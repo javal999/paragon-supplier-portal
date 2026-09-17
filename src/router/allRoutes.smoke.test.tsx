@@ -36,6 +36,7 @@ import BuyerCollaboration from '../pages-v2/BuyerCollaboration';
 import BuyerContracts from '../pages-v2/BuyerContracts';
 import BuyerContractDetail from '../pages-v2/BuyerContractDetail';
 import BuyerDeliveryAgreements from '../pages-v2/BuyerDeliveryAgreements';
+import BuyerCallOffs from '../pages-v2/BuyerCallOffs';
 import BuyerChase from '../pages-v2/BuyerChase';
 import BuyerInventory from '../pages-v2/BuyerInventory';
 import BuyerShipments from '../pages-v2/BuyerShipments';
@@ -68,6 +69,7 @@ import SupplierInvoicesV2 from '../pages-v2/SupplierInvoices';
 import SupplierInventoryV2 from '../pages-v2/SupplierInventory';
 import SupplierRegistrationV2 from '../pages-v2/SupplierRegistration';
 import SupplierDeliveryAgreements from '../pages-v2/SupplierDeliveryAgreements';
+import SupplierCallOffs from '../pages-v2/SupplierCallOffs';
 import SupplierPerformance from '../pages-v2/SupplierPerformance';
 import NotFound from '../pages-v2/NotFound';
 import { PERSONA_SYSTEM_ROLES } from '../services/transitions/businessRoles';
@@ -107,6 +109,7 @@ const ROUTES: RouteCase[] = [
   { name: 'buyer/contracts', pattern: '/buyer/contracts', at: '/buyer/contracts', element: <BuyerContracts />, identity: BUYER },
   { name: 'buyer/contracts/:id', pattern: '/buyer/contracts/:id', at: '/buyer/contracts/ctr-013', element: <BuyerContractDetail />, identity: BUYER },
   { name: 'buyer/delivery-agreements', pattern: '/buyer/delivery-agreements', at: '/buyer/delivery-agreements', element: <BuyerDeliveryAgreements />, identity: BUYER },
+  { name: 'buyer/call-offs', pattern: '/buyer/call-offs', at: '/buyer/call-offs', element: <BuyerCallOffs />, identity: BUYER },
   { name: 'buyer/chase', pattern: '/buyer/chase', at: '/buyer/chase', element: <BuyerChase />, identity: BUYER },
   { name: 'buyer/inventory', pattern: '/buyer/inventory', at: '/buyer/inventory', element: <BuyerInventory />, identity: BUYER },
   { name: 'buyer/shipments', pattern: '/buyer/shipments', at: '/buyer/shipments', element: <BuyerShipments />, identity: BUYER },
@@ -144,6 +147,7 @@ const ROUTES: RouteCase[] = [
   { name: 'supplier/invoices', pattern: '/supplier/invoices', at: '/supplier/invoices', element: <SupplierInvoicesV2 />, identity: SUPPLIER },
   { name: 'supplier/inventory', pattern: '/supplier/inventory', at: '/supplier/inventory', element: <SupplierInventoryV2 />, identity: SUPPLIER },
   { name: 'supplier/delivery-agreements', pattern: '/supplier/delivery-agreements', at: '/supplier/delivery-agreements', element: <SupplierDeliveryAgreements />, identity: SUPPLIER },
+  { name: 'supplier/call-offs', pattern: '/supplier/call-offs', at: '/supplier/call-offs', element: <SupplierCallOffs />, identity: SUPPLIER },
   { name: 'supplier/performance', pattern: '/supplier/performance', at: '/supplier/performance', element: <SupplierPerformance />, identity: SUPPLIER },
   { name: '404 (unknown → NotFound)', pattern: '*', at: '/does/not/exist', element: <NotFound />, identity: BUYER },
 ];

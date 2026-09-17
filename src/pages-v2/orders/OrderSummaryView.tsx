@@ -28,6 +28,8 @@ import {
 } from '../../services/data/poResponseProjection';
 import type { Persona } from '../../components/layout-v2/navConfig';
 import { isActiveAsn } from '../../services/transitions/fulfilmentRules';
+import type { CallOffView } from '../../services/transitions/callOffRules';
+import { useCallOffViews } from '../callOffs/callOffDisplay';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ORDER COLLABORATION SUMMARY — REQ-E07-03 (MN-ORD-10 to MN-ORD-13).
@@ -61,6 +63,39 @@ const FORESIGHT_TONE: Record<ForesightStatus, StatusTone> = {
   gap: 'warning',
 };
 
+/** The call-off confirmation status for one PO (REQ-E07-03 with REQ-E09-03):
+ *  the most urgent state among its released call-offs. */
+export type CallOffSummaryStatus = 'escalated' | 'awaitingApproval' | 'awaiting' | 'rejected' | 'confirmed';
+
+const CALL_OFF_TONE: Record<CallOffSummaryStatus, StatusTone> = {
+  escalated: 'danger',
+  awaitingApproval: 'warning',
+  awaiting: 'neutral',
+  rejected: 'danger',
+  confirmed: 'success',
+};
+
+export function callOffSummary(
+  poId: string,
+  views: readonly CallOffView[],
+): { count: number; status: CallOffSummaryStatus | null } {
+  const mine = views.filter(
+    (v) => v.callOff.poId === poId && v.callOff.status !== 'Draft' && v.callOff.status !== 'Dismissed',
+  );
+  if (mine.length === 0) return { count: 0, status: null };
+  const has = (s: CallOffView['confirmation']) => mine.some((v) => v.confirmation === s);
+  const status: CallOffSummaryStatus = has('Escalated')
+    ? 'escalated'
+    : has('Awaiting Approval')
+      ? 'awaitingApproval'
+      : has('Awaiting Confirmation')
+        ? 'awaiting'
+        : has('Rejected')
+          ? 'rejected'
+          : 'confirmed';
+  return { count: mine.length, status };
+}
+
 const linkClass = 'text-action hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-action rounded';
 
 export interface OrderSummaryViewProps {
@@ -73,6 +108,7 @@ const OrderSummaryView: React.FC<OrderSummaryViewProps> = ({ persona, foresightA
   const { t } = useTranslation();
   const posQuery = usePurchaseOrders();
   const asnsQuery = useASNs();
+  const callOffs = useCallOffViews();
   const nowIso = new Date().toISOString();
   const base = persona === 'buyer' ? '/buyer' : '/supplier';
   const crumb = [
@@ -91,9 +127,10 @@ const OrderSummaryView: React.FC<OrderSummaryViewProps> = ({ persona, foresightA
         asnCount: asns.filter((a) => a.poReference === po.poNumber && isActiveAsn(a)).length,
         foresight: foresightStatus(po, foresightAnswers),
         shipping: shippingNoticeStatus(po),
+        callOffs: callOffSummary(po.id, callOffs.views),
       }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [posQuery.data, asnsQuery.data, foresightAnswers]);
+  }, [posQuery.data, asnsQuery.data, foresightAnswers, callOffs.views]);
 
   if (posQuery.isPending) return <LoadingState breadcrumb={crumb} />;
   if (posQuery.isError)
@@ -133,12 +170,13 @@ const OrderSummaryView: React.FC<OrderSummaryViewProps> = ({ persona, foresightA
             {persona === 'buyer' && <TableHeaderCell>{t('oc.summary.col.supplier')}</TableHeaderCell>}
             <TableHeaderCell>{t('oc.summary.col.response')}</TableHeaderCell>
             <TableHeaderCell className="text-right">{t('oc.summary.col.asns')}</TableHeaderCell>
+            <TableHeaderCell>{t('co.summary.col')}</TableHeaderCell>
             <TableHeaderCell>{t('oc.summary.col.capacity')}</TableHeaderCell>
             <TableHeaderCell>{t('oc.summary.col.foresight')}</TableHeaderCell>
             <TableHeaderCell>{t('oc.summary.col.shipping')}</TableHeaderCell>
           </TableHeader>
           <tbody>
-            {rows.map(({ po, response, asnCount, foresight, shipping }) => (
+            {rows.map(({ po, response, asnCount, foresight, shipping, callOffs: co }) => (
               <TableRow key={po.id} data-testid={`order-summary-row-${po.id}`}>
                 <TableCell>
                   <Link to={poLink(po)} className={linkClass}>
@@ -162,6 +200,20 @@ const OrderSummaryView: React.FC<OrderSummaryViewProps> = ({ persona, foresightA
                     </Link>
                   ) : (
                     <Data className="text-text-tertiary">0</Data>
+                  )}
+                </TableCell>
+                <TableCell data-testid={`order-summary-calloffs-${po.id}`}>
+                  {co.status ? (
+                    <Link
+                      to={`${base}/call-offs`}
+                      aria-label={`${po.poNumber}: ${co.count} ${t('co.summary.col')}, ${t(`co.summary.status.${co.status}`)}`}
+                      className="inline-flex items-center gap-2"
+                    >
+                      <Data>{co.count}</Data>
+                      <StatusPill variant={CALL_OFF_TONE[co.status]}>{t(`co.summary.status.${co.status}`)}</StatusPill>
+                    </Link>
+                  ) : (
+                    <span className="text-xs text-text-tertiary">—</span>
                   )}
                 </TableCell>
                 <TableCell>
@@ -195,7 +247,7 @@ const OrderSummaryView: React.FC<OrderSummaryViewProps> = ({ persona, foresightA
             ))}
             {rows.length === 0 && (
               <tr>
-                <td colSpan={7} className="text-center text-sm text-text-tertiary py-10">
+                <td colSpan={8} className="text-center text-sm text-text-tertiary py-10">
                   {t('oc.summary.empty')}
                 </td>
               </tr>

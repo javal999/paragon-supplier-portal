@@ -1,3 +1,5 @@
+import { callOffStore } from './stores/callOffStore';
+import type { CallOff } from '../types';
 import { purchaseOrderStore } from './stores/purchaseOrderStore';
 import { mockInventory } from '../../../data/mockInventory';
 import { mockShipments } from '../../../data/mockShipments';
@@ -331,6 +333,18 @@ export class MockProcurementService implements IProcurementService {
     let rows = applySupplierScope(scope, asnStore.all());
     if (filter?.status) rows = rows.filter((a) => matchesList(a.status, filter.status));
     return { items: rows };
+  }
+
+  async getCallOffs(scope: QueryScope): Promise<Page<CallOff>> {
+    // REQ-E09-03 — call-offs resolve from the mutable store. A supplier sees its
+    // own released call-offs only: a draft or a dismissed draft is the planner's.
+    const rows = applySupplierScope(scope, callOffStore.all());
+    return {
+      items:
+        scope.personaType === 'supplier'
+          ? rows.filter((c) => c.status !== 'Draft' && c.status !== 'Dismissed')
+          : rows,
+    };
   }
 
   async getGoodsReceipts(

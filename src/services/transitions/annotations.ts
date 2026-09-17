@@ -275,6 +275,20 @@ export const TRANSITION_PURPOSE: FlowAnnotations = Object.freeze({
   },
   t_receiptdiscrepancy_dispute: { purposeKey: 'processFlows.purpose.t_receiptdiscrepancy_dispute' },
   t_receiptdiscrepancy_resolve: { purposeKey: 'processFlows.purpose.t_receiptdiscrepancy_resolve' },
+  t_calloff_release: { purposeKey: 'processFlows.purpose.t_calloff_release' },
+  t_calloff_draft: { purposeKey: 'processFlows.purpose.t_calloff_draft' },
+  t_calloff_edit_draft: { purposeKey: 'processFlows.purpose.t_calloff_edit_draft' },
+  t_calloff_release_draft: { purposeKey: 'processFlows.purpose.t_calloff_release_draft' },
+  t_calloff_dismiss: { purposeKey: 'processFlows.purpose.t_calloff_dismiss' },
+  t_calloff_change: { purposeKey: 'processFlows.purpose.t_calloff_change' },
+  t_calloff_confirm: { purposeKey: 'processFlows.purpose.t_calloff_confirm' },
+  t_calloff_confirm_new_date: { purposeKey: 'processFlows.purpose.t_calloff_confirm_new_date' },
+  t_calloff_confirm_changes: { purposeKey: 'processFlows.purpose.t_calloff_confirm_changes' },
+  t_calloff_confirm_partial: { purposeKey: 'processFlows.purpose.t_calloff_confirm_partial' },
+  t_calloff_reject: { purposeKey: 'processFlows.purpose.t_calloff_reject' },
+  t_calloff_approve: { purposeKey: 'processFlows.purpose.t_calloff_approve' },
+  t_calloff_reject_confirmation: { purposeKey: 'processFlows.purpose.t_calloff_reject_confirmation' },
+  t_calloff_dispatch: { purposeKey: 'processFlows.purpose.t_calloff_dispatch' },
 });
 
 /**
@@ -307,6 +321,7 @@ export const ENTITY_PURPOSE: FlowAnnotations = Object.freeze({
   role: { purposeKey: 'processFlows.purpose.entity.role' },
   supplierApplication: { purposeKey: 'processFlows.purpose.entity.supplierApplication' },
   receiptDiscrepancy: { purposeKey: 'processFlows.purpose.entity.receiptDiscrepancy' },
+  callOff: { purposeKey: 'processFlows.purpose.entity.callOff' },
 });
 
 /**

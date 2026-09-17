@@ -357,6 +357,99 @@ export interface PoShippingNotice {
   readonly updatedAt?: string;
 }
 
+// ── Call-offs (REQ-E09-01, REQ-E09-03, REQ-E09-04) ──────────────────────────
+//
+// A call-off manages ONE delivery under an umbrella PO line (same supplier and
+// material). The hub is the record for call-offs; SAP only knows the umbrella
+// PO, receipts and invoices (REQUIREMENTS §3.1). Everything clock-derived —
+// Escalated, At Risk, Dispatched, on time / late / missed — is computed at read
+// time (`callOffRules.ts`) and never stored here.
+
+/** JIT: no over-quantity limit. Forecast-based: CR-05 tolerance applies. */
+export type CallOffType = 'jit' | 'forecast';
+
+/** Stored call-off states — the confirmation statuses of REQ-E09-03 BR-02, plus
+ *  the planner's Draft and a dismissed draft. */
+export type CallOffStatus =
+  | 'Draft'
+  | 'Awaiting Confirmation'
+  | 'Confirmed'
+  | 'Confirmed with New Date'
+  | 'Confirmed with Changes'
+  | 'Partially Confirmed'
+  | 'Rejected'
+  | 'Dismissed';
+
+/** How the supplier answered (the four confirming answers). */
+export type CallOffConfirmationKind = 'confirm' | 'newDate' | 'changes' | 'partial';
+
+/** One confirmed delivery: a quantity on a date (`YYYY-MM-DD`). */
+export interface CallOffDelivery {
+  readonly quantity: number;
+  readonly date: string;
+}
+
+/**
+ * The supplier's confirmation. `approval` is the second axis of BR-04: `auto`
+ * when the answer was within tolerance, `awaiting` until the planner decides,
+ * `approved` once the planner approved it. A planner rejection clears the
+ * confirmation and returns the call-off to Awaiting Confirmation.
+ */
+export interface CallOffConfirmation {
+  readonly kind: CallOffConfirmationKind;
+  readonly deliveries: readonly CallOffDelivery[];
+  readonly comment?: string;
+  readonly confirmedAt: string;
+  readonly approval: 'auto' | 'awaiting' | 'approved';
+  readonly reviewedAt?: string;
+}
+
+/** A dispatch heads-up from the supplier (REQ-E09-04). */
+export interface CallOffDispatch {
+  readonly id: string;
+  readonly shippedDate: string;
+  readonly expectedArrival: string;
+  readonly quantity: number;
+  /** Optional link to the ASN for this shipment. */
+  readonly asnNumber?: string;
+  readonly recordedAt: string;
+}
+
+/** A planner or supplier note kept on the call-off (reasons are required). */
+export interface CallOffNote {
+  readonly action: 'edit' | 'dismiss' | 'change' | 'reject' | 'returned';
+  readonly text: string;
+  readonly at: string;
+}
+
+export interface CallOff {
+  readonly id: string;
+  readonly callOffNumber: string;
+  /** The umbrella PO and its line (supplier and material come from it). */
+  readonly poId: string;
+  readonly poNumber: string;
+  readonly poLineId: string;
+  readonly supplierId: string;
+  readonly supplierName: string;
+  readonly materialCode: string;
+  readonly description: string;
+  readonly uom: string;
+  readonly unitPrice: number;
+  readonly currency: string;
+  /** Released (requested) quantity and need date — "must come" (REQ-E09-04 BR-01). */
+  readonly quantity: number;
+  readonly needDate: string;
+  readonly type: CallOffType;
+  readonly status: CallOffStatus;
+  /** When the supplier was last asked to confirm; the 1-working-day deadline counts from here. */
+  readonly releasedAt?: string;
+  readonly confirmation?: CallOffConfirmation;
+  /** The supplier's reason when it rejected the call-off. */
+  readonly rejectionReason?: string;
+  readonly dispatches: readonly CallOffDispatch[];
+  readonly notes: readonly CallOffNote[];
+}
+
 export interface POSummary {
   id: string;
   poNumber: string;
@@ -819,6 +912,8 @@ export interface ASN {
   packingListFile?: string;
   /** Why the shipped quantity exceeds the open quantity (BR-02), when it does. */
   overShipReason?: string;
+  /** The call-off this ASN ships (REQ-E09-03 BR-06). Absent for a PO-level ASN. */
+  callOffId?: string;
 }
 
 export interface CatalogItem {
@@ -1796,6 +1891,8 @@ export interface IProcurementService {
   getShipments(scope: QueryScope, filter?: ShipmentFilter): Promise<Page<Shipment>>;
   getASNs(scope: QueryScope, filter?: ASNFilter): Promise<Page<ASN>>;
   getGoodsReceipts(scope: QueryScope, filter?: GRFilter): Promise<Page<GoodsReceipt>>;
+  /** Call-offs under umbrella POs (REQ-E09-03). A supplier never sees drafts. */
+  getCallOffs(scope: QueryScope): Promise<Page<CallOff>>;
 
   // — Finance —
   getBuyerInvoices(scope: QueryScope, filter?: InvoiceFilter): Promise<Page<BuyerInvoice>>;

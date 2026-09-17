@@ -90,6 +90,10 @@ export const hubEn: Record<string, string> = {
   'hub.home.task.rfqAward': 'Sourcing events ready to award',
   'hub.home.task.overdueInvoices': 'Overdue supplier invoices',
   'hub.home.task.disputedReceipts': 'Disputed receipt discrepancies',
+  'hub.home.task.callOffsAtRisk': 'Call-offs at risk',
+  'hub.home.task.callOffsApproval': 'Call-offs awaiting your approval',
+  'hub.home.task.callOffsEscalated': 'Escalated call-offs',
+  'hub.home.task.callOffsDrift': 'Delivery drift: suppliers late or missing 2 or more call-offs of a material',
 
   'hub.home.task.sup.confirmOrders': 'Purchase orders to respond to',
   'hub.home.task.sup.shippingNotice': 'Confirmed orders without an expected completion date',
@@ -99,6 +103,8 @@ export const hubEn: Record<string, string> = {
   'hub.home.task.sup.invoices': 'Invoices awaiting payment',
   'hub.home.task.sup.receiptDiscrepancies': 'Receipt discrepancies to acknowledge or dispute',
   'hub.home.task.sup.returnedInvoices': 'Returned invoices to correct and resubmit',
+  'hub.home.task.sup.callOffsConfirm': 'Call-offs to confirm',
+  'hub.home.task.sup.callOffsDue': 'Call-offs due within 7 days with no ASN or dispatch notice',
 
   // Sample data marker (SC-04)
   'hub.sample.label': 'Sample data',
@@ -184,6 +190,10 @@ export const hubId: Record<string, string> = {
   'hub.home.task.rfqAward': 'Event sourcing yang siap diputuskan pemenangnya',
   'hub.home.task.overdueInvoices': 'Faktur pemasok yang lewat jatuh tempo',
   'hub.home.task.disputedReceipts': 'Selisih penerimaan yang disanggah pemasok',
+  'hub.home.task.callOffsAtRisk': 'Call-off yang berisiko',
+  'hub.home.task.callOffsApproval': 'Call-off yang menunggu persetujuan Anda',
+  'hub.home.task.callOffsEscalated': 'Call-off yang dieskalasi',
+  'hub.home.task.callOffsDrift': 'Pergeseran pengiriman: pemasok terlambat atau tidak mengirim 2 call-off atau lebih untuk satu material',
 
   'hub.home.task.sup.confirmOrders': 'Pesanan pembelian yang perlu ditanggapi',
   'hub.home.task.sup.shippingNotice': 'Pesanan terkonfirmasi tanpa perkiraan tanggal selesai',
@@ -193,6 +203,8 @@ export const hubId: Record<string, string> = {
   'hub.home.task.sup.invoices': 'Faktur yang menunggu pembayaran',
   'hub.home.task.sup.receiptDiscrepancies': 'Selisih penerimaan untuk diakui atau disanggah',
   'hub.home.task.sup.returnedInvoices': 'Faktur yang dikembalikan untuk diperbaiki dan dikirim ulang',
+  'hub.home.task.sup.callOffsConfirm': 'Call-off yang perlu dikonfirmasi',
+  'hub.home.task.sup.callOffsDue': 'Call-off yang jatuh tempo dalam 7 hari tanpa ASN atau pemberitahuan pengiriman',
 
   'hub.sample.label': 'Data contoh',
   'hub.sample.hint': 'Angka hanya contoh. Tindakan berjalan, tetapi perubahan hilang saat halaman dimuat ulang.',

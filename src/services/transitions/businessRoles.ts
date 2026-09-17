@@ -231,6 +231,9 @@ const LANE_BUNDLES = Object.freeze({
       'inventorydeclaration:record',
       // REQ-E07-06 — the planner settles a supplier's dispute of a receipt.
       'receiptdiscrepancy:resolve',
+      // REQ-E09-01 / REQ-E09-03 — the planner releases and changes call-offs
+      // under an umbrella PO, and decides confirmations outside tolerance.
+      'calloff:plan', 'calloff:review',
     ]),
     // Raising and revising a requisition — split from approving one, which is
     // the segregation `pr:approve` living in `procurement` expresses.
@@ -295,6 +298,8 @@ const LANE_BUNDLES = Object.freeze({
       // answering a receipt discrepancy: both about the supplier's own delivery.
       'asn:cancel',
       'receiptdiscrepancy:respond',
+      // REQ-E09-03 / REQ-E09-04 — answering a call-off and saying it has shipped.
+      'calloff:confirm', 'calloff:dispatch',
       'incomingshipment:report', 'incomingshipment:ship',
       'incomingshipment:arrive', 'incomingshipment:cancel',
       'inventorydeclaration:declare',

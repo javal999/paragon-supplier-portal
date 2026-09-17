@@ -84,6 +84,7 @@ import { identityEn, identityId } from './i18n/identity';
 import { hubEn, hubId } from './i18n/hub';
 import { orderCollaborationEn, orderCollaborationId } from './i18n/orderCollaboration';
 import { fulfilmentCollaborationEn, fulfilmentCollaborationId } from './i18n/fulfilmentCollaboration';
+import { callOffsEn, callOffsId } from './i18n/callOffs';
 // — The read path's failure surface, shared by 31 pages —
 import { errorStateEn, errorStateId } from './i18n/errorState';
 import { loadingStateEn, loadingStateId } from './i18n/loadingState';
@@ -164,6 +165,7 @@ export const resources = {
       ...hubEn,
       ...orderCollaborationEn,
       ...fulfilmentCollaborationEn,
+      ...callOffsEn,
       ...errorStateEn,
       ...loadingStateEn,
       ...emptyStateEn,
@@ -600,6 +602,7 @@ export const resources = {
       ...hubId,
       ...orderCollaborationId,
       ...fulfilmentCollaborationId,
+      ...callOffsId,
       ...errorStateId,
       ...loadingStateId,
       ...emptyStateId,

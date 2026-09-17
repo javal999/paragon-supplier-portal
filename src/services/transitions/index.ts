@@ -22,6 +22,8 @@ export * from './policies';
 export * from './grRollup';
 export * from './invoiceRollup';
 export * from './fulfilmentRules';
+export * from './callOffRules';
+export * from './callOffTolerance';
 export * from './cascades';
 export { purchaseOrderFlow } from './flows/purchaseOrder.flow';
 export { advanceShipNoticeFlow } from './flows/advanceShipNotice.flow';
@@ -44,6 +46,7 @@ export { enforcementFlow } from './flows/enforcement.flow';
 export { roleFlow } from './flows/role.flow';
 export { supplierApplicationFlow } from './flows/supplierApplication.flow';
 export { receiptDiscrepancyFlow } from './flows/receiptDiscrepancy.flow';
+export { callOffFlow } from './flows/callOff.flow';
 export * from './customRoles';
 
 import { flowRegistry } from './registry';
@@ -68,6 +71,7 @@ import { enforcementFlow } from './flows/enforcement.flow';
 import { roleFlow } from './flows/role.flow';
 import { supplierApplicationFlow } from './flows/supplierApplication.flow';
 import { receiptDiscrepancyFlow } from './flows/receiptDiscrepancy.flow';
+import { callOffFlow } from './flows/callOff.flow';
 
 // Seed the shipped flows onto the singleton.
 flowRegistry.register(purchaseOrderFlow); // Step 3.1 — PO
@@ -113,3 +117,4 @@ flowRegistry.register(enforcementFlow); // CP-3 · E2 — Enforcement
 flowRegistry.register(roleFlow); // Duplicate-and-narrow — Role
 flowRegistry.register(supplierApplicationFlow); // B1 — Supplier onboarding
 flowRegistry.register(receiptDiscrepancyFlow); // REQ-E07-06 — receipt discrepancy response
+flowRegistry.register(callOffFlow); // REQ-E09-01 / 03 / 04 — call-offs under an umbrella PO

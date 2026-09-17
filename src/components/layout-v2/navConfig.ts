@@ -87,7 +87,7 @@ export const PTI_NAV: readonly NavSection[] = [
     labelKey: 'hub.nav.section.calloffs',
     roles: ['MP'],
     items: [
-      { labelKey: 'hub.nav.pti.callOffs', icon: CalendarClock, path: '/buyer/delivery-agreements' },
+      { labelKey: 'hub.nav.pti.callOffs', icon: CalendarClock, path: '/buyer/call-offs' },
     ],
   },
   {
@@ -125,7 +125,7 @@ export const SUPPLIER_NAV: readonly NavSection[] = [
     items: [
       { labelKey: 'hub.nav.sup.orderSummary', icon: ClipboardCheck, path: '/supplier/order-summary' },
       { labelKey: 'hub.nav.sup.purchaseOrders', icon: ShoppingCart, path: '/supplier/orders' },
-      { labelKey: 'hub.nav.sup.callOffs', icon: CalendarClock, path: '/supplier/delivery-agreements' },
+      { labelKey: 'hub.nav.sup.callOffs', icon: CalendarClock, path: '/supplier/call-offs' },
       { labelKey: 'hub.nav.sup.shipments', icon: Truck, path: '/supplier/shipments' },
       { labelKey: 'hub.nav.sup.goodsReceipts', icon: PackageCheck, path: '/supplier/goods-receipts' },
     ],

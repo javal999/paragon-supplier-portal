@@ -336,6 +336,38 @@ export const processFlowPurposeEn: Record<string, string> = {
     'The supplier does not agree with what Paragon counted and explains why, so the planner can check it while the delivery is still fresh.',
   'processFlows.purpose.t_receiptdiscrepancy_resolve':
     'The planner closes the disagreement and writes down how it was settled, so neither side has to reopen it when the bill arrives.',
+  // ── callOff ─────────────────────────────────────────────────────────
+  'processFlows.purpose.entity.callOff':
+    'One delivery called off against an umbrella purchase order: how much, by when, and whether the supplier has committed to it. The hub keeps this record, because SAP only knows the umbrella order.',
+  'processFlows.purpose.t_calloff_release':
+    'The planner asks the supplier for one delivery under the umbrella order. It cannot ask for more than is left on the order, so the order is never overdrawn.',
+  'processFlows.purpose.t_calloff_draft':
+    'The planner lays out a call-off without sending it yet, often as one of a series spread over weeks or months, so the plan can be checked before the supplier sees it.',
+  'processFlows.purpose.t_calloff_edit_draft':
+    'The planner adjusts a planned call-off before sending it and says why, so the explanation for the change stays with the plan.',
+  'processFlows.purpose.t_calloff_release_draft':
+    'The planner sends a planned call-off to the supplier. The amount still has to fit in what is left on the umbrella order.',
+  'processFlows.purpose.t_calloff_dismiss':
+    'The planner drops a planned call-off that is no longer needed and records why, so nobody wonders later what happened to it.',
+  'processFlows.purpose.t_calloff_change':
+    'The planner changes a call-off the supplier already saw. Because the ask changed, the supplier has to confirm it again.',
+  'processFlows.purpose.t_calloff_confirm':
+    'The supplier commits to the delivery exactly as asked. From here the supplier can ship and send its notice.',
+  'processFlows.purpose.t_calloff_confirm_new_date':
+    'The supplier commits to the full amount on a different date. Any date change goes to the planner unless it is within the agreed tolerance.',
+  'processFlows.purpose.t_calloff_confirm_changes':
+    'The supplier commits to a different amount. A small increase on a forecast-based call-off, or any increase on a JIT one, is accepted; anything else goes to the planner.',
+  'processFlows.purpose.t_calloff_confirm_partial':
+    'The supplier splits the delivery into two, each with its own date and amount. Each part is measured on its own for on-time and in-full.',
+  'processFlows.purpose.t_calloff_reject':
+    'The supplier cannot deliver this call-off and says why, so the planner can find the goods another way.',
+  'processFlows.purpose.t_calloff_approve':
+    'The planner accepts an answer from the supplier that was outside tolerance. The date and amount the supplier gave become what delivery is measured against.',
+  'processFlows.purpose.t_calloff_reject_confirmation':
+    'The planner does not accept the confirmation from the supplier and explains why. The call-off goes back to the supplier to confirm again.',
+  'processFlows.purpose.t_calloff_dispatch':
+    'The supplier tells PTI the goods have left, with the expected arrival. It is the heads-up the planner needs; an ASN for the same call-off counts as one.',
+
 };
 
 export const processFlowPurposeId: Record<string, string> = {
@@ -637,4 +669,36 @@ export const processFlowPurposeId: Record<string, string> = {
     'Pemasok tidak setuju dengan hitungan Paragon dan menjelaskan alasannya, agar perencana dapat memeriksanya selagi pengiriman masih baru.',
   'processFlows.purpose.t_receiptdiscrepancy_resolve':
     'Perencana menutup ketidaksepakatan dan mencatat cara penyelesaiannya, sehingga tidak ada pihak yang perlu membukanya lagi saat tagihan datang.',
+  // ── callOff ─────────────────────────────────────────────────────────
+  'processFlows.purpose.entity.callOff':
+    'Satu pengiriman yang dipanggil dari pesanan pembelian induk: berapa banyak, kapan, dan apakah pemasok sudah berkomitmen. Hub menyimpan catatan ini karena SAP hanya mengenal pesanan induknya.',
+  'processFlows.purpose.t_calloff_release':
+    'Perencana meminta satu pengiriman kepada pemasok dari pesanan induk. Permintaan tidak boleh melebihi sisa pesanan, sehingga pesanan tidak pernah terlampaui.',
+  'processFlows.purpose.t_calloff_draft':
+    'Perencana menyusun call-off tanpa mengirimkannya dulu, sering sebagai bagian dari rangkaian mingguan atau bulanan, agar rencana dapat diperiksa sebelum dilihat pemasok.',
+  'processFlows.purpose.t_calloff_edit_draft':
+    'Perencana mengubah draf sebelum dikirim dan menyatakan alasannya, sehingga alasan perubahan tetap melekat pada rencana.',
+  'processFlows.purpose.t_calloff_release_draft':
+    'Perencana mengirim call-off dari draf kepada pemasok. Kuantitasnya tetap harus muat dalam sisa pesanan induk.',
+  'processFlows.purpose.t_calloff_dismiss':
+    'Perencana membatalkan draf yang tidak lagi diperlukan dan mencatat alasannya, agar tidak ada yang bertanya-tanya nanti.',
+  'processFlows.purpose.t_calloff_change':
+    'Perencana mengubah call-off yang sudah dilihat pemasok. Karena permintaannya berubah, pemasok harus mengonfirmasi lagi.',
+  'processFlows.purpose.t_calloff_confirm':
+    'Pemasok berkomitmen pada pengiriman persis seperti diminta. Setelah itu pemasok dapat mengirim dan menyampaikan pemberitahuannya.',
+  'processFlows.purpose.t_calloff_confirm_new_date':
+    'Pemasok berkomitmen pada kuantitas di tanggal lain. Setiap perubahan tanggal diteruskan ke perencana kecuali masih dalam toleransi.',
+  'processFlows.purpose.t_calloff_confirm_changes':
+    'Pemasok berkomitmen pada kuantitas yang berbeda. Kenaikan kecil pada call-off berbasis prakiraan, atau kenaikan berapa pun pada JIT, diterima; selebihnya diteruskan ke perencana.',
+  'processFlows.purpose.t_calloff_confirm_partial':
+    'Pemasok membagi pengiriman menjadi dua, masing-masing dengan tanggal dan kuantitasnya. Setiap bagian diukur sendiri untuk tepat waktu dan lengkap.',
+  'processFlows.purpose.t_calloff_reject':
+    'Pemasok tidak dapat memenuhi call-off ini dan menyatakan alasannya, agar perencana dapat mencari barang dengan cara lain.',
+  'processFlows.purpose.t_calloff_approve':
+    'Perencana menerima konfirmasi yang di luar toleransi. Tanggal dan kuantitas yang dikonfirmasi menjadi dasar pengukuran pengiriman.',
+  'processFlows.purpose.t_calloff_reject_confirmation':
+    'Perencana tidak menerima konfirmasi pemasok dan menjelaskan alasannya. Call-off kembali ke pemasok untuk dikonfirmasi ulang.',
+  'processFlows.purpose.t_calloff_dispatch':
+    'Pemasok memberi tahu PTI bahwa barang sudah berangkat, beserta perkiraan tiba. Inilah kabar yang dibutuhkan perencana; ASN untuk call-off yang sama juga dihitung.',
+
 };

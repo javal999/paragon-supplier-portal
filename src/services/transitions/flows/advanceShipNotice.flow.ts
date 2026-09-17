@@ -59,7 +59,11 @@ export const advanceShipNoticeFlow: FlowDefinition = {
       trigger: 'creation',
       requiredRole: 'asn:create',
       requiredFields: ['poReference'],
-      policyHooks: [POLICY_HOOKS.ASN_CREATE_PO_APPROVED, POLICY_HOOKS.ASN_LINES_WITHIN_OPEN],
+      policyHooks: [
+        POLICY_HOOKS.ASN_CREATE_PO_APPROVED,
+        POLICY_HOOKS.ASN_CALLOFF_CONFIRMED,
+        POLICY_HOOKS.ASN_LINES_WITHIN_OPEN,
+      ],
       surfaceable: { surfaced: true },
       version: 1,
     },

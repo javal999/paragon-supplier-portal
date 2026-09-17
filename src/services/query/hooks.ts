@@ -76,6 +76,10 @@ export const useASNs = (filter?: ASNFilter) =>
     svc.procurement.getASNs(scope, filter),
   );
 
+/** Call-offs under umbrella POs (REQ-E09-03). A supplier's read omits drafts. */
+export const useCallOffs = () =>
+  useServiceQuery(['procurement', 'callOffs'], (svc, scope) => svc.procurement.getCallOffs(scope));
+
 export const useGoodsReceipts = (filter?: GRFilter) =>
   useServiceQuery(['procurement', 'goodsReceipts', filter], (svc, scope) =>
     svc.procurement.getGoodsReceipts(scope, filter),

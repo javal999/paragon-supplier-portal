@@ -93,6 +93,7 @@ import { enforcementSettingStore } from '../data/mock/stores/enforcementSettingS
 import { supplierDocumentStore } from '../data/mock/stores/supplierDocumentStore';
 import { supplierApplicationStore } from '../data/mock/stores/supplierApplicationStore';
 import { receiptDiscrepancyStore } from '../data/mock/stores/receiptDiscrepancyStore';
+import { callOffStore } from '../data/mock/stores/callOffStore';
 import { customRoleStore } from './customRoles';
 
 const svc = new MockCommandService();
@@ -175,6 +176,8 @@ async function realIds(): Promise<Record<string, string | null>> {
     supplierDocument: supplierDocumentStore.all()[0]?.id ?? null,
     supplierApplication: raised.entityId ?? null,
     receiptDiscrepancy: receiptDiscrepancyStore.all()[0]?.receiptId ?? null,
+    // REQ-E09-03 — the call-off store is seeded, so its first row is a real id.
+    callOff: callOffStore.all()[0]?.id ?? null,
   };
 }
 
@@ -272,6 +275,7 @@ const resetAll = () => {
   enforcementSettingStore.reset();
   supplierApplicationStore.reset();
   receiptDiscrepancyStore.reset();
+  callOffStore.reset();
   customRoleStore.reset();
 };
 

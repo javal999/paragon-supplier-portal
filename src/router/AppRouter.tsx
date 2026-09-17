@@ -20,6 +20,7 @@ import BuyerSourcing from '../pages-v2/BuyerSourcing';
 import BuyerContracts from '../pages-v2/BuyerContracts';
 import BuyerContractDetail from '../pages-v2/BuyerContractDetail';
 import BuyerDeliveryAgreements from '../pages-v2/BuyerDeliveryAgreements';
+import BuyerCallOffs from '../pages-v2/BuyerCallOffs';
 import BuyerChase from '../pages-v2/BuyerChase';
 import BuyerInventory from '../pages-v2/BuyerInventory';
 import BuyerShipments from '../pages-v2/BuyerShipments';
@@ -54,6 +55,7 @@ import SupplierInvoicesV2 from '../pages-v2/SupplierInvoices';
 import SupplierInventoryV2 from '../pages-v2/SupplierInventory';
 import SupplierRegistrationV2 from '../pages-v2/SupplierRegistration';
 import SupplierDeliveryAgreements from '../pages-v2/SupplierDeliveryAgreements';
+import SupplierCallOffs from '../pages-v2/SupplierCallOffs';
 import SupplierPerformance from '../pages-v2/SupplierPerformance';
 import NotFound from '../pages-v2/NotFound';
 
@@ -113,6 +115,7 @@ const AppRouter: React.FC = () => {
               Delivery Agreements | Docs). Must sit AFTER the list route. */}
           <Route path="/buyer/contracts/:id" element={<BuyerContractDetail />} />
           <Route path="/buyer/delivery-agreements" element={<BuyerDeliveryAgreements />} />
+          <Route path="/buyer/call-offs" element={<BuyerCallOffs />} />
           <Route path="/buyer/chase" element={<BuyerChase />} />
           <Route path="/buyer/inventory" element={<BuyerInventory />} />
           <Route path="/buyer/shipments" element={<BuyerShipments />} />
@@ -159,6 +162,7 @@ const AppRouter: React.FC = () => {
           <Route path="/supplier/invoices" element={<SupplierInvoicesV2 />} />
           <Route path="/supplier/inventory" element={<SupplierInventoryV2 />} />
           <Route path="/supplier/delivery-agreements" element={<SupplierDeliveryAgreements />} />
+          <Route path="/supplier/call-offs" element={<SupplierCallOffs />} />
           <Route path="/supplier/performance" element={<SupplierPerformance />} />
           <Route path="/" element={<Navigate to="/buyer/home" replace />} />
           <Route path="*" element={<NotFound />} />

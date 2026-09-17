@@ -54,7 +54,9 @@ import {
   useCurrentSupplier,
   usePurchaseOrders,
   useASNs,
+  useCallOffs,
 } from '../services/query/hooks';
+import { isConfirmedAndAccepted } from '../services/transitions/callOffRules';
 import type { AsnStatus, ASN, PurchaseOrder } from '../services/data/types';
 import { useRefusalText } from '../hooks/useRefusalText';
 import { refusalDetailOf } from '../services/transitions/refusalMessage';
@@ -105,6 +107,8 @@ interface AsnForm {
   /** Keyed by material code. */
   lines: Record<string, LineEntry>;
   overShipReason: string;
+  /** REQ-E09-03 BR-06 — the confirmed call-off this ASN ships, or '' for a PO-level ASN. */
+  callOffId: string;
 }
 
 const DEFAULT_FORM: AsnForm = {
@@ -120,6 +124,7 @@ const DEFAULT_FORM: AsnForm = {
   confirmed: false,
   lines: {},
   overShipReason: '',
+  callOffId: '',
 };
 
 /** A typed quantity, read by the one legal parser; NaN when unreadable. */
@@ -752,6 +757,8 @@ const SupplierShipments: React.FC = () => {
 
   const supplierQuery = useCurrentSupplier();
   const asnsQuery = useASNs();
+  // REQ-E09-03 BR-06 — an ASN may ship a confirmed call-off on the chosen PO.
+  const callOffsQuery = useCallOffs();
   // REQ-E07-04 — partial shipments: a PO stays shippable after a first receipt.
   const posQuery = usePurchaseOrders({
     status: [POStatus.CONFIRMED, POStatus.PARTIALLY_DELIVERED],
@@ -1011,6 +1018,7 @@ const SupplierShipments: React.FC = () => {
         lines: wizardRead.lines.map((l) => l.input),
         ...(form.packingList ? { packingListFile: form.packingList } : {}),
         ...(form.overShipReason.trim() ? { overShipReason: form.overShipReason.trim() } : {}),
+        ...(form.callOffId ? { callOffId: form.callOffId } : {}),
       });
       if (createRes.status === 'failed' || !createRes.entityId) {
         toast({
@@ -1072,6 +1080,7 @@ const SupplierShipments: React.FC = () => {
                       poId: po.id,
                       lines: seedLines(openLinesFor(po, asns)),
                       overShipReason: '',
+                      callOffId: '',
                     })
                   }
                   aria-pressed={selected}
@@ -1137,6 +1146,29 @@ const SupplierShipments: React.FC = () => {
                 </button>
               );
             })
+          )}
+          {selectedPO && (
+            <div>
+              <label htmlFor="asn-calloff" className="block text-label text-text-tertiary uppercase mb-1">
+                {t('co.asn.callOff')}
+              </label>
+              <select
+                id="asn-calloff"
+                value={form.callOffId}
+                onChange={(e) => updateForm({ callOffId: e.target.value })}
+                className="w-full px-3 py-2 text-sm text-text-primary bg-white border border-border-input rounded-md focus:outline-none focus:border-action"
+              >
+                <option value="">{t('co.asn.noCallOff')}</option>
+                {(callOffsQuery.data?.items ?? [])
+                  .filter((c) => c.poId === selectedPO.id && isConfirmedAndAccepted(c))
+                  .map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {`${c.callOffNumber} · ${c.quantity.toLocaleString()} ${c.uom} · ${fmtDate(c.needDate)}`}
+                    </option>
+                  ))}
+              </select>
+              <p className="mt-1 text-xs text-text-tertiary">{t('co.asn.callOffHint')}</p>
+            </div>
           )}
         </div>
       ),

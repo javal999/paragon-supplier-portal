@@ -18,6 +18,8 @@ import TaskList, { type HomeTask } from './home/TaskList';
 import { POStatus } from '../services/data/types';
 import { completionMovedLater, isEscalated } from '../services/data/poResponseProjection';
 import { isOpenDispute } from '../services/transitions/fulfilmentRules';
+import { deliveryDrift } from '../services/transitions/callOffRules';
+import { useCallOffViews } from './callOffs/callOffDisplay';
 
 // PTI Home — "My tasks" (REQUIREMENTS §3.8 SC-01). Tasks are filtered by the
 // PTI role the menu is showing, so a Finance user is not handed a planner's work.
@@ -34,6 +36,8 @@ const BuyerHome: React.FC = () => {
   const grs = useGoodsReceipts();
   const asns = useASNs();
   const chase = useUnifiedChase();
+  // REQ-E09-03 / REQ-E09-04 — call-off reminders, derived at read time (CR-09).
+  const callOffs = useCallOffViews();
 
   const tasks = useMemo<HomeTask[]>(() => {
     const now = new Date();
@@ -81,6 +85,38 @@ const BuyerHome: React.FC = () => {
         count: poItems.filter(completionMovedLater).length,
         severity: 'warning',
         to: '/buyer/order-summary',
+      },
+      {
+        id: 'calloffs-approval',
+        roles: ['MP'],
+        label: t('hub.home.task.callOffsApproval'),
+        count: callOffs.views.filter((v) => v.confirmation === 'Awaiting Approval').length,
+        severity: 'warning',
+        to: '/buyer/call-offs',
+      },
+      {
+        id: 'calloffs-escalated',
+        roles: ['MP'],
+        label: t('hub.home.task.callOffsEscalated'),
+        count: callOffs.views.filter((v) => v.confirmation === 'Escalated').length,
+        severity: 'critical',
+        to: '/buyer/call-offs',
+      },
+      {
+        id: 'calloffs-at-risk',
+        roles: ['MP'],
+        label: t('hub.home.task.callOffsAtRisk'),
+        count: callOffs.views.filter((v) => v.delivery === 'atRisk').length,
+        severity: 'warning',
+        to: '/buyer/call-offs',
+      },
+      {
+        id: 'calloffs-drift',
+        roles: ['MP'],
+        label: t('hub.home.task.callOffsDrift'),
+        count: deliveryDrift(callOffs.views).length,
+        severity: 'critical',
+        to: '/buyer/call-offs',
       },
       {
         id: 'chase',
@@ -134,7 +170,7 @@ const BuyerHome: React.FC = () => {
       },
     ];
     return role === 'ALL' ? all : all.filter((task) => task.roles.includes(role));
-  }, [role, pos.data, invoices.data, rfqs.data, quotes.data, grs.data, asns.data, chase.data, t]);
+  }, [role, pos.data, invoices.data, rfqs.data, quotes.data, grs.data, asns.data, chase.data, callOffs.views, t]);
 
   return (
     <AppShellV2>

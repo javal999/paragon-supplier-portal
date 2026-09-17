@@ -102,6 +102,34 @@ export const POLICY_HOOKS = {
   RECEIPT_DISCREPANCY_ANSWERABLE: 'receipt_discrepancy_answerable',
   /** Receipt discrepancy resolution: PTI's comment is substance, not presence. */
   RECEIPT_DISCREPANCY_RESOLUTION_AUTHORED: 'receipt_discrepancy_resolution_authored',
+  /** Call-off release / draft (REQ-E09-01 BR-02): the umbrella PO is approved and
+   *  open, the line exists, the quantity is positive, the need date is a date on
+   *  or after today, and the type is JIT or forecast-based. */
+  CALLOFF_LINE_VALID: 'calloff_line_valid',
+  /** Call-off release / change (BR-04, CR-04): the quantity and its value stay
+   *  within what remains on the umbrella PO line. */
+  CALLOFF_WITHIN_REMAINING: 'calloff_within_remaining',
+  /** Draft edit / call-off change: a reason is given, and a new quantity or
+   *  need date is valid. */
+  CALLOFF_EDIT_VALID: 'calloff_edit_valid',
+  /** Call-off change: nothing has been dispatched yet and no confirmation is
+   *  waiting for the planner. */
+  CALLOFF_CHANGEABLE: 'calloff_changeable',
+  /** Dismiss a draft / supplier rejection: the reason is substance. */
+  CALLOFF_REASON_AUTHORED: 'calloff_reason_authored',
+  /** Supplier confirmation (REQ-E09-03 BR-02): the answer is well formed for
+   *  its kind (a changed date, a changed quantity, two dated deliveries). */
+  CALLOFF_CONFIRMATION_VALID: 'calloff_confirmation_valid',
+  /** Planner approval / rejection: a confirmation is waiting for approval. */
+  CALLOFF_AWAITING_APPROVAL: 'calloff_awaiting_approval',
+  /** Planner rejection of a confirmation: the comment is substance. */
+  CALLOFF_REVIEW_COMMENT_AUTHORED: 'calloff_review_comment_authored',
+  /** Dispatch heads-up (REQ-E09-04): the confirmation is accepted, the dates are
+   *  dates with arrival on or after shipping, and the quantity is positive. */
+  CALLOFF_DISPATCH_VALID: 'calloff_dispatch_valid',
+  /** ASN create (REQ-E09-03 BR-06): an ASN naming a call-off needs that call-off
+   *  to be on the same PO and confirmed. A PO-level ASN is unaffected. */
+  ASN_CALLOFF_CONFIRMED: 'asn_calloff_confirmed',
   /** Invoice match: the match sub-flow must have rolled up to a clean Matched
    *  before the header can advance Submitted → Matched (census G2). */
   INVOICE_ROLLUP_MATCHED: 'invoice_rollup_matched',

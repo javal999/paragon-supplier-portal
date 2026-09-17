@@ -28,6 +28,8 @@ import type {
   PoLineResponse,
   PoRejectionCause,
   InvoiceLine,
+  CallOffDelivery,
+  CallOffType,
 } from '../data/types';
 import type { AsnLineInput } from '../transitions/fulfilmentRules';
 
@@ -336,6 +338,8 @@ export interface AsnCreateVars {
   packingListFile?: string;
   /** BR-02 — required when a line ships more than its open quantity. */
   overShipReason?: string;
+  /** REQ-E09-03 BR-06 — the confirmed call-off this ASN ships, if any. */
+  callOffId?: string;
 }
 
 /**
@@ -1616,6 +1620,81 @@ export function useApplicationReject() {
       }),
     onSuccess: (result) => {
       if (result.status !== 'failed') invalidate(scope);
+    },
+  });
+}
+
+// ─── Call-offs (REQ-E09-01, REQ-E09-03, REQ-E09-04) ─────────────────────────
+//
+// One dispatch per verb. The buyer's release and the supplier's answer touch
+// the same record, and both personas' reads are keyed under their own scope, so
+// a successful call-off command invalidates EVERY scope's `callOffs` read (and
+// the ASN read, which a linked ASN changes) — a persona switch in the same
+// session then shows the change.
+
+export type CallOffCommandVars =
+  | { verb: 'release'; poId: string; poLineId: string; quantity: number; needDate: string; type: CallOffType }
+  | { verb: 'draft'; poId: string; poLineId: string; quantity: number; needDate: string; type: CallOffType }
+  | { verb: 'editDraft'; id: string; reason: string; quantity?: number; needDate?: string; type?: CallOffType }
+  | { verb: 'releaseDraft'; id: string }
+  | { verb: 'dismiss'; id: string; reason: string }
+  | { verb: 'change'; id: string; reason: string; quantity?: number; needDate?: string }
+  | { verb: 'confirm'; id: string; comment?: string }
+  | { verb: 'confirmNewDate'; id: string; confirmedDate: string; comment?: string }
+  | { verb: 'confirmChanges'; id: string; confirmedQty: number; confirmedDate?: string; comment?: string }
+  | { verb: 'confirmPartial'; id: string; deliveries: CallOffDelivery[]; comment?: string }
+  | { verb: 'reject'; id: string; reason: string }
+  | { verb: 'approve'; id: string }
+  | { verb: 'rejectConfirmation'; id: string; reviewComment: string }
+  | {
+      verb: 'dispatch';
+      id: string;
+      shippedDate: string;
+      expectedArrival: string;
+      quantity: number;
+      asnNumber?: string;
+    };
+
+const CALL_OFF_TRANSITION: Record<CallOffCommandVars['verb'], string> = {
+  release: 't_calloff_release',
+  draft: 't_calloff_draft',
+  editDraft: 't_calloff_edit_draft',
+  releaseDraft: 't_calloff_release_draft',
+  dismiss: 't_calloff_dismiss',
+  change: 't_calloff_change',
+  confirm: 't_calloff_confirm',
+  confirmNewDate: 't_calloff_confirm_new_date',
+  confirmChanges: 't_calloff_confirm_changes',
+  confirmPartial: 't_calloff_confirm_partial',
+  reject: 't_calloff_reject',
+  approve: 't_calloff_approve',
+  rejectConfirmation: 't_calloff_reject_confirmation',
+  dispatch: 't_calloff_dispatch',
+};
+
+export function useCallOffCommand() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+
+  return useMutation<CommandResult, Error, CallOffCommandVars>({
+    mutationFn: (vars) => {
+      const { verb, ...rest } = vars;
+      const creation = verb === 'release' || verb === 'draft';
+      const { id, ...payload } = rest as { id?: string } & Record<string, unknown>;
+      return svc.commands.dispatch(scope, {
+        transitionId: CALL_OFF_TRANSITION[verb],
+        entity: 'callOff',
+        ...(creation ? {} : { entityId: id }),
+        payload: creation ? { ...rest } : payload,
+      });
+    },
+    onSuccess: (result) => {
+      if (result.status === 'failed') return;
+      qc.invalidateQueries({
+        predicate: (q) =>
+          q.queryKey[0] === 'procurement' && (q.queryKey[1] === 'callOffs' || q.queryKey[1] === 'asns'),
+      });
     },
   });
 }

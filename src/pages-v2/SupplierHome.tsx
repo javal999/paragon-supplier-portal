@@ -18,6 +18,8 @@ import { documentDisplayState } from '../services/data/documentDisplayState';
 import { DECLARED_PRESENT } from '../services/data/fixturePresent';
 import TaskList, { type HomeTask } from './home/TaskList';
 import { awaitsSupplierAnswer } from '../services/transitions/fulfilmentRules';
+import { isDueWithoutHeadsUp } from '../services/transitions/callOffRules';
+import { useCallOffViews } from './callOffs/callOffDisplay';
 
 // Supplier Home — "To do" (REQUIREMENTS §3.8 SC-01): what Paragon is waiting for
 // from this supplier. Filters match the supplier dashboard widgets they replace.
@@ -32,6 +34,8 @@ const SupplierHome: React.FC = () => {
   const documents = useDocuments();
   const receipts = useGoodsReceipts();
   const asns = useASNs();
+  // REQ-E09-03 / REQ-E09-04 — the supplier's own call-offs (the read is scoped).
+  const callOffs = useCallOffViews();
 
   const tasks = useMemo<HomeTask[]>(() => {
     const poItems = pos.data?.items ?? [];
@@ -64,6 +68,22 @@ const SupplierHome: React.FC = () => {
         count: toConfirm.length,
         severity: 'critical',
         to: '/supplier/orders',
+      },
+      {
+        // REQ-E09-03 — released call-offs waiting for this supplier's answer.
+        id: 'confirm-calloffs',
+        label: t('hub.home.task.sup.callOffsConfirm'),
+        count: callOffs.views.filter((v) => v.callOff.status === 'Awaiting Confirmation').length,
+        severity: callOffs.views.some((v) => v.confirmation === 'Escalated') ? 'critical' : 'warning',
+        to: '/supplier/call-offs',
+      },
+      {
+        // CR-09 — confirmed, due within 7 days, and no ASN or dispatch notice yet.
+        id: 'calloffs-due',
+        label: t('hub.home.task.sup.callOffsDue'),
+        count: callOffs.views.filter((v) => isDueWithoutHeadsUp(v, callOffs.nowIso)).length,
+        severity: 'warning',
+        to: '/supplier/call-offs',
       },
       {
         // REQ-E07-05 — a confirmed order still owes its expected completion date.
@@ -121,7 +141,7 @@ const SupplierHome: React.FC = () => {
         to: '/supplier/invoices',
       },
     ];
-  }, [pos.data, rfqs.data, invoices.data, documents.data, receipts.data, asns.data, supplierId, t]);
+  }, [pos.data, rfqs.data, invoices.data, documents.data, receipts.data, asns.data, callOffs.views, callOffs.nowIso, supplierId, t]);
 
   if (!supplierId) return <NoSupplierIdentity />;
 

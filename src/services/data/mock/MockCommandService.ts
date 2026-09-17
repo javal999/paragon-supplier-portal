@@ -35,6 +35,10 @@ import type {
   SupplierDocumentStatus,
   SupplierApplicationStatus,
   SupplierApplicationDeclaration,
+  CallOff,
+  CallOffConfirmationKind,
+  CallOffStatus,
+  CallOffType,
 } from '../types';
 import type {
   GoodsReceipt,
@@ -44,6 +48,7 @@ import type {
   ReceiptDiscrepancyStatus,
 } from '../../../data/mockGoodsReceipts';
 import { receiptDiscrepancyStore } from './stores/receiptDiscrepancyStore';
+import { callOffStore } from './stores/callOffStore';
 import { supplierDocumentStore } from './stores/supplierDocumentStore';
 import { supplierApplicationStore } from './stores/supplierApplicationStore';
 import { VENDOR_BEARING_REQUEST_TYPE } from '../../transitions/flows/supplierApplication.flow';
@@ -86,6 +91,17 @@ import {
   isCalendarDate,
   isDuplicateInvoiceNumber,
   openQtyForLine,
+  CALL_OFF_TYPES,
+  CONFIRMATION_STATE,
+  checkTolerance,
+  exceedsRemaining,
+  headsUpsFor,
+  isAwaitingApproval,
+  isCallOffDate,
+  isConfirmedAndAccepted,
+  isPositiveQty,
+  proposedDeliveries,
+  umbrellaRefusal,
   type AsnLineInput,
   type CommandTarget,
   type CascadeCommand,
@@ -325,6 +341,9 @@ const advanceShipNoticeTarget: CommandTarget = {
     const po = findPoByNumber(String(payload.poReference));
     const asnNumber = asnStore.nextNumber();
     const entered = payloadAsnLines(payload);
+    // REQ-E09-03 BR-06 — an ASN for a call-off delivery names the call-off; its
+    // proposed lines are that call-off's material only.
+    const callOff = nonBlank(payload.callOffId) ? callOffStore.get(String(payload.callOffId)) : undefined;
     // BR-02 — without entered lines, the draft proposes each PO line's OPEN
     // quantity (committed minus what other live ASNs already carry), never the
     // full ordered quantity: a second, partial ASN must not double-count.
@@ -333,6 +352,7 @@ const advanceShipNoticeTarget: CommandTarget = {
       : entered
         ? mergeAsnLines([], entered, po)
         : po.lineItems
+            .filter((li) => !callOff || li.id === callOff.poLineId)
             .map((li) => ({
               materialCode: li.materialCode,
               description: li.description,
@@ -361,6 +381,7 @@ const advanceShipNoticeTarget: CommandTarget = {
       ...(nonBlank(payload.shipDate) ? { shipDate: nonBlank(payload.shipDate) } : {}),
       ...(nonBlank(payload.packingListFile) ? { packingListFile: nonBlank(payload.packingListFile) } : {}),
       ...(nonBlank(payload.overShipReason) ? { overShipReason: nonBlank(payload.overShipReason) } : {}),
+      ...(callOff ? { callOffId: callOff.id } : {}),
     };
     asnStore.add(asn);
     return { entityId: asnNumber };
@@ -374,6 +395,27 @@ bindPolicyHook(POLICY_HOOKS.ASN_CREATE_PO_APPROVED, ({ payload }) => {
   if (!po) return { ok: false, reason: 'parent PO not found' };
   if (!ASN_PO_STATES.includes(po.status)) {
     return { ok: false, reason: `PO ${po.poNumber} is not approved and open (${po.status})` };
+  }
+  return { ok: true };
+});
+
+// REQ-E09-03 BR-06 / REQ-E07-04 AC-01 — an ASN for a call-off delivery needs a
+// confirmed call-off on the same PO. An ASN that names no call-off is a PO-level
+// ASN and keeps the existing behaviour.
+bindPolicyHook(POLICY_HOOKS.ASN_CALLOFF_CONFIRMED, ({ payload }) => {
+  if (payload.callOffId === undefined || payload.callOffId === null || payload.callOffId === '') return { ok: true };
+  const callOff = callOffStore.get(String(payload.callOffId));
+  if (!callOff) return { ok: false, reason: 'call-off not found' };
+  if (callOff.poNumber !== String(payload.poReference)) {
+    return { ok: false, reason: `${callOff.callOffNumber} is not on ${String(payload.poReference)}` };
+  }
+  if (!isConfirmedAndAccepted(callOff)) {
+    return {
+      ok: false,
+      reason: `CALL_OFF_NOT_CONFIRMED: ${callOff.callOffNumber} is not confirmed (${
+        isAwaitingApproval(callOff) ? 'awaiting approval' : callOff.status
+      })`,
+    };
   }
   return { ok: true };
 });
@@ -805,6 +847,276 @@ bindPolicyHook(POLICY_HOOKS.RECEIPT_DISCREPANCY_RESOLUTION_AUTHORED, ({ payload 
     ? { ok: true }
     : { ok: false, reason: 'resolving a dispute needs a comment for the supplier' },
 );
+
+// — Call-off target (REQ-E09-01, REQ-E09-03, REQ-E09-04) — the hub is the
+//   record. The planner releases, changes and reviews; the supplier confirms and
+//   sends dispatch heads-ups. Whether a confirmation is accepted automatically
+//   or waits for the planner is computed HERE from the one tolerance rule
+//   (`checkTolerance`), never chosen by the caller. Stamps use the simulated
+//   clock the call-off projections read, so a deadline and its escalation are
+//   measured on the same clock. ——————————————————————————————————————————————
+const kindForState = (toState: string): CallOffConfirmationKind | undefined =>
+  (Object.keys(CONFIRMATION_STATE) as CallOffConfirmationKind[]).find((k) => CONFIRMATION_STATE[k] === toState);
+
+const poLineFor = (poId: string, lineId: string) => {
+  const po = purchaseOrderStore.get(poId);
+  return { po, line: po?.lineItems.find((li) => li.id === lineId) };
+};
+
+const callOffTarget: CommandTarget = {
+  readState: (id) => callOffStore.get(id)?.status ?? null,
+  readScopeOwner: (id) => callOffStore.get(id)?.supplierId ?? null,
+  readEntity: (id) => callOffStore.get(id) ?? null,
+  applyTransition: (id, toState, payload) => {
+    const now = sdcClock.now();
+    const current = callOffStore.get(id);
+    if (!current) return;
+    const reason = nonBlank(payload.reason);
+    const withQtyDate = (c: CallOff): CallOff => ({
+      ...c,
+      ...(isPositiveQty(payload.quantity) ? { quantity: payload.quantity } : {}),
+      ...(isCallOffDate(payload.needDate) ? { needDate: payload.needDate } : {}),
+      ...(CALL_OFF_TYPES.includes(payload.type as CallOffType) ? { type: payload.type as CallOffType } : {}),
+    });
+
+    // The verbs are told apart by the state they leave and the state they reach;
+    // each one's policy has already refused every other combination.
+    if (toState === 'Draft') {
+      // Draft edit (state-preserving): new quantity / date / type, with the reason.
+      callOffStore.update(id, (c) => ({ ...withQtyDate(c), notes: [...c.notes, { action: 'edit', text: reason ?? '', at: now }] }));
+      return;
+    }
+    if (toState === 'Awaiting Confirmation') {
+      if (current.status === 'Draft') {
+        // Release a draft.
+        callOffStore.update(id, (c) => ({ ...c, status: 'Awaiting Confirmation', releasedAt: now }));
+      } else if (isAwaitingApproval(current)) {
+        // The planner rejects the confirmation: back to the supplier to confirm again.
+        callOffStore.update(id, (c) => {
+          const { confirmation: _dropped, ...rest } = c;
+          return {
+            ...rest,
+            status: 'Awaiting Confirmation',
+            releasedAt: now,
+            notes: [...c.notes, { action: 'returned', text: nonBlank(payload.reviewComment) ?? '', at: now }],
+          };
+        });
+      } else {
+        // The planner changes a released call-off: the supplier confirms again.
+        callOffStore.update(id, (c) => {
+          const { confirmation: _dropped, rejectionReason: _cleared, ...rest } = withQtyDate(c);
+          return {
+            ...rest,
+            status: 'Awaiting Confirmation',
+            releasedAt: now,
+            notes: [...c.notes, { action: 'change', text: reason ?? '', at: now }],
+          };
+        });
+      }
+      return;
+    }
+    if (toState === 'Dismissed') {
+      callOffStore.update(id, (c) => ({
+        ...c,
+        status: 'Dismissed',
+        notes: [...c.notes, { action: 'dismiss', text: reason ?? '', at: now }],
+      }));
+      return;
+    }
+    if (toState === 'Rejected') {
+      callOffStore.update(id, (c) => ({
+        ...c,
+        status: 'Rejected',
+        rejectionReason: reason,
+        notes: [...c.notes, { action: 'reject', text: reason ?? '', at: now }],
+      }));
+      return;
+    }
+    // State-preserving verbs on a confirmed call-off: approval (a confirmation is
+    // waiting) or a dispatch heads-up (the confirmation is accepted).
+    if (current.status === toState && current.confirmation) {
+      if (isAwaitingApproval(current)) {
+        callOffStore.update(id, (c) => ({
+          ...c,
+          confirmation: { ...c.confirmation!, approval: 'approved', reviewedAt: now },
+        }));
+        return;
+      }
+      callOffStore.update(id, (c) => ({
+        ...c,
+        dispatches: [
+          ...c.dispatches,
+          {
+            id: `dsp-${c.id.slice(3)}-${c.dispatches.length + 1}`,
+            shippedDate: String(payload.shippedDate),
+            expectedArrival: String(payload.expectedArrival),
+            quantity: Number(payload.quantity),
+            ...(nonBlank(payload.asnNumber) ? { asnNumber: nonBlank(payload.asnNumber) } : {}),
+            recordedAt: now,
+          },
+        ],
+      }));
+      return;
+    }
+    // Supplier confirmation: the tolerance rule decides auto or awaiting.
+    const kind = kindForState(toState);
+    if (!kind) return;
+    const proposal = proposedDeliveries(current, kind, payload);
+    if (!('deliveries' in proposal)) return;
+    const within = checkTolerance(current, proposal.deliveries).within;
+    callOffStore.update(id, (c) => ({
+      ...c,
+      status: toState as CallOffStatus,
+      confirmation: {
+        kind,
+        deliveries: proposal.deliveries,
+        ...(nonBlank(payload.comment) ? { comment: nonBlank(payload.comment) } : {}),
+        confirmedAt: now,
+        approval: within ? 'auto' : 'awaiting',
+      },
+    }));
+  },
+  // A call-off belongs to the supplier of its umbrella PO — read from the PO
+  // store, never echoed from the payload.
+  requireCreationOwner: true,
+  creationOwner: (payload) => purchaseOrderStore.get(String(payload.poId))?.supplierId ?? null,
+  create: (payload, toState) => {
+    const { po, line } = poLineFor(String(payload.poId), String(payload.poLineId));
+    const identity = callOffStore.nextIdentity();
+    const row: CallOff = {
+      ...identity,
+      poId: po!.id,
+      poNumber: po!.poNumber,
+      poLineId: line!.id,
+      supplierId: po!.supplierId,
+      supplierName: po!.supplierName,
+      materialCode: line!.materialCode,
+      description: line!.description,
+      uom: line!.uom,
+      unitPrice: line!.unitPrice,
+      currency: po!.currency,
+      quantity: Number(payload.quantity),
+      needDate: String(payload.needDate),
+      type: payload.type as CallOffType,
+      status: toState as CallOffStatus,
+      ...(toState === 'Awaiting Confirmation' ? { releasedAt: sdcClock.now() } : {}),
+      dispatches: [],
+      notes: [],
+    };
+    callOffStore.add(row);
+    return { entityId: row.id };
+  },
+};
+
+// REQ-E09-01 BR-02 — a call-off references an open umbrella PO line.
+bindPolicyHook(POLICY_HOOKS.CALLOFF_LINE_VALID, ({ payload }) => {
+  const { po } = poLineFor(String(payload.poId), String(payload.poLineId));
+  const refusal = umbrellaRefusal(po, payload.poLineId);
+  if (refusal === 'poNotFound') return { ok: false, reason: 'umbrella PO not found' };
+  if (refusal === 'poNotOpen') return { ok: false, reason: `PO ${po!.poNumber} is not approved and open (${po!.status})` };
+  if (refusal === 'lineNotFound') return { ok: false, reason: 'PO line not found' };
+  if (!isPositiveQty(payload.quantity)) return { ok: false, reason: 'quantity must be greater than zero' };
+  if (!isCallOffDate(payload.needDate)) return { ok: false, reason: 'need date must be a date (YYYY-MM-DD)' };
+  if (String(payload.needDate) < sdcClock.now().slice(0, 10)) return { ok: false, reason: 'need date is in the past' };
+  if (!CALL_OFF_TYPES.includes(payload.type as CallOffType)) return { ok: false, reason: 'type must be JIT or forecast-based' };
+  return { ok: true };
+});
+
+// REQ-E09-01 BR-04 / AC-03, CR-04 — never beyond what remains on the umbrella PO.
+bindPolicyHook(POLICY_HOOKS.CALLOFF_WITHIN_REMAINING, ({ entityId, payload }) => {
+  const existing = entityId ? callOffStore.get(entityId) : undefined;
+  const poId = existing?.poId ?? String(payload.poId);
+  const lineId = existing?.poLineId ?? String(payload.poLineId);
+  const { po, line } = poLineFor(poId, lineId);
+  if (!po || !line) return { ok: false, reason: 'umbrella PO line not found' };
+  const quantity = isPositiveQty(payload.quantity) ? payload.quantity : existing?.quantity;
+  if (!isPositiveQty(quantity)) return { ok: false, reason: 'quantity must be greater than zero' };
+  if (exceedsRemaining(quantity, line, callOffStore.all(), existing?.id)) {
+    return {
+      ok: false,
+      reason: `EXCEEDS_REMAINING: ${quantity} ${line.uom} is more than what remains on ${po.poNumber}`,
+    };
+  }
+  return { ok: true };
+});
+
+// Draft edit / change — a reason, and any new quantity or date is valid.
+bindPolicyHook(POLICY_HOOKS.CALLOFF_EDIT_VALID, ({ payload }) => {
+  if (!nonBlank(payload.reason)) return { ok: false, reason: 'a reason is required' };
+  if (payload.quantity !== undefined && !isPositiveQty(payload.quantity)) {
+    return { ok: false, reason: 'quantity must be greater than zero' };
+  }
+  if (payload.needDate !== undefined) {
+    if (!isCallOffDate(payload.needDate)) return { ok: false, reason: 'need date must be a date (YYYY-MM-DD)' };
+    if (String(payload.needDate) < sdcClock.now().slice(0, 10)) return { ok: false, reason: 'need date is in the past' };
+  }
+  if (payload.type !== undefined && !CALL_OFF_TYPES.includes(payload.type as CallOffType)) {
+    return { ok: false, reason: 'type must be JIT or forecast-based' };
+  }
+  return { ok: true };
+});
+
+bindPolicyHook(POLICY_HOOKS.CALLOFF_CHANGEABLE, ({ entityId }) => {
+  const c = callOffStore.get(entityId);
+  if (!c) return { ok: false, reason: 'call-off not found' };
+  if (isAwaitingApproval(c)) {
+    return { ok: false, reason: 'AWAITING_APPROVAL: approve or reject the confirmation first' };
+  }
+  if (headsUpsFor(c, asnStore.all()).length > 0) {
+    return { ok: false, reason: `ALREADY_DISPATCHED: ${c.callOffNumber} has already shipped` };
+  }
+  return { ok: true };
+});
+
+bindPolicyHook(POLICY_HOOKS.CALLOFF_REASON_AUTHORED, ({ payload }) =>
+  nonBlank(payload.reason) ? { ok: true } : { ok: false, reason: 'a reason is required' },
+);
+
+// REQ-E09-03 BR-02 — the answer is well formed for its kind. The kind is the
+// verb's own target state, so a caller cannot label one answer as another.
+bindPolicyHook(POLICY_HOOKS.CALLOFF_CONFIRMATION_VALID, ({ entityId, toState, payload }) => {
+  const c = callOffStore.get(entityId);
+  const kind = kindForState(toState);
+  if (!c || !kind) return { ok: false, reason: 'call-off not found' };
+  const proposal = proposedDeliveries(c, kind, payload);
+  if ('refusal' in proposal) return { ok: false, reason: `confirmation: ${proposal.refusal}` };
+  return { ok: true };
+});
+
+bindPolicyHook(POLICY_HOOKS.CALLOFF_AWAITING_APPROVAL, ({ entityId }) => {
+  const c = callOffStore.get(entityId);
+  return c && isAwaitingApproval(c)
+    ? { ok: true }
+    : { ok: false, reason: 'NOT_AWAITING_APPROVAL: no confirmation is waiting for approval' };
+});
+
+bindPolicyHook(POLICY_HOOKS.CALLOFF_REVIEW_COMMENT_AUTHORED, ({ payload }) =>
+  nonBlank(payload.reviewComment)
+    ? { ok: true }
+    : { ok: false, reason: 'rejecting a confirmation needs a comment for the supplier' },
+);
+
+// REQ-E09-04 — a heads-up only on an accepted confirmation, with real dates.
+bindPolicyHook(POLICY_HOOKS.CALLOFF_DISPATCH_VALID, ({ entityId, payload }) => {
+  const c = callOffStore.get(entityId);
+  if (!c) return { ok: false, reason: 'call-off not found' };
+  if (!isConfirmedAndAccepted(c)) {
+    return { ok: false, reason: `CALL_OFF_NOT_CONFIRMED: ${c.callOffNumber} is awaiting approval` };
+  }
+  if (!isCallOffDate(payload.shippedDate)) return { ok: false, reason: 'shipped date must be a date (YYYY-MM-DD)' };
+  if (!isCallOffDate(payload.expectedArrival)) return { ok: false, reason: 'expected arrival must be a date (YYYY-MM-DD)' };
+  if (String(payload.expectedArrival) < String(payload.shippedDate)) {
+    return { ok: false, reason: 'expected arrival is before the shipped date' };
+  }
+  if (!isPositiveQty(payload.quantity)) return { ok: false, reason: 'quantity must be greater than zero' };
+  if (nonBlank(payload.asnNumber)) {
+    const asn = asnStore.get(String(payload.asnNumber));
+    if (!asn || asn.poReference !== c.poNumber) {
+      return { ok: false, reason: `ASN ${String(payload.asnNumber)} is not on ${c.poNumber}` };
+    }
+  }
+  return { ok: true };
+});
 
 // — RFQ target (Step 4 batch iv) — buyer-side sourcing. `t_rfq_award` is the
 //   CASCADE SOURCE: it flips the RFQ to Awarded and records the award metadata
@@ -2217,6 +2529,8 @@ const TARGETS: Record<string, CommandTarget> = {
   // REQ-E07-06 — the supplier's answer to a receipt discrepancy. Ships in the
   // same commit as its flow, so the entity never joins the target-less set.
   receiptDiscrepancy: receiptDiscrepancyTarget,
+  // REQ-E09-03 — call-offs under an umbrella PO; the hub is their record.
+  callOff: callOffTarget,
 };
 
 // The behavior-wiring census (was the contract package's "6"; 7 with the G1.1
