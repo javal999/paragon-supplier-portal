@@ -95,7 +95,7 @@ The Foundation team details these stories with `prompts/foundation-requirements-
 | US-03 | As a supplier or PTI user, I want to maintain profile, bank data, and vendor documents, synced to SAP MM, so that master data stays correct | REQ-E02 (reserved) | [D] |
 | US-04 | As a buyer, I want to deactivate or blacklist a supplier so that it cannot be selected for new business | REQ-E02 (reserved) | [D] |
 
-Acceptance criteria: TBD by the Foundation team. Open decision: whether these epics are delivered in PROCIO, integrated with it, or built in the hub (DEC-05).
+Acceptance criteria: TBD by the Foundation team. The hub **replaces PROCIO** for registration, onboarding, and supplier master data [owner decision, 2026-09-17], so supplier data held in PROCIO must be migrated.
 
 #### Order Collaboration (E07)
 
@@ -310,7 +310,7 @@ The production tech stack, hosting, database, and authentication are **TBD by IT
 | SAP S/4HANA (MM, PP, SD) | System of record for PR, umbrella PO (value), financial posting, payment, forecast and ROP recommendations, goods receipts, invoices, vendor master | [D p.5]; [V] |
 | Supplier ERP (optional) | Stock and capacity sync by API for connected suppliers, such as DP Group | [D p.11]; [V] MN-INV-07 |
 | PTI TMS | Supplier shipment tracking; phase open | [V] MN-INV-13; D-03 |
-| PROCIO | E-procurement application linked to Foundation epics; relationship TBD | [D p.6]; DEC-05 |
+| PROCIO | Current e-procurement application for supplier registration and master data. **Replaced by the hub**; source for supplier data migration only | [D p.6]; owner decision 2026-09-17 |
 | Notification service | In-app and email notifications | [P] |
 | Identity and access | PTI employees and external supplier users | TBD by IT |
 
@@ -334,7 +334,8 @@ The production tech stack, hosting, database, and authentication are **TBD by IT
 | I7 | ASN as inbound delivery | Hub | SAP | TBD | [D] E07.05; [P] |
 | I8 | Goods receipt | SAP | Hub | TBD | [D] E07.03; [P] |
 | I9 | Invoice and invoice status | Hub to SAP; SAP to Hub | Both | TBD | [D] E07.04; [P] |
-| I10 | Vendor master | Hub or PROCIO | SAP MM | TBD | [D] E02.04; DEC-05 |
+| I10 | Vendor master | Hub | SAP MM | TBD | [D] E02.04; PROCIO replaced |
+| I13 | Supplier master data migration (one-time) | PROCIO | Hub | Migration before go-live | Owner decision 2026-09-17; data remediation per charter assumption [C] |
 | I11 | Shipment tracking | TMS | Supplier (access), Hub | TBD | [V] MN-INV-13; D-03 |
 | I12 | Notifications | Hub | Email | TBD | [P] |
 
@@ -370,7 +371,7 @@ flowchart TD
     INT <-->|"stock, capacity sync<br/>(PTI-triggered)"| SERP["Supplier ERP (optional)"]
     SUP -->|"spreadsheet template upload"| WEB
     SUP -.->|"shipment tracking access<br/>(phase open)"| TMS["PTI TMS"]
-    INT -.->|"vendor master<br/>(relationship TBD)"| PROCIO["PROCIO e-procurement"]
+    PROCIO["PROCIO e-procurement<br/>(being replaced)"] -.->|"one-time supplier<br/>data migration"| DB
 ```
 
 ### 5.2 Request Lifecycle Diagram: umbrella PO to delivery
@@ -697,14 +698,14 @@ Source: *Risk Assessment Supply Chain Collaboration Hub* workbook [R], all rows 
 
 | # | Register rows | Risk | Phase | Owner | Mitigation plan [R] | Impact [P] | Linked requirements | Deck risk |
 |---|---|---|---|---|---|---|---|---|
-| R1 | 1 | Supplier integration capability or readiness is insufficient, causing manual transactions, delayed PO acknowledgement, and reconciliation issues | UAT & Go-Live | TPO, Material Planner | Sign a clear data-sharing agreement (NDA) | PO response SLA and stock data freshness missed | REQ-E07-02, REQ-E08-02, REQ-E07-08 | RSK-02 |
+| R1 | 1 | Supplier integration capability or readiness is insufficient, causing manual transactions, delayed PO acknowledgement, and reconciliation issues | UAT & Go-Live | TPO, Material Planner | Sign a clear data-sharing agreement (NDA). **Add:** offer the tiered integration channels from R2 to suppliers not ready to integrate [owner-approved addition, 2026-09-17] | PO response SLA and stock data freshness missed | REQ-E07-02, REQ-E08-02, REQ-E07-08 | RSK-02 |
 | R2 | 2 | Supplier is reluctant to open their API | UAT & Go-Live | TPO, Material Planner | Offer tiered integration options: SFTP upload or manual portal entry | Stock sync limited to non-API channels | REQ-E08-02 | RSK-02 |
 | R3 | 3, 4 | Resistance to process change from suppliers and internal users | Hypercare | TPO, Material Planner, Procurement | (3) Identify and empower "champions" on both sides to model the new behaviour. (4) Run change-impact workshops with supplier representatives and internal teams before go-live | Adoption target S3 missed | All; S2, S3 | RSK-03 |
 | R4 | 5 | Low digital literacy among suppliers slows portal adoption | Hypercare | TPO, Material Planner, Procurement | Dedicated helpdesk or hotline for the first 60 days after launch | Onboarding target S2 missed | REQ-E08-02 (manual channel), Foundation | RSK-04 |
 | R5 | 6 | Poor data quality | Hypercare | Material Planner, Procurement, MDM | Data review and cleansing before go-live | Wrong alerts, stock figures, and metrics | REQ-E08-01, REQ-E08-05, REQ-E10-01, Foundation | RSK-05 |
 | R6 | 7, 8 | Deployment delayed by missed scope and resource availability | Development | TPO, Material Planner, Procurement | (7) Resource plan for key roles, tracking scope and resource risk. (8) Lock the MVP scope, with a formal change-control process for anything added later | Pilot go-live (Apr 2027) slips | Non-goals, section 2.3 | RSK-06 |
 | R7 | 9, 10 | Integration errors between PTI and supplier ERPs | UAT & Go-Live | TPO, ERP Team | (9) API compatibility assessment with PTI's and the supplier's ERP teams. (10) Structured integration testing (integration test, internal test, UAT) with the supplier before go-live | Wrong stock and transaction data | REQ-E07-08, REQ-E08-02; tests T8 | RSK-07 |
-| R8 | 11, 12 | Supplier updates incomplete or late | Hypercare | Material Planner, Procurement | (11) Automated reminder workflows in the portal for overdue updates. (12) Define data-update SLAs with suppliers | Stale stock, commitments, and confirmations | REQ-E08-01 (stale flag), REQ-E06-03 (reminders), REQ-E09-03 (reminders) | Not in deck |
+| R8 | 11, 12 | Supplier updates incomplete or late | Hypercare | Material Planner, Procurement | (11) Automated reminder workflows in the portal for overdue updates. (12) Define data-update SLAs with suppliers. SLAs vary by material and supplier, because each moves differently [owner, 2026-09-17] | Stale stock, commitments, and confirmations | REQ-E08-01 (stale flag), REQ-E06-03 (reminders), REQ-E09-03 (reminders) | Not in deck |
 
 Row 8's mitigation text overlaps another cell in the workbook, so its wording ("formal change-control process") is a best reading.
 
@@ -714,21 +715,21 @@ Row 8's mitigation text overlaps another cell in the workbook, so its wording ("
 
 | # | Risk | Why it matters | Proposed mitigation | Source |
 |---|---|---|---|---|
-| RA1 | PTI's own SAP API endpoints are not ready for master data and transaction sync | The register covers supplier-side readiness (R1) but not PTI-side readiness, which the deck lists first | Confirm the interface list and owners in Discovery; build against mocks | [D] RSK-01 |
+| RA1 | PTI's own SAP API readiness | **Treated as an assumption, not a risk:** SAP APIs are assumed ready. Readiness is still under discussion, so revisit if that discussion finds gaps | Track the discussion outcome | [D] RSK-01; owner 2026-09-17 |
 | RA2 | Call-offs are managed manually outside SAP today, so the hub becomes their only record | Migration of manual records and reconciliation with SAP receipts | Decide PQ-11; link receipts to call-offs through the ASN | [V] PQ-01 |
 | RA3 | Umbrella PO holds value only | Quantity-based checks may be impossible | Confirm PQ-12 | [V] PQ-01 |
-| RA4 | Foundation relationship with PROCIO undecided | Onboarding and master data design blocked | Decide DEC-05 in Discovery | [D] |
-| RA5 | Replenishment method and governance not yet established | Call-off and forecast rules unclear | Consultant engagement, IDR 1 billion | [C] |
+| RA4 | PROCIO is replaced by the hub, so supplier registration and master data must be migrated from PROCIO | Incomplete or dirty migrated data blocks onboarding and SAP MM sync | Migration plan with data review and cleansing before go-live (links to R5) | Owner decision 2026-09-17 |
+| RA5 | Replenishment method and governance not yet established; **decision deferred** | Call-off recommendation and event-based analysis (REQ-E09-01, REQ-E09-02) cannot be finalised until it is decided | Consultant engagement, IDR 1 billion [C]; decide before call-off build | [C]; owner 2026-09-17 |
 
 ### 9.2b Register points to confirm
 
-| # | Point |
-|---|---|
-| RQ1 | R2 offers **SFTP upload**. The validated requirement (REQ-E08-02) has spreadsheet template upload through the portal, API sync, and manual entry. Is SFTP a fourth channel, or is it the same as the spreadsheet upload? |
-| RQ2 | R1's mitigation (a data-sharing agreement) addresses willingness to share, not integration capability. Should R1 also carry a capability mitigation, such as the tiered channels in R2? |
-| RQ3 | R8's data-update SLAs need values: how often suppliers must update stock, capacity, and commitments. These are the same open parameters as the stale-data period (REQ-E08-01) and PQ-08 |
-| RQ4 | The Impacts column is empty for all 12 rows. Should the proposed impacts above be copied into the register? |
-| RQ5 | The deck's first risk (PTI ERP API readiness) is not in the register. Add it as RA1? |
+| # | Point | Answer (owner, 2026-09-17) |
+|---|---|---|
+| RQ1 | R2 offers **SFTP upload**: a supplier's system drops a data file on a secure server on a schedule, and the hub collects it automatically, with no person logging in. The validated requirement (REQ-E08-02) has spreadsheet upload by a person in the portal, API sync, and manual entry. Is SFTP needed as a 4th channel? | Open |
+| RQ2 | Should R1 also carry a capability mitigation, such as the tiered channels in R2? | Yes. Added to R1 |
+| RQ3 | Data-update SLA values | Vary by material and supplier. Configurable per supplier and material (REQ-E08-01, REQ-E08-02) |
+| RQ4 | Copy proposed impacts into the register? | No |
+| RQ5 | Add PTI SAP readiness to the register? | No. SAP APIs are assumed ready while discussions continue (RA1) |
 
 ### 9.3 Open Decisions Blocking the MVP
 
@@ -736,7 +737,8 @@ Row 8's mitigation text overlaps another cell in the workbook, so its wording ("
 |---|---|---|
 | PQ-11 | Hub as record for call-offs; migration of manual records; any sync back | Material Planner, IT |
 | PQ-12 | Umbrella PO: value only, or quantities per line | Material Planner, ERP Functional |
-| DEC-05 | Foundation in PROCIO, integrated, or built | Procurement, IT |
+| MIG | PROCIO to hub supplier data migration scope and approach | Procurement, MDM, IT |
+| REPL | Replenishment method and governance (deferred; consultant) | Material Planner |
 | DEC-03 | Final MVP list (RFx and performance dashboard in MVP; D-07 catalog for RFI; D-03 TMS phase) | Project sponsors |
 | PQ-07 | SAP source of forecast and demand sensing | Material Planner, ERP Functional |
 | PQ-08, PQ-02 | Tolerances, commitment deadline, forecast horizon and zones | Material Planner |

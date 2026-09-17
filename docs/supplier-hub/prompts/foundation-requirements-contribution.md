@@ -34,8 +34,8 @@ PT Paragon Technology and Innovation (PTI) is building a Supplier Hub, a portal 
 | E02.05 | | Soft file Vendor Document |
 
 **Facts from the deck that bear on Foundation:**
-- On the scope slide (p.6), both epics carry a badge "PROCIO E-Procurement Application". The deck does not say whether they are delivered in PROCIO, integrated with PROCIO, or rebuilt in the hub. This is open decision DEC-05.
-- Procurement is business owner for Supplier Onboarding (p.12). The deck names no business owner for Supplier Master Data Management (open decision DEC-09).
+- On the scope slide (p.6), both epics carry a badge "PROCIO E-Procurement Application". **Decided 2026-09-17: the Supplier Hub replaces PROCIO** for registration, onboarding, and supplier master data. Supplier data currently in PROCIO must be migrated, and the project charter assumes data is assessed and remediated before migration.
+- Procurement is business owner for Supplier Registration & Onboarding and for Supplier Master Data Management (project charter).
 - The Master Data team validates supplier-submitted data against master data governance and supports onboarding design (p.12).
 - Legal validates supplier documents for legal and regulatory compliance and supports onboarding design (p.12). The Legal key user is still TBC (p.13).
 - Related KPI: KPI-02, 80% of eligible suppliers boarded on time (p.15).
@@ -75,7 +75,7 @@ Plain, direct English. Short bullets and numbered steps. Tables only where the t
   - `[Deck p.N]`: a fact from the deck context above.
   - `[Proposed]`: your own design choice.
 - Set requirement status to **Validated** only when the notes say business users confirmed it. Otherwise use **Proposed**.
-- Record DEC-05 (PROCIO) as an open item unless the notes answer it. If they answer it, state the answer in the affected requirements with its `[FN-nn]` tag.
+- Treat PROCIO replacement as decided. Include at least 1 requirement for migrating supplier data from PROCIO, and record any open migration questions in section C.
 
 **IDs and structure**
 - Requirement IDs are `REQ-E01-nn` and `REQ-E02-nn`, numbered from 01 per epic.
@@ -126,7 +126,7 @@ The file contains exactly these 5 sections, in this order, with these headings.
 
 **Section B.** Heading `### Index rows for section 4`, then a table with columns `ID | Name | Epic | Phase | Status`, 1 row per requirement.
 
-**Section C.** Heading `### Open items for section 7`, then a table with columns `ID | Item | Requirements affected`. Number new items `FQ-01` onward. Include DEC-05 and DEC-09 if still open.
+**Section C.** Heading `### Open items for section 7`, then a table with columns `ID | Item | Requirements affected`. Number new items `FQ-01` onward. Include open questions about PROCIO data migration.
 
 **Section D.** Heading `### Glossary rows for section 3.5`, then a table with columns `Term | Meaning | Source`, for terms the requirements use that a reader outside Procurement would not know. After it, a line `Not covered:` listing any sub-epic from E01.01 to E02.05 that the notes give no basis to detail, or "None".
 
@@ -154,6 +154,6 @@ Read the notes in `<foundation_notes>`, build the source notes register first, t
 - **Fixed headings and IDs make the merge a paste.** Section A replaces section 5.1 of `SUPPLIER-HUB-REQUIREMENTS.md`. Sections B, C, and D go into sections 4, 7, and 3.5. Section E goes into the meeting notes as the Foundation equivalent of the `MN-` register.
 - **`FN-nn` tags mirror the `MN-nn` tags** used for the validated epics, so reviewers can trace every rule to a note the same way across the document.
 - **Status is Validated only when the notes say business users confirmed it.** This keeps a friend's unreviewed assumptions from entering the document looking like agreed requirements.
-- **PROCIO (DEC-05) is called out explicitly,** because it decides whether Foundation is built, integrated, or bought, and it affects every requirement in the section.
+- **PROCIO replacement is stated as decided,** so the contribution designs Foundation as built in the hub and covers data migration from PROCIO.
 - **No example requirement is included.** An example would anchor the model to invented Foundation content. The template carries the format instead.
 - **Left out:** no persona role for the model, no step-by-step reasoning instructions, and no request to research market practice. Your friends' notes are the source. If they want market-based proposals too, add that as a separate pass.

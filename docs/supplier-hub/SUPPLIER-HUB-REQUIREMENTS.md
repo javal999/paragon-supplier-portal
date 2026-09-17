@@ -171,7 +171,7 @@ The supplier response deadline is 1 working day [MN-ORD-04]. Which calendar defi
 
 ### 5.1 Foundation (reserved)
 
-Reserved for the Foundation team: E01 Supplier Registration & Onboarding and E02 Supplier Master Data Management. The deck scope for these epics is in `SUPPLIER-HUB-BASELINE.md`, section 3.1. The open PROCIO question (DEC-05) must be answered in that contribution.
+Reserved for the Foundation team: E01 Supplier Registration & Onboarding and E02 Supplier Master Data Management. The deck scope for these epics is in `SUPPLIER-HUB-BASELINE.md`, section 3.1. The hub replaces PROCIO for these epics (owner decision, 2026-09-17), so the contribution must cover migration of supplier data from PROCIO.
 
 ### 5.2 Sourcing & Contracting: RFx Management (E03)
 
@@ -680,7 +680,7 @@ Stub. Deck scope: E03.01, E03.04, E03.05 [Deck p.7]. Not discussed with business
 - BR-07. Raw material and packaging are shown separately, because packaging is a finished good at the supplier [MN-INV-06].
 
 **Edge cases.**
-- Supplier stock has not been updated recently: show the last update time and flag it as stale after a configurable period [Proposed].
+- Supplier stock has not been updated within its data-update SLA: show the last update time and flag it as stale. The SLA varies by material and supplier, because each moves differently, so it is configured per supplier and material [owner, 2026-09-17; configuration Proposed].
 - Supplier has no ROP: show "Not provided" [Proposed].
 
 **Acceptance criteria.**
@@ -694,7 +694,7 @@ Stub. Deck scope: E03.01, E03.04, E03.05 [Deck p.7]. Not discussed with business
 
 **Metrics.** Leading: share of materials with supplier stock updated within the agreed period. Lagging: KPI-04.
 
-**Open items.** Stale-data period [Proposed].
+**Open items.** Data-update SLA values per supplier and material, to be agreed with suppliers (risk register rows 11 and 12).
 
 #### REQ-E08-02  Supplier stock submission
 
@@ -734,7 +734,7 @@ Stub. Deck scope: E03.01, E03.04, E03.05 [Deck p.7]. Not discussed with business
 
 **Metrics.** Leading: share of suppliers submitting on schedule, by channel.
 
-**Open items.** Template fields and submission frequency [Proposed].
+**Open items.** Template fields [Proposed]. Submission frequency follows the per-supplier, per-material data-update SLA (see REQ-E08-01). Whether an SFTP file drop is needed as a 4th channel (PRD RQ1).
 
 #### REQ-E08-03  Supplier access to PTI stock
 
@@ -1253,7 +1253,6 @@ All requirements in this section are **Proposed**, written from market practice 
 | A-02 | Full parameter list for supplier filtering | REQ-E03-01 |
 | D-03 | Phase for supplier TMS access | REQ-E13-01 |
 | D-07 | Catalog needed by RFI in MVP while Catalog Management is Phase 2 | REQ-E03-02 |
-| DEC-05 | Relationship with PROCIO for Foundation | Section 5.1 |
 | DEC-09 | Business owner for performance dashboard | REQ-E10-01 |
 | DEC-06 | Is Web Tukar Faktur the invoice collaboration capability or a separate app | REQ-E07-07 |
 | PQ-11 | Call-offs are managed manually outside SAP today. Confirm the hub becomes the record for call-offs, whether call-offs ever need to go back to SAP or another system, and whether today's manual records (for example spreadsheets) are migrated | REQ-E07-08, REQ-E09-01, REQ-E09-03 |
@@ -1308,6 +1307,9 @@ Research date: 2026-09-17. Vendor pages were read directly unless marked "snippe
 
 | ID | Question | Answer (owner, 2026-09-17) |
 |---|---|---|
+| DEC-05 | Relationship with PROCIO for Foundation | PROCIO is replaced by the hub. Supplier data is migrated |
+| REPL | Replenishment method | Decided later. REQ-E09-01 and REQ-E09-02 depend on it |
+| SLA | Data-update SLA | Varies by material and supplier |
 | PQ-01 | SAP representation of umbrella PO and call-off | The umbrella PO is the overall ordered value. Call-offs are managed manually outside SAP |
 | PQ-10 | Dock slot booking | Not needed now. PTI only needs a heads-up that the supplier has shipped |
 
