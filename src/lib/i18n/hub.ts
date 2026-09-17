@@ -29,6 +29,7 @@ export const hubEn: Record<string, string> = {
   'hub.nav.pti.purchaseOrders': 'Purchase orders',
   'hub.nav.pti.shipments': 'Shipments & ASN',
   'hub.nav.pti.goodsReceipts': 'Goods receipts',
+  'hub.nav.pti.forecasts': 'Forecasts',
   'hub.nav.pti.commitments': 'Commitments & gaps',
   'hub.nav.pti.inventory': 'Inventory',
   'hub.nav.pti.capacity': 'Capacity',
@@ -100,6 +101,8 @@ export const hubEn: Record<string, string> = {
   'hub.home.task.callOffsDrift': 'Delivery drift: suppliers late or missing 2 or more call-offs of a material',
   'hub.home.task.inventoryHighAlerts': 'High-risk inventory and capacity alerts',
   'hub.home.task.capacityGaps': 'Suppliers with capacity below demand',
+  'hub.home.task.missingCommitments': 'Missing forecast commitments',
+  'hub.home.task.commitmentExceptions': 'Forecast commitments outside tolerance to review',
 
   'hub.home.task.sup.confirmOrders': 'Purchase orders to respond to',
   'hub.home.task.sup.shippingNotice': 'Confirmed orders without an expected completion date',
@@ -113,6 +116,10 @@ export const hubEn: Record<string, string> = {
   'hub.home.task.sup.callOffsDue': 'Call-offs due within 7 days with no ASN or dispatch notice',
   'hub.home.task.sup.staleStock': 'Stock figures to update',
   'hub.home.task.sup.capacityDue': 'Capacity confirmations due',
+  'hub.home.task.sup.newForecast': 'New forecast version to review',
+  'hub.home.task.sup.commitmentsDueSoon': 'Forecast commitments due soon',
+  'hub.home.task.sup.commitmentsOverdue': 'Forecast commitments overdue',
+  'hub.home.task.sup.revisionRequested': 'Forecast commitments PTI asked you to revise',
 
   // Sample data marker (SC-04)
   'hub.sample.label': 'Sample data',
@@ -141,6 +148,7 @@ export const hubId: Record<string, string> = {
   'hub.nav.pti.purchaseOrders': 'Pesanan pembelian',
   'hub.nav.pti.shipments': 'Pengiriman & ASN',
   'hub.nav.pti.goodsReceipts': 'Penerimaan barang',
+  'hub.nav.pti.forecasts': 'Prakiraan',
   'hub.nav.pti.commitments': 'Komitmen & selisih',
   'hub.nav.pti.inventory': 'Stok',
   'hub.nav.pti.capacity': 'Kapasitas',
@@ -208,6 +216,8 @@ export const hubId: Record<string, string> = {
   'hub.home.task.callOffsDrift': 'Pergeseran pengiriman: pemasok terlambat atau tidak mengirim 2 call-off atau lebih untuk satu material',
   'hub.home.task.inventoryHighAlerts': 'Peringatan stok dan kapasitas berisiko tinggi',
   'hub.home.task.capacityGaps': 'Pemasok dengan kapasitas di bawah kebutuhan',
+  'hub.home.task.missingCommitments': 'Komitmen prakiraan yang belum masuk',
+  'hub.home.task.commitmentExceptions': 'Komitmen prakiraan di luar toleransi untuk ditinjau',
 
   'hub.home.task.sup.confirmOrders': 'Pesanan pembelian yang perlu ditanggapi',
   'hub.home.task.sup.shippingNotice': 'Pesanan terkonfirmasi tanpa perkiraan tanggal selesai',
@@ -221,6 +231,10 @@ export const hubId: Record<string, string> = {
   'hub.home.task.sup.callOffsDue': 'Call-off yang jatuh tempo dalam 7 hari tanpa ASN atau pemberitahuan pengiriman',
   'hub.home.task.sup.staleStock': 'Angka stok yang perlu diperbarui',
   'hub.home.task.sup.capacityDue': 'Konfirmasi kapasitas yang jatuh tempo',
+  'hub.home.task.sup.newForecast': 'Versi prakiraan baru untuk ditinjau',
+  'hub.home.task.sup.commitmentsDueSoon': 'Komitmen prakiraan yang segera jatuh tempo',
+  'hub.home.task.sup.commitmentsOverdue': 'Komitmen prakiraan yang lewat tenggat',
+  'hub.home.task.sup.revisionRequested': 'Komitmen prakiraan yang diminta PTI untuk direvisi',
 
   'hub.sample.label': 'Data contoh',
   'hub.sample.hint': 'Angka hanya contoh. Tindakan berjalan, tetapi perubahan hilang saat halaman dimuat ulang.',

@@ -60,6 +60,9 @@ import SupplierRegistrationV2 from '../pages-v2/SupplierRegistration';
 import SupplierDeliveryAgreements from '../pages-v2/SupplierDeliveryAgreements';
 import SupplierCallOffs from '../pages-v2/SupplierCallOffs';
 import SupplierCapacity from '../pages-v2/SupplierCapacity';
+import BuyerForecasts from '../pages-v2/BuyerForecasts';
+import BuyerCommitments from '../pages-v2/BuyerCommitments';
+import SupplierForecastCommitments from '../pages-v2/SupplierForecastCommitments';
 import SupplierPerformance from '../pages-v2/SupplierPerformance';
 import NotFound from '../pages-v2/NotFound';
 
@@ -106,8 +109,12 @@ const AppRouter: React.FC = () => {
               </Suspense>
             }
           />
+          {/* REQ-E06-01 / REQ-E06-03 — Forecast: versions, then commitments & gaps.
+              The earlier response review stays reachable under the same menu item. */}
+          <Route path="/buyer/forecasts" element={<BuyerForecasts />} />
+          <Route path="/buyer/collaboration" element={<BuyerCommitments />} />
           <Route
-            path="/buyer/collaboration"
+            path="/buyer/collaboration/responses"
             element={
               <Suspense fallback={<LoadingState />}>
                 <BuyerCollaboration />
@@ -156,8 +163,11 @@ const AppRouter: React.FC = () => {
           <Route path="/supplier/order-summary" element={<SupplierOrderSummary />} />
           <Route path="/supplier/orders" element={<SupplierOrders />} />
           <Route path="/supplier/rfqs" element={<SupplierRFQsV2 />} />
+          {/* REQ-E06-01 / REQ-E06-02 — the supplier's forecast versions and commitments.
+              The earlier stock and shipment responses stay reachable beneath it. */}
+          <Route path="/supplier/forecasts" element={<SupplierForecastCommitments />} />
           <Route
-            path="/supplier/forecasts"
+            path="/supplier/forecasts/responses"
             element={
               <Suspense fallback={<LoadingState />}>
                 <SupplierForecasts />

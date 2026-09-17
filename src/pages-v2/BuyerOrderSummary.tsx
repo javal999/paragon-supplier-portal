@@ -1,25 +1,22 @@
 import React, { useMemo } from 'react';
-import { useConsolidationRows } from '../services/query/sdcBuyerHooks';
+import { useForecastCommitments } from '../services/query/hooks';
 import type { ForesightAnswer } from '../services/data/poResponseProjection';
+import { foresightAnswerOf } from '../services/transitions/forecastRules';
 import OrderSummaryView from './orders/OrderSummaryView';
 
 // PTI Order summary (REQ-E07-03). Foresight answers come from the forecast
-// consolidation: each published line and how its supplier answered it.
+// commitments (REQ-E06-02): each current forecast line and where its
+// commitment stands. PTI never reads a supplier's draft.
 const BuyerOrderSummary: React.FC = () => {
-  const consolidation = useConsolidationRows();
+  const lines = useForecastCommitments();
   const answers = useMemo<ForesightAnswer[]>(
     () =>
-      (consolidation.data ?? []).map((row) => ({
-        supplierId: row.line.supplierId,
-        materialCode: row.line.materialCode,
-        answer:
-          row.state.kind === 'short'
-            ? 'gap'
-            : row.state.kind === 'confirmed-full' || row.state.kind === 'acknowledged'
-              ? 'confirmed'
-              : 'awaiting',
+      (lines.data?.items ?? []).map((l) => ({
+        supplierId: l.supplierId,
+        materialCode: l.materialCode,
+        answer: foresightAnswerOf(l),
       })),
-    [consolidation.data],
+    [lines.data],
   );
   return <OrderSummaryView persona="buyer" foresightAnswers={answers} />;
 };

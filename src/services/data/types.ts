@@ -31,6 +31,8 @@ import type { EnforcementSetting, ActorAttribution } from '../../lib/enforcement
 // type-only cycle TS resolves at erase-time — no runtime import is emitted).
 import type {
   RequirementResponse,
+  DisputeEntry,
+  ForecastStream,
   InventoryDeclaration,
   StockChannel,
   MaterialType,
@@ -572,13 +574,128 @@ export interface CapacityPlan {
   readonly latest: CapacitySubmission | null;
 }
 
+// ─── Forecast collaboration (REQ-E06-01 to REQ-E06-03) ──────────────────────
+//
+// A forecast VERSION is a ForecastPublication of one stream (packaging weekly,
+// raw material monthly). A commitment is a RequirementResponse against a line.
+// Every row below is PROJECTED AT READ; nothing clock-derived is a field — a
+// line carries its deadline, and whether it is due soon or overdue is computed
+// by `transitions/forecastRules.deadlineState` against the page's clock.
+
+/** REQ-E06-01 BR-04 — Firm, Trade-off, Forecast (the commitment classes firm / semi-firm / visibility-only). */
+export type ForecastZone = 'firm' | 'tradeOff' | 'forecast';
+
+/**
+ * Where a line's commitment stands (REQ-E06-02, REQ-E06-03):
+ *  · awaiting — nothing submitted for the current quantity (a changed period
+ *    returns here on re-publication);
+ *  · acknowledged — a Forecast-zone period the supplier acknowledged;
+ *  · accepted — committed within tolerance (CR-21), no planner action;
+ *  · exception — committed outside tolerance, for the planner;
+ *  · acceptedByPlanner — the planner accepted the exception;
+ *  · revisionRequested — the planner asked the supplier to revise.
+ */
+export type CommitmentState =
+  | 'awaiting'
+  | 'acknowledged'
+  | 'accepted'
+  | 'exception'
+  | 'acceptedByPlanner'
+  | 'revisionRequested';
+
+/** One version of a forecast stream, with who has opened it (REQ-E06-01). */
+export interface ForecastVersionView {
+  readonly publicationId: string;
+  readonly planVersion: string;
+  readonly stream: ForecastStream;
+  readonly version: number;
+  readonly publishedAt: string;
+  readonly emergency: boolean;
+  /** The planner's note when the version moved demand between suppliers. */
+  readonly changeNote: string | null;
+  readonly isCurrent: boolean;
+  /** Suppliers with lines in this version; a supplier reads only itself. */
+  readonly suppliers: readonly {
+    readonly supplierId: string;
+    readonly supplierName: string;
+    /** When the supplier first opened this version; null when not yet. */
+    readonly viewedAt: string | null;
+    /** BR-06 — this supplier's periods whose quantity moved against the previous version. */
+    readonly changedPeriods: number;
+  }[];
+}
+
+/** One material × period of a supplier's current forecast, with its commitment. */
+export interface ForecastCommitmentLine {
+  /** publicationId | supplier | material | period. */
+  readonly key: string;
+  readonly stream: ForecastStream;
+  readonly publicationId: string;
+  readonly planVersion: string;
+  readonly version: number;
+  readonly supplierId: string;
+  readonly supplierName: string;
+  readonly materialCode: string;
+  readonly materialLabel: string;
+  readonly materialGroup: string;
+  readonly uom: string;
+  /** A week (its Monday, `YYYY-MM-DD`) or a month (`YYYY-MM`). */
+  readonly periodBucket: string;
+  readonly periodStart: string;
+  readonly periodEnd: string;
+  readonly zone: ForecastZone;
+  readonly forecastQty: number;
+  /** The quantity in the previous version; null when the period was not in it. */
+  readonly previousQty: number | null;
+  /** When the current version was published (the deadline counts from it). */
+  readonly publishedAt: string;
+  /** REQ-E06-02 BR-07 — Firm: 1 working day; Trade-off and Forecast: 7 days. */
+  readonly dueAt: string;
+  /** REQ-E06-03 BR-06 — the first reminder, at half the deadline. */
+  readonly reminderAt: string;
+  readonly state: CommitmentState;
+  /** The submitted commitment that stands for the current quantity. */
+  readonly response: RequirementResponse | null;
+  /** True when that commitment answered an earlier version with the same quantity. */
+  readonly carriedForward: boolean;
+  /** The supplier's own unsubmitted draft (never in PTI's read — BR-10). */
+  readonly draft: RequirementResponse | null;
+  readonly committedQty: number | null;
+  /** REQ-E06-03 BR-05 — every revision request and note on this period, oldest first. */
+  readonly log: readonly DisputeEntry[];
+  /** REQ-E06-03 BR-05 — the other suppliers qualified for the material (where demand can move). */
+  readonly otherQualifiedSuppliers: readonly { readonly supplierId: string; readonly supplierName: string }[];
+}
+
+/** REQ-E06-03 BR-07 — supplier coverage per material, with distributor lead times (an estimate). */
+export interface ForecastCoverageRow {
+  readonly stream: ForecastStream;
+  readonly supplierId: string;
+  readonly supplierName: string;
+  readonly materialCode: string;
+  readonly materialLabel: string;
+  readonly uom: string;
+  /** Σ Firm demand in the current version (CR-03 denominator). */
+  readonly firmDemandQty: number;
+  /** CR-03 ratio; null when the supplier has no stock figures. */
+  readonly ratio: number | null;
+  readonly status: 'covered' | 'atRisk' | 'uncovered' | 'noFigures';
+  readonly supplierType: 'manufacturer' | 'distributor';
+  /** Shortest principal-to-distributor lead time, for a distributor. */
+  readonly principalLeadTimeDays: number | null;
+  /** A distributor shortfall no principal order placed now can bridge in time. */
+  readonly unbridgeable: boolean;
+}
+
 export type InventoryAlertRule =
   | 'ptiBelowRop'
   | 'supplierBelowRop'
   | 'projectedStockOut'
   | 'capacityBelowDemand'
   | 'staleData'
-  | 'coverage';
+  | 'coverage'
+  /** REQ-E08-05 BR-01 — committed quantity below forecast beyond tolerance (REQ-E06-03). */
+  | 'commitmentBelowForecast';
 
 export type RiskClass = 'high' | 'medium' | 'low';
 
@@ -2035,6 +2152,14 @@ export interface IProcurementService {
   getCapacityPlans(scope: QueryScope): Promise<Page<CapacityPlan>>;
   /** Inventory and capacity alerts. A supplier sees its own supplier-side rules. */
   getInventoryAlerts(scope: QueryScope): Promise<Page<InventoryAlert>>;
+
+  // — Forecast collaboration (REQ-E06-01 to REQ-E06-03) —
+  /** Published forecast versions with who viewed them. A supplier sees versions carrying its lines. */
+  getForecastVersions(scope: QueryScope): Promise<Page<ForecastVersionView>>;
+  /** The current version's lines with their commitments. A supplier sees its own, with its drafts. */
+  getForecastCommitments(scope: QueryScope): Promise<Page<ForecastCommitmentLine>>;
+  /** Supplier coverage per material against Firm demand (CR-03), PTI only. */
+  getForecastCoverage(scope: QueryScope): Promise<Page<ForecastCoverageRow>>;
 
   // — Sourcing —
   getRFQs(scope: QueryScope, filter?: RFQFilter): Promise<Page<RFQ>>;

@@ -66,6 +66,9 @@ import CommHubInbound from '../pages-v2/CommHubInbound';
 import SupplierOrders from '../pages-v2/SupplierOrders';
 import SupplierRFQsV2 from '../pages-v2/SupplierRFQs';
 import SupplierForecasts from '../pages-v2/SupplierForecasts';
+import SupplierForecastCommitments from '../pages-v2/SupplierForecastCommitments';
+import BuyerForecasts from '../pages-v2/BuyerForecasts';
+import BuyerCommitments from '../pages-v2/BuyerCommitments';
 import SupplierShipments from '../pages-v2/SupplierShipments';
 import SupplierGoodsReceipts from '../pages-v2/SupplierGoodsReceipts';
 import SupplierInvoicesV2 from '../pages-v2/SupplierInvoices';
@@ -109,7 +112,9 @@ const ROUTES: RouteCase[] = [
   { name: 'buyer/orders', pattern: '/buyer/orders', at: '/buyer/orders', element: <BuyerOrders />, identity: BUYER },
   { name: 'buyer/sourcing', pattern: '/buyer/sourcing', at: '/buyer/sourcing', element: <BuyerSourcing />, identity: BUYER },
   { name: 'buyer/plan-grid', pattern: '/buyer/plan-grid', at: '/buyer/plan-grid', element: <PlanGrid />, identity: BUYER },
-  { name: 'buyer/collaboration', pattern: '/buyer/collaboration', at: '/buyer/collaboration', element: <BuyerCollaboration />, identity: BUYER },
+  { name: 'buyer/forecasts', pattern: '/buyer/forecasts', at: '/buyer/forecasts', element: <BuyerForecasts />, identity: BUYER },
+  { name: 'buyer/collaboration', pattern: '/buyer/collaboration', at: '/buyer/collaboration', element: <BuyerCommitments />, identity: BUYER },
+  { name: 'buyer/collaboration/responses', pattern: '/buyer/collaboration/responses', at: '/buyer/collaboration/responses', element: <BuyerCollaboration />, identity: BUYER },
   { name: 'buyer/contracts', pattern: '/buyer/contracts', at: '/buyer/contracts', element: <BuyerContracts />, identity: BUYER },
   { name: 'buyer/contracts/:id', pattern: '/buyer/contracts/:id', at: '/buyer/contracts/ctr-013', element: <BuyerContractDetail />, identity: BUYER },
   { name: 'buyer/delivery-agreements', pattern: '/buyer/delivery-agreements', at: '/buyer/delivery-agreements', element: <BuyerDeliveryAgreements />, identity: BUYER },
@@ -148,7 +153,8 @@ const ROUTES: RouteCase[] = [
   { name: 'supplier/order-summary', pattern: '/supplier/order-summary', at: '/supplier/order-summary', element: <SupplierOrderSummary />, identity: SUPPLIER },
   { name: 'supplier/orders', pattern: '/supplier/orders', at: '/supplier/orders', element: <SupplierOrders />, identity: SUPPLIER },
   { name: 'supplier/rfqs', pattern: '/supplier/rfqs', at: '/supplier/rfqs', element: <SupplierRFQsV2 />, identity: SUPPLIER },
-  { name: 'supplier/forecasts', pattern: '/supplier/forecasts', at: '/supplier/forecasts', element: <SupplierForecasts />, identity: SUPPLIER },
+  { name: 'supplier/forecasts', pattern: '/supplier/forecasts', at: '/supplier/forecasts', element: <SupplierForecastCommitments />, identity: SUPPLIER },
+  { name: 'supplier/forecasts/responses', pattern: '/supplier/forecasts/responses', at: '/supplier/forecasts/responses', element: <SupplierForecasts />, identity: SUPPLIER },
   { name: 'supplier/shipments', pattern: '/supplier/shipments', at: '/supplier/shipments', element: <SupplierShipments />, identity: SUPPLIER },
   { name: 'supplier/goods-receipts', pattern: '/supplier/goods-receipts', at: '/supplier/goods-receipts', element: <SupplierGoodsReceipts />, identity: SUPPLIER },
   { name: 'supplier/invoices', pattern: '/supplier/invoices', at: '/supplier/invoices', element: <SupplierInvoicesV2 />, identity: SUPPLIER },
@@ -188,7 +194,7 @@ describe('sp-001 — every route mounts without crashing', () => {
     // THIS FILE.** The first cut was `/<Route\s+path="…"\s+element=\{<(\w+)/`,
     // which requires `element=` to follow `path=` directly. Three routes wrap
     // their element in `<Suspense>` across several lines
-    // (`/buyer/collaboration`, `/buyer/plan-grid`, `/supplier/forecasts`), so the
+    // (`/buyer/collaboration/responses`, `/buyer/plan-grid`, `/supplier/forecasts/responses`), so the
     // narrowing that correctly excluded redirects silently DROPPED them from the
     // derived population — and they then read as stale smoke rows. Narrowing a
     // matcher creates blind spots as readily as widening one creates false

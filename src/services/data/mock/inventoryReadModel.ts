@@ -26,6 +26,8 @@ import {
 import { callOffViews } from '../../transitions/callOffRules';
 import { buildInventoryPositions } from '../../transitions/inventoryRules';
 import { buildCapacityPlans } from '../../transitions/capacityRules';
+import { commitmentAlertSubjects } from '../../transitions/forecastRules';
+import { allCommitmentLines } from './forecastReadModel';
 import {
   alertsFromLedger,
   clearedSince,
@@ -121,7 +123,13 @@ export function allCapacityPlans(nowIso: string = sdcClock.now()): CapacityPlan[
 
 /** The active alert conditions now. */
 export function activeAlertConditions(nowIso: string = sdcClock.now()): AlertCondition[] {
-  return deriveAlertConditions(allPositions(nowIso), allCapacityPlans(nowIso), nowIso);
+  return deriveAlertConditions(
+    allPositions(nowIso),
+    allCapacityPlans(nowIso),
+    nowIso,
+    // REQ-E08-05 BR-01 — commitments below forecast beyond tolerance (REQ-E06-03).
+    commitmentAlertSubjects(allCommitmentLines()),
+  );
 }
 
 /** Every alert (open and closed) with the ledger applied. */

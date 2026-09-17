@@ -1,6 +1,6 @@
 # C1 — Method Surface
 
-Three distinct axes. **67** (service surface) · **128** (transition catalog) · **20** (wired
+Three distinct axes. **70** (service surface) · **131** (transition catalog) · **22** (wired
 targets). They measure different things; this file keeps them separate.
 
 > ⚠️ **THIS DOCUMENT IS PINNED TO THE TREE, AND THE PIN IS WHY THE NUMBERS ABOVE ARE ALLOWED TO
@@ -32,7 +32,7 @@ Source of truth: `src/services/data/types.ts` (service + command types),
 
 ---
 
-## Axis 1 — the 67-method service surface (`IDataService`)
+## Axis 1 — the 70-method service surface (`IDataService`)
 
 The single interface the Phase-F1 real adapter implements; pages call it through
 `useDataService()` and do not change when the mock is swapped for `httpDataService`. Every method
@@ -60,7 +60,7 @@ interface IDataService {
 | Sub-service | Count | Methods |
 |---|---|---|
 | `ISupplierService` | 3 | `list`, `getById`, `getCurrent` |
-| `IProcurementService` | 28 | `getPurchaseOrders`, `getPurchaseOrder`, `getInventory`, `getStockAccess`, `getCapacityPlans`, `getInventoryAlerts`, `getRFQs`, `getQuotations`, `getShipments`, `getASNs`, `getGoodsReceipts`, `getCallOffs`, `getBuyerInvoices`, `getSupplierInvoices`, `getContracts`, `getObligations`, `getDocuments`, `getStorefrontCatalog`, `getStorefrontCerts`, `getStorefrontProducts`, `getKpis`, `getPerformanceTrend`, `getSupplierScorecards`, `getRequisitions`, `getPrIntake`, `getSupplierApplications`, `getProductionLines`, `getSupplierHealth` |
+| `IProcurementService` | 31 | `getPurchaseOrders`, `getPurchaseOrder`, `getInventory`, `getStockAccess`, `getCapacityPlans`, `getInventoryAlerts`, `getForecastVersions`, `getForecastCommitments`, `getForecastCoverage`, `getRFQs`, `getQuotations`, `getShipments`, `getASNs`, `getGoodsReceipts`, `getCallOffs`, `getBuyerInvoices`, `getSupplierInvoices`, `getContracts`, `getObligations`, `getDocuments`, `getStorefrontCatalog`, `getStorefrontCerts`, `getStorefrontProducts`, `getKpis`, `getPerformanceTrend`, `getSupplierScorecards`, `getRequisitions`, `getPrIntake`, `getSupplierApplications`, `getProductionLines`, `getSupplierHealth` |
 | `IRiskService` | 7 | `getRiskAlerts`, `getGeoRisks`, `getExposure`, `getScenarios`, `getCompliance`, `getComplianceRegistry`, `getCommodities` |
 | `IDiscoveryService` | 4 | `getRecommended`, `getQualifications`, `getMarketIntel`, `getSingleSourceItems` |
 | `IAnalyticsService` | 7 | `getSummary`, `getSpendByCategory`, `getTopSuppliers`, `getOtifTrend`, `getPoVolumeTrend`, `getChannelMix`, `getSupplierPerformance` |
@@ -68,10 +68,10 @@ interface IDataService {
 | `IDeliveryService` | 4 | `getAgreements`, `releaseLines`, `confirmMatch`, `editPolicy` |
 | `IChaseService` | 1 | `getUnifiedChase` |
 | `IEnforcementService` | 1 | `getEnforcementSettings` |
-| **read subtotal** | **63** | |
+| **read subtotal** | **66** | |
 | `ICommandService` | 3 | `dispatch`, `getCommandStatus`, `settle` |
 | top-level | 1 | `getCapabilities` |
-| **TOTAL** | **67** | |
+| **TOTAL** | **70** | |
 
 **Return contract:** list reads return `Page<T>` (DR-5 — see C2); single reads return `T | null`;
 `getSummary` returns a summary object or `null` (buyer-populated, supplier-null). Failure is
@@ -87,7 +87,7 @@ the string, because those are different claims and only the first is the contrac
 
 ---
 
-## Axis 2 — the 128-transition catalog (26 flows)
+## Axis 2 — the 131-transition catalog (28 flows)
 
 Every authored state-machine edge across the registered flows (`id: 't_<entity>_<verb>'`). Derived
 from `getKnownFlows()` — the seeded registry — never from a grep over the flow files, because a
@@ -122,7 +122,9 @@ transition id can be assembled at a call site rather than written as a literal (
 | `stockSync.flow.ts` | `stockSync` | 1 | `t_stocksync_run` | **wired** |
 | `capacitySubmission.flow.ts` | `capacitySubmission` | 1 | `t_capacity_submit` | **wired** |
 | `inventoryAlert.flow.ts` | `inventoryAlert` | 1 | `t_inventoryalert_close` | **wired** |
-| **TOTAL** | | **128** | | |
+| `forecastVersion.flow.ts` | `forecastVersion` | 2 | `t_forecastversion_publish`, `t_forecastversion_reassign` | **wired** |
+| `forecastView.flow.ts` | `forecastView` | 1 | `t_forecastview_record` | **wired** |
+| **TOTAL** | | **131** | | |
 
 **Flow shape** (`schema.ts`, `FlowDefinition` / `TransitionDef`): each transition declares
 `from[]` / `to` / `trigger` / `requiredRole` / `requiredFields[]` / `policyHooks[]` /
@@ -138,12 +140,12 @@ system reference is minted only on `settle` (see C5, SAP boundary).
 
 ---
 
-## Axis 3 — the 20 wired CommandTargets
+## Axis 3 — the 22 wired CommandTargets
 
-A `CommandTarget` is the per-entity adapter the dispatcher reads/writes through. **20 exist**, the
+A `CommandTarget` is the per-entity adapter the dispatcher reads/writes through. **22 exist**, the
 runtime export `WIRED_COMMAND_TARGETS` (`MockCommandService.ts` `TARGETS`):
 
-- **wired:** `purchaseOrder`, `advanceShipNotice`, `goodsReceipt`, `invoice`, `rfq`, `quotation`, `purchaseRequisition`, `supplierDocument`, `requirementResponse`, `inventoryDeclaration`, `incomingShipment`, `enforcement`, `role`, `supplierApplication`, `receiptDiscrepancy`, `callOff`, `stockSync`, `stockAccess`, `capacitySubmission`, `inventoryAlert`
+- **wired:** `purchaseOrder`, `advanceShipNotice`, `goodsReceipt`, `invoice`, `rfq`, `quotation`, `purchaseRequisition`, `supplierDocument`, `requirementResponse`, `inventoryDeclaration`, `incomingShipment`, `enforcement`, `role`, `supplierApplication`, `receiptDiscrepancy`, `callOff`, `stockSync`, `stockAccess`, `capacitySubmission`, `inventoryAlert`, `forecastVersion`, `forecastView`
 
 The interface is **7 members** (`dispatcher.ts`, `CommandTarget`):
 
@@ -168,9 +170,9 @@ transitions — scope is derived from the payload's **parent** (`creationOwner`,
 compare"** (§86). The dispatcher's supplier arm compares `owner !== scope.supplierId`
 unconditionally; a target that wants a supplier to reach a verb must NAME that supplier.
 
-### Wiring census (26 flows → 3 states)
+### Wiring census (28 flows → 3 states)
 
-- **20 behavior-wired** — have a `CommandTarget`, dispatch runs against in-memory stores. Named
+- **22 behavior-wired** — have a `CommandTarget`, dispatch runs against in-memory stores. Named
   above.
 - **2 rolled-up sub-flows** — authored, participate via terminal rollup (`grRollup.ts` /
   `invoiceRollup.ts`), **no standalone target**: `goodsReceiptLine`, `invoiceMatch`.

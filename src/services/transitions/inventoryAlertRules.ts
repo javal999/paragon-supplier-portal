@@ -15,6 +15,8 @@
 // Risk class (BR-02, until PQ-03): High when days of supply is Critical (CR-02)
 // or coverage is Uncovered (CR-03); Medium when Warning or At risk; Low for any
 // other rule, such as stale data. Thresholds live in `inventoryConfig.ts`.
+// A commitment below forecast beyond tolerance (REQ-E06-03) is High in the Firm
+// zone and Medium in the Trade-off zone.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type {
@@ -43,6 +45,7 @@ export const ALERT_RULES: readonly InventoryAlertRule[] = [
   'capacityBelowDemand',
   'staleData',
   'coverage',
+  'commitmentBelowForecast',
 ];
 
 /** Rules that read PTI stock — never shown to a supplier. */
@@ -70,11 +73,22 @@ export function positionRiskClass(p: InventoryPosition): RiskClass {
 
 export type AlertCondition = Omit<InventoryAlert, 'status' | 'closedAt' | 'actionNote'>;
 
+/** A supplier × material with a commitment below forecast beyond tolerance (REQ-E06-03). */
+export interface CommitmentShortfallSubject {
+  readonly supplierId: string;
+  readonly supplierName: string;
+  readonly materialCode: string;
+  readonly materialLabel: string;
+  /** True when any of its short periods is in the Firm zone. */
+  readonly firm: boolean;
+}
+
 /** BR-01 — every alert condition active now. Positions must be PTI's unmasked view. */
 export function deriveAlertConditions(
   positions: readonly InventoryPosition[],
   plans: readonly CapacityPlan[],
   nowIso: string,
+  commitmentShortfalls: readonly CommitmentShortfallSubject[] = [],
 ): AlertCondition[] {
   const out = new Map<string, AlertCondition>();
   const push = (rule: InventoryAlertRule, p: { supplierId: string; supplierName: string }, subject: string, label: string, riskClass: RiskClass) => {
@@ -98,6 +112,11 @@ export function deriveAlertConditions(
       .map(positionRiskClass);
     const cls: RiskClass = classes.includes('high') ? 'high' : classes.includes('medium') ? 'medium' : 'low';
     push('capacityBelowDemand', plan, plan.materialGroup, plan.materialGroup, cls);
+  }
+  // REQ-E08-05 BR-01 — committed quantity below forecast beyond tolerance
+  // (CR-21): High when a Firm period is short, Medium for Trade-off only.
+  for (const c of commitmentShortfalls) {
+    push('commitmentBelowForecast', c, c.materialCode, c.materialLabel, c.firm ? 'high' : 'medium');
   }
   return [...out.values()];
 }

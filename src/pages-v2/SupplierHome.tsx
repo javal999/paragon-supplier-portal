@@ -9,6 +9,8 @@ import {
   useASNs,
   useCapacityPlans,
   useDocuments,
+  useForecastCommitments,
+  useForecastVersions,
   useInventory,
   useInventoryAlerts,
   useGoodsReceipts,
@@ -25,6 +27,8 @@ import { isDueWithoutHeadsUp } from '../services/transitions/callOffRules';
 import { useCallOffViews } from './callOffs/callOffDisplay';
 import { planStatus } from '../services/transitions/capacityRules';
 import { stockFreshness } from '../services/transitions/inventoryRules';
+import { deadlineState } from '../services/transitions/forecastRules';
+import { forecastNow } from './forecasts/forecastDisplay';
 import Data from '../components/ui-v2/Data';
 import { RiskPill, inventoryNow } from './inventory/inventoryDisplay';
 
@@ -48,6 +52,9 @@ const SupplierHome: React.FC = () => {
   const capacity = useCapacityPlans();
   const alerts = useInventoryAlerts();
   const openAlerts = (alerts.data?.items ?? []).filter((a) => a.status === 'open');
+  // REQ-E06-01 / REQ-E06-03 BR-06 — new versions and commitment reminders.
+  const forecastLines = useForecastCommitments();
+  const forecastVersions = useForecastVersions();
 
   const tasks = useMemo<HomeTask[]>(() => {
     const poItems = pos.data?.items ?? [];
@@ -114,6 +121,40 @@ const SupplierHome: React.FC = () => {
         to: '/supplier/capacity',
       },
       {
+        // REQ-E06-01 — a published version this supplier has not opened yet.
+        id: 'new-forecast',
+        label: t('hub.home.task.sup.newForecast'),
+        count: (forecastVersions.data?.items ?? []).filter(
+          (v) => v.isCurrent && v.suppliers.some((s) => s.supplierId === supplierId && s.viewedAt === null),
+        ).length,
+        severity: 'warning',
+        to: '/supplier/forecasts',
+      },
+      {
+        // REQ-E06-03 BR-06 — the reminder at the deadline.
+        id: 'commitments-overdue',
+        label: t('hub.home.task.sup.commitmentsOverdue'),
+        count: (forecastLines.data?.items ?? []).filter((l) => deadlineState(l, forecastNow()) === 'overdue').length,
+        severity: 'critical',
+        to: '/supplier/forecasts',
+      },
+      {
+        // REQ-E06-03 BR-06 — the reminder at half the deadline.
+        id: 'commitments-due-soon',
+        label: t('hub.home.task.sup.commitmentsDueSoon'),
+        count: (forecastLines.data?.items ?? []).filter((l) => deadlineState(l, forecastNow()) === 'dueSoon').length,
+        severity: 'warning',
+        to: '/supplier/forecasts',
+      },
+      {
+        // REQ-E06-03 BR-05 — the planner asked for a revision, with a note.
+        id: 'commitments-revision',
+        label: t('hub.home.task.sup.revisionRequested'),
+        count: (forecastLines.data?.items ?? []).filter((l) => l.state === 'revisionRequested').length,
+        severity: 'warning',
+        to: '/supplier/forecasts',
+      },
+      {
         // REQ-E07-05 — a confirmed order still owes its expected completion date.
         id: 'shipping-notice',
         label: t('hub.home.task.sup.shippingNotice'),
@@ -169,7 +210,7 @@ const SupplierHome: React.FC = () => {
         to: '/supplier/invoices',
       },
     ];
-  }, [pos.data, rfqs.data, invoices.data, documents.data, receipts.data, asns.data, callOffs.views, callOffs.nowIso, stock.data, capacity.data, supplierId, t]);
+  }, [pos.data, rfqs.data, invoices.data, documents.data, receipts.data, asns.data, callOffs.views, callOffs.nowIso, stock.data, capacity.data, forecastLines.data, forecastVersions.data, supplierId, t]);
 
   if (!supplierId) return <NoSupplierIdentity />;
 

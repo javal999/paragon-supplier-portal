@@ -36,7 +36,11 @@ type StatusTab = 'open' | 'closed';
 type RiskFilter = 'all' | RiskClass;
 
 const linkFor = (a: InventoryAlert): string =>
-  a.rule === 'capacityBelowDemand' ? '/buyer/capacity' : '/buyer/inventory';
+  a.rule === 'capacityBelowDemand'
+    ? '/buyer/capacity'
+    : a.rule === 'commitmentBelowForecast'
+      ? `/buyer/collaboration?material=${encodeURIComponent(a.subject)}`
+      : '/buyer/inventory';
 
 const BuyerAlerts: React.FC = () => {
   const { t } = useTranslation();
@@ -159,7 +163,13 @@ const BuyerAlerts: React.FC = () => {
                           )}
                         </div>
                         <Link to={linkFor(a)} className="text-sm text-action hover:underline">
-                          {t(a.rule === 'capacityBelowDemand' ? 'inv.alerts.openCapacity' : 'inv.alerts.openInventory')}
+                          {t(
+                            a.rule === 'capacityBelowDemand'
+                              ? 'inv.alerts.openCapacity'
+                              : a.rule === 'commitmentBelowForecast'
+                                ? 'inv.alerts.openCommitments'
+                                : 'inv.alerts.openInventory',
+                          )}
                         </Link>
                         {a.status === 'open' &&
                           (close.kind === 'held' ? (

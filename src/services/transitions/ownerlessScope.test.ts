@@ -96,6 +96,7 @@ import { receiptDiscrepancyStore } from '../data/mock/stores/receiptDiscrepancyS
 import { callOffStore } from '../data/mock/stores/callOffStore';
 import { capacityStore, stockSyncStore } from '../data/mock/stores/inventoryHubStores';
 import { activeAlertConditions } from '../data/mock/inventoryReadModel';
+import { forecastVersionStore, forecastViewStore } from '../data/mock/stores/forecastHubStores';
 import { customRoleStore } from './customRoles';
 
 const svc = new MockCommandService();
@@ -187,6 +188,9 @@ async function realIds(): Promise<Record<string, string | null>> {
     stockAccess: 'sup-007',
     capacitySubmission: capacityStore.all()[0]?.id ?? null,
     inventoryAlert: activeAlertConditions()[0]?.key ?? null,
+    // REQ-E06-01 — the version and view stores are seeded.
+    forecastVersion: forecastVersionStore.all()[0]?.publicationId ?? null,
+    forecastView: forecastViewStore.all()[0]?.id ?? null,
   };
 }
 
@@ -337,7 +341,9 @@ describe('POPULATION — nothing below means anything without this', () => {
     // verb this leak could ride. Stated rather than silently absent. The API
     // sync attempt and the capacity submission (REQ-E08-02 / 04) are the same
     // creation-only snapshot shape.
-    expect(unprobeable).toEqual(['inventoryDeclaration', 'stockSync', 'capacitySubmission']);
+    // A forecast version and a supplier's view of it (REQ-E06-01) are the same
+    // creation-only snapshot shape.
+    expect(unprobeable).toEqual(['inventoryDeclaration', 'stockSync', 'capacitySubmission', 'forecastVersion', 'forecastView']);
   });
 
   it('CONTROL — the walk lands every probe in one of its verb\'s from-states', async () => {

@@ -287,15 +287,32 @@ export interface ForecastLine {
  * AGAINST. FLAG-2: a SIMULATED publication (as all seed data here is) is NEVER
  * supplier-visible — publishing to a real supplier requires LIVE plan data.
  */
+/**
+ * REQ-E06-01 BR-02 — the hub publishes two forecast streams: packaging weekly,
+ * raw material monthly. Each stream has its own versions.
+ */
+export type ForecastStream = 'packaging' | 'rawMaterial';
+
 export interface ForecastPublication {
   readonly publicationId: string;
   /** SOMO's plan version this snapshot came from (bound onto the response). */
   readonly planVersion: string;
   readonly publishedAt: string;
-  /** The rolling horizon of period buckets (C8 GG-8: 6-bucket window; trimmable). */
+  /** The rolling horizon of period buckets (C8 GG-8: 6-bucket window; trimmable).
+   *  A bucket is a month (`YYYY-MM`) or a week named by its Monday (`YYYY-MM-DD`). */
   readonly horizon: readonly string[];
   readonly lines: readonly ForecastLine[];
   readonly provenance: Provenance;
+  /**
+   * REQ-E06-01 — the hub's forecast stream and its version number. Absent on
+   * the SDC-0 seed publications, which predate the streams.
+   */
+  readonly stream?: ForecastStream;
+  readonly version?: number;
+  /** BR-02 edge case — an emergency re-publication outside the cadence. */
+  readonly emergency?: boolean;
+  /** REQ-E06-03 BR-05 — the planner's note when the version moved demand between suppliers. */
+  readonly changeNote?: string;
 }
 
 // ─── Object 1 — RequirementResponse (the spine, design §2.1) ──────────────────
@@ -314,6 +331,8 @@ export interface ForecastConfirmation {
   readonly uom: Uom;
   readonly committedDate?: string;
   readonly capacityConstraint?: string;
+  /** REQ-E06-02 BR-08 — an optional upside quantity the supplier could add above forecast. */
+  readonly upsideQty?: number;
 }
 
 /**

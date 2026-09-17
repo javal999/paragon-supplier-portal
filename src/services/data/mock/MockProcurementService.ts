@@ -9,6 +9,7 @@ import {
   suppliersWithAssignments,
 } from './inventoryReadModel';
 import { stockAccessStore } from './stores/inventoryHubStores';
+import { allCommitmentLines, allCoverageRows, allVersionViews } from './forecastReadModel';
 import { maskForSupplier } from '../../transitions/inventoryRules';
 import { PTI_ONLY_RULES } from '../../transitions/inventoryAlertRules';
 import { mockShipments } from '../../../data/mockShipments';
@@ -50,6 +51,9 @@ import type {
   StockAccessGrant,
   CapacityPlan,
   InventoryAlert,
+  ForecastVersionView,
+  ForecastCommitmentLine,
+  ForecastCoverageRow,
   InventoryFilter,
   Shipment,
   ShipmentFilter,
@@ -310,6 +314,33 @@ export class MockProcurementService implements IProcurementService {
     return {
       items: scope.personaType === 'supplier' ? rows.filter((a) => !PTI_ONLY_RULES.includes(a.rule)) : rows,
     };
+  }
+
+  // ─── Forecast collaboration (REQ-E06-01 to REQ-E06-03) ─────────────────────
+
+  async getForecastVersions(scope: QueryScope): Promise<Page<ForecastVersionView>> {
+    // BR-07 — a supplier sees only versions carrying its own lines, and only
+    // its own row of who viewed them.
+    const rows = allVersionViews();
+    if (scope.personaType === 'buyer') return { items: rows };
+    const sid = scope.supplierId;
+    return {
+      items: rows
+        .filter((v) => v.suppliers.some((s) => s.supplierId === sid))
+        .map((v) => ({ ...v, suppliers: v.suppliers.filter((s) => s.supplierId === sid) })),
+    };
+  }
+
+  async getForecastCommitments(scope: QueryScope): Promise<Page<ForecastCommitmentLine>> {
+    // BR-10 — PTI never reads a draft; a supplier reads its own lines with its drafts.
+    if (scope.personaType === 'buyer') return { items: allCommitmentLines(null) };
+    return { items: applySupplierScope(scope, allCommitmentLines(scope.supplierId)) };
+  }
+
+  async getForecastCoverage(scope: QueryScope): Promise<Page<ForecastCoverageRow>> {
+    // REQ-E06-03 BR-07 — the planner's view; a supplier reads nothing here.
+    if (scope.personaType !== 'buyer') return { items: [] };
+    return { items: allCoverageRows() };
   }
 
   // ─── Sourcing ─────────────────────────────────────────────────────────────

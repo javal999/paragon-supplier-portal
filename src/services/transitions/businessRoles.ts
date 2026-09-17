@@ -237,6 +237,9 @@ const LANE_BUNDLES = Object.freeze({
       // REQ-E08-02 / 03 / 05 — the planner pulls a connected supplier's stock,
       // decides which suppliers see PTI stock, and closes alerts with a note.
       'stocksync:run', 'stockaccess:manage', 'inventoryalert:close',
+      // REQ-E06-01 / REQ-E06-03 BR-05 — the planner publishes forecast versions
+      // and moves a period's demand to another supplier.
+      'forecast:publish',
     ]),
     // Raising and revising a requisition — split from approving one, which is
     // the segregation `pr:approve` living in `procurement` expresses.
@@ -274,6 +277,9 @@ const LANE_BUNDLES = Object.freeze({
     commercial: Object.freeze([
       'quotation:submit',
       'requirementresponse:submit',
+      // REQ-E06-01 — opening a forecast version is recorded for PTI; the people
+      // who commit against the forecast are the ones who read it.
+      'forecast:view',
     ]),
     // ── FULFILMENT — everything downstream of a placed order ────────────────
     // The PO arrives as an `external-fact`: *"raised in S/4HANA … the portal is

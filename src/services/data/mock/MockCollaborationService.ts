@@ -59,7 +59,13 @@ export class MockCollaborationService implements ICollaborationService {
   async getOwnRequirementResponses(
     scope: QueryScope,
   ): Promise<Page<RequirementResponse>> {
-    const own = applySupplierScope(scope, requirementResponseStore.all());
+    // The SDC-0 publications' responses only: forecast-version commitments
+    // (REQ-E06-02) are read through `getForecastCommitments`.
+    const sdcPublications = new Set(FORECAST_PUBLICATIONS.map((p) => p.publicationId));
+    const own = applySupplierScope(
+      scope,
+      requirementResponseStore.all().filter((r) => sdcPublications.has(r.publicationId)),
+    );
     const items = own
       .slice()
       .sort((a, b) => (b.submittedAt ?? '').localeCompare(a.submittedAt ?? ''));

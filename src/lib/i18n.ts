@@ -84,6 +84,7 @@ import { orderCollaborationEn, orderCollaborationId } from './i18n/orderCollabor
 import { fulfilmentCollaborationEn, fulfilmentCollaborationId } from './i18n/fulfilmentCollaboration';
 import { callOffsEn, callOffsId } from './i18n/callOffs';
 import { inventoryCapacityEn, inventoryCapacityId } from './i18n/inventoryCapacity';
+import { forecastCollaborationEn, forecastCollaborationId } from './i18n/forecastCollaboration';
 // — The read path's failure surface, shared by 31 pages —
 import { errorStateEn, errorStateId } from './i18n/errorState';
 import { loadingStateEn, loadingStateId } from './i18n/loadingState';
@@ -164,6 +165,7 @@ export const resources = {
       ...fulfilmentCollaborationEn,
       ...callOffsEn,
       ...inventoryCapacityEn,
+      ...forecastCollaborationEn,
       ...errorStateEn,
       ...loadingStateEn,
       ...emptyStateEn,
@@ -600,6 +602,7 @@ export const resources = {
       ...fulfilmentCollaborationId,
       ...callOffsId,
       ...inventoryCapacityId,
+      ...forecastCollaborationId,
       ...errorStateId,
       ...loadingStateId,
       ...emptyStateId,

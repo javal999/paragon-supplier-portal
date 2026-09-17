@@ -38,6 +38,9 @@ import { materialEntry } from '../../services/sdc';
 //
 // One row per PO: the supplier's response, its ASNs, and the 3 confirmations
 // (REQUIREMENTS §3.2). Each available status links to the page that owns it.
+// Foresight / fixed stock (REQ-E06-02) reads the forecast commitments for the
+// PO's materials — Confirmed, Gap, Awaiting, or Not required when only
+// Forecast-zone periods exist — and links to the forecast page for them.
 // Capacity confirmation (REQ-E08-04) reads the supplier's capacity submissions
 // for the material groups on the PO: Confirmed, Gap, Update needed or Not
 // started, linking to the capacity page. A supplier sees its own POs only: the
@@ -71,6 +74,7 @@ const FORESIGHT_TONE: Record<ForesightStatus, StatusTone> = {
   awaiting: 'neutral',
   confirmed: 'success',
   gap: 'warning',
+  notRequired: 'neutral',
 };
 
 /** The call-off confirmation status for one PO (REQ-E07-03 with REQ-E09-03):
@@ -105,6 +109,10 @@ export function callOffSummary(
           : 'confirmed';
   return { count: mine.length, status };
 }
+
+/** The first of the PO's materials with forecast lines — where the foresight link opens. */
+const foresightMaterial = (po: PurchaseOrder, answers: readonly ForesightAnswer[]): string =>
+  po.lineItems.map((li) => li.materialCode).find((code) => answers.some((a) => a.supplierId === po.supplierId && a.materialCode === code)) ?? '';
 
 const linkClass = 'text-action hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-action rounded';
 
@@ -237,11 +245,16 @@ const OrderSummaryView: React.FC<OrderSummaryViewProps> = ({ persona, foresightA
                     );
                   })()}
                 </TableCell>
-                <TableCell>
+                <TableCell data-testid={`order-summary-foresight-${po.id}`}>
                   {foresight === 'notStarted' ? (
                     <StatusPill variant="neutral">{t('oc.summary.status.notStarted')}</StatusPill>
                   ) : (
-                    <Link to={persona === 'buyer' ? '/buyer/collaboration' : '/supplier/forecasts'}>
+                    <Link
+                      to={`${persona === 'buyer' ? '/buyer/collaboration' : '/supplier/forecasts'}?material=${encodeURIComponent(
+                        foresightMaterial(po, foresightAnswers),
+                      )}`}
+                      aria-label={`${po.poNumber}: ${t(`oc.summary.foresight.${foresight}`)}`}
+                    >
                       <StatusPill variant={FORESIGHT_TONE[foresight]}>
                         {t(`oc.summary.foresight.${foresight}`)}
                       </StatusPill>

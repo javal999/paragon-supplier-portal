@@ -389,6 +389,16 @@ export const processFlowPurposeEn: Record<string, string> = {
     'A warning that stock or capacity is heading for a shortage, with a risk class, so the planner acts before material is missing.',
   'processFlows.purpose.t_inventoryalert_close':
     'The planner closes an alert and notes what was done. The same condition does not raise it again until it has cleared and come back.',
+  'processFlows.purpose.entity.forecastVersion':
+    'One version of PTI’s forecast for packaging (weekly) or raw material (monthly), with a zone per period. Every version is kept.',
+  'processFlows.purpose.t_forecastversion_publish':
+    'The planner publishes the next forecast version, on the cadence or as an emergency re-publication. Suppliers are asked to open it and commit.',
+  'processFlows.purpose.t_forecastversion_reassign':
+    'The planner moves one period’s demand from a supplier to another supplier of the material and explains why. Suppliers receive it as a new version.',
+  'processFlows.purpose.entity.forecastView':
+    'The moment a supplier first opened a forecast version, so the planner sees who has seen the plan.',
+  'processFlows.purpose.t_forecastview_record':
+    'Opening a forecast version records that the supplier has seen it.',
 };
 
 export const processFlowPurposeId: Record<string, string> = {
@@ -743,4 +753,14 @@ export const processFlowPurposeId: Record<string, string> = {
     'Peringatan bahwa stok atau kapasitas menuju kekurangan, dengan kelas risiko, agar perencana bertindak sebelum material habis.',
   'processFlows.purpose.t_inventoryalert_close':
     'Perencana menutup peringatan dan mencatat tindakan yang diambil. Kondisi yang sama tidak memunculkannya lagi sampai kondisi itu pulih lalu terjadi lagi.',
+  'processFlows.purpose.entity.forecastVersion':
+    'Satu versi prakiraan PTI yang diterbitkan untuk kemasan (mingguan) atau bahan baku (bulanan), dengan zona per periode. Setiap versi disimpan.',
+  'processFlows.purpose.t_forecastversion_publish':
+    'Perencana menerbitkan versi prakiraan berikutnya, sesuai jadwal atau sebagai penerbitan ulang darurat. Pemasok diminta membukanya dan memberi komitmen.',
+  'processFlows.purpose.t_forecastversion_reassign':
+    'Perencana memindahkan kebutuhan satu periode dari satu pemasok ke pemasok lain material itu dan menjelaskan alasannya. Pemasok menerimanya sebagai versi baru.',
+  'processFlows.purpose.entity.forecastView':
+    'Saat pemasok pertama kali membuka versi prakiraan, agar perencana tahu siapa yang sudah melihat rencananya.',
+  'processFlows.purpose.t_forecastview_record':
+    'Membuka versi prakiraan mencatat bahwa pemasok sudah melihatnya.',
 };

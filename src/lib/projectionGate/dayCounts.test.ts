@@ -218,10 +218,13 @@ describe('ACQUITTALS — asserted, because a gate that only convicts is unprobed
     const acquitted = DAY_COUNTS.filter((r) => r.group === 'not-a-clock-difference');
     // `InventoryRecord.daysOfSupply` retired with the static inventory list
     // (REQ-E08-01): days of supply is CR-01, computed at read and never stored.
+    // `ForecastCoverageRow.principalLeadTimeDays` joined at REQ-E06-03 BR-07: a
+    // principal's lead time is a duration, like a quoted lead time.
     expect(acquitted.map((r) => r.field).sort()).toEqual([
       'coverDays',
       'leadTimeDays',
       'noticeRequiredDays',
+      'principalLeadTimeDays',
     ]);
     for (const row of acquitted) expect(row.reason!.length).toBeGreaterThan(20);
   });

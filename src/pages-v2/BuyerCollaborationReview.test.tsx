@@ -24,6 +24,7 @@ import { renderWithProviders, BUYER } from '../test/test-utils';
 import BuyerCollaboration from './BuyerCollaboration';
 import SupplierForecasts from './SupplierForecasts';
 import { requirementResponseStore } from '../services/data/mock/stores/requirementResponseStore';
+import { FORECAST_PUBLICATIONS } from '../services/sdc';
 import { getFlow, userVerbsFrom } from '../services/transitions';
 import { rolesHolding } from '../services/transitions/businessRoles';
 import { mockDataService } from '../services/data/mock/mockDataService';
@@ -107,9 +108,12 @@ describe('wave C — the gate is the MACHINE, probed in both directions', () => 
 
 describe('wave C — the sections are derived, so they cannot offer an illegal act', () => {
   it('⚠ CONTROL — the review list holds exactly the Submitted responses, by id', async () => {
+    // The store also holds forecast-version commitments (REQ-E06-02), which this
+    // board does not review; its population is the SDC-0 publications' responses.
+    const sdcPublications = new Set(FORECAST_PUBLICATIONS.map((p) => p.publicationId));
     const submitted = requirementResponseStore
       .all()
-      .filter((r) => r.status === 'Submitted')
+      .filter((r) => r.status === 'Submitted' && sdcPublications.has(r.publicationId))
       .map((r) => r.id);
     expect(submitted.length).toBeGreaterThan(0); // the list must not be empty
 

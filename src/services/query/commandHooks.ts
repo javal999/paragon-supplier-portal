@@ -1803,3 +1803,158 @@ export function useInventoryCommand() {
     },
   });
 }
+
+// ─── Forecast collaboration (REQ-E06-01 to REQ-E06-03) ──────────────────────
+//
+// One mutation per business act. Some acts are two governed verbs in a row:
+//   · commit — `t_requirementresponse_submit` creates the draft, then
+//     `t_requirementresponse_promote` submits it (a draft stays hidden from PTI
+//     until then, BR-10); "Save draft" stops after the first.
+//   · accept / request revision — the planner's review verb, then accept or
+//     dispute (the dispute text is the revision request the supplier reads).
+// Every act changes what BOTH personas read (lines, versions, alerts), so a
+// successful one invalidates every scope's forecast and alert reads.
+
+export interface ForecastLineRef {
+  readonly publicationId: string;
+  readonly planVersion: string;
+  readonly supplierId: string;
+  readonly materialCode: string;
+  readonly periodBucket: string;
+}
+
+export type ForecastCommandVars =
+  | { verb: 'publish'; stream: 'packaging' | 'rawMaterial'; emergency?: boolean }
+  | {
+      verb: 'reassign';
+      publicationId: string;
+      materialCode: string;
+      periodBucket: string;
+      fromSupplierId: string;
+      toSupplierId: string;
+      note: string;
+    }
+  | { verb: 'recordView'; publicationId: string; supplierId: string }
+  | {
+      verb: 'commit';
+      line: ForecastLineRef;
+      committedQty: number;
+      commitmentDate: string;
+      upsideQty?: number;
+      reason?: string;
+      note?: string;
+      /** Save as a draft only (not visible to PTI). */
+      draftOnly?: boolean;
+    }
+  | { verb: 'submitDraft'; responseId: string }
+  | { verb: 'acknowledge'; line: ForecastLineRef; note?: string }
+  | { verb: 'accept'; responseId: string; status: string }
+  | { verb: 'requestRevision'; responseId: string; status: string; note: string };
+
+const FORECAST_READS = new Set(['forecastVersions', 'forecastCommitments', 'forecastCoverage', 'inventoryAlerts']);
+
+export function useForecastCommand() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+
+  const review = async (responseId: string, status: string): Promise<CommandResult | null> => {
+    if (status !== 'Submitted') return null;
+    const res = await svc.commands.dispatch(scope, {
+      transitionId: 't_requirementresponse_review',
+      entity: 'requirementResponse',
+      entityId: responseId,
+      payload: {},
+    });
+    return res.status === 'failed' ? res : null;
+  };
+
+  return useMutation<CommandResult, Error, ForecastCommandVars>({
+    mutationFn: async (vars) => {
+      switch (vars.verb) {
+        case 'publish':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_forecastversion_publish',
+            entity: 'forecastVersion',
+            payload: { stream: vars.stream, ...(vars.emergency ? { emergency: true } : {}) },
+          });
+        case 'reassign': {
+          const { verb, ...payload } = vars;
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_forecastversion_reassign',
+            entity: 'forecastVersion',
+            payload: { ...payload },
+          });
+        }
+        case 'recordView':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_forecastview_record',
+            entity: 'forecastView',
+            payload: { publicationId: vars.publicationId, supplierId: vars.supplierId },
+          });
+        case 'commit': {
+          const created = await svc.commands.dispatch(scope, {
+            transitionId: 't_requirementresponse_submit',
+            entity: 'requirementResponse',
+            payload: {
+              ...vars.line,
+              confirmedQty: vars.committedQty,
+              // The token the number was read from: the canonical digits, which
+              // read the same in either convention.
+              confirmedQtyRaw: String(vars.committedQty),
+              committedDate: vars.commitmentDate,
+              ...(vars.upsideQty !== undefined ? { upsideQty: vars.upsideQty } : {}),
+              ...(vars.reason ? { rootCause: { level1: vars.reason, ...(vars.note ? { note: vars.note } : {}) } } : {}),
+            },
+          });
+          if (created.status === 'failed' || vars.draftOnly || !created.entityId) return created;
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_requirementresponse_promote',
+            entity: 'requirementResponse',
+            entityId: created.entityId,
+            payload: {},
+          });
+        }
+        case 'submitDraft':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_requirementresponse_promote',
+            entity: 'requirementResponse',
+            entityId: vars.responseId,
+            payload: {},
+          });
+        case 'acknowledge':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_requirementresponse_acknowledge',
+            entity: 'requirementResponse',
+            payload: { ...vars.line, ...(vars.note ? { acknowledgment: { note: vars.note } } : {}) },
+          });
+        case 'accept': {
+          const refused = await review(vars.responseId, vars.status);
+          if (refused) return refused;
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_requirementresponse_accept',
+            entity: 'requirementResponse',
+            entityId: vars.responseId,
+            payload: {},
+          });
+        }
+        case 'requestRevision': {
+          const refused = await review(vars.responseId, vars.status);
+          if (refused) return refused;
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_requirementresponse_dispute',
+            entity: 'requirementResponse',
+            entityId: vars.responseId,
+            payload: { disputeReason: vars.note },
+          });
+        }
+      }
+    },
+    onSettled: () => {
+      qc.invalidateQueries({
+        predicate: (q) =>
+          (q.queryKey[0] === 'procurement' && FORECAST_READS.has(String(q.queryKey[1]))) || q.queryKey[0] === 'sdc',
+      });
+    },
+  });
+}

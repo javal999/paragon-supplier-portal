@@ -89,19 +89,24 @@ export function shippingNoticeStatus(po: PurchaseOrder): ShippingNoticeStatus {
   return completionMovedLater(po) ? 'delayed' : 'confirmed';
 }
 
-/** Foresight / fixed-stock confirmation (REQ-E06-02), per the PO's materials. */
-export type ForesightStatus = 'notStarted' | 'awaiting' | 'confirmed' | 'gap';
+/**
+ * Foresight / fixed-stock confirmation (REQ-E06-02), per the PO's materials:
+ * Confirmed, Gap, Awaiting, or Not required when the materials have only
+ * Forecast-zone periods (nothing to commit, only to acknowledge).
+ */
+export type ForesightStatus = 'notStarted' | 'awaiting' | 'confirmed' | 'gap' | 'notRequired';
 
 /** One forecast line's answer, reduced to what the summary needs. */
 export interface ForesightAnswer {
   readonly supplierId: string;
   readonly materialCode: string;
-  readonly answer: 'awaiting' | 'confirmed' | 'gap';
+  readonly answer: 'awaiting' | 'confirmed' | 'gap' | 'notRequired';
 }
 
 /**
  * The PO's foresight status from the forecast answers for ITS supplier and
- * ITS materials. No forecast line for any of them → Not started.
+ * ITS materials. No forecast line for any of them → Not started. Forecast-zone
+ * periods ask for no commitment, so they decide only when nothing else does.
  */
 export function foresightStatus(po: PurchaseOrder, answers: readonly ForesightAnswer[]): ForesightStatus {
   const codes = new Set(po.lineItems.map((li) => li.materialCode));
@@ -109,7 +114,8 @@ export function foresightStatus(po: PurchaseOrder, answers: readonly ForesightAn
   if (mine.length === 0) return 'notStarted';
   if (mine.some((a) => a.answer === 'gap')) return 'gap';
   if (mine.some((a) => a.answer === 'awaiting')) return 'awaiting';
-  return 'confirmed';
+  if (mine.some((a) => a.answer === 'confirmed')) return 'confirmed';
+  return 'notRequired';
 }
 
 /** Supplier response status for the summary: the answer, or its absence. */

@@ -183,6 +183,12 @@ export const DAY_COUNTS: readonly DayCountRow[] = [
     group: 'not-a-clock-difference',
     reason: 'Stock ÷ consumption rate. Decays because stock does, never because the clock moves.',
   },
+  {
+    owner: 'ForecastCoverageRow',
+    field: 'principalLeadTimeDays',
+    group: 'not-a-clock-difference',
+    reason: 'A principal’s delivery lead time to the distributor (REQ-E06-03 BR-07). A duration, not measured from today.',
+  },
   // `InventoryRecord.daysOfSupply` LEFT BY BEING RETIRED (REQ-E08-01): days of
   // supply is CR-01, computed at read by `inventoryRules.daysOfSupply` and never
   // stored on a DTO, so it has no row here.

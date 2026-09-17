@@ -6,6 +6,7 @@ import {
   Building2,
   ClipboardCheck,
   CalendarClock,
+  CalendarRange,
   ChartLine,
   Factory,
   FileSearch,
@@ -77,6 +78,7 @@ export const PTI_NAV: readonly NavSection[] = [
     labelKey: 'hub.nav.section.forecast',
     roles: ['MP'],
     items: [
+      { labelKey: 'hub.nav.pti.forecasts', icon: CalendarRange, path: '/buyer/forecasts' },
       { labelKey: 'hub.nav.pti.commitments', icon: ChartLine, path: '/buyer/collaboration' },
     ],
   },

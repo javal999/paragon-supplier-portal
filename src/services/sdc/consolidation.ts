@@ -62,9 +62,14 @@ function addDaysIso(iso: string, days: number): string {
   return new Date(Date.parse(iso) + days * DAY_MS).toISOString();
 }
 
-/** The last instant-of-day ms of a period bucket ('2026-08' → 2026-08-31 UTC). */
-function bucketEndMs(bucket: string): number {
-  const [y, m] = bucket.split('-').map(Number);
+/**
+ * The last day (UTC ms) of a period bucket. A month bucket ('2026-08') ends on
+ * its last day (2026-08-31); a week bucket is named by its Monday
+ * ('2026-08-31') and ends on the Sunday six days later (REQ-E06-01 BR-03).
+ */
+export function bucketEndMs(bucket: string): number {
+  const [y, m, d] = bucket.split('-').map(Number);
+  if (d !== undefined && !Number.isNaN(d)) return Date.UTC(y, m - 1, d + 6);
   // Day 0 of the NEXT month = the last day of this bucket's month.
   return Date.UTC(y, m, 0);
 }

@@ -28,6 +28,8 @@ export * from './inventoryConfig';
 export * from './inventoryRules';
 export * from './capacityRules';
 export * from './inventoryAlertRules';
+export * from './forecastConfig';
+export * from './forecastRules';
 export * from './cascades';
 export { purchaseOrderFlow } from './flows/purchaseOrder.flow';
 export { advanceShipNoticeFlow } from './flows/advanceShipNotice.flow';
@@ -55,6 +57,8 @@ export { stockAccessFlow } from './flows/stockAccess.flow';
 export { stockSyncFlow } from './flows/stockSync.flow';
 export { capacitySubmissionFlow } from './flows/capacitySubmission.flow';
 export { inventoryAlertFlow } from './flows/inventoryAlert.flow';
+export { forecastVersionFlow } from './flows/forecastVersion.flow';
+export { forecastViewFlow } from './flows/forecastView.flow';
 export * from './customRoles';
 
 import { flowRegistry } from './registry';
@@ -84,6 +88,8 @@ import { stockAccessFlow } from './flows/stockAccess.flow';
 import { stockSyncFlow } from './flows/stockSync.flow';
 import { capacitySubmissionFlow } from './flows/capacitySubmission.flow';
 import { inventoryAlertFlow } from './flows/inventoryAlert.flow';
+import { forecastVersionFlow } from './flows/forecastVersion.flow';
+import { forecastViewFlow } from './flows/forecastView.flow';
 
 // Seed the shipped flows onto the singleton.
 flowRegistry.register(purchaseOrderFlow); // Step 3.1 — PO
@@ -134,3 +140,5 @@ flowRegistry.register(stockAccessFlow); // REQ-E08-03 — supplier access to PTI
 flowRegistry.register(stockSyncFlow); // REQ-E08-02 — API stock sync
 flowRegistry.register(capacitySubmissionFlow); // REQ-E08-04 — capacity confirmation
 flowRegistry.register(inventoryAlertFlow); // REQ-E08-05 — inventory and capacity alerts
+flowRegistry.register(forecastVersionFlow); // REQ-E06-01 / REQ-E06-03 — forecast versions
+flowRegistry.register(forecastViewFlow); // REQ-E06-01 — supplier views of a version

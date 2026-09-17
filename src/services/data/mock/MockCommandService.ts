@@ -144,6 +144,19 @@ import {
   suppliersWithAssignments,
 } from './inventoryReadModel';
 import { API_CONNECTIONS } from './fixtures/inventoryHub';
+import { forecastVersionStore, forecastViewStore } from './stores/forecastHubStores';
+import {
+  currentVersion,
+  isForecastVersion,
+  forecastPublicationById,
+  qualifiedSuppliers,
+} from './forecastReadModel';
+import { baseDemand, FORECAST_SOURCES } from './fixtures/forecastHub';
+import {
+  reassignVersion,
+  republishVersion,
+  shortfallRefusal,
+} from '../../transitions/forecastRules';
 import type { CapacitySubmission, CapacityWeekEntry, StockAccessGrant } from '../types';
 import { mockShipments } from '../../../data/mockShipments';
 import { mockSuppliers } from '../../../data/mockSuppliers';
@@ -151,6 +164,7 @@ import {
   FORECAST_PUBLICATIONS,
   SUPPLIER_MATERIAL_RELATIONSHIPS,
   isKnownMaterial,
+  materialEntry,
   requireUom,
   sdcClock,
 } from '../../sdc';
@@ -1486,8 +1500,9 @@ const purchaseRequisitionTarget: CommandTarget = {
 //   response thread). confirmedQty: 0 is a LEGAL short confirmation (F-2).
 //   Publications are the frozen SDC fixtures until the SOMO C8 feed lands —
 //   read-only here (responses mutate; publications never do).
-const publicationById = (publicationId: string) =>
-  FORECAST_PUBLICATIONS.find((p) => p.publicationId === publicationId);
+// REQ-E06-01 — the forecast versions the hub publishes are publications too;
+// the lookup reads them beside the SDC-0 fixtures.
+const publicationById = (publicationId: string) => forecastPublicationById(publicationId);
 
 /** F-4 ruling: a store-minted response is SUPPLIER-authored, committed, and
  *  SIMULATED — the backing store is a mock; liveness flips at F1, not here. */
@@ -1633,6 +1648,8 @@ const requirementResponseTarget: CommandTarget = {
             ...(str('capacityConstraint')
               ? { capacityConstraint: str('capacityConstraint') }
               : {}),
+            // REQ-E06-02 BR-08 — proven a number ≥ 0 by RR_SUBMIT_COMMITMENT_DETAIL.
+            ...(typeof payload.upsideQty === 'number' ? { upsideQty: payload.upsideQty } : {}),
           },
         };
     const response: RequirementResponse = {
@@ -1762,6 +1779,48 @@ bindPolicyHook(POLICY_HOOKS.RR_SUBMIT_QTY_AGREES, ({ payload }) => {
   return { ok: true };
 });
 
+// REQ-E06-02 BR-04 / AC-02 — below forecast needs a starter reason (and `other`
+// a note). The rule is `forecastRules.shortfallRefusal`, the same function the
+// form and the upload check call, so the three can never disagree. The floor
+// ran first, so `confirmedQty` is a finite number here.
+bindPolicyHook(POLICY_HOOKS.RR_SUBMIT_SHORTFALL_REASON, ({ payload }) => {
+  const line = fannedLine(payload);
+  if (!line || typeof payload.confirmedQty !== 'number') return { ok: true };
+  const refusal = shortfallRefusal(
+    line.forecastQty,
+    payload.confirmedQty,
+    payload.rootCause as { level1?: unknown; note?: unknown } | undefined,
+  );
+  if (refusal === 'reasonRequired') {
+    return {
+      ok: false,
+      reason: `BELOW_FORECAST_NEEDS_REASON: ${payload.confirmedQty} is below the forecast of ${line.forecastQty}; choose capacity, material, logistics, quality or other`,
+    };
+  }
+  if (refusal === 'noteRequired') {
+    return { ok: false, reason: 'OTHER_REASON_NEEDS_NOTE: the reason "other" needs a note' };
+  }
+  return { ok: true };
+});
+
+// REQ-E06-02 BR-08 — a commitment to a forecast version carries its date, and
+// an upside quantity is a number of zero or more. The SDC-0 publications
+// predate the date rule and keep their shape.
+bindPolicyHook(POLICY_HOOKS.RR_SUBMIT_COMMITMENT_DETAIL, ({ payload }) => {
+  const up = payload.upsideQty;
+  if (up !== undefined && (typeof up !== 'number' || !Number.isFinite(up) || up < 0)) {
+    return { ok: false, reason: 'upsideQty must be a number of zero or more' };
+  }
+  const date = payload.committedDate;
+  if (isForecastVersion(String(payload.publicationId)) && !isIsoDay(date)) {
+    return { ok: false, reason: 'COMMITMENT_DATE_REQUIRED: a commitment needs its date (YYYY-MM-DD)' };
+  }
+  if (date !== undefined && date !== '' && !isIsoDay(date)) {
+    return { ok: false, reason: 'committedDate must be a date (YYYY-MM-DD)' };
+  }
+  return { ok: true };
+});
+
 // RR dispute / resolve — the authored text must be SUBSTANCE, not presence.
 //
 // ⚠️ WHICH FIELD IS ASKED FOR IS DERIVED FROM THE MACHINE, NEVER FROM THE
@@ -1796,13 +1855,14 @@ bindPolicyHook(POLICY_HOOKS.RR_DISPUTE_TEXT_AUTHORED, ({ payload, toState, curre
 
 // SDC-2b-EXT — the symmetric class guards (the honesty lock). creationOwner
 // already proved the fanned line exists, so resolving it here cannot miss.
-const fannedLineClass = (payload: Record<string, unknown>) =>
+const fannedLine = (payload: Record<string, unknown>) =>
   publicationById(String(payload.publicationId))?.lines.find(
     (l) =>
       l.supplierId === String(payload.supplierId) &&
       l.materialCode === String(payload.materialCode) &&
       l.periodBucket === String(payload.periodBucket),
-  )?.commitmentClass;
+  );
+const fannedLineClass = (payload: Record<string, unknown>) => fannedLine(payload)?.commitmentClass;
 
 // Submit (a COMMITMENT) is illegal against a visibility-only line — nothing was
 // requested to commit; a "confirmed" record there would be a fabricated claim.
@@ -2181,6 +2241,125 @@ bindPolicyHook(POLICY_HOOKS.ALERT_ACTION_NOTE_AUTHORED, ({ payload }) =>
     ? { ok: true }
     : { ok: false, reason: 'closing an alert needs an action note' },
 );
+
+// — Forecast collaboration (REQ-E06-01, REQ-E06-03) ————————————————————————
+//   A version is a snapshot of one stream and is never edited; publish and
+//   reassign each add the next version. A view is recorded once per supplier ×
+//   version. Commitments ride the requirementResponse target above.
+
+const FORECAST_STREAMS = ['packaging', 'rawMaterial'] as const;
+
+/** REQ-E06-01 / REQ-E06-03 BR-05 — a forecast version; `entityId` is its publicationId. */
+const forecastVersionTarget: CommandTarget = {
+  readState: (id) => (forecastVersionStore.get(id) ? 'Published' : null),
+  // Buyer-only: no supplier is named, so a supplier scope is denied.
+  readScopeOwner: () => null,
+  readEntity: (id) => forecastVersionStore.get(id) ?? null,
+  applyTransition: () => {
+    /* no-op — a version is never changed */
+  },
+  creationOwner: () => null,
+  create: (payload) => {
+    const now = sdcClock.now();
+    if (payload.toSupplierId !== undefined) {
+      const current = forecastVersionStore.get(String(payload.publicationId))!;
+      const next = reassignVersion(
+        current,
+        {
+          materialCode: String(payload.materialCode),
+          periodBucket: String(payload.periodBucket),
+          fromSupplierId: String(payload.fromSupplierId),
+          toSupplierId: String(payload.toSupplierId),
+          note: String(payload.note).trim(),
+        },
+        now,
+      )!;
+      forecastVersionStore.add(next);
+      return { entityId: next.publicationId };
+    }
+    const stream = payload.stream as (typeof FORECAST_STREAMS)[number];
+    const current = currentVersion(stream)!;
+    const next = republishVersion(current, {
+      publishedAt: now,
+      // The sources are the current version's suppliers; a supplier that
+      // received demand by reassignment keeps it on re-publication.
+      sources: [
+        ...FORECAST_SOURCES,
+        ...[...new Set(current.lines.map((l) => `${l.supplierId}|${l.materialCode}`))]
+          .filter((k) => !FORECAST_SOURCES.some((s) => `${s.supplierId}|${s.materialCode}` === k))
+          .map((k) => {
+            const [supplierId, materialCode] = k.split('|');
+            return { supplierId, materialCode, share: 0 };
+          }),
+      ],
+      master: materialEntry,
+      baseDemand,
+      ...(payload.emergency === true ? { emergency: true } : {}),
+    });
+    forecastVersionStore.add(next);
+    return { entityId: next.publicationId };
+  },
+};
+
+// REQ-E06-01 BR-02 — publish names a stream that has a version to follow.
+bindPolicyHook(POLICY_HOOKS.FORECAST_PUBLISH_VALID, ({ payload }) => {
+  if (!(FORECAST_STREAMS as readonly unknown[]).includes(payload.stream)) {
+    return { ok: false, reason: 'UNKNOWN_STREAM: stream must be packaging or rawMaterial' };
+  }
+  if (payload.emergency !== undefined && typeof payload.emergency !== 'boolean') {
+    return { ok: false, reason: 'emergency must be true or false' };
+  }
+  return currentVersion(payload.stream as (typeof FORECAST_STREAMS)[number])
+    ? { ok: true }
+    : { ok: false, reason: 'no earlier version of this stream to re-publish' };
+});
+
+// REQ-E06-03 BR-05 — reassign: a line of the CURRENT version, a different
+// supplier qualified for the material, and a note the supplier can read.
+bindPolicyHook(POLICY_HOOKS.FORECAST_REASSIGN_VALID, ({ payload }) => {
+  const pub = forecastVersionStore.get(String(payload.publicationId));
+  if (!pub || !pub.stream) return { ok: false, reason: 'forecast version not found' };
+  if (currentVersion(pub.stream)?.publicationId !== pub.publicationId) {
+    return { ok: false, reason: 'NOT_CURRENT_VERSION: demand moves only on the current version' };
+  }
+  if (nonBlank(payload.note) === undefined) return { ok: false, reason: 'NOTE_REQUIRED: moving demand needs a note' };
+  const from = String(payload.fromSupplierId);
+  const to = String(payload.toSupplierId);
+  const code = String(payload.materialCode);
+  const line = pub.lines.find((l) => l.supplierId === from && l.materialCode === code && l.periodBucket === String(payload.periodBucket));
+  if (!line) return { ok: false, reason: 'no such period for this supplier and material in the current version' };
+  if (from === to) return { ok: false, reason: 'SAME_SUPPLIER: choose a different supplier' };
+  if (!qualifiedSuppliers(code).includes(to)) {
+    return { ok: false, reason: `NOT_QUALIFIED: ${to} does not supply ${code}` };
+  }
+  return { ok: true };
+});
+
+/** REQ-E06-01 — a supplier's first opening of a version; `entityId` is the record id. */
+const forecastViewTarget: CommandTarget = {
+  readState: (id) => (forecastViewStore.get(id) ? 'Viewed' : null),
+  readScopeOwner: (id) => forecastViewStore.get(id)?.supplierId ?? null,
+  readEntity: (id) => forecastViewStore.get(id) ?? null,
+  applyTransition: () => {
+    /* no-op — a view is recorded once */
+  },
+  requireCreationOwner: true,
+  // The supplier must have lines in the version it opened.
+  creationOwner: (payload) => {
+    const sid = String(payload.supplierId);
+    const pub = forecastVersionStore.get(String(payload.publicationId));
+    return pub?.lines.some((l) => l.supplierId === sid) ? sid : null;
+  },
+  create: (payload) => {
+    const publicationId = String(payload.publicationId);
+    const supplierId = String(payload.supplierId);
+    const existing = forecastViewStore.find(publicationId, supplierId);
+    if (existing) return { entityId: existing.id };
+    const id = forecastViewStore.nextId();
+    forecastViewStore.add({ id, publicationId, supplierId, viewedAt: sdcClock.now() });
+    return { entityId: id };
+  },
+};
 
 const incomingShipmentTarget: CommandTarget = {
   readState: (id) => incomingShipmentStore.get(id)?.lifecycle ?? null,
@@ -2779,6 +2958,9 @@ const TARGETS: Record<string, CommandTarget> = {
   stockAccess: stockAccessTarget,
   capacitySubmission: capacityTarget,
   inventoryAlert: inventoryAlertTarget,
+  // REQ-E06-01 / REQ-E06-03 — forecast versions and supplier views.
+  forecastVersion: forecastVersionTarget,
+  forecastView: forecastViewTarget,
 };
 
 // The behavior-wiring census (was the contract package's "6"; 7 with the G1.1

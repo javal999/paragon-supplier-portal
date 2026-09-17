@@ -119,6 +119,13 @@ export const requirementResponseFlow: FlowDefinition = {
         // the agreement hook would be comparing a parse result against an
         // unvalidated `unknown` and would have to duplicate the floor to say so.
         POLICY_HOOKS.RR_SUBMIT_QTY_AGREES,
+        // REQ-E06-02 BR-04 — below forecast needs a starter reason (and `other`
+        // a note). It was a form rule only; the verb now refuses it. Runs after
+        // the floor, which proved `confirmedQty` is a number.
+        POLICY_HOOKS.RR_SUBMIT_SHORTFALL_REASON,
+        // REQ-E06-02 BR-08 — a forecast-version commitment carries its date,
+        // and any upside quantity is a number of zero or more.
+        POLICY_HOOKS.RR_SUBMIT_COMMITMENT_DETAIL,
       ],
       surfaceable: { surfaced: true },
       version: 1,

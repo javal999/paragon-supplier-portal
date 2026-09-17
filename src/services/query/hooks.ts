@@ -68,6 +68,18 @@ export const useCapacityPlans = () =>
 export const useInventoryAlerts = () =>
   useServiceQuery(['procurement', 'inventoryAlerts'], (svc, scope) => svc.procurement.getInventoryAlerts(scope));
 
+/** Published forecast versions with who viewed them (REQ-E06-01). */
+export const useForecastVersions = () =>
+  useServiceQuery(['procurement', 'forecastVersions'], (svc, scope) => svc.procurement.getForecastVersions(scope));
+
+/** The current forecast lines with their commitments (REQ-E06-02 / REQ-E06-03). */
+export const useForecastCommitments = () =>
+  useServiceQuery(['procurement', 'forecastCommitments'], (svc, scope) => svc.procurement.getForecastCommitments(scope));
+
+/** Supplier coverage per material against Firm demand (REQ-E06-03 BR-07). */
+export const useForecastCoverage = () =>
+  useServiceQuery(['procurement', 'forecastCoverage'], (svc, scope) => svc.procurement.getForecastCoverage(scope));
+
 export const useRFQs = (filter?: RFQFilter) =>
   useServiceQuery(['procurement', 'rfqs', filter], (svc, scope) =>
     svc.procurement.getRFQs(scope, filter),

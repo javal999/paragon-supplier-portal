@@ -229,6 +229,24 @@ export const POLICY_HOOKS = {
    */
   RR_SUBMIT_QTY_AGREES: 'rr_submit_qty_agrees',
   /**
+   * REQ-E06-02 BR-04 / AC-02 — a commitment below the line's forecast needs a
+   * starter reason code (section 3.6), and `other` needs a note. Enforced at
+   * the verb, so screen, upload and a hand-made dispatch are held to it alike.
+   */
+  RR_SUBMIT_SHORTFALL_REASON: 'rr_submit_shortfall_reason',
+  /**
+   * REQ-E06-02 BR-08 — a commitment to a forecast version carries a commitment
+   * date, and an upside quantity when given is a number of zero or more.
+   */
+  RR_SUBMIT_COMMITMENT_DETAIL: 'rr_submit_commitment_detail',
+  /** REQ-E06-01 BR-02 — publish names a forecast stream (packaging or raw material). */
+  FORECAST_PUBLISH_VALID: 'forecast_publish_valid',
+  /**
+   * REQ-E06-03 BR-05 — reassign moves a line of the CURRENT version to a
+   * different supplier qualified for the material, with a note.
+   */
+  FORECAST_REASSIGN_VALID: 'forecast_reassign_valid',
+  /**
    * RR dispute / resolve: the authored text must be SUBSTANCE, not presence.
    *
    * ⚠️ **THE DISPATCHER'S `requiredFields` RULE IS `isEmpty`, AND `isEmpty('   ')`

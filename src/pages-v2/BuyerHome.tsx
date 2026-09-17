@@ -7,6 +7,7 @@ import {
   useASNs,
   useBuyerInvoices,
   useCapacityPlans,
+  useForecastCommitments,
   useInventoryAlerts,
   useGoodsReceipts,
   usePurchaseOrders,
@@ -23,6 +24,8 @@ import { isOpenDispute } from '../services/transitions/fulfilmentRules';
 import { deliveryDrift } from '../services/transitions/callOffRules';
 import { useCallOffViews } from './callOffs/callOffDisplay';
 import { planStatus } from '../services/transitions/capacityRules';
+import { deadlineState } from '../services/transitions/forecastRules';
+import { forecastNow } from './forecasts/forecastDisplay';
 
 // PTI Home — "My tasks" (REQUIREMENTS §3.8 SC-01). Tasks are filtered by the
 // PTI role the menu is showing, so a Finance user is not handed a planner's work.
@@ -44,6 +47,9 @@ const BuyerHome: React.FC = () => {
   // REQ-E08-04 / REQ-E08-05 — open High alerts and capacity gaps, derived at read.
   const alerts = useInventoryAlerts();
   const capacity = useCapacityPlans();
+  // REQ-E06-02 / REQ-E06-03 — missing commitments past their deadline (the
+  // escalation) and commitments outside tolerance, derived at read time.
+  const forecastLines = useForecastCommitments();
 
   const tasks = useMemo<HomeTask[]>(() => {
     const now = new Date();
@@ -142,6 +148,24 @@ const BuyerHome: React.FC = () => {
         to: '/buyer/capacity',
       },
       {
+        // REQ-E06-03 BR-06 — after the deadline, a missing commitment escalates to the planner.
+        id: 'missing-commitments',
+        roles: ['MP'],
+        label: t('hub.home.task.missingCommitments'),
+        count: (forecastLines.data?.items ?? []).filter((l) => deadlineState(l, forecastNow()) === 'overdue').length,
+        severity: 'critical',
+        to: '/buyer/collaboration',
+      },
+      {
+        // REQ-E06-02 BR-05 — a commitment outside tolerance is an exception for the planner.
+        id: 'commitment-exceptions',
+        roles: ['MP'],
+        label: t('hub.home.task.commitmentExceptions'),
+        count: (forecastLines.data?.items ?? []).filter((l) => l.state === 'exception').length,
+        severity: 'warning',
+        to: '/buyer/collaboration',
+      },
+      {
         id: 'chase',
         roles: ['MP'],
         label: t('hub.home.task.chase'),
@@ -193,7 +217,7 @@ const BuyerHome: React.FC = () => {
       },
     ];
     return role === 'ALL' ? all : all.filter((task) => task.roles.includes(role));
-  }, [role, pos.data, invoices.data, rfqs.data, quotes.data, grs.data, asns.data, chase.data, callOffs.views, alerts.data, capacity.data, t]);
+  }, [role, pos.data, invoices.data, rfqs.data, quotes.data, grs.data, asns.data, chase.data, callOffs.views, alerts.data, capacity.data, forecastLines.data, t]);
 
   return (
     <AppShellV2>

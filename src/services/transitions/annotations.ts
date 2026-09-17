@@ -295,6 +295,9 @@ export const TRANSITION_PURPOSE: FlowAnnotations = Object.freeze({
   t_stocksync_run: { purposeKey: 'processFlows.purpose.t_stocksync_run' },
   t_capacity_submit: { purposeKey: 'processFlows.purpose.t_capacity_submit' },
   t_inventoryalert_close: { purposeKey: 'processFlows.purpose.t_inventoryalert_close' },
+  t_forecastversion_publish: { purposeKey: 'processFlows.purpose.t_forecastversion_publish' },
+  t_forecastversion_reassign: { purposeKey: 'processFlows.purpose.t_forecastversion_reassign' },
+  t_forecastview_record: { purposeKey: 'processFlows.purpose.t_forecastview_record' },
 });
 
 /**
@@ -332,6 +335,8 @@ export const ENTITY_PURPOSE: FlowAnnotations = Object.freeze({
   stockSync: { purposeKey: 'processFlows.purpose.entity.stockSync' },
   capacitySubmission: { purposeKey: 'processFlows.purpose.entity.capacitySubmission' },
   inventoryAlert: { purposeKey: 'processFlows.purpose.entity.inventoryAlert' },
+  forecastVersion: { purposeKey: 'processFlows.purpose.entity.forecastVersion' },
+  forecastView: { purposeKey: 'processFlows.purpose.entity.forecastView' },
 });
 
 /**
