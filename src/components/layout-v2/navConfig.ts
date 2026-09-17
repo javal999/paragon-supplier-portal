@@ -3,6 +3,7 @@ import {
   BookOpen,
   Boxes,
   Building2,
+  ClipboardCheck,
   CalendarClock,
   ChartLine,
   FileSearch,
@@ -61,6 +62,7 @@ export const PTI_NAV: readonly NavSection[] = [
     labelKey: 'hub.nav.section.orders',
     roles: ['MP'],
     items: [
+      { labelKey: 'hub.nav.pti.orderSummary', icon: ClipboardCheck, path: '/buyer/order-summary' },
       { labelKey: 'hub.nav.pti.purchaseOrders', icon: ShoppingCart, path: '/buyer/orders' },
       { labelKey: 'hub.nav.pti.shipments', icon: Truck, path: '/buyer/shipments' },
       { labelKey: 'hub.nav.pti.goodsReceipts', icon: PackageCheck, path: '/buyer/goods-receipt' },
@@ -121,6 +123,7 @@ export const SUPPLIER_NAV: readonly NavSection[] = [
     id: 'orders',
     labelKey: 'hub.nav.section.supplierOrders',
     items: [
+      { labelKey: 'hub.nav.sup.orderSummary', icon: ClipboardCheck, path: '/supplier/order-summary' },
       { labelKey: 'hub.nav.sup.purchaseOrders', icon: ShoppingCart, path: '/supplier/orders' },
       { labelKey: 'hub.nav.sup.callOffs', icon: CalendarClock, path: '/supplier/delivery-agreements' },
       { labelKey: 'hub.nav.sup.shipments', icon: Truck, path: '/supplier/shipments' },

@@ -54,6 +54,18 @@ const SupplierHome: React.FC = () => {
         to: '/supplier/orders',
       },
       {
+        // REQ-E07-05 — a confirmed order still owes its expected completion date.
+        id: 'shipping-notice',
+        label: t('hub.home.task.sup.shippingNotice'),
+        count: poItems.filter(
+          (po) =>
+            (po.status === POStatus.CONFIRMED || po.status === POStatus.PARTIALLY_DELIVERED) &&
+            !po.shippingNotice?.expectedCompletionDate,
+        ).length,
+        severity: 'warning',
+        to: '/supplier/order-summary',
+      },
+      {
         id: 'create-asn',
         label: t('hub.home.task.sup.createAsn'),
         count: readyToShip.length,

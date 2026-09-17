@@ -56,9 +56,19 @@ describe('BuyerOrders — four honest states', () => {
 // and this is what proves the arm is wired rather than merely declared.
 // ─────────────────────────────────────────────────────────────────────────────
 describe('BuyerOrders — who acts next', () => {
-  it('a PO in Confirmed names S/4HANA to the buyer too — the wait is SAP’s, not the supplier’s', async () => {
+  // ⚠️ PREMISE CHANGED BY REQ-E07-05: a Confirmed PO now waits on the supplier's
+  // shipping notice, so the buyer reads `theirs` there; the S/4HANA wait moved
+  // to Delivered (PO-2025-00101), where every exit is still an S/4HANA fact.
+  it('a PO in Confirmed now waits on the supplier — the shipping notice is theirs', async () => {
     renderWithProviders(<BuyerOrders />);
     fireEvent.click(await screen.findByText('PO-2025-00102'));
+    const line = await screen.findByTestId('next-act-buyer-po');
+    expect(line).toHaveAttribute('data-next-act', 'theirs');
+  });
+
+  it('a PO in Delivered names S/4HANA to the buyer — the wait is SAP’s, not the supplier’s', async () => {
+    renderWithProviders(<BuyerOrders />);
+    fireEvent.click(await screen.findByText('PO-2025-00101'));
     const line = await screen.findByTestId('next-act-buyer-po');
     expect(line).toHaveAttribute('data-next-act', 'external');
     expect(line).toHaveTextContent('Awaiting S/4HANA');

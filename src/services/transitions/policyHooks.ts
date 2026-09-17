@@ -41,6 +41,17 @@ export const POLICY_HOOKS = {
   SUPPLIERDOC_REFUSAL_AUTHORED: 'supplierdoc_refusal_authored',
   /** PO confirm: each confirmed line qty must be > 0 and ≤ the ordered qty. */
   PO_CONFIRM_QTY_WITHIN_ORDERED: 'po_confirm_qty_within_ordered',
+  /** PO adjust (REQ-E07-02 AC-02): every counter-offer names a line of this PO,
+   *  a predefined reason (a note when the reason is Other), a quantity within
+   *  CR-10 and a readable date. At least one line. */
+  PO_ADJUST_COUNTER_OFFER_VALID: 'po_adjust_counter_offer_valid',
+  /** PO reject (AC-03): at least one cause from date / quantity / quality, and
+   *  nothing off that list. */
+  PO_REJECT_CAUSE_GIVEN: 'po_reject_cause_given',
+  /** Counter-offer rejected by the planner: the comment is substance, not presence. */
+  PO_COUNTER_REVIEW_COMMENT_AUTHORED: 'po_counter_review_comment_authored',
+  /** Shipping notice: the expected completion date is a real `YYYY-MM-DD` date. */
+  PO_SHIPPING_NOTICE_DATE_VALID: 'po_shipping_notice_date_valid',
   /** ASN create: the parent PO (payload.poReference) must be Confirmed. */
   ASN_CREATE_PO_CONFIRMED: 'asn_create_po_confirmed',
   /** GR create: the parent shipment/ASN (payload.asnReference) must have arrived. */

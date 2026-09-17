@@ -9,6 +9,8 @@ import Login from '../pages/auth/Login';
 import BuyerDashboard from '../pages-v2/BuyerDashboard';
 import BuyerHome from '../pages-v2/BuyerHome';
 import SupplierHome from '../pages-v2/SupplierHome';
+import BuyerOrderSummary from '../pages-v2/BuyerOrderSummary';
+import SupplierOrderSummary from '../pages-v2/SupplierOrderSummary';
 import BuyerSuppliers from '../pages-v2/BuyerSuppliers';
 import BuyerSupplierProfile from '../pages-v2/BuyerSupplierProfile';
 import Marketplace from '../pages-v2/Marketplace';
@@ -83,6 +85,7 @@ const AppRouter: React.FC = () => {
           <Route path="/buyer/suppliers/:id" element={<BuyerSupplierProfile />} />
           <Route path="/marketplace" element={<Marketplace />} />
           <Route path="/marketplace/supplier/:id" element={<SupplierStorefrontV2 />} />
+          <Route path="/buyer/order-summary" element={<BuyerOrderSummary />} />
           <Route path="/buyer/orders" element={<BuyerOrders />} />
           <Route path="/buyer/sourcing" element={<BuyerSourcing />} />
           {/* Phase A/1 — the recommend-first triage that precedes the plan-grid
@@ -139,6 +142,7 @@ const AppRouter: React.FC = () => {
           <Route path="/supplier/whatsapp" element={<SupplierWhatsApp />} />
           {/* Comm Hub C2 — inbound reply triage (confirm-before-commit). */}
           <Route path="/supplier/comm-hub" element={<CommHubInbound />} />
+          <Route path="/supplier/order-summary" element={<SupplierOrderSummary />} />
           <Route path="/supplier/orders" element={<SupplierOrders />} />
           <Route path="/supplier/rfqs" element={<SupplierRFQsV2 />} />
           <Route

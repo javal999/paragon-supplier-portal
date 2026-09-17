@@ -54,6 +54,7 @@ const STATUS_ID: Record<string, string> = {
   Upcoming: 'Mendatang',
   Delayed: 'Terlambat',
   'Needs Attention': 'Perlu Perhatian',
+  Adjusted: 'Disesuaikan',
   // critical
   Overdue: 'Jatuh Tempo',
   Disputed: 'Disengketakan',
@@ -70,6 +71,7 @@ const STATUS_ID: Record<string, string> = {
   'Price Variance': 'Varians Harga',
   Suspended: 'Ditangguhkan',
   'Not Awarded': 'Tidak Dimenangkan',
+  Escalated: 'Dieskalasi',
   // info
   Confirmed: 'Dikonfirmasi',
   Acknowledged: 'Diakui',

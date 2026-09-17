@@ -25,6 +25,8 @@ import type {
   CommandDecision,
   CertificateDeclaration,
   SupplierDocumentCategory,
+  PoLineResponse,
+  PoRejectionCause,
 } from '../data/types';
 
 /**
@@ -162,6 +164,10 @@ function useInvalidateProcurement() {
 export interface PoConfirmVars {
   poId: string;
   confirmedQuantities: number[];
+  /** REQ-E07-02 Approve — the delivery date the supplier confirms. Optional so
+   *  an older caller that sends quantities only still dispatches. */
+  confirmedDeliveryDate?: string;
+  comment?: string;
 }
 
 /**
@@ -175,12 +181,16 @@ export function usePurchaseOrderConfirm() {
   const invalidate = useInvalidateProcurement();
 
   return useMutation<CommandResult, Error, PoConfirmVars>({
-    mutationFn: ({ poId, confirmedQuantities }) =>
+    mutationFn: ({ poId, confirmedQuantities, confirmedDeliveryDate, comment }) =>
       svc.commands.dispatch(scope, {
         transitionId: 't_po_confirm',
         entity: 'purchaseOrder',
         entityId: poId,
-        payload: { confirmedQuantities },
+        payload: {
+          confirmedQuantities,
+          ...(confirmedDeliveryDate ? { confirmedDeliveryDate } : {}),
+          ...(comment ? { comment } : {}),
+        },
       }),
     onSuccess: (result) => {
       if (result.status !== 'failed') invalidate(scope);
@@ -227,6 +237,89 @@ export function usePurchaseOrderAcknowledge() {
       if (result.status !== 'failed') invalidate(scope);
     },
   });
+}
+
+// ── PO response verbs (REQ-E07-02) and the shipping notice (REQ-E07-05) ────
+// Same shape as confirm: dispatch through the seam, invalidate this scope's
+// procurement reads on a non-failed outcome. `poId`, never `poNumber` (see
+// `usePurchaseOrderAcknowledge`).
+
+function usePoCommand<V extends { poId: string }>(
+  transitionId: string,
+  payloadOf: (vars: V) => Record<string, unknown>,
+) {
+  const svc = useDataService();
+  const scope = useScope();
+  const invalidate = useInvalidateProcurement();
+  return useMutation<CommandResult, Error, V>({
+    mutationFn: (vars) =>
+      svc.commands.dispatch(scope, {
+        transitionId,
+        entity: 'purchaseOrder',
+        entityId: vars.poId,
+        payload: payloadOf(vars),
+      }),
+    onSuccess: (result) => {
+      if (result.status !== 'failed') invalidate(scope);
+    },
+  });
+}
+
+export interface PoAdjustVars {
+  poId: string;
+  lineResponses: PoLineResponse[];
+  comment?: string;
+}
+
+/** Adjust a PO with a per-line counter-offer (fires `t_po_adjust`). */
+export function usePurchaseOrderAdjust() {
+  return usePoCommand<PoAdjustVars>('t_po_adjust', ({ lineResponses, comment }) => ({
+    lineResponses,
+    ...(comment ? { comment } : {}),
+  }));
+}
+
+export interface PoRejectVars {
+  poId: string;
+  rejectionCauses: PoRejectionCause[];
+  comment?: string;
+}
+
+/** Reject a PO (fires `t_po_reject`). */
+export function usePurchaseOrderReject() {
+  return usePoCommand<PoRejectVars>('t_po_reject', ({ rejectionCauses, comment }) => ({
+    rejectionCauses,
+    ...(comment ? { comment } : {}),
+  }));
+}
+
+/** The planner accepts a counter-offer (fires `t_po_accept_counter`). */
+export function usePurchaseOrderAcceptCounter() {
+  return usePoCommand<{ poId: string }>('t_po_accept_counter', () => ({}));
+}
+
+export interface PoRejectCounterVars {
+  poId: string;
+  reviewComment: string;
+}
+
+/** The planner rejects a counter-offer with a comment (fires `t_po_reject_counter`). */
+export function usePurchaseOrderRejectCounter() {
+  return usePoCommand<PoRejectCounterVars>('t_po_reject_counter', ({ reviewComment }) => ({
+    reviewComment,
+  }));
+}
+
+export interface PoShippingNoticeVars {
+  poId: string;
+  expectedCompletionDate: string;
+}
+
+/** Record or move the expected completion date (fires `t_po_shipping_notice`). */
+export function usePurchaseOrderShippingNotice() {
+  return usePoCommand<PoShippingNoticeVars>('t_po_shipping_notice', ({ expectedCompletionDate }) => ({
+    expectedCompletionDate,
+  }));
 }
 
 export interface AsnCreateVars {

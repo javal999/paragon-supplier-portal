@@ -106,6 +106,13 @@ export const DISPLAY_STATES: readonly DisplayStateRow[] = [
     group: 'computed-at-read',
     producer: 'src/services/data/invoiceProjection.ts',
   },
+  {
+    // REQ-E07-02 BR-09 — no supplier response past the 1-working-day deadline.
+    entity: 'purchaseOrder',
+    state: 'Escalated',
+    group: 'computed-at-read',
+    producer: 'src/services/data/poResponseProjection.ts',
+  },
   // ⚠️ THESE TWO MOVED OUT OF `stored-in-fixtures` — the group did not change
   // its mind, the TREE changed, and the gate re-derived it. They were fixture
   // literals with zero non-fixture writes until `obligationProjection.ts`

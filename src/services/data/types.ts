@@ -61,6 +61,10 @@ export enum POStatus {
   VIEWED = 'Viewed',
   ACKNOWLEDGED = 'Acknowledged',
   CONFIRMED = 'Confirmed',
+  /** The supplier proposed a counter-offer (REQ-E07-02 Adjust); the planner reviews it. */
+  ADJUSTED = 'Adjusted',
+  /** The supplier cannot meet the order (REQ-E07-02 Reject). PTI decides what next. */
+  REJECTED = 'Rejected',
   PARTIALLY_DELIVERED = 'Partially Delivered',
   DELIVERED = 'Delivered',
   CLOSED = 'Closed',
@@ -277,6 +281,76 @@ export interface PurchaseOrder {
   daysOverdue: number;
   acknowledgmentTimeHours: number;
   lineItems: POLineItem[];
+  /**
+   * The supplier's answer to the order (REQ-E07-02) — absent until the supplier
+   * approves, adjusts or rejects. Whether the PO is ESCALATED is never stored:
+   * it is derived at read time from the response deadline and the clock
+   * (`poResponseProjection.ts`, law 0.5).
+   */
+  response?: PoResponse;
+  /**
+   * When the supplier was last asked to respond, if not at creation — set when
+   * the planner rejects a counter-offer and the PO reopens. The response
+   * deadline counts from here (or from `orderDate` when absent).
+   */
+  responseRequestedAt?: string;
+  /** Shipping notice confirmation (REQ-E07-05) — absent until recorded. */
+  shippingNotice?: PoShippingNotice;
+}
+
+/** The three answers a supplier can give a purchase order (REQ-E07-02 BR-02). */
+export type PoResponseOption = 'approve' | 'adjust' | 'reject';
+
+/** Predefined adjust reasons — the starter list (REQUIREMENTS §3.6). */
+export type PoReasonCode = 'capacity' | 'material' | 'logistics' | 'quality' | 'other';
+
+/** What a rejection is about (REQ-E07-02 BR-06). */
+export type PoRejectionCause = 'date' | 'quantity' | 'quality';
+
+/** One line's counter-offer on an adjusted PO. */
+export interface PoLineResponse {
+  readonly lineId: string;
+  readonly reasonCode: PoReasonCode;
+  /** Required when `reasonCode` is `other`. */
+  readonly note?: string;
+  /** CR-10: 0 < quantity ≤ the line's ordered quantity. */
+  readonly counterQty: number;
+  /** `YYYY-MM-DD`. */
+  readonly counterDate: string;
+}
+
+/** The planner's decision on a counter-offer. */
+export interface PoCounterReview {
+  readonly decision: 'accepted' | 'rejected';
+  readonly comment?: string;
+  readonly reviewedAt: string;
+}
+
+export interface PoResponse {
+  readonly option: PoResponseOption;
+  /** ISO timestamp of the supplier's answer. */
+  readonly respondedAt: string;
+  /** Approve: the delivery date the supplier confirmed. */
+  readonly confirmedDeliveryDate?: string;
+  /** Adjust: one entry per adjusted line; lines not listed are accepted as ordered. */
+  readonly lines?: readonly PoLineResponse[];
+  /** Reject: at least one cause. */
+  readonly rejectionCauses?: readonly PoRejectionCause[];
+  readonly comment?: string;
+  /** The planner's review of an adjustment, once made. */
+  readonly review?: PoCounterReview;
+}
+
+export interface PoShippingNotice {
+  /** Date shipment started — recorded automatically from the first submitted ASN. */
+  readonly startedOn?: string;
+  /** The ASN that started it. */
+  readonly startedByAsn?: string;
+  /** Expected completion date given by the supplier (`YYYY-MM-DD`). */
+  readonly expectedCompletionDate?: string;
+  /** The previous expected completion date, kept when the supplier changes it. */
+  readonly previousCompletionDate?: string;
+  readonly updatedAt?: string;
 }
 
 export interface POSummary {

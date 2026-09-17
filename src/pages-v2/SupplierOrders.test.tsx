@@ -5,7 +5,7 @@ import { mockDataService } from '../services/data/mock/mockDataService';
 import { withChaos } from '../services/data/mock/withChaos';
 import { purchaseOrderStore } from '../services/data/mock/stores/purchaseOrderStore';
 import { commandAuditSink } from '../services/data/mock/MockCommandService';
-import type { IDataService } from '../services/data/types';
+import { POStatus, type IDataService } from '../services/data/types';
 import i18n from '../lib/i18n';
 import SupplierOrders from './SupplierOrders';
 
@@ -223,15 +223,29 @@ describe('SupplierOrders — the confirm cells are text, so the parser is load-b
 // ─────────────────────────────────────────────────────────────────────────────
 // WHO ACTS NEXT — the silence this batch exists to answer.
 //
-// `Confirmed` carries no footer verb and no handoff notice: every exit is an
-// S/4HANA goods movement, so `userVerbsFrom` returns [] and there is no atom to
-// ask about. Before this line the supplier saw a status word while both parties
-// waited on SAP.
+// ⚠️ PREMISE CHANGED BY REQ-E07-05 (order collaboration phase 2a): a `Confirmed`
+// PO now carries the supplier's shipping notice (`t_po_shipping_notice`), so the
+// supplier is the next actor there and the line reads `mine`. The S/4HANA wait
+// this block was written for still exists one state later — every exit from
+// `Delivered` is an S/4HANA fact — so the external assertions move to that state
+// rather than being deleted. The Confirmed PO is set to Delivered in the store
+// for them.
 // ─────────────────────────────────────────────────────────────────────────────
 describe('SupplierOrders — who acts next on a stranded PO', () => {
-  it('a PO in Confirmed names S/4HANA, on the supplier side', async () => {
+  const deliverPo007 = () =>
+    purchaseOrderStore.update('po-007', (po) => ({ ...po, status: POStatus.DELIVERED }));
+
+  it('a Confirmed PO is the supplier’s own next act — the shipping notice', async () => {
     renderWithProviders(<SupplierOrders />, { identity: SUPPLIER });
-    // PO-2025-00107 is sup-007's and sits in `Confirmed`.
+    fireEvent.click(await screen.findByText('PO-2025-00107'));
+    const line = await screen.findByTestId('next-act-supplier-po');
+    expect(line).toHaveAttribute('data-next-act', 'mine');
+  });
+
+  it('a PO in Delivered names S/4HANA, on the supplier side', async () => {
+    deliverPo007();
+    renderWithProviders(<SupplierOrders />, { identity: SUPPLIER });
+    // PO-2025-00107 is sup-007's, moved to `Delivered` above.
     fireEvent.click(await screen.findByText('PO-2025-00107'));
     const line = await screen.findByTestId('next-act-supplier-po');
     expect(line).toHaveAttribute('data-next-act', 'external');
@@ -244,6 +258,7 @@ describe('SupplierOrders — who acts next on a stranded PO', () => {
     // alone would be an assertion that cannot fail.
     await i18n.changeLanguage('id');
     try {
+      deliverPo007();
       renderWithProviders(<SupplierOrders />, { identity: SUPPLIER });
       fireEvent.click(await screen.findByText('PO-2025-00107'));
       const line = await screen.findByTestId('next-act-supplier-po');

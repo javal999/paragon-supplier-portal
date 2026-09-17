@@ -23,6 +23,8 @@ import Login from '../pages/auth/Login';
 import BuyerDashboard from '../pages-v2/BuyerDashboard';
 import BuyerHome from '../pages-v2/BuyerHome';
 import SupplierHome from '../pages-v2/SupplierHome';
+import BuyerOrderSummary from '../pages-v2/BuyerOrderSummary';
+import SupplierOrderSummary from '../pages-v2/SupplierOrderSummary';
 import BuyerSuppliers from '../pages-v2/BuyerSuppliers';
 import BuyerSupplierProfile from '../pages-v2/BuyerSupplierProfile';
 import Marketplace from '../pages-v2/Marketplace';
@@ -96,6 +98,7 @@ const ROUTES: RouteCase[] = [
   { name: 'buyer/suppliers/:id', pattern: '/buyer/suppliers/:id', at: '/buyer/suppliers/sup-007', element: <BuyerSupplierProfile />, identity: BUYER },
   { name: 'marketplace', pattern: '/marketplace', at: '/marketplace', element: <Marketplace />, identity: BUYER },
   { name: 'marketplace/supplier/:id', pattern: '/marketplace/supplier/:id', at: '/marketplace/supplier/sup-007', element: <SupplierStorefrontV2 />, identity: BUYER },
+  { name: 'buyer/order-summary', pattern: '/buyer/order-summary', at: '/buyer/order-summary', element: <BuyerOrderSummary />, identity: BUYER },
   { name: 'buyer/orders', pattern: '/buyer/orders', at: '/buyer/orders', element: <BuyerOrders />, identity: BUYER },
   { name: 'buyer/sourcing', pattern: '/buyer/sourcing', at: '/buyer/sourcing', element: <BuyerSourcing />, identity: BUYER },
   { name: 'buyer/plan-grid', pattern: '/buyer/plan-grid', at: '/buyer/plan-grid', element: <PlanGrid />, identity: BUYER },
@@ -131,6 +134,7 @@ const ROUTES: RouteCase[] = [
   { name: 'supplier/documents', pattern: '/supplier/documents', at: '/supplier/documents', element: <SupplierDocumentsV2 />, identity: SUPPLIER },
   { name: 'supplier/whatsapp', pattern: '/supplier/whatsapp', at: '/supplier/whatsapp', element: <SupplierWhatsApp />, identity: SUPPLIER },
   { name: 'supplier/comm-hub', pattern: '/supplier/comm-hub', at: '/supplier/comm-hub', element: <CommHubInbound />, identity: SUPPLIER },
+  { name: 'supplier/order-summary', pattern: '/supplier/order-summary', at: '/supplier/order-summary', element: <SupplierOrderSummary />, identity: SUPPLIER },
   { name: 'supplier/orders', pattern: '/supplier/orders', at: '/supplier/orders', element: <SupplierOrders />, identity: SUPPLIER },
   { name: 'supplier/rfqs', pattern: '/supplier/rfqs', at: '/supplier/rfqs', element: <SupplierRFQsV2 />, identity: SUPPLIER },
   { name: 'supplier/forecasts', pattern: '/supplier/forecasts', at: '/supplier/forecasts', element: <SupplierForecasts />, identity: SUPPLIER },

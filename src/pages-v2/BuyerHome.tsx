@@ -15,6 +15,8 @@ import { useUnifiedChase } from '../services/query/chaseHooks';
 import { useHubRole, type HubRole } from '../components/layout-v2/hubRole';
 import * as d from './widgets/buyerDerivations';
 import TaskList, { type HomeTask } from './home/TaskList';
+import { POStatus } from '../services/data/types';
+import { completionMovedLater, isEscalated } from '../services/data/poResponseProjection';
 
 // PTI Home — "My tasks" (REQUIREMENTS §3.8 SC-01). Tasks are filtered by the
 // PTI role the menu is showing, so a Finance user is not handed a planner's work.
@@ -34,6 +36,7 @@ const BuyerHome: React.FC = () => {
 
   const tasks = useMemo<HomeTask[]>(() => {
     const now = new Date();
+    const nowIso = now.toISOString();
     const poItems = pos.data?.items ?? [];
     const invItems = invoices.data?.items ?? [];
     const rfqItems = rfqs.data?.items ?? [];
@@ -43,12 +46,40 @@ const BuyerHome: React.FC = () => {
     const chaseRows = chase.data ?? [];
     const all: RoleTask[] = [
       {
-        id: 'unack-po',
+        // REQ-E07-02 BR-09 — no response by the 1-working-day deadline. Derived
+        // from the clock at read time, never stored.
+        id: 'escalated-po',
         roles: ['MP'],
-        label: t('hub.home.task.unackPo'),
-        count: d.unacknowledgedOver48h(poItems, now).length,
-        severity: d.poTier(poItems, now),
-        to: '/buyer/orders',
+        label: t('hub.home.task.escalatedPo'),
+        count: poItems.filter((po) => isEscalated(po, nowIso)).length,
+        severity: 'critical',
+        to: '/buyer/orders?tab=escalated',
+      },
+      {
+        // REQ-E07-02 BR-08 — a rejection is PTI's to act on.
+        id: 'rejected-po',
+        roles: ['MP'],
+        label: t('hub.home.task.rejectedPo'),
+        count: poItems.filter((po) => po.status === POStatus.REJECTED).length,
+        severity: 'critical',
+        to: '/buyer/orders?tab=rejected',
+      },
+      {
+        id: 'counter-offers',
+        roles: ['MP'],
+        label: t('hub.home.task.counterOffers'),
+        count: poItems.filter((po) => po.status === POStatus.ADJUSTED).length,
+        severity: 'warning',
+        to: '/buyer/orders?tab=review',
+      },
+      {
+        // REQ-E07-05 — the supplier moved the expected completion date later.
+        id: 'completion-moved',
+        roles: ['MP'],
+        label: t('hub.home.task.completionMoved'),
+        count: poItems.filter(completionMovedLater).length,
+        severity: 'warning',
+        to: '/buyer/order-summary',
       },
       {
         id: 'chase',

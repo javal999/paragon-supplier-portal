@@ -1,0 +1,208 @@
+import React, { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
+import AppShellV2 from '../../components/layout-v2/AppShellV2';
+import PageHeader from '../../components/ui-v2/PageHeader';
+import PageMetaLine from '../../components/ui-v2/PageMetaLine';
+import SampleDataBadge from '../../components/ui-v2/SampleDataBadge';
+import StatusPill from '../../components/ui-v2/StatusPill';
+import Table from '../../components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '../../components/ui-v2/TableHeader';
+import TableRow from '../../components/ui-v2/TableRow';
+import TableCell from '../../components/ui-v2/TableCell';
+import Data from '../../components/ui-v2/Data';
+import LoadingState from '../../components/ui-v2/LoadingState';
+import ErrorState from '../../components/ui-v2/ErrorState';
+import type { StatusTone } from '../../lib/statusTone';
+import { formatDate } from '../../lib/format';
+import { useASNs, usePurchaseOrders } from '../../services/query/hooks';
+import type { PurchaseOrder } from '../../services/data/types';
+import {
+  foresightStatus,
+  responseStatus,
+  shippingNoticeStatus,
+  type ForesightAnswer,
+  type ForesightStatus,
+  type ResponseStatus,
+  type ShippingNoticeStatus,
+} from '../../services/data/poResponseProjection';
+import type { Persona } from '../../components/layout-v2/navConfig';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ORDER COLLABORATION SUMMARY — REQ-E07-03 (MN-ORD-10 to MN-ORD-13).
+//
+// One row per PO: the supplier's response, its ASNs, and the 3 confirmations
+// (REQUIREMENTS §3.2). Each available status links to the page that owns it.
+// Capacity confirmation (REQ-E08-04) is not built yet, so it reads "Not
+// started" in neutral and links nowhere. A supplier sees its own POs only: the
+// PO read is already scoped to the session's supplier.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const RESPONSE_TONE: Record<ResponseStatus, StatusTone> = {
+  awaiting: 'neutral',
+  escalated: 'danger',
+  approved: 'success',
+  adjusted: 'warning',
+  rejected: 'danger',
+};
+
+const SHIPPING_TONE: Record<ShippingNoticeStatus, StatusTone> = {
+  notStarted: 'neutral',
+  missing: 'warning',
+  confirmed: 'success',
+  delayed: 'warning',
+};
+
+const FORESIGHT_TONE: Record<ForesightStatus, StatusTone> = {
+  notStarted: 'neutral',
+  awaiting: 'neutral',
+  confirmed: 'success',
+  gap: 'warning',
+};
+
+const linkClass = 'text-action hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-action rounded';
+
+export interface OrderSummaryViewProps {
+  readonly persona: Persona;
+  /** Forecast answers for the foresight confirmation (empty while loading). */
+  readonly foresightAnswers: readonly ForesightAnswer[];
+}
+
+const OrderSummaryView: React.FC<OrderSummaryViewProps> = ({ persona, foresightAnswers }) => {
+  const { t } = useTranslation();
+  const posQuery = usePurchaseOrders();
+  const asnsQuery = useASNs();
+  const nowIso = new Date().toISOString();
+  const base = persona === 'buyer' ? '/buyer' : '/supplier';
+  const crumb = [
+    t(persona === 'buyer' ? 'hub.nav.section.orders' : 'hub.nav.section.supplierOrders'),
+    t('oc.summary.title'),
+  ];
+
+  const rows = useMemo(() => {
+    const asns = asnsQuery.data?.items ?? [];
+    return [...(posQuery.data?.items ?? [])]
+      .sort((a, b) => b.orderDate.localeCompare(a.orderDate))
+      .map((po: PurchaseOrder) => ({
+        po,
+        response: responseStatus(po, nowIso),
+        asnCount: asns.filter((a) => a.poReference === po.poNumber).length,
+        foresight: foresightStatus(po, foresightAnswers),
+        shipping: shippingNoticeStatus(po),
+      }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [posQuery.data, asnsQuery.data, foresightAnswers]);
+
+  if (posQuery.isPending) return <LoadingState breadcrumb={crumb} />;
+  if (posQuery.isError)
+    return <ErrorState breadcrumb={crumb} error={posQuery.error} onRetry={() => posQuery.refetch()} />;
+
+  const escalated = rows.filter((r) => r.response === 'escalated').length;
+  const poLink = (po: PurchaseOrder) => `${base}/orders?po=${encodeURIComponent(po.id)}`;
+
+  return (
+    <AppShellV2>
+      <PageHeader
+        breadcrumb={crumb}
+        title={t('oc.summary.title')}
+        subtitle={t(persona === 'buyer' ? 'oc.summary.subtitle.pti' : 'oc.summary.subtitle.sup')}
+      />
+      <PageMetaLine className="-mt-6 mb-4">
+        {t('oc.summary.asOf')} <Data>{formatDate(nowIso)}</Data>
+        <SampleDataBadge className="ml-3 align-middle" />
+      </PageMetaLine>
+
+      {escalated > 0 && (
+        <div
+          role="status"
+          className="bg-danger-soft border-l-2 border-danger rounded px-4 py-3 mb-4 text-sm text-danger"
+          data-testid="order-summary-escalated-banner"
+        >
+          {t(escalated === 1 ? 'oc.summary.banner.escalated.one' : 'oc.summary.banner.escalated.other', {
+            count: escalated,
+          })}
+        </div>
+      )}
+
+      <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableHeaderCell>{t('oc.summary.col.po')}</TableHeaderCell>
+            {persona === 'buyer' && <TableHeaderCell>{t('oc.summary.col.supplier')}</TableHeaderCell>}
+            <TableHeaderCell>{t('oc.summary.col.response')}</TableHeaderCell>
+            <TableHeaderCell className="text-right">{t('oc.summary.col.asns')}</TableHeaderCell>
+            <TableHeaderCell>{t('oc.summary.col.capacity')}</TableHeaderCell>
+            <TableHeaderCell>{t('oc.summary.col.foresight')}</TableHeaderCell>
+            <TableHeaderCell>{t('oc.summary.col.shipping')}</TableHeaderCell>
+          </TableHeader>
+          <tbody>
+            {rows.map(({ po, response, asnCount, foresight, shipping }) => (
+              <TableRow key={po.id} data-testid={`order-summary-row-${po.id}`}>
+                <TableCell>
+                  <Link to={poLink(po)} className={linkClass}>
+                    <Data className="font-semibold">{po.poNumber}</Data>
+                  </Link>
+                </TableCell>
+                {persona === 'buyer' && (
+                  <TableCell className="text-sm text-text-primary">{po.supplierName}</TableCell>
+                )}
+                <TableCell>
+                  <Link to={poLink(po)} aria-label={`${po.poNumber}: ${t(`oc.summary.response.${response}`)}`}>
+                    <StatusPill variant={RESPONSE_TONE[response]}>
+                      {t(`oc.summary.response.${response}`)}
+                    </StatusPill>
+                  </Link>
+                </TableCell>
+                <TableCell className="text-right">
+                  {asnCount > 0 ? (
+                    <Link to={`${base}/shipments`} className={linkClass}>
+                      <Data>{asnCount}</Data>
+                    </Link>
+                  ) : (
+                    <Data className="text-text-tertiary">0</Data>
+                  )}
+                </TableCell>
+                <TableCell>
+                  <span title={t('oc.summary.capacityHint')} data-testid="order-summary-capacity">
+                    <StatusPill variant="neutral">{t('oc.summary.status.notStarted')}</StatusPill>
+                  </span>
+                </TableCell>
+                <TableCell>
+                  {foresight === 'notStarted' ? (
+                    <StatusPill variant="neutral">{t('oc.summary.status.notStarted')}</StatusPill>
+                  ) : (
+                    <Link to={persona === 'buyer' ? '/buyer/collaboration' : '/supplier/forecasts'}>
+                      <StatusPill variant={FORESIGHT_TONE[foresight]}>
+                        {t(`oc.summary.foresight.${foresight}`)}
+                      </StatusPill>
+                    </Link>
+                  )}
+                </TableCell>
+                <TableCell>
+                  {shipping === 'notStarted' ? (
+                    <StatusPill variant="neutral">{t('oc.summary.status.notStarted')}</StatusPill>
+                  ) : (
+                    <Link to={poLink(po)} data-testid={`order-summary-shipping-${po.id}`}>
+                      <StatusPill variant={SHIPPING_TONE[shipping]}>
+                        {t(`oc.summary.shipping.${shipping}`)}
+                      </StatusPill>
+                    </Link>
+                  )}
+                </TableCell>
+              </TableRow>
+            ))}
+            {rows.length === 0 && (
+              <tr>
+                <td colSpan={7} className="text-center text-sm text-text-tertiary py-10">
+                  {t('oc.summary.empty')}
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </Table>
+      </div>
+    </AppShellV2>
+  );
+};
+
+export default OrderSummaryView;

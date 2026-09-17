@@ -11,6 +11,9 @@
 
 import { POStatus } from '../types';
 import type {
+  PurchaseOrder,
+  PoLineResponse,
+  PoRejectionCause,
   ICommandService,
   QueryScope,
   CommandInput,
@@ -116,17 +119,113 @@ const purchaseOrderTarget: CommandTarget = {
   applyTransition: (id, toState, payload) => {
     // Immutable swap (new PO + new line items) so the invalidated query yields
     // genuinely-new references and all derivations recompute (see the store).
-    const qtys = payload.confirmedQuantities;
-    purchaseOrderStore.update(id, (po) => ({
-      ...po,
-      status: toState as POStatus,
-      lineItems: Array.isArray(qtys)
-        ? po.lineItems.map((li, i) =>
-            typeof qtys[i] === 'number' ? { ...li, confirmedQty: qtys[i] as number } : li,
-          )
-        : po.lineItems,
-    }));
+    //
+    // One target serves every PO verb, and the verbs are told apart by what
+    // they carry — the dispatcher has already proved the payload's shape
+    // through each verb's required fields and policy hook.
+    const now = new Date().toISOString();
+    const text = (v: unknown): string | undefined =>
+      typeof v === 'string' && v.trim() ? v.trim() : undefined;
+    purchaseOrderStore.update(id, (po) => {
+      const from = po.status;
+      const next: PurchaseOrder = { ...po, status: toState as POStatus };
+
+      // Approve (t_po_confirm): confirmed quantities + the confirmed date.
+      const qtys = payload.confirmedQuantities;
+      if (Array.isArray(qtys)) {
+        next.lineItems = po.lineItems.map((li, i) =>
+          typeof qtys[i] === 'number' ? { ...li, confirmedQty: qtys[i] as number } : li,
+        );
+        const date = text(payload.confirmedDeliveryDate);
+        if (date) next.confirmedDeliveryDate = date;
+        next.response = {
+          option: 'approve',
+          respondedAt: now,
+          ...(date ? { confirmedDeliveryDate: date } : {}),
+          ...(text(payload.comment) ? { comment: text(payload.comment) } : {}),
+        };
+      }
+
+      // Adjust (t_po_adjust): the per-line counter-offer record.
+      if (Array.isArray(payload.lineResponses)) {
+        next.response = {
+          option: 'adjust',
+          respondedAt: now,
+          lines: (payload.lineResponses as PoLineResponse[]).map((l) => ({
+            lineId: l.lineId,
+            reasonCode: l.reasonCode,
+            ...(text(l.note) ? { note: text(l.note) } : {}),
+            counterQty: l.counterQty,
+            counterDate: l.counterDate,
+          })),
+          ...(text(payload.comment) ? { comment: text(payload.comment) } : {}),
+        };
+      }
+
+      // Reject (t_po_reject).
+      if (Array.isArray(payload.rejectionCauses)) {
+        next.response = {
+          option: 'reject',
+          respondedAt: now,
+          rejectionCauses: [...(payload.rejectionCauses as PoRejectionCause[])],
+          ...(text(payload.comment) ? { comment: text(payload.comment) } : {}),
+        };
+      }
+
+      // Counter-offer review by the planner.
+      if (from === POStatus.ADJUSTED && po.response) {
+        if (toState === POStatus.CONFIRMED) {
+          // t_po_accept_counter — the PO stands at the counter-offer.
+          const byLine = new Map((po.response.lines ?? []).map((l) => [l.lineId, l]));
+          next.lineItems = po.lineItems.map((li) => {
+            const counter = byLine.get(li.id);
+            return { ...li, confirmedQty: counter ? counter.counterQty : li.quantity };
+          });
+          const dates = [...byLine.values()].map((l) => l.counterDate).sort();
+          if (dates.length > 0) next.confirmedDeliveryDate = dates[dates.length - 1];
+          next.response = { ...po.response, review: { decision: 'accepted', reviewedAt: now } };
+        } else if (toState === POStatus.SENT) {
+          // t_po_reject_counter — reopened; the deadline counts again from now.
+          next.response = {
+            ...po.response,
+            review: { decision: 'rejected', comment: text(payload.reviewComment), reviewedAt: now },
+          };
+          next.responseRequestedAt = now;
+        }
+      }
+
+      // Shipping notice (t_po_shipping_notice, state-preserving).
+      const completion = text(payload.expectedCompletionDate);
+      if (completion) {
+        const prev = po.shippingNotice?.expectedCompletionDate;
+        next.shippingNotice = {
+          ...po.shippingNotice,
+          expectedCompletionDate: completion,
+          ...(prev && prev !== completion ? { previousCompletionDate: prev } : {}),
+          updatedAt: now,
+        };
+      }
+      return next;
+    });
   },
+};
+
+/**
+ * REQ-E07-05 BR-03 — the first ASN submitted against a PO records "shipment
+ * started" on that PO, with the ASN's ship date. The ASN carries no separate
+ * dispatch-date field, so the submission date is its ship date.
+ */
+const recordShipmentStarted = (asnNumber: string, poNumber: string): void => {
+  const po = purchaseOrderStore.all().find((p) => p.poNumber === poNumber);
+  if (!po || po.shippingNotice?.startedOn) return;
+  purchaseOrderStore.update(po.id, (p) => ({
+    ...p,
+    shippingNotice: {
+      ...p.shippingNotice,
+      startedOn: new Date().toISOString().slice(0, 10),
+      startedByAsn: asnNumber,
+    },
+  }));
 };
 
 // — Advance ship notice target — creation-shape (canonical, Step 4 batch i). ——
@@ -138,6 +237,10 @@ const advanceShipNoticeTarget: CommandTarget = {
   readScopeOwner: (id) => asnStore.get(id)?.supplierId ?? null,
   readEntity: (id) => asnStore.get(id) ?? null,
   applyTransition: (id, toState, payload) => {
+    if (toState === 'Submitted') {
+      const asn = asnStore.get(id);
+      if (asn) recordShipmentStarted(asn.asnNumber, asn.poReference);
+    }
     asnStore.update(id, (a) => ({
       ...a,
       status: toState as AsnStatus,

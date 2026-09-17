@@ -146,6 +146,8 @@ const LANE_BUNDLES = Object.freeze({
       'contract:draft', 'contract:activate', 'contract:renew', 'contract:terminate',
       'obligation:track', 'obligation:complete',
       'pr:approve', 'pr:reject',
+      // REQ-E07-02 — deciding on a supplier's counter-offer to a PO.
+      'po:review-response',
       // ── B1 · RAISING A SUPPLIER APPLICATION, AND ONLY RAISING ONE ─────────
       // Establishing or extending a commercial relationship with a vendor is
       // this lane's subject matter — it sits upstream of the sourcing, orders
@@ -283,6 +285,9 @@ const LANE_BUNDLES = Object.freeze({
     // and is recorded rather than argued away.
     fulfilment: Object.freeze([
       'po:view', 'po:acknowledge', 'po:confirm',
+      // REQ-E07-02 / REQ-E07-05 — the other two answers to an order, and the
+      // shipping notice on a confirmed one.
+      'po:adjust', 'po:reject', 'po:shipping-notice',
       'asn:create', 'asn:submit',
       'incomingshipment:report', 'incomingshipment:ship',
       'incomingshipment:arrive', 'incomingshipment:cancel',

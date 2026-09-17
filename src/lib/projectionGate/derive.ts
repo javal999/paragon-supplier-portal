@@ -158,6 +158,9 @@ const OWNED_BY: Record<string, RegExp> = {
   obligation: /mockObligations|obligationStore|obligationProjection/,
   compliance: /complianceRegistry|complianceProjection|Compliance/,
   invoice: /fixtures\/invoices|invoiceStore|invoiceProjection|Invoices/,
+  // `poResponseProjection` is the producer of the computed `Escalated`, named
+  // precisely for the reason given on `obligation` above.
+  purchaseOrder: /mockPurchaseOrders|purchaseOrderStore|poResponseProjection/,
 };
 
 export function filesForEntity(entity: string, files: string[]): string[] {

@@ -25,6 +25,7 @@ export const hubEn: Record<string, string> = {
   // PTI items
   'hub.nav.pti.tasks': 'My tasks',
   'hub.nav.pti.replies': 'Supplier replies',
+  'hub.nav.pti.orderSummary': 'Order summary',
   'hub.nav.pti.purchaseOrders': 'Purchase orders',
   'hub.nav.pti.shipments': 'Shipments & ASN',
   'hub.nav.pti.goodsReceipts': 'Goods receipts',
@@ -38,6 +39,7 @@ export const hubEn: Record<string, string> = {
 
   // Supplier items
   'hub.nav.sup.todo': 'To do',
+  'hub.nav.sup.orderSummary': 'Order summary',
   'hub.nav.sup.purchaseOrders': 'Purchase orders',
   'hub.nav.sup.callOffs': 'Call-offs',
   'hub.nav.sup.shipments': 'Shipments & ASN',
@@ -77,7 +79,10 @@ export const hubEn: Record<string, string> = {
   'hub.home.severity.warning': 'Due soon',
   'hub.home.severity.info': 'To review',
 
-  'hub.home.task.unackPo': 'Purchase orders with no supplier response after 48 hours',
+  'hub.home.task.escalatedPo': 'Escalated purchase orders',
+  'hub.home.task.rejectedPo': 'Rejected purchase orders',
+  'hub.home.task.counterOffers': 'Supplier counter-offers to review',
+  'hub.home.task.completionMoved': 'Orders whose expected completion moved later',
   'hub.home.task.receipts': 'Goods receipts to review',
   'hub.home.task.inboundAsn': 'Inbound shipments to receive',
   'hub.home.task.chase': 'Suppliers to follow up on forecasts or deliveries',
@@ -85,6 +90,7 @@ export const hubEn: Record<string, string> = {
   'hub.home.task.overdueInvoices': 'Overdue supplier invoices',
 
   'hub.home.task.sup.confirmOrders': 'Purchase orders to respond to',
+  'hub.home.task.sup.shippingNotice': 'Confirmed orders without an expected completion date',
   'hub.home.task.sup.createAsn': 'Confirmed orders ready to ship: create the ASN',
   'hub.home.task.sup.rfq': 'Sourcing invitations to answer',
   'hub.home.task.sup.certs': 'Certificates expired or expiring',
@@ -113,6 +119,7 @@ export const hubId: Record<string, string> = {
 
   'hub.nav.pti.tasks': 'Tugas saya',
   'hub.nav.pti.replies': 'Balasan pemasok',
+  'hub.nav.pti.orderSummary': 'Ringkasan pesanan',
   'hub.nav.pti.purchaseOrders': 'Pesanan pembelian',
   'hub.nav.pti.shipments': 'Pengiriman & ASN',
   'hub.nav.pti.goodsReceipts': 'Penerimaan barang',
@@ -125,6 +132,7 @@ export const hubId: Record<string, string> = {
   'hub.nav.pti.performance': 'Kinerja pemasok',
 
   'hub.nav.sup.todo': 'Yang perlu dikerjakan',
+  'hub.nav.sup.orderSummary': 'Ringkasan pesanan',
   'hub.nav.sup.purchaseOrders': 'Pesanan pembelian',
   'hub.nav.sup.callOffs': 'Call-off',
   'hub.nav.sup.shipments': 'Pengiriman & ASN',
@@ -161,7 +169,10 @@ export const hubId: Record<string, string> = {
   'hub.home.severity.warning': 'Segera',
   'hub.home.severity.info': 'Untuk ditinjau',
 
-  'hub.home.task.unackPo': 'Pesanan pembelian tanpa tanggapan pemasok setelah 48 jam',
+  'hub.home.task.escalatedPo': 'Pesanan pembelian yang dieskalasi',
+  'hub.home.task.rejectedPo': 'Pesanan pembelian yang ditolak',
+  'hub.home.task.counterOffers': 'Penawaran balik pemasok untuk ditinjau',
+  'hub.home.task.completionMoved': 'Pesanan yang perkiraan selesainya mundur',
   'hub.home.task.receipts': 'Penerimaan barang untuk ditinjau',
   'hub.home.task.inboundAsn': 'Pengiriman masuk untuk diterima',
   'hub.home.task.chase': 'Pemasok yang perlu ditindaklanjuti untuk prakiraan atau pengiriman',
@@ -169,6 +180,7 @@ export const hubId: Record<string, string> = {
   'hub.home.task.overdueInvoices': 'Faktur pemasok yang lewat jatuh tempo',
 
   'hub.home.task.sup.confirmOrders': 'Pesanan pembelian yang perlu ditanggapi',
+  'hub.home.task.sup.shippingNotice': 'Pesanan terkonfirmasi tanpa perkiraan tanggal selesai',
   'hub.home.task.sup.createAsn': 'Pesanan terkonfirmasi siap dikirim: buat ASN',
   'hub.home.task.sup.rfq': 'Undangan sourcing yang perlu dijawab',
   'hub.home.task.sup.certs': 'Sertifikat kedaluwarsa atau akan kedaluwarsa',

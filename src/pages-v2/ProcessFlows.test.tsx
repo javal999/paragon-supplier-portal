@@ -174,7 +174,7 @@ describe('ProcessFlows — the lifecycle walk is honest about what it is', () =>
   it('advances a local cursor through the machine, and resets', async () => {
     renderWithProviders(<ProcessFlows />, { route: '/buyer/process-flows' });
     await title();
-    // purchaseOrder: born at Sent, then a three-way fork.
+    // purchaseOrder: born at Sent, then a five-way fork.
     expect(screen.getByText('not started')).toBeInTheDocument();
     // ⚠️ THE BIRTH STEP IS "OBSERVE", NOT "ADVANCE" (§52). `t_po_issue` is a
     // purchase order raised in S/4HANA and RECEIVED here as a fact; nobody in
@@ -182,9 +182,11 @@ describe('ProcessFlows — the lifecycle walk is honest about what it is', () =>
     // the structural axis (`kind === 'creation'`) a surface question.
     fireEvent.click(screen.getByRole('button', { name: 'Observe' }));
     expect(screen.getAllByText('Sent').length).toBeGreaterThan(0);
-    // Three verbs leave `Sent`; all three are offered, none is invented — and
-    // all three ARE performable, so the count is unchanged by the fix.
-    expect(screen.getAllByRole('button', { name: 'Advance' })).toHaveLength(3);
+    // Five verbs leave `Sent` — view, acknowledge, and the three answers
+    // (confirm, adjust, reject; REQ-E07-02 added the last two, which is the
+    // premise change behind this count moving from three). All are offered,
+    // none is invented, and all are performable.
+    expect(screen.getAllByRole('button', { name: 'Advance' })).toHaveLength(5);
     fireEvent.click(screen.getByRole('button', { name: 'Reset walk' }));
     expect(screen.getByText('not started')).toBeInTheDocument();
   });

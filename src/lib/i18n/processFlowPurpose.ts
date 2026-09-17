@@ -45,6 +45,16 @@ export const processFlowPurposeEn: Record<string, string> = {
     'The supplier says it has the order and is working through it, without yet committing to the numbers. Useful when a real answer will take days.',
   'processFlows.purpose.t_po_confirm':
     'The supplier commits to the line amounts it will actually ship. This is the promise the plant plans production around, and the figure every later shortfall is measured against.',
+  'processFlows.purpose.t_po_adjust':
+    'The supplier cannot meet the order as written and says what it can do instead: a quantity and date per line, with a reason. The planner learns early, and the reason becomes data for supplier assessment.',
+  'processFlows.purpose.t_po_reject':
+    'The supplier cannot meet the date, quantity or quality at all. Saying so on time lets the planner find the supply elsewhere, and the rejection counts in supplier performance.',
+  'processFlows.purpose.t_po_accept_counter':
+    'The planner agrees to the supplier’s counter-offer, so the order stands at the new quantity and date and the supplier can plan shipping.',
+  'processFlows.purpose.t_po_reject_counter':
+    'The planner cannot accept the counter-offer and says why. The order goes back to the supplier for a new answer.',
+  'processFlows.purpose.t_po_shipping_notice':
+    'The supplier states when shipping of an order it has committed to will be complete, and updates it if it moves. The planner sees whether the order is still safe.',
   'processFlows.purpose.t_po_partial_deliver':
     'Part of the order has physically arrived. Worth recording because a partly served order still owes something, and the shortfall is what buying chases.',
   'processFlows.purpose.t_po_deliver':
@@ -326,6 +336,16 @@ export const processFlowPurposeId: Record<string, string> = {
     'Pemasok menyatakan pesanan sudah diterima dan sedang ditelaah, tanpa mengikat diri pada angkanya. Berguna ketika jawaban sungguhan butuh berhari-hari.',
   'processFlows.purpose.t_po_confirm':
     'Pemasok berkomitmen pada jumlah tiap baris yang benar-benar akan dikirim. Inilah janji yang dipakai pabrik untuk merencanakan produksi, dan angka pembanding bagi setiap kekurangan di kemudian hari.',
+  'processFlows.purpose.t_po_adjust':
+    'Pemasok tidak dapat memenuhi pesanan seperti tertulis dan menyatakan yang bisa dipenuhi: jumlah dan tanggal per baris, dengan alasan. Planner tahu lebih awal, dan alasannya menjadi data penilaian pemasok.',
+  'processFlows.purpose.t_po_reject':
+    'Pemasok sama sekali tidak dapat memenuhi tanggal, jumlah, atau mutu. Menyampaikannya tepat waktu membuat planner bisa mencari pasokan lain, dan penolakan dihitung dalam kinerja pemasok.',
+  'processFlows.purpose.t_po_accept_counter':
+    'Planner menyetujui penawaran balik pemasok, sehingga pesanan berlaku dengan jumlah dan tanggal baru dan pemasok dapat merencanakan pengiriman.',
+  'processFlows.purpose.t_po_reject_counter':
+    'Planner tidak dapat menerima penawaran balik dan menyebutkan alasannya. Pesanan kembali ke pemasok untuk jawaban baru.',
+  'processFlows.purpose.t_po_shipping_notice':
+    'Pemasok menyatakan kapan pengiriman pesanan terkonfirmasi akan selesai, dan memperbaruinya bila bergeser. Planner melihat apakah pesanan masih aman.',
   'processFlows.purpose.t_po_partial_deliver':
     'Sebagian pesanan sudah tiba secara fisik. Perlu dicatat karena pesanan yang baru terpenuhi sebagian masih menyisakan kewajiban, dan sisa itulah yang dikejar tim pembelian.',
   'processFlows.purpose.t_po_deliver':

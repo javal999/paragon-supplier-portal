@@ -71,16 +71,20 @@ describe('POPULATION CONTROL — the assertions below filter, and a filter over 
 });
 
 describe('the two halves are composed, and neither answered this before', () => {
-  it('⚠️ THE STATE THIS EXISTS FOR: a PO in Confirmed names S/4HANA, on BOTH personas', () => {
-    // Before this, the buyer and the supplier both saw a status word and
-    // nothing else. `userVerbsFrom` returns [] here — which is what made the
-    // old instruments silent — so this is the composition's third read talking.
-    expect(userVerbsFrom('purchaseOrder', 'Confirmed')).toEqual([]);
+  it('⚠️ THE STATE THIS EXISTS FOR: a PO in Delivered names S/4HANA, on BOTH personas', () => {
+    // ⚠️ PREMISE CHANGED BY REQ-E07-05: this read `Confirmed` until the shipping
+    // notice (`t_po_shipping_notice`) gave Confirmed a user verb. The S/4HANA
+    // wait is unchanged one state on — every exit from `Delivered` is a fact
+    // S/4HANA reports — so the assertion moved there rather than being deleted.
+    expect(userVerbsFrom('purchaseOrder', 'Delivered')).toEqual([]);
     for (const seat of [BUYER, SUPPLIER]) {
-      const act = nextActFor('purchaseOrder', 'Confirmed', seat);
+      const act = nextActFor('purchaseOrder', 'Delivered', seat);
       expect(act.kind).toBe('external');
       expect(act.kind === 'external' && act.owners).toEqual(['s4hana']);
     }
+    // …and Confirmed is now the supplier's own act.
+    expect(userVerbsFrom('purchaseOrder', 'Confirmed').map((v) => v.id)).toEqual(['t_po_shipping_notice']);
+    expect(nextActFor('purchaseOrder', 'Confirmed', SUPPLIER).kind).toBe('mine');
   });
 
   it('a verb the seat HOLDS is `mine`; the same verb on the other seat is `theirs`', () => {
