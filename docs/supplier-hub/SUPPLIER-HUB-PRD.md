@@ -269,6 +269,7 @@ Acceptance criteria: TBD by the Foundation team. The hub **replaces PROCIO** for
 | Dock, slot, or delivery schedule management | Only a shipped heads-up is needed now | [V] PQ-10 |
 | Calculating forecasts, ROP, or replenishment in the hub | These come from SAP | [V] MN-INV-14 |
 | An "available stock" figure | On-hand is enough; stock is deducted as used | [V] Q-02 |
+| SFTP or other automated file-drop channel for supplier data | Spreadsheet upload, API sync, and manual entry are enough | Owner, 2026-09-17 |
 | Sending call-offs to SAP | Call-offs are managed outside SAP today; the hub becomes their record | [V] PQ-01; [P] PQ-11 |
 | Supplier approval of PTI stock access changes | PTI decides | [V] Q-06 |
 | Bid comparison, negotiation, and awarding detail | Not yet detailed; stub | [D] REQ-E03-05 |
@@ -699,7 +700,7 @@ Source: *Risk Assessment Supply Chain Collaboration Hub* workbook [R], all rows 
 | # | Register rows | Risk | Phase | Owner | Mitigation plan [R] | Impact [P] | Linked requirements | Deck risk |
 |---|---|---|---|---|---|---|---|---|
 | R1 | 1 | Supplier integration capability or readiness is insufficient, causing manual transactions, delayed PO acknowledgement, and reconciliation issues | UAT & Go-Live | TPO, Material Planner | Sign a clear data-sharing agreement (NDA). **Add:** offer the tiered integration channels from R2 to suppliers not ready to integrate [owner-approved addition, 2026-09-17] | PO response SLA and stock data freshness missed | REQ-E07-02, REQ-E08-02, REQ-E07-08 | RSK-02 |
-| R2 | 2 | Supplier is reluctant to open their API | UAT & Go-Live | TPO, Material Planner | Offer tiered integration options: SFTP upload or manual portal entry | Stock sync limited to non-API channels | REQ-E08-02 | RSK-02 |
+| R2 | 2 | Supplier is reluctant to open their API | UAT & Go-Live | TPO, Material Planner | Offer tiered integration options: SFTP upload or manual portal entry. **In the hub this is spreadsheet upload or manual entry; SFTP is not built** [owner, 2026-09-17] | Stock sync limited to non-API channels | REQ-E08-02 | RSK-02 |
 | R3 | 3, 4 | Resistance to process change from suppliers and internal users | Hypercare | TPO, Material Planner, Procurement | (3) Identify and empower "champions" on both sides to model the new behaviour. (4) Run change-impact workshops with supplier representatives and internal teams before go-live | Adoption target S3 missed | All; S2, S3 | RSK-03 |
 | R4 | 5 | Low digital literacy among suppliers slows portal adoption | Hypercare | TPO, Material Planner, Procurement | Dedicated helpdesk or hotline for the first 60 days after launch | Onboarding target S2 missed | REQ-E08-02 (manual channel), Foundation | RSK-04 |
 | R5 | 6 | Poor data quality | Hypercare | Material Planner, Procurement, MDM | Data review and cleansing before go-live | Wrong alerts, stock figures, and metrics | REQ-E08-01, REQ-E08-05, REQ-E10-01, Foundation | RSK-05 |
@@ -725,7 +726,7 @@ Row 8's mitigation text overlaps another cell in the workbook, so its wording ("
 
 | # | Point | Answer (owner, 2026-09-17) |
 |---|---|---|
-| RQ1 | R2 offers **SFTP upload**: a supplier's system drops a data file on a secure server on a schedule, and the hub collects it automatically, with no person logging in. The validated requirement (REQ-E08-02) has spreadsheet upload by a person in the portal, API sync, and manual entry. Is SFTP needed as a 4th channel? | Open |
+| RQ1 | Is an SFTP file drop (supplier system sends files to a secure server automatically) needed as a 4th stock channel? | No. Spreadsheet upload through the hub is enough |
 | RQ2 | Should R1 also carry a capability mitigation, such as the tiered channels in R2? | Yes. Added to R1 |
 | RQ3 | Data-update SLA values | Vary by material and supplier. Configurable per supplier and material (REQ-E08-01, REQ-E08-02) |
 | RQ4 | Copy proposed impacts into the register? | No |

@@ -734,7 +734,7 @@ Stub. Deck scope: E03.01, E03.04, E03.05 [Deck p.7]. Not discussed with business
 
 **Metrics.** Leading: share of suppliers submitting on schedule, by channel.
 
-**Open items.** Template fields [Proposed]. Submission frequency follows the per-supplier, per-material data-update SLA (see REQ-E08-01). Whether an SFTP file drop is needed as a 4th channel (PRD RQ1).
+**Open items.** Template fields [Proposed]. Submission frequency follows the per-supplier, per-material data-update SLA (see REQ-E08-01).
 
 #### REQ-E08-03  Supplier access to PTI stock
 
@@ -1310,6 +1310,7 @@ Research date: 2026-09-17. Vendor pages were read directly unless marked "snippe
 | DEC-05 | Relationship with PROCIO for Foundation | PROCIO is replaced by the hub. Supplier data is migrated |
 | REPL | Replenishment method | Decided later. REQ-E09-01 and REQ-E09-02 depend on it |
 | SLA | Data-update SLA | Varies by material and supplier |
+| SFTP | Automated SFTP file drop as a 4th stock channel | Not needed. Spreadsheet upload is enough |
 | PQ-01 | SAP representation of umbrella PO and call-off | The umbrella PO is the overall ordered value. Call-offs are managed manually outside SAP |
 | PQ-10 | Dock slot booking | Not needed now. PTI only needs a heads-up that the supplier has shipped |
 
