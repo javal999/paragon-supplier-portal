@@ -4,33 +4,63 @@
 |---|---|
 | Product | Supplier Hub (Supplier Portal, "SC Collaboration Hub") |
 | Company | PT Paragon Technology and Innovation (PTI) |
-| Version | 0.1 draft, 2026-09-17 |
+| Version | 0.2 draft, 2026-09-17 |
 | Scope | MVP (Phase 1, "Foundation to Transact"). Phase 2 and 3 appear only in section 9 |
-| Project managers | Vergiant, Levi |
-| Sources | Kick-off deck (Aug 2026), captured in `SUPPLIER-HUB-BASELINE.md`; business user feedback in `KICKOFF-MEETING-NOTES.md`; detailed requirements in `SUPPLIER-HUB-REQUIREMENTS.md` |
+| Steering Committee | Yogi Sapta Prakoso (VP Supply Chain), Ilauddin (CFO), Risman Adnan (CTO) [C] |
+| Technology Product Owners | Achmad Fahlevi, Vergiant Yoga Perdana (Supply Chain); Indita Ramasaphira (FATL) [C] |
+| Project Manager | Zanjabila Aulia (IT PMO) [C] |
+| Sources | Project Charter, SC Collaboration Hub Proposal (Sep 2026) for business numbers, scope, and milestones; kick-off deck (Aug 2026), captured in `SUPPLIER-HUB-BASELINE.md`; business user feedback in `KICKOFF-MEETING-NOTES.md`; detailed requirements in `SUPPLIER-HUB-REQUIREMENTS.md` |
 | Detail | This PRD summarises the product. Business rules, step-by-step walkthroughs, and full acceptance criteria live in `SUPPLIER-HUB-REQUIREMENTS.md`, referenced by `REQ-` ID |
 
-**Status tags.** **[V]** validated with business users. **[D]** stated in the kick-off deck. **[P]** proposed by the analyst, needs review. **TBD** not decided; the owner is named where known.
+**Status tags.** **[C]** stated in the project charter. **[V]** validated with business users. **[D]** stated in the kick-off deck. **[P]** proposed by the analyst, needs review. **TBD** not decided; the owner is named where known.
 
 ---
 
 ## 1. Executive Summary
 
-**Problem Statement.** PTI's supplier collaboration runs on email and Excel: supplier data is scattered, confirmations are manual, planners cannot see supplier stock or delivery progress, and supplier performance is not measured consistently [D]. Current supply confirmation reliability is below 50% and CFOT Material is 30%, so material is often not ready when the factory needs it [D, deck p.5].
+**Problem Statement.** Forecasts, order confirmations, supplier stock, delivery commitments, sourcing, and supplier performance are exchanged by email, chat, and spreadsheets across more than 500 direct and 5,000 indirect suppliers, so supply risks surface late [C]. In 2026, material supply issues were associated with about IDR 161 billion in average monthly lost sales [C].
 
 **Proposed Solution.** A single web hub where PTI planners and buyers share POs, forecasts, and sourcing events with suppliers. Suppliers confirm quantities, dates, capacity, stock, and shipments in a structured, time-bound way. The hub measures CFOT per PO and OTIF per call-off from those confirmations [D, V].
 
 **Success Criteria.**
 
-| # | KPI | Target | Source |
-|---|---|---|---|
-| S1 | Application uptime, with no bug that impacts business | 99% | [D] KPI-01 |
-| S2 | Eligible suppliers onboarded on time | 80% | [D] KPI-02 |
-| S3 | Onboarded suppliers actively using the hub | 100% | [D] KPI-03. "Actively using" definition TBD |
-| S4 | POs answered by the supplier within 1 working day | TBD. Baseline: confirmation reliability below 50% [D p.5] | [V] REQ-E07-02 |
-| S5 | Supplier OTIF per call-off, and CFOT per PO | TBD. Baseline CFOT Material 30% [D p.5] | [D] KPI-05; [V] definitions |
+| # | KPI | Baseline | Target | Source |
+|---|---|---|---|---|
+| S1 | Platform availability during production operation, excluding planned maintenance | New platform | ≥ 99% | [C]; [D] KPI-01 |
+| S2 | Targeted suppliers onboarded according to rollout plan | New platform | ≥ 80% | [C]; [D] KPI-02 |
+| S3 | Targeted suppliers actively using the platform within the agreed adoption period | New platform | ≥ 80% | [C]. The deck said 100% (KPI-03); see section 9.4 |
+| S4 | Supply-to-production confirmation accuracy | 60% | 80% | [C] |
+| S5 | Optimized stock | 20% | 40% | [C]. Metric definition TBD; linked to deck KPI-04 |
 
-Also tracked, targets TBD: optimize stock, meaning less excess, obsolete, and stock-out inventory (KPI-04), and procurement cycle time from sourcing to PO (KPI-06) [D].
+**Further success criteria from the charter** [C]:
+- Sourcing administration time: 8 hours → 1 hour per week.
+- Sourcing documentation with an audit trail: 100%.
+- Supplier data and files managed in the database: 100%.
+- CSAT: minimum 4 out of 5.
+
+**Still without a target** (not in the charter or the deck): supplier OTIF per call-off, CFOT per PO, share of POs answered within 1 working day, procurement cycle time (deck KPI-06).
+
+**Business case** [C]. Monthly value of the problem addressed, as calculated in the charter:
+
+| Benefit | IDR per month | Charter basis |
+|---|---|---|
+| Lost-sales risk reduced | 32,000,000,000 | 20% of the IDR 161 billion average monthly lost sales from material supply issues, benchmark from a similar project |
+| Warehouse rent reduced | 500,000,000 | Inventory reduction of 20 to 30% from supply visibility, citing McKinsey research |
+| Airfreight reduced | 360,000,000 | 30% of about IDR 1.2 billion monthly airfreight, benchmark from a similar project |
+| Administration reduced | 7,000,000 | Material Planner demand anticipation 90 → 18 hours per month; expeditor call-off calculation and consolidation 85 → 43 hours per month |
+| **Total** | **≈ 32,867,000,000** | Sum of the rows above |
+
+The benchmark percentages come from the charter and were not verified for this PRD.
+
+**Other expected benefits** [C]:
+- 80% less manual communication.
+- Forecast, demand collaboration, and inbound delivery input lead time: 2 weeks → 1 day.
+- 80% fewer material shortages caused by late supplier information.
+- 90% better supply visibility for working capital and inventory.
+- About 1% human error.
+- All supplier data maintained in the database.
+- Visibility of supplier spend.
+- More accurate awarding decisions and more effective negotiation.
 
 ---
 
@@ -77,7 +107,7 @@ Acceptance criteria: TBD by the Foundation team. Open decision: whether these ep
 | US-13 | As a planner or supplier, I want an Order Collaboration Summary per PO showing ASNs and the 3 confirmations so that I see at a glance whether an order is safe | REQ-E07-03 | [V] |
 | US-14 | As a supplier, I want to create an ASN and confirm shipment start and expected completion so that PTI knows goods are coming | REQ-E07-04, REQ-E07-05 | [V] concept, [P] ASN fields |
 | US-15 | As a supplier, I want to see goods receipts against my shipments and dispute discrepancies so that quantity differences are resolved early | REQ-E07-06 | [P] |
-| US-16 | As a supplier, I want to submit invoices from my goods receipts and follow their status so that I am paid without paper exchange | REQ-E07-07 | [P] |
+| US-16 | As a supplier, I want to submit invoices from my goods receipts and follow their status so that I am paid without paper exchange | REQ-E07-07 | Phase 1 scope [C]; detail [P] |
 
 **Acceptance criteria.**
 - US-10:
@@ -242,6 +272,9 @@ Acceptance criteria: TBD by the Foundation team. Open decision: whether these ep
 | Sending call-offs to SAP | Call-offs are managed outside SAP today; the hub becomes their record | [V] PQ-01; [P] PQ-11 |
 | Supplier approval of PTI stock access changes | PTI decides | [V] Q-06 |
 | Bid comparison, negotiation, and awarding detail | Not yet detailed; stub | [D] REQ-E03-05 |
+| Recording PR, PO, goods receipt, financial posting, or payment | SAP S/4HANA remains the system of record. The hub manages supplier interaction, visibility, acknowledgements, collaboration data, and designated sourcing processes | [C] |
+| Raw material manufacturers | Listed as out of scope in the charter. Whether this excludes manufacturers only, while raw material distributors such as the pilot suppliers stay in, is open (section 9.4) | [C] |
+| Indirect suppliers (5,000+) in the MVP rollout | Charter sizes the problem on 500+ direct and 5,000+ indirect suppliers; which are targeted in Phase 1 is TBD | [P]; [C] for counts |
 
 ---
 
@@ -249,7 +282,7 @@ Acceptance criteria: TBD by the Foundation team. Open decision: whether these ep
 
 **Not applicable to the MVP.** No MVP requirement uses AI [scope decision, 2026-09-17].
 
-**Phase 3 outline: web scraping and AI for sourcing** [D p.9]. Not yet scoped. The items below mark what must be defined before Phase 3 design, and nothing here is decided.
+**Phase 3 outline: web scraping and AI for sourcing** [D p.9]. Not yet scoped, and not listed in the charter's scope (section 9.4). The items below mark what must be defined before Phase 3 design, and nothing here is decided.
 
 - **Tool Requirements.** TBD:
   - Sources to scrape and their terms of use.
@@ -274,7 +307,7 @@ The production tech stack, hosting, database, and authentication are **TBD by IT
 | Hub services and API | Business logic: PO responses, confirmations, commitments, call-offs, stock submissions, alerts, metrics | [P]; stack TBD |
 | Hub database | System of record for data SAP does not hold: responses, confirmations, commitments, call-offs, supplier stock, access grants, RFx events, audit log | [P]; call-offs follow from [V] PQ-01 |
 | Integration layer | Exchange with SAP and supplier systems; message log and retry | [P]; technology TBD (PQ-06) |
-| SAP (MM, PP, SD) | System of record for umbrella PO (value), forecast and ROP recommendations, goods receipts, invoices, vendor master | [D p.5]; [V] |
+| SAP S/4HANA (MM, PP, SD) | System of record for PR, umbrella PO (value), financial posting, payment, forecast and ROP recommendations, goods receipts, invoices, vendor master | [D p.5]; [V] |
 | Supplier ERP (optional) | Stock and capacity sync by API for connected suppliers, such as DP Group | [D p.11]; [V] MN-INV-07 |
 | PTI TMS | Supplier shipment tracking; phase open | [V] MN-INV-13; D-03 |
 | PROCIO | E-procurement application linked to Foundation epics; relationship TBD | [D p.6]; DEC-05 |
@@ -312,7 +345,8 @@ The production tech stack, hosting, database, and authentication are **TBD by IT
 | SP1 | A supplier user sees only its own company's POs, call-offs, forecasts, stock, invoices, and RFx invitations | [V] MN-ORD-13; [P] extended to all objects |
 | SP2 | PTI stock is visible only to suppliers granted access by a Material Planner, optionally limited to materials | [V] MN-INV-08 to MN-INV-12 |
 | SP3 | Quotes and proposals of one supplier are never visible to another supplier | [P] |
-| SP4 | Grants, responses, approvals, and master data changes are written to an audit log with user and time | [P] |
+| SP4 | Grants, responses, approvals, and master data changes are written to an audit log with user and time. All sourcing documentation (RFI, RFQ, RFP, awards) has an audit trail | [P]; sourcing audit trail 100% [C] |
+| SP4a | All supplier data and files are held in the hub database, not in email or shared drives | [C] |
 | SP5 | Bank data and vendor documents are restricted to authorised PTI roles and the owning supplier | [P]; Foundation team to confirm |
 | SP6 | Personal data of supplier users is handled in line with Indonesia's Personal Data Protection Law (UU No. 27 Tahun 2022) | [P]; Legal to confirm scope |
 | SP7 | Authentication method for PTI users and suppliers, password and session policy, encryption at rest and in transit | TBD by IT |
@@ -412,7 +446,8 @@ sequenceDiagram
 
 | # | Scenario | Metric | Threshold |
 |---|---|---|---|
-| NF1 | Availability | Monthly application uptime | 99%, with no business-impacting bug [D KPI-01] |
+| NF1 | Availability | Platform availability in production, excluding planned maintenance | ≥ 99% [C]; no business-impacting bug [D KPI-01] |
+| NF1a | User satisfaction | CSAT survey of PTI and supplier users | ≥ 4 out of 5 [C] |
 | NF2 | Page response | p95 page load for PO list and inventory view | TBD by IT |
 | NF3 | Concurrent users | Simultaneous PTI and supplier sessions without degradation | TBD by IT |
 | NF4 | Upload size | Maximum rows and file size for stock template | TBD by IT |
@@ -615,31 +650,62 @@ A confirmation outside tolerance is not an error. It returns `awaiting_approval`
 
 ### 9.1 Phased Rollout
 
-Dates are indicative, per the deck, until resources and MVP scope are agreed [D p.10].
+Milestones follow the project charter [C]: 16 months, 1 Sep 2026 to 30 Dec 2027. The deck's indicative timeline differs (section 9.4).
 
-| Release | Deck phase | Indicative timing | Scope |
+| Release | Milestone | Timing |
+|---|---|---|
+| **MVP** (Phase 1) | Discovery & process design | Sep 2026 |
+| | Solution build & integration | Oct 2026 to Feb 2027 |
+| | Internal testing & UAT | Mar 2027 |
+| | Pilot go-live with selected suppliers | Apr 2027 |
+| | Hypercare | Apr to May 2027 |
+| | Rollout to suppliers | Jun to Dec 2027 |
+| **v1.1** (Phase 2) | Discovery & process design | May 2027 |
+| | Development | Jun to Aug 2027 |
+| | Internal testing & UAT | Sep 2027 |
+| | Pilot go-live with selected suppliers | Sep 2027 |
+| | Hypercare | Sep to Dec 2027 |
+| **v2.0** (Phase 3) | Web scraping and AI for sourcing | Not in the charter; deck only |
+
+**Phase 1 scope** [C]: supplier registration & onboarding and supplier master data management (Procurement); forecast, inventory & capacity, and order collaboration, and call-off management (Material Planning); API ERP (SAP); RFx & quotation management and supplier performance dashboard (Procurement); invoice collaboration, submit invoice from vendor (Finance).
+
+**Phase 2 scope** [C]: contract management (Finance & Legal); reporting and analytic dashboard (Procurement & Material Planning); catalog management (Procurement); API shipment aggregator (Logdist); supplier quality (Material Planning).
+
+**Budget items** [C]:
+
+| Item | Cost (IDR) | Unit | Purpose |
 |---|---|---|---|
-| Discovery & Design | | Aug to Sep 2026 | Requirements, design, integration discovery |
-| **MVP** | Phase 1: Foundation to Transact | Build Oct 2026 to Mar 2027; go-live about end of Mar 2027 | Registration and onboarding; master data; Order, Inventory & Capacity, Forecast Collaboration; Call-off Management; API ERP; RFx; Supplier Performance Dashboard. Pilot: DP Group, DKSH, Lautan Luas |
-| **v1.1** | Phase 2 | Apr to May 2027 | Contract Management; Catalog Management; Reporting & Analytics; API Shipment Aggregator; Supplier Quality |
-| **v2.0** | Phase 3 | Not scheduled on the deck timeline | Web scraping and AI for sourcing |
+| Consultant | 1,000,000,000 | per project | Help the Material Planner team establish replenishment method and governance |
+| Third-party software engineers | 400,000,000 | per project | If software engineering is sourced from a vendor |
+| Shipment aggregator | 270,000,000 | per year | If the shipping company charges an integration fee (Phase 2) |
+| SAP change request | 100,000,000 | per project | Man-days to create APIs |
 
-Hypercare and stabilisation run from Oct 2026 to about mid-Apr 2027 on the deck. The early start is flagged as a deck inconsistency (CON-08).
+**Charter assumptions** [C]:
+- Business process and operating model decisions are agreed before build freeze.
+- Supplier, master, and transaction data is identified, assessed, and remediated before migration.
+- Required SAP interfaces are confirmed through architecture assessment and included in scope and cost.
+- Pilot suppliers commit resources for design validation, UAT, and onboarding.
+- Business owners are available for decisions, UAT, and rollout.
+
+Initial change impact assessment: **High** [C].
 
 ### 9.2 Technical Risks
 
 | # | Risk | Impact | Mitigation | Status |
 |---|---|---|---|---|
-| R1 | ERP API endpoints not ready for master data and transaction sync | Blocks I1 to I10; MVP go-live | Agree interface list and owners in Discovery; build against mocks; ERP functional team allocated [D p.13] | [D] RSK-01; mitigation [P] |
+| R1 | ERP API endpoints not ready for master data and transaction sync | Blocks I1 to I10; MVP go-live | Confirm SAP interfaces through architecture assessment [C]; SAP change request budget IDR 100 million [C]; build against mocks [P] | [D] RSK-01; mitigation [P] |
 | R2 | Suppliers or aggregators reluctant to open APIs | Stock sync limited | Spreadsheet and manual channels in MVP | [D] RSK-02; mitigation [V] MN-INV-07 |
 | R3 | Resistance to change from suppliers and internal users | Low use, KPI-03 missed | Pilot with 3 suppliers; key users per team [D p.13] | [D] RSK-03 |
 | R4 | Low supplier digital literacy | Slow adoption | Manual entry and spreadsheet channels; simple response flows | [D] RSK-04 |
 | R5 | Poor data quality (stock, forecast, master data) | Wrong alerts and metrics | Last-update times, stale flags, MDM validation | [D] RSK-05; mitigation [P] |
-| R6 | Deployment delay from scope creep or missing resources | Go-live slips | Non-goals in section 2.3; Software Engineer & QA role is vacant and must be filled [D p.13] | [D] RSK-06 |
+| R6 | Deployment delay from scope creep or missing resources | Go-live slips | Non-goals in section 2.3; Software Engineer & QA role is vacant [D p.13], with IDR 400 million budgeted for third-party engineers [C] | [D] RSK-06 |
 | R7 | Integration errors between PTI and supplier ERPs | Wrong stock figures | Message log, retry, data-age warnings | [D] RSK-07; mitigation [P] |
 | R8 | Call-offs managed manually outside SAP today, so the hub becomes their only record | Data migration, reconciliation with SAP receipts | Decide migration and reconciliation (PQ-11); link receipts via ASN | [V] PQ-01; [P] |
 | R9 | Umbrella PO holds value only | Quantity-based checks may be impossible | Confirm PQ-12 | [V] PQ-01; open |
 | R10 | Foundation relationship with PROCIO undecided | Onboarding and master data design blocked | Decide DEC-05 in Discovery | [D] |
+| R11 | Replenishment method and governance not yet established | Call-off and forecast rules unclear | Consultant engagement, IDR 1 billion [C] | [C] |
+
+The charter's full risk and mitigation assessment is in a separate workbook, *Risk Assessment Supply Chain Collaboration Hub.xlsx*, not included here.
 
 ### 9.3 Open Decisions Blocking the MVP
 
@@ -652,7 +718,24 @@ Hypercare and stabilisation run from Oct 2026 to about mid-Apr 2027 on the deck.
 | PQ-07 | SAP source of forecast and demand sensing | Material Planner, ERP Functional |
 | PQ-08, PQ-02 | Tolerances, commitment deadline, forecast horizon and zones | Material Planner |
 | Q-18 | Working calendar for the 1-working-day deadline | Material Planner |
-| KPI | Targets for S4, S5, KPI-04, KPI-06; CFOT and OTIF formulas | Project sponsors, Material Planner |
+| KPI | Definitions for S4 (confirmation accuracy) and S5 (optimized stock); targets for OTIF, CFOT, PO response rate, procurement cycle time; CFOT and OTIF formulas | Steering Committee, Material Planner |
 | IT | Tech stack, hosting, authentication, NFR thresholds (NF2 to NF7), interface technology (PQ-06) | IT |
 
 The full list is in section 7 of `SUPPLIER-HUB-REQUIREMENTS.md`.
+
+### 9.4 Charter and deck differences to confirm
+
+| # | Topic | Project charter | Kick-off deck | Used in this PRD |
+|---|---|---|---|---|
+| X1 | Document dates | Prepared 02/07/2026, titled Sep 2026 | Aug 2026 | Charter for numbers, scope, and milestones, per owner instruction |
+| X2 | Phase 1 go-live | Pilot Apr 2027 after UAT in Mar 2027 | About end of Mar 2027 | Charter |
+| X3 | Phase 2 timing | Discovery May 2027 to hypercare Dec 2027 | Apr to May 2027 | Charter |
+| X4 | Phase 3, AI sourcing | Not listed | Listed | Kept as v2.0 outline, marked "deck only" |
+| X5 | Hypercare | Starts after pilot go-live (Apr 2027) | Starts Oct 2026 | Charter. Resolves deck conflict CON-08 |
+| X6 | Supplier adoption target | ≥ 80% active use within adoption period | 100% supplier compliance | Charter |
+| X7 | Confirmation baseline | Supply-to-production confirmation accuracy 60% | Confirmation reliability below 50%; CFOT Material 30% | Charter. Possibly different measures; confirm |
+| X8 | Invoice collaboration | Phase 1 deliverable, Finance | Sub-epic of Order Collaboration | Both agree on Phase 1 |
+| X9 | Business owners | Supplier master data and performance dashboard: Procurement; reporting: Procurement & Material Planning; contract: Finance & Legal; supplier quality: Material Planning; shipment aggregator: Logdist | Several not stated (DEC-09); contract: Procurement | Charter. Resolves DEC-09 |
+| X10 | Project roles | PM: Zanjabila Aulia; TPOs: Achmad Fahlevi, Vergiant, Indita; Steering Committee: Yogi, Ilauddin, Risman Adnan; Juan Jose: Technology Business Accelerator | PM: Vergiant, Levi; sponsor: Juan Jose, Yogi; PMO: Zanja | Charter |
+| X11 | Out of scope | Raw material manufacturer | Raw material suppliers DKSH and Lautan Luas are pilots | Open: confirm whether distributors stay in scope |
+
