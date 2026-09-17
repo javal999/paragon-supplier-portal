@@ -91,6 +91,8 @@ import type {
   CheckResult,
   OptionalCheck,
   InspectionResult,
+  ReceiptDiscrepancyResponse,
+  ReceiptDiscrepancyStatus,
 } from '../../data/mockGoodsReceipts';
 
 import type {
@@ -130,6 +132,8 @@ export type {
   CheckResult,
   OptionalCheck,
   InspectionResult,
+  ReceiptDiscrepancyResponse,
+  ReceiptDiscrepancyStatus,
   Contract,
   ContractType,
   ContractStatus,
@@ -640,7 +644,45 @@ export interface Invoice {
   paymentTerms: string;
   buyerContact: string;
   remittanceNote: string | null;
+  /**
+   * REQ-E07-07 — the invoiced lines, pre-filled from the goods receipts the
+   * supplier selected. Absent on invoices that predate receipt-based invoicing
+   * (those are still matched when a receipt posts).
+   */
+  lines?: InvoiceLine[];
+  /** The supplier's invoice date (`YYYY-MM-DD`). */
+  invoiceDate?: string;
+  /** Tax invoice (e-Faktur) attachment — the file name only in the prototype. */
+  taxInvoiceFile?: string;
+  /** Finance's reason when it returned the invoice to the supplier. */
+  returnReason?: string;
 }
+
+/** One invoiced line, drawn from one goods receipt line (REQ-E07-07). */
+export interface InvoiceLine {
+  /** The goods receipt the quantity was received on (its id). */
+  receiptId: string;
+  grNumber: string;
+  materialCode: string;
+  description: string;
+  /** Invoiced quantity — at most accepted minus already invoiced (BR-02). */
+  quantity: number;
+  uom?: string;
+  /** The PO unit price for this material (CR-12 basis). */
+  unitPrice: number;
+}
+
+/**
+ * The status list a supplier follows (REQ-E07-07 step 5, plus Returned). A
+ * read-time label of the stored `InvoiceStatus`, never stored itself.
+ */
+export type SupplierInvoiceStage =
+  | 'Draft'
+  | 'Submitted'
+  | 'Verified'
+  | 'Scheduled for payment'
+  | 'Paid'
+  | 'Returned';
 
 export interface SupplierInvoice {
   id: string;
@@ -658,6 +700,18 @@ export interface SupplierInvoice {
   channel: InvoiceChannel;
   buyerContact: string;
   remittanceNote: string | null;
+  /** REQ-E07-07 — the supplier's status list, derived at read time. */
+  stage: SupplierInvoiceStage;
+  /** CR-14 — past its due date and not paid. Derived at read time. */
+  overdue: boolean;
+  /** CR-14 — whole days past the due date (0 when not overdue). */
+  daysOutstanding: number;
+  /** The match result (CR-12 / CR-13), shown to the supplier. */
+  matchStatus: InvoiceMatchStatus;
+  lines: InvoiceLine[];
+  invoiceDate: string | null;
+  taxInvoiceFile: string | null;
+  returnReason: string | null;
 }
 
 /** BUYER-persona projection labels of `InvoiceStatus` (+ computed Overdue). */
@@ -711,6 +765,11 @@ export interface BuyerInvoice {
   daysOutstanding: number;
   bankAccount: string;
   channel: InvoiceChannel;
+  /** REQ-E07-07 — the invoiced lines and the supplier's documents. */
+  lines: InvoiceLine[];
+  invoiceDate: string | null;
+  taxInvoiceFile: string | null;
+  returnReason: string | null;
 }
 
 export type AsnStatus =
@@ -718,14 +777,22 @@ export type AsnStatus =
   | 'Submitted'
   | 'In Transit'
   | 'Delivered'
-  | 'Discrepancy';
+  | 'Discrepancy'
+  /** REQ-E07-04 — withdrawn by the supplier before receipt. A cancelled ASN no
+   *  longer counts toward the PO line's open quantity or the in-transit figure. */
+  | 'Cancelled';
 
 export interface AsnLineItem {
   materialCode: string;
   description: string;
   orderedQty: number;
   shippedQty: number;
+  /** The batch number (REQ-E07-04 BR-04). Kept under its original field name. */
   lotNumber: string;
+  /** Unit of the shipped quantity, from the PO line. */
+  uom?: string;
+  /** Optional expiry date of the batch (`YYYY-MM-DD`). */
+  expiryDate?: string;
 }
 
 export interface AsnShipmentDetails {
@@ -746,6 +813,12 @@ export interface ASN {
   eta: string;
   details: AsnShipmentDetails;
   lineItems: AsnLineItem[];
+  /** Ship (dispatch) date, `YYYY-MM-DD` (REQ-E07-04 BR-04). */
+  shipDate?: string;
+  /** Packing list attachment — the file name only in the prototype. */
+  packingListFile?: string;
+  /** Why the shipped quantity exceeds the open quantity (BR-02), when it does. */
+  overShipReason?: string;
 }
 
 export interface CatalogItem {

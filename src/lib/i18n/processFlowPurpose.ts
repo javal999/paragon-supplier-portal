@@ -69,6 +69,8 @@ export const processFlowPurposeEn: Record<string, string> = {
     'The supplier begins telling Paragon what it is about to send, while the details are still theirs to change.',
   'processFlows.purpose.t_asn_submit':
     'Hands the shipping details to Paragon’s warehouse: who is carrying it, how to trace it, and when to expect it.',
+  'processFlows.purpose.t_asn_cancel':
+    'The supplier withdraws a notice before anything arrived, so the warehouse stops expecting those goods and the quantity is free to ship again.',
   'processFlows.purpose.t_asn_in_transit':
     'The goods have left the supplier. From here the arrival date is a logistics question, not a production one.',
   'processFlows.purpose.t_asn_deliver':
@@ -131,6 +133,8 @@ export const processFlowPurposeEn: Record<string, string> = {
     'The supplier acknowledges the money and the advice that came with it. The claim is finished.',
   'processFlows.purpose.t_invoice_dispute':
     'Paragon does not take the claim as it stands, and says why. It stops the payment clock and puts the ball back with the supplier.',
+  'processFlows.purpose.t_invoice_resubmit':
+    'The supplier fixes what Finance sent back and asks to be paid again. The bill is checked again from the start, as if it were new.',
   'processFlows.purpose.t_invoice_resolve':
     'The disagreement has been settled and the claim goes back for checking. Without this, a contested bill has nowhere to go.',
 
@@ -322,6 +326,16 @@ export const processFlowPurposeEn: Record<string, string> = {
     'Paragon accepts the applicant. What this records is the decision and nothing else — the vendor master record is raised in S/4HANA, which owns supplier identity.',
   'processFlows.purpose.t_application_reject':
     'Paragon declines, and must say why in words somebody can repeat to the applicant. The applicant holds no seat here, so that text is the only account of the decision that will ever exist.',
+
+  // ── receiptDiscrepancy ───────────────────────────────────────────────
+  'processFlows.purpose.entity.receiptDiscrepancy':
+    'The conversation about a delivery that did not arrive as announced, or that failed inspection in part. It lets both sides agree on the quantity before the bill is written, instead of arguing about it afterwards.',
+  'processFlows.purpose.t_receiptdiscrepancy_acknowledge':
+    'The supplier agrees with what Paragon counted and says so in its own words. The difference stands, and the bill will follow the quantity Paragon accepted.',
+  'processFlows.purpose.t_receiptdiscrepancy_dispute':
+    'The supplier does not agree with what Paragon counted and explains why, so the planner can check it while the delivery is still fresh.',
+  'processFlows.purpose.t_receiptdiscrepancy_resolve':
+    'The planner closes the disagreement and writes down how it was settled, so neither side has to reopen it when the bill arrives.',
 };
 
 export const processFlowPurposeId: Record<string, string> = {
@@ -360,6 +374,8 @@ export const processFlowPurposeId: Record<string, string> = {
     'Pemasok mulai memberi tahu Paragon apa yang akan dikirimnya, selagi rinciannya masih bisa mereka ubah.',
   'processFlows.purpose.t_asn_submit':
     'Menyerahkan rincian pengapalan ke gudang Paragon: siapa yang membawa, bagaimana menelusurinya, dan kapan harus ditunggu.',
+  'processFlows.purpose.t_asn_cancel':
+    'Pemasok menarik pemberitahuan sebelum barang apa pun tiba, sehingga gudang berhenti menunggu barang itu dan kuantitasnya bisa dikirim lagi.',
   'processFlows.purpose.t_asn_in_transit':
     'Barang sudah meninggalkan pemasok. Sejak titik ini tanggal kedatangan menjadi urusan logistik, bukan lagi urusan produksi.',
   'processFlows.purpose.t_asn_deliver':
@@ -422,6 +438,8 @@ export const processFlowPurposeId: Record<string, string> = {
     'Pemasok mengakui penerimaan uang beserta nota yang menyertainya. Klaim ini selesai.',
   'processFlows.purpose.t_invoice_dispute':
     'Paragon tidak menerima klaim itu apa adanya, dan menyatakan alasannya. Ini menghentikan hitungan pembayaran dan mengembalikan bola ke pemasok.',
+  'processFlows.purpose.t_invoice_resubmit':
+    'Pemasok memperbaiki apa yang dikembalikan Finance dan kembali meminta pembayaran. Tagihan diperiksa ulang dari awal, seolah-olah baru.',
   'processFlows.purpose.t_invoice_resolve':
     'Perselisihannya sudah dituntaskan dan klaimnya dikembalikan untuk diperiksa. Tanpa ini, tagihan yang dipersoalkan tidak punya jalan ke mana pun.',
 
@@ -609,4 +627,14 @@ export const processFlowPurposeId: Record<string, string> = {
     'Paragon menerima pemohon. Yang dicatat hanyalah keputusannya — catatan induk vendor diterbitkan di S/4HANA, tempat identitas pemasok berada.',
   'processFlows.purpose.t_application_reject':
     'Paragon menolak, dan wajib menyatakan alasannya dengan kata-kata yang bisa diteruskan kepada pemohon. Pemohon tidak punya kursi di sini, sehingga teks itulah satu-satunya keterangan atas keputusan tersebut yang akan pernah ada.',
+
+  // ── receiptDiscrepancy ───────────────────────────────────────────────
+  'processFlows.purpose.entity.receiptDiscrepancy':
+    'Percakapan tentang pengiriman yang tidak tiba sesuai pemberitahuan, atau yang sebagian gagal pemeriksaan. Kedua pihak menyepakati kuantitas sebelum tagihan dibuat, bukan memperdebatkannya sesudahnya.',
+  'processFlows.purpose.t_receiptdiscrepancy_acknowledge':
+    'Pemasok setuju dengan hitungan Paragon dan menyatakannya dengan kata-katanya sendiri. Selisihnya berlaku, dan tagihan akan mengikuti kuantitas yang diterima Paragon.',
+  'processFlows.purpose.t_receiptdiscrepancy_dispute':
+    'Pemasok tidak setuju dengan hitungan Paragon dan menjelaskan alasannya, agar perencana dapat memeriksanya selagi pengiriman masih baru.',
+  'processFlows.purpose.t_receiptdiscrepancy_resolve':
+    'Perencana menutup ketidaksepakatan dan mencatat cara penyelesaiannya, sehingga tidak ada pihak yang perlu membukanya lagi saat tagihan datang.',
 };

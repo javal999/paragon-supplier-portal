@@ -27,7 +27,9 @@ import type {
   SupplierDocumentCategory,
   PoLineResponse,
   PoRejectionCause,
+  InvoiceLine,
 } from '../data/types';
+import type { AsnLineInput } from '../transitions/fulfilmentRules';
 
 /**
  * The COMMAND scope — tenancy plus the seat's business roles.
@@ -327,6 +329,13 @@ export interface AsnCreateVars {
   carrier?: string;
   trackingNumber?: string;
   eta?: string;
+  /** REQ-E07-04 — shipped quantity, batch and expiry per PO line. Omitted, the
+   *  draft proposes each line's open quantity. */
+  lines?: AsnLineInput[];
+  shipDate?: string;
+  packingListFile?: string;
+  /** BR-02 — required when a line ships more than its open quantity. */
+  overShipReason?: string;
 }
 
 /**
@@ -357,6 +366,9 @@ export interface AsnSubmitVars {
   carrier: string;
   trackingNumber: string;
   eta: string;
+  shipDate?: string;
+  lines?: AsnLineInput[];
+  overShipReason?: string;
 }
 
 /** Submit a Draft ASN (fires `t_asn_submit`, Draft → Submitted). */
@@ -366,12 +378,89 @@ export function useAdvanceShipNoticeSubmit() {
   const invalidate = useInvalidateProcurement();
 
   return useMutation<CommandResult, Error, AsnSubmitVars>({
-    mutationFn: ({ asnNumber, carrier, trackingNumber, eta }) =>
+    mutationFn: ({ asnNumber, carrier, trackingNumber, eta, shipDate, lines, overShipReason }) =>
       svc.commands.dispatch(scope, {
         transitionId: 't_asn_submit',
         entity: 'advanceShipNotice',
         entityId: asnNumber,
-        payload: { carrier, trackingNumber, eta },
+        payload: {
+          carrier,
+          trackingNumber,
+          eta,
+          ...(shipDate ? { shipDate } : {}),
+          ...(lines ? { lines } : {}),
+          ...(overShipReason ? { overShipReason } : {}),
+        },
+      }),
+    onSuccess: (result) => {
+      if (result.status !== 'failed') invalidate(scope);
+    },
+  });
+}
+
+/**
+ * Cancel a Draft or Submitted ASN before anything was received (fires
+ * `t_asn_cancel`). A cancelled ASN stops counting toward open quantity.
+ */
+export function useAdvanceShipNoticeCancel() {
+  const svc = useDataService();
+  const scope = useScope();
+  const invalidate = useInvalidateProcurement();
+
+  return useMutation<CommandResult, Error, { asnNumber: string }>({
+    mutationFn: ({ asnNumber }) =>
+      svc.commands.dispatch(scope, {
+        transitionId: 't_asn_cancel',
+        entity: 'advanceShipNotice',
+        entityId: asnNumber,
+      }),
+    onSuccess: (result) => {
+      if (result.status !== 'failed') invalidate(scope);
+    },
+  });
+}
+
+// ─── Receipt discrepancy (REQ-E07-06) ───────────────────────────────────────
+
+export interface ReceiptDiscrepancyAnswerVars {
+  receiptId: string;
+  answer: 'acknowledge' | 'dispute';
+  comment: string;
+}
+
+/** The supplier acknowledges or disputes a receipt discrepancy with a comment. */
+export function useReceiptDiscrepancyAnswer() {
+  const svc = useDataService();
+  const scope = useScope();
+  const invalidate = useInvalidateProcurement();
+
+  return useMutation<CommandResult, Error, ReceiptDiscrepancyAnswerVars>({
+    mutationFn: ({ receiptId, answer, comment }) =>
+      svc.commands.dispatch(scope, {
+        transitionId:
+          answer === 'acknowledge' ? 't_receiptdiscrepancy_acknowledge' : 't_receiptdiscrepancy_dispute',
+        entity: 'receiptDiscrepancy',
+        payload: { receiptId, comment },
+      }),
+    onSuccess: (result) => {
+      if (result.status !== 'failed') invalidate(scope);
+    },
+  });
+}
+
+/** PTI's planner resolves a disputed receipt discrepancy with a comment. */
+export function useReceiptDiscrepancyResolve() {
+  const svc = useDataService();
+  const scope = useScope();
+  const invalidate = useInvalidateProcurement();
+
+  return useMutation<CommandResult, Error, { receiptId: string; resolutionComment: string }>({
+    mutationFn: ({ receiptId, resolutionComment }) =>
+      svc.commands.dispatch(scope, {
+        transitionId: 't_receiptdiscrepancy_resolve',
+        entity: 'receiptDiscrepancy',
+        entityId: receiptId,
+        payload: { resolutionComment },
       }),
     onSuccess: (result) => {
       if (result.status !== 'failed') invalidate(scope);
@@ -830,9 +919,15 @@ export function useGoodsReceiptSettle() {
 // sapBoundary verb (Option B: no "paid" claim until settlement mints the FI doc).
 
 export interface InvoiceCreateVars {
-  /** The parent PO the invoice bills against (must be the supplier's own, Confirmed). */
+  /** The parent PO the invoice bills against (the supplier's own, confirmed or delivered). */
   poReference: string;
   amount: number;
+  /** REQ-E07-07 — lines drawn from the selected goods receipts. */
+  lines: InvoiceLine[];
+  invoiceNumber: string;
+  invoiceDate: string;
+  /** Tax invoice (e-Faktur) file name. */
+  taxInvoiceFile: string;
   dueDate?: string;
   submittedDate?: string;
   bankAccount?: string;
@@ -871,6 +966,35 @@ export function useInvoiceSubmit() {
         entity: 'invoice',
         entityId: invoiceId,
         payload: { amount },
+      }),
+    onSuccess: (result) => {
+      if (result.status !== 'failed') invalidate(scope);
+    },
+  });
+}
+
+export interface InvoiceResubmitVars {
+  invoiceId: string;
+  amount: number;
+  lines?: InvoiceLine[];
+  invoiceNumber?: string;
+  invoiceDate?: string;
+  taxInvoiceFile?: string;
+}
+
+/** Correct and resubmit a returned invoice (fires `t_invoice_resubmit`). */
+export function useInvoiceResubmit() {
+  const svc = useDataService();
+  const scope = useScope();
+  const invalidate = useInvalidateProcurement();
+
+  return useMutation<CommandResult, Error, InvoiceResubmitVars>({
+    mutationFn: ({ invoiceId, ...payload }) =>
+      svc.commands.dispatch(scope, {
+        transitionId: 't_invoice_resubmit',
+        entity: 'invoice',
+        entityId: invoiceId,
+        payload: Object.fromEntries(Object.entries(payload).filter(([, v]) => v !== undefined && v !== '')),
       }),
     onSuccess: (result) => {
       if (result.status !== 'failed') invalidate(scope);

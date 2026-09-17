@@ -6,7 +6,9 @@ import SampleDataBadge from '../components/ui-v2/SampleDataBadge';
 import NoSupplierIdentity from '../components/ui-v2/NoSupplierIdentity';
 import { useCurrentIdentity } from '../context/CurrentIdentityContext';
 import {
+  useASNs,
   useDocuments,
+  useGoodsReceipts,
   usePurchaseOrders,
   useRFQs,
   useSupplierInvoices,
@@ -15,6 +17,7 @@ import { POStatus } from '../services/data/types';
 import { documentDisplayState } from '../services/data/documentDisplayState';
 import { DECLARED_PRESENT } from '../services/data/fixturePresent';
 import TaskList, { type HomeTask } from './home/TaskList';
+import { awaitsSupplierAnswer } from '../services/transitions/fulfilmentRules';
 
 // Supplier Home — "To do" (REQUIREMENTS §3.8 SC-01): what Paragon is waiting for
 // from this supplier. Filters match the supplier dashboard widgets they replace.
@@ -27,6 +30,8 @@ const SupplierHome: React.FC = () => {
   const rfqs = useRFQs();
   const invoices = useSupplierInvoices();
   const documents = useDocuments();
+  const receipts = useGoodsReceipts();
+  const asns = useASNs();
 
   const tasks = useMemo<HomeTask[]>(() => {
     const poItems = pos.data?.items ?? [];
@@ -45,6 +50,13 @@ const SupplierHome: React.FC = () => {
     const unpaid = (invoices.data?.items ?? []).filter(
       (i) => i.status !== 'Payment Released' && i.status !== 'Remittance Received',
     );
+    const asnItems = asns.data?.items ?? [];
+    // REQ-E07-06 — receipts that differ from what was shipped (or had quantity
+    // rejected) and still wait for this supplier's answer. Derived at read time.
+    const toAnswer = (receipts.data?.items ?? []).filter((gr) =>
+      awaitsSupplierAnswer(gr, asnItems.find((a) => a.asnNumber === gr.asnNumber)),
+    );
+    const returned = (invoices.data?.items ?? []).filter((i) => i.stage === 'Returned');
     return [
       {
         id: 'confirm-orders',
@@ -73,6 +85,21 @@ const SupplierHome: React.FC = () => {
         to: '/supplier/shipments',
       },
       {
+        id: 'receipt-discrepancies',
+        label: t('hub.home.task.sup.receiptDiscrepancies'),
+        count: toAnswer.length,
+        severity: 'warning',
+        to: '/supplier/goods-receipts',
+      },
+      {
+        // REQ-E07-07 — Finance returned the invoice with a reason.
+        id: 'returned-invoices',
+        label: t('hub.home.task.sup.returnedInvoices'),
+        count: returned.length,
+        severity: 'critical',
+        to: '/supplier/invoices',
+      },
+      {
         id: 'rfq',
         label: t('hub.home.task.sup.rfq'),
         count: openRfqs.length,
@@ -94,7 +121,7 @@ const SupplierHome: React.FC = () => {
         to: '/supplier/invoices',
       },
     ];
-  }, [pos.data, rfqs.data, invoices.data, documents.data, supplierId, t]);
+  }, [pos.data, rfqs.data, invoices.data, documents.data, receipts.data, asns.data, supplierId, t]);
 
   if (!supplierId) return <NoSupplierIdentity />;
 

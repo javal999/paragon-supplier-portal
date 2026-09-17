@@ -21,6 +21,7 @@ export * from './settleFaults';
 export * from './policies';
 export * from './grRollup';
 export * from './invoiceRollup';
+export * from './fulfilmentRules';
 export * from './cascades';
 export { purchaseOrderFlow } from './flows/purchaseOrder.flow';
 export { advanceShipNoticeFlow } from './flows/advanceShipNotice.flow';
@@ -42,6 +43,7 @@ export { incomingShipmentFlow } from './flows/incomingShipment.flow';
 export { enforcementFlow } from './flows/enforcement.flow';
 export { roleFlow } from './flows/role.flow';
 export { supplierApplicationFlow } from './flows/supplierApplication.flow';
+export { receiptDiscrepancyFlow } from './flows/receiptDiscrepancy.flow';
 export * from './customRoles';
 
 import { flowRegistry } from './registry';
@@ -65,6 +67,7 @@ import { incomingShipmentFlow } from './flows/incomingShipment.flow';
 import { enforcementFlow } from './flows/enforcement.flow';
 import { roleFlow } from './flows/role.flow';
 import { supplierApplicationFlow } from './flows/supplierApplication.flow';
+import { receiptDiscrepancyFlow } from './flows/receiptDiscrepancy.flow';
 
 // Seed the shipped flows onto the singleton.
 flowRegistry.register(purchaseOrderFlow); // Step 3.1 — PO
@@ -109,3 +112,4 @@ flowRegistry.register(enforcementFlow); // CP-3 · E2 — Enforcement
 // the platform with no audit record (D3).
 flowRegistry.register(roleFlow); // Duplicate-and-narrow — Role
 flowRegistry.register(supplierApplicationFlow); // B1 — Supplier onboarding
+flowRegistry.register(receiptDiscrepancyFlow); // REQ-E07-06 — receipt discrepancy response

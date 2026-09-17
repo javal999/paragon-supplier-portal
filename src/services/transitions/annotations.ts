@@ -113,6 +113,7 @@ export const TRANSITION_PURPOSE: FlowAnnotations = Object.freeze({
   // ── advanceShipNotice ──────────────────────────────────────────────────────
   t_asn_create: { purposeKey: 'processFlows.purpose.t_asn_create' },
   t_asn_submit: { purposeKey: 'processFlows.purpose.t_asn_submit' },
+  t_asn_cancel: { purposeKey: 'processFlows.purpose.t_asn_cancel' },
   t_asn_in_transit: { purposeKey: 'processFlows.purpose.t_asn_in_transit' },
   t_asn_deliver: { purposeKey: 'processFlows.purpose.t_asn_deliver' },
   t_asn_discrepancy: { purposeKey: 'processFlows.purpose.t_asn_discrepancy' },
@@ -148,6 +149,7 @@ export const TRANSITION_PURPOSE: FlowAnnotations = Object.freeze({
   },
   t_invoice_remit: { purposeKey: 'processFlows.purpose.t_invoice_remit' },
   t_invoice_dispute: { purposeKey: 'processFlows.purpose.t_invoice_dispute' },
+  t_invoice_resubmit: { purposeKey: 'processFlows.purpose.t_invoice_resubmit' },
   t_invoice_resolve: { purposeKey: 'processFlows.purpose.t_invoice_resolve' },
 
   // ── invoiceMatch ───────────────────────────────────────────────────────────
@@ -268,6 +270,11 @@ export const TRANSITION_PURPOSE: FlowAnnotations = Object.freeze({
   },
   t_application_approve: { purposeKey: 'processFlows.purpose.t_application_approve' },
   t_application_reject: { purposeKey: 'processFlows.purpose.t_application_reject' },
+  t_receiptdiscrepancy_acknowledge: {
+    purposeKey: 'processFlows.purpose.t_receiptdiscrepancy_acknowledge',
+  },
+  t_receiptdiscrepancy_dispute: { purposeKey: 'processFlows.purpose.t_receiptdiscrepancy_dispute' },
+  t_receiptdiscrepancy_resolve: { purposeKey: 'processFlows.purpose.t_receiptdiscrepancy_resolve' },
 });
 
 /**
@@ -299,6 +306,7 @@ export const ENTITY_PURPOSE: FlowAnnotations = Object.freeze({
   enforcement: { purposeKey: 'processFlows.purpose.entity.enforcement' },
   role: { purposeKey: 'processFlows.purpose.entity.role' },
   supplierApplication: { purposeKey: 'processFlows.purpose.entity.supplierApplication' },
+  receiptDiscrepancy: { purposeKey: 'processFlows.purpose.entity.receiptDiscrepancy' },
 });
 
 /**

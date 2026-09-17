@@ -20,8 +20,10 @@ import type {
   CommandResult,
   CommandStatus,
   ASN,
+  AsnLineItem,
   AsnStatus,
   Invoice,
+  InvoiceLine,
   InvoiceStatus,
   PurchaseRequisition,
   PRStatus,
@@ -39,7 +41,9 @@ import type {
   GRStatus,
   Disposition,
   InspectionResult,
+  ReceiptDiscrepancyStatus,
 } from '../../../data/mockGoodsReceipts';
+import { receiptDiscrepancyStore } from './stores/receiptDiscrepancyStore';
 import { supplierDocumentStore } from './stores/supplierDocumentStore';
 import { supplierApplicationStore } from './stores/supplierApplicationStore';
 import { VENDOR_BEARING_REQUEST_TYPE } from '../../transitions/flows/supplierApplication.flow';
@@ -71,6 +75,18 @@ import {
   cascadesFor,
   deriveMatchVerdict,
   invoicesForReceipt,
+  INVOICE_AWAITING_MATCH,
+  ASN_PO_STATES,
+  INVOICEABLE_PO_STATES,
+  asnLineRefusal,
+  asnSubmitRefusal,
+  deriveInvoiceVerdict,
+  hasReceiptDiscrepancy,
+  invoiceLineRefusal,
+  isCalendarDate,
+  isDuplicateInvoiceNumber,
+  openQtyForLine,
+  type AsnLineInput,
   type CommandTarget,
   type CascadeCommand,
   type CascadeContext,
@@ -212,17 +228,18 @@ const purchaseOrderTarget: CommandTarget = {
 
 /**
  * REQ-E07-05 BR-03 — the first ASN submitted against a PO records "shipment
- * started" on that PO, with the ASN's ship date. The ASN carries no separate
- * dispatch-date field, so the submission date is its ship date.
+ * started" on that PO, with that ASN's ship date (REQ-E07-04 made the ship date
+ * part of the ASN). An ASN that predates the field falls back to the day it was
+ * submitted.
  */
-const recordShipmentStarted = (asnNumber: string, poNumber: string): void => {
+const recordShipmentStarted = (asnNumber: string, poNumber: string, shipDate?: string): void => {
   const po = purchaseOrderStore.all().find((p) => p.poNumber === poNumber);
   if (!po || po.shippingNotice?.startedOn) return;
   purchaseOrderStore.update(po.id, (p) => ({
     ...p,
     shippingNotice: {
       ...p.shippingNotice,
-      startedOn: new Date().toISOString().slice(0, 10),
+      startedOn: shipDate || new Date().toISOString().slice(0, 10),
       startedByAsn: asnNumber,
     },
   }));
@@ -232,15 +249,61 @@ const recordShipmentStarted = (asnNumber: string, poNumber: string): void => {
 const findPoByNumber = (poNumber: string) =>
   purchaseOrderStore.all().find((p) => p.poNumber === poNumber);
 
+const nonBlank = (v: unknown): string | undefined =>
+  typeof v === 'string' && v.trim() && v.trim() !== '—' ? v.trim() : undefined;
+
+/** The ASN lines a payload carries (REQ-E07-04), or null when it carries none. */
+const payloadAsnLines = (payload: Record<string, unknown>): AsnLineInput[] | null =>
+  Array.isArray(payload.lines) ? (payload.lines as AsnLineInput[]) : null;
+
+/**
+ * Merge entered lines onto an ASN's stored lines by material. A material the
+ * draft does not carry yet is added from its PO line. Stored lines the payload
+ * does not mention are kept as they are.
+ */
+const mergeAsnLines = (
+  stored: readonly AsnLineItem[],
+  entered: readonly AsnLineInput[],
+  po: PurchaseOrder | undefined,
+): AsnLineItem[] => {
+  const out = stored.map((l) => ({ ...l }));
+  for (const e of entered) {
+    const i = out.findIndex((l) => l.materialCode === e.materialCode);
+    const poLine = po?.lineItems.find((li) => li.materialCode === e.materialCode);
+    const base: AsnLineItem =
+      i >= 0
+        ? out[i]
+        : {
+            materialCode: e.materialCode,
+            description: poLine?.description ?? e.materialCode,
+            orderedQty: poLine?.quantity ?? 0,
+            shippedQty: 0,
+            lotNumber: '',
+            ...(poLine?.uom ? { uom: poLine.uom } : {}),
+          };
+    const next: AsnLineItem = {
+      ...base,
+      shippedQty: typeof e.shippedQty === 'number' ? e.shippedQty : base.shippedQty,
+      lotNumber: nonBlank(e.batchNumber) ?? base.lotNumber,
+      ...(nonBlank(e.expiryDate) ? { expiryDate: nonBlank(e.expiryDate) } : {}),
+    };
+    if (i >= 0) out[i] = next;
+    else out.push(next);
+  }
+  return out;
+};
+
 const advanceShipNoticeTarget: CommandTarget = {
   readState: (id) => asnStore.get(id)?.status ?? null,
   readScopeOwner: (id) => asnStore.get(id)?.supplierId ?? null,
   readEntity: (id) => asnStore.get(id) ?? null,
   applyTransition: (id, toState, payload) => {
-    if (toState === 'Submitted') {
-      const asn = asnStore.get(id);
-      if (asn) recordShipmentStarted(asn.asnNumber, asn.poReference);
+    const current = asnStore.get(id);
+    const shipDate = nonBlank(payload.shipDate) ?? current?.shipDate;
+    if (toState === 'Submitted' && current) {
+      recordShipmentStarted(current.asnNumber, current.poReference, shipDate);
     }
+    const entered = payloadAsnLines(payload);
     asnStore.update(id, (a) => ({
       ...a,
       status: toState as AsnStatus,
@@ -250,6 +313,10 @@ const advanceShipNoticeTarget: CommandTarget = {
           ? payload.trackingNumber
           : a.trackingNumber,
       eta: typeof payload.eta === 'string' && payload.eta ? payload.eta : a.eta,
+      ...(shipDate ? { shipDate } : {}),
+      ...(nonBlank(payload.packingListFile) ? { packingListFile: nonBlank(payload.packingListFile) } : {}),
+      ...(nonBlank(payload.overShipReason) ? { overShipReason: nonBlank(payload.overShipReason) } : {}),
+      lineItems: entered ? mergeAsnLines(a.lineItems, entered, findPoByNumber(a.poReference)) : a.lineItems,
     }));
   },
   // Creation scope: a supplier may draft an ASN only against its OWN PO.
@@ -257,6 +324,24 @@ const advanceShipNoticeTarget: CommandTarget = {
   create: (payload, toState) => {
     const po = findPoByNumber(String(payload.poReference));
     const asnNumber = asnStore.nextNumber();
+    const entered = payloadAsnLines(payload);
+    // BR-02 — without entered lines, the draft proposes each PO line's OPEN
+    // quantity (committed minus what other live ASNs already carry), never the
+    // full ordered quantity: a second, partial ASN must not double-count.
+    const lineItems: AsnLineItem[] = !po
+      ? []
+      : entered
+        ? mergeAsnLines([], entered, po)
+        : po.lineItems
+            .map((li) => ({
+              materialCode: li.materialCode,
+              description: li.description,
+              orderedQty: li.quantity,
+              shippedQty: openQtyForLine(po, li, asnStore.all()),
+              lotNumber: '',
+              uom: li.uom,
+            }))
+            .filter((l) => l.shippedQty > 0);
     const asn: ASN = {
       asnNumber,
       supplierId: po?.supplierId ?? '',
@@ -272,15 +357,10 @@ const advanceShipNoticeTarget: CommandTarget = {
         grossWeightKg: 0,
         temperatureRequirement: 'Ambient',
       },
-      lineItems: po
-        ? po.lineItems.map((li) => ({
-            materialCode: li.materialCode,
-            description: li.description,
-            orderedQty: li.quantity,
-            shippedQty: li.quantity,
-            lotNumber: '',
-          }))
-        : [],
+      lineItems,
+      ...(nonBlank(payload.shipDate) ? { shipDate: nonBlank(payload.shipDate) } : {}),
+      ...(nonBlank(payload.packingListFile) ? { packingListFile: nonBlank(payload.packingListFile) } : {}),
+      ...(nonBlank(payload.overShipReason) ? { overShipReason: nonBlank(payload.overShipReason) } : {}),
     };
     asnStore.add(asn);
     return { entityId: asnNumber };
@@ -288,13 +368,86 @@ const advanceShipNoticeTarget: CommandTarget = {
 };
 
 // Cross-entity creation legality (mock layer — reads the PO store): the parent
-// PO must be Confirmed before its ASN can be drafted.
-bindPolicyHook(POLICY_HOOKS.ASN_CREATE_PO_CONFIRMED, ({ payload }) => {
+// PO must be approved and still open before an ASN can be drafted against it.
+bindPolicyHook(POLICY_HOOKS.ASN_CREATE_PO_APPROVED, ({ payload }) => {
   const po = findPoByNumber(String(payload.poReference));
   if (!po) return { ok: false, reason: 'parent PO not found' };
-  if (po.status !== POStatus.CONFIRMED) return { ok: false, reason: `PO ${po.poNumber} is not Confirmed` };
+  if (!ASN_PO_STATES.includes(po.status)) {
+    return { ok: false, reason: `PO ${po.poNumber} is not approved and open (${po.status})` };
+  }
   return { ok: true };
 });
+
+// REQ-E07-04 BR-02 — shipped quantity within the PO line's open quantity, unless
+// the supplier says why. On create the PO comes from the payload; on submit from
+// the ASN, which is left out of its own open-quantity sum.
+bindPolicyHook(POLICY_HOOKS.ASN_LINES_WITHIN_OPEN, ({ entityId, payload }) => {
+  const asn = entityId ? asnStore.get(entityId) : undefined;
+  const po = findPoByNumber(asn ? asn.poReference : String(payload.poReference));
+  if (!po) return { ok: false, reason: 'parent PO not found' };
+  const entered = payloadAsnLines(payload);
+  const overShipReason = payload.overShipReason ?? asn?.overShipReason;
+  // A create without lines proposes open quantities by construction.
+  if (!asn && !entered) return { ok: true };
+  if (!asn && entered && entered.length === 0) {
+    return { ok: false, reason: 'an ASN needs at least one line' };
+  }
+  const lines: AsnLineInput[] = asn
+    ? mergeAsnLines(asn.lineItems, entered ?? [], po).map((l) => ({
+        materialCode: l.materialCode,
+        shippedQty: l.shippedQty,
+      }))
+    : entered!;
+  const seen = new Set<string>();
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    // Stored lines of an older draft whose material the PO does not carry were
+    // accepted when drafted; only entered lines must name a PO material.
+    const onPo = po.lineItems.some((li) => li.materialCode === line?.materialCode);
+    if (asn && !onPo && !entered?.some((e) => e.materialCode === line.materialCode)) continue;
+    const refusal = asnLineRefusal(line, po, asnStore.all(), {
+      excludeAsn: asn?.asnNumber,
+      overShipReason,
+      requireBatch: false,
+    });
+    if (refusal === 'overOpen') {
+      return {
+        ok: false,
+        reason: `OVER_OPEN_QUANTITY: line ${i + 1} (${line.materialCode}) ships more than the open quantity — give a reason`,
+      };
+    }
+    if (refusal) return { ok: false, reason: `line ${i + 1}: ${refusal}` };
+    if (seen.has(line.materialCode)) return { ok: false, reason: `line ${i + 1}: material given twice` };
+    seen.add(line.materialCode);
+  }
+  return { ok: true };
+});
+
+// REQ-E07-04 BR-04 — what a submitted ASN must carry, read on the draft merged
+// with what the submission adds.
+bindPolicyHook(POLICY_HOOKS.ASN_SUBMIT_COMPLETE, ({ entityId, payload }) => {
+  const asn = asnStore.get(entityId);
+  if (!asn) return { ok: false, reason: 'entity missing' };
+  const lines = mergeAsnLines(asn.lineItems, payloadAsnLines(payload) ?? [], findPoByNumber(asn.poReference));
+  const refusal = asnSubmitRefusal({
+    lineCount: lines.length,
+    shipDate: nonBlank(payload.shipDate) ?? asn.shipDate,
+    eta: nonBlank(payload.eta) ?? asn.eta,
+  });
+  if (refusal) return { ok: false, reason: `INCOMPLETE_ASN: ${refusal}` };
+  const noBatch = lines.findIndex((l) => !nonBlank(l.lotNumber));
+  if (noBatch >= 0) return { ok: false, reason: `INCOMPLETE_ASN: batch number missing on line ${noBatch + 1}` };
+  const badQty = lines.findIndex((l) => !(Number.isFinite(l.shippedQty) && l.shippedQty > 0));
+  if (badQty >= 0) return { ok: false, reason: `INCOMPLETE_ASN: shipped quantity missing on line ${badQty + 1}` };
+  return { ok: true };
+});
+
+// REQ-E07-04 — an ASN can be withdrawn only while nothing was received on it.
+bindPolicyHook(POLICY_HOOKS.ASN_CANCEL_NOT_RECEIVED, ({ entityId }) =>
+  goodsReceiptStore.all().some((g) => g.asnNumber === entityId)
+    ? { ok: false, reason: `goods were already received against ${entityId}` }
+    : { ok: true },
+);
 
 // — Goods-receipt target (Step 4 batch ii) — buyer-side receiving, inspection,
 //   disposition, and the FIRST real sapBoundary verb (Post to SAP, Option B). ——
@@ -446,26 +599,49 @@ const invoiceTarget: CommandTarget = {
   readScopeOwner: (id) => invoiceStore.get(id)?.supplierId ?? null,
   readEntity: (id) => invoiceStore.get(id) ?? null,
   applyTransition: (id, toState, payload) => {
-    invoiceStore.update(id, (inv) => ({
-      ...inv,
-      status: toState as InvoiceStatus,
-      // Submit carries the finalized amount; other verbs leave it untouched.
-      amount:
-        toState === 'Submitted' && typeof payload.amount === 'number'
-          ? payload.amount
-          : inv.amount,
-    }));
+    const today = new Date().toISOString().slice(0, 10);
+    invoiceStore.update(id, (inv) => {
+      const next: Invoice = {
+        ...inv,
+        status: toState as InvoiceStatus,
+        // Submit / resubmit carry the finalized amount; other verbs leave it.
+        amount:
+          toState === 'Submitted' && typeof payload.amount === 'number'
+            ? payload.amount
+            : inv.amount,
+      };
+      // Finance returns the invoice (t_invoice_dispute): keep its reason, which
+      // the supplier reads on the Returned invoice.
+      const reason = nonBlank(payload.disputeReason);
+      if (toState === 'Disputed' && reason) next.returnReason = reason;
+      if (toState === 'Submitted') {
+        // REQ-E07-07 — a correction may replace the lines and documents.
+        if (Array.isArray(payload.lines)) next.lines = (payload.lines as InvoiceLine[]).map((l) => ({ ...l }));
+        if (nonBlank(payload.invoiceNumber)) next.invoiceNumber = nonBlank(payload.invoiceNumber)!;
+        if (nonBlank(payload.invoiceDate)) next.invoiceDate = nonBlank(payload.invoiceDate);
+        if (nonBlank(payload.taxInvoiceFile)) next.taxInvoiceFile = nonBlank(payload.taxInvoiceFile);
+        // CR-14 — the due date counts from submission. A first submission of a
+        // receipt-based invoice restarts the dates at today; a resubmission
+        // keeps the original submission, so a return does not reset the clock.
+        if (inv.status === 'Draft' && inv.lines) {
+          next.submittedDate = today;
+          next.dueDate = new Date(Date.parse(today) + 30 * 86_400_000).toISOString().slice(0, 10);
+        }
+        // A fresh verdict is computed by the submission cascade.
+        if (inv.lines || next.lines) next.matchStatus = 'Pending';
+      }
+      return next;
+    });
   },
   // Creation scope: a supplier may draft an invoice only against its OWN PO
   // (cross-supplier ⇒ SCOPE_DENIED, exactly as reads). Derived from the parent PO.
   creationOwner: (payload) => findPoByNumber(String(payload.poReference))?.supplierId ?? null,
   create: (payload, toState) => {
     const po = findPoByNumber(String(payload.poReference));
-    const invoiceNumber = invoiceStore.nextNumber();
-    // Honest dates by construction: a creation that omits the dates (the form
-    // carries only PO + amount) defaults submittedDate to today and dueDate to
-    // Net-30 — so the invoice is never BORN overdue and aging is a real number,
-    // not NaN on an empty date (F-2). An explicit payload date still wins.
+    const id = invoiceStore.nextNumber();
+    // Honest dates by construction: a creation that omits the dates defaults
+    // submittedDate to today and dueDate to Net-30 (CR-14) — so the invoice is
+    // never BORN overdue. Submission restarts both at the submission day.
     const submittedDate =
       typeof payload.submittedDate === 'string' && payload.submittedDate
         ? payload.submittedDate
@@ -476,9 +652,14 @@ const invoiceTarget: CommandTarget = {
         : new Date(Date.parse(submittedDate) + 30 * 86_400_000)
             .toISOString()
             .slice(0, 10);
+    const lines = Array.isArray(payload.lines)
+      ? (payload.lines as InvoiceLine[]).map((l) => ({ ...l }))
+      : undefined;
     const invoice: Invoice = {
-      id: invoiceNumber, // store keyed by id; the assigned number doubles as id
-      invoiceNumber,
+      id, // store keyed by id; the store assigns it
+      // REQ-E07-07 — the supplier's own invoice number; the store number only
+      // when none was given.
+      invoiceNumber: nonBlank(payload.invoiceNumber) ?? id,
       supplierId: po?.supplierId ?? '',
       supplierName: po?.supplierName ?? '—',
       poNumber: String(payload.poReference),
@@ -499,20 +680,131 @@ const invoiceTarget: CommandTarget = {
       paymentTerms: 'Net 30',
       buyerContact: '',
       remittanceNote: null,
+      ...(lines ? { lines } : {}),
+      ...(nonBlank(payload.invoiceDate) ? { invoiceDate: nonBlank(payload.invoiceDate) } : {}),
+      ...(nonBlank(payload.taxInvoiceFile) ? { taxInvoiceFile: nonBlank(payload.taxInvoiceFile) } : {}),
     };
     invoiceStore.add(invoice);
-    return { entityId: invoiceNumber };
+    return { entityId: id };
   },
 };
 
 // Invoice create legality (mock layer — cross-entity read): the parent PO must
-// be Confirmed before its invoice can be drafted (same shape as ASN create).
-bindPolicyHook(POLICY_HOOKS.INVOICE_CREATE_PO_CONFIRMED, ({ payload }) => {
+// be confirmed or (partly) delivered — goods are invoiced after they arrive.
+bindPolicyHook(POLICY_HOOKS.INVOICE_CREATE_PO_INVOICEABLE, ({ payload }) => {
   const po = findPoByNumber(String(payload.poReference));
   if (!po) return { ok: false, reason: 'parent PO not found' };
-  if (po.status !== POStatus.CONFIRMED) return { ok: false, reason: `PO ${po.poNumber} is not Confirmed` };
+  if (!INVOICEABLE_PO_STATES.includes(po.status)) {
+    return { ok: false, reason: `PO ${po.poNumber} cannot be invoiced (${po.status})` };
+  }
   return { ok: true };
 });
+
+// REQ-E07-07 BR-01 / BR-02 — every line from a received receipt of the
+// supplier's own PO, at the PO price, within accepted minus already invoiced.
+// On resubmission the invoice itself is left out of "already invoiced", and a
+// line set the correction does not replace is re-checked as stored.
+bindPolicyHook(POLICY_HOOKS.INVOICE_LINES_FROM_RECEIPTS, ({ entityId, payload }) => {
+  const inv = entityId ? invoiceStore.get(entityId) : undefined;
+  const lines = Array.isArray(payload.lines) ? (payload.lines as Partial<InvoiceLine>[]) : inv?.lines;
+  // An invoice from before receipt-based invoicing has nothing to re-check.
+  if (inv && !lines) return { ok: true };
+  const po = findPoByNumber(inv ? inv.poNumber : String(payload.poReference));
+  if (!po) return { ok: false, reason: 'parent PO not found' };
+  if (!lines || lines.length === 0) return { ok: false, reason: 'an invoice needs at least one received line' };
+  const invoiceDate = nonBlank(payload.invoiceDate) ?? inv?.invoiceDate;
+  if (!isCalendarDate(invoiceDate)) return { ok: false, reason: 'invoice date must be a date (YYYY-MM-DD)' };
+  if (!(nonBlank(payload.taxInvoiceFile) ?? inv?.taxInvoiceFile)) {
+    return { ok: false, reason: 'the tax invoice (e-Faktur) must be attached' };
+  }
+  const seen = new Set<string>();
+  for (let i = 0; i < lines.length; i++) {
+    const refusal = invoiceLineRefusal(lines[i], {
+      supplierId: po.supplierId,
+      po,
+      receipts: goodsReceiptStore.all(),
+      invoices: invoiceStore.all(),
+      excludeInvoiceId: inv?.id,
+    });
+    if (refusal === 'overInvoiced') {
+      return {
+        ok: false,
+        reason: `OVER_INVOICED: line ${i + 1} invoices more than was received and not yet invoiced`,
+      };
+    }
+    if (refusal) return { ok: false, reason: `line ${i + 1}: ${refusal}` };
+    const key = `${lines[i].receiptId}|${lines[i].materialCode}`;
+    if (seen.has(key)) return { ok: false, reason: `line ${i + 1}: receipt line given twice` };
+    seen.add(key);
+  }
+  return { ok: true };
+});
+
+// REQ-E07-07 AC-02 — a supplier cannot use the same invoice number twice.
+bindPolicyHook(POLICY_HOOKS.INVOICE_NUMBER_UNIQUE, ({ entityId, payload }) => {
+  const inv = entityId ? invoiceStore.get(entityId) : undefined;
+  const po = inv ? undefined : findPoByNumber(String(payload.poReference));
+  const supplierId = inv?.supplierId ?? po?.supplierId;
+  const number = nonBlank(payload.invoiceNumber) ?? inv?.invoiceNumber;
+  if (!supplierId || !number) return { ok: true };
+  return isDuplicateInvoiceNumber(number, supplierId, invoiceStore.all(), inv?.id)
+    ? { ok: false, reason: `DUPLICATE_INVOICE_NUMBER: '${number}' is already used on another invoice` }
+    : { ok: true };
+});
+
+// — Receipt discrepancy response target (REQ-E07-06) — the supplier answers a
+//   derived discrepancy on its own receipt; PTI's planner resolves a dispute.
+//   Keyed by the receipt id: one answer per receipt. ——————————————————————————
+const asnForReceipt = (gr: GoodsReceipt) => asnStore.get(gr.asnNumber) ?? null;
+
+const receiptDiscrepancyTarget: CommandTarget = {
+  readState: (id) => receiptDiscrepancyStore.get(id)?.status ?? null,
+  readScopeOwner: (id) => receiptDiscrepancyStore.get(id)?.supplierId ?? null,
+  readEntity: (id) => receiptDiscrepancyStore.get(id) ?? null,
+  applyTransition: (id, toState, payload) => {
+    receiptDiscrepancyStore.update(id, (r) => ({
+      ...r,
+      status: toState as ReceiptDiscrepancyStatus,
+      ...(toState === 'Resolved'
+        ? { resolutionComment: nonBlank(payload.resolutionComment), resolvedAt: new Date().toISOString() }
+        : {}),
+    }));
+  },
+  // The owner is the supplier the receipt belongs to — derived from the store,
+  // never echoed from the payload — and it is required for every persona.
+  requireCreationOwner: true,
+  creationOwner: (payload) => goodsReceiptStore.get(String(payload.receiptId))?.supplierId ?? null,
+  create: (payload, toState) => {
+    const gr = goodsReceiptStore.get(String(payload.receiptId))!;
+    receiptDiscrepancyStore.add({
+      receiptId: gr.id,
+      supplierId: gr.supplierId,
+      status: toState as ReceiptDiscrepancyStatus,
+      comment: nonBlank(payload.comment) ?? '',
+      respondedAt: new Date().toISOString(),
+    });
+    return { entityId: gr.id };
+  },
+};
+
+bindPolicyHook(POLICY_HOOKS.RECEIPT_DISCREPANCY_ANSWERABLE, ({ payload }) => {
+  const gr = goodsReceiptStore.get(String(payload.receiptId));
+  if (!gr) return { ok: false, reason: 'goods receipt not found' };
+  if (!hasReceiptDiscrepancy(gr, asnForReceipt(gr))) {
+    return { ok: false, reason: `NO_DISCREPANCY: ${gr.grNumber} matches what was shipped` };
+  }
+  if (receiptDiscrepancyStore.get(gr.id)) {
+    return { ok: false, reason: `ALREADY_ANSWERED: ${gr.grNumber} already has an answer` };
+  }
+  if (!nonBlank(payload.comment)) return { ok: false, reason: 'a comment is required' };
+  return { ok: true };
+});
+
+bindPolicyHook(POLICY_HOOKS.RECEIPT_DISCREPANCY_RESOLUTION_AUTHORED, ({ payload }) =>
+  nonBlank(payload.resolutionComment)
+    ? { ok: true }
+    : { ok: false, reason: 'resolving a dispute needs a comment for the supplier' },
+);
 
 // — RFQ target (Step 4 batch iv) — buyer-side sourcing. `t_rfq_award` is the
 //   CASCADE SOURCE: it flips the RFQ to Awarded and records the award metadata
@@ -1922,6 +2214,9 @@ const TARGETS: Record<string, CommandTarget> = {
   // B1 — the onboarding lane's write path. Ships in the same commit as its
   // flow so the entity never joins the target-less set, not even for one merge.
   supplierApplication: supplierApplicationTarget,
+  // REQ-E07-06 — the supplier's answer to a receipt discrepancy. Ships in the
+  // same commit as its flow, so the entity never joins the target-less set.
+  receiptDiscrepancy: receiptDiscrepancyTarget,
 };
 
 // The behavior-wiring census (was the contract package's "6"; 7 with the G1.1
@@ -1997,7 +2292,11 @@ const resolveCascades = (ctx: CascadeContext): CascadeCommand[] => {
       // same rows, now named in `invoiceRollup.ts` so the mirror is askable and
       // testable. `invoiceMatchPairing.test.ts` pins that this direction is
       // byte-for-byte the behaviour it replaced.
-      for (const inv of invoicesForReceipt(gr, invoiceStore.all())) {
+      // REQ-E07-07 — an invoice drawn from receipts is matched at its own
+      // submission against the receipts it names (below), so a later receipt
+      // on the same PO does not overwrite that verdict. Only invoices without
+      // lines are still matched here.
+      for (const inv of invoicesForReceipt(gr, invoiceStore.all()).filter((i) => !i.lines)) {
         const verdict = deriveMatchVerdict(expectedValue, inv.amount, grHasRejects);
         invoiceStore.update(inv.id, (i) => ({ ...i, matchStatus: verdict }));
         if (verdict === 'Matched') {
@@ -2014,6 +2313,23 @@ const resolveCascades = (ctx: CascadeContext): CascadeCommand[] => {
     return cascadesFor(ctx.transitionId).map((link) => ({
       entity: link.targetEntity,
       entityId: gr.asnNumber,
+      transitionId: link.targetTransitionId,
+    }));
+  }
+  // REQ-E07-07 — the match runs when the supplier submits (or corrects and
+  // resubmits) a receipt-based invoice, and when Finance sends a returned one
+  // back for checking: CR-13 then CR-12 on the receipts the invoice names. The
+  // verdict is written; the header advances only on a clean Matched, exactly as
+  // on the receipt-post path.
+  if (ctx.entity === 'invoice') {
+    const inv = invoiceStore.get(ctx.entityId);
+    if (!inv || !inv.lines || inv.status !== INVOICE_AWAITING_MATCH) return [];
+    const verdict = deriveInvoiceVerdict(inv, goodsReceiptStore.all());
+    invoiceStore.update(inv.id, (i) => ({ ...i, matchStatus: verdict }));
+    if (verdict !== 'Matched') return [];
+    return cascadesFor(ctx.transitionId).map((link) => ({
+      entity: link.targetEntity,
+      entityId: inv.id,
       transitionId: link.targetTransitionId,
     }));
   }

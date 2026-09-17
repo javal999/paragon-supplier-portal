@@ -54,6 +54,27 @@ export interface GoodsReceipt {
   disposition: Disposition;
   sapMaterialDoc?: string;
   notes?: string;
+  /**
+   * REQ-E07-06 — the supplier's answer to a receipt discrepancy, and PTI's
+   * resolution of a dispute. Held in its own store and joined on read; never a
+   * fixture value. Whether a receipt HAS a discrepancy is derived at read time
+   * (`fulfilmentRules.ts`), not stored.
+   */
+  discrepancyResponse?: ReceiptDiscrepancyResponse;
+}
+
+export type ReceiptDiscrepancyStatus = 'Acknowledged' | 'Disputed' | 'Resolved';
+
+export interface ReceiptDiscrepancyResponse {
+  receiptId: string;
+  supplierId: string;
+  status: ReceiptDiscrepancyStatus;
+  /** The supplier's comment (required for both answers). */
+  comment: string;
+  respondedAt: string;
+  /** PTI's comment when it resolved a dispute. */
+  resolutionComment?: string;
+  resolvedAt?: string;
 }
 
 const mockGoodsReceiptsRaw: GoodsReceipt[] = [

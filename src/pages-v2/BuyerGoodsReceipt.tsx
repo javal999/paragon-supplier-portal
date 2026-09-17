@@ -16,6 +16,7 @@ import ProvenanceMarker from '../components/ui-v2/ProvenanceMarker';
 import KpiCard from '../components/ui-v2/KpiCard';
 import BulkActionsBar from '../components/ui-v2/BulkActionsBar';
 import SubTabs from '../components/ui-v2/SubTabs';
+import ReceiptDisputesSection from './receipts/ReceiptDisputesSection';
 import FilterChipsBar from '../components/ui-v2/FilterChipsBar';
 import SearchBar from '../components/ui-v2/SearchBar';
 import StatusPill from '../components/ui-v2/StatusPill';
@@ -916,6 +917,9 @@ const GoodsReceiptWorkspace: React.FC<GoodsReceiptWorkspaceProps> = ({
           </Table>
         </section>
       )}
+
+      {/* REQ-E07-06 — supplier disputes of a receipt discrepancy, for the planner. */}
+      <ReceiptDisputesSection goodsReceipts={goodsReceipts} />
 
       <SubTabs<GroupTab>
         options={[

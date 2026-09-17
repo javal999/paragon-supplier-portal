@@ -17,6 +17,7 @@ import * as d from './widgets/buyerDerivations';
 import TaskList, { type HomeTask } from './home/TaskList';
 import { POStatus } from '../services/data/types';
 import { completionMovedLater, isEscalated } from '../services/data/poResponseProjection';
+import { isOpenDispute } from '../services/transitions/fulfilmentRules';
 
 // PTI Home — "My tasks" (REQUIREMENTS §3.8 SC-01). Tasks are filtered by the
 // PTI role the menu is showing, so a Finance user is not handed a planner's work.
@@ -95,6 +96,16 @@ const BuyerHome: React.FC = () => {
         label: t('hub.home.task.receipts'),
         count: d.grNeedingAction(grItems).length,
         severity: d.grTier(grItems),
+        to: '/buyer/goods-receipt',
+      },
+      {
+        // REQ-E07-06 — a supplier disputed a receipt discrepancy; the planner
+        // resolves it on the goods receipt page.
+        id: 'disputed-receipts',
+        roles: ['MP'],
+        label: t('hub.home.task.disputedReceipts'),
+        count: grItems.filter(isOpenDispute).length,
+        severity: 'warning',
         to: '/buyer/goods-receipt',
       },
       {

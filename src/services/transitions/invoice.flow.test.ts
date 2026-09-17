@@ -32,8 +32,12 @@ describe('Invoice flows — registration + shape (Step 4 batch iii, DR-7)', () =
     const t = getTransition('t_invoice_create')!;
     expect(t.trigger).toBe('creation');
     expect(t.from).toEqual([]);
-    expect(t.requiredFields).toEqual(['poReference']);
-    expect(t.policyHooks).toContain('invoice_create_po_confirmed');
+    // REQ-E07-07 — drawn from received goods receipts, with the supplier's own
+    // invoice number and date and the tax invoice.
+    expect(t.requiredFields).toEqual(['poReference', 'lines', 'invoiceNumber', 'invoiceDate', 'taxInvoiceFile']);
+    expect(t.policyHooks).toContain('invoice_create_po_invoiceable');
+    expect(t.policyHooks).toContain('invoice_lines_from_receipts');
+    expect(t.policyHooks).toContain('invoice_number_unique');
   });
 
   it('t_invoice_match carries the rollup hook (header derived, not asserted)', () => {

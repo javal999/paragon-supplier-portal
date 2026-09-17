@@ -43,6 +43,7 @@ export const hubEn: Record<string, string> = {
   'hub.nav.sup.purchaseOrders': 'Purchase orders',
   'hub.nav.sup.callOffs': 'Call-offs',
   'hub.nav.sup.shipments': 'Shipments & ASN',
+  'hub.nav.sup.goodsReceipts': 'Goods receipts',
   'hub.nav.sup.forecast': 'Forecast & commitments',
   'hub.nav.sup.stock': 'Stock',
   'hub.nav.sup.invitations': 'Invitations',
@@ -88,6 +89,7 @@ export const hubEn: Record<string, string> = {
   'hub.home.task.chase': 'Suppliers to follow up on forecasts or deliveries',
   'hub.home.task.rfqAward': 'Sourcing events ready to award',
   'hub.home.task.overdueInvoices': 'Overdue supplier invoices',
+  'hub.home.task.disputedReceipts': 'Disputed receipt discrepancies',
 
   'hub.home.task.sup.confirmOrders': 'Purchase orders to respond to',
   'hub.home.task.sup.shippingNotice': 'Confirmed orders without an expected completion date',
@@ -95,6 +97,8 @@ export const hubEn: Record<string, string> = {
   'hub.home.task.sup.rfq': 'Sourcing invitations to answer',
   'hub.home.task.sup.certs': 'Certificates expired or expiring',
   'hub.home.task.sup.invoices': 'Invoices awaiting payment',
+  'hub.home.task.sup.receiptDiscrepancies': 'Receipt discrepancies to acknowledge or dispute',
+  'hub.home.task.sup.returnedInvoices': 'Returned invoices to correct and resubmit',
 
   // Sample data marker (SC-04)
   'hub.sample.label': 'Sample data',
@@ -136,6 +140,7 @@ export const hubId: Record<string, string> = {
   'hub.nav.sup.purchaseOrders': 'Pesanan pembelian',
   'hub.nav.sup.callOffs': 'Call-off',
   'hub.nav.sup.shipments': 'Pengiriman & ASN',
+  'hub.nav.sup.goodsReceipts': 'Penerimaan barang',
   'hub.nav.sup.forecast': 'Prakiraan & komitmen',
   'hub.nav.sup.stock': 'Stok',
   'hub.nav.sup.invitations': 'Undangan',
@@ -178,6 +183,7 @@ export const hubId: Record<string, string> = {
   'hub.home.task.chase': 'Pemasok yang perlu ditindaklanjuti untuk prakiraan atau pengiriman',
   'hub.home.task.rfqAward': 'Event sourcing yang siap diputuskan pemenangnya',
   'hub.home.task.overdueInvoices': 'Faktur pemasok yang lewat jatuh tempo',
+  'hub.home.task.disputedReceipts': 'Selisih penerimaan yang disanggah pemasok',
 
   'hub.home.task.sup.confirmOrders': 'Pesanan pembelian yang perlu ditanggapi',
   'hub.home.task.sup.shippingNotice': 'Pesanan terkonfirmasi tanpa perkiraan tanggal selesai',
@@ -185,6 +191,8 @@ export const hubId: Record<string, string> = {
   'hub.home.task.sup.rfq': 'Undangan sourcing yang perlu dijawab',
   'hub.home.task.sup.certs': 'Sertifikat kedaluwarsa atau akan kedaluwarsa',
   'hub.home.task.sup.invoices': 'Faktur yang menunggu pembayaran',
+  'hub.home.task.sup.receiptDiscrepancies': 'Selisih penerimaan untuk diakui atau disanggah',
+  'hub.home.task.sup.returnedInvoices': 'Faktur yang dikembalikan untuk diperbaiki dan dikirim ulang',
 
   'hub.sample.label': 'Data contoh',
   'hub.sample.hint': 'Angka hanya contoh. Tindakan berjalan, tetapi perubahan hilang saat halaman dimuat ulang.',

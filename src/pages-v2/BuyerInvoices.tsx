@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { InvoiceLinesSection } from './invoices/InvoiceCollaboration';
 import {
   BarChart,
   Bar,
@@ -1211,6 +1212,22 @@ const BuyerInvoicesView: React.FC<{ invoices: BuyerInvoice[] }> = ({ invoices })
                 </div>
               </div>
             </section>
+
+            {/* REQ-E07-07 — what the supplier invoiced, from which receipts, with
+                its tax invoice; and the reason Finance gave when it returned it. */}
+            {selected.lifecycleState === 'Disputed' && selected.returnReason && (
+              <div
+                role="status"
+                className="bg-danger-soft border-l-2 border-danger rounded px-3 py-2 text-xs text-danger"
+              >
+                <strong>{t('fc.inv.detail.returned')}:</strong> {selected.returnReason}
+              </div>
+            )}
+            <InvoiceLinesSection
+              lines={selected.lines}
+              invoiceDate={selected.invoiceDate}
+              taxInvoiceFile={selected.taxInvoiceFile}
+            />
 
             <section>
               <h3 className="text-label text-text-tertiary uppercase mb-3">

@@ -127,6 +127,7 @@ export const SUPPLIER_NAV: readonly NavSection[] = [
       { labelKey: 'hub.nav.sup.purchaseOrders', icon: ShoppingCart, path: '/supplier/orders' },
       { labelKey: 'hub.nav.sup.callOffs', icon: CalendarClock, path: '/supplier/delivery-agreements' },
       { labelKey: 'hub.nav.sup.shipments', icon: Truck, path: '/supplier/shipments' },
+      { labelKey: 'hub.nav.sup.goodsReceipts', icon: PackageCheck, path: '/supplier/goods-receipts' },
     ],
   },
   {

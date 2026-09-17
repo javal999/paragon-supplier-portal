@@ -63,6 +63,7 @@ import SupplierOrders from '../pages-v2/SupplierOrders';
 import SupplierRFQsV2 from '../pages-v2/SupplierRFQs';
 import SupplierForecasts from '../pages-v2/SupplierForecasts';
 import SupplierShipments from '../pages-v2/SupplierShipments';
+import SupplierGoodsReceipts from '../pages-v2/SupplierGoodsReceipts';
 import SupplierInvoicesV2 from '../pages-v2/SupplierInvoices';
 import SupplierInventoryV2 from '../pages-v2/SupplierInventory';
 import SupplierRegistrationV2 from '../pages-v2/SupplierRegistration';
@@ -139,6 +140,7 @@ const ROUTES: RouteCase[] = [
   { name: 'supplier/rfqs', pattern: '/supplier/rfqs', at: '/supplier/rfqs', element: <SupplierRFQsV2 />, identity: SUPPLIER },
   { name: 'supplier/forecasts', pattern: '/supplier/forecasts', at: '/supplier/forecasts', element: <SupplierForecasts />, identity: SUPPLIER },
   { name: 'supplier/shipments', pattern: '/supplier/shipments', at: '/supplier/shipments', element: <SupplierShipments />, identity: SUPPLIER },
+  { name: 'supplier/goods-receipts', pattern: '/supplier/goods-receipts', at: '/supplier/goods-receipts', element: <SupplierGoodsReceipts />, identity: SUPPLIER },
   { name: 'supplier/invoices', pattern: '/supplier/invoices', at: '/supplier/invoices', element: <SupplierInvoicesV2 />, identity: SUPPLIER },
   { name: 'supplier/inventory', pattern: '/supplier/inventory', at: '/supplier/inventory', element: <SupplierInventoryV2 />, identity: SUPPLIER },
   { name: 'supplier/delivery-agreements', pattern: '/supplier/delivery-agreements', at: '/supplier/delivery-agreements', element: <SupplierDeliveryAgreements />, identity: SUPPLIER },

@@ -253,7 +253,10 @@ describe('shipping notice (REQ-E07-05)', () => {
     expect((await notice(SENT_PO, '2025-04-30')).status).toBe('failed');
   });
 
-  it('BR-03 — submitting the first ASN records shipment started on its PO', async () => {
+  // ⚠️ REQ-E07-04 CHANGED THIS TEST'S PREMISE: the ASN now carries its own ship
+  // date and a batch per line (BR-04), and shipment started is recorded with
+  // THAT date rather than the day of submission.
+  it('BR-03 — submitting the first ASN records shipment started on its PO, with the ASN ship date', async () => {
     const created = await svc.dispatch(supplier, {
       transitionId: 't_asn_create',
       entity: 'advanceShipNotice',
@@ -266,11 +269,21 @@ describe('shipping notice (REQ-E07-05)', () => {
       transitionId: 't_asn_submit',
       entity: 'advanceShipNotice',
       entityId: asnNumber,
-      payload: { carrier: 'JNE', trackingNumber: 'TRK-1', eta: '2025-04-10' },
+      payload: {
+        carrier: 'JNE',
+        trackingNumber: 'TRK-1',
+        eta: '2025-04-10',
+        shipDate: '2025-04-08',
+        lines: asnStore.get(asnNumber)!.lineItems.map((l) => ({
+          materialCode: l.materialCode,
+          shippedQty: l.shippedQty,
+          batchNumber: 'BATCH-1',
+        })),
+      },
     });
     expect(submitted.status).not.toBe('failed');
     expect(po(CONFIRMED_PO).shippingNotice?.startedByAsn).toBe(asnNumber);
-    expect(po(CONFIRMED_PO).shippingNotice?.startedOn).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(po(CONFIRMED_PO).shippingNotice?.startedOn).toBe('2025-04-08');
     expect(asnStore.get(asnNumber)?.status).toBe('Submitted');
   });
 });

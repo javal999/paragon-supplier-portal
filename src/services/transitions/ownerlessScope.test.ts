@@ -92,6 +92,7 @@ import { incomingShipmentStore } from '../data/mock/stores/incomingShipmentStore
 import { enforcementSettingStore } from '../data/mock/stores/enforcementSettingStore';
 import { supplierDocumentStore } from '../data/mock/stores/supplierDocumentStore';
 import { supplierApplicationStore } from '../data/mock/stores/supplierApplicationStore';
+import { receiptDiscrepancyStore } from '../data/mock/stores/receiptDiscrepancyStore';
 import { customRoleStore } from './customRoles';
 
 const svc = new MockCommandService();
@@ -149,6 +150,15 @@ async function realIds(): Promise<Record<string, string | null>> {
     entity: 'supplierApplication',
     payload: { requestType: 'External SR', companyName: 'PT Sample Applicant' },
   });
+  // REQ-E07-06 — the response store starts empty (a response is something a
+  // supplier gives), so the probe raises one: sup-008 disputes the rejected
+  // quantity on its own receipt gr-006. A repeat call is refused as already
+  // answered and leaves the same row in place.
+  await svc.dispatch(supplierSeatOf('sup-008', ...PERSONA_SYSTEM_ROLES.supplier), {
+    transitionId: 't_receiptdiscrepancy_dispute',
+    entity: 'receiptDiscrepancy',
+    payload: { receiptId: 'gr-006', comment: 'raised to probe the scope gate' },
+  });
   return {
     purchaseOrder: purchaseOrderStore.all()[0]?.id ?? null,
     advanceShipNotice: asnStore.all()[0]?.asnNumber ?? null,
@@ -164,6 +174,7 @@ async function realIds(): Promise<Record<string, string | null>> {
     role: 'receiving',
     supplierDocument: supplierDocumentStore.all()[0]?.id ?? null,
     supplierApplication: raised.entityId ?? null,
+    receiptDiscrepancy: receiptDiscrepancyStore.all()[0]?.receiptId ?? null,
   };
 }
 
@@ -260,6 +271,7 @@ const resetAll = () => {
   purchaseRequisitionStore.reset();
   enforcementSettingStore.reset();
   supplierApplicationStore.reset();
+  receiptDiscrepancyStore.reset();
   customRoleStore.reset();
 };
 

@@ -21,6 +21,7 @@ import type {
   BuyerInvoice,
   BuyerInvoiceStatus,
 } from './types';
+import { supplierInvoiceStage } from '../transitions/fulfilmentRules';
 
 /** The `YYYY-MM-DD` day of an ISO instant (lexicographic date compares work). */
 function day(nowIso: string): string {
@@ -110,6 +111,16 @@ export function toSupplierInvoice(inv: Invoice, nowIso: string): SupplierInvoice
     channel: inv.channel,
     buyerContact: inv.buyerContact,
     remittanceNote: inv.remittanceNote,
+    // REQ-E07-07 — the supplier's status list and CR-14 overdue, both derived
+    // here at read time from the stored state and the clock.
+    stage: supplierInvoiceStage(inv.status),
+    overdue: isOverdue(inv, nowIso),
+    daysOutstanding: daysOutstanding(inv, nowIso),
+    matchStatus: inv.matchStatus,
+    lines: inv.lines ?? [],
+    invoiceDate: inv.invoiceDate ?? null,
+    taxInvoiceFile: inv.taxInvoiceFile ?? null,
+    returnReason: inv.returnReason ?? null,
   };
 }
 
@@ -140,5 +151,9 @@ export function toBuyerInvoice(inv: Invoice, nowIso: string): BuyerInvoice {
     daysOutstanding: daysOutstanding(inv, nowIso),
     bankAccount: inv.bankAccount,
     channel: inv.channel,
+    lines: inv.lines ?? [],
+    invoiceDate: inv.invoiceDate ?? null,
+    taxInvoiceFile: inv.taxInvoiceFile ?? null,
+    returnReason: inv.returnReason ?? null,
   };
 }

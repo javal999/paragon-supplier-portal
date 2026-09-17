@@ -229,6 +229,8 @@ const LANE_BUNDLES = Object.freeze({
       'requirementresponse:review', 'requirementresponse:accept',
       'requirementresponse:dispute',
       'inventorydeclaration:record',
+      // REQ-E07-06 — the planner settles a supplier's dispute of a receipt.
+      'receiptdiscrepancy:resolve',
     ]),
     // Raising and revising a requisition — split from approving one, which is
     // the segregation `pr:approve` living in `procurement` expresses.
@@ -289,6 +291,10 @@ const LANE_BUNDLES = Object.freeze({
       // shipping notice on a confirmed one.
       'po:adjust', 'po:reject', 'po:shipping-notice',
       'asn:create', 'asn:submit',
+      // REQ-E07-04 / REQ-E07-06 — withdrawing a notice before receipt, and
+      // answering a receipt discrepancy: both about the supplier's own delivery.
+      'asn:cancel',
+      'receiptdiscrepancy:respond',
       'incomingshipment:report', 'incomingshipment:ship',
       'incomingshipment:arrive', 'incomingshipment:cancel',
       'inventorydeclaration:declare',

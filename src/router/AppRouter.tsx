@@ -49,6 +49,7 @@ import CommHubInbound from '../pages-v2/CommHubInbound';
 import SupplierOrders from '../pages-v2/SupplierOrders';
 import SupplierRFQsV2 from '../pages-v2/SupplierRFQs';
 import SupplierShipments from '../pages-v2/SupplierShipments';
+import SupplierGoodsReceipts from '../pages-v2/SupplierGoodsReceipts';
 import SupplierInvoicesV2 from '../pages-v2/SupplierInvoices';
 import SupplierInventoryV2 from '../pages-v2/SupplierInventory';
 import SupplierRegistrationV2 from '../pages-v2/SupplierRegistration';
@@ -154,6 +155,7 @@ const AppRouter: React.FC = () => {
             }
           />
           <Route path="/supplier/shipments" element={<SupplierShipments />} />
+          <Route path="/supplier/goods-receipts" element={<SupplierGoodsReceipts />} />
           <Route path="/supplier/invoices" element={<SupplierInvoicesV2 />} />
           <Route path="/supplier/inventory" element={<SupplierInventoryV2 />} />
           <Route path="/supplier/delivery-agreements" element={<SupplierDeliveryAgreements />} />

@@ -83,6 +83,7 @@ import { identityEn, identityId } from './i18n/identity';
 // — Supplier Hub menu and Home (REQUIREMENTS §3.7, §3.8) —
 import { hubEn, hubId } from './i18n/hub';
 import { orderCollaborationEn, orderCollaborationId } from './i18n/orderCollaboration';
+import { fulfilmentCollaborationEn, fulfilmentCollaborationId } from './i18n/fulfilmentCollaboration';
 // — The read path's failure surface, shared by 31 pages —
 import { errorStateEn, errorStateId } from './i18n/errorState';
 import { loadingStateEn, loadingStateId } from './i18n/loadingState';
@@ -162,6 +163,7 @@ export const resources = {
       ...identityEn,
       ...hubEn,
       ...orderCollaborationEn,
+      ...fulfilmentCollaborationEn,
       ...errorStateEn,
       ...loadingStateEn,
       ...emptyStateEn,
@@ -597,6 +599,7 @@ export const resources = {
       ...identityId,
       ...hubId,
       ...orderCollaborationId,
+      ...fulfilmentCollaborationId,
       ...errorStateId,
       ...loadingStateId,
       ...emptyStateId,

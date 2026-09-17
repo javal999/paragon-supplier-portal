@@ -27,6 +27,7 @@ import {
   type ShippingNoticeStatus,
 } from '../../services/data/poResponseProjection';
 import type { Persona } from '../../components/layout-v2/navConfig';
+import { isActiveAsn } from '../../services/transitions/fulfilmentRules';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ORDER COLLABORATION SUMMARY — REQ-E07-03 (MN-ORD-10 to MN-ORD-13).
@@ -86,7 +87,8 @@ const OrderSummaryView: React.FC<OrderSummaryViewProps> = ({ persona, foresightA
       .map((po: PurchaseOrder) => ({
         po,
         response: responseStatus(po, nowIso),
-        asnCount: asns.filter((a) => a.poReference === po.poNumber).length,
+        // A cancelled ASN no longer carries goods (REQ-E07-04).
+        asnCount: asns.filter((a) => a.poReference === po.poNumber && isActiveAsn(a)).length,
         foresight: foresightStatus(po, foresightAnswers),
         shipping: shippingNoticeStatus(po),
       }));

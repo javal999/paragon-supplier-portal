@@ -7,6 +7,7 @@ import { applySupplierScope } from '../scoping';
 import { rfqStore } from './stores/rfqStore';
 import { quotationStore } from './stores/quotationStore';
 import { asnStore } from './stores/asnStore';
+import { receiptDiscrepancyStore } from './stores/receiptDiscrepancyStore';
 import { goodsReceiptStore } from './stores/goodsReceiptStore';
 import { invoiceStore } from './stores/invoiceStore';
 import { toBuyerInvoice, toSupplierInvoice } from '../invoiceProjection';
@@ -339,7 +340,15 @@ export class MockProcurementService implements IProcurementService {
     // Reads resolve from the mutable GR store (Step 4 batch ii) so a created /
     // inspected / posted GR is reflected after the command mutates it — mirrors
     // getASNs. The store seeds from the fixtures, so initial reads are identical.
-    let rows = applySupplierScope(scope, goodsReceiptStore.all());
+    // REQ-E07-06 — the supplier's answer to a discrepancy (and PTI's resolution)
+    // lives in its own store and is joined onto the receipt it answers.
+    let rows = applySupplierScope(
+      scope,
+      goodsReceiptStore.all().map((g) => {
+        const response = receiptDiscrepancyStore.get(g.id);
+        return response ? { ...g, discrepancyResponse: response } : g;
+      }),
+    );
     if (filter?.supplierId)
       rows = rows.filter((g) => g.supplierId === filter.supplierId);
     if (filter?.status) rows = rows.filter((g) => matchesList(g.status, filter.status));

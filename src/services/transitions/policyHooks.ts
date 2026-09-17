@@ -52,8 +52,19 @@ export const POLICY_HOOKS = {
   PO_COUNTER_REVIEW_COMMENT_AUTHORED: 'po_counter_review_comment_authored',
   /** Shipping notice: the expected completion date is a real `YYYY-MM-DD` date. */
   PO_SHIPPING_NOTICE_DATE_VALID: 'po_shipping_notice_date_valid',
-  /** ASN create: the parent PO (payload.poReference) must be Confirmed. */
-  ASN_CREATE_PO_CONFIRMED: 'asn_create_po_confirmed',
+  /** ASN create (REQ-E07-04 BR-01): the parent PO (payload.poReference) must be
+   *  approved and still open — Confirmed or Partially Delivered, so a partial
+   *  shipment can follow a first receipt. */
+  ASN_CREATE_PO_APPROVED: 'asn_create_po_approved',
+  /** ASN create / submit (BR-02): every line names a material of the PO and a
+   *  positive shipped quantity no larger than the line's open quantity, unless
+   *  the supplier gives a reason. */
+  ASN_LINES_WITHIN_OPEN: 'asn_lines_within_open',
+  /** ASN submit (BR-04): ship date, expected arrival (not before the ship
+   *  date) and a batch number on every line. */
+  ASN_SUBMIT_COMPLETE: 'asn_submit_complete',
+  /** ASN cancel: nothing has been received against the ASN yet. */
+  ASN_CANCEL_NOT_RECEIVED: 'asn_cancel_not_received',
   /** GR create: the parent shipment/ASN (payload.asnReference) must have arrived. */
   GR_CREATE_SHIPMENT_RECEIVED: 'gr_create_shipment_received',
   // GR header disposition = ROLLUP of the per-line sub-flow states (census G2).
@@ -75,8 +86,22 @@ export const POLICY_HOOKS = {
    *  known source. A malformed pin is worse than no pin: an absent one refuses
    *  loudly, a malformed one is a basis a comparison could be ranked on. */
   RFQ_FX_PIN_WELL_FORMED: 'rfq_fx_pin_well_formed',
-  /** Invoice create: the parent PO (payload.poReference) must be Confirmed. */
-  INVOICE_CREATE_PO_CONFIRMED: 'invoice_create_po_confirmed',
+  /** Invoice create (REQ-E07-07): the parent PO (payload.poReference) must be
+   *  Confirmed, Partially Delivered or Delivered. */
+  INVOICE_CREATE_PO_INVOICEABLE: 'invoice_create_po_invoiceable',
+  /** Invoice create / resubmit (BR-01, BR-02): every line is drawn from a
+   *  received goods receipt of the supplier's own PO, at the PO unit price, for
+   *  at most the accepted quantity not yet invoiced; the invoice date is a date
+   *  and the tax invoice is attached. */
+  INVOICE_LINES_FROM_RECEIPTS: 'invoice_lines_from_receipts',
+  /** Invoice create / resubmit (AC-02): no other invoice from the same supplier
+   *  carries the same invoice number. */
+  INVOICE_NUMBER_UNIQUE: 'invoice_number_unique',
+  /** Receipt discrepancy answer (REQ-E07-06 AC-03): the receipt has a derived
+   *  discrepancy, has not been answered yet, and the comment is substance. */
+  RECEIPT_DISCREPANCY_ANSWERABLE: 'receipt_discrepancy_answerable',
+  /** Receipt discrepancy resolution: PTI's comment is substance, not presence. */
+  RECEIPT_DISCREPANCY_RESOLUTION_AUTHORED: 'receipt_discrepancy_resolution_authored',
   /** Invoice match: the match sub-flow must have rolled up to a clean Matched
    *  before the header can advance Submitted → Matched (census G2). */
   INVOICE_ROLLUP_MATCHED: 'invoice_rollup_matched',

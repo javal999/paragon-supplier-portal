@@ -11,6 +11,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 
 import { MockCommandService } from './MockCommandService';
 import { invoiceStore } from './stores/invoiceStore';
+import { goodsReceiptStore } from './stores/goodsReceiptStore';
 import { isOverdue, daysOutstanding } from '../invoiceProjection';
 import { DataError } from '../types';
 import type { QueryScope } from '../types';
@@ -23,11 +24,43 @@ const sup002: QueryScope = { personaType: 'supplier', supplierId: 'sup-002', bus
 const svc = new MockCommandService();
 
 // PO-2025-00107 is Confirmed and owned by sup-007 (see mockPurchaseOrders).
+//
+// ⚠️ REQ-E07-07 CHANGED THIS SETUP'S PREMISE: an invoice is now drawn from a
+// RECEIVED goods receipt of the supplier's own PO, with the supplier's invoice
+// number, date and tax invoice. gr-002 (PK-PETB-8801, 120,000 received on
+// PO-2025-00107) is inspected and fully accepted here so it can be invoiced.
+const receiveGr002 = () =>
+  goodsReceiptStore.update('gr-002', (g) => ({
+    ...g,
+    status: 'Approved',
+    inspectionResults: g.inspectionResults.map((r) => ({ ...r, qtyAccepted: r.qtyReceived, qtyRejected: 0 })),
+  }));
+
+const GR002_LINE = {
+  receiptId: 'gr-002',
+  grNumber: 'GR-2026-002',
+  materialCode: 'PK-PETB-8801',
+  description: 'PET Bottle',
+  quantity: 120_000,
+  uom: 'PCS',
+  unitPrice: 1600,
+};
+
+const receiptPayload = (extra: Record<string, unknown> = {}) => ({
+  poReference: 'PO-2025-00107',
+  amount: 250_000_000,
+  lines: [GR002_LINE],
+  invoiceNumber: 'SUP-INV-0001',
+  invoiceDate: '2026-09-10',
+  taxInvoiceFile: 'efaktur-0001.pdf',
+  ...extra,
+});
+
 const createOwn = () =>
   svc.dispatch(sup007, {
     transitionId: 't_invoice_create',
     entity: 'invoice',
-    payload: { poReference: 'PO-2025-00107', amount: 250_000_000, dueDate: '2026-09-01' },
+    payload: receiptPayload({ dueDate: '2026-09-01' }),
   });
 
 const fire = (
@@ -39,6 +72,8 @@ const fire = (
 
 beforeEach(() => {
   invoiceStore.reset();
+  goodsReceiptStore.reset();
+  receiveGr002();
 });
 
 describe('Invoice command integration — supplier creation-shape', () => {
@@ -57,7 +92,7 @@ describe('Invoice command integration — supplier creation-shape', () => {
       svc.dispatch(sup002, {
         transitionId: 't_invoice_create',
         entity: 'invoice',
-        payload: { poReference: 'PO-2025-00107', amount: 1 },
+        payload: receiptPayload({ amount: 1 }),
       }),
     ).rejects.toBeInstanceOf(DataError);
   });
@@ -70,14 +105,14 @@ describe('Invoice command integration — supplier creation-shape', () => {
   });
 
   it('defaults honest dates so a freshly-created invoice is never born overdue (F-2)', async () => {
-    // Creation WITHOUT a dueDate — the form only carries PO + amount. The command
-    // layer must default the dates (submittedDate today, dueDate = Net-30) so the
-    // invoice is not computed Overdue on submit and aging is a real number, not NaN.
+    // Creation WITHOUT a dueDate — the form carries no dates of its own. The
+    // command layer must default the dates (submittedDate today, dueDate = Net-30)
+    // so the invoice is not computed Overdue on submit and aging is a real number.
     const id = (
       await svc.dispatch(sup007, {
         transitionId: 't_invoice_create',
         entity: 'invoice',
-        payload: { poReference: 'PO-2025-00107', amount: 250_000_000 },
+        payload: receiptPayload(),
       })
     ).entityId!;
     await fire(sup007, 't_invoice_submit', id, { amount: 250_000_000 });

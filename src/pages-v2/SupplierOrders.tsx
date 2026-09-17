@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { isActiveAsn } from '../services/transitions/fulfilmentRules';
 import { useSearchParams } from 'react-router-dom';
 import {
   Clock,
@@ -1353,7 +1354,7 @@ const SupplierOrders: React.FC = () => {
                   po={selectedLive ?? selected}
                   asnCount={
                     (asnsQuery.data?.items ?? []).filter(
-                      (a) => a.poReference === (selectedLive ?? selected).poNumber,
+                      (a) => a.poReference === (selectedLive ?? selected).poNumber && isActiveAsn(a),
                     ).length
                   }
                 />

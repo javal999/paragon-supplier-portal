@@ -36,6 +36,21 @@ export const CASCADES: Record<string, readonly CascadeLink[]> = {
   t_gr_post: [
     { targetEntity: 'invoice', targetTransitionId: 't_invoice_match' },
   ],
+  // REQ-E07-07 — the match also runs when an invoice drawn from receipts enters
+  // the state a verdict is written for: first submission, the supplier's
+  // corrected resubmission, and Finance sending a returned invoice back. All
+  // three entrances, so no door into that state skips the check. The adapter
+  // computes CR-13 / CR-12 from the receipts the invoice names and fires the
+  // header verb only on a clean Matched.
+  t_invoice_submit: [
+    { targetEntity: 'invoice', targetTransitionId: 't_invoice_match' },
+  ],
+  t_invoice_resubmit: [
+    { targetEntity: 'invoice', targetTransitionId: 't_invoice_match' },
+  ],
+  t_invoice_resolve: [
+    { targetEntity: 'invoice', targetTransitionId: 't_invoice_match' },
+  ],
   // RFQ award fans out onto its quotations (batch iv): the winner is awarded,
   // every other is rejected. Both target the `quotation` machine; the adapter
   // resolver splits the sibling set (winner ← payload, losers ← the store) across

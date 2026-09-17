@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { isActiveAsn } from '../services/transitions/fulfilmentRules';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
@@ -414,7 +415,7 @@ const BuyerOrders: React.FC = () => {
   // The LIVE row, so the panel follows a review the moment it lands.
   const livePO = selectedPO ? orders.find((p) => p.id === selectedPO.id) ?? selectedPO : null;
   const asnCountFor = (po: PurchaseOrder) =>
-    (asnsQuery.data?.items ?? []).filter((a) => a.poReference === po.poNumber).length;
+    (asnsQuery.data?.items ?? []).filter((a) => a.poReference === po.poNumber && isActiveAsn(a)).length;
 
   const reviewOutcome = (po: PurchaseOrder, titleKey: string) => ({
     onSuccess: (result: { status: string; reason?: string }) => {

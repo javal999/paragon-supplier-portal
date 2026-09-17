@@ -9,8 +9,9 @@
 //     supplierId (CommandTarget.creationOwner). A supplier may create only for
 //     its own PO — cross-supplier ⇒ SCOPE_DENIED (QueryScope on a creation
 //     command, exactly as reads).
-//   • Legality (parent PO must be Confirmed) is the `asn_create_po_confirmed`
-//     policy hook — a cross-entity rule bound in the mock adapter.
+//   • Legality (parent PO must be approved and still open) is the
+//     `asn_create_po_approved` policy hook — a cross-entity rule bound in the
+//     mock adapter — and BR-02's open-quantity bound is `asn_lines_within_open`.
 // Every future `creation` verb (invoice draft, PR, GR, …) reuses this shape.
 //
 // Discrepancy is a CROSS-ENTITY CASCADE (census G4): authored here, but fired by
@@ -25,7 +26,7 @@ import { POLICY_HOOKS } from '../policyHooks';
 export const advanceShipNoticeFlow: FlowDefinition = {
   entity: 'advanceShipNotice',
   version: 1,
-  states: ['Draft', 'Submitted', 'In Transit', 'Delivered', 'Discrepancy'],
+  states: ['Draft', 'Submitted', 'In Transit', 'Delivered', 'Discrepancy', 'Cancelled'],
   initial: 'Draft',
   /** PF-0 · D-2 — ⚠️ THIS MACHINE DECLARES NO ENDING, and that is still the
    *  truthful answer rather than an omission — but the REASON changed and the
@@ -43,8 +44,11 @@ export const advanceShipNoticeFlow: FlowDefinition = {
    *  `t_asn_discrepancy`, and `Discrepancy` is left by
    *  `t_asn_resolve_discrepancy`. Neither is an ending, so the array is empty
    *  because EVERY non-Draft state has an exit — not because one of them was
-   *  stranded. */
-  terminals: [],
+   *  stranded.
+   *
+   *  REQ-E07-04 added the one real ending: `Cancelled`, reached by the supplier
+   *  withdrawing a Draft or Submitted ASN before anything was received. */
+  terminals: ['Cancelled'],
   transitions: [
     {
       // CANONICAL creation verb — see the file header. Supplier drafts an ASN
@@ -55,7 +59,7 @@ export const advanceShipNoticeFlow: FlowDefinition = {
       trigger: 'creation',
       requiredRole: 'asn:create',
       requiredFields: ['poReference'],
-      policyHooks: [POLICY_HOOKS.ASN_CREATE_PO_CONFIRMED],
+      policyHooks: [POLICY_HOOKS.ASN_CREATE_PO_APPROVED, POLICY_HOOKS.ASN_LINES_WITHIN_OPEN],
       surfaceable: { surfaced: true },
       version: 1,
     },
@@ -66,7 +70,23 @@ export const advanceShipNoticeFlow: FlowDefinition = {
       trigger: 'user',
       requiredRole: 'asn:submit',
       requiredFields: ['carrier', 'trackingNumber', 'eta'],
-      policyHooks: [],
+      // REQ-E07-04 BR-04 — the rest of the required content (ship date, batch per
+      // line) may already sit on the draft, so it is checked on the merged record
+      // by a hook rather than demanded again in the payload.
+      policyHooks: [POLICY_HOOKS.ASN_SUBMIT_COMPLETE, POLICY_HOOKS.ASN_LINES_WITHIN_OPEN],
+      surfaceable: { surfaced: true },
+      version: 1,
+    },
+    {
+      // REQ-E07-04 — the supplier withdraws a notice before anything arrived.
+      // A cancelled notice stops counting toward open and in-transit quantity.
+      id: 't_asn_cancel',
+      from: ['Draft', 'Submitted'],
+      to: 'Cancelled',
+      trigger: 'user',
+      requiredRole: 'asn:cancel',
+      requiredFields: [],
+      policyHooks: [POLICY_HOOKS.ASN_CANCEL_NOT_RECEIVED],
       surfaceable: { surfaced: true },
       version: 1,
     },
