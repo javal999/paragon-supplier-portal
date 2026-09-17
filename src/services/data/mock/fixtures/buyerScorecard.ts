@@ -44,7 +44,7 @@ const CORE_SCORECARDS: SupplierScorecard[] = [
     score: 94,
     status: 'Preferred Supplier',
     kpis: [
-      { name: 'OTIF', value: '94%', target: '95%', pct: 94, targetPct: 95, trend: '↑' },
+      { name: 'OTIF', value: '94%', target: '90%', pct: 94, targetPct: 90, trend: '↑' },
       { name: 'OTDR', value: '96%', target: '95%', pct: 96, targetPct: 95, trend: '↑' },
       { name: 'PO Ack Rate', value: '100%', target: '95%', pct: 100, targetPct: 95, trend: '→' },
       { name: 'Ack Speed', value: '6h', target: '<24h', pct: 90, targetPct: 75, trend: '↑' },
@@ -88,7 +88,7 @@ const CORE_SCORECARDS: SupplierScorecard[] = [
     status: 'Approved Supplier',
     complianceIssue: { level: 'missing', label: 'BPJPH Halal cert not certified' },
     kpis: [
-      { name: 'OTIF', value: '88%', target: '95%', pct: 88, targetPct: 95, trend: '↑' },
+      { name: 'OTIF', value: '88%', target: '90%', pct: 88, targetPct: 90, trend: '↑' },
       { name: 'OTDR', value: '91%', target: '95%', pct: 91, targetPct: 95, trend: '↑' },
       { name: 'PO Ack Rate', value: '92%', target: '95%', pct: 92, targetPct: 95, trend: '↑' },
       { name: 'Ack Speed', value: '18h', target: '<24h', pct: 75, targetPct: 75, trend: '→' },
@@ -134,7 +134,7 @@ const CORE_SCORECARDS: SupplierScorecard[] = [
     complianceIssue: { level: 'expiring', label: 'ISO 9001 expiring in 83d' },
     improvementActions: SAMPLE_PC_IMPROVEMENT_ACTIONS,
     kpis: [
-      { name: 'OTIF', value: '78%', target: '95%', pct: 78, targetPct: 95, trend: '↓' },
+      { name: 'OTIF', value: '78%', target: '90%', pct: 78, targetPct: 90, trend: '↓' },
       { name: 'OTDR', value: '82%', target: '95%', pct: 82, targetPct: 95, trend: '↓' },
       { name: 'PO Ack Rate', value: '88%', target: '95%', pct: 88, targetPct: 95, trend: '↑' },
       { name: 'Ack Speed', value: '42h', target: '<24h', pct: 40, targetPct: 75, trend: '↓' },

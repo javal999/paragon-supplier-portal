@@ -21,6 +21,8 @@ import type { CurrentIdentity } from '../context/CurrentIdentityContext';
 
 import Login from '../pages/auth/Login';
 import BuyerDashboard from '../pages-v2/BuyerDashboard';
+import BuyerHome from '../pages-v2/BuyerHome';
+import SupplierHome from '../pages-v2/SupplierHome';
 import BuyerSuppliers from '../pages-v2/BuyerSuppliers';
 import BuyerSupplierProfile from '../pages-v2/BuyerSupplierProfile';
 import Marketplace from '../pages-v2/Marketplace';
@@ -88,6 +90,7 @@ interface RouteCase {
 const ROUTES: RouteCase[] = [
   { name: 'login', pattern: '/login', at: '/login', element: <Login />, identity: BUYER },
   { name: 'register', pattern: '/register', at: '/register', element: <SupplierRegistrationV2 />, identity: BUYER },
+  { name: 'buyer/home', pattern: '/buyer/home', at: '/buyer/home', element: <BuyerHome />, identity: BUYER },
   { name: 'buyer/dashboard', pattern: '/buyer/dashboard', at: '/buyer/dashboard', element: <BuyerDashboard />, identity: BUYER },
   { name: 'buyer/suppliers', pattern: '/buyer/suppliers', at: '/buyer/suppliers', element: <BuyerSuppliers />, identity: BUYER },
   { name: 'buyer/suppliers/:id', pattern: '/buyer/suppliers/:id', at: '/buyer/suppliers/sup-007', element: <BuyerSupplierProfile />, identity: BUYER },
@@ -122,6 +125,7 @@ const ROUTES: RouteCase[] = [
   // AppRouter, and nothing would have reported that until a route was deleted.
   { name: 'buyer/intake-review', pattern: '/buyer/intake-review', at: '/buyer/intake-review', element: <IntakeReview />, identity: BUYER },
   { name: 'glossary', pattern: '/glossary', at: '/glossary', element: <Glossary />, identity: BUYER },
+  { name: 'supplier/home', pattern: '/supplier/home', at: '/supplier/home', element: <SupplierHome />, identity: SUPPLIER },
   { name: 'supplier/dashboard', pattern: '/supplier/dashboard', at: '/supplier/dashboard', element: <SupplierDashboardV2 />, identity: SUPPLIER },
   { name: 'supplier/storefront', pattern: '/supplier/storefront', at: '/supplier/storefront', element: <SupplierMyStorefront />, identity: SUPPLIER },
   { name: 'supplier/documents', pattern: '/supplier/documents', at: '/supplier/documents', element: <SupplierDocumentsV2 />, identity: SUPPLIER },

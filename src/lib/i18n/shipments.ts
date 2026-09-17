@@ -20,9 +20,8 @@ export const shipmentsEn: Record<string, string> = {
   // — Page header —
   'shipments.header.title': 'Shipments & ASN',
   'shipments.header.subtitle':
-    'Inbound shipment tracking, advance shipment notices, and dock scheduling.',
+    'Inbound shipment tracking and advance shipment notices.',
   'shipments.action.export': 'Export',
-  'shipments.action.dockSchedule': 'Dock Schedule',
   'shipments.action.manualAsn': 'Manual ASN Entry',
   // — Meta line —
   'shipments.meta.summary.one': '{{count}} active shipment · last updated {{date}}',
@@ -57,11 +56,6 @@ export const shipmentsEn: Record<string, string> = {
   'shipments.table.daysLate': '+{{days}}d late',
   'shipments.table.empty': 'No shipments match the current filters.',
   // — Dock schedule (FormSection) —
-  'shipments.dock.eyebrow': 'OPERATIONS',
-  'shipments.dock.title': "Today's Dock Schedule",
-  'shipments.dock.description':
-    'Live view of dock assignments for inbound shipments at NDC J6.',
-  'shipments.dock.col.dock': 'Dock',
   // — Side panel: key facts —
   'shipments.panel.keyFacts': 'Key facts',
   'shipments.panel.asnNumber': 'ASN #',
@@ -88,10 +82,6 @@ export const shipmentsEn: Record<string, string> = {
   'shipments.panel.col.uom': 'UoM',
   // — Side panel: lifecycle + dock assignment —
   'shipments.panel.lifecycle': 'Shipment lifecycle',
-  'shipments.panel.dockAssignment': 'Dock Assignment',
-  'shipments.panel.dockScheduled': 'Scheduled {{time}} today',
-  'shipments.panel.notYetScheduled': 'Not yet scheduled',
-  'shipments.panel.scheduleDock': 'Schedule dock',
   // — Timeline milestone labels —
   'shipments.timeline.poCreated': 'PO Created',
   'shipments.timeline.asnSubmitted': 'ASN Submitted',
@@ -112,8 +102,6 @@ export const shipmentsEn: Record<string, string> = {
   'shipments.toast.export.desc': 'No file was generated — shipments export is not wired to a real system.',
   'shipments.toast.manualAsn.title': 'Manual ASN entry',
   'shipments.toast.manualAsn.desc': 'Form will open in a future release.',
-  'shipments.toast.dockSchedule.title': 'Dock schedule expanded',
-  'shipments.toast.dockSchedule.desc': 'Scroll down to view assignments.',
   // D-CENSUS-8 — was 'Reminder sent' / 'Notified {{supplier}}'. Nothing is sent:
   // there is no outbound channel write on this page. Retracted to the same shape
   // the manual-ASN and dock-scheduler toasts in this very file already use.
@@ -125,8 +113,6 @@ export const shipmentsEn: Record<string, string> = {
   'shipments.toast.carrierAlerted.title': 'Carrier escalation not available yet',
   'shipments.toast.carrierAlerted.desc':
     'No escalation ticket was opened for {{asn}}. Carrier contact is not wired to a real system.',
-  'shipments.toast.dockScheduler.title': 'Dock scheduler',
-  'shipments.toast.dockScheduler.desc': 'Schedule UI will open in a future release.',
   // — Side-panel footer actions —
   'shipments.footer.sendReminder': 'Send reminder to supplier',
   'shipments.footer.trackShipment': 'Track shipment',
@@ -147,9 +133,8 @@ export const shipmentsId: Record<string, string> = {
   // — Page header —
   'shipments.header.title': 'Pengiriman & ASN',
   'shipments.header.subtitle':
-    'Pelacakan pengiriman masuk, pemberitahuan pengiriman di muka, dan penjadwalan dermaga.',
+    'Pelacakan pengiriman masuk dan pemberitahuan pengiriman di muka.',
   'shipments.action.export': 'Ekspor',
-  'shipments.action.dockSchedule': 'Jadwal Dermaga',
   'shipments.action.manualAsn': 'Entri ASN Manual',
   // — Meta line —
   'shipments.meta.summary.one': '{{count}} pengiriman aktif · terakhir diperbarui {{date}}',
@@ -184,11 +169,6 @@ export const shipmentsId: Record<string, string> = {
   'shipments.table.daysLate': '+{{days}}h terlambat',
   'shipments.table.empty': 'Tidak ada pengiriman yang cocok dengan filter saat ini.',
   // — Dock schedule (FormSection) —
-  'shipments.dock.eyebrow': 'OPERASI',
-  'shipments.dock.title': 'Jadwal Dermaga Hari Ini',
-  'shipments.dock.description':
-    'Tampilan langsung penugasan dermaga untuk pengiriman masuk di NDC J6.',
-  'shipments.dock.col.dock': 'Dermaga',
   // — Side panel: key facts —
   'shipments.panel.keyFacts': 'Fakta utama',
   'shipments.panel.asnNumber': 'No. ASN',
@@ -215,10 +195,6 @@ export const shipmentsId: Record<string, string> = {
   'shipments.panel.col.uom': 'Satuan',
   // — Side panel: lifecycle + dock assignment —
   'shipments.panel.lifecycle': 'Siklus hidup pengiriman',
-  'shipments.panel.dockAssignment': 'Penugasan Dermaga',
-  'shipments.panel.dockScheduled': 'Dijadwalkan {{time}} hari ini',
-  'shipments.panel.notYetScheduled': 'Belum dijadwalkan',
-  'shipments.panel.scheduleDock': 'Jadwalkan dermaga',
   // — Timeline milestone labels —
   'shipments.timeline.poCreated': 'PO Dibuat',
   'shipments.timeline.asnSubmitted': 'ASN Diajukan',
@@ -239,8 +215,6 @@ export const shipmentsId: Record<string, string> = {
   'shipments.toast.export.desc': 'Tidak ada berkas yang dibuat — ekspor pengiriman belum tersambung ke sistem nyata.',
   'shipments.toast.manualAsn.title': 'Entri ASN manual',
   'shipments.toast.manualAsn.desc': 'Formulir akan tersedia pada rilis mendatang.',
-  'shipments.toast.dockSchedule.title': 'Jadwal dermaga diperluas',
-  'shipments.toast.dockSchedule.desc': 'Gulir ke bawah untuk melihat penugasan.',
   'shipments.toast.reminder.title': 'Pengingat belum tersedia',
   'shipments.toast.reminder.desc':
     'Pengingat pemasok untuk {{asn}} akan dikirim setelah sambungan kanal aktif. Tidak ada yang dikirim ke {{supplier}}.',
@@ -249,8 +223,6 @@ export const shipmentsId: Record<string, string> = {
   'shipments.toast.carrierAlerted.title': 'Eskalasi kurir belum tersedia',
   'shipments.toast.carrierAlerted.desc':
     'Tidak ada tiket eskalasi yang dibuka untuk {{asn}}. Kontak kurir belum tersambung ke sistem nyata.',
-  'shipments.toast.dockScheduler.title': 'Penjadwal dermaga',
-  'shipments.toast.dockScheduler.desc': 'Antarmuka penjadwalan akan tersedia pada rilis mendatang.',
   // — Side-panel footer actions —
   'shipments.footer.sendReminder': 'Kirim pengingat ke pemasok',
   'shipments.footer.trackShipment': 'Lacak pengiriman',

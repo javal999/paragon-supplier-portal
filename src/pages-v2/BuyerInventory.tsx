@@ -699,39 +699,6 @@ const BuyerInventory: React.FC = () => {
                     </Data>
                   </div>
                 </div>
-                <div>
-                  <div className="text-xs text-text-tertiary">{t('buyerInventory.panel.leadTime')}</div>
-                  <div className="text-text-primary"><Data>14 days</Data></div>
-                </div>
-                <div>
-                  <div className="text-xs text-text-tertiary">{t('buyerInventory.panel.moq')}</div>
-                  <div className="text-text-primary">
-                    <Data>
-                      {formatNumber(Math.max(500, selected.avgDailyDemand * 7))}{' '}
-                      {selected.uom}
-                    </Data>
-                  </div>
-                </div>
-                <div>
-                  <div className="text-xs text-text-tertiary">
-                    {t('buyerInventory.panel.safetyStock')}
-                  </div>
-                  <div className="text-text-primary">
-                    <Data>
-                      {formatNumber(selected.avgDailyDemand * 7)} {selected.uom}
-                    </Data>
-                  </div>
-                </div>
-                <div>
-                  <div className="text-xs text-text-tertiary">
-                    {t('buyerInventory.panel.reorderPoint')}
-                  </div>
-                  <div className="text-text-primary">
-                    <Data>
-                      {formatNumber(selected.avgDailyDemand * 14)} {selected.uom}
-                    </Data>
-                  </div>
-                </div>
               </div>
             </section>
 

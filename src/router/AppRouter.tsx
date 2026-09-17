@@ -7,6 +7,8 @@ import Login from '../pages/auth/Login';
 
 // V2 pages (canonical)
 import BuyerDashboard from '../pages-v2/BuyerDashboard';
+import BuyerHome from '../pages-v2/BuyerHome';
+import SupplierHome from '../pages-v2/SupplierHome';
 import BuyerSuppliers from '../pages-v2/BuyerSuppliers';
 import BuyerSupplierProfile from '../pages-v2/BuyerSupplierProfile';
 import Marketplace from '../pages-v2/Marketplace';
@@ -75,6 +77,7 @@ const AppRouter: React.FC = () => {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<SupplierRegistrationV2 />} />
+          <Route path="/buyer/home" element={<BuyerHome />} />
           <Route path="/buyer/dashboard" element={<BuyerDashboard />} />
           <Route path="/buyer/suppliers" element={<BuyerSuppliers />} />
           <Route path="/buyer/suppliers/:id" element={<BuyerSupplierProfile />} />
@@ -129,6 +132,7 @@ const AppRouter: React.FC = () => {
           <Route path="/buyer/roles" element={<RolesCatalogue />} />
           <Route path="/buyer/roles/:roleId" element={<RoleDetail />} />
           <Route path="/glossary" element={<Glossary />} />
+          <Route path="/supplier/home" element={<SupplierHome />} />
           <Route path="/supplier/dashboard" element={<SupplierDashboardV2 />} />
           <Route path="/supplier/storefront" element={<SupplierMyStorefront />} />
           <Route path="/supplier/documents" element={<SupplierDocumentsV2 />} />
@@ -150,7 +154,7 @@ const AppRouter: React.FC = () => {
           <Route path="/supplier/inventory" element={<SupplierInventoryV2 />} />
           <Route path="/supplier/delivery-agreements" element={<SupplierDeliveryAgreements />} />
           <Route path="/supplier/performance" element={<SupplierPerformance />} />
-          <Route path="/" element={<Navigate to="/buyer/dashboard" replace />} />
+          <Route path="/" element={<Navigate to="/buyer/home" replace />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         </CurrentIdentityProvider>

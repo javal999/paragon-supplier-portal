@@ -39,7 +39,6 @@ export const supplierShipmentsEn: Record<string, string> = {
   // — Sub-tabs —
   'supplierShipments.tab.myShipments': 'My Shipments',
   'supplierShipments.tab.createAsn': 'Create ASN',
-  'supplierShipments.tab.dock': 'Dock Appointments',
   // — Pending-ASN panel (confirmed POs awaiting ASN) —
   'supplierShipments.pending.awaiting.one':
     '{{count}} confirmed purchase order awaiting ASN',
@@ -85,19 +84,6 @@ export const supplierShipmentsEn: Record<string, string> = {
   'supplierShipments.empty.message':
     'ASNs and shippable confirmed POs will appear here.',
   // — Dock Appointments tab —
-  'supplierShipments.dock.heading': 'Your scheduled dock appointments',
-  'supplierShipments.dock.field.date': 'Date',
-  'supplierShipments.dock.field.time': 'Time',
-  'supplierShipments.dock.field.dock': 'Dock',
-  'supplierShipments.dock.field.location': 'Location',
-  'supplierShipments.dock.notice.arrivePre': 'Please arrive',
-  'supplierShipments.dock.notice.arriveEmphasis': '15 minutes before your slot',
-  'supplierShipments.dock.notice.arrivePost':
-    'Bring a printed copy of your ASN and packing list. Contact the receiving team at',
-  'supplierShipments.dock.notice.arriveTail': 'if you anticipate delays.',
-  'supplierShipments.dock.info.pre':
-    'Dock appointment requests for new ASNs are processed by the Paragon Inbound Team. Confirmation is sent via',
-  'supplierShipments.dock.info.post': 'within 2 hours of ASN submission.',
   // — Wizard: step 1 (select PO) —
   'supplierShipments.wizard.select.title': 'Select PO',
   'supplierShipments.wizard.select.short': 'Select PO',
@@ -195,7 +181,6 @@ export const supplierShipmentsId: Record<string, string> = {
   // — Sub-tabs —
   'supplierShipments.tab.myShipments': 'Pengiriman Saya',
   'supplierShipments.tab.createAsn': 'Buat ASN',
-  'supplierShipments.tab.dock': 'Janji Temu Dermaga',
   // — Pending-ASN panel (confirmed POs awaiting ASN) —
   'supplierShipments.pending.awaiting.one':
     '{{count}} pesanan pembelian terkonfirmasi menunggu ASN',
@@ -242,20 +227,6 @@ export const supplierShipmentsId: Record<string, string> = {
   'supplierShipments.empty.message':
     'ASN dan PO terkonfirmasi yang dapat dikirim akan muncul di sini.',
   // — Dock Appointments tab —
-  'supplierShipments.dock.heading': 'Janji temu dermaga terjadwal Anda',
-  'supplierShipments.dock.field.date': 'Tanggal',
-  'supplierShipments.dock.field.time': 'Waktu',
-  'supplierShipments.dock.field.dock': 'Dermaga',
-  'supplierShipments.dock.field.location': 'Lokasi',
-  'supplierShipments.dock.notice.arrivePre': 'Harap tiba',
-  'supplierShipments.dock.notice.arriveEmphasis': '15 menit sebelum slot Anda',
-  'supplierShipments.dock.notice.arrivePost':
-    'Bawa salinan cetak ASN dan daftar kemasan Anda. Hubungi tim penerima di',
-  'supplierShipments.dock.notice.arriveTail':
-    'jika Anda memperkirakan keterlambatan.',
-  'supplierShipments.dock.info.pre':
-    'Permintaan janji temu dermaga untuk ASN baru diproses oleh Tim Inbound Paragon. Konfirmasi dikirim via',
-  'supplierShipments.dock.info.post': 'dalam 2 jam setelah pengajuan ASN.',
   // — Wizard: step 1 (select PO) —
   'supplierShipments.wizard.select.title': 'Pilih PO',
   'supplierShipments.wizard.select.short': 'Pilih PO',

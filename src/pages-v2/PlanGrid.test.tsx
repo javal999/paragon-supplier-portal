@@ -27,7 +27,7 @@ describe('PlanGrid — honest render (page-level)', () => {
 
     // LivenessPill reads isLive('purchaseRequisitions') → the amber readiness note
     expect(
-      screen.getByText(/awaiting live PR producer/i),
+      screen.getByText(/Sample data/i),
     ).toBeInTheDocument();
     // green "Live" affordance is structurally unreachable
     expect(screen.queryByText(/^Live$/)).not.toBeInTheDocument();

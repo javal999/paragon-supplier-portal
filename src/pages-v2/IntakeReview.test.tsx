@@ -29,7 +29,7 @@ describe('IntakeReview — honest render (SIMULATED × PLANNED, green unreachabl
   it('renders the SIMULATED page pill from the registry — never Live', async () => {
     expect(isLive('purchaseRequisitions')).toBe(false);
     renderPage();
-    expect(await screen.findByText(/awaiting live PR producer/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Sample data/i)).toBeInTheDocument();
     expect(screen.queryByText(/^Live$/)).not.toBeInTheDocument();
   });
 
@@ -106,15 +106,6 @@ describe('IntakeReview — dismiss is EPHEMERAL, honestly labeled, restorable', 
     expect(
       screen.getByRole('button', { name: /Accept as suggested — PET Bottle 200ml/i }),
     ).toBeInTheDocument();
-  });
-});
-
-describe('IntakeReview — ACQUIRE nav entry (review precedes push)', () => {
-  it('the sidebar exposes the Intake Review entry alongside Plan Grid', async () => {
-    renderPage();
-    expect(screen.getByRole('button', { name: /^Intake Review$/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /^Plan Grid$/i })).toBeInTheDocument();
-    await screen.findByText(/Glycerin USP/); // flush the seam read (act hygiene)
   });
 });
 

@@ -15,7 +15,7 @@ describe('NotFound — real 404 (NAV-02)', () => {
     expect(screen.getByText('404 — Not found')).toBeInTheDocument();
   });
 
-  it('offers a route back to the dashboard', () => {
+  it('offers a route back to Home', () => {
     renderWithProviders(
       <>
         <NotFound />
@@ -23,7 +23,7 @@ describe('NotFound — real 404 (NAV-02)', () => {
       </>,
       { route: '/buyer/does-not-exist' },
     );
-    fireEvent.click(screen.getByRole('button', { name: 'Back to dashboard' }));
-    expect(screen.getByTestId('loc')).toHaveTextContent('/buyer/dashboard');
+    fireEvent.click(screen.getByRole('button', { name: 'Back to Home' }));
+    expect(screen.getByTestId('loc')).toHaveTextContent('/buyer/home');
   });
 });

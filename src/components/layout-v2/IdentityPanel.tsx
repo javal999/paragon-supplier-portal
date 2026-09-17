@@ -9,6 +9,9 @@ import {
   type SystemRoleId,
 } from '../../services/transitions/businessRoles';
 import { atomsForSeat } from '../../services/transitions/customRoles';
+import { useNavigate } from 'react-router-dom';
+import { HUB_ROLES, useHubRole } from './hubRole';
+import { UTILITY_NAV } from './navConfig';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // THE IDENTITY PANEL — the current role and the scope it grants.
@@ -41,6 +44,8 @@ import { atomsForSeat } from '../../services/transitions/customRoles';
 const IdentityPanel: React.FC = () => {
   const { t } = useTranslation();
   const { identity, setIdentity } = useCurrentIdentity();
+  const navigate = useNavigate();
+  const [hubRole, setHubRole] = useHubRole();
   const [open, setOpen] = useState(false);
   // The role list is a DROPDOWN, collapsed by default. A permanently expanded
   // list made the panel as tall as the viewport on the supplier side and put six
@@ -177,6 +182,54 @@ const IdentityPanel: React.FC = () => {
             <div className="text-sm font-medium text-text-primary" data-testid="identity-persona">
               {t(`nav.persona.${persona}`)}
             </div>
+          </div>
+
+          {/* — MENU FOR A PTI ROLE (NV-02): a view choice, not a permission — */}
+          {persona === 'buyer' && (
+            <div className="py-3 border-b border-border-subtle">
+              <label htmlFor="hub-role" className="text-label text-text-tertiary uppercase">
+                {t('hub.role.title')}
+              </label>
+              <select
+                id="hub-role"
+                data-testid="hub-role-select"
+                value={hubRole}
+                onChange={(e) => setHubRole(e.target.value as typeof hubRole)}
+                className="mt-1 w-full h-8 rounded-md border border-border-input bg-white px-2 text-sm text-text-primary"
+              >
+                {HUB_ROLES.map((r) => (
+                  <option key={r} value={r}>
+                    {t(`hub.role.${r}`)}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1 text-xs text-text-tertiary">{t('hub.role.hint')}</p>
+            </div>
+          )}
+
+          {/* — HELP AND ADMINISTRATION (NV-01) — */}
+          <div className="py-3 border-b border-border-subtle">
+            <div className="text-label text-text-tertiary uppercase">{t('hub.nav.util.title')}</div>
+            <ul className="mt-1">
+              {UTILITY_NAV[persona].map((item) => {
+                const Icon = item.icon;
+                return (
+                  <li key={item.path}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setOpen(false);
+                        navigate(item.path);
+                      }}
+                      className="w-full flex items-center gap-2 rounded-md px-1 py-1.5 text-sm text-text-secondary hover:bg-bg-hover"
+                    >
+                      <Icon size={14} />
+                      {t(item.labelKey)}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
           </div>
 
           {/* — ACCESS SCOPE: SHOWN, NEVER EDITABLE HERE — */}

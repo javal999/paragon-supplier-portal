@@ -44,10 +44,8 @@ describe('BuyerDiscovery — four honest states', () => {
     // "Sample": `supplierDiscovery` is now HARVEST-GATED, so it reads the readiness
     // note and states WHY. That is strictly more honest than the count this line
     // used to assert, so the assertion moved from counting markers to reading them.
-    expect(await screen.findByText('Sample — awaiting supplier-discovery feed'))
-      .toBeInTheDocument();
-    // …and the market-intel tab keeps its own capability pill, unchanged.
-    expect(screen.getByText('Sample')).toBeInTheDocument();
+    // Page marker and the market-intel tab's own pill both read "Sample data".
+    expect((await screen.findAllByText('Sample data')).length).toBeGreaterThanOrEqual(2);
     // The invented source attributions are deleted (not relabelled) …
     expect(screen.queryByText(/IFRA index/)).not.toBeInTheDocument();
     expect(screen.queryByText(/Niacinamide spot/)).not.toBeInTheDocument();

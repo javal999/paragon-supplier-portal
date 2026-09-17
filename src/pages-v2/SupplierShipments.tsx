@@ -9,10 +9,6 @@ import {
   Download,
   ChevronRight,
   ChevronDown,
-  Calendar,
-  Clock,
-  MapPin,
-  Package,
   Upload,
 } from 'lucide-react';
 import AppShellV2 from '../components/layout-v2/AppShellV2';
@@ -56,7 +52,7 @@ import type { AsnStatus, ASN, PurchaseOrder } from '../services/data/types';
 import { useRefusalText } from '../hooks/useRefusalText';
 import { refusalDetailOf } from '../services/transitions/refusalMessage';
 
-type TabKey = 'shipments' | 'create' | 'dock';
+type TabKey = 'shipments' | 'create';
 type StatusFilter = AsnStatus | 'All';
 
 const STATUS_VARIANT: Record<AsnStatus, 'success' | 'warning' | 'danger' | 'neutral'> = {
@@ -126,83 +122,6 @@ const CARRIER_OPTIONS = [
   'Other',
 ];
 
-const DockAppointments: React.FC = () => {
-  const { t } = useTranslation();
-  // i18n-defer: dock-appointment fixture is sample data — the field VALUES
-  // (dates, times, dock/location proper nouns) stay canonical EN; only the field
-  // LABELS localize.
-  const dockFields = [
-    { Icon: Calendar, label: t('supplierShipments.dock.field.date'), value: 'Monday, 7 April 2026' },
-    { Icon: Clock, label: t('supplierShipments.dock.field.time'), value: '10:00 WIB' },
-    { Icon: Package, label: t('supplierShipments.dock.field.dock'), value: 'Dock 3' },
-    {
-      Icon: MapPin,
-      label: t('supplierShipments.dock.field.location'),
-      value: 'NDC Jatake 6, Tangerang Selatan',
-    },
-  ];
-  return (
-    <div className="flex flex-col gap-4">
-      <h3 className="text-section text-text-primary">
-        {t('supplierShipments.dock.heading')}
-      </h3>
-
-      <div className="bg-bg-surface border-2 border-success rounded-lg shadow-sm p-5">
-        <div className="flex items-start justify-between mb-4 gap-3 flex-wrap">
-          <div>
-            <Data as="div" className="text-base font-bold text-text-primary">
-              ASN-2026-001
-            </Data>
-            <div className="text-xs text-text-tertiary mt-0.5">
-              {/* i18n-defer: mock/sample data (material proper noun) */}
-              <Data>PO-2025-00107</Data> · PET Bottle 100ml Airless Pump
-            </div>
-          </div>
-          <StatusPill variant="success">Confirmed</StatusPill>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-          {dockFields.map(({ Icon, label, value }) => (
-            <div
-              key={label}
-              className="px-3 py-2 bg-bg-hover rounded-md flex items-start gap-2"
-            >
-              <Icon size={14} className="text-text-tertiary mt-0.5 shrink-0" />
-              <div>
-                <div className="text-label text-text-tertiary uppercase">
-                  {label}
-                </div>
-                <div className="text-sm text-text-primary mt-0.5">{value}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="bg-warning-soft border-l-2 border-warning rounded px-4 py-3 text-sm text-text-secondary flex items-start gap-2">
-        <Clock size={14} className="text-warning-hover shrink-0 mt-0.5" />
-        <span>
-          {t('supplierShipments.dock.notice.arrivePre')}{' '}
-          <strong className="text-warning-hover">
-            {t('supplierShipments.dock.notice.arriveEmphasis')}
-          </strong>
-          . {t('supplierShipments.dock.notice.arrivePost')}{' '}
-          {/* i18n-defer: mock/sample data (receiving-team phone number) */}
-          <strong>+62-21-5595-xxxx</strong>{' '}
-          {t('supplierShipments.dock.notice.arriveTail')}
-        </span>
-      </div>
-
-      <div className="bg-info-soft border-l-2 border-info rounded px-4 py-3 text-sm text-text-secondary flex items-start gap-2">
-        <CheckCircle2 size={14} className="text-info shrink-0 mt-0.5" />
-        <span>
-          {t('supplierShipments.dock.info.pre')}{' '}
-          <strong>WhatsApp</strong>{' '}
-          {t('supplierShipments.dock.info.post')}
-        </span>
-      </div>
-    </div>
-  );
-};
 
 interface ShipmentsListProps {
   asns: ASN[];
@@ -1207,7 +1126,6 @@ const SupplierShipments: React.FC = () => {
           ...(wizardHeld
             ? [{ id: 'create' as TabKey, label: t('supplierShipments.tab.createAsn') }]
             : []),
-          { id: 'dock', label: t('supplierShipments.tab.dock'), count: 1 },
         ]}
         value={tab}
         onChange={setTab}
@@ -1256,7 +1174,6 @@ const SupplierShipments: React.FC = () => {
         />
       )}
 
-      {tab === 'dock' && <DockAppointments />}
 
       <SidePanel
         open={submitTarget !== null}

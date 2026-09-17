@@ -52,8 +52,6 @@ export const S2_GRANDFATHERED: readonly string[] = [
   'src/pages-v2/BuyerRequisitions.tsx::UOM_OPTIONS',
   'src/pages-v2/BuyerRisk.tsx::SCENARIO_LIBRARY_IDS',
   'src/pages-v2/BuyerRisk.tsx::TAB_DEFS',
-  'src/pages-v2/BuyerShipments.tsx::DOCKS',
-  'src/pages-v2/BuyerShipments.tsx::TIME_SLOTS',
   'src/pages-v2/BuyerSourcing.tsx::INCOTERMS_OPTIONS',
   'src/pages-v2/BuyerSourcing.tsx::MATERIAL_CATALOG',
   'src/pages-v2/BuyerSourcing.tsx::PAYMENT_TERMS_OPTIONS',

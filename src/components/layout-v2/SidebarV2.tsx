@@ -1,164 +1,16 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import {
-  LayoutDashboard,
-  Search,
-  Store,
-  Users,
-  FileText,
-  ShoppingCart,
-  Boxes,
-  Truck,
-  ClipboardCheck,
-  Receipt,
-  Inbox,
-  BarChart2,
-  Award,
-  AlertTriangle,
-  ShieldCheck,
-  ScrollText,
-  CalendarClock,
-  BellRing,
-  MessageCircle,
-  Table2,
-  Workflow,
-  BookOpen,
-  Handshake,
-  LucideIcon,
-  UserPlus,
-} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useCurrentIdentity } from '../../context/CurrentIdentityContext';
 import { mockSuppliers } from '../../data/mockSuppliers';
 import { SEEDED_SEAT_ROLES } from '../../services/transitions/businessRoles';
 import { NO_PERSON } from '../../context/noPerson';
+import { HOME_PATH, isItemActive, navFor } from './navConfig';
+import { useHubRole } from './hubRole';
 
 const SEED_SUPPLIER_ID = 'sup-007';
 const SEED_SUPPLIER_NAME =
   mockSuppliers.find((s) => s.id === SEED_SUPPLIER_ID)?.name ?? null;
-
-interface NavItem {
-  labelKey: string;
-  icon: LucideIcon;
-  path: string;
-}
-
-interface NavGroup {
-  labelKey: string;
-  items: NavItem[];
-}
-
-const BUYER_NAV: NavGroup[] = [
-  {
-    labelKey: 'nav.section.acquire',
-    items: [
-      { labelKey: 'nav.buyer.dashboard', icon: LayoutDashboard, path: '/buyer/dashboard' },
-      { labelKey: 'nav.buyer.discovery', icon: Search, path: '/buyer/discovery' },
-      { labelKey: 'nav.buyer.marketplace', icon: Store, path: '/marketplace' },
-      { labelKey: 'nav.buyer.suppliers', icon: Users, path: '/buyer/suppliers' },
-      { labelKey: 'nav.buyer.supplierApplications', icon: UserPlus, path: '/buyer/supplier-applications' },
-      { labelKey: 'nav.buyer.sourcing', icon: FileText, path: '/buyer/sourcing' },
-      // Phase A/1 — review precedes the plan-grid push in the sourcing flow.
-      { labelKey: 'nav.buyer.intakeReview', icon: Inbox, path: '/buyer/intake-review' },
-      { labelKey: 'nav.buyer.planGrid', icon: Table2, path: '/buyer/plan-grid' },
-      // SDC-1b — the P2 planner consolidation view (Supplier Data Collaboration).
-      { labelKey: 'nav.buyer.collaboration', icon: Handshake, path: '/buyer/collaboration' },
-    ],
-  },
-  {
-    labelKey: 'nav.section.transact',
-    items: [
-      { labelKey: 'nav.buyer.requisitions', icon: FileText, path: '/buyer/purchase-requisition' },
-      { labelKey: 'nav.buyer.purchaseOrders', icon: ShoppingCart, path: '/buyer/orders' },
-      { labelKey: 'nav.buyer.inventory', icon: Boxes, path: '/buyer/inventory' },
-      { labelKey: 'nav.buyer.shipments', icon: Truck, path: '/buyer/shipments' },
-      { labelKey: 'nav.buyer.goodsReceipt', icon: ClipboardCheck, path: '/buyer/goods-receipt' },
-    ],
-  },
-  {
-    labelKey: 'nav.section.settle',
-    items: [
-      { labelKey: 'nav.buyer.invoices', icon: Receipt, path: '/buyer/invoices' },
-      { labelKey: 'nav.buyer.contracts', icon: ScrollText, path: '/buyer/contracts' },
-      { labelKey: 'nav.buyer.deliveryAgreements', icon: CalendarClock, path: '/buyer/delivery-agreements' },
-      { labelKey: 'nav.buyer.chase', icon: BellRing, path: '/buyer/chase' },
-    ],
-  },
-  {
-    labelKey: 'nav.section.intelligence',
-    items: [
-      { labelKey: 'nav.buyer.analytics', icon: BarChart2, path: '/buyer/analytics' },
-      { labelKey: 'nav.buyer.scorecard', icon: Award, path: '/buyer/scorecard' },
-      { labelKey: 'nav.buyer.risk', icon: AlertTriangle, path: '/buyer/risk' },
-      { labelKey: 'nav.buyer.compliance', icon: ShieldCheck, path: '/buyer/compliance' },
-      { labelKey: 'nav.buyer.commHub', icon: MessageCircle, path: '/buyer/comm-hub' },
-      // PF-1 — the derived flow catalog (read-only; the analyzer's surface).
-      { labelKey: 'nav.buyer.processFlows', icon: Workflow, path: '/buyer/process-flows' },
-      // GL-1 — the glossary. LISTED IN BOTH PERSONAS' NAV, under one
-      // persona-neutral key and one persona-neutral path, because the term chips
-      // that lead here sit on both sides' refusal sites.
-      { labelKey: 'nav.glossary', icon: BookOpen, path: '/glossary' },
-    ],
-  },
-  {
-    // ── THE PLATFORM GROUPING ────────────────────────────────────────────────
-    // Settings-shaped items, deliberately apart from the day-to-day work
-    // sections. WHO I AM is in the avatar panel; MANAGING WHO ANYONE IS is a
-    // page — and a role catalogue is the second, not the first.
-    //
-    // A Users page is NOT here and that is a ruling: the portal holds no people
-    // (staff identity is the corporate directory's, unconnected), so it would
-    // show an empty list and "0 assigned" on every role, with the honest marker
-    // doing all the work. Shipping the shape without the substance is the class
-    // this project spends its time removing.
-    labelKey: 'nav.section.platform',
-    items: [
-      { labelKey: 'nav.buyer.roles', icon: ShieldCheck, path: '/buyer/roles' },
-    ],
-  },
-];
-
-const SUPPLIER_NAV: NavGroup[] = [
-  {
-    labelKey: 'nav.section.acquire',
-    items: [
-      { labelKey: 'nav.supplier.dashboard', icon: LayoutDashboard, path: '/supplier/dashboard' },
-      { labelKey: 'nav.supplier.rfqs', icon: Search, path: '/supplier/rfqs' },
-      // SDC-2b — the P1 forecast-confirmation surface (Supplier Data Collaboration).
-      { labelKey: 'nav.supplier.forecasts', icon: Handshake, path: '/supplier/forecasts' },
-      { labelKey: 'nav.supplier.storefront', icon: Store, path: '/supplier/storefront' },
-    ],
-  },
-  {
-    labelKey: 'nav.section.transact',
-    items: [
-      { labelKey: 'nav.supplier.orders', icon: ShoppingCart, path: '/supplier/orders' },
-      { labelKey: 'nav.supplier.shipments', icon: Truck, path: '/supplier/shipments' },
-      { labelKey: 'nav.supplier.inventory', icon: Boxes, path: '/supplier/inventory' },
-    ],
-  },
-  {
-    labelKey: 'nav.section.settle',
-    items: [
-      { labelKey: 'nav.supplier.invoices', icon: Receipt, path: '/supplier/invoices' },
-      { labelKey: 'nav.supplier.documents', icon: FileText, path: '/supplier/documents' },
-      {
-        labelKey: 'nav.supplier.deliveryAgreements',
-        icon: CalendarClock,
-        path: '/supplier/delivery-agreements',
-      },
-    ],
-  },
-  {
-    labelKey: 'nav.section.intelligence',
-    items: [
-      { labelKey: 'nav.supplier.performance', icon: BarChart2, path: '/supplier/performance' },
-      { labelKey: 'nav.supplier.whatsapp', icon: MessageCircle, path: '/supplier/whatsapp' },
-      { labelKey: 'nav.supplier.commHub', icon: Inbox, path: '/supplier/comm-hub' },
-      { labelKey: 'nav.glossary', icon: BookOpen, path: '/glossary' },
-    ],
-  },
-];
 
 const SidebarV2: React.FC = () => {
   const navigate = useNavigate();
@@ -168,7 +20,8 @@ const SidebarV2: React.FC = () => {
   const { identity, setIdentity } = useCurrentIdentity();
   const persona = identity.personaType;
 
-  const groups = persona === 'buyer' ? BUYER_NAV : SUPPLIER_NAV;
+  const [hubRole] = useHubRole();
+  const groups = navFor(persona, hubRole);
 
   return (
     <aside className="w-60 shrink-0 h-full bg-bg-sidebar border-r border-border-subtle flex flex-col">
@@ -185,7 +38,7 @@ const SidebarV2: React.FC = () => {
                 businessRoles: SEEDED_SEAT_ROLES.buyer,
                 actor: NO_PERSON,
               });
-              navigate('/buyer/dashboard');
+              navigate(HOME_PATH.buyer);
             }}
             className={`flex-1 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
               persona === 'buyer'
@@ -193,7 +46,7 @@ const SidebarV2: React.FC = () => {
                 : 'text-text-tertiary'
             }`}
           >
-            {t('nav.persona.buyer')}
+            {t('hub.persona.pti')}
           </button>
           <button
             type="button"
@@ -205,7 +58,7 @@ const SidebarV2: React.FC = () => {
                 businessRoles: SEEDED_SEAT_ROLES.supplier,
                 actor: NO_PERSON,
               });
-              navigate('/supplier/dashboard');
+              navigate(HOME_PATH.supplier);
             }}
             className={`flex-1 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
               persona === 'supplier'
@@ -213,7 +66,7 @@ const SidebarV2: React.FC = () => {
                 : 'text-text-tertiary'
             }`}
           >
-            {t('nav.persona.supplier')}
+            {t('hub.persona.supplier')}
           </button>
         </div>
       </div>
@@ -221,20 +74,21 @@ const SidebarV2: React.FC = () => {
       {/* Nav groups */}
       <nav className="flex-1 overflow-y-auto px-3 pb-4 space-y-4">
         {groups.map((group) => (
-          <div key={group.labelKey}>
+          <div key={group.id}>
             <div className="text-label text-text-tertiary px-3 py-2 uppercase">
               {t(group.labelKey)}
             </div>
             <ul className="space-y-0.5">
               {group.items.map((item) => {
-                const isActive = currentPath === item.path;
+                const isActive = isItemActive(item, currentPath);
                 const Icon = item.icon;
                 return (
                   <li key={item.path}>
                     <button
                       type="button"
+                      aria-current={isActive ? 'page' : undefined}
                       onClick={() => navigate(item.path)}
-                      className={`relative w-full h-9 px-3 rounded-md flex items-center gap-2.5 text-sm transition-colors ${
+                      className={`relative w-full min-h-9 py-1.5 px-3 rounded-md flex items-center gap-2.5 text-sm text-left transition-colors ${
                         isActive
                           ? 'bg-action-soft text-action-hover font-semibold'
                           : 'text-text-secondary hover:bg-bg-hover'
@@ -243,7 +97,7 @@ const SidebarV2: React.FC = () => {
                       {isActive && (
                         <span className="absolute left-0 top-1.5 bottom-1.5 w-[3px] bg-action rounded-r" />
                       )}
-                      <Icon size={18} />
+                      <Icon size={18} className="shrink-0" />
                       <span>{t(item.labelKey)}</span>
                     </button>
                   </li>

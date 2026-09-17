@@ -29,7 +29,7 @@ describe('LivenessPill — honest-render (reads the LivenessRegistry)', () => {
     expect(isLive('compliance')).toBe(false);
     const { container } = renderPill(<LivenessPill capability="compliance" />);
     // The SPECIFIC waiting-state text — not the generic "Sample" — names the harvest.
-    expect(screen.getByText('Sample — awaiting Track-R harvest')).toBeInTheDocument();
+    expect(screen.getByText('Sample data')).toBeInTheDocument();
     expect(screen.queryByText('Live')).not.toBeInTheDocument();
     // Still amber / SIMULATED — green tokens structurally absent.
     expect(container.querySelector('.text-success')).toBeNull();
@@ -41,7 +41,7 @@ describe('LivenessPill — honest-render (reads the LivenessRegistry)', () => {
     // LIVE) but gate-2 holds until a live supplier feed lands (F1) → still amber.
     expect(isLive('inventory')).toBe(false);
     const { container } = renderPill(<LivenessPill capability="inventory" />);
-    expect(screen.getByText('Sample — awaiting live supplier feed')).toBeInTheDocument();
+    expect(screen.getByText('Sample data')).toBeInTheDocument();
     expect(screen.queryByText('Live')).not.toBeInTheDocument();
     expect(container.querySelector('.text-success')).toBeNull();
     expect(container.querySelector('.bg-success')).toBeNull();
@@ -50,7 +50,7 @@ describe('LivenessPill — honest-render (reads the LivenessRegistry)', () => {
   it('every generic SIMULATED capability renders amber "Sample" — green is unreachable', () => {
     for (const cap of GENERIC_SIMULATED_CAPS) {
       const { unmount, container } = renderPill(<LivenessPill capability={cap} />);
-      expect(screen.getByText('Sample')).toBeInTheDocument();
+      expect(screen.getByText('Sample data')).toBeInTheDocument();
       expect(screen.queryByText('Live')).not.toBeInTheDocument();
       // The green tokens are structurally absent for a SIMULATED tier.
       expect(container.querySelector('.text-success')).toBeNull();
@@ -67,7 +67,7 @@ describe('LivenessPill — honest-render (reads the LivenessRegistry)', () => {
     expect(isLive('supplierDocuments')).toBe(false);
     const { container } = renderPill(<LivenessPill capability="supplierDocuments" />);
     expect(
-      screen.getByText('Sample — awaiting real supplier identities'),
+      screen.getByText('Sample data'),
     ).toBeInTheDocument();
     expect(screen.queryByText('Live')).not.toBeInTheDocument();
     expect(container.querySelector('.text-success')).toBeNull();

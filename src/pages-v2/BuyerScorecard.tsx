@@ -435,7 +435,7 @@ const BuyerScorecard: React.FC = () => {
               <Tooltip content={<ChartTooltip />} />
               <ReferenceLine
                 yAxisId="pct"
-                y={95}
+                y={90}
                 stroke={TOKEN_SUCCESS}
                 strokeDasharray="4 2"
                 label={{

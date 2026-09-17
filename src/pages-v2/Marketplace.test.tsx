@@ -18,7 +18,7 @@ describe('Marketplace — four honest states', () => {
     // supplier grid + KPI tiles, which had no marker at all) and one on the open-RFQ
     // teaser that previously carried the only badge on the route. findAll, and assert
     // the count, so losing either one fails here.
-    expect(await screen.findAllByText('Sample')).toHaveLength(2);
+    expect(await screen.findAllByText('Sample data')).toHaveLength(2);
   });
 
   it('loading: shows LoadingState while the read is pending', () => {

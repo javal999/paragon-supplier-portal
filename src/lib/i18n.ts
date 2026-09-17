@@ -80,6 +80,8 @@ import {
 import { glossaryEn, glossaryId } from './i18n/glossary';
 // — Surface residuals: the seat-identity guard (was hardcoded English) —
 import { identityEn, identityId } from './i18n/identity';
+// — Supplier Hub menu and Home (REQUIREMENTS §3.7, §3.8) —
+import { hubEn, hubId } from './i18n/hub';
 // — The read path's failure surface, shared by 31 pages —
 import { errorStateEn, errorStateId } from './i18n/errorState';
 import { loadingStateEn, loadingStateId } from './i18n/loadingState';
@@ -157,6 +159,7 @@ export const resources = {
       // — GL-1 glossary (chrome only) —
       ...glossaryEn,
       ...identityEn,
+      ...hubEn,
       ...errorStateEn,
       ...loadingStateEn,
       ...emptyStateEn,
@@ -179,7 +182,7 @@ export const resources = {
       // Managing who anyone is is a page; who I am is in the avatar.
       'nav.section.platform': 'Platform',
       'nav.buyer.roles': 'Roles',
-      'nav.persona.buyer': 'Buyer',
+      'nav.persona.buyer': 'PTI',
       'nav.persona.supplier': 'Supplier',
       'nav.buyer.dashboard': 'Dashboard',
       'nav.buyer.discovery': 'Discovery',
@@ -590,6 +593,7 @@ export const resources = {
       // — GL-1 glossary (chrome only) —
       ...glossaryId,
       ...identityId,
+      ...hubId,
       ...errorStateId,
       ...loadingStateId,
       ...emptyStateId,
@@ -606,7 +610,7 @@ export const resources = {
       'nav.section.intelligence': 'Intelijen',
       'nav.section.platform': 'Platform',
       'nav.buyer.roles': 'Peran',
-      'nav.persona.buyer': 'Pembeli',
+      'nav.persona.buyer': 'PTI',
       'nav.persona.supplier': 'Pemasok',
       'nav.buyer.dashboard': 'Dasbor',
       'nav.buyer.discovery': 'Penemuan',

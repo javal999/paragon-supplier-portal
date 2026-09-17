@@ -23,7 +23,7 @@ export const SUP_007_SUPPLIER_ID = 'sup-007';
 // encoded ones (Lead Time Variance / POA) it's the pass line that reproduces the
 // intended meeting/near/missing read via targetStatus(pct, targetPct, 10).
 export const KPIS: KpiPoint[] = [
-  { name: 'OTIF Rate',            value: '87%',      target: '≥ 95%',       pct: 87, targetPct: 95, trend: '↑' },
+  { name: 'OTIF Rate',            value: '87%',      target: '≥ 90%',       pct: 87, targetPct: 90, trend: '↑' },
   { name: 'ASN Accuracy',         value: '97.8%',    target: '≥ 95%',       pct: 98, targetPct: 95, trend: '→' },
   { name: 'Lead Time Variance',   value: '1.4 days', target: '≤ 0.5 days',  pct: 35, targetPct: 42, trend: '↓' },
   { name: 'POA Response Time',    value: '42 hrs',   target: '≤ 24 hrs',    pct: 40, targetPct: 52, trend: '↓' },

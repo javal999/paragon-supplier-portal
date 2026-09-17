@@ -69,6 +69,7 @@ describe('BuyerSupplierProfile — honest states', () => {
     // A real sup-007 PO proves the scoped read drove the table.
     expect(await screen.findByText('PO-2025-00108')).toBeInTheDocument();
     // The former "Sample data" pill is gone from this section.
-    expect(screen.queryByText('Sample data')).not.toBeInTheDocument();
+    // Only the page-level "Sample data" marker remains; the section has none of its own.
+    expect(screen.queryAllByText('Sample data').length).toBeLessThanOrEqual(1);
   });
 });

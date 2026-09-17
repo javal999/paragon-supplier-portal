@@ -25,7 +25,7 @@ export const supplierDashboardEn: Record<string, string> = {
   'supplierDashboard.identity.sapBp': 'SAP BP: {{bp}} · Channel: {{channel}}',
   'supplierDashboard.identity.grade': 'Paragon Grade',
   'supplierDashboard.identity.otif': 'OTIF: {{value}}%',
-  'supplierDashboard.identity.target': 'Target: ≥ 95%',
+  'supplierDashboard.identity.target': 'Target: ≥ 90%',
   // — Preferred-channel labels —
   'supplierDashboard.channel.whatsapp': 'WhatsApp',
   'supplierDashboard.channel.web': 'Web Portal',
@@ -113,7 +113,7 @@ export const supplierDashboardId: Record<string, string> = {
   'supplierDashboard.identity.sapBp': 'SAP BP: {{bp}} · Kanal: {{channel}}',
   'supplierDashboard.identity.grade': 'Grade Paragon',
   'supplierDashboard.identity.otif': 'OTIF: {{value}}%',
-  'supplierDashboard.identity.target': 'Target: ≥ 95%',
+  'supplierDashboard.identity.target': 'Target: ≥ 90%',
   // — Preferred-channel labels —
   'supplierDashboard.channel.whatsapp': 'WhatsApp',
   'supplierDashboard.channel.web': 'Portal Web',

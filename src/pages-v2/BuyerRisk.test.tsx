@@ -54,7 +54,7 @@ describe('BuyerRisk — honesty: no live affordance while SIMULATED', () => {
     // …and the pulsing "live" dot and its keyframes are gone.
     expect(container.querySelector('.risk-live-pulse')).toBeNull();
     // The ONLY honesty marker is the SIMULATED-derived pill (green is unreachable).
-    expect(screen.getAllByText('Sample').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Sample data').length).toBeGreaterThan(0);
   });
 });
 
@@ -148,7 +148,7 @@ describe('BuyerRisk — whole-surface honesty while SIMULATED', () => {
       // Every enclosure hosts the registry-derived marker, never a hand-rolled
       // literal — so the honesty on each region reads the ONE authority.
       for (const r of Array.from(regions)) {
-        expect(within(r as HTMLElement).getAllByText('Sample').length).toBeGreaterThan(0);
+        expect(within(r as HTMLElement).getAllByText('Sample data').length).toBeGreaterThan(0);
       }
     }
   });

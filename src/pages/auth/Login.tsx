@@ -40,7 +40,7 @@ const Login: React.FC = () => {
       businessRoles: SEEDED_SEAT_ROLES.buyer,
       actor: NO_PERSON,
     });
-    navigate('/buyer/dashboard');
+    navigate('/buyer/home');
   };
 
   const signInAsSupplier = () => {
@@ -51,7 +51,7 @@ const Login: React.FC = () => {
       businessRoles: SEEDED_SEAT_ROLES.supplier,
       actor: NO_PERSON,
     });
-    navigate('/supplier/dashboard');
+    navigate('/supplier/home');
   };
 
   const handleSignIn = () => {

@@ -66,10 +66,6 @@ export const buyerInventoryEn: Record<string, string> = {
   'buyerInventory.panel.description': 'Description',
   'buyerInventory.panel.supplier': 'Supplier',
   'buyerInventory.panel.otif': 'OTIF',
-  'buyerInventory.panel.leadTime': 'Lead Time',
-  'buyerInventory.panel.moq': 'MOQ',
-  'buyerInventory.panel.safetyStock': 'Safety Stock',
-  'buyerInventory.panel.reorderPoint': 'Reorder Point',
   // — Side panel: sections —
   'buyerInventory.panel.recentUpdates': 'Recent inventory updates',
   'buyerInventory.panel.activePos': 'Active POs',
@@ -157,10 +153,6 @@ export const buyerInventoryId: Record<string, string> = {
   'buyerInventory.panel.description': 'Deskripsi',
   'buyerInventory.panel.supplier': 'Pemasok',
   'buyerInventory.panel.otif': 'OTIF',
-  'buyerInventory.panel.leadTime': 'Waktu Tunggu',
-  'buyerInventory.panel.moq': 'MOQ',
-  'buyerInventory.panel.safetyStock': 'Stok Pengaman',
-  'buyerInventory.panel.reorderPoint': 'Titik Pemesanan Ulang',
   // — Side panel: sections —
   'buyerInventory.panel.recentUpdates': 'Pembaruan inventaris terbaru',
   'buyerInventory.panel.activePos': 'PO Aktif',
