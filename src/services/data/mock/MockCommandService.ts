@@ -102,6 +102,13 @@ import {
   isPositiveQty,
   proposedDeliveries,
   umbrellaRefusal,
+  addDays,
+  capacitySubmissionRefusal,
+  dayOf,
+  isCapacityReason,
+  isIsoDay,
+  parseAlertKey,
+  standingClosure,
   type AsnLineInput,
   type CommandTarget,
   type CascadeCommand,
@@ -120,6 +127,24 @@ import { requirementResponseStore } from './stores/requirementResponseStore';
 import { inventoryDeclarationStore } from './stores/inventoryDeclarationStore';
 import { incomingShipmentStore } from './stores/incomingShipmentStore';
 import { enforcementSettingStore } from './stores/enforcementSettingStore';
+import {
+  capacityStore,
+  inventoryAlertLedger,
+  stockAccessStore,
+  stockSyncStore,
+} from './stores/inventoryHubStores';
+import {
+  activeAlertConditions,
+  allAlerts,
+  allCapacityPlans,
+  isApiConnected,
+  isAssignedMaterial,
+  observeAlertConditions,
+  supplierNameOf,
+  suppliersWithAssignments,
+} from './inventoryReadModel';
+import { API_CONNECTIONS } from './fixtures/inventoryHub';
+import type { CapacitySubmission, CapacityWeekEntry, StockAccessGrant } from '../types';
 import { mockShipments } from '../../../data/mockShipments';
 import { mockSuppliers } from '../../../data/mockSuppliers';
 import {
@@ -1870,11 +1895,14 @@ const inventoryDeclarationTarget: CommandTarget = {
   // t_inventorydeclaration_declare is byte-for-byte unchanged. On the record path
   // it blocks a buyer recording for a supplier × material the data never names.
   requireCreationOwner: true,
+  // REQ-E08-02 — membership widens to the hub's supply assignments (the
+  // materials a stock row is checked against); `isAssignedMaterial` includes the
+  // (i)∪(ii) collaborated set, so every pair accepted before is accepted now.
   creationOwner: (payload) => {
     const sid = String(payload.supplierId);
-    return collaboratedMaterial(sid, String(payload.materialCode)) ? sid : null;
+    return isAssignedMaterial(sid, String(payload.materialCode)) ? sid : null;
   },
-  create: (payload, _toState) => {
+  create: (payload, _toState, scope) => {
     const str = (k: string) => (typeof payload[k] === 'string' ? (payload[k] as string) : '');
     const materialCode = str('materialCode');
     const supplierId = str('supplierId');
@@ -1912,6 +1940,13 @@ const inventoryDeclarationTarget: CommandTarget = {
       totalQty,
       uom,
       ...(batches.length > 0 ? { batches } : {}),
+      // REQ-E08-02 BR-06 — the supplier's ROP and production figures, when given.
+      ...(isNonNegative(payload.supplierRop) ? { supplierRop: payload.supplierRop } : {}),
+      ...(isNonNegative(payload.inProductionQty) ? { inProductionQty: payload.inProductionQty } : {}),
+      ...(isIsoDay(payload.productionCompletionDate) ? { productionCompletionDate: payload.productionCompletionDate } : {}),
+      // BR-08 — a PTI recording is ALWAYS "Entered by PTI", whatever the payload
+      // says; a supplier's own submission is the template or manual entry.
+      channel: scope.personaType === 'buyer' ? 'pti' : payload.channel === 'template' ? 'template' : 'manual',
       provenance: PROV_SUPPLIER_SUBMIT,
     };
     inventoryDeclarationStore.add(declaration);
@@ -1938,6 +1973,214 @@ bindPolicyHook(POLICY_HOOKS.INV_DECLARE_BATCH_TOTAL, ({ payload }) => {
         reason: `batch total ${sum} does not equal declared totalQty ${total} — a total that disagrees with its own detail is fabricated`,
       };
 });
+
+const isNonNegative = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v) && v >= 0;
+
+// REQ-E08-02 BR-06 — the optional detail of a stock submission is well formed.
+bindPolicyHook(POLICY_HOOKS.INV_DECLARE_DETAIL_VALID, ({ payload }) => {
+  for (const f of ['supplierRop', 'inProductionQty'] as const) {
+    if (payload[f] !== undefined && !isNonNegative(payload[f])) {
+      return { ok: false, reason: `${f} must be a number of zero or more` };
+    }
+  }
+  if (payload.productionCompletionDate !== undefined && !isIsoDay(payload.productionCompletionDate)) {
+    return { ok: false, reason: 'production completion date must be a date (YYYY-MM-DD)' };
+  }
+  if (payload.channel !== undefined && payload.channel !== 'template' && payload.channel !== 'manual') {
+    return { ok: false, reason: 'channel must be template or manual' };
+  }
+  return { ok: true };
+});
+
+// — Inventory & capacity collaboration (REQ-E08-02 to REQ-E08-05) ——————————————
+//   Four targets over the stores in `inventoryHubStores`, reading positions,
+//   capacity plans and alert conditions through ONE read model
+//   (`inventoryReadModel`) so a policy sees exactly what the pages show.
+
+/** REQ-E08-02 BR-03 — one API sync attempt per press, success or failure. */
+const stockSyncTarget: CommandTarget = {
+  readState: (id) => (stockSyncStore.get(id) ? 'Recorded' : null),
+  readScopeOwner: (id) => stockSyncStore.get(id)?.supplierId ?? null,
+  readEntity: (id) => stockSyncStore.get(id) ?? null,
+  applyTransition: () => {
+    /* no-op — an attempt is a snapshot */
+  },
+  requireCreationOwner: true,
+  creationOwner: (payload) => {
+    const sid = String(payload.supplierId);
+    return suppliersWithAssignments().some((s) => s.supplierId === sid) ? sid : null;
+  },
+  create: (payload) => {
+    const supplierId = String(payload.supplierId);
+    const now = sdcClock.now();
+    const connection = API_CONNECTIONS[supplierId];
+    const id = stockSyncStore.nextId();
+    if (connection && connection.outcome === 'success') {
+      // The supplier's system answered: its figures land as API submissions.
+      for (const f of connection.figures) {
+        inventoryDeclarationStore.add({
+          id: inventoryDeclarationStore.nextNumber(),
+          supplierId,
+          materialCode: f.materialCode,
+          declaredAt: now,
+          totalQty: f.soh,
+          uom: requireUom(f.materialCode),
+          ...(f.supplierRop !== undefined ? { supplierRop: f.supplierRop } : {}),
+          ...(f.inProductionQty !== undefined ? { inProductionQty: f.inProductionQty } : {}),
+          ...(f.completionInDays !== undefined ? { productionCompletionDate: addDays(dayOf(now), f.completionInDays) } : {}),
+          channel: 'api',
+          provenance: PROV_SUPPLIER_SUBMIT,
+        });
+      }
+      stockSyncStore.add({ id, supplierId, at: now, outcome: 'success' });
+    } else {
+      // Edge case: show the error and time, keep the previous figures (nothing
+      // is written to the stock store), and they read as stale from here on.
+      stockSyncStore.add({
+        id,
+        supplierId,
+        at: now,
+        outcome: 'failed',
+        errorKey: connection && connection.outcome === 'failed' ? connection.errorKey : 'timeout',
+      });
+    }
+    return { entityId: id };
+  },
+};
+
+bindPolicyHook(POLICY_HOOKS.STOCK_SYNC_CONNECTED, ({ payload }) =>
+  isApiConnected(String(payload.supplierId))
+    ? { ok: true }
+    : { ok: false, reason: 'NOT_API_CONNECTED: this supplier shares stock by template or manual entry, not by API' },
+);
+
+/** REQ-E08-03 — a supplier's access to PTI stock; `entityId` is the supplierId. */
+const stockAccessTarget: CommandTarget = {
+  readState: (id) => {
+    if (!suppliersWithAssignments().some((s) => s.supplierId === id)) return null;
+    return stockAccessStore.get(id)?.active ? 'Granted' : 'NoAccess';
+  },
+  readScopeOwner: (id) => (suppliersWithAssignments().some((s) => s.supplierId === id) ? id : null),
+  readEntity: (id) => stockAccessStore.get(id) ?? null,
+  applyTransition: (id, toState, payload, scope) => {
+    const at = sdcClock.now();
+    const previous: StockAccessGrant = stockAccessStore.get(id) ?? {
+      supplierId: id,
+      supplierName: supplierNameOf(id),
+      active: false,
+      materials: [],
+      log: [],
+    };
+    const materials =
+      toState === 'Granted' && Array.isArray(payload.materials) ? [...new Set(payload.materials.map(String))].sort() : [];
+    stockAccessStore.put({
+      ...previous,
+      active: toState === 'Granted',
+      materials,
+      // BR-06 — every change is logged with the acting user and the time.
+      log: [
+        ...previous.log,
+        {
+          action: toState !== 'Granted' ? 'remove' : previous.active ? 'change' : 'grant',
+          materials: toState === 'Granted' ? materials : previous.materials,
+          at,
+          actor: scope.actor ?? NO_PERSON,
+        },
+      ],
+    });
+  },
+};
+
+// REQ-E08-03 BR-03 / BR-04 — access names only materials the supplier supplies.
+bindPolicyHook(POLICY_HOOKS.STOCK_ACCESS_SCOPE_VALID, ({ entityId, payload }) => {
+  const supplier = suppliersWithAssignments().find((s) => s.supplierId === entityId);
+  if (!supplier) return { ok: false, reason: 'supplier not found in the inventory view' };
+  if (payload.materials !== undefined && !Array.isArray(payload.materials)) {
+    return { ok: false, reason: 'materials must be a list (empty for every material)' };
+  }
+  const named = Array.isArray(payload.materials) ? payload.materials.map(String) : [];
+  const stray = named.find((m) => !supplier.materials.includes(m));
+  if (stray) return { ok: false, reason: `NOT_SUPPLIED: ${stray} is not a material this supplier supplies` };
+  return { ok: true };
+});
+
+/** REQ-E08-04 — capacity per supplier × material group per week. */
+const capacityTarget: CommandTarget = {
+  readState: (id) => (capacityStore.get(id) ? 'Submitted' : null),
+  readScopeOwner: (id) => capacityStore.get(id)?.supplierId ?? null,
+  readEntity: (id) => capacityStore.get(id) ?? null,
+  applyTransition: () => {
+    /* no-op — a changed plan is a new submission */
+  },
+  requireCreationOwner: true,
+  creationOwner: (payload) => {
+    const sid = String(payload.supplierId);
+    return allCapacityPlans().some((p) => p.supplierId === sid && p.materialGroup === String(payload.materialGroup))
+      ? sid
+      : null;
+  },
+  create: (payload) => {
+    const weeks: CapacityWeekEntry[] = (payload.weeks as Record<string, unknown>[]).map((w) => ({
+      week: String(w.week),
+      allocated: Number(w.allocated),
+      ...(isNonNegative(w.upside) ? { upside: w.upside } : {}),
+      ...(isCapacityReason(w.reason) ? { reason: w.reason } : {}),
+      ...(nonBlank(w.note) ? { note: nonBlank(w.note) } : {}),
+    }));
+    const row: CapacitySubmission = {
+      id: capacityStore.nextId(),
+      supplierId: String(payload.supplierId),
+      materialGroup: String(payload.materialGroup),
+      submittedAt: sdcClock.now(),
+      weeks: weeks.sort((a, b) => a.week.localeCompare(b.week)),
+    };
+    capacityStore.add(row);
+    return { entityId: row.id };
+  },
+};
+
+// REQ-E08-04 AC-01 / AC-02 — every horizon week, and a reason below demand.
+bindPolicyHook(POLICY_HOOKS.CAPACITY_SUBMISSION_VALID, ({ payload }) => {
+  const plan = allCapacityPlans().find(
+    (p) => p.supplierId === String(payload.supplierId) && p.materialGroup === String(payload.materialGroup),
+  );
+  if (!plan) return { ok: false, reason: 'no materials of this group are assigned to the supplier' };
+  if (!Array.isArray(payload.weeks)) return { ok: false, reason: 'weeks must be a list' };
+  const refusal = capacitySubmissionRefusal(
+    payload.weeks,
+    (week) => plan.weeks.find((w) => w.week === week)?.demand ?? 0,
+    plan.weeks.map((w) => w.week),
+  );
+  if (!refusal) return { ok: true };
+  const code =
+    refusal.refusal === 'reasonRequired'
+      ? 'BELOW_DEMAND_NEEDS_REASON'
+      : refusal.refusal === 'noteRequired'
+        ? 'OTHER_REASON_NEEDS_NOTE'
+        : refusal.refusal.toUpperCase();
+  return { ok: false, reason: `${code}: week ${refusal.week ?? ''}`.trim() };
+});
+
+/** REQ-E08-05 — an alert; `entityId` is its key (rule | subject | supplier). */
+const inventoryAlertTarget: CommandTarget = {
+  readState: (key) => {
+    if (!activeAlertConditions().some((c) => c.key === key)) return null;
+    return standingClosure(key, inventoryAlertLedger.all()) ? 'Closed' : 'Open';
+  },
+  readScopeOwner: (key) => parseAlertKey(key)?.supplierId ?? null,
+  readEntity: (key) => allAlerts().find((a) => a.key === key) ?? null,
+  applyTransition: (key, _toState, payload, scope) => {
+    inventoryAlertLedger.append([
+      { key, kind: 'closed', at: sdcClock.now(), note: nonBlank(payload.actionNote) ?? '', actor: scope.actor ?? NO_PERSON },
+    ]);
+  },
+};
+
+bindPolicyHook(POLICY_HOOKS.ALERT_ACTION_NOTE_AUTHORED, ({ payload }) =>
+  nonBlank(payload.actionNote)
+    ? { ok: true }
+    : { ok: false, reason: 'closing an alert needs an action note' },
+);
 
 const incomingShipmentTarget: CommandTarget = {
   readState: (id) => incomingShipmentStore.get(id)?.lifecycle ?? null,
@@ -2531,6 +2774,11 @@ const TARGETS: Record<string, CommandTarget> = {
   receiptDiscrepancy: receiptDiscrepancyTarget,
   // REQ-E09-03 — call-offs under an umbrella PO; the hub is their record.
   callOff: callOffTarget,
+  // REQ-E08-02 to REQ-E08-05 — inventory & capacity collaboration.
+  stockSync: stockSyncTarget,
+  stockAccess: stockAccessTarget,
+  capacitySubmission: capacityTarget,
+  inventoryAlert: inventoryAlertTarget,
 };
 
 // The behavior-wiring census (was the contract package's "6"; 7 with the G1.1
@@ -2804,7 +3052,11 @@ export class MockCommandService implements ICommandService {
     // so every event this dispatch emits groups to the first command's
     // correlationId (DR-10). The dispatcher has always accepted this third arg
     // (cascades use it); this exposes it on the public seam.
-    return dispatcher.dispatch(scope, input, causationId);
+    const result = await dispatcher.dispatch(scope, input, causationId);
+    // REQ-E08-05 BR-05 — only a command changes the figures an alert reads, so
+    // after one lands, record which closed alerts' conditions have cleared.
+    if (result.status !== 'failed') observeAlertConditions();
+    return result;
   }
 
   // ── THE TWO UNDERSCORES ARE GONE, AND THEY WERE THE HONEST MARKER OF THE

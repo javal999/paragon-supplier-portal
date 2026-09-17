@@ -10,72 +10,57 @@ import TableHeader, { TableHeaderCell } from '../../components/ui-v2/TableHeader
 import TableRow from '../../components/ui-v2/TableRow';
 import TableCell from '../../components/ui-v2/TableCell';
 import Data from '../../components/ui-v2/Data';
-import StatusPill from '../../components/ui-v2/StatusPill';
-import { statusTone } from '../../lib/statusTone';
 import { useInventory } from '../../services/query/hooks';
-import { StockStatus } from '../../types/supplier.types';
-import type { InventoryRecord } from '../../types/supplier.types';
+import { positionBand } from '../../services/transitions/inventoryRules';
+import { SupplyPill, qty } from '../inventory/inventoryDisplay';
 
-// Capability "inventory": SDC-3b repointed it at the wired InventoryDeclaration
-// target (gate-1 LIVE), but it stays harvest-gated on a live supplier feed
-// (gate-2) → the LivenessRegistry keeps isLive() false → still an amber pill,
-// now reading the specific "Sample — awaiting live supplier feed" waiting-state.
-// The urgency flag is still honestly derived from the fixture's real stockStatus.
-const isLow = (r: InventoryRecord): boolean =>
-  r.stockStatus === StockStatus.CRITICAL || r.stockStatus === StockStatus.LOW;
-
+// Capability "inventory": backed by the wired InventoryDeclaration target
+// (gate-1 LIVE) and still harvest-gated on a live supplier feed (gate-2), so the
+// shell keeps the amber "Sample data" pill. INVENTORY-REFERENT-01 is closed: the
+// widget now reads the same inventory model the capability is backed to, and
+// "low" is the ONE band function (CR-02) — Critical or Warning days of supply —
+// not the retired <7 / 7–13 stock status.
 const BuyerInventoryWidget: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const query = useInventory();
 
   const low = useMemo(
-    () => (query.data?.items ?? []).filter(isLow),
+    () =>
+      (query.data?.items ?? []).filter((p) => {
+        const band = positionBand(p);
+        return band === 'critical' || band === 'warning';
+      }),
     [query.data],
   );
   const count = low.length;
-  const critical = useMemo(
-    () => low.filter((r) => r.stockStatus === StockStatus.CRITICAL).length,
-    [low],
-  );
-  const severity: FlagSeverity =
-    critical > 0 ? 'critical' : count > 0 ? 'warning' : 'none';
+  const critical = low.filter((p) => positionBand(p) === 'critical').length;
+  const severity: FlagSeverity = critical > 0 ? 'critical' : count > 0 ? 'warning' : 'none';
 
   const expandedRows =
     count === 0 ? (
-      <div className="text-sm text-text-tertiary">No low or blocked stock.</div>
+      <div className="text-sm text-text-tertiary">{t('widget.inventory.none')}</div>
     ) : (
       <Table>
         <TableHeader>
-          <TableHeaderCell>Material</TableHeaderCell>
-          <TableHeaderCell>Description</TableHeaderCell>
-          <TableHeaderCell className="text-right">On hand</TableHeaderCell>
-          <TableHeaderCell className="text-right">Days supply</TableHeaderCell>
-          <TableHeaderCell>Status</TableHeaderCell>
+          <TableHeaderCell>{t('widget.inventory.col.material')}</TableHeaderCell>
+          <TableHeaderCell>{t('widget.inventory.col.supplier')}</TableHeaderCell>
+          <TableHeaderCell className="text-right">{t('widget.inventory.col.onHand')}</TableHeaderCell>
+          <TableHeaderCell>{t('widget.inventory.col.daysOfSupply')}</TableHeaderCell>
         </TableHeader>
         <tbody>
-          {low.map((r) => (
-            <TableRow key={r.id}>
+          {low.map((p) => (
+            <TableRow key={`${p.supplierId}-${p.materialCode}`}>
               <TableCell>
-                <Data className="text-xs font-bold text-text-primary">
-                  {r.materialCode}
-                </Data>
+                <Data className="text-xs font-bold text-text-primary">{p.materialCode}</Data>
+                <div className="text-text-secondary">{p.materialLabel}</div>
               </TableCell>
-              <TableCell className="text-text-secondary">
-                {r.materialDescription}
-              </TableCell>
+              <TableCell className="text-text-secondary">{p.supplierName}</TableCell>
               <TableCell className="text-right text-text-secondary">
-                <Data>
-                  {r.qtyOnHand} {r.uom}
-                </Data>
-              </TableCell>
-              <TableCell className="text-right text-text-secondary">
-                <Data>{r.daysOfSupply}d</Data>
+                <Data>{p.supplierSoh === null ? '—' : `${qty(p.supplierSoh)} ${p.uom}`}</Data>
               </TableCell>
               <TableCell>
-                <StatusPill variant={statusTone(r.stockStatus)}>
-                  {r.stockStatus}
-                </StatusPill>
+                <SupplyPill position={p} />
               </TableCell>
             </TableRow>
           ))}

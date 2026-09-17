@@ -130,6 +130,20 @@ export const POLICY_HOOKS = {
   /** ASN create (REQ-E09-03 BR-06): an ASN naming a call-off needs that call-off
    *  to be on the same PO and confirmed. A PO-level ASN is unaffected. */
   ASN_CALLOFF_CONFIRMED: 'asn_calloff_confirmed',
+  /** Stock submission detail (REQ-E08-02 BR-06): supplier ROP and in-production
+   *  quantity are non-negative numbers, the completion date is a date, and the
+   *  channel is template or manual (API and PTI channels are set by the target). */
+  INV_DECLARE_DETAIL_VALID: 'inv_declare_detail_valid',
+  /** Supplier access grant (REQ-E08-03): the supplier is in the inventory model
+   *  and every named material is one it supplies. */
+  STOCK_ACCESS_SCOPE_VALID: 'stock_access_scope_valid',
+  /** API sync (REQ-E08-02 BR-03): the supplier is API-connected. */
+  STOCK_SYNC_CONNECTED: 'stock_sync_connected',
+  /** Capacity submission (REQ-E08-04): weeks inside the 13-week horizon, valid
+   *  quantities, and a starter reason for every week below demand. */
+  CAPACITY_SUBMISSION_VALID: 'capacity_submission_valid',
+  /** Closing an alert (REQ-E08-05): the action note is substance. */
+  ALERT_ACTION_NOTE_AUTHORED: 'alert_action_note_authored',
   /** Invoice match: the match sub-flow must have rolled up to a clean Matched
    *  before the header can advance Submitted → Matched (census G2). */
   INVOICE_ROLLUP_MATCHED: 'invoice_rollup_matched',

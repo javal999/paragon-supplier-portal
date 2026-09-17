@@ -94,6 +94,8 @@ import { supplierDocumentStore } from '../data/mock/stores/supplierDocumentStore
 import { supplierApplicationStore } from '../data/mock/stores/supplierApplicationStore';
 import { receiptDiscrepancyStore } from '../data/mock/stores/receiptDiscrepancyStore';
 import { callOffStore } from '../data/mock/stores/callOffStore';
+import { capacityStore, stockSyncStore } from '../data/mock/stores/inventoryHubStores';
+import { activeAlertConditions } from '../data/mock/inventoryReadModel';
 import { customRoleStore } from './customRoles';
 
 const svc = new MockCommandService();
@@ -178,6 +180,13 @@ async function realIds(): Promise<Record<string, string | null>> {
     receiptDiscrepancy: receiptDiscrepancyStore.all()[0]?.receiptId ?? null,
     // REQ-E09-03 — the call-off store is seeded, so its first row is a real id.
     callOff: callOffStore.all()[0]?.id ?? null,
+    // REQ-E08-02 to 05 — the sync and capacity stores are seeded; supplier
+    // access is keyed by a supplier in the inventory view; an alert by the key
+    // of a condition active in the sample data.
+    stockSync: stockSyncStore.all()[0]?.id ?? null,
+    stockAccess: 'sup-007',
+    capacitySubmission: capacityStore.all()[0]?.id ?? null,
+    inventoryAlert: activeAlertConditions()[0]?.key ?? null,
   };
 }
 
@@ -325,8 +334,10 @@ describe('POPULATION — nothing below means anything without this', () => {
       [...WIRED_COMMAND_TARGETS].sort(),
     );
     // `inventoryDeclaration` declares no non-creation transition, so it has no
-    // verb this leak could ride. Stated rather than silently absent.
-    expect(unprobeable).toEqual(['inventoryDeclaration']);
+    // verb this leak could ride. Stated rather than silently absent. The API
+    // sync attempt and the capacity submission (REQ-E08-02 / 04) are the same
+    // creation-only snapshot shape.
+    expect(unprobeable).toEqual(['inventoryDeclaration', 'stockSync', 'capacitySubmission']);
   });
 
   it('CONTROL — the walk lands every probe in one of its verb\'s from-states', async () => {

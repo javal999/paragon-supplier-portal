@@ -27,13 +27,6 @@ export enum ScorecardGrade {
   F = 'F',
 }
 
-export enum StockStatus {
-  CRITICAL = 'Critical',
-  LOW = 'Low',
-  NORMAL = 'Normal',
-  EXCESS = 'Excess',
-}
-
 // ─── Supplier interfaces ──────────────────────────────────────────────────────
 
 export interface Supplier {
@@ -85,23 +78,7 @@ export interface SupplierSummary {
   country: string;
 }
 
-// ─── Inventory interface ──────────────────────────────────────────────────────
-
-export interface InventoryRecord {
-  id: string;
-  supplierId: string;
-  supplierName: string;
-  materialCode: string;
-  materialDescription: string;
-  qtyOnHand: number;
-  qtyAvailable: number;
-  qtyReserved: number;
-  qtyInTransit: number;
-  uom: 'KG' | 'L' | 'PCS' | 'MT';
-  daysOfSupply: number;
-  avgDailyDemand: number;
-  lastUpdated: string;
-  dataSource: 'API Push' | 'Manual' | 'EDI 846';
-  stockStatus: StockStatus;
-  location: string;
-}
+// ─── Inventory ────────────────────────────────────────────────────────────────
+// The static `InventoryRecord` (with its stored days of supply, stock status and
+// available / reserved quantities) is retired: inventory is ONE model projected
+// at read — `InventoryPosition` in `services/data/types.ts` (REQ-E08-01).

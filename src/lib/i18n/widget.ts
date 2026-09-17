@@ -66,6 +66,11 @@ export const widgetEn: Record<string, string> = {
   'widget.inventory.action': 'View inventory',
   'widget.inventory.flag.withCritical': '{{count}} low · {{critical}} critical',
   'widget.inventory.flag.plain': '{{count}} low',
+  'widget.inventory.none': 'No material is below 30 days of supply.',
+  'widget.inventory.col.material': 'Material',
+  'widget.inventory.col.supplier': 'Supplier',
+  'widget.inventory.col.onHand': 'Supplier stock',
+  'widget.inventory.col.daysOfSupply': 'Days of supply',
   // — Invoices / AP aging (Buyer) —
   'widget.invoiceAging.title': 'Invoices — AP aging',
   'widget.invoiceAging.action': 'Open AP queue',
@@ -156,6 +161,11 @@ export const widgetId: Record<string, string> = {
   'widget.inventory.action': 'Lihat inventaris',
   'widget.inventory.flag.withCritical': '{{count}} rendah · {{critical}} kritis',
   'widget.inventory.flag.plain': '{{count}} rendah',
+  'widget.inventory.none': 'Tidak ada material di bawah 30 hari persediaan.',
+  'widget.inventory.col.material': 'Material',
+  'widget.inventory.col.supplier': 'Pemasok',
+  'widget.inventory.col.onHand': 'Stok pemasok',
+  'widget.inventory.col.daysOfSupply': 'Hari persediaan',
   // — Invoices / AP aging (Buyer) —
   'widget.invoiceAging.title': 'Faktur — umur AP',
   'widget.invoiceAging.action': 'Buka antrean AP',

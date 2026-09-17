@@ -183,7 +183,9 @@ describe('Order summary pages (REQ-E07-03)', () => {
     const row = await screen.findByTestId('order-summary-row-po-007');
     expect(row).toHaveTextContent('PO-2025-00107');
     expect(row).toHaveTextContent('PT Sample Packaging Indonesia');
-    expect(within(row).getByTestId('order-summary-capacity')).toHaveTextContent('Not started');
+    // REQ-E08-04 — capacity is wired: sup-007's rigid plastic packaging
+    // submission has a week below demand, so po-007 reads Gap (was Not started).
+    expect(within(row).getByTestId('order-summary-capacity')).toHaveTextContent('Gap');
     expect(within(row).getByTestId('order-summary-shipping-po-007')).toHaveTextContent('Missing');
     expect(within(row).getByRole('link', { name: 'PO-2025-00107' })).toHaveAttribute(
       'href',

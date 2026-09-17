@@ -1,269 +1,173 @@
-import { InventoryRecord, StockStatus } from '../types/supplier.types';
+import type { StockChannel } from '../services/sdc/types';
 import { shiftFields } from '../services/data/fixturePresent';
 
-// daysOfSupply thresholds: Critical <7, Low 7–14, Normal 14–30, Excess >30
-function calcStockStatus(days: number): StockStatus {
-  if (days < 7) return StockStatus.CRITICAL;
-  if (days < 14) return StockStatus.LOW;
-  if (days <= 30) return StockStatus.NORMAL;
-  return StockStatus.EXCESS;
+// ─────────────────────────────────────────────────────────────────────────────
+// SUPPLIER STOCK SUBMISSIONS — the seed of the ONE inventory model (REQ-E08-01,
+// REQ-E08-02). INVENTORY-REFERENT-01 is closed: this list is no longer a second
+// inventory the pages read beside the InventoryDeclaration store. Each row is a
+// supplier's stock submission and is loaded INTO that store
+// (`inventoryDeclarationStore`), so the planner's page, the supplier's page,
+// the alerts and the capacity view all read the same figures.
+//
+// What left this file, and why:
+//   · `qtyAvailable` / `qtyReserved` — REQ-E08-01 BR-01 / AC-02: no "available"
+//     figure anywhere.
+//   · `daysOfSupply` / `avgDailyDemand` / `stockStatus` — days of supply is
+//     CR-01 (SOH ÷ forecast demand), derived at read; the stored number and its
+//     <7/7–13/14–30 status contradicted CR-02. The planning estimate that stood
+//     in for demand moved to the PTI planning fixture (`inventoryHub.ts`).
+//   · `qtyInTransit` — in transit is the submitted ASNs and call-off dispatch
+//     notices (BR-06), not a supplier-typed number.
+//   · `supplierName` / `materialDescription` / `location` — names come from the
+//     supplier list and the material master, never a copy.
+//   · `dataSource` — became `channel` (template, manual, API, PTI on behalf).
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface SupplierStockSeed {
+  id: string;
+  supplierId: string;
+  materialCode: string;
+  qtyOnHand: number;
+  lastUpdated: string;
+  channel: StockChannel;
+  supplierRop?: number;
+  inProductionQty?: number;
+  productionCompletionDate?: string;
 }
 
-const items: Omit<InventoryRecord, 'stockStatus'>[] = [
+const items: SupplierStockSeed[] = [
   {
-    id: 'inv-001',
+    id: 'inv-0101',
     supplierId: 'sup-001',
-    supplierName: 'PT Sample Oleochemicals',
     materialCode: 'RM-COCO-8200',
-    materialDescription: 'Coconut Fatty Acid Distillate (CFAD)',
     qtyOnHand: 18000,
-    qtyAvailable: 14500,
-    qtyReserved: 3500,
-    qtyInTransit: 25000,
-    uom: 'KG',
-    daysOfSupply: 29,
-    avgDailyDemand: 621,
     lastUpdated: '2025-04-06',
-    dataSource: 'API Push',
-    location: 'Batam, Indonesia',
+    channel: 'api',
+    supplierRop: 15000,
+    inProductionQty: 20000,
+    productionCompletionDate: '2025-04-10',
   },
   {
-    id: 'inv-002',
+    id: 'inv-0102',
     supplierId: 'sup-001',
-    supplierName: 'PT Sample Oleochemicals',
     materialCode: 'RM-LAURIC-7200',
-    materialDescription: 'Lauric Acid 99% — Halal Certified',
     qtyOnHand: 8500,
-    qtyAvailable: 6000,
-    qtyReserved: 2500,
-    qtyInTransit: 0,
-    uom: 'KG',
-    daysOfSupply: 14,
-    avgDailyDemand: 607,
     lastUpdated: '2025-04-05',
-    dataSource: 'API Push',
-    location: 'Batam, Indonesia',
+    channel: 'api',
+    supplierRop: 6000,
   },
   {
-    id: 'inv-003',
+    id: 'inv-0103',
     supplierId: 'sup-002',
-    supplierName: 'PT Sample Specialty Fats',
     materialCode: 'RM-EMUL-9410',
-    materialDescription: 'Glyceryl Stearate SE (Halal Emulsifier)',
     qtyOnHand: 3200,
-    qtyAvailable: 2800,
-    qtyReserved: 400,
-    qtyInTransit: 8000,
-    uom: 'KG',
-    daysOfSupply: 22,
-    avgDailyDemand: 145,
     lastUpdated: '2025-04-06',
-    dataSource: 'Manual',
-    location: 'Medan, Indonesia',
+    channel: 'manual',
+    supplierRop: 2000,
   },
   {
-    id: 'inv-004',
+    id: 'inv-0104',
     supplierId: 'sup-002',
-    supplierName: 'PT Sample Specialty Fats',
     materialCode: 'RM-STEAR-7300',
-    materialDescription: 'Stearic Acid — Double Pressed (Halal)',
     qtyOnHand: 4200,
-    qtyAvailable: 3700,
-    qtyReserved: 500,
-    qtyInTransit: 10000,
-    uom: 'KG',
-    daysOfSupply: 10,
-    avgDailyDemand: 420,
     lastUpdated: '2025-04-04',
-    dataSource: 'Manual',
-    location: 'Medan, Indonesia',
+    channel: 'manual',
+    supplierRop: 5000,
+    inProductionQty: 6000,
+    productionCompletionDate: '2025-04-12',
   },
   {
-    id: 'inv-005',
+    id: 'inv-0105',
     supplierId: 'sup-003',
-    supplierName: 'Sample Fragrance House Indonesia',
     materialCode: 'FR-WARD-4410',
-    materialDescription: 'Wardah Signature Floral Compound',
     qtyOnHand: 120,
-    qtyAvailable: 90,
-    qtyReserved: 30,
-    qtyInTransit: 350,
-    uom: 'KG',
-    daysOfSupply: 5,
-    avgDailyDemand: 24,
     lastUpdated: '2025-04-06',
-    dataSource: 'API Push',
-    location: 'Jakarta, Indonesia',
+    channel: 'api',
   },
   {
-    id: 'inv-006',
+    id: 'inv-0106',
     supplierId: 'sup-003',
-    supplierName: 'Sample Fragrance House Indonesia',
     materialCode: 'FR-EMIN-4420',
-    materialDescription: 'Emina Fresh Citrus Accord',
     qtyOnHand: 210,
-    qtyAvailable: 180,
-    qtyReserved: 30,
-    qtyInTransit: 0,
-    uom: 'KG',
-    daysOfSupply: 3,
-    avgDailyDemand: 70,
     lastUpdated: '2025-04-06',
-    dataSource: 'API Push',
-    location: 'Jakarta, Indonesia',
+    channel: 'api',
   },
   {
-    id: 'inv-007',
+    id: 'inv-0107',
     supplierId: 'sup-005',
-    supplierName: 'Sample Personal Care Emulsifiers GmbH',
     materialCode: 'AI-NIAC-6601',
-    materialDescription: 'Niacinamide USP Grade 99.5% (Vitamin B3)',
     qtyOnHand: 3800,
-    qtyAvailable: 3200,
-    qtyReserved: 600,
-    qtyInTransit: 5000,
-    uom: 'KG',
-    daysOfSupply: 19,
-    avgDailyDemand: 200,
     lastUpdated: '2025-04-05',
-    dataSource: 'EDI 846',
-    location: 'Frankfurt, Germany',
+    channel: 'template',
   },
   {
-    id: 'inv-008',
+    id: 'inv-0108',
     supplierId: 'sup-005',
-    supplierName: 'Sample Personal Care Emulsifiers GmbH',
     materialCode: 'AI-HYALU-6610',
-    materialDescription: 'Sodium Hyaluronate (High MW, 1.5-2.0 MDa)',
     qtyOnHand: 95,
-    qtyAvailable: 80,
-    qtyReserved: 15,
-    qtyInTransit: 300,
-    uom: 'KG',
-    daysOfSupply: 8,
-    avgDailyDemand: 12,
     lastUpdated: '2025-04-05',
-    dataSource: 'EDI 846',
-    location: 'Frankfurt, Germany',
+    channel: 'template',
   },
   {
-    id: 'inv-009',
+    id: 'inv-0109',
     supplierId: 'sup-006',
-    supplierName: 'Sample Specialty Chemicals France',
     materialCode: 'AI-VITC-6720',
-    materialDescription: 'Ascorbyl Glucoside (Vitamin C Derivative)',
     qtyOnHand: 180,
-    qtyAvailable: 160,
-    qtyReserved: 20,
-    qtyInTransit: 500,
-    uom: 'KG',
-    daysOfSupply: 12,
-    avgDailyDemand: 15,
     lastUpdated: '2025-04-03',
-    dataSource: 'Manual',
-    location: 'Paris, France',
+    channel: 'manual',
   },
   {
-    id: 'inv-010',
+    id: 'inv-0110',
     supplierId: 'sup-007',
-    supplierName: 'PT Sample Packaging Indonesia',
     materialCode: 'PK-PETB-8801',
-    materialDescription: 'PET Bottle 200ml Frosted — Wardah Series',
     qtyOnHand: 85000,
-    qtyAvailable: 72000,
-    qtyReserved: 13000,
-    qtyInTransit: 150000,
-    uom: 'PCS',
-    daysOfSupply: 17,
-    avgDailyDemand: 5000,
     lastUpdated: '2025-04-06',
-    dataSource: 'Manual',
-    location: 'Tangerang, Indonesia',
+    channel: 'template',
+    supplierRop: 60000,
+    inProductionQty: 60000,
+    productionCompletionDate: '2025-04-16',
   },
   {
-    id: 'inv-011',
+    id: 'inv-0111',
     supplierId: 'sup-007',
-    supplierName: 'PT Sample Packaging Indonesia',
     materialCode: 'PK-PETB-8802',
-    materialDescription: 'PET Bottle 100ml Clear — Emina Series',
     qtyOnHand: 22000,
-    qtyAvailable: 18000,
-    qtyReserved: 4000,
-    qtyInTransit: 150000,
-    uom: 'PCS',
-    daysOfSupply: 4,
-    avgDailyDemand: 5500,
     lastUpdated: '2025-04-05',
-    dataSource: 'Manual',
-    location: 'Tangerang, Indonesia',
+    channel: 'template',
+    supplierRop: 30000,
   },
   {
-    id: 'inv-012',
+    id: 'inv-0112',
     supplierId: 'sup-008',
-    supplierName: 'PT Sample Carton Packaging',
     materialCode: 'PK-CART-9901',
-    materialDescription: 'Mono-Carton Box 70x40x180mm — Wardah Moisturizing Lotion',
     qtyOnHand: 620000,
-    qtyAvailable: 580000,
-    qtyReserved: 40000,
-    qtyInTransit: 0,
-    uom: 'PCS',
-    daysOfSupply: 45,
-    avgDailyDemand: 13778,
     lastUpdated: '2025-04-04',
-    dataSource: 'Manual',
-    location: 'Surabaya, Indonesia',
+    channel: 'manual',
   },
   {
-    id: 'inv-013',
+    id: 'inv-0113',
     supplierId: 'sup-009',
-    supplierName: 'Sample Vitamins Co.',
     materialCode: 'AI-VITC-6730',
-    materialDescription: 'L-Ascorbic Acid Powder 99% — Cosmetic Grade',
     qtyOnHand: 750,
-    qtyAvailable: 650,
-    qtyReserved: 100,
-    qtyInTransit: 2000,
-    uom: 'KG',
-    daysOfSupply: 25,
-    avgDailyDemand: 30,
     lastUpdated: '2025-04-02',
-    dataSource: 'EDI 846',
-    location: 'Hangzhou, China',
+    channel: 'template',
   },
   {
-    id: 'inv-014',
+    id: 'inv-0114',
     supplierId: 'sup-009',
-    supplierName: 'Sample Vitamins Co.',
     materialCode: 'AI-PANTO-6640',
-    materialDescription: 'D-Panthenol 75% (Provitamin B5)',
     qtyOnHand: 1100,
-    qtyAvailable: 1000,
-    qtyReserved: 100,
-    qtyInTransit: 0,
-    uom: 'KG',
-    daysOfSupply: 38,
-    avgDailyDemand: 29,
     lastUpdated: '2025-04-03',
-    dataSource: 'EDI 846',
-    location: 'Hangzhou, China',
+    channel: 'template',
   },
   {
-    id: 'inv-015',
+    // REQ-E08-02 BR-08 — the supplier replied by WhatsApp; a planner recorded it.
+    id: 'inv-0115',
     supplierId: 'sup-010',
-    supplierName: 'PT Sample Halal Emulsifiers',
     materialCode: 'RM-EMUL-9430',
-    materialDescription: 'Polysorbate 80 — Halal, Food & Cosmetic Grade',
     qtyOnHand: 420,
-    qtyAvailable: 400,
-    qtyReserved: 20,
-    qtyInTransit: 3000,
-    uom: 'KG',
-    daysOfSupply: 6,
-    avgDailyDemand: 70,
     lastUpdated: '2025-04-05',
-    dataSource: 'Manual',
-    location: 'Bogor, Indonesia',
+    channel: 'pti',
   },
 ];
 
@@ -276,13 +180,10 @@ const items: Omit<InventoryRecord, 'stockStatus'>[] = [
 // uniform "refresh everything to one date" would have left this set a year
 // adrift from the cluster instead of the four months it was; anchoring it on its
 // own declared date is what lets it land beside the others without inventing a
-// past it never had.
+// past it never had. The production completion dates ride the same anchor, so
+// they stay the same number of days after each submission.
 // ─────────────────────────────────────────────────────────────────────────────
-export const mockInventory: InventoryRecord[] = shiftFields(
-  items,
-  'inventory',
-  ['lastUpdated'],
-).map((item) => ({
-  ...item,
-  stockStatus: calcStockStatus(item.daysOfSupply),
-}));
+export const mockInventory: SupplierStockSeed[] = shiftFields(items, 'inventory', [
+  'lastUpdated',
+  'productionCompletionDate',
+]);

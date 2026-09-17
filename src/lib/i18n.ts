@@ -43,12 +43,10 @@ import { buyerSuppliersEn, buyerSuppliersId } from './i18n/buyerSuppliers';
 import { buyerSupplierProfileEn, buyerSupplierProfileId } from './i18n/buyerSupplierProfile';
 import { buyerAnalyticsEn, buyerAnalyticsId } from './i18n/buyerAnalytics';
 import { buyerScorecardEn, buyerScorecardId } from './i18n/buyerScorecard';
-import { buyerInventoryEn, buyerInventoryId } from './i18n/buyerInventory';
 import { marketplaceEn, marketplaceId } from './i18n/marketplace';
 import { buyerDashboardEn, buyerDashboardId } from './i18n/buyerDashboard';
 import { supplierMyStorefrontEn, supplierMyStorefrontId } from './i18n/supplierMyStorefront';
 import { supplierStorefrontEn, supplierStorefrontId } from './i18n/supplierStorefront';
-import { supplierInventoryEn, supplierInventoryId } from './i18n/supplierInventory';
 import { supplierPerformanceEn, supplierPerformanceId } from './i18n/supplierPerformance';
 // — Coverage sweep (sprint close) —
 import { buyerInvoicesEn, buyerInvoicesId } from './i18n/buyerInvoices';
@@ -85,6 +83,7 @@ import { hubEn, hubId } from './i18n/hub';
 import { orderCollaborationEn, orderCollaborationId } from './i18n/orderCollaboration';
 import { fulfilmentCollaborationEn, fulfilmentCollaborationId } from './i18n/fulfilmentCollaboration';
 import { callOffsEn, callOffsId } from './i18n/callOffs';
+import { inventoryCapacityEn, inventoryCapacityId } from './i18n/inventoryCapacity';
 // — The read path's failure surface, shared by 31 pages —
 import { errorStateEn, errorStateId } from './i18n/errorState';
 import { loadingStateEn, loadingStateId } from './i18n/loadingState';
@@ -136,12 +135,10 @@ export const resources = {
       ...buyerSupplierProfileEn,
       ...buyerAnalyticsEn,
       ...buyerScorecardEn,
-      ...buyerInventoryEn,
       ...marketplaceEn,
       ...buyerDashboardEn,
       ...supplierMyStorefrontEn,
       ...supplierStorefrontEn,
-      ...supplierInventoryEn,
       ...supplierPerformanceEn,
       // — Coverage sweep (sprint close) —
       ...buyerInvoicesEn,
@@ -166,6 +163,7 @@ export const resources = {
       ...orderCollaborationEn,
       ...fulfilmentCollaborationEn,
       ...callOffsEn,
+      ...inventoryCapacityEn,
       ...errorStateEn,
       ...loadingStateEn,
       ...emptyStateEn,
@@ -573,12 +571,10 @@ export const resources = {
       ...buyerSupplierProfileId,
       ...buyerAnalyticsId,
       ...buyerScorecardId,
-      ...buyerInventoryId,
       ...marketplaceId,
       ...buyerDashboardId,
       ...supplierMyStorefrontId,
       ...supplierStorefrontId,
-      ...supplierInventoryId,
       ...supplierPerformanceId,
       // — Coverage sweep (sprint close) —
       ...buyerInvoicesId,
@@ -603,6 +599,7 @@ export const resources = {
       ...orderCollaborationId,
       ...fulfilmentCollaborationId,
       ...callOffsId,
+      ...inventoryCapacityId,
       ...errorStateId,
       ...loadingStateId,
       ...emptyStateId,

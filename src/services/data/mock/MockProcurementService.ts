@@ -1,7 +1,16 @@
 import { callOffStore } from './stores/callOffStore';
 import type { CallOff } from '../types';
 import { purchaseOrderStore } from './stores/purchaseOrderStore';
-import { mockInventory } from '../../../data/mockInventory';
+import {
+  allAlerts,
+  allCapacityPlans,
+  allPositions,
+  grantFor,
+  suppliersWithAssignments,
+} from './inventoryReadModel';
+import { stockAccessStore } from './stores/inventoryHubStores';
+import { maskForSupplier } from '../../transitions/inventoryRules';
+import { PTI_ONLY_RULES } from '../../transitions/inventoryAlertRules';
 import { mockShipments } from '../../../data/mockShipments';
 import { mockContracts } from '../../../data/mockContracts';
 import { mockObligations } from '../../../data/mockObligations';
@@ -37,7 +46,10 @@ import type {
   QueryScope,
   PurchaseOrder,
   POFilter,
-  InventoryRecord,
+  InventoryPosition,
+  StockAccessGrant,
+  CapacityPlan,
+  InventoryAlert,
   InventoryFilter,
   Shipment,
   ShipmentFilter,
@@ -254,15 +266,50 @@ export class MockProcurementService implements IProcurementService {
   async getInventory(
     scope: QueryScope,
     filter?: InventoryFilter,
-  ): Promise<Page<InventoryRecord>> {
-    let rows = applySupplierScope(scope, mockInventory);
-    if (filter?.supplierId)
-      rows = rows.filter((r) => r.supplierId === filter.supplierId);
-    if (filter?.materialCode)
-      rows = rows.filter((r) => r.materialCode === filter.materialCode);
-    if (filter?.stockStatus)
-      rows = rows.filter((r) => matchesList(r.stockStatus, filter.stockStatus));
+  ): Promise<Page<InventoryPosition>> {
+    // REQ-E08-01 — ONE inventory model, projected at read from the stock
+    // submissions, PTI's SAP stock, in-transit ASNs and dispatch notices, and
+    // the forecast. A supplier sees its own rows, and PTI stock only for the
+    // materials its access covers (REQ-E08-03 AC-01) — read from the access
+    // store on EVERY read, so a removal applies on the next page load.
+    let rows = applySupplierScope(scope, allPositions());
+    if (scope.personaType === 'supplier') {
+      const grant = scope.supplierId ? grantFor(scope.supplierId) : undefined;
+      rows = rows.map((p) => maskForSupplier(p, grant));
+    }
+    if (filter?.supplierId) rows = rows.filter((r) => r.supplierId === filter.supplierId);
+    if (filter?.materialCode) rows = rows.filter((r) => r.materialCode === filter.materialCode);
     return { items: rows };
+  }
+
+  async getStockAccess(scope: QueryScope): Promise<Page<StockAccessGrant>> {
+    // REQ-E08-03 — PTI sees every supplier in the inventory model (an inactive
+    // row where nothing was ever granted); a supplier sees only its own grant.
+    const rows: StockAccessGrant[] = suppliersWithAssignments().map(
+      (s) =>
+        stockAccessStore.get(s.supplierId) ?? {
+          supplierId: s.supplierId,
+          supplierName: s.supplierName,
+          active: false,
+          materials: [],
+          log: [],
+        },
+    );
+    return { items: applySupplierScope(scope, rows) };
+  }
+
+  async getCapacityPlans(scope: QueryScope): Promise<Page<CapacityPlan>> {
+    // REQ-E08-04 — capacity against demand per supplier × material group.
+    return { items: applySupplierScope(scope, allCapacityPlans()) };
+  }
+
+  async getInventoryAlerts(scope: QueryScope): Promise<Page<InventoryAlert>> {
+    // REQ-E08-05 — a supplier sees alerts about its own materials, never the
+    // rules that read PTI stock.
+    const rows = applySupplierScope(scope, allAlerts());
+    return {
+      items: scope.personaType === 'supplier' ? rows.filter((a) => !PTI_ONLY_RULES.includes(a.rule)) : rows,
+    };
   }
 
   // ─── Sourcing ─────────────────────────────────────────────────────────────

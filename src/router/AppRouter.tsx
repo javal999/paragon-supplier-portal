@@ -23,6 +23,9 @@ import BuyerDeliveryAgreements from '../pages-v2/BuyerDeliveryAgreements';
 import BuyerCallOffs from '../pages-v2/BuyerCallOffs';
 import BuyerChase from '../pages-v2/BuyerChase';
 import BuyerInventory from '../pages-v2/BuyerInventory';
+import BuyerCapacity from '../pages-v2/BuyerCapacity';
+import BuyerAlerts from '../pages-v2/BuyerAlerts';
+import BuyerSupplierAccess from '../pages-v2/BuyerSupplierAccess';
 import BuyerShipments from '../pages-v2/BuyerShipments';
 import BuyerGoodsReceipt from '../pages-v2/BuyerGoodsReceipt';
 import BuyerDiscovery from '../pages-v2/BuyerDiscovery';
@@ -56,6 +59,7 @@ import SupplierInventoryV2 from '../pages-v2/SupplierInventory';
 import SupplierRegistrationV2 from '../pages-v2/SupplierRegistration';
 import SupplierDeliveryAgreements from '../pages-v2/SupplierDeliveryAgreements';
 import SupplierCallOffs from '../pages-v2/SupplierCallOffs';
+import SupplierCapacity from '../pages-v2/SupplierCapacity';
 import SupplierPerformance from '../pages-v2/SupplierPerformance';
 import NotFound from '../pages-v2/NotFound';
 
@@ -118,6 +122,9 @@ const AppRouter: React.FC = () => {
           <Route path="/buyer/call-offs" element={<BuyerCallOffs />} />
           <Route path="/buyer/chase" element={<BuyerChase />} />
           <Route path="/buyer/inventory" element={<BuyerInventory />} />
+          <Route path="/buyer/capacity" element={<BuyerCapacity />} />
+          <Route path="/buyer/alerts" element={<BuyerAlerts />} />
+          <Route path="/buyer/supplier-access" element={<BuyerSupplierAccess />} />
           <Route path="/buyer/shipments" element={<BuyerShipments />} />
           <Route path="/buyer/goods-receipt" element={<BuyerGoodsReceipt />} />
           <Route path="/buyer/discovery" element={<BuyerDiscovery />} />
@@ -163,6 +170,7 @@ const AppRouter: React.FC = () => {
           <Route path="/supplier/inventory" element={<SupplierInventoryV2 />} />
           <Route path="/supplier/delivery-agreements" element={<SupplierDeliveryAgreements />} />
           <Route path="/supplier/call-offs" element={<SupplierCallOffs />} />
+          <Route path="/supplier/capacity" element={<SupplierCapacity />} />
           <Route path="/supplier/performance" element={<SupplierPerformance />} />
           <Route path="/" element={<Navigate to="/buyer/home" replace />} />
           <Route path="*" element={<NotFound />} />

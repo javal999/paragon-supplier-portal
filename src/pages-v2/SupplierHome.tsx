@@ -7,7 +7,10 @@ import NoSupplierIdentity from '../components/ui-v2/NoSupplierIdentity';
 import { useCurrentIdentity } from '../context/CurrentIdentityContext';
 import {
   useASNs,
+  useCapacityPlans,
   useDocuments,
+  useInventory,
+  useInventoryAlerts,
   useGoodsReceipts,
   usePurchaseOrders,
   useRFQs,
@@ -20,6 +23,10 @@ import TaskList, { type HomeTask } from './home/TaskList';
 import { awaitsSupplierAnswer } from '../services/transitions/fulfilmentRules';
 import { isDueWithoutHeadsUp } from '../services/transitions/callOffRules';
 import { useCallOffViews } from './callOffs/callOffDisplay';
+import { planStatus } from '../services/transitions/capacityRules';
+import { stockFreshness } from '../services/transitions/inventoryRules';
+import Data from '../components/ui-v2/Data';
+import { RiskPill, inventoryNow } from './inventory/inventoryDisplay';
 
 // Supplier Home — "To do" (REQUIREMENTS §3.8 SC-01): what Paragon is waiting for
 // from this supplier. Filters match the supplier dashboard widgets they replace.
@@ -36,6 +43,11 @@ const SupplierHome: React.FC = () => {
   const asns = useASNs();
   // REQ-E09-03 / REQ-E09-04 — the supplier's own call-offs (the read is scoped).
   const callOffs = useCallOffViews();
+  // REQ-E08-01 / 04 / 05 — the supplier's stock freshness, capacity and alerts.
+  const stock = useInventory();
+  const capacity = useCapacityPlans();
+  const alerts = useInventoryAlerts();
+  const openAlerts = (alerts.data?.items ?? []).filter((a) => a.status === 'open');
 
   const tasks = useMemo<HomeTask[]>(() => {
     const poItems = pos.data?.items ?? [];
@@ -84,6 +96,22 @@ const SupplierHome: React.FC = () => {
         count: callOffs.views.filter((v) => isDueWithoutHeadsUp(v, callOffs.nowIso)).length,
         severity: 'warning',
         to: '/supplier/call-offs',
+      },
+      {
+        // REQ-E08-01 AC-05 — figures past their data-update SLA, or never sent.
+        id: 'stale-stock',
+        label: t('hub.home.task.sup.staleStock'),
+        count: (stock.data?.items ?? []).filter((p) => stockFreshness(p, inventoryNow()) !== 'current').length,
+        severity: 'warning',
+        to: '/supplier/inventory',
+      },
+      {
+        // REQ-E08-04 — a material group with no current capacity confirmation.
+        id: 'capacity-due',
+        label: t('hub.home.task.sup.capacityDue'),
+        count: (capacity.data?.items ?? []).filter((p) => planStatus(p) === 'notStarted' || planStatus(p) === 'outdated').length,
+        severity: 'warning',
+        to: '/supplier/capacity',
       },
       {
         // REQ-E07-05 — a confirmed order still owes its expected completion date.
@@ -141,7 +169,7 @@ const SupplierHome: React.FC = () => {
         to: '/supplier/invoices',
       },
     ];
-  }, [pos.data, rfqs.data, invoices.data, documents.data, receipts.data, asns.data, callOffs.views, callOffs.nowIso, supplierId, t]);
+  }, [pos.data, rfqs.data, invoices.data, documents.data, receipts.data, asns.data, callOffs.views, callOffs.nowIso, stock.data, capacity.data, supplierId, t]);
 
   if (!supplierId) return <NoSupplierIdentity />;
 
@@ -156,6 +184,22 @@ const SupplierHome: React.FC = () => {
         <SampleDataBadge />
       </div>
       <TaskList tasks={tasks} />
+      {openAlerts.length > 0 && (
+        <section className="mt-6" data-testid="supplier-home-alerts">
+          <h2 className="text-section text-text-primary mb-2">{t('inv.alerts.sup.title')}</h2>
+          <ul className="bg-bg-surface border border-border-subtle rounded-lg divide-y divide-border-subtle">
+            {openAlerts.map((a) => (
+              <li key={a.key} className="px-4 py-3 flex flex-wrap items-center gap-3">
+                <RiskPill riskClass={a.riskClass} />
+                <span className="text-sm text-text-primary">{t(`inv.alerts.sup.rule.${a.rule}`)}</span>
+                <span className="text-xs text-text-secondary">
+                  {a.rule === 'capacityBelowDemand' ? t(`inv.group.${a.subject}`) : <Data>{a.subject}</Data>}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </AppShellV2>
   );
 };

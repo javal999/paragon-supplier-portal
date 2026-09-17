@@ -220,4 +220,27 @@ export const LOOSE_END_CENSUS: readonly CensusEntry[] = Object.freeze([
       'as a born entity would have made the parent its creator, which is the one relationship the ' +
       'copy deliberately does not have — a child follows its parent, it is not owned by it.',
   },
+  // ── stockAccess (REQ-E08-03) ───────────────────────────────────────────────
+  {
+    entity: 'stockAccess',
+    kind: 'initial-integrity',
+    subject: 'NoAccess',
+    reason: 'born-state',
+    note:
+      'NO creation verb BY DESIGN: the entity IS a supplier in the inventory view, and every such ' +
+      'supplier starts without access to PTI stock. `NoAccess` is the natural born-state; the planner ' +
+      'grants from it and removes back to it, so there is nothing to create.',
+  },
+
+  // ── inventoryAlert (REQ-E08-05) ────────────────────────────────────────────
+  {
+    entity: 'inventoryAlert',
+    kind: 'initial-integrity',
+    subject: 'Open',
+    reason: 'born-state',
+    note:
+      'NO creation verb BY DESIGN: an alert exists because its condition is derived from the ' +
+      'inventory figures and capacity at read time, so `Open` is its born-state. Only the planner ' +
+      'closure is recorded; a recurrence after the condition cleared is a fresh open alert.',
+  },
 ]);

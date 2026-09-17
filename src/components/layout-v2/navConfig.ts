@@ -1,4 +1,5 @@
 import {
+  AlertTriangle,
   Award,
   BookOpen,
   Boxes,
@@ -6,7 +7,10 @@ import {
   ClipboardCheck,
   CalendarClock,
   ChartLine,
+  Factory,
   FileSearch,
+  Gauge,
+  KeyRound,
   ListTodo,
   MessageSquareReply,
   PackageCheck,
@@ -80,7 +84,12 @@ export const PTI_NAV: readonly NavSection[] = [
     id: 'inventory',
     labelKey: 'hub.nav.section.inventory',
     roles: ['MP'],
-    items: [{ labelKey: 'hub.nav.pti.inventory', icon: Boxes, path: '/buyer/inventory' }],
+    items: [
+      { labelKey: 'hub.nav.pti.inventory', icon: Boxes, path: '/buyer/inventory' },
+      { labelKey: 'hub.nav.pti.capacity', icon: Gauge, path: '/buyer/capacity' },
+      { labelKey: 'hub.nav.pti.alerts', icon: AlertTriangle, path: '/buyer/alerts' },
+      { labelKey: 'hub.nav.pti.supplierAccess', icon: KeyRound, path: '/buyer/supplier-access' },
+    ],
   },
   {
     id: 'calloffs',
@@ -136,6 +145,7 @@ export const SUPPLIER_NAV: readonly NavSection[] = [
     items: [
       { labelKey: 'hub.nav.sup.forecast', icon: ChartLine, path: '/supplier/forecasts' },
       { labelKey: 'hub.nav.sup.stock', icon: Boxes, path: '/supplier/inventory' },
+      { labelKey: 'hub.nav.sup.capacity', icon: Factory, path: '/supplier/capacity' },
     ],
   },
   {

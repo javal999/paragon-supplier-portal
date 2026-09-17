@@ -289,6 +289,12 @@ export const TRANSITION_PURPOSE: FlowAnnotations = Object.freeze({
   t_calloff_approve: { purposeKey: 'processFlows.purpose.t_calloff_approve' },
   t_calloff_reject_confirmation: { purposeKey: 'processFlows.purpose.t_calloff_reject_confirmation' },
   t_calloff_dispatch: { purposeKey: 'processFlows.purpose.t_calloff_dispatch' },
+  t_stockaccess_grant: { purposeKey: 'processFlows.purpose.t_stockaccess_grant' },
+  t_stockaccess_change: { purposeKey: 'processFlows.purpose.t_stockaccess_change' },
+  t_stockaccess_remove: { purposeKey: 'processFlows.purpose.t_stockaccess_remove' },
+  t_stocksync_run: { purposeKey: 'processFlows.purpose.t_stocksync_run' },
+  t_capacity_submit: { purposeKey: 'processFlows.purpose.t_capacity_submit' },
+  t_inventoryalert_close: { purposeKey: 'processFlows.purpose.t_inventoryalert_close' },
 });
 
 /**
@@ -322,6 +328,10 @@ export const ENTITY_PURPOSE: FlowAnnotations = Object.freeze({
   supplierApplication: { purposeKey: 'processFlows.purpose.entity.supplierApplication' },
   receiptDiscrepancy: { purposeKey: 'processFlows.purpose.entity.receiptDiscrepancy' },
   callOff: { purposeKey: 'processFlows.purpose.entity.callOff' },
+  stockAccess: { purposeKey: 'processFlows.purpose.entity.stockAccess' },
+  stockSync: { purposeKey: 'processFlows.purpose.entity.stockSync' },
+  capacitySubmission: { purposeKey: 'processFlows.purpose.entity.capacitySubmission' },
+  inventoryAlert: { purposeKey: 'processFlows.purpose.entity.inventoryAlert' },
 });
 
 /**

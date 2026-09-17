@@ -25,14 +25,16 @@ const noInventory: IDataService = {
 describe('BuyerInventory — four honest states', () => {
   it('data: renders the inventory workspace with wired reads', async () => {
     renderWithProviders(<BuyerInventory />);
-    // The KPI strip only renders in the data branch — proof the read resolved.
-    expect(await screen.findByText('Total Materials Tracked')).toBeInTheDocument();
+    // A position row only renders in the data branch — proof the read resolved.
+    // (REQ-E08-01 rebuilt the page on the one inventory model; the KPI strip it
+    // used to key on is gone.)
+    expect(await screen.findByTestId('pti-stock-row-sup-002-RM-STEAR-7300')).toBeInTheDocument();
   });
 
   it('loading: shows LoadingState while the read is pending', () => {
     renderWithProviders(<BuyerInventory />, { service: alwaysPending });
     expect(screen.getByText('Loading…')).toBeInTheDocument();
-    expect(screen.queryByText('Total Materials Tracked')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('pti-stock-row-sup-002-RM-STEAR-7300')).not.toBeInTheDocument();
   });
 
   it('error: shows ErrorState when the read throws', async () => {
@@ -42,6 +44,6 @@ describe('BuyerInventory — four honest states', () => {
 
   it('empty: shows EmptyState when there are no inventory positions', async () => {
     renderWithProviders(<BuyerInventory />, { service: noInventory });
-    expect(await screen.findByText('No inventory positions yet')).toBeInTheDocument();
+    expect(await screen.findByText('No supplier stock to show yet.')).toBeInTheDocument();
   });
 });

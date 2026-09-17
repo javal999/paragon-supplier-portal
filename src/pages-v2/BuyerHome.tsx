@@ -6,6 +6,8 @@ import SampleDataBadge from '../components/ui-v2/SampleDataBadge';
 import {
   useASNs,
   useBuyerInvoices,
+  useCapacityPlans,
+  useInventoryAlerts,
   useGoodsReceipts,
   usePurchaseOrders,
   useQuotations,
@@ -20,6 +22,7 @@ import { completionMovedLater, isEscalated } from '../services/data/poResponsePr
 import { isOpenDispute } from '../services/transitions/fulfilmentRules';
 import { deliveryDrift } from '../services/transitions/callOffRules';
 import { useCallOffViews } from './callOffs/callOffDisplay';
+import { planStatus } from '../services/transitions/capacityRules';
 
 // PTI Home — "My tasks" (REQUIREMENTS §3.8 SC-01). Tasks are filtered by the
 // PTI role the menu is showing, so a Finance user is not handed a planner's work.
@@ -38,6 +41,9 @@ const BuyerHome: React.FC = () => {
   const chase = useUnifiedChase();
   // REQ-E09-03 / REQ-E09-04 — call-off reminders, derived at read time (CR-09).
   const callOffs = useCallOffViews();
+  // REQ-E08-04 / REQ-E08-05 — open High alerts and capacity gaps, derived at read.
+  const alerts = useInventoryAlerts();
+  const capacity = useCapacityPlans();
 
   const tasks = useMemo<HomeTask[]>(() => {
     const now = new Date();
@@ -119,6 +125,23 @@ const BuyerHome: React.FC = () => {
         to: '/buyer/call-offs',
       },
       {
+        id: 'inventory-high-alerts',
+        roles: ['MP'],
+        label: t('hub.home.task.inventoryHighAlerts'),
+        count: (alerts.data?.items ?? []).filter((a) => a.status === 'open' && a.riskClass === 'high').length,
+        severity: 'critical',
+        to: '/buyer/alerts',
+      },
+      {
+        // REQ-E08-04 edge case — a submitted update that creates a gap notifies the planner.
+        id: 'capacity-gaps',
+        roles: ['MP'],
+        label: t('hub.home.task.capacityGaps'),
+        count: (capacity.data?.items ?? []).filter((p) => planStatus(p) === 'gap').length,
+        severity: 'warning',
+        to: '/buyer/capacity',
+      },
+      {
         id: 'chase',
         roles: ['MP'],
         label: t('hub.home.task.chase'),
@@ -170,7 +193,7 @@ const BuyerHome: React.FC = () => {
       },
     ];
     return role === 'ALL' ? all : all.filter((task) => task.roles.includes(role));
-  }, [role, pos.data, invoices.data, rfqs.data, quotes.data, grs.data, asns.data, chase.data, callOffs.views, t]);
+  }, [role, pos.data, invoices.data, rfqs.data, quotes.data, grs.data, asns.data, chase.data, callOffs.views, alerts.data, capacity.data, t]);
 
   return (
     <AppShellV2>

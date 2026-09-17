@@ -56,6 +56,18 @@ export const useInventory = (filter?: InventoryFilter) =>
     svc.procurement.getInventory(scope, filter),
   );
 
+/** Supplier access to PTI stock (REQ-E08-03). A supplier reads its own grant. */
+export const useStockAccess = () =>
+  useServiceQuery(['procurement', 'stockAccess'], (svc, scope) => svc.procurement.getStockAccess(scope));
+
+/** Capacity against demand per supplier × material group (REQ-E08-04). */
+export const useCapacityPlans = () =>
+  useServiceQuery(['procurement', 'capacityPlans'], (svc, scope) => svc.procurement.getCapacityPlans(scope));
+
+/** Inventory and capacity alerts (REQ-E08-05). */
+export const useInventoryAlerts = () =>
+  useServiceQuery(['procurement', 'inventoryAlerts'], (svc, scope) => svc.procurement.getInventoryAlerts(scope));
+
 export const useRFQs = (filter?: RFQFilter) =>
   useServiceQuery(['procurement', 'rfqs', filter], (svc, scope) =>
     svc.procurement.getRFQs(scope, filter),

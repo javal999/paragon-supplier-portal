@@ -20,8 +20,6 @@ import type {
   SupplierTier,
   PreferredChannel,
   ScorecardGrade,
-  StockStatus,
-  InventoryRecord,
 } from '../../types/supplier.types';
 
 // CP-3 · E2 — the enforcement read seam's row type. TYPE-ONLY: naming the
@@ -34,6 +32,8 @@ import type { EnforcementSetting, ActorAttribution } from '../../lib/enforcement
 import type {
   RequirementResponse,
   InventoryDeclaration,
+  StockChannel,
+  MaterialType,
   IncomingShipmentView,
   ConsolidationRow,
   SupplierCoverageEntry,
@@ -120,8 +120,6 @@ export type {
   SupplierTier,
   PreferredChannel,
   ScorecardGrade,
-  StockStatus,
-  InventoryRecord,
   Shipment,
   ShipmentLineItem,
   ShipmentStatus,
@@ -448,6 +446,155 @@ export interface CallOff {
   readonly rejectionReason?: string;
   readonly dispatches: readonly CallOffDispatch[];
   readonly notes: readonly CallOffNote[];
+}
+
+// ─── Inventory & capacity collaboration (REQ-E08-01 to REQ-E08-05) ─────────
+//
+// ONE inventory model (INVENTORY-REFERENT-01 closed): every row is a supplier ×
+// material position PROJECTED AT READ from the supplier stock submissions (the
+// InventoryDeclaration store), PTI's SAP stock and reorder point, the in-transit
+// ASNs and call-off dispatch notices, and the forecast. Nothing here is stored,
+// and nothing clock-derived (staleness, days of supply, bands) is a field: the
+// pages compute those with the shared rules in `transitions/inventoryRules.ts`.
+
+/** Where an incoming quantity comes from (REQ-E08-01 BR-06). */
+export type IncomingSource = 'production' | 'asn' | 'dispatch';
+
+/** One incoming quantity with its date — the per-date detail behind the aggregate. */
+export interface IncomingItem {
+  readonly source: IncomingSource;
+  /** Expected completion or arrival (`YYYY-MM-DD`); null when the supplier gave none. */
+  readonly date: string | null;
+  readonly quantity: number;
+  /** The ASN number or call-off number the quantity rides on; null for production. */
+  readonly reference: string | null;
+}
+
+/** An API sync attempt for a connected supplier (REQ-E08-02 BR-03). */
+export interface StockSyncAttempt {
+  readonly id: string;
+  readonly supplierId: string;
+  readonly at: string;
+  readonly outcome: 'success' | 'failed';
+  /** i18n key suffix of the business-language error, when it failed. */
+  readonly errorKey?: string;
+}
+
+/** Where the average daily demand came from (CR-01). */
+export type DemandSource = 'forecast' | 'planningEstimate' | 'none';
+
+export interface InventoryPosition {
+  readonly supplierId: string;
+  readonly supplierName: string;
+  readonly materialCode: string;
+  readonly materialLabel: string;
+  /** ROH = raw material, VERP = packaging (BR-07). */
+  readonly materialType: MaterialType;
+  readonly materialGroup: string;
+  readonly uom: string;
+  /** Latest supplier stock submission; null when the supplier never submitted. */
+  readonly supplierSoh: number | null;
+  /** The supplier's own reorder point; null reads "Not provided". */
+  readonly supplierRop: number | null;
+  /** PTI stock and reorder point from SAP. Null for a supplier without access. */
+  readonly ptiSoh: number | null;
+  readonly ptiRop: number | null;
+  /** Whether PTI stock is shown on this row (always true for PTI users). */
+  readonly ptiStockShared: boolean;
+  /** Consignment material (MN-INV-10). */
+  readonly consignment: boolean;
+  readonly incoming: readonly IncomingItem[];
+  /** CR-01 — forecast for the next 30 days ÷ 30; null when there is no demand. */
+  readonly avgDailyDemand: number | null;
+  readonly demandSource: DemandSource;
+  readonly lastUpdatedAt: string | null;
+  readonly channel: StockChannel | null;
+  /** The data-update SLA for this supplier × material, in days (AC-05). */
+  readonly updateSla: number;
+  readonly apiConnected: boolean;
+  /** The latest API sync attempt for this supplier, if any. */
+  readonly lastSync: StockSyncAttempt | null;
+  readonly batches: readonly { readonly batchNumber: string; readonly qty: number; readonly expiryDate?: string }[];
+}
+
+/** One entry in the supplier-access log (REQ-E08-03 BR-06). */
+export interface StockAccessLogEntry {
+  readonly action: 'grant' | 'change' | 'remove';
+  /** Empty = all materials the supplier supplies. */
+  readonly materials: readonly string[];
+  readonly at: string;
+  readonly actor: ActorAttribution;
+}
+
+/** A supplier's access to PTI stock (REQ-E08-03). */
+export interface StockAccessGrant {
+  readonly supplierId: string;
+  readonly supplierName: string;
+  readonly active: boolean;
+  /** Empty = all materials the supplier supplies. */
+  readonly materials: readonly string[];
+  readonly log: readonly StockAccessLogEntry[];
+}
+
+/** Starter reason codes for allocation below demand (section 3.6). */
+export type CapacityReason = 'capacity' | 'material' | 'logistics' | 'quality' | 'other';
+
+/** One weekly bucket of a capacity submission (REQ-E08-04). */
+export interface CapacityWeekEntry {
+  /** Monday of the week (`YYYY-MM-DD`). */
+  readonly week: string;
+  readonly allocated: number;
+  readonly upside?: number;
+  readonly reason?: CapacityReason;
+  readonly note?: string;
+}
+
+export interface CapacitySubmission {
+  readonly id: string;
+  readonly supplierId: string;
+  readonly materialGroup: string;
+  readonly submittedAt: string;
+  readonly weeks: readonly CapacityWeekEntry[];
+}
+
+/** Capacity against demand for one supplier × material group, 13 weekly buckets. */
+export interface CapacityPlan {
+  readonly supplierId: string;
+  readonly supplierName: string;
+  readonly materialGroup: string;
+  readonly materials: readonly string[];
+  readonly uom: string;
+  readonly weeks: readonly {
+    readonly week: string;
+    readonly demand: number;
+    readonly entry: CapacityWeekEntry | null;
+  }[];
+  readonly latest: CapacitySubmission | null;
+}
+
+export type InventoryAlertRule =
+  | 'ptiBelowRop'
+  | 'supplierBelowRop'
+  | 'projectedStockOut'
+  | 'capacityBelowDemand'
+  | 'staleData'
+  | 'coverage';
+
+export type RiskClass = 'high' | 'medium' | 'low';
+
+/** A rule-based alert (REQ-E08-05). The key is rule × material (or group) × supplier. */
+export interface InventoryAlert {
+  readonly key: string;
+  readonly rule: InventoryAlertRule;
+  readonly supplierId: string;
+  readonly supplierName: string;
+  /** The material, or the material group for a capacity alert. */
+  readonly subject: string;
+  readonly subjectLabel: string;
+  readonly riskClass: RiskClass;
+  readonly status: 'open' | 'closed';
+  readonly closedAt?: string;
+  readonly actionNote?: string;
 }
 
 export interface POSummary {
@@ -1634,7 +1781,6 @@ export interface POFilter {
 export interface InventoryFilter {
   supplierId?: string;
   materialCode?: string;
-  stockStatus?: StockStatus | StockStatus[];
 }
 
 export interface RFQFilter {
@@ -1880,8 +2026,15 @@ export interface IProcurementService {
   getPurchaseOrders(scope: QueryScope, filter?: POFilter): Promise<Page<PurchaseOrder>>;
   getPurchaseOrder(scope: QueryScope, id: string): Promise<PurchaseOrder | null>;
 
-  // — Inventory —
-  getInventory(scope: QueryScope, filter?: InventoryFilter): Promise<Page<InventoryRecord>>;
+  // — Inventory & capacity (REQ-E08-01 to REQ-E08-05) —
+  /** Supplier × material positions. A supplier sees its own; PTI stock only where granted. */
+  getInventory(scope: QueryScope, filter?: InventoryFilter): Promise<Page<InventoryPosition>>;
+  /** Supplier access to PTI stock. PTI: every supplier with its log. Supplier: its own. */
+  getStockAccess(scope: QueryScope): Promise<Page<StockAccessGrant>>;
+  /** Capacity against demand per supplier × material group, 13 weeks. */
+  getCapacityPlans(scope: QueryScope): Promise<Page<CapacityPlan>>;
+  /** Inventory and capacity alerts. A supplier sees its own supplier-side rules. */
+  getInventoryAlerts(scope: QueryScope): Promise<Page<InventoryAlert>>;
 
   // — Sourcing —
   getRFQs(scope: QueryScope, filter?: RFQFilter): Promise<Page<RFQ>>;

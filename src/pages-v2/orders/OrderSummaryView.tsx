@@ -15,7 +15,7 @@ import LoadingState from '../../components/ui-v2/LoadingState';
 import ErrorState from '../../components/ui-v2/ErrorState';
 import type { StatusTone } from '../../lib/statusTone';
 import { formatDate } from '../../lib/format';
-import { useASNs, usePurchaseOrders } from '../../services/query/hooks';
+import { useASNs, useCapacityPlans, usePurchaseOrders } from '../../services/query/hooks';
 import type { PurchaseOrder } from '../../services/data/types';
 import {
   foresightStatus,
@@ -30,14 +30,17 @@ import type { Persona } from '../../components/layout-v2/navConfig';
 import { isActiveAsn } from '../../services/transitions/fulfilmentRules';
 import type { CallOffView } from '../../services/transitions/callOffRules';
 import { useCallOffViews } from '../callOffs/callOffDisplay';
+import { capacityStatusForPo, type CapacityConfirmationStatus } from '../../services/transitions/capacityRules';
+import { materialEntry } from '../../services/sdc';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ORDER COLLABORATION SUMMARY — REQ-E07-03 (MN-ORD-10 to MN-ORD-13).
 //
 // One row per PO: the supplier's response, its ASNs, and the 3 confirmations
 // (REQUIREMENTS §3.2). Each available status links to the page that owns it.
-// Capacity confirmation (REQ-E08-04) is not built yet, so it reads "Not
-// started" in neutral and links nowhere. A supplier sees its own POs only: the
+// Capacity confirmation (REQ-E08-04) reads the supplier's capacity submissions
+// for the material groups on the PO: Confirmed, Gap, Update needed or Not
+// started, linking to the capacity page. A supplier sees its own POs only: the
 // PO read is already scoped to the session's supplier.
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -54,6 +57,13 @@ const SHIPPING_TONE: Record<ShippingNoticeStatus, StatusTone> = {
   missing: 'warning',
   confirmed: 'success',
   delayed: 'warning',
+};
+
+const CAPACITY_TONE: Record<CapacityConfirmationStatus, StatusTone> = {
+  notStarted: 'neutral',
+  outdated: 'neutral',
+  confirmed: 'success',
+  gap: 'warning',
 };
 
 const FORESIGHT_TONE: Record<ForesightStatus, StatusTone> = {
@@ -109,6 +119,7 @@ const OrderSummaryView: React.FC<OrderSummaryViewProps> = ({ persona, foresightA
   const posQuery = usePurchaseOrders();
   const asnsQuery = useASNs();
   const callOffs = useCallOffViews();
+  const capacityPlans = useCapacityPlans();
   const nowIso = new Date().toISOString();
   const base = persona === 'buyer' ? '/buyer' : '/supplier';
   const crumb = [
@@ -216,10 +227,15 @@ const OrderSummaryView: React.FC<OrderSummaryViewProps> = ({ persona, foresightA
                     <span className="text-xs text-text-tertiary">—</span>
                   )}
                 </TableCell>
-                <TableCell>
-                  <span title={t('oc.summary.capacityHint')} data-testid="order-summary-capacity">
-                    <StatusPill variant="neutral">{t('oc.summary.status.notStarted')}</StatusPill>
-                  </span>
+                <TableCell data-testid="order-summary-capacity">
+                  {(() => {
+                    const capacity = capacityStatusForPo(po, capacityPlans.data?.items ?? [], materialEntry);
+                    return (
+                      <Link to={`${base}/capacity`} aria-label={`${po.poNumber}: ${t(`oc.summary.capacity.${capacity}`)}`}>
+                        <StatusPill variant={CAPACITY_TONE[capacity]}>{t(`oc.summary.capacity.${capacity}`)}</StatusPill>
+                      </Link>
+                    );
+                  })()}
                 </TableCell>
                 <TableCell>
                   {foresight === 'notStarted' ? (

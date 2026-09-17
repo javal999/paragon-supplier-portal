@@ -234,6 +234,9 @@ const LANE_BUNDLES = Object.freeze({
       // REQ-E09-01 / REQ-E09-03 — the planner releases and changes call-offs
       // under an umbrella PO, and decides confirmations outside tolerance.
       'calloff:plan', 'calloff:review',
+      // REQ-E08-02 / 03 / 05 — the planner pulls a connected supplier's stock,
+      // decides which suppliers see PTI stock, and closes alerts with a note.
+      'stocksync:run', 'stockaccess:manage', 'inventoryalert:close',
     ]),
     // Raising and revising a requisition — split from approving one, which is
     // the segregation `pr:approve` living in `procurement` expresses.
@@ -303,6 +306,9 @@ const LANE_BUNDLES = Object.freeze({
       'incomingshipment:report', 'incomingshipment:ship',
       'incomingshipment:arrive', 'incomingshipment:cancel',
       'inventorydeclaration:declare',
+      // REQ-E08-04 — confirming allocated production capacity: the people who
+      // plan the supplier's production, beside the stock it declares.
+      'capacity:confirm',
     ]),
     // ── BACK OFFICE — the paperwork ─────────────────────────────────────────
     // *"The admin people are the ones who upload the certificates"* (operator).

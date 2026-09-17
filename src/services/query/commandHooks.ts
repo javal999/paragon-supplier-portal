@@ -1698,3 +1698,108 @@ export function useCallOffCommand() {
     },
   });
 }
+
+// ─── Inventory & capacity (REQ-E08-02 to REQ-E08-05) ────────────────────────
+//
+// One dispatch per verb. Every one of these changes figures BOTH personas read
+// (a PTI recording is about a supplier; a supplier's submission feeds the
+// planner's view; access decides what a supplier sees), so a successful command
+// invalidates EVERY scope's inventory, access, capacity and alert reads — and
+// the SDC reads, which show the same declarations on the forecast page.
+
+export type InventoryCommandVars =
+  | {
+      verb: 'declare';
+      supplierId: string;
+      materialCode: string;
+      totalQty: number;
+      channel: 'template' | 'manual';
+      supplierRop?: number;
+      inProductionQty?: number;
+      productionCompletionDate?: string;
+      batches?: readonly { batchNumber: string; qty: number; expiryDate?: string }[];
+    }
+  | {
+      verb: 'record';
+      supplierId: string;
+      materialCode: string;
+      totalQty: number;
+      supplierRop?: number;
+      inProductionQty?: number;
+      productionCompletionDate?: string;
+      batches?: readonly { batchNumber: string; qty: number; expiryDate?: string }[];
+    }
+  | { verb: 'sync'; supplierId: string }
+  | { verb: 'grantAccess'; supplierId: string; materials: readonly string[]; alreadyGranted: boolean }
+  | { verb: 'removeAccess'; supplierId: string }
+  | {
+      verb: 'submitCapacity';
+      supplierId: string;
+      materialGroup: string;
+      weeks: readonly { week: string; allocated: number; upside?: number; reason?: string; note?: string }[];
+    }
+  | { verb: 'closeAlert'; key: string; actionNote: string };
+
+const INVENTORY_READS = new Set(['inventory', 'stockAccess', 'capacityPlans', 'inventoryAlerts']);
+
+export function useInventoryCommand() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+
+  return useMutation<CommandResult, Error, InventoryCommandVars>({
+    mutationFn: (vars) => {
+      switch (vars.verb) {
+        case 'declare':
+        case 'record': {
+          const { verb, ...payload } = vars;
+          return svc.commands.dispatch(scope, {
+            transitionId: verb === 'declare' ? 't_inventorydeclaration_declare' : 't_inventorydeclaration_record',
+            entity: 'inventoryDeclaration',
+            payload,
+          });
+        }
+        case 'sync':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_stocksync_run',
+            entity: 'stockSync',
+            payload: { supplierId: vars.supplierId },
+          });
+        case 'grantAccess':
+          return svc.commands.dispatch(scope, {
+            transitionId: vars.alreadyGranted ? 't_stockaccess_change' : 't_stockaccess_grant',
+            entity: 'stockAccess',
+            entityId: vars.supplierId,
+            payload: { materials: [...vars.materials] },
+          });
+        case 'removeAccess':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_stockaccess_remove',
+            entity: 'stockAccess',
+            entityId: vars.supplierId,
+            payload: {},
+          });
+        case 'submitCapacity':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_capacity_submit',
+            entity: 'capacitySubmission',
+            payload: { supplierId: vars.supplierId, materialGroup: vars.materialGroup, weeks: vars.weeks.map((w) => ({ ...w })) },
+          });
+        case 'closeAlert':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_inventoryalert_close',
+            entity: 'inventoryAlert',
+            entityId: vars.key,
+            payload: { actionNote: vars.actionNote },
+          });
+      }
+    },
+    onSuccess: (result) => {
+      if (result.status === 'failed') return;
+      qc.invalidateQueries({
+        predicate: (q) =>
+          (q.queryKey[0] === 'procurement' && INVENTORY_READS.has(String(q.queryKey[1]))) || q.queryKey[0] === 'sdc',
+      });
+    },
+  });
+}

@@ -214,11 +214,12 @@ describe('⚠️ mintedAtWrite — the clock value COMPUTED AND THEN STORED', ()
 });
 
 describe('ACQUITTALS — asserted, because a gate that only convicts is unprobed', () => {
-  it('the four non-clock day-fields are acquitted and each says why', () => {
+  it('the non-clock day-fields are acquitted and each says why', () => {
     const acquitted = DAY_COUNTS.filter((r) => r.group === 'not-a-clock-difference');
+    // `InventoryRecord.daysOfSupply` retired with the static inventory list
+    // (REQ-E08-01): days of supply is CR-01, computed at read and never stored.
     expect(acquitted.map((r) => r.field).sort()).toEqual([
       'coverDays',
-      'daysOfSupply',
       'leadTimeDays',
       'noticeRequiredDays',
     ]);

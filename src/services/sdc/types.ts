@@ -478,9 +478,27 @@ export interface InventoryDeclaration {
   /** OPTIONAL batch-grain detail (portal / magic-link grid; never required by
    *  the chat channel). When present, Σ qty must equal `totalQty`. */
   readonly batches?: readonly InventoryBatch[];
+  /** REQ-E08-02 BR-06 — the supplier's own reorder point, when it gave one. */
+  readonly supplierRop?: number;
+  /** REQ-E08-01 BR-06 — quantity in production at the supplier for PTI. */
+  readonly inProductionQty?: number;
+  /** Expected production completion date (`YYYY-MM-DD`) for `inProductionQty`. */
+  readonly productionCompletionDate?: string;
+  /**
+   * REQ-E08-02 BR-01 / BR-08 — how the figures reached the hub. Set by the
+   * target from the verb's scope, never trusted from a PTI caller: a PTI
+   * recording is always `pti` ("Entered by PTI"), an API pull is `api`. Absent
+   * on the SDC-0 seed rows, which predate the channel.
+   */
+  readonly channel?: StockChannel;
   /** source = SUPPLIER. */
   readonly provenance: Provenance;
 }
+
+/** REQ-E08-02 — the submission channels: spreadsheet template (the business
+ *  users' "EDI"), manual entry, supplier API sync, and PTI on the supplier's
+ *  behalf (a WhatsApp or email reply recorded by a planner). */
+export type StockChannel = 'template' | 'manual' | 'api' | 'pti';
 
 // ─── Object 3 — IncomingShipment (long-lived, direction-named, design §2.3) ────
 

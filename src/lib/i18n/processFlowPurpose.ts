@@ -368,6 +368,27 @@ export const processFlowPurposeEn: Record<string, string> = {
   'processFlows.purpose.t_calloff_dispatch':
     'The supplier tells PTI the goods have left, with the expected arrival. It is the heads-up the planner needs; an ASN for the same call-off counts as one.',
 
+  // ── inventory & capacity ────────────────────────────────────────────
+  'processFlows.purpose.entity.stockAccess':
+    'Whether a supplier may see PTI stock, and for which materials. Only selected suppliers see it, so commercial information stays protected.',
+  'processFlows.purpose.t_stockaccess_grant':
+    'The planner lets a supplier see PTI stock, for every material it supplies or only chosen ones, so the supplier can plan replenishment itself. The change is logged.',
+  'processFlows.purpose.t_stockaccess_remove':
+    'The planner stops a supplier seeing PTI stock. It takes effect the next time the supplier opens a page, and the change is logged.',
+  'processFlows.purpose.entity.stockSync':
+    'One attempt to pull stock figures straight from a connected supplier, kept whether it worked or not.',
+  'processFlows.purpose.t_stocksync_run':
+    'The planner pulls the latest stock figures from a connected supplier. If the supplier does not answer, the error and time are shown and the previous figures stay, marked out of date.',
+  'processFlows.purpose.t_stockaccess_change':
+    'The planner changes which materials a supplier with access may see PTI stock for. The change is logged.',
+  'processFlows.purpose.entity.capacitySubmission':
+    'The capacity a supplier allocates to PTI per material group for each of the next 13 weekly periods.',
+  'processFlows.purpose.t_capacity_submit':
+    'The supplier states the capacity it allocates per week. A week below PTI demand needs a reason, so the planner sees the gap and why before it reaches the factory.',
+  'processFlows.purpose.entity.inventoryAlert':
+    'A warning that stock or capacity is heading for a shortage, with a risk class, so the planner acts before material is missing.',
+  'processFlows.purpose.t_inventoryalert_close':
+    'The planner closes an alert and notes what was done. The same condition does not raise it again until it has cleared and come back.',
 };
 
 export const processFlowPurposeId: Record<string, string> = {
@@ -701,4 +722,25 @@ export const processFlowPurposeId: Record<string, string> = {
   'processFlows.purpose.t_calloff_dispatch':
     'Pemasok memberi tahu PTI bahwa barang sudah berangkat, beserta perkiraan tiba. Inilah kabar yang dibutuhkan perencana; ASN untuk call-off yang sama juga dihitung.',
 
+  // ── inventory & capacity ────────────────────────────────────────────
+  'processFlows.purpose.entity.stockAccess':
+    'Apakah pemasok boleh melihat stok PTI, dan untuk material apa saja. Hanya pemasok terpilih yang melihatnya, agar informasi komersial tetap terlindungi.',
+  'processFlows.purpose.t_stockaccess_grant':
+    'Perencana mengizinkan pemasok melihat stok PTI, untuk semua material yang dipasoknya atau hanya yang dipilih, agar pemasok dapat merencanakan pengisian sendiri. Perubahan dicatat.',
+  'processFlows.purpose.t_stockaccess_change':
+    'Perencana mengubah material yang stok PTI-nya boleh dilihat pemasok yang sudah memiliki akses. Perubahan dicatat.',
+  'processFlows.purpose.t_stockaccess_remove':
+    'Perencana menghentikan akses pemasok ke stok PTI. Berlaku saat pemasok membuka halaman berikutnya, dan perubahan dicatat.',
+  'processFlows.purpose.entity.stockSync':
+    'Satu upaya menarik angka stok dari sistem pemasok yang terhubung ke hub, disimpan baik berhasil maupun gagal.',
+  'processFlows.purpose.t_stocksync_run':
+    'Perencana menarik angka stok terbaru dari pemasok yang terhubung. Jika sistem pemasok tidak menjawab, kesalahan dan waktunya ditampilkan dan angka sebelumnya tetap ada, ditandai kedaluwarsa.',
+  'processFlows.purpose.entity.capacitySubmission':
+    'Kapasitas yang dialokasikan pemasok untuk PTI per kelompok material dan minggu, untuk 13 minggu ke depan.',
+  'processFlows.purpose.t_capacity_submit':
+    'Pemasok menyatakan kapasitas yang dialokasikan per minggu. Minggu di bawah kebutuhan PTI memerlukan alasan, agar perencana melihat kekurangannya dan penyebabnya sebelum sampai ke pabrik.',
+  'processFlows.purpose.entity.inventoryAlert':
+    'Peringatan bahwa stok atau kapasitas menuju kekurangan, dengan kelas risiko, agar perencana bertindak sebelum material habis.',
+  'processFlows.purpose.t_inventoryalert_close':
+    'Perencana menutup peringatan dan mencatat tindakan yang diambil. Kondisi yang sama tidak memunculkannya lagi sampai kondisi itu pulih lalu terjadi lagi.',
 };
