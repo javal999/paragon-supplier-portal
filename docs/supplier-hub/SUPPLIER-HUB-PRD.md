@@ -174,22 +174,22 @@ Acceptance criteria: TBD by the Foundation team. The hub **replaces PROCIO** for
 
 | ID | Story | Req | Status |
 |---|---|---|---|
-| US-30 | As a supplier, I want to see PTI's material forecast per period, with firm, trade-off, and forecast zones and changes since the last version, so that I can plan production | REQ-E06-01 | [P] |
-| US-31 | As a supplier, I want to commit a quantity and date per period, with a reason when below forecast, so that PTI knows what supply is secured | REQ-E06-02 | [V] concept, [P] detail |
-| US-32 | As a planner, I want forecast-versus-commitment gaps coloured by tolerance and ranked by impact so that I focus on real risks | REQ-E06-03 | [P] |
+| US-30 | As a supplier, I want to see PTI's material forecast per period, with firm, trade-off, and forecast zones and changes since the last version, so that I can plan production | REQ-E06-01 | [V] |
+| US-31 | As a supplier, I want to commit a quantity and date per period, with a reason when below forecast, so that PTI knows what supply is secured | REQ-E06-02 | [V] |
+| US-32 | As a planner, I want forecast-versus-commitment gaps coloured by tolerance and ranked by impact so that I focus on real risks | REQ-E06-03 | [V] |
 
 **Acceptance criteria.**
-- US-30 [P]:
+- US-30:
   - Each period shows quantity and zone.
   - Current and previous versions can be compared.
   - The forecast can be downloaded as a spreadsheet.
   - Suppliers see only their own materials.
-- US-31 [P]:
+- US-31:
   - Commitments can be made on screen or by upload.
   - A commitment below forecast requires a reason.
   - Commitments within tolerance need no planner action.
   - Missing commitments escalate.
-- US-32 [P]:
+- US-32:
   - Gaps are shown as quantity and percentage, coloured by tolerance.
   - Firm-zone exceptions are listed first.
   - Planner actions are saved with a note and visible to the supplier.
@@ -763,9 +763,8 @@ Row 8's mitigation text overlaps another cell in the workbook, so its wording ("
 | REPL | Replenishment method and governance (deferred; consultant) | Material Planner |
 | DEC-03 | Final MVP list (RFx and performance dashboard in MVP; D-07 catalog for RFI; D-03 TMS phase) | Project sponsors |
 | PQ-07 | SAP source of forecast and demand sensing | Material Planner, ERP Functional |
-| PQ-08, PQ-02 | Tolerances, commitment deadline, forecast horizon and zones | Material Planner |
+| PQ-08, PQ-02 | Confirm call-off and commitment tolerance values; capacity horizon | Material Planner |
 | Q-18 | Working calendar for the 1-working-day deadline (default recommended) | Material Planner |
-| E06-R | Owner review of Forecast Collaboration recommendations | Project owner |
 | A-03 | RFI and RFP templates, standard term list, quote score weights | Procurement |
 | Q-20 | Quality inspection result in the hub for MVP vs Phase 2 Supplier Quality module | Material Planner, Procurement |
 | KPI | Definitions for S4 (confirmation accuracy) and S5 (optimized stock); targets for OTIF, CFOT, PO response rate, procurement cycle time; CFOT and OTIF formulas | Steering Committee, Material Planner |

@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 0.4 draft, 2026-09-17 |
+| Version | 0.5 draft, 2026-09-17 |
 | Sources | `SUPPLIER-HUB-BASELINE.md` (kick-off deck, Aug 2026); `KICKOFF-MEETING-NOTES.md` (business user feedback, reviewed 2026-09-17); owner review of the prototype gap review (2026-09-17) |
 | Scope of this version | Detailed: Order Collaboration, Inventory & Capacity Collaboration, RFx (validated); Forecast Collaboration, Call-off Management, and the undiscussed parts of Order and Inventory Collaboration (proposed). Hub navigation and screen conventions (validated). Foundation is reserved for the Foundation team. The remaining epics are stubs |
 | Not in scope | The codebase. This file states what the Supplier Hub must do, not what is built. What the prototype does today, and where, is tracked only in `BUILD-GAP.md` |
@@ -161,6 +161,8 @@ Every requirement that calculates something refers to a rule here by its `CR-` I
 | CR-18 | Spreadsheet number check | A number that reads differently in Indonesian and English format (for example `1.500`) is rejected with a reason, not guessed | REQ-E08-02 | [Code] |
 | CR-19 | Batch total | When a stock row has batches, batch quantities must add up to the SOH | REQ-E08-02 | [Code] |
 | CR-20 | Integration retry | A failed SAP message is retryable only for a transport failure (timeout, connection). A business refusal from SAP is shown with its reason and is not retried until the data is fixed | REQ-E07-08 | [Code] |
+| CR-21 | Forecast commitment tolerance | Firm periods: no shortfall accepted automatically. Trade-off periods: up to 10% below forecast accepted automatically. Forecast periods: acknowledgement only | REQ-E06-02 | [Owner]; 10% mirrors CR-05 |
+| CR-22 | Commitment gap colour | Commitment ÷ forecast: Green at 1.0 or more; Amber from 0.8 to below 1.0; Red below 0.8 | REQ-E06-03 | [Owner]; thresholds from CR-03 [Code] |
 
 **Starter reason codes** [Code], used by REQ-E07-02 (Adjust), REQ-E08-04 (capacity shortfall), and REQ-E06-02 (commitment shortfall) until the Material Planner supplies the final list: Capacity, Material, Logistics, Quality, Other (with a note).
 
@@ -223,9 +225,9 @@ The menu follows the hub's own sections, not procurement stages, and each PTI us
 | REQ-E03-03 | Request for Quotation (RFQ) with RFI reuse | E03 | MVP | Validated |
 | REQ-E03-04 | Request for Proposal (RFP) | E03 | MVP | Validated; template Proposed (A-03) |
 | REQ-E03-05 | Bid comparison, negotiation, and awarding | E03 | MVP | Validated (negotiation, multi-award); Proposed (detail) |
-| REQ-E06-01 | Forecast publication | E06 | MVP | Proposed; owner review pending (E06-R) |
-| REQ-E06-02 | Foresight / fixed-stock confirmation | E06 | MVP | Proposed (confirmation concept validated); owner review pending (E06-R) |
-| REQ-E06-03 | Forecast-commit gap monitoring | E06 | MVP | Proposed; owner review pending (E06-R) |
+| REQ-E06-01 | Forecast publication | E06 | MVP | Validated (owner, E06-R) |
+| REQ-E06-02 | Foresight / fixed-stock confirmation | E06 | MVP | Validated (owner, E06-R) |
+| REQ-E06-03 | Forecast-commit gap monitoring | E06 | MVP | Validated (owner, E06-R) |
 | REQ-E07-01 | PO visibility with quantity and timing breakdown | E07 | MVP | Validated |
 | REQ-E07-02 | PO response: approve, adjust, reject, escalate | E07 | MVP | Validated |
 | REQ-E07-03 | Order Collaboration Summary | E07 | MVP | Validated |
@@ -1046,7 +1048,7 @@ Template rules:
 
 All requirements in this section are **Proposed**, written from market practice (section 8). Only the foresight / fixed-stock confirmation concept is validated [MN-ORD-11].
 
-The owner asked for recommendations on this section before confirming it (E06-R, 2026-09-17). This section is unchanged until that review.
+The owner confirmed the recommendations for this section on 2026-09-17 (E06-R). Rules tagged `[Owner]` come from that review.
 
 #### REQ-E06-01  Forecast publication
 
@@ -1068,15 +1070,16 @@ The owner asked for recommendations on this section before confirming it (E06-R,
 5. The supplier downloads it to plan, then confirms in REQ-E06-02.
 
 **Business rules.**
-- BR-01. The forecast is net material requirement from SAP planning. The hub does not calculate demand [Proposed; aligned with MN-INV-14].
-- BR-02. Publication cadence is weekly [Proposed].
-- BR-03. Buckets are weekly for the near horizon and monthly after. Horizon and cut-over are configurable [Proposed; Market].
+- BR-01. The forecast is net material requirement from SAP planning, from MRP or IBP until PQ-07 decides. The hub does not calculate demand [Owner; aligned with MN-INV-14].
+- BR-02. Publication cadence: weekly for packaging, monthly for raw material. An emergency re-publication is allowed at any time [Owner; Code design].
+- BR-03. Periods: packaging uses weekly periods for 13 weeks, then monthly up to 6 months; raw material uses monthly periods for 6 months. Horizon and cut-over are configurable [Owner].
 - BR-04. Each period carries a zone [Market]:
   - Firm: quantities no longer change.
   - Trade-off: changes are acceptable to the supplier.
   - Forecast: indicative only.
-- BR-05. Zone lengths are set per supplier and material group [Proposed].
-- BR-06. Every published version is kept. Suppliers can compare the current version with the previous one [Market].
+- BR-05. Zone lengths are set per supplier and material group. The Firm zone defaults to the supplier's lead time for that material group [Owner].
+- BR-08. Firm and Trade-off periods need a quantity and date commitment. Forecast periods need only an acknowledgement [Owner; Code].
+- BR-06. Every published version is kept. Suppliers can compare the current version with the previous one, and a Changes view lists only periods whose quantity moved [Market; Owner].
 - BR-07. A supplier sees only materials it supplies [Proposed].
 
 **Edge cases.**
@@ -1093,7 +1096,7 @@ The owner asked for recommendations on this section before confirming it (E06-R,
 
 **Metrics.** Leading: share of suppliers that viewed the forecast within 1 working day. Lagging: forecast change in the Firm zone (should be near zero).
 
-**Open items.** PQ-02 (horizon, buckets, zones). PQ-07 (SAP source: MRP or IBP).
+**Open items.** PQ-07 (SAP source: MRP or IBP).
 
 #### REQ-E06-02  Foresight / fixed-stock confirmation
 
@@ -1117,14 +1120,16 @@ The owner asked for recommendations on this section before confirming it (E06-R,
 - BR-01. PTI shares its plan; the supplier replies with the quantity and date it can meet [MN-ORD-11].
 - BR-02. The page lives in Forecast Collaboration, and the summary links to it [MN-ORD-13; Q-16].
 - BR-03. Commitment is per material per period [Market].
-- BR-04. A commit below forecast needs a predefined reason [Proposed].
-- BR-05. A commit within the tolerance of forecast is accepted without planner action. Outside tolerance, it becomes an exception (REQ-E06-03) [Market].
-- BR-06. Suppliers can commit by screen or spreadsheet upload [Market; aligned with MN-INV-07].
-- BR-07. Commitments are due within a set time after publication, proposed as 1 working day to match the PO rule [Proposed; MN-ORD-04].
-- BR-08. A supplier may commit an upside quantity above forecast [Market].
+- BR-04. A commit below forecast needs a predefined reason. The starter list is in section 3.6 [Owner; Code].
+- BR-05. A commit within the tolerance of forecast is accepted without planner action. Outside tolerance, it becomes an exception (REQ-E06-03). Tolerance follows CR-21 [Owner].
+- BR-06. Suppliers can commit by screen or spreadsheet upload, using the same fixed-template approach as stock (REQ-E08-02) [Owner].
+- BR-07. Commitments are due 1 working day after publication for Firm periods, and 7 days after publication for Trade-off and Forecast periods [Owner; Code].
+- BR-08. A supplier may commit an optional upside quantity above forecast [Market; Owner].
+- BR-09. The commitment starts pre-filled with the forecast quantity. The supplier still submits it [Owner].
+- BR-10. A commitment is kept as a draft until submitted, and the planner does not see drafts [Owner; Code].
 
 **Edge cases.**
-- Forecast re-published after commitment: periods whose quantity changed beyond tolerance return to "awaiting commitment"; unchanged periods keep their commitment [Proposed].
+- Forecast re-published after commitment: periods whose quantity did not change keep their commitment; changed periods return to "awaiting commitment" [Owner; Code].
 - No commitment by the deadline: escalate to the planner, as for POs [Proposed; MN-ORD-14].
 
 **Acceptance criteria.**
@@ -1137,7 +1142,7 @@ The owner asked for recommendations on this section before confirming it (E06-R,
 
 **Metrics.** Leading: commitment coverage (share of periods committed). Lagging: CFOT (REQ-E10-01); confirmation reliability.
 
-**Open items.** PQ-08 (tolerance per zone; commitment deadline).
+**Open items.** PQ-08 (confirm CR-21 values with suppliers).
 
 #### REQ-E06-03  Forecast-commit gap monitoring
 
@@ -1158,14 +1163,15 @@ The owner asked for recommendations on this section before confirming it (E06-R,
 
 **Business rules.**
 - BR-01. Gap per period = commitment minus forecast, as quantity and percentage [Market].
-- BR-02. Periods are coloured by tolerance level [Market]:
-  - Green: within tolerance.
-  - Amber: warning.
-  - Red: error.
+- BR-02. Periods are coloured by commitment ÷ forecast, per CR-22 [Market; Owner]:
+  - Green: 1.0 or more.
+  - Amber: 0.8 to below 1.0.
+  - Red: below 0.8.
 - BR-03. Cumulative commitment against cumulative forecast is shown over the horizon [Market].
-- BR-04. Exceptions are ranked by impact: Firm zone first, then by projected days of cover from REQ-E08-01 [Proposed].
-- BR-05. Planner actions on an exception: accept, request revision, reassign demand. Each needs a note [Proposed].
-- BR-06. Automatic reminders go to suppliers with missing commitments [Market].
+- BR-04. Exceptions are ranked: overdue first, then Firm zone, then lowest days of supply (CR-01) [Owner; Code].
+- BR-05. Planner actions on an exception: accept, request revision, reassign demand. Request revision and reassign need a note. Every note and revision request is kept in a log the supplier can see [Owner; Code].
+- BR-06. Automatic reminders go to suppliers with missing commitments at half the deadline and at the deadline. After the deadline, the missing commitment escalates to the planner [Market; Owner].
+- BR-07. The planner sees supplier coverage per material (CR-03), including distributor lead times from principal to distributor, labelled as an estimate [Owner; Code].
 
 **Edge cases.**
 - Supplier commits more than forecast in Firm zone: show as information, not error [Proposed].
@@ -1179,7 +1185,7 @@ The owner asked for recommendations on this section before confirming it (E06-R,
 
 **Metrics.** Leading: open exceptions older than 2 working days [Proposed]. Lagging: KPI-04; KPI-05.
 
-**Open items.** PQ-08 (tolerances).
+**Open items.** PQ-08 (confirm CR-21 and CR-22 values).
 
 ### 5.6 Planning & Fulfillment: Call-off Management (E09)
 
@@ -1436,7 +1442,6 @@ All requirements in this section are **Proposed**, written from market practice 
 |---|---|---|
 | Q-18 | Which working calendar defines the 1-working-day deadline. Recommended default in section 3.4 | REQ-E07-02 |
 | A-03 | Review with users: RFI template, RFP template and standard term list, quote score weights (CR-15) | REQ-E03-02, REQ-E03-04, REQ-E03-05 |
-| E06-R | Owner review of the Forecast Collaboration recommendations before section 5.5 changes | REQ-E06-01 to REQ-E06-03 |
 | Q-20 | Quality inspection result is recorded in the hub for the MVP, while the Supplier Quality module is Phase 2 and goods receipt posting stays in SAP. Confirm the boundary | REQ-E07-06 |
 | A-01 | Check with Mas Ary Hidayat on compliance and capability for RFx | REQ-E03-01 to REQ-E03-04 |
 | A-02 | Full parameter list for supplier filtering | REQ-E03-01 |
@@ -1446,7 +1451,7 @@ All requirements in this section are **Proposed**, written from market practice 
 | DEC-06 | Is Web Tukar Faktur the invoice collaboration capability or a separate app | REQ-E07-07 |
 | PQ-11 | Call-offs are managed manually outside SAP today. Confirm the hub becomes the record for call-offs, whether call-offs ever need to go back to SAP or another system, and whether today's manual records (for example spreadsheets) are migrated | REQ-E07-08, REQ-E09-01, REQ-E09-03 |
 | PQ-12 | Does the umbrella PO carry only a total value, or also quantities per breakdown line (MN-ORD-03 says quantity and timing come from SAP) | REQ-E07-01, REQ-E09-01 |
-| PQ-02 | Forecast and capacity horizon, bucket sizes, and zone lengths | REQ-E06-01, REQ-E08-04 |
+| PQ-02 | Capacity horizon and bucket size (recommended default: weekly for 13 weeks) | REQ-E08-04 |
 | PQ-03 | Confirm the starting risk class thresholds | REQ-E08-05 |
 | PQ-04 | Goods receipt discrepancy tolerance (0 until decided) | REQ-E07-06 |
 | PQ-05 | Finance to confirm the 1% invoice tolerance (CR-12) and the status list | REQ-E07-07 |
@@ -1509,6 +1514,7 @@ Research date: 2026-09-17. Vendor pages were read directly unless marked "snippe
 | GAP-2 | Calculations where this file was silent or open | Follow the prototype (section 3.6, tag `[Code]`) |
 | GAP-3 | Menu, usability, and screen conventions | Follow the gap review recommendations (sections 3.7 and 3.8) |
 | GAP-4 | Prototype features not in this file | Per the gap review suggestions, listed in `BUILD-GAP.md` |
+| E06-R | Forecast Collaboration recommendations | Confirmed as recommended: periods and cadence by material type, zones, split deadline, pre-filled commitment, tolerance CR-21, gap colours CR-22, re-publication, ranking, planner actions, reminders, spreadsheet round-trip, supplier coverage, upside |
 
 ## 10. Change log
 
@@ -1518,3 +1524,4 @@ Research date: 2026-09-17. Vendor pages were read directly unless marked "snippe
 | 0.2 | 2026-09-17 | Added proposed Planning & Fulfillment requirements (E06, E09, E07-06 to E07-08, E08-04, E08-05) from market research; market reference; Foundation contribution rule |
 | 0.3 | 2026-09-17 | Applied PQ-01 (call-offs outside SAP) and PQ-10 (dispatch heads-up, no dock scheduling); REQ-E09-04 rescoped |
 | 0.4 | 2026-09-17 | Applied owner decisions from the prototype gap review: shared calculation rules (3.6), hub navigation (3.7), screen conventions (3.8); RFI and RFP templates; RFQ from a purchase requisition; REQ-E03-05 detailed with negotiation and multi-award; recommendations filled for open points in E07, E08, E09, E10. E06 held for owner review (E06-R) |
+| 0.5 | 2026-09-17 | Applied the confirmed Forecast Collaboration recommendations (E06-R): section 5.5 validated, CR-21 and CR-22 added |

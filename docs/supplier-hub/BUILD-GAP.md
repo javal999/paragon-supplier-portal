@@ -2,8 +2,8 @@
 
 | | |
 |---|---|
-| Version | 1.0, 2026-09-17 |
-| Compares | `SUPPLIER-HUB-REQUIREMENTS.md` v0.4 with the prototype in this repository at `main` b81f770 |
+| Version | 1.1, 2026-09-17 |
+| Compares | `SUPPLIER-HUB-REQUIREMENTS.md` v0.5 with the prototype in this repository at `main` b81f770 |
 | Owner decisions | 2026-09-17, recorded in section 9 of the requirements (RFX-1 to RFX-3, GAP-1 to GAP-4) |
 | Rule | This is the **only** document that describes what the prototype does for the Supplier Hub. The PRD and the requirements describe the product and never the code. Update this file when a build item lands |
 
@@ -53,7 +53,7 @@ Where the experience differs, the requirement wins (GAP-1). Where the code had a
 
 ## 2. Build list: bring the prototype in line
 
-Each item follows the requirement named. E06 items wait for the owner review (E06-R).
+Each item follows the requirement named.
 
 | ID | Change | Requirement |
 |---|---|---|
@@ -70,8 +70,8 @@ Each item follows the requirement named. E06 items wait for the owner review (E0
 | X-11 | Supplier access to PTI stock | REQ-E08-03 |
 | X-12 | Capacity confirmation | REQ-E08-04 |
 | X-13 | Rule-based alerts with risk class | REQ-E08-05 |
-| X-14 | Forecast buckets, zones, compare, download, upload, upside | REQ-E06-01, REQ-E06-02 (after E06-R) |
-| X-15 | Gap monitoring: %, bands, cumulative, ranking, reassign | REQ-E06-03 (after E06-R) |
+| X-14 | Forecast buckets, zones, compare, download, upload, upside | REQ-E06-01, REQ-E06-02 |
+| X-15 | Gap monitoring: %, bands, cumulative, ranking, reassign | REQ-E06-03 |
 | X-16 | SAP ROP recommendations released as call-offs | REQ-E09-01 (after REPL) |
 | X-17 | Event-based analysis | REQ-E09-02 (after PQ-09) |
 | X-18 | Dispatch heads-up against a call-off, At Risk flag; remove the Dock appointments tab and Dock Schedule button | REQ-E09-04 |
@@ -118,6 +118,8 @@ Rules adopted into section 3.6 of the requirements, with the prototype code they
 | CR-18 number check | `src/lib/localeNumber.ts` |
 | CR-19 batch total | `src/services/sdc/ingest.ts` |
 | CR-20 integration retry | `src/services/transitions/settleFaults.ts` |
+| CR-21 Trade-off 10% and CR-22 colour thresholds | Mirror CR-05 and CR-03 |
+| E06 7-day commitment deadline (REQ-E06-02 BR-07), keep-if-unchanged re-publication | `src/services/sdc/consolidation.ts` (`RESPONSE_DUE_DAYS = 7`) |
 | Starter reason codes | `src/pages-v2/SupplierForecasts.tsx` (`ROOT_CAUSE_LEVELS`) |
 | Call-off series generator (REQ-E09-01 BR-05) | `src/services/delivery/generator.ts` |
 
@@ -128,7 +130,6 @@ Rules adopted into section 3.6 of the requirements, with the prototype code they
 | Reorder point = daily demand × 14, safety stock = × 7, MOQ = max(500, × 7), on the PTI inventory panel | ROP comes from SAP (REQ-E08-01 BR-04, validated) |
 | Supplier-page days-of-supply bands (below 7, 7 to 13, 14 to 30, above 30) | Conflicts with CR-02; one set kept |
 | OTIF target 95% on scorecard and supplier performance | Conflicts with CR-17; one target kept |
-| Forecast commitment deadline of 7 calendar days, exact-match re-publication, coverage-style gap colours | Held for owner review of E06 (E06-R) |
 
 ---
 
@@ -141,13 +142,13 @@ Decisions per the gap review suggestions (GAP-4).
 | K-01 | Goods receipt quality inspection: hold, retest, halal and BPOM checks | Keep for PTI; the supplier sees the result | REQ-E07-06 BR-06; boundary open (Q-20) |
 | K-02 | Stock by batch with expiry date | Keep as optional template columns | REQ-E08-02 BR-06 |
 | K-03 | PTI records stock or replies received by WhatsApp or email | Keep | REQ-E08-02 BR-08 |
-| K-04 | Distributor principal lead times and principal shipments | Keep | Held with E06 (E06-R), because it feeds forecast coverage |
+| K-04 | Distributor principal lead times and principal shipments | Keep | REQ-E06-03 BR-07 |
 | K-05 | Should-cost model in bid comparison | Park | Hidden in pilot |
 | K-06 | Purchase requisitions, intake review, plan grid | Park. The RFQ-from-requisition path stays (REQ-E03-03 BR-04) | Hidden in pilot |
 | K-07 | Compliance tracker and supplier documents | Hand to the Foundation team (E01, E02) | Foundation contribution |
 | K-08 | Marketplace, discovery, storefront, supply risk, contracts | Park; contract and catalog are Phase 2 | Hidden in pilot |
 | K-09 | Roles catalogue, process flows, glossary | Move to the user menu | NV-01 |
-| K-10 | Acknowledge-only forecast lines, dispute log, draft before submit | Keep | Held with E06 (E06-R) |
+| K-10 | Acknowledge-only forecast lines, dispute log, draft before submit | Keep | REQ-E06-01 BR-08, REQ-E06-02 BR-10, REQ-E06-03 BR-05 |
 
 ---
 
@@ -158,7 +159,7 @@ These documents describe how the prototype was designed. For Supplier Hub produc
 | Document | Relation to the Supplier Hub documents |
 |---|---|
 | `docs/Delivery_Agreement_Design_Spec_v1.md`, `docs/Delivery_Agreement_and_Contract_Compliance_Chase_Design_Note_v1.md` | The scheduling-agreement model is replaced by hub call-offs (REQ-E09-03, X-01). Its calculations kept as CR-04 to CR-09 |
-| `docs/Supplier_Data_Collaboration_Design_v2.md`, `docs/C8_Forecast_Publication_Seam_Proposal.md`, `docs/contracts/C8-forecast-publication.md` | Forecast and stock design. Forecast parts wait for E06-R; stock parts replaced by REQ-E08-02 |
+| `docs/Supplier_Data_Collaboration_Design_v2.md`, `docs/C8_Forecast_Publication_Seam_Proposal.md`, `docs/contracts/C8-forecast-publication.md` | Forecast and stock design. Forecast parts replaced by REQ-E06-01 to REQ-E06-03; stock parts replaced by REQ-E08-02 |
 | `docs/PR_Intake_Review_Investigation_2026-07-15.md`, `docs/contracts/C7-pr-intake.md`, `docs/Stage_G_Grid_Planning_Layer_Plan_v1.md` | Parked features (K-06) |
 | `docs/Halal_Compliance_Control_Design_v1.md` | Foundation hand-off (K-07); halal checks at receipt kept (K-01) |
 | `docs/Communication_Hub_Design_Skeleton_v1.md` | Supports K-03 |
