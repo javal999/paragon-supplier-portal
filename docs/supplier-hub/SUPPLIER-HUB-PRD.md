@@ -4,15 +4,15 @@
 |---|---|
 | Product | Supplier Hub (Supplier Portal, "SC Collaboration Hub") |
 | Company | PT Paragon Technology and Innovation (PTI) |
-| Version | 0.2 draft, 2026-09-17 |
+| Version | 0.3 draft, 2026-09-17 |
 | Scope | MVP (Phase 1, "Foundation to Transact"). Phase 2 and 3 appear only in section 9 |
 | Steering Committee | Yogi Sapta Prakoso (VP Supply Chain), Ilauddin (CFO), Risman Adnan (CTO) [C] |
 | Technology Product Owners | Achmad Fahlevi, Vergiant Yoga Perdana (Supply Chain); Indita Ramasaphira (FATL) [C] |
 | Project Manager | Zanjabila Aulia (IT PMO) [C] |
-| Sources | Project Charter, SC Collaboration Hub Proposal (Sep 2026) for business numbers, scope, and milestones; kick-off deck (Aug 2026), captured in `SUPPLIER-HUB-BASELINE.md`; business user feedback in `KICKOFF-MEETING-NOTES.md`; detailed requirements in `SUPPLIER-HUB-REQUIREMENTS.md` |
+| Sources | Project Charter, SC Collaboration Hub Proposal (Sep 2026) for business numbers, scope, and milestones; Risk Assessment workbook (6 Aug 2026) for risks; kick-off deck (Aug 2026), captured in `SUPPLIER-HUB-BASELINE.md`; business user feedback in `KICKOFF-MEETING-NOTES.md`; detailed requirements in `SUPPLIER-HUB-REQUIREMENTS.md` |
 | Detail | This PRD summarises the product. Business rules, step-by-step walkthroughs, and full acceptance criteria live in `SUPPLIER-HUB-REQUIREMENTS.md`, referenced by `REQ-` ID |
 
-**Status tags.** **[C]** stated in the project charter. **[V]** validated with business users. **[D]** stated in the kick-off deck. **[P]** proposed by the analyst, needs review. **TBD** not decided; the owner is named where known.
+**Status tags.** **[C]** stated in the project charter. **[R]** stated in the risk register. **[V]** validated with business users. **[D]** stated in the kick-off deck. **[P]** proposed by the analyst, needs review. **TBD** not decided; the owner is named where known.
 
 ---
 
@@ -691,21 +691,44 @@ Initial change impact assessment: **High** [C].
 
 ### 9.2 Technical Risks
 
-| # | Risk | Impact | Mitigation | Status |
-|---|---|---|---|---|
-| R1 | ERP API endpoints not ready for master data and transaction sync | Blocks I1 to I10; MVP go-live | Confirm SAP interfaces through architecture assessment [C]; SAP change request budget IDR 100 million [C]; build against mocks [P] | [D] RSK-01; mitigation [P] |
-| R2 | Suppliers or aggregators reluctant to open APIs | Stock sync limited | Spreadsheet and manual channels in MVP | [D] RSK-02; mitigation [V] MN-INV-07 |
-| R3 | Resistance to change from suppliers and internal users | Low use, KPI-03 missed | Pilot with 3 suppliers; key users per team [D p.13] | [D] RSK-03 |
-| R4 | Low supplier digital literacy | Slow adoption | Manual entry and spreadsheet channels; simple response flows | [D] RSK-04 |
-| R5 | Poor data quality (stock, forecast, master data) | Wrong alerts and metrics | Last-update times, stale flags, MDM validation | [D] RSK-05; mitigation [P] |
-| R6 | Deployment delay from scope creep or missing resources | Go-live slips | Non-goals in section 2.3; Software Engineer & QA role is vacant [D p.13], with IDR 400 million budgeted for third-party engineers [C] | [D] RSK-06 |
-| R7 | Integration errors between PTI and supplier ERPs | Wrong stock figures | Message log, retry, data-age warnings | [D] RSK-07; mitigation [P] |
-| R8 | Call-offs managed manually outside SAP today, so the hub becomes their only record | Data migration, reconciliation with SAP receipts | Decide migration and reconciliation (PQ-11); link receipts via ASN | [V] PQ-01; [P] |
-| R9 | Umbrella PO holds value only | Quantity-based checks may be impossible | Confirm PQ-12 | [V] PQ-01; open |
-| R10 | Foundation relationship with PROCIO undecided | Onboarding and master data design blocked | Decide DEC-05 in Discovery | [D] |
-| R11 | Replenishment method and governance not yet established | Call-off and forecast rules unclear | Consultant engagement, IDR 1 billion [C] | [C] |
+Source: *Risk Assessment Supply Chain Collaboration Hub* workbook [R], all rows identified 6 Aug 2026 and **Open**. The register pairs some risk descriptions with more than 1 mitigation row; they are merged below, with the register row IDs kept. The register's Impacts column is empty for every row, so the impact stated here is proposed [P].
 
-The charter's full risk and mitigation assessment is in a separate workbook, *Risk Assessment Supply Chain Collaboration Hub.xlsx*, not included here.
+**Status tag added:** **[R]** stated in the risk register.
+
+| # | Register rows | Risk | Phase | Owner | Mitigation plan [R] | Impact [P] | Linked requirements | Deck risk |
+|---|---|---|---|---|---|---|---|---|
+| R1 | 1 | Supplier integration capability or readiness is insufficient, causing manual transactions, delayed PO acknowledgement, and reconciliation issues | UAT & Go-Live | TPO, Material Planner | Sign a clear data-sharing agreement (NDA) | PO response SLA and stock data freshness missed | REQ-E07-02, REQ-E08-02, REQ-E07-08 | RSK-02 |
+| R2 | 2 | Supplier is reluctant to open their API | UAT & Go-Live | TPO, Material Planner | Offer tiered integration options: SFTP upload or manual portal entry | Stock sync limited to non-API channels | REQ-E08-02 | RSK-02 |
+| R3 | 3, 4 | Resistance to process change from suppliers and internal users | Hypercare | TPO, Material Planner, Procurement | (3) Identify and empower "champions" on both sides to model the new behaviour. (4) Run change-impact workshops with supplier representatives and internal teams before go-live | Adoption target S3 missed | All; S2, S3 | RSK-03 |
+| R4 | 5 | Low digital literacy among suppliers slows portal adoption | Hypercare | TPO, Material Planner, Procurement | Dedicated helpdesk or hotline for the first 60 days after launch | Onboarding target S2 missed | REQ-E08-02 (manual channel), Foundation | RSK-04 |
+| R5 | 6 | Poor data quality | Hypercare | Material Planner, Procurement, MDM | Data review and cleansing before go-live | Wrong alerts, stock figures, and metrics | REQ-E08-01, REQ-E08-05, REQ-E10-01, Foundation | RSK-05 |
+| R6 | 7, 8 | Deployment delayed by missed scope and resource availability | Development | TPO, Material Planner, Procurement | (7) Resource plan for key roles, tracking scope and resource risk. (8) Lock the MVP scope, with a formal change-control process for anything added later | Pilot go-live (Apr 2027) slips | Non-goals, section 2.3 | RSK-06 |
+| R7 | 9, 10 | Integration errors between PTI and supplier ERPs | UAT & Go-Live | TPO, ERP Team | (9) API compatibility assessment with PTI's and the supplier's ERP teams. (10) Structured integration testing (integration test, internal test, UAT) with the supplier before go-live | Wrong stock and transaction data | REQ-E07-08, REQ-E08-02; tests T8 | RSK-07 |
+| R8 | 11, 12 | Supplier updates incomplete or late | Hypercare | Material Planner, Procurement | (11) Automated reminder workflows in the portal for overdue updates. (12) Define data-update SLAs with suppliers | Stale stock, commitments, and confirmations | REQ-E08-01 (stale flag), REQ-E06-03 (reminders), REQ-E09-03 (reminders) | Not in deck |
+
+Row 8's mitigation text overlaps another cell in the workbook, so its wording ("formal change-control process") is a best reading.
+
+**Supporting facts from the charter** [C]: SAP interfaces to be confirmed by architecture assessment, with a SAP change request budget of IDR 100 million (supports R7); IDR 400 million for third-party engineers while the Software Engineer & QA role is vacant (supports R6).
+
+### 9.2a Risks not yet in the register (proposed additions)
+
+| # | Risk | Why it matters | Proposed mitigation | Source |
+|---|---|---|---|---|
+| RA1 | PTI's own SAP API endpoints are not ready for master data and transaction sync | The register covers supplier-side readiness (R1) but not PTI-side readiness, which the deck lists first | Confirm the interface list and owners in Discovery; build against mocks | [D] RSK-01 |
+| RA2 | Call-offs are managed manually outside SAP today, so the hub becomes their only record | Migration of manual records and reconciliation with SAP receipts | Decide PQ-11; link receipts to call-offs through the ASN | [V] PQ-01 |
+| RA3 | Umbrella PO holds value only | Quantity-based checks may be impossible | Confirm PQ-12 | [V] PQ-01 |
+| RA4 | Foundation relationship with PROCIO undecided | Onboarding and master data design blocked | Decide DEC-05 in Discovery | [D] |
+| RA5 | Replenishment method and governance not yet established | Call-off and forecast rules unclear | Consultant engagement, IDR 1 billion | [C] |
+
+### 9.2b Register points to confirm
+
+| # | Point |
+|---|---|
+| RQ1 | R2 offers **SFTP upload**. The validated requirement (REQ-E08-02) has spreadsheet template upload through the portal, API sync, and manual entry. Is SFTP a fourth channel, or is it the same as the spreadsheet upload? |
+| RQ2 | R1's mitigation (a data-sharing agreement) addresses willingness to share, not integration capability. Should R1 also carry a capability mitigation, such as the tiered channels in R2? |
+| RQ3 | R8's data-update SLAs need values: how often suppliers must update stock, capacity, and commitments. These are the same open parameters as the stale-data period (REQ-E08-01) and PQ-08 |
+| RQ4 | The Impacts column is empty for all 12 rows. Should the proposed impacts above be copied into the register? |
+| RQ5 | The deck's first risk (PTI ERP API readiness) is not in the register. Add it as RA1? |
 
 ### 9.3 Open Decisions Blocking the MVP
 
