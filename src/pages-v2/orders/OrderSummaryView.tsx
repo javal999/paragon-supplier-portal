@@ -204,7 +204,16 @@ const OrderSummaryView: React.FC<OrderSummaryViewProps> = ({ persona, foresightA
                   </Link>
                 </TableCell>
                 {persona === 'buyer' && (
-                  <TableCell className="text-sm text-text-primary">{po.supplierName}</TableCell>
+                  // The one free-text column beside seven status columns — bounded so a
+                  // 37-character supplier name does not wrap the whole row.
+                  <TableCell>
+                    <div
+                      className="text-sm text-text-primary truncate max-w-[13rem]"
+                      title={po.supplierName}
+                    >
+                      {po.supplierName}
+                    </div>
+                  </TableCell>
                 )}
                 <TableCell>
                   <Link to={poLink(po)} aria-label={`${po.poNumber}: ${t(`oc.summary.response.${response}`)}`}>

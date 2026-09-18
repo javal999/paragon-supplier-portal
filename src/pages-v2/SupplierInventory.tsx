@@ -166,9 +166,16 @@ const SupplierInventory: React.FC = () => {
           <tbody>
             {shown.map((p) => (
               <TableRow key={p.materialCode} data-testid={`sup-stock-row-${p.materialCode}`}>
+                {/* Bounded for the same reason as the PTI stock table: the material
+                    label is the one free-text column beside seven nowrap figures. */}
                 <TableCell>
                   <Data className="text-xs font-bold text-text-primary">{p.materialCode}</Data>
-                  <div className="text-sm text-text-primary">{p.materialLabel}</div>
+                  <div
+                    className="text-sm text-text-primary truncate max-w-[16rem]"
+                    title={p.materialLabel}
+                  >
+                    {p.materialLabel}
+                  </div>
                 </TableCell>
                 <TableCell className="text-right whitespace-nowrap">
                   <Figure value={p.supplierSoh} uom={p.uom} absentKey="inv.figure.noSubmission" />

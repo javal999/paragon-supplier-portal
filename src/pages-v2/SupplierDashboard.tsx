@@ -500,10 +500,14 @@ const SupplierDashboard: React.FC = () => {
           country: mySupplier.country,
           category: mySupplier.category,
         })}
-        {/* D-CENSUS-8 — the KPI tiles above were the only unmarked figures on a page
-            whose widgets each carry a derived marker; the briefing block below had
-            its own "Sample data" badge while the numbers at the top had none. */}
-        <ProvenanceMarker capability="dashboard" className="ml-3 align-middle" />
+        {/* REQ-E10-01 — the page-level marker is RETIRED, the same move phase 6b made
+            on my-performance. D-CENSUS-8 put it here because the KPI tiles were the only
+            unmarked figures on the page; since then the grade, the score and the OTIF
+            beside them became MEASURED from this supplier's own call-offs, heads-ups,
+            receipts and orders, and the identity card below is nothing but those three.
+            A marker on the meta line reads over that card, so it moved down onto the KPI
+            strip, which names the tile it does not speak for. The briefing block and the
+            fixture-backed widgets keep their own markers. */}
       </PageMetaLine>
 
       <section className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm p-6 mb-6">
@@ -550,6 +554,17 @@ const SupplierDashboard: React.FC = () => {
         </div>
       </section>
 
+      {/* Three counted-from-fixture tiles beside one measured one, so the marker says
+          which tile it is not speaking for rather than claiming the row. */}
+      <div
+        className="mb-2 flex flex-wrap items-center gap-3"
+        data-testid="supplier-dashboard-kpi-provenance"
+      >
+        <ProvenanceMarker capability="dashboard" />
+        <span className="text-meta text-text-tertiary">
+          {t('supplierDashboard.kpi.otif.eyebrow')}: {t('perf.calculated')}
+        </span>
+      </div>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-5 mb-6">
         <KpiCard
           eyebrow={t('supplierDashboard.kpi.openOrders.eyebrow')}
@@ -705,69 +720,76 @@ const SupplierDashboard: React.FC = () => {
                 {t('supplierDashboard.orders.title')}
               </h2>
             </div>
-            <Table>
-              <TableHeader>
-                <TableHeaderCell>{t('supplierDashboard.orders.col.po')}</TableHeaderCell>
-                <TableHeaderCell>{t('supplierDashboard.orders.col.orderDate')}</TableHeaderCell>
-                <TableHeaderCell className="text-right">{t('supplierDashboard.orders.col.items')}</TableHeaderCell>
-                <TableHeaderCell className="text-right">{t('supplierDashboard.orders.col.value')}</TableHeaderCell>
-                <TableHeaderCell>{t('supplierDashboard.orders.col.status')}</TableHeaderCell>
-                <TableHeaderCell className="text-right">{t('supplierDashboard.orders.col.action')}</TableHeaderCell>
-              </TableHeader>
-              <tbody>
-                {sortedPOs.map((po) => {
-                  const isActionable =
-                    po.status === POStatus.SENT ||
-                    po.status === POStatus.ACKNOWLEDGED;
-                  const isConfirmed = po.status === POStatus.CONFIRMED;
-                  const btnLabel = isActionable
-                    ? t('supplierDashboard.orders.action.confirm')
-                    : isConfirmed
-                      ? t('supplierDashboard.orders.action.createAsn')
-                      : t('supplierDashboard.orders.action.view');
-                  return (
-                    <TableRow key={po.id}>
-                      <TableCell>
-                        <Data className="text-xs font-bold text-text-primary">
-                          {po.poNumber}
-                        </Data>
-                      </TableCell>
-                      <TableCell className="whitespace-nowrap text-text-secondary">
-                        <Data>{fmtDate(po.orderDate)}</Data>
-                      </TableCell>
-                      <TableCell className="text-right text-text-secondary">
-                        {po.lineItems.length}
-                      </TableCell>
-                      <TableCell className="text-right font-semibold text-text-primary whitespace-nowrap">
-                        <Data>{fmtIDR(po.totalValue)}</Data>
-                      </TableCell>
-                      <TableCell>
-                        <StatusPill variant={statusTone(po.status)}>
-                          {po.status}
-                        </StatusPill>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          variant={isActionable ? 'outline' : 'secondary'}
-                          onClick={() =>
-                            toast({
-                              variant: 'info',
-                              title: isActionable
-                                ? t('supplierDashboard.orders.toast.opening', { po: po.poNumber })
-                                : isConfirmed
-                                  ? t('supplierDashboard.orders.toast.creatingAsn', { po: po.poNumber })
-                                  : t('supplierDashboard.orders.toast.viewing', { po: po.poNumber }),
-                            })
-                          }
-                        >
-                          {btnLabel}
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </tbody>
-            </Table>
+            {/* This table sits in the 3fr half of `xl:grid-cols-[3fr_2fr]`, so at
+                1280px it has ~574px for six columns that want ~750px — the Action
+                button was the part that fell off, silently. Same remedy as the
+                compliance table: scroll the table inside its own box rather than
+                clip it, with the section keeping `overflow-hidden` for its corners. */}
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableHeaderCell>{t('supplierDashboard.orders.col.po')}</TableHeaderCell>
+                  <TableHeaderCell>{t('supplierDashboard.orders.col.orderDate')}</TableHeaderCell>
+                  <TableHeaderCell className="text-right">{t('supplierDashboard.orders.col.items')}</TableHeaderCell>
+                  <TableHeaderCell className="text-right">{t('supplierDashboard.orders.col.value')}</TableHeaderCell>
+                  <TableHeaderCell>{t('supplierDashboard.orders.col.status')}</TableHeaderCell>
+                  <TableHeaderCell className="text-right">{t('supplierDashboard.orders.col.action')}</TableHeaderCell>
+                </TableHeader>
+                <tbody>
+                  {sortedPOs.map((po) => {
+                    const isActionable =
+                      po.status === POStatus.SENT ||
+                      po.status === POStatus.ACKNOWLEDGED;
+                    const isConfirmed = po.status === POStatus.CONFIRMED;
+                    const btnLabel = isActionable
+                      ? t('supplierDashboard.orders.action.confirm')
+                      : isConfirmed
+                        ? t('supplierDashboard.orders.action.createAsn')
+                        : t('supplierDashboard.orders.action.view');
+                    return (
+                      <TableRow key={po.id}>
+                        <TableCell>
+                          <Data className="text-xs font-bold text-text-primary">
+                            {po.poNumber}
+                          </Data>
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap text-text-secondary">
+                          <Data>{fmtDate(po.orderDate)}</Data>
+                        </TableCell>
+                        <TableCell className="text-right text-text-secondary">
+                          {po.lineItems.length}
+                        </TableCell>
+                        <TableCell className="text-right font-semibold text-text-primary whitespace-nowrap">
+                          <Data>{fmtIDR(po.totalValue)}</Data>
+                        </TableCell>
+                        <TableCell>
+                          <StatusPill variant={statusTone(po.status)}>
+                            {po.status}
+                          </StatusPill>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant={isActionable ? 'outline' : 'secondary'}
+                            onClick={() =>
+                              toast({
+                                variant: 'info',
+                                title: isActionable
+                                  ? t('supplierDashboard.orders.toast.opening', { po: po.poNumber })
+                                  : isConfirmed
+                                    ? t('supplierDashboard.orders.toast.creatingAsn', { po: po.poNumber })
+                                    : t('supplierDashboard.orders.toast.viewing', { po: po.poNumber }),
+                              })
+                            }
+                          >
+                            {btnLabel}
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </tbody>
+              </Table>
+            </div>
           </section>
         </div>
 

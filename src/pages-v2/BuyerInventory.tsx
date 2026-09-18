@@ -225,16 +225,32 @@ const BuyerInventory: React.FC = () => {
           <tbody>
             {shown.map((p) => (
               <TableRow key={`${p.supplierId}-${p.materialCode}`} data-testid={`pti-stock-row-${p.supplierId}-${p.materialCode}`}>
+                {/* Nine columns, six of them `whitespace-nowrap` figures: the two
+                    free-text ones have to be bounded or they wrap over several lines
+                    and push the right-hand columns out. Same bound-and-truncate as
+                    `BuyerOrders`; the full value stays on the `title`. */}
                 <TableCell>
                   <Data className="text-xs font-bold text-text-primary">{p.materialCode}</Data>
-                  <div className="text-sm text-text-primary">{p.materialLabel}</div>
+                  <div
+                    className="text-sm text-text-primary truncate max-w-[14rem]"
+                    title={p.materialLabel}
+                  >
+                    {p.materialLabel}
+                  </div>
                   {p.consignment && (
                     <StatusPill variant="info" className="mt-1">
                       {t('inv.consignment')}
                     </StatusPill>
                   )}
                 </TableCell>
-                <TableCell className="text-sm text-text-primary">{p.supplierName}</TableCell>
+                <TableCell>
+                  <div
+                    className="text-sm text-text-primary truncate max-w-[12rem]"
+                    title={p.supplierName}
+                  >
+                    {p.supplierName}
+                  </div>
+                </TableCell>
                 <TableCell className="text-right whitespace-nowrap">
                   <Figure value={p.supplierSoh} uom={p.uom} absentKey="inv.figure.noSubmission" />
                 </TableCell>

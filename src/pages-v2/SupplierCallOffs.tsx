@@ -213,11 +213,22 @@ const SupplierCallOffs: React.FC = () => {
                   <TableCell>
                     <Data className="text-xs text-text-secondary whitespace-nowrap">{c.poNumber}</Data>
                   </TableCell>
+                  {/* Ten columns is the widest table in the hub, and the material
+                      description is the only free-text one: left unbounded it wrapped
+                      over three or four lines at 1280–1440px and pushed Action off the
+                      edge. Bounded and truncated the way `BuyerOrders` bounds its own
+                      material column; the full value stays reachable from the `title`
+                      and from the row's side panel, which prints it in full. */}
                   <TableCell>
-                    <Data as="div" className="text-[11px] text-text-tertiary">
+                    <Data as="div" className="text-[11px] text-text-tertiary whitespace-nowrap">
                       {c.materialCode}
                     </Data>
-                    <div className="text-xs text-text-primary">{c.description}</div>
+                    <div
+                      className="text-xs text-text-primary truncate max-w-[14rem]"
+                      title={c.description}
+                    >
+                      {c.description}
+                    </div>
                   </TableCell>
                   <TableCell className="text-right whitespace-nowrap">
                     <Data>{`${qty(c.quantity)} ${c.uom}`}</Data>

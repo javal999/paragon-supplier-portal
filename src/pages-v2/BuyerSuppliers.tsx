@@ -146,10 +146,12 @@ const BuyerSuppliers: React.FC = () => {
           ? t('buyerSuppliers.meta.records.one', { count: counts.total })
           : t('buyerSuppliers.meta.records.other', { count: counts.total })}{' '}
         · {t('buyerSuppliers.meta.lastUpdated')} <Data>{lastUpdated}</Data>
-        {/* D-CENSUS-8 — supplier master carried NO marker while the transactional
-            lanes all wore one, so the least-real surface read as the most
-            trustworthy. `suppliers` is null-backed → feed axis only, no verb axis. */}
-        <ProvenanceMarker capability="suppliers" className="ml-3 align-middle" />
+        {/* REQ-E10-01 — the page-level marker is RETIRED, the same move phase 6b made
+            on the scorecard. D-CENSUS-8 put it here because supplier master carried no
+            marker at all; since the OTIF column stopped being a stored field and became
+            a measure over this hub's own call-offs, a page-level "Sample data" claim is
+            FALSE about the one number a buyer reads this table for. The marker moved
+            onto the table below, which states which column it does not speak for. */}
       </PageMetaLine>
 
       <SubTabs
@@ -199,6 +201,19 @@ const BuyerSuppliers: React.FC = () => {
       </div>
 
       <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-hidden">
+        {/* The marker sits on the company master — name, country, tier, category,
+            compliance and status are all authored — and says in the same breath which
+            column it is NOT speaking for, the way the analytics table names its own
+            sample columns. `suppliers` is null-backed → feed axis only, no verb axis. */}
+        <div
+          className="px-4 py-3 border-b border-border-subtle flex flex-wrap items-center gap-3"
+          data-testid="suppliers-provenance"
+        >
+          <ProvenanceMarker capability="suppliers" />
+          <span className="text-meta text-text-tertiary">
+            {t('buyerSuppliers.col.otif')}: {t('perf.calculated')}
+          </span>
+        </div>
         <Table>
           <TableHeader>
             <TableHeaderCell>{t('buyerSuppliers.col.supplier')}</TableHeaderCell>

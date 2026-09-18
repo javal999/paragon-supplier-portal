@@ -229,7 +229,18 @@ const BuyerCommitments: React.FC = () => {
                     <TableCell>
                       <Data>{i + 1}</Data>
                     </TableCell>
-                    <TableCell className="text-sm text-text-primary">{l.supplierName}</TableCell>
+                    {/* Eleven columns — the widest list on the PTI side. The two
+                        free-text ones (supplier name, root-cause note) are bounded so
+                        the Actions column keeps its place; both keep the full value on
+                        the `title`. */}
+                    <TableCell>
+                      <div
+                        className="text-sm text-text-primary truncate max-w-[12rem]"
+                        title={l.supplierName}
+                      >
+                        {l.supplierName}
+                      </div>
+                    </TableCell>
                     <TableCell>
                       <Data>{l.materialCode}</Data>
                     </TableCell>
@@ -243,7 +254,12 @@ const BuyerCommitments: React.FC = () => {
                     <TableCell className="text-right">
                       {l.committedQty !== null && l.state !== 'awaiting' ? <Data>{qtyText(l.committedQty)}</Data> : '—'}
                       {reason && (
-                        <div className="text-xs text-text-secondary">
+                        <div
+                          className="text-xs text-text-secondary truncate max-w-[12rem] ml-auto"
+                          title={`${t(`fc.reason.${reason.level1}`, { defaultValue: reason.level1 })}${
+                            reason.note ? ` — ${reason.note}` : ''
+                          }`}
+                        >
                           {t(`fc.reason.${reason.level1}`, { defaultValue: reason.level1 })}
                           {reason.note ? ` — ${reason.note}` : ''}
                         </div>
