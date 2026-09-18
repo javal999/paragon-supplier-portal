@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 0.5 draft, 2026-09-17 |
+| Version | 0.6 draft, 2026-09-18 |
 | Sources | `SUPPLIER-HUB-BASELINE.md` (kick-off deck, Aug 2026); `KICKOFF-MEETING-NOTES.md` (business user feedback, reviewed 2026-09-17); owner review of the prototype gap review (2026-09-17) |
 | Scope of this version | Detailed: Order Collaboration, Inventory & Capacity Collaboration, RFx (validated); Forecast Collaboration, Call-off Management, and the undiscussed parts of Order and Inventory Collaboration (proposed). Hub navigation and screen conventions (validated). Foundation is reserved for the Foundation team. The remaining epics are stubs |
 | Not in scope | The codebase. This file states what the Supplier Hub must do, not what is built. What the prototype does today, and where, is tracked only in `BUILD-GAP.md` |
@@ -165,6 +165,21 @@ Every requirement that calculates something refers to a rule here by its `CR-` I
 | CR-22 | Commitment gap colour | Commitment ÷ forecast: Green at 1.0 or more; Amber from 0.8 to below 1.0; Red below 0.8 | REQ-E06-03 | [Owner]; thresholds from CR-03 [Code] |
 
 **Starter reason codes** [Code], used by REQ-E07-02 (Adjust), REQ-E08-04 (capacity shortfall), and REQ-E06-02 (commitment shortfall) until the Material Planner supplies the final list: Capacity, Material, Logistics, Quality, Other (with a note).
+
+### 3.6a Creating a sourcing event
+
+How an RFI, RFQ or RFP comes into being, before it reaches suppliers [Owner, A-04, 2026-09-18]. The same rules apply to all 3 event types.
+
+- CE-01. The buyer creates the event. There is no sourcing request object in the MVP: a planner or requester asks Procurement outside the hub. Sourcing request (E03.01) stays a stub for a later phase [Owner].
+- CE-02. Where a purchase requisition exists, the buyer can start an RFQ from it, and its fields are pre-filled (REQ-E03-03 BR-04). A requisition is never required [Owner].
+- CE-03. The buyer starts from the central library: 1 RFI template per category family, and the standard RFP term list. The buyer adds or removes questions or terms for that 1 event; the library is not changed by doing so [Owner].
+- CE-04. A buyer cannot save a new template and cannot copy a past event into a new one in the MVP [Owner].
+- CE-05. Procurement owns the question library and the term list. A change is made by IT on Procurement's request; there is no admin screen in the MVP [Owner].
+- CE-06. No approval is needed before an event is sent: the buyer sends it. Creating and sending are separate permissions, so a second pair of eyes can be required by giving them to different people, but the hub does not demand it [Owner].
+- CE-07. Every event carries a response deadline, at least 1 invited supplier, and the scope the suppliers answer, before it can be sent [Proposed].
+- CE-08. The whole event is auditable: who created it, what was added or removed against the template, who sent it, and when [Proposed; charter requires 100% sourcing documentation].
+
+**Why it is worth revisiting later.** CE-01 leaves the ask in email, and CE-05 means a new question waits on an IT change. Both are acceptable while the pilot runs a handful of events; neither scales to routine sourcing. The candidates are the sourcing request (E03.01) and an admin screen for the library.
 
 ### 3.7 Hub navigation
 
@@ -333,7 +348,7 @@ Reserved for the Foundation team: E01 Supplier Registration & Onboarding and E02
 - AC-02. A supplier can submit capability, experience, facility, and product entries, each with a description.
 - AC-03. Submitted product entries are stored in a form a later RFQ can select from (REQ-E03-03).
 
-**RFI template** [Proposed; Market; pending user use cases, A-03]. A template is a set of reusable sections plus questions from a question library. Procurement keeps 1 template per category family, such as "Packaging RFI" and "Raw material RFI". The buyer starts from a template and can add or remove questions for one event. Company identity (legal name, tax ID, address, bank) is read from the supplier master (Foundation) and never asked again.
+**RFI template** [Proposed; Market; pending user use cases, A-03]. How an event is created from a template is in section 3.6a. A template is a set of reusable sections plus questions from a question library. Procurement keeps 1 template per category family, such as "Packaging RFI" and "Raw material RFI". The buyer starts from a template and can add or remove questions for one event. Company identity (legal name, tax ID, address, bank) is read from the supplier master (Foundation) and never asked again.
 
 | Section | What the supplier answers | Structured as |
 |---|---|---|
@@ -353,7 +368,7 @@ Template rules:
 
 **Metrics.** Leading: RFI response rate; median time to respond. Lagging: KPI-06.
 
-**Open items.** D-07: the catalog needed by RFI is Phase 2 in the deck. A-01. A-03 (RFI template review with users). A-04 (how the RFI is created before it is sent).
+**Open items.** D-07: the catalog needed by RFI is Phase 2 in the deck. A-01. A-03 (RFI template review with users).
 
 #### REQ-E03-03  Request for Quotation (RFQ) with RFI reuse
 
@@ -424,7 +439,7 @@ Template rules:
 - AC-01. A buyer can create an RFP with a list of required commercial terms.
 - AC-02. A supplier can respond to each listed term.
 
-**RFP template** [Proposed; Market; pending user use cases, A-03]. An RFP has 3 parts: the buyer's scope, a commercial terms table, and supporting attachments. The terms table is the part suppliers answer and buyers compare.
+**RFP template** [Proposed; Market; pending user use cases, A-03]. How an event is created from the term list is in section 3.6a. An RFP has 3 parts: the buyer's scope, a commercial terms table, and supporting attachments. The terms table is the part suppliers answer and buyers compare.
 
 Each term row holds: term name; PTI's requested value; the supplier's proposed value; Comply or Deviate; a comment, required when the supplier deviates.
 
@@ -449,7 +464,7 @@ Template rules:
 
 **Metrics.** Lagging: KPI-06.
 
-**Open items.** A-03 (RFP template and standard term list review with Procurement). A-04 (how the RFP is created before it is sent).
+**Open items.** A-03 (RFP template and standard term list review with Procurement).
 
 #### REQ-E03-05  Bid comparison, negotiation, and awarding
 
@@ -1442,7 +1457,6 @@ All requirements in this section are **Proposed**, written from market practice 
 |---|---|---|
 | Q-18 | Which working calendar defines the 1-working-day deadline. Recommended default in section 3.4 | REQ-E07-02 |
 | A-03 | Review with users: RFI template, RFP template and standard term list, quote score weights (CR-15) | REQ-E03-02, REQ-E03-04, REQ-E03-05 |
-| A-04 | How an RFI or RFP is created before it is sent: who drafts it, whether a template is chosen or built each time, how buyer questions and commercial terms are assembled, and whether anyone reviews or approves it before it goes to suppliers. Today only the sent event and the supplier's answers are described (owner, 2026-09-18) | REQ-E03-02, REQ-E03-04 |
 | Q-20 | Quality inspection result is recorded in the hub for the MVP, while the Supplier Quality module is Phase 2 and goods receipt posting stays in SAP. Confirm the boundary | REQ-E07-06 |
 | A-01 | Check with Mas Ary Hidayat on compliance and capability for RFx | REQ-E03-01 to REQ-E03-04 |
 | A-02 | Full parameter list for supplier filtering | REQ-E03-01 |
@@ -1511,6 +1525,7 @@ Research date: 2026-09-17. Vendor pages were read directly unless marked "snippe
 | RFX-1 | Supplier filters for sourcing events | Category and purchasing group |
 | RFX-2 | Is a purchase requisition required to create an RFQ | No. An RFQ can start from scratch, an RFI, or a purchase requisition |
 | RFX-3 | Bid comparison, negotiation, and award | A negotiation step is required, and an event can be awarded to more than 1 supplier |
+| A-04 | How an RFI or RFP is created before it is sent | The buyer creates it; no sourcing request in the MVP. Central library, edited per event, with no save-as-template. Procurement owns the library and IT changes it on request. No approval before sending (section 3.6a) |
 | GAP-1 | Prototype experience that differs from this file | This file wins |
 | GAP-2 | Calculations where this file was silent or open | Follow the prototype (section 3.6, tag `[Code]`) |
 | GAP-3 | Menu, usability, and screen conventions | Follow the gap review recommendations (sections 3.7 and 3.8) |
@@ -1526,3 +1541,4 @@ Research date: 2026-09-17. Vendor pages were read directly unless marked "snippe
 | 0.3 | 2026-09-17 | Applied PQ-01 (call-offs outside SAP) and PQ-10 (dispatch heads-up, no dock scheduling); REQ-E09-04 rescoped |
 | 0.4 | 2026-09-17 | Applied owner decisions from the prototype gap review: shared calculation rules (3.6), hub navigation (3.7), screen conventions (3.8); RFI and RFP templates; RFQ from a purchase requisition; REQ-E03-05 detailed with negotiation and multi-award; recommendations filled for open points in E07, E08, E09, E10. E06 held for owner review (E06-R) |
 | 0.5 | 2026-09-17 | Applied the confirmed Forecast Collaboration recommendations (E06-R): section 5.5 validated, CR-21 and CR-22 added |
+| 0.6 | 2026-09-18 | Answered A-04: section 3.6a records how a sourcing event is created before it is sent |
