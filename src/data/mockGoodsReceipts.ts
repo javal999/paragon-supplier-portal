@@ -86,7 +86,17 @@ const mockGoodsReceiptsRaw: GoodsReceipt[] = [
     poNumber: 'PO-2025-00101',
     supplierId: 'sup-001',
     supplierName: 'PT Sample Oleochemicals',
-    receivedDate: '2026-05-19',
+    // ⚠️ MOVED BACK 31 DAYS FROM `2026-05-19`, AND THE REASON IS CROSS-FAMILY.
+    // This family and `purchaseOrder` are anchored separately (they must be —
+    // their raw literals live a year apart), so the shift that re-times the
+    // receipts is not the shift that re-times the orders. Read together at the
+    // declared present, this receipt landed NINE DAYS AFTER the confirmed
+    // delivery date of the order it fulfils, which made `poCfot` read
+    // `PO-2025-00101` as 0% delivered-on-time — the whole of sup-001's CFOT.
+    // Only the two rows whose parent order they contradicted were moved
+    // (this one and `gr-005`); the rest are left late ON PURPOSE, so CFOT is a
+    // spread and not a flat 100%.
+    receivedDate: '2026-04-18',
     receivedBy: 'Warehouse Supervisor',
     status: 'Under Inspection',
     inspectionResults: [
@@ -192,7 +202,12 @@ const mockGoodsReceiptsRaw: GoodsReceipt[] = [
     poNumber: 'PO-2025-00116',
     supplierId: 'sup-002',
     supplierName: 'PT Sample Specialty Fats',
-    receivedDate: '2026-05-15',
+    // Moved back 18 days from `2026-05-15`, for the reason stated on `gr-001`:
+    // `PO-2025-00116` is confirmed for two days after this, so the receipt now
+    // reads on time. `gr-014`, the other sup-002 receipt, is deliberately left
+    // late — one supplier with one of each is what makes the percentage mean
+    // something.
+    receivedDate: '2026-04-27',
     receivedBy: 'Warehouse Supervisor',
     status: 'Posted to SAP',
     inspectionResults: [
@@ -462,6 +477,120 @@ const mockGoodsReceiptsRaw: GoodsReceipt[] = [
     disposition: 'Accept',
     sapMaterialDoc: 'MAT-DOC-501205',
   },
+  // ══ THE sup-007 WALKTHROUGH RECEIPTS — demo data ═══════════════════════════
+  //
+  // Three receipts against the two DELIVERED sup-007 orders authored in
+  // `mockPurchaseOrders.ts`, one per state the receipt lane can render and
+  // could not previously reach for this supplier:
+  //
+  //   gr-015  a quantity discrepancy with NO answer yet → the supplier can still
+  //           acknowledge or DISPUTE it (`awaitsSupplierAnswer`)
+  //   gr-016  a discrepancy the supplier HAS disputed → waiting on PTI
+  //           (`isOpenDispute`; the answer itself is seeded in
+  //           `stores/receiptDiscrepancyStore.ts`, never here — a response is
+  //           something a supplier gives)
+  //   gr-017  clean, Approved, fully accepted → the one receipt a sup-007 user
+  //           can raise an invoice from with no setup at all
+  //           (`INVOICEABLE_RECEIPT_STATES` × `remainingInvoiceableQty > 0`)
+  //
+  // ⚠️ `hasReceiptDiscrepancy` COMPARES AGAINST `qtyExpected`, NOT AGAINST AN
+  // ASN, because no goods receipt in this fixture resolves an ASN number
+  // (`compareReceipt` falls back to `qtyExpected` when it cannot find one). So
+  // a short RECEIPT is what flags gr-015, and a rejected quantity is what flags
+  // gr-016 — two different arms of the same predicate, deliberately.
+  //
+  // ⚠️ THE DATES ARE NOT FREE, AND NEITHER ARE THE MATERIALS. sup-007's only
+  // two document-lane codes (`PK-PETB-8801`, `-8802`) BOTH carry call-off
+  // programmes, and `receiptEvents` matches a delivery to a call-off on
+  // supplier + material within SEVEN DAYS of its approved date and consumes it
+  // once, globally. Using a code outside the lane instead was tried and
+  // rejected: `materialIdentity.test.ts` pins the document lane at an exact
+  // size and asserts `PK-PETB-8810` / `PK-CAPF-8820` absent from it BY NAME.
+  // So the codes stay, and every receipt here is dated OUTSIDE the ±7-day
+  // window of every sup-007 call-off (nearest: `co-0001`, 2026-08-27, nine days
+  // from `gr-015`; `co-0013`, 2026-08-31, eleven from `gr-017`). Move one of
+  // these three dates later and `co-0001`'s OTIF quietly re-decides.
+  {
+    id: 'gr-015',
+    grNumber: 'GR-2026-015',
+    asnId: 'shp-025',
+    asnNumber: 'ASN-2026-025',
+    poNumber: 'PO-2026-00125',
+    supplierId: 'sup-007',
+    supplierName: 'PT Sample Packaging Indonesia',
+    receivedDate: '2026-05-07',
+    receivedBy: 'Warehouse Supervisor',
+    status: 'Partially Approved',
+    inspectionResults: [
+      {
+        materialCode: 'PK-PETB-8801',
+        description: 'PET Bottle 200ml Frosted — Wardah Series',
+        qtyExpected: 50000,
+        qtyReceived: 47500,
+        qtyAccepted: 47500,
+        qtyRejected: 0,
+        visualCheck: 'Pass',
+        packagingCheck: 'Pass',
+        bpomLotCheck: 'N/A' as OptionalCheck,
+      },
+    ],
+    disposition: 'Accept',
+    notes: 'Short by 2,500 PCS against the ordered quantity — counted twice at Dock B-2.',
+  },
+  {
+    id: 'gr-016',
+    grNumber: 'GR-2026-016',
+    asnId: 'shp-026',
+    asnNumber: 'ASN-2026-026',
+    poNumber: 'PO-2026-00125',
+    supplierId: 'sup-007',
+    supplierName: 'PT Sample Packaging Indonesia',
+    receivedDate: '2026-05-08',
+    receivedBy: 'QC Inspector',
+    status: 'Partially Approved',
+    inspectionResults: [
+      {
+        materialCode: 'PK-PETB-8802',
+        description: 'PET Bottle 100ml Clear — Emina Series',
+        qtyExpected: 50000,
+        qtyReceived: 48800,
+        qtyAccepted: 48000,
+        qtyRejected: 800,
+        rejectionReason: 'Neck-finish deformation on 800 PCS from lot LOT-F2210.',
+        visualCheck: 'Fail',
+        packagingCheck: 'Pass',
+        bpomLotCheck: 'N/A' as OptionalCheck,
+      },
+    ],
+    disposition: 'Quarantine',
+  },
+  {
+    id: 'gr-017',
+    grNumber: 'GR-2026-017',
+    asnId: 'shp-027',
+    asnNumber: 'ASN-2026-027',
+    poNumber: 'PO-2026-00126',
+    supplierId: 'sup-007',
+    supplierName: 'PT Sample Packaging Indonesia',
+    receivedDate: '2026-05-09',
+    receivedBy: 'Warehouse Supervisor',
+    status: 'Approved',
+    inspectionResults: [
+      {
+        materialCode: 'PK-PETB-8802',
+        description: 'PET Bottle 100ml Clear — Emina Series',
+        qtyExpected: 40000,
+        qtyReceived: 40000,
+        qtyAccepted: 40000,
+        qtyRejected: 0,
+        visualCheck: 'Pass',
+        packagingCheck: 'Pass',
+        bpomLotCheck: 'N/A' as OptionalCheck,
+      },
+    ],
+    disposition: 'Accept',
+  },
+
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────

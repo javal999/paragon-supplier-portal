@@ -242,13 +242,28 @@ describe('2B-5b-i — the ASN lane resolves', () => {
       'PO-2025-00114',
       'PO-2025-00116',
     ]);
-    expect(mockPurchaseOrders).toHaveLength(21);
+    // ⚠️ 21 UNTIL THE DEMO-DATA BATCH ADDED THE sup-007 WALKTHROUGH SET (7 rows,
+    // `po-021` … `po-027`). A count in a spec is a floor on the population the
+    // assertions above ran over, not a claim about the fixture's contents — it
+    // is restated rather than derived because deriving it from the array under
+    // test is a tautology.
+    expect(mockPurchaseOrders).toHaveLength(28);
     // ⚠️ "NO LINES" IS NOT "FULLY RECEIVED" — pinned DIRECTLY, not only through
-    // the selection rule. Level 2 of that rule now decides `ASN-2025-00215`
-    // before level 4 is ever reached, so the three-valued predicate stopped
-    // being load-bearing there the moment the rule got better. A correctness
-    // fix that nothing exercises is a correctness fix that will be undone, so
-    // the semantics get their own assertion: an empty line set answers NEITHER
+    // the selection rule.
+    //
+    // ⚠️ THE NOTE HERE SAID THE THREE-VALUED PREDICATE HAD STOPPED BEING
+    // LOAD-BEARING, AND IT IS LOAD-BEARING AGAIN. As written:
+    //
+    //     "Level 2 of that rule now decides `ASN-2025-00215` before level 4 is
+    //      ever reached, so the three-valued predicate stopped being
+    //      load-bearing there the moment the rule got better."
+    //
+    // True while sup-007 owned ONE order at or past confirmation. The demo-data
+    // batch gives it six, so level 2 returns six candidates and LEVEL 4 decides
+    // that row — on `po-024`, the one order with a line confirmed short. The
+    // direct assertion below was the right call for exactly this reason: it
+    // survived the period in which nothing else exercised it.
+    // The semantics, stated on their own: an empty line set answers NEITHER
     // "complete" NOR "outstanding".
     expect(po!.lineItems.every((l) => l.confirmedQty >= l.quantity)).toBe(true); // vacuous truth
     expect(po!.lineItems.some((l) => l.confirmedQty < l.quantity)).toBe(false); // vacuous falsity

@@ -100,8 +100,13 @@ describe('supplier Goods receipts page (REQ-E07-06)', () => {
     });
     renderWithProviders(<BuyerGoodsReceipt />, { identity: BUYER });
     const section = await screen.findByTestId('gr-receipt-disputes');
-    expect(within(section).getByText('Our QC passed this batch.')).toBeInTheDocument();
-    fireEvent.click(within(section).getByRole('button', { name: 'Resolve' }));
+    // ⚠️ SCOPED TO THE ROW THIS SPEC ADDED. The section-wide query found one
+    // button only while `receiptDiscrepancyStore` started empty; it now carries
+    // one seeded dispute (`gr-016`, sup-007) so that PTI's resolve affordance is
+    // reachable in the demo without somebody first dispatching a dispute by
+    // hand. The comment text is what identifies this spec's own row.
+    const row = within(section).getByText('Our QC passed this batch.').closest('tr')!;
+    fireEvent.click(within(row).getByRole('button', { name: 'Resolve' }));
     const confirm = panel().getByRole('button', { name: 'Resolve dispute' });
     expect(confirm).toBeDisabled();
     fireEvent.change(panel().getByLabelText('Resolution comment for the supplier'), {

@@ -169,8 +169,14 @@ describe('PTI Home', () => {
     renderWithProviders(<BuyerHome />, { identity: { ...BUYER, businessRoles: SEEDED_SEAT_ROLES.buyer } });
     const rejected = await screen.findByTestId('home-task-rejected-po');
     expect(rejected).toHaveTextContent('Rejected purchase orders');
-    // The fixture orders are dated 2025, long past any deadline: every
-    // unanswered one is escalated, derived from the clock at read time.
+    // ⚠️ THE REASON THIS TASK IS NON-EMPTY CHANGED. It read "the fixture orders
+    // are dated 2025, long past any deadline: every unanswered one is
+    // escalated" — true, and true of EVERY order, which made the assertion
+    // unfalsifiable by anything short of deleting the projection. The orders are
+    // anchored to the declared present now, and the seed deliberately holds BOTH
+    // shapes: `po-021` is sent on the present and is NOT escalated, while the
+    // older unanswered ones are. So this counts something the fixture could get
+    // wrong, and `BuyerOrders`' Escalated tab is reachable rather than universal.
     expect(await screen.findByTestId('home-task-escalated-po')).toHaveTextContent('Escalated purchase orders');
     expect(screen.queryByText(/after 48 hours/)).toBeNull();
   });

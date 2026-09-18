@@ -29,6 +29,7 @@ import { deadlineState } from '../services/transitions/forecastRules';
 import { isClosingSoon } from '../services/transitions/rfxRules';
 import { forecastNow } from './forecasts/forecastDisplay';
 import { rfxNow } from './rfx/rfxDisplay';
+import { ordersNow } from './orders/PoCollaboration';
 import { useSapInterface } from './interface/sapInterfaceDisplay';
 import { isRetryable } from '../services/data/sapInterfaceRules';
 
@@ -62,7 +63,13 @@ const BuyerHome: React.FC = () => {
 
   const tasks = useMemo<HomeTask[]>(() => {
     const now = new Date();
-    const nowIso = now.toISOString();
+    // ⚠️ THE ORDER LANE'S CLOCK, NOT THE WALL CLOCK — the same reading the
+    // negotiation task below takes, and for the same reason: the purchase-order
+    // fixtures are dated relative to the declared present, which is frozen,
+    // while `now` walks away from it. An order authored to sit inside its
+    // response window would read Escalated here and the two tasks would
+    // disagree with the order pages, which read `ordersNow()`.
+    const nowIso = ordersNow();
     const poItems = pos.data?.items ?? [];
     const invItems = invoices.data?.items ?? [];
     const rfqItems = rfqs.data?.items ?? [];

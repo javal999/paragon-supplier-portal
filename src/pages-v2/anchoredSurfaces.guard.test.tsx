@@ -48,10 +48,17 @@
 // ⚠️ **WHAT IS STILL DELIBERATELY NOT HERE: `BuyerDashboard` and the two widgets
 // rendered only on it.** Their day-counts come from PO and RFQ derivations that
 // take a `now` off the wall clock (`BuyerDashboard.tsx:144`,
-// `widgets/BuyerAlertsBar.tsx:48`), and those families — `purchaseOrder`, `rfq` —
-// are not anchored at all. **The invoice half of that exclusion is spent; the PO
-// and RFQ half stands**, and collapsing the two into one sentence is what let
-// the invoice half sit unexamined through two batches.
+// `widgets/BuyerAlertsBar.tsx:48`). **The invoice half of that exclusion is
+// spent; so, now, is half of what remained**, and collapsing them into one
+// sentence is what let the invoice half sit unexamined through two batches — so
+// the halves are counted separately here:
+//   · `purchaseOrder` IS an anchored family since the demo-data batch, and the
+//     three order SURFACES (`BuyerOrders`, `SupplierOrders`, the order summary)
+//     read `ordersNow()` rather than the wall clock. `BuyerDashboard` still does
+//     not, so its exclusion now rests on the SURFACE and no longer on the
+//     fixtures — a narrower claim, and a smaller job than it was.
+//   · `rfq` still has no `FAMILY_ANCHORS` entry (it carries its own ad-hoc shift
+//     in `mockRfqs.ts`), so that half stands unchanged.
 // ─────────────────────────────────────────────────────────────────────────────
 import React from 'react';
 import { describe, it, expect, afterEach } from 'vitest';

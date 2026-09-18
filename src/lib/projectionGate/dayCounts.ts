@@ -139,12 +139,27 @@ export const DAY_COUNTS: readonly DayCountRow[] = [
   //   quote stays — a deferral whose precondition is satisfied elsewhere does
   //   not announce itself.
   //
-  //   ⚠️ **THE TWO PO ROWS BELOW ARE NOT RIDING, AND THE DIFFERENCE IS DERIVED
-  //   RATHER THAN SCOPED AWAY:** `purchaseOrder` HAS NO ENTRY IN
-  //   `FAMILY_ANCHORS`, so its dates are still the raw literals and the quoted
-  //   reasoning still binds them exactly. "496 days late" remains the live risk
-  //   for a PO and is no longer one for a shipment. **Anchor that family first;
-  //   the fields are downstream of the anchoring, never the other way round.**
+  //   ⚠️ **THE TWO PO ROWS BELOW ARE NOT RIDING, AND THE REASON CHANGED WITHOUT
+  //   THE ANSWER CHANGING.** The sentence here read, verbatim:
+  //
+  //       "`purchaseOrder` HAS NO ENTRY IN `FAMILY_ANCHORS`, so its dates are
+  //        still the raw literals and the quoted reasoning still binds them
+  //        exactly. '496 days late' remains the live risk for a PO … Anchor
+  //        that family first; the fields are downstream of the anchoring, never
+  //        the other way round."
+  //
+  //   **THE PRECONDITION IS NOW MET.** The demo-data batch anchored
+  //   `purchaseOrder` (`services/data/fixturePresent.ts`), so "496 days late"
+  //   is no longer reachable for a PO either, exactly as it stopped being
+  //   reachable for a shipment at #319/#320.
+  //
+  //   The two rows STAY `stored-in-fixtures` all the same, and that is a
+  //   disposal rather than an oversight: unlike `daysInTransit`, `daysOverdue`
+  //   is not a difference against `now` at all — it is
+  //   `confirmedDeliveryDate − requestedDeliveryDate`, two STORED dates, which
+  //   is why `factWhenPresent` names one of them. Retiring it is a computation
+  //   over the fixture, not a clock projection, and it belongs to whichever
+  //   batch owns the field. What this batch removes is the EXCUSE, not the row.
   {
     owner: 'PurchaseOrder',
     field: 'daysOverdue',

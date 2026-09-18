@@ -56,6 +56,7 @@ import {
   PoLifecycleSteps,
   PoResponseDetails,
   RespondByLine,
+  ordersNow,
   ShippingNoticeDetails,
 } from './orders/PoCollaboration';
 import type { QtyRefusalReason } from '../lib/localeNumber';
@@ -215,7 +216,7 @@ const SupplierOrders: React.FC = () => {
   const supplierQuery = useCurrentSupplier();
   const posQuery = usePurchaseOrders();
   const asnsQuery = useASNs();
-  const nowIso = new Date().toISOString();
+  const nowIso = ordersNow();
 
   const mySupplier = supplierQuery.data ?? null;
 

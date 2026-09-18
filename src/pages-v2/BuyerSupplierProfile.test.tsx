@@ -1,6 +1,7 @@
 import { screen, fireEvent } from '@testing-library/react';
 import { Routes, Route } from 'react-router-dom';
 import { renderWithProviders } from '../test/test-utils';
+import { mockPurchaseOrders } from '../data/mockPurchaseOrders';
 import { mockDataService } from '../services/data/mock/mockDataService';
 import { withChaos } from '../services/data/mock/withChaos';
 import BuyerSupplierProfile from './BuyerSupplierProfile';
@@ -67,7 +68,15 @@ describe('BuyerSupplierProfile — honest states', () => {
     fireEvent.click(screen.getByRole('tab', { name: 'Performance' }));
     expect(await screen.findByText('Recent purchase orders')).toBeInTheDocument();
     // A real sup-007 PO proves the scoped read drove the table.
-    expect(await screen.findByText('PO-2025-00108')).toBeInTheDocument();
+    // ⚠️ DERIVED, NOT PINNED. This named `PO-2025-00108` and passed only while
+    // sup-007 owned few enough orders for it to sit inside the panel's four most
+    // recent. The panel's rule is "this supplier's orders, newest first" — so
+    // the fixture is asked which order that is, and the pin cannot go stale
+    // again when the seed grows.
+    const newest = [...mockPurchaseOrders]
+      .filter((p) => p.supplierId === 'sup-007')
+      .sort((a, b) => (a.orderDate < b.orderDate ? 1 : -1))[0];
+    expect(await screen.findByText(newest.poNumber)).toBeInTheDocument();
     // The former "Sample data" pill is gone from this section.
     // Only the page-level "Sample data" marker remains; the section has none of its own.
     expect(screen.queryAllByText('Sample data').length).toBeLessThanOrEqual(1);

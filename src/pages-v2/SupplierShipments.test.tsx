@@ -1,4 +1,4 @@
-import { screen, fireEvent, waitFor } from '@testing-library/react';
+import { screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { beforeEach } from 'vitest';
 import { renderWithProviders, SUPPLIER } from '../test/test-utils';
 import { mockDataService } from '../services/data/mock/mockDataService';
@@ -128,8 +128,13 @@ describe('SupplierShipments — ASN verbs (Step 4 batch i)', () => {
     renderWithProviders(<SupplierShipments />, { identity: SUPPLIER });
 
     // The confirmed PO surfaces in the "awaiting ASN" panel with a Create action.
-    expect(await screen.findByText('PO-2025-00108')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Create ASN' }));
+    // ⚠️ SCOPED TO ITS OWN ROW — sup-007 now has several confirmed orders with
+    // open quantity (the demo-data walkthrough set), so the panel offers several
+    // Create actions. Which PO the draft is raised against is the claim here,
+    // and the assertions below already say so; the click has to agree.
+    const cell = await screen.findByText('PO-2025-00108');
+    const row = (cell.closest('tr') ?? cell.closest('li') ?? cell.parentElement!) as HTMLElement;
+    fireEvent.click(within(row).getByRole('button', { name: 'Create ASN' }));
 
     // A Draft ASN was created for that PO — store re-derives; no fabricated id.
     await waitFor(() =>

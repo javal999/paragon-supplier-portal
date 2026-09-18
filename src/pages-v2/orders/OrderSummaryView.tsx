@@ -15,6 +15,7 @@ import LoadingState from '../../components/ui-v2/LoadingState';
 import ErrorState from '../../components/ui-v2/ErrorState';
 import type { StatusTone } from '../../lib/statusTone';
 import { formatDate } from '../../lib/format';
+import { ordersNow } from './PoCollaboration';
 import { useASNs, useCapacityPlans, usePurchaseOrders } from '../../services/query/hooks';
 import type { PurchaseOrder } from '../../services/data/types';
 import {
@@ -128,7 +129,7 @@ const OrderSummaryView: React.FC<OrderSummaryViewProps> = ({ persona, foresightA
   const asnsQuery = useASNs();
   const callOffs = useCallOffViews();
   const capacityPlans = useCapacityPlans();
-  const nowIso = new Date().toISOString();
+  const nowIso = ordersNow();
   const base = persona === 'buyer' ? '/buyer' : '/supplier';
   const crumb = [
     t(persona === 'buyer' ? 'hub.nav.section.orders' : 'hub.nav.section.supplierOrders'),

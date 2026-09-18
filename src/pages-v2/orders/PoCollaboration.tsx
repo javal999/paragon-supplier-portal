@@ -14,6 +14,7 @@ import {
   responseDeadline,
   type StepState,
 } from '../../services/data/poResponseProjection';
+import { sdcClock } from '../../services/sdc/clock';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Order collaboration read blocks shared by the PTI and supplier PO panels:
@@ -21,6 +22,32 @@ import {
 // (REQ-E07-05) and the PO's steps (SC-02). Read-only; the actions stay on the
 // pages that own them.
 // ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * ⚠️ **THE ORDER LANE'S CLOCK — the declared present, not the wall clock.**
+ *
+ * `Escalated` is computed at read from the response deadline and an injected
+ * `now` (`poResponseProjection.ts`, law 0.5), and every order in
+ * `mockPurchaseOrders.ts` is now dated relative to `DECLARED_PRESENT` by the
+ * `purchaseOrder` family anchor. The three surfaces that render a PO status
+ * used to pass `new Date().toISOString()`, which was defensible only while the
+ * fixture carried raw 2025 literals — every unanswered order was escalated, so
+ * the wall clock could not be wrong about one.
+ *
+ * It can now. The declared present is a FROZEN day and the wall clock walks
+ * away from it between bumps, so an order authored to sit INSIDE its
+ * one-working-day window reads Escalated the moment the two diverge — the
+ * demo's only non-escalated awaiting order silently stops existing, with
+ * nothing able to say so. This is the same reading `forecastNow`, `rfxNow` and
+ * `inventoryNow` already take for their lanes, and `BuyerHome` states the
+ * reason on the negotiation task in almost these words.
+ *
+ * ⚠️ It is `sdcClock.now()` rather than `DECLARED_PRESENT` because the SDC
+ * clock IS the declared present plus a time of day (`services/sdc/clock.ts`),
+ * and a deadline is an INSTANT: a bare date would read 00:00 UTC, an hour
+ * before the Jakarta working day this lane's deadlines are computed in.
+ */
+export const ordersNow = (): string => sdcClock.now();
 
 const sectionTitle = 'text-label text-text-tertiary uppercase mb-3';
 

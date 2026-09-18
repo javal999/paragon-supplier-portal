@@ -67,6 +67,7 @@ import {
   PoLifecycleSteps,
   PoResponseDetails,
   RespondByLine,
+  ordersNow,
   ShippingNoticeDetails,
 } from './orders/PoCollaboration';
 import { formatIDR, formatNumber, formatDate } from '../lib/format';
@@ -288,7 +289,7 @@ const BuyerOrders: React.FC = () => {
   const reviewAvailability = useVerbAvailability('po:review-response');
   const asnsQuery = useASNs();
   const [searchParams] = useSearchParams();
-  const nowIso = new Date().toISOString();
+  const nowIso = ordersNow();
 
   const ordersQuery = usePurchaseOrders();
   const suppliersQuery = useSuppliers();

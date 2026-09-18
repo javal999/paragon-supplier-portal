@@ -70,8 +70,13 @@ describe('SupplierOrders — PO-confirm end-to-end proof (Step 3.10)', () => {
     renderWithProviders(<SupplierOrders />, { identity: SUPPLIER });
 
     // The Sent PO (PO-2025-00108 / po-008) surfaces a "Confirm" row action.
-    await screen.findByText('PO-2025-00108');
-    fireEvent.click(screen.getByRole('button', { name: 'Confirm' }));
+    // ⚠️ SCOPED TO ITS OWN ROW. This read `screen.getByRole('button', {name:
+    // 'Confirm'})` and passed only while sup-007 owned exactly ONE order
+    // awaiting a response; the demo-data batch gives it a second (`po-021`,
+    // ordered on the declared present and deliberately NOT escalated), so the
+    // page-wide query now finds two. The row is what this spec was ever about.
+    const row108 = (await screen.findByText('PO-2025-00108')).closest('tr')!;
+    fireEvent.click(within(row108).getByRole('button', { name: 'Confirm' }));
 
     // Editing panel opens → dispatch t_po_confirm with the confirmedQuantities payload.
     fireEvent.click(await screen.findByRole('button', { name: 'Confirm order' }));
@@ -90,16 +95,53 @@ describe('SupplierOrders — PO-confirm end-to-end proof (Step 3.10)', () => {
 
     // KPI cards, tab counts, and the banner must re-derive from the SAME
     // invalidated query as the table — no parallel/local derivation, no stale
-    // memo. Both sup-007 POs are now Confirmed → needsAction 0, inProgress 2.
-    expect(await screen.findByText('All actions cleared')).toBeInTheDocument();
-    expect(screen.queryByText(/need your confirmation/i)).not.toBeInTheDocument();
+    // memo.
+    //
+    // ⚠️ DERIVED FROM THE STORE, NOT PINNED. This read "All actions cleared",
+    // no banner, and In progress "2" — true only while sup-007 owned exactly
+    // two orders, both of them the ones this spec confirms. The walkthrough set
+    // gives it more, including one deliberately left awaiting a response, so
+    // the page-wide literals stopped describing the page. What the spec is
+    // about is that the three surfaces agree with the mutated store, and that
+    // is what is asserted now.
+    const mine = purchaseOrderStore.all().filter((p) => p.supplierId === 'sup-007');
+    const awaiting = mine.filter(
+      (p) => p.status === POStatus.SENT || p.status === POStatus.ACKNOWLEDGED,
+    ).length;
+    const inProgress = mine.filter(
+      (p) => p.status === POStatus.CONFIRMED || p.status === POStatus.PARTIALLY_DELIVERED,
+    ).length;
+    // CONTROL: the two counts must actually be exercised — a seed where nothing
+    // is awaiting would make the banner assertion vacuous.
+    expect(awaiting).toBeGreaterThan(0);
+    expect(inProgress).toBeGreaterThan(0);
+    // The banner is pluralised, so the count is matched rather than the sentence.
+    expect(
+      await screen.findByText(
+        new RegExp(`^${awaiting} orders? needs? your confirmation:$`),
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('All actions cleared')).not.toBeInTheDocument();
     const inProgressTab = screen.getByRole('tab', { name: /In progress/ });
-    expect(within(inProgressTab).getByText('2')).toBeInTheDocument();
+    expect(within(inProgressTab).getByText(String(inProgress))).toBeInTheDocument();
 
     // Riding fix: the drawer Key Facts derives from the live query, not the
     // frozen open-time snapshot. po-008 is now Confirmed, so no 'Sent' status
-    // lingers anywhere — neither the table row nor the drawer.
-    expect(screen.queryByText('Sent')).not.toBeInTheDocument();
+    // lingers on ITS row or in the drawer.
+    //
+    // ⚠️ SCOPED. This asked the whole document for 'Sent' and was only ever
+    // about po-008 — it passed because po-008 was sup-007's only awaiting
+    // order. `po-021` is Sent on purpose (it is the demo's one un-escalated
+    // order awaiting a response), so a page-wide query now finds a legitimate
+    // 'Sent' that has nothing to do with this walk.
+    const confirmedRow = screen
+      .getAllByText('PO-2025-00108')
+      .map((el) => el.closest('tr'))
+      .find((el): el is HTMLTableRowElement => el !== null)!;
+    expect(within(confirmedRow).queryByText('Sent')).not.toBeInTheDocument();
+    const drawer = document.querySelector('aside[role="dialog"]') as HTMLElement | null;
+    expect(drawer).not.toBeNull();
+    expect(within(drawer!).queryByText('Sent')).not.toBeInTheDocument();
   });
 
   it('confirm toast is honest (F2-24): correlationId surfaced, no false delivery claim', () => {
@@ -125,8 +167,10 @@ describe('SupplierOrders — the confirm cells are text, so the parser is load-b
   /** Open PO-2025-00108 (sup-007, Sent, one line: 150,000 PCS) in editing mode. */
   const openEditing = async () => {
     renderWithProviders(<SupplierOrders />, { identity: SUPPLIER });
-    await screen.findByText('PO-2025-00108');
-    fireEvent.click(screen.getByRole('button', { name: 'Confirm' }));
+    // Scoped to the row — sup-007 has more than one order awaiting a response
+    // since the demo-data batch. See the note in the dispatcher proof above.
+    const row = (await screen.findByText('PO-2025-00108')).closest('tr')!;
+    fireEvent.click(within(row).getByRole('button', { name: 'Confirm' }));
     return screen.findByLabelText('Confirmed PK-PETB-8802');
   };
 

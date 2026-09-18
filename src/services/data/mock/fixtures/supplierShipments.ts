@@ -25,6 +25,10 @@
 //   ASN-2025-00198 · sup-007 → PO-2025-00107, owned by sup-007 ✅ (the one)
 //   ASN-2025-00201 · sup-007 → PO-2025-00109, owned by sup-008 (Sample Carton)
 //   ASN-2025-00215 · sup-007 → PO-2025-00115, owned by sup-009 (Sample Vitamins)
+//                     (repaired to PO-2025-00107 here; re-derived to
+//                      PO-2026-00124 by the same rule once the demo-data batch
+//                      gave sup-007 more than one confirmable order — see the
+//                      row itself)
 //   ASN-2025-00301 · sup-002 → PO-2025-00120, owned by sup-011 (Sample Salicylics)
 //   ASN-2025-00302 · sup-005 → PO-2025-00131, WHICH DID NOT EXIST
 //
@@ -80,8 +84,14 @@
 // ────────────────────────────────────────────────────────────────────────────
 
 import type { ASN } from '../../types';
+import { shiftFields } from '../../fixturePresent';
 
-export const MOCK_ASNS: ASN[] = [
+// ⚠️ RAW, AUTHORED literals (2025). `MOCK_ASNS` at the foot of the file is the
+// shifted export — this corpus belongs to the `purchaseOrder` family, because
+// `asnRefIntegrity.test.ts`'s level-3 rule compares `po.orderDate <= asn.eta`
+// and a cross-family comparison is exactly what the declared present does not
+// cancel. Membership follows the coupling, not the directory.
+const MOCK_ASNS_RAW: ASN[] = [
   {
     asnNumber: 'ASN-2025-00211',
     supplierId: 'sup-007',
@@ -154,13 +164,33 @@ export const MOCK_ASNS: ASN[] = [
   {
     asnNumber: 'ASN-2025-00215',
     supplierId: 'sup-007',
-    // 2B-5b-i — was `PO-2025-00115` (sup-009, Sample Vitamins). A DRAFT with an
-    // empty `eta`, so level 3 constrains nothing; LEVEL 2 decides alone:
-    // PO-2025-00108 is SENT, and an ASN cannot exist against an unconfirmed
-    // order, leaving PO-2025-00107 (CONFIRMED) as sup-007's only legal parent.
-    // ⚠️ This row carries NO line items, so it is the one ASN whose every
-    // referential axis — including material — now passes.
-    poReference: 'PO-2025-00107',
+    // 2B-5b-i — was `PO-2025-00115` (sup-009, Sample Vitamins), repaired to
+    // `PO-2025-00107`; REPOINTED AGAIN IN THE DEMO-DATA BATCH, and the rule did
+    // the repointing rather than a preference.
+    //
+    // ⚠️ **LEVEL 2 NO LONGER DECIDES THIS ROW ALONE, AND THAT IS A FACT ABOUT
+    // THE FIXTURE, NOT A CHANGE OF MIND.** The note this replaces read:
+    //
+    //     "A DRAFT with an empty `eta`, so level 3 constrains nothing; LEVEL 2
+    //      decides alone: PO-2025-00108 is SENT, and an ASN cannot exist
+    //      against an unconfirmed order, leaving PO-2025-00107 (CONFIRMED) as
+    //      sup-007's only legal parent."
+    //
+    // Every word of that was true while sup-007 owned ONE order at or past
+    // confirmation. It owns six now (the walkthrough set in
+    // `mockPurchaseOrders.ts`), so level 2 returns six candidates, the empty
+    // `eta` still makes level 3 vacuous, and LEVEL 4 — "NOT determinately
+    // complete" — is reached for the first time. It resolves to `PO-2026-00124`,
+    // the only sup-007 order with a line the supplier did not confirm in full.
+    //
+    // ⚠️ The uniqueness is now an INVARIANT ON THE ORDER FIXTURE rather than an
+    // accident of its size, and it is stated there: exactly one sup-007 order at
+    // or past confirmation may be partially confirmed. `asnRefIntegrity.test.ts`
+    // re-derives this reference from the rule, so it goes red by name the day a
+    // second one is.
+    // ⚠️ This row still carries NO line items, so it remains the one ASN whose
+    // every referential axis — including material — passes.
+    poReference: 'PO-2026-00124',
     status: 'Draft',
     carrier: '—',
     trackingNumber: '—',
@@ -226,3 +256,10 @@ export const MOCK_ASNS: ASN[] = [
     ],
   },
 ];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// THE DECLARED PRESENT — shifted with the purchase orders these ASNs name, so
+// `orderDate <= eta` survives the re-anchor by construction rather than by two
+// offsets that happen to agree.
+// ─────────────────────────────────────────────────────────────────────────────
+export const MOCK_ASNS: ASN[] = shiftFields(MOCK_ASNS_RAW, 'purchaseOrder', ['eta']);
