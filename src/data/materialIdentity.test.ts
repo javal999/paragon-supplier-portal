@@ -608,7 +608,21 @@ describe('2B-4a — the FIELD SET derives too (the third level)', () => {
     // ⚠️ AND A FIFTH, THE SAME WAY (REQ-E08-03). Supplier access to PTI stock
     // names the materials a supplier may see under `materials`; the access seed
     // holds real master codes, so the derivation admitted the key on its own.
-    expect(CODE_FIELDS).toEqual(['materialCode', 'materialCodes', 'materialIds', 'materials', 'sapCode']);
+    // ⚠️ AND A SIXTH, UNAIDED AGAIN (REQ-E03-05 BR-06). An award line names the
+    // ITEM its share is against — `AwardLine.itemCode` — and the sample award
+    // carries master codes, so the derivation admitted the key the day the
+    // split award landed. It is REPORTED here rather than worked around: an
+    // award that places a share against an item IS a material-identity site,
+    // and a field renamed to stay out of this census would be the census
+    // learning to look away.
+    expect(CODE_FIELDS).toEqual([
+      'itemCode',
+      'materialCode',
+      'materialCodes',
+      'materialIds',
+      'materials',
+      'sapCode',
+    ]);
   });
 
   it('⚠️ FIELD-SET-CLOSURE-OVERRUNS-01 — the disqualifier, and what it stops', () => {

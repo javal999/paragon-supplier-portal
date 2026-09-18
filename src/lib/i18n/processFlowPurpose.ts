@@ -399,6 +399,54 @@ export const processFlowPurposeEn: Record<string, string> = {
     'The moment a supplier first opened a forecast version, so the planner sees who has seen the plan.',
   'processFlows.purpose.t_forecastview_record':
     'Opening a forecast version records that the supplier has seen it.',
+
+  // ── RFx management (REQ-E03-02 / REQ-E03-04 / REQ-E03-05) ─────────────────
+  'processFlows.purpose.entity.rfiEvent':
+    'A structured set of questions about what a supplier can make, where, and how — asked before anybody talks about price.',
+  'processFlows.purpose.t_rfi_create':
+    'Buying starts from the question set Procurement keeps for the category, then adds or removes questions for this one event.',
+  'processFlows.purpose.t_rfi_publish':
+    'The questions reach the invited suppliers. Until this happens they are still being prepared and nobody outside PTI sees them.',
+  'processFlows.purpose.t_rfi_extend':
+    'Buying gives every invited supplier — or only the ones it names — more time to answer.',
+  'processFlows.purpose.t_rfi_close':
+    'The answering window ends, and buying compares what came in.',
+  'processFlows.purpose.t_rfi_cancel':
+    'PTI drops the request, so suppliers stop spending time on it.',
+  'processFlows.purpose.t_rfq_extend':
+    'Buying gives every invited supplier — or only the ones it names — more time to price the work.',
+  'processFlows.purpose.t_quotation_revise':
+    'A supplier asked to improve what it offered sends a better one. The earlier version is kept, so buying can see exactly how far it moved.',
+  'processFlows.purpose.entity.rfiResponse':
+    'What one supplier says about its capability, experience, sites and products — kept against that supplier so a later price request can reuse it.',
+  'processFlows.purpose.t_rfiresponse_save':
+    'A half-finished answer is kept for the supplier to come back to, and PTI cannot see it yet.',
+  'processFlows.purpose.t_rfiresponse_submit':
+    'The supplier sends its answers to PTI. Every question marked as needed has to be answered first, so what arrives is comparable.',
+  'processFlows.purpose.entity.rfpEvent':
+    'A request for the commercial terms a supplier will trade on — payment, delivery, service level and contract — rather than a unit figure alone.',
+  'processFlows.purpose.t_rfp_create':
+    'Buying picks the terms it needs answered from the standard list and states what PTI is asking for on each one.',
+  'processFlows.purpose.t_rfp_publish':
+    'The terms reach the invited suppliers, and only then can a proposal arrive.',
+  'processFlows.purpose.t_rfp_extend':
+    'Buying gives every invited supplier — or only the ones it names — more time to propose.',
+  'processFlows.purpose.t_rfp_close':
+    'The proposing window ends, and buying compares the terms side by side.',
+  'processFlows.purpose.t_rfp_cancel':
+    'PTI drops the request, so suppliers stop spending time on it.',
+  'processFlows.purpose.entity.rfpResponse':
+    'One supplier’s proposed terms: what it offers on each point PTI raised, whether it will match it, and why where it will not.',
+  'processFlows.purpose.t_rfpresponse_save':
+    'A partly filled proposal is kept for the supplier to come back to, and PTI cannot see it yet.',
+  'processFlows.purpose.t_rfpresponse_submit':
+    'The supplier sends its terms to PTI. Anything it will not match has to carry an explanation, so a departure is never silent.',
+  'processFlows.purpose.entity.negotiationRound':
+    'A round of asking a shortlist to improve what they offered, with a date to answer by and an optional target.',
+  'processFlows.purpose.t_negotiationround_open':
+    'Buying asks the suppliers it shortlisted to improve what they offered, with a date to answer by and an optional message and target figure. Nobody else may answer.',
+  'processFlows.purpose.t_negotiationround_close':
+    'Buying stops taking improved offers for this round. A supplier that said nothing keeps what it offered before.',
 };
 
 export const processFlowPurposeId: Record<string, string> = {
@@ -763,4 +811,52 @@ export const processFlowPurposeId: Record<string, string> = {
     'Saat pemasok pertama kali membuka versi prakiraan, agar perencana tahu siapa yang sudah melihat rencananya.',
   'processFlows.purpose.t_forecastview_record':
     'Membuka versi prakiraan mencatat bahwa pemasok sudah melihatnya.',
+
+  // ── RFx (REQ-E03-02 / REQ-E03-04 / REQ-E03-05) ────────────────────────────
+  'processFlows.purpose.entity.rfiEvent':
+    'Rangkaian pertanyaan terstruktur tentang apa yang bisa dibuat pemasok, di mana, dan bagaimana — ditanyakan sebelum membahas harga.',
+  'processFlows.purpose.t_rfi_create':
+    'Pembelian mulai dari kumpulan pertanyaan yang dipelihara Procurement untuk kategori itu, lalu menambah atau menghapus pertanyaan khusus acara ini.',
+  'processFlows.purpose.t_rfi_publish':
+    'Pertanyaan sampai ke pemasok yang diundang. Sebelum itu masih disiapkan dan tidak terlihat di luar PTI.',
+  'processFlows.purpose.t_rfi_extend':
+    'Pembelian memberi semua pemasok yang diundang — atau hanya yang disebut — waktu tambahan untuk menjawab.',
+  'processFlows.purpose.t_rfi_close':
+    'Masa menjawab berakhir, dan pembelian membandingkan yang masuk.',
+  'processFlows.purpose.t_rfi_cancel':
+    'PTI membatalkan permintaan, sehingga pemasok berhenti mengerjakannya.',
+  'processFlows.purpose.t_rfq_extend':
+    'Pembelian memberi semua pemasok yang diundang — atau hanya yang disebut — waktu tambahan untuk memberi harga.',
+  'processFlows.purpose.t_quotation_revise':
+    'Pemasok yang diminta memperbaiki tawarannya mengirim yang lebih baik. Versi sebelumnya tetap disimpan, sehingga pembelian bisa melihat seberapa jauh pergerakannya.',
+  'processFlows.purpose.entity.rfiResponse':
+    'Yang disampaikan satu pemasok tentang kemampuan, pengalaman, lokasi, dan produknya — disimpan pada pemasok itu agar permintaan harga berikutnya bisa memakainya lagi.',
+  'processFlows.purpose.t_rfiresponse_save':
+    'Jawaban yang belum selesai disimpan agar pemasok bisa melanjutkan, dan PTI belum bisa melihatnya.',
+  'processFlows.purpose.t_rfiresponse_submit':
+    'Pemasok mengirim jawabannya ke PTI. Semua pertanyaan yang ditandai wajib harus terjawab lebih dulu agar hasilnya bisa dibandingkan.',
+  'processFlows.purpose.entity.rfpEvent':
+    'Permintaan syarat komersial yang akan dipakai pemasok — pembayaran, pengiriman, tingkat layanan, dan kontrak — bukan sekadar angka satuan.',
+  'processFlows.purpose.t_rfp_create':
+    'Pembelian memilih syarat yang perlu dijawab dari daftar standar dan menyatakan apa yang diminta PTI pada masing-masing.',
+  'processFlows.purpose.t_rfp_publish':
+    'Syarat sampai ke pemasok yang diundang, dan baru setelah itu proposal bisa masuk.',
+  'processFlows.purpose.t_rfp_extend':
+    'Pembelian memberi semua pemasok yang diundang — atau hanya yang disebut — waktu tambahan untuk mengusulkan.',
+  'processFlows.purpose.t_rfp_close':
+    'Masa mengusulkan berakhir, dan pembelian membandingkan syarat berdampingan.',
+  'processFlows.purpose.t_rfp_cancel':
+    'PTI membatalkan permintaan, sehingga pemasok berhenti mengerjakannya.',
+  'processFlows.purpose.entity.rfpResponse':
+    'Syarat yang diusulkan satu pemasok: apa yang ditawarkan pada tiap pokok yang diangkat PTI, apakah bisa dipenuhi, dan alasannya bila tidak.',
+  'processFlows.purpose.t_rfpresponse_save':
+    'Proposal yang belum lengkap disimpan agar pemasok bisa melanjutkan, dan PTI belum bisa melihatnya.',
+  'processFlows.purpose.t_rfpresponse_submit':
+    'Pemasok mengirim syaratnya ke PTI. Hal yang tidak bisa dipenuhi wajib disertai penjelasan, sehingga penyimpangan tidak pernah senyap.',
+  'processFlows.purpose.entity.negotiationRound':
+    'Satu putaran meminta daftar pendek memperbaiki tawarannya, dengan tanggal untuk menjawab dan target yang boleh dicantumkan.',
+  'processFlows.purpose.t_negotiationround_open':
+    'Pembelian meminta pemasok dalam daftar pendek memperbaiki tawarannya, dengan tanggal untuk menjawab serta pesan dan angka target bila ada. Pihak lain tidak boleh menjawab.',
+  'processFlows.purpose.t_negotiationround_close':
+    'Pembelian berhenti menerima tawaran perbaikan untuk putaran ini. Pemasok yang tidak menjawab tetap pada tawaran sebelumnya.',
 };

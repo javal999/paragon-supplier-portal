@@ -31,6 +31,12 @@ import Marketplace from '../pages-v2/Marketplace';
 import SupplierStorefrontV2 from '../pages-v2/SupplierStorefront';
 import BuyerOrders from '../pages-v2/BuyerOrders';
 import BuyerSourcing from '../pages-v2/BuyerSourcing';
+import BuyerRfi from '../pages-v2/BuyerRfi';
+import BuyerRfp from '../pages-v2/BuyerRfp';
+import BuyerSourcingEvent from '../pages-v2/BuyerSourcingEvent';
+import SupplierRfi from '../pages-v2/SupplierRfi';
+import SupplierRfp from '../pages-v2/SupplierRfp';
+import SupplierNegotiations from '../pages-v2/SupplierNegotiations';
 import PlanGrid from '../pages-v2/PlanGrid';
 import BuyerCollaboration from '../pages-v2/BuyerCollaboration';
 import BuyerContracts from '../pages-v2/BuyerContracts';
@@ -111,6 +117,10 @@ const ROUTES: RouteCase[] = [
   { name: 'buyer/order-summary', pattern: '/buyer/order-summary', at: '/buyer/order-summary', element: <BuyerOrderSummary />, identity: BUYER },
   { name: 'buyer/orders', pattern: '/buyer/orders', at: '/buyer/orders', element: <BuyerOrders />, identity: BUYER },
   { name: 'buyer/sourcing', pattern: '/buyer/sourcing', at: '/buyer/sourcing', element: <BuyerSourcing />, identity: BUYER },
+  // REQ-E03-02 / REQ-E03-04 / REQ-E03-05 — the RFx surfaces.
+  { name: 'buyer/sourcing/rfi', pattern: '/buyer/sourcing/rfi', at: '/buyer/sourcing/rfi', element: <BuyerRfi />, identity: BUYER },
+  { name: 'buyer/sourcing/rfp', pattern: '/buyer/sourcing/rfp', at: '/buyer/sourcing/rfp', element: <BuyerRfp />, identity: BUYER },
+  { name: 'buyer/sourcing/rfq/:rfqId', pattern: '/buyer/sourcing/rfq/:rfqId', at: '/buyer/sourcing/rfq/rfq-014', element: <BuyerSourcingEvent />, identity: BUYER },
   { name: 'buyer/plan-grid', pattern: '/buyer/plan-grid', at: '/buyer/plan-grid', element: <PlanGrid />, identity: BUYER },
   { name: 'buyer/forecasts', pattern: '/buyer/forecasts', at: '/buyer/forecasts', element: <BuyerForecasts />, identity: BUYER },
   { name: 'buyer/collaboration', pattern: '/buyer/collaboration', at: '/buyer/collaboration', element: <BuyerCommitments />, identity: BUYER },
@@ -153,6 +163,9 @@ const ROUTES: RouteCase[] = [
   { name: 'supplier/order-summary', pattern: '/supplier/order-summary', at: '/supplier/order-summary', element: <SupplierOrderSummary />, identity: SUPPLIER },
   { name: 'supplier/orders', pattern: '/supplier/orders', at: '/supplier/orders', element: <SupplierOrders />, identity: SUPPLIER },
   { name: 'supplier/rfqs', pattern: '/supplier/rfqs', at: '/supplier/rfqs', element: <SupplierRFQsV2 />, identity: SUPPLIER },
+  { name: 'supplier/rfqs/rfi', pattern: '/supplier/rfqs/rfi', at: '/supplier/rfqs/rfi', element: <SupplierRfi />, identity: SUPPLIER },
+  { name: 'supplier/rfqs/rfp', pattern: '/supplier/rfqs/rfp', at: '/supplier/rfqs/rfp', element: <SupplierRfp />, identity: SUPPLIER },
+  { name: 'supplier/rfqs/rounds', pattern: '/supplier/rfqs/rounds', at: '/supplier/rfqs/rounds', element: <SupplierNegotiations />, identity: SUPPLIER },
   { name: 'supplier/forecasts', pattern: '/supplier/forecasts', at: '/supplier/forecasts', element: <SupplierForecastCommitments />, identity: SUPPLIER },
   { name: 'supplier/forecasts/responses', pattern: '/supplier/forecasts/responses', at: '/supplier/forecasts/responses', element: <SupplierForecasts />, identity: SUPPLIER },
   { name: 'supplier/shipments', pattern: '/supplier/shipments', at: '/supplier/shipments', element: <SupplierShipments />, identity: SUPPLIER },

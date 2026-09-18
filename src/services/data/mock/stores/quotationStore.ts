@@ -11,12 +11,17 @@
 
 import { mockQuotations } from '../../../../data/mockQuotations';
 import type { Quotation } from '../../../../data/mockQuotations';
+// REQ-E03-03 / REQ-E03-05 — the priced bids on the present-relative events,
+// including the round-1 revision that supersedes one of them.
+import { RFX_QUOTATION_SEED } from '../fixtures/rfxHub';
+
+const SEED: readonly Quotation[] = [...RFX_QUOTATION_SEED, ...mockQuotations];
 
 function clone(q: Quotation): Quotation {
   return { ...q };
 }
 
-let rows: Quotation[] = mockQuotations.map(clone);
+let rows: Quotation[] = SEED.map(clone);
 let seq = 0;
 
 export const quotationStore = {
@@ -47,7 +52,7 @@ export const quotationStore = {
   },
   /** Restore the fixture seed (test isolation). */
   reset(): void {
-    rows = mockQuotations.map(clone);
+    rows = SEED.map(clone);
     seq = 0;
   },
 };

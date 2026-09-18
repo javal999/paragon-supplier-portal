@@ -1958,3 +1958,288 @@ export function useForecastCommand() {
     },
   });
 }
+
+// ── RFx MANAGEMENT (REQ-E03-01 to REQ-E03-05) ──────────────────────────────
+//
+// ONE mutation hook for the whole RFx lane, in the shape `useForecastCommand`
+// established: a discriminated `verb` per act, every act dispatched through the
+// service seam, and ONE invalidation predicate — because an RFI answered, a
+// round opened or an award recorded changes what BOTH personas read, across
+// several reads each.
+//
+// Composite acts (save-then-submit) dispatch twice and STOP AT THE FIRST
+// REFUSAL, returning it: a "sent" toast after a refused submit is the shape
+// §90 exists to prevent.
+
+import type {
+  AwardLine,
+  RfiAnswer,
+  RfiQuestion,
+  RfpTermAnswer,
+  RfpTermRow,
+} from '../sourcing/types';
+import type { QuoteLineInput } from '../transitions/rfxRules';
+
+export type RfxCommandVars =
+  // — REQ-E03-02 · RFI —
+  | {
+      verb: 'createRfi';
+      title: string;
+      templateId: string;
+      materialCategory: string;
+      purchasingGroup?: string;
+      responseDeadline: string;
+      invitedSupplierIds: readonly string[];
+      questions?: readonly RfiQuestion[];
+      /** Send it to the invitees in the same act. */
+      publish?: boolean;
+    }
+  | { verb: 'publishRfi'; rfiId: string }
+  | { verb: 'closeRfi'; rfiId: string }
+  | { verb: 'extendRfi'; rfiId: string; deadline: string; supplierIds?: readonly string[] }
+  | {
+      verb: 'answerRfi';
+      rfiId: string;
+      supplierId: string;
+      answers: readonly RfiAnswer[];
+      /** Draft only — PTI does not see it (REQ-E03-02 edge case). */
+      draftOnly?: boolean;
+    }
+  // — REQ-E03-04 · RFP —
+  | {
+      verb: 'createRfp';
+      title: string;
+      scope: string;
+      materialCategory: string;
+      purchasingGroup?: string;
+      responseDeadline: string;
+      currency: string;
+      invitedSupplierIds: readonly string[];
+      terms: readonly RfpTermRow[];
+      publish?: boolean;
+    }
+  | { verb: 'publishRfp'; rfpId: string }
+  | { verb: 'closeRfp'; rfpId: string }
+  | { verb: 'extendRfp'; rfpId: string; deadline: string; supplierIds?: readonly string[] }
+  | {
+      verb: 'answerRfp';
+      rfpId: string;
+      supplierId: string;
+      answers: readonly RfpTermAnswer[];
+      otherTerms?: string;
+      draftOnly?: boolean;
+    }
+  // — REQ-E03-03 · RFQ deadline —
+  | { verb: 'extendRfq'; rfqId: string; deadline: string; supplierIds?: readonly string[] }
+  // — REQ-E03-05 · negotiation and award —
+  | {
+      verb: 'openRound';
+      rfqId: string;
+      deadline: string;
+      invitedSupplierIds: readonly string[];
+      message?: string;
+      targetUnitPrice?: number;
+      bestAndFinal?: boolean;
+    }
+  | { verb: 'closeRound'; roundId: string }
+  | {
+      verb: 'reviseQuote';
+      roundId: string;
+      rfqId: string;
+      supplierId: string;
+      roundNumber: number;
+      supersedesQuotationId?: string;
+      unitPrice: number;
+      leadTimeDays: number;
+      currency: BidCurrency;
+      paymentTermsOffered?: string;
+      validUntil?: string;
+      notes?: string;
+      lines?: readonly QuoteLineInput[];
+      bestAndFinal?: boolean;
+    }
+  | {
+      verb: 'award';
+      rfqId: string;
+      awardedQuotationId: string;
+      awardedSupplierId: string;
+      awardLines?: readonly AwardLine[];
+      awardReason?: string;
+    };
+
+/** Every read an RFx act can change, on either persona. */
+const RFX_READS = new Set([
+  'rfiEvents',
+  'rfpEvents',
+  'negotiationRounds',
+  'awards',
+  'rfqs',
+  'quotations',
+  'inviteeCandidates',
+]);
+
+export function useRfxCommand() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+
+  return useMutation<CommandResult, Error, RfxCommandVars>({
+    mutationFn: async (vars) => {
+      switch (vars.verb) {
+        case 'createRfi': {
+          const { verb, publish, ...payload } = vars;
+          const created = await svc.commands.dispatch(scope, {
+            transitionId: 't_rfi_create',
+            entity: 'rfiEvent',
+            payload: { ...payload, invitedSupplierIds: [...payload.invitedSupplierIds] },
+          });
+          if (created.status === 'failed' || !publish || !created.entityId) return created;
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_rfi_publish',
+            entity: 'rfiEvent',
+            entityId: created.entityId,
+            payload: {},
+          });
+        }
+        case 'publishRfi':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_rfi_publish',
+            entity: 'rfiEvent',
+            entityId: vars.rfiId,
+            payload: {},
+          });
+        case 'closeRfi':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_rfi_close',
+            entity: 'rfiEvent',
+            entityId: vars.rfiId,
+            payload: {},
+          });
+        case 'extendRfi':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_rfi_extend',
+            entity: 'rfiEvent',
+            entityId: vars.rfiId,
+            payload: { deadline: vars.deadline, supplierIds: [...(vars.supplierIds ?? [])] },
+          });
+        case 'answerRfi': {
+          const saved = await svc.commands.dispatch(scope, {
+            transitionId: 't_rfiresponse_save',
+            entity: 'rfiResponse',
+            payload: { rfiId: vars.rfiId, supplierId: vars.supplierId, answers: [...vars.answers] },
+          });
+          if (saved.status === 'failed' || vars.draftOnly || !saved.entityId) return saved;
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_rfiresponse_submit',
+            entity: 'rfiResponse',
+            entityId: saved.entityId,
+            payload: {},
+          });
+        }
+        case 'createRfp': {
+          const { verb, publish, ...payload } = vars;
+          const created = await svc.commands.dispatch(scope, {
+            transitionId: 't_rfp_create',
+            entity: 'rfpEvent',
+            payload: {
+              ...payload,
+              invitedSupplierIds: [...payload.invitedSupplierIds],
+              terms: [...payload.terms],
+            },
+          });
+          if (created.status === 'failed' || !publish || !created.entityId) return created;
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_rfp_publish',
+            entity: 'rfpEvent',
+            entityId: created.entityId,
+            payload: {},
+          });
+        }
+        case 'publishRfp':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_rfp_publish',
+            entity: 'rfpEvent',
+            entityId: vars.rfpId,
+            payload: {},
+          });
+        case 'closeRfp':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_rfp_close',
+            entity: 'rfpEvent',
+            entityId: vars.rfpId,
+            payload: {},
+          });
+        case 'extendRfp':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_rfp_extend',
+            entity: 'rfpEvent',
+            entityId: vars.rfpId,
+            payload: { deadline: vars.deadline, supplierIds: [...(vars.supplierIds ?? [])] },
+          });
+        case 'answerRfp': {
+          const saved = await svc.commands.dispatch(scope, {
+            transitionId: 't_rfpresponse_save',
+            entity: 'rfpResponse',
+            payload: {
+              rfpId: vars.rfpId,
+              supplierId: vars.supplierId,
+              answers: [...vars.answers],
+              ...(vars.otherTerms !== undefined ? { otherTerms: vars.otherTerms } : {}),
+            },
+          });
+          if (saved.status === 'failed' || vars.draftOnly || !saved.entityId) return saved;
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_rfpresponse_submit',
+            entity: 'rfpResponse',
+            entityId: saved.entityId,
+            payload: {},
+          });
+        }
+        case 'extendRfq':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_rfq_extend',
+            entity: 'rfq',
+            entityId: vars.rfqId,
+            payload: { deadline: vars.deadline, supplierIds: [...(vars.supplierIds ?? [])] },
+          });
+        case 'openRound': {
+          const { verb, ...payload } = vars;
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_negotiationround_open',
+            entity: 'negotiationRound',
+            payload: { ...payload, invitedSupplierIds: [...payload.invitedSupplierIds] },
+          });
+        }
+        case 'closeRound':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_negotiationround_close',
+            entity: 'negotiationRound',
+            entityId: vars.roundId,
+            payload: {},
+          });
+        case 'reviseQuote': {
+          const { verb, lines, ...payload } = vars;
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_quotation_revise',
+            entity: 'quotation',
+            payload: { ...payload, ...(lines ? { lines: lines.map((l) => ({ ...l })) } : {}) },
+          });
+        }
+        case 'award': {
+          const { verb, rfqId, awardLines, ...payload } = vars;
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_rfq_award',
+            entity: 'rfq',
+            entityId: rfqId,
+            payload: { ...payload, ...(awardLines ? { awardLines: awardLines.map((l) => ({ ...l })) } : {}) },
+          });
+        }
+      }
+    },
+    onSettled: () => {
+      qc.invalidateQueries({
+        predicate: (q) => q.queryKey[0] === 'procurement' && RFX_READS.has(String(q.queryKey[1])),
+      });
+    },
+  });
+}

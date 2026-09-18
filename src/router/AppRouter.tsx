@@ -17,6 +17,12 @@ import Marketplace from '../pages-v2/Marketplace';
 import SupplierStorefrontV2 from '../pages-v2/SupplierStorefront';
 import BuyerOrders from '../pages-v2/BuyerOrders';
 import BuyerSourcing from '../pages-v2/BuyerSourcing';
+import BuyerRfi from '../pages-v2/BuyerRfi';
+import BuyerRfp from '../pages-v2/BuyerRfp';
+import BuyerSourcingEvent from '../pages-v2/BuyerSourcingEvent';
+import SupplierRfi from '../pages-v2/SupplierRfi';
+import SupplierRfp from '../pages-v2/SupplierRfp';
+import SupplierNegotiations from '../pages-v2/SupplierNegotiations';
 import BuyerContracts from '../pages-v2/BuyerContracts';
 import BuyerContractDetail from '../pages-v2/BuyerContractDetail';
 import BuyerDeliveryAgreements from '../pages-v2/BuyerDeliveryAgreements';
@@ -98,6 +104,13 @@ const AppRouter: React.FC = () => {
           <Route path="/buyer/order-summary" element={<BuyerOrderSummary />} />
           <Route path="/buyer/orders" element={<BuyerOrders />} />
           <Route path="/buyer/sourcing" element={<BuyerSourcing />} />
+          {/* REQ-E03-02 / REQ-E03-04 / REQ-E03-05 — the other two event types and
+              one event's comparison, rounds and award. All under the SAME menu
+              item, so NV-03's "a menu item stays highlighted on its detail
+              pages" holds without a second sidebar entry. */}
+          <Route path="/buyer/sourcing/rfi" element={<BuyerRfi />} />
+          <Route path="/buyer/sourcing/rfp" element={<BuyerRfp />} />
+          <Route path="/buyer/sourcing/rfq/:rfqId" element={<BuyerSourcingEvent />} />
           {/* Phase A/1 — the recommend-first triage that precedes the plan-grid
               push. Plain DOM (no grid engine) — stays in the entry chunk. */}
           <Route path="/buyer/intake-review" element={<IntakeReview />} />
@@ -163,6 +176,12 @@ const AppRouter: React.FC = () => {
           <Route path="/supplier/order-summary" element={<SupplierOrderSummary />} />
           <Route path="/supplier/orders" element={<SupplierOrders />} />
           <Route path="/supplier/rfqs" element={<SupplierRFQsV2 />} />
+          {/* REQ-E03-02 / REQ-E03-04 / REQ-E03-05 — under the same "Invitations"
+              menu item: information requests, proposal requests, and the
+              supplier's own negotiation thread. */}
+          <Route path="/supplier/rfqs/rfi" element={<SupplierRfi />} />
+          <Route path="/supplier/rfqs/rfp" element={<SupplierRfp />} />
+          <Route path="/supplier/rfqs/rounds" element={<SupplierNegotiations />} />
           {/* REQ-E06-01 / REQ-E06-02 — the supplier's forecast versions and commitments.
               The earlier stock and shipment responses stay reachable beneath it. */}
           <Route path="/supplier/forecasts" element={<SupplierForecastCommitments />} />

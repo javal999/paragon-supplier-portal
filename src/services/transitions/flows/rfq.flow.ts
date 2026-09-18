@@ -109,13 +109,37 @@ export const rfqFlow: FlowDefinition = {
       // quotation; the cascade fans out onto the quotations (winner + losers).
       // requiredFields carry the award decision — set as metadata ONLY (no PO /
       // contract minted, honest-by-construction).
+      //
+      // ⚠️ **REQ-E03-05 BR-06 WIDENED IT TO A SPLIT WITHOUT CHANGING ITS
+      // FLOOR.** `awardedQuotationId` / `awardedSupplierId` still name the
+      // PRINCIPAL award — the cascade reads them to pick the winner — and an
+      // optional `awardLines` carries the rest of the split. A single-supplier
+      // award is therefore byte-identical to what it was, and a two-supplier
+      // award is the same verb with one more field, rather than a second award
+      // verb that could drift from this one.
       id: 't_rfq_award',
       from: ['Open', 'Closed'],
       to: 'Awarded',
       trigger: 'user',
       requiredRole: 'rfq:award',
       requiredFields: ['awardedQuotationId', 'awardedSupplierId'],
-      policyHooks: [],
+      policyHooks: [POLICY_HOOKS.RFQ_AWARD_GOVERNED],
+      surfaceable: { surfaced: true },
+      version: 1,
+    },
+    {
+      // REQ-E03-03 BR-05 — the buyer extends the response window, for every
+      // invitee or for named ones. STATE-PRESERVING for the reason the FX pin
+      // below is: moving a date is not a step in the sourcing machine, and a
+      // state for it would make `Open` mean two different things.
+      id: 't_rfq_extend',
+      from: ['Open', 'Closed'],
+      to: 'Open',
+      statePreserving: true,
+      trigger: 'user',
+      requiredRole: 'rfq:publish',
+      requiredFields: ['deadline'],
+      policyHooks: [POLICY_HOOKS.RFX_EXTEND_VALID],
       surfaceable: { surfaced: true },
       version: 1,
     },

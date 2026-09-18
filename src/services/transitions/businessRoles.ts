@@ -143,6 +143,17 @@ const LANE_BUNDLES = Object.freeze({
     procurement: Object.freeze([
       'rfq:create', 'rfq:publish', 'rfq:award', 'rfq:fx-pin', 'rfq:cancel', 'rfq:reopen',
       'quotation:review',
+      // ── REQ-E03-02 / REQ-E03-04 / REQ-E03-05 — the other two RFx event types
+      //    and the negotiation window ──────────────────────────────────────
+      // Raising an RFI or an RFP is the same authority as raising an RFQ one
+      // question earlier, so they sit in the lane that already holds
+      // `rfq:create`. `rfq:negotiate` is deliberately BESIDE `rfq:award` rather
+      // than folded into it: opening a round and choosing a winner are the same
+      // person's job today, but they are two acts, and a seat that may
+      // negotiate without awarding is expressible the day Procurement wants it.
+      'rfi:create', 'rfi:publish',
+      'rfp:create', 'rfp:publish',
+      'rfq:negotiate',
       'contract:draft', 'contract:activate', 'contract:renew', 'contract:terminate',
       'obligation:track', 'obligation:complete',
       'pr:approve', 'pr:reject',
@@ -276,6 +287,11 @@ const LANE_BUNDLES = Object.freeze({
     // talks to.
     commercial: Object.freeze([
       'quotation:submit',
+      // REQ-E03-02 / REQ-E03-04 — answering an RFI or an RFP is the same seat's
+      // work as quoting: what the company can make, on what terms, at what
+      // price. The three are one conversation and one lane.
+      'rfiresponse:answer',
+      'rfpresponse:answer',
       'requirementresponse:submit',
       // REQ-E06-01 — opening a forecast version is recorded for PTI; the people
       // who commit against the forecast are the ones who read it.

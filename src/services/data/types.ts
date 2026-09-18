@@ -21,6 +21,16 @@ import type {
   PreferredChannel,
   ScorecardGrade,
 } from '../../types/supplier.types';
+// REQ-E03-01 to REQ-E03-05 — the RFx read surface. The view shapes live beside
+// the entities (`services/sourcing/views`) so the contract and the adapter that
+// fulfils it import ONE declaration rather than each holding its own copy.
+import type { InviteeCandidate, InviteeFilter } from '../transitions/rfxRules';
+import type {
+  AwardView,
+  NegotiationRoundView,
+  RfiEventView,
+  RfpEventView,
+} from '../sourcing/views';
 
 // CP-3 · E2 — the enforcement read seam's row type. TYPE-ONLY: naming the
 // vocabulary is not acquiring a consumer, and nothing in this file calls it.
@@ -2164,6 +2174,18 @@ export interface IProcurementService {
   // — Sourcing —
   getRFQs(scope: QueryScope, filter?: RFQFilter): Promise<Page<RFQ>>;
   getQuotations(scope: QueryScope, filter?: QuotationFilter): Promise<Page<Quotation>>;
+
+  // — RFx management (REQ-E03-01 to REQ-E03-05) —
+  /** REQ-E03-01 — selectable invitees for a sourcing event, filtered by category and purchasing group. PTI only. */
+  getInviteeCandidates(scope: QueryScope, filter?: InviteeFilter): Promise<Page<InviteeCandidate>>;
+  /** REQ-E03-02 — RFI events. A supplier sees the ones it was invited to, and only its own answers. */
+  getRfiEvents(scope: QueryScope): Promise<Page<RfiEventView>>;
+  /** REQ-E03-04 — RFP events with their commercial terms and proposals. Same scoping as the RFI board. */
+  getRfpEvents(scope: QueryScope): Promise<Page<RfpEventView>>;
+  /** REQ-E03-05 — negotiation rounds. A supplier reads only its own thread (BR-05). */
+  getNegotiationRounds(scope: QueryScope): Promise<Page<NegotiationRoundView>>;
+  /** REQ-E03-05 — recorded awards. A supplier reads only its own outcome (AC-05). */
+  getAwards(scope: QueryScope): Promise<Page<AwardView>>;
 
   // — Fulfilment —
   getShipments(scope: QueryScope, filter?: ShipmentFilter): Promise<Page<Shipment>>;

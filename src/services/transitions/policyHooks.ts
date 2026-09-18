@@ -399,6 +399,96 @@ export const POLICY_HOOKS = {
    * declarations key that is present and malformed is not.
    */
   APPLICATION_DECLARATIONS_WELL_FORMED: 'application_declarations_well_formed',
+
+  // ── REQ-E03-01 to REQ-E03-05 · RFx MANAGEMENT ────────────────────────────
+  /**
+   * RFI create (REQ-E03-02): the event names a template Procurement keeps, a
+   * readable deadline, and — when the buyer edited the question set — questions
+   * whose kinds this build recognises. `requiredFields` proves presence only, so
+   * without this an unknown template id would mint an event with no questions
+   * at all and a supplier would be sent an empty form.
+   */
+  RFI_CREATE_VALID: 'rfi_create_valid',
+  /**
+   * RFI / RFP / RFQ publish: the event has at least one invitee, and every
+   * invitee is a supplier the invitee filter would return (REQ-E03-01 BR-04).
+   *
+   * ⚠️ **THE SECOND HALF IS THE ONE THAT MATTERS.** A screen that hides
+   * suspended suppliers from the picker does not stop an event whose draft was
+   * built before the supplier was suspended — nor a dispatch that never opened
+   * the picker. The status is re-read at PUBLICATION, which is the moment the
+   * invitation actually goes out.
+   */
+  RFX_PUBLISH_HAS_INVITEES: 'rfx_publish_has_invitees',
+  /**
+   * RFI / RFP / RFQ extend (REQ-E03-02 / -03 edge cases): the new date is a
+   * readable date and is LATER than the deadline in force. A date that moves
+   * earlier is not an extension — it would retroactively close a window
+   * suppliers are still answering in — and any named invitees must be invitees.
+   */
+  RFX_EXTEND_VALID: 'rfx_extend_valid',
+  /**
+   * RFI / RFP response save: the supplier is an invitee of an OPEN event.
+   * Creation scope proves the payload names the supplier's own id; this proves
+   * the supplier was asked at all.
+   */
+  RFX_RESPONSE_INVITED: 'rfx_response_invited',
+  /**
+   * RFI submit (REQ-E03-02 template rule): every REQUIRED question is answered,
+   * and the response deadline in force for this supplier has not passed. The
+   * refusal names the questions, so it is a refusal a supplier can act on.
+   */
+  RFI_SUBMIT_COMPLETE: 'rfi_submit_complete',
+  /**
+   * RFP create (REQ-E03-04): every term row names a term from the STANDARD
+   * LIST and carries PTI's requested value. An off-list term id would produce a
+   * comparison column no supplier's answer can be read against.
+   */
+  RFP_CREATE_TERMS_KNOWN: 'rfp_create_terms_known',
+  /**
+   * RFP submit (REQ-E03-04): every term the buyer asked for is answered, every
+   * answer takes a stance, and **a Deviate carries a comment**. The deviation
+   * is what changes the deal; a deviation nobody explained is not an answer.
+   */
+  RFP_SUBMIT_TERMS_ANSWERED: 'rfp_submit_terms_answered',
+  /**
+   * Quotation submit (REQ-E03-03 AC-05): no quote after the response deadline
+   * in force for THIS supplier (its own extension, or the event's).
+   */
+  QUOTATION_SUBMIT_BEFORE_DEADLINE: 'quotation_submit_before_deadline',
+  /**
+   * Quotation submit / revise (REQ-E03-03): when the quote carries per-item
+   * lines, every line names an item once, with a positive quantity and a
+   * positive unit price. A quote without lines is the single-price quote that
+   * has always been legal, so this refuses malformed detail and never absence.
+   */
+  QUOTATION_LINES_WELL_FORMED: 'quotation_lines_well_formed',
+  /**
+   * Quotation revise (REQ-E03-05 BR-03): the round exists, is open, its
+   * deadline has not passed, and **this supplier was invited to it**. Being on
+   * the RFQ is not enough — a round is a shortlist, and letting an uninvited
+   * bidder revise would make the shortlist decorative.
+   */
+  QUOTATION_REVISE_IN_ROUND: 'quotation_revise_in_round',
+  /**
+   * Negotiation round open (REQ-E03-05 BR-03): the RFQ exists and is not
+   * already awarded, the deadline is a readable date, and every invited
+   * supplier actually quoted on this RFQ.
+   */
+  NEGOTIATION_ROUND_VALID: 'negotiation_round_valid',
+  /**
+   * RFQ award (REQ-E03-05 BR-06 / BR-07): **each item's shares total 100%**,
+   * every share and quantity is positive, and an award that does NOT follow the
+   * best-scored quote carries a reason.
+   *
+   * ⚠️ **BOTH HALVES ARE POLICY, NOT VALIDATION.** A split that totals 90%
+   * leaves a tenth of the demand placed nowhere and reads on screen as a
+   * complete award; an award that passes over the top-ranked quote with no
+   * reason is exactly the decision the charter's audit trail exists to explain.
+   * Neither is a field being empty, so neither is expressible in
+   * `requiredFields`.
+   */
+  RFQ_AWARD_GOVERNED: 'rfq_award_governed',
 } as const;
 
 for (const name of Object.values(POLICY_HOOKS)) registerPolicyHook(name);

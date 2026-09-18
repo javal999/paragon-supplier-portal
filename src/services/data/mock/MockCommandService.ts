@@ -109,6 +109,21 @@ import {
   isIsoDay,
   parseAlertKey,
   standingClosure,
+  // REQ-E03-01 to REQ-E03-05 — the RFx rules. The verb and the screen read the
+  // SAME predicates, so a refusal and a disabled button can never disagree.
+  awardFollowsBestScore,
+  awardSplitRefusal,
+  deviationsWithoutComment,
+  effectiveDeadline,
+  isExtension,
+  isInvitedToRound,
+  isPastDeadline,
+  isSelectableSupplier,
+  missingRequiredAnswers,
+  quoteLinesRefusal,
+  quoteLinesTotal,
+  unansweredTerms,
+  type QuoteLineInput,
   type AsnLineInput,
   type CommandTarget,
   type CascadeCommand,
@@ -145,6 +160,47 @@ import {
 } from './inventoryReadModel';
 import { API_CONNECTIONS } from './fixtures/inventoryHub';
 import { forecastVersionStore, forecastViewStore } from './stores/forecastHubStores';
+// ── REQ-E03-01 to REQ-E03-05 — RFx management ──────────────────────────────
+import {
+  awardStore,
+  negotiationRoundStore,
+  rfiEventStore,
+  rfiResponseStore,
+  rfpEventStore,
+  rfpResponseStore,
+} from './stores/rfxStores';
+import { bestScoredQuotationId, rfxNow } from './rfxReadModel';
+import { rfiTemplate, rfpTerm } from '../../sourcing/rfxConfig';
+import type {
+  AwardLine,
+  RfiAnswer,
+  RfiQuestion,
+  RfiQuestionType,
+  RfiResponse,
+  RfpResponse,
+  RfpTermAnswer,
+  RfpTermRow,
+  RfxEventStatus,
+  RfxInvitee,
+  RfxResponseStatus,
+} from '../../sourcing/types';
+import { BID_CURRENCIES } from '../../../lib/currencyPolicy';
+
+/**
+ * The question kinds this build can render and score. Named as DATA so the
+ * create hook proves MEMBERSHIP rather than presence — the
+ * `QUOTATION_SUBMIT_CURRENCY_PERMITTED` shape: an off-list token is refused by
+ * name instead of stored as a kind no surface can draw.
+ */
+const RFI_QUESTION_TYPES: readonly RfiQuestionType[] = [
+  'yesNo',
+  'singleChoice',
+  'multipleChoice',
+  'numberWithUnit',
+  'date',
+  'text',
+  'attachment',
+];
 import {
   currentVersion,
   isForecastVersion,
@@ -1177,6 +1233,67 @@ const rfqTarget: CommandTarget = {
   readScopeOwner: () => null,
   readEntity: (id) => rfqStore.get(id) ?? null,
   applyTransition: (id, toState, payload) => {
+    // REQ-E03-03 BR-05 — the extension branch. `applyTransition` receives no
+    // transitionId, so the payload is the discriminator, exactly as the FX pin
+    // below discriminates on `quote`. `t_rfq_extend` is the ONLY rfq verb
+    // carrying `deadline`, and it is state-preserving, so nothing else here runs.
+    if (payload.deadline !== undefined) {
+      const deadline = String(payload.deadline);
+      const only = Array.isArray(payload.supplierIds)
+        ? (payload.supplierIds as unknown[]).filter((x): x is string => typeof x === 'string')
+        : [];
+      rfqStore.update(id, (r) => ({
+        ...r,
+        // Extended for EVERYONE moves the event's own deadline; extended for
+        // NAMED invitees leaves it alone and records a per-invitee one, so the
+        // two acts stay distinguishable after the fact.
+        ...(only.length === 0 ? { responseDeadline: deadline } : {}),
+        ...(only.length === 0
+          ? {}
+          : {
+              inviteeDeadlines: [
+                ...(r.inviteeDeadlines ?? []).filter((i) => !only.includes(i.supplierId)),
+                ...only.map((supplierId) => ({ supplierId, deadline })),
+              ],
+            }),
+        extensions: [...(r.extensions ?? []), { at: new Date().toISOString(), deadline, supplierIds: only }],
+      }));
+      return;
+    }
+    // REQ-E03-05 BR-06 / BR-09 — an award RECORDS itself. The hub keeps the
+    // split, the reason and who was not awarded; it mints no PO and no contract
+    // (the charter's system-of-record rule).
+    if (toState === 'Awarded') {
+      const rfq = rfqStore.get(id);
+      const supplied = Array.isArray(payload.awardLines) ? (payload.awardLines as AwardLine[]) : null;
+      // A single-supplier award is the same record with ONE line at 100% — so
+      // there is one award shape to read, not "a split" and "a plain award".
+      const lines: AwardLine[] = supplied ?? [
+        {
+          supplierId: String(payload.awardedSupplierId),
+          quotationId: String(payload.awardedQuotationId),
+          itemCode: '',
+          sharePct: 100,
+          quantity: rfq?.totalQty ?? 0,
+        },
+      ];
+      const winners = new Set(lines.map((l) => l.supplierId));
+      awardStore.add({
+        id: awardStore.nextId(),
+        rfqId: id,
+        awardedAt: new Date().toISOString(),
+        lines,
+        ...(typeof payload.awardReason === 'string' && payload.awardReason.trim()
+          ? { reason: payload.awardReason.trim() }
+          : {}),
+        ...(rfq && bestScoredQuotationId(rfq, rfxNow())
+          ? { bestScoredQuotationId: bestScoredQuotationId(rfq, rfxNow())! }
+          : {}),
+        // BR-08 — every other quote is marked Not awarded and its supplier
+        // notified. The quote status is the cascade's job; this records WHO.
+        notAwardedSupplierIds: (rfq?.invitedSupplierIds ?? []).filter((sid) => !winners.has(sid)),
+      });
+    }
     rfqStore.update(id, (r) => ({
       ...r,
       status: toState as RFQStatus,
@@ -1332,7 +1449,13 @@ const quotationTarget: CommandTarget = {
       // Honest arithmetic from raw facts (unit × the RFQ's quantity), NOT a score.
       // Denominated in the quote's OWN currency — the RFQ's quantity is a count,
       // so it carries no currency of its own to disagree with.
-      totalPrice: unitPrice * (rfq?.totalQty ?? 0),
+      // REQ-E03-03 — the total is the SUM OF THE LINES when the quote carries
+      // them, and unit × the event quantity when it does not. Derived either
+      // way, so a header figure can never disagree with the detail under it.
+      totalPrice:
+        Array.isArray(payload.lines) && (payload.lines as unknown[]).length > 0
+          ? quoteLinesTotal(payload.lines as QuoteLineInput[])
+          : unitPrice * (rfq?.totalQty ?? 0),
       // Required by the flow's `requiredFields`, so `num()`'s 0 fallback is
       // unreachable here — an absent lead time fails MISSING_FIELDS before
       // create is ever called, rather than being minted as a same-day promise.
@@ -1344,6 +1467,19 @@ const quotationTarget: CommandTarget = {
       ...(typeof payload.moq === 'number' ? { moq: payload.moq as number } : {}),
       paymentTermsOffered: str('paymentTermsOffered'),
       validUntil: str('validUntil'),
+      // REQ-E03-03 — the per-item prices, when the supplier quoted item by item.
+      // `quotation_lines_well_formed` has already refused a malformed set, so a
+      // `lines` key that survives to here is either absent or sound.
+      ...(Array.isArray(payload.lines) && (payload.lines as unknown[]).length > 0
+        ? { lines: payload.lines as Quotation['lines'] }
+        : {}),
+      // REQ-E03-05 BR-04 — which round this version answered, and the version it
+      // supersedes. Both absent on an original response, which is what makes
+      // "this is the first bid" a readable state rather than round 0 by
+      // convention.
+      ...(typeof payload.roundNumber === 'number' ? { roundNumber: payload.roundNumber as number } : {}),
+      ...(str('supersedesQuotationId') ? { supersedesQuotationId: str('supersedesQuotationId') } : {}),
+      ...(payload.bestAndFinal === true ? { bestAndFinal: true } : {}),
       // DECLARED-SIMULATED axes — documented baseline, passed through the engine
       // and marked "Simulated" at read. Never zero, never a profile lookup.
       complianceScore: SIMULATED_AXIS_BASELINE,
@@ -2361,6 +2497,500 @@ const forecastViewTarget: CommandTarget = {
   },
 };
 
+// ── RFx MANAGEMENT (REQ-E03-01 to REQ-E03-05) ──────────────────────────────
+//
+// Five targets and eleven policy hooks. The shape is the one the rest of this
+// file already uses: the TARGET owns the store mutation, the HOOK owns the rule,
+// and every rule the requirement states is enforced at the verb rather than on
+// the screen — a screen can stop a gesture, only a verb can stop an act.
+
+/** Is `supplierId` an invitee of this event, and is the event answerable? */
+const rfxInvited = (
+  event: { status: string; invitees: readonly RfxInvitee[] } | undefined,
+  supplierId: string,
+): boolean => !!event && event.status === 'Open' && event.invitees.some((i) => i.supplierId === supplierId);
+
+/** REQ-E03-02 — the RFI event. `entityId` is its id. */
+const rfiEventTarget: CommandTarget = {
+  readState: (id) => rfiEventStore.get(id)?.status ?? null,
+  // Buyer-only: a supplier answers an RFI, it never publishes one.
+  readScopeOwner: () => null,
+  readEntity: (id) => rfiEventStore.get(id) ?? null,
+  applyTransition: (id, toState, payload) => {
+    if (payload.deadline !== undefined) {
+      const deadline = String(payload.deadline);
+      const only = Array.isArray(payload.supplierIds)
+        ? (payload.supplierIds as unknown[]).filter((x): x is string => typeof x === 'string')
+        : [];
+      rfiEventStore.update(id, (e) => ({
+        ...e,
+        ...(only.length === 0 ? { responseDeadline: deadline } : {}),
+        invitees:
+          only.length === 0
+            ? e.invitees
+            : e.invitees.map((i) => (only.includes(i.supplierId) ? { ...i, deadline } : i)),
+        extensions: [...e.extensions, { at: sdcClock.now(), deadline, supplierIds: only }],
+      }));
+      return;
+    }
+    rfiEventStore.update(id, (e) => ({ ...e, status: toState as RfxEventStatus }));
+  },
+  creationOwner: () => null,
+  create: (payload, toState) => {
+    const id = rfiEventStore.nextId();
+    const template = rfiTemplate(String(payload.templateId))!;
+    const str = (k: string) => (typeof payload[k] === 'string' ? (payload[k] as string) : '');
+    // The event carries its OWN question list from birth. A buyer's additions
+    // and removals apply to THIS event only, and a later edit to the template
+    // never rewrites an event suppliers have already answered.
+    const questions = Array.isArray(payload.questions)
+      ? (payload.questions as RfiQuestion[])
+      : template.questions;
+    rfiEventStore.add({
+      id,
+      eventNumber: `RFI-2026-${id.slice(-3)}`,
+      title: str('title'),
+      templateId: template.id,
+      materialCategory: str('materialCategory'),
+      ...(str('purchasingGroup') ? { purchasingGroup: str('purchasingGroup') } : {}),
+      status: toState as RfxEventStatus,
+      createdAt: sdcClock.now(),
+      responseDeadline: str('responseDeadline'),
+      invitees: (Array.isArray(payload.invitedSupplierIds)
+        ? (payload.invitedSupplierIds as unknown[]).filter((x): x is string => typeof x === 'string')
+        : []
+      ).map((supplierId) => ({ supplierId })),
+      questions,
+      extensions: [],
+    });
+    return { entityId: id };
+  },
+};
+
+/** REQ-E03-02 — the supplier's RFI answers. A Draft is its author's alone. */
+const rfiResponseTarget: CommandTarget = {
+  readState: (id) => rfiResponseStore.get(id)?.status ?? null,
+  readScopeOwner: (id) => rfiResponseStore.get(id)?.supplierId ?? null,
+  readEntity: (id) => rfiResponseStore.get(id) ?? null,
+  applyTransition: (id, toState) => {
+    rfiResponseStore.update(id, (r) => ({
+      ...r,
+      status: toState as RfxResponseStatus,
+      updatedAt: sdcClock.now(),
+      ...(toState === 'Submitted' ? { submittedAt: sdcClock.now() } : {}),
+    }));
+  },
+  requireCreationOwner: true,
+  creationOwner: (payload) => {
+    const sid = String(payload.supplierId);
+    return rfxInvited(rfiEventStore.get(String(payload.rfiId)), sid) ? sid : null;
+  },
+  create: (payload, toState) => {
+    const rfiId = String(payload.rfiId);
+    const supplierId = String(payload.supplierId);
+    const answers = Array.isArray(payload.answers) ? (payload.answers as RfiAnswer[]) : [];
+    // ONE response per supplier × event. Saving again REPLACES the draft's
+    // answers rather than minting a second row — two drafts for one invitation
+    // would make "which one did they send?" unanswerable.
+    const existing = rfiResponseStore.all().find((r) => r.rfiId === rfiId && r.supplierId === supplierId);
+    if (existing) {
+      rfiResponseStore.update(existing.id, (r) => ({ ...r, answers, updatedAt: sdcClock.now() }));
+      return { entityId: existing.id };
+    }
+    const id = rfiResponseStore.nextId();
+    rfiResponseStore.add({
+      id,
+      rfiId,
+      supplierId,
+      status: toState as RfxResponseStatus,
+      updatedAt: sdcClock.now(),
+      answers,
+    });
+    return { entityId: id };
+  },
+};
+
+/** REQ-E03-04 — the RFP event. */
+const rfpEventTarget: CommandTarget = {
+  readState: (id) => rfpEventStore.get(id)?.status ?? null,
+  readScopeOwner: () => null,
+  readEntity: (id) => rfpEventStore.get(id) ?? null,
+  applyTransition: (id, toState, payload) => {
+    if (payload.deadline !== undefined) {
+      const deadline = String(payload.deadline);
+      const only = Array.isArray(payload.supplierIds)
+        ? (payload.supplierIds as unknown[]).filter((x): x is string => typeof x === 'string')
+        : [];
+      rfpEventStore.update(id, (e) => ({
+        ...e,
+        ...(only.length === 0 ? { responseDeadline: deadline } : {}),
+        invitees:
+          only.length === 0
+            ? e.invitees
+            : e.invitees.map((i) => (only.includes(i.supplierId) ? { ...i, deadline } : i)),
+        extensions: [...e.extensions, { at: sdcClock.now(), deadline, supplierIds: only }],
+      }));
+      return;
+    }
+    rfpEventStore.update(id, (e) => ({ ...e, status: toState as RfxEventStatus }));
+  },
+  creationOwner: () => null,
+  create: (payload, toState) => {
+    const id = rfpEventStore.nextId();
+    const str = (k: string) => (typeof payload[k] === 'string' ? (payload[k] as string) : '');
+    rfpEventStore.add({
+      id,
+      eventNumber: `RFP-2026-${id.slice(-3)}`,
+      title: str('title'),
+      scope: str('scope'),
+      materialCategory: str('materialCategory'),
+      ...(str('purchasingGroup') ? { purchasingGroup: str('purchasingGroup') } : {}),
+      status: toState as RfxEventStatus,
+      createdAt: sdcClock.now(),
+      responseDeadline: str('responseDeadline'),
+      currency: (BID_CURRENCIES as readonly string[]).includes(str('currency'))
+        ? (str('currency') as BidCurrency)
+        : BASE_CURRENCY,
+      invitees: (Array.isArray(payload.invitedSupplierIds)
+        ? (payload.invitedSupplierIds as unknown[]).filter((x): x is string => typeof x === 'string')
+        : []
+      ).map((supplierId) => ({ supplierId })),
+      terms: Array.isArray(payload.terms) ? (payload.terms as RfpTermRow[]) : [],
+      extensions: [],
+    });
+    return { entityId: id };
+  },
+};
+
+/** REQ-E03-04 — the supplier's proposal. */
+const rfpResponseTarget: CommandTarget = {
+  readState: (id) => rfpResponseStore.get(id)?.status ?? null,
+  readScopeOwner: (id) => rfpResponseStore.get(id)?.supplierId ?? null,
+  readEntity: (id) => rfpResponseStore.get(id) ?? null,
+  applyTransition: (id, toState) => {
+    rfpResponseStore.update(id, (r) => ({
+      ...r,
+      status: toState as RfxResponseStatus,
+      updatedAt: sdcClock.now(),
+      ...(toState === 'Submitted' ? { submittedAt: sdcClock.now() } : {}),
+    }));
+  },
+  requireCreationOwner: true,
+  creationOwner: (payload) => {
+    const sid = String(payload.supplierId);
+    return rfxInvited(rfpEventStore.get(String(payload.rfpId)), sid) ? sid : null;
+  },
+  create: (payload, toState) => {
+    const rfpId = String(payload.rfpId);
+    const supplierId = String(payload.supplierId);
+    const answers = Array.isArray(payload.answers) ? (payload.answers as RfpTermAnswer[]) : [];
+    const otherTerms = typeof payload.otherTerms === 'string' ? payload.otherTerms : undefined;
+    const existing = rfpResponseStore.all().find((r) => r.rfpId === rfpId && r.supplierId === supplierId);
+    if (existing) {
+      rfpResponseStore.update(existing.id, (r) => ({
+        ...r,
+        answers,
+        ...(otherTerms !== undefined ? { otherTerms } : {}),
+        updatedAt: sdcClock.now(),
+      }));
+      return { entityId: existing.id };
+    }
+    const id = rfpResponseStore.nextId();
+    rfpResponseStore.add({
+      id,
+      rfpId,
+      supplierId,
+      status: toState as RfxResponseStatus,
+      updatedAt: sdcClock.now(),
+      answers,
+      ...(otherTerms !== undefined ? { otherTerms } : {}),
+    });
+    return { entityId: id };
+  },
+};
+
+/** REQ-E03-05 — a negotiation round. Append-only: asking again is a new round. */
+const negotiationRoundTarget: CommandTarget = {
+  readState: (id) => {
+    const round = negotiationRoundStore.get(id);
+    return round ? (round.closed ? 'Closed' : 'Open') : null;
+  },
+  // Buyer-only to OPEN. A supplier answers a round through `t_quotation_revise`,
+  // which is scoped to its own quotation — so a supplier never addresses the
+  // round entity itself and an owner here would be a supplier who may edit the
+  // window they are being negotiated in.
+  readScopeOwner: () => null,
+  readEntity: (id) => negotiationRoundStore.get(id) ?? null,
+  applyTransition: (id) => {
+    negotiationRoundStore.update(id, (r) => ({ ...r, closed: true }));
+  },
+  creationOwner: () => null,
+  create: (payload) => {
+    const id = negotiationRoundStore.nextId();
+    const rfqId = String(payload.rfqId);
+    const roundNumber =
+      negotiationRoundStore.all().filter((r) => r.rfqId === rfqId).length + 1;
+    negotiationRoundStore.add({
+      id,
+      rfqId,
+      roundNumber,
+      openedAt: sdcClock.now(),
+      deadline: String(payload.deadline),
+      invitedSupplierIds: (payload.invitedSupplierIds as unknown[]).filter(
+        (x): x is string => typeof x === 'string',
+      ),
+      ...(typeof payload.message === 'string' && payload.message.trim()
+        ? { message: payload.message.trim() }
+        : {}),
+      ...(typeof payload.targetUnitPrice === 'number' ? { targetUnitPrice: payload.targetUnitPrice } : {}),
+      bestAndFinal: payload.bestAndFinal === true,
+      closed: false,
+    });
+    return { entityId: id };
+  },
+};
+
+// — The RFx policy hooks ————————————————————————————————————————————————
+
+// REQ-E03-02 — the template must be one Procurement keeps, the deadline a date,
+// and any hand-edited question set must carry kinds this build recognises.
+bindPolicyHook(POLICY_HOOKS.RFI_CREATE_VALID, ({ payload }) => {
+  if (!rfiTemplate(String(payload.templateId))) {
+    return { ok: false, reason: 'UNKNOWN_TEMPLATE: the RFI template is not one Procurement keeps' };
+  }
+  if (!isCalendarDate(String(payload.responseDeadline))) {
+    return { ok: false, reason: 'BAD_DEADLINE: the response deadline must be a date' };
+  }
+  if (payload.questions !== undefined) {
+    if (!Array.isArray(payload.questions) || payload.questions.length === 0) {
+      return { ok: false, reason: 'NO_QUESTIONS: an RFI asks at least one question' };
+    }
+    for (const q of payload.questions as RfiQuestion[]) {
+      if (!RFI_QUESTION_TYPES.includes(q?.type)) {
+        return { ok: false, reason: `UNKNOWN_QUESTION_TYPE: ${String(q?.type)}` };
+      }
+      if (!q.id || !q.promptKey) {
+        return { ok: false, reason: 'QUESTION_INCOMPLETE: every question names itself and what it asks' };
+      }
+    }
+  }
+  return { ok: true };
+});
+
+// REQ-E03-01 BR-04 — publication is when the invitation actually goes out, so
+// the supplier statuses are re-read HERE and not only in the picker.
+bindPolicyHook(POLICY_HOOKS.RFX_PUBLISH_HAS_INVITEES, ({ target, entityId }) => {
+  const event = target.readEntity(entityId) as { invitees?: readonly RfxInvitee[] } | null;
+  const invitees = event?.invitees ?? [];
+  if (invitees.length === 0) {
+    return { ok: false, reason: 'NO_INVITEES: publish an event to at least one supplier' };
+  }
+  const refused = invitees
+    .map((i) => i.supplierId)
+    .filter((sid) => {
+      const supplier = mockSuppliers.find((x) => x.id === sid);
+      return !supplier || !isSelectableSupplier(supplier.status);
+    });
+  if (refused.length > 0) {
+    return { ok: false, reason: `SUPPLIER_NOT_SELECTABLE: ${refused.join(', ')}` };
+  }
+  return { ok: true };
+});
+
+// REQ-E03-02 / -03 edge cases — an extension moves the deadline LATER. A date
+// that moves earlier would retroactively close a window suppliers are answering
+// in, which is not an extension under any reading.
+bindPolicyHook(POLICY_HOOKS.RFX_EXTEND_VALID, ({ payload, target, entityId }) => {
+  const next = String(payload.deadline);
+  if (!isCalendarDate(next)) return { ok: false, reason: 'BAD_DEADLINE: the new deadline must be a date' };
+  const event = target.readEntity(entityId) as
+    | { responseDeadline?: string; invitees?: readonly RfxInvitee[]; invitedSupplierIds?: readonly string[] }
+    | null;
+  if (!event) return { ok: false, reason: 'event not found' };
+  const named = Array.isArray(payload.supplierIds)
+    ? (payload.supplierIds as unknown[]).filter((x): x is string => typeof x === 'string')
+    : [];
+  const members = event.invitees
+    ? event.invitees.map((i) => i.supplierId)
+    : event.invitedSupplierIds ?? [];
+  const strangers = named.filter((sid) => !members.includes(sid));
+  if (strangers.length > 0) {
+    return { ok: false, reason: `NOT_INVITED: ${strangers.join(', ')} was not invited to this event` };
+  }
+  const current = String(event.responseDeadline ?? '');
+  if (named.length === 0 && current && !isExtension(current, next)) {
+    return { ok: false, reason: 'NOT_AN_EXTENSION: the new deadline must be later than the current one' };
+  }
+  return { ok: true };
+});
+
+// REQ-E03-02 / -04 — an answer is only answerable by an invitee of an open event.
+bindPolicyHook(POLICY_HOOKS.RFX_RESPONSE_INVITED, ({ payload }) => {
+  const supplierId = String(payload.supplierId);
+  const event = payload.rfiId
+    ? rfiEventStore.get(String(payload.rfiId))
+    : rfpEventStore.get(String(payload.rfpId));
+  if (!event) return { ok: false, reason: 'event not found' };
+  if (event.status !== 'Open') return { ok: false, reason: `EVENT_NOT_OPEN: the event is ${event.status}` };
+  return event.invitees.some((i) => i.supplierId === supplierId)
+    ? { ok: true }
+    : { ok: false, reason: 'NOT_INVITED: this supplier was not invited to the event' };
+});
+
+// REQ-E03-02 — every required question answered, and the deadline in force for
+// THIS supplier not yet passed. The refusal names the questions.
+bindPolicyHook(POLICY_HOOKS.RFI_SUBMIT_COMPLETE, ({ target, entityId }) => {
+  const response = target.readEntity(entityId) as RfiResponse | null;
+  if (!response) return { ok: false, reason: 'response not found' };
+  const event = rfiEventStore.get(response.rfiId);
+  if (!event) return { ok: false, reason: 'RFI not found' };
+  const deadline = effectiveDeadline(event.responseDeadline, event.invitees, response.supplierId);
+  if (isPastDeadline(deadline, rfxNow())) {
+    return { ok: false, reason: `PAST_DEADLINE: answers closed on ${deadline}` };
+  }
+  const missing = missingRequiredAnswers(event.questions, response.answers);
+  return missing.length === 0
+    ? { ok: true }
+    : { ok: false, reason: `REQUIRED_UNANSWERED: ${missing.join(', ')}` };
+});
+
+// REQ-E03-04 — the buyer picks terms from the STANDARD LIST, and each row
+// carries PTI's requested value.
+bindPolicyHook(POLICY_HOOKS.RFP_CREATE_TERMS_KNOWN, ({ payload }) => {
+  if (!isCalendarDate(String(payload.responseDeadline))) {
+    return { ok: false, reason: 'BAD_DEADLINE: the response deadline must be a date' };
+  }
+  const terms = Array.isArray(payload.terms) ? (payload.terms as RfpTermRow[]) : [];
+  if (terms.length === 0) return { ok: false, reason: 'NO_TERMS: an RFP lists at least one commercial term' };
+  for (const row of terms) {
+    if (!rfpTerm(row?.termId)) {
+      return { ok: false, reason: `UNKNOWN_TERM: ${String(row?.termId)} is not on the standard term list` };
+    }
+    if (!row.requestedValue || String(row.requestedValue).trim().length === 0) {
+      return { ok: false, reason: `TERM_VALUE_REQUIRED: ${row.termId} needs PTI's requested value` };
+    }
+  }
+  return { ok: true };
+});
+
+// REQ-E03-04 — every asked term answered, and A DEVIATION CARRIES A COMMENT.
+bindPolicyHook(POLICY_HOOKS.RFP_SUBMIT_TERMS_ANSWERED, ({ target, entityId }) => {
+  const response = target.readEntity(entityId) as RfpResponse | null;
+  if (!response) return { ok: false, reason: 'proposal not found' };
+  const event = rfpEventStore.get(response.rfpId);
+  if (!event) return { ok: false, reason: 'RFP not found' };
+  const deadline = effectiveDeadline(event.responseDeadline, event.invitees, response.supplierId);
+  if (isPastDeadline(deadline, rfxNow())) {
+    return { ok: false, reason: `PAST_DEADLINE: proposals closed on ${deadline}` };
+  }
+  const unanswered = unansweredTerms(event.terms, response.answers);
+  if (unanswered.length > 0) {
+    return { ok: false, reason: `TERMS_UNANSWERED: ${unanswered.join(', ')}` };
+  }
+  const uncommented = deviationsWithoutComment(response.answers);
+  return uncommented.length === 0
+    ? { ok: true }
+    : { ok: false, reason: `DEVIATION_NEEDS_COMMENT: ${uncommented.join(', ')}` };
+});
+
+// REQ-E03-03 AC-05 — no quote after the deadline in force for this supplier.
+bindPolicyHook(POLICY_HOOKS.QUOTATION_SUBMIT_BEFORE_DEADLINE, ({ payload }) => {
+  const rfq = rfqStore.get(String(payload.rfqId));
+  if (!rfq) return { ok: false, reason: 'sourcing event not found' };
+  const deadline = effectiveDeadline(rfq.responseDeadline, rfq.inviteeDeadlines ?? [], String(payload.supplierId));
+  return isPastDeadline(deadline, rfxNow())
+    ? { ok: false, reason: `PAST_DEADLINE: quotes closed on ${deadline}` }
+    : { ok: true };
+});
+
+// REQ-E03-03 — malformed per-item lines are refused; absent lines are legal.
+bindPolicyHook(POLICY_HOOKS.QUOTATION_LINES_WELL_FORMED, ({ payload }) => {
+  if (payload.lines === undefined) return { ok: true };
+  if (!Array.isArray(payload.lines)) return { ok: false, reason: 'QUOTE_LINES_MALFORMED: lines must be a list' };
+  const refusal = quoteLinesRefusal(payload.lines as QuoteLineInput[]);
+  return refusal ? { ok: false, reason: refusal } : { ok: true };
+});
+
+// REQ-E03-05 BR-03 — only a supplier INVITED TO THE ROUND may revise, and only
+// while the round is open and inside its deadline.
+bindPolicyHook(POLICY_HOOKS.QUOTATION_REVISE_IN_ROUND, ({ payload }) => {
+  const round = negotiationRoundStore.get(String(payload.roundId));
+  if (!round) return { ok: false, reason: 'negotiation round not found' };
+  if (round.rfqId !== String(payload.rfqId)) {
+    return { ok: false, reason: 'ROUND_MISMATCH: this round belongs to another sourcing event' };
+  }
+  if (round.closed) return { ok: false, reason: 'ROUND_CLOSED: this round is closed' };
+  if (isPastDeadline(round.deadline, rfxNow())) {
+    return { ok: false, reason: `PAST_DEADLINE: the round closed on ${round.deadline}` };
+  }
+  return isInvitedToRound(round.invitedSupplierIds, String(payload.supplierId))
+    ? { ok: true }
+    : { ok: false, reason: 'NOT_IN_ROUND: this supplier was not invited to the negotiation round' };
+});
+
+// REQ-E03-05 BR-03 — a round names an event that can still be negotiated, and a
+// shortlist drawn from the suppliers that actually quoted.
+bindPolicyHook(POLICY_HOOKS.NEGOTIATION_ROUND_VALID, ({ payload }) => {
+  const rfq = rfqStore.get(String(payload.rfqId));
+  if (!rfq) return { ok: false, reason: 'sourcing event not found' };
+  if (rfq.status === 'Awarded' || rfq.status === 'Cancelled') {
+    return { ok: false, reason: `EVENT_CLOSED: ${rfq.rfqNumber} is ${rfq.status}` };
+  }
+  if (!isCalendarDate(String(payload.deadline))) {
+    return { ok: false, reason: 'BAD_DEADLINE: the round needs a deadline date' };
+  }
+  const invited = Array.isArray(payload.invitedSupplierIds)
+    ? (payload.invitedSupplierIds as unknown[]).filter((x): x is string => typeof x === 'string')
+    : [];
+  if (invited.length === 0) {
+    return { ok: false, reason: 'NO_SHORTLIST: a round invites at least one supplier' };
+  }
+  const quoted = new Set(quotationStore.all().filter((q) => q.rfqId === rfq.id).map((q) => q.supplierId));
+  const strangers = invited.filter((sid) => !quoted.has(sid));
+  if (strangers.length > 0) {
+    return { ok: false, reason: `NOT_A_BIDDER: ${strangers.join(', ')} did not quote on this event` };
+  }
+  if (payload.targetUnitPrice !== undefined && !(typeof payload.targetUnitPrice === 'number' && payload.targetUnitPrice > 0)) {
+    return { ok: false, reason: 'BAD_TARGET: a target price is a number above zero' };
+  }
+  return { ok: true };
+});
+
+// REQ-E03-05 BR-06 / BR-07 — the split totals 100% per item, and an award that
+// passes over the best-scored quote states why.
+bindPolicyHook(POLICY_HOOKS.RFQ_AWARD_GOVERNED, ({ payload, entityId }) => {
+  const rfq = rfqStore.get(entityId);
+  if (!rfq) return { ok: false, reason: 'sourcing event not found' };
+  const supplied = Array.isArray(payload.awardLines) ? (payload.awardLines as AwardLine[]) : null;
+  const lines: AwardLine[] = supplied ?? [
+    {
+      supplierId: String(payload.awardedSupplierId),
+      quotationId: String(payload.awardedQuotationId),
+      itemCode: '',
+      sharePct: 100,
+      quantity: rfq.totalQty,
+    },
+  ];
+  const refusal = awardSplitRefusal(lines);
+  if (refusal) return { ok: false, reason: refusal };
+  // Every awarded line names a real quotation ON THIS EVENT. Without this an
+  // award could record a share against a bid from another tender.
+  const onEvent = new Set(quotationStore.all().filter((q) => q.rfqId === rfq.id).map((q) => q.id));
+  const foreign = lines.filter((l) => !onEvent.has(l.quotationId));
+  if (foreign.length > 0) {
+    return { ok: false, reason: `QUOTE_NOT_ON_EVENT: ${foreign.map((l) => l.quotationId).join(', ')}` };
+  }
+  const best = bestScoredQuotationId(rfq, rfxNow());
+  const reason = typeof payload.awardReason === 'string' ? payload.awardReason.trim() : '';
+  if (!awardFollowsBestScore(lines, best) && reason.length === 0) {
+    return {
+      ok: false,
+      reason: 'AWARD_REASON_REQUIRED: an award that does not follow the best-scored quote needs a reason',
+    };
+  }
+  return { ok: true };
+});
+
 const incomingShipmentTarget: CommandTarget = {
   readState: (id) => incomingShipmentStore.get(id)?.lifecycle ?? null,
   readScopeOwner: (id) => incomingShipmentStore.get(id)?.supplierId ?? null,
@@ -2961,6 +3591,14 @@ const TARGETS: Record<string, CommandTarget> = {
   // REQ-E06-01 / REQ-E06-03 — forecast versions and supplier views.
   forecastVersion: forecastVersionTarget,
   forecastView: forecastViewTarget,
+  // REQ-E03-02 / REQ-E03-04 / REQ-E03-05 — the RFx event types, the answers to
+  // them, and the negotiation window. Each ships in the same commit as its flow,
+  // so no entity joins the target-less set even for one merge.
+  rfiEvent: rfiEventTarget,
+  rfiResponse: rfiResponseTarget,
+  rfpEvent: rfpEventTarget,
+  rfpResponse: rfpResponseTarget,
+  negotiationRound: negotiationRoundTarget,
 };
 
 // The behavior-wiring census (was the contract package's "6"; 7 with the G1.1

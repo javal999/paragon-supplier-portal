@@ -57,11 +57,18 @@ const ALLOWED = new Set(
     'Kemas', 'Vitamins', 'Halal', 'Salicylics', 'Niacinamide', 'PET', 'Bottle',
     'Manufacturer', 'Bioscience', 'Consumer', 'Goods', 'Raw', 'Material', 'Active',
     'Ingredient', 'Natural', 'Botanical',
+    // REQ-E03-01 — the three suppliers the invitee filter exists to tell apart
+    // (no OTIF history, blacklisted, and a second active packaging bidder).
+    // Industry words, deliberately added to the vocabulary rather than the
+    // names being bent to fit it.
+    'Preform', 'Works', 'Closures', 'Flexible',
     // geography — real places are not company names and stay real
     'Indonesia', 'Malaysia', 'France', 'Germany', 'China', 'Singapore', 'Batam', 'Medan',
     'Jakarta', 'Tangerang', 'Surabaya', 'Bogor', 'Hangzhou', 'Hefei', 'Paris', 'Frankfurt',
     'Duesseldorf', 'Petaling', 'Jaya', 'Riau', 'Islands', 'Banten', 'Jawa', 'Barat',
     'Cikarang', 'APAC', 'SG', 'ID', 'MY', 'DE', 'FR', 'CN',
+    // Real places, added with the RFx suppliers above.
+    'Karawang', 'Bekasi', 'Nusantara',
   ].map((s) => s.toLowerCase()),
 );
 

@@ -1,4 +1,19 @@
 import type { BidCurrency } from '../lib/currencyPolicy';
+import { shiftRfqDay } from './mockRfqs';
+
+/**
+ * REQ-E03-03 — one priced line of a quotation: the supplier's answer to one
+ * RFQ line item. `unitPrice × quantity` is the line total and the sum of the
+ * lines is the quote total, so a multi-item event is comparable item by item
+ * instead of on one blended number.
+ */
+export interface QuotationLine {
+  readonly lineNo: number;
+  readonly materialCode: string;
+  readonly quantity: number;
+  readonly uom: string;
+  readonly unitPrice: number;
+}
 
 export type QuotationStatus =
   | 'Submitted'
@@ -45,9 +60,30 @@ export interface Quotation {
   aiRecommended: boolean;
   status: QuotationStatus;
   notes?: string;
+  /**
+   * REQ-E03-03 — the per-item prices. OPTIONAL and additive: a quote without
+   * lines is the single-price quote this fixture set has always carried, and
+   * `unitPrice` / `totalPrice` stay the header figures either way (a quote WITH
+   * lines derives both from them, so the header can never disagree with the
+   * detail).
+   */
+  lines?: readonly QuotationLine[];
+  /**
+   * REQ-E03-05 BR-04 — which negotiation round this version belongs to. Absent
+   * or 0 = the original response to the RFQ.
+   */
+  roundNumber?: number;
+  /** The quotation version this one revises. Every version is kept (AC-03). */
+  supersedesQuotationId?: string;
+  /** True when the round this version answered was marked best and final. */
+  bestAndFinal?: boolean;
 }
 
-export const mockQuotations: Quotation[] = [
+// The quotations follow the RFQs they answer onto the declared present — the
+// SAME shift, from the same anchor, because a quote dated before its own event
+// or valid past an award nobody made is the incoherence the re-anchor exists to
+// remove. `submittedAt` and `validUntil` are the only dates a quotation carries.
+const RAW_QUOTATIONS: Quotation[] = [
   // RFQ-2026-001 — Niacinamide USP (Open)
   {
     id: 'qt-001a',
@@ -576,3 +612,9 @@ export const mockQuotations: Quotation[] = [
     notes: 'Imported ex-works, quoted in US dollars.',
   },
 ];
+
+export const mockQuotations: Quotation[] = RAW_QUOTATIONS.map((q) => ({
+  ...q,
+  submittedAt: shiftRfqDay(q.submittedAt),
+  validUntil: shiftRfqDay(q.validUntil),
+}));

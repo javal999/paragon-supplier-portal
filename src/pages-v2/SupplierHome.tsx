@@ -16,6 +16,9 @@ import {
   useGoodsReceipts,
   usePurchaseOrders,
   useRFQs,
+  useRfiEvents,
+  useRfpEvents,
+  useNegotiationRounds,
   useSupplierInvoices,
 } from '../services/query/hooks';
 import { POStatus } from '../services/data/types';
@@ -41,6 +44,11 @@ const SupplierHome: React.FC = () => {
   const supplierId = identity.supplierId;
   const pos = usePurchaseOrders();
   const rfqs = useRFQs();
+  // REQ-E03-02 / REQ-E03-04 / REQ-E03-05 — the RFx invitations and this
+  // supplier's own negotiation thread (Phase 6a).
+  const rfiEvents = useRfiEvents();
+  const rfpEvents = useRfpEvents();
+  const rounds = useNegotiationRounds();
   const invoices = useSupplierInvoices();
   const documents = useDocuments();
   const receipts = useGoodsReceipts();
@@ -196,6 +204,36 @@ const SupplierHome: React.FC = () => {
         to: '/supplier/rfqs',
       },
       {
+        // REQ-E03-02 — an information request still to answer: invited, and no
+        // SUBMITTED response (a draft is still "to answer").
+        id: 'rfi-answer',
+        label: t('hub.home.task.rfiToAnswer'),
+        count: (rfiEvents.data?.items ?? []).filter(
+          (e) => !e.closed && e.responses.every((r) => r.status !== 'Submitted'),
+        ).length,
+        severity: 'warning',
+        to: '/supplier/rfqs/rfi',
+      },
+      {
+        // REQ-E03-04 — a proposal request still to answer.
+        id: 'rfp-answer',
+        label: t('hub.home.task.rfpToAnswer'),
+        count: (rfpEvents.data?.items ?? []).filter(
+          (e) => !e.closed && e.responses.every((r) => r.status !== 'Submitted'),
+        ).length,
+        severity: 'warning',
+        to: '/supplier/rfqs/rfp',
+      },
+      {
+        // REQ-E03-05 — PTI asked for a revised quote and this supplier has not
+        // sent one. The read already narrows the round to its own thread.
+        id: 'revised-quote',
+        label: t('hub.home.task.revisedQuote'),
+        count: (rounds.data?.items ?? []).filter((r) => !r.closed && r.awaiting > 0).length,
+        severity: 'critical',
+        to: '/supplier/rfqs/rounds',
+      },
+      {
         id: 'certs',
         label: t('hub.home.task.sup.certs'),
         count: expired.length + expiring.length,
@@ -210,7 +248,7 @@ const SupplierHome: React.FC = () => {
         to: '/supplier/invoices',
       },
     ];
-  }, [pos.data, rfqs.data, invoices.data, documents.data, receipts.data, asns.data, callOffs.views, callOffs.nowIso, stock.data, capacity.data, forecastLines.data, forecastVersions.data, supplierId, t]);
+  }, [pos.data, rfqs.data, invoices.data, documents.data, receipts.data, asns.data, callOffs.views, callOffs.nowIso, stock.data, capacity.data, forecastLines.data, forecastVersions.data, rfiEvents.data, rfpEvents.data, rounds.data, supplierId, t]);
 
   if (!supplierId) return <NoSupplierIdentity />;
 

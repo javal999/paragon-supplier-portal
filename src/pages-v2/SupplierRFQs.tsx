@@ -17,6 +17,7 @@ import {
 import AppShellV2 from '../components/layout-v2/AppShellV2';
 import PageHeader from '../components/ui-v2/PageHeader';
 import PageMetaLine from '../components/ui-v2/PageMetaLine';
+import RfxTabs from './rfx/RfxTabs';
 import ProvenanceMarker from '../components/ui-v2/ProvenanceMarker';
 import KpiCard from '../components/ui-v2/KpiCard';
 import SubTabs from '../components/ui-v2/SubTabs';
@@ -1040,6 +1041,10 @@ const RfqWorkspace: React.FC<RfqWorkspaceProps> = ({
             RFQs being answered are fixtures. */}
         <ProvenanceMarker capability="rfqs" className="ml-3 align-middle" />
       </PageMetaLine>
+
+      {/* REQ-E03-02 / -04 — information and proposal requests live behind the
+          SAME "Invitations" menu item (§3.7); this is the switch. */}
+      <RfxTabs persona="supplier" active="rfq" counts={{ rfq: openCount }} />
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-6">
         <KpiCard

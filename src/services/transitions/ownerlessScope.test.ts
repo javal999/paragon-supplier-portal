@@ -97,6 +97,13 @@ import { callOffStore } from '../data/mock/stores/callOffStore';
 import { capacityStore, stockSyncStore } from '../data/mock/stores/inventoryHubStores';
 import { activeAlertConditions } from '../data/mock/inventoryReadModel';
 import { forecastVersionStore, forecastViewStore } from '../data/mock/stores/forecastHubStores';
+import {
+  negotiationRoundStore,
+  rfiEventStore,
+  rfiResponseStore,
+  rfpEventStore,
+  rfpResponseStore,
+} from '../data/mock/stores/rfxStores';
 import { customRoleStore } from './customRoles';
 
 const svc = new MockCommandService();
@@ -191,6 +198,15 @@ async function realIds(): Promise<Record<string, string | null>> {
     // REQ-E06-01 — the version and view stores are seeded.
     forecastVersion: forecastVersionStore.all()[0]?.publicationId ?? null,
     forecastView: forecastViewStore.all()[0]?.id ?? null,
+    // REQ-E03-02 / REQ-E03-04 / REQ-E03-05 — every RFx store is seeded, so each
+    // first row is a real id. The two RESPONSE targets are supplier-owned and
+    // therefore land in `ownerful`; the three buyer-owned ones land in
+    // `ownerless`, which is what the assertions below check by name.
+    rfiEvent: rfiEventStore.all()[0]?.id ?? null,
+    rfiResponse: rfiResponseStore.all()[0]?.id ?? null,
+    rfpEvent: rfpEventStore.all()[0]?.id ?? null,
+    rfpResponse: rfpResponseStore.all()[0]?.id ?? null,
+    negotiationRound: negotiationRoundStore.all()[0]?.id ?? null,
   };
 }
 
@@ -329,6 +345,12 @@ describe('POPULATION — nothing below means anything without this', () => {
     expect(ownerless).toContain('purchaseRequisition');
     expect(ownerless).toContain('supplierApplication');
     expect(ownerless).toContain('rfq');
+    // REQ-E03-02 / -04 — an RFI or RFP EVENT names no supplier (it is PTI's);
+    // a RESPONSE to one names exactly the supplier that wrote it. The two land
+    // on opposite sides, which is the bilateral control the RFx lane adds.
+    expect(ownerless).toContain('rfiEvent');
+    expect(ownerful).toContain('rfiResponse');
+    expect(ownerful).toContain('rfpResponse');
     expect(ownerless).not.toContain('purchaseOrder');
     expect(ownerless).not.toContain('invoice');
     expect(ownerful).toContain('purchaseOrder');
@@ -343,6 +365,8 @@ describe('POPULATION — nothing below means anything without this', () => {
     // creation-only snapshot shape.
     // A forecast version and a supplier's view of it (REQ-E06-01) are the same
     // creation-only snapshot shape.
+    // A negotiation round's only non-creation verb closes it, so it IS probeable
+    // and lands in `ownerless` with the other buyer-owned targets.
     expect(unprobeable).toEqual(['inventoryDeclaration', 'stockSync', 'capacitySubmission', 'forecastVersion', 'forecastView']);
   });
 
@@ -431,7 +455,19 @@ describe('THE LEGITIMATE PATHS — the half a "refuse everyone" fix would break'
     // refuses everybody; these cannot.
     const { ownerless } = await derive();
     expect(ownerless.sort()).toEqual(
-      ['enforcement', 'purchaseRequisition', 'rfq', 'role', 'supplierApplication'],
+      [
+        'enforcement',
+        // REQ-E03-05 — a negotiation round is PTI's window; a supplier answers
+        // it through its own quotation, never by addressing the round.
+        'negotiationRound',
+        'purchaseRequisition',
+        // REQ-E03-02 / REQ-E03-04 — an RFI and an RFP EVENT name no supplier.
+        'rfiEvent',
+        'rfpEvent',
+        'rfq',
+        'role',
+        'supplierApplication',
+      ],
     );
 
     const draftRfq = rfqStore.all().find((r) => r.status === 'Draft')!;
@@ -479,5 +515,29 @@ describe('THE LEGITIMATE PATHS — the half a "refuse everyone" fix would break'
     });
     expect(reviewed.status, reviewed.reason).toBe('done');
     expect(supplierApplicationStore.get(raised.entityId!)!.status).toBe('Under Review');
+
+    // REQ-E03-02 / REQ-E03-04 / REQ-E03-05 — the three RFx lanes a buyer seat
+    // must still be able to LAND a verb in. Each is a real dispatch through the
+    // real dispatcher ending in a state change, exactly as the four above.
+    const openRfi = rfiEventStore.all().find((e) => e.status === 'Open')!;
+    const rfiRes = await svc.dispatch(buyerSeat('procurement'), {
+      transitionId: 't_rfi_close', entity: 'rfiEvent', entityId: openRfi.id,
+    });
+    expect(rfiRes.status, rfiRes.reason).toBe('done');
+    expect(rfiEventStore.get(openRfi.id)!.status).toBe('Closed');
+
+    const openRfp = rfpEventStore.all().find((e) => e.status === 'Open')!;
+    const rfpRes = await svc.dispatch(buyerSeat('procurement'), {
+      transitionId: 't_rfp_close', entity: 'rfpEvent', entityId: openRfp.id,
+    });
+    expect(rfpRes.status, rfpRes.reason).toBe('done');
+    expect(rfpEventStore.get(openRfp.id)!.status).toBe('Closed');
+
+    const openRound = negotiationRoundStore.all().find((r) => !r.closed)!;
+    const roundRes = await svc.dispatch(buyerSeat('procurement'), {
+      transitionId: 't_negotiationround_close', entity: 'negotiationRound', entityId: openRound.id,
+    });
+    expect(roundRes.status, roundRes.reason).toBe('done');
+    expect(negotiationRoundStore.get(openRound.id)!.closed).toBe(true);
   });
 });

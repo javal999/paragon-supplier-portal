@@ -85,6 +85,8 @@ import { fulfilmentCollaborationEn, fulfilmentCollaborationId } from './i18n/ful
 import { callOffsEn, callOffsId } from './i18n/callOffs';
 import { inventoryCapacityEn, inventoryCapacityId } from './i18n/inventoryCapacity';
 import { forecastCollaborationEn, forecastCollaborationId } from './i18n/forecastCollaboration';
+// — Phase 6a RFx management (REQ-E03-01 to REQ-E03-05) —
+import { rfxEn, rfxId } from './i18n/rfx';
 // — The read path's failure surface, shared by 31 pages —
 import { errorStateEn, errorStateId } from './i18n/errorState';
 import { loadingStateEn, loadingStateId } from './i18n/loadingState';
@@ -166,6 +168,7 @@ export const resources = {
       ...callOffsEn,
       ...inventoryCapacityEn,
       ...forecastCollaborationEn,
+      ...rfxEn,
       ...errorStateEn,
       ...loadingStateEn,
       ...emptyStateEn,
@@ -603,6 +606,7 @@ export const resources = {
       ...callOffsId,
       ...inventoryCapacityId,
       ...forecastCollaborationId,
+      ...rfxId,
       ...errorStateId,
       ...loadingStateId,
       ...emptyStateId,

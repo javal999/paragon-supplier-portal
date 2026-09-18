@@ -17,6 +17,24 @@ import { mockContracts } from '../../../data/mockContracts';
 import { mockObligations } from '../../../data/mockObligations';
 import { applySupplierScope } from '../scoping';
 import { rfqStore } from './stores/rfqStore';
+// REQ-E03-01 to REQ-E03-05 — the RFx read model. Every RFx read resolves through
+// it, which is what keeps the draft-invisibility and own-thread rules in ONE
+// place instead of once per surface.
+import {
+  awardViews,
+  matchingInvitees,
+  negotiationRoundViews,
+  rfiEventViews,
+  rfpEventViews,
+  rfxNow,
+} from './rfxReadModel';
+import type { InviteeCandidate, InviteeFilter } from '../../transitions/rfxRules';
+import type {
+  AwardView,
+  NegotiationRoundView,
+  RfiEventView,
+  RfpEventView,
+} from '../../sourcing/views';
 import { quotationStore } from './stores/quotationStore';
 import { asnStore } from './stores/asnStore';
 import { receiptDiscrepancyStore } from './stores/receiptDiscrepancyStore';
@@ -389,6 +407,37 @@ export class MockProcurementService implements IProcurementService {
       rows = rows.filter((q) => q.supplierId === filter.supplierId);
     if (filter?.status) rows = rows.filter((q) => matchesList(q.status, filter.status));
     return { items: rows };
+  }
+
+  // ─── RFx management (REQ-E03-01 to REQ-E03-05) ────────────────────────────
+
+  async getInviteeCandidates(scope: QueryScope, filter?: InviteeFilter): Promise<Page<InviteeCandidate>> {
+    // REQ-E03-01 — the invitee search is PTI's. A supplier has no business
+    // reading the roster it competes against, so the answer is empty rather
+    // than narrowed: there is no "own row" of a competitor list.
+    if (scope.personaType !== 'buyer') return { items: [] };
+    return { items: [...matchingInvitees(filter ?? {})] };
+  }
+
+  async getRfiEvents(scope: QueryScope): Promise<Page<RfiEventView>> {
+    // REQ-E03-02 — a supplier sees the RFIs it was invited to (never a Draft)
+    // and only its own answers; PTI sees every event and only SUBMITTED
+    // responses, so a half-filled draft never reaches the comparison.
+    return { items: [...rfiEventViews(rfxNow(), scope.personaType === 'buyer' ? null : scope.supplierId ?? '')] };
+  }
+
+  async getRfpEvents(scope: QueryScope): Promise<Page<RfpEventView>> {
+    return { items: [...rfpEventViews(rfxNow(), scope.personaType === 'buyer' ? null : scope.supplierId ?? '')] };
+  }
+
+  async getNegotiationRounds(scope: QueryScope): Promise<Page<NegotiationRoundView>> {
+    // REQ-E03-05 BR-05 — a supplier reads only its own thread.
+    return { items: [...negotiationRoundViews(rfxNow(), scope.personaType === 'buyer' ? null : scope.supplierId ?? '')] };
+  }
+
+  async getAwards(scope: QueryScope): Promise<Page<AwardView>> {
+    // REQ-E03-05 AC-05 — a supplier sees its own outcome and nobody else's share.
+    return { items: [...awardViews(scope.personaType === 'buyer' ? null : scope.supplierId ?? '')] };
   }
 
   // ─── Fulfilment ───────────────────────────────────────────────────────────

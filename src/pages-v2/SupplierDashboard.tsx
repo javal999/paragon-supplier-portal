@@ -334,11 +334,18 @@ const SupplierDashboard: React.FC = () => {
 
   const grade = mySupplier.scorecardGrade as Grade;
   const channelLabel = t(CHANNEL_KEY[mySupplier.preferredChannel]);
-  const otifVariant = perfVariant(mySupplier.otif);
-  const otifStatusLabel =
-    mySupplier.otif >= 90
+  // REQ-E03-01 edge case — OTIF is OPTIONAL on the supplier master: a supplier
+  // with nothing delivered yet has no record, and the honest answer is "No
+  // history" rather than 0%, which would read as the worst performer in the
+  // room. `hasOtif` is the one discriminator every OTIF site on this page reads.
+  const otif = mySupplier.otif;
+  const hasOtif = otif !== undefined;
+  const otifVariant = hasOtif ? perfVariant(otif) : 'neutral';
+  const otifStatusLabel = !hasOtif
+    ? t('rfx.noHistory')
+    : otif >= 90
       ? 'On Track'
-      : mySupplier.otif >= 80
+      : otif >= 80
         ? 'Needs Attention'
         : 'At Risk';
 
@@ -516,13 +523,15 @@ const SupplierDashboard: React.FC = () => {
               </div>
               <GradeBadge grade={grade} />
               <div className="text-xs text-text-secondary mt-1">
-                {mySupplier.otif >= 90 ? '94' : mySupplier.otif >= 80 ? '82' : '70'} / 100
+                {!hasOtif ? '—' : otif >= 90 ? '94' : otif >= 80 ? '82' : '70'} / 100
               </div>
             </div>
             <div className="flex flex-col gap-1">
               <StatusPill variant={otifVariant}>{otifStatusLabel}</StatusPill>
               <div className="text-xs text-text-secondary">
-                {t('supplierDashboard.identity.otif', { value: mySupplier.otif })}
+                {hasOtif
+                  ? t('supplierDashboard.identity.otif', { value: otif })
+                  : t('rfx.noHistory')}
               </div>
               <div className="text-xs text-text-tertiary">
                 {t('supplierDashboard.identity.target')}
@@ -561,7 +570,7 @@ const SupplierDashboard: React.FC = () => {
         />
         <KpiCard
           eyebrow={t('supplierDashboard.kpi.otif.eyebrow')}
-          value={`${mySupplier.otif}%`}
+          value={hasOtif ? `${otif}%` : t('rfx.noHistory')}
           subtitle={t('supplierDashboard.kpi.otif.subtitle')}
           icon={Target}
         />
@@ -763,7 +772,9 @@ const SupplierDashboard: React.FC = () => {
             </div>
             <div className="flex flex-col gap-4">
               {[
-                { label: t('supplierDashboard.perf.otif'), value: mySupplier.otif },
+                // A supplier with no measured OTIF gets no bar: a target bar at
+                // 0% is a claim about performance nobody has measured.
+                ...(hasOtif ? [{ label: t('supplierDashboard.perf.otif'), value: otif }] : []),
                 {
                   label: t('supplierDashboard.perf.leadTime'),
                   value: mySupplier.leadTimeAdherence,

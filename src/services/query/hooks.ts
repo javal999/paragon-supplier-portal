@@ -23,6 +23,7 @@ import type {
   PRFilter,
   TrendRange,
 } from '../data/types';
+import type { InviteeFilter } from '../transitions/rfxRules';
 
 // ─── Suppliers ──────────────────────────────────────────────────────────────
 
@@ -79,6 +80,36 @@ export const useForecastCommitments = () =>
 /** Supplier coverage per material against Firm demand (REQ-E06-03 BR-07). */
 export const useForecastCoverage = () =>
   useServiceQuery(['procurement', 'forecastCoverage'], (svc, scope) => svc.procurement.getForecastCoverage(scope));
+
+// ── RFx management (REQ-E03-01 to REQ-E03-05) ──────────────────────────────
+
+/**
+ * REQ-E03-01 — the invitee search. The FILTER IS PART OF THE QUERY KEY, so two
+ * different filters are two different cache entries rather than one entry whose
+ * contents depend on whichever filter asked last.
+ */
+export const useInviteeCandidates = (filter?: InviteeFilter) =>
+  useServiceQuery(['procurement', 'inviteeCandidates', filter], (svc, scope) =>
+    svc.procurement.getInviteeCandidates(scope, filter),
+  );
+
+/** REQ-E03-02 — RFI events with their invitees and visible responses. */
+export const useRfiEvents = () =>
+  useServiceQuery(['procurement', 'rfiEvents'], (svc, scope) => svc.procurement.getRfiEvents(scope));
+
+/** REQ-E03-04 — RFP events with their commercial terms and proposals. */
+export const useRfpEvents = () =>
+  useServiceQuery(['procurement', 'rfpEvents'], (svc, scope) => svc.procurement.getRfpEvents(scope));
+
+/** REQ-E03-05 — negotiation rounds. A supplier reads only its own thread. */
+export const useNegotiationRounds = () =>
+  useServiceQuery(['procurement', 'negotiationRounds'], (svc, scope) =>
+    svc.procurement.getNegotiationRounds(scope),
+  );
+
+/** REQ-E03-05 — recorded awards. A supplier reads only its own outcome. */
+export const useAwards = () =>
+  useServiceQuery(['procurement', 'awards'], (svc, scope) => svc.procurement.getAwards(scope));
 
 export const useRFQs = (filter?: RFQFilter) =>
   useServiceQuery(['procurement', 'rfqs', filter], (svc, scope) =>

@@ -10,6 +10,11 @@ export enum SupplierStatus {
   ACTIVE = 'Active',
   ONBOARDING = 'Onboarding',
   SUSPENDED = 'Suspended',
+  // REQ-E03-01 BR-04 — a supplier PTI has stopped doing business with. It is a
+  // DISTINCT status from Suspended (a pause, reversible by the supplier fixing
+  // something) because the invitee filter refuses both and a reader has to be
+  // able to tell "temporarily out" from "never again".
+  BLACKLISTED = 'Blacklisted',
 }
 
 export enum PreferredChannel {
@@ -50,7 +55,23 @@ export interface Supplier {
   bpomRegistered: boolean;
   certExpiryDate: string;
   preferredChannel: PreferredChannel;
-  otif: number;
+  /**
+   * REQ-E03-01 edge case — OPTIONAL, and the absence is the point.
+   *
+   * A supplier that has never delivered against a call-off has NO on-time-in-full
+   * history, and the honest answer is "No history", never 0%. The field was
+   * `number` and every surface printed it, so a supplier with nothing measured
+   * would have been shown as the worst performer in the room. CR-15 reads the
+   * same absence and scores reliability 50 rather than 0.
+   */
+  otif?: number;
+  /**
+   * REQ-E03-01 BR-01 — the SAP MM purchasing group (EKGRP) that buys from this
+   * supplier. Optional: a supplier the master has not yet assigned to a group is
+   * a real state, and the invitee filter treats it as "matches no group filter"
+   * rather than inventing one.
+   */
+  purchasingGroup?: string;
   leadTimeAdherence: number;
   invoiceAccuracy: number;
   scorecardGrade: ScorecardGrade;
@@ -74,7 +95,7 @@ export interface SupplierSummary {
   status: SupplierStatus;
   tier: SupplierTier;
   scorecardGrade: ScorecardGrade;
-  otif: number;
+  otif?: number;
   country: string;
 }
 

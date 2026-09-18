@@ -55,8 +55,17 @@ import { useToast } from '../hooks/useToast';
 import LoadingState from '../components/ui-v2/LoadingState';
 import ErrorState from '../components/ui-v2/ErrorState';
 import EmptyState from '../components/ui-v2/EmptyState';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { useRFQs, useQuotations, useSuppliers, useRequisitions } from '../services/query/hooks';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import {
+  useRFQs,
+  useQuotations,
+  useSuppliers,
+  useRequisitions,
+  useInviteeCandidates,
+} from '../services/query/hooks';
+import { PURCHASING_GROUPS, purchasingGroupNameKey } from '../services/sourcing/rfxConfig';
+import { reliabilityScoreFor } from '../services/transitions/rfxRules';
+import RfxTabs from './rfx/RfxTabs';
 import {
   useRfqCreate,
   useRfqAward,
@@ -911,6 +920,10 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
   const [wizardStep, setWizardStep] = useState(0);
   const [draft, setDraft] = useState<DraftRfq>(EMPTY_DRAFT);
   const [supplierSearch, setSupplierSearch] = useState('');
+  // REQ-E03-01 BR-01 — the purchasing-group filter, usable alone or with the
+  // category one. '' means the filter is off, which is a different state from
+  // "matched nothing" and is what the empty state has to be able to say.
+  const [inviteeGroup, setInviteeGroup] = useState('');
   const { toast } = useToast();
   const { t } = useTranslation();
   const refusalText = useRefusalText();
@@ -1194,9 +1207,24 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
   // BASE_CURRENCY` at the unit-price, spread and total-price cells), which is
   // the same convention restated three times: three places to forget it, and
   // three places for the engine's view of a quote to drift from the surface's.
+  //
+  // REQ-E03-05 / CR-15 — THE RELIABILITY AXIS IS THE SUPPLIER'S OTIF, and it is
+  // resolved HERE for the same reason the currency is. It used to be the
+  // quotation's stored `reliabilityScore`, which is one of the retired
+  // hand-authored axes (F0.3-FIND-01): a quote cannot state how reliable its
+  // author is, the performance record can. A supplier with no OTIF history
+  // scores 50 — the rule says so, and `reliabilityScoreFor` is where it lives so
+  // the screen and the award verb cannot disagree about it.
   const pricedQuotes = useMemo(
-    () => quotesForSelected.map((q) => ({ ...q, currency: q.currency ?? BASE_CURRENCY })),
-    [quotesForSelected],
+    () =>
+      quotesForSelected.map((q) => ({
+        ...q,
+        currency: q.currency ?? BASE_CURRENCY,
+        reliabilityScore: reliabilityScoreFor(
+          suppliers.find((s) => s.id === q.supplierId)?.otif ?? null,
+        ),
+      })),
+    [quotesForSelected, suppliers],
   );
 
   // The actually-awarded quotation (Awarded RFQs only), resolved from the real
@@ -1451,29 +1479,62 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
     );
   };
 
+  // ── REQ-E03-01 — THE INVITEE SEARCH ────────────────────────────────────
+  //
+  // The candidates come from the read model, NOT from `suppliers`: the read
+  // applies the status gate (`isSelectableSupplier`), so a suspended,
+  // deactivated or blacklisted supplier is not a candidate at all rather than
+  // a row this page has to remember to filter. The category filter still maps
+  // the RFQ category onto the master's own category vocabulary here, because
+  // that mapping is this wizard's and not the master's.
+  const cats = draft.category ? CATEGORY_TO_SUPPLIER_CATEGORY[draft.category] : [];
+  const inviteeCandidatesQuery = useInviteeCandidates(
+    inviteeGroup ? { purchasingGroup: inviteeGroup } : undefined,
+  );
+  const inviteePool = useMemo(
+    () =>
+      (inviteeCandidatesQuery.data?.items ?? []).filter((c) =>
+        draft.category ? cats.includes(c.category) : true,
+      ),
+    [inviteeCandidatesQuery.data, draft.category, cats],
+  );
+
   const aiRecommendedSuppliers = useMemo(() => {
     if (!draft.category) return [];
-    const cats = CATEGORY_TO_SUPPLIER_CATEGORY[draft.category];
-    return suppliers
-      .filter((s) => cats.includes(s.category))
-      .sort((a, b) => b.otif - a.otif)
+    // A supplier with NO history sorts last rather than bottom-of-the-league:
+    // `-1` is outside the 0..100 axis, so it can never be confused with a
+    // measured zero, and the list never recommends a supplier on a number that
+    // does not exist.
+    return [...inviteePool]
+      .sort((a, b) => (b.otif ?? -1) - (a.otif ?? -1))
       .slice(0, 4);
-  }, [draft.category, suppliers]);
+  }, [draft.category, inviteePool]);
 
-  const supplierTableFiltered = useMemo(() => {
-    if (!draft.category) return [];
-    const cats = CATEGORY_TO_SUPPLIER_CATEGORY[draft.category];
-    return suppliers
-      .filter((s) => cats.includes(s.category))
-      .filter((s) => {
+  const supplierTableFiltered = useMemo(
+    () =>
+      inviteePool.filter((s) => {
         if (!supplierSearch) return true;
         const q = supplierSearch.toLowerCase();
-        return (
-          s.name.toLowerCase().includes(q) ||
-          s.country.toLowerCase().includes(q)
-        );
-      });
-  }, [draft.category, supplierSearch, suppliers]);
+        return s.supplierName.toLowerCase().includes(q) || s.country.toLowerCase().includes(q);
+      }),
+    [supplierSearch, inviteePool],
+  );
+
+  /** The filters in force, in business language — what the empty state shows. */
+  const activeInviteeFilters = useMemo(() => {
+    const parts: string[] = [];
+    if (draft.category) parts.push(draft.category);
+    if (inviteeGroup) {
+      const key = purchasingGroupNameKey(inviteeGroup);
+      parts.push(`${inviteeGroup}${key ? ` · ${t(key)}` : ''}`);
+    }
+    return parts;
+  }, [draft.category, inviteeGroup, t]);
+
+  const clearInviteeFilters = () => {
+    setInviteeGroup('');
+    setSupplierSearch('');
+  };
 
   const wizardSteps: WizardStep[] = [
     {
@@ -1725,10 +1786,10 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {aiRecommendedSuppliers.map((s) => {
-                  const selected = draft.invitedSupplierIds.includes(s.id);
+                  const selected = draft.invitedSupplierIds.includes(s.supplierId);
                   return (
                     <label
-                      key={s.id}
+                      key={s.supplierId}
                       className={`flex items-start gap-3 p-3 rounded-md border cursor-pointer transition-colors ${
                         selected
                           ? 'bg-bg-surface border-action'
@@ -1738,19 +1799,17 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
                       <input
                         type="checkbox"
                         checked={selected}
-                        onChange={() => toggleSupplier(s.id)}
+                        onChange={() => toggleSupplier(s.supplierId)}
                         className="mt-0.5 accent-teal"
                       />
                       <div className="min-w-0 flex-1">
                         <div className="text-sm font-semibold text-text-primary truncate">
-                          {s.name}
+                          {s.supplierName}
                         </div>
                         <div className="text-xs text-text-tertiary">
-                          {t('sourcing.wizard.supplierMeta', {
-                            country: s.country,
-                            otif: s.otif,
-                            grade: s.scorecardGrade,
-                          })}
+                          {s.country} · {t('rfx.otif')}{' '}
+                          {s.otif === null ? t('rfx.noHistory') : `${s.otif}%`}
+                          {s.purchasingGroup ? ` · ${s.purchasingGroup}` : ''}
                         </div>
                       </div>
                     </label>
@@ -1760,13 +1819,37 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
             </div>
           )}
 
-          <div>
-            <SearchBar
-              value={supplierSearch}
-              onChange={setSupplierSearch}
-              placeholder={t('sourcing.wizard.search.supplier')}
-            />
+          {/* REQ-E03-01 BR-01 — category (taken from the event) and purchasing
+              group, usable alone or together. */}
+          <div className="flex flex-wrap items-end gap-3">
+            <div className="min-w-[12rem]">
+              <label className="block text-xs font-semibold text-text-secondary mb-1" htmlFor="invitee-group">
+                {t('rfx.invite.purchasingGroup')}
+              </label>
+              <select
+                id="invitee-group"
+                data-testid="invitee-group-filter"
+                value={inviteeGroup}
+                onChange={(e) => setInviteeGroup(e.target.value)}
+                className="w-full bg-white border border-border-input rounded-md px-3 h-10 text-sm focus:outline-none focus:border-action"
+              >
+                <option value="">{t('rfx.pg.all')}</option>
+                {PURCHASING_GROUPS.map((g) => (
+                  <option key={g.code} value={g.code}>
+                    {g.code} · {t(g.nameKey)}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex-1 min-w-[14rem]">
+              <SearchBar
+                value={supplierSearch}
+                onChange={setSupplierSearch}
+                placeholder={t('sourcing.wizard.search.supplier')}
+              />
+            </div>
           </div>
+          <p className="text-xs text-text-tertiary -mt-3">{t('rfx.invite.onlyActive')}</p>
 
           <div className="border border-border-subtle rounded-md overflow-hidden max-h-64 overflow-y-auto">
             <table className="w-full text-sm">
@@ -1775,6 +1858,9 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
                   <th className="px-3 py-2 text-left font-semibold w-10"></th>
                   <th className="px-3 py-2 text-left font-semibold">
                     {t('sourcing.wizard.col.supplier')}
+                  </th>
+                  <th className="px-3 py-2 text-left font-semibold">
+                    {t('rfx.invite.col.group')}
                   </th>
                   <th className="px-3 py-2 text-left font-semibold">
                     {t('sourcing.wizard.col.country')}
@@ -1786,30 +1872,41 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
               </thead>
               <tbody>
                 {supplierTableFiltered.map((s) => {
-                  const selected = draft.invitedSupplierIds.includes(s.id);
+                  const selected = draft.invitedSupplierIds.includes(s.supplierId);
                   return (
                     <tr
-                      key={s.id}
+                      key={s.supplierId}
+                      data-testid={`invitee-row-${s.supplierId}`}
                       className="border-t border-border-subtle hover:bg-bg-hover cursor-pointer"
-                      onClick={() => toggleSupplier(s.id)}
+                      onClick={() => toggleSupplier(s.supplierId)}
                     >
                       <td className="px-3 py-2">
                         <input
                           type="checkbox"
                           checked={selected}
-                          onChange={() => toggleSupplier(s.id)}
+                          onChange={() => toggleSupplier(s.supplierId)}
                           onClick={(e) => e.stopPropagation()}
                           className="accent-teal"
                         />
                       </td>
                       <td className="px-3 py-2 text-text-primary">
-                        {s.name}
+                        {s.supplierName}
+                      </td>
+                      <td className="px-3 py-2 text-text-secondary">
+                        <Data>{s.purchasingGroup ?? '—'}</Data>
                       </td>
                       <td className="px-3 py-2 text-text-secondary">
                         {s.country}
                       </td>
+                      {/* REQ-E03-01 AC-02 — the OTIF, or "No history". NEVER 0%:
+                          a supplier nothing has been measured against is not a
+                          supplier that failed every delivery. */}
                       <td className="px-3 py-2 text-right text-text-secondary">
-                        {s.otif}%
+                        {s.otif === null ? (
+                          <span className="text-text-tertiary">{t('rfx.noHistory')}</span>
+                        ) : (
+                          <Data>{s.otif}%</Data>
+                        )}
                       </td>
                     </tr>
                   );
@@ -1817,12 +1914,28 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
                 {supplierTableFiltered.length === 0 && (
                   <tr>
                     <td
-                      colSpan={4}
+                      colSpan={5}
                       className="text-center text-sm text-text-tertiary py-6"
                     >
-                      {draft.category
-                        ? t('sourcing.wizard.supplier.noMatch')
-                        : t('sourcing.wizard.supplier.selectCategory')}
+                      {/* REQ-E03-01 edge case — the empty state NAMES the active
+                          filters and offers to clear them, because "no results"
+                          without saying what was asked for is a dead end. */}
+                      <div data-testid="invitee-empty">
+                        <div>{t('rfx.invite.empty')}</div>
+                        <div className="mt-1 text-xs">
+                          {activeInviteeFilters.length > 0
+                            ? t('rfx.invite.activeFilters', { filters: activeInviteeFilters.join(', ') })
+                            : t('rfx.invite.noFilters')}
+                        </div>
+                        <Button
+                          variant="secondary"
+                          className="mt-3"
+                          onClick={clearInviteeFilters}
+                          data-testid="invitee-clear-filters"
+                        >
+                          {t('rfx.invite.clear')}
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 )}
@@ -2202,6 +2315,10 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
         <ProvenanceMarker capability="rfqs" className="ml-3 align-middle" />
       </PageMetaLine>
 
+      {/* REQ-E03-02 / -04 — the other two event types live behind the SAME menu
+          item (§3.7). The switch is here rather than in the sidebar. */}
+      <RfxTabs persona="buyer" active="rfq" counts={{ rfq: rfqs.length }} />
+
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-8">
         <KpiCard
           eyebrow={t('sourcing.kpi.active.eyebrow')}
@@ -2531,6 +2648,16 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
       >
         {selectedRfq && (
           <div className="space-y-6">
+            {/* REQ-E03-05 — the comparison, negotiation rounds and the split
+                award live on the event's own page, where a round and an award
+                can be read beside the bids they act on. */}
+            <Link
+              to={`/buyer/sourcing/rfq/${selectedRfq.id}`}
+              className="text-sm text-action hover:underline"
+              data-testid="open-sourcing-event"
+            >
+              {t('rfx.cmp.title')} · {t('rfx.neg.title')} · {t('rfx.award.title')}
+            </Link>
             {selectedRfq.status === 'Awarded' && (
               <section className="bg-success-soft border border-success/30 rounded-md p-4">
                 <div className="flex items-center gap-2 mb-3">

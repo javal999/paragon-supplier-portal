@@ -49,7 +49,12 @@ import { PERSONA_SYSTEM_ROLES } from '../../services/transitions/businessRoles';
 // A supplier typing the ordinary Indonesian "1.500" means Rp 1.500 — mid-market,
 // and it should LOSE on price to the 1,220 incumbent.
 const RFQ_ID = 'rfq-002';
-const invited: QueryScope = { personaType: 'supplier', supplierId: 'sup-012', businessRoles: PERSONA_SYSTEM_ROLES.supplier };
+// ⚠️ **WAS `sup-012`, AND THE PREMISE CHANGED UNDER IT (REQ-E03-01 AC-03).**
+// The supplier master carries sup-012 as SUSPENDED, and a suspended supplier can
+// no longer be an invitee — so the sample RFQ that invited one was corrected, and
+// this scope names sup-013, which is invited and active. Nothing about what the
+// spec PROVES changes: it is still one invited supplier submitting one price.
+const invited: QueryScope = { personaType: 'supplier', supplierId: 'sup-013', businessRoles: PERSONA_SYSTEM_ROLES.supplier };
 
 const svc = new MockCommandService();
 
@@ -86,7 +91,7 @@ const submitTypedPrice = async (typed: string) => {
     entity: 'quotation',
     payload: buildQuotationSubmitPayload({
       rfqId: RFQ_ID,
-      supplierId: 'sup-012',
+      supplierId: 'sup-013',
       unitPrice: price.value,
       currency: 'IDR', // required since 2e-c-2; the whole set shares it, so ranking stays comparable
       // ⚠️ WAS `'18'` — A RAW STRING, IN THE FIELD WHOSE FINDING IS THAT RAW TEXT
@@ -189,7 +194,7 @@ describe('BLAST RADIUS — a refused bid price never enters the award ranking', 
       entity: 'quotation',
       payload: buildQuotationSubmitPayload({
         rfqId: RFQ_ID,
-        supplierId: 'sup-012',
+        supplierId: 'sup-013',
         unitPrice: 1.5, // ← the misparse
         currency: 'IDR',
         leadTimeDays: 18, // was '18' — see the helper above; same defect, same fix

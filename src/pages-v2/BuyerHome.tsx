@@ -13,6 +13,7 @@ import {
   usePurchaseOrders,
   useQuotations,
   useRFQs,
+  useNegotiationRounds,
 } from '../services/query/hooks';
 import { useUnifiedChase } from '../services/query/chaseHooks';
 import { useHubRole, type HubRole } from '../components/layout-v2/hubRole';
@@ -25,7 +26,9 @@ import { deliveryDrift } from '../services/transitions/callOffRules';
 import { useCallOffViews } from './callOffs/callOffDisplay';
 import { planStatus } from '../services/transitions/capacityRules';
 import { deadlineState } from '../services/transitions/forecastRules';
+import { isClosingSoon } from '../services/transitions/rfxRules';
 import { forecastNow } from './forecasts/forecastDisplay';
+import { rfxNow } from './rfx/rfxDisplay';
 
 // PTI Home — "My tasks" (REQUIREMENTS §3.8 SC-01). Tasks are filtered by the
 // PTI role the menu is showing, so a Finance user is not handed a planner's work.
@@ -50,6 +53,8 @@ const BuyerHome: React.FC = () => {
   // REQ-E06-02 / REQ-E06-03 — missing commitments past their deadline (the
   // escalation) and commitments outside tolerance, derived at read time.
   const forecastLines = useForecastCommitments();
+  // REQ-E03-05 — negotiation rounds closing soon (Phase 6a).
+  const rounds = useNegotiationRounds();
 
   const tasks = useMemo<HomeTask[]>(() => {
     const now = new Date();
@@ -200,6 +205,23 @@ const BuyerHome: React.FC = () => {
         to: '/buyer/shipments',
       },
       {
+        // REQ-E03-05 BR-03 — a round whose deadline is close and whose invitees
+        // have not all answered. Derived from the clock at read (law 0.5).
+        id: 'negotiation-closing',
+        roles: ['BUY'],
+        label: t('hub.home.task.negotiationClosing'),
+        count: (rounds.data?.items ?? []).filter(
+          // ⚠️ THE RFx LANE'S OWN CLOCK, NOT `nowIso`. The RFx sample data is
+          // dated relative to the declared present, and the wall clock drifts
+          // away from it between bumps — so a round that closes in two days
+          // would read as long overdue and the task would silently vanish. The
+          // forecast tasks above read `forecastNow()` for the same reason.
+          (r) => !r.closed && r.awaiting > 0 && isClosingSoon(r.deadline, rfxNow()),
+        ).length,
+        severity: 'warning',
+        to: '/buyer/sourcing',
+      },
+      {
         id: 'rfq-award',
         roles: ['BUY'],
         label: t('hub.home.task.rfqAward'),
@@ -217,7 +239,7 @@ const BuyerHome: React.FC = () => {
       },
     ];
     return role === 'ALL' ? all : all.filter((task) => task.roles.includes(role));
-  }, [role, pos.data, invoices.data, rfqs.data, quotes.data, grs.data, asns.data, chase.data, callOffs.views, alerts.data, capacity.data, forecastLines.data, t]);
+  }, [role, pos.data, invoices.data, rfqs.data, quotes.data, grs.data, asns.data, chase.data, callOffs.views, alerts.data, capacity.data, forecastLines.data, rounds.data, t]);
 
   return (
     <AppShellV2>

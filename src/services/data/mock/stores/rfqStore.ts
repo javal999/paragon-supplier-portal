@@ -15,12 +15,19 @@
 
 import { mockRfqs } from '../../../../data/mockRfqs';
 import type { RFQ } from '../../../../data/mockRfqs';
+// REQ-E03-03 / REQ-E03-05 — the present-relative sourcing events the RFx demo
+// needs. They join the SAME list rather than a second one: a buyer looking at
+// sourcing events sees one board, and a read that had to union two sources is a
+// read that will one day union only one.
+import { RFX_RFQ_SEED } from '../fixtures/rfxHub';
+
+const SEED: readonly RFQ[] = [...RFX_RFQ_SEED, ...mockRfqs];
 
 function clone(r: RFQ): RFQ {
   return { ...r, materialIds: [...r.materialIds], invitedSupplierIds: [...r.invitedSupplierIds], respondedSupplierIds: [...r.respondedSupplierIds] };
 }
 
-let rows: RFQ[] = mockRfqs.map(clone);
+let rows: RFQ[] = SEED.map(clone);
 let seq = 0;
 
 export const rfqStore = {
@@ -47,7 +54,7 @@ export const rfqStore = {
   },
   /** Restore the fixture seed (test isolation). */
   reset(): void {
-    rows = mockRfqs.map(clone);
+    rows = SEED.map(clone);
     seq = 0;
   },
 };

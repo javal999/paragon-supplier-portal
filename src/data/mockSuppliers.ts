@@ -52,6 +52,7 @@ export interface SupplierExtended extends Supplier {
 export const mockSuppliers: SupplierExtended[] = [
   {
     id: 'sup-001',
+    purchasingGroup: '102',
     sapBpNumber: 'BP-10001234',
     name: 'PT Sample Oleochemicals',
     legalName: 'PT Sample Oleochemicals',
@@ -88,6 +89,7 @@ export const mockSuppliers: SupplierExtended[] = [
   },
   {
     id: 'sup-002',
+    purchasingGroup: '102',
     sapBpNumber: 'BP-10001235',
     name: 'PT Sample Specialty Fats',
     category: 'Raw Material',
@@ -114,6 +116,7 @@ export const mockSuppliers: SupplierExtended[] = [
   },
   {
     id: 'sup-003',
+    purchasingGroup: '103',
     sapBpNumber: 'BP-10001236',
     name: 'Sample Fragrance House Indonesia',
     category: 'Fragrance',
@@ -140,6 +143,7 @@ export const mockSuppliers: SupplierExtended[] = [
   },
   {
     id: 'sup-004',
+    purchasingGroup: '103',
     sapBpNumber: 'BP-10001237',
     name: 'Sample Aromatics Sdn. Bhd.',
     category: 'Fragrance',
@@ -166,6 +170,7 @@ export const mockSuppliers: SupplierExtended[] = [
   },
   {
     id: 'sup-005',
+    purchasingGroup: '103',
     sapBpNumber: 'BP-10001238',
     name: 'Sample Personal Care Emulsifiers GmbH',
     category: 'Active Ingredient',
@@ -192,6 +197,7 @@ export const mockSuppliers: SupplierExtended[] = [
   },
   {
     id: 'sup-006',
+    purchasingGroup: '103',
     sapBpNumber: 'BP-10001239',
     name: 'Sample Specialty Chemicals France',
     category: 'Active Ingredient',
@@ -218,6 +224,7 @@ export const mockSuppliers: SupplierExtended[] = [
   },
   {
     id: 'sup-007',
+    purchasingGroup: '101',
     sapBpNumber: 'BP-10001240',
     name: 'PT Sample Packaging Indonesia',
     legalName: 'PT Sample Packaging',
@@ -255,6 +262,7 @@ export const mockSuppliers: SupplierExtended[] = [
   },
   {
     id: 'sup-008',
+    purchasingGroup: '104',
     sapBpNumber: 'BP-10001241',
     name: 'PT Sample Carton Packaging',
     category: 'Packaging',
@@ -281,6 +289,7 @@ export const mockSuppliers: SupplierExtended[] = [
   },
   {
     id: 'sup-009',
+    purchasingGroup: '103',
     sapBpNumber: 'BP-10001242',
     name: 'Sample Vitamins Co.',
     category: 'Active Ingredient',
@@ -307,6 +316,7 @@ export const mockSuppliers: SupplierExtended[] = [
   },
   {
     id: 'sup-010',
+    purchasingGroup: '102',
     sapBpNumber: 'BP-10001243',
     name: 'PT Sample Halal Emulsifiers',
     category: 'Raw Material',
@@ -333,6 +343,7 @@ export const mockSuppliers: SupplierExtended[] = [
   },
   {
     id: 'sup-011',
+    purchasingGroup: '103',
     sapBpNumber: 'BP-10001244',
     name: 'Sample Salicylics & Niacinamide Ltd.',
     category: 'Active Ingredient',
@@ -359,6 +370,7 @@ export const mockSuppliers: SupplierExtended[] = [
   },
   {
     id: 'sup-012',
+    purchasingGroup: '101',
     sapBpNumber: 'BP-10001245',
     name: 'Sample PET Bottle Manufacturer GmbH',
     category: 'Packaging',
@@ -382,5 +394,93 @@ export const mockSuppliers: SupplierExtended[] = [
     leadTimeAdherence: 78,
     invoiceAccuracy: 86,
     scorecardGrade: ScorecardGrade.D,
+  },
+  // ── REQ-E03-01 — the two suppliers the invitee filter exists to tell apart ──
+  //   sup-013 is ACTIVE with NOTHING MEASURED: no call-off has ever been
+  //   delivered against it, so it carries no `otif` at all and the filter shows
+  //   "No history" rather than 0% (CR-15 scores its reliability 50).
+  //   sup-014 is BLACKLISTED and must never appear in an invitee result, in the
+  //   same category and purchasing group as sup-013 so the refusal is visible
+  //   rather than incidental.
+  {
+    id: 'sup-013',
+    purchasingGroup: '101',
+    sapBpNumber: 'BP-10001246',
+    name: 'PT Sample Preform Works',
+    category: 'Packaging',
+    country: 'ID',
+    city: 'Karawang',
+    tier: SupplierTier.WEB,
+    status: SupplierStatus.ACTIVE,
+    contactName: 'Sari Handayani',
+    email: 'sari.handayani@sample-preform.example',
+    contactEmail: 'sari.handayani@sample-preform.example',
+    phone: '+6281345678013',
+    contactPhone: '+6281345678013',
+    rating: 3.8,
+    onboardedDate: '2026-07-01',
+    lastActivityDate: '2026-08-20',
+    halalCertified: true,
+    bpomRegistered: false,
+    certExpiryDate: '2028-06-30',
+    preferredChannel: PreferredChannel.WEB,
+    // No `otif` — newly onboarded, nothing delivered yet. NOT a zero.
+    leadTimeAdherence: 0,
+    invoiceAccuracy: 0,
+    scorecardGrade: ScorecardGrade.C,
+  },
+  {
+    id: 'sup-014',
+    purchasingGroup: '101',
+    sapBpNumber: 'BP-10001247',
+    name: 'PT Sample Closures Nusantara',
+    category: 'Packaging',
+    country: 'ID',
+    city: 'Tangerang',
+    tier: SupplierTier.WHATSAPP,
+    status: SupplierStatus.BLACKLISTED,
+    contactName: 'Hendra Wijaya',
+    email: 'hendra.wijaya@sample-closures.example',
+    contactEmail: 'hendra.wijaya@sample-closures.example',
+    phone: '+6281456789014',
+    contactPhone: '+6281456789014',
+    rating: 1.2,
+    onboardedDate: '2021-02-11',
+    lastActivityDate: '2025-10-02',
+    halalCertified: false,
+    bpomRegistered: false,
+    certExpiryDate: '2025-02-10',
+    preferredChannel: PreferredChannel.WHATSAPP,
+    otif: 54,
+    leadTimeAdherence: 60,
+    invoiceAccuracy: 71,
+    scorecardGrade: ScorecardGrade.F,
+  },
+  {
+    id: 'sup-015',
+    purchasingGroup: '101',
+    sapBpNumber: 'BP-10001248',
+    name: 'PT Sample Flexible Packaging',
+    category: 'Packaging',
+    country: 'ID',
+    city: 'Cikarang',
+    tier: SupplierTier.WEB,
+    status: SupplierStatus.ACTIVE,
+    contactName: 'Dimas Prabowo',
+    email: 'dimas.prabowo@sample-flexpack.example',
+    contactEmail: 'dimas.prabowo@sample-flexpack.example',
+    phone: '+6281567890015',
+    contactPhone: '+6281567890015',
+    rating: 4.1,
+    onboardedDate: '2023-04-18',
+    lastActivityDate: '2026-08-28',
+    halalCertified: true,
+    bpomRegistered: true,
+    certExpiryDate: '2027-11-30',
+    preferredChannel: PreferredChannel.WEB,
+    otif: 88,
+    leadTimeAdherence: 86,
+    invoiceAccuracy: 94,
+    scorecardGrade: ScorecardGrade.B,
   },
 ];

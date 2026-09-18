@@ -298,6 +298,25 @@ export const TRANSITION_PURPOSE: FlowAnnotations = Object.freeze({
   t_forecastversion_publish: { purposeKey: 'processFlows.purpose.t_forecastversion_publish' },
   t_forecastversion_reassign: { purposeKey: 'processFlows.purpose.t_forecastversion_reassign' },
   t_forecastview_record: { purposeKey: 'processFlows.purpose.t_forecastview_record' },
+  // REQ-E03-02 / REQ-E03-04 / REQ-E03-05 — RFx management.
+  t_rfi_create: { purposeKey: 'processFlows.purpose.t_rfi_create' },
+  t_rfi_publish: { purposeKey: 'processFlows.purpose.t_rfi_publish' },
+  t_rfi_extend: { purposeKey: 'processFlows.purpose.t_rfi_extend' },
+  t_rfi_close: { purposeKey: 'processFlows.purpose.t_rfi_close' },
+  t_rfi_cancel: { purposeKey: 'processFlows.purpose.t_rfi_cancel' },
+  t_rfiresponse_save: { purposeKey: 'processFlows.purpose.t_rfiresponse_save' },
+  t_rfiresponse_submit: { purposeKey: 'processFlows.purpose.t_rfiresponse_submit' },
+  t_rfp_create: { purposeKey: 'processFlows.purpose.t_rfp_create' },
+  t_rfp_publish: { purposeKey: 'processFlows.purpose.t_rfp_publish' },
+  t_rfp_extend: { purposeKey: 'processFlows.purpose.t_rfp_extend' },
+  t_rfp_close: { purposeKey: 'processFlows.purpose.t_rfp_close' },
+  t_rfp_cancel: { purposeKey: 'processFlows.purpose.t_rfp_cancel' },
+  t_rfpresponse_save: { purposeKey: 'processFlows.purpose.t_rfpresponse_save' },
+  t_rfpresponse_submit: { purposeKey: 'processFlows.purpose.t_rfpresponse_submit' },
+  t_rfq_extend: { purposeKey: 'processFlows.purpose.t_rfq_extend' },
+  t_quotation_revise: { purposeKey: 'processFlows.purpose.t_quotation_revise' },
+  t_negotiationround_open: { purposeKey: 'processFlows.purpose.t_negotiationround_open' },
+  t_negotiationround_close: { purposeKey: 'processFlows.purpose.t_negotiationround_close' },
 });
 
 /**
@@ -337,6 +356,11 @@ export const ENTITY_PURPOSE: FlowAnnotations = Object.freeze({
   inventoryAlert: { purposeKey: 'processFlows.purpose.entity.inventoryAlert' },
   forecastVersion: { purposeKey: 'processFlows.purpose.entity.forecastVersion' },
   forecastView: { purposeKey: 'processFlows.purpose.entity.forecastView' },
+  rfiEvent: { purposeKey: 'processFlows.purpose.entity.rfiEvent' },
+  rfiResponse: { purposeKey: 'processFlows.purpose.entity.rfiResponse' },
+  rfpEvent: { purposeKey: 'processFlows.purpose.entity.rfpEvent' },
+  rfpResponse: { purposeKey: 'processFlows.purpose.entity.rfpResponse' },
+  negotiationRound: { purposeKey: 'processFlows.purpose.entity.negotiationRound' },
 });
 
 /**
