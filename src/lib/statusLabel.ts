@@ -54,6 +54,12 @@ const STATUS_ID: Record<string, string> = {
   Upcoming: 'Mendatang',
   Delayed: 'Terlambat',
   'Needs Attention': 'Perlu Perhatian',
+  Adjusted: 'Disesuaikan',
+  // REQ-E07-07 — the supplier's invoice status list.
+  Verified: 'Terverifikasi',
+  'Scheduled for payment': 'Dijadwalkan untuk dibayar',
+  Paid: 'Dibayar',
+  Returned: 'Dikembalikan',
   // critical
   Overdue: 'Jatuh Tempo',
   Disputed: 'Disengketakan',
@@ -70,6 +76,7 @@ const STATUS_ID: Record<string, string> = {
   'Price Variance': 'Varians Harga',
   Suspended: 'Ditangguhkan',
   'Not Awarded': 'Tidak Dimenangkan',
+  Escalated: 'Dieskalasi',
   // info
   Confirmed: 'Dikonfirmasi',
   Acknowledged: 'Diakui',

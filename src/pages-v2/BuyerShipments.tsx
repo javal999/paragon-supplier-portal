@@ -12,7 +12,6 @@ import {
   ChevronRight,
   FileSpreadsheet,
   Plus,
-  CalendarClock,
   LucideIcon,
 } from 'lucide-react';
 import AppShellV2 from '../components/layout-v2/AppShellV2';
@@ -35,7 +34,6 @@ import SidePanel from '../components/ui-v2/SidePanel';
 import Data from '../components/ui-v2/Data';
 import Timeline, { TimelineEvent } from '../components/ui-v2/Timeline';
 import Button from '../components/ui-v2/Button';
-import FormSection from '../components/ui-v2/FormSection';
 import { useToast } from '../hooks/useToast';
 import type {
   Shipment,
@@ -139,8 +137,6 @@ const matchesGroup = (s: ShipmentDisplayState, g: GroupTab): boolean => {
   return true;
 };
 
-const DOCKS = ['Dock A-1', 'Dock A-2', 'Dock B-1', 'Dock B-2', 'Dock B-3', 'Dock C-1'];
-const TIME_SLOTS = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00'];
 
 const BuyerShipments: React.FC = () => {
   const navigate = useNavigate();
@@ -163,7 +159,6 @@ const BuyerShipments: React.FC = () => {
   const [search, setSearch] = useState('');
   const [selectedModes, setSelectedModes] = useState<ShipmentMode[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [showSchedule, setShowSchedule] = useState(true);
 
   // ⚠️ ONE CLASSIFICATION, CAPTURED ONCE, HANDED TO EVERY SITE. `TODAY` is
   // `DECLARED_PRESENT`, so this page renders identically at horizons nine
@@ -373,22 +368,6 @@ const BuyerShipments: React.FC = () => {
     }
   };
 
-  const dockSchedule = useMemo(() => {
-    const map: Record<string, Record<string, Shipment | undefined>> = {};
-    for (const d of DOCKS) {
-      map[d] = {};
-      for (const t of TIME_SLOTS) map[d][t] = undefined;
-    }
-    for (const s of shipments) {
-      if (s.dockAssignment && s.dockTime && map[s.dockAssignment]) {
-        if (s.dockTime in map[s.dockAssignment]) {
-          map[s.dockAssignment][s.dockTime] = s;
-        }
-      }
-    }
-    return map;
-  }, [shipments]);
-
   const handleExport = () =>
     toast({
       variant: 'info',
@@ -402,15 +381,6 @@ const BuyerShipments: React.FC = () => {
       title: t('shipments.toast.manualAsn.title'),
       description: t('shipments.toast.manualAsn.desc'),
     });
-
-  const handleDockSchedule = () => {
-    setShowSchedule(true);
-    toast({
-      variant: 'info',
-      title: t('shipments.toast.dockSchedule.title'),
-      description: t('shipments.toast.dockSchedule.desc'),
-    });
-  };
 
   const footerForStatus = (s: Shipment): React.ReactNode => {
     switch (displayOf(s)) {
@@ -529,11 +499,6 @@ const BuyerShipments: React.FC = () => {
                 label: t('shipments.action.export'),
                 icon: FileSpreadsheet,
                 onClick: handleExport,
-              },
-              {
-                label: t('shipments.action.dockSchedule'),
-                icon: CalendarClock,
-                onClick: handleDockSchedule,
               },
             ]}
             primary={{
@@ -753,66 +718,6 @@ const BuyerShipments: React.FC = () => {
         </Table>
       </div>
 
-      <FormSection
-        eyebrow={t('shipments.dock.eyebrow')}
-        title={t('shipments.dock.title')}
-        description={t('shipments.dock.description')}
-        collapsible
-        defaultOpen={showSchedule}
-      >
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs border-collapse">
-            <thead>
-              <tr>
-                <th className="text-left text-label text-text-tertiary uppercase py-2 pr-3">
-                  {t('shipments.dock.col.dock')}
-                </th>
-                {TIME_SLOTS.map((t) => (
-                  <th
-                    key={t}
-                    className="text-left text-label text-text-tertiary uppercase py-2 px-1"
-                  >
-                    {t}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {DOCKS.map((d) => (
-                <tr key={d}>
-                  <td className="py-2 pr-3 text-sm font-medium text-text-primary">
-                    {d}
-                  </td>
-                  {TIME_SLOTS.map((t) => {
-                    const cell = dockSchedule[d]?.[t];
-                    return (
-                      <td key={t} className="py-1 px-1">
-                        {cell ? (
-                          <button
-                            type="button"
-                            onClick={() => setSelectedId(cell.id)}
-                            className="w-full rounded-md px-2 py-2 text-xs font-semibold bg-action-soft text-action-hover hover:bg-action/20 transition-colors text-left"
-                          >
-                            <Data as="div" className="truncate">{cell.asnNumber}</Data>
-                            <div className="text-label text-action/80 truncate">
-                              {cell.supplierName}
-                            </div>
-                          </button>
-                        ) : (
-                          <div className="rounded-md px-2 py-2 bg-bg-hover text-text-tertiary text-center">
-                            —
-                          </div>
-                        )}
-                      </td>
-                    );
-                  })}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </FormSection>
-
       <SidePanel
         open={!!selected}
         onClose={() => setSelectedId(null)}
@@ -975,35 +880,6 @@ const BuyerShipments: React.FC = () => {
               <Timeline events={buildTimeline(selected)} />
             </section>
 
-            <section className="border border-border-subtle rounded-lg p-4 bg-bg-hover">
-              <div className="text-label text-text-tertiary uppercase mb-1">
-                {t('shipments.panel.dockAssignment')}
-              </div>
-              {selected.dockAssignment ? (
-                <div className="text-sm text-text-primary">
-                  {selected.dockAssignment} ·{' '}
-                  {t('shipments.panel.dockScheduled', { time: selected.dockTime })}
-                </div>
-              ) : (
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-text-secondary">
-                    {t('shipments.panel.notYetScheduled')}
-                  </span>
-                  <Button
-                    variant="secondary"
-                    onClick={() =>
-                      toast({
-                        variant: 'info',
-                        title: t('shipments.toast.dockScheduler.title'),
-                        description: t('shipments.toast.dockScheduler.desc'),
-                      })
-                    }
-                  >
-                    {t('shipments.panel.scheduleDock')}
-                  </Button>
-                </div>
-              )}
-            </section>
           </div>
         )}
       </SidePanel>

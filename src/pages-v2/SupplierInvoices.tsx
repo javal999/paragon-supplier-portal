@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import AppShellV2 from '../components/layout-v2/AppShellV2';
 import PageHeader from '../components/ui-v2/PageHeader';
+import SapDataAgeBanner from '../components/ui-v2/SapDataAgeBanner';
 import PageMetaLine from '../components/ui-v2/PageMetaLine';
 import ProvenanceMarker from '../components/ui-v2/ProvenanceMarker';
 import KpiCard from '../components/ui-v2/KpiCard';
@@ -37,17 +38,39 @@ import ErrorState from '../components/ui-v2/ErrorState';
 import EmptyState from '../components/ui-v2/EmptyState';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
-import { POStatus } from '../services/data/types';
 import type {
+  InvoiceLine,
   SupplierInvoice,
-  SupplierInvoiceStatus as InvStatus,
+  SupplierInvoiceStage,
 } from '../services/data/types';
 import {
   useSupplierInvoices,
   useCurrentSupplier,
+  useGoodsReceipts,
   usePurchaseOrders,
 } from '../services/query/hooks';
-import { useInvoiceCreate, useInvoiceSubmit } from '../services/query/commandHooks';
+import {
+  useInvoiceCreate,
+  useInvoiceResubmit,
+  useInvoiceSubmit,
+} from '../services/query/commandHooks';
+import {
+  INVOICEABLE_PO_STATES,
+  INVOICEABLE_RECEIPT_STATES,
+  expectedInvoiceValue,
+  isDuplicateInvoiceNumber,
+  prefillInvoiceLines,
+  remainingInvoiceableQty,
+} from '../services/transitions/fulfilmentRules';
+import { statusLabelKey } from '../lib/statusLabel';
+import { statusTone } from '../lib/statusTone';
+import {
+  InvoiceLinesSection,
+  MatchPill,
+  MatchResult,
+  fmtIdr,
+  readQty,
+} from './invoices/InvoiceCollaboration';
 import { useVerbAvailability, useNextAct } from '../hooks/useVerbAvailability';
 import NextActLine from '../components/ui-v2/NextActLine';
 import { HandoffNotice } from '../components/ui-v2/HandoffNotice';
@@ -64,26 +87,6 @@ const INVOICE_AMOUNT_REFUSAL_KEY: Record<QtyRefusalReason, string> = {
   EMPTY_QTY: 'supplierInvoices.new.amount.refused.empty',
   NOT_NUMERIC: 'supplierInvoices.new.amount.refused.notNumeric',
   AMBIGUOUS_QTY: 'supplierInvoices.new.amount.refused.ambiguous',
-};
-
-const STATUS_VARIANT: Record<InvStatus, 'success' | 'warning' | 'danger' | 'neutral'> = {
-  Draft: 'neutral',
-  'Pending Approval': 'warning',
-  Approved: 'success',
-  'Payment Released': 'success',
-  'Remittance Received': 'success',
-  Overdue: 'danger',
-  Disputed: 'danger',
-};
-
-const STATUS_RANK: Record<InvStatus, number> = {
-  Draft: 0,
-  'Pending Approval': 1,
-  Approved: 2,
-  'Payment Released': 3,
-  'Remittance Received': 4,
-  Overdue: -1,
-  Disputed: -1,
 };
 
 const CHANNEL_ICON: Record<SupplierInvoice['channel'], LucideIcon> = {
@@ -111,63 +114,127 @@ const fmtDate = (s: string | null): string => {
 
 type PanelMode = 'detail' | 'remittance';
 
-const buildTimeline = (
-  inv: SupplierInvoice,
-  t: TFunction,
-): TimelineEvent[] => {
-  const r = STATUS_RANK[inv.status];
-  const isOverdue = inv.status === 'Overdue';
-  const isDisputed = inv.status === 'Disputed';
-  const cleared = t('supplierInvoices.timeline.cleared');
-  const stateFor = (rank: number): 'completed' | 'current' | 'pending' => {
-    if (r === -1) return rank === 0 ? 'completed' : 'pending';
-    if (r > rank) return 'completed';
-    if (r === rank) return 'current';
-    return 'pending';
-  };
-  return [
-    {
-      id: 'submitted',
-      title: t('supplierInvoices.timeline.submitted'),
-      timestamp: fmtDate(inv.submittedDate),
-      status: 'completed',
-      icon: FileText,
-    },
-    {
-      id: 'pending',
-      title: t('supplierInvoices.timeline.pending'),
+/** REQ-E07-07 step 5 — Submitted → Verified → Scheduled for payment → Paid. */
+// i18n-defer: canonical status tokens, localized at render through statusLabelKey
+const STAGE_ORDER: readonly SupplierInvoiceStage[] = ['Submitted', 'Verified', 'Scheduled for payment', 'Paid'];
+
+const buildTimeline = (inv: SupplierInvoice, t: TFunction): TimelineEvent[] => {
+  const at = inv.stage === 'Returned' ? 0 : STAGE_ORDER.indexOf(inv.stage);
+  const icons = [FileText, CheckCircle2, Clock, Wallet];
+  return STAGE_ORDER.map((stage, i) => {
+    const k = statusLabelKey(stage);
+    return {
+      id: stage,
+      title: k ? t(k) : stage,
       timestamp:
-        r >= 1
-          ? cleared
-          : isDisputed
-            ? t('supplierInvoices.timeline.disputed')
+        i === 0 && inv.stage !== 'Draft'
+          ? fmtDate(inv.submittedDate)
+          : i === 3 && inv.paymentDate
+            ? fmtDate(inv.paymentDate)
             : undefined,
-      status: isDisputed ? 'current' : stateFor(1),
-      icon: Clock,
-    },
-    {
-      id: 'approved',
-      title: t('supplierInvoices.timeline.approved'),
-      timestamp: r >= 2 ? cleared : undefined,
-      status: stateFor(2),
-      icon: CheckCircle2,
-    },
-    {
-      id: 'released',
-      title: t('supplierInvoices.timeline.released'),
-      timestamp:
-        r >= 3 && inv.paymentDate ? fmtDate(inv.paymentDate) : undefined,
-      status: isOverdue ? 'current' : stateFor(3),
-      icon: Send,
-    },
-    {
-      id: 'paid',
-      title: t('supplierInvoices.timeline.received'),
-      timestamp: r >= 4 ? t('supplierInvoices.timeline.confirmed') : undefined,
-      status: stateFor(4),
-      icon: Wallet,
-    },
-  ];
+      status:
+        inv.stage === 'Draft'
+          ? 'pending'
+          : i < at || (inv.stage === 'Paid' && i === at)
+            ? 'completed'
+            : i === at
+              ? 'current'
+              : 'pending',
+      icon: icons[i],
+    };
+  });
+};
+
+const lineKey = (l: Pick<InvoiceLine, 'receiptId' | 'materialCode'>) => `${l.receiptId}|${l.materialCode}`;
+
+const inputCls =
+  'w-full text-sm border border-border-subtle rounded-md px-3 py-2 bg-bg-surface text-text-primary';
+const labelCls = 'text-label text-text-tertiary uppercase block mb-1';
+
+/** Editable quantities over a set of invoice lines, each bounded by what is left. */
+const LineQtyTable: React.FC<{
+  lines: readonly (InvoiceLine & { remaining: number | null })[];
+  entries: Record<string, string>;
+  onChange: (key: string, v: string) => void;
+}> = ({ lines, entries, onChange }) => {
+  const { t } = useTranslation();
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full text-xs">
+        <thead>
+          <tr className="text-text-tertiary uppercase">
+            <th className="text-left py-1 pr-2">{t('fc.inv.new.col.receipt')}</th>
+            <th className="text-left py-1 pr-2">{t('fc.inv.new.col.material')}</th>
+            <th className="text-left py-1 pr-2">{t('fc.inv.new.col.quantity')}</th>
+            <th className="text-right py-1">{t('fc.inv.new.col.unitPrice')}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {lines.map((l) => {
+            const key = lineKey(l);
+            const raw = entries[key] ?? String(l.quantity);
+            const q = readQty(raw);
+            const bad = !(Number.isFinite(q) && q > 0);
+            const over = !bad && l.remaining !== null && q > l.remaining;
+            return (
+              <tr key={key} className="border-t border-border-subtle align-top">
+                <td className="py-1.5 pr-2">
+                  <Data>{l.grNumber}</Data>
+                </td>
+                <td className="py-1.5 pr-2">
+                  <Data as="div" className="text-[11px] text-text-tertiary">
+                    {l.materialCode}
+                  </Data>
+                  <div className="text-text-primary">{l.description}</div>
+                </td>
+                <td className="py-1.5 pr-2">
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    className={`${inputCls} min-w-[96px]`}
+                    aria-label={t('fc.inv.new.quantityFor', { material: l.materialCode, grNumber: l.grNumber })}
+                    aria-invalid={bad || over}
+                    value={raw}
+                    onChange={(e) => onChange(key, e.target.value)}
+                  />
+                  {l.remaining !== null && (
+                    <div className="mt-0.5 text-[11px] text-text-tertiary">
+                      {t('fc.inv.new.upTo', { qty: `${l.remaining.toLocaleString('en-US')} ${l.uom ?? ''}` })}
+                    </div>
+                  )}
+                  {bad && <div className="text-[11px] text-danger">{t('fc.inv.new.qtyInvalid')}</div>}
+                  {over && (
+                    <div role="alert" className="text-[11px] text-danger">
+                      {t('fc.inv.new.overInvoiced')}
+                    </div>
+                  )}
+                </td>
+                <td className="py-1.5 text-right whitespace-nowrap">
+                  <Data>{fmtIdr(l.unitPrice)}</Data>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
+/** Apply typed quantities to lines; report whether every line is readable and in bounds. */
+const applyEntries = (
+  lines: readonly (InvoiceLine & { remaining: number | null })[],
+  entries: Record<string, string>,
+) => {
+  const out = lines.map((l) => {
+    const q = readQty(entries[lineKey(l)] ?? String(l.quantity));
+    return { ...l, quantity: q };
+  });
+  const valid = out.every(
+    (l, i) => Number.isFinite(l.quantity) && l.quantity > 0 && (lines[i].remaining === null || l.quantity <= lines[i].remaining!),
+  );
+  const clean: InvoiceLine[] = out.map(({ remaining: _r, ...l }) => l);
+  return { lines: clean, valid };
 };
 
 const SupplierInvoices: React.FC = () => {
@@ -179,11 +246,14 @@ const SupplierInvoices: React.FC = () => {
   const invoicesQuery = useSupplierInvoices();
   const supplierQuery = useCurrentSupplier();
   const posQuery = usePurchaseOrders();
+  const receiptsQuery = useGoodsReceipts();
   const createMutation = useInvoiceCreate();
   const submitMutation = useInvoiceSubmit();
-  // ⚠️ ONE ATOM, TWO VERBS. `t_invoice_create` and `t_invoice_submit` both
-  // require `invoice:submit`, so one availability answers for the page-level
-  // create AND the row-level submit — and BOTH need a slot, because
+  const resubmitMutation = useInvoiceResubmit();
+  // ⚠️ ONE ATOM, THREE VERBS. `t_invoice_create`, `t_invoice_submit` and
+  // `t_invoice_resubmit` all require `invoice:submit`, so one availability
+  // answers for the page-level create, the row-level submit AND the correction
+  // of a returned invoice — and each needs a slot, because
   // `IMPORTER-PRESENCE-IS-NOT-VERB-COVERAGE-01` is exactly the page that
   // guarded its rows and shipped a live create in its header.
   const invoiceAvailability = useVerbAvailability('invoice:submit');
@@ -191,40 +261,107 @@ const SupplierInvoices: React.FC = () => {
     t('supplierInvoices.crumb.settle'),
     t('supplierInvoices.crumb.invoices'),
   ];
-  const INVOICES = invoicesQuery.data?.items ?? [];
+  const INVOICES = useMemo(() => invoicesQuery.data?.items ?? [], [invoicesQuery.data]);
+  const RECEIPTS = useMemo(() => receiptsQuery.data?.items ?? [], [receiptsQuery.data]);
   const mySupplier = supplierQuery.data ?? null;
   const [selected, setSelected] = useState<SupplierInvoice | null>(null);
   const [panelMode, setPanelMode] = useState<PanelMode>('detail');
 
-  // WHO ACTS NEXT (S2b). ⚠️ **READS THE SAME `selected.status` THE PILL READS,
-  // AND THAT IS DELIBERATE EVEN THOUGH THE BUYER SIDE READS `lifecycleState`.**
-  // `SupplierInvoice` HAS no `lifecycleState` — the supplier DTO carries only
-  // the projection — so there is no canonical state to prefer here. Reading a
-  // different source than the pill beside it would let the line and the status
-  // disagree on one row, which is worse than the silence.
-  //
-  // ⚠️ **AND THE SILENCE IS LARGE ON THIS SURFACE: `Overdue` is a computed
-  // projection no transition names, so those rows say nothing** — measured at 5
-  // of 13 fixtures, whose canonical states are `Submitted` and `Approved` and
-  // would have answered. That is the projection arm's case, reported not
-  // repaired; it is not repairable here without a DTO change.
+  // WHO ACTS NEXT (S2b). ⚠️ **READS `selected.status`, THE PROJECTION LABEL,
+  // AND THAT IS DELIBERATE.** `SupplierInvoice` HAS no `lifecycleState` — the
+  // supplier DTO carries only projections — so there is no canonical state to
+  // prefer here. `Overdue` is a computed projection no transition names, so
+  // those rows say nothing; reported, not repaired here.
   const nextAct = useNextAct('invoice', selected?.status);
-  // New-invoice draft form (creation-shape against one of the supplier's own
-  // confirmed POs — the store assigns the invoice number).
+
+  // New invoice (REQ-E07-07): PO → received receipts → pre-filled lines.
   const [newOpen, setNewOpen] = useState(false);
   const [newPoRef, setNewPoRef] = useState('');
+  const [newReceiptIds, setNewReceiptIds] = useState<string[]>([]);
+  const [newLineQty, setNewLineQty] = useState<Record<string, string>>({});
+  const [newInvoiceNumber, setNewInvoiceNumber] = useState('');
+  const [newInvoiceDate, setNewInvoiceDate] = useState('');
+  const [newTaxFile, setNewTaxFile] = useState('');
   const [newAmount, setNewAmount] = useState('');
 
-  // The supplier's confirmed POs are the legal parents for a new invoice.
-  const confirmablePos = (posQuery.data?.items ?? []).filter(
-    (po) => po.status === POStatus.CONFIRMED,
+  // Correct and resubmit a returned invoice.
+  const [fixTarget, setFixTarget] = useState<SupplierInvoice | null>(null);
+  const [fixAmount, setFixAmount] = useState('');
+  const [fixNumber, setFixNumber] = useState('');
+  const [fixDate, setFixDate] = useState('');
+  const [fixTaxFile, setFixTaxFile] = useState('');
+  const [fixLineQty, setFixLineQty] = useState<Record<string, string>>({});
+
+  // POs an invoice may bill against (confirmed, partly or fully delivered).
+  const invoiceablePos = (posQuery.data?.items ?? []).filter((po) =>
+    INVOICEABLE_PO_STATES.includes(po.status),
   );
+  const newPo = invoiceablePos.find((po) => po.poNumber === newPoRef);
+
+  // Received receipts of that PO with quantity left to invoice (BR-01, BR-02).
+  const receiptOptions = useMemo(
+    () =>
+      newPo
+        ? RECEIPTS.filter(
+            (gr) =>
+              gr.poNumber === newPo.poNumber &&
+              INVOICEABLE_RECEIPT_STATES.includes(gr.status) &&
+              gr.inspectionResults.some(
+                (r) => remainingInvoiceableQty(gr, r.materialCode, INVOICES) > 0,
+              ),
+          )
+        : [],
+    [newPo, RECEIPTS, INVOICES],
+  );
+  const prefilled = useMemo(
+    () =>
+      newPo
+        ? prefillInvoiceLines(
+            receiptOptions.filter((gr) => newReceiptIds.includes(gr.id)),
+            newPo,
+            INVOICES,
+          ).map((l) => ({ ...l, remaining: l.quantity }))
+        : [],
+    [newPo, receiptOptions, newReceiptIds, INVOICES],
+  );
+  const newRead = applyEntries(prefilled, newLineQty);
+  const newExpected = expectedInvoiceValue(newRead.valid ? newRead.lines : []);
+  const newDuplicate =
+    !!supplierId &&
+    newInvoiceNumber.trim() !== '' &&
+    isDuplicateInvoiceNumber(newInvoiceNumber, supplierId, INVOICES);
 
   // ── CP-0 · W1 · 2f-d — THE ONE READ of the new-invoice amount ──────────────
   // The gate, the inline message and the dispatched payload all read this, so
   // none of them can disagree about the amount being invoiced.
   const amountRead = readInvoiceAmount(newAmount);
   const amountPositive = amountRead.ok && amountRead.value > 0;
+  const newReady =
+    !!newPo &&
+    newRead.lines.length > 0 &&
+    newRead.valid &&
+    newInvoiceNumber.trim() !== '' &&
+    !newDuplicate &&
+    newInvoiceDate !== '' &&
+    newTaxFile !== '' &&
+    amountPositive;
+
+  const resetNew = () => {
+    setNewPoRef('');
+    setNewReceiptIds([]);
+    setNewLineQty({});
+    setNewInvoiceNumber('');
+    setNewInvoiceDate('');
+    setNewTaxFile('');
+    setNewAmount('');
+  };
+
+  const failToast = (title: string, reason?: string) =>
+    toast({
+      variant: 'warning',
+      title,
+      description: refusalText(reason) ?? t('invoice.create.failed.desc', { reason: reason ?? '' }),
+    });
 
   const submitDraft = (inv: SupplierInvoice) => {
     submitMutation.mutate(
@@ -251,10 +388,8 @@ const SupplierInvoices: React.FC = () => {
     );
   };
 
-  const submitNewInvoice = () => {
-    // Each cause gets its OWN translated message. The retired guard collapsed
-    // three distinct failures — no PO, an unreadable amount, a non-positive
-    // amount — into one hard-coded English sentence, in both locales.
+  const createNewInvoice = async (andSubmit: boolean) => {
+    // Each cause gets its OWN translated message.
     if (!newPoRef) {
       toast({
         variant: 'warning',
@@ -271,9 +406,7 @@ const SupplierInvoices: React.FC = () => {
       });
       return;
     }
-    // The pre-existing `> 0` rule, PRESERVED VERBATIM — whether a zero-value
-    // invoice is legal is a commercial question, not a parsing one. What changed
-    // is that it now says which rule it is.
+    // The pre-existing `> 0` rule, PRESERVED VERBATIM.
     if (amountRead.value <= 0) {
       toast({
         variant: 'warning',
@@ -283,26 +416,92 @@ const SupplierInvoices: React.FC = () => {
       return;
     }
     const amount = amountRead.value;
-    createMutation.mutate(
-      { poReference: newPoRef, amount },
+    const invoiceNumber = newInvoiceNumber.trim();
+    try {
+      const res = await createMutation.mutateAsync({
+        poReference: newPoRef,
+        amount,
+        lines: newRead.lines,
+        invoiceNumber,
+        invoiceDate: newInvoiceDate,
+        taxInvoiceFile: newTaxFile,
+      });
+      if (res.status === 'failed' || !res.entityId) {
+        failToast(t('invoice.create.failed.title'), res.reason);
+        return;
+      }
+      if (andSubmit) {
+        const sub = await submitMutation.mutateAsync({ invoiceId: res.entityId, amount });
+        if (sub.status === 'failed') {
+          failToast(t('invoice.submit.failed.title', { invoiceNumber }), sub.reason);
+        } else {
+          toast({ variant: 'success', title: t('fc.inv.submit.success', { invoiceNumber }) });
+        }
+      } else {
+        toast({
+          variant: 'success',
+          title: t('invoice.create.success.title', { invoiceNumber }),
+          description: t('invoice.create.success.desc', { poNumber: newPoRef, correlationId: res.correlationId }),
+        });
+      }
+      setNewOpen(false);
+      resetNew();
+    } catch {
+      toast({ variant: 'error', title: t('invoice.denied.title'), description: t('invoice.denied.desc') });
+    }
+  };
+
+  // ── Correct and resubmit ────────────────────────────────────────────────
+  const openFix = (inv: SupplierInvoice) => {
+    setFixTarget(inv);
+    setFixAmount(String(inv.amount));
+    setFixNumber(inv.invoiceNumber);
+    setFixDate(inv.invoiceDate ?? '');
+    setFixTaxFile(inv.taxInvoiceFile ?? '');
+    setFixLineQty({});
+  };
+  const fixLines = (fixTarget?.lines ?? []).map((l) => {
+    const gr = RECEIPTS.find((g) => g.id === l.receiptId);
+    return {
+      ...l,
+      remaining: gr ? remainingInvoiceableQty(gr, l.materialCode, INVOICES, fixTarget?.id) : null,
+    };
+  });
+  const fixRead = applyEntries(fixLines, fixLineQty);
+  const fixAmountRead = readInvoiceAmount(fixAmount);
+  const fixDuplicate =
+    !!fixTarget &&
+    fixNumber.trim() !== '' &&
+    isDuplicateInvoiceNumber(fixNumber, fixTarget.supplierId, INVOICES, fixTarget.id);
+  const fixReady =
+    !!fixTarget &&
+    fixAmountRead.ok &&
+    fixAmountRead.value > 0 &&
+    fixRead.valid &&
+    fixNumber.trim() !== '' &&
+    !fixDuplicate;
+
+  const doResubmit = () => {
+    if (!fixTarget || !fixAmountRead.ok) return;
+    const invoiceNumber = fixNumber.trim();
+    resubmitMutation.mutate(
+      {
+        invoiceId: fixTarget.id,
+        amount: fixAmountRead.value,
+        ...(fixTarget.lines.length > 0 ? { lines: fixRead.lines } : {}),
+        invoiceNumber,
+        ...(fixDate ? { invoiceDate: fixDate } : {}),
+        ...(fixTaxFile ? { taxInvoiceFile: fixTaxFile } : {}),
+      },
       {
         onSuccess: (res) => {
           if (res.status === 'failed') {
-            toast({
-              variant: 'warning',
-              title: t('invoice.create.failed.title'),
-              description: refusalText(res.reason) ?? t('invoice.create.failed.desc', { reason: res.reason ?? '' }),
-            });
+            failToast(t('fc.inv.resubmit.failed', { invoiceNumber }), res.reason);
             return;
           }
-          setNewOpen(false);
-          setNewPoRef('');
-          setNewAmount('');
-          toast({
-            variant: 'success',
-            title: t('invoice.create.success.title', { invoiceNumber: res.entityId ?? '' }),
-            description: t('invoice.create.success.desc', { poNumber: newPoRef, correlationId: res.correlationId }),
-          });
+          toast({ variant: 'success', title: t('fc.inv.resubmit.success', { invoiceNumber }) });
+          setFixTarget(null);
+          setSelected(null);
         },
         onError: () =>
           toast({ variant: 'error', title: t('invoice.denied.title'), description: t('invoice.denied.desc') }),
@@ -314,27 +513,21 @@ const SupplierInvoices: React.FC = () => {
     const sum = (filter: (i: SupplierInvoice) => boolean) =>
       INVOICES.filter(filter).reduce((a, b) => a + b.amount, 0);
     return {
-      paid: sum((i) => i.status === 'Payment Released' || i.status === 'Remittance Received'),
-      pending: sum((i) =>
-        i.status === 'Pending Approval' || i.status === 'Approved',
-      ),
-      disputed: sum((i) => i.status === 'Disputed'),
+      paid: sum((i) => i.stage === 'Paid'),
+      pending: sum((i) => ['Submitted', 'Verified', 'Scheduled for payment'].includes(i.stage)),
+      returned: sum((i) => i.stage === 'Returned'),
     };
   }, [INVOICES]);
 
   const counts = useMemo(() => {
     return {
-      paid: INVOICES.filter(
-        (i) => i.status === 'Payment Released' || i.status === 'Remittance Received',
-      ).length,
-      pending: INVOICES.filter((i) =>
-        ['Pending Approval', 'Approved'].includes(i.status),
-      ).length,
-      disputed: INVOICES.filter((i) => i.status === 'Disputed').length,
+      paid: INVOICES.filter((i) => i.stage === 'Paid').length,
+      pending: INVOICES.filter((i) => ['Submitted', 'Verified', 'Scheduled for payment'].includes(i.stage)).length,
+      returned: INVOICES.filter((i) => i.stage === 'Returned').length,
     };
   }, [INVOICES]);
 
-  const disputed = INVOICES.filter((i) => i.status === 'Disputed');
+  const returned = INVOICES.filter((i) => i.stage === 'Returned');
 
   const lastSubmitted = INVOICES.reduce(
     (acc, i) => (i.submittedDate > acc ? i.submittedDate : acc),
@@ -350,9 +543,6 @@ const SupplierInvoices: React.FC = () => {
     setSelected(null);
     setPanelMode('detail');
   };
-
-  const isPaidStatus = (s: InvStatus): boolean =>
-    s === 'Payment Released' || s === 'Remittance Received';
 
   if (!supplierId) return <NoSupplierIdentity />;
   if (invoicesQuery.isPending || supplierQuery.isPending)
@@ -383,6 +573,19 @@ const SupplierInvoices: React.FC = () => {
       />
     );
 
+  const dueCell = (inv: SupplierInvoice) => (
+    <>
+      <Data>{fmtDate(inv.dueDate)}</Data>
+      {inv.overdue && (
+        <div className="text-[11px] text-danger font-semibold">
+          {inv.daysOutstanding === 1
+            ? t('fc.inv.overdue.one')
+            : t('fc.inv.overdue.other', { count: inv.daysOutstanding })}
+        </div>
+      )}
+    </>
+  );
+
   return (
     <AppShellV2>
       <PageHeader
@@ -393,8 +596,7 @@ const SupplierInvoices: React.FC = () => {
         })}
         actions={
           // The page-level create is WITHHELD rather than disabled (§73's
-          // pattern). Export holds no atom and is not gated — a read is
-          // ungoverned, not withheld (§75e).
+          // pattern). Export holds no atom and is not gated.
           <div className="flex items-center gap-3">
             <HandoffNotice
               availability={invoiceAvailability}
@@ -434,11 +636,15 @@ const SupplierInvoices: React.FC = () => {
           { count: INVOICES.length },
         )}{' '}
         <Data>{fmtDate(lastSubmitted)}</Data>
-        {/* D-CENSUS-8 — PARTLY REAL, both axes. Invoice create + submit dispatch
-            through the wired `invoice` target (DR-7); the PO backing them is fixture,
-            and nothing reaches e-Faktur or SAP. */}
+        {/* D-CENSUS-8 — PARTLY REAL, both axes. Invoice create, submit and
+            resubmit dispatch through the wired `invoice` target (DR-7); the POs
+            and receipts backing them are fixtures, and nothing reaches e-Faktur
+            or SAP. */}
         <ProvenanceMarker capability="invoices" className="ml-3 align-middle" />
       </PageMetaLine>
+
+      {/* REQ-E07-08 AC-03 — this page reads SAP data; say how old it is. */}
+      <SapDataAgeBanner page="invoices" className="mb-4" />
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-6">
         <KpiCard
@@ -473,14 +679,14 @@ const SupplierInvoices: React.FC = () => {
         />
         <KpiCard
           eyebrow={t('supplierInvoices.kpi.disputed.eyebrow')}
-          value={fmtIDR(sums.disputed)}
+          value={fmtIDR(sums.returned)}
           subtitle={
             <span className="text-danger">
               {t(
-                counts.disputed === 1
+                counts.returned === 1
                   ? 'supplierInvoices.kpi.invoiceCount.one'
                   : 'supplierInvoices.kpi.invoiceCount.other',
-                { count: counts.disputed },
+                { count: counts.returned },
               )}
             </span>
           }
@@ -488,24 +694,25 @@ const SupplierInvoices: React.FC = () => {
         />
       </div>
 
-      {disputed.length > 0 && (
+      {returned.length > 0 && (
         <div className="bg-warning-soft border-l-2 border-warning rounded px-4 py-3 mb-6 flex items-start gap-2 text-sm text-warning-hover">
           <AlertTriangle size={14} className="shrink-0 mt-0.5" />
           <div>
             <strong>{t('supplierInvoices.banner.dispute.label')}</strong>
-            <Data>{disputed.map((i) => i.invoiceNumber).join(', ')}</Data>{' '}
+            <Data>{returned.map((i) => i.invoiceNumber).join(', ')}</Data>{' '}
             {t('supplierInvoices.banner.dispute.body')}
           </div>
         </div>
       )}
 
-      <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-hidden mb-6">
+      <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto mb-6">
         <Table>
           <TableHeader>
             <TableHeaderCell>{t('supplierInvoices.table.invoiceNo')}</TableHeaderCell>
             <TableHeaderCell>{t('supplierInvoices.table.poRef')}</TableHeaderCell>
             <TableHeaderCell className="text-right">{t('supplierInvoices.table.amount')}</TableHeaderCell>
             <TableHeaderCell>{t('supplierInvoices.table.status')}</TableHeaderCell>
+            <TableHeaderCell>{t('fc.inv.col.match')}</TableHeaderCell>
             <TableHeaderCell>{t('supplierInvoices.table.dueDate')}</TableHeaderCell>
             <TableHeaderCell>{t('supplierInvoices.table.paymentDate')}</TableHeaderCell>
             <TableHeaderCell className="text-right">{t('supplierInvoices.table.action')}</TableHeaderCell>
@@ -513,7 +720,7 @@ const SupplierInvoices: React.FC = () => {
           <tbody>
             {INVOICES.map((inv) => {
               const Channel = CHANNEL_ICON[inv.channel];
-              const isPaid = isPaidStatus(inv.status);
+              const isPaid = inv.stage === 'Paid';
               return (
                 <TableRow
                   key={inv.id}
@@ -543,12 +750,17 @@ const SupplierInvoices: React.FC = () => {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <StatusPill variant={STATUS_VARIANT[inv.status]}>
-                      {inv.status}
-                    </StatusPill>
+                    <StatusPill variant={statusTone(inv.stage)}>{inv.stage}</StatusPill>
+                  </TableCell>
+                  <TableCell>
+                    {inv.stage === 'Draft' ? (
+                      <span className="text-text-tertiary text-xs">—</span>
+                    ) : (
+                      <MatchPill status={inv.matchStatus} />
+                    )}
                   </TableCell>
                   <TableCell className="text-text-tertiary text-xs whitespace-nowrap">
-                    <Data>{fmtDate(inv.dueDate)}</Data>
+                    {dueCell(inv)}
                   </TableCell>
                   <TableCell className="text-xs whitespace-nowrap">
                     {inv.paymentDate ? (
@@ -571,34 +783,27 @@ const SupplierInvoices: React.FC = () => {
                       >
                         {t('supplierInvoices.action.remittance')}
                       </Button>
-                    ) : inv.status === 'Draft' ? (
+                    ) : inv.stage === 'Draft' || inv.stage === 'Returned' ? (
                       invoiceAvailability.kind === 'held' ? (
-                        <Button
-                          variant="outline"
-                          disabled={submitMutation.isPending}
-                          onClick={() => submitDraft(inv)}
-                        >
-                          {t('invoice.submit.action')}
-                        </Button>
+                        inv.stage === 'Draft' ? (
+                          <Button
+                            variant="outline"
+                            disabled={submitMutation.isPending}
+                            onClick={() => submitDraft(inv)}
+                          >
+                            {t('invoice.submit.action')}
+                          </Button>
+                        ) : (
+                          <Button variant="outline" onClick={() => openFix(inv)}>
+                            {t('fc.inv.resubmit.action')}
+                          </Button>
+                        )
                       ) : (
                         <HandoffNotice
                           availability={invoiceAvailability}
-                          testId="handoff-invoice-submit"
+                          testId={inv.stage === 'Draft' ? 'handoff-invoice-submit' : 'handoff-invoice-resubmit'}
                         />
                       )
-                    ) : inv.status === 'Disputed' ? (
-                      <Button
-                        variant="outline"
-                        onClick={() =>
-                          toast({
-                            variant: 'warning',
-                            title: t('supplierInvoices.toast.resolve.title'),
-                            description: t('supplierInvoices.toast.resolve.desc'),
-                          })
-                        }
-                      >
-                        {t('supplierInvoices.action.resolve')}
-                      </Button>
                     ) : (
                       <Button variant="secondary" onClick={() => openDetail(inv)}>
                         {t('supplierInvoices.action.view')}
@@ -637,7 +842,7 @@ const SupplierInvoices: React.FC = () => {
               <Button variant="secondary" onClick={closePanel}>
                 {t('supplierInvoices.panel.close')}
               </Button>
-              {panelMode === 'detail' && isPaidStatus(selected.status) && (
+              {panelMode === 'detail' && selected.stage === 'Paid' && (
                 <Button
                   variant="outline"
                   icon={Receipt}
@@ -646,6 +851,13 @@ const SupplierInvoices: React.FC = () => {
                   {t('supplierInvoices.panel.viewRemittance')}
                 </Button>
               )}
+              {panelMode === 'detail' &&
+                selected.stage === 'Returned' &&
+                invoiceAvailability.kind === 'held' && (
+                  <Button variant="outline" onClick={() => openFix(selected)}>
+                    {t('fc.inv.resubmit.action')}
+                  </Button>
+                )}
               {panelMode === 'remittance' && (
                 <Button
                   variant="outline"
@@ -690,16 +902,12 @@ const SupplierInvoices: React.FC = () => {
                 </div>
                 <div>
                   <dt className="text-text-tertiary">{t('supplierInvoices.field.dueDate')}</dt>
-                  <dd className="text-text-primary font-medium">
-                    <Data>{fmtDate(selected.dueDate)}</Data>
-                  </dd>
+                  <dd className="text-text-primary font-medium">{dueCell(selected)}</dd>
                 </div>
                 <div>
                   <dt className="text-text-tertiary">{t('supplierInvoices.field.status')}</dt>
                   <dd>
-                    <StatusPill variant={STATUS_VARIANT[selected.status]}>
-                      {selected.status}
-                    </StatusPill>
+                    <StatusPill variant={statusTone(selected.stage)}>{selected.stage}</StatusPill>
                     <span className="mt-1 block">
                       <NextActLine act={nextAct} testId="next-act-supplier-invoice" />
                     </span>
@@ -750,18 +958,35 @@ const SupplierInvoices: React.FC = () => {
               </dl>
             </section>
 
+            {selected.stage === 'Returned' && (
+              <div
+                role="status"
+                className="bg-danger-soft border-l-2 border-danger rounded px-3 py-2 text-xs text-danger"
+              >
+                <strong>{t('fc.inv.detail.returned')}:</strong>{' '}
+                {selected.returnReason ?? t('supplierInvoices.note.disputed')}
+              </div>
+            )}
+
+            {panelMode === 'detail' && selected.stage !== 'Draft' && (
+              <MatchResult status={selected.matchStatus} />
+            )}
+
+            {panelMode === 'detail' && (
+              <InvoiceLinesSection
+                lines={selected.lines}
+                invoiceDate={selected.invoiceDate}
+                taxInvoiceFile={selected.taxInvoiceFile}
+              />
+            )}
+
             {panelMode === 'detail' && (
               <section>
                 <h3 className="text-label text-text-tertiary uppercase mb-3">
                   {t('supplierInvoices.section.lifecycle')}
                 </h3>
                 <Timeline events={buildTimeline(selected, t)} />
-                {selected.status === 'Disputed' && (
-                  <div className="mt-3 bg-danger-soft border-l-2 border-danger rounded px-3 py-2 text-xs text-danger">
-                    {t('supplierInvoices.note.disputed')}
-                  </div>
-                )}
-                {selected.status === 'Overdue' && (
+                {selected.overdue && (
                   <div className="mt-3 bg-danger-soft border-l-2 border-danger rounded px-3 py-2 text-xs text-danger">
                     {t('supplierInvoices.note.overdue')}
                   </div>
@@ -831,14 +1056,21 @@ const SupplierInvoices: React.FC = () => {
             <Button variant="secondary" onClick={() => setNewOpen(false)}>
               {t('supplierInvoices.new.cancel')}
             </Button>
-            {/* Disabled-under-refusal is UX; the gate in `submitNewInvoice` is
-                what guarantees no misread amount is dispatched. */}
+            {/* Disabled-under-refusal is UX; the verb's policies are the law. */}
             <Button
-              variant="outline"
-              disabled={createMutation.isPending || !newPoRef || !amountPositive}
-              onClick={submitNewInvoice}
+              variant="secondary"
+              disabled={createMutation.isPending || !newReady}
+              onClick={() => createNewInvoice(false)}
             >
               {t('supplierInvoices.new.createDraft')}
+            </Button>
+            <Button
+              variant="outline"
+              icon={Send}
+              disabled={createMutation.isPending || submitMutation.isPending || !newReady}
+              onClick={() => createNewInvoice(true)}
+            >
+              {t('fc.inv.new.submit')}
             </Button>
           </>
         }
@@ -848,49 +1080,139 @@ const SupplierInvoices: React.FC = () => {
             {t('supplierInvoices.new.intro')}
           </p>
           <div>
-            <label htmlFor="new-po" className="text-label text-text-tertiary uppercase block mb-1">
+            <label htmlFor="new-po" className={labelCls}>
               {t('supplierInvoices.new.poLabel')}
             </label>
             <select
               id="new-po"
-              className="w-full text-sm border border-border-subtle rounded-md px-3 py-2 bg-bg-surface text-text-primary"
+              className={inputCls}
               value={newPoRef}
-              onChange={(e) => setNewPoRef(e.target.value)}
+              onChange={(e) => {
+                setNewPoRef(e.target.value);
+                setNewReceiptIds([]);
+                setNewLineQty({});
+              }}
             >
               <option value="">{t('supplierInvoices.new.poPlaceholder')}</option>
-              {confirmablePos.map((po) => (
+              {invoiceablePos.map((po) => (
                 <option key={po.id} value={po.poNumber}>
                   {po.poNumber}
                 </option>
               ))}
             </select>
-            {confirmablePos.length === 0 && (
+            {invoiceablePos.length === 0 && (
               <div className="mt-1 text-xs text-text-tertiary">
                 {t('supplierInvoices.new.noPos')}
               </div>
             )}
           </div>
+
+          {newPo && (
+            <fieldset>
+              <legend className={labelCls}>{t('fc.inv.new.receipts')}</legend>
+              {receiptOptions.length === 0 ? (
+                <div className="text-xs text-text-tertiary">{t('fc.inv.new.noReceipts')}</div>
+              ) : (
+                <div className="space-y-1.5">
+                  {receiptOptions.map((gr) => (
+                    <label key={gr.id} className="flex items-center gap-2 text-sm text-text-primary">
+                      <input
+                        type="checkbox"
+                        className="accent-action"
+                        checked={newReceiptIds.includes(gr.id)}
+                        onChange={(e) =>
+                          setNewReceiptIds((ids) =>
+                            e.target.checked ? [...ids, gr.id] : ids.filter((x) => x !== gr.id),
+                          )
+                        }
+                      />
+                      {t('fc.inv.new.receiptOption', { grNumber: gr.grNumber, date: fmtDate(gr.receivedDate) })}
+                    </label>
+                  ))}
+                </div>
+              )}
+            </fieldset>
+          )}
+
+          {prefilled.length > 0 && (
+            <div>
+              <div className={labelCls}>{t('fc.inv.new.lines')}</div>
+              <LineQtyTable
+                lines={prefilled}
+                entries={newLineQty}
+                onChange={(k, v) => setNewLineQty((m) => ({ ...m, [k]: v }))}
+              />
+              <div className="mt-2 text-xs text-text-secondary">
+                {t('fc.inv.new.expected')}: <Data>{fmtIdr(newExpected)}</Data>
+              </div>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label htmlFor="new-invoice-number" className={labelCls}>
+                {t('fc.inv.new.invoiceNumber')}
+              </label>
+              <input
+                id="new-invoice-number"
+                type="text"
+                className={inputCls}
+                value={newInvoiceNumber}
+                aria-invalid={newDuplicate}
+                onChange={(e) => setNewInvoiceNumber(e.target.value)}
+              />
+              {newDuplicate && (
+                <div role="alert" data-testid="invoice-number-duplicate" className="mt-1 text-[11px] text-danger">
+                  {t('fc.inv.new.duplicate')}
+                </div>
+              )}
+            </div>
+            <div>
+              <label htmlFor="new-invoice-date" className={labelCls}>
+                {t('fc.inv.new.invoiceDate')}
+              </label>
+              <input
+                id="new-invoice-date"
+                type="date"
+                className={inputCls}
+                value={newInvoiceDate}
+                onChange={(e) => setNewInvoiceDate(e.target.value)}
+              />
+            </div>
+          </div>
+
           <div>
-            <label htmlFor="new-amount" className="text-label text-text-tertiary uppercase block mb-1">
+            <label htmlFor="new-tax-invoice" className={labelCls}>
+              {t('fc.inv.new.taxInvoice')}
+            </label>
+            <input
+              id="new-tax-invoice"
+              type="file"
+              className="text-sm text-text-secondary"
+              onChange={(e) => setNewTaxFile(e.target.files?.[0]?.name ?? '')}
+            />
+            <div className="mt-1 text-xs text-text-tertiary">{newTaxFile || t('fc.inv.new.noFile')}</div>
+          </div>
+
+          <div>
+            <label htmlFor="new-amount" className={labelCls}>
               {t('supplierInvoices.new.amountLabel')}
             </label>
-            {/* Ruling 6.2: text + inputMode. `min={0}` was a number-input
-                affordance that never bound the parse — a negative is refused by
+            {/* Ruling 6.2: text + inputMode. A negative is refused by
                 `normalizeQty` as NOT_NUMERIC, where it is actually enforced. */}
             <input
               id="new-amount"
               type="text"
               inputMode="decimal"
-              className="w-full text-sm border border-border-subtle rounded-md px-3 py-2 bg-bg-surface text-text-primary"
+              className={inputCls}
               placeholder={t('supplierInvoices.new.amountPlaceholder')}
               value={newAmount}
               aria-invalid={newAmount.trim() !== '' && !amountRead.ok}
               onChange={(e) => setNewAmount(e.target.value)}
             />
+            <div className="mt-1 text-xs text-text-tertiary">{t('fc.inv.new.tolerance')}</div>
             {/* UNSEEDED field, so the 2e-a rule applies: an untouched blank does
-                not nag on sight — it refuses at the gate and speaks once the
-                supplier has typed something. (Contrast the seeded 2f-a/2f-c
-                cells, where every blank is operator-cleared.) */}
+                not nag on sight. */}
             {newAmount.trim() !== '' && !amountRead.ok && (
               <div
                 role="alert"
@@ -903,8 +1225,6 @@ const SupplierInvoices: React.FC = () => {
                 />
               </div>
             )}
-            {/* The pre-existing `> 0` rule, finally SAYING SO rather than
-                failing into a generic warning toast. No rule changed. */}
             {amountRead.ok && amountRead.value <= 0 && (
               <div
                 role="alert"
@@ -916,6 +1236,116 @@ const SupplierInvoices: React.FC = () => {
             )}
           </div>
         </div>
+      </SidePanel>
+
+      <SidePanel
+        open={fixTarget !== null}
+        onClose={() => setFixTarget(null)}
+        title={fixTarget ? t('fc.inv.resubmit.title', { invoiceNumber: fixTarget.invoiceNumber }) : ''}
+        footerActions={
+          <>
+            <Button variant="secondary" onClick={() => setFixTarget(null)}>
+              {t('fc.inv.cancel')}
+            </Button>
+            <Button
+              variant="outline"
+              icon={Send}
+              disabled={resubmitMutation.isPending || !fixReady}
+              onClick={doResubmit}
+            >
+              {t('fc.inv.resubmit.confirm')}
+            </Button>
+          </>
+        }
+      >
+        {fixTarget && (
+          <div className="space-y-5">
+            <div className="bg-danger-soft border-l-2 border-danger rounded px-3 py-2 text-sm text-danger">
+              <strong>{t('fc.inv.resubmit.reason')}:</strong>{' '}
+              {fixTarget.returnReason ?? t('supplierInvoices.note.disputed')}
+            </div>
+            {fixLines.length > 0 && (
+              <div>
+                <div className={labelCls}>{t('fc.inv.new.lines')}</div>
+                <LineQtyTable
+                  lines={fixLines}
+                  entries={fixLineQty}
+                  onChange={(k, v) => setFixLineQty((m) => ({ ...m, [k]: v }))}
+                />
+                <div className="mt-2 text-xs text-text-secondary">
+                  {t('fc.inv.new.expected')}:{' '}
+                  <Data>{fmtIdr(expectedInvoiceValue(fixRead.valid ? fixRead.lines : []))}</Data>
+                </div>
+              </div>
+            )}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label htmlFor="fix-invoice-number" className={labelCls}>
+                  {t('fc.inv.new.invoiceNumber')}
+                </label>
+                <input
+                  id="fix-invoice-number"
+                  type="text"
+                  className={inputCls}
+                  value={fixNumber}
+                  aria-invalid={fixDuplicate}
+                  onChange={(e) => setFixNumber(e.target.value)}
+                />
+                {fixDuplicate && (
+                  <div role="alert" className="mt-1 text-[11px] text-danger">
+                    {t('fc.inv.new.duplicate')}
+                  </div>
+                )}
+              </div>
+              <div>
+                <label htmlFor="fix-invoice-date" className={labelCls}>
+                  {t('fc.inv.new.invoiceDate')}
+                </label>
+                <input
+                  id="fix-invoice-date"
+                  type="date"
+                  className={inputCls}
+                  value={fixDate}
+                  onChange={(e) => setFixDate(e.target.value)}
+                />
+              </div>
+            </div>
+            <div>
+              <label htmlFor="fix-tax-invoice" className={labelCls}>
+                {t('fc.inv.new.taxInvoice')}
+              </label>
+              <input
+                id="fix-tax-invoice"
+                type="file"
+                className="text-sm text-text-secondary"
+                onChange={(e) => setFixTaxFile(e.target.files?.[0]?.name ?? fixTaxFile)}
+              />
+              <div className="mt-1 text-xs text-text-tertiary">{fixTaxFile || t('fc.inv.new.noFile')}</div>
+            </div>
+            <div>
+              <label htmlFor="fix-amount" className={labelCls}>
+                {t('supplierInvoices.new.amountLabel')}
+              </label>
+              <input
+                id="fix-amount"
+                type="text"
+                inputMode="decimal"
+                className={inputCls}
+                value={fixAmount}
+                aria-invalid={fixAmount.trim() !== '' && !fixAmountRead.ok}
+                onChange={(e) => setFixAmount(e.target.value)}
+              />
+              {fixAmount.trim() !== '' && !fixAmountRead.ok && (
+                <div role="alert" className="mt-1 text-[11px] text-danger">
+                  {t(INVOICE_AMOUNT_REFUSAL_KEY[fixAmountRead.reason])}{' '}
+                  <GlossaryTermChip
+                    refTo={{ sourceType: 'QtyRefusalReason', term: fixAmountRead.reason }}
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </SidePanel>
     </AppShellV2>
   );

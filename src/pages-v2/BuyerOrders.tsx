@@ -1,4 +1,6 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { isActiveAsn } from '../services/transitions/fulfilmentRules';
+import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import {
@@ -25,6 +27,7 @@ import {
 } from 'lucide-react';
 import AppShellV2 from '../components/layout-v2/AppShellV2';
 import PageHeader from '../components/ui-v2/PageHeader';
+import SapDataAgeBanner from '../components/ui-v2/SapDataAgeBanner';
 import PageMetaLine from '../components/ui-v2/PageMetaLine';
 import ProvenanceMarker from '../components/ui-v2/ProvenanceMarker';
 import KpiCard from '../components/ui-v2/KpiCard';
@@ -46,8 +49,27 @@ import LoadingState from '../components/ui-v2/LoadingState';
 import ErrorState from '../components/ui-v2/ErrorState';
 import EmptyState from '../components/ui-v2/EmptyState';
 import Data from '../components/ui-v2/Data';
-import { usePurchaseOrders, useSuppliers } from '../services/query/hooks';
-import { useNextAct } from '../hooks/useVerbAvailability';
+import { useASNs, usePurchaseOrders, useSuppliers } from '../services/query/hooks';
+import { useNextAct, useVerbAvailability } from '../hooks/useVerbAvailability';
+import { HandoffNotice } from '../components/ui-v2/HandoffNotice';
+import {
+  usePurchaseOrderAcceptCounter,
+  usePurchaseOrderRejectCounter,
+} from '../services/query/commandHooks';
+import { useToast } from '../hooks/useToast';
+import { useRefusalText } from '../hooks/useRefusalText';
+import {
+  completionMovedLater,
+  isEscalated,
+  poDisplayStatus,
+} from '../services/data/poResponseProjection';
+import {
+  PoLifecycleSteps,
+  PoResponseDetails,
+  RespondByLine,
+  ordersNow,
+  ShippingNoticeDetails,
+} from './orders/PoCollaboration';
 import { formatIDR, formatNumber, formatDate } from '../lib/format';
 // POStatus / ChannelType are runtime enums (used as values) — they stay sourced
 // from the enum module; the canonical drift-resolved PurchaseOrder type comes
@@ -57,6 +79,9 @@ import type { PurchaseOrder } from '../services/data/types';
 
 type GroupTab =
   | 'all'
+  | 'escalated'
+  | 'review'
+  | 'rejected'
   | 'pending'
   | 'confirmed'
   | 'transit'
@@ -81,8 +106,14 @@ const TRANSIT_STATUSES: POStatus[] = [POStatus.PARTIALLY_DELIVERED];
 const DELIVERED_STATUSES: POStatus[] = [POStatus.DELIVERED];
 const CLOSED_STATUSES: POStatus[] = [POStatus.CLOSED];
 
-const matchesGroup = (status: POStatus, group: GroupTab): boolean => {
+// `escalated` is computed from the clock (never stored); `review` is a counter-
+// offer waiting for the planner; `rejected` is the supplier's refusal.
+const matchesGroup = (po: PurchaseOrder, group: GroupTab, nowIso: string): boolean => {
+  const status = po.status;
   if (group === 'all') return true;
+  if (group === 'escalated') return isEscalated(po, nowIso);
+  if (group === 'review') return status === POStatus.ADJUSTED;
+  if (group === 'rejected') return status === POStatus.REJECTED;
   if (group === 'pending') return PENDING_STATUSES.includes(status);
   if (group === 'confirmed') return CONFIRMED_STATUSES.includes(status);
   if (group === 'transit') return TRANSIT_STATUSES.includes(status);
@@ -92,7 +123,7 @@ const matchesGroup = (status: POStatus, group: GroupTab): boolean => {
 };
 
 const isOpen = (status: POStatus): boolean =>
-  status !== POStatus.DELIVERED && status !== POStatus.CLOSED;
+  status !== POStatus.DELIVERED && status !== POStatus.CLOSED && status !== POStatus.REJECTED;
 
 const isOverdue = (po: PurchaseOrder): boolean =>
   po.daysOverdue > 0 && isOpen(po.status);
@@ -109,7 +140,11 @@ const COUNTRY_FLAG: Record<string, string> = {
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-const FOOTER_ACTION_KEY: Record<POStatus, string> = {
+// `null` — no footer shortcut: an adjusted PO is reviewed in the panel body, and
+// a rejected one has nothing further to ask of the supplier.
+const FOOTER_ACTION_KEY: Record<POStatus, string | null> = {
+  [POStatus.ADJUSTED]: null,
+  [POStatus.REJECTED]: null,
   [POStatus.SENT]: 'buyerOrders.footer.sendReminder',
   [POStatus.VIEWED]: 'buyerOrders.footer.sendReminder',
   [POStatus.ACKNOWLEDGED]: 'buyerOrders.footer.requestAsn',
@@ -123,6 +158,8 @@ const STATUS_RANK: Record<POStatus, number> = {
   [POStatus.SENT]: 1,
   [POStatus.VIEWED]: 2,
   [POStatus.ACKNOWLEDGED]: 3,
+  [POStatus.ADJUSTED]: 3,
+  [POStatus.REJECTED]: 3,
   [POStatus.CONFIRMED]: 4,
   [POStatus.PARTIALLY_DELIVERED]: 5,
   [POStatus.DELIVERED]: 6,
@@ -242,10 +279,37 @@ const BuyerOrders: React.FC = () => {
   // be a render-order bug the first time the drawer closes.
   const nextAct = useNextAct('purchaseOrder', selectedPO?.status);
   const [commsOpen, setCommsOpen] = useState(false);
+  const [reviewRejecting, setReviewRejecting] = useState(false);
+  const [reviewComment, setReviewComment] = useState('');
+  const { toast } = useToast();
+  const refusalText = useRefusalText();
+  const acceptCounter = usePurchaseOrderAcceptCounter();
+  const rejectCounter = usePurchaseOrderRejectCounter();
+  // Two verbs, one atom today — asked once per slot so each keeps its own notice.
+  const reviewAvailability = useVerbAvailability('po:review-response');
+  const asnsQuery = useASNs();
+  const [searchParams] = useSearchParams();
+  const nowIso = ordersNow();
 
   const ordersQuery = usePurchaseOrders();
   const suppliersQuery = useSuppliers();
   const orders = ordersQuery.data?.items ?? [];
+
+  // A link from the order summary or Home opens that PO (`?po=<id>`) or tab
+  // (`?tab=escalated`).
+  const linkedPoId = searchParams.get('po');
+  const linkedTab = searchParams.get('tab');
+  useEffect(() => {
+    if (linkedTab && ['escalated', 'review', 'rejected'].includes(linkedTab)) {
+      setGroup(linkedTab as GroupTab);
+    }
+  }, [linkedTab]);
+  useEffect(() => {
+    if (!linkedPoId || selectedPO) return;
+    const po = (ordersQuery.data?.items ?? []).find((p) => p.id === linkedPoId);
+    if (po) setSelectedPO(po);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [linkedPoId, ordersQuery.data]);
 
   // Country flags are a cosmetic cross-supplier join — best-effort off the
   // suppliers list (empty for a supplier persona; the page still renders).
@@ -264,6 +328,9 @@ const BuyerOrders: React.FC = () => {
   const counts = useMemo(() => {
     return {
       all: orders.length,
+      escalated: orders.filter((p) => isEscalated(p, nowIso)).length,
+      review: orders.filter((p) => p.status === POStatus.ADJUSTED).length,
+      rejected: orders.filter((p) => p.status === POStatus.REJECTED).length,
       pending: orders.filter((p) => PENDING_STATUSES.includes(p.status)).length,
       confirmed: orders.filter((p) => CONFIRMED_STATUSES.includes(p.status))
         .length,
@@ -272,6 +339,7 @@ const BuyerOrders: React.FC = () => {
         .length,
       closed: orders.filter((p) => CLOSED_STATUSES.includes(p.status)).length,
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orders]);
 
   const kpis = useMemo(() => {
@@ -302,7 +370,7 @@ const BuyerOrders: React.FC = () => {
       : null;
 
     return orders.filter((po) => {
-      if (!matchesGroup(po.status, group)) return false;
+      if (!matchesGroup(po, group, nowIso)) return false;
       if (cutoff && new Date(po.orderDate) < cutoff) return false;
       if (search) {
         const q = search.toLowerCase();
@@ -316,6 +384,7 @@ const BuyerOrders: React.FC = () => {
       }
       return true;
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orders, group, range, search, maxOrderDate]);
 
   // Primary gate is the PO read; the suppliers join is cosmetic and not gated.
@@ -341,7 +410,31 @@ const BuyerOrders: React.FC = () => {
   const closePanel = () => {
     setSelectedPO(null);
     setCommsOpen(false);
+    setReviewRejecting(false);
+    setReviewComment('');
   };
+
+  // The LIVE row, so the panel follows a review the moment it lands.
+  const livePO = selectedPO ? orders.find((p) => p.id === selectedPO.id) ?? selectedPO : null;
+  const asnCountFor = (po: PurchaseOrder) =>
+    (asnsQuery.data?.items ?? []).filter((a) => a.poReference === po.poNumber && isActiveAsn(a)).length;
+
+  const reviewOutcome = (po: PurchaseOrder, titleKey: string) => ({
+    onSuccess: (result: { status: string; reason?: string }) => {
+      if (result.status === 'failed') {
+        toast({
+          variant: 'error',
+          title: t('oc.toast.reviewFailed.title', { poNumber: po.poNumber }),
+          description: refusalText(result.reason) ?? result.reason ?? '',
+        });
+        return;
+      }
+      toast({ variant: 'success', title: t(titleKey, { poNumber: po.poNumber }) });
+      setReviewRejecting(false);
+      setReviewComment('');
+    },
+    onError: () => toast({ variant: 'error', title: t('oc.toast.denied') }),
+  });
 
   const panelTitle = selectedPO
     ? t('buyerOrders.panel.title', {
@@ -381,6 +474,9 @@ const BuyerOrders: React.FC = () => {
         <ProvenanceMarker capability="purchaseOrders" className="ml-3 align-middle" />
       </PageMetaLine>
 
+      {/* REQ-E07-08 AC-03 — this page reads SAP data; say how old it is. */}
+      <SapDataAgeBanner page="purchaseOrders" className="mb-4" />
+
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-8">
         <KpiCard
           eyebrow={t('buyerOrders.kpi.open.eyebrow')}
@@ -415,6 +511,9 @@ const BuyerOrders: React.FC = () => {
       <SubTabs
         options={[
           { id: 'all', label: t('buyerOrders.tab.all'), count: counts.all },
+          { id: 'escalated', label: t('oc.tab.escalated'), count: counts.escalated },
+          { id: 'review', label: t('oc.tab.review'), count: counts.review },
+          { id: 'rejected', label: t('oc.tab.rejected'), count: counts.rejected },
           { id: 'pending', label: t('buyerOrders.tab.pending'), count: counts.pending },
           { id: 'confirmed', label: t('buyerOrders.tab.confirmed'), count: counts.confirmed },
           { id: 'transit', label: t('buyerOrders.tab.transit'), count: counts.transit },
@@ -537,9 +636,14 @@ const BuyerOrders: React.FC = () => {
                     </span>
                   </TableCell>
                   <TableCell>
-                    <StatusPill variant={statusTone(po.status)}>
-                      {po.status}
+                    <StatusPill variant={statusTone(poDisplayStatus(po, nowIso))}>
+                      {poDisplayStatus(po, nowIso)}
                     </StatusPill>
+                    {completionMovedLater(po) && (
+                      <div className="text-xs text-warning-hover mt-0.5">
+                        {t('oc.shipping.movedLaterShort')}
+                      </div>
+                    )}
                   </TableCell>
                   <TableCell className="text-right">
                     <ChevronRight
@@ -572,9 +676,11 @@ const BuyerOrders: React.FC = () => {
           selectedPO && (
             <>
               <Button variant="secondary">{t('buyerOrders.footer.viewFullDetails')}</Button>
-              <Button variant="outline">
-                {t(FOOTER_ACTION_KEY[selectedPO.status])}
-              </Button>
+              {FOOTER_ACTION_KEY[(livePO ?? selectedPO).status] && (
+                <Button variant="outline">
+                  {t(FOOTER_ACTION_KEY[(livePO ?? selectedPO).status] as string)}
+                </Button>
+              )}
             </>
           )
         }
@@ -620,8 +726,8 @@ const BuyerOrders: React.FC = () => {
                 <div>
                   <dt className="text-text-tertiary">{t('buyerOrders.panel.field.status')}</dt>
                   <dd>
-                    <StatusPill variant={statusTone(selectedPO.status)}>
-                      {selectedPO.status}
+                    <StatusPill variant={statusTone(poDisplayStatus(livePO ?? selectedPO, nowIso))}>
+                      {poDisplayStatus(livePO ?? selectedPO, nowIso)}
                     </StatusPill>
                     {/* The buyer's half of the same silence. `Confirmed`,
                         `Partially Delivered` and `Delivered` are all stranded
@@ -651,6 +757,83 @@ const BuyerOrders: React.FC = () => {
                 </div>
               </dl>
             </section>
+
+            <RespondByLine po={livePO ?? selectedPO} nowIso={nowIso} />
+
+            <PoLifecycleSteps po={livePO ?? selectedPO} asnCount={asnCountFor(livePO ?? selectedPO)} />
+
+            <PoResponseDetails po={livePO ?? selectedPO} />
+
+            {(livePO ?? selectedPO).status === POStatus.ADJUSTED && (
+              <section data-testid="po-counter-review">
+                <h3 className="text-label text-text-tertiary uppercase mb-3">
+                  {t('oc.review.title')}
+                </h3>
+                {reviewAvailability.kind !== 'held' ? (
+                  <HandoffNotice availability={reviewAvailability} testId="handoff-po-review-response" />
+                ) : !reviewRejecting ? (
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      variant="outline"
+                      disabled={acceptCounter.isPending}
+                      onClick={() => {
+                        const po = livePO ?? selectedPO;
+                        acceptCounter.mutate({ poId: po.id }, reviewOutcome(po, 'oc.toast.accepted.title'));
+                      }}
+                    >
+                      {t('oc.review.accept')}
+                    </Button>
+                    <Button variant="secondary" onClick={() => setReviewRejecting(true)}>
+                      {t('oc.review.reject')}
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <label
+                      className="block text-label text-text-tertiary uppercase"
+                      htmlFor="po-review-comment"
+                    >
+                      {t('oc.review.comment')}
+                    </label>
+                    <textarea
+                      id="po-review-comment"
+                      className="w-full px-3 py-2 text-sm text-text-primary bg-white border border-border-input rounded-md focus:outline-none focus:border-action min-h-[72px]"
+                      value={reviewComment}
+                      onChange={(e) => setReviewComment(e.target.value)}
+                    />
+                    <div className="flex flex-wrap gap-2">
+                      <Button variant="secondary" onClick={() => setReviewRejecting(false)}>
+                        {t('oc.action.back')}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        disabled={rejectCounter.isPending || !reviewComment.trim()}
+                        onClick={() => {
+                          const po = livePO ?? selectedPO;
+                          rejectCounter.mutate(
+                            { poId: po.id, reviewComment: reviewComment.trim() },
+                            reviewOutcome(po, 'oc.toast.reopened.title'),
+                          );
+                        }}
+                      >
+                        {t('oc.review.sendReject')}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </section>
+            )}
+
+            {[POStatus.CONFIRMED, POStatus.PARTIALLY_DELIVERED, POStatus.DELIVERED, POStatus.CLOSED].includes(
+              (livePO ?? selectedPO).status,
+            ) && (
+              <section>
+                <h3 className="text-label text-text-tertiary uppercase mb-3">
+                  {t('oc.shipping.title')}
+                </h3>
+                <ShippingNoticeDetails po={livePO ?? selectedPO} />
+              </section>
+            )}
 
             <section>
               <h3 className="text-label text-text-tertiary uppercase mb-3">

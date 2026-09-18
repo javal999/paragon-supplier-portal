@@ -96,6 +96,12 @@ export const INVOICE_VERB_DEFERRED: Readonly<Record<string, InvoiceVerbDeferral>
       'Supplier-owned. The buyer surface never submits an invoice on a supplier’s behalf — ' +
       'SupplierInvoices.tsx wires it via useInvoiceSubmit. Not a gap; a different persona.',
   },
+  t_invoice_resubmit: {
+    why:
+      'Supplier-owned (REQ-E07-07). Finance returns an invoice with a reason; correcting and ' +
+      'resubmitting it is the supplier\'s act, wired in SupplierInvoices.tsx via useInvoiceResubmit. ' +
+      'Not a gap; a different persona.',
+  },
   t_invoice_approve: {
     why:
       'RULED UNREACHABLE, NOT MISSING. C10 §2.4 lists invoice approval among the capabilities ' +

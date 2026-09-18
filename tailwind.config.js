@@ -78,7 +78,7 @@ export default {
         'section': ['16px', { lineHeight: '1.4', fontWeight: '600' }],
         'kpi': ['36px', { lineHeight: '1.1', fontWeight: '600' }],
         'eyebrow': ['12px', { lineHeight: '1.4', letterSpacing: '0.08em', fontWeight: '600' }],
-        'label': ['11px', { lineHeight: '1.3', letterSpacing: '0.06em', fontWeight: '600' }],
+        'label': ['12px', { lineHeight: '1.3', letterSpacing: '0.06em', fontWeight: '600' }],
         'meta': ['13px', { lineHeight: '1.4', fontWeight: '400' }],
       },
       borderRadius: {

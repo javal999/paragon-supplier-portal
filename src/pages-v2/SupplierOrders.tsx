@@ -1,4 +1,6 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { isActiveAsn } from '../services/transitions/fulfilmentRules';
+import { useSearchParams } from 'react-router-dom';
 import {
   Clock,
   CheckCircle2,
@@ -9,6 +11,7 @@ import {
 } from 'lucide-react';
 import AppShellV2 from '../components/layout-v2/AppShellV2';
 import PageHeader from '../components/ui-v2/PageHeader';
+import SapDataAgeBanner from '../components/ui-v2/SapDataAgeBanner';
 import PageMetaLine from '../components/ui-v2/PageMetaLine';
 import ProvenanceMarker from '../components/ui-v2/ProvenanceMarker';
 import KpiCard from '../components/ui-v2/KpiCard';
@@ -29,6 +32,9 @@ import { useCurrentIdentity } from '../context/CurrentIdentityContext';
 import {
   usePurchaseOrderConfirm,
   usePurchaseOrderAcknowledge,
+  usePurchaseOrderAdjust,
+  usePurchaseOrderReject,
+  usePurchaseOrderShippingNotice,
 } from '../services/query/commandHooks';
 import { userVerbsFrom } from '../services/transitions';
 import { useVerbAvailability, useNextAct } from '../hooks/useVerbAvailability';
@@ -38,10 +44,30 @@ import NoSupplierIdentity from '../components/ui-v2/NoSupplierIdentity';
 import LoadingState from '../components/ui-v2/LoadingState';
 import ErrorState from '../components/ui-v2/ErrorState';
 import EmptyState from '../components/ui-v2/EmptyState';
-import { useCurrentSupplier, usePurchaseOrders } from '../services/query/hooks';
-import type { PurchaseOrder } from '../services/data/types';
+import { useASNs, useCurrentSupplier, usePurchaseOrders } from '../services/query/hooks';
+import type {
+  PoLineResponse,
+  PoReasonCode,
+  PoRejectionCause,
+  PurchaseOrder,
+} from '../services/data/types';
+import { poDisplayStatus } from '../services/data/poResponseProjection';
+import {
+  PoLifecycleSteps,
+  PoResponseDetails,
+  RespondByLine,
+  ordersNow,
+  ShippingNoticeDetails,
+} from './orders/PoCollaboration';
 import type { QtyRefusalReason } from '../lib/localeNumber';
-import { confirmedQtyWithinBounds } from '../services/transitions/policies';
+import {
+  PO_REASON_CODES,
+  PO_REJECTION_CAUSES,
+  confirmedQtyWithinBounds,
+  counterOfferRefusal,
+  isIsoDate,
+  type CounterOfferRefusal,
+} from '../services/transitions/policies';
 import {
   readConfirmedQty,
   readConfirmedQuantities,
@@ -52,7 +78,26 @@ import GlossaryTermChip from '../components/ui-v2/GlossaryTermChip';
 import { useRefusalText } from '../hooks/useRefusalText';
 
 type TabKey = 'all' | 'action' | 'progress' | 'completed';
-type PanelMode = 'detail' | 'editing' | 'confirmed' | 'change-request';
+// `adjusting` and `rejecting` are the other two answers to a PO (REQ-E07-02);
+// they replaced the old ungoverned "request change" toast.
+type PanelMode = 'detail' | 'editing' | 'adjusting' | 'rejecting' | 'confirmed';
+
+/** One line's adjust draft, raw-backed like the confirm cells. */
+interface AdjustDraft {
+  on: boolean;
+  reasonCode: PoReasonCode | '';
+  note: string;
+  qty: string;
+  date: string;
+}
+
+const ADJUST_REFUSAL_KEY: Record<CounterOfferRefusal, string> = {
+  unknownLine: 'oc.adjust.refusal.unknownLine',
+  reason: 'oc.adjust.refusal.reason',
+  note: 'oc.adjust.refusal.note',
+  quantity: 'oc.adjust.refusal.quantity',
+  date: 'oc.adjust.refusal.date',
+};
 
 const ACTION_STATUSES: POStatus[] = [POStatus.SENT, POStatus.ACKNOWLEDGED];
 const PROGRESS_STATUSES: POStatus[] = [
@@ -121,6 +166,14 @@ const SupplierOrders: React.FC = () => {
   // answers agree on every seat that exists; they are asked apart so the answer
   // stays right if the lanes ever split.
   const acknowledgeAvailability = useVerbAvailability('po:acknowledge');
+  // The other two answers and the shipping notice — each asked of its own atom.
+  const adjustMutation = usePurchaseOrderAdjust();
+  const rejectMutation = usePurchaseOrderReject();
+  const shippingMutation = usePurchaseOrderShippingNotice();
+  const adjustAvailability = useVerbAvailability('po:adjust');
+  const rejectAvailability = useVerbAvailability('po:reject');
+  const shippingAvailability = useVerbAvailability('po:shipping-notice');
+  const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<TabKey>('all');
   const [selected, setSelected] = useState<PurchaseOrder | null>(null);
   const [panelMode, setPanelMode] = useState<PanelMode>('detail');
@@ -131,7 +184,7 @@ const SupplierOrders: React.FC = () => {
   //   · `startEditing` — behind the `detail`-footer notice (the guarded door);
   //   · `openOrderPanel(po, 'editing')` from the table's row action — the
   //     PRIMARY path, and it walked straight past it;
-  //   · the change-request footer's back-button, re-entering from inside.
+  //   · the adjust / reject footers' back-button, re-entering from inside.
   // A seat can also be NARROWED while the panel already stands open, which is
   // reachable rather than a dead branch — `SupplierShipments` states the same
   // reason for gating its wizard TAB rather than the button that opens it.
@@ -139,11 +192,13 @@ const SupplierOrders: React.FC = () => {
   // Collapsing 'editing' to 'detail' when the verb is not held answers all four
   // in ONE statement, and it keeps §76's one-notice-per-verb intact: an unheld
   // seat lands on the notice that is ALREADY THERE rather than meeting a second
-  // one. `change-request` needs no arm — it holds no atom (its submit is a toast,
-  // ungoverned per §75e) and is only reachable THROUGH 'editing'; `confirmed` is
-  // only reachable after a successful dispatch, which requires the verb held.
+  // one. `adjusting` and `rejecting` (REQ-E07-02) get the same arm on their own
+  // atoms (`po:adjust`, `po:reject`); `confirmed` is only reachable after a
+  // successful dispatch, which requires the verb held.
   const effectivePanelMode: PanelMode =
-    panelMode === 'editing' && confirmAvailability.kind !== 'held'
+    (panelMode === 'editing' && confirmAvailability.kind !== 'held') ||
+    (panelMode === 'adjusting' && adjustAvailability.kind !== 'held') ||
+    (panelMode === 'rejecting' && rejectAvailability.kind !== 'held')
       ? 'detail'
       : panelMode;
   // CP-0 · W1 · 2f-c — RAW-BACKED (string[]), the 2f-a state-shape lesson:
@@ -152,11 +207,16 @@ const SupplierOrders: React.FC = () => {
   const [confirmedQtyRaws, setConfirmedQtyRaws] = useState<string[]>([]);
   const [deliveryDate, setDeliveryDate] = useState('');
   const [notes, setNotes] = useState('');
-  const [changeText, setChangeText] = useState('');
   const [confirmedAt, setConfirmedAt] = useState<string>('');
+  const [adjustDrafts, setAdjustDrafts] = useState<Record<string, AdjustDraft>>({});
+  const [rejectCauses, setRejectCauses] = useState<PoRejectionCause[]>([]);
+  const [responseComment, setResponseComment] = useState('');
+  const [completionDate, setCompletionDate] = useState('');
 
   const supplierQuery = useCurrentSupplier();
   const posQuery = usePurchaseOrders();
+  const asnsQuery = useASNs();
+  const nowIso = ordersNow();
 
   const mySupplier = supplierQuery.data ?? null;
 
@@ -213,6 +273,16 @@ const SupplierOrders: React.FC = () => {
     : undefined;
   const nextAct = useNextAct('purchaseOrder', liveStatus);
 
+  // A link from the order summary opens that PO (`?po=<id>`). Above the early
+  // returns for the same reason as the hook above.
+  const linkedPoId = searchParams.get('po');
+  useEffect(() => {
+    if (!linkedPoId || selected) return;
+    const po = MY_POS.find((p) => p.id === linkedPoId);
+    if (po) openOrderPanel(po, 'detail');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [linkedPoId, MY_POS]);
+
   if (!supplierId) return <NoSupplierIdentity />;
   if (supplierQuery.isPending || posQuery.isPending)
     return <LoadingState breadcrumb={ORDERS_CRUMB} />;
@@ -265,17 +335,28 @@ const SupplierOrders: React.FC = () => {
   const allBoundsOk = lineBounds.every(Boolean);
   const allQtysOk = qtysRead.ok && allBoundsOk;
 
-  const openOrderPanel = (po: PurchaseOrder, mode: PanelMode = 'detail') => {
+  // A hoisted declaration, so the `?po=` effect above the early returns can call it.
+  function openOrderPanel(po: PurchaseOrder, mode: PanelMode = 'detail') {
     setSelected(po);
     // Seeded CANONICAL (ungrouped) — these orders run to 150,000+ units, so a
     // display-formatter seed would open every line refusing its own default.
     setConfirmedQtyRaws(po.lineItems.map((li) => seedConfirmQty(li.quantity)));
     setDeliveryDate(po.requestedDeliveryDate);
     setNotes('');
-    setChangeText('');
     setConfirmedAt('');
+    setAdjustDrafts(
+      Object.fromEntries(
+        po.lineItems.map((li) => [
+          li.id,
+          { on: false, reasonCode: '', note: '', qty: seedConfirmQty(li.quantity), date: po.requestedDeliveryDate },
+        ]),
+      ),
+    );
+    setRejectCauses([]);
+    setResponseComment('');
+    setCompletionDate(po.shippingNotice?.expectedCompletionDate ?? '');
     setPanelMode(mode);
-  };
+  }
 
   const closePanel = () => {
     setSelected(null);
@@ -296,7 +377,13 @@ const SupplierOrders: React.FC = () => {
     // does not come through this surface.
     if (!qtysRead.ok || !allBoundsOk) return;
     confirmMutation.mutate(
-      { poId: po.id, confirmedQuantities: [...qtysRead.quantities] },
+      {
+        poId: po.id,
+        confirmedQuantities: [...qtysRead.quantities],
+        // REQ-E07-02 — the date the form always collected is now kept.
+        ...(isIsoDate(deliveryDate) ? { confirmedDeliveryDate: deliveryDate } : {}),
+        ...(notes.trim() ? { comment: notes.trim() } : {}),
+      },
       {
         onSuccess: (result) => {
           if (result.status === 'failed') {
@@ -330,16 +417,93 @@ const SupplierOrders: React.FC = () => {
     );
   };
 
-  const submitChangeRequest = () => {
-    if (!selected) return;
-    toast({
-      variant: 'info',
-      title: t('supplierOrders.toast.changeSubmitted.title', {
-        poNumber: selected.poNumber,
-      }),
-      description: t('supplierOrders.toast.changeSubmitted.desc'),
-    });
-    closePanel();
+  // ── ADJUST / REJECT (REQ-E07-02) ─────────────────────────────────────────
+  // The courtesy mirror reads the SAME `counterOfferRefusal` the policy runs;
+  // the policy stays the law for anything that does not come through here.
+  const adjustLines: { lineId: string; read: Partial<PoLineResponse>; refusal: CounterOfferRefusal | null }[] =
+    selected
+      ? selected.lineItems
+          .filter((li) => adjustDrafts[li.id]?.on)
+          .map((li) => {
+            const d = adjustDrafts[li.id];
+            const qty = readConfirmedQty(d.qty);
+            const read: Partial<PoLineResponse> = {
+              lineId: li.id,
+              reasonCode: d.reasonCode || undefined,
+              note: d.note.trim() || undefined,
+              counterQty: qty.ok ? qty.value : undefined,
+              counterDate: d.date,
+            };
+            return { lineId: li.id, read, refusal: counterOfferRefusal(read, selected) };
+          })
+      : [];
+  const adjustReady = adjustLines.length > 0 && adjustLines.every((l) => l.refusal === null);
+
+  const updateDraft = (lineId: string, patch: Partial<AdjustDraft>) =>
+    setAdjustDrafts((prev) => ({ ...prev, [lineId]: { ...prev[lineId], ...patch } }));
+
+  const responseToast = (po: PurchaseOrder, successKey: string, successDesc: string) => ({
+    onSuccess: (result: { status: string; reason?: string }) => {
+      if (result.status === 'failed') {
+        toast({
+          variant: 'error',
+          title: t('oc.toast.failed.title', { poNumber: po.poNumber }),
+          description: refusalText(result.reason) ?? result.reason ?? '',
+        });
+        return;
+      }
+      toast({ variant: 'success', title: t(successKey, { poNumber: po.poNumber }), description: t(successDesc) });
+      setPanelMode('detail');
+    },
+    onError: () => toast({ variant: 'error', title: t('oc.toast.denied') }),
+  });
+
+  const submitAdjust = () => {
+    if (!selected || !adjustReady) return;
+    const po = selected;
+    adjustMutation.mutate(
+      {
+        poId: po.id,
+        lineResponses: adjustLines.map((l) => l.read as PoLineResponse),
+        ...(responseComment.trim() ? { comment: responseComment.trim() } : {}),
+      },
+      responseToast(po, 'oc.toast.adjusted.title', 'oc.toast.adjusted.desc'),
+    );
+  };
+
+  const submitReject = () => {
+    if (!selected || rejectCauses.length === 0) return;
+    const po = selected;
+    rejectMutation.mutate(
+      {
+        poId: po.id,
+        rejectionCauses: rejectCauses,
+        ...(responseComment.trim() ? { comment: responseComment.trim() } : {}),
+      },
+      responseToast(po, 'oc.toast.rejected.title', 'oc.toast.rejected.desc'),
+    );
+  };
+
+  const saveCompletionDate = () => {
+    if (!selected || !isIsoDate(completionDate)) return;
+    const po = selected;
+    shippingMutation.mutate(
+      { poId: po.id, expectedCompletionDate: completionDate },
+      {
+        onSuccess: (result) => {
+          if (result.status === 'failed') {
+            toast({
+              variant: 'error',
+              title: t('oc.toast.failed.title', { poNumber: po.poNumber }),
+              description: refusalText(result.reason) ?? result.reason ?? '',
+            });
+            return;
+          }
+          toast({ variant: 'success', title: t('oc.toast.shipping.title', { poNumber: po.poNumber }) });
+        },
+        onError: () => toast({ variant: 'error', title: t('oc.toast.denied') }),
+      },
+    );
   };
 
   const goToASN = () => {
@@ -492,6 +656,9 @@ const SupplierOrders: React.FC = () => {
         <ProvenanceMarker capability="purchaseOrders" className="ml-3 align-middle" />
       </PageMetaLine>
 
+      {/* REQ-E07-08 AC-03 — this page reads SAP data; say how old it is. */}
+      <SapDataAgeBanner page="purchaseOrders" className="mb-4" />
+
       <div className="grid grid-cols-2 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-6">
         <KpiCard
           eyebrow={t('supplierOrders.kpi.openOrders.eyebrow')}
@@ -597,8 +764,8 @@ const SupplierOrders: React.FC = () => {
                   <Data>{fmtIDR(po.totalValue)}</Data>
                 </TableCell>
                 <TableCell>
-                  <StatusPill variant={statusTone(po.status)}>
-                    {po.status}
+                  <StatusPill variant={statusTone(poDisplayStatus(po, nowIso))}>
+                    {poDisplayStatus(po, nowIso)}
                   </StatusPill>
                 </TableCell>
                 <TableCell className="text-right">
@@ -705,12 +872,22 @@ const SupplierOrders: React.FC = () => {
               )}
               {effectivePanelMode === 'editing' && (
                 <>
-                  <Button
-                    variant="secondary"
-                    onClick={() => setPanelMode('change-request')}
-                  >
-                    {t('supplierOrders.action.requestChange')}
-                  </Button>
+                  {/* The other two answers (REQ-E07-02), each in its own slot
+                      with its own notice for a seat that does not hold it. */}
+                  {adjustAvailability.kind === 'held' ? (
+                    <Button variant="secondary" onClick={() => setPanelMode('adjusting')}>
+                      {t('oc.action.adjust')}
+                    </Button>
+                  ) : (
+                    <HandoffNotice availability={adjustAvailability} testId="handoff-po-adjust" />
+                  )}
+                  {rejectAvailability.kind === 'held' ? (
+                    <Button variant="secondary" onClick={() => setPanelMode('rejecting')}>
+                      {t('oc.action.reject')}
+                    </Button>
+                  ) : (
+                    <HandoffNotice availability={rejectAvailability} testId="handoff-po-reject" />
+                  )}
                   {/* Disabled-under-refusal is UX, not the lock: the parse gate
                       in confirmOrder and the dispatcher policy behind it are
                       what guarantee no unread or out-of-bounds number ships. */}
@@ -726,17 +903,28 @@ const SupplierOrders: React.FC = () => {
                   </Button>
                 </>
               )}
-              {effectivePanelMode === 'change-request' && (
+              {(effectivePanelMode === 'adjusting' || effectivePanelMode === 'rejecting') && (
                 <>
-                  <Button
-                    variant="secondary"
-                    onClick={() => setPanelMode('editing')}
-                  >
-                    {t('supplierOrders.action.backToConfirm')}
+                  <Button variant="secondary" onClick={() => setPanelMode('editing')}>
+                    {t('oc.action.back')}
                   </Button>
-                  <Button variant="outline" onClick={submitChangeRequest}>
-                    {t('supplierOrders.action.submitChange')}
-                  </Button>
+                  {effectivePanelMode === 'adjusting' ? (
+                    <Button
+                      variant="outline"
+                      onClick={submitAdjust}
+                      disabled={adjustMutation.isPending || !adjustReady}
+                    >
+                      {t('oc.action.submitAdjust')}
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      onClick={submitReject}
+                      disabled={rejectMutation.isPending || rejectCauses.length === 0}
+                    >
+                      {t('oc.action.submitReject')}
+                    </Button>
+                  )}
                 </>
               )}
               {effectivePanelMode === 'confirmed' && (
@@ -787,8 +975,8 @@ const SupplierOrders: React.FC = () => {
                 <div>
                   <dt className="text-text-tertiary">{t('supplierOrders.col.status')}</dt>
                   <dd>
-                    <StatusPill variant={statusTone((selectedLive ?? selected).status)}>
-                      {(selectedLive ?? selected).status}
+                    <StatusPill variant={statusTone(poDisplayStatus(selectedLive ?? selected, nowIso))}>
+                      {poDisplayStatus(selectedLive ?? selected, nowIso)}
                     </StatusPill>
                     {/* WHO ACTS NEXT — the answer the pill cannot give. A PO in
                         `Confirmed` carries no footer verb and no handoff notice
@@ -800,6 +988,9 @@ const SupplierOrders: React.FC = () => {
                       <NextActLine act={nextAct} testId="next-act-supplier-po" />
                     </span>
                   </dd>
+                </div>
+                <div className="col-span-2">
+                  <RespondByLine po={selectedLive ?? selected} nowIso={nowIso} />
                 </div>
                 <div>
                   <dt className="text-text-tertiary">{t('supplierOrders.panel.channel')}</dt>
@@ -964,21 +1155,215 @@ const SupplierOrders: React.FC = () => {
               </section>
             )}
 
-            {effectivePanelMode === 'change-request' && (
-              <section>
-                <h3 className="text-label text-text-tertiary uppercase mb-3">
-                  {t('supplierOrders.panel.changeRequest')}
+            {effectivePanelMode === 'adjusting' && (
+              <section data-testid="po-adjust-form">
+                <h3 className="text-label text-text-tertiary uppercase mb-2">
+                  {t('oc.adjust.title')}
                 </h3>
-                <p className="text-xs text-text-secondary mb-2">
-                  {t('supplierOrders.panel.changeRequestHint')}
-                </p>
+                <p className="text-xs text-text-secondary mb-3">{t('oc.adjust.hint')}</p>
+                <div className="space-y-3">
+                  {selected.lineItems.map((li) => {
+                    const d = adjustDrafts[li.id];
+                    if (!d) return null;
+                    const refusal = adjustLines.find((l) => l.lineId === li.id)?.refusal ?? null;
+                    return (
+                      <div key={li.id} className="border border-border-subtle rounded-md p-3">
+                        <label className="flex items-center gap-2 text-sm text-text-primary">
+                          <input
+                            type="checkbox"
+                            checked={d.on}
+                            onChange={(e) => updateDraft(li.id, { on: e.target.checked })}
+                          />
+                          <span>{t('oc.adjust.lineToggle')}</span>
+                          <Data>{li.materialCode}</Data>
+                          <span className="text-text-tertiary">
+                            (<Data>{li.quantity.toLocaleString()} {li.uom}</Data>)
+                          </span>
+                        </label>
+                        {d.on && (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+                            <div>
+                              <label className={labelClass} htmlFor={`adj-reason-${li.id}`}>
+                                {t('oc.adjust.reason')}
+                              </label>
+                              <select
+                                id={`adj-reason-${li.id}`}
+                                className={inputClass}
+                                value={d.reasonCode}
+                                onChange={(e) =>
+                                  updateDraft(li.id, { reasonCode: e.target.value as PoReasonCode | '' })
+                                }
+                              >
+                                <option value="">{t('oc.adjust.reasonPlaceholder')}</option>
+                                {PO_REASON_CODES.map((code) => (
+                                  <option key={code} value={code}>
+                                    {t(`oc.reason.${code}`)}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                            {d.reasonCode === 'other' && (
+                              <div>
+                                <label className={labelClass} htmlFor={`adj-note-${li.id}`}>
+                                  {t('oc.adjust.note')}
+                                </label>
+                                <input
+                                  id={`adj-note-${li.id}`}
+                                  type="text"
+                                  className={inputClass}
+                                  value={d.note}
+                                  onChange={(e) => updateDraft(li.id, { note: e.target.value })}
+                                />
+                              </div>
+                            )}
+                            <div>
+                              <label className={labelClass} htmlFor={`adj-qty-${li.id}`}>
+                                {t('oc.adjust.qty')}
+                              </label>
+                              <input
+                                id={`adj-qty-${li.id}`}
+                                type="text"
+                                inputMode="decimal"
+                                className={inputClass}
+                                value={d.qty}
+                                onChange={(e) => updateDraft(li.id, { qty: e.target.value })}
+                              />
+                            </div>
+                            <div>
+                              <label className={labelClass} htmlFor={`adj-date-${li.id}`}>
+                                {t('oc.adjust.date')}
+                              </label>
+                              <input
+                                id={`adj-date-${li.id}`}
+                                type="date"
+                                className={inputClass}
+                                value={d.date}
+                                onChange={(e) => updateDraft(li.id, { date: e.target.value })}
+                              />
+                            </div>
+                            {refusal && (
+                              <div
+                                role="alert"
+                                data-testid={`po-adjust-refusal-${li.id}`}
+                                className="sm:col-span-2 text-[11px] text-danger"
+                              >
+                                {t(ADJUST_REFUSAL_KEY[refusal], { ordered: li.quantity, uom: li.uom })}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+                {adjustLines.length === 0 && (
+                  <p className="mt-2 text-xs text-text-secondary">{t('oc.adjust.needLine')}</p>
+                )}
+                <label className={`${labelClass} mt-3`} htmlFor="po-response-comment">
+                  {t('oc.response.commentOptional')}
+                </label>
                 <textarea
-                  className={`${inputClass} min-h-[96px] resize-y`}
-                  value={changeText}
-                  onChange={(e) => setChangeText(e.target.value)}
-                  placeholder={t('supplierOrders.panel.changeRequestPlaceholder')}
+                  id="po-response-comment"
+                  className={`${inputClass} min-h-[72px] resize-y`}
+                  value={responseComment}
+                  onChange={(e) => setResponseComment(e.target.value)}
                 />
               </section>
+            )}
+
+            {effectivePanelMode === 'rejecting' && (
+              <section data-testid="po-reject-form">
+                <h3 className="text-label text-text-tertiary uppercase mb-2">
+                  {t('oc.reject.title')}
+                </h3>
+                <fieldset>
+                  <legend className="text-xs text-text-secondary mb-2">{t('oc.reject.hint')}</legend>
+                  <div className="flex flex-wrap gap-4">
+                    {PO_REJECTION_CAUSES.map((cause) => (
+                      <label key={cause} className="flex items-center gap-2 text-sm text-text-primary">
+                        <input
+                          type="checkbox"
+                          checked={rejectCauses.includes(cause)}
+                          onChange={(e) =>
+                            setRejectCauses((prev) =>
+                              e.target.checked ? [...prev, cause] : prev.filter((c) => c !== cause),
+                            )
+                          }
+                        />
+                        {t(`oc.cause.${cause}`)}
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
+                {rejectCauses.length === 0 && (
+                  <p className="mt-2 text-xs text-text-secondary">{t('oc.reject.needCause')}</p>
+                )}
+                <label className={`${labelClass} mt-3`} htmlFor="po-response-comment">
+                  {t('oc.response.commentOptional')}
+                </label>
+                <textarea
+                  id="po-response-comment"
+                  className={`${inputClass} min-h-[72px] resize-y`}
+                  value={responseComment}
+                  onChange={(e) => setResponseComment(e.target.value)}
+                />
+              </section>
+            )}
+
+            {effectivePanelMode === 'detail' && (
+              <>
+                {(selectedLive ?? selected).response && (
+                  <PoResponseDetails po={selectedLive ?? selected} />
+                )}
+                {[POStatus.CONFIRMED, POStatus.PARTIALLY_DELIVERED].includes(
+                  (selectedLive ?? selected).status,
+                ) && (
+                  <section>
+                    <h3 className="text-label text-text-tertiary uppercase mb-3">
+                      {t('oc.shipping.title')}
+                    </h3>
+                    <ShippingNoticeDetails po={selectedLive ?? selected} />
+                    {shippingAvailability.kind === 'held' ? (
+                      <div className="flex flex-wrap items-end gap-2 mt-3">
+                        <div>
+                          <label className={labelClass} htmlFor="po-completion-date">
+                            {t('oc.shipping.dateLabel')}
+                          </label>
+                          <input
+                            id="po-completion-date"
+                            type="date"
+                            className={inputClass}
+                            value={completionDate}
+                            onChange={(e) => setCompletionDate(e.target.value)}
+                          />
+                        </div>
+                        <Button
+                          variant="outline"
+                          onClick={saveCompletionDate}
+                          disabled={shippingMutation.isPending || !isIsoDate(completionDate)}
+                        >
+                          {t('oc.shipping.save')}
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="mt-3">
+                        <HandoffNotice
+                          availability={shippingAvailability}
+                          testId="handoff-po-shipping-notice"
+                        />
+                      </div>
+                    )}
+                  </section>
+                )}
+                <PoLifecycleSteps
+                  po={selectedLive ?? selected}
+                  asnCount={
+                    (asnsQuery.data?.items ?? []).filter(
+                      (a) => a.poReference === (selectedLive ?? selected).poNumber && isActiveAsn(a),
+                    ).length
+                  }
+                />
+              </>
             )}
 
             {effectivePanelMode === 'confirmed' && (

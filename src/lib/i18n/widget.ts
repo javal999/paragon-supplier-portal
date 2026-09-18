@@ -16,27 +16,27 @@
 export const widgetEn: Record<string, string> = {
   // — Shared shell (ExpandableWidget) —
   'widget.honesty.live': 'Live',
-  'widget.honesty.sample': 'Sample',
+  'widget.honesty.sample': 'Sample data',
   // Harvest-gated waiting-state (I3.3): a capability whose real data source has not
   // yet landed. Specific, not generic — names the Track-R certificate harvest.
-  'widget.honesty.awaitingHarvest': 'Sample — awaiting Track-R harvest',
+  'widget.honesty.awaitingHarvest': 'Sample data',
   // Harvest-gated (G1.1): the PR intake is wired but has no live producer yet
   // (SOMO F2 / internal Grid) — names the missing producer, not a generic sample.
-  'widget.honesty.awaitingProducer': 'Sample — awaiting live PR producer (SOMO / Grid)',
+  'widget.honesty.awaitingProducer': 'Sample data',
   // Harvest-gated (SDC-1): the forecast publications the planner consolidates
   // are SIMULATED fixtures on the C8 grain until the real SOMO C8 feed lands.
-  'widget.honesty.awaitingC8Feed': 'Sample — awaiting SOMO C8 feed',
-  'widget.honesty.awaitingSupplierIdentities': 'Sample — awaiting real supplier identities',
+  'widget.honesty.awaitingC8Feed': 'Sample data',
+  'widget.honesty.awaitingSupplierIdentities': 'Sample data',
   // Harvest-gated (SDC-3b): the InventoryDeclaration target is wired, but the SOH
   // shown is SIMULATED until real supplier identities submit over a live portal (F1).
-  'widget.honesty.awaitingSupplierFeed': 'Sample — awaiting live supplier feed',
+  'widget.honesty.awaitingSupplierFeed': 'Sample data',
   // DISCOVERY-REAL-SUBJECTS-01 (C) — the discovery candidate pool has no source.
-  'widget.honesty.awaitingDiscoveryFeed': 'Sample — awaiting supplier-discovery feed',
+  'widget.honesty.awaitingDiscoveryFeed': 'Sample data',
   // D-CENSUS-8 — the VERB axis of ProvenanceMarker. Says the narrow true thing
   // and no more: acting here really dispatches and is really recorded, in an
   // in-memory ledger that does not survive a reload and never reaches SAP.
   // Deliberately NOT "Live" and deliberately not green — the feed is still fixture.
-  'widget.honesty.commandsDispatch': 'Commands dispatch — in-memory ledger',
+  'widget.honesty.commandsDispatch': 'Changes reset on reload',
   'widget.allClear': 'All clear',
   'widget.aria.expand': 'Expand {{title}}',
   'widget.aria.show': 'Show {{title}}',
@@ -66,6 +66,11 @@ export const widgetEn: Record<string, string> = {
   'widget.inventory.action': 'View inventory',
   'widget.inventory.flag.withCritical': '{{count}} low · {{critical}} critical',
   'widget.inventory.flag.plain': '{{count}} low',
+  'widget.inventory.none': 'No material is below 30 days of supply.',
+  'widget.inventory.col.material': 'Material',
+  'widget.inventory.col.supplier': 'Supplier',
+  'widget.inventory.col.onHand': 'Supplier stock',
+  'widget.inventory.col.daysOfSupply': 'Days of supply',
   // — Invoices / AP aging (Buyer) —
   'widget.invoiceAging.title': 'Invoices — AP aging',
   'widget.invoiceAging.action': 'Open AP queue',
@@ -119,14 +124,14 @@ export const widgetEn: Record<string, string> = {
 export const widgetId: Record<string, string> = {
   // — Shared shell (ExpandableWidget) —
   'widget.honesty.live': 'Langsung',
-  'widget.honesty.sample': 'Sampel',
-  'widget.honesty.awaitingHarvest': 'Sampel — menunggu panen data Track-R',
-  'widget.honesty.awaitingProducer': 'Sampel — menunggu produsen PR live (SOMO / Grid)',
-  'widget.honesty.awaitingC8Feed': 'Sampel — menunggu feed data C8 SOMO',
-  'widget.honesty.awaitingSupplierIdentities': 'Sampel — menunggu identitas pemasok sungguhan',
-  'widget.honesty.awaitingSupplierFeed': 'Sampel — menunggu feed pemasok live',
-  'widget.honesty.awaitingDiscoveryFeed': 'Sampel — menunggu feed penemuan pemasok',
-  'widget.honesty.commandsDispatch': 'Perintah dijalankan — buku besar in-memory',
+  'widget.honesty.sample': 'Data contoh',
+  'widget.honesty.awaitingHarvest': 'Data contoh',
+  'widget.honesty.awaitingProducer': 'Data contoh',
+  'widget.honesty.awaitingC8Feed': 'Data contoh',
+  'widget.honesty.awaitingSupplierIdentities': 'Data contoh',
+  'widget.honesty.awaitingSupplierFeed': 'Data contoh',
+  'widget.honesty.awaitingDiscoveryFeed': 'Data contoh',
+  'widget.honesty.commandsDispatch': 'Perubahan hilang saat dimuat ulang',
   'widget.allClear': 'Semua beres',
   'widget.aria.expand': 'Perluas {{title}}',
   'widget.aria.show': 'Tampilkan {{title}}',
@@ -156,6 +161,11 @@ export const widgetId: Record<string, string> = {
   'widget.inventory.action': 'Lihat inventaris',
   'widget.inventory.flag.withCritical': '{{count}} rendah · {{critical}} kritis',
   'widget.inventory.flag.plain': '{{count}} rendah',
+  'widget.inventory.none': 'Tidak ada material di bawah 30 hari persediaan.',
+  'widget.inventory.col.material': 'Material',
+  'widget.inventory.col.supplier': 'Pemasok',
+  'widget.inventory.col.onHand': 'Stok pemasok',
+  'widget.inventory.col.daysOfSupply': 'Hari persediaan',
   // — Invoices / AP aging (Buyer) —
   'widget.invoiceAging.title': 'Faktur — umur AP',
   'widget.invoiceAging.action': 'Buka antrean AP',

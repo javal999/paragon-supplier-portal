@@ -41,8 +41,30 @@ export const POLICY_HOOKS = {
   SUPPLIERDOC_REFUSAL_AUTHORED: 'supplierdoc_refusal_authored',
   /** PO confirm: each confirmed line qty must be > 0 and ≤ the ordered qty. */
   PO_CONFIRM_QTY_WITHIN_ORDERED: 'po_confirm_qty_within_ordered',
-  /** ASN create: the parent PO (payload.poReference) must be Confirmed. */
-  ASN_CREATE_PO_CONFIRMED: 'asn_create_po_confirmed',
+  /** PO adjust (REQ-E07-02 AC-02): every counter-offer names a line of this PO,
+   *  a predefined reason (a note when the reason is Other), a quantity within
+   *  CR-10 and a readable date. At least one line. */
+  PO_ADJUST_COUNTER_OFFER_VALID: 'po_adjust_counter_offer_valid',
+  /** PO reject (AC-03): at least one cause from date / quantity / quality, and
+   *  nothing off that list. */
+  PO_REJECT_CAUSE_GIVEN: 'po_reject_cause_given',
+  /** Counter-offer rejected by the planner: the comment is substance, not presence. */
+  PO_COUNTER_REVIEW_COMMENT_AUTHORED: 'po_counter_review_comment_authored',
+  /** Shipping notice: the expected completion date is a real `YYYY-MM-DD` date. */
+  PO_SHIPPING_NOTICE_DATE_VALID: 'po_shipping_notice_date_valid',
+  /** ASN create (REQ-E07-04 BR-01): the parent PO (payload.poReference) must be
+   *  approved and still open — Confirmed or Partially Delivered, so a partial
+   *  shipment can follow a first receipt. */
+  ASN_CREATE_PO_APPROVED: 'asn_create_po_approved',
+  /** ASN create / submit (BR-02): every line names a material of the PO and a
+   *  positive shipped quantity no larger than the line's open quantity, unless
+   *  the supplier gives a reason. */
+  ASN_LINES_WITHIN_OPEN: 'asn_lines_within_open',
+  /** ASN submit (BR-04): ship date, expected arrival (not before the ship
+   *  date) and a batch number on every line. */
+  ASN_SUBMIT_COMPLETE: 'asn_submit_complete',
+  /** ASN cancel: nothing has been received against the ASN yet. */
+  ASN_CANCEL_NOT_RECEIVED: 'asn_cancel_not_received',
   /** GR create: the parent shipment/ASN (payload.asnReference) must have arrived. */
   GR_CREATE_SHIPMENT_RECEIVED: 'gr_create_shipment_received',
   // GR header disposition = ROLLUP of the per-line sub-flow states (census G2).
@@ -64,8 +86,64 @@ export const POLICY_HOOKS = {
    *  known source. A malformed pin is worse than no pin: an absent one refuses
    *  loudly, a malformed one is a basis a comparison could be ranked on. */
   RFQ_FX_PIN_WELL_FORMED: 'rfq_fx_pin_well_formed',
-  /** Invoice create: the parent PO (payload.poReference) must be Confirmed. */
-  INVOICE_CREATE_PO_CONFIRMED: 'invoice_create_po_confirmed',
+  /** Invoice create (REQ-E07-07): the parent PO (payload.poReference) must be
+   *  Confirmed, Partially Delivered or Delivered. */
+  INVOICE_CREATE_PO_INVOICEABLE: 'invoice_create_po_invoiceable',
+  /** Invoice create / resubmit (BR-01, BR-02): every line is drawn from a
+   *  received goods receipt of the supplier's own PO, at the PO unit price, for
+   *  at most the accepted quantity not yet invoiced; the invoice date is a date
+   *  and the tax invoice is attached. */
+  INVOICE_LINES_FROM_RECEIPTS: 'invoice_lines_from_receipts',
+  /** Invoice create / resubmit (AC-02): no other invoice from the same supplier
+   *  carries the same invoice number. */
+  INVOICE_NUMBER_UNIQUE: 'invoice_number_unique',
+  /** Receipt discrepancy answer (REQ-E07-06 AC-03): the receipt has a derived
+   *  discrepancy, has not been answered yet, and the comment is substance. */
+  RECEIPT_DISCREPANCY_ANSWERABLE: 'receipt_discrepancy_answerable',
+  /** Receipt discrepancy resolution: PTI's comment is substance, not presence. */
+  RECEIPT_DISCREPANCY_RESOLUTION_AUTHORED: 'receipt_discrepancy_resolution_authored',
+  /** Call-off release / draft (REQ-E09-01 BR-02): the umbrella PO is approved and
+   *  open, the line exists, the quantity is positive, the need date is a date on
+   *  or after today, and the type is JIT or forecast-based. */
+  CALLOFF_LINE_VALID: 'calloff_line_valid',
+  /** Call-off release / change (BR-04, CR-04): the quantity and its value stay
+   *  within what remains on the umbrella PO line. */
+  CALLOFF_WITHIN_REMAINING: 'calloff_within_remaining',
+  /** Draft edit / call-off change: a reason is given, and a new quantity or
+   *  need date is valid. */
+  CALLOFF_EDIT_VALID: 'calloff_edit_valid',
+  /** Call-off change: nothing has been dispatched yet and no confirmation is
+   *  waiting for the planner. */
+  CALLOFF_CHANGEABLE: 'calloff_changeable',
+  /** Dismiss a draft / supplier rejection: the reason is substance. */
+  CALLOFF_REASON_AUTHORED: 'calloff_reason_authored',
+  /** Supplier confirmation (REQ-E09-03 BR-02): the answer is well formed for
+   *  its kind (a changed date, a changed quantity, two dated deliveries). */
+  CALLOFF_CONFIRMATION_VALID: 'calloff_confirmation_valid',
+  /** Planner approval / rejection: a confirmation is waiting for approval. */
+  CALLOFF_AWAITING_APPROVAL: 'calloff_awaiting_approval',
+  /** Planner rejection of a confirmation: the comment is substance. */
+  CALLOFF_REVIEW_COMMENT_AUTHORED: 'calloff_review_comment_authored',
+  /** Dispatch heads-up (REQ-E09-04): the confirmation is accepted, the dates are
+   *  dates with arrival on or after shipping, and the quantity is positive. */
+  CALLOFF_DISPATCH_VALID: 'calloff_dispatch_valid',
+  /** ASN create (REQ-E09-03 BR-06): an ASN naming a call-off needs that call-off
+   *  to be on the same PO and confirmed. A PO-level ASN is unaffected. */
+  ASN_CALLOFF_CONFIRMED: 'asn_calloff_confirmed',
+  /** Stock submission detail (REQ-E08-02 BR-06): supplier ROP and in-production
+   *  quantity are non-negative numbers, the completion date is a date, and the
+   *  channel is template or manual (API and PTI channels are set by the target). */
+  INV_DECLARE_DETAIL_VALID: 'inv_declare_detail_valid',
+  /** Supplier access grant (REQ-E08-03): the supplier is in the inventory model
+   *  and every named material is one it supplies. */
+  STOCK_ACCESS_SCOPE_VALID: 'stock_access_scope_valid',
+  /** API sync (REQ-E08-02 BR-03): the supplier is API-connected. */
+  STOCK_SYNC_CONNECTED: 'stock_sync_connected',
+  /** Capacity submission (REQ-E08-04): weeks inside the 13-week horizon, valid
+   *  quantities, and a starter reason for every week below demand. */
+  CAPACITY_SUBMISSION_VALID: 'capacity_submission_valid',
+  /** Closing an alert (REQ-E08-05): the action note is substance. */
+  ALERT_ACTION_NOTE_AUTHORED: 'alert_action_note_authored',
   /** Invoice match: the match sub-flow must have rolled up to a clean Matched
    *  before the header can advance Submitted → Matched (census G2). */
   INVOICE_ROLLUP_MATCHED: 'invoice_rollup_matched',
@@ -150,6 +228,24 @@ export const POLICY_HOOKS = {
    * whose absence RELAXED a check would be the `isEmpty` defect one layer up.
    */
   RR_SUBMIT_QTY_AGREES: 'rr_submit_qty_agrees',
+  /**
+   * REQ-E06-02 BR-04 / AC-02 — a commitment below the line's forecast needs a
+   * starter reason code (section 3.6), and `other` needs a note. Enforced at
+   * the verb, so screen, upload and a hand-made dispatch are held to it alike.
+   */
+  RR_SUBMIT_SHORTFALL_REASON: 'rr_submit_shortfall_reason',
+  /**
+   * REQ-E06-02 BR-08 — a commitment to a forecast version carries a commitment
+   * date, and an upside quantity when given is a number of zero or more.
+   */
+  RR_SUBMIT_COMMITMENT_DETAIL: 'rr_submit_commitment_detail',
+  /** REQ-E06-01 BR-02 — publish names a forecast stream (packaging or raw material). */
+  FORECAST_PUBLISH_VALID: 'forecast_publish_valid',
+  /**
+   * REQ-E06-03 BR-05 — reassign moves a line of the CURRENT version to a
+   * different supplier qualified for the material, with a note.
+   */
+  FORECAST_REASSIGN_VALID: 'forecast_reassign_valid',
   /**
    * RR dispute / resolve: the authored text must be SUBSTANCE, not presence.
    *
@@ -303,6 +399,96 @@ export const POLICY_HOOKS = {
    * declarations key that is present and malformed is not.
    */
   APPLICATION_DECLARATIONS_WELL_FORMED: 'application_declarations_well_formed',
+
+  // ── REQ-E03-01 to REQ-E03-05 · RFx MANAGEMENT ────────────────────────────
+  /**
+   * RFI create (REQ-E03-02): the event names a template Procurement keeps, a
+   * readable deadline, and — when the buyer edited the question set — questions
+   * whose kinds this build recognises. `requiredFields` proves presence only, so
+   * without this an unknown template id would mint an event with no questions
+   * at all and a supplier would be sent an empty form.
+   */
+  RFI_CREATE_VALID: 'rfi_create_valid',
+  /**
+   * RFI / RFP / RFQ publish: the event has at least one invitee, and every
+   * invitee is a supplier the invitee filter would return (REQ-E03-01 BR-04).
+   *
+   * ⚠️ **THE SECOND HALF IS THE ONE THAT MATTERS.** A screen that hides
+   * suspended suppliers from the picker does not stop an event whose draft was
+   * built before the supplier was suspended — nor a dispatch that never opened
+   * the picker. The status is re-read at PUBLICATION, which is the moment the
+   * invitation actually goes out.
+   */
+  RFX_PUBLISH_HAS_INVITEES: 'rfx_publish_has_invitees',
+  /**
+   * RFI / RFP / RFQ extend (REQ-E03-02 / -03 edge cases): the new date is a
+   * readable date and is LATER than the deadline in force. A date that moves
+   * earlier is not an extension — it would retroactively close a window
+   * suppliers are still answering in — and any named invitees must be invitees.
+   */
+  RFX_EXTEND_VALID: 'rfx_extend_valid',
+  /**
+   * RFI / RFP response save: the supplier is an invitee of an OPEN event.
+   * Creation scope proves the payload names the supplier's own id; this proves
+   * the supplier was asked at all.
+   */
+  RFX_RESPONSE_INVITED: 'rfx_response_invited',
+  /**
+   * RFI submit (REQ-E03-02 template rule): every REQUIRED question is answered,
+   * and the response deadline in force for this supplier has not passed. The
+   * refusal names the questions, so it is a refusal a supplier can act on.
+   */
+  RFI_SUBMIT_COMPLETE: 'rfi_submit_complete',
+  /**
+   * RFP create (REQ-E03-04): every term row names a term from the STANDARD
+   * LIST and carries PTI's requested value. An off-list term id would produce a
+   * comparison column no supplier's answer can be read against.
+   */
+  RFP_CREATE_TERMS_KNOWN: 'rfp_create_terms_known',
+  /**
+   * RFP submit (REQ-E03-04): every term the buyer asked for is answered, every
+   * answer takes a stance, and **a Deviate carries a comment**. The deviation
+   * is what changes the deal; a deviation nobody explained is not an answer.
+   */
+  RFP_SUBMIT_TERMS_ANSWERED: 'rfp_submit_terms_answered',
+  /**
+   * Quotation submit (REQ-E03-03 AC-05): no quote after the response deadline
+   * in force for THIS supplier (its own extension, or the event's).
+   */
+  QUOTATION_SUBMIT_BEFORE_DEADLINE: 'quotation_submit_before_deadline',
+  /**
+   * Quotation submit / revise (REQ-E03-03): when the quote carries per-item
+   * lines, every line names an item once, with a positive quantity and a
+   * positive unit price. A quote without lines is the single-price quote that
+   * has always been legal, so this refuses malformed detail and never absence.
+   */
+  QUOTATION_LINES_WELL_FORMED: 'quotation_lines_well_formed',
+  /**
+   * Quotation revise (REQ-E03-05 BR-03): the round exists, is open, its
+   * deadline has not passed, and **this supplier was invited to it**. Being on
+   * the RFQ is not enough — a round is a shortlist, and letting an uninvited
+   * bidder revise would make the shortlist decorative.
+   */
+  QUOTATION_REVISE_IN_ROUND: 'quotation_revise_in_round',
+  /**
+   * Negotiation round open (REQ-E03-05 BR-03): the RFQ exists and is not
+   * already awarded, the deadline is a readable date, and every invited
+   * supplier actually quoted on this RFQ.
+   */
+  NEGOTIATION_ROUND_VALID: 'negotiation_round_valid',
+  /**
+   * RFQ award (REQ-E03-05 BR-06 / BR-07): **each item's shares total 100%**,
+   * every share and quantity is positive, and an award that does NOT follow the
+   * best-scored quote carries a reason.
+   *
+   * ⚠️ **BOTH HALVES ARE POLICY, NOT VALIDATION.** A split that totals 90%
+   * leaves a tenth of the demand placed nowhere and reads on screen as a
+   * complete award; an award that passes over the top-ranked quote with no
+   * reason is exactly the decision the charter's audit trail exists to explain.
+   * Neither is a field being empty, so neither is expressible in
+   * `requiredFields`.
+   */
+  RFQ_AWARD_GOVERNED: 'rfq_award_governed',
 } as const;
 
 for (const name of Object.values(POLICY_HOOKS)) registerPolicyHook(name);

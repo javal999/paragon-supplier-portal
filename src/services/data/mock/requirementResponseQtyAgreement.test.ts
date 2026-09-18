@@ -61,6 +61,9 @@ const submitAsSurfaceDoes = (typed: string) => {
   const payload = buildRequirementResponsePayload(pub, line, 'sup-002', {
     confirmedQty: parsed.value,
     confirmedQtyRaw: typed,
+    // REQ-E06-02 BR-04 — below forecast the verb now requires a starter reason;
+    // the surface asks for one, so the chain carries it.
+    rootCause: { level1: 'capacity' },
   });
   return { refusedAtSurface: null, payload, value: parsed.value } as const;
 };
@@ -76,6 +79,9 @@ const handCrafted = (payload: Record<string, unknown>) =>
       materialCode: 'RM-EMUL-3310',
       periodBucket: '2026-08',
       supplierId: 'sup-002',
+      // REQ-E06-02 BR-04 — the quantities under test sit below the 6 000 forecast,
+      // which the verb now accepts only with a starter reason.
+      rootCause: { level1: 'capacity' },
       ...payload,
     },
   });

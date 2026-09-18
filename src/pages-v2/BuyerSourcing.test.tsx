@@ -8,6 +8,7 @@ import { quotationStore } from '../services/data/mock/stores/quotationStore';
 import { rfqStore } from '../services/data/mock/stores/rfqStore';
 import i18n from '../lib/i18n';
 import BuyerSourcing from './BuyerSourcing';
+import { mockRfqs } from '../data/mockRfqs';
 import { PERSONA_SYSTEM_ROLES } from '../services/transitions/businessRoles';
 
 const alwaysFails = withChaos(mockDataService, { minMs: 0, maxMs: 0, failureRate: 1 });
@@ -267,11 +268,29 @@ describe('BuyerSourcing — dates localise (COS-04, the en-GB hardcode)', () => 
     await i18n.changeLanguage('id');
     try {
       renderWithProviders(<BuyerSourcing />);
-      // rfq-001's response deadline is 2026-05-20. id-ID abbreviates May as
-      // "Mei"; the retired local formatter printed "May" in both languages.
-      expect((await screen.findAllByText(/20 Mei 2026/)).length).toBeGreaterThan(0);
-      // The retired output. Nothing on this surface may still say "May" in ID.
-      expect(screen.queryAllByText(/20 May 2026/)).toHaveLength(0);
+      // ⚠️ **THE DATE IS DERIVED, NOT RETYPED.** It used to be the literal
+      // "20 Mei 2026"; REQ-E03-03's deadline gate re-anchored the RFQ fixture
+      // set onto the declared present (an `Open` event whose window had closed
+      // months ago was the defect the gate exposed), so a literal here would
+      // have to be re-typed on every re-anchor — `FLOOR-IN-PROSE-01` with a
+      // date in it. The CLAIM is unchanged: whatever day rfq-001 closes on, it
+      // is spelled in Indonesian.
+      const idDate = new Intl.DateTimeFormat('id-ID', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        timeZone: 'Asia/Jakarta',
+      }).format(new Date(`${mockRfqs[0].responseDeadline}T00:00:00.000Z`));
+      const enDate = new Intl.DateTimeFormat('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        timeZone: 'Asia/Jakarta',
+      }).format(new Date(`${mockRfqs[0].responseDeadline}T00:00:00.000Z`));
+      expect((await screen.findAllByText(idDate)).length).toBeGreaterThan(0);
+      // The retired output. Nothing on this surface may still say the English
+      // month in ID — asserted only when the two spellings actually differ.
+      if (enDate !== idDate) expect(screen.queryAllByText(enDate)).toHaveLength(0);
     } finally {
       await i18n.changeLanguage('en');
     }
@@ -279,8 +298,20 @@ describe('BuyerSourcing — dates localise (COS-04, the en-GB hardcode)', () => 
 
   it('POSITIVE TWIN — English output is unchanged (en-GB day-month-year kept)', async () => {
     renderWithProviders(<BuyerSourcing />);
-    expect((await screen.findAllByText(/20 May 2026/)).length).toBeGreaterThan(0);
-    expect(screen.queryAllByText(/20 Mei 2026/)).toHaveLength(0);
+    const enDate = new Intl.DateTimeFormat('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      timeZone: 'Asia/Jakarta',
+    }).format(new Date(`${mockRfqs[0].responseDeadline}T00:00:00.000Z`));
+    const idDate = new Intl.DateTimeFormat('id-ID', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      timeZone: 'Asia/Jakarta',
+    }).format(new Date(`${mockRfqs[0].responseDeadline}T00:00:00.000Z`));
+    expect((await screen.findAllByText(enDate)).length).toBeGreaterThan(0);
+    if (enDate !== idDate) expect(screen.queryAllByText(idDate)).toHaveLength(0);
   });
 });
 
@@ -912,7 +943,19 @@ describe('BuyerSourcing — the award summary states the currency it was awarded
         transitionId: 't_rfq_award',
         entity: 'rfq',
         entityId: 'rfq-009',
-        payload: { awardedQuotationId: 'qt-009a', awardedSupplierId: 'sup-006' },
+        // ⚠️ **`awardReason` IS NEW HERE, AND IT IS A PREMISE CHANGE RATHER
+        // THAN A FIXUP.** REQ-E03-05 BR-07 refuses an award that does not
+        // follow the best-scored quote unless it states why, and CR-15 now
+        // reads the reliability axis from the supplier's OTIF instead of the
+        // quotation's retired stored score — so which quote ranks first on
+        // rfq-009 is decided by real performance data. The reason is what the
+        // requirement asks a buyer for; without it the award is refused and
+        // this spec's subject (the awarded CURRENCY) never renders.
+        payload: {
+          awardedQuotationId: 'qt-009a',
+          awardedSupplierId: 'sup-006',
+          awardReason: 'Awarded on delivery capability for the launch window.',
+        },
       },
     );
     renderWithProviders(<BuyerSourcing />);

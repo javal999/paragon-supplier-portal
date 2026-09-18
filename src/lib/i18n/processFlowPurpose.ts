@@ -45,6 +45,16 @@ export const processFlowPurposeEn: Record<string, string> = {
     'The supplier says it has the order and is working through it, without yet committing to the numbers. Useful when a real answer will take days.',
   'processFlows.purpose.t_po_confirm':
     'The supplier commits to the line amounts it will actually ship. This is the promise the plant plans production around, and the figure every later shortfall is measured against.',
+  'processFlows.purpose.t_po_adjust':
+    'The supplier cannot meet the order as written and says what it can do instead: a quantity and date per line, with a reason. The planner learns early, and the reason becomes data for supplier assessment.',
+  'processFlows.purpose.t_po_reject':
+    'The supplier cannot meet the date, quantity or quality at all. Saying so on time lets the planner find the supply elsewhere, and the rejection counts in supplier performance.',
+  'processFlows.purpose.t_po_accept_counter':
+    'The planner agrees to the supplier’s counter-offer, so the order stands at the new quantity and date and the supplier can plan shipping.',
+  'processFlows.purpose.t_po_reject_counter':
+    'The planner cannot accept the counter-offer and says why. The order goes back to the supplier for a new answer.',
+  'processFlows.purpose.t_po_shipping_notice':
+    'The supplier states when shipping of an order it has committed to will be complete, and updates it if it moves. The planner sees whether the order is still safe.',
   'processFlows.purpose.t_po_partial_deliver':
     'Part of the order has physically arrived. Worth recording because a partly served order still owes something, and the shortfall is what buying chases.',
   'processFlows.purpose.t_po_deliver':
@@ -59,6 +69,8 @@ export const processFlowPurposeEn: Record<string, string> = {
     'The supplier begins telling Paragon what it is about to send, while the details are still theirs to change.',
   'processFlows.purpose.t_asn_submit':
     'Hands the shipping details to Paragon’s warehouse: who is carrying it, how to trace it, and when to expect it.',
+  'processFlows.purpose.t_asn_cancel':
+    'The supplier withdraws a notice before anything arrived, so the warehouse stops expecting those goods and the quantity is free to ship again.',
   'processFlows.purpose.t_asn_in_transit':
     'The goods have left the supplier. From here the arrival date is a logistics question, not a production one.',
   'processFlows.purpose.t_asn_deliver':
@@ -121,6 +133,8 @@ export const processFlowPurposeEn: Record<string, string> = {
     'The supplier acknowledges the money and the advice that came with it. The claim is finished.',
   'processFlows.purpose.t_invoice_dispute':
     'Paragon does not take the claim as it stands, and says why. It stops the payment clock and puts the ball back with the supplier.',
+  'processFlows.purpose.t_invoice_resubmit':
+    'The supplier fixes what Finance sent back and asks to be paid again. The bill is checked again from the start, as if it were new.',
   'processFlows.purpose.t_invoice_resolve':
     'The disagreement has been settled and the claim goes back for checking. Without this, a contested bill has nowhere to go.',
 
@@ -312,6 +326,127 @@ export const processFlowPurposeEn: Record<string, string> = {
     'Paragon accepts the applicant. What this records is the decision and nothing else — the vendor master record is raised in S/4HANA, which owns supplier identity.',
   'processFlows.purpose.t_application_reject':
     'Paragon declines, and must say why in words somebody can repeat to the applicant. The applicant holds no seat here, so that text is the only account of the decision that will ever exist.',
+
+  // ── receiptDiscrepancy ───────────────────────────────────────────────
+  'processFlows.purpose.entity.receiptDiscrepancy':
+    'The conversation about a delivery that did not arrive as announced, or that failed inspection in part. It lets both sides agree on the quantity before the bill is written, instead of arguing about it afterwards.',
+  'processFlows.purpose.t_receiptdiscrepancy_acknowledge':
+    'The supplier agrees with what Paragon counted and says so in its own words. The difference stands, and the bill will follow the quantity Paragon accepted.',
+  'processFlows.purpose.t_receiptdiscrepancy_dispute':
+    'The supplier does not agree with what Paragon counted and explains why, so the planner can check it while the delivery is still fresh.',
+  'processFlows.purpose.t_receiptdiscrepancy_resolve':
+    'The planner closes the disagreement and writes down how it was settled, so neither side has to reopen it when the bill arrives.',
+  // ── callOff ─────────────────────────────────────────────────────────
+  'processFlows.purpose.entity.callOff':
+    'One delivery called off against an umbrella purchase order: how much, by when, and whether the supplier has committed to it. The hub keeps this record, because SAP only knows the umbrella order.',
+  'processFlows.purpose.t_calloff_release':
+    'The planner asks the supplier for one delivery under the umbrella order. It cannot ask for more than is left on the order, so the order is never overdrawn.',
+  'processFlows.purpose.t_calloff_draft':
+    'The planner lays out a call-off without sending it yet, often as one of a series spread over weeks or months, so the plan can be checked before the supplier sees it.',
+  'processFlows.purpose.t_calloff_edit_draft':
+    'The planner adjusts a planned call-off before sending it and says why, so the explanation for the change stays with the plan.',
+  'processFlows.purpose.t_calloff_release_draft':
+    'The planner sends a planned call-off to the supplier. The amount still has to fit in what is left on the umbrella order.',
+  'processFlows.purpose.t_calloff_dismiss':
+    'The planner drops a planned call-off that is no longer needed and records why, so nobody wonders later what happened to it.',
+  'processFlows.purpose.t_calloff_change':
+    'The planner changes a call-off the supplier already saw. Because the ask changed, the supplier has to confirm it again.',
+  'processFlows.purpose.t_calloff_confirm':
+    'The supplier commits to the delivery exactly as asked. From here the supplier can ship and send its notice.',
+  'processFlows.purpose.t_calloff_confirm_new_date':
+    'The supplier commits to the full amount on a different date. Any date change goes to the planner unless it is within the agreed tolerance.',
+  'processFlows.purpose.t_calloff_confirm_changes':
+    'The supplier commits to a different amount. A small increase on a forecast-based call-off, or any increase on a JIT one, is accepted; anything else goes to the planner.',
+  'processFlows.purpose.t_calloff_confirm_partial':
+    'The supplier splits the delivery into two, each with its own date and amount. Each part is measured on its own for on-time and in-full.',
+  'processFlows.purpose.t_calloff_reject':
+    'The supplier cannot deliver this call-off and says why, so the planner can find the goods another way.',
+  'processFlows.purpose.t_calloff_approve':
+    'The planner accepts an answer from the supplier that was outside tolerance. The date and amount the supplier gave become what delivery is measured against.',
+  'processFlows.purpose.t_calloff_reject_confirmation':
+    'The planner does not accept the confirmation from the supplier and explains why. The call-off goes back to the supplier to confirm again.',
+  'processFlows.purpose.t_calloff_dispatch':
+    'The supplier tells PTI the goods have left, with the expected arrival. It is the heads-up the planner needs; an ASN for the same call-off counts as one.',
+
+  // ── inventory & capacity ────────────────────────────────────────────
+  'processFlows.purpose.entity.stockAccess':
+    'Whether a supplier may see PTI stock, and for which materials. Only selected suppliers see it, so commercial information stays protected.',
+  'processFlows.purpose.t_stockaccess_grant':
+    'The planner lets a supplier see PTI stock, for every material it supplies or only chosen ones, so the supplier can plan replenishment itself. The change is logged.',
+  'processFlows.purpose.t_stockaccess_remove':
+    'The planner stops a supplier seeing PTI stock. It takes effect the next time the supplier opens a page, and the change is logged.',
+  'processFlows.purpose.entity.stockSync':
+    'One attempt to pull stock figures straight from a connected supplier, kept whether it worked or not.',
+  'processFlows.purpose.t_stocksync_run':
+    'The planner pulls the latest stock figures from a connected supplier. If the supplier does not answer, the error and time are shown and the previous figures stay, marked out of date.',
+  'processFlows.purpose.t_stockaccess_change':
+    'The planner changes which materials a supplier with access may see PTI stock for. The change is logged.',
+  'processFlows.purpose.entity.capacitySubmission':
+    'The capacity a supplier allocates to PTI per material group for each of the next 13 weekly periods.',
+  'processFlows.purpose.t_capacity_submit':
+    'The supplier states the capacity it allocates per week. A week below PTI demand needs a reason, so the planner sees the gap and why before it reaches the factory.',
+  'processFlows.purpose.entity.inventoryAlert':
+    'A warning that stock or capacity is heading for a shortage, with a risk class, so the planner acts before material is missing.',
+  'processFlows.purpose.t_inventoryalert_close':
+    'The planner closes an alert and notes what was done. The same condition does not raise it again until it has cleared and come back.',
+  'processFlows.purpose.entity.forecastVersion':
+    'One version of PTI’s forecast for packaging (weekly) or raw material (monthly), with a zone per period. Every version is kept.',
+  'processFlows.purpose.t_forecastversion_publish':
+    'The planner publishes the next forecast version, on the cadence or as an emergency re-publication. Suppliers are asked to open it and commit.',
+  'processFlows.purpose.t_forecastversion_reassign':
+    'The planner moves one period’s demand from a supplier to another supplier of the material and explains why. Suppliers receive it as a new version.',
+  'processFlows.purpose.entity.forecastView':
+    'The moment a supplier first opened a forecast version, so the planner sees who has seen the plan.',
+  'processFlows.purpose.t_forecastview_record':
+    'Opening a forecast version records that the supplier has seen it.',
+
+  // ── RFx management (REQ-E03-02 / REQ-E03-04 / REQ-E03-05) ─────────────────
+  'processFlows.purpose.entity.rfiEvent':
+    'A structured set of questions about what a supplier can make, where, and how — asked before anybody talks about price.',
+  'processFlows.purpose.t_rfi_create':
+    'Buying starts from the question set Procurement keeps for the category, then adds or removes questions for this one event.',
+  'processFlows.purpose.t_rfi_publish':
+    'The questions reach the invited suppliers. Until this happens they are still being prepared and nobody outside PTI sees them.',
+  'processFlows.purpose.t_rfi_extend':
+    'Buying gives every invited supplier — or only the ones it names — more time to answer.',
+  'processFlows.purpose.t_rfi_close':
+    'The answering window ends, and buying compares what came in.',
+  'processFlows.purpose.t_rfi_cancel':
+    'PTI drops the request, so suppliers stop spending time on it.',
+  'processFlows.purpose.t_rfq_extend':
+    'Buying gives every invited supplier — or only the ones it names — more time to price the work.',
+  'processFlows.purpose.t_quotation_revise':
+    'A supplier asked to improve what it offered sends a better one. The earlier version is kept, so buying can see exactly how far it moved.',
+  'processFlows.purpose.entity.rfiResponse':
+    'What one supplier says about its capability, experience, sites and products — kept against that supplier so a later price request can reuse it.',
+  'processFlows.purpose.t_rfiresponse_save':
+    'A half-finished answer is kept for the supplier to come back to, and PTI cannot see it yet.',
+  'processFlows.purpose.t_rfiresponse_submit':
+    'The supplier sends its answers to PTI. Every question marked as needed has to be answered first, so what arrives is comparable.',
+  'processFlows.purpose.entity.rfpEvent':
+    'A request for the commercial terms a supplier will trade on — payment, delivery, service level and contract — rather than a unit figure alone.',
+  'processFlows.purpose.t_rfp_create':
+    'Buying picks the terms it needs answered from the standard list and states what PTI is asking for on each one.',
+  'processFlows.purpose.t_rfp_publish':
+    'The terms reach the invited suppliers, and only then can a proposal arrive.',
+  'processFlows.purpose.t_rfp_extend':
+    'Buying gives every invited supplier — or only the ones it names — more time to propose.',
+  'processFlows.purpose.t_rfp_close':
+    'The proposing window ends, and buying compares the terms side by side.',
+  'processFlows.purpose.t_rfp_cancel':
+    'PTI drops the request, so suppliers stop spending time on it.',
+  'processFlows.purpose.entity.rfpResponse':
+    'One supplier’s proposed terms: what it offers on each point PTI raised, whether it will match it, and why where it will not.',
+  'processFlows.purpose.t_rfpresponse_save':
+    'A partly filled proposal is kept for the supplier to come back to, and PTI cannot see it yet.',
+  'processFlows.purpose.t_rfpresponse_submit':
+    'The supplier sends its terms to PTI. Anything it will not match has to carry an explanation, so a departure is never silent.',
+  'processFlows.purpose.entity.negotiationRound':
+    'A round of asking a shortlist to improve what they offered, with a date to answer by and an optional target.',
+  'processFlows.purpose.t_negotiationround_open':
+    'Buying asks the suppliers it shortlisted to improve what they offered, with a date to answer by and an optional message and target figure. Nobody else may answer.',
+  'processFlows.purpose.t_negotiationround_close':
+    'Buying stops taking improved offers for this round. A supplier that said nothing keeps what it offered before.',
 };
 
 export const processFlowPurposeId: Record<string, string> = {
@@ -326,6 +461,16 @@ export const processFlowPurposeId: Record<string, string> = {
     'Pemasok menyatakan pesanan sudah diterima dan sedang ditelaah, tanpa mengikat diri pada angkanya. Berguna ketika jawaban sungguhan butuh berhari-hari.',
   'processFlows.purpose.t_po_confirm':
     'Pemasok berkomitmen pada jumlah tiap baris yang benar-benar akan dikirim. Inilah janji yang dipakai pabrik untuk merencanakan produksi, dan angka pembanding bagi setiap kekurangan di kemudian hari.',
+  'processFlows.purpose.t_po_adjust':
+    'Pemasok tidak dapat memenuhi pesanan seperti tertulis dan menyatakan yang bisa dipenuhi: jumlah dan tanggal per baris, dengan alasan. Planner tahu lebih awal, dan alasannya menjadi data penilaian pemasok.',
+  'processFlows.purpose.t_po_reject':
+    'Pemasok sama sekali tidak dapat memenuhi tanggal, jumlah, atau mutu. Menyampaikannya tepat waktu membuat planner bisa mencari pasokan lain, dan penolakan dihitung dalam kinerja pemasok.',
+  'processFlows.purpose.t_po_accept_counter':
+    'Planner menyetujui penawaran balik pemasok, sehingga pesanan berlaku dengan jumlah dan tanggal baru dan pemasok dapat merencanakan pengiriman.',
+  'processFlows.purpose.t_po_reject_counter':
+    'Planner tidak dapat menerima penawaran balik dan menyebutkan alasannya. Pesanan kembali ke pemasok untuk jawaban baru.',
+  'processFlows.purpose.t_po_shipping_notice':
+    'Pemasok menyatakan kapan pengiriman pesanan terkonfirmasi akan selesai, dan memperbaruinya bila bergeser. Planner melihat apakah pesanan masih aman.',
   'processFlows.purpose.t_po_partial_deliver':
     'Sebagian pesanan sudah tiba secara fisik. Perlu dicatat karena pesanan yang baru terpenuhi sebagian masih menyisakan kewajiban, dan sisa itulah yang dikejar tim pembelian.',
   'processFlows.purpose.t_po_deliver':
@@ -340,6 +485,8 @@ export const processFlowPurposeId: Record<string, string> = {
     'Pemasok mulai memberi tahu Paragon apa yang akan dikirimnya, selagi rinciannya masih bisa mereka ubah.',
   'processFlows.purpose.t_asn_submit':
     'Menyerahkan rincian pengapalan ke gudang Paragon: siapa yang membawa, bagaimana menelusurinya, dan kapan harus ditunggu.',
+  'processFlows.purpose.t_asn_cancel':
+    'Pemasok menarik pemberitahuan sebelum barang apa pun tiba, sehingga gudang berhenti menunggu barang itu dan kuantitasnya bisa dikirim lagi.',
   'processFlows.purpose.t_asn_in_transit':
     'Barang sudah meninggalkan pemasok. Sejak titik ini tanggal kedatangan menjadi urusan logistik, bukan lagi urusan produksi.',
   'processFlows.purpose.t_asn_deliver':
@@ -402,6 +549,8 @@ export const processFlowPurposeId: Record<string, string> = {
     'Pemasok mengakui penerimaan uang beserta nota yang menyertainya. Klaim ini selesai.',
   'processFlows.purpose.t_invoice_dispute':
     'Paragon tidak menerima klaim itu apa adanya, dan menyatakan alasannya. Ini menghentikan hitungan pembayaran dan mengembalikan bola ke pemasok.',
+  'processFlows.purpose.t_invoice_resubmit':
+    'Pemasok memperbaiki apa yang dikembalikan Finance dan kembali meminta pembayaran. Tagihan diperiksa ulang dari awal, seolah-olah baru.',
   'processFlows.purpose.t_invoice_resolve':
     'Perselisihannya sudah dituntaskan dan klaimnya dikembalikan untuk diperiksa. Tanpa ini, tagihan yang dipersoalkan tidak punya jalan ke mana pun.',
 
@@ -589,4 +738,125 @@ export const processFlowPurposeId: Record<string, string> = {
     'Paragon menerima pemohon. Yang dicatat hanyalah keputusannya — catatan induk vendor diterbitkan di S/4HANA, tempat identitas pemasok berada.',
   'processFlows.purpose.t_application_reject':
     'Paragon menolak, dan wajib menyatakan alasannya dengan kata-kata yang bisa diteruskan kepada pemohon. Pemohon tidak punya kursi di sini, sehingga teks itulah satu-satunya keterangan atas keputusan tersebut yang akan pernah ada.',
+
+  // ── receiptDiscrepancy ───────────────────────────────────────────────
+  'processFlows.purpose.entity.receiptDiscrepancy':
+    'Percakapan tentang pengiriman yang tidak tiba sesuai pemberitahuan, atau yang sebagian gagal pemeriksaan. Kedua pihak menyepakati kuantitas sebelum tagihan dibuat, bukan memperdebatkannya sesudahnya.',
+  'processFlows.purpose.t_receiptdiscrepancy_acknowledge':
+    'Pemasok setuju dengan hitungan Paragon dan menyatakannya dengan kata-katanya sendiri. Selisihnya berlaku, dan tagihan akan mengikuti kuantitas yang diterima Paragon.',
+  'processFlows.purpose.t_receiptdiscrepancy_dispute':
+    'Pemasok tidak setuju dengan hitungan Paragon dan menjelaskan alasannya, agar perencana dapat memeriksanya selagi pengiriman masih baru.',
+  'processFlows.purpose.t_receiptdiscrepancy_resolve':
+    'Perencana menutup ketidaksepakatan dan mencatat cara penyelesaiannya, sehingga tidak ada pihak yang perlu membukanya lagi saat tagihan datang.',
+  // ── callOff ─────────────────────────────────────────────────────────
+  'processFlows.purpose.entity.callOff':
+    'Satu pengiriman yang dipanggil dari pesanan pembelian induk: berapa banyak, kapan, dan apakah pemasok sudah berkomitmen. Hub menyimpan catatan ini karena SAP hanya mengenal pesanan induknya.',
+  'processFlows.purpose.t_calloff_release':
+    'Perencana meminta satu pengiriman kepada pemasok dari pesanan induk. Permintaan tidak boleh melebihi sisa pesanan, sehingga pesanan tidak pernah terlampaui.',
+  'processFlows.purpose.t_calloff_draft':
+    'Perencana menyusun call-off tanpa mengirimkannya dulu, sering sebagai bagian dari rangkaian mingguan atau bulanan, agar rencana dapat diperiksa sebelum dilihat pemasok.',
+  'processFlows.purpose.t_calloff_edit_draft':
+    'Perencana mengubah draf sebelum dikirim dan menyatakan alasannya, sehingga alasan perubahan tetap melekat pada rencana.',
+  'processFlows.purpose.t_calloff_release_draft':
+    'Perencana mengirim call-off dari draf kepada pemasok. Kuantitasnya tetap harus muat dalam sisa pesanan induk.',
+  'processFlows.purpose.t_calloff_dismiss':
+    'Perencana membatalkan draf yang tidak lagi diperlukan dan mencatat alasannya, agar tidak ada yang bertanya-tanya nanti.',
+  'processFlows.purpose.t_calloff_change':
+    'Perencana mengubah call-off yang sudah dilihat pemasok. Karena permintaannya berubah, pemasok harus mengonfirmasi lagi.',
+  'processFlows.purpose.t_calloff_confirm':
+    'Pemasok berkomitmen pada pengiriman persis seperti diminta. Setelah itu pemasok dapat mengirim dan menyampaikan pemberitahuannya.',
+  'processFlows.purpose.t_calloff_confirm_new_date':
+    'Pemasok berkomitmen pada kuantitas di tanggal lain. Setiap perubahan tanggal diteruskan ke perencana kecuali masih dalam toleransi.',
+  'processFlows.purpose.t_calloff_confirm_changes':
+    'Pemasok berkomitmen pada kuantitas yang berbeda. Kenaikan kecil pada call-off berbasis prakiraan, atau kenaikan berapa pun pada JIT, diterima; selebihnya diteruskan ke perencana.',
+  'processFlows.purpose.t_calloff_confirm_partial':
+    'Pemasok membagi pengiriman menjadi dua, masing-masing dengan tanggal dan kuantitasnya. Setiap bagian diukur sendiri untuk tepat waktu dan lengkap.',
+  'processFlows.purpose.t_calloff_reject':
+    'Pemasok tidak dapat memenuhi call-off ini dan menyatakan alasannya, agar perencana dapat mencari barang dengan cara lain.',
+  'processFlows.purpose.t_calloff_approve':
+    'Perencana menerima konfirmasi yang di luar toleransi. Tanggal dan kuantitas yang dikonfirmasi menjadi dasar pengukuran pengiriman.',
+  'processFlows.purpose.t_calloff_reject_confirmation':
+    'Perencana tidak menerima konfirmasi pemasok dan menjelaskan alasannya. Call-off kembali ke pemasok untuk dikonfirmasi ulang.',
+  'processFlows.purpose.t_calloff_dispatch':
+    'Pemasok memberi tahu PTI bahwa barang sudah berangkat, beserta perkiraan tiba. Inilah kabar yang dibutuhkan perencana; ASN untuk call-off yang sama juga dihitung.',
+
+  // ── inventory & capacity ────────────────────────────────────────────
+  'processFlows.purpose.entity.stockAccess':
+    'Apakah pemasok boleh melihat stok PTI, dan untuk material apa saja. Hanya pemasok terpilih yang melihatnya, agar informasi komersial tetap terlindungi.',
+  'processFlows.purpose.t_stockaccess_grant':
+    'Perencana mengizinkan pemasok melihat stok PTI, untuk semua material yang dipasoknya atau hanya yang dipilih, agar pemasok dapat merencanakan pengisian sendiri. Perubahan dicatat.',
+  'processFlows.purpose.t_stockaccess_change':
+    'Perencana mengubah material yang stok PTI-nya boleh dilihat pemasok yang sudah memiliki akses. Perubahan dicatat.',
+  'processFlows.purpose.t_stockaccess_remove':
+    'Perencana menghentikan akses pemasok ke stok PTI. Berlaku saat pemasok membuka halaman berikutnya, dan perubahan dicatat.',
+  'processFlows.purpose.entity.stockSync':
+    'Satu upaya menarik angka stok dari sistem pemasok yang terhubung ke hub, disimpan baik berhasil maupun gagal.',
+  'processFlows.purpose.t_stocksync_run':
+    'Perencana menarik angka stok terbaru dari pemasok yang terhubung. Jika sistem pemasok tidak menjawab, kesalahan dan waktunya ditampilkan dan angka sebelumnya tetap ada, ditandai kedaluwarsa.',
+  'processFlows.purpose.entity.capacitySubmission':
+    'Kapasitas yang dialokasikan pemasok untuk PTI per kelompok material dan minggu, untuk 13 minggu ke depan.',
+  'processFlows.purpose.t_capacity_submit':
+    'Pemasok menyatakan kapasitas yang dialokasikan per minggu. Minggu di bawah kebutuhan PTI memerlukan alasan, agar perencana melihat kekurangannya dan penyebabnya sebelum sampai ke pabrik.',
+  'processFlows.purpose.entity.inventoryAlert':
+    'Peringatan bahwa stok atau kapasitas menuju kekurangan, dengan kelas risiko, agar perencana bertindak sebelum material habis.',
+  'processFlows.purpose.t_inventoryalert_close':
+    'Perencana menutup peringatan dan mencatat tindakan yang diambil. Kondisi yang sama tidak memunculkannya lagi sampai kondisi itu pulih lalu terjadi lagi.',
+  'processFlows.purpose.entity.forecastVersion':
+    'Satu versi prakiraan PTI yang diterbitkan untuk kemasan (mingguan) atau bahan baku (bulanan), dengan zona per periode. Setiap versi disimpan.',
+  'processFlows.purpose.t_forecastversion_publish':
+    'Perencana menerbitkan versi prakiraan berikutnya, sesuai jadwal atau sebagai penerbitan ulang darurat. Pemasok diminta membukanya dan memberi komitmen.',
+  'processFlows.purpose.t_forecastversion_reassign':
+    'Perencana memindahkan kebutuhan satu periode dari satu pemasok ke pemasok lain material itu dan menjelaskan alasannya. Pemasok menerimanya sebagai versi baru.',
+  'processFlows.purpose.entity.forecastView':
+    'Saat pemasok pertama kali membuka versi prakiraan, agar perencana tahu siapa yang sudah melihat rencananya.',
+  'processFlows.purpose.t_forecastview_record':
+    'Membuka versi prakiraan mencatat bahwa pemasok sudah melihatnya.',
+
+  // ── RFx (REQ-E03-02 / REQ-E03-04 / REQ-E03-05) ────────────────────────────
+  'processFlows.purpose.entity.rfiEvent':
+    'Rangkaian pertanyaan terstruktur tentang apa yang bisa dibuat pemasok, di mana, dan bagaimana — ditanyakan sebelum membahas harga.',
+  'processFlows.purpose.t_rfi_create':
+    'Pembelian mulai dari kumpulan pertanyaan yang dipelihara Procurement untuk kategori itu, lalu menambah atau menghapus pertanyaan khusus acara ini.',
+  'processFlows.purpose.t_rfi_publish':
+    'Pertanyaan sampai ke pemasok yang diundang. Sebelum itu masih disiapkan dan tidak terlihat di luar PTI.',
+  'processFlows.purpose.t_rfi_extend':
+    'Pembelian memberi semua pemasok yang diundang — atau hanya yang disebut — waktu tambahan untuk menjawab.',
+  'processFlows.purpose.t_rfi_close':
+    'Masa menjawab berakhir, dan pembelian membandingkan yang masuk.',
+  'processFlows.purpose.t_rfi_cancel':
+    'PTI membatalkan permintaan, sehingga pemasok berhenti mengerjakannya.',
+  'processFlows.purpose.t_rfq_extend':
+    'Pembelian memberi semua pemasok yang diundang — atau hanya yang disebut — waktu tambahan untuk memberi harga.',
+  'processFlows.purpose.t_quotation_revise':
+    'Pemasok yang diminta memperbaiki tawarannya mengirim yang lebih baik. Versi sebelumnya tetap disimpan, sehingga pembelian bisa melihat seberapa jauh pergerakannya.',
+  'processFlows.purpose.entity.rfiResponse':
+    'Yang disampaikan satu pemasok tentang kemampuan, pengalaman, lokasi, dan produknya — disimpan pada pemasok itu agar permintaan harga berikutnya bisa memakainya lagi.',
+  'processFlows.purpose.t_rfiresponse_save':
+    'Jawaban yang belum selesai disimpan agar pemasok bisa melanjutkan, dan PTI belum bisa melihatnya.',
+  'processFlows.purpose.t_rfiresponse_submit':
+    'Pemasok mengirim jawabannya ke PTI. Semua pertanyaan yang ditandai wajib harus terjawab lebih dulu agar hasilnya bisa dibandingkan.',
+  'processFlows.purpose.entity.rfpEvent':
+    'Permintaan syarat komersial yang akan dipakai pemasok — pembayaran, pengiriman, tingkat layanan, dan kontrak — bukan sekadar angka satuan.',
+  'processFlows.purpose.t_rfp_create':
+    'Pembelian memilih syarat yang perlu dijawab dari daftar standar dan menyatakan apa yang diminta PTI pada masing-masing.',
+  'processFlows.purpose.t_rfp_publish':
+    'Syarat sampai ke pemasok yang diundang, dan baru setelah itu proposal bisa masuk.',
+  'processFlows.purpose.t_rfp_extend':
+    'Pembelian memberi semua pemasok yang diundang — atau hanya yang disebut — waktu tambahan untuk mengusulkan.',
+  'processFlows.purpose.t_rfp_close':
+    'Masa mengusulkan berakhir, dan pembelian membandingkan syarat berdampingan.',
+  'processFlows.purpose.t_rfp_cancel':
+    'PTI membatalkan permintaan, sehingga pemasok berhenti mengerjakannya.',
+  'processFlows.purpose.entity.rfpResponse':
+    'Syarat yang diusulkan satu pemasok: apa yang ditawarkan pada tiap pokok yang diangkat PTI, apakah bisa dipenuhi, dan alasannya bila tidak.',
+  'processFlows.purpose.t_rfpresponse_save':
+    'Proposal yang belum lengkap disimpan agar pemasok bisa melanjutkan, dan PTI belum bisa melihatnya.',
+  'processFlows.purpose.t_rfpresponse_submit':
+    'Pemasok mengirim syaratnya ke PTI. Hal yang tidak bisa dipenuhi wajib disertai penjelasan, sehingga penyimpangan tidak pernah senyap.',
+  'processFlows.purpose.entity.negotiationRound':
+    'Satu putaran meminta daftar pendek memperbaiki tawarannya, dengan tanggal untuk menjawab dan target yang boleh dicantumkan.',
+  'processFlows.purpose.t_negotiationround_open':
+    'Pembelian meminta pemasok dalam daftar pendek memperbaiki tawarannya, dengan tanggal untuk menjawab serta pesan dan angka target bila ada. Pihak lain tidak boleh menjawab.',
+  'processFlows.purpose.t_negotiationround_close':
+    'Pembelian berhenti menerima tawaran perbaikan untuk putaran ini. Pemasok yang tidak menjawab tetap pada tawaran sebelumnya.',
 };

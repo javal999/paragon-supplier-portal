@@ -23,7 +23,6 @@ import {
 } from 'lucide-react';
 import AppShellV2 from '../components/layout-v2/AppShellV2';
 import PageHeader from '../components/ui-v2/PageHeader';
-import PageMetaLine from '../components/ui-v2/PageMetaLine';
 import ProvenanceMarker from '../components/ui-v2/ProvenanceMarker';
 import KpiCard from '../components/ui-v2/KpiCard';
 import StatusPill from '../components/ui-v2/StatusPill';
@@ -226,14 +225,16 @@ const BuyerSupplierProfile: React.FC = () => {
         }
       />
 
-      {/* D-CENSUS-8 — MARKER-SCOPE-01. The only marker on this route sat inside the
-          Message-log tab; the profile header, KPI tiles, catalogue and certificate
-          list — everything a reader would act on — were unmarked. NOTE: the two
-          header buttons above have no handler at all (DEAD-AFFORDANCE-01, filed);
-          this batch marks the data, it does not fix inert affordances. */}
-      <PageMetaLine className="-mt-6 mb-6">
-        <ProvenanceMarker capability="suppliers" />
-      </PageMetaLine>
+      {/* D-CENSUS-8 — MARKER-SCOPE-01 put a marker on this route because the only one
+          used to sit inside the Message-log tab. REQ-E10-01 has now moved it OFF the
+          page meta line, the same move phase 6b made on the scorecard: two of the four
+          KPI tiles — on time and in full, and the scorecard grade — are measured from
+          this hub's own call-offs and orders, so a page-level "Sample data" claim is
+          false about them. Each authored block below carries the marker itself, and the
+          KPI strip names which of its tiles the marker does not speak for. The
+          Performance tab stays unmarked: it folds onto the real purchase-order read.
+          NOTE: the two header buttons above still have no handler at all
+          (DEAD-AFFORDANCE-01, filed); this is a marker move, not an affordance fix. */}
 
       {/* Overview card */}
       <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm p-6 mb-6">
@@ -255,6 +256,7 @@ const BuyerSupplierProfile: React.FC = () => {
               <Data className="text-xs text-text-tertiary">
                 {supp.sapBpNumber}
               </Data>
+              <ProvenanceMarker capability="suppliers" />
             </div>
             <div className="mt-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 text-sm text-text-secondary">
               <div className="flex items-center gap-2">
@@ -282,11 +284,22 @@ const BuyerSupplierProfile: React.FC = () => {
         </div>
       </div>
 
-      {/* KPI strip */}
+      {/* KPI strip — two measured tiles beside two authored ones, so the marker has to
+          say which is which rather than claim the row. */}
+      <div
+        className="mb-2 flex flex-wrap items-center gap-3"
+        data-testid="profile-kpi-provenance"
+      >
+        <ProvenanceMarker capability="suppliers" />
+        <span className="text-meta text-text-tertiary">
+          {t('buyerSupplierProfile.kpi.otif.eyebrow')} ·{' '}
+          {t('buyerSupplierProfile.kpi.scorecard.eyebrow')}: {t('perf.calculated')}
+        </span>
+      </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
         <KpiCard
           eyebrow={t('buyerSupplierProfile.kpi.otif.eyebrow')}
-          value={`${supp.otif}%`}
+          value={supp.otif === undefined ? t('rfx.noHistory') : `${supp.otif}%`}
           subtitle={t('buyerSupplierProfile.kpi.otif.subtitle')}
           icon={Activity}
         />
@@ -304,7 +317,7 @@ const BuyerSupplierProfile: React.FC = () => {
         />
         <KpiCard
           eyebrow={t('buyerSupplierProfile.kpi.scorecard.eyebrow')}
-          value={supp.scorecardGrade}
+          value={supp.scorecardGrade ?? t('rfx.noHistory')}
           subtitle={t('buyerSupplierProfile.kpi.scorecard.subtitle', {
             rating: supp.rating.toFixed(1),
           })}
@@ -321,8 +334,9 @@ const BuyerSupplierProfile: React.FC = () => {
 
       {activeTab === 'overview' && (
         <section className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm p-6">
-          <h2 className="text-section text-text-primary mb-4">
+          <h2 className="flex flex-wrap items-center gap-3 text-section text-text-primary mb-4">
             {t('buyerSupplierProfile.overview.heading')}
+            <ProvenanceMarker capability="suppliers" />
           </h2>
           <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3 text-sm">
             <div className="flex justify-between border-b border-border-subtle py-2">
@@ -377,8 +391,9 @@ const BuyerSupplierProfile: React.FC = () => {
 
       {activeTab === 'comm' && (
         <section className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm p-6">
-          <h2 className="text-section text-text-primary mb-4">
+          <h2 className="flex flex-wrap items-center gap-3 text-section text-text-primary mb-4">
             {t('buyerSupplierProfile.comm.heading')}
+            <ProvenanceMarker capability="suppliers" />
           </h2>
           <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3 text-sm">
             <div className="flex justify-between border-b border-border-subtle py-2">
@@ -415,10 +430,11 @@ const BuyerSupplierProfile: React.FC = () => {
 
       {activeTab === 'compliance' && (
         <section className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-hidden">
-          <div className="flex items-center gap-2 p-4 border-b border-border-subtle">
+          <div className="flex flex-wrap items-center gap-3 p-4 border-b border-border-subtle">
             <span className="text-sm font-semibold text-text-primary">
               {t('buyerSupplierProfile.compliance.heading')}
             </span>
+            <ProvenanceMarker capability="suppliers" />
           </div>
           <Table>
             <TableHeader>
@@ -468,10 +484,11 @@ const BuyerSupplierProfile: React.FC = () => {
 
       {activeTab === 'catalog' && (
         <section className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-hidden">
-          <div className="flex items-center gap-2 p-4 border-b border-border-subtle">
+          <div className="flex flex-wrap items-center gap-3 p-4 border-b border-border-subtle">
             <span className="text-sm font-semibold text-text-primary">
               {t('buyerSupplierProfile.catalog.heading')}
             </span>
+            <ProvenanceMarker capability="suppliers" />
           </div>
           <Table>
             <TableHeader>
@@ -523,7 +540,13 @@ const BuyerSupplierProfile: React.FC = () => {
       )}
 
       {activeTab === 'performance' && (
-        <section className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-hidden">
+        // Deliberately UNMARKED: this table folds onto the real purchase-order read,
+        // so a "Sample data" marker here would be the opposite lie to the one the
+        // page-level marker was telling over the measured KPI tiles.
+        <section
+          data-testid="profile-performance"
+          className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-hidden"
+        >
           <div className="p-6 border-b border-border-subtle">
             <h2 className="text-section text-text-primary mb-1">
               {t('buyerSupplierProfile.performance.heading')}

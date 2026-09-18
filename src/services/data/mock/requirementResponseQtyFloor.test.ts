@@ -78,6 +78,9 @@ const submit = (confirmedQty: unknown, raw?: string, numberConvention?: 'id' | '
     confirmedQtyRaw: raw ?? String(confirmedQty),
     ...(numberConvention ? { numberConvention } : {}),
     committedDate: '2026-08-20',
+    // REQ-E06-02 BR-04 — below the 6 000 forecast the verb now requires a
+    // starter reason; the floor cases are about the number, so every one carries it.
+    rootCause: { level1: 'capacity' },
   },
 });
 

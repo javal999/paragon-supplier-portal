@@ -21,19 +21,33 @@ import type { CurrentIdentity } from '../context/CurrentIdentityContext';
 
 import Login from '../pages/auth/Login';
 import BuyerDashboard from '../pages-v2/BuyerDashboard';
+import BuyerHome from '../pages-v2/BuyerHome';
+import SupplierHome from '../pages-v2/SupplierHome';
+import BuyerOrderSummary from '../pages-v2/BuyerOrderSummary';
+import SupplierOrderSummary from '../pages-v2/SupplierOrderSummary';
 import BuyerSuppliers from '../pages-v2/BuyerSuppliers';
 import BuyerSupplierProfile from '../pages-v2/BuyerSupplierProfile';
 import Marketplace from '../pages-v2/Marketplace';
 import SupplierStorefrontV2 from '../pages-v2/SupplierStorefront';
 import BuyerOrders from '../pages-v2/BuyerOrders';
 import BuyerSourcing from '../pages-v2/BuyerSourcing';
+import BuyerRfi from '../pages-v2/BuyerRfi';
+import BuyerRfp from '../pages-v2/BuyerRfp';
+import BuyerSourcingEvent from '../pages-v2/BuyerSourcingEvent';
+import SupplierRfi from '../pages-v2/SupplierRfi';
+import SupplierRfp from '../pages-v2/SupplierRfp';
+import SupplierNegotiations from '../pages-v2/SupplierNegotiations';
 import PlanGrid from '../pages-v2/PlanGrid';
 import BuyerCollaboration from '../pages-v2/BuyerCollaboration';
 import BuyerContracts from '../pages-v2/BuyerContracts';
 import BuyerContractDetail from '../pages-v2/BuyerContractDetail';
 import BuyerDeliveryAgreements from '../pages-v2/BuyerDeliveryAgreements';
+import BuyerCallOffs from '../pages-v2/BuyerCallOffs';
 import BuyerChase from '../pages-v2/BuyerChase';
 import BuyerInventory from '../pages-v2/BuyerInventory';
+import BuyerCapacity from '../pages-v2/BuyerCapacity';
+import BuyerAlerts from '../pages-v2/BuyerAlerts';
+import BuyerSupplierAccess from '../pages-v2/BuyerSupplierAccess';
 import BuyerShipments from '../pages-v2/BuyerShipments';
 import BuyerGoodsReceipt from '../pages-v2/BuyerGoodsReceipt';
 import BuyerDiscovery from '../pages-v2/BuyerDiscovery';
@@ -46,6 +60,7 @@ import BuyerRisk from '../pages-v2/BuyerRisk';
 import BuyerCommHub from '../pages-v2/BuyerCommHub';
 import BuyerCompliance from '../pages-v2/BuyerCompliance';
 import ProcessFlows from '../pages-v2/ProcessFlows';
+import InterfaceMonitor from '../pages-v2/InterfaceMonitor';
 import RolesCatalogue from '../pages-v2/RolesCatalogue';
 import RoleDetail from '../pages-v2/RoleDetail';
 import Glossary from '../pages-v2/Glossary';
@@ -58,11 +73,17 @@ import CommHubInbound from '../pages-v2/CommHubInbound';
 import SupplierOrders from '../pages-v2/SupplierOrders';
 import SupplierRFQsV2 from '../pages-v2/SupplierRFQs';
 import SupplierForecasts from '../pages-v2/SupplierForecasts';
+import SupplierForecastCommitments from '../pages-v2/SupplierForecastCommitments';
+import BuyerForecasts from '../pages-v2/BuyerForecasts';
+import BuyerCommitments from '../pages-v2/BuyerCommitments';
 import SupplierShipments from '../pages-v2/SupplierShipments';
+import SupplierGoodsReceipts from '../pages-v2/SupplierGoodsReceipts';
 import SupplierInvoicesV2 from '../pages-v2/SupplierInvoices';
 import SupplierInventoryV2 from '../pages-v2/SupplierInventory';
 import SupplierRegistrationV2 from '../pages-v2/SupplierRegistration';
 import SupplierDeliveryAgreements from '../pages-v2/SupplierDeliveryAgreements';
+import SupplierCallOffs from '../pages-v2/SupplierCallOffs';
+import SupplierCapacity from '../pages-v2/SupplierCapacity';
 import SupplierPerformance from '../pages-v2/SupplierPerformance';
 import NotFound from '../pages-v2/NotFound';
 import { PERSONA_SYSTEM_ROLES } from '../services/transitions/businessRoles';
@@ -88,20 +109,32 @@ interface RouteCase {
 const ROUTES: RouteCase[] = [
   { name: 'login', pattern: '/login', at: '/login', element: <Login />, identity: BUYER },
   { name: 'register', pattern: '/register', at: '/register', element: <SupplierRegistrationV2 />, identity: BUYER },
+  { name: 'buyer/home', pattern: '/buyer/home', at: '/buyer/home', element: <BuyerHome />, identity: BUYER },
   { name: 'buyer/dashboard', pattern: '/buyer/dashboard', at: '/buyer/dashboard', element: <BuyerDashboard />, identity: BUYER },
   { name: 'buyer/suppliers', pattern: '/buyer/suppliers', at: '/buyer/suppliers', element: <BuyerSuppliers />, identity: BUYER },
   { name: 'buyer/suppliers/:id', pattern: '/buyer/suppliers/:id', at: '/buyer/suppliers/sup-007', element: <BuyerSupplierProfile />, identity: BUYER },
   { name: 'marketplace', pattern: '/marketplace', at: '/marketplace', element: <Marketplace />, identity: BUYER },
   { name: 'marketplace/supplier/:id', pattern: '/marketplace/supplier/:id', at: '/marketplace/supplier/sup-007', element: <SupplierStorefrontV2 />, identity: BUYER },
+  { name: 'buyer/order-summary', pattern: '/buyer/order-summary', at: '/buyer/order-summary', element: <BuyerOrderSummary />, identity: BUYER },
   { name: 'buyer/orders', pattern: '/buyer/orders', at: '/buyer/orders', element: <BuyerOrders />, identity: BUYER },
   { name: 'buyer/sourcing', pattern: '/buyer/sourcing', at: '/buyer/sourcing', element: <BuyerSourcing />, identity: BUYER },
+  // REQ-E03-02 / REQ-E03-04 / REQ-E03-05 — the RFx surfaces.
+  { name: 'buyer/sourcing/rfi', pattern: '/buyer/sourcing/rfi', at: '/buyer/sourcing/rfi', element: <BuyerRfi />, identity: BUYER },
+  { name: 'buyer/sourcing/rfp', pattern: '/buyer/sourcing/rfp', at: '/buyer/sourcing/rfp', element: <BuyerRfp />, identity: BUYER },
+  { name: 'buyer/sourcing/rfq/:rfqId', pattern: '/buyer/sourcing/rfq/:rfqId', at: '/buyer/sourcing/rfq/rfq-014', element: <BuyerSourcingEvent />, identity: BUYER },
   { name: 'buyer/plan-grid', pattern: '/buyer/plan-grid', at: '/buyer/plan-grid', element: <PlanGrid />, identity: BUYER },
-  { name: 'buyer/collaboration', pattern: '/buyer/collaboration', at: '/buyer/collaboration', element: <BuyerCollaboration />, identity: BUYER },
+  { name: 'buyer/forecasts', pattern: '/buyer/forecasts', at: '/buyer/forecasts', element: <BuyerForecasts />, identity: BUYER },
+  { name: 'buyer/collaboration', pattern: '/buyer/collaboration', at: '/buyer/collaboration', element: <BuyerCommitments />, identity: BUYER },
+  { name: 'buyer/collaboration/responses', pattern: '/buyer/collaboration/responses', at: '/buyer/collaboration/responses', element: <BuyerCollaboration />, identity: BUYER },
   { name: 'buyer/contracts', pattern: '/buyer/contracts', at: '/buyer/contracts', element: <BuyerContracts />, identity: BUYER },
   { name: 'buyer/contracts/:id', pattern: '/buyer/contracts/:id', at: '/buyer/contracts/ctr-013', element: <BuyerContractDetail />, identity: BUYER },
   { name: 'buyer/delivery-agreements', pattern: '/buyer/delivery-agreements', at: '/buyer/delivery-agreements', element: <BuyerDeliveryAgreements />, identity: BUYER },
+  { name: 'buyer/call-offs', pattern: '/buyer/call-offs', at: '/buyer/call-offs', element: <BuyerCallOffs />, identity: BUYER },
   { name: 'buyer/chase', pattern: '/buyer/chase', at: '/buyer/chase', element: <BuyerChase />, identity: BUYER },
   { name: 'buyer/inventory', pattern: '/buyer/inventory', at: '/buyer/inventory', element: <BuyerInventory />, identity: BUYER },
+  { name: 'buyer/capacity', pattern: '/buyer/capacity', at: '/buyer/capacity', element: <BuyerCapacity />, identity: BUYER },
+  { name: 'buyer/alerts', pattern: '/buyer/alerts', at: '/buyer/alerts', element: <BuyerAlerts />, identity: BUYER },
+  { name: 'buyer/supplier-access', pattern: '/buyer/supplier-access', at: '/buyer/supplier-access', element: <BuyerSupplierAccess />, identity: BUYER },
   { name: 'buyer/shipments', pattern: '/buyer/shipments', at: '/buyer/shipments', element: <BuyerShipments />, identity: BUYER },
   { name: 'buyer/goods-receipt', pattern: '/buyer/goods-receipt', at: '/buyer/goods-receipt', element: <BuyerGoodsReceipt />, identity: BUYER },
   { name: 'buyer/discovery', pattern: '/buyer/discovery', at: '/buyer/discovery', element: <BuyerDiscovery />, identity: BUYER },
@@ -114,6 +147,7 @@ const ROUTES: RouteCase[] = [
   { name: 'buyer/comm-hub', pattern: '/buyer/comm-hub', at: '/buyer/comm-hub', element: <BuyerCommHub />, identity: BUYER },
   { name: 'buyer/compliance', pattern: '/buyer/compliance', at: '/buyer/compliance', element: <BuyerCompliance />, identity: BUYER },
   { name: 'buyer/process-flows', pattern: '/buyer/process-flows', at: '/buyer/process-flows', element: <ProcessFlows />, identity: BUYER },
+  { name: 'buyer/interface-monitor', pattern: '/buyer/interface-monitor', at: '/buyer/interface-monitor', element: <InterfaceMonitor />, identity: BUYER },
   { name: 'buyer/roles', pattern: '/buyer/roles', at: '/buyer/roles', element: <RolesCatalogue />, identity: BUYER },
   { name: 'buyer/roles/:roleId', pattern: '/buyer/roles/:roleId', at: '/buyer/roles/finance', element: <RoleDetail />, identity: BUYER },
   // ⚠️ THESE TWO WERE NEVER IN THE SMOKE, AND THE OLD SELF-REFERENTIAL GUARD
@@ -122,18 +156,27 @@ const ROUTES: RouteCase[] = [
   // AppRouter, and nothing would have reported that until a route was deleted.
   { name: 'buyer/intake-review', pattern: '/buyer/intake-review', at: '/buyer/intake-review', element: <IntakeReview />, identity: BUYER },
   { name: 'glossary', pattern: '/glossary', at: '/glossary', element: <Glossary />, identity: BUYER },
+  { name: 'supplier/home', pattern: '/supplier/home', at: '/supplier/home', element: <SupplierHome />, identity: SUPPLIER },
   { name: 'supplier/dashboard', pattern: '/supplier/dashboard', at: '/supplier/dashboard', element: <SupplierDashboardV2 />, identity: SUPPLIER },
   { name: 'supplier/storefront', pattern: '/supplier/storefront', at: '/supplier/storefront', element: <SupplierMyStorefront />, identity: SUPPLIER },
   { name: 'supplier/documents', pattern: '/supplier/documents', at: '/supplier/documents', element: <SupplierDocumentsV2 />, identity: SUPPLIER },
   { name: 'supplier/whatsapp', pattern: '/supplier/whatsapp', at: '/supplier/whatsapp', element: <SupplierWhatsApp />, identity: SUPPLIER },
   { name: 'supplier/comm-hub', pattern: '/supplier/comm-hub', at: '/supplier/comm-hub', element: <CommHubInbound />, identity: SUPPLIER },
+  { name: 'supplier/order-summary', pattern: '/supplier/order-summary', at: '/supplier/order-summary', element: <SupplierOrderSummary />, identity: SUPPLIER },
   { name: 'supplier/orders', pattern: '/supplier/orders', at: '/supplier/orders', element: <SupplierOrders />, identity: SUPPLIER },
   { name: 'supplier/rfqs', pattern: '/supplier/rfqs', at: '/supplier/rfqs', element: <SupplierRFQsV2 />, identity: SUPPLIER },
-  { name: 'supplier/forecasts', pattern: '/supplier/forecasts', at: '/supplier/forecasts', element: <SupplierForecasts />, identity: SUPPLIER },
+  { name: 'supplier/rfqs/rfi', pattern: '/supplier/rfqs/rfi', at: '/supplier/rfqs/rfi', element: <SupplierRfi />, identity: SUPPLIER },
+  { name: 'supplier/rfqs/rfp', pattern: '/supplier/rfqs/rfp', at: '/supplier/rfqs/rfp', element: <SupplierRfp />, identity: SUPPLIER },
+  { name: 'supplier/rfqs/rounds', pattern: '/supplier/rfqs/rounds', at: '/supplier/rfqs/rounds', element: <SupplierNegotiations />, identity: SUPPLIER },
+  { name: 'supplier/forecasts', pattern: '/supplier/forecasts', at: '/supplier/forecasts', element: <SupplierForecastCommitments />, identity: SUPPLIER },
+  { name: 'supplier/forecasts/responses', pattern: '/supplier/forecasts/responses', at: '/supplier/forecasts/responses', element: <SupplierForecasts />, identity: SUPPLIER },
   { name: 'supplier/shipments', pattern: '/supplier/shipments', at: '/supplier/shipments', element: <SupplierShipments />, identity: SUPPLIER },
+  { name: 'supplier/goods-receipts', pattern: '/supplier/goods-receipts', at: '/supplier/goods-receipts', element: <SupplierGoodsReceipts />, identity: SUPPLIER },
   { name: 'supplier/invoices', pattern: '/supplier/invoices', at: '/supplier/invoices', element: <SupplierInvoicesV2 />, identity: SUPPLIER },
   { name: 'supplier/inventory', pattern: '/supplier/inventory', at: '/supplier/inventory', element: <SupplierInventoryV2 />, identity: SUPPLIER },
   { name: 'supplier/delivery-agreements', pattern: '/supplier/delivery-agreements', at: '/supplier/delivery-agreements', element: <SupplierDeliveryAgreements />, identity: SUPPLIER },
+  { name: 'supplier/call-offs', pattern: '/supplier/call-offs', at: '/supplier/call-offs', element: <SupplierCallOffs />, identity: SUPPLIER },
+  { name: 'supplier/capacity', pattern: '/supplier/capacity', at: '/supplier/capacity', element: <SupplierCapacity />, identity: SUPPLIER },
   { name: 'supplier/performance', pattern: '/supplier/performance', at: '/supplier/performance', element: <SupplierPerformance />, identity: SUPPLIER },
   { name: '404 (unknown → NotFound)', pattern: '*', at: '/does/not/exist', element: <NotFound />, identity: BUYER },
 ];
@@ -166,7 +209,7 @@ describe('sp-001 — every route mounts without crashing', () => {
     // THIS FILE.** The first cut was `/<Route\s+path="…"\s+element=\{<(\w+)/`,
     // which requires `element=` to follow `path=` directly. Three routes wrap
     // their element in `<Suspense>` across several lines
-    // (`/buyer/collaboration`, `/buyer/plan-grid`, `/supplier/forecasts`), so the
+    // (`/buyer/collaboration/responses`, `/buyer/plan-grid`, `/supplier/forecasts/responses`), so the
     // narrowing that correctly excluded redirects silently DROPPED them from the
     // derived population — and they then read as stale smoke rows. Narrowing a
     // matcher creates blind spots as readily as widening one creates false

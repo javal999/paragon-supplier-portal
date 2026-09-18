@@ -61,6 +61,12 @@ const STATUS_TONE: Record<string, StatusTone> = {
   Upcoming: 'warning',
   Delayed: 'warning',
   'Needs Attention': 'warning',
+  Adjusted: 'warning',
+  // REQ-E07-07 — the supplier's invoice status list.
+  Verified: 'success',
+  'Scheduled for payment': 'info',
+  Paid: 'success',
+  Returned: 'danger',
   // critical
   Overdue: 'danger',
   Disputed: 'danger',
@@ -77,6 +83,7 @@ const STATUS_TONE: Record<string, StatusTone> = {
   'Price Variance': 'danger',
   Suspended: 'danger',
   'Not Awarded': 'danger',
+  Escalated: 'danger',
   // info (blue #0070F2 family)
   Confirmed: 'info',
   Acknowledged: 'info',

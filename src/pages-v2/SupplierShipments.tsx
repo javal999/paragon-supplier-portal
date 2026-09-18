@@ -9,10 +9,6 @@ import {
   Download,
   ChevronRight,
   ChevronDown,
-  Calendar,
-  Clock,
-  MapPin,
-  Package,
   Upload,
 } from 'lucide-react';
 import AppShellV2 from '../components/layout-v2/AppShellV2';
@@ -39,9 +35,16 @@ import { statusLabelKey } from '../lib/statusLabel';
 import { useToast } from '../hooks/useToast';
 import { useCurrentIdentity } from '../context/CurrentIdentityContext';
 import {
+  useAdvanceShipNoticeCancel,
   useAdvanceShipNoticeCreate,
   useAdvanceShipNoticeSubmit,
 } from '../services/query/commandHooks';
+import { normalizeQty } from '../lib/localeNumber';
+import {
+  ASN_CANCELLABLE_STATES,
+  openQtyForLine,
+  type AsnLineInput,
+} from '../services/transitions/fulfilmentRules';
 import { POStatus } from '../services/data/types';
 import NoSupplierIdentity from '../components/ui-v2/NoSupplierIdentity';
 import LoadingState from '../components/ui-v2/LoadingState';
@@ -51,12 +54,14 @@ import {
   useCurrentSupplier,
   usePurchaseOrders,
   useASNs,
+  useCallOffs,
 } from '../services/query/hooks';
+import { isConfirmedAndAccepted } from '../services/transitions/callOffRules';
 import type { AsnStatus, ASN, PurchaseOrder } from '../services/data/types';
 import { useRefusalText } from '../hooks/useRefusalText';
 import { refusalDetailOf } from '../services/transitions/refusalMessage';
 
-type TabKey = 'shipments' | 'create' | 'dock';
+type TabKey = 'shipments' | 'create';
 type StatusFilter = AsnStatus | 'All';
 
 const STATUS_VARIANT: Record<AsnStatus, 'success' | 'warning' | 'danger' | 'neutral'> = {
@@ -65,6 +70,7 @@ const STATUS_VARIANT: Record<AsnStatus, 'success' | 'warning' | 'danger' | 'neut
   'In Transit': 'warning',
   Delivered: 'success',
   Discrepancy: 'danger',
+  Cancelled: 'neutral',
 };
 
 const fmtDate = (s: string): string => {
@@ -80,6 +86,13 @@ const inputClass =
   'w-full px-3 py-2 text-sm text-text-primary bg-white border border-border-input rounded-md focus:outline-none focus:border-action placeholder:text-text-tertiary';
 const labelClass = 'block text-label text-text-tertiary uppercase mb-1';
 
+/** One line as the supplier types it (REQ-E07-04 BR-04): text, parsed once. */
+interface LineEntry {
+  qty: string;
+  batch: string;
+  expiry: string;
+}
+
 interface AsnForm {
   poId: string;
   carrier: string;
@@ -91,8 +104,11 @@ interface AsnForm {
   packingList: string;
   notes: string;
   confirmed: boolean;
-  batchNumber: string;
-  lotNumber: string;
+  /** Keyed by material code. */
+  lines: Record<string, LineEntry>;
+  overShipReason: string;
+  /** REQ-E09-03 BR-06 — the confirmed call-off this ASN ships, or '' for a PO-level ASN. */
+  callOffId: string;
 }
 
 const DEFAULT_FORM: AsnForm = {
@@ -106,8 +122,166 @@ const DEFAULT_FORM: AsnForm = {
   packingList: '',
   notes: '',
   confirmed: false,
-  batchNumber: '',
-  lotNumber: '',
+  lines: {},
+  overShipReason: '',
+  callOffId: '',
+};
+
+/** A typed quantity, read by the one legal parser; NaN when unreadable. */
+const readQty = (raw: string): number => {
+  const r = normalizeQty(raw);
+  return r.ok ? r.value : Number.NaN;
+};
+
+interface OpenLine {
+  materialCode: string;
+  description: string;
+  uom: string;
+  open: number;
+}
+
+/** The PO's lines with their open quantity (BR-02), leaving one ASN out. */
+const openLinesFor = (po: PurchaseOrder, asns: readonly ASN[], excludeAsn?: string): OpenLine[] =>
+  po.lineItems.map((li) => ({
+    materialCode: li.materialCode,
+    description: li.description,
+    uom: li.uom,
+    open: openQtyForLine(po, li, asns, excludeAsn),
+  }));
+
+/** Seed the line entries: each open line proposes its open quantity. */
+const seedLines = (lines: readonly OpenLine[]): Record<string, LineEntry> =>
+  Object.fromEntries(
+    lines.map((l) => [l.materialCode, { qty: l.open > 0 ? String(l.open) : '', batch: '', expiry: '' }]),
+  );
+
+/** The entered lines as the verb reads them, with what the form can see about them. */
+const readLines = (entries: Record<string, LineEntry>, open: readonly OpenLine[]) => {
+  const lines = open
+    .filter((l) => entries[l.materialCode] && entries[l.materialCode].qty.trim() !== '')
+    .map((l) => {
+      const e = entries[l.materialCode];
+      const shippedQty = readQty(e.qty);
+      return {
+        line: l,
+        input: {
+          materialCode: l.materialCode,
+          shippedQty,
+          batchNumber: e.batch.trim(),
+          ...(e.expiry ? { expiryDate: e.expiry } : {}),
+        } as AsnLineInput,
+        qtyOk: Number.isFinite(shippedQty) && shippedQty > 0,
+        over: Number.isFinite(shippedQty) && shippedQty > l.open,
+        batchOk: e.batch.trim() !== '',
+      };
+    });
+  return {
+    lines,
+    overCount: lines.filter((l) => l.over).length,
+    complete: lines.length > 0 && lines.every((l) => l.qtyOk && l.batchOk),
+  };
+};
+
+/** The shared line editor: shipped quantity, batch and expiry per PO line. */
+const AsnLinesEditor: React.FC<{
+  open: readonly OpenLine[];
+  entries: Record<string, LineEntry>;
+  onChange: (materialCode: string, patch: Partial<LineEntry>) => void;
+  overShipReason: string;
+  onReasonChange: (v: string) => void;
+}> = ({ open, entries, onChange, overShipReason, onReasonChange }) => {
+  const { t } = useTranslation();
+  const read = readLines(entries, open);
+  if (open.length === 0) {
+    return <p className="text-sm text-text-tertiary">{t('fc.asn.lines.empty')}</p>;
+  }
+  return (
+    <div className="space-y-3">
+      <div className="overflow-x-auto">
+        <table className="w-full text-xs">
+          <thead>
+            <tr className="text-text-tertiary uppercase">
+              <th className="text-left py-1 pr-2">{t('fc.asn.col.material')}</th>
+              <th className="text-right py-1 pr-2">{t('fc.asn.col.open')}</th>
+              <th className="text-left py-1 pr-2">{t('fc.asn.col.shipped')}</th>
+              <th className="text-left py-1 pr-2">{t('fc.asn.col.batch')}</th>
+              <th className="text-left py-1">{t('fc.asn.col.expiry')}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {open.map((l) => {
+              const e = entries[l.materialCode] ?? { qty: '', batch: '', expiry: '' };
+              const q = readQty(e.qty);
+              const bad = e.qty.trim() !== '' && !(Number.isFinite(q) && q > 0);
+              const over = Number.isFinite(q) && q > l.open;
+              return (
+                <tr key={l.materialCode} className="border-t border-border-subtle align-top">
+                  <td className="py-1.5 pr-2">
+                    <Data as="div" className="text-[11px] text-text-tertiary">
+                      {l.materialCode}
+                    </Data>
+                    <div className="text-text-primary">{l.description}</div>
+                  </td>
+                  <td className="py-1.5 pr-2 text-right whitespace-nowrap">
+                    <Data>{`${l.open.toLocaleString('en-US')} ${l.uom}`}</Data>
+                  </td>
+                  <td className="py-1.5 pr-2">
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      aria-label={t('fc.asn.shippedFor', { material: l.materialCode })}
+                      aria-invalid={bad || over}
+                      value={e.qty}
+                      onChange={(ev) => onChange(l.materialCode, { qty: ev.target.value })}
+                      className={`${inputClass} min-w-[96px]`}
+                    />
+                    {bad && <div className="mt-1 text-[11px] text-danger">{t('fc.asn.qty.invalid')}</div>}
+                  </td>
+                  <td className="py-1.5 pr-2">
+                    <input
+                      type="text"
+                      aria-label={t('fc.asn.batchFor', { material: l.materialCode })}
+                      value={e.batch}
+                      onChange={(ev) => onChange(l.materialCode, { batch: ev.target.value })}
+                      placeholder={t('supplierShipments.placeholder.batch')}
+                      className={`${inputClass} min-w-[110px]`}
+                    />
+                  </td>
+                  <td className="py-1.5">
+                    <input
+                      type="date"
+                      aria-label={t('fc.asn.expiryFor', { material: l.materialCode })}
+                      value={e.expiry}
+                      onChange={(ev) => onChange(l.materialCode, { expiry: ev.target.value })}
+                      className={inputClass}
+                    />
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      {read.overCount > 0 && (
+        <div className="bg-warning-soft border-l-2 border-warning rounded px-3 py-2 space-y-2">
+          <p role="alert" className="text-xs text-warning-hover">
+            {read.overCount === 1
+              ? t('fc.asn.overOpen.one')
+              : t('fc.asn.overOpen.other', { count: read.overCount })}
+          </p>
+          <label className="block">
+            <span className={labelClass}>{t('fc.asn.overOpen.reason')}</span>
+            <textarea
+              rows={2}
+              value={overShipReason}
+              onChange={(ev) => onReasonChange(ev.target.value)}
+              className={`${inputClass} resize-y`}
+            />
+          </label>
+        </div>
+      )}
+    </div>
+  );
 };
 
 // Batch E (DISCOVERY-REAL-SUBJECTS-01): this list was six real courier and
@@ -126,83 +300,6 @@ const CARRIER_OPTIONS = [
   'Other',
 ];
 
-const DockAppointments: React.FC = () => {
-  const { t } = useTranslation();
-  // i18n-defer: dock-appointment fixture is sample data — the field VALUES
-  // (dates, times, dock/location proper nouns) stay canonical EN; only the field
-  // LABELS localize.
-  const dockFields = [
-    { Icon: Calendar, label: t('supplierShipments.dock.field.date'), value: 'Monday, 7 April 2026' },
-    { Icon: Clock, label: t('supplierShipments.dock.field.time'), value: '10:00 WIB' },
-    { Icon: Package, label: t('supplierShipments.dock.field.dock'), value: 'Dock 3' },
-    {
-      Icon: MapPin,
-      label: t('supplierShipments.dock.field.location'),
-      value: 'NDC Jatake 6, Tangerang Selatan',
-    },
-  ];
-  return (
-    <div className="flex flex-col gap-4">
-      <h3 className="text-section text-text-primary">
-        {t('supplierShipments.dock.heading')}
-      </h3>
-
-      <div className="bg-bg-surface border-2 border-success rounded-lg shadow-sm p-5">
-        <div className="flex items-start justify-between mb-4 gap-3 flex-wrap">
-          <div>
-            <Data as="div" className="text-base font-bold text-text-primary">
-              ASN-2026-001
-            </Data>
-            <div className="text-xs text-text-tertiary mt-0.5">
-              {/* i18n-defer: mock/sample data (material proper noun) */}
-              <Data>PO-2025-00107</Data> · PET Bottle 100ml Airless Pump
-            </div>
-          </div>
-          <StatusPill variant="success">Confirmed</StatusPill>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-          {dockFields.map(({ Icon, label, value }) => (
-            <div
-              key={label}
-              className="px-3 py-2 bg-bg-hover rounded-md flex items-start gap-2"
-            >
-              <Icon size={14} className="text-text-tertiary mt-0.5 shrink-0" />
-              <div>
-                <div className="text-label text-text-tertiary uppercase">
-                  {label}
-                </div>
-                <div className="text-sm text-text-primary mt-0.5">{value}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="bg-warning-soft border-l-2 border-warning rounded px-4 py-3 text-sm text-text-secondary flex items-start gap-2">
-        <Clock size={14} className="text-warning-hover shrink-0 mt-0.5" />
-        <span>
-          {t('supplierShipments.dock.notice.arrivePre')}{' '}
-          <strong className="text-warning-hover">
-            {t('supplierShipments.dock.notice.arriveEmphasis')}
-          </strong>
-          . {t('supplierShipments.dock.notice.arrivePost')}{' '}
-          {/* i18n-defer: mock/sample data (receiving-team phone number) */}
-          <strong>+62-21-5595-xxxx</strong>{' '}
-          {t('supplierShipments.dock.notice.arriveTail')}
-        </span>
-      </div>
-
-      <div className="bg-info-soft border-l-2 border-info rounded px-4 py-3 text-sm text-text-secondary flex items-start gap-2">
-        <CheckCircle2 size={14} className="text-info shrink-0 mt-0.5" />
-        <span>
-          {t('supplierShipments.dock.info.pre')}{' '}
-          <strong>WhatsApp</strong>{' '}
-          {t('supplierShipments.dock.info.post')}
-        </span>
-      </div>
-    </div>
-  );
-};
 
 interface ShipmentsListProps {
   asns: ASN[];
@@ -210,6 +307,7 @@ interface ShipmentsListProps {
   expanded: Set<string>;
   onToggleExpand: (asnNumber: string) => void;
   onSubmitAsn: (asnNumber: string) => void;
+  onCancelAsn: (asnNumber: string) => void;
   onCreateAsnForPO: (poId: string) => void;
   confirmedPOs: PurchaseOrder[];
 }
@@ -220,6 +318,7 @@ const ShipmentsList: React.FC<ShipmentsListProps> = ({
   expanded,
   onToggleExpand,
   onSubmitAsn,
+  onCancelAsn,
   onCreateAsnForPO,
   confirmedPOs,
 }) => {
@@ -239,6 +338,8 @@ const ShipmentsList: React.FC<ShipmentsListProps> = ({
     // notice: the day a supplier lane is granted the atom, the surface follows
     // the bundles instead of contradicting them.
     resolve: 'asn:flag',
+    // REQ-E07-04 — withdrawing a notice before receipt.
+    cancel: 'asn:cancel',
   } as const);
   const filtered = useMemo(
     () =>
@@ -418,7 +519,23 @@ const ShipmentsList: React.FC<ShipmentsListProps> = ({
                           testId="handoff-asn-resolve"
                         />
                       )}
-                      {asn.status !== 'Draft' &&
+                      {ASN_CANCELLABLE_STATES.includes(asn.status) &&
+                        (asnVerbs.cancel.kind === 'held' ? (
+                          <Button
+                            variant="secondary"
+                            className="ml-2"
+                            onClick={() => onCancelAsn(asn.asnNumber)}
+                            aria-label={`${t('fc.asn.cancel.action')} ${asn.asnNumber}`}
+                          >
+                            {t('fc.asn.cancel.action')}
+                          </Button>
+                        ) : (
+                          <HandoffNotice
+                            availability={asnVerbs.cancel}
+                            testId="handoff-asn-cancel"
+                          />
+                        ))}
+                      {!ASN_CANCELLABLE_STATES.includes(asn.status) &&
                         asn.status !== 'Discrepancy' && (
                           <span className="text-text-tertiary text-xs">—</span>
                         )}
@@ -477,6 +594,26 @@ const ShipmentsList: React.FC<ShipmentsListProps> = ({
                               <dd className="text-text-primary">
                                 {asn.details.temperatureRequirement}
                               </dd>
+                              <dt className="text-text-tertiary">
+                                {t('fc.asn.detail.shipDate')}
+                              </dt>
+                              <dd className="text-text-primary">
+                                <Data>{asn.shipDate ? fmtDate(asn.shipDate) : t('fc.asn.detail.none')}</Data>
+                              </dd>
+                              <dt className="text-text-tertiary">
+                                {t('fc.asn.detail.packingList')}
+                              </dt>
+                              <dd className="text-text-primary">
+                                {asn.packingListFile ?? t('fc.asn.detail.none')}
+                              </dd>
+                              {asn.overShipReason && (
+                                <>
+                                  <dt className="text-text-tertiary">
+                                    {t('fc.asn.detail.overShipReason')}
+                                  </dt>
+                                  <dd className="text-text-primary">{asn.overShipReason}</dd>
+                                </>
+                              )}
                             </dl>
                           </div>
                           <div className="bg-bg-surface border border-border-subtle rounded-md p-4">
@@ -504,6 +641,9 @@ const ShipmentsList: React.FC<ShipmentsListProps> = ({
                                     </th>
                                     <th className="text-right py-1">
                                       {t('supplierShipments.lineItems.col.lot')}
+                                    </th>
+                                    <th className="text-right py-1">
+                                      {t('fc.asn.col.expiryShort')}
                                     </th>
                                   </tr>
                                 </thead>
@@ -534,6 +674,9 @@ const ShipmentsList: React.FC<ShipmentsListProps> = ({
                                         </td>
                                         <td className="py-1.5 text-right text-text-tertiary">
                                           <Data>{li.lotNumber}</Data>
+                                        </td>
+                                        <td className="py-1.5 text-right text-text-tertiary">
+                                          <Data>{li.expiryDate ? fmtDate(li.expiryDate) : '—'}</Data>
                                         </td>
                                       </tr>
                                     );
@@ -578,6 +721,7 @@ const SupplierShipments: React.FC = () => {
   const { supplierId } = identity;
   const createAsnMutation = useAdvanceShipNoticeCreate();
   const submitAsnMutation = useAdvanceShipNoticeSubmit();
+  const cancelAsnMutation = useAdvanceShipNoticeCancel();
   // ⚠️ **THE WIZARD TAB IS A SECOND ENTRY TO THE SAME VERBS, AND THE FIRST PASS
   // OF THIS BATCH MISSED IT** — `IMPORTER-PRESENCE-IS-NOT-VERB-COVERAGE-01` for
   // the third time, on the seat that was applying the rule. The row-level create
@@ -601,17 +745,34 @@ const SupplierShipments: React.FC = () => {
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<AsnForm>(DEFAULT_FORM);
   const [submitTarget, setSubmitTarget] = useState<ASN | null>(null);
-  const [submitForm, setSubmitForm] = useState({ carrier: 'Sample Courier (illustrative)', trackingNumber: '', eta: '' });
+  const [submitForm, setSubmitForm] = useState({
+    carrier: 'Sample Courier (illustrative)',
+    trackingNumber: '',
+    eta: '',
+    shipDate: '',
+    lines: {} as Record<string, LineEntry>,
+    overShipReason: '',
+  });
+  const [cancelTarget, setCancelTarget] = useState<string | null>(null);
 
   const supplierQuery = useCurrentSupplier();
   const asnsQuery = useASNs();
-  const posQuery = usePurchaseOrders({ status: POStatus.CONFIRMED });
+  // REQ-E09-03 BR-06 — an ASN may ship a confirmed call-off on the chosen PO.
+  const callOffsQuery = useCallOffs();
+  // REQ-E07-04 — partial shipments: a PO stays shippable after a first receipt.
+  const posQuery = usePurchaseOrders({
+    status: [POStatus.CONFIRMED, POStatus.PARTIALLY_DELIVERED],
+  });
 
   const mySupplier = supplierQuery.data ?? null;
   const asns = useMemo(() => asnsQuery.data?.items ?? [], [asnsQuery.data]);
-  const CONFIRMED_POS = useMemo(
+  const SHIPPABLE_POS = useMemo(
     () => posQuery.data?.items ?? [],
     [posQuery.data],
+  );
+  const CONFIRMED_POS = useMemo(
+    () => SHIPPABLE_POS.filter((po) => po.status === POStatus.CONFIRMED),
+    [SHIPPABLE_POS],
   );
 
   const counts = useMemo(() => {
@@ -621,6 +782,7 @@ const SupplierShipments: React.FC = () => {
       'In Transit': 0,
       Delivered: 0,
       Discrepancy: 0,
+      Cancelled: 0,
     };
     for (const a of asns) base[a.status]++;
     return base;
@@ -651,11 +813,43 @@ const SupplierShipments: React.FC = () => {
     if (!asn) return;
     const real = (v: string) => (v && v !== '—' ? v : '');
     setSubmitTarget(asn);
+    const entries: Record<string, LineEntry> = Object.fromEntries(
+      submitLinesFor(asn).map((l) => {
+        const stored = asn.lineItems.find((li) => li.materialCode === l.materialCode);
+        return [
+          l.materialCode,
+          {
+            qty: stored ? String(stored.shippedQty) : l.open > 0 ? String(l.open) : '',
+            batch: stored ? real(stored.lotNumber) : '',
+            expiry: stored?.expiryDate ?? '',
+          },
+        ];
+      }),
+    );
     setSubmitForm({
       carrier: real(asn.carrier) || 'Sample Courier (illustrative)',
       trackingNumber: real(asn.trackingNumber),
       eta: real(asn.eta),
+      shipDate: asn.shipDate ?? '',
+      lines: entries,
+      overShipReason: asn.overShipReason ?? '',
     });
+  };
+
+  // The lines a draft is submitted with: its PO's lines (open quantity leaving
+  // this draft out), plus any stored line whose material the PO does not carry.
+  const submitLinesFor = (asn: ASN): OpenLine[] => {
+    const po = SHIPPABLE_POS.find((p) => p.poNumber === asn.poReference);
+    const fromPo = po ? openLinesFor(po, asns, asn.asnNumber) : [];
+    const extra = asn.lineItems
+      .filter((li) => !fromPo.some((l) => l.materialCode === li.materialCode))
+      .map((li) => ({
+        materialCode: li.materialCode,
+        description: li.description,
+        uom: li.uom ?? '',
+        open: li.shippedQty,
+      }));
+    return [...fromPo, ...extra];
   };
 
   // t_asn_submit (Draft → Submitted) with the collected fields. The dispatcher
@@ -664,18 +858,30 @@ const SupplierShipments: React.FC = () => {
   const doSubmitAsn = () => {
     if (!submitTarget) return;
     const asnNumber = submitTarget.asnNumber;
+    const read = readLines(submitForm.lines, submitLinesFor(submitTarget));
     submitAsnMutation.mutate(
-      { asnNumber, ...submitForm },
+      {
+        asnNumber,
+        carrier: submitForm.carrier,
+        trackingNumber: submitForm.trackingNumber,
+        eta: submitForm.eta,
+        ...(submitForm.shipDate ? { shipDate: submitForm.shipDate } : {}),
+        ...(read.lines.length > 0 ? { lines: read.lines.map((l) => l.input) } : {}),
+        ...(submitForm.overShipReason.trim() ? { overShipReason: submitForm.overShipReason.trim() } : {}),
+      },
       {
         onSuccess: (res) => {
           if (res.status === 'failed') {
             const missing = (res.reason ?? '').startsWith('MISSING_FIELDS');
+            const incomplete = (res.reason ?? '').includes('INCOMPLETE_ASN');
             toast({
               variant: 'warning',
               title: t('asn.submit.failed.title', { asnNumber }),
               description: missing
                 ? t('asn.submit.missingFields', { code: refusalDetailOf(res.reason) })
-                : (refusalText(res.reason) ?? t('asn.submit.failed.desc', { reason: res.reason ?? '' })),
+                : incomplete
+                  ? `${t('fc.asn.submit.required')} (${refusalDetailOf(res.reason)})`
+                  : (refusalText(res.reason) ?? t('asn.submit.failed.desc', { reason: res.reason ?? '' })),
             });
             return;
           }
@@ -685,6 +891,31 @@ const SupplierShipments: React.FC = () => {
             title: t('asn.submit.success.title', { asnNumber }),
             description: t('asn.submit.success.desc', { correlationId: res.correlationId }),
           });
+        },
+        onError: () =>
+          toast({ variant: 'error', title: t('asn.denied.title'), description: t('asn.denied.desc') }),
+      },
+    );
+  };
+
+  // t_asn_cancel — a Draft or Submitted ASN withdrawn before receipt.
+  const doCancelAsn = () => {
+    if (!cancelTarget) return;
+    const asnNumber = cancelTarget;
+    cancelAsnMutation.mutate(
+      { asnNumber },
+      {
+        onSuccess: (res) => {
+          if (res.status === 'failed') {
+            toast({
+              variant: 'warning',
+              title: t('fc.asn.cancel.failed', { asnNumber }),
+              description: refusalText(res.reason) ?? res.reason ?? '',
+            });
+            return;
+          }
+          setCancelTarget(null);
+          toast({ variant: 'success', title: t('fc.asn.cancel.success', { asnNumber }) });
         },
         onError: () =>
           toast({ variant: 'error', title: t('asn.denied.title'), description: t('asn.denied.desc') }),
@@ -742,7 +973,7 @@ const SupplierShipments: React.FC = () => {
       />
     );
   if (!mySupplier) return <NoSupplierIdentity />;
-  if (asns.length === 0 && CONFIRMED_POS.length === 0)
+  if (asns.length === 0 && SHIPPABLE_POS.length === 0)
     return (
       <EmptyState
         breadcrumb={SHIPMENTS_CRUMB}
@@ -752,14 +983,19 @@ const SupplierShipments: React.FC = () => {
       />
     );
 
-  const selectedPO = CONFIRMED_POS.find((p) => p.id === form.poId);
+  const selectedPO = SHIPPABLE_POS.find((p) => p.id === form.poId);
+  const wizardOpenLines = selectedPO ? openLinesFor(selectedPO, asns) : [];
+  const wizardRead = readLines(form.lines, wizardOpenLines);
   const step1Valid = form.poId !== '';
+  // BR-04 required fields, and BR-02's reason when a line ships above open.
   const step2Valid =
     form.carrier !== '' &&
     form.trackingNumber !== '' &&
     form.shipDate !== '' &&
     form.eta !== '' &&
-    form.batchNumber !== '';
+    form.eta >= form.shipDate &&
+    wizardRead.complete &&
+    (wizardRead.overCount === 0 || form.overShipReason.trim() !== '');
   const step3Valid = form.confirmed;
   const isStepValid = (s: number): boolean =>
     s === 0 ? step1Valid : s === 1 ? step2Valid : step3Valid;
@@ -773,11 +1009,16 @@ const SupplierShipments: React.FC = () => {
       carrier: form.carrier,
       trackingNumber: form.trackingNumber,
       eta: form.eta,
+      shipDate: form.shipDate,
     };
     try {
       const createRes = await createAsnMutation.mutateAsync({
         poReference: selectedPO.poNumber,
         ...detail,
+        lines: wizardRead.lines.map((l) => l.input),
+        ...(form.packingList ? { packingListFile: form.packingList } : {}),
+        ...(form.overShipReason.trim() ? { overShipReason: form.overShipReason.trim() } : {}),
+        ...(form.callOffId ? { callOffId: form.callOffId } : {}),
       });
       if (createRes.status === 'failed' || !createRes.entityId) {
         toast({
@@ -821,19 +1062,27 @@ const SupplierShipments: React.FC = () => {
       description: t('supplierShipments.wizard.select.desc'),
       content: (
         <div className="flex flex-col gap-3">
-          {CONFIRMED_POS.length === 0 ? (
+          {SHIPPABLE_POS.length === 0 ? (
             <div className="bg-bg-hover border border-border-subtle rounded-md py-8 px-4 text-center text-sm text-text-tertiary">
               {t('supplierShipments.wizard.select.empty')}
             </div>
           ) : (
-            CONFIRMED_POS.map((po) => {
+            SHIPPABLE_POS.map((po) => {
               const mat = po.lineItems[0];
               const selected = form.poId === po.id;
+              const openTotal = openLinesFor(po, asns).reduce((a, l) => a + l.open, 0);
               return (
                 <button
                   key={po.id}
                   type="button"
-                  onClick={() => updateForm({ poId: po.id })}
+                  onClick={() =>
+                    updateForm({
+                      poId: po.id,
+                      lines: seedLines(openLinesFor(po, asns)),
+                      overShipReason: '',
+                      callOffId: '',
+                    })
+                  }
                   aria-pressed={selected}
                   className={`text-left rounded-md p-4 border transition-colors ${
                     selected
@@ -858,6 +1107,10 @@ const SupplierShipments: React.FC = () => {
                       <div className="text-xs text-text-tertiary">
                         {t('supplierShipments.wizard.select.delivery')}{' '}
                         <Data>{fmtDate(po.requestedDeliveryDate)}</Data>
+                      </div>
+                      <div className="text-xs text-text-tertiary">
+                        {t('fc.asn.select.open')}{' '}
+                        <Data>{mat ? `${openTotal.toLocaleString()} ${mat.uom}` : '—'}</Data>
                       </div>
                     </div>
                   </div>
@@ -894,6 +1147,29 @@ const SupplierShipments: React.FC = () => {
               );
             })
           )}
+          {selectedPO && (
+            <div>
+              <label htmlFor="asn-calloff" className="block text-label text-text-tertiary uppercase mb-1">
+                {t('co.asn.callOff')}
+              </label>
+              <select
+                id="asn-calloff"
+                value={form.callOffId}
+                onChange={(e) => updateForm({ callOffId: e.target.value })}
+                className="w-full px-3 py-2 text-sm text-text-primary bg-white border border-border-input rounded-md focus:outline-none focus:border-action"
+              >
+                <option value="">{t('co.asn.noCallOff')}</option>
+                {(callOffsQuery.data?.items ?? [])
+                  .filter((c) => c.poId === selectedPO.id && isConfirmedAndAccepted(c))
+                  .map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {`${c.callOffNumber} · ${c.quantity.toLocaleString()} ${c.uom} · ${fmtDate(c.needDate)}`}
+                    </option>
+                  ))}
+              </select>
+              <p className="mt-1 text-xs text-text-tertiary">{t('co.asn.callOffHint')}</p>
+            </div>
+          )}
         </div>
       ),
     },
@@ -927,10 +1203,11 @@ const SupplierShipments: React.FC = () => {
                 </select>
               </div>
               <div>
-                <label className={labelClass}>
-                  {t('supplierShipments.wizard.details.field.tracking')}
+                <label className={labelClass} htmlFor="asn-wizard-tracking">
+                  {t('fc.asn.trackingOrVehicle')}
                 </label>
                 <input
+                  id="asn-wizard-tracking"
                   type="text"
                   placeholder={t('supplierShipments.placeholder.tracking')}
                   value={form.trackingNumber}
@@ -966,6 +1243,28 @@ const SupplierShipments: React.FC = () => {
           </FormSection>
 
           <FormSection
+            eyebrow={t('supplierShipments.wizard.details.logistics.eyebrow')}
+            title={t('fc.asn.lines.title')}
+            description={t('fc.asn.lines.desc')}
+          >
+            <AsnLinesEditor
+              open={wizardOpenLines}
+              entries={form.lines}
+              onChange={(code, patch) =>
+                setForm((f) => ({
+                  ...f,
+                  lines: {
+                    ...f.lines,
+                    [code]: { ...(f.lines[code] ?? { qty: '', batch: '', expiry: '' }), ...patch },
+                  },
+                }))
+              }
+              overShipReason={form.overShipReason}
+              onReasonChange={(v) => updateForm({ overShipReason: v })}
+            />
+          </FormSection>
+
+          <FormSection
             eyebrow={t('supplierShipments.wizard.details.packaging.eyebrow')}
             title={t('supplierShipments.wizard.details.packaging.title')}
             description={t('supplierShipments.wizard.details.packaging.desc')}
@@ -997,30 +1296,6 @@ const SupplierShipments: React.FC = () => {
                   className={inputClass}
                 />
               </div>
-              <div>
-                <label className={labelClass}>
-                  {t('supplierShipments.wizard.details.field.batch')}
-                </label>
-                <input
-                  type="text"
-                  placeholder={t('supplierShipments.placeholder.batch')}
-                  value={form.batchNumber}
-                  onChange={(e) => updateForm({ batchNumber: e.target.value })}
-                  className={inputClass}
-                />
-              </div>
-              <div>
-                <label className={labelClass}>
-                  {t('supplierShipments.wizard.details.field.lot')}
-                </label>
-                <input
-                  type="text"
-                  placeholder={t('supplierShipments.placeholder.lot')}
-                  value={form.lotNumber}
-                  onChange={(e) => updateForm({ lotNumber: e.target.value })}
-                  className={inputClass}
-                />
-              </div>
             </div>
           </FormSection>
 
@@ -1031,7 +1306,7 @@ const SupplierShipments: React.FC = () => {
           >
             <div>
               <label className={labelClass}>
-                {t('supplierShipments.wizard.details.field.packingList')}
+                {t('fc.asn.packingList')}
               </label>
               <label className="inline-flex items-center gap-2 cursor-pointer">
                 <input
@@ -1085,20 +1360,23 @@ const SupplierShipments: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {[
                 [t('supplierShipments.wizard.review.field.poNumber'), selectedPO?.poNumber ?? '—'],
-                [t('supplierShipments.wizard.review.field.material'), selectedPO?.lineItems[0]?.description ?? '—'],
-                [
-                  t('supplierShipments.wizard.review.field.quantity'),
-                  selectedPO?.lineItems[0]
-                    ? `${selectedPO.lineItems[0].quantity.toLocaleString()} ${selectedPO.lineItems[0].uom}`
-                    : '—',
-                ],
+                ...wizardRead.lines.map((l) => [
+                  `${t('supplierShipments.wizard.review.field.material')} · ${l.line.materialCode}`,
+                  `${l.line.description} · ${
+                    Number.isFinite(l.input.shippedQty) ? l.input.shippedQty.toLocaleString() : '—'
+                  } ${l.line.uom} · ${t('fc.asn.col.batch')} ${l.input.batchNumber || '—'}${
+                    l.input.expiryDate ? ` · ${t('fc.asn.col.expiryShort')} ${fmtDate(l.input.expiryDate)}` : ''
+                  }`,
+                ]),
                 [t('supplierShipments.wizard.review.field.carrier'), form.carrier],
-                [t('supplierShipments.wizard.review.field.tracking'), form.trackingNumber || '—'],
+                [t('fc.asn.trackingOrVehicle'), form.trackingNumber || '—'],
                 [t('supplierShipments.wizard.review.field.shipDate'), fmtDate(form.shipDate)],
                 [t('supplierShipments.wizard.review.field.eta'), form.eta ? fmtDate(form.eta) : '—'],
                 [t('supplierShipments.wizard.review.field.packages'), form.packages || '—'],
-                [t('supplierShipments.wizard.review.field.batch'), form.batchNumber || '—'],
-                [t('supplierShipments.wizard.review.field.lot'), form.lotNumber || '—'],
+                [t('fc.asn.packingList'), form.packingList || '—'],
+                ...(form.overShipReason.trim()
+                  ? [[t('fc.asn.detail.overShipReason'), form.overShipReason.trim()]]
+                  : []),
               ].map(([k, v]) => (
                 <div key={k} className="bg-bg-hover rounded-md px-3 py-2">
                   <div className="text-label text-text-tertiary uppercase mb-0.5">
@@ -1153,7 +1431,7 @@ const SupplierShipments: React.FC = () => {
       <PageMetaLine className="-mt-6 mb-6">
         {t('supplierShipments.meta.summary', {
           shipments: asns.length,
-          pos: CONFIRMED_POS.length,
+          pos: SHIPPABLE_POS.length,
         })}
         {/* D-CENSUS-8 — PARTLY REAL, both axes. ASN create + submit dispatch through
             the wired `advanceShipNotice` target and cascade into goods receipt; the
@@ -1207,7 +1485,6 @@ const SupplierShipments: React.FC = () => {
           ...(wizardHeld
             ? [{ id: 'create' as TabKey, label: t('supplierShipments.tab.createAsn') }]
             : []),
-          { id: 'dock', label: t('supplierShipments.tab.dock'), count: 1 },
         ]}
         value={tab}
         onChange={setTab}
@@ -1221,6 +1498,7 @@ const SupplierShipments: React.FC = () => {
           expanded={expanded}
           onToggleExpand={toggleExpand}
           onSubmitAsn={openSubmitForm}
+          onCancelAsn={setCancelTarget}
           onCreateAsnForPO={createAsnForPO}
           confirmedPOs={CONFIRMED_POS}
         />
@@ -1256,7 +1534,6 @@ const SupplierShipments: React.FC = () => {
         />
       )}
 
-      {tab === 'dock' && <DockAppointments />}
 
       <SidePanel
         open={submitTarget !== null}
@@ -1306,13 +1583,22 @@ const SupplierShipments: React.FC = () => {
               </select>
             </label>
             <label className="block">
-              <span className={labelClass}>{t('asn.submit.form.tracking')}</span>
+              <span className={labelClass}>{t('fc.asn.trackingOrVehicle')}</span>
               <input
                 type="text"
                 value={submitForm.trackingNumber}
                 onChange={(e) => setSubmitForm((f) => ({ ...f, trackingNumber: e.target.value }))}
                 className={inputClass}
                 placeholder={t('supplierShipments.placeholder.tracking')}
+              />
+            </label>
+            <label className="block">
+              <span className={labelClass}>{t('fc.asn.shipDate')}</span>
+              <input
+                type="date"
+                value={submitForm.shipDate}
+                onChange={(e) => setSubmitForm((f) => ({ ...f, shipDate: e.target.value }))}
+                className={inputClass}
               />
             </label>
             <label className="block">
@@ -1324,8 +1610,45 @@ const SupplierShipments: React.FC = () => {
                 className={inputClass}
               />
             </label>
+            <div>
+              <div className={labelClass}>{t('fc.asn.lines.title')}</div>
+              <AsnLinesEditor
+                open={submitLinesFor(submitTarget)}
+                entries={submitForm.lines}
+                onChange={(code, patch) =>
+                  setSubmitForm((f) => ({
+                    ...f,
+                    lines: {
+                      ...f.lines,
+                      [code]: { ...(f.lines[code] ?? { qty: '', batch: '', expiry: '' }), ...patch },
+                    },
+                  }))
+                }
+                overShipReason={submitForm.overShipReason}
+                onReasonChange={(v) => setSubmitForm((f) => ({ ...f, overShipReason: v }))}
+              />
+              <p className="mt-2 text-xs text-text-tertiary">{t('fc.asn.submit.required')}</p>
+            </div>
           </div>
         )}
+      </SidePanel>
+
+      <SidePanel
+        open={cancelTarget !== null}
+        onClose={() => setCancelTarget(null)}
+        title={cancelTarget ? t('fc.asn.cancel.title', { asnNumber: cancelTarget }) : ''}
+        footerActions={
+          <>
+            <Button variant="secondary" onClick={() => setCancelTarget(null)}>
+              {t('fc.asn.cancel.keep')}
+            </Button>
+            <Button variant="outline" onClick={doCancelAsn} disabled={cancelAsnMutation.isPending}>
+              {t('fc.asn.cancel.confirm')}
+            </Button>
+          </>
+        }
+      >
+        <p className="text-sm text-text-secondary">{t('fc.asn.cancel.body')}</p>
       </SidePanel>
     </AppShellV2>
   );

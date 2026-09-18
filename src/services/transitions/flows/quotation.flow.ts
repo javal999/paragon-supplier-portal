@@ -51,7 +51,41 @@ export const quotationFlow: FlowDefinition = {
       // Membership, not merely presence: `requiredFields` only proves the field
       // is non-empty, so without this an arbitrary token ('CNY', 'Rp', 'usd')
       // would satisfy the floor and be stored as a currency nobody permits.
-      policyHooks: [POLICY_HOOKS.QUOTATION_SUBMIT_CURRENCY_PERMITTED],
+      //
+      // REQ-E03-03 AC-05 / BR-05 — the response deadline is enforced HERE and
+      // not on the screen. A closed window that only greys a button out is a
+      // window any hand-made dispatch walks through, and a quote accepted after
+      // the deadline is a quote the other bidders never had the chance to beat.
+      // The deadline in force is the invitee's own extension when the buyer
+      // granted one, so extending for two suppliers does not reopen the event.
+      policyHooks: [
+        POLICY_HOOKS.QUOTATION_SUBMIT_CURRENCY_PERMITTED,
+        POLICY_HOOKS.QUOTATION_SUBMIT_BEFORE_DEADLINE,
+        POLICY_HOOKS.QUOTATION_LINES_WELL_FORMED,
+      ],
+      surfaceable: { surfaced: true },
+      version: 1,
+    },
+    {
+      // REQ-E03-05 BR-03 — a REVISED quote inside a negotiation round. A
+      // CREATION verb, not an edit: every version is kept and viewable by the
+      // buyer (AC-03), so revising mints a new quotation that names the one it
+      // supersedes. The superseded version is not deleted and not relabelled.
+      //
+      // Its guard is the one BR-03 exists for: ONLY A SUPPLIER INVITED TO THE
+      // ROUND MAY SUBMIT. Membership of the RFQ is not enough — the shortlist
+      // is the whole point of a round.
+      id: 't_quotation_revise',
+      from: [],
+      to: 'Submitted',
+      trigger: 'creation',
+      requiredRole: 'quotation:submit',
+      requiredFields: ['roundId', 'rfqId', 'unitPrice', 'leadTimeDays', 'currency'],
+      policyHooks: [
+        POLICY_HOOKS.QUOTATION_SUBMIT_CURRENCY_PERMITTED,
+        POLICY_HOOKS.QUOTATION_REVISE_IN_ROUND,
+        POLICY_HOOKS.QUOTATION_LINES_WELL_FORMED,
+      ],
       surfaceable: { surfaced: true },
       version: 1,
     },

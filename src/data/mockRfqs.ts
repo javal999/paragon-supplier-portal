@@ -1,4 +1,25 @@
 import type { FxPin } from '../lib/fxPin';
+import type { DeadlineExtension, RfxInvitee } from '../services/sourcing/types';
+import { DECLARED_PRESENT } from '../services/data/fixturePresent';
+
+/**
+ * REQ-E03-03 — ONE PRICED LINE OF A SOURCING EVENT.
+ *
+ * The RFQ used to carry a single `totalQty` and a single `materialCategory`,
+ * and a quotation a single `unitPrice` — so an event sourcing three items could
+ * only be answered with one number, and a buyer comparing them was comparing
+ * averages. Line items are additive and OPTIONAL: an event with none is the
+ * single-item event the prototype already had, unchanged.
+ */
+export interface RfqLineItem {
+  readonly lineNo: number;
+  readonly materialCode: string;
+  readonly description: string;
+  readonly quantity: number;
+  readonly uom: 'KG' | 'PCS' | 'L' | 'MT';
+  /** The specification an RFI pre-fills (REQ-E03-03 BR-02), buyer-editable. */
+  readonly specification?: string;
+}
 
 export type RFQStatus =
   | 'Draft'
@@ -55,9 +76,61 @@ export interface RFQ {
    * rate nobody chose. A single-currency RFQ never needs one.
    */
   fxPins?: readonly FxPin[];
+  /**
+   * REQ-E03-03 — the items being sourced, each answerable with its own price.
+   * OPTIONAL and additive: absent = the single-item event this fixture set has
+   * always carried, whose quantity is `totalQty`.
+   */
+  lineItems?: readonly RfqLineItem[];
+  /**
+   * REQ-E03-03 BR-02 — the RFI this RFQ was created from. Absent is the common
+   * case: an RFI is never a required step (REQ-E03-02 BR-03).
+   */
+  sourceRfiId?: string;
+  /**
+   * REQ-E03-03 BR-05 — a deadline granted to ONE invitee. Absent from the map =
+   * `responseDeadline` applies. Kept per supplier rather than overwritten onto
+   * the event so "extended for everyone" and "extended for these two" stay
+   * distinguishable after the fact.
+   */
+  inviteeDeadlines?: readonly RfxInvitee[];
+  /** The extensions the buyer granted, in order. */
+  extensions?: readonly DeadlineExtension[];
 }
 
-export const mockRfqs: RFQ[] = [
+// ────────────────────────────────────────────────────────────────────────────
+// ⚠️ THE DATES BELOW ARE RE-ANCHORED ON THE DECLARED PRESENT, AND THE REASON IS
+// A DEFECT THIS PHASE MADE VISIBLE RATHER THAN A TIDY-UP.
+//
+// REQ-E03-03 AC-05 added a real deadline gate: a quote is refused after the
+// response deadline in force. Run against this fixture set as it stood, EVERY
+// event marked `Open` refused every quote — because the deadlines were authored
+// for May 2026 and the declared present had moved past them. **An event whose
+// status says Open while its window closed three months ago is a lie the
+// fixture was telling before the gate existed**; the gate did not break these
+// rows, it read them.
+//
+// The shape is `fixturePresent`'s per-family shift, applied locally rather than
+// by minting a new fixture family: ONE anchor, every date moved by `P − A`, so
+// the intervals between raise, respond and award are preserved exactly and each
+// event's status stays true of its own dates. `A` is chosen so the EARLIEST open
+// deadline lands a few days after the present — open events are open, closed and
+// awarded ones are behind it.
+// ────────────────────────────────────────────────────────────────────────────
+
+/** The instant this RFQ set was authored for. */
+const RFQ_ANCHOR = '2026-05-12';
+const RFQ_SHIFT_MS =
+  Date.parse(`${DECLARED_PRESENT}T00:00:00.000Z`) - Date.parse(`${RFQ_ANCHOR}T00:00:00.000Z`);
+
+/** `YYYY-MM-DD`, moved by `P − A`. Non-dates pass through untouched. */
+export const shiftRfqDay = (value: string): string => {
+  const ms = Date.parse(`${value}T00:00:00.000Z`);
+  if (!Number.isFinite(ms)) return value;
+  return new Date(ms + RFQ_SHIFT_MS).toISOString().slice(0, 10);
+};
+
+const RAW_RFQS: RFQ[] = [
   {
     id: 'rfq-001',
     rfqNumber: 'RFQ-2026-001',
@@ -96,7 +169,13 @@ export const mockRfqs: RFQ[] = [
     createdAt: '2026-05-02',
     responseDeadline: '2026-05-22',
     awardDeadline: '2026-05-29',
-    invitedSupplierIds: ['sup-007', 'sup-008', 'sup-012'],
+    // REQ-E03-01 AC-03 — this invitation used to name sup-012, which the
+    // supplier master carries as SUSPENDED. A suspended supplier cannot be
+    // selected as an invitee, so a sample event that had invited one was
+    // showing a state the filter refuses to produce. It now invites sup-013,
+    // active and with no OTIF history yet, which is the state the comparison
+    // must render as "No history" rather than 0%.
+    invitedSupplierIds: ['sup-007', 'sup-008', 'sup-013'],
     respondedSupplierIds: ['sup-007', 'sup-008'],
     totalQty: 200_000,
     uom: 'PCS',
@@ -438,3 +517,15 @@ export const mockRfqs: RFQ[] = [
     ],
   },
 ];
+
+/**
+ * The sourcing events every read resolves from — the authored rows with their
+ * three dates moved onto the declared present. Nothing else changes: ids,
+ * numbers, suppliers, quantities and statuses are byte-identical.
+ */
+export const mockRfqs: RFQ[] = RAW_RFQS.map((r) => ({
+  ...r,
+  createdAt: shiftRfqDay(r.createdAt),
+  responseDeadline: shiftRfqDay(r.responseDeadline),
+  awardDeadline: shiftRfqDay(r.awardDeadline),
+}));

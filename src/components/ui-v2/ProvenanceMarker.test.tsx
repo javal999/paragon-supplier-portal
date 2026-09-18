@@ -23,9 +23,9 @@ describe('ProvenanceMarker — two axes, neither caller-supplied', () => {
     expect(feedProvenance('purchaseOrders')).toBe('FIXTURE');
 
     renderMarker(<ProvenanceMarker capability="purchaseOrders" />);
-    expect(screen.getByText('Sample')).toBeInTheDocument();
+    expect(screen.getByText('Sample data')).toBeInTheDocument();
     expect(
-      screen.getByText('Commands dispatch — in-memory ledger'),
+      screen.getByText('Changes reset on reload'),
     ).toBeInTheDocument();
   });
 
@@ -60,9 +60,9 @@ describe('ProvenanceMarker — two axes, neither caller-supplied', () => {
     // verbs, so it must not display a "commands dispatch" claim it cannot honour.
     expect(dispatchesCommands('suppliers')).toBe(false);
     renderMarker(<ProvenanceMarker capability="suppliers" />);
-    expect(screen.getByText('Sample')).toBeInTheDocument();
+    expect(screen.getByText('Sample data')).toBeInTheDocument();
     expect(
-      screen.queryByText('Commands dispatch — in-memory ledger'),
+      screen.queryByText('Changes reset on reload'),
     ).not.toBeInTheDocument();
   });
 
@@ -71,10 +71,10 @@ describe('ProvenanceMarker — two axes, neither caller-supplied', () => {
     // flatten it back to a generic "Sample".
     renderMarker(<ProvenanceMarker capability="purchaseRequisitions" />);
     expect(
-      screen.getByText('Sample — awaiting live PR producer (SOMO / Grid)'),
+      screen.getByText('Sample data'),
     ).toBeInTheDocument();
     expect(
-      screen.getByText('Commands dispatch — in-memory ledger'),
+      screen.getByText('Changes reset on reload'),
     ).toBeInTheDocument();
   });
 });

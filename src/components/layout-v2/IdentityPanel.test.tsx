@@ -44,7 +44,7 @@ describe('⚠️ A BUYER SEAT — role stated, scope shown, scope NOT editable',
   it('states the persona and the access scope', async () => {
     renderWithProviders(<IdentityPanel />, { identity: BUYER });
     const panel = await open();
-    expect(within(panel).getByTestId('identity-persona')).toHaveTextContent(/Buyer/i);
+    expect(within(panel).getByTestId('identity-persona')).toHaveTextContent(/PTI/i);
     // OUR scope axis, derived from QueryScope — not TMS's warehouses or nodes.
     expect(within(panel).getByTestId('identity-scope')).toHaveTextContent(/All suppliers/i);
   });

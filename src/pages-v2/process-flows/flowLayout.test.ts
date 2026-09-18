@@ -272,9 +272,12 @@ describe('C.2 — entityVerbOf qualifies a cascade source with its entity', () =
       }
     }
 
-    // The three that were ambiguous before the qualification, named so a future
+    // The ones that were ambiguous before the qualification, named so a future
     // change that reintroduces a bare form has something specific to break.
+    // REQ-E07-07 added `invoice.t_invoice_match`: it is now also fired by the
+    // invoice's own `t_invoice_submit`, whose bare verb collides with itself.
     expect(rows.filter((r) => r.ambiguous).map((r) => r.key).sort()).toEqual([
+      'invoice.t_invoice_match',
       'purchaseRequisition.t_pr_source',
       'quotation.t_quotation_award',
       'quotation.t_quotation_reject',

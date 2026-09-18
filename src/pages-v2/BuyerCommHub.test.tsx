@@ -84,7 +84,7 @@ describe('BuyerCommHub — the buyer/planner Communication Hub (C4a)', () => {
   it('shows the SIMULATED liveness marker and NO fabricated channel chrome', () => {
     renderWithProviders(<BuyerCommHub />);
     // Honest amber "Sample" marker (LivenessRegistry two-gate).
-    expect(screen.getAllByText('Sample').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Sample data').length).toBeGreaterThan(0);
     // None of the retired mock's dishonest chrome survives.
     expect(screen.queryByText(/360dialog/i)).not.toBeInTheDocument();
     expect(screen.queryByText('✓✓')).not.toBeInTheDocument();

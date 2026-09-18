@@ -143,9 +143,22 @@ const LANE_BUNDLES = Object.freeze({
     procurement: Object.freeze([
       'rfq:create', 'rfq:publish', 'rfq:award', 'rfq:fx-pin', 'rfq:cancel', 'rfq:reopen',
       'quotation:review',
+      // ── REQ-E03-02 / REQ-E03-04 / REQ-E03-05 — the other two RFx event types
+      //    and the negotiation window ──────────────────────────────────────
+      // Raising an RFI or an RFP is the same authority as raising an RFQ one
+      // question earlier, so they sit in the lane that already holds
+      // `rfq:create`. `rfq:negotiate` is deliberately BESIDE `rfq:award` rather
+      // than folded into it: opening a round and choosing a winner are the same
+      // person's job today, but they are two acts, and a seat that may
+      // negotiate without awarding is expressible the day Procurement wants it.
+      'rfi:create', 'rfi:publish',
+      'rfp:create', 'rfp:publish',
+      'rfq:negotiate',
       'contract:draft', 'contract:activate', 'contract:renew', 'contract:terminate',
       'obligation:track', 'obligation:complete',
       'pr:approve', 'pr:reject',
+      // REQ-E07-02 — deciding on a supplier's counter-offer to a PO.
+      'po:review-response',
       // ── B1 · RAISING A SUPPLIER APPLICATION, AND ONLY RAISING ONE ─────────
       // Establishing or extending a commercial relationship with a vendor is
       // this lane's subject matter — it sits upstream of the sourcing, orders
@@ -227,6 +240,17 @@ const LANE_BUNDLES = Object.freeze({
       'requirementresponse:review', 'requirementresponse:accept',
       'requirementresponse:dispute',
       'inventorydeclaration:record',
+      // REQ-E07-06 — the planner settles a supplier's dispute of a receipt.
+      'receiptdiscrepancy:resolve',
+      // REQ-E09-01 / REQ-E09-03 — the planner releases and changes call-offs
+      // under an umbrella PO, and decides confirmations outside tolerance.
+      'calloff:plan', 'calloff:review',
+      // REQ-E08-02 / 03 / 05 — the planner pulls a connected supplier's stock,
+      // decides which suppliers see PTI stock, and closes alerts with a note.
+      'stocksync:run', 'stockaccess:manage', 'inventoryalert:close',
+      // REQ-E06-01 / REQ-E06-03 BR-05 — the planner publishes forecast versions
+      // and moves a period's demand to another supplier.
+      'forecast:publish',
     ]),
     // Raising and revising a requisition — split from approving one, which is
     // the segregation `pr:approve` living in `procurement` expresses.
@@ -263,7 +287,15 @@ const LANE_BUNDLES = Object.freeze({
     // talks to.
     commercial: Object.freeze([
       'quotation:submit',
+      // REQ-E03-02 / REQ-E03-04 — answering an RFI or an RFP is the same seat's
+      // work as quoting: what the company can make, on what terms, at what
+      // price. The three are one conversation and one lane.
+      'rfiresponse:answer',
+      'rfpresponse:answer',
       'requirementresponse:submit',
+      // REQ-E06-01 — opening a forecast version is recorded for PTI; the people
+      // who commit against the forecast are the ones who read it.
+      'forecast:view',
     ]),
     // ── FULFILMENT — everything downstream of a placed order ────────────────
     // The PO arrives as an `external-fact`: *"raised in S/4HANA … the portal is
@@ -283,10 +315,22 @@ const LANE_BUNDLES = Object.freeze({
     // and is recorded rather than argued away.
     fulfilment: Object.freeze([
       'po:view', 'po:acknowledge', 'po:confirm',
+      // REQ-E07-02 / REQ-E07-05 — the other two answers to an order, and the
+      // shipping notice on a confirmed one.
+      'po:adjust', 'po:reject', 'po:shipping-notice',
       'asn:create', 'asn:submit',
+      // REQ-E07-04 / REQ-E07-06 — withdrawing a notice before receipt, and
+      // answering a receipt discrepancy: both about the supplier's own delivery.
+      'asn:cancel',
+      'receiptdiscrepancy:respond',
+      // REQ-E09-03 / REQ-E09-04 — answering a call-off and saying it has shipped.
+      'calloff:confirm', 'calloff:dispatch',
       'incomingshipment:report', 'incomingshipment:ship',
       'incomingshipment:arrive', 'incomingshipment:cancel',
       'inventorydeclaration:declare',
+      // REQ-E08-04 — confirming allocated production capacity: the people who
+      // plan the supplier's production, beside the stock it declares.
+      'capacity:confirm',
     ]),
     // ── BACK OFFICE — the paperwork ─────────────────────────────────────────
     // *"The admin people are the ones who upload the certificates"* (operator).

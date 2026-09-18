@@ -35,6 +35,7 @@ import { MOCK_ASNS } from '../../data/mock/fixtures/supplierShipments';
 import { INITIAL_CATALOG } from '../../data/mock/fixtures/supplierStorefront';
 import { DOCUMENTS as SUPPLIER_DOCUMENTS } from '../../data/mock/fixtures/supplierDocuments';
 import { mockPurchaseOrders } from '../../../data/mockPurchaseOrders';
+import { mockRfqs } from '../../../data/mockRfqs';
 
 /** The seven, with what they were before the retirement. Written out because
  *  the pre-retirement strings are otherwise only in git history, and half the
@@ -222,14 +223,23 @@ describe('2B-5b-ii — the rulings, asserted so they cannot be tidied away', () 
     // ruling rests on two facts neither label shows.
     expect(MATERIAL_MASTER['PK-ALCP-2441'].label).toBe('Aluminium Cap 24/410');
     expect(MATERIAL_MASTER['PK-ALCP-2450'].label).toBe('Aluminium Closure 24/410');
-    // 1. AN OPEN 2026 RFQ IS NOT EVIDENCE ABOUT A 2025 DELIVERY. `PK-ALCP-2441`
-    //    rests on `RFQ-2026-011`, created 2026-04-22 and still Open;
-    //    `PK-ALCP-2450`'s source ASN was Delivered with an eta of 2025-03-22.
+    // 1. AN OPEN RFQ IS NOT EVIDENCE ABOUT A DELIVERY THAT ALREADY HAPPENED.
+    //    `PK-ALCP-2441` rests on `RFQ-2026-011`, still Open; `PK-ALCP-2450`'s
+    //    source ASN was Delivered BEFORE that RFQ was raised.
+    //
+    //    ⚠️ BOTH SIDES ARE NOW READ FROM THEIR FIXTURES. This line used to pin
+    //    the RFQ's RAW literal `'2026-04-22'` against the ASN's eta — and the
+    //    ASN's eta is shifted (`purchaseOrder` family) while the RFQ's is
+    //    shifted by its own `shiftRfqDay`, so the comparison silently stopped
+    //    being like-for-like the moment either corpus was re-anchored. The
+    //    ordering is the claim; neither literal is.
     const source = MOCK_ASNS.find((a) =>
       a.lineItems.some((l) => l.materialCode === 'PK-ALCP-2450'),
     )!;
+    const rfq2441 = mockRfqs.find((r) => r.materialIds?.includes('PK-ALCP-2441'))!;
+    expect(rfq2441.status).toBe('Open');
     expect(source.status).toBe('Delivered');
-    expect(source.eta < '2026-04-22', 'the delivery precedes the RFQ').toBe(true);
+    expect(source.eta < rfq2441.createdAt, 'the delivery precedes the RFQ').toBe(true);
     // 2. Both are MG-21 by R-1's FUNCTIONAL axis — so "same group" is not an
     //    argument for sameness, and MG-22 stays member-less with TWO aluminium
     //    closures in the tree.

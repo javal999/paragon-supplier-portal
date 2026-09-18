@@ -5,7 +5,13 @@
 // Kept separate so flow metadata stays serialisable (names, never closures).
 // ────────────────────────────────────────────────────────────────────────────
 
-import type { PurchaseOrder, Invoice } from '../data/types';
+import type {
+  PurchaseOrder,
+  Invoice,
+  PoLineResponse,
+  PoReasonCode,
+  PoRejectionCause,
+} from '../data/types';
 import type { GoodsReceipt } from '../../data/mockGoodsReceipts';
 import type { PolicyHookFn } from './dispatcher';
 import { POLICY_HOOKS } from './policyHooks';
@@ -94,6 +100,91 @@ const poConfirmQtyWithinOrdered: PolicyHookFn = ({ entityId, payload, target }) 
 };
 
 bindPolicyHook(POLICY_HOOKS.PO_CONFIRM_QTY_WITHIN_ORDERED, poConfirmQtyWithinOrdered);
+
+// — PO response: adjust / reject / counter-offer review / shipping notice
+//   (REQ-E07-02, REQ-E07-05). Each rule is ONE exported expression, read by the
+//   policy (the law) and by the supplier surface (a courtesy mirror), on the
+//   `confirmedQtyWithinBounds` precedent. ——————————————————————————————————————
+
+/** The predefined adjust reasons (REQUIREMENTS §3.6 starter list). */
+export const PO_REASON_CODES: readonly PoReasonCode[] = ['capacity', 'material', 'logistics', 'quality', 'other'];
+
+/** The rejection causes (REQ-E07-02 BR-06). */
+export const PO_REJECTION_CAUSES: readonly PoRejectionCause[] = ['date', 'quantity', 'quality'];
+
+const isNonBlank = (v: unknown): v is string => typeof v === 'string' && v.trim().length > 0;
+
+/** A real calendar date written `YYYY-MM-DD` (2026-02-30 is refused). */
+export const isIsoDate = (v: unknown): v is string => {
+  if (typeof v !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(v)) return false;
+  const d = new Date(`${v}T00:00:00.000Z`);
+  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === v;
+};
+
+/** Why a counter-offer line would be refused, or null when it is acceptable. */
+export type CounterOfferRefusal = 'unknownLine' | 'reason' | 'note' | 'quantity' | 'date';
+
+export function counterOfferRefusal(
+  line: Partial<PoLineResponse> | null | undefined,
+  po: Pick<PurchaseOrder, 'lineItems'>,
+): CounterOfferRefusal | null {
+  const item = po.lineItems.find((li) => li.id === line?.lineId);
+  if (!line || !item) return 'unknownLine';
+  if (!PO_REASON_CODES.includes(line.reasonCode as PoReasonCode)) return 'reason';
+  if (line.reasonCode === 'other' && !isNonBlank(line.note)) return 'note';
+  // CR-10 is the same bound the confirm verb enforces: 0 < q ≤ ordered.
+  if (typeof line.counterQty !== 'number' || !confirmedQtyWithinBounds(line.counterQty, item.quantity)) {
+    return 'quantity';
+  }
+  if (!isIsoDate(line.counterDate)) return 'date';
+  return null;
+}
+
+const poAdjustCounterOfferValid: PolicyHookFn = ({ entityId, payload, target }) => {
+  const po = target.readEntity(entityId) as PurchaseOrder | null;
+  if (!po) return { ok: false, reason: 'entity missing' };
+  const lines = payload.lineResponses;
+  if (!Array.isArray(lines) || lines.length === 0) {
+    return { ok: false, reason: 'an adjustment needs at least one counter-offer line' };
+  }
+  const seen = new Set<string>();
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i] as Partial<PoLineResponse> | null;
+    const refusal = counterOfferRefusal(line, po);
+    if (refusal) return { ok: false, reason: `counter-offer ${i + 1}: ${refusal}` };
+    if (seen.has(String(line?.lineId))) return { ok: false, reason: `counter-offer ${i + 1}: line given twice` };
+    seen.add(String(line?.lineId));
+  }
+  return { ok: true };
+};
+
+bindPolicyHook(POLICY_HOOKS.PO_ADJUST_COUNTER_OFFER_VALID, poAdjustCounterOfferValid);
+
+const poRejectCauseGiven: PolicyHookFn = ({ payload }) => {
+  const causes = payload.rejectionCauses;
+  if (!Array.isArray(causes) || causes.length === 0) {
+    return { ok: false, reason: 'a rejection needs at least one cause: date, quantity or quality' };
+  }
+  const unknown = causes.find((c) => !PO_REJECTION_CAUSES.includes(c as PoRejectionCause));
+  if (unknown !== undefined) return { ok: false, reason: `unknown rejection cause '${String(unknown)}'` };
+  return { ok: true };
+};
+
+bindPolicyHook(POLICY_HOOKS.PO_REJECT_CAUSE_GIVEN, poRejectCauseGiven);
+
+const poCounterReviewCommentAuthored: PolicyHookFn = ({ payload }) =>
+  isNonBlank(payload.reviewComment)
+    ? { ok: true }
+    : { ok: false, reason: 'rejecting a counter-offer needs a comment for the supplier' };
+
+bindPolicyHook(POLICY_HOOKS.PO_COUNTER_REVIEW_COMMENT_AUTHORED, poCounterReviewCommentAuthored);
+
+const poShippingNoticeDateValid: PolicyHookFn = ({ payload }) =>
+  isIsoDate(payload.expectedCompletionDate)
+    ? { ok: true }
+    : { ok: false, reason: 'expected completion date must be a date (YYYY-MM-DD)' };
+
+bindPolicyHook(POLICY_HOOKS.PO_SHIPPING_NOTICE_DATE_VALID, poShippingNoticeDateValid);
 
 // — GR header disposition = ROLLUP of the per-line sub-flow (census G2). Each
 //   disposition verb is legal ONLY when the lines roll up to its terminal, so

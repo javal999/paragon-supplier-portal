@@ -59,8 +59,9 @@ describe('Batch 6 — tail-sweep bilingual render (no header EN leak)', () => {
   it('BuyerInventory: ID header, English gone', async () => {
     await setLang('id');
     renderWithProviders(<BuyerInventory />, { route: '/buyer/inventory' });
-    expect(await screen.findByText('Visibilitas Inventaris')).toBeInTheDocument();
-    expect(screen.queryByText('Inventory Visibility')).not.toBeInTheDocument();
+    // REQ-E08-01 renamed the page to the menu item (NV-05): Inventory / Stok.
+    expect(await screen.findByRole('heading', { name: 'Stok' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Inventory' })).not.toBeInTheDocument();
   });
 
   it('Marketplace: ID header, English gone', async () => {
@@ -97,8 +98,9 @@ describe('Batch 6 — tail-sweep bilingual render (no header EN leak)', () => {
       identity: SUPPLIER,
       route: '/supplier/inventory',
     });
-    expect(await screen.findByText('Inventaris Saya')).toBeInTheDocument();
-    expect(screen.queryByText('My Inventory')).not.toBeInTheDocument();
+    // REQ-E08-01 renamed the page to the menu item (NV-05): Stock / Stok.
+    expect(await screen.findByRole('heading', { name: 'Stok' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Stock' })).not.toBeInTheDocument();
   });
 
   it('SupplierPerformance: ID header, English gone', async () => {

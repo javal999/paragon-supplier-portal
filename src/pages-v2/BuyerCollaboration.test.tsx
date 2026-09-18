@@ -28,7 +28,7 @@ describe('BuyerCollaboration — honest render (page-level)', () => {
 
     renderWithProviders(<BuyerCollaboration />, { route: '/buyer/collaboration' });
 
-    expect(screen.getByText(/awaiting SOMO C8 feed/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Sample data/i).length).toBeGreaterThan(0);
     expect(screen.queryByText(/^Live$/)).not.toBeInTheDocument();
   });
 
@@ -177,7 +177,7 @@ describe('BuyerCollaboration — i18n', () => {
     try {
       renderWithProviders(<BuyerCollaboration />, { route: '/buyer/collaboration' });
       expect(screen.getAllByText(/Kolaborasi Pemasok/i).length).toBeGreaterThan(0);
-      expect(screen.getByText(/menunggu feed data C8 SOMO/i)).toBeInTheDocument();
+      expect(screen.getByText(/Data contoh/i)).toBeInTheDocument();
     } finally {
       await i18n.changeLanguage('en');
     }

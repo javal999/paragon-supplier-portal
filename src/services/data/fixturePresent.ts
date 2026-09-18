@@ -213,7 +213,8 @@ export type FixtureFamily =
   | 'inventory'
   | 'contract'
   | 'obligation'
-  | 'invoice';
+  | 'invoice'
+  | 'purchaseOrder';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ⚠️ `contract` AND `obligation` ARE NOW ANCHORED, AND THEY SHARE ONE ANCHOR.
@@ -435,6 +436,40 @@ export const FAMILY_ANCHORS: Readonly<Record<FixtureFamily, FamilyAnchor>> = {
   // the nearer of the two. Taking the declared instant would buy a demo that
   // goes false within a week of the next `P` bump, and the whole reason this
   // family is being anchored is that it had gone false already.
+  // ⚠️ **THE LAST FAMILY THAT STILL CARRIED 2025 LITERALS.** Every PO in
+  // `mockPurchaseOrders.ts` was dated March–May 2025 while its own goods
+  // receipts sat in 2026 and its invoices in mid-2026 — the order arrived a
+  // year before it was placed, on three surfaces that render both. Anchoring
+  // is what closes that; the raw literals stay readable in the fixture.
+  //
+  // ⚠️ **THE ASNs BELONG TO THIS FAMILY, NOT TO `shipment`.** `MOCK_ASNS`
+  // (`mock/fixtures/supplierShipments.ts`) is selected AGAINST the PO by
+  // `asnRefIntegrity.test.ts`'s level-3 rule — `po.orderDate <= asn.eta` — so
+  // an ASN's eta and its parent's order date are the SAME comparison `P` does
+  // not cancel for. **Membership follows the coupling, not the file it sits
+  // in**, the ruling `SDC_FAMILY_CONTRACT_IDS` already made for `ctr-013`.
+  // `mockShipments.ts` is a different corpus and keeps `shipment`.
+  //
+  // The anchor is EVIDENCED, not solved for — no PO stores a clock word
+  // (`Escalated` is computed at read, `poResponseProjection.ts`, and
+  // `DISPLAY_STATES` classes it so), which is why the window is null in the
+  // same way `goodsReceipt`'s and `inventory`'s are. Two independent readings
+  // of the family land on the same day:
+  //   · `max(orderDate)` is 2025-04-18 — the newest order IS the family's own
+  //     present, exactly how `inventory` reads `max(lastUpdated)` and
+  //     `goodsReceipt` reads `max(receivedDate)`;
+  //   · the latest DELIVERED ASN, `ASN-2025-00302`, has eta 2025-04-18, and a
+  //     delivery cannot be in the future. Its parent `po-131` is confirmed for
+  //     that same day.
+  // `purchaseOrderAnchor.test.ts` re-derives both from the raw source, so a
+  // re-authored order date moves the anchor by name rather than quietly.
+  purchaseOrder: {
+    anchor: '2025-04-18',
+    window: null,
+    toleranceDays: null,
+    why: 'max(orderDate) over the raw fixture — the newest order is the family’s own as-of date — corroborated by the latest DELIVERED ASN (ASN-2025-00302, eta 2025-04-18) and by po-131, which is confirmed for that same day',
+  },
+
   invoice: {
     anchor: '2026-06-23',
     window: ['2026-06-05', '2026-07-10'],

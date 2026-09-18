@@ -27,13 +27,13 @@ export const supplierInvoicesEn: Record<string, string> = {
   // — KPI cards —
   'supplierInvoices.kpi.received.eyebrow': 'Payments Received',
   'supplierInvoices.kpi.pending.eyebrow': 'Pending Payment',
-  'supplierInvoices.kpi.disputed.eyebrow': 'Disputed',
+  'supplierInvoices.kpi.disputed.eyebrow': 'Returned',
   'supplierInvoices.kpi.invoiceCount.one': '{{count}} invoice',
   'supplierInvoices.kpi.invoiceCount.other': '{{count}} invoices',
   // — Dispute banner (label <strong> · <Data> numbers · body) —
-  'supplierInvoices.banner.dispute.label': 'Invoice dispute: ',
+  'supplierInvoices.banner.dispute.label': 'Returned by Finance: ',
   'supplierInvoices.banner.dispute.body':
-    '— Quantity mismatch. Credit note required before payment can be released.',
+    '— correct the invoice and resubmit it.',
   // — Table columns —
   'supplierInvoices.table.invoiceNo': 'Invoice #',
   'supplierInvoices.table.poRef': 'PO ref',
@@ -90,7 +90,7 @@ export const supplierInvoicesEn: Record<string, string> = {
   'supplierInvoices.field.pending': '— pending —',
   // — Detail state notes —
   'supplierInvoices.note.disputed':
-    'This invoice is disputed. Contact Paragon Finance Controller to resolve before payment can be released.',
+    'Finance returned this invoice. Correct it and resubmit; the match runs again.',
   'supplierInvoices.note.overdue':
     'Payment is overdue. Paragon Finance has been escalated.',
   // — Remittance section —
@@ -107,10 +107,10 @@ export const supplierInvoicesEn: Record<string, string> = {
   'supplierInvoices.new.cancel': 'Cancel',
   'supplierInvoices.new.createDraft': 'Create draft',
   'supplierInvoices.new.intro':
-    'Draft an invoice against one of your confirmed purchase orders. The invoice number is assigned on creation; you submit it for approval from the list.',
+    'Invoice goods PTI has received. Choose the purchase order and its received goods receipts; save a draft or submit straight away.',
   'supplierInvoices.new.poLabel': 'Purchase order',
-  'supplierInvoices.new.poPlaceholder': 'Select a confirmed PO…',
-  'supplierInvoices.new.noPos': 'No confirmed POs available to invoice.',
+  'supplierInvoices.new.poPlaceholder': 'Select a purchase order…',
+  'supplierInvoices.new.noPos': 'No purchase orders with received goods to invoice.',
   'supplierInvoices.new.amountLabel': 'Amount (IDR)',
   'supplierInvoices.new.amountPlaceholder': 'e.g. 250000000',
   // — New invoice: the amount refusals (CP-0 · W1 · 2f-d). These replace a
@@ -148,13 +148,13 @@ export const supplierInvoicesId: Record<string, string> = {
   // — KPI cards —
   'supplierInvoices.kpi.received.eyebrow': 'Pembayaran Diterima',
   'supplierInvoices.kpi.pending.eyebrow': 'Menunggu Pembayaran',
-  'supplierInvoices.kpi.disputed.eyebrow': 'Disengketakan',
+  'supplierInvoices.kpi.disputed.eyebrow': 'Dikembalikan',
   'supplierInvoices.kpi.invoiceCount.one': '{{count}} faktur',
   'supplierInvoices.kpi.invoiceCount.other': '{{count}} faktur',
   // — Dispute banner —
-  'supplierInvoices.banner.dispute.label': 'Sengketa faktur: ',
+  'supplierInvoices.banner.dispute.label': 'Dikembalikan oleh Finance: ',
   'supplierInvoices.banner.dispute.body':
-    '— Ketidaksesuaian kuantitas. Nota kredit diperlukan sebelum pembayaran dapat dirilis.',
+    '— perbaiki faktur lalu ajukan ulang.',
   // — Table columns —
   'supplierInvoices.table.invoiceNo': 'No. Faktur',
   'supplierInvoices.table.poRef': 'Ref PO',
@@ -211,7 +211,7 @@ export const supplierInvoicesId: Record<string, string> = {
   'supplierInvoices.field.pending': '— menunggu —',
   // — Detail state notes —
   'supplierInvoices.note.disputed':
-    'Faktur ini disengketakan. Hubungi Pengawas Keuangan Paragon untuk menyelesaikannya sebelum pembayaran dapat dirilis.',
+    'Finance mengembalikan faktur ini. Perbaiki lalu ajukan ulang; pencocokan dijalankan lagi.',
   'supplierInvoices.note.overdue':
     'Pembayaran telah jatuh tempo. Keuangan Paragon telah dieskalasi.',
   // — Remittance section —
@@ -228,10 +228,10 @@ export const supplierInvoicesId: Record<string, string> = {
   'supplierInvoices.new.cancel': 'Batal',
   'supplierInvoices.new.createDraft': 'Buat draf',
   'supplierInvoices.new.intro':
-    'Buat draf faktur untuk salah satu pesanan pembelian Anda yang telah dikonfirmasi. Nomor faktur ditetapkan saat pembuatan; Anda mengajukannya untuk persetujuan dari daftar.',
+    'Tagihkan barang yang sudah diterima PTI. Pilih pesanan pembelian dan penerimaan barangnya; simpan sebagai draf atau langsung ajukan.',
   'supplierInvoices.new.poLabel': 'Pesanan pembelian',
-  'supplierInvoices.new.poPlaceholder': 'Pilih PO yang dikonfirmasi…',
-  'supplierInvoices.new.noPos': 'Tidak ada PO dikonfirmasi yang tersedia untuk difakturkan.',
+  'supplierInvoices.new.poPlaceholder': 'Pilih pesanan pembelian…',
+  'supplierInvoices.new.noPos': 'Tidak ada pesanan pembelian dengan barang diterima untuk ditagih.',
   'supplierInvoices.new.amountLabel': 'Jumlah (IDR)',
   'supplierInvoices.new.amountPlaceholder': 'mis. 250000000',
   // — Faktur baru: penolakan jumlah (CP-0 · W1 · 2f-d) —

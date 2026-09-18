@@ -4,6 +4,8 @@ import type { CurrentIdentity } from '../context/CurrentIdentityContext';
 import { mockDataService } from '../services/data/mock/mockDataService';
 import { withChaos } from '../services/data/mock/withChaos';
 import { invoiceStore } from '../services/data/mock/stores/invoiceStore';
+import { purchaseOrderStore } from '../services/data/mock/stores/purchaseOrderStore';
+import { goodsReceiptStore } from '../services/data/mock/stores/goodsReceiptStore';
 import SupplierInvoices from './SupplierInvoices';
 import { PERSONA_SYSTEM_ROLES } from '../services/transitions/businessRoles';
 import { NO_PERSON } from '../context/noPerson';
@@ -136,15 +138,39 @@ describe('SupplierInvoices — the new-invoice amount is text, so the parser is 
     expect(screen.getByRole('button', { name: 'Create draft' })).toBeDisabled();
   });
 
-  it('POSITIVE TWIN — a readable amount against a confirmed PO ENABLES the create', async () => {
-    // A negative assertion alone proves nothing: sup-007's PO-2025-00107 is
-    // Confirmed, so the dropdown has a legal parent and the gate must open.
+  it('POSITIVE TWIN — a readable amount on a complete receipt-based invoice ENABLES the create', async () => {
+    // ⚠️ REQ-E07-07 CHANGED THIS TEST'S PREMISE. A PO and an amount no longer make
+    // an invoice: it is drawn from a RECEIVED goods receipt of the supplier's own
+    // PO and carries the invoice number, date and tax invoice. sup-007's receipt
+    // GR-2026-003 sits on PO-2025-00108, which is confirmed first so it can be
+    // invoiced. A negative assertion alone proves nothing, so the gate is walked
+    // shut → open.
+    purchaseOrderStore.reset();
+    goodsReceiptStore.reset();
+    invoiceStore.reset();
+    await mockDataService.commands.dispatch(
+      { personaType: 'supplier', supplierId: 'sup-007', businessRoles: PERSONA_SYSTEM_ROLES.supplier },
+      {
+        transitionId: 't_po_confirm',
+        entity: 'purchaseOrder',
+        entityId: 'po-008',
+        payload: { confirmedQuantities: [150000] },
+      },
+    );
     const amount = await openNewInvoice();
     fireEvent.change(screen.getByLabelText('Purchase order'), {
-      target: { value: 'PO-2025-00107' },
+      target: { value: 'PO-2025-00108' },
     });
+    fireEvent.click(await screen.findByLabelText(/GR-2026-003, received/));
+    fireEvent.change(screen.getByLabelText('Invoice number'), { target: { value: 'SUP-INV-777' } });
+    fireEvent.change(screen.getByLabelText('Invoice date'), { target: { value: '2026-09-10' } });
+    fireEvent.change(screen.getByLabelText('Tax invoice (e-Faktur)'), {
+      target: { files: [new File(['x'], 'efaktur-777.pdf', { type: 'application/pdf' })] },
+    });
+    expect(screen.getByRole('button', { name: 'Create draft' })).toBeDisabled();
     fireEvent.change(amount, { target: { value: '185000000' } });
     expect(screen.queryByTestId('invoice-amount-refusal')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Create draft' })).not.toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Submit invoice' })).not.toBeDisabled();
   });
 });

@@ -11,14 +11,19 @@
 
 import { POStatus } from '../types';
 import type {
+  PurchaseOrder,
+  PoLineResponse,
+  PoRejectionCause,
   ICommandService,
   QueryScope,
   CommandInput,
   CommandResult,
   CommandStatus,
   ASN,
+  AsnLineItem,
   AsnStatus,
   Invoice,
+  InvoiceLine,
   InvoiceStatus,
   PurchaseRequisition,
   PRStatus,
@@ -30,13 +35,20 @@ import type {
   SupplierDocumentStatus,
   SupplierApplicationStatus,
   SupplierApplicationDeclaration,
+  CallOff,
+  CallOffConfirmationKind,
+  CallOffStatus,
+  CallOffType,
 } from '../types';
 import type {
   GoodsReceipt,
   GRStatus,
   Disposition,
   InspectionResult,
+  ReceiptDiscrepancyStatus,
 } from '../../../data/mockGoodsReceipts';
+import { receiptDiscrepancyStore } from './stores/receiptDiscrepancyStore';
+import { callOffStore } from './stores/callOffStore';
 import { supplierDocumentStore } from './stores/supplierDocumentStore';
 import { supplierApplicationStore } from './stores/supplierApplicationStore';
 import { VENDOR_BEARING_REQUEST_TYPE } from '../../transitions/flows/supplierApplication.flow';
@@ -68,6 +80,51 @@ import {
   cascadesFor,
   deriveMatchVerdict,
   invoicesForReceipt,
+  INVOICE_AWAITING_MATCH,
+  ASN_PO_STATES,
+  INVOICEABLE_PO_STATES,
+  asnLineRefusal,
+  asnSubmitRefusal,
+  deriveInvoiceVerdict,
+  hasReceiptDiscrepancy,
+  invoiceLineRefusal,
+  isCalendarDate,
+  isDuplicateInvoiceNumber,
+  openQtyForLine,
+  CALL_OFF_TYPES,
+  CONFIRMATION_STATE,
+  checkTolerance,
+  exceedsRemaining,
+  headsUpsFor,
+  isAwaitingApproval,
+  isCallOffDate,
+  isConfirmedAndAccepted,
+  isPositiveQty,
+  proposedDeliveries,
+  umbrellaRefusal,
+  addDays,
+  capacitySubmissionRefusal,
+  dayOf,
+  isCapacityReason,
+  isIsoDay,
+  parseAlertKey,
+  standingClosure,
+  // REQ-E03-01 to REQ-E03-05 — the RFx rules. The verb and the screen read the
+  // SAME predicates, so a refusal and a disabled button can never disagree.
+  awardFollowsBestScore,
+  awardSplitRefusal,
+  deviationsWithoutComment,
+  effectiveDeadline,
+  isExtension,
+  isInvitedToRound,
+  isPastDeadline,
+  isSelectableSupplier,
+  missingRequiredAnswers,
+  quoteLinesRefusal,
+  quoteLinesTotal,
+  unansweredTerms,
+  type QuoteLineInput,
+  type AsnLineInput,
   type CommandTarget,
   type CascadeCommand,
   type CascadeContext,
@@ -85,12 +142,85 @@ import { requirementResponseStore } from './stores/requirementResponseStore';
 import { inventoryDeclarationStore } from './stores/inventoryDeclarationStore';
 import { incomingShipmentStore } from './stores/incomingShipmentStore';
 import { enforcementSettingStore } from './stores/enforcementSettingStore';
+import {
+  capacityStore,
+  inventoryAlertLedger,
+  stockAccessStore,
+  stockSyncStore,
+} from './stores/inventoryHubStores';
+import {
+  activeAlertConditions,
+  allAlerts,
+  allCapacityPlans,
+  isApiConnected,
+  isAssignedMaterial,
+  observeAlertConditions,
+  supplierNameOf,
+  suppliersWithAssignments,
+} from './inventoryReadModel';
+import { API_CONNECTIONS } from './fixtures/inventoryHub';
+import { forecastVersionStore, forecastViewStore } from './stores/forecastHubStores';
+// ── REQ-E03-01 to REQ-E03-05 — RFx management ──────────────────────────────
+import {
+  awardStore,
+  negotiationRoundStore,
+  rfiEventStore,
+  rfiResponseStore,
+  rfpEventStore,
+  rfpResponseStore,
+} from './stores/rfxStores';
+import { bestScoredQuotationId, rfxNow } from './rfxReadModel';
+import { rfiTemplate, rfpTerm } from '../../sourcing/rfxConfig';
+import type {
+  AwardLine,
+  RfiAnswer,
+  RfiQuestion,
+  RfiQuestionType,
+  RfiResponse,
+  RfpResponse,
+  RfpTermAnswer,
+  RfpTermRow,
+  RfxEventStatus,
+  RfxInvitee,
+  RfxResponseStatus,
+} from '../../sourcing/types';
+import { BID_CURRENCIES } from '../../../lib/currencyPolicy';
+
+/**
+ * The question kinds this build can render and score. Named as DATA so the
+ * create hook proves MEMBERSHIP rather than presence — the
+ * `QUOTATION_SUBMIT_CURRENCY_PERMITTED` shape: an off-list token is refused by
+ * name instead of stored as a kind no surface can draw.
+ */
+const RFI_QUESTION_TYPES: readonly RfiQuestionType[] = [
+  'yesNo',
+  'singleChoice',
+  'multipleChoice',
+  'numberWithUnit',
+  'date',
+  'text',
+  'attachment',
+];
+import {
+  currentVersion,
+  isForecastVersion,
+  forecastPublicationById,
+  qualifiedSuppliers,
+} from './forecastReadModel';
+import { baseDemand, FORECAST_SOURCES } from './fixtures/forecastHub';
+import {
+  reassignVersion,
+  republishVersion,
+  shortfallRefusal,
+} from '../../transitions/forecastRules';
+import type { CapacitySubmission, CapacityWeekEntry, StockAccessGrant } from '../types';
 import { mockShipments } from '../../../data/mockShipments';
 import { mockSuppliers } from '../../../data/mockSuppliers';
 import {
   FORECAST_PUBLICATIONS,
   SUPPLIER_MATERIAL_RELATIONSHIPS,
   isKnownMaterial,
+  materialEntry,
   requireUom,
   sdcClock,
 } from '../../sdc';
@@ -116,28 +246,175 @@ const purchaseOrderTarget: CommandTarget = {
   applyTransition: (id, toState, payload) => {
     // Immutable swap (new PO + new line items) so the invalidated query yields
     // genuinely-new references and all derivations recompute (see the store).
-    const qtys = payload.confirmedQuantities;
-    purchaseOrderStore.update(id, (po) => ({
-      ...po,
-      status: toState as POStatus,
-      lineItems: Array.isArray(qtys)
-        ? po.lineItems.map((li, i) =>
-            typeof qtys[i] === 'number' ? { ...li, confirmedQty: qtys[i] as number } : li,
-          )
-        : po.lineItems,
-    }));
+    //
+    // One target serves every PO verb, and the verbs are told apart by what
+    // they carry — the dispatcher has already proved the payload's shape
+    // through each verb's required fields and policy hook.
+    const now = new Date().toISOString();
+    const text = (v: unknown): string | undefined =>
+      typeof v === 'string' && v.trim() ? v.trim() : undefined;
+    purchaseOrderStore.update(id, (po) => {
+      const from = po.status;
+      const next: PurchaseOrder = { ...po, status: toState as POStatus };
+
+      // Approve (t_po_confirm): confirmed quantities + the confirmed date.
+      const qtys = payload.confirmedQuantities;
+      if (Array.isArray(qtys)) {
+        next.lineItems = po.lineItems.map((li, i) =>
+          typeof qtys[i] === 'number' ? { ...li, confirmedQty: qtys[i] as number } : li,
+        );
+        const date = text(payload.confirmedDeliveryDate);
+        if (date) next.confirmedDeliveryDate = date;
+        next.response = {
+          option: 'approve',
+          respondedAt: now,
+          ...(date ? { confirmedDeliveryDate: date } : {}),
+          ...(text(payload.comment) ? { comment: text(payload.comment) } : {}),
+        };
+      }
+
+      // Adjust (t_po_adjust): the per-line counter-offer record.
+      if (Array.isArray(payload.lineResponses)) {
+        next.response = {
+          option: 'adjust',
+          respondedAt: now,
+          lines: (payload.lineResponses as PoLineResponse[]).map((l) => ({
+            lineId: l.lineId,
+            reasonCode: l.reasonCode,
+            ...(text(l.note) ? { note: text(l.note) } : {}),
+            counterQty: l.counterQty,
+            counterDate: l.counterDate,
+          })),
+          ...(text(payload.comment) ? { comment: text(payload.comment) } : {}),
+        };
+      }
+
+      // Reject (t_po_reject).
+      if (Array.isArray(payload.rejectionCauses)) {
+        next.response = {
+          option: 'reject',
+          respondedAt: now,
+          rejectionCauses: [...(payload.rejectionCauses as PoRejectionCause[])],
+          ...(text(payload.comment) ? { comment: text(payload.comment) } : {}),
+        };
+      }
+
+      // Counter-offer review by the planner.
+      if (from === POStatus.ADJUSTED && po.response) {
+        if (toState === POStatus.CONFIRMED) {
+          // t_po_accept_counter — the PO stands at the counter-offer.
+          const byLine = new Map((po.response.lines ?? []).map((l) => [l.lineId, l]));
+          next.lineItems = po.lineItems.map((li) => {
+            const counter = byLine.get(li.id);
+            return { ...li, confirmedQty: counter ? counter.counterQty : li.quantity };
+          });
+          const dates = [...byLine.values()].map((l) => l.counterDate).sort();
+          if (dates.length > 0) next.confirmedDeliveryDate = dates[dates.length - 1];
+          next.response = { ...po.response, review: { decision: 'accepted', reviewedAt: now } };
+        } else if (toState === POStatus.SENT) {
+          // t_po_reject_counter — reopened; the deadline counts again from now.
+          next.response = {
+            ...po.response,
+            review: { decision: 'rejected', comment: text(payload.reviewComment), reviewedAt: now },
+          };
+          next.responseRequestedAt = now;
+        }
+      }
+
+      // Shipping notice (t_po_shipping_notice, state-preserving).
+      const completion = text(payload.expectedCompletionDate);
+      if (completion) {
+        const prev = po.shippingNotice?.expectedCompletionDate;
+        next.shippingNotice = {
+          ...po.shippingNotice,
+          expectedCompletionDate: completion,
+          ...(prev && prev !== completion ? { previousCompletionDate: prev } : {}),
+          updatedAt: now,
+        };
+      }
+      return next;
+    });
   },
+};
+
+/**
+ * REQ-E07-05 BR-03 — the first ASN submitted against a PO records "shipment
+ * started" on that PO, with that ASN's ship date (REQ-E07-04 made the ship date
+ * part of the ASN). An ASN that predates the field falls back to the day it was
+ * submitted.
+ */
+const recordShipmentStarted = (asnNumber: string, poNumber: string, shipDate?: string): void => {
+  const po = purchaseOrderStore.all().find((p) => p.poNumber === poNumber);
+  if (!po || po.shippingNotice?.startedOn) return;
+  purchaseOrderStore.update(po.id, (p) => ({
+    ...p,
+    shippingNotice: {
+      ...p.shippingNotice,
+      startedOn: shipDate || new Date().toISOString().slice(0, 10),
+      startedByAsn: asnNumber,
+    },
+  }));
 };
 
 // — Advance ship notice target — creation-shape (canonical, Step 4 batch i). ——
 const findPoByNumber = (poNumber: string) =>
   purchaseOrderStore.all().find((p) => p.poNumber === poNumber);
 
+const nonBlank = (v: unknown): string | undefined =>
+  typeof v === 'string' && v.trim() && v.trim() !== '—' ? v.trim() : undefined;
+
+/** The ASN lines a payload carries (REQ-E07-04), or null when it carries none. */
+const payloadAsnLines = (payload: Record<string, unknown>): AsnLineInput[] | null =>
+  Array.isArray(payload.lines) ? (payload.lines as AsnLineInput[]) : null;
+
+/**
+ * Merge entered lines onto an ASN's stored lines by material. A material the
+ * draft does not carry yet is added from its PO line. Stored lines the payload
+ * does not mention are kept as they are.
+ */
+const mergeAsnLines = (
+  stored: readonly AsnLineItem[],
+  entered: readonly AsnLineInput[],
+  po: PurchaseOrder | undefined,
+): AsnLineItem[] => {
+  const out = stored.map((l) => ({ ...l }));
+  for (const e of entered) {
+    const i = out.findIndex((l) => l.materialCode === e.materialCode);
+    const poLine = po?.lineItems.find((li) => li.materialCode === e.materialCode);
+    const base: AsnLineItem =
+      i >= 0
+        ? out[i]
+        : {
+            materialCode: e.materialCode,
+            description: poLine?.description ?? e.materialCode,
+            orderedQty: poLine?.quantity ?? 0,
+            shippedQty: 0,
+            lotNumber: '',
+            ...(poLine?.uom ? { uom: poLine.uom } : {}),
+          };
+    const next: AsnLineItem = {
+      ...base,
+      shippedQty: typeof e.shippedQty === 'number' ? e.shippedQty : base.shippedQty,
+      lotNumber: nonBlank(e.batchNumber) ?? base.lotNumber,
+      ...(nonBlank(e.expiryDate) ? { expiryDate: nonBlank(e.expiryDate) } : {}),
+    };
+    if (i >= 0) out[i] = next;
+    else out.push(next);
+  }
+  return out;
+};
+
 const advanceShipNoticeTarget: CommandTarget = {
   readState: (id) => asnStore.get(id)?.status ?? null,
   readScopeOwner: (id) => asnStore.get(id)?.supplierId ?? null,
   readEntity: (id) => asnStore.get(id) ?? null,
   applyTransition: (id, toState, payload) => {
+    const current = asnStore.get(id);
+    const shipDate = nonBlank(payload.shipDate) ?? current?.shipDate;
+    if (toState === 'Submitted' && current) {
+      recordShipmentStarted(current.asnNumber, current.poReference, shipDate);
+    }
+    const entered = payloadAsnLines(payload);
     asnStore.update(id, (a) => ({
       ...a,
       status: toState as AsnStatus,
@@ -147,6 +424,10 @@ const advanceShipNoticeTarget: CommandTarget = {
           ? payload.trackingNumber
           : a.trackingNumber,
       eta: typeof payload.eta === 'string' && payload.eta ? payload.eta : a.eta,
+      ...(shipDate ? { shipDate } : {}),
+      ...(nonBlank(payload.packingListFile) ? { packingListFile: nonBlank(payload.packingListFile) } : {}),
+      ...(nonBlank(payload.overShipReason) ? { overShipReason: nonBlank(payload.overShipReason) } : {}),
+      lineItems: entered ? mergeAsnLines(a.lineItems, entered, findPoByNumber(a.poReference)) : a.lineItems,
     }));
   },
   // Creation scope: a supplier may draft an ASN only against its OWN PO.
@@ -154,6 +435,28 @@ const advanceShipNoticeTarget: CommandTarget = {
   create: (payload, toState) => {
     const po = findPoByNumber(String(payload.poReference));
     const asnNumber = asnStore.nextNumber();
+    const entered = payloadAsnLines(payload);
+    // REQ-E09-03 BR-06 — an ASN for a call-off delivery names the call-off; its
+    // proposed lines are that call-off's material only.
+    const callOff = nonBlank(payload.callOffId) ? callOffStore.get(String(payload.callOffId)) : undefined;
+    // BR-02 — without entered lines, the draft proposes each PO line's OPEN
+    // quantity (committed minus what other live ASNs already carry), never the
+    // full ordered quantity: a second, partial ASN must not double-count.
+    const lineItems: AsnLineItem[] = !po
+      ? []
+      : entered
+        ? mergeAsnLines([], entered, po)
+        : po.lineItems
+            .filter((li) => !callOff || li.id === callOff.poLineId)
+            .map((li) => ({
+              materialCode: li.materialCode,
+              description: li.description,
+              orderedQty: li.quantity,
+              shippedQty: openQtyForLine(po, li, asnStore.all()),
+              lotNumber: '',
+              uom: li.uom,
+            }))
+            .filter((l) => l.shippedQty > 0);
     const asn: ASN = {
       asnNumber,
       supplierId: po?.supplierId ?? '',
@@ -169,15 +472,11 @@ const advanceShipNoticeTarget: CommandTarget = {
         grossWeightKg: 0,
         temperatureRequirement: 'Ambient',
       },
-      lineItems: po
-        ? po.lineItems.map((li) => ({
-            materialCode: li.materialCode,
-            description: li.description,
-            orderedQty: li.quantity,
-            shippedQty: li.quantity,
-            lotNumber: '',
-          }))
-        : [],
+      lineItems,
+      ...(nonBlank(payload.shipDate) ? { shipDate: nonBlank(payload.shipDate) } : {}),
+      ...(nonBlank(payload.packingListFile) ? { packingListFile: nonBlank(payload.packingListFile) } : {}),
+      ...(nonBlank(payload.overShipReason) ? { overShipReason: nonBlank(payload.overShipReason) } : {}),
+      ...(callOff ? { callOffId: callOff.id } : {}),
     };
     asnStore.add(asn);
     return { entityId: asnNumber };
@@ -185,13 +484,107 @@ const advanceShipNoticeTarget: CommandTarget = {
 };
 
 // Cross-entity creation legality (mock layer — reads the PO store): the parent
-// PO must be Confirmed before its ASN can be drafted.
-bindPolicyHook(POLICY_HOOKS.ASN_CREATE_PO_CONFIRMED, ({ payload }) => {
+// PO must be approved and still open before an ASN can be drafted against it.
+bindPolicyHook(POLICY_HOOKS.ASN_CREATE_PO_APPROVED, ({ payload }) => {
   const po = findPoByNumber(String(payload.poReference));
   if (!po) return { ok: false, reason: 'parent PO not found' };
-  if (po.status !== POStatus.CONFIRMED) return { ok: false, reason: `PO ${po.poNumber} is not Confirmed` };
+  if (!ASN_PO_STATES.includes(po.status)) {
+    return { ok: false, reason: `PO ${po.poNumber} is not approved and open (${po.status})` };
+  }
   return { ok: true };
 });
+
+// REQ-E09-03 BR-06 / REQ-E07-04 AC-01 — an ASN for a call-off delivery needs a
+// confirmed call-off on the same PO. An ASN that names no call-off is a PO-level
+// ASN and keeps the existing behaviour.
+bindPolicyHook(POLICY_HOOKS.ASN_CALLOFF_CONFIRMED, ({ payload }) => {
+  if (payload.callOffId === undefined || payload.callOffId === null || payload.callOffId === '') return { ok: true };
+  const callOff = callOffStore.get(String(payload.callOffId));
+  if (!callOff) return { ok: false, reason: 'call-off not found' };
+  if (callOff.poNumber !== String(payload.poReference)) {
+    return { ok: false, reason: `${callOff.callOffNumber} is not on ${String(payload.poReference)}` };
+  }
+  if (!isConfirmedAndAccepted(callOff)) {
+    return {
+      ok: false,
+      reason: `CALL_OFF_NOT_CONFIRMED: ${callOff.callOffNumber} is not confirmed (${
+        isAwaitingApproval(callOff) ? 'awaiting approval' : callOff.status
+      })`,
+    };
+  }
+  return { ok: true };
+});
+
+// REQ-E07-04 BR-02 — shipped quantity within the PO line's open quantity, unless
+// the supplier says why. On create the PO comes from the payload; on submit from
+// the ASN, which is left out of its own open-quantity sum.
+bindPolicyHook(POLICY_HOOKS.ASN_LINES_WITHIN_OPEN, ({ entityId, payload }) => {
+  const asn = entityId ? asnStore.get(entityId) : undefined;
+  const po = findPoByNumber(asn ? asn.poReference : String(payload.poReference));
+  if (!po) return { ok: false, reason: 'parent PO not found' };
+  const entered = payloadAsnLines(payload);
+  const overShipReason = payload.overShipReason ?? asn?.overShipReason;
+  // A create without lines proposes open quantities by construction.
+  if (!asn && !entered) return { ok: true };
+  if (!asn && entered && entered.length === 0) {
+    return { ok: false, reason: 'an ASN needs at least one line' };
+  }
+  const lines: AsnLineInput[] = asn
+    ? mergeAsnLines(asn.lineItems, entered ?? [], po).map((l) => ({
+        materialCode: l.materialCode,
+        shippedQty: l.shippedQty,
+      }))
+    : entered!;
+  const seen = new Set<string>();
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    // Stored lines of an older draft whose material the PO does not carry were
+    // accepted when drafted; only entered lines must name a PO material.
+    const onPo = po.lineItems.some((li) => li.materialCode === line?.materialCode);
+    if (asn && !onPo && !entered?.some((e) => e.materialCode === line.materialCode)) continue;
+    const refusal = asnLineRefusal(line, po, asnStore.all(), {
+      excludeAsn: asn?.asnNumber,
+      overShipReason,
+      requireBatch: false,
+    });
+    if (refusal === 'overOpen') {
+      return {
+        ok: false,
+        reason: `OVER_OPEN_QUANTITY: line ${i + 1} (${line.materialCode}) ships more than the open quantity — give a reason`,
+      };
+    }
+    if (refusal) return { ok: false, reason: `line ${i + 1}: ${refusal}` };
+    if (seen.has(line.materialCode)) return { ok: false, reason: `line ${i + 1}: material given twice` };
+    seen.add(line.materialCode);
+  }
+  return { ok: true };
+});
+
+// REQ-E07-04 BR-04 — what a submitted ASN must carry, read on the draft merged
+// with what the submission adds.
+bindPolicyHook(POLICY_HOOKS.ASN_SUBMIT_COMPLETE, ({ entityId, payload }) => {
+  const asn = asnStore.get(entityId);
+  if (!asn) return { ok: false, reason: 'entity missing' };
+  const lines = mergeAsnLines(asn.lineItems, payloadAsnLines(payload) ?? [], findPoByNumber(asn.poReference));
+  const refusal = asnSubmitRefusal({
+    lineCount: lines.length,
+    shipDate: nonBlank(payload.shipDate) ?? asn.shipDate,
+    eta: nonBlank(payload.eta) ?? asn.eta,
+  });
+  if (refusal) return { ok: false, reason: `INCOMPLETE_ASN: ${refusal}` };
+  const noBatch = lines.findIndex((l) => !nonBlank(l.lotNumber));
+  if (noBatch >= 0) return { ok: false, reason: `INCOMPLETE_ASN: batch number missing on line ${noBatch + 1}` };
+  const badQty = lines.findIndex((l) => !(Number.isFinite(l.shippedQty) && l.shippedQty > 0));
+  if (badQty >= 0) return { ok: false, reason: `INCOMPLETE_ASN: shipped quantity missing on line ${badQty + 1}` };
+  return { ok: true };
+});
+
+// REQ-E07-04 — an ASN can be withdrawn only while nothing was received on it.
+bindPolicyHook(POLICY_HOOKS.ASN_CANCEL_NOT_RECEIVED, ({ entityId }) =>
+  goodsReceiptStore.all().some((g) => g.asnNumber === entityId)
+    ? { ok: false, reason: `goods were already received against ${entityId}` }
+    : { ok: true },
+);
 
 // — Goods-receipt target (Step 4 batch ii) — buyer-side receiving, inspection,
 //   disposition, and the FIRST real sapBoundary verb (Post to SAP, Option B). ——
@@ -343,26 +736,49 @@ const invoiceTarget: CommandTarget = {
   readScopeOwner: (id) => invoiceStore.get(id)?.supplierId ?? null,
   readEntity: (id) => invoiceStore.get(id) ?? null,
   applyTransition: (id, toState, payload) => {
-    invoiceStore.update(id, (inv) => ({
-      ...inv,
-      status: toState as InvoiceStatus,
-      // Submit carries the finalized amount; other verbs leave it untouched.
-      amount:
-        toState === 'Submitted' && typeof payload.amount === 'number'
-          ? payload.amount
-          : inv.amount,
-    }));
+    const today = new Date().toISOString().slice(0, 10);
+    invoiceStore.update(id, (inv) => {
+      const next: Invoice = {
+        ...inv,
+        status: toState as InvoiceStatus,
+        // Submit / resubmit carry the finalized amount; other verbs leave it.
+        amount:
+          toState === 'Submitted' && typeof payload.amount === 'number'
+            ? payload.amount
+            : inv.amount,
+      };
+      // Finance returns the invoice (t_invoice_dispute): keep its reason, which
+      // the supplier reads on the Returned invoice.
+      const reason = nonBlank(payload.disputeReason);
+      if (toState === 'Disputed' && reason) next.returnReason = reason;
+      if (toState === 'Submitted') {
+        // REQ-E07-07 — a correction may replace the lines and documents.
+        if (Array.isArray(payload.lines)) next.lines = (payload.lines as InvoiceLine[]).map((l) => ({ ...l }));
+        if (nonBlank(payload.invoiceNumber)) next.invoiceNumber = nonBlank(payload.invoiceNumber)!;
+        if (nonBlank(payload.invoiceDate)) next.invoiceDate = nonBlank(payload.invoiceDate);
+        if (nonBlank(payload.taxInvoiceFile)) next.taxInvoiceFile = nonBlank(payload.taxInvoiceFile);
+        // CR-14 — the due date counts from submission. A first submission of a
+        // receipt-based invoice restarts the dates at today; a resubmission
+        // keeps the original submission, so a return does not reset the clock.
+        if (inv.status === 'Draft' && inv.lines) {
+          next.submittedDate = today;
+          next.dueDate = new Date(Date.parse(today) + 30 * 86_400_000).toISOString().slice(0, 10);
+        }
+        // A fresh verdict is computed by the submission cascade.
+        if (inv.lines || next.lines) next.matchStatus = 'Pending';
+      }
+      return next;
+    });
   },
   // Creation scope: a supplier may draft an invoice only against its OWN PO
   // (cross-supplier ⇒ SCOPE_DENIED, exactly as reads). Derived from the parent PO.
   creationOwner: (payload) => findPoByNumber(String(payload.poReference))?.supplierId ?? null,
   create: (payload, toState) => {
     const po = findPoByNumber(String(payload.poReference));
-    const invoiceNumber = invoiceStore.nextNumber();
-    // Honest dates by construction: a creation that omits the dates (the form
-    // carries only PO + amount) defaults submittedDate to today and dueDate to
-    // Net-30 — so the invoice is never BORN overdue and aging is a real number,
-    // not NaN on an empty date (F-2). An explicit payload date still wins.
+    const id = invoiceStore.nextNumber();
+    // Honest dates by construction: a creation that omits the dates defaults
+    // submittedDate to today and dueDate to Net-30 (CR-14) — so the invoice is
+    // never BORN overdue. Submission restarts both at the submission day.
     const submittedDate =
       typeof payload.submittedDate === 'string' && payload.submittedDate
         ? payload.submittedDate
@@ -373,9 +789,14 @@ const invoiceTarget: CommandTarget = {
         : new Date(Date.parse(submittedDate) + 30 * 86_400_000)
             .toISOString()
             .slice(0, 10);
+    const lines = Array.isArray(payload.lines)
+      ? (payload.lines as InvoiceLine[]).map((l) => ({ ...l }))
+      : undefined;
     const invoice: Invoice = {
-      id: invoiceNumber, // store keyed by id; the assigned number doubles as id
-      invoiceNumber,
+      id, // store keyed by id; the store assigns it
+      // REQ-E07-07 — the supplier's own invoice number; the store number only
+      // when none was given.
+      invoiceNumber: nonBlank(payload.invoiceNumber) ?? id,
       supplierId: po?.supplierId ?? '',
       supplierName: po?.supplierName ?? '—',
       poNumber: String(payload.poReference),
@@ -396,18 +817,399 @@ const invoiceTarget: CommandTarget = {
       paymentTerms: 'Net 30',
       buyerContact: '',
       remittanceNote: null,
+      ...(lines ? { lines } : {}),
+      ...(nonBlank(payload.invoiceDate) ? { invoiceDate: nonBlank(payload.invoiceDate) } : {}),
+      ...(nonBlank(payload.taxInvoiceFile) ? { taxInvoiceFile: nonBlank(payload.taxInvoiceFile) } : {}),
     };
     invoiceStore.add(invoice);
-    return { entityId: invoiceNumber };
+    return { entityId: id };
   },
 };
 
 // Invoice create legality (mock layer — cross-entity read): the parent PO must
-// be Confirmed before its invoice can be drafted (same shape as ASN create).
-bindPolicyHook(POLICY_HOOKS.INVOICE_CREATE_PO_CONFIRMED, ({ payload }) => {
+// be confirmed or (partly) delivered — goods are invoiced after they arrive.
+bindPolicyHook(POLICY_HOOKS.INVOICE_CREATE_PO_INVOICEABLE, ({ payload }) => {
   const po = findPoByNumber(String(payload.poReference));
   if (!po) return { ok: false, reason: 'parent PO not found' };
-  if (po.status !== POStatus.CONFIRMED) return { ok: false, reason: `PO ${po.poNumber} is not Confirmed` };
+  if (!INVOICEABLE_PO_STATES.includes(po.status)) {
+    return { ok: false, reason: `PO ${po.poNumber} cannot be invoiced (${po.status})` };
+  }
+  return { ok: true };
+});
+
+// REQ-E07-07 BR-01 / BR-02 — every line from a received receipt of the
+// supplier's own PO, at the PO price, within accepted minus already invoiced.
+// On resubmission the invoice itself is left out of "already invoiced", and a
+// line set the correction does not replace is re-checked as stored.
+bindPolicyHook(POLICY_HOOKS.INVOICE_LINES_FROM_RECEIPTS, ({ entityId, payload }) => {
+  const inv = entityId ? invoiceStore.get(entityId) : undefined;
+  const lines = Array.isArray(payload.lines) ? (payload.lines as Partial<InvoiceLine>[]) : inv?.lines;
+  // An invoice from before receipt-based invoicing has nothing to re-check.
+  if (inv && !lines) return { ok: true };
+  const po = findPoByNumber(inv ? inv.poNumber : String(payload.poReference));
+  if (!po) return { ok: false, reason: 'parent PO not found' };
+  if (!lines || lines.length === 0) return { ok: false, reason: 'an invoice needs at least one received line' };
+  const invoiceDate = nonBlank(payload.invoiceDate) ?? inv?.invoiceDate;
+  if (!isCalendarDate(invoiceDate)) return { ok: false, reason: 'invoice date must be a date (YYYY-MM-DD)' };
+  if (!(nonBlank(payload.taxInvoiceFile) ?? inv?.taxInvoiceFile)) {
+    return { ok: false, reason: 'the tax invoice (e-Faktur) must be attached' };
+  }
+  const seen = new Set<string>();
+  for (let i = 0; i < lines.length; i++) {
+    const refusal = invoiceLineRefusal(lines[i], {
+      supplierId: po.supplierId,
+      po,
+      receipts: goodsReceiptStore.all(),
+      invoices: invoiceStore.all(),
+      excludeInvoiceId: inv?.id,
+    });
+    if (refusal === 'overInvoiced') {
+      return {
+        ok: false,
+        reason: `OVER_INVOICED: line ${i + 1} invoices more than was received and not yet invoiced`,
+      };
+    }
+    if (refusal) return { ok: false, reason: `line ${i + 1}: ${refusal}` };
+    const key = `${lines[i].receiptId}|${lines[i].materialCode}`;
+    if (seen.has(key)) return { ok: false, reason: `line ${i + 1}: receipt line given twice` };
+    seen.add(key);
+  }
+  return { ok: true };
+});
+
+// REQ-E07-07 AC-02 — a supplier cannot use the same invoice number twice.
+bindPolicyHook(POLICY_HOOKS.INVOICE_NUMBER_UNIQUE, ({ entityId, payload }) => {
+  const inv = entityId ? invoiceStore.get(entityId) : undefined;
+  const po = inv ? undefined : findPoByNumber(String(payload.poReference));
+  const supplierId = inv?.supplierId ?? po?.supplierId;
+  const number = nonBlank(payload.invoiceNumber) ?? inv?.invoiceNumber;
+  if (!supplierId || !number) return { ok: true };
+  return isDuplicateInvoiceNumber(number, supplierId, invoiceStore.all(), inv?.id)
+    ? { ok: false, reason: `DUPLICATE_INVOICE_NUMBER: '${number}' is already used on another invoice` }
+    : { ok: true };
+});
+
+// — Receipt discrepancy response target (REQ-E07-06) — the supplier answers a
+//   derived discrepancy on its own receipt; PTI's planner resolves a dispute.
+//   Keyed by the receipt id: one answer per receipt. ——————————————————————————
+const asnForReceipt = (gr: GoodsReceipt) => asnStore.get(gr.asnNumber) ?? null;
+
+const receiptDiscrepancyTarget: CommandTarget = {
+  readState: (id) => receiptDiscrepancyStore.get(id)?.status ?? null,
+  readScopeOwner: (id) => receiptDiscrepancyStore.get(id)?.supplierId ?? null,
+  readEntity: (id) => receiptDiscrepancyStore.get(id) ?? null,
+  applyTransition: (id, toState, payload) => {
+    receiptDiscrepancyStore.update(id, (r) => ({
+      ...r,
+      status: toState as ReceiptDiscrepancyStatus,
+      ...(toState === 'Resolved'
+        ? { resolutionComment: nonBlank(payload.resolutionComment), resolvedAt: new Date().toISOString() }
+        : {}),
+    }));
+  },
+  // The owner is the supplier the receipt belongs to — derived from the store,
+  // never echoed from the payload — and it is required for every persona.
+  requireCreationOwner: true,
+  creationOwner: (payload) => goodsReceiptStore.get(String(payload.receiptId))?.supplierId ?? null,
+  create: (payload, toState) => {
+    const gr = goodsReceiptStore.get(String(payload.receiptId))!;
+    receiptDiscrepancyStore.add({
+      receiptId: gr.id,
+      supplierId: gr.supplierId,
+      status: toState as ReceiptDiscrepancyStatus,
+      comment: nonBlank(payload.comment) ?? '',
+      respondedAt: new Date().toISOString(),
+    });
+    return { entityId: gr.id };
+  },
+};
+
+bindPolicyHook(POLICY_HOOKS.RECEIPT_DISCREPANCY_ANSWERABLE, ({ payload }) => {
+  const gr = goodsReceiptStore.get(String(payload.receiptId));
+  if (!gr) return { ok: false, reason: 'goods receipt not found' };
+  if (!hasReceiptDiscrepancy(gr, asnForReceipt(gr))) {
+    return { ok: false, reason: `NO_DISCREPANCY: ${gr.grNumber} matches what was shipped` };
+  }
+  if (receiptDiscrepancyStore.get(gr.id)) {
+    return { ok: false, reason: `ALREADY_ANSWERED: ${gr.grNumber} already has an answer` };
+  }
+  if (!nonBlank(payload.comment)) return { ok: false, reason: 'a comment is required' };
+  return { ok: true };
+});
+
+bindPolicyHook(POLICY_HOOKS.RECEIPT_DISCREPANCY_RESOLUTION_AUTHORED, ({ payload }) =>
+  nonBlank(payload.resolutionComment)
+    ? { ok: true }
+    : { ok: false, reason: 'resolving a dispute needs a comment for the supplier' },
+);
+
+// — Call-off target (REQ-E09-01, REQ-E09-03, REQ-E09-04) — the hub is the
+//   record. The planner releases, changes and reviews; the supplier confirms and
+//   sends dispatch heads-ups. Whether a confirmation is accepted automatically
+//   or waits for the planner is computed HERE from the one tolerance rule
+//   (`checkTolerance`), never chosen by the caller. Stamps use the simulated
+//   clock the call-off projections read, so a deadline and its escalation are
+//   measured on the same clock. ——————————————————————————————————————————————
+const kindForState = (toState: string): CallOffConfirmationKind | undefined =>
+  (Object.keys(CONFIRMATION_STATE) as CallOffConfirmationKind[]).find((k) => CONFIRMATION_STATE[k] === toState);
+
+const poLineFor = (poId: string, lineId: string) => {
+  const po = purchaseOrderStore.get(poId);
+  return { po, line: po?.lineItems.find((li) => li.id === lineId) };
+};
+
+const callOffTarget: CommandTarget = {
+  readState: (id) => callOffStore.get(id)?.status ?? null,
+  readScopeOwner: (id) => callOffStore.get(id)?.supplierId ?? null,
+  readEntity: (id) => callOffStore.get(id) ?? null,
+  applyTransition: (id, toState, payload) => {
+    const now = sdcClock.now();
+    const current = callOffStore.get(id);
+    if (!current) return;
+    const reason = nonBlank(payload.reason);
+    const withQtyDate = (c: CallOff): CallOff => ({
+      ...c,
+      ...(isPositiveQty(payload.quantity) ? { quantity: payload.quantity } : {}),
+      ...(isCallOffDate(payload.needDate) ? { needDate: payload.needDate } : {}),
+      ...(CALL_OFF_TYPES.includes(payload.type as CallOffType) ? { type: payload.type as CallOffType } : {}),
+    });
+
+    // The verbs are told apart by the state they leave and the state they reach;
+    // each one's policy has already refused every other combination.
+    if (toState === 'Draft') {
+      // Draft edit (state-preserving): new quantity / date / type, with the reason.
+      callOffStore.update(id, (c) => ({ ...withQtyDate(c), notes: [...c.notes, { action: 'edit', text: reason ?? '', at: now }] }));
+      return;
+    }
+    if (toState === 'Awaiting Confirmation') {
+      if (current.status === 'Draft') {
+        // Release a draft.
+        callOffStore.update(id, (c) => ({ ...c, status: 'Awaiting Confirmation', releasedAt: now }));
+      } else if (isAwaitingApproval(current)) {
+        // The planner rejects the confirmation: back to the supplier to confirm again.
+        callOffStore.update(id, (c) => {
+          const { confirmation: _dropped, ...rest } = c;
+          return {
+            ...rest,
+            status: 'Awaiting Confirmation',
+            releasedAt: now,
+            notes: [...c.notes, { action: 'returned', text: nonBlank(payload.reviewComment) ?? '', at: now }],
+          };
+        });
+      } else {
+        // The planner changes a released call-off: the supplier confirms again.
+        callOffStore.update(id, (c) => {
+          const { confirmation: _dropped, rejectionReason: _cleared, ...rest } = withQtyDate(c);
+          return {
+            ...rest,
+            status: 'Awaiting Confirmation',
+            releasedAt: now,
+            notes: [...c.notes, { action: 'change', text: reason ?? '', at: now }],
+          };
+        });
+      }
+      return;
+    }
+    if (toState === 'Dismissed') {
+      callOffStore.update(id, (c) => ({
+        ...c,
+        status: 'Dismissed',
+        notes: [...c.notes, { action: 'dismiss', text: reason ?? '', at: now }],
+      }));
+      return;
+    }
+    if (toState === 'Rejected') {
+      callOffStore.update(id, (c) => ({
+        ...c,
+        status: 'Rejected',
+        rejectionReason: reason,
+        notes: [...c.notes, { action: 'reject', text: reason ?? '', at: now }],
+      }));
+      return;
+    }
+    // State-preserving verbs on a confirmed call-off: approval (a confirmation is
+    // waiting) or a dispatch heads-up (the confirmation is accepted).
+    if (current.status === toState && current.confirmation) {
+      if (isAwaitingApproval(current)) {
+        callOffStore.update(id, (c) => ({
+          ...c,
+          confirmation: { ...c.confirmation!, approval: 'approved', reviewedAt: now },
+        }));
+        return;
+      }
+      callOffStore.update(id, (c) => ({
+        ...c,
+        dispatches: [
+          ...c.dispatches,
+          {
+            id: `dsp-${c.id.slice(3)}-${c.dispatches.length + 1}`,
+            shippedDate: String(payload.shippedDate),
+            expectedArrival: String(payload.expectedArrival),
+            quantity: Number(payload.quantity),
+            ...(nonBlank(payload.asnNumber) ? { asnNumber: nonBlank(payload.asnNumber) } : {}),
+            recordedAt: now,
+          },
+        ],
+      }));
+      return;
+    }
+    // Supplier confirmation: the tolerance rule decides auto or awaiting.
+    const kind = kindForState(toState);
+    if (!kind) return;
+    const proposal = proposedDeliveries(current, kind, payload);
+    if (!('deliveries' in proposal)) return;
+    const within = checkTolerance(current, proposal.deliveries).within;
+    callOffStore.update(id, (c) => ({
+      ...c,
+      status: toState as CallOffStatus,
+      confirmation: {
+        kind,
+        deliveries: proposal.deliveries,
+        ...(nonBlank(payload.comment) ? { comment: nonBlank(payload.comment) } : {}),
+        confirmedAt: now,
+        approval: within ? 'auto' : 'awaiting',
+      },
+    }));
+  },
+  // A call-off belongs to the supplier of its umbrella PO — read from the PO
+  // store, never echoed from the payload.
+  requireCreationOwner: true,
+  creationOwner: (payload) => purchaseOrderStore.get(String(payload.poId))?.supplierId ?? null,
+  create: (payload, toState) => {
+    const { po, line } = poLineFor(String(payload.poId), String(payload.poLineId));
+    const identity = callOffStore.nextIdentity();
+    const row: CallOff = {
+      ...identity,
+      poId: po!.id,
+      poNumber: po!.poNumber,
+      poLineId: line!.id,
+      supplierId: po!.supplierId,
+      supplierName: po!.supplierName,
+      materialCode: line!.materialCode,
+      description: line!.description,
+      uom: line!.uom,
+      unitPrice: line!.unitPrice,
+      currency: po!.currency,
+      quantity: Number(payload.quantity),
+      needDate: String(payload.needDate),
+      type: payload.type as CallOffType,
+      status: toState as CallOffStatus,
+      ...(toState === 'Awaiting Confirmation' ? { releasedAt: sdcClock.now() } : {}),
+      dispatches: [],
+      notes: [],
+    };
+    callOffStore.add(row);
+    return { entityId: row.id };
+  },
+};
+
+// REQ-E09-01 BR-02 — a call-off references an open umbrella PO line.
+bindPolicyHook(POLICY_HOOKS.CALLOFF_LINE_VALID, ({ payload }) => {
+  const { po } = poLineFor(String(payload.poId), String(payload.poLineId));
+  const refusal = umbrellaRefusal(po, payload.poLineId);
+  if (refusal === 'poNotFound') return { ok: false, reason: 'umbrella PO not found' };
+  if (refusal === 'poNotOpen') return { ok: false, reason: `PO ${po!.poNumber} is not approved and open (${po!.status})` };
+  if (refusal === 'lineNotFound') return { ok: false, reason: 'PO line not found' };
+  if (!isPositiveQty(payload.quantity)) return { ok: false, reason: 'quantity must be greater than zero' };
+  if (!isCallOffDate(payload.needDate)) return { ok: false, reason: 'need date must be a date (YYYY-MM-DD)' };
+  if (String(payload.needDate) < sdcClock.now().slice(0, 10)) return { ok: false, reason: 'need date is in the past' };
+  if (!CALL_OFF_TYPES.includes(payload.type as CallOffType)) return { ok: false, reason: 'type must be JIT or forecast-based' };
+  return { ok: true };
+});
+
+// REQ-E09-01 BR-04 / AC-03, CR-04 — never beyond what remains on the umbrella PO.
+bindPolicyHook(POLICY_HOOKS.CALLOFF_WITHIN_REMAINING, ({ entityId, payload }) => {
+  const existing = entityId ? callOffStore.get(entityId) : undefined;
+  const poId = existing?.poId ?? String(payload.poId);
+  const lineId = existing?.poLineId ?? String(payload.poLineId);
+  const { po, line } = poLineFor(poId, lineId);
+  if (!po || !line) return { ok: false, reason: 'umbrella PO line not found' };
+  const quantity = isPositiveQty(payload.quantity) ? payload.quantity : existing?.quantity;
+  if (!isPositiveQty(quantity)) return { ok: false, reason: 'quantity must be greater than zero' };
+  if (exceedsRemaining(quantity, line, callOffStore.all(), existing?.id)) {
+    return {
+      ok: false,
+      reason: `EXCEEDS_REMAINING: ${quantity} ${line.uom} is more than what remains on ${po.poNumber}`,
+    };
+  }
+  return { ok: true };
+});
+
+// Draft edit / change — a reason, and any new quantity or date is valid.
+bindPolicyHook(POLICY_HOOKS.CALLOFF_EDIT_VALID, ({ payload }) => {
+  if (!nonBlank(payload.reason)) return { ok: false, reason: 'a reason is required' };
+  if (payload.quantity !== undefined && !isPositiveQty(payload.quantity)) {
+    return { ok: false, reason: 'quantity must be greater than zero' };
+  }
+  if (payload.needDate !== undefined) {
+    if (!isCallOffDate(payload.needDate)) return { ok: false, reason: 'need date must be a date (YYYY-MM-DD)' };
+    if (String(payload.needDate) < sdcClock.now().slice(0, 10)) return { ok: false, reason: 'need date is in the past' };
+  }
+  if (payload.type !== undefined && !CALL_OFF_TYPES.includes(payload.type as CallOffType)) {
+    return { ok: false, reason: 'type must be JIT or forecast-based' };
+  }
+  return { ok: true };
+});
+
+bindPolicyHook(POLICY_HOOKS.CALLOFF_CHANGEABLE, ({ entityId }) => {
+  const c = callOffStore.get(entityId);
+  if (!c) return { ok: false, reason: 'call-off not found' };
+  if (isAwaitingApproval(c)) {
+    return { ok: false, reason: 'AWAITING_APPROVAL: approve or reject the confirmation first' };
+  }
+  if (headsUpsFor(c, asnStore.all()).length > 0) {
+    return { ok: false, reason: `ALREADY_DISPATCHED: ${c.callOffNumber} has already shipped` };
+  }
+  return { ok: true };
+});
+
+bindPolicyHook(POLICY_HOOKS.CALLOFF_REASON_AUTHORED, ({ payload }) =>
+  nonBlank(payload.reason) ? { ok: true } : { ok: false, reason: 'a reason is required' },
+);
+
+// REQ-E09-03 BR-02 — the answer is well formed for its kind. The kind is the
+// verb's own target state, so a caller cannot label one answer as another.
+bindPolicyHook(POLICY_HOOKS.CALLOFF_CONFIRMATION_VALID, ({ entityId, toState, payload }) => {
+  const c = callOffStore.get(entityId);
+  const kind = kindForState(toState);
+  if (!c || !kind) return { ok: false, reason: 'call-off not found' };
+  const proposal = proposedDeliveries(c, kind, payload);
+  if ('refusal' in proposal) return { ok: false, reason: `confirmation: ${proposal.refusal}` };
+  return { ok: true };
+});
+
+bindPolicyHook(POLICY_HOOKS.CALLOFF_AWAITING_APPROVAL, ({ entityId }) => {
+  const c = callOffStore.get(entityId);
+  return c && isAwaitingApproval(c)
+    ? { ok: true }
+    : { ok: false, reason: 'NOT_AWAITING_APPROVAL: no confirmation is waiting for approval' };
+});
+
+bindPolicyHook(POLICY_HOOKS.CALLOFF_REVIEW_COMMENT_AUTHORED, ({ payload }) =>
+  nonBlank(payload.reviewComment)
+    ? { ok: true }
+    : { ok: false, reason: 'rejecting a confirmation needs a comment for the supplier' },
+);
+
+// REQ-E09-04 — a heads-up only on an accepted confirmation, with real dates.
+bindPolicyHook(POLICY_HOOKS.CALLOFF_DISPATCH_VALID, ({ entityId, payload }) => {
+  const c = callOffStore.get(entityId);
+  if (!c) return { ok: false, reason: 'call-off not found' };
+  if (!isConfirmedAndAccepted(c)) {
+    return { ok: false, reason: `CALL_OFF_NOT_CONFIRMED: ${c.callOffNumber} is awaiting approval` };
+  }
+  if (!isCallOffDate(payload.shippedDate)) return { ok: false, reason: 'shipped date must be a date (YYYY-MM-DD)' };
+  if (!isCallOffDate(payload.expectedArrival)) return { ok: false, reason: 'expected arrival must be a date (YYYY-MM-DD)' };
+  if (String(payload.expectedArrival) < String(payload.shippedDate)) {
+    return { ok: false, reason: 'expected arrival is before the shipped date' };
+  }
+  if (!isPositiveQty(payload.quantity)) return { ok: false, reason: 'quantity must be greater than zero' };
+  if (nonBlank(payload.asnNumber)) {
+    const asn = asnStore.get(String(payload.asnNumber));
+    if (!asn || asn.poReference !== c.poNumber) {
+      return { ok: false, reason: `ASN ${String(payload.asnNumber)} is not on ${c.poNumber}` };
+    }
+  }
   return { ok: true };
 });
 
@@ -431,6 +1233,67 @@ const rfqTarget: CommandTarget = {
   readScopeOwner: () => null,
   readEntity: (id) => rfqStore.get(id) ?? null,
   applyTransition: (id, toState, payload) => {
+    // REQ-E03-03 BR-05 — the extension branch. `applyTransition` receives no
+    // transitionId, so the payload is the discriminator, exactly as the FX pin
+    // below discriminates on `quote`. `t_rfq_extend` is the ONLY rfq verb
+    // carrying `deadline`, and it is state-preserving, so nothing else here runs.
+    if (payload.deadline !== undefined) {
+      const deadline = String(payload.deadline);
+      const only = Array.isArray(payload.supplierIds)
+        ? (payload.supplierIds as unknown[]).filter((x): x is string => typeof x === 'string')
+        : [];
+      rfqStore.update(id, (r) => ({
+        ...r,
+        // Extended for EVERYONE moves the event's own deadline; extended for
+        // NAMED invitees leaves it alone and records a per-invitee one, so the
+        // two acts stay distinguishable after the fact.
+        ...(only.length === 0 ? { responseDeadline: deadline } : {}),
+        ...(only.length === 0
+          ? {}
+          : {
+              inviteeDeadlines: [
+                ...(r.inviteeDeadlines ?? []).filter((i) => !only.includes(i.supplierId)),
+                ...only.map((supplierId) => ({ supplierId, deadline })),
+              ],
+            }),
+        extensions: [...(r.extensions ?? []), { at: new Date().toISOString(), deadline, supplierIds: only }],
+      }));
+      return;
+    }
+    // REQ-E03-05 BR-06 / BR-09 — an award RECORDS itself. The hub keeps the
+    // split, the reason and who was not awarded; it mints no PO and no contract
+    // (the charter's system-of-record rule).
+    if (toState === 'Awarded') {
+      const rfq = rfqStore.get(id);
+      const supplied = Array.isArray(payload.awardLines) ? (payload.awardLines as AwardLine[]) : null;
+      // A single-supplier award is the same record with ONE line at 100% — so
+      // there is one award shape to read, not "a split" and "a plain award".
+      const lines: AwardLine[] = supplied ?? [
+        {
+          supplierId: String(payload.awardedSupplierId),
+          quotationId: String(payload.awardedQuotationId),
+          itemCode: '',
+          sharePct: 100,
+          quantity: rfq?.totalQty ?? 0,
+        },
+      ];
+      const winners = new Set(lines.map((l) => l.supplierId));
+      awardStore.add({
+        id: awardStore.nextId(),
+        rfqId: id,
+        awardedAt: new Date().toISOString(),
+        lines,
+        ...(typeof payload.awardReason === 'string' && payload.awardReason.trim()
+          ? { reason: payload.awardReason.trim() }
+          : {}),
+        ...(rfq && bestScoredQuotationId(rfq, rfxNow())
+          ? { bestScoredQuotationId: bestScoredQuotationId(rfq, rfxNow())! }
+          : {}),
+        // BR-08 — every other quote is marked Not awarded and its supplier
+        // notified. The quote status is the cascade's job; this records WHO.
+        notAwardedSupplierIds: (rfq?.invitedSupplierIds ?? []).filter((sid) => !winners.has(sid)),
+      });
+    }
     rfqStore.update(id, (r) => ({
       ...r,
       status: toState as RFQStatus,
@@ -586,7 +1449,13 @@ const quotationTarget: CommandTarget = {
       // Honest arithmetic from raw facts (unit × the RFQ's quantity), NOT a score.
       // Denominated in the quote's OWN currency — the RFQ's quantity is a count,
       // so it carries no currency of its own to disagree with.
-      totalPrice: unitPrice * (rfq?.totalQty ?? 0),
+      // REQ-E03-03 — the total is the SUM OF THE LINES when the quote carries
+      // them, and unit × the event quantity when it does not. Derived either
+      // way, so a header figure can never disagree with the detail under it.
+      totalPrice:
+        Array.isArray(payload.lines) && (payload.lines as unknown[]).length > 0
+          ? quoteLinesTotal(payload.lines as QuoteLineInput[])
+          : unitPrice * (rfq?.totalQty ?? 0),
       // Required by the flow's `requiredFields`, so `num()`'s 0 fallback is
       // unreachable here — an absent lead time fails MISSING_FIELDS before
       // create is ever called, rather than being minted as a same-day promise.
@@ -598,6 +1467,19 @@ const quotationTarget: CommandTarget = {
       ...(typeof payload.moq === 'number' ? { moq: payload.moq as number } : {}),
       paymentTermsOffered: str('paymentTermsOffered'),
       validUntil: str('validUntil'),
+      // REQ-E03-03 — the per-item prices, when the supplier quoted item by item.
+      // `quotation_lines_well_formed` has already refused a malformed set, so a
+      // `lines` key that survives to here is either absent or sound.
+      ...(Array.isArray(payload.lines) && (payload.lines as unknown[]).length > 0
+        ? { lines: payload.lines as Quotation['lines'] }
+        : {}),
+      // REQ-E03-05 BR-04 — which round this version answered, and the version it
+      // supersedes. Both absent on an original response, which is what makes
+      // "this is the first bid" a readable state rather than round 0 by
+      // convention.
+      ...(typeof payload.roundNumber === 'number' ? { roundNumber: payload.roundNumber as number } : {}),
+      ...(str('supersedesQuotationId') ? { supersedesQuotationId: str('supersedesQuotationId') } : {}),
+      ...(payload.bestAndFinal === true ? { bestAndFinal: true } : {}),
       // DECLARED-SIMULATED axes — documented baseline, passed through the engine
       // and marked "Simulated" at read. Never zero, never a profile lookup.
       complianceScore: SIMULATED_AXIS_BASELINE,
@@ -754,8 +1636,9 @@ const purchaseRequisitionTarget: CommandTarget = {
 //   response thread). confirmedQty: 0 is a LEGAL short confirmation (F-2).
 //   Publications are the frozen SDC fixtures until the SOMO C8 feed lands —
 //   read-only here (responses mutate; publications never do).
-const publicationById = (publicationId: string) =>
-  FORECAST_PUBLICATIONS.find((p) => p.publicationId === publicationId);
+// REQ-E06-01 — the forecast versions the hub publishes are publications too;
+// the lookup reads them beside the SDC-0 fixtures.
+const publicationById = (publicationId: string) => forecastPublicationById(publicationId);
 
 /** F-4 ruling: a store-minted response is SUPPLIER-authored, committed, and
  *  SIMULATED — the backing store is a mock; liveness flips at F1, not here. */
@@ -901,6 +1784,8 @@ const requirementResponseTarget: CommandTarget = {
             ...(str('capacityConstraint')
               ? { capacityConstraint: str('capacityConstraint') }
               : {}),
+            // REQ-E06-02 BR-08 — proven a number ≥ 0 by RR_SUBMIT_COMMITMENT_DETAIL.
+            ...(typeof payload.upsideQty === 'number' ? { upsideQty: payload.upsideQty } : {}),
           },
         };
     const response: RequirementResponse = {
@@ -1030,6 +1915,48 @@ bindPolicyHook(POLICY_HOOKS.RR_SUBMIT_QTY_AGREES, ({ payload }) => {
   return { ok: true };
 });
 
+// REQ-E06-02 BR-04 / AC-02 — below forecast needs a starter reason (and `other`
+// a note). The rule is `forecastRules.shortfallRefusal`, the same function the
+// form and the upload check call, so the three can never disagree. The floor
+// ran first, so `confirmedQty` is a finite number here.
+bindPolicyHook(POLICY_HOOKS.RR_SUBMIT_SHORTFALL_REASON, ({ payload }) => {
+  const line = fannedLine(payload);
+  if (!line || typeof payload.confirmedQty !== 'number') return { ok: true };
+  const refusal = shortfallRefusal(
+    line.forecastQty,
+    payload.confirmedQty,
+    payload.rootCause as { level1?: unknown; note?: unknown } | undefined,
+  );
+  if (refusal === 'reasonRequired') {
+    return {
+      ok: false,
+      reason: `BELOW_FORECAST_NEEDS_REASON: ${payload.confirmedQty} is below the forecast of ${line.forecastQty}; choose capacity, material, logistics, quality or other`,
+    };
+  }
+  if (refusal === 'noteRequired') {
+    return { ok: false, reason: 'OTHER_REASON_NEEDS_NOTE: the reason "other" needs a note' };
+  }
+  return { ok: true };
+});
+
+// REQ-E06-02 BR-08 — a commitment to a forecast version carries its date, and
+// an upside quantity is a number of zero or more. The SDC-0 publications
+// predate the date rule and keep their shape.
+bindPolicyHook(POLICY_HOOKS.RR_SUBMIT_COMMITMENT_DETAIL, ({ payload }) => {
+  const up = payload.upsideQty;
+  if (up !== undefined && (typeof up !== 'number' || !Number.isFinite(up) || up < 0)) {
+    return { ok: false, reason: 'upsideQty must be a number of zero or more' };
+  }
+  const date = payload.committedDate;
+  if (isForecastVersion(String(payload.publicationId)) && !isIsoDay(date)) {
+    return { ok: false, reason: 'COMMITMENT_DATE_REQUIRED: a commitment needs its date (YYYY-MM-DD)' };
+  }
+  if (date !== undefined && date !== '' && !isIsoDay(date)) {
+    return { ok: false, reason: 'committedDate must be a date (YYYY-MM-DD)' };
+  }
+  return { ok: true };
+});
+
 // RR dispute / resolve — the authored text must be SUBSTANCE, not presence.
 //
 // ⚠️ WHICH FIELD IS ASKED FOR IS DERIVED FROM THE MACHINE, NEVER FROM THE
@@ -1064,13 +1991,14 @@ bindPolicyHook(POLICY_HOOKS.RR_DISPUTE_TEXT_AUTHORED, ({ payload, toState, curre
 
 // SDC-2b-EXT — the symmetric class guards (the honesty lock). creationOwner
 // already proved the fanned line exists, so resolving it here cannot miss.
-const fannedLineClass = (payload: Record<string, unknown>) =>
+const fannedLine = (payload: Record<string, unknown>) =>
   publicationById(String(payload.publicationId))?.lines.find(
     (l) =>
       l.supplierId === String(payload.supplierId) &&
       l.materialCode === String(payload.materialCode) &&
       l.periodBucket === String(payload.periodBucket),
-  )?.commitmentClass;
+  );
+const fannedLineClass = (payload: Record<string, unknown>) => fannedLine(payload)?.commitmentClass;
 
 // Submit (a COMMITMENT) is illegal against a visibility-only line — nothing was
 // requested to commit; a "confirmed" record there would be a fabricated claim.
@@ -1163,11 +2091,14 @@ const inventoryDeclarationTarget: CommandTarget = {
   // t_inventorydeclaration_declare is byte-for-byte unchanged. On the record path
   // it blocks a buyer recording for a supplier × material the data never names.
   requireCreationOwner: true,
+  // REQ-E08-02 — membership widens to the hub's supply assignments (the
+  // materials a stock row is checked against); `isAssignedMaterial` includes the
+  // (i)∪(ii) collaborated set, so every pair accepted before is accepted now.
   creationOwner: (payload) => {
     const sid = String(payload.supplierId);
-    return collaboratedMaterial(sid, String(payload.materialCode)) ? sid : null;
+    return isAssignedMaterial(sid, String(payload.materialCode)) ? sid : null;
   },
-  create: (payload, _toState) => {
+  create: (payload, _toState, scope) => {
     const str = (k: string) => (typeof payload[k] === 'string' ? (payload[k] as string) : '');
     const materialCode = str('materialCode');
     const supplierId = str('supplierId');
@@ -1205,6 +2136,13 @@ const inventoryDeclarationTarget: CommandTarget = {
       totalQty,
       uom,
       ...(batches.length > 0 ? { batches } : {}),
+      // REQ-E08-02 BR-06 — the supplier's ROP and production figures, when given.
+      ...(isNonNegative(payload.supplierRop) ? { supplierRop: payload.supplierRop } : {}),
+      ...(isNonNegative(payload.inProductionQty) ? { inProductionQty: payload.inProductionQty } : {}),
+      ...(isIsoDay(payload.productionCompletionDate) ? { productionCompletionDate: payload.productionCompletionDate } : {}),
+      // BR-08 — a PTI recording is ALWAYS "Entered by PTI", whatever the payload
+      // says; a supplier's own submission is the template or manual entry.
+      channel: scope.personaType === 'buyer' ? 'pti' : payload.channel === 'template' ? 'template' : 'manual',
       provenance: PROV_SUPPLIER_SUBMIT,
     };
     inventoryDeclarationStore.add(declaration);
@@ -1230,6 +2168,827 @@ bindPolicyHook(POLICY_HOOKS.INV_DECLARE_BATCH_TOTAL, ({ payload }) => {
         ok: false,
         reason: `batch total ${sum} does not equal declared totalQty ${total} — a total that disagrees with its own detail is fabricated`,
       };
+});
+
+const isNonNegative = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v) && v >= 0;
+
+// REQ-E08-02 BR-06 — the optional detail of a stock submission is well formed.
+bindPolicyHook(POLICY_HOOKS.INV_DECLARE_DETAIL_VALID, ({ payload }) => {
+  for (const f of ['supplierRop', 'inProductionQty'] as const) {
+    if (payload[f] !== undefined && !isNonNegative(payload[f])) {
+      return { ok: false, reason: `${f} must be a number of zero or more` };
+    }
+  }
+  if (payload.productionCompletionDate !== undefined && !isIsoDay(payload.productionCompletionDate)) {
+    return { ok: false, reason: 'production completion date must be a date (YYYY-MM-DD)' };
+  }
+  if (payload.channel !== undefined && payload.channel !== 'template' && payload.channel !== 'manual') {
+    return { ok: false, reason: 'channel must be template or manual' };
+  }
+  return { ok: true };
+});
+
+// — Inventory & capacity collaboration (REQ-E08-02 to REQ-E08-05) ——————————————
+//   Four targets over the stores in `inventoryHubStores`, reading positions,
+//   capacity plans and alert conditions through ONE read model
+//   (`inventoryReadModel`) so a policy sees exactly what the pages show.
+
+/** REQ-E08-02 BR-03 — one API sync attempt per press, success or failure. */
+const stockSyncTarget: CommandTarget = {
+  readState: (id) => (stockSyncStore.get(id) ? 'Recorded' : null),
+  readScopeOwner: (id) => stockSyncStore.get(id)?.supplierId ?? null,
+  readEntity: (id) => stockSyncStore.get(id) ?? null,
+  applyTransition: () => {
+    /* no-op — an attempt is a snapshot */
+  },
+  requireCreationOwner: true,
+  creationOwner: (payload) => {
+    const sid = String(payload.supplierId);
+    return suppliersWithAssignments().some((s) => s.supplierId === sid) ? sid : null;
+  },
+  create: (payload) => {
+    const supplierId = String(payload.supplierId);
+    const now = sdcClock.now();
+    const connection = API_CONNECTIONS[supplierId];
+    const id = stockSyncStore.nextId();
+    if (connection && connection.outcome === 'success') {
+      // The supplier's system answered: its figures land as API submissions.
+      for (const f of connection.figures) {
+        inventoryDeclarationStore.add({
+          id: inventoryDeclarationStore.nextNumber(),
+          supplierId,
+          materialCode: f.materialCode,
+          declaredAt: now,
+          totalQty: f.soh,
+          uom: requireUom(f.materialCode),
+          ...(f.supplierRop !== undefined ? { supplierRop: f.supplierRop } : {}),
+          ...(f.inProductionQty !== undefined ? { inProductionQty: f.inProductionQty } : {}),
+          ...(f.completionInDays !== undefined ? { productionCompletionDate: addDays(dayOf(now), f.completionInDays) } : {}),
+          channel: 'api',
+          provenance: PROV_SUPPLIER_SUBMIT,
+        });
+      }
+      stockSyncStore.add({ id, supplierId, at: now, outcome: 'success' });
+    } else {
+      // Edge case: show the error and time, keep the previous figures (nothing
+      // is written to the stock store), and they read as stale from here on.
+      stockSyncStore.add({
+        id,
+        supplierId,
+        at: now,
+        outcome: 'failed',
+        errorKey: connection && connection.outcome === 'failed' ? connection.errorKey : 'timeout',
+      });
+    }
+    return { entityId: id };
+  },
+};
+
+bindPolicyHook(POLICY_HOOKS.STOCK_SYNC_CONNECTED, ({ payload }) =>
+  isApiConnected(String(payload.supplierId))
+    ? { ok: true }
+    : { ok: false, reason: 'NOT_API_CONNECTED: this supplier shares stock by template or manual entry, not by API' },
+);
+
+/** REQ-E08-03 — a supplier's access to PTI stock; `entityId` is the supplierId. */
+const stockAccessTarget: CommandTarget = {
+  readState: (id) => {
+    if (!suppliersWithAssignments().some((s) => s.supplierId === id)) return null;
+    return stockAccessStore.get(id)?.active ? 'Granted' : 'NoAccess';
+  },
+  readScopeOwner: (id) => (suppliersWithAssignments().some((s) => s.supplierId === id) ? id : null),
+  readEntity: (id) => stockAccessStore.get(id) ?? null,
+  applyTransition: (id, toState, payload, scope) => {
+    const at = sdcClock.now();
+    const previous: StockAccessGrant = stockAccessStore.get(id) ?? {
+      supplierId: id,
+      supplierName: supplierNameOf(id),
+      active: false,
+      materials: [],
+      log: [],
+    };
+    const materials =
+      toState === 'Granted' && Array.isArray(payload.materials) ? [...new Set(payload.materials.map(String))].sort() : [];
+    stockAccessStore.put({
+      ...previous,
+      active: toState === 'Granted',
+      materials,
+      // BR-06 — every change is logged with the acting user and the time.
+      log: [
+        ...previous.log,
+        {
+          action: toState !== 'Granted' ? 'remove' : previous.active ? 'change' : 'grant',
+          materials: toState === 'Granted' ? materials : previous.materials,
+          at,
+          actor: scope.actor ?? NO_PERSON,
+        },
+      ],
+    });
+  },
+};
+
+// REQ-E08-03 BR-03 / BR-04 — access names only materials the supplier supplies.
+bindPolicyHook(POLICY_HOOKS.STOCK_ACCESS_SCOPE_VALID, ({ entityId, payload }) => {
+  const supplier = suppliersWithAssignments().find((s) => s.supplierId === entityId);
+  if (!supplier) return { ok: false, reason: 'supplier not found in the inventory view' };
+  if (payload.materials !== undefined && !Array.isArray(payload.materials)) {
+    return { ok: false, reason: 'materials must be a list (empty for every material)' };
+  }
+  const named = Array.isArray(payload.materials) ? payload.materials.map(String) : [];
+  const stray = named.find((m) => !supplier.materials.includes(m));
+  if (stray) return { ok: false, reason: `NOT_SUPPLIED: ${stray} is not a material this supplier supplies` };
+  return { ok: true };
+});
+
+/** REQ-E08-04 — capacity per supplier × material group per week. */
+const capacityTarget: CommandTarget = {
+  readState: (id) => (capacityStore.get(id) ? 'Submitted' : null),
+  readScopeOwner: (id) => capacityStore.get(id)?.supplierId ?? null,
+  readEntity: (id) => capacityStore.get(id) ?? null,
+  applyTransition: () => {
+    /* no-op — a changed plan is a new submission */
+  },
+  requireCreationOwner: true,
+  creationOwner: (payload) => {
+    const sid = String(payload.supplierId);
+    return allCapacityPlans().some((p) => p.supplierId === sid && p.materialGroup === String(payload.materialGroup))
+      ? sid
+      : null;
+  },
+  create: (payload) => {
+    const weeks: CapacityWeekEntry[] = (payload.weeks as Record<string, unknown>[]).map((w) => ({
+      week: String(w.week),
+      allocated: Number(w.allocated),
+      ...(isNonNegative(w.upside) ? { upside: w.upside } : {}),
+      ...(isCapacityReason(w.reason) ? { reason: w.reason } : {}),
+      ...(nonBlank(w.note) ? { note: nonBlank(w.note) } : {}),
+    }));
+    const row: CapacitySubmission = {
+      id: capacityStore.nextId(),
+      supplierId: String(payload.supplierId),
+      materialGroup: String(payload.materialGroup),
+      submittedAt: sdcClock.now(),
+      weeks: weeks.sort((a, b) => a.week.localeCompare(b.week)),
+    };
+    capacityStore.add(row);
+    return { entityId: row.id };
+  },
+};
+
+// REQ-E08-04 AC-01 / AC-02 — every horizon week, and a reason below demand.
+bindPolicyHook(POLICY_HOOKS.CAPACITY_SUBMISSION_VALID, ({ payload }) => {
+  const plan = allCapacityPlans().find(
+    (p) => p.supplierId === String(payload.supplierId) && p.materialGroup === String(payload.materialGroup),
+  );
+  if (!plan) return { ok: false, reason: 'no materials of this group are assigned to the supplier' };
+  if (!Array.isArray(payload.weeks)) return { ok: false, reason: 'weeks must be a list' };
+  const refusal = capacitySubmissionRefusal(
+    payload.weeks,
+    (week) => plan.weeks.find((w) => w.week === week)?.demand ?? 0,
+    plan.weeks.map((w) => w.week),
+  );
+  if (!refusal) return { ok: true };
+  const code =
+    refusal.refusal === 'reasonRequired'
+      ? 'BELOW_DEMAND_NEEDS_REASON'
+      : refusal.refusal === 'noteRequired'
+        ? 'OTHER_REASON_NEEDS_NOTE'
+        : refusal.refusal.toUpperCase();
+  return { ok: false, reason: `${code}: week ${refusal.week ?? ''}`.trim() };
+});
+
+/** REQ-E08-05 — an alert; `entityId` is its key (rule | subject | supplier). */
+const inventoryAlertTarget: CommandTarget = {
+  readState: (key) => {
+    if (!activeAlertConditions().some((c) => c.key === key)) return null;
+    return standingClosure(key, inventoryAlertLedger.all()) ? 'Closed' : 'Open';
+  },
+  readScopeOwner: (key) => parseAlertKey(key)?.supplierId ?? null,
+  readEntity: (key) => allAlerts().find((a) => a.key === key) ?? null,
+  applyTransition: (key, _toState, payload, scope) => {
+    inventoryAlertLedger.append([
+      { key, kind: 'closed', at: sdcClock.now(), note: nonBlank(payload.actionNote) ?? '', actor: scope.actor ?? NO_PERSON },
+    ]);
+  },
+};
+
+bindPolicyHook(POLICY_HOOKS.ALERT_ACTION_NOTE_AUTHORED, ({ payload }) =>
+  nonBlank(payload.actionNote)
+    ? { ok: true }
+    : { ok: false, reason: 'closing an alert needs an action note' },
+);
+
+// — Forecast collaboration (REQ-E06-01, REQ-E06-03) ————————————————————————
+//   A version is a snapshot of one stream and is never edited; publish and
+//   reassign each add the next version. A view is recorded once per supplier ×
+//   version. Commitments ride the requirementResponse target above.
+
+const FORECAST_STREAMS = ['packaging', 'rawMaterial'] as const;
+
+/** REQ-E06-01 / REQ-E06-03 BR-05 — a forecast version; `entityId` is its publicationId. */
+const forecastVersionTarget: CommandTarget = {
+  readState: (id) => (forecastVersionStore.get(id) ? 'Published' : null),
+  // Buyer-only: no supplier is named, so a supplier scope is denied.
+  readScopeOwner: () => null,
+  readEntity: (id) => forecastVersionStore.get(id) ?? null,
+  applyTransition: () => {
+    /* no-op — a version is never changed */
+  },
+  creationOwner: () => null,
+  create: (payload) => {
+    const now = sdcClock.now();
+    if (payload.toSupplierId !== undefined) {
+      const current = forecastVersionStore.get(String(payload.publicationId))!;
+      const next = reassignVersion(
+        current,
+        {
+          materialCode: String(payload.materialCode),
+          periodBucket: String(payload.periodBucket),
+          fromSupplierId: String(payload.fromSupplierId),
+          toSupplierId: String(payload.toSupplierId),
+          note: String(payload.note).trim(),
+        },
+        now,
+      )!;
+      forecastVersionStore.add(next);
+      return { entityId: next.publicationId };
+    }
+    const stream = payload.stream as (typeof FORECAST_STREAMS)[number];
+    const current = currentVersion(stream)!;
+    const next = republishVersion(current, {
+      publishedAt: now,
+      // The sources are the current version's suppliers; a supplier that
+      // received demand by reassignment keeps it on re-publication.
+      sources: [
+        ...FORECAST_SOURCES,
+        ...[...new Set(current.lines.map((l) => `${l.supplierId}|${l.materialCode}`))]
+          .filter((k) => !FORECAST_SOURCES.some((s) => `${s.supplierId}|${s.materialCode}` === k))
+          .map((k) => {
+            const [supplierId, materialCode] = k.split('|');
+            return { supplierId, materialCode, share: 0 };
+          }),
+      ],
+      master: materialEntry,
+      baseDemand,
+      ...(payload.emergency === true ? { emergency: true } : {}),
+    });
+    forecastVersionStore.add(next);
+    return { entityId: next.publicationId };
+  },
+};
+
+// REQ-E06-01 BR-02 — publish names a stream that has a version to follow.
+bindPolicyHook(POLICY_HOOKS.FORECAST_PUBLISH_VALID, ({ payload }) => {
+  if (!(FORECAST_STREAMS as readonly unknown[]).includes(payload.stream)) {
+    return { ok: false, reason: 'UNKNOWN_STREAM: stream must be packaging or rawMaterial' };
+  }
+  if (payload.emergency !== undefined && typeof payload.emergency !== 'boolean') {
+    return { ok: false, reason: 'emergency must be true or false' };
+  }
+  return currentVersion(payload.stream as (typeof FORECAST_STREAMS)[number])
+    ? { ok: true }
+    : { ok: false, reason: 'no earlier version of this stream to re-publish' };
+});
+
+// REQ-E06-03 BR-05 — reassign: a line of the CURRENT version, a different
+// supplier qualified for the material, and a note the supplier can read.
+bindPolicyHook(POLICY_HOOKS.FORECAST_REASSIGN_VALID, ({ payload }) => {
+  const pub = forecastVersionStore.get(String(payload.publicationId));
+  if (!pub || !pub.stream) return { ok: false, reason: 'forecast version not found' };
+  if (currentVersion(pub.stream)?.publicationId !== pub.publicationId) {
+    return { ok: false, reason: 'NOT_CURRENT_VERSION: demand moves only on the current version' };
+  }
+  if (nonBlank(payload.note) === undefined) return { ok: false, reason: 'NOTE_REQUIRED: moving demand needs a note' };
+  const from = String(payload.fromSupplierId);
+  const to = String(payload.toSupplierId);
+  const code = String(payload.materialCode);
+  const line = pub.lines.find((l) => l.supplierId === from && l.materialCode === code && l.periodBucket === String(payload.periodBucket));
+  if (!line) return { ok: false, reason: 'no such period for this supplier and material in the current version' };
+  if (from === to) return { ok: false, reason: 'SAME_SUPPLIER: choose a different supplier' };
+  if (!qualifiedSuppliers(code).includes(to)) {
+    return { ok: false, reason: `NOT_QUALIFIED: ${to} does not supply ${code}` };
+  }
+  return { ok: true };
+});
+
+/** REQ-E06-01 — a supplier's first opening of a version; `entityId` is the record id. */
+const forecastViewTarget: CommandTarget = {
+  readState: (id) => (forecastViewStore.get(id) ? 'Viewed' : null),
+  readScopeOwner: (id) => forecastViewStore.get(id)?.supplierId ?? null,
+  readEntity: (id) => forecastViewStore.get(id) ?? null,
+  applyTransition: () => {
+    /* no-op — a view is recorded once */
+  },
+  requireCreationOwner: true,
+  // The supplier must have lines in the version it opened.
+  creationOwner: (payload) => {
+    const sid = String(payload.supplierId);
+    const pub = forecastVersionStore.get(String(payload.publicationId));
+    return pub?.lines.some((l) => l.supplierId === sid) ? sid : null;
+  },
+  create: (payload) => {
+    const publicationId = String(payload.publicationId);
+    const supplierId = String(payload.supplierId);
+    const existing = forecastViewStore.find(publicationId, supplierId);
+    if (existing) return { entityId: existing.id };
+    const id = forecastViewStore.nextId();
+    forecastViewStore.add({ id, publicationId, supplierId, viewedAt: sdcClock.now() });
+    return { entityId: id };
+  },
+};
+
+// ── RFx MANAGEMENT (REQ-E03-01 to REQ-E03-05) ──────────────────────────────
+//
+// Five targets and eleven policy hooks. The shape is the one the rest of this
+// file already uses: the TARGET owns the store mutation, the HOOK owns the rule,
+// and every rule the requirement states is enforced at the verb rather than on
+// the screen — a screen can stop a gesture, only a verb can stop an act.
+
+/** Is `supplierId` an invitee of this event, and is the event answerable? */
+const rfxInvited = (
+  event: { status: string; invitees: readonly RfxInvitee[] } | undefined,
+  supplierId: string,
+): boolean => !!event && event.status === 'Open' && event.invitees.some((i) => i.supplierId === supplierId);
+
+/** REQ-E03-02 — the RFI event. `entityId` is its id. */
+const rfiEventTarget: CommandTarget = {
+  readState: (id) => rfiEventStore.get(id)?.status ?? null,
+  // Buyer-only: a supplier answers an RFI, it never publishes one.
+  readScopeOwner: () => null,
+  readEntity: (id) => rfiEventStore.get(id) ?? null,
+  applyTransition: (id, toState, payload) => {
+    if (payload.deadline !== undefined) {
+      const deadline = String(payload.deadline);
+      const only = Array.isArray(payload.supplierIds)
+        ? (payload.supplierIds as unknown[]).filter((x): x is string => typeof x === 'string')
+        : [];
+      rfiEventStore.update(id, (e) => ({
+        ...e,
+        ...(only.length === 0 ? { responseDeadline: deadline } : {}),
+        invitees:
+          only.length === 0
+            ? e.invitees
+            : e.invitees.map((i) => (only.includes(i.supplierId) ? { ...i, deadline } : i)),
+        extensions: [...e.extensions, { at: sdcClock.now(), deadline, supplierIds: only }],
+      }));
+      return;
+    }
+    rfiEventStore.update(id, (e) => ({ ...e, status: toState as RfxEventStatus }));
+  },
+  creationOwner: () => null,
+  create: (payload, toState) => {
+    const id = rfiEventStore.nextId();
+    const template = rfiTemplate(String(payload.templateId))!;
+    const str = (k: string) => (typeof payload[k] === 'string' ? (payload[k] as string) : '');
+    // The event carries its OWN question list from birth. A buyer's additions
+    // and removals apply to THIS event only, and a later edit to the template
+    // never rewrites an event suppliers have already answered.
+    const questions = Array.isArray(payload.questions)
+      ? (payload.questions as RfiQuestion[])
+      : template.questions;
+    rfiEventStore.add({
+      id,
+      eventNumber: `RFI-2026-${id.slice(-3)}`,
+      title: str('title'),
+      templateId: template.id,
+      materialCategory: str('materialCategory'),
+      ...(str('purchasingGroup') ? { purchasingGroup: str('purchasingGroup') } : {}),
+      status: toState as RfxEventStatus,
+      createdAt: sdcClock.now(),
+      responseDeadline: str('responseDeadline'),
+      invitees: (Array.isArray(payload.invitedSupplierIds)
+        ? (payload.invitedSupplierIds as unknown[]).filter((x): x is string => typeof x === 'string')
+        : []
+      ).map((supplierId) => ({ supplierId })),
+      questions,
+      extensions: [],
+    });
+    return { entityId: id };
+  },
+};
+
+/** REQ-E03-02 — the supplier's RFI answers. A Draft is its author's alone. */
+const rfiResponseTarget: CommandTarget = {
+  readState: (id) => rfiResponseStore.get(id)?.status ?? null,
+  readScopeOwner: (id) => rfiResponseStore.get(id)?.supplierId ?? null,
+  readEntity: (id) => rfiResponseStore.get(id) ?? null,
+  applyTransition: (id, toState) => {
+    rfiResponseStore.update(id, (r) => ({
+      ...r,
+      status: toState as RfxResponseStatus,
+      updatedAt: sdcClock.now(),
+      ...(toState === 'Submitted' ? { submittedAt: sdcClock.now() } : {}),
+    }));
+  },
+  requireCreationOwner: true,
+  creationOwner: (payload) => {
+    const sid = String(payload.supplierId);
+    return rfxInvited(rfiEventStore.get(String(payload.rfiId)), sid) ? sid : null;
+  },
+  create: (payload, toState) => {
+    const rfiId = String(payload.rfiId);
+    const supplierId = String(payload.supplierId);
+    const answers = Array.isArray(payload.answers) ? (payload.answers as RfiAnswer[]) : [];
+    // ONE response per supplier × event. Saving again REPLACES the draft's
+    // answers rather than minting a second row — two drafts for one invitation
+    // would make "which one did they send?" unanswerable.
+    const existing = rfiResponseStore.all().find((r) => r.rfiId === rfiId && r.supplierId === supplierId);
+    if (existing) {
+      rfiResponseStore.update(existing.id, (r) => ({ ...r, answers, updatedAt: sdcClock.now() }));
+      return { entityId: existing.id };
+    }
+    const id = rfiResponseStore.nextId();
+    rfiResponseStore.add({
+      id,
+      rfiId,
+      supplierId,
+      status: toState as RfxResponseStatus,
+      updatedAt: sdcClock.now(),
+      answers,
+    });
+    return { entityId: id };
+  },
+};
+
+/** REQ-E03-04 — the RFP event. */
+const rfpEventTarget: CommandTarget = {
+  readState: (id) => rfpEventStore.get(id)?.status ?? null,
+  readScopeOwner: () => null,
+  readEntity: (id) => rfpEventStore.get(id) ?? null,
+  applyTransition: (id, toState, payload) => {
+    if (payload.deadline !== undefined) {
+      const deadline = String(payload.deadline);
+      const only = Array.isArray(payload.supplierIds)
+        ? (payload.supplierIds as unknown[]).filter((x): x is string => typeof x === 'string')
+        : [];
+      rfpEventStore.update(id, (e) => ({
+        ...e,
+        ...(only.length === 0 ? { responseDeadline: deadline } : {}),
+        invitees:
+          only.length === 0
+            ? e.invitees
+            : e.invitees.map((i) => (only.includes(i.supplierId) ? { ...i, deadline } : i)),
+        extensions: [...e.extensions, { at: sdcClock.now(), deadline, supplierIds: only }],
+      }));
+      return;
+    }
+    rfpEventStore.update(id, (e) => ({ ...e, status: toState as RfxEventStatus }));
+  },
+  creationOwner: () => null,
+  create: (payload, toState) => {
+    const id = rfpEventStore.nextId();
+    const str = (k: string) => (typeof payload[k] === 'string' ? (payload[k] as string) : '');
+    rfpEventStore.add({
+      id,
+      eventNumber: `RFP-2026-${id.slice(-3)}`,
+      title: str('title'),
+      scope: str('scope'),
+      materialCategory: str('materialCategory'),
+      ...(str('purchasingGroup') ? { purchasingGroup: str('purchasingGroup') } : {}),
+      status: toState as RfxEventStatus,
+      createdAt: sdcClock.now(),
+      responseDeadline: str('responseDeadline'),
+      currency: (BID_CURRENCIES as readonly string[]).includes(str('currency'))
+        ? (str('currency') as BidCurrency)
+        : BASE_CURRENCY,
+      invitees: (Array.isArray(payload.invitedSupplierIds)
+        ? (payload.invitedSupplierIds as unknown[]).filter((x): x is string => typeof x === 'string')
+        : []
+      ).map((supplierId) => ({ supplierId })),
+      terms: Array.isArray(payload.terms) ? (payload.terms as RfpTermRow[]) : [],
+      extensions: [],
+    });
+    return { entityId: id };
+  },
+};
+
+/** REQ-E03-04 — the supplier's proposal. */
+const rfpResponseTarget: CommandTarget = {
+  readState: (id) => rfpResponseStore.get(id)?.status ?? null,
+  readScopeOwner: (id) => rfpResponseStore.get(id)?.supplierId ?? null,
+  readEntity: (id) => rfpResponseStore.get(id) ?? null,
+  applyTransition: (id, toState) => {
+    rfpResponseStore.update(id, (r) => ({
+      ...r,
+      status: toState as RfxResponseStatus,
+      updatedAt: sdcClock.now(),
+      ...(toState === 'Submitted' ? { submittedAt: sdcClock.now() } : {}),
+    }));
+  },
+  requireCreationOwner: true,
+  creationOwner: (payload) => {
+    const sid = String(payload.supplierId);
+    return rfxInvited(rfpEventStore.get(String(payload.rfpId)), sid) ? sid : null;
+  },
+  create: (payload, toState) => {
+    const rfpId = String(payload.rfpId);
+    const supplierId = String(payload.supplierId);
+    const answers = Array.isArray(payload.answers) ? (payload.answers as RfpTermAnswer[]) : [];
+    const otherTerms = typeof payload.otherTerms === 'string' ? payload.otherTerms : undefined;
+    const existing = rfpResponseStore.all().find((r) => r.rfpId === rfpId && r.supplierId === supplierId);
+    if (existing) {
+      rfpResponseStore.update(existing.id, (r) => ({
+        ...r,
+        answers,
+        ...(otherTerms !== undefined ? { otherTerms } : {}),
+        updatedAt: sdcClock.now(),
+      }));
+      return { entityId: existing.id };
+    }
+    const id = rfpResponseStore.nextId();
+    rfpResponseStore.add({
+      id,
+      rfpId,
+      supplierId,
+      status: toState as RfxResponseStatus,
+      updatedAt: sdcClock.now(),
+      answers,
+      ...(otherTerms !== undefined ? { otherTerms } : {}),
+    });
+    return { entityId: id };
+  },
+};
+
+/** REQ-E03-05 — a negotiation round. Append-only: asking again is a new round. */
+const negotiationRoundTarget: CommandTarget = {
+  readState: (id) => {
+    const round = negotiationRoundStore.get(id);
+    return round ? (round.closed ? 'Closed' : 'Open') : null;
+  },
+  // Buyer-only to OPEN. A supplier answers a round through `t_quotation_revise`,
+  // which is scoped to its own quotation — so a supplier never addresses the
+  // round entity itself and an owner here would be a supplier who may edit the
+  // window they are being negotiated in.
+  readScopeOwner: () => null,
+  readEntity: (id) => negotiationRoundStore.get(id) ?? null,
+  applyTransition: (id) => {
+    negotiationRoundStore.update(id, (r) => ({ ...r, closed: true }));
+  },
+  creationOwner: () => null,
+  create: (payload) => {
+    const id = negotiationRoundStore.nextId();
+    const rfqId = String(payload.rfqId);
+    const roundNumber =
+      negotiationRoundStore.all().filter((r) => r.rfqId === rfqId).length + 1;
+    negotiationRoundStore.add({
+      id,
+      rfqId,
+      roundNumber,
+      openedAt: sdcClock.now(),
+      deadline: String(payload.deadline),
+      invitedSupplierIds: (payload.invitedSupplierIds as unknown[]).filter(
+        (x): x is string => typeof x === 'string',
+      ),
+      ...(typeof payload.message === 'string' && payload.message.trim()
+        ? { message: payload.message.trim() }
+        : {}),
+      ...(typeof payload.targetUnitPrice === 'number' ? { targetUnitPrice: payload.targetUnitPrice } : {}),
+      bestAndFinal: payload.bestAndFinal === true,
+      closed: false,
+    });
+    return { entityId: id };
+  },
+};
+
+// — The RFx policy hooks ————————————————————————————————————————————————
+
+// REQ-E03-02 — the template must be one Procurement keeps, the deadline a date,
+// and any hand-edited question set must carry kinds this build recognises.
+bindPolicyHook(POLICY_HOOKS.RFI_CREATE_VALID, ({ payload }) => {
+  if (!rfiTemplate(String(payload.templateId))) {
+    return { ok: false, reason: 'UNKNOWN_TEMPLATE: the RFI template is not one Procurement keeps' };
+  }
+  if (!isCalendarDate(String(payload.responseDeadline))) {
+    return { ok: false, reason: 'BAD_DEADLINE: the response deadline must be a date' };
+  }
+  if (payload.questions !== undefined) {
+    if (!Array.isArray(payload.questions) || payload.questions.length === 0) {
+      return { ok: false, reason: 'NO_QUESTIONS: an RFI asks at least one question' };
+    }
+    for (const q of payload.questions as RfiQuestion[]) {
+      if (!RFI_QUESTION_TYPES.includes(q?.type)) {
+        return { ok: false, reason: `UNKNOWN_QUESTION_TYPE: ${String(q?.type)}` };
+      }
+      if (!q.id || !q.promptKey) {
+        return { ok: false, reason: 'QUESTION_INCOMPLETE: every question names itself and what it asks' };
+      }
+    }
+  }
+  return { ok: true };
+});
+
+// REQ-E03-01 BR-04 — publication is when the invitation actually goes out, so
+// the supplier statuses are re-read HERE and not only in the picker.
+bindPolicyHook(POLICY_HOOKS.RFX_PUBLISH_HAS_INVITEES, ({ target, entityId }) => {
+  const event = target.readEntity(entityId) as { invitees?: readonly RfxInvitee[] } | null;
+  const invitees = event?.invitees ?? [];
+  if (invitees.length === 0) {
+    return { ok: false, reason: 'NO_INVITEES: publish an event to at least one supplier' };
+  }
+  const refused = invitees
+    .map((i) => i.supplierId)
+    .filter((sid) => {
+      const supplier = mockSuppliers.find((x) => x.id === sid);
+      return !supplier || !isSelectableSupplier(supplier.status);
+    });
+  if (refused.length > 0) {
+    return { ok: false, reason: `SUPPLIER_NOT_SELECTABLE: ${refused.join(', ')}` };
+  }
+  return { ok: true };
+});
+
+// REQ-E03-02 / -03 edge cases — an extension moves the deadline LATER. A date
+// that moves earlier would retroactively close a window suppliers are answering
+// in, which is not an extension under any reading.
+bindPolicyHook(POLICY_HOOKS.RFX_EXTEND_VALID, ({ payload, target, entityId }) => {
+  const next = String(payload.deadline);
+  if (!isCalendarDate(next)) return { ok: false, reason: 'BAD_DEADLINE: the new deadline must be a date' };
+  const event = target.readEntity(entityId) as
+    | { responseDeadline?: string; invitees?: readonly RfxInvitee[]; invitedSupplierIds?: readonly string[] }
+    | null;
+  if (!event) return { ok: false, reason: 'event not found' };
+  const named = Array.isArray(payload.supplierIds)
+    ? (payload.supplierIds as unknown[]).filter((x): x is string => typeof x === 'string')
+    : [];
+  const members = event.invitees
+    ? event.invitees.map((i) => i.supplierId)
+    : event.invitedSupplierIds ?? [];
+  const strangers = named.filter((sid) => !members.includes(sid));
+  if (strangers.length > 0) {
+    return { ok: false, reason: `NOT_INVITED: ${strangers.join(', ')} was not invited to this event` };
+  }
+  const current = String(event.responseDeadline ?? '');
+  if (named.length === 0 && current && !isExtension(current, next)) {
+    return { ok: false, reason: 'NOT_AN_EXTENSION: the new deadline must be later than the current one' };
+  }
+  return { ok: true };
+});
+
+// REQ-E03-02 / -04 — an answer is only answerable by an invitee of an open event.
+bindPolicyHook(POLICY_HOOKS.RFX_RESPONSE_INVITED, ({ payload }) => {
+  const supplierId = String(payload.supplierId);
+  const event = payload.rfiId
+    ? rfiEventStore.get(String(payload.rfiId))
+    : rfpEventStore.get(String(payload.rfpId));
+  if (!event) return { ok: false, reason: 'event not found' };
+  if (event.status !== 'Open') return { ok: false, reason: `EVENT_NOT_OPEN: the event is ${event.status}` };
+  return event.invitees.some((i) => i.supplierId === supplierId)
+    ? { ok: true }
+    : { ok: false, reason: 'NOT_INVITED: this supplier was not invited to the event' };
+});
+
+// REQ-E03-02 — every required question answered, and the deadline in force for
+// THIS supplier not yet passed. The refusal names the questions.
+bindPolicyHook(POLICY_HOOKS.RFI_SUBMIT_COMPLETE, ({ target, entityId }) => {
+  const response = target.readEntity(entityId) as RfiResponse | null;
+  if (!response) return { ok: false, reason: 'response not found' };
+  const event = rfiEventStore.get(response.rfiId);
+  if (!event) return { ok: false, reason: 'RFI not found' };
+  const deadline = effectiveDeadline(event.responseDeadline, event.invitees, response.supplierId);
+  if (isPastDeadline(deadline, rfxNow())) {
+    return { ok: false, reason: `PAST_DEADLINE: answers closed on ${deadline}` };
+  }
+  const missing = missingRequiredAnswers(event.questions, response.answers);
+  return missing.length === 0
+    ? { ok: true }
+    : { ok: false, reason: `REQUIRED_UNANSWERED: ${missing.join(', ')}` };
+});
+
+// REQ-E03-04 — the buyer picks terms from the STANDARD LIST, and each row
+// carries PTI's requested value.
+bindPolicyHook(POLICY_HOOKS.RFP_CREATE_TERMS_KNOWN, ({ payload }) => {
+  if (!isCalendarDate(String(payload.responseDeadline))) {
+    return { ok: false, reason: 'BAD_DEADLINE: the response deadline must be a date' };
+  }
+  const terms = Array.isArray(payload.terms) ? (payload.terms as RfpTermRow[]) : [];
+  if (terms.length === 0) return { ok: false, reason: 'NO_TERMS: an RFP lists at least one commercial term' };
+  for (const row of terms) {
+    if (!rfpTerm(row?.termId)) {
+      return { ok: false, reason: `UNKNOWN_TERM: ${String(row?.termId)} is not on the standard term list` };
+    }
+    if (!row.requestedValue || String(row.requestedValue).trim().length === 0) {
+      return { ok: false, reason: `TERM_VALUE_REQUIRED: ${row.termId} needs PTI's requested value` };
+    }
+  }
+  return { ok: true };
+});
+
+// REQ-E03-04 — every asked term answered, and A DEVIATION CARRIES A COMMENT.
+bindPolicyHook(POLICY_HOOKS.RFP_SUBMIT_TERMS_ANSWERED, ({ target, entityId }) => {
+  const response = target.readEntity(entityId) as RfpResponse | null;
+  if (!response) return { ok: false, reason: 'proposal not found' };
+  const event = rfpEventStore.get(response.rfpId);
+  if (!event) return { ok: false, reason: 'RFP not found' };
+  const deadline = effectiveDeadline(event.responseDeadline, event.invitees, response.supplierId);
+  if (isPastDeadline(deadline, rfxNow())) {
+    return { ok: false, reason: `PAST_DEADLINE: proposals closed on ${deadline}` };
+  }
+  const unanswered = unansweredTerms(event.terms, response.answers);
+  if (unanswered.length > 0) {
+    return { ok: false, reason: `TERMS_UNANSWERED: ${unanswered.join(', ')}` };
+  }
+  const uncommented = deviationsWithoutComment(response.answers);
+  return uncommented.length === 0
+    ? { ok: true }
+    : { ok: false, reason: `DEVIATION_NEEDS_COMMENT: ${uncommented.join(', ')}` };
+});
+
+// REQ-E03-03 AC-05 — no quote after the deadline in force for this supplier.
+bindPolicyHook(POLICY_HOOKS.QUOTATION_SUBMIT_BEFORE_DEADLINE, ({ payload }) => {
+  const rfq = rfqStore.get(String(payload.rfqId));
+  if (!rfq) return { ok: false, reason: 'sourcing event not found' };
+  const deadline = effectiveDeadline(rfq.responseDeadline, rfq.inviteeDeadlines ?? [], String(payload.supplierId));
+  return isPastDeadline(deadline, rfxNow())
+    ? { ok: false, reason: `PAST_DEADLINE: quotes closed on ${deadline}` }
+    : { ok: true };
+});
+
+// REQ-E03-03 — malformed per-item lines are refused; absent lines are legal.
+bindPolicyHook(POLICY_HOOKS.QUOTATION_LINES_WELL_FORMED, ({ payload }) => {
+  if (payload.lines === undefined) return { ok: true };
+  if (!Array.isArray(payload.lines)) return { ok: false, reason: 'QUOTE_LINES_MALFORMED: lines must be a list' };
+  const refusal = quoteLinesRefusal(payload.lines as QuoteLineInput[]);
+  return refusal ? { ok: false, reason: refusal } : { ok: true };
+});
+
+// REQ-E03-05 BR-03 — only a supplier INVITED TO THE ROUND may revise, and only
+// while the round is open and inside its deadline.
+bindPolicyHook(POLICY_HOOKS.QUOTATION_REVISE_IN_ROUND, ({ payload }) => {
+  const round = negotiationRoundStore.get(String(payload.roundId));
+  if (!round) return { ok: false, reason: 'negotiation round not found' };
+  if (round.rfqId !== String(payload.rfqId)) {
+    return { ok: false, reason: 'ROUND_MISMATCH: this round belongs to another sourcing event' };
+  }
+  if (round.closed) return { ok: false, reason: 'ROUND_CLOSED: this round is closed' };
+  if (isPastDeadline(round.deadline, rfxNow())) {
+    return { ok: false, reason: `PAST_DEADLINE: the round closed on ${round.deadline}` };
+  }
+  return isInvitedToRound(round.invitedSupplierIds, String(payload.supplierId))
+    ? { ok: true }
+    : { ok: false, reason: 'NOT_IN_ROUND: this supplier was not invited to the negotiation round' };
+});
+
+// REQ-E03-05 BR-03 — a round names an event that can still be negotiated, and a
+// shortlist drawn from the suppliers that actually quoted.
+bindPolicyHook(POLICY_HOOKS.NEGOTIATION_ROUND_VALID, ({ payload }) => {
+  const rfq = rfqStore.get(String(payload.rfqId));
+  if (!rfq) return { ok: false, reason: 'sourcing event not found' };
+  if (rfq.status === 'Awarded' || rfq.status === 'Cancelled') {
+    return { ok: false, reason: `EVENT_CLOSED: ${rfq.rfqNumber} is ${rfq.status}` };
+  }
+  if (!isCalendarDate(String(payload.deadline))) {
+    return { ok: false, reason: 'BAD_DEADLINE: the round needs a deadline date' };
+  }
+  const invited = Array.isArray(payload.invitedSupplierIds)
+    ? (payload.invitedSupplierIds as unknown[]).filter((x): x is string => typeof x === 'string')
+    : [];
+  if (invited.length === 0) {
+    return { ok: false, reason: 'NO_SHORTLIST: a round invites at least one supplier' };
+  }
+  const quoted = new Set(quotationStore.all().filter((q) => q.rfqId === rfq.id).map((q) => q.supplierId));
+  const strangers = invited.filter((sid) => !quoted.has(sid));
+  if (strangers.length > 0) {
+    return { ok: false, reason: `NOT_A_BIDDER: ${strangers.join(', ')} did not quote on this event` };
+  }
+  if (payload.targetUnitPrice !== undefined && !(typeof payload.targetUnitPrice === 'number' && payload.targetUnitPrice > 0)) {
+    return { ok: false, reason: 'BAD_TARGET: a target price is a number above zero' };
+  }
+  return { ok: true };
+});
+
+// REQ-E03-05 BR-06 / BR-07 — the split totals 100% per item, and an award that
+// passes over the best-scored quote states why.
+bindPolicyHook(POLICY_HOOKS.RFQ_AWARD_GOVERNED, ({ payload, entityId }) => {
+  const rfq = rfqStore.get(entityId);
+  if (!rfq) return { ok: false, reason: 'sourcing event not found' };
+  const supplied = Array.isArray(payload.awardLines) ? (payload.awardLines as AwardLine[]) : null;
+  const lines: AwardLine[] = supplied ?? [
+    {
+      supplierId: String(payload.awardedSupplierId),
+      quotationId: String(payload.awardedQuotationId),
+      itemCode: '',
+      sharePct: 100,
+      quantity: rfq.totalQty,
+    },
+  ];
+  const refusal = awardSplitRefusal(lines);
+  if (refusal) return { ok: false, reason: refusal };
+  // Every awarded line names a real quotation ON THIS EVENT. Without this an
+  // award could record a share against a bid from another tender.
+  const onEvent = new Set(quotationStore.all().filter((q) => q.rfqId === rfq.id).map((q) => q.id));
+  const foreign = lines.filter((l) => !onEvent.has(l.quotationId));
+  if (foreign.length > 0) {
+    return { ok: false, reason: `QUOTE_NOT_ON_EVENT: ${foreign.map((l) => l.quotationId).join(', ')}` };
+  }
+  const best = bestScoredQuotationId(rfq, rfxNow());
+  const reason = typeof payload.awardReason === 'string' ? payload.awardReason.trim() : '';
+  if (!awardFollowsBestScore(lines, best) && reason.length === 0) {
+    return {
+      ok: false,
+      reason: 'AWARD_REASON_REQUIRED: an award that does not follow the best-scored quote needs a reason',
+    };
+  }
+  return { ok: true };
 });
 
 const incomingShipmentTarget: CommandTarget = {
@@ -1819,6 +3578,27 @@ const TARGETS: Record<string, CommandTarget> = {
   // B1 — the onboarding lane's write path. Ships in the same commit as its
   // flow so the entity never joins the target-less set, not even for one merge.
   supplierApplication: supplierApplicationTarget,
+  // REQ-E07-06 — the supplier's answer to a receipt discrepancy. Ships in the
+  // same commit as its flow, so the entity never joins the target-less set.
+  receiptDiscrepancy: receiptDiscrepancyTarget,
+  // REQ-E09-03 — call-offs under an umbrella PO; the hub is their record.
+  callOff: callOffTarget,
+  // REQ-E08-02 to REQ-E08-05 — inventory & capacity collaboration.
+  stockSync: stockSyncTarget,
+  stockAccess: stockAccessTarget,
+  capacitySubmission: capacityTarget,
+  inventoryAlert: inventoryAlertTarget,
+  // REQ-E06-01 / REQ-E06-03 — forecast versions and supplier views.
+  forecastVersion: forecastVersionTarget,
+  forecastView: forecastViewTarget,
+  // REQ-E03-02 / REQ-E03-04 / REQ-E03-05 — the RFx event types, the answers to
+  // them, and the negotiation window. Each ships in the same commit as its flow,
+  // so no entity joins the target-less set even for one merge.
+  rfiEvent: rfiEventTarget,
+  rfiResponse: rfiResponseTarget,
+  rfpEvent: rfpEventTarget,
+  rfpResponse: rfpResponseTarget,
+  negotiationRound: negotiationRoundTarget,
 };
 
 // The behavior-wiring census (was the contract package's "6"; 7 with the G1.1
@@ -1894,7 +3674,11 @@ const resolveCascades = (ctx: CascadeContext): CascadeCommand[] => {
       // same rows, now named in `invoiceRollup.ts` so the mirror is askable and
       // testable. `invoiceMatchPairing.test.ts` pins that this direction is
       // byte-for-byte the behaviour it replaced.
-      for (const inv of invoicesForReceipt(gr, invoiceStore.all())) {
+      // REQ-E07-07 — an invoice drawn from receipts is matched at its own
+      // submission against the receipts it names (below), so a later receipt
+      // on the same PO does not overwrite that verdict. Only invoices without
+      // lines are still matched here.
+      for (const inv of invoicesForReceipt(gr, invoiceStore.all()).filter((i) => !i.lines)) {
         const verdict = deriveMatchVerdict(expectedValue, inv.amount, grHasRejects);
         invoiceStore.update(inv.id, (i) => ({ ...i, matchStatus: verdict }));
         if (verdict === 'Matched') {
@@ -1911,6 +3695,23 @@ const resolveCascades = (ctx: CascadeContext): CascadeCommand[] => {
     return cascadesFor(ctx.transitionId).map((link) => ({
       entity: link.targetEntity,
       entityId: gr.asnNumber,
+      transitionId: link.targetTransitionId,
+    }));
+  }
+  // REQ-E07-07 — the match runs when the supplier submits (or corrects and
+  // resubmits) a receipt-based invoice, and when Finance sends a returned one
+  // back for checking: CR-13 then CR-12 on the receipts the invoice names. The
+  // verdict is written; the header advances only on a clean Matched, exactly as
+  // on the receipt-post path.
+  if (ctx.entity === 'invoice') {
+    const inv = invoiceStore.get(ctx.entityId);
+    if (!inv || !inv.lines || inv.status !== INVOICE_AWAITING_MATCH) return [];
+    const verdict = deriveInvoiceVerdict(inv, goodsReceiptStore.all());
+    invoiceStore.update(inv.id, (i) => ({ ...i, matchStatus: verdict }));
+    if (verdict !== 'Matched') return [];
+    return cascadesFor(ctx.transitionId).map((link) => ({
+      entity: link.targetEntity,
+      entityId: inv.id,
       transitionId: link.targetTransitionId,
     }));
   }
@@ -2071,7 +3872,11 @@ export class MockCommandService implements ICommandService {
     // so every event this dispatch emits groups to the first command's
     // correlationId (DR-10). The dispatcher has always accepted this third arg
     // (cascades use it); this exposes it on the public seam.
-    return dispatcher.dispatch(scope, input, causationId);
+    const result = await dispatcher.dispatch(scope, input, causationId);
+    // REQ-E08-05 BR-05 — only a command changes the figures an alert reads, so
+    // after one lands, record which closed alerts' conditions have cleared.
+    if (result.status !== 'failed') observeAlertConditions();
+    return result;
   }
 
   // ── THE TWO UNDERSCORES ARE GONE, AND THEY WERE THE HONEST MARKER OF THE

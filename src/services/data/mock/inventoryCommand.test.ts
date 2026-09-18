@@ -1,0 +1,285 @@
+// ────────────────────────────────────────────────────────────────────────────
+// Inventory & capacity verbs (REQ-E08-02 to REQ-E08-05) dispatched through the
+// REAL MockCommandService and read back through the REAL MockProcurementService.
+// Every rule is probed both ways and every walk ends in the store or the read.
+// ────────────────────────────────────────────────────────────────────────────
+
+import { beforeEach, describe, expect, it } from 'vitest';
+import { MockCommandService } from './MockCommandService';
+import { MockProcurementService } from './MockProcurementService';
+import { inventoryDeclarationStore } from './stores/inventoryDeclarationStore';
+import {
+  capacityStore,
+  inventoryAlertLedger,
+  stockAccessStore,
+  stockSyncStore,
+} from './stores/inventoryHubStores';
+import type { QueryScope } from '../types';
+import { PERSONA_SYSTEM_ROLES, rolesHolding } from '../../transitions/businessRoles';
+import { stockFreshness } from '../../transitions/inventoryRules';
+import { planStatus } from '../../transitions/capacityRules';
+import { sdcClock } from '../../sdc';
+import { NO_PERSON } from '../../../context/noPerson';
+import { CAPACITY_FIRST_WEEK } from './fixtures/inventoryHub';
+
+const svc = new MockCommandService();
+const reads = new MockProcurementService();
+
+const supplier = (supplierId: string): QueryScope => ({
+  personaType: 'supplier',
+  supplierId,
+  businessRoles: PERSONA_SYSTEM_ROLES.supplier,
+  actor: NO_PERSON,
+});
+const sup007 = supplier('sup-007');
+const sup002 = supplier('sup-002');
+const buyer: QueryScope = { personaType: 'buyer', supplierId: null, businessRoles: PERSONA_SYSTEM_ROLES.buyer, actor: NO_PERSON };
+
+beforeEach(() => {
+  inventoryDeclarationStore.reset();
+  stockAccessStore.reset();
+  capacityStore.reset();
+  stockSyncStore.reset();
+  inventoryAlertLedger.reset();
+  sdcClock.reset();
+});
+
+const now = () => sdcClock.now();
+const positionOf = async (scope: QueryScope, supplierId: string, materialCode: string) =>
+  (await reads.getInventory(scope)).items.find((p) => p.supplierId === supplierId && p.materialCode === materialCode);
+
+describe('roles (bilateral): planner syncs, grants and closes; supplier confirms capacity', () => {
+  it('each new atom sits in exactly one lane on the right side', () => {
+    expect(rolesHolding('stocksync:run')).toEqual(['planning']);
+    expect(rolesHolding('stockaccess:manage')).toEqual(['planning']);
+    expect(rolesHolding('inventoryalert:close')).toEqual(['planning']);
+    expect(rolesHolding('capacity:confirm')).toEqual(['fulfilment']);
+  });
+});
+
+describe('ONE inventory model (REQ-E08-01)', () => {
+  it('the read has no "available" figure and projects every field the view needs', async () => {
+    const p = (await positionOf(buyer, 'sup-007', 'PK-PETB-8801'))!;
+    expect(p).toMatchObject({ supplierSoh: 85000, supplierRop: 60000, ptiSoh: 30000, ptiRop: 40000, materialType: 'VERP', channel: 'template' });
+    expect(Object.keys(p).some((k) => /available|reserved/i.test(k))).toBe(false);
+    // In production from the submission; in transit from the call-off dispatch notices.
+    expect(p.incoming.map((i) => i.source).sort()).toEqual(['dispatch', 'dispatch', 'production']);
+  });
+
+  it('a supplier reads only its own rows (scoping)', async () => {
+    const mine = (await reads.getInventory(sup002)).items;
+    expect(mine.length).toBeGreaterThan(0);
+    expect(new Set(mine.map((p) => p.supplierId))).toEqual(new Set(['sup-002']));
+  });
+});
+
+describe('stock submission (REQ-E08-02)', () => {
+  const declare = (payload: Record<string, unknown>, scope: QueryScope = sup007) =>
+    svc.dispatch(scope, { transitionId: 't_inventorydeclaration_declare', entity: 'inventoryDeclaration', payload: { supplierId: scope.supplierId, ...payload } });
+
+  it('known-good: SOH, ROP, in-production and completion date land on the template channel and become current', async () => {
+    const res = await declare({ materialCode: 'PK-CAPF-8820', totalQty: 50000, supplierRop: 20000, inProductionQty: 10000, productionCompletionDate: '2026-09-12', channel: 'template' });
+    expect(res.status).toBe('done');
+    const p = (await positionOf(sup007, 'sup-007', 'PK-CAPF-8820'))!;
+    expect(p).toMatchObject({ supplierSoh: 50000, supplierRop: 20000, channel: 'template', lastUpdatedAt: now() });
+    expect(p.incoming).toEqual([{ source: 'production', date: '2026-09-12', quantity: 10000, reference: null }]);
+    expect(stockFreshness(p, now())).toBe('current');
+  });
+
+  it('known-bad: a material not assigned to the supplier is refused, nothing stored', async () => {
+    const before = inventoryDeclarationStore.all().length;
+    await expect(declare({ materialCode: 'RM-STEAR-7300', totalQty: 1 })).rejects.toMatchObject({ code: 'SCOPE_DENIED' });
+    expect(inventoryDeclarationStore.all()).toHaveLength(before);
+  });
+
+  it('known-bad: batches that do not add up to SOH (CR-19) and malformed detail are refused', async () => {
+    expect((await declare({ materialCode: 'PK-PETB-8801', totalQty: 100, batches: [{ batchNumber: 'B', qty: 90 }] })).reason).toMatch(/batch total/);
+    expect((await declare({ materialCode: 'PK-PETB-8801', totalQty: 100, supplierRop: -5 })).reason).toMatch(/inv_declare_detail_valid/);
+    expect((await declare({ materialCode: 'PK-PETB-8801', totalQty: 100, productionCompletionDate: '12/09/2026' })).reason).toMatch(/date/);
+    expect((await declare({ materialCode: 'PK-PETB-8801', totalQty: 100, channel: 'api' })).reason).toMatch(/channel/);
+  });
+
+  it('BR-08: PTI records a WhatsApp reply on the supplier’s behalf — "Entered by PTI", visible to the supplier', async () => {
+    const res = await svc.dispatch(buyer, {
+      transitionId: 't_inventorydeclaration_record',
+      entity: 'inventoryDeclaration',
+      payload: { supplierId: 'sup-007', materialCode: 'PK-PETB-8802', totalQty: 33000, channel: 'template' },
+    });
+    expect(res.status).toBe('done');
+    const seen = (await positionOf(sup007, 'sup-007', 'PK-PETB-8802'))!;
+    // The payload's "template" is ignored: a PTI recording is always channel pti.
+    expect(seen).toMatchObject({ supplierSoh: 33000, channel: 'pti' });
+  });
+});
+
+describe('API sync (REQ-E08-02 BR-03, AC-02, edge case)', () => {
+  const sync = (supplierId: string, scope: QueryScope = buyer) =>
+    svc.dispatch(scope, { transitionId: 't_stocksync_run', entity: 'stockSync', payload: { supplierId } });
+
+  it('success refreshes the figures and the last update time', async () => {
+    const before = (await positionOf(buyer, 'sup-001', 'RM-LAURIC-7200'))!;
+    expect(stockFreshness(before, now())).toBe('stale'); // 1-day SLA
+    const res = await sync('sup-001');
+    expect(res.status).toBe('done');
+    expect(stockSyncStore.get(res.entityId!)).toMatchObject({ outcome: 'success', at: now() });
+    const after = (await positionOf(buyer, 'sup-001', 'RM-LAURIC-7200'))!;
+    expect(after).toMatchObject({ supplierSoh: 9000, channel: 'api', lastUpdatedAt: now() });
+    expect(stockFreshness(after, now())).toBe('current');
+  });
+
+  it('failure records the error and time, keeps the previous figures, and flags them stale', async () => {
+    const figures = inventoryDeclarationStore.all().length;
+    const before = (await positionOf(buyer, 'sup-003', 'FR-WARD-4410'))!;
+    const res = await sync('sup-003');
+    expect(res.status).toBe('done');
+    expect(stockSyncStore.get(res.entityId!)).toMatchObject({ outcome: 'failed', errorKey: 'timeout', at: now() });
+    expect(inventoryDeclarationStore.all()).toHaveLength(figures);
+    const after = (await positionOf(buyer, 'sup-003', 'FR-WARD-4410'))!;
+    expect(after.supplierSoh).toBe(before.supplierSoh);
+    expect(after.lastSync).toMatchObject({ outcome: 'failed' });
+    expect(stockFreshness(after, now())).toBe('stale');
+  });
+
+  it('known-bad: a supplier that is not API-connected, and a supplier pressing Sync', async () => {
+    expect((await sync('sup-007')).reason).toMatch(/NOT_API_CONNECTED/);
+    expect((await sync('sup-001', supplier('sup-001'))).reason).toMatch(/ROLE_NOT_PERMITTED/);
+  });
+});
+
+describe('supplier access to PTI stock (REQ-E08-03)', () => {
+  const act = (transitionId: string, supplierId: string, payload: Record<string, unknown> = {}, scope: QueryScope = buyer) =>
+    svc.dispatch(scope, { transitionId, entity: 'stockAccess', entityId: supplierId, payload });
+
+  it('AC-01: a supplier without access reads no PTI stock anywhere', async () => {
+    const rows = (await reads.getInventory(sup002)).items;
+    expect(rows.every((p) => p.ptiSoh === null && p.ptiRop === null && !p.ptiStockShared)).toBe(true);
+    expect((await reads.getStockAccess(sup002)).items[0]).toMatchObject({ supplierId: 'sup-002', active: false });
+  });
+
+  it('the seeded grant shows PTI stock to sup-007 for the 2 permitted materials only', async () => {
+    const rows = (await reads.getInventory(sup007)).items;
+    const shared = rows.filter((p) => p.ptiStockShared).map((p) => p.materialCode).sort();
+    expect(shared).toEqual(['PK-PETB-8801', 'PK-PETB-8802']);
+    expect(rows.find((p) => p.materialCode === 'PK-CAPF-8820')).toMatchObject({ ptiSoh: null, ptiRop: null });
+  });
+
+  it('AC-02 / AC-03: grant, change and remove without supplier action, each logged with user and time; removal applies on the next read', async () => {
+    expect((await act('t_stockaccess_grant', 'sup-002', { materials: ['RM-STEAR-7300'] })).status).toBe('done');
+    let rows = (await reads.getInventory(sup002)).items;
+    expect(rows.filter((p) => p.ptiStockShared).map((p) => p.materialCode)).toEqual(['RM-STEAR-7300']);
+    expect((await act('t_stockaccess_change', 'sup-002', { materials: [] })).status).toBe('done');
+    rows = (await reads.getInventory(sup002)).items;
+    expect(rows.every((p) => p.ptiStockShared)).toBe(true);
+    expect((await act('t_stockaccess_remove', 'sup-002')).status).toBe('done');
+    rows = (await reads.getInventory(sup002)).items;
+    expect(rows.some((p) => p.ptiStockShared)).toBe(false);
+    const log = stockAccessStore.get('sup-002')!.log;
+    expect(log.map((e) => e.action)).toEqual(['grant', 'change', 'remove']);
+    expect(log.every((e) => e.at === now() && e.actor.kind === 'UNATTRIBUTED')).toBe(true);
+  });
+
+  it('known-bad: a material the supplier does not supply, a second grant, removal without access, a supplier granting itself', async () => {
+    expect((await act('t_stockaccess_grant', 'sup-002', { materials: ['PK-PETB-8801'] })).reason).toMatch(/NOT_SUPPLIED/);
+    expect((await act('t_stockaccess_grant', 'sup-007', { materials: [] })).reason).toMatch(/ILLEGAL_TRANSITION/);
+    expect((await act('t_stockaccess_remove', 'sup-002')).reason).toMatch(/ILLEGAL_TRANSITION/);
+    expect((await act('t_stockaccess_grant', 'sup-002', { materials: [] }, sup002)).reason).toMatch(/ROLE_NOT_PERMITTED/);
+    expect(stockAccessStore.get('sup-002')).toBeUndefined();
+  });
+});
+
+describe('capacity confirmation (REQ-E08-04)', () => {
+  const plan = async (scope: QueryScope, group: string) =>
+    (await reads.getCapacityPlans(scope)).items.find((p) => p.supplierId === scope.supplierId && p.materialGroup === group)!;
+  const submit = (weeks: unknown[], group = 'MG-21', scope: QueryScope = sup007) =>
+    svc.dispatch(scope, { transitionId: 't_capacity_submit', entity: 'capacitySubmission', payload: { supplierId: scope.supplierId, materialGroup: group, weeks } });
+
+  it('the seed shows a gap week for sup-007 rigid plastics and a confirmed raw-material group for sup-002', async () => {
+    const pet = await plan(sup007, 'MG-20');
+    expect(pet.weeks[0].week).toBe(CAPACITY_FIRST_WEEK);
+    expect(planStatus(pet)).toBe('gap');
+    expect(planStatus(await plan(sup002, 'MG-02'))).toBe('confirmed');
+    expect(planStatus(await plan(sup007, 'MG-21'))).toBe('notStarted');
+  });
+
+  it('AC-02 known-bad: a week below demand without a reason is refused, nothing stored', async () => {
+    const closures = await plan(sup007, 'MG-21');
+    const before = capacityStore.all().length;
+    const weeks = closures.weeks.map((w, i) => ({ week: w.week, allocated: i === 4 ? w.demand - 1 : w.demand }));
+    const res = await submit(weeks);
+    expect(res.reason).toMatch(/BELOW_DEMAND_NEEDS_REASON/);
+    expect(capacityStore.all()).toHaveLength(before);
+    const other = weeks.map((w, i) => (i === 4 ? { ...w, reason: 'other' } : w));
+    expect((await submit(other)).reason).toMatch(/OTHER_REASON_NEEDS_NOTE/);
+  });
+
+  it('AC-01 known-good: with a reason the submission lands, the plan shows the gap, and PTI sees it', async () => {
+    const closures = await plan(sup007, 'MG-21');
+    const weeks = closures.weeks.map((w, i) => ({
+      week: w.week,
+      allocated: i === 4 ? w.demand - 1000 : w.demand,
+      ...(i === 4 ? { reason: 'logistics' } : { upside: 500 }),
+    }));
+    const res = await submit(weeks);
+    expect(res.status).toBe('done');
+    const after = (await reads.getCapacityPlans(buyer)).items.find((p) => p.supplierId === 'sup-007' && p.materialGroup === 'MG-21')!;
+    expect(planStatus(after)).toBe('gap');
+    expect(after.weeks[4].entry).toMatchObject({ reason: 'logistics' });
+    expect(after.weeks[0].entry).toMatchObject({ upside: 500 });
+  });
+
+  it('known-bad: a supplier cannot submit for another supplier, nor for a group it does not supply', async () => {
+    const closures = await plan(sup007, 'MG-21');
+    const weeks = closures.weeks.map((w) => ({ week: w.week, allocated: w.demand }));
+    await expect(
+      svc.dispatch(sup002, {
+        transitionId: 't_capacity_submit',
+        entity: 'capacitySubmission',
+        payload: { supplierId: 'sup-007', materialGroup: 'MG-21', weeks },
+      }),
+    ).rejects.toMatchObject({ code: 'SCOPE_DENIED' });
+    await expect(submit(weeks, 'MG-04')).rejects.toMatchObject({ code: 'SCOPE_DENIED' });
+  });
+});
+
+describe('alerts (REQ-E08-05)', () => {
+  const close = (key: string, actionNote: string, scope: QueryScope = buyer) =>
+    svc.dispatch(scope, { transitionId: 't_inventoryalert_close', entity: 'inventoryAlert', entityId: key, payload: { actionNote } });
+
+  it('the sample data shows High alerts first, and a supplier never sees PTI-stock rules', async () => {
+    const all = (await reads.getInventoryAlerts(buyer)).items;
+    expect(all[0].riskClass).toBe('high');
+    expect(all.map((a) => a.key)).toEqual(
+      expect.arrayContaining(['capacityBelowDemand|MG-20|sup-007', 'staleData|PK-PETB-8810|sup-007', 'ptiBelowRop|RM-STEAR-7300|sup-002']),
+    );
+    const mine = (await reads.getInventoryAlerts(sup007)).items;
+    expect(mine.every((a) => a.supplierId === 'sup-007')).toBe(true);
+    expect(mine.some((a) => a.rule === 'ptiBelowRop' || a.rule === 'projectedStockOut')).toBe(false);
+    expect(new Set(all.map((a) => a.key)).size).toBe(all.length);
+  });
+
+  it('closing needs an action note; a closed alert stays one closed alert while the condition persists', async () => {
+    const key = 'ptiBelowRop|RM-STEAR-7300|sup-002';
+    expect((await close(key, '  ')).status).toBe('failed');
+    expect((await close(key, 'Earlier call-off requested')).status).toBe('done');
+    // Another command lands; the condition still holds → no new open alert.
+    await svc.dispatch(sup007, { transitionId: 't_inventorydeclaration_declare', entity: 'inventoryDeclaration', payload: { supplierId: 'sup-007', materialCode: 'PK-PETB-8801', totalQty: 1 } });
+    const matching = (await reads.getInventoryAlerts(buyer)).items.filter((a) => a.key === key);
+    expect(matching).toEqual([expect.objectContaining({ status: 'closed', actionNote: 'Earlier call-off requested' })]);
+    expect((await close(key, 'again')).reason).toMatch(/ILLEGAL_TRANSITION/);
+  });
+
+  it('a closed alert reopens only after its condition clears and recurs', async () => {
+    const key = 'supplierBelowRop|PK-PETB-8802|sup-007';
+    expect((await close(key, 'Supplier producing')).status).toBe('done');
+    const declare = (totalQty: number) =>
+      svc.dispatch(sup007, { transitionId: 't_inventorydeclaration_declare', entity: 'inventoryDeclaration', payload: { supplierId: 'sup-007', materialCode: 'PK-PETB-8802', totalQty, supplierRop: 30000 } });
+    await declare(40000); // above ROP → condition clears
+    expect((await reads.getInventoryAlerts(buyer)).items.some((a) => a.key === key)).toBe(false);
+    await declare(10000); // below ROP again → recurs
+    expect((await reads.getInventoryAlerts(buyer)).items.find((a) => a.key === key)).toMatchObject({ status: 'open' });
+  });
+
+  it('a supplier cannot close an alert', async () => {
+    expect((await close('staleData|PK-PETB-8810|sup-007', 'x', sup007)).reason).toMatch(/ROLE_NOT_PERMITTED/);
+  });
+});

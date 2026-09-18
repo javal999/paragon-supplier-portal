@@ -332,13 +332,23 @@ const SupplierDashboard: React.FC = () => {
       />
     );
 
-  const grade = mySupplier.scorecardGrade as Grade;
+  // REQ-E10-01 — the grade and the score are PROJECTED from the calculated
+  // measures, so both are absent together when there is nothing to measure.
+  const grade = mySupplier.scorecardGrade as Grade | undefined;
+  const score = mySupplier.performanceScore;
   const channelLabel = t(CHANNEL_KEY[mySupplier.preferredChannel]);
-  const otifVariant = perfVariant(mySupplier.otif);
-  const otifStatusLabel =
-    mySupplier.otif >= 90
+  // REQ-E03-01 edge case — OTIF is OPTIONAL on the supplier master: a supplier
+  // with nothing delivered yet has no record, and the honest answer is "No
+  // history" rather than 0%, which would read as the worst performer in the
+  // room. `hasOtif` is the one discriminator every OTIF site on this page reads.
+  const otif = mySupplier.otif;
+  const hasOtif = otif !== undefined;
+  const otifVariant = hasOtif ? perfVariant(otif) : 'neutral';
+  const otifStatusLabel = !hasOtif
+    ? t('rfx.noHistory')
+    : otif >= 90
       ? 'On Track'
-      : mySupplier.otif >= 80
+      : otif >= 80
         ? 'Needs Attention'
         : 'At Risk';
 
@@ -490,10 +500,14 @@ const SupplierDashboard: React.FC = () => {
           country: mySupplier.country,
           category: mySupplier.category,
         })}
-        {/* D-CENSUS-8 — the KPI tiles above were the only unmarked figures on a page
-            whose widgets each carry a derived marker; the briefing block below had
-            its own "Sample data" badge while the numbers at the top had none. */}
-        <ProvenanceMarker capability="dashboard" className="ml-3 align-middle" />
+        {/* REQ-E10-01 — the page-level marker is RETIRED, the same move phase 6b made
+            on my-performance. D-CENSUS-8 put it here because the KPI tiles were the only
+            unmarked figures on the page; since then the grade, the score and the OTIF
+            beside them became MEASURED from this supplier's own call-offs, heads-ups,
+            receipts and orders, and the identity card below is nothing but those three.
+            A marker on the meta line reads over that card, so it moved down onto the KPI
+            strip, which names the tile it does not speak for. The briefing block and the
+            fixture-backed widgets keep their own markers. */}
       </PageMetaLine>
 
       <section className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm p-6 mb-6">
@@ -514,15 +528,23 @@ const SupplierDashboard: React.FC = () => {
               <div className="text-[10px] text-text-tertiary uppercase tracking-wider mb-2">
                 {t('supplierDashboard.identity.grade')}
               </div>
-              <GradeBadge grade={grade} />
+              {grade ? (
+                <GradeBadge grade={grade} />
+              ) : (
+                <div className="text-xs text-text-tertiary">{t('rfx.noHistory')}</div>
+              )}
               <div className="text-xs text-text-secondary mt-1">
-                {mySupplier.otif >= 90 ? '94' : mySupplier.otif >= 80 ? '82' : '70'} / 100
+                {score === undefined
+                  ? '—'
+                  : t('supplierDashboard.identity.score', { score })}
               </div>
             </div>
             <div className="flex flex-col gap-1">
               <StatusPill variant={otifVariant}>{otifStatusLabel}</StatusPill>
               <div className="text-xs text-text-secondary">
-                {t('supplierDashboard.identity.otif', { value: mySupplier.otif })}
+                {hasOtif
+                  ? t('supplierDashboard.identity.otif', { value: otif })
+                  : t('rfx.noHistory')}
               </div>
               <div className="text-xs text-text-tertiary">
                 {t('supplierDashboard.identity.target')}
@@ -532,6 +554,17 @@ const SupplierDashboard: React.FC = () => {
         </div>
       </section>
 
+      {/* Three counted-from-fixture tiles beside one measured one, so the marker says
+          which tile it is not speaking for rather than claiming the row. */}
+      <div
+        className="mb-2 flex flex-wrap items-center gap-3"
+        data-testid="supplier-dashboard-kpi-provenance"
+      >
+        <ProvenanceMarker capability="dashboard" />
+        <span className="text-meta text-text-tertiary">
+          {t('supplierDashboard.kpi.otif.eyebrow')}: {t('perf.calculated')}
+        </span>
+      </div>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-5 mb-6">
         <KpiCard
           eyebrow={t('supplierDashboard.kpi.openOrders.eyebrow')}
@@ -561,7 +594,7 @@ const SupplierDashboard: React.FC = () => {
         />
         <KpiCard
           eyebrow={t('supplierDashboard.kpi.otif.eyebrow')}
-          value={`${mySupplier.otif}%`}
+          value={hasOtif ? `${otif}%` : t('rfx.noHistory')}
           subtitle={t('supplierDashboard.kpi.otif.subtitle')}
           icon={Target}
         />
@@ -687,69 +720,76 @@ const SupplierDashboard: React.FC = () => {
                 {t('supplierDashboard.orders.title')}
               </h2>
             </div>
-            <Table>
-              <TableHeader>
-                <TableHeaderCell>{t('supplierDashboard.orders.col.po')}</TableHeaderCell>
-                <TableHeaderCell>{t('supplierDashboard.orders.col.orderDate')}</TableHeaderCell>
-                <TableHeaderCell className="text-right">{t('supplierDashboard.orders.col.items')}</TableHeaderCell>
-                <TableHeaderCell className="text-right">{t('supplierDashboard.orders.col.value')}</TableHeaderCell>
-                <TableHeaderCell>{t('supplierDashboard.orders.col.status')}</TableHeaderCell>
-                <TableHeaderCell className="text-right">{t('supplierDashboard.orders.col.action')}</TableHeaderCell>
-              </TableHeader>
-              <tbody>
-                {sortedPOs.map((po) => {
-                  const isActionable =
-                    po.status === POStatus.SENT ||
-                    po.status === POStatus.ACKNOWLEDGED;
-                  const isConfirmed = po.status === POStatus.CONFIRMED;
-                  const btnLabel = isActionable
-                    ? t('supplierDashboard.orders.action.confirm')
-                    : isConfirmed
-                      ? t('supplierDashboard.orders.action.createAsn')
-                      : t('supplierDashboard.orders.action.view');
-                  return (
-                    <TableRow key={po.id}>
-                      <TableCell>
-                        <Data className="text-xs font-bold text-text-primary">
-                          {po.poNumber}
-                        </Data>
-                      </TableCell>
-                      <TableCell className="whitespace-nowrap text-text-secondary">
-                        <Data>{fmtDate(po.orderDate)}</Data>
-                      </TableCell>
-                      <TableCell className="text-right text-text-secondary">
-                        {po.lineItems.length}
-                      </TableCell>
-                      <TableCell className="text-right font-semibold text-text-primary whitespace-nowrap">
-                        <Data>{fmtIDR(po.totalValue)}</Data>
-                      </TableCell>
-                      <TableCell>
-                        <StatusPill variant={statusTone(po.status)}>
-                          {po.status}
-                        </StatusPill>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          variant={isActionable ? 'outline' : 'secondary'}
-                          onClick={() =>
-                            toast({
-                              variant: 'info',
-                              title: isActionable
-                                ? t('supplierDashboard.orders.toast.opening', { po: po.poNumber })
-                                : isConfirmed
-                                  ? t('supplierDashboard.orders.toast.creatingAsn', { po: po.poNumber })
-                                  : t('supplierDashboard.orders.toast.viewing', { po: po.poNumber }),
-                            })
-                          }
-                        >
-                          {btnLabel}
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </tbody>
-            </Table>
+            {/* This table sits in the 3fr half of `xl:grid-cols-[3fr_2fr]`, so at
+                1280px it has ~574px for six columns that want ~750px — the Action
+                button was the part that fell off, silently. Same remedy as the
+                compliance table: scroll the table inside its own box rather than
+                clip it, with the section keeping `overflow-hidden` for its corners. */}
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableHeaderCell>{t('supplierDashboard.orders.col.po')}</TableHeaderCell>
+                  <TableHeaderCell>{t('supplierDashboard.orders.col.orderDate')}</TableHeaderCell>
+                  <TableHeaderCell className="text-right">{t('supplierDashboard.orders.col.items')}</TableHeaderCell>
+                  <TableHeaderCell className="text-right">{t('supplierDashboard.orders.col.value')}</TableHeaderCell>
+                  <TableHeaderCell>{t('supplierDashboard.orders.col.status')}</TableHeaderCell>
+                  <TableHeaderCell className="text-right">{t('supplierDashboard.orders.col.action')}</TableHeaderCell>
+                </TableHeader>
+                <tbody>
+                  {sortedPOs.map((po) => {
+                    const isActionable =
+                      po.status === POStatus.SENT ||
+                      po.status === POStatus.ACKNOWLEDGED;
+                    const isConfirmed = po.status === POStatus.CONFIRMED;
+                    const btnLabel = isActionable
+                      ? t('supplierDashboard.orders.action.confirm')
+                      : isConfirmed
+                        ? t('supplierDashboard.orders.action.createAsn')
+                        : t('supplierDashboard.orders.action.view');
+                    return (
+                      <TableRow key={po.id}>
+                        <TableCell>
+                          <Data className="text-xs font-bold text-text-primary">
+                            {po.poNumber}
+                          </Data>
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap text-text-secondary">
+                          <Data>{fmtDate(po.orderDate)}</Data>
+                        </TableCell>
+                        <TableCell className="text-right text-text-secondary">
+                          {po.lineItems.length}
+                        </TableCell>
+                        <TableCell className="text-right font-semibold text-text-primary whitespace-nowrap">
+                          <Data>{fmtIDR(po.totalValue)}</Data>
+                        </TableCell>
+                        <TableCell>
+                          <StatusPill variant={statusTone(po.status)}>
+                            {po.status}
+                          </StatusPill>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant={isActionable ? 'outline' : 'secondary'}
+                            onClick={() =>
+                              toast({
+                                variant: 'info',
+                                title: isActionable
+                                  ? t('supplierDashboard.orders.toast.opening', { po: po.poNumber })
+                                  : isConfirmed
+                                    ? t('supplierDashboard.orders.toast.creatingAsn', { po: po.poNumber })
+                                    : t('supplierDashboard.orders.toast.viewing', { po: po.poNumber }),
+                              })
+                            }
+                          >
+                            {btnLabel}
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </tbody>
+              </Table>
+            </div>
           </section>
         </div>
 
@@ -759,11 +799,17 @@ const SupplierDashboard: React.FC = () => {
               <h2 className="text-section text-text-primary">
                 {t('supplierDashboard.perf.title')}
               </h2>
-              <GradeBadge grade={grade} size="sm" />
+              {grade ? (
+                <GradeBadge grade={grade} size="sm" />
+              ) : (
+                <span className="text-xs text-text-tertiary">{t('rfx.noHistory')}</span>
+              )}
             </div>
             <div className="flex flex-col gap-4">
               {[
-                { label: t('supplierDashboard.perf.otif'), value: mySupplier.otif },
+                // A supplier with no measured OTIF gets no bar: a target bar at
+                // 0% is a claim about performance nobody has measured.
+                ...(hasOtif ? [{ label: t('supplierDashboard.perf.otif'), value: otif }] : []),
                 {
                   label: t('supplierDashboard.perf.leadTime'),
                   value: mySupplier.leadTimeAdherence,

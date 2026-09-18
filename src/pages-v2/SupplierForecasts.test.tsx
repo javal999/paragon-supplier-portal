@@ -108,7 +108,7 @@ describe('SupplierForecasts — FLAG-2 honest render', () => {
     expect(isLive('forecastPublications')).toBe(false);
     renderPage();
     // The registry-derived pill (green structurally unreachable).
-    expect(await screen.findByText(/awaiting SOMO C8 feed/i)).toBeInTheDocument();
+    expect((await screen.findAllByText(/Sample data/i)).length).toBeGreaterThan(0);
     expect(screen.queryByText(/^Live$/)).not.toBeInTheDocument();
     // The honest empty state of the live lane, stated on the sample banner.
     expect(screen.getByText(/no live publication yet/i)).toBeInTheDocument();

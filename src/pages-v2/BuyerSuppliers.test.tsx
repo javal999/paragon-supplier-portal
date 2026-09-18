@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import { renderWithProviders, SUPPLIER } from '../test/test-utils';
 import { mockDataService } from '../services/data/mock/mockDataService';
 import { withChaos } from '../services/data/mock/withChaos';
@@ -12,6 +12,30 @@ describe('BuyerSuppliers — four honest states', () => {
     renderWithProviders(<BuyerSuppliers />);
     expect(await screen.findByText('Supplier Directory')).toBeInTheDocument();
     expect(await screen.findByText(/records · last updated/)).toBeInTheDocument();
+  });
+
+  // ⚠️ NEW BEHAVIOUR (REQ-E10-01, marker-polish pass). The "Sample data" marker used
+  // to sit on the page meta line, which claimed the OTIF column too — and OTIF stopped
+  // being a stored field when phase 6b made it a measure over this hub's own call-offs.
+  // It moved onto the table, which is authored, and names the column it does not cover.
+  // Asserted BY PLACEMENT in both directions: a marker back on the meta line, or a
+  // marker that stops naming the calculated column, fails here.
+  it('the sample marker sits on the table and names the calculated column, not the page', async () => {
+    renderWithProviders(<BuyerSuppliers />);
+    const meta = await screen.findByText(/records · last updated/);
+    // The meta line itself, not some ancestor — otherwise the assertion below would
+    // be about the whole page and could never fail for the right reason.
+    expect(meta.tagName).toBe('P');
+    expect(within(meta).queryByText('Sample data')).toBeNull();
+
+    const provenance = screen.getByTestId('suppliers-provenance');
+    expect(provenance).toHaveTextContent('Sample data');
+    expect(provenance).toHaveTextContent(
+      'Calculated from deliveries and orders in this hub',
+    );
+    // …and the marker is the only one on the route, so the assertion above is not
+    // passing because some other block happens to carry one.
+    expect(screen.getAllByText('Sample data')).toHaveLength(1);
   });
 
   it('loading: shows LoadingState while the read is pending', () => {

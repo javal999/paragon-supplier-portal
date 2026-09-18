@@ -63,7 +63,9 @@ describe('mock fixtures — seeded rows the surfaces depend on', () => {
     expect((await svc.procurement.getSupplierScorecards(aScope)).items.length).toBe(0);
     // D-2: per-supplier optionals live on the record, not shared consts — the
     // conditional supplier carries both its compliance issue and its plan.
-    const samplePc = buyer.find((s) => s.id === 'sample-personalcare');
+    // PREMISE CHANGED (REQ-E10-01): scorecard rows are keyed by the supplier
+    // MASTER id, so the calculated measures can be joined to them.
+    const samplePc = buyer.find((s) => s.id === 'sup-005');
     expect(samplePc?.improvementActions?.length).toBeGreaterThan(0);
     expect(samplePc?.complianceIssue?.level).toBe('expiring');
   });

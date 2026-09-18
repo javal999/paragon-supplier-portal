@@ -1,0 +1,161 @@
+// ────────────────────────────────────────────────────────────────────────────
+// The inventory & capacity read model over the mock stores (REQ-E08-01 to 05).
+//
+// ONE place gathers the stores and hands them to the pure rules
+// (`inventoryRules`, `capacityRules`, `inventoryAlertRules`), so the read
+// service, the command targets (sync, capacity, alert close) and the alert
+// ledger all see the same positions. Nothing computed here is stored — except
+// the alert ledger's `cleared` marks, appended by `observeAlertConditions`,
+// which is what lets a closed alert reopen only after its condition cleared.
+// ────────────────────────────────────────────────────────────────────────────
+
+import type {
+  CapacityPlan,
+  InventoryAlert,
+  InventoryPosition,
+  StockAccessGrant,
+} from '../types';
+import { mockSuppliers } from '../../../data/mockSuppliers';
+import {
+  FORECAST_PUBLICATIONS,
+  SUPPLIER_MATERIAL_RELATIONSHIPS,
+  currentPublication,
+  materialEntry,
+  sdcClock,
+} from '../../sdc';
+import { callOffViews } from '../../transitions/callOffRules';
+import { buildInventoryPositions } from '../../transitions/inventoryRules';
+import { buildCapacityPlans } from '../../transitions/capacityRules';
+import { commitmentAlertSubjects } from '../../transitions/forecastRules';
+import { allCommitmentLines } from './forecastReadModel';
+import {
+  alertsFromLedger,
+  clearedSince,
+  deriveAlertConditions,
+  type AlertCondition,
+} from '../../transitions/inventoryAlertRules';
+import { inventoryDeclarationStore } from './stores/inventoryDeclarationStore';
+import { asnStore } from './stores/asnStore';
+import { callOffStore } from './stores/callOffStore';
+import { goodsReceiptStore } from './stores/goodsReceiptStore';
+import {
+  capacityStore,
+  inventoryAlertLedger,
+  stockAccessStore,
+  stockSyncStore,
+} from './stores/inventoryHubStores';
+import {
+  API_CONNECTIONS,
+  PLANNING_DAILY_DEMAND,
+  PTI_STOCK,
+  SUPPLY_ASSIGNMENTS,
+} from './fixtures/inventoryHub';
+
+export const supplierNameOf = (supplierId: string): string =>
+  mockSuppliers.find((s) => s.id === supplierId)?.name ?? supplierId;
+
+export const isApiConnected = (supplierId: string): boolean => supplierId in API_CONNECTIONS;
+
+/**
+ * Is this material assigned to the supplier? The hub's supply assignments, or
+ * a material PTI already collaborates with the supplier on (a relationship or a
+ * forecast line) — the same membership the stock declaration verb accepts.
+ */
+export function isAssignedMaterial(supplierId: string, materialCode: string): boolean {
+  return (
+    SUPPLY_ASSIGNMENTS.some((a) => a.supplierId === supplierId && a.materialCode === materialCode) ||
+    SUPPLIER_MATERIAL_RELATIONSHIPS.some((r) => r.supplierId === supplierId && r.materialCode === materialCode) ||
+    FORECAST_PUBLICATIONS.some((p) => p.lines.some((l) => l.supplierId === supplierId && l.materialCode === materialCode))
+  );
+}
+
+/** The inventory rows: every supply assignment, plus any pair a supplier has submitted stock for. */
+function assignments(): { supplierId: string; materialCode: string }[] {
+  const pairs = new Map<string, { supplierId: string; materialCode: string }>();
+  for (const a of SUPPLY_ASSIGNMENTS) pairs.set(`${a.supplierId}|${a.materialCode}`, a);
+  for (const d of inventoryDeclarationStore.all()) {
+    const k = `${d.supplierId}|${d.materialCode}`;
+    if (!pairs.has(k) && materialEntry(d.materialCode)) pairs.set(k, { supplierId: d.supplierId, materialCode: d.materialCode });
+  }
+  return [...pairs.values()];
+}
+
+const planningEstimate = (supplierId: string, materialCode: string): number | null =>
+  PLANNING_DAILY_DEMAND[`${supplierId}|${materialCode}`] ?? null;
+
+const forecastLines = () => currentPublication(FORECAST_PUBLICATIONS)?.lines ?? [];
+
+/** PTI's unmasked view of every position, as of the simulated clock. */
+export function allPositions(nowIso: string = sdcClock.now()): InventoryPosition[] {
+  return buildInventoryPositions(
+    {
+      assignments: assignments(),
+      declarations: inventoryDeclarationStore.all(),
+      currentDeclaration: (s, m) => inventoryDeclarationStore.latestFor(s, m),
+      master: materialEntry,
+      supplierName: supplierNameOf,
+      ptiStock: PTI_STOCK,
+      forecastLines: forecastLines(),
+      planningEstimate,
+      asns: asnStore.all(),
+      callOffViews: callOffViews(callOffStore.all(), asnStore.all(), goodsReceiptStore.all(), nowIso),
+      apiConnected: isApiConnected,
+      syncAttempts: stockSyncStore.all(),
+    },
+    nowIso,
+  );
+}
+
+/** Every supplier × material group with capacity against demand. */
+export function allCapacityPlans(nowIso: string = sdcClock.now()): CapacityPlan[] {
+  return buildCapacityPlans(
+    {
+      assignments: assignments(),
+      master: materialEntry,
+      supplierName: supplierNameOf,
+      submissions: capacityStore.all(),
+      forecastLines: forecastLines(),
+      planningEstimate,
+    },
+    nowIso,
+  );
+}
+
+/** The active alert conditions now. */
+export function activeAlertConditions(nowIso: string = sdcClock.now()): AlertCondition[] {
+  return deriveAlertConditions(
+    allPositions(nowIso),
+    allCapacityPlans(nowIso),
+    nowIso,
+    // REQ-E08-05 BR-01 — commitments below forecast beyond tolerance (REQ-E06-03).
+    commitmentAlertSubjects(allCommitmentLines()),
+  );
+}
+
+/** Every alert (open and closed) with the ledger applied. */
+export function allAlerts(nowIso: string = sdcClock.now()): InventoryAlert[] {
+  return alertsFromLedger(activeAlertConditions(nowIso), inventoryAlertLedger.all());
+}
+
+/**
+ * Record, for every closed alert whose condition is no longer active, the moment
+ * it cleared (REQ-E08-05 BR-05). Called after each successful command, because
+ * only a command can change the figures a condition reads.
+ */
+export function observeAlertConditions(nowIso: string = sdcClock.now()): void {
+  if (inventoryAlertLedger.all().length === 0) return;
+  const active = new Set(activeAlertConditions(nowIso).map((c) => c.key));
+  inventoryAlertLedger.append(clearedSince(active, inventoryAlertLedger.all(), nowIso));
+}
+
+/** A supplier's grant, or undefined. */
+export const grantFor = (supplierId: string): StockAccessGrant | undefined => stockAccessStore.get(supplierId);
+
+/** Suppliers that appear in the inventory model (for the access page). */
+export function suppliersWithAssignments(): { supplierId: string; supplierName: string; materials: string[] }[] {
+  const bySupplier = new Map<string, string[]>();
+  for (const a of assignments()) bySupplier.set(a.supplierId, [...(bySupplier.get(a.supplierId) ?? []), a.materialCode]);
+  return [...bySupplier.entries()]
+    .map(([supplierId, materials]) => ({ supplierId, supplierName: supplierNameOf(supplierId), materials: materials.sort() }))
+    .sort((a, b) => a.supplierName.localeCompare(b.supplierName));
+}

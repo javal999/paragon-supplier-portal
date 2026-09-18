@@ -36,6 +36,16 @@ import {
 import PageHeader from '../components/ui-v2/PageHeader';
 import PageMetaLine from '../components/ui-v2/PageMetaLine';
 import ProvenanceMarker from '../components/ui-v2/ProvenanceMarker';
+import FilterChipsBar from '../components/ui-v2/FilterChipsBar';
+import KpiCard from '../components/ui-v2/KpiCard';
+import { usePerformance } from './performance/performanceDisplay';
+import {
+  GRADE_BANDS,
+  OTIF_TARGET_PCT,
+  performanceStatus,
+  PERFORMANCE_PERIODS,
+  type PerformancePeriod,
+} from '../services/data/performanceRules';
 import Data from '../components/ui-v2/Data';
 import TargetBar from '../components/ui-v2/TargetBar';
 import Tabs from '../components/ui-v2/Tabs';
@@ -76,9 +86,6 @@ const GRADE_TONE: Record<Grade, { stroke: string; soft: string }> = {
   C: { stroke: '#B45309', soft: '#FEF3D6' },
   D: { stroke: '#BB0000', soft: '#FCE4E4' },
 };
-
-const CURRENT_GRADE: Grade = 'B';
-const CURRENT_SCORE = 82;
 
 const GRADE_HISTORY: { month: string; grade: Grade; score: number }[] = [
   { month: 'Oct 24', grade: 'C', score: 71 },
@@ -151,9 +158,18 @@ const KpiProgressTile: React.FC<{ k: Kpi }> = ({ k }) => {
   );
 };
 
-const GradeBadge: React.FC<{ grade: Grade; score: number }> = ({ grade, score }) => {
+const GradeBadge: React.FC<{ grade: Grade | null; score: number | null }> = ({ grade, score }) => {
   const { t } = useTranslation();
-  const tone = GRADE_TONE[grade];
+  const tone = GRADE_TONE[grade ?? 'D'];
+  if (grade === null || score === null)
+    return (
+      <div
+        data-testid="my-performance-grade"
+        className="shrink-0 text-sm font-semibold text-text-tertiary"
+      >
+        {t('rfx.noHistory')}
+      </div>
+    );
   return (
     <div className="flex flex-col items-center gap-2 shrink-0">
       <div
@@ -164,7 +180,9 @@ const GradeBadge: React.FC<{ grade: Grade; score: number }> = ({ grade, score })
           {grade}
         </span>
       </div>
-      <div className="text-base font-bold text-text-primary">{score}/100</div>
+      <div data-testid="my-performance-grade" className="text-base font-bold text-text-primary">
+        {score}/100
+      </div>
       <span
         className="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold"
         style={{
@@ -188,6 +206,8 @@ const SupplierPerformance: React.FC = () => {
   const { identity } = useCurrentIdentity();
   const { supplierId } = identity;
   const [activeTab, setActiveTab] = useState<string>('overview');
+  // REQ-E10-01 BR-08 — the period is an INPUT to the measures, not a caption.
+  const [period, setPeriod] = useState<PerformancePeriod>('90d');
   const PERF_CRUMB = [
     t('supplierPerformance.crumb.intelligence'),
     t('supplierPerformance.crumb.myPerformance'),
@@ -201,6 +221,12 @@ const SupplierPerformance: React.FC = () => {
   const supplierQuery = useCurrentSupplier();
   const kpisQuery = useKpis();
   const posQuery = usePurchaseOrders();
+  const perf = usePerformance(period);
+  const measure = perf.forSupplier(supplierId ?? '');
+  const PERIOD_OPTIONS = PERFORMANCE_PERIODS.map((id) => ({
+    id,
+    label: t(`perf.period.${id}`),
+  }));
 
   const mySupplier = supplierQuery.data ?? null;
   const snapshot = kpisQuery.data;
@@ -266,13 +292,88 @@ const SupplierPerformance: React.FC = () => {
         }
       />
 
-      {/* D-CENSUS-8 — MARKER-SCOPE-01. The page's only marker was on the grade-history
-          chart; the OTIF / quality / lead-time scores a supplier is judged on carried
-          none. `scorecards` is null-backed — these figures are authored, not computed
-          from the transactional history this portal holds. */}
+      {/* REQ-E10-01 — the page-level marker is RETIRED rather than kept: the
+          grade, the score, the OTIF and the CFOT below ARE computed from this
+          supplier's own call-offs, heads-ups, receipts and orders. The marker
+          moved to the KPI section, which is still authored. */}
       <PageMetaLine className="-mt-6 mb-6">
-        <ProvenanceMarker capability="scorecards" />
+        {t('perf.periodLabel')}: {t(`perf.period.${period}`)} ·{' '}
+        {t('perf.gradeBands', {
+          bands: GRADE_BANDS.map((b) => `${b.grade} ${b.min}+`).join(' · '),
+        })}
       </PageMetaLine>
+
+      <div className="mb-6">
+        <FilterChipsBar<PerformancePeriod>
+          options={PERIOD_OPTIONS}
+          value={period}
+          onChange={setPeriod}
+        />
+      </div>
+
+      {/* REQ-E10-01 — the calculated half of the assessment. */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-6">
+        <KpiCard
+          eyebrow={t('perf.otif')}
+          value={
+            measure.otif.pct === null ? (
+              t('rfx.noHistory')
+            ) : (
+              // CR-17 — the target status decides the colour, from the ONE
+              // threshold source every target bar on this page already reads.
+              <span style={{ color: TARGET_STATUS[performanceStatus(measure.otif.pct)!].text }}>
+                {measure.otif.pct}%
+              </span>
+            )
+          }
+          subtitle={
+            <span className="text-text-tertiary" data-testid="my-performance-otif">
+              {measure.otif.pct === null
+                ? t('perf.noMeasured')
+                : t('perf.measuredCallOffs', {
+                    count: measure.otif.measured,
+                    target: OTIF_TARGET_PCT,
+                  })}
+            </span>
+          }
+        />
+        <KpiCard
+          eyebrow={t('perf.cfot')}
+          value={
+            measure.cfot.pct === null ? (
+              t('rfx.noHistory')
+            ) : (
+              <span style={{ color: TARGET_STATUS[performanceStatus(measure.cfot.pct)!].text }}>
+                {measure.cfot.pct}%
+              </span>
+            )
+          }
+          subtitle={
+            <span className="text-text-tertiary" data-testid="my-performance-cfot">
+              {measure.cfot.pct === null
+                ? t('perf.noMeasured')
+                : t('perf.measuredOrders', { count: measure.cfot.measured })}
+            </span>
+          }
+        />
+        <KpiCard
+          eyebrow={t('perf.rejections')}
+          value={String(measure.rejections.total)}
+          subtitle={
+            <span className="text-text-tertiary">
+              {t('perf.rejectionsSplit', {
+                orders: measure.rejections.purchaseOrders,
+                callOffs: measure.rejections.callOffs,
+              })}
+            </span>
+          }
+        />
+        <KpiCard
+          eyebrow={t('perf.score')}
+          value={measure.score === null ? t('rfx.noHistory') : `${measure.score}`}
+          subtitle={<span className="text-text-tertiary">{t('perf.calculated')}</span>}
+        />
+      </div>
 
       <section className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm p-6 mb-6">
         <div className="flex items-start justify-between gap-6 flex-wrap">
@@ -310,7 +411,7 @@ const SupplierPerformance: React.FC = () => {
               </span>
             </div>
           </div>
-          <GradeBadge grade={CURRENT_GRADE} score={CURRENT_SCORE} />
+          <GradeBadge grade={measure.grade} score={measure.score} />
         </div>
       </section>
 
@@ -319,7 +420,8 @@ const SupplierPerformance: React.FC = () => {
       {activeTab === 'overview' && (
         <>
           <section className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm p-6 mb-6">
-            <h2 className="text-section text-text-primary mb-4 pb-3 border-b border-border-subtle">
+            <h2 className="flex flex-wrap items-center gap-3 text-section text-text-primary mb-4 pb-3 border-b border-border-subtle">
+              <ProvenanceMarker capability="scorecards" />
               {kpis.length === 1
                 ? t('supplierPerformance.overview.scorecardTitle.one', {
                     count: kpis.length,

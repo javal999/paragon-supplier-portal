@@ -221,7 +221,8 @@ describe('t_requirementresponse_submit — the snapshot binding is un-falsifiabl
     expect(requirementResponseStore.get(first.entityId!)!.submissionVersion).toBe(1);
     const second = await svc.dispatch(
       sup002,
-      submit({ confirmedQty: 5500, confirmedQtyRaw: '5500' }),
+      // REQ-E06-02 BR-04 — below forecast now needs a starter reason at the verb.
+      submit({ confirmedQty: 5500, confirmedQtyRaw: '5500', rootCause: { level1: 'capacity' } }),
     );
     const r2 = requirementResponseStore.get(second.entityId!)!;
     expect(r2.submissionVersion).toBe(2);

@@ -160,10 +160,12 @@ const CAPABILITY_BACKING: Record<Capability, string | null> = {
   // All null-backed, DELIBERATELY. Each of these surfaces reads a frozen fixture
   // array through `mockDataService`; none is the read-model of a lifecycle
   // entity. Backing one to a merely-adjacent wired entity is the exact defect
-  // this batch files as INVENTORY-REFERENT-01 (`inventory` is backed to
-  // `inventoryDeclaration` while BuyerInventoryWidget renders `mockInventory` —
-  // so the pill's referent is not the data on screen, and unwire-flips-the-pill
-  // stops meaning anything). Null is the honest backing for a fixture read: it
+  // this batch filed as INVENTORY-REFERENT-01 (`inventory` was backed to
+  // `inventoryDeclaration` while BuyerInventoryWidget rendered `mockInventory` —
+  // so the pill's referent was not the data on screen). CLOSED at REQ-E08-01:
+  // the inventory pages and widget now read positions projected FROM the
+  // InventoryDeclaration store, so the backing is the data on screen. Null is
+  // still the honest backing for the fixture reads below: it
   // derives SIMULATED, and it flips only when a real read-model actually lands.
   suppliers: null,
   supplierDiscovery: null,

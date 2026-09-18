@@ -13,12 +13,17 @@
 
 import { REQUIREMENT_RESPONSES } from '../../../sdc';
 import type { RequirementResponse } from '../../../sdc';
+// REQ-E06-02 — the forecast commitments are RequirementResponses too, seeded
+// after the SDC-0 rows so the first row stays the SDC-0 seed.
+import { FORECAST_COMMITMENT_SEED } from '../fixtures/forecastHub';
+
+const SEED: readonly RequirementResponse[] = [...REQUIREMENT_RESPONSES, ...FORECAST_COMMITMENT_SEED];
 
 function clone(r: RequirementResponse): RequirementResponse {
   return { ...r };
 }
 
-let rows: RequirementResponse[] = REQUIREMENT_RESPONSES.map(clone);
+let rows: RequirementResponse[] = SEED.map(clone);
 let seq = 0;
 
 export const requirementResponseStore = {
@@ -64,7 +69,7 @@ export const requirementResponseStore = {
   },
   /** Restore the fixture seed (test isolation). */
   reset(): void {
-    rows = REQUIREMENT_RESPONSES.map(clone);
+    rows = SEED.map(clone);
     seq = 0;
   },
 };

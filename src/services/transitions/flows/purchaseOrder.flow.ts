@@ -25,13 +25,17 @@ export const purchaseOrderFlow: FlowDefinition = {
     POStatus.VIEWED,
     POStatus.ACKNOWLEDGED,
     POStatus.CONFIRMED,
+    POStatus.ADJUSTED,
+    POStatus.REJECTED,
     POStatus.PARTIALLY_DELIVERED,
     POStatus.DELIVERED,
     POStatus.CLOSED,
   ],
   initial: POStatus.SENT,
   /** PF-0 · D-2 — a closed PO is the end of the order lifecycle. */
-  terminals: [POStatus.CLOSED],
+  /** REQ-E07-02 — a rejected PO leaves the supplier's hands; PTI sources the
+   *  need another way (BR-09 / MN-ORD-14), outside this machine. */
+  terminals: [POStatus.CLOSED, POStatus.REJECTED],
   transitions: [
     {
       id: 't_po_issue',
@@ -85,6 +89,73 @@ export const purchaseOrderFlow: FlowDefinition = {
       requiredRole: 'po:confirm',
       requiredFields: ['confirmedQuantities'],
       policyHooks: [POLICY_HOOKS.PO_CONFIRM_QTY_WITHIN_ORDERED],
+      surfaceable: { surfaced: true },
+      version: 1,
+    },
+    {
+      // REQ-E07-02 Adjust — the supplier answers with a counter-offer per line:
+      // a predefined reason, a quantity (CR-10) and a date. The planner reviews.
+      id: 't_po_adjust',
+      from: [POStatus.SENT, POStatus.VIEWED, POStatus.ACKNOWLEDGED],
+      to: POStatus.ADJUSTED,
+      trigger: 'user',
+      requiredRole: 'po:adjust',
+      requiredFields: ['lineResponses'],
+      policyHooks: [POLICY_HOOKS.PO_ADJUST_COUNTER_OFFER_VALID],
+      surfaceable: { surfaced: true },
+      version: 1,
+    },
+    {
+      // REQ-E07-02 Reject — the supplier cannot meet the date, quantity and/or
+      // quality. At least one cause is required (AC-03).
+      id: 't_po_reject',
+      from: [POStatus.SENT, POStatus.VIEWED, POStatus.ACKNOWLEDGED],
+      to: POStatus.REJECTED,
+      trigger: 'user',
+      requiredRole: 'po:reject',
+      requiredFields: ['rejectionCauses'],
+      policyHooks: [POLICY_HOOKS.PO_REJECT_CAUSE_GIVEN],
+      surfaceable: { surfaced: true },
+      version: 1,
+    },
+    {
+      // The planner accepts the counter-offer: the PO is confirmed at the
+      // counter-offered quantities and date.
+      id: 't_po_accept_counter',
+      from: [POStatus.ADJUSTED],
+      to: POStatus.CONFIRMED,
+      trigger: 'user',
+      requiredRole: 'po:review-response',
+      requiredFields: [],
+      policyHooks: [],
+      surfaceable: { surfaced: true },
+      version: 1,
+    },
+    {
+      // The planner does not accept the counter-offer: a comment is required,
+      // and the PO reopens for the supplier's response.
+      id: 't_po_reject_counter',
+      from: [POStatus.ADJUSTED],
+      to: POStatus.SENT,
+      trigger: 'user',
+      requiredRole: 'po:review-response',
+      requiredFields: ['reviewComment'],
+      policyHooks: [POLICY_HOOKS.PO_COUNTER_REVIEW_COMMENT_AUTHORED],
+      surfaceable: { surfaced: true },
+      version: 1,
+    },
+    {
+      // REQ-E07-05 — the supplier states (and later moves) the expected
+      // completion date of a confirmed PO. Records a fact without moving the
+      // PO, so it is legal wherever shipping is still under way.
+      id: 't_po_shipping_notice',
+      from: [POStatus.CONFIRMED, POStatus.PARTIALLY_DELIVERED],
+      to: POStatus.CONFIRMED,
+      statePreserving: true,
+      trigger: 'user',
+      requiredRole: 'po:shipping-notice',
+      requiredFields: ['expectedCompletionDate'],
+      policyHooks: [POLICY_HOOKS.PO_SHIPPING_NOTICE_DATE_VALID],
       surfaceable: { surfaced: true },
       version: 1,
     },

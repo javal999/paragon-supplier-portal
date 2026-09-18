@@ -20,9 +20,17 @@ import type {
   SupplierTier,
   PreferredChannel,
   ScorecardGrade,
-  StockStatus,
-  InventoryRecord,
 } from '../../types/supplier.types';
+// REQ-E03-01 to REQ-E03-05 — the RFx read surface. The view shapes live beside
+// the entities (`services/sourcing/views`) so the contract and the adapter that
+// fulfils it import ONE declaration rather than each holding its own copy.
+import type { InviteeCandidate, InviteeFilter } from '../transitions/rfxRules';
+import type {
+  AwardView,
+  NegotiationRoundView,
+  RfiEventView,
+  RfpEventView,
+} from '../sourcing/views';
 
 // CP-3 · E2 — the enforcement read seam's row type. TYPE-ONLY: naming the
 // vocabulary is not acquiring a consumer, and nothing in this file calls it.
@@ -33,7 +41,11 @@ import type { EnforcementSetting, ActorAttribution } from '../../lib/enforcement
 // type-only cycle TS resolves at erase-time — no runtime import is emitted).
 import type {
   RequirementResponse,
+  DisputeEntry,
+  ForecastStream,
   InventoryDeclaration,
+  StockChannel,
+  MaterialType,
   IncomingShipmentView,
   ConsolidationRow,
   SupplierCoverageEntry,
@@ -61,6 +73,10 @@ export enum POStatus {
   VIEWED = 'Viewed',
   ACKNOWLEDGED = 'Acknowledged',
   CONFIRMED = 'Confirmed',
+  /** The supplier proposed a counter-offer (REQ-E07-02 Adjust); the planner reviews it. */
+  ADJUSTED = 'Adjusted',
+  /** The supplier cannot meet the order (REQ-E07-02 Reject). PTI decides what next. */
+  REJECTED = 'Rejected',
   PARTIALLY_DELIVERED = 'Partially Delivered',
   DELIVERED = 'Delivered',
   CLOSED = 'Closed',
@@ -87,6 +103,8 @@ import type {
   CheckResult,
   OptionalCheck,
   InspectionResult,
+  ReceiptDiscrepancyResponse,
+  ReceiptDiscrepancyStatus,
 } from '../../data/mockGoodsReceipts';
 
 import type {
@@ -114,8 +132,6 @@ export type {
   SupplierTier,
   PreferredChannel,
   ScorecardGrade,
-  StockStatus,
-  InventoryRecord,
   Shipment,
   ShipmentLineItem,
   ShipmentStatus,
@@ -126,6 +142,8 @@ export type {
   CheckResult,
   OptionalCheck,
   InspectionResult,
+  ReceiptDiscrepancyResponse,
+  ReceiptDiscrepancyStatus,
   Contract,
   ContractType,
   ContractStatus,
@@ -277,6 +295,433 @@ export interface PurchaseOrder {
   daysOverdue: number;
   acknowledgmentTimeHours: number;
   lineItems: POLineItem[];
+  /**
+   * The supplier's answer to the order (REQ-E07-02) — absent until the supplier
+   * approves, adjusts or rejects. Whether the PO is ESCALATED is never stored:
+   * it is derived at read time from the response deadline and the clock
+   * (`poResponseProjection.ts`, law 0.5).
+   */
+  response?: PoResponse;
+  /**
+   * When the supplier was last asked to respond, if not at creation — set when
+   * the planner rejects a counter-offer and the PO reopens. The response
+   * deadline counts from here (or from `orderDate` when absent).
+   */
+  responseRequestedAt?: string;
+  /** Shipping notice confirmation (REQ-E07-05) — absent until recorded. */
+  shippingNotice?: PoShippingNotice;
+}
+
+/** The three answers a supplier can give a purchase order (REQ-E07-02 BR-02). */
+export type PoResponseOption = 'approve' | 'adjust' | 'reject';
+
+/** Predefined adjust reasons — the starter list (REQUIREMENTS §3.6). */
+export type PoReasonCode = 'capacity' | 'material' | 'logistics' | 'quality' | 'other';
+
+/** What a rejection is about (REQ-E07-02 BR-06). */
+export type PoRejectionCause = 'date' | 'quantity' | 'quality';
+
+/** One line's counter-offer on an adjusted PO. */
+export interface PoLineResponse {
+  readonly lineId: string;
+  readonly reasonCode: PoReasonCode;
+  /** Required when `reasonCode` is `other`. */
+  readonly note?: string;
+  /** CR-10: 0 < quantity ≤ the line's ordered quantity. */
+  readonly counterQty: number;
+  /** `YYYY-MM-DD`. */
+  readonly counterDate: string;
+}
+
+/** The planner's decision on a counter-offer. */
+export interface PoCounterReview {
+  readonly decision: 'accepted' | 'rejected';
+  readonly comment?: string;
+  readonly reviewedAt: string;
+}
+
+export interface PoResponse {
+  readonly option: PoResponseOption;
+  /** ISO timestamp of the supplier's answer. */
+  readonly respondedAt: string;
+  /** Approve: the delivery date the supplier confirmed. */
+  readonly confirmedDeliveryDate?: string;
+  /** Adjust: one entry per adjusted line; lines not listed are accepted as ordered. */
+  readonly lines?: readonly PoLineResponse[];
+  /** Reject: at least one cause. */
+  readonly rejectionCauses?: readonly PoRejectionCause[];
+  readonly comment?: string;
+  /** The planner's review of an adjustment, once made. */
+  readonly review?: PoCounterReview;
+}
+
+export interface PoShippingNotice {
+  /** Date shipment started — recorded automatically from the first submitted ASN. */
+  readonly startedOn?: string;
+  /** The ASN that started it. */
+  readonly startedByAsn?: string;
+  /** Expected completion date given by the supplier (`YYYY-MM-DD`). */
+  readonly expectedCompletionDate?: string;
+  /** The previous expected completion date, kept when the supplier changes it. */
+  readonly previousCompletionDate?: string;
+  readonly updatedAt?: string;
+}
+
+// ── Call-offs (REQ-E09-01, REQ-E09-03, REQ-E09-04) ──────────────────────────
+//
+// A call-off manages ONE delivery under an umbrella PO line (same supplier and
+// material). The hub is the record for call-offs; SAP only knows the umbrella
+// PO, receipts and invoices (REQUIREMENTS §3.1). Everything clock-derived —
+// Escalated, At Risk, Dispatched, on time / late / missed — is computed at read
+// time (`callOffRules.ts`) and never stored here.
+
+/** JIT: no over-quantity limit. Forecast-based: CR-05 tolerance applies. */
+export type CallOffType = 'jit' | 'forecast';
+
+/** Stored call-off states — the confirmation statuses of REQ-E09-03 BR-02, plus
+ *  the planner's Draft and a dismissed draft. */
+export type CallOffStatus =
+  | 'Draft'
+  | 'Awaiting Confirmation'
+  | 'Confirmed'
+  | 'Confirmed with New Date'
+  | 'Confirmed with Changes'
+  | 'Partially Confirmed'
+  | 'Rejected'
+  | 'Dismissed';
+
+/** How the supplier answered (the four confirming answers). */
+export type CallOffConfirmationKind = 'confirm' | 'newDate' | 'changes' | 'partial';
+
+/** One confirmed delivery: a quantity on a date (`YYYY-MM-DD`). */
+export interface CallOffDelivery {
+  readonly quantity: number;
+  readonly date: string;
+}
+
+/**
+ * The supplier's confirmation. `approval` is the second axis of BR-04: `auto`
+ * when the answer was within tolerance, `awaiting` until the planner decides,
+ * `approved` once the planner approved it. A planner rejection clears the
+ * confirmation and returns the call-off to Awaiting Confirmation.
+ */
+export interface CallOffConfirmation {
+  readonly kind: CallOffConfirmationKind;
+  readonly deliveries: readonly CallOffDelivery[];
+  readonly comment?: string;
+  readonly confirmedAt: string;
+  readonly approval: 'auto' | 'awaiting' | 'approved';
+  readonly reviewedAt?: string;
+}
+
+/** A dispatch heads-up from the supplier (REQ-E09-04). */
+export interface CallOffDispatch {
+  readonly id: string;
+  readonly shippedDate: string;
+  readonly expectedArrival: string;
+  readonly quantity: number;
+  /** Optional link to the ASN for this shipment. */
+  readonly asnNumber?: string;
+  readonly recordedAt: string;
+}
+
+/** A planner or supplier note kept on the call-off (reasons are required). */
+export interface CallOffNote {
+  readonly action: 'edit' | 'dismiss' | 'change' | 'reject' | 'returned';
+  readonly text: string;
+  readonly at: string;
+}
+
+export interface CallOff {
+  readonly id: string;
+  readonly callOffNumber: string;
+  /** The umbrella PO and its line (supplier and material come from it). */
+  readonly poId: string;
+  readonly poNumber: string;
+  readonly poLineId: string;
+  readonly supplierId: string;
+  readonly supplierName: string;
+  readonly materialCode: string;
+  readonly description: string;
+  readonly uom: string;
+  readonly unitPrice: number;
+  readonly currency: string;
+  /** Released (requested) quantity and need date — "must come" (REQ-E09-04 BR-01). */
+  readonly quantity: number;
+  readonly needDate: string;
+  readonly type: CallOffType;
+  readonly status: CallOffStatus;
+  /** When the supplier was last asked to confirm; the 1-working-day deadline counts from here. */
+  readonly releasedAt?: string;
+  readonly confirmation?: CallOffConfirmation;
+  /** The supplier's reason when it rejected the call-off. */
+  readonly rejectionReason?: string;
+  readonly dispatches: readonly CallOffDispatch[];
+  readonly notes: readonly CallOffNote[];
+}
+
+// ─── Inventory & capacity collaboration (REQ-E08-01 to REQ-E08-05) ─────────
+//
+// ONE inventory model (INVENTORY-REFERENT-01 closed): every row is a supplier ×
+// material position PROJECTED AT READ from the supplier stock submissions (the
+// InventoryDeclaration store), PTI's SAP stock and reorder point, the in-transit
+// ASNs and call-off dispatch notices, and the forecast. Nothing here is stored,
+// and nothing clock-derived (staleness, days of supply, bands) is a field: the
+// pages compute those with the shared rules in `transitions/inventoryRules.ts`.
+
+/** Where an incoming quantity comes from (REQ-E08-01 BR-06). */
+export type IncomingSource = 'production' | 'asn' | 'dispatch';
+
+/** One incoming quantity with its date — the per-date detail behind the aggregate. */
+export interface IncomingItem {
+  readonly source: IncomingSource;
+  /** Expected completion or arrival (`YYYY-MM-DD`); null when the supplier gave none. */
+  readonly date: string | null;
+  readonly quantity: number;
+  /** The ASN number or call-off number the quantity rides on; null for production. */
+  readonly reference: string | null;
+}
+
+/** An API sync attempt for a connected supplier (REQ-E08-02 BR-03). */
+export interface StockSyncAttempt {
+  readonly id: string;
+  readonly supplierId: string;
+  readonly at: string;
+  readonly outcome: 'success' | 'failed';
+  /** i18n key suffix of the business-language error, when it failed. */
+  readonly errorKey?: string;
+}
+
+/** Where the average daily demand came from (CR-01). */
+export type DemandSource = 'forecast' | 'planningEstimate' | 'none';
+
+export interface InventoryPosition {
+  readonly supplierId: string;
+  readonly supplierName: string;
+  readonly materialCode: string;
+  readonly materialLabel: string;
+  /** ROH = raw material, VERP = packaging (BR-07). */
+  readonly materialType: MaterialType;
+  readonly materialGroup: string;
+  readonly uom: string;
+  /** Latest supplier stock submission; null when the supplier never submitted. */
+  readonly supplierSoh: number | null;
+  /** The supplier's own reorder point; null reads "Not provided". */
+  readonly supplierRop: number | null;
+  /** PTI stock and reorder point from SAP. Null for a supplier without access. */
+  readonly ptiSoh: number | null;
+  readonly ptiRop: number | null;
+  /** Whether PTI stock is shown on this row (always true for PTI users). */
+  readonly ptiStockShared: boolean;
+  /** Consignment material (MN-INV-10). */
+  readonly consignment: boolean;
+  readonly incoming: readonly IncomingItem[];
+  /** CR-01 — forecast for the next 30 days ÷ 30; null when there is no demand. */
+  readonly avgDailyDemand: number | null;
+  readonly demandSource: DemandSource;
+  readonly lastUpdatedAt: string | null;
+  readonly channel: StockChannel | null;
+  /** The data-update SLA for this supplier × material, in days (AC-05). */
+  readonly updateSla: number;
+  readonly apiConnected: boolean;
+  /** The latest API sync attempt for this supplier, if any. */
+  readonly lastSync: StockSyncAttempt | null;
+  readonly batches: readonly { readonly batchNumber: string; readonly qty: number; readonly expiryDate?: string }[];
+}
+
+/** One entry in the supplier-access log (REQ-E08-03 BR-06). */
+export interface StockAccessLogEntry {
+  readonly action: 'grant' | 'change' | 'remove';
+  /** Empty = all materials the supplier supplies. */
+  readonly materials: readonly string[];
+  readonly at: string;
+  readonly actor: ActorAttribution;
+}
+
+/** A supplier's access to PTI stock (REQ-E08-03). */
+export interface StockAccessGrant {
+  readonly supplierId: string;
+  readonly supplierName: string;
+  readonly active: boolean;
+  /** Empty = all materials the supplier supplies. */
+  readonly materials: readonly string[];
+  readonly log: readonly StockAccessLogEntry[];
+}
+
+/** Starter reason codes for allocation below demand (section 3.6). */
+export type CapacityReason = 'capacity' | 'material' | 'logistics' | 'quality' | 'other';
+
+/** One weekly bucket of a capacity submission (REQ-E08-04). */
+export interface CapacityWeekEntry {
+  /** Monday of the week (`YYYY-MM-DD`). */
+  readonly week: string;
+  readonly allocated: number;
+  readonly upside?: number;
+  readonly reason?: CapacityReason;
+  readonly note?: string;
+}
+
+export interface CapacitySubmission {
+  readonly id: string;
+  readonly supplierId: string;
+  readonly materialGroup: string;
+  readonly submittedAt: string;
+  readonly weeks: readonly CapacityWeekEntry[];
+}
+
+/** Capacity against demand for one supplier × material group, 13 weekly buckets. */
+export interface CapacityPlan {
+  readonly supplierId: string;
+  readonly supplierName: string;
+  readonly materialGroup: string;
+  readonly materials: readonly string[];
+  readonly uom: string;
+  readonly weeks: readonly {
+    readonly week: string;
+    readonly demand: number;
+    readonly entry: CapacityWeekEntry | null;
+  }[];
+  readonly latest: CapacitySubmission | null;
+}
+
+// ─── Forecast collaboration (REQ-E06-01 to REQ-E06-03) ──────────────────────
+//
+// A forecast VERSION is a ForecastPublication of one stream (packaging weekly,
+// raw material monthly). A commitment is a RequirementResponse against a line.
+// Every row below is PROJECTED AT READ; nothing clock-derived is a field — a
+// line carries its deadline, and whether it is due soon or overdue is computed
+// by `transitions/forecastRules.deadlineState` against the page's clock.
+
+/** REQ-E06-01 BR-04 — Firm, Trade-off, Forecast (the commitment classes firm / semi-firm / visibility-only). */
+export type ForecastZone = 'firm' | 'tradeOff' | 'forecast';
+
+/**
+ * Where a line's commitment stands (REQ-E06-02, REQ-E06-03):
+ *  · awaiting — nothing submitted for the current quantity (a changed period
+ *    returns here on re-publication);
+ *  · acknowledged — a Forecast-zone period the supplier acknowledged;
+ *  · accepted — committed within tolerance (CR-21), no planner action;
+ *  · exception — committed outside tolerance, for the planner;
+ *  · acceptedByPlanner — the planner accepted the exception;
+ *  · revisionRequested — the planner asked the supplier to revise.
+ */
+export type CommitmentState =
+  | 'awaiting'
+  | 'acknowledged'
+  | 'accepted'
+  | 'exception'
+  | 'acceptedByPlanner'
+  | 'revisionRequested';
+
+/** One version of a forecast stream, with who has opened it (REQ-E06-01). */
+export interface ForecastVersionView {
+  readonly publicationId: string;
+  readonly planVersion: string;
+  readonly stream: ForecastStream;
+  readonly version: number;
+  readonly publishedAt: string;
+  readonly emergency: boolean;
+  /** The planner's note when the version moved demand between suppliers. */
+  readonly changeNote: string | null;
+  readonly isCurrent: boolean;
+  /** Suppliers with lines in this version; a supplier reads only itself. */
+  readonly suppliers: readonly {
+    readonly supplierId: string;
+    readonly supplierName: string;
+    /** When the supplier first opened this version; null when not yet. */
+    readonly viewedAt: string | null;
+    /** BR-06 — this supplier's periods whose quantity moved against the previous version. */
+    readonly changedPeriods: number;
+  }[];
+}
+
+/** One material × period of a supplier's current forecast, with its commitment. */
+export interface ForecastCommitmentLine {
+  /** publicationId | supplier | material | period. */
+  readonly key: string;
+  readonly stream: ForecastStream;
+  readonly publicationId: string;
+  readonly planVersion: string;
+  readonly version: number;
+  readonly supplierId: string;
+  readonly supplierName: string;
+  readonly materialCode: string;
+  readonly materialLabel: string;
+  readonly materialGroup: string;
+  readonly uom: string;
+  /** A week (its Monday, `YYYY-MM-DD`) or a month (`YYYY-MM`). */
+  readonly periodBucket: string;
+  readonly periodStart: string;
+  readonly periodEnd: string;
+  readonly zone: ForecastZone;
+  readonly forecastQty: number;
+  /** The quantity in the previous version; null when the period was not in it. */
+  readonly previousQty: number | null;
+  /** When the current version was published (the deadline counts from it). */
+  readonly publishedAt: string;
+  /** REQ-E06-02 BR-07 — Firm: 1 working day; Trade-off and Forecast: 7 days. */
+  readonly dueAt: string;
+  /** REQ-E06-03 BR-06 — the first reminder, at half the deadline. */
+  readonly reminderAt: string;
+  readonly state: CommitmentState;
+  /** The submitted commitment that stands for the current quantity. */
+  readonly response: RequirementResponse | null;
+  /** True when that commitment answered an earlier version with the same quantity. */
+  readonly carriedForward: boolean;
+  /** The supplier's own unsubmitted draft (never in PTI's read — BR-10). */
+  readonly draft: RequirementResponse | null;
+  readonly committedQty: number | null;
+  /** REQ-E06-03 BR-05 — every revision request and note on this period, oldest first. */
+  readonly log: readonly DisputeEntry[];
+  /** REQ-E06-03 BR-05 — the other suppliers qualified for the material (where demand can move). */
+  readonly otherQualifiedSuppliers: readonly { readonly supplierId: string; readonly supplierName: string }[];
+}
+
+/** REQ-E06-03 BR-07 — supplier coverage per material, with distributor lead times (an estimate). */
+export interface ForecastCoverageRow {
+  readonly stream: ForecastStream;
+  readonly supplierId: string;
+  readonly supplierName: string;
+  readonly materialCode: string;
+  readonly materialLabel: string;
+  readonly uom: string;
+  /** Σ Firm demand in the current version (CR-03 denominator). */
+  readonly firmDemandQty: number;
+  /** CR-03 ratio; null when the supplier has no stock figures. */
+  readonly ratio: number | null;
+  readonly status: 'covered' | 'atRisk' | 'uncovered' | 'noFigures';
+  readonly supplierType: 'manufacturer' | 'distributor';
+  /** Shortest principal-to-distributor lead time, for a distributor. */
+  readonly principalLeadTimeDays: number | null;
+  /** A distributor shortfall no principal order placed now can bridge in time. */
+  readonly unbridgeable: boolean;
+}
+
+export type InventoryAlertRule =
+  | 'ptiBelowRop'
+  | 'supplierBelowRop'
+  | 'projectedStockOut'
+  | 'capacityBelowDemand'
+  | 'staleData'
+  | 'coverage'
+  /** REQ-E08-05 BR-01 — committed quantity below forecast beyond tolerance (REQ-E06-03). */
+  | 'commitmentBelowForecast';
+
+export type RiskClass = 'high' | 'medium' | 'low';
+
+/** A rule-based alert (REQ-E08-05). The key is rule × material (or group) × supplier. */
+export interface InventoryAlert {
+  readonly key: string;
+  readonly rule: InventoryAlertRule;
+  readonly supplierId: string;
+  readonly supplierName: string;
+  /** The material, or the material group for a capacity alert. */
+  readonly subject: string;
+  readonly subjectLabel: string;
+  readonly riskClass: RiskClass;
+  readonly status: 'open' | 'closed';
+  readonly closedAt?: string;
+  readonly actionNote?: string;
 }
 
 export interface POSummary {
@@ -566,7 +1011,45 @@ export interface Invoice {
   paymentTerms: string;
   buyerContact: string;
   remittanceNote: string | null;
+  /**
+   * REQ-E07-07 — the invoiced lines, pre-filled from the goods receipts the
+   * supplier selected. Absent on invoices that predate receipt-based invoicing
+   * (those are still matched when a receipt posts).
+   */
+  lines?: InvoiceLine[];
+  /** The supplier's invoice date (`YYYY-MM-DD`). */
+  invoiceDate?: string;
+  /** Tax invoice (e-Faktur) attachment — the file name only in the prototype. */
+  taxInvoiceFile?: string;
+  /** Finance's reason when it returned the invoice to the supplier. */
+  returnReason?: string;
 }
+
+/** One invoiced line, drawn from one goods receipt line (REQ-E07-07). */
+export interface InvoiceLine {
+  /** The goods receipt the quantity was received on (its id). */
+  receiptId: string;
+  grNumber: string;
+  materialCode: string;
+  description: string;
+  /** Invoiced quantity — at most accepted minus already invoiced (BR-02). */
+  quantity: number;
+  uom?: string;
+  /** The PO unit price for this material (CR-12 basis). */
+  unitPrice: number;
+}
+
+/**
+ * The status list a supplier follows (REQ-E07-07 step 5, plus Returned). A
+ * read-time label of the stored `InvoiceStatus`, never stored itself.
+ */
+export type SupplierInvoiceStage =
+  | 'Draft'
+  | 'Submitted'
+  | 'Verified'
+  | 'Scheduled for payment'
+  | 'Paid'
+  | 'Returned';
 
 export interface SupplierInvoice {
   id: string;
@@ -584,6 +1067,18 @@ export interface SupplierInvoice {
   channel: InvoiceChannel;
   buyerContact: string;
   remittanceNote: string | null;
+  /** REQ-E07-07 — the supplier's status list, derived at read time. */
+  stage: SupplierInvoiceStage;
+  /** CR-14 — past its due date and not paid. Derived at read time. */
+  overdue: boolean;
+  /** CR-14 — whole days past the due date (0 when not overdue). */
+  daysOutstanding: number;
+  /** The match result (CR-12 / CR-13), shown to the supplier. */
+  matchStatus: InvoiceMatchStatus;
+  lines: InvoiceLine[];
+  invoiceDate: string | null;
+  taxInvoiceFile: string | null;
+  returnReason: string | null;
 }
 
 /** BUYER-persona projection labels of `InvoiceStatus` (+ computed Overdue). */
@@ -637,6 +1132,11 @@ export interface BuyerInvoice {
   daysOutstanding: number;
   bankAccount: string;
   channel: InvoiceChannel;
+  /** REQ-E07-07 — the invoiced lines and the supplier's documents. */
+  lines: InvoiceLine[];
+  invoiceDate: string | null;
+  taxInvoiceFile: string | null;
+  returnReason: string | null;
 }
 
 export type AsnStatus =
@@ -644,14 +1144,22 @@ export type AsnStatus =
   | 'Submitted'
   | 'In Transit'
   | 'Delivered'
-  | 'Discrepancy';
+  | 'Discrepancy'
+  /** REQ-E07-04 — withdrawn by the supplier before receipt. A cancelled ASN no
+   *  longer counts toward the PO line's open quantity or the in-transit figure. */
+  | 'Cancelled';
 
 export interface AsnLineItem {
   materialCode: string;
   description: string;
   orderedQty: number;
   shippedQty: number;
+  /** The batch number (REQ-E07-04 BR-04). Kept under its original field name. */
   lotNumber: string;
+  /** Unit of the shipped quantity, from the PO line. */
+  uom?: string;
+  /** Optional expiry date of the batch (`YYYY-MM-DD`). */
+  expiryDate?: string;
 }
 
 export interface AsnShipmentDetails {
@@ -672,6 +1180,14 @@ export interface ASN {
   eta: string;
   details: AsnShipmentDetails;
   lineItems: AsnLineItem[];
+  /** Ship (dispatch) date, `YYYY-MM-DD` (REQ-E07-04 BR-04). */
+  shipDate?: string;
+  /** Packing list attachment — the file name only in the prototype. */
+  packingListFile?: string;
+  /** Why the shipped quantity exceeds the open quantity (BR-02), when it does. */
+  overShipReason?: string;
+  /** The call-off this ASN ships (REQ-E09-03 BR-06). Absent for a PO-level ASN. */
+  callOffId?: string;
 }
 
 export interface CatalogItem {
@@ -858,8 +1374,13 @@ export interface SupplierScorecard {
   tier: string;
   sapBp: string;
   channel: string;
-  grade: ScorecardGradeLetter;
-  score: number;
+  /**
+   * REQ-E10-01 — THE GRADE AND THE SCORE ARE NOT STORED. Both used to be
+   * authored here beside authored KPI rows; both are now read from the
+   * calculated measures for the period the page is showing
+   * (`services/data/performanceRules.ts`). `id` is the SUPPLIER MASTER id, which
+   * is what makes that join real rather than by-name.
+   */
   status: string;
   kpis: ScorecardKpi[];
   radar: ScorecardRadarAxis[];
@@ -1354,13 +1875,19 @@ export interface MonthlyChannelMix {
 }
 
 export interface AnalyticsPerfRow {
-  supplier: string;
-  category: string;
-  otif: number;
+  /**
+   * REQ-E10-01 — the row names a SUPPLIER, and the name, the category, the OTIF
+   * and the grade are all resolved from the master and the calculated measures
+   * at read. The row used to carry an authored `otif` and `grade` beside a
+   * supplier NAME that matched no master record; both are gone.
+   */
+  supplierId: string;
+  /** Still SAMPLE: nothing in the hub measures on-time delivery rate yet. */
   otdr: number;
+  /** Still SAMPLE: acknowledgement speed is not measured from hub data. */
   ackSpeed: string;
+  /** Still SAMPLE: first-time invoice match rate is not measured from hub data. */
   invoiceMatch: string;
-  grade: AnalyticsGrade;
   trend: KpiTrend;
 }
 
@@ -1376,7 +1903,11 @@ export interface AnalyticsKpi {
 export interface AnalyticsSummary {
   totalSpend: AnalyticsKpi;
   activeSuppliers: AnalyticsKpi;
-  portfolioOtif: AnalyticsKpi;
+  /**
+   * REQ-E10-01 — `portfolioOtif` is NOT here any more. It was an authored string
+   * ("87%") and it is now computed for the chosen period from the call-offs the
+   * hub holds, on the page, beside the chips that decide the period.
+   */
   avgCycleTime: AnalyticsKpi;
 }
 
@@ -1392,7 +1923,6 @@ export interface POFilter {
 export interface InventoryFilter {
   supplierId?: string;
   materialCode?: string;
-  stockStatus?: StockStatus | StockStatus[];
 }
 
 export interface RFQFilter {
@@ -1638,17 +2168,46 @@ export interface IProcurementService {
   getPurchaseOrders(scope: QueryScope, filter?: POFilter): Promise<Page<PurchaseOrder>>;
   getPurchaseOrder(scope: QueryScope, id: string): Promise<PurchaseOrder | null>;
 
-  // — Inventory —
-  getInventory(scope: QueryScope, filter?: InventoryFilter): Promise<Page<InventoryRecord>>;
+  // — Inventory & capacity (REQ-E08-01 to REQ-E08-05) —
+  /** Supplier × material positions. A supplier sees its own; PTI stock only where granted. */
+  getInventory(scope: QueryScope, filter?: InventoryFilter): Promise<Page<InventoryPosition>>;
+  /** Supplier access to PTI stock. PTI: every supplier with its log. Supplier: its own. */
+  getStockAccess(scope: QueryScope): Promise<Page<StockAccessGrant>>;
+  /** Capacity against demand per supplier × material group, 13 weeks. */
+  getCapacityPlans(scope: QueryScope): Promise<Page<CapacityPlan>>;
+  /** Inventory and capacity alerts. A supplier sees its own supplier-side rules. */
+  getInventoryAlerts(scope: QueryScope): Promise<Page<InventoryAlert>>;
+
+  // — Forecast collaboration (REQ-E06-01 to REQ-E06-03) —
+  /** Published forecast versions with who viewed them. A supplier sees versions carrying its lines. */
+  getForecastVersions(scope: QueryScope): Promise<Page<ForecastVersionView>>;
+  /** The current version's lines with their commitments. A supplier sees its own, with its drafts. */
+  getForecastCommitments(scope: QueryScope): Promise<Page<ForecastCommitmentLine>>;
+  /** Supplier coverage per material against Firm demand (CR-03), PTI only. */
+  getForecastCoverage(scope: QueryScope): Promise<Page<ForecastCoverageRow>>;
 
   // — Sourcing —
   getRFQs(scope: QueryScope, filter?: RFQFilter): Promise<Page<RFQ>>;
   getQuotations(scope: QueryScope, filter?: QuotationFilter): Promise<Page<Quotation>>;
 
+  // — RFx management (REQ-E03-01 to REQ-E03-05) —
+  /** REQ-E03-01 — selectable invitees for a sourcing event, filtered by category and purchasing group. PTI only. */
+  getInviteeCandidates(scope: QueryScope, filter?: InviteeFilter): Promise<Page<InviteeCandidate>>;
+  /** REQ-E03-02 — RFI events. A supplier sees the ones it was invited to, and only its own answers. */
+  getRfiEvents(scope: QueryScope): Promise<Page<RfiEventView>>;
+  /** REQ-E03-04 — RFP events with their commercial terms and proposals. Same scoping as the RFI board. */
+  getRfpEvents(scope: QueryScope): Promise<Page<RfpEventView>>;
+  /** REQ-E03-05 — negotiation rounds. A supplier reads only its own thread (BR-05). */
+  getNegotiationRounds(scope: QueryScope): Promise<Page<NegotiationRoundView>>;
+  /** REQ-E03-05 — recorded awards. A supplier reads only its own outcome (AC-05). */
+  getAwards(scope: QueryScope): Promise<Page<AwardView>>;
+
   // — Fulfilment —
   getShipments(scope: QueryScope, filter?: ShipmentFilter): Promise<Page<Shipment>>;
   getASNs(scope: QueryScope, filter?: ASNFilter): Promise<Page<ASN>>;
   getGoodsReceipts(scope: QueryScope, filter?: GRFilter): Promise<Page<GoodsReceipt>>;
+  /** Call-offs under umbrella POs (REQ-E09-03). A supplier never sees drafts. */
+  getCallOffs(scope: QueryScope): Promise<Page<CallOff>>;
 
   // — Finance —
   getBuyerInvoices(scope: QueryScope, filter?: InvoiceFilter): Promise<Page<BuyerInvoice>>;

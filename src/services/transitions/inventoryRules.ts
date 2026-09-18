@@ -1,0 +1,647 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// INVENTORY VISIBILITY AND STOCK SUBMISSION RULES — REQ-E08-01, REQ-E08-02.
+//
+// Pure functions, inputs as arguments, `now` always injected. Every derived
+// figure a page shows — days of supply (CR-01), its band (CR-02), coverage
+// (CR-03), staleness against the data-update SLA, incoming totals, projected
+// stock-out — is computed HERE at read time and never stored, so the planner's
+// page, the supplier's page, the alerts and the Home tasks cannot disagree.
+//
+// The ONE band function: `supplyBand`. It replaces the two conflicting sets the
+// old pages carried (the buyer's <14/<30/≤60 labels and the supplier's
+// <7/7–13/14–30 stock status).
+// ─────────────────────────────────────────────────────────────────────────────
+
+import type {
+  ASN,
+  CallOff,
+  IncomingItem,
+  InventoryPosition,
+  StockAccessGrant,
+  StockSyncAttempt,
+  DemandSource,
+} from '../data/types';
+import type { ForecastLine, InventoryDeclaration, MaterialMasterEntry, StockChannel } from '../sdc/types';
+import type { CallOffView } from './callOffRules';
+import { normalizeQty } from '../../lib/localeNumber';
+import {
+  COVERAGE_THRESHOLDS,
+  DEMAND_WINDOW,
+  SUPPLY_BANDS,
+  updateSlaFor,
+} from './inventoryConfig';
+
+// ── Dates (UTC calendar days, `YYYY-MM-DD`) ──────────────────────────────────
+
+const DAY_MS = 86_400_000;
+
+export const dayOf = (iso: string): string => iso.slice(0, 10);
+
+export const addDays = (day: string, n: number): string =>
+  new Date(Date.parse(`${day}T00:00:00.000Z`) + n * DAY_MS).toISOString().slice(0, 10);
+
+/** Whole days from `from` to `to` (both `YYYY-MM-DD`). */
+export const daysBetween = (from: string, to: string): number =>
+  Math.round((Date.parse(`${to}T00:00:00.000Z`) - Date.parse(`${from}T00:00:00.000Z`)) / DAY_MS);
+
+/** Monday of the week that contains `day`. */
+export function mondayOf(day: string): string {
+  const dow = new Date(`${day}T00:00:00.000Z`).getUTCDay(); // 0 = Sunday
+  return addDays(day, dow === 0 ? -6 : 1 - dow);
+}
+
+export const isIsoDay = (v: unknown): v is string =>
+  typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(Date.parse(`${v}T00:00:00.000Z`));
+
+// ── Demand (CR-01) ───────────────────────────────────────────────────────────
+
+const daysInMonth = (bucket: string): number => {
+  const [y, m] = bucket.split('-').map(Number);
+  return new Date(Date.UTC(y, m, 0)).getUTCDate();
+};
+
+type DemandLine = Pick<ForecastLine, 'periodBucket' | 'forecastQty'>;
+
+/**
+ * Demand on one day: the forecast for that day's month spread evenly over the
+ * month when a forecast line exists for it, otherwise the planning estimate
+ * (sample data) — so a window that runs past the forecast horizon still has a
+ * demand, and a month the forecast covers is never double counted.
+ */
+export function demandOn(
+  lines: readonly DemandLine[],
+  planningEstimate: number | null,
+  day: string,
+): { qty: number; fromForecast: boolean } {
+  const bucket = day.slice(0, 7);
+  const monthLines = lines.filter((l) => l.periodBucket === bucket);
+  if (monthLines.length > 0) {
+    return { qty: monthLines.reduce((s, l) => s + l.forecastQty, 0) / daysInMonth(bucket), fromForecast: true };
+  }
+  return { qty: planningEstimate ?? 0, fromForecast: false };
+}
+
+/** Total demand between two days, inclusive. */
+export function demandBetween(
+  lines: readonly DemandLine[],
+  planningEstimate: number | null,
+  from: string,
+  to: string,
+): { qty: number; fromForecast: boolean } {
+  let qty = 0;
+  let fromForecast = false;
+  for (let day = from; day <= to; day = addDays(day, 1)) {
+    const d = demandOn(lines, planningEstimate, day);
+    qty += d.qty;
+    fromForecast = fromForecast || d.fromForecast;
+  }
+  return { qty, fromForecast };
+}
+
+/**
+ * CR-01 — average daily demand = forecast quantity for the next 30 days ÷ 30
+ * (today and the 29 days after), with the planning estimate for days the
+ * forecast does not cover. Null when there is no demand at all.
+ */
+export function averageDailyDemand(
+  lines: readonly DemandLine[],
+  planningEstimate: number | null,
+  nowIso: string,
+): { value: number | null; source: DemandSource } {
+  const today = dayOf(nowIso);
+  const d = demandBetween(lines, planningEstimate, today, addDays(today, DEMAND_WINDOW - 1));
+  const source: DemandSource = d.fromForecast ? 'forecast' : planningEstimate !== null ? 'planningEstimate' : 'none';
+  return { value: d.qty > 0 ? d.qty / DEMAND_WINDOW : null, source: d.qty > 0 ? source : 'none' };
+}
+
+/** Demand in one week (Monday + 6 days). */
+export function weekDemand(lines: readonly DemandLine[], planningEstimate: number | null, week: string): number {
+  return demandBetween(lines, planningEstimate, week, addDays(week, 6)).qty;
+}
+
+// ── Days of supply and bands (CR-01, CR-02) ──────────────────────────────────
+
+export type SupplyBand = 'critical' | 'warning' | 'healthy' | 'excess';
+
+export const SUPPLY_BAND_ORDER: readonly SupplyBand[] = ['critical', 'warning', 'healthy', 'excess'];
+
+/** SOH ÷ average daily demand; null without stock figures or without demand. */
+export function daysOfSupply(soh: number | null, avgDailyDemand: number | null): number | null {
+  if (soh === null || avgDailyDemand === null || avgDailyDemand <= 0) return null;
+  return soh / avgDailyDemand;
+}
+
+/** CR-02 — THE band function. Null when days of supply cannot be computed. */
+export function supplyBand(days: number | null): SupplyBand | null {
+  if (days === null) return null;
+  if (days < SUPPLY_BANDS.criticalBelow) return 'critical';
+  if (days < SUPPLY_BANDS.warningBelow) return 'warning';
+  if (days <= SUPPLY_BANDS.healthyUpTo) return 'healthy';
+  return 'excess';
+}
+
+export const positionDays = (p: Pick<InventoryPosition, 'supplierSoh' | 'avgDailyDemand'>): number | null =>
+  daysOfSupply(p.supplierSoh, p.avgDailyDemand);
+
+export const positionBand = (p: Pick<InventoryPosition, 'supplierSoh' | 'avgDailyDemand'>): SupplyBand | null =>
+  supplyBand(positionDays(p));
+
+// ── Incoming (REQ-E08-01 BR-05, BR-06) ───────────────────────────────────────
+
+export interface IncomingTotals {
+  readonly inProduction: number;
+  readonly inTransit: number;
+  readonly total: number;
+  readonly nextDate: string | null;
+}
+
+export function incomingTotals(items: readonly IncomingItem[]): IncomingTotals {
+  const inProduction = items.filter((i) => i.source === 'production').reduce((s, i) => s + i.quantity, 0);
+  const inTransit = items.filter((i) => i.source !== 'production').reduce((s, i) => s + i.quantity, 0);
+  const dates = items.map((i) => i.date).filter((d): d is string => d !== null).sort();
+  return { inProduction, inTransit, total: inProduction + inTransit, nextDate: dates[0] ?? null };
+}
+
+/** ASN states that are on the way to PTI: submitted or in transit, not cancelled or received. */
+const IN_TRANSIT_ASN_STATES: readonly ASN['status'][] = ['Submitted', 'In Transit'];
+
+/**
+ * In-transit quantities for one supplier × material: submitted, non-cancelled
+ * ASNs, plus call-off dispatch notices whose delivery has not been received.
+ * A notice that names an ASN already counted is not counted twice.
+ */
+export function inTransitItems(
+  supplierId: string,
+  materialCode: string,
+  asns: readonly ASN[],
+  views: readonly Pick<CallOffView, 'callOff' | 'delivery'>[],
+): IncomingItem[] {
+  const counted = new Set<string>();
+  const fromAsns: IncomingItem[] = [];
+  for (const a of asns) {
+    if (a.supplierId !== supplierId || !IN_TRANSIT_ASN_STATES.includes(a.status)) continue;
+    const qty = a.lineItems.filter((l) => l.materialCode === materialCode).reduce((s, l) => s + l.shippedQty, 0);
+    if (qty <= 0) continue;
+    counted.add(a.asnNumber);
+    fromAsns.push({ source: 'asn', date: a.eta ? dayOf(a.eta) : null, quantity: qty, reference: a.asnNumber });
+  }
+  const fromNotices: IncomingItem[] = [];
+  for (const v of views) {
+    const c: CallOff = v.callOff;
+    if (c.supplierId !== supplierId || c.materialCode !== materialCode) continue;
+    if (v.delivery !== 'dispatched' && v.delivery !== 'atRisk') continue;
+    for (const d of c.dispatches) {
+      if (d.asnNumber && counted.has(d.asnNumber)) continue;
+      fromNotices.push({ source: 'dispatch', date: d.expectedArrival, quantity: d.quantity, reference: c.callOffNumber });
+    }
+  }
+  return [...fromAsns, ...fromNotices];
+}
+
+// ── Coverage (CR-03) ─────────────────────────────────────────────────────────
+
+export type CoverageStatus = 'covered' | 'atRisk' | 'uncovered';
+
+/**
+ * CR-03 — (supplier SOH + incoming in production or in transit) ÷ firm demand.
+ * Firm demand here is the demand for the CR-01 window (30 days); no demand
+ * counts as Covered. A supplier that never submitted stock cannot be assessed,
+ * so it is not reported as uncovered — its missing figures are the stale-data
+ * alert instead.
+ */
+export function coverage(
+  p: Pick<InventoryPosition, 'supplierSoh' | 'avgDailyDemand' | 'incoming'>,
+): { ratio: number | null; status: CoverageStatus } {
+  const demand = p.avgDailyDemand === null ? 0 : p.avgDailyDemand * DEMAND_WINDOW;
+  if (demand <= 0 || p.supplierSoh === null) return { ratio: null, status: 'covered' };
+  const supply = (p.supplierSoh ?? 0) + incomingTotals(p.incoming).total;
+  const ratio = supply / demand;
+  const status: CoverageStatus =
+    ratio >= COVERAGE_THRESHOLDS.coveredFrom ? 'covered' : ratio >= COVERAGE_THRESHOLDS.atRiskFrom ? 'atRisk' : 'uncovered';
+  return { ratio, status };
+}
+
+// ── Freshness against the data-update SLA (REQ-E08-01 AC-05, edge case) ─────
+
+export type StockFreshness = 'missing' | 'stale' | 'current';
+
+/**
+ * Missing when the supplier never submitted; stale when the last figure is
+ * older than the SLA, or when an API sync failed after it (the previous
+ * figures are kept, flagged — REQ-E08-02 edge case); otherwise current.
+ */
+export function stockFreshness(
+  p: Pick<InventoryPosition, 'lastUpdatedAt' | 'updateSla' | 'lastSync'>,
+  nowIso: string,
+): StockFreshness {
+  if (p.lastUpdatedAt === null) return 'missing';
+  if (p.lastSync?.outcome === 'failed' && p.lastSync.at >= p.lastUpdatedAt) return 'stale';
+  const ageMs = Date.parse(nowIso) - Date.parse(p.lastUpdatedAt);
+  return ageMs > p.updateSla * DAY_MS ? 'stale' : 'current';
+}
+
+// ── PTI-side conditions (REQ-E08-05 BR-01) ───────────────────────────────────
+
+export const isPtiBelowRop = (p: Pick<InventoryPosition, 'ptiSoh' | 'ptiRop'>): boolean =>
+  p.ptiSoh !== null && p.ptiRop !== null && p.ptiSoh < p.ptiRop;
+
+export const isSupplierBelowRop = (p: Pick<InventoryPosition, 'supplierSoh' | 'supplierRop'>): boolean =>
+  p.supplierSoh !== null && p.supplierRop !== null && p.supplierSoh < p.supplierRop;
+
+/**
+ * Projected stock-out before the next incoming date: PTI SOH ÷ the material's
+ * daily demand (all its suppliers) is fewer days than until the next incoming
+ * quantity from this supplier. With no incoming date there is no "before" to
+ * compare against, so the rule does not fire (PTI SOH below PTI ROP covers it).
+ */
+export function isProjectedStockOut(
+  p: Pick<InventoryPosition, 'ptiSoh' | 'incoming'>,
+  materialDailyDemand: number,
+  nowIso: string,
+): boolean {
+  if (p.ptiSoh === null || materialDailyDemand <= 0) return false;
+  const cover = p.ptiSoh / materialDailyDemand;
+  const next = incomingTotals(p.incoming).nextDate;
+  if (next === null) return false;
+  return cover < daysBetween(dayOf(nowIso), next);
+}
+
+/** The material's daily demand across every supplier of it. */
+export function materialDailyDemand(positions: readonly InventoryPosition[], materialCode: string): number {
+  return positions
+    .filter((p) => p.materialCode === materialCode)
+    .reduce((s, p) => s + (p.avgDailyDemand ?? 0), 0);
+}
+
+// ── Building the positions (the ONE inventory model) ─────────────────────────
+
+export interface PtiStockRecord {
+  readonly materialCode: string;
+  readonly ptiSoh: number;
+  readonly ptiRop: number;
+  readonly consignment: boolean;
+}
+
+export interface PositionInputs {
+  /** Every supplier × material the hub knows as assigned. */
+  readonly assignments: readonly { readonly supplierId: string; readonly materialCode: string }[];
+  readonly declarations: readonly InventoryDeclaration[];
+  /** Picks the current declaration for a pair (store insertion order). */
+  readonly currentDeclaration: (supplierId: string, materialCode: string) => InventoryDeclaration | undefined;
+  readonly master: (materialCode: string) => MaterialMasterEntry | null;
+  readonly supplierName: (supplierId: string) => string;
+  readonly ptiStock: readonly PtiStockRecord[];
+  readonly forecastLines: readonly ForecastLine[];
+  readonly planningEstimate: (supplierId: string, materialCode: string) => number | null;
+  readonly asns: readonly ASN[];
+  readonly callOffViews: readonly Pick<CallOffView, 'callOff' | 'delivery'>[];
+  readonly apiConnected: (supplierId: string) => boolean;
+  readonly syncAttempts: readonly StockSyncAttempt[];
+}
+
+/** Every assigned supplier × material, projected. PTI stock is present for all rows. */
+export function buildInventoryPositions(input: PositionInputs, nowIso: string): InventoryPosition[] {
+  const rows: InventoryPosition[] = [];
+  for (const { supplierId, materialCode } of input.assignments) {
+    const entry = input.master(materialCode);
+    if (!entry) continue;
+    const decl = input.currentDeclaration(supplierId, materialCode);
+    const pti = input.ptiStock.find((s) => s.materialCode === materialCode);
+    const lines = input.forecastLines.filter((l) => l.supplierId === supplierId && l.materialCode === materialCode);
+    const demand = averageDailyDemand(lines, input.planningEstimate(supplierId, materialCode), nowIso);
+    const production: IncomingItem[] =
+      decl?.inProductionQty && decl.inProductionQty > 0
+        ? [{ source: 'production', date: decl.productionCompletionDate ?? null, quantity: decl.inProductionQty, reference: null }]
+        : [];
+    const syncs = input.syncAttempts.filter((a) => a.supplierId === supplierId).sort((a, b) => b.at.localeCompare(a.at));
+    rows.push({
+      supplierId,
+      supplierName: input.supplierName(supplierId),
+      materialCode,
+      materialLabel: entry.label,
+      materialType: entry.materialType,
+      materialGroup: entry.materialGroup,
+      uom: entry.canonicalUom,
+      supplierSoh: decl ? decl.totalQty : null,
+      supplierRop: decl?.supplierRop ?? null,
+      ptiSoh: pti ? pti.ptiSoh : null,
+      ptiRop: pti ? pti.ptiRop : null,
+      ptiStockShared: true,
+      consignment: pti?.consignment ?? false,
+      incoming: [...production, ...inTransitItems(supplierId, materialCode, input.asns, input.callOffViews)],
+      avgDailyDemand: demand.value,
+      demandSource: demand.source,
+      lastUpdatedAt: decl ? decl.declaredAt : null,
+      channel: decl ? (decl.channel ?? 'manual') : null,
+      updateSla: updateSlaFor(supplierId, materialCode),
+      apiConnected: input.apiConnected(supplierId),
+      lastSync: syncs[0] ?? null,
+      batches: (decl?.batches ?? []).map((b) => ({
+        batchNumber: b.batchNumber,
+        qty: b.qty,
+        ...(b.expiryDate ? { expiryDate: b.expiryDate } : {}),
+      })),
+    });
+  }
+  return rows.sort(
+    (a, b) => a.supplierName.localeCompare(b.supplierName) || a.materialCode.localeCompare(b.materialCode),
+  );
+}
+
+// ── Supplier access to PTI stock (REQ-E08-03) ────────────────────────────────
+
+/** Is PTI stock for this material visible to this supplier? No grant → never. */
+export function canSeePtiStock(grant: StockAccessGrant | undefined, materialCode: string): boolean {
+  if (!grant || !grant.active) return false;
+  return grant.materials.length === 0 || grant.materials.includes(materialCode);
+}
+
+/** The supplier's view of a position: PTI stock removed unless access covers it. */
+export function maskForSupplier(p: InventoryPosition, grant: StockAccessGrant | undefined): InventoryPosition {
+  if (canSeePtiStock(grant, p.materialCode)) return p;
+  return { ...p, ptiSoh: null, ptiRop: null, ptiStockShared: false };
+}
+
+// ── The stock template and row-by-row validation (REQ-E08-02 BR-05 to BR-07) ─
+
+export type StockTemplateField =
+  | 'materialCode'
+  | 'soh'
+  | 'unit'
+  | 'supplierRop'
+  | 'inProductionQty'
+  | 'productionCompletionDate'
+  | 'batchNumber'
+  | 'batchQty'
+  | 'expiryDate';
+
+/** The fixed template, in column order (BR-06). Headers are matched in EN or ID. */
+export const STOCK_TEMPLATE_FIELDS: readonly {
+  readonly field: StockTemplateField;
+  readonly en: string;
+  readonly id: string;
+  readonly required: boolean;
+}[] = [
+  { field: 'materialCode', en: 'Material code', id: 'Kode material', required: true },
+  { field: 'soh', en: 'Stock on hand', id: 'Stok tersedia', required: true },
+  { field: 'unit', en: 'Unit', id: 'Satuan', required: true },
+  { field: 'supplierRop', en: 'Supplier reorder point', id: 'Titik pemesanan ulang pemasok', required: false },
+  { field: 'inProductionQty', en: 'In-production quantity', id: 'Kuantitas dalam produksi', required: false },
+  {
+    field: 'productionCompletionDate',
+    en: 'Expected production completion date (YYYY-MM-DD)',
+    id: 'Perkiraan tanggal selesai produksi (YYYY-MM-DD)',
+    required: false,
+  },
+  { field: 'batchNumber', en: 'Batch number', id: 'Nomor batch', required: false },
+  { field: 'batchQty', en: 'Batch quantity', id: 'Kuantitas batch', required: false },
+  { field: 'expiryDate', en: 'Expiry date (YYYY-MM-DD)', id: 'Tanggal kedaluwarsa (YYYY-MM-DD)', required: false },
+];
+
+const normHeader = (h: string) => h.toLowerCase().replace(/[^a-z0-9]+/g, '');
+
+/** The template field a raw header names, or null. */
+export function templateFieldFor(header: string): StockTemplateField | null {
+  const n = normHeader(header);
+  const hit = STOCK_TEMPLATE_FIELDS.find((f) => normHeader(f.en) === n || normHeader(f.id) === n);
+  return hit ? hit.field : null;
+}
+
+/** The template as CSV text, one row per assigned material, prefilled with code and unit. */
+export function stockTemplateCsv(
+  materials: readonly { readonly materialCode: string; readonly uom: string }[],
+  language: 'en' | 'id',
+): string {
+  const quote = (v: string) => (/[",\n;]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v);
+  const header = STOCK_TEMPLATE_FIELDS.map((f) => quote(f[language])).join(',');
+  const rows = materials.map((m) =>
+    STOCK_TEMPLATE_FIELDS.map((f) => (f.field === 'materialCode' ? m.materialCode : f.field === 'unit' ? m.uom : '')).join(','),
+  );
+  return [header, ...rows].join('\n') + '\n';
+}
+
+/** Parse CSV text (comma or semicolon, quoted cells) into rows keyed by header. */
+export function parseCsv(text: string): { headers: string[]; rows: Record<string, string>[] } {
+  const lines: string[][] = [];
+  const firstLine = text.split(/\r?\n/, 1)[0] ?? '';
+  const delimiter = firstLine.includes(';') && !firstLine.includes(',') ? ';' : ',';
+  let cell = '';
+  let row: string[] = [];
+  let quoted = false;
+  for (let i = 0; i < text.length; i += 1) {
+    const ch = text[i];
+    if (quoted) {
+      if (ch === '"' && text[i + 1] === '"') {
+        cell += '"';
+        i += 1;
+      } else if (ch === '"') quoted = false;
+      else cell += ch;
+    } else if (ch === '"') quoted = true;
+    else if (ch === delimiter) {
+      row.push(cell);
+      cell = '';
+    } else if (ch === '\n' || ch === '\r') {
+      if (ch === '\r' && text[i + 1] === '\n') i += 1;
+      row.push(cell);
+      lines.push(row);
+      row = [];
+      cell = '';
+    } else cell += ch;
+  }
+  if (cell !== '' || row.length > 0) {
+    row.push(cell);
+    lines.push(row);
+  }
+  const nonBlank = lines.filter((l) => l.some((c) => c.trim() !== ''));
+  const headers = (nonBlank[0] ?? []).map((h) => h.trim());
+  const rows = nonBlank.slice(1).map((l) => {
+    const rec: Record<string, string> = {};
+    headers.forEach((h, idx) => {
+      rec[h] = (l[idx] ?? '').trim();
+    });
+    return rec;
+  });
+  return { headers, rows };
+}
+
+export type StockRowRefusal =
+  | 'missingField'
+  | 'notAssigned'
+  | 'notANumber'
+  | 'ambiguousNumber'
+  | 'unitMismatch'
+  | 'invalidDate'
+  | 'batchTotal'
+  | 'conflictingRows';
+
+export interface RefusedStockRow {
+  /** 1-based data row number as the supplier sees it (header is row 1, so data starts at 2). */
+  readonly row: number;
+  readonly materialCode: string;
+  readonly reason: StockRowRefusal;
+  /** The field the refusal is about, when there is one. */
+  readonly field?: StockTemplateField;
+}
+
+/** One validated material submission, ready for the declare verb. */
+export interface StockSubmissionDraft {
+  readonly materialCode: string;
+  readonly totalQty: number;
+  readonly supplierRop?: number;
+  readonly inProductionQty?: number;
+  readonly productionCompletionDate?: string;
+  readonly batches?: readonly { readonly batchNumber: string; readonly qty: number; readonly expiryDate?: string }[];
+  /** The file rows this submission came from. */
+  readonly rows: readonly number[];
+}
+
+export interface StockRowContext {
+  /** The supplier's assigned materials with their canonical unit. */
+  readonly assigned: readonly { readonly materialCode: string; readonly uom: string }[];
+}
+
+type NumberRead = { ok: true; value: number | null } | { ok: false; reason: 'notANumber' | 'ambiguousNumber' };
+
+/** CR-18 — a number that reads differently in ID and EN format is refused, not guessed. */
+export function readStockNumber(raw: string | undefined): NumberRead {
+  const s = (raw ?? '').trim();
+  if (s === '') return { ok: true, value: null };
+  const r = normalizeQty(s);
+  if (r.ok) return { ok: true, value: r.value };
+  return { ok: false, reason: r.reason === 'AMBIGUOUS_QTY' ? 'ambiguousNumber' : 'notANumber' };
+}
+
+/**
+ * Validate an uploaded file row by row (BR-05). A material's rows (one row, or
+ * one row per batch) are accepted or refused together, because batch
+ * quantities must add up to the SOH (CR-19); every other material's rows are
+ * unaffected. Valid materials become drafts; every refused row is listed with
+ * its row number and reason.
+ */
+export function validateStockRows(
+  rows: readonly Record<string, string>[],
+  ctx: StockRowContext,
+): { accepted: StockSubmissionDraft[]; refused: RefusedStockRow[] } {
+  const refused: RefusedStockRow[] = [];
+  // Re-key every row by template field.
+  const keyed = rows.map((r, index) => {
+    const rec: Partial<Record<StockTemplateField, string>> = {};
+    for (const [header, value] of Object.entries(r)) {
+      const f = templateFieldFor(header);
+      if (f) rec[f] = (value ?? '').trim();
+    }
+    return { row: index + 2, rec };
+  });
+
+  const groups = new Map<string, { row: number; rec: Partial<Record<StockTemplateField, string>> }[]>();
+  for (const k of keyed) {
+    const code = k.rec.materialCode ?? '';
+    if (code === '') {
+      refused.push({ row: k.row, materialCode: '', reason: 'missingField', field: 'materialCode' });
+      continue;
+    }
+    groups.set(code, [...(groups.get(code) ?? []), k]);
+  }
+
+  const accepted: StockSubmissionDraft[] = [];
+  for (const [code, members] of groups) {
+    const rowNumbers = members.map((m) => m.row);
+    const refuseAll = (reason: StockRowRefusal, field?: StockTemplateField) => {
+      for (const m of members) refused.push({ row: m.row, materialCode: code, reason, ...(field ? { field } : {}) });
+    };
+    const assigned = ctx.assigned.find((a) => a.materialCode === code);
+    if (!assigned) {
+      refuseAll('notAssigned');
+      continue;
+    }
+    const first = members[0].rec;
+    // Required fields on the first row of the material.
+    const missing = (['soh', 'unit'] as const).find((f) => (first[f] ?? '') === '');
+    if (missing) {
+      refuseAll('missingField', missing);
+      continue;
+    }
+    // Header values repeated on batch rows must agree with the first row.
+    const headerFields = ['soh', 'unit', 'supplierRop', 'inProductionQty', 'productionCompletionDate'] as const;
+    const conflict = members.slice(1).some((m) => headerFields.some((f) => (m.rec[f] ?? '') !== '' && m.rec[f] !== first[f]));
+    if (conflict) {
+      refuseAll('conflictingRows');
+      continue;
+    }
+    if (first.unit!.toUpperCase() !== assigned.uom.toUpperCase()) {
+      refuseAll('unitMismatch', 'unit');
+      continue;
+    }
+    let failed = false;
+    const numbers: Partial<Record<'soh' | 'supplierRop' | 'inProductionQty', number | null>> = {};
+    for (const f of ['soh', 'supplierRop', 'inProductionQty'] as const) {
+      const read = readStockNumber(first[f]);
+      if (!read.ok) {
+        refuseAll(read.reason, f);
+        failed = true;
+        break;
+      }
+      numbers[f] = read.value;
+    }
+    if (failed) continue;
+    const completion = first.productionCompletionDate ?? '';
+    if (completion !== '' && !isIsoDay(completion)) {
+      refuseAll('invalidDate', 'productionCompletionDate');
+      continue;
+    }
+    // Batches: every row that names a batch number or a batch quantity.
+    const batches: { batchNumber: string; qty: number; expiryDate?: string }[] = [];
+    for (const m of members) {
+      const bn = m.rec.batchNumber ?? '';
+      const bq = m.rec.batchQty ?? '';
+      const exp = m.rec.expiryDate ?? '';
+      if (bn === '' && bq === '' && exp === '') continue;
+      if (bn === '' || bq === '') {
+        refused.push({ row: m.row, materialCode: code, reason: 'missingField', field: bn === '' ? 'batchNumber' : 'batchQty' });
+        failed = true;
+        continue;
+      }
+      const read = readStockNumber(bq);
+      if (!read.ok || read.value === null) {
+        refused.push({ row: m.row, materialCode: code, reason: read.ok ? 'missingField' : read.reason, field: 'batchQty' });
+        failed = true;
+        continue;
+      }
+      if (exp !== '' && !isIsoDay(exp)) {
+        refused.push({ row: m.row, materialCode: code, reason: 'invalidDate', field: 'expiryDate' });
+        failed = true;
+        continue;
+      }
+      batches.push({ batchNumber: bn, qty: read.value, ...(exp ? { expiryDate: exp } : {}) });
+    }
+    if (failed) {
+      // A material is all-or-nothing: list its remaining rows too, so nothing is half-saved.
+      const listed = new Set(refused.filter((r) => r.materialCode === code).map((r) => r.row));
+      for (const m of members) {
+        if (!listed.has(m.row)) refused.push({ row: m.row, materialCode: code, reason: 'conflictingRows' });
+      }
+      continue;
+    }
+    const soh = numbers.soh!;
+    if (batches.length > 0 && batches.reduce((s, b) => s + b.qty, 0) !== soh) {
+      refuseAll('batchTotal', 'batchQty');
+      continue;
+    }
+    accepted.push({
+      materialCode: code,
+      totalQty: soh,
+      ...(numbers.supplierRop !== null && numbers.supplierRop !== undefined ? { supplierRop: numbers.supplierRop } : {}),
+      ...(numbers.inProductionQty !== null && numbers.inProductionQty !== undefined
+        ? { inProductionQty: numbers.inProductionQty }
+        : {}),
+      ...(completion ? { productionCompletionDate: completion } : {}),
+      ...(batches.length > 0 ? { batches } : {}),
+      rows: rowNumbers,
+    });
+  }
+  refused.sort((a, b) => a.row - b.row);
+  return { accepted, refused };
+}
+
+/** The channel label key suffix for a stock figure (REQ-E08-02 BR-08: "Entered by PTI"). */
+export const CHANNELS: readonly StockChannel[] = ['template', 'manual', 'api', 'pti'];

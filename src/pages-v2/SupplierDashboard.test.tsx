@@ -51,6 +51,25 @@ describe('SupplierDashboard — four honest states', () => {
     expect(flags.length).toBeGreaterThanOrEqual(1);
   });
 
+  // ⚠️ NEW BEHAVIOUR (REQ-E10-01, marker-polish pass). The marker used to sit on the
+  // page meta line, which read over the identity card immediately below it — and that
+  // card is nothing but the grade, the score and the OTIF, all three MEASURED from this
+  // supplier's own call-offs, heads-ups, receipts and orders since phase 6b. It moved
+  // onto the KPI strip, which is counted from fixtures, and names the one tile there
+  // that is calculated. Pinned in both directions: back onto the meta line fails, and
+  // so does a strip that stops distinguishing its measured tile.
+  it('the sample marker sits on the KPI strip, not on the page meta line', async () => {
+    renderWithProviders(<SupplierDashboard />, { identity: SUPPLIER });
+    const strip = await screen.findByTestId('supplier-dashboard-kpi-provenance');
+    expect(strip).toHaveTextContent('Sample data');
+    expect(strip).toHaveTextContent(
+      'Calculated from deliveries and orders in this hub',
+    );
+
+    const meta = screen.getByText(/Supplier identity ·/);
+    expect(meta).not.toHaveTextContent('Sample data');
+  });
+
   it('loading: shows LoadingState while the reads are pending', () => {
     renderWithProviders(<SupplierDashboard />, {
       identity: SUPPLIER,

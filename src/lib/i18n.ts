@@ -43,12 +43,10 @@ import { buyerSuppliersEn, buyerSuppliersId } from './i18n/buyerSuppliers';
 import { buyerSupplierProfileEn, buyerSupplierProfileId } from './i18n/buyerSupplierProfile';
 import { buyerAnalyticsEn, buyerAnalyticsId } from './i18n/buyerAnalytics';
 import { buyerScorecardEn, buyerScorecardId } from './i18n/buyerScorecard';
-import { buyerInventoryEn, buyerInventoryId } from './i18n/buyerInventory';
 import { marketplaceEn, marketplaceId } from './i18n/marketplace';
 import { buyerDashboardEn, buyerDashboardId } from './i18n/buyerDashboard';
 import { supplierMyStorefrontEn, supplierMyStorefrontId } from './i18n/supplierMyStorefront';
 import { supplierStorefrontEn, supplierStorefrontId } from './i18n/supplierStorefront';
-import { supplierInventoryEn, supplierInventoryId } from './i18n/supplierInventory';
 import { supplierPerformanceEn, supplierPerformanceId } from './i18n/supplierPerformance';
 // — Coverage sweep (sprint close) —
 import { buyerInvoicesEn, buyerInvoicesId } from './i18n/buyerInvoices';
@@ -80,6 +78,17 @@ import {
 import { glossaryEn, glossaryId } from './i18n/glossary';
 // — Surface residuals: the seat-identity guard (was hardcoded English) —
 import { identityEn, identityId } from './i18n/identity';
+// — Supplier Hub menu and Home (REQUIREMENTS §3.7, §3.8) —
+import { hubEn, hubId } from './i18n/hub';
+import { orderCollaborationEn, orderCollaborationId } from './i18n/orderCollaboration';
+import { fulfilmentCollaborationEn, fulfilmentCollaborationId } from './i18n/fulfilmentCollaboration';
+import { callOffsEn, callOffsId } from './i18n/callOffs';
+import { sapInterfaceEn, sapInterfaceId } from './i18n/sapInterface';
+import { performanceEn, performanceId } from './i18n/performance';
+import { inventoryCapacityEn, inventoryCapacityId } from './i18n/inventoryCapacity';
+import { forecastCollaborationEn, forecastCollaborationId } from './i18n/forecastCollaboration';
+// — Phase 6a RFx management (REQ-E03-01 to REQ-E03-05) —
+import { rfxEn, rfxId } from './i18n/rfx';
 // — The read path's failure surface, shared by 31 pages —
 import { errorStateEn, errorStateId } from './i18n/errorState';
 import { loadingStateEn, loadingStateId } from './i18n/loadingState';
@@ -131,12 +140,10 @@ export const resources = {
       ...buyerSupplierProfileEn,
       ...buyerAnalyticsEn,
       ...buyerScorecardEn,
-      ...buyerInventoryEn,
       ...marketplaceEn,
       ...buyerDashboardEn,
       ...supplierMyStorefrontEn,
       ...supplierStorefrontEn,
-      ...supplierInventoryEn,
       ...supplierPerformanceEn,
       // — Coverage sweep (sprint close) —
       ...buyerInvoicesEn,
@@ -157,6 +164,15 @@ export const resources = {
       // — GL-1 glossary (chrome only) —
       ...glossaryEn,
       ...identityEn,
+      ...hubEn,
+      ...orderCollaborationEn,
+      ...fulfilmentCollaborationEn,
+      ...callOffsEn,
+      ...sapInterfaceEn,
+      ...performanceEn,
+      ...inventoryCapacityEn,
+      ...forecastCollaborationEn,
+      ...rfxEn,
       ...errorStateEn,
       ...loadingStateEn,
       ...emptyStateEn,
@@ -179,7 +195,7 @@ export const resources = {
       // Managing who anyone is is a page; who I am is in the avatar.
       'nav.section.platform': 'Platform',
       'nav.buyer.roles': 'Roles',
-      'nav.persona.buyer': 'Buyer',
+      'nav.persona.buyer': 'PTI',
       'nav.persona.supplier': 'Supplier',
       'nav.buyer.dashboard': 'Dashboard',
       'nav.buyer.discovery': 'Discovery',
@@ -564,12 +580,10 @@ export const resources = {
       ...buyerSupplierProfileId,
       ...buyerAnalyticsId,
       ...buyerScorecardId,
-      ...buyerInventoryId,
       ...marketplaceId,
       ...buyerDashboardId,
       ...supplierMyStorefrontId,
       ...supplierStorefrontId,
-      ...supplierInventoryId,
       ...supplierPerformanceId,
       // — Coverage sweep (sprint close) —
       ...buyerInvoicesId,
@@ -590,6 +604,15 @@ export const resources = {
       // — GL-1 glossary (chrome only) —
       ...glossaryId,
       ...identityId,
+      ...hubId,
+      ...orderCollaborationId,
+      ...fulfilmentCollaborationId,
+      ...callOffsId,
+      ...sapInterfaceId,
+      ...performanceId,
+      ...inventoryCapacityId,
+      ...forecastCollaborationId,
+      ...rfxId,
       ...errorStateId,
       ...loadingStateId,
       ...emptyStateId,
@@ -606,7 +629,7 @@ export const resources = {
       'nav.section.intelligence': 'Intelijen',
       'nav.section.platform': 'Platform',
       'nav.buyer.roles': 'Peran',
-      'nav.persona.buyer': 'Pembeli',
+      'nav.persona.buyer': 'PTI',
       'nav.persona.supplier': 'Pemasok',
       'nav.buyer.dashboard': 'Dasbor',
       'nav.buyer.discovery': 'Penemuan',

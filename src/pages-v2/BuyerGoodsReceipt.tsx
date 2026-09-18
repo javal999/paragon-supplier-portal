@@ -11,11 +11,13 @@ import {
 } from 'lucide-react';
 import AppShellV2 from '../components/layout-v2/AppShellV2';
 import PageHeader from '../components/ui-v2/PageHeader';
+import SapDataAgeBanner from '../components/ui-v2/SapDataAgeBanner';
 import PageMetaLine from '../components/ui-v2/PageMetaLine';
 import ProvenanceMarker from '../components/ui-v2/ProvenanceMarker';
 import KpiCard from '../components/ui-v2/KpiCard';
 import BulkActionsBar from '../components/ui-v2/BulkActionsBar';
 import SubTabs from '../components/ui-v2/SubTabs';
+import ReceiptDisputesSection from './receipts/ReceiptDisputesSection';
 import FilterChipsBar from '../components/ui-v2/FilterChipsBar';
 import SearchBar from '../components/ui-v2/SearchBar';
 import StatusPill from '../components/ui-v2/StatusPill';
@@ -799,6 +801,9 @@ const GoodsReceiptWorkspace: React.FC<GoodsReceiptWorkspaceProps> = ({
         <ProvenanceMarker capability="goodsReceipts" className="ml-3 align-middle" />
       </PageMetaLine>
 
+      {/* REQ-E07-08 AC-03 — this page reads SAP data; say how old it is. */}
+      <SapDataAgeBanner page="goodsReceipts" className="mb-4" />
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <KpiCard
           eyebrow={t('goodsReceipt.kpi.pending.eyebrow')}
@@ -916,6 +921,9 @@ const GoodsReceiptWorkspace: React.FC<GoodsReceiptWorkspaceProps> = ({
           </Table>
         </section>
       )}
+
+      {/* REQ-E07-06 — supplier disputes of a receipt discrepancy, for the planner. */}
+      <ReceiptDisputesSection goodsReceipts={goodsReceipts} />
 
       <SubTabs<GroupTab>
         options={[

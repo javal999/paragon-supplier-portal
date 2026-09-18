@@ -2,6 +2,7 @@ import { screen, fireEvent, waitFor } from '@testing-library/react';
 import { renderWithProviders, SUPPLIER } from '../test/test-utils';
 import { mockDataService } from '../services/data/mock/mockDataService';
 import { quotationStore } from '../services/data/mock/stores/quotationStore';
+import { rfqStore } from '../services/data/mock/stores/rfqStore';
 import { withChaos } from '../services/data/mock/withChaos';
 import type { IDataService } from '../services/data/types';
 import SupplierRFQs from './SupplierRFQs';
@@ -495,10 +496,21 @@ describe('SupplierRFQs — display consistency (2e-b-3)', () => {
     render();
     const kpi = (await screen.findByText('Awaiting Award')).closest('div')!
       .parentElement!;
-    expect(kpi.textContent).toMatch(/2/);
-    // The retired literal. If this ever reads 1 again for sup-007, the KPI has
-    // gone back to asserting a number nobody derived.
-    expect(kpi.textContent).not.toMatch(/\b1\b/);
+    // ⚠️ **DERIVED, NOT RETYPED — and that is what kept this honest when the
+    // population moved.** It read a literal 2; REQ-E03-03's sample tender
+    // (rfq-014) added a fourth bid, one of it sup-007's, so the true figure is
+    // now 3. The claim was never "2": it is that the tile counts THIS
+    // supplier's own quotes awaiting a decision, so the expectation derives
+    // that count from the store instead of restating it.
+    const awaiting = quotationStore
+      .all()
+      .filter((q) => q.supplierId === 'sup-007' && (q.status === 'Submitted' || q.status === 'Under Review'))
+      .filter((q) => {
+        const rfq = rfqStore.get(q.rfqId);
+        return rfq !== undefined && rfq.status !== 'Awarded' && rfq.status !== 'Cancelled';
+      }).length;
+    expect(awaiting).toBeGreaterThan(1);
+    expect(kpi.textContent).toMatch(new RegExp(String(awaiting)));
   });
 
   // COS-02. The open-RFQ card grouped its quantity with bare `toLocaleString()`

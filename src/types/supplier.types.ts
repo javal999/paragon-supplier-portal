@@ -10,6 +10,11 @@ export enum SupplierStatus {
   ACTIVE = 'Active',
   ONBOARDING = 'Onboarding',
   SUSPENDED = 'Suspended',
+  // REQ-E03-01 BR-04 — a supplier PTI has stopped doing business with. It is a
+  // DISTINCT status from Suspended (a pause, reversible by the supplier fixing
+  // something) because the invitee filter refuses both and a reader has to be
+  // able to tell "temporarily out" from "never again".
+  BLACKLISTED = 'Blacklisted',
 }
 
 export enum PreferredChannel {
@@ -25,13 +30,6 @@ export enum ScorecardGrade {
   C = 'C',
   D = 'D',
   F = 'F',
-}
-
-export enum StockStatus {
-  CRITICAL = 'Critical',
-  LOW = 'Low',
-  NORMAL = 'Normal',
-  EXCESS = 'Excess',
 }
 
 // ─── Supplier interfaces ──────────────────────────────────────────────────────
@@ -57,10 +55,38 @@ export interface Supplier {
   bpomRegistered: boolean;
   certExpiryDate: string;
   preferredChannel: PreferredChannel;
-  otif: number;
+  /**
+   * REQ-E03-01 edge case — OPTIONAL, and the absence is the point.
+   *
+   * A supplier that has never delivered against a call-off has NO on-time-in-full
+   * history, and the honest answer is "No history", never 0%. The field was
+   * `number` and every surface printed it, so a supplier with nothing measured
+   * would have been shown as the worst performer in the room. CR-15 reads the
+   * same absence and scores reliability 50 rather than 0.
+   */
+  otif?: number;
+  /**
+   * REQ-E03-01 BR-01 — the SAP MM purchasing group (EKGRP) that buys from this
+   * supplier. Optional: a supplier the master has not yet assigned to a group is
+   * a real state, and the invitee filter treats it as "matches no group filter"
+   * rather than inventing one.
+   */
+  purchasingGroup?: string;
   leadTimeAdherence: number;
   invoiceAccuracy: number;
-  scorecardGrade: ScorecardGrade;
+  /**
+   * REQ-E10-01 — PROJECTED AT READ, never stored. The letter is a reading of the
+   * calculated score (the band table lives in `performanceRules.ts`), so a
+   * stored grade can never disagree with the figures beside it. Absent for a
+   * supplier with no measurable history, exactly as `otif` is.
+   */
+  scorecardGrade?: ScorecardGrade;
+  /**
+   * REQ-E10-01 — the calculated assessment score the grade is read from, 0–100.
+   * PROJECTED AT READ beside `scorecardGrade`, and absent for the same reason:
+   * a supplier with no measurable history has no score, not a zero.
+   */
+  performanceScore?: number;
   // Optional profile attributes (surfaced on storefront/profile views).
   legalName?: string;
   taxId?: string;
@@ -81,27 +107,11 @@ export interface SupplierSummary {
   status: SupplierStatus;
   tier: SupplierTier;
   scorecardGrade: ScorecardGrade;
-  otif: number;
+  otif?: number;
   country: string;
 }
 
-// ─── Inventory interface ──────────────────────────────────────────────────────
-
-export interface InventoryRecord {
-  id: string;
-  supplierId: string;
-  supplierName: string;
-  materialCode: string;
-  materialDescription: string;
-  qtyOnHand: number;
-  qtyAvailable: number;
-  qtyReserved: number;
-  qtyInTransit: number;
-  uom: 'KG' | 'L' | 'PCS' | 'MT';
-  daysOfSupply: number;
-  avgDailyDemand: number;
-  lastUpdated: string;
-  dataSource: 'API Push' | 'Manual' | 'EDI 846';
-  stockStatus: StockStatus;
-  location: string;
-}
+// ─── Inventory ────────────────────────────────────────────────────────────────
+// The static `InventoryRecord` (with its stored days of supply, stock status and
+// available / reserved quantities) is retired: inventory is ONE model projected
+// at read — `InventoryPosition` in `services/data/types.ts` (REQ-E08-01).

@@ -1,4 +1,4 @@
-import { screen, fireEvent, waitFor } from '@testing-library/react';
+import { screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { beforeEach } from 'vitest';
 import { renderWithProviders, SUPPLIER } from '../test/test-utils';
 import { mockDataService } from '../services/data/mock/mockDataService';
@@ -96,12 +96,23 @@ describe('SupplierShipments — ASN verbs (Step 4 batch i)', () => {
     expect(created?.poReference).toBe('PO-2025-00108');
     expect(created?.lineItems.length).toBeGreaterThan(0); // derived from the PO
 
-    // Submit verb: Draft → Submitted.
+    // Submit verb: Draft → Submitted. ⚠️ REQ-E07-04 BR-04 changed the premise:
+    // a submitted ASN also needs its ship date and a batch number on every line.
     const submitRes = await mockDataService.commands.dispatch(supScope, {
       transitionId: 't_asn_submit',
       entity: 'advanceShipNotice',
       entityId: createRes.entityId!,
-      payload: { carrier: 'Sample Courier', trackingNumber: 'SMPL123', eta: '2026-05-10' },
+      payload: {
+        carrier: 'Sample Courier',
+        trackingNumber: 'SMPL123',
+        eta: '2026-05-10',
+        shipDate: '2026-05-08',
+        lines: created!.lineItems.map((l) => ({
+          materialCode: l.materialCode,
+          shippedQty: l.shippedQty,
+          batchNumber: 'BATCH-77',
+        })),
+      },
     });
     expect(submitRes.status).toBe('done');
     expect(asnStore.get(createRes.entityId!)?.status).toBe('Submitted');
@@ -117,8 +128,13 @@ describe('SupplierShipments — ASN verbs (Step 4 batch i)', () => {
     renderWithProviders(<SupplierShipments />, { identity: SUPPLIER });
 
     // The confirmed PO surfaces in the "awaiting ASN" panel with a Create action.
-    expect(await screen.findByText('PO-2025-00108')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Create ASN' }));
+    // ⚠️ SCOPED TO ITS OWN ROW — sup-007 now has several confirmed orders with
+    // open quantity (the demo-data walkthrough set), so the panel offers several
+    // Create actions. Which PO the draft is raised against is the claim here,
+    // and the assertions below already say so; the click has to agree.
+    const cell = await screen.findByText('PO-2025-00108');
+    const row = (cell.closest('tr') ?? cell.closest('li') ?? cell.parentElement!) as HTMLElement;
+    fireEvent.click(within(row).getByRole('button', { name: 'Create ASN' }));
 
     // A Draft ASN was created for that PO — store re-derives; no fabricated id.
     await waitFor(() =>
@@ -146,8 +162,14 @@ describe('SupplierShipments — ASN verbs (Step 4 batch i)', () => {
     renderWithProviders(<SupplierShipments />, { identity: SUPPLIER });
     expect(await screen.findByText('ASN-2025-00215')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
-    fireEvent.change(await screen.findByLabelText('Tracking number'), { target: { value: 'SMPL999' } });
+    // ⚠️ REQ-E07-04 changed the premise: the field reads "Tracking or vehicle
+    // number", and BR-04 adds the ship date and a batch number per line.
+    fireEvent.change(await screen.findByLabelText('Tracking or vehicle number'), { target: { value: 'SMPL999' } });
+    fireEvent.change(screen.getByLabelText('Ship date'), { target: { value: '2026-05-18' } });
     fireEvent.change(screen.getByLabelText('Estimated arrival'), { target: { value: '2026-05-20' } });
+    for (const batch of screen.getAllByLabelText(/^Batch number for /)) {
+      fireEvent.change(batch, { target: { value: 'BATCH-99' } });
+    }
     fireEvent.click(screen.getByRole('button', { name: 'Submit ASN' }));
     await waitFor(() => expect(asnStore.get('ASN-2025-00215')?.status).toBe('Submitted'));
     expect(

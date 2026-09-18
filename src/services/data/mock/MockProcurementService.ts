@@ -1,12 +1,43 @@
+import { callOffStore } from './stores/callOffStore';
+import type { CallOff } from '../types';
 import { purchaseOrderStore } from './stores/purchaseOrderStore';
-import { mockInventory } from '../../../data/mockInventory';
+import {
+  allAlerts,
+  allCapacityPlans,
+  allPositions,
+  grantFor,
+  suppliersWithAssignments,
+} from './inventoryReadModel';
+import { stockAccessStore } from './stores/inventoryHubStores';
+import { allCommitmentLines, allCoverageRows, allVersionViews } from './forecastReadModel';
+import { maskForSupplier } from '../../transitions/inventoryRules';
+import { PTI_ONLY_RULES } from '../../transitions/inventoryAlertRules';
 import { mockShipments } from '../../../data/mockShipments';
 import { mockContracts } from '../../../data/mockContracts';
 import { mockObligations } from '../../../data/mockObligations';
 import { applySupplierScope } from '../scoping';
 import { rfqStore } from './stores/rfqStore';
+// REQ-E03-01 to REQ-E03-05 — the RFx read model. Every RFx read resolves through
+// it, which is what keeps the draft-invisibility and own-thread rules in ONE
+// place instead of once per surface.
+import {
+  awardViews,
+  matchingInvitees,
+  negotiationRoundViews,
+  rfiEventViews,
+  rfpEventViews,
+  rfxNow,
+} from './rfxReadModel';
+import type { InviteeCandidate, InviteeFilter } from '../../transitions/rfxRules';
+import type {
+  AwardView,
+  NegotiationRoundView,
+  RfiEventView,
+  RfpEventView,
+} from '../../sourcing/views';
 import { quotationStore } from './stores/quotationStore';
 import { asnStore } from './stores/asnStore';
+import { receiptDiscrepancyStore } from './stores/receiptDiscrepancyStore';
 import { goodsReceiptStore } from './stores/goodsReceiptStore';
 import { invoiceStore } from './stores/invoiceStore';
 import { toBuyerInvoice, toSupplierInvoice } from '../invoiceProjection';
@@ -34,7 +65,13 @@ import type {
   QueryScope,
   PurchaseOrder,
   POFilter,
-  InventoryRecord,
+  InventoryPosition,
+  StockAccessGrant,
+  CapacityPlan,
+  InventoryAlert,
+  ForecastVersionView,
+  ForecastCommitmentLine,
+  ForecastCoverageRow,
   InventoryFilter,
   Shipment,
   ShipmentFilter,
@@ -251,15 +288,77 @@ export class MockProcurementService implements IProcurementService {
   async getInventory(
     scope: QueryScope,
     filter?: InventoryFilter,
-  ): Promise<Page<InventoryRecord>> {
-    let rows = applySupplierScope(scope, mockInventory);
-    if (filter?.supplierId)
-      rows = rows.filter((r) => r.supplierId === filter.supplierId);
-    if (filter?.materialCode)
-      rows = rows.filter((r) => r.materialCode === filter.materialCode);
-    if (filter?.stockStatus)
-      rows = rows.filter((r) => matchesList(r.stockStatus, filter.stockStatus));
+  ): Promise<Page<InventoryPosition>> {
+    // REQ-E08-01 — ONE inventory model, projected at read from the stock
+    // submissions, PTI's SAP stock, in-transit ASNs and dispatch notices, and
+    // the forecast. A supplier sees its own rows, and PTI stock only for the
+    // materials its access covers (REQ-E08-03 AC-01) — read from the access
+    // store on EVERY read, so a removal applies on the next page load.
+    let rows = applySupplierScope(scope, allPositions());
+    if (scope.personaType === 'supplier') {
+      const grant = scope.supplierId ? grantFor(scope.supplierId) : undefined;
+      rows = rows.map((p) => maskForSupplier(p, grant));
+    }
+    if (filter?.supplierId) rows = rows.filter((r) => r.supplierId === filter.supplierId);
+    if (filter?.materialCode) rows = rows.filter((r) => r.materialCode === filter.materialCode);
     return { items: rows };
+  }
+
+  async getStockAccess(scope: QueryScope): Promise<Page<StockAccessGrant>> {
+    // REQ-E08-03 — PTI sees every supplier in the inventory model (an inactive
+    // row where nothing was ever granted); a supplier sees only its own grant.
+    const rows: StockAccessGrant[] = suppliersWithAssignments().map(
+      (s) =>
+        stockAccessStore.get(s.supplierId) ?? {
+          supplierId: s.supplierId,
+          supplierName: s.supplierName,
+          active: false,
+          materials: [],
+          log: [],
+        },
+    );
+    return { items: applySupplierScope(scope, rows) };
+  }
+
+  async getCapacityPlans(scope: QueryScope): Promise<Page<CapacityPlan>> {
+    // REQ-E08-04 — capacity against demand per supplier × material group.
+    return { items: applySupplierScope(scope, allCapacityPlans()) };
+  }
+
+  async getInventoryAlerts(scope: QueryScope): Promise<Page<InventoryAlert>> {
+    // REQ-E08-05 — a supplier sees alerts about its own materials, never the
+    // rules that read PTI stock.
+    const rows = applySupplierScope(scope, allAlerts());
+    return {
+      items: scope.personaType === 'supplier' ? rows.filter((a) => !PTI_ONLY_RULES.includes(a.rule)) : rows,
+    };
+  }
+
+  // ─── Forecast collaboration (REQ-E06-01 to REQ-E06-03) ─────────────────────
+
+  async getForecastVersions(scope: QueryScope): Promise<Page<ForecastVersionView>> {
+    // BR-07 — a supplier sees only versions carrying its own lines, and only
+    // its own row of who viewed them.
+    const rows = allVersionViews();
+    if (scope.personaType === 'buyer') return { items: rows };
+    const sid = scope.supplierId;
+    return {
+      items: rows
+        .filter((v) => v.suppliers.some((s) => s.supplierId === sid))
+        .map((v) => ({ ...v, suppliers: v.suppliers.filter((s) => s.supplierId === sid) })),
+    };
+  }
+
+  async getForecastCommitments(scope: QueryScope): Promise<Page<ForecastCommitmentLine>> {
+    // BR-10 — PTI never reads a draft; a supplier reads its own lines with its drafts.
+    if (scope.personaType === 'buyer') return { items: allCommitmentLines(null) };
+    return { items: applySupplierScope(scope, allCommitmentLines(scope.supplierId)) };
+  }
+
+  async getForecastCoverage(scope: QueryScope): Promise<Page<ForecastCoverageRow>> {
+    // REQ-E06-03 BR-07 — the planner's view; a supplier reads nothing here.
+    if (scope.personaType !== 'buyer') return { items: [] };
+    return { items: allCoverageRows() };
   }
 
   // ─── Sourcing ─────────────────────────────────────────────────────────────
@@ -310,6 +409,37 @@ export class MockProcurementService implements IProcurementService {
     return { items: rows };
   }
 
+  // ─── RFx management (REQ-E03-01 to REQ-E03-05) ────────────────────────────
+
+  async getInviteeCandidates(scope: QueryScope, filter?: InviteeFilter): Promise<Page<InviteeCandidate>> {
+    // REQ-E03-01 — the invitee search is PTI's. A supplier has no business
+    // reading the roster it competes against, so the answer is empty rather
+    // than narrowed: there is no "own row" of a competitor list.
+    if (scope.personaType !== 'buyer') return { items: [] };
+    return { items: [...matchingInvitees(filter ?? {})] };
+  }
+
+  async getRfiEvents(scope: QueryScope): Promise<Page<RfiEventView>> {
+    // REQ-E03-02 — a supplier sees the RFIs it was invited to (never a Draft)
+    // and only its own answers; PTI sees every event and only SUBMITTED
+    // responses, so a half-filled draft never reaches the comparison.
+    return { items: [...rfiEventViews(rfxNow(), scope.personaType === 'buyer' ? null : scope.supplierId ?? '')] };
+  }
+
+  async getRfpEvents(scope: QueryScope): Promise<Page<RfpEventView>> {
+    return { items: [...rfpEventViews(rfxNow(), scope.personaType === 'buyer' ? null : scope.supplierId ?? '')] };
+  }
+
+  async getNegotiationRounds(scope: QueryScope): Promise<Page<NegotiationRoundView>> {
+    // REQ-E03-05 BR-05 — a supplier reads only its own thread.
+    return { items: [...negotiationRoundViews(rfxNow(), scope.personaType === 'buyer' ? null : scope.supplierId ?? '')] };
+  }
+
+  async getAwards(scope: QueryScope): Promise<Page<AwardView>> {
+    // REQ-E03-05 AC-05 — a supplier sees its own outcome and nobody else's share.
+    return { items: [...awardViews(scope.personaType === 'buyer' ? null : scope.supplierId ?? '')] };
+  }
+
   // ─── Fulfilment ───────────────────────────────────────────────────────────
 
   async getShipments(
@@ -332,6 +462,18 @@ export class MockProcurementService implements IProcurementService {
     return { items: rows };
   }
 
+  async getCallOffs(scope: QueryScope): Promise<Page<CallOff>> {
+    // REQ-E09-03 — call-offs resolve from the mutable store. A supplier sees its
+    // own released call-offs only: a draft or a dismissed draft is the planner's.
+    const rows = applySupplierScope(scope, callOffStore.all());
+    return {
+      items:
+        scope.personaType === 'supplier'
+          ? rows.filter((c) => c.status !== 'Draft' && c.status !== 'Dismissed')
+          : rows,
+    };
+  }
+
   async getGoodsReceipts(
     scope: QueryScope,
     filter?: GRFilter,
@@ -339,7 +481,15 @@ export class MockProcurementService implements IProcurementService {
     // Reads resolve from the mutable GR store (Step 4 batch ii) so a created /
     // inspected / posted GR is reflected after the command mutates it — mirrors
     // getASNs. The store seeds from the fixtures, so initial reads are identical.
-    let rows = applySupplierScope(scope, goodsReceiptStore.all());
+    // REQ-E07-06 — the supplier's answer to a discrepancy (and PTI's resolution)
+    // lives in its own store and is joined onto the receipt it answers.
+    let rows = applySupplierScope(
+      scope,
+      goodsReceiptStore.all().map((g) => {
+        const response = receiptDiscrepancyStore.get(g.id);
+        return response ? { ...g, discrepancyResponse: response } : g;
+      }),
+    );
     if (filter?.supplierId)
       rows = rows.filter((g) => g.supplierId === filter.supplierId);
     if (filter?.status) rows = rows.filter((g) => matchesList(g.status, filter.status));

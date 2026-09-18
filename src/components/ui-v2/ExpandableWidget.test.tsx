@@ -37,14 +37,14 @@ const SIMULATED_CAPS: Capability[] = [
 describe('ExpandableWidget — honesty lock (reads the LivenessRegistry)', () => {
   it('a SIMULATED capability renders the amber "Sample" dot-label, NEVER "Live"', () => {
     renderWidget(<ExpandableWidget {...baseProps} capability="risk" />);
-    expect(screen.getByText('Sample')).toBeInTheDocument();
+    expect(screen.getByText('Sample data')).toBeInTheDocument();
     expect(screen.queryByText('Live')).not.toBeInTheDocument();
   });
 
   it('a LIVE capability renders the green "Live" dot-label, NEVER "Sample"', () => {
     renderWidget(<ExpandableWidget {...baseProps} capability="invoices" />);
     expect(screen.getByText('Live')).toBeInTheDocument();
-    expect(screen.queryByText('Sample')).not.toBeInTheDocument();
+    expect(screen.queryByText('Sample data')).not.toBeInTheDocument();
   });
 
   // Structural proof at the shell layer: NO fixture capability can reach green,
@@ -55,7 +55,7 @@ describe('ExpandableWidget — honesty lock (reads the LivenessRegistry)', () =>
       renderWidget(<ExpandableWidget {...baseProps} capability={capability} />);
       fireEvent.click(screen.getByRole('button', { name: 'Expand Invoices' }));
       // two markers now (compact header + dialog header) — both amber, never green.
-      expect(screen.getAllByText('Sample').length).toBe(2);
+      expect(screen.getAllByText('Sample data').length).toBe(2);
       expect(screen.queryByText('Live')).not.toBeInTheDocument();
     },
   );

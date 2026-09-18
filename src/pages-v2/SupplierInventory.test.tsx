@@ -22,8 +22,9 @@ const SUPPLIER_NO_STOCK: CurrentIdentity = {
 describe('SupplierInventory — four honest states', () => {
   it('data: renders the scoped inventory for the seeded supplier', async () => {
     renderWithProviders(<SupplierInventory />, { identity: SUPPLIER });
-    expect(await screen.findByText('My Inventory')).toBeInTheDocument();
-    expect(await screen.findByText('Critical stock')).toBeInTheDocument();
+    // REQ-E08-01 — the supplier Stock page on the one inventory model.
+    expect(await screen.findByRole('heading', { name: 'Stock' })).toBeInTheDocument();
+    expect(await screen.findByTestId('sup-stock-row-PK-PETB-8802')).toBeInTheDocument();
   });
 
   it('loading: shows LoadingState while the read is pending', () => {
@@ -32,7 +33,7 @@ describe('SupplierInventory — four honest states', () => {
       service: alwaysPending,
     });
     expect(screen.getByText('Loading…')).toBeInTheDocument();
-    expect(screen.queryByText('Critical stock')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('sup-stock-row-PK-PETB-8802')).not.toBeInTheDocument();
   });
 
   it('error: shows ErrorState when the read throws', async () => {
@@ -45,6 +46,6 @@ describe('SupplierInventory — four honest states', () => {
 
   it('empty: shows EmptyState for a supplier with no inventory', async () => {
     renderWithProviders(<SupplierInventory />, { identity: SUPPLIER_NO_STOCK });
-    expect(await screen.findByText('No inventory yet')).toBeInTheDocument();
+    expect(await screen.findByText('No materials are assigned to you yet.')).toBeInTheDocument();
   });
 });

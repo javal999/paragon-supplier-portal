@@ -25,7 +25,13 @@ import type {
   CommandDecision,
   CertificateDeclaration,
   SupplierDocumentCategory,
+  PoLineResponse,
+  PoRejectionCause,
+  InvoiceLine,
+  CallOffDelivery,
+  CallOffType,
 } from '../data/types';
+import type { AsnLineInput } from '../transitions/fulfilmentRules';
 
 /**
  * The COMMAND scope — tenancy plus the seat's business roles.
@@ -162,6 +168,10 @@ function useInvalidateProcurement() {
 export interface PoConfirmVars {
   poId: string;
   confirmedQuantities: number[];
+  /** REQ-E07-02 Approve — the delivery date the supplier confirms. Optional so
+   *  an older caller that sends quantities only still dispatches. */
+  confirmedDeliveryDate?: string;
+  comment?: string;
 }
 
 /**
@@ -175,12 +185,16 @@ export function usePurchaseOrderConfirm() {
   const invalidate = useInvalidateProcurement();
 
   return useMutation<CommandResult, Error, PoConfirmVars>({
-    mutationFn: ({ poId, confirmedQuantities }) =>
+    mutationFn: ({ poId, confirmedQuantities, confirmedDeliveryDate, comment }) =>
       svc.commands.dispatch(scope, {
         transitionId: 't_po_confirm',
         entity: 'purchaseOrder',
         entityId: poId,
-        payload: { confirmedQuantities },
+        payload: {
+          confirmedQuantities,
+          ...(confirmedDeliveryDate ? { confirmedDeliveryDate } : {}),
+          ...(comment ? { comment } : {}),
+        },
       }),
     onSuccess: (result) => {
       if (result.status !== 'failed') invalidate(scope);
@@ -229,11 +243,103 @@ export function usePurchaseOrderAcknowledge() {
   });
 }
 
+// ── PO response verbs (REQ-E07-02) and the shipping notice (REQ-E07-05) ────
+// Same shape as confirm: dispatch through the seam, invalidate this scope's
+// procurement reads on a non-failed outcome. `poId`, never `poNumber` (see
+// `usePurchaseOrderAcknowledge`).
+
+function usePoCommand<V extends { poId: string }>(
+  transitionId: string,
+  payloadOf: (vars: V) => Record<string, unknown>,
+) {
+  const svc = useDataService();
+  const scope = useScope();
+  const invalidate = useInvalidateProcurement();
+  return useMutation<CommandResult, Error, V>({
+    mutationFn: (vars) =>
+      svc.commands.dispatch(scope, {
+        transitionId,
+        entity: 'purchaseOrder',
+        entityId: vars.poId,
+        payload: payloadOf(vars),
+      }),
+    onSuccess: (result) => {
+      if (result.status !== 'failed') invalidate(scope);
+    },
+  });
+}
+
+export interface PoAdjustVars {
+  poId: string;
+  lineResponses: PoLineResponse[];
+  comment?: string;
+}
+
+/** Adjust a PO with a per-line counter-offer (fires `t_po_adjust`). */
+export function usePurchaseOrderAdjust() {
+  return usePoCommand<PoAdjustVars>('t_po_adjust', ({ lineResponses, comment }) => ({
+    lineResponses,
+    ...(comment ? { comment } : {}),
+  }));
+}
+
+export interface PoRejectVars {
+  poId: string;
+  rejectionCauses: PoRejectionCause[];
+  comment?: string;
+}
+
+/** Reject a PO (fires `t_po_reject`). */
+export function usePurchaseOrderReject() {
+  return usePoCommand<PoRejectVars>('t_po_reject', ({ rejectionCauses, comment }) => ({
+    rejectionCauses,
+    ...(comment ? { comment } : {}),
+  }));
+}
+
+/** The planner accepts a counter-offer (fires `t_po_accept_counter`). */
+export function usePurchaseOrderAcceptCounter() {
+  return usePoCommand<{ poId: string }>('t_po_accept_counter', () => ({}));
+}
+
+export interface PoRejectCounterVars {
+  poId: string;
+  reviewComment: string;
+}
+
+/** The planner rejects a counter-offer with a comment (fires `t_po_reject_counter`). */
+export function usePurchaseOrderRejectCounter() {
+  return usePoCommand<PoRejectCounterVars>('t_po_reject_counter', ({ reviewComment }) => ({
+    reviewComment,
+  }));
+}
+
+export interface PoShippingNoticeVars {
+  poId: string;
+  expectedCompletionDate: string;
+}
+
+/** Record or move the expected completion date (fires `t_po_shipping_notice`). */
+export function usePurchaseOrderShippingNotice() {
+  return usePoCommand<PoShippingNoticeVars>('t_po_shipping_notice', ({ expectedCompletionDate }) => ({
+    expectedCompletionDate,
+  }));
+}
+
 export interface AsnCreateVars {
   poReference: string;
   carrier?: string;
   trackingNumber?: string;
   eta?: string;
+  /** REQ-E07-04 — shipped quantity, batch and expiry per PO line. Omitted, the
+   *  draft proposes each line's open quantity. */
+  lines?: AsnLineInput[];
+  shipDate?: string;
+  packingListFile?: string;
+  /** BR-02 — required when a line ships more than its open quantity. */
+  overShipReason?: string;
+  /** REQ-E09-03 BR-06 — the confirmed call-off this ASN ships, if any. */
+  callOffId?: string;
 }
 
 /**
@@ -264,6 +370,9 @@ export interface AsnSubmitVars {
   carrier: string;
   trackingNumber: string;
   eta: string;
+  shipDate?: string;
+  lines?: AsnLineInput[];
+  overShipReason?: string;
 }
 
 /** Submit a Draft ASN (fires `t_asn_submit`, Draft → Submitted). */
@@ -273,12 +382,89 @@ export function useAdvanceShipNoticeSubmit() {
   const invalidate = useInvalidateProcurement();
 
   return useMutation<CommandResult, Error, AsnSubmitVars>({
-    mutationFn: ({ asnNumber, carrier, trackingNumber, eta }) =>
+    mutationFn: ({ asnNumber, carrier, trackingNumber, eta, shipDate, lines, overShipReason }) =>
       svc.commands.dispatch(scope, {
         transitionId: 't_asn_submit',
         entity: 'advanceShipNotice',
         entityId: asnNumber,
-        payload: { carrier, trackingNumber, eta },
+        payload: {
+          carrier,
+          trackingNumber,
+          eta,
+          ...(shipDate ? { shipDate } : {}),
+          ...(lines ? { lines } : {}),
+          ...(overShipReason ? { overShipReason } : {}),
+        },
+      }),
+    onSuccess: (result) => {
+      if (result.status !== 'failed') invalidate(scope);
+    },
+  });
+}
+
+/**
+ * Cancel a Draft or Submitted ASN before anything was received (fires
+ * `t_asn_cancel`). A cancelled ASN stops counting toward open quantity.
+ */
+export function useAdvanceShipNoticeCancel() {
+  const svc = useDataService();
+  const scope = useScope();
+  const invalidate = useInvalidateProcurement();
+
+  return useMutation<CommandResult, Error, { asnNumber: string }>({
+    mutationFn: ({ asnNumber }) =>
+      svc.commands.dispatch(scope, {
+        transitionId: 't_asn_cancel',
+        entity: 'advanceShipNotice',
+        entityId: asnNumber,
+      }),
+    onSuccess: (result) => {
+      if (result.status !== 'failed') invalidate(scope);
+    },
+  });
+}
+
+// ─── Receipt discrepancy (REQ-E07-06) ───────────────────────────────────────
+
+export interface ReceiptDiscrepancyAnswerVars {
+  receiptId: string;
+  answer: 'acknowledge' | 'dispute';
+  comment: string;
+}
+
+/** The supplier acknowledges or disputes a receipt discrepancy with a comment. */
+export function useReceiptDiscrepancyAnswer() {
+  const svc = useDataService();
+  const scope = useScope();
+  const invalidate = useInvalidateProcurement();
+
+  return useMutation<CommandResult, Error, ReceiptDiscrepancyAnswerVars>({
+    mutationFn: ({ receiptId, answer, comment }) =>
+      svc.commands.dispatch(scope, {
+        transitionId:
+          answer === 'acknowledge' ? 't_receiptdiscrepancy_acknowledge' : 't_receiptdiscrepancy_dispute',
+        entity: 'receiptDiscrepancy',
+        payload: { receiptId, comment },
+      }),
+    onSuccess: (result) => {
+      if (result.status !== 'failed') invalidate(scope);
+    },
+  });
+}
+
+/** PTI's planner resolves a disputed receipt discrepancy with a comment. */
+export function useReceiptDiscrepancyResolve() {
+  const svc = useDataService();
+  const scope = useScope();
+  const invalidate = useInvalidateProcurement();
+
+  return useMutation<CommandResult, Error, { receiptId: string; resolutionComment: string }>({
+    mutationFn: ({ receiptId, resolutionComment }) =>
+      svc.commands.dispatch(scope, {
+        transitionId: 't_receiptdiscrepancy_resolve',
+        entity: 'receiptDiscrepancy',
+        entityId: receiptId,
+        payload: { resolutionComment },
       }),
     onSuccess: (result) => {
       if (result.status !== 'failed') invalidate(scope);
@@ -737,9 +923,15 @@ export function useGoodsReceiptSettle() {
 // sapBoundary verb (Option B: no "paid" claim until settlement mints the FI doc).
 
 export interface InvoiceCreateVars {
-  /** The parent PO the invoice bills against (must be the supplier's own, Confirmed). */
+  /** The parent PO the invoice bills against (the supplier's own, confirmed or delivered). */
   poReference: string;
   amount: number;
+  /** REQ-E07-07 — lines drawn from the selected goods receipts. */
+  lines: InvoiceLine[];
+  invoiceNumber: string;
+  invoiceDate: string;
+  /** Tax invoice (e-Faktur) file name. */
+  taxInvoiceFile: string;
   dueDate?: string;
   submittedDate?: string;
   bankAccount?: string;
@@ -778,6 +970,35 @@ export function useInvoiceSubmit() {
         entity: 'invoice',
         entityId: invoiceId,
         payload: { amount },
+      }),
+    onSuccess: (result) => {
+      if (result.status !== 'failed') invalidate(scope);
+    },
+  });
+}
+
+export interface InvoiceResubmitVars {
+  invoiceId: string;
+  amount: number;
+  lines?: InvoiceLine[];
+  invoiceNumber?: string;
+  invoiceDate?: string;
+  taxInvoiceFile?: string;
+}
+
+/** Correct and resubmit a returned invoice (fires `t_invoice_resubmit`). */
+export function useInvoiceResubmit() {
+  const svc = useDataService();
+  const scope = useScope();
+  const invalidate = useInvalidateProcurement();
+
+  return useMutation<CommandResult, Error, InvoiceResubmitVars>({
+    mutationFn: ({ invoiceId, ...payload }) =>
+      svc.commands.dispatch(scope, {
+        transitionId: 't_invoice_resubmit',
+        entity: 'invoice',
+        entityId: invoiceId,
+        payload: Object.fromEntries(Object.entries(payload).filter(([, v]) => v !== undefined && v !== '')),
       }),
     onSuccess: (result) => {
       if (result.status !== 'failed') invalidate(scope);
@@ -1399,6 +1620,626 @@ export function useApplicationReject() {
       }),
     onSuccess: (result) => {
       if (result.status !== 'failed') invalidate(scope);
+    },
+  });
+}
+
+// ─── Call-offs (REQ-E09-01, REQ-E09-03, REQ-E09-04) ─────────────────────────
+//
+// One dispatch per verb. The buyer's release and the supplier's answer touch
+// the same record, and both personas' reads are keyed under their own scope, so
+// a successful call-off command invalidates EVERY scope's `callOffs` read (and
+// the ASN read, which a linked ASN changes) — a persona switch in the same
+// session then shows the change.
+
+export type CallOffCommandVars =
+  | { verb: 'release'; poId: string; poLineId: string; quantity: number; needDate: string; type: CallOffType }
+  | { verb: 'draft'; poId: string; poLineId: string; quantity: number; needDate: string; type: CallOffType }
+  | { verb: 'editDraft'; id: string; reason: string; quantity?: number; needDate?: string; type?: CallOffType }
+  | { verb: 'releaseDraft'; id: string }
+  | { verb: 'dismiss'; id: string; reason: string }
+  | { verb: 'change'; id: string; reason: string; quantity?: number; needDate?: string }
+  | { verb: 'confirm'; id: string; comment?: string }
+  | { verb: 'confirmNewDate'; id: string; confirmedDate: string; comment?: string }
+  | { verb: 'confirmChanges'; id: string; confirmedQty: number; confirmedDate?: string; comment?: string }
+  | { verb: 'confirmPartial'; id: string; deliveries: CallOffDelivery[]; comment?: string }
+  | { verb: 'reject'; id: string; reason: string }
+  | { verb: 'approve'; id: string }
+  | { verb: 'rejectConfirmation'; id: string; reviewComment: string }
+  | {
+      verb: 'dispatch';
+      id: string;
+      shippedDate: string;
+      expectedArrival: string;
+      quantity: number;
+      asnNumber?: string;
+    };
+
+const CALL_OFF_TRANSITION: Record<CallOffCommandVars['verb'], string> = {
+  release: 't_calloff_release',
+  draft: 't_calloff_draft',
+  editDraft: 't_calloff_edit_draft',
+  releaseDraft: 't_calloff_release_draft',
+  dismiss: 't_calloff_dismiss',
+  change: 't_calloff_change',
+  confirm: 't_calloff_confirm',
+  confirmNewDate: 't_calloff_confirm_new_date',
+  confirmChanges: 't_calloff_confirm_changes',
+  confirmPartial: 't_calloff_confirm_partial',
+  reject: 't_calloff_reject',
+  approve: 't_calloff_approve',
+  rejectConfirmation: 't_calloff_reject_confirmation',
+  dispatch: 't_calloff_dispatch',
+};
+
+export function useCallOffCommand() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+
+  return useMutation<CommandResult, Error, CallOffCommandVars>({
+    mutationFn: (vars) => {
+      const { verb, ...rest } = vars;
+      const creation = verb === 'release' || verb === 'draft';
+      const { id, ...payload } = rest as { id?: string } & Record<string, unknown>;
+      return svc.commands.dispatch(scope, {
+        transitionId: CALL_OFF_TRANSITION[verb],
+        entity: 'callOff',
+        ...(creation ? {} : { entityId: id }),
+        payload: creation ? { ...rest } : payload,
+      });
+    },
+    onSuccess: (result) => {
+      if (result.status === 'failed') return;
+      qc.invalidateQueries({
+        predicate: (q) =>
+          q.queryKey[0] === 'procurement' && (q.queryKey[1] === 'callOffs' || q.queryKey[1] === 'asns'),
+      });
+    },
+  });
+}
+
+// ─── Inventory & capacity (REQ-E08-02 to REQ-E08-05) ────────────────────────
+//
+// One dispatch per verb. Every one of these changes figures BOTH personas read
+// (a PTI recording is about a supplier; a supplier's submission feeds the
+// planner's view; access decides what a supplier sees), so a successful command
+// invalidates EVERY scope's inventory, access, capacity and alert reads — and
+// the SDC reads, which show the same declarations on the forecast page.
+
+export type InventoryCommandVars =
+  | {
+      verb: 'declare';
+      supplierId: string;
+      materialCode: string;
+      totalQty: number;
+      channel: 'template' | 'manual';
+      supplierRop?: number;
+      inProductionQty?: number;
+      productionCompletionDate?: string;
+      batches?: readonly { batchNumber: string; qty: number; expiryDate?: string }[];
+    }
+  | {
+      verb: 'record';
+      supplierId: string;
+      materialCode: string;
+      totalQty: number;
+      supplierRop?: number;
+      inProductionQty?: number;
+      productionCompletionDate?: string;
+      batches?: readonly { batchNumber: string; qty: number; expiryDate?: string }[];
+    }
+  | { verb: 'sync'; supplierId: string }
+  | { verb: 'grantAccess'; supplierId: string; materials: readonly string[]; alreadyGranted: boolean }
+  | { verb: 'removeAccess'; supplierId: string }
+  | {
+      verb: 'submitCapacity';
+      supplierId: string;
+      materialGroup: string;
+      weeks: readonly { week: string; allocated: number; upside?: number; reason?: string; note?: string }[];
+    }
+  | { verb: 'closeAlert'; key: string; actionNote: string };
+
+const INVENTORY_READS = new Set(['inventory', 'stockAccess', 'capacityPlans', 'inventoryAlerts']);
+
+export function useInventoryCommand() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+
+  return useMutation<CommandResult, Error, InventoryCommandVars>({
+    mutationFn: (vars) => {
+      switch (vars.verb) {
+        case 'declare':
+        case 'record': {
+          const { verb, ...payload } = vars;
+          return svc.commands.dispatch(scope, {
+            transitionId: verb === 'declare' ? 't_inventorydeclaration_declare' : 't_inventorydeclaration_record',
+            entity: 'inventoryDeclaration',
+            payload,
+          });
+        }
+        case 'sync':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_stocksync_run',
+            entity: 'stockSync',
+            payload: { supplierId: vars.supplierId },
+          });
+        case 'grantAccess':
+          return svc.commands.dispatch(scope, {
+            transitionId: vars.alreadyGranted ? 't_stockaccess_change' : 't_stockaccess_grant',
+            entity: 'stockAccess',
+            entityId: vars.supplierId,
+            payload: { materials: [...vars.materials] },
+          });
+        case 'removeAccess':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_stockaccess_remove',
+            entity: 'stockAccess',
+            entityId: vars.supplierId,
+            payload: {},
+          });
+        case 'submitCapacity':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_capacity_submit',
+            entity: 'capacitySubmission',
+            payload: { supplierId: vars.supplierId, materialGroup: vars.materialGroup, weeks: vars.weeks.map((w) => ({ ...w })) },
+          });
+        case 'closeAlert':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_inventoryalert_close',
+            entity: 'inventoryAlert',
+            entityId: vars.key,
+            payload: { actionNote: vars.actionNote },
+          });
+      }
+    },
+    onSuccess: (result) => {
+      if (result.status === 'failed') return;
+      qc.invalidateQueries({
+        predicate: (q) =>
+          (q.queryKey[0] === 'procurement' && INVENTORY_READS.has(String(q.queryKey[1]))) || q.queryKey[0] === 'sdc',
+      });
+    },
+  });
+}
+
+// ─── Forecast collaboration (REQ-E06-01 to REQ-E06-03) ──────────────────────
+//
+// One mutation per business act. Some acts are two governed verbs in a row:
+//   · commit — `t_requirementresponse_submit` creates the draft, then
+//     `t_requirementresponse_promote` submits it (a draft stays hidden from PTI
+//     until then, BR-10); "Save draft" stops after the first.
+//   · accept / request revision — the planner's review verb, then accept or
+//     dispute (the dispute text is the revision request the supplier reads).
+// Every act changes what BOTH personas read (lines, versions, alerts), so a
+// successful one invalidates every scope's forecast and alert reads.
+
+export interface ForecastLineRef {
+  readonly publicationId: string;
+  readonly planVersion: string;
+  readonly supplierId: string;
+  readonly materialCode: string;
+  readonly periodBucket: string;
+}
+
+export type ForecastCommandVars =
+  | { verb: 'publish'; stream: 'packaging' | 'rawMaterial'; emergency?: boolean }
+  | {
+      verb: 'reassign';
+      publicationId: string;
+      materialCode: string;
+      periodBucket: string;
+      fromSupplierId: string;
+      toSupplierId: string;
+      note: string;
+    }
+  | { verb: 'recordView'; publicationId: string; supplierId: string }
+  | {
+      verb: 'commit';
+      line: ForecastLineRef;
+      committedQty: number;
+      commitmentDate: string;
+      upsideQty?: number;
+      reason?: string;
+      note?: string;
+      /** Save as a draft only (not visible to PTI). */
+      draftOnly?: boolean;
+    }
+  | { verb: 'submitDraft'; responseId: string }
+  | { verb: 'acknowledge'; line: ForecastLineRef; note?: string }
+  | { verb: 'accept'; responseId: string; status: string }
+  | { verb: 'requestRevision'; responseId: string; status: string; note: string };
+
+const FORECAST_READS = new Set(['forecastVersions', 'forecastCommitments', 'forecastCoverage', 'inventoryAlerts']);
+
+export function useForecastCommand() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+
+  const review = async (responseId: string, status: string): Promise<CommandResult | null> => {
+    if (status !== 'Submitted') return null;
+    const res = await svc.commands.dispatch(scope, {
+      transitionId: 't_requirementresponse_review',
+      entity: 'requirementResponse',
+      entityId: responseId,
+      payload: {},
+    });
+    return res.status === 'failed' ? res : null;
+  };
+
+  return useMutation<CommandResult, Error, ForecastCommandVars>({
+    mutationFn: async (vars) => {
+      switch (vars.verb) {
+        case 'publish':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_forecastversion_publish',
+            entity: 'forecastVersion',
+            payload: { stream: vars.stream, ...(vars.emergency ? { emergency: true } : {}) },
+          });
+        case 'reassign': {
+          const { verb, ...payload } = vars;
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_forecastversion_reassign',
+            entity: 'forecastVersion',
+            payload: { ...payload },
+          });
+        }
+        case 'recordView':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_forecastview_record',
+            entity: 'forecastView',
+            payload: { publicationId: vars.publicationId, supplierId: vars.supplierId },
+          });
+        case 'commit': {
+          const created = await svc.commands.dispatch(scope, {
+            transitionId: 't_requirementresponse_submit',
+            entity: 'requirementResponse',
+            payload: {
+              ...vars.line,
+              confirmedQty: vars.committedQty,
+              // The token the number was read from: the canonical digits, which
+              // read the same in either convention.
+              confirmedQtyRaw: String(vars.committedQty),
+              committedDate: vars.commitmentDate,
+              ...(vars.upsideQty !== undefined ? { upsideQty: vars.upsideQty } : {}),
+              ...(vars.reason ? { rootCause: { level1: vars.reason, ...(vars.note ? { note: vars.note } : {}) } } : {}),
+            },
+          });
+          if (created.status === 'failed' || vars.draftOnly || !created.entityId) return created;
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_requirementresponse_promote',
+            entity: 'requirementResponse',
+            entityId: created.entityId,
+            payload: {},
+          });
+        }
+        case 'submitDraft':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_requirementresponse_promote',
+            entity: 'requirementResponse',
+            entityId: vars.responseId,
+            payload: {},
+          });
+        case 'acknowledge':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_requirementresponse_acknowledge',
+            entity: 'requirementResponse',
+            payload: { ...vars.line, ...(vars.note ? { acknowledgment: { note: vars.note } } : {}) },
+          });
+        case 'accept': {
+          const refused = await review(vars.responseId, vars.status);
+          if (refused) return refused;
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_requirementresponse_accept',
+            entity: 'requirementResponse',
+            entityId: vars.responseId,
+            payload: {},
+          });
+        }
+        case 'requestRevision': {
+          const refused = await review(vars.responseId, vars.status);
+          if (refused) return refused;
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_requirementresponse_dispute',
+            entity: 'requirementResponse',
+            entityId: vars.responseId,
+            payload: { disputeReason: vars.note },
+          });
+        }
+      }
+    },
+    onSettled: () => {
+      qc.invalidateQueries({
+        predicate: (q) =>
+          (q.queryKey[0] === 'procurement' && FORECAST_READS.has(String(q.queryKey[1]))) || q.queryKey[0] === 'sdc',
+      });
+    },
+  });
+}
+
+// ── RFx MANAGEMENT (REQ-E03-01 to REQ-E03-05) ──────────────────────────────
+//
+// ONE mutation hook for the whole RFx lane, in the shape `useForecastCommand`
+// established: a discriminated `verb` per act, every act dispatched through the
+// service seam, and ONE invalidation predicate — because an RFI answered, a
+// round opened or an award recorded changes what BOTH personas read, across
+// several reads each.
+//
+// Composite acts (save-then-submit) dispatch twice and STOP AT THE FIRST
+// REFUSAL, returning it: a "sent" toast after a refused submit is the shape
+// §90 exists to prevent.
+
+import type {
+  AwardLine,
+  RfiAnswer,
+  RfiQuestion,
+  RfpTermAnswer,
+  RfpTermRow,
+} from '../sourcing/types';
+import type { QuoteLineInput } from '../transitions/rfxRules';
+
+export type RfxCommandVars =
+  // — REQ-E03-02 · RFI —
+  | {
+      verb: 'createRfi';
+      title: string;
+      templateId: string;
+      materialCategory: string;
+      purchasingGroup?: string;
+      responseDeadline: string;
+      invitedSupplierIds: readonly string[];
+      questions?: readonly RfiQuestion[];
+      /** Send it to the invitees in the same act. */
+      publish?: boolean;
+    }
+  | { verb: 'publishRfi'; rfiId: string }
+  | { verb: 'closeRfi'; rfiId: string }
+  | { verb: 'extendRfi'; rfiId: string; deadline: string; supplierIds?: readonly string[] }
+  | {
+      verb: 'answerRfi';
+      rfiId: string;
+      supplierId: string;
+      answers: readonly RfiAnswer[];
+      /** Draft only — PTI does not see it (REQ-E03-02 edge case). */
+      draftOnly?: boolean;
+    }
+  // — REQ-E03-04 · RFP —
+  | {
+      verb: 'createRfp';
+      title: string;
+      scope: string;
+      materialCategory: string;
+      purchasingGroup?: string;
+      responseDeadline: string;
+      currency: string;
+      invitedSupplierIds: readonly string[];
+      terms: readonly RfpTermRow[];
+      publish?: boolean;
+    }
+  | { verb: 'publishRfp'; rfpId: string }
+  | { verb: 'closeRfp'; rfpId: string }
+  | { verb: 'extendRfp'; rfpId: string; deadline: string; supplierIds?: readonly string[] }
+  | {
+      verb: 'answerRfp';
+      rfpId: string;
+      supplierId: string;
+      answers: readonly RfpTermAnswer[];
+      otherTerms?: string;
+      draftOnly?: boolean;
+    }
+  // — REQ-E03-03 · RFQ deadline —
+  | { verb: 'extendRfq'; rfqId: string; deadline: string; supplierIds?: readonly string[] }
+  // — REQ-E03-05 · negotiation and award —
+  | {
+      verb: 'openRound';
+      rfqId: string;
+      deadline: string;
+      invitedSupplierIds: readonly string[];
+      message?: string;
+      targetUnitPrice?: number;
+      bestAndFinal?: boolean;
+    }
+  | { verb: 'closeRound'; roundId: string }
+  | {
+      verb: 'reviseQuote';
+      roundId: string;
+      rfqId: string;
+      supplierId: string;
+      roundNumber: number;
+      supersedesQuotationId?: string;
+      unitPrice: number;
+      leadTimeDays: number;
+      currency: BidCurrency;
+      paymentTermsOffered?: string;
+      validUntil?: string;
+      notes?: string;
+      lines?: readonly QuoteLineInput[];
+      bestAndFinal?: boolean;
+    }
+  | {
+      verb: 'award';
+      rfqId: string;
+      awardedQuotationId: string;
+      awardedSupplierId: string;
+      awardLines?: readonly AwardLine[];
+      awardReason?: string;
+    };
+
+/** Every read an RFx act can change, on either persona. */
+const RFX_READS = new Set([
+  'rfiEvents',
+  'rfpEvents',
+  'negotiationRounds',
+  'awards',
+  'rfqs',
+  'quotations',
+  'inviteeCandidates',
+]);
+
+export function useRfxCommand() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+
+  return useMutation<CommandResult, Error, RfxCommandVars>({
+    mutationFn: async (vars) => {
+      switch (vars.verb) {
+        case 'createRfi': {
+          const { verb, publish, ...payload } = vars;
+          const created = await svc.commands.dispatch(scope, {
+            transitionId: 't_rfi_create',
+            entity: 'rfiEvent',
+            payload: { ...payload, invitedSupplierIds: [...payload.invitedSupplierIds] },
+          });
+          if (created.status === 'failed' || !publish || !created.entityId) return created;
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_rfi_publish',
+            entity: 'rfiEvent',
+            entityId: created.entityId,
+            payload: {},
+          });
+        }
+        case 'publishRfi':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_rfi_publish',
+            entity: 'rfiEvent',
+            entityId: vars.rfiId,
+            payload: {},
+          });
+        case 'closeRfi':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_rfi_close',
+            entity: 'rfiEvent',
+            entityId: vars.rfiId,
+            payload: {},
+          });
+        case 'extendRfi':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_rfi_extend',
+            entity: 'rfiEvent',
+            entityId: vars.rfiId,
+            payload: { deadline: vars.deadline, supplierIds: [...(vars.supplierIds ?? [])] },
+          });
+        case 'answerRfi': {
+          const saved = await svc.commands.dispatch(scope, {
+            transitionId: 't_rfiresponse_save',
+            entity: 'rfiResponse',
+            payload: { rfiId: vars.rfiId, supplierId: vars.supplierId, answers: [...vars.answers] },
+          });
+          if (saved.status === 'failed' || vars.draftOnly || !saved.entityId) return saved;
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_rfiresponse_submit',
+            entity: 'rfiResponse',
+            entityId: saved.entityId,
+            payload: {},
+          });
+        }
+        case 'createRfp': {
+          const { verb, publish, ...payload } = vars;
+          const created = await svc.commands.dispatch(scope, {
+            transitionId: 't_rfp_create',
+            entity: 'rfpEvent',
+            payload: {
+              ...payload,
+              invitedSupplierIds: [...payload.invitedSupplierIds],
+              terms: [...payload.terms],
+            },
+          });
+          if (created.status === 'failed' || !publish || !created.entityId) return created;
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_rfp_publish',
+            entity: 'rfpEvent',
+            entityId: created.entityId,
+            payload: {},
+          });
+        }
+        case 'publishRfp':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_rfp_publish',
+            entity: 'rfpEvent',
+            entityId: vars.rfpId,
+            payload: {},
+          });
+        case 'closeRfp':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_rfp_close',
+            entity: 'rfpEvent',
+            entityId: vars.rfpId,
+            payload: {},
+          });
+        case 'extendRfp':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_rfp_extend',
+            entity: 'rfpEvent',
+            entityId: vars.rfpId,
+            payload: { deadline: vars.deadline, supplierIds: [...(vars.supplierIds ?? [])] },
+          });
+        case 'answerRfp': {
+          const saved = await svc.commands.dispatch(scope, {
+            transitionId: 't_rfpresponse_save',
+            entity: 'rfpResponse',
+            payload: {
+              rfpId: vars.rfpId,
+              supplierId: vars.supplierId,
+              answers: [...vars.answers],
+              ...(vars.otherTerms !== undefined ? { otherTerms: vars.otherTerms } : {}),
+            },
+          });
+          if (saved.status === 'failed' || vars.draftOnly || !saved.entityId) return saved;
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_rfpresponse_submit',
+            entity: 'rfpResponse',
+            entityId: saved.entityId,
+            payload: {},
+          });
+        }
+        case 'extendRfq':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_rfq_extend',
+            entity: 'rfq',
+            entityId: vars.rfqId,
+            payload: { deadline: vars.deadline, supplierIds: [...(vars.supplierIds ?? [])] },
+          });
+        case 'openRound': {
+          const { verb, ...payload } = vars;
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_negotiationround_open',
+            entity: 'negotiationRound',
+            payload: { ...payload, invitedSupplierIds: [...payload.invitedSupplierIds] },
+          });
+        }
+        case 'closeRound':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_negotiationround_close',
+            entity: 'negotiationRound',
+            entityId: vars.roundId,
+            payload: {},
+          });
+        case 'reviseQuote': {
+          const { verb, lines, ...payload } = vars;
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_quotation_revise',
+            entity: 'quotation',
+            payload: { ...payload, ...(lines ? { lines: lines.map((l) => ({ ...l })) } : {}) },
+          });
+        }
+        case 'award': {
+          const { verb, rfqId, awardLines, ...payload } = vars;
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_rfq_award',
+            entity: 'rfq',
+            entityId: rfqId,
+            payload: { ...payload, ...(awardLines ? { awardLines: awardLines.map((l) => ({ ...l })) } : {}) },
+          });
+        }
+      }
+    },
+    onSettled: () => {
+      qc.invalidateQueries({
+        predicate: (q) => q.queryKey[0] === 'procurement' && RFX_READS.has(String(q.queryKey[1])),
+      });
     },
   });
 }

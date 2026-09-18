@@ -41,6 +41,16 @@ import Data from '../components/ui-v2/Data';
 import TargetBar from '../components/ui-v2/TargetBar';
 import PageMetaLine from '../components/ui-v2/PageMetaLine';
 import ProvenanceMarker from '../components/ui-v2/ProvenanceMarker';
+import FilterChipsBar from '../components/ui-v2/FilterChipsBar';
+import KpiCard from '../components/ui-v2/KpiCard';
+import { usePerformance } from './performance/performanceDisplay';
+import {
+  GRADE_BANDS,
+  OTIF_TARGET_PCT,
+  performanceStatus,
+  PERFORMANCE_PERIODS,
+  type PerformancePeriod,
+} from '../services/data/performanceRules';
 import StatusPill from '../components/ui-v2/StatusPill';
 import Button from '../components/ui-v2/Button';
 import LoadingState from '../components/ui-v2/LoadingState';
@@ -194,7 +204,9 @@ const BuyerScorecard: React.FC = () => {
   const cl = useCategoryLabel();
   const chl = useChannelLabel();
   const { toast } = useToast();
-  const [selectedId, setSelectedId] = useState<string>('zhejiang');
+  const [selectedId, setSelectedId] = useState<string>('sup-007');
+  // REQ-E10-01 BR-08 — the period is an INPUT to the measures, not a caption.
+  const [period, setPeriod] = useState<PerformancePeriod>('90d');
 
   const SCORECARD_CRUMB = [
     t('buyerScorecard.crumb.intelligence'),
@@ -203,6 +215,11 @@ const BuyerScorecard: React.FC = () => {
 
   const scorecardsQuery = useSupplierScorecards();
   const suppliers = scorecardsQuery.data?.items ?? [];
+  const perf = usePerformance(period);
+  const PERIOD_OPTIONS = PERFORMANCE_PERIODS.map((id) => ({
+    id,
+    label: t(`perf.period.${id}`),
+  }));
 
   if (scorecardsQuery.isPending)
     return <LoadingState breadcrumb={SCORECARD_CRUMB} />;
@@ -226,7 +243,11 @@ const BuyerScorecard: React.FC = () => {
 
   const supp = suppliers.find((s) => s.id === selectedId) ?? suppliers[0];
   const compliance = supp.complianceIssue;
-  const tone = GRADE_TONE[supp.grade];
+  // REQ-E10-01 — grade, score, OTIF, CFOT and the rejection counts are all read
+  // from the calculated measures for the chosen period. "No history" is a real
+  // answer here and is never rendered as 0%.
+  const measure = perf.forSupplier(supp.id);
+  const tone = measure.grade ? GRADE_TONE[measure.grade] : GRADE_TONE.D;
 
   const trendData = supp.otifTrend.map((v, i) => ({
     month: OTIF_MONTHS[i],
@@ -272,12 +293,87 @@ const BuyerScorecard: React.FC = () => {
             : 'buyerScorecard.meta.suppliers.other',
           { count: suppliers.length },
         )}{' '}
-        · {t('buyerScorecard.meta.lastActivity')} {latestCommDate}
-        {/* D-CENSUS-8 — `scorecards` is null-backed: the scores are authored fixture
-            values, not computed from transactional history. The header claimed
-            "Real-time performance scoring"; that is retracted in this batch. */}
-        <ProvenanceMarker capability="scorecards" className="ml-3 align-middle" />
+        · {t('buyerScorecard.meta.lastActivity')} {latestCommDate} ·{' '}
+        {t('perf.periodLabel')}: {t(`perf.period.${period}`)}
+        {/* REQ-E10-01 — the marker MOVED rather than staying put. The OTIF, CFOT,
+            score and grade on this page ARE computed from hub data now, so the
+            page-level "Sample data" claim would be false about them; the marker
+            sits on the KPI section below, which is still authored. */}
       </PageMetaLine>
+
+      <div className="mb-6">
+        <FilterChipsBar<PerformancePeriod>
+          options={PERIOD_OPTIONS}
+          value={period}
+          onChange={setPeriod}
+        />
+      </div>
+
+      {/* REQ-E10-01 — the calculated half of the assessment. */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-6">
+        <KpiCard
+          eyebrow={t('perf.otif')}
+          value={
+            measure.otif.pct === null ? (
+              t('rfx.noHistory')
+            ) : (
+              // CR-17 — the target status decides the colour, from the ONE
+              // threshold source every target bar on this page already reads.
+              <span style={{ color: TARGET_STATUS[performanceStatus(measure.otif.pct)!].text }}>
+                {measure.otif.pct}%
+              </span>
+            )
+          }
+          subtitle={
+            <span className="text-text-tertiary" data-testid="scorecard-otif">
+              {measure.otif.pct === null
+                ? t('perf.noMeasured')
+                : t('perf.measuredCallOffs', {
+                    count: measure.otif.measured,
+                    target: OTIF_TARGET_PCT,
+                  })}
+            </span>
+          }
+        />
+        <KpiCard
+          eyebrow={t('perf.cfot')}
+          value={
+            measure.cfot.pct === null ? (
+              t('rfx.noHistory')
+            ) : (
+              <span style={{ color: TARGET_STATUS[performanceStatus(measure.cfot.pct)!].text }}>
+                {measure.cfot.pct}%
+              </span>
+            )
+          }
+          subtitle={
+            <span className="text-text-tertiary" data-testid="scorecard-cfot">
+              {measure.cfot.pct === null
+                ? t('perf.noMeasured')
+                : t('perf.measuredOrders', { count: measure.cfot.measured })}
+            </span>
+          }
+        />
+        <KpiCard
+          eyebrow={t('perf.rejections')}
+          value={String(measure.rejections.total)}
+          subtitle={
+            <span className="text-text-tertiary" data-testid="scorecard-rejections">
+              {t('perf.rejectionsSplit', {
+                orders: measure.rejections.purchaseOrders,
+                callOffs: measure.rejections.callOffs,
+              })}
+            </span>
+          }
+        />
+        <KpiCard
+          eyebrow={t('perf.score')}
+          value={measure.score === null ? t('rfx.noHistory') : `${measure.score}`}
+          subtitle={
+            <span className="text-text-tertiary">{t('perf.calculated')}</span>
+          }
+        />
+      </div>
 
       {/* DP-1: the supplier identity hero restyles from a solid navy fill to a
           light surface — navy text, teal accents, semantic grade badge kept. */}
@@ -332,9 +428,28 @@ const BuyerScorecard: React.FC = () => {
           </div>
 
           <div className="flex flex-col items-center gap-2 shrink-0">
-            <GradeBadge grade={supp.grade} />
-            <div className="text-base font-bold text-text-primary">
-              {supp.score}/100
+            {measure.grade === null ? (
+              <div
+                data-testid="scorecard-grade"
+                className="text-sm font-semibold text-text-tertiary"
+              >
+                {t('rfx.noHistory')}
+              </div>
+            ) : (
+              <>
+                <GradeBadge grade={measure.grade} />
+                <div
+                  data-testid="scorecard-grade"
+                  className="text-base font-bold text-text-primary"
+                >
+                  {measure.score}/100
+                </div>
+              </>
+            )}
+            <div className="text-meta text-text-tertiary text-center max-w-[12rem]">
+              {t('perf.gradeBands', {
+                bands: GRADE_BANDS.map((b) => `${b.grade} ${b.min}+`).join(' · '),
+              })}
             </div>
             <span
               className="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold"
@@ -354,8 +469,11 @@ const BuyerScorecard: React.FC = () => {
       </section>
 
       <section className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm p-6 mb-6">
-        <h2 className="text-section text-text-primary mb-4 pb-3 border-b border-border-subtle">
+        <h2 className="flex flex-wrap items-center gap-3 text-section text-text-primary mb-4 pb-3 border-b border-border-subtle">
           {t('buyerScorecard.kpi.title')}
+          {/* D-CENSUS-8 — these rows are still authored: no hub data measures
+              OTDR, acknowledgement speed, defect rate or sustainability. */}
+          <ProvenanceMarker capability="scorecards" />
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
           {supp.kpis.map((k) => (
@@ -435,7 +553,7 @@ const BuyerScorecard: React.FC = () => {
               <Tooltip content={<ChartTooltip />} />
               <ReferenceLine
                 yAxisId="pct"
-                y={95}
+                y={90}
                 stroke={TOKEN_SUCCESS}
                 strokeDasharray="4 2"
                 label={{

@@ -590,7 +590,7 @@ describe('2B-0 — the lane set DERIVES (DERIVED-OVER-A-CHOSEN-SCOPE-01)', () =>
 });
 
 describe('2B-4a — the FIELD SET derives too (the third level)', () => {
-  it('the derived field set is exactly THREE keys, and nothing named them', () => {
+  it('the derived field set is exactly the code-bearing keys, and nothing named them', () => {
     // ⚠️ THE OPERATOR RULING, EXECUTED AS A DERIVATION RATHER THAN AS A LIST.
     // "A field holding MAT-* values that overlap the third space IS material
     // identity, whatever the field is named." `sapCode` is admitted on the
@@ -605,7 +605,24 @@ describe('2B-4a — the FIELD SET derives too (the third level)', () => {
     // registry onto real master codes and the derivation admitted it the same
     // day, with nobody editing this list. THE REGISTRY IS NOW A MATERIAL-IDENTITY
     // SITE, which is precisely what the seam was for.
-    expect(CODE_FIELDS).toEqual(['materialCode', 'materialCodes', 'materialIds', 'sapCode']);
+    // ⚠️ AND A FIFTH, THE SAME WAY (REQ-E08-03). Supplier access to PTI stock
+    // names the materials a supplier may see under `materials`; the access seed
+    // holds real master codes, so the derivation admitted the key on its own.
+    // ⚠️ AND A SIXTH, UNAIDED AGAIN (REQ-E03-05 BR-06). An award line names the
+    // ITEM its share is against — `AwardLine.itemCode` — and the sample award
+    // carries master codes, so the derivation admitted the key the day the
+    // split award landed. It is REPORTED here rather than worked around: an
+    // award that places a share against an item IS a material-identity site,
+    // and a field renamed to stay out of this census would be the census
+    // learning to look away.
+    expect(CODE_FIELDS).toEqual([
+      'itemCode',
+      'materialCode',
+      'materialCodes',
+      'materialIds',
+      'materials',
+      'sapCode',
+    ]);
   });
 
   it('⚠️ FIELD-SET-CLOSURE-OVERRUNS-01 — the disqualifier, and what it stops', () => {

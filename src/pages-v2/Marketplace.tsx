@@ -5,7 +5,6 @@ import { Globe2, Users, FileText, Clock, ArrowUpRight } from 'lucide-react';
 import { useCategoryLabel } from '../hooks/useCategoryLabel';
 import AppShellV2 from '../components/layout-v2/AppShellV2';
 import PageHeader from '../components/ui-v2/PageHeader';
-import PageMetaLine from '../components/ui-v2/PageMetaLine';
 import ProvenanceMarker from '../components/ui-v2/ProvenanceMarker';
 import KpiCard from '../components/ui-v2/KpiCard';
 import SearchBar from '../components/ui-v2/SearchBar';
@@ -130,15 +129,17 @@ const Marketplace: React.FC = () => {
         subtitle={t('marketplace.header.subtitle')}
       />
 
-      {/* D-CENSUS-8 — MARKER-SCOPE-01. This page did carry a "Sample data" badge, but
-          only on the RFQ section below; the supplier grid and the four KPI tiles above
-          it — the page's actual claim — were unmarked, and a section badge reads as
-          scoped to its section. The page-level marker states the fact once, for the
-          whole route. */}
-      <PageMetaLine className="-mt-6 mb-6">
-        <ProvenanceMarker capability="suppliers" />
-      </PageMetaLine>
+      {/* D-CENSUS-8 — MARKER-SCOPE-01 added a page-level marker here because the KPI
+          tiles and the supplier grid carried none. REQ-E10-01 takes it back OFF the page
+          meta line, the same move phase 6b made on the scorecard: each card's grade and
+          on-time-in-full are MEASURED from this hub's call-offs and orders, so a marker
+          that speaks for the whole route now says something false about them. The two
+          authored blocks below carry it themselves, and the card grid names the two
+          values it does not cover. */}
 
+      <div className="mb-2" data-testid="marketplace-kpi-provenance">
+        <ProvenanceMarker capability="suppliers" />
+      </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-8">
         <KpiCard
           eyebrow={t('marketplace.kpi.totalSuppliers.eyebrow')}
@@ -200,6 +201,15 @@ const Marketplace: React.FC = () => {
         />
       </div>
 
+      <div
+        className="mb-2 flex flex-wrap items-center gap-3"
+        data-testid="marketplace-cards-provenance"
+      >
+        <ProvenanceMarker capability="suppliers" />
+        <span className="text-meta text-text-tertiary">
+          {t('perf.grade')} · {t('perf.otif')}: {t('perf.calculated')}
+        </span>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 mb-10">
         {filtered.map((s) => (
           <SupplierCard
@@ -207,7 +217,11 @@ const Marketplace: React.FC = () => {
             name={s.name}
             country={s.country}
             countryFlag={s.city}
-            tier={t('marketplace.grade', { grade: s.scorecardGrade })}
+            tier={
+              s.scorecardGrade
+                ? t('marketplace.grade', { grade: s.scorecardGrade })
+                : t('rfx.noHistory')
+            }
             categories={[cl(s.category)]}
             otif={s.otif}
             compliance={[

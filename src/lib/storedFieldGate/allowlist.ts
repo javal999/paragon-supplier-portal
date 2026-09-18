@@ -156,24 +156,10 @@ export const STORED_FIELD_ALLOWLIST: readonly Exemption[] = Object.freeze([
       'which may be the whole reason, and that is a ruling, not a derivation.',
     since: D_F,
   },
-  {
-    key: 'MaterialMasterEntry.materialGroup',
-    reason: 'unadjudicated',
-    why:
-      'The 2B-1 registry group. 34 reads and not one outside a spec — the largest test-only read count ' +
-      'in the population, which makes it the clearest case that a suite can exercise a field thoroughly ' +
-      'while no product surface ever asks for it.',
-    since: D_F,
-  },
-  {
-    key: 'MaterialMasterEntry.materialType',
-    reason: 'unadjudicated',
-    why:
-      'Master material type, read in four specs and nowhere else. Sits beside halalApplicable and ' +
-      'bpomApplicable — both of which ARE read in production — on the same DTO, so the DTO is live and ' +
-      'this field is not.',
-    since: D_F,
-  },
+  // `MaterialMasterEntry.materialGroup` and `.materialType` LEFT THIS LIST BY
+  // ACQUIRING A PRODUCT READER (REQ-E08-01 / REQ-E08-04): the inventory model
+  // splits raw material from packaging on the type (BR-07) and states capacity
+  // per material group, both in `transitions/inventoryRules.ts`.
   // ⚠️ §68 — `ActorAttribution.person` WAS HERE AND ITS EXEMPTION OUTLIVED ITS
   // SUBJECT, WHICH IS THE GATE DOING THE ONE THING A ONE-DIRECTIONAL LIST
   // CANNOT. The row read: unreachable by construction, nothing can produce a

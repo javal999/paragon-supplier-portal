@@ -109,3 +109,17 @@ export function formatDate(value?: string | number | Date | null): string {
     year: 'numeric',
   }).format(d);
 }
+
+/** "18 Sep 2026, 08:00 WIB" — a date and time in Asia/Jakarta. Invalid → "—". */
+export function formatDateTime(value?: string | number | Date | null): string {
+  if (value == null || value === '') return EMPTY;
+  const d = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(d.getTime())) return EMPTY;
+  const time = new Intl.DateTimeFormat('en-GB', {
+    timeZone: JAKARTA,
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(d);
+  return `${formatDate(d)}, ${time} WIB`;
+}

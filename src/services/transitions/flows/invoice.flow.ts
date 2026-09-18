@@ -57,8 +57,14 @@ export const invoiceFlow: FlowDefinition = {
       to: 'Draft',
       trigger: 'creation',
       requiredRole: 'invoice:submit',
-      requiredFields: ['poReference'],
-      policyHooks: [POLICY_HOOKS.INVOICE_CREATE_PO_CONFIRMED],
+      // REQ-E07-07 — an invoice is drawn from received goods receipts (lines),
+      // carries the supplier's own number and date, and the tax invoice.
+      requiredFields: ['poReference', 'lines', 'invoiceNumber', 'invoiceDate', 'taxInvoiceFile'],
+      policyHooks: [
+        POLICY_HOOKS.INVOICE_CREATE_PO_INVOICEABLE,
+        POLICY_HOOKS.INVOICE_LINES_FROM_RECEIPTS,
+        POLICY_HOOKS.INVOICE_NUMBER_UNIQUE,
+      ],
       surfaceable: { surfaced: true },
       version: 1,
     },
@@ -157,6 +163,19 @@ export const invoiceFlow: FlowDefinition = {
       requiredRole: 'invoice:dispute',
       requiredFields: ['disputeReason'],
       policyHooks: [],
+      surfaceable: { surfaced: true },
+      version: 1,
+    },
+    {
+      // REQ-E07-07 edge case — Finance returned the invoice with a reason; the
+      // supplier corrects it and sends it again, and the match runs again.
+      id: 't_invoice_resubmit',
+      from: ['Disputed'],
+      to: 'Submitted',
+      trigger: 'user',
+      requiredRole: 'invoice:submit',
+      requiredFields: ['amount'],
+      policyHooks: [POLICY_HOOKS.INVOICE_LINES_FROM_RECEIPTS, POLICY_HOOKS.INVOICE_NUMBER_UNIQUE],
       surfaceable: { surfaced: true },
       version: 1,
     },

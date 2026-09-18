@@ -65,7 +65,12 @@ describe('userVerbsFrom — legality, derived from the machine', () => {
     expect(userVerbsFrom('no_such_entity', 'Approved')).toEqual([]);
     expect(userVerbsFrom('invoice', 'No Such State')).toEqual([]);
     expect(userVerbsFrom('invoice', '')).toEqual([]);
-    expect(userVerbsFrom('invoice', 'Disputed').map((t) => t.id)).toEqual(['t_invoice_resolve']);
+    // REQ-E07-07 — a returned invoice has two ways out: Finance resolves it, or
+    // the supplier corrects and resubmits it.
+    expect(userVerbsFrom('invoice', 'Disputed').map((t) => t.id)).toEqual([
+      't_invoice_resubmit',
+      't_invoice_resolve',
+    ]);
   });
 });
 
