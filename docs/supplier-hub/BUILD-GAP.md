@@ -2,166 +2,158 @@
 
 | | |
 |---|---|
-| Version | 1.1, 2026-09-17 |
-| Compares | `SUPPLIER-HUB-REQUIREMENTS.md` v0.5 with the prototype in this repository at `main` b81f770 |
-| Owner decisions | 2026-09-17, recorded in section 9 of the requirements (RFX-1 to RFX-3, GAP-1 to GAP-4) |
+| Version | 2.0, 2026-09-18 |
+| Compares | `SUPPLIER-HUB-REQUIREMENTS.md` v0.5 with the prototype on branch `feat/supplier-hub-mvp` (pull request "Supplier Hub MVP build") |
+| Owner decisions | 2026-09-17, recorded in section 9 of the requirements (RFX-1 to RFX-3, GAP-1 to GAP-4, E06-R) |
 | Rule | This is the **only** document that describes what the prototype does for the Supplier Hub. The PRD and the requirements describe the product and never the code. Update this file when a build item lands |
 
 **How to read the status.**
-- **Partial:** some of the requirement is built.
-- **Different:** built, but the experience differs from the requirement.
-- **Missing:** nothing built.
-- **Ahead:** the code has more than the requirement said at the time of review.
+- **Built:** the requirement is implemented as written, on sample data.
+- **Partial:** part of the requirement is implemented; the rest is named below.
+- **Not built:** nothing implemented, with the reason.
 
-Where the experience differs, the requirement wins (GAP-1). Where the code had a calculation the requirement lacked, the calculation was moved into the requirements as a `CR-` rule (GAP-2). The code is then brought in line with the requirements.
+Everything runs on sample data held in the browser. There is no backend, no SAP connection and no email; the hub's own rules, refusals and calculations are real, and anything a user changes is lost when the page reloads.
 
 ---
 
 ## 1. Status per requirement
 
-| Req | Status at review | What the prototype has | Main code |
-|---|---|---|---|
-| REQ-E03-01 | Partial | Category filter and OTIF column. No purchasing-group filter; suspended suppliers can be invited | `src/pages-v2/BuyerSourcing.tsx` |
-| REQ-E03-02 | Missing | No RFI | — |
-| REQ-E03-03 | Partial | RFQ create, publish, invite-only quoting, quote privacy. Pre-fill from a purchase requisition. One price per quote; deadline not enforced | `BuyerSourcing.tsx`, `SupplierRFQs.tsx`, `services/transitions/flows/rfq.flow.ts`, `quotation.flow.ts` |
-| REQ-E03-04 | Missing | No RFP; the RFQ has one Incoterms and one payment-terms field | — |
-| REQ-E03-05 | Ahead | Scored comparison, currency rule, single-supplier award that rejects the other quotes. No negotiation; no multi-award | `src/lib/quoteScore.ts`, `BuyerSourcing.tsx`, `services/transitions/cascades.ts` |
-| REQ-E06-01 | Partial | Versioned forecast publications scoped per supplier. Monthly buckets, 3 commitment classes, no compare or download | `services/sdc/`, `SupplierForecasts.tsx` |
-| REQ-E06-02 | Partial | Commitment per period with quantity, date, reason; draft then submit. 7-day deadline; no tolerance, upload, or upside | `SupplierForecasts.tsx`, `flows/requirementResponse.flow.ts` |
-| REQ-E06-03 | Partial | Shortfall quantity, accept or dispute with note, manual chase list | `services/sdc/consolidation.ts`, `BuyerCollaboration.tsx`, `BuyerChase.tsx` |
-| REQ-E07-01 | Different | Standard PO with lines; no umbrella PO; dates on header only | `services/data/types.ts`, `SupplierOrders.tsx`, `BuyerOrders.tsx` |
-| REQ-E07-02 | Different | Acknowledge, then confirm quantity. No adjust reason, reject, deadline, or escalation. Confirmed date is collected but not saved | `flows/purchaseOrder.flow.ts`, `SupplierOrders.tsx` |
-| REQ-E07-03 | Missing | No Order Collaboration Summary | — |
-| REQ-E07-04 | Partial | ASN only after PO confirmation; several per PO. Shipped quantity always the full line; batch not saved; no cancel | `flows/advanceShipNotice.flow.ts`, `SupplierShipments.tsx` |
-| REQ-E07-05 | Missing | No shipping notice confirmation | — |
-| REQ-E07-06 | Different | PTI creates, inspects, and posts the goods receipt to SAP in the hub. Discrepancy from quality rejection only; supplier cannot dispute | `flows/goodsReceipt.flow.ts`, `BuyerGoodsReceipt.tsx`, `services/transitions/grRollup.ts` |
-| REQ-E07-07 | Different | Invoice = PO + amount; number generated; 1% match; delivered POs cannot be invoiced | `flows/invoice.flow.ts`, `services/transitions/invoiceRollup.ts`, `SupplierInvoices.tsx` |
-| REQ-E07-08 | Missing | No interface monitor or data-age banner. Simulated SAP posting with retry on 2 screens | `services/transitions/settleFaults.ts` |
-| REQ-E08-01 | Different | Sample stock list with an Available column; no PTI vs supplier stock, supplier ROP, in-production, or raw material / packaging split | `BuyerInventory.tsx`, `SupplierInventory.tsx`, `src/data/mockInventory.ts` |
-| REQ-E08-02 | Partial | Manual entry, batch grid, .xlsx import with column mapping. Whole file accepted or rejected; no template; Sync button inert | `BulkStockEntryGrid.tsx`, `XlsxImportPanel.tsx`, `services/sdc/ingest.ts` |
-| REQ-E08-03 | Missing | — | — |
-| REQ-E08-04 | Missing | Capacity type defined, unused | `services/sdc/types.ts` |
-| REQ-E08-05 | Missing | Hand-written risk banners only | `BuyerRisk.tsx` |
-| REQ-E09-01 | Different | No SAP recommendations; Intake Review turns suggestions into purchase requisitions | `IntakeReview.tsx` |
-| REQ-E09-02 | Missing | — | — |
-| REQ-E09-03 | Different | Scheduling agreement releases under a contract; PTI releases; supplier read-only; no confirmation statuses | `services/delivery/`, `BuyerDeliveryAgreements.tsx`, `SupplierDeliveryAgreements.tsx` |
-| REQ-E09-04 | Partial | Supplier-reported shipment with ETA, not linked to a call-off; no At Risk; dock appointments tab present | `flows/incomingShipment.flow.ts`, `SupplierShipments.tsx` |
-| REQ-E10-01 | Missing | OTIF and grades are typed into sample data; no CFOT | `src/data/mockSuppliers.ts`, `services/data/mock/fixtures/` |
-| REQ-E13-01 | Missing | "Track shipment" shows a not-available message | `BuyerShipments.tsx` |
+| Req | Status | Notes |
+|---|---|---|
+| REQ-E03-01 Supplier filtering | Built | Category and purchasing group filters; OTIF or "No history"; suspended, deactivated and blacklisted suppliers cannot be invited |
+| REQ-E03-02 RFI | Built | Template sections A–F, question library with required and weighted questions, drafts hidden from the buyer, deadline extension, answers reused by a later RFQ. Attachment questions are text fields: there is no file store |
+| REQ-E03-03 RFQ | Built | From scratch, from an RFI, or from a purchase requisition; price per item; response deadline enforced; quote privacy |
+| REQ-E03-04 RFP | Built | Standard term list in 7 groups, Comply or Deviate with a comment required on a deviation, term-by-term comparison |
+| REQ-E03-05 Comparison, negotiation, award | Built | Weighted score (CR-15) with reliability from measured OTIF, currency rule (CR-16), negotiation rounds restricted to shortlisted suppliers with every quote version kept, split award that must total 100% per item, reason required when the award leaves the best-scored quote. Sourcing request (E03.01) is still not detailed in the requirements |
+| REQ-E06-01 Forecast publication | Built | Weekly periods for packaging then monthly, monthly for raw material; Firm / Trade-off / Forecast zones; versions kept with a Changes view; spreadsheet download; view tracking and re-publication on the PTI Forecasts page |
+| REQ-E06-02 Commitment | Built | Pre-filled with the forecast, upside, acknowledgement for Forecast periods, reason enforced by the system when below forecast, CR-21 tolerance, split deadline, spreadsheet upload, carry-forward on re-publication |
+| REQ-E06-03 Gap monitoring | Built | Gap quantity and %, CR-22 colours, cumulative view, ranked exception list, Accept / Request revision / Move demand, reminders as Home tasks, supplier coverage as an estimate |
+| REQ-E07-01 PO visibility | Partial | Umbrella PO with its lines, response status and deadline. Per-line dates still depend on PQ-12; there is no SAP feed, so POs are sample data |
+| REQ-E07-02 PO response | Built | Approve, Adjust with reason and counter-offer, Reject with cause; 1-working-day deadline and Escalated derived from the clock; planner accepts or rejects a counter-offer; rejections feed performance |
+| REQ-E07-03 Order summary | Built | PO, ASN count, and the three confirmations with links; lifecycle steps on the PO |
+| REQ-E07-04 ASN | Built | Shipped quantity per line capped at the open quantity unless a reason is given, batch, ship date, required fields, several ASNs per PO, cancellation |
+| REQ-E07-05 Shipping notice | Built | Expected completion date per PO; the first ASN records shipment started; a later date raises a PTI task |
+| REQ-E07-06 Goods receipt | Partial | Supplier page with shipped, received and rejected quantity, QC result, discrepancy flag, acknowledge or dispute, PTI resolution. Receipts are still created in the hub rather than read from SAP, because there is no SAP feed; dispute attachments are not built |
+| REQ-E07-07 Invoice | Built | Built from received goods receipts, supplier's own invoice number and date, e-Faktur file name, duplicate and over-invoicing refused, CR-12 and CR-13 matching at submission, status list with correct-and-resubmit, CR-14 due date |
+| REQ-E07-08 SAP interface | Partial | Interface monitor with last successful arrival, failed messages and CR-20 retry, plus the data-age banner. The feeds themselves are simulated; the real interface technology is PQ-06 |
+| REQ-E08-01 Inventory visibility | Built | Supplier and PTI stock and reorder points, incoming split into in production and in transit with its detail, raw material and packaging views, days of supply with one band scale, last update and stale flag. No "available" figure |
+| REQ-E08-02 Stock submission | Built | Downloadable template, row-by-row upload validation, manual entry, simulated API sync with a failure path, and stock recorded by PTI on a supplier's behalf |
+| REQ-E08-03 Supplier access to PTI stock | Built | Grant, change and remove per supplier and per material, with a log; a supplier without access never receives PTI stock data |
+| REQ-E08-04 Capacity | Built | 13 weekly buckets per material group, upside, reason required below demand, gap weeks highlighted for the planner, and the Order summary capacity status |
+| REQ-E08-05 Alerts | Built | Rules for PTI and supplier stock against reorder point, projected stock-out, capacity gap, stale data, coverage and commitment below forecast; High / Medium / Low; no duplicates; grouped per supplier; closed with an action note. Delivery is in the hub only, not by email |
+| REQ-E09-01 Replenishment recommendation | Partial | Planner releases call-offs against the remaining umbrella PO quantity and value, and can generate a series. The SAP ROP recommendation list is not built (X-16) |
+| REQ-E09-02 Event-based analysis | Not built | Waiting on PQ-09 |
+| REQ-E09-03 Call-off confirmation | Built | Hub-owned call-offs, the six confirmation statuses, CR-05 tolerance, planner approval outside tolerance, 1-working-day deadline with escalation, ASN allowed only on a confirmed call-off |
+| REQ-E09-04 Delivery execution | Built | Dispatch heads-up or a linked ASN, At Risk when the expected arrival is after the need date, reminders. No dock or slot booking |
+| REQ-E10-01 CFOT and OTIF | Built | Calculated per PO and per call-off from hub data with working period filters, rejections counted, grade bands stated on screen, "No history" where nothing is measurable. Other scorecard measures stay sample figures and are marked as such |
+| REQ-E13-01 TMS access | Not built | Waiting on D-03 |
 
 ---
 
-## 2. Build list: bring the prototype in line
+## 2. Build list
 
-Each item follows the requirement named.
-
-| ID | Change | Requirement |
+| ID | Change | State |
 |---|---|---|
-| X-01 | Replace the scheduling-agreement release model with call-offs owned by the hub under an umbrella PO, confirmed by the supplier per line | REQ-E09-03 |
-| X-02 | PO response: Approve / Adjust / Reject, deadline, Escalated status, rejection notification; save the confirmed date | REQ-E07-02 |
-| X-03 | Build the Order Collaboration Summary | REQ-E07-03 |
-| X-04 | Build the shipping notice confirmation | REQ-E07-05 |
-| X-05 | ASN: shipped quantity, batch, required fields, cancel, in-transit link, call-off gate | REQ-E07-04 |
-| X-06 | Goods receipt read from SAP; supplier acknowledge or dispute; keep the quality inspection result (K-01) | REQ-E07-06 |
-| X-07 | Invoice from goods receipts; supplier invoice number and e-Faktur; duplicate block; statuses | REQ-E07-07 |
-| X-08 | SAP interface monitor and data-age banner | REQ-E07-08 |
-| X-09 | Inventory view: remove Available; add PTI and supplier SOH and ROP, in production vs in transit, material type split, stale flag, days of supply | REQ-E08-01 |
-| X-10 | Fixed downloadable stock template; row-level acceptance; working Sync button | REQ-E08-02 |
-| X-11 | Supplier access to PTI stock | REQ-E08-03 |
-| X-12 | Capacity confirmation | REQ-E08-04 |
-| X-13 | Rule-based alerts with risk class | REQ-E08-05 |
-| X-14 | Forecast buckets, zones, compare, download, upload, upside | REQ-E06-01, REQ-E06-02 |
-| X-15 | Gap monitoring: %, bands, cumulative, ranking, reassign | REQ-E06-03 |
-| X-16 | SAP ROP recommendations released as call-offs | REQ-E09-01 (after REPL) |
-| X-17 | Event-based analysis | REQ-E09-02 (after PQ-09) |
-| X-18 | Dispatch heads-up against a call-off, At Risk flag; remove the Dock appointments tab and Dock Schedule button | REQ-E09-04 |
-| X-19 | RFI and RFP; RFQ from RFI; quote per item; enforce deadline; purchasing-group filter; hide suspended suppliers; negotiation rounds; multi-award | REQ-E03-01 to REQ-E03-05 |
-| X-20 | Calculate CFOT and OTIF from hub data; working period filter; one OTIF target | REQ-E10-01 |
-| X-21 | No change until D-03 decides the TMS phase | REQ-E13-01 |
+| X-01 | Hub-owned call-offs under an umbrella PO | Done (phase 3) |
+| X-02 | PO response, deadline, escalation, counter-offer review | Done (phase 2a) |
+| X-03 | Order Collaboration Summary | Done (phase 2a) |
+| X-04 | Shipping notice confirmation | Done (phase 2a) |
+| X-05 | ASN detail, open-quantity rule, cancellation | Done (phase 2b) |
+| X-06 | Goods receipt discrepancy, supplier acknowledge or dispute | Done (phase 2b), except receipts still originate in the hub and disputes take no attachment |
+| X-07 | Invoice from goods receipts | Done (phase 2b) |
+| X-08 | SAP interface monitor and data-age banner | Done (phase 6b) against simulated feeds |
+| X-09 | Inventory view rebuilt | Done (phase 4) |
+| X-10 | Stock template, row-level upload, sync | Done (phase 4) |
+| X-11 | Supplier access to PTI stock | Done (phase 4) |
+| X-12 | Capacity confirmation | Done (phase 4) |
+| X-13 | Alerts with risk class | Done (phase 4), hub only |
+| X-14 | Forecast periods, zones, compare, download, upload, upside | Done (phase 5) |
+| X-15 | Gap monitoring | Done (phase 5) |
+| X-16 | SAP ROP recommendations released as call-offs | Not built — waiting on REPL |
+| X-17 | Event-based strategy analysis | Not built — waiting on PQ-09 |
+| X-18 | Dispatch heads-up, At Risk, dock booking removed | Done (phases 1 and 3) |
+| X-19 | RFI, RFP, quote per item, negotiation, split award, invite filters | Done (phase 6a) |
+| X-20 | CFOT and OTIF calculated | Done (phase 6b) |
+| X-21 | TMS access | Not built — waiting on D-03 |
 
 ### 2.1 Navigation and screens
 
-| ID | Change | Requirement |
+| ID | Change | State |
 |---|---|---|
-| U-01 to U-04, U-07, U-08 | Rebuild the menu per section 3.7: sections by hub area, role filter, one name per object, section label from the menu, "PTI / Supplier" switch, supplier menu by task. Main code: `src/components/layout-v2/SidebarV2.tsx` | NV-02, NV-05; section 3.7 |
-| U-05 | Home as a task list; lifecycle steps on each PO and call-off | SC-01, SC-02 |
-| U-06 | Replace system labels ("Commands dispatch — in-memory ledger", feed names) with 1 "Sample data" badge | SC-04 |
-| U-09 | Hide out-of-scope pages during the pilot (section 4) | NV-06 |
-| U-10 | Highlight the menu item on detail pages | NV-03 |
-| U-11 | Unique icon per menu item | NV-04 |
-| U-12 | One "as of" date for sample data | SC-05 |
-| U-13 | One OTIF target (CR-17: 90%). Retire the 95% line on the scorecard and supplier performance pages | CR-17 |
-| H-01 | Action banner above KPI tiles on working pages | SC-03 |
-| H-02 | Section labels at least 12px | SC-06 |
-| H-03 | Keyboard and screen-reader test before UAT | SC-07 |
+| U-01 to U-04, U-07, U-08 | Menu by hub section and role, one name per object, section label from the menu, PTI / Supplier switch, supplier menu by task | Done (phase 1) |
+| U-05 | Home task lists and lifecycle steps | Done (phases 1 and 2a) |
+| U-06 | System wording replaced by a plain sample-data marker | Done (phase 1), with markers moved onto the sample sections of pages that now mix calculated and sample figures (phase 6b) |
+| U-09 | Pages outside the MVP hidden from the menu | Done (phase 1) |
+| U-10 | Menu item highlighted on detail pages | Done (phase 1) |
+| U-11 | One icon per menu item | Done (phase 1) |
+| U-12 | One "as of" date for sample data | Partial — each family is anchored to the declared present; the PO family is the last to be aligned |
+| U-13 | One OTIF target of 90% | Done (phase 1) |
+| H-01 | Action banner above summary figures | Done where the built pages carry one |
+| H-02 | Section labels at least 12px | Done (phase 1) |
+| H-03 | Keyboard and screen-reader test before UAT | Not done — still to be tested |
 
 ---
 
-## 3. Calculations: where each rule came from
+## 3. Where the calculations live
 
-Rules adopted into section 3.6 of the requirements, with the prototype code they were taken from.
+The `CR-` rules are implemented in the hub's own modules and covered by their own tests. The prototype sources they were taken from are recorded in the requirements' `[Code]` tags.
 
-| Rule | Prototype source |
+| Rules | Module |
 |---|---|
-| CR-02 days-of-supply bands | `src/pages-v2/BuyerInventory.tsx` (PTI page bands) |
-| CR-03 supplier coverage | `src/services/sdc/consolidation.ts` (`COVERAGE_AT_RISK_FLOOR = 0.8`) |
-| CR-04 remaining quantity | `src/services/delivery/ledger.ts` |
-| CR-05 over-quantity tolerance | `src/services/delivery/ledger.ts` (10% flag for forecast releases; unlimited for JIT) |
-| CR-06, CR-07 match and on time | `src/services/delivery/fulfillment.ts` (`MATCH_WINDOW_DAYS = 7`, `DELIVERY_GRACE_DAYS = 3`) |
-| CR-09 reminders and drift | `src/services/chase/deliveryChase.ts` |
-| CR-10 counter-offer quantity | `src/services/transitions/policies.ts` |
-| CR-11 goods receipt result | `src/services/transitions/grRollup.ts` |
-| CR-12, CR-13 invoice match | `src/services/transitions/invoiceRollup.ts` (`MATCH_TOLERANCE = 0.01`) |
-| CR-14 invoice due and overdue | `src/services/data/mock/MockCommandService.ts` (due date on submit), `src/services/data/invoiceProjection.ts` (overdue) |
-| CR-15, CR-16 quote score and currency | `src/lib/quoteScore.ts`, `src/lib/fxPin.ts` |
-| CR-17 OTIF target status | `src/lib/chartPalette.ts` (`targetStatus`, target 90 on dashboard and analytics) |
-| CR-18 number check | `src/lib/localeNumber.ts` |
-| CR-19 batch total | `src/services/sdc/ingest.ts` |
-| CR-20 integration retry | `src/services/transitions/settleFaults.ts` |
-| CR-21 Trade-off 10% and CR-22 colour thresholds | Mirror CR-05 and CR-03 |
-| E06 7-day commitment deadline (REQ-E06-02 BR-07), keep-if-unchanged re-publication | `src/services/sdc/consolidation.ts` (`RESPONSE_DUE_DAYS = 7`) |
-| Starter reason codes | `src/pages-v2/SupplierForecasts.tsx` (`ROOT_CAUSE_LEVELS`) |
-| Call-off series generator (REQ-E09-01 BR-05) | `src/services/delivery/generator.ts` |
-
-**Prototype calculations not adopted**, to be removed from the code:
-
-| Calculation | Why not adopted |
-|---|---|
-| Reorder point = daily demand × 14, safety stock = × 7, MOQ = max(500, × 7), on the PTI inventory panel | ROP comes from SAP (REQ-E08-01 BR-04, validated) |
-| Supplier-page days-of-supply bands (below 7, 7 to 13, 14 to 30, above 30) | Conflicts with CR-02; one set kept |
-| OTIF target 95% on scorecard and supplier performance | Conflicts with CR-17; one target kept |
+| Working day, response deadline (section 3.4) | `src/lib/workingCalendar.ts` |
+| PO response and escalation | `src/services/data/poResponseProjection.ts` |
+| Call-off tolerance, matching, on time, in full, reminders (CR-05 to CR-09) | `src/services/transitions/callOffRules.ts`, `callOffTolerance.ts` |
+| Days of supply, bands, coverage, stale, alert risk class (CR-01 to CR-03) | `src/services/data/` inventory rules with `inventoryConfig.ts` |
+| Forecast periods, zones, commitment tolerance, gap colours (CR-21, CR-22) | `src/services/sdc/` forecast rules with `forecastConfig.ts` |
+| Goods receipt result, invoice matching, due date (CR-11 to CR-14) | `src/services/transitions/grRollup.ts`, `invoiceRollup.ts`, invoice projection |
+| Quote score and currency rule (CR-15, CR-16) | `src/lib/quoteScore.ts`, `src/lib/fxPin.ts` |
+| CFOT, OTIF, rejections, score and grade (CR-17) | `src/services/data/performanceRules.ts` |
+| Spreadsheet number and batch checks (CR-18, CR-19) | `src/lib/localeNumber.ts`, stock upload validation |
+| Integration retry classes (CR-20) | `src/services/transitions/settleFaults.ts` |
 
 ---
 
-## 4. Prototype features not in the requirements
+## 4. Prototype features that were kept or parked
 
-Decisions per the gap review suggestions (GAP-4).
-
-| ID | Feature | Decision | Where it now lives |
-|---|---|---|---|
-| K-01 | Goods receipt quality inspection: hold, retest, halal and BPOM checks | Keep for PTI; the supplier sees the result | REQ-E07-06 BR-06; boundary open (Q-20) |
-| K-02 | Stock by batch with expiry date | Keep as optional template columns | REQ-E08-02 BR-06 |
-| K-03 | PTI records stock or replies received by WhatsApp or email | Keep | REQ-E08-02 BR-08 |
-| K-04 | Distributor principal lead times and principal shipments | Keep | REQ-E06-03 BR-07 |
-| K-05 | Should-cost model in bid comparison | Park | Hidden in pilot |
-| K-06 | Purchase requisitions, intake review, plan grid | Park. The RFQ-from-requisition path stays (REQ-E03-03 BR-04) | Hidden in pilot |
-| K-07 | Compliance tracker and supplier documents | Hand to the Foundation team (E01, E02) | Foundation contribution |
-| K-08 | Marketplace, discovery, storefront, supply risk, contracts | Park; contract and catalog are Phase 2 | Hidden in pilot |
-| K-09 | Roles catalogue, process flows, glossary | Move to the user menu | NV-01 |
-| K-10 | Acknowledge-only forecast lines, dispute log, draft before submit | Keep | REQ-E06-01 BR-08, REQ-E06-02 BR-10, REQ-E06-03 BR-05 |
+| ID | Feature | Outcome |
+|---|---|---|
+| K-01 | Goods receipt quality inspection | Kept for PTI; the supplier sees the result and rejected quantity only. Boundary with the Phase 2 Supplier Quality module is still open (Q-20) |
+| K-02 | Stock by batch with expiry | Kept as template columns |
+| K-03 | Stock recorded by PTI from a WhatsApp or email reply | Kept, labelled "Entered by PTI" |
+| K-04 | Distributor principal lead times | Kept, feeding supplier coverage |
+| K-05 | Should-cost model | Parked, hidden from the menu |
+| K-06 | Purchase requisitions, intake review, plan grid | Parked; the RFQ-from-requisition path is kept |
+| K-07 | Compliance tracker and supplier documents | Handed to the Foundation team; hidden from the menu |
+| K-08 | Marketplace, discovery, storefront, supply risk, contracts | Parked, hidden from the menu |
+| K-09 | Roles catalogue, process flows, glossary | Moved to the user menu |
+| K-10 | Acknowledge-only forecast lines, dispute log, draft before submit | Kept in forecast collaboration |
 
 ---
 
-## 5. Other documents in this repository
+## 5. What is still not built
+
+- **SAP ROP replenishment recommendations** (X-16, REQ-E09-01): waiting on the replenishment-method decision (REPL).
+- **Event-based strategy analysis** (X-17, REQ-E09-02): waiting on PQ-09.
+- **Supplier access to the TMS** (X-21, REQ-E13-01): waiting on the phase decision (D-03).
+- **Any real integration.** SAP, supplier APIs and the TMS are simulated. POs, goods receipts and invoice status are sample data, not inbound messages.
+- **Email and other notifications.** Alerts and reminders appear in the hub only; nothing is sent.
+- **File attachments.** RFI attachment questions, receipt-dispute attachments and the e-Faktur are recorded as file names; no file is stored.
+- **A backend.** No database, no sign-in for real users, no scheduled jobs; changes are lost on reload. The pilot needs all of these (PRD section 4).
+- **Accessibility testing** (H-03) and an admin screen for the thresholds that currently live in configuration files.
+- **Foundation epics** E01 and E02 (registration, onboarding, supplier master data), which belong to the Foundation team.
+
+---
+
+## 6. Other documents in this repository
 
 These documents describe how the prototype was designed. For Supplier Hub product scope, `SUPPLIER-HUB-PRD.md` and `SUPPLIER-HUB-REQUIREMENTS.md` are the reference. Where they disagree, the Supplier Hub documents win. The documents below are kept unchanged as engineering history.
 
 | Document | Relation to the Supplier Hub documents |
 |---|---|
-| `docs/Delivery_Agreement_Design_Spec_v1.md`, `docs/Delivery_Agreement_and_Contract_Compliance_Chase_Design_Note_v1.md` | The scheduling-agreement model is replaced by hub call-offs (REQ-E09-03, X-01). Its calculations kept as CR-04 to CR-09 |
-| `docs/Supplier_Data_Collaboration_Design_v2.md`, `docs/C8_Forecast_Publication_Seam_Proposal.md`, `docs/contracts/C8-forecast-publication.md` | Forecast and stock design. Forecast parts replaced by REQ-E06-01 to REQ-E06-03; stock parts replaced by REQ-E08-02 |
+| `docs/Delivery_Agreement_Design_Spec_v1.md`, `docs/Delivery_Agreement_and_Contract_Compliance_Chase_Design_Note_v1.md` | The scheduling-agreement model is replaced by hub call-offs (REQ-E09-03). Its calculations survive as CR-04 to CR-09 |
+| `docs/Supplier_Data_Collaboration_Design_v2.md`, `docs/C8_Forecast_Publication_Seam_Proposal.md`, `docs/contracts/C8-forecast-publication.md` | Forecast and stock design, replaced by REQ-E06-01 to REQ-E06-03 and REQ-E08-02 |
 | `docs/PR_Intake_Review_Investigation_2026-07-15.md`, `docs/contracts/C7-pr-intake.md`, `docs/Stage_G_Grid_Planning_Layer_Plan_v1.md` | Parked features (K-06) |
 | `docs/Halal_Compliance_Control_Design_v1.md` | Foundation hand-off (K-07); halal checks at receipt kept (K-01) |
 | `docs/Communication_Hub_Design_Skeleton_v1.md` | Supports K-03 |
 | `docs/Supplier_Portal_*_Plan_*.md`, `Paragon_World_Class_Build_Plan_v1.md`, `docs/Paragon_Platform_Strategic_Spine_v1.md` | Prototype build sequencing, not product requirements |
-| `CLAUDE.md`, `docs/findings.md`, `docs/contracts/` (others) | Engineering rules and records for the prototype codebase |
+| `CLAUDE.md`, `docs/findings.md`, `docs/contracts/` (others) | Engineering rules and records for the prototype codebase. `C1-methods.md` and `C5-seams.md` carry counts that the build updates as verbs are added |
