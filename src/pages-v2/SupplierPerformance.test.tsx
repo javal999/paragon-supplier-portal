@@ -24,7 +24,9 @@ describe('SupplierPerformance — four honest states', () => {
   it('data: renders the scorecard for the seeded supplier', async () => {
     renderWithProviders(<SupplierPerformance />, { identity: SUPPLIER });
     expect(await screen.findByText('My Performance')).toBeInTheDocument();
-    expect(await screen.findByText('KPI Scorecard — 6 metrics')).toBeInTheDocument();
+    // PREMISE CHANGED (REQ-E10-01): the authored "OTIF Rate" row left this
+    // fixture — OTIF is calculated now and sits in its own KPI card above.
+    expect(await screen.findByText('KPI Scorecard — 5 metrics')).toBeInTheDocument();
   });
 
   it('loading: shows LoadingState while the reads are pending', () => {
@@ -47,5 +49,40 @@ describe('SupplierPerformance — four honest states', () => {
   it('empty: shows EmptyState for a supplier with no published scorecard', async () => {
     renderWithProviders(<SupplierPerformance />, { identity: SUPPLIER_NO_PERF });
     expect(await screen.findByText('No performance data yet')).toBeInTheDocument();
+  });
+});
+
+// ────────────────────────────────────────────────────────────────────────────
+// REQ-E10-01 — the supplier's own figures are CALCULATED now.
+// sup-007 has two measured deliveries in the window, one met and one late.
+// ────────────────────────────────────────────────────────────────────────────
+describe('My performance — calculated (REQ-E10-01)', () => {
+  it('shows the calculated OTIF over the deliveries measured in the period', async () => {
+    renderWithProviders(<SupplierPerformance />, { identity: SUPPLIER });
+    expect(await screen.findByTestId('my-performance-otif')).toHaveTextContent(
+      'From 2 deliveries due in this period',
+    );
+    expect(await screen.findByText('50%')).toBeInTheDocument();
+  });
+
+  it('the grade comes from the calculated score, and the bands are stated on screen', async () => {
+    renderWithProviders(<SupplierPerformance />, { identity: SUPPLIER });
+    expect(await screen.findByTestId('my-performance-grade')).toHaveTextContent('50/100');
+    expect(
+      await screen.findByText(/Grades from the score: A 90\+ · B 80\+ · C 70\+ · D 0\+/),
+    ).toBeInTheDocument();
+  });
+
+  it('CFOT with no measurable order reads "No history", never 0%', async () => {
+    renderWithProviders(<SupplierPerformance />, { identity: SUPPLIER });
+    expect(await screen.findByTestId('my-performance-cfot')).toHaveTextContent(
+      'Nothing measured in this period yet.',
+    );
+  });
+
+  it('offers the period chips that drive the computation', async () => {
+    renderWithProviders(<SupplierPerformance />, { identity: SUPPLIER });
+    expect(await screen.findByText('Last 30 days')).toBeInTheDocument();
+    expect(await screen.findByText('This year')).toBeInTheDocument();
   });
 });

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { AlertTriangle, MessageSquarePlus, RefreshCw } from 'lucide-react';
 import AppShellV2 from '../components/layout-v2/AppShellV2';
 import PageHeader from '../components/ui-v2/PageHeader';
+import SapDataAgeBanner from '../components/ui-v2/SapDataAgeBanner';
 import PageMetaLine from '../components/ui-v2/PageMetaLine';
 import SampleDataBadge from '../components/ui-v2/SampleDataBadge';
 import SubTabs from '../components/ui-v2/SubTabs';
@@ -121,6 +122,9 @@ const BuyerInventory: React.FC = () => {
         {t('inv.asOf')} <Data>{formatDate(nowIso)}</Data>
         <SampleDataBadge className="ml-3 align-middle" />
       </PageMetaLine>
+
+      {/* REQ-E07-08 AC-03 — this page reads SAP data; say how old it is. */}
+      <SapDataAgeBanner page="inventory" className="mb-4" />
 
       {(critical > 0 || stale > 0) && (
         <div

@@ -286,7 +286,7 @@ const BuyerSupplierProfile: React.FC = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
         <KpiCard
           eyebrow={t('buyerSupplierProfile.kpi.otif.eyebrow')}
-          value={`${supp.otif}%`}
+          value={supp.otif === undefined ? t('rfx.noHistory') : `${supp.otif}%`}
           subtitle={t('buyerSupplierProfile.kpi.otif.subtitle')}
           icon={Activity}
         />
@@ -304,7 +304,7 @@ const BuyerSupplierProfile: React.FC = () => {
         />
         <KpiCard
           eyebrow={t('buyerSupplierProfile.kpi.scorecard.eyebrow')}
-          value={supp.scorecardGrade}
+          value={supp.scorecardGrade ?? t('rfx.noHistory')}
           subtitle={t('buyerSupplierProfile.kpi.scorecard.subtitle', {
             rating: supp.rating.toFixed(1),
           })}

@@ -332,7 +332,10 @@ const SupplierDashboard: React.FC = () => {
       />
     );
 
-  const grade = mySupplier.scorecardGrade as Grade;
+  // REQ-E10-01 — the grade and the score are PROJECTED from the calculated
+  // measures, so both are absent together when there is nothing to measure.
+  const grade = mySupplier.scorecardGrade as Grade | undefined;
+  const score = mySupplier.performanceScore;
   const channelLabel = t(CHANNEL_KEY[mySupplier.preferredChannel]);
   // REQ-E03-01 edge case — OTIF is OPTIONAL on the supplier master: a supplier
   // with nothing delivered yet has no record, and the honest answer is "No
@@ -521,9 +524,15 @@ const SupplierDashboard: React.FC = () => {
               <div className="text-[10px] text-text-tertiary uppercase tracking-wider mb-2">
                 {t('supplierDashboard.identity.grade')}
               </div>
-              <GradeBadge grade={grade} />
+              {grade ? (
+                <GradeBadge grade={grade} />
+              ) : (
+                <div className="text-xs text-text-tertiary">{t('rfx.noHistory')}</div>
+              )}
               <div className="text-xs text-text-secondary mt-1">
-                {!hasOtif ? '—' : otif >= 90 ? '94' : otif >= 80 ? '82' : '70'} / 100
+                {score === undefined
+                  ? '—'
+                  : t('supplierDashboard.identity.score', { score })}
               </div>
             </div>
             <div className="flex flex-col gap-1">
@@ -768,7 +777,11 @@ const SupplierDashboard: React.FC = () => {
               <h2 className="text-section text-text-primary">
                 {t('supplierDashboard.perf.title')}
               </h2>
-              <GradeBadge grade={grade} size="sm" />
+              {grade ? (
+                <GradeBadge grade={grade} size="sm" />
+              ) : (
+                <span className="text-xs text-text-tertiary">{t('rfx.noHistory')}</span>
+              )}
             </div>
             <div className="flex flex-col gap-4">
               {[

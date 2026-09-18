@@ -137,7 +137,15 @@ describe('t_rfq_fx_pin — the D-1 freeze is APPEND-ONLY', () => {
       transitionId: 't_rfq_award',
       entity: 'rfq',
       entityId: RFQ,
-      payload: { awardedQuotationId: 'qt-001a', awardedSupplierId: 'sup-005' },
+      // PREMISE CHANGED (REQ-E10-01): CR-15's reliability axis now reads the
+      // CALCULATED OTIF, so this award no longer happens to follow the
+      // best-scored quote and BR-07's reason is required. The claim under test
+      // — that an award leaves the FX ledger alone — is unchanged.
+      payload: {
+        awardedQuotationId: 'qt-001a',
+        awardedSupplierId: 'sup-005',
+        awardReason: 'Chosen for capacity in the delivery window.',
+      },
     });
     expect(rfqStore.get(RFQ)!.status).toBe('Awarded');
     expect(rfqStore.get(RFQ)!.fxPins).toHaveLength(1);

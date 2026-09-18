@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import AppShellV2 from '../components/layout-v2/AppShellV2';
 import PageHeader from '../components/ui-v2/PageHeader';
+import SapDataAgeBanner from '../components/ui-v2/SapDataAgeBanner';
 import PageMetaLine from '../components/ui-v2/PageMetaLine';
 import ProvenanceMarker from '../components/ui-v2/ProvenanceMarker';
 import KpiCard from '../components/ui-v2/KpiCard';
@@ -799,6 +800,9 @@ const GoodsReceiptWorkspace: React.FC<GoodsReceiptWorkspaceProps> = ({
             DR-10 trail. The receipts listed are fixtures. */}
         <ProvenanceMarker capability="goodsReceipts" className="ml-3 align-middle" />
       </PageMetaLine>
+
+      {/* REQ-E07-08 AC-03 — this page reads SAP data; say how old it is. */}
+      <SapDataAgeBanner page="goodsReceipts" className="mb-4" />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <KpiCard

@@ -3,9 +3,15 @@ import {
   SupplierStatus,
   SupplierTier,
   PreferredChannel,
-  ScorecardGrade,
 } from '../types/supplier.types';
 
+// ────────────────────────────────────────────────────────────────────────────
+// ⚠️ NO SUPPLIER BELOW CARRIES AN OTIF OR A GRADE — REQ-E10-01 (Phase 6b).
+//   Both used to be authored here, and a typed-in percentage beside a real
+//   delivery history is the shape this phase exists to remove. They are
+//   PROJECTED AT READ from the call-offs, heads-ups, receipts and orders the hub
+//   holds (`mock/supplierMeasureReadModel.ts`), so a supplier with nothing
+//   measured carries neither field and every surface reads "No history".
 // ────────────────────────────────────────────────────────────────────────────
 // ⚠️ EVERY SUPPLIER BELOW IS FICTIONAL — `DISCOVERY-REAL-SUBJECTS-01`, batch A.
 //   This file previously named twelve REAL trading corporations and carried, on
@@ -82,10 +88,8 @@ export const mockSuppliers: SupplierExtended[] = [
     bpomRegistered: true,
     certExpiryDate: '2027-03-09',
     preferredChannel: PreferredChannel.API,
-    otif: 95,
     leadTimeAdherence: 93,
     invoiceAccuracy: 99,
-    scorecardGrade: ScorecardGrade.A,
   },
   {
     id: 'sup-002',
@@ -109,10 +113,8 @@ export const mockSuppliers: SupplierExtended[] = [
     bpomRegistered: true,
     certExpiryDate: '2026-09-10',
     preferredChannel: PreferredChannel.WEB,
-    otif: 91,
     leadTimeAdherence: 88,
     invoiceAccuracy: 96,
-    scorecardGrade: ScorecardGrade.A,
   },
   {
     id: 'sup-003',
@@ -136,10 +138,8 @@ export const mockSuppliers: SupplierExtended[] = [
     bpomRegistered: true,
     certExpiryDate: '2026-11-01',
     preferredChannel: PreferredChannel.API,
-    otif: 97,
     leadTimeAdherence: 96,
     invoiceAccuracy: 100,
-    scorecardGrade: ScorecardGrade.A,
   },
   {
     id: 'sup-004',
@@ -163,10 +163,8 @@ export const mockSuppliers: SupplierExtended[] = [
     bpomRegistered: false,
     certExpiryDate: '2026-06-19',
     preferredChannel: PreferredChannel.WEB,
-    otif: 89,
     leadTimeAdherence: 85,
     invoiceAccuracy: 97,
-    scorecardGrade: ScorecardGrade.B,
   },
   {
     id: 'sup-005',
@@ -190,10 +188,8 @@ export const mockSuppliers: SupplierExtended[] = [
     bpomRegistered: true,
     certExpiryDate: '2027-02-13',
     preferredChannel: PreferredChannel.API,
-    otif: 93,
     leadTimeAdherence: 92,
     invoiceAccuracy: 98,
-    scorecardGrade: ScorecardGrade.A,
   },
   {
     id: 'sup-006',
@@ -217,10 +213,8 @@ export const mockSuppliers: SupplierExtended[] = [
     bpomRegistered: true,
     certExpiryDate: '2026-07-04',
     preferredChannel: PreferredChannel.EMAIL,
-    otif: 87,
     leadTimeAdherence: 84,
     invoiceAccuracy: 95,
-    scorecardGrade: ScorecardGrade.B,
   },
   {
     id: 'sup-007',
@@ -255,10 +249,8 @@ export const mockSuppliers: SupplierExtended[] = [
     bpomRegistered: false,
     certExpiryDate: '2027-09-01',
     preferredChannel: PreferredChannel.WHATSAPP,
-    otif: 82,
     leadTimeAdherence: 80,
     invoiceAccuracy: 91,
-    scorecardGrade: ScorecardGrade.B,
   },
   {
     id: 'sup-008',
@@ -282,10 +274,8 @@ export const mockSuppliers: SupplierExtended[] = [
     bpomRegistered: false,
     certExpiryDate: '2027-01-09',
     preferredChannel: PreferredChannel.WHATSAPP,
-    otif: 79,
     leadTimeAdherence: 81,
     invoiceAccuracy: 88,
-    scorecardGrade: ScorecardGrade.C,
   },
   {
     id: 'sup-009',
@@ -309,10 +299,8 @@ export const mockSuppliers: SupplierExtended[] = [
     bpomRegistered: true,
     certExpiryDate: '2026-08-24',
     preferredChannel: PreferredChannel.WEB,
-    otif: 85,
     leadTimeAdherence: 83,
     invoiceAccuracy: 93,
-    scorecardGrade: ScorecardGrade.B,
   },
   {
     id: 'sup-010',
@@ -336,10 +324,8 @@ export const mockSuppliers: SupplierExtended[] = [
     bpomRegistered: false,
     certExpiryDate: '2026-08-31',
     preferredChannel: PreferredChannel.WHATSAPP,
-    otif: 75,
     leadTimeAdherence: 80,
     invoiceAccuracy: 85,
-    scorecardGrade: ScorecardGrade.D,
   },
   {
     id: 'sup-011',
@@ -363,10 +349,8 @@ export const mockSuppliers: SupplierExtended[] = [
     bpomRegistered: false,
     certExpiryDate: '2027-01-14',
     preferredChannel: PreferredChannel.EMAIL,
-    otif: 80,
     leadTimeAdherence: 82,
     invoiceAccuracy: 90,
-    scorecardGrade: ScorecardGrade.C,
   },
   {
     id: 'sup-012',
@@ -390,10 +374,8 @@ export const mockSuppliers: SupplierExtended[] = [
     bpomRegistered: false,
     certExpiryDate: '2025-04-30',
     preferredChannel: PreferredChannel.API,
-    otif: 75,
     leadTimeAdherence: 78,
     invoiceAccuracy: 86,
-    scorecardGrade: ScorecardGrade.D,
   },
   // ── REQ-E03-01 — the two suppliers the invitee filter exists to tell apart ──
   //   sup-013 is ACTIVE with NOTHING MEASURED: no call-off has ever been
@@ -424,10 +406,8 @@ export const mockSuppliers: SupplierExtended[] = [
     bpomRegistered: false,
     certExpiryDate: '2028-06-30',
     preferredChannel: PreferredChannel.WEB,
-    // No `otif` — newly onboarded, nothing delivered yet. NOT a zero.
     leadTimeAdherence: 0,
     invoiceAccuracy: 0,
-    scorecardGrade: ScorecardGrade.C,
   },
   {
     id: 'sup-014',
@@ -451,10 +431,8 @@ export const mockSuppliers: SupplierExtended[] = [
     bpomRegistered: false,
     certExpiryDate: '2025-02-10',
     preferredChannel: PreferredChannel.WHATSAPP,
-    otif: 54,
     leadTimeAdherence: 60,
     invoiceAccuracy: 71,
-    scorecardGrade: ScorecardGrade.F,
   },
   {
     id: 'sup-015',
@@ -478,9 +456,7 @@ export const mockSuppliers: SupplierExtended[] = [
     bpomRegistered: true,
     certExpiryDate: '2027-11-30',
     preferredChannel: PreferredChannel.WEB,
-    otif: 88,
     leadTimeAdherence: 86,
     invoiceAccuracy: 94,
-    scorecardGrade: ScorecardGrade.B,
   },
 ];

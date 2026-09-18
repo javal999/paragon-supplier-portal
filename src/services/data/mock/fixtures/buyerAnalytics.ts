@@ -69,15 +69,23 @@ export const CHANNEL_DATA: MonthlyChannelMix[] = [
   { month: 'Mar', whatsapp: 45, web: 25, email: 20, api: 10 },
 ];
 
+// ⚠️ REQ-E10-01 — THIS TABLE NO LONGER CARRIES AN OTIF OR A GRADE. Both were
+// authored numbers beside supplier NAMES that matched no master record, so the
+// table could not have been joined to a delivery history even in principle. The
+// row now names a supplier id; the page resolves the name, the category, the
+// calculated OTIF and the grade from the master and the measures. What stays
+// here is the genuinely SAMPLE half — no hub data measures OTDR, acknowledgement
+// speed or first-time invoice match — and the page marks it as sample.
 export const PERF_TABLE: AnalyticsPerfRow[] = [
-  { supplier: 'PT Sample Packaging Indonesia', category: 'Packaging Primary', otif: 88, otdr: 91, ackSpeed: '18h', invoiceMatch: '98%', grade: 'B', trend: '↑' },
-  { supplier: 'Sample Vitamins Co.', category: 'Active Ingredients', otif: 94, otdr: 96, ackSpeed: '6h', invoiceMatch: '100%', grade: 'A', trend: '↑' },
-  { supplier: 'Sample Personal Care DE', category: 'Active Ingredients', otif: 78, otdr: 82, ackSpeed: '42h', invoiceMatch: '85%', grade: 'C', trend: '↓' },
-  { supplier: 'PT Sample Specialty Fats', category: 'Halal Emulsifier', otif: 92, otdr: 94, ackSpeed: '12h', invoiceMatch: '97%', grade: 'A', trend: '→' },
-  { supplier: 'PT Sample Halal Emulsifiers', category: 'Halal Emulsifier', otif: 85, otdr: 88, ackSpeed: '24h', invoiceMatch: '95%', grade: 'B', trend: '↑' },
-  { supplier: 'Sample Fragrance House SG', category: 'Fragrance', otif: 91, otdr: 93, ackSpeed: '8h', invoiceMatch: '99%', grade: 'A', trend: '→' },
-  { supplier: 'PT Sample Oleochemicals', category: 'Natural Botanical', otif: 82, otdr: 85, ackSpeed: '30h', invoiceMatch: '92%', grade: 'B', trend: '↑' },
-  { supplier: 'Sample Specialty FR', category: 'Active Ingredients', otif: 72, otdr: 76, ackSpeed: '56h', invoiceMatch: '88%', grade: 'C', trend: '↓' },
+  { supplierId: 'sup-007', otdr: 91, ackSpeed: '18h', invoiceMatch: '98%', trend: '↑' },
+  { supplierId: 'sup-009', otdr: 96, ackSpeed: '6h', invoiceMatch: '100%', trend: '↑' },
+  { supplierId: 'sup-005', otdr: 82, ackSpeed: '42h', invoiceMatch: '85%', trend: '↓' },
+  { supplierId: 'sup-002', otdr: 94, ackSpeed: '12h', invoiceMatch: '97%', trend: '→' },
+  { supplierId: 'sup-010', otdr: 88, ackSpeed: '24h', invoiceMatch: '95%', trend: '↑' },
+  { supplierId: 'sup-003', otdr: 93, ackSpeed: '8h', invoiceMatch: '99%', trend: '→' },
+  { supplierId: 'sup-001', otdr: 85, ackSpeed: '30h', invoiceMatch: '92%', trend: '↑' },
+  { supplierId: 'sup-006', otdr: 76, ackSpeed: '56h', invoiceMatch: '88%', trend: '↓' },
+  { supplierId: 'sup-008', otdr: 89, ackSpeed: '20h', invoiceMatch: '96%', trend: '→' },
 ];
 
 // Headline KPI cards — relocated from the inline JSX in BuyerAnalytics so the
@@ -92,11 +100,6 @@ export const ANALYTICS_SUMMARY: AnalyticsSummary = {
     value: '12',
     subtitle: '2 onboarding · 8 Grade A or B',
     tone: 'success',
-  },
-  portfolioOtif: {
-    value: '87%',
-    subtitle: '-3pp vs target 90% · 15-mo avg',
-    tone: 'danger',
   },
   avgCycleTime: {
     value: '28h',

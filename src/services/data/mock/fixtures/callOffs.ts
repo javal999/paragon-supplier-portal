@@ -17,7 +17,7 @@
 //   Confirmation · 0004 new date Awaiting Approval · 0005 At Risk · 0006
 //   Confirmed, due within 7 days with no dispatch notice · 0007 and 0008 Missed
 //   (delivery drift) · 0009 Escalated · 0010 partial Awaiting Approval · 0011
-//   Rejected · 0012 Draft.
+//   Rejected · 0012 Draft · 0013 Delivered on time and in full.
 // ────────────────────────────────────────────────────────────────────────────
 
 import { DECLARED_PRESENT } from '../../fixturePresent';
@@ -41,6 +41,24 @@ const PET = {
   description: 'PET Bottle 200ml Frosted — Wardah Series',
   uom: 'PCS',
   unitPrice: 1600,
+  currency: 'IDR',
+} as const;
+
+// A SECOND PET line, on the 100ml bottle — its goods receipt (GR-2026-003) is
+// the one delivery in this seed that lands ON the approved date and IN FULL, so
+// REQ-E10-01's calculated OTIF has a MET result to show beside the late and
+// missed ones. Without it every measured supplier would read 0%, which is a
+// property of the sample set rather than of the rule.
+const PET_100 = {
+  poId: 'po-008',
+  poNumber: 'PO-2025-00108',
+  poLineId: 'li-008a',
+  supplierId: 'sup-007',
+  supplierName: 'PT Sample Packaging Indonesia',
+  materialCode: 'PK-PETB-8802',
+  description: 'PET Bottle 100ml Clear — Emina Series',
+  uom: 'PCS',
+  unitPrice: 1233,
   currency: 'IDR',
 } as const;
 
@@ -259,6 +277,25 @@ export const CALL_OFF_SEED: readonly CallOff[] = [
     status: 'Rejected',
     releasedAt: at(-3, 3),
     rejectionReason: 'Production line under maintenance that week.',
+    dispatches: [],
+    notes: [],
+  },
+  {
+    // 0013 Delivered on time and in full — the met OTIF in this seed.
+    ...PET_100,
+    id: 'co-0013',
+    callOffNumber: 'CO-2026-0013',
+    quantity: 95000,
+    needDate: day(0),
+    type: 'forecast',
+    status: 'Confirmed',
+    releasedAt: at(-12, 2),
+    confirmation: {
+      kind: 'confirm',
+      deliveries: [{ quantity: 95000, date: day(0) }],
+      confirmedAt: at(-11, 3),
+      approval: 'auto',
+    },
     dispatches: [],
     notes: [],
   },

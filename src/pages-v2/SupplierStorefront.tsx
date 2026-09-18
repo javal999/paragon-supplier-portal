@@ -291,7 +291,7 @@ const SupplierStorefront: React.FC = () => {
         />
         <KpiCard
           eyebrow={t('supplierStorefront.kpi.otif.eyebrow')}
-          value={`${supp.otif}%`}
+          value={supp.otif === undefined ? t('rfx.noHistory') : `${supp.otif}%`}
           subtitle={t('supplierStorefront.kpi.otif.subtitle')}
           icon={Activity}
         />

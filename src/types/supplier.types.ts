@@ -74,7 +74,19 @@ export interface Supplier {
   purchasingGroup?: string;
   leadTimeAdherence: number;
   invoiceAccuracy: number;
-  scorecardGrade: ScorecardGrade;
+  /**
+   * REQ-E10-01 — PROJECTED AT READ, never stored. The letter is a reading of the
+   * calculated score (the band table lives in `performanceRules.ts`), so a
+   * stored grade can never disagree with the figures beside it. Absent for a
+   * supplier with no measurable history, exactly as `otif` is.
+   */
+  scorecardGrade?: ScorecardGrade;
+  /**
+   * REQ-E10-01 — the calculated assessment score the grade is read from, 0–100.
+   * PROJECTED AT READ beside `scorecardGrade`, and absent for the same reason:
+   * a supplier with no measurable history has no score, not a zero.
+   */
+  performanceScore?: number;
   // Optional profile attributes (surfaced on storefront/profile views).
   legalName?: string;
   taxId?: string;

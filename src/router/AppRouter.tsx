@@ -45,6 +45,7 @@ import BuyerRisk from '../pages-v2/BuyerRisk';
 import BuyerCommHub from '../pages-v2/BuyerCommHub';
 import BuyerCompliance from '../pages-v2/BuyerCompliance';
 import ProcessFlows from '../pages-v2/ProcessFlows';
+import InterfaceMonitor from '../pages-v2/InterfaceMonitor';
 import RolesCatalogue from '../pages-v2/RolesCatalogue';
 import RoleDetail from '../pages-v2/RoleDetail';
 // GL-1 — the glossary surface. PERSONA-NEUTRAL by route, deliberately: the term
@@ -163,6 +164,7 @@ const AppRouter: React.FC = () => {
               flow-graph analyzer. Everything it draws is derived from
               getKnownFlows(); there is no second copy of any machine. */}
           <Route path="/buyer/process-flows" element={<ProcessFlows />} />
+          <Route path="/buyer/interface-monitor" element={<InterfaceMonitor />} />
           <Route path="/buyer/roles" element={<RolesCatalogue />} />
           <Route path="/buyer/roles/:roleId" element={<RoleDetail />} />
           <Route path="/glossary" element={<Glossary />} />

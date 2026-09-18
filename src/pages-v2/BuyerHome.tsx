@@ -29,6 +29,8 @@ import { deadlineState } from '../services/transitions/forecastRules';
 import { isClosingSoon } from '../services/transitions/rfxRules';
 import { forecastNow } from './forecasts/forecastDisplay';
 import { rfxNow } from './rfx/rfxDisplay';
+import { useSapInterface } from './interface/sapInterfaceDisplay';
+import { isRetryable } from '../services/data/sapInterfaceRules';
 
 // PTI Home — "My tasks" (REQUIREMENTS §3.8 SC-01). Tasks are filtered by the
 // PTI role the menu is showing, so a Finance user is not handed a planner's work.
@@ -55,6 +57,8 @@ const BuyerHome: React.FC = () => {
   const forecastLines = useForecastCommitments();
   // REQ-E03-05 — negotiation rounds closing soon (Phase 6a).
   const rounds = useNegotiationRounds();
+  // REQ-E07-08 — records that did not get through and can be sent again (CR-20).
+  const sap = useSapInterface();
 
   const tasks = useMemo<HomeTask[]>(() => {
     const now = new Date();
@@ -230,6 +234,16 @@ const BuyerHome: React.FC = () => {
         to: '/buyer/sourcing',
       },
       {
+        // REQ-E07-08 AC-02 — only a RETRYABLE failure is a task: a business
+        // refusal is not something acting here can fix (CR-20).
+        id: 'sap-messages-failed',
+        roles: ['MP'],
+        label: t('hub.home.task.sapMessagesFailed'),
+        count: sap.failures.filter(isRetryable).length,
+        severity: 'critical',
+        to: '/buyer/interface-monitor',
+      },
+      {
         id: 'overdue-invoices',
         roles: ['FIN'],
         label: t('hub.home.task.overdueInvoices'),
@@ -239,7 +253,7 @@ const BuyerHome: React.FC = () => {
       },
     ];
     return role === 'ALL' ? all : all.filter((task) => task.roles.includes(role));
-  }, [role, pos.data, invoices.data, rfqs.data, quotes.data, grs.data, asns.data, chase.data, callOffs.views, alerts.data, capacity.data, forecastLines.data, rounds.data, t]);
+  }, [role, pos.data, invoices.data, rfqs.data, quotes.data, grs.data, asns.data, chase.data, callOffs.views, alerts.data, capacity.data, forecastLines.data, rounds.data, sap.failures, t]);
 
   return (
     <AppShellV2>

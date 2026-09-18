@@ -110,7 +110,10 @@ describe('REQ-E03-01 — the invitee search on the sourcing wizard', () => {
     expect(within(row).getByText('No history')).toBeInTheDocument();
     expect(within(row).queryByText('0%')).not.toBeInTheDocument();
     // POSITIVE TWIN — a measured supplier still shows its number.
-    expect(within(screen.getByTestId('invitee-row-sup-007')).getByText('82%')).toBeInTheDocument();
+    // PREMISE CHANGED (REQ-E10-01): the positive twin's figure is CALCULATED
+    // from sup-007's own deliveries (two measured, one met) rather than read off
+    // the master, so it is 50% where the authored master said 82%.
+    expect(within(screen.getByTestId('invitee-row-sup-007')).getByText('50%')).toBeInTheDocument();
   });
 
   it('the purchasing-group filter narrows the result, and the empty state names the filters', async () => {
@@ -143,7 +146,8 @@ describe('REQ-E03-02 — the information request', () => {
     expect(await screen.findByTestId('rfi-row-rfi-001')).toHaveTextContent('RFI-2026-001');
     fireEvent.click(screen.getByTestId('rfi-open-rfi-001'));
     const detail = await screen.findByTestId('rfi-detail-rfi-001');
-    expect(within(detail).getByTestId('rfi-otif-sup-007')).toHaveTextContent('82%');
+    // PREMISE CHANGED (REQ-E10-01) — calculated, not authored.
+    expect(within(detail).getByTestId('rfi-otif-sup-007')).toHaveTextContent('50%');
     // ⚠️ the new supplier's OTIF is a sentence, not a zero.
     expect(within(detail).getByTestId('rfi-otif-sup-013')).toHaveTextContent('No history');
     // BR-10 shape — the DRAFT author is listed as an invitee but its answers
@@ -263,7 +267,8 @@ describe('REQ-E03-05 — the bid comparison', () => {
     openEvent();
     const row = await screen.findByTestId('cmp-row-reliability');
     expect(within(row).getByTestId('cmp-otif-sup-013')).toHaveTextContent('No history');
-    expect(within(row).getByTestId('cmp-otif-sup-007')).toHaveTextContent('82%');
+    // PREMISE CHANGED (REQ-E10-01) — calculated, not authored.
+    expect(within(row).getByTestId('cmp-otif-sup-007')).toHaveTextContent('50%');
   });
 
   it('AC-03 — every quote version is kept and readable, rounds and all', async () => {

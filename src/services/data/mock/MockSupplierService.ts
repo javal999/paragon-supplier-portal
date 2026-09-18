@@ -1,11 +1,18 @@
 import { mockSuppliers } from '../../../data/mockSuppliers';
 import type { ISupplierService, Page, QueryScope, Supplier } from '../types';
 import { DataError } from '../types';
+import { allWithMeasures, withMeasures } from './supplierMeasureReadModel';
+
+// ⚠️ REQ-E10-01 — OTIF AND THE GRADE ARE PROJECTED HERE, NOT READ FROM THE
+// FIXTURE. Every supplier read goes through `withMeasures`, so a list, a
+// profile, a marketplace card and an RFx invitee row all quote the same
+// calculated figure — and a supplier with nothing measured carries neither
+// field, which is what every surface renders as "No history".
 
 export class MockSupplierService implements ISupplierService {
   async list(scope: QueryScope): Promise<Page<Supplier>> {
     if (scope.personaType === 'supplier') return { items: [] };
-    return { items: [...mockSuppliers] };
+    return { items: allWithMeasures(mockSuppliers) };
   }
 
   async getById(scope: QueryScope, id: string): Promise<Supplier | null> {
@@ -16,11 +23,13 @@ export class MockSupplierService implements ISupplierService {
         'SCOPE_DENIED',
         `Supplier ${scope.supplierId ?? '(none)'} may not read supplier ${id}`,
       );
-    return mockSuppliers.find((s) => s.id === id) ?? null;
+    const found = mockSuppliers.find((s) => s.id === id);
+    return found ? withMeasures(found) : null;
   }
 
   async getCurrent(scope: QueryScope): Promise<Supplier | null> {
     if (scope.personaType !== 'supplier' || !scope.supplierId) return null;
-    return mockSuppliers.find((s) => s.id === scope.supplierId) ?? null;
+    const mine = mockSuppliers.find((s) => s.id === scope.supplierId);
+    return mine ? withMeasures(mine) : null;
   }
 }

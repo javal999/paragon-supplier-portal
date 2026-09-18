@@ -1374,8 +1374,13 @@ export interface SupplierScorecard {
   tier: string;
   sapBp: string;
   channel: string;
-  grade: ScorecardGradeLetter;
-  score: number;
+  /**
+   * REQ-E10-01 — THE GRADE AND THE SCORE ARE NOT STORED. Both used to be
+   * authored here beside authored KPI rows; both are now read from the
+   * calculated measures for the period the page is showing
+   * (`services/data/performanceRules.ts`). `id` is the SUPPLIER MASTER id, which
+   * is what makes that join real rather than by-name.
+   */
   status: string;
   kpis: ScorecardKpi[];
   radar: ScorecardRadarAxis[];
@@ -1870,13 +1875,19 @@ export interface MonthlyChannelMix {
 }
 
 export interface AnalyticsPerfRow {
-  supplier: string;
-  category: string;
-  otif: number;
+  /**
+   * REQ-E10-01 — the row names a SUPPLIER, and the name, the category, the OTIF
+   * and the grade are all resolved from the master and the calculated measures
+   * at read. The row used to carry an authored `otif` and `grade` beside a
+   * supplier NAME that matched no master record; both are gone.
+   */
+  supplierId: string;
+  /** Still SAMPLE: nothing in the hub measures on-time delivery rate yet. */
   otdr: number;
+  /** Still SAMPLE: acknowledgement speed is not measured from hub data. */
   ackSpeed: string;
+  /** Still SAMPLE: first-time invoice match rate is not measured from hub data. */
   invoiceMatch: string;
-  grade: AnalyticsGrade;
   trend: KpiTrend;
 }
 
@@ -1892,7 +1903,11 @@ export interface AnalyticsKpi {
 export interface AnalyticsSummary {
   totalSpend: AnalyticsKpi;
   activeSuppliers: AnalyticsKpi;
-  portfolioOtif: AnalyticsKpi;
+  /**
+   * REQ-E10-01 — `portfolioOtif` is NOT here any more. It was an authored string
+   * ("87%") and it is now computed for the chosen period from the call-offs the
+   * hub holds, on the page, beside the chips that decide the period.
+   */
   avgCycleTime: AnalyticsKpi;
 }
 

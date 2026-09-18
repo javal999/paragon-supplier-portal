@@ -83,6 +83,8 @@ import { hubEn, hubId } from './i18n/hub';
 import { orderCollaborationEn, orderCollaborationId } from './i18n/orderCollaboration';
 import { fulfilmentCollaborationEn, fulfilmentCollaborationId } from './i18n/fulfilmentCollaboration';
 import { callOffsEn, callOffsId } from './i18n/callOffs';
+import { sapInterfaceEn, sapInterfaceId } from './i18n/sapInterface';
+import { performanceEn, performanceId } from './i18n/performance';
 import { inventoryCapacityEn, inventoryCapacityId } from './i18n/inventoryCapacity';
 import { forecastCollaborationEn, forecastCollaborationId } from './i18n/forecastCollaboration';
 // — Phase 6a RFx management (REQ-E03-01 to REQ-E03-05) —
@@ -166,6 +168,8 @@ export const resources = {
       ...orderCollaborationEn,
       ...fulfilmentCollaborationEn,
       ...callOffsEn,
+      ...sapInterfaceEn,
+      ...performanceEn,
       ...inventoryCapacityEn,
       ...forecastCollaborationEn,
       ...rfxEn,
@@ -604,6 +608,8 @@ export const resources = {
       ...orderCollaborationId,
       ...fulfilmentCollaborationId,
       ...callOffsId,
+      ...sapInterfaceId,
+      ...performanceId,
       ...inventoryCapacityId,
       ...forecastCollaborationId,
       ...rfxId,

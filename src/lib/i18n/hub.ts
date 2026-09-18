@@ -61,6 +61,7 @@ export const hubEn: Record<string, string> = {
   'hub.nav.util.glossary': 'Help & glossary',
   'hub.nav.util.roles': 'Roles',
   'hub.nav.util.processFlows': 'Process flows',
+  'hub.nav.util.interfaceMonitor': 'Interface monitor',
 
   // PTI role view (NV-02)
   'hub.role.title': 'Menu for',
@@ -95,6 +96,7 @@ export const hubEn: Record<string, string> = {
   'hub.home.task.rfqAward': 'Sourcing events ready to award',
   // REQ-E03-05 / REQ-E03-02 / REQ-E03-04 — the RFx tasks (Phase 6a).
   'hub.home.task.negotiationClosing': 'Negotiation rounds closing soon',
+  'hub.home.task.sapMessagesFailed': 'SAP messages failed',
   'hub.home.task.rfiToAnswer': 'Information requests to answer',
   'hub.home.task.rfpToAnswer': 'Proposal requests to answer',
   'hub.home.task.revisedQuote': 'Revised quote requested',
@@ -183,6 +185,7 @@ export const hubId: Record<string, string> = {
   'hub.nav.util.glossary': 'Bantuan & glosarium',
   'hub.nav.util.roles': 'Peran',
   'hub.nav.util.processFlows': 'Alur proses',
+  'hub.nav.util.interfaceMonitor': 'Monitor antarmuka',
 
   'hub.role.title': 'Menu untuk',
   'hub.role.hint': 'Menampilkan bagian menu untuk peran ini. Tidak mengubah apa yang boleh Anda lakukan.',
@@ -214,6 +217,7 @@ export const hubId: Record<string, string> = {
   'hub.home.task.chase': 'Pemasok yang perlu ditindaklanjuti untuk prakiraan atau pengiriman',
   'hub.home.task.rfqAward': 'Event sourcing yang siap diputuskan pemenangnya',
   'hub.home.task.negotiationClosing': 'Putaran negosiasi yang segera ditutup',
+  'hub.home.task.sapMessagesFailed': 'Pesan SAP gagal terkirim',
   'hub.home.task.rfiToAnswer': 'Permintaan informasi yang perlu dijawab',
   'hub.home.task.rfpToAnswer': 'Permintaan proposal yang perlu dijawab',
   'hub.home.task.revisedQuote': 'Penawaran revisi yang diminta',

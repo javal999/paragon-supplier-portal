@@ -11,6 +11,12 @@
 // masquerades as per-supplier data. The old COMPLIANCE_ISSUES entry for
 // "Sample Specialty Chemicals" matched no displayed supplier (the extra supplier
 // is "Sample Specialty FR"), so it was dead data and is dropped.
+// ⚠️ REQ-E10-01 (Phase 6b) — NO GRADE, NO SCORE, NO OTIF ROW HERE ANY MORE.
+// All three were authored, and all three are now calculated from the call-offs,
+// heads-ups, receipts and orders the hub holds. The rows are keyed by the
+// SUPPLIER MASTER id so the join to those measures is real; the remaining KPI
+// rows (OTDR, acknowledgement, defect rate, …) are genuinely sample figures and
+// the page marks them as such rather than pretending they are derived.
 // ────────────────────────────────────────────────────────────────────────────
 
 import type {
@@ -33,18 +39,15 @@ const SAMPLE_PC_IMPROVEMENT_ACTIONS: ScorecardImprovementAction[] = [
 
 const CORE_SCORECARDS: SupplierScorecard[] = [
   {
-    id: 'sample-vitamins',
+    id: 'sup-009',
     name: 'Sample Vitamins Co.',
     country: 'CN',
     category: 'Active Ingredients',
     tier: 'Tier 3 — API',
     sapBp: 'BP-20045',
     channel: 'API',
-    grade: 'A',
-    score: 94,
     status: 'Preferred Supplier',
     kpis: [
-      { name: 'OTIF', value: '94%', target: '90%', pct: 94, targetPct: 90, trend: '↑' },
       { name: 'OTDR', value: '96%', target: '95%', pct: 96, targetPct: 95, trend: '↑' },
       { name: 'PO Ack Rate', value: '100%', target: '95%', pct: 100, targetPct: 95, trend: '→' },
       { name: 'Ack Speed', value: '6h', target: '<24h', pct: 90, targetPct: 75, trend: '↑' },
@@ -76,19 +79,16 @@ const CORE_SCORECARDS: SupplierScorecard[] = [
     ],
   },
   {
-    id: 'sample-packaging',
+    id: 'sup-007',
     name: 'PT Sample Packaging Indonesia',
     country: 'ID',
     category: 'Packaging Primary',
     tier: 'Tier 1 — WhatsApp',
     sapBp: 'BP-10007',
     channel: 'WhatsApp',
-    grade: 'B',
-    score: 82,
     status: 'Approved Supplier',
     complianceIssue: { level: 'missing', label: 'BPJPH Halal cert not certified' },
     kpis: [
-      { name: 'OTIF', value: '88%', target: '90%', pct: 88, targetPct: 90, trend: '↑' },
       { name: 'OTDR', value: '91%', target: '95%', pct: 91, targetPct: 95, trend: '↑' },
       { name: 'PO Ack Rate', value: '92%', target: '95%', pct: 92, targetPct: 95, trend: '↑' },
       { name: 'Ack Speed', value: '18h', target: '<24h', pct: 75, targetPct: 75, trend: '→' },
@@ -120,21 +120,18 @@ const CORE_SCORECARDS: SupplierScorecard[] = [
     ],
   },
   {
-    id: 'sample-personalcare',
+    id: 'sup-005',
     name: 'Sample Personal Care DE',
     country: 'DE',
     category: 'Active Ingredients',
     tier: 'Tier 3 — API',
     sapBp: 'BP-20012',
     channel: 'API',
-    grade: 'C',
-    score: 74,
     status: 'Conditional — Improvement Plan Active',
     impPlan: true,
     complianceIssue: { level: 'expiring', label: 'ISO 9001 expiring in 83d' },
     improvementActions: SAMPLE_PC_IMPROVEMENT_ACTIONS,
     kpis: [
-      { name: 'OTIF', value: '78%', target: '90%', pct: 78, targetPct: 90, trend: '↓' },
       { name: 'OTDR', value: '82%', target: '95%', pct: 82, targetPct: 95, trend: '↓' },
       { name: 'PO Ack Rate', value: '88%', target: '95%', pct: 88, targetPct: 95, trend: '↑' },
       { name: 'Ack Speed', value: '42h', target: '<24h', pct: 40, targetPct: 75, trend: '↓' },
@@ -178,15 +175,13 @@ const EXTRA_SCORECARDS: SupplierScorecard[] = (
     'Sample Specialty FR',
   ] as const
 ).map((name, i) => ({
-  id: `sup-extra-${i}`,
+  id: (['sup-002', 'sup-010', 'sup-003', 'sup-001', 'sup-006'] as const)[i],
   name,
   country: (['ID', 'ID', 'SG', 'ID', 'FR'] as const)[i],
   category: (['Halal Emulsifier', 'Halal Emulsifier', 'Fragrance', 'Natural Botanical', 'Active Ingredients'] as const)[i],
   tier: (['Tier 2 — Web', 'Tier 1 — WhatsApp', 'Tier 3 — API', 'Tier 2 — Web', 'Tier 2 — Web'] as const)[i],
   sapBp: `BP-2000${10 + i}`,
   channel: (['Web', 'WhatsApp', 'API', 'Web', 'Web'] as const)[i],
-  grade: (['A', 'B', 'A', 'B', 'C'] as const)[i],
-  score: ([92, 84, 91, 83, 72] as const)[i],
   status: 'Approved Supplier',
   kpis: CORE_SCORECARDS[0].kpis as ScorecardKpi[],
   radar: CORE_SCORECARDS[0].radar as ScorecardRadarAxis[],

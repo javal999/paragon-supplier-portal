@@ -15,6 +15,7 @@ import {
   ListTodo,
   MessageSquareReply,
   PackageCheck,
+  Radio,
   Receipt,
   ShieldCheck,
   ShoppingCart,
@@ -178,6 +179,8 @@ export const UTILITY_NAV: Record<Persona, readonly NavItem[]> = {
     { labelKey: 'hub.nav.util.glossary', icon: BookOpen, path: '/glossary' },
     { labelKey: 'hub.nav.util.roles', icon: ShieldCheck, path: '/buyer/roles' },
     { labelKey: 'hub.nav.util.processFlows', icon: Workflow, path: '/buyer/process-flows' },
+    // REQ-E07-08 / NV-01 — administration sits in the user menu, not the main menu.
+    { labelKey: 'hub.nav.util.interfaceMonitor', icon: Radio, path: '/buyer/interface-monitor' },
   ],
   supplier: [{ labelKey: 'hub.nav.util.glossary', icon: BookOpen, path: '/glossary' }],
 };

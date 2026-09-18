@@ -258,7 +258,11 @@ const BuyerSuppliers: React.FC = () => {
                   </div>
                 </TableCell>
                 <TableCell className="text-right font-semibold text-text-primary">
-                  <Data>{s.otif}%</Data>
+                  {s.otif === undefined ? (
+                    <span className="font-normal text-text-tertiary">{t('rfx.noHistory')}</span>
+                  ) : (
+                    <Data>{s.otif}%</Data>
+                  )}
                 </TableCell>
                 <TableCell>
                   <StatusPill variant={statusTone(s.status)}>

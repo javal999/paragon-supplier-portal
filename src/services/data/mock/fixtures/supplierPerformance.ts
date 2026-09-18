@@ -22,8 +22,13 @@ export const SUP_007_SUPPLIER_ID = 'sup-007';
 // (DP2-TARGET-01). For ≥-metrics targetPct is the raw target; for the attainment-
 // encoded ones (Lead Time Variance / POA) it's the pass line that reproduces the
 // intended meeting/near/missing read via targetStatus(pct, targetPct, 10).
+// ⚠️ REQ-E10-01 — THE OTIF ROW IS GONE FROM HERE. It is calculated from the
+// call-offs, heads-ups and receipts the hub holds, for the period the page is
+// showing. What stays below is genuinely SAMPLE — nothing in this prototype
+// measures ASN accuracy, lead-time variance, reply speed, defect rate or
+// invoice accuracy — and the page marks it as sample rather than implying it is
+// derived.
 export const KPIS: KpiPoint[] = [
-  { name: 'OTIF Rate',            value: '87%',      target: '≥ 90%',       pct: 87, targetPct: 90, trend: '↑' },
   { name: 'ASN Accuracy',         value: '97.8%',    target: '≥ 95%',       pct: 98, targetPct: 95, trend: '→' },
   { name: 'Lead Time Variance',   value: '1.4 days', target: '≤ 0.5 days',  pct: 35, targetPct: 42, trend: '↓' },
   { name: 'POA Response Time',    value: '42 hrs',   target: '≤ 24 hrs',    pct: 40, targetPct: 52, trend: '↓' },
@@ -32,7 +37,6 @@ export const KPIS: KpiPoint[] = [
 ];
 
 export const RADAR_DATA: RadarPoint[] = [
-  { axis: 'OTIF',         value: 87, target: 95 },
   { axis: 'ASN Acc.',     value: 98, target: 95 },
   { axis: 'POA Speed',    value: 72, target: 85 },
   { axis: 'Invoice Acc.', value: 91, target: 98 },
@@ -58,15 +62,6 @@ export const WEEKLY_TREND: PerformancePoint[] = [
 // Below-target KPIs with recommended corrective actions. Surfaced through
 // getKpis (KpiSnapshot.improvementActions) so the page reads them via useKpis.
 export const IMPROVEMENT_ACTIONS: ImprovementAction[] = [
-  {
-    kpi: 'OTIF Rate',
-    current: '87%',
-    target: '≥ 95%',
-    gap: '−8pp',
-    action:
-      'Review production schedule alignment with Paragon delivery windows. Current 7-day overdue on PO-2025-00107 indicates capacity constraint.',
-    priority: 'High',
-  },
   {
     kpi: 'POA Response Time',
     current: '42 hrs avg',

@@ -606,7 +606,10 @@ describe('REQ-E03-01 — the invitee read', () => {
   it('AC-02 — a supplier with no measured history reads `null`, never 0', async () => {
     const all = (await reads.getInviteeCandidates(buyer)).items;
     expect(all.find((c) => c.supplierId === 'sup-013')!.otif).toBeNull();
-    expect(all.find((c) => c.supplierId === 'sup-007')!.otif).toBe(82);
+    // PREMISE CHANGED (REQ-E10-01): the figure is CALCULATED from the seeded
+    // call-offs and receipts — sup-007 has two measured deliveries in the
+    // window, one met and one late — not read off the master.
+    expect(all.find((c) => c.supplierId === 'sup-007')!.otif).toBe(50);
   });
 
   it('the invitee roster is PTI’s — a supplier reads nothing', async () => {

@@ -52,6 +52,7 @@ import {
   targetStatus,
 } from '../lib/chartPalette';
 import {
+  useSuppliers,
   useAnalyticsSummary,
   useSpendByCategory,
   useTopSuppliers,
@@ -66,11 +67,19 @@ import type {
   AnalyticsGrade as Grade,
   AnalyticsSummary,
 } from '../services/data/types';
+import { usePerformance } from './performance/performanceDisplay';
+import {
+  GRADE_BANDS,
+  OTIF_TARGET_PCT,
+  type PerformancePeriod,
+} from '../services/data/performanceRules';
+import { useCategoryLabel } from '../hooks/useCategoryLabel';
 
-type Period = '30d' | '90d' | 'ytd';
-
-// Canonical period ids (drive filter state / comparison — stay EN). The visible
-// label localizes at render via t('buyerAnalytics.period.<id>').
+// ⚠️ REQ-E10-01 BR-08 — THE PERIOD IS AN INPUT TO THE COMPUTATION, NOT A LABEL.
+// The chips used to change a caption over figures that never moved. The ids now
+// come from the rules module that consumes them, so a fourth period cannot be
+// offered here without the arithmetic knowing about it.
+type Period = PerformancePeriod;
 const PERIOD_IDS: Period[] = ['30d', '90d', 'ytd'];
 
 // DP2-PALETTE-01: chart/UI colour sourced from the central palette (SSoT),
@@ -113,7 +122,6 @@ const SUMMARY_CARDS: {
 }[] = [
   { key: 'totalSpend', icon: Wallet },
   { key: 'activeSuppliers', icon: Users },
-  { key: 'portfolioOtif', icon: Activity },
   { key: 'avgCycleTime', icon: Clock },
 ];
 
@@ -199,6 +207,10 @@ const BuyerAnalytics: React.FC = () => {
   const poQuery = usePoVolumeTrend();
   const channelQuery = useChannelMix();
   const perfQuery = useSupplierPerformance();
+  const suppliersQuery = useSuppliers();
+  // REQ-E10-01 — the calculated measures for the CHOSEN period.
+  const perf = usePerformance(period);
+  const cl = useCategoryLabel();
 
   const summary = summaryQuery.data ?? null;
   const spendCat = spendQuery.data?.items ?? [];
@@ -207,6 +219,7 @@ const BuyerAnalytics: React.FC = () => {
   const poVolData = poQuery.data?.items ?? [];
   const channelData = channelQuery.data?.items ?? [];
   const perfTable = perfQuery.data?.items ?? [];
+  const suppliers = suppliersQuery.data?.items ?? [];
 
   const queries = [
     summaryQuery,
@@ -216,6 +229,7 @@ const BuyerAnalytics: React.FC = () => {
     poQuery,
     channelQuery,
     perfQuery,
+    suppliersQuery,
   ];
   const anyPending = queries.some((q) => q.isPending);
   const anyError = queries.some((q) => q.isError);
@@ -283,10 +297,10 @@ const BuyerAnalytics: React.FC = () => {
           { count: perfTable.length },
         )}{' '}
         · {t('buyerAnalytics.meta.period')}: {periodLabel}
-        {/* D-CENSUS-8 — `analytics` is null-backed: every trend, mix and spend
-            aggregate on this page is derived from authored fixtures, over a period
-            label that names a range no real data covers. */}
-        <ProvenanceMarker capability="analytics" className="ml-3 align-middle" />
+        {/* REQ-E10-01 — the page-level marker is RETIRED. It used to say every
+            figure here was sample, and the OTIF column and the portfolio card
+            are computed from hub data now. `analytics` still marks the spend,
+            trend and channel sections, which really are authored. */}
       </PageMetaLine>
 
       <div className="mb-6">
@@ -297,8 +311,31 @@ const BuyerAnalytics: React.FC = () => {
         />
       </div>
 
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-6">
+        {/* REQ-E10-01 — CALCULATED for the chosen period, not an authored string. */}
+        <KpiCard
+          eyebrow={t('buyerAnalytics.summary.portfolioOtif')}
+          value={
+            perf.portfolio.otif.pct === null
+              ? t('rfx.noHistory')
+              : `${perf.portfolio.otif.pct}%`
+          }
+          subtitle={
+            <span className="text-text-tertiary font-medium" data-testid="analytics-portfolio-otif">
+              {perf.portfolio.otif.pct === null
+                ? t('perf.noMeasured')
+                : t('perf.measuredCallOffs', {
+                    count: perf.portfolio.otif.measured,
+                    target: OTIF_TARGET_PCT,
+                  })}
+            </span>
+          }
+          icon={Activity}
+        />
+      </div>
+
       {summary && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5 mb-6">
           {SUMMARY_CARDS.map((card) => {
             const kpi = summary[card.key];
             return (
@@ -320,8 +357,9 @@ const BuyerAnalytics: React.FC = () => {
       )}
 
       <section className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm p-6 mb-6">
-        <h2 className="text-section text-text-primary mb-4 pb-3 border-b border-border-subtle">
+        <h2 className="flex flex-wrap items-center gap-3 text-section text-text-primary mb-4 pb-3 border-b border-border-subtle">
           {t('buyerAnalytics.spend.title')}
+          <ProvenanceMarker capability="analytics" />
         </h2>
         <div className="grid grid-cols-1 lg:grid-cols-[6fr_4fr] gap-6">
           <div>
@@ -397,8 +435,11 @@ const BuyerAnalytics: React.FC = () => {
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 mb-6">
         <section className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm p-6">
-          <h2 className="text-section text-text-primary mb-4 pb-3 border-b border-border-subtle">
+          <h2 className="flex flex-wrap items-center gap-3 text-section text-text-primary mb-4 pb-3 border-b border-border-subtle">
             {t('buyerAnalytics.otif.title')}
+            {/* The 15-month TREND is still authored: nothing in the hub holds a
+                month-by-month history to compute it from. */}
+            <ProvenanceMarker capability="analytics" />
           </h2>
           <ResponsiveContainer width="100%" height={240}>
             <LineChart
@@ -513,6 +554,17 @@ const BuyerAnalytics: React.FC = () => {
           <h2 className="text-section text-text-primary">
             {t('buyerAnalytics.perf.title')}
           </h2>
+          {/* CR-17 + the band table, stated on screen so the letter can be read
+              back to the score it came from. */}
+          <div className="mt-1 text-meta text-text-tertiary" data-testid="perf-grade-bands">
+            {t('perf.gradeBands', {
+              bands: GRADE_BANDS.map((b) => `${b.grade} ${b.min}+`).join(' · '),
+            })}{' '}
+            · {t('perf.target', { target: OTIF_TARGET_PCT })}
+          </div>
+          <div className="mt-1 text-meta text-text-tertiary">
+            {t('perf.sampleColumns')}
+          </div>
         </div>
         <Table>
           <TableHeader>
@@ -526,20 +578,37 @@ const BuyerAnalytics: React.FC = () => {
             <TableHeaderCell>{t('buyerAnalytics.perf.col.trend')}</TableHeaderCell>
           </TableHeader>
           <tbody>
-            {perfTable.map((row) => (
-              <TableRow key={row.supplier}>
+            {perfTable.map((row) => {
+              // REQ-E10-01 — name, category, OTIF and grade resolve from the
+              // master and the calculated measures for the chosen period; only
+              // OTDR, acknowledgement speed and invoice match are still sample.
+              const supplier = suppliers.find((sup) => sup.id === row.supplierId);
+              const measure = perf.forSupplier(row.supplierId);
+              return (
+              <TableRow key={row.supplierId}>
                 <TableCell>
                   <span className="font-semibold text-text-primary">
-                    {row.supplier}
+                    {supplier?.name ?? row.supplierId}
                   </span>
                 </TableCell>
                 <TableCell>
-                  <StatusPill variant="neutral">{row.category}</StatusPill>
+                  <StatusPill variant="neutral">{cl(supplier?.category ?? '')}</StatusPill>
                 </TableCell>
                 <TableCell>
-                  <StatusPill variant={rateVariant(row.otif)}>
-                    {row.otif}%
-                  </StatusPill>
+                  {measure.otif.pct === null ? (
+                    <span
+                      className="text-xs text-text-tertiary"
+                      data-testid={`analytics-otif-${row.supplierId}`}
+                    >
+                      {t('rfx.noHistory')}
+                    </span>
+                  ) : (
+                    <StatusPill variant={rateVariant(measure.otif.pct)}>
+                      <span data-testid={`analytics-otif-${row.supplierId}`}>
+                        {measure.otif.pct}%
+                      </span>
+                    </StatusPill>
+                  )}
                 </TableCell>
                 <TableCell>
                   <StatusPill variant={rateVariant(row.otdr)}>
@@ -553,22 +622,28 @@ const BuyerAnalytics: React.FC = () => {
                   {row.invoiceMatch}
                 </TableCell>
                 <TableCell>
-                  <StatusPill variant={GRADE_VARIANT[row.grade]}>
-                    {row.grade}
-                  </StatusPill>
+                  {measure.grade === null ? (
+                    <span className="text-xs text-text-tertiary">{t('rfx.noHistory')}</span>
+                  ) : (
+                    <StatusPill variant={GRADE_VARIANT[measure.grade as Grade]}>
+                      {measure.grade}
+                    </StatusPill>
+                  )}
                 </TableCell>
                 <TableCell>
                   <TrendIcon trend={row.trend} />
                 </TableCell>
               </TableRow>
-            ))}
+              );
+            })}
           </tbody>
         </Table>
       </section>
 
       <section className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm p-6">
-        <h2 className="text-section text-text-primary mb-4 pb-3 border-b border-border-subtle">
+        <h2 className="flex flex-wrap items-center gap-3 text-section text-text-primary mb-4 pb-3 border-b border-border-subtle">
           {t('buyerAnalytics.channel.title')}
+          <ProvenanceMarker capability="analytics" />
         </h2>
         <ResponsiveContainer width="100%" height={240}>
           <BarChart

@@ -14,6 +14,7 @@
 // ────────────────────────────────────────────────────────────────────────────
 
 import { mockSuppliers } from '../../../data/mockSuppliers';
+import { masterMeasure } from './supplierMeasureReadModel';
 import { sdcClock } from '../../sdc/clock';
 import type { Quotation } from '../../../data/mockQuotations';
 import type { RFQ } from '../../../data/mockRfqs';
@@ -61,9 +62,15 @@ export const rfxNow = (): string => sdcClock.now();
 export const rfxSupplierName = (supplierId: string): string =>
   mockSuppliers.find((s) => s.id === supplierId)?.name ?? supplierId;
 
-/** The supplier's OTIF, or `null` when nothing has ever been measured. */
+/**
+ * The supplier's OTIF, or `null` when nothing has ever been measured.
+ *
+ * REQ-E10-01 — CALCULATED, not read off the master: the same projection the
+ * supplier list and profile read, so CR-15's reliability axis and the invitee
+ * list quote the same figure as the performance dashboard.
+ */
 export const rfxSupplierOtif = (supplierId: string): number | null =>
-  mockSuppliers.find((s) => s.id === supplierId)?.otif ?? null;
+  masterMeasure(supplierId).otif.pct;
 
 // ── REQ-E03-01 — the invitee search ─────────────────────────────────────────
 
@@ -75,7 +82,7 @@ export function inviteeCandidates(): readonly InviteeCandidate[] {
     category: s.category,
     purchasingGroup: s.purchasingGroup,
     status: s.status,
-    otif: s.otif ?? null,
+    otif: masterMeasure(s.id).otif.pct,
     country: s.country,
   }));
 }
