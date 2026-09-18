@@ -4,13 +4,13 @@
 |---|---|
 | Product | Supplier Hub (Supplier Portal, "SC Collaboration Hub") |
 | Company | PT Paragon Technology and Innovation (PTI) |
-| Version | 0.3 draft, 2026-09-17 |
+| Version | 0.4 draft, 2026-09-17 |
 | Scope | MVP (Phase 1, "Foundation to Transact"). Phase 2 and 3 appear only in section 9 |
 | Steering Committee | Yogi Sapta Prakoso (VP Supply Chain), Ilauddin (CFO), Risman Adnan (CTO) [C] |
 | Technology Product Owners | Achmad Fahlevi, Vergiant Yoga Perdana (Supply Chain); Indita Ramasaphira (FATL) [C] |
 | Project Manager | Zanjabila Aulia (IT PMO) [C] |
 | Sources | Project Charter, SC Collaboration Hub Proposal (Sep 2026) for business numbers, scope, and milestones; Risk Assessment workbook (6 Aug 2026) for risks; kick-off deck (Aug 2026), captured in `SUPPLIER-HUB-BASELINE.md`; business user feedback in `KICKOFF-MEETING-NOTES.md`; detailed requirements in `SUPPLIER-HUB-REQUIREMENTS.md` |
-| Detail | This PRD summarises the product. Business rules, step-by-step walkthroughs, and full acceptance criteria live in `SUPPLIER-HUB-REQUIREMENTS.md`, referenced by `REQ-` ID |
+| Detail | This PRD summarises the product. Business rules, step-by-step walkthroughs, full acceptance criteria, shared calculation rules (`CR-`), navigation (`NV-`), and screen conventions (`SC-`) live in `SUPPLIER-HUB-REQUIREMENTS.md`. What the prototype already does is tracked only in `BUILD-GAP.md` |
 
 **Status tags.** **[C]** stated in the project charter. **[R]** stated in the risk register. **[V]** validated with business users. **[D]** stated in the kick-off deck. **[P]** proposed by the analyst, needs review. **TBD** not decided; the owner is named where known.
 
@@ -38,7 +38,7 @@
 - Supplier data and files managed in the database: 100%.
 - CSAT: minimum 4 out of 5.
 
-**Still without a target** (not in the charter or the deck): supplier OTIF per call-off, CFOT per PO, share of POs answered within 1 working day, procurement cycle time (deck KPI-06).
+**Still without a target** (not in the charter or the deck): CFOT per PO, share of POs answered within 1 working day, procurement cycle time (deck KPI-06). Supplier OTIF per call-off uses the prototype's working target of 90% (CR-17) until the Steering Committee sets one.
 
 **Business case** [C]. Monthly value of the problem addressed, as calculated in the charter:
 
@@ -174,22 +174,22 @@ Acceptance criteria: TBD by the Foundation team. The hub **replaces PROCIO** for
 
 | ID | Story | Req | Status |
 |---|---|---|---|
-| US-30 | As a supplier, I want to see PTI's material forecast per period, with firm, trade-off, and forecast zones and changes since the last version, so that I can plan production | REQ-E06-01 | [P] |
-| US-31 | As a supplier, I want to commit a quantity and date per period, with a reason when below forecast, so that PTI knows what supply is secured | REQ-E06-02 | [V] concept, [P] detail |
-| US-32 | As a planner, I want forecast-versus-commitment gaps coloured by tolerance and ranked by impact so that I focus on real risks | REQ-E06-03 | [P] |
+| US-30 | As a supplier, I want to see PTI's material forecast per period, with firm, trade-off, and forecast zones and changes since the last version, so that I can plan production | REQ-E06-01 | [V] |
+| US-31 | As a supplier, I want to commit a quantity and date per period, with a reason when below forecast, so that PTI knows what supply is secured | REQ-E06-02 | [V] |
+| US-32 | As a planner, I want forecast-versus-commitment gaps coloured by tolerance and ranked by impact so that I focus on real risks | REQ-E06-03 | [V] |
 
 **Acceptance criteria.**
-- US-30 [P]:
+- US-30:
   - Each period shows quantity and zone.
   - Current and previous versions can be compared.
   - The forecast can be downloaded as a spreadsheet.
   - Suppliers see only their own materials.
-- US-31 [P]:
+- US-31:
   - Commitments can be made on screen or by upload.
   - A commitment below forecast requires a reason.
   - Commitments within tolerance need no planner action.
   - Missing commitments escalate.
-- US-32 [P]:
+- US-32:
   - Gaps are shown as quantity and percentage, coloured by tolerance.
   - Firm-zone exceptions are listed first.
   - Planner actions are saved with a note and visible to the supplier.
@@ -225,26 +225,35 @@ Acceptance criteria: TBD by the Foundation team. The hub **replaces PROCIO** for
 
 | ID | Story | Req | Status |
 |---|---|---|---|
-| US-50 | As a buyer, I want to filter suppliers by commodity, purchasing group, and further parameters, with their OTIF visible, so that I invite the right suppliers | REQ-E03-01 | [V] |
+| US-50 | As a buyer, I want to filter suppliers by category, purchasing group, and further parameters, with their OTIF visible, so that I invite the right suppliers | REQ-E03-01 | [V] |
 | US-51 | As a buyer, I want to send an RFI and receive capability, experience, facility, and product information so that I know what suppliers can offer | REQ-E03-02 | [V] |
-| US-52 | As a buyer, I want to create an RFQ, from scratch or from an RFI, so that I collect comparable quotes | REQ-E03-03 | [V] |
-| US-53 | As a buyer, I want to send an RFP asking for commercial terms so that I can compare proposals term by term | REQ-E03-04 | [V] |
+| US-52 | As a buyer, I want to create an RFQ from scratch, from an RFI, or from a purchase requisition so that I collect comparable quotes | REQ-E03-03 | [V] |
+| US-53 | As a buyer, I want to send an RFP asking for commercial terms so that I can compare proposals term by term | REQ-E03-04 | [V]; template [P] |
+| US-54 | As a buyer, I want to compare scored quotes and run negotiation rounds with shortlisted suppliers so that I reach the best final offer with an audit trail | REQ-E03-05 | [V] negotiation; [P] detail |
+| US-55 | As a buyer, I want to award one event to more than 1 supplier with a quantity split so that I can dual-source | REQ-E03-05 | [V] |
 
 **Acceptance criteria.**
 - US-50:
-  - Filters by commodity and purchasing group work alone and combined.
+  - Filters by category and purchasing group work alone and combined.
   - Each supplier shows OTIF or "No history".
   - Blacklisted and deactivated suppliers are hidden.
 - US-51:
   - An RFI can be sent with no RFQ.
   - Suppliers submit capability, experience, facility, and product entries, each with a description.
 - US-52:
-  - An RFQ can be created with or without an RFI.
-  - When created from an RFI, specifications and invitees are pre-filled.
+  - An RFQ can be created with or without an RFI, and a purchase requisition is never required.
+  - When created from an RFI or a purchase requisition, its fields are pre-filled and editable.
   - Suppliers cannot see each other's quotes.
 - US-53:
   - An RFP lists required commercial terms.
   - Suppliers respond per term.
+- US-54:
+  - The comparison shows each criterion score and the weighted score (CR-15).
+  - Only suppliers invited to a negotiation round can submit a revised quote.
+  - Every quote version is kept.
+- US-55:
+  - An award to 2 or more suppliers cannot be saved unless each item's split totals 100%.
+  - Each supplier sees only its own award outcome.
 
 #### Supplier Performance (E10)
 
@@ -255,8 +264,8 @@ Acceptance criteria: TBD by the Foundation team. The hub **replaces PROCIO** for
 **Acceptance criteria.**
 - US-60:
   - The dashboard shows CFOT and OTIF per supplier for a chosen period.
-  - OTIF is calculated per call-off and CFOT per PO.
-  - Formulas are confirmed by the business before build.
+  - OTIF is calculated per call-off (CR-06 to CR-08) and CFOT per PO.
+  - The CFOT formula is confirmed by the business before build.
 
 ### 2.3 Non-Goals (MVP)
 
@@ -272,10 +281,14 @@ Acceptance criteria: TBD by the Foundation team. The hub **replaces PROCIO** for
 | SFTP or other automated file-drop channel for supplier data | Spreadsheet upload, API sync, and manual entry are enough | Owner, 2026-09-17 |
 | Sending call-offs to SAP | Call-offs are managed outside SAP today; the hub becomes their record | [V] PQ-01; [P] PQ-11 |
 | Supplier approval of PTI stock access changes | PTI decides | [V] Q-06 |
-| Bid comparison, negotiation, and awarding detail | Not yet detailed; stub | [D] REQ-E03-05 |
 | Recording PR, PO, goods receipt, financial posting, or payment | SAP S/4HANA remains the system of record. The hub manages supplier interaction, visibility, acknowledgements, collaboration data, and designated sourcing processes | [C] |
 | Raw material manufacturers | Listed as out of scope in the charter. Whether this excludes manufacturers only, while raw material distributors such as the pilot suppliers stay in, is open (section 9.4) | [C] |
+| Prototype features outside the Supplier Hub scope: marketplace, supplier discovery, storefront, should-cost model, purchase requisitions and intake review, plan grid, supply risk, contract pages | Parked and hidden during the pilot. The list and status are kept in `BUILD-GAP.md` | Owner, 2026-09-17 |
 | Indirect suppliers (5,000+) in the MVP rollout | Charter sizes the problem on 500+ direct and 5,000+ indirect suppliers; which are targeted in Phase 1 is TBD | [P]; [C] for counts |
+
+### 2.4 Navigation and Screen Conventions
+
+The hub's menu follows its own sections (Order collaboration, Forecast, Inventory & capacity, Call-offs, Sourcing, Invoices, Performance), filtered by PTI role, with a task-list Home for PTI users and suppliers [V, owner 2026-09-17]. The menu per persona and the screen rules are defined once, in sections 3.7 and 3.8 of `SUPPLIER-HUB-REQUIREMENTS.md`.
 
 ---
 
@@ -440,9 +453,13 @@ sequenceDiagram
 | T14 | Shipped heads-up late | Expected arrival after need date | Call-off At Risk | Flag visible to planner |
 | T15 | Commitment below forecast [P] | Commit 800 of 1,000 without reason | Blocked | Error names the missing reason |
 | T16 | RFQ from RFI | Create RFQ from closed RFI | Specs and invitees pre-filled | Fields match RFI; all editable |
-| T17 | Supplier filter | Commodity + purchasing group | Matching active suppliers with OTIF | No blacklisted or deactivated supplier listed |
+| T17 | Supplier filter | Category + purchasing group | Matching active suppliers with OTIF | No blacklisted or deactivated supplier listed |
 | T18 | OTIF calculation [P formula] | Call-off received in full on need date | OTIF = 1 for that call-off | Dashboard reflects it for the period |
 | T19 | Duplicate invoice [P] | Same invoice number twice from one supplier | Second blocked | Error names duplicate |
+| T20 | Split award | Award 70% to A and 20% to B | Save blocked | Error names the 10% not awarded |
+| T21 | Negotiation round | Round opened for suppliers A and B; supplier C tries to revise | C blocked; A and B revise | 2 quote versions kept for A and B |
+| T22 | Invoice price match | Invoice 1.5% above invoiced quantity × PO price | Exception: Price variance | Rule CR-12 applied |
+| T23 | Menu by role | Finance user signs in | Sees Home, Invoices | No Order collaboration or Call-offs sections |
 
 ### 6.2 Non-Functional Tests
 
@@ -518,7 +535,9 @@ sequenceDiagram
 | POST | `/api/v1/call-offs/{callOffId}/dispatch` | Shipped heads-up | SUP | REQ-E09-04 |
 | POST | `/api/v1/asns` | Create ASN | SUP | REQ-E07-04 |
 | GET | `/api/v1/alerts` | Alerts for the caller | MP, SUP | REQ-E08-05 |
-| GET | `/api/v1/suppliers?commodity=&purchasingGroup=` | Filter suppliers with OTIF | BUY | REQ-E03-01 |
+| GET | `/api/v1/suppliers?category=&purchasingGroup=` | Filter suppliers with OTIF | BUY | REQ-E03-01 |
+| POST | `/api/v1/rfx/{eventId}/negotiation-rounds` | Open a negotiation round for selected suppliers | BUY | REQ-E03-05 |
+| POST | `/api/v1/rfx/{eventId}/awards` | Award to 1 or more suppliers with a split | BUY | REQ-E03-05 |
 
 **Common headers.**
 
@@ -641,6 +660,8 @@ A confirmation outside tolerance is not an error. It returns `awaiting_approval`
 | `422` | `CAUSE_REQUIRED` | Reject without date, quantity, or quality cause | No |
 | `422` | `EXCEEDS_UMBRELLA_PO_VALUE` | Call-off release beyond remaining PO value | No |
 | `422` | `DUPLICATE_INVOICE` | Invoice number already submitted | No |
+| `422` | `AWARD_SPLIT_INCOMPLETE` | An item's award shares do not total 100% | No; fix the split |
+| `403` | `NOT_IN_ROUND` | Supplier not invited to the negotiation round submits a quote | No |
 | `413` | `FILE_TOO_LARGE` | Upload above limit (limit TBD, NF4) | No; split file |
 | `429` | `RATE_LIMITED` | Rate limit TBD by IT | After `retry_after_s` |
 | `502` | `SUPPLIER_SYSTEM_ERROR` | Supplier API sync failed | Yes, with backoff |
@@ -742,8 +763,10 @@ Row 8's mitigation text overlaps another cell in the workbook, so its wording ("
 | REPL | Replenishment method and governance (deferred; consultant) | Material Planner |
 | DEC-03 | Final MVP list (RFx and performance dashboard in MVP; D-07 catalog for RFI; D-03 TMS phase) | Project sponsors |
 | PQ-07 | SAP source of forecast and demand sensing | Material Planner, ERP Functional |
-| PQ-08, PQ-02 | Tolerances, commitment deadline, forecast horizon and zones | Material Planner |
-| Q-18 | Working calendar for the 1-working-day deadline | Material Planner |
+| PQ-08, PQ-02 | Confirm call-off and commitment tolerance values; capacity horizon | Material Planner |
+| Q-18 | Working calendar for the 1-working-day deadline (default recommended) | Material Planner |
+| A-03 | RFI and RFP templates, standard term list, quote score weights | Procurement |
+| Q-20 | Quality inspection result in the hub for MVP vs Phase 2 Supplier Quality module | Material Planner, Procurement |
 | KPI | Definitions for S4 (confirmation accuracy) and S5 (optimized stock); targets for OTIF, CFOT, PO response rate, procurement cycle time; CFOT and OTIF formulas | Steering Committee, Material Planner |
 | IT | Tech stack, hosting, authentication, NFR thresholds (NF2 to NF7), interface technology (PQ-06) | IT |
 
