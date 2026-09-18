@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 2.0, 2026-09-18 |
+| Version | 2.1, 2026-09-18 |
 | Compares | `SUPPLIER-HUB-REQUIREMENTS.md` v0.5 with the prototype on branch `feat/supplier-hub-mvp` (pull request "Supplier Hub MVP build") |
 | Owner decisions | 2026-09-17, recorded in section 9 of the requirements (RFX-1 to RFX-3, GAP-1 to GAP-4, E06-R) |
 | Rule | This is the **only** document that describes what the prototype does for the Supplier Hub. The PRD and the requirements describe the product and never the code. Update this file when a build item lands |
@@ -21,7 +21,7 @@ Everything runs on sample data held in the browser. There is no backend, no SAP 
 | Req | Status | Notes |
 |---|---|---|
 | REQ-E03-01 Supplier filtering | Built | Category and purchasing group filters; OTIF or "No history"; suspended, deactivated and blacklisted suppliers cannot be invited |
-| REQ-E03-02 RFI | Built | Template sections A–F, question library with required and weighted questions, drafts hidden from the buyer, deadline extension, answers reused by a later RFQ. Attachment questions are text fields: there is no file store |
+| REQ-E03-02 RFI | Built | Template sections A–F, question library with required and weighted questions, drafts hidden from the buyer, deadline extension, answers reused by a later RFQ. Creation follows section 3.6a of the requirements, which the build already matches: central library, edited per event, no save-as-template, no approval before sending. Attachment questions are text fields: there is no file store |
 | REQ-E03-03 RFQ | Built | From scratch, from an RFI, or from a purchase requisition; price per item; response deadline enforced; quote privacy |
 | REQ-E03-04 RFP | Built | Standard term list in 7 groups, Comply or Deviate with a comment required on a deviation, term-by-term comparison |
 | REQ-E03-05 Comparison, negotiation, award | Built | Weighted score (CR-15) with reliability from measured OTIF, currency rule (CR-16), negotiation rounds restricted to shortlisted suppliers with every quote version kept, split award that must total 100% per item, reason required when the award leaves the best-scored quote. Sourcing request (E03.01) is still not detailed in the requirements |
@@ -138,6 +138,7 @@ The `CR-` rules are implemented in the hub's own modules and covered by their ow
 - **Any real integration.** SAP, supplier APIs and the TMS are simulated. POs, goods receipts and invoice status are sample data, not inbound messages.
 - **Email and other notifications.** Alerts and reminders appear in the hub only; nothing is sent.
 - **File attachments.** RFI attachment questions, receipt-dispute attachments and the e-Faktur are recorded as file names; no file is stored.
+- **Sourcing event creation beyond the central library** (A-04): no sourcing request intake, no save-as-template, no admin screen for the question and term library, no approval step before sending. All four were ruled out of the MVP rather than left undone.
 - **A backend.** No database, no sign-in for real users, no scheduled jobs; changes are lost on reload. The pilot needs all of these (PRD section 4).
 - **Accessibility testing** (H-03) and an admin screen for the thresholds that currently live in configuration files.
 - **Foundation epics** E01 and E02 (registration, onboarding, supplier master data), which belong to the Foundation team.
