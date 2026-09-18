@@ -353,7 +353,7 @@ Template rules:
 
 **Metrics.** Leading: RFI response rate; median time to respond. Lagging: KPI-06.
 
-**Open items.** D-07: the catalog needed by RFI is Phase 2 in the deck. A-01. A-03 (RFI template review with users).
+**Open items.** D-07: the catalog needed by RFI is Phase 2 in the deck. A-01. A-03 (RFI template review with users). A-04 (how the RFI is created before it is sent).
 
 #### REQ-E03-03  Request for Quotation (RFQ) with RFI reuse
 
@@ -449,7 +449,7 @@ Template rules:
 
 **Metrics.** Lagging: KPI-06.
 
-**Open items.** A-03 (RFP template and standard term list review with Procurement).
+**Open items.** A-03 (RFP template and standard term list review with Procurement). A-04 (how the RFP is created before it is sent).
 
 #### REQ-E03-05  Bid comparison, negotiation, and awarding
 
@@ -1442,6 +1442,7 @@ All requirements in this section are **Proposed**, written from market practice 
 |---|---|---|
 | Q-18 | Which working calendar defines the 1-working-day deadline. Recommended default in section 3.4 | REQ-E07-02 |
 | A-03 | Review with users: RFI template, RFP template and standard term list, quote score weights (CR-15) | REQ-E03-02, REQ-E03-04, REQ-E03-05 |
+| A-04 | How an RFI or RFP is created before it is sent: who drafts it, whether a template is chosen or built each time, how buyer questions and commercial terms are assembled, and whether anyone reviews or approves it before it goes to suppliers. Today only the sent event and the supplier's answers are described (owner, 2026-09-18) | REQ-E03-02, REQ-E03-04 |
 | Q-20 | Quality inspection result is recorded in the hub for the MVP, while the Supplier Quality module is Phase 2 and goods receipt posting stays in SAP. Confirm the boundary | REQ-E07-06 |
 | A-01 | Check with Mas Ary Hidayat on compliance and capability for RFx | REQ-E03-01 to REQ-E03-04 |
 | A-02 | Full parameter list for supplier filtering | REQ-E03-01 |
