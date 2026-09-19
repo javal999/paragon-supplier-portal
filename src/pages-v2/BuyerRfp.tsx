@@ -23,6 +23,7 @@ import { RFP_TERM_GROUP_ORDER, rfpTerm } from '../services/sourcing/rfxConfig';
 import { rfpScoringOf } from './rfx/rfpScoring';
 import type { RfpEventView } from '../services/sourcing/views';
 import RfxTabs from './rfx/RfxTabs';
+import RfpCreateWizard from './rfx/RfpCreateWizard';
 import { DeadlinePill, EmptyRow, OtifOrNoHistory, ResponseStatePill, rfxNow } from './rfx/rfxDisplay';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -38,6 +39,12 @@ import { DeadlinePill, EmptyRow, OtifOrNoHistory, ResponseStatePill, rfxNow } fr
 // reliability read from each supplier's OTIF. An RFP that carries neither is not
 // scored at all, and says so: a weighted number invented from prose would be the
 // fabricated-score defect in a new document.
+//
+// ⚠️ **AND THE EVENT IS RAISED HERE (section 3.6a).** "New RFP" opens the wizard;
+// the lifecycle is offered BY STATE — Send on a Draft, Close on an Open one,
+// Extend where `t_rfp_extend` legally runs (Open AND Closed, because reopening a
+// window somebody asked for is not a state change). A seat without `rfp:publish`
+// reads whose act it is rather than a button the dispatcher would refuse.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const BuyerRfp: React.FC = () => {
@@ -47,7 +54,9 @@ const BuyerRfp: React.FC = () => {
   const rfis = useRfiEvents();
   const rfqs = useRFQs();
   const publish = useVerbAvailability('rfp:publish');
+  const create = useVerbAvailability('rfp:create');
   const command = useRfxCommand();
+  const [wizardOpen, setWizardOpen] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
   const [extendTo, setExtendTo] = useState<Record<string, string>>({});
 
@@ -60,18 +69,22 @@ const BuyerRfp: React.FC = () => {
 
   const open = items.find((e) => e.id === openId) ?? null;
 
+  /** One runner for every RFP verb this page offers — one refusal path, not four. */
+  const run = (vars: Parameters<typeof command.mutate>[0], successKey: string) =>
+    command.mutate(vars, {
+      onSuccess: (res) =>
+        toast(
+          res.status === 'failed'
+            ? { variant: 'error', title: t('rfx.toast.refused', { reason: res.reason ?? '' }) }
+            : { variant: 'success', title: t(successKey) },
+        ),
+      onError: () => toast({ variant: 'error', title: t('rfx.toast.refused', { reason: '' }) }),
+    });
+
   const extend = (event: RfpEventView) =>
-    command.mutate(
+    run(
       { verb: 'extendRfp', rfpId: event.id, deadline: extendTo[event.id] ?? '' },
-      {
-        onSuccess: (res) =>
-          toast(
-            res.status === 'failed'
-              ? { variant: 'error', title: t('rfx.toast.refused', { reason: res.reason ?? '' }) }
-              : { variant: 'success', title: t('rfx.toast.extended') },
-          ),
-        onError: () => toast({ variant: 'error', title: t('rfx.toast.refused', { reason: '' }) }),
-      },
+      'rfx.toast.extended',
     );
 
   return (
@@ -88,11 +101,20 @@ const BuyerRfp: React.FC = () => {
         counts={{ rfi: rfis.data?.items.length ?? 0, rfq: rfqs.data?.items.length ?? 0, rfp: items.length }}
       />
 
-      {publish.kind !== 'held' && (
-        <div className="mb-4">
+      {/* CE-01 — the buyer raises the event; a seat without `rfp:create` reads
+          WHOSE act it is rather than losing the affordance silently (§72a). */}
+      <div className="flex flex-wrap items-center justify-end gap-3 mb-4">
+        {publish.kind !== 'held' && (
           <HandoffNotice availability={publish} testId="handoff-rfp-publish" />
-        </div>
-      )}
+        )}
+        {create.kind === 'held' ? (
+          <Button variant="outline" onClick={() => setWizardOpen(true)} data-testid="rfp-new">
+            {t('rfx.rfp.new')}
+          </Button>
+        ) : (
+          <HandoffNotice availability={create} testId="handoff-rfp-create" />
+        )}
+      </div>
 
       <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto">
         <Table>
@@ -128,7 +150,11 @@ const BuyerRfp: React.FC = () => {
                     onClick={() => setOpenId(openId === event.id ? null : event.id)}
                     data-testid={`rfp-open-${event.id}`}
                   >
-                    {openId === event.id ? t('rfx.close') : t('rfx.rfp.compare')}
+                    {openId === event.id
+                      ? t('rfx.close')
+                      : event.status === 'Draft'
+                        ? t('rfx.rfp.openEvent')
+                        : t('rfx.rfp.compare')}
                   </Button>
                 </TableCell>
               </TableRow>
@@ -145,7 +171,46 @@ const BuyerRfp: React.FC = () => {
       {open && (
         <section className="mt-6 space-y-6" data-testid={`rfp-detail-${open.id}`}>
           <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm p-4">
-            <h3 className="text-sm font-semibold text-text-primary">{t('rfx.rfp.scope')}</h3>
+            {/* — The event, and the acts its STATE allows. — */}
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <Data className="font-semibold">{open.eventNumber}</Data>
+                <h3 className="text-sm font-semibold text-text-primary">{open.title}</h3>
+                <StatusPill variant={open.closed ? 'neutral' : 'info'} className="mt-1">
+                  {t(`rfx.status.${open.status}`)}
+                </StatusPill>
+              </div>
+              <div className="flex flex-wrap items-center gap-3">
+                {open.status === 'Draft' && (
+                  <Button
+                    variant="outline"
+                    disabled={publish.kind !== 'held'}
+                    data-testid={`rfp-send-${open.id}`}
+                    onClick={() => run({ verb: 'publishRfp', rfpId: open.id }, 'rfx.toast.published')}
+                  >
+                    {t('rfx.rfp.publish')}
+                  </Button>
+                )}
+                {open.status === 'Open' && (
+                  <Button
+                    variant="secondary"
+                    disabled={publish.kind !== 'held'}
+                    data-testid={`rfp-close-${open.id}`}
+                    onClick={() => run({ verb: 'closeRfp', rfpId: open.id }, 'rfx.toast.closed')}
+                  >
+                    {t('rfx.rfp.closeEvent')}
+                  </Button>
+                )}
+              </div>
+            </div>
+            {open.status === 'Draft' && (
+              <p className="text-xs text-text-tertiary mt-3" data-testid={`rfp-draft-notice-${open.id}`}>
+                {t('rfx.status.draftHiddenFromSuppliers')}
+              </p>
+            )}
+            <h4 className="text-xs uppercase tracking-wide text-text-tertiary mt-4">
+              {t('rfx.rfp.scope')}
+            </h4>
             <p className="text-sm text-text-secondary mt-1">{open.scope}</p>
             <div className="flex flex-wrap items-end gap-3 mt-4">
               <div>
@@ -174,6 +239,18 @@ const BuyerRfp: React.FC = () => {
           <RfpInvitees event={open} />
           <RfpComparison event={open} />
         </section>
+      )}
+
+      {wizardOpen && (
+        <RfpCreateWizard
+          canPublish={publish.kind === 'held'}
+          onCancel={() => setWizardOpen(false)}
+          onCreated={(rfpId) => {
+            // Land the buyer ON the new event — the act just performed is in view.
+            setWizardOpen(false);
+            setOpenId(rfpId);
+          }}
+        />
       )}
     </AppShellV2>
   );

@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 0.6 draft, 2026-09-18 |
+| Version | 0.7 draft, 2026-09-19 |
 | Sources | `SUPPLIER-HUB-BASELINE.md` (kick-off deck, Aug 2026); `KICKOFF-MEETING-NOTES.md` (business user feedback, reviewed 2026-09-17); owner review of the prototype gap review (2026-09-17) |
 | Scope of this version | Detailed: Order Collaboration, Inventory & Capacity Collaboration, RFx (validated); Forecast Collaboration, Call-off Management, and the undiscussed parts of Order and Inventory Collaboration (proposed). Hub navigation and screen conventions (validated). Foundation is reserved for the Foundation team. The remaining epics are stubs |
 | Not in scope | The codebase. This file states what the Supplier Hub must do, not what is built. What the prototype does today, and where, is tracked only in `BUILD-GAP.md` |
@@ -245,7 +245,7 @@ The menu follows the hub's own sections, not procurement stages, and each PTI us
 | REQ-E06-03 | Forecast-commit gap monitoring | E06 | MVP | Validated (owner, E06-R) |
 | REQ-E07-01 | PO visibility with quantity and timing breakdown | E07 | MVP | Validated |
 | REQ-E07-02 | PO response: approve, adjust, reject, escalate | E07 | MVP | Validated |
-| REQ-E07-03 | Order Collaboration Summary | E07 | MVP | Validated |
+| REQ-E07-03 | Order Collaboration Summary | E07 | MVP | Validated (drill-through and lifecycle columns, 2026-09-19) |
 | REQ-E07-04 | Advanced shipping notice | E07 | MVP | Validated (shipping notice); Proposed (ASN detail) |
 | REQ-E07-05 | Shipping notice confirmation | E07 | MVP | Validated |
 | REQ-E07-06 | Goods receipt confirmation | E07 | MVP | Proposed |
@@ -614,35 +614,112 @@ Template rules:
 
 | Maps to | Phase | Priority | Business owner | Users | Status |
 |---|---|---|---|---|---|
-| E07; MN-ORD-10 to MN-ORD-13 | MVP | P0 [Deck p.7] | Material Planner | MP, SUP | Validated |
+| E07; MN-ORD-10 to MN-ORD-13 | MVP | P0 [Deck p.7] | Material Planner | MP, SUP | Validated; drill-through and lifecycle columns validated by the owner, 2026-09-19 |
 
-**Business value.** One place to see whether a PO is fully secured: the PO, its ASNs, and all 3 confirmations. It removes the need to check 3 menus to answer "is this order safe?".
+**Business value.** One place to answer "is this order safe?": the PO, who supplies it, the supplier's response, its ASNs and call-offs, the 3 confirmations, what has been received, and what has been invoiced. Every figure on the row is a way in to the record behind it, so the planner stops hunting through menus and cross-matching PO numbers by eye. It removes the need to check 3 menus [MN-ORD-13] and, with the lifecycle columns, the need to check 5.
 
 **Experience.**
-- MP: sees every PO with its ASN breakdown and the status of the capacity, foresight / fixed-stock, and shipping notice confirmations. Each status links to its detail page.
-- SUP: sees the same summary for its own POs only.
+- MP: one row per open PO, with every cell either a link to that record or a plain statement of why there is nothing to open. Landing on a destination, the planner sees that PO's records already filtered, and a way back.
+- SUP: the same summary for its own POs only, with the supplier's own destinations (its orders, shipments, call-offs, receipts, invoices, commitments, capacity).
 
 **Step-by-step (Planner, Monday review).**
-1. The planner opens the Order Collaboration Summary.
-2. The planner sees a PO with capacity confirmed, foresight confirmed, and shipping notice missing.
-3. The planner opens the shipping notice status and lands on that PO's shipping notice page [MN-ORD-13].
+1. The planner opens Order summary. A banner names how many orders have had no supplier response past their deadline.
+2. Row PO-2025-00108 shows Escalated, 2 ASNs, 1 call-off confirmed, capacity Gap, foresight Confirmed, shipping notice Not started, 1 receipt with a discrepancy, 1 invoice returned.
+3. The planner selects the ASN count. Shipments & ASN opens, filtered to PO-2025-00108, with its 2 ASNs listed; the first is open in the detail panel.
+4. The planner selects "Back to order summary" and is returned to the same row, with the summary's own filters as they left them.
+5. The planner selects the capacity Gap. Capacity opens for that supplier and the material groups of that PO, on the weeks the PO delivers into, with the gap week highlighted.
+
+**Step-by-step (Supplier).**
+1. The supplier opens Order summary and sees only its own POs.
+2. A row shows Awaiting response with a deadline today. Selecting the response opens that PO with the response form.
+3. A row shows a receipt discrepancy. Selecting it opens Goods receipts filtered to that PO, where the supplier acknowledges or disputes.
 
 **Business rules.**
-- BR-01. The summary shows the PO, its ASN breakdown, and the 3 confirmations [MN-ORD-13].
-- BR-02. Each confirmation links to the detail page in its own menu [MN-ORD-13; Q-16].
-- BR-03. Paragon users and the supplier that owns the PO can see the summary. A supplier sees only its own POs [MN-ORD-13; Q-17].
+- BR-01. The summary shows, per PO: PO number, supplier, supplier response, ASNs, call-offs, the 3 confirmations (capacity, foresight / fixed stock, shipping notice), goods receipts, and invoices [MN-ORD-13; lifecycle columns Owner, 2026-09-19].
+- BR-02. Every cell that has a record behind it is a link. Selecting it opens the page that owns that record, filtered to this PO, with the record open where exactly one exists [Owner].
+- BR-03. A cell with nothing behind it is **not** a link. It states the empty condition, and names the reason on hover and to assistive technology [Owner; SC-07].
+- BR-04. Every destination reached this way shows which PO it was filtered by and offers "Back to order summary", which returns the user to the summary with its filters and scroll position as they were [Owner].
+- BR-05. Capacity and foresight are agreed per material group and period, not per PO. Their destinations are filtered to the PO's supplier and the PO's materials or material groups, over the periods the PO delivers into, and the destination states that this is why those rows are shown [Owner].
+- BR-06. A supplier sees only POs where it is the supplier, on the summary and at every destination [MN-ORD-13; Q-17].
+- BR-07. Navigation is a read. A user whose role does not permit the destination's actions still sees the filtered records; the actions are withheld with the usual notice, never the navigation [Proposed; consistent with NV and the handoff pattern].
+- BR-08. A confirmation that is not required for a PO shows "Not required", which is not a link [Proposed].
+- BR-09. Counts on the summary count what the destination will show: cancelled ASNs, dismissed call-off drafts and cancelled invoices are excluded from both, or shown in both [Owner].
+- BR-10. The summary and its destinations read the same figures as the pages that own them. The summary never calculates a status of its own [Proposed].
+- BR-11. Rows are ordered by attention: escalated or overdue first, then orders with a gap or discrepancy, then the rest by need date [Proposed].
+- BR-12. A destination opened from the summary carries the data-age banner of the page it lands on (REQ-E07-08) [Proposed].
+
+**Drill-through contract.** One row per column: what is behind it, where it goes, and what the cell does when there is nothing.
+
+| Column | Destination | Filtered to | Opens | When empty (not a link) |
+|---|---|---|---|---|
+| PO number | Purchase orders | That PO | The PO detail | Never empty |
+| Supplier | Supplier profile (PTI); no link on the supplier's own summary | That supplier | Profile | Supplier record missing: state "Supplier record unavailable" |
+| Response | Purchase orders | That PO | The PO detail at the response, including the counter-offer or rejection reason | Never empty; before any response it reads "Awaiting response" and still opens the PO |
+| ASNs | Shipments & ASN | That PO | The ASN when there is exactly 1; the filtered list when there are several | "No ASN yet" — the supplier has not shipped against this order |
+| Call-offs | Call-offs | That PO | The call-off when there is exactly 1; the filtered list when there are several | "No call-offs" — deliveries on this order are not managed as call-offs |
+| Capacity | Capacity | That supplier, the PO's material groups, the PO's delivery weeks | The capacity grid on those weeks, gap weeks highlighted | "Not started" — the supplier has not confirmed capacity for these material groups |
+| Foresight / fixed stock | Forecast commitments | That supplier, the PO's materials | The commitment rows for those materials | "Not started"; or "Not required" when the PO's materials have no forecast periods |
+| Shipping notice | Purchase orders | That PO | The PO detail at the shipping notice (REQ-E07-05) | "Not started" — no expected completion date yet |
+| Goods receipts | Goods receipts | That PO | The receipt when there is exactly 1; the filtered list when there are several | "Nothing received yet" |
+| Invoices | Invoices | That PO | The invoice when there is exactly 1; the filtered list when there are several | "Not invoiced yet" |
 
 **Edge cases.**
-- A confirmation is not required for a PO type: show "Not required" instead of "Missing" [Proposed].
+
+*Positive paths*
+- Exactly 1 record behind a cell: the destination opens that record, not a list of 1 [Owner].
+- Several records: the destination lists them, filtered, newest first, and none is auto-opened [Proposed].
+- A PO whose materials span several material groups: capacity opens with every group of that PO listed [Proposed].
+- A PO delivered before call-offs were introduced: call-offs reads "No call-offs" and is not a link [Proposed].
+- Language switched to Indonesian: destinations, filters and the back link behave the same, with every string translated [SC-04].
+
+*Refusals and negatives*
+- A supplier follows a link or a pasted address for another supplier's PO: refused as not found, with no hint that the PO exists [BR-06; SP1].
+- An address names a PO that does not exist: "Order not found", with a way back to the summary [Proposed].
+- An address names a PO the user may see but a filter value that is malformed: the filter is ignored, the page states that it showed everything for the PO [Proposed].
+- A user without the role the destination's actions need: the records are shown, the actions are withheld with the standard notice [BR-07].
+- A cell with nothing behind it cannot be selected by mouse or keyboard, and its reason is available to a screen reader [BR-03; SC-07].
+
+*Data edges*
+- An ASN cancelled after it was counted: the count and the destination both exclude it [BR-09].
+- Goods received with no ASN: the receipts cell counts it, and the destination shows it marked "Received without ASN" [REQ-E07-06].
+- An invoice covering several POs: it appears under each PO it covers, and the destination states that its lines cover more than this order [Proposed].
+- A PO with many ASNs or receipts: the destination scrolls rather than truncating, and the count on the summary matches the number listed [Proposed].
+- The PO is closed or cancelled: the row stays visible with its status, and every destination still opens read-only [Proposed].
+- SAP data behind a destination is older than the latency target: the destination shows the data-age banner [BR-12].
+- The same PO open in 2 browser tabs: each behaves independently; the summary re-reads on return [Proposed].
 
 **Acceptance criteria.**
-- AC-01. For any PO, the summary shows its ASNs and the status of each of the 3 confirmations.
-- AC-02. Selecting a confirmation status opens that confirmation's detail page for the same PO.
-- AC-03. A supplier user sees only POs where it is the supplier.
+- AC-01. For any PO, the summary shows the supplier, the response, ASNs, call-offs, the 3 confirmations, goods receipts and invoices.
+- AC-02. Selecting each of those cells opens the page that owns that record, filtered to that PO, and the filter is visible to the user.
+- AC-03. Where exactly 1 record exists behind a cell, that record is open on arrival; where several exist, the filtered list is shown.
+- AC-04. Capacity opens for the PO's supplier, material groups and delivery weeks; foresight opens for the PO's supplier and materials; each destination states why those rows were chosen.
+- AC-05. A cell with nothing behind it is not selectable by mouse or keyboard, and its reason is readable on hover and by a screen reader.
+- AC-06. Every destination reached from the summary offers "Back to order summary", and returning restores the summary's filters and position.
+- AC-07. A supplier user sees only POs where it is the supplier, and a direct address to another supplier's PO is refused as not found.
+- AC-08. An address naming a PO that does not exist shows "Order not found" and a way back.
+- AC-09. A user lacking the destination's action role still sees the filtered records, with actions withheld and explained.
+- AC-10. A count on the summary equals the number of records the destination lists, with cancelled records excluded from both.
+- AC-11. A confirmation that is not required shows "Not required" and is not a link.
+- AC-12. Every rule above holds on both the PTI and the supplier summary.
 
-**Data and integration.** Reads from REQ-E07-01, REQ-E07-04, REQ-E07-05, REQ-E08-04, REQ-E06-02.
+**Data and integration.** Reads from REQ-E07-01 (PO and response), REQ-E07-04 (ASNs), REQ-E07-05 (shipping notice), REQ-E07-06 (goods receipts), REQ-E07-07 (invoices), REQ-E08-04 (capacity), REQ-E06-02 (foresight), REQ-E09-03 (call-offs), Foundation (supplier). The summary holds no state of its own.
 
-**Metrics.** Leading: share of open POs with all 3 confirmations complete.
+**Metrics.** Leading: share of open POs with all 3 confirmations complete; share of summary visits that reach a destination.
+
+**Alignment check against the other requirements.** Each source requirement owns its records; this one only gathers and links to them.
+
+| Source | Owns | This requirement adds | Conflict? |
+|---|---|---|---|
+| REQ-E07-01, REQ-E07-02 | PO, response, escalation | A column and a link to the PO detail | None. The summary never changes a response |
+| REQ-E07-04 | ASNs | Count and link; cancelled ASNs excluded (BR-09) | None. BR-09 matches REQ-E07-04's cancellation rule |
+| REQ-E07-05 | Shipping notice | Status and link to the PO detail where the notice lives | None |
+| REQ-E07-06 | Goods receipts and discrepancies | New column and link | Extends the original 3-confirmation scope; owner-approved 2026-09-19 |
+| REQ-E07-07 | Invoices | New column and link | As above. An invoice spanning POs is listed under each |
+| REQ-E08-04 | Capacity per material group and week | Status per PO, and the filter that maps a PO to groups and weeks (BR-05) | No conflict, but the grain differs: a PO status is a reading of a wider agreement, and the destination says so |
+| REQ-E06-02 | Commitments per material and period | Status per PO and the material filter | As above. "Not required" where the materials have no forecast periods |
+| REQ-E09-03 | Call-offs | Count and link | None |
+| Section 3.7, 3.8 (NV, SC) | Menu and screen rules | Destinations keep their own menu highlight (NV-03); the back link is additional, not a replacement for the menu | None |
+| REQ-E07-08 | SAP data age | Destinations carry their own banner (BR-12) | None |
 
 **Open items.** None.
 
@@ -1542,3 +1619,4 @@ Research date: 2026-09-17. Vendor pages were read directly unless marked "snippe
 | 0.4 | 2026-09-17 | Applied owner decisions from the prototype gap review: shared calculation rules (3.6), hub navigation (3.7), screen conventions (3.8); RFI and RFP templates; RFQ from a purchase requisition; REQ-E03-05 detailed with negotiation and multi-award; recommendations filled for open points in E07, E08, E09, E10. E06 held for owner review (E06-R) |
 | 0.5 | 2026-09-17 | Applied the confirmed Forecast Collaboration recommendations (E06-R): section 5.5 validated, CR-21 and CR-22 added |
 | 0.6 | 2026-09-18 | Answered A-04: section 3.6a records how a sourcing event is created before it is sent |
+| 0.7 | 2026-09-19 | REQ-E07-03 extended: drill-through contract per column, goods receipt and invoice columns, empty-cell rule, and an alignment check against the source requirements |

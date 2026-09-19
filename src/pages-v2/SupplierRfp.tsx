@@ -131,7 +131,11 @@ const SupplierRfp: React.FC = () => {
           const missing = unansweredTerms(event.terms, answers);
           const uncommented = deviationsWithoutComment(answers);
           const opened = openId === event.id;
-          const locked = mine?.status === 'Submitted' || answerVerb.kind !== 'held';
+          // A CLOSED event locks the form for the same reason a submitted one
+          // does: the verb refuses an answer to a non-Open event
+          // (`EVENT_NOT_OPEN`), so offering the boxes would offer a gesture the
+          // act cannot accept.
+          const locked = mine?.status === 'Submitted' || event.closed || answerVerb.kind !== 'held';
           return (
             <section
               key={event.id}
@@ -173,6 +177,14 @@ const SupplierRfp: React.FC = () => {
                       data-testid={`supplier-rfp-draft-${event.id}`}
                     >
                       {t('rfx.draftHidden')}
+                    </p>
+                  )}
+                  {event.closed && (
+                    <p
+                      className="text-sm text-text-secondary bg-bg-hover rounded px-3 py-2"
+                      data-testid={`supplier-rfp-closed-${event.id}`}
+                    >
+                      {t('rfx.rfi.closedNoAnswers')}
                     </p>
                   )}
 

@@ -29,7 +29,7 @@ import {
   useSuppliers,
 } from '../services/query/hooks';
 import { useRfxCommand } from '../services/query/commandHooks';
-import { awardSplitRefusal, reliabilityScoreFor } from '../services/transitions/rfxRules';
+import { awardSplitRefusal, effectiveDeadline, reliabilityScoreFor } from '../services/transitions/rfxRules';
 import type { AwardLine } from '../services/sourcing/types';
 import { DeadlinePill, EmptyRow, OtifOrNoHistory, money, qty, rfxNow } from './rfx/rfxDisplay';
 
@@ -49,6 +49,19 @@ import { DeadlinePill, EmptyRow, OtifOrNoHistory, money, qty, rfxNow } from './r
 //   · THE SPLIT MUST TOTAL 100% PER ITEM AND A DEPARTURE FROM THE BEST SCORE
 //     NEEDS A REASON. Both are checked here for the message and enforced at the
 //     verb for the act — the page cannot be the only thing standing in the way.
+//
+// ⚠️ **AND THE RESPONSE WINDOW MOVES HERE (BR-05), FOR EVERYONE OR FOR NAMED
+// INVITEES — THE SAME TWO ACTS THE RFI SIDE OFFERS AND THE SAME DISTINCTION IN
+// THE STORE.** Extending for everyone moves the event's deadline; extending for
+// ticked suppliers records a PER-INVITEE one and leaves the event's alone, so
+// "extended for everyone" and "extended for these two" stay distinguishable
+// after the fact — and the quote gate reads the deadline IN FORCE FOR THIS
+// SUPPLIER, which is what makes the per-invitee grant mean anything.
+//
+// It is offered while the event is Open or Closed, because that is where
+// `t_rfq_extend` legally runs — reopening a window somebody asked for is not a
+// step in the machine. After an award there is nothing to extend, and the page
+// says so rather than offering a control the dispatcher would refuse.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const BuyerSourcingEvent: React.FC = () => {
@@ -62,6 +75,9 @@ const BuyerSourcingEvent: React.FC = () => {
   const suppliers = useSuppliers();
   const negotiate = useVerbAvailability('rfq:negotiate');
   const awardVerb = useVerbAvailability('rfq:award');
+  // REQ-E03-03 BR-05 — moving the response window is the PUBLISH authority, the
+  // same atom that sent the invitation out; it is not the award authority.
+  const publish = useVerbAvailability('rfq:publish');
   const command = useRfxCommand();
 
   const [shortlist, setShortlist] = useState<string[]>([]);
@@ -71,6 +87,8 @@ const BuyerSourcingEvent: React.FC = () => {
   const [bestAndFinal, setBestAndFinal] = useState(false);
   const [shares, setShares] = useState<Record<string, string>>({});
   const [awardReason, setAwardReason] = useState('');
+  const [extendTo, setExtendTo] = useState('');
+  const [extendOnly, setExtendOnly] = useState<string[]>([]);
 
   const crumb = [t('hub.nav.section.sourcing'), t('rfx.event.title')];
   const rfq = useMemo(() => (rfqs.data?.items ?? []).find((r) => r.id === rfqId) ?? null, [rfqs.data, rfqId]);
@@ -167,6 +185,111 @@ const BuyerSourcingEvent: React.FC = () => {
           <span className="text-xs text-text-tertiary" data-testid="event-from-rfi">
             {t('rfx.event.fromRfi', { event: rfq.sourceRfiId })}
           </span>
+        )}
+      </div>
+
+      {/* — REQ-E03-03 BR-05: the response window, for everyone or for named invitees — */}
+      <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto mb-6">
+        <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-b border-border-subtle">
+          <span className="text-sm font-semibold text-text-primary">{t('rfx.event.window')}</span>
+          {publish.kind !== 'held' && (
+            <HandoffNotice availability={publish} testId="handoff-rfq-extend" />
+          )}
+        </div>
+        <Table>
+          <TableHeader>
+            <TableHeaderCell>{t('rfx.invite.col.supplier')}</TableHeaderCell>
+            <TableHeaderCell>{t('rfx.invite.col.otif')}</TableHeaderCell>
+            <TableHeaderCell>{t('rfx.deadline.own')}</TableHeaderCell>
+            <TableHeaderCell>{t('rfx.rfi.extendSelected')}</TableHeaderCell>
+          </TableHeader>
+          <tbody>
+            {rfq.invitedSupplierIds.map((supplierId) => {
+              const own = effectiveDeadline(rfq.responseDeadline, rfq.inviteeDeadlines ?? [], supplierId);
+              return (
+                <TableRow key={supplierId} data-testid={`event-invitee-${supplierId}`}>
+                  <TableCell>{supplierName(supplierId)}</TableCell>
+                  <TableCell>
+                    <OtifOrNoHistory otif={supplierOtif(supplierId)} testId={`event-otif-${supplierId}`} />
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap">
+                    <DeadlinePill
+                      deadline={own}
+                      done={rfq.respondedSupplierIds.includes(supplierId)}
+                      testId={`event-deadline-${supplierId}`}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <input
+                      type="checkbox"
+                      className="accent-teal"
+                      aria-label={supplierName(supplierId)}
+                      checked={extendOnly.includes(supplierId)}
+                      onChange={() =>
+                        setExtendOnly((prev) =>
+                          prev.includes(supplierId)
+                            ? prev.filter((s) => s !== supplierId)
+                            : [...prev, supplierId],
+                        )
+                      }
+                    />
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+            {rfq.invitedSupplierIds.length === 0 && (
+              <EmptyRow colSpan={4} testId="event-no-invitees">
+                {t('rfx.invite.empty')}
+              </EmptyRow>
+            )}
+          </tbody>
+        </Table>
+        {rfq.status === 'Open' || rfq.status === 'Closed' ? (
+          <div className="flex flex-wrap items-end gap-3 px-4 py-3 border-t border-border-subtle">
+            <div>
+              <label className="block text-xs font-semibold text-text-secondary mb-1" htmlFor="event-extend">
+                {t('rfx.rfi.extend')}
+              </label>
+              <input
+                id="event-extend"
+                type="date"
+                value={extendTo}
+                onChange={(e) => setExtendTo(e.target.value)}
+                className="bg-white border border-border-input rounded-md px-3 h-10 text-sm focus:outline-none focus:border-action"
+              />
+            </div>
+            <Button
+              variant="outline"
+              disabled={publish.kind !== 'held' || !extendTo}
+              data-testid="event-extend-btn"
+              onClick={() =>
+                run(
+                  {
+                    verb: 'extendRfq',
+                    rfqId: rfq.id,
+                    deadline: extendTo,
+                    ...(extendOnly.length > 0 ? { supplierIds: extendOnly } : {}),
+                  },
+                  'rfx.toast.extended',
+                )
+              }
+            >
+              {extendOnly.length > 0 ? t('rfx.rfi.extendSelected') : t('rfx.rfi.extendAll')}
+            </Button>
+            <p className="text-xs text-text-tertiary flex-1 min-w-[16rem]">{t('rfx.event.windowRule')}</p>
+          </div>
+        ) : (
+          <p
+            className="px-4 py-3 text-xs text-text-tertiary border-t border-border-subtle"
+            data-testid="event-extend-unavailable"
+          >
+            {t('rfx.event.extendClosed')}
+          </p>
+        )}
+        {(rfq.extensions?.length ?? 0) > 0 && (
+          <p className="px-4 pb-3 text-xs text-text-tertiary" data-testid="event-extended">
+            {t('rfx.extended')}
+          </p>
         )}
       </div>
 

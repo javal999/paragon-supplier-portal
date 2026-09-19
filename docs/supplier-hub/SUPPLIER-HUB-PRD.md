@@ -4,7 +4,7 @@
 |---|---|
 | Product | Supplier Hub (Supplier Portal, "SC Collaboration Hub") |
 | Company | PT Paragon Technology and Innovation (PTI) |
-| Version | 0.5 draft, 2026-09-18 |
+| Version | 0.6 draft, 2026-09-19 |
 | Scope | MVP (Phase 1, "Foundation to Transact"). Phase 2 and 3 appear only in section 9 |
 | Steering Committee | Yogi Sapta Prakoso (VP Supply Chain), Ilauddin (CFO), Risman Adnan (CTO) [C] |
 | Technology Product Owners | Achmad Fahlevi, Vergiant Yoga Perdana (Supply Chain); Indita Ramasaphira (FATL) [C] |
@@ -104,7 +104,7 @@ Acceptance criteria: TBD by the Foundation team. The hub **replaces PROCIO** for
 | US-10 | As a supplier, I want to see each umbrella PO with its quantity and timing breakdown from SAP so that I confirm against one reliable source | REQ-E07-01 | [V] |
 | US-11 | As a supplier, I want to approve, adjust, or reject a PO within 1 working day so that PTI knows quickly whether supply is secured | REQ-E07-02 | [V] |
 | US-12 | As a planner, I want POs with no response after 1 working day escalated to me so that I can act, for example by sourcing elsewhere | REQ-E07-02 | [V] |
-| US-13 | As a planner or supplier, I want an Order Collaboration Summary per PO showing ASNs and the 3 confirmations so that I see at a glance whether an order is safe | REQ-E07-03 | [V] |
+| US-13 | As a planner or supplier, I want an Order Collaboration Summary per PO covering response, ASNs, call-offs, the 3 confirmations, receipts and invoices, where every figure opens the record behind it, so that I see at a glance whether an order is safe and can act without hunting | REQ-E07-03 | [V] |
 | US-14 | As a supplier, I want to create an ASN and confirm shipment start and expected completion so that PTI knows goods are coming | REQ-E07-04, REQ-E07-05 | [V] concept, [P] ASN fields |
 | US-15 | As a supplier, I want to see goods receipts against my shipments and dispute discrepancies so that quantity differences are resolved early | REQ-E07-06 | [P] |
 | US-16 | As a supplier, I want to submit invoices from my goods receipts and follow their status so that I am paid without paper exchange | REQ-E07-07 | Phase 1 scope [C]; detail [P] |
@@ -121,9 +121,11 @@ Acceptance criteria: TBD by the Foundation team. The hub **replaces PROCIO** for
 - US-12:
   - A PO with no response at the deadline is marked Escalated and listed for the planner.
 - US-13:
-  - The summary shows ASNs and the status of the capacity, foresight / fixed-stock, and shipping notice confirmations.
-  - Each status opens its detail page.
-  - Suppliers see only their own POs.
+  - The summary shows the supplier, the response, ASNs, call-offs, the 3 confirmations, goods receipts and invoices.
+  - Every cell with a record behind it opens that record's page, filtered to the PO, with the record open where only one exists.
+  - A cell with nothing behind it is not a link and says why.
+  - Every destination offers a way back to the summary.
+  - Suppliers see only their own POs, and a direct address to another supplier's PO is refused as not found.
 - US-14:
   - An ASN can be created only for an approved PO or confirmed call-off.
   - A submitted ASN increases in-transit quantity.
@@ -443,7 +445,10 @@ sequenceDiagram
 | T3 | Adjust without reason | Adjust with counter-offer, no reason | Submission blocked | Error names the missing reason |
 | T4 | Reject | Reject with cause "quality" | PTI notified; rejection stored | Notification names supplier; rejection appears in assessment data |
 | T5 | No response | PO created, 1 working day passes | PO Escalated | PO in planner's escalation list |
-| T6 | Summary links | Open capacity status in summary | Capacity confirmation page for that PO | Same PO ID on target page |
+| T6 | Summary links | Open capacity status in summary | Capacity page for that PO's supplier, material groups and delivery weeks | Destination states the PO it was filtered by |
+| T6a | Summary link, single record | Open the ASN cell on a PO with 1 ASN | That ASN opens | The ASN's own detail, not a list |
+| T6b | Summary link, empty cell | Select an ASN cell reading "No ASN yet" | Nothing happens | Not focusable; reason readable on hover and by screen reader |
+| T6c | Summary link, tenancy | Supplier opens an address for another supplier's PO | Refused as not found | No hint the PO exists |
 | T7 | Template upload with bad rows | 10 rows, 2 invalid materials | 8 saved, 2 listed with reasons | Counts and reasons exact |
 | T8 | API sync button | PTI presses Sync for connected supplier | Supplier figures refreshed | Last update time changes; values match supplier system |
 | T9 | Stock access removed | Planner removes supplier's access | Supplier no longer sees PTI stock | No PTI stock on any supplier page; change logged |

@@ -103,6 +103,13 @@ export interface RfiEvent {
   readonly id: string;
   readonly eventNumber: string;
   readonly title: string;
+  /**
+   * What PTI wants to learn, in the buyer's own words (section 3.6a CE-07 —
+   * "the scope the suppliers answer"). Optional because the seeded events
+   * predate it and an absent description is honestly absent; the RFP's
+   * `scope` is the same field under the name that requirement uses.
+   */
+  readonly description?: string;
   readonly templateId: string;
   readonly materialCategory: string;
   readonly purchasingGroup?: string;
