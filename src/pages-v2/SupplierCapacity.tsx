@@ -2,6 +2,11 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import AppShellV2 from '../components/layout-v2/AppShellV2';
 import PageHeader from '../components/ui-v2/PageHeader';
+import {
+  OrderNotFound,
+  PoFilterBanner,
+  usePoDrillFilter,
+} from './orders/PoDrillFilter';
 import PageMetaLine from '../components/ui-v2/PageMetaLine';
 import SampleDataBadge from '../components/ui-v2/SampleDataBadge';
 import SubTabs from '../components/ui-v2/SubTabs';
@@ -68,7 +73,18 @@ const SupplierCapacity: React.FC = () => {
   const crumb = [t('hub.nav.section.planning'), t('inv.capacity.sup.title')];
 
   const plans = useMemo(() => plansQuery.data?.items ?? [], [plansQuery.data]);
-  const plan = plans.find((p) => p.materialGroup === group) ?? plans[0] ?? null;
+  // ── REQ-E07-03 BR-05 / AC-04 ──────────────────────────────────────────────
+  // Arriving from one order selects that order's material group. The WEEK ROWS
+  // are NOT filtered, and that is deliberate: this surface SUBMITS the horizon,
+  // and `capacitySubmissionRefusal` requires every week of it — a form showing
+  // three of thirteen weeks would be a form that cannot be submitted. So the
+  // order's delivery weeks are MARKED instead, and the banner says so.
+  const drill = usePoDrillFilter();
+  const drillGroup =
+    drill.kind === 'filtered' && drill.groups !== null && drill.groups.length > 0 ? drill.groups[0] : null;
+  const drillWeeks = drill.kind === 'filtered' ? drill.weeks : null;
+  const plan =
+    plans.find((p) => p.materialGroup === (group ?? drillGroup)) ?? plans[0] ?? null;
 
   useEffect(() => {
     if (plan) setDraft(draftFrom(plan));
@@ -76,7 +92,9 @@ const SupplierCapacity: React.FC = () => {
   }, [plan?.materialGroup, plan?.latest?.id, plansQuery.dataUpdatedAt]);
 
   if (!identity.supplierId) return <NoSupplierIdentity />;
-  if (plansQuery.isPending) return <LoadingState breadcrumb={crumb} />;
+  if (plansQuery.isPending || drill.kind === 'pending') return <LoadingState breadcrumb={crumb} />;
+  // AC-07 / AC-08 — identical refusal for an unknown PO and another supplier's.
+  if (drill.kind === 'notFound') return <OrderNotFound persona="supplier" breadcrumb={crumb} />;
   if (plansQuery.isError)
     return <ErrorState breadcrumb={crumb} error={plansQuery.error} onRetry={() => plansQuery.refetch()} />;
   if (!plan)
@@ -126,6 +144,26 @@ const SupplierCapacity: React.FC = () => {
         <SampleDataBadge className="ml-3 align-middle" />
       </PageMetaLine>
 
+      {/* BR-04 / BR-05 — the filter, why these rows, and the way back. */}
+      <PoFilterBanner drill={drill} persona="supplier" reason="capacity" />
+      {drillWeeks !== null && drillWeeks.length > 0 && (
+        // ⚠️ Which line is honest depends on whether the horizon reaches those
+        // weeks. "The weeks are marked" beside nothing marked is a claim the
+        // screen contradicts, so the out-of-horizon case says THAT instead.
+        <p
+          className="text-sm text-text-tertiary mb-4"
+          data-testid={
+            plan.weeks.some((w) => drillWeeks.includes(w.week))
+              ? 'capacity-weeks-marked'
+              : 'capacity-weeks-outside-horizon'
+          }
+        >
+          {plan.weeks.some((w) => drillWeeks.includes(w.week))
+            ? t('oc.drill.weeks.highlighted')
+            : t('oc.drill.weeks.outside')}
+        </p>
+      )}
+
       <SubTabs<string>
         options={plans.map((p) => ({ id: p.materialGroup, label: t(`inv.group.${p.materialGroup}`) }))}
         value={plan.materialGroup}
@@ -162,7 +200,14 @@ const SupplierCapacity: React.FC = () => {
             {rows.map(({ w, d, allocated }, i) => {
               const below = allocated.ok && allocated.value !== null && allocated.value < w.demand;
               return (
-                <TableRow key={w.week} data-testid={`capacity-week-${w.week}`} className={below ? 'bg-warning-soft' : ''}>
+                <TableRow
+                  key={w.week}
+                  data-testid={`capacity-week-${w.week}`}
+                  data-drill-week={drillWeeks?.includes(w.week) ? 'true' : undefined}
+                  className={`${below ? 'bg-warning-soft' : ''} ${
+                    drillWeeks?.includes(w.week) ? 'ring-1 ring-inset ring-action' : ''
+                  }`.trim()}
+                >
                   <TableCell className="whitespace-nowrap">
                     <Data>{formatDate(w.week)}</Data>
                   </TableCell>

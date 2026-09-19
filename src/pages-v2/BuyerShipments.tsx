@@ -16,6 +16,14 @@ import {
 } from 'lucide-react';
 import AppShellV2 from '../components/layout-v2/AppShellV2';
 import PageHeader from '../components/ui-v2/PageHeader';
+import {
+  OrderNotFound,
+  PoFilterBanner,
+  drilledPoNumber,
+  usePoDrillFilter,
+} from './orders/PoDrillFilter';
+import { asnsForPo } from './orders/orderSummaryModel';
+import { useASNs } from '../services/query/hooks';
 import PageMetaLine from '../components/ui-v2/PageMetaLine';
 import ProvenanceMarker from '../components/ui-v2/ProvenanceMarker';
 import KpiCard from '../components/ui-v2/KpiCard';
@@ -150,6 +158,17 @@ const BuyerShipments: React.FC = () => {
   ];
   const shipmentsQuery = useShipments();
   const suppliersQuery = useSuppliers();
+  // ── REQ-E07-03 · the ASN half of "Shipments & ASN" ────────────────────────
+  // ⚠️ **THE SUMMARY'S ASN COUNT IS A COUNT OF *ASNs*, SO THIS PAGE HAS TO SHOW
+  // ASNs FOR AC-10 TO MEAN ANYTHING.** This page's own list is the SHIPMENT
+  // family (`useShipments`), which is a different population from the supplier's
+  // ASN records (`useASNs`) — and the summary counts the latter, because that is
+  // the family whose `Cancelled` state BR-09 speaks about. Rather than make the
+  // count agree by changing what it counts, the destination gains the ASN list
+  // it was always named for, filtered by the SAME predicate the summary counted
+  // with (`asnsForPo`). Both halves are then filtered to the PO.
+  const asnsQuery = useASNs();
+  const drill = usePoDrillFilter();
   const shipments = shipmentsQuery.data?.items ?? [];
   const supplierById = useMemo(
     () => new Map((suppliersQuery.data?.items ?? []).map((s) => [s.id, s])),
@@ -200,8 +219,10 @@ const BuyerShipments: React.FC = () => {
     [shipments]
   );
 
+  const drilledPo = drilledPoNumber(drill);
   const filtered = useMemo(() => {
     return shipments.filter((s) => {
+      if (drilledPo !== null && s.poNumber !== drilledPo) return false;
       if (!matchesGroup(displayOf(s), tab)) return false;
       if (selectedModes.length > 0 && !selectedModes.includes(s.mode))
         return false;
@@ -217,7 +238,13 @@ const BuyerShipments: React.FC = () => {
       }
       return true;
     });
-  }, [shipments, tab, selectedModes, search]);
+  }, [shipments, tab, selectedModes, search, drilledPo]);
+
+  /** The PO's ASNs — the records the summary's ASN cell counted (BR-09). */
+  const drilledAsns = useMemo(
+    () => (drilledPo === null ? [] : asnsForPo(asnsQuery.data?.items ?? [], drilledPo)),
+    [asnsQuery.data, drilledPo],
+  );
 
   const toggleMode = (m: ShipmentMode) => {
     setSelectedModes((prev) =>
@@ -476,6 +503,9 @@ const BuyerShipments: React.FC = () => {
         }}
       />
     );
+  if (drill.kind === 'pending') return <LoadingState breadcrumb={SHIPMENTS_CRUMB} />;
+  if (drill.kind === 'notFound')
+    return <OrderNotFound persona="buyer" breadcrumb={SHIPMENTS_CRUMB} />;
   if (shipments.length === 0)
     return (
       <EmptyState
@@ -557,6 +587,51 @@ const BuyerShipments: React.FC = () => {
           subtitle={formatDate(TODAY)}
         />
       </div>
+
+      {/* BR-04 / AC-02 — the filter is visible, and the way back is offered. */}
+      <PoFilterBanner drill={drill} persona="buyer" count={drilledAsns.length} />
+
+      {drill.kind === 'filtered' && (
+        <section
+          className="border border-border-subtle rounded-lg bg-bg-surface mb-6 overflow-x-auto"
+          data-testid="drill-asn-section"
+          aria-label={t('oc.drill.asnSection')}
+        >
+          <h2 className="text-sm font-semibold text-text-primary px-4 py-3 border-b border-border-subtle">
+            {t('oc.drill.asnSection')}
+          </h2>
+          {drilledAsns.length === 0 ? (
+            <p className="px-4 py-4 text-sm text-text-tertiary">{t('oc.summary.empty.asns.why')}</p>
+          ) : (
+            <ul className="divide-y divide-border-subtle">
+              {drilledAsns.map((a) => (
+                <li
+                  key={a.asnNumber}
+                  data-testid={`drill-asn-${a.asnNumber}`}
+                  /* AC-03 — exactly one record arrives OPEN, not as a list of one. */
+                  data-open={drilledAsns.length === 1 ? 'true' : 'false'}
+                  className="px-4 py-3 flex flex-wrap items-center gap-3 text-sm"
+                >
+                  <Data className="font-semibold">{a.asnNumber}</Data>
+                  <StatusPill>{a.status}</StatusPill>
+                  <span className="text-text-secondary">{a.carrier}</span>
+                  <Data className="text-text-secondary">{a.eta}</Data>
+                  {drilledAsns.length === 1 && (
+                    <ul className="w-full mt-2 space-y-1">
+                      {a.lineItems.map((li) => (
+                        <li key={li.materialCode} className="text-text-secondary">
+                          <Data>{li.materialCode}</Data> — {li.description} ·{' '}
+                          <Data>{li.shippedQty}</Data> {li.uom ?? ''}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
 
       <SubTabs<GroupTab>
         options={[

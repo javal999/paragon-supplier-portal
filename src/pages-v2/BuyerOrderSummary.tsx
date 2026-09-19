@@ -1,14 +1,20 @@
 import React, { useMemo } from 'react';
-import { useForecastCommitments } from '../services/query/hooks';
+import { useBuyerInvoices, useForecastCommitments } from '../services/query/hooks';
 import type { ForesightAnswer } from '../services/data/poResponseProjection';
 import { foresightAnswerOf } from '../services/transitions/forecastRules';
-import OrderSummaryView from './orders/OrderSummaryView';
+import OrderSummaryView, { type SummaryInvoice } from './orders/OrderSummaryView';
 
 // PTI Order summary (REQ-E07-03). Foresight answers come from the forecast
 // commitments (REQ-E06-02): each current forecast line and where its
 // commitment stands. PTI never reads a supplier's draft.
+//
+// The invoice column reads PTI's OWN invoice population (REQ-E07-07): the buyer
+// read already drops drafts, so the count on the row equals what
+// `/buyer/invoices` lists for that PO (BR-09 / AC-10) without this page
+// re-deciding which invoices exist.
 const BuyerOrderSummary: React.FC = () => {
   const lines = useForecastCommitments();
+  const invoicesQuery = useBuyerInvoices();
   const answers = useMemo<ForesightAnswer[]>(
     () =>
       (lines.data?.items ?? []).map((l) => ({
@@ -18,7 +24,16 @@ const BuyerOrderSummary: React.FC = () => {
       })),
     [lines.data],
   );
-  return <OrderSummaryView persona="buyer" foresightAnswers={answers} />;
+  const invoices = useMemo<SummaryInvoice[]>(
+    () =>
+      (invoicesQuery.data?.items ?? []).map((i) => ({
+        poNumber: i.poNumber,
+        lines: i.lines,
+        returnReason: i.returnReason,
+      })),
+    [invoicesQuery.data],
+  );
+  return <OrderSummaryView persona="buyer" foresightAnswers={answers} invoices={invoices} />;
 };
 
 export default BuyerOrderSummary;

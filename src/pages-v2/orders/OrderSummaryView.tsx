@@ -1,6 +1,5 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
 import AppShellV2 from '../../components/layout-v2/AppShellV2';
 import PageHeader from '../../components/ui-v2/PageHeader';
 import PageMetaLine from '../../components/ui-v2/PageMetaLine';
@@ -16,7 +15,7 @@ import ErrorState from '../../components/ui-v2/ErrorState';
 import type { StatusTone } from '../../lib/statusTone';
 import { formatDate } from '../../lib/format';
 import { ordersNow } from './PoCollaboration';
-import { useASNs, useCapacityPlans, usePurchaseOrders } from '../../services/query/hooks';
+import { useASNs, useCapacityPlans, useGoodsReceipts, usePurchaseOrders } from '../../services/query/hooks';
 import type { PurchaseOrder } from '../../services/data/types';
 import {
   foresightStatus,
@@ -28,24 +27,51 @@ import {
   type ShippingNoticeStatus,
 } from '../../services/data/poResponseProjection';
 import type { Persona } from '../../components/layout-v2/navConfig';
-import { isActiveAsn } from '../../services/transitions/fulfilmentRules';
 import type { CallOffView } from '../../services/transitions/callOffRules';
 import { useCallOffViews } from '../callOffs/callOffDisplay';
 import { capacityStatusForPo, type CapacityConfirmationStatus } from '../../services/transitions/capacityRules';
 import { materialEntry } from '../../services/sdc';
+import { dayOf, mondayOf } from '../../services/transitions/inventoryRules';
+import {
+  asnsForPo,
+  callOffsForPo,
+  attentionBand,
+  compareAttention,
+  invoicesForPo,
+  poHasReceiptDiscrepancy,
+  receiptsForPo,
+  type AttentionInputs,
+  type PoJoinableInvoice,
+} from './orderSummaryModel';
+import { drillHref, EMPTY_CONTRACT, NOT_REQUIRED, type DrillTarget } from './orderSummaryDrill';
+import { DrillLink, EmptyCell } from './DrillCell';
+import {
+  readOrderSummaryViewState,
+  saveOrderSummaryViewState,
+} from './orderSummaryViewState';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ORDER COLLABORATION SUMMARY — REQ-E07-03 (MN-ORD-10 to MN-ORD-13).
 //
-// One row per PO: the supplier's response, its ASNs, and the 3 confirmations
-// (REQUIREMENTS §3.2). Each available status links to the page that owns it.
-// Foresight / fixed stock (REQ-E06-02) reads the forecast commitments for the
-// PO's materials — Confirmed, Gap, Awaiting, or Not required when only
-// Forecast-zone periods exist — and links to the forecast page for them.
-// Capacity confirmation (REQ-E08-04) reads the supplier's capacity submissions
-// for the material groups on the PO: Confirmed, Gap, Update needed or Not
-// started, linking to the capacity page. A supplier sees its own POs only: the
-// PO read is already scoped to the session's supplier.
+// One row per PO, and per BR-01 ten columns of it: the PO, its supplier, the
+// supplier's response, its ASNs, its call-offs, the 3 confirmations (capacity,
+// foresight / fixed stock, shipping notice), its goods receipts and its
+// invoices. Every cell with a record behind it is a link to the page that OWNS
+// that record, filtered to this PO (BR-02); a cell with nothing behind it is not
+// a link and states why (BR-03, `DrillCell`).
+//
+// ⚠️ **THE SUMMARY CALCULATES NO STATUS OF ITS OWN (BR-10), AND EVERY COLUMN
+// HERE NAMES THE MODULE IT READS.** Response and shipping notice come from
+// `poResponseProjection`, capacity from `capacityRules.capacityStatusForPo`,
+// foresight from `poResponseProjection.foresightStatus`, call-offs from
+// `callOffRules` through `useCallOffViews`, receipt discrepancies from
+// `fulfilmentRules.hasReceiptDiscrepancy`. Membership — which records belong to
+// a PO, and so what each count says — lives in `orderSummaryModel`, which the
+// DESTINATIONS also call, which is what makes AC-10 hold by construction rather
+// than by two filters that happen to agree today.
+//
+// A supplier sees its own POs only: the PO read is already scoped to the
+// session's supplier (BR-06), so nothing here filters by supplier by hand.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const RESPONSE_TONE: Record<ResponseStatus, StatusTone> = {
@@ -94,9 +120,7 @@ export function callOffSummary(
   poId: string,
   views: readonly CallOffView[],
 ): { count: number; status: CallOffSummaryStatus | null } {
-  const mine = views.filter(
-    (v) => v.callOff.poId === poId && v.callOff.status !== 'Draft' && v.callOff.status !== 'Dismissed',
-  );
+  const mine = callOffsForPo(views, poId);
   if (mine.length === 0) return { count: 0, status: null };
   const has = (s: CallOffView['confirmation']) => mine.some((v) => v.confirmation === s);
   const status: CallOffSummaryStatus = has('Escalated')
@@ -111,53 +135,163 @@ export function callOffSummary(
   return { count: mine.length, status };
 }
 
-/** The first of the PO's materials with forecast lines — where the foresight link opens. */
-const foresightMaterial = (po: PurchaseOrder, answers: readonly ForesightAnswer[]): string =>
-  po.lineItems.map((li) => li.materialCode).find((code) => answers.some((a) => a.supplierId === po.supplierId && a.materialCode === code)) ?? '';
+/** The PO's materials that have forecast lines — where the foresight link opens. */
+const foresightMaterials = (po: PurchaseOrder, answers: readonly ForesightAnswer[]): readonly string[] =>
+  [...new Set(po.lineItems.map((li) => li.materialCode))].filter((code) =>
+    answers.some((a) => a.supplierId === po.supplierId && a.materialCode === code),
+  );
 
-const linkClass = 'text-action hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-action rounded';
+/** The material groups of a PO's lines — the capacity destination's filter (BR-05). */
+const poMaterialGroups = (po: PurchaseOrder): readonly string[] =>
+  [
+    ...new Set(
+      po.lineItems
+        .map((li) => materialEntry(li.materialCode)?.materialGroup)
+        .filter((g): g is string => typeof g === 'string'),
+    ),
+  ].sort();
+
+/** The Mondays of the weeks the PO delivers into — the other half of BR-05. */
+const poDeliveryWeeks = (po: PurchaseOrder): readonly string[] =>
+  [
+    ...new Set(
+      [po.requestedDeliveryDate, po.confirmedDeliveryDate]
+        .filter((d): d is string => typeof d === 'string' && d.length >= 10)
+        .map((d) => mondayOf(dayOf(d))),
+    ),
+  ].sort();
+
+/** The least an invoice must expose for this summary. Both projections satisfy it. */
+export interface SummaryInvoice extends PoJoinableInvoice {
+  /** Finance returned it to the supplier — an attention signal (BR-11). */
+  readonly returnReason: string | null;
+}
 
 export interface OrderSummaryViewProps {
   readonly persona: Persona;
   /** Forecast answers for the foresight confirmation (empty while loading). */
   readonly foresightAnswers: readonly ForesightAnswer[];
+  /**
+   * The invoices of THIS persona's own read (REQ-E07-07). Passed in rather than
+   * fetched here because the buyer and supplier reads are different projections
+   * with different populations — the buyer's drops drafts, the supplier's keeps
+   * its own — and AC-10 wants each summary counting exactly what ITS destination
+   * lists.
+   */
+  readonly invoices: readonly SummaryInvoice[];
 }
 
-const OrderSummaryView: React.FC<OrderSummaryViewProps> = ({ persona, foresightAnswers }) => {
+const OrderSummaryView: React.FC<OrderSummaryViewProps> = ({ persona, foresightAnswers, invoices }) => {
   const { t } = useTranslation();
   const posQuery = usePurchaseOrders();
   const asnsQuery = useASNs();
+  const receiptsQuery = useGoodsReceipts();
   const callOffs = useCallOffViews();
   const capacityPlans = useCapacityPlans();
   const nowIso = ordersNow();
-  const base = persona === 'buyer' ? '/buyer' : '/supplier';
   const crumb = [
     t(persona === 'buyer' ? 'hub.nav.section.orders' : 'hub.nav.section.supplierOrders'),
     t('oc.summary.title'),
   ];
 
+  // BR-04 / AC-06 — the filters and the scroll offset the user left behind.
+  const stored = useRef(readOrderSummaryViewState(persona));
+  const [search, setSearch] = useState(stored.current.search);
+  const [attentionOnly, setAttentionOnly] = useState(stored.current.attentionOnly);
+
+  useEffect(() => {
+    saveOrderSummaryViewState(persona, { search, attentionOnly, scrollY: stored.current.scrollY });
+  }, [persona, search, attentionOnly]);
+
+  const restored = useRef(false);
+  useEffect(() => {
+    if (restored.current || stored.current.scrollY === 0) return;
+    restored.current = true;
+    window.scrollTo(0, stored.current.scrollY);
+  }, []);
+
+  /** Leaving for a destination: remember where the row was (BR-04). */
+  const rememberPosition = () =>
+    saveOrderSummaryViewState(persona, { search, attentionOnly, scrollY: window.scrollY });
+
   const rows = useMemo(() => {
     const asns = asnsQuery.data?.items ?? [];
-    return [...(posQuery.data?.items ?? [])]
-      .sort((a, b) => b.orderDate.localeCompare(a.orderDate))
-      .map((po: PurchaseOrder) => ({
-        po,
-        response: responseStatus(po, nowIso),
-        // A cancelled ASN no longer carries goods (REQ-E07-04).
-        asnCount: asns.filter((a) => a.poReference === po.poNumber && isActiveAsn(a)).length,
-        foresight: foresightStatus(po, foresightAnswers),
-        shipping: shippingNoticeStatus(po),
-        callOffs: callOffSummary(po.id, callOffs.views),
-      }));
+    const receipts = receiptsQuery.data?.items ?? [];
+    const plans = capacityPlans.data?.items ?? [];
+    return (posQuery.data?.items ?? [])
+      .map((po: PurchaseOrder) => {
+        const poReceipts = receiptsForPo(receipts, po.poNumber);
+        const poInvoices = invoicesForPo(invoices, po.poNumber, receipts);
+        const capacity = capacityStatusForPo(po, plans, materialEntry);
+        const foresight = foresightStatus(po, foresightAnswers);
+        const co = callOffSummary(po.id, callOffs.views);
+        const discrepancy = poHasReceiptDiscrepancy(po, receipts, asns);
+        const returned = poInvoices.some((i) => i.returnReason !== null);
+        const attention: AttentionInputs = {
+          response: responseStatus(po, nowIso),
+          overdue: po.daysOverdue > 0,
+          capacity,
+          foresight,
+          callOffAlarm: co.status === 'escalated' || co.status === 'rejected',
+          receiptDiscrepancy: discrepancy || returned,
+          needDate: po.requestedDeliveryDate,
+        };
+        return {
+          po,
+          response: attention.response,
+          asnCount: asnsForPo(asns, po.poNumber).length,
+          foresight,
+          shipping: shippingNoticeStatus(po),
+          callOffs: co,
+          capacity,
+          receiptCount: poReceipts.length,
+          discrepancy,
+          invoiceCount: poInvoices.length,
+          returned,
+          attention,
+        };
+      })
+      .sort((a, b) => compareAttention(a.attention, b.attention));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [posQuery.data, asnsQuery.data, foresightAnswers, callOffs.views]);
+  }, [posQuery.data, asnsQuery.data, receiptsQuery.data, capacityPlans.data, foresightAnswers, callOffs.views, invoices]);
 
   if (posQuery.isPending) return <LoadingState breadcrumb={crumb} />;
   if (posQuery.isError)
     return <ErrorState breadcrumb={crumb} error={posQuery.error} onRetry={() => posQuery.refetch()} />;
 
   const escalated = rows.filter((r) => r.response === 'escalated').length;
-  const poLink = (po: PurchaseOrder) => `${base}/orders?po=${encodeURIComponent(po.id)}`;
+  const q = search.trim().toLowerCase();
+  const shown = rows.filter((r) => {
+    // "Needs attention" is the requirement's own first two bands (BR-11):
+    // escalated or overdue, and orders carrying a gap or a discrepancy.
+    if (attentionOnly && attentionBand(r.attention) > 1) return false;
+    if (q === '') return true;
+    const hay = `${r.po.poNumber} ${r.po.supplierName} ${r.po.lineItems.map((li) => `${li.materialCode} ${li.description}`).join(' ')}`;
+    return hay.toLowerCase().includes(q);
+  });
+
+  const target = (po: PurchaseOrder): DrillTarget => ({
+    poId: po.id,
+    supplierId: po.supplierId,
+    groups: poMaterialGroups(po),
+    weeks: poDeliveryWeeks(po),
+    materials: foresightMaterials(po, foresightAnswers),
+  });
+
+  const href = (column: Parameters<typeof drillHref>[0], po: PurchaseOrder, focus?: DrillTarget['focus']) =>
+    drillHref(column, persona, { ...target(po), focus });
+
+  const statusAria = (po: PurchaseOrder, columnKey: string, status: string) =>
+    t('oc.summary.cell.aria.status', { poNumber: po.poNumber, column: t(columnKey), status });
+
+  const countAria = (po: PurchaseOrder, kind: string, count: number) =>
+    t(count === 1 ? `oc.summary.cell.aria.${kind}.one` : `oc.summary.cell.aria.${kind}.other`, {
+      poNumber: po.poNumber,
+      count,
+    });
+
+  // 10 columns for PTI, 9 for a supplier (no supplier column of its own).
+  const columnCount = persona === 'buyer' ? 10 : 9;
 
   return (
     <AppShellV2>
@@ -183,6 +317,30 @@ const OrderSummaryView: React.FC<OrderSummaryViewProps> = ({ persona, foresightA
         </div>
       )}
 
+      <div className="flex flex-wrap items-center gap-3 mb-4">
+        <label className="sr-only" htmlFor="order-summary-search">
+          {t('oc.summary.filter.search')}
+        </label>
+        <input
+          id="order-summary-search"
+          type="search"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder={t('oc.summary.filter.searchPlaceholder')}
+          data-testid="order-summary-search"
+          className="text-sm border border-border-subtle rounded px-3 py-2 w-72 max-w-full bg-bg-surface"
+        />
+        <label className="text-sm text-text-secondary inline-flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={attentionOnly}
+            onChange={(e) => setAttentionOnly(e.target.checked)}
+            data-testid="order-summary-attention-only"
+          />
+          {t('oc.summary.filter.attentionOnly')}
+        </label>
+      </div>
+
       <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto">
         <Table>
           <TableHeader>
@@ -190,104 +348,241 @@ const OrderSummaryView: React.FC<OrderSummaryViewProps> = ({ persona, foresightA
             {persona === 'buyer' && <TableHeaderCell>{t('oc.summary.col.supplier')}</TableHeaderCell>}
             <TableHeaderCell>{t('oc.summary.col.response')}</TableHeaderCell>
             <TableHeaderCell className="text-right">{t('oc.summary.col.asns')}</TableHeaderCell>
-            <TableHeaderCell>{t('co.summary.col')}</TableHeaderCell>
-            <TableHeaderCell>{t('oc.summary.col.capacity')}</TableHeaderCell>
-            <TableHeaderCell>{t('oc.summary.col.foresight')}</TableHeaderCell>
-            <TableHeaderCell>{t('oc.summary.col.shipping')}</TableHeaderCell>
+            <TableHeaderCell>{t('oc.summary.col.callOffs')}</TableHeaderCell>
+            {/* The 3 confirmations share 1 column: separately they pushed the
+                receipt and invoice columns off a 1280px screen. Each marker is
+                still its own link or its own empty statement. */}
+            <TableHeaderCell>{t('oc.summary.col.confirmations')}</TableHeaderCell>
+            <TableHeaderCell className="text-right">{t('oc.summary.col.receipts')}</TableHeaderCell>
+            <TableHeaderCell className="text-right">{t('oc.summary.col.invoices')}</TableHeaderCell>
           </TableHeader>
           <tbody>
-            {rows.map(({ po, response, asnCount, foresight, shipping, callOffs: co }) => (
-              <TableRow key={po.id} data-testid={`order-summary-row-${po.id}`}>
-                <TableCell>
-                  <Link to={poLink(po)} className={linkClass}>
-                    <Data className="font-semibold">{po.poNumber}</Data>
-                  </Link>
-                </TableCell>
-                {persona === 'buyer' && (
-                  // The one free-text column beside seven status columns — bounded so a
-                  // 37-character supplier name does not wrap the whole row.
+            {shown.map((row) => {
+              const { po } = row;
+              return (
+                <TableRow key={po.id} data-testid={`order-summary-row-${po.id}`}>
+                  {/* PO number — never empty (the drill-through table says so). */}
                   <TableCell>
-                    <div
-                      className="text-sm text-text-primary truncate max-w-[13rem]"
-                      title={po.supplierName}
+                    <DrillLink to={href('po', po)!} label={po.poNumber} onNavigate={rememberPosition}>
+                      <Data className="font-semibold whitespace-nowrap">{po.poNumber}</Data>
+                    </DrillLink>
+                    {/* BR-11 puts escalated AND overdue orders at the top. Without
+                        this line an Approved order sits above an Escalated one with
+                        nothing on screen saying why it earned the place. */}
+                    {po.daysOverdue > 0 && (
+                      <div
+                        className="text-xs text-danger whitespace-nowrap"
+                        data-testid={`order-summary-overdue-${po.id}`}
+                      >
+                        <span title={t('oc.summary.overdueTitle', { count: po.daysOverdue })}>
+                          {t('oc.summary.overdueBy', { count: po.daysOverdue })}
+                        </span>
+                      </div>
+                    )}
+                  </TableCell>
+
+                  {/* Supplier — the profile, or the empty statement when there is
+                      no supplier id to open one with. */}
+                  {persona === 'buyer' && (
+                    <TableCell>
+                      {href('supplier', po) ? (
+                        <DrillLink
+                          to={href('supplier', po)!}
+                          label={t('oc.summary.cell.aria.supplier', {
+                            poNumber: po.poNumber,
+                            supplier: po.supplierName,
+                          })}
+                          onNavigate={rememberPosition}
+                          testId={`order-summary-supplier-${po.id}`}
+                        >
+                          <span className="text-sm truncate max-w-[7.5rem] inline-block align-bottom" title={po.supplierName}>
+                            {po.supplierName}
+                          </span>
+                        </DrillLink>
+                      ) : (
+                        <EmptyCell
+                          contract={EMPTY_CONTRACT.supplier!}
+                          testId={`order-summary-supplier-${po.id}`}
+                        />
+                      )}
+                    </TableCell>
+                  )}
+
+                  {/* Response — never empty; "Awaiting response" still opens the PO. */}
+                  <TableCell>
+                    <DrillLink
+                      to={href('response', po, 'response')!}
+                      label={statusAria(po, 'oc.summary.col.response', t(`oc.summary.response.${row.response}`))}
+                      onNavigate={rememberPosition}
+                      testId={`order-summary-response-${po.id}`}
                     >
-                      {po.supplierName}
+                      <StatusPill variant={RESPONSE_TONE[row.response]}>
+                        {t(`oc.summary.response.${row.response}`)}
+                      </StatusPill>
+                    </DrillLink>
+                  </TableCell>
+
+                  {/* ASNs (REQ-E07-04) — cancelled ASNs excluded from the count
+                      AND from the destination (BR-09). */}
+                  <TableCell className="text-right">
+                    {row.asnCount > 0 ? (
+                      <DrillLink
+                        to={href('asns', po)!}
+                        label={countAria(po, 'asns', row.asnCount)}
+                        onNavigate={rememberPosition}
+                        testId={`order-summary-asns-${po.id}`}
+                      >
+                        <Data>{row.asnCount}</Data>
+                      </DrillLink>
+                    ) : (
+                      <EmptyCell contract={EMPTY_CONTRACT.asns!} testId={`order-summary-asns-${po.id}`} />
+                    )}
+                  </TableCell>
+
+                  {/* Call-offs (REQ-E09-03). */}
+                  <TableCell data-testid={`order-summary-calloffs-${po.id}`}>
+                    {row.callOffs.status ? (
+                      <DrillLink
+                        to={href('callOffs', po)!}
+                        label={t(
+                          row.callOffs.count === 1
+                            ? 'oc.summary.cell.aria.callOffs.one'
+                            : 'oc.summary.cell.aria.callOffs.other',
+                          {
+                            poNumber: po.poNumber,
+                            count: row.callOffs.count,
+                            status: t(`co.summary.status.${row.callOffs.status}`),
+                          },
+                        )}
+                        onNavigate={rememberPosition}
+                        className="inline-flex items-center gap-2"
+                      >
+                        <Data>{row.callOffs.count}</Data>
+                        <StatusPill variant={CALL_OFF_TONE[row.callOffs.status]}>
+                          {t(`co.summary.status.${row.callOffs.status}`)}
+                        </StatusPill>
+                      </DrillLink>
+                    ) : (
+                      <EmptyCell contract={EMPTY_CONTRACT.callOffs!} />
+                    )}
+                  </TableCell>
+
+                  {/* The 3 confirmations (REQ-E08-04, REQ-E06-02, REQ-E07-05),
+                      each keeping its own destination and its own empty reason. */}
+                  <TableCell data-testid={`order-summary-confirmations-${po.id}`}>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                      <span
+                        className="inline-flex items-center gap-1.5"
+                        data-testid={`order-summary-capacity-${po.id}`}
+                      >
+                        <span className="text-label uppercase text-text-tertiary">
+                          {t('oc.summary.short.capacity')}
+                        </span>
+                        {row.capacity === 'notStarted' ? (
+                          <EmptyCell contract={EMPTY_CONTRACT.capacity!} />
+                        ) : (
+                          <DrillLink
+                            to={href('capacity', po)!}
+                            label={statusAria(po, 'oc.summary.col.capacity', t(`oc.summary.capacity.${row.capacity}`))}
+                            onNavigate={rememberPosition}
+                          >
+                            <StatusPill variant={CAPACITY_TONE[row.capacity]}>
+                              {t(`oc.summary.capacity.${row.capacity}`)}
+                            </StatusPill>
+                          </DrillLink>
+                        )}
+                      </span>
+
+                      <span
+                        className="inline-flex items-center gap-1.5"
+                        data-testid={`order-summary-foresight-${po.id}`}
+                      >
+                        <span className="text-label uppercase text-text-tertiary">
+                          {t('oc.summary.short.foresight')}
+                        </span>
+                        {row.foresight === 'notRequired' ? (
+                          <EmptyCell contract={NOT_REQUIRED} />
+                        ) : row.foresight === 'notStarted' ? (
+                          <EmptyCell contract={EMPTY_CONTRACT.foresight!} />
+                        ) : (
+                          <DrillLink
+                            to={href('foresight', po)!}
+                            label={statusAria(po, 'oc.summary.col.foresight', t(`oc.summary.foresight.${row.foresight}`))}
+                            onNavigate={rememberPosition}
+                          >
+                            <StatusPill variant={FORESIGHT_TONE[row.foresight]}>
+                              {t(`oc.summary.foresight.${row.foresight}`)}
+                            </StatusPill>
+                          </DrillLink>
+                        )}
+                      </span>
+
+                      <span
+                        className="inline-flex items-center gap-1.5"
+                        data-testid={`order-summary-shipping-${po.id}`}
+                      >
+                        <span className="text-label uppercase text-text-tertiary">
+                          {t('oc.summary.short.shipping')}
+                        </span>
+                        {row.shipping === 'notStarted' ? (
+                          <EmptyCell contract={EMPTY_CONTRACT.shipping!} />
+                        ) : (
+                          <DrillLink
+                            to={href('shipping', po, 'shipping')!}
+                            label={statusAria(po, 'oc.summary.col.shipping', t(`oc.summary.shipping.${row.shipping}`))}
+                            onNavigate={rememberPosition}
+                          >
+                            <StatusPill variant={SHIPPING_TONE[row.shipping]}>
+                              {t(`oc.summary.shipping.${row.shipping}`)}
+                            </StatusPill>
+                          </DrillLink>
+                        )}
+                      </span>
                     </div>
                   </TableCell>
-                )}
-                <TableCell>
-                  <Link to={poLink(po)} aria-label={`${po.poNumber}: ${t(`oc.summary.response.${response}`)}`}>
-                    <StatusPill variant={RESPONSE_TONE[response]}>
-                      {t(`oc.summary.response.${response}`)}
-                    </StatusPill>
-                  </Link>
-                </TableCell>
-                <TableCell className="text-right">
-                  {asnCount > 0 ? (
-                    <Link to={`${base}/shipments`} className={linkClass}>
-                      <Data>{asnCount}</Data>
-                    </Link>
-                  ) : (
-                    <Data className="text-text-tertiary">0</Data>
-                  )}
-                </TableCell>
-                <TableCell data-testid={`order-summary-calloffs-${po.id}`}>
-                  {co.status ? (
-                    <Link
-                      to={`${base}/call-offs`}
-                      aria-label={`${po.poNumber}: ${co.count} ${t('co.summary.col')}, ${t(`co.summary.status.${co.status}`)}`}
-                      className="inline-flex items-center gap-2"
-                    >
-                      <Data>{co.count}</Data>
-                      <StatusPill variant={CALL_OFF_TONE[co.status]}>{t(`co.summary.status.${co.status}`)}</StatusPill>
-                    </Link>
-                  ) : (
-                    <span className="text-xs text-text-tertiary">—</span>
-                  )}
-                </TableCell>
-                <TableCell data-testid="order-summary-capacity">
-                  {(() => {
-                    const capacity = capacityStatusForPo(po, capacityPlans.data?.items ?? [], materialEntry);
-                    return (
-                      <Link to={`${base}/capacity`} aria-label={`${po.poNumber}: ${t(`oc.summary.capacity.${capacity}`)}`}>
-                        <StatusPill variant={CAPACITY_TONE[capacity]}>{t(`oc.summary.capacity.${capacity}`)}</StatusPill>
-                      </Link>
-                    );
-                  })()}
-                </TableCell>
-                <TableCell data-testid={`order-summary-foresight-${po.id}`}>
-                  {foresight === 'notStarted' ? (
-                    <StatusPill variant="neutral">{t('oc.summary.status.notStarted')}</StatusPill>
-                  ) : (
-                    <Link
-                      to={`${persona === 'buyer' ? '/buyer/collaboration' : '/supplier/forecasts'}?material=${encodeURIComponent(
-                        foresightMaterial(po, foresightAnswers),
-                      )}`}
-                      aria-label={`${po.poNumber}: ${t(`oc.summary.foresight.${foresight}`)}`}
-                    >
-                      <StatusPill variant={FORESIGHT_TONE[foresight]}>
-                        {t(`oc.summary.foresight.${foresight}`)}
-                      </StatusPill>
-                    </Link>
-                  )}
-                </TableCell>
-                <TableCell>
-                  {shipping === 'notStarted' ? (
-                    <StatusPill variant="neutral">{t('oc.summary.status.notStarted')}</StatusPill>
-                  ) : (
-                    <Link to={poLink(po)} data-testid={`order-summary-shipping-${po.id}`}>
-                      <StatusPill variant={SHIPPING_TONE[shipping]}>
-                        {t(`oc.summary.shipping.${shipping}`)}
-                      </StatusPill>
-                    </Link>
-                  )}
-                </TableCell>
-              </TableRow>
-            ))}
-            {rows.length === 0 && (
+
+                  {/* Goods receipts (REQ-E07-06). */}
+                  <TableCell className="text-right" data-testid={`order-summary-receipts-${po.id}`}>
+                    {row.receiptCount > 0 ? (
+                      <DrillLink
+                        to={href('receipts', po)!}
+                        label={countAria(po, 'receipts', row.receiptCount)}
+                        onNavigate={rememberPosition}
+                        className="inline-flex items-center gap-2"
+                      >
+                        <Data>{row.receiptCount}</Data>
+                        {row.discrepancy && (
+                          <StatusPill variant="warning">{t('oc.summary.discrepancy')}</StatusPill>
+                        )}
+                      </DrillLink>
+                    ) : (
+                      <EmptyCell contract={EMPTY_CONTRACT.receipts!} />
+                    )}
+                  </TableCell>
+
+                  {/* Invoices (REQ-E07-07). */}
+                  <TableCell className="text-right" data-testid={`order-summary-invoices-${po.id}`}>
+                    {row.invoiceCount > 0 ? (
+                      <DrillLink
+                        to={href('invoices', po)!}
+                        label={countAria(po, 'invoices', row.invoiceCount)}
+                        onNavigate={rememberPosition}
+                        className="inline-flex items-center gap-2"
+                      >
+                        <Data>{row.invoiceCount}</Data>
+                        {row.returned && <StatusPill variant="warning">{t('oc.summary.returned')}</StatusPill>}
+                      </DrillLink>
+                    ) : (
+                      <EmptyCell contract={EMPTY_CONTRACT.invoices!} />
+                    )}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+            {shown.length === 0 && (
               <tr>
-                <td colSpan={8} className="text-center text-sm text-text-tertiary py-10">
-                  {t('oc.summary.empty')}
+                <td colSpan={columnCount} className="text-center text-sm text-text-tertiary py-10">
+                  {rows.length === 0 ? t('oc.summary.empty') : t('oc.summary.filter.none')}
                 </td>
               </tr>
             )}

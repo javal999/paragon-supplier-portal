@@ -1,6 +1,11 @@
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useSearchParams } from 'react-router-dom';
+import {
+  OrderNotFound,
+  PoFilterBanner,
+  usePoDrillFilter,
+} from './orders/PoDrillFilter';
 import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import AppShellV2 from '../components/layout-v2/AppShellV2';
 import PageHeader from '../components/ui-v2/PageHeader';
@@ -72,8 +77,15 @@ const BuyerCommitments: React.FC = () => {
   const nowIso = forecastNow();
   const crumb = [t('hub.nav.section.forecast'), t('fc.pti.gaps.title')];
 
+  // ── REQ-E07-03 BR-05 / AC-04 ──────────────────────────────────────────────
+  // Foresight is agreed per material and period, not per order, so a PO's
+  // destination is its SUPPLIER and its MATERIALS. The `material` parameter this
+  // page already read is the singular case of that; `materials` carries the rest
+  // when a PO spans several.
+  const drill = usePoDrillFilter();
+  const drillMaterials = drill.kind === 'filtered' ? drill.materials : null;
   const [stream, setStream] = useState<ForecastStream | null>(null);
-  const [supplier, setSupplier] = useState('');
+  const [supplier, setSupplier] = useState(drill.kind === 'filtered' ? drill.po.supplierId : '');
   const [material, setMaterial] = useState(params.get('material') ?? '');
   const [action, setAction] = useState<Action | null>(null);
   const [note, setNote] = useState('');
@@ -81,7 +93,9 @@ const BuyerCommitments: React.FC = () => {
 
   const lines = useMemo(() => linesQuery.data?.items ?? [], [linesQuery.data]);
 
-  if (linesQuery.isPending) return <LoadingState breadcrumb={crumb} />;
+  if (linesQuery.isPending || drill.kind === 'pending') return <LoadingState breadcrumb={crumb} />;
+  // AC-08 — an address naming a PO that does not exist, with a way back.
+  if (drill.kind === 'notFound') return <OrderNotFound persona="buyer" breadcrumb={crumb} />;
   if (linesQuery.isError)
     return <ErrorState breadcrumb={crumb} error={linesQuery.error} onRetry={() => linesQuery.refetch()} />;
 
@@ -91,7 +105,11 @@ const BuyerCommitments: React.FC = () => {
   const suppliers = [...new Map(streamLines.map((l) => [l.supplierId, l.supplierName])).entries()];
   const materials = [...new Set(streamLines.map((l) => l.materialCode))];
   const shown = streamLines.filter(
-    (l) => (supplier === '' || l.supplierId === supplier) && (material === '' || !materials.includes(material) || l.materialCode === material),
+    (l) =>
+      (supplier === '' || l.supplierId === supplier) &&
+      (material === '' || !materials.includes(material) || l.materialCode === material) &&
+      // A PO spanning several materials narrows to all of them at once.
+      (drillMaterials === null || drillMaterials.length === 0 || drillMaterials.includes(l.materialCode)),
   );
 
   // CR-01 — the lowest days of supply across the material's positions.
@@ -199,6 +217,9 @@ const BuyerCommitments: React.FC = () => {
           </Link>
         </div>
       </div>
+
+      {/* REQ-E07-03 BR-04 / BR-05 — the filter, why these rows, and the way back. */}
+      <PoFilterBanner drill={drill} persona="buyer" count={shown.length} reason="foresight" />
 
       {/* BR-04 / BR-05 — the ranked exception list and the planner's actions. */}
       <section className="mb-6" data-testid="fc-exceptions">

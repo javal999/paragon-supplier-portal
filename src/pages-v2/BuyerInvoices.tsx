@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { InvoiceLinesSection } from './invoices/InvoiceCollaboration';
 import {
   BarChart,
@@ -27,6 +27,14 @@ import {
 import AppShellV2 from '../components/layout-v2/AppShellV2';
 import { CHART_SERIES, CHART_SEMANTIC, CHART_GRID } from '../lib/chartPalette';
 import PageHeader from '../components/ui-v2/PageHeader';
+import {
+  OrderNotFound,
+  PoFilterBanner,
+  drilledPoNumber,
+  usePoDrillFilter,
+} from './orders/PoDrillFilter';
+import { invoicePoNumbers, invoicesForPo } from './orders/orderSummaryModel';
+import { useGoodsReceipts } from '../services/query/hooks';
 import SapDataAgeBanner from '../components/ui-v2/SapDataAgeBanner';
 import PageMetaLine from '../components/ui-v2/PageMetaLine';
 import ProvenanceMarker from '../components/ui-v2/ProvenanceMarker';
@@ -214,7 +222,7 @@ const STATUS_OPTIONS: StatusFilter[] = [
 // (INV-SEED-01 retired; the GR-post → invoice-match auto-advance returns as a
 // real cascade under INV-GR-OVERLAY-01, next batch). The selected invoice is
 // tracked by id so a background refetch never strands a stale object.
-const BuyerInvoicesView: React.FC<{ invoices: BuyerInvoice[] }> = ({ invoices }) => {
+const BuyerInvoicesView: React.FC<{ invoices: BuyerInvoice[] }> = ({ invoices: allInvoices }) => {
   const { toast } = useToast();
   const { t } = useTranslation();
   const refusalText = useRefusalText();
@@ -226,6 +234,23 @@ const BuyerInvoicesView: React.FC<{ invoices: BuyerInvoice[] }> = ({ invoices })
   const [tab, setTab] = useState<TabKey>('queue');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  // ── REQ-E07-03 · the drill-through filter ─────────────────────────────────
+  // The receipts join is what makes "an invoice covering several POs appears
+  // under each PO it covers" true in BOTH directions: the summary counts it on
+  // every PO its lines touch, and this page lists it under each of them.
+  const drill = usePoDrillFilter();
+  const drilledPo = drilledPoNumber(drill);
+  const receiptsQuery = useGoodsReceipts();
+  const receipts = useMemo(() => receiptsQuery.data?.items ?? [], [receiptsQuery.data]);
+  const invoices = useMemo(
+    () => (drilledPo === null ? allInvoices : [...invoicesForPo(allInvoices, drilledPo, receipts)]),
+    [allInvoices, drilledPo, receipts],
+  );
+  // AC-03 — exactly one record behind the cell arrives OPEN, not as a list of one.
+  const onlyInvoiceId = drilledPo !== null && invoices.length === 1 ? invoices[0].id : null;
+  useEffect(() => {
+    if (onlyInvoiceId !== null) setSelectedId(onlyInvoiceId);
+  }, [onlyInvoiceId]);
   const [disputeReason, setDisputeReason] = useState('');
   const selected = useMemo(
     () => invoices.find((i) => i.id === selectedId) ?? null,
@@ -710,6 +735,15 @@ const BuyerInvoicesView: React.FC<{ invoices: BuyerInvoice[] }> = ({ invoices })
           </div>
         </div>
       )}
+
+      {/* BR-04 / AC-02 — the filter, and the way back. */}
+      <PoFilterBanner drill={drill} persona="buyer" count={invoices.length} />
+      {drilledPo !== null &&
+        invoices.some((i) => invoicePoNumbers(i, receipts).length > 1) && (
+          <p className="text-sm text-text-tertiary mb-4" data-testid="invoice-multi-po-note">
+            {t('oc.drill.invoice.multiPo')}
+          </p>
+        )}
 
       <SubTabs<TabKey>
         options={[
@@ -1405,7 +1439,11 @@ const BuyerInvoices: React.FC = () => {
   const { t } = useTranslation();
   const crumb = [t('buyerInvoices.crumb.transact'), t('buyerInvoices.crumb.invoices')];
   const invoicesQuery = useBuyerInvoices();
-  if (invoicesQuery.isPending) return <LoadingState breadcrumb={crumb} />;
+  // AC-08 — refused at the page's own gate, beside the other three honest states.
+  const drill = usePoDrillFilter();
+  if (invoicesQuery.isPending || drill.kind === 'pending')
+    return <LoadingState breadcrumb={crumb} />;
+  if (drill.kind === 'notFound') return <OrderNotFound persona="buyer" breadcrumb={crumb} />;
   if (invoicesQuery.isError)
     return (
       <ErrorState
