@@ -16,6 +16,7 @@
 import { screen, within, waitFor, fireEvent } from '@testing-library/react';
 import { Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it } from 'vitest';
+import { mockPurchaseOrders } from '../data/mockPurchaseOrders';
 import { renderWithProviders, BUYER, SUPPLIER } from '../test/test-utils';
 import type { CurrentIdentity } from '../context/CurrentIdentityContext';
 import { purchaseOrderStore } from '../services/data/mock/stores/purchaseOrderStore';
@@ -67,6 +68,21 @@ const summaryRow = async (persona: 'buyer' | 'supplier', poId = PO_ID) => {
 };
 
 // ── AC-01 ───────────────────────────────────────────────────────────────────
+describe('BR-11 — the row says why it is near the top', () => {
+  it('an order whose delivery is overdue states it, and one that is not says nothing', async () => {
+    renderWithProviders(<BuyerOrderSummary />, { route: '/buyer/order-summary' });
+    await screen.findByTestId('order-summary-row-po-007');
+    const overdue = mockPurchaseOrders.filter((po) => po.daysOverdue > 0);
+    const onTime = mockPurchaseOrders.filter((po) => po.daysOverdue <= 0);
+    expect(overdue.length).toBeGreaterThan(0); // population control
+    expect(onTime.length).toBeGreaterThan(0); // known-good control
+    expect(screen.getByTestId(`order-summary-overdue-${overdue[0].id}`)).toHaveTextContent(
+      /Delivery overdue by \d+ day/,
+    );
+    expect(screen.queryByTestId(`order-summary-overdue-${onTime[0].id}`)).toBeNull();
+  });
+});
+
 describe('AC-01 — the summary shows the supplier, the response, ASNs, call-offs, the 3 confirmations, goods receipts and invoices', () => {
   it('PTI: every column BR-01 names is a column header, and the row carries a value in each', async () => {
     const row = await summaryRow('buyer');

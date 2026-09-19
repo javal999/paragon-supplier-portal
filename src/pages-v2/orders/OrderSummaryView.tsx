@@ -363,8 +363,19 @@ const OrderSummaryView: React.FC<OrderSummaryViewProps> = ({ persona, foresightA
                   {/* PO number — never empty (the drill-through table says so). */}
                   <TableCell>
                     <DrillLink to={href('po', po)!} label={po.poNumber} onNavigate={rememberPosition}>
-                      <Data className="font-semibold">{po.poNumber}</Data>
+                      <Data className="font-semibold whitespace-nowrap">{po.poNumber}</Data>
                     </DrillLink>
+                    {/* BR-11 puts escalated AND overdue orders at the top. Without
+                        this line an Approved order sits above an Escalated one with
+                        nothing on screen saying why it earned the place. */}
+                    {po.daysOverdue > 0 && (
+                      <div
+                        className="text-xs text-danger whitespace-nowrap"
+                        data-testid={`order-summary-overdue-${po.id}`}
+                      >
+                        {t('oc.summary.overdueBy', { count: po.daysOverdue })}
+                      </div>
+                    )}
                   </TableCell>
 
                   {/* Supplier — the profile, or the empty statement when there is
