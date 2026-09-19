@@ -1985,6 +1985,8 @@ export type RfxCommandVars =
   | {
       verb: 'createRfi';
       title: string;
+      /** What PTI wants to learn (section 3.6a CE-07). */
+      description?: string;
       templateId: string;
       materialCategory: string;
       purchasingGroup?: string;

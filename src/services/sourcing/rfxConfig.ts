@@ -288,6 +288,46 @@ export const RFI_TEMPLATES: readonly RfiTemplate[] = [
 export const rfiTemplate = (id: string): RfiTemplate | undefined =>
   RFI_TEMPLATES.find((tpl) => tpl.id === id);
 
+/**
+ * The category families a sourcing event is raised for (section 3.6a CE-03).
+ *
+ * ⚠️ **ONE LIST, TWO JOBS, AND THAT IS WHY IT IS HERE AND NOT IN A SCREEN.**
+ * The family a buyer picks does two things at once: it names the RFI template
+ * Procurement keeps for it, and it names the category the supplier master files
+ * its suppliers under — which is what the invitee search filters on. Two lists
+ * would let a wizard open the packaging template and then offer raw-material
+ * suppliers, and nothing would say so.
+ *
+ * `templateId` is `undefined` for a family with no RFI template: an RFP is
+ * raised per family too and does not read a template at all, so a family that
+ * only ever carries terms is representable rather than fabricated.
+ */
+export const RFX_CATEGORY_FAMILIES: readonly {
+  readonly id: string;
+  readonly labelKey: string;
+  /** The supplier-master category the invitee search narrows to. */
+  readonly supplierCategory: string;
+  readonly templateId?: string;
+}[] = [
+  { id: 'packaging', labelKey: 'rfx.family.packaging', supplierCategory: 'Packaging', templateId: 'packaging' },
+  { id: 'rawMaterial', labelKey: 'rfx.family.rawMaterial', supplierCategory: 'Raw Material', templateId: 'rawMaterial' },
+];
+
+/** A category family by id, or undefined. */
+export const rfxCategoryFamily = (id: string) => RFX_CATEGORY_FAMILIES.find((f) => f.id === id);
+
+/**
+ * THE CENTRAL QUESTION LIBRARY — every question any template carries, once.
+ *
+ * CE-03 / CE-05: this is what "add from the library" offers, and adding from it
+ * copies the question ONTO ONE EVENT. Nothing in the app writes here; the
+ * library changes when Procurement asks IT to change this file (CE-05), which
+ * is why there is no admin screen and no save-as-template (CE-04).
+ */
+export const RFI_QUESTION_LIBRARY: readonly RfiQuestion[] = RFI_TEMPLATES.flatMap(
+  (tpl) => tpl.questions,
+).filter((q, i, all) => all.findIndex((x) => x.id === q.id) === i);
+
 /** The section order every RFI surface renders in (A to F). */
 export const RFI_SECTION_ORDER = [
   'capability',
