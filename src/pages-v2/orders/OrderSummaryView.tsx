@@ -349,9 +349,10 @@ const OrderSummaryView: React.FC<OrderSummaryViewProps> = ({ persona, foresightA
             <TableHeaderCell>{t('oc.summary.col.response')}</TableHeaderCell>
             <TableHeaderCell className="text-right">{t('oc.summary.col.asns')}</TableHeaderCell>
             <TableHeaderCell>{t('oc.summary.col.callOffs')}</TableHeaderCell>
-            <TableHeaderCell>{t('oc.summary.col.capacity')}</TableHeaderCell>
-            <TableHeaderCell>{t('oc.summary.col.foresight')}</TableHeaderCell>
-            <TableHeaderCell>{t('oc.summary.col.shipping')}</TableHeaderCell>
+            {/* The 3 confirmations share 1 column: separately they pushed the
+                receipt and invoice columns off a 1280px screen. Each marker is
+                still its own link or its own empty statement. */}
+            <TableHeaderCell>{t('oc.summary.col.confirmations')}</TableHeaderCell>
             <TableHeaderCell className="text-right">{t('oc.summary.col.receipts')}</TableHeaderCell>
             <TableHeaderCell className="text-right">{t('oc.summary.col.invoices')}</TableHeaderCell>
           </TableHeader>
@@ -373,7 +374,9 @@ const OrderSummaryView: React.FC<OrderSummaryViewProps> = ({ persona, foresightA
                         className="text-xs text-danger whitespace-nowrap"
                         data-testid={`order-summary-overdue-${po.id}`}
                       >
-                        {t('oc.summary.overdueBy', { count: po.daysOverdue })}
+                        <span title={t('oc.summary.overdueTitle', { count: po.daysOverdue })}>
+                          {t('oc.summary.overdueBy', { count: po.daysOverdue })}
+                        </span>
                       </div>
                     )}
                   </TableCell>
@@ -392,7 +395,7 @@ const OrderSummaryView: React.FC<OrderSummaryViewProps> = ({ persona, foresightA
                           onNavigate={rememberPosition}
                           testId={`order-summary-supplier-${po.id}`}
                         >
-                          <span className="text-sm truncate max-w-[11rem] inline-block align-bottom" title={po.supplierName}>
+                          <span className="text-sm truncate max-w-[7.5rem] inline-block align-bottom" title={po.supplierName}>
                             {po.supplierName}
                           </span>
                         </DrillLink>
@@ -464,59 +467,78 @@ const OrderSummaryView: React.FC<OrderSummaryViewProps> = ({ persona, foresightA
                     )}
                   </TableCell>
 
-                  {/* Capacity (REQ-E08-04) — filtered to the supplier, the PO's
-                      material groups and its delivery weeks (BR-05). */}
-                  <TableCell data-testid={`order-summary-capacity-${po.id}`}>
-                    {row.capacity === 'notStarted' ? (
-                      <EmptyCell contract={EMPTY_CONTRACT.capacity!} />
-                    ) : (
-                      <DrillLink
-                        to={href('capacity', po)!}
-                        label={statusAria(po, 'oc.summary.col.capacity', t(`oc.summary.capacity.${row.capacity}`))}
-                        onNavigate={rememberPosition}
+                  {/* The 3 confirmations (REQ-E08-04, REQ-E06-02, REQ-E07-05),
+                      each keeping its own destination and its own empty reason. */}
+                  <TableCell data-testid={`order-summary-confirmations-${po.id}`}>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                      <span
+                        className="inline-flex items-center gap-1.5"
+                        data-testid={`order-summary-capacity-${po.id}`}
                       >
-                        <StatusPill variant={CAPACITY_TONE[row.capacity]}>
-                          {t(`oc.summary.capacity.${row.capacity}`)}
-                        </StatusPill>
-                      </DrillLink>
-                    )}
-                  </TableCell>
+                        <span className="text-label uppercase text-text-tertiary">
+                          {t('oc.summary.short.capacity')}
+                        </span>
+                        {row.capacity === 'notStarted' ? (
+                          <EmptyCell contract={EMPTY_CONTRACT.capacity!} />
+                        ) : (
+                          <DrillLink
+                            to={href('capacity', po)!}
+                            label={statusAria(po, 'oc.summary.col.capacity', t(`oc.summary.capacity.${row.capacity}`))}
+                            onNavigate={rememberPosition}
+                          >
+                            <StatusPill variant={CAPACITY_TONE[row.capacity]}>
+                              {t(`oc.summary.capacity.${row.capacity}`)}
+                            </StatusPill>
+                          </DrillLink>
+                        )}
+                      </span>
 
-                  {/* Foresight / fixed stock (REQ-E06-02). "Not required" when the
-                      PO's materials have no forecast periods (BR-08). */}
-                  <TableCell data-testid={`order-summary-foresight-${po.id}`}>
-                    {row.foresight === 'notRequired' ? (
-                      <EmptyCell contract={NOT_REQUIRED} />
-                    ) : row.foresight === 'notStarted' ? (
-                      <EmptyCell contract={EMPTY_CONTRACT.foresight!} />
-                    ) : (
-                      <DrillLink
-                        to={href('foresight', po)!}
-                        label={statusAria(po, 'oc.summary.col.foresight', t(`oc.summary.foresight.${row.foresight}`))}
-                        onNavigate={rememberPosition}
+                      <span
+                        className="inline-flex items-center gap-1.5"
+                        data-testid={`order-summary-foresight-${po.id}`}
                       >
-                        <StatusPill variant={FORESIGHT_TONE[row.foresight]}>
-                          {t(`oc.summary.foresight.${row.foresight}`)}
-                        </StatusPill>
-                      </DrillLink>
-                    )}
-                  </TableCell>
+                        <span className="text-label uppercase text-text-tertiary">
+                          {t('oc.summary.short.foresight')}
+                        </span>
+                        {row.foresight === 'notRequired' ? (
+                          <EmptyCell contract={NOT_REQUIRED} />
+                        ) : row.foresight === 'notStarted' ? (
+                          <EmptyCell contract={EMPTY_CONTRACT.foresight!} />
+                        ) : (
+                          <DrillLink
+                            to={href('foresight', po)!}
+                            label={statusAria(po, 'oc.summary.col.foresight', t(`oc.summary.foresight.${row.foresight}`))}
+                            onNavigate={rememberPosition}
+                          >
+                            <StatusPill variant={FORESIGHT_TONE[row.foresight]}>
+                              {t(`oc.summary.foresight.${row.foresight}`)}
+                            </StatusPill>
+                          </DrillLink>
+                        )}
+                      </span>
 
-                  {/* Shipping notice (REQ-E07-05) — on the PO detail. */}
-                  <TableCell data-testid={`order-summary-shipping-${po.id}`}>
-                    {row.shipping === 'notStarted' ? (
-                      <EmptyCell contract={EMPTY_CONTRACT.shipping!} />
-                    ) : (
-                      <DrillLink
-                        to={href('shipping', po, 'shipping')!}
-                        label={statusAria(po, 'oc.summary.col.shipping', t(`oc.summary.shipping.${row.shipping}`))}
-                        onNavigate={rememberPosition}
+                      <span
+                        className="inline-flex items-center gap-1.5"
+                        data-testid={`order-summary-shipping-${po.id}`}
                       >
-                        <StatusPill variant={SHIPPING_TONE[row.shipping]}>
-                          {t(`oc.summary.shipping.${row.shipping}`)}
-                        </StatusPill>
-                      </DrillLink>
-                    )}
+                        <span className="text-label uppercase text-text-tertiary">
+                          {t('oc.summary.short.shipping')}
+                        </span>
+                        {row.shipping === 'notStarted' ? (
+                          <EmptyCell contract={EMPTY_CONTRACT.shipping!} />
+                        ) : (
+                          <DrillLink
+                            to={href('shipping', po, 'shipping')!}
+                            label={statusAria(po, 'oc.summary.col.shipping', t(`oc.summary.shipping.${row.shipping}`))}
+                            onNavigate={rememberPosition}
+                          >
+                            <StatusPill variant={SHIPPING_TONE[row.shipping]}>
+                              {t(`oc.summary.shipping.${row.shipping}`)}
+                            </StatusPill>
+                          </DrillLink>
+                        )}
+                      </span>
+                    </div>
                   </TableCell>
 
                   {/* Goods receipts (REQ-E07-06). */}

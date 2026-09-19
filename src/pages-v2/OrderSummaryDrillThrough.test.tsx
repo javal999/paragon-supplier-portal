@@ -77,7 +77,7 @@ describe('BR-11 — the row says why it is near the top', () => {
     expect(overdue.length).toBeGreaterThan(0); // population control
     expect(onTime.length).toBeGreaterThan(0); // known-good control
     expect(screen.getByTestId(`order-summary-overdue-${overdue[0].id}`)).toHaveTextContent(
-      /Delivery overdue by \d+ day/,
+      /Overdue \d+ day/,
     );
     expect(screen.queryByTestId(`order-summary-overdue-${onTime[0].id}`)).toBeNull();
   });
@@ -92,10 +92,10 @@ describe('AC-01 — the summary shows the supplier, the response, ASNs, call-off
       'Response',
       'ASNs',
       'Call-offs',
-      'Capacity',
-      'Foresight / fixed stock',
-      'Shipping notice',
-      'Goods receipts',
+      // The 3 confirmations share 1 header; each keeps its own marker and link
+      // inside the cell, asserted by test id below and by AC-02.
+      'Confirmations',
+      'Receipts',
       'Invoices',
     ]) {
       expect(screen.getByRole('columnheader', { name: header }), header).toBeInTheDocument();
