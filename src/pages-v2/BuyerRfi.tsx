@@ -16,6 +16,7 @@ import LoadingState from '../components/ui-v2/LoadingState';
 import ErrorState from '../components/ui-v2/ErrorState';
 import { HandoffNotice } from '../components/ui-v2/HandoffNotice';
 import { useVerbAvailability } from '../hooks/useVerbAvailability';
+import type { VerbAvailability } from '../services/transitions/handoff';
 import { useToast } from '../hooks/useToast';
 import { formatDate } from '../lib/format';
 import { useRfiEvents, useRfpEvents, useRFQs } from '../services/query/hooks';
@@ -23,6 +24,7 @@ import { useRfxCommand } from '../services/query/commandHooks';
 import { RFI_SECTION_ORDER } from '../services/sourcing/rfxConfig';
 import type { RfiEventView } from '../services/sourcing/views';
 import RfxTabs from './rfx/RfxTabs';
+import RfiCreateWizard from './rfx/RfiCreateWizard';
 import { DeadlinePill, EmptyRow, OtifOrNoHistory, ResponseStatePill, rfxNow } from './rfx/rfxDisplay';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -42,6 +44,14 @@ import { DeadlinePill, EmptyRow, OtifOrNoHistory, ResponseStatePill, rfxNow } fr
 // "Create a quotation request from this" carries the RFI forward (REQ-E03-03
 // AC-02): it opens the RFQ wizard with the event named, and every pre-filled
 // field stays editable there.
+//
+// ⚠️ **THE EVENT IS RAISED HERE TOO (section 3.6a), AND THE LIFECYCLE IS OFFERED
+// BY STATE RATHER THAN BY GUESS.** "New RFI" opens the wizard; a Draft offers
+// Send and nothing else; an Open event offers Close and Extend; a Closed one
+// offers Extend alone, because `t_rfi_extend` legally leaves a Closed event
+// (reopening a window somebody asked for) while `t_rfi_close` does not run twice.
+// A button the machine would refuse is worse than an absent one: it teaches the
+// buyer that the screen does not know the rules.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const BuyerRfi: React.FC = () => {
@@ -52,7 +62,9 @@ const BuyerRfi: React.FC = () => {
   const rfps = useRfpEvents();
   const rfqs = useRFQs();
   const publish = useVerbAvailability('rfi:publish');
+  const create = useVerbAvailability('rfi:create');
   const command = useRfxCommand();
+  const [wizardOpen, setWizardOpen] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
   const [extendFor, setExtendFor] = useState<Record<string, string>>({});
   const [extendOnly, setExtendOnly] = useState<Record<string, string[]>>({});
@@ -92,11 +104,20 @@ const BuyerRfi: React.FC = () => {
         counts={{ rfi: items.length, rfq: rfqs.data?.items.length ?? 0, rfp: rfps.data?.items.length ?? 0 }}
       />
 
-      {publish.kind !== 'held' && (
-        <div className="mb-4">
+      {/* CE-01 — the buyer raises the event. A seat without `rfi:create` reads
+          WHOSE act it is rather than losing the affordance silently (§72a). */}
+      <div className="flex flex-wrap items-center justify-end gap-3 mb-4">
+        {publish.kind !== 'held' && (
           <HandoffNotice availability={publish} testId="handoff-rfi-publish" />
-        </div>
-      )}
+        )}
+        {create.kind === 'held' ? (
+          <Button variant="outline" onClick={() => setWizardOpen(true)} data-testid="rfi-new">
+            {t('rfx.rfi.new')}
+          </Button>
+        ) : (
+          <HandoffNotice availability={create} testId="handoff-rfi-create" />
+        )}
+      </div>
 
       <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto">
         <Table>
@@ -138,7 +159,11 @@ const BuyerRfi: React.FC = () => {
                     onClick={() => setOpenId(openId === event.id ? null : event.id)}
                     data-testid={`rfi-open-${event.id}`}
                   >
-                    {openId === event.id ? t('rfx.close') : t('rfx.rfi.answer')}
+                    {openId === event.id
+                      ? t('rfx.close')
+                      : event.status === 'Draft'
+                        ? t('rfx.rfi.openEvent')
+                        : t('rfx.rfi.answer')}
                   </Button>
                 </TableCell>
               </TableRow>
@@ -152,7 +177,20 @@ const BuyerRfi: React.FC = () => {
         </Table>
       </div>
 
-      {open && <RfiDetail event={open} run={run} onCreateRfq={() => navigate(`/buyer/sourcing?rfi=${open.id}`)} extendFor={extendFor} setExtendFor={setExtendFor} extendOnly={extendOnly} setExtendOnly={setExtendOnly} canPublish={publish.kind === 'held'} />}
+      {open && <RfiDetail event={open} run={run} onCreateRfq={() => navigate(`/buyer/sourcing?rfi=${open.id}`)} extendFor={extendFor} setExtendFor={setExtendFor} extendOnly={extendOnly} setExtendOnly={setExtendOnly} canPublish={publish.kind === 'held'} publishAvailability={publish} />}
+
+      {wizardOpen && (
+        <RfiCreateWizard
+          canPublish={publish.kind === 'held'}
+          onCancel={() => setWizardOpen(false)}
+          onCreated={(rfiId) => {
+            // Land the buyer ON the new event rather than on a board they then
+            // have to search: the act they just performed is the one in view.
+            setWizardOpen(false);
+            setOpenId(rfiId);
+          }}
+        />
+      )}
     </AppShellV2>
   );
 };
@@ -166,6 +204,8 @@ interface DetailProps {
   extendOnly: Record<string, string[]>;
   setExtendOnly: React.Dispatch<React.SetStateAction<Record<string, string[]>>>;
   canPublish: boolean;
+  /** Whose act publishing is, when this seat does not hold it. */
+  publishAvailability: VerbAvailability;
 }
 
 const RfiDetail: React.FC<DetailProps> = ({
@@ -177,6 +217,7 @@ const RfiDetail: React.FC<DetailProps> = ({
   extendOnly,
   setExtendOnly,
   canPublish,
+  publishAvailability,
 }) => {
   const { t } = useTranslation();
   const only = extendOnly[event.id] ?? [];
@@ -184,6 +225,55 @@ const RfiDetail: React.FC<DetailProps> = ({
 
   return (
     <section className="mt-6 space-y-6" data-testid={`rfi-detail-${event.id}`}>
+      {/* — The event itself, and the acts its STATE allows. — */}
+      <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm p-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <Data className="font-semibold">{event.eventNumber}</Data>
+            <h3 className="text-sm font-semibold text-text-primary">{event.title}</h3>
+            <StatusPill variant={event.closed ? 'neutral' : 'info'} className="mt-1">
+              {t(`rfx.status.${event.status}`)}
+            </StatusPill>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            {publishAvailability.kind !== 'held' && (
+              <HandoffNotice availability={publishAvailability} testId={`handoff-rfi-lifecycle-${event.id}`} />
+            )}
+            {event.status === 'Draft' && (
+              <Button
+                variant="outline"
+                disabled={!canPublish}
+                data-testid={`rfi-send-${event.id}`}
+                onClick={() => run({ verb: 'publishRfi', rfiId: event.id }, 'rfx.toast.published')}
+              >
+                {t('rfx.rfi.publish')}
+              </Button>
+            )}
+            {event.status === 'Open' && (
+              <Button
+                variant="secondary"
+                disabled={!canPublish}
+                data-testid={`rfi-close-${event.id}`}
+                onClick={() => run({ verb: 'closeRfi', rfiId: event.id }, 'rfx.toast.closed')}
+              >
+                {t('rfx.rfi.closeEvent')}
+              </Button>
+            )}
+          </div>
+        </div>
+        {event.description && (
+          <div className="mt-3">
+            <h4 className="text-xs uppercase tracking-wide text-text-tertiary">{t('rfx.rfi.about')}</h4>
+            <p className="text-sm text-text-secondary">{event.description}</p>
+          </div>
+        )}
+        {event.status === 'Draft' && (
+          <p className="text-xs text-text-tertiary mt-3" data-testid={`rfi-draft-notice-${event.id}`}>
+            {t('rfx.status.draftHiddenFromSuppliers')}
+          </p>
+        )}
+      </div>
+
       {/* — Invitees, their OTIF and where their answer stands — */}
       <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto">
         <div className="px-4 py-3 border-b border-border-subtle text-sm font-semibold text-text-primary">

@@ -2550,6 +2550,9 @@ const rfiEventTarget: CommandTarget = {
       id,
       eventNumber: `RFI-2026-${id.slice(-3)}`,
       title: str('title'),
+      // Stored only when the buyer wrote one: an empty string on the event
+      // would read as "PTI described this and said nothing".
+      ...(str('description') ? { description: str('description') } : {}),
       templateId: template.id,
       materialCategory: str('materialCategory'),
       ...(str('purchasingGroup') ? { purchasingGroup: str('purchasingGroup') } : {}),

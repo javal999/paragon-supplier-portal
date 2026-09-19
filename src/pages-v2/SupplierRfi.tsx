@@ -194,16 +194,28 @@ const SupplierRfi: React.FC = () => {
                     );
                   })}
 
-                  {missing.length > 0 && (
+                  {missing.length > 0 && !event.closed && (
                     <p className="text-sm text-danger" data-testid={`supplier-rfi-missing-${event.id}`}>
                       {t('rfx.rfi.missing')}
+                    </p>
+                  )}
+
+                  {/* REQ-E03-02 — PTI closed the window. The verb refuses an answer
+                      to a non-Open event (`EVENT_NOT_OPEN`), so offering the box
+                      would be offering a gesture the act cannot accept. */}
+                  {event.closed && (
+                    <p
+                      className="text-sm text-text-secondary bg-bg-hover rounded px-3 py-2"
+                      data-testid={`supplier-rfi-closed-${event.id}`}
+                    >
+                      {t('rfx.rfi.closedNoAnswers')}
                     </p>
                   )}
 
                   <div className="flex flex-wrap gap-3">
                     <Button
                       variant="secondary"
-                      disabled={answer.kind !== 'held' || mine?.status === 'Submitted'}
+                      disabled={answer.kind !== 'held' || event.closed || mine?.status === 'Submitted'}
                       onClick={() => send(event, true)}
                       data-testid={`supplier-rfi-save-${event.id}`}
                     >
@@ -211,7 +223,12 @@ const SupplierRfi: React.FC = () => {
                     </Button>
                     <Button
                       variant="outline"
-                      disabled={answer.kind !== 'held' || missing.length > 0 || mine?.status === 'Submitted'}
+                      disabled={
+                        answer.kind !== 'held' ||
+                        event.closed ||
+                        missing.length > 0 ||
+                        mine?.status === 'Submitted'
+                      }
                       onClick={() => send(event, false)}
                       data-testid={`supplier-rfi-submit-${event.id}`}
                     >
