@@ -1846,7 +1846,6 @@ export type ForecastCommandVars =
       /** Save as a draft only (not visible to PTI). */
       draftOnly?: boolean;
     }
-  | { verb: 'submitDraft'; responseId: string }
   | { verb: 'acknowledge'; line: ForecastLineRef; note?: string }
   | { verb: 'accept'; responseId: string; status: string }
   | { verb: 'requestRevision'; responseId: string; status: string; note: string };
@@ -1915,13 +1914,6 @@ export function useForecastCommand() {
             payload: {},
           });
         }
-        case 'submitDraft':
-          return svc.commands.dispatch(scope, {
-            transitionId: 't_requirementresponse_promote',
-            entity: 'requirementResponse',
-            entityId: vars.responseId,
-            payload: {},
-          });
         case 'acknowledge':
           return svc.commands.dispatch(scope, {
             transitionId: 't_requirementresponse_acknowledge',
