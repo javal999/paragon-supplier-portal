@@ -147,8 +147,20 @@ const SupplierCapacity: React.FC = () => {
       {/* BR-04 / BR-05 — the filter, why these rows, and the way back. */}
       <PoFilterBanner drill={drill} persona="supplier" reason="capacity" />
       {drillWeeks !== null && drillWeeks.length > 0 && (
-        <p className="text-sm text-text-tertiary mb-4" data-testid="capacity-weeks-marked">
-          {t('oc.drill.weeks.highlighted')}
+        // ⚠️ Which line is honest depends on whether the horizon reaches those
+        // weeks. "The weeks are marked" beside nothing marked is a claim the
+        // screen contradicts, so the out-of-horizon case says THAT instead.
+        <p
+          className="text-sm text-text-tertiary mb-4"
+          data-testid={
+            plan.weeks.some((w) => drillWeeks.includes(w.week))
+              ? 'capacity-weeks-marked'
+              : 'capacity-weeks-outside-horizon'
+          }
+        >
+          {plan.weeks.some((w) => drillWeeks.includes(w.week))
+            ? t('oc.drill.weeks.highlighted')
+            : t('oc.drill.weeks.outside')}
         </p>
       )}
 
