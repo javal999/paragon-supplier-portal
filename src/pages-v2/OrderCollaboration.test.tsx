@@ -191,11 +191,13 @@ describe('Order summary pages (REQ-E07-03)', () => {
     expect(row).toHaveTextContent('PT Sample Packaging Indonesia');
     // REQ-E08-04 — capacity is wired: sup-007's rigid plastic packaging
     // submission has a week below demand, so po-007 reads Gap (was Not started).
-    expect(within(row).getByTestId('order-summary-capacity')).toHaveTextContent('Gap');
+    expect(within(row).getByTestId('order-summary-capacity-po-007')).toHaveTextContent('Gap');
     expect(within(row).getByTestId('order-summary-shipping-po-007')).toHaveTextContent('Missing');
     expect(within(row).getByRole('link', { name: 'PO-2025-00107' })).toHaveAttribute(
       'href',
-      '/buyer/orders?po=po-007',
+      // REQ-E07-03 BR-04 — every drill-through address says it came from the
+      // summary, so the destination can offer the way back.
+      '/buyer/orders?po=po-007&from=order-summary',
     );
     expect(screen.getByTestId('order-summary-row-po-001')).toBeInTheDocument();
   });
@@ -205,7 +207,7 @@ describe('Order summary pages (REQ-E07-03)', () => {
     const row = await screen.findByTestId('order-summary-row-po-008');
     expect(within(row).getByRole('link', { name: 'PO-2025-00108' })).toHaveAttribute(
       'href',
-      '/supplier/orders?po=po-008',
+      '/supplier/orders?po=po-008&from=order-summary',
     );
     expect(screen.getByTestId('order-summary-row-po-007')).toBeInTheDocument();
     expect(screen.queryByTestId('order-summary-row-po-001')).toBeNull(); // sup-001's

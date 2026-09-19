@@ -286,7 +286,12 @@ describe('Alert, Home tasks and the Order summary', () => {
     renderWithProviders(<BuyerOrderSummary />, { identity: PLANNER });
     const gap = await screen.findByTestId('order-summary-foresight-po-016');
     await waitFor(() => expect(gap).toHaveTextContent('Gap'));
-    expect(within(gap).getByRole('link')).toHaveAttribute('href', '/buyer/collaboration?material=RM-STEAR-7300');
+    // REQ-E07-03 BR-05 — the foresight destination is filtered to the PO's
+    // supplier and materials, and says it came from the summary (BR-04).
+    expect(within(gap).getByRole('link')).toHaveAttribute(
+      'href',
+      '/buyer/collaboration?po=po-016&supplier=sup-002&material=RM-STEAR-7300&from=order-summary',
+    );
     expect(screen.getByTestId('order-summary-foresight-po-002')).toHaveTextContent('Awaiting');
   });
 });
