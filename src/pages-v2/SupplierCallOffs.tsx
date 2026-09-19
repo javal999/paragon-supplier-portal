@@ -3,6 +3,13 @@ import { useTranslation } from 'react-i18next';
 import { AlertTriangle } from 'lucide-react';
 import AppShellV2 from '../components/layout-v2/AppShellV2';
 import PageHeader from '../components/ui-v2/PageHeader';
+import {
+  OrderNotFound,
+  PoFilterBanner,
+  drilledPoId,
+  usePoDrillFilter,
+} from './orders/PoDrillFilter';
+import { callOffsForPo } from './orders/orderSummaryModel';
 import PageMetaLine from '../components/ui-v2/PageMetaLine';
 import SampleDataBadge from '../components/ui-v2/SampleDataBadge';
 import Table from '../components/ui-v2/Table';
@@ -85,9 +92,15 @@ const SupplierCallOffs: React.FC = () => {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [form, setForm] = useState(EMPTY);
   const crumb = [t('hub.nav.section.supplierOrders'), t('co.sup.title')];
+  // REQ-E07-03 — the drill-through filter. The supplier's own read already
+  // excludes drafts and dismissed drafts, so the predicate only narrows by PO.
+  const drill = usePoDrillFilter();
+  const drilledPo = drilledPoId(drill);
 
   if (!identity.supplierId) return <NoSupplierIdentity />;
-  if (isPending) return <LoadingState breadcrumb={crumb} />;
+  if (isPending || drill.kind === 'pending') return <LoadingState breadcrumb={crumb} />;
+  // AC-07 / AC-08 — identical refusal for an unknown PO and another supplier's.
+  if (drill.kind === 'notFound') return <OrderNotFound persona="supplier" breadcrumb={crumb} />;
   if (error) return <ErrorState breadcrumb={crumb} error={error} onRetry={refetch} />;
   if (views.length === 0)
     return (
@@ -99,7 +112,8 @@ const SupplierCallOffs: React.FC = () => {
       />
     );
 
-  const rows = [...views].sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+  const scoped = drilledPo === null ? views : callOffsForPo(views, drilledPo);
+  const rows = [...scoped].sort((a, b) => a.dueDate.localeCompare(b.dueDate));
   const toConfirm = rows.filter((v) => v.callOff.status === 'Awaiting Confirmation').length;
   const dueSoon = rows.filter((v) => isDueWithoutHeadsUp(v, nowIso)).length;
   const selected: CallOffView | null = rows.find((v) => v.callOff.id === selectedId) ?? null;
@@ -170,6 +184,9 @@ const SupplierCallOffs: React.FC = () => {
         {t('co.asOf')} <Data>{formatDate(nowIso)}</Data>
         <SampleDataBadge className="ml-3 align-middle" />
       </PageMetaLine>
+
+      {/* BR-04 / AC-02 — the filter is visible, and the way back is offered. */}
+      <PoFilterBanner drill={drill} persona="supplier" count={drilledPo === null ? undefined : rows.length} />
 
       {(toConfirm > 0 || dueSoon > 0) && (
         <div

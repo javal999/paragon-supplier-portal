@@ -3,6 +3,13 @@ import { useTranslation } from 'react-i18next';
 import { AlertTriangle } from 'lucide-react';
 import AppShellV2 from '../components/layout-v2/AppShellV2';
 import PageHeader from '../components/ui-v2/PageHeader';
+import {
+  OrderNotFound,
+  PoFilterBanner,
+  drilledPoId,
+  usePoDrillFilter,
+} from './orders/PoDrillFilter';
+import { callOffsForPo } from './orders/orderSummaryModel';
 import PageMetaLine from '../components/ui-v2/PageMetaLine';
 import SampleDataBadge from '../components/ui-v2/SampleDataBadge';
 import Table from '../components/ui-v2/Table';
@@ -87,6 +94,21 @@ const BuyerCallOffs: React.FC = () => {
   const [seriesRows, setSeriesRows] = useState<SeriesRow[]>([]);
   const crumb = [t('hub.nav.section.calloffs'), t('co.pti.title')];
   const today = nowIso.slice(0, 10);
+  // REQ-E07-03 — the drill-through filter from the order summary.
+  const drill = usePoDrillFilter();
+  const drilledPo = drilledPoId(drill);
+  /**
+   * ⚠️ **WHEN A PO FILTER IS IN PLAY THE PAGE LISTS WHAT THE SUMMARY COUNTED,
+   * WHICH IS NARROWER THAN ITS OWN NORMAL POPULATION.** Unfiltered, a planner
+   * sees its own drafts and dismissed drafts here — those are planning artefacts
+   * it owns. BR-09 excludes them from the summary's count, so a drill-through
+   * that still listed them would break AC-10 on the buyer side only. Same
+   * predicate, one module.
+   */
+  const drilledViews = useMemo(
+    () => (drilledPo === null ? null : callOffsForPo(views, drilledPo)),
+    [views, drilledPo],
+  );
 
   const sections = useMemo(() => {
     const pos: readonly PurchaseOrder[] = posQuery.data?.items ?? [];
@@ -97,15 +119,19 @@ const BuyerCallOffs: React.FC = () => {
           po,
           line,
           remaining: umbrellaRemaining(line, all),
-          rows: views
+          rows: (drilledViews ?? views)
             .filter((v) => v.callOff.poLineId === line.id)
             .sort((a, b) => a.callOff.needDate.localeCompare(b.callOff.needDate)),
         })),
       )
+      .filter((s) => drilledPo === null || s.po.id === drilledPo)
       .sort((a, b) => b.rows.length - a.rows.length || a.po.poNumber.localeCompare(b.po.poNumber));
-  }, [posQuery.data, views]);
+  }, [posQuery.data, views, drilledViews, drilledPo]);
 
-  if (posQuery.isPending || isPending) return <LoadingState breadcrumb={crumb} />;
+  if (posQuery.isPending || isPending || drill.kind === 'pending')
+    return <LoadingState breadcrumb={crumb} />;
+  // AC-08 — an address naming a PO that does not exist, with a way back.
+  if (drill.kind === 'notFound') return <OrderNotFound persona="buyer" breadcrumb={crumb} />;
   if (posQuery.isError || error)
     return (
       <ErrorState
@@ -235,6 +261,9 @@ const BuyerCallOffs: React.FC = () => {
         {t('co.asOf')} <Data>{formatDate(nowIso)}</Data>
         <SampleDataBadge className="ml-3 align-middle" />
       </PageMetaLine>
+
+      {/* BR-04 / AC-02 — the filter is visible, and the way back is offered. */}
+      <PoFilterBanner drill={drill} persona="buyer" count={drilledViews?.length} />
 
       {(awaitingApproval > 0 || escalated > 0 || atRisk > 0 || drift.length > 0) && (
         <div

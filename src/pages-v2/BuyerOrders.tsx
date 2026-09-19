@@ -1,6 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { isActiveAsn } from '../services/transitions/fulfilmentRules';
 import { useSearchParams } from 'react-router-dom';
+import {
+  OrderNotFound,
+  PoFilterBanner,
+  usePoDrillFilter,
+} from './orders/PoDrillFilter';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import {
@@ -299,6 +304,9 @@ const BuyerOrders: React.FC = () => {
   // (`?tab=escalated`).
   const linkedPoId = searchParams.get('po');
   const linkedTab = searchParams.get('tab');
+  // REQ-E07-03 — the drill-through filter, read before the early returns so an
+  // unknown or out-of-scope PO refuses rather than silently opening nothing.
+  const drill = usePoDrillFilter();
   useEffect(() => {
     if (linkedTab && ['escalated', 'review', 'rejected'].includes(linkedTab)) {
       setGroup(linkedTab as GroupTab);
@@ -397,6 +405,10 @@ const BuyerOrders: React.FC = () => {
         onRetry={() => ordersQuery.refetch()}
       />
     );
+  // AC-08 / AC-07 — an address naming a PO this seat cannot see is refused as
+  // not found, with a way back, and says nothing about whether it exists.
+  if (drill.kind === 'pending') return <LoadingState breadcrumb={ORDERS_CRUMB} />;
+  if (drill.kind === 'notFound') return <OrderNotFound persona="buyer" breadcrumb={ORDERS_CRUMB} />;
   if (orders.length === 0)
     return (
       <EmptyState
@@ -476,6 +488,9 @@ const BuyerOrders: React.FC = () => {
 
       {/* REQ-E07-08 AC-03 — this page reads SAP data; say how old it is. */}
       <SapDataAgeBanner page="purchaseOrders" className="mb-4" />
+
+      {/* REQ-E07-03 BR-04 — which PO this was filtered by, and the way back. */}
+      <PoFilterBanner drill={drill} persona="buyer" count={1} />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-8">
         <KpiCard

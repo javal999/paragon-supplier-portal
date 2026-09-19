@@ -213,6 +213,9 @@ export const orderCollaborationEn: Record<string, string> = {
   'oc.drill.focus.response': 'Opened at the supplier response.',
   'oc.drill.focus.shipping': 'Opened at the shipping notice.',
   'oc.drill.asnSection': 'ASNs on this order',
+  'oc.drill.weeks.outside':
+    'This order\u2019s delivery weeks fall outside the capacity horizon, so every week is shown.',
+  'oc.drill.weeks.highlighted': 'The order\u2019s delivery weeks are marked.',
 };
 
 
@@ -416,5 +419,8 @@ export const orderCollaborationId: Record<string, string> = {
   'oc.drill.focus.response': 'Dibuka pada tanggapan pemasok.',
   'oc.drill.focus.shipping': 'Dibuka pada pemberitahuan pengiriman.',
   'oc.drill.asnSection': 'ASN pada pesanan ini',
+  'oc.drill.weeks.outside':
+    'Pekan pengiriman pesanan ini berada di luar cakrawala kapasitas, jadi semua pekan ditampilkan.',
+  'oc.drill.weeks.highlighted': 'Pekan pengiriman pesanan ini ditandai.',
 };
 

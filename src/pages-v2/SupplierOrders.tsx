@@ -2,6 +2,11 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { isActiveAsn } from '../services/transitions/fulfilmentRules';
 import { useSearchParams } from 'react-router-dom';
 import {
+  OrderNotFound,
+  PoFilterBanner,
+  usePoDrillFilter,
+} from './orders/PoDrillFilter';
+import {
   Clock,
   CheckCircle2,
   Wallet,
@@ -276,6 +281,9 @@ const SupplierOrders: React.FC = () => {
   // A link from the order summary opens that PO (`?po=<id>`). Above the early
   // returns for the same reason as the hook above.
   const linkedPoId = searchParams.get('po');
+  // REQ-E07-03 — the drill-through filter. A supplier addressing another
+  // supplier's PO lands in `notFound`: the PO read never returned it (BR-06).
+  const drill = usePoDrillFilter();
   useEffect(() => {
     if (!linkedPoId || selected) return;
     const po = MY_POS.find((p) => p.id === linkedPoId);
@@ -298,6 +306,10 @@ const SupplierOrders: React.FC = () => {
       />
     );
   if (!mySupplier) return <NoSupplierIdentity />;
+  // AC-07 / AC-08 — not found, identically, for an unknown PO and for one that
+  // belongs to another supplier.
+  if (drill.kind === 'pending') return <LoadingState breadcrumb={ORDERS_CRUMB} />;
+  if (drill.kind === 'notFound') return <OrderNotFound persona="supplier" breadcrumb={ORDERS_CRUMB} />;
   if (MY_POS.length === 0)
     return (
       <EmptyState
@@ -658,6 +670,9 @@ const SupplierOrders: React.FC = () => {
 
       {/* REQ-E07-08 AC-03 — this page reads SAP data; say how old it is. */}
       <SapDataAgeBanner page="purchaseOrders" className="mb-4" />
+
+      {/* REQ-E07-03 BR-04 — which PO this was filtered by, and the way back. */}
+      <PoFilterBanner drill={drill} persona="supplier" count={1} />
 
       <div className="grid grid-cols-2 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-6">
         <KpiCard

@@ -1,8 +1,15 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AlertTriangle } from 'lucide-react';
 import AppShellV2 from '../components/layout-v2/AppShellV2';
 import PageHeader from '../components/ui-v2/PageHeader';
+import {
+  OrderNotFound,
+  PoFilterBanner,
+  drilledPoNumber,
+  usePoDrillFilter,
+} from './orders/PoDrillFilter';
+import { receiptsForPo } from './orders/orderSummaryModel';
 import SapDataAgeBanner from '../components/ui-v2/SapDataAgeBanner';
 import PageMetaLine from '../components/ui-v2/PageMetaLine';
 import SampleDataBadge from '../components/ui-v2/SampleDataBadge';
@@ -73,26 +80,44 @@ const SupplierGoodsReceipts: React.FC = () => {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [comment, setComment] = useState('');
   const crumb = [t('hub.nav.section.supplierOrders'), t('fc.gr.title')];
+  // REQ-E07-03 — the drill-through filter, with the summary's own predicate.
+  const drill = usePoDrillFilter();
+  const drilledPo = drilledPoNumber(drill);
 
   const rows = useMemo(() => {
     const asns: readonly ASN[] = asnQuery.data?.items ?? [];
-    return [...(grQuery.data?.items ?? [])]
+    const scoped =
+      drilledPo === null
+        ? (grQuery.data?.items ?? [])
+        : receiptsForPo(grQuery.data?.items ?? [], drilledPo);
+    return [...scoped]
       .sort((a, b) => b.receivedDate.localeCompare(a.receivedDate))
       .map((gr) => {
         const asn = asns.find((a) => a.asnNumber === gr.asnNumber) ?? null;
         const lines = compareReceipt(gr, asn);
         return {
           gr,
+          // REQ-E07-06 — goods received with no ASN on record, said plainly.
+          withoutAsn: asn === null,
           lines,
           flagged: lines.some((l) => l.flagged),
           awaiting: awaitsSupplierAnswer(gr, asn),
           qc: qcResult(gr),
         };
       });
-  }, [grQuery.data, asnQuery.data]);
+  }, [grQuery.data, asnQuery.data, drilledPo]);
+
+  // AC-03 — exactly one record behind the cell arrives OPEN, not as a list of one.
+  const onlyGrId = drilledPo !== null && rows.length === 1 ? rows[0].gr.id : null;
+  useEffect(() => {
+    if (onlyGrId !== null) setSelectedId(onlyGrId);
+  }, [onlyGrId]);
 
   if (!identity.supplierId) return <NoSupplierIdentity />;
-  if (grQuery.isPending || asnQuery.isPending) return <LoadingState breadcrumb={crumb} />;
+  if (grQuery.isPending || asnQuery.isPending || drill.kind === 'pending')
+    return <LoadingState breadcrumb={crumb} />;
+  // AC-07 / AC-08 — identical refusal for an unknown PO and another supplier's.
+  if (drill.kind === 'notFound') return <OrderNotFound persona="supplier" breadcrumb={crumb} />;
   if (grQuery.isError || asnQuery.isError)
     return (
       <ErrorState
@@ -156,6 +181,9 @@ const SupplierGoodsReceipts: React.FC = () => {
       {/* REQ-E07-08 AC-03 — this page reads SAP data; say how old it is. */}
       <SapDataAgeBanner page="goodsReceipts" className="mb-4" />
 
+      {/* REQ-E07-03 BR-04 / AC-02 — the filter, and the way back. */}
+      <PoFilterBanner drill={drill} persona="supplier" count={rows.length} />
+
       {awaiting > 0 && (
         <div
           role="status"
@@ -182,13 +210,18 @@ const SupplierGoodsReceipts: React.FC = () => {
             <TableHeaderCell className="text-right">{t('fc.gr.col.action')}</TableHeaderCell>
           </TableHeader>
           <tbody>
-            {rows.map(({ gr, lines, flagged, awaiting: needsAnswer, qc }) => (
-              <TableRow key={gr.id}>
+            {rows.map(({ gr, lines, flagged, awaiting: needsAnswer, qc, withoutAsn }) => (
+              <TableRow key={gr.id} data-testid={`supplier-gr-row-${gr.id}`}>
                 <TableCell>
                   <Data className="text-xs font-bold text-text-primary whitespace-nowrap">{gr.grNumber}</Data>
                 </TableCell>
                 <TableCell>
                   <Data className="text-xs text-text-secondary whitespace-nowrap">{gr.asnNumber}</Data>
+                  {withoutAsn && (
+                    <span className="block text-xs text-warning-hover" data-testid={`gr-without-asn-${gr.id}`}>
+                      {t('oc.drill.receipt.withoutAsn')}
+                    </span>
+                  )}
                 </TableCell>
                 <TableCell>
                   <Data className="text-xs text-text-secondary whitespace-nowrap">{gr.poNumber}</Data>

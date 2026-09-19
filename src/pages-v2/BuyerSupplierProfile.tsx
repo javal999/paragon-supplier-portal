@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import AppShellV2 from '../components/layout-v2/AppShellV2';
 import PageHeader from '../components/ui-v2/PageHeader';
+import { BackToOrderSummary, usePoDrillFilter } from './orders/PoDrillFilter';
 import ProvenanceMarker from '../components/ui-v2/ProvenanceMarker';
 import KpiCard from '../components/ui-v2/KpiCard';
 import StatusPill from '../components/ui-v2/StatusPill';
@@ -113,6 +114,10 @@ const BuyerSupplierProfile: React.FC = () => {
   const cl = useCategoryLabel();
   const chl = useChannelLabel();
   const [activeTab, setActiveTab] = useState<TabId>('overview');
+  // REQ-E07-03 BR-04 — reached from the summary's Supplier cell, this page
+  // offers the way back ALONGSIDE its own "back to directory", never instead of
+  // it: the menu path here is unchanged (NV-03).
+  const drill = usePoDrillFilter();
 
   const PROFILE_CRUMB = [
     t('buyerSupplierProfile.crumb.acquire'),
@@ -203,6 +208,11 @@ const BuyerSupplierProfile: React.FC = () => {
           <ArrowLeft size={14} />
           {t('buyerSupplierProfile.back.directory')}
         </button>
+        {drill.kind === 'filtered' && drill.fromSummary && (
+          <span className="ml-4">
+            <BackToOrderSummary persona="buyer" />
+          </span>
+        )}
       </div>
 
       <PageHeader

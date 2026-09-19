@@ -1,6 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useSearchParams } from 'react-router-dom';
+import {
+  OrderNotFound,
+  PoFilterBanner,
+  usePoDrillFilter,
+} from './orders/PoDrillFilter';
 import { Download, Upload } from 'lucide-react';
 import AppShellV2 from '../components/layout-v2/AppShellV2';
 import PageHeader from '../components/ui-v2/PageHeader';
@@ -104,6 +109,11 @@ const SupplierForecastCommitments: React.FC = () => {
   const nowIso = forecastNow();
   const crumb = [t('hub.nav.section.planning'), t('fc.sup.title')];
 
+  // REQ-E07-03 BR-05 — a PO's foresight destination is its supplier's own
+  // commitments for that PO's materials. A supplier addressing another
+  // supplier's PO gets `notFound`: its PO read never returned it (BR-06).
+  const drill = usePoDrillFilter();
+  const drillMaterials = drill.kind === 'filtered' ? drill.materials : null;
   const [stream, setStream] = useState<ForecastStream | null>(null);
   const [mode, setMode] = useState<ViewMode>('forecast');
   const [material, setMaterial] = useState<string>(params.get('material') ?? '');
@@ -137,13 +147,19 @@ const SupplierForecastCommitments: React.FC = () => {
 
   if (!supplierId) return <NoSupplierIdentity />;
   if (linesQuery.isPending || versionsQuery.isPending) return <LoadingState breadcrumb={crumb} />;
+  if (drill.kind === 'pending') return <LoadingState breadcrumb={crumb} />;
+  // AC-07 / AC-08 — identical refusal for an unknown PO and another supplier's.
+  if (drill.kind === 'notFound') return <OrderNotFound persona="supplier" breadcrumb={crumb} />;
   if (linesQuery.isError)
     return <ErrorState breadcrumb={crumb} error={linesQuery.error} onRetry={() => linesQuery.refetch()} />;
   if (lines.length === 0 || !activeStream)
     return <EmptyState breadcrumb={crumb} title={t('fc.sup.title')} subtitle={t('fc.sup.subtitle')} message={t('fc.sup.empty')} />;
 
   const materials = [...new Set(streamLines.map((l) => l.materialCode))];
-  const shownMaterials = materials.filter((m) => material === '' || !materials.includes(material) || m === material);
+  const shownMaterials = materials
+    .filter((m) => material === '' || !materials.includes(material) || m === material)
+    // A PO spanning several materials narrows to all of them at once.
+    .filter((m) => drillMaterials === null || drillMaterials.length === 0 || drillMaterials.includes(m));
   const rowDraft = (l: ForecastCommitmentLine) => drafts[l.key] ?? draftOf(l);
   const setRow = (l: ForecastCommitmentLine, patch: Partial<RowDraft>) =>
     setDrafts((prev) => ({ ...prev, [l.key]: { ...rowDraft(l), ...patch } }));
@@ -245,6 +261,9 @@ const SupplierForecastCommitments: React.FC = () => {
         {t('fc.asOf')} <Data>{formatDate(nowIso)}</Data>
         <SampleDataBadge className="ml-3 align-middle" />
       </PageMetaLine>
+
+      {/* REQ-E07-03 BR-04 / BR-05 — the filter, why these rows, and the way back. */}
+      <PoFilterBanner drill={drill} persona="supplier" count={shownMaterials.length} reason="foresight" />
 
       {awaiting > 0 && (
         <div

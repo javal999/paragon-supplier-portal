@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   ClipboardCheck,
   AlertTriangle,
@@ -11,6 +11,13 @@ import {
 } from 'lucide-react';
 import AppShellV2 from '../components/layout-v2/AppShellV2';
 import PageHeader from '../components/ui-v2/PageHeader';
+import {
+  OrderNotFound,
+  PoFilterBanner,
+  drilledPoNumber,
+  usePoDrillFilter,
+} from './orders/PoDrillFilter';
+import { receiptsForPo } from './orders/orderSummaryModel';
 import SapDataAgeBanner from '../components/ui-v2/SapDataAgeBanner';
 import PageMetaLine from '../components/ui-v2/PageMetaLine';
 import ProvenanceMarker from '../components/ui-v2/ProvenanceMarker';
@@ -320,7 +327,20 @@ const GoodsReceiptWorkspace: React.FC<GoodsReceiptWorkspaceProps> = ({
 
   // No local seeded copy — the list re-derives from the invalidated query after
   // each command (the standardized mutation pattern).
-  const allGRs = goodsReceipts;
+  // REQ-E07-03 — the drill-through filter. `receiptsForPo` is the predicate the
+  // summary counted with, so AC-10 holds by construction (BR-09 / BR-10).
+  const drill = usePoDrillFilter();
+  const drilledPo = drilledPoNumber(drill);
+  const allGRs = useMemo(
+    () => (drilledPo === null ? goodsReceipts : [...receiptsForPo(goodsReceipts, drilledPo)]),
+    [goodsReceipts, drilledPo],
+  );
+
+  // AC-03 — exactly one record behind the cell arrives OPEN, not as a list of one.
+  const onlyGrId = drilledPo !== null && allGRs.length === 1 ? allGRs[0].id : null;
+  useEffect(() => {
+    if (onlyGrId !== null) setSelectedId(onlyGrId);
+  }, [onlyGrId]);
 
   const counts = useMemo(() => {
     let pending = 0;
@@ -922,6 +942,9 @@ const GoodsReceiptWorkspace: React.FC<GoodsReceiptWorkspaceProps> = ({
         </section>
       )}
 
+      {/* REQ-E07-03 BR-04 / AC-02 — the filter, and the way back. */}
+      <PoFilterBanner drill={drill} persona="buyer" count={allGRs.length} />
+
       {/* REQ-E07-06 — supplier disputes of a receipt discrepancy, for the planner. */}
       <ReceiptDisputesSection goodsReceipts={goodsReceipts} />
 
@@ -994,6 +1017,12 @@ const GoodsReceiptWorkspace: React.FC<GoodsReceiptWorkspaceProps> = ({
                     <Data as="div" className="text-xs text-text-tertiary">
                       {g.asnNumber} · {g.poNumber}
                     </Data>
+                    {/* REQ-E07-06 — goods received with no ASN, said plainly. */}
+                    {!g.asnNumber && (
+                      <span className="text-xs text-warning-hover" data-testid={`gr-without-asn-${g.id}`}>
+                        {t('oc.drill.receipt.withoutAsn')}
+                      </span>
+                    )}
                   </TableCell>
                   <TableCell>
                     <div className="text-sm text-text-primary">
@@ -1287,7 +1316,12 @@ const BuyerGoodsReceipt: React.FC = () => {
   // CP-3 · H4 — the certificate side joins the same read set. Buyer scope reads
   // the superset; the service applies the scoping contract, not this page.
   const registryQuery = useComplianceRegistry();
+  // REQ-E07-03 AC-08 — refused at the page's own gate, beside the other three
+  // honest states, so the workspace below never renders for a PO it cannot show.
+  const drill = usePoDrillFilter();
 
+  if (drill.kind === 'pending') return <LoadingState breadcrumb={GR_CRUMB} />;
+  if (drill.kind === 'notFound') return <OrderNotFound persona="buyer" breadcrumb={GR_CRUMB} />;
   if (
     grQuery.isPending ||
     suppliersQuery.isPending ||

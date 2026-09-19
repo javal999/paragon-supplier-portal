@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   CheckCircle2,
   Clock,
@@ -16,6 +16,13 @@ import {
 } from 'lucide-react';
 import AppShellV2 from '../components/layout-v2/AppShellV2';
 import PageHeader from '../components/ui-v2/PageHeader';
+import {
+  OrderNotFound,
+  PoFilterBanner,
+  drilledPoNumber,
+  usePoDrillFilter,
+} from './orders/PoDrillFilter';
+import { invoicePoNumbers, invoicesForPo } from './orders/orderSummaryModel';
 import SapDataAgeBanner from '../components/ui-v2/SapDataAgeBanner';
 import PageMetaLine from '../components/ui-v2/PageMetaLine';
 import ProvenanceMarker from '../components/ui-v2/ProvenanceMarker';
@@ -264,7 +271,24 @@ const SupplierInvoices: React.FC = () => {
   const INVOICES = useMemo(() => invoicesQuery.data?.items ?? [], [invoicesQuery.data]);
   const RECEIPTS = useMemo(() => receiptsQuery.data?.items ?? [], [receiptsQuery.data]);
   const mySupplier = supplierQuery.data ?? null;
+  // ── REQ-E07-03 · the drill-through filter ─────────────────────────────────
+  // ⚠️ **ONLY THE LIST NARROWS, NEVER `INVOICES`.** The duplicate-number check
+  // and the remaining-invoiceable-quantity rule are asked of the supplier's
+  // WHOLE population; narrowing that to one PO would let a duplicate through
+  // and over-invoice a receipt. So the filter produces a separate `listed` set
+  // and the business rules keep reading `INVOICES`.
+  const drill = usePoDrillFilter();
+  const drilledPo = drilledPoNumber(drill);
+  const listed = useMemo(
+    () => (drilledPo === null ? INVOICES : [...invoicesForPo(INVOICES, drilledPo, RECEIPTS)]),
+    [INVOICES, RECEIPTS, drilledPo],
+  );
   const [selected, setSelected] = useState<SupplierInvoice | null>(null);
+  // AC-03 — exactly one record behind the cell arrives OPEN, not as a list of one.
+  const onlyInvoice = drilledPo !== null && listed.length === 1 ? listed[0] : null;
+  useEffect(() => {
+    if (onlyInvoice !== null) setSelected(onlyInvoice);
+  }, [onlyInvoice]);
   const [panelMode, setPanelMode] = useState<PanelMode>('detail');
 
   // WHO ACTS NEXT (S2b). ⚠️ **READS `selected.status`, THE PROJECTION LABEL,
@@ -545,6 +569,9 @@ const SupplierInvoices: React.FC = () => {
   };
 
   if (!supplierId) return <NoSupplierIdentity />;
+  // AC-07 / AC-08 — identical refusal for an unknown PO and another supplier's.
+  if (drill.kind === 'pending') return <LoadingState breadcrumb={invCrumb} />;
+  if (drill.kind === 'notFound') return <OrderNotFound persona="supplier" breadcrumb={invCrumb} />;
   if (invoicesQuery.isPending || supplierQuery.isPending)
     return <LoadingState breadcrumb={invCrumb} />;
   if (invoicesQuery.isError || supplierQuery.isError)
@@ -705,6 +732,14 @@ const SupplierInvoices: React.FC = () => {
         </div>
       )}
 
+      {/* BR-04 / AC-02 — the filter, and the way back. */}
+      <PoFilterBanner drill={drill} persona="supplier" count={listed.length} />
+      {drilledPo !== null && listed.some((i) => invoicePoNumbers(i, RECEIPTS).length > 1) && (
+        <p className="text-sm text-text-tertiary mb-4" data-testid="invoice-multi-po-note">
+          {t('oc.drill.invoice.multiPo')}
+        </p>
+      )}
+
       <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto mb-6">
         <Table>
           <TableHeader>
@@ -718,7 +753,7 @@ const SupplierInvoices: React.FC = () => {
             <TableHeaderCell className="text-right">{t('supplierInvoices.table.action')}</TableHeaderCell>
           </TableHeader>
           <tbody>
-            {INVOICES.map((inv) => {
+            {listed.map((inv) => {
               const Channel = CHANNEL_ICON[inv.channel];
               const isPaid = inv.stage === 'Paid';
               return (

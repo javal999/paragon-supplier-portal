@@ -3,6 +3,11 @@ import { useTranslation } from 'react-i18next';
 import { AlertTriangle, ChevronDown, ChevronRight } from 'lucide-react';
 import AppShellV2 from '../components/layout-v2/AppShellV2';
 import PageHeader from '../components/ui-v2/PageHeader';
+import {
+  OrderNotFound,
+  PoFilterBanner,
+  usePoDrillFilter,
+} from './orders/PoDrillFilter';
 import PageMetaLine from '../components/ui-v2/PageMetaLine';
 import SampleDataBadge from '../components/ui-v2/SampleDataBadge';
 import FilterChipsBar from '../components/ui-v2/FilterChipsBar';
@@ -36,16 +41,43 @@ const BuyerCapacity: React.FC = () => {
   const nowIso = inventoryNow();
   const crumb = [t('hub.nav.section.inventory'), t('inv.capacity.pti.title')];
 
-  const plans = useMemo(() => plansQuery.data?.items ?? [], [plansQuery.data]);
+  const allPlans = useMemo(() => plansQuery.data?.items ?? [], [plansQuery.data]);
+  // ── REQ-E07-03 BR-05 / AC-04 ──────────────────────────────────────────────
+  // Capacity is agreed per supplier x material group per week, so a PO cannot be
+  // its filter — the PO's SUPPLIER, its MATERIAL GROUPS and its DELIVERY WEEKS
+  // are. The banner says exactly that, because a planner who arrived from one
+  // order must not read a wider agreement as if it were about that order alone.
+  const drill = usePoDrillFilter();
+  const plans = useMemo(() => {
+    if (drill.kind !== 'filtered') return allPlans;
+    return allPlans.filter(
+      (p) =>
+        p.supplierId === drill.po.supplierId &&
+        (drill.groups === null || drill.groups.length === 0 || drill.groups.includes(p.materialGroup)),
+    );
+  }, [allPlans, drill]);
+  /** The PO's delivery weeks, kept only where the horizon actually covers them. */
+  const drillWeeks = useMemo(() => {
+    if (drill.kind !== 'filtered' || drill.weeks === null) return null;
+    const horizon = new Set(plans.flatMap((p) => p.weeks.map((w) => w.week)));
+    const inHorizon = drill.weeks.filter((w) => horizon.has(w));
+    return inHorizon.length > 0 ? inHorizon : null;
+  }, [drill, plans]);
+  const weeksOutsideHorizon =
+    drill.kind === 'filtered' && drill.weeks !== null && drill.weeks.length > 0 && drillWeeks === null;
 
-  if (plansQuery.isPending) return <LoadingState breadcrumb={crumb} />;
+  if (plansQuery.isPending || drill.kind === 'pending') return <LoadingState breadcrumb={crumb} />;
+  if (drill.kind === 'notFound') return <OrderNotFound persona="buyer" breadcrumb={crumb} />;
   if (plansQuery.isError)
     return <ErrorState breadcrumb={crumb} error={plansQuery.error} onRetry={() => plansQuery.refetch()} />;
 
   const keyOf = (p: CapacityPlan) => `${p.supplierId}-${p.materialGroup}`;
   const withGap = plans.filter((p) => planStatus(p) === 'gap');
   const shown = plans.filter((p) => filter === 'all' || planStatus(p) === filter);
-  const isOpen = (p: CapacityPlan) => expanded[keyOf(p)] ?? planStatus(p) === 'gap';
+  // AC-03 / AC-04 — arriving from one order, the grid is OPEN: a collapsed
+  // section would be a list of one, which the requirement rules out.
+  const isOpen = (p: CapacityPlan) =>
+    expanded[keyOf(p)] ?? (drill.kind === 'filtered' || planStatus(p) === 'gap');
   const count = (f: StatusFilter) => (f === 'all' ? plans.length : plans.filter((p) => planStatus(p) === f).length);
 
   return (
@@ -64,6 +96,18 @@ const BuyerCapacity: React.FC = () => {
         >
           <AlertTriangle size={14} aria-hidden="true" />
           {t('inv.capacity.pti.banner', { count: withGap.length })}
+        </div>
+      )}
+
+      {/* BR-04 / BR-05 — the filter, why these rows, and the way back. */}
+      <PoFilterBanner drill={drill} persona="buyer" count={plans.length} reason="capacity" />
+      {weeksOutsideHorizon && (
+        <div
+          role="status"
+          data-testid="capacity-weeks-outside-horizon"
+          className="bg-bg-hover border-l-2 border-border-subtle rounded px-4 py-3 mb-4 text-sm text-text-secondary"
+        >
+          {t('oc.drill.weeks.outside')}
         </div>
       )}
 
@@ -124,7 +168,9 @@ const BuyerCapacity: React.FC = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {p.weeks.map((w) => {
+                      {p.weeks
+                        .filter((w) => drillWeeks === null || drillWeeks.includes(w.week))
+                        .map((w) => {
                         const gap = isGapWeek(w);
                         return (
                           <tr

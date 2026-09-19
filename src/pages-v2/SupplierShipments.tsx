@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   FileText,
   Send,
@@ -13,6 +13,13 @@ import {
 } from 'lucide-react';
 import AppShellV2 from '../components/layout-v2/AppShellV2';
 import PageHeader from '../components/ui-v2/PageHeader';
+import {
+  OrderNotFound,
+  PoFilterBanner,
+  drilledPoNumber,
+  usePoDrillFilter,
+} from './orders/PoDrillFilter';
+import { asnsForPo } from './orders/orderSummaryModel';
 import PageMetaLine from '../components/ui-v2/PageMetaLine';
 import ProvenanceMarker from '../components/ui-v2/ProvenanceMarker';
 import KpiCard from '../components/ui-v2/KpiCard';
@@ -766,6 +773,18 @@ const SupplierShipments: React.FC = () => {
 
   const mySupplier = supplierQuery.data ?? null;
   const asns = useMemo(() => asnsQuery.data?.items ?? [], [asnsQuery.data]);
+  // REQ-E07-03 — the drill-through filter. A supplier addressing another
+  // supplier's PO gets `notFound`: its own PO read never returned it (BR-06).
+  const drill = usePoDrillFilter();
+  const drilledPo = drilledPoNumber(drill);
+  /**
+   * The ASNs this page lists when a PO filter is in play — the SAME predicate
+   * the summary counted with (BR-09), so AC-10 cannot drift.
+   */
+  const visibleAsns = useMemo(
+    () => (drilledPo === null ? asns : [...asnsForPo(asns, drilledPo)]),
+    [asns, drilledPo],
+  );
   const SHIPPABLE_POS = useMemo(
     () => posQuery.data?.items ?? [],
     [posQuery.data],
@@ -787,6 +806,13 @@ const SupplierShipments: React.FC = () => {
     for (const a of asns) base[a.status]++;
     return base;
   }, [asns]);
+
+  // AC-03 — exactly one record behind the cell arrives OPEN, not as a list of one.
+  const onlyAsn = drilledPo !== null && visibleAsns.length === 1 ? visibleAsns[0].asnNumber : null;
+  useEffect(() => {
+    if (onlyAsn === null) return;
+    setExpanded((prev) => (prev.has(onlyAsn) ? prev : new Set(prev).add(onlyAsn)));
+  }, [onlyAsn]);
 
   const toggleExpand = (asnNumber: string) => {
     setExpanded((prev) => {
@@ -973,6 +999,10 @@ const SupplierShipments: React.FC = () => {
       />
     );
   if (!mySupplier) return <NoSupplierIdentity />;
+  // AC-07 / AC-08 — identical refusal for an unknown PO and another supplier's.
+  if (drill.kind === 'pending') return <LoadingState breadcrumb={SHIPMENTS_CRUMB} />;
+  if (drill.kind === 'notFound')
+    return <OrderNotFound persona="supplier" breadcrumb={SHIPMENTS_CRUMB} />;
   if (asns.length === 0 && SHIPPABLE_POS.length === 0)
     return (
       <EmptyState
@@ -1477,9 +1507,16 @@ const SupplierShipments: React.FC = () => {
         />
       </div>
 
+      {/* BR-04 / AC-02 — the filter is visible, and the way back is offered. */}
+      <PoFilterBanner drill={drill} persona="supplier" count={visibleAsns.length} />
+
       <SubTabs<TabKey>
         options={[
-          { id: 'shipments', label: t('supplierShipments.tab.myShipments'), count: asns.length },
+          {
+            id: 'shipments',
+            label: t('supplierShipments.tab.myShipments'),
+            count: visibleAsns.length,
+          },
           // Withheld rather than disabled — §73's rule, applied to a tab: a seat
           // that cannot finish the wizard is not offered its first step.
           ...(wizardHeld
@@ -1493,7 +1530,7 @@ const SupplierShipments: React.FC = () => {
 
       {tab === 'shipments' && (
         <ShipmentsList
-          asns={asns}
+          asns={visibleAsns}
           statusFilter={statusFilter}
           expanded={expanded}
           onToggleExpand={toggleExpand}
