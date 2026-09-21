@@ -20,8 +20,10 @@ import type { RFQ } from '../../../../data/mockRfqs';
 // sourcing events sees one board, and a read that had to union two sources is a
 // read that will one day union only one.
 import { RFX_RFQ_SEED } from '../fixtures/rfxHub';
+// BL-64 — the compliance gate demo RFQs (CR-23), on the same board.
+import { GATE_DEMO_RFQ_SEED } from '../fixtures/gateDemo';
 
-const SEED: readonly RFQ[] = [...RFX_RFQ_SEED, ...mockRfqs];
+const SEED: readonly RFQ[] = [...RFX_RFQ_SEED, ...GATE_DEMO_RFQ_SEED, ...mockRfqs];
 
 function clone(r: RFQ): RFQ {
   return { ...r, materialIds: [...r.materialIds], invitedSupplierIds: [...r.invitedSupplierIds], respondedSupplierIds: [...r.respondedSupplierIds] };

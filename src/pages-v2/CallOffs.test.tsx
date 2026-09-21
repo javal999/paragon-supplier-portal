@@ -64,7 +64,13 @@ describe('PTI Call-offs page (REQ-E09-01, REQ-E09-03)', () => {
     expect(within(row('co-0005')).getByText('At Risk')).toBeInTheDocument();
     expect(within(row('co-0009')).getByText('Escalated')).toBeInTheDocument();
     expect(within(row('co-0012')).getByText('Draft')).toBeInTheDocument();
-    expect(screen.getByTestId('pti-calloff-drift')).toHaveTextContent('PT Sample Carton Packaging');
+    // CR-09 drift, by supplier NAME: the carton misses (co-0007/0008), and — BL-64 —
+    // the gate demo's sup-020, whose three missed 200ml-bottle call-offs are what
+    // hold its OTIF at 79%. No other supplier drifts.
+    const drift = screen.getAllByTestId('pti-calloff-drift').map((el) => el.textContent ?? '');
+    expect(drift).toHaveLength(2);
+    expect(drift.some((t) => t.includes('PT Sample Carton Packaging'))).toBe(true);
+    expect(drift.some((t) => t.includes('PT Sample PET Bottle Karawang (illustrative)'))).toBe(true);
     // AC-04 — no dock or slot booking anywhere on the page.
     expect(screen.queryByText(/dock|slot/i)).toBeNull();
   });

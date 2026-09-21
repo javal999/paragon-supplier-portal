@@ -611,7 +611,12 @@ describe('REQ-E03-01 — the invitee read', () => {
 
   it('AC-01 — the purchasing-group filter narrows, and combines with the category', async () => {
     const group = (await reads.getInviteeCandidates(buyer, { purchasingGroup: '101' })).items;
-    expect(group.map((c) => c.supplierId).sort()).toEqual(['sup-007', 'sup-013', 'sup-015']);
+    // BL-64 — the gate demo adds four packaging suppliers to group 101: the two
+    // ACTIVE ones (sup-019, OTIF 80%; sup-020, OTIF 79%) are candidates; the
+    // SUSPENDED sup-021 and BLACKLISTED sup-022 are not, like sup-012 and sup-014.
+    expect(group.map((c) => c.supplierId).sort()).toEqual(['sup-007', 'sup-013', 'sup-015', 'sup-019', 'sup-020']);
+    expect(group.map((c) => c.supplierId)).not.toContain('sup-021');
+    expect(group.map((c) => c.supplierId)).not.toContain('sup-022');
     const both = (await reads.getInviteeCandidates(buyer, { purchasingGroup: '104', category: 'Packaging' })).items;
     expect(both.map((c) => c.supplierId)).toEqual(['sup-008']);
     // KNOWN-BAD twin — a combination nothing satisfies returns EMPTY, not everything.

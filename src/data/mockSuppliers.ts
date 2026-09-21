@@ -4,6 +4,11 @@ import {
   SupplierTier,
   PreferredChannel,
 } from '../types/supplier.types';
+import { DECLARED_PRESENT } from '../services/data/fixturePresent';
+
+/** `YYYY-MM-DD`, `offset` days from the declared present (the BL-64 demo rows only). */
+const day = (offset: number): string =>
+  new Date(Date.parse(`${DECLARED_PRESENT}T00:00:00.000Z`) + offset * 86_400_000).toISOString().slice(0, 10);
 
 // ────────────────────────────────────────────────────────────────────────────
 // ⚠️ NO SUPPLIER BELOW CARRIES AN OTIF OR A GRADE — REQ-E10-01 (Phase 6b).
@@ -472,5 +477,206 @@ export const mockSuppliers: SupplierExtended[] = [
     preferredChannel: PreferredChannel.WEB,
     leadTimeAdherence: 86,
     invoiceAccuracy: 94,
+  },
+  // ── BL-64 — COMPLIANCE GATE DEMO SUPPLIERS (CR-23), ILLUSTRATIVE ──────────
+  //   Each exists to show ONE gate scenario on the sample RFQs in
+  //   `services/data/mock/fixtures/gateDemo.ts` (rfq-016 to rfq-020), so a buyer
+  //   can see every pass/fail case in the app. The scenario each one carries is
+  //   pinned by name in `gateDemo.test.ts`. None of them holds a compliance-
+  //   registry row: the master decides for them, by design (a registry row for a
+  //   new supplier would be a new HALAL-XPERSONA-01 disagreement).
+  //
+  //   The halal expiries of sup-017 and sup-018 are OFFSETS from the declared
+  //   present, never literals: "expires today" and "expired yesterday" must stay
+  //   true of the demo whatever day the present is moved to. Whether a
+  //   certificate is valid is derived by the gate at read; only the date is here.
+  {
+    // Fails on BPOM ALONE where BPOM applies: halal valid, GMP held, no BPOM.
+    id: 'sup-016',
+    purchasingGroup: '103',
+    sapBpNumber: 'BP-10001249',
+    name: 'PT Sample Active Ingredient Indonesia (illustrative)',
+    category: 'Active Ingredient',
+    country: 'ID',
+    city: 'Bekasi',
+    tier: SupplierTier.WEB,
+    status: SupplierStatus.ACTIVE,
+    contactName: 'Rina Kartika',
+    email: 'rina.kartika@sample-actives.example',
+    contactEmail: 'rina.kartika@sample-actives.example',
+    phone: '+6281600000016',
+    contactPhone: '+6281600000016',
+    rating: 4.0,
+    onboardedDate: '2025-11-03',
+    lastActivityDate: day(-6),
+    halalCertified: true,
+    bpomRegistered: false,
+    gmpIso22716: true, // CR-23 — sample evidence (illustrative)
+    certExpiryDate: day(420),
+    preferredChannel: PreferredChannel.WEB,
+    leadTimeAdherence: 0,
+    invoiceAccuracy: 0,
+  },
+  {
+    // Halal certificate expires ON the declared present — valid today, so it passes.
+    id: 'sup-017',
+    purchasingGroup: '102',
+    sapBpNumber: 'BP-10001250',
+    name: 'PT Sample Halal Raw Material Jakarta (illustrative)',
+    category: 'Raw Material',
+    country: 'ID',
+    city: 'Jakarta',
+    tier: SupplierTier.WEB,
+    status: SupplierStatus.ACTIVE,
+    contactName: 'Agus Salim',
+    email: 'agus.salim@sample-halal-rm.example',
+    contactEmail: 'agus.salim@sample-halal-rm.example',
+    phone: '+6281600000017',
+    contactPhone: '+6281600000017',
+    rating: 4.2,
+    onboardedDate: '2024-06-17',
+    lastActivityDate: day(-5),
+    halalCertified: true,
+    bpomRegistered: false,
+    gmpIso22716: true, // CR-23 — sample evidence (illustrative)
+    certExpiryDate: day(0),
+    preferredChannel: PreferredChannel.WEB,
+    leadTimeAdherence: 0,
+    invoiceAccuracy: 0,
+  },
+  {
+    // Halal certificate expired the DAY BEFORE the declared present — fails halal.
+    id: 'sup-018',
+    purchasingGroup: '102',
+    sapBpNumber: 'BP-10001251',
+    name: 'PT Sample Raw Material Surabaya (illustrative)',
+    category: 'Raw Material',
+    country: 'ID',
+    city: 'Surabaya',
+    tier: SupplierTier.WEB,
+    status: SupplierStatus.ACTIVE,
+    contactName: 'Wulan Sari',
+    email: 'wulan.sari@sample-rm-sby.example',
+    contactEmail: 'wulan.sari@sample-rm-sby.example',
+    phone: '+6281600000018',
+    contactPhone: '+6281600000018',
+    rating: 3.9,
+    onboardedDate: '2024-02-05',
+    lastActivityDate: day(-4),
+    halalCertified: true,
+    bpomRegistered: false,
+    gmpIso22716: true, // CR-23 — sample evidence (illustrative)
+    certExpiryDate: day(-1),
+    preferredChannel: PreferredChannel.WEB,
+    leadTimeAdherence: 0,
+    invoiceAccuracy: 0,
+  },
+  {
+    // OTIF EXACTLY AT the gate minimum (4 of 5 call-offs on time and in full =
+    // 80%) — passes. The deliveries are in `gateDemo.ts`, not typed in here.
+    id: 'sup-019',
+    purchasingGroup: '101',
+    sapBpNumber: 'BP-10001252',
+    name: 'PT Sample Preform Bekasi (illustrative)',
+    category: 'Packaging',
+    country: 'ID',
+    city: 'Bekasi',
+    tier: SupplierTier.WEB,
+    status: SupplierStatus.ACTIVE,
+    contactName: 'Yusuf Hakim',
+    email: 'yusuf.hakim@sample-preform-bks.example',
+    contactEmail: 'yusuf.hakim@sample-preform-bks.example',
+    phone: '+6281600000019',
+    contactPhone: '+6281600000019',
+    rating: 4.0,
+    onboardedDate: '2023-09-12',
+    lastActivityDate: day(-3),
+    halalCertified: false,
+    bpomRegistered: false,
+    certExpiryDate: day(365),
+    preferredChannel: PreferredChannel.WEB,
+    leadTimeAdherence: 0,
+    invoiceAccuracy: 0,
+  },
+  {
+    // OTIF JUST BELOW the gate minimum (11 of 14 = 78.6%, shown 79%) — fails OTIF alone.
+    id: 'sup-020',
+    purchasingGroup: '101',
+    sapBpNumber: 'BP-10001253',
+    name: 'PT Sample PET Bottle Karawang (illustrative)',
+    category: 'Packaging',
+    country: 'ID',
+    city: 'Karawang',
+    tier: SupplierTier.WEB,
+    status: SupplierStatus.ACTIVE,
+    contactName: 'Maya Lestari',
+    email: 'maya.lestari@sample-pet-krw.example',
+    contactEmail: 'maya.lestari@sample-pet-krw.example',
+    phone: '+6281600000020',
+    contactPhone: '+6281600000020',
+    rating: 3.7,
+    onboardedDate: '2023-03-20',
+    lastActivityDate: day(-3),
+    halalCertified: false,
+    bpomRegistered: false,
+    certExpiryDate: day(365),
+    preferredChannel: PreferredChannel.WEB,
+    leadTimeAdherence: 0,
+    invoiceAccuracy: 0,
+  },
+  {
+    // SUSPENDED after it quoted on rfq-019 — fails on status alone (packaging
+    // needs no certificate; no delivery history, which passes). Publication
+    // refuses a suspended invitee (REQ-E03-01 BR-04), so this is the state the
+    // gate exists for: the status changed between the quote and the award.
+    id: 'sup-021',
+    purchasingGroup: '101',
+    sapBpNumber: 'BP-10001254',
+    name: 'PT Sample Packaging Medan (illustrative)',
+    category: 'Packaging',
+    country: 'ID',
+    city: 'Medan',
+    tier: SupplierTier.WEB,
+    status: SupplierStatus.SUSPENDED,
+    contactName: 'Taufik Hidayat',
+    email: 'taufik.hidayat@sample-pack-mdn.example',
+    contactEmail: 'taufik.hidayat@sample-pack-mdn.example',
+    phone: '+6281600000021',
+    contactPhone: '+6281600000021',
+    rating: 2.9,
+    onboardedDate: '2022-08-08',
+    lastActivityDate: day(-2),
+    halalCertified: false,
+    bpomRegistered: false,
+    certExpiryDate: day(365),
+    preferredChannel: PreferredChannel.WEB,
+    leadTimeAdherence: 0,
+    invoiceAccuracy: 0,
+  },
+  {
+    // BLACKLISTED after it quoted on rfq-019 — fails on status alone, as sup-021.
+    id: 'sup-022',
+    purchasingGroup: '101',
+    sapBpNumber: 'BP-10001255',
+    name: 'PT Sample Closures Batam (illustrative)',
+    category: 'Packaging',
+    country: 'ID',
+    city: 'Batam',
+    tier: SupplierTier.WEB,
+    status: SupplierStatus.BLACKLISTED,
+    contactName: 'Indra Gunawan',
+    email: 'indra.gunawan@sample-closures-btm.example',
+    contactEmail: 'indra.gunawan@sample-closures-btm.example',
+    phone: '+6281600000022',
+    contactPhone: '+6281600000022',
+    rating: 1.8,
+    onboardedDate: '2021-10-25',
+    lastActivityDate: day(-2),
+    halalCertified: false,
+    bpomRegistered: false,
+    certExpiryDate: day(365),
+    preferredChannel: PreferredChannel.WEB,
+    leadTimeAdherence: 0,
+    invoiceAccuracy: 0,
   },
 ];
