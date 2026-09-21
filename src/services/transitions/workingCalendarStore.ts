@@ -53,6 +53,15 @@ import { asActorAttribution, type ActorAttribution } from '../../lib/enforcement
 // ── 1 · THE SAP LOAD (simulated) ─────────────────────────────────────────────
 
 /**
+ * ⚠️ SAMPLE DATA (BL-48 demo). A plant shutdown the factory calendar carries on
+ * top of the public holidays — factory calendars hold plant days as well as
+ * national ones. It is what makes the packaging Trade-off deadline span a
+ * weekend AND a holiday at the present. Invented for the demo, like every other
+ * row of this simulated load; the page marks the load "Sample data".
+ */
+export const SAMPLE_PLANT_SHUTDOWN_DAYS: readonly string[] = Object.freeze(['2026-09-02']);
+
+/**
  * The SAP factory calendar as the hub loaded it. ⚠️ **SIMULATED** — a fixture,
  * not an inbound message; `liveness` says so and the page renders it.
  *
@@ -69,7 +78,7 @@ export const SAP_FACTORY_CALENDAR = Object.freeze({
   coversTo: '2026-12-31',
   /** When the load arrived. A fixed instant — there is no feed to stamp it. */
   loadedAt: '2026-08-31T01:00:00.000Z',
-  nonWorkingDates: INDONESIA_HOLIDAYS_2026,
+  nonWorkingDates: Object.freeze([...INDONESIA_HOLIDAYS_2026, ...SAMPLE_PLANT_SHUTDOWN_DAYS].sort()),
 });
 
 /** Is `date` inside the year the SAP load covers? The verb's `readState`. */
@@ -104,8 +113,28 @@ export interface CalendarDayRuling {
   readonly setAt: string;
 }
 
-/** Rulings present before anybody acts — sample data, not a stored write. */
-export const SEEDED_CALENDAR_RULINGS: readonly CalendarDayRuling[] = Object.freeze([]);
+/**
+ * THE DEMO RULING (BL-48 demo data) — present before anybody acts; fixture
+ * data, not a stored write, so `reset()` keeps it.
+ *
+ * The administrator made Friday 4 September 2026 a non-working day: collective
+ * leave announced after the SAP load. SAP has it as a working day, so this is
+ * an OVERRIDE, and it is what moves the raw-material Trade-off deadline of the
+ * version published on Monday 31 August from Friday 4 to Monday 7 September
+ * (`forecastDeadline.bl48.test.ts`, BL48-DEMO-04). Seeded as a ruling rather
+ * than written into the SAP list, deliberately: the page must show it came from
+ * the administrator, with a reason. Attributed honestly — the platform cannot
+ * name a person.
+ */
+export const SEEDED_CALENDAR_RULINGS: readonly CalendarDayRuling[] = Object.freeze([
+  Object.freeze({
+    date: '2026-09-04',
+    kind: 'non-working' as const,
+    reason: 'Collective leave announced after the SAP load',
+    setBy: Object.freeze({ kind: 'UNATTRIBUTED' as const, reason: 'NO_PERSON_IN_SESSION' as const }),
+    setAt: '2026-08-31T02:00:00.000Z',
+  }),
+]);
 
 /** The one key. Beside `paragon.customRoles`, same envelope discipline. */
 export const WORKING_CALENDAR_KEY = 'paragon.workingCalendar';

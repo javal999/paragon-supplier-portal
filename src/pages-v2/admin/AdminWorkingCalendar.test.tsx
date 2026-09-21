@@ -43,21 +43,24 @@ describe('BL-50 · AdminWorkingCalendar', () => {
 
   it('BL50-PAGE-03 · recording a ruling dispatches the verb, lists the day as the administrator\'s, and keeps the record', async () => {
     renderWithProviders(<AdminWorkingCalendar />, { identity: BUYER });
-    expect(screen.queryByTestId('admin-cal-day-2026-09-02')).toBeNull();
-    expect(screen.getByTestId('admin-cal-history-empty')).toBeTruthy();
+    expect(screen.queryByTestId('admin-cal-day-2026-09-09')).toBeNull();
+    // The demo ruling (Friday 4 September) is on record before anybody acts.
+    expect(screen.getByTestId('admin-cal-ruling-2026-09-04')).toBeTruthy();
+    const before = workingCalendarStore.rulings().length;
 
-    fireEvent.change(screen.getByTestId('admin-cal-date'), { target: { value: '2026-09-02' } });
+    fireEvent.change(screen.getByTestId('admin-cal-date'), { target: { value: '2026-09-09' } });
     fireEvent.change(screen.getByTestId('admin-cal-kind'), { target: { value: 'non-working' } });
     fireEvent.change(screen.getByTestId('admin-cal-reason'), { target: { value: 'Plant shutdown for maintenance' } });
     fireEvent.click(screen.getByTestId('admin-cal-submit'));
 
-    const row = await screen.findByTestId('admin-cal-day-2026-09-02');
+    const row = await screen.findByTestId('admin-cal-day-2026-09-09');
     expect(within(row).getByText('Hub administrator')).toBeTruthy();
     expect(within(row).getByText('Overrides SAP')).toBeTruthy();
     expect(within(row).getByText('Plant shutdown for maintenance')).toBeTruthy();
-    const record = screen.getByTestId('admin-cal-ruling-2026-09-02');
+    const record = screen.getByTestId('admin-cal-ruling-2026-09-09');
     expect(within(record).getByText('Not attributed (no user directory)')).toBeTruthy();
-    expect(workingCalendarStore.rulings().map((r) => r.date)).toEqual(['2026-09-02']);
+    expect(workingCalendarStore.rulings()).toHaveLength(before + 1);
+    expect(workingCalendarStore.rulings().map((r) => r.date)).toContain('2026-09-09');
   });
 
   it('BL50-PAGE-05 · recording a holiday MOVES a deadline shown on the page that made it', async () => {
@@ -85,6 +88,6 @@ describe('BL-50 · AdminWorkingCalendar', () => {
       expect((screen.getByTestId('admin-cal-date') as HTMLInputElement).value).toBe('2026-08-17'),
     );
     expect((screen.getByTestId('admin-cal-kind') as HTMLSelectElement).value).toBe('working');
-    expect(workingCalendarStore.rulings()).toHaveLength(0);
+    expect(workingCalendarStore.rulings().map((r) => r.date)).not.toContain('2026-08-17');
   });
 });

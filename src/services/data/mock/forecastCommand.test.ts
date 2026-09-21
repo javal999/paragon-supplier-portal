@@ -312,8 +312,16 @@ describe('REQ-E06-03 BR-06 and REQ-E08-05 — reminders, escalation and the aler
     const dueSoon007 = (await linesFor(sup007)).filter((l) => deadlineState(l, now) === 'dueSoon');
     expect(dueSoon007.map((l) => `${l.materialCode}|${l.periodBucket}`)).toContain(`PK-PETB-8801|${W[3]}`);
     expect(dueSoon007.filter((l) => l.zone === 'firm')).toEqual([]);
-    const dueSoon002 = (await linesFor(sup002)).filter((l) => deadlineState(l, now) === 'dueSoon');
-    expect(dueSoon002.map((l) => `${l.materialCode}|${l.periodBucket}`)).toContain(`RM-EMUL-9410|${M[1]}`);
+    // ⚠️ PREMISE CHANGED BY THE BL-48 DEMO DATA: raw-material v2 used to be
+    // published four days ago and sup-002's changed Trade-off month was due
+    // soon here. It is now published THIS MORNING, so nothing of sup-002's is
+    // due soon yet: its awaiting Trade-off month is open, due Monday 7 September
+    // 10:00 WIB — the date the administrator's Friday ruling moved it to.
+    const lines002 = await linesFor(sup002);
+    expect(lines002.filter((l) => deadlineState(l, now) === 'dueSoon')).toEqual([]);
+    const emul = lines002.find((l) => l.materialCode === 'RM-EMUL-9410' && l.periodBucket === M[1])!;
+    expect(emul).toMatchObject({ zone: 'tradeOff', state: 'awaiting', dueAt: '2026-09-07T03:00:00.000Z' });
+    expect(deadlineState(emul, now)).toBe('open');
     // Both sides of the reminder instant: one millisecond before it no Trade-off
     // week of sup-007 is due soon; from it on, they are.
     const reminder = dueSoon007[0].reminderAt;

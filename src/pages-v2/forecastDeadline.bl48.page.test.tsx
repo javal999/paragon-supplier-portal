@@ -1,6 +1,8 @@
 import { screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { renderWithProviders, BUYER, SUPPLIER } from '../test/test-utils';
+import type { CurrentIdentity } from '../context/CurrentIdentityContext';
+import { NO_PERSON } from '../context/noPerson';
 import { SEEDED_SEAT_ROLES } from '../services/transitions/businessRoles';
 import { requirementResponseStore } from '../services/data/mock/stores/requirementResponseStore';
 import { forecastVersionStore, forecastViewStore } from '../services/data/mock/stores/forecastHubStores';
@@ -27,6 +29,15 @@ beforeEach(() => {
 });
 
 const PLANNER = { ...BUYER, businessRoles: SEEDED_SEAT_ROLES.buyer };
+const supplierSeat = (supplierId: string, supplierName: string): CurrentIdentity => ({
+  personaType: 'supplier',
+  supplierId,
+  supplierName,
+  businessRoles: SEEDED_SEAT_ROLES.supplier,
+  actor: NO_PERSON,
+});
+const SUP_002 = supplierSeat('sup-002', 'PT Sample Specialty Fats');
+const SUP_005 = supplierSeat('sup-005', 'PT Sample Distributor');
 
 describe('BL-48 · the supplier commitment screen', () => {
   it('BL48-UI-SUP-01 · a Firm period past its deadline is marked late, with how late', async () => {
@@ -52,6 +63,27 @@ describe('BL-48 · the supplier commitment screen', () => {
     const due = await screen.findByTestId(`fc-due-PK-PETB-8802-${W[4]}`);
     expect(due).toHaveAttribute('data-timing', 'submittedOnTime');
     expect(due).toHaveTextContent('Submitted on time');
+  });
+});
+
+describe('BL-48 · the demo states on the supplier screen', () => {
+  it('BL48-UI-SUP-04 · a Firm period due TOMORROW shows its deadline and the hours left (sup-005)', async () => {
+    renderWithProviders(<SupplierForecastCommitments />, { identity: SUP_005, route: '/supplier/forecasts' });
+    // Raw-material v2 was published this morning, Monday 10:00 WIB → due Tuesday
+    // 10:00 WIB (03:00Z); the present is Monday 12:00Z → 15 hours left.
+    const due = await screen.findByTestId('fc-due-RM-EMUL-9410-2026-09');
+    expect(due).toHaveAttribute('data-timing', 'open');
+    expect(due.textContent).toMatch(/^01 Sept? 2026, 10:00 WIB15 h left$/);
+  });
+
+  it('BL48-UI-SUP-05 · a commitment that arrived after its version\'s deadline reads "submitted late" (sup-002)', async () => {
+    renderWithProviders(<SupplierForecastCommitments />, { identity: SUP_002, route: '/supplier/forecasts' });
+    // Answered on raw-material v1 (published Monday 3 August 09:00 WIB, Firm due
+    // Tuesday 4 August 09:00) at 10:00 — carried forward, it keeps that verdict.
+    const due = await screen.findByTestId('fc-due-RM-EMUL-9410-2026-09');
+    expect(due).toHaveAttribute('data-timing', 'submittedLate');
+    expect(due).toHaveTextContent('04 Aug 2026, 09:00 WIB');
+    expect(due).toHaveTextContent('Submitted late by 1 h');
   });
 });
 

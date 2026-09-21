@@ -273,9 +273,21 @@ describe('Alert, Home tasks and the Order summary', () => {
     expect(await screen.findByTestId('home-task-commitments-due-soon')).toHaveTextContent('Forecast commitments due soon');
   });
 
-  it('supplier Home (sup-002): commitments due soon', async () => {
+  // ⚠️ PREMISE CHANGED BY THE BL-48 DEMO DATA: raw-material v2 is now published
+  // this morning (it was four days ago), so sup-002 has nothing due soon yet —
+  // the Home task that stood here is gone. The positive control is the deadline
+  // itself, on sup-002's commitment page: open, with time left.
+  it('supplier Home (sup-002): no commitment task yet — the raw-material version was published this morning', async () => {
+    const { unmount } = renderWithProviders(<SupplierForecastCommitments />, { identity: SUP_002, route: '/supplier/forecasts' });
+    const due = await screen.findByTestId('fc-due-RM-EMUL-9410-2026-10');
+    expect(due).toHaveAttribute('data-timing', 'open');
+    expect(due.textContent).toMatch(/07 Sept? 2026, 10:00 WIB/);
+    unmount();
     renderWithProviders(<SupplierHome />, { identity: SUP_002 });
-    expect(await screen.findByTestId('home-task-commitments-due-soon')).toHaveTextContent('Forecast commitments due soon');
+    // Control: Home's task area has rendered, so the absences below are real.
+    expect(await screen.findByTestId(/^home-(tasks|empty)$/)).toBeInTheDocument();
+    expect(screen.queryByTestId('home-task-commitments-due-soon')).toBeNull();
+    expect(screen.queryByTestId('home-task-commitments-overdue')).toBeNull();
     expect(screen.queryByTestId('home-task-new-forecast')).toBeNull(); // sup-002 opened version 2
   });
 

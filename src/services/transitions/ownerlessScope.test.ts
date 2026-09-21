@@ -185,7 +185,7 @@ async function realIds(): Promise<Record<string, string | null>> {
     enforcement: GOVERNED_CHECK_IDS[0],
     role: 'receiving',
     // BL-50 — `entityId` IS the date; any date the SAP load covers exists.
-    workingCalendar: '2026-09-02',
+    workingCalendar: '2026-09-09',
     supplierDocument: supplierDocumentStore.all()[0]?.id ?? null,
     supplierApplication: raised.entityId ?? null,
     receiptDiscrepancy: receiptDiscrepancyStore.all()[0]?.receiptId ?? null,
@@ -269,7 +269,7 @@ async function walk(entity: string, t: TransitionDef): Promise<Walk | null> {
   }
   if (entity === 'enforcement') return at(GOVERNED_CHECK_IDS[0], 'Governed');
   if (entity === 'role') return at('receiving', 'Defined');
-  if (entity === 'workingCalendar') return at('2026-09-02', 'Maintained');
+  if (entity === 'workingCalendar') return at('2026-09-09', 'Maintained');
   if (entity === 'supplierApplication') {
     const raised = await svc.dispatch(buyerSeat('procurement'), {
       transitionId: 't_application_submit', entity,
@@ -513,11 +513,11 @@ describe('THE LEGITIMATE PATHS — the half a "refuse everyone" fix would break'
 
     // BL-50 — the Hub administrator's lane (compliance) can still rule a day.
     const calRes = await svc.dispatch(buyerSeat('compliance'), {
-      transitionId: 't_calendar_day_set', entity: 'workingCalendar', entityId: '2026-09-02',
+      transitionId: 't_calendar_day_set', entity: 'workingCalendar', entityId: '2026-09-09',
       payload: { kind: 'non-working', reason: 'Probe of the owner-less scope gate', setBy: NO_PERSON },
     });
     expect(calRes.status, calRes.reason).toBe('done');
-    expect(workingCalendarStore.rulings().map((r) => r.date)).toContain('2026-09-02');
+    expect(workingCalendarStore.rulings().map((r) => r.date)).toContain('2026-09-09');
 
     const raised = await svc.dispatch(buyerSeat('procurement'), {
       transitionId: 't_application_submit', entity: 'supplierApplication',

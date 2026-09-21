@@ -70,12 +70,12 @@ describe('BL-50 · t_calendar_day_set — the recorded act', () => {
   });
 
   it('BL50-VERB-02 · the administrator lane records a ruling, and it changes the calendar in force', async () => {
-    expect(isWorkingDay('2026-09-02', hubWorkingCalendar())).toBe(true); // control
-    const r = await svc.dispatch(seat('compliance'), rule('2026-09-02'));
+    expect(isWorkingDay('2026-09-09', hubWorkingCalendar())).toBe(true); // control
+    const r = await svc.dispatch(seat('compliance'), rule('2026-09-09'));
     expect(r.status, r.reason).toBe('done');
-    expect(isWorkingDay('2026-09-02', hubWorkingCalendar())).toBe(false);
+    expect(isWorkingDay('2026-09-09', hubWorkingCalendar())).toBe(false);
     expect(workingCalendarStore.rulings()[workingCalendarStore.rulings().length - 1]).toMatchObject({
-      date: '2026-09-02',
+      date: '2026-09-09',
       kind: 'non-working',
       reason: 'Plant shutdown for maintenance',
       setBy: NOBODY,
@@ -83,7 +83,7 @@ describe('BL-50 · t_calendar_day_set — the recorded act', () => {
   });
 
   it('BL50-VERB-03 · the ruling lands in the DR-10 trail', async () => {
-    await svc.dispatch(seat('compliance'), rule('2026-09-02'));
+    await svc.dispatch(seat('compliance'), rule('2026-09-09'));
     const events = commandAuditSink.byEvent('t_calendar_day_set');
     expect(events).toHaveLength(1);
     expect(events[0].outcome).toBe('done');
@@ -91,8 +91,8 @@ describe('BL-50 · t_calendar_day_set — the recorded act', () => {
   });
 
   it('BL50-VERB-04 · setAt is minted by the store; a payload setAt is ignored', async () => {
-    await svc.dispatch(seat('compliance'), rule('2026-09-02', { setAt: '1999-01-01T00:00:00.000Z' }));
-    expect(workingCalendarStore.rulings()[0]?.setAt).not.toBe('1999-01-01T00:00:00.000Z');
+    await svc.dispatch(seat('compliance'), rule('2026-09-09', { setAt: '1999-01-01T00:00:00.000Z' }));
+    expect(workingCalendarStore.rulings()[workingCalendarStore.rulings().length - 1]?.setAt).not.toBe('1999-01-01T00:00:00.000Z');
   });
 });
 
@@ -112,53 +112,55 @@ describe('BL-50 · who may rule — the role atom, both ways', () => {
   });
 
   it('BL50-ROLE-02 · the Hub administrator seat (admin) can rule a day', async () => {
-    const r = await svc.dispatch(seat('admin'), rule('2026-09-02'));
+    const r = await svc.dispatch(seat('admin'), rule('2026-09-09'));
     expect(r.status, r.reason).toBe('done');
   });
 
   it('BL50-ROLE-03 · a planner is refused at the ROLE gate — a party may not set the clock it is timed on', async () => {
-    const r = await svc.dispatch(seat('planning'), rule('2026-09-02'));
+    const r = await svc.dispatch(seat('planning'), rule('2026-09-09'));
     expect(r.status).toBe('failed');
     expect(r.reason).toMatch(/^ROLE_NOT_PERMITTED/);
-    expect(isWorkingDay('2026-09-02', hubWorkingCalendar())).toBe(true);
+    expect(isWorkingDay('2026-09-09', hubWorkingCalendar())).toBe(true);
   });
 
   it('BL50-ROLE-04 · procurement is refused at the ROLE gate', async () => {
-    const r = await svc.dispatch(seat('procurement'), rule('2026-09-02'));
+    const r = await svc.dispatch(seat('procurement'), rule('2026-09-09'));
     expect(r.reason).toMatch(/^ROLE_NOT_PERMITTED/);
   });
 
   it('BL50-ROLE-05 · a supplier is refused, and nothing is recorded', async () => {
-    expect(await outcomeOf(supplier, rule('2026-09-02'))).toBe('throw/SCOPE_DENIED');
-    expect(workingCalendarStore.rulings()).toHaveLength(0);
+    const before = workingCalendarStore.rulings().length;
+    expect(await outcomeOf(supplier, rule('2026-09-09'))).toBe('throw/SCOPE_DENIED');
+    expect(workingCalendarStore.rulings()).toHaveLength(before);
   });
 });
 
 describe('BL-50 · the policy — each refusal names what it refused', () => {
   it('BL50-POL-01 · a date outside the SAP load is NOT_FOUND, never a silently created ruling', async () => {
+    const before = workingCalendarStore.rulings().length;
     expect(await outcomeOf(seat('compliance'), rule('2027-01-04'))).toBe('throw/NOT_FOUND');
-    expect(workingCalendarStore.rulings()).toHaveLength(0);
+    expect(workingCalendarStore.rulings()).toHaveLength(before);
   });
 
   it('BL50-POL-02 · a kind that is neither working nor non-working is refused', async () => {
-    const r = await svc.dispatch(seat('compliance'), rule('2026-09-02', { kind: 'holiday' }));
+    const r = await svc.dispatch(seat('compliance'), rule('2026-09-09', { kind: 'holiday' }));
     expect(r.reason).toMatch(/kind 'holiday'/);
   });
 
   it('BL50-POL-03 · a blank reason is refused — presence is not substance', async () => {
-    const r = await svc.dispatch(seat('compliance'), rule('2026-09-02', { reason: '   ' }));
+    const r = await svc.dispatch(seat('compliance'), rule('2026-09-09', { reason: '   ' }));
     expect(r.status).toBe('failed');
     expect(r.reason).toMatch(/reason/);
   });
 
   it('BL50-POL-04 · a malformed attribution is refused', async () => {
-    const r = await svc.dispatch(seat('compliance'), rule('2026-09-02', { setBy: { kind: 'SYSTEM' } }));
+    const r = await svc.dispatch(seat('compliance'), rule('2026-09-09', { setBy: { kind: 'SYSTEM' } }));
     expect(r.reason).toMatch(/setBy/);
   });
 
   it('BL50-POL-05 · a working ruling on a Saturday is accepted (a make-up day)', async () => {
-    const r = await svc.dispatch(seat('compliance'), rule('2026-09-05', { kind: 'working', reason: 'Make-up working day' }));
+    const r = await svc.dispatch(seat('compliance'), rule('2026-09-12', { kind: 'working', reason: 'Make-up working day' }));
     expect(r.status, r.reason).toBe('done');
-    expect(isWorkingDay('2026-09-05', hubWorkingCalendar())).toBe(true);
+    expect(isWorkingDay('2026-09-12', hubWorkingCalendar())).toBe(true);
   });
 });

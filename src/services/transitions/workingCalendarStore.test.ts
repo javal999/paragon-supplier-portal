@@ -37,9 +37,9 @@ describe('BL-50 · the pure ruling application (lib)', () => {
   });
 
   it('BL50-CAL-02 · a non-working ruling on a weekday makes it a holiday', () => {
-    const cal = withDayRulings(DEFAULT_WORKING_CALENDAR, [{ date: '2026-09-02', kind: 'non-working' }]);
-    expect(isWorkingDay('2026-09-02', DEFAULT_WORKING_CALENDAR)).toBe(true); // control: SAP says working
-    expect(isWorkingDay('2026-09-02', cal)).toBe(false);
+    const cal = withDayRulings(DEFAULT_WORKING_CALENDAR, [{ date: '2026-09-09', kind: 'non-working' }]);
+    expect(isWorkingDay('2026-09-09', DEFAULT_WORKING_CALENDAR)).toBe(true); // control: SAP says working
+    expect(isWorkingDay('2026-09-09', cal)).toBe(false);
   });
 
   it('BL50-CAL-03 · a working ruling on a listed holiday makes it a working day', () => {
@@ -49,18 +49,18 @@ describe('BL-50 · the pure ruling application (lib)', () => {
   });
 
   it('BL50-CAL-04 · a working ruling on a Saturday makes it a make-up working day', () => {
-    const cal = withDayRulings(DEFAULT_WORKING_CALENDAR, [{ date: '2026-09-05', kind: 'working' }]);
-    expect(isWorkingDay('2026-09-05', DEFAULT_WORKING_CALENDAR)).toBe(false); // control: a Saturday
-    expect(isWorkingDay('2026-09-05', cal)).toBe(true);
-    expect(isWorkingDay('2026-09-06', cal)).toBe(false); // the Sunday beside it is untouched
+    const cal = withDayRulings(DEFAULT_WORKING_CALENDAR, [{ date: '2026-09-12', kind: 'working' }]);
+    expect(isWorkingDay('2026-09-12', DEFAULT_WORKING_CALENDAR)).toBe(false); // control: a Saturday
+    expect(isWorkingDay('2026-09-12', cal)).toBe(true);
+    expect(isWorkingDay('2026-09-13', cal)).toBe(false); // the Sunday beside it is untouched
   });
 
   it('BL50-CAL-05 · the latest ruling for a date decides it', () => {
     const cal = withDayRulings(DEFAULT_WORKING_CALENDAR, [
-      { date: '2026-09-02', kind: 'non-working' },
-      { date: '2026-09-02', kind: 'working' },
+      { date: '2026-09-09', kind: 'non-working' },
+      { date: '2026-09-09', kind: 'working' },
     ]);
-    expect(isWorkingDay('2026-09-02', cal)).toBe(true);
+    expect(isWorkingDay('2026-09-09', cal)).toBe(true);
   });
 });
 
@@ -68,16 +68,16 @@ describe('BL-50 · the calendar in force (store)', () => {
   it('BL50-CAL-06 · with no rulings the hub calendar is the SAP load', () => {
     const cal = hubWorkingCalendar();
     for (const date of SAP_FACTORY_CALENDAR.nonWorkingDates) expect(isWorkingDay(date, cal), date).toBe(false);
-    expect(isWorkingDay('2026-09-01', cal)).toBe(true);
+    expect(isWorkingDay('2026-09-08', cal)).toBe(true);
   });
 
   it('BL50-CAL-07 · A HOLIDAY ADDED BY THE ADMINISTRATOR MOVES A DEADLINE', () => {
-    // Monday 31 August 2026, 10:00 WIB. One working day later is Tuesday 10:00.
-    const published = '2026-08-31T03:00:00.000Z';
-    expect(addWorkingDays(published, 1, hubWorkingCalendar()).toISOString()).toBe('2026-09-01T03:00:00.000Z');
-    workingCalendarStore.append(ruling('2026-09-01', 'non-working'));
+    // Monday 7 September 2026, 10:00 WIB. One working day later is Tuesday 10:00.
+    const published = '2026-09-07T03:00:00.000Z';
+    expect(addWorkingDays(published, 1, hubWorkingCalendar()).toISOString()).toBe('2026-09-08T03:00:00.000Z');
+    workingCalendarStore.append(ruling('2026-09-08', 'non-working'));
     // Tuesday is now a holiday, so the deadline moves to Wednesday 10:00.
-    expect(addWorkingDays(published, 1, hubWorkingCalendar()).toISOString()).toBe('2026-09-02T03:00:00.000Z');
+    expect(addWorkingDays(published, 1, hubWorkingCalendar()).toISOString()).toBe('2026-09-09T03:00:00.000Z');
   });
 
   it('BL50-CAL-08 · removing a day (ruling it working) moves a deadline earlier', () => {
@@ -90,10 +90,10 @@ describe('BL-50 · the calendar in force (store)', () => {
   });
 
   it('BL50-CAL-09 · a ruling survives a reload (persisted in this browser)', () => {
-    workingCalendarStore.append(ruling('2026-09-02', 'non-working'));
+    workingCalendarStore.append(ruling('2026-09-09', 'non-working'));
     workingCalendarStore.rehydrate();
-    expect(isWorkingDay('2026-09-02', hubWorkingCalendar())).toBe(false);
-    expect(workingCalendarStore.rulings().map((r) => r.date)).toContain('2026-09-02');
+    expect(isWorkingDay('2026-09-09', hubWorkingCalendar())).toBe(false);
+    expect(workingCalendarStore.rulings().map((r) => r.date)).toContain('2026-09-09');
   });
 
   it('BL50-CAL-10 · an unparseable store reads as UNREADABLE, never as "no rulings"', () => {
@@ -108,26 +108,27 @@ describe('BL-50 · the calendar in force (store)', () => {
       JSON.stringify({
         v: 1,
         rulings: [
-          { ...ruling('2026-09-02', 'non-working') },
+          { ...ruling('2026-09-09', 'non-working') },
           { ...ruling('2027-01-04', 'non-working') }, // outside the SAP load
-          { ...ruling('2026-09-03', 'non-working'), reason: '  ' }, // no reason
+          { ...ruling('2026-09-10', 'non-working'), reason: '  ' }, // no reason
         ],
       }),
     );
     workingCalendarStore.rehydrate();
     const state = workingCalendarStore.readState();
     expect(state.unreadable).toBe(false);
-    expect(state.rulings.map((r) => r.date)).toEqual(['2026-09-02']);
-    expect(state.rejected.map((r) => r.row)).toEqual(['2027-01-04', '2026-09-03']);
+    // The seeded demo ruling (Friday 4 September) comes first; it is fixture data.
+    expect(state.rulings.map((r) => r.date)).toEqual(['2026-09-04', '2026-09-09']);
+    expect(state.rejected.map((r) => r.row)).toEqual(['2027-01-04', '2026-09-10']);
     expect(state.rejected[0].reason).toMatch(/outside the calendar loaded from SAP/);
   });
 
   it('BL50-CAL-12 · the verb\'s refusals, both ways (known-good passes, each bad input names itself)', () => {
-    expect(calendarRulingRefusal('2026-09-02', 'non-working', 'Plant shutdown')).toBeNull();
+    expect(calendarRulingRefusal('2026-09-09', 'non-working', 'Plant shutdown')).toBeNull();
     expect(calendarRulingRefusal('2026-02-30', 'non-working', 'Plant shutdown')).toMatch(/not a date/);
     expect(calendarRulingRefusal('2027-01-04', 'non-working', 'Plant shutdown')).toMatch(/outside/);
-    expect(calendarRulingRefusal('2026-09-02', 'holiday', 'Plant shutdown')).toMatch(/kind/);
-    expect(calendarRulingRefusal('2026-09-02', 'working', ' ')).toMatch(/reason/);
+    expect(calendarRulingRefusal('2026-09-09', 'holiday', 'Plant shutdown')).toMatch(/kind/);
+    expect(calendarRulingRefusal('2026-09-09', 'working', ' ')).toMatch(/reason/);
   });
 
   it('BL50-CAL-13 · coverage is the year the SAP load carries', () => {
@@ -138,29 +139,29 @@ describe('BL-50 · the calendar in force (store)', () => {
   });
 
   it('BL50-CAL-14 · the page list names where each day came from, and shows an override as one', () => {
-    workingCalendarStore.append(ruling('2026-09-02', 'non-working'));
+    workingCalendarStore.append(ruling('2026-09-09', 'non-working'));
     const days = listedCalendarDays();
     const sap = days.find((d) => d.date === '2026-08-17');
-    const ruled = days.find((d) => d.date === '2026-09-02');
+    const ruled = days.find((d) => d.date === '2026-09-09');
     expect(sap).toMatchObject({ source: 'sap', working: false, sapWorking: false, ruling: null });
     expect(ruled).toMatchObject({ source: 'administrator', working: false, sapWorking: true });
     expect(ruled?.ruling?.reason).toBe('Plant shutdown for maintenance');
     // An ordinary working day is not listed.
-    expect(days.find((d) => d.date === '2026-09-01')).toBeUndefined();
-    expect(calendarDay('2026-09-01')).toMatchObject({ working: true, source: 'sap', weekday: 2 });
+    expect(days.find((d) => d.date === '2026-09-08')).toBeUndefined();
+    expect(calendarDay('2026-09-08')).toMatchObject({ working: true, source: 'sap', weekday: 2 });
   });
 
   it('BL50-CAL-15 · the SAP base is DEFAULT plus the load, and is not mutated by a ruling', () => {
-    workingCalendarStore.append(ruling('2026-09-02', 'non-working'));
+    workingCalendarStore.append(ruling('2026-09-09', 'non-working'));
     hubWorkingCalendar();
-    expect(isWorkingDay('2026-09-02', SAP_BASE_CALENDAR)).toBe(true);
+    expect(isWorkingDay('2026-09-09', SAP_BASE_CALENDAR)).toBe(true);
   });
 
   it('BL50-CAL-16 · subscribers hear a ruling, and the version moves', () => {
     let heard = 0;
     const off = workingCalendarStore.subscribe(() => (heard += 1));
     const before = workingCalendarStore.version();
-    workingCalendarStore.append(ruling('2026-09-02', 'non-working'));
+    workingCalendarStore.append(ruling('2026-09-09', 'non-working'));
     off();
     expect(heard).toBe(1);
     expect(workingCalendarStore.version()).toBeGreaterThan(before);

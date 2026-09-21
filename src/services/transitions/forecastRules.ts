@@ -33,7 +33,7 @@ import type {
   RequirementResponse,
 } from '../sdc/types';
 import type { CapacityReason, CommitmentState, ForecastCommitmentLine, ForecastZone } from '../data/types';
-import { addWorkingDays } from '../../lib/workingCalendar';
+import { addWorkingDays, type WorkingCalendar } from '../../lib/workingCalendar';
 import { hubWorkingCalendar } from './workingCalendarStore';
 import { normalizeQty } from '../../lib/localeNumber';
 import {
@@ -397,9 +397,13 @@ export function toleranceOutcome(zone: ForecastZone, forecastQty: number, commit
  * Trade-off and Forecast periods 3 working days after. Both count on the hub's
  * working calendar (BL-50), so a holiday the administrator adds moves them.
  */
-export function commitmentDueAt(zone: ForecastZone, publishedAt: string): string {
+export function commitmentDueAt(
+  zone: ForecastZone,
+  publishedAt: string,
+  cal: WorkingCalendar = hubWorkingCalendar(),
+): string {
   const days = zone === 'firm' ? FIRM_DEADLINE_WORKING_DAYS : OTHER_DEADLINE_WORKING_DAYS;
-  return addWorkingDays(publishedAt, days, hubWorkingCalendar()).toISOString();
+  return addWorkingDays(publishedAt, days, cal).toISOString();
 }
 
 /** REQ-E06-03 BR-06 — the first reminder, at half the time to the deadline. */
