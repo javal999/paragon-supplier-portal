@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Info, Lock, Users, ArrowRight, Search, AlertTriangle } from 'lucide-react';
 import AppShellV2 from '../components/layout-v2/AppShellV2';
+import { rowActivation, ROW_FOCUS_CLASS } from '../components/ui-v2/TableRow';
 import { deriveRoleViews, roleTotals, type RoleView } from './roles/roleModel';
 import CreateRolePanel from './roles/CreateRolePanel';
 import { customRoleStore } from '../services/transitions/customRoles';
@@ -56,11 +57,15 @@ const RoleRow: React.FC<{ role: RoleView }> = ({ role }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
+  const open = () => navigate(`/buyer/roles/${role.id}`);
   return (
+    // BL-31: the row is the only way into a role's detail, so it is keyboard
+    // operable through the same helper TableRow uses.
     <tr
-      className="border-t border-border-subtle hover:bg-bg-hover cursor-pointer"
+      className={`border-t border-border-subtle hover:bg-bg-hover ${ROW_FOCUS_CLASS}`}
       data-testid={`role-row-${role.id}`}
-      onClick={() => navigate(`/buyer/roles/${role.id}`)}
+      onClick={open}
+      {...rowActivation(open)}
     >
       <td className="py-3 px-4 align-middle">
         <span className="font-mono text-xs text-data-navy">{role.id}</span>

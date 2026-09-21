@@ -8,6 +8,9 @@ export const hubEn: Record<string, string> = {
   // Persona switch (NV-02)
   'hub.persona.pti': 'PTI',
   'hub.persona.supplier': 'Supplier',
+  // BL-31 — accessible names (not visible copy).
+  'hub.persona.groupLabel': 'Portal view',
+  'hub.nav.primaryLabel': 'Main navigation',
 
   // Sections
   'hub.nav.section.home': 'Home',
@@ -138,6 +141,8 @@ export const hubEn: Record<string, string> = {
 export const hubId: Record<string, string> = {
   'hub.persona.pti': 'PTI',
   'hub.persona.supplier': 'Pemasok',
+  'hub.persona.groupLabel': 'Tampilan portal',
+  'hub.nav.primaryLabel': 'Navigasi utama',
 
   'hub.nav.section.home': 'Beranda',
   'hub.nav.section.orders': 'Kolaborasi pesanan',

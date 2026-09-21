@@ -30,9 +30,11 @@ const PageHeader: React.FC<PageHeaderProps> = ({
   actions,
 }) => {
   const inRouter = useInRouterContext();
+  // BL-31 (WCAG 1.4.10): wraps, so at narrow widths the actions drop below the
+  // title instead of squeezing the h1 to zero width.
   return (
-    <div className="flex items-start justify-between gap-4 mb-8">
-      <div className="min-w-0">
+    <div className="flex flex-wrap items-start justify-between gap-4 mb-8">
+      <div className="min-w-0 flex-1 basis-72">
         <div className="text-eyebrow text-text-tertiary uppercase">
           {inRouter ? <SectionCrumb fallback={breadcrumb} /> : breadcrumb.join(' · ')}
         </div>
