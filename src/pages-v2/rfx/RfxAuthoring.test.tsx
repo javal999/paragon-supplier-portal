@@ -6,7 +6,6 @@
 // "Create a proposal request from this" landing in a pre-filled RFP wizard.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import React from 'react';
 import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { renderWithProviders, BUYER } from '../../test/test-utils';
