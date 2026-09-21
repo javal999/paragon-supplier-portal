@@ -11,6 +11,7 @@ import type {
 import { useCallOffs, useASNs, useGoodsReceipts } from '../../services/query/hooks';
 import { callOffViews } from '../../services/transitions/callOffRules';
 import { formatDate } from '../../lib/format';
+import type { CallOffConfirmation } from '../../services/data/types';
 import { sdcClock } from '../../services/sdc';
 import { normalizeQty } from '../../lib/localeNumber';
 
@@ -110,22 +111,36 @@ export const ToleranceFindings: React.FC<{
   );
 };
 
-/** The same findings as short tags, for a table row. */
-export const ToleranceTags: React.FC<{ check: ToleranceCheck; uom: string; testId?: string }> = ({
-  check,
-  uom,
-  testId,
-}) => {
+/**
+ * The same findings as short tags, for a table row. The finding is the rule's;
+ * the verdict beside it is the call-off's own: a finding that needs approval
+ * reads "approved by PTI" once the planner has approved it, never "needs
+ * approval" on an answer that is already accepted.
+ */
+export const ToleranceTags: React.FC<{
+  check: ToleranceCheck;
+  uom: string;
+  approval: CallOffConfirmation['approval'];
+  testId?: string;
+}> = ({ check, uom, approval, testId }) => {
   const { t } = useTranslation();
   const tags = check.findings.filter((f) => f.kind !== 'asRequested');
   if (tags.length === 0) return null;
+  const verdictOf = (f: ToleranceFinding) =>
+    !f.needsApproval ? 'accepted' : approval === 'approved' ? 'approved' : 'needsApproval';
   return (
     <div data-testid={testId} className="mt-1 space-y-0.5">
       {tags.map((f, i) => (
-        <div key={i} className={`text-[11px] ${f.needsApproval ? 'text-warning-hover' : 'text-text-tertiary'}`}>
-          {t(`co.tol.tag.${f.kind === 'early' && !f.needsApproval ? 'earlyWithin' : f.kind}`, {
-            qty: f.qty === undefined ? '' : `${qty(f.qty)} ${uom}`,
-            pct: f.pct ?? 0,
+        <div
+          key={i}
+          className={`text-[11px] ${verdictOf(f) === 'needsApproval' ? 'text-warning-hover' : 'text-text-tertiary'}`}
+        >
+          {t('co.tol.tagLine', {
+            finding: t(`co.tol.tag.${f.kind}`, {
+              qty: f.qty === undefined ? '' : `${qty(f.qty)} ${uom}`,
+              pct: f.pct ?? 0,
+            }),
+            verdict: t(`co.tol.verdict.${verdictOf(f)}`),
           })}
         </div>
       ))}

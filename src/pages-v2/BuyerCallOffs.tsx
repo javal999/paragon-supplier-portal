@@ -443,10 +443,11 @@ const BuyerCallOffs: React.FC = () => {
                         <TableCell>
                           <ConfirmationPill status={v.confirmation} />
                           {/* CR-05 — the rule that decided this confirmation. */}
-                          {v.tolerance && (
+                          {v.tolerance && v.callOff.confirmation && (
                             <ToleranceTags
                               check={v.tolerance}
                               uom={v.callOff.uom}
+                              approval={v.callOff.confirmation.approval}
                               testId={`calloff-tol-${v.callOff.id}`}
                             />
                           )}

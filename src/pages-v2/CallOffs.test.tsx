@@ -314,6 +314,20 @@ describe('CR-04 on the screens — release by remaining quantity, value only wit
     expect(screen.getByTestId('calloff-tol-co-0017')).toHaveTextContent('200 PCS over (5%), accepted');
   });
 
+  // Found in the built app, not by a spec: once the planner approved the
+  // earlier-date answer, its row still read "needs approval". The finding is the
+  // rule's; the verdict is the call-off's.
+  it('after the planner approves CO-2026-0014, its row says approved — not "needs approval"', async () => {
+    renderWithProviders(<BuyerCallOffs />, { identity: PLANNER });
+    fireEvent.click(within(await screen.findByTestId('calloff-row-co-0014')).getByRole('button', { name: /Review/ }));
+    fireEvent.click(within(panel().getByTestId('calloff-review')).getByRole('button', { name: 'Approve' }));
+    await waitFor(() => expect(callOffStore.get('co-0014')!.confirmation?.approval).toBe('approved'));
+    await waitFor(() =>
+      expect(screen.getByTestId('calloff-tol-co-0014')).toHaveTextContent('408 PCS over (5.1%), approved by PTI'),
+    );
+    expect(screen.getByTestId('calloff-tol-co-0014')).not.toHaveTextContent('needs approval');
+  });
+
   it('…and on the supplier rows', async () => {
     renderWithProviders(<SupplierCallOffs />, { identity: SUPPLIER });
     expect(await screen.findByTestId('supplier-calloff-tol-co-0014')).toHaveTextContent('needs approval');

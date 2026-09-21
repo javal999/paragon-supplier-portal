@@ -268,8 +268,13 @@ const SupplierCallOffs: React.FC = () => {
                     <ConfirmationPill status={v.confirmation} />
                     {/* CR-05 — the rule that decided this confirmation, on the row
                         the supplier is reading, not only inside the panel. */}
-                    {v.tolerance && (
-                      <ToleranceTags check={v.tolerance} uom={c.uom} testId={`supplier-calloff-tol-${c.id}`} />
+                    {v.tolerance && c.confirmation && (
+                      <ToleranceTags
+                        check={v.tolerance}
+                        uom={c.uom}
+                        approval={c.confirmation.approval}
+                        testId={`supplier-calloff-tol-${c.id}`}
+                      />
                     )}
                   </TableCell>
                   <TableCell>
