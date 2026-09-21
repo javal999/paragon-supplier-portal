@@ -209,11 +209,8 @@ const RfxQuestionEditor: React.FC<RfxQuestionEditorProps> = ({
                         {t(`rfx.qtype.${q.type}`)}
                       </StatusPill>
                       {q.type === 'priceRange' && <IndicativePill className="ml-2" />}
-                      {q.required && (
-                        <StatusPill variant="neutral" className="ml-2">
-                          {t('rfx.rfi.required')}
-                        </StatusPill>
-                      )}
+                      {/* The required flag is the checkbox on the right — a
+                          pill as well would say it twice. */}
                     </span>
                     {q.help && <p className="text-xs text-text-tertiary mt-0.5">{authored(t, q.help)}</p>}
                     {isChoiceType(q.type) && (
