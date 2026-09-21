@@ -11,14 +11,58 @@
 // Every prompt, option and term is an i18n KEY, never a literal: SC-04 is
 // business language in EN and ID, and a string authored here in English would
 // be a screen half the users cannot read.
+//
+// ⚠️ **CE-04 IS REVERSED (owner decision D2, 2026-09-21).** Buyers may now save
+// an RFI or RFP as a template and start from one, or copy a past event. That
+// store is `rfxTemplates.ts` (browser storage, the `customRoles` pattern). The
+// category-family templates below are unchanged and stay the SYSTEM templates:
+// Procurement's, read-only, and the library a buyer's own template starts from.
 // ────────────────────────────────────────────────────────────────────────────
 
 import type {
   RfiQuestion,
+  RfiQuestionType,
+  RfiSectionId,
   RfiTemplate,
   RfpTermDefinition,
   RfpTermGroup,
+  RfpTermRow,
+  RfpTermValueKind,
+  RfxCustomSection,
 } from './types';
+
+/**
+ * The question kinds this build can render, validate and score. Named as DATA
+ * so the create verb proves MEMBERSHIP rather than presence: an off-list token
+ * is refused by name instead of stored as a kind no surface can draw.
+ *
+ * i18n-defer: answer-kind IDS off the `RfiQuestionType` union, not copy. The
+ * words a buyer reads are `t('rfx.qtype.<kind>')`.
+ */
+export const RFX_QUESTION_TYPES: readonly RfiQuestionType[] = [
+  'text',
+  'longText',
+  'yesNo',
+  'singleChoice',
+  'multipleChoice',
+  'numberWithUnit',
+  'money',
+  'percentage',
+  'date',
+  'attachment',
+  'priceRange',
+];
+
+/** Question kinds whose answer is a pick from an option list. */
+export const isChoiceType = (type: RfiQuestionType): boolean =>
+  type === 'singleChoice' || type === 'multipleChoice';
+
+/** Question kinds that carry an optional min / max. */
+export const isBoundedType = (type: RfiQuestionType): boolean =>
+  type === 'numberWithUnit' || type === 'money' || type === 'percentage';
+
+/** Is this id a buyer-added section (`custom-…`)? */
+export const isCustomSectionId = (id: string): id is RfxCustomSection['id'] => id.startsWith('custom-');
 
 /**
  * REQ-E03-01 BR-01 — the SAP MM purchasing groups (EKGRP) the supplier master
@@ -316,13 +360,18 @@ export const RFX_CATEGORY_FAMILIES: readonly {
 /** A category family by id, or undefined. */
 export const rfxCategoryFamily = (id: string) => RFX_CATEGORY_FAMILIES.find((f) => f.id === id);
 
+/** The family whose supplier-master category an event was raised under, or undefined. */
+export const rfxFamilyForCategory = (materialCategory: string) =>
+  RFX_CATEGORY_FAMILIES.find((f) => f.supplierCategory === materialCategory);
+
 /**
  * THE CENTRAL QUESTION LIBRARY — every question any template carries, once.
  *
  * CE-03 / CE-05: this is what "add from the library" offers, and adding from it
  * copies the question ONTO ONE EVENT. Nothing in the app writes here; the
  * library changes when Procurement asks IT to change this file (CE-05), which
- * is why there is no admin screen and no save-as-template (CE-04).
+ * is why there is no admin screen. A buyer's saved template (D2, reversing
+ * CE-04) is a COPY of questions into the buyer's own store; it never writes here.
  */
 export const RFI_QUESTION_LIBRARY: readonly RfiQuestion[] = RFI_TEMPLATES.flatMap(
   (tpl) => tpl.questions,
@@ -337,6 +386,26 @@ export const RFI_SECTION_ORDER = [
   'compliance',
   'event',
 ] as const;
+
+/**
+ * One section as a surface renders it: a template section (title from i18n) or
+ * a buyer-added one (title in the buyer's words).
+ */
+export type RfxSectionView =
+  | { readonly id: RfiSectionId; readonly kind: 'template' }
+  | { readonly id: RfxCustomSection['id']; readonly kind: 'custom'; readonly title: string };
+
+/**
+ * Every section an event renders, in order: the template's A–F, then the
+ * buyer's own sections in the order they were added. ONE function so the
+ * wizard, the supplier form and the comparison cannot disagree on the order.
+ */
+export function rfxSectionsOf(customSections: readonly RfxCustomSection[] = []): readonly RfxSectionView[] {
+  return [
+    ...RFI_SECTION_ORDER.map((id) => ({ id, kind: 'template' as const })),
+    ...customSections.map((s) => ({ id: s.id, kind: 'custom' as const, title: s.title })),
+  ];
+}
 
 // ── The RFP standard term list (REQ-E03-04) ─────────────────────────────────
 
@@ -356,17 +425,31 @@ export const RFP_TERM_GROUP_ORDER: readonly RfpTermGroup[] = [
  * is a NUMBER, and CR-15 scores those axes and nothing else here.
  */
 export const RFP_STANDARD_TERMS: readonly RfpTermDefinition[] = [
-  { id: 'priceBasis', group: 'price', labelKey: 'rfx.term.priceBasis', scorable: 'price' },
+  {
+    id: 'priceBasis',
+    group: 'price',
+    labelKey: 'rfx.term.priceBasis',
+    scorable: 'price',
+    valueKind: 'numberWithUnit',
+    unitKey: 'rfx.unit.perUnitPrice',
+  },
   { id: 'priceValidity', group: 'price', labelKey: 'rfx.term.priceValidity' },
   { id: 'priceAdjustment', group: 'price', labelKey: 'rfx.term.priceAdjustment' },
   { id: 'volumeDiscount', group: 'price', labelKey: 'rfx.term.volumeDiscount' },
   { id: 'paymentTerms', group: 'payment', labelKey: 'rfx.term.paymentTerms' },
   { id: 'currency', group: 'payment', labelKey: 'rfx.term.currency' },
   { id: 'incoterms', group: 'delivery', labelKey: 'rfx.term.incoterms' },
-  { id: 'leadTime', group: 'delivery', labelKey: 'rfx.term.leadTime', scorable: 'leadTime' },
+  {
+    id: 'leadTime',
+    group: 'delivery',
+    labelKey: 'rfx.term.leadTime',
+    scorable: 'leadTime',
+    valueKind: 'numberWithUnit',
+    unitKey: 'rfx.unit.days',
+  },
   { id: 'moq', group: 'delivery', labelKey: 'rfx.term.moq' },
   { id: 'allocation', group: 'delivery', labelKey: 'rfx.term.allocation' },
-  { id: 'consignment', group: 'delivery', labelKey: 'rfx.term.consignment' },
+  { id: 'consignment', group: 'delivery', labelKey: 'rfx.term.consignment', valueKind: 'yesNo' },
   { id: 'specCompliance', group: 'quality', labelKey: 'rfx.term.specCompliance' },
   { id: 'claimHandling', group: 'quality', labelKey: 'rfx.term.claimHandling' },
   { id: 'halalBpom', group: 'quality', labelKey: 'rfx.term.halalBpom' },
@@ -381,3 +464,23 @@ export const RFP_STANDARD_TERMS: readonly RfpTermDefinition[] = [
 /** A standard term by id, or undefined for a term the list does not carry. */
 export const rfpTerm = (id: string): RfpTermDefinition | undefined =>
   RFP_STANDARD_TERMS.find((term) => term.id === id);
+
+/**
+ * The value kinds a term may be asked in.
+ *
+ * i18n-defer: kind IDS off the `RfpTermValueKind` union; the words are
+ * `t('rfx.termKind.<kind>')`.
+ */
+export const RFP_TERM_VALUE_KINDS: readonly RfpTermValueKind[] = ['text', 'numberWithUnit', 'choice', 'yesNo'];
+
+/** Is this term row the buyer's own (`custom-…`), rather than a standard one? */
+export const isCustomTermId = (termId: string): boolean => termId.startsWith('custom-');
+
+/** The group a term row renders under: the standard term's, the custom row's, or `other`. */
+export const rfpTermGroupOf = (row: RfpTermRow): RfpTermGroup =>
+  rfpTerm(row.termId)?.group ?? row.group ?? 'other';
+
+/** The value kind a term row is read in: the row's own, the standard term's, else text. */
+export const rfpTermKindOf = (row: RfpTermRow): RfpTermValueKind =>
+  row.valueKind ?? rfpTerm(row.termId)?.valueKind ?? 'text';
+

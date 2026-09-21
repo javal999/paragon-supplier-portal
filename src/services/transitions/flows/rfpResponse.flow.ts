@@ -27,7 +27,7 @@ export const rfpResponseFlow: FlowDefinition = {
       trigger: 'creation',
       requiredRole: 'rfpresponse:answer',
       requiredFields: ['rfpId', 'supplierId'],
-      policyHooks: [POLICY_HOOKS.RFX_RESPONSE_INVITED],
+      policyHooks: [POLICY_HOOKS.RFX_RESPONSE_INVITED, POLICY_HOOKS.RFX_RESPONSE_ACCEPTANCE_GATE],
       surfaceable: { surfaced: true },
       version: 1,
     },

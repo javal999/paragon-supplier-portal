@@ -13,8 +13,16 @@
 // ────────────────────────────────────────────────────────────────────────────
 
 import type { BidCurrency } from '../../lib/currencyPolicy';
+import type { SessionAttachmentMeta } from '../../lib/sessionFiles';
 
-/** The question kinds an RFI section may ask (REQ-E03-02, section F). */
+/**
+ * The question kinds an RFI (or an RFP's questions section) may ask.
+ *
+ * RFx authoring batch (2026-09-21): `longText`, `money`, `percentage` and
+ * `priceRange` join the original seven. `priceRange` is the RFI's INDICATIVE
+ * price question (spec D4): a min–max range in a currency and a unit, never a
+ * firm price, and every surface labels it so.
+ */
 export type RfiQuestionType =
   | 'yesNo'
   | 'singleChoice'
@@ -22,10 +30,26 @@ export type RfiQuestionType =
   | 'numberWithUnit'
   | 'date'
   | 'text'
+  | 'longText'
+  | 'money'
+  | 'percentage'
+  | 'priceRange'
   | 'attachment';
 
 /** The template sections A–F of the RFI (REQ-E03-02). */
 export type RfiSectionId = 'capability' | 'experience' | 'facilities' | 'products' | 'compliance' | 'event';
+
+/**
+ * A section the buyer added for ONE event. The id carries the `custom-` prefix
+ * so it can never collide with the template's A–F, and the title is the buyer's
+ * own words (not an i18n key — nobody translated it).
+ */
+export type RfxCustomSectionId = `custom-${string}`;
+
+export interface RfxCustomSection {
+  readonly id: RfxCustomSectionId;
+  readonly title: string;
+}
 
 /**
  * A scoring scale for a weighted `numberWithUnit` question: the value that
@@ -40,15 +64,32 @@ export interface RfiNumberScale {
 /** One question of an RFI, from the library or added for a single event. */
 export interface RfiQuestion {
   readonly id: string;
-  readonly sectionId: RfiSectionId;
+  readonly sectionId: RfiSectionId | RfxCustomSectionId;
   /** i18n key for the prompt. Business language only (SC-04). */
   readonly promptKey: string;
   readonly type: RfiQuestionType;
   /** Option ids for a single/multiple choice question; i18n key `rfx.opt.<id>`. */
   readonly options?: readonly string[];
-  /** i18n key for the unit of a `numberWithUnit` question. */
+  /**
+   * The buyer's own words for each option id, for a choice question written in
+   * the option editor (BL-36). Library options have none and resolve through
+   * `rfx.opt.<id>`; an authored option is its label, in the buyer's language.
+   */
+  readonly optionLabels?: Readonly<Record<string, string>>;
+  /**
+   * i18n key for the unit of a `numberWithUnit` / `priceRange` question — or,
+   * for a question the buyer wrote, the buyer's own unit (the `promptKey`
+   * convention: an unknown key renders as the words themselves).
+   */
   readonly unitKey?: string;
   readonly required: boolean;
+  /** Help text shown under the prompt, in the buyer's own words. */
+  readonly help?: string;
+  /** Optional bounds on a `numberWithUnit` / `money` / `percentage` answer. */
+  readonly min?: number;
+  readonly max?: number;
+  /** The currency of a `money` or `priceRange` question. */
+  readonly currency?: BidCurrency;
   /**
    * OPTIONAL weight (REQ-E03-02 template rules). A weighted question feeds the
    * response score, which SHORTLISTS and never awards. Absent = the answer is
@@ -75,6 +116,20 @@ export interface RfiAnswer {
   readonly value?: string | number | readonly string[];
   /** The description every structured entry carries (REQ-E03-02 BR-02). */
   readonly description?: string;
+  /** A `priceRange` answer: the INDICATIVE range, in the question's currency. */
+  readonly range?: { readonly min: number; readonly max: number };
+  /** An `attachment` answer's files: metadata only, the file itself is session-held (BL-27). */
+  readonly attachments?: readonly SessionAttachmentMeta[];
+}
+
+/**
+ * The confidentiality (bidder-agreement) gate an event may carry. When present
+ * the supplier accepts once before the scope, attachments and questions are
+ * shown, and the READ withholds them until it has.
+ */
+export interface RfxConfidentiality {
+  /** The buyer's terms, in the buyer's words. Absent = the standard wording. */
+  readonly terms?: string;
 }
 
 /** A sourcing event's invitation, with the deadline actually in force for it. */
@@ -119,6 +174,12 @@ export interface RfiEvent {
   readonly invitees: readonly RfxInvitee[];
   readonly questions: readonly RfiQuestion[];
   readonly extensions: readonly DeadlineExtension[];
+  /** Sections the buyer added for this event, in the order they render. */
+  readonly customSections?: readonly RfxCustomSection[];
+  /** The buyer's documents: a brief, drawings, reference images (session-held). */
+  readonly attachments?: readonly SessionAttachmentMeta[];
+  /** Present = the supplier must accept before reading the event. */
+  readonly confidentiality?: RfxConfidentiality;
 }
 
 export type RfxResponseStatus = 'Draft' | 'Submitted';
@@ -132,6 +193,8 @@ export interface RfiResponse {
   readonly updatedAt: string;
   readonly submittedAt?: string;
   readonly answers: readonly RfiAnswer[];
+  /** When this supplier accepted the event's confidentiality terms (store-assigned). */
+  readonly confidentialityAcceptedAt?: string;
 }
 
 // ── RFP (REQ-E03-04) ────────────────────────────────────────────────────────
@@ -139,10 +202,17 @@ export interface RfiResponse {
 export type RfpTermGroup = 'price' | 'payment' | 'delivery' | 'quality' | 'serviceLevel' | 'contract' | 'other';
 
 /** A term from the standard list the buyer picks from. */
+/** How a term's value is read: free text, a number with a unit, a choice, or yes/no. */
+export type RfpTermValueKind = 'text' | 'numberWithUnit' | 'choice' | 'yesNo';
+
 export interface RfpTermDefinition {
   readonly id: string;
   readonly group: RfpTermGroup;
   readonly labelKey: string;
+  /** The value kind this term is asked in. Absent = free text. */
+  readonly valueKind?: RfpTermValueKind;
+  /** i18n key of the unit, for a `numberWithUnit` term. */
+  readonly unitKey?: string;
   /**
    * When present, this term carries a number CR-15 can score: the price basis
    * feeds the price axis, the standard lead time the lead-time axis.
@@ -150,10 +220,78 @@ export interface RfpTermDefinition {
   readonly scorable?: 'price' | 'leadTime';
 }
 
-/** A term row on one RFP, holding PTI's requested value. */
+/** The id prefix of a term the buyer wrote for one RFP (not on the standard list). */
+export type RfpCustomTermId = `custom-${string}`;
+
+/**
+ * A term row on one RFP, holding PTI's requested value.
+ *
+ * A STANDARD row names a term on `RFP_STANDARD_TERMS` and needs nothing else. A
+ * CUSTOM row (`custom-…` id) is the buyer's own term, so it carries what the
+ * standard list would have: its label (the buyer's words), its group, its value
+ * kind, and, for a choice, its options.
+ */
 export interface RfpTermRow {
   readonly termId: string;
   readonly requestedValue: string;
+  /** Custom term: the buyer's label. */
+  readonly label?: string;
+  /** Custom term: the group it renders under. Absent = `other`. */
+  readonly group?: RfpTermGroup;
+  /** The value kind. Absent = the standard term's own, else free text. */
+  readonly valueKind?: RfpTermValueKind;
+  /** The unit of a `numberWithUnit` value (the buyer's own words on a custom term). */
+  readonly unit?: string;
+  /** The options of a `choice` value, in the buyer's words. */
+  readonly options?: readonly string[];
+}
+
+/**
+ * An optional T&C document on an RFP: the supplier ticks acceptance before it
+ * may answer. Text, a file, or both.
+ */
+export interface RfpTermsDocument {
+  readonly text?: string;
+  readonly attachment?: SessionAttachmentMeta;
+}
+
+/** One option PTI asks an INDICATIVE price for (open-spec requests, spec D4). */
+export interface RfpPricingOption {
+  readonly id: string;
+  readonly title: string;
+  readonly description?: string;
+}
+
+/**
+ * RFP indicative pricing: options × quantity points. Every price asked here is
+ * INDICATIVE (spec D4); firm prices by tier belong to the RFQ.
+ */
+export interface RfpPricingRequest {
+  readonly options: readonly RfpPricingOption[];
+  /** Indicative quantity points, ascending (e.g. 10,000 / 50,000 / 100,000). */
+  readonly quantityPoints: readonly number[];
+  /** Whether a quantity point is per variant or across the whole order. */
+  readonly quantityBasis: 'perVariant' | 'total';
+  /** Ask the supplier for a sample offer (can sample, ready date). */
+  readonly samplesRequested: boolean;
+}
+
+/** One indicative price: one option at one quantity point. */
+export interface RfpIndicativePrice {
+  readonly optionId: string;
+  readonly qty: number;
+  readonly unitPrice: number;
+}
+
+/** A supplier's indicative-pricing answer. */
+export interface RfpPricingAnswer {
+  readonly prices: readonly RfpIndicativePrice[];
+  /** Options the SUPPLIER proposes (e.g. "pump and cap only"); ids start `sup-opt-`. */
+  readonly proposedOptions: readonly RfpPricingOption[];
+  readonly sample?: { readonly canSample: boolean; readonly readyDate?: string };
+  readonly timelineNote?: string;
+  /** How long the indicative prices hold. */
+  readonly validUntil?: string;
 }
 
 export type TermStance = 'comply' | 'deviate';
@@ -182,6 +320,17 @@ export interface RfpEvent {
   readonly invitees: readonly RfxInvitee[];
   readonly terms: readonly RfpTermRow[];
   readonly extensions: readonly DeadlineExtension[];
+  /** The RFI this RFP was created from (spec D3); the board shows "Created from RFI-…". */
+  readonly sourceRfiId?: string;
+  /** Optional typed questions, the same shape the RFI asks. */
+  readonly questions?: readonly RfiQuestion[];
+  readonly customSections?: readonly RfxCustomSection[];
+  readonly attachments?: readonly SessionAttachmentMeta[];
+  readonly confidentiality?: RfxConfidentiality;
+  /** Present = the supplier accepts this T&C before answering. */
+  readonly termsDocument?: RfpTermsDocument;
+  /** Present = the RFP asks for indicative prices (options × quantity points). */
+  readonly pricing?: RfpPricingRequest;
 }
 
 /** REQ-E03-04 — one supplier's proposal. A Draft is invisible to PTI. */
@@ -195,7 +344,15 @@ export interface RfpResponse {
   readonly answers: readonly RfpTermAnswer[];
   /** REQ-E03-04 edge case — terms the supplier wants to add. */
   readonly otherTerms?: string;
+  /** Answers to the RFP's questions section. */
+  readonly questionAnswers?: readonly RfiAnswer[];
+  /** The supplier's indicative pricing. */
+  readonly pricing?: RfpPricingAnswer;
+  readonly confidentialityAcceptedAt?: string;
+  /** When the supplier accepted the RFP's T&C document (store-assigned). */
+  readonly termsAcceptedAt?: string;
 }
+
 
 // ── Negotiation and award (REQ-E03-05) ──────────────────────────────────────
 

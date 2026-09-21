@@ -15,6 +15,15 @@
 //     sup-007 has not (its Home task), and the round closes soon (PTI's task).
 //   · rfq-015  — an AWARDED tender recording a 70/30 split across two suppliers,
 //     with the reason kept and the two losing quotes marked Not awarded.
+//   · rfi-002  — the Oslo sticker capability RFI: every question kind, a
+//     buyer-added section, an indicative price range, a brief attachment.
+//   · rfp-002  — Tundra, open-spec bottle and pump: indicative pricing on two
+//     options × 10K/50K/100K, custom terms, and sup-007's answer proposing an
+//     option of its own.
+//   · rfp-003  — ICY, full-service lip product: formula and pack options at
+//     25K/50K per variant, CONFIDENTIAL with a T&C document, not yet accepted.
+//   · Attachments on seeded events are metadata only — the hub never held the
+//     bytes, so every surface reads them as "not available in this session".
 //   · sup-013  — invited and quoting with NO OTIF HISTORY, so every surface has
 //     to say "No history" rather than 0% and CR-15 scores its reliability 50.
 // ────────────────────────────────────────────────────────────────────────────
@@ -89,6 +98,135 @@ export const RFI_EVENT_SEED: readonly RfiEvent[] = [
     extensions: [
       { at: at(-2), deadline: day(10), supplierIds: ['sup-013'] },
     ],
+  },
+  {
+    // RFx authoring batch — an OSLO-style sticker capability RFI that asks with
+    // EVERY question kind, including a buyer-added section, choice questions
+    // written in the option editor, bounded numbers and an INDICATIVE price
+    // range. sup-008 has answered it; sup-007 (the seeded supplier seat) has
+    // not, so the supplier form shows every kind to fill in.
+    id: 'rfi-002',
+    eventNumber: 'RFI-2026-002',
+    title: 'Oslo sticker capability — variant labels 2027',
+    description:
+      'PTI is preparing 8 variant stickers for the Oslo range and wants to know which label converters can print, finish and supply them on rolls.',
+    templateId: 'packaging',
+    materialCategory: 'Packaging',
+    purchasingGroup: '104',
+    status: 'Open',
+    createdAt: at(-5),
+    responseDeadline: day(9),
+    invitees: [{ supplierId: 'sup-007' }, { supplierId: 'sup-008' }],
+    customSections: [{ id: 'custom-printing', title: 'Printing and finishing' }],
+    attachments: [
+      {
+        id: 'att-seed-oslo-brief',
+        name: 'Oslo sticker brief v2.pdf',
+        size: 356_210,
+        type: 'application/pdf',
+      },
+    ],
+    questions: [
+      {
+        id: 'oslo-machine',
+        sectionId: 'custom-printing',
+        promptKey: 'rfx.q.oslo-machine',
+        type: 'text',
+        required: true,
+        help: 'Brand and model of the press you would run this on.',
+      },
+      {
+        id: 'oslo-dieCut',
+        sectionId: 'custom-printing',
+        promptKey: 'rfx.q.oslo-dieCut',
+        type: 'singleChoice',
+        options: ['flexible', 'flatbed', 'both'],
+        optionLabels: { flexible: 'Flexible (rotary) die', flatbed: 'Flatbed die', both: 'Both' },
+        required: true,
+      },
+      {
+        id: 'oslo-finishing',
+        sectionId: 'custom-printing',
+        promptKey: 'rfx.q.oslo-finishing',
+        type: 'multipleChoice',
+        options: ['matteLam', 'glossLam', 'hotStamp', 'spotUv'],
+        optionLabels: {
+          matteLam: 'Matte lamination',
+          glossLam: 'Gloss lamination',
+          hotStamp: 'Hot stamping',
+          spotUv: 'Spot UV',
+        },
+        required: true,
+      },
+      {
+        id: 'oslo-colours',
+        sectionId: 'custom-printing',
+        promptKey: 'rfx.q.oslo-colours',
+        type: 'numberWithUnit',
+        unitKey: 'rfx.unit.colours',
+        min: 1,
+        max: 10,
+        required: true,
+      },
+      {
+        id: 'oslo-process',
+        sectionId: 'custom-printing',
+        promptKey: 'rfx.q.oslo-process',
+        type: 'longText',
+        required: false,
+        help: 'From artwork approval to delivery, in your own words.',
+      },
+      {
+        id: 'oslo-defect',
+        sectionId: 'compliance',
+        promptKey: 'rfx.q.oslo-defect',
+        type: 'percentage',
+        max: 5,
+        required: true,
+      },
+      {
+        id: 'oslo-plate',
+        sectionId: 'products',
+        promptKey: 'rfx.q.oslo-plate',
+        type: 'money',
+        currency: 'IDR',
+        required: false,
+      },
+      {
+        id: 'oslo-price',
+        sectionId: 'products',
+        promptKey: 'rfx.q.oslo-price',
+        type: 'priceRange',
+        currency: 'IDR',
+        unitKey: 'rfx.unit.perPiece',
+        required: true,
+        help: 'An indicative range for a 50 x 80 mm sticker at 10,000 pieces. Not a quotation.',
+      },
+      {
+        id: 'oslo-sample',
+        sectionId: 'products',
+        promptKey: 'rfx.q.oslo-sample',
+        type: 'date',
+        required: false,
+      },
+      {
+        id: 'oslo-halal',
+        sectionId: 'compliance',
+        promptKey: 'rfx.q.oslo-halal',
+        type: 'yesNo',
+        required: true,
+        weight: 2,
+        optionScores: { yes: 100, no: 0 },
+      },
+      {
+        id: 'oslo-portfolio',
+        sectionId: 'products',
+        promptKey: 'rfx.q.oslo-portfolio',
+        type: 'attachment',
+        required: false,
+      },
+    ],
+    extensions: [],
   },
 ];
 
@@ -201,6 +339,27 @@ export const RFI_RESPONSE_SEED: readonly RfiResponse[] = [
       'b-years': 1,
     }),
   },
+  {
+    // sup-008's answer to the Oslo RFI: every kind answered, including the
+    // indicative price range the buyer sees labelled Indicative.
+    id: 'rfi-resp-004',
+    rfiId: 'rfi-002',
+    supplierId: 'sup-008',
+    status: 'Submitted',
+    updatedAt: at(-1),
+    submittedAt: at(-1),
+    answers: [
+      { questionId: 'oslo-machine', value: 'Mark Andy P5, 8 colours with rotary die station' },
+      { questionId: 'oslo-dieCut', value: 'flexible' },
+      { questionId: 'oslo-finishing', value: ['matteLam', 'hotStamp'] },
+      { questionId: 'oslo-colours', value: 6 },
+      { questionId: 'oslo-defect', value: 0.5 },
+      { questionId: 'oslo-plate', value: 1_250_000 },
+      { questionId: 'oslo-price', range: { min: 210, max: 260 } },
+      { questionId: 'oslo-sample', value: day(14) },
+      { questionId: 'oslo-halal', value: 'yes' },
+    ],
+  },
 ];
 
 // ── REQ-E03-04 — the RFP with three proposals ───────────────────────────────
@@ -239,6 +398,165 @@ export const RFP_EVENT_SEED: readonly RfpEvent[] = [
       { termId: 'otifCommitment', requestedValue: '95%' },
       { termId: 'contractDuration', requestedValue: '12 months' },
     ],
+    extensions: [],
+  },
+  {
+    // RFx authoring batch — a TUNDRA-style open-spec RFP: PTI does not fix the
+    // bottle and pump, it asks for options and INDICATIVE prices at three
+    // quantity points. sup-007 has answered with prices and one option of its
+    // own; sup-015 has not answered yet.
+    id: 'rfp-002',
+    eventNumber: 'RFP-2026-002',
+    title: 'Tundra — open-spec bottle and pump',
+    scope:
+      'A 150 ml bottle with pump for the Tundra body lotion. The shape follows the reference image; material, neck and pump are open for your recommendation.',
+    materialCategory: 'Packaging',
+    purchasingGroup: '101',
+    status: 'Open',
+    createdAt: at(-6),
+    responseDeadline: day(9),
+    currency: 'IDR',
+    invitees: [{ supplierId: 'sup-007' }, { supplierId: 'sup-015' }],
+    terms: [
+      { termId: 'priceValidity', requestedValue: '6 months' },
+      { termId: 'paymentTerms', requestedValue: '60' },
+      { termId: 'leadTime', requestedValue: '45' },
+      {
+        termId: 'custom-dosage',
+        label: 'Pump dosage per stroke',
+        group: 'quality',
+        valueKind: 'numberWithUnit',
+        unit: 'ml',
+        requestedValue: '1.5',
+      },
+      {
+        termId: 'custom-pcr',
+        label: 'Recycled (PCR) resin available',
+        group: 'quality',
+        valueKind: 'yesNo',
+        requestedValue: 'yes',
+      },
+    ],
+    attachments: [
+      {
+        id: 'att-seed-tundra-ref',
+        name: 'Tundra reference bottle and pump.jpg',
+        size: 482_133,
+        type: 'image/jpeg',
+      },
+    ],
+    pricing: {
+      options: [
+        {
+          id: 'opt-full-set',
+          title: 'Full set: bottle, pump and cap',
+          description: '150 ml bottle, lotion pump and over-cap, one colour print on the bottle.',
+        },
+        {
+          id: 'opt-pump-cap',
+          title: 'Pump and cap only',
+          description: 'PTI sources the bottle; you supply a matching pump and over-cap.',
+        },
+      ],
+      quantityPoints: [10_000, 50_000, 100_000],
+      quantityBasis: 'total',
+      samplesRequested: true,
+    },
+    extensions: [],
+  },
+  {
+    // RFx authoring batch — an ICY-style FULL-SERVICE RFP for a lip product:
+    // two formula options and three secondary-pack options, INDICATIVE prices
+    // at MOQ points of 25K and 50K PER VARIANT, samples and a timeline. It is
+    // CONFIDENTIAL with a T&C document, so the seeded supplier seat (sup-007)
+    // meets the gate first and sees nothing of the brief until it accepts.
+    id: 'rfp-003',
+    eventNumber: 'RFP-2026-003',
+    title: 'ICY — full-service lip product',
+    scope:
+      'Formula, filling and secondary pack for a new lip product in 6 variants. Propose the formula base, the pack and a development timeline from brief to first production.',
+    materialCategory: 'Packaging',
+    purchasingGroup: '104',
+    status: 'Open',
+    createdAt: at(-3),
+    responseDeadline: day(12),
+    currency: 'IDR',
+    invitees: [{ supplierId: 'sup-007' }, { supplierId: 'sup-015' }],
+    terms: [
+      { termId: 'priceValidity', requestedValue: '6 months' },
+      { termId: 'paymentTerms', requestedValue: '45' },
+      { termId: 'leadTime', requestedValue: '60' },
+      {
+        termId: 'custom-formula-owner',
+        label: 'Formula ownership',
+        group: 'contract',
+        valueKind: 'choice',
+        options: ['PTI owns the formula', 'Supplier owns the formula', 'Shared'],
+        requestedValue: 'PTI owns the formula',
+      },
+      {
+        termId: 'custom-shelf-life',
+        label: 'Shelf life',
+        group: 'quality',
+        valueKind: 'numberWithUnit',
+        unit: 'months',
+        requestedValue: '24',
+      },
+      {
+        termId: 'custom-stability',
+        label: 'Stability test report provided',
+        group: 'quality',
+        valueKind: 'yesNo',
+        requestedValue: 'yes',
+      },
+    ],
+    customSections: [{ id: 'custom-development', title: 'Development' }],
+    questions: [
+      {
+        id: 'icy-timeline',
+        sectionId: 'custom-development',
+        promptKey: 'rfx.q.icy-timeline',
+        type: 'longText',
+        required: true,
+      },
+      {
+        id: 'icy-halal',
+        sectionId: 'compliance',
+        promptKey: 'rfx.q.icy-halal',
+        type: 'yesNo',
+        required: true,
+      },
+      {
+        id: 'icy-shades',
+        sectionId: 'custom-development',
+        promptKey: 'rfx.q.icy-shades',
+        type: 'numberWithUnit',
+        unitKey: 'rfx.unit.shades',
+        min: 1,
+        max: 20,
+        required: false,
+      },
+    ],
+    confidentiality: {
+      terms:
+        'The ICY brief, formula targets and pack artwork are PTI confidential. Use them only to prepare this proposal, and share them with nobody outside your company.',
+    },
+    termsDocument: {
+      text:
+        'Proposals are indicative and non-binding for both parties. Samples requested under this RFP are free of charge up to 3 rounds. PTI may share the outcome, but never another supplier’s prices.',
+    },
+    pricing: {
+      options: [
+        { id: 'opt-formula-1', title: 'Formula option 1: matte lip cream', description: '8 shades, transfer-resistant.' },
+        { id: 'opt-formula-2', title: 'Formula option 2: satin lip tint', description: '6 shades, hydrating base.' },
+        { id: 'opt-pack-1', title: 'Secondary pack option 1: unit box, 3 colours + hot stamp' },
+        { id: 'opt-pack-2', title: 'Secondary pack option 2: unit box, 2 colours + spot UV' },
+        { id: 'opt-pack-3', title: 'Secondary pack option 3: printed sleeve, 1 colour' },
+      ],
+      quantityPoints: [25_000, 50_000],
+      quantityBasis: 'perVariant',
+      samplesRequested: true,
+    },
     extensions: [],
   },
 ];
@@ -310,6 +628,46 @@ export const RFP_RESPONSE_SEED: readonly RfpResponse[] = [
       { termId: 'otifCommitment', proposedValue: '95%', stance: 'comply' },
       { termId: 'contractDuration', proposedValue: '24 months', stance: 'deviate', comment: 'A two-year term lets us amortise the tooling.' },
     ],
+  },
+  {
+    // sup-007's Tundra proposal: indicative prices on both of PTI's options,
+    // plus an option of its OWN (a stock bottle it already moulds), a sample
+    // offer, a timeline note and a validity date.
+    id: 'rfp-resp-004',
+    rfpId: 'rfp-002',
+    supplierId: 'sup-007',
+    status: 'Submitted',
+    updatedAt: at(-1),
+    submittedAt: at(-1),
+    answers: [
+      { termId: 'priceValidity', proposedValue: '6 months', stance: 'comply' },
+      { termId: 'paymentTerms', proposedValue: '60', stance: 'comply' },
+      { termId: 'leadTime', proposedValue: '50', stance: 'deviate', comment: 'A new pump tool adds five days to the first run.' },
+      { termId: 'custom-dosage', proposedValue: '1.5', stance: 'comply' },
+      { termId: 'custom-pcr', proposedValue: 'yes', stance: 'comply' },
+    ],
+    pricing: {
+      prices: [
+        { optionId: 'opt-full-set', qty: 10_000, unitPrice: 4_850 },
+        { optionId: 'opt-full-set', qty: 50_000, unitPrice: 4_200 },
+        { optionId: 'opt-full-set', qty: 100_000, unitPrice: 3_900 },
+        { optionId: 'opt-pump-cap', qty: 10_000, unitPrice: 2_650 },
+        { optionId: 'opt-pump-cap', qty: 50_000, unitPrice: 2_300 },
+        { optionId: 'opt-pump-cap', qty: 100_000, unitPrice: 2_150 },
+        { optionId: 'sup-opt-1', qty: 50_000, unitPrice: 3_600 },
+        { optionId: 'sup-opt-1', qty: 100_000, unitPrice: 3_350 },
+      ],
+      proposedOptions: [
+        {
+          id: 'sup-opt-1',
+          title: 'Stock 150 ml bottle with 24/410 lotion pump',
+          description: 'Our existing mould, so no bottle tooling cost; shape differs slightly from the reference.',
+        },
+      ],
+      sample: { canSample: true, readyDate: day(20) },
+      timelineNote: 'Samples 3 weeks after PTI confirms the option; first production 7 weeks after sample approval.',
+      validUntil: day(120),
+    },
   },
 ];
 
