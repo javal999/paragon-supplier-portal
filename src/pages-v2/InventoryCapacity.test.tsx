@@ -262,6 +262,69 @@ describe('One stock entry (BL-60, REQ-E08-02 BR-06, BR-09, BR-10, AC-04, AC-05)'
   });
 });
 
+describe('Supplier-triggered sync and PTI refresh (BL-59, REQ-E08-02 BR-03, BR-11, AC-02, AC-06)', () => {
+  const seat = (supplierId: string, supplierName: string): CurrentIdentity => ({
+    personaType: 'supplier',
+    supplierId,
+    supplierName,
+    businessRoles: SEEDED_SEAT_ROLES.supplier,
+    actor: NO_PERSON,
+  });
+
+  it('an API-connected supplier syncs its own stock; the result is stored and the time shown', async () => {
+    renderWithProviders(<SupplierInventory />, { identity: seat('sup-001', 'PT Sample Oleochemicals') });
+    const erp = await screen.findByTestId('sup-sync-erp');
+    expect(within(erp).getByTestId('sample-data-badge')).toBeInTheDocument();
+    expect(within(erp).getByTestId('sup-sync-status')).toHaveTextContent('Not synced yet');
+    fireEvent.click(within(erp).getByTestId('sup-sync-button'));
+    await waitFor(() => expect(stockSyncStore.all().some((a) => a.supplierId === 'sup-001' && a.outcome === 'success')).toBe(true));
+    expect(inventoryDeclarationStore.latestFor('sup-001', 'RM-LAURIC-7200')).toMatchObject({ totalQty: 9000, channel: 'api' });
+    await waitFor(() => expect(within(erp).getByTestId('sup-sync-status')).toHaveTextContent('Last synced'));
+  });
+
+  it('a failed sync shows the error and time, and the previous figures stay, marked out of date', async () => {
+    renderWithProviders(<SupplierInventory />, { identity: seat('sup-003', 'PT Sample Fragrance House') });
+    expect(await screen.findByTestId('sup-sync-error')).toHaveTextContent('the supplier system did not respond');
+    expect(screen.getByTestId('sup-sync-error')).toHaveTextContent('previous figures kept and marked out of date');
+    expect(screen.getByTestId('sup-stock-row-FR-WARD-4410')).toHaveTextContent('Out of date');
+  });
+
+  it('a supplier that is not API-connected has no Sync', async () => {
+    renderWithProviders(<SupplierInventory />, { identity: SUPPLIER });
+    await screen.findByTestId('sup-stock-row-PK-PETB-8801');
+    expect(screen.queryByTestId('sup-sync-erp')).toBeNull();
+    expect(screen.queryByTestId('sup-sync-button')).toBeNull();
+  });
+
+  it('a supplier with a PTI grant refreshes PTI stock for the granted materials only', async () => {
+    renderWithProviders(<SupplierInventory />, { identity: SUPPLIER });
+    fireEvent.click(await screen.findByTestId('sup-pti-refresh-button'));
+    const result = await screen.findByTestId('sup-pti-refresh-result');
+    const listed = [...result.querySelectorAll('[data-testid^="sup-pti-refresh-"]')]
+      .map((el) => el.getAttribute('data-testid'))
+      .filter((id) => id !== 'sup-pti-refresh-result');
+    expect(listed).toEqual(['sup-pti-refresh-PK-PETB-8801', 'sup-pti-refresh-PK-PETB-8802']);
+    expect(within(result).getByTestId('sup-pti-refresh-PK-PETB-8801')).toHaveTextContent('30,000 PCS');
+    expect(within(result).queryByTestId('sup-pti-refresh-PK-CAPF-8820')).toBeNull();
+  });
+
+  it('without a grant the PTI refresh is not offered at all', async () => {
+    renderWithProviders(<SupplierInventory />, { identity: SUP_002 });
+    await screen.findByTestId('sup-stock-row-RM-STEAR-7300');
+    expect(screen.queryByTestId('sup-pti-refresh')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Refresh PTI stock' })).toBeNull();
+  });
+
+  it('a removed grant removes the refresh on the next load', async () => {
+    stockAccessStore.reset();
+    const grant = stockAccessStore.get('sup-007')!;
+    stockAccessStore.put({ ...grant, active: false, materials: [] });
+    renderWithProviders(<SupplierInventory />, { identity: SUPPLIER });
+    await screen.findByTestId('sup-stock-row-PK-PETB-8801');
+    expect(screen.queryByTestId('sup-pti-refresh')).toBeNull();
+  });
+});
+
 describe('Supplier access (REQ-E08-03)', () => {
   it('grant access to chosen materials, logged; the supplier then sees PTI stock for them', async () => {
     renderWithProviders(<BuyerSupplierAccess />, { identity: PLANNER });

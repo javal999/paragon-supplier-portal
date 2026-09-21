@@ -35,10 +35,12 @@ import {
 } from './inventory/inventoryDisplay';
 import StockEntryPanel from './inventory/StockEntryPanel';
 import StockUploadPanel from './inventory/StockUploadPanel';
+import SupplierSyncPanel from './inventory/SupplierSyncPanel';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SUPPLIER STOCK — REQ-E08-01 (SUP view), REQ-E08-02 (template upload, manual
-// entry), REQ-E08-03 (PTI stock where granted).
+// entry, the supplier's own API Sync — BL-59), REQ-E08-03 (PTI stock where
+// granted, and its refresh only then).
 //
 // One row per material the supplier supplies, from the ONE inventory model:
 // its stock on hand, its own reorder point ("Not provided" when absent), what
@@ -135,6 +137,8 @@ const SupplierInventory: React.FC = () => {
             : t('inv.sup.access.some', { count: grant.materials.length })}
         </p>
       )}
+
+      <SupplierSyncPanel supplierId={supplierId} positions={rows} grant={grant} refetch={() => inventory.refetch()} />
 
       <StockUploadPanel supplierId={supplierId} positions={rows} canSubmit={held} />
 

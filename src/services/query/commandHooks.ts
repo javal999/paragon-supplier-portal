@@ -1730,6 +1730,8 @@ export type InventoryCommandVars =
       batches?: readonly { batchNumber: string; qty: number; manufacturingDate?: string; expiryDate?: string }[];
     }
   | { verb: 'sync'; supplierId: string }
+  /** BL-59 — the supplier pulls its OWN ERP stock (its own seat, its own id). */
+  | { verb: 'pull'; supplierId: string }
   | { verb: 'grantAccess'; supplierId: string; materials: readonly string[]; alreadyGranted: boolean }
   | { verb: 'removeAccess'; supplierId: string }
   | {
@@ -1762,6 +1764,12 @@ export function useInventoryCommand() {
         case 'sync':
           return svc.commands.dispatch(scope, {
             transitionId: 't_stocksync_run',
+            entity: 'stockSync',
+            payload: { supplierId: vars.supplierId },
+          });
+        case 'pull':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_stocksync_pull',
             entity: 'stockSync',
             payload: { supplierId: vars.supplierId },
           });
