@@ -358,7 +358,7 @@ const BuyerChannelTriage: React.FC<BuyerChannelTriageProps> = ({ onRecorded }) =
                     <span className="text-label text-text-tertiary uppercase mr-2">{t('commHub.infer.matched')}</span>
                     <span className="inline-flex flex-wrap gap-1">
                       {parsed.diagnostics.matchedTokens.map((tok, i) => (
-                        <Data key={i} className="rounded bg-teal-soft px-1.5 py-0.5 text-teal">
+                        <Data key={i} className="rounded bg-teal-soft px-1.5 py-0.5 text-teal-hover">
                           {tok}
                         </Data>
                       ))}

@@ -447,7 +447,7 @@ const CommHubInbound: React.FC = () => {
                   </span>
                   <span className="inline-flex flex-wrap gap-1">
                     {parsed.diagnostics.matchedTokens.map((tok, i) => (
-                      <Data key={i} className="rounded bg-teal-soft px-1.5 py-0.5 text-teal">
+                      <Data key={i} className="rounded bg-teal-soft px-1.5 py-0.5 text-teal-hover">
                         {tok}
                       </Data>
                     ))}

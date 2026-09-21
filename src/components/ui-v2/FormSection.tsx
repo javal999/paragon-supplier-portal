@@ -1,5 +1,6 @@
 import React, { ReactNode, useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface FormSectionProps {
   eyebrow?: string;
@@ -20,6 +21,7 @@ const FormSection: React.FC<FormSectionProps> = ({
   defaultOpen = true,
   className = '',
 }) => {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(defaultOpen);
   const showBody = !collapsible || open;
 
@@ -44,7 +46,8 @@ const FormSection: React.FC<FormSectionProps> = ({
         {collapsible && (
           <button
             type="button"
-            aria-label={open ? 'Collapse section' : 'Expand section'}
+            // BL-31: was an English literal on every locale.
+            aria-label={t(open ? 'ui.collapseSection' : 'ui.expandSection')}
             aria-expanded={open}
             onClick={() => setOpen((v) => !v)}
             className="shrink-0 text-text-tertiary hover:text-text-secondary transition-colors"
@@ -60,7 +63,8 @@ const FormSection: React.FC<FormSectionProps> = ({
             : 'grid-rows-[0fr] opacity-0 mt-0'
         }`}
       >
-        <div className="overflow-hidden">
+        {/* BL-31: a collapsed body is inert, so its fields leave the tab order. */}
+        <div className="overflow-hidden" {...(showBody ? {} : { inert: '' })}>
           <div className="flex flex-col gap-4">{children}</div>
         </div>
       </div>

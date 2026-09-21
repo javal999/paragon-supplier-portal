@@ -1,3 +1,5 @@
+import { onTabListKeyDown } from './tabKeys';
+
 export interface SubTabItem<T extends string> {
   id: T;
   label: string;
@@ -20,6 +22,7 @@ function SubTabs<T extends string>({
   return (
     <div
       role="tablist"
+      onKeyDown={(e) => onTabListKeyDown(e, options.map((x) => x.id), value, onChange)}
       className={`flex items-center gap-6 border-b border-border-subtle ${className}`}
     >
       {options.map((opt) => {

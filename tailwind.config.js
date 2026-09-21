@@ -16,7 +16,13 @@ export default {
         // Text
         'text-primary': '#0D1B2A',
         'text-secondary': '#354A5F',
-        'text-tertiary': '#6B7785',
+        // BL-31 (SC-06 / WCAG 1.4.3): was #6B7785, which cleared AA on white
+        // only (4.56:1) and failed on every surface it actually sits on — the
+        // page background (4.40), the table header band / bg-hover (4.21) and
+        // every soft status tint (3.77–4.13). #5E6A78 is the smallest step that
+        // clears 4.5:1 on all of them (white 5.51, bg-page 5.32, bg-hover 5.09,
+        // worst tint danger-soft 4.56). Same hue; one lightness step darker.
+        'text-tertiary': '#5E6A78',
         // Brand
         // Blue action/identity system (DP-3 follow-up). Fiori "Morning Horizon".
         //  DEFAULT #0070F2 — primary buttons (white text 4.57:1 AA).
@@ -33,7 +39,12 @@ export default {
         },
         'teal': {
           DEFAULT: '#0097A7',
-          hover: '#007A8A',
+          // BL-31: teal is a FILL/TEXT split like warning (DP2-WARN-01).
+          // DEFAULT #0097A7 is 3.51:1 on white — fine for icons, dials and
+          // chart marks (3:1 non-text floor), never for TEXT. `hover` is the
+          // teal for text: #00707E clears AA on white (5.80), bg-hover (5.36)
+          // and teal-soft (5.15); the old #007A8A failed on teal-soft (4.49).
+          hover: '#00707E',
           soft: '#E6F4F7',
         },
         'navy': '#0D1B2A',

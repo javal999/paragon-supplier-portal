@@ -687,7 +687,7 @@ const SupplierForecastCommitments: React.FC = () => {
       )}
 
       <p className="mt-6 text-sm">
-        <Link to="/supplier/forecasts/responses" className="text-action hover:underline">
+        <Link to="/supplier/forecasts/responses" className="text-action-hover hover:underline">
           {t('fc.sup.earlierResponses')}
         </Link>
       </p>

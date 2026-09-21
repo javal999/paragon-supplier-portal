@@ -32,9 +32,21 @@ const VARIANT_CLASS: Record<Variant, string> = {
   // DP2-BUTTON-01 (as amended, §68): action-blue OUTLINE — transparent fill,
   // blue border + text. It is no longer the CALM weight beside a louder one;
   // it is the ONLY primary weight, and therefore the default below.
+  //
+  // BL-31 (WCAG 1.4.3): the LABEL is `action.hover` (#0064D9), the BORDER stays
+  // `action` (#0070F2) — the same fill/text split as DP2-WARN-01. The fill is
+  // transparent, so the label sits on whatever is behind the button, and
+  // #0070F2 as text fails AA on the page background (4.41:1), on bg-hover
+  // (4.21:1) and on its own hover tint action-soft (3.96:1). #0064D9 clears all
+  // three (5.30 / 5.07 / 4.76). The border is a non-text mark (3:1 floor).
   outline:
-    'bg-transparent text-action border border-action hover:bg-action-soft',
+    'bg-transparent text-action-hover border border-action hover:bg-action-soft',
 };
+
+// BL-31 (WCAG 2.4.7): an explicit keyboard focus ring, so focus does not depend
+// on each browser's default and survives any `outline-none` a caller passes.
+const FOCUS_RING =
+  'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action';
 
 const Button: React.FC<ButtonProps> = ({
   variant = 'outline',
@@ -46,10 +58,10 @@ const Button: React.FC<ButtonProps> = ({
   return (
     <button
       type="button"
-      className={`inline-flex items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${VARIANT_CLASS[variant]} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${FOCUS_RING} ${VARIANT_CLASS[variant]} ${className}`}
       {...rest}
     >
-      {Icon ? <Icon size={16} /> : null}
+      {Icon ? <Icon size={16} aria-hidden="true" /> : null}
       {children}
     </button>
   );

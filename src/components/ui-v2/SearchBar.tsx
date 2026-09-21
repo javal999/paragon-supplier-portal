@@ -16,22 +16,29 @@ interface SearchBarProps {
 const SearchBar: React.FC<SearchBarProps> = ({
   value,
   onChange,
-  placeholder = 'Search…',
+  placeholder,
   className = '',
   ariaLabel,
 }) => {
   const { t } = useTranslation();
+  // BL-31 (WCAG 3.3.2 / 4.1.2): every SearchBar has a stable accessible name.
+  // A caller's `ariaLabel` wins; otherwise the hint text becomes the name, so
+  // it survives the moment the reader types (a placeholder alone does not).
+  // The default hint was an English literal; it is now `ui.search`.
+  const hint = placeholder ?? t('ui.search');
   return (
     <div
-      className={`flex items-center h-10 w-full bg-white border border-border-input rounded-md px-3 gap-2 focus-within:border-teal transition-colors ${className}`}
+      // BL-31 / DP-2: the focus border is action-blue (the selected/active
+      // colour), not decorative teal.
+      className={`flex items-center h-10 w-full bg-white border border-border-input rounded-md px-3 gap-2 focus-within:border-action focus-within:ring-1 focus-within:ring-action transition-colors ${className}`}
     >
       <Search size={16} className="text-text-tertiary shrink-0" />
       <input
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        aria-label={ariaLabel}
+        placeholder={hint}
+        aria-label={ariaLabel ?? hint}
         className="flex-1 bg-transparent text-sm text-text-primary placeholder:text-text-tertiary focus:outline-none"
       />
       {value && (

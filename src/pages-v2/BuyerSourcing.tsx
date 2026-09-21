@@ -44,6 +44,7 @@ import LivenessPill from '../components/ui-v2/LivenessPill';
 import ModelMarker from '../components/ui-v2/ModelMarker';
 import Button from '../components/ui-v2/Button';
 import Wizard, { WizardStep } from '../components/ui-v2/Wizard';
+import ModalOverlay from '../components/ui-v2/ModalOverlay';
 import {
   RFQ_CATEGORY_OPTIONS,
   RFQ_UOM_OPTIONS,
@@ -630,7 +631,7 @@ const ReviewSection: React.FC<{
       <button
         type="button"
         onClick={onEdit}
-        className="text-xs font-medium text-teal hover:text-teal-hover"
+        className="text-xs font-medium text-teal-hover hover:text-teal-hover"
       >
         {t('sourcing.wizard.review.edit')}
       </button>
@@ -1641,24 +1642,24 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
             )}
           </div>
           <div>
-            <label className="text-label text-text-tertiary uppercase block mb-1.5">
+            <label className="block"><span className="text-label text-text-tertiary uppercase block mb-1.5">
               {t('sourcing.wizard.field.title')}{' '}
               <span className="text-danger">*</span>
-            </label>
+            </span>
             <input
               type="text"
               value={draft.title}
               onChange={(e) => updateDraft('title', e.target.value)}
               placeholder={t('sourcing.wizard.placeholder.title')}
               className="w-full bg-white border border-border-input rounded-md px-3 h-10 text-sm focus:outline-none focus:border-action"
-            />
+            /></label>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="text-label text-text-tertiary uppercase block mb-1.5">
+              <label className="block"><span className="text-label text-text-tertiary uppercase block mb-1.5">
                 {t('sourcing.wizard.field.category')}{' '}
                 <span className="text-danger">*</span>
-              </label>
+              </span>
               <select
                 value={draft.category}
                 onChange={(e) => {
@@ -1673,7 +1674,7 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
                     {categoryLabel(t, c)}
                   </option>
                 ))}
-              </select>
+              </select></label>
             </div>
             <div>
               <label className="text-label text-text-tertiary uppercase block mb-1.5">
@@ -1784,9 +1785,9 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
               )}
             </div>
             <div>
-              <label className="text-label text-text-tertiary uppercase block mb-1.5">
+              <label className="block"><span className="text-label text-text-tertiary uppercase block mb-1.5">
                 {t('sourcing.wizard.field.uom')}
-              </label>
+              </span>
               <select
                 value={draft.uom}
                 onChange={(e) =>
@@ -1802,7 +1803,7 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
                     {u}
                   </option>
                 ))}
-              </select>
+              </select></label>
             </div>
           </div>
         </div>
@@ -1939,6 +1940,7 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
                       <td className="px-3 py-2">
                         <input
                           type="checkbox"
+                          aria-label={s.supplierName}
                           checked={selected}
                           onChange={() => toggleSupplier(s.supplierId)}
                           onClick={(e) => e.stopPropagation()}
@@ -2010,7 +2012,7 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
           </div>
 
           <div className="text-sm text-text-secondary">
-            <span className="inline-flex items-center gap-1.5 bg-teal-soft text-teal rounded-full px-3 py-1 text-xs font-semibold">
+            <span className="inline-flex items-center gap-1.5 bg-teal-soft text-teal-hover rounded-full px-3 py-1 text-xs font-semibold">
               {t(
                 draft.invitedSupplierIds.length === 1
                   ? 'sourcing.wizard.selectedCount.one'
@@ -2031,10 +2033,10 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
         <div className="space-y-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="text-label text-text-tertiary uppercase block mb-1.5">
+              <label className="block"><span className="text-label text-text-tertiary uppercase block mb-1.5">
                 {t('sourcing.wizard.field.responseDeadline')}{' '}
                 <span className="text-danger">*</span>
-              </label>
+              </span>
               <input
                 type="date"
                 value={draft.responseDeadline}
@@ -2042,19 +2044,19 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
                   updateDraft('responseDeadline', e.target.value)
                 }
                 className="w-full bg-white border border-border-input rounded-md px-3 h-10 text-sm focus:outline-none focus:border-action"
-              />
+              /></label>
             </div>
             <div>
-              <label className="text-label text-text-tertiary uppercase block mb-1.5">
+              <label className="block"><span className="text-label text-text-tertiary uppercase block mb-1.5">
                 {t('sourcing.wizard.field.awardDeadline')}{' '}
                 <span className="text-danger">*</span>
-              </label>
+              </span>
               <input
                 type="date"
                 value={draft.awardDeadline}
                 onChange={(e) => updateDraft('awardDeadline', e.target.value)}
                 className="w-full bg-white border border-border-input rounded-md px-3 h-10 text-sm focus:outline-none focus:border-action"
-              />
+              /></label>
               {draft.responseDeadline &&
                 draft.awardDeadline &&
                 new Date(draft.awardDeadline) <=
@@ -2065,9 +2067,9 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
                 )}
             </div>
             <div>
-              <label className="text-label text-text-tertiary uppercase block mb-1.5">
+              <label className="block"><span className="text-label text-text-tertiary uppercase block mb-1.5">
                 {t('sourcing.wizard.field.incoterms')}
-              </label>
+              </span>
               <select
                 value={draft.incoterms}
                 onChange={(e) => updateDraft('incoterms', e.target.value)}
@@ -2078,12 +2080,12 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
                     {i}
                   </option>
                 ))}
-              </select>
+              </select></label>
             </div>
             <div>
-              <label className="text-label text-text-tertiary uppercase block mb-1.5">
+              <label className="block"><span className="text-label text-text-tertiary uppercase block mb-1.5">
                 {t('sourcing.wizard.field.paymentTerms')}
-              </label>
+              </span>
               <select
                 value={draft.paymentTerms}
                 onChange={(e) => updateDraft('paymentTerms', e.target.value)}
@@ -2094,7 +2096,7 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
                     {p}
                   </option>
                 ))}
-              </select>
+              </select></label>
             </div>
           </div>
           <div>
@@ -3049,7 +3051,7 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
                             >
                               {q.id === topRankedId && (
                                 <span className="flex flex-col items-start gap-0.5 mb-1">
-                                  <span className="inline-flex items-center gap-1 text-label text-teal uppercase">
+                                  <span className="inline-flex items-center gap-1 text-label text-teal-hover uppercase">
                                     <Trophy size={10} />{' '}
                                     {t('sourcing.cmp.topRanked')}
                                   </span>
@@ -3418,17 +3420,15 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
           prior basis is kept — because "edit" would describe a mutation that
           cannot happen and would misrepresent what the trail will show. */}
       {pinDraft && selectedRfq && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[rgba(13,27,42,0.4)]">
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-label={t(
-              pinDraft.superseding ? 'sourcing.fx.dialog.title.supersede' : 'sourcing.fx.dialog.title.record',
-              { currency: pinDraft.currency },
-            )}
-            data-testid="fx-pin-dialog"
-            className="w-full max-w-md bg-white rounded-lg border border-border-subtle p-5"
-          >
+        <ModalOverlay
+          onClose={() => setPinDraft(null)}
+          label={t(
+            pinDraft.superseding ? 'sourcing.fx.dialog.title.supersede' : 'sourcing.fx.dialog.title.record',
+            { currency: pinDraft.currency },
+          )}
+          testId="fx-pin-dialog"
+        >
+          <div className="w-full max-w-md bg-white rounded-lg border border-border-subtle p-5">
             <h3 className="text-section text-text-primary mb-1">
               {t(
                 pinDraft.superseding
@@ -3594,11 +3594,11 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
               )}
             </div>
           </div>
-        </div>
+        </ModalOverlay>
       )}
 
       {wizardOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[rgba(13,27,42,0.4)]">
+        <ModalOverlay onClose={closeWizard}>
           <Wizard
             steps={wizardSteps}
             currentStep={wizardStep}
@@ -3608,7 +3608,7 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
             isStepValid={isStepValid}
             completeLabel={t('sourcing.wizard.complete')}
           />
-        </div>
+        </ModalOverlay>
       )}
     </AppShellV2>
   );

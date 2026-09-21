@@ -73,7 +73,8 @@ const Toast: React.FC<ToastProps> = ({
 
   return (
     <div
-      role="status"
+      // BL-31: an error interrupts (alert); everything else waits (status).
+      role={variant === 'error' ? 'alert' : 'status'}
       className={`min-w-[320px] max-w-[420px] bg-bg-surface border border-border-subtle border-l-4 ${VARIANT_BORDER[variant]} rounded-md shadow-md p-4 flex items-start gap-3 transition-opacity duration-150 ${
         visible ? 'opacity-100' : 'opacity-0'
       }`}

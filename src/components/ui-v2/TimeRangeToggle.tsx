@@ -24,6 +24,9 @@ function TimeRangeToggle<T extends string>({
           <button
             key={opt.id}
             type="button"
+            // BL-31 (WCAG 1.3.1 / 4.1.2): the chosen range was shown only by a
+            // white fill; state it to assistive technology too.
+            aria-pressed={active}
             onClick={() => onChange(opt.id)}
             className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-[6px] transition-all duration-150 cursor-pointer ${
               active

@@ -1251,26 +1251,26 @@ const SupplierShipments: React.FC = () => {
                 />
               </div>
               <div>
-                <label className={labelClass}>
+                <label className="block"><span className={labelClass}>
                   {t('supplierShipments.wizard.details.field.shipDate')}
-                </label>
+                </span>
                 <input
                   type="date"
                   value={form.shipDate}
                   onChange={(e) => updateForm({ shipDate: e.target.value })}
                   className={inputClass}
-                />
+                /></label>
               </div>
               <div>
-                <label className={labelClass}>
+                <label className="block"><span className={labelClass}>
                   {t('supplierShipments.wizard.details.field.eta')}
-                </label>
+                </span>
                 <input
                   type="date"
                   value={form.eta}
                   onChange={(e) => updateForm({ eta: e.target.value })}
                   className={inputClass}
-                />
+                /></label>
               </div>
             </div>
           </FormSection>
@@ -1304,9 +1304,9 @@ const SupplierShipments: React.FC = () => {
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className={labelClass}>
+                <label className="block"><span className={labelClass}>
                   {t('supplierShipments.wizard.details.field.packages')}
-                </label>
+                </span>
                 <input
                   type="number"
                   min={1}
@@ -1314,12 +1314,12 @@ const SupplierShipments: React.FC = () => {
                   value={form.packages}
                   onChange={(e) => updateForm({ packages: e.target.value })}
                   className={inputClass}
-                />
+                /></label>
               </div>
               <div>
-                <label className={labelClass}>
+                <label className="block"><span className={labelClass}>
                   {t('supplierShipments.wizard.details.field.weight')}
-                </label>
+                </span>
                 <input
                   type="number"
                   min={0}
@@ -1327,7 +1327,7 @@ const SupplierShipments: React.FC = () => {
                   value={form.weightKg}
                   onChange={(e) => updateForm({ weightKg: e.target.value })}
                   className={inputClass}
-                />
+                /></label>
               </div>
             </div>
           </FormSection>
@@ -1351,7 +1351,7 @@ const SupplierShipments: React.FC = () => {
                     })
                   }
                 />
-                <span className="inline-flex items-center gap-2 px-3 py-1.5 border border-border-input rounded-md text-sm text-teal font-semibold bg-bg-surface">
+                <span className="inline-flex items-center gap-2 px-3 py-1.5 border border-border-input rounded-md text-sm text-teal-hover font-semibold bg-bg-surface">
                   <Upload size={14} />
                   {t('supplierShipments.wizard.details.chooseFile')}
                 </span>
@@ -1363,16 +1363,16 @@ const SupplierShipments: React.FC = () => {
               </label>
             </div>
             <div>
-              <label className={labelClass}>
+              <label className="block"><span className={labelClass}>
                 {t('supplierShipments.wizard.details.field.notes')}
-              </label>
+              </span>
               <textarea
                 value={form.notes}
                 onChange={(e) => updateForm({ notes: e.target.value })}
                 rows={3}
                 placeholder={t('supplierShipments.placeholder.notes')}
                 className={`${inputClass} resize-y`}
-              />
+              /></label>
             </div>
           </FormSection>
         </div>

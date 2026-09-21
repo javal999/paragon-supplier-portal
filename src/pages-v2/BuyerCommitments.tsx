@@ -210,10 +210,10 @@ const BuyerCommitments: React.FC = () => {
               ))}
             </select>
           </label>
-          <Link to="/buyer/chase" className="text-sm text-action hover:underline self-center">
+          <Link to="/buyer/chase" className="text-sm text-action-hover hover:underline self-center">
             {t('fc.pti.gaps.followUp')}
           </Link>
-          <Link to="/buyer/collaboration/responses" className="text-sm text-action hover:underline self-center">
+          <Link to="/buyer/collaboration/responses" className="text-sm text-action-hover hover:underline self-center">
             {t('fc.pti.gaps.earlierResponses')}
           </Link>
         </div>

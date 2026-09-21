@@ -132,9 +132,9 @@ const Login: React.FC = () => {
         {/* Form */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '20px' }}>
           <div>
-            <label style={{ fontSize: '12px', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '5px' }}>
+            <label className="block"><span style={{ fontSize: '12px', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '5px' }}>
               Email
-            </label>
+            </span>
             <input
               type="email"
               style={INPUT_STYLE}
@@ -142,12 +142,12 @@ const Login: React.FC = () => {
               value={email}
               onChange={e => setEmail(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleSignIn()}
-            />
+            /></label>
           </div>
           <div>
-            <label style={{ fontSize: '12px', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '5px' }}>
+            <label className="block"><span style={{ fontSize: '12px', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '5px' }}>
               Password
-            </label>
+            </span>
             <input
               type="password"
               style={INPUT_STYLE}
@@ -155,7 +155,7 @@ const Login: React.FC = () => {
               value={password}
               onChange={e => setPassword(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleSignIn()}
-            />
+            /></label>
           </div>
 
           <button
