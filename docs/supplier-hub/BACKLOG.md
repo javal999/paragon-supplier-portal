@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 1.3, 2026-09-21 |
+| Version | 1.4, 2026-09-21 |
 | What this is | Everything known to be outstanding for the Supplier Hub, in one list: decisions waiting on people, work waiting on those decisions, work waiting on the backend, and work that can start today |
 | What this is not | A plan or a commitment. Nothing here has a date. Sequencing belongs to the project owner |
 | Sources | Open items (section 7 of `SUPPLIER-HUB-REQUIREMENTS.md`), open decisions (section 9.3 of `SUPPLIER-HUB-PRD.md`), what is not built (section 5 of `BUILD-GAP.md`), stubs (section 6 of the requirements), and defects or debts found while building |
@@ -48,9 +48,6 @@ Decided on 2026-09-21 and ready to build. Priority: first what protects money an
 | 6 | BL-48 | **Forecast commitment deadline.** Firm periods 1 working day, Trade-off and Forecast 3 working days | CR-26 | S | — |
 | 7 | BL-49 | **Call-off release by remaining quantity.** Quantity becomes the default check, value only where a line has no quantity | CR-04; BL-13 | S | — |
 | 8 | BL-50 | **Hub-managed working calendar.** Administrator page to load the SAP factory calendar and add, remove or override days; every deadline reads it. This is the first page of the admin screen in BL-32 | Requirements 3.4 | M | SAP load simulated |
-| 9 | BL-51 | **3PL tracking link on the ASN.** An administrator-maintained list of 3PLs and their public tracking addresses; the tracking number on an ASN becomes a link out. No reading of status from the 3PL's site | REQ-E07-04 BR-05 | S | A short sample list, marked as sample |
-| 10 | BL-52 | **Supplier filters.** Certificate validity, then performance band, then country or region | REQ-E03-01 BR-05 | S | — |
-| 11 | BL-53 | **KPI definitions on the performance pages.** State the delivery window, whether early counts, the grain, and whether a date change resets the clock; show targets as "baseline period" until they are set | BL-19 decision | S | Baseline period, no target |
 | 12 | BL-31 | Accessibility pass (section 4) | SC-07 | M | — |
 | 13 | BL-32 | Admin screen for the remaining configuration: reason codes, tolerances, thresholds, stale periods (section 4) | REQ-E08-05 BR-03 | M | — |
 | 14 | BL-33 to BL-39 | The remaining "can start today" items in section 4, in the order listed there | — | — | — |
@@ -137,3 +134,6 @@ Nothing blocks these.
 | BL-61 | One list on the supplier inventory view | 2026-09-21 | Built: tabs only when a supplier supplies both types; PTI view unchanged |
 | BL-62 | Capacity "upside" relabelled | 2026-09-21 | Built: "Extra capacity if requested", with an explanation |
 | BL-63 | Capacity page filters | 2026-09-21 | Built: supplier, material group, material, gaps only, kept in the page address |
+| BL-51 | 3PL tracking link on the ASN | 2026-09-21 | Built: the supplier picks the 3PL from the administrator's list (sample list, marked as sample) or types another carrier; the tracking number opens the 3PL's public page in a new tab on every ASN surface, supplier and PTI; no status read; no or unknown 3PL shows plain text. The list is changed through a governed verb held by the compliance lane and the Hub administrator, on Administration → 3PL tracking links |
+| BL-52 | Supplier filters | 2026-09-21 | Built: certificate validity (valid, expiring within 90 days, expired or missing), performance band (A–D, No history), country, on the supplier list and every invitee search, in the page address and combined with the existing filters. Region is not a separate filter: the supplier master holds a country only |
+| BL-53 | KPI definitions on the performance pages | 2026-09-21 | Built: OTIF and CFOT definitions as calculated (window, early, grain, date change, in full) on both performance pages; targets read "Baseline period — no target yet". One difference from the requirements is stated as the code does it and left for a decision: a PO counter-offer moves the CFOT date as soon as it is sent |
