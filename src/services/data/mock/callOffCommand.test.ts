@@ -83,6 +83,12 @@ describe('release (REQ-E09-01 BR-04 / AC-03) — blocked beyond what remains, by
     expect(callOffStore.all()).toHaveLength(before);
   });
 
+  it('BL-49: the refusal is on remaining QUANTITY and names both figures', async () => {
+    const res = await release({ quantity: 15001 });
+    expect(res.reason).toMatch(/EXCEEDS_REMAINING: 15001 PCS is more than the 15000 PCS remaining on PO-2025-00107/);
+    expect(res.reason).not.toMatch(/EXCEEDS_REMAINING_VALUE/);
+  });
+
   it('a draft may be planned beyond remaining, but releasing it is refused', async () => {
     const drafted = await svc.dispatch(buyer, {
       transitionId: 't_calloff_draft',

@@ -276,6 +276,13 @@ export interface POLineItem {
   uom: string;
   unitPrice: number;
   confirmedQty: number;
+  /**
+   * An SAP value-limit line: the line commits a VALUE and carries NO quantity
+   * (CR-04; BL-13 decided quantity per line, so this is the exception). When it
+   * is set, `quantity` is 0 and means "no quantity", never "nothing ordered",
+   * and a call-off release on the line is checked against remaining VALUE.
+   */
+  valueLimit?: number;
 }
 
 export interface PurchaseOrder {

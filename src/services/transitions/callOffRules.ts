@@ -79,10 +79,25 @@ const daysBetween = (from: string, to: string) => Math.round((dayMs(to) - dayMs(
 
 // ── CR-04 · remaining on the umbrella PO ────────────────────────────────────
 
+/**
+ * What a release is checked against (CR-04; BL-13 decided on 2026-09-21 that
+ * the umbrella PO holds a QUANTITY per line, so BL-49 makes quantity the
+ * default). Value is the check only on a line that carries no quantity — an SAP
+ * value-limit line, marked by `valueLimit`.
+ */
+export type ReleaseBasis = 'quantity' | 'value';
+
+type UmbrellaLine = Pick<POLineItem, 'id' | 'quantity' | 'unitPrice' | 'valueLimit'>;
+
+export const releaseBasis = (line: UmbrellaLine): ReleaseBasis =>
+  line.valueLimit === undefined ? 'quantity' : 'value';
+
 export interface UmbrellaRemaining {
-  readonly orderedQty: number;
+  readonly basis: ReleaseBasis;
+  /** Ordered and remaining quantity — null on a line that has no quantity. */
+  readonly orderedQty: number | null;
   readonly releasedQty: number;
-  readonly remainingQty: number;
+  readonly remainingQty: number | null;
   readonly orderedValue: number;
   readonly releasedValue: number;
   readonly remainingValue: number;
@@ -90,38 +105,68 @@ export interface UmbrellaRemaining {
 
 /**
  * Remaining quantity = PO line quantity − released call-off quantity; remaining
- * value = PO line value − released call-off value. `excludeId` leaves one
- * call-off out (the one being released or changed).
+ * value = PO line value − released call-off value, where a value-limit line's
+ * ordered value is its limit. `excludeId` leaves one call-off out (the one being
+ * released or changed).
  */
 export function umbrellaRemaining(
-  line: Pick<POLineItem, 'id' | 'quantity' | 'unitPrice'>,
+  line: UmbrellaLine,
   callOffs: readonly CallOff[],
   excludeId?: string,
 ): UmbrellaRemaining {
+  const basis = releaseBasis(line);
   const releasedQty = callOffs
     .filter((c) => c.poLineId === line.id && c.id !== excludeId && isReleased(c))
     .reduce((s, c) => s + c.quantity, 0);
-  const orderedValue = line.quantity * line.unitPrice;
+  const orderedValue = line.valueLimit ?? line.quantity * line.unitPrice;
   const releasedValue = releasedQty * line.unitPrice;
   return {
-    orderedQty: line.quantity,
+    basis,
+    orderedQty: basis === 'quantity' ? line.quantity : null,
     releasedQty,
-    remainingQty: line.quantity - releasedQty,
+    remainingQty: basis === 'quantity' ? line.quantity - releasedQty : null,
     orderedValue,
     releasedValue,
     remainingValue: orderedValue - releasedValue,
   };
 }
 
-/** REQ-E09-01 BR-04 / AC-03 — release is blocked beyond what remains. */
+/** A release measured against what remains, in the line's own basis. */
+export interface ReleaseCheck {
+  readonly basis: ReleaseBasis;
+  readonly exceeds: boolean;
+  readonly requestedQty: number;
+  readonly requestedValue: number;
+  readonly remaining: UmbrellaRemaining;
+}
+
+/**
+ * REQ-E09-01 BR-04 / AC-03 with CR-04 — release is blocked beyond what remains:
+ * on remaining QUANTITY by default, on remaining VALUE only where the line has
+ * no quantity (BL-49). Exactly the remainder is allowed.
+ */
+export function releaseCheck(
+  quantity: number,
+  line: UmbrellaLine,
+  callOffs: readonly CallOff[],
+  excludeId?: string,
+): ReleaseCheck {
+  const remaining = umbrellaRemaining(line, callOffs, excludeId);
+  const requestedValue = quantity * line.unitPrice;
+  const exceeds =
+    remaining.basis === 'quantity'
+      ? quantity > (remaining.remainingQty ?? 0)
+      : requestedValue > remaining.remainingValue;
+  return { basis: remaining.basis, exceeds, requestedQty: quantity, requestedValue, remaining };
+}
+
 export function exceedsRemaining(
   quantity: number,
-  line: Pick<POLineItem, 'id' | 'quantity' | 'unitPrice'>,
+  line: UmbrellaLine,
   callOffs: readonly CallOff[],
   excludeId?: string,
 ): boolean {
-  const r = umbrellaRemaining(line, callOffs, excludeId);
-  return quantity > r.remainingQty || quantity * line.unitPrice > r.remainingValue;
+  return releaseCheck(quantity, line, callOffs, excludeId).exceeds;
 }
 
 /** Why a call-off could not be placed on this PO line, or null. */

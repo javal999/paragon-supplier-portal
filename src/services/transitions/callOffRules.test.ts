@@ -27,6 +27,8 @@ import {
   isCallOffEscalated,
   isDueWithoutHeadsUp,
   proposedDeliveries,
+  releaseBasis,
+  releaseCheck,
   umbrellaRemaining,
   type ReceiptEvent,
 } from './callOffRules';
@@ -76,6 +78,37 @@ describe('CR-04 · remaining on the umbrella PO', () => {
     expect(exceedsRemaining(50001, LINE, rows)).toBe(true);
     // Changing a call-off leaves itself out of what is already released.
     expect(exceedsRemaining(200000, LINE, rows, 'a')).toBe(false);
+  });
+
+  it('BL-49: a line with a quantity is checked on remaining QUANTITY, and says so', () => {
+    const rows: CallOff[] = [{ ...base, id: 'a', quantity: 150000, status: 'Confirmed' }];
+    const fits = releaseCheck(50000, LINE, rows);
+    expect(fits).toMatchObject({ basis: 'quantity', exceeds: false, requestedQty: 50000 });
+    expect(fits.remaining).toMatchObject({ basis: 'quantity', orderedQty: 200000, remainingQty: 50000 });
+    const over = releaseCheck(50001, LINE, rows);
+    expect(over).toMatchObject({ basis: 'quantity', exceeds: true });
+    expect(releaseBasis(LINE)).toBe('quantity');
+  });
+
+  it('BL-49: value is the check ONLY on a line with no quantity — boundary both sides', () => {
+    // A value-limit line: 100,000 of value at 1,000 a unit; 30 units released.
+    const VALUE_LINE = { id: 'v-line', quantity: 0, unitPrice: 1000, valueLimit: 100000 };
+    const rows: CallOff[] = [{ ...base, id: 'a', poLineId: 'v-line', quantity: 30, status: 'Confirmed' }];
+    const r = umbrellaRemaining(VALUE_LINE, rows);
+    expect(r).toEqual({
+      basis: 'value',
+      orderedQty: null,
+      releasedQty: 30,
+      remainingQty: null,
+      orderedValue: 100000,
+      releasedValue: 30000,
+      remainingValue: 70000,
+    });
+    expect(releaseCheck(70, VALUE_LINE, rows)).toMatchObject({ basis: 'value', exceeds: false, requestedValue: 70000 });
+    expect(releaseCheck(71, VALUE_LINE, rows)).toMatchObject({ basis: 'value', exceeds: true, requestedValue: 71000 });
+    // The stored 0 quantity is never read as "0 remaining": without the value
+    // basis, every release on this line would be refused.
+    expect(exceedsRemaining(1, VALUE_LINE, rows)).toBe(false);
   });
 });
 
