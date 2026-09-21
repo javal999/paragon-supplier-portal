@@ -53,7 +53,7 @@ describe('BL-52 · the invitee search (RFI / RFP step)', () => {
   it('?band=B&cert=expiredOrMissing with purchasing group 101 → exactly sup-019', async () => {
     renderWithProviders(
       <RfxInviteeStep supplierCategory="" selected={[]} onToggle={() => {}} testIdPrefix="rfi" />,
-      { identity: BUYER, route: '/buyer/sourcing/rfi?band=B&cert=expiredOrMissing' },
+      { identity: BUYER, route: '/buyer/rfi?band=B&cert=expiredOrMissing' },
     );
     fireEvent.change(await screen.findByTestId('rfi-invitee-group-filter'), { target: { value: '101' } });
     await waitFor(() => expect(rowIds(/^rfi-invitee-row-sup-/)).toEqual(['sup-019']));
@@ -64,7 +64,7 @@ describe('BL-52 · the invitee search (RFI / RFP step)', () => {
   it('an empty result names every filter in force, and clearing clears the BR-05 ones too', async () => {
     renderWithProviders(
       <RfxInviteeStep supplierCategory="" selected={[]} onToggle={() => {}} testIdPrefix="rfi" />,
-      { identity: BUYER, route: '/buyer/sourcing/rfi?band=A&country=DE' },
+      { identity: BUYER, route: '/buyer/rfi?band=A&country=DE' },
     );
     expect(await screen.findByTestId('rfi-invitee-empty')).toHaveTextContent(/Grade A.*\(DE\)/);
     fireEvent.click(screen.getByTestId('rfi-invitee-clear-filters'));

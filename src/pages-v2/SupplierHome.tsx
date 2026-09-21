@@ -201,7 +201,7 @@ const SupplierHome: React.FC = () => {
         label: t('hub.home.task.sup.rfq'),
         count: openRfqs.length,
         severity: lateRfqs.length > 0 ? 'critical' : 'warning',
-        to: '/supplier/rfqs',
+        to: '/supplier/rfq',
       },
       {
         // REQ-E03-02 — an information request still to answer: invited, and no
@@ -212,7 +212,7 @@ const SupplierHome: React.FC = () => {
           (e) => !e.closed && e.responses.every((r) => r.status !== 'Submitted'),
         ).length,
         severity: 'warning',
-        to: '/supplier/rfqs/rfi',
+        to: '/supplier/rfi',
       },
       {
         // REQ-E03-04 — a proposal request still to answer.
@@ -222,7 +222,7 @@ const SupplierHome: React.FC = () => {
           (e) => !e.closed && e.responses.every((r) => r.status !== 'Submitted'),
         ).length,
         severity: 'warning',
-        to: '/supplier/rfqs/rfp',
+        to: '/supplier/rfp',
       },
       {
         // REQ-E03-05 — PTI asked for a revised quote and this supplier has not
@@ -231,7 +231,7 @@ const SupplierHome: React.FC = () => {
         label: t('hub.home.task.revisedQuote'),
         count: (rounds.data?.items ?? []).filter((r) => !r.closed && r.awaiting > 0).length,
         severity: 'critical',
-        to: '/supplier/rfqs/rounds',
+        to: '/supplier/rfq/rounds',
       },
       {
         id: 'certs',

@@ -554,7 +554,7 @@ const BuyerRequisitions: React.FC = () => {
    * dispatching from here would have got wrong.
    */
   const raiseSourcingEvent = (pr: PurchaseRequisition) => {
-    navigate('/buyer/sourcing', { state: { sourceRequisitionId: pr.id } });
+    navigate('/buyer/rfq', { state: { sourceRequisitionId: pr.id } });
   };
 
   const rejectSelected = async () => {

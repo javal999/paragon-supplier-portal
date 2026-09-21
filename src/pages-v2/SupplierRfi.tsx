@@ -14,13 +14,12 @@ import { useVerbAvailability } from '../hooks/useVerbAvailability';
 import { useToast } from '../hooks/useToast';
 import { formatDate } from '../lib/format';
 import { useCurrentIdentity } from '../context/CurrentIdentityContext';
-import { useRfiEvents, useRfpEvents, useRFQs } from '../services/query/hooks';
+import { useRfiEvents } from '../services/query/hooks';
 import { useRfxCommand } from '../services/query/commandHooks';
 import { RFI_SECTION_ORDER } from '../services/sourcing/rfxConfig';
 import { missingRequiredAnswers } from '../services/transitions/rfxRules';
 import type { RfiAnswer, RfiQuestion } from '../services/sourcing/types';
 import type { RfiEventView } from '../services/sourcing/views';
-import RfxTabs from './rfx/RfxTabs';
 import { DeadlinePill, rfxNow } from './rfx/rfxDisplay';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -49,8 +48,6 @@ const SupplierRfi: React.FC = () => {
   const { toast } = useToast();
   const { identity } = useCurrentIdentity();
   const events = useRfiEvents();
-  const rfps = useRfpEvents();
-  const rfqs = useRFQs();
   const answer = useVerbAvailability('rfiresponse:answer');
   const command = useRfxCommand();
   const [openId, setOpenId] = useState<string | null>(null);
@@ -103,18 +100,13 @@ const SupplierRfi: React.FC = () => {
       <PageHeader
         breadcrumb={crumb}
         title={t('rfx.rfi.supplier.title')}
+        count={items.length}
         subtitle={t('rfx.rfi.supplier.subtitle')}
       />
       <PageMetaLine className="-mt-6 mb-4">
         {t('rfx.asOf')} <Data>{formatDate(rfxNow())}</Data>
         <SampleDataBadge className="ml-3 align-middle" />
       </PageMetaLine>
-
-      <RfxTabs
-        persona="supplier"
-        active="rfi"
-        counts={{ rfi: items.length, rfq: rfqs.data?.items.length ?? 0, rfp: rfps.data?.items.length ?? 0 }}
-      />
 
       {answer.kind !== 'held' && (
         <div className="mb-4">

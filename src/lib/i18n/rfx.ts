@@ -7,9 +7,6 @@
 
 export const rfxEn: Record<string, string> = {
   // — Shared chrome ————————————————————————————————————————————————————
-  'rfx.tabs.rfi': 'Information requests',
-  'rfx.tabs.rfq': 'Quotation requests',
-  'rfx.tabs.rfp': 'Proposal requests',
   'rfx.asOf': 'As of',
   'rfx.deadline': 'Response deadline',
   'rfx.deadline.own': 'Your deadline',
@@ -249,6 +246,9 @@ export const rfxEn: Record<string, string> = {
   'rfx.cmp.empty': 'No quote has been received yet.',
   'rfx.cmp.versions': 'Quote versions',
   'rfx.cmp.round': 'Round {{round}}',
+  // BL-72 — the COLUMN header. `rfx.cmp.round` interpolates a round number and
+  // was rendered bare in two headers, so i18next printed its placeholder.
+  'rfx.cmp.roundColumn': 'Round',
   'rfx.cmp.originalQuote': 'First quote',
   'rfx.cmp.notAutomatic': 'The score supports your decision. Nothing is awarded automatically.',
   'rfx.neg.title': 'Negotiation rounds',
@@ -371,9 +371,6 @@ export const rfxEn: Record<string, string> = {
 };
 
 export const rfxId: Record<string, string> = {
-  'rfx.tabs.rfi': 'Permintaan informasi',
-  'rfx.tabs.rfq': 'Permintaan penawaran harga',
-  'rfx.tabs.rfp': 'Permintaan proposal',
   'rfx.asOf': 'Per',
   'rfx.deadline': 'Batas waktu jawaban',
   'rfx.deadline.own': 'Batas waktu Anda',
@@ -607,6 +604,7 @@ export const rfxId: Record<string, string> = {
   'rfx.cmp.empty': 'Belum ada penawaran yang masuk.',
   'rfx.cmp.versions': 'Versi penawaran',
   'rfx.cmp.round': 'Putaran {{round}}',
+  'rfx.cmp.roundColumn': 'Putaran',
   'rfx.cmp.originalQuote': 'Penawaran pertama',
   'rfx.cmp.notAutomatic': 'Nilai membantu keputusan Anda. Tidak ada yang dimenangkan otomatis.',
   'rfx.neg.title': 'Putaran negosiasi',

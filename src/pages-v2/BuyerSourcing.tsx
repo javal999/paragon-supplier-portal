@@ -75,7 +75,6 @@ import SupplierFilterBar, {
 } from './suppliers/SupplierFilterBar';
 import { PURCHASING_GROUPS, purchasingGroupNameKey } from '../services/sourcing/rfxConfig';
 import { reliabilityScoreFor } from '../services/transitions/rfxRules';
-import RfxTabs from './rfx/RfxTabs';
 import {
   useRfqCreate,
   useRfqAward,
@@ -2335,6 +2334,7 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
       <PageHeader
         breadcrumb={[t('sourcing.crumb.acquire'), t('sourcing.crumb.sourcing')]}
         title={t('sourcing.header.title')}
+        count={rfqs.length}
         subtitle={t('sourcing.header.subtitle')}
         actions={
           // §73 — the page-level create, WITHHELD rather than disabled. A seat
@@ -2383,10 +2383,6 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
             and drives the quotation cascade, over a fixture RFQ set. */}
         <ProvenanceMarker capability="rfqs" className="ml-3 align-middle" />
       </PageMetaLine>
-
-      {/* REQ-E03-02 / -04 — the other two event types live behind the SAME menu
-          item (§3.7). The switch is here rather than in the sidebar. */}
-      <RfxTabs persona="buyer" active="rfq" counts={{ rfq: rfqs.length }} />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-8">
         <KpiCard
@@ -2721,7 +2717,7 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
                 award live on the event's own page, where a round and an award
                 can be read beside the bids they act on. */}
             <Link
-              to={`/buyer/sourcing/rfq/${selectedRfq.id}`}
+              to={`/buyer/rfq/${selectedRfq.id}`}
               className="text-sm text-action hover:underline"
               data-testid="open-sourcing-event"
             >

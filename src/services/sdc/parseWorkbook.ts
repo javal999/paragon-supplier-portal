@@ -2,12 +2,12 @@
 // SDC-3c-c-a — the headless XLSX PARSE LAYER (file → rows). Pure edge + one
 // lazy IO seam; NO rendering, NO grid, NO adapter change.
 //
-// This is the file→rows front edge of DEC-MAGIC-LINK-GRID's Excel path. It sits
-// ABOVE the SDC-3c-a adapter (`parseGrid`), never inside it: it turns a workbook
-// into the adapter's source-agnostic `Record<string,string>[]`, and stops there.
-// The adapter still owns ROW-level honest-silence (ParseReason); this layer owns
-// FILE-level honest-silence (FileParseReason) — the failures that happen BEFORE
-// any row exists to hand on.
+// This is the file→rows front edge of the Excel path: it turns a workbook into
+// source-agnostic `Record<string,string>[]`, and stops there. Row-level checks
+// belong to the consumer (the Stock page's template upload runs
+// `validateStockRows`; the SDC `parseGrid` adapter this once fed was retired at
+// BL-73). This layer owns FILE-level honest-silence (FileParseReason) — the
+// failures that happen BEFORE any row exists to hand on.
 //
 // DECOUPLED FROM THE GRID UI (hard requirement): the same file→rows path is the
 // Communication Hub email-attachment path (CH-5 / P1b). Keeping it a pure module
@@ -34,8 +34,8 @@
 
 /**
  * Why a FILE could not become rows — the file tier's honest-silence reasons,
- * parallel to `ParseReason` (ingest.ts) but one level up: these fire BEFORE any
- * row reaches the adapter. Each resolves to `{ ok:false, reason }`, never a
+ * one level above the row checks: these fire BEFORE any row reaches a
+ * consumer. Each resolves to `{ ok:false, reason }`, never a
  * fabricated workbook.
  */
 export type FileParseReason =
@@ -48,8 +48,7 @@ export type FileParseReason =
  * A successfully parsed workbook. `rows` are keyed by the supplier's RAW headers
  * (NOT our canonical fields — mapping is 3c-c-b's confirmable step). `sheets`
  * lists every sheet name so the picker can offer them; `activeSheet` is the one
- * parsed (the first by default). `ok:true` is the union discriminant, mirroring
- * DispatchUnit in ingest.ts.
+ * parsed (the first by default). `ok:true` is the union discriminant.
  */
 export interface ParsedWorkbook {
   readonly ok: true;

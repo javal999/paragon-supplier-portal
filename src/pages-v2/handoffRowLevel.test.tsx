@@ -24,11 +24,16 @@ const REQUISITIONER: CurrentIdentity = { ...BUYER, businessRoles: ['requisitione
 const FINANCE: CurrentIdentity = { ...BUYER, businessRoles: ['finance'] };
 const RECEIVING_ONLY: CurrentIdentity = { ...BUYER, businessRoles: ['receiving'] };
 
-// ⚠️ THE CONFIRM CONTROL IS NOT ON THE PAGE UNTIL A MESSAGE IS PARSED, SO A
-// BARE "it is absent" ASSERTION PASSES FOR EVERY SEAT AND PROVES NOTHING. The
-// first cut of this pair did exactly that and went green; it was caught by
-// asking whether the HOLDING seat could reach the control at all (it could not,
-// without the interaction). Both cases now drive the parse first.
+// ⚠️ THE CONTROL IS NOT ON THE PAGE UNTIL A MESSAGE IS PARSED, SO A BARE "it
+// is absent" ASSERTION PASSES FOR EVERY SEAT AND PROVES NOTHING. The first cut
+// of this pair did exactly that and went green; it was caught by asking whether
+// the HOLDING seat could reach the control at all (it could not, without the
+// interaction). Both cases now drive the parse first.
+//
+// PREMISE CHANGED (BL-73): the control a parsed row offers is no longer a
+// "Confirm & record" button that dispatched on its own path — it is the way
+// into the Inventory page's entry form (`triage-enter-0`), whose save is the
+// `record` dispatch. The gate is the same atom, on the same row.
 async function reachConfirmStage() {
   const select = screen.getByTestId('triage-supplier') as HTMLSelectElement;
   await waitFor(() => expect(within(select).getAllByRole('option').length).toBeGreaterThan(1));
@@ -37,17 +42,15 @@ async function reachConfirmStage() {
     target: { value: 'STOK PK-PETB-8810 2400 KG' },
   });
   fireEvent.click(screen.getByTestId('triage-parse'));
-  const mat = (await screen.findByTestId('triage-mat-0')) as HTMLSelectElement;
-  await waitFor(() => expect(within(mat).getAllByRole('option').length).toBeGreaterThan(1));
-  fireEvent.change(mat, { target: { value: 'PK-PETB-8810' } });
+  await screen.findByTestId('triage-row-0');
 }
 
 describe('§74 · BuyerChannelTriage — inventorydeclaration:record', () => {
-  it('HELD: a planning seat reaches the confirm control, and gets NO notice', async () => {
+  it('HELD: a planning seat reaches the entry control, and gets NO notice', async () => {
     renderWithProviders(<BuyerChannelTriage />, { identity: PLANNING });
     await screen.findAllByText(/Triage/i);
     await reachConfirmStage();
-    expect(screen.getByTestId('triage-confirm')).toBeInTheDocument();
+    expect(screen.getByTestId('triage-enter-0')).toBeInTheDocument();
     expect(screen.queryByTestId('handoff-triage-record')).not.toBeInTheDocument();
   });
 
@@ -55,7 +58,7 @@ describe('§74 · BuyerChannelTriage — inventorydeclaration:record', () => {
     renderWithProviders(<BuyerChannelTriage />, { identity: FINANCE });
     await screen.findAllByText(/Triage/i);
     await reachConfirmStage();
-    expect(screen.queryByTestId('triage-confirm')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('triage-enter-0')).not.toBeInTheDocument();
     expect(screen.getByTestId('handoff-triage-record')).toHaveTextContent('Awaiting Planning');
   });
 });

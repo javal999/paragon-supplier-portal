@@ -119,11 +119,11 @@ const ROUTES: RouteCase[] = [
   { name: 'marketplace/supplier/:id', pattern: '/marketplace/supplier/:id', at: '/marketplace/supplier/sup-007', element: <SupplierStorefrontV2 />, identity: BUYER },
   { name: 'buyer/order-summary', pattern: '/buyer/order-summary', at: '/buyer/order-summary', element: <BuyerOrderSummary />, identity: BUYER },
   { name: 'buyer/orders', pattern: '/buyer/orders', at: '/buyer/orders', element: <BuyerOrders />, identity: BUYER },
-  { name: 'buyer/sourcing', pattern: '/buyer/sourcing', at: '/buyer/sourcing', element: <BuyerSourcing />, identity: BUYER },
+  { name: 'buyer/rfq', pattern: '/buyer/rfq', at: '/buyer/rfq', element: <BuyerSourcing />, identity: BUYER },
   // REQ-E03-02 / REQ-E03-04 / REQ-E03-05 — the RFx surfaces.
-  { name: 'buyer/sourcing/rfi', pattern: '/buyer/sourcing/rfi', at: '/buyer/sourcing/rfi', element: <BuyerRfi />, identity: BUYER },
-  { name: 'buyer/sourcing/rfp', pattern: '/buyer/sourcing/rfp', at: '/buyer/sourcing/rfp', element: <BuyerRfp />, identity: BUYER },
-  { name: 'buyer/sourcing/rfq/:rfqId', pattern: '/buyer/sourcing/rfq/:rfqId', at: '/buyer/sourcing/rfq/rfq-014', element: <BuyerSourcingEvent />, identity: BUYER },
+  { name: 'buyer/rfi', pattern: '/buyer/rfi', at: '/buyer/rfi', element: <BuyerRfi />, identity: BUYER },
+  { name: 'buyer/rfp', pattern: '/buyer/rfp', at: '/buyer/rfp', element: <BuyerRfp />, identity: BUYER },
+  { name: 'buyer/rfq/:rfqId', pattern: '/buyer/rfq/:rfqId', at: '/buyer/rfq/rfq-014', element: <BuyerSourcingEvent />, identity: BUYER },
   { name: 'buyer/plan-grid', pattern: '/buyer/plan-grid', at: '/buyer/plan-grid', element: <PlanGrid />, identity: BUYER },
   { name: 'buyer/forecasts', pattern: '/buyer/forecasts', at: '/buyer/forecasts', element: <BuyerForecasts />, identity: BUYER },
   { name: 'buyer/collaboration', pattern: '/buyer/collaboration', at: '/buyer/collaboration', element: <BuyerCommitments />, identity: BUYER },
@@ -168,10 +168,10 @@ const ROUTES: RouteCase[] = [
   { name: 'supplier/comm-hub', pattern: '/supplier/comm-hub', at: '/supplier/comm-hub', element: <CommHubInbound />, identity: SUPPLIER },
   { name: 'supplier/order-summary', pattern: '/supplier/order-summary', at: '/supplier/order-summary', element: <SupplierOrderSummary />, identity: SUPPLIER },
   { name: 'supplier/orders', pattern: '/supplier/orders', at: '/supplier/orders', element: <SupplierOrders />, identity: SUPPLIER },
-  { name: 'supplier/rfqs', pattern: '/supplier/rfqs', at: '/supplier/rfqs', element: <SupplierRFQsV2 />, identity: SUPPLIER },
-  { name: 'supplier/rfqs/rfi', pattern: '/supplier/rfqs/rfi', at: '/supplier/rfqs/rfi', element: <SupplierRfi />, identity: SUPPLIER },
-  { name: 'supplier/rfqs/rfp', pattern: '/supplier/rfqs/rfp', at: '/supplier/rfqs/rfp', element: <SupplierRfp />, identity: SUPPLIER },
-  { name: 'supplier/rfqs/rounds', pattern: '/supplier/rfqs/rounds', at: '/supplier/rfqs/rounds', element: <SupplierNegotiations />, identity: SUPPLIER },
+  { name: 'supplier/rfq', pattern: '/supplier/rfq', at: '/supplier/rfq', element: <SupplierRFQsV2 />, identity: SUPPLIER },
+  { name: 'supplier/rfi', pattern: '/supplier/rfi', at: '/supplier/rfi', element: <SupplierRfi />, identity: SUPPLIER },
+  { name: 'supplier/rfp', pattern: '/supplier/rfp', at: '/supplier/rfp', element: <SupplierRfp />, identity: SUPPLIER },
+  { name: 'supplier/rfq/rounds', pattern: '/supplier/rfq/rounds', at: '/supplier/rfq/rounds', element: <SupplierNegotiations />, identity: SUPPLIER },
   { name: 'supplier/forecasts', pattern: '/supplier/forecasts', at: '/supplier/forecasts', element: <SupplierForecastCommitments />, identity: SUPPLIER },
   { name: 'supplier/forecasts/responses', pattern: '/supplier/forecasts/responses', at: '/supplier/forecasts/responses', element: <SupplierForecasts />, identity: SUPPLIER },
   { name: 'supplier/shipments', pattern: '/supplier/shipments', at: '/supplier/shipments', element: <SupplierShipments />, identity: SUPPLIER },
@@ -226,7 +226,10 @@ describe('sp-001 — every route mounts without crashing', () => {
         if (!m) return null;
         // The element belongs to THIS Route: everything before the next tag.
         const body = chunk.split('<Route')[0];
-        return /<Navigate\b/.test(body) ? null : m[1];
+        // `LegacyRedirect` is a `<Navigate>` that keeps query, state and params
+        // (the RFx paths retired 2026-09-21); its landing is proved in
+        // `legacyRedirects.test.tsx`, not here.
+        return /<(Navigate|LegacyRedirect)\b/.test(body) ? null : m[1];
       })
       .filter((p): p is string => p !== null);
 

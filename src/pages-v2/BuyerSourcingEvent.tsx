@@ -191,7 +191,7 @@ const BuyerSourcingEvent: React.FC = () => {
       </PageMetaLine>
 
       <div className="mb-4 flex flex-wrap items-center gap-3">
-        <Link to="/buyer/sourcing" className="text-sm text-action-hover hover:underline" data-testid="event-back">
+        <Link to="/buyer/rfq" className="text-sm text-action-hover hover:underline" data-testid="event-back">
           {t('rfx.event.back')}
         </Link>
         <StatusPill variant={rfq.status === 'Awarded' ? 'success' : 'info'}>{rfq.status}</StatusPill>
@@ -467,7 +467,7 @@ const BuyerSourcingEvent: React.FC = () => {
           <Table>
             <TableHeader>
               <TableHeaderCell>{t('rfx.supplier')}</TableHeaderCell>
-              <TableHeaderCell>{t('rfx.cmp.round')}</TableHeaderCell>
+              <TableHeaderCell>{t('rfx.cmp.roundColumn')}</TableHeaderCell>
               <TableHeaderCell>{t('rfx.cmp.row.unitPrice')}</TableHeaderCell>
               <TableHeaderCell>{t('rfx.cmp.row.leadTime')}</TableHeaderCell>
               <TableHeaderCell>{t('rfx.deadline')}</TableHeaderCell>
@@ -509,7 +509,7 @@ const BuyerSourcingEvent: React.FC = () => {
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableHeaderCell>{t('rfx.cmp.round')}</TableHeaderCell>
+              <TableHeaderCell>{t('rfx.cmp.roundColumn')}</TableHeaderCell>
               <TableHeaderCell>{t('rfx.neg.deadline')}</TableHeaderCell>
               <TableHeaderCell>{t('rfx.neg.shortlist')}</TableHeaderCell>
               <TableHeaderCell>{t('rfx.neg.message')}</TableHeaderCell>

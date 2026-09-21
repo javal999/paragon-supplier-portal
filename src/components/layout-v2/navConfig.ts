@@ -10,7 +10,9 @@ import {
   CalendarRange,
   ChartLine,
   Factory,
+  FileQuestion,
   FileSearch,
+  FileText,
   Gauge,
   KeyRound,
   Link2,
@@ -109,7 +111,11 @@ export const PTI_NAV: readonly NavSection[] = [
     labelKey: 'hub.nav.section.sourcing',
     roles: ['BUY'],
     items: [
-      { labelKey: 'hub.nav.pti.rfx', icon: FileSearch, path: '/buyer/sourcing' },
+      // Operator decision 2026-09-21 (reverses NV-06's one-sourcing-item ruling):
+      // RFI, RFQ and RFP are three modules, each with its own menu item and route.
+      { labelKey: 'hub.nav.pti.rfi', icon: FileQuestion, path: '/buyer/rfi' },
+      { labelKey: 'hub.nav.pti.rfq', icon: FileSearch, path: '/buyer/rfq' },
+      { labelKey: 'hub.nav.pti.rfp', icon: FileText, path: '/buyer/rfp' },
       { labelKey: 'hub.nav.pti.suppliers', icon: Users, path: '/buyer/suppliers' },
     ],
   },
@@ -156,7 +162,13 @@ export const SUPPLIER_NAV: readonly NavSection[] = [
   {
     id: 'sourcing',
     labelKey: 'hub.nav.section.sourcing',
-    items: [{ labelKey: 'hub.nav.sup.invitations', icon: FileSearch, path: '/supplier/rfqs' }],
+    // Operator decision 2026-09-21 — one item per event type. Negotiation rounds
+    // live at /supplier/rfq/rounds, under the RFQ item, so it stays highlighted.
+    items: [
+      { labelKey: 'hub.nav.sup.rfiInvitations', icon: FileQuestion, path: '/supplier/rfi' },
+      { labelKey: 'hub.nav.sup.rfqInvitations', icon: FileSearch, path: '/supplier/rfq' },
+      { labelKey: 'hub.nav.sup.rfpInvitations', icon: FileText, path: '/supplier/rfp' },
+    ],
   },
   {
     id: 'invoices',

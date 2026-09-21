@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
 import {
-  buildInventoryDeclarationPayload,
   buildIncomingShipmentPayload,
   ownCollaboratedMaterials,
   asnTrackingFor,
@@ -22,49 +21,6 @@ import type {
 // so it CANNOT fabricate a value because it never sees a string. (Its draft
 // normaliser was retired with the Forecast page's stock form — BL-60.)
 
-describe('buildInventoryDeclarationPayload (pure assembly, total-first)', () => {
-  it('a total-only declaration carries totalQty, no batches, no uom', () => {
-    const p = buildInventoryDeclarationPayload('sup-002', 'RM-EMUL-3310', { totalQty: 4000 });
-    expect(p).toEqual({ supplierId: 'sup-002', materialCode: 'RM-EMUL-3310', totalQty: 4000 });
-    expect('uom' in p).toBe(false); // master owns the unit (invariant #2)
-    expect('batches' in p).toBe(false);
-  });
-
-  it('batch detail is carried through verbatim (uom absent)', () => {
-    const p = buildInventoryDeclarationPayload('sup-002', 'RM-EMUL-3310', {
-      totalQty: 4000,
-      batches: [
-        { batchNumber: 'A', qty: 1800, expiryDate: '2027-06-30' },
-        { batchNumber: 'B', qty: 2200 },
-      ],
-    });
-    expect(p.batches).toEqual([
-      { batchNumber: 'A', qty: 1800, expiryDate: '2027-06-30' },
-      { batchNumber: 'B', qty: 2200 },
-    ]);
-  });
-
-  it('an empty batch list ⇒ a total-only payload (no batches key)', () => {
-    const p = buildInventoryDeclarationPayload('sup-002', 'RM-EMUL-3310', {
-      totalQty: 1000,
-      batches: [],
-    });
-    expect('batches' in p).toBe(false);
-  });
-
-  // The structural guarantee behind §4: the builder has no string input, so it
-  // has nothing to parse and no second reading to diverge from the gate's.
-  it('is pure assembly — the number it is given is the number it ships', () => {
-    const p = buildInventoryDeclarationPayload('sup-002', 'RM-EMUL-3310', { totalQty: 1.8 });
-    expect(p.totalQty).toBe(1.8);
-  });
-});
-
-// CP-0 · PR-2d — the shipment builder no longer parses either. `qty` arrives as
-// a NUMBER the caller already ran through `normalizeQty`, so the builder cannot
-// coerce, cannot fabricate a zero, and cannot disagree with the gate that let
-// the submit through. The three drafts below carried the strings '6000' /
-// '4000' / '10'; they now carry the numbers. See the ledger note on each.
 describe('buildIncomingShipmentPayload (direction-guarded)', () => {
   // LEDGER (CP-0 · 6.1 · correction 1): `qty: '6000'` → `6000`. Mechanical —
   // the draft field is number-typed now; the assertion and its intent are
