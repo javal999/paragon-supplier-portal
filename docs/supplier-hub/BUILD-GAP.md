@@ -41,9 +41,9 @@ Everything runs on sample data held in the browser. There is no backend, no SAP 
 | REQ-E08-03 Supplier access to PTI stock | Built | Grant, change and remove per supplier and per material, with a log; a supplier without access never receives PTI stock data |
 | REQ-E08-04 Capacity | Built | 13 weekly buckets per material group, "Extra capacity if requested" with a one-line explanation on both sides (BR-05, BL-62), reason required below demand, gap weeks highlighted for the planner, planner filters by supplier, material group, material and gap weeks only, kept in the page address and combined with the Order summary filter (BR-07, BL-63), and the Order summary capacity status |
 | REQ-E08-05 Alerts | Built | Rules for PTI and supplier stock against reorder point, projected stock-out, capacity gap, stale data, coverage and commitment below forecast; High / Medium / Low; no duplicates; grouped per supplier; closed with an action note. Delivery is in the hub only, not by email |
-| REQ-E09-01 Replenishment recommendation | Partial | Planner releases call-offs against the remaining umbrella PO quantity and value, and can generate a series. The SAP ROP recommendation list is not built (X-16) |
+| REQ-E09-01 Replenishment recommendation | Partial | Planner releases call-offs against what remains on the umbrella PO line, and can generate a series. Since BL-49 the release check is on remaining **quantity** (BL-13: the PO holds a quantity per line); remaining **value** is the check only on a line that has no quantity (an SAP value-limit line, sample `PO-2026-00128`). The release panel and a draft's panel show what remains before the planner acts, and an over-release is refused with the requested and remaining figures, on the screen and by the verb. The SAP ROP recommendation list is not built (X-16) |
 | REQ-E09-02 Event-based analysis | Not built | Waiting on PQ-09 |
-| REQ-E09-03 Call-off confirmation | Built | Hub-owned call-offs, the six confirmation statuses, CR-05 tolerance, planner approval outside tolerance, 1-working-day deadline with escalation, ASN allowed only on a confirmed call-off |
+| REQ-E09-03 Call-off confirmation | Built | Hub-owned call-offs, the six confirmation statuses, CR-05 tolerance as revised on 2026-09-21 (BL-47): up to 5% over accepted for every call-off type; any shortfall accepted and shown as a partial; a later date always goes to the planner; an earlier date goes to the planner while the early allowance is the placeholder 0 days (BL-56). Both call-off screens show the rule that applied and its reason, on the row and in the panel, and the supplier sees it before sending. Planner approval outside tolerance uses the existing approve and reject verbs; 1-working-day deadline with escalation; ASN allowed only on a confirmed call-off |
 | REQ-E09-04 Delivery execution | Built | Dispatch heads-up or a linked ASN, At Risk when the expected arrival is after the need date, reminders. No dock or slot booking |
 | REQ-E10-01 CFOT and OTIF | Built | Calculated per PO and per call-off from hub data with working period filters, rejections counted, grade bands stated on screen, "No history" where nothing is measurable. Other scorecard measures stay sample figures and are marked as such |
 | REQ-E13-01 TMS access | Not built | Waiting on D-03 |
@@ -80,6 +80,8 @@ Everything runs on sample data held in the browser. There is no backend, no SAP 
 | X-24 | One list on the supplier inventory view (BL-61) | Done (inventory feedback) |
 | X-25 | Capacity "Extra capacity if requested" label (BL-62) | Done (inventory feedback) |
 | X-26 | Planner capacity filters in the page address (BL-63) | Done (inventory feedback) |
+| BL-47 | Call-off tolerance per CR-05 as revised: 5% over for every type, shortfall a visible partial, later and earlier dates to the planner | Done (2026-09-21). Early allowance is a placeholder of 0 days until BL-56 |
+| BL-49 | Call-off release checked on remaining quantity; value only on a line with no quantity | Done (2026-09-21) |
 
 ### 2.1 Navigation and screens
 
@@ -107,7 +109,9 @@ The `CR-` rules are implemented in the hub's own modules and covered by their ow
 |---|---|
 | Working day, response deadline (section 3.4) | `src/lib/workingCalendar.ts` |
 | PO response and escalation | `src/services/data/poResponseProjection.ts` |
-| Call-off tolerance, matching, on time, in full, reminders (CR-05 to CR-09) | `src/services/transitions/callOffRules.ts`, `callOffTolerance.ts` |
+| Remaining on the umbrella PO line and the release check, quantity first and value only on a line with no quantity (CR-04) | `src/services/transitions/callOffRules.ts` (`umbrellaRemaining`, `releaseCheck`) |
+| Call-off tolerance (CR-05) | Rule: `src/services/transitions/callOffRules.ts` (`checkTolerance`). Values: config module `src/services/transitions/callOffTolerance.ts` — 5% over (`CALL_OFF_OVER_PCT`) and the early allowance `CALL_OFF_EARLY_ALLOWANCE_DAYS`, a placeholder of 0 days until BL-56 is answered (one line) |
+| Call-off matching, on time, in full, reminders (CR-06 to CR-09) | `src/services/transitions/callOffRules.ts` |
 | Days of supply, bands, coverage, stale, alert risk class (CR-01 to CR-03) | `src/services/data/` inventory rules with `inventoryConfig.ts` |
 | Forecast periods, zones, commitment tolerance, gap colours (CR-21, CR-22) | `src/services/sdc/` forecast rules with `forecastConfig.ts` |
 | Goods receipt result, invoice matching, due date (CR-11 to CR-14) | `src/services/transitions/grRollup.ts`, `invoiceRollup.ts` (`checkPrice`, `deriveMatchVerdict`), `fulfilmentRules.ts` (`checkInvoicePrices`, `deriveInvoiceVerdict`), invoice projection |

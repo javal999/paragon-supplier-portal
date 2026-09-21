@@ -37,10 +37,13 @@ import {
   isDueWithoutHeadsUp,
   proposedDeliveries,
   type CallOffView,
+  type ToleranceCheck,
 } from '../services/transitions/callOffRules';
 import {
   ConfirmationPill,
   DeliveryPill,
+  ToleranceFindings,
+  ToleranceTags,
   inputClass,
   labelClass,
   numberOf,
@@ -263,6 +266,16 @@ const SupplierCallOffs: React.FC = () => {
                   </TableCell>
                   <TableCell>
                     <ConfirmationPill status={v.confirmation} />
+                    {/* CR-05 — the rule that decided this confirmation, on the row
+                        the supplier is reading, not only inside the panel. */}
+                    {v.tolerance && c.confirmation && (
+                      <ToleranceTags
+                        check={v.tolerance}
+                        uom={c.uom}
+                        approval={c.confirmation.approval}
+                        testId={`supplier-calloff-tol-${c.id}`}
+                      />
+                    )}
                   </TableCell>
                   <TableCell>
                     <DeliveryPill status={v.delivery} />
@@ -330,6 +343,17 @@ const SupplierCallOffs: React.FC = () => {
                   ))}
                 </ul>
                 <p className="mt-1 text-xs text-text-tertiary">{t(`co.approval.${selected.callOff.confirmation.approval}`)}</p>
+                {/* CR-05 — which rule applied to this answer, and why. */}
+                {selected.tolerance && (
+                  <div className="mt-2">
+                    <ToleranceFindings
+                      check={selected.tolerance}
+                      uom={selected.callOff.uom}
+                      needDate={selected.callOff.needDate}
+                      testId="supplier-calloff-tolerance-applied"
+                    />
+                  </div>
+                )}
               </section>
             )}
 
@@ -356,9 +380,9 @@ const SupplierCallOffs: React.FC = () => {
                     form={form}
                     setForm={setForm}
                     busy={command.isPending}
-                    within={(() => {
+                    check={(() => {
                       const p = proposal(selected);
-                      return p ? checkTolerance(selected.callOff, p.deliveries).within : null;
+                      return p ? checkTolerance(selected.callOff, p.deliveries) : null;
                     })()}
                     onSend={() => sendAnswer(selected)}
                   />
@@ -503,14 +527,14 @@ const RespondForm: React.FC<{
   form: typeof EMPTY;
   setForm: (f: typeof EMPTY) => void;
   busy: boolean;
-  /** Within tolerance (accepted at once), outside (goes to PTI), or not yet readable. */
-  within: boolean | null;
+  /** The tolerance rule read on the answer being typed — null while it is not yet readable. */
+  check: ToleranceCheck | null;
   onSend: () => void;
-}> = ({ view, form, setForm, busy, within, onSend }) => {
+}> = ({ view, form, setForm, busy, check, onSend }) => {
   const { t } = useTranslation();
   const c = view.callOff;
   const set = (patch: Partial<typeof EMPTY>) => setForm({ ...form, ...patch });
-  const ready = form.answer === 'reject' ? form.reason.trim() !== '' : within !== null;
+  const ready = form.answer === 'reject' ? form.reason.trim() !== '' : check !== null;
   const field = (id: string, label: string, value: string, key: keyof typeof EMPTY, type: 'date' | 'qty') => (
     <div>
       <label htmlFor={id} className={labelClass}>
@@ -585,13 +609,23 @@ const RespondForm: React.FC<{
         </div>
       )}
 
-      {form.answer !== 'reject' && within !== null && (
-        <p
-          className={`text-xs ${within ? 'text-success' : 'text-warning-hover'}`}
-          data-testid="supplier-calloff-tolerance"
-        >
-          {t(within ? 'co.respond.within' : 'co.respond.outside')}
-        </p>
+      {/* CR-05 — before the answer is sent: the rule that will apply to it, its
+          reason, and what follows. The verb re-applies the same rule. */}
+      {form.answer !== 'reject' && check !== null && (
+        <div className="space-y-1">
+          <p
+            className={`text-xs ${check.within ? 'text-success' : 'text-warning-hover'}`}
+            data-testid="supplier-calloff-tolerance"
+          >
+            {t(check.within ? 'co.respond.within' : 'co.respond.outside')}
+          </p>
+          <ToleranceFindings
+            check={check}
+            uom={c.uom}
+            needDate={c.needDate}
+            testId="supplier-calloff-tolerance-rule"
+          />
+        </div>
       )}
 
       <div className="flex justify-end">

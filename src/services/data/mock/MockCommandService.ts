@@ -94,7 +94,7 @@ import {
   CALL_OFF_TYPES,
   CONFIRMATION_STATE,
   checkTolerance,
-  exceedsRemaining,
+  releaseCheck,
   headsUpsFor,
   isAwaitingApproval,
   isCallOffDate,
@@ -1119,7 +1119,10 @@ bindPolicyHook(POLICY_HOOKS.CALLOFF_LINE_VALID, ({ payload }) => {
   return { ok: true };
 });
 
-// REQ-E09-01 BR-04 / AC-03, CR-04 — never beyond what remains on the umbrella PO.
+// REQ-E09-01 BR-04 / AC-03, CR-04 — never beyond what remains on the umbrella PO
+// line. BL-49: the check is on remaining QUANTITY, and on remaining VALUE only
+// where the line carries no quantity. The refusal says which, and with what
+// figures, so the planner can act on it.
 bindPolicyHook(POLICY_HOOKS.CALLOFF_WITHIN_REMAINING, ({ entityId, payload }) => {
   const existing = entityId ? callOffStore.get(entityId) : undefined;
   const poId = existing?.poId ?? String(payload.poId);
@@ -1128,10 +1131,14 @@ bindPolicyHook(POLICY_HOOKS.CALLOFF_WITHIN_REMAINING, ({ entityId, payload }) =>
   if (!po || !line) return { ok: false, reason: 'umbrella PO line not found' };
   const quantity = isPositiveQty(payload.quantity) ? payload.quantity : existing?.quantity;
   if (!isPositiveQty(quantity)) return { ok: false, reason: 'quantity must be greater than zero' };
-  if (exceedsRemaining(quantity, line, callOffStore.all(), existing?.id)) {
+  const check = releaseCheck(quantity, line, callOffStore.all(), existing?.id);
+  if (check.exceeds) {
     return {
       ok: false,
-      reason: `EXCEEDS_REMAINING: ${quantity} ${line.uom} is more than what remains on ${po.poNumber}`,
+      reason:
+        check.basis === 'quantity'
+          ? `EXCEEDS_REMAINING: ${quantity} ${line.uom} is more than the ${check.remaining.remainingQty} ${line.uom} remaining on ${po.poNumber} line ${line.materialCode}`
+          : `EXCEEDS_REMAINING_VALUE: ${check.requestedValue} is more than the ${check.remaining.remainingValue} remaining on ${po.poNumber} line ${line.materialCode}, which has no quantity`,
     };
   }
   return { ok: true };

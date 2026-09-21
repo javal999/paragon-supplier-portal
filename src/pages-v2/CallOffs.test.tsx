@@ -216,6 +216,132 @@ describe('Supplier Call-offs page (REQ-E09-03, REQ-E09-04)', () => {
   });
 });
 
+describe('CR-05 on the screens — the applied rule and its reason (BL-47)', () => {
+  const respondTo = async (id: string) => {
+    renderWithProviders(<SupplierCallOffs />, { identity: SUPPLIER });
+    fireEvent.click(within(await screen.findByTestId(`supplier-calloff-row-${id}`)).getByRole('button', { name: /Respond/ }));
+    fireEvent.click(panel().getByLabelText('Confirm with a different quantity'));
+  };
+  const typeQty = (value: string) => fireEvent.change(panel().getByLabelText('Quantity (PCS)'), { target: { value } });
+
+  it('supplier, before sending: exactly +5% is within, and the rule says why', async () => {
+    await respondTo('co-0003'); // 15,000 PCS
+    typeQty('15750');
+    expect(panel().getByTestId('supplier-calloff-tolerance')).toHaveTextContent('Within tolerance');
+    expect(panel().getByTestId('supplier-calloff-tolerance-rule')).toHaveTextContent(
+      '750 PCS over the requested quantity (5%). Up to 5% over is accepted automatically.',
+    );
+  });
+
+  it('supplier, before sending: one unit beyond +5% is outside, and the rule says PTI must approve', async () => {
+    await respondTo('co-0003');
+    typeQty('15751');
+    expect(panel().getByTestId('supplier-calloff-tolerance')).toHaveTextContent('Outside tolerance');
+    expect(panel().getByTestId('supplier-calloff-tolerance-rule')).toHaveTextContent('More than 5% over needs PTI approval.');
+  });
+
+  it('supplier, before sending: a shortfall is within — a partial delivery that stays visible', async () => {
+    await respondTo('co-0003');
+    typeQty('9000');
+    expect(panel().getByTestId('supplier-calloff-tolerance')).toHaveTextContent('Within tolerance');
+    expect(panel().getByTestId('supplier-calloff-tolerance-rule')).toHaveTextContent(
+      '6,000 PCS short of the requested quantity (40%). Accepted as a partial delivery',
+    );
+    fireEvent.click(panel().getByRole('button', { name: 'Send confirmation' }));
+    await waitFor(() =>
+      expect(callOffStore.get('co-0003')).toMatchObject({ status: 'Confirmed with Changes', confirmation: { approval: 'auto' } }),
+    );
+  });
+
+  it('planner: the later-date answer (CO-2026-0004) names the rule on the row and in the review panel', async () => {
+    renderWithProviders(<BuyerCallOffs />, { identity: PLANNER });
+    const row = await screen.findByTestId('calloff-row-co-0004');
+    expect(within(row).getByTestId('calloff-tol-co-0004')).toHaveTextContent('Later date, needs approval');
+    fireEvent.click(within(row).getByRole('button', { name: /Review/ }));
+    expect(panel().getByTestId('calloff-tolerance-applied')).toHaveTextContent('A later date always needs PTI approval.');
+  });
+
+  it('planner: the exactly-+5% JIT answer (CO-2026-0005) reads as accepted on the row', async () => {
+    renderWithProviders(<BuyerCallOffs />, { identity: PLANNER });
+    const row = await screen.findByTestId('calloff-row-co-0005');
+    expect(within(row).getByTestId('calloff-tol-co-0005')).toHaveTextContent('500 PCS over (5%), accepted');
+  });
+});
+
+describe('CR-04 on the screens — release by remaining quantity, value only without one (BL-49)', () => {
+  it('the new call-off panel states the remaining quantity and refuses over-release with the figures', async () => {
+    renderWithProviders(<BuyerCallOffs />, { identity: PLANNER });
+    const pet = await screen.findByTestId('calloff-umbrella-po-007-li-007a');
+    expect(within(pet).getByTestId('calloff-basis-li-007a')).toHaveTextContent('checked against the remaining quantity');
+    fireEvent.click(within(pet).getByRole('button', { name: 'New call-off' }));
+    expect(panel().getByTestId('calloff-new-remaining')).toHaveTextContent('Remaining on this line: 15,000 PCS');
+    fireEvent.change(panel().getByLabelText('Quantity (PCS)'), { target: { value: '15001' } });
+    expect(panel().getByTestId('calloff-exceeds-remaining')).toHaveTextContent(
+      '15,001 PCS is more than the 15,000 PCS remaining on this line. Release is not possible.',
+    );
+    fireEvent.change(panel().getByLabelText('Quantity (PCS)'), { target: { value: '15000' } });
+    expect(panel().queryByTestId('calloff-exceeds-remaining')).toBeNull();
+  });
+
+  it('draft CO-2026-0018 over the remaining quantity: refused on the panel, release disabled', async () => {
+    renderWithProviders(<BuyerCallOffs />, { identity: PLANNER });
+    fireEvent.click(within(await screen.findByTestId('calloff-row-co-0018')).getByRole('button', { name: /Open draft/ }));
+    expect(panel().getByTestId('calloff-draft-remaining')).toHaveTextContent('Remaining on this line: 37,000 PCS');
+    expect(panel().getByTestId('calloff-draft-exceeds-remaining')).toHaveTextContent(
+      '45,000 PCS is more than the 37,000 PCS remaining on this line.',
+    );
+    expect(panel().getByRole('button', { name: 'Release to supplier' })).toBeDisabled();
+  });
+
+  it('draft CO-2026-0019 of exactly the remainder releases, and the store agrees', async () => {
+    renderWithProviders(<BuyerCallOffs />, { identity: PLANNER });
+    fireEvent.click(within(await screen.findByTestId('calloff-row-co-0019')).getByRole('button', { name: /Open draft/ }));
+    expect(panel().queryByTestId('calloff-draft-exceeds-remaining')).toBeNull();
+    fireEvent.click(panel().getByRole('button', { name: 'Release to supplier' }));
+    await waitFor(() => expect(callOffStore.get('co-0019')!.status).toBe('Awaiting Confirmation'));
+  });
+
+  it('the value-limit line (po-028) shows no quantity, checks value, and refuses draft CO-2026-0021 on value', async () => {
+    renderWithProviders(<BuyerCallOffs />, { identity: PLANNER });
+    const line = await screen.findByTestId('calloff-umbrella-po-028-li-028a');
+    expect(within(line).getByTestId('calloff-basis-li-028a')).toHaveTextContent('No quantity on this line');
+    expect(within(line).queryByTestId('calloff-remaining-li-028a')).toBeNull();
+    expect(within(line).getByTestId('calloff-remaining-value-li-028a')).toHaveTextContent('280.000.000');
+    fireEvent.click(within(screen.getByTestId('calloff-row-co-0021')).getByRole('button', { name: /Open draft/ }));
+    expect(panel().getByTestId('calloff-draft-exceeds-remaining')).toHaveTextContent('which has no quantity');
+    expect(panel().getByRole('button', { name: 'Release to supplier' })).toBeDisabled();
+  });
+
+  it('the demo rows carry their CR-05 tag on the planner rows: +5.1% (0014), partial (0015), earlier (0016)', async () => {
+    renderWithProviders(<BuyerCallOffs />, { identity: PLANNER });
+    expect(await screen.findByTestId('calloff-tol-co-0014')).toHaveTextContent('408 PCS over (5.1%), needs approval');
+    expect(screen.getByTestId('calloff-tol-co-0015')).toHaveTextContent('Partial: 600 PCS short');
+    expect(screen.getByTestId('calloff-tol-co-0016')).toHaveTextContent('Earlier date, needs approval');
+    expect(screen.getByTestId('calloff-tol-co-0017')).toHaveTextContent('200 PCS over (5%), accepted');
+  });
+
+  // Found in the built app, not by a spec: once the planner approved the
+  // earlier-date answer, its row still read "needs approval". The finding is the
+  // rule's; the verdict is the call-off's.
+  it('after the planner approves CO-2026-0014, its row says approved — not "needs approval"', async () => {
+    renderWithProviders(<BuyerCallOffs />, { identity: PLANNER });
+    fireEvent.click(within(await screen.findByTestId('calloff-row-co-0014')).getByRole('button', { name: /Review/ }));
+    fireEvent.click(within(panel().getByTestId('calloff-review')).getByRole('button', { name: 'Approve' }));
+    await waitFor(() => expect(callOffStore.get('co-0014')!.confirmation?.approval).toBe('approved'));
+    await waitFor(() =>
+      expect(screen.getByTestId('calloff-tol-co-0014')).toHaveTextContent('408 PCS over (5.1%), approved by PTI'),
+    );
+    expect(screen.getByTestId('calloff-tol-co-0014')).not.toHaveTextContent('needs approval');
+  });
+
+  it('…and on the supplier rows', async () => {
+    renderWithProviders(<SupplierCallOffs />, { identity: SUPPLIER });
+    expect(await screen.findByTestId('supplier-calloff-tol-co-0014')).toHaveTextContent('needs approval');
+    expect(screen.getByTestId('supplier-calloff-tol-co-0015')).toHaveTextContent('Partial: 600 PCS short');
+    expect(screen.getByTestId('supplier-calloff-tol-co-0005')).toHaveTextContent('500 PCS over (5%), accepted');
+  });
+});
+
 describe('Home tasks (CR-09)', () => {
   it('supplier: call-offs to confirm, and confirmed call-offs due within 7 days with no dispatch notice', async () => {
     renderWithProviders(<SupplierHome />, { identity: SUPPLIER });

@@ -278,6 +278,13 @@ export interface POLineItem {
   unitPrice: number;
   confirmedQty: number;
   /**
+   * An SAP value-limit line: the line commits a VALUE and carries NO quantity
+   * (CR-04; BL-13 decided quantity per line, so this is the exception). When it
+   * is set, `quantity` is 0 and means "no quantity", never "nothing ordered",
+   * and a call-off release on the line is checked against remaining VALUE.
+   */
+  valueLimit?: number;
+  /**
    * CR-12 — the contract this line's unit price comes from, when it does. A
    * contract-priced line is invoiced at 0% tolerance; a line without one at 2%
    * within the rupiah cap (`fulfilmentConfig.ts`). Absent = no contract price.
@@ -382,7 +389,7 @@ export interface PoShippingNotice {
 // Escalated, At Risk, Dispatched, on time / late / missed — is computed at read
 // time (`callOffRules.ts`) and never stored here.
 
-/** JIT: no over-quantity limit. Forecast-based: CR-05 tolerance applies. */
+/** JIT or forecast-based, set at release (BR-09). Since BL-47 the CR-05 tolerance is the same for both. */
 export type CallOffType = 'jit' | 'forecast';
 
 /** Stored call-off states — the confirmation statuses of REQ-E09-03 BR-02, plus
