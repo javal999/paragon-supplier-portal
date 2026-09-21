@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 1.0, 2026-09-21 |
+| Version | 1.1, 2026-09-21 |
 | What this is | Everything known to be outstanding for the Supplier Hub, in one list: decisions waiting on people, work waiting on those decisions, work waiting on the backend, and work that can start today |
 | What this is not | A plan or a commitment. Nothing here has a date. Sequencing belongs to the project owner |
 | Sources | Open items (section 7 of `SUPPLIER-HUB-REQUIREMENTS.md`), open decisions (section 9.3 of `SUPPLIER-HUB-PRD.md`), what is not built (section 5 of `BUILD-GAP.md`), stubs (section 6 of the requirements), and defects or debts found while building |
@@ -19,44 +19,48 @@
 
 ## 1. Decisions waiting on people
 
-These block work. Each one is a question for a named owner, not a task for the build team.
+Still open. Items decided on 2026-09-21 are in section 6.
 
 | ID | Decision | Owner | What it unblocks | Detail |
 |---|---|---|---|---|
 | BL-01 | **REPL** — replenishment method and governance | Material Planner (consultant engaged) | BL-20 SAP replenishment recommendations, and the shape of REQ-E09-01 | PRD 9.3 |
-| BL-02 | **PQ-09** — is event-based strategy analysis needed in the MVP | Material Planner | BL-21, or drops it from scope | REQ-E09-02 |
-| BL-03 | **D-03** — which phase supplier TMS access belongs to | Project sponsors | BL-22 supplier TMS access | REQ-E13-01 |
-| BL-04 | **A-03** — review the RFI template, the RFP term list and the quote score weights with Procurement | Procurement | Confirms what is already built; may change questions, terms or weights | REQ-E03-02, E03-04, CR-15 |
-| BL-05 | **PQ-08** — call-off under-quantity and date tolerances, in-full tolerance, commitment tolerances per zone, commitment deadline | Material Planner | Replaces the placeholder values now in configuration (CR-05, CR-08, CR-21) | REQ-E09-03, E06-02 |
-| BL-06 | **PQ-04** — goods receipt discrepancy tolerance | Material Planner, warehouse | Today any difference is flagged (tolerance 0) | REQ-E07-06 |
-| BL-07 | **PQ-05** — Finance to confirm the 1% invoice price tolerance and the status list | Finance | Confirms CR-12 and the supplier-visible statuses | REQ-E07-07 |
-| BL-08 | **PQ-02** — capacity horizon and bucket size | Material Planner | Confirms the 13 weekly buckets now built | REQ-E08-04 |
-| BL-09 | **PQ-03** — risk class thresholds for alerts | Material Planner | Confirms the starting High / Medium / Low rules | REQ-E08-05 |
-| BL-10 | **PQ-07** — which SAP source provides forecast and demand sensing (MRP, IBP, other) | Material Planner, ERP Functional | The real forecast feed, and BL-20 | REQ-E06-01, E09-01 |
 | BL-11 | **PQ-06** — interface technology and latency target | IT | The real SAP interface, and what the interface monitor watches | REQ-E07-08 |
-| BL-12 | **PQ-11** — is the hub the record for call-offs, do they ever go back to SAP, are today's manual records migrated | Material Planner, IT | Call-off data migration, and whether an outbound interface is needed | REQ-E09-01, E09-03 |
-| BL-13 | **PQ-12** — does the umbrella PO carry quantities per line, or only a total value | Material Planner, ERP Functional | Whether call-off release checks quantity or value (CR-04) | REQ-E07-01 |
-| BL-14 | **Q-18** — which working calendar defines the 1-working-day deadline | Material Planner | Confirms the default now built (Mon–Fri 08:00–17:00 WIB, Indonesian holidays) | Requirements 3.4 |
-| BL-15 | **Q-20** — quality inspection in the hub for the MVP, while Supplier Quality is Phase 2 and receipts post in SAP | Material Planner, Procurement | Whether the inspection built at K-01 stays | REQ-E07-06 |
-| BL-16 | **D-07** — the RFI needs a product catalog, which the deck puts in Phase 2 | Project sponsors | Whether RFI product entries become a real catalog | REQ-E03-02 |
-| BL-17 | **DEC-06** — is Web Tukar Faktur this invoice capability or a separate application | Finance | Scope of REQ-E07-07 | PRD 9.3 |
-| BL-18 | **DEC-09** — business owner for the performance dashboard | Steering Committee | Ownership of REQ-E10-01 | PRD 9.3 |
-| BL-19 | **KPI definitions** — S4 confirmation accuracy, S5 optimized stock, and targets for OTIF, CFOT, PO response rate and procurement cycle time | Steering Committee, Material Planner | What the dashboard measures against | PRD section 1 |
-| BL-19a | **A-01, A-02** — compliance and capability check for RFx with Mas Ary Hidayat; the full supplier filter parameter list | Procurement | Extra invitee filters beyond category and purchasing group | REQ-E03-01 |
-| BL-19b | **MIG** — PROCIO to hub supplier data migration scope and approach | Procurement, MDM, IT | Foundation onboarding with real supplier data | PRD 9.3 |
+| BL-12 | **PQ-11** — is the hub the long-term record for call-offs? Recommended: the hub holds them for the pilot, and SAP scheduling agreement releases become the long-term record. **Awaiting the owner's yes** | Material Planner, IT | Integration scope (BL-11), and whether call-offs migrate to SAP later | REQ-E09-01, E09-03 |
+| BL-54 | **PQ-05 cap** — the absolute rupiah cap on invoice price variance (the 0% and 2% tolerances are decided) | Finance | The final value in CR-12; the build uses a placeholder until then | REQ-E07-07 |
+| BL-55 | **A-05** — minimum OTIF for the compliance gate, and whether "No history" passes (proposed: passes) | Procurement | The final value in CR-23; the build uses a placeholder until then | REQ-E03-05 |
+| BL-56 | **PQ-08 early allowance** — how many days early a call-off may arrive, given warehouse capacity | Warehouse, Material Planner | The early-delivery rule in CR-05; until then an early date needs approval | REQ-E09-03 |
+| BL-57 | **A-01** — compliance and capability check for RFx with Mas Ary Hidayat | Procurement | Confirms the gate criteria in CR-23 | REQ-E03-01 |
+| BL-58 | **Q-19** — the PQ-10 answer ends with "They"; confirm nothing is missing | Material Planner | Confirms the delivery execution scope | REQ-E09-04 |
 
 ---
 
-## 2. Build work waiting on a decision
+## 2. Build work, in the order it will be done
+
+Decided on 2026-09-21 and ready to build. Priority: first what protects money and compliance, then what keeps planning figures correct, then administration and usability. Placeholder values are used where a number is still open, and each is named.
+
+| Priority | ID | Item | Rule | Size | Placeholder until decided |
+|---|---|---|---|---|---|
+| 1 | BL-43 | **Compliance gate at award.** Check each supplier against CR-23; a supplier that fails can be invited and can quote but cannot be selected in an award, with the failed criteria shown. Re-weight the quote score to price 40 / lead time 20 / reliability 40 for qualified suppliers | CR-23, CR-15 | M | Minimum OTIF 80%, "No history" passes (BL-55) |
+| 2 | BL-44 | **Invoice price tolerance.** 0% where a contract price exists; 2% otherwise, within an absolute rupiah cap | CR-12 | S | Cap IDR 500,000 (BL-54) |
+| 3 | BL-45 | **Goods receipt tolerance.** Any over-delivery flagged; a shortfall above 2% flagged and the receipt kept open | CR-25 | S | — |
+| 4 | BL-46 | **Alert risk class by lead time.** High below lead time, Medium below 1.5 × lead time, Low otherwise; day bands only where the lead time is missing, which raises its own alert | CR-24 | M | — |
+| 5 | BL-47 | **Call-off tolerance.** Up to 5% over accepted for every call-off type; any shortfall a visible partial; a late date always goes to planner approval; an early date also goes to approval until the warehouse answers | CR-05 | S | Early allowance 0 days (BL-56) |
+| 6 | BL-48 | **Forecast commitment deadline.** Firm periods 1 working day, Trade-off and Forecast 3 working days | CR-26 | S | — |
+| 7 | BL-49 | **Call-off release by remaining quantity.** Quantity becomes the default check, value only where a line has no quantity | CR-04; BL-13 | S | — |
+| 8 | BL-50 | **Hub-managed working calendar.** Administrator page to load the SAP factory calendar and add, remove or override days; every deadline reads it. This is the first page of the admin screen in BL-32 | Requirements 3.4 | M | SAP load simulated |
+| 9 | BL-51 | **3PL tracking link on the ASN.** An administrator-maintained list of 3PLs and their public tracking addresses; the tracking number on an ASN becomes a link out. No reading of status from the 3PL's site | REQ-E07-04 BR-05 | S | A short sample list, marked as sample |
+| 10 | BL-52 | **Supplier filters.** Certificate validity, then performance band, then country or region | REQ-E03-01 BR-05 | S | — |
+| 11 | BL-53 | **KPI definitions on the performance pages.** State the delivery window, whether early counts, the grain, and whether a date change resets the clock; show targets as "baseline period" until they are set | BL-19 decision | S | Baseline period, no target |
+| 12 | BL-31 | Accessibility pass (section 4) | SC-07 | M | — |
+| 13 | BL-32 | Admin screen for the remaining configuration: reason codes, tolerances, thresholds, stale periods (section 4) | REQ-E08-05 BR-03 | M | — |
+| 14 | BL-33 to BL-39 | The remaining "can start today" items in section 4, in the order listed there | — | — | — |
+
+### Build work waiting on a decision
 
 | ID | Item | Blocked by | Size | Detail |
 |---|---|---|---|---|
-| BL-20 | SAP ROP replenishment recommendations released as call-offs | BL-01, BL-10 | L | REQ-E09-01, X-16 |
-| BL-21 | Event-based strategy analysis (launch, promotion, phase-in or out, supply crisis) | BL-02 | L | REQ-E09-02, X-17 |
-| BL-22 | Supplier access to the TMS for shipment tracking | BL-03 | M | REQ-E13-01, X-21 |
-| BL-23 | Replace placeholder tolerance and threshold values with the agreed ones | BL-05 to BL-09 | S | Config modules named in `BUILD-GAP.md` section 3 |
-
----
+| BL-20 | SAP ROP replenishment recommendations released as call-offs | BL-01; forecast source decided (BL-10) | L | REQ-E09-01, X-16 |
+| BL-23 | Replace the placeholder values above with the agreed ones | BL-54, BL-55, BL-56 | S | Config modules named in `BUILD-GAP.md` section 3 |
 
 ## 3. Build work waiting on the backend (Stage F)
 
@@ -106,4 +110,23 @@ Nothing blocks these.
 
 | ID | Item | Closed | By |
 |---|---|---|---|
-| — | Nothing closed yet. The first closed item goes here, with the date and the pull request that closed it | | |
+| BL-02 | PQ-09 event-based analysis in the MVP | 2026-09-21 | Decided: not in the MVP; belongs in the planning suite. BL-21 closes with it |
+| BL-03 | D-03 supplier TMS access | 2026-09-21 | Decided: no TMS integration in the MVP; replaced by the 3PL tracking link (BL-51). BL-22 closes with it |
+| BL-04 | A-03 compliance and scoring | 2026-09-21 | Decided: compliance gate at award (CR-23) and new weights (CR-15). Build is BL-43; template and term-list review with users continues as part of A-01 (BL-57) |
+| BL-05 | PQ-08 call-off tolerances and commitment deadline | 2026-09-21 | Decided except the early allowance (BL-56). Build is BL-47 and BL-48 |
+| BL-06 | PQ-04 goods receipt tolerance | 2026-09-21 | Decided (CR-25). Build is BL-45 |
+| BL-07 | PQ-05 invoice tolerance | 2026-09-21 | Decided except the rupiah cap (BL-54). Build is BL-44 |
+| BL-08 | PQ-02 capacity horizon | 2026-09-21 | Decided: 13 weekly buckets, as built. No build |
+| BL-09 | PQ-03 alert risk class | 2026-09-21 | Decided (CR-24). Build is BL-46 |
+| BL-10 | PQ-07 forecast source | 2026-09-21 | Decided: MRP weeks 1–13, IBP months 4–6, one published forecast. Build waits on the real SAP feed (BL-24) |
+| BL-13 | PQ-12 umbrella PO grain | 2026-09-21 | Decided: quantity per line. Build is BL-49 |
+| BL-14 | Q-18 working calendar | 2026-09-21 | Decided: hub-managed by the Hub administrator, loaded from SAP. Build is BL-50 |
+| BL-15 | Q-20 quality inspection | 2026-09-21 | Decided: keep the result display; non-conformance in Phase 2 with BL-39. No build |
+| BL-16 | D-07 catalog for the RFI | 2026-09-21 | Decided: capability list only in the MVP, as built. No build |
+| BL-17 | DEC-06 Web Tukar Faktur | 2026-09-21 | Decided: separate system built in parallel; the hub's invoice collaboration stays unchanged. No build |
+| BL-18 | DEC-09 dashboard owner | 2026-09-21 | Decided: Procurement owns the dashboard; Material Planning owns delivery measures. No build |
+| BL-19 | KPI definitions and targets | 2026-09-21 | Decided: definitions first, 3-month baseline, then targets. Build is BL-53 |
+| BL-19a | A-02 supplier filters | 2026-09-21 | Decided. Build is BL-52. A-01 continues as BL-57 |
+| BL-19b | MIG PROCIO migration | 2026-09-21 | Decided: active suppliers of the last 24 months plus contracted; suppliers confirm their own bank and tax details; second-channel confirmation for bank changes. Work sits with the Foundation team (BL-40) |
+| BL-21 | Event-based strategy analysis | 2026-09-21 | Closed with BL-02 |
+| BL-22 | Supplier TMS access | 2026-09-21 | Closed with BL-03 |

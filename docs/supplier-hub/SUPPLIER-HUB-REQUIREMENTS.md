@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 0.7 draft, 2026-09-19 |
+| Version | 0.8 draft, 2026-09-21 |
 | Sources | `SUPPLIER-HUB-BASELINE.md` (kick-off deck, Aug 2026); `KICKOFF-MEETING-NOTES.md` (business user feedback, reviewed 2026-09-17); owner review of the prototype gap review (2026-09-17) |
 | Scope of this version | Detailed: Order Collaboration, Inventory & Capacity Collaboration, RFx (validated); Forecast Collaboration, Call-off Management, and the undiscussed parts of Order and Inventory Collaboration (proposed). Hub navigation and screen conventions (validated). Foundation is reserved for the Foundation team. The remaining epics are stubs |
 | Not in scope | The codebase. This file states what the Supplier Hub must do, not what is built. What the prototype does today, and where, is tracked only in `BUILD-GAP.md` |
@@ -123,6 +123,8 @@ The supplier response deadline is 1 working day [MN-ORD-04]. Which calendar defi
 
 Recommended default until Q-18 is answered: Monday to Friday, 08:00 to 17:00 WIB, excluding Indonesian national holidays and PTI collective leave days (cuti bersama). A deadline that falls outside working hours moves to the next working hour [Proposed].
 
+Decided (Q-18, 2026-09-21): the hub keeps its own working calendar, maintained by the Hub administrator (ADM). It is loaded from the SAP factory calendar for Indonesia, and the administrator can add, remove or override days in the hub. Every deadline in this file reads that calendar [Owner].
+
 ### 3.5 Glossary additions
 
 | Term | Meaning | Source |
@@ -142,20 +144,20 @@ Every requirement that calculates something refers to a rule here by its `CR-` I
 | ID | Rule | Formula or value | Used by | Source |
 |---|---|---|---|---|
 | CR-01 | Days of supply | SOH ÷ average daily demand. Average daily demand = forecast quantity for the next 30 days ÷ 30 | REQ-E08-01, REQ-E08-05 | Bands [Code]; demand basis [Proposed] |
-| CR-02 | Days-of-supply bands | Critical below 14 days; Warning 14 to 29; Healthy 30 to 60; Excess above 60 | REQ-E08-01, REQ-E08-05 | [Code] |
+| CR-02 | Days-of-supply bands | Fallback only, used where a supplier lead time is missing: Critical below 14 days; Warning 14 to 29; Healthy 30 to 60; Excess above 60. A missing lead time raises its own data-quality alert | REQ-E08-01, REQ-E08-05 | [Code]; fallback role [Owner, 2026-09-21] |
 | CR-03 | Supplier coverage | (supplier SOH + incoming quantity in production or in transit) ÷ firm demand. Covered at 1.0 or more; At risk from 0.8 to below 1.0; Uncovered below 0.8. No demand counts as Covered | REQ-E08-05 | [Code] |
 | CR-04 | Remaining on umbrella PO | Remaining quantity = PO quantity − released call-off quantity. Remaining value = PO value − released call-off value. Value applies until PQ-12 confirms a quantity exists | REQ-E09-01 | [Code] quantity; [PQ-01] value |
-| CR-05 | Call-off over-quantity tolerance | Forecast-based call-offs: 10% over the approved quantity, flagged for planner approval. JIT call-offs: no limit. Under-quantity and date tolerances stay open (PQ-08) | REQ-E09-03 | [Code] |
+| CR-05 | Call-off quantity and date tolerance | Quantity: up to 5% over the approved quantity is accepted; any shortfall is a partial delivery and stays visible. Date: a late confirmation always needs planner approval. Early-delivery allowance waits on the warehouse capacity check (PQ-08); until then early also needs approval | REQ-E09-03 | [Owner, 2026-09-21] |
 | CR-06 | Delivery match to a call-off | A receipt or dispatch counts toward a call-off when its date is within 7 days of the need date, for the same supplier and material. If several match, take the closest date, then the closest quantity | REQ-E09-03, REQ-E10-01 | [Code] |
 | CR-07 | On time and missed | On time: received on or before the approved need date. Late: received after it. Missed: nothing received 3 days after the need date. Pending: before that | REQ-E09-03, REQ-E10-01 | [Code] |
 | CR-08 | In full | Received quantity ≥ approved call-off quantity. Tolerance for "in full" stays open (PQ-08) | REQ-E10-01 | [Proposed]; the prototype has no in-full test |
 | CR-09 | Delivery reminders | Reminder to the supplier 7 days before the need date when no ASN or dispatch heads-up exists. "Drift" signal to the planner when 2 or more call-offs of the same material and supplier are late or missed | REQ-E09-03, REQ-E09-04 | [Code] |
 | CR-10 | Counter-offer quantity | 0 < counter-offer quantity ≤ ordered quantity for that line | REQ-E07-02 | [Code] |
 | CR-11 | Goods receipt line result | Rejected quantity = received − accepted. Line is Accepted when nothing is rejected and all checks pass; Rejected when nothing is accepted; Partial otherwise. The receipt is Approved when all lines are Accepted, Rejected when all are Rejected, else Partially approved | REQ-E07-06 | [Code] |
-| CR-12 | Invoice price match | Expected value = invoiced quantity × PO unit price. Matched when \|invoice amount − expected value\| ÷ expected value ≤ 1%. Otherwise the exception is Price variance | REQ-E07-07 | 1% [Code]; basis on invoiced quantity [Proposed] |
+| CR-12 | Invoice price match | Expected value = invoiced quantity × PO unit price. Where a contract price exists the tolerance is 0%. Otherwise matched when \|invoice amount − expected value\| ÷ expected value ≤ 2% **and** the difference is within an absolute rupiah cap set by Finance (PQ-05). Outside either limit the exception is Price variance | REQ-E07-07 | [Owner, 2026-09-21] |
 | CR-13 | Invoice quantity match | Any rejected goods receipt quantity on the referenced receipts makes the exception Quantity mismatch | REQ-E07-07 | [Code] |
 | CR-14 | Invoice due and overdue | Due date = submission date + 30 days. Overdue when the due date has passed and the invoice is not paid. Days outstanding = today − due date | REQ-E07-07 | [Code] |
-| CR-15 | Quote score | Weighted score = price 30% + lead time 20% + compliance 25% + reliability 25%. Price score = lowest price ÷ this price × 100. Lead-time score = max(0, 100 − 2 × lead-time days). Reliability score = the supplier's OTIF (REQ-E10-01), "No history" scores 50 | REQ-E03-05 | Weights and formulas [Code]; reliability source [Proposed] |
+| CR-15 | Quote score | Only suppliers that pass the compliance gate (CR-23) are scored. Weighted score = price 40% + lead time 20% + reliability 40%. Price score = lowest price ÷ this price × 100. Lead-time score = max(0, 100 − 2 × lead-time days). Reliability score = the supplier's OTIF (REQ-E10-01); "No history" scores 50 | REQ-E03-05 | [Owner, 2026-09-21]; formulas [Code] |
 | CR-16 | Multi-currency quotes | Quotes in different currencies are ranked only after an exchange rate is recorded for each currency. A rate older than 7 days must be refreshed | REQ-E03-05 | [Code] |
 | CR-17 | OTIF target status | Target 90%. Meeting at 90% or more; Near from 80% to below 90%; Missing below 80% | REQ-E10-01 | [Code] |
 | CR-18 | Spreadsheet number check | A number that reads differently in Indonesian and English format (for example `1.500`) is rejected with a reason, not guessed | REQ-E08-02 | [Code] |
@@ -163,6 +165,10 @@ Every requirement that calculates something refers to a rule here by its `CR-` I
 | CR-20 | Integration retry | A failed SAP message is retryable only for a transport failure (timeout, connection). A business refusal from SAP is shown with its reason and is not retried until the data is fixed | REQ-E07-08 | [Code] |
 | CR-21 | Forecast commitment tolerance | Firm periods: no shortfall accepted automatically. Trade-off periods: up to 10% below forecast accepted automatically. Forecast periods: acknowledgement only | REQ-E06-02 | [Owner]; 10% mirrors CR-05 |
 | CR-22 | Commitment gap colour | Commitment ÷ forecast: Green at 1.0 or more; Amber from 0.8 to below 1.0; Red below 0.8 | REQ-E06-03 | [Owner]; thresholds from CR-03 [Code] |
+| CR-23 | Compliance gate | A supplier passes only when all apply: a valid halal certificate for halal materials; a valid BPOM registration where required; GMP / ISO 22716 for cosmetic raw material; status not Suspended or Blacklisted; OTIF at or above the gate minimum, where "No history" passes. A supplier that fails can be invited and can answer, but **cannot be awarded**; the reason is shown to the buyer | REQ-E03-01, REQ-E03-05 | [Owner, 2026-09-21]; OTIF minimum value open (A-05) |
+| CR-24 | Alert risk class | Days of cover compared with the supplier's lead time for that material: High when cover is below the lead time; Medium when below 1.5 × lead time; Low otherwise. CR-02 applies only where no lead time exists | REQ-E08-05 | [Owner, 2026-09-21] |
+| CR-25 | Goods receipt quantity tolerance | Over-delivery: 0%, so any quantity above the order is a decision, not a default. Under-delivery: a shortfall above 2% is flagged and the receipt stays open. Values held per material | REQ-E07-06 | [Owner, 2026-09-21] |
+| CR-26 | Forecast commitment deadline | Firm periods: 1 working day after publication. Trade-off and Forecast periods: 3 working days after publication | REQ-E06-02 | [Owner, 2026-09-21] |
 
 **Starter reason codes** [Code], used by REQ-E07-02 (Adjust), REQ-E08-04 (capacity shortfall), and REQ-E06-02 (commitment shortfall) until the Material Planner supplies the final list: Capacity, Material, Logistics, Quality, Other (with a note).
 
@@ -297,6 +303,8 @@ Reserved for the Foundation team: E01 Supplier Registration & Onboarding and E02
 - BR-02. The full filter parameter list is provided by Procurement later [MN-RFX-01; A-02].
 - BR-03. Supplier OTIF is visible during supplier sourcing [MN-ORD-09].
 - BR-04. Only active suppliers are selectable. Blacklisted or deactivated suppliers are hidden [Proposed; Deck p.7 E02.03].
+- BR-05. Further filters, in this order: certificate validity (halal and BPOM expiry), performance band, and country or region [Owner, 2026-09-21; A-02].
+- BR-06. A supplier that fails the compliance gate (CR-23) can still be found and invited; the list shows that it cannot be awarded and why [Owner, 2026-09-21].
 
 **Edge cases.**
 - A supplier has no OTIF history yet: show "No history" instead of 0% [Proposed].
@@ -487,6 +495,7 @@ Template rules:
 
 **Business rules.**
 - BR-01. The comparison view shows, per quote: unit price, total price, lead time, MOQ, payment terms, the score for each criterion, and the weighted score (CR-15). Quotes in different currencies follow CR-16 [Code].
+- BR-01a. Quotes are scored only for suppliers that pass the compliance gate (CR-23). A supplier that fails keeps its quote visible, marked with the failed criteria, and cannot be selected in an award [Owner, 2026-09-21].
 - BR-02. The hub highlights the best-scored quote. The score supports the buyer's decision and never awards automatically [Proposed].
 - BR-03. A negotiation step is available after the response deadline [Owner]. The buyer invites 1 or more shortlisted suppliers to a round with a deadline and an optional message or target. Invited suppliers submit a revised quote; suppliers not invited cannot [Proposed].
 - BR-04. Rounds can repeat. The buyer can mark a round as best and final offer. Every quote version, message, and deadline is kept [Proposed; Market].
@@ -745,6 +754,7 @@ Template rules:
 - BR-01. An ASN is provided after the supplier approves [MN-ORD-05].
 - BR-02. ASN quantity cannot exceed the open quantity on the call-off without a reason [Proposed].
 - BR-03. Per-date incoming detail is shown in Order Collaboration; inventory shows the aggregate [MN-INV-04].
+- BR-05. The ASN names its 3PL or carrier and a tracking or vehicle number. Where the 3PL has a public tracking page, the hub shows the tracking number as a link to that page. The hub does not read status from the 3PL's site. The list of 3PLs and their tracking addresses is maintained by ADM [Owner, 2026-09-21; replaces TMS access, D-03].
 - BR-04. Required ASN fields: material, shipped quantity and unit, batch number, ship date, expected arrival, carrier, and tracking or vehicle number. Optional: expiry date per batch and a packing list attachment [Proposed; carrier, tracking number, and expected arrival are required in the prototype, Code].
 
 **Edge cases.**
@@ -818,7 +828,7 @@ Template rules:
 **Business rules.**
 - BR-01. Goods receipts come from SAP. The hub displays them and does not post them [Proposed].
 - BR-02. Every receipt links to its ASN and call-off where one exists. SAP receipts reference the umbrella PO only, because call-offs are not in SAP, so the link to the call-off runs through the ASN or inbound delivery reference [Proposed; PQ-01].
-- BR-03. A receipt that differs from ASN quantity by more than a configurable tolerance is flagged as a discrepancy [Proposed; Market]. Until PQ-04 sets a value, any difference is flagged (tolerance 0) [Proposed].
+- BR-03. A receipt that differs from ASN quantity outside CR-25 is flagged as a discrepancy: any over-delivery, or a shortfall above 2% [Owner, 2026-09-21].
 - BR-04. Received quantity and receipt date feed OTIF per call-off (REQ-E10-01) [MN-ORD-09; Proposed].
 - BR-05. Quantity rejected at PTI's quality inspection is also a discrepancy. Line and receipt results follow CR-11 [Code].
 - BR-06. PTI records its quality inspection result against the receipt: quality hold, retest, halal and BPOM checks. The supplier sees the result and the rejected quantity, not the internal checklist. Posting the goods receipt stays in SAP [Owner; detail Proposed; see Q-20].
@@ -1117,7 +1127,7 @@ Template rules:
   - Allocated capacity below demand (REQ-E08-04).
   - Supplier data older than the stale period.
   - Supplier coverage At risk or Uncovered (CR-03) [Code].
-- BR-02. Each alert has a risk class: High, Medium, Low. Until PQ-03 sets thresholds: High when days of supply is Critical (CR-02) or coverage is Uncovered (CR-03); Medium when days of supply is Warning or coverage is At risk; Low for any other rule, such as stale data [thresholds Code; mapping Proposed]. Comparing days of cover with supplier lead time replaces this once lead times are held per supplier and material [PX1].
+- BR-02. Each alert has a risk class: High, Medium, Low, set by CR-24 (days of cover against the supplier's lead time). CR-02 applies only where the lead time is missing, and a missing lead time raises its own alert [Owner, 2026-09-21].
 - BR-03. Alert thresholds and the stale period are configurable by ADM, per material group [Proposed; Market].
 - BR-04. Alerts are delivered in the hub and by email [Proposed; Market].
 - BR-05. The same condition does not raise a new alert until the open one is closed [Proposed].
@@ -1162,7 +1172,7 @@ The owner confirmed the recommendations for this section on 2026-09-17 (E06-R). 
 5. The supplier downloads it to plan, then confirms in REQ-E06-02.
 
 **Business rules.**
-- BR-01. The forecast is net material requirement from SAP planning, from MRP or IBP until PQ-07 decides. The hub does not calculate demand [Owner; aligned with MN-INV-14].
+- BR-01. The forecast is net material requirement from SAP planning: MRP for weeks 1 to 13, IBP for months 4 to 6, published to the supplier as one forecast with the zone marking each period. The hub does not calculate demand [Owner, 2026-09-21; aligned with MN-INV-14].
 - BR-02. Publication cadence: weekly for packaging, monthly for raw material. An emergency re-publication is allowed at any time [Owner; Code design].
 - BR-03. Periods: packaging uses weekly periods for 13 weeks, then monthly up to 6 months; raw material uses monthly periods for 6 months. Horizon and cut-over are configurable [Owner].
 - BR-04. Each period carries a zone [Market]:
@@ -1215,7 +1225,7 @@ The owner confirmed the recommendations for this section on 2026-09-17 (E06-R). 
 - BR-04. A commit below forecast needs a predefined reason. The starter list is in section 3.6 [Owner; Code].
 - BR-05. A commit within the tolerance of forecast is accepted without planner action. Outside tolerance, it becomes an exception (REQ-E06-03). Tolerance follows CR-21 [Owner].
 - BR-06. Suppliers can commit by screen or spreadsheet upload, using the same fixed-template approach as stock (REQ-E08-02) [Owner].
-- BR-07. Commitments are due 1 working day after publication for Firm periods, and 7 days after publication for Trade-off and Forecast periods [Owner; Code].
+- BR-07. Commitments are due per CR-26: 1 working day after publication for Firm periods, 3 working days for Trade-off and Forecast periods [Owner, 2026-09-21].
 - BR-08. A supplier may commit an optional upside quantity above forecast [Market; Owner].
 - BR-09. The commitment starts pre-filled with the forecast quantity. The supplier still submits it [Owner].
 - BR-10. A commitment is kept as a draft until submitted, and the planner does not see drafts [Owner; Code].
@@ -1383,7 +1393,7 @@ All requirements in this section are **Proposed**, written from market practice 
   - Confirmed with Changes.
   - Partially Confirmed.
   - Rejected.
-- BR-03. Quantity tolerance (under and over %) and date tolerance (early and late days) are set per supplier and material group [Market]. The starting over-quantity tolerance is CR-05 [Code]. Under-quantity and date tolerances follow PQ-08.
+- BR-03. Quantity and date tolerance follow CR-05: up to 5% over accepted, any shortfall a visible partial delivery, and a late date always needs planner approval. The early-delivery allowance waits on the warehouse capacity check (PQ-08) [Owner, 2026-09-21].
 - BR-04. A confirmation within tolerance is accepted automatically. Outside tolerance it waits for planner approval: Awaiting Approval, Approved, Rejected [Market].
 - BR-05. Confirmation is due within 1 working day of release, matching the PO rule. No response escalates [Proposed; MN-ORD-04, MN-ORD-14].
 - BR-06. An ASN can be created only for a confirmed call-off [Market; MN-ORD-05].
@@ -1454,7 +1464,7 @@ All requirements in this section are **Proposed**, written from market practice 
 
 | Maps to | Phase | Priority | Business owner | Users | Status |
 |---|---|---|---|---|---|
-| E10.01; MN-ORD-07, MN-ORD-08, MN-ORD-09 | MVP | P1 [Proposed] | Not stated (DEC-09) | MP, BUY | Validated (definitions); Proposed (formulas) |
+| E10.01; MN-ORD-07, MN-ORD-08, MN-ORD-09 | MVP | P1 [Proposed] | Procurement (dashboard); Material Planning (delivery measures) | MP, BUY | Validated (definitions); Proposed (formulas) |
 
 **Business value.** Supplier performance is not tracked in a standard way today [Deck p.3, C4]. Measuring CFOT per PO and OTIF per call-off from hub data turns every confirmation and delivery into evidence for sourcing decisions. Moves KPI-05.
 
@@ -1495,7 +1505,7 @@ All requirements in this section are **Proposed**, written from market practice 
 
 | Maps to | Phase | Priority | Business owner | Users | Status |
 |---|---|---|---|---|---|
-| E13.01; MN-INV-13 | Open (D-03): deck puts E13 in Phase 2 | P2 [Proposed] | IT | SUP, MP | Validated |
+| E13.01; MN-INV-13 | Not in the MVP (D-03, 2026-09-21) | P2 [Proposed] | IT | SUP, MP | Validated |
 
 **Business value.** ETA and in-transit visibility are not real-time today [Deck p.5]. Giving suppliers access to PTI's TMS to track their deliveries is a fast start, before a full API integration. Relevant to DKSH's pilot need for shipment visibility [Deck p.11].
 
@@ -1508,6 +1518,7 @@ All requirements in this section are **Proposed**, written from market practice 
 **Business rules.**
 - BR-01. Initially, suppliers get TMS access to track deliveries to PTI [MN-INV-13].
 - BR-02. When integration is mature, exchange moves to API [MN-INV-13].
+- BR-03. Decided (D-03, 2026-09-21): no TMS integration in the MVP. Delivery tracking is covered by the 3PL tracking link on the ASN (REQ-E07-04 BR-05) [Owner].
 
 **Acceptance criteria.** To be written once the phase is decided.
 
@@ -1532,25 +1543,12 @@ All requirements in this section are **Proposed**, written from market practice 
 
 | ID | Item | Requirements affected |
 |---|---|---|
-| Q-18 | Which working calendar defines the 1-working-day deadline. Recommended default in section 3.4 | REQ-E07-02 |
-| A-03 | Review with users: RFI template, RFP template and standard term list, quote score weights (CR-15) | REQ-E03-02, REQ-E03-04, REQ-E03-05 |
-| Q-20 | Quality inspection result is recorded in the hub for the MVP, while the Supplier Quality module is Phase 2 and goods receipt posting stays in SAP. Confirm the boundary | REQ-E07-06 |
+| A-05 | Minimum OTIF for the compliance gate (CR-23), and whether "No history" passes (proposed: passes) | REQ-E03-05 |
 | A-01 | Check with Mas Ary Hidayat on compliance and capability for RFx | REQ-E03-01 to REQ-E03-04 |
-| A-02 | Full parameter list for supplier filtering | REQ-E03-01 |
-| D-03 | Phase for supplier TMS access | REQ-E13-01 |
-| D-07 | Catalog needed by RFI in MVP while Catalog Management is Phase 2 | REQ-E03-02 |
-| DEC-09 | Business owner for performance dashboard | REQ-E10-01 |
-| DEC-06 | Is Web Tukar Faktur the invoice collaboration capability or a separate app | REQ-E07-07 |
-| PQ-11 | Call-offs are managed manually outside SAP today. Confirm the hub becomes the record for call-offs, whether call-offs ever need to go back to SAP or another system, and whether today's manual records (for example spreadsheets) are migrated | REQ-E07-08, REQ-E09-01, REQ-E09-03 |
-| PQ-12 | Does the umbrella PO carry only a total value, or also quantities per breakdown line (MN-ORD-03 says quantity and timing come from SAP) | REQ-E07-01, REQ-E09-01 |
-| PQ-02 | Capacity horizon and bucket size (recommended default: weekly for 13 weeks) | REQ-E08-04 |
-| PQ-03 | Confirm the starting risk class thresholds | REQ-E08-05 |
-| PQ-04 | Goods receipt discrepancy tolerance (0 until decided) | REQ-E07-06 |
-| PQ-05 | Finance to confirm the 1% invoice tolerance (CR-12) and the status list | REQ-E07-07 |
+| PQ-11 | Call-offs are managed manually outside SAP today. Confirm the hub becomes the record for call-offs, whether call-offs ever need to go back to SAP or another system, and whether today's manual records (for example spreadsheets) are migrated. Recommended, not yet confirmed: the hub holds call-offs for the pilot, and SAP scheduling agreement releases become the long-term record | REQ-E07-08, REQ-E09-01, REQ-E09-03 |
+| PQ-05 | Finance to set the absolute rupiah cap for invoice price variance (CR-12); the 0% and 2% tolerances are decided | REQ-E07-07 |
 | PQ-06 | Interface technology and latency target | REQ-E07-08 |
-| PQ-07 | SAP source of forecast and demand sensing (MRP, IBP, or other) | REQ-E06-01, REQ-E09-01 |
-| PQ-08 | Call-off under-quantity and date tolerances; in-full tolerance; commitment tolerances per zone; commitment deadline | REQ-E06-02, REQ-E06-03, REQ-E09-03, REQ-E10-01 |
-| PQ-09 | Is event-based strategy analysis needed in MVP | REQ-E09-02 |
+| PQ-08 | Early-delivery allowance for call-offs, pending the warehouse capacity check; quantity and late-date rules are decided (CR-05) | REQ-E09-03 |
 | Q-19 | The PQ-10 answer ends with "They". Confirm nothing is missing | REQ-E09-04 |
 
 ---
@@ -1603,6 +1601,24 @@ Research date: 2026-09-17. Vendor pages were read directly unless marked "snippe
 | RFX-2 | Is a purchase requisition required to create an RFQ | No. An RFQ can start from scratch, an RFI, or a purchase requisition |
 | RFX-3 | Bid comparison, negotiation, and award | A negotiation step is required, and an event can be awarded to more than 1 supplier |
 | A-04 | How an RFI or RFP is created before it is sent | The buyer creates it; no sourcing request in the MVP. Central library, edited per event, with no save-as-template. Procurement owns the library and IT changes it on request. No approval before sending (section 3.6a) |
+| BL-02 / PQ-09 | Event-based strategy analysis in the MVP | No. It belongs in the planning suite |
+| BL-03 / D-03 | Supplier TMS access | No TMS integration in the MVP. The ASN names its 3PL and tracking number, and the hub links out to the 3PL's public tracking page (REQ-E07-04 BR-05) |
+| BL-04 / A-03 | Compliance in sourcing | A pass/fail gate, not a weight (CR-23): valid halal, valid BPOM where required, GMP / ISO 22716 for cosmetic raw material, not Suspended or Blacklisted, minimum OTIF. A supplier that fails can be invited but cannot be awarded. Qualified suppliers are scored on price 40%, lead time 20%, reliability 40% (CR-15) |
+| BL-05 / PQ-08 | Call-off tolerances and commitment deadline | Up to 5% over accepted; any shortfall a visible partial; late always needs approval (CR-05). Commitment deadline 1 working day for Firm, 3 for Trade-off and Forecast (CR-26). Early-delivery allowance waits on the warehouse |
+| BL-06 / PQ-04 | Goods receipt tolerance | 0% over; shortfall above 2% flagged (CR-25) |
+| BL-07 / PQ-05 | Invoice price tolerance | 0% where a contract price exists; 2% otherwise, within an absolute rupiah cap set by Finance (CR-12) |
+| BL-08 / PQ-02 | Capacity horizon | 13 weekly buckets |
+| BL-09 / PQ-03 | Alert risk class | Days of cover against supplier lead time (CR-24); day bands only as a fallback |
+| BL-10 / PQ-07 | Forecast source | MRP for weeks 1–13, IBP for months 4–6, published as one forecast |
+| BL-13 / PQ-12 | Umbrella PO grain | Quantity per line, so call-off release checks remaining quantity |
+| BL-14 / Q-18 | Working calendar | The hub keeps its own calendar, maintained by the Hub administrator, loaded from the SAP factory calendar with overrides in the hub |
+| BL-15 / Q-20 | Quality inspection | Keep the result display in the hub; non-conformance and corrective action come with Supplier Quality in Phase 2 |
+| BL-16 / D-07 | Catalog for the RFI | A capability list only in the MVP (the RFI's product entries); the purchasable catalog stays in Phase 2 |
+| BL-17 / DEC-06 | Web Tukar Faktur | A separate system built in parallel. The hub's invoice collaboration stays as it is, so the end-to-end flow keeps working |
+| BL-18 / DEC-09 | Performance dashboard owner | Procurement owns the dashboard; Material Planning owns the delivery measures |
+| BL-19 / KPI | KPI targets | Fix the definitions first (delivery window, whether early counts, grain, whether a date change resets the clock), measure a 3-month baseline, then set targets |
+| BL-19a / A-02 | Supplier filters | Add certificate validity, then performance band, then country or region |
+| BL-19b / MIG | PROCIO migration | Active suppliers from the last 24 months, plus any under contract. Suppliers confirm their own bank and tax details through the portal; a bank-detail change is confirmed through a second channel |
 | GAP-1 | Prototype experience that differs from this file | This file wins |
 | GAP-2 | Calculations where this file was silent or open | Follow the prototype (section 3.6, tag `[Code]`) |
 | GAP-3 | Menu, usability, and screen conventions | Follow the gap review recommendations (sections 3.7 and 3.8) |
@@ -1620,3 +1636,4 @@ Research date: 2026-09-17. Vendor pages were read directly unless marked "snippe
 | 0.5 | 2026-09-17 | Applied the confirmed Forecast Collaboration recommendations (E06-R): section 5.5 validated, CR-21 and CR-22 added |
 | 0.6 | 2026-09-18 | Answered A-04: section 3.6a records how a sourcing event is created before it is sent |
 | 0.7 | 2026-09-19 | REQ-E07-03 extended: drill-through contract per column, goods receipt and invoice columns, empty-cell rule, and an alignment check against the source requirements |
+| 0.8 | 2026-09-21 | Owner decisions on 18 of the 21 backlog decisions: compliance gate CR-23, risk class CR-24, receipt tolerance CR-25, commitment deadline CR-26; CR-02, CR-05, CR-12 and CR-15 revised; hub-managed calendar; 3PL tracking link replaces TMS access. Open items narrowed to A-01, A-05, PQ-05 cap, PQ-06, PQ-08 early allowance, PQ-11, Q-19 |
