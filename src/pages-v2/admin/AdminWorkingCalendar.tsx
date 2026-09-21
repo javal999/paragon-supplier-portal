@@ -83,7 +83,7 @@ const AdminSectionNav: React.FC = () => {
                 data-testid={`admin-section-${s.id}`}
                 className={({ isActive }) =>
                   `inline-flex items-center gap-2 px-3 py-2 text-sm border-b-2 -mb-px ${
-                    isActive ? 'border-action text-action font-medium' : 'border-transparent text-text-secondary'
+                    isActive ? 'border-action text-action-hover font-medium' : 'border-transparent text-text-secondary'
                   }`
                 }
               >

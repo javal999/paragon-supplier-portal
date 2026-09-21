@@ -45,7 +45,7 @@ export const buyerCommHubEn: Record<string, string> = {
   // — Triage panel (C4d — in-place recording confirm) —
   'buyerCommHub.triage.title': 'Triage a channel reply',
   'buyerCommHub.triage.subtitle':
-    'Record a reply a supplier sent you over a channel. You confirm before anything is recorded, and it is recorded by Paragon — the supplier’s words, not their self-submission.',
+    'Record a reply a supplier sent you over a channel. You check and save it in the stock entry form before anything is recorded, and it is recorded by Paragon — the supplier’s words, not their self-submission.',
   'buyerCommHub.triage.supplierLabel': 'Whose conversation is this?',
   'buyerCommHub.triage.supplierSelect': 'Select the supplier…',
   'buyerCommHub.triage.supplierHint':
@@ -64,19 +64,17 @@ export const buyerCommHubEn: Record<string, string> = {
   'buyerCommHub.triage.reset': 'New message',
   'buyerCommHub.triage.inferTitle': 'Parsed interpretation',
   'buyerCommHub.triage.rawTitle': 'Message received',
-  'buyerCommHub.triage.rowTitle': 'Confirm what to record',
-  'buyerCommHub.triage.confirmHint': 'Nothing is recorded until you confirm.',
-  'buyerCommHub.triage.confirm': 'Confirm & record',
-  'buyerCommHub.triage.confirming': 'Recording…',
+  'buyerCommHub.triage.rowTitle': 'Read from the message',
+  // BL-73 — a row only pre-fills the Inventory page's entry form, bound to the
+  // supplier (REQ-E08-02 BR-08 / BR-09).
+  'buyerCommHub.triage.row.matched': 'Matches {{material}} for {{supplier}}',
+  'buyerCommHub.triage.row.unmatched': 'No material of {{supplier}} matches — choose it in the form',
+  'buyerCommHub.triage.row.record': 'Record this stock',
+  'buyerCommHub.triage.entryHint': 'Opens the stock entry form of the Inventory page, filled in and bound to this supplier. The record shows it was entered by PTI on the supplier’s behalf, and the supplier sees it on its Stock page.',
   'buyerCommHub.triage.resultTitle': 'Result',
   'buyerCommHub.triage.result.landed': 'Recorded by Paragon from {{channel}}: {{material}} — {{qty}}',
-  'buyerCommHub.triage.result.refused': 'Not recorded: {{reason}}',
   'buyerCommHub.triage.honestyNote':
     'Operator-fed — no live channel; nothing is sent or received here. Recorded by Paragon under the buyer’s identity, honestly distinct from a supplier’s own submission.',
-  'buyerCommHub.triage.toast.landed.title': 'Recorded from {{channel}}',
-  'buyerCommHub.triage.toast.landed.body': 'The supplier’s reply was recorded by Paragon as a governed declaration.',
-  'buyerCommHub.triage.toast.failed.title': 'Nothing recorded',
-  'buyerCommHub.triage.toast.failed.body': 'No confirmable update was recorded from this message.',
 };
 
 export const buyerCommHubId: Record<string, string> = {
@@ -123,7 +121,7 @@ export const buyerCommHubId: Record<string, string> = {
   // — Triage panel (C4d — konfirmasi pencatatan langsung) —
   'buyerCommHub.triage.title': 'Triase balasan kanal',
   'buyerCommHub.triage.subtitle':
-    'Catat balasan yang dikirim pemasok kepada Anda melalui kanal. Anda mengonfirmasi sebelum apa pun dicatat, dan ini dicatat oleh Paragon — kata-kata pemasok, bukan kiriman mandiri mereka.',
+    'Catat balasan yang dikirim pemasok kepada Anda melalui kanal. Anda memeriksa dan menyimpannya di formulir isi stok sebelum apa pun dicatat, dan ini dicatat oleh Paragon — kata-kata pemasok, bukan kiriman mandiri mereka.',
   'buyerCommHub.triage.supplierLabel': 'Ini percakapan siapa?',
   'buyerCommHub.triage.supplierSelect': 'Pilih pemasok…',
   'buyerCommHub.triage.supplierHint':
@@ -138,17 +136,13 @@ export const buyerCommHubId: Record<string, string> = {
   'buyerCommHub.triage.reset': 'Pesan baru',
   'buyerCommHub.triage.inferTitle': 'Interpretasi terurai',
   'buyerCommHub.triage.rawTitle': 'Pesan diterima',
-  'buyerCommHub.triage.rowTitle': 'Konfirmasi yang akan dicatat',
-  'buyerCommHub.triage.confirmHint': 'Tidak ada yang dicatat sampai Anda mengonfirmasi.',
-  'buyerCommHub.triage.confirm': 'Konfirmasi & catat',
-  'buyerCommHub.triage.confirming': 'Mencatat…',
+  'buyerCommHub.triage.rowTitle': 'Terbaca dari pesan',
+  'buyerCommHub.triage.row.matched': 'Cocok dengan {{material}} untuk {{supplier}}',
+  'buyerCommHub.triage.row.unmatched': 'Tidak ada material {{supplier}} yang cocok — pilih di formulir',
+  'buyerCommHub.triage.row.record': 'Catat stok ini',
+  'buyerCommHub.triage.entryHint': 'Membuka formulir isi stok di halaman Stok, sudah terisi dan terikat ke pemasok ini. Catatan menunjukkan bahwa angka diisi oleh PTI atas nama pemasok, dan pemasok melihatnya di halaman Stok miliknya.',
   'buyerCommHub.triage.resultTitle': 'Hasil',
   'buyerCommHub.triage.result.landed': 'Dicatat oleh Paragon dari {{channel}}: {{material}} — {{qty}}',
-  'buyerCommHub.triage.result.refused': 'Tidak tercatat: {{reason}}',
   'buyerCommHub.triage.honestyNote':
     'Diisi operator — tanpa kanal langsung; tidak ada yang dikirim atau diterima di sini. Dicatat oleh Paragon di bawah identitas pembeli, jujur berbeda dari kiriman mandiri pemasok.',
-  'buyerCommHub.triage.toast.landed.title': 'Tercatat dari {{channel}}',
-  'buyerCommHub.triage.toast.landed.body': 'Balasan pemasok dicatat oleh Paragon sebagai deklarasi terkelola.',
-  'buyerCommHub.triage.toast.failed.title': 'Tidak ada yang dicatat',
-  'buyerCommHub.triage.toast.failed.body': 'Tidak ada pembaruan yang dapat dikonfirmasi tercatat dari pesan ini.',
 };

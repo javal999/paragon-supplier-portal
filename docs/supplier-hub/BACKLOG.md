@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 1.5, 2026-09-21 |
+| Version | 1.6, 2026-09-21 |
 | What this is | Everything known to be outstanding for the Supplier Hub, in one list: decisions waiting on people, work waiting on those decisions, work waiting on the backend, and work that can start today |
 | What this is not | A plan or a commitment. Nothing here has a date. Sequencing belongs to the project owner |
 | Sources | Open items (section 7 of `SUPPLIER-HUB-REQUIREMENTS.md`), open decisions (section 9.3 of `SUPPLIER-HUB-PRD.md`), what is not built (section 5 of `BUILD-GAP.md`), stubs (section 6 of the requirements), and defects or debts found while building |
@@ -47,11 +47,8 @@ Decided on 2026-09-21 and ready to build. Priority: first what protects money an
 
 | Priority | ID | Item | Rule | Size | Placeholder until decided |
 |---|---|---|---|---|---|
-| 1 | BL-72 | **Fix "ROUND {{ROUND}}"** on the RFQ event page's negotiation table: the round number placeholder is not filled | REQ-E03-05 | S | — |
-| 2 | BL-73 | **One stock entry, second path.** The chat-inbound triage (`CommHubInbound`) still records stock through its own path, against REQ-E08-02 BR-09. Route it through the Stock page's entry or retire it | REQ-E08-02 BR-09 | S | — |
-| 3 | BL-31 | Accessibility pass (section 4) | SC-07 | M | — |
-| 4 | BL-32 | Admin screen for the remaining configuration: reason codes, tolerances, thresholds, stale periods (section 4). The working calendar and the 3PL list are its first two pages | REQ-E08-05 BR-03 | M | — |
-| 5 | BL-33 to BL-39, BL-74 to BL-80 | The remaining "can start today" items in section 4, in the order listed there | — | — | — |
+| 1 | BL-32 | Admin screen for the remaining configuration: reason codes, tolerances, thresholds, stale periods (section 4). The working calendar and the 3PL list are its first two pages | REQ-E08-05 BR-03 | M | — |
+| 2 | BL-33 to BL-39, BL-74 to BL-80, BL-83, BL-84 | The remaining "can start today" items in section 4, in the order listed there | — | — | — |
 
 ### Build work waiting on a decision
 
@@ -84,7 +81,6 @@ Nothing blocks these.
 
 | ID | Item | Why | Size | Detail |
 |---|---|---|---|---|
-| BL-31 | Accessibility pass: keyboard reachability and screen-reader labels across the built pages, then fixes | SC-07 requires it before UAT; it has never been tested | M | Requirements 3.8 |
 | BL-32 | Admin screen for the values now held in configuration files: reason codes, tolerances, alert thresholds, stale periods, the working calendar | Today a change needs a developer. ADM is a named persona in the requirements with nothing to use | M | REQ-E08-05 BR-03, 3.6 |
 | BL-33 | Sample data so a "Received without ASN" receipt exists | The code path is built and rendered but no sample data produces it, so nobody can see it | S | REQ-E07-06 |
 | BL-34 | One "as of" date across the app: the order pages read the demo clock, other pages read today. Also seen: a recorded award and the admin change history are dated with the real clock while the page says "As of 31 Aug 2026" | Two clocks in one demo confuse a reviewer | S | U-12 in `BUILD-GAP.md` |
@@ -98,8 +94,10 @@ Nothing blocks these.
 | BL-76 | The Risk page uses its own day thresholds (under 30 red, under 50 amber) over sample categories with no supplier or material; align with CR-24 or retire it | Contradicts CR-02 / CR-24 | S | REQ-E08-05 |
 | BL-77 | Capacity sample data for more than one supplier, so the planner's capacity filters (BL-63) can be demonstrated | Today one supplier has capacity plans | S | REQ-E08-04 |
 | BL-78 | Sample KPI tiles, the radar "benchmark", improvement-action targets, the analytics page and the supplier dashboard still show authored targets or colour against 90% | BL-19: baseline first, no targets yet | S | REQ-E10-01 |
-| BL-79 | Retire superseded supply-data-collaboration code: `services/sdc/ingest.ts` (`parseGrid`) has no caller since BL-60, and the hidden chase page counts a 7-day calendar-day threshold | Dead code and a rule nobody decided | S | BUILD-GAP section 6 |
+| BL-79 | Retire superseded supply-data-collaboration code: the hidden chase page counts a 7-day calendar-day threshold nobody decided (`parseGrid` was removed with BL-73) | Dead code and a rule nobody decided | S | BUILD-GAP section 6 |
 | BL-80 | A value-only PO line (BL-49) shows quantity 0 on PO and ASN screens outside the call-off pages | Only the call-off screens know the line has no quantity | S | CR-04 |
+| BL-83 | Text run-ons: Indonesian "closing soon" pill joins its date ("Segera ditutup02 Sep 2026"); the in-transit read-out reads "0nothing in transit"; `formatNumber` uses the Indonesian thousands dot in the English UI outside the Stock page | Small display defects seen in the BL-72/73 check | S | SC conventions |
+| BL-84 | Accessibility items left by BL-31: field errors not tied to their field (many forms); h1 jumping to h3 on marketplace, discovery, storefront, WhatsApp demo, supplier comm hub and shipments; unnamed controls in the contract wizard obligation grid and WhatsApp demo; top-bar menu button does nothing and the notification count is not in its name; login contrast and missing h1; 404 title in English only; then a session with a real screen reader | Needed before UAT (SC-07) | M | `BUILD-GAP.md` "Accessibility (BL-31)" |
 
 ---
 
@@ -154,3 +152,6 @@ Nothing blocks these.
 | BL-51 | 3PL tracking link on the ASN | 2026-09-21 | Built: the supplier picks the 3PL from the administrator's list (sample list, marked as sample) or types another carrier; the tracking number opens the 3PL's public page in a new tab on every ASN surface, supplier and PTI; no status read; no or unknown 3PL shows plain text. The list is changed through a governed verb held by the compliance lane and the Hub administrator, on Administration → 3PL tracking links |
 | BL-52 | Supplier filters | 2026-09-21 | Built: certificate validity (valid, expiring within 90 days, expired or missing), performance band (A–D, No history), country, on the supplier list and every invitee search, in the page address and combined with the existing filters. Region is not a separate filter: the supplier master holds a country only |
 | BL-53 | KPI definitions on the performance pages | 2026-09-21 | Built: OTIF and CFOT definitions as calculated (window, early, grain, date change, in full) on both performance pages; targets read "Baseline period — no target yet". One difference from the requirements is stated as the code does it and left for a decision: a PO counter-offer moves the CFOT date as soon as it is sent |
+| BL-72 | "ROUND {{ROUND}}" on the RFQ event page | 2026-09-21 | Fixed: a header key for the column; one more un-interpolated string found and fixed (supplier application toast); guard test over the tree |
+| BL-73 | Second stock entry path | 2026-09-21 | Fixed: the supplier and PTI chat triage pages pre-fill the Stock page's own entry form (same fields, checks and verb); a PTI recording shows "Entered by PTI"; the old grid parser and hooks removed |
+| BL-31 | Accessibility pass | 2026-09-21 | Done: 68 pages audited by keyboard and automated checks against WCAG 2.1 AA; keyboard-operable rows, one focus contract for every drawer and dialog, skip link, named nav and search, 39 form labels tied to fields, text contrast raised to AA; guard tests. What remains is BL-84 |

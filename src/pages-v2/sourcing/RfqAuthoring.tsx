@@ -9,7 +9,7 @@
 // through is a step the create verb will accept.
 // ────────────────────────────────────────────────────────────────────────────
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { Plus, Trash2, X } from 'lucide-react';
@@ -18,6 +18,7 @@ import Data from '../../components/ui-v2/Data';
 import SubTabs from '../../components/ui-v2/SubTabs';
 import SessionAttachments from '../../components/ui-v2/SessionAttachments';
 import { useToast } from '../../hooks/useToast';
+import { useDialogFocus } from '../../hooks/useDialogFocus';
 import { formatDate, formatNumber } from '../../lib/format';
 import type { RFQ } from '../../data/mockRfqs';
 import type { RfiQuestion, RfiQuestionType } from '../../services/sourcing/types';
@@ -791,9 +792,16 @@ const Dialog: React.FC<{ label: string; testId: string; onClose: () => void; wid
   children,
 }) => {
   const { t } = useTranslation();
+  // The shared modal keyboard contract (BL-31): focus moves in, Tab is trapped,
+  // Escape closes, focus returns to the opener. It stacks, so this dialog opened
+  // over the wizard is the one that owns the keys while it is open.
+  const ref = useRef<HTMLDivElement>(null);
+  useDialogFocus(ref, true, onClose);
   return (
+    // z-[60]: above the wizard's overlay (z-50), which "Save as template" opens over.
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-[rgba(13,27,42,0.4)]">
       <div
+        ref={ref}
         role="dialog"
         aria-modal="true"
         aria-label={label}

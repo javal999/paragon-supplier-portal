@@ -23,7 +23,7 @@ interface ToneStyle {
 // comparisons, the top-ranked column highlight). Semantic red/amber/green is
 // reserved for true state elsewhere, not for decorating a 0–100 score.
 const TONE: ToneStyle = {
-  text: 'text-teal',
+  text: 'text-teal-hover', // BL-31: teal as TEXT uses the text arm (AA); stroke stays DEFAULT
   stroke: CHART_SERIES[0], // teal brand accent — byte-identical, now sourced
   bg: 'bg-teal-soft',
 };

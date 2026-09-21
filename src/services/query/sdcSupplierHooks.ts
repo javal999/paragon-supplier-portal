@@ -314,38 +314,6 @@ export interface SdcObjectDispatchVars {
   causationId?: string;
 }
 
-/** Declare current SOH (fires the `creation` verb `t_inventorydeclaration_declare`
- *  — supplier-owned, collaborated-material scoped, total-first). */
-export function useInventoryDeclare() {
-  const svc = useDataService();
-  const { identity } = useCurrentIdentity();
-  const scope: QueryScope = {
-    personaType: identity.personaType,
-    supplierId: identity.supplierId,
-    businessRoles: identity.businessRoles,
-    actor: identity.actor,
-  };
-  const invalidate = useInvalidateSdc();
-
-  return useMutation<CommandResult, Error, SdcObjectDispatchVars>({
-    mutationFn: ({ payload, causationId }) =>
-      svc.commands.dispatch(
-        scope,
-        {
-          transitionId: 't_inventorydeclaration_declare',
-          entity: 'inventoryDeclaration',
-          payload,
-        },
-        causationId,
-      ),
-    onSuccess: (result) => {
-      if (result.status !== 'failed') invalidate(scope);
-    },
-  });
-}
-
-/** Report an incoming shipment (fires the `creation` verb
- *  `t_incomingshipment_report`; direction-guarded). */
 export function useIncomingShipmentReport() {
   const svc = useDataService();
   const { identity } = useCurrentIdentity();

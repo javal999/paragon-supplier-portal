@@ -82,7 +82,7 @@ type TabKey = 'gaps' | 'qualification' | 'intelligence' | 'search';
 
 const scoreColorClass = (score: number): string => {
   if (score >= 90) return 'text-success';
-  if (score >= 80) return 'text-teal';
+  if (score >= 80) return 'text-teal-hover';
   return 'text-warning-hover';
 };
 
@@ -114,7 +114,7 @@ const QualificationCard: React.FC<{ item: QualificationItem; onUpdate: () => voi
               ? 'bg-action text-white'
               : 'bg-bg-hover text-text-tertiary';
           const labelClass = isActive
-            ? 'text-teal font-semibold'
+            ? 'text-teal-hover font-semibold'
             : 'text-text-tertiary';
           return (
             <React.Fragment key={labelKey}>
@@ -151,7 +151,7 @@ const QualificationCard: React.FC<{ item: QualificationItem; onUpdate: () => voi
         <button
           type="button"
           onClick={onUpdate}
-          className="inline-flex items-center gap-1 text-xs font-medium text-teal hover:text-teal-hover"
+          className="inline-flex items-center gap-1 text-xs font-medium text-teal-hover hover:text-teal-hover"
         >
           {t('discovery.qual.updateStatus')} <ArrowRight size={12} />
         </button>
@@ -610,7 +610,7 @@ const BuyerDiscovery: React.FC = () => {
                     <div className="text-[11px] text-text-tertiary">{t('discovery.intel.global')}</div>
                   </div>
                   <div>
-                    <div className="text-lg font-bold text-teal">
+                    <div className="text-lg font-bold text-teal-hover">
                       {card.suppliersParagon}
                     </div>
                     <div className="text-[11px] text-text-tertiary">{t('discovery.intel.inNetwork')}</div>

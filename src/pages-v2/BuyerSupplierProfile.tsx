@@ -203,7 +203,7 @@ const BuyerSupplierProfile: React.FC = () => {
         <button
           type="button"
           onClick={() => navigate('/buyer/suppliers')}
-          className="inline-flex items-center gap-1 text-sm text-teal hover:text-teal-hover font-medium"
+          className="inline-flex items-center gap-1 text-sm text-teal-hover hover:text-teal-hover font-medium"
         >
           <ArrowLeft size={14} />
           {t('buyerSupplierProfile.back.directory')}

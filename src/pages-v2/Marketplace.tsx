@@ -260,7 +260,7 @@ const Marketplace: React.FC = () => {
           </div>
           <button
             type="button"
-            className="inline-flex items-center gap-1 text-sm font-medium text-teal hover:text-teal-hover"
+            className="inline-flex items-center gap-1 text-sm font-medium text-teal-hover hover:text-teal-hover"
           >
             {t('marketplace.rfq.viewAll')} <ArrowUpRight size={14} />
           </button>

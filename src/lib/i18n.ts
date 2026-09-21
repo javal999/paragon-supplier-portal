@@ -446,6 +446,12 @@ export const resources = {
       'ui.clearSearch': 'Clear search',
       'ui.closePanel': 'Close panel',
       'ui.dismiss': 'Dismiss',
+      // BL-31 — shared accessible names and the skip link.
+      'ui.skipToContent': 'Skip to main content',
+      'ui.search': 'Search',
+      'ui.expandSection': 'Expand section',
+      'ui.collapseSection': 'Collapse section',
+      'topbar.searchLabel': 'Search the portal',
       // — PO confirm (Step 3.10 proof surface) —
       'po.confirm.action': 'Confirm order',
       'po.confirm.submitting': 'Confirming…',
@@ -877,6 +883,11 @@ export const resources = {
       'ui.clearSearch': 'Hapus pencarian',
       'ui.closePanel': 'Tutup panel',
       'ui.dismiss': 'Tutup',
+      'ui.skipToContent': 'Lewati ke konten utama',
+      'ui.search': 'Cari',
+      'ui.expandSection': 'Buka bagian',
+      'ui.collapseSection': 'Tutup bagian',
+      'topbar.searchLabel': 'Cari di portal',
       // — PO confirm (ID stub — refined in the Phase 3′ ID-first sweep) —
       'po.confirm.action': 'Konfirmasi pesanan',
       'po.confirm.submitting': 'Mengonfirmasi…',

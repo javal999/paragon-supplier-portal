@@ -70,6 +70,14 @@ const Wizard: React.FC<WizardProps> = ({
                     onClick={() => reachable && onStepChange(i)}
                     disabled={!reachable}
                     aria-current={active ? 'step' : undefined}
+                    // BL-31 (WCAG 4.1.2 / 2.4.6): the circle shows only a number
+                    // or a check icon, and the step name beside it is hidden
+                    // below `sm`, so the button needs its own full name.
+                    aria-label={t(completed ? 'wizard.stepLabelDone' : 'wizard.stepLabel', {
+                      n: i + 1,
+                      total: steps.length,
+                      title: step.title,
+                    })}
                     className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold transition-colors ${
                       completed
                         ? 'bg-action text-white'
@@ -78,9 +86,10 @@ const Wizard: React.FC<WizardProps> = ({
                           : 'bg-bg-hover text-text-tertiary border border-border-subtle'
                     } ${reachable ? 'cursor-pointer' : 'cursor-default'}`}
                   >
-                    {completed ? <Check size={14} strokeWidth={3} /> : i + 1}
+                    {completed ? <Check size={14} strokeWidth={3} aria-hidden="true" /> : i + 1}
                   </button>
                   <span
+                    aria-hidden="true"
                     className={`text-sm hidden sm:inline ${
                       active
                         ? 'text-text-primary font-semibold'
@@ -93,7 +102,10 @@ const Wizard: React.FC<WizardProps> = ({
                   </span>
                 </li>
                 {i < steps.length - 1 && (
-                  <div
+                  // An <ol> may only hold <li>; the connector is presentational.
+                  <li
+                    aria-hidden="true"
+                    role="presentation"
                     className={`flex-1 h-px ${
                       i < currentStep ? 'bg-action' : 'bg-border-subtle'
                     }`}

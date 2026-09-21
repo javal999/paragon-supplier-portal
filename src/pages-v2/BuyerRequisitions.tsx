@@ -1353,7 +1353,7 @@ const BuyerRequisitions: React.FC = () => {
             description={t('requisitions.new.step1.desc')}
           >
             <div>
-              <label className={labelClass}>{t('requisitions.new.field.material')}</label>
+              <label className="block"><span className={labelClass}>{t('requisitions.new.field.material')}</span>
               <input
                 className={inputClass}
                 placeholder={t('requisitions.new.placeholder.material')}
@@ -1361,7 +1361,7 @@ const BuyerRequisitions: React.FC = () => {
                 onChange={(e) =>
                   setForm({ ...form, material: e.target.value })
                 }
-              />
+              /></label>
             </div>
             <div className="grid grid-cols-[1fr_100px] gap-3">
               <div>
@@ -1397,7 +1397,7 @@ const BuyerRequisitions: React.FC = () => {
                 </div>
               </div>
               <div>
-                <label className={labelClass}>{t('requisitions.new.field.uom')}</label>
+                <label className="block"><span className={labelClass}>{t('requisitions.new.field.uom')}</span>
                 <select
                   className={inputClass}
                   value={form.uom}
@@ -1406,7 +1406,7 @@ const BuyerRequisitions: React.FC = () => {
                   {UOM_OPTIONS.map((u) => (
                     <option key={u}>{u}</option>
                   ))}
-                </select>
+                </select></label>
               </div>
             </div>
           </FormSection>
@@ -1418,16 +1418,16 @@ const BuyerRequisitions: React.FC = () => {
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className={labelClass}>{t('requisitions.new.field.requiredDate')}</label>
+                <label className="block"><span className={labelClass}>{t('requisitions.new.field.requiredDate')}</span>
                 <input
                   type="date"
                   className={inputClass}
                   value={form.date}
                   onChange={(e) => setForm({ ...form, date: e.target.value })}
-                />
+                /></label>
               </div>
               <div>
-                <label className={labelClass}>{t('requisitions.new.field.costCenter')}</label>
+                <label className="block"><span className={labelClass}>{t('requisitions.new.field.costCenter')}</span>
                 <select
                   className={inputClass}
                   value={form.costCenter}
@@ -1441,11 +1441,11 @@ const BuyerRequisitions: React.FC = () => {
                       {c}
                     </option>
                   ))}
-                </select>
+                </select></label>
               </div>
             </div>
             <div>
-              <label className={labelClass}>{t('requisitions.new.field.priority')}</label>
+              <label className="block"><span className={labelClass}>{t('requisitions.new.field.priority')}</span>
               <select
                 className={inputClass}
                 value={form.priority}
@@ -1458,7 +1458,7 @@ const BuyerRequisitions: React.FC = () => {
                     {el(p)}
                   </option>
                 ))}
-              </select>
+              </select></label>
             </div>
           </FormSection>
 
@@ -1468,6 +1468,7 @@ const BuyerRequisitions: React.FC = () => {
             description={t('requisitions.new.step3.desc')}
           >
             <textarea
+              aria-label={t('requisitions.new.step3.title')}
               className={`${inputClass} min-h-[72px] resize-y`}
               placeholder={t('requisitions.new.placeholder.justification')}
               value={form.justification}

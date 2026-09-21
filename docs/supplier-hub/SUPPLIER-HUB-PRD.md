@@ -4,7 +4,7 @@
 |---|---|
 | Product | Supplier Hub (Supplier Portal, "SC Collaboration Hub") |
 | Company | PT Paragon Technology and Innovation (PTI) |
-| Version | 0.6 draft, 2026-09-19 |
+| Version | 0.7 draft, 2026-09-21 |
 | Scope | MVP (Phase 1, "Foundation to Transact"). Phase 2 and 3 appear only in section 9 |
 | Steering Committee | Yogi Sapta Prakoso (VP Supply Chain), Ilauddin (CFO), Risman Adnan (CTO) [C] |
 | Technology Product Owners | Achmad Fahlevi, Vergiant Yoga Perdana (Supply Chain); Indita Ramasaphira (FATL) [C] |
@@ -76,7 +76,7 @@ The benchmark percentages come from the charter and were not verified for this P
 | MDM | Master Data steward | PTI | Keep supplier master data governed and in sync with SAP MM |
 | LEG | Legal reviewer | PTI | Validate supplier documents |
 | SUP | Supplier user | Raw material and packaging suppliers | One place to see PTI demand and orders and to respond; channel suited to its digital maturity |
-| ADM | Hub administrator | PTI IT | Configure reason codes, calendars, templates, tolerances; monitor integrations [P] |
+| ADM | Hub administrator | PTI IT | Maintain the hub working calendar (loaded from SAP) and the 3PL tracking list; configure reason codes, templates, tolerances; monitor integrations [Owner 2026-09-21; rest P] |
 
 MVP pilot suppliers: DP Group (Dynaplast, Rapid Plast), DKSH Indonesia, Lautan Luas [D].
 
@@ -129,10 +129,11 @@ Acceptance criteria: TBD by the Foundation team. The hub **replaces PROCIO** for
 - US-14:
   - An ASN can be created only for an approved PO or confirmed call-off.
   - A submitted ASN increases in-transit quantity.
+  - The ASN names its 3PL and tracking number; the number links to the 3PL's public tracking page. The hub reads nothing back from the 3PL.
   - Shipment start and expected completion are recorded per PO.
 - US-15 [P]:
   - A SAP goods receipt appears against its ASN.
-  - A receipt outside tolerance is flagged.
+  - Any over-delivery is flagged; a shortfall above 2% is flagged and the receipt is kept open (CR-25).
   - The supplier can acknowledge or dispute it with a comment.
 - US-16 [P]:
   - Invoices are created only from the supplier's own received goods receipts.
@@ -153,11 +154,12 @@ Acceptance criteria: TBD by the Foundation team. The hub **replaces PROCIO** for
 - US-20:
   - The view shows supplier SOH, PTI SOH, PTI ROP, supplier ROP, and incoming split into in production and in transit.
   - There is no "available stock" field.
-  - Raw material and packaging can be viewed separately.
+  - Raw material and packaging can be viewed separately on the PTI view; the supplier view is one list unless the supplier supplies both.
   - Each supplier figure shows its last update time.
 - US-21:
-  - Template upload and manual entry work for suppliers.
-  - A PTI user can trigger API sync with a Sync button.
+  - Template upload and manual entry work for suppliers, on one page, with the same fields; batch, manufacturing and expiry dates are optional.
+  - In-transit is taken from ASNs and dispatched call-offs and cannot be typed.
+  - An API-connected supplier triggers a sync with a Sync button, and so can a PTI user on its behalf. A supplier retrieves PTI stock only for materials it has been granted.
   - Invalid template rows are listed with a reason, and valid rows are saved.
 - US-22:
   - A supplier without access sees no PTI stock anywhere.
@@ -166,10 +168,11 @@ Acceptance criteria: TBD by the Foundation team. The hub **replaces PROCIO** for
 - US-23 [P]:
   - Capacity is entered per material group per week.
   - A week below demand requires a reason.
-  - The planner sees gap weeks highlighted.
+  - The planner sees gap weeks highlighted, and can filter by supplier, material group, material and gaps only.
+  - Extra capacity the supplier could give on request is optional and labelled as such.
 - US-24 [P]:
   - Each alert rule fires on test data.
-  - Every alert has a High, Medium, or Low class.
+  - Every alert has a High, Medium, or Low class, judged against the supplier lead time (CR-24); day bands only where the lead time is missing, which raises its own alert.
   - A repeating condition creates no duplicate open alert.
 
 #### Forecast Collaboration (E06)
@@ -209,13 +212,13 @@ Acceptance criteria: TBD by the Foundation team. The hub **replaces PROCIO** for
 - US-40:
   - Recommendations show quantity, date, and inventory context.
   - Release, edit, and dismiss are available, with a reason for edit and dismiss.
-  - Release is blocked beyond the remaining umbrella PO value.
+  - Release is blocked beyond the remaining quantity on the umbrella PO line; value only where a line has no quantity (CR-04).
 - US-41 [P]:
   - Projected stock under current and event-based strategy can be compared and shared.
 - US-42 [P]:
   - Each line can be confirmed, confirmed with a new date or quantity, or rejected.
-  - A confirmation within tolerance is auto-accepted; outside tolerance it awaits planner approval.
-  - No response after 1 working day escalates.
+  - A confirmation up to 5% over is auto-accepted for every call-off type; a shortfall is a visible partial; any date change, later or earlier, awaits planner approval (CR-05).
+  - No response after 1 working day on the hub calendar escalates.
   - OTIF is calculated against the approved date and quantity.
 - US-43:
   - A confirmed call-off can be marked shipped with expected arrival.
@@ -250,7 +253,8 @@ Acceptance criteria: TBD by the Foundation team. The hub **replaces PROCIO** for
   - An RFP lists required commercial terms.
   - Suppliers respond per term.
 - US-54:
-  - The comparison shows each criterion score and the weighted score (CR-15).
+  - A supplier that fails the compliance gate (CR-23: halal, BPOM, GMP where the material needs it, status, minimum OTIF) can be invited and can quote, but cannot be awarded, and the reason is shown.
+  - Qualified suppliers are scored on price 40%, lead time 20%, reliability 40% (CR-15).
   - Only suppliers invited to a negotiation round can submit a revised quote.
   - Every quote version is kept.
 - US-55:
@@ -267,14 +271,15 @@ Acceptance criteria: TBD by the Foundation team. The hub **replaces PROCIO** for
 - US-60:
   - The dashboard shows CFOT and OTIF per supplier for a chosen period.
   - OTIF is calculated per call-off (CR-06 to CR-08) and CFOT per PO.
-  - The CFOT formula is confirmed by the business before build.
+  - The page states each KPI's definition (delivery window, early deliveries, grain, date change). Targets read "Baseline period" until a 3-month baseline is measured (owner 2026-09-21).
 
 ### 2.3 Non-Goals (MVP)
 
 | Not building in MVP | Why | Source |
 |---|---|---|
 | Contract management, catalog management, spend and reporting analytics | Phase 2 | [D] p.9 |
-| API integration with a shipment aggregator | Phase 2. Supplier access to PTI's TMS may come earlier, phase open (D-03) | [D] p.9; [V] MN-INV-13 |
+| API integration with a shipment aggregator, and supplier access to PTI's TMS | Not in the MVP. The ASN links out to the 3PL's public tracking page instead | [D] p.9; owner 2026-09-21 (D-03) |
+| Invoice exchange through Web Tukar Faktur | A separate system built in parallel; the hub's invoice collaboration stays as it is | Owner 2026-09-21 (DEC-06) |
 | Supplier Quality module | Phase 2 | [D] p.9 |
 | Web scraping and AI for sourcing | Phase 3 | [D] p.9 |
 | Dock, slot, or delivery schedule management | Only a shipped heads-up is needed now | [V] PQ-10 |
@@ -326,7 +331,7 @@ The production tech stack, hosting, database, and authentication are **TBD by IT
 | Integration layer | Exchange with SAP and supplier systems; message log and retry | [P]; technology TBD (PQ-06) |
 | SAP S/4HANA (MM, PP, SD) | System of record for PR, umbrella PO (value), financial posting, payment, forecast and ROP recommendations, goods receipts, invoices, vendor master | [D p.5]; [V] |
 | Supplier ERP (optional) | Stock and capacity sync by API for connected suppliers, such as DP Group | [D p.11]; [V] MN-INV-07 |
-| PTI TMS | Supplier shipment tracking; phase open | [V] MN-INV-13; D-03 |
+| 3PL public tracking pages | The ASN's tracking number links out to the 3PL's page; nothing is read back | Owner 2026-09-21 (D-03) |
 | PROCIO | Current e-procurement application for supplier registration and master data. **Replaced by the hub**; source for supplier data migration only | [D p.6]; owner decision 2026-09-17 |
 | Notification service | In-app and email notifications | [P] |
 | Identity and access | PTI employees and external supplier users | TBD by IT |
@@ -347,13 +352,13 @@ The production tech stack, hosting, database, and authentication are **TBD by IT
 | I3 | Forecast / net requirements | SAP | Hub | Weekly publication [P] | [P]; SAP source open (PQ-07) |
 | I4 | ROP and replenishment recommendation | SAP | Hub | TBD | [V] MN-INV-14 |
 | I5 | PTI stock on hand | SAP | Hub | TBD | [V] MN-INV-03 |
-| I6 | Supplier stock, ROP, in production | Supplier ERP, spreadsheet, manual | Hub | API sync on PTI button; upload; screen | [V] MN-INV-07 |
+| I6 | Supplier stock, ROP, in production | Supplier ERP, spreadsheet, manual | Hub | API sync on the supplier's or PTI's Sync button, plus a schedule; upload; screen | [V] MN-INV-07, amended 2026-09-21 |
 | I7 | ASN as inbound delivery | Hub | SAP | TBD | [D] E07.05; [P] |
 | I8 | Goods receipt | SAP | Hub | TBD | [D] E07.03; [P] |
 | I9 | Invoice and invoice status | Hub to SAP; SAP to Hub | Both | TBD | [D] E07.04; [P] |
 | I10 | Vendor master | Hub | SAP MM | TBD | [D] E02.04; PROCIO replaced |
 | I13 | Supplier master data migration (one-time) | PROCIO | Hub | Migration before go-live | Owner decision 2026-09-17; data remediation per charter assumption [C] |
-| I11 | Shipment tracking | TMS | Supplier (access), Hub | TBD | [V] MN-INV-13; D-03 |
+| I11 | Shipment tracking | 3PL public page | User (link out) | None; link only | Owner 2026-09-21 (D-03) |
 | I12 | Notifications | Hub | Email | TBD | [P] |
 
 ### 4.3 Security & Privacy
@@ -385,9 +390,9 @@ flowchart TD
     API --> NOTIF["Notification service<br/>(in-app, email)"]
     API --> INT["Integration layer<br/>message log + retry<br/>technology TBD"]
     INT <-->|"PO, forecast, ROP, SOH, GR,<br/>invoice status / PO response,<br/>inbound delivery, invoice"| SAP["SAP MM / PP / SD"]
-    INT <-->|"stock, capacity sync<br/>(PTI-triggered)"| SERP["Supplier ERP (optional)"]
+    INT <-->|"stock, capacity sync<br/>(supplier- or PTI-triggered)"| SERP["Supplier ERP (optional)"]
     SUP -->|"spreadsheet template upload"| WEB
-    SUP -.->|"shipment tracking access<br/>(phase open)"| TMS["PTI TMS"]
+    WEB -.->|"tracking link out<br/>(nothing read back)"| TPL["3PL public tracking page"]
     PROCIO["PROCIO e-procurement<br/>(being replaced)"] -.->|"one-time supplier<br/>data migration"| DB
 ```
 
@@ -477,7 +482,7 @@ sequenceDiagram
 | NF3 | Concurrent users | Simultaneous PTI and supplier sessions without degradation | TBD by IT |
 | NF4 | Upload size | Maximum rows and file size for stock template | TBD by IT |
 | NF5 | Data freshness | Delay from SAP change to hub display | TBD by IT (PQ-06) |
-| NF6 | Deadline accuracy | Escalation fires at the working-day deadline | TBD tolerance; calendar per Q-18 |
+| NF6 | Deadline accuracy | Escalation fires at the working-day deadline | TBD tolerance; hub working calendar (requirements 3.4) |
 | NF7 | Recovery | Restore time after outage; data loss window | TBD by IT |
 
 ---
@@ -502,7 +507,7 @@ sequenceDiagram
 | E7 | Template row for a material not assigned to the supplier | Reject that row, accept valid rows | [P] |
 | E8 | Malformed or oversize upload | Reject file with reason; size limit TBD | [P]; NF4 |
 | E9 | Duplicate invoice number | Block | [P] |
-| E10 | Call-off exceeds remaining umbrella PO value | Block release | [P]; follows [V] PQ-01 |
+| E10 | Call-off exceeds the remaining quantity on the umbrella PO line (value where the line has none) | Block release, naming requested and remaining | Owner 2026-09-21 (PQ-12, CR-04) |
 | E11 | Commitment below forecast without reason | Block | [P] |
 
 ### 7.3 Data Integrity
@@ -515,7 +520,7 @@ sequenceDiagram
 | E15 | Goods receipt with no ASN | Show "Received without ASN"; count in ASN coverage | [P] |
 | E16 | Access to PTI stock removed during a session | Next page load hides PTI stock | [P] |
 | E17 | Two planners act on the same exception | Last action wins only if based on current version; otherwise reload prompt | [P] |
-| E18 | PO created on a non-working day | Deadline counts from next working day | [P]; Q-18 |
+| E18 | PO created on a non-working day | Deadline counts from next working day on the hub calendar | Owner 2026-09-21 (Q-18) |
 
 ---
 
@@ -745,7 +750,7 @@ Row 8's mitigation text overlaps another cell in the workbook, so its wording ("
 |---|---|---|---|---|
 | RA1 | PTI's own SAP API readiness | **Treated as an assumption, not a risk:** SAP APIs are assumed ready. Readiness is still under discussion, so revisit if that discussion finds gaps | Track the discussion outcome | [D] RSK-01; owner 2026-09-17 |
 | RA2 | Call-offs are managed manually outside SAP today, so the hub becomes their only record | Migration of manual records and reconciliation with SAP receipts | Decide PQ-11; link receipts to call-offs through the ASN | [V] PQ-01 |
-| RA3 | Umbrella PO holds value only | Quantity-based checks may be impossible | Confirm PQ-12 | [V] PQ-01 |
+| RA3 | Umbrella PO holds value only | Quantity-based checks may be impossible | Resolved 2026-09-21: quantity per line (PQ-12); value only on a line with no quantity | [V] PQ-01 |
 | RA4 | PROCIO is replaced by the hub, so supplier registration and master data must be migrated from PROCIO | Incomplete or dirty migrated data blocks onboarding and SAP MM sync | Migration plan with data review and cleansing before go-live (links to R5) | Owner decision 2026-09-17 |
 | RA5 | Replenishment method and governance not yet established; **decision deferred** | Call-off recommendation and event-based analysis (REQ-E09-01, REQ-E09-02) cannot be finalised until it is decided | Consultant engagement, IDR 1 billion [C]; decide before call-off build | [C]; owner 2026-09-17 |
 
@@ -761,22 +766,20 @@ Row 8's mitigation text overlaps another cell in the workbook, so its wording ("
 
 ### 9.3 Open Decisions Blocking the MVP
 
+Decided on 2026-09-21 and no longer listed here: PQ-02, PQ-07, PQ-12, MIG, Q-18, Q-20, A-03, D-03, D-07, DEC-06, DEC-09 and the KPI approach (definitions, then a 3-month baseline, then targets). The answers are in section 9 of the requirements.
+
 | ID | Decision | Owner |
 |---|---|---|
-| PQ-11 | Hub as record for call-offs; migration of manual records; any sync back | Material Planner, IT |
-| PQ-12 | Umbrella PO: value only, or quantities per line | Material Planner, ERP Functional |
-| MIG | PROCIO to hub supplier data migration scope and approach | Procurement, MDM, IT |
+| PQ-11 | Hub as record for call-offs; migration of manual records; any sync back. Recommended: hub for the pilot, SAP scheduling agreement releases long term | Material Planner, IT |
 | REPL | Replenishment method and governance (deferred; consultant) | Material Planner |
-| DEC-03 | Final MVP list (RFx and performance dashboard in MVP; D-07 catalog for RFI; D-03 TMS phase) | Project sponsors |
-| PQ-07 | SAP source of forecast and demand sensing | Material Planner, ERP Functional |
-| PQ-08, PQ-02 | Confirm call-off and commitment tolerance values; capacity horizon | Material Planner |
-| Q-18 | Working calendar for the 1-working-day deadline (default recommended) | Material Planner |
-| A-03 | RFI and RFP templates, standard term list, quote score weights | Procurement |
-| Q-20 | Quality inspection result in the hub for MVP vs Phase 2 Supplier Quality module | Material Planner, Procurement |
-| KPI | Definitions for S4 (confirmation accuracy) and S5 (optimized stock); targets for OTIF, CFOT, PO response rate, procurement cycle time; CFOT and OTIF formulas | Steering Committee, Material Planner |
+| DEC-03 | Final MVP list sign-off (RFx and performance dashboard in the MVP) | Project sponsors |
+| Values | Invoice rupiah cap (PQ-05), gate minimum OTIF (A-05), call-off early-delivery allowance (PQ-08). The build runs on named placeholders | Finance, Procurement, Warehouse |
+| A-01 | Compliance and capability check for RFx | Procurement |
+| KPI | Definitions for S4 and S5; align the OTIF and CFOT calculation with the agreed definitions (five differences found); targets after the baseline | Steering Committee, Material Planner |
+| CAP-1 | Whether supplier capacity is usually fixed or changes week to week | Material Planner |
 | IT | Tech stack, hosting, authentication, NFR thresholds (NF2 to NF7), interface technology (PQ-06) | IT |
 
-The full list is in section 7 of `SUPPLIER-HUB-REQUIREMENTS.md`.
+The full list is in section 7 of `SUPPLIER-HUB-REQUIREMENTS.md`, and every open decision with its owner is in section 1 of `BACKLOG.md`.
 
 ### 9.4 Charter and deck differences to confirm
 

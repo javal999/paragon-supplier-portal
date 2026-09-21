@@ -48,6 +48,7 @@ const TopBarV2: React.FC = () => {
           />
           <input
             type="search"
+            aria-label={t('topbar.searchLabel')}
             placeholder={t('topbar.search')}
             className="w-full h-9 pl-9 pr-3 rounded-md bg-bg-hover text-sm text-text-primary placeholder:text-text-tertiary border border-transparent focus:outline-none focus:border-border-input focus:bg-bg-surface"
           />

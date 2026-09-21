@@ -1,42 +1,27 @@
 import React, { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Inbox, Info, MessageSquare, Send, RotateCcw, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { Inbox, Info, MessageSquare, PenLine, RotateCcw, CheckCircle2, AlertTriangle } from 'lucide-react';
 import Button from '../components/ui-v2/Button';
 import Data from '../components/ui-v2/Data';
 import StatusPill from '../components/ui-v2/StatusPill';
-import { useToast } from '../hooks/useToast';
-import { useSuppliers } from '../services/query/hooks';
-import { useInventoryRecord } from '../services/query/sdcBuyerHooks';
+import { useInventory, useSuppliers } from '../services/query/hooks';
+import StockEntryPanel from './inventory/StockEntryPanel';
 import { HandoffNotice } from '../components/ui-v2/HandoffNotice';
 import { useVerbAvailability } from '../hooks/useVerbAvailability';
 import { parseChannelReply, type ChannelParseResult, type QtyRefusalReason } from '../services/channel/replyParser';
 import { makeProvenanceRef, type Channel, type ChannelMessage } from '../services/channel/types';
 import { channelProvenanceStore } from '../services/channel/provenanceStore';
 import {
-  parseGrid,
   openSubmissionSession,
   sdcClock,
-  ownCollaboratedMaterials,
-  SUPPLIER_MATERIAL_RELATIONSHIPS,
-  FORECAST_PUBLICATIONS,
-  // CP-2 · B1 — the ONE master lookup; this page no longer indexes the master.
-  labelOf,
-  uomOf,
   knownMaterialCodes,
   IMPORT_DECLARE_COLUMN,
-  type GridRow,
-  type GridContext,
-  type ParseReason,
   type SubmissionSessionRecorder,
-  type Uom,
 } from '../services/sdc';
 import type { CommandResult } from '../services/data/types';
-import { formatNumber } from '../lib/format';
+import { qty } from './inventory/inventoryDisplay';
 // GL-1 - the glossary destination for this surface's refusals.
 import GlossaryTermChip from '../components/ui-v2/GlossaryTermChip';
-import { useRefusalText } from '../hooks/useRefusalText';
-import { refusedByPolicy } from '../services/transitions/refusalMessage';
-import { POLICY_HOOKS } from '../services/transitions/policyHooks';
 
 // ────────────────────────────────────────────────────────────────────────────
 // Comm Hub C4d — the buyer IN-PLACE TRIAGE CONFIRM (DEC-COMMS-PRIMARY).
@@ -46,40 +31,40 @@ import { POLICY_HOOKS } from '../services/transitions/policyHooks';
 // truthfully the BUYER (Paragon recorded the supplier's words — not the supplier
 // self-submitting through the portal).
 //
-// It mirrors CommHubInbound (C2)'s proven confirm-before-commit gate — same
-// honesty discipline, SHARED machinery (parseChannelReply, parseGrid,
-// openSubmissionSession, the reply-parser vocabulary + the generic `commHub.*`
-// diagnostic i18n) — with TWO deliberate differences:
+// It mirrors CommHubInbound (C2) — same honesty discipline, SHARED machinery
+// (parseChannelReply, openSubmissionSession, the reply-parser vocabulary + the
+// generic `commHub.*` diagnostic i18n, and the Stock page's entry form) — with
+// TWO deliberate differences:
 //   · BINDING: the SUBJECT supplier is chosen AT CAPTURE ("whose conversation is
 //     this?") BEFORE the paste. That one choice mints the ChannelMessage; the
-//     confirm step NEVER offers a free supplierId field. C4c already enforces this
-//     server-side ({...facts, supplierId: message.supplierId}); the surface must
-//     not even present it as editable.
-//   · VERB: dispatch via `useInventoryRecord` (t_inventorydeclaration_record), the
-//     buyer recording verb — NOT the supplier `useInventoryDeclare`. The subject-
-//     supplier cache invalidation is the hook's job (the C4c carve-out).
+//     entry form is opened with the supplier LOCKED to it and NEVER offers a free
+//     supplierId field.
+//   · VERB: the form runs in PTI mode, so it dispatches `record`
+//     (t_inventorydeclaration_record), the buyer recording verb — never the
+//     supplier's `declare`.
 //
 // HONESTY (identical to C2): operator-fed, no live channel — nothing is sent or
-// received here; a parsed reply is a SUGGESTION until confirmed; uom is
-// diagnostic-only; an unknown material BLOCKS confirm (no silent resolution); on
-// confirm the wrapper is STRIPPED (parseGrid gets bare rows). The RESULT is framed
-// "Recorded by Paragon from {channel}" — never "the supplier submitted it".
+// received here; a parsed reply is a SUGGESTION until the form is saved; uom is
+// diagnostic-only; an unknown material is never pre-selected (no silent
+// resolution). The RESULT is framed "Recorded by Paragon from {channel}" —
+// never "the supplier submitted it".
+//
+// ⚠️ BL-73 · REQ-E08-02 BR-08 / BR-09 — THE RECORD IS MADE BY THE INVENTORY
+// PAGE'S OWN ENTRY FORM, NOT BY THIS PANEL. This panel used to confirm through
+// its own path (`parseGrid` in import mode → `useInventoryRecord`): one field
+// (the total), its own number rules, none of the entry form's fields (supplier
+// ROP, in production and its completion date, batches with manufacturing and
+// expiry dates), and a cache carve-out that left the Inventory and Stock pages
+// stale. A parsed row now only PRE-FILLS `StockEntryPanel` in PTI mode — the
+// same form `BuyerInventory` opens with "Record stock" — with the supplier
+// BOUND (`lockSupplier`): same fields, same CR-18 / CR-19 checks, the same
+// governed `record` dispatch, stored as "Entered by PTI" and shown to the
+// supplier on its Stock page. The binding, the parse and the channel-side
+// provenance stay here; the act does not.
 // ────────────────────────────────────────────────────────────────────────────
 
 const CHANNELS: Channel[] = ['whatsapp', 'email', 'wechat'];
 
-// parseGrid import-mode failure reason → the honest message key (shared with C2).
-// EXHAUSTIVE, not Partial — see CommHubInbound: a refused row must always be
-// able to say WHY, so widening ParseReason breaks the build rather than the copy.
-const REASON_KEY: Record<ParseReason, string> = {
-  EMPTY_TOTAL: 'commHub.reason.EMPTY_TOTAL',
-  MISSING_MATERIAL: 'commHub.reason.MISSING_MATERIAL',
-  INVALID_QTY: 'commHub.reason.INVALID_QTY',
-  AMBIGUOUS_QTY: 'commHub.reason.AMBIGUOUS_QTY',
-  MISSING_BATCH_NUMBER: 'commHub.reason.MISSING_BATCH_NUMBER',
-  BATCH_TOTAL_MISMATCH: 'commHub.reason.BATCH_TOTAL_MISMATCH',
-  NO_ROWS: 'commHub.reason.NO_ROWS',
-};
 const QTY_REASON_KEY: Record<QtyRefusalReason, string> = {
   EMPTY_QTY: 'commHub.qtyReason.EMPTY_QTY',
   NOT_NUMERIC: 'commHub.qtyReason.NOT_NUMERIC',
@@ -90,111 +75,79 @@ const inputClass =
   'w-full px-3 py-2 text-sm text-text-primary bg-white border border-border-input rounded-md focus:outline-none focus:border-action placeholder:text-text-tertiary';
 const labelClass = 'block text-label text-text-tertiary uppercase mb-1';
 
-interface EditRow {
+/** One row read from a parsed reply — a SUGGESTION for the entry form. */
+interface ReadRow {
   readonly rawMaterial: string;
-  materialCode: string;
-  totalQty: string;
+  /** The subject's own stock row it names EXACTLY, or '' (never a guess). */
+  readonly materialCode: string;
+  readonly totalQty: string;
 }
 
-interface DispatchOutcome {
-  readonly ok: boolean;
+/** A row recorded through the entry form. */
+interface Recorded {
   readonly material: string;
-  readonly qty?: string;
-  readonly reasonKey?: string;
-  readonly reasonText?: string;
+  readonly qty: number;
 }
 
 interface BuyerChannelTriageProps {
-  /** Called after ≥1 declaration is recorded, so the parent's channel-sourced
+  /** Called after a declaration is recorded, so the parent's channel-sourced
    *  audit trail (which reads the append-only provenance store) re-renders. */
   onRecorded?: () => void;
 }
 
 const BuyerChannelTriage: React.FC<BuyerChannelTriageProps> = ({ onRecorded }) => {
   const { t } = useTranslation();
-  const refusalText = useRefusalText();
-  const { toast } = useToast();
   const suppliersQuery = useSuppliers();
   const suppliers = useMemo(() => suppliersQuery.data?.items ?? [], [suppliersQuery.data]);
-  const recordMutation = useInventoryRecord();
+  // The same read the Inventory page hands its entry form.
+  const inventoryQuery = useInventory();
 
   // §74 — the seat's authority over `t_inventorydeclaration_record`
-  // (atom `inventorydeclaration:record`, held by `planning`). The triage
-  // confirm is the ONE act on this surface; a seat without it reads whose.
+  // (atom `inventorydeclaration:record`, held by `planning`). The entry form's
+  // submit is the ONE act this surface leads to; a seat without it reads whose.
   const recordAvailability = useVerbAvailability('inventorydeclaration:record');
 
   // THE BINDING, FIRST: the subject supplier is chosen at capture. Everything
-  // downstream (the ChannelMessage, the material picker, the dispatch) derives
-  // from it. There is no free supplierId field anywhere after this.
+  // downstream (the ChannelMessage, the material suggestion, the entry form)
+  // derives from it. There is no free supplierId field anywhere after this.
   const [subjectSupplierId, setSubjectSupplierId] = useState('');
   const [channel, setChannel] = useState<Channel>('whatsapp');
   const [rawText, setRawText] = useState('');
   const [parsed, setParsed] = useState<ChannelParseResult | null>(null);
   const [message, setMessage] = useState<ChannelMessage | null>(null);
-  const [rows, setRows] = useState<EditRow[]>([]);
-  const [outcomes, setOutcomes] = useState<DispatchOutcome[] | null>(null);
+  const [rows, setRows] = useState<ReadRow[]>([]);
+  const [recorded, setRecorded] = useState<Recorded[]>([]);
+  const [entry, setEntry] = useState<{ supplierId: string; materialCode: string; soh: string } | null>(null);
 
   const sessionRef = useRef<SubmissionSessionRecorder | null>(null);
   const msgSeq = useRef(0);
-  const causationId = (): string | undefined => sessionRef.current?.causationAnchor() ?? undefined;
-  const recordAttempt = (res: CommandResult) => {
-    if (!sessionRef.current) {
-      sessionRef.current = openSubmissionSession(
-        `ss-c4d-${Date.now().toString(36)}`,
-        subjectSupplierId, // the SUBJECT supplier — the envelope is "about X"
-        new Date().toISOString(),
-      );
-    }
-    sessionRef.current.attempt('InventoryDeclaration', res.entityId ?? '', res.correlationId);
-  };
 
-  // The subject supplier's collaborated materials — EXACTLY the set the record
-  // command would accept (the surface mirror of the server's creationOwner rule).
-  // The UI never offers a material the dispatch would deny; an unknown token stays
-  // unmapped (materialCode '') and blocks confirm.
-  const subjectMaterials = useMemo(() => {
-    if (!subjectSupplierId) return [];
-    return ownCollaboratedMaterials(
-      SUPPLIER_MATERIAL_RELATIONSHIPS,
-      FORECAST_PUBLICATIONS,
-      subjectSupplierId,
-    ).map((m) => {
-      // CP-2 · B1 — a LABEL miss echoes the code (honest); a UNIT miss is null,
-      // never the old fabricated 'KG'. The collaborated set is relationships ∪
-      // publications, which the master does not gate, so this join CAN miss.
-      const unit = uomOf(m.materialCode);
-      return {
-        materialCode: m.materialCode,
-        label: labelOf(m.materialCode),
-        uom: unit.ok ? unit.uom : null,
-      };
-    });
-  }, [subjectSupplierId]);
+  // The subject's stock rows — EXACTLY the supplier × material pairs the entry
+  // form offers and the record verb accepts (its assignments).
+  const subjectPositions = useMemo(
+    () => (inventoryQuery.data?.items ?? []).filter((p) => p.supplierId === subjectSupplierId),
+    [inventoryQuery.data, subjectSupplierId],
+  );
 
   const subjectName = useMemo(
     () => suppliers.find((s) => s.id === subjectSupplierId)?.name ?? subjectSupplierId,
     [suppliers, subjectSupplierId],
   );
 
-  // The subject's canonical unit for a code, or null when the master cannot name
-  // one. Distinct from the shared `uomOf` import: this is scoped to the materials
-  // THIS supplier collaborates on, so a code outside that set is also null.
-  const subjectUom = (materialCode: string): Uom | null =>
-    subjectMaterials.find((m) => m.materialCode === materialCode)?.uom ?? null;
+  const subjectUom = (materialCode: string): string =>
+    subjectPositions.find((p) => p.materialCode === materialCode)?.uom ?? '';
 
   // ── Gate 1 → parse (the reply is a SOURCE; nothing dispatches here) ──────────
   const runParse = () => {
     if (!subjectSupplierId) return; // binding first — cannot parse without a subject
-    // CP-2 · B1 — MEMBERSHIP-FIRST classification. The subject's collaborated
-    // set is EXACTLY what a legitimate reply could name, and it is what the
-    // record verb would accept; the master's remaining codes come second so a
-    // canonical code the subject does not collaborate on is still read as the
-    // MATERIAL (and then blocks at confirm as unmapped) rather than being
-    // silently captured as the QUANTITY. Without this, a numeric MATNR loses to
-    // `isQtyLike` and the row proposed into the hub is plausible and wrong.
+    // CP-2 · B1 — MEMBERSHIP-FIRST classification. The subject's own materials
+    // are EXACTLY what a legitimate reply could name; the master's remaining
+    // codes come second so a canonical code the subject does not hold is still
+    // read as the MATERIAL (and then stays unmatched) rather than being silently
+    // captured as the QUANTITY.
     const result = parseChannelReply(rawText, {
       numberFormatHint: 'id',
-      knownMaterials: [...subjectMaterials.map((m) => m.materialCode), ...knownMaterialCodes()],
+      knownMaterials: [...subjectPositions.map((p) => p.materialCode), ...knownMaterialCodes()],
     });
     // The ChannelMessage's supplierId is the SUBJECT binding — chosen at capture,
     // NEVER parsed from the text (C1a). receivedAt rides the shared simulated clock.
@@ -208,11 +161,11 @@ const BuyerChannelTriage: React.FC<BuyerChannelTriageProps> = ({ onRecorded }) =
     };
     setMessage(cm);
     setParsed(result);
-    setOutcomes(null);
+    setRecorded([]);
     setRows(
       result.proposedRows.map((r) => {
         const rawMaterial = r[IMPORT_DECLARE_COLUMN.materialCode] ?? '';
-        const exact = subjectMaterials.some((m) => m.materialCode === rawMaterial);
+        const exact = subjectPositions.some((p) => p.materialCode === rawMaterial);
         return {
           rawMaterial,
           materialCode: exact ? rawMaterial : '',
@@ -228,7 +181,8 @@ const BuyerChannelTriage: React.FC<BuyerChannelTriageProps> = ({ onRecorded }) =
     setParsed(null);
     setMessage(null);
     setRows([]);
-    setOutcomes(null);
+    setRecorded([]);
+    setEntry(null);
     sessionRef.current = null;
   };
 
@@ -237,95 +191,36 @@ const BuyerChannelTriage: React.FC<BuyerChannelTriageProps> = ({ onRecorded }) =
     setParsed(null);
     setMessage(null);
     setRows([]);
-    setOutcomes(null);
+    setRecorded([]);
+    setEntry(null);
     sessionRef.current = null;
   };
 
-  const setRow = (i: number, patch: Partial<EditRow>) =>
-    setRows((prev) => prev.map((r, j) => (j === i ? { ...r, ...patch } : r)));
-
-  const dispatchableRows = rows.filter((r) => r.materialCode !== '' && r.totalQty.trim() !== '');
-  const canConfirm = subjectSupplierId !== '' && dispatchableRows.length > 0 && !recordMutation.isPending;
-
-  // ── Gate 3 → confirm: STRIP the wrapper, dispatch the RECORD verb ────────────
-  const confirm = async () => {
+  // ── Gate 3 → the entry form, pre-filled and BOUND; its submit is the act ─────
+  const openEntry = (row: ReadRow) => {
     if (!message) return;
-    const gridRows: GridRow[] = dispatchableRows.map((r) => ({
-      [IMPORT_DECLARE_COLUMN.materialCode]: r.materialCode,
-      [IMPORT_DECLARE_COLUMN.totalQty]: r.totalQty,
-    }));
-    // supplierId from the MESSAGE binding (the subject), never a free field.
-    const context: GridContext = {
-      supplierId: message.supplierId,
-      spec: { kind: 'InventoryDeclaration', mode: 'import' },
-    };
-    const units = parseGrid(gridRows, context);
+    // The supplier is the MESSAGE's binding, never a field.
+    setEntry({ supplierId: message.supplierId, materialCode: row.materialCode, soh: row.totalQty });
+  };
 
-    const results: DispatchOutcome[] = [];
-    for (let i = 0; i < units.length; i++) {
-      const unit = units[i];
-      const material = dispatchableRows[i]?.materialCode ?? '';
-      if (!unit.ok) {
-        results.push({ ok: false, material, reasonKey: REASON_KEY[unit.reason] });
-        continue;
-      }
-      try {
-        // The C4c recording verb — the subject supplierId is message-bound inside
-        // the hook ({...facts, supplierId: message.supplierId}); the DR-10 actor is
-        // the buyer. NOT useInventoryDeclare (that is the supplier's own act).
-        const res = await recordMutation.mutateAsync({
-          message,
-          facts: unit.payload,
-          causationId: causationId(),
-        });
-        if (res.status === 'failed') {
-          // CP-2 · B1 — a NAMED dispatch refusal gets its own sentence rather
-          // than leaking the server string; anything else falls back as before.
-          //
-          // ⚠️ **SAME UNSATISFIABLE SHAPE AS THE GR WIZARD'S.**
-          // `UNKNOWN_MATERIAL` is the `sdc_material_known` hook's OWN reason, so
-          // it arrives behind `POLICY_REJECTED:sdc_material_known:` and a head
-          // test never matched. The buyer has been reading the raw hook string
-          // while a full EN+ID remedy sat unused one line away.
-          const named = refusedByPolicy(res.reason, POLICY_HOOKS.SDC_MATERIAL_KNOWN)
-            ? t('commHub.refusal.UNKNOWN_MATERIAL')
-            : undefined;
-          results.push({
-            ok: false,
-            material,
-            reasonText: named ?? refusalText(res.reason) ?? res.reason ?? t('buyerCommHub.triage.toast.failed.body'),
-          });
-          continue;
-        }
-        recordAttempt(res);
-        results.push({ ok: true, material, qty: String(unit.payload.totalQty) });
-      } catch {
-        results.push({ ok: false, material, reasonText: t('buyerCommHub.triage.toast.failed.body') });
-      }
+  const onSubmitted = (res: CommandResult, saved: { materialCode: string; totalQty: number }) => {
+    if (!message) return;
+    if (!sessionRef.current) {
+      sessionRef.current = openSubmissionSession(
+        `ss-c4d-${Date.now().toString(36)}`,
+        message.supplierId, // the SUBJECT supplier — the envelope is "about X"
+        new Date().toISOString(),
+      );
     }
-
+    sessionRef.current.attempt('InventoryDeclaration', res.entityId ?? '', res.correlationId);
     // Provenance (channel side): link the message to the session it produced —
-    // channelMessageId → sessionId / causationAnchor, never in a payload (C2 shape).
-    if (sessionRef.current) {
+    // channelMessageId → sessionId / causationAnchor, never in a payload. Once
+    // per message; later rows share the session's anchor.
+    if (channelProvenanceStore.forMessage(message.id).length === 0) {
       channelProvenanceStore.append(makeProvenanceRef(message.id, sessionRef.current.envelope()));
     }
-
-    setOutcomes(results);
-    const landed = results.filter((r) => r.ok).length;
-    if (landed > 0) {
-      onRecorded?.(); // let the parent refresh its channel-sourced audit trail
-      toast({
-        variant: 'success',
-        title: t('buyerCommHub.triage.toast.landed.title', { channel: t(`buyerCommHub.channel.${channel}`) }),
-        description: t('buyerCommHub.triage.toast.landed.body'),
-      });
-    } else {
-      toast({
-        variant: 'error',
-        title: t('buyerCommHub.triage.toast.failed.title'),
-        description: t('buyerCommHub.triage.toast.failed.body'),
-      });
-    }
+    setRecorded((prev) => [...prev, { material: saved.materialCode, qty: saved.totalQty }]);
+    onRecorded?.(); // let the parent refresh its channel-sourced audit trail
   };
 
   const hasRows = parsed !== null && rows.length > 0;
@@ -463,7 +358,7 @@ const BuyerChannelTriage: React.FC<BuyerChannelTriageProps> = ({ onRecorded }) =
                     <span className="text-label text-text-tertiary uppercase mr-2">{t('commHub.infer.matched')}</span>
                     <span className="inline-flex flex-wrap gap-1">
                       {parsed.diagnostics.matchedTokens.map((tok, i) => (
-                        <Data key={i} className="rounded bg-teal-soft px-1.5 py-0.5 text-teal">
+                        <Data key={i} className="rounded bg-teal-soft px-1.5 py-0.5 text-teal-hover">
                           {tok}
                         </Data>
                       ))}
@@ -506,82 +401,45 @@ const BuyerChannelTriage: React.FC<BuyerChannelTriageProps> = ({ onRecorded }) =
                 {hasRows && (
                   <div className="flex flex-col gap-3" data-testid="triage-rows">
                     <div className="text-label text-text-tertiary uppercase">{t('buyerCommHub.triage.rowTitle')}</div>
-                    {rows.map((row, i) => {
-                      const masterUom = subjectUom(row.materialCode);
-                      // CP-2 · B1 — an ABSENT master unit is not a mismatch. With
-                      // the old 'KG' default this comparison always had something
-                      // to disagree with, so an unknown material would have warned
-                      // "supplier said PCS, master says KG" — a fabricated claim
-                      // dressed as a warning. No unit known ⇒ nothing to contradict.
-                      const mismatch =
-                        !!parsed.diagnostics.uom &&
-                        row.materialCode !== '' &&
-                        masterUom !== null &&
-                        parsed.diagnostics.uom.toUpperCase() !== masterUom.toUpperCase();
-                      return (
-                        <div key={i} className="rounded-md border border-border-subtle bg-bg-hover p-3 flex flex-col gap-2">
-                          <div className="text-xs text-text-tertiary">
+                    {rows.map((row, i) => (
+                      <div
+                        key={i}
+                        className="rounded-md border border-border-subtle bg-bg-hover p-3 flex flex-wrap items-center justify-between gap-2"
+                        data-testid={`triage-row-${i}`}
+                      >
+                        <div className="flex flex-col gap-0.5 text-xs">
+                          <span className="text-text-tertiary">
                             {t('commHub.row.supplierWrote')}:{' '}
                             <Data className="text-text-secondary">{row.rawMaterial || '—'}</Data>
-                          </div>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                            <div>
-                              <label className={labelClass} htmlFor={`triage-mat-${i}`}>
-                                {t('commHub.row.materialLabel')}
-                              </label>
-                              <select
-                                id={`triage-mat-${i}`}
-                                className={inputClass}
-                                value={row.materialCode}
-                                onChange={(e) => setRow(i, { materialCode: e.target.value })}
-                                data-testid={`triage-mat-${i}`}
-                              >
-                                <option value="">{t('commHub.row.materialSelect')}</option>
-                                {subjectMaterials.map((m) => (
-                                  <option key={m.materialCode} value={m.materialCode}>
-                                    {m.materialCode} — {m.label} ({m.uom ?? '—'})
-                                  </option>
-                                ))}
-                              </select>
-                              <p className="mt-1 text-[11px] text-text-tertiary">{t('commHub.row.materialHint')}</p>
-                            </div>
-                            <div>
-                              <label className={labelClass} htmlFor={`triage-qty-${i}`}>
-                                {t('commHub.row.totalLabel', { uom: masterUom || '—' })}
-                              </label>
-                              <input
-                                id={`triage-qty-${i}`}
-                                type="text"
-                                inputMode="decimal"
-                                className={`${inputClass} font-mono`}
-                                value={row.totalQty}
-                                onChange={(e) => setRow(i, { totalQty: e.target.value })}
-                                data-testid={`triage-qty-${i}`}
-                              />
-                            </div>
-                          </div>
-                          {mismatch && (
-                            <div className="text-[11px] text-warning-hover">
-                              {t('commHub.row.uomMismatch', { msg: parsed.diagnostics.uom, master: masterUom })}
-                            </div>
-                          )}
+                            {row.totalQty !== '' && (
+                              <>
+                                {' · '}
+                                <Data className="text-text-secondary">{row.totalQty}</Data>
+                              </>
+                            )}
+                          </span>
+                          <span className={row.materialCode ? 'text-text-secondary' : 'text-warning-hover'}>
+                            {row.materialCode
+                              ? t('buyerCommHub.triage.row.matched', { material: row.materialCode, supplier: subjectName })
+                              : t('buyerCommHub.triage.row.unmatched', { supplier: subjectName })}
+                          </span>
                         </div>
-                      );
-                    })}
+                        {recordAvailability.kind === 'held' && (
+                          <Button
+                            variant="outline"
+                            icon={PenLine}
+                            onClick={() => openEntry(row)}
+                            data-testid={`triage-enter-${i}`}
+                          >
+                            {t('buyerCommHub.triage.row.record')}
+                          </Button>
+                        )}
+                      </div>
+                    ))}
 
                     <div className="flex items-center justify-between gap-2">
-                      <p className="text-xs text-text-tertiary">{t('buyerCommHub.triage.confirmHint')}</p>
-                      {recordAvailability.kind === 'held' ? (
-                        <Button
-                          variant="outline"
-                          icon={Send}
-                          disabled={!canConfirm}
-                          onClick={confirm}
-                          data-testid="triage-confirm"
-                        >
-                          {recordMutation.isPending ? t('buyerCommHub.triage.confirming') : t('buyerCommHub.triage.confirm')}
-                        </Button>
-                      ) : (
+                      <p className="text-xs text-text-tertiary">{t('buyerCommHub.triage.entryHint')}</p>
+                      {recordAvailability.kind !== 'held' && (
                         <HandoffNotice availability={recordAvailability} testId="handoff-triage-record" />
                       )}
                     </div>
@@ -589,26 +447,18 @@ const BuyerChannelTriage: React.FC<BuyerChannelTriageProps> = ({ onRecorded }) =
                 )}
 
                 {/* Result — the C4c semantic ON SCREEN: RECORDED BY PARAGON. */}
-                {outcomes && outcomes.length > 0 && (
+                {recorded.length > 0 && (
                   <div className="flex flex-col gap-1.5 border-t border-border-subtle pt-3" data-testid="triage-result">
                     <div className="text-label text-text-tertiary uppercase">{t('buyerCommHub.triage.resultTitle')}</div>
-                    {outcomes.map((o, i) => (
-                      <div key={i} className={`flex items-start gap-2 text-xs ${o.ok ? 'text-success' : 'text-danger'}`}>
-                        {o.ok ? (
-                          <CheckCircle2 size={14} className="mt-0.5 shrink-0" aria-hidden="true" />
-                        ) : (
-                          <AlertTriangle size={14} className="mt-0.5 shrink-0" aria-hidden="true" />
-                        )}
+                    {recorded.map((o, i) => (
+                      <div key={i} className="flex items-start gap-2 text-xs text-success">
+                        <CheckCircle2 size={14} className="mt-0.5 shrink-0" aria-hidden="true" />
                         <span>
-                          {o.ok
-                            ? t('buyerCommHub.triage.result.landed', {
-                                channel: t(`buyerCommHub.channel.${channel}`),
-                                material: o.material,
-                                qty: `${formatNumber(Number(o.qty))} ${subjectUom(o.material) ?? ''}`.trim(),
-                              })
-                            : t('buyerCommHub.triage.result.refused', {
-                                reason: o.reasonKey ? t(o.reasonKey) : (o.reasonText ?? ''),
-                              })}
+                          {t('buyerCommHub.triage.result.landed', {
+                            channel: t(`buyerCommHub.channel.${channel}`),
+                            material: o.material,
+                            qty: `${qty(o.qty)} ${subjectUom(o.material)}`.trim(),
+                          })}
                         </span>
                       </div>
                     ))}
@@ -625,6 +475,20 @@ const BuyerChannelTriage: React.FC<BuyerChannelTriageProps> = ({ onRecorded }) =
           <span>{t('buyerCommHub.triage.honestyNote')}</span>
         </div>
       </div>
+
+      {/* The Inventory page's own entry form, bound to the subject supplier. */}
+      {recordAvailability.kind === 'held' && (
+        <StockEntryPanel
+          open={entry !== null}
+          onClose={() => setEntry(null)}
+          mode="pti"
+          lockSupplier
+          positions={subjectPositions}
+          initial={entry}
+          causationId={sessionRef.current?.causationAnchor() ?? undefined}
+          onSubmitted={onSubmitted}
+        />
+      )}
     </section>
   );
 };

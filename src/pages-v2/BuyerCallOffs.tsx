@@ -341,7 +341,7 @@ const BuyerCallOffs: React.FC = () => {
           >
             <header className="px-4 py-3 border-b border-border-subtle flex flex-wrap items-start justify-between gap-3">
               <div className="min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
+                <div id={`calloff-umbrella-title-${po.id}-${line.id}`} className="flex items-center gap-2 flex-wrap">
                   <Data className="text-sm font-bold text-text-primary">{po.poNumber}</Data>
                   <span className="text-sm text-text-primary">{po.supplierName}</span>
                 </div>
@@ -397,10 +397,12 @@ const BuyerCallOffs: React.FC = () => {
               <div className="flex gap-2 shrink-0">
                 {planHeld ? (
                   <>
-                    <Button variant="secondary" onClick={() => open({ kind: 'series', poId: po.id, lineId: line.id })}>
+                    {/* BL-31 (WCAG 2.4.6): these two buttons repeat on every agreement line;
+                        describedby ties each to its PO and supplier. */}
+                    <Button variant="secondary" aria-describedby={`calloff-umbrella-title-${po.id}-${line.id}`} onClick={() => open({ kind: 'series', poId: po.id, lineId: line.id })}>
                       {t('co.action.series')}
                     </Button>
-                    <Button variant="outline" onClick={() => open({ kind: 'new', poId: po.id, lineId: line.id })}>
+                    <Button variant="outline" aria-describedby={`calloff-umbrella-title-${po.id}-${line.id}`} onClick={() => open({ kind: 'new', poId: po.id, lineId: line.id })}>
                       {t('co.action.new')}
                     </Button>
                   </>
