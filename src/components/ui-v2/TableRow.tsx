@@ -46,14 +46,13 @@ const TableRow: React.FC<TableRowProps> = ({
   tabIndex,
   ...rest
 }) => {
-  const activation = rowActivation(onClick, onKeyDown);
   return (
     <tr
       className={`border-b border-border-subtle hover:bg-bg-hover transition-colors ${
         onClick ? ROW_FOCUS : ''
       } ${className}`}
       onClick={onClick}
-      {...activation}
+      {...rowActivation(onClick, onKeyDown)}
       {...(tabIndex !== undefined ? { tabIndex } : {})}
       {...rest}
     >

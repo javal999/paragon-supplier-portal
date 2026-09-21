@@ -15,9 +15,10 @@
 // overlays (RFQ, RFI, RFP, contract, GR inspection) had no dialog semantics at
 // all. One hook, so the contract is stated once.
 //
-// Nested modals: only the TOPMOST open modal reacts to Tab and Escape (a
-// module-level stack), so a dialog opened from a drawer does not also close the
-// drawer on the same key press.
+// Nested modals: only the TOPMOST open modal reacts to Tab and Escape, so a
+// dialog opened from a drawer does not also close the drawer on the same key
+// press. "Topmost" = no other open modal inside it, and none opened after it
+// elsewhere in the page (a module-level registry).
 // ────────────────────────────────────────────────────────────────────────────
 
 import { useEffect, useRef, type RefObject } from 'react';
@@ -61,13 +62,26 @@ export function useDialogFocus(
       }
     }
 
-    const initial =
-      root.querySelector<HTMLElement>('[data-autofocus]') ?? focusableWithin(root)[0] ?? root;
-    if (initial === root && !root.hasAttribute('tabindex')) root.setAttribute('tabindex', '-1');
-    initial.focus();
+    // Which modal is on top is decided by the DOM, not only by push order:
+    // when a drawer and a dialog inside it mount in the same commit, React runs
+    // the CHILD's effect first, so push order alone would crown the drawer.
+    const nestedOpenInside = () =>
+      stack.some((r) => r !== ref && r.current && root.contains(r.current));
+    const openedLaterElsewhere = () =>
+      stack
+        .slice(stack.indexOf(ref) + 1)
+        .some((r) => r.current && !r.current.contains(root));
+    const isTop = () => !nestedOpenInside() && !openedLaterElsewhere();
+
+    if (!nestedOpenInside()) {
+      const initial =
+        root.querySelector<HTMLElement>('[data-autofocus]') ?? focusableWithin(root)[0] ?? root;
+      if (initial === root && !root.hasAttribute('tabindex')) root.setAttribute('tabindex', '-1');
+      initial.focus();
+    }
 
     const onKey = (e: KeyboardEvent) => {
-      if (stack[stack.length - 1] !== ref) return;
+      if (!isTop()) return;
       if (e.key === 'Escape') {
         if (closeRef.current) {
           e.stopPropagation();
