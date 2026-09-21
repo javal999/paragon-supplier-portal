@@ -143,53 +143,57 @@ export const InvoiceLinesSection: React.FC<{
                 <th className="text-left py-1 pr-2">{t('fc.inv.new.col.material')}</th>
                 <th className="text-right py-1 pr-2">{t('fc.inv.new.col.quantity')}</th>
                 <th className="text-right py-1 pr-2">{t('fc.inv.new.col.unitPrice')}</th>
-                <th className="text-right py-1 pr-2">{t('fc.inv.new.col.value')}</th>
-                {priced && <th className="text-right py-1 pr-2">{t('fc.inv.price.col.billed')}</th>}
-                {priced && <th className="text-left py-1">{t('fc.inv.price.col.check')}</th>}
+                <th className="text-right py-1">{t('fc.inv.new.col.value')}</th>
               </tr>
             </thead>
             <tbody>
-              {lines.map((l) => (
-                <tr key={`${l.receiptId}|${l.materialCode}`} className="border-t border-border-subtle">
-                  <td className="py-1.5 pr-2">
-                    <Data>{l.grNumber}</Data>
-                  </td>
-                  <td className="py-1.5 pr-2">
-                    <Data as="div" className="text-[11px] text-text-tertiary">
-                      {l.materialCode}
-                    </Data>
-                    <div className="text-text-primary">{l.description}</div>
-                  </td>
-                  <td className="py-1.5 pr-2 text-right whitespace-nowrap">
-                    <Data>{`${l.quantity.toLocaleString('en-US')} ${l.uom ?? ''}`}</Data>
-                  </td>
-                  <td className="py-1.5 pr-2 text-right whitespace-nowrap">
-                    <Data>{fmtIdr(l.unitPrice)}</Data>
-                  </td>
-                  <td className="py-1.5 pr-2 text-right whitespace-nowrap">
-                    <Data>{fmtIdr(l.quantity * l.unitPrice)}</Data>
-                  </td>
-                  {priced && (
-                    <td className="py-1.5 pr-2 text-right whitespace-nowrap">
-                      <Data>{fmtIdr(checkFor(l)?.billed ?? l.quantity * l.unitPrice)}</Data>
-                    </td>
-                  )}
-                  {priced && (
-                    <td className="py-1.5">
-                      {(() => {
-                        const c = checkFor(l);
-                        return c ? (
-                          <PriceCheckCell
-                            check={c}
-                            contractNumber={c.contractNumber}
-                            testId={`invoice-line-check-${l.receiptId}-${l.materialCode}`}
-                          />
-                        ) : null;
-                      })()}
-                    </td>
-                  )}
-                </tr>
-              ))}
+              {lines.map((l) => {
+                const c = checkFor(l);
+                return (
+                  <React.Fragment key={`${l.receiptId}|${l.materialCode}`}>
+                    <tr className="border-t border-border-subtle">
+                      <td className="py-1.5 pr-2">
+                        <Data>{l.grNumber}</Data>
+                      </td>
+                      <td className="py-1.5 pr-2">
+                        <Data as="div" className="text-[11px] text-text-tertiary">
+                          {l.materialCode}
+                        </Data>
+                        <div className="text-text-primary">{l.description}</div>
+                      </td>
+                      <td className="py-1.5 pr-2 text-right whitespace-nowrap">
+                        <Data>{`${l.quantity.toLocaleString('en-US')} ${l.uom ?? ''}`}</Data>
+                      </td>
+                      <td className="py-1.5 pr-2 text-right whitespace-nowrap">
+                        <Data>{fmtIdr(l.unitPrice)}</Data>
+                      </td>
+                      <td className="py-1.5 text-right whitespace-nowrap">
+                        <Data>{fmtIdr(l.quantity * l.unitPrice)}</Data>
+                      </td>
+                    </tr>
+                    {/* CR-12 (BL-44) — the price check sits on its own row under
+                        the line, full width, so the reason is never scrolled
+                        out of a narrow panel. */}
+                    {c && (
+                      <tr>
+                        <td colSpan={5} className="pb-2">
+                          <div className="rounded bg-bg-hover px-2 py-1.5">
+                            <div className="text-[11px] text-text-tertiary">
+                              {t('fc.inv.price.col.check')} · {t('fc.inv.price.col.billed')}{' '}
+                              <Data>{fmtIdr(c.billed)}</Data>
+                            </div>
+                            <PriceCheckCell
+                              check={c}
+                              contractNumber={c.contractNumber}
+                              testId={`invoice-line-check-${l.receiptId}-${l.materialCode}`}
+                            />
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                );
+              })}
             </tbody>
           </table>
         </div>

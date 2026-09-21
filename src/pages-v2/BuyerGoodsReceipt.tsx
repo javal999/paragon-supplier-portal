@@ -1198,7 +1198,6 @@ const GoodsReceiptWorkspace: React.FC<GoodsReceiptWorkspaceProps> = ({
                       {t('goodsReceipt.panel.col.rej')}
                     </TableHeaderCell>
                     <TableHeaderCell>{t('goodsReceipt.panel.col.checks')}</TableHeaderCell>
-                    <TableHeaderCell>{t('fc.gr.col.qtyCheck')}</TableHeaderCell>
                   </TableHeader>
                   <tbody>
                     {selected.inspectionResults.map((r, i) => (
@@ -1262,17 +1261,6 @@ const GoodsReceiptWorkspace: React.FC<GoodsReceiptWorkspaceProps> = ({
                             )}
                           </div>
                         </TableCell>
-                        <TableCell>
-                          {(() => {
-                            const c = selectedChecks.find((x) => x.materialCode === r.materialCode);
-                            return c ? (
-                              <ReceiptToleranceNote
-                                line={c}
-                                testId={`buyer-gr-qty-check-${selected.id}-${r.materialCode}`}
-                              />
-                            ) : null;
-                          })()}
-                        </TableCell>
                       </TableRow>
                     ))}
                   </tbody>
@@ -1281,6 +1269,26 @@ const GoodsReceiptWorkspace: React.FC<GoodsReceiptWorkspaceProps> = ({
               <div className="text-xs text-text-tertiary mt-2">
                 {t('goodsReceipt.panel.legend')}
               </div>
+              {/* CR-25 (BL-45) — each line's quantity check, below the table so
+                  it wraps inside the panel rather than scrolling out of it. */}
+              {selectedChecks.length > 0 && (
+                <div className="mt-3" data-testid="buyer-gr-qty-checks">
+                  <div className="text-label text-text-tertiary uppercase mb-1">
+                    {t('fc.gr.col.qtyCheck')}
+                  </div>
+                  <ul className="space-y-1">
+                    {selectedChecks.map((c) => (
+                      <li key={c.materialCode} className="text-xs">
+                        <Data className="text-[11px] text-text-tertiary mr-2">{c.materialCode}</Data>
+                        <ReceiptToleranceNote
+                          line={c}
+                          testId={`buyer-gr-qty-check-${selected.id}-${c.materialCode}`}
+                        />
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </section>
 
             {selected.notes && (

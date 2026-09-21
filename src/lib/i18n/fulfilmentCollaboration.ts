@@ -93,7 +93,7 @@ export const fulfilmentCollaborationEn: Record<string, string> = {
   'fc.gr.col.qtyCheck': 'Quantity check (CR-25)',
   'fc.gr.tol.exact': 'Received as shipped.',
   'fc.gr.tol.over':
-    'Flagged: {{qty}} over what was shipped ({{pct}}). Any over-delivery is PTI\'s decision, not accepted by default.',
+    'Flagged: {{qty}} over what was shipped. Any over-delivery, however small, is PTI\'s decision, not accepted by default.',
   'fc.gr.tol.shortWithin': 'Closed: short {{qty}} ({{pct}}), within the {{shortPct}}% shortfall tolerance.',
   'fc.gr.tol.shortOver':
     'Kept open: short {{qty}} ({{pct}}), more than the {{shortPct}}% shortfall tolerance. The rest is still owed.',
@@ -279,7 +279,7 @@ export const fulfilmentCollaborationId: Record<string, string> = {
   'fc.gr.col.qtyCheck': 'Pemeriksaan kuantitas (CR-25)',
   'fc.gr.tol.exact': 'Diterima sesuai yang dikirim.',
   'fc.gr.tol.over':
-    'Ditandai: {{qty}} melebihi yang dikirim ({{pct}}). Setiap kelebihan kiriman adalah keputusan PTI, tidak diterima otomatis.',
+    'Ditandai: {{qty}} melebihi yang dikirim. Setiap kelebihan kiriman, sekecil apa pun, adalah keputusan PTI, tidak diterima otomatis.',
   'fc.gr.tol.shortWithin': 'Ditutup: kurang {{qty}} ({{pct}}), dalam toleransi kekurangan {{shortPct}}%.',
   'fc.gr.tol.shortOver':
     'Tetap terbuka: kurang {{qty}} ({{pct}}), melebihi toleransi kekurangan {{shortPct}}%. Sisanya masih terutang.',

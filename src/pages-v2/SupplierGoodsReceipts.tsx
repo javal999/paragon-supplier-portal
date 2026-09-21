@@ -323,12 +323,12 @@ const SupplierGoodsReceipts: React.FC = () => {
                       <th className="text-right py-1">{t('fc.gr.col.received')}</th>
                       <th className="text-right py-1">{t('fc.gr.col.difference')}</th>
                       <th className="text-right py-1">{t('fc.gr.col.rejected')}</th>
-                      <th className="text-left py-1 pl-3">{t('fc.gr.col.qtyCheck')}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {selected.lines.map((l) => (
-                      <tr key={l.materialCode} className="border-t border-border-subtle">
+                      <React.Fragment key={l.materialCode}>
+                      <tr className="border-t border-border-subtle">
                         <td className="py-1.5">
                           <Data as="div" className="text-[11px] text-text-tertiary">
                             {l.materialCode}
@@ -349,13 +349,18 @@ const SupplierGoodsReceipts: React.FC = () => {
                         <td className={`py-1.5 text-right ${l.rejected > 0 ? 'text-danger font-semibold' : ''}`}>
                           <Data>{qty(l.rejected)}</Data>
                         </td>
-                        <td className="py-1.5 pl-3">
+                      </tr>
+                      {/* CR-25 (BL-45) — the quantity check on its own row, full width. */}
+                      <tr>
+                        <td colSpan={5} className="pb-2">
+                          <span className="text-[11px] text-text-tertiary">{t('fc.gr.col.qtyCheck')}: </span>
                           <ReceiptToleranceNote
                             line={l}
                             testId={`gr-qty-check-${selected.gr.id}-${l.materialCode}`}
                           />
                         </td>
                       </tr>
+                      </React.Fragment>
                     ))}
                   </tbody>
                 </table>
