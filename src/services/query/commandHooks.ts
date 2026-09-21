@@ -1798,6 +1798,8 @@ export type InventoryCommandVars =
       materialCode: string;
       totalQty: number;
       channel: 'template' | 'manual';
+      /** BL-73 — the audit anchor of an earlier dispatch in the same visit (channel triage). */
+      causationId?: string;
       supplierRop?: number;
       inProductionQty?: number;
       productionCompletionDate?: string;
@@ -1808,6 +1810,7 @@ export type InventoryCommandVars =
       supplierId: string;
       materialCode: string;
       totalQty: number;
+      causationId?: string;
       supplierRop?: number;
       inProductionQty?: number;
       productionCompletionDate?: string;
@@ -1838,12 +1841,17 @@ export function useInventoryCommand() {
       switch (vars.verb) {
         case 'declare':
         case 'record': {
-          const { verb, ...payload } = vars;
-          return svc.commands.dispatch(scope, {
-            transitionId: verb === 'declare' ? 't_inventorydeclaration_declare' : 't_inventorydeclaration_record',
-            entity: 'inventoryDeclaration',
-            payload,
-          });
+          // `causationId` is dispatch metadata, never a payload field.
+          const { verb, causationId, ...payload } = vars;
+          return svc.commands.dispatch(
+            scope,
+            {
+              transitionId: verb === 'declare' ? 't_inventorydeclaration_declare' : 't_inventorydeclaration_record',
+              entity: 'inventoryDeclaration',
+              payload,
+            },
+            causationId,
+          );
         }
         case 'sync':
           return svc.commands.dispatch(scope, {

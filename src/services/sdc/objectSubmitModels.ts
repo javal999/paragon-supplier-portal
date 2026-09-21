@@ -1,6 +1,6 @@
 // ────────────────────────────────────────────────────────────────────────────
-// SDC-3b — the PURE draft→payload mappings for the two additional supplier
-// objects (InventoryDeclaration + IncomingShipment). Mirrors `submitModel.ts`
+// SDC-3b — the PURE draft→payload mapping for the IncomingShipment supplier
+// object (the InventoryDeclaration builder was retired at BL-73). Mirrors `submitModel.ts`
 // (requirementResponse) EXACTLY: the page collects text, coercion happens here,
 // and the payload carries ONLY honest raw facts. `uom` is deliberately ABSENT
 // from every payload — the CommandTarget copies it from the material master
@@ -10,50 +10,12 @@
 
 import type { ShipmentDirection } from './types';
 
-// ─── InventoryDeclaration (SOH, total-first) ──────────────────────────────────
-
-// ── Parse vs assembly (CP-0 · W1 · PR-2a) ────────────────────────────────────
+// ─── InventoryDeclaration ─────────────────────────────────────────────────────
 //
-// `buildInventoryDeclarationPayload` takes NUMBERS and cannot parse at all:
-// callers normalise ONCE (through the one legal `normalizeQty`), gate on that
-// result, and assemble from the same value. The page-level draft normaliser
-// that used to live here served only the Forecast page's stock form, retired
-// by BL-60 (REQ-E08-02 BR-09 — one stock entry point, on the Stock page).
-
-/** A batch whose qty has already been through the one legal parse. */
-export interface NormalizedInventoryBatch {
-  readonly batchNumber: string;
-  readonly qty: number;
-  readonly expiryDate?: string;
-}
-
-/** A declaration draft whose quantities are numbers — the builder's ONLY input. */
-export interface NormalizedInventoryDeclaration {
-  readonly totalQty: number;
-  readonly batches?: readonly NormalizedInventoryBatch[];
-}
-
-/**
- * Assemble the `t_inventorydeclaration_declare` payload from the supplier
- * identity, the chosen collaborated material, and an ALREADY-NORMALISED
- * declaration. Pure assembly — no coercion, no defaulting, no parse. A
- * declaration with no surviving batch is total-only, the honest minimal form.
- * No id/declaredAt/uom: those are store/master-assigned on create.
- */
-export function buildInventoryDeclarationPayload(
-  supplierId: string,
-  materialCode: string,
-  normalized: NormalizedInventoryDeclaration,
-): Record<string, unknown> {
-  return {
-    supplierId,
-    materialCode,
-    totalQty: normalized.totalQty,
-    ...(normalized.batches && normalized.batches.length > 0
-      ? { batches: normalized.batches.map((b) => ({ ...b })) }
-      : {}),
-  };
-}
+// No builder here any more. `buildInventoryDeclarationPayload` served only the
+// SDC ingestion adapter (`parseGrid`), retired at BL-73 with the channel
+// triage's own stock path; every stock declaration is now assembled by the
+// Stock page's entry form and template upload (REQ-E08-02 BR-09).
 
 // ─── IncomingShipment (direction-named) ───────────────────────────────────────
 

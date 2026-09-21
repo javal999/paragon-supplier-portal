@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Plus, X } from 'lucide-react';
 import SidePanel from '../../components/ui-v2/SidePanel';
 import Button from '../../components/ui-v2/Button';
-import type { InventoryPosition } from '../../services/data/types';
+import type { CommandResult, InventoryPosition } from '../../services/data/types';
 import { batchDatesProblem, dayOf, isIsoDay, readStockNumber } from '../../services/transitions/inventoryRules';
 import { InTransitReadOnly, inputClass, inventoryNow, labelClass, useInventoryRunner } from './inventoryDisplay';
 
@@ -18,6 +18,13 @@ import { InTransitReadOnly, inputClass, inventoryNow, labelClass, useInventoryRu
 // own materials (`declare`, manual channel) and by a PTI planner recording what
 // a supplier sent by WhatsApp or email (`record`, shown as "Entered by PTI").
 // The page mirrors CR-18 and CR-19 for courtesy; the verb's policies decide.
+//
+// BL-73 · BR-09 — THIS IS THE ONE STOCK ENTRY. The channel triage surfaces
+// (`CommHubInbound` for a supplier, `BuyerChannelTriage` for PTI) no longer
+// carry a form or a dispatch of their own: a parsed message only PRE-FILLS this
+// panel (`initial.soh`), and the act is this panel's submit. The triage binds
+// the subject supplier (`lockSupplier`) and ties the result to the message
+// (`onSubmitted`), and nothing else.
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface BatchRow {
@@ -35,13 +42,29 @@ export interface StockEntryPanelProps {
   mode: 'supplier' | 'pti';
   /** Rows the user may enter stock for (a supplier's own, or every PTI row). */
   positions: readonly InventoryPosition[];
-  /** Preselect a supplier × material. */
-  initial?: { supplierId: string; materialCode: string } | null;
+  /** Preselect a supplier × material, and optionally pre-fill the stock on hand
+   *  (a figure read from a supplier's message — a suggestion the user checks). */
+  initial?: { supplierId: string; materialCode: string; soh?: string } | null;
+  /** PTI mode: the supplier is bound by the caller and shown, never chosen here. */
+  lockSupplier?: boolean;
+  /** The audit anchor of an earlier dispatch in the same visit, if any. */
+  causationId?: string;
+  /** Called with the governed dispatch's result after a successful submit. */
+  onSubmitted?: (result: CommandResult, recorded: { materialCode: string; totalQty: number }) => void;
 }
 
 const EMPTY = { supplierId: '', materialCode: '', soh: '', rop: '', inProduction: '', completion: '' };
 
-const StockEntryPanel: React.FC<StockEntryPanelProps> = ({ open, onClose, mode, positions, initial }) => {
+const StockEntryPanel: React.FC<StockEntryPanelProps> = ({
+  open,
+  onClose,
+  mode,
+  positions,
+  initial,
+  lockSupplier = false,
+  causationId,
+  onSubmitted,
+}) => {
   const { t } = useTranslation();
   const { run, pending } = useInventoryRunner();
   const [form, setForm] = useState(EMPTY);
@@ -50,7 +73,7 @@ const StockEntryPanel: React.FC<StockEntryPanelProps> = ({ open, onClose, mode, 
   useEffect(() => {
     if (!open) return;
     const supplierId = initial?.supplierId ?? (mode === 'supplier' ? (positions[0]?.supplierId ?? '') : '');
-    setForm({ ...EMPTY, supplierId, materialCode: initial?.materialCode ?? '' });
+    setForm({ ...EMPTY, supplierId, materialCode: initial?.materialCode ?? '', soh: initial?.soh ?? '' });
     setBatches([]);
   }, [open, initial, mode, positions]);
 
@@ -90,6 +113,7 @@ const StockEntryPanel: React.FC<StockEntryPanelProps> = ({ open, onClose, mode, 
   const submit = async () => {
     if (!selected || !soh.ok || soh.value === null || !rop.ok || !inProduction.ok) return;
     const common = {
+      ...(causationId ? { causationId } : {}),
       supplierId: selected.supplierId,
       materialCode: selected.materialCode,
       totalQty: soh.value,
@@ -111,7 +135,10 @@ const StockEntryPanel: React.FC<StockEntryPanelProps> = ({ open, onClose, mode, 
       mode === 'supplier'
         ? await run({ verb: 'declare', channel: 'manual', ...common }, t('inv.entry.toast.saved'))
         : await run({ verb: 'record', ...common }, t('inv.entry.toast.recorded'));
-    if (result.ok) onClose();
+    if (result.ok) {
+      if (result.result) onSubmitted?.(result.result, { materialCode: selected.materialCode, totalQty: soh.value });
+      onClose();
+    }
   };
 
   const uom = selected?.uom ?? '';
@@ -131,6 +158,12 @@ const StockEntryPanel: React.FC<StockEntryPanelProps> = ({ open, onClose, mode, 
         {mode === 'pti' && (
           <>
             <p className="text-sm text-text-secondary">{t('inv.entry.ptiHint')}</p>
+            {lockSupplier ? (
+              <div data-testid="stock-entry-supplier-locked">
+                <span className={labelClass}>{t('inv.entry.supplier')}</span>
+                <span className="text-sm text-text-primary">{suppliers.find(([id]) => id === form.supplierId)?.[1] ?? form.supplierId}</span>
+              </div>
+            ) : (
             <div>
               <label htmlFor="stock-entry-supplier" className={labelClass}>
                 {t('inv.entry.supplier')}
@@ -149,6 +182,7 @@ const StockEntryPanel: React.FC<StockEntryPanelProps> = ({ open, onClose, mode, 
                 ))}
               </select>
             </div>
+            )}
           </>
         )}
         <div>

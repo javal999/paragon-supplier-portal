@@ -4,36 +4,32 @@
 // Turns a free-text supplier reply into an INFERENCE the confirm surface (C2)
 // shows before anything dispatches. It NEVER dispatches and NEVER fabricates.
 //
-// ── SHAPE (Seat 3 ratified) ──────────────────────────────────────────────────
-//   The parser emits `GridRow[]`, and the dispatch path is
-//   `GridRow → parseGrid → builder` — NOT the object builders directly. The
-//   builders coerce `Number(...) || 0` (submitModel.ts:63), so a garbage qty would
-//   become a legal ZERO-COMMITMENT ("cannot supply"). `parseGrid` surfaces
-//   `INVALID_QTY` as honest silence instead. One governed entry point, and it IS
-//   the ratified source-agnostic contract — a channel reply is the third emitter
-//   of rows ("a grid emits them, an XLSX parse emits them"; ingest.ts).
+// ── SHAPE ────────────────────────────────────────────────────────────────────
+//   The parser emits `GridRow[]` (material + total). BL-73 (REQ-E08-02 BR-09):
+//   those cells only PRE-FILL the Stock page's entry form (`StockEntryPanel`) on
+//   the two triage surfaces; the form's own checks (CR-18 / CR-19) and its
+//   governed dispatch decide. The SDC adapter `parseGrid` that used to receive
+//   these rows is retired — it was a second stock-entry rule set.
 //
 // ── OUTPUT = an INFERENCE WRAPPER, not bare rows ─────────────────────────────
 //   `{ proposedRows, specHint, diagnostics }`. LAW: the wrapper is DISPLAY /
-//   PROVENANCE ONLY. On confirm (C2) it is STRIPPED and `parseGrid` receives
-//   exactly `(proposedRows, context)`. NOTHING from the wrapper (specHint,
-//   confidence, matchedTokens, uom) enters a payload — mirrors the XLSX mapping
-//   split, where the grid stays the sole dispatch surface.
+//   PROVENANCE ONLY. NOTHING from it (specHint, confidence, matchedTokens, uom)
+//   reaches the form; only the two row cells do, as values the user can change.
 //
 // ── LOCALE-AWARE QUANTITY (the binding constraint; Seat 3 caught a real bug) ──
-//   `parseQty` (ingest.ts) does `raw.replace(/,/g, '')` — WRONG for Bahasa free
+//   The old `parseQty` (ingest.ts, retired) did `raw.replace(/,/g, '')` — WRONG for Bahasa free
 //   text, where '.' groups thousands and ',' is the decimal. "2.400" (=2400) would
 //   read 2.4; "2,4" (=2.4) would read 24 — PLAUSIBLE WRONG NUMBERS, not failures.
 //   The controlled grid never hit this; a WhatsApp message hits it immediately —
 //   it is the DEFAULT case here. So C1 does its OWN grouping-validated,
 //   convention-aware normalisation and emits an ALREADY-CANONICAL numeric string
-//   (no separators, '.' decimal) that parseGrid's tolerance then passes through
-//   cleanly. Honest silence (AMBIGUOUS_QTY) over a plausible wrong number, always.
+//   (no separators, '.' decimal) that the entry form's CR-18 read accepts as is.
+//   Honest silence (AMBIGUOUS_QTY) over a plausible wrong number, always.
 //
 // ── UN-FALSIFIABILITY ────────────────────────────────────────────────────────
 //   · supplierId — the row shape has NO slot for it (only the import columns). The
-//     app binds it into GridContext at confirm; a message claiming "I am sup-005"
-//     is inert by construction.
+//     app binds it (identity, or the PTI triage's chosen subject); a message
+//     claiming "I am sup-005" is inert by construction.
 //   · snapshot keys — ride the GridParseSpec arm, bound from the RENDERED object in
 //     C2. A reply can never name a plan version.
 //   · uom — a parsed "KG" is DIAGNOSTIC only (a C2 warn-on-mismatch hint); it is
@@ -73,7 +69,7 @@ export {
 // ─── The reply parser ─────────────────────────────────────────────────────────
 
 /** Inventory-declaration command keywords (ID + EN). Extended as more intents
- *  gain a spine-wired verb; today only InventoryDeclaration rides `parseGrid`. */
+ *  gain a spine-wired verb; today only InventoryDeclaration is recognised. */
 const INVENTORY_COMMANDS = new Set(['STOK', 'STOCK', 'SOH']);
 
 /** A token that is only digits + separators AND carries at least one digit. */
@@ -113,8 +109,8 @@ export interface ChannelReplyDiagnostics {
 }
 
 /**
- * The inference wrapper. `proposedRows` are plain `GridRow`s ready for `parseGrid`;
- * `specHint` suggests which `GridParseSpec` arm C2 should bind (null when no intent
+ * The inference wrapper. `proposedRows` are plain `GridRow`s (a pre-fill for the
+ * stock entry form); `specHint` names what the rows would be (null when no intent
  * was recognised). `diagnostics` is display/provenance only.
  */
 export interface ChannelParseResult {

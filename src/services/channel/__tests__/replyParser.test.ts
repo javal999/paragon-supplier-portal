@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { normalizeQty, parseChannelReply } from '../replyParser';
-import { parseGrid, type GridContext } from '../../sdc';
+import { IMPORT_DECLARE_COLUMN } from '../../sdc';
 
 describe('C1 — locale-aware quantity normalisation', () => {
   // The four cases the binding constraint names — each resolves CORRECTLY under
@@ -83,23 +83,18 @@ describe('C1 — reply parser (inference wrapper)', () => {
     expect(JSON.stringify(res.proposedRows)).not.toContain('KG');
   });
 
-  it('the wrapper never reaches a payload — the confirm path hands parseGrid bare rows', () => {
-    // C2 STRIPS the wrapper and calls parseGrid(proposedRows, context). The
-    // supplierId comes from context (the app binding), NOT the message; the
-    // locale-correct 2400 flows through; nothing from diagnostics/uom/confidence
-    // enters the payload.
-    const res = parseChannelReply('STOK MAT-10234 2.400 KG', { numberFormatHint: 'id' });
-    const context: GridContext = {
-      supplierId: 'sup-005',
-      spec: { kind: 'InventoryDeclaration', mode: 'import' },
-    };
-    const units = parseGrid(res.proposedRows, context);
-    expect(units).toEqual([
+  // PREMISE CHANGED (BL-73): the confirm path no longer hands these rows to
+  // `parseGrid` (retired) — the triage surfaces read the two cells as a PRE-FILL
+  // for the Stock page's entry form. The claim that survives is the one this
+  // test exists for: a proposed row is BARE — the two cells and nothing from the
+  // wrapper (uom, confidence, diagnostics, a supplierId) — and the quantity in
+  // it is already the locale-correct canonical form.
+  it('the wrapper never reaches a row — a proposed row is the two bare cells', () => {
+    const res = parseChannelReply('STOK MAT-10234 2.400 KG supplierId=sup-999', { numberFormatHint: 'id' });
+    expect(res.proposedRows).toEqual([
       {
-        ok: true,
-        kind: 'InventoryDeclaration',
-        payload: { supplierId: 'sup-005', materialCode: 'MAT-10234', totalQty: 2400 },
-        rowRefs: [0],
+        [IMPORT_DECLARE_COLUMN.materialCode]: 'MAT-10234',
+        [IMPORT_DECLARE_COLUMN.totalQty]: '2400',
       },
     ]);
   });

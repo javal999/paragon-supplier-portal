@@ -32,8 +32,7 @@ import {
   buildRequirementDisputePayload,
   buildRequirementResolutionPayload,
 } from '../sdc/submitModel';
-import type { ChannelMessage } from '../channel/types';
-import type { CommandResult, QueryScope } from '../data/types';
+import type { CommandResult } from '../data/types';
 
 /** The consolidation rows (every current-publication line + its response state).
  *  Buyer-scoped; a supplier persona resolves to []. */
@@ -72,10 +71,13 @@ export function useSupplierRollups() {
 // ─── C4c — the buyer RECORDING write (ruled option (d)) ───────────────────────
 // A planner records an SOH assertion a supplier made over an ungoverned channel,
 // firing the DISTINCT buyer verb `t_inventorydeclaration_record` under the BUYER
-// scope (so the DR-10 actor is honestly the buyer). Authored + WIRED here; its
-// in-place confirm SURFACE is the C4c follow-on (FORK-2). NB the SUPPLIER-side
-// self-submit stays `useInventoryDeclare` (sdcSupplierHooks) — a different verb,
-// a different actor, permanently distinguishable in the event stream.
+// scope (so the DR-10 actor is honestly the buyer).
+//
+// ⚠️ BL-73 — THE DISPATCH NO LONGER LIVES HERE. `useInventoryRecord` was the
+// channel triage's own recording path (one field, its own rules); it was
+// retired when the triage began pre-filling the Inventory page's entry form,
+// which records through `useInventoryCommand` ('record'). The invalidation
+// predicate below stays: the requirement-response writes further down use it.
 
 const BUYER_SCOPE_KEY = scopeKey({ personaType: 'buyer', supplierId: null });
 
@@ -98,65 +100,6 @@ export function isRecordedDeclarationInvalidation(
     last === scopeKey({ personaType: 'supplier', supplierId: subjectSupplierId }) ||
     last === BUYER_SCOPE_KEY
   );
-}
-
-export interface InventoryRecordVars {
-  /**
-   * The captured inbound message. Its `supplierId` is the SUBJECT binding —
-   * app-resolved once at capture (C1a), NEVER parsed from the text — and the SOLE
-   * source of the recorded declaration's supplierId. The operator never
-   * free-picks a supplier at dispatch time (C4c point 2): everything derives from
-   * this single auditable ChannelMessage record.
-   */
-  message: ChannelMessage;
-  /**
-   * The confirmed declared facts (materialCode + totalQty, optional batches) — the
-   * operator's triaged reply. supplierId is intentionally NOT here: it is bound
-   * from `message`, and any supplierId a caller slips in is overridden.
-   */
-  facts: Record<string, unknown>;
-  /** SDC-3b — the SubmissionSession audit anchor (commands 2..n of one visit). */
-  causationId?: string;
-}
-
-/**
- * Record a channel-asserted SOH declaration (fires the buyer `creation` verb
- * `t_inventorydeclaration_record`). The subject supplierId is taken from the
- * message binding, never the operator; on a non-failed outcome it invalidates the
- * SUBJECT supplier's reads AND the buyer consolidation (the C4c carve-out).
- */
-export function useInventoryRecord() {
-  const svc = useDataService();
-  const { identity } = useCurrentIdentity();
-  const scope: QueryScope = {
-    personaType: identity.personaType,
-    supplierId: identity.supplierId,
-    businessRoles: identity.businessRoles,
-    actor: identity.actor,
-  };
-  const qc = useQueryClient();
-
-  return useMutation<CommandResult, Error, InventoryRecordVars>({
-    mutationFn: ({ message, facts, causationId }) =>
-      svc.commands.dispatch(
-        scope,
-        {
-          transitionId: 't_inventorydeclaration_record',
-          entity: 'inventoryDeclaration',
-          // Subject supplierId is message-bound (C4c point 2) — placed LAST so a
-          // stray supplierId in `facts` can never override the conversation binding.
-          payload: { ...facts, supplierId: message.supplierId },
-        },
-        causationId,
-      ),
-    onSuccess: (result, { message }) => {
-      if (result.status !== 'failed') {
-        qc.invalidateQueries({
-          predicate: (q) => isRecordedDeclarationInvalidation(q.queryKey, message.supplierId),
-        });
-      }
-    },
-  });
 }
 
 // ─── R1b — the buyer's RESOLVE write (the dispute seam, closed) ───────────────
