@@ -2,9 +2,9 @@
 
 | | |
 |---|---|
-| Version | 2.1, 2026-09-18 |
+| Version | 2.2, 2026-09-21 |
 | Compares | `SUPPLIER-HUB-REQUIREMENTS.md` v0.5 with the prototype on branch `feat/supplier-hub-mvp` (pull request "Supplier Hub MVP build") |
-| Owner decisions | 2026-09-17, recorded in section 9 of the requirements (RFX-1 to RFX-3, GAP-1 to GAP-4, E06-R) |
+| Owner decisions | 2026-09-17, recorded in section 9 of the requirements (RFX-1 to RFX-3, GAP-1 to GAP-4, E06-R); 2026-09-21 for the working calendar (Q-18, BL-14) and the commitment deadline (CR-26, BL-05), built as BL-50 and BL-48 |
 | Rule | This is the **only** document that describes what the prototype does for the Supplier Hub. The PRD and the requirements describe the product and never the code. Update this file when a build item lands |
 
 **How to read the status.**
@@ -26,10 +26,10 @@ Everything runs on sample data held in the browser. There is no backend, no SAP 
 | REQ-E03-04 RFP | Built | Standard term list in 7 groups, Comply or Deviate with a comment required on a deviation, term-by-term comparison |
 | REQ-E03-05 Comparison, negotiation, award | Built | Weighted score (CR-15) with reliability from measured OTIF, currency rule (CR-16), negotiation rounds restricted to shortlisted suppliers with every quote version kept, split award that must total 100% per item, reason required when the award leaves the best-scored quote. Sourcing request (E03.01) is still not detailed in the requirements |
 | REQ-E06-01 Forecast publication | Built | Weekly periods for packaging then monthly, monthly for raw material; Firm / Trade-off / Forecast zones; versions kept with a Changes view; spreadsheet download; view tracking and re-publication on the PTI Forecasts page |
-| REQ-E06-02 Commitment | Built | Pre-filled with the forecast, upside, acknowledgement for Forecast periods, reason enforced by the system when below forecast, CR-21 tolerance, split deadline, spreadsheet upload, carry-forward on re-publication |
-| REQ-E06-03 Gap monitoring | Built | Gap quantity and %, CR-22 colours, cumulative view, ranked exception list, Accept / Request revision / Move demand, reminders as Home tasks, supplier coverage as an estimate |
+| REQ-E06-02 Commitment | Built | Pre-filled with the forecast, upside, acknowledgement for Forecast periods, reason enforced by the system when below forecast, CR-21 tolerance, spreadsheet upload, carry-forward on re-publication. CR-26 deadline (BL-48): Firm periods 1 working day, Trade-off and Forecast 3 working days after publication, counted on the hub working calendar. The supplier sees the deadline with the time left, how late once past it, and whether a submitted commitment arrived in time; a commitment is judged against the deadline of the version it answered, so a carried-forward one keeps its verdict. Late is derived when the page is read, never stored |
+| REQ-E06-03 Gap monitoring | Built | Gap quantity and %, CR-22 colours, cumulative view, ranked exception list, Accept / Request revision / Move demand, reminders as Home tasks, supplier coverage as an estimate. The planner sees each commitment's CR-26 deadline and how late it is in the exception list, and the time left or lateness in each awaiting cell of the grid (BL-48) |
 | REQ-E07-01 PO visibility | Partial | Umbrella PO with its lines, response status and deadline. Per-line dates still depend on PQ-12; there is no SAP feed, so POs are sample data |
-| REQ-E07-02 PO response | Built | Approve, Adjust with reason and counter-offer, Reject with cause; 1-working-day deadline and Escalated derived from the clock; planner accepts or rejects a counter-offer; rejections feed performance |
+| REQ-E07-02 PO response | Built | Approve, Adjust with reason and counter-offer, Reject with cause; 1-working-day deadline on the hub working calendar and Escalated derived from the clock; planner accepts or rejects a counter-offer; rejections feed performance |
 | REQ-E07-03 Order summary | Built | PO, ASN count, and the three confirmations with links; lifecycle steps on the PO |
 | REQ-E07-04 ASN | Built | Shipped quantity per line capped at the open quantity unless a reason is given, batch, ship date, required fields, several ASNs per PO, cancellation |
 | REQ-E07-05 Shipping notice | Built | Expected completion date per PO; the first ASN records shipment started; a later date raises a PTI task |
@@ -43,10 +43,11 @@ Everything runs on sample data held in the browser. There is no backend, no SAP 
 | REQ-E08-05 Alerts | Built | Rules for PTI and supplier stock against reorder point, projected stock-out, capacity gap, stale data, coverage and commitment below forecast; High / Medium / Low; no duplicates; grouped per supplier; closed with an action note. Delivery is in the hub only, not by email |
 | REQ-E09-01 Replenishment recommendation | Partial | Planner releases call-offs against the remaining umbrella PO quantity and value, and can generate a series. The SAP ROP recommendation list is not built (X-16) |
 | REQ-E09-02 Event-based analysis | Not built | Waiting on PQ-09 |
-| REQ-E09-03 Call-off confirmation | Built | Hub-owned call-offs, the six confirmation statuses, CR-05 tolerance, planner approval outside tolerance, 1-working-day deadline with escalation, ASN allowed only on a confirmed call-off |
+| REQ-E09-03 Call-off confirmation | Built | Hub-owned call-offs, the six confirmation statuses, CR-05 tolerance, planner approval outside tolerance, 1-working-day deadline on the hub working calendar with escalation, ASN allowed only on a confirmed call-off |
 | REQ-E09-04 Delivery execution | Built | Dispatch heads-up or a linked ASN, At Risk when the expected arrival is after the need date, reminders. No dock or slot booking |
 | REQ-E10-01 CFOT and OTIF | Built | Calculated per PO and per call-off from hub data with working period filters, rejections counted, grade bands stated on screen, "No history" where nothing is measurable. Other scorecard measures stay sample figures and are marked as such |
 | REQ-E13-01 TMS access | Not built | Waiting on D-03 |
+| Section 3.4 Working calendar (Q-18) | Built | The hub keeps its own calendar (BL-50): the SAP factory calendar as loaded, which is simulated and marked Sample data (there is no SAP connection, and the load includes one sample plant shutdown day), plus rulings by the Hub administrator that make one date working or non-working, with a reason. A ruling is a governed act (`t_calendar_day_set`), held by Compliance and the administrator seat and by no lane the deadlines measure, and is kept in this browser across reloads. The administration page (Help & administration, Working calendar) lists the non-working days with where each came from, the rulings on record, and the commitment deadlines the calendar decides now. Every working-day deadline in the hub reads this calendar: PO response, call-off confirmation and forecast commitment |
 
 ---
 
@@ -75,6 +76,8 @@ Everything runs on sample data held in the browser. There is no backend, no SAP 
 | X-19 | RFI, RFP, quote per item, negotiation, split award, invite filters | Done (phase 6a) |
 | X-20 | CFOT and OTIF calculated | Done (phase 6b) |
 | X-21 | TMS access | Not built — waiting on D-03 |
+| X-22 | Hub working calendar and the first administration page (BL-50) | Done |
+| X-23 | Forecast commitment deadline, CR-26 (BL-48) | Done |
 
 ### 2.1 Navigation and screens
 
@@ -100,11 +103,13 @@ The `CR-` rules are implemented in the hub's own modules and covered by their ow
 
 | Rules | Module |
 |---|---|
-| Working day, response deadline (section 3.4) | `src/lib/workingCalendar.ts` |
+| Working day arithmetic (section 3.4) | `src/lib/workingCalendar.ts` |
+| The calendar in force: SAP load plus administrator rulings (section 3.4, BL-50) | `src/services/transitions/workingCalendarStore.ts` (`hubWorkingCalendar`); the ruling verb `flows/workingCalendar.flow.ts` |
 | PO response and escalation | `src/services/data/poResponseProjection.ts` |
 | Call-off tolerance, matching, on time, in full, reminders (CR-05 to CR-09) | `src/services/transitions/callOffRules.ts`, `callOffTolerance.ts` |
 | Days of supply, bands, coverage, stale, alert risk class (CR-01 to CR-03) | `src/services/data/` inventory rules with `inventoryConfig.ts` |
-| Forecast periods, zones, commitment tolerance, gap colours (CR-21, CR-22) | `src/services/sdc/` forecast rules with `forecastConfig.ts` |
+| Forecast periods, zones, commitment tolerance, gap colours (CR-21, CR-22) | `src/services/transitions/forecastRules.ts` with `forecastConfig.ts` |
+| Commitment deadline, time left and late (CR-26) | `src/services/transitions/forecastRules.ts` (`commitmentDueAt`, `commitmentTiming`) with `forecastConfig.ts` |
 | Goods receipt result, invoice matching, due date (CR-11 to CR-14) | `src/services/transitions/grRollup.ts`, `invoiceRollup.ts`, invoice projection |
 | Quote score and currency rule (CR-15, CR-16) | `src/lib/quoteScore.ts`, `src/lib/fxPin.ts` |
 | CFOT, OTIF, rejections, score and grade (CR-17) | `src/services/data/performanceRules.ts` |
@@ -140,7 +145,9 @@ The `CR-` rules are implemented in the hub's own modules and covered by their ow
 - **File attachments.** RFI attachment questions, receipt-dispute attachments and the e-Faktur are recorded as file names; no file is stored.
 - **Sourcing event creation beyond the central library** (A-04): no sourcing request intake, no save-as-template, no admin screen for the question and term library, no approval step before sending. All four were ruled out of the MVP rather than left undone.
 - **A backend.** No database, no sign-in for real users, no scheduled jobs; changes are lost on reload. The pilot needs all of these (PRD section 4).
-- **Accessibility testing** (H-03) and an admin screen for the thresholds that currently live in configuration files.
+- **Accessibility testing** (H-03).
+- **The rest of the administration screen** (BL-32): reason codes, tolerances, alert thresholds and stale periods still live in configuration files. The working calendar is its first page and is built.
+- **The real SAP factory calendar.** The calendar load is simulated sample data; the administrator's rulings are kept in the browser only.
 - **Foundation epics** E01 and E02 (registration, onboarding, supplier master data), which belong to the Foundation team.
 
 ---
