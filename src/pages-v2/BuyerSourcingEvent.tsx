@@ -191,7 +191,7 @@ const BuyerSourcingEvent: React.FC = () => {
       </PageMetaLine>
 
       <div className="mb-4 flex flex-wrap items-center gap-3">
-        <Link to="/buyer/sourcing" className="text-sm text-action hover:underline" data-testid="event-back">
+        <Link to="/buyer/sourcing" className="text-sm text-action-hover hover:underline" data-testid="event-back">
           {t('rfx.event.back')}
         </Link>
         <StatusPill variant={rfq.status === 'Awarded' ? 'success' : 'info'}>{rfq.status}</StatusPill>
