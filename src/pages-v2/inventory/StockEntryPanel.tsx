@@ -211,8 +211,8 @@ const StockEntryPanel: React.FC<StockEntryPanelProps> = ({ open, onClose, mode, 
           ) : (
             <div className="space-y-2">
               {batches.map((b, i) => (
-                <div key={i}>
-                <div className="grid grid-cols-[1fr_1fr_1fr_1fr_auto] gap-2 items-end">
+                <div key={i} className="relative border border-border-subtle rounded-md p-3 pr-10">
+                <div className="grid grid-cols-2 gap-2 items-end">
                   <div>
                     <label htmlFor={`batch-number-${i}`} className={labelClass}>
                       {t('inv.entry.batchNumber')}
@@ -264,7 +264,7 @@ const StockEntryPanel: React.FC<StockEntryPanelProps> = ({ open, onClose, mode, 
                   </div>
                   <button
                     type="button"
-                    className="p-2 text-text-tertiary hover:text-text-primary"
+                    className="absolute top-1 right-1 p-2 text-text-tertiary hover:text-text-primary"
                     aria-label={t('inv.entry.removeBatch')}
                     onClick={() => setBatches(batches.filter((_, j) => j !== i))}
                   >

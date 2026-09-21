@@ -149,7 +149,7 @@ const BuyerCapacity: React.FC = () => {
         </div>
       )}
 
-      <div className="flex flex-wrap items-end gap-3 mb-3" data-testid="capacity-filters">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[repeat(3,minmax(0,1fr))_auto_auto] items-end gap-3 mb-3" data-testid="capacity-filters">
         <div>
           <label htmlFor="capacity-filter-supplier" className={labelClass}>
             {t('inv.capacity.filter.supplier')}
