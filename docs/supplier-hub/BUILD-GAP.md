@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 2.5, 2026-09-21 |
+| Version | 2.7, 2026-09-21 |
 | Compares | `SUPPLIER-HUB-REQUIREMENTS.md` v0.9 with the prototype on `main` |
 | Owner decisions | 2026-09-17, recorded in section 9 of the requirements (RFX-1 to RFX-3, GAP-1 to GAP-4, E06-R); 2026-09-21 for the working calendar (Q-18, BL-14) and the commitment deadline (CR-26, BL-05), built as BL-50 and BL-48 |
 | Rule | This is the **only** document that describes what the prototype does for the Supplier Hub. The PRD and the requirements describe the product and never the code. Update this file when a build item lands |
@@ -89,6 +89,7 @@ Everything runs on sample data held in the browser. There is no backend, no SAP 
 | X-30 | 3PL tracking link on the ASN and the administrator's 3PL list (BL-51) | Done |
 | X-31 | Supplier filters: certificate validity, performance band, country (BL-52) | Done |
 | X-32 | KPI definitions and "Baseline period" on the performance pages (BL-53) | Done |
+| X-33 | No raw `{{…}}` placeholder on screen (BL-72): the "Round" column header of the quote versions and negotiation rounds tables on the RFQ event page, and the buyer's "application raised" message, which now names the company | Done; a source check over every `t()` call with a literal key now fails the build on a missing variable |
 
 ### 2.1 Navigation and screens
 

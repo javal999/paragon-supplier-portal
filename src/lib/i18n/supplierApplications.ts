@@ -150,7 +150,7 @@ export const supplierApplicationsEn: Record<string, string> = {
   'applications.raise.confirm.declaredNone': 'None',
   'applications.raise.confirm.unattributed':
     'This will be recorded against no person. The portal has no identity provider yet, so the record will say a Paragon seat raised it and nothing more.',
-  'applications.toast.raised.title': '{{number}} raised',
+  'applications.toast.raised.title': 'Application raised for {{company}}',
   'applications.toast.raised.desc': 'It is in the queue, waiting to be picked up.',
   'applications.toast.raiseFailed.title': 'Could not raise the application',
 };
@@ -275,7 +275,7 @@ export const supplierApplicationsId: Record<string, string> = {
   'applications.raise.confirm.declaredNone': 'Tidak ada',
   'applications.raise.confirm.unattributed':
     'Ini akan dicatat tanpa nama orang. Portal belum memiliki penyedia identitas, jadi catatannya hanya menyebut bahwa sebuah kursi Paragon mengajukannya.',
-  'applications.toast.raised.title': '{{number}} diajukan',
+  'applications.toast.raised.title': 'Aplikasi untuk {{company}} diajukan',
   'applications.toast.raised.desc': 'Sudah masuk antrean, menunggu untuk diambil.',
   'applications.toast.raiseFailed.title': 'Tidak dapat mengajukan aplikasi',
 };
