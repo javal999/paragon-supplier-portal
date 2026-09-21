@@ -169,7 +169,8 @@ import {
   rfpEventStore,
   rfpResponseStore,
 } from './stores/rfxStores';
-import { bestScoredQuotationId, rfxNow } from './rfxReadModel';
+import { bestScoredQuotationId, rfqSupplierGate, rfxNow } from './rfxReadModel';
+import { gateRefusal } from '../../sourcing/complianceGate';
 import { rfiTemplate, rfpTerm } from '../../sourcing/rfxConfig';
 import type {
   AwardLine,
@@ -2960,7 +2961,8 @@ bindPolicyHook(POLICY_HOOKS.NEGOTIATION_ROUND_VALID, ({ payload }) => {
 });
 
 // REQ-E03-05 BR-06 / BR-07 — the split totals 100% per item, and an award that
-// passes over the best-scored quote states why.
+// passes over the best-scored quote states why. BR-01a — every awarded supplier
+// passes the compliance gate (CR-23).
 bindPolicyHook(POLICY_HOOKS.RFQ_AWARD_GOVERNED, ({ payload, entityId }) => {
   const rfq = rfqStore.get(entityId);
   if (!rfq) return { ok: false, reason: 'sourcing event not found' };
@@ -2982,6 +2984,16 @@ bindPolicyHook(POLICY_HOOKS.RFQ_AWARD_GOVERNED, ({ payload, entityId }) => {
   const foreign = lines.filter((l) => !onEvent.has(l.quotationId));
   if (foreign.length > 0) {
     return { ok: false, reason: `QUOTE_NOT_ON_EVENT: ${foreign.map((l) => l.quotationId).join(', ')}` };
+  }
+  // REQ-E03-05 BR-01a / CR-23 — no award line may name a supplier that fails the
+  // compliance gate. Judged against the supplier who actually AUTHORED the quote
+  // as well as the one the line names, so a line cannot launder a failing bid
+  // under a passing supplier id.
+  const quoteAuthor = new Map(quotationStore.all().map((q) => [q.id, q.supplierId] as const));
+  const named = [...new Set(lines.flatMap((l) => [l.supplierId, quoteAuthor.get(l.quotationId) ?? l.supplierId]))];
+  for (const supplierId of named) {
+    const gate = rfqSupplierGate(rfq, supplierId, rfxNow());
+    if (!gate.passes) return { ok: false, reason: gateRefusal(supplierId, gate.failed) };
   }
   const best = bestScoredQuotationId(rfq, rfxNow());
   const reason = typeof payload.awardReason === 'string' ? payload.awardReason.trim() : '';

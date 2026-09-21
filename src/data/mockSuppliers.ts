@@ -214,10 +214,12 @@ export const mockSuppliers: SupplierExtended[] = [
     rating: 4.1,
     onboardedDate: '2020-04-05',
     lastActivityDate: '2025-04-02',
-    halalCertified: false,
+    // CR-23 demo seed (BL-43): halal held and current, so this supplier passes
+    // the compliance gate on the humectant RFQs (rfq-009/012/013).
+    halalCertified: true,
     bpomRegistered: true,
     gmpIso22716: true, // CR-23 — sample evidence (illustrative)
-    certExpiryDate: '2026-07-04',
+    certExpiryDate: '2027-07-04',
     preferredChannel: PreferredChannel.EMAIL,
     leadTimeAdherence: 84,
     invoiceAccuracy: 95,
@@ -330,7 +332,10 @@ export const mockSuppliers: SupplierExtended[] = [
     halalCertified: true,
     bpomRegistered: false,
     gmpIso22716: true, // CR-23 — sample evidence (illustrative)
-    certExpiryDate: '2026-08-31',
+    // CR-23 demo seed (BL-43): the halal certificate EXPIRED before the declared
+    // present (2026-08-31), so on rfq-003 this supplier can quote but cannot be
+    // awarded — the one criterion it fails is halal.
+    certExpiryDate: '2026-08-20',
     preferredChannel: PreferredChannel.WHATSAPP,
     leadTimeAdherence: 80,
     invoiceAccuracy: 85,

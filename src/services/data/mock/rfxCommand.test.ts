@@ -269,9 +269,12 @@ describe('REQ-E03-05 BR-06 — each item’s shares must total 100%', () => {
   });
 
   it('KNOWN-GOOD — the SAME award at 70/30 is recorded, with the loser named', async () => {
+    // ⚠️ PREMISE CHANGE (BL-43): the 30% line used to name sup-007, which now
+    // fails the compliance gate on OTIF (50% < 80%) and cannot be awarded. The
+    // split rule is unchanged; the second supplier is one that passes.
     const lines = awardLines([
       ['sup-015', 'qt-014d-r1', 70],
-      ['sup-007', 'qt-014a', 30],
+      ['sup-013', 'qt-014c', 30],
     ]);
     const res = await svc.dispatch(buyer, {
       transitionId: 't_rfq_award',
@@ -289,10 +292,10 @@ describe('REQ-E03-05 BR-06 — each item’s shares must total 100%', () => {
     const recorded = awardStore.all().find((a) => a.rfqId === 'rfq-014')!;
     expect(recorded.lines.map((l) => [l.supplierId, l.sharePct])).toEqual([
       ['sup-015', 70],
-      ['sup-007', 30],
+      ['sup-013', 30],
     ]);
     // BR-08 — every other invited supplier is recorded as not awarded.
-    expect([...recorded.notAwardedSupplierIds].sort()).toEqual(['sup-008', 'sup-013']);
+    expect([...recorded.notAwardedSupplierIds].sort()).toEqual(['sup-007', 'sup-008']);
   });
 });
 
@@ -303,6 +306,19 @@ describe('REQ-E03-05 BR-07 — an award that leaves the best-scored quote out st
     return bestScoredQuotationId(rfqStore.get('rfq-014')!, rfxNow());
   };
 
+  /**
+   * A current quote on rfq-014 that is NOT the best-scored one and whose supplier
+   * PASSES the compliance gate. BL-43: before the gate, any other quote would do;
+   * now a failing supplier is refused on CR-23 before BR-07 is ever reached.
+   */
+  const qualifiedLoserOf014 = async (best: string) => {
+    const { currentQuotesFor, rfqSupplierGate } = await import('./rfxReadModel');
+    const rfq = rfqStore.get('rfq-014')!;
+    return currentQuotesFor('rfq-014').find(
+      (q) => q.id !== best && rfqSupplierGate(rfq, q.supplierId, rfxNow()).passes,
+    )!;
+  };
+
   it('CONTROL — the set IS rankable, so the rule below has something to depart from', async () => {
     const best = await bestOf014();
     expect(best).not.toBeNull();
@@ -311,7 +327,7 @@ describe('REQ-E03-05 BR-07 — an award that leaves the best-scored quote out st
 
   it('KNOWN-BAD — awarding around the best-scored quote with no reason is refused by name', async () => {
     const best = (await bestOf014())!;
-    const loser = quotationStore.forRfq('rfq-014').find((q) => q.id !== best && !q.supersedesQuotationId)!;
+    const loser = await qualifiedLoserOf014(best);
     const res = await svc.dispatch(buyer, {
       transitionId: 't_rfq_award',
       entity: 'rfq',
@@ -329,7 +345,7 @@ describe('REQ-E03-05 BR-07 — an award that leaves the best-scored quote out st
 
   it('KNOWN-GOOD — the SAME award with a reason is recorded, and the reason is kept', async () => {
     const best = (await bestOf014())!;
-    const loser = quotationStore.forRfq('rfq-014').find((q) => q.id !== best && !q.supersedesQuotationId)!;
+    const loser = await qualifiedLoserOf014(best);
     const res = await svc.dispatch(buyer, {
       transitionId: 't_rfq_award',
       entity: 'rfq',
@@ -614,5 +630,91 @@ describe('REQ-E03-01 — the invitee read', () => {
 
   it('the invitee roster is PTI’s — a supplier reads nothing', async () => {
     expect((await reads.getInviteeCandidates(sup007)).items).toEqual([]);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// REQ-E03-05 BR-01a / CR-23 — the compliance gate at award (BL-43).
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('REQ-E03-05 BR-01a — an award line naming a supplier that fails the compliance gate is refused', () => {
+  const award014 = (lines: ReturnType<typeof awardLines>) =>
+    svc.dispatch(buyer, {
+      transitionId: 't_rfq_award',
+      entity: 'rfq',
+      entityId: 'rfq-014',
+      payload: {
+        awardedQuotationId: lines[0].quotationId,
+        awardedSupplierId: lines[0].supplierId,
+        awardLines: lines,
+        awardReason: 'Chosen on supply security.',
+      },
+    });
+
+  it('KNOWN-BAD — awarding 100% to sup-007 (OTIF 50% < 80%) is refused by name, and awards nothing', async () => {
+    const res = await award014(awardLines([['sup-007', 'qt-014a', 100]]));
+    expect(res.status).toBe('failed');
+    expect(res.reason).toMatch(/COMPLIANCE_GATE_FAILED: sup-007 .*\(otif\)/);
+    expect(rfqStore.get('rfq-014')!.status).toBe('Closed');
+    expect(awardStore.all().some((a) => a.rfqId === 'rfq-014')).toBe(false);
+  });
+
+  it('KNOWN-GOOD — the SAME award to sup-013, which passes, is recorded', async () => {
+    const res = await award014(awardLines([['sup-013', 'qt-014c', 100]]));
+    expect(res.status, res.reason).toBe('done');
+    expect(rfqStore.get('rfq-014')!.status).toBe('Awarded');
+  });
+
+  it('a split with ONE failing line is refused whole — the passing share does not carry it', async () => {
+    const res = await award014(
+      awardLines([
+        ['sup-015', 'qt-014d-r1', 70],
+        ['sup-008', 'qt-014b', 30],
+      ]),
+    );
+    expect(res.status).toBe('failed');
+    expect(res.reason).toMatch(/COMPLIANCE_GATE_FAILED: sup-008/);
+  });
+
+  it('a line cannot launder a failing bid under a passing supplier id — the quote author is judged', async () => {
+    const res = await award014(awardLines([['sup-013', 'qt-014a', 100]]));
+    expect(res.status).toBe('failed');
+    expect(res.reason).toMatch(/COMPLIANCE_GATE_FAILED: sup-007/);
+  });
+
+  it('the seeded demo: on rfq-003 sup-010 fails on its expired halal certificate; sup-001 is awarded', async () => {
+    const line = (supplierId: string, quotationId: string) => ({
+      supplierId,
+      quotationId,
+      itemCode: '',
+      sharePct: 100,
+      quantity: rfqStore.get('rfq-003')!.totalQty,
+    });
+    const bad = await svc.dispatch(buyer, {
+      transitionId: 't_rfq_award',
+      entity: 'rfq',
+      entityId: 'rfq-003',
+      payload: {
+        awardedQuotationId: 'qt-003c',
+        awardedSupplierId: 'sup-010',
+        awardLines: [line('sup-010', 'qt-003c')],
+        awardReason: 'Local supplier.',
+      },
+    });
+    expect(bad.status).toBe('failed');
+    expect(bad.reason).toMatch(/COMPLIANCE_GATE_FAILED: sup-010 .*\(halal\)/);
+
+    const good = await svc.dispatch(buyer, {
+      transitionId: 't_rfq_award',
+      entity: 'rfq',
+      entityId: 'rfq-003',
+      payload: {
+        awardedQuotationId: 'qt-003a',
+        awardedSupplierId: 'sup-001',
+        awardLines: [line('sup-001', 'qt-003a')],
+        awardReason: 'Local supplier.',
+      },
+    });
+    expect(good.status, good.reason).toBe('done');
   });
 });
