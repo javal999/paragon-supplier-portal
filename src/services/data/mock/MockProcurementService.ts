@@ -26,6 +26,7 @@ import {
   negotiationRoundViews,
   rfiEventViews,
   rfpEventViews,
+  rfqGateViews,
   rfxNow,
 } from './rfxReadModel';
 import type { InviteeCandidate, InviteeFilter } from '../../transitions/rfxRules';
@@ -34,6 +35,7 @@ import type {
   NegotiationRoundView,
   RfiEventView,
   RfpEventView,
+  RfqSupplierGateView,
 } from '../../sourcing/views';
 import { quotationStore } from './stores/quotationStore';
 import { asnStore } from './stores/asnStore';
@@ -433,6 +435,14 @@ export class MockProcurementService implements IProcurementService {
   async getNegotiationRounds(scope: QueryScope): Promise<Page<NegotiationRoundView>> {
     // REQ-E03-05 BR-05 — a supplier reads only its own thread.
     return { items: [...negotiationRoundViews(rfxNow(), scope.personaType === 'buyer' ? null : scope.supplierId ?? '')] };
+  }
+
+  async getRfqComplianceGate(scope: QueryScope, rfqId: string): Promise<Page<RfqSupplierGateView>> {
+    // CR-23 — the gate names why a supplier cannot be awarded; that is PTI's
+    // read, not a competitor's. A supplier gets nothing rather than a list.
+    if (scope.personaType !== 'buyer') return { items: [] };
+    const rfq = rfqStore.get(rfqId);
+    return { items: rfq ? [...rfqGateViews(rfq, rfxNow())] : [] };
   }
 
   async getAwards(scope: QueryScope): Promise<Page<AwardView>> {

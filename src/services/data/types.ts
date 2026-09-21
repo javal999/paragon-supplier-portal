@@ -30,6 +30,7 @@ import type {
   NegotiationRoundView,
   RfiEventView,
   RfpEventView,
+  RfqSupplierGateView,
 } from '../sourcing/views';
 
 // CP-3 · E2 — the enforcement read seam's row type. TYPE-ONLY: naming the
@@ -2201,6 +2202,8 @@ export interface IProcurementService {
   getNegotiationRounds(scope: QueryScope): Promise<Page<NegotiationRoundView>>;
   /** REQ-E03-05 — recorded awards. A supplier reads only its own outcome (AC-05). */
   getAwards(scope: QueryScope): Promise<Page<AwardView>>;
+  /** CR-23 — the compliance gate for every invitee and bidder of one RFQ. PTI only. */
+  getRfqComplianceGate(scope: QueryScope, rfqId: string): Promise<Page<RfqSupplierGateView>>;
 
   // — Fulfilment —
   getShipments(scope: QueryScope, filter?: ShipmentFilter): Promise<Page<Shipment>>;

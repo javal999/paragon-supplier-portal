@@ -62,7 +62,9 @@ import {
   useSuppliers,
   useRequisitions,
   useInviteeCandidates,
+  useRfqComplianceGate,
 } from '../services/query/hooks';
+import { GateMarker } from './rfx/rfxDisplay';
 import { PURCHASING_GROUPS, purchasingGroupNameKey } from '../services/sourcing/rfxConfig';
 import { reliabilityScoreFor } from '../services/transitions/rfxRules';
 import RfxTabs from './rfx/RfxTabs';
@@ -1238,8 +1240,8 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
   // Governed derived scores (F0.3 quote-scoring primitive): the drawer COMPUTES
   // the comparison axes via `scoreQuotations` instead of reading the hand-authored
   // fixture literals (the fabricated-score root cause). price/leadTime are LIVE
-  // (ratio-to-best over this RFQ's set), compliance/reliability are declared
-  // SIMULATED, the composite carries weakest-link liveness, and topRanked =
+  // (ratio-to-best over this RFQ's set), reliability is declared SIMULATED,
+  // compliance is the CR-23 gate (who is scored, not a weight), the composite carries weakest-link liveness, and topRanked =
   // argmax(composite) — replacing the old fixture `aiRecommended` flag.
   //
   // 2e-c-3 — the engine now returns a DISCRIMINATED OUTCOME. A multi-currency
@@ -1247,9 +1249,23 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
   // approximated: `scoreById` stays empty, `topRankedId` stays null, and the
   // surface says why. This is the operator's ruling (b) on 2e-c-2-FIND-01 —
   // withhold the ranking rather than publish one computed from bare numerals.
+  // CR-23 / REQ-E03-05 BR-01a — only suppliers that PASS the compliance gate
+  // are scored. A failing supplier's quote stays in the comparison, marked; it
+  // is never ranked and cannot be selected for award. No gate read yet = not
+  // qualified: a pass is never assumed.
+  const rfqGates = useRfqComplianceGate(selectedRfq?.id);
+  const gateOf = (supplierId: string) =>
+    rfqGates.data?.items.find((g) => g.supplierId === supplierId);
+  const qualifiedQuotes = useMemo(
+    () =>
+      pricedQuotes.filter((q) =>
+        rfqGates.data?.items.some((g) => g.supplierId === q.supplierId && g.passes),
+      ),
+    [pricedQuotes, rfqGates.data],
+  );
   const scoring = useMemo(
-    () => scoreQuotations(pricedQuotes, { pins: selectedRfq?.fxPins }),
-    [pricedQuotes, selectedRfq?.fxPins],
+    () => scoreQuotations(qualifiedQuotes, { pins: selectedRfq?.fxPins }),
+    [qualifiedQuotes, selectedRfq?.fxPins],
   );
   /** The non-base currencies actually bid on this RFQ — what needs a basis. */
   const foreignCurrencies = useMemo(
@@ -1488,9 +1504,13 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
   // the RFQ category onto the master's own category vocabulary here, because
   // that mapping is this wizard's and not the master's.
   const cats = draft.category ? CATEGORY_TO_SUPPLIER_CATEGORY[draft.category] : [];
-  const inviteeCandidatesQuery = useInviteeCandidates(
-    inviteeGroup ? { purchasingGroup: inviteeGroup } : undefined,
-  );
+  // CR-23 / BR-06 — the chosen materials travel with the search so each
+  // candidate carries its compliance gate: a failing supplier stays selectable
+  // (it can be invited and can quote) and is marked as not awardable.
+  const inviteeCandidatesQuery = useInviteeCandidates({
+    ...(inviteeGroup ? { purchasingGroup: inviteeGroup } : {}),
+    materialCodes: draft.materials,
+  });
   const inviteePool = useMemo(
     () =>
       (inviteeCandidatesQuery.data?.items ?? []).filter((c) =>
@@ -1850,6 +1870,7 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
             </div>
           </div>
           <p className="text-xs text-text-tertiary -mt-3">{t('rfx.invite.onlyActive')}</p>
+          <p className="text-xs text-text-tertiary -mt-3">{t('rfx.gate.inviteNote')}</p>
 
           <div className="border border-border-subtle rounded-md overflow-hidden max-h-64 overflow-y-auto">
             <table className="w-full text-sm">
@@ -1891,6 +1912,9 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
                       </td>
                       <td className="px-3 py-2 text-text-primary">
                         {s.supplierName}
+                        <div className="mt-1">
+                          <GateMarker gate={s.gate} testId={`invitee-gate-${s.supplierId}`} />
+                        </div>
                       </td>
                       <td className="px-3 py-2 text-text-secondary">
                         <Data>{s.purchasingGroup ?? '—'}</Data>
@@ -3133,18 +3157,16 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
                           </ComparisonCell>
                         ))}
                       </ComparisonRow>
-                      <ComparisonRow
-                        label={t('sourcing.cmp.row.compliance')}
-                        tag={
-                          AXIS_LIVENESS.compliance === 'simulated'
-                            ? t('sourcing.cmp.simulated')
-                            : undefined
-                        }
-                        tagTitle={t('sourcing.cmp.simulatedTitle')}
-                      >
+                      {/* CR-23 — compliance is a GATE, not a weighted axis: it
+                          decides who is scored, and names why a supplier is not. */}
+                      <ComparisonRow label={t('sourcing.cmp.row.compliance')}>
                         {pricedQuotes.map((q) => (
                           <ComparisonCell key={q.id} highlight={q.id === topRankedId}>
-                            <ScoreOrSilence score={scoreById.get(q.id)?.complianceScore} />
+                            <GateMarker
+                              gate={gateOf(q.supplierId)}
+                              showPass
+                              testId={`drawer-gate-${q.supplierId}`}
+                            />
                           </ComparisonCell>
                         ))}
                       </ComparisonRow>
@@ -3258,6 +3280,12 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
                         <ComparisonRow label={t('sourcing.cmp.row.select')}>
                           {quotesForSelected.map((q) => (
                             <ComparisonCell key={q.id} highlight={q.id === topRankedId}>
+                              {gateOf(q.supplierId)?.passes !== true ? (
+                                // BR-01a — not selectable; the reason instead.
+                                <span className="text-xs text-text-tertiary" data-testid={`drawer-award-blocked-${q.supplierId}`}>
+                                  {t('rfx.gate.cannotAward')}
+                                </span>
+                              ) : (
                               <label className="inline-flex items-center gap-2 cursor-pointer">
                                 <input
                                   type="radio"
@@ -3271,6 +3299,7 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
                                   {t('sourcing.cmp.award')}
                                 </span>
                               </label>
+                              )}
                             </ComparisonCell>
                           ))}
                         </ComparisonRow>

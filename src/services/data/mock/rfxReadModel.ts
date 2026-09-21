@@ -38,6 +38,7 @@ import type {
   NegotiationRoundView,
   RfiEventView,
   RfpEventView,
+  RfqSupplierGateView,
   RfxInviteeView,
 } from '../../sourcing/views';
 import { rfqStore } from './stores/rfqStore';
@@ -113,6 +114,12 @@ export function supplierGate(supplierId: string, materialCodes: readonly string[
   const supplier = mockSuppliers.find((s) => s.id === supplierId);
   if (!supplier) return { passes: false, failed: ['status'] };
   return complianceGate(supplier, rfxSupplierOtif(supplierId), materialCodes, nowIso, COMPLIANCE_REGISTRY);
+}
+
+/** CR-23 — the gate for every invitee and every bidder of one RFQ. */
+export function rfqGateViews(rfq: RFQ, nowIso: string): readonly RfqSupplierGateView[] {
+  const ids = [...new Set([...rfq.invitedSupplierIds, ...currentQuotesFor(rfq.id).map((q) => q.supplierId)])];
+  return ids.map((supplierId) => ({ supplierId, ...rfqSupplierGate(rfq, supplierId, nowIso) }));
 }
 
 /** CR-23 — one supplier against one sourcing event. */
@@ -220,7 +227,6 @@ export const scorableQuote = (q: Quotation) => ({
   unitPrice: q.unitPrice,
   currency: q.currency ?? BASE_CURRENCY,
   leadTimeDays: q.leadTimeDays,
-  complianceScore: q.complianceScore,
   reliabilityScore: reliabilityScoreFor(rfxSupplierOtif(q.supplierId)),
 });
 

@@ -10,6 +10,29 @@ import i18n from '../lib/i18n';
 import BuyerSourcing from './BuyerSourcing';
 import { mockRfqs } from '../data/mockRfqs';
 import { PERSONA_SYSTEM_ROLES } from '../services/transitions/businessRoles';
+import { mockSuppliers } from '../data/mockSuppliers';
+
+/**
+ * ⚠️ PREMISE CHANGE (BL-43). The FX specs probe RFQ-2026-009 because its two
+ * quotes (sup-006, sup-005) both rank. Since CR-23 only suppliers that PASS the
+ * compliance gate are scored, and sup-005 holds no halal certificate for the
+ * humectant, so rfq-009 now ranks ONE quote and a currency mix can never refuse.
+ * The gate is not these specs' subject: for their duration sup-005 is given a
+ * current halal certificate so the probe keeps two rankable quotes, and the
+ * master row is restored afterwards.
+ */
+const passGateForSup005 = () => {
+  const s = mockSuppliers.find((x) => x.id === 'sup-005')!;
+  const saved = { halalCertified: s.halalCertified, certExpiryDate: s.certExpiryDate };
+  beforeEach(() => {
+    s.halalCertified = true;
+    s.certExpiryDate = '2027-12-31';
+  });
+  afterEach(() => {
+    s.halalCertified = saved.halalCertified;
+    s.certExpiryDate = saved.certExpiryDate;
+  });
+};
 
 const alwaysFails = withChaos(mockDataService, { minMs: 0, maxMs: 0, failureRate: 1 });
 const alwaysPending = withChaos(mockDataService, { minMs: 1e7, maxMs: 1e7, failureRate: 0 });
@@ -441,6 +464,7 @@ describe('BuyerSourcing — the should-cost spread refuses an unpriceable curren
 // which makes it the right probe: it ranks today, so a refusal can only come
 // from the currency mix this test introduces.
 describe('BuyerSourcing — a comparison with no FX basis withholds the ranking', () => {
+  passGateForSup005();
   beforeEach(() => {
     quotationStore.reset();
     rfqStore.reset();
@@ -606,6 +630,7 @@ describe('BuyerSourcing — a comparison with no FX basis withholds the ranking'
 // both USD, so it ranks today and any refusal can only come from the currency
 // mix the test introduces.
 describe('BuyerSourcing — the FX basis is visible, and recordable (2e-c-4)', () => {
+  passGateForSup005();
   beforeEach(() => {
     quotationStore.reset();
     rfqStore.reset();
