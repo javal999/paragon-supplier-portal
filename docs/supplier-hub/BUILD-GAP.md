@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 2.1, 2026-09-18 |
+| Version | 2.2, 2026-09-21 |
 | Compares | `SUPPLIER-HUB-REQUIREMENTS.md` v0.5 with the prototype on branch `feat/supplier-hub-mvp` (pull request "Supplier Hub MVP build") |
 | Owner decisions | 2026-09-17, recorded in section 9 of the requirements (RFX-1 to RFX-3, GAP-1 to GAP-4, E06-R) |
 | Rule | This is the **only** document that describes what the prototype does for the Supplier Hub. The PRD and the requirements describe the product and never the code. Update this file when a build item lands |
@@ -24,7 +24,7 @@ Everything runs on sample data held in the browser. There is no backend, no SAP 
 | REQ-E03-02 RFI | Built | Template sections A–F, question library with required and weighted questions, drafts hidden from the buyer, deadline extension, answers reused by a later RFQ. Creation follows section 3.6a of the requirements, which the build already matches: central library, edited per event, no save-as-template, no approval before sending. Attachment questions are text fields: there is no file store |
 | REQ-E03-03 RFQ | Built | From scratch, from an RFI, or from a purchase requisition; price per item; response deadline enforced; quote privacy |
 | REQ-E03-04 RFP | Built | Standard term list in 7 groups, Comply or Deviate with a comment required on a deviation, term-by-term comparison |
-| REQ-E03-05 Comparison, negotiation, award | Built | Weighted score (CR-15) with reliability from measured OTIF, currency rule (CR-16), negotiation rounds restricted to shortlisted suppliers with every quote version kept, split award that must total 100% per item, reason required when the award leaves the best-scored quote. Sourcing request (E03.01) is still not detailed in the requirements |
+| REQ-E03-05 Comparison, negotiation, award | Built | Compliance gate at award (CR-23: halal, BPOM, GMP / ISO 22716 per material, supplier status, minimum OTIF — placeholder 80%, "No history" passes); a failing supplier can be invited and quote but gets no award field, and the award verb refuses it. Weighted score (CR-15, price 40 / lead time 20 / reliability 40) over qualified suppliers only, with reliability from measured OTIF, currency rule (CR-16), negotiation rounds restricted to shortlisted suppliers with every quote version kept, split award that must total 100% per item, reason required when the award leaves the best-scored quote. Sourcing request (E03.01) is still not detailed in the requirements |
 | REQ-E06-01 Forecast publication | Built | Weekly periods for packaging then monthly, monthly for raw material; Firm / Trade-off / Forecast zones; versions kept with a Changes view; spreadsheet download; view tracking and re-publication on the PTI Forecasts page |
 | REQ-E06-02 Commitment | Built | Pre-filled with the forecast, upside, acknowledgement for Forecast periods, reason enforced by the system when below forecast, CR-21 tolerance, split deadline, spreadsheet upload, carry-forward on re-publication |
 | REQ-E06-03 Gap monitoring | Built | Gap quantity and %, CR-22 colours, cumulative view, ranked exception list, Accept / Request revision / Move demand, reminders as Home tasks, supplier coverage as an estimate |
@@ -107,6 +107,7 @@ The `CR-` rules are implemented in the hub's own modules and covered by their ow
 | Forecast periods, zones, commitment tolerance, gap colours (CR-21, CR-22) | `src/services/sdc/` forecast rules with `forecastConfig.ts` |
 | Goods receipt result, invoice matching, due date (CR-11 to CR-14) | `src/services/transitions/grRollup.ts`, `invoiceRollup.ts`, invoice projection |
 | Quote score and currency rule (CR-15, CR-16) | `src/lib/quoteScore.ts`, `src/lib/fxPin.ts` |
+| Compliance gate (CR-23) | `src/services/sourcing/complianceGate.ts`, values in `complianceGateConfig.ts` |
 | CFOT, OTIF, rejections, score and grade (CR-17) | `src/services/data/performanceRules.ts` |
 | Spreadsheet number and batch checks (CR-18, CR-19) | `src/lib/localeNumber.ts`, stock upload validation |
 | Integration retry classes (CR-20) | `src/services/transitions/settleFaults.ts` |
