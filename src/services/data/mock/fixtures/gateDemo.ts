@@ -58,11 +58,22 @@ const at = (offset: number, hourUtc = 3): string =>
 
 const SUP_019 = { supplierId: 'sup-019', supplierName: 'PT Sample Preform Bekasi (illustrative)' } as const;
 const SUP_020 = { supplierId: 'sup-020', supplierName: 'PT Sample PET Bottle Karawang (illustrative)' } as const;
+/**
+ * BL-52 — the ONE A-band supplier in the sample set. Every measured supplier
+ * graded B, C or D, so the performance-band filter's first band could never be
+ * seen. Two call-offs received on their date in full make OTIF 100%; the
+ * umbrella is confirmed to the end of its term, so no CFOT is measured, and the
+ * score reads 100 → A. It changes none of sup-016's gate results: it still
+ * fails BPOM alone on rfq-017, and "No history" passed OTIF before as 100% does now.
+ */
+const SUP_016 = { supplierId: 'sup-016', supplierName: 'PT Sample Active Ingredient Indonesia (illustrative)' } as const;
 
 interface Material {
   readonly materialCode: string;
   readonly description: string;
   readonly unitPrice: number;
+  /** Unit of the PO line and call-off. Absent = PCS (the packaging rows). */
+  readonly uom?: string;
 }
 
 const BOTTLE_250: Material = { materialCode: 'PK-PETB-8810', description: 'PET Bottle 250ml', unitPrice: 1_450 };
@@ -76,6 +87,14 @@ const BOTTLE_200: Material = {
   materialCode: 'PK-PETB-8801',
   description: 'PET Bottle 200ml Frosted — Wardah Series',
   unitPrice: 1_600,
+};
+// BL-52 — the A-band supplier's material; stated on `mockPurchaseOrders.ts`'s
+// PO line li-013a with this description and unit, so no meaning is new here.
+const PANTHENOL: Material = {
+  materialCode: 'AI-PANTO-6640',
+  description: 'D-Panthenol 75% (Provitamin B5)',
+  unitPrice: 280_000,
+  uom: 'KG',
 };
 // ⚠️ Only codes the document lane ALREADY states a meaning for (PO lines in
 // `mockPurchaseOrders.ts` / `callOffs.ts`). The RFQ-header-only codes
@@ -110,7 +129,7 @@ const umbrellaPo = (
     materialCode: l.materialCode,
     description: l.description,
     quantity: l.quantity,
-    uom: 'PCS',
+    uom: l.uom ?? 'PCS',
     unitPrice: l.unitPrice,
     confirmedQty: l.quantity,
   })),
@@ -126,6 +145,8 @@ export const GATE_DEMO_PURCHASE_ORDERS: readonly PurchaseOrder[] = [
     { ...FLIP_CAP, lineId: 'li-192b', quantity: 400_000 },
     { ...BOTTLE_200, lineId: 'li-192c', quantity: 150_000 },
   ]),
+  // BL-52 — the A-band supplier's umbrella order.
+  umbrellaPo('po-193', 'PO-2026-00193', SUP_016, [{ ...PANTHENOL, lineId: 'li-193a', quantity: 6_000 }]),
 ];
 
 const poOf = (poId: string) => GATE_DEMO_PURCHASE_ORDERS.find((p) => p.id === poId)!;
@@ -144,7 +165,7 @@ const callOff = (n: number, poId: string, lineId: string, quantity: number, need
     supplierName: po.supplierName,
     materialCode: line.materialCode,
     description: line.description,
-    uom: 'PCS',
+    uom: line.uom,
     unitPrice: line.unitPrice,
     currency: 'IDR',
     quantity,
@@ -197,6 +218,9 @@ export const GATE_DEMO_CALL_OFFS: readonly CallOff[] = [
   callOff(30, 'po-192', 'li-192b', 30_000, -28),
   callOff(31, 'po-192', 'li-192c', 10_000, -21),
   callOff(32, 'po-192', 'li-192a', 30_000, -14),
+  // BL-52 — sup-016, 2 measured, both received on their date in full: 100% → A.
+  callOff(33, 'po-193', 'li-193a', 500, -56),
+  callOff(34, 'po-193', 'li-193a', 500, -28),
 ];
 
 /**
@@ -252,6 +276,9 @@ export const GATE_DEMO_GOODS_RECEIPTS: readonly GoodsReceipt[] = [
   receipt(106, 'po-192', -42, pair(BOTTLE_100, 30_000)),
   receipt(107, 'po-192', -28, pair(BOTTLE_100, 30_000)),
   receipt(108, 'po-192', -14, [{ material: BOTTLE_100, quantity: 30_000 }]),
+  // BL-52 — sup-016's two on-time, in-full deliveries (the A band).
+  receipt(109, 'po-193', -56, [{ material: PANTHENOL, quantity: 500 }]),
+  receipt(110, 'po-193', -28, [{ material: PANTHENOL, quantity: 500 }]),
 ];
 
 // ── The sample RFQs ─────────────────────────────────────────────────────────

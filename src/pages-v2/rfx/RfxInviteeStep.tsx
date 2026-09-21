@@ -3,8 +3,10 @@
 //
 // The RFQ wizard has asked "who is asked?" since C.2, and the RFI and RFP
 // wizards ask it identically: same filters (BR-01 — category and purchasing
-// group, alone or together), same OTIF column with "No history" where nothing is
-// measured, same empty state that NAMES the filters in force.
+// group, alone or together; BR-05 / BL-52 — certificate validity, performance
+// band and country, held in the page address), same OTIF column with "No
+// history" where nothing is measured, same empty state that NAMES the filters
+// in force.
 //
 // ⚠️ **THE POOL COMES FROM THE READ MODEL, NOT FROM THE SUPPLIER LIST, AND THAT
 // IS THE STATUS GATE.** `getInviteeCandidates` applies `isSelectableSupplier`,
@@ -28,6 +30,13 @@ import SearchBar from '../../components/ui-v2/SearchBar';
 import { useInviteeCandidates } from '../../services/query/hooks';
 import { PURCHASING_GROUPS, purchasingGroupNameKey } from '../../services/sourcing/rfxConfig';
 import { GateMarker } from './rfxDisplay';
+import { matchesSupplierFilters } from '../../services/sourcing/supplierFilters';
+import SupplierFilterBar, {
+  bandLabel,
+  certLabel,
+  useSupplierFilterLabels,
+  useSupplierFilterParams,
+} from '../suppliers/SupplierFilterBar';
 
 interface RfxInviteeStepProps {
   /** The supplier-master category this event's family narrows to; '' = all. */
@@ -47,6 +56,9 @@ const RfxInviteeStep: React.FC<RfxInviteeStepProps> = ({
   const { t } = useTranslation();
   const [group, setGroup] = useState('');
   const [search, setSearch] = useState('');
+  // BL-52 / BR-05 — certificate validity, band and country, in the page address.
+  const { filters, setFilters } = useSupplierFilterParams();
+  const filterLabels = useSupplierFilterLabels();
 
   const candidates = useInviteeCandidates(group ? { purchasingGroup: group } : undefined);
 
@@ -58,13 +70,19 @@ const RfxInviteeStep: React.FC<RfxInviteeStepProps> = ({
     [candidates.data, supplierCategory],
   );
 
+  /** The countries this pool can offer — derived before the BR-05 filters narrow it. */
+  const countries = useMemo(() => [...new Set(pool.map((c) => c.country))].sort(), [pool]);
+
   const rows = useMemo(() => {
-    if (!search) return pool;
+    // BL-52 — composes with category and purchasing group (AND), the same rule
+    // `filterInvitees` applies to the read.
+    const narrowed = pool.filter((c) => matchesSupplierFilters(c, filters));
+    if (!search) return narrowed;
     const q = search.toLowerCase();
-    return pool.filter(
+    return narrowed.filter(
       (s) => s.supplierName.toLowerCase().includes(q) || s.country.toLowerCase().includes(q),
     );
-  }, [pool, search]);
+  }, [pool, search, filters]);
 
   /** The filters in force, in business language — what the empty state shows. */
   const activeFilters = useMemo(() => {
@@ -74,8 +92,9 @@ const RfxInviteeStep: React.FC<RfxInviteeStepProps> = ({
       const key = purchasingGroupNameKey(group);
       parts.push(`${group}${key ? ` · ${t(key)}` : ''}`);
     }
+    parts.push(...filterLabels(filters));
     return parts;
-  }, [supplierCategory, group, t]);
+  }, [supplierCategory, group, t, filters, filterLabels]);
 
   return (
     <div className="space-y-5">
@@ -110,6 +129,13 @@ const RfxInviteeStep: React.FC<RfxInviteeStepProps> = ({
           />
         </div>
       </div>
+      {/* BL-52 / REQ-E03-01 BR-05 — after category and purchasing group. */}
+      <SupplierFilterBar
+        filters={filters}
+        onChange={setFilters}
+        countries={countries}
+        testIdPrefix={`${testIdPrefix}-invitee`}
+      />
       <p className="text-xs text-text-tertiary -mt-3">{t('rfx.invite.onlyActive')}</p>
       <p className="text-xs text-text-tertiary -mt-3">{t('rfx.gate.inviteNote')}</p>
 
@@ -121,6 +147,8 @@ const RfxInviteeStep: React.FC<RfxInviteeStepProps> = ({
               <th className="px-3 py-2 text-left font-semibold">{t('rfx.invite.col.supplier')}</th>
               <th className="px-3 py-2 text-left font-semibold">{t('rfx.invite.col.group')}</th>
               <th className="px-3 py-2 text-left font-semibold">{t('rfx.invite.col.country')}</th>
+              <th className="px-3 py-2 text-left font-semibold">{t('supFilter.col.certificates')}</th>
+              <th className="px-3 py-2 text-left font-semibold">{t('supFilter.col.band')}</th>
               <th className="px-3 py-2 text-right font-semibold">{t('rfx.invite.col.otif')}</th>
             </tr>
           </thead>
@@ -155,6 +183,13 @@ const RfxInviteeStep: React.FC<RfxInviteeStepProps> = ({
                     <Data>{s.purchasingGroup ?? '—'}</Data>
                   </td>
                   <td className="px-3 py-2 text-text-secondary">{s.country}</td>
+                  {/* BL-52 — the two BR-05 facts the filters read, on the row. */}
+                  <td className="px-3 py-2 text-text-secondary" data-testid={`${testIdPrefix}-invitee-cert-${s.supplierId}`}>
+                    {certLabel(t, s.certificates)}
+                  </td>
+                  <td className="px-3 py-2 text-text-secondary" data-testid={`${testIdPrefix}-invitee-band-${s.supplierId}`}>
+                    {bandLabel(t, s.band)}
+                  </td>
                   {/* REQ-E03-01 AC-02 — the OTIF, or "No history". NEVER 0%. */}
                   <td className="px-3 py-2 text-right text-text-secondary">
                     {s.otif === null ? (
@@ -168,7 +203,7 @@ const RfxInviteeStep: React.FC<RfxInviteeStepProps> = ({
             })}
             {rows.length === 0 && (
               <tr>
-                <td colSpan={5} className="text-center text-sm text-text-tertiary py-6">
+                <td colSpan={7} className="text-center text-sm text-text-tertiary py-6">
                   {/* REQ-E03-01 edge case — the empty state names what was asked. */}
                   <div data-testid={`${testIdPrefix}-invitee-empty`}>
                     <div>{t('rfx.invite.empty')}</div>
@@ -183,6 +218,7 @@ const RfxInviteeStep: React.FC<RfxInviteeStepProps> = ({
                       onClick={() => {
                         setGroup('');
                         setSearch('');
+                        setFilters({});
                       }}
                       data-testid={`${testIdPrefix}-invitee-clear-filters`}
                     >

@@ -65,6 +65,13 @@ import {
   useRfqComplianceGate,
 } from '../services/query/hooks';
 import { GateMarker } from './rfx/rfxDisplay';
+import { matchesSupplierFilters } from '../services/sourcing/supplierFilters';
+import SupplierFilterBar, {
+  bandLabel,
+  certLabel,
+  useSupplierFilterLabels,
+  useSupplierFilterParams,
+} from './suppliers/SupplierFilterBar';
 import { PURCHASING_GROUPS, purchasingGroupNameKey } from '../services/sourcing/rfxConfig';
 import { reliabilityScoreFor } from '../services/transitions/rfxRules';
 import RfxTabs from './rfx/RfxTabs';
@@ -926,6 +933,10 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
   // category one. '' means the filter is off, which is a different state from
   // "matched nothing" and is what the empty state has to be able to say.
   const [inviteeGroup, setInviteeGroup] = useState('');
+  // BL-52 / REQ-E03-01 BR-05 — certificate validity, band and country, in the
+  // page address, composing with the category and purchasing-group filters.
+  const { filters: inviteeFilters, setFilters: setInviteeFilters } = useSupplierFilterParams();
+  const inviteeFilterLabels = useSupplierFilterLabels();
   const { toast } = useToast();
   const { t } = useTranslation();
   const refusalText = useRefusalText();
@@ -1532,14 +1543,22 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
       .slice(0, 4);
   }, [draft.category, inviteePool]);
 
+  /** BL-52 — the countries this pool can offer, before the BR-05 filters narrow it. */
+  const inviteeCountries = useMemo(
+    () => [...new Set(inviteePool.map((c) => c.country))].sort(),
+    [inviteePool],
+  );
+
   const supplierTableFiltered = useMemo(
     () =>
       inviteePool.filter((s) => {
+        // BL-52 / BR-05 — composes with category and purchasing group (AND).
+        if (!matchesSupplierFilters(s, inviteeFilters)) return false;
         if (!supplierSearch) return true;
         const q = supplierSearch.toLowerCase();
         return s.supplierName.toLowerCase().includes(q) || s.country.toLowerCase().includes(q);
       }),
-    [supplierSearch, inviteePool],
+    [supplierSearch, inviteePool, inviteeFilters],
   );
 
   /** The filters in force, in business language — what the empty state shows. */
@@ -1550,12 +1569,14 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
       const key = purchasingGroupNameKey(inviteeGroup);
       parts.push(`${inviteeGroup}${key ? ` · ${t(key)}` : ''}`);
     }
+    parts.push(...inviteeFilterLabels(inviteeFilters));
     return parts;
-  }, [draft.category, inviteeGroup, t]);
+  }, [draft.category, inviteeGroup, t, inviteeFilters, inviteeFilterLabels]);
 
   const clearInviteeFilters = () => {
     setInviteeGroup('');
     setSupplierSearch('');
+    setInviteeFilters({});
   };
 
   const wizardSteps: WizardStep[] = [
@@ -1871,6 +1892,13 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
               />
             </div>
           </div>
+          {/* BL-52 / REQ-E03-01 BR-05 — after category and purchasing group. */}
+          <SupplierFilterBar
+            filters={inviteeFilters}
+            onChange={setInviteeFilters}
+            countries={inviteeCountries}
+            testIdPrefix="rfq-invitee"
+          />
           <p className="text-xs text-text-tertiary -mt-3">{t('rfx.invite.onlyActive')}</p>
           <p className="text-xs text-text-tertiary -mt-3">{t('rfx.gate.inviteNote')}</p>
 
@@ -1887,6 +1915,12 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
                   </th>
                   <th className="px-3 py-2 text-left font-semibold">
                     {t('sourcing.wizard.col.country')}
+                  </th>
+                  <th className="px-3 py-2 text-left font-semibold">
+                    {t('supFilter.col.certificates')}
+                  </th>
+                  <th className="px-3 py-2 text-left font-semibold">
+                    {t('supFilter.col.band')}
                   </th>
                   <th className="px-3 py-2 text-right font-semibold">
                     {t('sourcing.wizard.col.otif')}
@@ -1924,10 +1958,17 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
                       <td className="px-3 py-2 text-text-secondary">
                         {s.country}
                       </td>
+                      {/* BL-52 — the two BR-05 facts the filters read, on the row. */}
+                      <td className="px-3 py-2 text-text-secondary" data-testid={`invitee-cert-${s.supplierId}`}>
+                        {certLabel(t, s.certificates)}
+                      </td>
+                      <td className="px-3 py-2 text-text-secondary" data-testid={`invitee-band-${s.supplierId}`}>
+                        {bandLabel(t, s.band)}
+                      </td>
                       {/* REQ-E03-01 AC-02 — the OTIF, or "No history". NEVER 0%:
                           a supplier nothing has been measured against is not a
                           supplier that failed every delivery. */}
-                      <td className="px-3 py-2 text-right text-text-secondary">
+                      <td className="px-3 py-2 text-right text-text-secondary" data-testid={`invitee-otif-${s.supplierId}`}>
                         {s.otif === null ? (
                           <span className="text-text-tertiary">{t('rfx.noHistory')}</span>
                         ) : (
@@ -1940,7 +1981,7 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
                 {supplierTableFiltered.length === 0 && (
                   <tr>
                     <td
-                      colSpan={5}
+                      colSpan={7}
                       className="text-center text-sm text-text-tertiary py-6"
                     >
                       {/* REQ-E03-01 edge case — the empty state NAMES the active

@@ -22,6 +22,7 @@ import { BASE_CURRENCY } from '../../../lib/currencyPolicy';
 import { scoreQuotations, type ScoringOutcome } from '../../../lib/quoteScore';
 import { complianceGate, type GateResult } from '../../sourcing/complianceGate';
 import { COMPLIANCE_REGISTRY } from './fixtures/complianceRegistry';
+import { bandOf, certificateValidity } from '../../sourcing/supplierFilters';
 import {
   complianceScoreFor,
   effectiveDeadline,
@@ -79,19 +80,27 @@ export const rfxSupplierOtif = (supplierId: string): number | null =>
 
 /** Every supplier master row as an invitee candidate, before any filter. */
 export function inviteeCandidates(materialCodes: readonly string[] = []): readonly InviteeCandidate[] {
-  return mockSuppliers.map((s) => ({
-    supplierId: s.id,
-    supplierName: s.name,
-    category: s.category,
-    purchasingGroup: s.purchasingGroup,
-    status: s.status,
-    otif: masterMeasure(s.id).otif.pct,
-    country: s.country,
-    // CR-23 / BR-06 — the gate travels WITH the candidate: a failing supplier is
-    // still a candidate (it can be invited and can quote), and the list says it
-    // cannot be awarded and why.
-    gate: supplierGate(s.id, materialCodes, rfxNow()),
-  }));
+  const now = rfxNow();
+  return mockSuppliers.map((s) => {
+    const measure = masterMeasure(s.id);
+    return {
+      supplierId: s.id,
+      supplierName: s.name,
+      category: s.category,
+      purchasingGroup: s.purchasingGroup,
+      status: s.status,
+      otif: measure.otif.pct,
+      country: s.country,
+      // BL-52 / BR-05 — the same certificate projection and grade the supplier
+      // list filters on, read at the same "now" the gate below is judged at.
+      certificates: certificateValidity(s, COMPLIANCE_REGISTRY, now),
+      band: bandOf(measure.grade),
+      // CR-23 / BR-06 — the gate travels WITH the candidate: a failing supplier
+      // is still a candidate (it can be invited and can quote), and the list
+      // says it cannot be awarded and why.
+      gate: supplierGate(s.id, materialCodes, now),
+    };
+  });
 }
 
 /** The candidates matching the buyer's active filters (BR-01, BR-04). */

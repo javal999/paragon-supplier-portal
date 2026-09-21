@@ -91,6 +91,8 @@ import { forecastCollaborationEn, forecastCollaborationId } from './i18n/forecas
 import { rfxEn, rfxId } from './i18n/rfx';
 // — BL-51 3PL tracking links (REQ-E07-04 BR-05) —
 import { threePlEn, threePlId } from './i18n/threePl';
+// — BL-52 supplier filters (REQ-E03-01 BR-05) —
+import { supplierFiltersEn, supplierFiltersId } from './i18n/supplierFilters';
 // — The read path's failure surface, shared by 31 pages —
 import { errorStateEn, errorStateId } from './i18n/errorState';
 import { loadingStateEn, loadingStateId } from './i18n/loadingState';
@@ -176,6 +178,7 @@ export const resources = {
       ...forecastCollaborationEn,
       ...rfxEn,
       ...threePlEn,
+      ...supplierFiltersEn,
       ...errorStateEn,
       ...loadingStateEn,
       ...emptyStateEn,
@@ -617,6 +620,7 @@ export const resources = {
       ...forecastCollaborationId,
       ...rfxId,
       ...threePlId,
+      ...supplierFiltersId,
       ...errorStateId,
       ...loadingStateId,
       ...emptyStateId,
