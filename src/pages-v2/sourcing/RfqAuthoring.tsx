@@ -392,7 +392,8 @@ const ItemCard: React.FC<{
               );
             })}
           </div>
-          <div className="mt-2 flex flex-wrap items-end gap-3" data-testid={`${tid}-custom`}>
+          <div className="mt-3 text-xs font-medium text-text-secondary">{t('rfqAuthoring.items.addField')}</div>
+          <div className="mt-1 flex flex-wrap items-end gap-3" data-testid={`${tid}-custom`}>
             <div>
               <label className={labelClass} htmlFor={`${tid}-custom-label`}>
                 {t('rfqAuthoring.items.addField.label')}

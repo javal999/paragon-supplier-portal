@@ -136,7 +136,7 @@ describe('the RFQ wizard authors a multi-item tiered RFQ', () => {
     next();
 
     // Review names the items and the breaks.
-    expect(await screen.findByTestId('rfq-review-item-1')).toHaveTextContent('Sticker / label · Front sticker · 8 variants');
+    expect(await screen.findByTestId('rfq-review-item-1')).toHaveTextContent('Sticker / label · Front sticker · variants: 8');
     expect(screen.getByTestId('rfq-review-tiers')).toHaveTextContent('3.000 per variant · 5.000 per variant');
     fireEvent.click(screen.getByRole('button', { name: 'Save RFQ draft' }));
 
@@ -163,6 +163,24 @@ describe('the RFQ wizard authors a multi-item tiered RFQ', () => {
     expect(rfq.confidential).toBe(true);
     expect(rfq.samplesRequested).toEqual({ qty: 20, neededBy: '2026-10-05' });
     expect(rfq.invitedSupplierIds).toEqual(['sup-008']);
+  });
+});
+
+describe('attachments are session-only, and say so', () => {
+  it('a file attached to an item is listed with the honest note, and removable', async () => {
+    renderWithProviders(<BuyerSourcing />);
+    fireEvent.click(await screen.findByText('New RFQ'));
+    await fillScope({ title: 'With files', qty: '1000' });
+    next();
+    const files = await screen.findByTestId('rfq-item-1-files');
+    expect(within(files).getByTestId('rfq-item-1-files-note')).toHaveTextContent(
+      'Stored for this session; permanent storage comes with the backend.',
+    );
+    const file = new File(['%PDF'], 'die-line.pdf', { type: 'application/pdf' });
+    fireEvent.change(within(files).getByTestId('rfq-item-1-files-input'), { target: { files: [file] } });
+    expect(within(files).getByTestId('rfq-item-1-files-row')).toHaveTextContent('die-line.pdf');
+    fireEvent.click(within(files).getByRole('button', { name: 'Remove die-line.pdf' }));
+    expect(within(files).queryByTestId('rfq-item-1-files-row')).not.toBeInTheDocument();
   });
 });
 

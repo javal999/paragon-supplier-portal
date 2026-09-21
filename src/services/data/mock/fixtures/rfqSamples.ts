@@ -6,10 +6,11 @@
 //   · rfq-021  Oslo — two sticker items, eight variants each, SIX quantity
 //     breaks per variant (3K / 5K / 7K / 10K / 25K / 50K), plate costs
 //     requested, alternatives allowed, samples requested, two typed questions.
-//     TWO TIERED QUOTES are already in (sup-008, sup-015), priced so the cheaper
+//     TWO TIERED QUOTES are already in (sup-013, sup-015), priced so the cheaper
 //     supplier changes between the low and the high breaks — the shape a split
-//     award exists for. sup-007 (the supplier persona) is invited and has not
-//     quoted yet.
+//     award exists for. Both PASS the compliance gate (CR-23), so either can
+//     actually be awarded a share; sup-007 and sup-008 would not. sup-007 (the
+//     supplier persona) is invited and has not quoted yet.
 //   · rfq-022  Iron — one unit box item, FIVE breaks in total (10K to 30K).
 //   · rfq-023  Redwood 2.0 — CONFIDENTIAL, five mold components, THREE breaks
 //     (100K / 200K / 300K), the mold requested as a one-time cost on each.
@@ -161,8 +162,8 @@ export const RFQ_SAMPLE_SEED: readonly RFQ[] = [
     createdAt: day(-5),
     responseDeadline: day(9),
     awardDeadline: day(16),
-    invitedSupplierIds: ['sup-007', 'sup-008', 'sup-015'],
-    respondedSupplierIds: ['sup-008', 'sup-015'],
+    invitedSupplierIds: ['sup-007', 'sup-008', 'sup-013', 'sup-015'],
+    respondedSupplierIds: ['sup-013', 'sup-015'],
     // The first break, per variant, across both items: 3,000 × 8 × 2. The
     // header total a quote derives is evaluated at this break (`deriveQuoteHeader`).
     totalQty: 48_000,
@@ -270,8 +271,8 @@ const OSLO_SUP015: readonly QuotationItemQuote[] = [
   },
 ];
 
-/** sup-008 — cheapest at the low breaks, dearer at volume. */
-const OSLO_SUP008: readonly QuotationItemQuote[] = [
+/** sup-013 — cheapest at the low breaks, dearer at volume. */
+const OSLO_SUP013: readonly QuotationItemQuote[] = [
   {
     itemLineNo: 1,
     specValues: [
@@ -335,18 +336,18 @@ export const RFQ_SAMPLE_QUOTATION_SEED: readonly Quotation[] = [
   {
     id: 'qt-021b',
     rfqId: 'rfq-021',
-    supplierId: 'sup-008',
+    supplierId: 'sup-013',
     submittedAt: day(-1),
-    ...header(OSLO_SUP008),
+    ...header(OSLO_SUP013),
     currency: 'IDR',
     leadTimeDays: 24,
     moq: 5_000,
     paymentTermsOffered: 'Net 45',
     validUntil: day(30),
-    complianceScore: 74,
+    complianceScore: 68,
     ...retiredAxes,
     status: 'Submitted',
-    itemQuotes: OSLO_SUP008,
+    itemQuotes: OSLO_SUP013,
     alternatives: [
       {
         itemLineNo: 2,

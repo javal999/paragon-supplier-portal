@@ -18,6 +18,7 @@ import { PERSONA_SYSTEM_ROLES } from '../../transitions/businessRoles';
 import { specSheetFor } from '../../sourcing/rfqItemTypes';
 import { deriveQuoteHeader, type RfqItem } from '../../sourcing/rfqModel';
 import { RFQ_SAMPLE_SEED } from './fixtures/rfqSamples';
+import { rfqSupplierGate, rfxNow } from './rfxReadModel';
 
 const buyer: QueryScope = { personaType: 'buyer', supplierId: null, businessRoles: PERSONA_SYSTEM_ROLES.buyer };
 const svc = new MockCommandService();
@@ -219,7 +220,7 @@ describe('the sample RFQs are sound by the verb’s own rule', () => {
 
   it('Oslo has two tiered quotes from different suppliers, whose header is DERIVED', () => {
     const quotes = quotationStore.forRfq('rfq-021');
-    expect(new Set(quotes.map((q) => q.supplierId))).toEqual(new Set(['sup-008', 'sup-015']));
+    expect(new Set(quotes.map((q) => q.supplierId))).toEqual(new Set(['sup-013', 'sup-015']));
     const oslo = rfqStore.get('rfq-021')!;
     for (const q of quotes) {
       expect(q.itemQuotes).toHaveLength(2);
@@ -229,7 +230,12 @@ describe('the sample RFQs are sound by the verb’s own rule', () => {
     // The cheaper supplier CHANGES across the breaks — the shape a split exists for.
     const at = (sid: string, tier: number) =>
       quotes.find((q) => q.supplierId === sid)!.itemQuotes![0]!.tierPrices.find((p) => p.tierQty === tier)!.unitPrice;
-    expect(at('sup-008', 3_000)).toBeLessThan(at('sup-015', 3_000));
-    expect(at('sup-015', 50_000)).toBeLessThan(at('sup-008', 50_000));
+    expect(at('sup-013', 3_000)).toBeLessThan(at('sup-015', 3_000));
+    expect(at('sup-015', 50_000)).toBeLessThan(at('sup-013', 50_000));
+    // Both bidders PASS the compliance gate, so a split between them is an
+    // award that can actually be made. KNOWN-BAD twin: sup-008, invited, does not.
+    expect(rfqSupplierGate(oslo, 'sup-013', rfxNow()).passes).toBe(true);
+    expect(rfqSupplierGate(oslo, 'sup-015', rfxNow()).passes).toBe(true);
+    expect(rfqSupplierGate(oslo, 'sup-008', rfxNow()).passes).toBe(false);
   });
 });
