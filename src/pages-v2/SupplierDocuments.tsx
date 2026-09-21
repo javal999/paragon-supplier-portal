@@ -887,7 +887,7 @@ const SupplierDocuments: React.FC = () => {
                   supplier must know what this act is while deciding whether to
                   perform it - a disclaimer under the button is a receipt, not a
                   notice. The claim is precisely bounded: the platform CAN read a
-                  file (XlsxImportPanel parses a workbook one lane over); what it
+                  file (the Stock page's StockUploadPanel parses a workbook); what it
                   has no seam for is KEEPING or FORWARDING one. */}
               <section
                 className="bg-bg-hover border-l-2 border-action rounded px-4 py-3"

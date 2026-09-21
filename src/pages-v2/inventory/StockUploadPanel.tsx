@@ -6,12 +6,13 @@ import Data from '../../components/ui-v2/Data';
 import { parseWorkbook } from '../../services/sdc';
 import type { InventoryPosition } from '../../services/data/types';
 import {
+  dayOf,
   parseCsv,
   stockTemplateCsv,
   validateStockRows,
   type RefusedStockRow,
 } from '../../services/transitions/inventoryRules';
-import { readFileText, useInventoryRunner } from './inventoryDisplay';
+import { InTransitReadOnly, inventoryNow, readFileText, useInventoryRunner } from './inventoryDisplay';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Spreadsheet template ("EDI" to business users) — REQ-E08-02 BR-02, BR-05.
@@ -22,6 +23,10 @@ import { readFileText, useInventoryRunner } from './inventoryDisplay';
 // saved through the declare verb (template channel); every refused row is
 // listed with its row number and reason, and nothing else is held back. A row
 // the verb itself refuses is listed the same way.
+//
+// In transit (BR-10, BL-60): the template has no in-transit column — a supplier
+// never enters it. The panel shows it read-only per material, beside the
+// in-production figure last submitted, from ASNs and dispatched call-offs.
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface UploadResult {
@@ -78,7 +83,7 @@ const StockUploadPanel: React.FC<{ supplierId: string; positions: readonly Inven
       setBusy(false);
       return;
     }
-    const checked = validateStockRows(rows, { assigned });
+    const checked = validateStockRows(rows, { assigned, today: dayOf(inventoryNow()) });
     const out: UploadResult = { savedMaterials: [], refused: [...checked.refused] };
     for (const draft of checked.accepted) {
       const { rows: rowNumbers, ...payload } = draft;
@@ -121,6 +126,26 @@ const StockUploadPanel: React.FC<{ supplierId: string; positions: readonly Inven
           )}
         </div>
       </div>
+      <details open className="mt-3" data-testid="stock-upload-incoming">
+        <summary className="text-sm text-action cursor-pointer">{t('inv.upload.incoming.toggle')}</summary>
+        <p className="mt-2 text-xs text-text-tertiary">{t('inv.upload.incoming.hint')}</p>
+        <div className="mt-2 grid gap-3 sm:grid-cols-2">
+          {positions.map((p) => {
+            const inProduction = p.incoming.filter((i) => i.source === 'production').reduce((s, i) => s + i.quantity, 0);
+            return (
+              <div key={p.materialCode} className="border border-border-subtle rounded-md p-3" data-testid={`stock-upload-incoming-${p.materialCode}`}>
+                <Data className="text-xs font-bold text-text-primary">{p.materialCode}</Data>
+                <div className="mt-1 text-xs text-text-secondary">
+                  {t('inv.upload.incoming.inProduction')} <Data>{inProduction.toLocaleString('en-US')}</Data> {p.uom}
+                </div>
+                <div className="mt-2">
+                  <InTransitReadOnly position={p} testId={`stock-upload-in-transit-${p.materialCode}`} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </details>
       {busy && <p className="mt-3 text-sm text-text-tertiary">{t('inv.upload.checking')}</p>}
       {fileError && (
         <p role="alert" className="mt-3 text-sm text-danger">

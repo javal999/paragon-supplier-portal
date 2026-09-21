@@ -86,12 +86,6 @@ export const sdcSupplierEn: Record<string, string> = {
     'That is not a quantity — type digits only, e.g. 40000.',
   'sdcSup.panel.qty.refused.ambiguous':
     'This can be read two ways — "40.000" means forty thousand in Indonesian and forty in English. Type it without separators: 40000.',
-  'sdcSup.stock.qty.refused.empty':
-    'Enter your total stock on hand — a blank field is not a zero. If you hold none, type 0.',
-  'sdcSup.stock.qty.refused.notNumeric':
-    'That is not a quantity — type digits only, e.g. 2400.',
-  'sdcSup.stock.qty.refused.ambiguous':
-    'This can be read two ways — "2.400" means two thousand four hundred in Indonesian and two-point-four in English. Type it without separators: 2400.',
   'sdcSup.panel.date.eyebrow': 'Step 2',
   'sdcSup.panel.date.title': 'Delivery commitment',
   'sdcSup.panel.date.desc': 'Optional: the date you commit to deliver by, and any capacity constraint worth flagging.',
@@ -140,131 +134,15 @@ export const sdcSupplierEn: Record<string, string> = {
   'sdcSup.toast.failed.title': 'Confirmation not submitted',
   'sdcSup.toast.failed.body': 'The submission was rejected. Please try again.',
 
-  // ── SDC-3b — Stock (SOH) tab ────────────────────────────────────────────────
-  'sdcSup.stock.subtitle': 'Your current stock on hand for the materials Paragon collaborates with you on.',
-  'sdcSup.stock.declare': 'Declare stock',
-  'sdcSup.stock.emptyTitle': 'No stock declared yet',
-  'sdcSup.stock.emptyBody': 'Declare your current stock on hand and it will appear here.',
-  'sdcSup.stock.grain.batch': 'Batch detail',
-  'sdcSup.stock.grain.total': 'Total only',
-  'sdcSup.stock.asOf': 'as of {{date}}',
-  'sdcSup.stock.expiry': 'expires {{date}}',
-  'sdcSup.stock.noExpiry': 'no expiry',
-  'sdcSup.stock.totalOnlyHint':
-    'Total declared without batch/expiry detail — expiry bridgeability is not assessable from this declaration.',
-  // — SOH declare panel —
-  'sdcSup.stock.panel.title': 'Declare current stock',
-  'sdcSup.stock.panel.submit': 'Declare stock',
-  'sdcSup.stock.panel.submitting': 'Declaring…',
-  'sdcSup.stock.panel.material.eyebrow': 'Step 1',
-  'sdcSup.stock.panel.material.title': 'Material',
-  'sdcSup.stock.panel.material.desc': 'Choose the material you are declaring stock for. The unit is set by the material — you never pick it.',
+  // ── Stock tab — retired as an entry point (BL-60); a signpost to the Stock page.
+  // The two material keys below are shared with the shipment panel.
   'sdcSup.stock.panel.materialLabel': 'Material',
   'sdcSup.stock.panel.materialSelect': 'Select a material…',
-  'sdcSup.stock.panel.total.eyebrow': 'Step 2',
-  'sdcSup.stock.panel.total.title': 'Total stock on hand',
-  'sdcSup.stock.panel.total.desc': 'The total quantity you currently hold. This is the floor — batch detail below is optional.',
-  'sdcSup.stock.panel.totalLabel': 'Total quantity ({{uom}})',
-  'sdcSup.stock.panel.batches.eyebrow': 'Step 3 (optional)',
-  'sdcSup.stock.panel.batches.title': 'Batch detail',
-  'sdcSup.stock.panel.batches.desc': 'Optional: break the total into batches with expiry dates. When you add batches, they must sum to the total.',
-  'sdcSup.stock.panel.batchNumber': 'Batch number',
-  'sdcSup.stock.panel.batchQty': 'Quantity ({{uom}})',
-  'sdcSup.stock.panel.batchQtyLabel': 'Batch quantity',
-  'sdcSup.stock.panel.batchExpiry': 'Expiry date',
-  'sdcSup.stock.panel.removeBatch': 'Remove batch',
-  'sdcSup.stock.panel.addBatch': 'Add batch',
-  'sdcSup.stock.panel.batchSum': 'Batch total: {{sum}} of {{total}} {{uom}}',
-  'sdcSup.stock.panel.batchMismatch': 'batches must sum to the total',
-  // — SOH toasts —
-  'sdcSup.stock.toast.missingMaterial.title': 'Material required',
-  'sdcSup.stock.toast.missingMaterial.body': 'Select the material you are declaring stock for.',
-  'sdcSup.stock.toast.missingTotal.title': 'Total quantity required',
-  'sdcSup.stock.toast.missingTotal.body': 'Enter your total stock on hand for this material.',
-  'sdcSup.stock.toast.batchMismatch.title': 'Batches do not sum to the total',
-  'sdcSup.stock.toast.batchMismatch.body': 'Your batches sum to {{sum}} but the declared total is {{total}} — a total that disagrees with its own detail cannot be recorded.',
-  'sdcSup.stock.toast.failed.title': 'Stock not declared',
-  'sdcSup.stock.toast.declared.title': 'Stock declared — {{material}}',
-  'sdcSup.stock.toast.declared.body': 'Your current stock is recorded under Stock (SOH).',
+  'sdcSup.stock.moved.title': 'Stock is entered on the Stock page',
+  'sdcSup.stock.moved.body':
+    'Upload the stock template or type your figures there — both carry the same fields, and your in-transit quantity is shown beside them.',
+  'sdcSup.stock.moved.link': 'Go to the Stock page',
 
-  // ── SDC-3c-b — Bulk stock-entry grid (batch-grain, DEC-MAGIC-LINK-GRID) ──────
-  'sdcSup.bulk.entry': 'Bulk stock entry',
-  'sdcSup.bulk.subtitle':
-    'Enter batch-grain stock as a grid — one row per batch, submitted as a single declaration.',
-  'sdcSup.bulk.back': 'Back to list',
-  'sdcSup.bulk.gridTitle': 'Batches',
-  'sdcSup.bulk.note.title': 'Fixture-first grid',
-  'sdcSup.bulk.note.body':
-    'This is the hosted magic-link stock grid (DEC-MAGIC-LINK-GRID). Real magic-link delivery, tokens, and supplier identity arrive with the Communication Hub / backend (F1+); here it runs on your own signed-in session.',
-  'sdcSup.bulk.col.batchNumber': 'Batch number',
-  'sdcSup.bulk.col.qty': 'Quantity ({{uom}})',
-  'sdcSup.bulk.col.expiry': 'Expiry date',
-  'sdcSup.bulk.submit': 'Declare stock',
-  'sdcSup.bulk.toast.blocked.title': 'Stock not declared',
-  'sdcSup.bulk.toast.declared.body': 'Your batch-grain stock is recorded under Stock (SOH).',
-  // Honest-silence reasons surfaced from the SDC-3c-a adapter's {ok:false}.
-  'sdcSup.bulk.reason.emptyTotal': 'Enter the total stock on hand — it is the floor the batches sit under.',
-  'sdcSup.bulk.reason.missingMaterial': 'Select a material.',
-  'sdcSup.bulk.reason.missingBatchNumber': 'A row has a quantity but no batch number — every batch needs a number.',
-  'sdcSup.bulk.reason.invalidQty': 'A batch quantity is not a valid number.',
-  'sdcSup.bulk.reason.ambiguousQty':
-    'A quantity could be read two ways (1.800 = 1,800 or 1.8) — rewrite it without separators so it can only mean one thing.',
-  'sdcSup.bulk.reason.batchMismatch': 'batches must sum to the total',
-  'sdcSup.bulk.reason.noRows': 'Enter a total, or one or more batches.',
-
-  // CP-0 · 2d — the header total's own refusal (the Σ-banner reads ONE parse).
-  'sdcSup.bulk.total.refused.empty': 'Enter the total stock on hand to see the batch total.',
-  'sdcSup.bulk.total.refused.notNumeric': 'That total is not a number — enter digits only, for example 4000.',
-  'sdcSup.bulk.total.refused.ambiguous':
-    'That total could be read two ways (4.000 = 4,000 or 4) — enter it without separators, for example 4000.',
-
-  // CP-0 · 2d′-a — a batch row with no readable quantity is UNKNOWN, not zero,
-  // so no Σ is shown at all. Count is interpolated (not an i18next plural key)
-  // to keep the EN/ID key sets exactly parallel.
-  'sdcSup.bulk.batchSum.refused':
-    'Batch quantities that could not be read: {{count}} — enter or retype them, then the batch total will show.',
-
-  // ── SDC-3c-c-b — XLSX import (upload + confirmable column mapping) ───────────
-  'sdcSup.bulk.import.open': 'Import from Excel',
-  'sdcSup.bulk.import.needMaterial':
-    'Pick a material and total first — the file fills batch rows under them.',
-  'sdcSup.bulk.import.title': 'Import batches from a spreadsheet',
-  'sdcSup.bulk.import.drop': 'Drop an .xlsx file here, or',
-  'sdcSup.bulk.import.browse': 'Choose file',
-  'sdcSup.bulk.import.parsing': 'Reading the file…',
-  'sdcSup.bulk.import.sheetLabel': 'Sheet',
-  'sdcSup.bulk.import.mapTitle': 'Match your columns',
-  'sdcSup.bulk.import.mapHint': 'We guessed from your headers — check each field before importing.',
-  'sdcSup.bulk.import.field.batchNumber': 'Batch number ← your column',
-  'sdcSup.bulk.import.field.qty': 'Quantity ← your column',
-  'sdcSup.bulk.import.field.expiry': 'Expiry date ← your column (optional)',
-  'sdcSup.bulk.import.selectPlaceholder': 'Select a column…',
-  'sdcSup.bulk.import.none': '— none —',
-  'sdcSup.bulk.import.incomplete': 'Map both Batch number and Quantity to distinct columns.',
-  'sdcSup.bulk.import.confirm': 'Import {{count}} rows',
-  'sdcSup.bulk.import.cancel': 'Cancel',
-  'sdcSup.bulk.import.another': 'Try another file',
-  'sdcSup.bulk.import.toast.title': 'Batches imported',
-  'sdcSup.bulk.import.toast.body': '{{count}} rows added — review and Declare when ready.',
-
-  // CP-0 · 2d — quantities the one parser refused. They import BLANK; saying so
-  // BEFORE the import is what lets a wrong column mapping be corrected here.
-  'sdcSup.bulk.import.unreadable.title': 'Quantities that could not be read: {{count}}',
-  'sdcSup.bulk.import.unreadable.row': 'Row {{row}}: “{{raw}}” — {{reason}}',
-  'sdcSup.bulk.import.unreadable.more': '…and {{count}} more.',
-  'sdcSup.bulk.import.unreadable.body':
-    'These cells import blank — retype them in the grid. If most rows are listed, check that Quantity is mapped to the right column.',
-  'sdcSup.bulk.import.unreadable.reason.empty': 'no quantity',
-  'sdcSup.bulk.import.unreadable.reason.notNumeric': 'not a number',
-  'sdcSup.bulk.import.unreadable.reason.ambiguous': 'could mean two different numbers',
-  'sdcSup.bulk.import.fail.notWorkbook':
-    'That file isn’t a readable .xlsx workbook. Nothing was imported.',
-  'sdcSup.bulk.import.fail.noSheets': 'That workbook has no usable sheet. Nothing was imported.',
-  'sdcSup.bulk.import.fail.emptySheet': 'That sheet has no data rows. Nothing was imported.',
-  'sdcSup.bulk.import.fail.noHeaderRow':
-    'That sheet has no header row to match columns against. Nothing was imported.',
-
-  // ── SDC-3b — Shipments tab ──────────────────────────────────────────────────
   'sdcSup.ship.subtitle': 'Incoming shipments you have reported for your collaborated materials.',
   'sdcSup.ship.report': 'Report shipment',
   'sdcSup.ship.emptyTitle': 'No shipments reported yet',
@@ -435,12 +313,6 @@ export const sdcSupplierId: Record<string, string> = {
     'Itu bukan kuantitas — ketik angka saja, misalnya 40000.',
   'sdcSup.panel.qty.refused.ambiguous':
     'Ini bisa dibaca dua cara — "40.000" berarti empat puluh ribu dalam bahasa Indonesia dan empat puluh dalam bahasa Inggris. Ketik tanpa pemisah: 40000.',
-  'sdcSup.stock.qty.refused.empty':
-    'Masukkan total stok di tangan — kolom kosong bukan berarti nol. Bila Anda tidak memiliki stok, ketik 0.',
-  'sdcSup.stock.qty.refused.notNumeric':
-    'Itu bukan kuantitas — ketik angka saja, misalnya 2400.',
-  'sdcSup.stock.qty.refused.ambiguous':
-    'Ini bisa dibaca dua cara — "2.400" berarti dua ribu empat ratus dalam bahasa Indonesia dan dua koma empat dalam bahasa Inggris. Ketik tanpa pemisah: 2400.',
   'sdcSup.panel.date.eyebrow': 'Langkah 2',
   'sdcSup.panel.date.title': 'Komitmen pengiriman',
   'sdcSup.panel.date.desc': 'Opsional: tanggal komitmen pengiriman dan kendala kapasitas yang perlu ditandai.',
@@ -487,129 +359,15 @@ export const sdcSupplierId: Record<string, string> = {
   'sdcSup.toast.failed.title': 'Konfirmasi tidak terkirim',
   'sdcSup.toast.failed.body': 'Pengiriman ditolak. Silakan coba lagi.',
 
-  // ── SDC-3b — Tab Stok (SOH) ─────────────────────────────────────────────────
-  'sdcSup.stock.subtitle': 'Stok di tangan Anda saat ini untuk material yang dikolaborasikan Paragon dengan Anda.',
-  'sdcSup.stock.declare': 'Deklarasikan stok',
-  'sdcSup.stock.emptyTitle': 'Belum ada stok dideklarasikan',
-  'sdcSup.stock.emptyBody': 'Deklarasikan stok di tangan Anda saat ini dan akan muncul di sini.',
-  'sdcSup.stock.grain.batch': 'Rincian batch',
-  'sdcSup.stock.grain.total': 'Total saja',
-  'sdcSup.stock.asOf': 'per {{date}}',
-  'sdcSup.stock.expiry': 'kedaluwarsa {{date}}',
-  'sdcSup.stock.noExpiry': 'tanpa kedaluwarsa',
-  'sdcSup.stock.totalOnlyHint':
-    'Total dideklarasikan tanpa rincian batch/kedaluwarsa — keterjembatanan kedaluwarsa tidak dapat dinilai dari deklarasi ini.',
-  // — Panel deklarasi SOH —
-  'sdcSup.stock.panel.title': 'Deklarasikan stok saat ini',
-  'sdcSup.stock.panel.submit': 'Deklarasikan stok',
-  'sdcSup.stock.panel.submitting': 'Mendeklarasikan…',
-  'sdcSup.stock.panel.material.eyebrow': 'Langkah 1',
-  'sdcSup.stock.panel.material.title': 'Material',
-  'sdcSup.stock.panel.material.desc': 'Pilih material yang stoknya Anda deklarasikan. Satuan ditetapkan oleh material — Anda tidak memilihnya.',
+  // ── Tab Stok — tidak lagi menjadi titik entri (BL-60); penunjuk ke halaman Stok.
+  // Dua kunci material di bawah dipakai bersama oleh panel pengiriman.
   'sdcSup.stock.panel.materialLabel': 'Material',
   'sdcSup.stock.panel.materialSelect': 'Pilih material…',
-  'sdcSup.stock.panel.total.eyebrow': 'Langkah 2',
-  'sdcSup.stock.panel.total.title': 'Total stok di tangan',
-  'sdcSup.stock.panel.total.desc': 'Total kuantitas yang Anda miliki saat ini. Ini adalah dasar — rincian batch di bawah opsional.',
-  'sdcSup.stock.panel.totalLabel': 'Total kuantitas ({{uom}})',
-  'sdcSup.stock.panel.batches.eyebrow': 'Langkah 3 (opsional)',
-  'sdcSup.stock.panel.batches.title': 'Rincian batch',
-  'sdcSup.stock.panel.batches.desc': 'Opsional: pecah total menjadi batch dengan tanggal kedaluwarsa. Bila Anda menambah batch, jumlahnya harus sama dengan total.',
-  'sdcSup.stock.panel.batchNumber': 'Nomor batch',
-  'sdcSup.stock.panel.batchQty': 'Kuantitas ({{uom}})',
-  'sdcSup.stock.panel.batchQtyLabel': 'Kuantitas batch',
-  'sdcSup.stock.panel.batchExpiry': 'Tanggal kedaluwarsa',
-  'sdcSup.stock.panel.removeBatch': 'Hapus batch',
-  'sdcSup.stock.panel.addBatch': 'Tambah batch',
-  'sdcSup.stock.panel.batchSum': 'Total batch: {{sum}} dari {{total}} {{uom}}',
-  'sdcSup.stock.panel.batchMismatch': 'batch harus berjumlah sama dengan total',
-  // — Toast SOH —
-  'sdcSup.stock.toast.missingMaterial.title': 'Material wajib diisi',
-  'sdcSup.stock.toast.missingMaterial.body': 'Pilih material yang stoknya Anda deklarasikan.',
-  'sdcSup.stock.toast.missingTotal.title': 'Total kuantitas wajib diisi',
-  'sdcSup.stock.toast.missingTotal.body': 'Masukkan total stok di tangan Anda untuk material ini.',
-  'sdcSup.stock.toast.batchMismatch.title': 'Batch tidak berjumlah sama dengan total',
-  'sdcSup.stock.toast.batchMismatch.body': 'Batch Anda berjumlah {{sum}} tetapi total yang dideklarasikan {{total}} — total yang tidak sesuai dengan rinciannya tidak dapat dicatat.',
-  'sdcSup.stock.toast.failed.title': 'Stok tidak dideklarasikan',
-  'sdcSup.stock.toast.declared.title': 'Stok dideklarasikan — {{material}}',
-  'sdcSup.stock.toast.declared.body': 'Stok Anda saat ini tercatat di Stok (SOH).',
+  'sdcSup.stock.moved.title': 'Stok diisi di halaman Stok',
+  'sdcSup.stock.moved.body':
+    'Unggah template stok atau ketik angka Anda di sana — keduanya memuat kolom yang sama, dan kuantitas dalam perjalanan ditampilkan di sampingnya.',
+  'sdcSup.stock.moved.link': 'Buka halaman Stok',
 
-  // ── SDC-3c-b — Grid entri stok massal (grain batch, DEC-MAGIC-LINK-GRID) ─────
-  'sdcSup.bulk.entry': 'Entri stok massal',
-  'sdcSup.bulk.subtitle':
-    'Masukkan stok grain-batch sebagai grid — satu baris per batch, dikirim sebagai satu deklarasi.',
-  'sdcSup.bulk.back': 'Kembali ke daftar',
-  'sdcSup.bulk.gridTitle': 'Batch',
-  'sdcSup.bulk.note.title': 'Grid fixture-first',
-  'sdcSup.bulk.note.body':
-    'Ini adalah grid stok magic-link terhosting (DEC-MAGIC-LINK-GRID). Pengiriman magic-link, token, dan identitas pemasok yang sesungguhnya hadir bersama Communication Hub / backend (F1+); di sini berjalan pada sesi login Anda sendiri.',
-  'sdcSup.bulk.col.batchNumber': 'Nomor batch',
-  'sdcSup.bulk.col.qty': 'Kuantitas ({{uom}})',
-  'sdcSup.bulk.col.expiry': 'Tanggal kedaluwarsa',
-  'sdcSup.bulk.submit': 'Deklarasikan stok',
-  'sdcSup.bulk.toast.blocked.title': 'Stok tidak dideklarasikan',
-  'sdcSup.bulk.toast.declared.body': 'Stok grain-batch Anda tercatat di Stok (SOH).',
-  // Alasan honest-silence yang dipermukakan dari {ok:false} adapter SDC-3c-a.
-  'sdcSup.bulk.reason.emptyTotal': 'Masukkan total stok di tangan — itu adalah dasar bagi batch-batchnya.',
-  'sdcSup.bulk.reason.missingMaterial': 'Pilih material.',
-  'sdcSup.bulk.reason.missingBatchNumber': 'Sebuah baris memiliki kuantitas tetapi tanpa nomor batch — setiap batch memerlukan nomor.',
-  'sdcSup.bulk.reason.invalidQty': 'Sebuah kuantitas batch bukan angka yang valid.',
-  'sdcSup.bulk.reason.ambiguousQty':
-    'Sebuah kuantitas dapat dibaca dua cara (1.800 = 1.800 atau 1,8) — tulis ulang tanpa pemisah agar hanya memiliki satu makna.',
-  'sdcSup.bulk.reason.batchMismatch': 'batch harus berjumlah sama dengan total',
-  'sdcSup.bulk.reason.noRows': 'Masukkan total, atau satu batch atau lebih.',
-
-  // CP-0 · 2d — penolakan total header (banner Σ membaca SATU parse).
-  'sdcSup.bulk.total.refused.empty': 'Masukkan total stok di tangan untuk melihat total batch.',
-  'sdcSup.bulk.total.refused.notNumeric': 'Total itu bukan angka — masukkan hanya digit, misalnya 4000.',
-  'sdcSup.bulk.total.refused.ambiguous':
-    'Total itu bisa dibaca dua cara (4.000 = 4.000 atau 4) — masukkan tanpa pemisah, misalnya 4000.',
-
-  // CP-0 · 2d′-a — baris batch tanpa kuantitas yang terbaca berarti TIDAK
-  // DIKETAHUI, bukan nol, jadi tidak ada Σ yang ditampilkan sama sekali.
-  'sdcSup.bulk.batchSum.refused':
-    'Kuantitas batch yang tidak dapat dibaca: {{count}} — masukkan atau ketik ulang, lalu total batch akan tampil.',
-
-  // ── SDC-3c-c-b — Impor XLSX (unggah + pemetaan kolom yang dikonfirmasi) ──────
-  'sdcSup.bulk.import.open': 'Impor dari Excel',
-  'sdcSup.bulk.import.needMaterial':
-    'Pilih material dan total dulu — file hanya mengisi baris batch di bawahnya.',
-  'sdcSup.bulk.import.title': 'Impor batch dari spreadsheet',
-  'sdcSup.bulk.import.drop': 'Letakkan file .xlsx di sini, atau',
-  'sdcSup.bulk.import.browse': 'Pilih file',
-  'sdcSup.bulk.import.parsing': 'Membaca file…',
-  'sdcSup.bulk.import.sheetLabel': 'Lembar',
-  'sdcSup.bulk.import.mapTitle': 'Cocokkan kolom Anda',
-  'sdcSup.bulk.import.mapHint': 'Kami menebak dari header Anda — periksa setiap kolom sebelum mengimpor.',
-  'sdcSup.bulk.import.field.batchNumber': 'Nomor batch ← kolom Anda',
-  'sdcSup.bulk.import.field.qty': 'Kuantitas ← kolom Anda',
-  'sdcSup.bulk.import.field.expiry': 'Tanggal kedaluwarsa ← kolom Anda (opsional)',
-  'sdcSup.bulk.import.selectPlaceholder': 'Pilih kolom…',
-  'sdcSup.bulk.import.none': '— tidak ada —',
-  'sdcSup.bulk.import.incomplete': 'Petakan Nomor batch dan Kuantitas ke kolom yang berbeda.',
-  'sdcSup.bulk.import.confirm': 'Impor {{count}} baris',
-  'sdcSup.bulk.import.cancel': 'Batal',
-  'sdcSup.bulk.import.another': 'Coba file lain',
-  'sdcSup.bulk.import.toast.title': 'Batch diimpor',
-  'sdcSup.bulk.import.toast.body': '{{count}} baris ditambahkan — tinjau dan Deklarasikan bila siap.',
-
-  // CP-0 · 2d — kuantitas yang ditolak parser. Sel-sel itu diimpor kosong.
-  'sdcSup.bulk.import.unreadable.title': 'Kuantitas yang tidak dapat dibaca: {{count}}',
-  'sdcSup.bulk.import.unreadable.row': 'Baris {{row}}: “{{raw}}” — {{reason}}',
-  'sdcSup.bulk.import.unreadable.more': '…dan {{count}} lagi.',
-  'sdcSup.bulk.import.unreadable.body':
-    'Sel-sel ini diimpor kosong — ketik ulang di grid. Jika sebagian besar baris tercantum, periksa apakah Kuantitas dipetakan ke kolom yang benar.',
-  'sdcSup.bulk.import.unreadable.reason.empty': 'tidak ada kuantitas',
-  'sdcSup.bulk.import.unreadable.reason.notNumeric': 'bukan angka',
-  'sdcSup.bulk.import.unreadable.reason.ambiguous': 'bisa berarti dua angka berbeda',
-  'sdcSup.bulk.import.fail.notWorkbook':
-    'File itu bukan workbook .xlsx yang bisa dibaca. Tidak ada yang diimpor.',
-  'sdcSup.bulk.import.fail.noSheets': 'Workbook itu tidak punya lembar yang bisa dipakai. Tidak ada yang diimpor.',
-  'sdcSup.bulk.import.fail.emptySheet': 'Lembar itu tidak punya baris data. Tidak ada yang diimpor.',
-  'sdcSup.bulk.import.fail.noHeaderRow':
-    'Lembar itu tidak punya baris header untuk mencocokkan kolom. Tidak ada yang diimpor.',
-
-  // ── SDC-3b — Tab Pengiriman ─────────────────────────────────────────────────
   'sdcSup.ship.subtitle': 'Pengiriman masuk yang telah Anda laporkan untuk material kolaborasi Anda.',
   'sdcSup.ship.report': 'Laporkan pengiriman',
   'sdcSup.ship.emptyTitle': 'Belum ada pengiriman dilaporkan',

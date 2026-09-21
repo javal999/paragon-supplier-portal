@@ -17,6 +17,7 @@ import type {
   RfpTermRow,
   RfxInvitee,
 } from '../sourcing/types';
+import type { GateResult } from '../sourcing/complianceGate';
 
 // ── REQ-E03-01 — who may be invited ─────────────────────────────────────────
 
@@ -45,12 +46,24 @@ export interface InviteeCandidate {
   /** REQ-E03-01 edge case — `null` is "No history", never 0%. */
   readonly otif: number | null;
   readonly country: string;
+  /**
+   * CR-23 / BR-06 — the compliance gate against the event's materials. A
+   * failing supplier stays a candidate (it can be invited and can quote); the
+   * list shows it cannot be awarded and why. Absent = not computed.
+   */
+  readonly gate?: GateResult;
 }
 
 /** The filters a buyer may combine (BR-01). Absent = that filter is off. */
 export interface InviteeFilter {
   readonly category?: string;
   readonly purchasingGroup?: string;
+  /**
+   * CR-23 — the event's material codes, which the gate is judged against. NOT
+   * a filter: it narrows nothing, it only tells the read which materials the
+   * certificates must cover.
+   */
+  readonly materialCodes?: readonly string[];
 }
 
 /**

@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 0.8 draft, 2026-09-21 |
+| Version | 0.9 draft, 2026-09-21 |
 | Sources | `SUPPLIER-HUB-BASELINE.md` (kick-off deck, Aug 2026); `KICKOFF-MEETING-NOTES.md` (business user feedback, reviewed 2026-09-17); owner review of the prototype gap review (2026-09-17) |
 | Scope of this version | Detailed: Order Collaboration, Inventory & Capacity Collaboration, RFx (validated); Forecast Collaboration, Call-off Management, and the undiscussed parts of Order and Inventory Collaboration (proposed). Hub navigation and screen conventions (validated). Foundation is reserved for the Foundation team. The remaining epics are stubs |
 | Not in scope | The codebase. This file states what the Supplier Hub must do, not what is built. What the prototype does today, and where, is tracked only in `BUILD-GAP.md` |
@@ -134,8 +134,8 @@ Decided (Q-18, 2026-09-21): the hub keeps its own working calendar, maintained b
 | Consignment material | Material under a consignment ("modal sharing") arrangement | MN-INV-10 |
 | Spreadsheet template upload | Called "EDI" by business users. A file upload, not EDIFACT or X12 | MN-INV-07 |
 | TMS | Transportation management system | MN-INV-13 |
-| JIT call-off | A firm call-off for a fixed delivery. No over-quantity limit applies | Code |
-| Forecast-based call-off | A call-off released from a forecast-driven schedule. Over-quantity tolerance applies | Code |
+| JIT call-off | A firm call-off for a fixed delivery. The same tolerance as every call-off applies (CR-05) | Owner, 2026-09-21 |
+| Forecast-based call-off | A call-off released from a forecast-driven schedule. The same tolerance as every call-off applies (CR-05) | Owner, 2026-09-21 |
 
 ### 3.6 Shared calculation rules
 
@@ -955,7 +955,7 @@ Template rules:
 - BR-04. PTI's ROP comes from SAP. The hub does not calculate a ROP, safety stock, or MOQ of its own [MN-INV-14].
 - BR-05. Incoming stock is shown as an aggregate. The per-date detail is in Order Collaboration [MN-INV-04].
 - BR-06. Incoming is split into in production and in transit [MN-INV-05].
-- BR-07. Raw material and packaging are shown separately, because packaging is a finished good at the supplier [MN-INV-06].
+- BR-07. Raw material and packaging are shown separately on the PTI view, because packaging is a finished good at the supplier [MN-INV-06]. On the supplier view they are one list, because a supplier normally supplies one type; the split appears only for a supplier that supplies both [Owner, 2026-09-21].
 - BR-08. Each material shows its days of supply (CR-01) and band (CR-02) [Code].
 
 **Edge cases.**
@@ -985,8 +985,8 @@ Template rules:
 **Business value.** Suppliers differ in digital maturity [Deck p.14, RSK-04]. Offering spreadsheet, API, and manual entry lets every supplier share stock, while ERP-connected suppliers such as DP Group can sync automatically [Deck p.11].
 
 **Experience.**
-- SUP: uploads a filled template, or types stock figures into the hub.
-- MP: presses Sync for API-connected suppliers to pull their latest figures.
+- SUP: uploads a filled template, types stock figures into the hub, or, if API-connected, presses Sync to pull its latest figures from its own ERP. A supplier granted PTI stock access (REQ-E08-03) can also refresh PTI stock for the granted materials.
+- MP: can also press Sync for an API-connected supplier, for example when chasing a stale figure.
 
 **Step-by-step (Supplier, spreadsheet upload).**
 1. The supplier downloads the stock template from the hub [MN-INV-07; download Proposed].
@@ -997,12 +997,15 @@ Template rules:
 **Business rules.**
 - BR-01. 3 submission channels: spreadsheet template upload, API sync, manual entry [MN-INV-07].
 - BR-02. The spreadsheet channel uses a fixed template [MN-INV-07].
-- BR-03. API sync is triggered by PTI with a Sync button [MN-INV-07].
+- BR-03. API sync is triggered by the supplier with a Sync button, in addition to the scheduled sync; a PTI user can also trigger it for an API-connected supplier [MN-INV-07, amended by the owner 2026-09-21]. A scheduled sync needs the backend (Stage F).
 - BR-04. Manual entry is done directly in the hub [MN-INV-07].
 - BR-05. A file with invalid rows is rejected row by row, not as a whole, and valid rows are accepted [Proposed].
-- BR-06. Template fields, 1 row per material, or 1 row per batch when batches are given: material code; SOH; unit; supplier ROP; in-production quantity; expected production completion date; batch number, batch quantity, and expiry date (optional) [Proposed; batch fields Code].
+- BR-06. Template fields, 1 row per material, or 1 row per batch when batches are given: material code; SOH; unit; supplier ROP; in-production quantity; expected production completion date; batch number, batch quantity, manufacturing date, and expiry date (optional) [Proposed; batch fields Code; manufacturing date Owner, 2026-09-21]. Batch detail stays optional because it matters only where batches expire at different times.
 - BR-07. Rows are checked with CR-18 (numbers) and CR-19 (batch total) [Code].
 - BR-08. A PTI user can record stock that a supplier sent by WhatsApp or email, on the supplier's behalf. The record shows it was entered by PTI, and the supplier sees it [Owner; detail Proposed].
+- BR-09. Manual entry and template upload carry exactly the same fields and rules, on one page. There is no second stock entry point [Owner, 2026-09-21].
+- BR-10. In-transit quantity is never entered by the supplier. It comes from submitted ASNs and dispatched call-offs (REQ-E07-04, REQ-E09-03), and both input methods show it read-only next to the in-production figure, so the two parts of incoming stock appear together [Owner, 2026-09-21].
+- BR-11. A supplier's sync retrieves PTI stock only for materials it has been granted (REQ-E08-03). A supplier without a grant retrieves no PTI stock, and the option is not offered [Owner, 2026-09-21].
 
 **Edge cases.**
 - Uploaded material is not assigned to the supplier: reject that row [Proposed].
@@ -1010,7 +1013,10 @@ Template rules:
 
 **Acceptance criteria.**
 - AC-01. A supplier can submit stock by template upload and by manual entry.
-- AC-02. A PTI user can trigger an API sync for a connected supplier with a Sync button.
+- AC-02. An API-connected supplier can trigger a sync with a Sync button, and so can a PTI user on its behalf.
+- AC-04. The manual form and the template have the same fields.
+- AC-05. In-transit quantity is shown read-only from ASNs and dispatched call-offs, and cannot be typed.
+- AC-06. A supplier without PTI stock access is not offered a PTI stock refresh, and a supplier with access retrieves only the granted materials.
 - AC-03. Invalid template rows are listed with a reason, and valid rows are saved.
 
 **Data and integration.** Stock record per supplier, material, date: SOH, ROP, in-production quantity, channel, submitted by. API contract per supplier [RSK-02].
@@ -1083,7 +1089,9 @@ Template rules:
 - BR-02. The page lives in Inventory & Capacity Collaboration, and the summary links to it [MN-ORD-13; Q-16].
 - BR-03. Capacity is stated per material group and weekly period, for a horizon set by ADM [Proposed; Market].
 - BR-04. Allocation below demand requires a predefined constraint reason. The starter list is in section 3.6 [Proposed; Code].
-- BR-05. Suppliers may state upside capacity above demand [Proposed; Market].
+- BR-05. Suppliers may state extra capacity they could give PTI on request, above their allocation. The field is labelled "Extra capacity if requested" and explained where it is entered [Proposed; Market; label Owner, 2026-09-21].
+- BR-06. Capacity is kept per material group, not per SKU, because one supplier line usually makes several PTI materials [Owner, 2026-09-21].
+- BR-07. The planner can filter the capacity view by supplier, material group, material, and gap weeks only, and the filter is kept in the page address [Owner, 2026-09-21].
 
 **Edge cases.**
 - Supplier shares one line across several PTI materials: capacity is entered per material group, not per material [Proposed].
@@ -1093,6 +1101,7 @@ Template rules:
 - AC-01. A supplier can enter allocated capacity per material group per week.
 - AC-02. A week with allocation below demand cannot be submitted without a reason.
 - AC-03. The planner sees capacity against demand with gap weeks highlighted.
+- AC-04. The planner can narrow the capacity view by supplier, material group, material, and gaps only.
 
 **Data and integration.** Capacity record: supplier, material group, week, allocated quantity, upside quantity, reason. Demand from REQ-E06-01.
 
@@ -1381,7 +1390,7 @@ All requirements in this section are **Proposed**, written from market practice 
 **Step-by-step (Supplier).**
 1. The supplier receives a call-off: 2,000 units, need date 12 Oct [Proposed].
 2. The supplier confirms 2,000 for 14 Oct, which is 2 days late [Market].
-3. Late tolerance is 1 day, so the confirmation goes to the planner as Awaiting Approval [Market].
+3. A later date always needs approval (CR-05), so the confirmation goes to the planner as Awaiting Approval [Owner, 2026-09-21].
 4. The planner approves it. The call-off shows Confirmed with New Date, and ASN creation opens (REQ-E07-04) [Market].
 
 **Business rules.**
@@ -1399,7 +1408,7 @@ All requirements in this section are **Proposed**, written from market practice 
 - BR-06. An ASN can be created only for a confirmed call-off [Market; MN-ORD-05].
 - BR-07. OTIF is measured per call-off against the approved date and quantity, using CR-06 to CR-08 [MN-ORD-09; "approved" Proposed; Code].
 - BR-08. Automatic reminder to the supplier before the need date if no ASN exists, per CR-09: 7 days before [Market; Code].
-- BR-09. Each call-off is JIT or forecast-based (section 3.5), set at release. The type decides the over-quantity tolerance (CR-05) [Code].
+- BR-09. Each call-off is JIT or forecast-based (section 3.5), set at release. The type no longer changes the tolerance: CR-05 applies the same rule to both [Owner, 2026-09-21].
 
 **Edge cases.**
 - Planner changes a confirmed call-off: status returns to Awaiting Confirmation [Proposed].
@@ -1550,6 +1559,7 @@ All requirements in this section are **Proposed**, written from market practice 
 | PQ-06 | Interface technology and latency target | REQ-E07-08 |
 | PQ-08 | Early-delivery allowance for call-offs, pending the warehouse capacity check; quantity and late-date rules are decided (CR-05) | REQ-E09-03 |
 | Q-19 | The PQ-10 answer ends with "They". Confirm nothing is missing | REQ-E09-04 |
+| CAP-1 | Does supplier capacity usually stay the same every week or change week to week? This shapes how capacity is entered. Proposed: one number for all weeks with per-week overrides | REQ-E08-04 |
 
 ---
 
@@ -1619,6 +1629,7 @@ Research date: 2026-09-17. Vendor pages were read directly unless marked "snippe
 | BL-19 / KPI | KPI targets | Fix the definitions first (delivery window, whether early counts, grain, whether a date change resets the clock), measure a 3-month baseline, then set targets |
 | BL-19a / A-02 | Supplier filters | Add certificate validity, then performance band, then country or region |
 | BL-19b / MIG | PROCIO migration | Active suppliers from the last 24 months, plus any under contract. Suppliers confirm their own bank and tax details through the portal; a bank-detail change is confirmed through a second channel |
+| INV-FB | Inventory collaboration feedback (2026-09-21) | Supplier triggers API sync, retrieving PTI stock only where granted (REQ-E08-02 BR-03, BR-11). Manual entry and upload are identical and in one place (BR-09). In-transit comes from the ASN (BR-10). Batch, manufacturing and expiry dates stay optional (BR-06). One list on the supplier view (REQ-E08-01 BR-07). Capacity per material group, "upside" relabelled (REQ-E08-04 BR-05, BR-06). Capacity filters (BR-07). Fixed or changing weekly capacity stays open (CAP-1) |
 | GAP-1 | Prototype experience that differs from this file | This file wins |
 | GAP-2 | Calculations where this file was silent or open | Follow the prototype (section 3.6, tag `[Code]`) |
 | GAP-3 | Menu, usability, and screen conventions | Follow the gap review recommendations (sections 3.7 and 3.8) |
@@ -1637,3 +1648,4 @@ Research date: 2026-09-17. Vendor pages were read directly unless marked "snippe
 | 0.6 | 2026-09-18 | Answered A-04: section 3.6a records how a sourcing event is created before it is sent |
 | 0.7 | 2026-09-19 | REQ-E07-03 extended: drill-through contract per column, goods receipt and invoice columns, empty-cell rule, and an alignment check against the source requirements |
 | 0.8 | 2026-09-21 | Owner decisions on 18 of the 21 backlog decisions: compliance gate CR-23, risk class CR-24, receipt tolerance CR-25, commitment deadline CR-26; CR-02, CR-05, CR-12 and CR-15 revised; hub-managed calendar; 3PL tracking link replaces TMS access. Open items narrowed to A-01, A-05, PQ-05 cap, PQ-06, PQ-08 early allowance, PQ-11, Q-19 |
+| 0.9 | 2026-09-21 | Inventory collaboration feedback (INV-FB): supplier-triggered sync with PTI stock limited to granted materials, one stock entry with identical fields, in-transit from the ASN, optional manufacturing date, one list on the supplier view, capacity label and filters. CAP-1 opened |

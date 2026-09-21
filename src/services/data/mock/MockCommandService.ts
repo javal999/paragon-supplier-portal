@@ -107,6 +107,7 @@ import {
   dayOf,
   isCapacityReason,
   isIsoDay,
+  batchDatesProblem,
   parseAlertKey,
   standingClosure,
   // REQ-E03-01 to REQ-E03-05 — the RFx rules. The verb and the screen read the
@@ -169,7 +170,8 @@ import {
   rfpEventStore,
   rfpResponseStore,
 } from './stores/rfxStores';
-import { bestScoredQuotationId, rfxNow } from './rfxReadModel';
+import { bestScoredQuotationId, rfqSupplierGate, rfxNow } from './rfxReadModel';
+import { gateRefusal } from '../../sourcing/complianceGate';
 import { rfiTemplate, rfpTerm } from '../../sourcing/rfxConfig';
 import type {
   AwardLine,
@@ -2128,6 +2130,9 @@ const inventoryDeclarationTarget: CommandTarget = {
         batchNumber: String(b.batchNumber),
         qty: typeof b.qty === 'number' ? b.qty : 0,
         uom,
+        ...(typeof b.manufacturingDate === 'string' && b.manufacturingDate
+          ? { manufacturingDate: b.manufacturingDate }
+          : {}),
         ...(typeof b.expiryDate === 'string' && b.expiryDate ? { expiryDate: b.expiryDate } : {}),
       }));
     const id = inventoryDeclarationStore.nextNumber();
@@ -2191,6 +2196,30 @@ bindPolicyHook(POLICY_HOOKS.INV_DECLARE_DETAIL_VALID, ({ payload }) => {
   }
   if (payload.channel !== undefined && payload.channel !== 'template' && payload.channel !== 'manual') {
     return { ok: false, reason: 'channel must be template or manual' };
+  }
+  // BL-60 — a batch's optional manufacturing date is not after its expiry date
+  // and not in the future on the shared clock; the SAME check the form and the
+  // template validator run (`batchDatesProblem`).
+  if (Array.isArray(payload.batches)) {
+    const today = dayOf(sdcClock.now());
+    for (const b of payload.batches) {
+      if (!b || typeof b !== 'object') continue;
+      const rec = b as Record<string, unknown>;
+      const str = (v: unknown) => (typeof v === 'string' ? v : undefined);
+      const hit = batchDatesProblem({ manufacturingDate: str(rec.manufacturingDate), expiryDate: str(rec.expiryDate) }, today);
+      if (hit) {
+        const name = typeof rec.batchNumber === 'string' ? rec.batchNumber : '';
+        return {
+          ok: false,
+          reason:
+            hit.problem === 'invalidDate'
+              ? `batch ${name}: ${hit.field === 'manufacturingDate' ? 'manufacturing' : 'expiry'} date must be a date (YYYY-MM-DD)`
+              : hit.problem === 'manufacturedAfterExpiry'
+                ? `batch ${name}: manufacturing date is after the expiry date`
+                : `batch ${name}: manufacturing date is in the future`,
+        };
+      }
+    }
   }
   return { ok: true };
 });
@@ -2967,7 +2996,8 @@ bindPolicyHook(POLICY_HOOKS.NEGOTIATION_ROUND_VALID, ({ payload }) => {
 });
 
 // REQ-E03-05 BR-06 / BR-07 — the split totals 100% per item, and an award that
-// passes over the best-scored quote states why.
+// passes over the best-scored quote states why. BR-01a — every awarded supplier
+// passes the compliance gate (CR-23).
 bindPolicyHook(POLICY_HOOKS.RFQ_AWARD_GOVERNED, ({ payload, entityId }) => {
   const rfq = rfqStore.get(entityId);
   if (!rfq) return { ok: false, reason: 'sourcing event not found' };
@@ -2989,6 +3019,16 @@ bindPolicyHook(POLICY_HOOKS.RFQ_AWARD_GOVERNED, ({ payload, entityId }) => {
   const foreign = lines.filter((l) => !onEvent.has(l.quotationId));
   if (foreign.length > 0) {
     return { ok: false, reason: `QUOTE_NOT_ON_EVENT: ${foreign.map((l) => l.quotationId).join(', ')}` };
+  }
+  // REQ-E03-05 BR-01a / CR-23 — no award line may name a supplier that fails the
+  // compliance gate. Judged against the supplier who actually AUTHORED the quote
+  // as well as the one the line names, so a line cannot launder a failing bid
+  // under a passing supplier id.
+  const quoteAuthor = new Map(quotationStore.all().map((q) => [q.id, q.supplierId] as const));
+  const named = [...new Set(lines.flatMap((l) => [l.supplierId, quoteAuthor.get(l.quotationId) ?? l.supplierId]))];
+  for (const supplierId of named) {
+    const gate = rfqSupplierGate(rfq, supplierId, rfxNow());
+    if (!gate.passes) return { ok: false, reason: gateRefusal(supplierId, gate.failed) };
   }
   const best = bestScoredQuotationId(rfq, rfxNow());
   const reason = typeof payload.awardReason === 'string' ? payload.awardReason.trim() : '';

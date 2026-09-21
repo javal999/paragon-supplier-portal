@@ -187,6 +187,10 @@ const SupplierCapacity: React.FC = () => {
         </span>
       </div>
 
+      {/* REQ-E08-04 BR-05 (BL-62) — the field is explained where it is entered. */}
+      <p className="text-xs text-text-tertiary mb-2" data-testid="capacity-upside-help">
+        {t('inv.capacity.upsideHelp')}
+      </p>
       <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto mb-4">
         <Table>
           <TableHeader>

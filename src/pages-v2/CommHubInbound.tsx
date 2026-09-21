@@ -56,7 +56,7 @@ import { useRefusalText } from '../hooks/useRefusalText';
 // truth. A parsed reply is an INFERENCE until a human confirms; this surface
 // shows the inference, lets the operator correct it, and dispatches ONLY on
 // confirm — through the EXISTING spine (parseGrid → verb hook → dispatch). It
-// mirrors XlsxImportPanel's doctrine: the parse is a pre-fill SOURCE, never a
+// mirrors the retired XlsxImportPanel's doctrine: the parse is a pre-fill SOURCE, never a
 // dispatch path; the confirm gate is the sole dispatch surface.
 //
 // SUPPLIER-CONTEXT (this cut): the SDC verb hooks scope by the current identity,

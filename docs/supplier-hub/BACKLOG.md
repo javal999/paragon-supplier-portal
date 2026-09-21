@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 1.1, 2026-09-21 |
+| Version | 1.4, 2026-09-21 |
 | What this is | Everything known to be outstanding for the Supplier Hub, in one list: decisions waiting on people, work waiting on those decisions, work waiting on the backend, and work that can start today |
 | What this is not | A plan or a commitment. Nothing here has a date. Sequencing belongs to the project owner |
 | Sources | Open items (section 7 of `SUPPLIER-HUB-REQUIREMENTS.md`), open decisions (section 9.3 of `SUPPLIER-HUB-PRD.md`), what is not built (section 5 of `BUILD-GAP.md`), stubs (section 6 of the requirements), and defects or debts found while building |
@@ -31,6 +31,7 @@ Still open. Items decided on 2026-09-21 are in section 6.
 | BL-56 | **PQ-08 early allowance** — how many days early a call-off may arrive, given warehouse capacity | Warehouse, Material Planner | The early-delivery rule in CR-05; until then an early date needs approval | REQ-E09-03 |
 | BL-57 | **A-01** — compliance and capability check for RFx with Mas Ary Hidayat | Procurement | Confirms the gate criteria in CR-23 | REQ-E03-01 |
 | BL-58 | **Q-19** — the PQ-10 answer ends with "They"; confirm nothing is missing | Material Planner | Confirms the delivery execution scope | REQ-E09-04 |
+| BL-65 | **CAP-1** — does supplier capacity usually stay the same every week or change? Being discussed | Material Planner | How capacity is entered (one number with overrides, or per week) | REQ-E08-04 |
 
 ---
 
@@ -40,13 +41,10 @@ Decided on 2026-09-21 and ready to build. Priority: first what protects money an
 
 | Priority | ID | Item | Rule | Size | Placeholder until decided |
 |---|---|---|---|---|---|
-| 1 | BL-43 | **Compliance gate at award.** Check each supplier against CR-23; a supplier that fails can be invited and can quote but cannot be selected in an award, with the failed criteria shown. Re-weight the quote score to price 40 / lead time 20 / reliability 40 for qualified suppliers | CR-23, CR-15 | M | Minimum OTIF 80%, "No history" passes (BL-55) |
 | 2 | BL-44 | **Invoice price tolerance.** 0% where a contract price exists; 2% otherwise, within an absolute rupiah cap | CR-12 | S | Cap IDR 500,000 (BL-54) |
 | 3 | BL-45 | **Goods receipt tolerance.** Any over-delivery flagged; a shortfall above 2% flagged and the receipt kept open | CR-25 | S | — |
 | 4 | BL-46 | **Alert risk class by lead time.** High below lead time, Medium below 1.5 × lead time, Low otherwise; day bands only where the lead time is missing, which raises its own alert | CR-24 | M | — |
-| 5 | BL-47 | **Call-off tolerance.** Up to 5% over accepted for every call-off type; any shortfall a visible partial; a late date always goes to planner approval; an early date also goes to approval until the warehouse answers | CR-05 | S | Early allowance 0 days (BL-56) |
 | 6 | BL-48 | **Forecast commitment deadline.** Firm periods 1 working day, Trade-off and Forecast 3 working days | CR-26 | S | — |
-| 7 | BL-49 | **Call-off release by remaining quantity.** Quantity becomes the default check, value only where a line has no quantity | CR-04; BL-13 | S | — |
 | 8 | BL-50 | **Hub-managed working calendar.** Administrator page to load the SAP factory calendar and add, remove or override days; every deadline reads it. This is the first page of the admin screen in BL-32 | Requirements 3.4 | M | SAP load simulated |
 | 9 | BL-51 | **3PL tracking link on the ASN.** An administrator-maintained list of 3PLs and their public tracking addresses; the tracking number on an ASN becomes a link out. No reading of status from the 3PL's site | REQ-E07-04 BR-05 | S | A short sample list, marked as sample |
 | 10 | BL-52 | **Supplier filters.** Certificate validity, then performance band, then country or region | REQ-E03-01 BR-05 | S | — |
@@ -130,3 +128,12 @@ Nothing blocks these.
 | BL-19b | MIG PROCIO migration | 2026-09-21 | Decided: active suppliers of the last 24 months plus contracted; suppliers confirm their own bank and tax details; second-channel confirmation for bank changes. Work sits with the Foundation team (BL-40) |
 | BL-21 | Event-based strategy analysis | 2026-09-21 | Closed with BL-02 |
 | BL-22 | Supplier TMS access | 2026-09-21 | Closed with BL-03 |
+| BL-43 | Compliance gate at award | 2026-09-21 | Built: CR-23 gate refuses an award to a failing supplier and shows the failed criteria; quote score re-weighted 40/20/40 (CR-15) over qualified suppliers. Placeholder OTIF minimum 80% until BL-55 |
+| BL-64 | Compliance gate demo data | 2026-09-21 | Built: five sample RFQs (016–020) cover every CR-23 scenario; an RFQ nobody can win says so. Table in `BUILD-GAP.md` |
+| BL-60 | One stock entry | 2026-09-21 | Built: manual and template share the same fields on the Stock page; the Forecast page's old entry retired; optional manufacturing date; in-transit read-only from ASNs and call-offs |
+| BL-59 | Supplier-triggered stock sync | 2026-09-21 | Built (simulated until BL-25): supplier Sync for API-connected suppliers; PTI stock refresh only for granted materials |
+| BL-61 | One list on the supplier inventory view | 2026-09-21 | Built: tabs only when a supplier supplies both types; PTI view unchanged |
+| BL-62 | Capacity "upside" relabelled | 2026-09-21 | Built: "Extra capacity if requested", with an explanation |
+| BL-63 | Capacity page filters | 2026-09-21 | Built: supplier, material group, material, gaps only, kept in the page address |
+| BL-47 | Call-off tolerance | 2026-09-21 | Built: up to 5% over accepted for every type; a shortfall is a visible partial; later and earlier dates go to the planner (early allowance 0 days until BL-56) |
+| BL-49 | Call-off release by remaining quantity | 2026-09-21 | Built: release checked on remaining quantity; value only on a line with no quantity; over-release refused with both figures |

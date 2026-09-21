@@ -14,8 +14,10 @@ import type { Quotation } from '../../../../data/mockQuotations';
 // REQ-E03-03 / REQ-E03-05 — the priced bids on the present-relative events,
 // including the round-1 revision that supersedes one of them.
 import { RFX_QUOTATION_SEED } from '../fixtures/rfxHub';
+// BL-64 — the compliance gate demo quotes (CR-23), in the same store.
+import { GATE_DEMO_QUOTATION_SEED } from '../fixtures/gateDemo';
 
-const SEED: readonly Quotation[] = [...RFX_QUOTATION_SEED, ...mockQuotations];
+const SEED: readonly Quotation[] = [...RFX_QUOTATION_SEED, ...GATE_DEMO_QUOTATION_SEED, ...mockQuotations];
 
 function clone(q: Quotation): Quotation {
   return { ...q };

@@ -10,6 +10,16 @@
 //
 // Degenerate single state, like `inventoryDeclaration`: an attempt is a
 // snapshot. Refused only when the supplier is not API-connected.
+//
+// TWO VERBS, ONE ACT (BL-59, BR-03 as amended 2026-09-21): the supplier presses
+// Sync on its own Stock page (`t_stocksync_pull`, a supplier fulfilment atom,
+// beside `inventorydeclaration:declare`), and a PTI planner can press it on the
+// supplier's behalf (`t_stocksync_run`, a planning atom). Same target, same
+// store, same connection check — they differ ONLY in the role, exactly as
+// `t_inventorydeclaration_declare` / `_record` do. The target's creationOwner
+// NAMES the supplier (the payload's own, when it has assignments), so the
+// dispatcher's supplier arm admits a supplier pulling ITS OWN stock and
+// refuses one naming another supplier.
 // ────────────────────────────────────────────────────────────────────────────
 
 import type { FlowDefinition } from '../schema';
@@ -29,6 +39,18 @@ export const stockSyncFlow: FlowDefinition = {
       to: 'Recorded',
       trigger: 'creation',
       requiredRole: 'stocksync:run',
+      requiredFields: ['supplierId'],
+      policyHooks: [POLICY_HOOKS.STOCK_SYNC_CONNECTED],
+      surfaceable: { surfaced: true },
+      version: 1,
+    },
+    {
+      // BL-59 — the supplier's own Sync button (REQ-E08-02 BR-03, AC-02).
+      id: 't_stocksync_pull',
+      from: [],
+      to: 'Recorded',
+      trigger: 'creation',
+      requiredRole: 'stocksync:pull',
       requiredFields: ['supplierId'],
       policyHooks: [POLICY_HOOKS.STOCK_SYNC_CONNECTED],
       surfaceable: { surfaced: true },
