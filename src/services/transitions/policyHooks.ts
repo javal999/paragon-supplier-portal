@@ -89,6 +89,12 @@ export const POLICY_HOOKS = {
    *  known source. A malformed pin is worse than no pin: an absent one refuses
    *  loudly, a malformed one is a basis a comparison could be ranked on. */
   RFQ_FX_PIN_WELL_FORMED: 'rfq_fx_pin_well_formed',
+  /** RFQ create (RFx spec 2026-09-21): the items, quantity breaks, questions,
+   *  sample request and currency are sound WHEN SENT — at least one item with
+   *  its required buyer fields filled, 1 to 8 strictly increasing breaks, and a
+   *  permitted bid currency. Refusals are named. A legacy single-item dispatch
+   *  sends none of these and is not refused for it. */
+  RFQ_CREATE_VALID: 'rfq_create_valid',
   /** Invoice create (REQ-E07-07): the parent PO (payload.poReference) must be
    *  Confirmed, Partially Delivered or Delivered. */
   INVOICE_CREATE_PO_INVOICEABLE: 'invoice_create_po_invoiceable',

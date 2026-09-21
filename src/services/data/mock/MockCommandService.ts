@@ -194,6 +194,7 @@ import type {
   RfxResponseStatus,
 } from '../../sourcing/types';
 import { BID_CURRENCIES } from '../../../lib/currencyPolicy';
+import { readRfqAuthoringFields } from '../../sourcing/rfqModel';
 
 /**
  * The question kinds this build can render and score. Named as DATA so the
@@ -1417,9 +1418,16 @@ const rfqTarget: CommandTarget = {
       ...(typeof payload.estimatedValue === 'number'
         ? { estimatedValue: payload.estimatedValue as number }
         : {}),
-      currency: 'IDR',
       incoterms: str('incoterms'),
       paymentTerms: str('paymentTerms'),
+      // REQ-E03-03 BR-02 — the RFI this RFQ was created from. Carried ONLY when
+      // present: most RFQs come from no RFI (REQ-E03-02 BR-03).
+      ...(str('sourceRfiId') ? { sourceRfiId: str('sourceRfiId') } : {}),
+      // The rebuilt authoring fields — project, items, breaks, questions,
+      // options, provenance — AND THE CURRENCY. This used to be the literal
+      // `currency: 'IDR'`, so a buyer who chose USD raised a rupiah RFQ. The
+      // payload is already judged by `rfq_create_valid`.
+      ...readRfqAuthoringFields(payload),
     };
     rfqStore.add(rfq);
     return { entityId: rfqNumber };

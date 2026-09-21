@@ -1,6 +1,8 @@
 import type { FxPin } from '../lib/fxPin';
 import type { DeadlineExtension, RfxInvitee } from '../services/sourcing/types';
 import { DECLARED_PRESENT } from '../services/data/fixturePresent';
+import type { BidCurrency } from '../lib/currencyPolicy';
+import type { RfqAuthoringFields } from '../services/sourcing/rfqModel';
 
 /**
  * REQ-E03-03 — ONE PRICED LINE OF A SOURCING EVENT.
@@ -36,7 +38,13 @@ export type RFQCategory =
   | 'Botanical'
   | 'Other';
 
-export interface RFQ {
+/**
+ * A sourcing event. The rebuilt-authoring fields (project, items with spec
+ * sheets, quantity breaks, questions, options, provenance) come from
+ * `RfqAuthoringFields` and are ALL optional: an RFQ without them is the
+ * single-item event this fixture set has always carried.
+ */
+export interface RFQ extends RfqAuthoringFields {
   id: string;
   rfqNumber: string;
   title: string;
@@ -58,7 +66,11 @@ export interface RFQ {
   // claim from no budget at all. Every seeded fixture states one, so nothing is
   // backfilled; only a wizard-raised RFQ can be honestly absent.
   estimatedValue?: number;
-  currency: 'IDR';
+  // The currency bids are invited in. WIDENED from the literal `'IDR'` it used
+  // to be, which is why the create handler could hard-code it: the entity had
+  // no way to hold the currency a buyer chose. It is now whatever the bid
+  // policy permits, and the create verb stores the buyer's choice.
+  currency: BidCurrency;
   incoterms: string;
   paymentTerms: string;
   awardedSupplierId?: string;

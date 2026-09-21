@@ -173,7 +173,10 @@ describe('BuyerSourcing — the minimum order quantity reaches the comparison', 
     expect(screen.getByText('Min. Order Qty')).toBeInTheDocument();
     // 100,000 PCS against an RFQ for 80,000 — the case JJ named: a minimum that
     // EXCEEDS what is being sourced. Shown as a fact, with no verdict attached.
-    expect(screen.getByText(/100\.000 PCS/)).toBeInTheDocument();
+    // PREMISE CHANGED (RFx spec 2026-09-21): the board now also lists
+    // RFQ-2026-023 (Redwood 2.0), sourced at 100,000 PCS, so the assertion is
+    // aimed at the open panel rather than at the first match on the page.
+    expect(within(screen.getByRole('dialog')).getByText(/100\.000 PCS/)).toBeInTheDocument();
   });
 
   it('a quote with no stated minimum reads as an ANSWER, not as missing data', async () => {
