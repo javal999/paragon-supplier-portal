@@ -2,8 +2,8 @@
 
 | | |
 |---|---|
-| Version | 2.5, 2026-09-21 |
-| Compares | `SUPPLIER-HUB-REQUIREMENTS.md` v0.9 with the prototype on `main` |
+| Version | 2.6, 2026-09-21 |
+| Compares | `SUPPLIER-HUB-REQUIREMENTS.md` v0.10 with the prototype on `main` (production deploy of 2026-09-21) |
 | Owner decisions | 2026-09-17, recorded in section 9 of the requirements (RFX-1 to RFX-3, GAP-1 to GAP-4, E06-R); 2026-09-21 for the working calendar (Q-18, BL-14) and the commitment deadline (CR-26, BL-05), built as BL-50 and BL-48 |
 | Rule | This is the **only** document that describes what the prototype does for the Supplier Hub. The PRD and the requirements describe the product and never the code. Update this file when a build item lands |
 
@@ -224,7 +224,9 @@ Sample data so a planner can see every CR-24 outcome on `/buyer/inventory`, `/su
 - **Sourcing event creation beyond the central library** (A-04): no sourcing request intake, no save-as-template, no admin screen for the question and term library, no approval step before sending. All four were ruled out of the MVP rather than left undone.
 - **A backend.** No database, no sign-in for real users, no scheduled jobs; changes are lost on reload. The pilot needs all of these (PRD section 4).
 - **Accessibility testing** (H-03).
-- **The rest of the administration screen** (BL-32): reason codes, tolerances, alert thresholds and stale periods still live in configuration files. The working calendar is its first page and is built.
+- **The rest of the administration screen** (BL-32): reason codes, tolerances, alert thresholds and stale periods still live in configuration files. The working calendar and the 3PL list are its first two pages and are built.
+- **KPI calculation aligned with the agreed definitions** (BL-66, BL-82): the performance pages state what the code measures; five differences from REQ-E10-01 wait on a decision.
+- **Known defects found in the 2026-09-21 builds**: BL-72 to BL-80 in the backlog.
 - **The real SAP factory calendar.** The calendar load is simulated sample data; the administrator's rulings are kept in the browser only.
 - **Foundation epics** E01 and E02 (registration, onboarding, supplier master data), which belong to the Foundation team.
 
