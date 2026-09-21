@@ -36,10 +36,15 @@ export const wizardEn: Record<string, string> = {
   'wizard.cancel': 'Cancel',
   'wizard.back': 'Back',
   'wizard.next': 'Next',
+  // BL-31 — accessible names of the stepper circles (not visible copy).
+  'wizard.stepLabel': 'Step {{n}} of {{total}}: {{title}}',
+  'wizard.stepLabelDone': 'Step {{n}} of {{total}}: {{title}} (completed)',
 };
 
 export const wizardId: Record<string, string> = {
   'wizard.cancel': 'Batal',
   'wizard.back': 'Kembali',
   'wizard.next': 'Berikutnya',
+  'wizard.stepLabel': 'Langkah {{n}} dari {{total}}: {{title}}',
+  'wizard.stepLabelDone': 'Langkah {{n}} dari {{total}}: {{title}} (selesai)',
 };

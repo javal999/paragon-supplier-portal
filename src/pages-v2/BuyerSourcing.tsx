@@ -44,6 +44,7 @@ import LivenessPill from '../components/ui-v2/LivenessPill';
 import ModelMarker from '../components/ui-v2/ModelMarker';
 import Button from '../components/ui-v2/Button';
 import Wizard, { WizardStep } from '../components/ui-v2/Wizard';
+import ModalOverlay from '../components/ui-v2/ModalOverlay';
 import {
   RFQ_CATEGORY_OPTIONS,
   RFQ_UOM_OPTIONS,
@@ -1940,6 +1941,7 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
                       <td className="px-3 py-2">
                         <input
                           type="checkbox"
+                          aria-label={s.supplierName}
                           checked={selected}
                           onChange={() => toggleSupplier(s.supplierId)}
                           onClick={(e) => e.stopPropagation()}
@@ -3422,17 +3424,15 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
           prior basis is kept — because "edit" would describe a mutation that
           cannot happen and would misrepresent what the trail will show. */}
       {pinDraft && selectedRfq && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[rgba(13,27,42,0.4)]">
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-label={t(
-              pinDraft.superseding ? 'sourcing.fx.dialog.title.supersede' : 'sourcing.fx.dialog.title.record',
-              { currency: pinDraft.currency },
-            )}
-            data-testid="fx-pin-dialog"
-            className="w-full max-w-md bg-white rounded-lg border border-border-subtle p-5"
-          >
+        <ModalOverlay
+          onClose={() => setPinDraft(null)}
+          label={t(
+            pinDraft.superseding ? 'sourcing.fx.dialog.title.supersede' : 'sourcing.fx.dialog.title.record',
+            { currency: pinDraft.currency },
+          )}
+          testId="fx-pin-dialog"
+        >
+          <div className="w-full max-w-md bg-white rounded-lg border border-border-subtle p-5">
             <h3 className="text-section text-text-primary mb-1">
               {t(
                 pinDraft.superseding
@@ -3598,11 +3598,11 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
               )}
             </div>
           </div>
-        </div>
+        </ModalOverlay>
       )}
 
       {wizardOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[rgba(13,27,42,0.4)]">
+        <ModalOverlay onClose={closeWizard}>
           <Wizard
             steps={wizardSteps}
             currentStep={wizardStep}
@@ -3612,7 +3612,7 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
             isStepValid={isStepValid}
             completeLabel={t('sourcing.wizard.complete')}
           />
-        </div>
+        </ModalOverlay>
       )}
     </AppShellV2>
   );

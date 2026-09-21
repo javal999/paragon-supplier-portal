@@ -32,6 +32,7 @@ import Button from '../../components/ui-v2/Button';
 import Data from '../../components/ui-v2/Data';
 import StatusPill from '../../components/ui-v2/StatusPill';
 import Wizard, { WizardStep } from '../../components/ui-v2/Wizard';
+import ModalOverlay from '../../components/ui-v2/ModalOverlay';
 import { useToast } from '../../hooks/useToast';
 import { useRfxCommand } from '../../services/query/commandHooks';
 import {
@@ -519,7 +520,7 @@ const RfiCreateWizard: React.FC<RfiCreateWizardProps> = ({ onCancel, onCreated, 
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[rgba(13,27,42,0.4)]">
+    <ModalOverlay onClose={onCancel}>
       <Wizard
         steps={steps}
         currentStep={step}
@@ -529,7 +530,7 @@ const RfiCreateWizard: React.FC<RfiCreateWizardProps> = ({ onCancel, onCreated, 
         isStepValid={(n) => (n === steps.length - 1 ? canPublish && sendable : stepValid(n))}
         completeLabel={t('rfx.create.send')}
       />
-    </div>
+    </ModalOverlay>
   );
 };
 

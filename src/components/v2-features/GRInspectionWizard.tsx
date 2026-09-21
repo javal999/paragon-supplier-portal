@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import Wizard, { WizardStep } from '../ui-v2/Wizard';
+import ModalOverlay from '../ui-v2/ModalOverlay';
 import FormSection from '../ui-v2/FormSection';
 import Data from '../ui-v2/Data';
 import { useToast } from '../../hooks/useToast';
@@ -1688,7 +1689,7 @@ const GRInspectionWizard: React.FC<GRInspectionWizardProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[rgba(13,27,42,0.5)]">
+    <ModalOverlay onClose={onClose} scrim="dark">
       <Wizard
         steps={steps}
         currentStep={step}
@@ -1698,7 +1699,7 @@ const GRInspectionWizard: React.FC<GRInspectionWizardProps> = ({
         isStepValid={isStepValid}
         completeLabel={t('goodsReceipt.wizard.complete')}
       />
-    </div>
+    </ModalOverlay>
   );
 };
 

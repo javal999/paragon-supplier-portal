@@ -34,6 +34,7 @@ import ScoreBadge from '../components/ui-v2/ScoreBadge';
 import Data from '../components/ui-v2/Data';
 import Button from '../components/ui-v2/Button';
 import Wizard, { WizardStep } from '../components/ui-v2/Wizard';
+import ModalOverlay from '../components/ui-v2/ModalOverlay';
 import { useToast } from '../hooks/useToast';
 import LoadingState from '../components/ui-v2/LoadingState';
 import ErrorState from '../components/ui-v2/ErrorState';
@@ -805,6 +806,7 @@ const ContractsWorkspace: React.FC<ContractsWorkspaceProps> = ({
                         <input
                           type="radio"
                           name="supplier"
+                          aria-label={s.name}
                           checked={draft.supplierId === s.id}
                           onChange={() => updateDraft('supplierId', s.id)}
                           onClick={(e) => e.stopPropagation()}
@@ -1607,7 +1609,7 @@ const ContractsWorkspace: React.FC<ContractsWorkspaceProps> = ({
           It deliberately reuses the wizard's own overlay — a flow that vanished
           on its last step is the failure mode this batch was told to stop for. */}
       {stoppedDraft && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[rgba(13,27,42,0.4)]">
+        <ModalOverlay onClose={() => setStoppedDraft(null)}>
           <RaisedElsewherePanel
             summary={collectedSummary(false)}
             onRestart={() => {
@@ -1616,10 +1618,10 @@ const ContractsWorkspace: React.FC<ContractsWorkspaceProps> = ({
             }}
             onClose={() => setStoppedDraft(null)}
           />
-        </div>
+        </ModalOverlay>
       )}
       {wizardOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[rgba(13,27,42,0.4)]">
+        <ModalOverlay onClose={closeWizard}>
           <Wizard
             steps={wizardSteps}
             currentStep={wizardStep}
@@ -1629,7 +1631,7 @@ const ContractsWorkspace: React.FC<ContractsWorkspaceProps> = ({
             isStepValid={isStepValid}
             completeLabel={t('contracts.wizard.complete')}
           />
-        </div>
+        </ModalOverlay>
       )}
     </AppShellV2>
   );
