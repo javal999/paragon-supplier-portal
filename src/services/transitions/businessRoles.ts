@@ -232,6 +232,17 @@ const LANE_BUNDLES = Object.freeze({
       // `supplierdoc:verify` and `:reject` sit together here for the same
       // reason and on the same argument.
       'application:review', 'application:decide',
+      // ── BL-50 · THE HUB'S WORKING CALENDAR (§3.4, Q-18 decided) ──────────
+      // Ruling a day working or non-working moves EVERY deadline the hub
+      // measures people by — PO responses, call-off confirmations, forecast
+      // commitments, the planner's own escalations. So the lanes those
+      // deadlines measure (planning, procurement, every supplier lane) cannot
+      // hold it: a party may not set the clock it is timed on. It sits beside
+      // `role:grant` with the platform's other governance acts, and `admin`
+      // (the Hub administrator, ADM) holds it by derivation. Unlike `role:grant`
+      // it is NOT subtracted from `buyer_all`: it grants no authority, it moves
+      // dates — the `enforcement:set` shape, which `buyer_all` also holds.
+      'calendar:set',
     ]),
     // The SDC / P2 planning lane. `inventorydeclaration:record` is the C4c
     // buyer RECORDING verb — a distinct authority from the supplier's

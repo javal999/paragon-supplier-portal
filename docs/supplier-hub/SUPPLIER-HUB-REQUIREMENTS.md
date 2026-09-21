@@ -134,8 +134,8 @@ Decided (Q-18, 2026-09-21): the hub keeps its own working calendar, maintained b
 | Consignment material | Material under a consignment ("modal sharing") arrangement | MN-INV-10 |
 | Spreadsheet template upload | Called "EDI" by business users. A file upload, not EDIFACT or X12 | MN-INV-07 |
 | TMS | Transportation management system | MN-INV-13 |
-| JIT call-off | A firm call-off for a fixed delivery. No over-quantity limit applies | Code |
-| Forecast-based call-off | A call-off released from a forecast-driven schedule. Over-quantity tolerance applies | Code |
+| JIT call-off | A firm call-off for a fixed delivery. The same tolerance as every call-off applies (CR-05) | Owner, 2026-09-21 |
+| Forecast-based call-off | A call-off released from a forecast-driven schedule. The same tolerance as every call-off applies (CR-05) | Owner, 2026-09-21 |
 
 ### 3.6 Shared calculation rules
 
@@ -847,7 +847,7 @@ Template rules:
 
 **Metrics.** Leading: open discrepancies older than 5 working days [Proposed]. Lagging: KPI-05.
 
-**Open items.** PQ-04 (discrepancy tolerance; 0 until decided). Q-20 (quality inspection in the MVP while the Supplier Quality module is Phase 2).
+**Open items.** None on tolerance: PQ-04 is decided (CR-25). Q-20 (quality inspection in the MVP while the Supplier Quality module is Phase 2).
 
 #### REQ-E07-07  Invoice collaboration
 
@@ -871,7 +871,7 @@ Template rules:
 **Business rules.**
 - BR-01. An invoice can only reference goods receipts of the supplier's own POs [Proposed].
 - BR-02. Invoiced quantity cannot exceed received minus already invoiced quantity [Proposed; Market].
-- BR-03. Price differences beyond tolerance make the invoice an exception for FIN. The tolerance is 1% (CR-12) until Finance sets another [Code]. An exception is either Price variance (CR-12) or Quantity mismatch (CR-13) [Code].
+- BR-03. Price differences beyond tolerance make the invoice an exception for FIN. The tolerance is per line: 0% where a contract price exists, otherwise 2% within an absolute rupiah cap (CR-12) [Owner, 2026-09-21]. An exception is either Price variance (CR-12) or Quantity mismatch (CR-13) [Code].
 - BR-04. Invoice status comes back from SAP [Proposed].
 - BR-05. Due date and overdue follow CR-14 [Code]. Payment terms on the PO replace the 30-day default when present [Proposed].
 
@@ -888,7 +888,7 @@ Template rules:
 
 **Metrics.** Leading: share of invoices submitted through the hub; share matched first time. Lagging: days from receipt to payment.
 
-**Open items.** DEC-06 (is Web Tukar Faktur this capability or a separate app). PQ-05 (Finance to confirm the 1% tolerance and the status list).
+**Open items.** DEC-06 (is Web Tukar Faktur this capability or a separate app). PQ-05 (Finance to set the rupiah cap in CR-12; the 0% and 2% tolerances are decided).
 
 #### REQ-E07-08  Order data interface with SAP
 
@@ -1390,7 +1390,7 @@ All requirements in this section are **Proposed**, written from market practice 
 **Step-by-step (Supplier).**
 1. The supplier receives a call-off: 2,000 units, need date 12 Oct [Proposed].
 2. The supplier confirms 2,000 for 14 Oct, which is 2 days late [Market].
-3. Late tolerance is 1 day, so the confirmation goes to the planner as Awaiting Approval [Market].
+3. A later date always needs approval (CR-05), so the confirmation goes to the planner as Awaiting Approval [Owner, 2026-09-21].
 4. The planner approves it. The call-off shows Confirmed with New Date, and ASN creation opens (REQ-E07-04) [Market].
 
 **Business rules.**
@@ -1408,7 +1408,7 @@ All requirements in this section are **Proposed**, written from market practice 
 - BR-06. An ASN can be created only for a confirmed call-off [Market; MN-ORD-05].
 - BR-07. OTIF is measured per call-off against the approved date and quantity, using CR-06 to CR-08 [MN-ORD-09; "approved" Proposed; Code].
 - BR-08. Automatic reminder to the supplier before the need date if no ASN exists, per CR-09: 7 days before [Market; Code].
-- BR-09. Each call-off is JIT or forecast-based (section 3.5), set at release. The type decides the over-quantity tolerance (CR-05) [Code].
+- BR-09. Each call-off is JIT or forecast-based (section 3.5), set at release. The type no longer changes the tolerance: CR-05 applies the same rule to both [Owner, 2026-09-21].
 
 **Edge cases.**
 - Planner changes a confirmed call-off: status returns to Awaiting Confirmation [Proposed].

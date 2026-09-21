@@ -61,6 +61,7 @@ import BuyerCommHub from '../pages-v2/BuyerCommHub';
 import BuyerCompliance from '../pages-v2/BuyerCompliance';
 import ProcessFlows from '../pages-v2/ProcessFlows';
 import InterfaceMonitor from '../pages-v2/InterfaceMonitor';
+import AdminWorkingCalendar from '../pages-v2/admin/AdminWorkingCalendar';
 import RolesCatalogue from '../pages-v2/RolesCatalogue';
 import RoleDetail from '../pages-v2/RoleDetail';
 import Glossary from '../pages-v2/Glossary';
@@ -148,6 +149,7 @@ const ROUTES: RouteCase[] = [
   { name: 'buyer/compliance', pattern: '/buyer/compliance', at: '/buyer/compliance', element: <BuyerCompliance />, identity: BUYER },
   { name: 'buyer/process-flows', pattern: '/buyer/process-flows', at: '/buyer/process-flows', element: <ProcessFlows />, identity: BUYER },
   { name: 'buyer/interface-monitor', pattern: '/buyer/interface-monitor', at: '/buyer/interface-monitor', element: <InterfaceMonitor />, identity: BUYER },
+  { name: 'buyer/admin/working-calendar', pattern: '/buyer/admin/working-calendar', at: '/buyer/admin/working-calendar', element: <AdminWorkingCalendar />, identity: BUYER },
   { name: 'buyer/roles', pattern: '/buyer/roles', at: '/buyer/roles', element: <RolesCatalogue />, identity: BUYER },
   { name: 'buyer/roles/:roleId', pattern: '/buyer/roles/:roleId', at: '/buyer/roles/finance', element: <RoleDetail />, identity: BUYER },
   // ⚠️ THESE TWO WERE NEVER IN THE SMOKE, AND THE OLD SELF-REFERENTIAL GUARD

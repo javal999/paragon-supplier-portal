@@ -8,12 +8,8 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { POStatus, type PurchaseOrder } from './types';
-import {
-  DEFAULT_WORKING_CALENDAR,
-  addWorkingDays,
-  documentInstant,
-  type WorkingCalendar,
-} from '../../lib/workingCalendar';
+import { addWorkingDays, documentInstant, type WorkingCalendar } from '../../lib/workingCalendar';
+import { hubWorkingCalendar } from '../transitions/workingCalendarStore';
 
 /** The supplier's response window (REQ-E07-02 BR-01, MN-ORD-04). */
 export const RESPONSE_WORKING_DAYS = 1;
@@ -30,10 +26,13 @@ export function isAwaitingResponse(po: PurchaseOrder): boolean {
   return AWAITING_RESPONSE.has(po.status);
 }
 
-/** The instant the supplier must respond by: 1 working day after it was asked. */
+/**
+ * The instant the supplier must respond by: 1 working day after it was asked,
+ * on the hub's calendar (BL-50 — an administrator's ruling moves it).
+ */
 export function responseDeadline(
   po: PurchaseOrder,
-  cal: WorkingCalendar = DEFAULT_WORKING_CALENDAR,
+  cal: WorkingCalendar = hubWorkingCalendar(),
 ): Date {
   const askedAt = po.responseRequestedAt ?? po.orderDate;
   return addWorkingDays(documentInstant(askedAt, cal), RESPONSE_WORKING_DAYS, cal);

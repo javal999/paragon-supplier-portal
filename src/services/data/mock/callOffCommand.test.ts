@@ -83,6 +83,12 @@ describe('release (REQ-E09-01 BR-04 / AC-03) — blocked beyond what remains, by
     expect(callOffStore.all()).toHaveLength(before);
   });
 
+  it('BL-49: the refusal is on remaining QUANTITY and names both figures', async () => {
+    const res = await release({ quantity: 15001 });
+    expect(res.reason).toMatch(/EXCEEDS_REMAINING: 15001 PCS is more than the 15000 PCS remaining on PO-2025-00107/);
+    expect(res.reason).not.toMatch(/EXCEEDS_REMAINING_VALUE/);
+  });
+
   it('a draft may be planned beyond remaining, but releasing it is refused', async () => {
     const drafted = await svc.dispatch(buyer, {
       transitionId: 't_calloff_draft',
@@ -144,27 +150,52 @@ describe('supplier confirmation and tolerance (REQ-E09-03 BR-02..BR-04, AC-01, A
     expect(callOffStore.get('co-0003')).toMatchObject({ status: 'Confirmed', confirmation: { approval: 'auto' } });
   });
 
-  it('forecast-based over-quantity within 10% is accepted automatically', async () => {
-    await verb('t_calloff_confirm_changes', 'co-0003', { confirmedQty: 16500 });
+  // ⚠️ PREMISE CHANGED AT BL-47 (CR-05 revised 2026-09-21). These read "forecast
+  // 10% over, JIT no limit" and "any date change to approval (PQ-08 open)".
+  // Now: 5% over for every type; a shortfall is accepted as a visible partial;
+  // later always to approval; earlier to approval while BL-56's placeholder is
+  // 0 days. Each boundary is walked through the real verb on both sides.
+  it('forecast-based: exactly +5% is accepted automatically', async () => {
+    await verb('t_calloff_confirm_changes', 'co-0003', { confirmedQty: 15750 });
     expect(callOffStore.get('co-0003')).toMatchObject({
       status: 'Confirmed with Changes',
-      confirmation: { approval: 'auto', deliveries: [{ quantity: 16500 }] },
+      confirmation: { approval: 'auto', deliveries: [{ quantity: 15750 }] },
     });
   });
 
-  it('forecast-based over-quantity beyond 10% waits for the planner', async () => {
-    await verb('t_calloff_confirm_changes', 'co-0003', { confirmedQty: 16501 });
+  it('forecast-based: one unit beyond +5% waits for the planner', async () => {
+    await verb('t_calloff_confirm_changes', 'co-0003', { confirmedQty: 15751 });
     expect(callOffStore.get('co-0003')!.confirmation?.approval).toBe('awaiting');
   });
 
-  it('JIT has no over-quantity limit', async () => {
-    const res = await release({ quantity: 1000, type: 'jit' });
-    await verb('t_calloff_confirm_changes', res.entityId!, { confirmedQty: 14000 });
-    expect(callOffStore.get(res.entityId!)!.confirmation?.approval).toBe('auto');
+  it('JIT takes the SAME 5%: +5% accepted, beyond it waits (it had no limit before BL-47)', async () => {
+    const atLimit = await release({ quantity: 1000, type: 'jit' });
+    await verb('t_calloff_confirm_changes', atLimit.entityId!, { confirmedQty: 1050 });
+    expect(callOffStore.get(atLimit.entityId!)!.confirmation?.approval).toBe('auto');
+    const beyond = await release({ quantity: 1000, type: 'jit' });
+    await verb('t_calloff_confirm_changes', beyond.entityId!, { confirmedQty: 1051 });
+    expect(callOffStore.get(beyond.entityId!)!.confirmation?.approval).toBe('awaiting');
   });
 
-  it('a date change goes to approval (PQ-08 default 0 days)', async () => {
-    await verb('t_calloff_confirm_new_date', 'co-0003', { confirmedDate: '2026-09-08' });
+  it('a shortfall is accepted as a partial delivery — it does not wait for the planner', async () => {
+    await verb('t_calloff_confirm_changes', 'co-0003', { confirmedQty: 9000 });
+    expect(callOffStore.get('co-0003')).toMatchObject({
+      status: 'Confirmed with Changes',
+      confirmation: { approval: 'auto', deliveries: [{ quantity: 9000 }] },
+    });
+  });
+
+  it('a later date always goes to approval — one day later is enough', async () => {
+    const needDate = callOffStore.get('co-0003')!.needDate;
+    const nextDay = new Date(Date.parse(`${needDate}T00:00:00.000Z`) + 86_400_000).toISOString().slice(0, 10);
+    await verb('t_calloff_confirm_new_date', 'co-0003', { confirmedDate: nextDay });
+    expect(callOffStore.get('co-0003')).toMatchObject({ status: 'Confirmed with New Date', confirmation: { approval: 'awaiting' } });
+  });
+
+  it('an earlier date goes to approval while the early allowance is the BL-56 placeholder (0 days)', async () => {
+    const needDate = callOffStore.get('co-0003')!.needDate;
+    const dayBefore = new Date(Date.parse(`${needDate}T00:00:00.000Z`) - 86_400_000).toISOString().slice(0, 10);
+    await verb('t_calloff_confirm_new_date', 'co-0003', { confirmedDate: dayBefore });
     expect(callOffStore.get('co-0003')).toMatchObject({ status: 'Confirmed with New Date', confirmation: { approval: 'awaiting' } });
   });
 
@@ -297,5 +328,43 @@ describe('dispatch heads-up (REQ-E09-04) and ASN gating (REQ-E09-03 BR-06)', () 
     const res = await createAsn({});
     expect(res.status).toBe('done');
     expect(asnStore.get(res.entityId!)!.callOffId).toBeUndefined();
+  });
+});
+
+describe('BL-47 / BL-49 demo rows, walked through the real verbs', () => {
+  it('the planner approves the +5.1% answer (CO-2026-0014) and the earlier-date answer (CO-2026-0016)', async () => {
+    expect((await verb('t_calloff_approve', 'co-0014', {}, buyer)).status).toBe('done');
+    expect(callOffStore.get('co-0014')).toMatchObject({ status: 'Confirmed with Changes', confirmation: { approval: 'approved' } });
+    expect((await verb('t_calloff_approve', 'co-0016', {}, buyer)).status).toBe('done');
+    expect(callOffStore.get('co-0016')).toMatchObject({ status: 'Confirmed with New Date', confirmation: { approval: 'approved' } });
+  });
+
+  it('the accepted partial (CO-2026-0015) is not waiting, so there is nothing to approve', async () => {
+    expect((await verb('t_calloff_approve', 'co-0015', {}, buyer)).reason).toMatch(/NOT_AWAITING_APPROVAL/);
+  });
+
+  it('li-024a: draft CO-2026-0018 (45,000 of 37,000 remaining) is refused on quantity; CO-2026-0019 (exactly 37,000) releases', async () => {
+    const refused = await verb('t_calloff_release_draft', 'co-0018', {}, buyer);
+    expect(refused.reason).toMatch(/EXCEEDS_REMAINING: 45000 PCS is more than the 37000 PCS remaining on PO-2026-00124/);
+    expect(callOffStore.get('co-0018')!.status).toBe('Draft');
+    expect((await verb('t_calloff_release_draft', 'co-0019', {}, buyer)).status).toBe('done');
+    expect(callOffStore.get('co-0019')!.status).toBe('Awaiting Confirmation');
+  });
+
+  it('li-028a has no quantity: a release is checked on remaining VALUE, both sides of the boundary', async () => {
+    const onValueLine = (quantity: number) =>
+      svc.dispatch(buyer, {
+        transitionId: 't_calloff_release',
+        entity: 'callOff',
+        payload: { poId: 'po-028', poLineId: 'li-028a', quantity, needDate: '2026-09-20', type: 'forecast' },
+      });
+    // 280,000,000 remains; 127 KG = 279,400,000 fits, 128 KG = 281,600,000 does not.
+    const over = await onValueLine(128);
+    expect(over.reason).toMatch(/EXCEEDS_REMAINING_VALUE: 281600000 is more than the 280000000 remaining on PO-2026-00128/);
+    const fits = await onValueLine(127);
+    expect(fits.status).toBe('done');
+    expect(callOffStore.get(fits.entityId!)).toMatchObject({ poLineId: 'li-028a', quantity: 127, status: 'Awaiting Confirmation' });
+    // Draft CO-2026-0021 (150 KG = 330,000,000) is refused on value too.
+    expect((await verb('t_calloff_release_draft', 'co-0021', {}, buyer)).reason).toMatch(/EXCEEDS_REMAINING_VALUE/);
   });
 });

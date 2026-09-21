@@ -28,12 +28,8 @@ import { generateSchedule } from '../delivery/generator';
 import type { ReleaseCadence } from '../delivery/types';
 import { DELIVERY_GRACE_DAYS, MATCH_WINDOW_DAYS } from '../delivery/fulfillment';
 import { ANTICIPATION_DAYS, DRIFT_COUNT } from '../chase/deliveryChase';
-import {
-  DEFAULT_WORKING_CALENDAR,
-  addWorkingDays,
-  documentInstant,
-  type WorkingCalendar,
-} from '../../lib/workingCalendar';
+import { addWorkingDays, documentInstant, type WorkingCalendar } from '../../lib/workingCalendar';
+import { hubWorkingCalendar } from './workingCalendarStore';
 import {
   CALL_OFF_CONFIRM_WORKING_DAYS,
   CALL_OFF_TOLERANCE,
@@ -79,10 +75,25 @@ const daysBetween = (from: string, to: string) => Math.round((dayMs(to) - dayMs(
 
 // ── CR-04 · remaining on the umbrella PO ────────────────────────────────────
 
+/**
+ * What a release is checked against (CR-04; BL-13 decided on 2026-09-21 that
+ * the umbrella PO holds a QUANTITY per line, so BL-49 makes quantity the
+ * default). Value is the check only on a line that carries no quantity — an SAP
+ * value-limit line, marked by `valueLimit`.
+ */
+export type ReleaseBasis = 'quantity' | 'value';
+
+type UmbrellaLine = Pick<POLineItem, 'id' | 'quantity' | 'unitPrice' | 'valueLimit'>;
+
+export const releaseBasis = (line: UmbrellaLine): ReleaseBasis =>
+  line.valueLimit === undefined ? 'quantity' : 'value';
+
 export interface UmbrellaRemaining {
-  readonly orderedQty: number;
+  readonly basis: ReleaseBasis;
+  /** Ordered and remaining quantity — null on a line that has no quantity. */
+  readonly orderedQty: number | null;
   readonly releasedQty: number;
-  readonly remainingQty: number;
+  readonly remainingQty: number | null;
   readonly orderedValue: number;
   readonly releasedValue: number;
   readonly remainingValue: number;
@@ -90,38 +101,68 @@ export interface UmbrellaRemaining {
 
 /**
  * Remaining quantity = PO line quantity − released call-off quantity; remaining
- * value = PO line value − released call-off value. `excludeId` leaves one
- * call-off out (the one being released or changed).
+ * value = PO line value − released call-off value, where a value-limit line's
+ * ordered value is its limit. `excludeId` leaves one call-off out (the one being
+ * released or changed).
  */
 export function umbrellaRemaining(
-  line: Pick<POLineItem, 'id' | 'quantity' | 'unitPrice'>,
+  line: UmbrellaLine,
   callOffs: readonly CallOff[],
   excludeId?: string,
 ): UmbrellaRemaining {
+  const basis = releaseBasis(line);
   const releasedQty = callOffs
     .filter((c) => c.poLineId === line.id && c.id !== excludeId && isReleased(c))
     .reduce((s, c) => s + c.quantity, 0);
-  const orderedValue = line.quantity * line.unitPrice;
+  const orderedValue = line.valueLimit ?? line.quantity * line.unitPrice;
   const releasedValue = releasedQty * line.unitPrice;
   return {
-    orderedQty: line.quantity,
+    basis,
+    orderedQty: basis === 'quantity' ? line.quantity : null,
     releasedQty,
-    remainingQty: line.quantity - releasedQty,
+    remainingQty: basis === 'quantity' ? line.quantity - releasedQty : null,
     orderedValue,
     releasedValue,
     remainingValue: orderedValue - releasedValue,
   };
 }
 
-/** REQ-E09-01 BR-04 / AC-03 — release is blocked beyond what remains. */
+/** A release measured against what remains, in the line's own basis. */
+export interface ReleaseCheck {
+  readonly basis: ReleaseBasis;
+  readonly exceeds: boolean;
+  readonly requestedQty: number;
+  readonly requestedValue: number;
+  readonly remaining: UmbrellaRemaining;
+}
+
+/**
+ * REQ-E09-01 BR-04 / AC-03 with CR-04 — release is blocked beyond what remains:
+ * on remaining QUANTITY by default, on remaining VALUE only where the line has
+ * no quantity (BL-49). Exactly the remainder is allowed.
+ */
+export function releaseCheck(
+  quantity: number,
+  line: UmbrellaLine,
+  callOffs: readonly CallOff[],
+  excludeId?: string,
+): ReleaseCheck {
+  const remaining = umbrellaRemaining(line, callOffs, excludeId);
+  const requestedValue = quantity * line.unitPrice;
+  const exceeds =
+    remaining.basis === 'quantity'
+      ? quantity > (remaining.remainingQty ?? 0)
+      : requestedValue > remaining.remainingValue;
+  return { basis: remaining.basis, exceeds, requestedQty: quantity, requestedValue, remaining };
+}
+
 export function exceedsRemaining(
   quantity: number,
-  line: Pick<POLineItem, 'id' | 'quantity' | 'unitPrice'>,
+  line: UmbrellaLine,
   callOffs: readonly CallOff[],
   excludeId?: string,
 ): boolean {
-  const r = umbrellaRemaining(line, callOffs, excludeId);
-  return quantity > r.remainingQty || quantity * line.unitPrice > r.remainingValue;
+  return releaseCheck(quantity, line, callOffs, excludeId).exceeds;
 }
 
 /** Why a call-off could not be placed on this PO line, or null. */
@@ -159,7 +200,7 @@ export function generateCallOffSeries(input: SeriesInput): readonly CallOffDeliv
   }).map((l) => ({ quantity: l.plannedQty, date: l.releaseDate }));
 }
 
-// ── REQ-E09-03 · supplier confirmation and tolerance (CR-05, PQ-08) ─────────
+// ── REQ-E09-03 · supplier confirmation and tolerance (CR-05; BL-47, BL-56) ──
 
 /** The deliveries a confirming answer proposes, or a refusal. */
 export type ConfirmationRefusal =
@@ -211,27 +252,104 @@ export function proposedDeliveries(
   }
 }
 
-/** Where a confirmation falls against the tolerances (BR-03). */
-export interface ToleranceCheck {
-  readonly within: boolean;
-  readonly overQty: boolean;
-  readonly underQty: boolean;
-  readonly early: boolean;
-  readonly late: boolean;
+/**
+ * What the tolerance rule found in one confirmation (BR-03, CR-05 as revised on
+ * 2026-09-21). Each finding names the rule that applied and whether it sends
+ * the confirmation to the planner, so both call-off screens can show the rule
+ * AND its reason from the same derivation the verb uses.
+ *
+ * · `asRequested` — the released quantity on the need date.
+ * · `overWithin`  — over the released quantity, within the 5% allowance.
+ * · `overBeyond`  — more than 5% over: waits for the planner.
+ * · `short`       — less than released: a partial delivery, accepted and kept
+ *                   visible, never a reason to wait.
+ * · `late`        — a delivery after the need date: always waits for the planner.
+ * · `early`       — a delivery before the need date, beyond the early allowance
+ *                   (placeholder 0 days, BL-56): waits for the planner.
+ */
+export type ToleranceFindingKind = 'asRequested' | 'overWithin' | 'overBeyond' | 'short' | 'late' | 'early';
+
+export interface ToleranceFinding {
+  readonly kind: ToleranceFindingKind;
+  readonly needsApproval: boolean;
+  /** Quantity over or short of the released quantity. */
+  readonly qty?: number;
+  /** That quantity as a percentage of the released quantity (display only; the decision is exact). */
+  readonly pct?: number;
+  /** For `late` / `early`: the largest number of days off the need date. */
+  readonly days?: number;
+  /** For `late` / `early`: the delivery date furthest from the need date. */
+  readonly date?: string;
+  /** The limit the finding was measured against (percent, or days for `early`). */
+  readonly limit?: number;
 }
 
+/** Where a confirmation falls against the tolerances (BR-03). */
+export interface ToleranceCheck {
+  /** Accepted automatically — nothing needs the planner. */
+  readonly within: boolean;
+  readonly overQty: boolean;
+  /** A shortfall: a visible partial delivery, which does NOT make `within` false. */
+  readonly short: boolean;
+  readonly early: boolean;
+  readonly late: boolean;
+  readonly findings: readonly ToleranceFinding[];
+}
+
+/** Percentage for display, to 2 decimals. */
+const pctOf = (part: number, whole: number) => Math.round((part / whole) * 10_000) / 100;
+
 export function checkTolerance(
-  callOff: Pick<CallOff, 'quantity' | 'needDate' | 'type'>,
+  callOff: Pick<CallOff, 'quantity' | 'needDate'>,
   deliveries: readonly CallOffDelivery[],
   tol: CallOffTolerance = CALL_OFF_TOLERANCE,
 ): ToleranceCheck {
   const total = deliveries.reduce((s, d) => s + d.quantity, 0);
-  const overPct = tol.overPct[callOff.type];
-  const overQty = total > callOff.quantity && overPct !== null && total > callOff.quantity * (1 + overPct);
-  const underQty = total < callOff.quantity * (1 - tol.underPct);
-  const early = deliveries.some((d) => daysBetween(d.date, callOff.needDate) > tol.earlyDays);
-  const late = deliveries.some((d) => daysBetween(callOff.needDate, d.date) > tol.lateDays);
-  return { within: !overQty && !underQty && !early && !late, overQty, underQty, early, late };
+  const over = total - callOff.quantity;
+  // Exact comparison, no floating-point multiply: over / quantity > pct / 100.
+  const overQty = over > 0 && over * 100 > tol.overPct * callOff.quantity;
+  const short = over < 0;
+  const byDate = [...deliveries].sort((a, b) => a.date.localeCompare(b.date));
+  const latest = byDate[byDate.length - 1]?.date ?? callOff.needDate;
+  const earliest = byDate[0]?.date ?? callOff.needDate;
+  const lateBy = Math.max(0, daysBetween(callOff.needDate, latest));
+  const earlyBy = Math.max(0, daysBetween(earliest, callOff.needDate));
+  const late = lateBy > 0;
+  const early = earlyBy > tol.earlyDays;
+
+  const findings: ToleranceFinding[] = [];
+  if (over > 0) {
+    findings.push({
+      kind: overQty ? 'overBeyond' : 'overWithin',
+      needsApproval: overQty,
+      qty: over,
+      pct: pctOf(over, callOff.quantity),
+      limit: tol.overPct,
+    });
+  }
+  if (short) {
+    findings.push({ kind: 'short', needsApproval: false, qty: -over, pct: pctOf(-over, callOff.quantity) });
+  }
+  if (late) findings.push({ kind: 'late', needsApproval: true, days: lateBy, date: latest });
+  if (earlyBy > 0) {
+    // An earlier date inside the allowance is accepted and says so; with the
+    // placeholder at 0 days (BL-56) every earlier date needs approval.
+    findings.push({ kind: 'early', needsApproval: early, days: earlyBy, date: earliest, limit: tol.earlyDays });
+  }
+  if (findings.length === 0) findings.push({ kind: 'asRequested', needsApproval: false });
+
+  return { within: !overQty && !late && !early, overQty, short, early, late, findings };
+}
+
+/**
+ * The shortfall an ACCEPTED or waiting confirmation leaves against the released
+ * quantity — the "visible partial" of CR-05. 0 when nothing is short or the
+ * supplier has not answered.
+ */
+export function confirmedShortfall(c: Pick<CallOff, 'quantity' | 'confirmation'>): number {
+  if (!c.confirmation) return 0;
+  const total = c.confirmation.deliveries.reduce((s, d) => s + d.quantity, 0);
+  return Math.max(0, c.quantity - total);
 }
 
 /** The stored state each confirming answer lands in. */
@@ -261,7 +379,9 @@ export function approvedDeliveries(c: CallOff): readonly CallOffDelivery[] {
 
 // ── BR-05 · confirmation deadline and Escalated (derived) ──────────────────
 
-export function confirmationDeadline(c: CallOff, cal: WorkingCalendar = DEFAULT_WORKING_CALENDAR): Date | null {
+/** BR-05 — 1 working day after release, on the hub's calendar (BL-50: every
+ *  deadline reads the calendar the administrator maintains). */
+export function confirmationDeadline(c: CallOff, cal: WorkingCalendar = hubWorkingCalendar()): Date | null {
   if (!c.releasedAt) return null;
   return addWorkingDays(documentInstant(c.releasedAt, cal), CALL_OFF_CONFIRM_WORKING_DAYS, cal);
 }
@@ -486,6 +606,10 @@ export interface CallOffView {
   readonly otif: 1 | 0 | null;
   /** The earliest approved date — "must come". */
   readonly dueDate: string;
+  /** The tolerance rule applied to the supplier's confirmation, read now (CR-05); null before an answer. */
+  readonly tolerance: ToleranceCheck | null;
+  /** The confirmed shortfall against the released quantity — the visible partial (CR-05). */
+  readonly shortfall: number;
 }
 
 export function callOffViews(
@@ -523,6 +647,8 @@ export function callOffViews(
       results: mine,
       otif: callOffOtif(c.id, mine),
       dueDate: dates[0],
+      tolerance: c.confirmation ? checkTolerance(c, c.confirmation.deliveries) : null,
+      shortfall: confirmedShortfall(c),
     };
   });
 }

@@ -94,7 +94,7 @@ import {
   CALL_OFF_TYPES,
   CONFIRMATION_STATE,
   checkTolerance,
-  exceedsRemaining,
+  releaseCheck,
   headsUpsFor,
   isAwaitingApproval,
   isCallOffDate,
@@ -143,6 +143,7 @@ import { requirementResponseStore } from './stores/requirementResponseStore';
 import { inventoryDeclarationStore } from './stores/inventoryDeclarationStore';
 import { incomingShipmentStore } from './stores/incomingShipmentStore';
 import { enforcementSettingStore } from './stores/enforcementSettingStore';
+import { calendarCovers, workingCalendarStore } from '../../transitions/workingCalendarStore';
 import {
   capacityStore,
   inventoryAlertLedger,
@@ -930,7 +931,7 @@ bindPolicyHook(POLICY_HOOKS.RECEIPT_DISCREPANCY_ANSWERABLE, ({ payload }) => {
   const gr = goodsReceiptStore.get(String(payload.receiptId));
   if (!gr) return { ok: false, reason: 'goods receipt not found' };
   if (!hasReceiptDiscrepancy(gr, asnForReceipt(gr))) {
-    return { ok: false, reason: `NO_DISCREPANCY: ${gr.grNumber} matches what was shipped` };
+    return { ok: false, reason: `NO_DISCREPANCY: ${gr.grNumber} is within the receipt tolerance (CR-25) and nothing was rejected` };
   }
   if (receiptDiscrepancyStore.get(gr.id)) {
     return { ok: false, reason: `ALREADY_ANSWERED: ${gr.grNumber} already has an answer` };
@@ -1119,7 +1120,10 @@ bindPolicyHook(POLICY_HOOKS.CALLOFF_LINE_VALID, ({ payload }) => {
   return { ok: true };
 });
 
-// REQ-E09-01 BR-04 / AC-03, CR-04 — never beyond what remains on the umbrella PO.
+// REQ-E09-01 BR-04 / AC-03, CR-04 — never beyond what remains on the umbrella PO
+// line. BL-49: the check is on remaining QUANTITY, and on remaining VALUE only
+// where the line carries no quantity. The refusal says which, and with what
+// figures, so the planner can act on it.
 bindPolicyHook(POLICY_HOOKS.CALLOFF_WITHIN_REMAINING, ({ entityId, payload }) => {
   const existing = entityId ? callOffStore.get(entityId) : undefined;
   const poId = existing?.poId ?? String(payload.poId);
@@ -1128,10 +1132,14 @@ bindPolicyHook(POLICY_HOOKS.CALLOFF_WITHIN_REMAINING, ({ entityId, payload }) =>
   if (!po || !line) return { ok: false, reason: 'umbrella PO line not found' };
   const quantity = isPositiveQty(payload.quantity) ? payload.quantity : existing?.quantity;
   if (!isPositiveQty(quantity)) return { ok: false, reason: 'quantity must be greater than zero' };
-  if (exceedsRemaining(quantity, line, callOffStore.all(), existing?.id)) {
+  const check = releaseCheck(quantity, line, callOffStore.all(), existing?.id);
+  if (check.exceeds) {
     return {
       ok: false,
-      reason: `EXCEEDS_REMAINING: ${quantity} ${line.uom} is more than what remains on ${po.poNumber}`,
+      reason:
+        check.basis === 'quantity'
+          ? `EXCEEDS_REMAINING: ${quantity} ${line.uom} is more than the ${check.remaining.remainingQty} ${line.uom} remaining on ${po.poNumber} line ${line.materialCode}`
+          : `EXCEEDS_REMAINING_VALUE: ${check.requestedValue} is more than the ${check.remaining.remainingValue} remaining on ${po.poNumber} line ${line.materialCode}, which has no quantity`,
     };
   }
   return { ok: true };
@@ -3192,6 +3200,28 @@ const enforcementTarget: CommandTarget = {
 // and `parentAtomsAtGrant` are minted HERE — the `pinnedAt` discipline. The
 // baseline especially: a caller that could supply it could fake the drift check
 // into silence, and drift-detection is the entire reason it is recorded.
+// ── BL-50 · THE HUB'S WORKING CALENDAR ──────────────────────────────────────
+// `entityId` IS the date. `readState` answers `Maintained` for any date the SAP
+// load covers and null otherwise, so a date outside the loaded calendar is
+// NOT_FOUND rather than a silently created ruling. Owner-less by construction:
+// the calendar is PTI's, and `readScopeOwner: () => null` denies every supplier
+// at SCOPE (§86) — which is the correct answer here, not a missing one.
+// `applyTransition` APPENDS; `setAt` is stamped here, never read from the payload.
+const workingCalendarTarget: CommandTarget = {
+  readState: (id) => (calendarCovers(id) ? 'Maintained' : null),
+  readScopeOwner: () => null,
+  readEntity: (id) => (calendarCovers(id) ? workingCalendarStore.rulings().filter((r) => r.date === id) : null),
+  applyTransition: (id, _toState, payload) => {
+    workingCalendarStore.append({
+      date: id,
+      kind: payload.kind as 'working' | 'non-working',
+      reason: (payload.reason as string).trim(),
+      setBy: asActorAttribution(payload.setBy)!,
+      setAt: new Date().toISOString(),
+    });
+  },
+};
+
 const roleTarget: CommandTarget = {
   readState: (id) => (isSystemRole(id) ? 'Defined' : null),
   readScopeOwner: () => null,
@@ -3615,6 +3645,10 @@ const TARGETS: Record<string, CommandTarget> = {
   // grant lands in the DR-10 trail: a role edit outside the dispatcher would be
   // the only privilege-granting act in the platform with no TransitionEvent.
   role: roleTarget,
+  // BL-50 — the hub's working calendar. Wired so every ruling lands in the
+  // DR-10 trail: a ruling moves every deadline in the hub, and "who made this
+  // day a holiday, when, and why" is exactly what an audit asks.
+  workingCalendar: workingCalendarTarget,
   // §82 — the document lane's first write path: the supplier's declaration and
   // compliance's review of it.
   supplierDocument: supplierDocumentTarget,
@@ -3708,6 +3742,10 @@ const resolveCascades = (ctx: CascadeContext): CascadeCommand[] => {
         0,
       );
       const grHasRejects = gr.inspectionResults.some((r) => r.qtyRejected > 0);
+      // CR-12 (BL-44) — a lineless invoice's difference is not split by line,
+      // so the order's strictest rule applies: 0% when any PO line carries a
+      // contract price, else 2% within the rupiah cap.
+      const priceRule = po.lineItems.some((li) => li.contractNumber) ? 'contract' : 'standard';
       const cmds: CascadeCommand[] = [];
       // ⚠️ **THE PAIRING, NAMED.** This was an inline `continue` clause reading
       // `inv.poNumber !== gr.poNumber || inv.status !== 'Submitted'`. It IS the
@@ -3722,7 +3760,7 @@ const resolveCascades = (ctx: CascadeContext): CascadeCommand[] => {
       // on the same PO does not overwrite that verdict. Only invoices without
       // lines are still matched here.
       for (const inv of invoicesForReceipt(gr, invoiceStore.all()).filter((i) => !i.lines)) {
-        const verdict = deriveMatchVerdict(expectedValue, inv.amount, grHasRejects);
+        const verdict = deriveMatchVerdict(expectedValue, inv.amount, grHasRejects, priceRule);
         invoiceStore.update(inv.id, (i) => ({ ...i, matchStatus: verdict }));
         if (verdict === 'Matched') {
           cmds.push({

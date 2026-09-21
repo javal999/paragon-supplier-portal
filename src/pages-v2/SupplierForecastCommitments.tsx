@@ -44,6 +44,7 @@ import {
 import { parseCsv } from '../services/transitions/inventoryRules';
 import { inputClass, readFileText } from './inventory/inventoryDisplay';
 import {
+  CommitmentDeadline,
   CommitmentStatePill,
   GapCell,
   ZonePill,
@@ -495,7 +496,9 @@ const SupplierForecastCommitments: React.FC = () => {
                       <TableHeaderCell>{t('fc.col.period')}</TableHeaderCell>
                       <TableHeaderCell>{t('fc.col.zone')}</TableHeaderCell>
                       <TableHeaderCell className="text-right">{t('fc.col.forecast', { uom: first.uom })}</TableHeaderCell>
-                      <TableHeaderCell>{t('fc.col.due')}</TableHeaderCell>
+                      <TableHeaderCell>
+                        <span title={t('fc.col.dueRule')}>{t('fc.col.due')}</span>
+                      </TableHeaderCell>
                       <TableHeaderCell>{t('fc.col.commitment', { uom: first.uom })}</TableHeaderCell>
                       <TableHeaderCell>{t('fc.col.date')}</TableHeaderCell>
                       <TableHeaderCell>{t('fc.col.upside', { uom: first.uom })}</TableHeaderCell>
@@ -519,7 +522,7 @@ const SupplierForecastCommitments: React.FC = () => {
                                 <Data>{qtyText(l.forecastQty)}</Data>
                               </TableCell>
                               <TableCell>
-                                <Data className="text-xs">{formatDateTime(l.dueAt)}</Data>
+                                <CommitmentDeadline line={l} nowIso={nowIso} testId={`fc-due-${l.materialCode}-${l.periodBucket}`} />
                               </TableCell>
                               <TableCell colSpan={4}>
                                 <span className="text-xs text-text-tertiary">{t('fc.sup.ackOnly')}</span>
@@ -558,7 +561,7 @@ const SupplierForecastCommitments: React.FC = () => {
                                 )}
                               </TableCell>
                               <TableCell>
-                                <Data className="text-xs">{formatDateTime(l.dueAt)}</Data>
+                                <CommitmentDeadline line={l} nowIso={nowIso} testId={`fc-due-${l.materialCode}-${l.periodBucket}`} />
                               </TableCell>
                               <TableCell>
                                 <input

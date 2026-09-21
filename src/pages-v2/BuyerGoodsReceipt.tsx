@@ -25,6 +25,8 @@ import KpiCard from '../components/ui-v2/KpiCard';
 import BulkActionsBar from '../components/ui-v2/BulkActionsBar';
 import SubTabs from '../components/ui-v2/SubTabs';
 import ReceiptDisputesSection from './receipts/ReceiptDisputesSection';
+import ReceiptToleranceNote from './receipts/ReceiptToleranceNote';
+import { compareReceipt } from '../services/transitions/fulfilmentRules';
 import FilterChipsBar from '../components/ui-v2/FilterChipsBar';
 import SearchBar from '../components/ui-v2/SearchBar';
 import StatusPill from '../components/ui-v2/StatusPill';
@@ -416,6 +418,12 @@ const GoodsReceiptWorkspace: React.FC<GoodsReceiptWorkspaceProps> = ({
   const selectedSupplier = selected
     ? supplierById.get(selected.supplierId)
     : undefined;
+  // CR-25 (BL-45) — each line's quantity check, against the ASN when the hub
+  // has it and the expected quantity when it does not (the supplier sees the
+  // same comparison on its own receipts page).
+  const selectedChecks = selected
+    ? compareReceipt(selected, asns.find((a) => a.asnNumber === selected.asnNumber) ?? null)
+    : [];
 
   // WHO ACTS NEXT (S2a). `GRStatus` matches the machine's states exactly, so
   // `status` IS the canonical state here — no projection member to fall through.
@@ -1261,6 +1269,26 @@ const GoodsReceiptWorkspace: React.FC<GoodsReceiptWorkspaceProps> = ({
               <div className="text-xs text-text-tertiary mt-2">
                 {t('goodsReceipt.panel.legend')}
               </div>
+              {/* CR-25 (BL-45) — each line's quantity check, below the table so
+                  it wraps inside the panel rather than scrolling out of it. */}
+              {selectedChecks.length > 0 && (
+                <div className="mt-3" data-testid="buyer-gr-qty-checks">
+                  <div className="text-label text-text-tertiary uppercase mb-1">
+                    {t('fc.gr.col.qtyCheck')}
+                  </div>
+                  <ul className="space-y-1">
+                    {selectedChecks.map((c) => (
+                      <li key={c.materialCode} className="text-xs">
+                        <Data className="text-[11px] text-text-tertiary mr-2">{c.materialCode}</Data>
+                        <ReceiptToleranceNote
+                          line={c}
+                          testId={`buyer-gr-qty-check-${selected.id}-${c.materialCode}`}
+                        />
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </section>
 
             {selected.notes && (

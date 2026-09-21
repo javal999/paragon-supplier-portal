@@ -45,6 +45,7 @@ import {
   zoneFor,
 } from './forecastRules';
 import { parseCsv } from './inventoryRules';
+import { DEFAULT_WORKING_CALENDAR } from '../../lib/workingCalendar';
 import { deriveAlertConditions } from './inventoryAlertRules';
 import { FORECAST_VERSION_SEED, SEEDED_PACKAGING_WEEKS } from '../data/mock/fixtures/forecastHub';
 
@@ -208,10 +209,16 @@ describe('REQ-E06-02 BR-07 — split deadlines, reminders and overdue (derived, 
     expect(commitmentDueAt('firm', '2026-08-14T02:00:00.000Z')).toBe('2026-08-18T02:00:00.000Z');
   });
 
-  it('Trade-off and Forecast: 7 days after publication; the reminder is at half the deadline', () => {
-    expect(commitmentDueAt('tradeOff', '2026-08-28T02:00:00.000Z')).toBe('2026-09-04T02:00:00.000Z');
-    expect(commitmentDueAt('forecast', '2026-08-28T02:00:00.000Z')).toBe('2026-09-04T02:00:00.000Z');
-    expect(commitmentReminderAt('2026-08-28T02:00:00.000Z', '2026-09-04T02:00:00.000Z')).toBe('2026-08-31T14:00:00.000Z');
+  // ⚠️ PREMISE CHANGED BY BL-48 (CR-26, owner 2026-09-21): this case pinned
+  // "7 days after publication", a value no rule stated. CR-26 says 3 WORKING
+  // days. Friday 09:00 WIB → Monday, Tuesday, Wednesday 09:00.
+  // Stated on the public-holiday base calendar: the demo's SAP plant shutdown
+  // (Wednesday 2 September) moves the calendar-in-force answer to Thursday, and
+  // that case is pinned separately (BL48-DEMO-03).
+  it('Trade-off and Forecast: 3 working days after publication (CR-26); the reminder is at half the deadline', () => {
+    expect(commitmentDueAt('tradeOff', '2026-08-28T02:00:00.000Z', DEFAULT_WORKING_CALENDAR)).toBe('2026-09-02T02:00:00.000Z');
+    expect(commitmentDueAt('forecast', '2026-08-28T02:00:00.000Z', DEFAULT_WORKING_CALENDAR)).toBe('2026-09-02T02:00:00.000Z');
+    expect(commitmentReminderAt('2026-08-28T02:00:00.000Z', '2026-09-02T02:00:00.000Z')).toBe('2026-08-30T14:00:00.000Z');
   });
 
   it('open before the reminder, due soon from it, overdue from the deadline; none once answered', () => {
@@ -323,8 +330,10 @@ const mk = (p: Partial<ForecastCommitmentLine> & { key: string }): ForecastCommi
   supplierId: 'sup-007', supplierName: 'PT Sample Packaging Indonesia', materialCode: 'PK-PETB-8801', materialLabel: 'Bottle',
   materialGroup: 'MG-20', uom: 'PCS', periodBucket: '2026-09-07', periodStart: '2026-09-07', periodEnd: '2026-09-13',
   zone: 'tradeOff', forecastQty: 1000, previousQty: 1000, publishedAt: '2026-08-28T02:00:00.000Z',
-  dueAt: '2026-09-04T02:00:00.000Z', reminderAt: '2026-08-31T14:00:00.000Z', state: 'awaiting', response: null,
-  carriedForward: false, draft: null, committedQty: null, log: [], otherQualifiedSuppliers: [],
+  // CR-26 — a Trade-off line of a version published Friday 28 August 09:00 WIB,
+  // on the public-holiday base calendar (an input to the ranking, not a pin).
+  dueAt: '2026-09-02T02:00:00.000Z', reminderAt: '2026-08-30T14:00:00.000Z', state: 'awaiting', response: null,
+  responseDueAt: null, carriedForward: false, draft: null, committedQty: null, log: [], otherQualifiedSuppliers: [],
   ...p,
 });
 

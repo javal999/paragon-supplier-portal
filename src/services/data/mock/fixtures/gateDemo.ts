@@ -164,7 +164,8 @@ const callOff = (n: number, poId: string, lineId: string, quantity: number, need
 };
 
 /**
- * The call-offs. Numbered straight after the base seed's CO-2026-0013, so the
+ * The call-offs. Numbered straight after the base seed's CO-2026-0021 (the base seed grew
+ * to 0021 with the BL-47/49 call-off demo rows), so the
  * store's next assigned number (seed length + 1) never collides.
  *
  * sup-019 — 5 measured: bottle + cap received on their date at −70 and −42 days
@@ -178,25 +179,25 @@ const callOff = (n: number, poId: string, lineId: string, quantity: number, need
  *   page shows it — a 79% supplier honestly carries one.
  */
 export const GATE_DEMO_CALL_OFFS: readonly CallOff[] = [
-  callOff(14, 'po-191', 'li-191a', 40_000, -70),
-  callOff(15, 'po-191', 'li-191b', 40_000, -70),
-  callOff(16, 'po-191', 'li-191a', 40_000, -42),
-  callOff(17, 'po-191', 'li-191b', 40_000, -42),
-  callOff(18, 'po-191', 'li-191a', 40_000, -14),
-  callOff(19, 'po-192', 'li-192a', 30_000, -84),
-  callOff(20, 'po-192', 'li-192b', 30_000, -84),
-  callOff(21, 'po-192', 'li-192c', 10_000, -77),
-  callOff(22, 'po-192', 'li-192a', 30_000, -70),
-  callOff(23, 'po-192', 'li-192b', 30_000, -70),
-  callOff(24, 'po-192', 'li-192a', 30_000, -56),
-  callOff(25, 'po-192', 'li-192b', 30_000, -56),
-  callOff(26, 'po-192', 'li-192c', 10_000, -49),
-  callOff(27, 'po-192', 'li-192a', 30_000, -42),
-  callOff(28, 'po-192', 'li-192b', 30_000, -42),
-  callOff(29, 'po-192', 'li-192a', 30_000, -28),
-  callOff(30, 'po-192', 'li-192b', 30_000, -28),
-  callOff(31, 'po-192', 'li-192c', 10_000, -21),
-  callOff(32, 'po-192', 'li-192a', 30_000, -14),
+  callOff(22, 'po-191', 'li-191a', 40_000, -70),
+  callOff(23, 'po-191', 'li-191b', 40_000, -70),
+  callOff(24, 'po-191', 'li-191a', 40_000, -42),
+  callOff(25, 'po-191', 'li-191b', 40_000, -42),
+  callOff(26, 'po-191', 'li-191a', 40_000, -14),
+  callOff(27, 'po-192', 'li-192a', 30_000, -84),
+  callOff(28, 'po-192', 'li-192b', 30_000, -84),
+  callOff(29, 'po-192', 'li-192c', 10_000, -77),
+  callOff(30, 'po-192', 'li-192a', 30_000, -70),
+  callOff(31, 'po-192', 'li-192b', 30_000, -70),
+  callOff(32, 'po-192', 'li-192a', 30_000, -56),
+  callOff(33, 'po-192', 'li-192b', 30_000, -56),
+  callOff(34, 'po-192', 'li-192c', 10_000, -49),
+  callOff(35, 'po-192', 'li-192a', 30_000, -42),
+  callOff(36, 'po-192', 'li-192b', 30_000, -42),
+  callOff(37, 'po-192', 'li-192a', 30_000, -28),
+  callOff(38, 'po-192', 'li-192b', 30_000, -28),
+  callOff(39, 'po-192', 'li-192c', 10_000, -21),
+  callOff(40, 'po-192', 'li-192a', 30_000, -14),
 ];
 
 /**
