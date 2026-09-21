@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 1.3, 2026-09-21 |
+| Version | 1.4, 2026-09-21 |
 | What this is | Everything known to be outstanding for the Supplier Hub, in one list: decisions waiting on people, work waiting on those decisions, work waiting on the backend, and work that can start today |
 | What this is not | A plan or a commitment. Nothing here has a date. Sequencing belongs to the project owner |
 | Sources | Open items (section 7 of `SUPPLIER-HUB-REQUIREMENTS.md`), open decisions (section 9.3 of `SUPPLIER-HUB-PRD.md`), what is not built (section 5 of `BUILD-GAP.md`), stubs (section 6 of the requirements), and defects or debts found while building |
@@ -41,8 +41,6 @@ Decided on 2026-09-21 and ready to build. Priority: first what protects money an
 
 | Priority | ID | Item | Rule | Size | Placeholder until decided |
 |---|---|---|---|---|---|
-| 2 | BL-44 | **Invoice price tolerance.** 0% where a contract price exists; 2% otherwise, within an absolute rupiah cap | CR-12 | S | Cap IDR 500,000 (BL-54) |
-| 3 | BL-45 | **Goods receipt tolerance.** Any over-delivery flagged; a shortfall above 2% flagged and the receipt kept open | CR-25 | S | — |
 | 4 | BL-46 | **Alert risk class by lead time.** High below lead time, Medium below 1.5 × lead time, Low otherwise; day bands only where the lead time is missing, which raises its own alert | CR-24 | M | — |
 | 5 | BL-47 | **Call-off tolerance.** Up to 5% over accepted for every call-off type; any shortfall a visible partial; a late date always goes to planner approval; an early date also goes to approval until the warehouse answers | CR-05 | S | Early allowance 0 days (BL-56) |
 | 6 | BL-48 | **Forecast commitment deadline.** Firm periods 1 working day, Trade-off and Forecast 3 working days | CR-26 | S | — |
@@ -137,3 +135,5 @@ Nothing blocks these.
 | BL-61 | One list on the supplier inventory view | 2026-09-21 | Built: tabs only when a supplier supplies both types; PTI view unchanged |
 | BL-62 | Capacity "upside" relabelled | 2026-09-21 | Built: "Extra capacity if requested", with an explanation |
 | BL-63 | Capacity page filters | 2026-09-21 | Built: supplier, material group, material, gaps only, kept in the page address |
+| BL-44 | Invoice price tolerance | 2026-09-21 | Built: per line, 0% on a contract price, otherwise 2% within the cap (placeholder IDR 500,000 until BL-54); the invoice shows which rule applied |
+| BL-45 | Goods receipt tolerance | 2026-09-21 | Built: any over-delivery flagged; a shortfall above 2% flagged and shown as kept open (a label; it does not reopen the order quantity) |
