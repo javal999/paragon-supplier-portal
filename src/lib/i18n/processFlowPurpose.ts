@@ -379,6 +379,8 @@ export const processFlowPurposeEn: Record<string, string> = {
     'One attempt to pull stock figures straight from a connected supplier, kept whether it worked or not.',
   'processFlows.purpose.t_stocksync_run':
     'The planner pulls the latest stock figures from a connected supplier. If the supplier does not answer, the error and time are shown and the previous figures stay, marked out of date.',
+  'processFlows.purpose.t_stocksync_pull':
+    'A connected supplier pulls its own latest stock figures from its own records with the Sync button. If they do not answer, the error and time are shown and the previous figures stay, marked out of date.',
   'processFlows.purpose.t_stockaccess_change':
     'The planner changes which materials a supplier with access may see PTI stock for. The change is logged.',
   'processFlows.purpose.entity.capacitySubmission':
@@ -793,6 +795,8 @@ export const processFlowPurposeId: Record<string, string> = {
     'Satu upaya menarik angka stok dari sistem pemasok yang terhubung ke hub, disimpan baik berhasil maupun gagal.',
   'processFlows.purpose.t_stocksync_run':
     'Perencana menarik angka stok terbaru dari pemasok yang terhubung. Jika sistem pemasok tidak menjawab, kesalahan dan waktunya ditampilkan dan angka sebelumnya tetap ada, ditandai kedaluwarsa.',
+  'processFlows.purpose.t_stocksync_pull':
+    'Pemasok yang terhubung menarik angka stok terbarunya sendiri dari catatan stoknya dengan tombol Sinkronkan. Jika tidak ada jawaban, kesalahan dan waktunya ditampilkan dan angka sebelumnya tetap ada, ditandai kedaluwarsa.',
   'processFlows.purpose.entity.capacitySubmission':
     'Kapasitas yang dialokasikan pemasok untuk PTI per kelompok material dan minggu, untuk 13 minggu ke depan.',
   'processFlows.purpose.t_capacity_submit':

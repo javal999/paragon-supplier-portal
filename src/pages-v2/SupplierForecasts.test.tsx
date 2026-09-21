@@ -423,50 +423,18 @@ describe('SupplierForecasts — the false-deficit chain (CP-0 · 2c)', () => {
   });
 });
 
-describe('SupplierForecasts — the Σ-banner reads the SAME parse as the payload (CP-0 · 2c)', () => {
-  const openSoh = async () => {
+// BL-60 (REQ-E08-02 BR-09) — the Stock tab's own entry (a declare form, a batch
+// grid and a free-form spreadsheet import) was RETIRED: stock has ONE entry
+// point, the Stock page. The Σ-banner specs that stood here tested that form and
+// were deleted with it; the Stock page's entry has its own specs.
+describe('SupplierForecasts — the Stock tab is a signpost, not a second entry point (BL-60)', () => {
+  it('links to the Stock page and offers no stock entry of its own', async () => {
     renderPage();
-    // The declare CTA lives on the Stock (SOH) tab, not the default lines tab.
     fireEvent.click(await screen.findByRole('tab', { name: /Stock \(SOH\)/ }));
-    fireEvent.click(await screen.findByRole('button', { name: /Declare stock/i }));
-    await screen.findByLabelText(/Total quantity/);
-  };
-  const setTotal = (v: string) =>
-    fireEvent.change(screen.getByLabelText(/Total quantity/), { target: { value: v } });
-
-  // Two batch rows of 1,200 each — Σ 2,400, matching the total under the ID
-  // reading of "2.400" and mismatching under the EN one. That is the whole point.
-  const addTwoBatches = () => {
-    fireEvent.click(screen.getByRole('button', { name: /Add batch/i }));
-    fireEvent.click(screen.getByRole('button', { name: /Add batch/i }));
-    fireEvent.change(screen.getByLabelText('Batch number 1'), { target: { value: 'A' } });
-    fireEvent.change(screen.getByLabelText('Batch quantity 1'), { target: { value: '1200' } });
-    fireEvent.change(screen.getByLabelText('Batch number 2'), { target: { value: 'B' } });
-    fireEvent.change(screen.getByLabelText('Batch quantity 2'), { target: { value: '1200' } });
-  };
-
-  it('an AMBIGUOUS total states the refusal — never a fabricated Σ mismatch', async () => {
-    await openSoh();
-    setTotal('2.400'); // 2400 under id, 2.4 under en
-    addTwoBatches();
-
-    // The banner used to compute 2,4 from its OWN parse, declare the batches
-    // mismatched, and block — accusing the supplier of arithmetic they had not
-    // got wrong. The honest answer is that the total cannot be read at all.
-    const banner = screen.getByTestId('soh-batch-sum');
-    expect(banner.textContent).not.toMatch(/do not add up|2,4/);
-    expect(banner.textContent?.trim()).not.toBe('');
-  });
-
-  it('a READABLE total and matching batches agree — banner and payload derive from one parse', async () => {
-    await openSoh();
-    setTotal('2400');
-    addTwoBatches();
-
-    const banner = screen.getByTestId('soh-batch-sum');
-    // 2.400 is formatNumber(2400) — id-ID grouping, the display convention.
-    expect(banner.textContent).toContain('2.400');
-    expect(banner.textContent).not.toMatch(/do not add up/);
+    expect(await screen.findByTestId('sdcsup-stock-moved')).toBeInTheDocument();
+    expect(screen.getByTestId('sdcsup-stock-moved-link')).toHaveAttribute('href', '/supplier/inventory');
+    expect(screen.queryByRole('button', { name: /Declare stock/i })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Bulk stock entry/i })).toBeNull();
   });
 });
 
@@ -484,10 +452,9 @@ describe('SupplierForecasts — the shipment quantity is parsed, never coerced (
   // sup-007 (the seeded persona) owns PK-PETB-8810 and four own ASNs, so the
   // material select, the direction and the ASN link are all reachable by hand
   // on ONE form — the smoke path, exercised here.
-  // The SOH panel and the shipment panel are BOTH mounted, and both carry a
-  // "Material" label — so these address the shipment panel's fields by their
-  // own ids (the same ids the labels' htmlFor points at). A missing id throws
-  // rather than silently matching the wrong panel.
+  // Several panels are mounted at once, so these address the shipment panel's
+  // fields by their own ids (the same ids the labels' htmlFor points at). A
+  // missing id throws rather than silently matching the wrong panel.
   const field = <T extends HTMLElement>(id: string): T => {
     const el = document.getElementById(id);
     if (!el) throw new Error(`shipment panel field #${id} is not in the document`);

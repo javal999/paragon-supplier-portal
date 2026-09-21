@@ -293,6 +293,7 @@ export const TRANSITION_PURPOSE: FlowAnnotations = Object.freeze({
   t_stockaccess_change: { purposeKey: 'processFlows.purpose.t_stockaccess_change' },
   t_stockaccess_remove: { purposeKey: 'processFlows.purpose.t_stockaccess_remove' },
   t_stocksync_run: { purposeKey: 'processFlows.purpose.t_stocksync_run' },
+  t_stocksync_pull: { purposeKey: 'processFlows.purpose.t_stocksync_pull' },
   t_capacity_submit: { purposeKey: 'processFlows.purpose.t_capacity_submit' },
   t_inventoryalert_close: { purposeKey: 'processFlows.purpose.t_inventoryalert_close' },
   t_forecastversion_publish: { purposeKey: 'processFlows.purpose.t_forecastversion_publish' },

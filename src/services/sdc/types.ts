@@ -472,6 +472,8 @@ export interface InventoryBatch {
   readonly qty: number;
   /** Keys off MaterialMaster.canonicalUom (invariant #2). */
   readonly uom: Uom;
+  /** Optional (REQ-E08-02 BR-06, BL-60): not after `expiryDate`, not in the future. */
+  readonly manufacturingDate?: string;
   readonly expiryDate?: string;
 }
 

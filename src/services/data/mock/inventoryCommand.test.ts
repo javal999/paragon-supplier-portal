@@ -51,6 +51,7 @@ const positionOf = async (scope: QueryScope, supplierId: string, materialCode: s
 describe('roles (bilateral): planner syncs, grants and closes; supplier confirms capacity', () => {
   it('each new atom sits in exactly one lane on the right side', () => {
     expect(rolesHolding('stocksync:run')).toEqual(['planning']);
+    expect(rolesHolding('stocksync:pull')).toEqual(['fulfilment']);
     expect(rolesHolding('stockaccess:manage')).toEqual(['planning']);
     expect(rolesHolding('inventoryalert:close')).toEqual(['planning']);
     expect(rolesHolding('capacity:confirm')).toEqual(['fulfilment']);
@@ -99,6 +100,34 @@ describe('stock submission (REQ-E08-02)', () => {
     expect((await declare({ materialCode: 'PK-PETB-8801', totalQty: 100, channel: 'api' })).reason).toMatch(/channel/);
   });
 
+  it('BL-60: a batch manufacturing date is stored; after expiry or in the future is refused by the verb', async () => {
+    const today = now().slice(0, 10);
+    const ok = await declare({
+      materialCode: 'PK-PETB-8801',
+      totalQty: 100,
+      batches: [{ batchNumber: 'M1', qty: 100, manufacturingDate: today, expiryDate: '2099-01-01' }],
+    });
+    expect(ok.status).toBe('done');
+    expect(inventoryDeclarationStore.latestFor('sup-007', 'PK-PETB-8801')!.batches).toEqual([
+      { batchNumber: 'M1', qty: 100, uom: 'PCS', manufacturingDate: today, expiryDate: '2099-01-01' },
+    ]);
+    expect((await positionOf(sup007, 'sup-007', 'PK-PETB-8801'))!.batches[0]).toMatchObject({ manufacturingDate: today });
+    const before = inventoryDeclarationStore.all().length;
+    const after = await declare({
+      materialCode: 'PK-PETB-8801',
+      totalQty: 100,
+      batches: [{ batchNumber: 'M2', qty: 100, manufacturingDate: '2026-01-10', expiryDate: '2026-01-09' }],
+    });
+    expect(after.reason).toMatch(/manufacturing date is after the expiry date/);
+    const future = await declare({
+      materialCode: 'PK-PETB-8801',
+      totalQty: 100,
+      batches: [{ batchNumber: 'M3', qty: 100, manufacturingDate: '2099-01-01' }],
+    });
+    expect(future.reason).toMatch(/manufacturing date is in the future/);
+    expect(inventoryDeclarationStore.all()).toHaveLength(before);
+  });
+
   it('BR-08: PTI records a WhatsApp reply on the supplier’s behalf — "Entered by PTI", visible to the supplier', async () => {
     const res = await svc.dispatch(buyer, {
       transitionId: 't_inventorydeclaration_record',
@@ -143,6 +172,40 @@ describe('API sync (REQ-E08-02 BR-03, AC-02, edge case)', () => {
   it('known-bad: a supplier that is not API-connected, and a supplier pressing Sync', async () => {
     expect((await sync('sup-007')).reason).toMatch(/NOT_API_CONNECTED/);
     expect((await sync('sup-001', supplier('sup-001'))).reason).toMatch(/ROLE_NOT_PERMITTED/);
+  });
+});
+
+describe('supplier-triggered sync (BL-59, REQ-E08-02 BR-03, AC-02)', () => {
+  const pull = (supplierId: string, scope: QueryScope = supplier(supplierId)) =>
+    svc.dispatch(scope, { transitionId: 't_stocksync_pull', entity: 'stockSync', payload: { supplierId } });
+
+  it('known-good: a connected supplier pulls its OWN stock from its seat', async () => {
+    const res = await pull('sup-001');
+    expect(res.status).toBe('done');
+    expect(stockSyncStore.get(res.entityId!)).toMatchObject({ supplierId: 'sup-001', outcome: 'success', at: now() });
+    expect((await positionOf(supplier('sup-001'), 'sup-001', 'RM-LAURIC-7200'))!).toMatchObject({
+      supplierSoh: 9000,
+      channel: 'api',
+      lastUpdatedAt: now(),
+    });
+  });
+
+  it('a failing connection records the error and keeps the previous figures, stale', async () => {
+    const figures = inventoryDeclarationStore.all().length;
+    const res = await pull('sup-003');
+    expect(stockSyncStore.get(res.entityId!)).toMatchObject({ outcome: 'failed', errorKey: 'timeout' });
+    expect(inventoryDeclarationStore.all()).toHaveLength(figures);
+    expect(stockFreshness((await positionOf(supplier('sup-003'), 'sup-003', 'FR-WARD-4410'))!, now())).toBe('stale');
+  });
+
+  it('known-bad: another supplier’s stock, a non-connected supplier, a seat without fulfilment, and the buyer', async () => {
+    // Scope: the owner the target names is the PAYLOAD's supplier, not the seat's.
+    await expect(pull('sup-003', supplier('sup-001'))).rejects.toMatchObject({ code: 'SCOPE_DENIED' });
+    expect((await pull('sup-007')).reason).toMatch(/NOT_API_CONNECTED/);
+    const commercialOnly: QueryScope = { ...supplier('sup-001'), businessRoles: ['supplier', 'commercial'] };
+    expect((await pull('sup-001', commercialOnly)).reason).toMatch(/ROLE_NOT_PERMITTED/);
+    // The planner keeps its own verb; the supplier's is not the planner's.
+    expect((await pull('sup-001', buyer)).reason).toMatch(/ROLE_NOT_PERMITTED/);
   });
 });
 

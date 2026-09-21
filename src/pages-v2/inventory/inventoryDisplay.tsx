@@ -263,3 +263,36 @@ export function readFileText(file: File): Promise<string> {
     reader.readAsText(file);
   });
 }
+
+/**
+ * REQ-E08-02 BR-10 / AC-05 (BL-60) — the in-transit part of incoming stock,
+ * shown READ-ONLY beside the in-production figure on both stock entry methods.
+ * The supplier never types it: it is the position's own in-transit items, which
+ * `inTransitItems` derives from submitted ASNs and dispatched call-offs, and it
+ * names the documents it comes from. Deliberately not a form control.
+ */
+export const InTransitReadOnly: React.FC<{ position: InventoryPosition; testId?: string }> = ({
+  position,
+  testId = 'in-transit-readonly',
+}) => {
+  const { t } = useTranslation();
+  const items = position.incoming.filter((i) => i.source !== 'production');
+  const total = items.reduce((s, i) => s + i.quantity, 0);
+  const refs = [...new Set(items.map((i) => i.reference).filter((r): r is string => !!r))];
+  return (
+    <div data-testid={testId}>
+      <span className={labelClass}>{t('inv.entry.inTransit', { uom: position.uom })}</span>
+      <div className="px-3 py-2 text-sm rounded-md bg-bg-hover border border-border-subtle text-text-primary">
+        <Data data-testid={`${testId}-qty`}>{qty(total)}</Data>
+        {refs.length > 0 ? (
+          <span className="ml-2 text-xs text-text-secondary" data-testid={`${testId}-source`}>
+            {t('inv.entry.inTransitFrom', { refs: refs.join(', ') })}
+          </span>
+        ) : (
+          <span className="ml-2 text-xs text-text-tertiary">{t('inv.entry.inTransitNone')}</span>
+        )}
+      </div>
+      <p className="mt-1 text-xs text-text-tertiary">{t('inv.entry.inTransitHint')}</p>
+    </div>
+  );
+};

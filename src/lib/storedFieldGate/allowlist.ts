@@ -295,22 +295,6 @@ export const STORED_FIELD_ALLOWLIST: readonly Exemption[] = Object.freeze([
       'the refusal SITES; this outcome field is a separate carrier that no site reads.',
     since: D_F,
   },
-  {
-    key: 'DraftOutcome.field',
-    reason: 'unadjudicated',
-    why:
-      'Which field of an SDC draft submission was refused. Zero reads. Same shape as ' +
-      'PoConfirmQtysOutcome.line: the refusal knows where it happened and nothing asks.',
-    since: D_F,
-  },
-  {
-    key: 'RefusedImportRow.batchNumber',
-    reason: 'unadjudicated',
-    why:
-      'The batch number on a refused xlsx import row, stored so a rejected row can be identified by the ' +
-      'importer. Zero reads — the import refusal surface identifies rows some other way.',
-    since: D_F,
-  },
   // ⚠️ `DataError.cause` STOOD HERE, AND ITS DELETION IS THIS LIST'S FIRST
   // SHRINK. The row said the field discarded "every underlying cause the data
   // layer captures"; deriving the call sites showed ZERO OF SEVEN pass a cause
