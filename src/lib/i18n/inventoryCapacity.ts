@@ -15,10 +15,6 @@ export const inventoryCapacityEn: Record<string, string> = {
   'inv.type.VERP': 'Packaging',
 
   'inv.filter.all': 'All',
-  'inv.filter.critical': 'Critical',
-  'inv.filter.warning': 'Warning',
-  'inv.filter.healthy': 'Healthy',
-  'inv.filter.excess': 'Excess',
   'inv.filter.stale': 'Out of date',
 
   'inv.col.material': 'Material',
@@ -44,6 +40,9 @@ export const inventoryCapacityEn: Record<string, string> = {
   'inv.band.excess': 'Excess',
   'inv.band.noDemand': 'No demand in the next 30 days',
   'inv.band.noFigures': 'No stock figures',
+  'inv.basis.leadTime': 'Lead time {{count}} days',
+  'inv.basis.fallback': 'No lead time · day bands: {{band}}',
+  'inv.basis.cover': 'Cover {{count}} days',
 
   'inv.freshness.stale': 'Out of date',
   'inv.freshness.missing': 'No figures yet',
@@ -73,7 +72,8 @@ export const inventoryCapacityEn: Record<string, string> = {
   'inv.pti.subtitle': 'Supplier and PTI stock, reorder points and incoming supply per material and supplier.',
   'inv.pti.empty': 'No supplier stock to show yet.',
   'inv.pti.record': 'Record stock from a supplier message',
-  'inv.pti.banner.critical': 'Materials with less than 14 days of supply: {{count}}',
+  'inv.pti.banner.high': 'Materials at High risk (cover below the supplier lead time): {{count}}',
+  'inv.pti.banner.leadTimeMissing': 'Materials with no supplier lead time on record, using the day bands: {{count}}',
   'inv.pti.banner.stale': 'Supplier figures past their update deadline: {{count}}',
 
   'inv.sync.title': 'Suppliers connected by system',
@@ -290,6 +290,7 @@ export const inventoryCapacityEn: Record<string, string> = {
   'inv.alerts.rule.staleData': 'Supplier stock figures are out of date',
   'inv.alerts.rule.coverage': 'Supplier stock and incoming do not cover the next 30 days of demand',
   'inv.alerts.rule.commitmentBelowForecast': 'Committed quantity below forecast beyond tolerance',
+  'inv.alerts.rule.leadTimeMissing': 'No supplier lead time on record: risk uses the day bands until the master data is fixed',
   'inv.alerts.openInventory': 'Open inventory',
   'inv.alerts.openCapacity': 'Open capacity',
   'inv.alerts.openCommitments': 'Open commitments & gaps',
@@ -307,6 +308,7 @@ export const inventoryCapacityEn: Record<string, string> = {
   'inv.alerts.sup.rule.commitmentBelowForecast': 'Your commitment is below PTI forecast beyond tolerance',
   'inv.alerts.sup.rule.ptiBelowRop': 'PTI stock is below the PTI reorder point',
   'inv.alerts.sup.rule.projectedStockOut': 'PTI stock runs out before the next incoming delivery',
+  'inv.alerts.sup.rule.leadTimeMissing': 'PTI has no lead time on record for this material',
 
   'inv.group.MG-01': 'Surfactants and cleansing actives',
   'inv.group.MG-02': 'Emollients, oils and esters',
@@ -334,10 +336,6 @@ export const inventoryCapacityId: Record<string, string> = {
   'inv.type.VERP': 'Kemasan',
 
   'inv.filter.all': 'Semua',
-  'inv.filter.critical': 'Kritis',
-  'inv.filter.warning': 'Waspada',
-  'inv.filter.healthy': 'Sehat',
-  'inv.filter.excess': 'Berlebih',
   'inv.filter.stale': 'Kedaluwarsa',
 
   'inv.col.material': 'Material',
@@ -363,6 +361,9 @@ export const inventoryCapacityId: Record<string, string> = {
   'inv.band.excess': 'Berlebih',
   'inv.band.noDemand': 'Tidak ada kebutuhan dalam 30 hari ke depan',
   'inv.band.noFigures': 'Belum ada angka stok',
+  'inv.basis.leadTime': 'Waktu tunggu {{count}} hari',
+  'inv.basis.fallback': 'Tanpa waktu tunggu · pita hari: {{band}}',
+  'inv.basis.cover': 'Cakupan {{count}} hari',
 
   'inv.freshness.stale': 'Kedaluwarsa',
   'inv.freshness.missing': 'Belum ada angka',
@@ -392,7 +393,8 @@ export const inventoryCapacityId: Record<string, string> = {
   'inv.pti.subtitle': 'Stok pemasok dan PTI, titik pemesanan ulang, dan pasokan yang akan datang per material dan pemasok.',
   'inv.pti.empty': 'Belum ada stok pemasok untuk ditampilkan.',
   'inv.pti.record': 'Catat stok dari pesan pemasok',
-  'inv.pti.banner.critical': 'Material dengan persediaan kurang dari 14 hari: {{count}}',
+  'inv.pti.banner.high': 'Material berisiko Tinggi (cakupan di bawah waktu tunggu pemasok): {{count}}',
+  'inv.pti.banner.leadTimeMissing': 'Material tanpa waktu tunggu pemasok, memakai pita hari: {{count}}',
   'inv.pti.banner.stale': 'Angka pemasok yang melewati batas pembaruan: {{count}}',
 
   'inv.sync.title': 'Pemasok yang terhubung lewat sistem',
@@ -609,6 +611,7 @@ export const inventoryCapacityId: Record<string, string> = {
   'inv.alerts.rule.staleData': 'Angka stok pemasok kedaluwarsa',
   'inv.alerts.rule.coverage': 'Stok dan kedatangan pemasok tidak menutup kebutuhan 30 hari ke depan',
   'inv.alerts.rule.commitmentBelowForecast': 'Kuantitas komitmen di bawah prakiraan melebihi toleransi',
+  'inv.alerts.rule.leadTimeMissing': 'Waktu tunggu pemasok belum tercatat: risiko memakai pita hari sampai data induk diperbaiki',
   'inv.alerts.openInventory': 'Buka stok',
   'inv.alerts.openCapacity': 'Buka kapasitas',
   'inv.alerts.openCommitments': 'Buka komitmen & selisih',
@@ -626,6 +629,7 @@ export const inventoryCapacityId: Record<string, string> = {
   'inv.alerts.sup.rule.commitmentBelowForecast': 'Komitmen Anda di bawah prakiraan PTI melebihi toleransi',
   'inv.alerts.sup.rule.ptiBelowRop': 'Stok PTI di bawah titik pemesanan ulang PTI',
   'inv.alerts.sup.rule.projectedStockOut': 'Stok PTI habis sebelum kedatangan berikutnya',
+  'inv.alerts.sup.rule.leadTimeMissing': 'PTI belum mencatat waktu tunggu untuk material ini',
 
   'inv.group.MG-01': 'Surfaktan dan bahan pembersih',
   'inv.group.MG-02': 'Emolien, minyak, dan ester',

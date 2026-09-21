@@ -41,7 +41,6 @@ Decided on 2026-09-21 and ready to build. Priority: first what protects money an
 
 | Priority | ID | Item | Rule | Size | Placeholder until decided |
 |---|---|---|---|---|---|
-| 4 | BL-46 | **Alert risk class by lead time.** High below lead time, Medium below 1.5 × lead time, Low otherwise; day bands only where the lead time is missing, which raises its own alert | CR-24 | M | — |
 | 9 | BL-51 | **3PL tracking link on the ASN.** An administrator-maintained list of 3PLs and their public tracking addresses; the tracking number on an ASN becomes a link out. No reading of status from the 3PL's site | REQ-E07-04 BR-05 | S | A short sample list, marked as sample |
 | 10 | BL-52 | **Supplier filters.** Certificate validity, then performance band, then country or region | REQ-E03-01 BR-05 | S | — |
 | 11 | BL-53 | **KPI definitions on the performance pages.** State the delivery window, whether early counts, the grain, and whether a date change resets the clock; show targets as "baseline period" until they are set | BL-19 decision | S | Baseline period, no target |
@@ -125,6 +124,7 @@ Nothing blocks these.
 | BL-21 | Event-based strategy analysis | 2026-09-21 | Closed with BL-02 |
 | BL-22 | Supplier TMS access | 2026-09-21 | Closed with BL-03 |
 | BL-43 | Compliance gate at award | 2026-09-21 | Built: CR-23 gate refuses an award to a failing supplier and shows the failed criteria; quote score re-weighted 40/20/40 (CR-15) over qualified suppliers. Placeholder OTIF minimum 80% until BL-55 |
+| BL-46 | Alert risk class by lead time | 2026-09-21 | Built: one risk-class function (CR-24) for the inventory views, the dashboard widget and the alerts: High below the supplier lead time, Medium below 1.5 ×, Low otherwise, strict at both cuts; the CR-02 day bands only where the lead time is missing, which raises a "lead time missing" alert for PTI. Every surface shows the basis. Lead times are sample master data; demo table in `BUILD-GAP.md` 3.2 |
 | BL-64 | Compliance gate demo data | 2026-09-21 | Built: five sample RFQs (016–020) cover every CR-23 scenario; an RFQ nobody can win says so. Table in `BUILD-GAP.md` |
 | BL-60 | One stock entry | 2026-09-21 | Built: manual and template share the same fields on the Stock page; the Forecast page's old entry retired; optional manufacturing date; in-transit read-only from ASNs and call-offs |
 | BL-59 | Supplier-triggered stock sync | 2026-09-21 | Built (simulated until BL-25): supplier Sync for API-connected suppliers; PTI stock refresh only for granted materials |

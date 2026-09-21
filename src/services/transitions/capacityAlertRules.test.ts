@@ -21,9 +21,9 @@ import {
   deriveAlertConditions,
   groupAlertsBySupplier,
   parseAlertKey,
-  positionRiskClass,
   type AlertLedgerEntry,
 } from './inventoryAlertRules';
+import { positionRisk } from './inventoryRules';
 import type { MaterialMasterEntry } from '../sdc/types';
 
 const NOW = '2026-08-31T12:00:00.000Z';
@@ -129,6 +129,7 @@ const position = (over: Partial<InventoryPosition> = {}): InventoryPosition => (
   incoming: [],
   avgDailyDemand: 100,
   demandSource: 'forecast',
+  leadTimeDays: 30,
   lastUpdatedAt: '2026-08-31T02:00:00.000Z',
   channel: 'manual',
   updateSla: 7,
@@ -138,16 +139,35 @@ const position = (over: Partial<InventoryPosition> = {}): InventoryPosition => (
   ...over,
 });
 
-describe('REQ-E08-05 BR-02 — risk class', () => {
-  it('High on Critical days or Uncovered; Medium on Warning or At risk; otherwise Low', () => {
-    expect(positionRiskClass(position({ supplierSoh: 1300 }))).toBe('high'); // 13 days
-    expect(positionRiskClass(position({ supplierSoh: 2500 }))).toBe('medium'); // 25 days, 0.83 cover
-    expect(positionRiskClass(position({ supplierSoh: 4500 }))).toBe('low'); // 45 days
-    // Healthy days but Uncovered is impossible with the same demand, so probe coverage via incoming:
-    // 29 days is Warning; with incoming it is Covered, still Medium by the band.
+describe('REQ-E08-05 BR-02 — risk class (CR-24 since 2026-09-21; was CR-02 band × CR-03 coverage)', () => {
+  // Demand 100/day, lead time 30 days, so 1× = 3000 and 1.5× = 4500 units.
+  it('lead time decides: High below it, Medium below 1.5 ×, Low otherwise', () => {
+    expect(positionRisk(position({ supplierSoh: 1300 })).riskClass).toBe('high'); // 13 days
+    expect(positionRisk(position({ supplierSoh: 4500 })).riskClass).toBe('low'); // 45 days = 1.5 ×
+    // PREMISE CHANGED (BL-46): 25 days with 0.83 coverage was Medium under the
+    // old rule (Warning band, At-risk coverage). Against a 30-day lead time it
+    // is below 1 ×, so High.
+    expect(positionRisk(position({ supplierSoh: 2500 })).riskClass).toBe('high');
+    // PREMISE CHANGED: 29 days was Medium by the Warning band even when covered.
+    // It is still below the 30-day lead time, so High — coverage never lowers it.
     expect(
-      positionRiskClass(position({ supplierSoh: 2900, incoming: [{ source: 'production', date: null, quantity: 1000, reference: null }] })),
-    ).toBe('medium');
+      positionRisk(position({ supplierSoh: 2900, incoming: [{ source: 'production', date: null, quantity: 1000, reference: null }] }))
+        .riskClass,
+    ).toBe('high');
+  });
+
+  it('coverage no longer sets the class: Uncovered but above 1.5 × lead time is Low', () => {
+    // 45 days of cover, lead time 20 (1.5 × = 30): Low, whatever coverage says.
+    expect(positionRisk(position({ supplierSoh: 4500, leadTimeDays: 20 })).riskClass).toBe('low');
+  });
+
+  it('no lead time: the CR-02 bands decide, and the basis says so', () => {
+    expect(positionRisk(position({ supplierSoh: 1300, leadTimeDays: null }))).toEqual({
+      riskClass: 'high',
+      basis: { kind: 'fallbackBands', band: 'critical', daysOfCover: 13 },
+    });
+    expect(positionRisk(position({ supplierSoh: 2500, leadTimeDays: null })).riskClass).toBe('medium'); // Warning
+    expect(positionRisk(position({ supplierSoh: 4500, leadTimeDays: null })).riskClass).toBe('low'); // Healthy
   });
 });
 
@@ -160,6 +180,7 @@ describe('REQ-E08-05 BR-01 — each rule raises an alert when its condition is m
         position({ materialCode: 'P3', ptiSoh: 300, incoming: [{ source: 'asn', date: '2026-09-10', quantity: 1, reference: 'A' }] }),
         position({ materialCode: 'P4', lastUpdatedAt: '2026-08-01T00:00:00.000Z' }),
         position({ materialCode: 'P5', supplierSoh: 2000 }),
+        position({ materialCode: 'P6', supplierSoh: 1300, leadTimeDays: null }),
       ],
       [
         {
@@ -186,7 +207,19 @@ describe('REQ-E08-05 BR-01 — each rule raises an alert when its condition is m
       ]),
     );
     expect(conditions.find((c) => c.key === 'staleData|P4|sup-007')!.riskClass).toBe('low');
-    expect(conditions.find((c) => c.key === 'coverage|P5|sup-007')!.riskClass).toBe('high'); // 20 days, 0.67 cover
+    // 20 days against a 30-day lead time — High by CR-24, with its basis.
+    expect(conditions.find((c) => c.key === 'coverage|P5|sup-007')).toMatchObject({
+      riskClass: 'high',
+      riskBasis: { kind: 'leadTime', leadTimeDays: 30, daysOfCover: 20 },
+    });
+    // CR-24 — a missing lead time is its own alert, classed by the CR-02 fallback.
+    expect(conditions.find((c) => c.key === 'leadTimeMissing|P6|sup-007')).toMatchObject({
+      riskClass: 'high',
+      riskBasis: { kind: 'fallbackBands', band: 'critical', daysOfCover: 13 },
+    });
+    // Known-false: a position WITH a lead time never raises it.
+    expect(keys.filter((k) => k.startsWith('leadTimeMissing|'))).toEqual(['leadTimeMissing|P6|sup-007']);
+    expect(conditions.find((c) => c.key === 'staleData|P4|sup-007')!.riskBasis).toEqual({ kind: 'rule' });
     // A position with none of the conditions raises nothing.
     expect(keys.filter((k) => k.includes('|PK-A|'))).toEqual([]);
   });

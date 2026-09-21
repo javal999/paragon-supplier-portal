@@ -45,7 +45,8 @@ import SupplierSyncPanel from './inventory/SupplierSyncPanel';
 // One row per material the supplier supplies, from the ONE inventory model:
 // its stock on hand, its own reorder point ("Not provided" when absent), what
 // is incoming (in production and in transit, with the next date), days of
-// supply with its band (CR-01, CR-02), and when the figure was last updated,
+// supply with its risk class and basis (CR-01, CR-24 — the CR-02 bands only
+// where the lead time is missing), and when the figure was last updated,
 // how, and whether it is past its data-update SLA. PTI stock columns appear
 // only when PTI has granted access, and only carry figures for the permitted
 // materials — the read already removed everything else.
