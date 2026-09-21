@@ -376,6 +376,22 @@ describe('Capacity (REQ-E08-04)', () => {
     expect(within(plan).getAllByTestId(/capacity-gap-sup-007-MG-20-/)).toHaveLength(1);
     expect(plan).toHaveTextContent('Material');
   });
+
+  it('BL-62: "Extra capacity if requested", explained on both sides; the word "Upside" is gone', async () => {
+    const sup = renderWithProviders(<SupplierCapacity />, { identity: SUPPLIER });
+    expect(await screen.findByRole('columnheader', { name: /^Extra capacity if requested \(/ })).toBeInTheDocument();
+    expect(screen.getByTestId('capacity-upside-help')).toHaveTextContent('above the capacity you allocate');
+    expect(screen.getAllByLabelText(/Extra capacity if requested for the week of/).length).toBeGreaterThan(0);
+    expect(screen.queryByText(/Upside/)).toBeNull();
+    sup.unmount();
+    renderWithProviders(<BuyerCapacity />, { identity: PLANNER });
+    const plan = await screen.findByTestId('capacity-plan-sup-007-MG-20');
+    expect(within(plan).getByRole('columnheader', { name: /^Extra capacity if requested \(/ })).toBeInTheDocument();
+    expect(within(plan).getByTestId('capacity-upside-help-sup-007-MG-20')).toHaveTextContent('above its allocation');
+    expect(screen.queryByText(/Upside/)).toBeNull();
+    // ID wording as ruled.
+    expect(inventoryCapacityId['inv.capacity.col.upside']).toBe('Kapasitas tambahan jika diminta ({{uom}})');
+  });
 });
 
 describe('Alerts (REQ-E08-05)', () => {

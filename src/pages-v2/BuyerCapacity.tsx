@@ -156,6 +156,9 @@ const BuyerCapacity: React.FC = () => {
               </button>
               {open && (
                 <div className="overflow-x-auto border-t border-border-subtle">
+                  <p className="px-4 pt-2 text-xs text-text-tertiary" data-testid={`capacity-upside-help-${keyOf(p)}`}>
+                    {t('inv.capacity.upsideHelpPti')}
+                  </p>
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="text-label text-text-tertiary uppercase bg-bg-hover">
