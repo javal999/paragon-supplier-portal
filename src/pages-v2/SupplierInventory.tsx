@@ -74,7 +74,11 @@ const SupplierInventory: React.FC = () => {
     [rows],
   );
   const activeType: MaterialType = typeChosen ? type : counts.VERP > 0 ? 'VERP' : 'ROH';
-  const shown = rows.filter((r) => r.materialType === activeType);
+  // REQ-E08-01 BR-07 (BL-61) — one list on the supplier view: a supplier
+  // normally supplies one material type, so the raw material / packaging split
+  // appears only for a supplier that supplies both. The PTI view keeps it.
+  const splitByType = counts.ROH > 0 && counts.VERP > 0;
+  const shown = splitByType ? rows.filter((r) => r.materialType === activeType) : rows;
   const needUpdate = rows.filter((r) => stockFreshness(r, nowIso) !== 'current').length;
   const sharesPti = rows.some((r) => r.ptiStockShared);
   const grant = (access.data?.items ?? []).find((g) => g.supplierId === supplierId);
@@ -142,18 +146,20 @@ const SupplierInventory: React.FC = () => {
 
       <StockUploadPanel supplierId={supplierId} positions={rows} canSubmit={held} />
 
-      <SubTabs<MaterialType>
-        options={[
-          { id: 'ROH', label: t('inv.type.ROH'), count: counts.ROH },
-          { id: 'VERP', label: t('inv.type.VERP'), count: counts.VERP },
-        ]}
-        value={activeType}
-        onChange={(v) => {
-          setType(v);
-          setTypeChosen(true);
-        }}
-        className="mb-4"
-      />
+      {splitByType && (
+        <SubTabs<MaterialType>
+          options={[
+            { id: 'ROH', label: t('inv.type.ROH'), count: counts.ROH },
+            { id: 'VERP', label: t('inv.type.VERP'), count: counts.VERP },
+          ]}
+          value={activeType}
+          onChange={(v) => {
+            setType(v);
+            setTypeChosen(true);
+          }}
+          className="mb-4"
+        />
+      )}
 
       <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto">
         <Table>
