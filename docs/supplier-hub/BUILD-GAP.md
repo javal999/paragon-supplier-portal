@@ -112,6 +112,30 @@ The `CR-` rules are implemented in the hub's own modules and covered by their ow
 | Spreadsheet number and batch checks (CR-18, CR-19) | `src/lib/localeNumber.ts`, stock upload validation |
 | Integration retry classes (CR-20) | `src/services/transitions/settleFaults.ts` |
 
+### 3.1 Compliance gate demo scenarios
+
+Sample data (BL-64) so a buyer can see every CR-23 outcome on the sourcing pages (`/buyer/sourcing`, then an RFQ). The five sample RFQs are titled "Compliance gate demo — … (sample)"; the suppliers marked "(illustrative)" exist only for this demo. Fixtures: `src/services/data/mock/fixtures/gateDemo.ts`; each row is pinned by name in `gateDemo.test.ts`. Demo date: the declared present, 31 Aug 2026.
+
+| Scenario | RFQ | Supplier | Gate result |
+|---|---|---|---|
+| Halal certificate expired (the day before the demo date) | RFQ-2026-016 (Closed) | sup-018 PT Sample Raw Material Surabaya | Fails: halal |
+| Halal certificate expires on the demo date (still valid) | RFQ-2026-016 | sup-017 PT Sample Halal Raw Material Jakarta | Passes |
+| Halal certificate missing | RFQ-2026-016 | sup-009 Sample Vitamins Co. | Fails: halal |
+| GMP / ISO 22716 missing on a raw material | RFQ-2026-016 | sup-013 PT Sample Preform Works | Fails: GMP |
+| Mixed pass and fail; split award among passing suppliers | RFQ-2026-016 | sup-001 and sup-017 (e.g. 60 / 40) | Award recorded; a line naming sup-018 is refused |
+| BPOM missing where BPOM applies | RFQ-2026-017 (Closed) | sup-016 PT Sample Active Ingredient Indonesia | Fails: BPOM |
+| Registry row valid, supplier master holds no halal certificate | RFQ-2026-017 | sup-005 (registry row creg-0015) | Passes |
+| Several criteria at once | RFQ-2026-017, RFQ-2026-020 | sup-011 (halal, BPOM, GMP); sup-004 (halal, BPOM) | Fails |
+| Registry row expired, supplier master says valid | RFQ-2026-018 (Open, still collecting quotes) | sup-002 (registry row creg-0017) | Fails: halal |
+| OTIF exactly at the 80% minimum (4 of 5 call-offs) | RFQ-2026-019 (Closed) | sup-019 PT Sample Preform Bekasi | Passes |
+| OTIF just below the minimum (11 of 14, shown 79%) | RFQ-2026-019 | sup-020 PT Sample PET Bottle Karawang | Fails: OTIF |
+| Suspended | RFQ-2026-019 | sup-021 PT Sample Packaging Medan | Fails: status |
+| Blacklisted | RFQ-2026-019 | sup-022 PT Sample Closures Batam | Fails: status |
+| Material needing no certificate (packaging); no certificates and no OTIF history | RFQ-2026-019 | sup-011 Sample Salicylics & Niacinamide Ltd. | Passes |
+| Every bidder fails; award impossible, and the page says so | RFQ-2026-020 (Closed) | sup-011, sup-004, sup-009 | No award possible |
+
+Earlier demo rows still hold: RFQ-2026-003 (sup-010 halal expired), RFQ-2026-014 (sup-007 OTIF 50%, sup-008 OTIF 0%, sup-013 no history), RFQ-2026-004 (sup-004 halal and BPOM). The OTIF figures are calculated from sample call-offs and goods receipts (PO-2026-00191, PO-2026-00192), not typed in. Suspended and blacklisted suppliers cannot be invited; sup-021 and sup-022 represent a status change after the quote.
+
 ---
 
 ## 4. Prototype features that were kept or parked
