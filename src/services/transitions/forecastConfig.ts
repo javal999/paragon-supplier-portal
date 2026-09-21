@@ -10,7 +10,8 @@
 //     zone defaults to the supplier's lead time for that group.
 //   · CR-21 — commitment tolerance per zone.
 //   · CR-22 — gap colour thresholds.
-//   · REQ-E06-02 BR-07 — commitment deadlines; REQ-E06-03 BR-06 — reminders.
+//   · CR-26 / REQ-E06-02 BR-07 — commitment deadlines in working days on the
+//     hub calendar; REQ-E06-03 BR-06 — reminders.
 //   · Section 3.6 — starter reason codes for a commitment below forecast.
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -94,10 +95,14 @@ export const GAP_COLOUR_THRESHOLDS = Object.freeze({
   amberFrom: 0.8,
 });
 
-/** REQ-E06-02 BR-07 — Firm periods due 1 working day after publication. */
+/** CR-26 / REQ-E06-02 BR-07 — Firm periods due 1 working day after publication. */
 export const FIRM_DEADLINE_WORKING_DAYS = 1;
-/** REQ-E06-02 BR-07 — Trade-off and Forecast periods due 7 days after publication. */
-export const OTHER_DEADLINE_DAYS = 7;
+/**
+ * CR-26 / REQ-E06-02 BR-07 — Trade-off and Forecast periods due 3 WORKING days
+ * after publication (owner, 2026-09-21; BL-48). It was 7 calendar days, which
+ * no rule stated. Both deadlines count on the hub's working calendar (BL-50).
+ */
+export const OTHER_DEADLINE_WORKING_DAYS = 3;
 /** REQ-E06-03 BR-06 — the first reminder goes out at half the deadline. */
 export const REMINDER_FRACTION = 0.5;
 

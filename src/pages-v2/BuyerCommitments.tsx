@@ -38,6 +38,7 @@ import {
 } from '../services/transitions/forecastRules';
 import { inputClass, labelClass } from './inventory/inventoryDisplay';
 import {
+  CommitmentDeadline,
   CommitmentStatePill,
   GapCell,
   ZonePill,
@@ -237,6 +238,9 @@ const BuyerCommitments: React.FC = () => {
               <TableHeaderCell className="text-right">{t('fc.col.commitmentShort')}</TableHeaderCell>
               <TableHeaderCell>{t('fc.col.gap')}</TableHeaderCell>
               <TableHeaderCell>{t('fc.col.status')}</TableHeaderCell>
+              <TableHeaderCell>
+                <span title={t('fc.col.dueRule')}>{t('fc.col.due')}</span>
+              </TableHeaderCell>
               <TableHeaderCell>{t('fc.col.daysOfSupply')}</TableHeaderCell>
               <TableHeaderCell>{t('fc.col.actions')}</TableHeaderCell>
             </TableHeader>
@@ -250,7 +254,7 @@ const BuyerCommitments: React.FC = () => {
                     <TableCell>
                       <Data>{i + 1}</Data>
                     </TableCell>
-                    {/* Eleven columns — the widest list on the PTI side. The two
+                    {/* Twelve columns (CR-26 added the deadline) — the widest list on the PTI side. The two
                         free-text ones (supplier name, root-cause note) are bounded so
                         the Actions column keeps its place; both keep the full value on
                         the `title`. */}
@@ -292,6 +296,13 @@ const BuyerCommitments: React.FC = () => {
                     <TableCell>
                       <CommitmentStatePill line={l} nowIso={nowIso} />
                     </TableCell>
+                    <TableCell className="whitespace-nowrap">
+                      <CommitmentDeadline
+                        line={l}
+                        nowIso={nowIso}
+                        testId={`fc-due-exception-${l.supplierId}-${l.materialCode}-${l.periodBucket}`}
+                      />
+                    </TableCell>
                     <TableCell>{days === null ? '—' : <Data>{t('fc.days', { count: Math.floor(days) })}</Data>}</TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-2 min-w-[220px]">
@@ -323,7 +334,7 @@ const BuyerCommitments: React.FC = () => {
               })}
               {exceptions.length === 0 && (
                 <tr>
-                  <td colSpan={11} className="text-center text-sm text-text-tertiary py-8">
+                  <td colSpan={12} className="text-center text-sm text-text-tertiary py-8">
                     {t('fc.pti.gaps.noExceptions')}
                   </td>
                 </tr>
@@ -388,6 +399,13 @@ const BuyerCommitments: React.FC = () => {
                           {!gap && l.zone !== 'forecast' && ` · ${t('fc.state.awaiting')}`}
                           {l.zone === 'forecast' && l.state === 'acknowledged' && ` · ${t('fc.state.acknowledged')}`}
                         </div>
+                        {/* CR-26 · BL-48 — time left or how late, per cell. */}
+                        <CommitmentDeadline
+                          line={l}
+                          nowIso={nowIso}
+                          compact
+                          testId={`fc-due-cell-${l.supplierId}-${l.materialCode}-${l.periodBucket}`}
+                        />
                       </td>
                     );
                   })}

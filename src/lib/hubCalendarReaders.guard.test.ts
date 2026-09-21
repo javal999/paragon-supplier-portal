@@ -178,8 +178,6 @@ const CALENDAR_DAY_ALLOWLIST: Readonly<Record<string, string>> = {
     'An RFI/RFQ/RFP deadline is a DATE THE BUYER SETS on the event (CE-07); nothing computes it, so no calendar ruling can move it. This is a calendar-day countdown to that chosen date for the "closing soon" band.',
   'services/sdc/consolidation.ts#chaseList':
     "The superseded SDC design's interim chase threshold (RESPONSE_DUE_DAYS) on /buyer/chase, a route hidden from the MVP menu (NV-06) and replaced by REQ-E06-03. No Supplier Hub rule defines it, so changing it would invent one. Reported as a follow-up rather than left silently.",
-  'services/transitions/forecastRules.ts#commitmentDueAt':
-    'TEMPORARY — the Trade-off and Forecast commitment deadline still counts 7 calendar days. BL-48 (CR-26: 3 working days) replaces it, and this row must leave with it.',
 };
 
 describe('BL-50 · the deadline population reads the hub calendar', () => {
@@ -194,6 +192,8 @@ describe('BL-50 · the deadline population reads the hub calendar', () => {
     // And the calendar-day side has both a known member and a known non-member.
     expect(D.calendarDaySites).toContain('services/delivery/fulfillment.ts#statusForUnmatched');
     expect(D.calendarDaySites).not.toContain('services/data/poResponseProjection.ts#responseDeadline');
+    // BL-48 — the commitment deadline no longer counts calendar days.
+    expect(D.calendarDaySites).not.toContain('services/transitions/forecastRules.ts#commitmentDueAt');
   });
 
   it('the modules doing working-day arithmetic are exactly these (the derived list, pinned)', () => {

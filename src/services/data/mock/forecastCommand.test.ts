@@ -293,7 +293,7 @@ describe('REQ-E06-03 — planner actions on exceptions', () => {
 });
 
 describe('REQ-E06-03 BR-06 and REQ-E08-05 — reminders, escalation and the alert, derived at read', () => {
-  it('at the declared present: overdue Firm periods escalate; Trade-off periods of the emergency version are due soon', async () => {
+  it('at the declared present: overdue Firm periods escalate; awaiting Trade-off and Forecast periods are due soon', async () => {
     const now = sdcClock.now();
     const lines = await linesFor(buyer);
     const overdue = lines.filter((l) => deadlineState(l, now) === 'overdue').map((l) => `${l.supplierId}|${l.materialCode}|${l.periodBucket}`);
@@ -303,14 +303,26 @@ describe('REQ-E06-03 BR-06 and REQ-E08-05 — reminders, escalation and the aler
       `sup-012|PK-PETB-8801|${W[1]}`,
       `sup-012|PK-PETB-8801|${W[2]}`,
     ]);
+    // ⚠️ PREMISE CHANGED BY BL-48 (CR-26). Under the retired 7-calendar-day rule
+    // packaging version 2's Trade-off reminder fell AFTER the present, so sup-007
+    // had nothing due soon and this read `toEqual([])`. At 3 working days the
+    // deadline is days earlier and its reminder (half of it) is already past, so
+    // sup-007's awaiting Trade-off and Forecast periods ARE due soon now — and
+    // never a Firm one, which are overdue instead.
     const dueSoon007 = (await linesFor(sup007)).filter((l) => deadlineState(l, now) === 'dueSoon');
-    expect(dueSoon007).toEqual([]);
+    expect(dueSoon007.map((l) => `${l.materialCode}|${l.periodBucket}`)).toContain(`PK-PETB-8801|${W[3]}`);
+    expect(dueSoon007.filter((l) => l.zone === 'firm')).toEqual([]);
     const dueSoon002 = (await linesFor(sup002)).filter((l) => deadlineState(l, now) === 'dueSoon');
     expect(dueSoon002.map((l) => `${l.materialCode}|${l.periodBucket}`)).toContain(`RM-EMUL-9410|${M[1]}`);
-    // Half a day before the Trade-off reminder of packaging version 2, nothing is due soon;
-    // from it on, the awaiting Trade-off weeks are.
-    sdcClock.set('2026-08-31T14:00:00.000Z');
-    expect((await linesFor(sup007)).some((l) => deadlineState(l, sdcClock.now()) === 'dueSoon')).toBe(true);
+    // Both sides of the reminder instant: one millisecond before it no Trade-off
+    // week of sup-007 is due soon; from it on, they are.
+    const reminder = dueSoon007[0].reminderAt;
+    const tradeOffDueSoon = async (at: string) => {
+      sdcClock.set(at);
+      return (await linesFor(sup007)).filter((l) => l.zone === 'tradeOff' && deadlineState(l, at) === 'dueSoon').length;
+    };
+    expect(await tradeOffDueSoon(new Date(Date.parse(reminder) - 1).toISOString())).toBe(0);
+    expect(await tradeOffDueSoon(reminder)).toBeGreaterThan(0);
   });
 
   it('the alert engine raises "committed below forecast beyond tolerance": High for Firm, Medium for Trade-off', async () => {

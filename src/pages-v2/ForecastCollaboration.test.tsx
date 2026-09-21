@@ -263,11 +263,14 @@ describe('Alert, Home tasks and the Order summary', () => {
     expect(within(alert).getByRole('link', { name: 'Open commitments & gaps' })).toHaveAttribute('href', '/buyer/collaboration?material=RM-STEAR-7300');
   });
 
-  it('supplier Home: a new version to review and overdue commitments (sup-007); due soon (sup-002)', async () => {
+  // ⚠️ PREMISE CHANGED BY BL-48 (CR-26): at 3 working days sup-007's Trade-off
+  // periods are due soon at the present (their reminder is past), so the Home
+  // due-soon task that used to be absent here is now present beside the overdue one.
+  it('supplier Home: a new version to review, overdue Firm commitments and Trade-off commitments due soon (sup-007)', async () => {
     renderWithProviders(<SupplierHome />, { identity: SUPPLIER });
     expect(await screen.findByTestId('home-task-new-forecast')).toHaveTextContent('New forecast version to review');
     expect(await screen.findByTestId('home-task-commitments-overdue')).toHaveTextContent('Forecast commitments overdue');
-    expect(screen.queryByTestId('home-task-commitments-due-soon')).toBeNull();
+    expect(await screen.findByTestId('home-task-commitments-due-soon')).toHaveTextContent('Forecast commitments due soon');
   });
 
   it('supplier Home (sup-002): commitments due soon', async () => {
