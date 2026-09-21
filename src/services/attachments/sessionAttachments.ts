@@ -62,6 +62,27 @@ export const sessionAttachments = {
   },
 };
 
+/**
+ * Is this a well-formed metadata record? The RFI/RFP create verbs and the
+ * typed-answer rule read attachments back through it, so a hand-made payload
+ * cannot store a "file" with no name.
+ */
+export function isAttachmentMeta(v: unknown): v is AttachmentMeta {
+  if (!v || typeof v !== 'object') return false;
+  const o = v as Record<string, unknown>;
+  return (
+    typeof o.id === 'string' &&
+    o.id.length > 0 &&
+    typeof o.name === 'string' &&
+    o.name.trim().length > 0 &&
+    typeof o.size === 'number' &&
+    Number.isFinite(o.size) &&
+    o.size >= 0 &&
+    typeof o.type === 'string' &&
+    typeof o.addedAt === 'string'
+  );
+}
+
 /** A size in bytes, for display: `12 KB`, `1.4 MB`. */
 export function formatBytes(size: number): string {
   if (size < 1024) return `${size} B`;

@@ -163,7 +163,7 @@ describe('the RFQ wizard authors a multi-item tiered RFQ', () => {
     expect(rfq.confidential).toBe(true);
     expect(rfq.samplesRequested).toEqual({ qty: 20, neededBy: '2026-10-05' });
     expect(rfq.invitedSupplierIds).toEqual(['sup-008']);
-  });
+  }, 20000); // a long wizard walk; at the default 5s it timed out under full-suite load (5.2s measured)
 });
 
 describe('attachments are session-only, and say so', () => {
