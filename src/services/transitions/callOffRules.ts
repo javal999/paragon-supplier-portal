@@ -28,12 +28,8 @@ import { generateSchedule } from '../delivery/generator';
 import type { ReleaseCadence } from '../delivery/types';
 import { DELIVERY_GRACE_DAYS, MATCH_WINDOW_DAYS } from '../delivery/fulfillment';
 import { ANTICIPATION_DAYS, DRIFT_COUNT } from '../chase/deliveryChase';
-import {
-  DEFAULT_WORKING_CALENDAR,
-  addWorkingDays,
-  documentInstant,
-  type WorkingCalendar,
-} from '../../lib/workingCalendar';
+import { addWorkingDays, documentInstant, type WorkingCalendar } from '../../lib/workingCalendar';
+import { hubWorkingCalendar } from './workingCalendarStore';
 import {
   CALL_OFF_CONFIRM_WORKING_DAYS,
   CALL_OFF_TOLERANCE,
@@ -261,7 +257,9 @@ export function approvedDeliveries(c: CallOff): readonly CallOffDelivery[] {
 
 // ── BR-05 · confirmation deadline and Escalated (derived) ──────────────────
 
-export function confirmationDeadline(c: CallOff, cal: WorkingCalendar = DEFAULT_WORKING_CALENDAR): Date | null {
+/** BR-05 — 1 working day after release, on the hub's calendar (BL-50: every
+ *  deadline reads the calendar the administrator maintains). */
+export function confirmationDeadline(c: CallOff, cal: WorkingCalendar = hubWorkingCalendar()): Date | null {
   if (!c.releasedAt) return null;
   return addWorkingDays(documentInstant(c.releasedAt, cal), CALL_OFF_CONFIRM_WORKING_DAYS, cal);
 }

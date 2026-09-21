@@ -60,6 +60,24 @@ describe('BL-50 · AdminWorkingCalendar', () => {
     expect(workingCalendarStore.rulings().map((r) => r.date)).toEqual(['2026-09-02']);
   });
 
+  it('BL50-PAGE-05 · recording a holiday MOVES a deadline shown on the page that made it', async () => {
+    renderWithProviders(<AdminWorkingCalendar />, { identity: BUYER });
+    // Packaging version 2 was published Friday 28 August 09:00 WIB; one working
+    // day later is Monday 31 August 09:00.
+    const firm = await screen.findByTestId('admin-cal-due-packaging-firm');
+    expect(firm.textContent).toBe('31 Aug 2026, 09:00 WIB');
+
+    fireEvent.change(screen.getByTestId('admin-cal-date'), { target: { value: '2026-08-31' } });
+    fireEvent.change(screen.getByTestId('admin-cal-kind'), { target: { value: 'non-working' } });
+    fireEvent.change(screen.getByTestId('admin-cal-reason'), { target: { value: 'Collective leave' } });
+    fireEvent.click(screen.getByTestId('admin-cal-submit'));
+
+    await waitFor(() =>
+      // ICU spells September 'Sep' or 'Sept' depending on its version.
+      expect(screen.getByTestId('admin-cal-due-packaging-firm').textContent).toMatch(/^01 Sept? 2026, 09:00 WIB$/),
+    );
+  });
+
   it('BL50-PAGE-04 · a row button only PRE-FILLS the form with the opposite answer; nothing is recorded yet', async () => {
     renderWithProviders(<AdminWorkingCalendar />, { identity: BUYER });
     fireEvent.click(screen.getByTestId('admin-cal-prefill-2026-08-17'));

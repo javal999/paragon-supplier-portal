@@ -32,7 +32,8 @@ import type {
   RequirementResponse,
 } from '../sdc/types';
 import type { CapacityReason, CommitmentState, ForecastCommitmentLine, ForecastZone } from '../data/types';
-import { addWorkingDays, DEFAULT_WORKING_CALENDAR } from '../../lib/workingCalendar';
+import { addWorkingDays } from '../../lib/workingCalendar';
+import { hubWorkingCalendar } from './workingCalendarStore';
 import { normalizeQty } from '../../lib/localeNumber';
 import {
   COMMITMENT_REASONS,
@@ -60,7 +61,7 @@ const daysFrom = (from: string, to: string): number =>
 
 /** The calendar date of an instant in PTI's working-calendar zone (WIB). */
 export const publicationDay = (iso: string): string =>
-  new Date(Date.parse(iso) + DEFAULT_WORKING_CALENDAR.utcOffsetHours * 3_600_000).toISOString().slice(0, 10);
+  new Date(Date.parse(iso) + hubWorkingCalendar().utcOffsetHours * 3_600_000).toISOString().slice(0, 10);
 
 const lastDayOfMonth = (day: string): string => {
   const [y, m] = day.split('-').map(Number);
@@ -395,7 +396,7 @@ export function toleranceOutcome(zone: ForecastZone, forecastQty: number, commit
  * calendar); Trade-off and Forecast periods 7 days after.
  */
 export function commitmentDueAt(zone: ForecastZone, publishedAt: string): string {
-  if (zone === 'firm') return addWorkingDays(publishedAt, FIRM_DEADLINE_WORKING_DAYS).toISOString();
+  if (zone === 'firm') return addWorkingDays(publishedAt, FIRM_DEADLINE_WORKING_DAYS, hubWorkingCalendar()).toISOString();
   return new Date(Date.parse(publishedAt) + OTHER_DEADLINE_DAYS * DAY_MS).toISOString();
 }
 
