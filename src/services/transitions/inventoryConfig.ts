@@ -8,7 +8,8 @@
 //   CR-01 days of supply (30-day demand window), CR-02 bands, CR-03 coverage,
 //   REQ-E08-01 data-update SLA (default 7 days, per supplier × material),
 //   REQ-E08-04 capacity horizon (PQ-02 default: 13 weekly buckets) and the
-//   starter reason codes, REQ-E08-05 BR-02 risk classes.
+//   starter reason codes, REQ-E08-05 BR-02 risk classes (CR-24 lead-time
+//   multiple; CR-02 bands as its fallback).
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { CapacityReason } from '../data/types';
@@ -16,7 +17,21 @@ import type { CapacityReason } from '../data/types';
 /** CR-01 — average daily demand = forecast quantity for the next 30 days ÷ 30. */
 export const DEMAND_WINDOW = 30;
 
-/** CR-02 — Critical below 14; Warning 14 to 29; Healthy 30 to 60; Excess above 60. */
+/**
+ * CR-24 — risk class against the supplier lead time: High when days of cover
+ * are below the lead time; Medium below 1.5 × lead time; Low otherwise.
+ * "Below" is strict at both cuts: cover EXACTLY at the lead time is Medium, and
+ * EXACTLY at 1.5 × lead time is Low (pinned in inventoryRules.test.ts).
+ */
+export const LEAD_TIME_RISK = Object.freeze({
+  mediumBelowMultiple: 1.5,
+});
+
+/**
+ * CR-02 — Critical below 14; Warning 14 to 29; Healthy 30 to 60; Excess above 60.
+ * Since 2026-09-21 a FALLBACK only: the risk class uses these bands where the
+ * supplier lead time is missing (CR-24), and that gap raises its own alert.
+ */
 export const SUPPLY_BANDS = Object.freeze({
   criticalBelow: 14,
   warningBelow: 30,

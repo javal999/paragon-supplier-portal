@@ -519,6 +519,12 @@ export interface InventoryPosition {
   readonly incoming: readonly IncomingItem[];
   /** CR-01 — forecast for the next 30 days ÷ 30; null when there is no demand. */
   readonly avgDailyDemand: number | null;
+  /**
+   * CR-24 — the supplier's lead time for this material, in days (master data,
+   * not a clock state). Null when none is on record: the risk class then falls
+   * back to the CR-02 bands and a "lead time missing" alert is raised.
+   */
+  readonly leadTimeDays: number | null;
   readonly demandSource: DemandSource;
   readonly lastUpdatedAt: string | null;
   readonly channel: StockChannel | null;
@@ -711,9 +717,30 @@ export type InventoryAlertRule =
   | 'staleData'
   | 'coverage'
   /** REQ-E08-05 BR-01 — committed quantity below forecast beyond tolerance (REQ-E06-03). */
-  | 'commitmentBelowForecast';
+  | 'commitmentBelowForecast'
+  /** CR-24 / BR-02 — no supplier lead time on record; the risk class fell back to CR-02. */
+  | 'leadTimeMissing';
 
 export type RiskClass = 'high' | 'medium' | 'low';
+
+/** CR-02 — the days-of-supply bands, used only where a lead time is missing. */
+export type SupplyBand = 'critical' | 'warning' | 'healthy' | 'excess';
+
+/**
+ * CR-24 — what a risk class was decided on, so a planner can see WHY a material
+ * is High. Derived at read by `positionRisk` (inventoryRules), never stored.
+ *   · leadTime       — days of cover against the supplier lead time.
+ *   · fallbackBands  — no lead time on record, so the CR-02 bands decided.
+ *   · noCover        — days of cover cannot be computed (no stock figures or no
+ *                      demand); the class is Low and the stale-data alert speaks.
+ *   · rule           — the alert's own rule set the class (stale data, the
+ *                      commitment zone), not CR-24.
+ */
+export type RiskBasis =
+  | { readonly kind: 'leadTime'; readonly leadTimeDays: number; readonly daysOfCover: number }
+  | { readonly kind: 'fallbackBands'; readonly band: SupplyBand; readonly daysOfCover: number }
+  | { readonly kind: 'noCover'; readonly leadTimeDays: number | null }
+  | { readonly kind: 'rule' };
 
 /** A rule-based alert (REQ-E08-05). The key is rule × material (or group) × supplier. */
 export interface InventoryAlert {
@@ -725,6 +752,8 @@ export interface InventoryAlert {
   readonly subject: string;
   readonly subjectLabel: string;
   readonly riskClass: RiskClass;
+  /** CR-24 — what the class was decided on (derived with the alert, never stored). */
+  readonly riskBasis: RiskBasis;
   readonly status: 'open' | 'closed';
   readonly closedAt?: string;
   readonly actionNote?: string;

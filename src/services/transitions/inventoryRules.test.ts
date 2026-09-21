@@ -49,6 +49,7 @@ const position = (over: Partial<InventoryPosition> = {}): InventoryPosition => (
   incoming: [],
   avgDailyDemand: 50,
   demandSource: 'forecast',
+  leadTimeDays: 14,
   lastUpdatedAt: '2026-08-30T02:00:00.000Z',
   channel: 'template',
   updateSla: 7,

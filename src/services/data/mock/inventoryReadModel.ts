@@ -48,6 +48,7 @@ import {
   API_CONNECTIONS,
   PLANNING_DAILY_DEMAND,
   PTI_STOCK,
+  SUPPLIER_LEAD_TIME_DAYS,
   SUPPLY_ASSIGNMENTS,
 } from './fixtures/inventoryHub';
 
@@ -83,6 +84,10 @@ function assignments(): { supplierId: string; materialCode: string }[] {
 const planningEstimate = (supplierId: string, materialCode: string): number | null =>
   PLANNING_DAILY_DEMAND[`${supplierId}|${materialCode}`] ?? null;
 
+/** CR-24 — the supplier lead time on record, or null (sample master data). */
+export const leadTimeOf = (supplierId: string, materialCode: string): number | null =>
+  SUPPLIER_LEAD_TIME_DAYS[`${supplierId}|${materialCode}`] ?? null;
+
 const forecastLines = () => currentPublication(FORECAST_PUBLICATIONS)?.lines ?? [];
 
 /** PTI's unmasked view of every position, as of the simulated clock. */
@@ -97,6 +102,7 @@ export function allPositions(nowIso: string = sdcClock.now()): InventoryPosition
       ptiStock: PTI_STOCK,
       forecastLines: forecastLines(),
       planningEstimate,
+      leadTime: leadTimeOf,
       asns: asnStore.all(),
       callOffViews: callOffViews(callOffStore.all(), asnStore.all(), goodsReceiptStore.all(), nowIso),
       apiConnected: isApiConnected,
