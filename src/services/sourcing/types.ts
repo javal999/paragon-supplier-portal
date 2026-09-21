@@ -222,6 +222,12 @@ export interface AwardLine {
   readonly itemCode: string;
   readonly sharePct: number;
   readonly quantity: number;
+  /**
+   * The quantity break the award was made at, on a tiered RFQ (RFx spec,
+   * "the award records the break it was made at"). Absent on an untiered
+   * event, where there is no break to name.
+   */
+  readonly awardTierQty?: number;
 }
 
 /** REQ-E03-05 BR-09 — the hub's record of an award. No PO, no contract. */

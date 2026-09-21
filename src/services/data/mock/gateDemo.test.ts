@@ -68,8 +68,9 @@ describe('BL-64 — the demo exists where a buyer will look for it', () => {
     const rows = ['rfq-016', 'rfq-017', 'rfq-018', 'rfq-019', 'rfq-020'].map((id) => rfqStore.get(id));
     expect(rows.map((r) => r?.status)).toEqual(['Closed', 'Closed', 'Open', 'Closed', 'Closed']);
     expect(rows.every((r) => r!.title.startsWith('Compliance gate demo') && r!.title.endsWith('(sample)'))).toBe(true);
-    // KNOWN-BAD twin — an id the demo does not hold.
-    expect(rfqStore.get('rfq-021')).toBeUndefined();
+    // KNOWN-BAD twin — an id the demo does not hold. PREMISE CHANGED (RFx spec
+    // 2026-09-21): rfq-021 is now the Oslo sample RFQ, so the absent id moved.
+    expect(rfqStore.get('rfq-099')).toBeUndefined();
   });
 
   it('the seven demo suppliers are in the master and marked illustrative', () => {

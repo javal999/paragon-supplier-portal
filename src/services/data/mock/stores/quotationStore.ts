@@ -17,7 +17,16 @@ import { RFX_QUOTATION_SEED } from '../fixtures/rfxHub';
 // BL-64 — the compliance gate demo quotes (CR-23), in the same store.
 import { GATE_DEMO_QUOTATION_SEED } from '../fixtures/gateDemo';
 
-const SEED: readonly Quotation[] = [...RFX_QUOTATION_SEED, ...GATE_DEMO_QUOTATION_SEED, ...mockQuotations];
+// RFx spec 2026-09-21 — two tiered quotes on Oslo (rfq-021), for the
+// comparison and the split award to work against.
+import { RFQ_SAMPLE_QUOTATION_SEED } from '../fixtures/rfqSamples';
+
+const SEED: readonly Quotation[] = [
+  ...RFX_QUOTATION_SEED,
+  ...GATE_DEMO_QUOTATION_SEED,
+  ...mockQuotations,
+  ...RFQ_SAMPLE_QUOTATION_SEED,
+];
 
 function clone(q: Quotation): Quotation {
   return { ...q };

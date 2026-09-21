@@ -61,7 +61,9 @@ export const rfqFlow: FlowDefinition = {
       trigger: 'creation',
       requiredRole: 'rfq:create',
       requiredFields: ['title', 'materialCategory', 'totalQty'],
-      policyHooks: [],
+      // The rebuilt RFQ (items, quantity breaks, currency) is judged here, BY
+      // NAME, when it is sent. See `rfqModel.rfqCreateRefusal`.
+      policyHooks: [POLICY_HOOKS.RFQ_CREATE_VALID],
       surfaceable: { surfaced: true },
       version: 1,
     },

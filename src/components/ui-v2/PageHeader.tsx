@@ -19,8 +19,11 @@ const SectionCrumb: React.FC<{ fallback: string[] }> = ({ fallback }) => {
   const { t } = useTranslation();
   const { pathname } = useLocation();
   const section = sectionForPath(pathname);
-  const crumbs = section
-    ? [t(section.labelKey), ...(fallback.length > 1 ? fallback.slice(1) : fallback)]
+  const sectionLabel = section ? t(section.labelKey) : null;
+  // A page whose only crumb IS its menu section ("Sourcing") shows it once, not
+  // "Sourcing · Sourcing".
+  const crumbs = sectionLabel
+    ? [sectionLabel, ...(fallback.length > 1 ? fallback.slice(1) : fallback.filter((c) => c !== sectionLabel))]
     : fallback;
   return <>{crumbs.join(' · ')}</>;
 };
