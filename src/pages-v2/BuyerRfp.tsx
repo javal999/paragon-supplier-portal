@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import AppShellV2 from '../components/layout-v2/AppShellV2';
 import PageHeader from '../components/ui-v2/PageHeader';
@@ -13,17 +14,23 @@ import TableRow from '../components/ui-v2/TableRow';
 import TableCell from '../components/ui-v2/TableCell';
 import LoadingState from '../components/ui-v2/LoadingState';
 import ErrorState from '../components/ui-v2/ErrorState';
+import SessionAttachments from '../components/ui-v2/SessionAttachments';
 import { HandoffNotice } from '../components/ui-v2/HandoffNotice';
 import { useVerbAvailability } from '../hooks/useVerbAvailability';
 import { useToast } from '../hooks/useToast';
 import { formatDate } from '../lib/format';
-import { useRfpEvents } from '../services/query/hooks';
+import { useRfiEvents, useRfpEvents } from '../services/query/hooks';
 import { useRfxCommand } from '../services/query/commandHooks';
-import { RFP_TERM_GROUP_ORDER, rfpTerm } from '../services/sourcing/rfxConfig';
+import { RFP_TERM_GROUP_ORDER, rfpTermGroupOf, rfxFamilyForCategory, rfxSectionsOf } from '../services/sourcing/rfxConfig';
+import { prefillRfpFromRfi } from '../services/sourcing/rfxPrefill';
+import { rfpTemplateStore } from '../services/sourcing/rfxTemplates';
 import { rfpScoringOf } from './rfx/rfpScoring';
 import type { RfpEventView } from '../services/sourcing/views';
 import RfpCreateWizard from './rfx/RfpCreateWizard';
+import RfxSaveTemplate from './rfx/RfxSaveTemplate';
+import { RfpPricingComparison } from './rfx/RfpPricing';
 import { DeadlinePill, EmptyRow, OtifOrNoHistory, ResponseStatePill, rfxNow } from './rfx/rfxDisplay';
+import { answerText, authored, sectionTitle, termLabel, termValueText } from './rfx/rfxAuthoringDisplay';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PTI PROPOSAL REQUESTS — REQ-E03-04 (BUY).
@@ -31,7 +38,8 @@ import { DeadlinePill, EmptyRow, OtifOrNoHistory, ResponseStatePill, rfxNow } fr
 // An RFP asks for TERMS, not a price, so the comparison is shaped the way the
 // requirement specifies and not the way a quote comparison is: TERMS ARE ROWS,
 // SUPPLIERS ARE COLUMNS, and every deviation is highlighted with the comment the
-// supplier had to write for it.
+// supplier had to write for it. A CUSTOM term (the buyer's own, RFx authoring)
+// sits in its group beside the standard ones, labelled in the buyer's words.
 //
 // Where the RFP carries a price basis and a standard lead time — the two terms
 // the standard list marks scorable — the proposals are ALSO scored with CR-15,
@@ -39,20 +47,29 @@ import { DeadlinePill, EmptyRow, OtifOrNoHistory, ResponseStatePill, rfxNow } fr
 // scored at all, and says so: a weighted number invented from prose would be the
 // fabricated-score defect in a new document.
 //
+// ⚠️ **INDICATIVE PRICING (D4) IS COMPARED OPTIONS × SUPPLIERS AND IS NEVER
+// SCORED.** Every price there is labelled Indicative, and a supplier's own
+// option is shown as proposed by that supplier.
+//
 // ⚠️ **AND THE EVENT IS RAISED HERE (section 3.6a).** "New RFP" opens the wizard;
 // the lifecycle is offered BY STATE — Send on a Draft, Close on an Open one,
 // Extend where `t_rfp_extend` legally runs (Open AND Closed, because reopening a
 // window somebody asked for is not a state change). A seat without `rfp:publish`
 // reads whose act it is rather than a button the dispatcher would refuse.
+//
+// `?rfi=<id>` opens the wizard pre-filled from that RFI (D3); the created RFP
+// records `sourceRfiId` and the detail shows "Created from RFI-…".
 // ─────────────────────────────────────────────────────────────────────────────
 
 const BuyerRfp: React.FC = () => {
   const { t } = useTranslation();
   const { toast } = useToast();
   const events = useRfpEvents();
+  const rfis = useRfiEvents();
   const publish = useVerbAvailability('rfp:publish');
   const create = useVerbAvailability('rfp:create');
   const command = useRfxCommand();
+  const [params, setParams] = useSearchParams();
   const [wizardOpen, setWizardOpen] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
   const [extendTo, setExtendTo] = useState<Record<string, string>>({});
@@ -60,11 +77,29 @@ const BuyerRfp: React.FC = () => {
   const crumb = [t('hub.nav.section.sourcing'), t('rfx.rfp.title')];
   const items = useMemo(() => events.data?.items ?? [], [events.data]);
 
+  // D3 — `?rfi=<id>` asks for an RFP pre-filled from that RFI. Only a seat
+  // holding `rfp:create` gets the wizard; the others read whose act it is.
+  const sourceRfiId = params.get('rfi');
+  const sourceRfi = sourceRfiId ? (rfis.data?.items ?? []).find((e) => e.id === sourceRfiId) : undefined;
+  const prefill = useMemo(
+    () =>
+      sourceRfi
+        ? { ...prefillRfpFromRfi(sourceRfi, sourceRfi.responses), sourceRfiNumber: sourceRfi.eventNumber }
+        : undefined,
+    [sourceRfi],
+  );
+
   if (events.isPending) return <LoadingState breadcrumb={crumb} />;
   if (events.isError)
     return <ErrorState breadcrumb={crumb} error={events.error} onRetry={() => events.refetch()} />;
 
   const open = items.find((e) => e.id === openId) ?? null;
+  const showWizard = create.kind === 'held' && (wizardOpen || !!prefill);
+
+  const closeWizard = () => {
+    setWizardOpen(false);
+    if (sourceRfiId) setParams({}, { replace: true });
+  };
 
   /** One runner for every RFP verb this page offers — one refusal path, not four. */
   const run = (vars: Parameters<typeof command.mutate>[0], successKey: string) =>
@@ -125,12 +160,25 @@ const BuyerRfp: React.FC = () => {
                   <StatusPill variant={event.closed ? 'neutral' : 'info'} className="mt-1">
                     {t(`rfx.status.${event.status}`)}
                   </StatusPill>
+                  {event.confidentiality && (
+                    <StatusPill variant="neutral" className="mt-1 ml-1">
+                      {t('rfxa.conf.pill')}
+                    </StatusPill>
+                  )}
                 </TableCell>
                 <TableCell className="align-top whitespace-nowrap">
                   <DeadlinePill deadline={event.responseDeadline} done={event.closed} />
                 </TableCell>
                 <TableCell className="align-top text-sm">
                   {t('rfx.rfp.terms', { count: event.terms.length })}
+                  {event.pricing && (
+                    <div className="text-xs text-text-tertiary">
+                      {t('rfxa.pricing.summary', {
+                        options: event.pricing.options.length,
+                        points: event.pricing.quantityPoints.length,
+                      })}
+                    </div>
+                  )}
                 </TableCell>
                 <TableCell className="align-top text-sm">
                   {t('rfx.rfp.proposals', { count: event.responses.length })}
@@ -170,6 +218,11 @@ const BuyerRfp: React.FC = () => {
                 <StatusPill variant={open.closed ? 'neutral' : 'info'} className="mt-1">
                   {t(`rfx.status.${open.status}`)}
                 </StatusPill>
+                {open.sourceRfiNumber && (
+                  <p className="text-xs text-text-tertiary mt-1" data-testid={`rfp-from-rfi-${open.id}`}>
+                    {t('rfx.event.fromRfi', { event: open.sourceRfiNumber })}
+                  </p>
+                )}
               </div>
               <div className="flex flex-wrap items-center gap-3">
                 {open.status === 'Draft' && (
@@ -202,7 +255,37 @@ const BuyerRfp: React.FC = () => {
             <h4 className="text-xs uppercase tracking-wide text-text-tertiary mt-4">
               {t('rfx.rfp.scope')}
             </h4>
-            <p className="text-sm text-text-secondary mt-1">{open.scope}</p>
+            <p className="text-sm text-text-secondary mt-1 whitespace-pre-line">{open.scope}</p>
+            {(open.attachments ?? []).length > 0 && (
+              <div className="mt-3">
+                <h4 className="text-xs uppercase tracking-wide text-text-tertiary mb-1">{t('rfxa.att.buyer')}</h4>
+                <SessionAttachments
+                  value={open.attachments ?? []}
+                  label={t('rfxa.att.buyer')}
+                  testId={`rfp-attachments-${open.id}`}
+                />
+              </div>
+            )}
+            {open.confidentiality && (
+              <p className="text-xs text-text-tertiary mt-3" data-testid={`rfp-confidential-${open.id}`}>
+                {t('rfxa.conf.buyerNote')}
+              </p>
+            )}
+            {open.termsDocument && (
+              <div className="mt-3" data-testid={`rfp-tc-${open.id}`}>
+                <h4 className="text-xs uppercase tracking-wide text-text-tertiary">{t('rfxa.tc.title')}</h4>
+                {open.termsDocument.text && (
+                  <p className="text-sm text-text-secondary whitespace-pre-line">{open.termsDocument.text}</p>
+                )}
+                {open.termsDocument.attachment && (
+                  <SessionAttachments
+                    value={[open.termsDocument.attachment]}
+                    label={t('rfxa.tc.file')}
+                    testId={`rfp-tc-file-${open.id}`}
+                  />
+                )}
+              </div>
+            )}
             <div className="flex flex-wrap items-end gap-3 mt-4">
               <div>
                 <label className="block text-xs font-semibold text-text-secondary mb-1" htmlFor={`rfp-extend-${open.id}`}>
@@ -225,20 +308,63 @@ const BuyerRfp: React.FC = () => {
                 {t('rfx.rfi.extendAll')}
               </Button>
             </div>
+            <div className="mt-4">
+              <RfxSaveTemplate
+                key={open.id}
+                testIdPrefix={`rfp-${open.id}`}
+                defaultName={open.title}
+                onSave={(name) =>
+                  rfpTemplateStore.save(
+                    name,
+                    {
+                      familyId: rfxFamilyForCategory(open.materialCategory)?.id ?? '',
+                      scope: open.scope,
+                      currency: open.currency,
+                      terms: open.terms,
+                      questions: open.questions ?? [],
+                      customSections: open.customSections ?? [],
+                      ...(open.pricing ? { pricing: open.pricing } : {}),
+                      confidential: !!open.confidentiality,
+                      ...(open.confidentiality?.terms ? { confidentialityTerms: open.confidentiality.terms } : {}),
+                      ...(open.termsDocument?.text ? { termsText: open.termsDocument.text } : {}),
+                    },
+                    rfxNow(),
+                  )
+                }
+              />
+            </div>
           </div>
 
           <RfpInvitees event={open} />
           <RfpComparison event={open} />
+          {open.pricing && (
+            <RfpPricingComparison
+              request={open.pricing}
+              currency={open.currency}
+              responses={open.responses}
+              testId={`rfp-pricing-${open.id}`}
+            />
+          )}
+          {(open.questions ?? []).length > 0 && <RfpQuestionAnswers event={open} />}
         </section>
       )}
 
-      {wizardOpen && (
+      {create.kind !== 'held' && sourceRfiId && (
+        <div className="mt-4">
+          <HandoffNotice availability={create} testId="handoff-rfp-from-rfi" />
+        </div>
+      )}
+
+      {showWizard && (
         <RfpCreateWizard
+          key={prefill?.sourceRfiId ?? 'blank'}
+          pastEvents={items}
+          prefill={prefill}
           canPublish={publish.kind === 'held'}
-          onCancel={() => setWizardOpen(false)}
+          onCancel={closeWizard}
           onCreated={(rfpId) => {
             // Land the buyer ON the new event — the act just performed is in view.
-            setWizardOpen(false);
+            closeWizard();
             setOpenId(rfpId);
           }}
         />
@@ -249,6 +375,11 @@ const BuyerRfp: React.FC = () => {
 
 const RfpInvitees: React.FC<{ event: RfpEventView }> = ({ event }) => {
   const { t } = useTranslation();
+  const acceptedCell = (at: string | null, testId: string) => (
+    <TableCell data-testid={testId}>
+      {at ? <Data>{formatDate(at)}</Data> : <span className="text-xs text-text-tertiary">{t('rfxa.conf.notYet')}</span>}
+    </TableCell>
+  );
   return (
     <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto">
       <Table>
@@ -257,6 +388,8 @@ const RfpInvitees: React.FC<{ event: RfpEventView }> = ({ event }) => {
           <TableHeaderCell>{t('rfx.invite.col.otif')}</TableHeaderCell>
           <TableHeaderCell>{t('rfx.deadline.own')}</TableHeaderCell>
           <TableHeaderCell>{t('rfx.response.submitted')}</TableHeaderCell>
+          {event.confidentiality && <TableHeaderCell>{t('rfxa.conf.col')}</TableHeaderCell>}
+          {event.termsDocument && <TableHeaderCell>{t('rfxa.tc.col')}</TableHeaderCell>}
         </TableHeader>
         <tbody>
           {event.invitedSuppliers.map((invitee) => (
@@ -271,6 +404,10 @@ const RfpInvitees: React.FC<{ event: RfpEventView }> = ({ event }) => {
               <TableCell>
                 <ResponseStatePill state={invitee.responseState} />
               </TableCell>
+              {event.confidentiality &&
+                acceptedCell(invitee.confidentialityAcceptedAt, `rfp-accepted-${event.id}-${invitee.supplierId}`)}
+              {event.termsDocument &&
+                acceptedCell(invitee.termsAcceptedAt, `rfp-tc-accepted-${event.id}-${invitee.supplierId}`)}
             </TableRow>
           ))}
         </tbody>
@@ -323,7 +460,7 @@ const RfpComparison: React.FC<{ event: RfpEventView }> = ({ event }) => {
         </TableHeader>
         <tbody>
           {RFP_TERM_GROUP_ORDER.flatMap((group) => {
-            const rows = event.terms.filter((row) => rfpTerm(row.termId)?.group === group);
+            const rows = event.terms.filter((row) => rfpTermGroupOf(row) === group);
             if (rows.length === 0) return [];
             return rows.map((row, index) => (
               <TableRow key={row.termId} data-testid={`rfp-term-${row.termId}`}>
@@ -333,10 +470,15 @@ const RfpComparison: React.FC<{ event: RfpEventView }> = ({ event }) => {
                       {t(`rfx.group.${group}`)}
                     </div>
                   )}
-                  <div className="text-sm text-text-primary">{t(rfpTerm(row.termId)!.labelKey)}</div>
+                  <div className="text-sm text-text-primary">{termLabel(t, row)}</div>
+                  {row.termId.startsWith('custom-') && (
+                    <StatusPill variant="neutral" className="mt-1">
+                      {t('rfxa.term.customPill')}
+                    </StatusPill>
+                  )}
                 </TableCell>
                 <TableCell className="align-top text-sm text-text-secondary">
-                  <Data>{row.requestedValue}</Data>
+                  <Data>{termValueText(t, row, row.requestedValue)}</Data>
                 </TableCell>
                 {event.responses.map((r) => {
                   const a = r.answers.find((x) => x.termId === row.termId);
@@ -348,7 +490,7 @@ const RfpComparison: React.FC<{ event: RfpEventView }> = ({ event }) => {
                       data-testid={`rfp-cell-${row.termId}-${r.supplierId}`}
                     >
                       <div className="text-sm text-text-primary">
-                        <Data>{a?.proposedValue ?? '—'}</Data>
+                        <Data>{termValueText(t, row, a?.proposedValue)}</Data>
                       </div>
                       {a && (
                         <StatusPill variant={deviates ? 'warning' : 'success'} className="mt-1">
@@ -384,6 +526,46 @@ const RfpComparison: React.FC<{ event: RfpEventView }> = ({ event }) => {
           {t('rfx.rfp.notScorable')}
         </p>
       )}
+    </div>
+  );
+};
+
+/** The RFP's questions section, answers side by side (submitted proposals only). */
+const RfpQuestionAnswers: React.FC<{ event: RfpEventView }> = ({ event }) => {
+  const { t } = useTranslation();
+  if (event.responses.length === 0) return null;
+  return (
+    <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto" data-testid={`rfp-answers-${event.id}`}>
+      <div className="px-4 py-3 border-b border-border-subtle text-sm font-semibold text-text-primary">
+        {t('rfxa.step.rfpQuestions')}
+      </div>
+      <Table>
+        <TableHeader>
+          <TableHeaderCell>{t('rfx.rfi.section')}</TableHeaderCell>
+          {event.responses.map((r) => (
+            <TableHeaderCell key={r.id}>{r.supplierName}</TableHeaderCell>
+          ))}
+        </TableHeader>
+        <tbody>
+          {rfxSectionsOf(event.customSections).flatMap((section) =>
+            (event.questions ?? [])
+              .filter((q) => q.sectionId === section.id)
+              .map((q) => (
+                <TableRow key={q.id}>
+                  <TableCell className="align-top">
+                    <div className="text-xs text-text-tertiary">{sectionTitle(t, section)}</div>
+                    <div className="text-sm text-text-primary">{authored(t, q.promptKey)}</div>
+                  </TableCell>
+                  {event.responses.map((r) => (
+                    <TableCell key={r.id} className="align-top text-sm">
+                      {answerText(t, q, (r.questionAnswers ?? []).find((a) => a.questionId === q.id))}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              )),
+          )}
+        </tbody>
+      </Table>
     </div>
   );
 };

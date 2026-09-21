@@ -13,6 +13,7 @@ import TableRow from '../components/ui-v2/TableRow';
 import TableCell from '../components/ui-v2/TableCell';
 import LoadingState from '../components/ui-v2/LoadingState';
 import ErrorState from '../components/ui-v2/ErrorState';
+import SessionAttachments from '../components/ui-v2/SessionAttachments';
 import { HandoffNotice } from '../components/ui-v2/HandoffNotice';
 import { useVerbAvailability } from '../hooks/useVerbAvailability';
 import { useToast } from '../hooks/useToast';
@@ -20,23 +21,43 @@ import { formatDate } from '../lib/format';
 import { useCurrentIdentity } from '../context/CurrentIdentityContext';
 import { useRfpEvents } from '../services/query/hooks';
 import { useRfxCommand } from '../services/query/commandHooks';
-import { RFP_TERM_GROUP_ORDER, rfpTerm } from '../services/sourcing/rfxConfig';
-import { deviationsWithoutComment, unansweredTerms } from '../services/transitions/rfxRules';
-import type { RfpTermAnswer } from '../services/sourcing/types';
+import { RFP_TERM_GROUP_ORDER, rfpTermGroupOf } from '../services/sourcing/rfxConfig';
+import {
+  deviationsWithoutComment,
+  invalidAnswers,
+  invalidTermAnswers,
+  missingRequiredAnswers,
+  rfpPricingAnswerRefusal,
+  unansweredTerms,
+} from '../services/transitions/rfxRules';
+import type { RfiAnswer, RfpPricingAnswer, RfpTermAnswer } from '../services/sourcing/types';
 import type { RfpEventView } from '../services/sourcing/views';
 import { DeadlinePill, rfxNow } from './rfx/rfxDisplay';
+import RfxQuestionForm from './rfx/RfxQuestionForm';
+import RfxConfidentialityGate from './rfx/RfxConfidentialityGate';
+import { TermValueInput } from './rfx/RfpTermControls';
+import { EMPTY_PRICING_ANSWER, RfpPricingForm } from './rfx/RfpPricing';
+import { refusalCode } from './rfx/RfxQuestionEditor';
+import { termLabel, termValueText } from './rfx/rfxAuthoringDisplay';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SUPPLIER PROPOSAL REQUESTS — REQ-E03-04 (SUP).
 //
 // One row per term the buyer asked for: PTI's requested value, the supplier's
-// proposed value, Comply or Deviate, and — ON DEVIATE — a comment that is
-// REQUIRED. The page marks it required and the submit verb refuses without it,
-// because a deviation nobody explained changes the deal and says nothing about
-// how.
+// proposed value (typed in the term's own kind), Comply or Deviate, and — ON
+// DEVIATE — a comment that is REQUIRED. The page marks it required and the
+// submit verb refuses without it, because a deviation nobody explained changes
+// the deal and says nothing about how.
 //
 // "Other terms" is the free-text box for terms the supplier wants to add that
 // PTI did not ask for (the requirement's edge case).
+//
+// RFx authoring, in the order the supplier meets them:
+//   1. a CONFIDENTIAL RFP shows only its gate — the read withheld the rest;
+//   2. an RFP with a T&C document shows it with an acceptance tick, and the
+//      answer boxes stay shut until it is accepted (refused at the verb too);
+//   3. then the terms, the questions section, and INDICATIVE PRICING — every
+//      price there labelled Indicative, the supplier's own options included.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const SupplierRfp: React.FC = () => {
@@ -49,6 +70,9 @@ const SupplierRfp: React.FC = () => {
   const [openId, setOpenId] = useState<string | null>(null);
   const [draft, setDraft] = useState<Record<string, RfpTermAnswer[]>>({});
   const [other, setOther] = useState<Record<string, string>>({});
+  const [qDraft, setQDraft] = useState<Record<string, RfiAnswer[]>>({});
+  const [pDraft, setPDraft] = useState<Record<string, RfpPricingAnswer>>({});
+  const [tcTicked, setTcTicked] = useState<Record<string, boolean>>({});
 
   const crumb = [t('hub.nav.section.sourcing'), t('rfx.rfp.supplier.title')];
   const items = useMemo(() => events.data?.items ?? [], [events.data]);
@@ -61,6 +85,10 @@ const SupplierRfp: React.FC = () => {
 
   const answersFor = (event: RfpEventView): RfpTermAnswer[] =>
     draft[event.id] ?? [...(event.responses[0]?.answers ?? [])];
+  const questionAnswersFor = (event: RfpEventView): RfiAnswer[] =>
+    qDraft[event.id] ?? [...(event.responses[0]?.questionAnswers ?? [])];
+  const pricingFor = (event: RfpEventView): RfpPricingAnswer =>
+    pDraft[event.id] ?? event.responses[0]?.pricing ?? EMPTY_PRICING_ANSWER;
 
   const setAnswer = (event: RfpEventView, termId: string, patch: Partial<RfpTermAnswer>) => {
     const current = answersFor(event);
@@ -70,6 +98,24 @@ const SupplierRfp: React.FC = () => {
     setDraft((prev) => ({ ...prev, [event.id]: next }));
   };
 
+  const setQuestionAnswer = (event: RfpEventView, questionId: string, patch: Partial<RfiAnswer>) => {
+    const current = questionAnswersFor(event);
+    const next = current.some((a) => a.questionId === questionId)
+      ? current.map((a) => (a.questionId === questionId ? { ...a, ...patch } : a))
+      : [...current, { questionId, ...patch }];
+    setQDraft((prev) => ({ ...prev, [event.id]: next }));
+  };
+
+  const report = (successKey: string) => ({
+    onSuccess: (res: { status: string; reason?: string }) =>
+      toast(
+        res.status === 'failed'
+          ? { variant: 'error' as const, title: t('rfx.toast.refused', { reason: res.reason ?? '' }) }
+          : { variant: 'success' as const, title: t(successKey) },
+      ),
+    onError: () => toast({ variant: 'error', title: t('rfx.toast.refused', { reason: '' }) }),
+  });
+
   const send = (event: RfpEventView, draftOnly: boolean) =>
     command.mutate(
       {
@@ -78,18 +124,15 @@ const SupplierRfp: React.FC = () => {
         supplierId,
         answers: answersFor(event),
         otherTerms: other[event.id] ?? event.responses[0]?.otherTerms ?? '',
+        ...((event.questions ?? []).length > 0 ? { questionAnswers: questionAnswersFor(event) } : {}),
+        ...(event.pricing ? { pricing: pricingFor(event) } : {}),
         ...(draftOnly ? { draftOnly: true } : {}),
       },
-      {
-        onSuccess: (res) =>
-          toast(
-            res.status === 'failed'
-              ? { variant: 'error', title: t('rfx.toast.refused', { reason: res.reason ?? '' }) }
-              : { variant: 'success', title: t(draftOnly ? 'rfx.toast.saved' : 'rfx.toast.sent') },
-          ),
-        onError: () => toast({ variant: 'error', title: t('rfx.toast.refused', { reason: '' }) }),
-      },
+      report(draftOnly ? 'rfx.toast.saved' : 'rfx.toast.sent'),
     );
+
+  const accept = (event: RfpEventView, what: { confidentiality?: boolean; terms?: boolean }) =>
+    command.mutate({ verb: 'acceptRfp', rfpId: event.id, supplierId, ...what }, report('rfxa.toast.accepted'));
 
   return (
     <AppShellV2>
@@ -120,14 +163,37 @@ const SupplierRfp: React.FC = () => {
         {items.map((event) => {
           const mine = event.responses[0] ?? null;
           const answers = answersFor(event);
+          const qAnswers = questionAnswersFor(event);
+          const pricing = pricingFor(event);
           const missing = unansweredTerms(event.terms, answers);
+          const badValues = invalidTermAnswers(event.terms, answers);
           const uncommented = deviationsWithoutComment(answers);
+          const questions = event.questions ?? [];
+          const qMissing = missingRequiredAnswers(questions, qAnswers);
+          const qInvalid = invalidAnswers(questions, qAnswers);
+          const pricingRefusal = event.pricing ? rfpPricingAnswerRefusal(event.pricing, pricing) : null;
           const opened = openId === event.id;
+          const tcPending = !!event.termsDocument && !mine?.termsAcceptedAt;
+          const started =
+            !!mine &&
+            (mine.status === 'Submitted' ||
+              mine.answers.length > 0 ||
+              (mine.questionAnswers ?? []).length > 0 ||
+              !!mine.pricing);
           // A CLOSED event locks the form for the same reason a submitted one
           // does: the verb refuses an answer to a non-Open event
           // (`EVENT_NOT_OPEN`), so offering the boxes would offer a gesture the
-          // act cannot accept.
-          const locked = mine?.status === 'Submitted' || event.closed || answerVerb.kind !== 'held';
+          // act cannot accept. An unaccepted T&C locks it for the verb's
+          // `TC_NOT_ACCEPTED`, for the same reason.
+          const locked =
+            mine?.status === 'Submitted' || event.closed || answerVerb.kind !== 'held' || tcPending;
+          const blockers = [
+            ...(missing.length > 0 ? ['terms'] : []),
+            ...(badValues.length > 0 ? ['termValues'] : []),
+            ...(uncommented.length > 0 ? ['comments'] : []),
+            ...(qMissing.length > 0 ? ['questions'] : []),
+            ...(qInvalid.length > 0 ? ['answers'] : []),
+          ];
           return (
             <section
               key={event.id}
@@ -140,6 +206,7 @@ const SupplierRfp: React.FC = () => {
                   <div className="text-sm text-text-primary">{event.title}</div>
                 </div>
                 <div className="flex items-center gap-3">
+                  {event.confidentiality && <StatusPill variant="neutral">{t('rfxa.conf.pill')}</StatusPill>}
                   <DeadlinePill
                     deadline={
                       event.invitedSuppliers.find((i) => i.supplierId === supplierId)?.deadline ??
@@ -147,8 +214,8 @@ const SupplierRfp: React.FC = () => {
                     }
                     done={mine?.status === 'Submitted'}
                   />
-                  <StatusPill variant={mine?.status === 'Submitted' ? 'success' : mine ? 'info' : 'neutral'}>
-                    {t(`rfx.response.${mine?.status === 'Submitted' ? 'submitted' : mine ? 'draft' : 'notStarted'}`)}
+                  <StatusPill variant={mine?.status === 'Submitted' ? 'success' : started ? 'info' : 'neutral'}>
+                    {t(`rfx.response.${mine?.status === 'Submitted' ? 'submitted' : started ? 'draft' : 'notStarted'}`)}
                   </StatusPill>
                   <Button
                     variant="secondary"
@@ -160,10 +227,80 @@ const SupplierRfp: React.FC = () => {
                 </div>
               </header>
 
-              {opened && (
+              {opened && event.confidentialityLocked && (
+                <div className="px-4 py-4">
+                  <RfxConfidentialityGate
+                    terms={event.confidentiality?.terms}
+                    disabled={answerVerb.kind !== 'held' || event.closed || command.isPending}
+                    onAccept={() => accept(event, { confidentiality: true })}
+                    testId={`supplier-rfp-gate-${event.id}`}
+                  />
+                </div>
+              )}
+
+              {opened && !event.confidentialityLocked && (
                 <div className="px-4 py-4 space-y-4">
-                  <p className="text-sm text-text-secondary">{event.scope}</p>
-                  {mine?.status === 'Draft' && (
+                  {mine?.confidentialityAcceptedAt && (
+                    <p className="text-xs text-text-tertiary" data-testid={`supplier-rfp-accepted-${event.id}`}>
+                      {t('rfxa.conf.acceptedOn')} <Data>{formatDate(mine.confidentialityAcceptedAt)}</Data>
+                    </p>
+                  )}
+                  <p className="text-sm text-text-secondary whitespace-pre-line">{event.scope}</p>
+                  {(event.attachments ?? []).length > 0 && (
+                    <div>
+                      <h4 className="text-xs uppercase tracking-wide text-text-tertiary mb-1">{t('rfxa.att.title')}</h4>
+                      <SessionAttachments
+                        value={event.attachments ?? []}
+                        label={t('rfxa.att.title')}
+                        testId={`supplier-rfp-attachments-${event.id}`}
+                      />
+                    </div>
+                  )}
+
+                  {event.termsDocument && (
+                    <div className="border border-border-subtle rounded-md px-3 py-3 space-y-2" data-testid={`supplier-rfp-tc-${event.id}`}>
+                      <h4 className="text-sm font-semibold text-text-primary">{t('rfxa.tc.title')}</h4>
+                      {event.termsDocument.text && (
+                        <p className="text-sm text-text-secondary whitespace-pre-line">{event.termsDocument.text}</p>
+                      )}
+                      {event.termsDocument.attachment && (
+                        <SessionAttachments
+                          value={[event.termsDocument.attachment]}
+                          label={t('rfxa.tc.file')}
+                          testId={`supplier-rfp-tc-file-${event.id}`}
+                        />
+                      )}
+                      {tcPending ? (
+                        <div className="flex flex-wrap items-center gap-3">
+                          <label className="flex items-center gap-2 text-sm text-text-primary">
+                            <input
+                              type="checkbox"
+                              className="accent-teal"
+                              data-testid={`supplier-rfp-tc-tick-${event.id}`}
+                              checked={tcTicked[event.id] ?? false}
+                              disabled={answerVerb.kind !== 'held' || event.closed}
+                              onChange={(e) => setTcTicked((prev) => ({ ...prev, [event.id]: e.target.checked }))}
+                            />
+                            {t('rfxa.tc.tick')}
+                          </label>
+                          <Button
+                            variant="outline"
+                            disabled={!tcTicked[event.id] || answerVerb.kind !== 'held' || event.closed || command.isPending}
+                            onClick={() => accept(event, { terms: true })}
+                            data-testid={`supplier-rfp-tc-accept-${event.id}`}
+                          >
+                            {t('rfxa.tc.accept')}
+                          </Button>
+                        </div>
+                      ) : (
+                        <p className="text-xs text-text-tertiary" data-testid={`supplier-rfp-tc-accepted-${event.id}`}>
+                          {t('rfxa.tc.acceptedOn')} <Data>{formatDate(mine!.termsAcceptedAt!)}</Data>
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {mine?.status === 'Draft' && started && (
                     <p
                       className="text-sm text-action-hover bg-action-soft rounded px-3 py-2"
                       data-testid={`supplier-rfp-draft-${event.id}`}
@@ -192,38 +329,42 @@ const SupplierRfp: React.FC = () => {
                       <tbody>
                         {RFP_TERM_GROUP_ORDER.flatMap((group) =>
                           event.terms
-                            .filter((row) => rfpTerm(row.termId)?.group === group)
+                            .filter((row) => rfpTermGroupOf(row) === group)
                             .map((row) => {
                               const a = answers.find((x) => x.termId === row.termId);
                               const deviates = a?.stance === 'deviate';
                               const needsComment = deviates && uncommented.includes(row.termId);
+                              const label = termLabel(t, row);
                               return (
                                 <TableRow key={row.termId} data-testid={`supplier-rfp-term-${row.termId}`}>
                                   <TableCell className="align-top">
                                     <div className="text-xs uppercase tracking-wide text-text-tertiary">
                                       {t(`rfx.group.${group}`)}
                                     </div>
-                                    <div className="text-sm text-text-primary">
-                                      {t(rfpTerm(row.termId)!.labelKey)}
-                                    </div>
+                                    <div className="text-sm text-text-primary">{label}</div>
                                   </TableCell>
                                   <TableCell className="align-top text-sm text-text-secondary">
-                                    <Data>{row.requestedValue}</Data>
+                                    <Data>{termValueText(t, row, row.requestedValue)}</Data>
                                   </TableCell>
                                   <TableCell className="align-top">
-                                    <input
-                                      type="text"
-                                      disabled={locked}
-                                      aria-label={t(rfpTerm(row.termId)!.labelKey)}
+                                    <TermValueInput
+                                      row={row}
                                       value={a?.proposedValue ?? ''}
-                                      onChange={(e) => setAnswer(event, row.termId, { proposedValue: e.target.value })}
-                                      className="w-full bg-white border border-border-input rounded-md px-3 h-9 text-sm focus:outline-none focus:border-action disabled:bg-bg-hover"
+                                      onChange={(v) => setAnswer(event, row.termId, { proposedValue: v })}
+                                      ariaLabel={label}
+                                      disabled={locked}
+                                      invalid={badValues.includes(row.termId)}
                                     />
+                                    {badValues.includes(row.termId) && (
+                                      <div className="text-xs text-danger mt-1" data-testid={`supplier-rfp-value-invalid-${row.termId}`}>
+                                        {t('rfxa.term.valueInvalid')}
+                                      </div>
+                                    )}
                                   </TableCell>
                                   <TableCell className="align-top">
                                     <select
                                       disabled={locked}
-                                      aria-label={`${t(rfpTerm(row.termId)!.labelKey)} — ${t('rfx.stance.comply')}`}
+                                      aria-label={`${label} — ${t('rfx.stance.comply')}`}
                                       value={a?.stance ?? 'comply'}
                                       onChange={(e) =>
                                         setAnswer(event, row.termId, {
@@ -240,7 +381,7 @@ const SupplierRfp: React.FC = () => {
                                     <input
                                       type="text"
                                       disabled={locked || !deviates}
-                                      aria-label={`${t(rfpTerm(row.termId)!.labelKey)} — ${t('rfx.rfp.comment')}`}
+                                      aria-label={`${label} — ${t('rfx.rfp.comment')}`}
                                       value={a?.comment ?? ''}
                                       onChange={(e) => setAnswer(event, row.termId, { comment: e.target.value })}
                                       className={`w-full bg-white border rounded-md px-3 h-9 text-sm focus:outline-none focus:border-action disabled:bg-bg-hover ${
@@ -282,6 +423,42 @@ const SupplierRfp: React.FC = () => {
                     />
                   </div>
 
+                  {questions.length > 0 && (
+                    <div className="space-y-4" data-testid={`supplier-rfp-questions-${event.id}`}>
+                      <RfxQuestionForm
+                        questions={questions}
+                        customSections={event.customSections}
+                        answers={qAnswers}
+                        disabled={locked}
+                        onChange={(questionId, patch) => setQuestionAnswer(event, questionId, patch)}
+                      />
+                    </div>
+                  )}
+
+                  {event.pricing && (
+                    <RfpPricingForm
+                      request={event.pricing}
+                      currency={event.currency}
+                      value={pricing}
+                      onChange={(next) => setPDraft((prev) => ({ ...prev, [event.id]: next }))}
+                      disabled={locked}
+                      testIdPrefix={`supplier-rfp-${event.id}`}
+                    />
+                  )}
+
+                  {!event.closed && !tcPending && (blockers.length > 0 || pricingRefusal) && (
+                    <ul className="text-sm text-danger list-disc pl-5" data-testid={`supplier-rfp-blockers-${event.id}`}>
+                      {blockers.map((b) => (
+                        <li key={b}>{t(`rfxa.blocker.${b}`)}</li>
+                      ))}
+                      {pricingRefusal && (
+                        <li data-testid={`supplier-rfp-pricing-refusal-${event.id}`}>
+                          {t(`rfxa.refusal.${refusalCode(pricingRefusal)}`, { defaultValue: pricingRefusal })}
+                        </li>
+                      )}
+                    </ul>
+                  )}
+
                   <div className="flex flex-wrap gap-3">
                     <Button
                       variant="secondary"
@@ -293,7 +470,7 @@ const SupplierRfp: React.FC = () => {
                     </Button>
                     <Button
                       variant="outline"
-                      disabled={locked || missing.length > 0 || uncommented.length > 0}
+                      disabled={locked || blockers.length > 0 || pricingRefusal !== null}
                       onClick={() => send(event, false)}
                       data-testid={`supplier-rfp-submit-${event.id}`}
                     >

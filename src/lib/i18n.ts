@@ -90,6 +90,9 @@ import { inventoryCapacityEn, inventoryCapacityId } from './i18n/inventoryCapaci
 import { forecastCollaborationEn, forecastCollaborationId } from './i18n/forecastCollaboration';
 // — Phase 6a RFx management (REQ-E03-01 to REQ-E03-05) —
 import { rfxEn, rfxId } from './i18n/rfx';
+// — RFx authoring (RFI/RFP batch, 2026-09-21) and session-held attachments —
+import { rfxAuthoringEn, rfxAuthoringId } from './i18n/rfxAuthoring';
+import { sessionFilesEn, sessionFilesId } from './i18n/sessionFiles';
 // — BL-51 3PL tracking links (REQ-E07-04 BR-05) —
 import { threePlEn, threePlId } from './i18n/threePl';
 // — BL-52 supplier filters (REQ-E03-01 BR-05) —
@@ -179,6 +182,8 @@ export const resources = {
       ...inventoryCapacityEn,
       ...forecastCollaborationEn,
       ...rfxEn,
+      ...rfxAuthoringEn,
+      ...sessionFilesEn,
       ...threePlEn,
       ...supplierFiltersEn,
       ...errorStateEn,
@@ -622,6 +627,8 @@ export const resources = {
       ...inventoryCapacityId,
       ...forecastCollaborationId,
       ...rfxId,
+      ...rfxAuthoringId,
+      ...sessionFilesId,
       ...threePlId,
       ...supplierFiltersId,
       ...errorStateId,

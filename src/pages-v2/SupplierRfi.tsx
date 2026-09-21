@@ -9,6 +9,7 @@ import Data from '../components/ui-v2/Data';
 import StatusPill from '../components/ui-v2/StatusPill';
 import LoadingState from '../components/ui-v2/LoadingState';
 import ErrorState from '../components/ui-v2/ErrorState';
+import SessionAttachments from '../components/ui-v2/SessionAttachments';
 import { HandoffNotice } from '../components/ui-v2/HandoffNotice';
 import { useVerbAvailability } from '../hooks/useVerbAvailability';
 import { useToast } from '../hooks/useToast';
@@ -16,11 +17,12 @@ import { formatDate } from '../lib/format';
 import { useCurrentIdentity } from '../context/CurrentIdentityContext';
 import { useRfiEvents } from '../services/query/hooks';
 import { useRfxCommand } from '../services/query/commandHooks';
-import { RFI_SECTION_ORDER } from '../services/sourcing/rfxConfig';
-import { missingRequiredAnswers } from '../services/transitions/rfxRules';
-import type { RfiAnswer, RfiQuestion } from '../services/sourcing/types';
+import { invalidAnswers, missingRequiredAnswers } from '../services/transitions/rfxRules';
+import type { RfiAnswer } from '../services/sourcing/types';
 import type { RfiEventView } from '../services/sourcing/views';
 import { DeadlinePill, rfxNow } from './rfx/rfxDisplay';
+import RfxQuestionForm from './rfx/RfxQuestionForm';
+import RfxConfidentialityGate from './rfx/RfxConfidentialityGate';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SUPPLIER INFORMATION REQUESTS — REQ-E03-02 (SUP).
@@ -32,16 +34,19 @@ import { DeadlinePill, rfxNow } from './rfx/rfxDisplay';
 //   · A PARTIAL ANSWER IS A DRAFT AND PTI CANNOT SEE IT. "Save draft" is a
 //     first-class button, not a lesser one, and the page says out loud that the
 //     draft is invisible.
-//   · A REQUIRED QUESTION BLOCKS SENDING. The page names the ones still
-//     missing; the submit verb refuses the act with the same list.
+//   · A REQUIRED QUESTION BLOCKS SENDING, AND SO DOES AN ANSWER THAT DOES NOT
+//     FIT ITS QUESTION. The page names what is missing or wrong; the submit
+//     verb refuses the act with the same predicates.
+//
+// ⚠️ **A CONFIDENTIAL REQUEST SHOWS ONLY ITS GATE UNTIL THE SUPPLIER ACCEPTS
+// (RFx authoring).** The read withholds the description, attachments and
+// questions, so this page has nothing to render but the terms and the accept
+// button — and accepting is a dispatched act, recorded with its time.
 //
 // COMPANY IDENTITY IS NEVER ASKED. Legal name, tax number, address and bank
 // come from the company profile, and the page says so rather than leaving the
 // supplier to wonder why the form starts at "what can you make".
 // ─────────────────────────────────────────────────────────────────────────────
-
-const answerValue = (answers: readonly RfiAnswer[], id: string): RfiAnswer | undefined =>
-  answers.find((a) => a.questionId === id);
 
 const SupplierRfi: React.FC = () => {
   const { t } = useTranslation();
@@ -74,6 +79,17 @@ const SupplierRfi: React.FC = () => {
     setDraft((prev) => ({ ...prev, [event.id]: next }));
   };
 
+  const report = (successKey: string) => ({
+    onSuccess: (res: { status: string; reason?: string }) => {
+      if (res.status === 'failed') {
+        toast({ variant: 'error', title: t('rfx.toast.refused', { reason: res.reason ?? '' }) });
+        return;
+      }
+      toast({ variant: 'success', title: t(successKey) });
+    },
+    onError: () => toast({ variant: 'error', title: t('rfx.toast.refused', { reason: '' }) }),
+  });
+
   const send = (event: RfiEventView, draftOnly: boolean) =>
     command.mutate(
       {
@@ -83,17 +99,11 @@ const SupplierRfi: React.FC = () => {
         answers: answersFor(event),
         ...(draftOnly ? { draftOnly: true } : {}),
       },
-      {
-        onSuccess: (res) => {
-          if (res.status === 'failed') {
-            toast({ variant: 'error', title: t('rfx.toast.refused', { reason: res.reason ?? '' }) });
-            return;
-          }
-          toast({ variant: 'success', title: t(draftOnly ? 'rfx.toast.saved' : 'rfx.toast.sent') });
-        },
-        onError: () => toast({ variant: 'error', title: t('rfx.toast.refused', { reason: '' }) }),
-      },
+      report(draftOnly ? 'rfx.toast.saved' : 'rfx.toast.sent'),
     );
+
+  const accept = (event: RfiEventView) =>
+    command.mutate({ verb: 'acceptRfi', rfiId: event.id, supplierId }, report('rfxa.toast.accepted'));
 
   return (
     <AppShellV2>
@@ -125,7 +135,11 @@ const SupplierRfi: React.FC = () => {
           const mine = event.responses[0] ?? null;
           const answers = answersFor(event);
           const missing = missingRequiredAnswers(event.questions, answers);
+          const invalid = invalidAnswers(event.questions, answers);
           const opened = openId === event.id;
+          const locked = mine?.status === 'Submitted' || answer.kind !== 'held' || event.closed;
+          // An acceptance-only row is not a started answer (the read says the same).
+          const started = !!mine && (mine.status === 'Submitted' || mine.answers.length > 0);
           return (
             <section
               key={event.id}
@@ -138,13 +152,16 @@ const SupplierRfi: React.FC = () => {
                   <div className="text-sm text-text-primary">{event.title}</div>
                 </div>
                 <div className="flex items-center gap-3">
+                  {event.confidentiality && (
+                    <StatusPill variant="neutral">{t('rfxa.conf.pill')}</StatusPill>
+                  )}
                   <DeadlinePill
                     deadline={event.invitedSuppliers.find((i) => i.supplierId === supplierId)?.deadline ?? event.responseDeadline}
                     done={mine?.status === 'Submitted'}
                     testId={`supplier-rfi-deadline-${event.id}`}
                   />
-                  <StatusPill variant={mine?.status === 'Submitted' ? 'success' : mine ? 'info' : 'neutral'}>
-                    {t(`rfx.response.${mine?.status === 'Submitted' ? 'submitted' : mine ? 'draft' : 'notStarted'}`)}
+                  <StatusPill variant={mine?.status === 'Submitted' ? 'success' : started ? 'info' : 'neutral'}>
+                    {t(`rfx.response.${mine?.status === 'Submitted' ? 'submitted' : started ? 'draft' : 'notStarted'}`)}
                   </StatusPill>
                   <Button
                     variant="secondary"
@@ -156,39 +173,64 @@ const SupplierRfi: React.FC = () => {
                 </div>
               </header>
 
-              {opened && (
+              {opened && event.confidentialityLocked && (
+                <div className="px-4 py-4">
+                  <RfxConfidentialityGate
+                    terms={event.confidentiality?.terms}
+                    disabled={answer.kind !== 'held' || event.closed || command.isPending}
+                    onAccept={() => accept(event)}
+                    testId={`supplier-rfi-gate-${event.id}`}
+                  />
+                </div>
+              )}
+
+              {opened && !event.confidentialityLocked && (
                 <div className="px-4 py-4 space-y-5">
+                  {mine?.confidentialityAcceptedAt && (
+                    <p className="text-xs text-text-tertiary" data-testid={`supplier-rfi-accepted-${event.id}`}>
+                      {t('rfxa.conf.acceptedOn')} <Data>{formatDate(mine.confidentialityAcceptedAt)}</Data>
+                    </p>
+                  )}
+                  {event.description && (
+                    <div>
+                      <h4 className="text-xs uppercase tracking-wide text-text-tertiary">{t('rfx.rfi.about')}</h4>
+                      <p className="text-sm text-text-secondary">{event.description}</p>
+                    </div>
+                  )}
+                  {(event.attachments ?? []).length > 0 && (
+                    <div>
+                      <h4 className="text-xs uppercase tracking-wide text-text-tertiary mb-1">{t('rfxa.att.title')}</h4>
+                      <SessionAttachments
+                        value={event.attachments ?? []}
+                        label={t('rfxa.att.title')}
+                        testId={`supplier-rfi-attachments-${event.id}`}
+                      />
+                    </div>
+                  )}
                   <p className="text-xs text-text-tertiary">{t('rfx.rfi.identityFromMaster')}</p>
-                  {mine?.status === 'Draft' && (
+                  {mine?.status === 'Draft' && started && (
                     <p className="text-sm text-action-hover bg-action-soft rounded px-3 py-2" data-testid={`supplier-rfi-draft-${event.id}`}>
                       {t('rfx.draftHidden')}
                     </p>
                   )}
 
-                  {RFI_SECTION_ORDER.map((section) => {
-                    const questions = event.questions.filter((q) => q.sectionId === section);
-                    if (questions.length === 0) return null;
-                    return (
-                      <fieldset key={section} className="space-y-4">
-                        <legend className="text-sm font-semibold text-text-primary">
-                          {t(`rfx.section.${section}`)}
-                        </legend>
-                        {questions.map((q) => (
-                          <QuestionField
-                            key={q.id}
-                            question={q}
-                            answer={answerValue(answers, q.id)}
-                            disabled={mine?.status === 'Submitted' || answer.kind !== 'held'}
-                            onChange={(patch) => setAnswer(event, q.id, patch)}
-                          />
-                        ))}
-                      </fieldset>
-                    );
-                  })}
+                  <RfxQuestionForm
+                    questions={event.questions}
+                    customSections={event.customSections}
+                    answers={answers}
+                    disabled={locked}
+                    withDescription
+                    onChange={(questionId, patch) => setAnswer(event, questionId, patch)}
+                  />
 
                   {missing.length > 0 && !event.closed && (
                     <p className="text-sm text-danger" data-testid={`supplier-rfi-missing-${event.id}`}>
                       {t('rfx.rfi.missing')}
+                    </p>
+                  )}
+                  {invalid.length > 0 && !event.closed && (
+                    <p className="text-sm text-danger" data-testid={`supplier-rfi-invalid-${event.id}`}>
+                      {t('rfxa.answer.fixInvalid')}
                     </p>
                   )}
 
@@ -207,7 +249,7 @@ const SupplierRfi: React.FC = () => {
                   <div className="flex flex-wrap gap-3">
                     <Button
                       variant="secondary"
-                      disabled={answer.kind !== 'held' || event.closed || mine?.status === 'Submitted'}
+                      disabled={locked}
                       onClick={() => send(event, true)}
                       data-testid={`supplier-rfi-save-${event.id}`}
                     >
@@ -215,12 +257,7 @@ const SupplierRfi: React.FC = () => {
                     </Button>
                     <Button
                       variant="outline"
-                      disabled={
-                        answer.kind !== 'held' ||
-                        event.closed ||
-                        missing.length > 0 ||
-                        mine?.status === 'Submitted'
-                      }
+                      disabled={locked || missing.length > 0 || invalid.length > 0}
                       onClick={() => send(event, false)}
                       data-testid={`supplier-rfi-submit-${event.id}`}
                     >
@@ -234,110 +271,6 @@ const SupplierRfi: React.FC = () => {
         })}
       </div>
     </AppShellV2>
-  );
-};
-
-/** One question, drawn according to its kind. */
-const QuestionField: React.FC<{
-  question: RfiQuestion;
-  answer: RfiAnswer | undefined;
-  disabled: boolean;
-  onChange: (patch: Partial<RfiAnswer>) => void;
-}> = ({ question, answer, disabled, onChange }) => {
-  const { t } = useTranslation();
-  const id = `q-${question.id}`;
-  const value = answer?.value;
-  const inputClass =
-    'w-full bg-white border border-border-input rounded-md px-3 h-10 text-sm focus:outline-none focus:border-action disabled:bg-bg-hover';
-
-  const options = question.type === 'yesNo' ? ['yes', 'no'] : (question.options ?? []);
-
-  return (
-    <div data-testid={`rfi-field-${question.id}`}>
-      <label className="block text-sm text-text-primary mb-1" htmlFor={id}>
-        {t(question.promptKey)}
-        {question.required && <span className="text-danger ml-1">*</span>}
-        {question.unitKey && <span className="text-text-tertiary ml-1">({t(question.unitKey)})</span>}
-      </label>
-
-      {(question.type === 'yesNo' || question.type === 'singleChoice') && (
-        <select
-          id={id}
-          disabled={disabled}
-          value={typeof value === 'string' ? value : ''}
-          onChange={(e) => onChange({ value: e.target.value })}
-          className={inputClass}
-        >
-          <option value="">—</option>
-          {options.map((o) => (
-            <option key={o} value={o}>
-              {t(`rfx.opt.${o}`, { defaultValue: o })}
-            </option>
-          ))}
-        </select>
-      )}
-
-      {question.type === 'multipleChoice' && (
-        <div className="flex flex-wrap gap-3">
-          {options.map((o) => {
-            const chosen = Array.isArray(value) && value.includes(o);
-            return (
-              <label key={o} className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  className="accent-teal"
-                  disabled={disabled}
-                  checked={chosen}
-                  onChange={() =>
-                    onChange({
-                      value: chosen
-                        ? (value as string[]).filter((v) => v !== o)
-                        : [...(Array.isArray(value) ? (value as string[]) : []), o],
-                    })
-                  }
-                />
-                {t(`rfx.opt.${o}`, { defaultValue: o })}
-              </label>
-            );
-          })}
-        </div>
-      )}
-
-      {(question.type === 'numberWithUnit' || question.type === 'date') && (
-        <input
-          id={id}
-          type={question.type === 'date' ? 'date' : 'number'}
-          disabled={disabled}
-          value={value === undefined ? '' : String(value)}
-          onChange={(e) =>
-            onChange({ value: question.type === 'date' ? e.target.value : Number(e.target.value) })
-          }
-          className={inputClass}
-        />
-      )}
-
-      {(question.type === 'text' || question.type === 'attachment') && (
-        <textarea
-          id={id}
-          rows={2}
-          disabled={disabled}
-          value={typeof value === 'string' ? value : ''}
-          onChange={(e) => onChange({ value: e.target.value })}
-          className="w-full bg-white border border-border-input rounded-md px-3 py-2 text-sm focus:outline-none focus:border-action disabled:bg-bg-hover"
-        />
-      )}
-
-      {/* REQ-E03-02 BR-02 — every structured entry carries a description. */}
-      <input
-        type="text"
-        disabled={disabled}
-        placeholder={t('rfx.rfi.description')}
-        aria-label={`${t(question.promptKey)} — ${t('rfx.rfi.description')}`}
-        value={answer?.description ?? ''}
-        onChange={(e) => onChange({ description: e.target.value })}
-        className="mt-2 w-full bg-white border border-border-input rounded-md px-3 h-9 text-xs focus:outline-none focus:border-action disabled:bg-bg-hover"
-      />
-    </div>
   );
 };
 
