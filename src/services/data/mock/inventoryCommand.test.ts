@@ -99,6 +99,34 @@ describe('stock submission (REQ-E08-02)', () => {
     expect((await declare({ materialCode: 'PK-PETB-8801', totalQty: 100, channel: 'api' })).reason).toMatch(/channel/);
   });
 
+  it('BL-60: a batch manufacturing date is stored; after expiry or in the future is refused by the verb', async () => {
+    const today = now().slice(0, 10);
+    const ok = await declare({
+      materialCode: 'PK-PETB-8801',
+      totalQty: 100,
+      batches: [{ batchNumber: 'M1', qty: 100, manufacturingDate: today, expiryDate: '2099-01-01' }],
+    });
+    expect(ok.status).toBe('done');
+    expect(inventoryDeclarationStore.latestFor('sup-007', 'PK-PETB-8801')!.batches).toEqual([
+      { batchNumber: 'M1', qty: 100, uom: 'PCS', manufacturingDate: today, expiryDate: '2099-01-01' },
+    ]);
+    expect((await positionOf(sup007, 'sup-007', 'PK-PETB-8801'))!.batches[0]).toMatchObject({ manufacturingDate: today });
+    const before = inventoryDeclarationStore.all().length;
+    const after = await declare({
+      materialCode: 'PK-PETB-8801',
+      totalQty: 100,
+      batches: [{ batchNumber: 'M2', qty: 100, manufacturingDate: '2026-01-10', expiryDate: '2026-01-09' }],
+    });
+    expect(after.reason).toMatch(/manufacturing date is after the expiry date/);
+    const future = await declare({
+      materialCode: 'PK-PETB-8801',
+      totalQty: 100,
+      batches: [{ batchNumber: 'M3', qty: 100, manufacturingDate: '2099-01-01' }],
+    });
+    expect(future.reason).toMatch(/manufacturing date is in the future/);
+    expect(inventoryDeclarationStore.all()).toHaveLength(before);
+  });
+
   it('BR-08: PTI records a WhatsApp reply on the supplier’s behalf — "Entered by PTI", visible to the supplier', async () => {
     const res = await svc.dispatch(buyer, {
       transitionId: 't_inventorydeclaration_record',

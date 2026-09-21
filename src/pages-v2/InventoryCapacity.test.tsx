@@ -20,6 +20,7 @@ import {
   stockSyncStore,
 } from '../services/data/mock/stores/inventoryHubStores';
 import { sdcClock } from '../services/sdc';
+import { STOCK_TEMPLATE_FIELDS, type StockTemplateField } from '../services/transitions/inventoryRules';
 import BuyerInventory from './BuyerInventory';
 import SupplierInventory from './SupplierInventory';
 import BuyerSupplierAccess from './BuyerSupplierAccess';
@@ -166,6 +167,98 @@ describe('Supplier Stock (REQ-E08-01 SUP, REQ-E08-02, REQ-E08-03)', () => {
     fireEvent.change(panel().getByLabelText('Quantity'), { target: { value: '1000' } });
     fireEvent.click(panel().getByTestId('stock-entry-submit'));
     await waitFor(() => expect(inventoryDeclarationStore.latestFor('sup-007', 'PK-PETB-8810')).toMatchObject({ totalQty: 1000, channel: 'manual' }));
+  });
+});
+
+describe('One stock entry (BL-60, REQ-E08-02 BR-06, BR-09, BR-10, AC-04, AC-05)', () => {
+  // The manual form's label for each template field. The material is chosen
+  // from a list and the unit is the material's (shown in every label), so those
+  // two template columns have no typed counterpart — everything else must match.
+  const MANUAL_LABEL: Record<StockTemplateField, RegExp | null> = {
+    materialCode: /^Material$/,
+    soh: /^Stock on hand \(PCS\)$/,
+    unit: null,
+    supplierRop: /^Supplier reorder point \(PCS\)$/,
+    inProductionQty: /^In production \(PCS\)$/,
+    productionCompletionDate: /^Expected production completion$/,
+    batchNumber: /^Batch number$/,
+    batchQty: /^Quantity$/,
+    manufacturingDate: /^Manufacturing date$/,
+    expiryDate: /^Expiry date$/,
+  };
+
+  const openManual = async (material = 'PK-PETB-8801') => {
+    renderWithProviders(<SupplierInventory />, { identity: SUPPLIER });
+    fireEvent.click(await screen.findByTestId('stock-entry-open'));
+    fireEvent.change(panel().getByLabelText('Material'), { target: { value: material } });
+  };
+
+  it('AC-04: the manual form carries every template field, and nothing the template lacks', async () => {
+    await openManual();
+    fireEvent.click(panel().getByRole('button', { name: 'Add batch' }));
+    for (const f of STOCK_TEMPLATE_FIELDS) {
+      const label = MANUAL_LABEL[f.field];
+      if (label) expect(panel().getByLabelText(label), f.field).toBeInTheDocument();
+    }
+    // Every typeable control in the panel maps to a template field.
+    const controls = [...document.querySelectorAll('aside[role="dialog"] input, aside[role="dialog"] select')];
+    expect(controls).toHaveLength(STOCK_TEMPLATE_FIELDS.filter((f) => MANUAL_LABEL[f.field] !== null).length);
+  });
+
+  it('manufacturing date: after expiry or in the future blocks Save; a valid one is saved', async () => {
+    await openManual();
+    fireEvent.change(panel().getByLabelText('Stock on hand (PCS)'), { target: { value: '500' } });
+    fireEvent.click(panel().getByRole('button', { name: 'Add batch' }));
+    fireEvent.change(panel().getByLabelText('Batch number'), { target: { value: 'MD-1' } });
+    fireEvent.change(panel().getByLabelText('Quantity'), { target: { value: '500' } });
+    fireEvent.change(panel().getByLabelText('Expiry date'), { target: { value: '2027-01-31' } });
+    fireEvent.change(panel().getByLabelText('Manufacturing date'), { target: { value: '2027-02-01' } });
+    expect(panel().getByTestId('stock-entry-batch-date-0')).toHaveTextContent('cannot be after the expiry date');
+    expect(panel().getByTestId('stock-entry-submit')).toBeDisabled();
+    fireEvent.change(panel().getByLabelText('Expiry date'), { target: { value: '' } });
+    fireEvent.change(panel().getByLabelText('Manufacturing date'), { target: { value: '2099-01-01' } });
+    expect(panel().getByTestId('stock-entry-batch-date-0')).toHaveTextContent('cannot be in the future');
+    expect(panel().getByTestId('stock-entry-submit')).toBeDisabled();
+    const made = sdcClock.now().slice(0, 10);
+    fireEvent.change(panel().getByLabelText('Manufacturing date'), { target: { value: made } });
+    expect(panel().queryByTestId('stock-entry-batch-date-0')).toBeNull();
+    fireEvent.click(panel().getByTestId('stock-entry-submit'));
+    await waitFor(() =>
+      expect(inventoryDeclarationStore.latestFor('sup-007', 'PK-PETB-8801')!.batches).toEqual([
+        { batchNumber: 'MD-1', qty: 500, uom: 'PCS', manufacturingDate: made },
+      ]),
+    );
+  });
+
+  it('AC-05: in transit sits beside in production, read-only, naming its call-offs', async () => {
+    await openManual();
+    const transit = panel().getByTestId('stock-entry-in-transit');
+    expect(within(transit).getByTestId('stock-entry-in-transit-qty').textContent).not.toBe('0');
+    expect(within(transit).getByTestId('stock-entry-in-transit-source')).toHaveTextContent(/CO-\d{4}-\d{4}/);
+    // Not a control of any kind — it cannot be typed.
+    expect(transit.querySelector('input, select, textarea, [contenteditable]')).toBeNull();
+    expect(panel().queryByLabelText(/In transit/)).toBeNull();
+  });
+
+  it('template: in transit shown read-only per material, and a manufacturing date column is saved', async () => {
+    renderWithProviders(<SupplierInventory />, { identity: SUPPLIER });
+    const incoming = await screen.findByTestId('stock-upload-incoming');
+    const bottle = within(incoming).getByTestId('stock-upload-in-transit-PK-PETB-8801');
+    expect(within(bottle).getByTestId('stock-upload-in-transit-PK-PETB-8801-source')).toHaveTextContent(/CO-/);
+    expect(incoming.querySelector('input, select, textarea')).toBeNull();
+    const made = sdcClock.now().slice(0, 10);
+    const csv = [
+      'Material code,Stock on hand,Unit,Batch number,Batch quantity,Manufacturing date (YYYY-MM-DD),Expiry date (YYYY-MM-DD)',
+      `PK-CAPF-8820,300,PCS,T-1,300,${made},2028-01-01`,
+      'PK-PETB-8802,300,PCS,T-2,300,2099-01-01,',
+    ].join('\n');
+    fireEvent.change(screen.getByTestId('stock-upload-file'), { target: { files: [new File([csv], 's.csv', { type: 'text/csv' })] } });
+    const result = await screen.findByTestId('stock-upload-result');
+    expect(within(result).getByTestId('stock-upload-saved')).toHaveTextContent('Materials saved: 1');
+    expect(within(result).getByTestId('stock-upload-refused-row-3')).toHaveTextContent('The manufacturing date is in the future');
+    expect(inventoryDeclarationStore.latestFor('sup-007', 'PK-CAPF-8820')!.batches).toEqual([
+      { batchNumber: 'T-1', qty: 300, uom: 'PCS', manufacturingDate: made, expiryDate: '2028-01-01' },
+    ]);
   });
 });
 

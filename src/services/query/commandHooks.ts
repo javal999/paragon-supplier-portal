@@ -1717,7 +1717,7 @@ export type InventoryCommandVars =
       supplierRop?: number;
       inProductionQty?: number;
       productionCompletionDate?: string;
-      batches?: readonly { batchNumber: string; qty: number; expiryDate?: string }[];
+      batches?: readonly { batchNumber: string; qty: number; manufacturingDate?: string; expiryDate?: string }[];
     }
   | {
       verb: 'record';
@@ -1727,7 +1727,7 @@ export type InventoryCommandVars =
       supplierRop?: number;
       inProductionQty?: number;
       productionCompletionDate?: string;
-      batches?: readonly { batchNumber: string; qty: number; expiryDate?: string }[];
+      batches?: readonly { batchNumber: string; qty: number; manufacturingDate?: string; expiryDate?: string }[];
     }
   | { verb: 'sync'; supplierId: string }
   | { verb: 'grantAccess'; supplierId: string; materials: readonly string[]; alreadyGranted: boolean }

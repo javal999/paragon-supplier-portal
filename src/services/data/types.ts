@@ -526,7 +526,12 @@ export interface InventoryPosition {
   readonly apiConnected: boolean;
   /** The latest API sync attempt for this supplier, if any. */
   readonly lastSync: StockSyncAttempt | null;
-  readonly batches: readonly { readonly batchNumber: string; readonly qty: number; readonly expiryDate?: string }[];
+  readonly batches: readonly {
+    readonly batchNumber: string;
+    readonly qty: number;
+    readonly manufacturingDate?: string;
+    readonly expiryDate?: string;
+  }[];
 }
 
 /** One entry in the supplier-access log (REQ-E08-03 BR-06). */

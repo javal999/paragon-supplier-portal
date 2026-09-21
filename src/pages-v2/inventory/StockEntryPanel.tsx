@@ -4,13 +4,17 @@ import { Plus, X } from 'lucide-react';
 import SidePanel from '../../components/ui-v2/SidePanel';
 import Button from '../../components/ui-v2/Button';
 import type { InventoryPosition } from '../../services/data/types';
-import { isIsoDay, readStockNumber } from '../../services/transitions/inventoryRules';
-import { inputClass, labelClass, useInventoryRunner } from './inventoryDisplay';
+import { batchDatesProblem, dayOf, isIsoDay, readStockNumber } from '../../services/transitions/inventoryRules';
+import { InTransitReadOnly, inputClass, inventoryNow, labelClass, useInventoryRunner } from './inventoryDisplay';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Stock entry on screen (REQ-E08-02 BR-04) — the same fields as the template:
-// SOH, supplier ROP, in-production quantity and its completion date, and
-// optional batches (batch number, quantity, expiry). Used by a supplier for its
+// Stock entry on screen (REQ-E08-02 BR-04, BR-09) — the same fields as the
+// template, field for field (STOCK_TEMPLATE_FIELDS): SOH, supplier ROP,
+// in-production quantity and its completion date, and optional batches (batch
+// number, quantity, manufacturing date, expiry). The unit is the material's,
+// shown in every label — never typed. In-transit quantity sits beside the
+// in-production figure READ-ONLY (BR-10): it comes from ASNs and dispatched
+// call-offs, never from this form. Used by a supplier for its
 // own materials (`declare`, manual channel) and by a PTI planner recording what
 // a supplier sent by WhatsApp or email (`record`, shown as "Entered by PTI").
 // The page mirrors CR-18 and CR-19 for courtesy; the verb's policies decide.
@@ -19,8 +23,11 @@ import { inputClass, labelClass, useInventoryRunner } from './inventoryDisplay';
 interface BatchRow {
   batchNumber: string;
   qty: string;
+  manufacturingDate: string;
   expiryDate: string;
 }
+
+const EMPTY_BATCH: BatchRow = { batchNumber: '', qty: '', manufacturingDate: '', expiryDate: '' };
 
 export interface StockEntryPanelProps {
   open: boolean;
@@ -64,6 +71,9 @@ const StockEntryPanel: React.FC<StockEntryPanelProps> = ({ open, onClose, mode, 
   const batchMismatch = batches.length > 0 && soh.ok && soh.value !== null && batchTotal !== soh.value;
   const dateInvalid = form.completion !== '' && !isIsoDay(form.completion);
   const batchIncomplete = batches.some((b, i) => b.batchNumber.trim() === '' || !batchReads[i].ok || batchReads[i].value === null);
+  const today = dayOf(inventoryNow());
+  const batchDates = batches.map((b) => batchDatesProblem(b, today));
+  const batchDateInvalid = batchDates.some((d) => d !== null);
 
   const canSubmit =
     selected !== null &&
@@ -74,6 +84,7 @@ const StockEntryPanel: React.FC<StockEntryPanelProps> = ({ open, onClose, mode, 
     !dateInvalid &&
     !batchMismatch &&
     !batchIncomplete &&
+    !batchDateInvalid &&
     !pending;
 
   const submit = async () => {
@@ -90,6 +101,7 @@ const StockEntryPanel: React.FC<StockEntryPanelProps> = ({ open, onClose, mode, 
             batches: batches.map((b, i) => ({
               batchNumber: b.batchNumber.trim(),
               qty: (batchReads[i] as { ok: true; value: number }).value,
+              ...(b.manufacturingDate ? { manufacturingDate: b.manufacturingDate } : {}),
               ...(b.expiryDate ? { expiryDate: b.expiryDate } : {}),
             })),
           }
@@ -179,13 +191,18 @@ const StockEntryPanel: React.FC<StockEntryPanelProps> = ({ open, onClose, mode, 
               onChange={(e) => setForm({ ...form, completion: e.target.value })}
             />
           </div>
+          {selected && (
+            <div className="col-span-2">
+              <InTransitReadOnly position={selected} testId="stock-entry-in-transit" />
+            </div>
+          )}
         </div>
         <p className="text-xs text-text-tertiary">{t('inv.entry.numberHint')}</p>
 
         <section>
           <div className="flex items-center justify-between mb-2">
             <span className={labelClass}>{t('inv.entry.batches')}</span>
-            <Button variant="secondary" icon={Plus} onClick={() => setBatches([...batches, { batchNumber: '', qty: '', expiryDate: '' }])}>
+            <Button variant="secondary" icon={Plus} onClick={() => setBatches([...batches, { ...EMPTY_BATCH }])}>
               {t('inv.entry.addBatch')}
             </Button>
           </div>
@@ -194,7 +211,8 @@ const StockEntryPanel: React.FC<StockEntryPanelProps> = ({ open, onClose, mode, 
           ) : (
             <div className="space-y-2">
               {batches.map((b, i) => (
-                <div key={i} className="grid grid-cols-[1fr_1fr_1fr_auto] gap-2 items-end">
+                <div key={i}>
+                <div className="grid grid-cols-[1fr_1fr_1fr_1fr_auto] gap-2 items-end">
                   <div>
                     <label htmlFor={`batch-number-${i}`} className={labelClass}>
                       {t('inv.entry.batchNumber')}
@@ -219,6 +237,20 @@ const StockEntryPanel: React.FC<StockEntryPanelProps> = ({ open, onClose, mode, 
                     />
                   </div>
                   <div>
+                    <label htmlFor={`batch-mfg-${i}`} className={labelClass}>
+                      {t('inv.entry.manufacturing')}
+                    </label>
+                    <input
+                      id={`batch-mfg-${i}`}
+                      type="date"
+                      className={inputClass}
+                      value={b.manufacturingDate}
+                      onChange={(e) =>
+                        setBatches(batches.map((x, j) => (j === i ? { ...x, manufacturingDate: e.target.value } : x)))
+                      }
+                    />
+                  </div>
+                  <div>
                     <label htmlFor={`batch-expiry-${i}`} className={labelClass}>
                       {t('inv.entry.expiry')}
                     </label>
@@ -238,6 +270,12 @@ const StockEntryPanel: React.FC<StockEntryPanelProps> = ({ open, onClose, mode, 
                   >
                     <X size={16} />
                   </button>
+                </div>
+                {batchDates[i] && (
+                  <p role="alert" className="mt-1 text-xs text-danger" data-testid={`stock-entry-batch-date-${i}`}>
+                    {t(`inv.entry.error.${batchDates[i]!.problem}`)}
+                  </p>
+                )}
                 </div>
               ))}
             </div>
