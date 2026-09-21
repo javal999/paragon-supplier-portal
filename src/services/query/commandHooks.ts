@@ -329,6 +329,8 @@ export function usePurchaseOrderShippingNotice() {
 export interface AsnCreateVars {
   poReference: string;
   carrier?: string;
+  /** BL-51 — the 3PL picked from the list; omitted when the carrier is typed. */
+  threePlId?: string;
   trackingNumber?: string;
   eta?: string;
   /** REQ-E07-04 — shipped quantity, batch and expiry per PO line. Omitted, the
@@ -368,6 +370,11 @@ export function useAdvanceShipNoticeCreate() {
 export interface AsnSubmitVars {
   asnNumber: string;
   carrier: string;
+  /**
+   * BL-51 — the 3PL picked from the list. `''` clears a 3PL the draft named
+   * (the carrier typed by name instead); omitted keeps the draft's.
+   */
+  threePlId?: string;
   trackingNumber: string;
   eta: string;
   shipDate?: string;
@@ -382,13 +389,14 @@ export function useAdvanceShipNoticeSubmit() {
   const invalidate = useInvalidateProcurement();
 
   return useMutation<CommandResult, Error, AsnSubmitVars>({
-    mutationFn: ({ asnNumber, carrier, trackingNumber, eta, shipDate, lines, overShipReason }) =>
+    mutationFn: ({ asnNumber, carrier, threePlId, trackingNumber, eta, shipDate, lines, overShipReason }) =>
       svc.commands.dispatch(scope, {
         transitionId: 't_asn_submit',
         entity: 'advanceShipNotice',
         entityId: asnNumber,
         payload: {
           carrier,
+          ...(threePlId !== undefined ? { threePlId } : {}),
           trackingNumber,
           eta,
           ...(shipDate ? { shipDate } : {}),
@@ -1189,6 +1197,43 @@ export function useRoleGrant() {
           grantedBy: identity.actor,
         },
       }),
+  });
+}
+
+// ── BL-51 · ONE 3PL ON THE ADMINISTRATOR'S LIST ──────────────────────────────
+//
+// ⚠️ **`entityId` IS THE 3PL ID, AND THERE IS NO ID PAYLOAD FIELD** — the
+// `checkId` / `parent` discipline. `setBy` comes from the session, never the
+// form (C10 §6.2). The list is read straight from its store by the pages that
+// show a tracking number (they subscribe to it), so nothing in the query cache
+// holds a stale copy of an address; the ASN queries are refreshed anyway so a
+// 3PL that stopped being offered drops out of the ASN form at once.
+export interface ThreePlSetVars {
+  /** `tpl-…` — the command's entityId. */
+  threePlId: string;
+  name: string;
+  trackingUrlPattern: string;
+  active: boolean;
+}
+
+/** Add a 3PL to the list or change one (`t_threepl_set`). */
+export function useThreePlSet() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+  const { identity } = useCurrentIdentity();
+
+  return useMutation<CommandResult, Error, ThreePlSetVars>({
+    mutationFn: ({ threePlId, name, trackingUrlPattern, active }) =>
+      svc.commands.dispatch(scope, {
+        transitionId: 't_threepl_set',
+        entity: 'threePl',
+        entityId: threePlId,
+        payload: { name, trackingUrlPattern, active, setBy: identity.actor },
+      }),
+    onSuccess: (result) => {
+      if (result.status !== 'failed') void qc.invalidateQueries();
+    },
   });
 }
 

@@ -8,6 +8,7 @@ import TableHeader, { TableHeaderCell } from '../../components/ui-v2/TableHeader
 import TableRow from '../../components/ui-v2/TableRow';
 import TableCell from '../../components/ui-v2/TableCell';
 import Data from '../../components/ui-v2/Data';
+import TrackingNumber from '../../components/ui-v2/TrackingNumber';
 import StatusPill from '../../components/ui-v2/StatusPill';
 import { statusTone } from '../../lib/statusTone';
 import { formatDate } from '../../lib/format';
@@ -35,6 +36,7 @@ const BuyerAsnInboundWidget: React.FC = () => {
           <TableHeaderCell>ASN #</TableHeaderCell>
           <TableHeaderCell>PO ref</TableHeaderCell>
           <TableHeaderCell>Carrier</TableHeaderCell>
+          <TableHeaderCell>{t('tpl.col.tracking')}</TableHeaderCell>
           <TableHeaderCell>ETA</TableHeaderCell>
           <TableHeaderCell>Status</TableHeaderCell>
         </TableHeader>
@@ -50,6 +52,10 @@ const BuyerAsnInboundWidget: React.FC = () => {
                 <Data className="text-text-secondary">{asn.poReference}</Data>
               </TableCell>
               <TableCell className="text-text-secondary">{asn.carrier}</TableCell>
+              {/* BL-51 — the tracking number links to the 3PL's page, or is plain. */}
+              <TableCell className="whitespace-nowrap text-text-secondary">
+                <TrackingNumber threePlId={asn.threePlId} trackingNumber={asn.trackingNumber} />
+              </TableCell>
               <TableCell className="whitespace-nowrap text-text-secondary">
                 <Data>{formatDate(asn.eta)}</Data>
               </TableCell>

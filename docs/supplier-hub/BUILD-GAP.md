@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 2.4, 2026-09-21 |
+| Version | 2.5, 2026-09-21 |
 | Compares | `SUPPLIER-HUB-REQUIREMENTS.md` v0.9 with the prototype on `main` |
 | Owner decisions | 2026-09-17, recorded in section 9 of the requirements (RFX-1 to RFX-3, GAP-1 to GAP-4, E06-R); 2026-09-21 for the working calendar (Q-18, BL-14) and the commitment deadline (CR-26, BL-05), built as BL-50 and BL-48 |
 | Rule | This is the **only** document that describes what the prototype does for the Supplier Hub. The PRD and the requirements describe the product and never the code. Update this file when a build item lands |
@@ -20,7 +20,7 @@ Everything runs on sample data held in the browser. There is no backend, no SAP 
 
 | Req | Status | Notes |
 |---|---|---|
-| REQ-E03-01 Supplier filtering | Built | Category and purchasing group filters; OTIF or "No history"; suspended, deactivated and blacklisted suppliers cannot be invited |
+| REQ-E03-01 Supplier filtering | Built | Category and purchasing group filters; OTIF or "No history"; suspended, deactivated and blacklisted suppliers cannot be invited. BR-05 (BL-52): certificate validity (valid, expiring within 90 days, expired or missing — halal and BPOM, from the compliance projection), then performance band (grade A–D or "No history"), then country, on the buyer supplier list and every invitee search, kept in the page address and combined with the existing filters |
 | REQ-E03-02 RFI | Built | Template sections A–F, question library with required and weighted questions, drafts hidden from the buyer, deadline extension, answers reused by a later RFQ. Creation follows section 3.6a of the requirements, which the build already matches: central library, edited per event, no save-as-template, no approval before sending. Attachment questions are text fields: there is no file store |
 | REQ-E03-03 RFQ | Built | From scratch, from an RFI, or from a purchase requisition; price per item; response deadline enforced; quote privacy |
 | REQ-E03-04 RFP | Built | Standard term list in 7 groups, Comply or Deviate with a comment required on a deviation, term-by-term comparison |
@@ -31,7 +31,7 @@ Everything runs on sample data held in the browser. There is no backend, no SAP 
 | REQ-E07-01 PO visibility | Partial | Umbrella PO with its lines, response status and deadline. Per-line dates still depend on PQ-12; there is no SAP feed, so POs are sample data |
 | REQ-E07-02 PO response | Built | Approve, Adjust with reason and counter-offer, Reject with cause; 1-working-day deadline on the hub working calendar and Escalated derived from the clock; planner accepts or rejects a counter-offer; rejections feed performance |
 | REQ-E07-03 Order summary | Built | PO, ASN count, and the three confirmations with links; lifecycle steps on the PO |
-| REQ-E07-04 ASN | Built | Shipped quantity per line capped at the open quantity unless a reason is given, batch, ship date, required fields, several ASNs per PO, cancellation |
+| REQ-E07-04 ASN | Built | Shipped quantity per line capped at the open quantity unless a reason is given, batch, ship date, required fields, several ASNs per PO, cancellation. BR-05 (BL-51): the supplier picks the 3PL from the administrator's list (or types another carrier); the tracking number opens the 3PL's public tracking page in a new tab wherever the ASN is shown, supplier and PTI; no status is read from the 3PL; no 3PL or an unknown one shows plain text. The 3PL list is a sample list, maintained on an administration page by the hub administrator |
 | REQ-E07-05 Shipping notice | Built | Expected completion date per PO; the first ASN records shipment started; a later date raises a PTI task |
 | REQ-E07-06 Goods receipt | Partial | Supplier page with shipped, received and rejected quantity, QC result, discrepancy flag, acknowledge or dispute, PTI resolution. CR-25 tolerance (BL-45): any over-delivery is flagged, a shortfall above 2% is flagged and the receipt is shown as kept open, a shortfall at or below 2% closes; both the supplier page and PTI's goods receipt panel state the reason per line. Tolerance is held per material, with no material overriding the default yet. Receipts are still created in the hub rather than read from SAP, because there is no SAP feed; dispute attachments are not built; "kept open" is a derived label and does not yet reopen the order quantity for another shipment |
 | REQ-E07-07 Invoice | Built | Built from received goods receipts, supplier's own invoice number and date, e-Faktur file name, duplicate and over-invoicing refused, CR-12 and CR-13 matching at submission, status list with correct-and-resubmit, CR-14 due date. CR-12 as revised 2026-09-21 (BL-44): 0% on a line whose PO price comes from a contract, otherwise 2% and within a rupiah cap; the cap is a placeholder (IDR 500,000) until Finance sets it (BL-54). Buyer and supplier invoice screens state per line which rule applied and why a line is held. The supplier's new-invoice form still takes one invoice total, not an amount per line; a total that differs from its lines is checked under the strictest rule on the invoice |
@@ -45,8 +45,8 @@ Everything runs on sample data held in the browser. There is no backend, no SAP 
 | REQ-E09-02 Event-based analysis | Not built | Waiting on PQ-09 |
 | REQ-E09-03 Call-off confirmation | Built | Hub-owned call-offs, the six confirmation statuses, CR-05 tolerance as revised on 2026-09-21 (BL-47): up to 5% over accepted for every call-off type; any shortfall accepted and shown as a partial; a later date always goes to the planner; an earlier date goes to the planner while the early allowance is the placeholder 0 days (BL-56). Both call-off screens show the rule that applied and its reason, on the row and in the panel, and the supplier sees it before sending. Planner approval outside tolerance uses the existing approve and reject verbs; 1-working-day deadline on the hub working calendar with escalation; ASN allowed only on a confirmed call-off |
 | REQ-E09-04 Delivery execution | Built | Dispatch heads-up or a linked ASN, At Risk when the expected arrival is after the need date, reminders. No dock or slot booking |
-| REQ-E10-01 CFOT and OTIF | Built | Calculated per PO and per call-off from hub data with working period filters, rejections counted, grade bands stated on screen, "No history" where nothing is measurable. Other scorecard measures stay sample figures and are marked as such |
-| REQ-E13-01 TMS access | Not built | Waiting on D-03 |
+| REQ-E10-01 CFOT and OTIF | Built | Calculated per PO and per call-off from hub data with working period filters, rejections counted, grade bands stated on screen, "No history" where nothing is measurable. Both performance pages state the definitions as calculated — delivery window, early deliveries, grain, date change, in full (BL-53) — and show "Baseline period — no target yet" instead of the 90% target (BL-19). Other scorecard measures stay sample figures and are marked as such |
+| REQ-E13-01 TMS access | Not built | Decided out of the MVP (D-03); covered by the 3PL tracking link on the ASN (BL-51) |
 | Section 3.4 Working calendar (Q-18) | Built | The hub keeps its own calendar (BL-50): the SAP factory calendar as loaded, which is simulated and marked Sample data (there is no SAP connection, and the load includes one sample plant shutdown day), plus rulings by the Hub administrator that make one date working or non-working, with a reason. A ruling is a governed act (`t_calendar_day_set`), held by Compliance and the administrator seat and by no lane the deadlines measure, and is kept in this browser across reloads. The administration page (Help & administration, Working calendar) lists the non-working days with where each came from, the rulings on record, and the commitment deadlines the calendar decides now. Every working-day deadline in the hub reads this calendar: PO response, call-off confirmation and forecast commitment |
 
 ---
@@ -75,7 +75,7 @@ Everything runs on sample data held in the browser. There is no backend, no SAP 
 | X-18 | Dispatch heads-up, At Risk, dock booking removed | Done (phases 1 and 3) |
 | X-19 | RFI, RFP, quote per item, negotiation, split award, invite filters | Done (phase 6a) |
 | X-20 | CFOT and OTIF calculated | Done (phase 6b) |
-| X-21 | TMS access | Not built — waiting on D-03 |
+| X-21 | TMS access | Not built — out of the MVP (D-03); replaced by X-27 |
 | X-22 | One stock entry (BL-60): same fields on template and manual entry, manufacturing date, read-only in-transit, Forecast page stock grid retired | Done (inventory feedback) |
 | X-23 | Supplier-triggered stock sync and PTI stock refresh for granted materials (BL-59) | Done (inventory feedback), simulated until the backend |
 | X-24 | One list on the supplier inventory view (BL-61) | Done (inventory feedback) |
@@ -86,6 +86,9 @@ Everything runs on sample data held in the browser. There is no backend, no SAP 
 | BL-47 | Call-off tolerance per CR-05 as revised: 5% over for every type, shortfall a visible partial, later and earlier dates to the planner | Done (2026-09-21). Early allowance is a placeholder of 0 days until BL-56 |
 | BL-49 | Call-off release checked on remaining quantity; value only on a line with no quantity | Done (2026-09-21) |
 | X-29 | Alert risk class by supplier lead time, day bands as fallback, "lead time missing" alert, basis shown on screen (BL-46, CR-24) | Done; lead times are sample master data |
+| X-30 | 3PL tracking link on the ASN and the administrator's 3PL list (BL-51) | Done |
+| X-31 | Supplier filters: certificate validity, performance band, country (BL-52) | Done |
+| X-32 | KPI definitions and "Baseline period" on the performance pages (BL-53) | Done |
 
 ### 2.1 Navigation and screens
 
@@ -98,7 +101,7 @@ Everything runs on sample data held in the browser. There is no backend, no SAP 
 | U-10 | Menu item highlighted on detail pages | Done (phase 1) |
 | U-11 | One icon per menu item | Done (phase 1) |
 | U-12 | One "as of" date for sample data | Partial — each family is anchored to the declared present; the PO family is the last to be aligned |
-| U-13 | One OTIF target of 90% | Done (phase 1) |
+| U-13 | One OTIF target of 90% | Done (phase 1); the performance pages now show "Baseline period" instead (BL-19, BL-53). The 90% still colours the analytics page and the supplier dashboard |
 | H-01 | Action banner above summary figures | Done where the built pages carry one |
 | H-02 | Section labels at least 12px | Done (phase 1) |
 | H-03 | Keyboard and screen-reader test before UAT | Not done — still to be tested |
@@ -126,6 +129,9 @@ The `CR-` rules are implemented in the hub's own modules and covered by their ow
 | Quote score and currency rule (CR-15, CR-16) | `src/lib/quoteScore.ts`, `src/lib/fxPin.ts` |
 | Compliance gate (CR-23) | `src/services/sourcing/complianceGate.ts`, values in `complianceGateConfig.ts` |
 | CFOT, OTIF, rejections, score and grade (CR-17) | `src/services/data/performanceRules.ts` |
+| KPI definitions as stated on the performance pages (BL-53) | `src/services/data/kpiDefinitions.ts`, pinned to the arithmetic by `kpiDefinitions.bl53.test.ts` |
+| Supplier filters: certificate validity, performance band, country (REQ-E03-01 BR-05) | `src/services/sourcing/supplierFilters.ts` |
+| 3PL list, tracking address rule and tracking link (REQ-E07-04 BR-05) | `src/services/transitions/threePlStore.ts`, verb `t_threepl_set` |
 | Spreadsheet number and batch checks (CR-18, CR-19) | `src/lib/localeNumber.ts`, stock upload validation |
 | Integration retry classes (CR-20) | `src/services/transitions/settleFaults.ts` |
 
@@ -152,6 +158,26 @@ Sample data (BL-64) so a buyer can see every CR-23 outcome on the sourcing pages
 | Every bidder fails; award impossible, and the page says so | RFQ-2026-020 (Closed) | sup-011, sup-004, sup-009 | No award possible |
 
 Earlier demo rows still hold: RFQ-2026-003 (sup-010 halal expired), RFQ-2026-014 (sup-007 OTIF 50%, sup-008 OTIF 0%, sup-013 no history), RFQ-2026-004 (sup-004 halal and BPOM). The OTIF figures are calculated from sample call-offs and goods receipts (PO-2026-00191, PO-2026-00192), not typed in. Suspended and blacklisted suppliers cannot be invited; sup-021 and sup-022 represent a status change after the quote.
+
+### 3.2 3PL tracking link and supplier filter demo cases (BL-51, BL-52)
+
+The 3PL list is a sample list (four illustrative 3PLs on the reserved `.example` domain, so the links cannot be opened); it is kept on **Administration → 3PL tracking links** (`/buyer/admin/3pl-tracking`, user menu). Each case is pinned by name in `threePl.bl51.test.ts` and `supplierFilters.bl52.test.ts`. Demo date: the declared present, 31 Aug 2026.
+
+| Case | Where to see it | Sample record | Result |
+|---|---|---|---|
+| ASN names a listed 3PL | Supplier Shipments & ASN (sup-007); PTI Shipments & ASN opened from the Order summary for PO-2025-00107 | ASN-2025-00211, ASN-2025-00198 | Tracking number is a link to the 3PL's page, new tab |
+| ASN names a 3PL no longer offered | PTI Shipments & ASN for PO-2025-00116 | ASN-2025-00301 (sup-002) | Still a link; the 3PL is not offered on new ASNs |
+| ASN names a 3PL the list does not hold | Supplier Shipments & ASN; PTI Goods receipts (ASN discrepancies); PTI Shipments & ASN for PO-2025-00107 | ASN-2025-00201 | Plain text |
+| ASN names no 3PL (carrier typed by name) | PTI Shipments & ASN for PO-2025-00131 | ASN-2025-00302 (sup-005) | Plain text, although the typed name matches a listed 3PL |
+| Certificates valid | Supplier list, invitee search | sup-001 | Valid |
+| Certificates expiring within 90 days | Supplier list, invitee search | sup-017 (expires on the demo date), sup-003 | Expiring |
+| Certificates expired or missing | Supplier list, invitee search | sup-018 (expired), sup-008 (none on file), sup-007 (BPOM under review), sup-002 (registry row missing) | Expired or missing |
+| Performance band A to D and "No history" | Supplier list, invitee search | A sup-016 · B sup-019 · C sup-020 · D sup-001 · No history sup-006 | Band as shown |
+| Country | Supplier list, invitee search | DE: sup-005 (active), sup-012 (suspended, never invitable) | Filtered |
+
+The PTI Shipments list itself holds sample shipment records that name no 3PL, so their tracking numbers stay plain text; a shipment borrows its ASN's link only when both carry the same tracking number.
+
+sup-016's A band comes from two sample call-offs received on time and in full (PO-2026-00193, CO-2026-0033 and 0034, GR-2026-109 and 110); its compliance-gate result is unchanged.
 
 ---
 
@@ -191,7 +217,7 @@ Sample data so a planner can see every CR-24 outcome on `/buyer/inventory`, `/su
 
 - **SAP ROP replenishment recommendations** (X-16, REQ-E09-01): waiting on the replenishment-method decision (REPL).
 - **Event-based strategy analysis** (X-17, REQ-E09-02): waiting on PQ-09.
-- **Supplier access to the TMS** (X-21, REQ-E13-01): waiting on the phase decision (D-03).
+- **Supplier access to the TMS** (X-21, REQ-E13-01): decided out of the MVP (D-03); the 3PL tracking link covers delivery tracking (X-27).
 - **Any real integration.** SAP, supplier APIs and the TMS are simulated. POs, goods receipts and invoice status are sample data, not inbound messages.
 - **Email and other notifications.** Alerts and reminders appear in the hub only; nothing is sent.
 - **File attachments.** RFI attachment questions, receipt-dispute attachments and the e-Faktur are recorded as file names; no file is stored.

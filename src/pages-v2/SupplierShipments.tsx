@@ -67,6 +67,8 @@ import { isConfirmedAndAccepted } from '../services/transitions/callOffRules';
 import type { AsnStatus, ASN, PurchaseOrder } from '../services/data/types';
 import { useRefusalText } from '../hooks/useRefusalText';
 import { refusalDetailOf } from '../services/transitions/refusalMessage';
+import TrackingNumber from '../components/ui-v2/TrackingNumber';
+import CarrierPicker, { carrierFor, defaultCarrier } from './shipments/CarrierPicker';
 
 type TabKey = 'shipments' | 'create';
 type StatusFilter = AsnStatus | 'All';
@@ -102,6 +104,8 @@ interface LineEntry {
 
 interface AsnForm {
   poId: string;
+  /** BL-51 — the 3PL picked from the list, or '' for a carrier typed by name. */
+  threePlId: string;
   carrier: string;
   trackingNumber: string;
   shipDate: string;
@@ -118,9 +122,11 @@ interface AsnForm {
   callOffId: string;
 }
 
-const DEFAULT_FORM: AsnForm = {
+const EMPTY_FORM: AsnForm = {
   poId: '',
-  carrier: 'Sample Courier (illustrative)',
+  // BL-51 — filled from the 3PL list when the form opens (`newAsnForm`).
+  threePlId: '',
+  carrier: '',
   trackingNumber: '',
   shipDate: '2026-04-07',
   eta: '',
@@ -133,6 +139,9 @@ const DEFAULT_FORM: AsnForm = {
   overShipReason: '',
   callOffId: '',
 };
+
+/** A fresh ASN form, its carrier defaulted from the 3PL list in force. */
+const newAsnForm = (): AsnForm => ({ ...EMPTY_FORM, ...defaultCarrier() });
 
 /** A typed quantity, read by the one legal parser; NaN when unreadable. */
 const readQty = (raw: string): number => {
@@ -291,21 +300,12 @@ const AsnLinesEditor: React.FC<{
   );
 };
 
-// Batch E (DISCOVERY-REAL-SUBJECTS-01): this list was six real courier and
-// freight companies plus 'Other' — not named here, for the same reason PF-2a's
-// fixture header describes its deleted endorsers instead of re-listing them.
-// They render as <option>s a supplier picks when submitting an ASN, and
-// <option> text is absent from `innerText` — which is why the render census
-// wrongly reported carriers as rendering nowhere.
-const CARRIER_OPTIONS = [
-  'Sample Courier (illustrative)',
-  'Sample Parcel Courier (illustrative)',
-  'Sample Express Courier (illustrative)',
-  'Sample Air Freight (illustrative)',
-  'Sample Ocean Carrier (illustrative)',
-  'Sample Freight Forwarder (illustrative)',
-  'Other',
-];
+// BL-51 — the hard-coded carrier list that stood here is RETIRED. Its choices
+// now come from the administrator's 3PL list (`threePlStore`, sample names
+// held fictional by `carrierIdentity.test.ts`), and its "Other" option — which
+// stored the word "Other" as the carrier — is replaced by a typed carrier name
+// (`CarrierPicker`). Batch E's note still applies to the new list: option text
+// is absent from `innerText`, so a render census does not see the names.
 
 
 interface ShipmentsListProps {
@@ -487,7 +487,12 @@ const ShipmentsList: React.FC<ShipmentsListProps> = ({
                       {asn.carrier}
                     </TableCell>
                     <TableCell className="text-xs text-text-tertiary whitespace-nowrap">
-                      <Data>{asn.trackingNumber}</Data>
+                      {/* BL-51 — a link to the 3PL's tracking page, or plain text. */}
+                      <TrackingNumber
+                        threePlId={asn.threePlId}
+                        trackingNumber={asn.trackingNumber}
+                        testId={`asn-tracking-${asn.asnNumber}`}
+                      />
                     </TableCell>
                     <TableCell className="text-text-tertiary whitespace-nowrap">
                       <Data>{asn.eta ? fmtDate(asn.eta) : '—'}</Data>
@@ -750,10 +755,12 @@ const SupplierShipments: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('All');
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [step, setStep] = useState(0);
-  const [form, setForm] = useState<AsnForm>(DEFAULT_FORM);
+  const [form, setForm] = useState<AsnForm>(newAsnForm);
   const [submitTarget, setSubmitTarget] = useState<ASN | null>(null);
   const [submitForm, setSubmitForm] = useState({
-    carrier: 'Sample Courier (illustrative)',
+    // BL-51 — replaced from the draft when the drawer opens (`carrierFor`).
+    threePlId: '',
+    carrier: '',
     trackingNumber: '',
     eta: '',
     shipDate: '',
@@ -853,7 +860,7 @@ const SupplierShipments: React.FC = () => {
       }),
     );
     setSubmitForm({
-      carrier: real(asn.carrier) || 'Sample Courier (illustrative)',
+      ...carrierFor(asn),
       trackingNumber: real(asn.trackingNumber),
       eta: real(asn.eta),
       shipDate: asn.shipDate ?? '',
@@ -889,6 +896,8 @@ const SupplierShipments: React.FC = () => {
       {
         asnNumber,
         carrier: submitForm.carrier,
+        // BL-51 — '' clears a 3PL the draft named (a carrier typed by name).
+        threePlId: submitForm.threePlId,
         trackingNumber: submitForm.trackingNumber,
         eta: submitForm.eta,
         ...(submitForm.shipDate ? { shipDate: submitForm.shipDate } : {}),
@@ -1037,6 +1046,7 @@ const SupplierShipments: React.FC = () => {
     if (!selectedPO) return;
     const detail = {
       carrier: form.carrier,
+      ...(form.threePlId ? { threePlId: form.threePlId } : {}),
       trackingNumber: form.trackingNumber,
       eta: form.eta,
       shipDate: form.shipDate,
@@ -1079,7 +1089,7 @@ const SupplierShipments: React.FC = () => {
       toast({ variant: 'error', title: t('asn.denied.title'), description: t('asn.denied.desc') });
     } finally {
       setStep(0);
-      setForm(DEFAULT_FORM);
+      setForm(newAsnForm());
       setTab('shipments');
     }
   };
@@ -1216,22 +1226,15 @@ const SupplierShipments: React.FC = () => {
             description={t('supplierShipments.wizard.details.logistics.desc')}
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className={labelClass}>
-                  {t('supplierShipments.wizard.details.field.carrier')}
-                </label>
-                <select
-                  value={form.carrier}
-                  onChange={(e) => updateForm({ carrier: e.target.value })}
-                  className={inputClass}
-                >
-                  {CARRIER_OPTIONS.map((c) => (
-                    <option key={c} value={c}>
-                      {c === 'Other' ? t('supplierShipments.option.other') : c}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {/* BL-51 — the 3PL from the administrator's list, or a carrier by name. */}
+              <CarrierPicker
+                idPrefix="asn-wizard"
+                label={t('supplierShipments.wizard.details.field.carrier')}
+                labelClass={labelClass}
+                inputClass={inputClass}
+                value={{ threePlId: form.threePlId, carrier: form.carrier }}
+                onChange={(v) => updateForm(v)}
+              />
               <div>
                 <label className={labelClass} htmlFor="asn-wizard-tracking">
                   {t('fc.asn.trackingOrVehicle')}
@@ -1562,7 +1565,7 @@ const SupplierShipments: React.FC = () => {
           onStepChange={setStep}
           onCancel={() => {
             setStep(0);
-            setForm(DEFAULT_FORM);
+            setForm(newAsnForm());
             setTab('shipments');
           }}
           onComplete={completeWizard}
@@ -1605,20 +1608,15 @@ const SupplierShipments: React.FC = () => {
             <p className="text-sm text-text-secondary">
               {t('asn.submit.form.intro', { poNumber: submitTarget.poReference })}
             </p>
-            <label className="block">
-              <span className={labelClass}>{t('asn.submit.form.carrier')}</span>
-              <select
-                value={submitForm.carrier}
-                onChange={(e) => setSubmitForm((f) => ({ ...f, carrier: e.target.value }))}
-                className={inputClass}
-              >
-                {CARRIER_OPTIONS.map((c) => (
-                  <option key={c} value={c}>
-                    {c === 'Other' ? t('supplierShipments.option.other') : c}
-                  </option>
-                ))}
-              </select>
-            </label>
+            {/* BL-51 — the 3PL from the administrator's list, or a carrier by name. */}
+            <CarrierPicker
+              idPrefix="asn-submit"
+              label={t('asn.submit.form.carrier')}
+              labelClass={labelClass}
+              inputClass={inputClass}
+              value={{ threePlId: submitForm.threePlId, carrier: submitForm.carrier }}
+              onChange={(v) => setSubmitForm((f) => ({ ...f, ...v }))}
+            />
             <label className="block">
               <span className={labelClass}>{t('fc.asn.trackingOrVehicle')}</span>
               <input

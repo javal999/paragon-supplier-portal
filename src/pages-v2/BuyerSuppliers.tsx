@@ -26,8 +26,22 @@ import Data from '../components/ui-v2/Data';
 import LoadingState from '../components/ui-v2/LoadingState';
 import ErrorState from '../components/ui-v2/ErrorState';
 import EmptyState from '../components/ui-v2/EmptyState';
-import { useSuppliers } from '../services/query/hooks';
+import { useComplianceRegistry, useSuppliers } from '../services/query/hooks';
 import { useCategoryLabel } from '../hooks/useCategoryLabel';
+import { sdcClock } from '../services/sdc/clock';
+import {
+  bandOfLetter,
+  certificateValidity,
+  matchesSupplierFilters,
+  type CertValidity,
+  type PerformanceBand,
+} from '../services/sourcing/supplierFilters';
+import SupplierFilterBar, {
+  bandLabel,
+  certLabel,
+  useSupplierFilterLabels,
+  useSupplierFilterParams,
+} from './suppliers/SupplierFilterBar';
 import {
   SupplierStatus,
   SupplierTier,
@@ -49,15 +63,45 @@ const formatDate = (iso: string): string => {
 type GroupTab = 'suppliers' | 'invitations';
 type StatusFilter = 'active' | 'inactive' | 'all';
 
+/** BL-52 — the certificate state's tone: semantic colour only for true state. */
+const CERT_TONE: Record<CertValidity, 'success' | 'warning' | 'danger'> = {
+  valid: 'success',
+  expiring: 'warning',
+  expiredOrMissing: 'danger',
+};
+
 const BuyerSuppliers: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const cl = useCategoryLabel();
   const suppliersQuery = useSuppliers();
   const suppliers = suppliersQuery.data?.items ?? [];
+  // BL-52 — the certificate registry the validity filter reads (REQ-E03-01 BR-05).
+  const registryQuery = useComplianceRegistry();
   const [group, setGroup] = useState<GroupTab>('suppliers');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [search, setSearch] = useState('');
+  // BL-52 — certificate validity, performance band and country, in the address.
+  const { filters, setFilters } = useSupplierFilterParams();
+  const filterLabels = useSupplierFilterLabels();
+
+  /** Each supplier's BR-05 facts, derived at read — never stored (law 0.5). */
+  const facts = useMemo(() => {
+    const registry = registryQuery.data?.items ?? [];
+    const now = sdcClock.now();
+    const out = new Map<string, { certificates: CertValidity; band: PerformanceBand; country: string }>();
+    for (const s of suppliers) {
+      out.set(s.id, {
+        certificates: certificateValidity(s, registry, now),
+        band: bandOfLetter(s.scorecardGrade),
+        country: s.country,
+      });
+    }
+    return out;
+  }, [suppliers, registryQuery.data]);
+
+  /** The countries the list can offer — derived from the rows. */
+  const countries = useMemo(() => [...new Set(suppliers.map((s) => s.country))].sort(), [suppliers]);
 
   const SUPPLIERS_CRUMB = [
     t('buyerSuppliers.crumb.acquire'),
@@ -99,18 +143,24 @@ const BuyerSuppliers: React.FC = () => {
           `${s.name} ${s.sapBpNumber} ${s.country} ${s.category}`.toLowerCase();
         if (!hay.includes(q)) return false;
       }
+      // BL-52 — composes with the status and search filters above (AND).
+      const f = facts.get(s.id);
+      if (f && !matchesSupplierFilters(f, filters)) return false;
       return true;
     });
-  }, [suppliers, statusFilter, search]);
+  }, [suppliers, statusFilter, search, facts, filters]);
 
-  if (suppliersQuery.isPending)
+  if (suppliersQuery.isPending || registryQuery.isPending)
     return <LoadingState breadcrumb={SUPPLIERS_CRUMB} />;
-  if (suppliersQuery.isError)
+  if (suppliersQuery.isError || registryQuery.isError)
     return (
       <ErrorState
         breadcrumb={SUPPLIERS_CRUMB}
-        error={suppliersQuery.error}
-        onRetry={() => suppliersQuery.refetch()}
+        error={suppliersQuery.error ?? registryQuery.error}
+        onRetry={() => {
+          suppliersQuery.refetch();
+          registryQuery.refetch();
+        }}
       />
     );
   if (suppliers.length === 0)
@@ -193,6 +243,16 @@ const BuyerSuppliers: React.FC = () => {
       </div>
 
       <div className="mb-4">
+        {/* BL-52 / REQ-E03-01 BR-05 — certificate validity, band, country. */}
+        <SupplierFilterBar
+          filters={filters}
+          onChange={setFilters}
+          countries={countries}
+          testIdPrefix="suppliers"
+        />
+      </div>
+
+      <div className="mb-4">
         <SearchBar
           value={search}
           onChange={setSearch}
@@ -224,6 +284,7 @@ const BuyerSuppliers: React.FC = () => {
             <TableHeaderCell className="text-right">
               {t('buyerSuppliers.col.otif')}
             </TableHeaderCell>
+            <TableHeaderCell>{t('supFilter.col.band')}</TableHeaderCell>
             <TableHeaderCell>{t('buyerSuppliers.col.status')}</TableHeaderCell>
             <TableHeaderCell className="text-right">
               {t('buyerSuppliers.col.actions')}
@@ -233,6 +294,7 @@ const BuyerSuppliers: React.FC = () => {
             {filtered.map((s) => (
               <TableRow
                 key={s.id}
+                data-testid={`supplier-row-${s.id}`}
                 className="cursor-pointer"
                 onClick={() => navigate(`/buyer/suppliers/${s.id}`)}
               >
@@ -271,6 +333,14 @@ const BuyerSuppliers: React.FC = () => {
                       <StatusPill variant="neutral">None</StatusPill>
                     )}
                   </div>
+                  {/* BL-52 — the certificate validity the filter reads, on the row. */}
+                  {facts.get(s.id) && (
+                    <div className="mt-1" data-testid={`supplier-cert-${s.id}`}>
+                      <StatusPill variant={CERT_TONE[facts.get(s.id)!.certificates]}>
+                        {certLabel(t, facts.get(s.id)!.certificates)}
+                      </StatusPill>
+                    </div>
+                  )}
                 </TableCell>
                 <TableCell className="text-right font-semibold text-text-primary">
                   {s.otif === undefined ? (
@@ -278,6 +348,11 @@ const BuyerSuppliers: React.FC = () => {
                   ) : (
                     <Data>{s.otif}%</Data>
                   )}
+                </TableCell>
+                <TableCell>
+                  <span className="text-sm text-text-secondary" data-testid={`supplier-band-${s.id}`}>
+                    {bandLabel(t, facts.get(s.id)?.band ?? 'noHistory')}
+                  </span>
                 </TableCell>
                 <TableCell>
                   <StatusPill variant={statusTone(s.status)}>
@@ -295,10 +370,17 @@ const BuyerSuppliers: React.FC = () => {
             {filtered.length === 0 && (
               <tr>
                 <td
-                  colSpan={8}
+                  colSpan={9}
                   className="text-center text-sm text-text-tertiary py-10"
+                  data-testid="suppliers-no-match"
                 >
                   {t('buyerSuppliers.table.noMatch')}
+                  {/* BL-52 — the empty state names the BR-05 filters in force. */}
+                  {filterLabels(filters).length > 0 && (
+                    <div className="mt-1 text-xs">
+                      {t('supFilter.active', { filters: filterLabels(filters).join(', ') })}
+                    </div>
+                  )}
                 </td>
               </tr>
             )}

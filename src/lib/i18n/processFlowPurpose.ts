@@ -320,6 +320,11 @@ export const processFlowPurposeEn: Record<string, string> = {
     'Which days count as working days for every deadline in the hub, starting from the calendar SAP holds and corrected by the hub administrator where the plant knows better.',
   'processFlows.purpose.t_calendar_day_set':
     'The hub administrator says one date is or is not a working day, and why. Every response and commitment deadline that spans that date moves with it at once, so the grounds for it have to be on record.',
+  // ── the logistics providers list (BL-51) ─────────────────────────────
+  'processFlows.purpose.entity.threePl':
+    'The logistics providers a supplier can choose on a shipping notice, each with the public page where its tracking numbers can be looked up. The hub only links to that page; it never reads a status from it.',
+  'processFlows.purpose.t_threepl_set':
+    'The hub administrator adds a logistics provider or changes one: what it is called, its public tracking address, and whether new shipping notices may still choose it. Every tracking link in the hub is built from this list, so each change is on record.',
 
   // ── supplierApplication ──────────────────────────────────────────────
   'processFlows.purpose.entity.supplierApplication':
@@ -739,6 +744,10 @@ export const processFlowPurposeId: Record<string, string> = {
     'Hari mana yang dihitung sebagai hari kerja untuk setiap tenggat di hub, berawal dari kalender yang disimpan SAP lalu dikoreksi oleh administrator hub bila pabrik lebih tahu.',
   'processFlows.purpose.t_calendar_day_set':
     'Administrator hub menyatakan satu tanggal adalah atau bukan hari kerja, beserta alasannya. Setiap tenggat tanggapan dan komitmen yang melewati tanggal itu langsung ikut bergeser, sehingga alasannya harus tercatat.',
+  'processFlows.purpose.entity.threePl':
+    'Penyedia logistik yang dapat disebut pemasok pada pemberitahuan pengiriman, masing-masing dengan halaman publik tempat nomor pelacakannya dapat dicari. Hub hanya menautkan ke halaman itu; hub tidak pernah membaca status darinya.',
+  'processFlows.purpose.t_threepl_set':
+    'Administrator hub menambahkan atau mengubah penyedia logistik: namanya, alamat pelacakan publiknya, dan apakah pemberitahuan pengiriman baru masih boleh menyebutnya. Setiap tautan pelacakan di hub dibuat dari daftar ini, sehingga setiap perubahan tercatat.',
 
   // ── supplierApplication ──────────────────────────────────────────────
   'processFlows.purpose.entity.supplierApplication':

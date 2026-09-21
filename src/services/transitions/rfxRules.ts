@@ -18,6 +18,12 @@ import type {
   RfxInvitee,
 } from '../sourcing/types';
 import type { GateResult } from '../sourcing/complianceGate';
+import {
+  matchesSupplierFilters,
+  type CertValidity,
+  type PerformanceBand,
+  type SupplierFilters,
+} from '../sourcing/supplierFilters';
 
 // ── REQ-E03-01 — who may be invited ─────────────────────────────────────────
 
@@ -46,6 +52,10 @@ export interface InviteeCandidate {
   /** REQ-E03-01 edge case — `null` is "No history", never 0%. */
   readonly otif: number | null;
   readonly country: string;
+  /** BL-52 / BR-05 — halal and BPOM certificate validity, derived at read. */
+  readonly certificates: CertValidity;
+  /** BL-52 / BR-05 — the performance band: the calculated grade, or "No history". */
+  readonly band: PerformanceBand;
   /**
    * CR-23 / BR-06 — the compliance gate against the event's materials. A
    * failing supplier stays a candidate (it can be invited and can quote); the
@@ -54,8 +64,11 @@ export interface InviteeCandidate {
   readonly gate?: GateResult;
 }
 
-/** The filters a buyer may combine (BR-01). Absent = that filter is off. */
-export interface InviteeFilter {
+/**
+ * The filters a buyer may combine (BR-01, and BR-05's certificate validity,
+ * performance band and country — `SupplierFilters`). Absent = that filter is off.
+ */
+export interface InviteeFilter extends SupplierFilters {
   readonly category?: string;
   readonly purchasingGroup?: string;
   /**
@@ -81,7 +94,9 @@ export function filterInvitees(
   return candidates
     .filter((c) => isSelectableSupplier(c.status))
     .filter((c) => (filter.category ? c.category === filter.category : true))
-    .filter((c) => (filter.purchasingGroup ? c.purchasingGroup === filter.purchasingGroup : true));
+    .filter((c) => (filter.purchasingGroup ? c.purchasingGroup === filter.purchasingGroup : true))
+    // BL-52 — certificate validity, then performance band, then country (BR-05).
+    .filter((c) => matchesSupplierFilters(c, filter));
 }
 
 // ── CR-15 — the reliability axis from OTIF ──────────────────────────────────

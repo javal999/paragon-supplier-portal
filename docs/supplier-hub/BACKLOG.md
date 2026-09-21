@@ -41,9 +41,6 @@ Decided on 2026-09-21 and ready to build. Priority: first what protects money an
 
 | Priority | ID | Item | Rule | Size | Placeholder until decided |
 |---|---|---|---|---|---|
-| 9 | BL-51 | **3PL tracking link on the ASN.** An administrator-maintained list of 3PLs and their public tracking addresses; the tracking number on an ASN becomes a link out. No reading of status from the 3PL's site | REQ-E07-04 BR-05 | S | A short sample list, marked as sample |
-| 10 | BL-52 | **Supplier filters.** Certificate validity, then performance band, then country or region | REQ-E03-01 BR-05 | S | — |
-| 11 | BL-53 | **KPI definitions on the performance pages.** State the delivery window, whether early counts, the grain, and whether a date change resets the clock; show targets as "baseline period" until they are set | BL-19 decision | S | Baseline period, no target |
 | 12 | BL-31 | Accessibility pass (section 4) | SC-07 | M | — |
 | 13 | BL-32 | Admin screen for the remaining configuration: reason codes, tolerances, thresholds, stale periods (section 4) | REQ-E08-05 BR-03 | M | — |
 | 14 | BL-33 to BL-39 | The remaining "can start today" items in section 4, in the order listed there | — | — | — |
@@ -137,3 +134,6 @@ Nothing blocks these.
 | BL-49 | Call-off release by remaining quantity | 2026-09-21 | Built: release checked on remaining quantity; value only on a line with no quantity; over-release refused with both figures |
 | BL-50 | Hub-managed working calendar | 2026-09-21 | Built: administrator page (first page of the admin screen, BL-32) with the SAP factory calendar (sample load) and governed add/remove/override rulings; every working-day deadline reads it |
 | BL-48 | Forecast commitment deadline | 2026-09-21 | Built: Firm 1 working day, Trade-off and Forecast 3, on the hub calendar; time left and late shown to supplier and planner |
+| BL-51 | 3PL tracking link on the ASN | 2026-09-21 | Built: the supplier picks the 3PL from the administrator's list (sample list, marked as sample) or types another carrier; the tracking number opens the 3PL's public page in a new tab on every ASN surface, supplier and PTI; no status read; no or unknown 3PL shows plain text. The list is changed through a governed verb held by the compliance lane and the Hub administrator, on Administration → 3PL tracking links |
+| BL-52 | Supplier filters | 2026-09-21 | Built: certificate validity (valid, expiring within 90 days, expired or missing), performance band (A–D, No history), country, on the supplier list and every invitee search, in the page address and combined with the existing filters. Region is not a separate filter: the supplier master holds a country only |
+| BL-53 | KPI definitions on the performance pages | 2026-09-21 | Built: OTIF and CFOT definitions as calculated (window, early, grain, date change, in full) on both performance pages; targets read "Baseline period — no target yet". One difference from the requirements is stated as the code does it and left for a decision: a PO counter-offer moves the CFOT date as soon as it is sent |

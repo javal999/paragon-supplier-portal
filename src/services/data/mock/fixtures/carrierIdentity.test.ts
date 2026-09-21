@@ -16,9 +16,11 @@
 // owner code (the ones that were here) identifies the line on its own — removing
 // the name and keeping the code is the completed-half failure PF-2a warns about.
 //
-// SCOPE, STATED: this covers the two shipment FIXTURES. `CARRIER_OPTIONS` in
-// SupplierShipments.tsx is the same lane but lives in a page module; it is not
-// imported here to keep this a fixture-level test with no React dependency.
+// SCOPE, STATED: this covers the two shipment FIXTURES. The ASN form's carrier
+// choices no longer live in a page module: BL-51 retired `CARRIER_OPTIONS` for
+// the administrator's 3PL list (`SAMPLE_THREE_PLS`, `transitions/threePlStore`),
+// whose names and `.example` addresses are held fictional in
+// `transitions/threePl.bl51.test.ts`.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { describe, it, expect } from 'vitest';

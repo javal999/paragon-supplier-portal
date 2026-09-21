@@ -120,7 +120,10 @@ describe('REQ-E03-01 — the invitee search on the sourcing wizard', () => {
   it('⚠️ a supplier with nothing measured reads "No history", never 0%', async () => {
     await openInviteStep();
     const row = await screen.findByTestId('invitee-row-sup-013');
-    expect(within(row).getByText('No history')).toBeInTheDocument();
+    // PREMISE CHANGED (BL-52): the row now also carries the performance BAND,
+    // which for this supplier reads "No history" too — so the assertion is aimed
+    // at the OTIF cell itself rather than at the first "No history" in the row.
+    expect(within(screen.getByTestId('invitee-otif-sup-013')).getByText('No history')).toBeInTheDocument();
     expect(within(row).queryByText('0%')).not.toBeInTheDocument();
     // POSITIVE TWIN — a measured supplier still shows its number.
     // PREMISE CHANGED (REQ-E10-01): the positive twin's figure is CALCULATED

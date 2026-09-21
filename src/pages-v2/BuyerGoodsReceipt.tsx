@@ -36,6 +36,7 @@ import TableRow from '../components/ui-v2/TableRow';
 import TableCell from '../components/ui-v2/TableCell';
 import SidePanel from '../components/ui-v2/SidePanel';
 import Data from '../components/ui-v2/Data';
+import TrackingNumber from '../components/ui-v2/TrackingNumber';
 import Timeline, { TimelineEvent } from '../components/ui-v2/Timeline';
 import Button from '../components/ui-v2/Button';
 import GRInspectionWizard, { type FailedSettle } from '../components/v2-features/GRInspectionWizard';
@@ -899,6 +900,7 @@ const GoodsReceiptWorkspace: React.FC<GoodsReceiptWorkspaceProps> = ({
               <TableHeaderCell>{t('goodsReceipt.discrepancy.col.asn')}</TableHeaderCell>
               <TableHeaderCell>{t('goodsReceipt.discrepancy.col.po')}</TableHeaderCell>
               <TableHeaderCell>{t('goodsReceipt.discrepancy.col.carrier')}</TableHeaderCell>
+              <TableHeaderCell>{t('tpl.col.tracking')}</TableHeaderCell>
               <TableHeaderCell>{t('goodsReceipt.discrepancy.col.status')}</TableHeaderCell>
               <TableHeaderCell> </TableHeaderCell>
             </TableHeader>
@@ -914,6 +916,14 @@ const GoodsReceiptWorkspace: React.FC<GoodsReceiptWorkspaceProps> = ({
                     <Data className="text-text-secondary">{asn.poReference}</Data>
                   </TableCell>
                   <TableCell className="text-text-secondary">{asn.carrier}</TableCell>
+                  {/* BL-51 — the tracking number links to the 3PL's page, or is plain. */}
+                  <TableCell className="whitespace-nowrap text-xs text-text-secondary">
+                    <TrackingNumber
+                      threePlId={asn.threePlId}
+                      trackingNumber={asn.trackingNumber}
+                      testId={`gr-discrepancy-tracking-${asn.asnNumber}`}
+                    />
+                  </TableCell>
                   <TableCell>
                     {/* Tone from the `statusTone` SSoT and the LABEL from
                         `StatusPill`'s own `statusLabelKey` lookup — the raw

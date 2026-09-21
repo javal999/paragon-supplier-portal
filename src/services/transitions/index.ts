@@ -53,6 +53,7 @@ export { incomingShipmentFlow } from './flows/incomingShipment.flow';
 export { enforcementFlow } from './flows/enforcement.flow';
 export { roleFlow } from './flows/role.flow';
 export { workingCalendarFlow } from './flows/workingCalendar.flow';
+export { threePlFlow } from './flows/threePl.flow';
 export { supplierApplicationFlow } from './flows/supplierApplication.flow';
 export { receiptDiscrepancyFlow } from './flows/receiptDiscrepancy.flow';
 export { callOffFlow } from './flows/callOff.flow';
@@ -90,6 +91,7 @@ import { incomingShipmentFlow } from './flows/incomingShipment.flow';
 import { enforcementFlow } from './flows/enforcement.flow';
 import { roleFlow } from './flows/role.flow';
 import { workingCalendarFlow } from './flows/workingCalendar.flow';
+import { threePlFlow } from './flows/threePl.flow';
 import { supplierApplicationFlow } from './flows/supplierApplication.flow';
 import { receiptDiscrepancyFlow } from './flows/receiptDiscrepancy.flow';
 import { callOffFlow } from './flows/callOff.flow';
@@ -151,6 +153,10 @@ flowRegistry.register(roleFlow); // Duplicate-and-narrow — Role
 // shape: a day has no lifecycle, it has a ledger of rulings. Every deadline is
 // derived from the calendar at read, so nothing cascades from a ruling.
 flowRegistry.register(workingCalendarFlow); // BL-50 — Working calendar
+// BL-51 — the administrator's 3PL list. The same degenerate single-state ledger
+// shape: a 3PL on the list has no lifecycle, it has a ledger of changes. WIRED,
+// so every change to where a tracking link points lands in the audit trail.
+flowRegistry.register(threePlFlow); // BL-51 — 3PL list
 flowRegistry.register(supplierApplicationFlow); // B1 — Supplier onboarding
 flowRegistry.register(receiptDiscrepancyFlow); // REQ-E07-06 — receipt discrepancy response
 flowRegistry.register(callOffFlow); // REQ-E09-01 / 03 / 04 — call-offs under an umbrella PO

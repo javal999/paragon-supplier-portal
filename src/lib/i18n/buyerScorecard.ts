@@ -62,7 +62,6 @@ export const buyerScorecardEn: Record<string, string> = {
   'buyerScorecard.trends.title': 'Performance trends — 12 months',
   'buyerScorecard.trends.caption':
     'OTIF % (left axis) · Ack Speed in hours · Defect Rate %',
-  'buyerScorecard.trends.otifTarget': 'OTIF target',
   'buyerScorecard.series.otif': 'OTIF %',
   'buyerScorecard.series.ackSpeed': 'Ack Speed (h)',
   'buyerScorecard.series.defectRate': 'Defect Rate %',
@@ -114,7 +113,6 @@ export const buyerScorecardId: Record<string, string> = {
   'buyerScorecard.trends.title': 'Tren kinerja — 12 bulan',
   'buyerScorecard.trends.caption':
     'OTIF % (sumbu kiri) · Kecepatan Konfirmasi dalam jam · Tingkat Cacat %',
-  'buyerScorecard.trends.otifTarget': 'Target OTIF',
   'buyerScorecard.series.otif': 'OTIF %',
   'buyerScorecard.series.ackSpeed': 'Kecepatan Konfirmasi (j)',
   'buyerScorecard.series.defectRate': 'Tingkat Cacat %',

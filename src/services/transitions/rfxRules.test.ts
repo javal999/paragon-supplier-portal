@@ -55,6 +55,10 @@ const candidate = (
   status,
   otif,
   country: 'ID',
+  // BL-52 — every candidate now carries its certificate validity and band. The
+  // values here are neutral: no BR-01 assertion below sets a BR-05 filter.
+  certificates: 'valid',
+  band: 'noHistory',
 });
 
 const POOL: readonly InviteeCandidate[] = [

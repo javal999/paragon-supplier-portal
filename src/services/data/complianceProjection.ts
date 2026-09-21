@@ -52,7 +52,11 @@ export const BPJPH_MANDATE_DATE = '2026-10-17';
 /** Whole days until `expiryDate` from `now` (negative = past expiry). `null` when
  *  the cert has no expiry — unknown (never guessed) OR a BPJPH cert, which has
  *  permanent validity under GR 42/2024 and so has no expiry to record. */
-export function daysRemaining(entry: ComplianceRegistryEntry, nowIso: string): number | null {
+/** The two fields the clock projection reads. BL-52 projects the supplier
+ *  master's own halal expiry through the SAME rule, so it takes only these. */
+export type ProjectableCert = Pick<ComplianceRegistryEntry, 'lifecycleState' | 'expiryDate'>;
+
+export function daysRemaining(entry: ProjectableCert, nowIso: string): number | null {
   if (entry.expiryDate === null) return null;
   const expiry = Date.parse(entry.expiryDate);
   const now = Date.parse(day(nowIso));
@@ -64,7 +68,7 @@ export function daysRemaining(entry: ComplianceRegistryEntry, nowIso: string): n
  *  within the window → Expiring, else Valid. A Valid cert with no expiry
  *  (permanent basis) stays Valid. Nothing is stored — derived every read. */
 export function computeStatus(
-  entry: ComplianceRegistryEntry,
+  entry: ProjectableCert,
   nowIso: string,
 ): ComplianceDisplayStatus {
   if (entry.lifecycleState !== 'Valid') return entry.lifecycleState;

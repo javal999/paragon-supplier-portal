@@ -13,6 +13,7 @@ import {
   FileSearch,
   Gauge,
   KeyRound,
+  Link2,
   ListTodo,
   MessageSquareReply,
   PackageCheck,
@@ -185,6 +186,8 @@ export const UTILITY_NAV: Record<Persona, readonly NavItem[]> = {
     // BL-50 / NV-01 — the working calendar (ADM). The first page of the
     // administration area; BL-32's sections join it under /buyer/admin.
     { labelKey: 'hub.nav.util.workingCalendar', icon: CalendarDays, path: '/buyer/admin/working-calendar' },
+    // BL-51 — the 3PL list behind every ASN tracking link (maintained by ADM).
+    { labelKey: 'hub.nav.util.threePls', icon: Link2, path: '/buyer/admin/3pl-tracking' },
   ],
   supplier: [{ labelKey: 'hub.nav.util.glossary', icon: BookOpen, path: '/glossary' }],
 };

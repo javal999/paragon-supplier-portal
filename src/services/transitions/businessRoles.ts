@@ -243,6 +243,15 @@ const LANE_BUNDLES = Object.freeze({
       // it is NOT subtracted from `buyer_all`: it grants no authority, it moves
       // dates — the `enforcement:set` shape, which `buyer_all` also holds.
       'calendar:set',
+      // ── BL-51 · THE 3PL LIST (REQ-E07-04 BR-05, maintained by ADM) ────────
+      // Which public tracking page an ASN's number opens is what a planner
+      // checks a supplier's "it is on the way" against. A supplier lane cannot
+      // hold it (it would choose the page that vouches for its own shipment),
+      // nor `planning` / `receiving`, whose deliveries it is read against. It
+      // sits with the platform's other governance acts, and `admin` (the Hub
+      // administrator) holds it by derivation. Like `enforcement:set`, and
+      // unlike `role:grant`, it grants no authority, so `buyer_all` keeps it.
+      'threepl:maintain',
     ]),
     // The SDC / P2 planning lane. `inventorydeclaration:record` is the C4c
     // buyer RECORDING verb — a distinct authority from the supplier's

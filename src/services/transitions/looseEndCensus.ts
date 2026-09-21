@@ -221,6 +221,20 @@ export const LOOSE_END_CENSUS: readonly CensusEntry[] = Object.freeze([
       'copy deliberately does not have — a child follows its parent, it is not owned by it.',
   },
 
+  // ── threePl (BL-51) ────────────────────────────────────────────────────────
+  {
+    entity: 'threePl',
+    kind: 'initial-integrity',
+    subject: 'Maintained',
+    reason: 'substrate-only',
+    note:
+      'THE SAME DEGENERATE SINGLE-STATE LEDGER SHAPE AS THE ENFORCEMENT AND ROLE MACHINES: the entity ' +
+      'IS a logistics provider on the administrator\'s list, addressed by a well-formed id, and setting ' +
+      'an id the list does not yet hold adds it — so there is no separate creation verb to be an entry. ' +
+      'The recording verb is statePreserving, so it is neither an entry nor an exit, and the state is ' +
+      'correctly declared terminal. The tracking links built from the list are derived at read and are ' +
+      'never states of any machine.',
+  },
   // ── workingCalendar (BL-50) ────────────────────────────────────────────────
   {
     entity: 'workingCalendar',

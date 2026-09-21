@@ -65,6 +65,9 @@ export const POLICY_HOOKS = {
   ASN_SUBMIT_COMPLETE: 'asn_submit_complete',
   /** ASN cancel: nothing has been received against the ASN yet. */
   ASN_CANCEL_NOT_RECEIVED: 'asn_cancel_not_received',
+  /** ASN create / submit (BL-51, BR-05): a 3PL the ASN names is on the 3PL list
+   *  and still offered. An ASN naming no 3PL is untouched. */
+  ASN_THREE_PL_LISTED: 'asn_three_pl_listed',
   /** GR create: the parent shipment/ASN (payload.asnReference) must have arrived. */
   GR_CREATE_SHIPMENT_RECEIVED: 'gr_create_shipment_received',
   // GR header disposition = ROLLUP of the per-line sub-flow states (census G2).
@@ -309,6 +312,12 @@ export const POLICY_HOOKS = {
   // The privilege grant. Refuses a cross-tenancy add BY NAME, per atom — a
   // surface can prevent the gesture, only the verb can prevent the act.
   ROLE_GRANT_GOVERNED: 'role_grant_governed',
+  /**
+   * BL-51 — one 3PL on the administrator's list: a well-formed id, a name no
+   * other 3PL on the list carries, an `https://` tracking address with exactly
+   * one `{tracking}`, a boolean `active`, and a well-formed attribution.
+   */
+  THREE_PL_GOVERNED: 'three_pl_governed',
   /**
    * BL-50 — a ruling on one day of the hub's working calendar: the date is one
    * the SAP load covers, the kind is working or non-working, the reason is
