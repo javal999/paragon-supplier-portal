@@ -65,14 +65,18 @@ describe('menu and copy (section 3.7)', () => {
 });
 
 describe('PTI Inventory (REQ-E08-01)', () => {
-  it('shows supplier SOH, PTI SOH and ROP, supplier ROP ("Not provided"), incoming split, band and stale flag — and no available stock', async () => {
+  it('shows supplier SOH, PTI SOH and ROP, supplier ROP ("Not provided"), incoming split, risk class with its basis and stale flag — and no available stock', async () => {
     renderWithProviders(<BuyerInventory />, { identity: PLANNER });
     const stear = await screen.findByTestId('pti-stock-row-sup-002-RM-STEAR-7300');
     expect(stear).toHaveTextContent('4,200 KG');
     expect(stear).toHaveTextContent('900 KG');
     expect(stear).toHaveTextContent('2,500 KG');
     expect(stear).toHaveTextContent('5,000 KG');
-    expect(within(stear).getByText(/10 days · Critical/)).toBeInTheDocument();
+    // PREMISE CHANGED (BL-46, CR-24): the cell showed the CR-02 band ("10 days ·
+    // Critical"). It now shows the risk class against the supplier lead time and
+    // says which basis decided it.
+    expect(within(stear).getByText(/10 days · High/)).toBeInTheDocument();
+    expect(within(stear).getByText('Lead time 21 days')).toBeInTheDocument();
     expect(stear).toHaveTextContent(/In production\s*6,000/);
     const glycerin = screen.getByTestId('pti-stock-row-sup-002-RM-EMUL-3310');
     expect(glycerin).toHaveTextContent('Not provided');
