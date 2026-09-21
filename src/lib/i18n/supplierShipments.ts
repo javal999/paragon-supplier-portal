@@ -157,8 +157,7 @@ export const supplierShipmentsEn: Record<string, string> = {
   // — Export toast —
   'supplierShipments.toast.export.title': 'EDI 856 export not available yet',
   'supplierShipments.toast.export.desc': 'No file was generated — EDI export is not wired to a real system.',
-  // — Carrier <select> generic option (proper-noun carriers stay EN) —
-  'supplierShipments.option.other': 'Other',
+  // BL-51 — the carrier <select>'s "Other" is retired; see `tpl.form.other`.
 };
 
 export const supplierShipmentsId: Record<string, string> = {
@@ -301,6 +300,5 @@ export const supplierShipmentsId: Record<string, string> = {
   // — Export toast —
   'supplierShipments.toast.export.title': 'Ekspor EDI 856 belum tersedia',
   'supplierShipments.toast.export.desc': 'Tidak ada berkas yang dibuat — ekspor EDI belum tersambung ke sistem nyata.',
-  // — Carrier <select> generic option (proper-noun carriers stay EN) —
-  'supplierShipments.option.other': 'Lainnya',
+  // BL-51 — the carrier <select>'s "Other" is retired; see `tpl.form.other`.
 };

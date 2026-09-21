@@ -315,6 +315,12 @@ export const processFlowPurposeEn: Record<string, string> = {
   'processFlows.purpose.t_role_grant':
     'Somebody copies an existing set of permissions and widens it. Widening never removes anything, so nobody quietly loses an authority they were relied on to have, and the act is recorded like every other governed act.',
 
+  // ── the logistics providers list (BL-51) ─────────────────────────────
+  'processFlows.purpose.entity.threePl':
+    'The logistics providers a supplier can choose on a shipping notice, each with the public page where its tracking numbers can be looked up. The hub only links to that page; it never reads a status from it.',
+  'processFlows.purpose.t_threepl_set':
+    'The hub administrator adds a logistics provider or changes one: what it is called, its public tracking address, and whether new shipping notices may still choose it. Every tracking link in the hub is built from this list, so each change is on record.',
+
   // ── supplierApplication ──────────────────────────────────────────────
   'processFlows.purpose.entity.supplierApplication':
     'The record that a company has asked to supply Paragon, who is handling it, and what was decided. Without it a company could finish the sign-up form and be handed a reference number that nothing anywhere stood behind.',
@@ -728,6 +734,11 @@ export const processFlowPurposeId: Record<string, string> = {
     'Salinan satu paket izin dengan izin tambahan di atasnya, disimpan sebagai catatan tentang apa yang disalin dan oleh siapa — sehingga kursi yang dibuat seseorang Selasa lalu terbaca berbeda dari kursi standar.',
   'processFlows.purpose.t_role_grant':
     'Seseorang menyalin satu kumpulan izin lalu memperluasnya. Memperluas tidak pernah menghapus apa pun, sehingga tidak ada yang diam-diam kehilangan wewenang yang diandalkan darinya, dan tindakan itu dicatat seperti setiap tindakan diatur lainnya.',
+
+  'processFlows.purpose.entity.threePl':
+    'Penyedia logistik yang dapat disebut pemasok pada pemberitahuan pengiriman, masing-masing dengan halaman publik tempat nomor pelacakannya dapat dicari. Hub hanya menautkan ke halaman itu; hub tidak pernah membaca status darinya.',
+  'processFlows.purpose.t_threepl_set':
+    'Administrator hub menambahkan atau mengubah penyedia logistik: namanya, alamat pelacakan publiknya, dan apakah pemberitahuan pengiriman baru masih boleh menyebutnya. Setiap tautan pelacakan di hub dibuat dari daftar ini, sehingga setiap perubahan tercatat.',
 
   // ── supplierApplication ──────────────────────────────────────────────
   'processFlows.purpose.entity.supplierApplication':

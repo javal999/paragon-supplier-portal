@@ -40,6 +40,7 @@ import TableRow from '../components/ui-v2/TableRow';
 import TableCell from '../components/ui-v2/TableCell';
 import SidePanel from '../components/ui-v2/SidePanel';
 import Data from '../components/ui-v2/Data';
+import TrackingNumber from '../components/ui-v2/TrackingNumber';
 import Timeline, { TimelineEvent } from '../components/ui-v2/Timeline';
 import Button from '../components/ui-v2/Button';
 import { useToast } from '../hooks/useToast';
@@ -615,6 +616,14 @@ const BuyerShipments: React.FC = () => {
                   <Data className="font-semibold">{a.asnNumber}</Data>
                   <StatusPill>{a.status}</StatusPill>
                   <span className="text-text-secondary">{a.carrier}</span>
+                  {/* BL-51 — the tracking number links to the 3PL's page, or is plain. */}
+                  <TrackingNumber
+                    threePlId={a.threePlId}
+                    trackingNumber={a.trackingNumber}
+                    className="text-text-secondary"
+                    // Not `drill-asn-…`: that prefix names the ROWS, and a sweep counts them.
+                    testId={`asn-tracking-drill-${a.asnNumber}`}
+                  />
                   <Data className="text-text-secondary">{a.eta}</Data>
                   {drilledAsns.length === 1 && (
                     <ul className="w-full mt-2 space-y-1">
@@ -842,9 +851,21 @@ const BuyerShipments: React.FC = () => {
                   <div className="text-xs text-text-tertiary">
                     {t('shipments.panel.trackingNumber')}
                   </div>
-                  <Data as="div" className="text-text-primary">
-                    {selected.trackingNumber}
-                  </Data>
+                  {/* BL-51 — a shipment carries no 3PL of its own: the link is the
+                      one its ASN earns, and only for the SAME tracking number. */}
+                  <div className="text-text-primary">
+                    <TrackingNumber
+                      threePlId={
+                        (asnsQuery.data?.items ?? []).find(
+                          (a) =>
+                            a.asnNumber === selected.asnNumber &&
+                            a.trackingNumber === selected.trackingNumber,
+                        )?.threePlId
+                      }
+                      trackingNumber={selected.trackingNumber}
+                      testId="shipment-panel-tracking"
+                    />
+                  </div>
                 </div>
                 <div>
                   <div className="text-xs text-text-tertiary">{t('shipments.panel.mode')}</div>

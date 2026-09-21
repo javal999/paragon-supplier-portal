@@ -43,6 +43,7 @@ import {
 } from './customRoles';
 import { SYSTEM_ROLES, type SystemRoleId } from './businessRoles';
 import { catalogRoles } from './roles';
+import { threePlRefusal, threePlStore } from './threePlStore';
 import {
   APPLICATION_REQUEST_TYPES,
   VENDOR_BEARING_REQUEST_TYPE,
@@ -462,6 +463,33 @@ const roleGrantGoverned: PolicyHookFn = ({ entityId, payload }) => {
 };
 
 bindPolicyHook(POLICY_HOOKS.ROLE_GRANT_GOVERNED, roleGrantGoverned);
+
+// ── BL-51 · ONE 3PL ON THE ADMINISTRATOR'S LIST ──────────────────────────────
+//
+// ⚠️ **THE SAME PREDICATE THE LINK IS BUILT THROUGH** (`threePlRefusal` →
+// `trackingPatternRefusal`), so "an address the verb would accept" and "an
+// address an ASN links to" are one rule in one place. `entityId` IS the 3PL id —
+// there is no id payload field. A name is unique across the list, because a
+// supplier picks a 3PL by its name and two identical names would make the pick
+// a guess.
+const threePlGoverned: PolicyHookFn = ({ entityId, payload }) => {
+  const refusal = threePlRefusal(entityId, payload.name, payload.trackingUrlPattern, payload.active);
+  if (refusal) return { ok: false, reason: refusal };
+  const name = String(payload.name).trim().toLowerCase();
+  const clash = threePlStore.all().find((r) => r.id !== entityId && r.name.trim().toLowerCase() === name);
+  if (clash) return { ok: false, reason: `another 3PL on the list is already called ${clash.name}` };
+  if (!asActorAttribution(payload.setBy)) {
+    return {
+      ok: false,
+      reason:
+        "setBy must be { kind: 'RESOLVED', person: { personId, displayName } } or " +
+        `{ kind: 'UNATTRIBUTED', reason } (${UNATTRIBUTED_REASONS.join(', ')})`,
+    };
+  }
+  return { ok: true };
+};
+
+bindPolicyHook(POLICY_HOOKS.THREE_PL_GOVERNED, threePlGoverned);
 
 // ── §67 · PR REJECT — THE REASON IS SUBSTANCE, NOT PRESENCE ──────────────────
 //

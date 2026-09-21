@@ -144,6 +144,12 @@ import { inventoryDeclarationStore } from './stores/inventoryDeclarationStore';
 import { incomingShipmentStore } from './stores/incomingShipmentStore';
 import { enforcementSettingStore } from './stores/enforcementSettingStore';
 import {
+  THREE_PL_ID,
+  asnThreePlRefusal,
+  threePlChangeFrom,
+  threePlStore,
+} from '../../transitions/threePlStore';
+import {
   capacityStore,
   inventoryAlertLedger,
   stockAccessStore,
@@ -406,6 +412,10 @@ const mergeAsnLines = (
   return out;
 };
 
+/** BL-51 — the 3PL an ASN update leaves in place: named, cleared, or kept. */
+const threePlFromPayload = (payload: Record<string, unknown>, stored: string | undefined): string | undefined =>
+  Object.prototype.hasOwnProperty.call(payload, 'threePlId') ? nonBlank(payload.threePlId) : stored;
+
 const advanceShipNoticeTarget: CommandTarget = {
   readState: (id) => asnStore.get(id)?.status ?? null,
   readScopeOwner: (id) => asnStore.get(id)?.supplierId ?? null,
@@ -417,8 +427,13 @@ const advanceShipNoticeTarget: CommandTarget = {
       recordShipmentStarted(current.asnNumber, current.poReference, shipDate);
     }
     const entered = payloadAsnLines(payload);
-    asnStore.update(id, (a) => ({
+    // BL-51 — a submission that names the 3PL replaces it; one that sends an
+    // empty value (the carrier typed by name instead) clears it; one that says
+    // nothing keeps the draft's.
+    const threePlId = threePlFromPayload(payload, current?.threePlId);
+    asnStore.update(id, ({ threePlId: _stored, ...a }) => ({
       ...a,
+      ...(threePlId ? { threePlId } : {}),
       status: toState as AsnStatus,
       carrier: typeof payload.carrier === 'string' && payload.carrier ? payload.carrier : a.carrier,
       trackingNumber:
@@ -465,6 +480,7 @@ const advanceShipNoticeTarget: CommandTarget = {
       poReference: String(payload.poReference),
       status: toState as AsnStatus,
       carrier: typeof payload.carrier === 'string' ? payload.carrier : '',
+      ...(nonBlank(payload.threePlId) ? { threePlId: nonBlank(payload.threePlId) } : {}),
       trackingNumber: typeof payload.trackingNumber === 'string' ? payload.trackingNumber : '',
       eta: typeof payload.eta === 'string' ? payload.eta : '',
       details: {
@@ -587,6 +603,13 @@ bindPolicyHook(POLICY_HOOKS.ASN_CANCEL_NOT_RECEIVED, ({ entityId }) =>
     ? { ok: false, reason: `goods were already received against ${entityId}` }
     : { ok: true },
 );
+// BL-51 / REQ-E07-04 BR-05 — a 3PL the ASN names must be on the administrator's
+// list and still offered. The same predicate the ASN form offers its choices
+// through; an ASN that names no 3PL (the carrier typed by name) is untouched.
+bindPolicyHook(POLICY_HOOKS.ASN_THREE_PL_LISTED, ({ payload }) => {
+  const refusal = asnThreePlRefusal(payload.threePlId);
+  return refusal ? { ok: false, reason: `THREE_PL_NOT_LISTED: ${refusal}` } : { ok: true };
+});
 
 // — Goods-receipt target (Step 4 batch ii) — buyer-side receiving, inspection,
 //   disposition, and the FIRST real sapBoundary verb (Post to SAP, Option B). ——
@@ -3212,6 +3235,24 @@ const roleTarget: CommandTarget = {
   },
 };
 
+// ── BL-51 · THE ADMINISTRATOR'S 3PL LIST ─────────────────────────────────────
+// `entityId` IS the 3PL id. `readState` answers `Maintained` for any well-formed
+// 3PL id — setting one the list does not hold yet adds it — and null otherwise,
+// so a malformed id is NOT_FOUND rather than a silently created row.
+// Owner-less by construction: the list is PTI's, and `readScopeOwner: () =>
+// null` denies every supplier at SCOPE (§86). `applyTransition` APPENDS; `setAt`
+// is stamped here, never read from the payload.
+const threePlTarget: CommandTarget = {
+  readState: (id) => (THREE_PL_ID.test(id) ? 'Maintained' : null),
+  readScopeOwner: () => null,
+  readEntity: (id) => (THREE_PL_ID.test(id) ? threePlStore.get(id) ?? null : null),
+  applyTransition: (id, _toState, payload) => {
+    const change = threePlChangeFrom(id, payload, new Date().toISOString());
+    // The policy hook has already refused every payload this could reject.
+    if (change) threePlStore.append(change);
+  },
+};
+
 
 // ── §82 · SUPPLIER DOCUMENTS — the declaration and the review ────────────────
 //
@@ -3615,6 +3656,9 @@ const TARGETS: Record<string, CommandTarget> = {
   // grant lands in the DR-10 trail: a role edit outside the dispatcher would be
   // the only privilege-granting act in the platform with no TransitionEvent.
   role: roleTarget,
+  // BL-51 — the 3PL list. Wired so every change to where a tracking link points
+  // lands in the DR-10 trail with who made it and when.
+  threePl: threePlTarget,
   // §82 — the document lane's first write path: the supplier's declaration and
   // compliance's review of it.
   supplierDocument: supplierDocumentTarget,

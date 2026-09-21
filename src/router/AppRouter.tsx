@@ -46,6 +46,7 @@ import BuyerCommHub from '../pages-v2/BuyerCommHub';
 import BuyerCompliance from '../pages-v2/BuyerCompliance';
 import ProcessFlows from '../pages-v2/ProcessFlows';
 import InterfaceMonitor from '../pages-v2/InterfaceMonitor';
+import AdminThreePls from '../pages-v2/admin/AdminThreePls';
 import RolesCatalogue from '../pages-v2/RolesCatalogue';
 import RoleDetail from '../pages-v2/RoleDetail';
 // GL-1 — the glossary surface. PERSONA-NEUTRAL by route, deliberately: the term
@@ -165,6 +166,8 @@ const AppRouter: React.FC = () => {
               getKnownFlows(); there is no second copy of any machine. */}
           <Route path="/buyer/process-flows" element={<ProcessFlows />} />
           <Route path="/buyer/interface-monitor" element={<InterfaceMonitor />} />
+          {/* BL-51 — administration (ADM): the 3PL list behind every ASN tracking link. */}
+          <Route path="/buyer/admin/3pl-tracking" element={<AdminThreePls />} />
           <Route path="/buyer/roles" element={<RolesCatalogue />} />
           <Route path="/buyer/roles/:roleId" element={<RoleDetail />} />
           <Route path="/glossary" element={<Glossary />} />

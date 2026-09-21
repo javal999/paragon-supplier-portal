@@ -12,6 +12,7 @@ import {
   FileSearch,
   Gauge,
   KeyRound,
+  Link2,
   ListTodo,
   MessageSquareReply,
   PackageCheck,
@@ -181,6 +182,8 @@ export const UTILITY_NAV: Record<Persona, readonly NavItem[]> = {
     { labelKey: 'hub.nav.util.processFlows', icon: Workflow, path: '/buyer/process-flows' },
     // REQ-E07-08 / NV-01 — administration sits in the user menu, not the main menu.
     { labelKey: 'hub.nav.util.interfaceMonitor', icon: Radio, path: '/buyer/interface-monitor' },
+    // BL-51 — the 3PL list behind every ASN tracking link (maintained by ADM).
+    { labelKey: 'hub.nav.util.threePls', icon: Link2, path: '/buyer/admin/3pl-tracking' },
   ],
   supplier: [{ labelKey: 'hub.nav.util.glossary', icon: BookOpen, path: '/glossary' }],
 };

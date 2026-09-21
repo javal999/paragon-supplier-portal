@@ -77,7 +77,6 @@ export const S2_GRANDFATHERED: readonly string[] = [
   'src/pages-v2/SupplierRegistration.tsx::INDONESIAN_PROVINCES',
   'src/pages-v2/SupplierRegistration.tsx::REQUEST_TYPES',
   'src/pages-v2/SupplierRegistration.tsx::SUPPLY_CATEGORIES',
-  'src/pages-v2/SupplierShipments.tsx::CARRIER_OPTIONS',
   'src/pages-v2/SupplierStorefront.tsx::TABS',
   'src/pages-v2/SupplierStorefront.tsx::TRACK_RECORD',
   'src/pages-v2/SupplierWhatsApp.tsx::CAP_KEYS',

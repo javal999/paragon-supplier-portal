@@ -1182,6 +1182,13 @@ export interface ASN {
   poReference: string;
   status: AsnStatus;
   carrier: string;
+  /**
+   * BL-51 / REQ-E07-04 BR-05 — the 3PL on the administrator's list this ASN
+   * travels with (`tpl-…`). Absent when the carrier was entered by name. It is
+   * what turns `trackingNumber` into a link to the 3PL's public tracking page;
+   * an absent or unknown id shows the number as plain text.
+   */
+  threePlId?: string;
   trackingNumber: string;
   eta: string;
   details: AsnShipmentDetails;

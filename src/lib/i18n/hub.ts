@@ -62,6 +62,7 @@ export const hubEn: Record<string, string> = {
   'hub.nav.util.roles': 'Roles',
   'hub.nav.util.processFlows': 'Process flows',
   'hub.nav.util.interfaceMonitor': 'Interface monitor',
+  'hub.nav.util.threePls': '3PL tracking links',
 
   // PTI role view (NV-02)
   'hub.role.title': 'Menu for',
@@ -186,6 +187,7 @@ export const hubId: Record<string, string> = {
   'hub.nav.util.roles': 'Peran',
   'hub.nav.util.processFlows': 'Alur proses',
   'hub.nav.util.interfaceMonitor': 'Monitor antarmuka',
+  'hub.nav.util.threePls': 'Tautan pelacakan 3PL',
 
   'hub.role.title': 'Menu untuk',
   'hub.role.hint': 'Menampilkan bagian menu untuk peran ini. Tidak mengubah apa yang boleh Anda lakukan.',

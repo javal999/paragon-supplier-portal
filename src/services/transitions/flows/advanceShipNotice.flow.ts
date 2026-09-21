@@ -63,6 +63,8 @@ export const advanceShipNoticeFlow: FlowDefinition = {
         POLICY_HOOKS.ASN_CREATE_PO_APPROVED,
         POLICY_HOOKS.ASN_CALLOFF_CONFIRMED,
         POLICY_HOOKS.ASN_LINES_WITHIN_OPEN,
+        // BL-51 — a 3PL the draft names is on the list and still offered.
+        POLICY_HOOKS.ASN_THREE_PL_LISTED,
       ],
       surfaceable: { surfaced: true },
       version: 1,
@@ -77,7 +79,12 @@ export const advanceShipNoticeFlow: FlowDefinition = {
       // REQ-E07-04 BR-04 — the rest of the required content (ship date, batch per
       // line) may already sit on the draft, so it is checked on the merged record
       // by a hook rather than demanded again in the payload.
-      policyHooks: [POLICY_HOOKS.ASN_SUBMIT_COMPLETE, POLICY_HOOKS.ASN_LINES_WITHIN_OPEN],
+      policyHooks: [
+        POLICY_HOOKS.ASN_SUBMIT_COMPLETE,
+        POLICY_HOOKS.ASN_LINES_WITHIN_OPEN,
+        // BL-51 — a 3PL the submission names is on the list and still offered.
+        POLICY_HOOKS.ASN_THREE_PL_LISTED,
+      ],
       surfaceable: { surfaced: true },
       version: 1,
     },

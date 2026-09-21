@@ -101,6 +101,8 @@ const MOCK_ASNS_RAW: ASN[] = [
     poReference: 'PO-2025-00107',
     status: 'In Transit',
     carrier: 'Sample Express Courier (illustrative)',
+    // BL-51 demo — a 3PL on the list and offered: the tracking number is a link.
+    threePlId: 'tpl-sample-express',
     trackingNumber: 'SMPL-EXP-882941-X',
     eta: '2025-04-02',
     details: {
@@ -125,6 +127,8 @@ const MOCK_ASNS_RAW: ASN[] = [
     poReference: 'PO-2025-00107',
     status: 'Delivered',
     carrier: 'Sample Postal Logistics (illustrative)',
+    // BL-51 demo — a second listed 3PL, with a query-string address pattern.
+    threePlId: 'tpl-sample-postal',
     trackingNumber: 'SMPL-PST-7723-BC-4401',
     eta: '2025-03-22',
     details: {
@@ -147,6 +151,8 @@ const MOCK_ASNS_RAW: ASN[] = [
     poReference: 'PO-2025-00107',
     status: 'Discrepancy',
     carrier: 'Sample Parcel Courier (illustrative)',
+    // BL-51 demo — names a 3PL the list does NOT hold: the number stays plain text.
+    threePlId: 'tpl-sample-parcel',
     trackingNumber: 'SMPL-PCL-119843-JKT',
     eta: '2025-03-27',
     details: {
@@ -216,6 +222,8 @@ const MOCK_ASNS_RAW: ASN[] = [
     poReference: 'PO-2025-00116',
     status: 'In Transit',
     carrier: 'Sample Interisland Line (illustrative)',
+    // BL-51 demo — a 3PL no longer offered on new ASNs still links here.
+    threePlId: 'tpl-sample-interisland',
     trackingNumber: 'SMPL-ISL-4471-SBY',
     eta: '2025-05-06',
     details: {
@@ -242,6 +250,8 @@ const MOCK_ASNS_RAW: ASN[] = [
     poReference: 'PO-2025-00131',
     status: 'Delivered',
     carrier: 'Sample Freight Forwarder (illustrative)',
+    // BL-51 demo — NO 3PL named, although the typed carrier matches a listed
+    // 3PL's name: nothing is matched by name, so the number stays plain text.
     trackingNumber: 'SMPL-FFW-99120-JKT',
     eta: '2025-04-18',
     details: {
