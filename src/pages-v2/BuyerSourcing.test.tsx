@@ -992,3 +992,42 @@ describe('BuyerSourcing — the award summary states the currency it was awarded
     expect(screen.queryByText('Rp 22.800')).not.toBeInTheDocument();
   });
 });
+
+// ── BL-64 — the drawer says an all-fail RFQ cannot be awarded ────────────────
+//
+// The drawer's award block only renders for an OPEN event every invitee has
+// answered. No seeded event is both that and all-fail, so the probe re-opens the
+// gate-demo RFQs for its duration (the stores are reset around it). rfq-020's
+// three bidders all fail CR-23; rfq-016 is the mixed KNOWN-GOOD twin.
+describe('BuyerSourcing drawer — an RFQ no bidder can win says so (BL-64)', () => {
+  beforeEach(() => {
+    quotationStore.reset();
+    rfqStore.reset();
+  });
+  afterEach(() => {
+    rfqStore.reset();
+  });
+
+  const openDrawer = async (rfqId: string, rfqNumber: string) => {
+    rfqStore.update(rfqId, (r) => ({ ...r, status: 'Open' }));
+    renderWithProviders(<BuyerSourcing />);
+    fireEvent.click(await screen.findByText(rfqNumber));
+    await screen.findByText(/QUOTE COMPARISON/i);
+  };
+
+  it('rfq-020 — every bidder fails: the notice replaces the award prompt and no award button is offered', async () => {
+    await openDrawer('rfq-020', 'RFQ-2026-020');
+    expect(await screen.findByTestId('drawer-award-none-qualified')).toHaveTextContent(
+      /cannot be awarded: no supplier that quoted passes the compliance gate/,
+    );
+    expect(screen.queryByRole('button', { name: 'Award to selected' })).not.toBeInTheDocument();
+    expect(screen.getByTestId('drawer-award-blocked-sup-004')).toHaveTextContent('Cannot be awarded');
+  });
+
+  it('KNOWN-GOOD twin — rfq-016 has passing bidders, so the prompt and the award button stay', async () => {
+    await openDrawer('rfq-016', 'RFQ-2026-016');
+    await waitFor(() => expect(screen.getByTestId('drawer-award-blocked-sup-018')).toBeInTheDocument());
+    expect(screen.queryByTestId('drawer-award-none-qualified')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Award to selected' })).toBeInTheDocument();
+  });
+});

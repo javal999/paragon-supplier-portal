@@ -1263,6 +1263,8 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
       ),
     [pricedQuotes, rfqGates.data],
   );
+  /** BL-64 — the gate has answered and no quoting supplier passes it: nothing can be awarded. */
+  const noneAwardable = rfqGates.data !== undefined && pricedQuotes.length > 0 && qualifiedQuotes.length === 0;
   const scoring = useMemo(
     () => scoreQuotations(qualifiedQuotes, { pins: selectedRfq?.fxPins }),
     [qualifiedQuotes, selectedRfq?.fxPins],
@@ -3318,24 +3320,35 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
                   <h3 className="text-section text-text-primary mb-2">
                     {t('sourcing.award.title')}
                   </h3>
-                  <p className="text-sm text-text-secondary mb-3">
-                    {selectedQuoteId
-                      ? t('sourcing.award.selected', {
-                          name:
-                            supplierNameById.get(
-                              quotesForSelected.find(
-                                (q) => q.id === selectedQuoteId,
-                              )?.supplierId ?? '',
-                            ) ?? '—',
-                        })
-                      : t('sourcing.award.selectPrompt')}
-                  </p>
+                  {/* BL-64 / BR-01a — no quoting supplier passes the gate: the
+                      award is impossible, and the drawer says so instead of
+                      prompting a selection no row can accept. Only once the
+                      gate read has answered — a pass is never assumed, and
+                      neither is a universal fail. */}
+                  {noneAwardable ? (
+                    <p className="text-sm text-warning-hover mb-3" role="status" data-testid="drawer-award-none-qualified">
+                      {t('rfx.gate.noAward')}
+                    </p>
+                  ) : (
+                    <p className="text-sm text-text-secondary mb-3">
+                      {selectedQuoteId
+                        ? t('sourcing.award.selected', {
+                            name:
+                              supplierNameById.get(
+                                quotesForSelected.find(
+                                  (q) => q.id === selectedQuoteId,
+                                )?.supplierId ?? '',
+                              ) ?? '—',
+                          })
+                        : t('sourcing.award.selectPrompt')}
+                    </p>
+                  )}
                   <div className="flex flex-wrap items-center gap-2">
                     {/* AWARD — the drawer's own act, and the last one. Its
                         notice replaces its button in place; it no longer
                         speaks for `quotation:review`, which now answers for
                         itself in the comparison cells above. */}
-                    {rfqVerbs.award.kind === 'held' ? (
+                    {noneAwardable ? null : rfqVerbs.award.kind === 'held' ? (
                       <Button
                         variant="outline"
                         icon={Trophy}

@@ -233,6 +233,8 @@ export const rfxEn: Record<string, string> = {
   'rfx.gate.fails': 'Fails: {{criteria}}',
   'rfx.gate.notScored': 'Not scored',
   'rfx.gate.noneQualified': 'No quote comes from a supplier that passes the compliance gate, so nothing is ranked.',
+  'rfx.gate.noAward':
+    'This RFQ cannot be awarded: no supplier that quoted passes the compliance gate. The reason for each is shown below. Invite a supplier that passes, or wait for a failing one to renew what is missing.',
   'rfx.gate.inviteNote': 'A supplier that fails the compliance gate can still be invited and can quote, but cannot be awarded.',
   'rfx.gate.criterion.halal': 'no valid halal certificate',
   'rfx.gate.criterion.bpom': 'no valid BPOM registration',
@@ -589,6 +591,8 @@ export const rfxId: Record<string, string> = {
   'rfx.gate.fails': 'Tidak lolos: {{criteria}}',
   'rfx.gate.notScored': 'Tidak dinilai',
   'rfx.gate.noneQualified': 'Tidak ada penawaran dari pemasok yang lolos gerbang kepatuhan, sehingga tidak ada peringkat.',
+  'rfx.gate.noAward':
+    'RFQ ini tidak dapat dimenangkan: tidak ada pemasok yang mengajukan penawaran yang lolos gerbang kepatuhan. Alasan untuk masing-masing ditampilkan di bawah. Undang pemasok yang lolos, atau tunggu pemasok yang tidak lolos memperbarui yang kurang.',
   'rfx.gate.inviteNote': 'Pemasok yang tidak lolos gerbang kepatuhan tetap dapat diundang dan mengajukan penawaran, tetapi tidak dapat dimenangkan.',
   'rfx.gate.criterion.halal': 'tidak ada sertifikat halal yang berlaku',
   'rfx.gate.criterion.bpom': 'tidak ada registrasi BPOM yang berlaku',

@@ -164,6 +164,8 @@ const BuyerSourcingEvent: React.FC = () => {
     .filter((l): l is AwardLine => l !== null);
 
   const splitRefusal = awardLines.length > 0 ? awardSplitRefusal(awardLines) : null;
+  /** BL-64 — quotes exist and not one comes from a supplier passing CR-23: nothing can be awarded. */
+  const noneAwardable = current.length > 0 && qualified.length === 0;
   const departs = bestId !== null && awardLines.length > 0 && !awardLines.some((l) => l.quotationId === bestId);
 
   const run = (vars: Parameters<typeof command.mutate>[0], successKey: string) =>
@@ -728,7 +730,16 @@ const BuyerSourcingEvent: React.FC = () => {
           </div>
         ) : (
           <div className="p-4 space-y-3">
-            <p className="text-xs text-text-tertiary">{t('rfx.award.splitHint')}</p>
+            {/* BL-64 / BR-01a — every quoting supplier fails the gate: say the
+                award is impossible, rather than show a split hint and a form no
+                entry can ever complete. The table below still names each reason. */}
+            {noneAwardable ? (
+              <p className="text-sm text-warning-hover" role="status" data-testid="award-none-qualified">
+                {t('rfx.gate.noAward')}
+              </p>
+            ) : (
+              <p className="text-xs text-text-tertiary">{t('rfx.award.splitHint')}</p>
+            )}
             <Table>
               <TableHeader>
                 <TableHeaderCell>{t('rfx.award.col.supplier')}</TableHeaderCell>
@@ -790,26 +801,28 @@ const BuyerSourcingEvent: React.FC = () => {
                 {t('rfx.award.splitHint')}
               </p>
             )}
-            <Button
-              variant="outline"
-              disabled={awardLines.length === 0 || splitRefusal !== null || (departs && !awardReason.trim())}
-              data-testid="award-confirm"
-              onClick={() =>
-                run(
-                  {
-                    verb: 'award',
-                    rfqId: rfq.id,
-                    awardedQuotationId: awardLines[0].quotationId,
-                    awardedSupplierId: awardLines[0].supplierId,
-                    awardLines,
-                    ...(awardReason.trim() ? { awardReason: awardReason.trim() } : {}),
-                  },
-                  'rfx.toast.awarded',
-                )
-              }
-            >
-              {t('rfx.award.confirm')}
-            </Button>
+            {!noneAwardable && (
+              <Button
+                variant="outline"
+                disabled={awardLines.length === 0 || splitRefusal !== null || (departs && !awardReason.trim())}
+                data-testid="award-confirm"
+                onClick={() =>
+                  run(
+                    {
+                      verb: 'award',
+                      rfqId: rfq.id,
+                      awardedQuotationId: awardLines[0].quotationId,
+                      awardedSupplierId: awardLines[0].supplierId,
+                      awardLines,
+                      ...(awardReason.trim() ? { awardReason: awardReason.trim() } : {}),
+                    },
+                    'rfx.toast.awarded',
+                  )
+                }
+              >
+                {t('rfx.award.confirm')}
+              </Button>
+            )}
             <p className="text-xs text-text-tertiary">{t('rfx.award.noPo')}</p>
           </div>
         )}

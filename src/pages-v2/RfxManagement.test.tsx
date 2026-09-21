@@ -361,6 +361,27 @@ describe('CR-23 — the compliance gate is shown on the event (BL-43)', () => {
     // KNOWN-GOOD twin — a passing supplier can be given a share.
     expect(within(screen.getByTestId('award-input-sup-013')).getByLabelText(/Share/i)).toBeInTheDocument();
   });
+
+  it('BL-64 — when EVERY bidder fails (rfq-020), the award section says it cannot be awarded and offers no confirm', async () => {
+    renderEvent('rfq-020');
+    const notice = await screen.findByTestId('award-none-qualified');
+    expect(notice).toHaveTextContent(rfxEn['rfx.gate.noAward']);
+    expect(screen.queryByTestId('award-confirm')).not.toBeInTheDocument();
+    // The reasons stay visible, by supplier — the notice does not replace them.
+    expect(screen.getByTestId('award-gate-sup-011')).toHaveTextContent('no GMP / ISO 22716');
+    expect(screen.getByTestId('award-gate-sup-004')).toHaveTextContent('no valid BPOM registration');
+    expect(screen.getByTestId('award-gate-sup-009')).toHaveTextContent('no valid halal certificate');
+    // ID locale carries the same notice.
+    expect(rfxId['rfx.gate.noAward']).toMatch(/tidak dapat dimenangkan/);
+  });
+
+  it('BL-64 — KNOWN-GOOD twin: a mixed RFQ (rfq-016) shows the form and no such notice', async () => {
+    renderEvent('rfq-016');
+    expect(await screen.findByTestId('award-confirm')).toBeInTheDocument();
+    expect(screen.queryByTestId('award-none-qualified')).not.toBeInTheDocument();
+    expect(within(screen.getByTestId('award-input-sup-017')).getByLabelText(/Share/i)).toBeInTheDocument();
+    expect(within(screen.getByTestId('award-input-sup-018')).queryByLabelText(/Share/i)).not.toBeInTheDocument();
+  });
 });
 
 describe('REQ-E03-05 BR-05 — a supplier sees only its own thread and its own outcome', () => {
