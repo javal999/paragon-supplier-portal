@@ -143,6 +143,7 @@ import { requirementResponseStore } from './stores/requirementResponseStore';
 import { inventoryDeclarationStore } from './stores/inventoryDeclarationStore';
 import { incomingShipmentStore } from './stores/incomingShipmentStore';
 import { enforcementSettingStore } from './stores/enforcementSettingStore';
+import { calendarCovers, workingCalendarStore } from '../../transitions/workingCalendarStore';
 import {
   capacityStore,
   inventoryAlertLedger,
@@ -3199,6 +3200,28 @@ const enforcementTarget: CommandTarget = {
 // and `parentAtomsAtGrant` are minted HERE — the `pinnedAt` discipline. The
 // baseline especially: a caller that could supply it could fake the drift check
 // into silence, and drift-detection is the entire reason it is recorded.
+// ── BL-50 · THE HUB'S WORKING CALENDAR ──────────────────────────────────────
+// `entityId` IS the date. `readState` answers `Maintained` for any date the SAP
+// load covers and null otherwise, so a date outside the loaded calendar is
+// NOT_FOUND rather than a silently created ruling. Owner-less by construction:
+// the calendar is PTI's, and `readScopeOwner: () => null` denies every supplier
+// at SCOPE (§86) — which is the correct answer here, not a missing one.
+// `applyTransition` APPENDS; `setAt` is stamped here, never read from the payload.
+const workingCalendarTarget: CommandTarget = {
+  readState: (id) => (calendarCovers(id) ? 'Maintained' : null),
+  readScopeOwner: () => null,
+  readEntity: (id) => (calendarCovers(id) ? workingCalendarStore.rulings().filter((r) => r.date === id) : null),
+  applyTransition: (id, _toState, payload) => {
+    workingCalendarStore.append({
+      date: id,
+      kind: payload.kind as 'working' | 'non-working',
+      reason: (payload.reason as string).trim(),
+      setBy: asActorAttribution(payload.setBy)!,
+      setAt: new Date().toISOString(),
+    });
+  },
+};
+
 const roleTarget: CommandTarget = {
   readState: (id) => (isSystemRole(id) ? 'Defined' : null),
   readScopeOwner: () => null,
@@ -3622,6 +3645,10 @@ const TARGETS: Record<string, CommandTarget> = {
   // grant lands in the DR-10 trail: a role edit outside the dispatcher would be
   // the only privilege-granting act in the platform with no TransitionEvent.
   role: roleTarget,
+  // BL-50 — the hub's working calendar. Wired so every ruling lands in the
+  // DR-10 trail: a ruling moves every deadline in the hub, and "who made this
+  // day a holiday, when, and why" is exactly what an audit asks.
+  workingCalendar: workingCalendarTarget,
   // §82 — the document lane's first write path: the supplier's declaration and
   // compliance's review of it.
   supplierDocument: supplierDocumentTarget,

@@ -42,8 +42,6 @@ Decided on 2026-09-21 and ready to build. Priority: first what protects money an
 | Priority | ID | Item | Rule | Size | Placeholder until decided |
 |---|---|---|---|---|---|
 | 4 | BL-46 | **Alert risk class by lead time.** High below lead time, Medium below 1.5 × lead time, Low otherwise; day bands only where the lead time is missing, which raises its own alert | CR-24 | M | — |
-| 6 | BL-48 | **Forecast commitment deadline.** Firm periods 1 working day, Trade-off and Forecast 3 working days | CR-26 | S | — |
-| 8 | BL-50 | **Hub-managed working calendar.** Administrator page to load the SAP factory calendar and add, remove or override days; every deadline reads it. This is the first page of the admin screen in BL-32 | Requirements 3.4 | M | SAP load simulated |
 | 9 | BL-51 | **3PL tracking link on the ASN.** An administrator-maintained list of 3PLs and their public tracking addresses; the tracking number on an ASN becomes a link out. No reading of status from the 3PL's site | REQ-E07-04 BR-05 | S | A short sample list, marked as sample |
 | 10 | BL-52 | **Supplier filters.** Certificate validity, then performance band, then country or region | REQ-E03-01 BR-05 | S | — |
 | 11 | BL-53 | **KPI definitions on the performance pages.** State the delivery window, whether early counts, the grain, and whether a date change resets the clock; show targets as "baseline period" until they are set | BL-19 decision | S | Baseline period, no target |
@@ -137,3 +135,5 @@ Nothing blocks these.
 | BL-45 | Goods receipt tolerance | 2026-09-21 | Built: any over-delivery flagged; a shortfall above 2% flagged and shown as kept open (a label; it does not reopen the order quantity) |
 | BL-47 | Call-off tolerance | 2026-09-21 | Built: up to 5% over accepted for every type; a shortfall is a visible partial; later and earlier dates go to the planner (early allowance 0 days until BL-56) |
 | BL-49 | Call-off release by remaining quantity | 2026-09-21 | Built: release checked on remaining quantity; value only on a line with no quantity; over-release refused with both figures |
+| BL-50 | Hub-managed working calendar | 2026-09-21 | Built: administrator page (first page of the admin screen, BL-32) with the SAP factory calendar (sample load) and governed add/remove/override rulings; every working-day deadline reads it |
+| BL-48 | Forecast commitment deadline | 2026-09-21 | Built: Firm 1 working day, Trade-off and Forecast 3, on the hub calendar; time left and late shown to supplier and planner |

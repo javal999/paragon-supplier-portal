@@ -315,6 +315,12 @@ export const processFlowPurposeEn: Record<string, string> = {
   'processFlows.purpose.t_role_grant':
     'Somebody copies an existing set of permissions and widens it. Widening never removes anything, so nobody quietly loses an authority they were relied on to have, and the act is recorded like every other governed act.',
 
+  // ── the hub's working calendar (BL-50) ─────────────────────────────────
+  'processFlows.purpose.entity.workingCalendar':
+    'Which days count as working days for every deadline in the hub, starting from the calendar SAP holds and corrected by the hub administrator where the plant knows better.',
+  'processFlows.purpose.t_calendar_day_set':
+    'The hub administrator says one date is or is not a working day, and why. Every response and commitment deadline that spans that date moves with it at once, so the grounds for it have to be on record.',
+
   // ── supplierApplication ──────────────────────────────────────────────
   'processFlows.purpose.entity.supplierApplication':
     'The record that a company has asked to supply Paragon, who is handling it, and what was decided. Without it a company could finish the sign-up form and be handed a reference number that nothing anywhere stood behind.',
@@ -728,6 +734,11 @@ export const processFlowPurposeId: Record<string, string> = {
     'Salinan satu paket izin dengan izin tambahan di atasnya, disimpan sebagai catatan tentang apa yang disalin dan oleh siapa — sehingga kursi yang dibuat seseorang Selasa lalu terbaca berbeda dari kursi standar.',
   'processFlows.purpose.t_role_grant':
     'Seseorang menyalin satu kumpulan izin lalu memperluasnya. Memperluas tidak pernah menghapus apa pun, sehingga tidak ada yang diam-diam kehilangan wewenang yang diandalkan darinya, dan tindakan itu dicatat seperti setiap tindakan diatur lainnya.',
+
+  'processFlows.purpose.entity.workingCalendar':
+    'Hari mana yang dihitung sebagai hari kerja untuk setiap tenggat di hub, berawal dari kalender yang disimpan SAP lalu dikoreksi oleh administrator hub bila pabrik lebih tahu.',
+  'processFlows.purpose.t_calendar_day_set':
+    'Administrator hub menyatakan satu tanggal adalah atau bukan hari kerja, beserta alasannya. Setiap tenggat tanggapan dan komitmen yang melewati tanggal itu langsung ikut bergeser, sehingga alasannya harus tercatat.',
 
   // ── supplierApplication ──────────────────────────────────────────────
   'processFlows.purpose.entity.supplierApplication':

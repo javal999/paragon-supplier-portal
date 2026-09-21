@@ -678,13 +678,20 @@ export interface ForecastCommitmentLine {
   readonly previousQty: number | null;
   /** When the current version was published (the deadline counts from it). */
   readonly publishedAt: string;
-  /** REQ-E06-02 BR-07 — Firm: 1 working day; Trade-off and Forecast: 7 days. */
+  /** CR-26 / REQ-E06-02 BR-07 — Firm: 1 working day; Trade-off and Forecast: 3
+   *  working days after publication, on the hub calendar (BL-48, BL-50). */
   readonly dueAt: string;
   /** REQ-E06-03 BR-06 — the first reminder, at half the deadline. */
   readonly reminderAt: string;
   readonly state: CommitmentState;
   /** The submitted commitment that stands for the current quantity. */
   readonly response: RequirementResponse | null;
+  /**
+   * CR-26 — the deadline the standing response ANSWERED (its own version's
+   * publication and zone), so a carried-forward commitment keeps the verdict it
+   * earned. Derived from publications, never from a clock; null with no response.
+   */
+  readonly responseDueAt: string | null;
   /** True when that commitment answered an earlier version with the same quantity. */
   readonly carriedForward: boolean;
   /** The supplier's own unsubmitted draft (never in PTI's read — BR-10). */
