@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 0.9 draft, 2026-09-21 |
+| Version | 0.10 draft, 2026-09-21 |
 | Sources | `SUPPLIER-HUB-BASELINE.md` (kick-off deck, Aug 2026); `KICKOFF-MEETING-NOTES.md` (business user feedback, reviewed 2026-09-17); owner review of the prototype gap review (2026-09-17) |
 | Scope of this version | Detailed: Order Collaboration, Inventory & Capacity Collaboration, RFx (validated); Forecast Collaboration, Call-off Management, and the undiscussed parts of Order and Inventory Collaboration (proposed). Hub navigation and screen conventions (validated). Foundation is reserved for the Foundation team. The remaining epics are stubs |
 | Not in scope | The codebase. This file states what the Supplier Hub must do, not what is built. What the prototype does today, and where, is tracked only in `BUILD-GAP.md` |
@@ -1560,6 +1560,12 @@ All requirements in this section are **Proposed**, written from market practice 
 | PQ-08 | Early-delivery allowance for call-offs, pending the warehouse capacity check; quantity and late-date rules are decided (CR-05) | REQ-E09-03 |
 | Q-19 | The PQ-10 answer ends with "They". Confirm nothing is missing | REQ-E09-04 |
 | CAP-1 | Does supplier capacity usually stay the same every week or change week to week? This shapes how capacity is entered. Proposed: one number for all weeks with per-week overrides | REQ-E08-04 |
+| KPI-D | The OTIF and CFOT calculation differs from REQ-E10-01 and CR-08 in five places (counter-offer timing, planner date change, summing partial receipts, early window, dispatched but not received). See BACKLOG BL-66 | REQ-E10-01 |
+| CO-1 | A call-off confirmation above +5%: refused, or sent and held for planner approval (built) | REQ-E09-03 |
+| CR24-1 | Days of cover in CR-24 measured on supplier stock (built) or PTI stock | REQ-E08-05 |
+| DL-1 | Late at the deadline (forecast commitments, built) or after it (PO and call-off responses, built): one convention | REQ-E06-02, REQ-E07-02, REQ-E09-03 |
+| ADM-1 | Whether the combined buyer "All" role may change the working calendar and the 3PL list, or the Hub administrator only | Section 3.4, REQ-E07-04 |
+| GR-1 | Over-delivery measured against the order (CR-25) or the ASN (REQ-E07-06 BR-03); whether a receipt kept open reopens the missing quantity | REQ-E07-06 |
 
 ---
 
@@ -1649,3 +1655,4 @@ Research date: 2026-09-17. Vendor pages were read directly unless marked "snippe
 | 0.7 | 2026-09-19 | REQ-E07-03 extended: drill-through contract per column, goods receipt and invoice columns, empty-cell rule, and an alignment check against the source requirements |
 | 0.8 | 2026-09-21 | Owner decisions on 18 of the 21 backlog decisions: compliance gate CR-23, risk class CR-24, receipt tolerance CR-25, commitment deadline CR-26; CR-02, CR-05, CR-12 and CR-15 revised; hub-managed calendar; 3PL tracking link replaces TMS access. Open items narrowed to A-01, A-05, PQ-05 cap, PQ-06, PQ-08 early allowance, PQ-11, Q-19 |
 | 0.9 | 2026-09-21 | Inventory collaboration feedback (INV-FB): supplier-triggered sync with PTI stock limited to granted materials, one stock entry with identical fields, in-transit from the ASN, optional manufacturing date, one list on the supplier view, capacity label and filters. CAP-1 opened |
+| 0.10 | 2026-09-21 | Text aligned with the builds of BL-44 to BL-53 (CR-12 per line, CR-05 for every call-off type, CR-24 in inventory). Open items KPI-D, CO-1, CR24-1, DL-1, ADM-1 and GR-1 added from what the builds found |
