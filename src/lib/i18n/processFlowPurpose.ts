@@ -331,6 +331,10 @@ export const processFlowPurposeEn: Record<string, string> = {
     'One value a hub rule compares against: a tolerance, a deadline, an alert threshold or a stale period. It decides what is accepted without a person looking, so it is changed only by the hub administrator and every change is on record.',
   'processFlows.purpose.t_setting_set':
     'The hub administrator changes one rule value, or sets it back to its default. A value that is negative, out of range, or that would put a band out of order is refused, and the rules read the new value the next time they run.',
+  'processFlows.purpose.entity.reasonCode':
+    'One code on a reason list a supplier chooses from — why a purchase order line is adjusted or rejected, or why a commitment or capacity is below what was asked. A code is never deleted, so an old answer keeps its label.',
+  'processFlows.purpose.t_reasoncode_set':
+    'The hub administrator adds a reason code, renames it in English and Indonesian, retires it, or offers it again. A retired code is no longer offered on a new answer but still reads on the answers that carry it.',
 
   // ── supplierApplication ──────────────────────────────────────────────
   'processFlows.purpose.entity.supplierApplication':
@@ -759,6 +763,10 @@ export const processFlowPurposeId: Record<string, string> = {
     'Satu nilai yang menjadi pembanding aturan hub: toleransi, tenggat, ambang peringatan, atau periode data usang. Nilai ini menentukan apa yang diterima tanpa diperiksa orang, sehingga hanya administrator hub yang dapat mengubahnya dan setiap perubahan tercatat.',
   'processFlows.purpose.t_setting_set':
     'Administrator hub mengubah satu nilai aturan, atau mengembalikannya ke nilai bawaan. Nilai negatif, di luar batas, atau yang membuat urutan rentang terbalik ditolak, dan aturan membaca nilai baru saat berjalan berikutnya.',
+  'processFlows.purpose.entity.reasonCode':
+    'Satu kode pada daftar alasan yang dipilih pemasok — mengapa baris pesanan pembelian disesuaikan atau ditolak, atau mengapa komitmen atau kapasitas di bawah yang diminta. Kode tidak pernah dihapus, sehingga jawaban lama tetap berlabel.',
+  'processFlows.purpose.t_reasoncode_set':
+    'Administrator hub menambahkan kode alasan, mengganti namanya dalam bahasa Inggris dan Indonesia, menghentikannya, atau menawarkannya lagi. Kode yang dihentikan tidak ditawarkan lagi pada jawaban baru tetapi tetap terbaca pada jawaban yang memakainya.',
 
   // ── supplierApplication ──────────────────────────────────────────────
   'processFlows.purpose.entity.supplierApplication':

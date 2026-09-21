@@ -14,8 +14,8 @@ import { materialEntry } from '../sdc/materialMaster';
 import { bucketEndMs, coverageBands } from '../sdc/consolidation';
 import { coverageThresholds } from './inventoryConfig';
 import { hubSettingsStore } from './hubSettingsStore';
+import { activeReasonCodes } from './reasonCodes';
 import {
-  COMMITMENT_REASONS,
   commitmentTolerance,
   FORECAST_HORIZON,
   gapColourThresholds,
@@ -150,7 +150,8 @@ describe('REQ-E06-01 BR-04 / BR-05 — zones per supplier × material group', ()
 
 describe('REQ-E06-02 BR-04 — below forecast needs a starter reason (the verb calls this)', () => {
   it('known-good: at or above forecast needs nothing; below with a starter code passes', () => {
-    expect(COMMITMENT_REASONS).toEqual(['capacity', 'material', 'logistics', 'quality', 'other']);
+    // BL-32: the administrator's list in force; with nothing changed, the starter list.
+    expect(activeReasonCodes('commitmentShortfall')).toEqual(['capacity', 'material', 'logistics', 'quality', 'other']);
     expect(shortfallRefusal(1000, 1000, undefined)).toBeNull();
     expect(shortfallRefusal(1000, 1200, undefined)).toBeNull();
     expect(shortfallRefusal(1000, 800, { level1: 'material' })).toBeNull();

@@ -1,4 +1,4 @@
-import { BellRing, CalendarDays, Link2, SlidersHorizontal, type LucideIcon } from 'lucide-react';
+import { BellRing, CalendarDays, Link2, ListChecks, SlidersHorizontal, type LucideIcon } from 'lucide-react';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // THE ADMINISTRATION AREA — its sections, one definition (BL-50, BL-51, BL-32).
@@ -44,5 +44,11 @@ export const ADMIN_SECTIONS: readonly AdminSection[] = [
     labelKey: 'hub.nav.util.alertThresholds',
     icon: BellRing,
     path: `${ADMIN_BASE_PATH}/alert-thresholds`,
+  },
+  {
+    id: 'reason-codes',
+    labelKey: 'hub.nav.util.reasonCodes',
+    icon: ListChecks,
+    path: `${ADMIN_BASE_PATH}/reason-codes`,
   },
 ];

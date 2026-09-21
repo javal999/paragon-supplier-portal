@@ -13,7 +13,8 @@ import {
   horizonWeeks,
   planStatus,
 } from './capacityRules';
-import { CAPACITY_HORIZON_WEEKS, CAPACITY_REASONS } from './inventoryConfig';
+import { CAPACITY_HORIZON_WEEKS } from './inventoryConfig';
+import { activeReasonCodes } from './reasonCodes';
 import {
   alertKey,
   alertsFromLedger,
@@ -39,7 +40,8 @@ describe('REQ-E08-04 — the horizon and the below-demand rule', () => {
   });
 
   it('starter reason codes are Capacity, Material, Logistics, Quality, Other', () => {
-    expect(CAPACITY_REASONS).toEqual(['capacity', 'material', 'logistics', 'quality', 'other']);
+    // BL-32: the administrator's list in force; with nothing changed, the starter list.
+    expect(activeReasonCodes('capacityShortfall')).toEqual(['capacity', 'material', 'logistics', 'quality', 'other']);
   });
 
   const weeks = (patch: Record<number, object> = {}) =>

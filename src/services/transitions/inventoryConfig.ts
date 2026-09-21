@@ -21,7 +21,6 @@
 //     capacity grid; changing it changes the grid, not a threshold.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { CapacityReason } from '../data/types';
 import { hubSetting, stalePeriodFor } from './hubSettingsStore';
 
 /** CR-01 — average daily demand = forecast quantity for the next 30 days ÷ 30. */
@@ -75,14 +74,5 @@ export function updateSlaFor(supplierId: string, materialCode: string): number {
 /** REQ-E08-04 BR-03 / PQ-02 — weekly buckets for 13 weeks. */
 export const CAPACITY_HORIZON_WEEKS = 13;
 
-/** Section 3.6 starter reason codes; `other` needs a note. */
-export const CAPACITY_REASONS: readonly CapacityReason[] = Object.freeze([
-  'capacity',
-  'material',
-  'logistics',
-  'quality',
-  'other',
-]);
-
-export const isCapacityReason = (value: unknown): value is CapacityReason =>
-  typeof value === 'string' && (CAPACITY_REASONS as readonly string[]).includes(value);
+// Section 3.6 starter reason codes for allocation below demand are the Hub
+// administrator's list since BL-32: `reasonCodes.ts`, list `capacityShortfall`.

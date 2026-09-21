@@ -99,11 +99,6 @@ export const sdcSupplierEn: Record<string, string> = {
   'sdcSup.panel.rootCause.select': 'Select a category…',
   'sdcSup.panel.rootCause.note': 'Note',
   'sdcSup.panel.rootCause.notePlaceholder': 'What constrains this commitment?',
-  'sdcSup.rootCause.capacity': 'Capacity',
-  'sdcSup.rootCause.material': 'Material availability',
-  'sdcSup.rootCause.logistics': 'Logistics',
-  'sdcSup.rootCause.quality': 'Quality',
-  'sdcSup.rootCause.other': 'Other',
   'sdcSup.panel.cancel': 'Cancel',
   // ⚠️ PF-1b — THE PANEL SAVES A DRAFT; it does not send. Submitting is a
   // second, deliberate act from My responses.
@@ -326,11 +321,6 @@ export const sdcSupplierId: Record<string, string> = {
   'sdcSup.panel.rootCause.select': 'Pilih kategori…',
   'sdcSup.panel.rootCause.note': 'Catatan',
   'sdcSup.panel.rootCause.notePlaceholder': 'Apa yang membatasi komitmen ini?',
-  'sdcSup.rootCause.capacity': 'Kapasitas',
-  'sdcSup.rootCause.material': 'Ketersediaan material',
-  'sdcSup.rootCause.logistics': 'Logistik',
-  'sdcSup.rootCause.quality': 'Kualitas',
-  'sdcSup.rootCause.other': 'Lainnya',
   'sdcSup.panel.cancel': 'Batal',
   'sdcSup.panel.submit': 'Simpan draf',
   'sdcSup.panel.submitting': 'Menyimpan…',

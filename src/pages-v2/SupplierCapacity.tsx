@@ -26,7 +26,7 @@ import { useCurrentIdentity } from '../context/CurrentIdentityContext';
 import { formatDate, formatDateTime } from '../lib/format';
 import { useCapacityPlans } from '../services/query/hooks';
 import type { CapacityPlan, CapacityReason } from '../services/data/types';
-import { CAPACITY_REASONS } from '../services/transitions/inventoryConfig';
+import { useActiveReasonCodes, useReasonLabel } from './admin/reasonCodeDisplay';
 import { capacitySubmissionRefusal, planStatus } from '../services/transitions/capacityRules';
 import { readStockNumber } from '../services/transitions/inventoryRules';
 import {
@@ -63,6 +63,9 @@ const draftFrom = (plan: CapacityPlan): WeekDraft[] =>
 
 const SupplierCapacity: React.FC = () => {
   const { t } = useTranslation();
+  // BL-32 — the administrator's list in force: only active codes are offered.
+  const capacityReasons = useActiveReasonCodes('capacityShortfall');
+  const reasonLabel = useReasonLabel();
   const { identity } = useCurrentIdentity();
   const plansQuery = useCapacityPlans();
   const confirm = useVerbAvailability('capacity:confirm');
@@ -249,9 +252,9 @@ const SupplierCapacity: React.FC = () => {
                           onChange={(e) => update(i, { reason: e.target.value as CapacityReason | '' })}
                         >
                           <option value="">{t('inv.capacity.reason.select')}</option>
-                          {CAPACITY_REASONS.map((r) => (
+                          {capacityReasons.map((r) => (
                             <option key={r} value={r}>
-                              {t(`inv.capacity.reason.${r}`)}
+                              {reasonLabel('capacityShortfall', r)}
                             </option>
                           ))}
                         </select>

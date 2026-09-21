@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useReasonLabel } from './admin/reasonCodeDisplay';
 import { useSearchParams } from 'react-router-dom';
 import { AlertTriangle, ChevronDown, ChevronRight } from 'lucide-react';
 import AppShellV2 from '../components/layout-v2/AppShellV2';
@@ -50,6 +51,7 @@ type StatusFilter = 'all' | CapacityConfirmationStatus;
 
 const BuyerCapacity: React.FC = () => {
   const { t } = useTranslation();
+  const reasonLabel = useReasonLabel();
   const plansQuery = useCapacityPlans();
   const [filter, setStatusFilter] = useState<StatusFilter>('all');
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
@@ -314,7 +316,7 @@ const BuyerCapacity: React.FC = () => {
                             <td className="px-4 py-2 text-text-secondary">
                               {w.entry?.reason ? (
                                 <>
-                                  {t(`inv.capacity.reason.${w.entry.reason}`)}
+                                  {reasonLabel('capacityShortfall', w.entry.reason)}
                                   {w.entry.note ? ` — ${w.entry.note}` : ''}
                                 </>
                               ) : (

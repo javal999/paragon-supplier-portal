@@ -248,6 +248,19 @@ export const LOOSE_END_CENSUS: readonly CensusEntry[] = Object.freeze([
       'the state is correctly declared terminal. The deadlines a ruling moves are derived at read from ' +
       'the calendar and are never states of any machine.',
   },
+  // ── reasonCode (BL-32) ─────────────────────────────────────────────────────
+  {
+    entity: 'reasonCode',
+    kind: 'initial-integrity',
+    subject: 'Maintained',
+    reason: 'substrate-only',
+    note:
+      'THE SAME DEGENERATE SINGLE-STATE LEDGER SHAPE AS THE 3PL LIST: the entity IS one code on one ' +
+      'reason list, addressed by <list>:<code>, and setting a code the list does not yet hold adds it — ' +
+      'so there is no separate creation verb to be an entry. There is no delete: a retired code stays ' +
+      'so the records that carry it keep their label. The verb is statePreserving, so the state is ' +
+      'correctly declared terminal.',
+  },
   // ── hubSetting (BL-32) ─────────────────────────────────────────────────────
   {
     entity: 'hubSetting',

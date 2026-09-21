@@ -55,6 +55,7 @@ export { roleFlow } from './flows/role.flow';
 export { workingCalendarFlow } from './flows/workingCalendar.flow';
 export { threePlFlow } from './flows/threePl.flow';
 export { hubSettingFlow } from './flows/hubSetting.flow';
+export { reasonCodeFlow } from './flows/reasonCode.flow';
 export { supplierApplicationFlow } from './flows/supplierApplication.flow';
 export { receiptDiscrepancyFlow } from './flows/receiptDiscrepancy.flow';
 export { callOffFlow } from './flows/callOff.flow';
@@ -94,6 +95,7 @@ import { roleFlow } from './flows/role.flow';
 import { workingCalendarFlow } from './flows/workingCalendar.flow';
 import { threePlFlow } from './flows/threePl.flow';
 import { hubSettingFlow } from './flows/hubSetting.flow';
+import { reasonCodeFlow } from './flows/reasonCode.flow';
 import { supplierApplicationFlow } from './flows/supplierApplication.flow';
 import { receiptDiscrepancyFlow } from './flows/receiptDiscrepancy.flow';
 import { callOffFlow } from './flows/callOff.flow';
@@ -163,6 +165,8 @@ flowRegistry.register(threePlFlow); // BL-51 — 3PL list
 // degenerate single-state ledger shape. Every rule reads the value in force at
 // evaluation, so nothing cascades from a change.
 flowRegistry.register(hubSettingFlow); // BL-32 — rule values
+// BL-32 — the administrator's reason lists: the 3PL list's single-state shape.
+flowRegistry.register(reasonCodeFlow); // BL-32 — reason codes
 flowRegistry.register(supplierApplicationFlow); // B1 — Supplier onboarding
 flowRegistry.register(receiptDiscrepancyFlow); // REQ-E07-06 — receipt discrepancy response
 flowRegistry.register(callOffFlow); // REQ-E09-01 / 03 / 04 — call-offs under an umbrella PO

@@ -94,6 +94,7 @@ import { rfxEn, rfxId } from './i18n/rfx';
 import { threePlEn, threePlId } from './i18n/threePl';
 // — BL-32 the administrator's rule values (REQ-E08-05 BR-03, §3.6) —
 import { adminSettingsEn, adminSettingsId } from './i18n/adminSettings';
+import { adminReasonsEn, adminReasonsId } from './i18n/adminReasons';
 // — BL-52 supplier filters (REQ-E03-01 BR-05) —
 import { supplierFiltersEn, supplierFiltersId } from './i18n/supplierFilters';
 // — The read path's failure surface, shared by 31 pages —
@@ -183,6 +184,7 @@ export const resources = {
       ...rfxEn,
       ...threePlEn,
       ...adminSettingsEn,
+      ...adminReasonsEn,
       ...supplierFiltersEn,
       ...errorStateEn,
       ...loadingStateEn,
@@ -633,6 +635,7 @@ export const resources = {
       ...rfxId,
       ...threePlId,
       ...adminSettingsId,
+      ...adminReasonsId,
       ...supplierFiltersId,
       ...errorStateId,
       ...loadingStateId,

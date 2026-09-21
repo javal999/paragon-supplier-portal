@@ -31,7 +31,8 @@ import { useForecastCommitments, useForecastVersions } from '../services/query/h
 import { parseWorkbook } from '../services/sdc';
 import type { CapacityReason, ForecastCommitmentLine } from '../services/data/types';
 import type { ForecastStream } from '../services/sdc/types';
-import { COMMITMENT_REASONS, commitmentDeadlineWorkingDays } from '../services/transitions/forecastConfig';
+import { commitmentDeadlineWorkingDays } from '../services/transitions/forecastConfig';
+import { useActiveReasonCodes, useReasonLabel } from './admin/reasonCodeDisplay';
 import {
   commitmentTemplateCsv,
   deadlineState,
@@ -98,6 +99,9 @@ interface UploadResult {
 
 const SupplierForecastCommitments: React.FC = () => {
   const { t, i18n } = useTranslation();
+  // BL-32 — the administrator's list in force: only active codes are offered.
+  const commitmentReasons = useActiveReasonCodes('commitmentShortfall');
+  const reasonLabel = useReasonLabel();
   const { identity } = useCurrentIdentity();
   const [params] = useSearchParams();
   const linesQuery = useForecastCommitments();
@@ -604,9 +608,9 @@ const SupplierForecastCommitments: React.FC = () => {
                                       onChange={(e) => setRow(l, { reason: e.target.value as CapacityReason | '' })}
                                     >
                                       <option value="">{t('fc.reason.select')}</option>
-                                      {COMMITMENT_REASONS.map((r) => (
+                                      {commitmentReasons.map((r) => (
                                         <option key={r} value={r}>
-                                          {t(`fc.reason.${r}`)}
+                                          {reasonLabel('commitmentShortfall', r)}
                                         </option>
                                       ))}
                                     </select>

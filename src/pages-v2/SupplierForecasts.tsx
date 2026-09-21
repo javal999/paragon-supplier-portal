@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useActiveReasonCodes, useReasonLabel } from './admin/reasonCodeDisplay';
 import {
   ArrowRight,
   Boxes,
@@ -120,8 +121,8 @@ const CLASS_LABEL_KEY: Record<CommitmentClass, string> = {
 };
 
 // Root-cause level-1 vocabulary offered by the form (the child object's
-// category axis; free-text note carries the specifics).
-const ROOT_CAUSE_LEVELS = ['capacity', 'material', 'logistics', 'quality', 'other'] as const;
+// category axis; free-text note carries the specifics) — since BL-32 the Hub
+// administrator's commitment-shortfall list, read in force by the form below.
 
 // Quiet-outlined chip (DP-3 status-chip grammar — soft tint, thin border).
 const CHIP =
@@ -435,6 +436,7 @@ const ResponsesTab: React.FC<{
   submittingId: string | null;
 }> = ({ responses, onSubmitDraft, submittingId }) => {
   const { t } = useTranslation();
+  const reasonLabel = useReasonLabel();
   // ⚠️ PROMOTE SHARES `requirementresponse:submit` WITH THE DRAFT CREATION —
   // one atom guards both drafting and sending, so this lane cannot express a
   // draft-then-send segregation between two people. Recorded, not worked
@@ -557,7 +559,7 @@ const ResponsesTab: React.FC<{
               <span className="text-label text-text-tertiary uppercase">
                 {t('sdcSup.responses.rootCause')}
               </span>{' '}
-              {r.rootCause.level1}
+              {reasonLabel('commitmentShortfall', r.rootCause.level1)}
               {r.rootCause.note ? ` — ${r.rootCause.note}` : ''}
             </div>
           )}
@@ -947,6 +949,10 @@ const ForecastWorkspace: React.FC<WorkspaceProps> = ({
   asns,
 }) => {
   const { t } = useTranslation();
+  // BL-32 — the commitment-shortfall list in force (the same codes the Forecast
+  // & commitments page offers): only active codes, labelled from the list.
+  const rootCauseCodes = useActiveReasonCodes('commitmentShortfall');
+  const rootCauseLabel = useReasonLabel();
   const refusalText = useRefusalText();
   const { toast } = useToast();
   const crumb = [t('sdcSup.crumb.section'), t('sdcSup.crumb.page')];
@@ -1524,9 +1530,9 @@ const ForecastWorkspace: React.FC<WorkspaceProps> = ({
                   className={inputClass}
                 >
                   <option value="">{t('sdcSup.panel.rootCause.select')}</option>
-                  {ROOT_CAUSE_LEVELS.map((level) => (
+                  {rootCauseCodes.map((level) => (
                     <option key={level} value={level}>
-                      {t(`sdcSup.rootCause.${level}`)}
+                      {rootCauseLabel('commitmentShortfall', level)}
                     </option>
                   ))}
                 </select>

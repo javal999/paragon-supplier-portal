@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { useReasonLabel } from '../admin/reasonCodeDisplay';
 import { Check, Circle, CircleDot, XCircle } from 'lucide-react';
 import Data from '../../components/ui-v2/Data';
 import StatusPill from '../../components/ui-v2/StatusPill';
@@ -125,6 +126,7 @@ export const PoLifecycleSteps: React.FC<{ po: PurchaseOrder; asnCount: number }>
 /** What the supplier answered, per line where it adjusted. */
 export const PoResponseDetails: React.FC<{ po: PurchaseOrder }> = ({ po }) => {
   const { t } = useTranslation();
+  const reasonLabel = useReasonLabel();
   const r = po.response;
   return (
     <section data-testid="po-response-details">
@@ -181,7 +183,7 @@ export const PoResponseDetails: React.FC<{ po: PurchaseOrder }> = ({ po }) => {
                           <Data>{formatDate(l.counterDate)}</Data>
                         </td>
                         <td className="px-3 py-2 text-text-primary">
-                          {t(`oc.reason.${l.reasonCode}`)}
+                          {reasonLabel('poAdjust', l.reasonCode)}
                           {l.note ? ` — ${l.note}` : ''}
                         </td>
                       </tr>
@@ -194,7 +196,7 @@ export const PoResponseDetails: React.FC<{ po: PurchaseOrder }> = ({ po }) => {
           {r.rejectionCauses && r.rejectionCauses.length > 0 && (
             <div>
               <span className="text-text-tertiary">{t('oc.response.causes')}: </span>
-              {r.rejectionCauses.map((c) => t(`oc.cause.${c}`)).join(', ')}
+              {r.rejectionCauses.map((c) => reasonLabel('poReject', c)).join(', ')}
             </div>
           )}
           {r.comment && (

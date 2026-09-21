@@ -335,6 +335,13 @@ export const POLICY_HOOKS = {
    * The same predicate re-checks a stored change on read.
    */
   SETTING_GOVERNED: 'setting_governed',
+  /**
+   * BL-32 — one code on one reason list: a known list, a well-formed code,
+   * non-empty English and Indonesian labels no other code on the list shows, a
+   * boolean `active`, never the last offered code retired, and a well-formed
+   * attribution. The same predicate re-checks a stored change on read.
+   */
+  REASON_CODE_GOVERNED: 'reason_code_governed',
 
   /**
    * PR reject (§67): the rejection reason must be SUBSTANCE, not presence.

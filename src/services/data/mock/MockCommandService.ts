@@ -105,7 +105,6 @@ import {
   addDays,
   capacitySubmissionRefusal,
   dayOf,
-  isCapacityReason,
   isIsoDay,
   batchDatesProblem,
   parseAlertKey,
@@ -146,6 +145,7 @@ import { enforcementSettingStore } from './stores/enforcementSettingStore';
 import { calendarCovers, workingCalendarStore } from '../../transitions/workingCalendarStore';
 import { isHubSettingKey, parseStaleOverrideKey } from '../../transitions/hubSettings';
 import { hubSettingsStore, settingValue } from '../../transitions/hubSettingsStore';
+import { isActiveReasonCode, parseReasonCodeEntityId, reasonCodeStore } from '../../transitions/reasonCodes';
 import {
   THREE_PL_ID,
   asnThreePlRefusal,
@@ -2382,7 +2382,7 @@ const capacityTarget: CommandTarget = {
       week: String(w.week),
       allocated: Number(w.allocated),
       ...(isNonNegative(w.upside) ? { upside: w.upside } : {}),
-      ...(isCapacityReason(w.reason) ? { reason: w.reason } : {}),
+      ...(isActiveReasonCode('capacityShortfall', w.reason) ? { reason: w.reason } : {}),
       ...(nonBlank(w.note) ? { note: nonBlank(w.note) } : {}),
     }));
     const row: CapacitySubmission = {
@@ -3299,6 +3299,33 @@ const settingKeyExists = (id: string): boolean => {
   return pair !== null && isAssignedMaterial(pair.supplierId, pair.materialCode);
 };
 
+// ── BL-32 · THE ADMINISTRATOR'S REASON CODES ────────────────────────────────
+// `entityId` IS `<list>:<code>`. `readState` answers `Maintained` for a known
+// list and a well-formed code — setting a code the list does not hold yet ADDS
+// it — and null otherwise, so an unknown list is NOT_FOUND. Owner-less: the
+// lists are PTI's, and every supplier is denied at SCOPE (§86). APPENDS only;
+// there is no delete, so a retired code still labels the records that carry it.
+const reasonCodeTarget: CommandTarget = {
+  readState: (id) => (parseReasonCodeEntityId(id) ? 'Maintained' : null),
+  readScopeOwner: () => null,
+  readEntity: (id) => {
+    const p = parseReasonCodeEntityId(id);
+    return p ? reasonCodeStore.get(p.list, p.code) ?? null : null;
+  },
+  applyTransition: (id, _toState, payload) => {
+    const p = parseReasonCodeEntityId(id)!;
+    reasonCodeStore.append({
+      list: p.list,
+      code: p.code,
+      labelEn: String(payload.labelEn),
+      labelId: String(payload.labelId),
+      active: payload.active as boolean,
+      setBy: asActorAttribution(payload.setBy)!,
+      setAt: new Date().toISOString(),
+    });
+  },
+};
+
 const hubSettingTarget: CommandTarget = {
   readState: (id) => (settingKeyExists(id) ? 'Maintained' : null),
   readScopeOwner: () => null,
@@ -3728,6 +3755,9 @@ const TARGETS: Record<string, CommandTarget> = {
   // BL-32 — the rule values. Wired so every change to a tolerance, deadline,
   // threshold or stale period — and every reset — lands in the DR-10 trail.
   hubSetting: hubSettingTarget,
+  // BL-32 — the reason lists. Wired so every add, rename and retirement lands in
+  // the DR-10 trail.
+  reasonCode: reasonCodeTarget,
   // §82 — the document lane's first write path: the supplier's declaration and
   // compliance's review of it.
   supplierDocument: supplierDocumentTarget,

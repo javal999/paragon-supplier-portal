@@ -329,11 +329,16 @@ export interface PurchaseOrder {
 /** The three answers a supplier can give a purchase order (REQ-E07-02 BR-02). */
 export type PoResponseOption = 'approve' | 'adjust' | 'reject';
 
-/** Predefined adjust reasons — the starter list (REQUIREMENTS §3.6). */
-export type PoReasonCode = 'capacity' | 'material' | 'logistics' | 'quality' | 'other';
+/**
+ * An adjust reason code (REQUIREMENTS §3.6). Since BL-32 the list is the Hub
+ * administrator's (`reasonCodes.ts`, list `poAdjust`): the starter codes are
+ * capacity, material, logistics, quality and other, and a code can be added or
+ * retired, so the type is the code's shape, not a closed union.
+ */
+export type PoReasonCode = string;
 
-/** What a rejection is about (REQ-E07-02 BR-06). */
-export type PoRejectionCause = 'date' | 'quantity' | 'quality';
+/** What a rejection is about (REQ-E07-02 BR-06) — list `poReject` since BL-32. */
+export type PoRejectionCause = string;
 
 /** One line's counter-offer on an adjusted PO. */
 export interface PoLineResponse {
@@ -573,8 +578,12 @@ export interface StockAccessGrant {
   readonly log: readonly StockAccessLogEntry[];
 }
 
-/** Starter reason codes for allocation below demand (section 3.6). */
-export type CapacityReason = 'capacity' | 'material' | 'logistics' | 'quality' | 'other';
+/**
+ * A reason code for allocation or commitment below demand (section 3.6) —
+ * lists `capacityShortfall` / `commitmentShortfall`, the Hub administrator's
+ * since BL-32, so a code's shape rather than a closed union.
+ */
+export type CapacityReason = string;
 
 /** One weekly bucket of a capacity submission (REQ-E08-04). */
 export interface CapacityWeekEntry {

@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useReasonLabel } from './admin/reasonCodeDisplay';
 import { Link, useSearchParams } from 'react-router-dom';
 import {
   OrderNotFound,
@@ -72,6 +73,7 @@ const thresholdPct = (ratio: number): string => String(Math.round(ratio * 100_00
 
 const BuyerCommitments: React.FC = () => {
   const { t, i18n } = useTranslation();
+  const reasonLabel = useReasonLabel();
   // BL-32 — the rule texts state the administrator's values in force, never a
   // number written into the sentence.
   const dueDays = commitmentDeadlineWorkingDays();
@@ -295,11 +297,11 @@ const BuyerCommitments: React.FC = () => {
                       {reason && (
                         <div
                           className="text-xs text-text-secondary truncate max-w-[12rem] ml-auto"
-                          title={`${t(`fc.reason.${reason.level1}`, { defaultValue: reason.level1 })}${
+                          title={`${reasonLabel('commitmentShortfall', reason.level1)}${
                             reason.note ? ` — ${reason.note}` : ''
                           }`}
                         >
-                          {t(`fc.reason.${reason.level1}`, { defaultValue: reason.level1 })}
+                          {reasonLabel('commitmentShortfall', reason.level1)}
                           {reason.note ? ` — ${reason.note}` : ''}
                         </div>
                       )}

@@ -17,6 +17,7 @@ import {
   Gauge,
   KeyRound,
   Link2,
+  ListChecks,
   ListTodo,
   MessageSquareReply,
   PackageCheck,
@@ -205,6 +206,7 @@ export const UTILITY_NAV: Record<Persona, readonly NavItem[]> = {
     // BL-32 — the values that lived in configuration files (ADM, REQ-E08-05 BR-03).
     { labelKey: 'hub.nav.util.tolerances', icon: SlidersHorizontal, path: '/buyer/admin/tolerances' },
     { labelKey: 'hub.nav.util.alertThresholds', icon: BellRing, path: '/buyer/admin/alert-thresholds' },
+    { labelKey: 'hub.nav.util.reasonCodes', icon: ListChecks, path: '/buyer/admin/reason-codes' },
   ],
   supplier: [{ labelKey: 'hub.nav.util.glossary', icon: BookOpen, path: '/glossary' }],
 };

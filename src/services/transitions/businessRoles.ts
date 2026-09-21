@@ -265,6 +265,13 @@ const LANE_BUNDLES = Object.freeze({
       // three: a combined buyer who can move the gate's OTIF minimum or the
       // invoice cap is a sharper version of the question than the calendar.
       'setting:set',
+      // ── BL-32 · THE REASON LISTS (§3.6 starter lists, ADM) ─────────────────
+      // What a supplier must choose from when it adjusts or rejects a PO or
+      // commits below demand, and what the planner reads to judge it. No
+      // supplier lane (it would write the excuses it is judged by), nor planning
+      // or procurement (who judge them). Beside `setting:set`; admin derives it;
+      // `buyer_all` keeps it on the same precedent, pending BL-70.
+      'reasoncode:maintain',
     ]),
     // The SDC / P2 planning lane. `inventorydeclaration:record` is the C4c
     // buyer RECORDING verb — a distinct authority from the supplier's

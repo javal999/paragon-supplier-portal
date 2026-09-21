@@ -17,7 +17,6 @@
 //   · Section 3.6 — starter reason codes for a commitment below forecast.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { CapacityReason } from '../data/types';
 import type { ForecastStream, MaterialType } from '../sdc/types';
 import { hubSetting } from './hubSettingsStore';
 
@@ -125,14 +124,5 @@ export function commitmentDeadlineWorkingDays(): { readonly firm: number; readon
  */
 export const REMINDER_FRACTION = 0.5;
 
-/** Section 3.6 starter reason codes for a commitment below forecast; `other` needs a note. */
-export const COMMITMENT_REASONS: readonly CapacityReason[] = Object.freeze([
-  'capacity',
-  'material',
-  'logistics',
-  'quality',
-  'other',
-]);
-
-export const isCommitmentReason = (value: unknown): value is CapacityReason =>
-  typeof value === 'string' && (COMMITMENT_REASONS as readonly string[]).includes(value);
+// Section 3.6 starter reason codes for a commitment below forecast are the Hub
+// administrator's list since BL-32: `reasonCodes.ts`, list `commitmentShortfall`.

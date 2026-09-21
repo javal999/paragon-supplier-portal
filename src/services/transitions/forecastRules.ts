@@ -37,17 +37,16 @@ import { addWorkingDays, type WorkingCalendar } from '../../lib/workingCalendar'
 import { hubWorkingCalendar } from './workingCalendarStore';
 import { normalizeQty } from '../../lib/localeNumber';
 import {
-  COMMITMENT_REASONS,
   commitmentDeadlineWorkingDays,
   commitmentTolerance,
   FORECAST_HORIZON,
   gapColourThresholds,
   REMINDER_FRACTION,
   STREAM_MATERIAL_TYPE,
-  isCommitmentReason,
   zoneLengthsFor,
   type ZoneLengths,
 } from './forecastConfig';
+import { isActiveReasonCode } from './reasonCodes';
 
 const DAY_MS = 86_400_000;
 
@@ -372,7 +371,7 @@ export function shortfallRefusal(
   rootCause: { readonly level1?: unknown; readonly note?: unknown } | undefined,
 ): ShortfallRefusal | null {
   if (committedQty >= forecastQty) return null;
-  if (!rootCause || !isCommitmentReason(rootCause.level1)) return 'reasonRequired';
+  if (!rootCause || !isActiveReasonCode('commitmentShortfall', rootCause.level1)) return 'reasonRequired';
   if (rootCause.level1 === 'other' && (typeof rootCause.note !== 'string' || rootCause.note.trim() === '')) return 'noteRequired';
   return null;
 }
@@ -821,9 +820,10 @@ export function readCommitmentNumber(raw: string | undefined): NumberRead {
   return { ok: false, reason: r.reason === 'AMBIGUOUS_QTY' ? 'ambiguousNumber' : 'notANumber' };
 }
 
+/** An uploaded reason: an ACTIVE code of the commitment list in force (BL-32). */
 const reasonOf = (raw: string): CapacityReason | null => {
   const v = raw.trim().toLowerCase();
-  return (COMMITMENT_REASONS as readonly string[]).includes(v) ? (v as CapacityReason) : null;
+  return isActiveReasonCode('commitmentShortfall', v) ? v : null;
 };
 
 /**

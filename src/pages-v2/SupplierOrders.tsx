@@ -66,13 +66,12 @@ import {
 } from './orders/PoCollaboration';
 import type { QtyRefusalReason } from '../lib/localeNumber';
 import {
-  PO_REASON_CODES,
-  PO_REJECTION_CAUSES,
   confirmedQtyWithinBounds,
   counterOfferRefusal,
   isIsoDate,
   type CounterOfferRefusal,
 } from '../services/transitions/policies';
+import { useActiveReasonCodes, useReasonLabel } from './admin/reasonCodeDisplay';
 import {
   readConfirmedQty,
   readConfirmedQuantities,
@@ -150,6 +149,10 @@ const PO_QTY_REFUSAL_KEY: Record<QtyRefusalReason, string> = {
 
 const SupplierOrders: React.FC = () => {
   const { t } = useTranslation();
+  // BL-32 — the administrator's lists in force: only active codes are offered.
+  const adjustReasons = useActiveReasonCodes('poAdjust');
+  const rejectCauseCodes = useActiveReasonCodes('poReject');
+  const reasonLabel = useReasonLabel();
   const refusalText = useRefusalText();
   const ORDERS_CRUMB = [
     t('supplierOrders.crumb.transact'),
@@ -1210,9 +1213,9 @@ const SupplierOrders: React.FC = () => {
                                 }
                               >
                                 <option value="">{t('oc.adjust.reasonPlaceholder')}</option>
-                                {PO_REASON_CODES.map((code) => (
+                                {adjustReasons.map((code) => (
                                   <option key={code} value={code}>
-                                    {t(`oc.reason.${code}`)}
+                                    {reasonLabel('poAdjust', code)}
                                   </option>
                                 ))}
                               </select>
@@ -1294,7 +1297,7 @@ const SupplierOrders: React.FC = () => {
                 <fieldset>
                   <legend className="text-xs text-text-secondary mb-2">{t('oc.reject.hint')}</legend>
                   <div className="flex flex-wrap gap-4">
-                    {PO_REJECTION_CAUSES.map((cause) => (
+                    {rejectCauseCodes.map((cause) => (
                       <label key={cause} className="flex items-center gap-2 text-sm text-text-primary">
                         <input
                           type="checkbox"
@@ -1305,7 +1308,7 @@ const SupplierOrders: React.FC = () => {
                             )
                           }
                         />
-                        {t(`oc.cause.${cause}`)}
+                        {reasonLabel('poReject', cause)}
                       </label>
                     ))}
                   </div>

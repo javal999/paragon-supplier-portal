@@ -9,8 +9,6 @@ import type {
   PurchaseOrder,
   Invoice,
   PoLineResponse,
-  PoReasonCode,
-  PoRejectionCause,
 } from '../data/types';
 import type { GoodsReceipt } from '../../data/mockGoodsReceipts';
 import type { PolicyHookFn } from './dispatcher';
@@ -46,6 +44,7 @@ import { catalogRoles } from './roles';
 import { calendarRulingRefusal } from './workingCalendarStore';
 import { threePlRefusal, threePlStore } from './threePlStore';
 import { settingRefusal } from './hubSettings';
+import { activeReasonCodes, isActiveReasonCode, parseReasonCodeEntityId, reasonCodeStore } from './reasonCodes';
 import { hubSettingsStore } from './hubSettingsStore';
 import {
   APPLICATION_REQUEST_TYPES,
@@ -110,11 +109,10 @@ bindPolicyHook(POLICY_HOOKS.PO_CONFIRM_QTY_WITHIN_ORDERED, poConfirmQtyWithinOrd
 //   policy (the law) and by the supplier surface (a courtesy mirror), on the
 //   `confirmedQtyWithinBounds` precedent. ——————————————————————————————————————
 
-/** The predefined adjust reasons (REQUIREMENTS §3.6 starter list). */
-export const PO_REASON_CODES: readonly PoReasonCode[] = ['capacity', 'material', 'logistics', 'quality', 'other'];
-
-/** The rejection causes (REQ-E07-02 BR-06). */
-export const PO_REJECTION_CAUSES: readonly PoRejectionCause[] = ['date', 'quantity', 'quality'];
+// The adjust reasons (§3.6 starter list) and the rejection causes (REQ-E07-02
+// BR-06) are the Hub administrator's lists since BL-32 (`reasonCodes.ts`): read
+// IN FORCE at every check, so a code added is accepted at once and a retired
+// code is refused on a new answer while old answers keep it.
 
 const isNonBlank = (v: unknown): v is string => typeof v === 'string' && v.trim().length > 0;
 
@@ -134,7 +132,7 @@ export function counterOfferRefusal(
 ): CounterOfferRefusal | null {
   const item = po.lineItems.find((li) => li.id === line?.lineId);
   if (!line || !item) return 'unknownLine';
-  if (!PO_REASON_CODES.includes(line.reasonCode as PoReasonCode)) return 'reason';
+  if (!isActiveReasonCode('poAdjust', line.reasonCode)) return 'reason';
   if (line.reasonCode === 'other' && !isNonBlank(line.note)) return 'note';
   // CR-10 is the same bound the confirm verb enforces: 0 < q ≤ ordered.
   if (typeof line.counterQty !== 'number' || !confirmedQtyWithinBounds(line.counterQty, item.quantity)) {
@@ -167,10 +165,16 @@ bindPolicyHook(POLICY_HOOKS.PO_ADJUST_COUNTER_OFFER_VALID, poAdjustCounterOfferV
 const poRejectCauseGiven: PolicyHookFn = ({ payload }) => {
   const causes = payload.rejectionCauses;
   if (!Array.isArray(causes) || causes.length === 0) {
-    return { ok: false, reason: 'a rejection needs at least one cause: date, quantity or quality' };
+    return { ok: false, reason: `a rejection needs at least one cause: ${activeReasonCodes('poReject').join(', ')}` };
   }
-  const unknown = causes.find((c) => !PO_REJECTION_CAUSES.includes(c as PoRejectionCause));
-  if (unknown !== undefined) return { ok: false, reason: `unknown rejection cause '${String(unknown)}'` };
+  const unknown = causes.find((c) => !isActiveReasonCode('poReject', c));
+  if (unknown !== undefined) {
+    const retired = typeof unknown === 'string' && reasonCodeStore.get('poReject', unknown) !== undefined;
+    return {
+      ok: false,
+      reason: retired ? `rejection cause '${unknown}' is retired` : `unknown rejection cause '${String(unknown)}'`,
+    };
+  }
   return { ok: true };
 };
 
@@ -541,6 +545,27 @@ const settingGoverned: PolicyHookFn = ({ entityId, payload }) => {
 };
 
 bindPolicyHook(POLICY_HOOKS.SETTING_GOVERNED, settingGoverned);
+
+// ── BL-32 · ONE CODE ON ONE REASON LIST ──────────────────────────────────────
+// The same predicate the store calls on read (`reasonCodeStore.refusal`), so a
+// hand-edited list is held to the verb's rule. `entityId` IS `<list>:<code>`.
+const reasonCodeGoverned: PolicyHookFn = ({ entityId, payload }) => {
+  const id = parseReasonCodeEntityId(entityId);
+  if (!id) return { ok: false, reason: `'${entityId}' is not <list>:<code>` };
+  const refusal = reasonCodeStore.refusal(id.list, id.code, payload.labelEn, payload.labelId, payload.active);
+  if (refusal) return { ok: false, reason: refusal };
+  if (!asActorAttribution(payload.setBy)) {
+    return {
+      ok: false,
+      reason:
+        "setBy must be { kind: 'RESOLVED', person: { personId, displayName } } or " +
+        `{ kind: 'UNATTRIBUTED', reason } (${UNATTRIBUTED_REASONS.join(', ')})`,
+    };
+  }
+  return { ok: true };
+};
+
+bindPolicyHook(POLICY_HOOKS.REASON_CODE_GOVERNED, reasonCodeGoverned);
 
 // ── §67 · PR REJECT — THE REASON IS SUBSTANCE, NOT PRESENCE ──────────────────
 //
