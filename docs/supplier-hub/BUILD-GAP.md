@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 2.3, 2026-09-21 |
+| Version | 2.4, 2026-09-21 |
 | Compares | `SUPPLIER-HUB-REQUIREMENTS.md` v0.5 with the prototype on branch `feat/supplier-hub-mvp` (pull request "Supplier Hub MVP build") |
 | Owner decisions | 2026-09-17, recorded in section 9 of the requirements (RFX-1 to RFX-3, GAP-1 to GAP-4, E06-R) |
 | Rule | This is the **only** document that describes what the prototype does for the Supplier Hub. The PRD and the requirements describe the product and never the code. Update this file when a build item lands |
@@ -36,11 +36,11 @@ Everything runs on sample data held in the browser. There is no backend, no SAP 
 | REQ-E07-06 Goods receipt | Partial | Supplier page with shipped, received and rejected quantity, QC result, discrepancy flag, acknowledge or dispute, PTI resolution. Receipts are still created in the hub rather than read from SAP, because there is no SAP feed; dispute attachments are not built |
 | REQ-E07-07 Invoice | Built | Built from received goods receipts, supplier's own invoice number and date, e-Faktur file name, duplicate and over-invoicing refused, CR-12 and CR-13 matching at submission, status list with correct-and-resubmit, CR-14 due date |
 | REQ-E07-08 SAP interface | Partial | Interface monitor with last successful arrival, failed messages and CR-20 retry, plus the data-age banner. The feeds themselves are simulated; the real interface technology is PQ-06 |
-| REQ-E08-01 Inventory visibility | Built | Supplier and PTI stock and reorder points, incoming split into in production and in transit with its detail, days of supply with one band scale, last update and stale flag. No "available" figure. Raw material and packaging are separate on the PTI view; on the supplier view they are one list, split only for a supplier that supplies both (BR-07, BL-61) |
+| REQ-E08-01 Inventory visibility | Built | Supplier and PTI stock and reorder points, incoming split into in production and in transit with its detail, days of supply with its risk class and the basis that decided it (CR-24: "Lead time N days", or "No lead time · day bands" where the CR-02 fallback applied, BL-46), last update and stale flag. No "available" figure. Raw material and packaging are separate on the PTI view; on the supplier view they are one list, split only for a supplier that supplies both (BR-07, BL-61) |
 | REQ-E08-02 Stock submission | Built | One stock entry point, on the Stock page: the template and manual entry carry the same fields, including an optional manufacturing date per batch (not after expiry, not in the future), with row-by-row upload validation (BR-06, BR-09, BL-60). The Forecast page's old batch grid and free-form import are retired; its Stock tab now links to the Stock page. In-transit quantity is shown read-only beside in production on both methods, from ASNs and dispatched call-offs (BR-10). An API-connected supplier presses Sync on its own Stock page, and a PTI user can still sync on its behalf; the connection is simulated, with a failure path that keeps the previous figures marked out of date (BR-03, BL-59). A supplier with PTI stock access can refresh PTI stock for the granted materials only; without access the option is absent (BR-11). Stock recorded by PTI on a supplier's behalf |
 | REQ-E08-03 Supplier access to PTI stock | Built | Grant, change and remove per supplier and per material, with a log; a supplier without access never receives PTI stock data |
 | REQ-E08-04 Capacity | Built | 13 weekly buckets per material group, "Extra capacity if requested" with a one-line explanation on both sides (BR-05, BL-62), reason required below demand, gap weeks highlighted for the planner, planner filters by supplier, material group, material and gap weeks only, kept in the page address and combined with the Order summary filter (BR-07, BL-63), and the Order summary capacity status |
-| REQ-E08-05 Alerts | Built | Rules for PTI and supplier stock against reorder point, projected stock-out, capacity gap, stale data, coverage and commitment below forecast; High / Medium / Low; no duplicates; grouped per supplier; closed with an action note. Delivery is in the hub only, not by email |
+| REQ-E08-05 Alerts | Built | Rules for PTI and supplier stock against reorder point, projected stock-out, capacity gap, stale data, coverage and commitment below forecast; High / Medium / Low by days of cover against the supplier lead time (CR-24: High below 1 ×, Medium below 1.5 ×), with the CR-02 day bands only where the lead time is missing, which raises its own "lead time missing" alert for PTI (BR-02, BL-46); each alert shows the basis of its class; no duplicates; grouped per supplier; closed with an action note. Delivery is in the hub only, not by email |
 | REQ-E09-01 Replenishment recommendation | Partial | Planner releases call-offs against the remaining umbrella PO quantity and value, and can generate a series. The SAP ROP recommendation list is not built (X-16) |
 | REQ-E09-02 Event-based analysis | Not built | Waiting on PQ-09 |
 | REQ-E09-03 Call-off confirmation | Built | Hub-owned call-offs, the six confirmation statuses, CR-05 tolerance, planner approval outside tolerance, 1-working-day deadline with escalation, ASN allowed only on a confirmed call-off |
@@ -80,6 +80,7 @@ Everything runs on sample data held in the browser. There is no backend, no SAP 
 | X-24 | One list on the supplier inventory view (BL-61) | Done (inventory feedback) |
 | X-25 | Capacity "Extra capacity if requested" label (BL-62) | Done (inventory feedback) |
 | X-26 | Planner capacity filters in the page address (BL-63) | Done (inventory feedback) |
+| X-27 | Alert risk class by supplier lead time, day bands as fallback, "lead time missing" alert, basis shown on screen (BL-46, CR-24) | Done; lead times are sample master data |
 
 ### 2.1 Navigation and screens
 
@@ -108,7 +109,8 @@ The `CR-` rules are implemented in the hub's own modules and covered by their ow
 | Working day, response deadline (section 3.4) | `src/lib/workingCalendar.ts` |
 | PO response and escalation | `src/services/data/poResponseProjection.ts` |
 | Call-off tolerance, matching, on time, in full, reminders (CR-05 to CR-09) | `src/services/transitions/callOffRules.ts`, `callOffTolerance.ts` |
-| Days of supply, bands, coverage, stale, alert risk class (CR-01 to CR-03) | `src/services/data/` inventory rules with `inventoryConfig.ts` |
+| Days of supply, bands, coverage, stale (CR-01 to CR-03) | `src/services/transitions/inventoryRules.ts` with `inventoryConfig.ts` |
+| Risk class by lead time, CR-02 bands as fallback (CR-24, REQ-E08-05 BR-02) | `riskFor` / `positionRisk` in `src/services/transitions/inventoryRules.ts`, multiple in `inventoryConfig.ts` (`LEAD_TIME_RISK`); alerts in `inventoryAlertRules.ts`. Every page, the dashboard widget and the alerts read this one function (derived in `leadTimeRisk.test.ts`) |
 | Forecast periods, zones, commitment tolerance, gap colours (CR-21, CR-22) | `src/services/sdc/` forecast rules with `forecastConfig.ts` |
 | Goods receipt result, invoice matching, due date (CR-11 to CR-14) | `src/services/transitions/grRollup.ts`, `invoiceRollup.ts`, invoice projection |
 | Quote score and currency rule (CR-15, CR-16) | `src/lib/quoteScore.ts`, `src/lib/fxPin.ts` |
@@ -157,6 +159,21 @@ Earlier demo rows still hold: RFQ-2026-003 (sup-010 halal expired), RFQ-2026-014
 | K-08 | Marketplace, discovery, storefront, supply risk, contracts | Parked, hidden from the menu |
 | K-09 | Roles catalogue, process flows, glossary | Moved to the user menu |
 | K-10 | Acknowledge-only forecast lines, dispute log, draft before submit | Kept in forecast collaboration |
+
+### 3.2 Risk class demo scenarios (BL-46)
+
+Sample data so a planner can see every CR-24 outcome on `/buyer/inventory`, `/supplier/inventory` and `/buyer/alerts`. Lead times are sample master data per supplier × material in `src/services/data/mock/fixtures/inventoryHub.ts` (`SUPPLIER_LEAD_TIME_DAYS`); the real figure would come from the supplier master. Days of cover here come from the planning estimate, so they do not move with the clock. Each row is pinned by name in `leadTimeRisk.test.ts`.
+
+**Boundary convention:** "below" is strict at both cuts. Cover exactly at the lead time is Medium; cover exactly at 1.5 × the lead time is Low.
+
+| Scenario | Supplier | Material | Days of cover | Lead time | Risk class and basis shown |
+|---|---|---|---|---|---|
+| High: cover below lead time | sup-002 PT Sample Specialty Fats | RM-STEAR-7300 | 10 | 21 | High · Lead time 21 days |
+| Medium: between 1 × and 1.5 × | sup-007 PT Sample Packaging Indonesia | PK-PETB-8801 | 17 | 14 | Medium · Lead time 14 days |
+| Low | sup-008 PT Sample Carton Packaging | PK-CART-9901 | 44.99 (shown as 44) | 14 | Low · Lead time 14 days |
+| Exactly 1 × | sup-009 Sample Vitamins Co. | AI-VITC-6730 | 25 | 25 | Medium · Lead time 25 days |
+| Exactly 1.5 × (was Critical under the old day bands) | sup-006 Sample Specialty Chemicals France | AI-VITC-6720 | 12 | 8 | Low · Lead time 8 days |
+| No lead time: fallback to the CR-02 bands | sup-010 PT Sample Halal Emulsifiers | RM-EMUL-9430 | 6 | none | High · No lead time · day bands: Critical, and a "lead time missing" alert on `/buyer/alerts` (not shown to the supplier) |
 
 ---
 

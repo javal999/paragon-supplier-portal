@@ -108,7 +108,7 @@ describe('BL-46 demo data — each case visible, pinned by supplier × material'
     expect(positionRisk(p)).toEqual({ riskClass: 'medium', basis: { kind: 'leadTime', leadTimeDays: 14, daysOfCover: 17 } });
   });
 
-  it('Low: sup-008 PK-CART-9901, about 45 days against 14', async () => {
+  it('Low: sup-008 PK-CART-9901, 44.99 days against 14', async () => {
     const p = pos(await positions(), 'sup-008', 'PK-CART-9901');
     const r = positionRisk(p);
     expect(r.riskClass).toBe('low');
