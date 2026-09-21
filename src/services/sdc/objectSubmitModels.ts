@@ -8,54 +8,17 @@
 // current identity (never a form field), so the spoof branch stays SCOPE_DENIED.
 // ────────────────────────────────────────────────────────────────────────────
 
-import { normalizeQty, type NumberConvention, type QtyRefusalReason } from '../../lib/localeNumber';
 import type { ShipmentDirection } from './types';
 
 // ─── InventoryDeclaration (SOH, total-first) ──────────────────────────────────
 
-/** One batch row a supplier may optionally add (all strings — the form collects
- *  text; qty is normalised by `normalizeInventoryDeclarationDraft`). */
-export interface InventoryBatchDraft {
-  batchNumber: string;
-  qty: string;
-  expiryDate?: string;
-}
-
-/** The SOH declare form fields. `totalQty` is the floor (R-4 ruling (a));
- *  `batches` is OPTIONAL detail — when present the INV_DECLARE_BATCH_TOTAL hook
- *  enforces Σ batch qty = totalQty (the surface validates first, for UX). */
-export interface InventoryDeclarationDraft {
-  totalQty: string;
-  batches?: readonly InventoryBatchDraft[];
-}
-
-// ── The ONE parse (CP-0 · W1 · PR-2a) ────────────────────────────────────────
+// ── Parse vs assembly (CP-0 · W1 · PR-2a) ────────────────────────────────────
 //
-// SEPARATION OF PARSE FROM ASSEMBLY. The builder used to coerce its own strings
-// (`Number(x.replace(/,/g,'')) || 0`) while the ingest adapter coerced the SAME
-// `totalQty` string independently for its Σ-reconciliation gate — two parses,
-// two implementations, and only the builder's result reached the payload. A gate
-// that validates one number while the payload ships another is not a gate.
-//
-// So the coercion moved OUT of the builder entirely: `normalizeInventoryDeclaration
-// Draft` is the single parse (routing through the one legal `normalizeQty`), and
-// `buildInventoryDeclarationPayload` now takes NUMBERS and cannot parse at all.
-// Callers normalise ONCE, gate on that result, and assemble from the same value.
-//
-// The `|| 0` is gone with it: a refusal is not a legal zero. A zero is a
-// COMMITMENT ("I hold none"), which must be ENTERED — never defaulted out of a
-// blank or an unreadable cell.
-
-/** Which draft field refused, so a surface can point at the offending cell
- *  rather than reject the whole form anonymously. */
-export type DeclarationField =
-  | { readonly kind: 'totalQty' }
-  | { readonly kind: 'batchQty'; readonly index: number; readonly batchNumber: string };
-
-/** A normalisation result — honest silence carries the reason AND the field. */
-export type DraftOutcome<T> =
-  | { readonly ok: true; readonly value: T }
-  | { readonly ok: false; readonly reason: QtyRefusalReason; readonly field: DeclarationField };
+// `buildInventoryDeclarationPayload` takes NUMBERS and cannot parse at all:
+// callers normalise ONCE (through the one legal `normalizeQty`), gate on that
+// result, and assemble from the same value. The page-level draft normaliser
+// that used to live here served only the Forecast page's stock form, retired
+// by BL-60 (REQ-E08-02 BR-09 — one stock entry point, on the Stock page).
 
 /** A batch whose qty has already been through the one legal parse. */
 export interface NormalizedInventoryBatch {
@@ -68,45 +31,6 @@ export interface NormalizedInventoryBatch {
 export interface NormalizedInventoryDeclaration {
   readonly totalQty: number;
   readonly batches?: readonly NormalizedInventoryBatch[];
-}
-
-/**
- * Normalise a declaration draft's quantities — THE single parse for this object.
- *
- * Blank-NUMBERED batch rows are dropped first (a form legitimately carries empty
- * add-rows), so an unfilled row never refuses; every SURVIVING row must then
- * carry a readable qty. `hint` resolves a cross-convention ambiguity for TYPED
- * entry only — callers whose rows come from a sheet or a message of unknown
- * origin pass none, so an ambiguous cell refuses instead of being guessed
- * (CP-0 §5a).
- */
-export function normalizeInventoryDeclarationDraft(
-  draft: InventoryDeclarationDraft,
-  hint?: NumberConvention,
-): DraftOutcome<NormalizedInventoryDeclaration> {
-  const total = normalizeQty(draft.totalQty, hint);
-  if (!total.ok) return { ok: false, reason: total.reason, field: { kind: 'totalQty' } };
-
-  const rows = (draft.batches ?? []).filter((b) => b.batchNumber.trim() !== '');
-  const batches: NormalizedInventoryBatch[] = [];
-  for (let index = 0; index < rows.length; index++) {
-    const b = rows[index];
-    const batchNumber = b.batchNumber.trim();
-    const qty = normalizeQty(b.qty, hint);
-    if (!qty.ok) {
-      return { ok: false, reason: qty.reason, field: { kind: 'batchQty', index, batchNumber } };
-    }
-    batches.push({
-      batchNumber,
-      qty: qty.value,
-      ...(b.expiryDate ? { expiryDate: b.expiryDate } : {}),
-    });
-  }
-
-  return {
-    ok: true,
-    value: { totalQty: total.value, ...(batches.length > 0 ? { batches } : {}) },
-  };
 }
 
 /**

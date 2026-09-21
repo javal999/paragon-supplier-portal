@@ -16,3 +16,6 @@ qa*.png
 /*.png
 .vercel
 .env*
+
+# Claude Code agent worktrees (never committed)
+.claude/worktrees/

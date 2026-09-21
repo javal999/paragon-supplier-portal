@@ -339,6 +339,9 @@ const LANE_BUNDLES = Object.freeze({
       'incomingshipment:report', 'incomingshipment:ship',
       'incomingshipment:arrive', 'incomingshipment:cancel',
       'inventorydeclaration:declare',
+      // REQ-E08-02 BR-03 (BL-59) — an API-connected supplier pulls its own ERP
+      // stock with the Sync button: the same people who declare the stock.
+      'stocksync:pull',
       // REQ-E08-04 — confirming allocated production capacity: the people who
       // plan the supplier's production, beside the stock it declares.
       'capacity:confirm',

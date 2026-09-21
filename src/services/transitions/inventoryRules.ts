@@ -339,6 +339,7 @@ export function buildInventoryPositions(input: PositionInputs, nowIso: string): 
       batches: (decl?.batches ?? []).map((b) => ({
         batchNumber: b.batchNumber,
         qty: b.qty,
+        ...(b.manufacturingDate ? { manufacturingDate: b.manufacturingDate } : {}),
         ...(b.expiryDate ? { expiryDate: b.expiryDate } : {}),
       })),
     });
@@ -373,6 +374,7 @@ export type StockTemplateField =
   | 'productionCompletionDate'
   | 'batchNumber'
   | 'batchQty'
+  | 'manufacturingDate'
   | 'expiryDate';
 
 /** The fixed template, in column order (BR-06). Headers are matched in EN or ID. */
@@ -395,8 +397,39 @@ export const STOCK_TEMPLATE_FIELDS: readonly {
   },
   { field: 'batchNumber', en: 'Batch number', id: 'Nomor batch', required: false },
   { field: 'batchQty', en: 'Batch quantity', id: 'Kuantitas batch', required: false },
+  {
+    field: 'manufacturingDate',
+    en: 'Manufacturing date (YYYY-MM-DD)',
+    id: 'Tanggal produksi (YYYY-MM-DD)',
+    required: false,
+  },
   { field: 'expiryDate', en: 'Expiry date (YYYY-MM-DD)', id: 'Tanggal kedaluwarsa (YYYY-MM-DD)', required: false },
 ];
+
+// ── Batch dates (REQ-E08-02 BR-06, BL-60) ────────────────────────────────────
+
+export type BatchDateProblem = 'invalidDate' | 'manufacturedAfterExpiry' | 'manufacturedInFuture';
+
+/**
+ * The ONE check of a batch's optional dates, read by the manual form, the
+ * template validator and the declare/record verbs, so the three cannot
+ * disagree: each date, when given, is a `YYYY-MM-DD` day; the manufacturing
+ * date is not after the expiry date, and not after `today` (the app's clock —
+ * a batch cannot have been made tomorrow). Null when the dates are fine.
+ */
+export function batchDatesProblem(
+  batch: { readonly manufacturingDate?: string; readonly expiryDate?: string },
+  today: string,
+): { readonly problem: BatchDateProblem; readonly field: 'manufacturingDate' | 'expiryDate' } | null {
+  const mfg = batch.manufacturingDate ?? '';
+  const exp = batch.expiryDate ?? '';
+  if (mfg !== '' && !isIsoDay(mfg)) return { problem: 'invalidDate', field: 'manufacturingDate' };
+  if (exp !== '' && !isIsoDay(exp)) return { problem: 'invalidDate', field: 'expiryDate' };
+  if (mfg === '') return null;
+  if (exp !== '' && mfg > exp) return { problem: 'manufacturedAfterExpiry', field: 'manufacturingDate' };
+  if (mfg > today) return { problem: 'manufacturedInFuture', field: 'manufacturingDate' };
+  return null;
+}
 
 const normHeader = (h: string) => h.toLowerCase().replace(/[^a-z0-9]+/g, '');
 
@@ -471,6 +504,8 @@ export type StockRowRefusal =
   | 'ambiguousNumber'
   | 'unitMismatch'
   | 'invalidDate'
+  | 'manufacturedAfterExpiry'
+  | 'manufacturedInFuture'
   | 'batchTotal'
   | 'conflictingRows';
 
@@ -490,7 +525,12 @@ export interface StockSubmissionDraft {
   readonly supplierRop?: number;
   readonly inProductionQty?: number;
   readonly productionCompletionDate?: string;
-  readonly batches?: readonly { readonly batchNumber: string; readonly qty: number; readonly expiryDate?: string }[];
+  readonly batches?: readonly {
+    readonly batchNumber: string;
+    readonly qty: number;
+    readonly manufacturingDate?: string;
+    readonly expiryDate?: string;
+  }[];
   /** The file rows this submission came from. */
   readonly rows: readonly number[];
 }
@@ -498,6 +538,8 @@ export interface StockSubmissionDraft {
 export interface StockRowContext {
   /** The supplier's assigned materials with their canonical unit. */
   readonly assigned: readonly { readonly materialCode: string; readonly uom: string }[];
+  /** Today on the app's clock (`YYYY-MM-DD`) — a manufacturing date may not be after it. */
+  readonly today: string;
 }
 
 type NumberRead = { ok: true; value: number | null } | { ok: false; reason: 'notANumber' | 'ambiguousNumber' };
@@ -590,12 +632,13 @@ export function validateStockRows(
       continue;
     }
     // Batches: every row that names a batch number or a batch quantity.
-    const batches: { batchNumber: string; qty: number; expiryDate?: string }[] = [];
+    const batches: { batchNumber: string; qty: number; manufacturingDate?: string; expiryDate?: string }[] = [];
     for (const m of members) {
       const bn = m.rec.batchNumber ?? '';
       const bq = m.rec.batchQty ?? '';
+      const mfg = m.rec.manufacturingDate ?? '';
       const exp = m.rec.expiryDate ?? '';
-      if (bn === '' && bq === '' && exp === '') continue;
+      if (bn === '' && bq === '' && mfg === '' && exp === '') continue;
       if (bn === '' || bq === '') {
         refused.push({ row: m.row, materialCode: code, reason: 'missingField', field: bn === '' ? 'batchNumber' : 'batchQty' });
         failed = true;
@@ -607,12 +650,18 @@ export function validateStockRows(
         failed = true;
         continue;
       }
-      if (exp !== '' && !isIsoDay(exp)) {
-        refused.push({ row: m.row, materialCode: code, reason: 'invalidDate', field: 'expiryDate' });
+      const dates = batchDatesProblem({ manufacturingDate: mfg, expiryDate: exp }, ctx.today);
+      if (dates) {
+        refused.push({ row: m.row, materialCode: code, reason: dates.problem, field: dates.field });
         failed = true;
         continue;
       }
-      batches.push({ batchNumber: bn, qty: read.value, ...(exp ? { expiryDate: exp } : {}) });
+      batches.push({
+        batchNumber: bn,
+        qty: read.value,
+        ...(mfg ? { manufacturingDate: mfg } : {}),
+        ...(exp ? { expiryDate: exp } : {}),
+      });
     }
     if (failed) {
       // A material is all-or-nothing: list its remaining rows too, so nothing is half-saved.

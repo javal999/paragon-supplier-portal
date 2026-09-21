@@ -1,16 +1,14 @@
 import React, { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
+  ArrowRight,
   Boxes,
   CalendarRange,
   Info,
-  Layers,
   Lock,
   Plus,
   Send,
   Ship,
-  Table2,
-  Trash2,
   Truck,
 } from 'lucide-react';
 import { nextActorFrom, userVerbsFrom } from '../services/transitions';
@@ -25,6 +23,7 @@ import FormSection from '../components/ui-v2/FormSection';
 import Data from '../components/ui-v2/Data';
 import { useVerbAvailability, useVerbAvailabilities } from '../hooks/useVerbAvailability';
 import { HandoffNotice } from '../components/ui-v2/HandoffNotice';
+import { Link } from 'react-router-dom';
 import LivenessPill from '../components/ui-v2/LivenessPill';
 import NoSupplierIdentity from '../components/ui-v2/NoSupplierIdentity';
 import LoadingState from '../components/ui-v2/LoadingState';
@@ -40,10 +39,8 @@ import {
   useRequirementResponseAcknowledge,
   useRequirementResponsePromote,
   useOwnCollaboratedMaterials,
-  useOwnInventoryDeclarations,
   useOwnIncomingShipments,
   useOwnSupplierAsns,
-  useInventoryDeclare,
   useIncomingShipmentReport,
   useIncomingShipmentShip,
   useIncomingShipmentArrive,
@@ -58,18 +55,13 @@ import {
   type Uom,
   buildRequirementResponsePayload,
   buildRequirementAcknowledgePayload,
-  buildInventoryDeclarationPayload,
-  normalizeInventoryDeclarationDraft,
-  type NormalizedInventoryDeclaration,
   buildIncomingShipmentPayload,
-  declarationGranularity,
   openSubmissionSession,
   type CommitmentClass,
   type DisputeEntry,
   type ForecastLine,
   type ForecastPublication,
   type IncomingShipment,
-  type InventoryDeclaration,
   type RequirementResponse,
   type SdcObjectKind,
   type ShipmentDirection,
@@ -81,7 +73,6 @@ import { normalizeQty, type QtyRefusalReason } from '../lib/localeNumber';
 import { formatDate, formatNumber } from '../lib/format';
 import { statusLabelKey } from '../lib/statusLabel';
 import { statusTone } from '../lib/statusTone';
-import BulkStockEntryGrid from './BulkStockEntryGrid';
 // GL-1 - the glossary destination for this surface's refusals.
 import GlossaryTermChip from '../components/ui-v2/GlossaryTermChip';
 import { useRefusalText, useDataErrorText } from '../hooks/useRefusalText';
@@ -92,8 +83,8 @@ import { useRefusalText, useDataErrorText } from '../hooks/useRefusalText';
 // SubmissionSession envelope (addendum §5) with PER-OBJECT partial success:
 //   · Forecast lines   — confirm / acknowledge a published line
 //                        (t_requirementresponse_submit / _acknowledge, SDC-2b).
-//   · Stock (SOH)      — declare current stock, TOTAL-FIRST + optional batch
-//                        detail (t_inventorydeclaration_declare, SDC-3a).
+//   · Stock (SOH)      — RETIRED as an entry point (BL-60, REQ-E08-02 BR-09):
+//                        a signpost to the Stock page, the ONE stock entry.
 //   · Shipments        — report an incoming leg, direction-guarded
 //                        (t_incomingshipment_report, SDC-3a).
 //
@@ -101,7 +92,7 @@ import { useRefusalText, useDataErrorText } from '../hooks/useRefusalText';
 // becomes the audit anchor; every later dispatch passes `causationAnchor()` as
 // its causationId, so a visit's DR-10 events group WITHOUT collapsing their own
 // correlationIds. Each object validates independently — a forecast confirm can
-// land while a SOH declare fails, each reporting its own toast.
+// land while a shipment report fails, each reporting its own toast.
 //
 // HONESTY (FLAG-2, all three layers) — unchanged from SDC-2b:
 //   1+2 (structural) — the forecast read comes through supplierVisiblePublications()
@@ -109,8 +100,8 @@ import { useRefusalText, useDataErrorText } from '../hooks/useRefusalText';
 //       sample ONLY under the explicit sample banner + registry LivenessPill.
 //   3   (vocabulary) — the supplier-facing class vocabulary is commitmentClass
 //       ONLY; no internal liveness / plan-state grammar reaches a supplier.
-//   The Stock tab carries its OWN registry pill (`inventory`) — wired (gate-1)
-//   but harvest-gated → "Sample — awaiting live supplier feed", green unreachable.
+//   The Stock tab no longer shows stock, so it no longer carries the `inventory`
+//   registry pill; the Stock page carries its own sample marker.
 //
 // OWN-FACTS-ONLY (FORK-3b-C): own lines / own submissions / own declarations /
 // own shipments, STATUS-or-STATE only — never another supplier's data, never a
@@ -155,19 +146,6 @@ const emptyForm: ConfirmForm = {
   rootCauseLevel1: '',
   rootCauseNote: '',
 };
-
-// — SOH declare form (total-first + optional batch detail) —
-interface SohBatchForm {
-  batchNumber: string;
-  qty: string;
-  expiryDate: string;
-}
-interface SohForm {
-  materialCode: string;
-  totalQty: string;
-  batches: SohBatchForm[];
-}
-const emptySohForm: SohForm = { materialCode: '', totalQty: '', batches: [] };
 
 // — Shipment report form (direction-guarded) —
 interface ShipmentForm {
@@ -236,12 +214,6 @@ const CONFIRM_REFUSAL_KEY: Record<QtyRefusalReason, string> = {
   EMPTY_QTY: 'sdcSup.panel.qty.refused.empty',
   NOT_NUMERIC: 'sdcSup.panel.qty.refused.notNumeric',
   AMBIGUOUS_QTY: 'sdcSup.panel.qty.refused.ambiguous',
-};
-
-const SOH_REFUSAL_KEY: Record<QtyRefusalReason, string> = {
-  EMPTY_QTY: 'sdcSup.stock.qty.refused.empty',
-  NOT_NUMERIC: 'sdcSup.stock.qty.refused.notNumeric',
-  AMBIGUOUS_QTY: 'sdcSup.stock.qty.refused.ambiguous',
 };
 
 // CP-0 · W1 · PR-2d — the shipment quantity. NO CONVENTION HINT, for exactly
@@ -593,119 +565,6 @@ const ResponsesTab: React.FC<{
           <DisputeLedger entries={r.disputeResponse ?? []} />
         </div>
       ))}
-    </div>
-  );
-};
-
-// ── SDC-3b — My current stock (SOH) tab ──────────────────────────────────────
-const DeclarationsTab: React.FC<{
-  declarations: readonly InventoryDeclaration[];
-  onDeclare: () => void;
-  onBulkEntry: () => void;
-}> = ({ declarations, onDeclare, onBulkEntry }) => {
-  // ⚠️ ONE VERB REACHED TWO WAYS — the single-declaration form and the bulk
-  // grid both dispatch `inventorydeclaration:declare`, so ONE notice replaces
-  // BOTH buttons. That is not §76's retired per-GROUP collapse: a group notice
-  // spoke for two DIFFERENT verbs, and this speaks for two doors into one.
-  const declareAvailability = useVerbAvailability('inventorydeclaration:declare');
-  const { t } = useTranslation();
-  return (
-    <div className="flex flex-col gap-4" data-testid="sdcsup-declarations">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <p className="text-sm text-text-secondary">{t('sdcSup.stock.subtitle')}</p>
-        {/* Both OUTLINE — a SOH declaration is a routine submission, not the
-            page's ONE commitment (that stays the solid forecast confirm). The
-            bulk grid is the batch-grain path (DEC-MAGIC-LINK-GRID). */}
-        <div className="flex items-center gap-2 flex-wrap">
-          {declareAvailability.kind === 'held' ? (
-            <>
-              <Button variant="outline" icon={Table2} onClick={onBulkEntry}>
-                {t('sdcSup.bulk.entry')}
-              </Button>
-              <Button variant="outline" icon={Plus} onClick={onDeclare}>
-                {t('sdcSup.stock.declare')}
-              </Button>
-            </>
-          ) : (
-            <HandoffNotice
-              availability={declareAvailability}
-              testId="handoff-inventory-declare"
-            />
-          )}
-        </div>
-      </div>
-      {declarations.length === 0 ? (
-        <div className="bg-bg-surface border border-border-subtle rounded-lg py-12 px-6 text-center">
-          <div className="inline-flex w-12 h-12 rounded-full bg-bg-hover items-center justify-center mb-3">
-            <Boxes size={20} className="text-text-tertiary" />
-          </div>
-          <div className="text-base font-semibold text-text-primary mb-1">
-            {t('sdcSup.stock.emptyTitle')}
-          </div>
-          <div className="text-sm text-text-tertiary">{t('sdcSup.stock.emptyBody')}</div>
-        </div>
-      ) : (
-        declarations.map((d) => {
-          const grain = declarationGranularity(d);
-          return (
-            <div
-              key={d.id}
-              className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm border-l-2 border-l-teal p-5"
-            >
-              <div className="flex items-start justify-between gap-3 flex-wrap">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <Data className="text-sm font-bold text-text-primary">{d.materialCode}</Data>
-                    <span className={CHIP}>
-                      {grain === 'batch-grain'
-                        ? t('sdcSup.stock.grain.batch')
-                        : t('sdcSup.stock.grain.total')}
-                    </span>
-                  </div>
-                  <div className="text-base font-semibold text-text-primary mt-1">
-                    {materialLabel(d.materialCode)}
-                  </div>
-                </div>
-                <div className="text-right">
-                  <Data className="text-lg font-bold text-text-primary">
-                    {formatNumber(d.totalQty)} {d.uom}
-                  </Data>
-                  <div className="text-xs text-text-tertiary mt-0.5">
-                    {t('sdcSup.stock.asOf', { date: formatDate(d.declaredAt) })}
-                  </div>
-                </div>
-              </div>
-
-              {grain === 'batch-grain' && d.batches ? (
-                <ul className="mt-4 divide-y divide-border-subtle rounded-md border border-border-subtle overflow-hidden">
-                  {d.batches.map((b) => (
-                    <li
-                      key={b.batchNumber}
-                      className="flex flex-wrap items-center gap-x-4 gap-y-1 px-3 py-2 text-sm bg-bg-hover"
-                    >
-                      <Data className="font-semibold text-text-primary">{b.batchNumber}</Data>
-                      <Data className="text-text-secondary">
-                        {formatNumber(b.qty)} {b.uom}
-                      </Data>
-                      <span className="ml-auto text-xs text-text-tertiary">
-                        {b.expiryDate
-                          ? t('sdcSup.stock.expiry', { date: formatDate(b.expiryDate) })
-                          : t('sdcSup.stock.noExpiry')}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                // Total-only: honest about the missing detail — never presented
-                // as "no expiry risk" (the EXPIRY-BLIND rule, supplier-side).
-                <p className="mt-3 text-xs italic text-text-tertiary">
-                  {t('sdcSup.stock.totalOnlyHint')}
-                </p>
-              )}
-            </div>
-          );
-        })
-      )}
     </div>
   );
 };
@@ -1072,7 +931,6 @@ interface WorkspaceProps {
   liveFeed: boolean;
   responses: readonly RequirementResponse[];
   materials: readonly CollaboratedMaterialView[];
-  declarations: readonly InventoryDeclaration[];
   shipments: readonly IncomingShipmentView[];
   asns: readonly ASN[];
 }
@@ -1085,7 +943,6 @@ const ForecastWorkspace: React.FC<WorkspaceProps> = ({
   liveFeed,
   responses,
   materials,
-  declarations,
   shipments,
   asns,
 }) => {
@@ -1098,7 +955,6 @@ const ForecastWorkspace: React.FC<WorkspaceProps> = ({
   // PF-1b — the promotion of a saved draft into a real submission.
   const promoteMutation = useRequirementResponsePromote();
   const [promotingId, setPromotingId] = useState<string | null>(null);
-  const declareMutation = useInventoryDeclare();
   const reportMutation = useIncomingShipmentReport();
 
   const [activeTab, setActiveTab] = useState<TabKey>('lines');
@@ -1107,18 +963,14 @@ const ForecastWorkspace: React.FC<WorkspaceProps> = ({
   // SDC-2b-EXT — the visibility-response panel (acknowledge + optional note).
   const [ackPanelLine, setAckPanelLine] = useState<ForecastLine | null>(null);
   const [ackNote, setAckNote] = useState('');
-  // SDC-3b — the two additional object panels.
-  const [sohOpen, setSohOpen] = useState(false);
-  const [sohForm, setSohForm] = useState<SohForm>(emptySohForm);
-  // SDC-3c-b — the editable bulk stock-entry grid (batch-grain, on the Stock tab).
-  const [bulkOpen, setBulkOpen] = useState(false);
+  // SDC-3b — the shipment report panel.
   const [shipOpen, setShipOpen] = useState(false);
   const [shipForm, setShipForm] = useState<ShipmentForm>(emptyShipmentForm);
 
   // ONE SubmissionSession envelope per supplier visit (addendum §5): each
   // dispatched object records an attempt on it, and every dispatch AFTER the
   // first passes the anchor correlationId as its causationId (the SDC-3a seam,
-  // now driven). Degenerate no longer — three object kinds share this recorder.
+  // now driven). Degenerate no longer — two object kinds share this recorder.
   const sessionRef = useRef<SubmissionSessionRecorder | null>(null);
   /** The visit's audit anchor for the NEXT dispatch — undefined for the first
    *  (which becomes the anchor once recorded). */
@@ -1142,10 +994,6 @@ const ForecastWorkspace: React.FC<WorkspaceProps> = ({
   const openAcknowledge = (line: ForecastLine) => {
     setAckPanelLine(line);
     setAckNote('');
-  };
-  const openSoh = () => {
-    setSohForm(emptySohForm);
-    setSohOpen(true);
   };
   const openShip = () => {
     setShipForm(emptyShipmentForm);
@@ -1315,108 +1163,6 @@ const ForecastWorkspace: React.FC<WorkspaceProps> = ({
     }
   };
 
-  // ── SDC-3b — SOH declare ───────────────────────────────────────────────────
-  //
-  // CP-0 · W1 · PR-2c — the Σ-banner deferred by 2a. 2a routed the PAYLOAD
-  // through `normalizeInventoryDeclarationDraft` but left the gate and the
-  // banner on the old `numberFromField`, so the panel derived its total TWICE
-  // from two different implementations — the same double-parse 2a closed inside
-  // the builder, reopened one layer up. The consequence was not merely a wrong
-  // figure: a total of "2.400" beside batches of 1200 + 1200 made the banner
-  // read 2,4, declare a Σ MISMATCH, and block the submit — the platform
-  // accusing the supplier of arithmetic they had not got wrong, when the honest
-  // answer was "we cannot read that number." A fabricated accusation is worse
-  // than a fabricated value; it moves the blame.
-  //
-  // Now there is ONE normalisation of the whole draft, and the gate, the banner
-  // and the payload all read it. They cannot disagree.
-  const sohBatches = sohForm.batches.filter((b) => b.batchNumber.trim() !== '');
-  const sohNormalized = normalizeInventoryDeclarationDraft({
-    totalQty: sohForm.totalQty,
-    ...(sohBatches.length > 0
-      ? {
-          batches: sohBatches.map((b) => ({
-            batchNumber: b.batchNumber,
-            qty: b.qty,
-            ...(b.expiryDate ? { expiryDate: b.expiryDate } : {}),
-          })),
-        }
-      : {}),
-  });
-  // Σ and the total are only comparable when BOTH are readable. Under a refusal
-  // there is no arithmetic to check — the refusal is the whole story.
-  const sohValue: NormalizedInventoryDeclaration | null = sohNormalized.ok
-    ? sohNormalized.value
-    : null;
-  const sohBatchSum = sohValue?.batches?.reduce((s, b) => s + b.qty, 0) ?? null;
-  // Client-side pre-check (the INV_DECLARE_BATCH_TOTAL hook is the real gate):
-  // when batch detail is present, Σ must equal the declared total.
-  const sohBatchMismatch =
-    sohValue !== null && sohBatchSum !== null && sohBatchSum !== sohValue.totalQty;
-
-  const submitSoh = async () => {
-    if (!sohForm.materialCode) {
-      toast({
-        variant: 'error',
-        title: t('sdcSup.stock.toast.missingMaterial.title'),
-        description: t('sdcSup.stock.toast.missingMaterial.body'),
-      });
-      return;
-    }
-    // An unreadable quantity refuses BEFORE the Σ check: "we cannot read your
-    // total" must never be reported as "your batches do not add up".
-    if (!sohNormalized.ok) {
-      toast({
-        variant: 'error',
-        title: t('sdcSup.stock.toast.missingTotal.title'),
-        description: t(SOH_REFUSAL_KEY[sohNormalized.reason]),
-      });
-      return;
-    }
-    if (sohBatchMismatch) {
-      toast({
-        variant: 'error',
-        title: t('sdcSup.stock.toast.batchMismatch.title'),
-        description: t('sdcSup.stock.toast.batchMismatch.body', {
-          sum: formatNumber(sohBatchSum ?? 0),
-          total: formatNumber(sohNormalized.value.totalQty),
-        }),
-      });
-      return;
-    }
-    // CP-0 · PR-2a/2c — the builder no longer coerces, and the ONE parse above
-    // is what the gate, the banner AND this payload all read.
-    const payload = buildInventoryDeclarationPayload(
-      supplierId,
-      sohForm.materialCode,
-      sohNormalized.value,
-    );
-    try {
-      const res = await declareMutation.mutateAsync({ payload, causationId: causationId() });
-      if (res.status === 'failed') {
-        toast({
-          variant: 'error',
-          title: t('sdcSup.stock.toast.failed.title'),
-          description: refusalText(res.reason) ?? res.reason ?? t('sdcSup.toast.failed.body'),
-        });
-        return;
-      }
-      recordAttempt('InventoryDeclaration', res);
-      toast({
-        variant: 'success',
-        title: t('sdcSup.stock.toast.declared.title', {
-          material: materialLabel(sohForm.materialCode),
-        }),
-        description: t('sdcSup.stock.toast.declared.body'),
-      });
-      setSohOpen(false);
-      setSohForm(emptySohForm);
-      setActiveTab('stock');
-    } catch {
-      failToast();
-    }
-  };
-
   // ── SDC-3b — shipment report ───────────────────────────────────────────────
   const shipMaterial = materials.find((m) => m.materialCode === shipForm.materialCode) ?? null;
   // Direction legality (the surface never offers an illegal pairing):
@@ -1524,7 +1270,6 @@ const ForecastWorkspace: React.FC<WorkspaceProps> = ({
     }
   };
 
-  const sohUom = sohForm.materialCode ? materialUom(sohForm.materialCode) : '';
   const shipUom = shipForm.materialCode ? materialUom(shipForm.materialCode) : '';
 
   return (
@@ -1559,7 +1304,7 @@ const ForecastWorkspace: React.FC<WorkspaceProps> = ({
       <SubTabs<TabKey>
         options={[
           { id: 'lines', label: t('sdcSup.tab.lines'), count: lines.length },
-          { id: 'stock', label: t('sdcSup.tab.stock'), count: declarations.length },
+          { id: 'stock', label: t('sdcSup.tab.stock') },
           { id: 'shipments', label: t('sdcSup.tab.shipments'), count: shipments.length },
           { id: 'responses', label: t('sdcSup.tab.responses'), count: responses.length },
         ]}
@@ -1592,31 +1337,30 @@ const ForecastWorkspace: React.FC<WorkspaceProps> = ({
             ))}
           </div>
         ))}
+      {/* REQ-E08-02 BR-09 (BL-60) — ONE stock entry point. The batch grid, its
+          free-form spreadsheet import and the single-declaration form that
+          lived here were retired: stock is entered on the Stock page, where
+          manual entry and the template carry the same fields. The tab stays
+          as a signpost so a supplier who looks here is not left at a dead end. */}
       {activeTab === 'stock' && (
-        <>
-          {/* The Stock tab carries its OWN registry marker — inventory is wired
-              (gate-1) but harvest-gated → "Sample — awaiting live supplier feed". */}
-          <div className="mb-4">
-            <LivenessPill capability="inventory" />
+        <div
+          className="bg-bg-surface border border-border-subtle rounded-lg py-10 px-6 text-center"
+          data-testid="sdcsup-stock-moved"
+        >
+          <div className="inline-flex w-12 h-12 rounded-full bg-bg-hover items-center justify-center mb-3">
+            <Boxes size={20} className="text-text-tertiary" />
           </div>
-          {bulkOpen ? (
-            <BulkStockEntryGrid
-              supplierId={supplierId}
-              materials={materials}
-              declarations={declarations}
-              causationId={causationId}
-              recordAttempt={recordAttempt}
-              onClose={() => setBulkOpen(false)}
-              onDeclared={() => setBulkOpen(false)}
-            />
-          ) : (
-            <DeclarationsTab
-              declarations={declarations}
-              onDeclare={openSoh}
-              onBulkEntry={() => setBulkOpen(true)}
-            />
-          )}
-        </>
+          <div className="text-base font-semibold text-text-primary mb-1">{t('sdcSup.stock.moved.title')}</div>
+          <p className="text-sm text-text-tertiary mb-4">{t('sdcSup.stock.moved.body')}</p>
+          <Link
+            to="/supplier/inventory"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-action hover:underline"
+            data-testid="sdcsup-stock-moved-link"
+          >
+            {t('sdcSup.stock.moved.link')}
+            <ArrowRight size={14} aria-hidden="true" />
+          </Link>
+        </div>
       )}
       {activeTab === 'shipments' && (
         <ShipmentsTab shipments={shipments} onReport={openShip} />
@@ -1874,199 +1618,6 @@ const ForecastWorkspace: React.FC<WorkspaceProps> = ({
         )}
       </SidePanel>
 
-      {/* ── SDC-3b — SOH declare panel (total-first + optional batch detail) ─── */}
-      <SidePanel
-        open={sohOpen}
-        onClose={() => setSohOpen(false)}
-        title={t('sdcSup.stock.panel.title')}
-        footerActions={
-          <>
-            <Button variant="secondary" onClick={() => setSohOpen(false)}>
-              {t('sdcSup.panel.cancel')}
-            </Button>
-            <Button
-              variant="outline"
-              icon={Send}
-              disabled={declareMutation.isPending}
-              onClick={submitSoh}
-            >
-              {declareMutation.isPending
-                ? t('sdcSup.stock.panel.submitting')
-                : t('sdcSup.stock.panel.submit')}
-            </Button>
-          </>
-        }
-      >
-        <div className="space-y-5">
-          <FormSection
-            eyebrow={t('sdcSup.stock.panel.material.eyebrow')}
-            title={t('sdcSup.stock.panel.material.title')}
-            description={t('sdcSup.stock.panel.material.desc')}
-          >
-            <div>
-              <label className={labelClass} htmlFor="sdcsup-soh-material">
-                {t('sdcSup.stock.panel.materialLabel')}
-              </label>
-              <select
-                id="sdcsup-soh-material"
-                value={sohForm.materialCode}
-                onChange={(e) => setSohForm({ ...sohForm, materialCode: e.target.value })}
-                className={inputClass}
-              >
-                <option value="">{t('sdcSup.stock.panel.materialSelect')}</option>
-                {materials.map((m) => (
-                  <option key={m.materialCode} value={m.materialCode}>
-                    {m.materialCode} — {m.label} ({m.uom})
-                  </option>
-                ))}
-              </select>
-            </div>
-          </FormSection>
-
-          <FormSection
-            eyebrow={t('sdcSup.stock.panel.total.eyebrow')}
-            title={t('sdcSup.stock.panel.total.title')}
-            description={t('sdcSup.stock.panel.total.desc')}
-          >
-            <div>
-              <label className={labelClass} htmlFor="sdcsup-soh-total">
-                {t('sdcSup.stock.panel.totalLabel', { uom: sohUom || '—' })}
-              </label>
-              {/* 6.2 — see the confirm field: the separators are the point. */}
-              <input
-                id="sdcsup-soh-total"
-                type="text"
-                inputMode="decimal"
-                placeholder="0"
-                aria-invalid={sohForm.totalQty.trim() !== '' && !sohNormalized.ok}
-                value={sohForm.totalQty}
-                onChange={(e) => setSohForm({ ...sohForm, totalQty: e.target.value })}
-                className={inputClass}
-              />
-              <div className="mt-1 text-[11px] text-text-tertiary">
-                {t('sdcSup.panel.qty.hint')}
-              </div>
-            </div>
-          </FormSection>
-
-          <FormSection
-            eyebrow={t('sdcSup.stock.panel.batches.eyebrow')}
-            title={t('sdcSup.stock.panel.batches.title')}
-            description={t('sdcSup.stock.panel.batches.desc')}
-          >
-            <div className="space-y-3">
-              {sohForm.batches.map((b, i) => (
-                <div
-                  key={i}
-                  className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_1fr_auto] gap-2 items-end rounded-md border border-border-subtle bg-bg-hover p-3"
-                >
-                  <div>
-                    <label className={labelClass}>{t('sdcSup.stock.panel.batchNumber')}</label>
-                    <input
-                      type="text"
-                      aria-label={`${t('sdcSup.stock.panel.batchNumber')} ${i + 1}`}
-                      value={b.batchNumber}
-                      placeholder="e.g. GLY-24A"
-                      onChange={(e) => {
-                        const batches = sohForm.batches.slice();
-                        batches[i] = { ...b, batchNumber: e.target.value };
-                        setSohForm({ ...sohForm, batches });
-                      }}
-                      className={inputClass}
-                    />
-                  </div>
-                  <div>
-                    <label className={labelClass}>
-                      {t('sdcSup.stock.panel.batchQty', { uom: sohUom || '—' })}
-                    </label>
-                    <input
-                      type="text"
-                      inputMode="decimal"
-                      aria-label={`${t('sdcSup.stock.panel.batchQtyLabel')} ${i + 1}`}
-                      value={b.qty}
-                      onChange={(e) => {
-                        const batches = sohForm.batches.slice();
-                        batches[i] = { ...b, qty: e.target.value };
-                        setSohForm({ ...sohForm, batches });
-                      }}
-                      className={inputClass}
-                    />
-                  </div>
-                  <div>
-                    <label className={labelClass}>{t('sdcSup.stock.panel.batchExpiry')}</label>
-                    <input
-                      type="date"
-                      value={b.expiryDate}
-                      onChange={(e) => {
-                        const batches = sohForm.batches.slice();
-                        batches[i] = { ...b, expiryDate: e.target.value };
-                        setSohForm({ ...sohForm, batches });
-                      }}
-                      className={inputClass}
-                    />
-                  </div>
-                  <Button
-                    variant="secondary"
-                    icon={Trash2}
-                    aria-label={t('sdcSup.stock.panel.removeBatch')}
-                    onClick={() =>
-                      setSohForm({
-                        ...sohForm,
-                        batches: sohForm.batches.filter((_, j) => j !== i),
-                      })
-                    }
-                  />
-                </div>
-              ))}
-              <Button
-                variant="secondary"
-                icon={Layers}
-                onClick={() =>
-                  setSohForm({
-                    ...sohForm,
-                    batches: [...sohForm.batches, { batchNumber: '', qty: '', expiryDate: '' }],
-                  })
-                }
-              >
-                {t('sdcSup.stock.panel.addBatch')}
-              </Button>
-              {/* The Σ readout reports arithmetic ONLY when there is arithmetic
-                  to report. It used to render `isNaN(total) ? 0 : total`, so an
-                  unreadable total was displayed as a confident 0 and then
-                  accused of not matching the batches. Under a refusal the
-                  banner now states the refusal instead — the one honest thing
-                  it knows. */}
-              {sohBatches.length > 0 && (
-                <div
-                  data-testid="soh-batch-sum"
-                  className={`text-xs ${
-                    sohBatchMismatch || !sohNormalized.ok ? 'text-danger' : 'text-text-secondary'
-                  }`}
-                >
-                  {sohNormalized.ok ? (
-                    <>
-                      {t('sdcSup.stock.panel.batchSum', {
-                        sum: formatNumber(sohBatchSum ?? 0),
-                        total: formatNumber(sohNormalized.value.totalQty),
-                        uom: sohUom || '—',
-                      })}
-                      {sohBatchMismatch && ` — ${t('sdcSup.stock.panel.batchMismatch')}`}
-                    </>
-                  ) : (
-                    <>
-                      {t(SOH_REFUSAL_KEY[sohNormalized.reason])}{' '}
-                      <GlossaryTermChip
-                        refTo={{ sourceType: 'QtyRefusalReason', term: sohNormalized.reason }}
-                      />
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
-          </FormSection>
-        </div>
-      </SidePanel>
-
       {/* ── SDC-3b — shipment report panel (direction-guarded) ──────────────── */}
       <SidePanel
         open={shipOpen}
@@ -2300,7 +1851,6 @@ const SupplierForecasts: React.FC = () => {
   const linesQuery = useOwnForecastLines();
   const responsesQuery = useOwnRequirementResponses();
   const materialsQuery = useOwnCollaboratedMaterials();
-  const declarationsQuery = useOwnInventoryDeclarations();
   const shipmentsQuery = useOwnIncomingShipments();
   const asnsQuery = useOwnSupplierAsns();
 
@@ -2344,7 +1894,6 @@ const SupplierForecasts: React.FC = () => {
       liveFeed={read.liveFeed}
       responses={responses}
       materials={materialsQuery.data ?? []}
-      declarations={declarationsQuery.data ?? []}
       shipments={shipmentsQuery.data ?? []}
       asns={asnsQuery.data ?? []}
     />

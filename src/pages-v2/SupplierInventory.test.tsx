@@ -1,4 +1,5 @@
-import { screen } from '@testing-library/react';
+import { fireEvent, screen } from '@testing-library/react';
+import type { IDataService } from '../services/data/types';
 import { renderWithProviders, SUPPLIER } from '../test/test-utils';
 import type { CurrentIdentity } from '../context/CurrentIdentityContext';
 import { mockDataService } from '../services/data/mock/mockDataService';
@@ -47,5 +48,52 @@ describe('SupplierInventory — four honest states', () => {
   it('empty: shows EmptyState for a supplier with no inventory', async () => {
     renderWithProviders(<SupplierInventory />, { identity: SUPPLIER_NO_STOCK });
     expect(await screen.findByText('No materials are assigned to you yet.')).toBeInTheDocument();
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BL-61 (REQ-E08-01 BR-07) — one list on the supplier view. sup-007 supplies
+// packaging only, so it sees every row and no type tabs. A supplier that
+// supplies both types keeps the split: no fixture supplier does, so the second
+// case re-reads sup-007's own rows with one relabelled as raw material.
+// ─────────────────────────────────────────────────────────────────────────────
+describe('SupplierInventory — material-type tabs only when both types are supplied (BL-61)', () => {
+  it('a single-type supplier sees one list and no tabs', async () => {
+    renderWithProviders(<SupplierInventory />, { identity: SUPPLIER });
+    await screen.findByTestId('sup-stock-row-PK-PETB-8801');
+    expect(screen.queryByRole('tab', { name: /Raw material/i })).toBeNull();
+    expect(screen.queryByRole('tab', { name: /Packaging/i })).toBeNull();
+    for (const code of ['PK-PETB-8801', 'PK-PETB-8802', 'PK-PETB-8810', 'PK-CAPF-8820']) {
+      expect(screen.getByTestId(`sup-stock-row-${code}`)).toBeInTheDocument();
+    }
+  });
+
+  it('a supplier that supplies both types keeps the tabs, and they filter', async () => {
+    const mixed: IDataService = {
+      ...mockDataService,
+      procurement: new Proxy(mockDataService.procurement, {
+        get(target, prop, receiver) {
+          if (prop === 'getInventory')
+            return async (...args: Parameters<IDataService['procurement']['getInventory']>) => {
+              const page = await target.getInventory(...args);
+              return {
+                ...page,
+                items: page.items.map((p) => (p.materialCode === 'PK-CAPF-8820' ? { ...p, materialType: 'ROH' as const } : p)),
+              };
+            };
+          const value = Reflect.get(target, prop, receiver);
+          return typeof value === 'function' ? value.bind(target) : value;
+        },
+      }),
+    };
+    renderWithProviders(<SupplierInventory />, { identity: SUPPLIER, service: mixed });
+    const rawTab = await screen.findByRole('tab', { name: /Raw material/i });
+    expect(screen.getByRole('tab', { name: /Packaging/i })).toBeInTheDocument();
+    // Packaging is the default view; the relabelled row is not in it.
+    expect(screen.getByTestId('sup-stock-row-PK-PETB-8801')).toBeInTheDocument();
+    expect(screen.queryByTestId('sup-stock-row-PK-CAPF-8820')).toBeNull();
+    fireEvent.click(rawTab);
+    expect(await screen.findByTestId('sup-stock-row-PK-CAPF-8820')).toBeInTheDocument();
+    expect(screen.queryByTestId('sup-stock-row-PK-PETB-8801')).toBeNull();
   });
 });

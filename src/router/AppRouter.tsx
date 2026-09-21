@@ -189,7 +189,8 @@ const AppRouter: React.FC = () => {
           <Route path="/supplier/rfqs/rfp" element={<SupplierRfp />} />
           <Route path="/supplier/rfqs/rounds" element={<SupplierNegotiations />} />
           {/* REQ-E06-01 / REQ-E06-02 — the supplier's forecast versions and commitments.
-              The earlier stock and shipment responses stay reachable beneath it. */}
+              The earlier responses and shipment reports stay reachable beneath it;
+              its Stock tab only points to the Stock page (BL-60, one stock entry). */}
           <Route path="/supplier/forecasts" element={<SupplierForecastCommitments />} />
           <Route
             path="/supplier/forecasts/responses"

@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 2.2, 2026-09-21 |
+| Version | 2.4, 2026-09-21 |
 | Compares | `SUPPLIER-HUB-REQUIREMENTS.md` v0.5 with the prototype on branch `feat/supplier-hub-mvp` (pull request "Supplier Hub MVP build") |
 | Owner decisions | 2026-09-17, recorded in section 9 of the requirements (RFX-1 to RFX-3, GAP-1 to GAP-4, E06-R); 2026-09-21 for the working calendar (Q-18, BL-14) and the commitment deadline (CR-26, BL-05), built as BL-50 and BL-48 |
 | Rule | This is the **only** document that describes what the prototype does for the Supplier Hub. The PRD and the requirements describe the product and never the code. Update this file when a build item lands |
@@ -24,7 +24,7 @@ Everything runs on sample data held in the browser. There is no backend, no SAP 
 | REQ-E03-02 RFI | Built | Template sections A–F, question library with required and weighted questions, drafts hidden from the buyer, deadline extension, answers reused by a later RFQ. Creation follows section 3.6a of the requirements, which the build already matches: central library, edited per event, no save-as-template, no approval before sending. Attachment questions are text fields: there is no file store |
 | REQ-E03-03 RFQ | Built | From scratch, from an RFI, or from a purchase requisition; price per item; response deadline enforced; quote privacy |
 | REQ-E03-04 RFP | Built | Standard term list in 7 groups, Comply or Deviate with a comment required on a deviation, term-by-term comparison |
-| REQ-E03-05 Comparison, negotiation, award | Built | Weighted score (CR-15) with reliability from measured OTIF, currency rule (CR-16), negotiation rounds restricted to shortlisted suppliers with every quote version kept, split award that must total 100% per item, reason required when the award leaves the best-scored quote. Sourcing request (E03.01) is still not detailed in the requirements |
+| REQ-E03-05 Comparison, negotiation, award | Built | Compliance gate at award (CR-23: halal, BPOM, GMP / ISO 22716 per material, supplier status, minimum OTIF — placeholder 80%, "No history" passes); a failing supplier can be invited and quote but gets no award field, and the award verb refuses it. Weighted score (CR-15, price 40 / lead time 20 / reliability 40) over qualified suppliers only, with reliability from measured OTIF, currency rule (CR-16), negotiation rounds restricted to shortlisted suppliers with every quote version kept, split award that must total 100% per item, reason required when the award leaves the best-scored quote. Sourcing request (E03.01) is still not detailed in the requirements |
 | REQ-E06-01 Forecast publication | Built | Weekly periods for packaging then monthly, monthly for raw material; Firm / Trade-off / Forecast zones; versions kept with a Changes view; spreadsheet download; view tracking and re-publication on the PTI Forecasts page |
 | REQ-E06-02 Commitment | Built | Pre-filled with the forecast, upside, acknowledgement for Forecast periods, reason enforced by the system when below forecast, CR-21 tolerance, spreadsheet upload, carry-forward on re-publication. CR-26 deadline (BL-48): Firm periods 1 working day, Trade-off and Forecast 3 working days after publication, counted on the hub working calendar. The supplier sees the deadline with the time left, how late once past it, and whether a submitted commitment arrived in time; a commitment is judged against the deadline of the version it answered, so a carried-forward one keeps its verdict. Late is derived when the page is read, never stored |
 | REQ-E06-03 Gap monitoring | Built | Gap quantity and %, CR-22 colours, cumulative view, ranked exception list, Accept / Request revision / Move demand, reminders as Home tasks, supplier coverage as an estimate. The planner sees each commitment's CR-26 deadline and how late it is in the exception list, and the time left or lateness in each awaiting cell of the grid (BL-48) |
@@ -36,10 +36,10 @@ Everything runs on sample data held in the browser. There is no backend, no SAP 
 | REQ-E07-06 Goods receipt | Partial | Supplier page with shipped, received and rejected quantity, QC result, discrepancy flag, acknowledge or dispute, PTI resolution. Receipts are still created in the hub rather than read from SAP, because there is no SAP feed; dispute attachments are not built |
 | REQ-E07-07 Invoice | Built | Built from received goods receipts, supplier's own invoice number and date, e-Faktur file name, duplicate and over-invoicing refused, CR-12 and CR-13 matching at submission, status list with correct-and-resubmit, CR-14 due date |
 | REQ-E07-08 SAP interface | Partial | Interface monitor with last successful arrival, failed messages and CR-20 retry, plus the data-age banner. The feeds themselves are simulated; the real interface technology is PQ-06 |
-| REQ-E08-01 Inventory visibility | Built | Supplier and PTI stock and reorder points, incoming split into in production and in transit with its detail, raw material and packaging views, days of supply with one band scale, last update and stale flag. No "available" figure |
-| REQ-E08-02 Stock submission | Built | Downloadable template, row-by-row upload validation, manual entry, simulated API sync with a failure path, and stock recorded by PTI on a supplier's behalf |
+| REQ-E08-01 Inventory visibility | Built | Supplier and PTI stock and reorder points, incoming split into in production and in transit with its detail, days of supply with one band scale, last update and stale flag. No "available" figure. Raw material and packaging are separate on the PTI view; on the supplier view they are one list, split only for a supplier that supplies both (BR-07, BL-61) |
+| REQ-E08-02 Stock submission | Built | One stock entry point, on the Stock page: the template and manual entry carry the same fields, including an optional manufacturing date per batch (not after expiry, not in the future), with row-by-row upload validation (BR-06, BR-09, BL-60). The Forecast page's old batch grid and free-form import are retired; its Stock tab now links to the Stock page. In-transit quantity is shown read-only beside in production on both methods, from ASNs and dispatched call-offs (BR-10). An API-connected supplier presses Sync on its own Stock page, and a PTI user can still sync on its behalf; the connection is simulated, with a failure path that keeps the previous figures marked out of date (BR-03, BL-59). A supplier with PTI stock access can refresh PTI stock for the granted materials only; without access the option is absent (BR-11). Stock recorded by PTI on a supplier's behalf |
 | REQ-E08-03 Supplier access to PTI stock | Built | Grant, change and remove per supplier and per material, with a log; a supplier without access never receives PTI stock data |
-| REQ-E08-04 Capacity | Built | 13 weekly buckets per material group, upside, reason required below demand, gap weeks highlighted for the planner, and the Order summary capacity status |
+| REQ-E08-04 Capacity | Built | 13 weekly buckets per material group, "Extra capacity if requested" with a one-line explanation on both sides (BR-05, BL-62), reason required below demand, gap weeks highlighted for the planner, planner filters by supplier, material group, material and gap weeks only, kept in the page address and combined with the Order summary filter (BR-07, BL-63), and the Order summary capacity status |
 | REQ-E08-05 Alerts | Built | Rules for PTI and supplier stock against reorder point, projected stock-out, capacity gap, stale data, coverage and commitment below forecast; High / Medium / Low; no duplicates; grouped per supplier; closed with an action note. Delivery is in the hub only, not by email |
 | REQ-E09-01 Replenishment recommendation | Partial | Planner releases call-offs against the remaining umbrella PO quantity and value, and can generate a series. The SAP ROP recommendation list is not built (X-16) |
 | REQ-E09-02 Event-based analysis | Not built | Waiting on PQ-09 |
@@ -76,8 +76,13 @@ Everything runs on sample data held in the browser. There is no backend, no SAP 
 | X-19 | RFI, RFP, quote per item, negotiation, split award, invite filters | Done (phase 6a) |
 | X-20 | CFOT and OTIF calculated | Done (phase 6b) |
 | X-21 | TMS access | Not built — waiting on D-03 |
-| X-22 | Hub working calendar and the first administration page (BL-50) | Done |
-| X-23 | Forecast commitment deadline, CR-26 (BL-48) | Done |
+| X-22 | One stock entry (BL-60): same fields on template and manual entry, manufacturing date, read-only in-transit, Forecast page stock grid retired | Done (inventory feedback) |
+| X-23 | Supplier-triggered stock sync and PTI stock refresh for granted materials (BL-59) | Done (inventory feedback), simulated until the backend |
+| X-24 | One list on the supplier inventory view (BL-61) | Done (inventory feedback) |
+| X-25 | Capacity "Extra capacity if requested" label (BL-62) | Done (inventory feedback) |
+| X-26 | Planner capacity filters in the page address (BL-63) | Done (inventory feedback) |
+| X-27 | Hub working calendar and the first administration page (BL-50) | Done |
+| X-28 | Forecast commitment deadline, CR-26 (BL-48) | Done |
 
 ### 2.1 Navigation and screens
 
@@ -112,9 +117,34 @@ The `CR-` rules are implemented in the hub's own modules and covered by their ow
 | Commitment deadline, time left and late (CR-26) | `src/services/transitions/forecastRules.ts` (`commitmentDueAt`, `commitmentTiming`) with `forecastConfig.ts` |
 | Goods receipt result, invoice matching, due date (CR-11 to CR-14) | `src/services/transitions/grRollup.ts`, `invoiceRollup.ts`, invoice projection |
 | Quote score and currency rule (CR-15, CR-16) | `src/lib/quoteScore.ts`, `src/lib/fxPin.ts` |
+| Compliance gate (CR-23) | `src/services/sourcing/complianceGate.ts`, values in `complianceGateConfig.ts` |
 | CFOT, OTIF, rejections, score and grade (CR-17) | `src/services/data/performanceRules.ts` |
 | Spreadsheet number and batch checks (CR-18, CR-19) | `src/lib/localeNumber.ts`, stock upload validation |
 | Integration retry classes (CR-20) | `src/services/transitions/settleFaults.ts` |
+
+### 3.1 Compliance gate demo scenarios
+
+Sample data (BL-64) so a buyer can see every CR-23 outcome on the sourcing pages (`/buyer/sourcing`, then an RFQ). The five sample RFQs are titled "Compliance gate demo — … (sample)"; the suppliers marked "(illustrative)" exist only for this demo. Fixtures: `src/services/data/mock/fixtures/gateDemo.ts`; each row is pinned by name in `gateDemo.test.ts`. Demo date: the declared present, 31 Aug 2026.
+
+| Scenario | RFQ | Supplier | Gate result |
+|---|---|---|---|
+| Halal certificate expired (the day before the demo date) | RFQ-2026-016 (Closed) | sup-018 PT Sample Raw Material Surabaya | Fails: halal |
+| Halal certificate expires on the demo date (still valid) | RFQ-2026-016 | sup-017 PT Sample Halal Raw Material Jakarta | Passes |
+| Halal certificate missing | RFQ-2026-016 | sup-009 Sample Vitamins Co. | Fails: halal |
+| GMP / ISO 22716 missing on a raw material | RFQ-2026-016 | sup-013 PT Sample Preform Works | Fails: GMP |
+| Mixed pass and fail; split award among passing suppliers | RFQ-2026-016 | sup-001 and sup-017 (e.g. 60 / 40) | Award recorded; a line naming sup-018 is refused |
+| BPOM missing where BPOM applies | RFQ-2026-017 (Closed) | sup-016 PT Sample Active Ingredient Indonesia | Fails: BPOM |
+| Registry row valid, supplier master holds no halal certificate | RFQ-2026-017 | sup-005 (registry row creg-0015) | Passes |
+| Several criteria at once | RFQ-2026-017, RFQ-2026-020 | sup-011 (halal, BPOM, GMP); sup-004 (halal, BPOM) | Fails |
+| Registry row expired, supplier master says valid | RFQ-2026-018 (Open, still collecting quotes) | sup-002 (registry row creg-0017) | Fails: halal |
+| OTIF exactly at the 80% minimum (4 of 5 call-offs) | RFQ-2026-019 (Closed) | sup-019 PT Sample Preform Bekasi | Passes |
+| OTIF just below the minimum (11 of 14, shown 79%) | RFQ-2026-019 | sup-020 PT Sample PET Bottle Karawang | Fails: OTIF |
+| Suspended | RFQ-2026-019 | sup-021 PT Sample Packaging Medan | Fails: status |
+| Blacklisted | RFQ-2026-019 | sup-022 PT Sample Closures Batam | Fails: status |
+| Material needing no certificate (packaging); no certificates and no OTIF history | RFQ-2026-019 | sup-011 Sample Salicylics & Niacinamide Ltd. | Passes |
+| Every bidder fails; award impossible, and the page says so | RFQ-2026-020 (Closed) | sup-011, sup-004, sup-009 | No award possible |
+
+Earlier demo rows still hold: RFQ-2026-003 (sup-010 halal expired), RFQ-2026-014 (sup-007 OTIF 50%, sup-008 OTIF 0%, sup-013 no history), RFQ-2026-004 (sup-004 halal and BPOM). The OTIF figures are calculated from sample call-offs and goods receipts (PO-2026-00191, PO-2026-00192), not typed in. Suspended and blacklisted suppliers cannot be invited; sup-021 and sup-022 represent a status change after the quote.
 
 ---
 
@@ -123,7 +153,7 @@ The `CR-` rules are implemented in the hub's own modules and covered by their ow
 | ID | Feature | Outcome |
 |---|---|---|
 | K-01 | Goods receipt quality inspection | Kept for PTI; the supplier sees the result and rejected quantity only. Boundary with the Phase 2 Supplier Quality module is still open (Q-20) |
-| K-02 | Stock by batch with expiry | Kept as template columns |
+| K-02 | Stock by batch with expiry | Kept as template columns and manual batch rows, now with an optional manufacturing date |
 | K-03 | Stock recorded by PTI from a WhatsApp or email reply | Kept, labelled "Entered by PTI" |
 | K-04 | Distributor principal lead times | Kept, feeding supplier coverage |
 | K-05 | Should-cost model | Parked, hidden from the menu |

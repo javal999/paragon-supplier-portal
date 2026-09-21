@@ -35,10 +35,12 @@ import {
 } from './inventory/inventoryDisplay';
 import StockEntryPanel from './inventory/StockEntryPanel';
 import StockUploadPanel from './inventory/StockUploadPanel';
+import SupplierSyncPanel from './inventory/SupplierSyncPanel';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SUPPLIER STOCK — REQ-E08-01 (SUP view), REQ-E08-02 (template upload, manual
-// entry), REQ-E08-03 (PTI stock where granted).
+// entry, the supplier's own API Sync — BL-59), REQ-E08-03 (PTI stock where
+// granted, and its refresh only then).
 //
 // One row per material the supplier supplies, from the ONE inventory model:
 // its stock on hand, its own reorder point ("Not provided" when absent), what
@@ -72,7 +74,11 @@ const SupplierInventory: React.FC = () => {
     [rows],
   );
   const activeType: MaterialType = typeChosen ? type : counts.VERP > 0 ? 'VERP' : 'ROH';
-  const shown = rows.filter((r) => r.materialType === activeType);
+  // REQ-E08-01 BR-07 (BL-61) — one list on the supplier view: a supplier
+  // normally supplies one material type, so the raw material / packaging split
+  // appears only for a supplier that supplies both. The PTI view keeps it.
+  const splitByType = counts.ROH > 0 && counts.VERP > 0;
+  const shown = splitByType ? rows.filter((r) => r.materialType === activeType) : rows;
   const needUpdate = rows.filter((r) => stockFreshness(r, nowIso) !== 'current').length;
   const sharesPti = rows.some((r) => r.ptiStockShared);
   const grant = (access.data?.items ?? []).find((g) => g.supplierId === supplierId);
@@ -136,20 +142,24 @@ const SupplierInventory: React.FC = () => {
         </p>
       )}
 
+      <SupplierSyncPanel supplierId={supplierId} positions={rows} grant={grant} refetch={() => inventory.refetch()} />
+
       <StockUploadPanel supplierId={supplierId} positions={rows} canSubmit={held} />
 
-      <SubTabs<MaterialType>
-        options={[
-          { id: 'ROH', label: t('inv.type.ROH'), count: counts.ROH },
-          { id: 'VERP', label: t('inv.type.VERP'), count: counts.VERP },
-        ]}
-        value={activeType}
-        onChange={(v) => {
-          setType(v);
-          setTypeChosen(true);
-        }}
-        className="mb-4"
-      />
+      {splitByType && (
+        <SubTabs<MaterialType>
+          options={[
+            { id: 'ROH', label: t('inv.type.ROH'), count: counts.ROH },
+            { id: 'VERP', label: t('inv.type.VERP'), count: counts.VERP },
+          ]}
+          value={activeType}
+          onChange={(v) => {
+            setType(v);
+            setTypeChosen(true);
+          }}
+          className="mb-4"
+        />
+      )}
 
       <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto">
         <Table>
