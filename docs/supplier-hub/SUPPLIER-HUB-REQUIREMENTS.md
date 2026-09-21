@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 0.10 draft, 2026-09-21 |
+| Version | 0.11 draft, 2026-09-21 |
 | Sources | `SUPPLIER-HUB-BASELINE.md` (kick-off deck, Aug 2026); `KICKOFF-MEETING-NOTES.md` (business user feedback, reviewed 2026-09-17); owner review of the prototype gap review (2026-09-17) |
 | Scope of this version | Detailed: Order Collaboration, Inventory & Capacity Collaboration, RFx (validated); Forecast Collaboration, Call-off Management, and the undiscussed parts of Order and Inventory Collaboration (proposed). Hub navigation and screen conventions (validated). Foundation is reserved for the Foundation team. The remaining epics are stubs |
 | Not in scope | The codebase. This file states what the Supplier Hub must do, not what is built. What the prototype does today, and where, is tracked only in `BUILD-GAP.md` |
@@ -200,7 +200,7 @@ The menu follows the hub's own sections, not procurement stages, and each PTI us
 | Forecast | Forecasts; Commitments & gaps | MP | REQ-E06-01 to REQ-E06-03 |
 | Inventory & capacity | Inventory; Capacity; Alerts; Supplier access | MP | REQ-E08-01 to REQ-E08-05 |
 | Call-offs | Recommendations; Call-offs | MP | REQ-E09-01 to REQ-E09-04 |
-| Sourcing | RFI, RFQ, RFP; Suppliers | BUY | REQ-E03-01 to REQ-E03-05; Foundation |
+| Sourcing | RFI; RFQ (quotation requests); RFP; Suppliers | BUY | REQ-E03-01 to REQ-E03-05; Foundation |
 | Invoices | Invoices | FIN | REQ-E07-07 |
 | Performance | Supplier performance | MP, BUY | REQ-E10-01 |
 
@@ -211,7 +211,7 @@ The menu follows the hub's own sections, not procurement stages, and each PTI us
 | Home | To do | Section 3.8 |
 | Orders | Purchase orders; Call-offs; Shipments & ASN; Goods receipts | REQ-E07-01 to REQ-E07-06, REQ-E09-03, REQ-E09-04 |
 | Planning | Forecast & commitments; Stock; Capacity | REQ-E06-01, REQ-E06-02, REQ-E08-02, REQ-E08-04 |
-| Sourcing | Invitations (RFI, RFQ, RFP) | REQ-E03-02 to REQ-E03-05 |
+| Sourcing | RFI; RFQ (with negotiation rounds); RFP | REQ-E03-02 to REQ-E03-05 |
 | Invoices | Invoices | REQ-E07-07 |
 | Performance | My performance | REQ-E10-01 |
 | Company | Profile & documents | Foundation |
@@ -223,6 +223,7 @@ The menu follows the hub's own sections, not procurement stages, and each PTI us
 - NV-04. Every menu item has its own icon [Owner].
 - NV-05. A page's section label is taken from the menu, so it always matches the menu [Owner].
 - NV-06. Features outside the MVP are hidden from the menu during the pilot [Owner; see section 2.3 of the PRD].
+- NV-07. RFI, RFQ and RFP are three separate menu items, each with its own page, title and count, for buyers and suppliers alike; they are not tabs of one sourcing page. Older addresses redirect to the new ones [Owner, 2026-09-21].
 
 ### 3.8 Screen conventions
 
@@ -1656,3 +1657,4 @@ Research date: 2026-09-17. Vendor pages were read directly unless marked "snippe
 | 0.8 | 2026-09-21 | Owner decisions on 18 of the 21 backlog decisions: compliance gate CR-23, risk class CR-24, receipt tolerance CR-25, commitment deadline CR-26; CR-02, CR-05, CR-12 and CR-15 revised; hub-managed calendar; 3PL tracking link replaces TMS access. Open items narrowed to A-01, A-05, PQ-05 cap, PQ-06, PQ-08 early allowance, PQ-11, Q-19 |
 | 0.9 | 2026-09-21 | Inventory collaboration feedback (INV-FB): supplier-triggered sync with PTI stock limited to granted materials, one stock entry with identical fields, in-transit from the ASN, optional manufacturing date, one list on the supplier view, capacity label and filters. CAP-1 opened |
 | 0.10 | 2026-09-21 | Text aligned with the builds of BL-44 to BL-53 (CR-12 per line, CR-05 for every call-off type, CR-24 in inventory). Open items KPI-D, CO-1, CR24-1, DL-1, ADM-1 and GR-1 added from what the builds found |
+| 0.11 | 2026-09-21 | NV-07: RFI, RFQ and RFP as three separate menu items for buyers and suppliers (owner decision, built in PR #21); menu tables updated |

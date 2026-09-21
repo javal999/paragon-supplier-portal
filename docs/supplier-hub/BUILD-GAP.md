@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 2.8, 2026-09-21 |
+| Version | 2.9, 2026-09-21 |
 | Compares | `SUPPLIER-HUB-REQUIREMENTS.md` v0.10 with the prototype on `main` (production deploy of 2026-09-21) |
 | Owner decisions | 2026-09-17, recorded in section 9 of the requirements (RFX-1 to RFX-3, GAP-1 to GAP-4, E06-R); 2026-09-21 for the working calendar (Q-18, BL-14) and the commitment deadline (CR-26, BL-05), built as BL-50 and BL-48 |
 | Rule | This is the **only** document that describes what the prototype does for the Supplier Hub. The PRD and the requirements describe the product and never the code. Update this file when a build item lands |
@@ -91,6 +91,7 @@ Everything runs on sample data held in the browser. There is no backend, no SAP 
 | X-32 | KPI definitions and "Baseline period" on the performance pages (BL-53) | Done |
 | X-33 | No raw `{{…}}` placeholder on screen (BL-72): the "Round" column header of the quote versions and negotiation rounds tables on the RFQ event page, and the buyer's "application raised" message, which now names the company | Done; a source check over every `t()` call with a literal key now fails the build on a missing variable |
 | X-34 | One stock entry, second path closed (BL-73): the chat-reply triage (supplier Channel Inbox and PTI Communication Hub) pre-fills the Stock page's entry form instead of recording through its own one-field path; same fields (ROP, in production, completion date, batches with manufacturing and expiry), same CR-18 and CR-19 checks, same governed verb. The old path and its parser were removed | Done |
+| X-35 | RFI, RFQ and RFP as three separate menu items and pages (NV-07): buyer `/buyer/rfi`, `/buyer/rfq`, `/buyer/rfp`; supplier `/supplier/rfi`, `/supplier/rfq`, `/supplier/rfq/rounds`, `/supplier/rfp`. The old `/buyer/sourcing*` and `/supplier/rfqs*` addresses redirect, keeping query and state. Built in PR #21 | Done |
 
 ### 2.1 Navigation and screens
 
@@ -139,7 +140,7 @@ The `CR-` rules are implemented in the hub's own modules and covered by their ow
 
 ### 3.1 Compliance gate demo scenarios
 
-Sample data (BL-64) so a buyer can see every CR-23 outcome on the sourcing pages (`/buyer/sourcing`, then an RFQ). The five sample RFQs are titled "Compliance gate demo — … (sample)"; the suppliers marked "(illustrative)" exist only for this demo. Fixtures: `src/services/data/mock/fixtures/gateDemo.ts`; each row is pinned by name in `gateDemo.test.ts`. Demo date: the declared present, 31 Aug 2026.
+Sample data (BL-64) so a buyer can see every CR-23 outcome on the RFQ pages (`/buyer/rfq`, then an RFQ). The five sample RFQs are titled "Compliance gate demo — … (sample)"; the suppliers marked "(illustrative)" exist only for this demo. Fixtures: `src/services/data/mock/fixtures/gateDemo.ts`; each row is pinned by name in `gateDemo.test.ts`. Demo date: the declared present, 31 Aug 2026.
 
 | Scenario | RFQ | Supplier | Gate result |
 |---|---|---|---|
