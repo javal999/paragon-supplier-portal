@@ -220,6 +220,20 @@ export const LOOSE_END_CENSUS: readonly CensusEntry[] = Object.freeze([
       'as a born entity would have made the parent its creator, which is the one relationship the ' +
       'copy deliberately does not have — a child follows its parent, it is not owned by it.',
   },
+
+  // ── workingCalendar (BL-50) ────────────────────────────────────────────────
+  {
+    entity: 'workingCalendar',
+    kind: 'initial-integrity',
+    subject: 'Maintained',
+    reason: 'substrate-only',
+    note:
+      'THE SAME DEGENERATE SINGLE-STATE LEDGER SHAPE AS THE ENFORCEMENT AND ROLE MACHINES: the entity ' +
+      'IS a calendar date, and the dates are the year the SAP factory calendar load covers — not rows ' +
+      'anybody creates. The ruling verb is statePreserving, so it is neither an entry nor an exit, and ' +
+      'the state is correctly declared terminal. The deadlines a ruling moves are derived at read from ' +
+      'the calendar and are never states of any machine.',
+  },
   // ── stockAccess (REQ-E08-03) ───────────────────────────────────────────────
   {
     entity: 'stockAccess',
