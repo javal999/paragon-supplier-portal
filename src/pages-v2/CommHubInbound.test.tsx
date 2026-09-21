@@ -3,18 +3,29 @@ import { screen, waitFor, within, fireEvent } from '@testing-library/react';
 import { renderWithProviders, SUPPLIER } from '../test/test-utils';
 import CommHubInbound from './CommHubInbound';
 import { inventoryDeclarationStore } from '../services/data/mock/stores/inventoryDeclarationStore';
+import { commandAuditSink } from '../services/data/mock/MockCommandService';
 import { channelProvenanceStore } from '../services/channel/provenanceStore';
 import { outboundRequestStore } from '../services/channel';
 import i18n from '../lib/i18n';
 
 // ────────────────────────────────────────────────────────────────────────────
-// Comm Hub C2 — the inbound confirm-before-commit surface. The honesty crux:
-// a parsed reply is an INFERENCE until a human confirms; NOTHING dispatches
-// before confirm; supplierId comes from the identity, never the message; the
-// wrapper is stripped so the spine gets bare rows; honest silence on refusal.
+// Comm Hub C2 — the inbound triage surface. The honesty crux: a parsed reply is
+// an INFERENCE until a human acts; NOTHING dispatches from the parse; supplierId
+// comes from the identity, never the message.
 //
-// Default persona is sup-007 (PT Sample Packaging) — it collaborates PK-PETB-8810 (uom
-// PCS) + PK-CAPF-8820, so a STOK reply for those declares against a real material.
+// ⚠️ PREMISE CHANGED (BL-73 · REQ-E08-02 BR-09). This page used to confirm a
+// parsed row through its OWN path (a material select + a quantity box →
+// `parseGrid` → `useInventoryDeclare`): one field, its own number rules. That
+// was a second stock entry point. A row now only PRE-FILLS the Stock page's
+// entry form (`StockEntryPanel`, supplier mode), and that form's submit is the
+// act. So "confirm" below is: open the form from the row, check it, save. What
+// held before still holds (identity-bound supplier, master unit, locale-correct
+// quantity, channel-side provenance); what the old path's own refusals proved
+// (INVALID / AMBIGUOUS quantity) is now proved by the FORM's CR-18 check, and
+// the form's full field set is pinned beside it.
+//
+// Default persona is sup-007 (PT Sample Packaging) — it holds PK-PETB-8810 (uom
+// PCS) + PK-CAPF-8820, so a STOK reply for those pre-fills a real stock row.
 // ────────────────────────────────────────────────────────────────────────────
 
 const MAT = 'PK-PETB-8810';
@@ -22,86 +33,101 @@ const MAT = 'PK-PETB-8810';
 beforeEach(() => {
   inventoryDeclarationStore.reset();
   channelProvenanceStore.reset();
+  commandAuditSink.clear();
 });
 
 const renderPage = () =>
   renderWithProviders(<CommHubInbound />, { identity: SUPPLIER, route: '/supplier/comm-hub' });
 
+const panel = () => within(document.querySelector('aside[role="dialog"]') as HTMLElement);
+
 const typeMessage = (text: string) =>
   fireEvent.change(screen.getByTestId('commhub-message-input'), { target: { value: text } });
 const clickParse = () => fireEvent.click(screen.getByTestId('commhub-parse'));
 
-// Select the confirmable material in row 0, once the picker has its options.
-async function selectMaterial(code: string) {
-  const select = (await screen.findByTestId('commhub-mat-0')) as HTMLSelectElement;
-  await waitFor(() => expect(within(select).getAllByRole('option').length).toBeGreaterThan(1));
-  fireEvent.change(select, { target: { value: code } });
+/** Parse a reply once the supplier's stock rows have loaded (the match needs them). */
+async function parseWhenReady(text: string) {
+  await screen.findByTestId('commhub-needs');
+  typeMessage(text);
+  // The exact-match suggestion reads the supplier's own stock rows; parse only
+  // once they are there, else a real material would read as unmatched.
+  await waitFor(() => {
+    clickParse();
+    expect(screen.getByTestId('commhub-row-0')).not.toHaveTextContent(/No material of yours/);
+  });
 }
-const setQty = (v: string) =>
-  fireEvent.change(screen.getByTestId('commhub-qty-0'), { target: { value: v } });
+
+async function openEntryFromRow() {
+  fireEvent.click(await screen.findByTestId('commhub-enter-0'));
+  await screen.findByTestId('stock-entry-panel');
+}
+const save = () => fireEvent.click(panel().getByTestId('stock-entry-submit'));
 
 const countFor = (material: string) =>
   inventoryDeclarationStore.all().filter((d) => d.supplierId === 'sup-007' && d.materialCode === material).length;
 
 describe('CommHubInbound — parse renders the inference', () => {
-  it('shows the message echo, recognized tokens, and an editable row', async () => {
+  it('shows the message echo, recognized tokens, and a row read from it', async () => {
     renderPage();
-    typeMessage('STOK PK-PETB-8810 2.400 KG');
-    clickParse();
-    await screen.findByTestId('commhub-rows');
+    await parseWhenReady('STOK PK-PETB-8810 2.400 KG');
     // Recognized tokens shown; uom parsed as a DIAGNOSTIC (never a payload field).
     const inf = screen.getByTestId('commhub-inference');
     expect(within(inf).getByText('STOK')).toBeInTheDocument();
     expect(within(inf).getByText(/reference only|rujukan saja/i)).toBeInTheDocument();
-    // The quantity pre-fill is the locale-normalized 2400 (never 2.4).
-    expect((screen.getByTestId('commhub-qty-0') as HTMLInputElement).value).toBe('2400');
+    // The quantity read is the locale-normalized 2400 (never 2.4), and the row
+    // names the supplier's own material it matched.
+    const row = screen.getByTestId('commhub-row-0');
+    expect(row).toHaveTextContent('2400');
+    expect(row).toHaveTextContent(`Matches your material ${MAT}`);
   });
 
-  it('unparseable text → honest diagnostics, NO row, nothing to confirm', async () => {
+  it('unparseable text → honest diagnostics, NO row, nothing to enter', async () => {
     renderPage();
     typeMessage('halo pak, apa kabar hari ini?');
     clickParse();
     await screen.findByText(/could not interpret|tidak dapat menafsirkan/i);
     expect(screen.queryByTestId('commhub-rows')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('commhub-confirm')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('commhub-enter-0')).not.toBeInTheDocument();
   });
 });
 
-describe('CommHubInbound — the confirm gate (the honesty crux)', () => {
-  it('does NOT dispatch before confirm (the gate lock)', async () => {
+describe('CommHubInbound — the Stock page’s entry form is the only act', () => {
+  it('does NOT dispatch before the form is saved (the gate lock)', async () => {
     renderPage();
     const before = inventoryDeclarationStore.all().length;
-    const base = countFor(MAT);
-    typeMessage('STOK PK-PETB-8810 2400 KG');
-    clickParse();
-    await selectMaterial(MAT);
-    // Row parsed + material mapped, but no confirm yet → nothing dispatched.
+    await parseWhenReady('STOK PK-PETB-8810 2400 KG');
+    await openEntryFromRow();
+    // Parsed, form open and pre-filled — but not saved → nothing dispatched.
     expect(inventoryDeclarationStore.all().length).toBe(before);
-    expect(countFor(MAT)).toBe(base);
+    expect(commandAuditSink.all()).toHaveLength(0);
   });
 
-  it('on confirm the reply lands as a governed declaration (locale 2400, master uom)', async () => {
+  it('on save the reply lands as a governed declaration (locale 2400, master uom, entered on screen)', async () => {
     renderPage();
     const base = countFor(MAT);
-    typeMessage('STOK PK-PETB-8810 2.400 KG');
-    clickParse();
-    await selectMaterial(MAT);
-    fireEvent.click(screen.getByTestId('commhub-confirm'));
+    await parseWhenReady('STOK PK-PETB-8810 2.400 KG');
+    await openEntryFromRow();
+    expect((panel().getByLabelText('Material') as HTMLSelectElement).value).toBe(MAT);
+    expect((panel().getByLabelText('Stock on hand (PCS)') as HTMLInputElement).value).toBe('2400');
+    save();
     await waitFor(() => expect(countFor(MAT)).toBe(base + 1));
     const minted = inventoryDeclarationStore.latestFor('sup-007', MAT)!;
-    expect(minted.supplierId).toBe('sup-007'); // from identity/context
+    expect(minted.supplierId).toBe('sup-007'); // from identity
     expect(minted.totalQty).toBe(2400); // locale-correct, never 2.4
     expect(minted.uom).toBe('PCS'); // master uom — the message's "KG" never entered the payload
+    expect(minted.channel).toBe('manual'); // the supplier entered it — never "Entered by PTI"
+    expect(commandAuditSink.byEvent('t_inventorydeclaration_declare')).toHaveLength(1);
+    // The Stock page's own number format — never the id-ID "2.400" in an English UI.
+    expect(await screen.findByTestId('commhub-result')).toHaveTextContent(`Recorded: ${MAT} — 2,400 PCS`);
   });
 
-  it('the operator EDIT changes what dispatches', async () => {
+  it('the user’s EDIT in the form changes what dispatches', async () => {
     renderPage();
     const base = countFor(MAT);
-    typeMessage('STOK PK-PETB-8810 2400 KG');
-    clickParse();
-    await selectMaterial(MAT);
-    setQty('5000'); // operator corrects the quantity
-    fireEvent.click(screen.getByTestId('commhub-confirm'));
+    await parseWhenReady('STOK PK-PETB-8810 2400 KG');
+    await openEntryFromRow();
+    fireEvent.change(panel().getByLabelText('Stock on hand (PCS)'), { target: { value: '5000' } });
+    save();
     await waitFor(() => expect(countFor(MAT)).toBe(base + 1));
     expect(inventoryDeclarationStore.latestFor('sup-007', MAT)!.totalQty).toBe(5000);
   });
@@ -109,54 +135,44 @@ describe('CommHubInbound — the confirm gate (the honesty crux)', () => {
   it('supplierId comes from the identity, never the message (spoof is inert)', async () => {
     renderPage();
     const base = countFor(MAT);
-    typeMessage('STOK PK-PETB-8810 2400 supplierId=sup-999');
-    clickParse();
-    await selectMaterial(MAT);
-    fireEvent.click(screen.getByTestId('commhub-confirm'));
+    await parseWhenReady('STOK PK-PETB-8810 2400 supplierId=sup-999');
+    await openEntryFromRow();
+    save();
     await waitFor(() => expect(countFor(MAT)).toBe(base + 1));
     expect(inventoryDeclarationStore.latestFor('sup-007', MAT)!.supplierId).toBe('sup-007');
     expect(inventoryDeclarationStore.all().some((d) => d.supplierId === 'sup-999')).toBe(false);
   });
 
-  it('a parseGrid refusal surfaces its reason (honest silence — no fabricated payload)', async () => {
+  it('CR-18 — a quantity that is not a number blocks the save and says so', async () => {
     renderPage();
-    typeMessage('STOK PK-PETB-8810 2400 KG');
-    clickParse();
-    await selectMaterial(MAT);
-    setQty('abc'); // the operator breaks the quantity → parseGrid refuses INVALID_QTY
-    const before = countFor(MAT);
-    fireEvent.click(screen.getByTestId('commhub-confirm'));
-    const result = await screen.findByTestId('commhub-result');
-    expect(within(result).getByText(/not recorded|tidak tercatat/i)).toBeInTheDocument();
-    expect(countFor(MAT)).toBe(before); // nothing dispatched
+    await parseWhenReady('STOK PK-PETB-8810 2400 KG');
+    await openEntryFromRow();
+    fireEvent.change(panel().getByLabelText('Stock on hand (PCS)'), { target: { value: 'abc' } });
+    expect(panel().getByText('Not a number')).toBeInTheDocument();
+    expect(panel().getByTestId('stock-entry-submit')).toBeDisabled();
+    expect(commandAuditSink.all()).toHaveLength(0);
   });
 
-  // CP-0 · PR-2a — the operator-typed qty reaches parseGrid in IMPORT mode, whose
-  // origin is a supplier's own message, so an ambiguous number is never resolved
-  // by our locale. The load-bearing half of this test is the SECOND assertion: a
-  // refusal that renders no reason is not honest silence, it is just silence.
-  it('an AMBIGUOUS qty refuses AND says why — a reason is never blank', async () => {
+  // The operator-typed qty is never resolved by our locale when it reads two ways.
+  // The load-bearing half is the reason: a refusal that renders no reason is not
+  // honest silence, it is just silence.
+  it('CR-18 — an AMBIGUOUS quantity refuses AND says why — a reason is never blank', async () => {
     renderPage();
-    typeMessage('STOK PK-PETB-8810 2400 KG');
-    clickParse();
-    await selectMaterial(MAT);
-    setQty('2.400'); // 2400 (id) or 2.4 (en) — refused, never guessed
-    const before = countFor(MAT);
-    fireEvent.click(screen.getByTestId('commhub-confirm'));
-    const result = await screen.findByTestId('commhub-result');
-    expect(within(result).getByText(/not recorded|tidak tercatat/i)).toBeInTheDocument();
-    expect(within(result).getByText(/could be read two ways/i)).toBeInTheDocument();
-    expect(countFor(MAT)).toBe(before); // nothing dispatched, nothing fabricated
+    await parseWhenReady('STOK PK-PETB-8810 2400 KG');
+    await openEntryFromRow();
+    fireEvent.change(panel().getByLabelText('Stock on hand (PCS)'), { target: { value: '2.400' } });
+    expect(panel().getByText(/can be read two ways/i)).toBeInTheDocument();
+    expect(panel().getByTestId('stock-entry-submit')).toBeDisabled();
+    expect(commandAuditSink.all()).toHaveLength(0);
   });
 
   it('records provenance on the channel side after dispatch (never in the payload)', async () => {
     renderPage();
     const base = countFor(MAT);
     expect(channelProvenanceStore.all()).toHaveLength(0);
-    typeMessage('STOK PK-PETB-8810 2400 KG');
-    clickParse();
-    await selectMaterial(MAT);
-    fireEvent.click(screen.getByTestId('commhub-confirm'));
+    await parseWhenReady('STOK PK-PETB-8810 2400 KG');
+    await openEntryFromRow();
+    save();
     await waitFor(() => expect(countFor(MAT)).toBe(base + 1));
     await waitFor(() => expect(channelProvenanceStore.all()).toHaveLength(1));
     const ref = channelProvenanceStore.all()[0];
@@ -166,22 +182,68 @@ describe('CommHubInbound — the confirm gate (the honesty crux)', () => {
   });
 });
 
-describe('CommHubInbound — material alias is a visible suggestion, never auto-resolved', () => {
-  it('an unknown material does not pre-select and blocks confirm until mapped', async () => {
+// ────────────────────────────────────────────────────────────────────────────
+// BL-73 — IT IS THE STOCK PAGE'S FORM: the full field set and CR-19.
+// ────────────────────────────────────────────────────────────────────────────
+describe('BL-73 · CommHubInbound enters stock through the Stock page’s form', () => {
+  it('carries the full field set: ROP, in production, completion date, batches with manufacturing and expiry', async () => {
     renderPage();
-    // MAT-10234 is code-like (parses as a material token) but NOT a collaborated
-    // material for sup-007 — so it must never silently resolve.
+    await parseWhenReady('STOK PK-PETB-8810 1000');
+    await openEntryFromRow();
+    fireEvent.change(panel().getByLabelText('Supplier reorder point (PCS)'), { target: { value: '300' } });
+    fireEvent.change(panel().getByLabelText('In production (PCS)'), { target: { value: '5000' } });
+    fireEvent.change(panel().getByLabelText('Expected production completion'), { target: { value: '2026-09-30' } });
+    fireEvent.click(panel().getByRole('button', { name: 'Add batch' }));
+    fireEvent.change(panel().getByLabelText('Batch number'), { target: { value: 'WA-1' } });
+    fireEvent.change(panel().getByLabelText('Quantity'), { target: { value: '1000' } });
+    fireEvent.change(panel().getByLabelText('Manufacturing date'), { target: { value: '2026-06-01' } });
+    fireEvent.change(panel().getByLabelText('Expiry date'), { target: { value: '2028-06-01' } });
+    save();
+    await waitFor(() => expect(countFor(MAT)).toBe(1));
+    expect(inventoryDeclarationStore.latestFor('sup-007', MAT)).toMatchObject({
+      totalQty: 1000,
+      supplierRop: 300,
+      inProductionQty: 5000,
+      productionCompletionDate: '2026-09-30',
+      channel: 'manual',
+      batches: [{ batchNumber: 'WA-1', qty: 1000, uom: 'PCS', manufacturingDate: '2026-06-01', expiryDate: '2028-06-01' }],
+    });
+  });
+
+  it('CR-19 — batches that do not add up to the stock on hand block the save; the known-good twin saves', async () => {
+    renderPage();
+    await parseWhenReady('STOK PK-PETB-8810 1000');
+    await openEntryFromRow();
+    fireEvent.click(panel().getByRole('button', { name: 'Add batch' }));
+    fireEvent.change(panel().getByLabelText('Batch number'), { target: { value: 'WA-1' } });
+    fireEvent.change(panel().getByLabelText('Quantity'), { target: { value: '900' } });
+    expect(panel().getByTestId('stock-entry-batch-mismatch')).toBeInTheDocument();
+    expect(panel().getByTestId('stock-entry-submit')).toBeDisabled();
+    fireEvent.change(panel().getByLabelText('Quantity'), { target: { value: '1000' } });
+    save();
+    await waitFor(() => expect(countFor(MAT)).toBe(1));
+  });
+});
+
+describe('CommHubInbound — material alias is a visible suggestion, never auto-resolved', () => {
+  it('an unknown material does not pre-select, and the form cannot save until one is chosen', async () => {
+    renderPage();
+    await screen.findByTestId('commhub-needs');
+    // MAT-10234 is code-like (parses as a material token) but is NOT one of
+    // sup-007's materials — so it must never silently resolve.
     typeMessage('STOK MAT-10234 2400 KG');
     clickParse();
-    const select = (await screen.findByTestId('commhub-mat-0')) as HTMLSelectElement;
-    await waitFor(() => expect(within(select).getAllByRole('option').length).toBeGreaterThan(1));
+    const row = await screen.findByTestId('commhub-row-0');
     // The raw token is shown for reference, but nothing was silently resolved.
-    expect(within(screen.getByTestId('commhub-rows')).getByText('MAT-10234')).toBeInTheDocument();
-    expect(select.value).toBe('');
-    expect((screen.getByTestId('commhub-confirm') as HTMLButtonElement).disabled).toBe(true);
-    // Confirming the material unlocks the gate.
-    fireEvent.change(select, { target: { value: MAT } });
-    expect((screen.getByTestId('commhub-confirm') as HTMLButtonElement).disabled).toBe(false);
+    expect(within(row).getByText('MAT-10234')).toBeInTheDocument();
+    expect(row).toHaveTextContent(/No material of yours matches/);
+    await openEntryFromRow();
+    const material = panel().getByLabelText('Material') as HTMLSelectElement;
+    expect(material.value).toBe('');
+    expect(panel().getByTestId('stock-entry-submit')).toBeDisabled();
+    // Choosing the material in the form unlocks the save.
+    fireEvent.change(material, { target: { value: MAT } });
+    expect(panel().getByTestId('stock-entry-submit')).not.toBeDisabled();
   });
 });
 
@@ -295,18 +357,20 @@ describe('⚠️ CommHubInbound — `inventorydeclaration:declare` is FULFILMENT
       route: '/supplier/comm-hub',
     });
   const parseAReply = async () => {
+    await screen.findByTestId('commhub-needs');
     typeMessage('STOK PK-PETB-8810 2400 KG');
     clickParse();
-    await selectMaterial(MAT);
+    await screen.findByTestId('commhub-row-0');
   };
 
-  it('⚠️ a COMMERCIAL-only seat reads the WAIT, and the confirm is GONE', async () => {
+  it('⚠️ a COMMERCIAL-only seat reads the WAIT, and the way into the form is GONE', async () => {
     renderAs(['supplier', 'commercial']);
     await parseAReply();
     const notice = await screen.findByTestId('handoff-commhub-declare');
     expect(notice).toHaveTextContent(i18n.t('roles.owner.fulfilment'));
     expect(notice).toHaveAttribute('data-handoff', 'withheld');
-    expect(screen.queryByTestId('commhub-confirm')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('commhub-enter-0')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('stock-entry-panel')).not.toBeInTheDocument();
   });
 
   it('…and nothing dispatches for that seat even though the row parsed', async () => {
@@ -318,21 +382,25 @@ describe('⚠️ CommHubInbound — `inventorydeclaration:declare` is FULFILMENT
     expect(screen.getByTestId('commhub-inference')).toBeInTheDocument();
     // ⚠️ The absence of the CONTROL is the assertion that probes the guard.
     // Asserting only that the count did not move would pass against a LIVE
-    // confirm button that this test simply never clicks — measured: it survived
-    // the mutation probe until this line was added.
-    expect(screen.queryByTestId('commhub-confirm')).not.toBeInTheDocument();
+    // control that this test simply never clicks.
+    expect(screen.queryByTestId('commhub-enter-0')).not.toBeInTheDocument();
     expect(await screen.findByTestId('handoff-commhub-declare')).toHaveTextContent(
       i18n.t('roles.owner.fulfilment'),
     );
     expect(countFor(MAT)).toBe(base);
   });
 
-  it('…and a FULFILMENT seat still confirms end to end — not an always-off', async () => {
+  it('…and a FULFILMENT seat still enters end to end — not an always-off', async () => {
     renderAs(['supplier', 'fulfilment']);
     const base = countFor(MAT);
     await parseAReply();
     expect(screen.queryByTestId('handoff-commhub-declare')).not.toBeInTheDocument();
-    fireEvent.click(screen.getByTestId('commhub-confirm'));
+    await openEntryFromRow();
+    // The pre-fill needs the stock rows; set the material explicitly so the
+    // assertion is about the gate, not about load order.
+    fireEvent.change(panel().getByLabelText('Material'), { target: { value: MAT } });
+    fireEvent.change(panel().getByLabelText('Stock on hand (PCS)'), { target: { value: '2400' } });
+    save();
     await waitFor(() => expect(countFor(MAT)).toBe(base + 1));
   });
 });

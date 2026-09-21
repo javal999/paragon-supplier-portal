@@ -23,6 +23,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
 
 import BuyerSupplierApplications from './BuyerSupplierApplications';
+import Toaster from '../components/ui-v2/Toaster';
 import { renderWithProviders, SUPPLIER } from '../test/test-utils';
 import { supplierApplicationStore } from '../services/data/mock/stores/supplierApplicationStore';
 import { mockSuppliers } from '../data/mockSuppliers';
@@ -513,7 +514,15 @@ describe('B3 · the door', () => {
     const before = supplierApplicationStore.all().length;
     const vendor = mockSuppliers[0];
 
-    renderWithProviders(<BuyerSupplierApplications />, { identity: PROCUREMENT_SEAT });
+    // `<Toaster />` is mounted explicitly: it lives in `AppRouter`, not in the
+    // page, and the success toast is asserted below (BL-72).
+    renderWithProviders(
+      <>
+        <Toaster />
+        <BuyerSupplierApplications />
+      </>,
+      { identity: PROCUREMENT_SEAT },
+    );
     await openDoor('Internal SR');
     fireEvent.change(await screen.findByTestId('application-raise-vendor'), {
       target: { value: vendor.sapBpNumber },
@@ -547,6 +556,12 @@ describe('B3 · the door', () => {
     expect(raised.status).toBe('Submitted');
     expect(raised.submittedBy).toEqual(NO_PERSON);
     expect(raised.applicationNumber).toMatch(/^APP-2026-\d{4}$/);
+
+    // BL-72 — the success toast names the COMPANY (the page passes no number),
+    // and the string it renders interpolates exactly that. It used to read
+    // `{{number}} raised`, printed raw because no caller supplies a number.
+    expect(await screen.findByText(`Application raised for ${vendor.name}`)).toBeInTheDocument();
+    expect(document.body.textContent).not.toContain('{{');
   });
 
   it('an External SR names no identifier space — free text, and nothing resolves', async () => {

@@ -15,17 +15,18 @@ import type { SupplierChaseView } from '../services/chase';
 // mount is covered by allRoutes.smoke. outboundRequestStore keeps its SIMULATED
 // seed (sup-005 whatsapp @ 08-18, sup-007 email @ 08-19).
 vi.mock('../services/query/chaseHooks', () => ({ useUnifiedChase: vi.fn() }));
-// useConsolidationRows drives the outbound fold; useInventoryRecord is the C4d
-// triage panel's write hook — stubbed here (its REAL dispatch is covered in
-// BuyerChannelTriage.test.tsx), so this page test stays focused on the reads.
+// useConsolidationRows drives the outbound fold. The C4d triage panel no longer
+// has a write hook of its own (BL-73): it pre-fills the Inventory page's entry
+// form, whose dispatch runs REAL here against the mock service, and whose stock
+// rows come from the real `useInventory` read — so only `useSuppliers` is stubbed
+// in the hooks module.
 vi.mock('../services/query/sdcBuyerHooks', () => ({
   useConsolidationRows: vi.fn(),
-  useInventoryRecord: vi.fn(() => ({
-    mutateAsync: vi.fn().mockResolvedValue({ status: 'done', entityId: 'inv-x', correlationId: 'c' }),
-    isPending: false,
-  })),
 }));
-vi.mock('../services/query/hooks', () => ({ useSuppliers: vi.fn() }));
+vi.mock('../services/query/hooks', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../services/query/hooks')>()),
+  useSuppliers: vi.fn(),
+}));
 
 const view = (
   supplierId: string,
@@ -162,7 +163,7 @@ describe('BuyerCommHub — the buyer/planner Communication Hub (C4a)', () => {
     expect(within(triage).getByTestId('triage-supplier')).toBeInTheDocument();
     // Before a supplier is picked there is no message field and no confirm action.
     expect(within(triage).queryByTestId('triage-message')).not.toBeInTheDocument();
-    expect(within(triage).queryByTestId('triage-confirm')).not.toBeInTheDocument();
+    expect(within(triage).queryByTestId('triage-enter-0')).not.toBeInTheDocument();
     // And there is NEVER a free supplierId text field — the subject is picked.
     expect(within(triage).queryByLabelText(/supplier id/i)).not.toBeInTheDocument();
   });
@@ -171,14 +172,16 @@ describe('BuyerCommHub — the buyer/planner Communication Hub (C4a)', () => {
     renderWithProviders(<BuyerCommHub />);
     // Empty audit trail to begin.
     expect(within(screen.getByTestId('commhub-provenance')).getByText(/No channel-sourced submissions/)).toBeInTheDocument();
-    // Bind the subject, paste, parse, map the material, confirm.
+    // Bind the subject, paste, parse, open the entry form, save (BL-73: the form
+    // is the Inventory page's own, and its save is the record dispatch).
     fireEvent.change(screen.getByTestId('triage-supplier'), { target: { value: 'sup-007' } });
     fireEvent.change(screen.getByTestId('triage-message'), { target: { value: 'STOK PK-PETB-8810 2400 KG' } });
     fireEvent.click(screen.getByTestId('triage-parse'));
-    const mat = (await screen.findByTestId('triage-mat-0')) as HTMLSelectElement;
-    await waitFor(() => expect(within(mat).getAllByRole('option').length).toBeGreaterThan(1));
-    fireEvent.change(mat, { target: { value: 'PK-PETB-8810' } });
-    fireEvent.click(screen.getByTestId('triage-confirm'));
+    fireEvent.click(await screen.findByTestId('triage-enter-0'));
+    const form = within(document.querySelector('aside[role="dialog"]') as HTMLElement);
+    fireEvent.change(form.getByLabelText('Material'), { target: { value: 'PK-PETB-8810' } });
+    fireEvent.change(form.getByLabelText('Stock on hand (PCS)'), { target: { value: '2400' } });
+    fireEvent.click(form.getByTestId('stock-entry-submit'));
     // The onRecorded refresh re-reads the append-only store → a provenance row shows.
     await waitFor(() => expect(screen.getAllByTestId('commhub-provenance-row').length).toBe(1));
     expect(within(screen.getByTestId('commhub-provenance')).getByText('Recorded')).toBeInTheDocument();

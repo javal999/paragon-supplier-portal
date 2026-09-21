@@ -9,7 +9,7 @@ import { useRefusalText } from '../../hooks/useRefusalText';
 import { formatDate, formatDateTime } from '../../lib/format';
 import type { StatusTone } from '../../lib/statusTone';
 import { sdcClock } from '../../services/sdc';
-import type { InventoryPosition, RiskBasis, RiskClass } from '../../services/data/types';
+import type { CommandResult, InventoryPosition, RiskBasis, RiskClass } from '../../services/data/types';
 import type { StockChannel } from '../../services/sdc/types';
 import {
   incomingTotals,
@@ -253,7 +253,14 @@ export function useInventoryRunner() {
   const { toast } = useToast();
   const refusalText = useRefusalText();
   const command = useInventoryCommand();
-  const run = async (vars: InventoryCommandVars, success?: string): Promise<{ ok: boolean; reason?: string }> => {
+  // `result` is the governed dispatch's own answer, returned on success so a
+  // caller that must tie the act to something outside the payload (the channel
+  // triage's provenance, BL-73) reads it from the one dispatch rather than
+  // dispatching again.
+  const run = async (
+    vars: InventoryCommandVars,
+    success?: string,
+  ): Promise<{ ok: boolean; reason?: string; result?: CommandResult }> => {
     try {
       const res = await command.mutateAsync(vars);
       if (res.status === 'failed') {
@@ -268,7 +275,7 @@ export function useInventoryRunner() {
         return { ok: false, reason: key ? t(key) : (refusalText(res.reason) ?? t('inv.refusal.generic')) };
       }
       if (success) toast({ variant: 'success', title: success });
-      return { ok: true };
+      return { ok: true, result: res };
     } catch (err) {
       // A scope refusal is thrown, not returned: for a stock row it means the
       // material is not assigned to the supplier.
