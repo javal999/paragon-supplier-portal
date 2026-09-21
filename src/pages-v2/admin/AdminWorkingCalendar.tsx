@@ -133,15 +133,21 @@ const DeadlinesPanel: React.FC<{ calendarVersion: number }> = ({ calendarVersion
               <div className="text-xs text-text-tertiary mb-2">
                 {t('adminCal.deadlines.published', { date: formatDateTime(v.publishedAt) })}
               </div>
-              <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
-                <dt className="text-text-secondary">{t('adminCal.deadlines.firm')}</dt>
-                <dd data-testid={`admin-cal-due-${v.stream}-firm`}>
-                  <Data>{formatDateTime(commitmentDueAt('firm', v.publishedAt))}</Data>
-                </dd>
-                <dt className="text-text-secondary">{t('adminCal.deadlines.other')}</dt>
-                <dd data-testid={`admin-cal-due-${v.stream}-other`}>
-                  <Data>{formatDateTime(commitmentDueAt('tradeOff', v.publishedAt))}</Data>
-                </dd>
+              {/* Label above value: side by side, the long label squeezed the
+                  date into a column that wrapped word by word (seen at 800px). */}
+              <dl className="flex flex-col gap-2 text-sm">
+                <div>
+                  <dt className="text-xs text-text-secondary">{t('adminCal.deadlines.firm')}</dt>
+                  <dd className="whitespace-nowrap" data-testid={`admin-cal-due-${v.stream}-firm`}>
+                    <Data>{formatDateTime(commitmentDueAt('firm', v.publishedAt))}</Data>
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-xs text-text-secondary">{t('adminCal.deadlines.other')}</dt>
+                  <dd className="whitespace-nowrap" data-testid={`admin-cal-due-${v.stream}-other`}>
+                    <Data>{formatDateTime(commitmentDueAt('tradeOff', v.publishedAt))}</Data>
+                  </dd>
+                </div>
               </dl>
             </div>
           ))}
@@ -277,6 +283,7 @@ const AdminWorkingCalendar: React.FC = () => {
                   type="date"
                   className={`${INPUT_CLASS} font-mono`}
                   data-testid="admin-cal-date"
+                  aria-label={t('adminCal.form.date')}
                   min={SAP_FACTORY_CALENDAR.coversFrom}
                   max={SAP_FACTORY_CALENDAR.coversTo}
                   value={draft.date}
@@ -289,6 +296,7 @@ const AdminWorkingCalendar: React.FC = () => {
                 <select
                   className={INPUT_CLASS}
                   data-testid="admin-cal-kind"
+                  aria-label={t('adminCal.form.kind')}
                   value={draft.kind}
                   onChange={(e) => setDraft((d) => ({ ...d, kind: e.target.value as CalendarDayKind }))}
                 >
@@ -301,6 +309,7 @@ const AdminWorkingCalendar: React.FC = () => {
                 <input
                   className={INPUT_CLASS}
                   data-testid="admin-cal-reason"
+                  aria-label={t('adminCal.form.reason')}
                   value={draft.reason}
                   onChange={(e) => setDraft((d) => ({ ...d, reason: e.target.value }))}
                   required
