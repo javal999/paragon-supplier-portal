@@ -94,7 +94,7 @@ import {
   CALL_OFF_TYPES,
   CONFIRMATION_STATE,
   checkTolerance,
-  exceedsRemaining,
+  releaseCheck,
   headsUpsFor,
   isAwaitingApproval,
   isCallOffDate,
@@ -931,7 +931,7 @@ bindPolicyHook(POLICY_HOOKS.RECEIPT_DISCREPANCY_ANSWERABLE, ({ payload }) => {
   const gr = goodsReceiptStore.get(String(payload.receiptId));
   if (!gr) return { ok: false, reason: 'goods receipt not found' };
   if (!hasReceiptDiscrepancy(gr, asnForReceipt(gr))) {
-    return { ok: false, reason: `NO_DISCREPANCY: ${gr.grNumber} matches what was shipped` };
+    return { ok: false, reason: `NO_DISCREPANCY: ${gr.grNumber} is within the receipt tolerance (CR-25) and nothing was rejected` };
   }
   if (receiptDiscrepancyStore.get(gr.id)) {
     return { ok: false, reason: `ALREADY_ANSWERED: ${gr.grNumber} already has an answer` };
@@ -1120,7 +1120,10 @@ bindPolicyHook(POLICY_HOOKS.CALLOFF_LINE_VALID, ({ payload }) => {
   return { ok: true };
 });
 
-// REQ-E09-01 BR-04 / AC-03, CR-04 — never beyond what remains on the umbrella PO.
+// REQ-E09-01 BR-04 / AC-03, CR-04 — never beyond what remains on the umbrella PO
+// line. BL-49: the check is on remaining QUANTITY, and on remaining VALUE only
+// where the line carries no quantity. The refusal says which, and with what
+// figures, so the planner can act on it.
 bindPolicyHook(POLICY_HOOKS.CALLOFF_WITHIN_REMAINING, ({ entityId, payload }) => {
   const existing = entityId ? callOffStore.get(entityId) : undefined;
   const poId = existing?.poId ?? String(payload.poId);
@@ -1129,10 +1132,14 @@ bindPolicyHook(POLICY_HOOKS.CALLOFF_WITHIN_REMAINING, ({ entityId, payload }) =>
   if (!po || !line) return { ok: false, reason: 'umbrella PO line not found' };
   const quantity = isPositiveQty(payload.quantity) ? payload.quantity : existing?.quantity;
   if (!isPositiveQty(quantity)) return { ok: false, reason: 'quantity must be greater than zero' };
-  if (exceedsRemaining(quantity, line, callOffStore.all(), existing?.id)) {
+  const check = releaseCheck(quantity, line, callOffStore.all(), existing?.id);
+  if (check.exceeds) {
     return {
       ok: false,
-      reason: `EXCEEDS_REMAINING: ${quantity} ${line.uom} is more than what remains on ${po.poNumber}`,
+      reason:
+        check.basis === 'quantity'
+          ? `EXCEEDS_REMAINING: ${quantity} ${line.uom} is more than the ${check.remaining.remainingQty} ${line.uom} remaining on ${po.poNumber} line ${line.materialCode}`
+          : `EXCEEDS_REMAINING_VALUE: ${check.requestedValue} is more than the ${check.remaining.remainingValue} remaining on ${po.poNumber} line ${line.materialCode}, which has no quantity`,
     };
   }
   return { ok: true };
@@ -3735,6 +3742,10 @@ const resolveCascades = (ctx: CascadeContext): CascadeCommand[] => {
         0,
       );
       const grHasRejects = gr.inspectionResults.some((r) => r.qtyRejected > 0);
+      // CR-12 (BL-44) — a lineless invoice's difference is not split by line,
+      // so the order's strictest rule applies: 0% when any PO line carries a
+      // contract price, else 2% within the rupiah cap.
+      const priceRule = po.lineItems.some((li) => li.contractNumber) ? 'contract' : 'standard';
       const cmds: CascadeCommand[] = [];
       // ⚠️ **THE PAIRING, NAMED.** This was an inline `continue` clause reading
       // `inv.poNumber !== gr.poNumber || inv.status !== 'Submitted'`. It IS the
@@ -3749,7 +3760,7 @@ const resolveCascades = (ctx: CascadeContext): CascadeCommand[] => {
       // on the same PO does not overwrite that verdict. Only invoices without
       // lines are still matched here.
       for (const inv of invoicesForReceipt(gr, invoiceStore.all()).filter((i) => !i.lines)) {
-        const verdict = deriveMatchVerdict(expectedValue, inv.amount, grHasRejects);
+        const verdict = deriveMatchVerdict(expectedValue, inv.amount, grHasRejects, priceRule);
         invoiceStore.update(inv.id, (i) => ({ ...i, matchStatus: verdict }));
         if (verdict === 'Matched') {
           cmds.push({

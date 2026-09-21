@@ -157,8 +157,12 @@ const mockGoodsReceiptsRaw: GoodsReceipt[] = [
         materialCode: 'PK-PETB-8802',
         description: 'PET Bottle 100ml Clear — Emina Series',
         qtyExpected: 95000,
-        qtyReceived: 95000,
-        qtyAccepted: 95000,
+        // CR-25 (BL-45) demo — ONE unit over what was shipped. Any
+        // over-delivery is flagged: it is PTI's decision, not a default. The
+        // call-off this receipt serves (CO-2026-0013, 95,000) stays in full.
+        // Sample data.
+        qtyReceived: 95001,
+        qtyAccepted: 95001,
         qtyRejected: 0,
         visualCheck: 'Pass',
         packagingCheck: 'Pass',
@@ -489,9 +493,21 @@ const mockGoodsReceiptsRaw: GoodsReceipt[] = [
   //           (`isOpenDispute`; the answer itself is seeded in
   //           `stores/receiptDiscrepancyStore.ts`, never here — a response is
   //           something a supplier gives)
-  //   gr-017  clean, Approved, fully accepted → the one receipt a sup-007 user
-  //           can raise an invoice from with no setup at all
-  //           (`INVOICEABLE_RECEIPT_STATES` × `remainingInvoiceableQty > 0`)
+  //   gr-017  Approved, fully accepted, short by exactly 2% (within CR-25, so
+  //           no discrepancy) → the receipt a sup-007 user can still raise an
+  //           invoice from with no setup (`INVOICEABLE_RECEIPT_STATES` ×
+  //           `remainingInvoiceableQty > 0`; the BL-44 demo invoices use
+  //           37,000 of its 39,200)
+  //
+  // ⚠️ CR-25 (BL-45) CASES, ONE RECEIPT EACH, ALL sup-007 SO BOTH PERSONAS SEE
+  // THEM: exact — gr-002 (120,000 of 120,000); over by one — gr-003; short by
+  // exactly 2% — gr-017 (closes); short just over 2% — gr-015 (2.1%, flagged,
+  // kept open). Pinned by id in `receiptToleranceDemo.test.ts`.
+  //
+  // ⚠️ AND THE QUANTITIES ARE NOT FREE: CFOT reads gr-015/016/017 (their
+  // orders fall in the period) and OTIF reads gr-002/gr-003 through their
+  // call-offs. Each value was chosen so sup-007's CFOT still rounds to 40% and
+  // every call-off keeps its in-full result — measured, not assumed.
   //
   // ⚠️ `hasReceiptDiscrepancy` COMPARES AGAINST `qtyExpected`, NOT AGAINST AN
   // ASN, because no goods receipt in this fixture resolves an ASN number
@@ -526,8 +542,10 @@ const mockGoodsReceiptsRaw: GoodsReceipt[] = [
         materialCode: 'PK-PETB-8801',
         description: 'PET Bottle 200ml Frosted — Wardah Series',
         qtyExpected: 50000,
-        qtyReceived: 47500,
-        qtyAccepted: 47500,
+        // CR-25 (BL-45) demo — short by 1,050 (2.1%): just over the 2%
+        // tolerance, so it is flagged and the receipt stays open. Sample data.
+        qtyReceived: 48950,
+        qtyAccepted: 48950,
         qtyRejected: 0,
         visualCheck: 'Pass',
         packagingCheck: 'Pass',
@@ -535,7 +553,7 @@ const mockGoodsReceiptsRaw: GoodsReceipt[] = [
       },
     ],
     disposition: 'Accept',
-    notes: 'Short by 2,500 PCS against the ordered quantity — counted twice at Dock B-2.',
+    notes: 'Short by 1,050 PCS against the ordered quantity — counted twice at Dock B-2.',
   },
   {
     id: 'gr-016',
@@ -580,8 +598,10 @@ const mockGoodsReceiptsRaw: GoodsReceipt[] = [
         materialCode: 'PK-PETB-8802',
         description: 'PET Bottle 100ml Clear — Emina Series',
         qtyExpected: 40000,
-        qtyReceived: 40000,
-        qtyAccepted: 40000,
+        // CR-25 (BL-45) demo — short by EXACTLY 2% (800 of 40,000): at the
+        // tolerance, so the receipt closes and nothing is flagged. Sample data.
+        qtyReceived: 39200,
+        qtyAccepted: 39200,
         qtyRejected: 0,
         visualCheck: 'Pass',
         packagingCheck: 'Pass',

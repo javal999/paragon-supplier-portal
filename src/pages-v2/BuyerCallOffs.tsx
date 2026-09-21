@@ -33,17 +33,20 @@ import {
   CALL_OFF_CADENCES,
   CALL_OFF_TYPES,
   deliveryDrift,
-  exceedsRemaining,
   generateCallOffSeries,
   isConfirmedAndAccepted,
+  releaseCheck,
   umbrellaRemaining,
   type CallOffView,
+  type ReleaseCheck,
 } from '../services/transitions/callOffRules';
 import type { ReleaseCadence } from '../services/delivery/types';
 import { numberOf } from './callOffs/callOffDisplay';
 import {
   ConfirmationPill,
   DeliveryPill,
+  ToleranceFindings,
+  ToleranceTags,
   inputClass,
   labelClass,
   qty,
@@ -78,6 +81,35 @@ interface SeriesRow {
   quantity: string;
   date: string;
 }
+
+/**
+ * CR-04 / BL-49 — why a release is refused, with the figures: the requested
+ * quantity against the remaining quantity, or, on a line with no quantity, the
+ * requested value against the remaining value. The page never decides: this
+ * mirrors the same `releaseCheck` the policy hook runs.
+ */
+const ExceedsNotice: React.FC<{ check: ReleaseCheck | null; uom: string; testId: string }> = ({
+  check,
+  uom,
+  testId,
+}) => {
+  const { t } = useTranslation();
+  if (!check?.exceeds) return null;
+  return (
+    <p role="alert" className="mt-1 text-xs text-danger" data-testid={testId}>
+      {check.basis === 'quantity'
+        ? t('co.new.exceeds', {
+            requested: qty(check.requestedQty),
+            remaining: qty(check.remaining.remainingQty ?? 0),
+            uom,
+          })
+        : t('co.new.exceedsValue', {
+            requested: formatIDR(check.requestedValue),
+            remaining: formatIDR(check.remaining.remainingValue),
+          })}
+    </p>
+  );
+};
 
 const BuyerCallOffs: React.FC = () => {
   const { t } = useTranslation();
@@ -246,10 +278,23 @@ const BuyerCallOffs: React.FC = () => {
     }
   };
 
-  const remainingHint = (line: POLineItem, excludeId?: string) => {
-    const n = numberOf(form.quantity);
-    return Number.isFinite(n) && n > 0 && exceedsRemaining(n, line, views.map((v) => v.callOff), excludeId);
-  };
+  /**
+   * CR-04 / BL-49 — the release check the VERB will run, mirrored on the form:
+   * remaining quantity by default, remaining value only where the line has no
+   * quantity. `null` while nothing readable has been typed.
+   */
+  const checkRelease = (line: POLineItem, quantity: number, excludeId?: string): ReleaseCheck | null =>
+    Number.isFinite(quantity) && quantity > 0
+      ? releaseCheck(quantity, line, views.map((v) => v.callOff), excludeId)
+      : null;
+
+  const formRelease = (line: POLineItem, excludeId?: string) => checkRelease(line, numberOf(form.quantity), excludeId);
+
+  const selectedLine: POLineItem | null = selectedView
+    ? sections.find((s) => s.line.id === selectedView.callOff.poLineId)?.line ?? null
+    : null;
+  const checkForSelected = (quantity: number): ReleaseCheck | null =>
+    selectedLine && selectedView ? checkRelease(selectedLine, quantity, selectedView.callOff.id) : null;
 
   const planHeld = planAvailability.kind === 'held';
   const reviewHeld = reviewAvailability.kind === 'held';
@@ -303,32 +348,51 @@ const BuyerCallOffs: React.FC = () => {
                 <div className="text-xs text-text-secondary mt-0.5">
                   <Data className="text-text-tertiary">{line.materialCode}</Data> · {line.description}
                 </div>
+                {/* CR-04 / BL-49 — a line's own basis: quantity by default, value
+                    only where the line carries no quantity. */}
                 <dl className="mt-2 flex flex-wrap gap-x-6 gap-y-1 text-xs">
                   <div>
-                    <dt className="inline text-text-tertiary">{t('co.umbrella.ordered')} </dt>
+                    <dt className="inline text-text-tertiary">
+                      {t(remaining.basis === 'quantity' ? 'co.umbrella.ordered' : 'co.umbrella.orderedValue')}{' '}
+                    </dt>
                     <dd className="inline">
-                      <Data>{`${qty(remaining.orderedQty)} ${line.uom}`}</Data>
+                      <Data>
+                        {remaining.orderedQty === null
+                          ? formatIDR(remaining.orderedValue)
+                          : `${qty(remaining.orderedQty)} ${line.uom}`}
+                      </Data>
                     </dd>
                   </div>
                   <div>
                     <dt className="inline text-text-tertiary">{t('co.umbrella.released')} </dt>
                     <dd className="inline">
-                      <Data>{`${qty(remaining.releasedQty)} ${line.uom}`}</Data>
+                      <Data>
+                        {remaining.basis === 'quantity'
+                          ? `${qty(remaining.releasedQty)} ${line.uom}`
+                          : formatIDR(remaining.releasedValue)}
+                      </Data>
                     </dd>
                   </div>
-                  <div>
-                    <dt className="inline text-text-tertiary">{t('co.umbrella.remaining')} </dt>
-                    <dd className="inline" data-testid={`calloff-remaining-${line.id}`}>
-                      <Data className="font-semibold">{`${qty(remaining.remainingQty)} ${line.uom}`}</Data>
-                    </dd>
-                  </div>
+                  {remaining.remainingQty !== null && (
+                    <div>
+                      <dt className="inline text-text-tertiary">{t('co.umbrella.remaining')} </dt>
+                      <dd className="inline" data-testid={`calloff-remaining-${line.id}`}>
+                        <Data className="font-semibold">{`${qty(remaining.remainingQty)} ${line.uom}`}</Data>
+                      </dd>
+                    </div>
+                  )}
                   <div>
                     <dt className="inline text-text-tertiary">{t('co.umbrella.remainingValue')} </dt>
-                    <dd className="inline">
-                      <Data>{formatIDR(remaining.remainingValue)}</Data>
+                    <dd className="inline" data-testid={`calloff-remaining-value-${line.id}`}>
+                      <Data className={remaining.basis === 'value' ? 'font-semibold' : undefined}>
+                        {formatIDR(remaining.remainingValue)}
+                      </Data>
                     </dd>
                   </div>
                 </dl>
+                <p className="mt-1 text-[11px] text-text-tertiary" data-testid={`calloff-basis-${line.id}`}>
+                  {t(remaining.basis === 'quantity' ? 'co.umbrella.byQuantity' : 'co.umbrella.noQuantity')}
+                </p>
               </div>
               <div className="flex gap-2 shrink-0">
                 {planHeld ? (
@@ -378,6 +442,15 @@ const BuyerCallOffs: React.FC = () => {
                         </TableCell>
                         <TableCell>
                           <ConfirmationPill status={v.confirmation} />
+                          {/* CR-05 — the rule that decided this confirmation. */}
+                          {v.tolerance && v.callOff.confirmation && (
+                            <ToleranceTags
+                              check={v.tolerance}
+                              uom={v.callOff.uom}
+                              approval={v.callOff.confirmation.approval}
+                              testId={`calloff-tol-${v.callOff.id}`}
+                            />
+                          )}
                         </TableCell>
                         <TableCell>
                           <DeliveryPill status={v.delivery} />
@@ -427,7 +500,7 @@ const BuyerCallOffs: React.FC = () => {
                 </Button>
                 <Button
                   variant="outline"
-                  disabled={command.isPending || remainingHint(panelLine.line)}
+                  disabled={command.isPending || (formRelease(panelLine.line)?.exceeds ?? false)}
                   onClick={() => createOne('release')}
                 >
                   {t('co.new.release')}
@@ -439,12 +512,16 @@ const BuyerCallOffs: React.FC = () => {
       >
         {panelLine && (
           <div className="space-y-4">
-            <p className="text-sm text-text-secondary">
-              {t('co.new.remaining', {
-                quantity: qty(panelLine.remaining.remainingQty),
-                uom: panelLine.line.uom,
-                value: formatIDR(panelLine.remaining.remainingValue),
-              })}
+            {/* BL-49 — what the release will be checked against, said before the
+                planner types a quantity. */}
+            <p className="text-sm text-text-secondary" data-testid="calloff-new-remaining">
+              {panelLine.remaining.remainingQty === null
+                ? t('co.new.remainingValue', { value: formatIDR(panelLine.remaining.remainingValue) })
+                : t('co.new.remaining', {
+                    quantity: qty(panelLine.remaining.remainingQty),
+                    uom: panelLine.line.uom,
+                    value: formatIDR(panelLine.remaining.remainingValue),
+                  })}
             </p>
             <div>
               <label htmlFor="co-type" className={labelClass}>
@@ -477,11 +554,11 @@ const BuyerCallOffs: React.FC = () => {
                     value={form.quantity}
                     onChange={(e) => setForm({ ...form, quantity: e.target.value })}
                   />
-                  {remainingHint(panelLine.line) && (
-                    <p role="alert" className="mt-1 text-xs text-danger" data-testid="calloff-exceeds-remaining">
-                      {t('co.new.exceeds')}
-                    </p>
-                  )}
+                  <ExceedsNotice
+                    check={formRelease(panelLine.line)}
+                    uom={panelLine.line.uom}
+                    testId="calloff-exceeds-remaining"
+                  />
                 </div>
                 <div>
                   <label htmlFor="co-date" className={labelClass}>
@@ -625,6 +702,7 @@ const BuyerCallOffs: React.FC = () => {
             today={today}
             run={run}
             numberOf={numberOf}
+            checkRelease={checkForSelected}
           />
         )}
       </SidePanel>
@@ -644,6 +722,8 @@ interface PanelBodyProps {
   today: string;
   run: (vars: CallOffCommandVars, success: string, close?: boolean) => Promise<boolean>;
   numberOf: (raw: string) => number;
+  /** The release check for this call-off's own PO line at a given quantity (CR-04 / BL-49). */
+  checkRelease: (quantity: number) => ReleaseCheck | null;
 }
 
 const CallOffPanelBody: React.FC<PanelBodyProps> = ({
@@ -658,6 +738,7 @@ const CallOffPanelBody: React.FC<PanelBodyProps> = ({
   today,
   run,
   numberOf,
+  checkRelease,
 }) => {
   const { t } = useTranslation();
   const c = view.callOff;
@@ -670,6 +751,10 @@ const CallOffPanelBody: React.FC<PanelBodyProps> = ({
     view.headsUps.length === 0;
   const reason = form.reason.trim();
   const changedQty = numberOf(form.quantity);
+  // CR-04 / BL-49 — releasing a draft uses the draft's OWN quantity; changing a
+  // released call-off uses the quantity being typed. Both run the same check.
+  const draftRelease = isDraft ? checkRelease(c.quantity) : null;
+  const changeRelease = checkRelease(changedQty);
   const edits = {
     ...(Number.isFinite(changedQty) && changedQty !== c.quantity ? { quantity: changedQty } : {}),
     ...(form.needDate && form.needDate !== c.needDate ? { needDate: form.needDate } : {}),
@@ -734,6 +819,17 @@ const CallOffPanelBody: React.FC<PanelBodyProps> = ({
           </ul>
           {c.confirmation.comment && <p className="mt-1 text-sm text-text-secondary">“{c.confirmation.comment}”</p>}
           <p className="mt-1 text-xs text-text-tertiary">{t(`co.approval.${c.confirmation.approval}`)}</p>
+          {/* CR-05 — the rule that put this confirmation where it is, and why. */}
+          {view.tolerance && (
+            <div className="mt-2">
+              <ToleranceFindings
+                check={view.tolerance}
+                uom={c.uom}
+                needDate={c.needDate}
+                testId="calloff-tolerance-applied"
+              />
+            </div>
+          )}
         </section>
       )}
 
@@ -825,6 +921,22 @@ const CallOffPanelBody: React.FC<PanelBodyProps> = ({
           {planHeld ? (
             <>
               <DraftFields form={form} setForm={setForm} uom={c.uom} today={today} withType />
+              {/* BL-49 — releasing this draft is checked against what remains on
+                  its own line, and refused with the figures when it does not fit. */}
+              {draftRelease && (
+                <>
+                  <p className="text-xs text-text-secondary" data-testid="calloff-draft-remaining">
+                    {draftRelease.remaining.remainingQty === null
+                      ? t('co.new.remainingValue', { value: formatIDR(draftRelease.remaining.remainingValue) })
+                      : t('co.new.remaining', {
+                          quantity: qty(draftRelease.remaining.remainingQty),
+                          uom: c.uom,
+                          value: formatIDR(draftRelease.remaining.remainingValue),
+                        })}
+                  </p>
+                  <ExceedsNotice check={draftRelease} uom={c.uom} testId="calloff-draft-exceeds-remaining" />
+                </>
+              )}
               <div className="flex flex-wrap gap-2 justify-end">
                 <Button
                   variant="secondary"
@@ -846,7 +958,11 @@ const CallOffPanelBody: React.FC<PanelBodyProps> = ({
                 >
                   {t('co.draft.save')}
                 </Button>
-                <Button variant="outline" disabled={busy} onClick={() => void run({ verb: 'releaseDraft', id: c.id }, t('co.toast.released'))}>
+                <Button
+                  variant="outline"
+                  disabled={busy || (draftRelease?.exceeds ?? false)}
+                  onClick={() => void run({ verb: 'releaseDraft', id: c.id }, t('co.toast.released'))}
+                >
                   {t('co.draft.release')}
                 </Button>
               </div>
@@ -865,10 +981,12 @@ const CallOffPanelBody: React.FC<PanelBodyProps> = ({
             <>
               <p className="text-sm text-text-secondary">{t('co.change.intro')}</p>
               <DraftFields form={form} setForm={setForm} uom={c.uom} today={today} />
+              {/* The change verb runs the same remaining check as a release. */}
+              <ExceedsNotice check={changeRelease} uom={c.uom} testId="calloff-change-exceeds-remaining" />
               <div className="flex justify-end">
                 <Button
                   variant="outline"
-                  disabled={busy || reason === '' || Object.keys(edits).length === 0}
+                  disabled={busy || reason === '' || Object.keys(edits).length === 0 || (changeRelease?.exceeds ?? false)}
                   onClick={() => void run({ verb: 'change', id: c.id, reason, ...edits }, t('co.toast.changed'))}
                 >
                   {t('co.change.submit')}

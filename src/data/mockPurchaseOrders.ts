@@ -807,6 +807,12 @@ const mockPurchaseOrdersRaw: PurchaseOrder[] = [
         uom: 'PCS',
         unitPrice: 1600,
         confirmedQty: 50000,
+        // CR-12 (BL-44) demo — this line was ordered against sup-007's PET
+        // bottle supply contract, so its price is a contract price and an
+        // invoice line for it is checked at 0%. The other line of this order
+        // (li-025b) and PO-2026-00126's line carry no contract and are checked
+        // at 2% within the rupiah cap. Sample data.
+        contractNumber: 'CTR-2025-018',
       } satisfies POLineItem,
       {
         id: 'li-025b',
@@ -898,6 +904,54 @@ const mockPurchaseOrdersRaw: PurchaseOrder[] = [
       option: 'approve',
       respondedAt: '2025-04-08T03:20:00.000Z',
       confirmedDeliveryDate: '2025-05-06',
+    },
+  },
+
+  // ══ BL-49 — `PO-2026-00128`, THE ONE VALUE-LIMIT LINE ═════════════════════
+  //
+  // BL-13 decided that the umbrella PO holds a QUANTITY per line, so a call-off
+  // release is checked against remaining quantity. CR-04 keeps VALUE as the
+  // check only "where a line has no quantity" — an SAP value-limit line. Every
+  // other line in this fixture has a quantity, so without this row the value
+  // branch of the release check had no reachable example on the screen.
+  //
+  // ⚠️ `quantity: 0` HERE MEANS "NO QUANTITY", NOT "NOTHING ORDERED". The line
+  // commits `valueLimit`; `unitPrice` is the agreed price a call-off's value is
+  // priced at. `totalValue` is the limit, which is what the line is worth.
+  // Supplier `sup-003` and material `FR-WARD-4410` (with its existing meaning)
+  // are already in the document lane, so no census moves; no ASN or receipt
+  // names this order.
+  {
+    id: 'po-028',
+    poNumber: 'PO-2026-00128',
+    prReference: 'PR-2026-00425',
+    supplierId: 'sup-003',
+    supplierName: 'Sample Fragrance House Indonesia',
+    status: POStatus.CONFIRMED,
+    channel: ChannelType.API,
+    currency: 'IDR',
+    totalValue: 500_000_000,
+    orderDate: '2025-04-03',
+    requestedDeliveryDate: '2025-06-30',
+    confirmedDeliveryDate: '2025-06-30',
+    daysOverdue: 0,
+    acknowledgmentTimeHours: 6,
+    lineItems: [
+      {
+        id: 'li-028a',
+        materialCode: 'FR-WARD-4410',
+        description: 'Wardah Signature Floral Compound',
+        quantity: 0,
+        uom: 'KG',
+        unitPrice: 2_200_000,
+        confirmedQty: 0,
+        valueLimit: 500_000_000,
+      } satisfies POLineItem,
+    ],
+    response: {
+      option: 'approve',
+      respondedAt: '2025-04-03T08:00:00.000Z',
+      confirmedDeliveryDate: '2025-06-30',
     },
   },
 

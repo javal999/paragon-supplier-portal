@@ -11,6 +11,7 @@
 // ────────────────────────────────────────────────────────────────────────────
 
 import type { Invoice, InvoiceStatus, GRStatus } from '../data/types';
+import { INVOICE_PRICE_TOLERANCE } from './fulfilmentConfig';
 
 /** True when the match sub-flow has rolled up to a clean 3-way `Matched`. */
 export function isMatched(inv: Invoice): boolean {
@@ -23,34 +24,99 @@ export function isMatched(inv: Invoice): boolean {
 // are not verdicts a completed GR yields).
 export type MatchVerdict = 'Matched' | 'Qty Mismatch' | 'Price Variance';
 
+// ── CR-12 price tolerance (BL-44, owner decision 2026-09-21) ─────────────────
+//
+// ⚠️ `MATCH_TOLERANCE = 0.01` (a flat 1%) IS RETIRED. CR-12 now has two rules,
+// chosen per line by whether its PO price comes from a contract:
+//   • contract price → 0%: the billed amount must equal quantity × PO price;
+//   • otherwise      → within 2% of quantity × PO price AND within the absolute
+//                      rupiah cap (a placeholder until Finance sets it, BL-54).
+// The numbers live in `fulfilmentConfig.ts`, never here.
+
+/** Which CR-12 rule a price is checked under. */
+export type PriceRule = 'contract' | 'standard';
+
 /**
- * Provisional relative price tolerance: the invoiced amount may deviate from the
- * PO's confirmed value by up to this fraction and still count as Matched. A
- * placeholder business rule — the real AP tolerance policy (per-category /
- * absolute floors) lands with the Stage-2 I4 match engine; this is the honest
- * minimum that lets a clean invoice reconcile without asserting a false match.
+ * The result of one price check, in business terms:
+ *   exact            — billed exactly the expected value (passes under both rules)
+ *   withinTolerance  — no contract price; within 2% and within the cap (passes)
+ *   contractDiffers  — contract price; billed differs by any amount (held)
+ *   overPercent      — no contract price; more than 2% off (held)
+ *   overCap          — no contract price; within 2% but more than the cap (held)
+ *   noBasis          — nothing to compare against (expected value 0; held)
  */
-export const MATCH_TOLERANCE = 0.01; // 1%
+export type PriceCheckOutcome =
+  | 'exact'
+  | 'withinTolerance'
+  | 'contractDiffers'
+  | 'overPercent'
+  | 'overCap'
+  | 'noBasis';
+
+export interface PriceCheck {
+  rule: PriceRule;
+  /** Quantity × PO unit price. */
+  expected: number;
+  /** What the supplier billed. */
+  billed: number;
+  /** billed − expected (negative = billed below). */
+  difference: number;
+  /** |difference| ÷ expected × 100; null when there is no basis. */
+  percent: number | null;
+  outcome: PriceCheckOutcome;
+  /** True when the outcome makes the invoice a Price variance exception. */
+  held: boolean;
+}
+
+/** Rupiah amounts are compared to the sen, so float noise never decides a match. */
+const toSen = (n: number): number => Math.round(n * 100) / 100;
+
+/**
+ * CR-12 — check one billed amount against its expected value under a rule.
+ * PURE. The percentage test is written as |diff| × 100 ≤ expected × pct so the
+ * boundary (exactly 2%) is decided exactly, not by a float division.
+ */
+export function checkPrice(rule: PriceRule, expected: number, billed: number): PriceCheck {
+  const difference = toSen(billed - expected);
+  const abs = Math.abs(difference);
+  const base = { rule, expected, billed, difference };
+  if (!(expected > 0)) return { ...base, percent: null, outcome: 'noBasis', held: true };
+  const percent = (abs / expected) * 100;
+  const withinPct = (pct: number) => abs * 100 <= expected * pct;
+  if (abs === 0) return { ...base, percent, outcome: 'exact', held: false };
+  if (rule === 'contract') {
+    return withinPct(INVOICE_PRICE_TOLERANCE.contractPricePct)
+      ? { ...base, percent, outcome: 'withinTolerance', held: false }
+      : { ...base, percent, outcome: 'contractDiffers', held: true };
+  }
+  if (!withinPct(INVOICE_PRICE_TOLERANCE.standardPct)) {
+    return { ...base, percent, outcome: 'overPercent', held: true };
+  }
+  if (abs > INVOICE_PRICE_TOLERANCE.standardCapIdr) {
+    return { ...base, percent, outcome: 'overCap', held: true };
+  }
+  return { ...base, percent, outcome: 'withinTolerance', held: false };
+}
 
 /**
  * Derive the honest 3-way verdict from real data (F0.2, census G2 semantics):
- *   • the GR carries a rejection            → 'Qty Mismatch' (delivered ≠ ordered)
- *   • invoiced amount ≈ Σ(confirmedQty × unitPrice) within tolerance → 'Matched'
+ *   • the GR carries a rejection            → 'Qty Mismatch' (CR-13)
+ *   • the invoiced amount passes CR-12 under `rule` → 'Matched'
  *   • otherwise                              → 'Price Variance'
  * PURE — no store reads, no clock. `expectedValue` is Σ(confirmedQty × unitPrice)
- * from the parent PO; the caller gathers it (adapter side). This is the compute
- * that becomes matchStatus's home when it is made a computed read-projection
- * (DR-7 ruling 1) at A2 — the same function, then called from the read layer.
+ * from the parent PO; the caller gathers it (adapter side), and the caller
+ * chooses the rule — for a whole-invoice check that is 'contract' when any line
+ * of the order carries a contract price, because a difference that is not split
+ * by line cannot be shown to fall on a line allowed 2%.
  */
 export function deriveMatchVerdict(
   expectedValue: number,
   invoicedAmount: number,
   grHasRejects: boolean,
+  rule: PriceRule,
 ): MatchVerdict {
   if (grHasRejects) return 'Qty Mismatch';
-  if (expectedValue <= 0) return 'Price Variance';
-  const rel = Math.abs(invoicedAmount - expectedValue) / expectedValue;
-  return rel <= MATCH_TOLERANCE ? 'Matched' : 'Price Variance';
+  return checkPrice(rule, expectedValue, invoicedAmount).held ? 'Price Variance' : 'Matched';
 }
 
 // ── THE PAIRING, BOTH DIRECTIONS ─────────────────────────────────────────────
