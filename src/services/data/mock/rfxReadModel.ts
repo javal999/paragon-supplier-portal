@@ -20,6 +20,8 @@ import type { Quotation } from '../../../data/mockQuotations';
 import type { RFQ } from '../../../data/mockRfqs';
 import { BASE_CURRENCY } from '../../../lib/currencyPolicy';
 import { scoreQuotations, type ScoringOutcome } from '../../../lib/quoteScore';
+import { complianceGate, type GateResult } from '../../sourcing/complianceGate';
+import { COMPLIANCE_REGISTRY } from './fixtures/complianceRegistry';
 import {
   complianceScoreFor,
   effectiveDeadline,
@@ -75,7 +77,7 @@ export const rfxSupplierOtif = (supplierId: string): number | null =>
 // ── REQ-E03-01 — the invitee search ─────────────────────────────────────────
 
 /** Every supplier master row as an invitee candidate, before any filter. */
-export function inviteeCandidates(): readonly InviteeCandidate[] {
+export function inviteeCandidates(materialCodes: readonly string[] = []): readonly InviteeCandidate[] {
   return mockSuppliers.map((s) => ({
     supplierId: s.id,
     supplierName: s.name,
@@ -84,12 +86,38 @@ export function inviteeCandidates(): readonly InviteeCandidate[] {
     status: s.status,
     otif: masterMeasure(s.id).otif.pct,
     country: s.country,
+    // CR-23 / BR-06 — the gate travels WITH the candidate: a failing supplier is
+    // still a candidate (it can be invited and can quote), and the list says it
+    // cannot be awarded and why.
+    gate: supplierGate(s.id, materialCodes, rfxNow()),
   }));
 }
 
 /** The candidates matching the buyer's active filters (BR-01, BR-04). */
 export const matchingInvitees = (filter: InviteeFilter): readonly InviteeCandidate[] =>
-  filterInvitees(inviteeCandidates(), filter);
+  filterInvitees(inviteeCandidates(filter.materialCodes ?? []), filter);
+
+// ── CR-23 — the compliance gate ─────────────────────────────────────────────
+
+/** Every material code a sourcing event sources: its ids and its line items. */
+export const rfqMaterialCodes = (rfq: RFQ): readonly string[] => [
+  ...new Set([...rfq.materialIds, ...(rfq.lineItems ?? []).map((l) => l.materialCode)]),
+];
+
+/**
+ * CR-23 — one supplier against a set of materials, from the master, the measured
+ * OTIF and the compliance registry. A supplier the master does not know cannot
+ * be shown to pass anything, so it fails on status rather than passing blind.
+ */
+export function supplierGate(supplierId: string, materialCodes: readonly string[], nowIso: string): GateResult {
+  const supplier = mockSuppliers.find((s) => s.id === supplierId);
+  if (!supplier) return { passes: false, failed: ['status'] };
+  return complianceGate(supplier, rfxSupplierOtif(supplierId), materialCodes, nowIso, COMPLIANCE_REGISTRY);
+}
+
+/** CR-23 — one supplier against one sourcing event. */
+export const rfqSupplierGate = (rfq: RFQ, supplierId: string, nowIso: string): GateResult =>
+  supplierGate(supplierId, rfqMaterialCodes(rfq), nowIso);
 
 // ── REQ-E03-02 / REQ-E03-04 — the event views ───────────────────────────────
 
@@ -217,9 +245,11 @@ export function quoteVersionsFor(rfqId: string, supplierId: string): readonly Qu
     .sort((a, b) => (a.roundNumber ?? 0) - (b.roundNumber ?? 0) || a.submittedAt.localeCompare(b.submittedAt));
 }
 
-/** The CR-15 outcome for an RFQ's current quotes, honouring CR-16 (FX). */
+/** The CR-15 outcome for an RFQ's current quotes from QUALIFIED suppliers, honouring CR-16 (FX). */
 export function rfqScoring(rfq: RFQ, nowIso: string): ScoringOutcome {
-  return scoreQuotations(currentQuotesFor(rfq.id).map(scorableQuote), {
+  // REQ-E03-05 BR-01a — only suppliers that pass the gate (CR-23) are scored.
+  const qualified = currentQuotesFor(rfq.id).filter((q) => rfqSupplierGate(rfq, q.supplierId, nowIso).passes);
+  return scoreQuotations(qualified.map(scorableQuote), {
     pins: rfq.fxPins,
     now: new Date(nowIso),
   });

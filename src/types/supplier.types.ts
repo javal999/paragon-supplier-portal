@@ -54,6 +54,12 @@ export interface Supplier {
   halalCertified: boolean;
   bpomRegistered: boolean;
   certExpiryDate: string;
+  /**
+   * CR-23 — GMP / ISO 22716 held (the compliance gate's criterion for cosmetic
+   * raw material). OPTIONAL: absent means no evidence on file, which does not
+   * pass the gate — it is never read as "held".
+   */
+  gmpIso22716?: boolean;
   preferredChannel: PreferredChannel;
   /**
    * REQ-E03-01 edge case — OPTIONAL, and the absence is the point.

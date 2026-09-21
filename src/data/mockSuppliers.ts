@@ -86,6 +86,7 @@ export const mockSuppliers: SupplierExtended[] = [
     lastActivityDate: '2025-04-04',
     halalCertified: true,
     bpomRegistered: true,
+    gmpIso22716: true, // CR-23 — sample evidence (illustrative)
     certExpiryDate: '2027-03-09',
     preferredChannel: PreferredChannel.API,
     leadTimeAdherence: 93,
@@ -111,6 +112,7 @@ export const mockSuppliers: SupplierExtended[] = [
     lastActivityDate: '2025-04-01',
     halalCertified: true,
     bpomRegistered: true,
+    gmpIso22716: true, // CR-23 — sample evidence (illustrative)
     certExpiryDate: '2026-09-10',
     preferredChannel: PreferredChannel.WEB,
     leadTimeAdherence: 88,
@@ -136,6 +138,7 @@ export const mockSuppliers: SupplierExtended[] = [
     lastActivityDate: '2025-04-05',
     halalCertified: true,
     bpomRegistered: true,
+    gmpIso22716: true, // CR-23 — sample evidence (illustrative)
     certExpiryDate: '2026-11-01',
     preferredChannel: PreferredChannel.API,
     leadTimeAdherence: 96,
@@ -161,6 +164,7 @@ export const mockSuppliers: SupplierExtended[] = [
     lastActivityDate: '2025-03-28',
     halalCertified: true,
     bpomRegistered: false,
+    gmpIso22716: true, // CR-23 — sample evidence (illustrative)
     certExpiryDate: '2026-06-19',
     preferredChannel: PreferredChannel.WEB,
     leadTimeAdherence: 85,
@@ -186,6 +190,7 @@ export const mockSuppliers: SupplierExtended[] = [
     lastActivityDate: '2025-04-03',
     halalCertified: false,
     bpomRegistered: true,
+    gmpIso22716: true, // CR-23 — sample evidence (illustrative)
     certExpiryDate: '2027-02-13',
     preferredChannel: PreferredChannel.API,
     leadTimeAdherence: 92,
@@ -211,6 +216,7 @@ export const mockSuppliers: SupplierExtended[] = [
     lastActivityDate: '2025-04-02',
     halalCertified: false,
     bpomRegistered: true,
+    gmpIso22716: true, // CR-23 — sample evidence (illustrative)
     certExpiryDate: '2026-07-04',
     preferredChannel: PreferredChannel.EMAIL,
     leadTimeAdherence: 84,
@@ -297,6 +303,7 @@ export const mockSuppliers: SupplierExtended[] = [
     lastActivityDate: '2025-04-01',
     halalCertified: false,
     bpomRegistered: true,
+    gmpIso22716: true, // CR-23 — sample evidence (illustrative)
     certExpiryDate: '2026-08-24',
     preferredChannel: PreferredChannel.WEB,
     leadTimeAdherence: 83,
@@ -322,6 +329,7 @@ export const mockSuppliers: SupplierExtended[] = [
     lastActivityDate: '2025-04-05',
     halalCertified: true,
     bpomRegistered: false,
+    gmpIso22716: true, // CR-23 — sample evidence (illustrative)
     certExpiryDate: '2026-08-31',
     preferredChannel: PreferredChannel.WHATSAPP,
     leadTimeAdherence: 80,
@@ -454,6 +462,7 @@ export const mockSuppliers: SupplierExtended[] = [
     lastActivityDate: '2026-08-28',
     halalCertified: true,
     bpomRegistered: true,
+    gmpIso22716: true, // CR-23 — sample evidence (illustrative)
     certExpiryDate: '2027-11-30',
     preferredChannel: PreferredChannel.WEB,
     leadTimeAdherence: 86,
