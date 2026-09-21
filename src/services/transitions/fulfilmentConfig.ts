@@ -25,3 +25,29 @@ export const INVOICE_PRICE_TOLERANCE = Object.freeze({
    */
   standardCapIdr: 500_000,
 });
+
+/** CR-25 — the receipt quantity tolerance for one material, in percent of what was shipped. */
+export interface ReceiptQtyTolerance {
+  /** Over-delivery allowed without a flag. 0 = any quantity above is flagged. */
+  readonly overPct: number;
+  /** Shortfall allowed without a flag; above it the receipt stays open. */
+  readonly shortPct: number;
+}
+
+/** CR-25 — the default for every material. */
+export const RECEIPT_QTY_TOLERANCE_DEFAULT: ReceiptQtyTolerance = Object.freeze({
+  overPct: 0,
+  shortPct: 2,
+});
+
+/**
+ * CR-25 — "values held per material": a material that needs a different
+ * tolerance is listed here by material code. None is agreed yet, so the list
+ * is empty and every material uses the default.
+ */
+export const RECEIPT_QTY_TOLERANCE_BY_MATERIAL: Readonly<Record<string, ReceiptQtyTolerance>> = Object.freeze({});
+
+/** The receipt quantity tolerance for one material. */
+export function receiptQtyToleranceFor(materialCode: string): ReceiptQtyTolerance {
+  return RECEIPT_QTY_TOLERANCE_BY_MATERIAL[materialCode] ?? RECEIPT_QTY_TOLERANCE_DEFAULT;
+}

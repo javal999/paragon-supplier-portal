@@ -236,11 +236,26 @@ const receipt = (over: Partial<GoodsReceipt['inspectionResults'][number]>, statu
   }) as Pick<GoodsReceipt, 'inspectionResults' | 'status'>;
 
 describe('receipt discrepancy — derived at read time (BR-03, BR-05)', () => {
-  it('a short receipt against the ASN is flagged with its difference; tolerance is 0', () => {
+  // ⚠️ PREMISE CHANGED AT BL-45 (CR-25, owner decision 2026-09-21). This test
+  // read "tolerance is 0" and asserted that 999 of 1,000 shipped is flagged.
+  // PQ-04 is decided: a shortfall at or below 2% closes the receipt, so 999 is
+  // now NOT flagged — and the guard is not weakened, it is moved to the new
+  // edge and pinned there both ways (980 closes, 979 is flagged), with any
+  // over-delivery still flagged by a single unit.
+  it('a short receipt against the ASN is flagged with its difference only beyond the 2% shortfall tolerance', () => {
     const asn = { lineItems: [{ materialCode: MAT, description: '', orderedQty: 1_000, shippedQty: 1_000, lotNumber: 'B' }] } as Pick<ASN, 'lineItems'>;
     const [line] = compareReceipt(receipt({ qtyReceived: 950, qtyAccepted: 950 }), asn);
-    expect(line).toMatchObject({ shipped: 1_000, received: 950, difference: -50, flagged: true });
-    expect(compareReceipt(receipt({ qtyReceived: 999, qtyAccepted: 999 }), asn)[0].flagged).toBe(true);
+    expect(line).toMatchObject({ shipped: 1_000, received: 950, difference: -50, qtyOutcome: 'shortOver', flagged: true });
+    expect(compareReceipt(receipt({ qtyReceived: 999, qtyAccepted: 999 }), asn)[0]).toMatchObject({
+      qtyOutcome: 'shortWithin',
+      flagged: false,
+    });
+    expect(compareReceipt(receipt({ qtyReceived: 980, qtyAccepted: 980 }), asn)[0].flagged).toBe(false);
+    expect(compareReceipt(receipt({ qtyReceived: 979, qtyAccepted: 979 }), asn)[0].flagged).toBe(true);
+    expect(compareReceipt(receipt({ qtyReceived: 1_001, qtyAccepted: 1_001 }), asn)[0]).toMatchObject({
+      qtyOutcome: 'over',
+      flagged: true,
+    });
     expect(hasReceiptDiscrepancy(receipt({}), asn)).toBe(false);
   });
 

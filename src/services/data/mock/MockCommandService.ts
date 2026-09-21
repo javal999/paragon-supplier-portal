@@ -928,7 +928,7 @@ bindPolicyHook(POLICY_HOOKS.RECEIPT_DISCREPANCY_ANSWERABLE, ({ payload }) => {
   const gr = goodsReceiptStore.get(String(payload.receiptId));
   if (!gr) return { ok: false, reason: 'goods receipt not found' };
   if (!hasReceiptDiscrepancy(gr, asnForReceipt(gr))) {
-    return { ok: false, reason: `NO_DISCREPANCY: ${gr.grNumber} matches what was shipped` };
+    return { ok: false, reason: `NO_DISCREPANCY: ${gr.grNumber} is within the receipt tolerance (CR-25) and nothing was rejected` };
   }
   if (receiptDiscrepancyStore.get(gr.id)) {
     return { ok: false, reason: `ALREADY_ANSWERED: ${gr.grNumber} already has an answer` };

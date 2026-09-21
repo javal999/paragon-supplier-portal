@@ -43,6 +43,7 @@ import {
   deriveHeaderDisposition,
   type ReceiptLineComparison,
 } from '../services/transitions';
+import ReceiptToleranceNote from './receipts/ReceiptToleranceNote';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SUPPLIER GOODS RECEIPTS — REQ-E07-06 (goods receipt confirmation).
@@ -101,6 +102,8 @@ const SupplierGoodsReceipts: React.FC = () => {
           withoutAsn: asn === null,
           lines,
           flagged: lines.some((l) => l.flagged),
+          // CR-25 — a shortfall beyond tolerance keeps the receipt open (derived).
+          keptOpen: lines.some((l) => l.qtyOutcome === 'shortOver'),
           awaiting: awaitsSupplierAnswer(gr, asn),
           qc: qcResult(gr),
         };
@@ -210,7 +213,7 @@ const SupplierGoodsReceipts: React.FC = () => {
             <TableHeaderCell className="text-right">{t('fc.gr.col.action')}</TableHeaderCell>
           </TableHeader>
           <tbody>
-            {rows.map(({ gr, lines, flagged, awaiting: needsAnswer, qc, withoutAsn }) => (
+            {rows.map(({ gr, lines, flagged, keptOpen, awaiting: needsAnswer, qc, withoutAsn }) => (
               <TableRow key={gr.id} data-testid={`supplier-gr-row-${gr.id}`}>
                 <TableCell>
                   <Data className="text-xs font-bold text-text-primary whitespace-nowrap">{gr.grNumber}</Data>
@@ -256,6 +259,11 @@ const SupplierGoodsReceipts: React.FC = () => {
                     <StatusPill variant="warning">{t('fc.gr.disc.flagged')}</StatusPill>
                   ) : (
                     <span className="text-xs text-text-tertiary">{t('fc.gr.disc.none')}</span>
+                  )}
+                  {keptOpen && (
+                    <span className="block text-xs text-warning-hover" data-testid={`gr-kept-open-${gr.id}`}>
+                      {t('fc.gr.tol.keptOpen')}
+                    </span>
                   )}
                 </TableCell>
                 <TableCell className="text-right whitespace-nowrap">
@@ -315,6 +323,7 @@ const SupplierGoodsReceipts: React.FC = () => {
                       <th className="text-right py-1">{t('fc.gr.col.received')}</th>
                       <th className="text-right py-1">{t('fc.gr.col.difference')}</th>
                       <th className="text-right py-1">{t('fc.gr.col.rejected')}</th>
+                      <th className="text-left py-1 pl-3">{t('fc.gr.col.qtyCheck')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -339,6 +348,12 @@ const SupplierGoodsReceipts: React.FC = () => {
                         </td>
                         <td className={`py-1.5 text-right ${l.rejected > 0 ? 'text-danger font-semibold' : ''}`}>
                           <Data>{qty(l.rejected)}</Data>
+                        </td>
+                        <td className="py-1.5 pl-3">
+                          <ReceiptToleranceNote
+                            line={l}
+                            testId={`gr-qty-check-${selected.gr.id}-${l.materialCode}`}
+                          />
                         </td>
                       </tr>
                     ))}

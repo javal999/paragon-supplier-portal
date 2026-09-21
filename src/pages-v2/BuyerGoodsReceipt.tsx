@@ -25,6 +25,8 @@ import KpiCard from '../components/ui-v2/KpiCard';
 import BulkActionsBar from '../components/ui-v2/BulkActionsBar';
 import SubTabs from '../components/ui-v2/SubTabs';
 import ReceiptDisputesSection from './receipts/ReceiptDisputesSection';
+import ReceiptToleranceNote from './receipts/ReceiptToleranceNote';
+import { compareReceipt } from '../services/transitions/fulfilmentRules';
 import FilterChipsBar from '../components/ui-v2/FilterChipsBar';
 import SearchBar from '../components/ui-v2/SearchBar';
 import StatusPill from '../components/ui-v2/StatusPill';
@@ -416,6 +418,12 @@ const GoodsReceiptWorkspace: React.FC<GoodsReceiptWorkspaceProps> = ({
   const selectedSupplier = selected
     ? supplierById.get(selected.supplierId)
     : undefined;
+  // CR-25 (BL-45) — each line's quantity check, against the ASN when the hub
+  // has it and the expected quantity when it does not (the supplier sees the
+  // same comparison on its own receipts page).
+  const selectedChecks = selected
+    ? compareReceipt(selected, asns.find((a) => a.asnNumber === selected.asnNumber) ?? null)
+    : [];
 
   // WHO ACTS NEXT (S2a). `GRStatus` matches the machine's states exactly, so
   // `status` IS the canonical state here — no projection member to fall through.
@@ -1190,6 +1198,7 @@ const GoodsReceiptWorkspace: React.FC<GoodsReceiptWorkspaceProps> = ({
                       {t('goodsReceipt.panel.col.rej')}
                     </TableHeaderCell>
                     <TableHeaderCell>{t('goodsReceipt.panel.col.checks')}</TableHeaderCell>
+                    <TableHeaderCell>{t('fc.gr.col.qtyCheck')}</TableHeaderCell>
                   </TableHeader>
                   <tbody>
                     {selected.inspectionResults.map((r, i) => (
@@ -1252,6 +1261,17 @@ const GoodsReceiptWorkspace: React.FC<GoodsReceiptWorkspaceProps> = ({
                               </StatusPill>
                             )}
                           </div>
+                        </TableCell>
+                        <TableCell>
+                          {(() => {
+                            const c = selectedChecks.find((x) => x.materialCode === r.materialCode);
+                            return c ? (
+                              <ReceiptToleranceNote
+                                line={c}
+                                testId={`buyer-gr-qty-check-${selected.id}-${r.materialCode}`}
+                              />
+                            ) : null;
+                          })()}
                         </TableCell>
                       </TableRow>
                     ))}

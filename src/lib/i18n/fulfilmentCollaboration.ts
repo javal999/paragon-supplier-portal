@@ -89,7 +89,15 @@ export const fulfilmentCollaborationEn: Record<string, string> = {
   'fc.gr.response.answeredOn': 'Answered',
   'fc.gr.response.ptiComment': 'PTI resolution',
   'fc.gr.response.awaitingPti': 'PTI is reviewing your dispute.',
-  'fc.gr.noDiscrepancy': 'Received as shipped, nothing rejected. No answer is needed.',
+  'fc.gr.noDiscrepancy': 'Received within tolerance, nothing rejected. No answer is needed.',
+  'fc.gr.col.qtyCheck': 'Quantity check (CR-25)',
+  'fc.gr.tol.exact': 'Received as shipped.',
+  'fc.gr.tol.over':
+    'Flagged: {{qty}} over what was shipped ({{pct}}). Any over-delivery is PTI\'s decision, not accepted by default.',
+  'fc.gr.tol.shortWithin': 'Closed: short {{qty}} ({{pct}}), within the {{shortPct}}% shortfall tolerance.',
+  'fc.gr.tol.shortOver':
+    'Kept open: short {{qty}} ({{pct}}), more than the {{shortPct}}% shortfall tolerance. The rest is still owed.',
+  'fc.gr.tol.keptOpen': 'Receipt kept open',
 
   // ── Goods receipts, PTI side: disputes (REQ-E07-06) ───────────────────────
   'fc.grDispute.heading': 'Disputed receipt discrepancies',
@@ -267,7 +275,15 @@ export const fulfilmentCollaborationId: Record<string, string> = {
   'fc.gr.response.answeredOn': 'Dijawab',
   'fc.gr.response.ptiComment': 'Penyelesaian PTI',
   'fc.gr.response.awaitingPti': 'PTI sedang meninjau sanggahan Anda.',
-  'fc.gr.noDiscrepancy': 'Diterima sesuai kiriman, tidak ada yang ditolak. Tidak perlu jawaban.',
+  'fc.gr.noDiscrepancy': 'Diterima dalam toleransi, tidak ada yang ditolak. Tidak perlu jawaban.',
+  'fc.gr.col.qtyCheck': 'Pemeriksaan kuantitas (CR-25)',
+  'fc.gr.tol.exact': 'Diterima sesuai yang dikirim.',
+  'fc.gr.tol.over':
+    'Ditandai: {{qty}} melebihi yang dikirim ({{pct}}). Setiap kelebihan kiriman adalah keputusan PTI, tidak diterima otomatis.',
+  'fc.gr.tol.shortWithin': 'Ditutup: kurang {{qty}} ({{pct}}), dalam toleransi kekurangan {{shortPct}}%.',
+  'fc.gr.tol.shortOver':
+    'Tetap terbuka: kurang {{qty}} ({{pct}}), melebihi toleransi kekurangan {{shortPct}}%. Sisanya masih terutang.',
+  'fc.gr.tol.keptOpen': 'Penerimaan tetap terbuka',
 
   // ── Goods receipts, PTI side: disputes (REQ-E07-06) ───────────────────────
   'fc.grDispute.heading': 'Selisih penerimaan yang disanggah',
