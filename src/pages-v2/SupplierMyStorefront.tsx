@@ -350,14 +350,14 @@ const StorefrontEditor: React.FC<StorefrontEditorProps> = ({
           {editProfile ? (
             <div>
               <div className="mb-3">
-                <label className={labelClass}>
+                <label className="block"><span className={labelClass}>
                   {t('supplierMyStorefront.field.companyDescription')}
-                </label>
+                </span>
                 <textarea
                   className={`${inputClass} min-h-[96px] resize-y`}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                />
+                /></label>
               </div>
               <div className="flex gap-2">
                 <Button
@@ -512,9 +512,9 @@ const StorefrontEditor: React.FC<StorefrontEditorProps> = ({
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
                 <div>
-                  <label className={labelClass}>
+                  <label className="block"><span className={labelClass}>
                     {t('supplierMyStorefront.addForm.materialName')}
-                  </label>
+                  </span>
                   <input
                     className={inputClass}
                     placeholder={t('supplierMyStorefront.addForm.materialNamePlaceholder')}
@@ -522,12 +522,12 @@ const StorefrontEditor: React.FC<StorefrontEditorProps> = ({
                     onChange={(e) =>
                       setNewMaterial({ ...newMaterial, material: e.target.value })
                     }
-                  />
+                  /></label>
                 </div>
                 <div>
-                  <label className={labelClass}>
+                  <label className="block"><span className={labelClass}>
                     {t('supplierMyStorefront.addForm.sapCode')}
-                  </label>
+                  </span>
                   <input
                     className={inputClass}
                     placeholder={t('supplierMyStorefront.addForm.sapCodePlaceholder')}
@@ -535,12 +535,12 @@ const StorefrontEditor: React.FC<StorefrontEditorProps> = ({
                     onChange={(e) =>
                       setNewMaterial({ ...newMaterial, sapCode: e.target.value })
                     }
-                  />
+                  /></label>
                 </div>
                 <div>
-                  <label className={labelClass}>
+                  <label className="block"><span className={labelClass}>
                     {t('supplierMyStorefront.addForm.category')}
-                  </label>
+                  </span>
                   <select
                     className={inputClass}
                     value={newMaterial.category}
@@ -554,13 +554,13 @@ const StorefrontEditor: React.FC<StorefrontEditorProps> = ({
                         {cl(c)}
                       </option>
                     ))}
-                  </select>
+                  </select></label>
                 </div>
                 <div className="grid grid-cols-[1fr_80px] gap-2">
                   <div>
-                    <label className={labelClass}>
+                    <label className="block"><span className={labelClass}>
                       {t('supplierMyStorefront.addForm.moq')}
-                    </label>
+                    </span>
                     <input
                       type="number"
                       className={inputClass}
@@ -568,12 +568,12 @@ const StorefrontEditor: React.FC<StorefrontEditorProps> = ({
                       onChange={(e) =>
                         setNewMaterial({ ...newMaterial, moq: e.target.value })
                       }
-                    />
+                    /></label>
                   </div>
                   <div>
-                    <label className={labelClass}>
+                    <label className="block"><span className={labelClass}>
                       {t('supplierMyStorefront.addForm.uom')}
-                    </label>
+                    </span>
                     <select
                       className={inputClass}
                       value={newMaterial.uom}
@@ -584,13 +584,13 @@ const StorefrontEditor: React.FC<StorefrontEditorProps> = ({
                       {UOM_OPTIONS.map((u) => (
                         <option key={u}>{u}</option>
                       ))}
-                    </select>
+                    </select></label>
                   </div>
                 </div>
                 <div>
-                  <label className={labelClass}>
+                  <label className="block"><span className={labelClass}>
                     {t('supplierMyStorefront.addForm.leadTime')}
-                  </label>
+                  </span>
                   <input
                     type="number"
                     className={inputClass}
@@ -598,13 +598,13 @@ const StorefrontEditor: React.FC<StorefrontEditorProps> = ({
                     onChange={(e) =>
                       setNewMaterial({ ...newMaterial, leadTime: e.target.value })
                     }
-                  />
+                  /></label>
                 </div>
                 <div className="grid grid-cols-[1fr_80px] gap-2">
                   <div>
-                    <label className={labelClass}>
+                    <label className="block"><span className={labelClass}>
                       {t('supplierMyStorefront.addForm.unitPrice')}
-                    </label>
+                    </span>
                     <input
                       type="number"
                       className={inputClass}
@@ -615,12 +615,12 @@ const StorefrontEditor: React.FC<StorefrontEditorProps> = ({
                           unitPrice: e.target.value,
                         })
                       }
-                    />
+                    /></label>
                   </div>
                   <div>
-                    <label className={labelClass}>
+                    <label className="block"><span className={labelClass}>
                       {t('supplierMyStorefront.addForm.ccy')}
-                    </label>
+                    </span>
                     <select
                       className={inputClass}
                       value={newMaterial.currency}
@@ -634,13 +634,13 @@ const StorefrontEditor: React.FC<StorefrontEditorProps> = ({
                       {CURRENCY_OPTIONS.map((c) => (
                         <option key={c}>{c}</option>
                       ))}
-                    </select>
+                    </select></label>
                   </div>
                 </div>
                 <div>
-                  <label className={labelClass}>
+                  <label className="block"><span className={labelClass}>
                     {t('supplierMyStorefront.addForm.capacity')}
-                  </label>
+                  </span>
                   <input
                     type="number"
                     className={inputClass}
@@ -651,7 +651,7 @@ const StorefrontEditor: React.FC<StorefrontEditorProps> = ({
                         capacity: e.target.value,
                       })
                     }
-                  />
+                  /></label>
                 </div>
               </div>
               <div className="mb-3">

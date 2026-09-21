@@ -731,22 +731,22 @@ const ContractsWorkspace: React.FC<ContractsWorkspaceProps> = ({
       content: (
         <div className="space-y-5">
           <div>
-            <label className="text-label text-text-tertiary uppercase block mb-1.5">
+            <label className="block"><span className="text-label text-text-tertiary uppercase block mb-1.5">
               {t('contracts.wizard.field.title')} <span className="text-danger">*</span>
-            </label>
+            </span>
             <input
               type="text"
               value={draft.title}
               onChange={(e) => updateDraft('title', e.target.value)}
               placeholder={t('contracts.wizard.placeholder.title')}
               className="w-full bg-white border border-border-input rounded-md px-3 h-10 text-sm focus:outline-none focus:border-action"
-            />
+            /></label>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="text-label text-text-tertiary uppercase block mb-1.5">
+              <label className="block"><span className="text-label text-text-tertiary uppercase block mb-1.5">
                 {t('contracts.wizard.field.type')} <span className="text-danger">*</span>
-              </label>
+              </span>
               <select
                 value={draft.type}
                 onChange={(e) =>
@@ -760,12 +760,12 @@ const ContractsWorkspace: React.FC<ContractsWorkspaceProps> = ({
                     {typeLabel(t, opt)}
                   </option>
                 ))}
-              </select>
+              </select></label>
             </div>
             <div>
-              <label className="text-label text-text-tertiary uppercase block mb-1.5">
+              <label className="block"><span className="text-label text-text-tertiary uppercase block mb-1.5">
                 {t('contracts.wizard.field.category')} <span className="text-danger">*</span>
-              </label>
+              </span>
               <select
                 value={draft.category}
                 onChange={(e) => updateDraft('category', e.target.value)}
@@ -777,7 +777,7 @@ const ContractsWorkspace: React.FC<ContractsWorkspaceProps> = ({
                     {catLabel(t, c)}
                   </option>
                 ))}
-              </select>
+              </select></label>
             </div>
           </div>
           <div>
@@ -999,9 +999,9 @@ const ContractsWorkspace: React.FC<ContractsWorkspaceProps> = ({
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="text-label text-text-tertiary uppercase block mb-1.5">
+              <label className="block"><span className="text-label text-text-tertiary uppercase block mb-1.5">
                 {t('contracts.wizard.field.paymentTerms')}
-              </label>
+              </span>
               <select
                 value={draft.paymentTerms}
                 onChange={(e) => updateDraft('paymentTerms', e.target.value)}
@@ -1012,12 +1012,12 @@ const ContractsWorkspace: React.FC<ContractsWorkspaceProps> = ({
                     {p}
                   </option>
                 ))}
-              </select>
+              </select></label>
             </div>
             <div>
-              <label className="text-label text-text-tertiary uppercase block mb-1.5">
+              <label className="block"><span className="text-label text-text-tertiary uppercase block mb-1.5">
                 {t('contracts.wizard.field.incoterms')}
-              </label>
+              </span>
               <select
                 value={draft.incoterms}
                 onChange={(e) => updateDraft('incoterms', e.target.value)}
@@ -1028,7 +1028,7 @@ const ContractsWorkspace: React.FC<ContractsWorkspaceProps> = ({
                     {i}
                   </option>
                 ))}
-              </select>
+              </select></label>
             </div>
           </div>
         </div>
@@ -1096,6 +1096,7 @@ const ContractsWorkspace: React.FC<ContractsWorkspaceProps> = ({
             <div className="flex gap-2">
               <input
                 type="text"
+                aria-label={t('contracts.wizard.obl.addCustom')}
                 value={customObligationTitle}
                 onChange={(e) => setCustomObligationTitle(e.target.value)}
                 placeholder={t('contracts.wizard.obl.customPlaceholder')}

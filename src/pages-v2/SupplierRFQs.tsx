@@ -1280,6 +1280,7 @@ const RfqWorkspace: React.FC<RfqWorkspaceProps> = ({
                     className={inputClass}
                   />
                   <select
+                    aria-label={t('rfqs.field.leadTimeUnit')}
                     value={form.leadTimeUnit}
                     onChange={(e) =>
                       setForm({
@@ -1418,7 +1419,7 @@ const RfqWorkspace: React.FC<RfqWorkspaceProps> = ({
               description={t('rfqs.panel.step4.desc')}
             >
               <div>
-                <label className={labelClass}>{t('rfqs.panel.notes')}</label>
+                <label className="block"><span className={labelClass}>{t('rfqs.panel.notes')}</span>
                 <textarea
                   value={form.notes}
                   onChange={(e) =>
@@ -1427,7 +1428,7 @@ const RfqWorkspace: React.FC<RfqWorkspaceProps> = ({
                   rows={3}
                   placeholder={t('rfqs.panel.notesPlaceholder')}
                   className={`${inputClass} resize-y`}
-                />
+                /></label>
               </div>
               <div>
                 <label className={labelClass}>
@@ -1451,7 +1452,7 @@ const RfqWorkspace: React.FC<RfqWorkspaceProps> = ({
                 </div>
                 {form.canSample === 'yes' && (
                   <div className="mt-2">
-                    <label className={labelClass}>{t('rfqs.panel.sampleLeadTime')}</label>
+                    <label className="block"><span className={labelClass}>{t('rfqs.panel.sampleLeadTime')}</span>
                     <input
                       type="text"
                       placeholder={t('rfqs.panel.sampleLeadPlaceholder')}
@@ -1464,7 +1465,7 @@ const RfqWorkspace: React.FC<RfqWorkspaceProps> = ({
                       }
                       className={inputClass}
                       style={{ width: 200 }}
-                    />
+                    /></label>
                   </div>
                 )}
               </div>

@@ -226,16 +226,43 @@ interface FieldProps {
   children: React.ReactNode;
 }
 
-const Field: React.FC<FieldProps> = ({ label, required, error, children }) => (
-  <div>
-    <label className={labelClass}>
-      {label}
-      {required && <span className="text-danger ml-0.5">*</span>}
-    </label>
-    {children}
-    {error && <div className={errorClass}>{error}</div>}
-  </div>
-);
+// BL-31 (WCAG 1.3.1 / 3.3.1 / 4.1.2): the caption WRAPS the control, so it is
+// the control's accessible name (a sibling <label> with no htmlFor names
+// nothing); a required field says so to assistive technology, and an error is
+// tied to its control with aria-describedby + aria-invalid rather than only
+// sitting below it in red.
+const Field: React.FC<FieldProps> = ({ label, required, error, children }) => {
+  const errorId = React.useId();
+  const control =
+    React.isValidElement<Record<string, unknown>>(children) &&
+    typeof children.type === 'string' &&
+    ['input', 'select', 'textarea'].includes(children.type)
+      ? React.cloneElement(children, {
+          ...(required ? { 'aria-required': true } : {}),
+          ...(error ? { 'aria-invalid': true, 'aria-describedby': errorId } : {}),
+        })
+      : children;
+  return (
+    <div>
+      <label className="block">
+        <span className={labelClass}>
+          {label}
+          {required && (
+            <span className="text-danger ml-0.5" aria-hidden="true">
+              *
+            </span>
+          )}
+        </span>
+        {control}
+      </label>
+      {error && (
+        <div id={errorId} className={errorClass}>
+          {error}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const PageHeader: React.FC = () => {
   const { t } = useTranslation();
@@ -801,9 +828,9 @@ const DocumentsAndBankStep: React.FC<StepProps> = ({ form, setForm, errors }) =>
                 </div>
                 {doc.hasExpiry && d.uploaded && (
                   <div>
-                    <label className="block text-[10px] text-text-tertiary uppercase mb-0.5">
+                    <label className="block"><span className="block text-[10px] text-text-tertiary uppercase mb-0.5">
                       {t('registration.documents.expiry')}
-                    </label>
+                    </span>
                     <input
                       type="date"
                       className={`${inputClass} text-xs`}
@@ -812,7 +839,7 @@ const DocumentsAndBankStep: React.FC<StepProps> = ({ form, setForm, errors }) =>
                       onChange={(e) =>
                         setDoc(doc.key, { expiry: e.target.value })
                       }
-                    />
+                    /></label>
                   </div>
                 )}
                 <label

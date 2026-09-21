@@ -191,6 +191,7 @@ export const rfqsEn: Record<string, string> = {
   'rfqs.field.currency': 'Bid currency',
   'rfqs.field.unitPrice': 'Unit price',
   'rfqs.field.leadTime': 'Lead time',
+  'rfqs.field.leadTimeUnit': 'Lead time unit', // BL-31 accessible name
   'rfqs.field.moq': 'Minimum order quantity',
   'rfqs.field.validUntil': 'Quote valid until',
 };
@@ -370,6 +371,7 @@ export const rfqsId: Record<string, string> = {
   'rfqs.field.currency': 'Mata uang penawaran',
   'rfqs.field.unitPrice': 'Harga satuan',
   'rfqs.field.leadTime': 'Waktu tunggu',
+  'rfqs.field.leadTimeUnit': 'Satuan waktu tunggu',
   'rfqs.field.moq': 'Kuantitas pesanan minimum',
   'rfqs.field.validUntil': 'Penawaran berlaku hingga',
 };

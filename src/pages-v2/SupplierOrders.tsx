@@ -1141,25 +1141,25 @@ const SupplierOrders: React.FC = () => {
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                   <div>
-                    <label className={labelClass}>
+                    <label className="block"><span className={labelClass}>
                       {t('supplierOrders.panel.confirmedDeliveryDate')}
-                    </label>
+                    </span>
                     <input
                       type="date"
                       value={deliveryDate}
                       onChange={(e) => setDeliveryDate(e.target.value)}
                       className={inputClass}
-                    />
+                    /></label>
                   </div>
                   <div>
-                    <label className={labelClass}>{t('supplierOrders.panel.notesLabel')}</label>
+                    <label className="block"><span className={labelClass}>{t('supplierOrders.panel.notesLabel')}</span>
                     <input
                       type="text"
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
                       placeholder={t('supplierOrders.panel.notesPlaceholder')}
                       className={inputClass}
-                    />
+                    /></label>
                   </div>
                 </div>
                 {(hasQtyChange || hasDateChange) && (

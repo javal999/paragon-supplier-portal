@@ -1643,24 +1643,24 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
             )}
           </div>
           <div>
-            <label className="text-label text-text-tertiary uppercase block mb-1.5">
+            <label className="block"><span className="text-label text-text-tertiary uppercase block mb-1.5">
               {t('sourcing.wizard.field.title')}{' '}
               <span className="text-danger">*</span>
-            </label>
+            </span>
             <input
               type="text"
               value={draft.title}
               onChange={(e) => updateDraft('title', e.target.value)}
               placeholder={t('sourcing.wizard.placeholder.title')}
               className="w-full bg-white border border-border-input rounded-md px-3 h-10 text-sm focus:outline-none focus:border-action"
-            />
+            /></label>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="text-label text-text-tertiary uppercase block mb-1.5">
+              <label className="block"><span className="text-label text-text-tertiary uppercase block mb-1.5">
                 {t('sourcing.wizard.field.category')}{' '}
                 <span className="text-danger">*</span>
-              </label>
+              </span>
               <select
                 value={draft.category}
                 onChange={(e) => {
@@ -1675,7 +1675,7 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
                     {categoryLabel(t, c)}
                   </option>
                 ))}
-              </select>
+              </select></label>
             </div>
             <div>
               <label className="text-label text-text-tertiary uppercase block mb-1.5">
@@ -1786,9 +1786,9 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
               )}
             </div>
             <div>
-              <label className="text-label text-text-tertiary uppercase block mb-1.5">
+              <label className="block"><span className="text-label text-text-tertiary uppercase block mb-1.5">
                 {t('sourcing.wizard.field.uom')}
-              </label>
+              </span>
               <select
                 value={draft.uom}
                 onChange={(e) =>
@@ -1804,7 +1804,7 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
                     {u}
                   </option>
                 ))}
-              </select>
+              </select></label>
             </div>
           </div>
         </div>
@@ -2034,10 +2034,10 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
         <div className="space-y-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="text-label text-text-tertiary uppercase block mb-1.5">
+              <label className="block"><span className="text-label text-text-tertiary uppercase block mb-1.5">
                 {t('sourcing.wizard.field.responseDeadline')}{' '}
                 <span className="text-danger">*</span>
-              </label>
+              </span>
               <input
                 type="date"
                 value={draft.responseDeadline}
@@ -2045,19 +2045,19 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
                   updateDraft('responseDeadline', e.target.value)
                 }
                 className="w-full bg-white border border-border-input rounded-md px-3 h-10 text-sm focus:outline-none focus:border-action"
-              />
+              /></label>
             </div>
             <div>
-              <label className="text-label text-text-tertiary uppercase block mb-1.5">
+              <label className="block"><span className="text-label text-text-tertiary uppercase block mb-1.5">
                 {t('sourcing.wizard.field.awardDeadline')}{' '}
                 <span className="text-danger">*</span>
-              </label>
+              </span>
               <input
                 type="date"
                 value={draft.awardDeadline}
                 onChange={(e) => updateDraft('awardDeadline', e.target.value)}
                 className="w-full bg-white border border-border-input rounded-md px-3 h-10 text-sm focus:outline-none focus:border-action"
-              />
+              /></label>
               {draft.responseDeadline &&
                 draft.awardDeadline &&
                 new Date(draft.awardDeadline) <=
@@ -2068,9 +2068,9 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
                 )}
             </div>
             <div>
-              <label className="text-label text-text-tertiary uppercase block mb-1.5">
+              <label className="block"><span className="text-label text-text-tertiary uppercase block mb-1.5">
                 {t('sourcing.wizard.field.incoterms')}
-              </label>
+              </span>
               <select
                 value={draft.incoterms}
                 onChange={(e) => updateDraft('incoterms', e.target.value)}
@@ -2081,12 +2081,12 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
                     {i}
                   </option>
                 ))}
-              </select>
+              </select></label>
             </div>
             <div>
-              <label className="text-label text-text-tertiary uppercase block mb-1.5">
+              <label className="block"><span className="text-label text-text-tertiary uppercase block mb-1.5">
                 {t('sourcing.wizard.field.paymentTerms')}
-              </label>
+              </span>
               <select
                 value={draft.paymentTerms}
                 onChange={(e) => updateDraft('paymentTerms', e.target.value)}
@@ -2097,7 +2097,7 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
                     {p}
                   </option>
                 ))}
-              </select>
+              </select></label>
             </div>
           </div>
           <div>
