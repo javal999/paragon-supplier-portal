@@ -19,13 +19,15 @@ import { GATE_DEMO_QUOTATION_SEED } from '../fixtures/gateDemo';
 
 // RFx spec 2026-09-21 — two tiered quotes on Oslo (rfq-021), for the
 // comparison and the split award to work against.
-import { RFQ_SAMPLE_QUOTATION_SEED } from '../fixtures/rfqSamples';
+import { RFQ_SAMPLE_HISTORY_QUOTATION_SEED, RFQ_SAMPLE_QUOTATION_SEED } from '../fixtures/rfqSamples';
 
 const SEED: readonly Quotation[] = [
   ...RFX_QUOTATION_SEED,
   ...GATE_DEMO_QUOTATION_SEED,
   ...mockQuotations,
   ...RFQ_SAMPLE_QUOTATION_SEED,
+  // The Amplify split award's two winning quotes (rfq-024).
+  ...RFQ_SAMPLE_HISTORY_QUOTATION_SEED,
 ];
 
 function clone(q: Quotation): Quotation {

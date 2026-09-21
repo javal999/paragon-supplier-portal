@@ -218,8 +218,18 @@ export interface NegotiationRound {
 export interface AwardLine {
   readonly supplierId: string;
   readonly quotationId: string;
-  /** The RFQ line item this share is against; `''` = the whole event. */
+  /**
+   * The MATERIAL CODE of the RFQ line item this share is against; `''` = none:
+   * the whole event on a legacy award, or a tiered item named by `itemLineNo`.
+   */
   readonly itemCode: string;
+  /**
+   * The TIERED item (`RfqItem.lineNo`) this share is against (RFx spec, "Award
+   * per item"). A tiered item has no material code — Oslo's stickers are not in
+   * the material master — so it is named by its line, never by a code minted to
+   * fill `itemCode`. Absent on a legacy award.
+   */
+  readonly itemLineNo?: number;
   readonly sharePct: number;
   readonly quantity: number;
   /**
@@ -240,5 +250,11 @@ export interface AwardRecord {
   readonly reason?: string;
   /** The quotation CR-15 ranked first when the award was recorded. */
   readonly bestScoredQuotationId?: string;
+  /**
+   * A tiered RFQ is awarded ITEM BY ITEM, so the best score it departs from is
+   * per item: the quotation CR-15 ranked first for each item at the award's
+   * break, when the award was recorded. Absent on a legacy (event-level) award.
+   */
+  readonly bestScoredByItem?: readonly { readonly itemLineNo: number; readonly quotationId: string }[];
   readonly notAwardedSupplierIds: readonly string[];
 }

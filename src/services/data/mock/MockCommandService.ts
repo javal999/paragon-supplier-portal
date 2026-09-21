@@ -177,7 +177,14 @@ import {
   rfpEventStore,
   rfpResponseStore,
 } from './stores/rfxStores';
-import { bestScoredQuotationId, rfqSupplierGate, rfxNow } from './rfxReadModel';
+import { bestScoredByItem, bestScoredQuotationId, rfqSupplierGate, rfxNow } from './rfxReadModel';
+import {
+  isTieredRfq,
+  itemName,
+  itemsDepartingBestScore,
+  tieredAwardShapeRefusal,
+  tieredRefusalText,
+} from '../../sourcing/rfqComparison';
 import { gateRefusal } from '../../sourcing/complianceGate';
 import { rfiTemplate, rfpTerm } from '../../sourcing/rfxConfig';
 import type {
@@ -1312,6 +1319,17 @@ const rfqTarget: CommandTarget = {
         },
       ];
       const winners = new Set(lines.map((l) => l.supplierId));
+      // A tiered award is judged at the break its lines record (the policy has
+      // already required one break across every line), so the best score it is
+      // stored against is the best score AT THAT BREAK — per item and overall.
+      const awardTierQty = rfq && isTieredRfq(rfq) ? lines[0]?.awardTierQty : undefined;
+      const best = rfq ? bestScoredQuotationId(rfq, rfxNow(), awardTierQty) : null;
+      const bestByItem =
+        rfq && awardTierQty !== undefined
+          ? [...bestScoredByItem(rfq, rfxNow(), awardTierQty).entries()]
+              .filter((e): e is [number, string] => e[1] !== null)
+              .map(([itemLineNo, quotationId]) => ({ itemLineNo, quotationId }))
+          : null;
       awardStore.add({
         id: awardStore.nextId(),
         rfqId: id,
@@ -1320,9 +1338,8 @@ const rfqTarget: CommandTarget = {
         ...(typeof payload.awardReason === 'string' && payload.awardReason.trim()
           ? { reason: payload.awardReason.trim() }
           : {}),
-        ...(rfq && bestScoredQuotationId(rfq, rfxNow())
-          ? { bestScoredQuotationId: bestScoredQuotationId(rfq, rfxNow())! }
-          : {}),
+        ...(best ? { bestScoredQuotationId: best } : {}),
+        ...(bestByItem ? { bestScoredByItem: bestByItem } : {}),
         // BR-08 — every other quote is marked Not awarded and its supplier
         // notified. The quote status is the cascade's job; this records WHO.
         notAwardedSupplierIds: (rfq?.invitedSupplierIds ?? []).filter((sid) => !winners.has(sid)),
@@ -3043,7 +3060,19 @@ bindPolicyHook(POLICY_HOOKS.RFQ_AWARD_GOVERNED, ({ payload, entityId }) => {
       quantity: rfq.totalQty,
     },
   ];
-  const refusal = awardSplitRefusal(lines);
+  // RFx spec "Evaluation and award" (BL-37) — a TIERED RFQ is awarded ITEM BY
+  // ITEM at one evaluation break: every line names an item of this RFQ, every
+  // item totals 100% (the item is NAMED when it does not), the break is recorded
+  // on every line, and each quantity is the share of that break. The same verb
+  // and the same hook as the event-level award; only the shape rule differs.
+  const tiered = isTieredRfq(rfq);
+  const onEventQuotes = quotationStore.all().filter((q) => q.rfqId === rfq.id);
+  const refusal = tiered
+    ? (() => {
+        const r = tieredAwardShapeRefusal(rfq, lines, onEventQuotes);
+        return r ? tieredRefusalText(r) : null;
+      })()
+    : awardSplitRefusal(lines);
   if (refusal) return { ok: false, reason: refusal };
   // Every awarded line names a real quotation ON THIS EVENT. Without this an
   // award could record a share against a bid from another tender.
@@ -3062,8 +3091,24 @@ bindPolicyHook(POLICY_HOOKS.RFQ_AWARD_GOVERNED, ({ payload, entityId }) => {
     const gate = rfqSupplierGate(rfq, supplierId, rfxNow());
     if (!gate.passes) return { ok: false, reason: gateRefusal(supplierId, gate.failed) };
   }
-  const best = bestScoredQuotationId(rfq, rfxNow());
   const reason = typeof payload.awardReason === 'string' ? payload.awardReason.trim() : '';
+  if (tiered) {
+    // BR-07, PER ITEM — the reason is owed when ANY item's award leaves out
+    // that item's best-scored quote at the award's break. The item is named.
+    const departing = itemsDepartingBestScore(
+      rfq,
+      lines,
+      bestScoredByItem(rfq, rfxNow(), lines[0]!.awardTierQty!),
+    );
+    if (departing.length > 0 && reason.length === 0) {
+      return {
+        ok: false,
+        reason: tieredRefusalText({ code: 'AWARD_REASON_REQUIRED', item: itemName(departing[0]!) }),
+      };
+    }
+    return { ok: true };
+  }
+  const best = bestScoredQuotationId(rfq, rfxNow());
   if (!awardFollowsBestScore(lines, best) && reason.length === 0) {
     return {
       ok: false,
@@ -3896,17 +3941,27 @@ const resolveCascades = (ctx: CascadeContext): CascadeCommand[] => {
     }
     const winnerId =
       typeof ctx.payload.awardedQuotationId === 'string' ? ctx.payload.awardedQuotationId : '';
+    // BL-37 — A SPLIT HAS SEVERAL WINNERS. Every quotation an award line names
+    // is awarded, not only the principal one: before this, a 70/30 split marked
+    // the 30% supplier's quote Rejected while the award record said it won.
+    const winnerIds = new Set([
+      winnerId,
+      ...(Array.isArray(ctx.payload.awardLines)
+        ? (ctx.payload.awardLines as { quotationId?: unknown }[])
+            .map((l) => l?.quotationId)
+            .filter((x): x is string => typeof x === 'string')
+        : []),
+    ]);
     const siblings = quotationStore.forRfq(ctx.entityId);
     const cmds: CascadeCommand[] = [];
     for (const link of cascadesFor(ctx.transitionId)) {
       if (link.targetTransitionId === 't_quotation_award') {
-        const winner = siblings.find((q) => q.id === winnerId);
-        if (winner) {
+        for (const winner of siblings.filter((q) => winnerIds.has(q.id))) {
           cmds.push({ entity: link.targetEntity, entityId: winner.id, transitionId: link.targetTransitionId });
         }
       } else {
         for (const q of siblings) {
-          if (q.id !== winnerId) {
+          if (!winnerIds.has(q.id)) {
             cmds.push({ entity: link.targetEntity, entityId: q.id, transitionId: link.targetTransitionId });
           }
         }

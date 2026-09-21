@@ -22,6 +22,12 @@ import { BASE_CURRENCY } from '../../../lib/currencyPolicy';
 import { scoreQuotations, type ScoringOutcome } from '../../../lib/quoteScore';
 import { complianceGate, type GateResult } from '../../sourcing/complianceGate';
 import { COMPLIANCE_REGISTRY } from './fixtures/complianceRegistry';
+import {
+  bestScoredByItemAt,
+  defaultEvaluationTierQty,
+  isTieredRfq,
+  scoreRfqAt,
+} from '../../sourcing/rfqComparison';
 import { bandOf, certificateValidity } from '../../sourcing/supplierFilters';
 import {
   complianceScoreFor,
@@ -260,21 +266,54 @@ export function quoteVersionsFor(rfqId: string, supplierId: string): readonly Qu
     .sort((a, b) => (a.roundNumber ?? 0) - (b.roundNumber ?? 0) || a.submittedAt.localeCompare(b.submittedAt));
 }
 
-/** The CR-15 outcome for an RFQ's current quotes from QUALIFIED suppliers, honouring CR-16 (FX). */
-export function rfqScoring(rfq: RFQ, nowIso: string): ScoringOutcome {
-  // REQ-E03-05 BR-01a — only suppliers that pass the gate (CR-23) are scored.
-  const qualified = currentQuotesFor(rfq.id).filter((q) => rfqSupplierGate(rfq, q.supplierId, nowIso).passes);
-  return scoreQuotations(qualified.map(scorableQuote), {
-    pins: rfq.fxPins,
-    now: new Date(nowIso),
-  });
+/** REQ-E03-05 BR-01a — the current quotes whose supplier passes the gate (CR-23). */
+const qualifiedQuotesFor = (rfq: RFQ, nowIso: string): readonly Quotation[] =>
+  currentQuotesFor(rfq.id).filter((q) => rfqSupplierGate(rfq, q.supplierId, nowIso).passes);
+
+/** CR-15's reliability input for a supplier: its measured OTIF, scored. */
+const reliabilityOf = (supplierId: string): number => reliabilityScoreFor(rfxSupplierOtif(supplierId));
+
+/**
+ * The CR-15 outcome for an RFQ's current quotes from QUALIFIED suppliers,
+ * honouring CR-16 (FX).
+ *
+ * A TIERED RFQ (one with items) scores PRICE AS TOTAL COST AT THE EVALUATION
+ * BREAK (`rfqComparison.scoreRfqAt`), at `evalTierQty` or, absent, the default
+ * break nearest `totalQty`. The weights are unchanged. A legacy RFQ scores its
+ * header unit price exactly as before.
+ */
+export function rfqScoring(rfq: RFQ, nowIso: string, evalTierQty?: number): ScoringOutcome {
+  const qualified = qualifiedQuotesFor(rfq, nowIso);
+  const opts = { pins: rfq.fxPins, now: new Date(nowIso) };
+  if (isTieredRfq(rfq)) {
+    const qty = evalTierQty ?? defaultEvaluationTierQty(rfq);
+    if (qty !== null) return scoreRfqAt(rfq, qualified, qty, reliabilityOf, opts);
+  }
+  return scoreQuotations(qualified.map(scorableQuote), opts);
 }
 
 /** The best-scored quotation id for an RFQ, or null when the set is unrankable. */
-export function bestScoredQuotationId(rfq: RFQ, nowIso: string): string | null {
-  const outcome = rfqScoring(rfq, nowIso);
+export function bestScoredQuotationId(rfq: RFQ, nowIso: string, evalTierQty?: number): string | null {
+  const outcome = rfqScoring(rfq, nowIso, evalTierQty);
   if (outcome.kind !== 'scored') return null;
   return outcome.scores.find((s) => s.topRanked)?.quoteId ?? null;
+}
+
+/**
+ * A tiered RFQ's best-scored quote PER ITEM at the evaluation break, from
+ * qualified suppliers only. The award's reason rule is judged item by item
+ * against this. Empty for a legacy RFQ.
+ */
+export function bestScoredByItem(
+  rfq: RFQ,
+  nowIso: string,
+  evalTierQty: number,
+): ReadonlyMap<number, string | null> {
+  if (!isTieredRfq(rfq)) return new Map();
+  return bestScoredByItemAt(rfq, qualifiedQuotesFor(rfq, nowIso), evalTierQty, reliabilityOf, {
+    pins: rfq.fxPins,
+    now: new Date(nowIso),
+  });
 }
 
 /**
@@ -360,9 +399,15 @@ export function awardViews(supplierId: string | null): readonly AwardView[] {
           sharePct: Math.round(agg.sharePct / (lines.filter((l) => l.supplierId === sid).length || 1)),
           quantity: agg.quantity,
         })),
-        departedFromBestScore:
-          award.bestScoredQuotationId !== undefined &&
-          !award.lines.some((l) => l.quotationId === award.bestScoredQuotationId),
+        // A PER-ITEM award (a tiered RFQ) departs when ANY item's lines leave
+        // out that item's best-scored quote; an event-level award departs when
+        // its lines leave out the event's.
+        departedFromBestScore: award.bestScoredByItem
+          ? award.bestScoredByItem.some(
+              (b) => !award.lines.some((l) => l.itemLineNo === b.itemLineNo && l.quotationId === b.quotationId),
+            )
+          : award.bestScoredQuotationId !== undefined &&
+            !award.lines.some((l) => l.quotationId === award.bestScoredQuotationId),
       };
     });
 }

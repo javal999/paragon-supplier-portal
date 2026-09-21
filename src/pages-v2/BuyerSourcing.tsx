@@ -67,7 +67,10 @@ import {
   useInviteeCandidates,
   useRfqComplianceGate,
   useRfiEvents,
+  useAwards,
 } from '../services/query/hooks';
+import { isTieredRfq } from '../services/sourcing/rfqComparison';
+import { downloadComparison } from './rfx/comparisonExport';
 // RFx spec 2026-09-21 — the rebuilt authoring: items, breaks, questions and
 // options, templates and copying, and the generic "start from…" seed.
 import {
@@ -1016,6 +1019,31 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
   const { toast } = useToast();
   const { t } = useTranslation();
   const refusalText = useRefusalText();
+  // BL-37 — the award records, so the history can name EVERY supplier of a split.
+  const awardsQuery = useAwards();
+  const awardByRfq = useMemo(
+    () => new Map((awardsQuery.data?.items ?? []).map((a) => [a.rfqId, a] as const)),
+    [awardsQuery.data],
+  );
+  /**
+   * B1 review fix (c) — the comparison as CSV (items × suppliers × breaks),
+   * built in the browser. Says so when there is nothing to export rather than
+   * handing over an empty file.
+   */
+  const exportComparison = (scope: readonly RFQ[], filename: string) => {
+    const rows = downloadComparison(
+      filename,
+      scope,
+      quotations,
+      (id) => supplierNameById.get(id) ?? id,
+      t,
+    );
+    toast(
+      rows > 0
+        ? { variant: 'success', title: t('rfqCompare.export.done') }
+        : { variant: 'info', title: t('rfqCompare.export.empty') },
+    );
+  };
   const createMutation = useRfqCreate();
   const awardMutation = useRfqAward();
   const cancelMutation = useRfqCancel();
@@ -1554,7 +1582,12 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
       return (
         draft.title.trim().length > 0 &&
         draft.category !== '' &&
-        draft.materials.length > 0 &&
+        // B1 review fix (a) — "Specific material(s)" is OPTIONAL. Every RFQ
+        // this wizard raises has an Items step (one item at least, refused by
+        // name otherwise), and the items describe what is sourced; the
+        // hard-coded catalogue has no sticker, mold or box entry to pick.
+        // A requisition pre-fill never carried materials, so it is unchanged.
+
         // The quantity must be READABLE and positive. The positivity half is the
         // pre-existing `Number(draft.totalQty) > 0` guard, preserved verbatim in
         // meaning: this batch makes the reading honest, it does not relax what
@@ -1875,8 +1908,11 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
           <div>
             <label className="text-label text-text-tertiary uppercase block mb-1.5">
               {t('sourcing.wizard.field.materials')}{' '}
-              <span className="text-danger">*</span>
+              <span className="normal-case text-text-tertiary">{t('rfqCompare.wizard.optional')}</span>
             </label>
+            <p className="text-xs text-text-tertiary mb-1.5" data-testid="wizard-materials-optional">
+              {t('rfqCompare.wizard.materialsOptional')}
+            </p>
             {draft.category ? (
               <div className="flex flex-wrap gap-2">
                 {MATERIAL_CATALOG[draft.category as RFQCategory].map((m) => {
@@ -2580,7 +2616,11 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
             <HandoffNotice availability={rfqCreateAvailability} testId="handoff-rfq-create" />
             <BulkActionsBar
               actions={[
-                { label: t('sourcing.action.export'), icon: FileSpreadsheet },
+                {
+                  label: t('sourcing.action.export'),
+                  icon: FileSpreadsheet,
+                  onClick: () => exportComparison(rfqs, `rfq-comparison-${TODAY}.csv`),
+                },
                 ...(rfqCreateAvailability.kind === 'held'
                   ? [{ label: t('sourcing.action.templates'), icon: FileText, onClick: () => setPickerOpen(true) }]
                   : []),
@@ -2891,10 +2931,29 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
                   <TableCell className="text-sm text-text-secondary max-w-md truncate">
                     {r.title}
                   </TableCell>
-                  <TableCell className="text-sm text-text-primary">
-                    {r.awardedSupplierId
-                      ? (supplierNameById.get(r.awardedSupplierId) ?? '—')
-                      : '—'}
+                  <TableCell className="text-sm text-text-primary" data-testid={`award-history-supplier-${r.id}`}>
+                    {/* BL-37 — a split names EVERY awarded supplier, read from
+                        the award record; the principal alone would hide the
+                        rest of the split. */}
+                    {(() => {
+                      const rec = awardByRfq.get(r.id);
+                      const names = rec
+                        ? [...new Set(rec.lines.map((l) => l.supplierId))].map((id) => supplierNameById.get(id) ?? id)
+                        : [];
+                      if (names.length > 1) {
+                        return (
+                          <>
+                            {names.join(', ')}
+                            <div className="text-xs text-text-tertiary">
+                              {rec!.lines.some((l) => l.itemLineNo !== undefined) && isTieredRfq(r)
+                                ? t('rfqCompare.history.split')
+                                : null}
+                            </div>
+                          </>
+                        );
+                      }
+                      return r.awardedSupplierId ? (supplierNameById.get(r.awardedSupplierId) ?? '—') : '—';
+                    })()}
                   </TableCell>
                   <TableCell className="text-sm text-text-secondary whitespace-nowrap">
                     <Data>{formatDate(r.awardDeadline)}</Data>
@@ -2939,7 +2998,14 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
         footerActions={
           selectedRfq && (
             <>
-              <Button variant="secondary" icon={Download}>
+              <Button
+                variant="secondary"
+                icon={Download}
+                data-testid="panel-export-comparison"
+                onClick={() =>
+                  exportComparison([selectedRfq], `${selectedRfq.rfqNumber}-comparison.csv`)
+                }
+              >
                 {t('sourcing.panel.exportComparison')}
               </Button>
               <Button
@@ -3586,6 +3652,10 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
                             </ComparisonCell>
                           ))}
                         </ComparisonRow>
+                        {/* BL-37 — a TIERED RFQ has no one-winner pick: it is
+                            awarded item by item on the event page, by the same
+                            verb. The verb refuses a whole-event line on it. */}
+                        {!isTieredRfq(selectedRfq) && (
                         <ComparisonRow label={t('sourcing.cmp.row.select')}>
                           {quotesForSelected.map((q) => (
                             <ComparisonCell key={q.id} highlight={q.id === topRankedId}>
@@ -3612,6 +3682,7 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
                             </ComparisonCell>
                           ))}
                         </ComparisonRow>
+                        )}
                         </>
                       )}
                     </tbody>
@@ -3620,7 +3691,27 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
               )}
             </section>
 
-            {selectedRfq.status === 'Open' &&
+            {/* BL-37 — the panel's award AGREES with the event page by being
+                the event page: a tiered RFQ links to its per-item award rather
+                than offering a second, one-winner form beside it. */}
+            {isTieredRfq(selectedRfq) &&
+              (selectedRfq.status === 'Open' || selectedRfq.status === 'Closed') &&
+              quotesForSelected.length > 0 && (
+                <section className="bg-teal-soft border border-teal/20 rounded-md p-4" data-testid="panel-tiered-award">
+                  <h3 className="text-section text-text-primary mb-2">{t('sourcing.award.title')}</h3>
+                  <p className="text-sm text-text-secondary mb-2">{t('rfqCompare.panel.awardOnEvent')}</p>
+                  <Link
+                    to={`/buyer/rfq/${selectedRfq.id}`}
+                    className="text-sm text-action hover:underline"
+                    data-testid="panel-open-tiered-award"
+                  >
+                    {t('rfqCompare.panel.openAward')}
+                  </Link>
+                </section>
+              )}
+
+            {!isTieredRfq(selectedRfq) &&
+              selectedRfq.status === 'Open' &&
               isAllResponded(selectedRfq) &&
               quotesForSelected.length > 0 && (
                 <section className="bg-teal-soft border border-teal/20 rounded-md p-4">

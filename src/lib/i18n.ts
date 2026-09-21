@@ -92,6 +92,8 @@ import { forecastCollaborationEn, forecastCollaborationId } from './i18n/forecas
 import { rfxEn, rfxId } from './i18n/rfx';
 // — RFx spec 2026-09-21: the rebuilt RFQ authoring + session-only attachments —
 import { rfqAuthoringEn, rfqAuthoringId } from './i18n/rfqAuthoring';
+// — RFx spec 2026-09-21: RFQ evaluation and the per-item split award —
+import { rfqCompareEn, rfqCompareId } from './i18n/rfqCompare';
 // — BL-51 3PL tracking links (REQ-E07-04 BR-05) —
 import { threePlEn, threePlId } from './i18n/threePl';
 // — BL-52 supplier filters (REQ-E03-01 BR-05) —
@@ -182,6 +184,7 @@ export const resources = {
       ...forecastCollaborationEn,
       ...rfxEn,
       ...rfqAuthoringEn,
+      ...rfqCompareEn,
       ...threePlEn,
       ...supplierFiltersEn,
       ...errorStateEn,
@@ -632,6 +635,7 @@ export const resources = {
       ...forecastCollaborationId,
       ...rfxId,
       ...rfqAuthoringId,
+      ...rfqCompareId,
       ...threePlId,
       ...supplierFiltersId,
       ...errorStateId,

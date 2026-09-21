@@ -24,7 +24,7 @@
 import { DECLARED_PRESENT } from '../../fixturePresent';
 import type { RFQ } from '../../../../data/mockRfqs';
 import type { Quotation } from '../../../../data/mockQuotations';
-import type { RfiQuestion } from '../../../sourcing/types';
+import type { AwardLine, AwardRecord, RfiQuestion } from '../../../sourcing/types';
 import {
   deriveQuoteHeader,
   type QuotationItemQuote,
@@ -271,7 +271,13 @@ const OSLO_SUP015: readonly QuotationItemQuote[] = [
   },
 ];
 
-/** sup-013 — cheapest at the low breaks, dearer at volume. */
+/**
+ * sup-013 — cheapest at the low breaks, dearer at volume. Its lead time is 20
+ * days (it read 24): at 24 the six-day gap outweighed a 3% price lead on the
+ * lead-time axis, so the best COMPOSITE never changed between breaks and the
+ * evaluation-break selector had nothing to show. At 20 the ranking follows the
+ * price: sup-013 is best-scored at 3K and 5K, sup-015 from 10K.
+ */
 const OSLO_SUP013: readonly QuotationItemQuote[] = [
   {
     itemLineNo: 1,
@@ -282,7 +288,7 @@ const OSLO_SUP013: readonly QuotationItemQuote[] = [
     ],
     tierPrices: tierPrices([395, 345, 320, 298, 262, 240]),
     moq: 5_000,
-    leadTimeDays: 24,
+    leadTimeDays: 20,
     oneTimeCosts: [
       { name: 'Die-cut plate', amount: 1_200_000 },
       { name: 'Printing plate', amount: 3_000_000 },
@@ -297,7 +303,7 @@ const OSLO_SUP013: readonly QuotationItemQuote[] = [
     ],
     tierPrices: tierPrices([350, 310, 290, 270, 244, 226]),
     moq: 5_000,
-    leadTimeDays: 24,
+    leadTimeDays: 20,
     oneTimeCosts: [
       { name: 'Die-cut plate', amount: 1_100_000 },
       { name: 'Printing plate', amount: 2_000_000 },
@@ -340,7 +346,7 @@ export const RFQ_SAMPLE_QUOTATION_SEED: readonly Quotation[] = [
     submittedAt: day(-1),
     ...header(OSLO_SUP013),
     currency: 'IDR',
-    leadTimeDays: 24,
+    leadTimeDays: 20,
     moq: 5_000,
     paymentTermsOffered: 'Net 45',
     validUntil: day(30),
@@ -360,5 +366,221 @@ export const RFQ_SAMPLE_QUOTATION_SEED: readonly Quotation[] = [
       { questionId: 'q-sample-ready', value: day(12) },
     ],
     sampleOffer: { canSample: true, readyDate: day(12) },
+  },
+];
+
+// ── A historical award, split per item (BL-37) ──────────────────────────────
+//
+// rfq-024 — the Amplify variant stickers Oslo's note points at ("Spec is the
+// same as the existing Amplify variant sticker"). Awarded, SPLIT PER ITEM across
+// the two Oslo bidders at the 10K-per-variant evaluation break, so the award
+// history shows a multi-supplier award item by item rather than one winner.
+// Sample data, like everything in this file.
+
+const AMPLIFY_TIERS: readonly RfqQuantityTier[] = [5_000, 10_000, 25_000].map((qty) => ({
+  qty,
+  basis: 'perVariant' as const,
+}));
+
+const AMPLIFY_ITEMS: readonly RfqItem[] = [
+  {
+    lineNo: 1,
+    itemType: 'sticker',
+    description: 'Amplify front sticker',
+    variantCount: 6,
+    uom: 'PCS',
+    specFields: sheet('sticker', {
+      material: 'PP white gloss 60 mic',
+      size: '50 × 80',
+      printingColours: '4C (CMYK)',
+      finishing: 'Gloss lamination',
+      form: 'roll',
+      inkStandard: 'Low-migration ink',
+    }),
+    oneTimeCosts: ['dieCutPlate', 'printingPlate'],
+  },
+  {
+    lineNo: 2,
+    itemType: 'sticker',
+    description: 'Amplify back sticker (ingredients)',
+    variantCount: 6,
+    uom: 'PCS',
+    specFields: sheet('sticker', {
+      material: 'PP clear 50 mic',
+      size: '45 × 60',
+      printingColours: '2C + white',
+      finishing: 'Matte varnish',
+      form: 'roll',
+    }),
+    oneTimeCosts: ['dieCutPlate', 'printingPlate'],
+  },
+];
+
+const AMPLIFY: RFQ = {
+  id: 'rfq-024',
+  rfqNumber: 'RFQ-2026-024',
+  title: 'Amplify variant stickers — first run',
+  projectName: 'Amplify',
+  materialCategory: 'Packaging',
+  materialIds: [],
+  buyerId: 'buyer-001',
+  status: 'Awarded',
+  createdAt: day(-70),
+  responseDeadline: day(-56),
+  awardDeadline: day(-49),
+  invitedSupplierIds: ['sup-008', 'sup-013', 'sup-015'],
+  respondedSupplierIds: ['sup-013', 'sup-015'],
+  // 10K per variant × 6 variants × 2 items: the break it was awarded at.
+  totalQty: 120_000,
+  uom: 'PCS',
+  currency: 'IDR',
+  incoterms: 'DDP Jakarta',
+  paymentTerms: 'Net 60',
+  estimatedValue: 40_000_000,
+  items: AMPLIFY_ITEMS,
+  tiers: AMPLIFY_TIERS,
+  allowAlternatives: false,
+  confidential: false,
+  extensions: [],
+  awardedQuotationId: 'qt-024b',
+  awardedSupplierId: 'sup-013',
+};
+
+const amplifyPrices = (prices: readonly number[]) =>
+  AMPLIFY_TIERS.map((t, i) => ({ tierQty: t.qty, unitPrice: prices[i]! }));
+
+const specOf = (brand: string, machine: string, dieCutType: string) => [
+  { key: 'brand', value: brand },
+  { key: 'machine', value: machine },
+  { key: 'dieCutType', value: dieCutType },
+];
+
+/** sup-013 — the cheaper front sticker. */
+const AMPLIFY_SUP013: readonly QuotationItemQuote[] = [
+  {
+    itemLineNo: 1,
+    specValues: specOf('UPM Raflatac', 'Nilpeter FA-17', 'flatbed'),
+    tierPrices: amplifyPrices([330, 290, 250]),
+    moq: 5_000,
+    leadTimeDays: 21,
+    oneTimeCosts: [
+      { name: 'Die-cut plate', amount: 1_200_000 },
+      { name: 'Printing plate', amount: 2_400_000 },
+    ],
+  },
+  {
+    itemLineNo: 2,
+    specValues: specOf('UPM Raflatac', 'Nilpeter FA-17', 'flatbed'),
+    tierPrices: amplifyPrices([320, 285, 248]),
+    moq: 5_000,
+    leadTimeDays: 21,
+    oneTimeCosts: [
+      { name: 'Die-cut plate', amount: 1_100_000 },
+      { name: 'Printing plate', amount: 1_900_000 },
+    ],
+  },
+];
+
+/** sup-015 — the cheaper back sticker. */
+const AMPLIFY_SUP015: readonly QuotationItemQuote[] = [
+  {
+    itemLineNo: 1,
+    specValues: specOf('Avery Dennison', 'Mark Andy P5', 'flexible'),
+    tierPrices: amplifyPrices([350, 310, 262]),
+    moq: 3_000,
+    leadTimeDays: 18,
+    oneTimeCosts: [
+      { name: 'Die-cut plate', amount: 1_500_000 },
+      { name: 'Printing plate', amount: 2_200_000 },
+    ],
+  },
+  {
+    itemLineNo: 2,
+    specValues: specOf('Avery Dennison', 'Mark Andy P5', 'flexible'),
+    tierPrices: amplifyPrices([300, 262, 226]),
+    moq: 3_000,
+    leadTimeDays: 18,
+    oneTimeCosts: [
+      { name: 'Die-cut plate', amount: 1_300_000 },
+      { name: 'Printing plate', amount: 1_500_000 },
+    ],
+  },
+];
+
+const amplifyHeader = (q: readonly QuotationItemQuote[]) => deriveQuoteHeader(AMPLIFY, q)!;
+
+/** Joins the RFQ store AFTER `RFQ_SAMPLE_SEED`, so no existing row moves. */
+export const RFQ_SAMPLE_HISTORY_SEED: readonly RFQ[] = [AMPLIFY];
+
+export const RFQ_SAMPLE_HISTORY_QUOTATION_SEED: readonly Quotation[] = [
+  {
+    id: 'qt-024a',
+    rfqId: 'rfq-024',
+    supplierId: 'sup-015',
+    submittedAt: day(-60),
+    ...amplifyHeader(AMPLIFY_SUP015),
+    currency: 'IDR',
+    leadTimeDays: 18,
+    moq: 3_000,
+    paymentTermsOffered: 'Net 60',
+    validUntil: day(-10),
+    complianceScore: 90,
+    ...retiredAxes,
+    status: 'Awarded',
+    itemQuotes: AMPLIFY_SUP015,
+  },
+  {
+    id: 'qt-024b',
+    rfqId: 'rfq-024',
+    supplierId: 'sup-013',
+    submittedAt: day(-59),
+    ...amplifyHeader(AMPLIFY_SUP013),
+    currency: 'IDR',
+    leadTimeDays: 21,
+    moq: 5_000,
+    paymentTermsOffered: 'Net 45',
+    validUntil: day(-20),
+    complianceScore: 70,
+    ...retiredAxes,
+    status: 'Awarded',
+    itemQuotes: AMPLIFY_SUP013,
+  },
+];
+
+/** 10K per variant × 6 variants = 60,000 pieces per item at the award break. */
+const AMPLIFY_ITEM_PIECES = 60_000;
+const amplifyLine = (supplierId: string, quotationId: string, lineNo: number, sharePct: number): AwardLine => ({
+  supplierId,
+  quotationId,
+  itemCode: '',
+  itemLineNo: lineNo,
+  sharePct,
+  quantity: Math.round((AMPLIFY_ITEM_PIECES * sharePct) / 100),
+  awardTierQty: 10_000,
+});
+
+/**
+ * The recorded split. `bestScoredByItem` is what CR-15 ranks first per item at
+ * 10K — pinned against the live derivation by `rfqCompareAward.test.ts`, so the
+ * stored history cannot claim a best score the rule would not give.
+ */
+export const RFQ_SAMPLE_AWARD_SEED: readonly AwardRecord[] = [
+  {
+    id: 'aw-0002',
+    rfqId: 'rfq-024',
+    awardedAt: `${day(-48)}T03:00:00.000Z`,
+    lines: [
+      amplifyLine('sup-013', 'qt-024b', 1, 60),
+      amplifyLine('sup-015', 'qt-024a', 1, 40),
+      amplifyLine('sup-015', 'qt-024a', 2, 70),
+      amplifyLine('sup-013', 'qt-024b', 2, 30),
+    ],
+    reason: 'Split on both items so either press can cover a variant launch alone.',
+    bestScoredQuotationId: 'qt-024a',
+    bestScoredByItem: [
+      { itemLineNo: 1, quotationId: 'qt-024b' },
+      { itemLineNo: 2, quotationId: 'qt-024a' },
+    ],
+    notAwardedSupplierIds: ['sup-008'],
   },
 ];
