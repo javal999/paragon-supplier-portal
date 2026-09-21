@@ -956,7 +956,7 @@ Template rules:
 - BR-05. Incoming stock is shown as an aggregate. The per-date detail is in Order Collaboration [MN-INV-04].
 - BR-06. Incoming is split into in production and in transit [MN-INV-05].
 - BR-07. Raw material and packaging are shown separately on the PTI view, because packaging is a finished good at the supplier [MN-INV-06]. On the supplier view they are one list, because a supplier normally supplies one type; the split appears only for a supplier that supplies both [Owner, 2026-09-21].
-- BR-08. Each material shows its days of supply (CR-01) and band (CR-02) [Code].
+- BR-08. Each material shows its days of supply (CR-01) and its risk class against the supplier lead time (CR-24), with the basis shown. The CR-02 day bands are used only where the lead time is missing [Code; Owner, 2026-09-21].
 
 **Edge cases.**
 - Supplier stock has not been updated within its data-update SLA: show the last update time and flag it as stale. The SLA varies by material and supplier, because each moves differently, so it is configured per supplier and material [owner, 2026-09-17; configuration Proposed].
@@ -968,7 +968,7 @@ Template rules:
 - AC-03. Raw material and packaging can be viewed separately.
 - AC-04. The incoming figure links to its per-date detail in Order Collaboration.
 - AC-05. Each supplier figure shows its last update time.
-- AC-06. Each material shows days of supply and its band, calculated with CR-01 and CR-02.
+- AC-06. Each material shows days of supply and its risk class, calculated with CR-01 and CR-24 (CR-02 only without a lead time), and says which basis was used.
 
 **Data and integration.** PTI SOH and PTI ROP from SAP. Supplier SOH, supplier ROP, and in-production quantity from REQ-E08-02. In-transit quantity from ASNs (REQ-E07-04).
 
