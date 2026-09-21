@@ -84,6 +84,19 @@ describe('PTI Inventory (REQ-E08-01)', () => {
     expect(screen.queryByText(/available/i)).toBeNull();
   });
 
+  it('BL-46 — each row says which basis decided its risk: lead time, or the fallback bands', async () => {
+    renderWithProviders(<BuyerInventory />, { identity: PLANNER });
+    await screen.findByTestId('pti-stock-row-sup-002-RM-STEAR-7300');
+    const fallback = screen.getByTestId('risk-sup-010-RM-EMUL-9430');
+    expect(fallback).toHaveTextContent('6 days · High');
+    expect(fallback).toHaveTextContent('No lead time · day bands: Critical');
+    // Known-false: a lead-time row never claims the fallback.
+    expect(screen.getByTestId('risk-sup-002-RM-STEAR-7300')).not.toHaveTextContent('day bands');
+    expect(screen.getByTestId('pti-inventory-banner-lead-time')).toHaveTextContent(
+      'Materials with no supplier lead time on record, using the day bands: 1',
+    );
+  });
+
   it('raw material and packaging are separate views (BR-07)', async () => {
     renderWithProviders(<BuyerInventory />, { identity: PLANNER });
     await screen.findByTestId('pti-stock-row-sup-002-RM-STEAR-7300');
@@ -485,6 +498,14 @@ describe('Alerts (REQ-E08-05)', () => {
     fireEvent.change(panel().getByLabelText('What was done'), { target: { value: 'Earlier call-off requested' } });
     fireEvent.click(panel().getByTestId('alert-close-submit'));
     await waitFor(() => expect(inventoryAlertLedger.all()).toEqual([expect.objectContaining({ key: 'ptiBelowRop|RM-STEAR-7300|sup-002', kind: 'closed' })]));
+    // BL-46 — the class says why: cover against the lead time.
+    expect(within(alert).getByTestId('alert-basis-ptiBelowRop|RM-STEAR-7300|sup-002')).toHaveTextContent(
+      'Cover 10 days · Lead time 21 days',
+    );
+    // …and the one material with no lead time raises its own alert, on the fallback.
+    const missing = screen.getByTestId('alert-leadTimeMissing|RM-EMUL-9430|sup-010');
+    expect(missing).toHaveTextContent('No supplier lead time on record');
+    expect(missing).toHaveTextContent('Cover 6 days · No lead time · day bands: Critical');
     // The hand-written geopolitical banners are not part of the alert experience.
     expect(screen.queryByText(/geopolitic/i)).toBeNull();
   });
