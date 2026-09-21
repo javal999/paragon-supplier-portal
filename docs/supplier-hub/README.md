@@ -9,6 +9,7 @@ Business documentation for the PTI Supplier Hub (Supplier Portal) project. The p
 | [SUPPLIER-HUB-PRD.md](SUPPLIER-HUB-PRD.md) | MVP product requirements document: executive summary, KPIs, user stories, non-goals, architecture, diagrams, test scenarios, edge cases, proposed API contract, risks and roadmap. **For executives and IT** | Draft |
 | [SUPPLIER-HUB-REQUIREMENTS.md](SUPPLIER-HUB-REQUIREMENTS.md) | Detailed requirements (`REQ-Exx-nn`): business value, experience, step-by-step, business rules, edge cases, acceptance criteria. **Start here** | Living document |
 | [SUPPLIER-HUB-BASELINE.md](SUPPLIER-HUB-BASELINE.md) | Everything in the Aug 2026 kick-off deck, broken into IDs (`E01`–`E13`), plus milestones, people, KPIs, risks, and conflicts. Section 12 merges the reviewed meeting notes | Reference |
+| [BACKLOG.md](BACKLOG.md) | Everything outstanding in one list: decisions waiting on people, work waiting on those decisions or on the backend, work that can start today, and what other teams own. **Start here to pick up work** | Living document |
 | [DECISION-GUIDE.md](DECISION-GUIDE.md) | A recommendation for each open decision (BL-01 to BL-19b in the backlog): market practice, what we suggest for PTI, and what would change it. **Take this into the decision meetings** | Recommendations, 2026-09-21 |
 | [BUILD-GAP.md](BUILD-GAP.md) | The only place that describes the prototype: status per requirement, the build list and what is still not built, where each calculation lives, prototype features kept or parked, and how older design docs in this repo relate. **For the build team** | Living document |
 | [KICKOFF-MEETING-NOTES.md](KICKOFF-MEETING-NOTES.md) | Business-user feedback from the kick-off, each point with its original scrap note (`MN-…`) and owner confirmation | Reviewed 2026-09-17 |
@@ -31,6 +32,7 @@ Every business rule carries a source tag: `[MN-…]` meeting note, `[Deck p.N]`,
 - Product scope, KPIs, stories, architecture, risks: the PRD.
 - Business rules, formulas (`CR-`), menu (`NV-`), screen rules (`SC-`): the requirements. The PRD refers to them and does not repeat them.
 - What the prototype does and where: `BUILD-GAP.md` only.
+- What is still outstanding, and what blocks it: `BACKLOG.md`.
 - The deck and the meeting notes: the baseline and meeting notes files, kept as the record of what was said.
 
 ## How to contribute
