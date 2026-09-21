@@ -839,7 +839,7 @@ export type SupplierDocumentCategory =
  *
  * ⚠️ **AND THE PLATFORM CAN READ A FILE — IT CANNOT KEEP ONE.** The dispatched
  * premise was *"every other upload in the platform is a toast"*; measured, it is
- * not: `XlsxImportPanel` takes a real `<input type="file">`, parses the workbook
+ * not: `StockUploadPanel` (the Stock page) takes a real `<input type="file">`, parses the workbook
  * and renders its rows, and `SupplierShipments` / `SupplierRegistration` both
  * read `e.target.files[0].name` into form state. **What the tree has no seam for
  * is STORAGE and TRANSMISSION** — zero server code, no blob target, and

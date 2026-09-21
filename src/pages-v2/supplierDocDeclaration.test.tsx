@@ -106,7 +106,7 @@ describe('§82 · the supplier declares — and the surface says what it is', ()
     fireEvent.click(await screen.findByRole('button', { name: /declare a certificate/i }));
 
     // The sentence, and it is precisely bounded: the platform CANNOT keep or
-    // forward a file. It does not claim it cannot read one — `XlsxImportPanel`
+    // forward a file. It does not claim it cannot read one — `StockUploadPanel` (the Stock page)
     // parses a workbook one lane over, and a supplier could disprove the wider
     // claim in thirty seconds.
     expect(screen.getByTestId('declaration-nofile-notice')).toHaveTextContent(
