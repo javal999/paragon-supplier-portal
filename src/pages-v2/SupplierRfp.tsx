@@ -18,13 +18,12 @@ import { useVerbAvailability } from '../hooks/useVerbAvailability';
 import { useToast } from '../hooks/useToast';
 import { formatDate } from '../lib/format';
 import { useCurrentIdentity } from '../context/CurrentIdentityContext';
-import { useRfiEvents, useRfpEvents, useRFQs } from '../services/query/hooks';
+import { useRfpEvents } from '../services/query/hooks';
 import { useRfxCommand } from '../services/query/commandHooks';
 import { RFP_TERM_GROUP_ORDER, rfpTerm } from '../services/sourcing/rfxConfig';
 import { deviationsWithoutComment, unansweredTerms } from '../services/transitions/rfxRules';
 import type { RfpTermAnswer } from '../services/sourcing/types';
 import type { RfpEventView } from '../services/sourcing/views';
-import RfxTabs from './rfx/RfxTabs';
 import { DeadlinePill, rfxNow } from './rfx/rfxDisplay';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -45,8 +44,6 @@ const SupplierRfp: React.FC = () => {
   const { toast } = useToast();
   const { identity } = useCurrentIdentity();
   const events = useRfpEvents();
-  const rfis = useRfiEvents();
-  const rfqs = useRFQs();
   const answerVerb = useVerbAvailability('rfpresponse:answer');
   const command = useRfxCommand();
   const [openId, setOpenId] = useState<string | null>(null);
@@ -99,18 +96,13 @@ const SupplierRfp: React.FC = () => {
       <PageHeader
         breadcrumb={crumb}
         title={t('rfx.rfp.supplier.title')}
+        count={items.length}
         subtitle={t('rfx.rfp.supplier.subtitle')}
       />
       <PageMetaLine className="-mt-6 mb-4">
         {t('rfx.asOf')} <Data>{formatDate(rfxNow())}</Data>
         <SampleDataBadge className="ml-3 align-middle" />
       </PageMetaLine>
-
-      <RfxTabs
-        persona="supplier"
-        active="rfp"
-        counts={{ rfi: rfis.data?.items.length ?? 0, rfq: rfqs.data?.items.length ?? 0, rfp: items.length }}
-      />
 
       {answerVerb.kind !== 'held' && (
         <div className="mb-4">

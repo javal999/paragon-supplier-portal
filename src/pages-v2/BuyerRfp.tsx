@@ -17,12 +17,11 @@ import { HandoffNotice } from '../components/ui-v2/HandoffNotice';
 import { useVerbAvailability } from '../hooks/useVerbAvailability';
 import { useToast } from '../hooks/useToast';
 import { formatDate } from '../lib/format';
-import { useRfiEvents, useRfpEvents, useRFQs } from '../services/query/hooks';
+import { useRfpEvents } from '../services/query/hooks';
 import { useRfxCommand } from '../services/query/commandHooks';
 import { RFP_TERM_GROUP_ORDER, rfpTerm } from '../services/sourcing/rfxConfig';
 import { rfpScoringOf } from './rfx/rfpScoring';
 import type { RfpEventView } from '../services/sourcing/views';
-import RfxTabs from './rfx/RfxTabs';
 import RfpCreateWizard from './rfx/RfpCreateWizard';
 import { DeadlinePill, EmptyRow, OtifOrNoHistory, ResponseStatePill, rfxNow } from './rfx/rfxDisplay';
 
@@ -51,8 +50,6 @@ const BuyerRfp: React.FC = () => {
   const { t } = useTranslation();
   const { toast } = useToast();
   const events = useRfpEvents();
-  const rfis = useRfiEvents();
-  const rfqs = useRFQs();
   const publish = useVerbAvailability('rfp:publish');
   const create = useVerbAvailability('rfp:create');
   const command = useRfxCommand();
@@ -89,17 +86,11 @@ const BuyerRfp: React.FC = () => {
 
   return (
     <AppShellV2>
-      <PageHeader breadcrumb={crumb} title={t('rfx.rfp.title')} subtitle={t('rfx.rfp.subtitle')} />
+      <PageHeader breadcrumb={crumb} title={t('rfx.rfp.title')} count={items.length} subtitle={t('rfx.rfp.subtitle')} />
       <PageMetaLine className="-mt-6 mb-4">
         {t('rfx.asOf')} <Data>{formatDate(rfxNow())}</Data>
         <SampleDataBadge className="ml-3 align-middle" />
       </PageMetaLine>
-
-      <RfxTabs
-        persona="buyer"
-        active="rfp"
-        counts={{ rfi: rfis.data?.items.length ?? 0, rfq: rfqs.data?.items.length ?? 0, rfp: items.length }}
-      />
 
       {/* CE-01 — the buyer raises the event; a seat without `rfp:create` reads
           WHOSE act it is rather than losing the affordance silently (§72a). */}

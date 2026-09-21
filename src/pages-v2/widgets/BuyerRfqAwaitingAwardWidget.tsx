@@ -99,7 +99,7 @@ const BuyerRfqAwaitingAwardWidget: React.FC = () => {
           : undefined
       }
       actionLabel={count > 0 ? t('widget.rfqAward.action') : undefined}
-      onAction={count > 0 ? () => navigate('/buyer/sourcing') : undefined}
+      onAction={count > 0 ? () => navigate('/buyer/rfq') : undefined}
       expandedRows={expandedRows}
     />
   );

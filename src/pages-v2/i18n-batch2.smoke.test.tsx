@@ -37,14 +37,14 @@ describe('Batch 2 — bilingual render (no EN leak in chrome)', () => {
   it('BuyerSourcing: ID chrome header, English gone', async () => {
     await setLang('id');
     renderWithProviders(<BuyerSourcing />);
-    expect(await screen.findByText('Sumber & RFQ')).toBeInTheDocument();
-    expect(screen.queryByText('Sourcing & RFQ')).not.toBeInTheDocument();
+    expect(await screen.findByText('Permintaan penawaran harga')).toBeInTheDocument();
+    expect(screen.queryByText('Quotation requests')).not.toBeInTheDocument();
   });
 
   it('SupplierRFQs: ID chrome header, English gone', async () => {
     await setLang('id');
     renderWithProviders(<SupplierRFQs />, { identity: SUPPLIER });
-    expect(await screen.findByText('Acara Sourcing Saya')).toBeInTheDocument();
-    expect(screen.queryByText('My Sourcing Events')).not.toBeInTheDocument();
+    expect(await screen.findByText('Permintaan penawaran harga')).toBeInTheDocument();
+    expect(screen.queryByText('Quotation requests')).not.toBeInTheDocument();
   });
 });

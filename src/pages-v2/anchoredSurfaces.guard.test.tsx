@@ -287,7 +287,7 @@ describe('anchored surfaces — clock-independent by construction', () => {
   });
 
   it('BuyerSourcing is anchored', async () => {
-    await expectAnchored({ el: <BuyerSourcing />, route: '/buyer/sourcing' });
+    await expectAnchored({ el: <BuyerSourcing />, route: '/buyer/rfq' });
   });
 
   // ⚠️ **SUPPLIERDASHBOARD IS ASSERTED IN TWO HALVES, BY RULING.** Its badges
