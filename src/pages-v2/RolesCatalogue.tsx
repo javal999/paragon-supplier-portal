@@ -250,6 +250,8 @@ const RolesCatalogue: React.FC = () => {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder={t('roles.page.search')}
+            // BL-31: the wrapping <label> holds only an icon, so it named nothing.
+            aria-label={t('roles.page.search')}
             data-testid="roles-search"
             className="w-full pl-8 pr-3 py-2 text-sm border border-border-subtle rounded-md bg-white"
           />

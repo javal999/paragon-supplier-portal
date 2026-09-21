@@ -835,6 +835,7 @@ const StorefrontEditor: React.FC<StorefrontEditorProps> = ({
               <div className="flex items-center gap-2">
                 <input
                   type="time"
+                  aria-label={t('supplierMyStorefront.field.businessHoursStart')}
                   className={inputClass}
                   style={{ width: 120 }}
                   value={bizHoursStart}
@@ -845,6 +846,7 @@ const StorefrontEditor: React.FC<StorefrontEditorProps> = ({
                 </span>
                 <input
                   type="time"
+                  aria-label={t('supplierMyStorefront.field.businessHoursEnd')}
                   className={inputClass}
                   style={{ width: 120 }}
                   value={bizHoursEnd}

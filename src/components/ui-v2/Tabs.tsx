@@ -1,5 +1,6 @@
 import React from 'react';
 import { LucideIcon } from 'lucide-react';
+import { onTabListKeyDown } from './tabKeys';
 
 export interface TabItem {
   id: string;
@@ -18,6 +19,7 @@ const Tabs: React.FC<TabsProps> = ({ tabs, active, onChange, className = '' }) =
   return (
     <div
       role="tablist"
+      onKeyDown={(e) => onTabListKeyDown(e, tabs.map((x) => x.id), active, onChange)}
       className={`flex items-center gap-6 border-b border-border-subtle ${className}`}
     >
       {tabs.map((tab) => {
