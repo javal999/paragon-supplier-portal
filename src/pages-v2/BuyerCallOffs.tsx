@@ -44,6 +44,8 @@ import { numberOf } from './callOffs/callOffDisplay';
 import {
   ConfirmationPill,
   DeliveryPill,
+  ToleranceFindings,
+  ToleranceTags,
   inputClass,
   labelClass,
   qty,
@@ -378,6 +380,14 @@ const BuyerCallOffs: React.FC = () => {
                         </TableCell>
                         <TableCell>
                           <ConfirmationPill status={v.confirmation} />
+                          {/* CR-05 — the rule that decided this confirmation. */}
+                          {v.tolerance && (
+                            <ToleranceTags
+                              check={v.tolerance}
+                              uom={v.callOff.uom}
+                              testId={`calloff-tol-${v.callOff.id}`}
+                            />
+                          )}
                         </TableCell>
                         <TableCell>
                           <DeliveryPill status={v.delivery} />
@@ -734,6 +744,17 @@ const CallOffPanelBody: React.FC<PanelBodyProps> = ({
           </ul>
           {c.confirmation.comment && <p className="mt-1 text-sm text-text-secondary">“{c.confirmation.comment}”</p>}
           <p className="mt-1 text-xs text-text-tertiary">{t(`co.approval.${c.confirmation.approval}`)}</p>
+          {/* CR-05 — the rule that put this confirmation where it is, and why. */}
+          {view.tolerance && (
+            <div className="mt-2">
+              <ToleranceFindings
+                check={view.tolerance}
+                uom={c.uom}
+                needDate={c.needDate}
+                testId="calloff-tolerance-applied"
+              />
+            </div>
+          )}
         </section>
       )}
 

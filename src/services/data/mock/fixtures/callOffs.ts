@@ -167,15 +167,19 @@ export const CALL_OFF_SEED: readonly CallOff[] = [
     type: 'jit',
     status: 'Confirmed with Changes',
     releasedAt: at(-5, 3),
+    // BL-47 — EXACTLY +5% (10,500 on 10,000), the top of the CR-05 allowance, so
+    // accepted automatically. It read 11,000 (+10%) while a JIT call-off had no
+    // over-quantity limit; under the revised CR-05 that answer would wait for the
+    // planner, so a stored `auto` would have been a rule the tree no longer has.
     confirmation: {
       kind: 'changes',
-      deliveries: [{ quantity: 11000, date: day(2) }],
+      deliveries: [{ quantity: 10500, date: day(2) }],
       comment: 'Rounded up to full pallets.',
       confirmedAt: at(-5, 8),
       approval: 'auto',
     },
     dispatches: [
-      { id: 'dsp-0005-1', shippedDate: day(0), expectedArrival: day(5), quantity: 11000, recordedAt: at(0, 5) },
+      { id: 'dsp-0005-1', shippedDate: day(0), expectedArrival: day(5), quantity: 10500, recordedAt: at(0, 5) },
     ],
     notes: [],
   },

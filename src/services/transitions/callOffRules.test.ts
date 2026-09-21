@@ -11,12 +11,13 @@ import { mockGoodsReceipts } from '../../data/mockGoodsReceipts';
 import { MOCK_ASNS } from '../data/mock/fixtures/supplierShipments';
 import { SDC_SIMULATED_NOW } from '../sdc/clock';
 import { DECLARED_PRESENT } from '../data/fixturePresent';
-import { CALL_OFF_TOLERANCE } from './callOffTolerance';
+import { CALL_OFF_EARLY_ALLOWANCE_DAYS, CALL_OFF_OVER_PCT, CALL_OFF_TOLERANCE } from './callOffTolerance';
 import {
   callOffOtif,
   callOffViews,
   checkTolerance,
   confirmationDeadline,
+  confirmedShortfall,
   deliveryDrift,
   deliveryResults,
   exceedsRemaining,
@@ -104,30 +105,92 @@ describe('CR-04 BR-05 · series generator (the delivery generator, reused)', () 
   });
 });
 
-describe('REQ-E09-03 · confirmation answers and tolerance (CR-05, PQ-08)', () => {
-  it('the defaults: forecast 10% over, JIT no limit, 0 under, 0 days early or late', () => {
-    expect(CALL_OFF_TOLERANCE).toMatchObject({ overPct: { forecast: 0.1, jit: null }, underPct: 0, earlyDays: 0, lateDays: 0 });
+describe('REQ-E09-03 · confirmation answers and tolerance (CR-05 revised 2026-09-21; BL-47, BL-56)', () => {
+  // ⚠️ PREMISE CHANGED AT BL-47. These specs pinned the pre-decision rule —
+  // forecast 10% over, JIT no limit, and ANY shortfall to approval while PQ-08
+  // was open. The owner decided CR-05 on 2026-09-21: 5% over for every type,
+  // a shortfall is a visible partial (accepted), later always to approval,
+  // earlier to approval until the warehouse answers (BL-56). Rewritten to the
+  // decided rule, each boundary probed on BOTH sides.
+  it('the defaults: 5% over for every type, early allowance the BL-56 placeholder of 0 days', () => {
+    expect(CALL_OFF_TOLERANCE).toEqual({ overPct: 5, earlyDays: 0 });
+    expect(CALL_OFF_OVER_PCT).toBe(5);
+    expect(CALL_OFF_EARLY_ALLOWANCE_DAYS).toBe(0);
   });
 
-  it('forecast-based over-quantity: within 10% is accepted, beyond it is not', () => {
-    expect(checkTolerance(base, [{ quantity: 1100, date: base.needDate }]).within).toBe(true);
-    const over = checkTolerance(base, [{ quantity: 1101, date: base.needDate }]);
-    expect(over.within).toBe(false);
-    expect(over.overQty).toBe(true);
+  it.each(['forecast', 'jit'] as const)('%s: exactly +5%% is accepted; one unit more waits for the planner', (type) => {
+    const c = { ...base, type };
+    const atLimit = checkTolerance(c, [{ quantity: 1050, date: base.needDate }]);
+    expect(atLimit).toMatchObject({ within: true, overQty: false });
+    expect(atLimit.findings).toEqual([{ kind: 'overWithin', needsApproval: false, qty: 50, pct: 5, limit: 5 }]);
+    const beyond = checkTolerance(c, [{ quantity: 1051, date: base.needDate }]);
+    expect(beyond).toMatchObject({ within: false, overQty: true });
+    expect(beyond.findings).toEqual([{ kind: 'overBeyond', needsApproval: true, qty: 51, pct: 5.1, limit: 5 }]);
   });
 
-  it('JIT has no over-quantity limit', () => {
-    expect(checkTolerance({ ...base, type: 'jit' }, [{ quantity: 50000, date: base.needDate }]).within).toBe(true);
+  it('the 5% boundary is exact on quantities where 1.05 is not (no floating-point drift)', () => {
+    // 15,000 × 1.05 in floating point is 15750.000000000002; the rule must not
+    // depend on that.
+    expect(checkTolerance({ ...base, quantity: 15000 }, [{ quantity: 15750, date: base.needDate }]).within).toBe(true);
+    expect(checkTolerance({ ...base, quantity: 15000 }, [{ quantity: 15751, date: base.needDate }]).within).toBe(false);
   });
 
-  it('ANY date change or shortfall goes to approval while PQ-08 is open', () => {
-    expect(checkTolerance(base, [{ quantity: 1000, date: '2026-09-11' }])).toMatchObject({ within: false, late: true });
-    expect(checkTolerance(base, [{ quantity: 1000, date: '2026-09-09' }])).toMatchObject({ within: false, early: true });
-    expect(checkTolerance({ ...base, type: 'jit' }, [{ quantity: 999, date: base.needDate }])).toMatchObject({
-      within: false,
-      underQty: true,
+  it('any shortfall is a visible partial: accepted, flagged short, never a reason to wait', () => {
+    const one = checkTolerance(base, [{ quantity: 999, date: base.needDate }]);
+    expect(one).toMatchObject({ within: true, short: true, overQty: false });
+    expect(one.findings).toEqual([{ kind: 'short', needsApproval: false, qty: 1, pct: 0.1 }]);
+    const jit: CallOff = { ...base, type: 'jit' };
+    const half = checkTolerance(jit, [{ quantity: 500, date: base.needDate }]);
+    expect(half).toMatchObject({ within: true, short: true });
+    // …and the requested quantity is not short.
+    expect(checkTolerance(base, [{ quantity: 1000, date: base.needDate }]).short).toBe(false);
+  });
+
+  it('a later date ALWAYS goes to the planner — one day is enough', () => {
+    const late = checkTolerance(base, [{ quantity: 1000, date: '2026-09-11' }]);
+    expect(late).toMatchObject({ within: false, late: true });
+    expect(late.findings).toEqual([{ kind: 'late', needsApproval: true, days: 1, date: '2026-09-11' }]);
+    expect(checkTolerance(base, [{ quantity: 1000, date: base.needDate }])).toMatchObject({ within: true, late: false });
+  });
+
+  it('an earlier date goes to the planner while the early allowance is the placeholder 0 days (BL-56)', () => {
+    const early = checkTolerance(base, [{ quantity: 1000, date: '2026-09-09' }]);
+    expect(early).toMatchObject({ within: false, early: true });
+    expect(early.findings).toEqual([{ kind: 'early', needsApproval: true, days: 1, date: '2026-09-09', limit: 0 }]);
+  });
+
+  it('the early allowance is honoured when BL-56 sets one: inside it accepted, one day past it not', () => {
+    const tol = { ...CALL_OFF_TOLERANCE, earlyDays: 2 };
+    const inside = checkTolerance(base, [{ quantity: 1000, date: '2026-09-08' }], tol);
+    expect(inside).toMatchObject({ within: true, early: false });
+    expect(inside.findings).toEqual([{ kind: 'early', needsApproval: false, days: 2, date: '2026-09-08', limit: 2 }]);
+    expect(checkTolerance(base, [{ quantity: 1000, date: '2026-09-07' }], tol)).toMatchObject({ within: false, early: true });
+  });
+
+  it('the requested quantity on the need date is accepted and says so', () => {
+    const c = checkTolerance(base, [{ quantity: 1000, date: base.needDate }]);
+    expect(c).toMatchObject({ within: true, overQty: false, short: false, early: false, late: false });
+    expect(c.findings).toEqual([{ kind: 'asRequested', needsApproval: false }]);
+  });
+
+  it('a short split with one later delivery: partial AND later — the later date decides', () => {
+    const c = checkTolerance(base, [
+      { quantity: 600, date: '2026-09-10' },
+      { quantity: 300, date: '2026-09-17' },
+    ]);
+    expect(c).toMatchObject({ within: false, short: true, late: true });
+    expect(c.findings.map((f) => f.kind)).toEqual(['short', 'late']);
+  });
+
+  it('confirmedShortfall reads the answer against the released quantity; 0 before an answer', () => {
+    const answered = (quantity: number): CallOff => ({
+      ...base,
+      status: 'Confirmed with Changes',
+      confirmation: { kind: 'changes', deliveries: [{ quantity, date: base.needDate }], confirmedAt: 'x', approval: 'auto' },
     });
-    expect(checkTolerance(base, [{ quantity: 1000, date: base.needDate }]).within).toBe(true);
+    expect(confirmedShortfall(answered(900))).toBe(100);
+    expect(confirmedShortfall(answered(1050))).toBe(0);
+    expect(confirmedShortfall(base)).toBe(0);
   });
 
   it('each answer is well formed for its kind, or refused by name', () => {
@@ -163,6 +226,37 @@ describe('REQ-E09-03 · confirmation answers and tolerance (CR-05, PQ-08)', () =
         ],
       }),
     ).toEqual({ refusal: 'splitDates' });
+  });
+});
+
+describe('BL-47 · every seeded confirmation stores the verdict CR-05 gives it today', () => {
+  // A stored `approval` is decided once, when the supplier answers. A seed
+  // written under the old rule would keep claiming `auto` for an answer the
+  // revised rule sends to the planner — CO-2026-0005 did (+10% on a JIT
+  // call-off) until BL-47. `approved` means the rule said "needs approval".
+  const disagreeing = (rows: readonly CallOff[]) =>
+    rows
+      .filter((c) => c.confirmation)
+      .filter((c) => (c.confirmation!.approval === 'auto') !== checkTolerance(c, c.confirmation!.deliveries).within)
+      .map((c) => c.id);
+
+  it('population control: named confirmations of both verdicts are in the seed', () => {
+    const answered = CALL_OFF_SEED.filter((c) => c.confirmation).map((c) => c.id);
+    expect(answered).toContain('co-0005'); // auto
+    expect(answered).toContain('co-0004'); // awaiting
+  });
+
+  it('no seeded confirmation disagrees with the rule', () => {
+    expect(disagreeing(CALL_OFF_SEED)).toEqual([]);
+  });
+
+  it('known-bad: the pre-BL-47 CO-2026-0005 (+10% stored as auto) is caught by name', () => {
+    const stale = CALL_OFF_SEED.map((c) =>
+      c.id === 'co-0005'
+        ? { ...c, confirmation: { ...c.confirmation!, deliveries: [{ quantity: 11000, date: c.needDate }] } }
+        : c,
+    );
+    expect(disagreeing(stale)).toEqual(['co-0005']);
   });
 });
 

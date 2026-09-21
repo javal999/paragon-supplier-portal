@@ -144,27 +144,52 @@ describe('supplier confirmation and tolerance (REQ-E09-03 BR-02..BR-04, AC-01, A
     expect(callOffStore.get('co-0003')).toMatchObject({ status: 'Confirmed', confirmation: { approval: 'auto' } });
   });
 
-  it('forecast-based over-quantity within 10% is accepted automatically', async () => {
-    await verb('t_calloff_confirm_changes', 'co-0003', { confirmedQty: 16500 });
+  // ⚠️ PREMISE CHANGED AT BL-47 (CR-05 revised 2026-09-21). These read "forecast
+  // 10% over, JIT no limit" and "any date change to approval (PQ-08 open)".
+  // Now: 5% over for every type; a shortfall is accepted as a visible partial;
+  // later always to approval; earlier to approval while BL-56's placeholder is
+  // 0 days. Each boundary is walked through the real verb on both sides.
+  it('forecast-based: exactly +5% is accepted automatically', async () => {
+    await verb('t_calloff_confirm_changes', 'co-0003', { confirmedQty: 15750 });
     expect(callOffStore.get('co-0003')).toMatchObject({
       status: 'Confirmed with Changes',
-      confirmation: { approval: 'auto', deliveries: [{ quantity: 16500 }] },
+      confirmation: { approval: 'auto', deliveries: [{ quantity: 15750 }] },
     });
   });
 
-  it('forecast-based over-quantity beyond 10% waits for the planner', async () => {
-    await verb('t_calloff_confirm_changes', 'co-0003', { confirmedQty: 16501 });
+  it('forecast-based: one unit beyond +5% waits for the planner', async () => {
+    await verb('t_calloff_confirm_changes', 'co-0003', { confirmedQty: 15751 });
     expect(callOffStore.get('co-0003')!.confirmation?.approval).toBe('awaiting');
   });
 
-  it('JIT has no over-quantity limit', async () => {
-    const res = await release({ quantity: 1000, type: 'jit' });
-    await verb('t_calloff_confirm_changes', res.entityId!, { confirmedQty: 14000 });
-    expect(callOffStore.get(res.entityId!)!.confirmation?.approval).toBe('auto');
+  it('JIT takes the SAME 5%: +5% accepted, beyond it waits (it had no limit before BL-47)', async () => {
+    const atLimit = await release({ quantity: 1000, type: 'jit' });
+    await verb('t_calloff_confirm_changes', atLimit.entityId!, { confirmedQty: 1050 });
+    expect(callOffStore.get(atLimit.entityId!)!.confirmation?.approval).toBe('auto');
+    const beyond = await release({ quantity: 1000, type: 'jit' });
+    await verb('t_calloff_confirm_changes', beyond.entityId!, { confirmedQty: 1051 });
+    expect(callOffStore.get(beyond.entityId!)!.confirmation?.approval).toBe('awaiting');
   });
 
-  it('a date change goes to approval (PQ-08 default 0 days)', async () => {
-    await verb('t_calloff_confirm_new_date', 'co-0003', { confirmedDate: '2026-09-08' });
+  it('a shortfall is accepted as a partial delivery — it does not wait for the planner', async () => {
+    await verb('t_calloff_confirm_changes', 'co-0003', { confirmedQty: 9000 });
+    expect(callOffStore.get('co-0003')).toMatchObject({
+      status: 'Confirmed with Changes',
+      confirmation: { approval: 'auto', deliveries: [{ quantity: 9000 }] },
+    });
+  });
+
+  it('a later date always goes to approval — one day later is enough', async () => {
+    const needDate = callOffStore.get('co-0003')!.needDate;
+    const nextDay = new Date(Date.parse(`${needDate}T00:00:00.000Z`) + 86_400_000).toISOString().slice(0, 10);
+    await verb('t_calloff_confirm_new_date', 'co-0003', { confirmedDate: nextDay });
+    expect(callOffStore.get('co-0003')).toMatchObject({ status: 'Confirmed with New Date', confirmation: { approval: 'awaiting' } });
+  });
+
+  it('an earlier date goes to approval while the early allowance is the BL-56 placeholder (0 days)', async () => {
+    const needDate = callOffStore.get('co-0003')!.needDate;
+    const dayBefore = new Date(Date.parse(`${needDate}T00:00:00.000Z`) - 86_400_000).toISOString().slice(0, 10);
+    await verb('t_calloff_confirm_new_date', 'co-0003', { confirmedDate: dayBefore });
     expect(callOffStore.get('co-0003')).toMatchObject({ status: 'Confirmed with New Date', confirmation: { approval: 'awaiting' } });
   });
 

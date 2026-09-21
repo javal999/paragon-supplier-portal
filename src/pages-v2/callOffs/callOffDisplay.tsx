@@ -2,9 +2,15 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import StatusPill from '../../components/ui-v2/StatusPill';
 import type { StatusTone } from '../../lib/statusTone';
-import type { CallOffDeliveryStatus, CallOffView } from '../../services/transitions/callOffRules';
+import type {
+  CallOffDeliveryStatus,
+  CallOffView,
+  ToleranceCheck,
+  ToleranceFinding,
+} from '../../services/transitions/callOffRules';
 import { useCallOffs, useASNs, useGoodsReceipts } from '../../services/query/hooks';
 import { callOffViews } from '../../services/transitions/callOffRules';
+import { formatDate } from '../../lib/format';
 import { sdcClock } from '../../services/sdc';
 import { normalizeQty } from '../../lib/localeNumber';
 
@@ -61,6 +67,70 @@ export const DeliveryPill: React.FC<{ status: CallOffDeliveryStatus | null }> = 
   const { t } = useTranslation();
   if (!status) return <span className="text-xs text-text-tertiary">{t('co.delivery.none')}</span>;
   return <StatusPill variant={DELIVERY_TONE[status]}>{t(`co.delivery.${status}`)}</StatusPill>;
+};
+
+// ── CR-05 · the applied tolerance rule, said out loud (BL-47) ───────────────
+//
+// The planner and the supplier read the SAME findings the verb decided on, so a
+// screen can never explain a rule the dispatcher did not apply. Each finding is
+// one sentence: which rule applied, on what figures, and what follows from it.
+
+/** The i18n key per finding — an early date inside the allowance reads differently. */
+const findingKey = (f: ToleranceFinding): string =>
+  f.kind === 'early' && !f.needsApproval ? 'co.tol.earlyWithin' : `co.tol.${f.kind}`;
+
+const findingParams = (f: ToleranceFinding, uom: string, needDate: string) => ({
+  qty: f.qty === undefined ? '' : `${qty(f.qty)} ${uom}`,
+  pct: f.pct ?? 0,
+  limit: f.limit ?? 0,
+  days: f.days ?? 0,
+  date: f.date ? formatDate(f.date) : '',
+  needDate: formatDate(needDate),
+});
+
+/** The rules applied to one confirmation, with their reasons. */
+export const ToleranceFindings: React.FC<{
+  check: ToleranceCheck;
+  uom: string;
+  needDate: string;
+  testId?: string;
+}> = ({ check, uom, needDate, testId }) => {
+  const { t } = useTranslation();
+  return (
+    <div data-testid={testId} className="space-y-1">
+      <h4 className="text-label text-text-tertiary uppercase">{t('co.tol.title')}</h4>
+      <ul className="text-xs space-y-1">
+        {check.findings.map((f, i) => (
+          <li key={i} className={f.needsApproval ? 'text-warning-hover' : 'text-text-secondary'}>
+            {t(findingKey(f), findingParams(f, uom, needDate))}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
+
+/** The same findings as short tags, for a table row. */
+export const ToleranceTags: React.FC<{ check: ToleranceCheck; uom: string; testId?: string }> = ({
+  check,
+  uom,
+  testId,
+}) => {
+  const { t } = useTranslation();
+  const tags = check.findings.filter((f) => f.kind !== 'asRequested');
+  if (tags.length === 0) return null;
+  return (
+    <div data-testid={testId} className="mt-1 space-y-0.5">
+      {tags.map((f, i) => (
+        <div key={i} className={`text-[11px] ${f.needsApproval ? 'text-warning-hover' : 'text-text-tertiary'}`}>
+          {t(`co.tol.tag.${f.kind === 'early' && !f.needsApproval ? 'earlyWithin' : f.kind}`, {
+            qty: f.qty === undefined ? '' : `${qty(f.qty)} ${uom}`,
+            pct: f.pct ?? 0,
+          })}
+        </div>
+      ))}
+    </div>
+  );
 };
 
 /** The call-off projection for the current scope, with its loading state. */
