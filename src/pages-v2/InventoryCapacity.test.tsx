@@ -4,6 +4,8 @@
 // menu and the Home tasks. Every walk that acts ends in the STORE or the READ.
 // ─────────────────────────────────────────────────────────────────────────────
 
+import React from 'react';
+import { useLocation } from 'react-router-dom';
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { renderWithProviders, BUYER, SUPPLIER } from '../test/test-utils';
@@ -391,6 +393,78 @@ describe('Capacity (REQ-E08-04)', () => {
     expect(screen.queryByText(/Upside/)).toBeNull();
     // ID wording as ruled.
     expect(inventoryCapacityId['inv.capacity.col.upside']).toBe('Kapasitas tambahan jika diminta ({{uom}})');
+  });
+});
+
+describe('Planner capacity filters (BL-63, REQ-E08-04 BR-07, AC-04)', () => {
+  let search = '';
+  const LocationProbe: React.FC = () => {
+    search = useLocation().search;
+    return null;
+  };
+  const renderAt = (query = '') =>
+    renderWithProviders(
+      <>
+        <BuyerCapacity />
+        <LocationProbe />
+      </>,
+      { identity: PLANNER, route: `/buyer/capacity${query}` },
+    );
+  const planIds = () =>
+    screen.queryAllByTestId(/^capacity-plan-/).map((el) => el.getAttribute('data-testid')!.replace('capacity-plan-', ''));
+
+  it('supplier, material group and material narrow the view and are written to the address', async () => {
+    renderAt();
+    await screen.findByTestId('capacity-plan-sup-007-MG-20');
+    expect(planIds()).toHaveLength(13);
+    fireEvent.change(screen.getByLabelText('Supplier'), { target: { value: 'sup-002' } });
+    expect(planIds().sort()).toEqual(['sup-002-MG-02', 'sup-002-MG-03', 'sup-002-MG-10']);
+    expect(new URLSearchParams(search).get('supplier')).toBe('sup-002');
+    fireEvent.change(screen.getByLabelText('Material group'), { target: { value: 'MG-02' } });
+    expect(planIds()).toEqual(['sup-002-MG-02']);
+    expect(new URLSearchParams(search).get('materialGroup')).toBe('MG-02');
+    fireEvent.change(screen.getByLabelText('Supplier'), { target: { value: '' } });
+    fireEvent.change(screen.getByLabelText('Material group'), { target: { value: '' } });
+    fireEvent.change(screen.getByLabelText('Material'), { target: { value: 'RM-EMUL-3310' } });
+    expect(planIds().sort()).toEqual(['sup-002-MG-03', 'sup-005-MG-03']);
+    expect(new URLSearchParams(search).get('materialCode')).toBe('RM-EMUL-3310');
+    expect(new URLSearchParams(search).has('supplier')).toBe(false);
+  });
+
+  it('gap weeks only: only plans with a gap, and only their gap weeks', async () => {
+    renderAt();
+    await screen.findByTestId('capacity-plan-sup-007-MG-20');
+    fireEvent.click(screen.getByTestId('capacity-filter-gaps'));
+    expect(planIds()).toEqual(['sup-007-MG-20']);
+    expect(new URLSearchParams(search).get('gapsOnly')).toBe('1');
+    const rows = within(screen.getByTestId('capacity-plan-sup-007-MG-20')).getAllByRole('row');
+    expect(rows).toHaveLength(2); // the header row and the one gap week
+    expect(within(screen.getByTestId('capacity-plan-sup-007-MG-20')).getAllByTestId(/capacity-gap-/)).toHaveLength(1);
+  });
+
+  it('a filtered address reloads to the same view, and composes with the status chips', async () => {
+    renderAt('?supplier=sup-002');
+    await screen.findByTestId('capacity-plan-sup-002-MG-02');
+    expect(planIds()).toHaveLength(3);
+    expect(screen.getByLabelText('Supplier')).toHaveValue('sup-002');
+    fireEvent.click(screen.getByRole('radio', { name: /^Confirmed \(1\)$/ }));
+    expect(planIds()).toEqual(['sup-002-MG-02']);
+  });
+
+  it('composes with the Order summary PO filter', async () => {
+    renderAt('?po=po-007&from=order-summary&gapsOnly=1');
+    await screen.findByTestId('po-filter-banner');
+    expect(planIds()).toEqual(['sup-007-MG-20']);
+  });
+
+  it('an empty result says so and offers to clear the filters, which restores every plan', async () => {
+    renderAt('?supplier=sup-010&gapsOnly=1');
+    const empty = await screen.findByTestId('capacity-filters-empty');
+    expect(empty).toHaveTextContent('No supplier material group matches these filters.');
+    expect(planIds()).toEqual([]);
+    fireEvent.click(within(empty).getByTestId('capacity-filters-empty-clear'));
+    await waitFor(() => expect(planIds()).toHaveLength(13));
+    expect(search).toBe('');
   });
 });
 
