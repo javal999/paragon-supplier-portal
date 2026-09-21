@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import type { TFunction } from 'i18next';
 import {
   Inbox,
@@ -17,7 +18,6 @@ import {
 import AppShellV2 from '../components/layout-v2/AppShellV2';
 import PageHeader from '../components/ui-v2/PageHeader';
 import PageMetaLine from '../components/ui-v2/PageMetaLine';
-import RfxTabs from './rfx/RfxTabs';
 import ProvenanceMarker from '../components/ui-v2/ProvenanceMarker';
 import KpiCard from '../components/ui-v2/KpiCard';
 import SubTabs from '../components/ui-v2/SubTabs';
@@ -1028,6 +1028,7 @@ const RfqWorkspace: React.FC<RfqWorkspaceProps> = ({
       <PageHeader
         breadcrumb={crumb}
         title={t('rfqs.header.title')}
+        count={openCount}
         subtitle={t('rfqs.header.subtitle', { supplier: mySupplier.name })}
       />
 
@@ -1042,9 +1043,14 @@ const RfqWorkspace: React.FC<RfqWorkspaceProps> = ({
         <ProvenanceMarker capability="rfqs" className="ml-3 align-middle" />
       </PageMetaLine>
 
-      {/* REQ-E03-02 / -04 — information and proposal requests live behind the
-          SAME "Invitations" menu item (§3.7); this is the switch. */}
-      <RfxTabs persona="supplier" active="rfq" counts={{ rfq: openCount }} />
+      {/* The supplier's negotiation thread sits under this module (its route is
+          /supplier/rfq/rounds), so it is reached from here and the RFQ menu item
+          stays highlighted on it (NV-03). */}
+      <div className="flex justify-end mb-4">
+        <Link to="/supplier/rfq/rounds" className="text-sm text-action hover:underline" data-testid="rfq-rounds-link">
+          {t('rfqs.rounds.link')}
+        </Link>
+      </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-6">
         <KpiCard

@@ -12,7 +12,7 @@ export const sourcingEn: Record<string, string> = {
   'sourcing.crumb.acquire': 'ACQUIRE',
   'sourcing.crumb.sourcing': 'SOURCING & RFQ',
   // — Page header —
-  'sourcing.header.title': 'Sourcing & RFQ',
+  'sourcing.header.title': 'Quotation requests',
   'sourcing.header.subtitle': 'Active sourcing events, quote evaluation, and award history.',
   // — Header actions —
   'sourcing.action.export': 'Export',
@@ -371,7 +371,7 @@ export const sourcingId: Record<string, string> = {
   'sourcing.crumb.acquire': 'PENGADAAN',
   'sourcing.crumb.sourcing': 'SUMBER & RFQ',
   // — Page header —
-  'sourcing.header.title': 'Sumber & RFQ',
+  'sourcing.header.title': 'Permintaan penawaran harga',
   'sourcing.header.subtitle': 'Acara sumber aktif, evaluasi penawaran, dan riwayat pemenangan.',
   // — Header actions —
   'sourcing.action.export': 'Ekspor',

@@ -17,7 +17,6 @@ import { BASE_CURRENCY } from '../lib/currencyPolicy';
 import { useCurrentIdentity } from '../context/CurrentIdentityContext';
 import { useAwards, useNegotiationRounds, useQuotations } from '../services/query/hooks';
 import { useRfxCommand } from '../services/query/commandHooks';
-import RfxTabs from './rfx/RfxTabs';
 import { DeadlinePill, money, rfxNow } from './rfx/rfxDisplay';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -77,8 +76,6 @@ const SupplierNegotiations: React.FC = () => {
         {t('rfx.asOf')} <Data>{formatDate(rfxNow())}</Data>
         <SampleDataBadge className="ml-3 align-middle" />
       </PageMetaLine>
-
-      <RfxTabs persona="supplier" active="rfq" />
 
       {submit.kind !== 'held' && (
         <div className="mb-4">
