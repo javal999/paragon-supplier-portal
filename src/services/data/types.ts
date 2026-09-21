@@ -25,6 +25,7 @@ import type {
 // the entities (`services/sourcing/views`) so the contract and the adapter that
 // fulfils it import ONE declaration rather than each holding its own copy.
 import type { InviteeCandidate, InviteeFilter } from '../transitions/rfxRules';
+import type { RfqClarificationView, RfqEngagementView } from '../sourcing/rfqResponse';
 import type {
   AwardView,
   NegotiationRoundView,
@@ -2275,6 +2276,10 @@ export interface IProcurementService {
   getNegotiationRounds(scope: QueryScope): Promise<Page<NegotiationRoundView>>;
   /** REQ-E03-05 — recorded awards. A supplier reads only its own outcome (AC-05). */
   getAwards(scope: QueryScope): Promise<Page<AwardView>>;
+  /** RFx spec 2026-09-21 — invitees' intent and confidentiality acceptance. A supplier reads its own. */
+  getRfqEngagement(scope: QueryScope): Promise<Page<RfqEngagementView>>;
+  /** RFx spec 2026-09-21 — clarification Q&A. A supplier reads its own questions and the published answers, asker hidden. */
+  getRfqClarifications(scope: QueryScope): Promise<Page<RfqClarificationView>>;
   /** CR-23 — the compliance gate for every invitee and bidder of one RFQ. PTI only. */
   getRfqComplianceGate(scope: QueryScope, rfqId: string): Promise<Page<RfqSupplierGateView>>;
 

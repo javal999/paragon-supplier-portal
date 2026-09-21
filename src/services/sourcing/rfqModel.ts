@@ -169,6 +169,8 @@ export interface TierPrice {
 export interface OneTimeCostQuote {
   readonly name: string;
   readonly amount: number;
+  /** The requested cost this answers. Absent on a cost the supplier added. */
+  readonly costId?: RfqOneTimeCostId;
 }
 
 /** A supplier-filled spec value. */

@@ -17,6 +17,14 @@ import { mockContracts } from '../../../data/mockContracts';
 import { mockObligations } from '../../../data/mockObligations';
 import { applySupplierScope } from '../scoping';
 import { rfqStore } from './stores/rfqStore';
+// RFx spec 2026-09-21 — the supplier's side of a tiered RFQ.
+import { acceptanceOf } from './stores/rfqEngagementStores';
+import { rfqClarificationViews, rfqEngagementViews } from './rfqEngagementReadModel';
+import {
+  maskConfidential,
+  type RfqClarificationView,
+  type RfqEngagementView,
+} from '../../sourcing/rfqResponse';
 // REQ-E03-01 to REQ-E03-05 — the RFx read model. Every RFx read resolves through
 // it, which is what keeps the draft-invisibility and own-thread rules in ONE
 // place instead of once per surface.
@@ -386,6 +394,12 @@ export class MockProcurementService implements IProcurementService {
       rows = rows.filter(
         (r) => r.status !== 'Draft' && r.invitedSupplierIds.includes(scope.supplierId!),
       );
+      // RFx spec 2026-09-21 — THE CONFIDENTIALITY GATE IS A READ RULE. A
+      // confidential RFQ reaches a supplier without its spec values, item notes
+      // and attachments until that supplier accepts the terms; a screen that
+      // only hid them would still hold them in the payload it was handed.
+      const sid = scope.supplierId;
+      rows = rows.map((r) => (r.confidential && !acceptanceOf(r.id, sid) ? maskConfidential(r) : r));
     }
     if (filter?.status) rows = rows.filter((r) => matchesList(r.status, filter.status));
     if (filter?.category)
@@ -435,6 +449,19 @@ export class MockProcurementService implements IProcurementService {
   async getNegotiationRounds(scope: QueryScope): Promise<Page<NegotiationRoundView>> {
     // REQ-E03-05 BR-05 — a supplier reads only its own thread.
     return { items: [...negotiationRoundViews(rfxNow(), scope.personaType === 'buyer' ? null : scope.supplierId ?? '')] };
+  }
+
+  async getRfqEngagement(scope: QueryScope): Promise<Page<RfqEngagementView>> {
+    // RFx spec 2026-09-21 — the buyer reads every invitee's intent (with the
+    // decline reason and words) and every acceptance; a supplier reads its own.
+    return { items: [...rfqEngagementViews(scope.personaType === 'buyer' ? null : scope.supplierId ?? '')] };
+  }
+
+  async getRfqClarifications(scope: QueryScope): Promise<Page<RfqClarificationView>> {
+    // RFx spec 2026-09-21 — the visibility rule lives in the read model, once:
+    // a supplier reads its own questions and every PUBLISHED answer on an RFQ it
+    // is invited to, never who else asked.
+    return { items: [...rfqClarificationViews(scope.personaType === 'buyer' ? null : scope.supplierId ?? '')] };
   }
 
   async getRfqComplianceGate(scope: QueryScope, rfqId: string): Promise<Page<RfqSupplierGateView>> {

@@ -776,6 +776,74 @@ export function useQuotationReview() {
   });
 }
 
+// ─── RFQ supplier response (RFx spec 2026-09-21) ─────────────────────────────
+// Intent ("I will respond" / a reasoned decline), the confidentiality terms,
+// and clarification Q&A. The supplier's acts dispatch under its own scope and
+// are refused at scope when it is not invited; the answer is the buyer's.
+
+export type RfqEngagementVars =
+  | { verb: 'respond'; rfqId: string; supplierId: string }
+  | { verb: 'decline'; rfqId: string; supplierId: string; reason: RfqDeclineReason; text: string }
+  | { verb: 'withdraw'; intentId: string; reason: RfqDeclineReason; text: string }
+  | { verb: 'acceptTerms'; rfqId: string; supplierId: string }
+  | { verb: 'ask'; rfqId: string; supplierId: string; question: string }
+  | { verb: 'answer'; clarificationId: string; answer: string; visibility: 'private' | 'published' };
+
+/** Every act on a tiered RFQ's supplier response, through the command spine. */
+export function useRfqEngagementCommand() {
+  const svc = useDataService();
+  const scope = useScope();
+  const invalidate = useInvalidateProcurement();
+
+  return useMutation<CommandResult, Error, RfqEngagementVars>({
+    mutationFn: (vars) => {
+      switch (vars.verb) {
+        case 'respond':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_rfqintent_respond',
+            entity: 'rfqIntent',
+            payload: { rfqId: vars.rfqId, supplierId: vars.supplierId },
+          });
+        case 'decline':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_rfqintent_decline',
+            entity: 'rfqIntent',
+            payload: { rfqId: vars.rfqId, supplierId: vars.supplierId, reason: vars.reason, text: vars.text },
+          });
+        case 'withdraw':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_rfqintent_withdraw',
+            entity: 'rfqIntent',
+            entityId: vars.intentId,
+            payload: { reason: vars.reason, text: vars.text },
+          });
+        case 'acceptTerms':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_rfqconfidentiality_accept',
+            entity: 'rfqConfidentiality',
+            payload: { rfqId: vars.rfqId, supplierId: vars.supplierId },
+          });
+        case 'ask':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_rfqclarification_ask',
+            entity: 'rfqClarification',
+            payload: { rfqId: vars.rfqId, supplierId: vars.supplierId, question: vars.question },
+          });
+        case 'answer':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_rfqclarification_answer',
+            entity: 'rfqClarification',
+            entityId: vars.clarificationId,
+            payload: { answer: vars.answer, visibility: vars.visibility },
+          });
+      }
+    },
+    onSuccess: (result) => {
+      if (result.status !== 'failed') invalidate(scope);
+    },
+  });
+}
+
 // ─── Goods receipt (Step 4 batch ii) ────────────────────────────────────────
 // The GR is a buyer/warehouse document, so these dispatch under the buyer scope.
 // Create records the finalized inspection results; the header disposition is a
@@ -2071,6 +2139,13 @@ import type {
   RfpTermRow,
 } from '../sourcing/types';
 import type { QuoteLineInput } from '../transitions/rfxRules';
+import type {
+  AttachmentMeta,
+  QuotationAlternative,
+  QuotationItemQuote,
+  RfqDeclineReason,
+  SampleOffer,
+} from '../sourcing/rfqModel';
 
 export type RfxCommandVars =
   // — REQ-E03-02 · RFI —
@@ -2151,6 +2226,13 @@ export type RfxCommandVars =
       notes?: string;
       lines?: readonly QuoteLineInput[];
       bestAndFinal?: boolean;
+      // RFx spec 2026-09-21 — a revision on a tiered RFQ re-prices per break
+      // and carries the rest of the tiered answer forward.
+      itemQuotes?: readonly QuotationItemQuote[];
+      alternatives?: readonly QuotationAlternative[];
+      answers?: readonly RfiAnswer[];
+      sampleOffer?: SampleOffer;
+      attachments?: readonly AttachmentMeta[];
     }
   | {
       verb: 'award';

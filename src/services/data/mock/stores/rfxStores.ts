@@ -35,7 +35,7 @@ import type {
 } from '../../../sourcing/types';
 
 /** A store over one RFx collection: read, update in place, append, reset. */
-function collection<T extends { readonly id: string }>(seed: readonly T[], prefix: string) {
+export function collection<T extends { readonly id: string }>(seed: readonly T[], prefix: string) {
   let rows: T[] = seed.map((r) => ({ ...r }));
   let seq = seed.length;
   return {
