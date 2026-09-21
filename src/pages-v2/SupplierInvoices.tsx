@@ -61,6 +61,7 @@ import {
   useInvoiceResubmit,
   useInvoiceSubmit,
 } from '../services/query/commandHooks';
+import { INVOICE_PRICE_TOLERANCE } from '../services/transitions/fulfilmentConfig';
 import {
   INVOICEABLE_PO_STATES,
   INVOICEABLE_RECEIPT_STATES,
@@ -1007,11 +1008,13 @@ const SupplierInvoices: React.FC = () => {
               <MatchResult status={selected.matchStatus} />
             )}
 
+            {/* CR-12 (BL-44) — per line: which rule applied and why it is held. */}
             {panelMode === 'detail' && (
               <InvoiceLinesSection
                 lines={selected.lines}
                 invoiceDate={selected.invoiceDate}
                 taxInvoiceFile={selected.taxInvoiceFile}
+                amount={selected.amount}
               />
             )}
 
@@ -1245,7 +1248,10 @@ const SupplierInvoices: React.FC = () => {
               aria-invalid={newAmount.trim() !== '' && !amountRead.ok}
               onChange={(e) => setNewAmount(e.target.value)}
             />
-            <div className="mt-1 text-xs text-text-tertiary">{t('fc.inv.new.tolerance')}</div>
+            <div className="mt-1 text-xs text-text-tertiary">{t('fc.inv.new.tolerance', {
+                  pct: INVOICE_PRICE_TOLERANCE.standardPct,
+                  cap: fmtIdr(INVOICE_PRICE_TOLERANCE.standardCapIdr),
+                })}</div>
             {/* UNSEEDED field, so the 2e-a rule applies: an untouched blank does
                 not nag on sight. */}
             {newAmount.trim() !== '' && !amountRead.ok && (

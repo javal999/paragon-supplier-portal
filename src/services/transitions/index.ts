@@ -22,6 +22,7 @@ export * from './policies';
 export * from './grRollup';
 export * from './invoiceRollup';
 export * from './fulfilmentRules';
+export * from './fulfilmentConfig';
 export * from './callOffRules';
 export * from './callOffTolerance';
 export * from './inventoryConfig';

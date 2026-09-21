@@ -41,8 +41,6 @@ Decided on 2026-09-21 and ready to build. Priority: first what protects money an
 
 | Priority | ID | Item | Rule | Size | Placeholder until decided |
 |---|---|---|---|---|---|
-| 2 | BL-44 | **Invoice price tolerance.** 0% where a contract price exists; 2% otherwise, within an absolute rupiah cap | CR-12 | S | Cap IDR 500,000 (BL-54) |
-| 3 | BL-45 | **Goods receipt tolerance.** Any over-delivery flagged; a shortfall above 2% flagged and the receipt kept open | CR-25 | S | — |
 | 4 | BL-46 | **Alert risk class by lead time.** High below lead time, Medium below 1.5 × lead time, Low otherwise; day bands only where the lead time is missing, which raises its own alert | CR-24 | M | — |
 | 6 | BL-48 | **Forecast commitment deadline.** Firm periods 1 working day, Trade-off and Forecast 3 working days | CR-26 | S | — |
 | 8 | BL-50 | **Hub-managed working calendar.** Administrator page to load the SAP factory calendar and add, remove or override days; every deadline reads it. This is the first page of the admin screen in BL-32 | Requirements 3.4 | M | SAP load simulated |
@@ -135,5 +133,7 @@ Nothing blocks these.
 | BL-61 | One list on the supplier inventory view | 2026-09-21 | Built: tabs only when a supplier supplies both types; PTI view unchanged |
 | BL-62 | Capacity "upside" relabelled | 2026-09-21 | Built: "Extra capacity if requested", with an explanation |
 | BL-63 | Capacity page filters | 2026-09-21 | Built: supplier, material group, material, gaps only, kept in the page address |
+| BL-44 | Invoice price tolerance | 2026-09-21 | Built: per line, 0% on a contract price, otherwise 2% within the cap (placeholder IDR 500,000 until BL-54); the invoice shows which rule applied |
+| BL-45 | Goods receipt tolerance | 2026-09-21 | Built: any over-delivery flagged; a shortfall above 2% flagged and shown as kept open (a label; it does not reopen the order quantity) |
 | BL-47 | Call-off tolerance | 2026-09-21 | Built: up to 5% over accepted for every type; a shortfall is a visible partial; later and earlier dates go to the planner (early allowance 0 days until BL-56) |
 | BL-49 | Call-off release by remaining quantity | 2026-09-21 | Built: release checked on remaining quantity; value only on a line with no quantity; over-release refused with both figures |

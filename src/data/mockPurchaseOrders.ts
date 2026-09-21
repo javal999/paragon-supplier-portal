@@ -807,6 +807,12 @@ const mockPurchaseOrdersRaw: PurchaseOrder[] = [
         uom: 'PCS',
         unitPrice: 1600,
         confirmedQty: 50000,
+        // CR-12 (BL-44) demo — this line was ordered against sup-007's PET
+        // bottle supply contract, so its price is a contract price and an
+        // invoice line for it is checked at 0%. The other line of this order
+        // (li-025b) and PO-2026-00126's line carry no contract and are checked
+        // at 2% within the rupiah cap. Sample data.
+        contractNumber: 'CTR-2025-018',
       } satisfies POLineItem,
       {
         id: 'li-025b',

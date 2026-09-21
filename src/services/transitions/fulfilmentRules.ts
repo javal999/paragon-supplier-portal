@@ -20,7 +20,8 @@ import type {
   SupplierInvoiceStage,
 } from '../data/types';
 import type { GoodsReceipt, GRStatus } from '../../data/mockGoodsReceipts';
-import { deriveMatchVerdict, type MatchVerdict } from './invoiceRollup';
+import { checkPrice, type MatchVerdict, type PriceCheck, type PriceRule } from './invoiceRollup';
+import { receiptQtyToleranceFor } from './fulfilmentConfig';
 
 const isNonBlank = (v: unknown): v is string => typeof v === 'string' && v.trim().length > 0;
 
@@ -118,8 +119,32 @@ export function asnSubmitRefusal(fields: {
 
 // ── Goods receipt discrepancy (REQ-E07-06) ──────────────────────────────────
 
-/** PQ-04 — until the tolerance is decided, any difference is a discrepancy. */
-export const RECEIPT_QTY_TOLERANCE = 0;
+// ⚠️ `RECEIPT_QTY_TOLERANCE = 0` ("PQ-04 — until the tolerance is decided, any
+// difference is a discrepancy") IS RETIRED. PQ-04 was decided on 2026-09-21 as
+// CR-25 (BL-45): any over-delivery is flagged; a shortfall above 2% is flagged
+// and keeps the receipt open; a shortfall at or below 2% closes it. The values
+// are per material, in `fulfilmentConfig.ts`.
+
+/**
+ * CR-25 — what a received quantity means against what was shipped:
+ *   exact       — received exactly what was shipped
+ *   over        — any quantity above what was shipped (flagged: a decision, not a default)
+ *   shortWithin — short by no more than the material's tolerance (closes, not flagged)
+ *   shortOver   — short by more than the tolerance (flagged; the receipt stays open)
+ */
+export type ReceiptQtyOutcome = 'exact' | 'over' | 'shortWithin' | 'shortOver';
+
+/**
+ * CR-25 for one line. PURE. The percentage test is written as
+ * |difference| × 100 ≤ shipped × pct so exactly 2% is decided exactly.
+ */
+export function receiptQtyOutcome(materialCode: string, shipped: number, received: number): ReceiptQtyOutcome {
+  const difference = received - shipped;
+  if (difference === 0) return 'exact';
+  const tol = receiptQtyToleranceFor(materialCode);
+  if (difference > 0) return difference * 100 <= shipped * tol.overPct ? 'exact' : 'over';
+  return -difference * 100 <= shipped * tol.shortPct ? 'shortWithin' : 'shortOver';
+}
 
 /** Receipt states in which the inspection result is final. */
 export const RECEIPT_INSPECTED_STATES: readonly GRStatus[] = [
@@ -141,6 +166,10 @@ export interface ReceiptLineComparison {
   rejected: number;
   /** received − shipped (negative = short). */
   difference: number;
+  /** |difference| ÷ shipped × 100; null when nothing was shipped. */
+  differencePct: number | null;
+  /** CR-25 — what the quantity difference means for this material. */
+  qtyOutcome: ReceiptQtyOutcome;
   /** BR-03 / BR-05 — outside tolerance, or anything rejected at inspection. */
   flagged: boolean;
 }
@@ -157,6 +186,8 @@ export function compareReceipt(
     const difference = r.qtyReceived - shipped;
     // CR-11 — rejected quantity counts only once the inspection is final.
     const rejected = inspected ? r.qtyRejected : 0;
+    // CR-25 — the quantity check, per material.
+    const qtyOutcome = receiptQtyOutcome(r.materialCode, shipped, r.qtyReceived);
     return {
       materialCode: r.materialCode,
       description: r.description,
@@ -165,10 +196,23 @@ export function compareReceipt(
       accepted: inspected ? r.qtyAccepted : 0,
       rejected,
       difference,
-      flagged: Math.abs(difference) > RECEIPT_QTY_TOLERANCE || rejected > 0,
+      differencePct: shipped > 0 ? (Math.abs(difference) / shipped) * 100 : null,
+      qtyOutcome,
+      flagged: qtyOutcome === 'over' || qtyOutcome === 'shortOver' || rejected > 0,
     };
   });
 }
+
+/**
+ * CR-25 — the receipt stays OPEN while any line is short by more than its
+ * tolerance: the rest of the shipment is still owed. Derived at read time,
+ * never stored. A shortfall within tolerance, an exact line and an
+ * over-delivery do not keep it open (an over-delivery is flagged instead).
+ */
+export const receiptKeptOpen = (
+  gr: Pick<GoodsReceipt, 'inspectionResults' | 'status'>,
+  asn?: Pick<ASN, 'lineItems'> | null,
+): boolean => compareReceipt(gr, asn).some((l) => l.qtyOutcome === 'shortOver');
 
 export const hasReceiptDiscrepancy = (
   gr: Pick<GoodsReceipt, 'inspectionResults' | 'status'>,
@@ -257,6 +301,7 @@ export function prefillInvoiceLines(
         quantity: qty,
         uom: poLine?.uom,
         unitPrice: poLine?.unitPrice ?? 0,
+        ...(poLine?.contractNumber ? { contractNumber: poLine.contractNumber } : {}),
       });
     }
   }
@@ -275,7 +320,10 @@ export type InvoiceLineRefusal =
 /**
  * Why one invoice line would be refused, or null. BR-01 (own POs only: the
  * receipt must belong to this supplier and this PO), BR-02 (quantity at most
- * accepted minus already invoiced), CR-12 (the PO unit price is the basis).
+ * accepted minus already invoiced), CR-12 (the PO unit price is the basis, and
+ * so is the PO line's contract: a line cannot drop or change the contract that
+ * puts it at 0% tolerance; a billed amount, when given, must be a positive
+ * number).
  */
 export function invoiceLineRefusal(
   line: Partial<InvoiceLine> | null | undefined,
@@ -301,6 +349,13 @@ export function invoiceLineRefusal(
     return 'overInvoiced';
   }
   if (line.unitPrice !== poLine.unitPrice) return 'price';
+  if ((line.contractNumber ?? null) !== (poLine.contractNumber ?? null)) return 'price';
+  if (
+    line.billedAmount !== undefined &&
+    !(typeof line.billedAmount === 'number' && Number.isFinite(line.billedAmount) && line.billedAmount > 0)
+  ) {
+    return 'price';
+  }
   return null;
 }
 
@@ -324,11 +379,64 @@ export function isDuplicateInvoiceNumber(
 export const expectedInvoiceValue = (lines: readonly Pick<InvoiceLine, 'quantity' | 'unitPrice'>[]): number =>
   lines.reduce((sum, l) => sum + l.quantity * l.unitPrice, 0);
 
+/** CR-12 — the rule a line is checked under: 0% on a contract price, else 2% within the cap. */
+export const linePriceRule = (l: Pick<InvoiceLine, 'contractNumber'>): PriceRule =>
+  l.contractNumber ? 'contract' : 'standard';
+
+/** CR-12 for one invoice line: billed amount (or quantity × price) against quantity × PO price. */
+export interface InvoiceLinePriceCheck extends PriceCheck {
+  receiptId: string;
+  materialCode: string;
+  contractNumber: string | null;
+}
+
+/** CR-12 across an invoice's lines, plus any part of the total not split by line. */
+export interface InvoicePriceCheck {
+  lines: InvoiceLinePriceCheck[];
+  /**
+   * The invoice total minus the lines' billed amounts, checked on its own; null
+   * when the total equals the lines. Checked at 0% when any line carries a
+   * contract price — a difference that is not split by line cannot be shown to
+   * fall on a line allowed 2% — else at 2% within the cap, against the whole
+   * expected value.
+   */
+  unsplit: PriceCheck | null;
+  /** True when any line, or the unsplit part, is held. */
+  held: boolean;
+}
+
+/**
+ * CR-12, line by line. PURE — reads only the invoice. Each line is checked
+ * under its own rule (`linePriceRule`); a line with no billed amount of its own
+ * is billed at quantity × unit price, so a line can only be held on its own
+ * account when the supplier stated what it billed for it.
+ */
+export function checkInvoicePrices(inv: Pick<Invoice, 'amount' | 'lines'>): InvoicePriceCheck {
+  const lines = (inv.lines ?? []).map((l) => {
+    const expected = l.quantity * l.unitPrice;
+    return {
+      ...checkPrice(linePriceRule(l), expected, l.billedAmount ?? expected),
+      receiptId: l.receiptId,
+      materialCode: l.materialCode,
+      contractNumber: l.contractNumber ?? null,
+    };
+  });
+  const billedTotal = lines.reduce((a, l) => a + l.billed, 0);
+  const expectedTotal = lines.reduce((a, l) => a + l.expected, 0);
+  const rest = Math.round((inv.amount - billedTotal) * 100) / 100;
+  const unsplit =
+    rest === 0
+      ? null
+      : checkPrice(lines.some((l) => l.rule === 'contract') ? 'contract' : 'standard', expectedTotal, expectedTotal + rest);
+  return { lines, unsplit, held: lines.some((l) => l.held) || (unsplit?.held ?? false) };
+}
+
 /**
  * The match at submission: CR-13 first (any rejected quantity on a referenced
- * receipt → Quantity mismatch), then CR-12 (within 1% of the expected value →
- * Matched, else Price variance). The same `deriveMatchVerdict` the receipt-post
- * match uses, so the two moments cannot disagree about the rule.
+ * receipt → Quantity mismatch), then CR-12 line by line (`checkInvoicePrices`:
+ * any held line, or a held unsplit difference → Price variance, else Matched).
+ * The same `checkPrice` the receipt-post match uses, so the two moments cannot
+ * disagree about the rule.
  */
 export function deriveInvoiceVerdict(
   inv: Pick<Invoice, 'amount' | 'lines'>,
@@ -337,7 +445,8 @@ export function deriveInvoiceVerdict(
   const lines = inv.lines ?? [];
   const ids = new Set(lines.map((l) => l.receiptId));
   const rejects = receipts.some((gr) => ids.has(gr.id) && gr.inspectionResults.some((r) => r.qtyRejected > 0));
-  return deriveMatchVerdict(expectedInvoiceValue(lines), inv.amount, rejects);
+  if (rejects) return 'Qty Mismatch';
+  return checkInvoicePrices(inv).held ? 'Price Variance' : 'Matched';
 }
 
 /** Stored invoice state → the supplier's status list (REQ-E07-07 step 5). */
