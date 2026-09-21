@@ -26,6 +26,7 @@ import {
   openQtyForLine,
   supplierInvoiceStage,
 } from '../../transitions/fulfilmentRules';
+import { INVOICE_PRICE_TOLERANCE } from '../../transitions/fulfilmentConfig';
 import { NO_PERSON } from '../../../context/noPerson';
 
 const svc = new MockCommandService();
@@ -454,19 +455,33 @@ describe('invoice — the match runs at submission (CR-12, CR-13)', () => {
     expect(inv.status).toBe('Matched');
   });
 
-  it('1% BOUNDARY — at 1% over it is still Matched; just past 1% it is a Price variance and stays Submitted', async () => {
+  // ⚠️ PREMISE CHANGED AT BL-44 (CR-12, owner decision 2026-09-21). This test
+  // read "1% BOUNDARY — at 1% over it is still Matched" and asserted
+  // `EXPECTED * 1.01` → Matched. The flat 1% is retired: a line with no
+  // contract price is matched within 2% AND within the rupiah cap, so on this
+  // order (expected Rp 192,000,000, where 2% is Rp 3,840,000) THE CAP is what
+  // decides and 1% over is now a Price variance. No assertion is weakened —
+  // the same two directions are pinned against the rule that now applies, and
+  // the percentage side is pinned on its own where the cap does not bind.
+  it('CR-12 CAP BOUNDARY — at the cap it is Matched; one rupiah past it is a Price variance and stays Submitted', async () => {
     receiveGr002();
-    const atBoundary = await submitWith(EXPECTED * 1.01);
-    expect(atBoundary.matchStatus).toBe('Matched');
+    const atCap = await submitWith(EXPECTED + INVOICE_PRICE_TOLERANCE.standardCapIdr);
+    expect(atCap.matchStatus).toBe('Matched');
 
     invoiceStore.reset();
-    const past = await submitWith(EXPECTED * 1.01 + 1_000);
+    const past = await submitWith(EXPECTED + INVOICE_PRICE_TOLERANCE.standardCapIdr + 1);
     expect(past.matchStatus).toBe('Price Variance');
     expect(past.status).toBe('Submitted');
 
     invoiceStore.reset();
-    const under = await submitWith(EXPECTED * 0.99);
+    const under = await submitWith(EXPECTED - INVOICE_PRICE_TOLERANCE.standardCapIdr);
     expect(under.matchStatus).toBe('Matched');
+
+    // And 1% of this order — inside the old tolerance — is now held, because
+    // Rp 1,920,000 is over the cap even though it is under 2%.
+    invoiceStore.reset();
+    const onePercent = await submitWith(EXPECTED * 1.01);
+    expect(onePercent.matchStatus).toBe('Price Variance');
   });
 
   it('QUANTITY MISMATCH — any rejected quantity on a referenced receipt, even at the exact amount', async () => {
@@ -477,9 +492,24 @@ describe('invoice — the match runs at submission (CR-12, CR-13)', () => {
     expect(invoiceStore.get(id)!.status).toBe('Submitted');
   });
 
-  it('pure verdict agrees with the dispatched one', () => {
-    expect(deriveInvoiceVerdict({ amount: 101, lines: [line(1, { unitPrice: 100 })] }, [])).toBe('Matched');
-    expect(deriveInvoiceVerdict({ amount: 101.01, lines: [line(1, { unitPrice: 100 })] }, [])).toBe('Price Variance');
+  // ⚠️ PREMISE CHANGED AT BL-44. The pair used to be 101 (Matched at 1%) and
+  // 101.01 (Price variance just past 1%). The percentage is now 2%, so the
+  // same shape is pinned at the new boundary, both sides, on a line small
+  // enough that the rupiah cap cannot be what decides.
+  it('pure verdict agrees with the dispatched one, at the 2% boundary both ways', () => {
+    expect(deriveInvoiceVerdict({ amount: 102, lines: [line(1, { unitPrice: 100 })] }, [])).toBe('Matched');
+    expect(deriveInvoiceVerdict({ amount: 102.01, lines: [line(1, { unitPrice: 100 })] }, [])).toBe('Price Variance');
+    expect(deriveInvoiceVerdict({ amount: 98, lines: [line(1, { unitPrice: 100 })] }, [])).toBe('Matched');
+    expect(deriveInvoiceVerdict({ amount: 97.99, lines: [line(1, { unitPrice: 100 })] }, [])).toBe('Price Variance');
+  });
+
+  // CR-12 (BL-44) — a contract price on the PO line allows no difference at all,
+  // and the line carries the contract forward from the order.
+  it('CONTRACT PRICE — the same order is Matched at the exact value and held one rupiah off', () => {
+    const contractLine = line(1, { unitPrice: 100, contractNumber: 'CTR-2025-018' });
+    expect(deriveInvoiceVerdict({ amount: 100, lines: [contractLine] }, [])).toBe('Matched');
+    expect(deriveInvoiceVerdict({ amount: 101, lines: [contractLine] }, [])).toBe('Price Variance');
+    expect(deriveInvoiceVerdict({ amount: 99, lines: [contractLine] }, [])).toBe('Price Variance');
   });
 
   it('a receipt posted later does not overwrite the verdict of an invoice that names its receipts', async () => {

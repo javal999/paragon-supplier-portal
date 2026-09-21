@@ -3668,6 +3668,10 @@ const resolveCascades = (ctx: CascadeContext): CascadeCommand[] => {
         0,
       );
       const grHasRejects = gr.inspectionResults.some((r) => r.qtyRejected > 0);
+      // CR-12 (BL-44) — a lineless invoice's difference is not split by line,
+      // so the order's strictest rule applies: 0% when any PO line carries a
+      // contract price, else 2% within the rupiah cap.
+      const priceRule = po.lineItems.some((li) => li.contractNumber) ? 'contract' : 'standard';
       const cmds: CascadeCommand[] = [];
       // ⚠️ **THE PAIRING, NAMED.** This was an inline `continue` clause reading
       // `inv.poNumber !== gr.poNumber || inv.status !== 'Submitted'`. It IS the
@@ -3682,7 +3686,7 @@ const resolveCascades = (ctx: CascadeContext): CascadeCommand[] => {
       // on the same PO does not overwrite that verdict. Only invoices without
       // lines are still matched here.
       for (const inv of invoicesForReceipt(gr, invoiceStore.all()).filter((i) => !i.lines)) {
-        const verdict = deriveMatchVerdict(expectedValue, inv.amount, grHasRejects);
+        const verdict = deriveMatchVerdict(expectedValue, inv.amount, grHasRejects, priceRule);
         invoiceStore.update(inv.id, (i) => ({ ...i, matchStatus: verdict }));
         if (verdict === 'Matched') {
           cmds.push({

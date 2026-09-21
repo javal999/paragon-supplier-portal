@@ -276,6 +276,12 @@ export interface POLineItem {
   uom: string;
   unitPrice: number;
   confirmedQty: number;
+  /**
+   * CR-12 — the contract this line's unit price comes from, when it does. A
+   * contract-priced line is invoiced at 0% tolerance; a line without one at 2%
+   * within the rupiah cap (`fulfilmentConfig.ts`). Absent = no contract price.
+   */
+  contractNumber?: string;
 }
 
 export interface PurchaseOrder {
@@ -1037,6 +1043,18 @@ export interface InvoiceLine {
   uom?: string;
   /** The PO unit price for this material (CR-12 basis). */
   unitPrice: number;
+  /**
+   * CR-12 — the PO line's contract, copied with its price when the line is
+   * pre-filled (and refused if it differs from the PO): it decides whether the
+   * line is checked at 0% or at 2% within the rupiah cap.
+   */
+  contractNumber?: string;
+  /**
+   * What the supplier billed for this line, when the invoice states it per
+   * line. Absent: the line is billed at quantity × unit price, and any
+   * difference on the invoice total is not split by line.
+   */
+  billedAmount?: number;
 }
 
 /**
