@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 1.1, 2026-09-21 |
+| Version | 1.2, 2026-09-21 |
 | What this is | Everything known to be outstanding for the Supplier Hub, in one list: decisions waiting on people, work waiting on those decisions, work waiting on the backend, and work that can start today |
 | What this is not | A plan or a commitment. Nothing here has a date. Sequencing belongs to the project owner |
 | Sources | Open items (section 7 of `SUPPLIER-HUB-REQUIREMENTS.md`), open decisions (section 9.3 of `SUPPLIER-HUB-PRD.md`), what is not built (section 5 of `BUILD-GAP.md`), stubs (section 6 of the requirements), and defects or debts found while building |
@@ -31,6 +31,7 @@ Still open. Items decided on 2026-09-21 are in section 6.
 | BL-56 | **PQ-08 early allowance** — how many days early a call-off may arrive, given warehouse capacity | Warehouse, Material Planner | The early-delivery rule in CR-05; until then an early date needs approval | REQ-E09-03 |
 | BL-57 | **A-01** — compliance and capability check for RFx with Mas Ary Hidayat | Procurement | Confirms the gate criteria in CR-23 | REQ-E03-01 |
 | BL-58 | **Q-19** — the PQ-10 answer ends with "They"; confirm nothing is missing | Material Planner | Confirms the delivery execution scope | REQ-E09-04 |
+| BL-65 | **CAP-1** — does supplier capacity usually stay the same every week or change? Being discussed | Material Planner | How capacity is entered (one number with overrides, or per week) | REQ-E08-04 |
 
 ---
 
@@ -41,6 +42,12 @@ Decided on 2026-09-21 and ready to build. Priority: first what protects money an
 | Priority | ID | Item | Rule | Size | Placeholder until decided |
 |---|---|---|---|---|---|
 | 1 | BL-43 | **Compliance gate at award.** Check each supplier against CR-23; a supplier that fails can be invited and can quote but cannot be selected in an award, with the failed criteria shown. Re-weight the quote score to price 40 / lead time 20 / reliability 40 for qualified suppliers | CR-23, CR-15 | M | Minimum OTIF 80%, "No history" passes (BL-55) |
+| 1a | BL-64 | **Compliance gate demo data.** Sample suppliers, certificates and RFQs so every CR-23 combination can be seen: each criterion failing alone, several at once, "No history", exactly at the OTIF minimum, a registry row overriding the supplier record, a material needing no certificate | CR-23 | S | — |
+| 1b | BL-60 | **One stock entry.** Manual entry and template upload with identical fields on the Stock page; the old stock grid and import on the Forecast page retired; optional manufacturing date added to batch rows; in-transit shown read-only from ASNs and dispatched call-offs on both | REQ-E08-02 BR-06, BR-09, BR-10 | M | — |
+| 1c | BL-59 | **Supplier-triggered stock sync.** Sync button for API-connected suppliers pulling their own ERP stock, and a PTI stock refresh only for granted materials; not offered without a grant. Simulated until the backend (BL-25) | REQ-E08-02 BR-03, BR-11 | M | Simulated sync |
+| 1d | BL-61 | **One list on the supplier inventory view.** Material-type tabs hidden when the supplier supplies one type; kept on the PTI view | REQ-E08-01 BR-07 | S | — |
+| 1e | BL-62 | **Capacity "upside" relabelled** "Extra capacity if requested", with a short explanation | REQ-E08-04 BR-05 | S | — |
+| 1f | BL-63 | **Capacity page filters** for the planner: supplier, material group, material, gaps only, kept in the page address | REQ-E08-04 BR-07 | S | — |
 | 2 | BL-44 | **Invoice price tolerance.** 0% where a contract price exists; 2% otherwise, within an absolute rupiah cap | CR-12 | S | Cap IDR 500,000 (BL-54) |
 | 3 | BL-45 | **Goods receipt tolerance.** Any over-delivery flagged; a shortfall above 2% flagged and the receipt kept open | CR-25 | S | — |
 | 4 | BL-46 | **Alert risk class by lead time.** High below lead time, Medium below 1.5 × lead time, Low otherwise; day bands only where the lead time is missing, which raises its own alert | CR-24 | M | — |
