@@ -19,7 +19,7 @@ import { PERSONA_SYSTEM_ROLES } from '../../transitions/businessRoles';
 import { NO_PERSON } from '../../../context/noPerson';
 import { sdcClock } from '../../sdc';
 import { complianceGate, gateRequirementFor, type GateCriterion } from '../../sourcing/complianceGate';
-import { GATE_MIN_OTIF_PCT } from '../../sourcing/complianceGateConfig';
+import { gateMinOtifPct } from '../../sourcing/complianceGateConfig';
 import { COMPLIANCE_REGISTRY } from './fixtures/complianceRegistry';
 import { MockCommandService } from './MockCommandService';
 import { masterMeasure } from './supplierMeasureReadModel';
@@ -162,7 +162,7 @@ describe('BL-64 — the OTIF boundary is a real delivery history, not a typed nu
   it('sup-019 measures 4 met of 5 = 80%, and the minimum is 80', () => {
     const m = masterMeasure('sup-019').otif;
     expect({ met: m.met, measured: m.measured, pct: m.pct }).toEqual({ met: 4, measured: 5, pct: 80 });
-    expect(GATE_MIN_OTIF_PCT).toBe(80);
+    expect(gateMinOtifPct()).toBe(80);
   });
 
   it('sup-020 measures 11 met of 14 = 78.6%, shown 79% — one point under', () => {

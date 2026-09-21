@@ -144,6 +144,8 @@ import { inventoryDeclarationStore } from './stores/inventoryDeclarationStore';
 import { incomingShipmentStore } from './stores/incomingShipmentStore';
 import { enforcementSettingStore } from './stores/enforcementSettingStore';
 import { calendarCovers, workingCalendarStore } from '../../transitions/workingCalendarStore';
+import { isHubSettingKey, parseStaleOverrideKey } from '../../transitions/hubSettings';
+import { hubSettingsStore, settingValue } from '../../transitions/hubSettingsStore';
 import {
   THREE_PL_ID,
   asnThreePlRefusal,
@@ -3283,6 +3285,36 @@ const threePlTarget: CommandTarget = {
   },
 };
 
+// ── BL-32 · THE ADMINISTRATOR'S RULE VALUES ──────────────────────────────────
+// `entityId` IS the setting key. `readState` answers `Maintained` for a key the
+// registry defines, or a stale-period override of a supplier × material the hub
+// actually assigns — and null otherwise, so an unknown key (or an override for a
+// pair nobody supplies) is NOT_FOUND rather than a silently created setting.
+// Owner-less by construction: the values are PTI's, and `readScopeOwner: () =>
+// null` denies every supplier at SCOPE (§86). `applyTransition` APPENDS;
+// `previous` and `setAt` are stamped by the store, never read from the payload.
+const settingKeyExists = (id: string): boolean => {
+  if (isHubSettingKey(id)) return true;
+  const pair = parseStaleOverrideKey(id);
+  return pair !== null && isAssignedMaterial(pair.supplierId, pair.materialCode);
+};
+
+const hubSettingTarget: CommandTarget = {
+  readState: (id) => (settingKeyExists(id) ? 'Maintained' : null),
+  readScopeOwner: () => null,
+  readEntity: (id) => (settingKeyExists(id) ? { key: id, value: settingValue(id) ?? null } : null),
+  applyTransition: (id, _toState, payload) => {
+    // The policy hook has already refused every payload this could reject; the
+    // store re-checks anyway and records nothing it would refuse.
+    hubSettingsStore.append({
+      key: id,
+      value: payload.value as number | boolean | null,
+      setBy: asActorAttribution(payload.setBy)!,
+      setAt: new Date().toISOString(),
+    });
+  },
+};
+
 
 // ── §82 · SUPPLIER DOCUMENTS — the declaration and the review ────────────────
 //
@@ -3693,6 +3725,9 @@ const TARGETS: Record<string, CommandTarget> = {
   // BL-51 — the 3PL list. Wired so every change to where a tracking link points
   // lands in the DR-10 trail with who made it and when.
   threePl: threePlTarget,
+  // BL-32 — the rule values. Wired so every change to a tolerance, deadline,
+  // threshold or stale period — and every reset — lands in the DR-10 trail.
+  hubSetting: hubSettingTarget,
   // §82 — the document lane's first write path: the supplier's declaration and
   // compliance's review of it.
   supplierDocument: supplierDocumentTarget,

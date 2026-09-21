@@ -38,11 +38,10 @@ import { hubWorkingCalendar } from './workingCalendarStore';
 import { normalizeQty } from '../../lib/localeNumber';
 import {
   COMMITMENT_REASONS,
-  COMMITMENT_TOLERANCE,
-  FIRM_DEADLINE_WORKING_DAYS,
+  commitmentDeadlineWorkingDays,
+  commitmentTolerance,
   FORECAST_HORIZON,
-  GAP_COLOUR_THRESHOLDS,
-  OTHER_DEADLINE_WORKING_DAYS,
+  gapColourThresholds,
   REMINDER_FRACTION,
   STREAM_MATERIAL_TYPE,
   isCommitmentReason,
@@ -387,7 +386,8 @@ export type ToleranceOutcome = 'within' | 'outside' | 'acknowledgementOnly';
  */
 export function toleranceOutcome(zone: ForecastZone, forecastQty: number, committedQty: number): ToleranceOutcome {
   if (zone === 'forecast') return 'acknowledgementOnly';
-  const allowed = zone === 'firm' ? COMMITMENT_TOLERANCE.firmShortfall : COMMITMENT_TOLERANCE.tradeOffShortfall;
+  const tol = commitmentTolerance();
+  const allowed = zone === 'firm' ? tol.firmShortfall : tol.tradeOffShortfall;
   const shortfall = forecastQty - committedQty;
   return shortfall <= forecastQty * allowed + 1e-9 ? 'within' : 'outside';
 }
@@ -402,7 +402,8 @@ export function commitmentDueAt(
   publishedAt: string,
   cal: WorkingCalendar = hubWorkingCalendar(),
 ): string {
-  const days = zone === 'firm' ? FIRM_DEADLINE_WORKING_DAYS : OTHER_DEADLINE_WORKING_DAYS;
+  const deadlines = commitmentDeadlineWorkingDays();
+  const days = zone === 'firm' ? deadlines.firm : deadlines.other;
   return addWorkingDays(publishedAt, days, cal).toISOString();
 }
 
@@ -592,8 +593,9 @@ export type GapColour = 'green' | 'amber' | 'red';
 
 /** CR-22 — commitment ÷ forecast: Green at 1.0 or more; Amber from 0.8 to below 1.0; Red below 0.8. */
 export function gapColour(ratio: number): GapColour {
-  if (ratio >= GAP_COLOUR_THRESHOLDS.greenFrom) return 'green';
-  if (ratio >= GAP_COLOUR_THRESHOLDS.amberFrom) return 'amber';
+  const colours = gapColourThresholds();
+  if (ratio >= colours.greenFrom) return 'green';
+  if (ratio >= colours.amberFrom) return 'amber';
   return 'red';
 }
 

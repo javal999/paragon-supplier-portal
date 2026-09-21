@@ -92,6 +92,9 @@ export const fulfilmentCollaborationEn: Record<string, string> = {
   'fc.gr.noDiscrepancy': 'Received within tolerance, nothing rejected. No answer is needed.',
   'fc.gr.col.qtyCheck': 'Quantity check (CR-25)',
   'fc.gr.tol.exact': 'Received as shipped.',
+  'fc.gr.tol.overWithin': 'Accepted: {{qty}} over what was shipped ({{pct}}), within the {{overPct}}% over-delivery tolerance.',
+  'fc.gr.tol.overBeyond':
+    'Flagged: {{qty}} over what was shipped ({{pct}}), more than the {{overPct}}% over-delivery tolerance. It is PTI\'s decision, not accepted by default.',
   'fc.gr.tol.over':
     'Flagged: {{qty}} over what was shipped. Any over-delivery, however small, is PTI\'s decision, not accepted by default.',
   'fc.gr.tol.shortWithin': 'Closed: short {{qty}} ({{pct}}), within the {{shortPct}}% shortfall tolerance.',
@@ -278,6 +281,9 @@ export const fulfilmentCollaborationId: Record<string, string> = {
   'fc.gr.noDiscrepancy': 'Diterima dalam toleransi, tidak ada yang ditolak. Tidak perlu jawaban.',
   'fc.gr.col.qtyCheck': 'Pemeriksaan kuantitas (CR-25)',
   'fc.gr.tol.exact': 'Diterima sesuai yang dikirim.',
+  'fc.gr.tol.overWithin': 'Diterima: {{qty}} melebihi yang dikirim ({{pct}}), dalam toleransi kelebihan kiriman {{overPct}}%.',
+  'fc.gr.tol.overBeyond':
+    'Ditandai: {{qty}} melebihi yang dikirim ({{pct}}), lebih dari toleransi kelebihan kiriman {{overPct}}%. Ini keputusan PTI, tidak diterima otomatis.',
   'fc.gr.tol.over':
     'Ditandai: {{qty}} melebihi yang dikirim. Setiap kelebihan kiriman, sekecil apa pun, adalah keputusan PTI, tidak diterima otomatis.',
   'fc.gr.tol.shortWithin': 'Ditutup: kurang {{qty}} ({{pct}}), dalam toleransi kekurangan {{shortPct}}%.',

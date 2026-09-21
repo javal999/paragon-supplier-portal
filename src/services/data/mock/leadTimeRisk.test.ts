@@ -24,7 +24,7 @@ import { SUPPLIER_LEAD_TIME_DAYS, SUPPLY_ASSIGNMENTS } from './fixtures/inventor
 import type { InventoryPosition, QueryScope } from '../types';
 import { PERSONA_SYSTEM_ROLES } from '../../transitions/businessRoles';
 import { PTI_ONLY_RULES } from '../../transitions/inventoryAlertRules';
-import { LEAD_TIME_RISK } from '../../transitions/inventoryConfig';
+import { leadTimeRisk } from '../../transitions/inventoryConfig';
 import { hasLeadTime, positionDays, positionRisk, riskFor } from '../../transitions/inventoryRules';
 import { sdcClock } from '../../sdc';
 import { NO_PERSON } from '../../../context/noPerson';
@@ -49,7 +49,7 @@ beforeEach(() => {
 
 describe('CR-24 — the rule, at both cuts, on both sides', () => {
   it('the multiple is 1.5', () => {
-    expect(LEAD_TIME_RISK.mediumBelowMultiple).toBe(1.5);
+    expect(leadTimeRisk().mediumBelowMultiple).toBe(1.5);
   });
 
   it('lead time 21: High below 21, Medium from 21 to below 31.5, Low from 31.5', () => {
@@ -232,7 +232,13 @@ describe('BL-46 sites — one function computes the risk class, and nothing else
   });
 
   it('the thresholds are read only by the rules module', () => {
-    expect(callers(/\b(SUPPLY_BANDS|LEAD_TIME_RISK)\b/)).toEqual([
+    // ⚠️ PREMISE CHANGED AT BL-32: the thresholds were module constants
+    // (`SUPPLY_BANDS`, `LEAD_TIME_RISK`); they are now the administrator's
+    // values, read in force through `supplyBands()` / `leadTimeRisk()`. The
+    // claim is unchanged — the config module defines them, the rules module is
+    // their only reader — and the old names must be gone from shipped code.
+    expect(callers(/\b(SUPPLY_BANDS|LEAD_TIME_RISK)\b/)).toEqual([]);
+    expect(callers(/\b(supplyBands|leadTimeRisk)\s*\(/)).toEqual([
       'src/services/transitions/inventoryConfig.ts',
       'src/services/transitions/inventoryRules.ts',
     ]);

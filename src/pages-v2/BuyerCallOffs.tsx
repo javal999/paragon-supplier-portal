@@ -41,6 +41,7 @@ import {
   type ReleaseCheck,
 } from '../services/transitions/callOffRules';
 import type { ReleaseCadence } from '../services/delivery/types';
+import { callOffConfirmWorkingDays, callOffTolerance } from '../services/transitions/callOffTolerance';
 import { numberOf } from './callOffs/callOffDisplay';
 import {
   ConfirmationPill,
@@ -322,7 +323,10 @@ const BuyerCallOffs: React.FC = () => {
               {t('co.pti.banner.approval', { count: awaitingApproval })}
             </div>
           )}
-          {escalated > 0 && <div>{t('co.pti.banner.escalated', { count: escalated })}</div>}
+          {escalated > 0 && <div>{t('co.pti.banner.escalated', {
+                count: escalated,
+                within: t('adminSet.unit.workingDays', { count: callOffConfirmWorkingDays() }),
+              })}</div>}
           {atRisk > 0 && <div>{t('co.pti.banner.atRisk', { count: atRisk })}</div>}
           {drift.map((d) => (
             <div key={`${d.supplierId}-${d.materialCode}`} data-testid="pti-calloff-drift">
@@ -541,7 +545,7 @@ const BuyerCallOffs: React.FC = () => {
                   </option>
                 ))}
               </select>
-              <p className="mt-1 text-xs text-text-tertiary">{t(`co.type.hint.${form.type}`)}</p>
+              <p className="mt-1 text-xs text-text-tertiary">{t(`co.type.hint.${form.type}`, { pct: callOffTolerance().overPct })}</p>
             </div>
             {panel?.kind === 'new' ? (
               <>

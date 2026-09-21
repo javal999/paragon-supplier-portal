@@ -11,13 +11,14 @@ import { describe, expect, it } from 'vitest';
 import type { ForecastCommitmentLine } from '../data/types';
 import type { RequirementResponse } from '../sdc/types';
 import { materialEntry } from '../sdc/materialMaster';
-import { bucketEndMs, COVERAGE_AT_RISK_FLOOR } from '../sdc/consolidation';
-import { COVERAGE_THRESHOLDS } from './inventoryConfig';
+import { bucketEndMs, coverageBands } from '../sdc/consolidation';
+import { coverageThresholds } from './inventoryConfig';
+import { hubSettingsStore } from './hubSettingsStore';
 import {
   COMMITMENT_REASONS,
-  COMMITMENT_TOLERANCE,
+  commitmentTolerance,
   FORECAST_HORIZON,
-  GAP_COLOUR_THRESHOLDS,
+  gapColourThresholds,
   zoneLengthsFor,
 } from './forecastConfig';
 import {
@@ -166,13 +167,13 @@ describe('REQ-E06-02 BR-04 — below forecast needs a starter reason (the verb c
 
 describe('CR-21 — tolerance per zone', () => {
   it('Firm: any shortfall is an exception', () => {
-    expect(COMMITMENT_TOLERANCE.firmShortfall).toBe(0);
+    expect(commitmentTolerance().firmShortfall).toBe(0);
     expect(toleranceOutcome('firm', 1000, 1000)).toBe('within');
     expect(toleranceOutcome('firm', 1000, 999)).toBe('outside');
   });
 
   it('Trade-off: up to 10% below is accepted — exactly 10% is within, a unit more is outside', () => {
-    expect(COMMITMENT_TOLERANCE.tradeOffShortfall).toBe(0.1);
+    expect(commitmentTolerance().tradeOffShortfall).toBe(0.1);
     expect(toleranceOutcome('tradeOff', 1000, 900)).toBe('within');
     expect(toleranceOutcome('tradeOff', 38500, 34650)).toBe('within');
     expect(toleranceOutcome('tradeOff', 1000, 899)).toBe('outside');
@@ -304,7 +305,7 @@ describe('re-publication — unchanged periods keep their commitment, changed on
 
 describe('CR-22 — gap quantity, percentage and colour', () => {
   it('thresholds: Green from 1.0, Amber from 0.8, Red below', () => {
-    expect(GAP_COLOUR_THRESHOLDS).toEqual({ greenFrom: 1, amberFrom: 0.8 });
+    expect(gapColourThresholds()).toEqual({ greenFrom: 1, amberFrom: 0.8 });
     expect(gapColour(1)).toBe('green');
     expect(gapColour(0.9999)).toBe('amber');
     expect(gapColour(0.8)).toBe('amber');
@@ -515,6 +516,20 @@ describe('REQ-E07-03 — the foresight answer a line gives the Order summary', (
 
 describe('settings alignment', () => {
   it('the SDC coverage bands are CR-03’s (the one threshold set)', () => {
-    expect(COVERAGE_AT_RISK_FLOOR).toBe(COVERAGE_THRESHOLDS.atRiskFrom);
+    // ⚠️ PREMISE CHANGED AT BL-32: this pinned two CONSTANTS equal
+    // (`COVERAGE_AT_RISK_FLOOR` and CR-03's), which held only while nobody
+    // could change CR-03. Now the administrator can, so the claim is that the
+    // SDC indicator FOLLOWS a change — probed by making one, not by comparing
+    // two defaults (which a re-introduced copy would also satisfy).
+    expect(coverageBands()).toEqual(coverageThresholds());
+    const nobody = { kind: 'UNATTRIBUTED', reason: 'NO_PERSON_IN_SESSION' } as const;
+    try {
+      expect(hubSettingsStore.append({ key: 'coverage.atRiskFromPct', value: 60, setBy: nobody, setAt: '2026-09-21T00:00:00.000Z' })).toBe(true);
+      expect(coverageBands().atRiskFrom).toBe(0.6);
+      expect(coverageBands()).toEqual(coverageThresholds());
+    } finally {
+      hubSettingsStore.reset();
+    }
+    expect(coverageBands().atRiskFrom).toBe(0.8);
   });
 });

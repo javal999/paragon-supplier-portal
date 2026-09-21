@@ -252,6 +252,19 @@ const LANE_BUNDLES = Object.freeze({
       // administrator) holds it by derivation. Like `enforcement:set`, and
       // unlike `role:grant`, it grants no authority, so `buyer_all` keeps it.
       'threepl:maintain',
+      // ── BL-32 · THE HUB'S RULE VALUES (REQ-E08-05 BR-03, §3.6, ADM) ───────
+      // Tolerances, deadlines, alert thresholds and stale periods decide what
+      // is accepted without a person: a supplier's over-delivery, an invoice's
+      // price difference, a commitment's shortfall, a supplier's award
+      // eligibility. The lanes judged by them — every supplier lane — and the
+      // lanes that rule on the exceptions they raise — planning, procurement,
+      // receiving, finance — cannot hold it: a party may not set the bar it is
+      // measured against or decides under. Beside `calendar:set` and
+      // `threepl:maintain`; `admin` holds it by derivation. `buyer_all` keeps
+      // it on the same precedent, and BL-70 is the open question for all
+      // three: a combined buyer who can move the gate's OTIF minimum or the
+      // invoice cap is a sharper version of the question than the calendar.
+      'setting:set',
     ]),
     // The SDC / P2 planning lane. `inventorydeclaration:record` is the C4c
     // buyer RECORDING verb — a distinct authority from the supplier's

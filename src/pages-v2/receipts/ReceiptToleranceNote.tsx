@@ -15,6 +15,7 @@ import {
 
 const TONE: Record<ReceiptLineComparison['qtyOutcome'], string> = {
   exact: 'text-text-secondary',
+  overWithin: 'text-success',
   shortWithin: 'text-success',
   over: 'text-warning-hover font-semibold',
   shortOver: 'text-warning-hover font-semibold',
@@ -28,7 +29,9 @@ const ReceiptToleranceNote: React.FC<{
   const tol = receiptQtyToleranceFor(line.materialCode);
   return (
     <span className={`text-xs ${TONE[line.qtyOutcome]}`} data-testid={testId}>
-      {t(`fc.gr.tol.${line.qtyOutcome}`, {
+      {/* At the decided 0% "any over-delivery, however small" is the true
+          sentence; once the administrator allows some (BL-32) it is not. */}
+      {t(`fc.gr.tol.${line.qtyOutcome === 'over' && tol.overPct > 0 ? 'overBeyond' : line.qtyOutcome}`, {
         qty: Math.abs(line.difference).toLocaleString('en-US'),
         pct: line.differencePct === null ? '' : `${line.differencePct.toFixed(2)}%`,
         shortPct: tol.shortPct,

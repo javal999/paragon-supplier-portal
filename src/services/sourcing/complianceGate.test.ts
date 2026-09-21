@@ -8,7 +8,7 @@ import {
   otifPassesGate,
   type GateSupplier,
 } from './complianceGate';
-import { GATE_MIN_OTIF_PCT, GATE_NO_HISTORY_PASSES } from './complianceGateConfig';
+import { gateMinOtifPct, gateNoHistoryPasses } from './complianceGateConfig';
 
 // CR-23 — each criterion is failed ON ITS OWN against a supplier that otherwise
 // passes, so a red test names exactly one rule.
@@ -102,14 +102,14 @@ describe('CR-23 — complianceGate', () => {
   });
 
   it('fails otif alone below the minimum; the minimum itself passes (80% boundary)', () => {
-    expect(GATE_MIN_OTIF_PCT).toBe(80);
+    expect(gateMinOtifPct()).toBe(80);
     expect(gate({}, 79.9).failed).toEqual(['otif']);
     expect(gate({}, 80).passes).toBe(true);
     expect(gate({}, 0).failed).toEqual(['otif']);
   });
 
   it('"No history" passes (BL-55 placeholder)', () => {
-    expect(GATE_NO_HISTORY_PASSES).toBe(true);
+    expect(gateNoHistoryPasses()).toBe(true);
     expect(otifPassesGate(null)).toBe(true);
     expect(otifPassesGate(undefined)).toBe(true);
     expect(gate({}, null).passes).toBe(true);

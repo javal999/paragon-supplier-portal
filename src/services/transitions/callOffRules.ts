@@ -31,8 +31,8 @@ import { ANTICIPATION_DAYS, DRIFT_COUNT } from '../chase/deliveryChase';
 import { addWorkingDays, documentInstant, type WorkingCalendar } from '../../lib/workingCalendar';
 import { hubWorkingCalendar } from './workingCalendarStore';
 import {
-  CALL_OFF_CONFIRM_WORKING_DAYS,
-  CALL_OFF_TOLERANCE,
+  callOffConfirmWorkingDays,
+  callOffTolerance,
   type CallOffTolerance,
 } from './callOffTolerance';
 
@@ -302,7 +302,9 @@ const pctOf = (part: number, whole: number) => Math.round((part / whole) * 10_00
 export function checkTolerance(
   callOff: Pick<CallOff, 'quantity' | 'needDate'>,
   deliveries: readonly CallOffDelivery[],
-  tol: CallOffTolerance = CALL_OFF_TOLERANCE,
+  // Read at every call (BL-32): a default parameter is evaluated per call, so
+  // the administrator's value in force decides, never a copy taken at load.
+  tol: CallOffTolerance = callOffTolerance(),
 ): ToleranceCheck {
   const total = deliveries.reduce((s, d) => s + d.quantity, 0);
   const over = total - callOff.quantity;
@@ -383,7 +385,7 @@ export function approvedDeliveries(c: CallOff): readonly CallOffDelivery[] {
  *  deadline reads the calendar the administrator maintains). */
 export function confirmationDeadline(c: CallOff, cal: WorkingCalendar = hubWorkingCalendar()): Date | null {
   if (!c.releasedAt) return null;
-  return addWorkingDays(documentInstant(c.releasedAt, cal), CALL_OFF_CONFIRM_WORKING_DAYS, cal);
+  return addWorkingDays(documentInstant(c.releasedAt, cal), callOffConfirmWorkingDays(), cal);
 }
 
 export function isCallOffEscalated(c: CallOff, nowIso: string): boolean {

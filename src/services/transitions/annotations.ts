@@ -264,6 +264,7 @@ export const TRANSITION_PURPOSE: FlowAnnotations = Object.freeze({
   t_role_grant: { purposeKey: 'processFlows.purpose.t_role_grant' },
   t_calendar_day_set: { purposeKey: 'processFlows.purpose.t_calendar_day_set' },
   t_threepl_set: { purposeKey: 'processFlows.purpose.t_threepl_set' },
+  t_setting_set: { purposeKey: 'processFlows.purpose.t_setting_set' },
 
   // ── supplierApplication ────────────────────────────────────────────────────
   t_application_submit: { purposeKey: 'processFlows.purpose.t_application_submit' },
@@ -352,6 +353,7 @@ export const ENTITY_PURPOSE: FlowAnnotations = Object.freeze({
   role: { purposeKey: 'processFlows.purpose.entity.role' },
   workingCalendar: { purposeKey: 'processFlows.purpose.entity.workingCalendar' },
   threePl: { purposeKey: 'processFlows.purpose.entity.threePl' },
+  hubSetting: { purposeKey: 'processFlows.purpose.entity.hubSetting' },
   supplierApplication: { purposeKey: 'processFlows.purpose.entity.supplierApplication' },
   receiptDiscrepancy: { purposeKey: 'processFlows.purpose.entity.receiptDiscrepancy' },
   callOff: { purposeKey: 'processFlows.purpose.entity.callOff' },

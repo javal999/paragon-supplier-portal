@@ -7,7 +7,7 @@ import type { StatusTone } from '../../lib/statusTone';
 import type { Invoice, InvoiceLine, InvoiceMatchStatus } from '../../services/data/types';
 import { normalizeQty } from '../../lib/localeNumber';
 import {
-  INVOICE_PRICE_TOLERANCE,
+  invoicePriceTolerance,
   checkInvoicePrices,
   type InvoiceLinePriceCheck,
   type PriceCheck,
@@ -50,8 +50,8 @@ export const MatchResult: React.FC<{ status: InvoiceMatchStatus }> = ({ status }
       <MatchPill status={status} />
       <p className="mt-1 text-xs text-text-secondary">
         {t(`fc.inv.match.explain.${explain}`, {
-          pct: INVOICE_PRICE_TOLERANCE.standardPct,
-          cap: fmtIdr(INVOICE_PRICE_TOLERANCE.standardCapIdr),
+          pct: invoicePriceTolerance().standardPct,
+          cap: fmtIdr(invoicePriceTolerance().standardCapIdr),
         })}
       </p>
     </section>
@@ -80,11 +80,11 @@ export const PriceCheckCell: React.FC<{
     check.rule === 'contract'
       ? t('fc.inv.price.rule.contract', {
           contract: contractNumber ?? '',
-          pct: INVOICE_PRICE_TOLERANCE.contractPricePct,
+          pct: invoicePriceTolerance().contractPricePct,
         })
       : t('fc.inv.price.rule.standard', {
-          pct: INVOICE_PRICE_TOLERANCE.standardPct,
-          cap: fmtIdr(INVOICE_PRICE_TOLERANCE.standardCapIdr),
+          pct: invoicePriceTolerance().standardPct,
+          cap: fmtIdr(invoicePriceTolerance().standardCapIdr),
         });
   return (
     <div data-testid={testId}>
@@ -95,9 +95,9 @@ export const PriceCheckCell: React.FC<{
           percent: check.percent === null ? '' : fmtPct(check.percent),
           pct:
             check.rule === 'contract'
-              ? INVOICE_PRICE_TOLERANCE.contractPricePct
-              : INVOICE_PRICE_TOLERANCE.standardPct,
-          cap: fmtIdr(INVOICE_PRICE_TOLERANCE.standardCapIdr),
+              ? invoicePriceTolerance().contractPricePct
+              : invoicePriceTolerance().standardPct,
+          cap: fmtIdr(invoicePriceTolerance().standardCapIdr),
         })}
       </div>
     </div>

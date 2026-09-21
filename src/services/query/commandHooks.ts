@@ -1276,6 +1276,41 @@ export function useCalendarDaySet() {
   });
 }
 
+// ── BL-32 · ONE RULE VALUE THE HUB ADMINISTRATOR CHANGES ─────────────────────
+//
+// ⚠️ **`entityId` IS THE SETTING KEY, AND THERE IS NO KEY PAYLOAD FIELD.**
+// `setBy` comes from the session, never the form (C10 §6.2). "Reset to
+// default" is this same hook writing the default back. Every query is refreshed
+// on success, because a value moves verdicts on pages whose data is cached
+// (positions carry their stale period; call-off views their tolerance check).
+export interface SettingSetVars {
+  /** The setting key — the command's entityId. */
+  key: string;
+  /** The new value; `null` removes a stale-period override. */
+  value: number | boolean | null;
+}
+
+/** Change one rule value, or set it back to its default (`t_setting_set`). */
+export function useSettingSet() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+  const { identity } = useCurrentIdentity();
+
+  return useMutation<CommandResult, Error, SettingSetVars>({
+    mutationFn: ({ key, value }) =>
+      svc.commands.dispatch(scope, {
+        transitionId: 't_setting_set',
+        entity: 'hubSetting',
+        entityId: key,
+        payload: { value, setBy: identity.actor },
+      }),
+    onSuccess: (result) => {
+      if (result.status !== 'failed') void qc.invalidateQueries();
+    },
+  });
+}
+
 // ── §67 · THE APPROVAL LANE — approve / reject, the two verbs procurement holds ─
 //
 // ⚠️ **THE GAP THIS CLOSES WAS NEVER A SURFACE.** `BuyerRequisitions` already

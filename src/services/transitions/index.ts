@@ -54,6 +54,7 @@ export { enforcementFlow } from './flows/enforcement.flow';
 export { roleFlow } from './flows/role.flow';
 export { workingCalendarFlow } from './flows/workingCalendar.flow';
 export { threePlFlow } from './flows/threePl.flow';
+export { hubSettingFlow } from './flows/hubSetting.flow';
 export { supplierApplicationFlow } from './flows/supplierApplication.flow';
 export { receiptDiscrepancyFlow } from './flows/receiptDiscrepancy.flow';
 export { callOffFlow } from './flows/callOff.flow';
@@ -92,6 +93,7 @@ import { enforcementFlow } from './flows/enforcement.flow';
 import { roleFlow } from './flows/role.flow';
 import { workingCalendarFlow } from './flows/workingCalendar.flow';
 import { threePlFlow } from './flows/threePl.flow';
+import { hubSettingFlow } from './flows/hubSetting.flow';
 import { supplierApplicationFlow } from './flows/supplierApplication.flow';
 import { receiptDiscrepancyFlow } from './flows/receiptDiscrepancy.flow';
 import { callOffFlow } from './flows/callOff.flow';
@@ -157,6 +159,10 @@ flowRegistry.register(workingCalendarFlow); // BL-50 — Working calendar
 // shape: a 3PL on the list has no lifecycle, it has a ledger of changes. WIRED,
 // so every change to where a tracking link points lands in the audit trail.
 flowRegistry.register(threePlFlow); // BL-51 — 3PL list
+// BL-32 — the administrator's rule values: one verb with typed keys, the same
+// degenerate single-state ledger shape. Every rule reads the value in force at
+// evaluation, so nothing cascades from a change.
+flowRegistry.register(hubSettingFlow); // BL-32 — rule values
 flowRegistry.register(supplierApplicationFlow); // B1 — Supplier onboarding
 flowRegistry.register(receiptDiscrepancyFlow); // REQ-E07-06 — receipt discrepancy response
 flowRegistry.register(callOffFlow); // REQ-E09-01 / 03 / 04 — call-offs under an umbrella PO

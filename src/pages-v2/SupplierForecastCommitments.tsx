@@ -31,7 +31,7 @@ import { useForecastCommitments, useForecastVersions } from '../services/query/h
 import { parseWorkbook } from '../services/sdc';
 import type { CapacityReason, ForecastCommitmentLine } from '../services/data/types';
 import type { ForecastStream } from '../services/sdc/types';
-import { COMMITMENT_REASONS } from '../services/transitions/forecastConfig';
+import { COMMITMENT_REASONS, commitmentDeadlineWorkingDays } from '../services/transitions/forecastConfig';
 import {
   commitmentTemplateCsv,
   deadlineState,
@@ -497,7 +497,7 @@ const SupplierForecastCommitments: React.FC = () => {
                       <TableHeaderCell>{t('fc.col.zone')}</TableHeaderCell>
                       <TableHeaderCell className="text-right">{t('fc.col.forecast', { uom: first.uom })}</TableHeaderCell>
                       <TableHeaderCell>
-                        <span title={t('fc.col.dueRule')}>{t('fc.col.due')}</span>
+                        <span title={t('fc.col.dueRule', { firm: t('adminSet.unit.workingDays', { count: commitmentDeadlineWorkingDays().firm }), other: t('adminSet.unit.workingDays', { count: commitmentDeadlineWorkingDays().other }) })}>{t('fc.col.due')}</span>
                       </TableHeaderCell>
                       <TableHeaderCell>{t('fc.col.commitment', { uom: first.uom })}</TableHeaderCell>
                       <TableHeaderCell>{t('fc.col.date')}</TableHeaderCell>

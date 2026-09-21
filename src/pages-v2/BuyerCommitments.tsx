@@ -37,6 +37,8 @@ import {
   rankExceptions,
 } from '../services/transitions/forecastRules';
 import { inputClass, labelClass } from './inventory/inventoryDisplay';
+import { commitmentDeadlineWorkingDays, gapColourThresholds } from '../services/transitions/forecastConfig';
+import { coverageThresholds } from '../services/transitions/inventoryConfig';
 import {
   CommitmentDeadline,
   CommitmentStatePill,
@@ -65,8 +67,20 @@ import {
 
 type Action = { kind: 'accept' | 'revise' | 'reassign'; line: ForecastCommitmentLine };
 
+/** A threshold held as a fraction, shown as a percentage without rounding it away. */
+const thresholdPct = (ratio: number): string => String(Math.round(ratio * 100_000) / 1000);
+
 const BuyerCommitments: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  // BL-32 — the rule texts state the administrator's values in force, never a
+  // number written into the sentence.
+  const dueDays = commitmentDeadlineWorkingDays();
+  const dueRule = t('fc.col.dueRule', {
+    firm: t('adminSet.unit.workingDays', { count: dueDays.firm }),
+    other: t('adminSet.unit.workingDays', { count: dueDays.other }),
+  });
+  const ratioText = (n: number): string =>
+    n.toLocaleString(i18n.language === 'id' ? 'id-ID' : 'en-GB', { minimumFractionDigits: 1, maximumFractionDigits: 3 });
   const [params] = useSearchParams();
   const linesQuery = useForecastCommitments();
   const coverageQuery = useForecastCoverage();
@@ -239,7 +253,7 @@ const BuyerCommitments: React.FC = () => {
               <TableHeaderCell>{t('fc.col.gap')}</TableHeaderCell>
               <TableHeaderCell>{t('fc.col.status')}</TableHeaderCell>
               <TableHeaderCell>
-                <span title={t('fc.col.dueRule')}>{t('fc.col.due')}</span>
+                <span title={dueRule}>{t('fc.col.due')}</span>
               </TableHeaderCell>
               <TableHeaderCell>{t('fc.col.daysOfSupply')}</TableHeaderCell>
               <TableHeaderCell>{t('fc.col.actions')}</TableHeaderCell>
@@ -347,7 +361,10 @@ const BuyerCommitments: React.FC = () => {
       {/* BR-01 / BR-02 — the grid of commitment against forecast. */}
       <section className="mb-6" data-testid="fc-grid">
         <h2 className="text-section text-text-primary mb-2">{t('fc.pti.gaps.grid')}</h2>
-        <p className="text-sm text-text-secondary mb-3">{t('fc.pti.gaps.gridHint')}</p>
+        <p className="text-sm text-text-secondary mb-3">{t('fc.pti.gaps.gridHint', {
+            green: thresholdPct(gapColourThresholds().greenFrom),
+            amber: thresholdPct(gapColourThresholds().amberFrom),
+          })}</p>
         <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto">
           <table className="text-sm min-w-full">
             <thead>
@@ -474,7 +491,10 @@ const BuyerCommitments: React.FC = () => {
             {t('fc.pti.gaps.estimate')}
           </StatusPill>
         </h2>
-        <p className="text-sm text-text-secondary mb-3">{t('fc.pti.gaps.coverageHint')}</p>
+        <p className="text-sm text-text-secondary mb-3">{t('fc.pti.gaps.coverageHint', {
+            covered: ratioText(coverageThresholds().coveredFrom),
+            atRisk: ratioText(coverageThresholds().atRiskFrom),
+          })}</p>
         <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto">
           <Table>
             <TableHeader>

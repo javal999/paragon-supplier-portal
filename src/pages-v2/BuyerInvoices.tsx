@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { InvoiceLinesSection, fmtIdr } from './invoices/InvoiceCollaboration';
-import { INVOICE_PRICE_TOLERANCE } from '../services/transitions';
+import { invoicePriceTolerance } from '../services/transitions';
 import {
   BarChart,
   Bar,
@@ -1248,8 +1248,8 @@ const BuyerInvoicesView: React.FC<{ invoices: BuyerInvoice[] }> = ({ invoices: a
                 </div>
                 <div className="text-text-secondary mt-1">
                   {t(MATCH_DESC_KEY[selected.matchStatus], {
-                    pct: INVOICE_PRICE_TOLERANCE.standardPct,
-                    cap: fmtIdr(INVOICE_PRICE_TOLERANCE.standardCapIdr),
+                    pct: invoicePriceTolerance().standardPct,
+                    cap: fmtIdr(invoicePriceTolerance().standardCapIdr),
                   })}
                 </div>
               </div>

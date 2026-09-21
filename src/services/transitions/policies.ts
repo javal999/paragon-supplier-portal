@@ -45,6 +45,8 @@ import { SYSTEM_ROLES, type SystemRoleId } from './businessRoles';
 import { catalogRoles } from './roles';
 import { calendarRulingRefusal } from './workingCalendarStore';
 import { threePlRefusal, threePlStore } from './threePlStore';
+import { settingRefusal } from './hubSettings';
+import { hubSettingsStore } from './hubSettingsStore';
 import {
   APPLICATION_REQUEST_TYPES,
   VENDOR_BEARING_REQUEST_TYPE,
@@ -512,6 +514,33 @@ const calendarDayGoverned: PolicyHookFn = ({ entityId, payload }) => {
 
 bindPolicyHook(POLICY_HOOKS.THREE_PL_GOVERNED, threePlGoverned);
 bindPolicyHook(POLICY_HOOKS.CALENDAR_DAY_GOVERNED, calendarDayGoverned);
+
+// ── BL-32 · ONE RULE VALUE THE HUB ADMINISTRATOR CHANGES ─────────────────────
+//
+// ⚠️ **THE SAME PREDICATE THE STORE CALLS ON READ** (`settingRefusal`), checked
+// against the values IN FORCE, so an order rule (a band's ends, min below max)
+// is judged on the state the change would produce. `entityId` IS the key —
+// there is no key payload field. `value` must be PRESENT (null is a value: it
+// removes a stale-period override), which the dispatcher's required-field rule
+// cannot say without refusing that null.
+const settingGoverned: PolicyHookFn = ({ entityId, payload }) => {
+  if (!Object.prototype.hasOwnProperty.call(payload, 'value')) {
+    return { ok: false, reason: `value is required for ${entityId}` };
+  }
+  const refusal = settingRefusal(entityId, payload.value, hubSettingsStore.state());
+  if (refusal) return { ok: false, reason: refusal };
+  if (!asActorAttribution(payload.setBy)) {
+    return {
+      ok: false,
+      reason:
+        "setBy must be { kind: 'RESOLVED', person: { personId, displayName } } or " +
+        `{ kind: 'UNATTRIBUTED', reason } (${UNATTRIBUTED_REASONS.join(', ')})`,
+    };
+  }
+  return { ok: true };
+};
+
+bindPolicyHook(POLICY_HOOKS.SETTING_GOVERNED, settingGoverned);
 
 // ── §67 · PR REJECT — THE REASON IS SUBSTANCE, NOT PRESENCE ──────────────────
 //

@@ -16,8 +16,6 @@ export const adminCalendarEn: Record<string, string> = {
 
   'adminCal.sections.label': 'Administration sections',
   'adminCal.section.workingCalendar': 'Working calendar',
-  'adminCal.sections.later':
-    'Reason codes, tolerances, alert thresholds and stale periods will be managed here too. They are not built yet.',
 
   'adminCal.meta.source': 'Loaded from SAP factory calendar {{id}} on {{date}}',
   'adminCal.meta.covers': 'Covers {{from}} to {{to}}',
@@ -95,8 +93,6 @@ export const adminCalendarId: Record<string, string> = {
 
   'adminCal.sections.label': 'Bagian administrasi',
   'adminCal.section.workingCalendar': 'Kalender kerja',
-  'adminCal.sections.later':
-    'Kode alasan, toleransi, ambang peringatan, dan periode data usang juga akan dikelola di sini. Bagian itu belum dibangun.',
 
   'adminCal.meta.source': 'Dimuat dari kalender pabrik SAP {{id}} pada {{date}}',
   'adminCal.meta.covers': 'Mencakup {{from}} sampai {{to}}',
