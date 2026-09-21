@@ -37,9 +37,8 @@ export function rfpScoringOf(event: RfpEventView): ScoringOutcome | null {
         unitPrice: price,
         currency: event.currency,
         leadTimeDays: lead,
-        // The share of terms the proposal complies with IS its compliance axis
-        // here — the one comparable number an RFP produces by construction.
-        complianceScore: r.complianceScore,
+        // CR-15 (2026-09-21) has no compliance axis: compliance is the CR-23
+        // gate at award, so the term-compliance share is shown, not weighted.
         reliabilityScore: reliabilityScoreFor(otif),
       };
     })

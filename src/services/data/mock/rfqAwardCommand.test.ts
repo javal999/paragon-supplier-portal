@@ -36,7 +36,15 @@ const award = (scope: QueryScope, rfqId = RFQ, quotationId = WINNER, supplierId 
     transitionId: 't_rfq_award',
     entity: 'rfq',
     entityId: rfqId,
-    payload: { awardedQuotationId: quotationId, awardedSupplierId: supplierId },
+    // ⚠️ PREMISE CHANGE (BL-43): under the CR-15 re-weight (40/20/40) with
+    // sup-010 excluded by the compliance gate, qt-003b edges qt-003a (both 74),
+    // so this award now departs from the best score and BR-07 asks for a reason.
+    // The subject here is the cascade fan-out, not the ranking.
+    payload: {
+      awardedQuotationId: quotationId,
+      awardedSupplierId: supplierId,
+      awardReason: 'Awarded to the incumbent for continuity.',
+    },
   });
 
 beforeEach(() => {

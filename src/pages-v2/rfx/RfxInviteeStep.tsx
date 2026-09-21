@@ -27,6 +27,7 @@ import Data from '../../components/ui-v2/Data';
 import SearchBar from '../../components/ui-v2/SearchBar';
 import { useInviteeCandidates } from '../../services/query/hooks';
 import { PURCHASING_GROUPS, purchasingGroupNameKey } from '../../services/sourcing/rfxConfig';
+import { GateMarker } from './rfxDisplay';
 
 interface RfxInviteeStepProps {
   /** The supplier-master category this event's family narrows to; '' = all. */
@@ -110,6 +111,7 @@ const RfxInviteeStep: React.FC<RfxInviteeStepProps> = ({
         </div>
       </div>
       <p className="text-xs text-text-tertiary -mt-3">{t('rfx.invite.onlyActive')}</p>
+      <p className="text-xs text-text-tertiary -mt-3">{t('rfx.gate.inviteNote')}</p>
 
       <div className="border border-border-subtle rounded-md overflow-hidden max-h-64 overflow-y-auto">
         <table className="w-full text-sm">
@@ -142,7 +144,13 @@ const RfxInviteeStep: React.FC<RfxInviteeStepProps> = ({
                       className="accent-teal"
                     />
                   </td>
-                  <td className="px-3 py-2 text-text-primary">{s.supplierName}</td>
+                  <td className="px-3 py-2 text-text-primary">
+                    {s.supplierName}
+                    {/* CR-23 / BR-06 — still selectable; marked as not awardable. */}
+                    <div className="mt-1">
+                      <GateMarker gate={s.gate} testId={`${testIdPrefix}-invitee-gate-${s.supplierId}`} />
+                    </div>
+                  </td>
                   <td className="px-3 py-2 text-text-secondary">
                     <Data>{s.purchasingGroup ?? '—'}</Data>
                   </td>

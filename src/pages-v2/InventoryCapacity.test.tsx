@@ -4,6 +4,8 @@
 // menu and the Home tasks. Every walk that acts ends in the STORE or the READ.
 // ─────────────────────────────────────────────────────────────────────────────
 
+import React from 'react';
+import { useLocation } from 'react-router-dom';
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { renderWithProviders, BUYER, SUPPLIER } from '../test/test-utils';
@@ -20,6 +22,7 @@ import {
   stockSyncStore,
 } from '../services/data/mock/stores/inventoryHubStores';
 import { sdcClock } from '../services/sdc';
+import { STOCK_TEMPLATE_FIELDS, type StockTemplateField } from '../services/transitions/inventoryRules';
 import BuyerInventory from './BuyerInventory';
 import SupplierInventory from './SupplierInventory';
 import BuyerSupplierAccess from './BuyerSupplierAccess';
@@ -169,6 +172,161 @@ describe('Supplier Stock (REQ-E08-01 SUP, REQ-E08-02, REQ-E08-03)', () => {
   });
 });
 
+describe('One stock entry (BL-60, REQ-E08-02 BR-06, BR-09, BR-10, AC-04, AC-05)', () => {
+  // The manual form's label for each template field. The material is chosen
+  // from a list and the unit is the material's (shown in every label), so those
+  // two template columns have no typed counterpart — everything else must match.
+  const MANUAL_LABEL: Record<StockTemplateField, RegExp | null> = {
+    materialCode: /^Material$/,
+    soh: /^Stock on hand \(PCS\)$/,
+    unit: null,
+    supplierRop: /^Supplier reorder point \(PCS\)$/,
+    inProductionQty: /^In production \(PCS\)$/,
+    productionCompletionDate: /^Expected production completion$/,
+    batchNumber: /^Batch number$/,
+    batchQty: /^Quantity$/,
+    manufacturingDate: /^Manufacturing date$/,
+    expiryDate: /^Expiry date$/,
+  };
+
+  const openManual = async (material = 'PK-PETB-8801') => {
+    renderWithProviders(<SupplierInventory />, { identity: SUPPLIER });
+    fireEvent.click(await screen.findByTestId('stock-entry-open'));
+    fireEvent.change(panel().getByLabelText('Material'), { target: { value: material } });
+  };
+
+  it('AC-04: the manual form carries every template field, and nothing the template lacks', async () => {
+    await openManual();
+    fireEvent.click(panel().getByRole('button', { name: 'Add batch' }));
+    for (const f of STOCK_TEMPLATE_FIELDS) {
+      const label = MANUAL_LABEL[f.field];
+      if (label) expect(panel().getByLabelText(label), f.field).toBeInTheDocument();
+    }
+    // Every typeable control in the panel maps to a template field.
+    const controls = [...document.querySelectorAll('aside[role="dialog"] input, aside[role="dialog"] select')];
+    expect(controls).toHaveLength(STOCK_TEMPLATE_FIELDS.filter((f) => MANUAL_LABEL[f.field] !== null).length);
+  });
+
+  it('manufacturing date: after expiry or in the future blocks Save; a valid one is saved', async () => {
+    await openManual();
+    fireEvent.change(panel().getByLabelText('Stock on hand (PCS)'), { target: { value: '500' } });
+    fireEvent.click(panel().getByRole('button', { name: 'Add batch' }));
+    fireEvent.change(panel().getByLabelText('Batch number'), { target: { value: 'MD-1' } });
+    fireEvent.change(panel().getByLabelText('Quantity'), { target: { value: '500' } });
+    fireEvent.change(panel().getByLabelText('Expiry date'), { target: { value: '2027-01-31' } });
+    fireEvent.change(panel().getByLabelText('Manufacturing date'), { target: { value: '2027-02-01' } });
+    expect(panel().getByTestId('stock-entry-batch-date-0')).toHaveTextContent('cannot be after the expiry date');
+    expect(panel().getByTestId('stock-entry-submit')).toBeDisabled();
+    fireEvent.change(panel().getByLabelText('Expiry date'), { target: { value: '' } });
+    fireEvent.change(panel().getByLabelText('Manufacturing date'), { target: { value: '2099-01-01' } });
+    expect(panel().getByTestId('stock-entry-batch-date-0')).toHaveTextContent('cannot be in the future');
+    expect(panel().getByTestId('stock-entry-submit')).toBeDisabled();
+    const made = sdcClock.now().slice(0, 10);
+    fireEvent.change(panel().getByLabelText('Manufacturing date'), { target: { value: made } });
+    expect(panel().queryByTestId('stock-entry-batch-date-0')).toBeNull();
+    fireEvent.click(panel().getByTestId('stock-entry-submit'));
+    await waitFor(() =>
+      expect(inventoryDeclarationStore.latestFor('sup-007', 'PK-PETB-8801')!.batches).toEqual([
+        { batchNumber: 'MD-1', qty: 500, uom: 'PCS', manufacturingDate: made },
+      ]),
+    );
+  });
+
+  it('AC-05: in transit sits beside in production, read-only, naming its call-offs', async () => {
+    await openManual();
+    const transit = panel().getByTestId('stock-entry-in-transit');
+    expect(within(transit).getByTestId('stock-entry-in-transit-qty').textContent).not.toBe('0');
+    expect(within(transit).getByTestId('stock-entry-in-transit-source')).toHaveTextContent(/CO-\d{4}-\d{4}/);
+    // Not a control of any kind — it cannot be typed.
+    expect(transit.querySelector('input, select, textarea, [contenteditable]')).toBeNull();
+    expect(panel().queryByLabelText(/In transit/)).toBeNull();
+  });
+
+  it('template: in transit shown read-only per material, and a manufacturing date column is saved', async () => {
+    renderWithProviders(<SupplierInventory />, { identity: SUPPLIER });
+    const incoming = await screen.findByTestId('stock-upload-incoming');
+    const bottle = within(incoming).getByTestId('stock-upload-in-transit-PK-PETB-8801');
+    expect(within(bottle).getByTestId('stock-upload-in-transit-PK-PETB-8801-source')).toHaveTextContent(/CO-/);
+    expect(incoming.querySelector('input, select, textarea')).toBeNull();
+    const made = sdcClock.now().slice(0, 10);
+    const csv = [
+      'Material code,Stock on hand,Unit,Batch number,Batch quantity,Manufacturing date (YYYY-MM-DD),Expiry date (YYYY-MM-DD)',
+      `PK-CAPF-8820,300,PCS,T-1,300,${made},2028-01-01`,
+      'PK-PETB-8802,300,PCS,T-2,300,2099-01-01,',
+    ].join('\n');
+    fireEvent.change(screen.getByTestId('stock-upload-file'), { target: { files: [new File([csv], 's.csv', { type: 'text/csv' })] } });
+    const result = await screen.findByTestId('stock-upload-result');
+    expect(within(result).getByTestId('stock-upload-saved')).toHaveTextContent('Materials saved: 1');
+    expect(within(result).getByTestId('stock-upload-refused-row-3')).toHaveTextContent('The manufacturing date is in the future');
+    expect(inventoryDeclarationStore.latestFor('sup-007', 'PK-CAPF-8820')!.batches).toEqual([
+      { batchNumber: 'T-1', qty: 300, uom: 'PCS', manufacturingDate: made, expiryDate: '2028-01-01' },
+    ]);
+  });
+});
+
+describe('Supplier-triggered sync and PTI refresh (BL-59, REQ-E08-02 BR-03, BR-11, AC-02, AC-06)', () => {
+  const seat = (supplierId: string, supplierName: string): CurrentIdentity => ({
+    personaType: 'supplier',
+    supplierId,
+    supplierName,
+    businessRoles: SEEDED_SEAT_ROLES.supplier,
+    actor: NO_PERSON,
+  });
+
+  it('an API-connected supplier syncs its own stock; the result is stored and the time shown', async () => {
+    renderWithProviders(<SupplierInventory />, { identity: seat('sup-001', 'PT Sample Oleochemicals') });
+    const erp = await screen.findByTestId('sup-sync-erp');
+    expect(within(erp).getByTestId('sample-data-badge')).toBeInTheDocument();
+    expect(within(erp).getByTestId('sup-sync-status')).toHaveTextContent('Not synced yet');
+    fireEvent.click(within(erp).getByTestId('sup-sync-button'));
+    await waitFor(() => expect(stockSyncStore.all().some((a) => a.supplierId === 'sup-001' && a.outcome === 'success')).toBe(true));
+    expect(inventoryDeclarationStore.latestFor('sup-001', 'RM-LAURIC-7200')).toMatchObject({ totalQty: 9000, channel: 'api' });
+    await waitFor(() => expect(within(erp).getByTestId('sup-sync-status')).toHaveTextContent('Last synced'));
+  });
+
+  it('a failed sync shows the error and time, and the previous figures stay, marked out of date', async () => {
+    renderWithProviders(<SupplierInventory />, { identity: seat('sup-003', 'PT Sample Fragrance House') });
+    expect(await screen.findByTestId('sup-sync-error')).toHaveTextContent('the supplier system did not respond');
+    expect(screen.getByTestId('sup-sync-error')).toHaveTextContent('previous figures kept and marked out of date');
+    expect(screen.getByTestId('sup-stock-row-FR-WARD-4410')).toHaveTextContent('Out of date');
+  });
+
+  it('a supplier that is not API-connected has no Sync', async () => {
+    renderWithProviders(<SupplierInventory />, { identity: SUPPLIER });
+    await screen.findByTestId('sup-stock-row-PK-PETB-8801');
+    expect(screen.queryByTestId('sup-sync-erp')).toBeNull();
+    expect(screen.queryByTestId('sup-sync-button')).toBeNull();
+  });
+
+  it('a supplier with a PTI grant refreshes PTI stock for the granted materials only', async () => {
+    renderWithProviders(<SupplierInventory />, { identity: SUPPLIER });
+    fireEvent.click(await screen.findByTestId('sup-pti-refresh-button'));
+    const result = await screen.findByTestId('sup-pti-refresh-result');
+    const listed = [...result.querySelectorAll('[data-testid^="sup-pti-refresh-"]')]
+      .map((el) => el.getAttribute('data-testid'))
+      .filter((id) => id !== 'sup-pti-refresh-result');
+    expect(listed).toEqual(['sup-pti-refresh-PK-PETB-8801', 'sup-pti-refresh-PK-PETB-8802']);
+    expect(within(result).getByTestId('sup-pti-refresh-PK-PETB-8801')).toHaveTextContent('30,000 PCS');
+    expect(within(result).queryByTestId('sup-pti-refresh-PK-CAPF-8820')).toBeNull();
+  });
+
+  it('without a grant the PTI refresh is not offered at all', async () => {
+    renderWithProviders(<SupplierInventory />, { identity: SUP_002 });
+    await screen.findByTestId('sup-stock-row-RM-STEAR-7300');
+    expect(screen.queryByTestId('sup-pti-refresh')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Refresh PTI stock' })).toBeNull();
+  });
+
+  it('a removed grant removes the refresh on the next load', async () => {
+    stockAccessStore.reset();
+    const grant = stockAccessStore.get('sup-007')!;
+    stockAccessStore.put({ ...grant, active: false, materials: [] });
+    renderWithProviders(<SupplierInventory />, { identity: SUPPLIER });
+    await screen.findByTestId('sup-stock-row-PK-PETB-8801');
+    expect(screen.queryByTestId('sup-pti-refresh')).toBeNull();
+  });
+});
+
 describe('Supplier access (REQ-E08-03)', () => {
   it('grant access to chosen materials, logged; the supplier then sees PTI stock for them', async () => {
     renderWithProviders(<BuyerSupplierAccess />, { identity: PLANNER });
@@ -219,6 +377,94 @@ describe('Capacity (REQ-E08-04)', () => {
     expect(plan).toHaveTextContent('Gap');
     expect(within(plan).getAllByTestId(/capacity-gap-sup-007-MG-20-/)).toHaveLength(1);
     expect(plan).toHaveTextContent('Material');
+  });
+
+  it('BL-62: "Extra capacity if requested", explained on both sides; the word "Upside" is gone', async () => {
+    const sup = renderWithProviders(<SupplierCapacity />, { identity: SUPPLIER });
+    expect(await screen.findByRole('columnheader', { name: /^Extra capacity if requested \(/ })).toBeInTheDocument();
+    expect(screen.getByTestId('capacity-upside-help')).toHaveTextContent('above the capacity you allocate');
+    expect(screen.getAllByLabelText(/Extra capacity if requested for the week of/).length).toBeGreaterThan(0);
+    expect(screen.queryByText(/Upside/)).toBeNull();
+    sup.unmount();
+    renderWithProviders(<BuyerCapacity />, { identity: PLANNER });
+    const plan = await screen.findByTestId('capacity-plan-sup-007-MG-20');
+    expect(within(plan).getByRole('columnheader', { name: /^Extra capacity if requested \(/ })).toBeInTheDocument();
+    expect(within(plan).getByTestId('capacity-upside-help-sup-007-MG-20')).toHaveTextContent('above its allocation');
+    expect(screen.queryByText(/Upside/)).toBeNull();
+    // ID wording as ruled.
+    expect(inventoryCapacityId['inv.capacity.col.upside']).toBe('Kapasitas tambahan jika diminta ({{uom}})');
+  });
+});
+
+describe('Planner capacity filters (BL-63, REQ-E08-04 BR-07, AC-04)', () => {
+  let search = '';
+  const LocationProbe: React.FC = () => {
+    search = useLocation().search;
+    return null;
+  };
+  const renderAt = (query = '') =>
+    renderWithProviders(
+      <>
+        <BuyerCapacity />
+        <LocationProbe />
+      </>,
+      { identity: PLANNER, route: `/buyer/capacity${query}` },
+    );
+  const planIds = () =>
+    screen.queryAllByTestId(/^capacity-plan-/).map((el) => el.getAttribute('data-testid')!.replace('capacity-plan-', ''));
+
+  it('supplier, material group and material narrow the view and are written to the address', async () => {
+    renderAt();
+    await screen.findByTestId('capacity-plan-sup-007-MG-20');
+    expect(planIds()).toHaveLength(13);
+    fireEvent.change(screen.getByLabelText('Supplier'), { target: { value: 'sup-002' } });
+    expect(planIds().sort()).toEqual(['sup-002-MG-02', 'sup-002-MG-03', 'sup-002-MG-10']);
+    expect(new URLSearchParams(search).get('supplier')).toBe('sup-002');
+    fireEvent.change(screen.getByLabelText('Material group'), { target: { value: 'MG-02' } });
+    expect(planIds()).toEqual(['sup-002-MG-02']);
+    expect(new URLSearchParams(search).get('materialGroup')).toBe('MG-02');
+    fireEvent.change(screen.getByLabelText('Supplier'), { target: { value: '' } });
+    fireEvent.change(screen.getByLabelText('Material group'), { target: { value: '' } });
+    fireEvent.change(screen.getByLabelText('Material'), { target: { value: 'RM-EMUL-3310' } });
+    expect(planIds().sort()).toEqual(['sup-002-MG-03', 'sup-005-MG-03']);
+    expect(new URLSearchParams(search).get('materialCode')).toBe('RM-EMUL-3310');
+    expect(new URLSearchParams(search).has('supplier')).toBe(false);
+  });
+
+  it('gap weeks only: only plans with a gap, and only their gap weeks', async () => {
+    renderAt();
+    await screen.findByTestId('capacity-plan-sup-007-MG-20');
+    fireEvent.click(screen.getByTestId('capacity-filter-gaps'));
+    expect(planIds()).toEqual(['sup-007-MG-20']);
+    expect(new URLSearchParams(search).get('gapsOnly')).toBe('1');
+    const rows = within(screen.getByTestId('capacity-plan-sup-007-MG-20')).getAllByRole('row');
+    expect(rows).toHaveLength(2); // the header row and the one gap week
+    expect(within(screen.getByTestId('capacity-plan-sup-007-MG-20')).getAllByTestId(/capacity-gap-/)).toHaveLength(1);
+  });
+
+  it('a filtered address reloads to the same view, and composes with the status chips', async () => {
+    renderAt('?supplier=sup-002');
+    await screen.findByTestId('capacity-plan-sup-002-MG-02');
+    expect(planIds()).toHaveLength(3);
+    expect(screen.getByLabelText('Supplier')).toHaveValue('sup-002');
+    fireEvent.click(screen.getByRole('radio', { name: /^Confirmed \(1\)$/ }));
+    expect(planIds()).toEqual(['sup-002-MG-02']);
+  });
+
+  it('composes with the Order summary PO filter', async () => {
+    renderAt('?po=po-007&from=order-summary&gapsOnly=1');
+    await screen.findByTestId('po-filter-banner');
+    expect(planIds()).toEqual(['sup-007-MG-20']);
+  });
+
+  it('an empty result says so and offers to clear the filters, which restores every plan', async () => {
+    renderAt('?supplier=sup-010&gapsOnly=1');
+    const empty = await screen.findByTestId('capacity-filters-empty');
+    expect(empty).toHaveTextContent('No supplier material group matches these filters.');
+    expect(planIds()).toEqual([]);
+    fireEvent.click(within(empty).getByTestId('capacity-filters-empty-clear'));
+    await waitFor(() => expect(planIds()).toHaveLength(13));
+    expect(search).toBe('');
   });
 });
 

@@ -7,15 +7,19 @@
 //
 //  • AXIS-HONESTY SPLIT (FORK-3B). price + leadTime are LIVE — deterministic
 //    rankings computed from the quote data in hand (price ratio-to-best;
-//    leadTime absolute-linear since 2e-b-1, see below). compliance +
-//    reliability are DECLARED-SIMULATED external-data axes (compliance = the I3
-//    surface, still SIMULATED; reliability = needs real OTIF history): their
-//    inputs are passed through VERBATIM, never recomputed from fixture
-//    supplier-attributes — recomputing would dress SIMULATED data as LIVE.
+//    leadTime absolute-linear since 2e-b-1, see below). reliability is a
+//    DECLARED-SIMULATED external-data axis (the supplier's OTIF, measured from
+//    sample data): its input is passed through VERBATIM, never recomputed here.
+//
+//  • COMPLIANCE IS A GATE, NOT A WEIGHT (CR-23 / CR-15, owner 2026-09-21,
+//    BL-43). The compliance axis is gone: a supplier that fails the compliance
+//    gate is not scored at all, and the caller filters it out BEFORE calling
+//    this engine (`services/sourcing/complianceGate.ts`). Every quote this
+//    engine sees is from a qualified supplier.
 //
 //  • WEAKEST-LINK LIVENESS. The composite (and the topRanked flag it drives) is
 //    LIVE only when EVERY weighted axis is LIVE — DERIVED from AXIS_LIVENESS, not
-//    hardcoded, so it auto-flips the day compliance+reliability get real sources
+//    hardcoded, so it auto-flips the day reliability gets a real source
 //    (two-gate discipline on a derived score). Today it reads SIMULATED.
 //
 // C6-LOCK: CRITERIA_WEIGHTS are governed platform truth — a fixed scoring policy,
@@ -35,19 +39,21 @@ export type Liveness = 'live' | 'simulated';
 export interface CriteriaWeights {
   price: number;
   leadTime: number;
-  compliance: number;
   reliability: number;
 }
 
 /**
  * The governed scoring policy (C6-LOCK). Fixed platform truth, weights sum to 1.
  * Not user-authored — the portal's one blessed weighting, never a per-user knob.
+ *
+ * CR-15 (owner, 2026-09-21): price 40%, lead time 20%, reliability 40%. The old
+ * 30 / 20 / 25 compliance / 25 split is retired — compliance became the CR-23
+ * gate, which decides WHO is scored rather than adding points.
  */
 export const CRITERIA_WEIGHTS: CriteriaWeights = {
-  price: 0.3,
+  price: 0.4,
   leadTime: 0.2,
-  compliance: 0.25,
-  reliability: 0.25,
+  reliability: 0.4,
 };
 
 /**
@@ -57,7 +63,6 @@ export const CRITERIA_WEIGHTS: CriteriaWeights = {
 export const AXIS_LIVENESS: Record<keyof CriteriaWeights, Liveness> = {
   price: 'live',
   leadTime: 'live',
-  compliance: 'simulated',
   reliability: 'simulated',
 };
 
@@ -128,7 +133,7 @@ export interface ScorableQuote {
   currency: BidCurrency;
   /** REQUIRED (2e-b-1a) — an incomplete bid never reaches the comparison. */
   leadTimeDays: number;
-  complianceScore: number;
+  /** CR-15 — the supplier's OTIF; "No history" scores 50 (`reliabilityScoreFor`). */
   reliabilityScore: number;
 }
 
@@ -139,10 +144,8 @@ export interface QuoteScore {
   /** LIVE — absolute linear scale, `max(0, 100 - days×2)`; same-day = 100. */
   leadTimeScore: number;
   /** SIMULATED — the input value, passed through untouched. */
-  complianceScore: number;
-  /** SIMULATED — the input value, passed through untouched. */
   reliabilityScore: number;
-  /** Weighted roll-up of the four axes. */
+  /** Weighted roll-up of the three axes. */
   composite: number;
   /** Weakest-link liveness of the composite (SIMULATED while any input is). */
   compositeLiveness: Liveness;
@@ -218,7 +221,7 @@ export interface ScoringOptions {
  * HOMOGENEOUS-SET EXEMPTION. A single-currency set needs no pin and no
  * conversion. Ratio-to-best is scale-invariant — multiplying every price by the
  * same rate leaves every ratio, and therefore every score, identical — and the
- * other three axes never touch money. So an all-USD RFQ scores EXACTLY as it did
+ * other two axes never touch money. So an all-USD RFQ scores EXACTLY as it did
  * before this batch existed. This is not a convenience shortcut: demanding a pin
  * there would refuse a comparison the engine is provably able to make.
  *
@@ -289,7 +292,7 @@ export function scoreQuotations(
     // Compared in the basis, never as a bare numeral (2e-c-3).
     const priceScore = ratioToBest(inBasis(q), minPrice);
     // Absolute, not ratio-to-best (2e-b-1). Every quote states a lead time
-    // (2e-b-1a), so all four axes are always present and `totalWeight` is 1 —
+    // (2e-b-1a), so all three axes are always present and `totalWeight` is 1 —
     // the renormalising form is kept because it is what makes a custom `weights`
     // policy that zeroes an axis behave sanely, not because an axis can be
     // missing.
@@ -297,7 +300,6 @@ export function scoreQuotations(
     const axes: readonly (readonly [number, number])[] = [
       [priceScore, weights.price],
       [leadTimeScore, weights.leadTime],
-      [q.complianceScore, weights.compliance],
       [q.reliabilityScore, weights.reliability],
     ];
     const totalWeight = axes.reduce((sum, [, w]) => sum + w, 0);
@@ -317,7 +319,6 @@ export function scoreQuotations(
       quoteId: q.id,
       priceScore,
       leadTimeScore,
-      complianceScore: q.complianceScore,
       reliabilityScore: q.reliabilityScore,
       composite,
       compositeLiveness,

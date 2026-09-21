@@ -107,6 +107,12 @@ export const useNegotiationRounds = () =>
     svc.procurement.getNegotiationRounds(scope),
   );
 
+/** CR-23 — the compliance gate for every invitee and bidder of one RFQ (PTI only). */
+export const useRfqComplianceGate = (rfqId: string | null | undefined) =>
+  useServiceQuery(['procurement', 'rfqComplianceGate', rfqId ?? ''], (svc, scope) =>
+    rfqId ? svc.procurement.getRfqComplianceGate(scope, rfqId) : Promise.resolve({ items: [] }),
+  );
+
 /** REQ-E03-05 — recorded awards. A supplier reads only its own outcome. */
 export const useAwards = () =>
   useServiceQuery(['procurement', 'awards'], (svc, scope) => svc.procurement.getAwards(scope));

@@ -38,7 +38,6 @@ const A: ScorableQuote = {
   unitPrice: 100,
   currency: 'IDR',
   leadTimeDays: 10,
-  complianceScore: 90,
   reliabilityScore: 80,
 };
 const B: ScorableQuote = {
@@ -46,7 +45,6 @@ const B: ScorableQuote = {
   unitPrice: 200,
   currency: 'IDR',
   leadTimeDays: 20,
-  complianceScore: 70,
   reliabilityScore: 60,
 };
 
@@ -143,17 +141,18 @@ describe('scoreQuotations — LIVE axes derive from the quote set', () => {
 });
 
 describe('scoreQuotations — external axes are declared SIMULATED, passed through untouched', () => {
-  it('compliance/reliability are the input values verbatim (never recomputed)', () => {
+  it('reliability is the input value verbatim (never recomputed)', () => {
     const [a] = rank([A, B]);
-    expect(a.complianceScore).toBe(90);
     expect(a.reliabilityScore).toBe(80);
   });
 
-  it('AXIS_LIVENESS marks price/leadTime LIVE and compliance/reliability SIMULATED', () => {
+  // ⚠️ PREMISE CHANGE (BL-43, CR-15 2026-09-21): compliance is no longer an axis
+  // — it is the CR-23 gate, applied by the caller before scoring.
+  it('AXIS_LIVENESS marks price/leadTime LIVE and reliability SIMULATED; there is no compliance axis', () => {
     expect(AXIS_LIVENESS.price).toBe('live');
     expect(AXIS_LIVENESS.leadTime).toBe('live');
-    expect(AXIS_LIVENESS.compliance).toBe('simulated');
     expect(AXIS_LIVENESS.reliability).toBe('simulated');
+    expect(Object.keys(AXIS_LIVENESS).sort()).toEqual(['leadTime', 'price', 'reliability']);
   });
 });
 
@@ -162,10 +161,12 @@ describe('scoreQuotations — composite is a weighted roll-up with weakest-link 
     const [a, b] = rank([A, B]);
     // The lead-time terms moved with the axis (2e-b-1): A's 10 days scores 80
     // rather than a ratio-derived 100, and B's 20 days scores 60 rather than 50.
-    // A: 100*.3 + 80*.2 + 90*.25 + 80*.25 = 30+16+22.5+20 = 88.5 → 89
-    expect(a.composite).toBe(89);
-    // B: 50*.3 + 60*.2 + 70*.25 + 60*.25 = 15+12+17.5+15 = 59.5 → 60
-    expect(b.composite).toBe(60);
+    // ⚠️ PREMISE CHANGE (BL-43): weights are now price 40 / lead time 20 /
+    // reliability 40 (CR-15, 2026-09-21); the old 30/20/25/25 gave 89 and 60.
+    // A: 100*.4 + 80*.2 + 80*.4 = 40+16+32 = 88
+    expect(a.composite).toBe(88);
+    // B: 50*.4 + 60*.2 + 60*.4 = 20+12+24 = 56
+    expect(b.composite).toBe(56);
   });
 
   it('composite liveness is SIMULATED while any weighted axis is SIMULATED', () => {
@@ -178,7 +179,6 @@ describe('scoreQuotations — composite is a weighted roll-up with weakest-link 
     const liveOnly: CriteriaWeights = {
       price: 0.6,
       leadTime: 0.4,
-      compliance: 0,
       reliability: 0,
     };
     const [a] = rank([A, B], { weights: liveOnly });
@@ -189,7 +189,6 @@ describe('scoreQuotations — composite is a weighted roll-up with weakest-link 
     const priceOnly: CriteriaWeights = {
       price: 1,
       leadTime: 0,
-      compliance: 0,
       reliability: 0,
     };
     const [a, b] = rank([A, B], { weights: priceOnly });
@@ -250,12 +249,12 @@ describe('scoreQuotations — computes from data, not the stored fixture literal
   });
 
   it('the weights are a fixed governed constant summing to 1 (C6-LOCK)', () => {
-    const total =
-      CRITERIA_WEIGHTS.price +
-      CRITERIA_WEIGHTS.leadTime +
-      CRITERIA_WEIGHTS.compliance +
-      CRITERIA_WEIGHTS.reliability;
+    const total = CRITERIA_WEIGHTS.price + CRITERIA_WEIGHTS.leadTime + CRITERIA_WEIGHTS.reliability;
     expect(total).toBeCloseTo(1, 10);
+  });
+
+  it('CR-15 (2026-09-21) — price 40%, lead time 20%, reliability 40%, and no compliance weight', () => {
+    expect(CRITERIA_WEIGHTS).toEqual({ price: 0.4, leadTime: 0.2, reliability: 0.4 });
   });
 });
 
