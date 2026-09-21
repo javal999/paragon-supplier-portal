@@ -26,12 +26,13 @@ import {
   useNegotiationRounds,
   useQuotations,
   useRFQs,
+  useRfqComplianceGate,
   useSuppliers,
 } from '../services/query/hooks';
 import { useRfxCommand } from '../services/query/commandHooks';
 import { awardSplitRefusal, effectiveDeadline, reliabilityScoreFor } from '../services/transitions/rfxRules';
 import type { AwardLine } from '../services/sourcing/types';
-import { DeadlinePill, EmptyRow, OtifOrNoHistory, money, qty, rfxNow } from './rfx/rfxDisplay';
+import { DeadlinePill, EmptyRow, GateMarker, OtifOrNoHistory, money, qty, rfxNow } from './rfx/rfxDisplay';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ONE SOURCING EVENT — REQ-E03-03 and REQ-E03-05 (BUY).
@@ -73,6 +74,9 @@ const BuyerSourcingEvent: React.FC = () => {
   const rounds = useNegotiationRounds();
   const awards = useAwards();
   const suppliers = useSuppliers();
+  // CR-23 — who passes the compliance gate on THIS event. Read from the same
+  // model the award verb refuses on, so the page and the verb cannot disagree.
+  const gates = useRfqComplianceGate(rfqId);
   const negotiate = useVerbAvailability('rfq:negotiate');
   const awardVerb = useVerbAvailability('rfq:award');
   // REQ-E03-03 BR-05 — moving the response window is the PUBLISH authority, the
@@ -103,22 +107,30 @@ const BuyerSourcingEvent: React.FC = () => {
     return allQuotes.filter((q) => !superseded.has(q.id));
   }, [allQuotes]);
 
+  const gateOf = (supplierId: string) => gates.data?.items.find((g) => g.supplierId === supplierId);
+  /** REQ-E03-05 BR-01a — only a supplier that PASSES the gate is scored or awardable.
+   *  No gate read yet = not qualified: a pass is never assumed. */
+  const qualifies = (supplierId: string) => gateOf(supplierId)?.passes === true;
+  const qualified = useMemo(
+    () => current.filter((q) => gates.data?.items.some((g) => g.supplierId === q.supplierId && g.passes)),
+    [current, gates.data],
+  );
+
   const scoring = useMemo(
     () =>
       scoreQuotations(
-        current.map((q) => ({
+        qualified.map((q) => ({
           id: q.id,
           unitPrice: q.unitPrice,
           currency: q.currency ?? BASE_CURRENCY,
           leadTimeDays: q.leadTimeDays,
-          complianceScore: q.complianceScore,
           // CR-15 — reliability IS the supplier's OTIF; no history scores 50.
           reliabilityScore: reliabilityScoreFor(supplierOtif(q.supplierId)),
         })),
         { pins: rfq?.fxPins, now: new Date(rfxNow()) },
       ),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [current, rfq?.fxPins, suppliers.data],
+    [qualified, rfq?.fxPins, suppliers.data],
   );
   const scoreById = useMemo(
     () => new Map(scoring.kind === 'scored' ? scoring.scores.map((s) => [s.quoteId, s] as const) : []),
@@ -126,7 +138,7 @@ const BuyerSourcingEvent: React.FC = () => {
   );
   const bestId = scoring.kind === 'scored' ? (scoring.scores.find((s) => s.topRanked)?.quoteId ?? null) : null;
 
-  if (rfqs.isPending || quotes.isPending) return <LoadingState breadcrumb={crumb} />;
+  if (rfqs.isPending || quotes.isPending || gates.isPending) return <LoadingState breadcrumb={crumb} />;
   if (rfqs.isError) return <ErrorState breadcrumb={crumb} error={rfqs.error} onRetry={() => rfqs.refetch()} />;
   if (!rfq) return <NotFound />;
 
@@ -135,7 +147,7 @@ const BuyerSourcingEvent: React.FC = () => {
   const currency = rfq.currency;
 
   /** The award lines the form currently describes. */
-  const awardLines: AwardLine[] = current
+  const awardLines: AwardLine[] = qualified
     .map((q) => {
       const pct = Number(shares[q.id]);
       if (!Number.isFinite(pct) || pct <= 0) return null;
@@ -152,6 +164,8 @@ const BuyerSourcingEvent: React.FC = () => {
     .filter((l): l is AwardLine => l !== null);
 
   const splitRefusal = awardLines.length > 0 ? awardSplitRefusal(awardLines) : null;
+  /** BL-64 — quotes exist and not one comes from a supplier passing CR-23: nothing can be awarded. */
+  const noneAwardable = current.length > 0 && qualified.length === 0;
   const departs = bestId !== null && awardLines.length > 0 && !awardLines.some((l) => l.quotationId === bestId);
 
   const run = (vars: Parameters<typeof command.mutate>[0], successKey: string) =>
@@ -208,7 +222,13 @@ const BuyerSourcingEvent: React.FC = () => {
               const own = effectiveDeadline(rfq.responseDeadline, rfq.inviteeDeadlines ?? [], supplierId);
               return (
                 <TableRow key={supplierId} data-testid={`event-invitee-${supplierId}`}>
-                  <TableCell>{supplierName(supplierId)}</TableCell>
+                  <TableCell>
+                    {supplierName(supplierId)}
+                    {/* BR-06 — still invited and still able to quote; it cannot be awarded. */}
+                    <div className="mt-1">
+                      <GateMarker gate={gateOf(supplierId)} testId={`event-gate-${supplierId}`} />
+                    </div>
+                  </TableCell>
                   <TableCell>
                     <OtifOrNoHistory otif={supplierOtif(supplierId)} testId={`event-otif-${supplierId}`} />
                   </TableCell>
@@ -370,7 +390,6 @@ const BuyerSourcingEvent: React.FC = () => {
                   ['rfx.cmp.row.payment', (id: string) => byId(current, id).paymentTermsOffered],
                   ['rfx.cmp.row.priceScore', (id: string) => String(scoreById.get(id)?.priceScore ?? '—')],
                   ['rfx.cmp.row.leadTimeScore', (id: string) => String(scoreById.get(id)?.leadTimeScore ?? '—')],
-                  ['rfx.cmp.row.complianceScore', (id: string) => String(scoreById.get(id)?.complianceScore ?? '—')],
                 ] as const
               ).map(([labelKey, render]) => (
                 <TableRow key={labelKey} data-testid={`cmp-row-${labelKey}`}>
@@ -382,6 +401,16 @@ const BuyerSourcingEvent: React.FC = () => {
                   ))}
                 </TableRow>
               ))}
+              {/* CR-23 — compliance is a GATE, not a weighted axis: this row
+                  says who is scored and names why a supplier is not. */}
+              <TableRow data-testid="cmp-row-gate">
+                <TableCell className="text-sm text-text-secondary">{t('rfx.cmp.row.gate')}</TableCell>
+                {current.map((q) => (
+                  <TableCell key={q.id}>
+                    <GateMarker gate={gateOf(q.supplierId)} showPass testId={`cmp-gate-${q.supplierId}`} />
+                  </TableCell>
+                ))}
+              </TableRow>
               {/* The reliability axis names its source, because "50" with no
                   explanation reads as a measurement rather than a default. */}
               <TableRow data-testid="cmp-row-reliability">
@@ -403,12 +432,24 @@ const BuyerSourcingEvent: React.FC = () => {
                 </TableCell>
                 {current.map((q) => (
                   <TableCell key={q.id} className={q.id === bestId ? 'bg-success-soft' : ''}>
-                    <Data className="font-semibold">{scoreById.get(q.id)?.composite ?? '—'}</Data>
+                    {qualifies(q.supplierId) ? (
+                      <Data className="font-semibold">{scoreById.get(q.id)?.composite ?? '—'}</Data>
+                    ) : (
+                      // BR-01a — the quote stays visible; it is not scored.
+                      <span className="text-xs text-text-tertiary" data-testid={`cmp-not-scored-${q.supplierId}`}>
+                        {t('rfx.gate.notScored')}
+                      </span>
+                    )}
                   </TableCell>
                 ))}
               </TableRow>
             </tbody>
           </Table>
+        )}
+        {current.length > 0 && qualified.length === 0 && scoring.kind === 'scored' && (
+          <p className="px-4 py-2 text-xs text-warning-hover" data-testid="cmp-none-qualified">
+            {t('rfx.gate.noneQualified')}
+          </p>
         )}
         {current.length === 1 && (
           <p className="px-4 py-2 text-xs text-text-tertiary" data-testid="cmp-single">
@@ -689,7 +730,16 @@ const BuyerSourcingEvent: React.FC = () => {
           </div>
         ) : (
           <div className="p-4 space-y-3">
-            <p className="text-xs text-text-tertiary">{t('rfx.award.splitHint')}</p>
+            {/* BL-64 / BR-01a — every quoting supplier fails the gate: say the
+                award is impossible, rather than show a split hint and a form no
+                entry can ever complete. The table below still names each reason. */}
+            {noneAwardable ? (
+              <p className="text-sm text-warning-hover" role="status" data-testid="award-none-qualified">
+                {t('rfx.gate.noAward')}
+              </p>
+            ) : (
+              <p className="text-xs text-text-tertiary">{t('rfx.award.splitHint')}</p>
+            )}
             <Table>
               <TableHeader>
                 <TableHeaderCell>{t('rfx.award.col.supplier')}</TableHeaderCell>
@@ -704,6 +754,12 @@ const BuyerSourcingEvent: React.FC = () => {
                       <Data>{scoreById.get(q.id)?.composite ?? '—'}</Data>
                     </TableCell>
                     <TableCell>
+                      {/* BR-01a — a supplier that fails the gate cannot be
+                          selected: no share field, and the reason instead. The
+                          verb refuses it too, so this is the message, not the lock. */}
+                      {!qualifies(q.supplierId) ? (
+                        <GateMarker gate={gateOf(q.supplierId)} testId={`award-gate-${q.supplierId}`} />
+                      ) : (
                       <input
                         type="number"
                         min={0}
@@ -713,6 +769,7 @@ const BuyerSourcingEvent: React.FC = () => {
                         onChange={(e) => setShares((prev) => ({ ...prev, [q.id]: e.target.value }))}
                         className="w-24 bg-white border border-border-input rounded-md px-3 h-9 text-sm focus:outline-none focus:border-action"
                       />
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -744,26 +801,28 @@ const BuyerSourcingEvent: React.FC = () => {
                 {t('rfx.award.splitHint')}
               </p>
             )}
-            <Button
-              variant="outline"
-              disabled={awardLines.length === 0 || splitRefusal !== null || (departs && !awardReason.trim())}
-              data-testid="award-confirm"
-              onClick={() =>
-                run(
-                  {
-                    verb: 'award',
-                    rfqId: rfq.id,
-                    awardedQuotationId: awardLines[0].quotationId,
-                    awardedSupplierId: awardLines[0].supplierId,
-                    awardLines,
-                    ...(awardReason.trim() ? { awardReason: awardReason.trim() } : {}),
-                  },
-                  'rfx.toast.awarded',
-                )
-              }
-            >
-              {t('rfx.award.confirm')}
-            </Button>
+            {!noneAwardable && (
+              <Button
+                variant="outline"
+                disabled={awardLines.length === 0 || splitRefusal !== null || (departs && !awardReason.trim())}
+                data-testid="award-confirm"
+                onClick={() =>
+                  run(
+                    {
+                      verb: 'award',
+                      rfqId: rfq.id,
+                      awardedQuotationId: awardLines[0].quotationId,
+                      awardedSupplierId: awardLines[0].supplierId,
+                      awardLines,
+                      ...(awardReason.trim() ? { awardReason: awardReason.trim() } : {}),
+                    },
+                    'rfx.toast.awarded',
+                  )
+                }
+              >
+                {t('rfx.award.confirm')}
+              </Button>
+            )}
             <p className="text-xs text-text-tertiary">{t('rfx.award.noPo')}</p>
           </div>
         )}

@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 2.2, 2026-09-21 (inventory feedback BL-59 to BL-63, branch `feat/inventory-feedback`) |
+| Version | 2.3, 2026-09-21 |
 | Compares | `SUPPLIER-HUB-REQUIREMENTS.md` v0.5 with the prototype on branch `feat/supplier-hub-mvp` (pull request "Supplier Hub MVP build") |
 | Owner decisions | 2026-09-17, recorded in section 9 of the requirements (RFX-1 to RFX-3, GAP-1 to GAP-4, E06-R) |
 | Rule | This is the **only** document that describes what the prototype does for the Supplier Hub. The PRD and the requirements describe the product and never the code. Update this file when a build item lands |
@@ -24,7 +24,7 @@ Everything runs on sample data held in the browser. There is no backend, no SAP 
 | REQ-E03-02 RFI | Built | Template sections A–F, question library with required and weighted questions, drafts hidden from the buyer, deadline extension, answers reused by a later RFQ. Creation follows section 3.6a of the requirements, which the build already matches: central library, edited per event, no save-as-template, no approval before sending. Attachment questions are text fields: there is no file store |
 | REQ-E03-03 RFQ | Built | From scratch, from an RFI, or from a purchase requisition; price per item; response deadline enforced; quote privacy |
 | REQ-E03-04 RFP | Built | Standard term list in 7 groups, Comply or Deviate with a comment required on a deviation, term-by-term comparison |
-| REQ-E03-05 Comparison, negotiation, award | Built | Weighted score (CR-15) with reliability from measured OTIF, currency rule (CR-16), negotiation rounds restricted to shortlisted suppliers with every quote version kept, split award that must total 100% per item, reason required when the award leaves the best-scored quote. Sourcing request (E03.01) is still not detailed in the requirements |
+| REQ-E03-05 Comparison, negotiation, award | Built | Compliance gate at award (CR-23: halal, BPOM, GMP / ISO 22716 per material, supplier status, minimum OTIF — placeholder 80%, "No history" passes); a failing supplier can be invited and quote but gets no award field, and the award verb refuses it. Weighted score (CR-15, price 40 / lead time 20 / reliability 40) over qualified suppliers only, with reliability from measured OTIF, currency rule (CR-16), negotiation rounds restricted to shortlisted suppliers with every quote version kept, split award that must total 100% per item, reason required when the award leaves the best-scored quote. Sourcing request (E03.01) is still not detailed in the requirements |
 | REQ-E06-01 Forecast publication | Built | Weekly periods for packaging then monthly, monthly for raw material; Firm / Trade-off / Forecast zones; versions kept with a Changes view; spreadsheet download; view tracking and re-publication on the PTI Forecasts page |
 | REQ-E06-02 Commitment | Built | Pre-filled with the forecast, upside, acknowledgement for Forecast periods, reason enforced by the system when below forecast, CR-21 tolerance, split deadline, spreadsheet upload, carry-forward on re-publication |
 | REQ-E06-03 Gap monitoring | Built | Gap quantity and %, CR-22 colours, cumulative view, ranked exception list, Accept / Request revision / Move demand, reminders as Home tasks, supplier coverage as an estimate |
@@ -112,9 +112,34 @@ The `CR-` rules are implemented in the hub's own modules and covered by their ow
 | Forecast periods, zones, commitment tolerance, gap colours (CR-21, CR-22) | `src/services/sdc/` forecast rules with `forecastConfig.ts` |
 | Goods receipt result, invoice matching, due date (CR-11 to CR-14) | `src/services/transitions/grRollup.ts`, `invoiceRollup.ts`, invoice projection |
 | Quote score and currency rule (CR-15, CR-16) | `src/lib/quoteScore.ts`, `src/lib/fxPin.ts` |
+| Compliance gate (CR-23) | `src/services/sourcing/complianceGate.ts`, values in `complianceGateConfig.ts` |
 | CFOT, OTIF, rejections, score and grade (CR-17) | `src/services/data/performanceRules.ts` |
 | Spreadsheet number and batch checks (CR-18, CR-19) | `src/lib/localeNumber.ts`, stock upload validation |
 | Integration retry classes (CR-20) | `src/services/transitions/settleFaults.ts` |
+
+### 3.1 Compliance gate demo scenarios
+
+Sample data (BL-64) so a buyer can see every CR-23 outcome on the sourcing pages (`/buyer/sourcing`, then an RFQ). The five sample RFQs are titled "Compliance gate demo — … (sample)"; the suppliers marked "(illustrative)" exist only for this demo. Fixtures: `src/services/data/mock/fixtures/gateDemo.ts`; each row is pinned by name in `gateDemo.test.ts`. Demo date: the declared present, 31 Aug 2026.
+
+| Scenario | RFQ | Supplier | Gate result |
+|---|---|---|---|
+| Halal certificate expired (the day before the demo date) | RFQ-2026-016 (Closed) | sup-018 PT Sample Raw Material Surabaya | Fails: halal |
+| Halal certificate expires on the demo date (still valid) | RFQ-2026-016 | sup-017 PT Sample Halal Raw Material Jakarta | Passes |
+| Halal certificate missing | RFQ-2026-016 | sup-009 Sample Vitamins Co. | Fails: halal |
+| GMP / ISO 22716 missing on a raw material | RFQ-2026-016 | sup-013 PT Sample Preform Works | Fails: GMP |
+| Mixed pass and fail; split award among passing suppliers | RFQ-2026-016 | sup-001 and sup-017 (e.g. 60 / 40) | Award recorded; a line naming sup-018 is refused |
+| BPOM missing where BPOM applies | RFQ-2026-017 (Closed) | sup-016 PT Sample Active Ingredient Indonesia | Fails: BPOM |
+| Registry row valid, supplier master holds no halal certificate | RFQ-2026-017 | sup-005 (registry row creg-0015) | Passes |
+| Several criteria at once | RFQ-2026-017, RFQ-2026-020 | sup-011 (halal, BPOM, GMP); sup-004 (halal, BPOM) | Fails |
+| Registry row expired, supplier master says valid | RFQ-2026-018 (Open, still collecting quotes) | sup-002 (registry row creg-0017) | Fails: halal |
+| OTIF exactly at the 80% minimum (4 of 5 call-offs) | RFQ-2026-019 (Closed) | sup-019 PT Sample Preform Bekasi | Passes |
+| OTIF just below the minimum (11 of 14, shown 79%) | RFQ-2026-019 | sup-020 PT Sample PET Bottle Karawang | Fails: OTIF |
+| Suspended | RFQ-2026-019 | sup-021 PT Sample Packaging Medan | Fails: status |
+| Blacklisted | RFQ-2026-019 | sup-022 PT Sample Closures Batam | Fails: status |
+| Material needing no certificate (packaging); no certificates and no OTIF history | RFQ-2026-019 | sup-011 Sample Salicylics & Niacinamide Ltd. | Passes |
+| Every bidder fails; award impossible, and the page says so | RFQ-2026-020 (Closed) | sup-011, sup-004, sup-009 | No award possible |
+
+Earlier demo rows still hold: RFQ-2026-003 (sup-010 halal expired), RFQ-2026-014 (sup-007 OTIF 50%, sup-008 OTIF 0%, sup-013 no history), RFQ-2026-004 (sup-004 halal and BPOM). The OTIF figures are calculated from sample call-offs and goods receipts (PO-2026-00191, PO-2026-00192), not typed in. Suspended and blacklisted suppliers cannot be invited; sup-021 and sup-022 represent a status change after the quote.
 
 ---
 

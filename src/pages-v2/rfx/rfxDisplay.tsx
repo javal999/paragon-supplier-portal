@@ -14,6 +14,8 @@ import { formatDate } from '../../lib/format';
 import { sdcClock } from '../../services/sdc/clock';
 import { isClosingSoon, isPastDeadline } from '../../services/transitions/rfxRules';
 import type { InviteeResponseState } from '../../services/sourcing/views';
+import type { GateResult } from '../../services/sourcing/complianceGate';
+import { GATE_MIN_OTIF_PCT } from '../../services/sourcing/complianceGateConfig';
 
 /** The RFx lane's "now" — the same simulated clock the read model uses. */
 export const rfxNow = (): string => sdcClock.now();
@@ -109,3 +111,36 @@ export const money = (value: number, currency: string): string =>
 
 /** A plain quantity. */
 export const qty = (value: number): string => value.toLocaleString('en-US', { maximumFractionDigits: 2 });
+
+/**
+ * CR-23 — the compliance-gate marker (REQ-E03-01 BR-06, REQ-E03-05 BR-01a).
+ *
+ * ONE component so the invitee list, the comparison and the award form name the
+ * same failed criteria in the same words. It renders nothing for a supplier that
+ * passes unless `showPass` asks for it, and nothing when no gate was read —
+ * absence of a result is never drawn as a pass or a fail.
+ */
+export const GateMarker: React.FC<{ gate: GateResult | undefined; showPass?: boolean; testId?: string }> = ({
+  gate,
+  showPass = false,
+  testId,
+}) => {
+  const { t } = useTranslation();
+  if (!gate) return null;
+  if (gate.passes) {
+    return showPass ? (
+      <span data-testid={testId}>
+        <StatusPill variant="success">{t('rfx.gate.passes')}</StatusPill>
+      </span>
+    ) : null;
+  }
+  const criteria = gate.failed
+    .map((c) => t(`rfx.gate.criterion.${c}`, { min: GATE_MIN_OTIF_PCT }))
+    .join(', ');
+  return (
+    <span className="inline-flex flex-col items-start gap-0.5" data-testid={testId}>
+      <StatusPill variant="warning">{t('rfx.gate.cannotAward')}</StatusPill>
+      <span className="text-xs font-normal normal-case text-warning-hover">{t('rfx.gate.fails', { criteria })}</span>
+    </span>
+  );
+};

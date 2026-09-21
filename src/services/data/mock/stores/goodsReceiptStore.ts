@@ -14,6 +14,10 @@
 
 import { mockGoodsReceipts } from '../../../../data/mockGoodsReceipts';
 import type { GoodsReceipt } from '../../../../data/mockGoodsReceipts';
+// BL-64 — the delivery history behind the compliance gate's OTIF boundary.
+import { GATE_DEMO_GOODS_RECEIPTS } from '../fixtures/gateDemo';
+
+const SEED: readonly GoodsReceipt[] = [...mockGoodsReceipts, ...GATE_DEMO_GOODS_RECEIPTS];
 
 function clone(g: GoodsReceipt): GoodsReceipt {
   return {
@@ -22,7 +26,7 @@ function clone(g: GoodsReceipt): GoodsReceipt {
   };
 }
 
-let rows: GoodsReceipt[] = mockGoodsReceipts.map(clone);
+let rows: GoodsReceipt[] = SEED.map(clone);
 let seq = 0;
 let matSeq = 0;
 
@@ -52,7 +56,7 @@ export const goodsReceiptStore = {
     return `MAT-DOC-${600000 + matSeq}`;
   },
   reset(): void {
-    rows = mockGoodsReceipts.map(clone);
+    rows = SEED.map(clone);
     seq = 0;
     matSeq = 0;
   },

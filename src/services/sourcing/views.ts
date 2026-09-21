@@ -13,6 +13,18 @@
 // ────────────────────────────────────────────────────────────────────────────
 
 import type { RfiEvent, RfiResponse, RfpEvent, RfpResponse, NegotiationRound, AwardRecord } from './types';
+import type { GateCriterion } from './complianceGate';
+
+/**
+ * CR-23 — one supplier's compliance-gate result on one sourcing event: every
+ * invitee and every bidder. DERIVED at read from the certificates, the status
+ * and the measured OTIF; a failing supplier can quote but cannot be awarded.
+ */
+export interface RfqSupplierGateView {
+  readonly supplierId: string;
+  readonly passes: boolean;
+  readonly failed: readonly GateCriterion[];
+}
 
 /** What one invitee has done with its invitation. */
 export type InviteeResponseState = 'notStarted' | 'draft' | 'submitted';
