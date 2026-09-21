@@ -259,9 +259,9 @@ describe('REQ-E03-04 — terms as rows, suppliers as columns, deviations highlig
 const renderEvent = (rfqId: string) =>
   renderWithProviders(
     <Routes>
-      <Route path="/buyer/sourcing/rfq/:rfqId" element={<BuyerSourcingEvent />} />
+      <Route path="/buyer/rfq/:rfqId" element={<BuyerSourcingEvent />} />
     </Routes>,
-    { identity: BUYER_SEAT, route: `/buyer/sourcing/rfq/${rfqId}` },
+    { identity: BUYER_SEAT, route: `/buyer/rfq/${rfqId}` },
   );
 
 const openEvent = () => renderEvent('rfq-014');

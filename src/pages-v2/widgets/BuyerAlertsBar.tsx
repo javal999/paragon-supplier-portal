@@ -70,7 +70,7 @@ const BuyerAlertsBar: React.FC = () => {
         label: t('widget.alertsBar.flag.rfqAward'),
         count: d.pendingAwardRfqs(rfqItems, quoteItems).length,
         severity: d.rfqAwardTier(rfqItems, quoteItems, now),
-        to: '/buyer/sourcing',
+        to: '/buyer/rfq',
       },
       {
         label: t('widget.alertsBar.flag.receiptsReview'),

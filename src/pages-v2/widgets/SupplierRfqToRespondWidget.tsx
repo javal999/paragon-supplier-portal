@@ -101,7 +101,7 @@ const SupplierRfqToRespondWidget: React.FC = () => {
           : undefined
       }
       actionLabel={count > 0 ? t('widget.rfqRespond.action') : undefined}
-      onAction={count > 0 ? () => navigate('/supplier/rfqs') : undefined}
+      onAction={count > 0 ? () => navigate('/supplier/rfq') : undefined}
       expandedRows={expandedRows}
     />
   );

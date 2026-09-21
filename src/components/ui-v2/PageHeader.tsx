@@ -8,6 +8,8 @@ interface PageHeaderProps {
   title: string;
   subtitle?: string;
   actions?: React.ReactNode;
+  /** How many items the page lists, shown as a pill beside the title. */
+  count?: number;
 }
 
 // The section label comes from the menu, never from the page (NV-05): a page
@@ -28,6 +30,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({
   title,
   subtitle,
   actions,
+  count,
 }) => {
   const inRouter = useInRouterContext();
   return (
@@ -36,9 +39,19 @@ const PageHeader: React.FC<PageHeaderProps> = ({
         <div className="text-eyebrow text-text-tertiary uppercase">
           {inRouter ? <SectionCrumb fallback={breadcrumb} /> : breadcrumb.join(' · ')}
         </div>
-        <h1 className="text-title text-text-primary mt-1">
-          {title}
-        </h1>
+        <div className="flex items-center gap-3 mt-1">
+          <h1 className="text-title text-text-primary">
+            {title}
+          </h1>
+          {typeof count === 'number' && (
+            <span
+              data-testid="page-count"
+              className="inline-flex items-center justify-center rounded-full px-2.5 h-6 text-sm font-semibold bg-action-soft text-action-hover"
+            >
+              {count}
+            </span>
+          )}
+        </div>
         {subtitle ? (
           <p className="text-base text-text-secondary mt-2 max-w-prose">
             {subtitle}

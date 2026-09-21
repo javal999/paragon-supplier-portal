@@ -7,9 +7,6 @@
 
 export const rfxEn: Record<string, string> = {
   // — Shared chrome ————————————————————————————————————————————————————
-  'rfx.tabs.rfi': 'Information requests',
-  'rfx.tabs.rfq': 'Quotation requests',
-  'rfx.tabs.rfp': 'Proposal requests',
   'rfx.asOf': 'As of',
   'rfx.deadline': 'Response deadline',
   'rfx.deadline.own': 'Your deadline',
@@ -371,9 +368,6 @@ export const rfxEn: Record<string, string> = {
 };
 
 export const rfxId: Record<string, string> = {
-  'rfx.tabs.rfi': 'Permintaan informasi',
-  'rfx.tabs.rfq': 'Permintaan penawaran harga',
-  'rfx.tabs.rfp': 'Permintaan proposal',
   'rfx.asOf': 'Per',
   'rfx.deadline': 'Batas waktu jawaban',
   'rfx.deadline.own': 'Batas waktu Anda',

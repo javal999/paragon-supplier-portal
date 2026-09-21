@@ -7,7 +7,8 @@ export const rfqsEn: Record<string, string> = {
   'rfqs.crumb.section': 'ACQUIRE',
   'rfqs.crumb.page': 'MY RFQS & QUOTES',
   // header + meta
-  'rfqs.header.title': 'My Sourcing Events',
+  'rfqs.header.title': 'Quotation requests',
+  'rfqs.rounds.link': 'Revised quotes (negotiation rounds)',
   'rfqs.header.subtitle': 'RFQs received from Paragon Corp procurement team — {{supplier}}.',
   'rfqs.meta.event.one': 'open event',
   'rfqs.meta.event.other': 'open events',
@@ -200,7 +201,8 @@ export const rfqsId: Record<string, string> = {
   'rfqs.crumb.section': 'PENGADAAN',
   'rfqs.crumb.page': 'RFQ & PENAWARAN SAYA',
   // header + meta
-  'rfqs.header.title': 'Acara Sourcing Saya',
+  'rfqs.header.title': 'Permintaan penawaran harga',
+  'rfqs.rounds.link': 'Penawaran revisi (putaran negosiasi)',
   'rfqs.header.subtitle': 'RFQ diterima dari tim pengadaan Paragon Corp — {{supplier}}.',
   'rfqs.meta.event.one': 'acara terbuka',
   'rfqs.meta.event.other': 'acara terbuka',

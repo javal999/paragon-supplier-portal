@@ -19,11 +19,10 @@ import { useVerbAvailability } from '../hooks/useVerbAvailability';
 import type { VerbAvailability } from '../services/transitions/handoff';
 import { useToast } from '../hooks/useToast';
 import { formatDate } from '../lib/format';
-import { useRfiEvents, useRfpEvents, useRFQs } from '../services/query/hooks';
+import { useRfiEvents } from '../services/query/hooks';
 import { useRfxCommand } from '../services/query/commandHooks';
 import { RFI_SECTION_ORDER } from '../services/sourcing/rfxConfig';
 import type { RfiEventView } from '../services/sourcing/views';
-import RfxTabs from './rfx/RfxTabs';
 import RfiCreateWizard from './rfx/RfiCreateWizard';
 import { DeadlinePill, EmptyRow, OtifOrNoHistory, ResponseStatePill, rfxNow } from './rfx/rfxDisplay';
 
@@ -59,8 +58,6 @@ const BuyerRfi: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const events = useRfiEvents();
-  const rfps = useRfpEvents();
-  const rfqs = useRFQs();
   const publish = useVerbAvailability('rfi:publish');
   const create = useVerbAvailability('rfi:create');
   const command = useRfxCommand();
@@ -92,17 +89,11 @@ const BuyerRfi: React.FC = () => {
 
   return (
     <AppShellV2>
-      <PageHeader breadcrumb={crumb} title={t('rfx.rfi.title')} subtitle={t('rfx.rfi.subtitle')} />
+      <PageHeader breadcrumb={crumb} title={t('rfx.rfi.title')} count={items.length} subtitle={t('rfx.rfi.subtitle')} />
       <PageMetaLine className="-mt-6 mb-4">
         {t('rfx.asOf')} <Data>{formatDate(rfxNow())}</Data>
         <SampleDataBadge className="ml-3 align-middle" />
       </PageMetaLine>
-
-      <RfxTabs
-        persona="buyer"
-        active="rfi"
-        counts={{ rfi: items.length, rfq: rfqs.data?.items.length ?? 0, rfp: rfps.data?.items.length ?? 0 }}
-      />
 
       {/* CE-01 — the buyer raises the event. A seat without `rfi:create` reads
           WHOSE act it is rather than losing the affordance silently (§72a). */}
@@ -177,7 +168,7 @@ const BuyerRfi: React.FC = () => {
         </Table>
       </div>
 
-      {open && <RfiDetail event={open} run={run} onCreateRfq={() => navigate(`/buyer/sourcing?rfi=${open.id}`)} extendFor={extendFor} setExtendFor={setExtendFor} extendOnly={extendOnly} setExtendOnly={setExtendOnly} canPublish={publish.kind === 'held'} publishAvailability={publish} />}
+      {open && <RfiDetail event={open} run={run} onCreateRfq={() => navigate(`/buyer/rfq?rfi=${open.id}`)} extendFor={extendFor} setExtendFor={setExtendFor} extendOnly={extendOnly} setExtendOnly={setExtendOnly} canPublish={publish.kind === 'held'} publishAvailability={publish} />}
 
       {wizardOpen && (
         <RfiCreateWizard

@@ -64,7 +64,7 @@ describe('SidebarV2 — hub sections (REQUIREMENTS §3.7)', () => {
   it('shows the supplier menu by task', () => {
     renderWithProviders(<SidebarV2 />, { identity: SUPPLIER, route: '/supplier/home' });
     const nav = screen.getByRole('navigation');
-    for (const name of ['To do', 'Purchase orders', 'Call-offs', 'Forecast & commitments', 'Invitations', 'Profile & documents']) {
+    for (const name of ['To do', 'Purchase orders', 'Call-offs', 'Forecast & commitments', 'RFI invitations', 'RFQ invitations', 'RFP invitations', 'Profile & documents']) {
       expect(within(nav).getByRole('button', { name })).toBeInTheDocument();
     }
     expect(within(nav).queryByRole('button', { name: 'Channel Inbox' })).toBeNull();

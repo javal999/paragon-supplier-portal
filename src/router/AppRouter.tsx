@@ -1,5 +1,6 @@
 import React, { lazy, Suspense } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
+import LegacyRedirect from './LegacyRedirect';
 import { CurrentIdentityProvider } from '../context/CurrentIdentityContext';
 import { mockIdentitySource } from '../context/identitySources';
 import LoadingState from '../components/ui-v2/LoadingState';
@@ -106,14 +107,20 @@ const AppRouter: React.FC = () => {
           <Route path="/marketplace/supplier/:id" element={<SupplierStorefrontV2 />} />
           <Route path="/buyer/order-summary" element={<BuyerOrderSummary />} />
           <Route path="/buyer/orders" element={<BuyerOrders />} />
-          <Route path="/buyer/sourcing" element={<BuyerSourcing />} />
-          {/* REQ-E03-02 / REQ-E03-04 / REQ-E03-05 — the other two event types and
-              one event's comparison, rounds and award. All under the SAME menu
-              item, so NV-03's "a menu item stays highlighted on its detail
-              pages" holds without a second sidebar entry. */}
-          <Route path="/buyer/sourcing/rfi" element={<BuyerRfi />} />
-          <Route path="/buyer/sourcing/rfp" element={<BuyerRfp />} />
-          <Route path="/buyer/sourcing/rfq/:rfqId" element={<BuyerSourcingEvent />} />
+          {/* Operator decision 2026-09-21 — RFI, RFQ and RFP are three modules,
+              each with its own menu item and route (reverses NV-06's one
+              sourcing item). An event's detail page sits under /buyer/rfq, so
+              NV-03's "a menu item stays highlighted on its detail pages" holds. */}
+          <Route path="/buyer/rfi" element={<BuyerRfi />} />
+          <Route path="/buyer/rfq" element={<BuyerSourcing />} />
+          <Route path="/buyer/rfq/:rfqId" element={<BuyerSourcingEvent />} />
+          <Route path="/buyer/rfp" element={<BuyerRfp />} />
+          {/* The retired paths redirect, keeping query, state and params, so old
+              links in tasks, toasts and notifications still land. */}
+          <Route path="/buyer/sourcing" element={<LegacyRedirect to="/buyer/rfq" />} />
+          <Route path="/buyer/sourcing/rfi" element={<LegacyRedirect to="/buyer/rfi" />} />
+          <Route path="/buyer/sourcing/rfp" element={<LegacyRedirect to="/buyer/rfp" />} />
+          <Route path="/buyer/sourcing/rfq/:rfqId" element={<LegacyRedirect to="/buyer/rfq/:rfqId" />} />
           {/* Phase A/1 — the recommend-first triage that precedes the plan-grid
               push. Plain DOM (no grid engine) — stays in the entry chunk. */}
           <Route path="/buyer/intake-review" element={<IntakeReview />} />
@@ -184,13 +191,17 @@ const AppRouter: React.FC = () => {
           <Route path="/supplier/comm-hub" element={<CommHubInbound />} />
           <Route path="/supplier/order-summary" element={<SupplierOrderSummary />} />
           <Route path="/supplier/orders" element={<SupplierOrders />} />
-          <Route path="/supplier/rfqs" element={<SupplierRFQsV2 />} />
-          {/* REQ-E03-02 / REQ-E03-04 / REQ-E03-05 — under the same "Invitations"
-              menu item: information requests, proposal requests, and the
-              supplier's own negotiation thread. */}
-          <Route path="/supplier/rfqs/rfi" element={<SupplierRfi />} />
-          <Route path="/supplier/rfqs/rfp" element={<SupplierRfp />} />
-          <Route path="/supplier/rfqs/rounds" element={<SupplierNegotiations />} />
+          {/* Operator decision 2026-09-21 — one route per event type. The
+              supplier's negotiation thread sits under /supplier/rfq, so the RFQ
+              menu item stays highlighted on it (NV-03). */}
+          <Route path="/supplier/rfi" element={<SupplierRfi />} />
+          <Route path="/supplier/rfq" element={<SupplierRFQsV2 />} />
+          <Route path="/supplier/rfq/rounds" element={<SupplierNegotiations />} />
+          <Route path="/supplier/rfp" element={<SupplierRfp />} />
+          <Route path="/supplier/rfqs" element={<LegacyRedirect to="/supplier/rfq" />} />
+          <Route path="/supplier/rfqs/rfi" element={<LegacyRedirect to="/supplier/rfi" />} />
+          <Route path="/supplier/rfqs/rfp" element={<LegacyRedirect to="/supplier/rfp" />} />
+          <Route path="/supplier/rfqs/rounds" element={<LegacyRedirect to="/supplier/rfq/rounds" />} />
           {/* REQ-E06-01 / REQ-E06-02 — the supplier's forecast versions and commitments.
               The earlier responses and shipment reports stay reachable beneath it;
               its Stock tab only points to the Stock page (BL-60, one stock entry). */}

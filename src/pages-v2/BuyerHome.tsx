@@ -230,7 +230,7 @@ const BuyerHome: React.FC = () => {
           (r) => !r.closed && r.awaiting > 0 && isClosingSoon(r.deadline, rfxNow()),
         ).length,
         severity: 'warning',
-        to: '/buyer/sourcing',
+        to: '/buyer/rfq',
       },
       {
         id: 'rfq-award',
@@ -238,7 +238,7 @@ const BuyerHome: React.FC = () => {
         label: t('hub.home.task.rfqAward'),
         count: d.pendingAwardRfqs(rfqItems, quoteItems).length,
         severity: d.rfqAwardTier(rfqItems, quoteItems, now),
-        to: '/buyer/sourcing',
+        to: '/buyer/rfq',
       },
       {
         // REQ-E07-08 AC-02 — only a RETRYABLE failure is a task: a business

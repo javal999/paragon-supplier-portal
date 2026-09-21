@@ -70,9 +70,9 @@ const quote = (supplierId: string) =>
 const renderEvent = (rfqId = RFQ) =>
   renderWithProviders(
     <Routes>
-      <Route path="/buyer/sourcing/rfq/:rfqId" element={<BuyerSourcingEvent />} />
+      <Route path="/buyer/rfq/:rfqId" element={<BuyerSourcingEvent />} />
     </Routes>,
-    { identity: BUYER_SEAT, route: `/buyer/sourcing/rfq/${rfqId}` },
+    { identity: BUYER_SEAT, route: `/buyer/rfq/${rfqId}` },
   );
 
 describe('REQ-E03-03 BR-05 — the buyer moves the response window', () => {
@@ -165,9 +165,9 @@ describe('REQ-E03-03 BR-05 — the buyer moves the response window', () => {
   it('a seat without `rfq:publish` reads WHOSE act it is, and the control is shut', async () => {
     renderWithProviders(
       <Routes>
-        <Route path="/buyer/sourcing/rfq/:rfqId" element={<BuyerSourcingEvent />} />
+        <Route path="/buyer/rfq/:rfqId" element={<BuyerSourcingEvent />} />
       </Routes>,
-      { identity: RECEIVING_SEAT, route: `/buyer/sourcing/rfq/${RFQ}` },
+      { identity: RECEIVING_SEAT, route: `/buyer/rfq/${RFQ}` },
     );
     const notice = await screen.findByTestId('handoff-rfq-extend');
     expect(notice).toHaveAttribute('data-handoff', 'withheld');
