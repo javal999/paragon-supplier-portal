@@ -276,7 +276,7 @@ const OSLO_SUP015: readonly QuotationItemQuote[] = [
  * days (it read 24): at 24 the six-day gap outweighed a 3% price lead on the
  * lead-time axis, so the best COMPOSITE never changed between breaks and the
  * evaluation-break selector had nothing to show. At 20 the ranking follows the
- * price: sup-013 is best-scored at 3K and 5K, sup-015 from 10K.
+ * price: sup-013 is best-scored at 3K and 5K, sup-015 from 7K.
  */
 const OSLO_SUP013: readonly QuotationItemQuote[] = [
   {
