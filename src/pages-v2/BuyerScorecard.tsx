@@ -13,7 +13,6 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  ReferenceLine,
   Legend,
 } from 'recharts';
 import {
@@ -44,10 +43,9 @@ import ProvenanceMarker from '../components/ui-v2/ProvenanceMarker';
 import FilterChipsBar from '../components/ui-v2/FilterChipsBar';
 import KpiCard from '../components/ui-v2/KpiCard';
 import { usePerformance } from './performance/performanceDisplay';
+import KpiDefinitions from './performance/KpiDefinitions';
 import {
   GRADE_BANDS,
-  OTIF_TARGET_PCT,
-  performanceStatus,
   PERFORMANCE_PERIODS,
   type PerformancePeriod,
 } from '../services/data/performanceRules';
@@ -108,7 +106,6 @@ const COMM_STATUS_VARIANT: Record<CommLogEntry['status'], 'success' | 'warning' 
 // not page-local hex. Values unchanged — pure de-dup.
 const TOKEN_TEAL = CHART_SERIES[0];
 const TOKEN_MID = CHART_MID;
-const TOKEN_SUCCESS = CHART_SEMANTIC.success;
 const TOKEN_DANGER = CHART_SEMANTIC.danger;
 const TOKEN_MUTED = CHART_SEMANTIC.neutral;
 const TOKEN_BORDER = CHART_GRID;
@@ -317,35 +314,22 @@ const BuyerScorecard: React.FC = () => {
             measure.otif.pct === null ? (
               t('rfx.noHistory')
             ) : (
-              // CR-17 — the target status decides the colour, from the ONE
-              // threshold source every target bar on this page already reads.
-              <span style={{ color: TARGET_STATUS[performanceStatus(measure.otif.pct)!].text }}>
-                {measure.otif.pct}%
-              </span>
+              // BL-53 — no target colour: BL-19 set no target yet, only a
+              // baseline period, so the figure is not judged against 90%.
+              `${measure.otif.pct}%`
             )
           }
           subtitle={
             <span className="text-text-tertiary" data-testid="scorecard-otif">
               {measure.otif.pct === null
                 ? t('perf.noMeasured')
-                : t('perf.measuredCallOffs', {
-                    count: measure.otif.measured,
-                    target: OTIF_TARGET_PCT,
-                  })}
+                : t('perf.measuredCallOffs', { count: measure.otif.measured })}
             </span>
           }
         />
         <KpiCard
           eyebrow={t('perf.cfot')}
-          value={
-            measure.cfot.pct === null ? (
-              t('rfx.noHistory')
-            ) : (
-              <span style={{ color: TARGET_STATUS[performanceStatus(measure.cfot.pct)!].text }}>
-                {measure.cfot.pct}%
-              </span>
-            )
-          }
+          value={measure.cfot.pct === null ? t('rfx.noHistory') : `${measure.cfot.pct}%`}
           subtitle={
             <span className="text-text-tertiary" data-testid="scorecard-cfot">
               {measure.cfot.pct === null
@@ -374,6 +358,9 @@ const BuyerScorecard: React.FC = () => {
           }
         />
       </div>
+
+      {/* BL-53 — the definitions behind OTIF and CFOT, and "Baseline period". */}
+      <KpiDefinitions />
 
       {/* DP-1: the supplier identity hero restyles from a solid navy fill to a
           light surface — navy text, teal accents, semantic grade badge kept. */}
@@ -551,18 +538,8 @@ const BuyerScorecard: React.FC = () => {
                 tickFormatter={(v: number) => `${v}h`}
               />
               <Tooltip content={<ChartTooltip />} />
-              <ReferenceLine
-                yAxisId="pct"
-                y={90}
-                stroke={TOKEN_SUCCESS}
-                strokeDasharray="4 2"
-                label={{
-                  value: t('buyerScorecard.trends.otifTarget'),
-                  fill: TOKEN_SUCCESS,
-                  fontSize: 9,
-                  position: 'insideTopRight',
-                }}
-              />
+              {/* BL-53 — the "OTIF target 90%" reference line is retired: BL-19
+                  set no target yet, only a baseline period. */}
               <Line
                 yAxisId="pct"
                 type="monotone"

@@ -39,10 +39,9 @@ import ProvenanceMarker from '../components/ui-v2/ProvenanceMarker';
 import FilterChipsBar from '../components/ui-v2/FilterChipsBar';
 import KpiCard from '../components/ui-v2/KpiCard';
 import { usePerformance } from './performance/performanceDisplay';
+import KpiDefinitions from './performance/KpiDefinitions';
 import {
   GRADE_BANDS,
-  OTIF_TARGET_PCT,
-  performanceStatus,
   PERFORMANCE_PERIODS,
   type PerformancePeriod,
 } from '../services/data/performanceRules';
@@ -319,35 +318,22 @@ const SupplierPerformance: React.FC = () => {
             measure.otif.pct === null ? (
               t('rfx.noHistory')
             ) : (
-              // CR-17 — the target status decides the colour, from the ONE
-              // threshold source every target bar on this page already reads.
-              <span style={{ color: TARGET_STATUS[performanceStatus(measure.otif.pct)!].text }}>
-                {measure.otif.pct}%
-              </span>
+              // BL-53 — no target colour: BL-19 set no target yet, only a
+              // baseline period, so the figure is not judged against 90%.
+              `${measure.otif.pct}%`
             )
           }
           subtitle={
             <span className="text-text-tertiary" data-testid="my-performance-otif">
               {measure.otif.pct === null
                 ? t('perf.noMeasured')
-                : t('perf.measuredCallOffs', {
-                    count: measure.otif.measured,
-                    target: OTIF_TARGET_PCT,
-                  })}
+                : t('perf.measuredCallOffs', { count: measure.otif.measured })}
             </span>
           }
         />
         <KpiCard
           eyebrow={t('perf.cfot')}
-          value={
-            measure.cfot.pct === null ? (
-              t('rfx.noHistory')
-            ) : (
-              <span style={{ color: TARGET_STATUS[performanceStatus(measure.cfot.pct)!].text }}>
-                {measure.cfot.pct}%
-              </span>
-            )
-          }
+          value={measure.cfot.pct === null ? t('rfx.noHistory') : `${measure.cfot.pct}%`}
           subtitle={
             <span className="text-text-tertiary" data-testid="my-performance-cfot">
               {measure.cfot.pct === null
@@ -374,6 +360,9 @@ const SupplierPerformance: React.FC = () => {
           subtitle={<span className="text-text-tertiary">{t('perf.calculated')}</span>}
         />
       </div>
+
+      {/* BL-53 — the same definitions PTI reads, and "Baseline period". */}
+      <KpiDefinitions />
 
       <section className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm p-6 mb-6">
         <div className="flex items-start justify-between gap-6 flex-wrap">
