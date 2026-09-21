@@ -91,6 +91,17 @@ const openInviteStep = async () => {
   fireEvent.click(await screen.findByRole('button', { name: 'PET Bottle 100ml' }));
   fireEvent.change(await screen.findByLabelText('Total quantity'), { target: { value: '120000' } });
   fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+  // PREMISE CHANGED (RFx spec 2026-09-21): three authoring steps now sit
+  // between the scope and the invitees — items, quantity breaks, and questions
+  // and options. They are walked THROUGH, filled properly, for the reason the
+  // scope step is: each refuses to advance until it is sound.
+  fireEvent.change(await screen.findByTestId('rfq-item-1-description'), { target: { value: 'PET bottle 100ml' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+  fireEvent.change(await screen.findByTestId('rfq-tiers-input'), { target: { value: '120000' } });
+  fireEvent.click(screen.getByTestId('rfq-tiers-add'));
+  fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+  await screen.findByTestId('rfq-options-step');
+  fireEvent.click(screen.getByRole('button', { name: 'Next' }));
 };
 
 describe('REQ-E03-01 — the invitee search on the sourcing wizard', () => {

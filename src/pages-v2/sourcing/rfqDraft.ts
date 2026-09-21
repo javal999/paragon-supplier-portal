@@ -363,9 +363,25 @@ export function templateContentFromDraft(
   };
 }
 
-/** What "Save as template" keeps from an existing RFQ. `null` = an untiered RFQ has nothing to keep. */
+/**
+ * What "Save as template" keeps from an existing RFQ. A legacy single-item RFQ
+ * is kept as what it is — one "Other" item at one total break of its quantity —
+ * so the button works on every RFQ; `null` only when there is not even a
+ * quantity to keep.
+ */
 export function templateContentFromRfq(rfq: RFQ): RfqTemplateContent | null {
-  if (!rfq.items || rfq.items.length === 0 || !rfq.tiers || rfq.tiers.length === 0) return null;
+  if (!rfq.items || rfq.items.length === 0 || !rfq.tiers || rfq.tiers.length === 0) {
+    if (!(rfq.totalQty > 0) || !Number.isInteger(rfq.totalQty)) return null;
+    const { attachments: _files, ...item } = toRfqItem({ ...newItemDraft('other'), description: rfq.title, uom: rfq.uom }, 0);
+    void _files;
+    return {
+      category: rfq.materialCategory,
+      uom: rfq.uom,
+      currency: rfq.currency,
+      items: [item],
+      tiers: [{ qty: rfq.totalQty, basis: 'total' }],
+    };
+  }
   return {
     category: rfq.materialCategory,
     uom: rfq.uom,
