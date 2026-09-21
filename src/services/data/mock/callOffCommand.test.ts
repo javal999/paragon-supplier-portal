@@ -330,3 +330,41 @@ describe('dispatch heads-up (REQ-E09-04) and ASN gating (REQ-E09-03 BR-06)', () 
     expect(asnStore.get(res.entityId!)!.callOffId).toBeUndefined();
   });
 });
+
+describe('BL-47 / BL-49 demo rows, walked through the real verbs', () => {
+  it('the planner approves the +5.1% answer (CO-2026-0014) and the earlier-date answer (CO-2026-0016)', async () => {
+    expect((await verb('t_calloff_approve', 'co-0014', {}, buyer)).status).toBe('done');
+    expect(callOffStore.get('co-0014')).toMatchObject({ status: 'Confirmed with Changes', confirmation: { approval: 'approved' } });
+    expect((await verb('t_calloff_approve', 'co-0016', {}, buyer)).status).toBe('done');
+    expect(callOffStore.get('co-0016')).toMatchObject({ status: 'Confirmed with New Date', confirmation: { approval: 'approved' } });
+  });
+
+  it('the accepted partial (CO-2026-0015) is not waiting, so there is nothing to approve', async () => {
+    expect((await verb('t_calloff_approve', 'co-0015', {}, buyer)).reason).toMatch(/NOT_AWAITING_APPROVAL/);
+  });
+
+  it('li-024a: draft CO-2026-0018 (45,000 of 37,000 remaining) is refused on quantity; CO-2026-0019 (exactly 37,000) releases', async () => {
+    const refused = await verb('t_calloff_release_draft', 'co-0018', {}, buyer);
+    expect(refused.reason).toMatch(/EXCEEDS_REMAINING: 45000 PCS is more than the 37000 PCS remaining on PO-2026-00124/);
+    expect(callOffStore.get('co-0018')!.status).toBe('Draft');
+    expect((await verb('t_calloff_release_draft', 'co-0019', {}, buyer)).status).toBe('done');
+    expect(callOffStore.get('co-0019')!.status).toBe('Awaiting Confirmation');
+  });
+
+  it('li-028a has no quantity: a release is checked on remaining VALUE, both sides of the boundary', async () => {
+    const onValueLine = (quantity: number) =>
+      svc.dispatch(buyer, {
+        transitionId: 't_calloff_release',
+        entity: 'callOff',
+        payload: { poId: 'po-028', poLineId: 'li-028a', quantity, needDate: '2026-09-20', type: 'forecast' },
+      });
+    // 280,000,000 remains; 127 KG = 279,400,000 fits, 128 KG = 281,600,000 does not.
+    const over = await onValueLine(128);
+    expect(over.reason).toMatch(/EXCEEDS_REMAINING_VALUE: 281600000 is more than the 280000000 remaining on PO-2026-00128/);
+    const fits = await onValueLine(127);
+    expect(fits.status).toBe('done');
+    expect(callOffStore.get(fits.entityId!)).toMatchObject({ poLineId: 'li-028a', quantity: 127, status: 'Awaiting Confirmation' });
+    // Draft CO-2026-0021 (150 KG = 330,000,000) is refused on value too.
+    expect((await verb('t_calloff_release_draft', 'co-0021', {}, buyer)).reason).toMatch(/EXCEEDS_REMAINING_VALUE/);
+  });
+});

@@ -262,6 +262,66 @@ describe('CR-05 on the screens — the applied rule and its reason (BL-47)', () 
   });
 });
 
+describe('CR-04 on the screens — release by remaining quantity, value only without one (BL-49)', () => {
+  it('the new call-off panel states the remaining quantity and refuses over-release with the figures', async () => {
+    renderWithProviders(<BuyerCallOffs />, { identity: PLANNER });
+    const pet = await screen.findByTestId('calloff-umbrella-po-007-li-007a');
+    expect(within(pet).getByTestId('calloff-basis-li-007a')).toHaveTextContent('checked against the remaining quantity');
+    fireEvent.click(within(pet).getByRole('button', { name: 'New call-off' }));
+    expect(panel().getByTestId('calloff-new-remaining')).toHaveTextContent('Remaining on this line: 15,000 PCS');
+    fireEvent.change(panel().getByLabelText('Quantity (PCS)'), { target: { value: '15001' } });
+    expect(panel().getByTestId('calloff-exceeds-remaining')).toHaveTextContent(
+      '15,001 PCS is more than the 15,000 PCS remaining on this line. Release is not possible.',
+    );
+    fireEvent.change(panel().getByLabelText('Quantity (PCS)'), { target: { value: '15000' } });
+    expect(panel().queryByTestId('calloff-exceeds-remaining')).toBeNull();
+  });
+
+  it('draft CO-2026-0018 over the remaining quantity: refused on the panel, release disabled', async () => {
+    renderWithProviders(<BuyerCallOffs />, { identity: PLANNER });
+    fireEvent.click(within(await screen.findByTestId('calloff-row-co-0018')).getByRole('button', { name: /Open draft/ }));
+    expect(panel().getByTestId('calloff-draft-remaining')).toHaveTextContent('Remaining on this line: 37,000 PCS');
+    expect(panel().getByTestId('calloff-draft-exceeds-remaining')).toHaveTextContent(
+      '45,000 PCS is more than the 37,000 PCS remaining on this line.',
+    );
+    expect(panel().getByRole('button', { name: 'Release to supplier' })).toBeDisabled();
+  });
+
+  it('draft CO-2026-0019 of exactly the remainder releases, and the store agrees', async () => {
+    renderWithProviders(<BuyerCallOffs />, { identity: PLANNER });
+    fireEvent.click(within(await screen.findByTestId('calloff-row-co-0019')).getByRole('button', { name: /Open draft/ }));
+    expect(panel().queryByTestId('calloff-draft-exceeds-remaining')).toBeNull();
+    fireEvent.click(panel().getByRole('button', { name: 'Release to supplier' }));
+    await waitFor(() => expect(callOffStore.get('co-0019')!.status).toBe('Awaiting Confirmation'));
+  });
+
+  it('the value-limit line (po-028) shows no quantity, checks value, and refuses draft CO-2026-0021 on value', async () => {
+    renderWithProviders(<BuyerCallOffs />, { identity: PLANNER });
+    const line = await screen.findByTestId('calloff-umbrella-po-028-li-028a');
+    expect(within(line).getByTestId('calloff-basis-li-028a')).toHaveTextContent('No quantity on this line');
+    expect(within(line).queryByTestId('calloff-remaining-li-028a')).toBeNull();
+    expect(within(line).getByTestId('calloff-remaining-value-li-028a')).toHaveTextContent('280.000.000');
+    fireEvent.click(within(screen.getByTestId('calloff-row-co-0021')).getByRole('button', { name: /Open draft/ }));
+    expect(panel().getByTestId('calloff-draft-exceeds-remaining')).toHaveTextContent('which has no quantity');
+    expect(panel().getByRole('button', { name: 'Release to supplier' })).toBeDisabled();
+  });
+
+  it('the demo rows carry their CR-05 tag on the planner rows: +5.1% (0014), partial (0015), earlier (0016)', async () => {
+    renderWithProviders(<BuyerCallOffs />, { identity: PLANNER });
+    expect(await screen.findByTestId('calloff-tol-co-0014')).toHaveTextContent('408 PCS over (5.1%), needs approval');
+    expect(screen.getByTestId('calloff-tol-co-0015')).toHaveTextContent('Partial: 600 PCS short');
+    expect(screen.getByTestId('calloff-tol-co-0016')).toHaveTextContent('Earlier date, needs approval');
+    expect(screen.getByTestId('calloff-tol-co-0017')).toHaveTextContent('200 PCS over (5%), accepted');
+  });
+
+  it('…and on the supplier rows', async () => {
+    renderWithProviders(<SupplierCallOffs />, { identity: SUPPLIER });
+    expect(await screen.findByTestId('supplier-calloff-tol-co-0014')).toHaveTextContent('needs approval');
+    expect(screen.getByTestId('supplier-calloff-tol-co-0015')).toHaveTextContent('Partial: 600 PCS short');
+    expect(screen.getByTestId('supplier-calloff-tol-co-0005')).toHaveTextContent('500 PCS over (5%), accepted');
+  });
+});
+
 describe('Home tasks (CR-09)', () => {
   it('supplier: call-offs to confirm, and confirmed call-offs due within 7 days with no dispatch notice', async () => {
     renderWithProviders(<SupplierHome />, { identity: SUPPLIER });

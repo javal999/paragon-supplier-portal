@@ -444,9 +444,13 @@ describe('the seeded demo at the declared present — named call-offs, derived s
       'CO-2026-0003',
     ]);
     expect(views.filter((v) => v.confirmation === 'Escalated').map((v) => v.callOff.callOffNumber)).toEqual(['CO-2026-0009']);
+    // ⚠️ GREW AT BL-47: 0014 (+5.1%) and 0016 (earlier date) are the demo rows
+    // for the two CR-05 cases that wait for the planner and had no example.
     expect(views.filter((v) => v.confirmation === 'Awaiting Approval').map((v) => v.callOff.callOffNumber)).toEqual([
       'CO-2026-0004',
       'CO-2026-0010',
+      'CO-2026-0014',
+      'CO-2026-0016',
     ]);
     expect(views.filter((v) => v.delivery === 'missed').map((v) => v.callOff.callOffNumber)).toEqual([
       'CO-2026-0007',
@@ -461,5 +465,65 @@ describe('the seeded demo at the declared present — named call-offs, derived s
     expect(deliveryDrift(views)).toEqual([
       { supplierId: 'sup-008', supplierName: 'PT Sample Carton Packaging', materialCode: 'PK-CART-9910', count: 2 },
     ]);
+  });
+
+  // ── BL-47 · each CR-05 case, pinned by NAMED call-off through its derived rule
+  it('exactly +5% is accepted on BOTH types: CO-2026-0005 (JIT) and CO-2026-0017 (forecast)', () => {
+    for (const n of ['CO-2026-0005', 'CO-2026-0017']) {
+      const v = byNumber(n);
+      expect(v.tolerance?.findings).toEqual([expect.objectContaining({ kind: 'overWithin', pct: 5, needsApproval: false })]);
+      expect(v.tolerance?.within).toBe(true);
+      expect(v.callOff.confirmation?.approval).toBe('auto');
+    }
+    expect(byNumber('CO-2026-0005').callOff.type).toBe('jit');
+    expect(byNumber('CO-2026-0017').callOff.type).toBe('forecast');
+  });
+
+  it('+5.1% waits for the planner: CO-2026-0014', () => {
+    const v = byNumber('CO-2026-0014');
+    expect(v.tolerance?.findings).toEqual([expect.objectContaining({ kind: 'overBeyond', pct: 5.1, needsApproval: true })]);
+    expect(v.confirmation).toBe('Awaiting Approval');
+  });
+
+  it('a shortfall is a visible partial, accepted: CO-2026-0015', () => {
+    const v = byNumber('CO-2026-0015');
+    expect(v.tolerance?.findings).toEqual([expect.objectContaining({ kind: 'short', qty: 600, needsApproval: false })]);
+    expect(v.shortfall).toBe(600);
+    expect(v.confirmation).toBe('Confirmed with Changes');
+  });
+
+  it('a later date waits for the planner: CO-2026-0004; an earlier one too: CO-2026-0016', () => {
+    expect(byNumber('CO-2026-0004').tolerance?.findings).toEqual([
+      expect.objectContaining({ kind: 'late', days: 2, needsApproval: true }),
+    ]);
+    expect(byNumber('CO-2026-0016').tolerance?.findings).toEqual([
+      expect.objectContaining({ kind: 'early', days: 4, limit: 0, needsApproval: true }),
+    ]);
+  });
+
+  // ── BL-49 · release against remaining, on the seeded lines ─────────────────
+  it('li-024a: draft CO-2026-0019 fits the remaining quantity exactly; draft CO-2026-0018 does not', () => {
+    const line = { id: 'li-024a', quantity: 60000, unitPrice: 1600 };
+    const all = views.map((v) => v.callOff);
+    expect(umbrellaRemaining(line, all).remainingQty).toBe(37000);
+    expect(releaseCheck(byNumber('CO-2026-0019').callOff.quantity, line, all, 'co-0019')).toMatchObject({
+      basis: 'quantity',
+      exceeds: false,
+    });
+    expect(releaseCheck(byNumber('CO-2026-0018').callOff.quantity, line, all, 'co-0018')).toMatchObject({
+      basis: 'quantity',
+      exceeds: true,
+    });
+  });
+
+  it('li-028a has no quantity: released CO-2026-0020 counts against VALUE, and draft CO-2026-0021 is refused on value', () => {
+    const line = { id: 'li-028a', quantity: 0, unitPrice: 2_200_000, valueLimit: 500_000_000 };
+    const all = views.map((v) => v.callOff);
+    expect(umbrellaRemaining(line, all)).toMatchObject({ basis: 'value', remainingQty: null, remainingValue: 280_000_000 });
+    expect(releaseCheck(byNumber('CO-2026-0021').callOff.quantity, line, all, 'co-0021')).toMatchObject({
+      basis: 'value',
+      exceeds: true,
+      requestedValue: 330_000_000,
+    });
   });
 });

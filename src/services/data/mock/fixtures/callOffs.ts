@@ -11,6 +11,9 @@
 //   · po-007 / li-007a — sup-007, PET bottle PK-PETB-8801, 200,000 PCS
 //   · po-017 / li-017a — sup-008, shipper box PK-CART-9910, 20,000 PCS
 //   · po-002 / li-002a — sup-002, emulsifier RM-EMUL-9410, 8,000 KG
+//   · po-024 / li-024a — sup-007, PET bottle PK-PETB-8801, 60,000 PCS
+//   · po-028 / li-028a — sup-003, fragrance FR-WARD-4410, NO quantity: a
+//     value-limit line of 500,000,000 IDR (BL-49)
 //
 // What each row shows at the declared present (derived, never stored):
 //   0001 Late (received after need date) · 0002 Dispatched · 0003 Awaiting
@@ -18,6 +21,14 @@
 //   Confirmed, due within 7 days with no dispatch notice · 0007 and 0008 Missed
 //   (delivery drift) · 0009 Escalated · 0010 partial Awaiting Approval · 0011
 //   Rejected · 0012 Draft · 0013 Delivered on time and in full.
+//
+// And the CR-05 / CR-04 cases (BL-47, BL-49):
+//   exactly +5% accepted: 0005 (JIT) and 0017 (forecast) · +5.1% awaiting
+//   approval: 0014 · short, a visible partial: 0015 · later date awaiting
+//   approval: 0004 · earlier date awaiting approval: 0016 · release within
+//   remaining quantity: drafts 0012 and 0019 (each exactly the remainder) ·
+//   release over remaining quantity, refused: draft 0018 · value-limit line:
+//   0020 released, draft 0021 refused on remaining value.
 // ────────────────────────────────────────────────────────────────────────────
 
 import { DECLARED_PRESENT } from '../../fixturePresent';
@@ -72,6 +83,36 @@ const CARTON = {
   description: 'Shipper Box — Emina Bright Stuff Range (12-pack)',
   uom: 'PCS',
   unitPrice: 2500,
+  currency: 'IDR',
+} as const;
+
+// The PET line of `po-024` — the BL-47 / BL-49 demo rows sit here so the
+// original PET line keeps its 15,000 remaining. Same supplier and material as
+// PET, so the delivery matcher sees them; their need dates keep them clear.
+const PET_024 = {
+  poId: 'po-024',
+  poNumber: 'PO-2026-00124',
+  poLineId: 'li-024a',
+  supplierId: 'sup-007',
+  supplierName: 'PT Sample Packaging Indonesia',
+  materialCode: 'PK-PETB-8801',
+  description: 'PET Bottle 200ml Frosted — Wardah Series',
+  uom: 'PCS',
+  unitPrice: 1600,
+  currency: 'IDR',
+} as const;
+
+// The value-limit line (BL-49): `po-028` / `li-028a` carries no quantity.
+const FRAGRANCE_VALUE = {
+  poId: 'po-028',
+  poNumber: 'PO-2026-00128',
+  poLineId: 'li-028a',
+  supplierId: 'sup-003',
+  supplierName: 'Sample Fragrance House Indonesia',
+  materialCode: 'FR-WARD-4410',
+  description: 'Wardah Signature Floral Compound',
+  uom: 'KG',
+  unitPrice: 2_200_000,
   currency: 'IDR',
 } as const;
 
@@ -309,6 +350,152 @@ export const CALL_OFF_SEED: readonly CallOff[] = [
     callOffNumber: 'CO-2026-0012',
     quantity: 15000,
     needDate: day(21),
+    type: 'forecast',
+    status: 'Draft',
+    dispatches: [],
+    notes: [],
+  },
+
+  // ── BL-47 / BL-49 demo rows ────────────────────────────────────────────────
+  // One row per CR-05 and CR-04 case that had no example in the seed. Need
+  // dates are all 9 days or more ahead, so none falls inside the ±7-day
+  // delivery match of any past goods receipt (CR-06) and no OTIF moves; none is
+  // Awaiting Confirmation, so the supplier's "to confirm" count is unchanged.
+  {
+    // +5.1% (8,408 on 8,000): beyond the 5% allowance, so it waits for PTI.
+    ...PET_024,
+    id: 'co-0014',
+    callOffNumber: 'CO-2026-0014',
+    quantity: 8000,
+    needDate: day(12),
+    type: 'forecast',
+    status: 'Confirmed with Changes',
+    releasedAt: at(-2, 2),
+    confirmation: {
+      kind: 'changes',
+      deliveries: [{ quantity: 8408, date: day(12) }],
+      comment: 'Last carton layer is 408 pieces.',
+      confirmedAt: at(-1, 3),
+      approval: 'awaiting',
+    },
+    dispatches: [],
+    notes: [],
+  },
+  {
+    // Short by 600 (5,400 on 6,000): a partial delivery, accepted and visible.
+    ...PET_024,
+    id: 'co-0015',
+    callOffNumber: 'CO-2026-0015',
+    quantity: 6000,
+    needDate: day(14),
+    type: 'jit',
+    status: 'Confirmed with Changes',
+    releasedAt: at(-2, 3),
+    confirmation: {
+      kind: 'changes',
+      deliveries: [{ quantity: 5400, date: day(14) }],
+      comment: 'Resin allocation covers 5,400 this cycle.',
+      confirmedAt: at(-1, 4),
+      approval: 'auto',
+    },
+    dispatches: [],
+    notes: [],
+  },
+  {
+    // 4 days EARLIER than the need date: goes to PTI while the early
+    // allowance is the BL-56 placeholder of 0 days.
+    ...PET_024,
+    id: 'co-0016',
+    callOffNumber: 'CO-2026-0016',
+    quantity: 5000,
+    needDate: day(15),
+    type: 'forecast',
+    status: 'Confirmed with New Date',
+    releasedAt: at(-2, 4),
+    confirmation: {
+      kind: 'newDate',
+      deliveries: [{ quantity: 5000, date: day(11) }],
+      comment: 'We can ship the week before.',
+      confirmedAt: at(-1, 5),
+      approval: 'awaiting',
+    },
+    dispatches: [],
+    notes: [],
+  },
+  {
+    // EXACTLY +5% on a forecast-based call-off (4,200 on 4,000): accepted, the
+    // same allowance as the JIT CO-2026-0005.
+    ...PET_024,
+    id: 'co-0017',
+    callOffNumber: 'CO-2026-0017',
+    quantity: 4000,
+    needDate: day(16),
+    type: 'forecast',
+    status: 'Confirmed with Changes',
+    releasedAt: at(-2, 5),
+    confirmation: {
+      kind: 'changes',
+      deliveries: [{ quantity: 4200, date: day(16) }],
+      comment: 'Full pallets.',
+      confirmedAt: at(-1, 6),
+      approval: 'auto',
+    },
+    dispatches: [],
+    notes: [],
+  },
+  {
+    // Draft beyond what remains on li-024a (60,000 − 23,000 released =
+    // 37,000): releasing it is refused on remaining QUANTITY.
+    ...PET_024,
+    id: 'co-0018',
+    callOffNumber: 'CO-2026-0018',
+    quantity: 45000,
+    needDate: day(28),
+    type: 'forecast',
+    status: 'Draft',
+    dispatches: [],
+    notes: [],
+  },
+  {
+    // Draft of exactly what remains on li-024a: releasing it is allowed.
+    ...PET_024,
+    id: 'co-0019',
+    callOffNumber: 'CO-2026-0019',
+    quantity: 37000,
+    needDate: day(35),
+    type: 'forecast',
+    status: 'Draft',
+    dispatches: [],
+    notes: [],
+  },
+  {
+    // On the VALUE-LIMIT line: 100 KG × 2,200,000 = 220,000,000 of the
+    // 500,000,000 limit released, so 280,000,000 remains.
+    ...FRAGRANCE_VALUE,
+    id: 'co-0020',
+    callOffNumber: 'CO-2026-0020',
+    quantity: 100,
+    needDate: day(18),
+    type: 'forecast',
+    status: 'Confirmed',
+    releasedAt: at(-3, 2),
+    confirmation: {
+      kind: 'confirm',
+      deliveries: [{ quantity: 100, date: day(18) }],
+      confirmedAt: at(-3, 6),
+      approval: 'auto',
+    },
+    dispatches: [],
+    notes: [],
+  },
+  {
+    // Draft on the value-limit line: 150 KG = 330,000,000, more than the
+    // 280,000,000 remaining, so releasing it is refused on remaining VALUE.
+    ...FRAGRANCE_VALUE,
+    id: 'co-0021',
+    callOffNumber: 'CO-2026-0021',
+    quantity: 150,
+    needDate: day(25),
     type: 'forecast',
     status: 'Draft',
     dispatches: [],
