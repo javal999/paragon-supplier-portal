@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 2.1, 2026-09-18 |
+| Version | 2.2, 2026-09-21: BL-44 (CR-12 invoice price tolerance) and BL-45 (CR-25 goods receipt tolerance) built |
 | Compares | `SUPPLIER-HUB-REQUIREMENTS.md` v0.5 with the prototype on branch `feat/supplier-hub-mvp` (pull request "Supplier Hub MVP build") |
 | Owner decisions | 2026-09-17, recorded in section 9 of the requirements (RFX-1 to RFX-3, GAP-1 to GAP-4, E06-R) |
 | Rule | This is the **only** document that describes what the prototype does for the Supplier Hub. The PRD and the requirements describe the product and never the code. Update this file when a build item lands |
@@ -33,8 +33,8 @@ Everything runs on sample data held in the browser. There is no backend, no SAP 
 | REQ-E07-03 Order summary | Built | PO, ASN count, and the three confirmations with links; lifecycle steps on the PO |
 | REQ-E07-04 ASN | Built | Shipped quantity per line capped at the open quantity unless a reason is given, batch, ship date, required fields, several ASNs per PO, cancellation |
 | REQ-E07-05 Shipping notice | Built | Expected completion date per PO; the first ASN records shipment started; a later date raises a PTI task |
-| REQ-E07-06 Goods receipt | Partial | Supplier page with shipped, received and rejected quantity, QC result, discrepancy flag, acknowledge or dispute, PTI resolution. Receipts are still created in the hub rather than read from SAP, because there is no SAP feed; dispute attachments are not built |
-| REQ-E07-07 Invoice | Built | Built from received goods receipts, supplier's own invoice number and date, e-Faktur file name, duplicate and over-invoicing refused, CR-12 and CR-13 matching at submission, status list with correct-and-resubmit, CR-14 due date |
+| REQ-E07-06 Goods receipt | Partial | Supplier page with shipped, received and rejected quantity, QC result, discrepancy flag, acknowledge or dispute, PTI resolution. CR-25 tolerance (BL-45): any over-delivery is flagged, a shortfall above 2% is flagged and the receipt is shown as kept open, a shortfall at or below 2% closes; both the supplier page and PTI's goods receipt panel state the reason per line. Tolerance is held per material, with no material overriding the default yet. Receipts are still created in the hub rather than read from SAP, because there is no SAP feed; dispute attachments are not built; "kept open" is a derived label and does not yet reopen the order quantity for another shipment |
+| REQ-E07-07 Invoice | Built | Built from received goods receipts, supplier's own invoice number and date, e-Faktur file name, duplicate and over-invoicing refused, CR-12 and CR-13 matching at submission, status list with correct-and-resubmit, CR-14 due date. CR-12 as revised 2026-09-21 (BL-44): 0% on a line whose PO price comes from a contract, otherwise 2% and within a rupiah cap; the cap is a placeholder (IDR 500,000) until Finance sets it (BL-54). Buyer and supplier invoice screens state per line which rule applied and why a line is held. The supplier's new-invoice form still takes one invoice total, not an amount per line; a total that differs from its lines is checked under the strictest rule on the invoice |
 | REQ-E07-08 SAP interface | Partial | Interface monitor with last successful arrival, failed messages and CR-20 retry, plus the data-age banner. The feeds themselves are simulated; the real interface technology is PQ-06 |
 | REQ-E08-01 Inventory visibility | Built | Supplier and PTI stock and reorder points, incoming split into in production and in transit with its detail, raw material and packaging views, days of supply with one band scale, last update and stale flag. No "available" figure |
 | REQ-E08-02 Stock submission | Built | Downloadable template, row-by-row upload validation, manual entry, simulated API sync with a failure path, and stock recorded by PTI on a supplier's behalf |
@@ -105,7 +105,8 @@ The `CR-` rules are implemented in the hub's own modules and covered by their ow
 | Call-off tolerance, matching, on time, in full, reminders (CR-05 to CR-09) | `src/services/transitions/callOffRules.ts`, `callOffTolerance.ts` |
 | Days of supply, bands, coverage, stale, alert risk class (CR-01 to CR-03) | `src/services/data/` inventory rules with `inventoryConfig.ts` |
 | Forecast periods, zones, commitment tolerance, gap colours (CR-21, CR-22) | `src/services/sdc/` forecast rules with `forecastConfig.ts` |
-| Goods receipt result, invoice matching, due date (CR-11 to CR-14) | `src/services/transitions/grRollup.ts`, `invoiceRollup.ts`, invoice projection |
+| Goods receipt result, invoice matching, due date (CR-11 to CR-14) | `src/services/transitions/grRollup.ts`, `invoiceRollup.ts` (`checkPrice`, `deriveMatchVerdict`), `fulfilmentRules.ts` (`checkInvoicePrices`, `deriveInvoiceVerdict`), invoice projection |
+| Invoice price tolerance and goods receipt quantity tolerance (CR-12, CR-25) | Values in `src/services/transitions/fulfilmentConfig.ts` (the rupiah cap placeholder is one line there, BL-54); rules in `invoiceRollup.ts` (`checkPrice`) and `fulfilmentRules.ts` (`receiptQtyOutcome`, `compareReceipt`, `receiptKeptOpen`) |
 | Quote score and currency rule (CR-15, CR-16) | `src/lib/quoteScore.ts`, `src/lib/fxPin.ts` |
 | CFOT, OTIF, rejections, score and grade (CR-17) | `src/services/data/performanceRules.ts` |
 | Spreadsheet number and batch checks (CR-18, CR-19) | `src/lib/localeNumber.ts`, stock upload validation |
