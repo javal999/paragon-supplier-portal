@@ -1237,6 +1237,45 @@ export function useThreePlSet() {
   });
 }
 
+// ── BL-50 · A RULING ON ONE DAY OF THE HUB'S WORKING CALENDAR ────────────────
+//
+// ⚠️ **`entityId` IS THE DATE, AND THERE IS NO `date` PAYLOAD FIELD** — the
+// `checkId` / `parent` discipline, so the day commanded and the day recorded
+// cannot disagree. `setBy` comes from the session, never the form (C10 §6.2).
+//
+// Every deadline in the hub is derived from the calendar at read, so after a
+// ruling EVERY query that renders a deadline is stale. The whole cache is
+// invalidated rather than a guessed list of keys — a missed key would show the
+// old deadline next to the new calendar, which is the one thing this act must
+// not do.
+export interface CalendarDaySetVars {
+  /** `YYYY-MM-DD` — the command's entityId. */
+  date: string;
+  kind: 'working' | 'non-working';
+  reason: string;
+}
+
+/** Rule one date working or non-working (`t_calendar_day_set`). */
+export function useCalendarDaySet() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+  const { identity } = useCurrentIdentity();
+
+  return useMutation<CommandResult, Error, CalendarDaySetVars>({
+    mutationFn: ({ date, kind, reason }) =>
+      svc.commands.dispatch(scope, {
+        transitionId: 't_calendar_day_set',
+        entity: 'workingCalendar',
+        entityId: date,
+        payload: { kind, reason, setBy: identity.actor },
+      }),
+    onSuccess: (result) => {
+      if (result.status !== 'failed') void qc.invalidateQueries();
+    },
+  });
+}
+
 // ── §67 · THE APPROVAL LANE — approve / reject, the two verbs procurement holds ─
 //
 // ⚠️ **THE GAP THIS CLOSES WAS NEVER A SURFACE.** `BuyerRequisitions` already

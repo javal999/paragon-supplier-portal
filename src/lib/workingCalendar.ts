@@ -1,11 +1,18 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// THE WORKING CALENDAR — REQUIREMENTS §3.4 (recommended default until Q-18).
+// THE WORKING CALENDAR ARITHMETIC — REQUIREMENTS §3.4.
 //
 // Monday to Friday, 08:00 to 17:00 WIB (UTC+7, no daylight saving), excluding
 // the holidays below. A deadline that falls outside working hours moves to the
-// next working hour. ADM maintains the holiday list [Proposed]; the 2026 seed is
-// the national holidays plus collective leave (cuti bersama) as published for
-// 2026, and is configurable by passing a different calendar.
+// next working hour. The 2026 list is the national holidays plus collective
+// leave (cuti bersama) as published for 2026.
+//
+// ⚠️ **THIS FILE IS THE ARITHMETIC, NOT THE CALENDAR IN FORCE.** Q-18 was
+// decided on 2026-09-21: the hub keeps its own calendar, loaded from the SAP
+// factory calendar and maintained by the Hub administrator (BL-50). That
+// calendar lives in `services/transitions/workingCalendarStore.ts`
+// (`hubWorkingCalendar()`), and EVERY deadline in the hub reads it there — the
+// `DEFAULT_WORKING_CALENDAR` below is only the base it is built from, and
+// `hubCalendarReaders.guard.test.ts` refuses a deadline module that names it.
 //
 // Pure: every function takes the instant it reasons about. Nothing here reads
 // a clock, so a deadline is the same answer in a spec and in the browser.
@@ -22,6 +29,11 @@ export interface WorkingCalendar {
   readonly workingWeekdays: ReadonlySet<number>;
   /** Non-working dates, `YYYY-MM-DD` in the calendar's own wall-clock date. */
   readonly holidays: ReadonlySet<string>;
+  /**
+   * Dates ruled WORKING by ADM regardless of weekday (BL-50) — a make-up
+   * Saturday, say. Absent on a calendar nobody has ruled on.
+   */
+  readonly extraWorkingDates?: ReadonlySet<string>;
 }
 
 /** Indonesian public holidays and collective leave, 2026 (seed; ADM-editable). */
@@ -80,6 +92,7 @@ function nextDate(date: string): string {
 
 /** True when `date` (`YYYY-MM-DD`, wall clock) is a working day. */
 export function isWorkingDay(date: string, cal: WorkingCalendar = DEFAULT_WORKING_CALENDAR): boolean {
+  if (cal.extraWorkingDates?.has(date)) return true;
   const d = new Date(`${date}T00:00:00.000Z`);
   const weekday = d.getUTCDay() === 0 ? 7 : d.getUTCDay();
   return cal.workingWeekdays.has(weekday) && !cal.holidays.has(date);
@@ -141,4 +154,56 @@ export function addWorkingDays(
 export function documentInstant(value: string, cal: WorkingCalendar = DEFAULT_WORKING_CALENDAR): Date {
   if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return new Date(instantAt(value, 0, cal));
   return new Date(value);
+}
+
+// ── BL-50 · A DAY RULED BY THE HUB ADMINISTRATOR (§3.4, Q-18 decided) ─────────
+//
+// The hub keeps its own calendar: loaded from the SAP factory calendar, then
+// ADM can make any single day working or non-working, with a reason. A ruling
+// is a FACT about one date, never a derived state — the deadlines that read the
+// calendar are still computed at read time from whatever the calendar says.
+
+/** What ADM says one date is. */
+export type CalendarDayKind = 'working' | 'non-working';
+
+export const CALENDAR_DAY_KINDS: readonly CalendarDayKind[] = Object.freeze(['working', 'non-working']);
+
+export const isCalendarDayKind = (value: unknown): value is CalendarDayKind =>
+  typeof value === 'string' && (CALENDAR_DAY_KINDS as readonly string[]).includes(value);
+
+/** A readable `YYYY-MM-DD` that is a real date (not `2026-02-30`). */
+export function isCalendarDate(value: unknown): value is string {
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const ms = Date.parse(`${value}T00:00:00.000Z`);
+  return Number.isFinite(ms) && new Date(ms).toISOString().slice(0, 10) === value;
+}
+
+/**
+ * The calendar after ADM's rulings. Each ruling decides its date outright,
+ * whatever the base said and whatever weekday it is: a `non-working` Tuesday is
+ * a holiday, a `working` Saturday is a make-up day. Later rulings for the same
+ * date replace earlier ones, so pass them oldest first.
+ *
+ * A working Saturday cannot be expressed as a holiday removal — the base treats
+ * weekends by weekday, not by list — so a ruled day is carried as an explicit
+ * per-date answer rather than folded into `holidays`.
+ */
+export function withDayRulings(
+  base: WorkingCalendar,
+  rulings: readonly { readonly date: string; readonly kind: CalendarDayKind }[],
+): WorkingCalendar {
+  if (rulings.length === 0) return base;
+  const ruled = new Map<string, CalendarDayKind>();
+  for (const r of rulings) ruled.set(r.date, r.kind);
+  const holidays = new Set(base.holidays);
+  const extraWorking = new Set<string>();
+  for (const [date, kind] of ruled) {
+    if (kind === 'non-working') {
+      holidays.add(date);
+    } else {
+      holidays.delete(date);
+      extraWorking.add(date);
+    }
+  }
+  return { ...base, holidays, extraWorkingDates: extraWorking };
 }

@@ -4,12 +4,13 @@ import StatusPill from '../../components/ui-v2/StatusPill';
 import Data from '../../components/ui-v2/Data';
 import { useToast } from '../../hooks/useToast';
 import { useRefusalText } from '../../hooks/useRefusalText';
-import { formatDate } from '../../lib/format';
+import { formatDate, formatDateTime } from '../../lib/format';
 import type { StatusTone } from '../../lib/statusTone';
 import { sdcClock } from '../../services/sdc';
 import type { ForecastCommitmentLine, ForecastZone } from '../../services/data/types';
 import {
   commitmentGap,
+  commitmentTiming,
   deadlineState,
   periodKindOf,
   type GapColour,
@@ -68,6 +69,70 @@ export const CommitmentStatePill: React.FC<{ line: ForecastCommitmentLine; nowIs
     revisionRequested: 'warning',
   };
   return <StatusPill variant={tone[line.state]}>{t(`fc.state.${line.state}`)}</StatusPill>;
+};
+
+/**
+ * CR-26 · BL-48 — a duration as the deadline line says it: "2 d 5 h", "5 h",
+ * "under 1 h". Units are abbreviations so neither language needs a plural.
+ */
+export function useDurationText(): (ms: number) => string {
+  const { t } = useTranslation();
+  return (ms: number) => {
+    const hours = Math.floor(ms / 3_600_000);
+    if (hours < 1) return t('fc.duration.underHour');
+    const days = Math.floor(hours / 24);
+    return days > 0 ? t('fc.duration.daysHours', { days, hours: hours % 24 }) : t('fc.duration.hours', { hours });
+  };
+}
+
+/**
+ * CR-26 · BL-48 — the deadline, and where the line stands against it: time left
+ * while it is open, how late it is once past, or whether the commitment that
+ * stands arrived in time. Derived from `commitmentTiming` on the page's clock;
+ * nothing here is stored.
+ */
+export const CommitmentDeadline: React.FC<{
+  line: ForecastCommitmentLine;
+  nowIso: string;
+  testId?: string;
+  /** The grid's form: the timing line only, and nothing when it arrived in time. */
+  compact?: boolean;
+}> = ({ line, nowIso, testId, compact = false }) => {
+  const { t } = useTranslation();
+  const duration = useDurationText();
+  const timing = commitmentTiming(line, nowIso);
+  const due = line.response && line.state !== 'awaiting' && line.responseDueAt ? line.responseDueAt : line.dueAt;
+  let text: string;
+  let tone = 'text-text-tertiary';
+  switch (timing.kind) {
+    case 'open':
+      text = t('fc.timing.left', { time: duration(timing.msLeft) });
+      break;
+    case 'late':
+      text = t('fc.timing.lateBy', { time: duration(timing.msLate) });
+      tone = 'text-danger font-medium';
+      break;
+    case 'submittedLate':
+      text = t('fc.timing.submittedLate', { time: duration(timing.msLate) });
+      tone = 'text-warning-hover font-medium';
+      break;
+    default:
+      text = t('fc.timing.submittedOnTime');
+  }
+  if (compact) {
+    if (timing.kind === 'submittedOnTime') return null;
+    return (
+      <div data-testid={testId} data-timing={timing.kind} className={`text-[11px] ${tone}`} title={formatDateTime(due)}>
+        {text}
+      </div>
+    );
+  }
+  return (
+    <div data-testid={testId} data-timing={timing.kind}>
+      <Data className="text-xs">{formatDateTime(due)}</Data>
+      <div className={`text-[11px] ${tone}`}>{text}</div>
+    </div>
+  );
 };
 
 const GAP_TONE: Record<GapColour, StatusTone> = { green: 'success', amber: 'warning', red: 'danger' };

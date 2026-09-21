@@ -43,6 +43,7 @@ import {
 } from './customRoles';
 import { SYSTEM_ROLES, type SystemRoleId } from './businessRoles';
 import { catalogRoles } from './roles';
+import { calendarRulingRefusal } from './workingCalendarStore';
 import { threePlRefusal, threePlStore } from './threePlStore';
 import {
   APPLICATION_REQUEST_TYPES,
@@ -489,7 +490,28 @@ const threePlGoverned: PolicyHookFn = ({ entityId, payload }) => {
   return { ok: true };
 };
 
+// ── BL-50 · A RULING ON ONE DAY OF THE HUB'S WORKING CALENDAR ────────────────
+//
+// ⚠️ **THE SAME PREDICATE THE STORE CALLS ON READ** (`calendarRulingRefusal`),
+// so "a ruling the verb would have accepted" is one rule in one place, not two
+// vocabularies that agree until the day they do not. Every refusal names what
+// it refused. `entityId` IS the date — there is no date payload field.
+const calendarDayGoverned: PolicyHookFn = ({ entityId, payload }) => {
+  const refusal = calendarRulingRefusal(entityId, payload.kind, payload.reason);
+  if (refusal) return { ok: false, reason: refusal };
+  if (!asActorAttribution(payload.setBy)) {
+    return {
+      ok: false,
+      reason:
+        "setBy must be { kind: 'RESOLVED', person: { personId, displayName } } or " +
+        `{ kind: 'UNATTRIBUTED', reason } (${UNATTRIBUTED_REASONS.join(', ')})`,
+    };
+  }
+  return { ok: true };
+};
+
 bindPolicyHook(POLICY_HOOKS.THREE_PL_GOVERNED, threePlGoverned);
+bindPolicyHook(POLICY_HOOKS.CALENDAR_DAY_GOVERNED, calendarDayGoverned);
 
 // ── §67 · PR REJECT — THE REASON IS SUBSTANCE, NOT PRESENCE ──────────────────
 //

@@ -105,6 +105,7 @@ import {
   rfpResponseStore,
 } from '../data/mock/stores/rfxStores';
 import { customRoleStore } from './customRoles';
+import { workingCalendarStore } from './workingCalendarStore';
 import { threePlStore } from './threePlStore';
 
 const svc = new MockCommandService();
@@ -184,6 +185,8 @@ async function realIds(): Promise<Record<string, string | null>> {
     incomingShipment: incomingShipmentStore.all()[0]?.id ?? null,
     enforcement: GOVERNED_CHECK_IDS[0],
     role: 'receiving',
+    // BL-50 — `entityId` IS the date; any date the SAP load covers exists.
+    workingCalendar: '2026-09-09',
     // BL-51 — `entityId` IS the 3PL id; a sample-list row exists from the start.
     threePl: 'tpl-sample-express',
     supplierDocument: supplierDocumentStore.all()[0]?.id ?? null,
@@ -269,6 +272,7 @@ async function walk(entity: string, t: TransitionDef): Promise<Walk | null> {
   }
   if (entity === 'enforcement') return at(GOVERNED_CHECK_IDS[0], 'Governed');
   if (entity === 'role') return at('receiving', 'Defined');
+  if (entity === 'workingCalendar') return at('2026-09-09', 'Maintained');
   if (entity === 'threePl') return at('tpl-sample-express', 'Maintained');
   if (entity === 'supplierApplication') {
     const raised = await svc.dispatch(buyerSeat('procurement'), {
@@ -310,6 +314,7 @@ const resetAll = () => {
   receiptDiscrepancyStore.reset();
   callOffStore.reset();
   customRoleStore.reset();
+  workingCalendarStore.reset();
   threePlStore.reset();
 };
 
@@ -474,6 +479,8 @@ describe('THE LEGITIMATE PATHS — the half a "refuse everyone" fix would break'
         'supplierApplication',
         // BL-51 — the 3PL list is PTI's; no supplier is its owner.
         'threePl',
+        // BL-50 — the hub's calendar is PTI's; no supplier is its owner.
+        'workingCalendar',
       ],
     );
 
@@ -511,6 +518,13 @@ describe('THE LEGITIMATE PATHS — the half a "refuse everyone" fix would break'
     expect(roleRes.status, roleRes.reason).toBe('done');
     expect(customRoleStore.all().map((r) => r.id)).toContain('ownerless-gate-probe');
 
+    // BL-50 — the Hub administrator's lane (compliance) can still rule a day.
+    const calRes = await svc.dispatch(buyerSeat('compliance'), {
+      transitionId: 't_calendar_day_set', entity: 'workingCalendar', entityId: '2026-09-09',
+      payload: { kind: 'non-working', reason: 'Probe of the owner-less scope gate', setBy: NO_PERSON },
+    });
+    expect(calRes.status, calRes.reason).toBe('done');
+    expect(workingCalendarStore.rulings().map((r) => r.date)).toContain('2026-09-09');
     // BL-51 — the Hub administrator's lane (compliance) can still change a 3PL.
     const tplRes = await svc.dispatch(buyerSeat('compliance'), {
       transitionId: 't_threepl_set', entity: 'threePl', entityId: 'tpl-sample-express',

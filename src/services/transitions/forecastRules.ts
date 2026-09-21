@@ -9,8 +9,9 @@
 //     each period per supplier × material group, version comparison, and the
 //     forecast download.
 //   · Commitment (E06-02): the below-forecast reason rule (the verb's policy
-//     calls it), CR-21 tolerance per zone, the split deadline and its
-//     reminder, the commitment template and row-by-row upload check, and the
+//     calls it), CR-21 tolerance per zone, the CR-26 split deadline (1 or 3
+//     working days on the hub calendar) with its reminder and lateness, the
+//     commitment template and row-by-row upload check, and the
 //     re-publication carry-forward: a commitment stays with a period whose
 //     quantity did not change, and a changed period returns to awaiting.
 //   · Gap monitoring (E06-03): gap quantity and percentage, the CR-22 colour,
@@ -32,7 +33,8 @@ import type {
   RequirementResponse,
 } from '../sdc/types';
 import type { CapacityReason, CommitmentState, ForecastCommitmentLine, ForecastZone } from '../data/types';
-import { addWorkingDays, DEFAULT_WORKING_CALENDAR } from '../../lib/workingCalendar';
+import { addWorkingDays, type WorkingCalendar } from '../../lib/workingCalendar';
+import { hubWorkingCalendar } from './workingCalendarStore';
 import { normalizeQty } from '../../lib/localeNumber';
 import {
   COMMITMENT_REASONS,
@@ -40,7 +42,7 @@ import {
   FIRM_DEADLINE_WORKING_DAYS,
   FORECAST_HORIZON,
   GAP_COLOUR_THRESHOLDS,
-  OTHER_DEADLINE_DAYS,
+  OTHER_DEADLINE_WORKING_DAYS,
   REMINDER_FRACTION,
   STREAM_MATERIAL_TYPE,
   isCommitmentReason,
@@ -60,7 +62,7 @@ const daysFrom = (from: string, to: string): number =>
 
 /** The calendar date of an instant in PTI's working-calendar zone (WIB). */
 export const publicationDay = (iso: string): string =>
-  new Date(Date.parse(iso) + DEFAULT_WORKING_CALENDAR.utcOffsetHours * 3_600_000).toISOString().slice(0, 10);
+  new Date(Date.parse(iso) + hubWorkingCalendar().utcOffsetHours * 3_600_000).toISOString().slice(0, 10);
 
 const lastDayOfMonth = (day: string): string => {
   const [y, m] = day.split('-').map(Number);
@@ -391,12 +393,17 @@ export function toleranceOutcome(zone: ForecastZone, forecastQty: number, commit
 }
 
 /**
- * BR-07 — Firm periods are due 1 working day after publication (§3.4
- * calendar); Trade-off and Forecast periods 7 days after.
+ * CR-26 / BR-07 — Firm periods are due 1 working day after publication;
+ * Trade-off and Forecast periods 3 working days after. Both count on the hub's
+ * working calendar (BL-50), so a holiday the administrator adds moves them.
  */
-export function commitmentDueAt(zone: ForecastZone, publishedAt: string): string {
-  if (zone === 'firm') return addWorkingDays(publishedAt, FIRM_DEADLINE_WORKING_DAYS).toISOString();
-  return new Date(Date.parse(publishedAt) + OTHER_DEADLINE_DAYS * DAY_MS).toISOString();
+export function commitmentDueAt(
+  zone: ForecastZone,
+  publishedAt: string,
+  cal: WorkingCalendar = hubWorkingCalendar(),
+): string {
+  const days = zone === 'firm' ? FIRM_DEADLINE_WORKING_DAYS : OTHER_DEADLINE_WORKING_DAYS;
+  return addWorkingDays(publishedAt, days, cal).toISOString();
 }
 
 /** REQ-E06-03 BR-06 — the first reminder, at half the time to the deadline. */
@@ -420,6 +427,38 @@ export function deadlineState(
   if (now >= Date.parse(line.dueAt)) return 'overdue';
   if (now >= Date.parse(line.reminderAt)) return 'dueSoon';
   return 'open';
+}
+
+/**
+ * CR-26 · BL-48 — where a line stands against its deadline, as the screens say
+ * it: time left, late by, or whether the standing commitment arrived in time.
+ * DERIVED AT READ from the instant passed in; nothing here is stored (law 0.5).
+ *
+ * The window closes AT the deadline instant, as `deadlineState` has it: the
+ * last on-time moment is one millisecond before `dueAt`. A submitted
+ * commitment is judged against the deadline of the version it ANSWERED
+ * (`responseDueAt`), so a commitment carried forward from an earlier version
+ * keeps the verdict it earned there.
+ */
+export type CommitmentTiming =
+  | { readonly kind: 'open'; readonly msLeft: number }
+  | { readonly kind: 'late'; readonly msLate: number }
+  | { readonly kind: 'submittedOnTime' }
+  | { readonly kind: 'submittedLate'; readonly msLate: number };
+
+export function commitmentTiming(
+  line: Pick<ForecastCommitmentLine, 'state' | 'dueAt' | 'response' | 'responseDueAt'>,
+  nowIso: string,
+): CommitmentTiming {
+  const submittedAt = line.response?.submittedAt;
+  if (line.state !== 'awaiting' && submittedAt) {
+    const due = Date.parse(line.responseDueAt ?? line.dueAt);
+    const at = Date.parse(submittedAt);
+    return at >= due ? { kind: 'submittedLate', msLate: at - due } : { kind: 'submittedOnTime' };
+  }
+  const diff = Date.parse(line.dueAt) - Date.parse(nowIso);
+  // `Math.abs`, not `-diff`: at the deadline instant `-0` would leak out.
+  return diff > 0 ? { kind: 'open', msLeft: diff } : { kind: 'late', msLate: Math.abs(diff) };
 }
 
 /** The state of a line from the response that stands for its current quantity. */
@@ -479,6 +518,7 @@ export function buildCommitmentLines(input: CommitmentInputs): ForecastCommitmen
       const bounds = periodBounds(line.periodBucket);
       const mine = ordered.filter((r) => lineKey(r) === lineKey(line));
       let response: RequirementResponse | null = null;
+      let responseDueAt: string | null = null;
       let carriedForward = false;
       const submitted = mine.find((r) => r.status !== 'Draft');
       if (submitted) {
@@ -488,6 +528,11 @@ export function buildCommitmentLines(input: CommitmentInputs): ForecastCommitmen
         else if (answeredLine && answeredLine.forecastQty === line.forecastQty) {
           response = submitted;
           carriedForward = true;
+        }
+        // CR-26 — the deadline the standing commitment ANSWERED: its own
+        // version's publication and its line's zone in that version.
+        if (response && answered && answeredLine) {
+          responseDueAt = commitmentDueAt(zoneOfClass(answeredLine.commitmentClass), answered.publishedAt);
         }
       }
       const draft =
@@ -521,6 +566,7 @@ export function buildCommitmentLines(input: CommitmentInputs): ForecastCommitmen
         reminderAt: commitmentReminderAt(current.publishedAt, dueAt),
         state: commitmentState(zone, line.forecastQty, response),
         response,
+        responseDueAt,
         carriedForward,
         draft,
         committedQty: response?.forecastConfirmation?.confirmedQty ?? null,

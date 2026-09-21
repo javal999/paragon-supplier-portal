@@ -11,15 +11,16 @@ import TableRow from '../../components/ui-v2/TableRow';
 import TableCell from '../../components/ui-v2/TableCell';
 import Data from '../../components/ui-v2/Data';
 import { useInventory } from '../../services/query/hooks';
-import { positionBand } from '../../services/transitions/inventoryRules';
+import { positionRisk } from '../../services/transitions/inventoryRules';
 import { SupplyPill, qty } from '../inventory/inventoryDisplay';
 
 // Capability "inventory": backed by the wired InventoryDeclaration target
 // (gate-1 LIVE) and still harvest-gated on a live supplier feed (gate-2), so the
 // shell keeps the amber "Sample data" pill. INVENTORY-REFERENT-01 is closed: the
 // widget now reads the same inventory model the capability is backed to, and
-// "low" is the ONE band function (CR-02) — Critical or Warning days of supply —
-// not the retired <7 / 7–13 stock status.
+// "at risk" is the ONE risk-class function (CR-24, `positionRisk`) — High or
+// Medium against the supplier lead time, the CR-02 bands only where the lead
+// time is missing — not the retired <7 / 7–13 stock status.
 const BuyerInventoryWidget: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -27,15 +28,12 @@ const BuyerInventoryWidget: React.FC = () => {
 
   const low = useMemo(
     () =>
-      (query.data?.items ?? []).filter((p) => {
-        const band = positionBand(p);
-        return band === 'critical' || band === 'warning';
-      }),
+      (query.data?.items ?? []).filter((p) => positionRisk(p).riskClass !== 'low'),
     [query.data],
   );
   const count = low.length;
-  const critical = low.filter((p) => positionBand(p) === 'critical').length;
-  const severity: FlagSeverity = critical > 0 ? 'critical' : count > 0 ? 'warning' : 'none';
+  const high = low.filter((p) => positionRisk(p).riskClass === 'high').length;
+  const severity: FlagSeverity = high > 0 ? 'critical' : count > 0 ? 'warning' : 'none';
 
   const expandedRows =
     count === 0 ? (
@@ -77,8 +75,8 @@ const BuyerInventoryWidget: React.FC = () => {
       flagSeverity={severity}
       flagLabel={
         count > 0
-          ? critical > 0
-            ? t('widget.inventory.flag.withCritical', { count, critical })
+          ? high > 0
+            ? t('widget.inventory.flag.withHigh', { count, high })
             : t('widget.inventory.flag.plain', { count })
           : undefined
       }

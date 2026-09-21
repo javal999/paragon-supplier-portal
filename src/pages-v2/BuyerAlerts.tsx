@@ -19,13 +19,21 @@ import { formatDate, formatDateTime } from '../lib/format';
 import { useInventoryAlerts } from '../services/query/hooks';
 import type { InventoryAlert, RiskClass } from '../services/data/types';
 import { groupAlertsBySupplier } from '../services/transitions/inventoryAlertRules';
-import { RiskPill, inputClass, inventoryNow, labelClass, useInventoryRunner } from './inventory/inventoryDisplay';
+import {
+  RiskBasisNote,
+  RiskPill,
+  inputClass,
+  inventoryNow,
+  labelClass,
+  useInventoryRunner,
+} from './inventory/inventoryDisplay';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PTI ALERTS — REQ-E08-05.
 //
 // Rule-based alerts derived from the inventory model and capacity (BR-01), each
-// with a risk class (BR-02), sorted High first. One condition is one open alert
+// with a risk class (BR-02, CR-24) and the basis it was decided on — the lead
+// time, or the CR-02 fallback bands where none is on record — sorted High first. One condition is one open alert
 // (BR-05, AC-03). Alerts from one supplier on many materials sit under one
 // parent row (edge case). The planner opens the affected page directly and
 // closes an alert with an action note. Alerts are delivered in the hub; email
@@ -156,6 +164,7 @@ const BuyerAlerts: React.FC = () => {
                               </>
                             )}
                           </div>
+                          <RiskBasisNote basis={a.riskBasis} testId={`alert-basis-${a.key}`} withCover />
                           {a.status === 'closed' && (
                             <div className="text-xs text-text-secondary mt-1">
                               {t('inv.alerts.closedAt')} <Data>{formatDateTime(a.closedAt ?? '')}</Data> — {a.actionNote}

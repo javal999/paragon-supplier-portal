@@ -277,6 +277,19 @@ export interface POLineItem {
   uom: string;
   unitPrice: number;
   confirmedQty: number;
+  /**
+   * An SAP value-limit line: the line commits a VALUE and carries NO quantity
+   * (CR-04; BL-13 decided quantity per line, so this is the exception). When it
+   * is set, `quantity` is 0 and means "no quantity", never "nothing ordered",
+   * and a call-off release on the line is checked against remaining VALUE.
+   */
+  valueLimit?: number;
+  /**
+   * CR-12 — the contract this line's unit price comes from, when it does. A
+   * contract-priced line is invoiced at 0% tolerance; a line without one at 2%
+   * within the rupiah cap (`fulfilmentConfig.ts`). Absent = no contract price.
+   */
+  contractNumber?: string;
 }
 
 export interface PurchaseOrder {
@@ -376,7 +389,7 @@ export interface PoShippingNotice {
 // Escalated, At Risk, Dispatched, on time / late / missed — is computed at read
 // time (`callOffRules.ts`) and never stored here.
 
-/** JIT: no over-quantity limit. Forecast-based: CR-05 tolerance applies. */
+/** JIT or forecast-based, set at release (BR-09). Since BL-47 the CR-05 tolerance is the same for both. */
 export type CallOffType = 'jit' | 'forecast';
 
 /** Stored call-off states — the confirmation statuses of REQ-E09-03 BR-02, plus
@@ -519,6 +532,12 @@ export interface InventoryPosition {
   readonly incoming: readonly IncomingItem[];
   /** CR-01 — forecast for the next 30 days ÷ 30; null when there is no demand. */
   readonly avgDailyDemand: number | null;
+  /**
+   * CR-24 — the supplier's lead time for this material, in days (master data,
+   * not a clock state). Null when none is on record: the risk class then falls
+   * back to the CR-02 bands and a "lead time missing" alert is raised.
+   */
+  readonly leadTimeDays: number | null;
   readonly demandSource: DemandSource;
   readonly lastUpdatedAt: string | null;
   readonly channel: StockChannel | null;
@@ -665,13 +684,20 @@ export interface ForecastCommitmentLine {
   readonly previousQty: number | null;
   /** When the current version was published (the deadline counts from it). */
   readonly publishedAt: string;
-  /** REQ-E06-02 BR-07 — Firm: 1 working day; Trade-off and Forecast: 7 days. */
+  /** CR-26 / REQ-E06-02 BR-07 — Firm: 1 working day; Trade-off and Forecast: 3
+   *  working days after publication, on the hub calendar (BL-48, BL-50). */
   readonly dueAt: string;
   /** REQ-E06-03 BR-06 — the first reminder, at half the deadline. */
   readonly reminderAt: string;
   readonly state: CommitmentState;
   /** The submitted commitment that stands for the current quantity. */
   readonly response: RequirementResponse | null;
+  /**
+   * CR-26 — the deadline the standing response ANSWERED (its own version's
+   * publication and zone), so a carried-forward commitment keeps the verdict it
+   * earned. Derived from publications, never from a clock; null with no response.
+   */
+  readonly responseDueAt: string | null;
   /** True when that commitment answered an earlier version with the same quantity. */
   readonly carriedForward: boolean;
   /** The supplier's own unsubmitted draft (never in PTI's read — BR-10). */
@@ -711,9 +737,30 @@ export type InventoryAlertRule =
   | 'staleData'
   | 'coverage'
   /** REQ-E08-05 BR-01 — committed quantity below forecast beyond tolerance (REQ-E06-03). */
-  | 'commitmentBelowForecast';
+  | 'commitmentBelowForecast'
+  /** CR-24 / BR-02 — no supplier lead time on record; the risk class fell back to CR-02. */
+  | 'leadTimeMissing';
 
 export type RiskClass = 'high' | 'medium' | 'low';
+
+/** CR-02 — the days-of-supply bands, used only where a lead time is missing. */
+export type SupplyBand = 'critical' | 'warning' | 'healthy' | 'excess';
+
+/**
+ * CR-24 — what a risk class was decided on, so a planner can see WHY a material
+ * is High. Derived at read by `positionRisk` (inventoryRules), never stored.
+ *   · leadTime       — days of cover against the supplier lead time.
+ *   · fallbackBands  — no lead time on record, so the CR-02 bands decided.
+ *   · noCover        — days of cover cannot be computed (no stock figures or no
+ *                      demand); the class is Low and the stale-data alert speaks.
+ *   · rule           — the alert's own rule set the class (stale data, the
+ *                      commitment zone), not CR-24.
+ */
+export type RiskBasis =
+  | { readonly kind: 'leadTime'; readonly leadTimeDays: number; readonly daysOfCover: number }
+  | { readonly kind: 'fallbackBands'; readonly band: SupplyBand; readonly daysOfCover: number }
+  | { readonly kind: 'noCover'; readonly leadTimeDays: number | null }
+  | { readonly kind: 'rule' };
 
 /** A rule-based alert (REQ-E08-05). The key is rule × material (or group) × supplier. */
 export interface InventoryAlert {
@@ -725,6 +772,8 @@ export interface InventoryAlert {
   readonly subject: string;
   readonly subjectLabel: string;
   readonly riskClass: RiskClass;
+  /** CR-24 — what the class was decided on (derived with the alert, never stored). */
+  readonly riskBasis: RiskBasis;
   readonly status: 'open' | 'closed';
   readonly closedAt?: string;
   readonly actionNote?: string;
@@ -1043,6 +1092,18 @@ export interface InvoiceLine {
   uom?: string;
   /** The PO unit price for this material (CR-12 basis). */
   unitPrice: number;
+  /**
+   * CR-12 — the PO line's contract, copied with its price when the line is
+   * pre-filled (and refused if it differs from the PO): it decides whether the
+   * line is checked at 0% or at 2% within the rupiah cap.
+   */
+  contractNumber?: string;
+  /**
+   * What the supplier billed for this line, when the invoice states it per
+   * line. Absent: the line is billed at quantity × unit price, and any
+   * difference on the invoice total is not split by line.
+   */
+  billedAmount?: number;
 }
 
 /**

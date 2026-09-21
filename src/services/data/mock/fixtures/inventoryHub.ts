@@ -113,6 +113,46 @@ export const PLANNING_DAILY_DEMAND: Readonly<Record<string, number>> = {
   'sup-010|RM-EMUL-9430': 70,
 };
 
+/**
+ * CR-24 — the supplier's lead time per supplier × material, in days. SAMPLE
+ * master data (the real figure comes from the supplier master / SAP purchasing
+ * info record, not yet integrated). A pair with no entry has NO lead time on
+ * record: its risk class falls back to the CR-02 bands and it raises the
+ * "lead time missing" alert.
+ *
+ * BL-46 demo cases (days of cover are the planning estimate's, so they do not
+ * move with the clock — pinned in inventoryRules.test.ts by name):
+ *   · High        sup-002 RM-STEAR-7300  10 days vs lead time 21 (below 1×)
+ *   · Medium      sup-007 PK-PETB-8801   17 days vs lead time 14 (1× to 1.5×)
+ *   · Low         sup-008 PK-CART-9901   ~45 days vs lead time 14
+ *   · Exactly 1×  sup-009 AI-VITC-6730   25 days vs lead time 25 → Medium
+ *   · Exactly 1.5× sup-006 AI-VITC-6720  12 days vs lead time 8  → Low
+ *     (Critical under the old CR-02 bands — the case that changed most)
+ *   · Missing     sup-010 RM-EMUL-9430   6 days, no lead time → CR-02 Critical
+ *     → High, and a "lead time missing" alert
+ */
+export const SUPPLIER_LEAD_TIME_DAYS: Readonly<Record<string, number>> = {
+  'sup-001|RM-COCO-8200': 14,
+  'sup-001|RM-LAURIC-7200': 10,
+  'sup-002|RM-EMUL-9410': 21,
+  'sup-002|RM-STEAR-7300': 21,
+  'sup-002|RM-EMUL-3310': 21,
+  'sup-003|FR-WARD-4410': 30,
+  'sup-003|FR-EMIN-4420': 30,
+  'sup-005|AI-NIAC-6601': 45,
+  'sup-005|AI-HYALU-6610': 45,
+  'sup-005|RM-EMUL-3310': 45,
+  'sup-006|AI-VITC-6720': 8,
+  'sup-007|PK-PETB-8801': 14,
+  'sup-007|PK-PETB-8802': 14,
+  'sup-007|PK-PETB-8810': 14,
+  'sup-007|PK-CAPF-8820': 14,
+  'sup-008|PK-CART-9901': 14,
+  'sup-009|AI-VITC-6730': 25,
+  'sup-009|AI-PANTO-6640': 20,
+  // sup-010 RM-EMUL-9430 deliberately absent — the lead-time-missing case.
+};
+
 /** One material's figures in a supplier's API response. */
 export interface ApiStockFigure {
   readonly materialCode: string;

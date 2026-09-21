@@ -9,7 +9,10 @@
 //
 // The ONE band function: `supplyBand`. It replaces the two conflicting sets the
 // old pages carried (the buyer's <14/<30/≤60 labels and the supplier's
-// <7/7–13/14–30 stock status).
+// <7/7–13/14–30 stock status). Since CR-24 (BL-46) the band is a FALLBACK: the
+// ONE risk-class function is `riskFor` / `positionRisk`, which compares days of
+// cover with the supplier lead time and reaches for the band only where no lead
+// time is on record.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type {
@@ -17,8 +20,11 @@ import type {
   CallOff,
   IncomingItem,
   InventoryPosition,
+  RiskBasis,
+  RiskClass,
   StockAccessGrant,
   StockSyncAttempt,
+  SupplyBand,
   DemandSource,
 } from '../data/types';
 import type { ForecastLine, InventoryDeclaration, MaterialMasterEntry, StockChannel } from '../sdc/types';
@@ -27,6 +33,7 @@ import { normalizeQty } from '../../lib/localeNumber';
 import {
   COVERAGE_THRESHOLDS,
   DEMAND_WINDOW,
+  LEAD_TIME_RISK,
   SUPPLY_BANDS,
   updateSlaFor,
 } from './inventoryConfig';
@@ -121,7 +128,7 @@ export function weekDemand(lines: readonly DemandLine[], planningEstimate: numbe
 
 // ── Days of supply and bands (CR-01, CR-02) ──────────────────────────────────
 
-export type SupplyBand = 'critical' | 'warning' | 'healthy' | 'excess';
+export type { SupplyBand };
 
 export const SUPPLY_BAND_ORDER: readonly SupplyBand[] = ['critical', 'warning', 'healthy', 'excess'];
 
@@ -145,6 +152,47 @@ export const positionDays = (p: Pick<InventoryPosition, 'supplierSoh' | 'avgDail
 
 export const positionBand = (p: Pick<InventoryPosition, 'supplierSoh' | 'avgDailyDemand'>): SupplyBand | null =>
   supplyBand(positionDays(p));
+
+// ── Risk class (CR-24, CR-02 as its fallback) ────────────────────────────────
+
+/** A usable lead time: a positive, finite number of days. Anything else is missing. */
+export const hasLeadTime = (leadTimeDays: number | null | undefined): leadTimeDays is number =>
+  typeof leadTimeDays === 'number' && Number.isFinite(leadTimeDays) && leadTimeDays > 0;
+
+const BAND_RISK: Record<SupplyBand, RiskClass> = {
+  critical: 'high',
+  warning: 'medium',
+  healthy: 'low',
+  excess: 'low',
+};
+
+/**
+ * CR-24 — THE risk-class function. Every page, widget and alert that shows a
+ * material's risk reads it from here (BL-46).
+ *   · With a lead time L: High when cover < L; Medium when cover < 1.5 × L;
+ *     Low otherwise. Strict at both cuts — cover exactly L is Medium, exactly
+ *     1.5 × L is Low.
+ *   · Without one: the CR-02 bands decide (Critical → High, Warning → Medium,
+ *     Healthy / Excess → Low), and the caller raises "lead time missing".
+ *   · Without days of cover: Low, basis `noCover` — the missing figures are the
+ *     stale-data alert's business, not a risk.
+ */
+export function riskFor(daysOfCover: number | null, leadTimeDays: number | null): { riskClass: RiskClass; basis: RiskBasis } {
+  const lead = hasLeadTime(leadTimeDays) ? leadTimeDays : null;
+  if (daysOfCover === null) return { riskClass: 'low', basis: { kind: 'noCover', leadTimeDays: lead } };
+  if (lead !== null) {
+    const riskClass: RiskClass =
+      daysOfCover < lead ? 'high' : daysOfCover < LEAD_TIME_RISK.mediumBelowMultiple * lead ? 'medium' : 'low';
+    return { riskClass, basis: { kind: 'leadTime', leadTimeDays: lead, daysOfCover } };
+  }
+  const band = supplyBand(daysOfCover) as SupplyBand;
+  return { riskClass: BAND_RISK[band], basis: { kind: 'fallbackBands', band, daysOfCover } };
+}
+
+/** CR-24 for one position: its days of supply (CR-01) against its supplier lead time. */
+export const positionRisk = (
+  p: Pick<InventoryPosition, 'supplierSoh' | 'avgDailyDemand' | 'leadTimeDays'>,
+): { riskClass: RiskClass; basis: RiskBasis } => riskFor(positionDays(p), p.leadTimeDays);
 
 // ── Incoming (REQ-E08-01 BR-05, BR-06) ───────────────────────────────────────
 
@@ -293,6 +341,8 @@ export interface PositionInputs {
   readonly ptiStock: readonly PtiStockRecord[];
   readonly forecastLines: readonly ForecastLine[];
   readonly planningEstimate: (supplierId: string, materialCode: string) => number | null;
+  /** CR-24 — the supplier lead time in days (master data); null when none is on record. */
+  readonly leadTime: (supplierId: string, materialCode: string) => number | null;
   readonly asns: readonly ASN[];
   readonly callOffViews: readonly Pick<CallOffView, 'callOff' | 'delivery'>[];
   readonly apiConnected: (supplierId: string) => boolean;
@@ -331,6 +381,7 @@ export function buildInventoryPositions(input: PositionInputs, nowIso: string): 
       incoming: [...production, ...inTransitItems(supplierId, materialCode, input.asns, input.callOffViews)],
       avgDailyDemand: demand.value,
       demandSource: demand.source,
+      leadTimeDays: input.leadTime(supplierId, materialCode),
       lastUpdatedAt: decl ? decl.declaredAt : null,
       channel: decl ? (decl.channel ?? 'manual') : null,
       updateSla: updateSlaFor(supplierId, materialCode),

@@ -318,6 +318,14 @@ export const POLICY_HOOKS = {
    * one `{tracking}`, a boolean `active`, and a well-formed attribution.
    */
   THREE_PL_GOVERNED: 'three_pl_governed',
+  /**
+   * BL-50 — a ruling on one day of the hub's working calendar: the date is one
+   * the SAP load covers, the kind is working or non-working, the reason is
+   * SUBSTANCE rather than presence (`requiredFields` admits a space bar), and
+   * the attribution is well formed. The same predicates re-validate a stored
+   * ruling on read, so a hand-edited store is held to the verb's rule.
+   */
+  CALENDAR_DAY_GOVERNED: 'calendar_day_governed',
 
   /**
    * PR reject (§67): the rejection reason must be SUBSTANCE, not presence.

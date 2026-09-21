@@ -9,15 +9,13 @@ import { useRefusalText } from '../../hooks/useRefusalText';
 import { formatDate, formatDateTime } from '../../lib/format';
 import type { StatusTone } from '../../lib/statusTone';
 import { sdcClock } from '../../services/sdc';
-import type { InventoryPosition, RiskClass } from '../../services/data/types';
+import type { InventoryPosition, RiskBasis, RiskClass } from '../../services/data/types';
 import type { StockChannel } from '../../services/sdc/types';
 import {
   incomingTotals,
-  positionBand,
-  positionDays,
+  positionRisk,
   stockFreshness,
   type StockFreshness,
-  type SupplyBand,
 } from '../../services/transitions/inventoryRules';
 import type { CapacityConfirmationStatus } from '../../services/transitions/capacityRules';
 import { useInventoryCommand, type InventoryCommandVars } from '../../services/query/commandHooks';
@@ -37,29 +35,60 @@ export const inputClass =
   'w-full px-3 py-2 text-sm text-text-primary bg-white border border-border-input rounded-md focus:outline-none focus:border-action';
 export const labelClass = 'block text-label text-text-tertiary uppercase mb-1';
 
-const BAND_TONE: Record<SupplyBand, StatusTone> = {
-  critical: 'danger',
-  warning: 'warning',
-  healthy: 'success',
-  excess: 'info',
+const RISK_TONE: Record<RiskClass, StatusTone> = { high: 'danger', medium: 'warning', low: 'neutral' };
+
+/**
+ * CR-24 — WHY a risk class is what it is, in one line: "Lead time 21 days", or
+ * "No lead time · day bands: Critical" where the CR-02 fallback decided. Null
+ * when the class came from the alert's own rule or there is no cover figure.
+ */
+export const RiskBasisNote: React.FC<{ basis: RiskBasis; testId?: string; withCover?: boolean }> = ({
+  basis,
+  testId,
+  withCover = false,
+}) => {
+  const { t } = useTranslation();
+  if (basis.kind !== 'leadTime' && basis.kind !== 'fallbackBands') return null;
+  const cover = withCover ? `${t('inv.basis.cover', { count: Math.floor(basis.daysOfCover) })} · ` : '';
+  if (basis.kind === 'leadTime') {
+    return (
+      <span className="block text-xs text-text-secondary whitespace-nowrap" data-testid={testId} data-basis="leadTime">
+        {cover}
+        {t('inv.basis.leadTime', { count: basis.leadTimeDays })}
+      </span>
+    );
+  }
+  return (
+    <span className="block text-xs text-warning-hover whitespace-nowrap" data-testid={testId} data-basis="fallbackBands">
+      {cover}
+      {t('inv.basis.fallback', { band: t(`inv.band.${basis.band}`) })}
+    </span>
+  );
 };
 
-/** CR-01 / CR-02 — days of supply with its band. */
+/**
+ * CR-01 days of supply with its CR-24 risk class, and the basis the class was
+ * decided on (lead time, or the CR-02 fallback bands) — one function,
+ * `positionRisk`, on every page that shows it.
+ */
 export const SupplyPill: React.FC<{ position: InventoryPosition }> = ({ position }) => {
   const { t } = useTranslation();
-  const band = positionBand(position);
-  const days = positionDays(position);
-  if (band === null || days === null) {
+  const { riskClass, basis } = positionRisk(position);
+  const testId = `risk-${position.supplierId}-${position.materialCode}`;
+  if (basis.kind === 'noCover' || basis.kind === 'rule') {
     return (
-      <span className="text-xs text-text-tertiary">
+      <span className="text-xs text-text-tertiary" data-testid={testId}>
         {position.supplierSoh === null ? t('inv.band.noFigures') : t('inv.band.noDemand')}
       </span>
     );
   }
   return (
-    <StatusPill variant={BAND_TONE[band]}>
-      {t('inv.band.days', { count: Math.floor(days) })} · {t(`inv.band.${band}`)}
-    </StatusPill>
+    <div data-testid={testId} data-risk={riskClass}>
+      <StatusPill variant={RISK_TONE[riskClass]}>
+        {t('inv.band.days', { count: Math.floor(basis.daysOfCover) })} · {t(`inv.risk.${riskClass}`)}
+      </StatusPill>
+      <RiskBasisNote basis={basis} />
+    </div>
   );
 };
 
@@ -88,8 +117,6 @@ export const ChannelLabel: React.FC<{ channel: StockChannel }> = ({ channel }) =
   const { t } = useTranslation();
   return <span className="text-xs text-text-secondary whitespace-nowrap">{t(`inv.channel.${channel}`)}</span>;
 };
-
-const RISK_TONE: Record<RiskClass, StatusTone> = { high: 'danger', medium: 'warning', low: 'neutral' };
 
 export const RiskPill: React.FC<{ riskClass: RiskClass }> = ({ riskClass }) => {
   const { t } = useTranslation();

@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { InvoiceLinesSection } from './invoices/InvoiceCollaboration';
+import { InvoiceLinesSection, fmtIdr } from './invoices/InvoiceCollaboration';
+import { INVOICE_PRICE_TOLERANCE } from '../services/transitions';
 import {
   BarChart,
   Bar,
@@ -1246,7 +1247,10 @@ const BuyerInvoicesView: React.FC<{ invoices: BuyerInvoice[] }> = ({ invoices: a
                   })()}
                 </div>
                 <div className="text-text-secondary mt-1">
-                  {t(MATCH_DESC_KEY[selected.matchStatus])}
+                  {t(MATCH_DESC_KEY[selected.matchStatus], {
+                    pct: INVOICE_PRICE_TOLERANCE.standardPct,
+                    cap: fmtIdr(INVOICE_PRICE_TOLERANCE.standardCapIdr),
+                  })}
                 </div>
               </div>
             </section>
@@ -1261,10 +1265,12 @@ const BuyerInvoicesView: React.FC<{ invoices: BuyerInvoice[] }> = ({ invoices: a
                 <strong>{t('fc.inv.detail.returned')}:</strong> {selected.returnReason}
               </div>
             )}
+            {/* CR-12 (BL-44) — per line: which rule applied and why it is held. */}
             <InvoiceLinesSection
               lines={selected.lines}
               invoiceDate={selected.invoiceDate}
               taxInvoiceFile={selected.taxInvoiceFile}
+              amount={selected.amount}
             />
 
             <section>

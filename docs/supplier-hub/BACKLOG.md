@@ -41,13 +41,6 @@ Decided on 2026-09-21 and ready to build. Priority: first what protects money an
 
 | Priority | ID | Item | Rule | Size | Placeholder until decided |
 |---|---|---|---|---|---|
-| 2 | BL-44 | **Invoice price tolerance.** 0% where a contract price exists; 2% otherwise, within an absolute rupiah cap | CR-12 | S | Cap IDR 500,000 (BL-54) |
-| 3 | BL-45 | **Goods receipt tolerance.** Any over-delivery flagged; a shortfall above 2% flagged and the receipt kept open | CR-25 | S | — |
-| 4 | BL-46 | **Alert risk class by lead time.** High below lead time, Medium below 1.5 × lead time, Low otherwise; day bands only where the lead time is missing, which raises its own alert | CR-24 | M | — |
-| 5 | BL-47 | **Call-off tolerance.** Up to 5% over accepted for every call-off type; any shortfall a visible partial; a late date always goes to planner approval; an early date also goes to approval until the warehouse answers | CR-05 | S | Early allowance 0 days (BL-56) |
-| 6 | BL-48 | **Forecast commitment deadline.** Firm periods 1 working day, Trade-off and Forecast 3 working days | CR-26 | S | — |
-| 7 | BL-49 | **Call-off release by remaining quantity.** Quantity becomes the default check, value only where a line has no quantity | CR-04; BL-13 | S | — |
-| 8 | BL-50 | **Hub-managed working calendar.** Administrator page to load the SAP factory calendar and add, remove or override days; every deadline reads it. This is the first page of the admin screen in BL-32 | Requirements 3.4 | M | SAP load simulated |
 | 12 | BL-31 | Accessibility pass (section 4) | SC-07 | M | — |
 | 13 | BL-32 | Admin screen for the remaining configuration: reason codes, tolerances, thresholds, stale periods (section 4) | REQ-E08-05 BR-03 | M | — |
 | 14 | BL-33 to BL-39 | The remaining "can start today" items in section 4, in the order listed there | — | — | — |
@@ -128,12 +121,19 @@ Nothing blocks these.
 | BL-21 | Event-based strategy analysis | 2026-09-21 | Closed with BL-02 |
 | BL-22 | Supplier TMS access | 2026-09-21 | Closed with BL-03 |
 | BL-43 | Compliance gate at award | 2026-09-21 | Built: CR-23 gate refuses an award to a failing supplier and shows the failed criteria; quote score re-weighted 40/20/40 (CR-15) over qualified suppliers. Placeholder OTIF minimum 80% until BL-55 |
+| BL-46 | Alert risk class by lead time | 2026-09-21 | Built: one risk-class function (CR-24) for the inventory views, the dashboard widget and the alerts: High below the supplier lead time, Medium below 1.5 ×, Low otherwise, strict at both cuts; the CR-02 day bands only where the lead time is missing, which raises a "lead time missing" alert for PTI. Every surface shows the basis. Lead times are sample master data; demo table in `BUILD-GAP.md` 3.2 |
 | BL-64 | Compliance gate demo data | 2026-09-21 | Built: five sample RFQs (016–020) cover every CR-23 scenario; an RFQ nobody can win says so. Table in `BUILD-GAP.md` |
 | BL-60 | One stock entry | 2026-09-21 | Built: manual and template share the same fields on the Stock page; the Forecast page's old entry retired; optional manufacturing date; in-transit read-only from ASNs and call-offs |
 | BL-59 | Supplier-triggered stock sync | 2026-09-21 | Built (simulated until BL-25): supplier Sync for API-connected suppliers; PTI stock refresh only for granted materials |
 | BL-61 | One list on the supplier inventory view | 2026-09-21 | Built: tabs only when a supplier supplies both types; PTI view unchanged |
 | BL-62 | Capacity "upside" relabelled | 2026-09-21 | Built: "Extra capacity if requested", with an explanation |
 | BL-63 | Capacity page filters | 2026-09-21 | Built: supplier, material group, material, gaps only, kept in the page address |
+| BL-44 | Invoice price tolerance | 2026-09-21 | Built: per line, 0% on a contract price, otherwise 2% within the cap (placeholder IDR 500,000 until BL-54); the invoice shows which rule applied |
+| BL-45 | Goods receipt tolerance | 2026-09-21 | Built: any over-delivery flagged; a shortfall above 2% flagged and shown as kept open (a label; it does not reopen the order quantity) |
+| BL-47 | Call-off tolerance | 2026-09-21 | Built: up to 5% over accepted for every type; a shortfall is a visible partial; later and earlier dates go to the planner (early allowance 0 days until BL-56) |
+| BL-49 | Call-off release by remaining quantity | 2026-09-21 | Built: release checked on remaining quantity; value only on a line with no quantity; over-release refused with both figures |
+| BL-50 | Hub-managed working calendar | 2026-09-21 | Built: administrator page (first page of the admin screen, BL-32) with the SAP factory calendar (sample load) and governed add/remove/override rulings; every working-day deadline reads it |
+| BL-48 | Forecast commitment deadline | 2026-09-21 | Built: Firm 1 working day, Trade-off and Forecast 3, on the hub calendar; time left and late shown to supplier and planner |
 | BL-51 | 3PL tracking link on the ASN | 2026-09-21 | Built: the supplier picks the 3PL from the administrator's list (sample list, marked as sample) or types another carrier; the tracking number opens the 3PL's public page in a new tab on every ASN surface, supplier and PTI; no status read; no or unknown 3PL shows plain text. The list is changed through a governed verb held by the compliance lane and the Hub administrator, on Administration → 3PL tracking links |
 | BL-52 | Supplier filters | 2026-09-21 | Built: certificate validity (valid, expiring within 90 days, expired or missing), performance band (A–D, No history), country, on the supplier list and every invitee search, in the page address and combined with the existing filters. Region is not a separate filter: the supplier master holds a country only |
 | BL-53 | KPI definitions on the performance pages | 2026-09-21 | Built: OTIF and CFOT definitions as calculated (window, early, grain, date change, in full) on both performance pages; targets read "Baseline period — no target yet". One difference from the requirements is stated as the code does it and left for a decision: a PO counter-offer moves the CFOT date as soon as it is sent |

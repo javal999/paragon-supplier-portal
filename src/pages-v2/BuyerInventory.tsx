@@ -23,9 +23,9 @@ import { HandoffNotice } from '../components/ui-v2/HandoffNotice';
 import { useVerbAvailability } from '../hooks/useVerbAvailability';
 import { formatDate, formatDateTime } from '../lib/format';
 import { useInventory } from '../services/query/hooks';
-import type { InventoryPosition } from '../services/data/types';
+import type { InventoryPosition, RiskClass } from '../services/data/types';
 import type { MaterialType } from '../services/sdc/types';
-import { positionBand, stockFreshness, type SupplyBand } from '../services/transitions/inventoryRules';
+import { hasLeadTime, positionRisk, stockFreshness } from '../services/transitions/inventoryRules';
 import {
   Figure,
   IncomingButton,
@@ -44,12 +44,14 @@ import StockEntryPanel from './inventory/StockEntryPanel';
 // One row per material × supplier from the ONE inventory model: supplier SOH,
 // PTI SOH, PTI ROP, supplier ROP, incoming split into in production and in
 // transit with the next date (opening the per-date detail), days of supply
-// with its band, and the last update time with the stale flag. There is no
+// with its risk class and the basis it was decided on (CR-24: lead time, or the
+// CR-02 bands where the lead time is missing), and the last update time with
+// the stale flag. There is no
 // "available" figure (BR-01, AC-02). Raw material and packaging are separate
 // views (BR-07).
 // ─────────────────────────────────────────────────────────────────────────────
 
-type BandFilter = 'all' | SupplyBand | 'stale';
+type BandFilter = 'all' | RiskClass | 'stale';
 
 const BuyerInventory: React.FC = () => {
   const { t } = useTranslation();
@@ -72,10 +74,10 @@ const BuyerInventory: React.FC = () => {
       ? ofType.length
       : b === 'stale'
         ? ofType.filter((r) => stockFreshness(r, nowIso) !== 'current').length
-        : ofType.filter((r) => positionBand(r) === b).length;
+        : ofType.filter((r) => positionRisk(r).riskClass === b).length;
   const shown = ofType.filter((r) => {
     if (band === 'stale' && stockFreshness(r, nowIso) === 'current') return false;
-    if (band !== 'all' && band !== 'stale' && positionBand(r) !== band) return false;
+    if (band !== 'all' && band !== 'stale' && positionRisk(r).riskClass !== band) return false;
     const q = search.trim().toLowerCase();
     return (
       q === '' ||
@@ -99,7 +101,8 @@ const BuyerInventory: React.FC = () => {
       <EmptyState breadcrumb={crumb} title={t('inv.pti.title')} subtitle={t('inv.pti.subtitle')} message={t('inv.pti.empty')} />
     );
 
-  const critical = rows.filter((r) => positionBand(r) === 'critical').length;
+  const high = rows.filter((r) => positionRisk(r).riskClass === 'high').length;
+  const noLeadTime = rows.filter((r) => !hasLeadTime(r.leadTimeDays)).length;
   const stale = rows.filter((r) => stockFreshness(r, nowIso) !== 'current').length;
 
   return (
@@ -126,17 +129,20 @@ const BuyerInventory: React.FC = () => {
       {/* REQ-E07-08 AC-03 — this page reads SAP data; say how old it is. */}
       <SapDataAgeBanner page="inventory" className="mb-4" />
 
-      {(critical > 0 || stale > 0) && (
+      {(high > 0 || noLeadTime > 0 || stale > 0) && (
         <div
           role="status"
           data-testid="pti-inventory-banner"
           className="bg-warning-soft border-l-2 border-warning rounded px-4 py-3 mb-4 text-sm text-warning-hover space-y-1"
         >
-          {critical > 0 && (
+          {high > 0 && (
             <div className="flex items-center gap-2">
               <AlertTriangle size={14} aria-hidden="true" />
-              {t('inv.pti.banner.critical', { count: critical })}
+              {t('inv.pti.banner.high', { count: high })}
             </div>
+          )}
+          {noLeadTime > 0 && (
+            <div data-testid="pti-inventory-banner-lead-time">{t('inv.pti.banner.leadTimeMissing', { count: noLeadTime })}</div>
           )}
           {stale > 0 && <div>{t('inv.pti.banner.stale', { count: stale })}</div>}
         </div>
@@ -200,9 +206,9 @@ const BuyerInventory: React.FC = () => {
           <SearchBar value={search} onChange={setSearch} placeholder={t('inv.search')} />
         </div>
         <FilterChipsBar<BandFilter>
-          options={(['all', 'critical', 'warning', 'healthy', 'excess', 'stale'] as BandFilter[]).map((b) => ({
+          options={(['all', 'high', 'medium', 'low', 'stale'] as BandFilter[]).map((b) => ({
             id: b,
-            label: `${t(`inv.filter.${b}`)} (${bandCount(b)})`,
+            label: `${b === 'high' || b === 'medium' || b === 'low' ? t(`inv.risk.${b}`) : t(`inv.filter.${b}`)} (${bandCount(b)})`,
           }))}
           value={band}
           onChange={setBand}

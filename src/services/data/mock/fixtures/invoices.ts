@@ -63,6 +63,112 @@ const INVOICES_RAW: Invoice[] = [
     paymentTerms: 'Net 30', buyerContact: 'Procurement Officer', remittanceNote: null,
   },
 
+  // ── CR-12 PRICE TOLERANCE DEMO (BL-44) — sup-007, receipt-based ───────────
+  //
+  // One invoice per CR-12 case, each a single line so the line IS the reason
+  // the invoice is matched or held. All sample data. The receipts are the
+  // sup-007 walkthrough receipts: GR-2026-015 (PK-PETB-8801 on PO-2026-00125,
+  // whose line carries contract CTR-2025-018 → 0%) and GR-2026-017
+  // (PK-PETB-8802 on PO-2026-00126, no contract → 2% within the Rp 500,000
+  // cap). Neither receipt carries a rejection, so CR-13 never decides these.
+  // Quantities stay within what each receipt accepted (20,000 of GR-2026-015's
+  // 48,950; 37,000 of GR-2026-017's 40,001), so both remain invoiceable.
+  //
+  //   inv-brl-0061  contract price, billed exactly          → Matched
+  //   inv-brl-0062  contract price, billed Rp 10,000 over   → Price variance
+  //   inv-brl-0063  no contract, +1.38%, Rp 170,000         → Matched
+  //   inv-brl-0064  no contract, +1.95% but Rp 600,000      → Price variance (cap)
+  //   inv-brl-0065  no contract, +3.00%, Rp 74,000          → Price variance (2%)
+  //
+  // The stored `matchStatus` is the verdict `deriveInvoiceVerdict` gives, and
+  // `priceToleranceDemo.test.ts` re-derives it for each id by name. A held
+  // invoice stays `Submitted` (the header advances only on a clean match).
+  {
+    id: 'inv-brl-0061', invoiceNumber: 'INV-2026-BRL-0061', supplierId: 'sup-007',
+    supplierName: 'PT Sample Packaging Indonesia', poNumber: 'PO-2026-00125', poId: 'po-025',
+    amount: 16_000_000, currency: 'IDR', status: 'Matched', matchStatus: 'Matched',
+    submittedDate: '2026-06-17', dueDate: '2026-07-17', paymentDate: null,
+    paymentRef: null, sapFiDoc: null, sapGrDoc: null,
+    bankAccount: 'BCA 028-111-2222', channel: 'Web', approver: 'Procurement Officer',
+    paymentTerms: 'Net 30', buyerContact: 'Procurement Officer', remittanceNote: null,
+    invoiceDate: '2026-06-16', taxInvoiceFile: 'efaktur-BRL-0061.pdf',
+    lines: [
+      {
+        receiptId: 'gr-015', grNumber: 'GR-2026-015', materialCode: 'PK-PETB-8801',
+        description: 'PET Bottle 200ml Frosted — Wardah Series', quantity: 10_000, uom: 'PCS',
+        unitPrice: 1_600, contractNumber: 'CTR-2025-018', billedAmount: 16_000_000,
+      },
+    ],
+  },
+  {
+    id: 'inv-brl-0062', invoiceNumber: 'INV-2026-BRL-0062', supplierId: 'sup-007',
+    supplierName: 'PT Sample Packaging Indonesia', poNumber: 'PO-2026-00125', poId: 'po-025',
+    amount: 16_010_000, currency: 'IDR', status: 'Submitted', matchStatus: 'Price Variance',
+    submittedDate: '2026-06-17', dueDate: '2026-07-17', paymentDate: null,
+    paymentRef: null, sapFiDoc: null, sapGrDoc: null,
+    bankAccount: 'BCA 028-111-2222', channel: 'Web', approver: 'Procurement Officer',
+    paymentTerms: 'Net 30', buyerContact: 'Procurement Officer', remittanceNote: null,
+    invoiceDate: '2026-06-16', taxInvoiceFile: 'efaktur-BRL-0062.pdf',
+    lines: [
+      {
+        receiptId: 'gr-015', grNumber: 'GR-2026-015', materialCode: 'PK-PETB-8801',
+        description: 'PET Bottle 200ml Frosted — Wardah Series', quantity: 10_000, uom: 'PCS',
+        unitPrice: 1_600, contractNumber: 'CTR-2025-018', billedAmount: 16_010_000,
+      },
+    ],
+  },
+  {
+    id: 'inv-brl-0063', invoiceNumber: 'INV-2026-BRL-0063', supplierId: 'sup-007',
+    supplierName: 'PT Sample Packaging Indonesia', poNumber: 'PO-2026-00126', poId: 'po-026',
+    amount: 12_500_000, currency: 'IDR', status: 'Matched', matchStatus: 'Matched',
+    submittedDate: '2026-06-17', dueDate: '2026-07-17', paymentDate: null,
+    paymentRef: null, sapFiDoc: null, sapGrDoc: null,
+    bankAccount: 'BCA 028-111-2222', channel: 'Web', approver: 'Procurement Officer',
+    paymentTerms: 'Net 30', buyerContact: 'Procurement Officer', remittanceNote: null,
+    invoiceDate: '2026-06-16', taxInvoiceFile: 'efaktur-BRL-0063.pdf',
+    lines: [
+      {
+        receiptId: 'gr-017', grNumber: 'GR-2026-017', materialCode: 'PK-PETB-8802',
+        description: 'PET Bottle 100ml Clear — Emina Series', quantity: 10_000, uom: 'PCS',
+        unitPrice: 1_233, billedAmount: 12_500_000,
+      },
+    ],
+  },
+  {
+    id: 'inv-brl-0064', invoiceNumber: 'INV-2026-BRL-0064', supplierId: 'sup-007',
+    supplierName: 'PT Sample Packaging Indonesia', poNumber: 'PO-2026-00126', poId: 'po-026',
+    amount: 31_425_000, currency: 'IDR', status: 'Submitted', matchStatus: 'Price Variance',
+    submittedDate: '2026-06-17', dueDate: '2026-07-17', paymentDate: null,
+    paymentRef: null, sapFiDoc: null, sapGrDoc: null,
+    bankAccount: 'BCA 028-111-2222', channel: 'Web', approver: 'Procurement Officer',
+    paymentTerms: 'Net 30', buyerContact: 'Procurement Officer', remittanceNote: null,
+    invoiceDate: '2026-06-16', taxInvoiceFile: 'efaktur-BRL-0064.pdf',
+    lines: [
+      {
+        receiptId: 'gr-017', grNumber: 'GR-2026-017', materialCode: 'PK-PETB-8802',
+        description: 'PET Bottle 100ml Clear — Emina Series', quantity: 25_000, uom: 'PCS',
+        unitPrice: 1_233, billedAmount: 31_425_000,
+      },
+    ],
+  },
+  {
+    id: 'inv-brl-0065', invoiceNumber: 'INV-2026-BRL-0065', supplierId: 'sup-007',
+    supplierName: 'PT Sample Packaging Indonesia', poNumber: 'PO-2026-00126', poId: 'po-026',
+    amount: 2_540_000, currency: 'IDR', status: 'Submitted', matchStatus: 'Price Variance',
+    submittedDate: '2026-06-17', dueDate: '2026-07-17', paymentDate: null,
+    paymentRef: null, sapFiDoc: null, sapGrDoc: null,
+    bankAccount: 'BCA 028-111-2222', channel: 'Web', approver: 'Procurement Officer',
+    paymentTerms: 'Net 30', buyerContact: 'Procurement Officer', remittanceNote: null,
+    invoiceDate: '2026-06-16', taxInvoiceFile: 'efaktur-BRL-0065.pdf',
+    lines: [
+      {
+        receiptId: 'gr-017', grNumber: 'GR-2026-017', materialCode: 'PK-PETB-8802',
+        description: 'PET Bottle 100ml Clear — Emina Series', quantity: 2_000, uom: 'PCS',
+        unitPrice: 1_233, billedAmount: 2_540_000,
+      },
+    ],
+  },
+
   // ── PT Sample Specialty Fats (sup-002) ──────────────────────────────────
   {
     id: 'inv-msm-0210', invoiceNumber: 'INV-2025-MSM-0210', supplierId: 'sup-002',
@@ -212,7 +318,8 @@ const INVOICES_RAW: Invoice[] = [
 //
 // ⚠️ **THE FIELD LIST IS DERIVED, NOT REMEMBERED: it is every key on this type
 // whose value is date-shaped on at least one row** — `submittedDate`, `dueDate`,
-// `paymentDate`. Nothing else here holds a date: `paymentRef`, `sapFiDoc` and
+// `paymentDate`, and `invoiceDate` since the BL-44 receipt-based rows carry
+// one (absent on every older row, which `shiftFields` leaves untouched). Nothing else here holds a date: `paymentRef`, `sapFiDoc` and
 // `sapGrDoc` carry a YEAR inside a document number and are not dates, which is
 // exactly why `shiftIso` anchors on `^\d{4}-\d{2}-\d{2}` and returns a non-match
 // untouched. `paymentDate` is null on eight rows and stays null — absence is a
@@ -229,5 +336,5 @@ const INVOICES_RAW: Invoice[] = [
 export const INVOICES: Invoice[] = shiftFields(
   INVOICES_RAW,
   'invoice',
-  ['submittedDate', 'dueDate', 'paymentDate'],
+  ['submittedDate', 'dueDate', 'paymentDate', 'invoiceDate'],
 );

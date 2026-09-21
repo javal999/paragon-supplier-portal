@@ -22,6 +22,7 @@ export * from './policies';
 export * from './grRollup';
 export * from './invoiceRollup';
 export * from './fulfilmentRules';
+export * from './fulfilmentConfig';
 export * from './callOffRules';
 export * from './callOffTolerance';
 export * from './inventoryConfig';
@@ -51,6 +52,7 @@ export { inventoryDeclarationFlow } from './flows/inventoryDeclaration.flow';
 export { incomingShipmentFlow } from './flows/incomingShipment.flow';
 export { enforcementFlow } from './flows/enforcement.flow';
 export { roleFlow } from './flows/role.flow';
+export { workingCalendarFlow } from './flows/workingCalendar.flow';
 export { threePlFlow } from './flows/threePl.flow';
 export { supplierApplicationFlow } from './flows/supplierApplication.flow';
 export { receiptDiscrepancyFlow } from './flows/receiptDiscrepancy.flow';
@@ -88,6 +90,7 @@ import { inventoryDeclarationFlow } from './flows/inventoryDeclaration.flow';
 import { incomingShipmentFlow } from './flows/incomingShipment.flow';
 import { enforcementFlow } from './flows/enforcement.flow';
 import { roleFlow } from './flows/role.flow';
+import { workingCalendarFlow } from './flows/workingCalendar.flow';
 import { threePlFlow } from './flows/threePl.flow';
 import { supplierApplicationFlow } from './flows/supplierApplication.flow';
 import { receiptDiscrepancyFlow } from './flows/receiptDiscrepancy.flow';
@@ -146,6 +149,10 @@ flowRegistry.register(enforcementFlow); // CP-3 · E2 — Enforcement
 // grant that left no TransitionEvent would be the only privilege-granting act in
 // the platform with no audit record (D3).
 flowRegistry.register(roleFlow); // Duplicate-and-narrow — Role
+// BL-50 — the hub's working calendar. The same degenerate single-state ledger
+// shape: a day has no lifecycle, it has a ledger of rulings. Every deadline is
+// derived from the calendar at read, so nothing cascades from a ruling.
+flowRegistry.register(workingCalendarFlow); // BL-50 — Working calendar
 // BL-51 — the administrator's 3PL list. The same degenerate single-state ledger
 // shape: a 3PL on the list has no lifecycle, it has a ledger of changes. WIRED,
 // so every change to where a tracking link points lands in the audit trail.

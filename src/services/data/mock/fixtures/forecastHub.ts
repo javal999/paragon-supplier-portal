@@ -8,7 +8,8 @@
 //     three days ago. sup-007 PT Sample Packaging supplies both bottles and
 //     shares PK-PETB-8801 with sup-012.
 //   · Raw material (monthly) — version 1 four weeks ago, version 2 an
-//     emergency re-publication four days ago. sup-002 PT Sample Specialty Fats
+//     emergency re-publication THIS MORNING (Monday 10:00 WIB — moved from four
+//     days ago for the BL-48 demo, below). sup-002 PT Sample Specialty Fats
 //     supplies both materials and shares RM-EMUL-9410 with sup-005, a
 //     distributor waiting on its principal.
 //
@@ -21,9 +22,27 @@
 //     week acknowledged; an unsubmitted draft PTI cannot see.
 //   sup-012 — never opened version 2; its Firm weeks are overdue (escalation).
 //   sup-002 — a Firm month 21% short (Red, High alert); a Firm over-commit
-//     (information); a changed Trade-off month back to awaiting and due soon;
-//     a Trade-off month within tolerance; a draft.
+//     (information); a changed Trade-off month back to awaiting; a Trade-off
+//     month within tolerance; a draft.
 //   sup-005 — a distributor with a 60-day principal lead time (coverage).
+//
+// THE BL-48 DEADLINE DEMO (CR-26, on the hub working calendar; present =
+// Monday 31 August 19:00 WIB). All four are derived, none is stored:
+//   · A FIRM PERIOD DUE TOMORROW — raw-material v2 is published this morning,
+//     so its Firm months are due Tuesday 1 September 10:00; sup-005 has not
+//     answered its September month.
+//   · (falls out of CR-26, not planted) A COMMITMENT SUBMITTED LATE — sup-002
+//     answered raw-material v1's Firm September an hour after that version's
+//     1-working-day deadline; carried forward, it keeps that verdict.
+//   · A FIRM PERIOD ALREADY LATE — packaging v2 (Friday 09:00) was due Monday
+//     09:00; sup-007's and sup-012's awaiting Firm weeks are late.
+//   · 3 WORKING DAYS OVER A WEEKEND AND A HOLIDAY — packaging v2's Trade-off
+//     and Forecast weeks: Monday, Tuesday, [Wednesday 2 September: the plant
+//     shutdown in the SAP factory calendar], Thursday 3 September 09:00.
+//   · AN ADMINISTRATOR OVERRIDE MOVES A DEADLINE — raw-material v2's Trade-off
+//     and Forecast months: Tuesday, [Wednesday: shutdown], Thursday, [Friday 4:
+//     collective leave the administrator ruled, `SEEDED_CALENDAR_RULINGS`],
+//     Monday 7 September 10:00. Without the ruling it would be Friday 4.
 // ────────────────────────────────────────────────────────────────────────────
 
 import { DECLARED_PRESENT } from '../../fixturePresent';
@@ -109,7 +128,7 @@ const version = (
 const PK_V1_AT = at(-10, 2);
 const PK_V2_AT = at(-3, 2);
 const RM_V1_AT = at(-28, 2);
-const RM_V2_AT = at(-4, 2);
+const RM_V2_AT = at(0, 3); // BL-48 demo: this morning, Monday 10:00 WIB
 
 const PK_V1 = version('packaging', 1, PK_V1_AT);
 const PK_V2 = version('packaging', 2, PK_V2_AT, {
@@ -178,7 +197,7 @@ function commit(
 const V1_PK_ANSWERED = at(-9, 3);
 const V2_PK_ANSWERED = at(-2, 2);
 const V1_RM_ANSWERED = at(-27, 3);
-const V2_RM_ANSWERED = at(-4, 8);
+const V2_RM_ANSWERED = at(0, 6); // Monday 13:00 WIB, after this morning's publication
 
 /** Seeded commitments (RequirementResponses) against the forecast versions. */
 export const FORECAST_COMMITMENT_SEED: readonly RequirementResponse[] = [
@@ -197,7 +216,9 @@ export const FORECAST_COMMITMENT_SEED: readonly RequirementResponse[] = [
   // — Raw material, answered on version 1 —
   commit(RM_V1, 'sup-002', 'RM-EMUL-9410', RM_MONTHS[0], {}, V1_RM_ANSWERED),
   commit(RM_V1, 'sup-002', 'RM-EMUL-9410', RM_MONTHS[1], {}, V1_RM_ANSWERED),
-  commit(RM_V1, 'sup-005', 'RM-EMUL-9410', RM_MONTHS[0], {}, at(-26, 4)),
+  // BL-48 demo: sup-005 has NOT answered its Firm month, so on this morning's
+  // version it is due tomorrow (Tuesday 1 September 10:00 WIB). It used to
+  // carry a version-1 commitment here.
   // — Raw material, answered on version 2 —
   commit(RM_V2, 'sup-002', 'RM-STEAR-7300', RM_MONTHS[0], { qty: 10000, reason: 'capacity' }, V2_RM_ANSWERED),
   commit(RM_V2, 'sup-002', 'RM-STEAR-7300', RM_MONTHS[1], { qty: 14000 }, V2_RM_ANSWERED),
@@ -210,7 +231,7 @@ export const FORECAST_VIEW_SEED: readonly { readonly id: string; readonly public
   { id: 'fv-0001', publicationId: PK_V1.publicationId, supplierId: 'sup-007', viewedAt: at(-10, 5) },
   { id: 'fv-0002', publicationId: RM_V1.publicationId, supplierId: 'sup-002', viewedAt: at(-28, 6) },
   { id: 'fv-0003', publicationId: RM_V1.publicationId, supplierId: 'sup-005', viewedAt: at(-27, 2) },
-  { id: 'fv-0004', publicationId: RM_V2.publicationId, supplierId: 'sup-002', viewedAt: at(-4, 4) },
+  { id: 'fv-0004', publicationId: RM_V2.publicationId, supplierId: 'sup-002', viewedAt: at(0, 4) },
 ];
 
 /** Supplier × material relationships for the forecast materials (coverage, BR-07). */

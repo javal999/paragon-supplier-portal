@@ -230,8 +230,15 @@ describe('2B-5b-i — the ASN lane resolves', () => {
     // kept as an EXACT SET rather than deleted — it is a pre-existing header
     // /line disagreement in the PO lane, not 2B-5b-i's to repair, and an exact
     // set is what stops it drifting before someone rules on it.
+    // ⚠️ BL-49 — a VALUE-LIMIT line (`valueLimit`, quantity 0 meaning "no
+    // quantity") is worth its limit, not 0 × price. `PO-2026-00128` is the one
+    // such line, and its header states exactly that limit; reading it as
+    // quantity × price would add it to the disagreement set below for a reason
+    // that is not a disagreement.
+    const lineValue = (l: (typeof mockPurchaseOrders)[number]['lineItems'][number]) =>
+      l.valueLimit ?? l.quantity * l.unitPrice;
     const headerVsLines = mockPurchaseOrders
-      .filter((p) => p.totalValue !== p.lineItems.reduce((n, l) => n + l.quantity * l.unitPrice, 0))
+      .filter((p) => p.totalValue !== p.lineItems.reduce((n, l) => n + lineValue(l), 0))
       .map((p) => p.poNumber);
     expect(headerVsLines).toEqual([
       'PO-2025-00101',
@@ -246,8 +253,9 @@ describe('2B-5b-i — the ASN lane resolves', () => {
     // `po-021` … `po-027`). A count in a spec is a floor on the population the
     // assertions above ran over, not a claim about the fixture's contents — it
     // is restated rather than derived because deriving it from the array under
-    // test is a tautology.
-    expect(mockPurchaseOrders).toHaveLength(28);
+    // test is a tautology. ⚠️ 29 SINCE BL-49 ADDED `po-028`, the one
+    // value-limit line (a call-off release checked on value, CR-04).
+    expect(mockPurchaseOrders).toHaveLength(29);
     // ⚠️ "NO LINES" IS NOT "FULLY RECEIVED" — pinned DIRECTLY, not only through
     // the selection rule.
     //

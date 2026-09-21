@@ -184,11 +184,15 @@ describe('⚠️ A MATCHED-REACHABLE PATH EXISTS — by property, never by fixtu
         (sum, li) => sum + li.confirmedQty * li.unitPrice,
         0,
       );
+      // CR-12 (BL-44) — the rule the GR-post cascade resolves for a lineless
+      // invoice: 0% when any PO line carries a contract price, else 2% within
+      // the rupiah cap. Read from the order here exactly as the resolver does.
+      const rule = po.lineItems.some((li) => li.contractNumber) ? 'contract' : 'standard';
       return mockGoodsReceipts.some((gr) => {
         if (gr.poNumber !== inv.poNumber) return false;
         if (!from.includes(gr.status)) return false;
         const rejects = gr.inspectionResults.some((r) => r.qtyRejected > 0);
-        return deriveMatchVerdict(expected, inv.amount, rejects) === 'Matched';
+        return deriveMatchVerdict(expected, inv.amount, rejects, rule) === 'Matched';
       });
     });
 
