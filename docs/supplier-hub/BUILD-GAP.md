@@ -223,10 +223,49 @@ Sample data so a planner can see every CR-24 outcome on `/buyer/inventory`, `/su
 - **File attachments.** RFI attachment questions, receipt-dispute attachments and the e-Faktur are recorded as file names; no file is stored.
 - **Sourcing event creation beyond the central library** (A-04): no sourcing request intake, no save-as-template, no admin screen for the question and term library, no approval step before sending. All four were ruled out of the MVP rather than left undone.
 - **A backend.** No database, no sign-in for real users, no scheduled jobs; changes are lost on reload. The pilot needs all of these (PRD section 4).
-- **Accessibility testing** (H-03).
+- **Accessibility testing with assistive technology** (H-03): the BL-31 pass below was done with automated checks and the keyboard; no session with a real screen reader or real users has been run.
 - **The rest of the administration screen** (BL-32): reason codes, tolerances, alert thresholds and stale periods still live in configuration files. The working calendar is its first page and is built.
 - **The real SAP factory calendar.** The calendar load is simulated sample data; the administrator's rulings are kept in the browser only.
 - **Foundation epics** E01 and E02 (registration, onboarding, supplier master data), which belong to the Foundation team.
+
+---
+
+## Accessibility (BL-31)
+
+Target: SC-06 and SC-07, WCAG 2.1 AA. Pass done on 2026-09-21 against the built app.
+
+**What was checked.** Every route in `src/router/AppRouter.tsx`, both personas and in English and Indonesian, with a script run in the browser: controls without an accessible name, form fields without a label, positive `tabindex`, focusable content inside `aria-hidden`, dialogs without a name, tables without header cells, clickable elements that the keyboard cannot reach, heading order, landmarks, the page `lang`, and the contrast of every visible text node against its real background. The drawers and dialogs on the main walkthrough pages (PO, ASN, goods receipt, invoice, call-off, RFQ, requisition, delivery agreement, stock entry, the RFQ, RFI, RFP and goods-receipt wizards) were opened and checked the same way. Focus order, the focus trap, Escape and focus return were checked with real key presses on the PO drawer and the RFQ wizard.
+
+**What was fixed.**
+
+| Issue | WCAG | Severity | Fix |
+|---|---|---|---|
+| List rows (PO, ASN, goods receipt, invoice, contract, delivery agreement, requisition, RFQ, supplier, role) opened a record only on a mouse click | 2.1.1 | High | A clickable row is a tab stop and opens on Enter or Space, with a visible focus ring (shared `TableRow`) |
+| Drawers did not take focus, so the keyboard stayed on the page behind them; drawers had no name | 2.4.3, 4.1.2 | High | Shared modal behaviour: focus moves in, Tab stays inside, Escape closes, focus returns to the opener; the drawer is named by its title |
+| The five wizards and two confirmation dialogs were a plain overlay: no dialog role, no name, no Escape, Tab left the dialog | 2.1.2, 2.4.3, 4.1.2 | High | One shared modal overlay with the same behaviour; wizard step buttons are named "Step 2 of 4: …" |
+| Tertiary text failed contrast on the page background, the table header band and the status tints (3.8 to 4.4 : 1) | 1.4.3 | High | Tertiary text token darkened; it now passes on every surface it sits on |
+| Teal used as text (3.5 : 1) and action blue as text on tinted or grey backgrounds (4.0 to 4.4 : 1), including the outline button label | 1.4.3 | Medium | Text uses the darker arm of each colour, as warning already did; chart legend text and the planning grid header re-coloured |
+| Form captions were not tied to their fields (a separate label element with no link), so fields had no name | 1.3.1, 4.1.2 | Medium | Caption wraps the field on the ASN, PO acknowledge, RFQ quote, requisition, contract, storefront, goods-receipt and registration forms; registration errors are tied to their field |
+| Search boxes named only by their placeholder; the top bar search had no name | 3.3.2, 4.1.2 | Medium | Every search box has a name |
+| No way to skip the top bar and menu | 2.4.1 | Medium | "Skip to main content" link |
+| Toasts could go unannounced (the live region appeared with the first toast) | 4.1.3 | Medium | The region is always present; error toasts interrupt |
+| Menu, persona switch and period switch did not state their name or selected state; tabs had no arrow keys; "New call-off" repeated with no context | 1.3.1, 2.4.6, 4.1.2 | Low | Named navigation and groups, pressed state, arrow keys on tabs, each call-off button described by its PO and supplier |
+| A page title squeezed to zero width on a narrow window | 1.4.10 | Low | The page header wraps |
+
+**What remains.**
+
+| Issue | WCAG | Severity |
+|---|---|---|
+| Field errors are announced but tied to their field only on the registration, forecast response and intake adjustment forms | 1.3.1, 3.3.1 | Medium |
+| Action blue as text still passes only on white (4.57 : 1); any new use on a grey or tinted background fails. The sites are the `text-action` classes in `src/` (derive them; the in-browser check found none failing after this pass) | 1.4.3 | Low |
+| Some pages go from the page title straight to a level-3 heading (marketplace, discovery, storefront, WhatsApp demo, supplier comm hub, supplier shipments) | 1.3.1 | Low |
+| Controls inside a few table grids have no name of their own (contract wizard obligation owner and due date, WhatsApp demo input) | 4.1.2 | Low |
+| The menu button in the top bar does nothing; the notification button does not say how many notifications there are | 4.1.2 | Low |
+| The sign-in page (outside the hub shell) keeps its own dark design: low-contrast text, no page heading, English-only notice | 1.3.1, 1.4.3 | Low (not part of the hub) |
+| The 404 page title is English in both languages | 3.1.2 | Low |
+| No test with a real screen reader (see H-03 in section 5) | — | — |
+
+The checks that guard the fixes are in `src/lib/a11yGate/` (every icon-only button is named; every clickable table row is keyboard-operable) and `src/components/ui-v2/bl31Keyboard.test.tsx` (the modal keyboard behaviour, row activation and the accessible names of the shared building blocks).
 
 ---
 
