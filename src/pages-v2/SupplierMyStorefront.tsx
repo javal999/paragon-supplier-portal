@@ -127,7 +127,7 @@ const AdvisorPanel: React.FC<{ completeness: number }> = ({ completeness }) => {
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="w-full px-4 py-3 flex items-center justify-between text-sm font-semibold text-teal"
+        className="w-full px-4 py-3 flex items-center justify-between text-sm font-semibold text-teal-hover"
       >
         <span>{t('supplierMyStorefront.advisor.title')}</span>
         {open ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
@@ -464,7 +464,7 @@ const StorefrontEditor: React.FC<StorefrontEditorProps> = ({
                     <TableCell className="text-text-secondary">
                       <Data>{item.leadTime} {t('supplierMyStorefront.days')}</Data>
                     </TableCell>
-                    <TableCell className="font-semibold text-teal">
+                    <TableCell className="font-semibold text-teal-hover">
                       <Data>{item.currency} {item.unitPrice}/{item.uom}</Data>
                     </TableCell>
                     <TableCell className="text-text-secondary">
@@ -726,7 +726,7 @@ const StorefrontEditor: React.FC<StorefrontEditorProps> = ({
                 <div className="flex items-center gap-2 shrink-0">
                   <span
                     className={`inline-flex items-center gap-1 text-xs font-semibold ${
-                      cert.visible ? 'text-teal' : 'text-text-tertiary'
+                      cert.visible ? 'text-teal-hover' : 'text-text-tertiary'
                     }`}
                   >
                     {cert.visible ? <Eye size={12} /> : <EyeOff size={12} />}
@@ -881,7 +881,7 @@ const StorefrontEditor: React.FC<StorefrontEditorProps> = ({
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
             {/* value figures are demo marketplace stats (mono DATA) — kept EN */}
             {[
-              { label: t('supplierMyStorefront.stat.profileViews'), value: '24', tone: 'text-teal' },
+              { label: t('supplierMyStorefront.stat.profileViews'), value: '24', tone: 'text-teal-hover' },
               { label: t('supplierMyStorefront.stat.rfqInvitations'), value: '3', tone: 'text-info' },
               { label: t('supplierMyStorefront.stat.winRate'), value: '67%', tone: 'text-success' },
               { label: t('supplierMyStorefront.stat.categoryRank'), value: '#3 / 31', tone: 'text-warning-hover' },

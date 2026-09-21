@@ -256,7 +256,7 @@ const PageHeader: React.FC = () => {
           </div>
           <a
             href="mailto:supplier-support@paragon.id"
-            className="text-xs font-semibold text-teal hover:text-teal-hover"
+            className="text-xs font-semibold text-teal-hover hover:text-teal-hover"
           >
             supplier-support@paragon.id
           </a>
@@ -271,7 +271,7 @@ const PageFooter: React.FC = () => (
     © Paragon Corp ·{' '}
     <a
       href="mailto:supplier-support@paragon.id"
-      className="text-teal hover:text-teal-hover"
+      className="text-teal-hover hover:text-teal-hover"
     >
       supplier-support@paragon.id
     </a>
@@ -663,7 +663,7 @@ const ContactsStep: React.FC<StepProps> = ({ form, setForm, errors }) => {
         <button
           type="button"
           onClick={addContact}
-          className="mt-3 w-full border-2 border-dashed border-teal/40 text-teal font-semibold py-2 rounded-md hover:bg-teal-soft text-sm inline-flex items-center justify-center gap-2"
+          className="mt-3 w-full border-2 border-dashed border-teal/40 text-teal-hover font-semibold py-2 rounded-md hover:bg-teal-soft text-sm inline-flex items-center justify-center gap-2"
         >
           <Plus size={14} />
           {t('registration.contacts.add')}
@@ -1079,7 +1079,7 @@ const ReviewStep: React.FC<ReviewStepProps> = ({ form, setForm, errors, requestT
           >
             {form.contacts.map((c, i) => (
               <div key={i} className="mb-3 last:mb-0">
-                <div className="text-xs font-bold text-teal mb-1">
+                <div className="text-xs font-bold text-teal-hover mb-1">
                   {t('registration.contacts.label', { index: i + 1 })}
                 </div>
                 <Row label={t('registration.review.field.name')} value={c.name} />
@@ -1148,7 +1148,7 @@ const ReviewStep: React.FC<ReviewStepProps> = ({ form, setForm, errors, requestT
           >
             {form.contacts.map((c, i) => (
               <div key={i} className="mb-3 last:mb-0">
-                <div className="text-xs font-bold text-teal mb-1">
+                <div className="text-xs font-bold text-teal-hover mb-1">
                   {t('registration.contacts.label', { index: i + 1 })}
                 </div>
                 <Row label={t('registration.review.field.name')} value={c.name} />
@@ -1178,8 +1178,8 @@ const ReviewStep: React.FC<ReviewStepProps> = ({ form, setForm, errors, requestT
             <Trans
               i18nKey="registration.review.agreement1.text"
               components={{
-                coc: <span className="text-teal underline cursor-pointer" />,
-                terms: <span className="text-teal underline cursor-pointer" />,
+                coc: <span className="text-teal-hover underline cursor-pointer" />,
+                terms: <span className="text-teal-hover underline cursor-pointer" />,
               }}
             />
           </span>

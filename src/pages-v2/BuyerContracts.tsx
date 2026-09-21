@@ -199,7 +199,7 @@ const ReviewSection: React.FC<{
         <button
           type="button"
           onClick={onEdit}
-          className="text-xs font-medium text-teal hover:text-teal-hover"
+          className="text-xs font-medium text-teal-hover hover:text-teal-hover"
         >
           {t('contracts.wizard.review.edit')}
         </button>

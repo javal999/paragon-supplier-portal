@@ -631,7 +631,7 @@ const ReviewSection: React.FC<{
       <button
         type="button"
         onClick={onEdit}
-        className="text-xs font-medium text-teal hover:text-teal-hover"
+        className="text-xs font-medium text-teal-hover hover:text-teal-hover"
       >
         {t('sourcing.wizard.review.edit')}
       </button>
@@ -2011,7 +2011,7 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
           </div>
 
           <div className="text-sm text-text-secondary">
-            <span className="inline-flex items-center gap-1.5 bg-teal-soft text-teal rounded-full px-3 py-1 text-xs font-semibold">
+            <span className="inline-flex items-center gap-1.5 bg-teal-soft text-teal-hover rounded-full px-3 py-1 text-xs font-semibold">
               {t(
                 draft.invitedSupplierIds.length === 1
                   ? 'sourcing.wizard.selectedCount.one'
@@ -3053,7 +3053,7 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
                             >
                               {q.id === topRankedId && (
                                 <span className="flex flex-col items-start gap-0.5 mb-1">
-                                  <span className="inline-flex items-center gap-1 text-label text-teal uppercase">
+                                  <span className="inline-flex items-center gap-1 text-label text-teal-hover uppercase">
                                     <Trophy size={10} />{' '}
                                     {t('sourcing.cmp.topRanked')}
                                   </span>

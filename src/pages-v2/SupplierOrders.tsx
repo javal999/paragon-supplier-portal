@@ -1421,7 +1421,7 @@ const SupplierOrders: React.FC = () => {
                     <dt className="text-label text-text-tertiary uppercase mb-0.5">
                       {t('supplierOrders.panel.next')}
                     </dt>
-                    <dd className="text-sm font-bold text-teal inline-flex items-center gap-1">
+                    <dd className="text-sm font-bold text-teal-hover inline-flex items-center gap-1">
                       {t('supplierOrders.action.createAsn')} <ChevronRight size={12} />
                     </dd>
                   </div>

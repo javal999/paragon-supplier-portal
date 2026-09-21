@@ -1351,7 +1351,7 @@ const SupplierShipments: React.FC = () => {
                     })
                   }
                 />
-                <span className="inline-flex items-center gap-2 px-3 py-1.5 border border-border-input rounded-md text-sm text-teal font-semibold bg-bg-surface">
+                <span className="inline-flex items-center gap-2 px-3 py-1.5 border border-border-input rounded-md text-sm text-teal-hover font-semibold bg-bg-surface">
                   <Upload size={14} />
                   {t('supplierShipments.wizard.details.chooseFile')}
                 </span>

@@ -408,7 +408,7 @@ const RFQCard: React.FC<RFQCardProps> = ({
             <button
               type="button"
               onClick={() => setExpanded(!expanded)}
-              className="mt-1 text-xs font-semibold text-teal hover:text-teal-hover inline-flex items-center gap-1"
+              className="mt-1 text-xs font-semibold text-teal-hover hover:text-teal-hover inline-flex items-center gap-1"
             >
               {expanded ? (
                 <>
