@@ -11,12 +11,16 @@
 
 import { mockPurchaseOrders } from '../../../../data/mockPurchaseOrders';
 import type { PurchaseOrder } from '../../types';
+// BL-64 — the umbrella orders behind the compliance gate's OTIF boundary.
+import { GATE_DEMO_PURCHASE_ORDERS } from '../fixtures/gateDemo';
+
+const SEED: readonly PurchaseOrder[] = [...mockPurchaseOrders, ...GATE_DEMO_PURCHASE_ORDERS];
 
 function clone(po: PurchaseOrder): PurchaseOrder {
   return { ...po, lineItems: po.lineItems.map((li) => ({ ...li })) };
 }
 
-let rows: PurchaseOrder[] = mockPurchaseOrders.map(clone);
+let rows: PurchaseOrder[] = SEED.map(clone);
 
 export const purchaseOrderStore = {
   /** All POs (the mutable source reads resolve from). */
@@ -40,6 +44,6 @@ export const purchaseOrderStore = {
   },
   /** Restore the fixture seed (test isolation). */
   reset(): void {
-    rows = mockPurchaseOrders.map(clone);
+    rows = SEED.map(clone);
   },
 };

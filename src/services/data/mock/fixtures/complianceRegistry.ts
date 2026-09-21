@@ -291,6 +291,31 @@ export const COMPLIANCE_REGISTRY: readonly ComplianceRegistryEntry[] = [
     scopeText: 'Stearic acid requiring halal certification — none held',
     notes: 'Synthetic illustrative record — required cert not yet supplied.',
   },
+  // BL-64 — a Valid halal cert PAST its expiry (clock-projects to Expired), on a
+  // material whose supplier master still says "halal certified, valid". The
+  // compliance gate (CR-23) reads the registry row first, so sup-002 FAILS halal
+  // on the lauric-acid sample RFQ (rfq-018) although its master certificate is
+  // valid — the registry overriding the master in the failing direction.
+  // ⚠️ THE ONE ROW WHOSE MATERIAL IS NOT DERIVED FROM A PO / ASN / SHIPMENT:
+  // sup-002 transacts RM-LAURIC-7200 only as a quote on that sample RFQ. Every
+  // code it DOES transact already carries a halal row, and a second row there
+  // could not fail the gate (one valid row is enough). Chosen, and said so.
+  {
+    id: 'creg-0017',
+    supplierId: 'sup-002',
+    supplierName: 'PT Sample Specialty Fats',
+    materialCodes: ['RM-LAURIC-7200'],
+    materialCategory: 'other',
+    certType: 'HALAL_BPJPH',
+    certNumber: 'SAMPLE-HALAL-0002E',
+    issuer: 'BPJPH (illustrative)',
+    issueDate: '2022-07-31',
+    expiryDate: '2026-07-31',
+    lifecycleState: 'Valid',
+    sapSync: 'AWAITING_SYNC',
+    scopeText: 'Lauric Acid 99% — halal certificate lapsed, renewal not filed',
+    notes: 'Synthetic illustrative record — not a real certificate.',
+  },
 
   // ── sup-005 — portfolio (5 certs) ────────────────────────────────────────────
   // A Valid ISO cert already past expiry (clock-projects to Expired).

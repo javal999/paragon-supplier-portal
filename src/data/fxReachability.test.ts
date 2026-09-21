@@ -31,7 +31,6 @@ const scorable = (q: Quotation): ScorableQuote => ({
   unitPrice: q.unitPrice,
   currency: q.currency ?? BASE_CURRENCY,
   leadTimeDays: q.leadTimeDays,
-  complianceScore: q.complianceScore,
   reliabilityScore: q.reliabilityScore,
 });
 

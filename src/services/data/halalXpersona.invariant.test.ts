@@ -60,7 +60,9 @@ const buyerScope: QueryScope = { personaType: 'buyer', supplierId: null, busines
 const KNOWN: Record<string, string> = {
   'sup-007': 'HALAL-XPERSONA-01', // registry Valid BPJPH (permanent) vs master not-certified
   'sup-005': 'HALAL-XPERSONA-01', // registry Valid halal cert vs master halalCertified: false
-  'sup-002': 'HALAL-XPERSONA-01', // master halal expiry 2026-09-10 vs registry earliest 2026-09-15
+  // master halal expiry 2026-09-10 vs registry earliest Valid-state expiry — 2026-07-31
+  // since BL-64's creg-0017 (was 2026-09-15, creg-0003). Same supplier, same dimension.
+  'sup-002': 'HALAL-XPERSONA-01',
   // 'sup-003' REMOVED — it was a contradiction only against the deleted
   // COMPLIANCE_ITEMS. The registry covers sup-002/005/007 (the three tenants),
   // so sup-003 makes no compliance claim and cannot disagree. Leaving the entry

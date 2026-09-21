@@ -10,6 +10,29 @@ import i18n from '../lib/i18n';
 import BuyerSourcing from './BuyerSourcing';
 import { mockRfqs } from '../data/mockRfqs';
 import { PERSONA_SYSTEM_ROLES } from '../services/transitions/businessRoles';
+import { mockSuppliers } from '../data/mockSuppliers';
+
+/**
+ * ⚠️ PREMISE CHANGE (BL-43). The FX specs probe RFQ-2026-009 because its two
+ * quotes (sup-006, sup-005) both rank. Since CR-23 only suppliers that PASS the
+ * compliance gate are scored, and sup-005 holds no halal certificate for the
+ * humectant, so rfq-009 now ranks ONE quote and a currency mix can never refuse.
+ * The gate is not these specs' subject: for their duration sup-005 is given a
+ * current halal certificate so the probe keeps two rankable quotes, and the
+ * master row is restored afterwards.
+ */
+const passGateForSup005 = () => {
+  const s = mockSuppliers.find((x) => x.id === 'sup-005')!;
+  const saved = { halalCertified: s.halalCertified, certExpiryDate: s.certExpiryDate };
+  beforeEach(() => {
+    s.halalCertified = true;
+    s.certExpiryDate = '2027-12-31';
+  });
+  afterEach(() => {
+    s.halalCertified = saved.halalCertified;
+    s.certExpiryDate = saved.certExpiryDate;
+  });
+};
 
 const alwaysFails = withChaos(mockDataService, { minMs: 0, maxMs: 0, failureRate: 1 });
 const alwaysPending = withChaos(mockDataService, { minMs: 1e7, maxMs: 1e7, failureRate: 0 });
@@ -441,6 +464,7 @@ describe('BuyerSourcing — the should-cost spread refuses an unpriceable curren
 // which makes it the right probe: it ranks today, so a refusal can only come
 // from the currency mix this test introduces.
 describe('BuyerSourcing — a comparison with no FX basis withholds the ranking', () => {
+  passGateForSup005();
   beforeEach(() => {
     quotationStore.reset();
     rfqStore.reset();
@@ -606,6 +630,7 @@ describe('BuyerSourcing — a comparison with no FX basis withholds the ranking'
 // both USD, so it ranks today and any refusal can only come from the currency
 // mix the test introduces.
 describe('BuyerSourcing — the FX basis is visible, and recordable (2e-c-4)', () => {
+  passGateForSup005();
   beforeEach(() => {
     quotationStore.reset();
     rfqStore.reset();
@@ -965,5 +990,44 @@ describe('BuyerSourcing — the award summary states the currency it was awarded
     // above it said Rp 22.800, for the same quote on the same screen.
     expect(await screen.findAllByText('$22,800.00')).toHaveLength(2);
     expect(screen.queryByText('Rp 22.800')).not.toBeInTheDocument();
+  });
+});
+
+// ── BL-64 — the drawer says an all-fail RFQ cannot be awarded ────────────────
+//
+// The drawer's award block only renders for an OPEN event every invitee has
+// answered. No seeded event is both that and all-fail, so the probe re-opens the
+// gate-demo RFQs for its duration (the stores are reset around it). rfq-020's
+// three bidders all fail CR-23; rfq-016 is the mixed KNOWN-GOOD twin.
+describe('BuyerSourcing drawer — an RFQ no bidder can win says so (BL-64)', () => {
+  beforeEach(() => {
+    quotationStore.reset();
+    rfqStore.reset();
+  });
+  afterEach(() => {
+    rfqStore.reset();
+  });
+
+  const openDrawer = async (rfqId: string, rfqNumber: string) => {
+    rfqStore.update(rfqId, (r) => ({ ...r, status: 'Open' }));
+    renderWithProviders(<BuyerSourcing />);
+    fireEvent.click(await screen.findByText(rfqNumber));
+    await screen.findByText(/QUOTE COMPARISON/i);
+  };
+
+  it('rfq-020 — every bidder fails: the notice replaces the award prompt and no award button is offered', async () => {
+    await openDrawer('rfq-020', 'RFQ-2026-020');
+    expect(await screen.findByTestId('drawer-award-none-qualified')).toHaveTextContent(
+      /cannot be awarded: no supplier that quoted passes the compliance gate/,
+    );
+    expect(screen.queryByRole('button', { name: 'Award to selected' })).not.toBeInTheDocument();
+    expect(screen.getByTestId('drawer-award-blocked-sup-004')).toHaveTextContent('Cannot be awarded');
+  });
+
+  it('KNOWN-GOOD twin — rfq-016 has passing bidders, so the prompt and the award button stay', async () => {
+    await openDrawer('rfq-016', 'RFQ-2026-016');
+    await waitFor(() => expect(screen.getByTestId('drawer-award-blocked-sup-018')).toBeInTheDocument());
+    expect(screen.queryByTestId('drawer-award-none-qualified')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Award to selected' })).toBeInTheDocument();
   });
 });

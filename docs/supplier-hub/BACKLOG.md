@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 1.1, 2026-09-21 |
+| Version | 1.2, 2026-09-21 |
 | What this is | Everything known to be outstanding for the Supplier Hub, in one list: decisions waiting on people, work waiting on those decisions, work waiting on the backend, and work that can start today |
 | What this is not | A plan or a commitment. Nothing here has a date. Sequencing belongs to the project owner |
 | Sources | Open items (section 7 of `SUPPLIER-HUB-REQUIREMENTS.md`), open decisions (section 9.3 of `SUPPLIER-HUB-PRD.md`), what is not built (section 5 of `BUILD-GAP.md`), stubs (section 6 of the requirements), and defects or debts found while building |
@@ -40,7 +40,6 @@ Decided on 2026-09-21 and ready to build. Priority: first what protects money an
 
 | Priority | ID | Item | Rule | Size | Placeholder until decided |
 |---|---|---|---|---|---|
-| 1 | BL-43 | **Compliance gate at award.** Check each supplier against CR-23; a supplier that fails can be invited and can quote but cannot be selected in an award, with the failed criteria shown. Re-weight the quote score to price 40 / lead time 20 / reliability 40 for qualified suppliers | CR-23, CR-15 | M | Minimum OTIF 80%, "No history" passes (BL-55) |
 | 2 | BL-44 | **Invoice price tolerance.** 0% where a contract price exists; 2% otherwise, within an absolute rupiah cap | CR-12 | S | Cap IDR 500,000 (BL-54) |
 | 3 | BL-45 | **Goods receipt tolerance.** Any over-delivery flagged; a shortfall above 2% flagged and the receipt kept open | CR-25 | S | — |
 | 4 | BL-46 | **Alert risk class by lead time.** High below lead time, Medium below 1.5 × lead time, Low otherwise; day bands only where the lead time is missing, which raises its own alert | CR-24 | M | — |
@@ -130,3 +129,4 @@ Nothing blocks these.
 | BL-19b | MIG PROCIO migration | 2026-09-21 | Decided: active suppliers of the last 24 months plus contracted; suppliers confirm their own bank and tax details; second-channel confirmation for bank changes. Work sits with the Foundation team (BL-40) |
 | BL-21 | Event-based strategy analysis | 2026-09-21 | Closed with BL-02 |
 | BL-22 | Supplier TMS access | 2026-09-21 | Closed with BL-03 |
+| BL-43 | Compliance gate at award | 2026-09-21 | Built: CR-23 gate refuses an award to a failing supplier and shows the failed criteria; quote score re-weighted 40/20/40 (CR-15) over qualified suppliers. Placeholder OTIF minimum 80% until BL-55 |

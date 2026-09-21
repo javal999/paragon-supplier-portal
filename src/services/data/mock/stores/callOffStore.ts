@@ -7,6 +7,8 @@
 // ────────────────────────────────────────────────────────────────────────────
 
 import { CALL_OFF_SEED } from '../fixtures/callOffs';
+// BL-64 — the delivery history behind the compliance gate's OTIF boundary.
+import { GATE_DEMO_CALL_OFFS } from '../fixtures/gateDemo';
 import type { CallOff } from '../../types';
 
 const clone = (c: CallOff): CallOff => ({
@@ -18,8 +20,10 @@ const clone = (c: CallOff): CallOff => ({
   notes: c.notes.map((n) => ({ ...n })),
 });
 
-let rows: CallOff[] = CALL_OFF_SEED.map(clone);
-let seq = CALL_OFF_SEED.length;
+const SEED: readonly CallOff[] = [...CALL_OFF_SEED, ...GATE_DEMO_CALL_OFFS];
+
+let rows: CallOff[] = SEED.map(clone);
+let seq = SEED.length;
 
 export const callOffStore = {
   all(): readonly CallOff[] {
@@ -41,7 +45,7 @@ export const callOffStore = {
     return { id: `co-${n}`, callOffNumber: `CO-2026-${n}` };
   },
   reset(): void {
-    rows = CALL_OFF_SEED.map(clone);
-    seq = CALL_OFF_SEED.length;
+    rows = SEED.map(clone);
+    seq = SEED.length;
   },
 };
