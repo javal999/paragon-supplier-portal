@@ -233,7 +233,7 @@ const RfxInviteeStep: React.FC<RfxInviteeStepProps> = ({
       </div>
 
       <div className="text-sm text-text-secondary">
-        <span className="inline-flex items-center gap-1.5 bg-teal-soft text-teal rounded-full px-3 py-1 text-xs font-semibold">
+        <span className="inline-flex items-center gap-1.5 bg-teal-soft text-teal-hover rounded-full px-3 py-1 text-xs font-semibold">
           {t('rfx.invite.selected', { count: selected.length })}
         </span>
         {selected.length === 0 && (

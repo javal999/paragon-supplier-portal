@@ -124,6 +124,7 @@ export const RFI_EVENT_SEED: readonly RfiEvent[] = [
         name: 'Oslo sticker brief v2.pdf',
         size: 356_210,
         type: 'application/pdf',
+        addedAt: at(-5),
       },
     ],
     questions: [
@@ -443,6 +444,7 @@ export const RFP_EVENT_SEED: readonly RfpEvent[] = [
         name: 'Tundra reference bottle and pump.jpg',
         size: 482_133,
         type: 'image/jpeg',
+        addedAt: at(-6),
       },
     ],
     pricing: {

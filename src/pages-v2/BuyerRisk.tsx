@@ -643,7 +643,7 @@ const ScenarioTab: React.FC<{ scenarios: Scenario[] }> = ({ scenarios }) => {
       <section className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm p-5">
         <div className="flex items-center gap-2 mb-3">
           <Sparkles size={16} className="text-teal" />
-          <span className="text-sm font-bold text-teal">{t('risk.scenario.ariaRecommendation')}</span>
+          <span className="text-sm font-bold text-teal-hover">{t('risk.scenario.ariaRecommendation')}</span>
           {/* "AI-Powered" is a StatusPill child — left as-is per the central-maps rule */}
           <StatusPill variant="info">
             AI-Powered
@@ -658,7 +658,7 @@ const ScenarioTab: React.FC<{ scenarios: Scenario[] }> = ({ scenarios }) => {
           </strong>{' '}
           simultaneously. Activate Cape rerouting now for continuity, while
           building 90-day safety stock for your top 12 critical SKUs. Estimated
-          total cost: <strong className="text-teal">$1.06M</strong> vs. $3.2M
+          total cost: <strong className="text-teal-hover">$1.06M</strong> vs. $3.2M
           revenue-at-risk if no action taken.
         </p>
         {/* The trailing "Last updated 2 hours ago" clause is removed: it claimed a

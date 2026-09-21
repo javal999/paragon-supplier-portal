@@ -258,7 +258,6 @@ const BuyerRfp: React.FC = () => {
             <p className="text-sm text-text-secondary mt-1 whitespace-pre-line">{open.scope}</p>
             {(open.attachments ?? []).length > 0 && (
               <div className="mt-3">
-                <h4 className="text-xs uppercase tracking-wide text-text-tertiary mb-1">{t('rfxa.att.buyer')}</h4>
                 <SessionAttachments
                   value={open.attachments ?? []}
                   label={t('rfxa.att.buyer')}

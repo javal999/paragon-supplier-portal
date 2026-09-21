@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import Wizard, { WizardStep } from '../ui-v2/Wizard';
+import ModalOverlay from '../ui-v2/ModalOverlay';
 import FormSection from '../ui-v2/FormSection';
 import Data from '../ui-v2/Data';
 import { useToast } from '../../hooks/useToast';
@@ -243,10 +244,13 @@ interface GrSource {
   lines: LineDraft[];
 }
 
+// BL-31: the caption is a <span>; the field's wrapper is the <label>, which is
+// what associates the caption with its control (a sibling <label> with no
+// htmlFor labels nothing).
 const labelFor = (text: string) => (
-  <label className="block text-xs font-medium text-text-tertiary uppercase mb-1">
+  <span className="block text-xs font-medium text-text-tertiary uppercase mb-1">
     {text}
-  </label>
+  </span>
 );
 
 const inputCls =
@@ -1011,7 +1015,7 @@ const GRInspectionWizard: React.FC<GRInspectionWizardProps> = ({
         </div>
       ) : (
         <div className="flex flex-col gap-2">
-          <div>
+          <label className="block">
             {labelFor(t('goodsReceipt.wizard.field.asnNumber'))}
             <input
               type="text"
@@ -1020,7 +1024,7 @@ const GRInspectionWizard: React.FC<GRInspectionWizardProps> = ({
               placeholder="ASN-2026-XXX"
               className={inputCls}
             />
-          </div>
+          </label>
           {manualNotFound && (
             <p className="text-xs text-danger">
               {t('goodsReceipt.wizard.source.notFound')}
@@ -1040,7 +1044,7 @@ const GRInspectionWizard: React.FC<GRInspectionWizardProps> = ({
     <div className="flex flex-col gap-5">
       <FormSection title={t('goodsReceipt.wizard.section.receiptInfo')}>
         <div className="grid grid-cols-2 gap-4">
-          <div>
+          <label className="block">
             {labelFor(t('goodsReceipt.wizard.field.receivedDate'))}
             <input
               type="date"
@@ -1048,8 +1052,8 @@ const GRInspectionWizard: React.FC<GRInspectionWizardProps> = ({
               onChange={(e) => setReceivedDate(e.target.value)}
               className={inputCls}
             />
-          </div>
-          <div>
+          </label>
+          <label className="block">
             {labelFor(t('goodsReceipt.wizard.field.receivedBy'))}
             <select
               value={receivedBy}
@@ -1062,8 +1066,8 @@ const GRInspectionWizard: React.FC<GRInspectionWizardProps> = ({
                 </option>
               ))}
             </select>
-          </div>
-          <div>
+          </label>
+          <label className="block">
             {labelFor(t('goodsReceipt.wizard.field.warehouseLocation'))}
             <select
               value={warehouse}
@@ -1076,8 +1080,8 @@ const GRInspectionWizard: React.FC<GRInspectionWizardProps> = ({
                 </option>
               ))}
             </select>
-          </div>
-          <div className="col-span-2">
+          </label>
+          <label className="block col-span-2">
             {labelFor(t('goodsReceipt.wizard.field.notes'))}
             <textarea
               rows={2}
@@ -1086,7 +1090,7 @@ const GRInspectionWizard: React.FC<GRInspectionWizardProps> = ({
               placeholder={t('goodsReceipt.wizard.placeholder.notes')}
               className={inputCls}
             />
-          </div>
+          </label>
         </div>
       </FormSection>
 
@@ -1439,7 +1443,7 @@ const GRInspectionWizard: React.FC<GRInspectionWizardProps> = ({
         </div>
 
         {derivedDisposition === 'Rejected' && (
-          <div>
+          <label className="block">
             {labelFor(t('goodsReceipt.wizard.field.rejectionReasonRequired'))}
             <textarea
               rows={2}
@@ -1449,7 +1453,7 @@ const GRInspectionWizard: React.FC<GRInspectionWizardProps> = ({
               className={inputCls}
               placeholder={t('goodsReceipt.wizard.placeholder.fullLotRejection')}
             />
-          </div>
+          </label>
         )}
 
         {(derivedDisposition === 'Approved' ||
@@ -1464,7 +1468,7 @@ const GRInspectionWizard: React.FC<GRInspectionWizardProps> = ({
           </label>
         )}
 
-        <div>
+        <label className="block">
           {labelFor(t('goodsReceipt.wizard.field.finalNotes'))}
           <textarea
             rows={2}
@@ -1473,7 +1477,7 @@ const GRInspectionWizard: React.FC<GRInspectionWizardProps> = ({
             className={inputCls}
             placeholder={t('goodsReceipt.wizard.placeholder.optional')}
           />
-        </div>
+        </label>
       </FormSection>
 
       <div className="border border-border-subtle rounded-lg p-4 bg-bg-hover grid grid-cols-4 gap-3 text-sm">
@@ -1688,7 +1692,7 @@ const GRInspectionWizard: React.FC<GRInspectionWizardProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[rgba(13,27,42,0.5)]">
+    <ModalOverlay onClose={onClose} scrim="dark">
       <Wizard
         steps={steps}
         currentStep={step}
@@ -1698,7 +1702,7 @@ const GRInspectionWizard: React.FC<GRInspectionWizardProps> = ({
         isStepValid={isStepValid}
         completeLabel={t('goodsReceipt.wizard.complete')}
       />
-    </div>
+    </ModalOverlay>
   );
 };
 

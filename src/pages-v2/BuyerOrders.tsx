@@ -926,7 +926,7 @@ const BuyerOrders: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setCommsOpen((v) => !v)}
-                className="flex items-center gap-2 text-sm font-medium text-teal hover:text-teal-hover"
+                className="flex items-center gap-2 text-sm font-medium text-teal-hover hover:text-teal-hover"
               >
                 {commsOpen ? (
                   <ChevronUp size={14} />

@@ -92,7 +92,8 @@ import { forecastCollaborationEn, forecastCollaborationId } from './i18n/forecas
 import { rfxEn, rfxId } from './i18n/rfx';
 // — RFx authoring (RFI/RFP batch, 2026-09-21) and session-held attachments —
 import { rfxAuthoringEn, rfxAuthoringId } from './i18n/rfxAuthoring';
-import { sessionFilesEn, sessionFilesId } from './i18n/sessionFiles';
+// — RFx spec 2026-09-21: the rebuilt RFQ authoring + session-only attachments —
+import { rfqAuthoringEn, rfqAuthoringId } from './i18n/rfqAuthoring';
 // — BL-51 3PL tracking links (REQ-E07-04 BR-05) —
 import { threePlEn, threePlId } from './i18n/threePl';
 // — BL-52 supplier filters (REQ-E03-01 BR-05) —
@@ -183,7 +184,7 @@ export const resources = {
       ...forecastCollaborationEn,
       ...rfxEn,
       ...rfxAuthoringEn,
-      ...sessionFilesEn,
+      ...rfqAuthoringEn,
       ...threePlEn,
       ...supplierFiltersEn,
       ...errorStateEn,
@@ -448,6 +449,12 @@ export const resources = {
       'ui.clearSearch': 'Clear search',
       'ui.closePanel': 'Close panel',
       'ui.dismiss': 'Dismiss',
+      // BL-31 — shared accessible names and the skip link.
+      'ui.skipToContent': 'Skip to main content',
+      'ui.search': 'Search',
+      'ui.expandSection': 'Expand section',
+      'ui.collapseSection': 'Collapse section',
+      'topbar.searchLabel': 'Search the portal',
       // — PO confirm (Step 3.10 proof surface) —
       'po.confirm.action': 'Confirm order',
       'po.confirm.submitting': 'Confirming…',
@@ -628,7 +635,7 @@ export const resources = {
       ...forecastCollaborationId,
       ...rfxId,
       ...rfxAuthoringId,
-      ...sessionFilesId,
+      ...rfqAuthoringId,
       ...threePlId,
       ...supplierFiltersId,
       ...errorStateId,
@@ -880,6 +887,11 @@ export const resources = {
       'ui.clearSearch': 'Hapus pencarian',
       'ui.closePanel': 'Tutup panel',
       'ui.dismiss': 'Tutup',
+      'ui.skipToContent': 'Lewati ke konten utama',
+      'ui.search': 'Cari',
+      'ui.expandSection': 'Buka bagian',
+      'ui.collapseSection': 'Tutup bagian',
+      'topbar.searchLabel': 'Cari di portal',
       // — PO confirm (ID stub — refined in the Phase 3′ ID-first sweep) —
       'po.confirm.action': 'Konfirmasi pesanan',
       'po.confirm.submitting': 'Mengonfirmasi…',

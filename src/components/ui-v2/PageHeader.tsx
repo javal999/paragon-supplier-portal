@@ -19,8 +19,11 @@ const SectionCrumb: React.FC<{ fallback: string[] }> = ({ fallback }) => {
   const { t } = useTranslation();
   const { pathname } = useLocation();
   const section = sectionForPath(pathname);
-  const crumbs = section
-    ? [t(section.labelKey), ...(fallback.length > 1 ? fallback.slice(1) : fallback)]
+  const sectionLabel = section ? t(section.labelKey) : null;
+  // A page whose only crumb IS its menu section ("Sourcing") shows it once, not
+  // "Sourcing · Sourcing".
+  const crumbs = sectionLabel
+    ? [sectionLabel, ...(fallback.length > 1 ? fallback.slice(1) : fallback.filter((c) => c !== sectionLabel))]
     : fallback;
   return <>{crumbs.join(' · ')}</>;
 };
@@ -33,9 +36,11 @@ const PageHeader: React.FC<PageHeaderProps> = ({
   count,
 }) => {
   const inRouter = useInRouterContext();
+  // BL-31 (WCAG 1.4.10): wraps, so at narrow widths the actions drop below the
+  // title instead of squeezing the h1 to zero width.
   return (
-    <div className="flex items-start justify-between gap-4 mb-8">
-      <div className="min-w-0">
+    <div className="flex flex-wrap items-start justify-between gap-4 mb-8">
+      <div className="min-w-0 flex-1 basis-72">
         <div className="text-eyebrow text-text-tertiary uppercase">
           {inRouter ? <SectionCrumb fallback={breadcrumb} /> : breadcrumb.join(' · ')}
         </div>

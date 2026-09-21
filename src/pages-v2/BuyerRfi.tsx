@@ -296,7 +296,6 @@ const RfiDetail: React.FC<DetailProps> = ({
         )}
         {(event.attachments ?? []).length > 0 && (
           <div className="mt-3">
-            <h4 className="text-xs uppercase tracking-wide text-text-tertiary mb-1">{t('rfxa.att.buyer')}</h4>
             <SessionAttachments
               value={event.attachments ?? []}
               label={t('rfxa.att.buyer')}

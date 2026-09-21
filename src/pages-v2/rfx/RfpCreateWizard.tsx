@@ -34,9 +34,10 @@ import Button from '../../components/ui-v2/Button';
 import Data from '../../components/ui-v2/Data';
 import SessionAttachments from '../../components/ui-v2/SessionAttachments';
 import Wizard, { WizardStep } from '../../components/ui-v2/Wizard';
+import ModalOverlay from '../../components/ui-v2/ModalOverlay';
 import { useToast } from '../../hooks/useToast';
 import { BID_CURRENCIES, BASE_CURRENCY, type BidCurrency } from '../../lib/currencyPolicy';
-import type { SessionAttachmentMeta } from '../../lib/sessionFiles';
+import type { AttachmentMeta } from '../../services/attachments/sessionAttachments';
 import { useRfxCommand } from '../../services/query/commandHooks';
 import {
   RFP_STANDARD_TERMS,
@@ -85,11 +86,11 @@ interface Draft {
   questions: readonly RfiQuestion[];
   customSections: readonly RfxCustomSection[];
   pricing: RfpPricingRequest | undefined;
-  attachments: readonly SessionAttachmentMeta[];
+  attachments: readonly AttachmentMeta[];
   confidential: boolean;
   confidentialityTerms: string;
   termsText: string;
-  termsFile: readonly SessionAttachmentMeta[];
+  termsFile: readonly AttachmentMeta[];
   sourceRfiId: string;
 }
 
@@ -446,7 +447,6 @@ const RfpCreateWizard: React.FC<RfpCreateWizardProps> = ({
             </div>
           </div>
           <div>
-            <span className={labelClass}>{t('rfxa.att.buyer')}</span>
             <SessionAttachments
               value={draft.attachments}
               onChange={(next) => setDraft((d) => ({ ...d, attachments: next }))}
@@ -707,7 +707,7 @@ const RfpCreateWizard: React.FC<RfpCreateWizardProps> = ({
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[rgba(13,27,42,0.4)]">
+    <ModalOverlay onClose={onCancel}>
       <Wizard
         steps={steps}
         currentStep={step}
@@ -717,7 +717,7 @@ const RfpCreateWizard: React.FC<RfpCreateWizardProps> = ({
         isStepValid={(n) => (n === steps.length - 1 ? canPublish && sendable : stepValid(n))}
         completeLabel={t('rfx.create.send')}
       />
-    </div>
+    </ModalOverlay>
   );
 };
 

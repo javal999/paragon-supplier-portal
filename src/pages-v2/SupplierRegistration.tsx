@@ -226,16 +226,43 @@ interface FieldProps {
   children: React.ReactNode;
 }
 
-const Field: React.FC<FieldProps> = ({ label, required, error, children }) => (
-  <div>
-    <label className={labelClass}>
-      {label}
-      {required && <span className="text-danger ml-0.5">*</span>}
-    </label>
-    {children}
-    {error && <div className={errorClass}>{error}</div>}
-  </div>
-);
+// BL-31 (WCAG 1.3.1 / 3.3.1 / 4.1.2): the caption WRAPS the control, so it is
+// the control's accessible name (a sibling <label> with no htmlFor names
+// nothing); a required field says so to assistive technology, and an error is
+// tied to its control with aria-describedby + aria-invalid rather than only
+// sitting below it in red.
+const Field: React.FC<FieldProps> = ({ label, required, error, children }) => {
+  const errorId = React.useId();
+  const control =
+    React.isValidElement<Record<string, unknown>>(children) &&
+    typeof children.type === 'string' &&
+    ['input', 'select', 'textarea'].includes(children.type)
+      ? React.cloneElement(children, {
+          ...(required ? { 'aria-required': true } : {}),
+          ...(error ? { 'aria-invalid': true, 'aria-describedby': errorId } : {}),
+        })
+      : children;
+  return (
+    <div>
+      <label className="block">
+        <span className={labelClass}>
+          {label}
+          {required && (
+            <span className="text-danger ml-0.5" aria-hidden="true">
+              *
+            </span>
+          )}
+        </span>
+        {control}
+      </label>
+      {error && (
+        <div id={errorId} className={errorClass}>
+          {error}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const PageHeader: React.FC = () => {
   const { t } = useTranslation();
@@ -256,7 +283,7 @@ const PageHeader: React.FC = () => {
           </div>
           <a
             href="mailto:supplier-support@paragon.id"
-            className="text-xs font-semibold text-teal hover:text-teal-hover"
+            className="text-xs font-semibold text-teal-hover hover:text-teal-hover"
           >
             supplier-support@paragon.id
           </a>
@@ -271,7 +298,7 @@ const PageFooter: React.FC = () => (
     © Paragon Corp ·{' '}
     <a
       href="mailto:supplier-support@paragon.id"
-      className="text-teal hover:text-teal-hover"
+      className="text-teal-hover hover:text-teal-hover"
     >
       supplier-support@paragon.id
     </a>
@@ -663,7 +690,7 @@ const ContactsStep: React.FC<StepProps> = ({ form, setForm, errors }) => {
         <button
           type="button"
           onClick={addContact}
-          className="mt-3 w-full border-2 border-dashed border-teal/40 text-teal font-semibold py-2 rounded-md hover:bg-teal-soft text-sm inline-flex items-center justify-center gap-2"
+          className="mt-3 w-full border-2 border-dashed border-teal/40 text-teal-hover font-semibold py-2 rounded-md hover:bg-teal-soft text-sm inline-flex items-center justify-center gap-2"
         >
           <Plus size={14} />
           {t('registration.contacts.add')}
@@ -801,9 +828,9 @@ const DocumentsAndBankStep: React.FC<StepProps> = ({ form, setForm, errors }) =>
                 </div>
                 {doc.hasExpiry && d.uploaded && (
                   <div>
-                    <label className="block text-[10px] text-text-tertiary uppercase mb-0.5">
+                    <label className="block"><span className="block text-[10px] text-text-tertiary uppercase mb-0.5">
                       {t('registration.documents.expiry')}
-                    </label>
+                    </span>
                     <input
                       type="date"
                       className={`${inputClass} text-xs`}
@@ -812,7 +839,7 @@ const DocumentsAndBankStep: React.FC<StepProps> = ({ form, setForm, errors }) =>
                       onChange={(e) =>
                         setDoc(doc.key, { expiry: e.target.value })
                       }
-                    />
+                    /></label>
                   </div>
                 )}
                 <label
@@ -1079,7 +1106,7 @@ const ReviewStep: React.FC<ReviewStepProps> = ({ form, setForm, errors, requestT
           >
             {form.contacts.map((c, i) => (
               <div key={i} className="mb-3 last:mb-0">
-                <div className="text-xs font-bold text-teal mb-1">
+                <div className="text-xs font-bold text-teal-hover mb-1">
                   {t('registration.contacts.label', { index: i + 1 })}
                 </div>
                 <Row label={t('registration.review.field.name')} value={c.name} />
@@ -1148,7 +1175,7 @@ const ReviewStep: React.FC<ReviewStepProps> = ({ form, setForm, errors, requestT
           >
             {form.contacts.map((c, i) => (
               <div key={i} className="mb-3 last:mb-0">
-                <div className="text-xs font-bold text-teal mb-1">
+                <div className="text-xs font-bold text-teal-hover mb-1">
                   {t('registration.contacts.label', { index: i + 1 })}
                 </div>
                 <Row label={t('registration.review.field.name')} value={c.name} />
@@ -1178,8 +1205,8 @@ const ReviewStep: React.FC<ReviewStepProps> = ({ form, setForm, errors, requestT
             <Trans
               i18nKey="registration.review.agreement1.text"
               components={{
-                coc: <span className="text-teal underline cursor-pointer" />,
-                terms: <span className="text-teal underline cursor-pointer" />,
+                coc: <span className="text-teal-hover underline cursor-pointer" />,
+                terms: <span className="text-teal-hover underline cursor-pointer" />,
               }}
             />
           </span>

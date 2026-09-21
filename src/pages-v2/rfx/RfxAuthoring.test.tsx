@@ -117,7 +117,7 @@ describe('the supplier form renders and validates every kind (the Oslo RFI)', ()
     }
     // The buyer-added section and the buyer's documents are there.
     expect(screen.getByText('Printing and finishing')).toBeInTheDocument();
-    expect(screen.getByTestId('supplier-rfi-attachments-rfi-002')).toHaveTextContent('Not available in this session');
+    expect(screen.getByTestId('supplier-rfi-attachments-rfi-002')).toHaveTextContent(/not available in this session/i);
     expect(screen.getByTestId('rfi-field-indicative-oslo-price')).toHaveTextContent('Indicative');
     expect(screen.getByTestId('rfi-field-oslo-machine')).toHaveTextContent('Brand and model of the press');
 

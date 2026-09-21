@@ -33,7 +33,7 @@ import {
 } from '../sourcing/rfxConfig';
 import { BID_CURRENCIES } from '../../lib/currencyPolicy';
 import { isCalendarDate } from '../../lib/workingCalendar';
-import { isSessionAttachmentMeta } from '../../lib/sessionFiles';
+import { isAttachmentMeta } from '../attachments/sessionAttachments';
 import type { GateResult } from '../sourcing/complianceGate';
 import {
   matchesSupplierFilters,
@@ -334,7 +334,7 @@ export function answerRefusal(q: RfiQuestion, a: RfiAnswer | undefined): string 
       return null;
     }
     case 'attachment':
-      return (answer.attachments ?? []).every(isSessionAttachmentMeta) ? null : 'attachmentMalformed';
+      return (answer.attachments ?? []).every(isAttachmentMeta) ? null : 'attachmentMalformed';
     case 'text':
     case 'longText':
       return typeof v === 'string' ? null : 'notText';

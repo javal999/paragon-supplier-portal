@@ -207,7 +207,11 @@ import type {
   RfxResponseStatus,
 } from '../../sourcing/types';
 import { BID_CURRENCIES } from '../../../lib/currencyPolicy';
-import { isSessionAttachmentMeta, type SessionAttachmentMeta } from '../../../lib/sessionFiles';
+import { readRfqAuthoringFields } from '../../sourcing/rfqModel';
+import {
+  isAttachmentMeta,
+  type AttachmentMeta,
+} from '../../attachments/sessionAttachments';
 
 
 // The question kinds this build can render and score live in ONE list,
@@ -1420,9 +1424,16 @@ const rfqTarget: CommandTarget = {
       ...(typeof payload.estimatedValue === 'number'
         ? { estimatedValue: payload.estimatedValue as number }
         : {}),
-      currency: 'IDR',
       incoterms: str('incoterms'),
       paymentTerms: str('paymentTerms'),
+      // REQ-E03-03 BR-02 — the RFI this RFQ was created from. Carried ONLY when
+      // present: most RFQs come from no RFI (REQ-E03-02 BR-03).
+      ...(str('sourceRfiId') ? { sourceRfiId: str('sourceRfiId') } : {}),
+      // The rebuilt authoring fields — project, items, breaks, questions,
+      // options, provenance — AND THE CURRENCY. This used to be the literal
+      // `currency: 'IDR'`, so a buyer who chose USD raised a rupiah RFQ. The
+      // payload is already judged by `rfq_create_valid`.
+      ...readRfqAuthoringFields(payload),
     };
     rfqStore.add(rfq);
     return { entityId: rfqNumber };
@@ -2993,7 +3004,7 @@ bindPolicyHook(POLICY_HOOKS.RFP_CREATE_TERMS_KNOWN, ({ payload }) => {
     if (!doc || (!hasDocText && !doc.attachment)) {
       return { ok: false, reason: 'TC_DOCUMENT_EMPTY: a T&C document carries its text or a file' };
     }
-    if (doc.attachment && !isSessionAttachmentMeta(doc.attachment)) {
+    if (doc.attachment && !isAttachmentMeta(doc.attachment)) {
       return { ok: false, reason: 'ATTACHMENT_MALFORMED: the T&C file is not a file record' };
     }
   }
@@ -3079,7 +3090,7 @@ bindPolicyHook(POLICY_HOOKS.RFP_SUBMIT_TERMS_ANSWERED, ({ target, entityId }) =>
  */
 function rfxAuthoringFields(payload: Record<string, unknown>): {
   customSections?: readonly RfxCustomSection[];
-  attachments?: readonly SessionAttachmentMeta[];
+  attachments?: readonly AttachmentMeta[];
   confidentiality?: RfxConfidentiality;
 } {
   const conf = payload.confidentiality as RfxConfidentiality | undefined;
@@ -3088,7 +3099,7 @@ function rfxAuthoringFields(payload: Record<string, unknown>): {
       ? { customSections: payload.customSections as RfxCustomSection[] }
       : {}),
     ...(Array.isArray(payload.attachments) && payload.attachments.length > 0
-      ? { attachments: payload.attachments as SessionAttachmentMeta[] }
+      ? { attachments: payload.attachments as AttachmentMeta[] }
       : {}),
     ...(conf && typeof conf === 'object'
       ? { confidentiality: typeof conf.terms === 'string' && conf.terms.trim() ? { terms: conf.terms.trim() } : {} }
@@ -3099,7 +3110,7 @@ function rfxAuthoringFields(payload: Record<string, unknown>): {
 /** The refusal the shared authoring fields earn, or null. */
 function rfxAuthoringRefusal(payload: Record<string, unknown>): string | null {
   if (payload.attachments !== undefined) {
-    if (!Array.isArray(payload.attachments) || !payload.attachments.every(isSessionAttachmentMeta)) {
+    if (!Array.isArray(payload.attachments) || !payload.attachments.every(isAttachmentMeta)) {
       return 'ATTACHMENT_MALFORMED: every attachment is a file record (name, size, type)';
     }
   }

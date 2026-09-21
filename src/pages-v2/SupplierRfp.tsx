@@ -248,7 +248,6 @@ const SupplierRfp: React.FC = () => {
                   <p className="text-sm text-text-secondary whitespace-pre-line">{event.scope}</p>
                   {(event.attachments ?? []).length > 0 && (
                     <div>
-                      <h4 className="text-xs uppercase tracking-wide text-text-tertiary mb-1">{t('rfxa.att.title')}</h4>
                       <SessionAttachments
                         value={event.attachments ?? []}
                         label={t('rfxa.att.title')}

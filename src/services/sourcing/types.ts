@@ -13,7 +13,7 @@
 // ────────────────────────────────────────────────────────────────────────────
 
 import type { BidCurrency } from '../../lib/currencyPolicy';
-import type { SessionAttachmentMeta } from '../../lib/sessionFiles';
+import type { AttachmentMeta } from '../attachments/sessionAttachments';
 
 /**
  * The question kinds an RFI (or an RFP's questions section) may ask.
@@ -119,7 +119,7 @@ export interface RfiAnswer {
   /** A `priceRange` answer: the INDICATIVE range, in the question's currency. */
   readonly range?: { readonly min: number; readonly max: number };
   /** An `attachment` answer's files: metadata only, the file itself is session-held (BL-27). */
-  readonly attachments?: readonly SessionAttachmentMeta[];
+  readonly attachments?: readonly AttachmentMeta[];
 }
 
 /**
@@ -177,7 +177,7 @@ export interface RfiEvent {
   /** Sections the buyer added for this event, in the order they render. */
   readonly customSections?: readonly RfxCustomSection[];
   /** The buyer's documents: a brief, drawings, reference images (session-held). */
-  readonly attachments?: readonly SessionAttachmentMeta[];
+  readonly attachments?: readonly AttachmentMeta[];
   /** Present = the supplier must accept before reading the event. */
   readonly confidentiality?: RfxConfidentiality;
 }
@@ -252,7 +252,7 @@ export interface RfpTermRow {
  */
 export interface RfpTermsDocument {
   readonly text?: string;
-  readonly attachment?: SessionAttachmentMeta;
+  readonly attachment?: AttachmentMeta;
 }
 
 /** One option PTI asks an INDICATIVE price for (open-spec requests, spec D4). */
@@ -325,7 +325,7 @@ export interface RfpEvent {
   /** Optional typed questions, the same shape the RFI asks. */
   readonly questions?: readonly RfiQuestion[];
   readonly customSections?: readonly RfxCustomSection[];
-  readonly attachments?: readonly SessionAttachmentMeta[];
+  readonly attachments?: readonly AttachmentMeta[];
   readonly confidentiality?: RfxConfidentiality;
   /** Present = the supplier accepts this T&C before answering. */
   readonly termsDocument?: RfpTermsDocument;
@@ -379,6 +379,12 @@ export interface AwardLine {
   readonly itemCode: string;
   readonly sharePct: number;
   readonly quantity: number;
+  /**
+   * The quantity break the award was made at, on a tiered RFQ (RFx spec,
+   * "the award records the break it was made at"). Absent on an untiered
+   * event, where there is no break to name.
+   */
+  readonly awardTierQty?: number;
 }
 
 /** REQ-E03-05 BR-09 — the hub's record of an award. No PO, no contract. */

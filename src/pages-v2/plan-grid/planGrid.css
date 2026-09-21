@@ -14,3 +14,11 @@
 .plan-dsg .dsg-container {
   height: var(--plan-dsg-h) !important;
 }
+
+/* BL-31 (WCAG 1.4.3): the grid library's own header text colour is
+ * rgb(157,166,171), 2.48:1 on white. Re-point it at the portal's tertiary text
+ * token (#5E6A78, 5.51:1 on white). Scoped to the containers of the two DSG
+ * consumers that load this sheet (plan grid, collaboration responses). */
+.dsg-container {
+  --dsg-header-text-color: #5E6A78;
+}

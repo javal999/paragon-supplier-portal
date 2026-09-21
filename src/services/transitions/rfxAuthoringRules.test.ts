@@ -53,8 +53,8 @@ const CASES: Record<RfiQuestionType, { good: Omit<RfiAnswer, 'questionId'>; bad:
   date: { good: { value: '2026-10-05' }, bad: { value: '2026-02-30' }, code: 'notADate' },
   priceRange: { good: { range: { min: 210, max: 260 } }, bad: { range: { min: 300, max: 260 } }, code: 'rangeInverted' },
   attachment: {
-    good: { attachments: [{ id: 'att-1', name: 'labels.pdf', size: 1200, type: 'application/pdf' }] },
-    bad: { attachments: [{ id: 'att-2', name: '', size: 1, type: '' }] },
+    good: { attachments: [{ id: 'att-1', name: 'labels.pdf', size: 1200, type: 'application/pdf', addedAt: '2026-09-21T03:00:00.000Z' }] },
+    bad: { attachments: [{ id: 'att-2', name: '', size: 1, type: '', addedAt: '2026-09-21T03:00:00.000Z' }] },
     code: 'attachmentMalformed',
   },
 };

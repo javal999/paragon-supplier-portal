@@ -13,7 +13,7 @@
 
 import type { RfqLineItem } from '../../data/mockRfqs';
 import type { RfiEvent, RfiResponse, RfpEvent, RfpResponse } from './types';
-import type { SessionAttachmentMeta } from '../../lib/sessionFiles';
+import type { AttachmentMeta } from '../attachments/sessionAttachments';
 import { rfxFamilyForCategory, rfxSectionsOf } from './rfxConfig';
 
 /** The editable draft an RFQ opens on when it is created from an RFI. */
@@ -107,7 +107,7 @@ export interface RfpPrefill {
    */
   readonly scopeNoteKeys: readonly string[];
   readonly invitedSupplierIds: readonly string[];
-  readonly attachments: readonly SessionAttachmentMeta[];
+  readonly attachments: readonly AttachmentMeta[];
   readonly confidential: boolean;
   readonly confidentialityTerms?: string;
   readonly sourceRfiId: string;

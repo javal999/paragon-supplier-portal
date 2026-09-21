@@ -114,6 +114,8 @@ export const supplierMyStorefrontEn: Record<string, string> = {
   'supplierMyStorefront.toast.hoursUpdated': 'Business hours not saved — storefront editing is not wired to a real store.',
   'supplierMyStorefront.field.businessHours': 'Business hours',
   'supplierMyStorefront.field.to': 'to',
+  'supplierMyStorefront.field.businessHoursStart': 'Business hours start', // BL-31 accessible name
+  'supplierMyStorefront.field.businessHoursEnd': 'Business hours end',
   'supplierMyStorefront.field.timezone': 'Timezone',
   'supplierMyStorefront.field.currentStatus': 'Current status',
   'supplierMyStorefront.status.open': 'Open — {{time}}',
@@ -245,6 +247,8 @@ export const supplierMyStorefrontId: Record<string, string> = {
   'supplierMyStorefront.toast.hoursUpdated': 'Jam kerja tidak disimpan — penyuntingan etalase belum tersambung ke penyimpanan nyata.',
   'supplierMyStorefront.field.businessHours': 'Jam kerja',
   'supplierMyStorefront.field.to': 'sampai',
+  'supplierMyStorefront.field.businessHoursStart': 'Jam kerja mulai',
+  'supplierMyStorefront.field.businessHoursEnd': 'Jam kerja selesai',
   'supplierMyStorefront.field.timezone': 'Zona waktu',
   'supplierMyStorefront.field.currentStatus': 'Status saat ini',
   'supplierMyStorefront.status.open': 'Buka — {{time}}',

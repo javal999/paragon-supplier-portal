@@ -44,9 +44,12 @@ import LivenessPill from '../components/ui-v2/LivenessPill';
 import ModelMarker from '../components/ui-v2/ModelMarker';
 import Button from '../components/ui-v2/Button';
 import Wizard, { WizardStep } from '../components/ui-v2/Wizard';
+import ModalOverlay from '../components/ui-v2/ModalOverlay';
 import {
   RFQ_CATEGORY_OPTIONS,
   RFQ_UOM_OPTIONS,
+  isRfqCategory,
+  isRfqUom,
   prefillFromRequisition,
   requisitionSourcingStates,
   type RequisitionPrefill,
@@ -55,7 +58,7 @@ import { useToast } from '../hooks/useToast';
 import LoadingState from '../components/ui-v2/LoadingState';
 import ErrorState from '../components/ui-v2/ErrorState';
 import EmptyState from '../components/ui-v2/EmptyState';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   useRFQs,
   useQuotations,
@@ -63,7 +66,34 @@ import {
   useRequisitions,
   useInviteeCandidates,
   useRfqComplianceGate,
+  useRfiEvents,
 } from '../services/query/hooks';
+// RFx spec 2026-09-21 — the rebuilt authoring: items, breaks, questions and
+// options, templates and copying, and the generic "start from…" seed.
+import {
+  ItemsStep,
+  QuestionsOptionsStep,
+  SaveTemplateDialog,
+  StepRefusal,
+  TemplatePicker,
+  TierEditor,
+  authoringReviewRows,
+  refusalMessage,
+} from './sourcing/RfqAuthoring';
+import {
+  buildRfqAuthoringPayload,
+  itemsStepRefusal,
+  newItemDraft,
+  optionsStepRefusal,
+  seedFromRfiPrefill,
+  templateContentFromDraft,
+  templateContentFromRfq,
+  tiersStepRefusal,
+  type RfqAuthoringDraft,
+  type RfqDraftSeed,
+} from './sourcing/rfqDraft';
+import { prefillRfqFromRfi } from '../services/sourcing/rfxPrefill';
+import type { RfqTemplateContent } from '../services/sourcing/rfqTemplates';
 import { GateMarker } from './rfx/rfxDisplay';
 import { matchesSupplierFilters } from '../services/sourcing/supplierFilters';
 import SupplierFilterBar, {
@@ -106,6 +136,7 @@ import {
 } from '../lib/shouldCostSpread';
 import {
   BASE_CURRENCY,
+  BID_CURRENCIES,
   FX_PIN_MAX_AGE_DAYS,
   type BidCurrency,
 } from '../lib/currencyPolicy';
@@ -630,7 +661,7 @@ const ReviewSection: React.FC<{
       <button
         type="button"
         onClick={onEdit}
-        className="text-xs font-medium text-teal hover:text-teal-hover"
+        className="text-xs font-medium text-teal-hover hover:text-teal-hover"
       >
         {t('sourcing.wizard.review.edit')}
       </button>
@@ -783,7 +814,7 @@ const matchesGroup = (r: RFQ, group: GroupTab): boolean => {
   return true;
 };
 
-interface DraftRfq {
+interface DraftRfq extends RfqAuthoringDraft {
   title: string;
   category: RFQCategory | '';
   materials: string[];
@@ -794,10 +825,11 @@ interface DraftRfq {
   awardDeadline: string;
   incoterms: string;
   paymentTerms: string;
-  currency: 'IDR' | 'USD';
   invitedSupplierIds: string[];
   /** C.2 — set ONLY when the buyer started from a requisition. */
   sourceRequisitionId?: string;
+  /** Where a seeded draft came from — the review names it ("Created from …"). */
+  origin?: RfqDraftSeed['origin'];
 }
 
 /**
@@ -824,7 +856,8 @@ const applyPrefill = (base: DraftRfq, p: RequisitionPrefill): DraftRfq => ({
   sourceRequisitionId: p.sourceRequisitionId,
 });
 
-const EMPTY_DRAFT: DraftRfq = {
+/** A fresh draft. A function, not a constant: every opening gets its own item. */
+const emptyDraft = (): DraftRfq => ({
   title: '',
   category: '',
   materials: [],
@@ -837,7 +870,47 @@ const EMPTY_DRAFT: DraftRfq = {
   paymentTerms: 'Net 30',
   currency: 'IDR',
   invitedSupplierIds: [],
-};
+  projectName: '',
+  items: [newItemDraft('other')],
+  tiers: [],
+  questions: [],
+  allowAlternatives: false,
+  samplesOn: false,
+  samplesQty: '',
+  samplesNeededBy: '',
+  confidential: false,
+  attachments: [],
+});
+
+/**
+ * Fold a generic seed (RFI, template, past RFQ; an RFP later) into a fresh
+ * draft. What the seed does not carry keeps the wizard's default, and a category
+ * or unit the RFQ vocabulary does not hold is left for the buyer to choose
+ * rather than guessed — the `applyPrefill` rule.
+ */
+const applySeed = (base: DraftRfq, seed: RfqDraftSeed): DraftRfq => ({
+  ...base,
+  origin: seed.origin,
+  ...(seed.title !== undefined ? { title: seed.title } : {}),
+  ...(seed.projectName !== undefined ? { projectName: seed.projectName } : {}),
+  ...(seed.category !== undefined && isRfqCategory(seed.category) ? { category: seed.category } : {}),
+  ...(seed.uom !== undefined && isRfqUom(seed.uom) ? { uom: seed.uom } : {}),
+  ...(seed.totalQty !== undefined ? { totalQty: seed.totalQty } : {}),
+  ...(seed.currency !== undefined ? { currency: seed.currency } : {}),
+  ...(seed.incoterms !== undefined ? { incoterms: seed.incoterms } : {}),
+  ...(seed.paymentTerms !== undefined ? { paymentTerms: seed.paymentTerms } : {}),
+  ...(seed.invitedSupplierIds !== undefined ? { invitedSupplierIds: [...seed.invitedSupplierIds] } : {}),
+  ...(seed.items && seed.items.length > 0 ? { items: [...seed.items] } : {}),
+  ...(seed.tiers !== undefined ? { tiers: [...seed.tiers] } : {}),
+  ...(seed.questions !== undefined ? { questions: [...seed.questions] } : {}),
+  ...(seed.allowAlternatives !== undefined ? { allowAlternatives: seed.allowAlternatives } : {}),
+  ...(seed.samplesQty !== undefined ? { samplesOn: true, samplesQty: seed.samplesQty } : {}),
+  ...(seed.confidential !== undefined ? { confidential: seed.confidential } : {}),
+  sourceRfiId: seed.sourceRfiId,
+  sourceRfpId: seed.sourceRfpId,
+  copiedFromRfqId: seed.copiedFromRfqId,
+  templateId: seed.templateId,
+});
 
 interface SourcingWorkspaceProps {
   baseRfqs: RFQ[];
@@ -926,7 +999,11 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
     fxPin: 'rfq:fx-pin',
   } as const);
   const [wizardStep, setWizardStep] = useState(0);
-  const [draft, setDraft] = useState<DraftRfq>(EMPTY_DRAFT);
+  const [draft, setDraft] = useState<DraftRfq>(emptyDraft);
+  // Templates and copying (D2): the picker, and the "Save as template" dialog
+  // with the content it would save.
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [templateToSave, setTemplateToSave] = useState<{ content: RfqTemplateContent; name: string } | null>(null);
   const [supplierSearch, setSupplierSearch] = useState('');
   // REQ-E03-01 BR-01 — the purchasing-group filter, usable alone or with the
   // category one. '' means the filter is off, which is a different state from
@@ -1314,9 +1391,21 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
   // `prefillFromRequisition`. One entry shape, three callers — a second opener
   // taking a different shape is how C.3 would end up rewriting C.2.
   const openWizard = (prefill?: RequisitionPrefill) => {
-    setDraft(prefill ? applyPrefill(EMPTY_DRAFT, prefill) : EMPTY_DRAFT);
+    setDraft(prefill ? applyPrefill(emptyDraft(), prefill) : emptyDraft());
     setWizardStep(0);
     setSupplierSearch('');
+    setWizardOpen(true);
+  };
+
+  // ⚠️ **THE GENERIC ENTRANCE — ONE SEED SHAPE FOR EVERY OTHER SOURCE.** An RFI,
+  // a template and a past RFQ each become an `RfqDraftSeed` (`rfqDraft.ts`) and
+  // open the wizard through here. An RFP source is one more `seedFrom…` feeding
+  // this same function; nothing in the wizard changes for it.
+  const openWizardFromSeed = (seed: RfqDraftSeed) => {
+    setDraft(applySeed(emptyDraft(), seed));
+    setWizardStep(0);
+    setSupplierSearch('');
+    setPickerOpen(false);
     setWizardOpen(true);
   };
 
@@ -1372,6 +1461,37 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deepLinkId, sourceablePrs]);
 
+  // ⚠️ **RFI → RFQ (REQ-E03-03 BR-02), AND IT WAS BROKEN UNTIL NOW.** The RFI's
+  // "Create RFQ" button has always navigated to `/buyer/rfq?rfi=<id>`, and
+  // nothing here read the parameter, so `prefillRfqFromRfi` had no caller. The
+  // id travels, not the prefill (the requisition rule above): this page reads
+  // the RFI from its own live query, builds the prefill through the existing
+  // pure function, and opens the wizard through the generic seed entrance.
+  // The parameter is then removed so a refresh or a back-navigation does not
+  // re-open a wizard the buyer already closed.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const rfiParam = searchParams.get('rfi');
+  const rfiEvents = useRfiEvents();
+  const consumedRfi = useRef<string | null>(null);
+  useEffect(() => {
+    if (!rfiParam || consumedRfi.current === rfiParam || rfiEvents.isPending) return;
+    consumedRfi.current = rfiParam;
+    const event = (rfiEvents.data?.items ?? []).find((e) => e.id === rfiParam);
+    if (event) {
+      openWizardFromSeed(seedFromRfiPrefill(prefillRfqFromRfi(event, event.responses), event.eventNumber));
+    } else {
+      toast({
+        variant: 'error',
+        title: t('rfqAuthoring.prefill.rfiMissing.title'),
+        description: t('rfqAuthoring.prefill.rfiMissing.desc', { id: rfiParam }),
+      });
+    }
+    const next = new URLSearchParams(searchParams);
+    next.delete('rfi');
+    setSearchParams(next, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rfiParam, rfiEvents.isPending, rfiEvents.data]);
+
   const updateDraft = <K extends keyof DraftRfq>(
     key: K,
     value: DraftRfq[K],
@@ -1424,6 +1544,11 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
   const qtyRead = useMemo(() => readRfqTotalQty(draft.totalQty), [draft.totalQty]);
   const budgetRead = useMemo(() => readRfqBudget(draft.budget), [draft.budget]);
 
+  const itemsRefusal = useMemo(() => itemsStepRefusal(draft.items), [draft.items]);
+  const tiersRefusal = useMemo(() => tiersStepRefusal(draft.tiers), [draft.tiers]);
+  const optionsRefusal = optionsStepRefusal(draft);
+  const updateAuthoring = (patch: Partial<RfqAuthoringDraft>) => setDraft((d) => ({ ...d, ...patch }));
+
   const isStepValid = (step: number): boolean => {
     if (step === 0) {
       return (
@@ -1441,8 +1566,14 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
         rfqNumbers.value.totalQty > 0
       );
     }
-    if (step === 1) return draft.invitedSupplierIds.length > 0;
-    if (step === 2) {
+    // The three authoring steps are judged by the SAME rules the create verb
+    // binds (`rfq_create_valid`), so a step that lets the buyer through is one
+    // the dispatch will accept — and each says why when it does not.
+    if (step === 1) return itemsRefusal === null;
+    if (step === 2) return tiersRefusal === null;
+    if (step === 3) return optionsRefusal === null;
+    if (step === 4) return draft.invitedSupplierIds.length > 0;
+    if (step === 5) {
       if (!draft.responseDeadline || !draft.awardDeadline) return false;
       return new Date(draft.awardDeadline) > new Date(draft.responseDeadline);
     }
@@ -1474,14 +1605,26 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
     createMutation.mutate(
       // The SAME parsed values the gate above judged — the builder can no longer
       // re-read the strings and reach a different number (CP-0 §4).
-      { payload: buildRfqCreatePayload(draft, rfqNumbers.value) },
+      {
+        payload: {
+          ...buildRfqCreatePayload(draft, rfqNumbers.value),
+          // The authoring half — items, breaks, questions, options, files,
+          // provenance, and the CURRENCY the buyer chose (the store used to
+          // write 'IDR' whatever it was).
+          ...buildRfqAuthoringPayload(draft),
+        },
+      },
       {
         onSuccess: (result) => {
           if (result.status === 'failed') {
             toast({
               variant: 'error',
               title: t('sourcing.toast.createFailed.title'),
-              description: refusalText(result.reason) ?? result.reason ?? t('sourcing.toast.createFailed.default'),
+              // A `rfq_create_valid` refusal is named, so it is said in the
+              // buyer's language; anything else keeps the prior fallback chain.
+              description:
+                refusalText(result.reason) ??
+                (result.reason ? refusalMessage(t, result.reason) : t('sourcing.toast.createFailed.default')),
             });
             return;
           }
@@ -1578,6 +1721,8 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
     setInviteeFilters({});
   };
 
+  const authoringRows = authoringReviewRows(t, draft, draft.origin);
+
   const wizardSteps: WizardStep[] = [
     {
       id: 'scope',
@@ -1641,24 +1786,40 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
             )}
           </div>
           <div>
-            <label className="text-label text-text-tertiary uppercase block mb-1.5">
+            <label className="block"><span className="text-label text-text-tertiary uppercase block mb-1.5">
               {t('sourcing.wizard.field.title')}{' '}
               <span className="text-danger">*</span>
-            </label>
+            </span>
             <input
               type="text"
               value={draft.title}
               onChange={(e) => updateDraft('title', e.target.value)}
               placeholder={t('sourcing.wizard.placeholder.title')}
               className="w-full bg-white border border-border-input rounded-md px-3 h-10 text-sm focus:outline-none focus:border-action"
+            /></label>
+          </div>
+          <div>
+            <label
+              htmlFor="rfq-project-name"
+              className="text-label text-text-tertiary uppercase block mb-1.5"
+            >
+              {t('rfqAuthoring.field.projectName')}
+            </label>
+            <input
+              id="rfq-project-name"
+              type="text"
+              value={draft.projectName}
+              onChange={(e) => updateDraft('projectName', e.target.value)}
+              placeholder={t('rfqAuthoring.placeholder.projectName')}
+              className="w-full bg-white border border-border-input rounded-md px-3 h-10 text-sm focus:outline-none focus:border-action"
             />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="text-label text-text-tertiary uppercase block mb-1.5">
+              <label className="block"><span className="text-label text-text-tertiary uppercase block mb-1.5">
                 {t('sourcing.wizard.field.category')}{' '}
                 <span className="text-danger">*</span>
-              </label>
+              </span>
               <select
                 value={draft.category}
                 onChange={(e) => {
@@ -1673,7 +1834,7 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
                     {categoryLabel(t, c)}
                   </option>
                 ))}
-              </select>
+              </select></label>
             </div>
             <div>
               <label className="text-label text-text-tertiary uppercase block mb-1.5">
@@ -1784,9 +1945,9 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
               )}
             </div>
             <div>
-              <label className="text-label text-text-tertiary uppercase block mb-1.5">
+              <label className="block"><span className="text-label text-text-tertiary uppercase block mb-1.5">
                 {t('sourcing.wizard.field.uom')}
-              </label>
+              </span>
               <select
                 value={draft.uom}
                 onChange={(e) =>
@@ -1802,10 +1963,48 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
                     {u}
                   </option>
                 ))}
-              </select>
+              </select></label>
             </div>
           </div>
         </div>
+      ),
+    },
+    {
+      id: 'items',
+      title: t('rfqAuthoring.step.items.title'),
+      shortTitle: t('rfqAuthoring.step.items.short'),
+      description: t('rfqAuthoring.step.items.desc'),
+      content: (
+        <ItemsStep
+          items={draft.items}
+          onChange={(items) => updateAuthoring({ items })}
+          refusal={itemsRefusal}
+        />
+      ),
+    },
+    {
+      id: 'tiers',
+      title: t('rfqAuthoring.step.tiers.title'),
+      shortTitle: t('rfqAuthoring.step.tiers.short'),
+      description: t('rfqAuthoring.step.tiers.desc'),
+      content: (
+        <div className="space-y-4">
+          <TierEditor
+            tiers={draft.tiers}
+            onChange={(tiers) => updateAuthoring({ tiers })}
+            testId="rfq-tiers"
+          />
+          <StepRefusal reason={tiersRefusal} testId="rfq-tiers-step-refusal" />
+        </div>
+      ),
+    },
+    {
+      id: 'options',
+      title: t('rfqAuthoring.step.questions.title'),
+      shortTitle: t('rfqAuthoring.step.questions.short'),
+      description: t('rfqAuthoring.step.questions.desc'),
+      content: (
+        <QuestionsOptionsStep draft={draft} update={updateAuthoring} refusal={optionsRefusal} />
       ),
     },
     {
@@ -1939,6 +2138,7 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
                       <td className="px-3 py-2">
                         <input
                           type="checkbox"
+                          aria-label={s.supplierName}
                           checked={selected}
                           onChange={() => toggleSupplier(s.supplierId)}
                           onClick={(e) => e.stopPropagation()}
@@ -2010,7 +2210,7 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
           </div>
 
           <div className="text-sm text-text-secondary">
-            <span className="inline-flex items-center gap-1.5 bg-teal-soft text-teal rounded-full px-3 py-1 text-xs font-semibold">
+            <span className="inline-flex items-center gap-1.5 bg-teal-soft text-teal-hover rounded-full px-3 py-1 text-xs font-semibold">
               {t(
                 draft.invitedSupplierIds.length === 1
                   ? 'sourcing.wizard.selectedCount.one'
@@ -2031,10 +2231,10 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
         <div className="space-y-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="text-label text-text-tertiary uppercase block mb-1.5">
+              <label className="block"><span className="text-label text-text-tertiary uppercase block mb-1.5">
                 {t('sourcing.wizard.field.responseDeadline')}{' '}
                 <span className="text-danger">*</span>
-              </label>
+              </span>
               <input
                 type="date"
                 value={draft.responseDeadline}
@@ -2042,19 +2242,19 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
                   updateDraft('responseDeadline', e.target.value)
                 }
                 className="w-full bg-white border border-border-input rounded-md px-3 h-10 text-sm focus:outline-none focus:border-action"
-              />
+              /></label>
             </div>
             <div>
-              <label className="text-label text-text-tertiary uppercase block mb-1.5">
+              <label className="block"><span className="text-label text-text-tertiary uppercase block mb-1.5">
                 {t('sourcing.wizard.field.awardDeadline')}{' '}
                 <span className="text-danger">*</span>
-              </label>
+              </span>
               <input
                 type="date"
                 value={draft.awardDeadline}
                 onChange={(e) => updateDraft('awardDeadline', e.target.value)}
                 className="w-full bg-white border border-border-input rounded-md px-3 h-10 text-sm focus:outline-none focus:border-action"
-              />
+              /></label>
               {draft.responseDeadline &&
                 draft.awardDeadline &&
                 new Date(draft.awardDeadline) <=
@@ -2065,9 +2265,9 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
                 )}
             </div>
             <div>
-              <label className="text-label text-text-tertiary uppercase block mb-1.5">
+              <label className="block"><span className="text-label text-text-tertiary uppercase block mb-1.5">
                 {t('sourcing.wizard.field.incoterms')}
-              </label>
+              </span>
               <select
                 value={draft.incoterms}
                 onChange={(e) => updateDraft('incoterms', e.target.value)}
@@ -2078,12 +2278,12 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
                     {i}
                   </option>
                 ))}
-              </select>
+              </select></label>
             </div>
             <div>
-              <label className="text-label text-text-tertiary uppercase block mb-1.5">
+              <label className="block"><span className="text-label text-text-tertiary uppercase block mb-1.5">
                 {t('sourcing.wizard.field.paymentTerms')}
-              </label>
+              </span>
               <select
                 value={draft.paymentTerms}
                 onChange={(e) => updateDraft('paymentTerms', e.target.value)}
@@ -2094,7 +2294,7 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
                     {p}
                   </option>
                 ))}
-              </select>
+              </select></label>
             </div>
           </div>
           <div>
@@ -2102,7 +2302,9 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
               {t('sourcing.wizard.field.currency')}
             </label>
             <div className="flex gap-4">
-              {(['IDR', 'USD'] as const).map((cur) => (
+              {/* Every currency the bid policy permits, and the one chosen is
+                  now STORED — the create handler used to write 'IDR'. */}
+              {BID_CURRENCIES.map((cur) => (
                 <label
                   key={cur}
                   className="inline-flex items-center gap-2 cursor-pointer"
@@ -2134,6 +2336,7 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
             label={t('sourcing.wizard.review.section.scope')}
             onEdit={() => setWizardStep(0)}
             rows={[
+              ...authoringRows.basics,
               // ⚠️ C.2 — THE PROVENANCE LINE. Present ONLY when the buyer chose a
               // requisition, so an ordinary RFQ gains no empty row claiming
               // there might have been one.
@@ -2203,8 +2406,18 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
             ]}
           />
           <ReviewSection
-            label={t('sourcing.wizard.review.section.suppliers')}
+            label={t('rfqAuthoring.review.section.items')}
             onEdit={() => setWizardStep(1)}
+            rows={authoringRows.items}
+          />
+          <ReviewSection
+            label={t('rfqAuthoring.review.section.options')}
+            onEdit={() => setWizardStep(2)}
+            rows={authoringRows.options}
+          />
+          <ReviewSection
+            label={t('sourcing.wizard.review.section.suppliers')}
+            onEdit={() => setWizardStep(4)}
             rows={[
               [
                 t('sourcing.wizard.review.row.invited'),
@@ -2227,7 +2440,7 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
           />
           <ReviewSection
             label={t('sourcing.wizard.review.section.terms')}
-            onEdit={() => setWizardStep(2)}
+            onEdit={() => setWizardStep(5)}
             rows={[
               [
                 t('sourcing.wizard.review.row.responseDeadline'),
@@ -2242,6 +2455,23 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
               [t('sourcing.wizard.review.row.currency'), draft.currency],
             ]}
           />
+          {/* D2 — the draft's content kept as a template in this browser: items,
+              sheets, breaks, costs, questions and options. Not invitees, not
+              dates, not files. */}
+          <div className="flex justify-end">
+            <Button
+              variant="secondary"
+              onClick={() =>
+                setTemplateToSave({
+                  content: templateContentFromDraft(draft),
+                  name: draft.projectName.trim() || draft.title.trim(),
+                })
+              }
+              data-testid="rfq-review-save-template"
+            >
+              {t('rfqAuthoring.template.saveAs')}
+            </Button>
+          </div>
         </div>
       ),
     },
@@ -2330,7 +2560,10 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
   return (
     <AppShellV2>
       <PageHeader
-        breadcrumb={[t('sourcing.crumb.acquire'), t('sourcing.crumb.sourcing')]}
+        // The eyebrow is the menu section alone: "Sourcing". It read
+        // "Sourcing · Sourcing & RFQ" — a leftover from the one-module era,
+        // naming the section twice (NV-05 replaces the first crumb anyway).
+        breadcrumb={[t('hub.nav.section.sourcing')]}
         title={t('sourcing.header.title')}
         count={rfqs.length}
         subtitle={t('sourcing.header.subtitle')}
@@ -2338,13 +2571,19 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
           // §73 — the page-level create, WITHHELD rather than disabled. A seat
           // without `rfq:create` reads whose act it is instead of pressing a
           // button that opens a wizard the dispatcher will refuse at the end.
-          // Export and Templates are reads holding no atom; they are not gated.
+          // Export is a read holding no atom; it is not gated. TEMPLATES IS NOW
+          // AN ENTRANCE TO CREATE — both of its choices open the wizard that
+          // ends in `t_rfq_create` — so it is withheld with "New RFQ" rather
+          // than offered to a seat the dispatcher will refuse at the end (the
+          // entrance is the unit, §84).
           <div className="flex items-center gap-3">
             <HandoffNotice availability={rfqCreateAvailability} testId="handoff-rfq-create" />
             <BulkActionsBar
               actions={[
                 { label: t('sourcing.action.export'), icon: FileSpreadsheet },
-                { label: t('sourcing.action.templates'), icon: FileText },
+                ...(rfqCreateAvailability.kind === 'held'
+                  ? [{ label: t('sourcing.action.templates'), icon: FileText, onClick: () => setPickerOpen(true) }]
+                  : []),
               ]}
               {...(rfqCreateAvailability.kind === 'held'
                 ? {
@@ -2508,6 +2747,14 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
                       {r.rfqNumber}
                     </Data>
                     <div className="text-xs text-text-tertiary mt-0.5 max-w-[20rem] truncate">
+                      {r.projectName && (
+                        <span
+                          className="inline-block mr-1.5 px-1.5 py-px rounded border border-border-subtle bg-bg-hover text-[11px] text-text-secondary"
+                          data-testid={`rfq-project-tag-${r.id}`}
+                        >
+                          {r.projectName}
+                        </span>
+                      )}
                       {r.title}
                     </div>
                   </TableCell>
@@ -2721,6 +2968,29 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
             >
               {t('rfx.cmp.title')} · {t('rfx.neg.title')} · {t('rfx.award.title')}
             </Link>
+            {/* D2 — keep this RFQ's content as a template. Holds no atom: a
+                template is the buyer's own authoring aid in this browser, and
+                starting an RFQ from it is what the create gate guards. */}
+            <div>
+              <Button
+                variant="secondary"
+                data-testid="panel-save-template"
+                onClick={() => {
+                  const content = templateContentFromRfq(selectedRfq);
+                  if (!content) {
+                    toast({
+                      variant: 'error',
+                      title: t('rfqAuthoring.template.save.failed'),
+                      description: t('rfqAuthoring.template.save.nothing'),
+                    });
+                    return;
+                  }
+                  setTemplateToSave({ content, name: selectedRfq.projectName ?? selectedRfq.title });
+                }}
+              >
+                {t('rfqAuthoring.template.saveAs')}
+              </Button>
+            </div>
             {selectedRfq.status === 'Awarded' && (
               <section className="bg-success-soft border border-success/30 rounded-md p-4">
                 <div className="flex items-center gap-2 mb-3">
@@ -3049,7 +3319,7 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
                             >
                               {q.id === topRankedId && (
                                 <span className="flex flex-col items-start gap-0.5 mb-1">
-                                  <span className="inline-flex items-center gap-1 text-label text-teal uppercase">
+                                  <span className="inline-flex items-center gap-1 text-label text-teal-hover uppercase">
                                     <Trophy size={10} />{' '}
                                     {t('sourcing.cmp.topRanked')}
                                   </span>
@@ -3418,17 +3688,15 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
           prior basis is kept — because "edit" would describe a mutation that
           cannot happen and would misrepresent what the trail will show. */}
       {pinDraft && selectedRfq && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[rgba(13,27,42,0.4)]">
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-label={t(
-              pinDraft.superseding ? 'sourcing.fx.dialog.title.supersede' : 'sourcing.fx.dialog.title.record',
-              { currency: pinDraft.currency },
-            )}
-            data-testid="fx-pin-dialog"
-            className="w-full max-w-md bg-white rounded-lg border border-border-subtle p-5"
-          >
+        <ModalOverlay
+          onClose={() => setPinDraft(null)}
+          label={t(
+            pinDraft.superseding ? 'sourcing.fx.dialog.title.supersede' : 'sourcing.fx.dialog.title.record',
+            { currency: pinDraft.currency },
+          )}
+          testId="fx-pin-dialog"
+        >
+          <div className="w-full max-w-md bg-white rounded-lg border border-border-subtle p-5">
             <h3 className="text-section text-text-primary mb-1">
               {t(
                 pinDraft.superseding
@@ -3594,11 +3862,22 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
               )}
             </div>
           </div>
-        </div>
+        </ModalOverlay>
+      )}
+
+      {pickerOpen && rfqCreateAvailability.kind === 'held' && (
+        <TemplatePicker rfqs={rfqs} onClose={() => setPickerOpen(false)} onStart={openWizardFromSeed} />
+      )}
+      {templateToSave && (
+        <SaveTemplateDialog
+          content={templateToSave.content}
+          defaultName={templateToSave.name}
+          onClose={() => setTemplateToSave(null)}
+        />
       )}
 
       {wizardOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[rgba(13,27,42,0.4)]">
+        <ModalOverlay onClose={closeWizard}>
           <Wizard
             steps={wizardSteps}
             currentStep={wizardStep}
@@ -3608,7 +3887,7 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
             isStepValid={isStepValid}
             completeLabel={t('sourcing.wizard.complete')}
           />
-        </div>
+        </ModalOverlay>
       )}
     </AppShellV2>
   );
@@ -3619,10 +3898,7 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
 // non-persisting) RFQ-creation wizard state seeded from the resolved reads.
 const BuyerSourcing: React.FC = () => {
   const { t } = useTranslation();
-  const sourcingCrumb = [
-    t('sourcing.crumb.acquire'),
-    t('sourcing.crumb.sourcing'),
-  ];
+  const sourcingCrumb = [t('hub.nav.section.sourcing')];
   const rfqsQuery = useRFQs();
   const quotationsQuery = useQuotations();
   const suppliersQuery = useSuppliers();

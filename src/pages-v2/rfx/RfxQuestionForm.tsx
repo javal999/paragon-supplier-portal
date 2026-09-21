@@ -227,7 +227,7 @@ export const QuestionField: React.FC<{
         <SessionAttachments
           value={answer?.attachments ?? []}
           onChange={disabled ? undefined : (next) => onChange({ attachments: next })}
-          label={prompt}
+          label={t('rfxa.answer.files')}
           testId={`rfi-field-files-${question.id}`}
         />
       )}

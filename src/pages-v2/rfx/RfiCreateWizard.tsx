@@ -34,9 +34,10 @@ import Button from '../../components/ui-v2/Button';
 import Data from '../../components/ui-v2/Data';
 import SessionAttachments from '../../components/ui-v2/SessionAttachments';
 import Wizard, { WizardStep } from '../../components/ui-v2/Wizard';
+import ModalOverlay from '../../components/ui-v2/ModalOverlay';
 import { useToast } from '../../hooks/useToast';
 import { BASE_CURRENCY } from '../../lib/currencyPolicy';
-import type { SessionAttachmentMeta } from '../../lib/sessionFiles';
+import type { AttachmentMeta } from '../../services/attachments/sessionAttachments';
 import { useRfxCommand } from '../../services/query/commandHooks';
 import {
   RFI_QUESTION_LIBRARY,
@@ -63,7 +64,7 @@ interface Draft {
   questions: readonly RfiQuestion[];
   customSections: readonly RfxCustomSection[];
   invitedSupplierIds: string[];
-  attachments: readonly SessionAttachmentMeta[];
+  attachments: readonly AttachmentMeta[];
   confidential: boolean;
   confidentialityTerms: string;
 }
@@ -324,7 +325,6 @@ const RfiCreateWizard: React.FC<RfiCreateWizardProps> = ({ onCancel, onCreated, 
             )}
           </div>
           <div>
-            <span className={labelClass}>{t('rfxa.att.buyer')}</span>
             <SessionAttachments
               value={draft.attachments}
               onChange={(next) => setDraft((d) => ({ ...d, attachments: next }))}
@@ -461,7 +461,7 @@ const RfiCreateWizard: React.FC<RfiCreateWizardProps> = ({ onCancel, onCreated, 
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[rgba(13,27,42,0.4)]">
+    <ModalOverlay onClose={onCancel}>
       <Wizard
         steps={steps}
         currentStep={step}
@@ -471,7 +471,7 @@ const RfiCreateWizard: React.FC<RfiCreateWizardProps> = ({ onCancel, onCreated, 
         isStepValid={(n) => (n === steps.length - 1 ? canPublish && sendable : stepValid(n))}
         completeLabel={t('rfx.create.send')}
       />
-    </div>
+    </ModalOverlay>
   );
 };
 

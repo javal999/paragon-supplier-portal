@@ -133,7 +133,7 @@ const ContractDetailView: React.FC<{
     <AppShellV2>
       <Link
         to="/buyer/contracts"
-        className="inline-flex items-center gap-1 text-sm text-action hover:underline mb-3"
+        className="inline-flex items-center gap-1 text-sm text-action-hover hover:underline mb-3"
       >
         <ChevronLeft size={14} /> {t('contracts.detail.back')}
       </Link>

@@ -377,7 +377,7 @@ const BuyerScorecard: React.FC = () => {
               </span>
               {/* i18n-defer: supp.tier is a composite fixture string
                   ("Tier 3 — API" …) — data, no central map; kept canonical EN. */}
-              <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold bg-teal-soft text-teal">
+              <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold bg-teal-soft text-teal-hover">
                 {supp.tier}
               </span>
             </div>
@@ -646,7 +646,7 @@ const BuyerScorecard: React.FC = () => {
                     <div className="text-xs text-text-tertiary whitespace-nowrap">
                       {log.date}
                     </div>
-                    <div className="inline-flex items-center gap-1 text-xs text-teal font-semibold mt-1">
+                    <div className="inline-flex items-center gap-1 text-xs text-teal-hover font-semibold mt-1">
                       <Icon size={12} />
                       {chl(log.channel)}
                     </div>

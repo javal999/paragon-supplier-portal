@@ -127,7 +127,7 @@ const AdvisorPanel: React.FC<{ completeness: number }> = ({ completeness }) => {
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="w-full px-4 py-3 flex items-center justify-between text-sm font-semibold text-teal"
+        className="w-full px-4 py-3 flex items-center justify-between text-sm font-semibold text-teal-hover"
       >
         <span>{t('supplierMyStorefront.advisor.title')}</span>
         {open ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
@@ -350,14 +350,14 @@ const StorefrontEditor: React.FC<StorefrontEditorProps> = ({
           {editProfile ? (
             <div>
               <div className="mb-3">
-                <label className={labelClass}>
+                <label className="block"><span className={labelClass}>
                   {t('supplierMyStorefront.field.companyDescription')}
-                </label>
+                </span>
                 <textarea
                   className={`${inputClass} min-h-[96px] resize-y`}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                />
+                /></label>
               </div>
               <div className="flex gap-2">
                 <Button
@@ -464,7 +464,7 @@ const StorefrontEditor: React.FC<StorefrontEditorProps> = ({
                     <TableCell className="text-text-secondary">
                       <Data>{item.leadTime} {t('supplierMyStorefront.days')}</Data>
                     </TableCell>
-                    <TableCell className="font-semibold text-teal">
+                    <TableCell className="font-semibold text-teal-hover">
                       <Data>{item.currency} {item.unitPrice}/{item.uom}</Data>
                     </TableCell>
                     <TableCell className="text-text-secondary">
@@ -512,9 +512,9 @@ const StorefrontEditor: React.FC<StorefrontEditorProps> = ({
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
                 <div>
-                  <label className={labelClass}>
+                  <label className="block"><span className={labelClass}>
                     {t('supplierMyStorefront.addForm.materialName')}
-                  </label>
+                  </span>
                   <input
                     className={inputClass}
                     placeholder={t('supplierMyStorefront.addForm.materialNamePlaceholder')}
@@ -522,12 +522,12 @@ const StorefrontEditor: React.FC<StorefrontEditorProps> = ({
                     onChange={(e) =>
                       setNewMaterial({ ...newMaterial, material: e.target.value })
                     }
-                  />
+                  /></label>
                 </div>
                 <div>
-                  <label className={labelClass}>
+                  <label className="block"><span className={labelClass}>
                     {t('supplierMyStorefront.addForm.sapCode')}
-                  </label>
+                  </span>
                   <input
                     className={inputClass}
                     placeholder={t('supplierMyStorefront.addForm.sapCodePlaceholder')}
@@ -535,12 +535,12 @@ const StorefrontEditor: React.FC<StorefrontEditorProps> = ({
                     onChange={(e) =>
                       setNewMaterial({ ...newMaterial, sapCode: e.target.value })
                     }
-                  />
+                  /></label>
                 </div>
                 <div>
-                  <label className={labelClass}>
+                  <label className="block"><span className={labelClass}>
                     {t('supplierMyStorefront.addForm.category')}
-                  </label>
+                  </span>
                   <select
                     className={inputClass}
                     value={newMaterial.category}
@@ -554,13 +554,13 @@ const StorefrontEditor: React.FC<StorefrontEditorProps> = ({
                         {cl(c)}
                       </option>
                     ))}
-                  </select>
+                  </select></label>
                 </div>
                 <div className="grid grid-cols-[1fr_80px] gap-2">
                   <div>
-                    <label className={labelClass}>
+                    <label className="block"><span className={labelClass}>
                       {t('supplierMyStorefront.addForm.moq')}
-                    </label>
+                    </span>
                     <input
                       type="number"
                       className={inputClass}
@@ -568,12 +568,12 @@ const StorefrontEditor: React.FC<StorefrontEditorProps> = ({
                       onChange={(e) =>
                         setNewMaterial({ ...newMaterial, moq: e.target.value })
                       }
-                    />
+                    /></label>
                   </div>
                   <div>
-                    <label className={labelClass}>
+                    <label className="block"><span className={labelClass}>
                       {t('supplierMyStorefront.addForm.uom')}
-                    </label>
+                    </span>
                     <select
                       className={inputClass}
                       value={newMaterial.uom}
@@ -584,13 +584,13 @@ const StorefrontEditor: React.FC<StorefrontEditorProps> = ({
                       {UOM_OPTIONS.map((u) => (
                         <option key={u}>{u}</option>
                       ))}
-                    </select>
+                    </select></label>
                   </div>
                 </div>
                 <div>
-                  <label className={labelClass}>
+                  <label className="block"><span className={labelClass}>
                     {t('supplierMyStorefront.addForm.leadTime')}
-                  </label>
+                  </span>
                   <input
                     type="number"
                     className={inputClass}
@@ -598,13 +598,13 @@ const StorefrontEditor: React.FC<StorefrontEditorProps> = ({
                     onChange={(e) =>
                       setNewMaterial({ ...newMaterial, leadTime: e.target.value })
                     }
-                  />
+                  /></label>
                 </div>
                 <div className="grid grid-cols-[1fr_80px] gap-2">
                   <div>
-                    <label className={labelClass}>
+                    <label className="block"><span className={labelClass}>
                       {t('supplierMyStorefront.addForm.unitPrice')}
-                    </label>
+                    </span>
                     <input
                       type="number"
                       className={inputClass}
@@ -615,12 +615,12 @@ const StorefrontEditor: React.FC<StorefrontEditorProps> = ({
                           unitPrice: e.target.value,
                         })
                       }
-                    />
+                    /></label>
                   </div>
                   <div>
-                    <label className={labelClass}>
+                    <label className="block"><span className={labelClass}>
                       {t('supplierMyStorefront.addForm.ccy')}
-                    </label>
+                    </span>
                     <select
                       className={inputClass}
                       value={newMaterial.currency}
@@ -634,13 +634,13 @@ const StorefrontEditor: React.FC<StorefrontEditorProps> = ({
                       {CURRENCY_OPTIONS.map((c) => (
                         <option key={c}>{c}</option>
                       ))}
-                    </select>
+                    </select></label>
                   </div>
                 </div>
                 <div>
-                  <label className={labelClass}>
+                  <label className="block"><span className={labelClass}>
                     {t('supplierMyStorefront.addForm.capacity')}
-                  </label>
+                  </span>
                   <input
                     type="number"
                     className={inputClass}
@@ -651,7 +651,7 @@ const StorefrontEditor: React.FC<StorefrontEditorProps> = ({
                         capacity: e.target.value,
                       })
                     }
-                  />
+                  /></label>
                 </div>
               </div>
               <div className="mb-3">
@@ -726,7 +726,7 @@ const StorefrontEditor: React.FC<StorefrontEditorProps> = ({
                 <div className="flex items-center gap-2 shrink-0">
                   <span
                     className={`inline-flex items-center gap-1 text-xs font-semibold ${
-                      cert.visible ? 'text-teal' : 'text-text-tertiary'
+                      cert.visible ? 'text-teal-hover' : 'text-text-tertiary'
                     }`}
                   >
                     {cert.visible ? <Eye size={12} /> : <EyeOff size={12} />}
@@ -835,6 +835,7 @@ const StorefrontEditor: React.FC<StorefrontEditorProps> = ({
               <div className="flex items-center gap-2">
                 <input
                   type="time"
+                  aria-label={t('supplierMyStorefront.field.businessHoursStart')}
                   className={inputClass}
                   style={{ width: 120 }}
                   value={bizHoursStart}
@@ -845,6 +846,7 @@ const StorefrontEditor: React.FC<StorefrontEditorProps> = ({
                 </span>
                 <input
                   type="time"
+                  aria-label={t('supplierMyStorefront.field.businessHoursEnd')}
                   className={inputClass}
                   style={{ width: 120 }}
                   value={bizHoursEnd}
@@ -881,7 +883,7 @@ const StorefrontEditor: React.FC<StorefrontEditorProps> = ({
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
             {/* value figures are demo marketplace stats (mono DATA) — kept EN */}
             {[
-              { label: t('supplierMyStorefront.stat.profileViews'), value: '24', tone: 'text-teal' },
+              { label: t('supplierMyStorefront.stat.profileViews'), value: '24', tone: 'text-teal-hover' },
               { label: t('supplierMyStorefront.stat.rfqInvitations'), value: '3', tone: 'text-info' },
               { label: t('supplierMyStorefront.stat.winRate'), value: '67%', tone: 'text-success' },
               { label: t('supplierMyStorefront.stat.categoryRank'), value: '#3 / 31', tone: 'text-warning-hover' },

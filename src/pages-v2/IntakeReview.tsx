@@ -128,7 +128,7 @@ const IntakeReview: React.FC = () => {
           <div className="font-semibold text-info">{t('intakeReview.honesty.title')}</div>
           <p className="mt-0.5 text-text-secondary">{t('intakeReview.honesty.body')}</p>
           <p className="mt-1 text-text-secondary">
-            <Link to="/buyer/plan-grid" className="text-action hover:underline">
+            <Link to="/buyer/plan-grid" className="text-action-hover hover:underline">
               {t('intakeReview.adjustHint')}
             </Link>
           </p>

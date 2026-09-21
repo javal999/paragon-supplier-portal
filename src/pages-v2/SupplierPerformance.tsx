@@ -375,7 +375,7 @@ const SupplierPerformance: React.FC = () => {
               <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold bg-bg-hover text-text-secondary">
                 {cl(mySupplier.category)}
               </span>
-              <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold bg-teal-soft text-teal">
+              <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold bg-teal-soft text-teal-hover">
                 {t('supplierPerformance.card.tierChannel')}
               </span>
             </div>

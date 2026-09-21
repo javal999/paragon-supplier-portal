@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 2.6, 2026-09-21 |
+| Version | 2.9, 2026-09-21 |
 | Compares | `SUPPLIER-HUB-REQUIREMENTS.md` v0.10 with the prototype on `main` (production deploy of 2026-09-21) |
 | Owner decisions | 2026-09-17, recorded in section 9 of the requirements (RFX-1 to RFX-3, GAP-1 to GAP-4, E06-R); 2026-09-21 for the working calendar (Q-18, BL-14) and the commitment deadline (CR-26, BL-05), built as BL-50 and BL-48 |
 | Rule | This is the **only** document that describes what the prototype does for the Supplier Hub. The PRD and the requirements describe the product and never the code. Update this file when a build item lands |
@@ -37,7 +37,7 @@ Everything runs on sample data held in the browser. There is no backend, no SAP 
 | REQ-E07-07 Invoice | Built | Built from received goods receipts, supplier's own invoice number and date, e-Faktur file name, duplicate and over-invoicing refused, CR-12 and CR-13 matching at submission, status list with correct-and-resubmit, CR-14 due date. CR-12 as revised 2026-09-21 (BL-44): 0% on a line whose PO price comes from a contract, otherwise 2% and within a rupiah cap; the cap is a placeholder (IDR 500,000) until Finance sets it (BL-54). Buyer and supplier invoice screens state per line which rule applied and why a line is held. The supplier's new-invoice form still takes one invoice total, not an amount per line; a total that differs from its lines is checked under the strictest rule on the invoice |
 | REQ-E07-08 SAP interface | Partial | Interface monitor with last successful arrival, failed messages and CR-20 retry, plus the data-age banner. The feeds themselves are simulated; the real interface technology is PQ-06 |
 | REQ-E08-01 Inventory visibility | Built | Supplier and PTI stock and reorder points, incoming split into in production and in transit with its detail, days of supply with its risk class and the basis that decided it (CR-24: "Lead time N days", or "No lead time · day bands" where the CR-02 fallback applied, BL-46), last update and stale flag. No "available" figure. Raw material and packaging are separate on the PTI view; on the supplier view they are one list, split only for a supplier that supplies both (BR-07, BL-61) |
-| REQ-E08-02 Stock submission | Built | One stock entry point, on the Stock page: the template and manual entry carry the same fields, including an optional manufacturing date per batch (not after expiry, not in the future), with row-by-row upload validation (BR-06, BR-09, BL-60). The Forecast page's old batch grid and free-form import are retired; its Stock tab now links to the Stock page. In-transit quantity is shown read-only beside in production on both methods, from ASNs and dispatched call-offs (BR-10). An API-connected supplier presses Sync on its own Stock page, and a PTI user can still sync on its behalf; the connection is simulated, with a failure path that keeps the previous figures marked out of date (BR-03, BL-59). A supplier with PTI stock access can refresh PTI stock for the granted materials only; without access the option is absent (BR-11). Stock recorded by PTI on a supplier's behalf |
+| REQ-E08-02 Stock submission | Built | One stock entry point, on the Stock page: the template and manual entry carry the same fields, including an optional manufacturing date per batch (not after expiry, not in the future), with row-by-row upload validation (BR-06, BR-09, BL-60). The Forecast page's old batch grid and free-form import are retired; its Stock tab now links to the Stock page. In-transit quantity is shown read-only beside in production on both methods, from ASNs and dispatched call-offs (BR-10). An API-connected supplier presses Sync on its own Stock page, and a PTI user can still sync on its behalf; the connection is simulated, with a failure path that keeps the previous figures marked out of date (BR-03, BL-59). A supplier with PTI stock access can refresh PTI stock for the granted materials only; without access the option is absent (BR-11). Stock recorded by PTI on a supplier's behalf (BR-08) uses the same entry form, shows "Entered by PTI" and appears on the supplier's Stock page. The chat-reply triage pages (supplier and PTI) no longer record stock themselves: a pasted WhatsApp or email reply only fills in that same entry form (BL-73) |
 | REQ-E08-03 Supplier access to PTI stock | Built | Grant, change and remove per supplier and per material, with a log; a supplier without access never receives PTI stock data |
 | REQ-E08-04 Capacity | Built | 13 weekly buckets per material group, "Extra capacity if requested" with a one-line explanation on both sides (BR-05, BL-62), reason required below demand, gap weeks highlighted for the planner, planner filters by supplier, material group, material and gap weeks only, kept in the page address and combined with the Order summary filter (BR-07, BL-63), and the Order summary capacity status |
 | REQ-E08-05 Alerts | Built | Rules for PTI and supplier stock against reorder point, projected stock-out, capacity gap, stale data, coverage and commitment below forecast; High / Medium / Low by days of cover against the supplier lead time (CR-24: High below 1 ×, Medium below 1.5 ×), with the CR-02 day bands only where the lead time is missing, which raises its own "lead time missing" alert for PTI (BR-02, BL-46); each alert shows the basis of its class; no duplicates; grouped per supplier; closed with an action note. Delivery is in the hub only, not by email |
@@ -89,6 +89,9 @@ Everything runs on sample data held in the browser. There is no backend, no SAP 
 | X-30 | 3PL tracking link on the ASN and the administrator's 3PL list (BL-51) | Done |
 | X-31 | Supplier filters: certificate validity, performance band, country (BL-52) | Done |
 | X-32 | KPI definitions and "Baseline period" on the performance pages (BL-53) | Done |
+| X-33 | No raw `{{…}}` placeholder on screen (BL-72): the "Round" column header of the quote versions and negotiation rounds tables on the RFQ event page, and the buyer's "application raised" message, which now names the company | Done; a source check over every `t()` call with a literal key now fails the build on a missing variable |
+| X-34 | One stock entry, second path closed (BL-73): the chat-reply triage (supplier Channel Inbox and PTI Communication Hub) pre-fills the Stock page's entry form instead of recording through its own one-field path; same fields (ROP, in production, completion date, batches with manufacturing and expiry), same CR-18 and CR-19 checks, same governed verb. The old path and its parser were removed | Done |
+| X-35 | RFI, RFQ and RFP as three separate menu items and pages (NV-07): buyer `/buyer/rfi`, `/buyer/rfq`, `/buyer/rfp`; supplier `/supplier/rfi`, `/supplier/rfq`, `/supplier/rfq/rounds`, `/supplier/rfp`. The old `/buyer/sourcing*` and `/supplier/rfqs*` addresses redirect, keeping query and state. Built in PR #21 | Done |
 
 ### 2.1 Navigation and screens
 
@@ -137,7 +140,7 @@ The `CR-` rules are implemented in the hub's own modules and covered by their ow
 
 ### 3.1 Compliance gate demo scenarios
 
-Sample data (BL-64) so a buyer can see every CR-23 outcome on the sourcing pages (`/buyer/sourcing`, then an RFQ). The five sample RFQs are titled "Compliance gate demo — … (sample)"; the suppliers marked "(illustrative)" exist only for this demo. Fixtures: `src/services/data/mock/fixtures/gateDemo.ts`; each row is pinned by name in `gateDemo.test.ts`. Demo date: the declared present, 31 Aug 2026.
+Sample data (BL-64) so a buyer can see every CR-23 outcome on the RFQ pages (`/buyer/rfq`, then an RFQ). The five sample RFQs are titled "Compliance gate demo — … (sample)"; the suppliers marked "(illustrative)" exist only for this demo. Fixtures: `src/services/data/mock/fixtures/gateDemo.ts`; each row is pinned by name in `gateDemo.test.ts`. Demo date: the declared present, 31 Aug 2026.
 
 | Scenario | RFQ | Supplier | Gate result |
 |---|---|---|---|
@@ -187,7 +190,7 @@ sup-016's A band comes from two sample call-offs received on time and in full (P
 |---|---|---|
 | K-01 | Goods receipt quality inspection | Kept for PTI; the supplier sees the result and rejected quantity only. Boundary with the Phase 2 Supplier Quality module is still open (Q-20) |
 | K-02 | Stock by batch with expiry | Kept as template columns and manual batch rows, now with an optional manufacturing date |
-| K-03 | Stock recorded by PTI from a WhatsApp or email reply | Kept, labelled "Entered by PTI" |
+| K-03 | Stock recorded by PTI from a WhatsApp or email reply | Kept, labelled "Entered by PTI"; recorded through the Inventory page's entry form with every field and check (BL-73) |
 | K-04 | Distributor principal lead times | Kept, feeding supplier coverage |
 | K-05 | Should-cost model | Parked, hidden from the menu |
 | K-06 | Purchase requisitions, intake review, plan grid | Parked; the RFQ-from-requisition path is kept |
@@ -223,12 +226,51 @@ Sample data so a planner can see every CR-24 outcome on `/buyer/inventory`, `/su
 - **File attachments.** RFI attachment questions, receipt-dispute attachments and the e-Faktur are recorded as file names; no file is stored.
 - **Sourcing event creation beyond the central library** (A-04): no sourcing request intake, no save-as-template, no admin screen for the question and term library, no approval step before sending. All four were ruled out of the MVP rather than left undone.
 - **A backend.** No database, no sign-in for real users, no scheduled jobs; changes are lost on reload. The pilot needs all of these (PRD section 4).
-- **Accessibility testing** (H-03).
+- **Accessibility testing with assistive technology** (H-03): the BL-31 pass below was done with automated checks and the keyboard; no session with a real screen reader or real users has been run.
 - **The rest of the administration screen** (BL-32): reason codes, tolerances, alert thresholds and stale periods still live in configuration files. The working calendar and the 3PL list are its first two pages and are built.
 - **KPI calculation aligned with the agreed definitions** (BL-66, BL-82): the performance pages state what the code measures; five differences from REQ-E10-01 wait on a decision.
 - **Known defects found in the 2026-09-21 builds**: BL-72 to BL-80 in the backlog.
 - **The real SAP factory calendar.** The calendar load is simulated sample data; the administrator's rulings are kept in the browser only.
 - **Foundation epics** E01 and E02 (registration, onboarding, supplier master data), which belong to the Foundation team.
+
+---
+
+## Accessibility (BL-31)
+
+Target: SC-06 and SC-07, WCAG 2.1 AA. Pass done on 2026-09-21 against the built app.
+
+**What was checked.** Every route in `src/router/AppRouter.tsx`, both personas and in English and Indonesian, with a script run in the browser: controls without an accessible name, form fields without a label, positive `tabindex`, focusable content inside `aria-hidden`, dialogs without a name, tables without header cells, clickable elements that the keyboard cannot reach, heading order, landmarks, the page `lang`, and the contrast of every visible text node against its real background. The drawers and dialogs on the main walkthrough pages (PO, ASN, goods receipt, invoice, call-off, RFQ, requisition, delivery agreement, stock entry, the RFQ, RFI, RFP and goods-receipt wizards) were opened and checked the same way. Focus order, the focus trap, Escape and focus return were checked with real key presses on the PO drawer and the RFQ wizard.
+
+**What was fixed.**
+
+| Issue | WCAG | Severity | Fix |
+|---|---|---|---|
+| List rows (PO, ASN, goods receipt, invoice, contract, delivery agreement, requisition, RFQ, supplier, role) opened a record only on a mouse click | 2.1.1 | High | A clickable row is a tab stop and opens on Enter or Space, with a visible focus ring (shared `TableRow`) |
+| Drawers did not take focus, so the keyboard stayed on the page behind them; drawers had no name | 2.4.3, 4.1.2 | High | Shared modal behaviour: focus moves in, Tab stays inside, Escape closes, focus returns to the opener; the drawer is named by its title |
+| The five wizards and two confirmation dialogs were a plain overlay: no dialog role, no name, no Escape, Tab left the dialog | 2.1.2, 2.4.3, 4.1.2 | High | One shared modal overlay with the same behaviour; wizard step buttons are named "Step 2 of 4: …" |
+| Tertiary text failed contrast on the page background, the table header band and the status tints (3.8 to 4.4 : 1) | 1.4.3 | High | Tertiary text token darkened; it now passes on every surface it sits on |
+| Teal used as text (3.5 : 1) and action blue as text on tinted or grey backgrounds (4.0 to 4.4 : 1), including the outline button label | 1.4.3 | Medium | Text uses the darker arm of each colour, as warning already did; chart legend text and the planning grid header re-coloured |
+| Form captions were not tied to their fields (a separate label element with no link), so fields had no name | 1.3.1, 4.1.2 | Medium | Caption wraps the field on the ASN, PO acknowledge, RFQ quote, requisition, contract, storefront, goods-receipt and registration forms; registration errors are tied to their field |
+| Search boxes named only by their placeholder; the top bar search had no name | 3.3.2, 4.1.2 | Medium | Every search box has a name |
+| No way to skip the top bar and menu | 2.4.1 | Medium | "Skip to main content" link |
+| Toasts could go unannounced (the live region appeared with the first toast) | 4.1.3 | Medium | The region is always present; error toasts interrupt |
+| Menu, persona switch and period switch did not state their name or selected state; tabs had no arrow keys; "New call-off" repeated with no context | 1.3.1, 2.4.6, 4.1.2 | Low | Named navigation and groups, pressed state, arrow keys on tabs, each call-off button described by its PO and supplier |
+| A page title squeezed to zero width on a narrow window | 1.4.10 | Low | The page header wraps |
+
+**What remains.**
+
+| Issue | WCAG | Severity |
+|---|---|---|
+| Field errors are announced but tied to their field only on the registration, forecast response and intake adjustment forms | 1.3.1, 3.3.1 | Medium |
+| Action blue as text still passes only on white (4.57 : 1); any new use on a grey or tinted background fails. The sites are the `text-action` classes in `src/` (derive them; the in-browser check found none failing after this pass) | 1.4.3 | Low |
+| Some pages go from the page title straight to a level-3 heading (marketplace, discovery, storefront, WhatsApp demo, supplier comm hub, supplier shipments) | 1.3.1 | Low |
+| Controls inside a few table grids have no name of their own (contract wizard obligation owner and due date, WhatsApp demo input) | 4.1.2 | Low |
+| The menu button in the top bar does nothing; the notification button does not say how many notifications there are | 4.1.2 | Low |
+| The sign-in page (outside the hub shell) keeps its own dark design: low-contrast text, no page heading, English-only notice | 1.3.1, 1.4.3 | Low (not part of the hub) |
+| The 404 page title is English in both languages | 3.1.2 | Low |
+| No test with a real screen reader (see H-03 in section 5) | — | — |
+
+The checks that guard the fixes are in `src/lib/a11yGate/` (every icon-only button is named; every clickable table row is keyboard-operable) and `src/components/ui-v2/bl31Keyboard.test.tsx` (the modal keyboard behaviour, row activation and the accessible names of the shared building blocks).
 
 ---
 

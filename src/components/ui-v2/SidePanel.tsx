@@ -52,9 +52,10 @@
 // exists to catch a REGRESSION of this line, not to hold the property up.
 // ────────────────────────────────────────────────────────────────────────────
 
-import React, { useEffect } from 'react';
+import React, { useId, useRef } from 'react';
 import { X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useDialogFocus } from '../../hooks/useDialogFocus';
 
 interface SidePanelProps {
   open: boolean;
@@ -74,14 +75,14 @@ const SidePanel: React.FC<SidePanelProps> = ({
   const { t } = useTranslation();
   // Hooks run unconditionally and the early return sits BELOW them — the
   // ordering is load-bearing, not stylistic.
-  useEffect(() => {
-    if (!open) return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, [open, onClose]);
+  //
+  // BL-31 (SC-07): Escape, focus-in, focus trap and focus return are the shared
+  // modal contract (`useDialogFocus`). Before, the panel closed on Escape but
+  // never took focus, so the keyboard stayed on the page behind an
+  // `aria-modal` drawer; and the dialog had no accessible name.
+  const panelRef = useRef<HTMLElement>(null);
+  const titleId = useId();
+  useDialogFocus(panelRef, open, onClose);
 
   // THE CONTRACT, in one line.
   if (!open) return null;
@@ -94,21 +95,23 @@ const SidePanel: React.FC<SidePanelProps> = ({
         className="fixed inset-0 z-40 bg-[rgba(13,27,42,0.4)] animate-overlay-in"
       />
       <aside
+        ref={panelRef}
         role="dialog"
         aria-modal="true"
+        aria-labelledby={titleId}
         className="fixed top-0 right-0 z-50 h-screen w-full sm:w-[480px] bg-bg-surface shadow-md border-l border-border-subtle flex flex-col animate-panel-in"
       >
         <header className="flex items-center justify-between gap-4 px-6 py-5 border-b border-border-subtle">
-          <h2 className="text-base font-semibold text-text-primary truncate">
+          <h2 id={titleId} className="text-base font-semibold text-text-primary truncate">
             {title}
           </h2>
           <button
             type="button"
             aria-label={t('ui.closePanel')}
             onClick={onClose}
-            className="shrink-0 text-text-tertiary hover:text-text-secondary transition-colors"
+            className="shrink-0 rounded-md text-text-tertiary hover:text-text-secondary transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-action"
           >
-            <X size={20} />
+            <X size={20} aria-hidden="true" />
           </button>
         </header>
         <div className="flex-1 overflow-y-auto p-6">{children}</div>
