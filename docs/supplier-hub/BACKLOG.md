@@ -47,7 +47,7 @@ Decided on 2026-09-21 and ready to build. Priority: first what protects money an
 
 | Priority | ID | Item | Rule | Size | Placeholder until decided |
 |---|---|---|---|---|---|
-| 1 | BL-33 to BL-35, BL-38, BL-39, BL-74 to BL-80, BL-83, BL-84, BL-93, BL-94, BL-96 to BL-98 | The remaining "can start today" items in section 4, in the order listed there | — | — | — |
+| 1 | BL-33 to BL-35, BL-38, BL-39, BL-74 to BL-80, BL-83, BL-84, BL-93, BL-96 to BL-98 | The remaining "can start today" items in section 4, in the order listed there | — | — | — |
 
 ### Build work waiting on a decision
 
@@ -94,7 +94,6 @@ Nothing blocks these.
 | BL-79 | Retire superseded supply-data-collaboration code: the hidden chase page counts a 7-day calendar-day threshold nobody decided (`parseGrid` was removed with BL-73) | Dead code and a rule nobody decided | S | BUILD-GAP section 6 |
 | BL-80 | A value-only PO line (BL-49) shows quantity 0 on PO and ASN screens outside the call-off pages | Only the call-off screens know the line has no quantity | S | CR-04 |
 | BL-83 | Text run-ons: Indonesian "closing soon" pill joins its date ("Segera ditutup02 Sep 2026"); the in-transit read-out reads "0nothing in transit"; `formatNumber` uses the Indonesian thousands dot in the English UI outside the Stock page | Small display defects seen in the BL-72/73 check | S | SC conventions |
-| BL-94 | Oslo demo: sup-007, the main supplier persona, fails the compliance gate on RFQ-2026-021 (OTIF 50% under the 80% placeholder), so it can quote but never be awarded a share. Give the persona a passing record on an Oslo-shaped RFQ, or add one it passes | The main walkthrough cannot show the persona winning part of a split award | S | REQ-E03-05; `BUILD-GAP.md` 3.3 |
 | BL-84 | Accessibility items left by BL-31: field errors not tied to their field (many forms); h1 jumping to h3 on marketplace, discovery, storefront, WhatsApp demo, supplier comm hub and shipments; unnamed controls in the contract wizard obligation grid and WhatsApp demo; top-bar menu button does nothing and the notification count is not in its name; login contrast and missing h1; 404 title in English only; then a session with a real screen reader | Needed before UAT (SC-07) | M | `BUILD-GAP.md` "Accessibility (BL-31)" |
 
 ---
@@ -168,3 +167,4 @@ Nothing blocks these.
 | BL-98 | "Created from …" on every event with a source | 2026-09-22 | Built in PR #30 |
 | BL-93 | Edit a draft RFI, RFQ or RFP | 2026-09-22 | Built in PR #31: Edit draft on a Draft's side panel (RFQ) or detail (RFI, RFP) re-opens the create wizard on every stored field and saves through a revise-draft verb per event type (same atom, fields and policy as create; Draft only; compare-and-set on Draft; who and when recorded); Save changes keeps it a draft, Save and send also sends it with the publish permission. Discard draft on a Draft RFI or RFP through the existing cancel verbs (the RFQ panel already had Cancel) |
 | BL-32 | Admin screen for the remaining configuration | 2026-09-22 | Built: tolerances and rule values, alert thresholds and stale periods (default and per supplier × material), and reason codes (add, rename, retire; never deleted) on `/buyer/admin`, each change governed, validated, logged and resettable; the rules read the setting when they run |
+| BL-94 | Oslo demo: sup-007 fails the compliance gate on RFQ-2026-021 | 2026-09-22 | Fixed in PR #33: sup-007 now has a real delivery history, four past call-offs on the 100ml PET line (CO-2026-0043 to 0046, 80, 60, 40 and 25 days before the present) each received on its date and in full (GR-2026-018 to 021). Its calculated 90-day OTIF is 83% (5 of 6), so it passes the gate on Oslo, is ranked, and can take a share of the award. The gate minimum, the gate and the late CO-2026-0001 are unchanged; sup-008 (0%) still fails |

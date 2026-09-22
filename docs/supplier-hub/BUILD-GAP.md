@@ -170,7 +170,7 @@ Sample data (BL-64) so a buyer can see every CR-23 outcome on the RFQ pages (`/b
 | Material needing no certificate (packaging); no certificates and no OTIF history | RFQ-2026-019 | sup-011 Sample Salicylics & Niacinamide Ltd. | Passes |
 | Every bidder fails; award impossible, and the page says so | RFQ-2026-020 (Closed) | sup-011, sup-004, sup-009 | No award possible |
 
-Earlier demo rows still hold: RFQ-2026-003 (sup-010 halal expired), RFQ-2026-014 (sup-007 OTIF 50%, sup-008 OTIF 0%, sup-013 no history), RFQ-2026-004 (sup-004 halal and BPOM). The OTIF figures are calculated from sample call-offs and goods receipts (PO-2026-00191, PO-2026-00192), not typed in. Suspended and blacklisted suppliers cannot be invited; sup-021 and sup-022 represent a status change after the quote.
+Earlier demo rows still hold: RFQ-2026-003 (sup-010 halal expired), RFQ-2026-014 (sup-008 OTIF 0%, sup-013 no history; sup-007 passes at 83% since BL-94), RFQ-2026-004 (sup-004 halal and BPOM). The OTIF figures are calculated from sample call-offs and goods receipts (PO-2026-00191, PO-2026-00192), not typed in. Suspended and blacklisted suppliers cannot be invited; sup-021 and sup-022 represent a status change after the quote.
 
 ### 3.2 3PL tracking link and supplier filter demo cases (BL-51, BL-52)
 
@@ -206,7 +206,7 @@ Sample events shaped like Paragon's real RFQs and RFPs; the supplier names are t
 | RFP-2026-002 Tundra (open spec) | 2 options × 10K / 50K / 100K, a reference image, custom terms, sup-007's proposal with an option of its own | `/buyer/rfp` |
 | RFP-2026-003 ICY (full service) | Formula and pack options at 25K / 50K per variant, samples, timeline, confidential, with a T&C document | `/buyer/rfp` |
 
-**Known limit of the demo (BL-94).** sup-007, the main supplier persona, fails the compliance gate on Oslo: its measured OTIF is 50%, below the 80% placeholder minimum. Its quote is shown in the buyer's comparison as "listed, not ranked" and it cannot be given an award share, so the main walkthrough cannot end with the persona winning part of Oslo.
+**Oslo and the supplier persona (BL-94, fixed).** sup-007, the main supplier persona, passes the compliance gate on Oslo: its measured OTIF is 83% (5 of 6 call-offs on time and in full in the last 90 days), above the 80% placeholder minimum. Once it quotes, it is ranked in the buyer's comparison and can be given an award share, so the main walkthrough can end with the persona winning part of Oslo.
 
 ---
 

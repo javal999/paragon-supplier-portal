@@ -43,8 +43,8 @@ describe('BuyerAnalytics — calculated performance (REQ-E10-01)', () => {
   it('each supplier row reads its own measured OTIF, and an unmeasured one reads "No history"', async () => {
     renderWithProviders(<BuyerAnalytics />);
     await screen.findByText('Analytics & Procurement Intelligence');
-    // sup-007: two measured deliveries in the window, one met → 50%.
-    expect(await screen.findByTestId('analytics-otif-sup-007')).toHaveTextContent('50%');
+    // sup-007: six measured deliveries in the window, five met → 83% (BL-94).
+    expect(await screen.findByTestId('analytics-otif-sup-007')).toHaveTextContent('83%');
     // sup-009: nothing measured → the sentence, never a zero.
     expect(await screen.findByTestId('analytics-otif-sup-009')).toHaveTextContent(
       'No history',

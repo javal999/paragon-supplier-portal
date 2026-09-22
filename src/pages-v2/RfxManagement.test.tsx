@@ -128,10 +128,13 @@ describe('REQ-E03-01 — the invitee search on the sourcing wizard', () => {
 
   it('CR-23 / BR-06 — a supplier failing the compliance gate is still listed and selectable, and marked with why', async () => {
     await openInviteStep();
-    const row = await screen.findByTestId('invitee-row-sup-007');
-    // sup-007's measured OTIF is 50%, under the 80% gate minimum (BL-55 placeholder).
-    expect(within(row).getByTestId('invitee-gate-sup-007')).toHaveTextContent('Cannot be awarded');
-    expect(within(row).getByTestId('invitee-gate-sup-007')).toHaveTextContent('OTIF below 80%');
+    // ⚠️ PREMISE CHANGE (BL-94): this named sup-007, whose OTIF was 50%. BL-94
+    // gave sup-007 a real delivery history (83%), so it passes now; the failing
+    // supplier is sup-008, whose measured OTIF is 0%, under the 80% gate
+    // minimum (BL-55 placeholder). The rule under test is unchanged.
+    const row = await screen.findByTestId('invitee-row-sup-008');
+    expect(within(row).getByTestId('invitee-gate-sup-008')).toHaveTextContent('Cannot be awarded');
+    expect(within(row).getByTestId('invitee-gate-sup-008')).toHaveTextContent('OTIF below 80%');
     const box = within(row).getByRole('checkbox');
     fireEvent.click(box);
     expect(box).toBeChecked();
@@ -149,9 +152,9 @@ describe('REQ-E03-01 — the invitee search on the sourcing wizard', () => {
     expect(within(row).queryByText('0%')).not.toBeInTheDocument();
     // POSITIVE TWIN — a measured supplier still shows its number.
     // PREMISE CHANGED (REQ-E10-01): the positive twin's figure is CALCULATED
-    // from sup-007's own deliveries (two measured, one met) rather than read off
-    // the master, so it is 50% where the authored master said 82%.
-    expect(within(screen.getByTestId('invitee-row-sup-007')).getByText('50%')).toBeInTheDocument();
+    // from sup-007's own deliveries (six measured, five met since BL-94) rather
+    // than read off the master, so it is 83% where the authored master said 82%.
+    expect(within(screen.getByTestId('invitee-row-sup-007')).getByText('83%')).toBeInTheDocument();
   });
 
   it('the purchasing-group filter narrows the result, and the empty state names the filters', async () => {
@@ -185,7 +188,7 @@ describe('REQ-E03-02 — the information request', () => {
     fireEvent.click(screen.getByTestId('rfi-open-rfi-001'));
     const detail = await screen.findByTestId('rfi-detail-rfi-001');
     // PREMISE CHANGED (REQ-E10-01) — calculated, not authored.
-    expect(within(detail).getByTestId('rfi-otif-sup-007')).toHaveTextContent('50%');
+    expect(within(detail).getByTestId('rfi-otif-sup-007')).toHaveTextContent('83%');
     // ⚠️ the new supplier's OTIF is a sentence, not a zero.
     expect(within(detail).getByTestId('rfi-otif-sup-013')).toHaveTextContent('No history');
     // BR-10 shape — the DRAFT author is listed as an invitee but its answers
@@ -309,7 +312,7 @@ describe('REQ-E03-05 — the bid comparison', () => {
     const row = await screen.findByTestId('cmp-row-reliability');
     expect(within(row).getByTestId('cmp-otif-sup-013')).toHaveTextContent('No history');
     // PREMISE CHANGED (REQ-E10-01) — calculated, not authored.
-    expect(within(row).getByTestId('cmp-otif-sup-007')).toHaveTextContent('50%');
+    expect(within(row).getByTestId('cmp-otif-sup-007')).toHaveTextContent('83%');
   });
 
   it('AC-03 — every quote version is kept and readable, rounds and all', async () => {
@@ -337,8 +340,9 @@ describe('REQ-E03-05 — the bid comparison', () => {
     await waitFor(() => expect(screen.getByTestId('award-split-invalid')).toBeInTheDocument());
     expect(screen.getByTestId('award-confirm')).toBeDisabled();
     // POSITIVE TWIN — completing the split to 100% enables it. ⚠️ PREMISE
-    // CHANGE (BL-43): the second share used to go to sup-007, which now fails
-    // the compliance gate (OTIF 50% < 80%) and has no share field; sup-013 passes.
+    // CHANGE (BL-43): the second share used to go to sup-007, which then failed
+    // the compliance gate (OTIF 50% < 80%; it passes at 83% since BL-94);
+    // sup-013 passes.
     const second = within(screen.getByTestId('award-input-sup-013')).getByLabelText(/Share/i);
     fireEvent.change(second, { target: { value: '30' } });
     await waitFor(() => expect(screen.queryByTestId('award-split-invalid')).not.toBeInTheDocument());
@@ -357,22 +361,26 @@ describe('REQ-E03-05 — the bid comparison', () => {
 });
 
 describe('CR-23 — the compliance gate is shown on the event (BL-43)', () => {
+  // ⚠️ PREMISE CHANGE (BL-94): the three specs below named sup-007 as rfq-014's
+  // failing bidder (OTIF 50%). sup-007 now passes at 83%, so they name sup-008
+  // (OTIF 0%), rfq-014's other failing bidder; each rule is unchanged.
   it('BR-06 — the invitee list marks a failing supplier and names why; a passing one is unmarked', async () => {
     openEvent();
-    const marker = await screen.findByTestId('event-gate-sup-007');
+    const marker = await screen.findByTestId('event-gate-sup-008');
     expect(marker).toHaveTextContent('Cannot be awarded');
     expect(marker).toHaveTextContent('OTIF below 80%');
     expect(screen.queryByTestId('event-gate-sup-013')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('event-gate-sup-007')).not.toBeInTheDocument();
     // Still an invitee — the row is there and still selectable for an extension.
-    expect(within(screen.getByTestId('event-invitee-sup-007')).getByRole('checkbox')).toBeEnabled();
+    expect(within(screen.getByTestId('event-invitee-sup-008')).getByRole('checkbox')).toBeEnabled();
   });
 
   it('BR-01a — the comparison keeps the failing quote visible, marks it, and does not score it', async () => {
     openEvent();
     const row = await screen.findByTestId('cmp-row-gate');
-    expect(within(row).getByTestId('cmp-gate-sup-007')).toHaveTextContent('Cannot be awarded');
+    expect(within(row).getByTestId('cmp-gate-sup-008')).toHaveTextContent('Cannot be awarded');
     expect(within(row).getByTestId('cmp-gate-sup-013')).toHaveTextContent('Passes');
-    expect(screen.getByTestId('cmp-not-scored-sup-007')).toHaveTextContent('Not scored');
+    expect(screen.getByTestId('cmp-not-scored-sup-008')).toHaveTextContent('Not scored');
     expect(screen.queryByTestId('cmp-not-scored-sup-013')).not.toBeInTheDocument();
     // The quote itself is still shown (its unit price row has a cell per bidder).
     expect(within(screen.getByTestId('cmp-row-rfx.cmp.row.unitPrice')).getAllByRole('cell')).toHaveLength(5);
@@ -380,9 +388,9 @@ describe('CR-23 — the compliance gate is shown on the event (BL-43)', () => {
 
   it('BR-01a — the award form offers no share for a failing supplier and shows the reason instead', async () => {
     openEvent();
-    const failing = await screen.findByTestId('award-input-sup-007');
+    const failing = await screen.findByTestId('award-input-sup-008');
     expect(within(failing).queryByLabelText(/Share/i)).not.toBeInTheDocument();
-    expect(within(failing).getByTestId('award-gate-sup-007')).toHaveTextContent('OTIF below 80%');
+    expect(within(failing).getByTestId('award-gate-sup-008')).toHaveTextContent('OTIF below 80%');
     // KNOWN-GOOD twin — a passing supplier can be given a share.
     expect(within(screen.getByTestId('award-input-sup-013')).getByLabelText(/Share/i)).toBeInTheDocument();
   });

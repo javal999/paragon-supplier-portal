@@ -55,15 +55,16 @@ describe('SupplierPerformance — four honest states', () => {
 
 // ────────────────────────────────────────────────────────────────────────────
 // REQ-E10-01 — the supplier's own figures are CALCULATED now.
-// sup-007 has two measured deliveries in the window, one met and one late.
+// sup-007 has six measured deliveries in the window, five met and one late
+// (BL-94 added the four earlier on-time call-offs; it read two, one met).
 // ────────────────────────────────────────────────────────────────────────────
 describe('My performance — calculated (REQ-E10-01)', () => {
   it('shows the calculated OTIF over the deliveries measured in the period', async () => {
     renderWithProviders(<SupplierPerformance />, { identity: SUPPLIER });
     expect(await screen.findByTestId('my-performance-otif')).toHaveTextContent(
-      'From 2 deliveries due in this period',
+      'From 6 deliveries due in this period',
     );
-    expect(await screen.findByText('50%')).toBeInTheDocument();
+    expect(await screen.findByText('83%')).toBeInTheDocument();
   });
 
   it('the grade comes from the calculated score, and the bands are stated on screen', async () => {
@@ -72,7 +73,7 @@ describe('My performance — calculated (REQ-E10-01)', () => {
     // measured less the rejection penalty; while every order sat in 2025 it was
     // the OTIF number alone. Checked against the two percentages the page
     // renders beside it rather than restated as a third literal.
-    const expected = Math.round((50 + 40) / 2) - 1 * REJECTION_PENALTY_POINTS;
+    const expected = Math.round((83 + 40) / 2) - 1 * REJECTION_PENALTY_POINTS;
     expect(await screen.findByTestId('my-performance-grade')).toHaveTextContent(`${expected}/100`);
     expect(
       await screen.findByText(/Grades from the score: A 90\+ · B 80\+ · C 70\+ · D 0\+/),

@@ -270,9 +270,9 @@ describe('REQ-E03-05 BR-06 — each item’s shares must total 100%', () => {
   });
 
   it('KNOWN-GOOD — the SAME award at 70/30 is recorded, with the loser named', async () => {
-    // ⚠️ PREMISE CHANGE (BL-43): the 30% line used to name sup-007, which now
-    // fails the compliance gate on OTIF (50% < 80%) and cannot be awarded. The
-    // split rule is unchanged; the second supplier is one that passes.
+    // ⚠️ PREMISE CHANGE (BL-43): the 30% line used to name sup-007, which then
+    // failed the compliance gate on OTIF (50% < 80%; it passes at 83% since
+    // BL-94). The split rule is unchanged; the second supplier is one that passes.
     const lines = awardLines([
       ['sup-015', 'qt-014d-r1', 70],
       ['sup-013', 'qt-014c', 30],
@@ -641,9 +641,10 @@ describe('REQ-E03-01 — the invitee read', () => {
     const all = (await reads.getInviteeCandidates(buyer)).items;
     expect(all.find((c) => c.supplierId === 'sup-013')!.otif).toBeNull();
     // PREMISE CHANGED (REQ-E10-01): the figure is CALCULATED from the seeded
-    // call-offs and receipts — sup-007 has two measured deliveries in the
-    // window, one met and one late — not read off the master.
-    expect(all.find((c) => c.supplierId === 'sup-007')!.otif).toBe(50);
+    // call-offs and receipts — sup-007 has six measured deliveries in the
+    // window, five met and one late (BL-94; it read 50% on two) — not read off
+    // the master.
+    expect(all.find((c) => c.supplierId === 'sup-007')!.otif).toBe(83);
   });
 
   it('the invitee roster is PTI’s — a supplier reads nothing', async () => {
@@ -669,10 +670,13 @@ describe('REQ-E03-05 BR-01a — an award line naming a supplier that fails the c
       },
     });
 
-  it('KNOWN-BAD — awarding 100% to sup-007 (OTIF 50% < 80%) is refused by name, and awards nothing', async () => {
-    const res = await award014(awardLines([['sup-007', 'qt-014a', 100]]));
+  // ⚠️ PREMISE CHANGE (BL-94): the failing bidder here was sup-007 (OTIF 50%).
+  // It passes at 83% now, so the refusals name sup-008 (OTIF 0%), rfq-014's
+  // other failing bidder. The rule and its twins are unchanged.
+  it('KNOWN-BAD — awarding 100% to sup-008 (OTIF 0% < 80%) is refused by name, and awards nothing', async () => {
+    const res = await award014(awardLines([['sup-008', 'qt-014b', 100]]));
     expect(res.status).toBe('failed');
-    expect(res.reason).toMatch(/COMPLIANCE_GATE_FAILED: sup-007 .*\(otif\)/);
+    expect(res.reason).toMatch(/COMPLIANCE_GATE_FAILED: sup-008 .*\(otif\)/);
     expect(rfqStore.get('rfq-014')!.status).toBe('Closed');
     expect(awardStore.all().some((a) => a.rfqId === 'rfq-014')).toBe(false);
   });
@@ -695,9 +699,9 @@ describe('REQ-E03-05 BR-01a — an award line naming a supplier that fails the c
   });
 
   it('a line cannot launder a failing bid under a passing supplier id — the quote author is judged', async () => {
-    const res = await award014(awardLines([['sup-013', 'qt-014a', 100]]));
+    const res = await award014(awardLines([['sup-013', 'qt-014b', 100]]));
     expect(res.status).toBe('failed');
-    expect(res.reason).toMatch(/COMPLIANCE_GATE_FAILED: sup-007/);
+    expect(res.reason).toMatch(/COMPLIANCE_GATE_FAILED: sup-008/);
   });
 
   it('the seeded demo: on rfq-003 sup-010 fails on its expired halal certificate; sup-001 is awarded', async () => {
