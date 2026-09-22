@@ -172,6 +172,13 @@ export const TRANSITION_PURPOSE: FlowAnnotations = Object.freeze({
   // ── quotation ──────────────────────────────────────────────────────────────
   t_quotation_submit: { purposeKey: 'processFlows.purpose.t_quotation_submit' },
   t_quotation_review: { purposeKey: 'processFlows.purpose.t_quotation_review' },
+  // RFx spec 2026-09-21 — the supplier's side of a tiered RFQ.
+  t_rfqintent_respond: { purposeKey: 'processFlows.purpose.t_rfqintent_respond' },
+  t_rfqintent_decline: { purposeKey: 'processFlows.purpose.t_rfqintent_decline' },
+  t_rfqintent_withdraw: { purposeKey: 'processFlows.purpose.t_rfqintent_withdraw' },
+  t_rfqconfidentiality_accept: { purposeKey: 'processFlows.purpose.t_rfqconfidentiality_accept' },
+  t_rfqclarification_ask: { purposeKey: 'processFlows.purpose.t_rfqclarification_ask' },
+  t_rfqclarification_answer: { purposeKey: 'processFlows.purpose.t_rfqclarification_answer' },
   t_quotation_award: { purposeKey: 'processFlows.purpose.t_quotation_award' },
   t_quotation_reject: { purposeKey: 'processFlows.purpose.t_quotation_reject' },
 
@@ -341,6 +348,9 @@ export const ENTITY_PURPOSE: FlowAnnotations = Object.freeze({
   invoiceMatch: { purposeKey: 'processFlows.purpose.entity.invoiceMatch' },
   rfq: { purposeKey: 'processFlows.purpose.entity.rfq' },
   quotation: { purposeKey: 'processFlows.purpose.entity.quotation' },
+  rfqIntent: { purposeKey: 'processFlows.purpose.entity.rfqIntent' },
+  rfqConfidentiality: { purposeKey: 'processFlows.purpose.entity.rfqConfidentiality' },
+  rfqClarification: { purposeKey: 'processFlows.purpose.entity.rfqClarification' },
   shipment: { purposeKey: 'processFlows.purpose.entity.shipment' },
   contract: { purposeKey: 'processFlows.purpose.entity.contract' },
   obligation: { purposeKey: 'processFlows.purpose.entity.obligation' },

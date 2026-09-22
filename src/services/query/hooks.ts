@@ -107,6 +107,14 @@ export const useNegotiationRounds = () =>
     svc.procurement.getNegotiationRounds(scope),
   );
 
+/** RFx spec 2026-09-21 — invitees' intent and confidentiality acceptance. */
+export const useRfqEngagement = () =>
+  useServiceQuery(['procurement', 'rfqEngagement'], (svc, scope) => svc.procurement.getRfqEngagement(scope));
+
+/** RFx spec 2026-09-21 — clarification Q&A, as the reader may see it. */
+export const useRfqClarifications = () =>
+  useServiceQuery(['procurement', 'rfqClarifications'], (svc, scope) => svc.procurement.getRfqClarifications(scope));
+
 /** CR-23 — the compliance gate for every invitee and bidder of one RFQ (PTI only). */
 export const useRfqComplianceGate = (rfqId: string | null | undefined) =>
   useServiceQuery(['procurement', 'rfqComplianceGate', rfqId ?? ''], (svc, scope) =>

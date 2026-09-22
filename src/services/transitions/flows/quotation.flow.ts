@@ -62,6 +62,8 @@ export const quotationFlow: FlowDefinition = {
         POLICY_HOOKS.QUOTATION_SUBMIT_CURRENCY_PERMITTED,
         POLICY_HOOKS.QUOTATION_SUBMIT_BEFORE_DEADLINE,
         POLICY_HOOKS.QUOTATION_LINES_WELL_FORMED,
+        // RFx spec 2026-09-21 — the tiered quote, per item and per break.
+        POLICY_HOOKS.QUOTATION_TIERED_WELL_FORMED,
       ],
       surfaceable: { surfaced: true },
       version: 1,
@@ -85,6 +87,8 @@ export const quotationFlow: FlowDefinition = {
         POLICY_HOOKS.QUOTATION_SUBMIT_CURRENCY_PERMITTED,
         POLICY_HOOKS.QUOTATION_REVISE_IN_ROUND,
         POLICY_HOOKS.QUOTATION_LINES_WELL_FORMED,
+        // RFx spec 2026-09-21 — the tiered quote, per item and per break.
+        POLICY_HOOKS.QUOTATION_TIERED_WELL_FORMED,
       ],
       surfaceable: { surfaced: true },
       version: 1,

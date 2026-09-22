@@ -207,6 +207,8 @@ export const rfqAuthoringEn: Record<string, string> = {
   // — Pre-fill —
   'rfqAuthoring.prefill.rfiMissing.title': 'RFI not found',
   'rfqAuthoring.prefill.rfiMissing.desc': 'The RFI {{id}} is not available, so the RFQ starts blank.',
+  'rfqAuthoring.prefill.rfpMissing.title': 'RFP options not found',
+  'rfqAuthoring.prefill.rfpMissing.desc': 'The RFP {{id}} or the options chosen on it are not available, so no RFQ was started.',
 
   // — Step refusals (why Next is disabled) —
   'rfqAuthoring.refusal.NO_ITEMS': 'Add at least one item.',
@@ -421,6 +423,8 @@ export const rfqAuthoringId: Record<string, string> = {
 
   'rfqAuthoring.prefill.rfiMissing.title': 'RFI tidak ditemukan',
   'rfqAuthoring.prefill.rfiMissing.desc': 'RFI {{id}} tidak tersedia, jadi RFQ dimulai kosong.',
+  'rfqAuthoring.prefill.rfpMissing.title': 'Pilihan RFP tidak ditemukan',
+  'rfqAuthoring.prefill.rfpMissing.desc': 'RFP {{id}} atau pilihan yang dipilih di dalamnya tidak tersedia, jadi tidak ada RFQ yang dimulai.',
 
   'rfqAuthoring.refusal.NO_ITEMS': 'Tambahkan minimal satu item.',
   'rfqAuthoring.refusal.ITEM_TYPE_UNKNOWN': 'Pilih jenis item untuk setiap item.',

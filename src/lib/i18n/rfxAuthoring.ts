@@ -37,6 +37,7 @@ export const rfxAuthoringEn: Record<string, string> = {
 
   // — Indicative (spec D4) —————————————————————————————————————————————
   'rfxa.indicative': 'Indicative',
+  'rfxa.firm': 'Firm',
 
   // — Sections and the question editor ————————————————————————————————
   'rfxa.section.new': 'Add a section of your own',
@@ -80,7 +81,8 @@ export const rfxAuthoringEn: Record<string, string> = {
   // — Attachments ——————————————————————————————————————————————————————
   'rfxa.att.buyer': 'Documents for the suppliers',
   'rfxa.att.title': 'Documents from PTI',
-  'rfxa.att.count': '{{count}} documents',
+  'rfxa.att.count_one': '{{count}} document',
+  'rfxa.att.count_other': '{{count}} documents',
 
   // — Confidentiality gate ————————————————————————————————————————————
   'rfxa.conf.toggle': 'Suppliers must accept confidentiality terms before they see this request',
@@ -146,7 +148,11 @@ export const rfxAuthoringEn: Record<string, string> = {
   'rfxa.pricing.basis.total': 'Quantities are totals.',
   'rfxa.pricing.basis.perVariant': 'Quantities are per variant.',
   'rfxa.pricing.samples': 'Ask whether the supplier can provide samples',
-  'rfxa.pricing.summary': '{{options}} options at {{points}} quantities',
+  'rfxa.pricing.summary': '{{options}} at {{points}}',
+  'rfxa.pricing.optionCount_one': '{{count}} option',
+  'rfxa.pricing.optionCount_other': '{{count}} options',
+  'rfxa.pricing.pointCount_one': '{{count}} quantity',
+  'rfxa.pricing.pointCount_other': '{{count}} quantities',
   'rfxa.pricing.title': 'Indicative prices',
   'rfxa.pricing.supplierHint': 'A unit price per option at each quantity, in {{currency}}. Leave a cell empty for an option you do not offer.',
   'rfxa.pricing.col.option': 'Option',
@@ -262,6 +268,7 @@ export const rfxAuthoringId: Record<string, string> = {
 
   // — Indikatif (D4) ——————————————————————————————————————————————————
   'rfxa.indicative': 'Indikatif',
+  'rfxa.firm': 'Pasti',
 
   // — Bagian dan penyunting pertanyaan ————————————————————————————————————
   'rfxa.section.new': 'Tambah bagian Anda sendiri',
@@ -305,7 +312,7 @@ export const rfxAuthoringId: Record<string, string> = {
   // — Lampiran ————————————————————————————————————————————————————————
   'rfxa.att.buyer': 'Dokumen untuk pemasok',
   'rfxa.att.title': 'Dokumen dari PTI',
-  'rfxa.att.count': '{{count}} dokumen',
+  'rfxa.att.count_other': '{{count}} dokumen',
 
   // — Kerahasiaan —————————————————————————————————————————————————————
   'rfxa.conf.toggle': 'Pemasok wajib menyetujui ketentuan kerahasiaan sebelum melihat permintaan ini',
@@ -371,7 +378,9 @@ export const rfxAuthoringId: Record<string, string> = {
   'rfxa.pricing.basis.total': 'Jumlah adalah total.',
   'rfxa.pricing.basis.perVariant': 'Jumlah adalah per varian.',
   'rfxa.pricing.samples': 'Tanyakan apakah pemasok dapat menyediakan sampel',
-  'rfxa.pricing.summary': '{{options}} pilihan pada {{points}} jumlah',
+  'rfxa.pricing.summary': '{{options}} pada {{points}}',
+  'rfxa.pricing.optionCount_other': '{{count}} pilihan',
+  'rfxa.pricing.pointCount_other': '{{count}} jumlah',
   'rfxa.pricing.title': 'Harga indikatif',
   'rfxa.pricing.supplierHint': 'Harga satuan per pilihan pada setiap jumlah, dalam {{currency}}. Kosongkan sel untuk pilihan yang tidak Anda tawarkan.',
   'rfxa.pricing.col.option': 'Pilihan',

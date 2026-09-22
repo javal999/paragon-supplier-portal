@@ -104,6 +104,11 @@ import {
   rfpEventStore,
   rfpResponseStore,
 } from '../data/mock/stores/rfxStores';
+import {
+  rfqClarificationStore,
+  rfqConfidentialityStore,
+  rfqIntentStore,
+} from '../data/mock/stores/rfqEngagementStores';
 import { customRoleStore } from './customRoles';
 import { workingCalendarStore } from './workingCalendarStore';
 import { threePlStore } from './threePlStore';
@@ -219,6 +224,12 @@ async function realIds(): Promise<Record<string, string | null>> {
     rfpEvent: rfpEventStore.all()[0]?.id ?? null,
     rfpResponse: rfpResponseStore.all()[0]?.id ?? null,
     negotiationRound: negotiationRoundStore.all()[0]?.id ?? null,
+    // RFx spec 2026-09-21 — the supplier-response stores are seeded. An intent
+    // and a clarification each name the supplier that raised them, so they land
+    // in `ownerful`; an acceptance is creation-only and is `unprobeable`.
+    rfqIntent: rfqIntentStore.all()[0]?.id ?? null,
+    rfqConfidentiality: rfqConfidentialityStore.all()[0]?.id ?? null,
+    rfqClarification: rfqClarificationStore.all()[0]?.id ?? null,
   };
 }
 
@@ -371,6 +382,8 @@ describe('POPULATION — nothing below means anything without this', () => {
     expect(ownerless).toContain('rfiEvent');
     expect(ownerful).toContain('rfiResponse');
     expect(ownerful).toContain('rfpResponse');
+    expect(ownerful).toContain('rfqIntent');
+    expect(ownerful).toContain('rfqClarification');
     expect(ownerless).not.toContain('purchaseOrder');
     expect(ownerless).not.toContain('invoice');
     expect(ownerful).toContain('purchaseOrder');
@@ -387,7 +400,8 @@ describe('POPULATION — nothing below means anything without this', () => {
     // creation-only snapshot shape.
     // A negotiation round's only non-creation verb closes it, so it IS probeable
     // and lands in `ownerless` with the other buyer-owned targets.
-    expect(unprobeable).toEqual(['inventoryDeclaration', 'stockSync', 'capacitySubmission', 'forecastVersion', 'forecastView']);
+    // A confidentiality acceptance is the same creation-only shape.
+    expect(unprobeable).toEqual(['rfqConfidentiality', 'inventoryDeclaration', 'stockSync', 'capacitySubmission', 'forecastVersion', 'forecastView']);
   });
 
   it('CONTROL — the walk lands every probe in one of its verb\'s from-states', async () => {

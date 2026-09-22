@@ -517,6 +517,26 @@ export const POLICY_HOOKS = {
    */
   QUOTATION_LINES_WELL_FORMED: 'quotation_lines_well_formed',
   /**
+   * Quotation submit / revise (RFx spec 2026-09-21, "Supplier response"): on an
+   * RFQ with items, the quote answers every item — each required supplier spec
+   * field, a price at every quantity break, an amount for every requested
+   * one-time cost — alternatives only where allowed, the required questions in
+   * their type, and a sample offer when samples were requested. On an RFQ
+   * without items the per-item fields are refused by name. The confidentiality
+   * terms must be accepted first, and a supplier that declined cannot quote.
+   */
+  QUOTATION_TIERED_WELL_FORMED: 'quotation_tiered_well_formed',
+  /** RFQ intent (RFx spec): invited, the event open and inside its deadline,
+   *  one intent per invitee, a decline with a listed reason and words. */
+  RFQ_INTENT_VALID: 'rfq_intent_valid',
+  /** RFQ confidentiality: the RFQ is confidential, the supplier invited, and
+   *  the terms not accepted already. */
+  RFQ_CONFIDENTIALITY_ACCEPTABLE: 'rfq_confidentiality_acceptable',
+  /** RFQ clarification ask: invited, the event open, and a real question. */
+  RFQ_CLARIFICATION_ASKABLE: 'rfq_clarification_askable',
+  /** RFQ clarification answer: an answer with substance, private or published. */
+  RFQ_CLARIFICATION_ANSWERABLE: 'rfq_clarification_answerable',
+  /**
    * Quotation revise (REQ-E03-05 BR-03): the round exists, is open, its
    * deadline has not passed, and **this supplier was invited to it**. Being on
    * the RFQ is not enough — a round is a shortlist, and letting an uninvited

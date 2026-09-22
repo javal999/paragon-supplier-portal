@@ -12,7 +12,7 @@ import {
   Mail,
   MessageCircle,
   Globe,
-  Upload,
+  Lock,
   LucideIcon,
 } from 'lucide-react';
 import AppShellV2 from '../components/layout-v2/AppShellV2';
@@ -40,7 +40,26 @@ import {
   useCurrentSupplier,
   useRFQs,
   useQuotations,
+  useRfqClarifications,
+  useRfqEngagement,
 } from '../services/query/hooks';
+import SessionAttachments from '../components/ui-v2/SessionAttachments';
+import TieredQuoteForm, { SampleOfferFields } from './rfqs/TieredQuoteForm';
+import {
+  RfqClarifications,
+  RfqConfidentialityGate,
+  RfqIntentControls,
+} from './rfqs/RfqEngagementControls';
+import {
+  draftFromQuote,
+  emptyTieredDraft,
+  readTieredDraft,
+  refusalItem,
+  type TieredDraft,
+} from './rfqs/tieredQuoteModel';
+import { rfqResponseRefusal } from './rfqs/rfqResponseText';
+import { tiersForItem, type AttachmentMeta } from '../services/sourcing/rfqModel';
+import type { RfqClarificationView, RfqEngagementView } from '../services/sourcing/rfqResponse';
 import { useQuotationSubmit } from '../services/query/commandHooks';
 import { useVerbAvailability } from '../hooks/useVerbAvailability';
 import { HandoffNotice } from '../components/ui-v2/HandoffNotice';
@@ -64,6 +83,8 @@ import { readMoq, type MoqRefusalReason } from './rfqs/quotationMoq';
 import { daysUntil } from '../services/data/dayProjection';
 import type { RFQ, Quotation, Supplier } from '../services/data/types';
 import { CHART_SERIES } from '../lib/chartPalette';
+import { CRITERIA_WEIGHTS } from '../lib/quoteScore';
+import { rfxNow } from './rfx/rfxDisplay';
 import { formatDate, formatMoney, formatNumber } from '../lib/format';
 import { useRefusalText } from '../hooks/useRefusalText';
 
@@ -76,17 +97,25 @@ interface OpenRFQ {
   qty: string;
   /** The same quantity as a number — what the total-price preview multiplies. */
   totalQty: number;
-  deliveryLocation: string;
-  requestedDelivery: string;
+  /** The RFQ itself, for the tiered response (items, breaks, questions). */
+  rfq: RFQ;
+  /** The delivery terms the RFQ states (its incoterms). */
+  delivery: string;
+  /** The date the buyer means to award by. */
+  awardBy: string;
   deadline: string;
   daysRemaining: number;
-  specialRequirements: string;
+  /**
+   * What the RFQ itself asks beyond the price: item notes, samples requested,
+   * alternatives allowed. `sample: true` when the RFQ states none of it and the
+   * card shows illustrative text, marked as such.
+   */
+  specialRequirements: { text: string; sample: boolean };
+  /** How the quote is scored — the platform's CR-15 weights, in percent. */
   evaluationCriteria: {
     price: number;
-    quality: number;
     leadTime: number;
-    sustainability: number;
-    risk: number;
+    reliability: number;
   };
   status: string;
   receivedVia: string;
@@ -105,6 +134,10 @@ interface SubmittedQuote {
   moq: string;
   validUntil: string;
   status: string;
+  /** The quotation itself, for a revision. */
+  quote: Quotation;
+  /** False once a later version supersedes this one. */
+  current: boolean;
 }
 
 // The supplier's OWN submitted quotations (Task 3b), joined to their RFQ for
@@ -117,10 +150,13 @@ const buildSubmittedQuotes = (
   quotations: Quotation[],
   rfqById: Map<string, RFQ>,
   t: TFunction,
-): SubmittedQuote[] =>
-  quotations.map((q) => {
+): SubmittedQuote[] => {
+  const superseded = new Set(quotations.map((q) => q.supersedesQuotationId).filter(Boolean) as string[]);
+  return quotations.map((q) => {
     const rfq = rfqById.get(q.rfqId);
     return {
+      quote: q,
+      current: !superseded.has(q.id),
       rfqNumber: rfq?.rfqNumber ?? q.rfqId,
       quoteNumber: q.id,
       material: rfq?.title ?? '—',
@@ -160,6 +196,7 @@ const buildSubmittedQuotes = (
       status: q.status,
     };
   });
+};
 
 interface AwardRow {
   rfqNumber: string;
@@ -205,10 +242,8 @@ const EVAL_SEGMENTS: {
 }[] = [
   // DP-2: single teal→navy ramp (chartPalette CHART_SERIES), not a rainbow.
   { key: 'price', labelKey: 'rfqs.eval.price', color: CHART_SERIES[0] },
-  { key: 'quality', labelKey: 'rfqs.eval.quality', color: CHART_SERIES[1] },
-  { key: 'leadTime', labelKey: 'rfqs.eval.leadTime', color: CHART_SERIES[2] },
-  { key: 'sustainability', labelKey: 'rfqs.eval.sustainability', color: CHART_SERIES[3] },
-  { key: 'risk', labelKey: 'rfqs.eval.risk', color: CHART_SERIES[4] },
+  { key: 'leadTime', labelKey: 'rfqs.eval.leadTime', color: CHART_SERIES[1] },
+  { key: 'reliability', labelKey: 'rfqs.eval.reliability', color: CHART_SERIES[2] },
 ];
 
 const CHANNEL_ICON: Record<string, LucideIcon> = {
@@ -268,8 +303,11 @@ interface QuoteForm {
   validUntil: string;
   moq: string;
   notes: string;
-  canSample: 'yes' | 'no';
-  sampleLeadTime: string;
+  /** RFx spec — the offer is saved now. `null` = not answered. */
+  canSample: boolean | null;
+  sampleReadyDate: string;
+  paymentTermsOffered: string;
+  attachments: readonly AttachmentMeta[];
 }
 
 const emptyQuoteForm: QuoteForm = {
@@ -281,8 +319,10 @@ const emptyQuoteForm: QuoteForm = {
   validUntil: '',
   moq: '',
   notes: '',
-  canSample: 'yes',
-  sampleLeadTime: '',
+  canSample: null,
+  sampleReadyDate: '',
+  paymentTermsOffered: '',
+  attachments: [],
 };
 
 const EvalBar: React.FC<{ criteria: OpenRFQ['evaluationCriteria'] }> = ({
@@ -321,27 +361,42 @@ const EvalBar: React.FC<{ criteria: OpenRFQ['evaluationCriteria'] }> = ({
 interface RFQCardProps {
   rfq: OpenRFQ;
   onSubmitQuote: (rfq: OpenRFQ) => void;
-  onDecline: (rfqNumber: string) => void;
-  onAskQuestion: (rfqNumber: string) => void;
+  supplierId: string;
+  engagement: RfqEngagementView | undefined;
+  clarifications: readonly RfqClarificationView[];
 }
 
 const RFQCard: React.FC<RFQCardProps> = ({
   rfq,
   onSubmitQuote,
-  onDecline,
-  onAskQuestion,
+  supplierId,
+  engagement,
+  clarifications,
 }) => {
   const { t } = useTranslation();
   const quoteAvailability = useVerbAvailability('quotation:submit');
   const [expanded, setExpanded] = useState(false);
+  const [asking, setAsking] = useState(false);
   const urgent = rfq.daysRemaining <= 7;
   const Icon = CHANNEL_ICON[rfq.receivedVia] ?? Inbox;
   const accentClass = urgent ? 'border-l-warning' : 'border-l-teal';
-  const showLongReqs = rfq.specialRequirements.length > 80;
+  const reqs = rfq.specialRequirements;
+  const showLongReqs = reqs.text.length > 80;
+  const items = rfq.rfq.items ?? [];
+  const tiered = items.length > 0;
+  const intent = engagement?.intent?.intent;
+  const declined = intent === 'decline';
+  // RFx spec 2026-09-21 — on the rebuilt (tiered) RFQ the supplier first says
+  // it will respond, and on a confidential one accepts the terms, before the
+  // quote grid opens. A legacy RFQ keeps today's single-price entrance: quoting
+  // it is itself the statement of intent.
+  const termsOpen = !rfq.rfq.confidential || Boolean(engagement?.confidentialityAcceptedAt);
+  const quoteReady = !declined && (!tiered || (intent === 'respond' && termsOpen));
 
   return (
     <div
       className={`bg-bg-surface border border-border-subtle rounded-lg shadow-sm mb-4 border-l-2 ${accentClass} overflow-hidden`}
+      data-testid={`rfq-card-${rfq.id}`}
     >
       <div className="flex items-center gap-3 px-4 py-3 border-b border-border-subtle flex-wrap">
         <Data className="text-sm font-bold text-text-primary">
@@ -352,7 +407,13 @@ const RFQCard: React.FC<RFQCardProps> = ({
             ? t('rfqs.card.daysRemaining', { count: rfq.daysRemaining })
             : t('rfqs.card.daysToDeadline', { count: rfq.daysRemaining })}
         </StatusPill>
-        <StatusPill variant="neutral">{t('rfqs.card.sampleDetail')}</StatusPill>
+        {rfq.rfq.projectName && <StatusPill variant="neutral">{rfq.rfq.projectName}</StatusPill>}
+        {rfq.rfq.confidential && (
+          <StatusPill variant="neutral">
+            <Lock size={11} className="mr-1" />
+            {t('rfqResponse.card.confidential')}
+          </StatusPill>
+        )}
         <span className="ml-auto inline-flex items-center gap-1 text-xs text-text-tertiary">
           <Icon size={12} />
           {t('rfqs.card.via', { channel: rfq.receivedVia })}
@@ -376,16 +437,12 @@ const RFQCard: React.FC<RFQCardProps> = ({
             <strong className="text-text-primary">{rfq.qty}</strong>
           </span>
           <span>
-            {t('rfqs.card.location')}{' '}
-            <strong className="text-text-primary">
-              {rfq.deliveryLocation}
-            </strong>
+            {t('rfqResponse.card.delivery')}{' '}
+            <strong className="text-text-primary">{rfq.delivery || '—'}</strong>
           </span>
           <span>
-            {t('rfqs.card.reqDelivery')}{' '}
-            <strong className="text-text-primary">
-              {rfq.requestedDelivery}
-            </strong>
+            {t('rfqResponse.card.awardBy')}{' '}
+            <strong className="text-text-primary">{rfq.awardBy}</strong>
           </span>
           <span>
             {t('rfqs.card.deadline')}{' '}
@@ -395,14 +452,40 @@ const RFQCard: React.FC<RFQCardProps> = ({
           </span>
         </div>
 
+        {tiered && (
+          <ul className="mb-3 space-y-1 text-xs" data-testid={`rfq-items-${rfq.id}`}>
+            {items.map((item) => (
+              <li key={item.lineNo} className="flex flex-wrap gap-x-2">
+                <span className="font-semibold text-text-primary">{item.description}</span>
+                <span className="text-text-tertiary">
+                  {t('rfqResponse.grid.variants', { count: item.variantCount, uom: item.uom })}
+                </span>
+                <span className="text-text-tertiary">
+                  {t('rfqResponse.card.breaks')}{' '}
+                  <Data>
+                    {tiersForItem(rfq.rfq, item)
+                      .map((b) => formatNumber(b.qty))
+                      .join(' / ')}
+                  </Data>{' '}
+                  {t(
+                    tiersForItem(rfq.rfq, item)[0]?.basis === 'perVariant'
+                      ? 'rfqResponse.basis.perVariant'
+                      : 'rfqResponse.basis.total',
+                  )}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+
         <div className="bg-bg-hover rounded-md px-3 py-2 mb-3">
-          <div className="text-label text-text-tertiary uppercase mb-1">
+          <div className="text-label text-text-tertiary uppercase mb-1 flex items-center gap-2">
             {t('rfqs.card.specialReqs')}
+            {/* Still illustrative where the RFQ states nothing of its own. */}
+            {reqs.sample && <StatusPill variant="neutral">{t('rfqs.card.sampleDetail')}</StatusPill>}
           </div>
           <div className="text-xs text-text-secondary leading-relaxed">
-            {expanded || !showLongReqs
-              ? rfq.specialRequirements
-              : rfq.specialRequirements.slice(0, 80) + '…'}
+            {expanded || !showLongReqs ? reqs.text : reqs.text.slice(0, 80) + '…'}
           </div>
           {showLongReqs && (
             <button
@@ -424,43 +507,61 @@ const RFQCard: React.FC<RFQCardProps> = ({
         </div>
 
         <div className="mb-4">
-          <div className="text-label text-text-tertiary uppercase mb-2">
-            {t('rfqs.card.evalCriteria')}
-          </div>
+          <div className="text-label text-text-tertiary uppercase mb-2">{t('rfqs.card.evalCriteria')}</div>
+          {/* The REAL scoring (CR-15, after the CR-23 gate) — the weights PTI's
+              comparison actually applies. The invented five-way split that
+              stood here ("Quality 25%, Sustainability 10%…") is gone. */}
           <EvalBar criteria={rfq.evaluationCriteria} />
+          <p className="text-xs text-text-tertiary mt-1" data-testid={`rfq-eval-gate-${rfq.id}`}>
+            {t('rfqs.eval.gate')}
+          </p>
+        </div>
+
+        <div className="mb-3 space-y-3">
+          <RfqConfidentialityGate rfq={rfq.rfq} supplierId={supplierId} engagement={engagement} />
+          <RfqIntentControls rfq={rfq.rfq} supplierId={supplierId} engagement={engagement} hasQuote={false} />
         </div>
 
         <div className="flex items-center gap-3 flex-wrap">
           {/* ⚠️ `quotation:submit` IS COMMERCIAL'S. A fulfilment or back-office
               seat reads the wait with the lane named, in the slot the button
               occupied — the ENTRY into the quote panel, so the panel's own
-              commit stays unreachable behind one statement rather than two.
-              Asking a question is UNGOVERNED and stays live beside it: a lane
-              that cannot quote can still talk to procurement. */}
-          {quoteAvailability.kind === 'held' ? (
-            <Button variant="outline" onClick={() => onSubmitQuote(rfq)}>
-              {t('rfqs.card.submitQuote')}
-            </Button>
-          ) : (
-            <HandoffNotice
-              availability={quoteAvailability}
-              testId="handoff-quotation-submit"
-            />
-          )}
+              commit stays unreachable behind one statement rather than two. */}
+          {!declined &&
+            (quoteAvailability.kind === 'held' ? (
+              quoteReady ? (
+                <Button variant="outline" onClick={() => onSubmitQuote(rfq)}>
+                  {t('rfqs.card.submitQuote')}
+                </Button>
+              ) : (
+                <span className="text-xs text-text-tertiary" data-testid={`quote-waits-${rfq.id}`}>
+                  {t(intent === 'respond' ? 'rfqResponse.card.acceptFirst' : 'rfqResponse.card.respondFirst')}
+                </span>
+              )
+            ) : (
+              <HandoffNotice
+                availability={quoteAvailability}
+                testId="handoff-quotation-submit"
+              />
+            ))}
+          {/* Opening the question box holds no atom; SENDING a question does,
+              and the box says whose act it is when this seat cannot. */}
           <Button
             variant="secondary"
             icon={MessageSquare}
-            onClick={() => onAskQuestion(rfq.rfqNumber)}
+            onClick={() => setAsking(!asking)}
           >
             {t('rfqs.card.askQuestion')}
           </Button>
-          <button
-            type="button"
-            onClick={() => onDecline(rfq.rfqNumber)}
-            className="ml-auto text-xs text-danger hover:underline font-semibold"
-          >
-            {t('rfqs.card.decline')}
-          </button>
+        </div>
+        <div className="mt-3">
+          <RfqClarifications
+            rfq={rfq.rfq}
+            supplierId={supplierId}
+            clarifications={clarifications}
+            open={asking}
+            onToggle={() => setAsking(!asking)}
+          />
         </div>
       </div>
     </div>
@@ -470,9 +571,10 @@ const RFQCard: React.FC<RFQCardProps> = ({
 const OpenRFQsTab: React.FC<{
   rfqs: OpenRFQ[];
   onSubmitQuote: (rfq: OpenRFQ) => void;
-  onDecline: (rfqNumber: string) => void;
-  onAskQuestion: (rfqNumber: string) => void;
-}> = ({ rfqs, onSubmitQuote, onDecline, onAskQuestion }) => {
+  supplierId: string;
+  engagementByRfq: Map<string, RfqEngagementView>;
+  clarifications: readonly RfqClarificationView[];
+}> = ({ rfqs, onSubmitQuote, supplierId, engagementByRfq, clarifications }) => {
   const { t } = useTranslation();
   if (rfqs.length === 0) {
     return (
@@ -496,16 +598,23 @@ const OpenRFQsTab: React.FC<{
           key={rfq.id}
           rfq={rfq}
           onSubmitQuote={onSubmitQuote}
-          onDecline={onDecline}
-          onAskQuestion={onAskQuestion}
+          supplierId={supplierId}
+          engagement={engagementByRfq.get(rfq.id)}
+          clarifications={clarifications}
         />
       ))}
     </div>
   );
 };
 
-const MyQuotesTab: React.FC<{ quotes: SubmittedQuote[] }> = ({ quotes }) => {
+const MyQuotesTab: React.FC<{
+  quotes: SubmittedQuote[];
+  /** Whether a version can still be revised: current, and its RFQ still open. */
+  canRevise: (q: SubmittedQuote) => boolean;
+  onRevise: (q: SubmittedQuote) => void;
+}> = ({ quotes, canRevise, onRevise }) => {
   const { t } = useTranslation();
+  const quoteAvailability = useVerbAvailability('quotation:submit');
 
   if (quotes.length === 0) {
     return (
@@ -546,7 +655,20 @@ const MyQuotesTab: React.FC<{ quotes: SubmittedQuote[] }> = ({ quotes }) => {
             </div>
             {/* Status only — a competitive score/rank needs the sibling set that
                 per-supplier scoping hides (3b-C); the supplier never sees it. */}
-            <StatusPill variant="neutral">{q.status}</StatusPill>
+            <div className="flex items-center gap-2">
+              {!q.current && <StatusPill variant="neutral">{t('rfqResponse.quotes.superseded')}</StatusPill>}
+              <StatusPill variant="neutral">{q.status}</StatusPill>
+              {/* RFx spec — revising before the deadline mints a new version
+                  that names this one; every version is kept (AC-03). */}
+              {canRevise(q) &&
+                (quoteAvailability.kind === 'held' ? (
+                  <Button variant="outline" data-testid={`revise-${q.quoteNumber}`} onClick={() => onRevise(q)}>
+                    {t('rfqResponse.quotes.revise')}
+                  </Button>
+                ) : (
+                  <HandoffNotice availability={quoteAvailability} testId="handoff-quotation-submit" />
+                ))}
+            </div>
           </div>
 
           <dl className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
@@ -687,19 +809,19 @@ const AwardsTab: React.FC<{ rows: AwardRow[] }> = ({ rows }) => {
   );
 };
 
-const SAMPLE_EVAL: OpenRFQ['evaluationCriteria'] = {
-  price: 40,
-  quality: 25,
-  leadTime: 15,
-  sustainability: 10,
-  risk: 10,
+/** CR-15's weights as percentages — read from the policy, never restated. */
+const EVAL_WEIGHTS: OpenRFQ['evaluationCriteria'] = {
+  price: Math.round(CRITERIA_WEIGHTS.price * 100),
+  leadTime: Math.round(CRITERIA_WEIGHTS.leadTime * 100),
+  reliability: Math.round(CRITERIA_WEIGHTS.reliability * 100),
 };
 
 // Adapter: canonical RFQ → the page's OpenRFQ display shape. Real fields come
 // from the read (number, material, category, qty, deadline, received date);
-// the supplier-facing detail the RFQ entity does NOT carry — evaluation weights,
-// special requirements, delivery location, received-via — is illustrative
-// sample, flagged with a "Sample detail" pill per card (partial migration).
+// the evaluation weights are the platform's own CR-15 policy (`CRITERIA_WEIGHTS`);
+// the detail the RFQ entity does NOT carry — special requirements on a legacy
+// RFQ, received-via — is illustrative sample, flagged with a "Sample detail"
+// pill (partial migration).
 // ⚠️ `RFQ_TODAY_MS = new Date('2026-04-25')` IS DELETED. It was the SECOND pin
 // in this app and it disagreed with `BuyerSourcing`'s by 23 days, so the same
 // RFQ deadline produced two different day-counts depending on which persona was
@@ -711,7 +833,25 @@ const SAMPLE_EVAL: OpenRFQ['evaluationCriteria'] = {
 // second defect inside a clock fix. With the pin gone the clamp is now visible
 // for what it is: a deadline 111 days past renders "0 days remaining", which
 // reads as *due today*. Filed, not fixed.
-const toOpenRfq = (r: RFQ, nowIso: string): OpenRFQ => {
+/**
+ * What the RFQ itself asks beyond the price. Real where the rebuilt RFQ carries
+ * it (item notes, samples requested, alternatives allowed); a legacy RFQ states
+ * none of it, so the card keeps the illustrative line and marks it sample.
+ */
+const specialRequirementsOf = (r: RFQ, t: TFunction): OpenRFQ['specialRequirements'] => {
+  const parts = [
+    ...(r.items ?? []).filter((i) => i.note).map((i) => `${i.description}: ${i.note}`),
+    ...(r.samplesRequested
+      ? [t('rfqResponse.card.samplesRequested', { qty: formatNumber(r.samplesRequested.qty), date: formatDate(r.samplesRequested.neededBy) })]
+      : []),
+    ...(r.allowAlternatives ? [t('rfqResponse.card.alternativesAllowed')] : []),
+  ];
+  return parts.length > 0
+    ? { text: parts.join(' · '), sample: false }
+    : { text: t('rfqResponse.card.sampleRequirements'), sample: true };
+};
+
+const toOpenRfq = (r: RFQ, nowIso: string, t: TFunction): OpenRFQ => {
   const daysRemaining = Math.max(0, daysUntil(r.responseDeadline, nowIso) ?? 0);
   return {
     id: r.id,
@@ -728,13 +868,15 @@ const toOpenRfq = (r: RFQ, nowIso: string): OpenRFQ => {
     // the total-price preview never has to parse `qty` back out of its own
     // formatting (CP-0 2e-a).
     totalQty: r.totalQty,
-    deliveryLocation: 'NDC Jatake 6',
-    requestedDelivery: r.awardDeadline,
+    rfq: r,
+    // RFx spec 2026-09-21 — the delivery terms are the RFQ's own incoterms; the
+    // hard-coded warehouse that stood here was sample text on every card.
+    delivery: r.incoterms,
+    awardBy: r.awardDeadline,
     deadline: r.responseDeadline,
     daysRemaining,
-    specialRequirements:
-      'Full RFQ specifics arrive with the Paragon sourcing packet (illustrative sample).',
-    evaluationCriteria: SAMPLE_EVAL,
+    specialRequirements: specialRequirementsOf(r, t),
+    evaluationCriteria: EVAL_WEIGHTS,
     status: r.status === 'Open' ? 'Open — Awaiting Your Quote' : r.status,
     receivedVia: 'Web Portal',
     receivedDate: r.createdAt,
@@ -748,6 +890,7 @@ interface RfqWorkspaceProps {
   quotations: Quotation[];
   rfqById: Map<string, RFQ>;
   awardRows: AwardRow[];
+  nowIso: string;
 }
 
 const RfqWorkspace: React.FC<RfqWorkspaceProps> = ({
@@ -757,11 +900,13 @@ const RfqWorkspace: React.FC<RfqWorkspaceProps> = ({
   quotations,
   rfqById,
   awardRows,
+  nowIso,
 }) => {
   const { toast } = useToast();
   const { t } = useTranslation();
   const refusalText = useRefusalText();
-  const crumb = [t('rfqs.crumb.section'), t('rfqs.crumb.page')];
+  // The eyebrow is the menu section alone (the `PageHeader` rule).
+  const crumb = [t('hub.nav.section.sourcing')];
   const submitMutation = useQuotationSubmit();
   const [activeTab, setActiveTab] = useState<TabKey>('open');
   const quoteAvailability = useVerbAvailability('quotation:submit');
@@ -786,6 +931,19 @@ const RfqWorkspace: React.FC<RfqWorkspaceProps> = ({
   const effectiveQuotePanelRFQ =
     quoteAvailability.kind === 'held' ? quotePanelRFQ : null;
   const [form, setForm] = useState<QuoteForm>(emptyQuoteForm);
+  // RFx spec 2026-09-21 — the tiered grid's own state, and the version a
+  // revision supersedes (absent on a first quote).
+  const [tieredDraft, setTieredDraft] = useState<TieredDraft | null>(null);
+  const [supersedes, setSupersedes] = useState<string | null>(null);
+  const [gridRefusal, setGridRefusal] = useState<string | null>(null);
+  const engagementQuery = useRfqEngagement();
+  const clarificationsQuery = useRfqClarifications();
+  const engagementByRfq = useMemo(
+    () => new Map((engagementQuery.data?.items ?? []).map((e) => [e.rfqId, e] as const)),
+    [engagementQuery.data],
+  );
+  const clarifications = clarificationsQuery.data?.items ?? [];
+  const panelTiered = (effectiveQuotePanelRFQ?.rfq.items ?? []).length > 0;
 
   // The supplier's OWN submitted quotations (real read) drive My-Quotes AND prune
   // the open list — an RFQ this supplier has already quoted drops from "Open" (the
@@ -806,7 +964,9 @@ const RfqWorkspace: React.FC<RfqWorkspaceProps> = ({
     [initialRfqs, quotedRfqIds],
   );
 
-  const openCount = openRFQs.length;
+  // A declined RFQ stays on the list with its decline stated, and leaves the
+  // count: it is no longer waiting on this supplier.
+  const openCount = openRFQs.filter((r) => engagementByRfq.get(r.id)?.intent?.intent !== 'decline').length;
   const submittedCount = submittedQuotes.length;
   // 2e-b-3 (COS-03) — DERIVED, not a literal. This was `= 1`: a hardcoded
   // number rendered as a live KPI reading "Awaiting Award · Decision pending".
@@ -830,22 +990,43 @@ const RfqWorkspace: React.FC<RfqWorkspaceProps> = ({
 
   const handleSubmitQuote = (rfq: OpenRFQ) => {
     setQuotePanelRFQ(rfq);
-    setForm(emptyQuoteForm);
+    setForm({ ...emptyQuoteForm, paymentTermsOffered: rfq.rfq.paymentTerms });
+    setTieredDraft((rfq.rfq.items ?? []).length > 0 ? emptyTieredDraft(rfq.rfq) : null);
+    setSupersedes(null);
+    setGridRefusal(null);
   };
 
-  const handleDecline = (rfqNumber: string) => {
-    toast({
-      variant: 'info',
-      title: t('rfqs.toast.declined.title', { rfq: rfqNumber }),
-      description: t('rfqs.toast.notified'),
-    });
+  // RFx spec — revising before the deadline: the panel opens on the supplier's
+  // own last version, and the new one names it (`supersedesQuotationId`).
+  const canRevise = (q: SubmittedQuote): boolean => {
+    const rfq = rfqById.get(q.quote.rfqId);
+    return (
+      q.current &&
+      (q.status === 'Submitted' || q.status === 'Under Review') &&
+      rfq?.status === 'Open' &&
+      (daysUntil(rfq.responseDeadline, nowIso) ?? -1) >= 0
+    );
   };
-
-  const handleAskQuestion = (rfqNumber: string) => {
-    toast({
-      title: t('rfqs.toast.question.title', { rfq: rfqNumber }),
-      description: t('rfqs.toast.question.body'),
+  const handleRevise = (q: SubmittedQuote) => {
+    const rfq = rfqById.get(q.quote.rfqId);
+    if (!rfq) return;
+    setQuotePanelRFQ(toOpenRfq(rfq, nowIso, t));
+    setForm({
+      ...emptyQuoteForm,
+      unitPrice: String(q.quote.unitPrice),
+      currency: q.quote.currency ?? BASE_CURRENCY,
+      leadTimeNum: String(q.quote.leadTimeDays),
+      validUntil: q.quote.validUntil,
+      moq: q.quote.moq === undefined ? '' : String(q.quote.moq),
+      notes: q.quote.notes ?? '',
+      paymentTermsOffered: q.quote.paymentTermsOffered,
+      canSample: q.quote.sampleOffer ? q.quote.sampleOffer.canSample : null,
+      sampleReadyDate: q.quote.sampleOffer?.readyDate ?? '',
+      attachments: q.quote.attachments ?? [],
     });
+    setTieredDraft((rfq.items ?? []).length > 0 ? draftFromQuote(rfq, q.quote) : null);
+    setSupersedes(q.quote.id);
+    setGridRefusal(null);
   };
 
   // ── CP-0 · W1 · 2e-a — the ONE read of the bid price ──────────────────────
@@ -898,8 +1079,63 @@ const RfqWorkspace: React.FC<RfqWorkspaceProps> = ({
   // at read (#78). On a non-failed outcome the hook invalidates → the supplier's
   // quotations re-read, the quote lands in My-Quotes, and its RFQ leaves the open
   // list. Replaces the retired local-state masquerade.
+  /** Dispatch a built payload and say what the verb decided. */
+  const dispatchQuote = async (payload: Record<string, unknown>, rfqNumber: string, deadline: string) => {
+    try {
+      const res = await submitMutation.mutateAsync({ payload });
+      if (res.status === 'failed') {
+        toast({
+          variant: 'error',
+          title: t('rfqs.toast.submitFailed.title'),
+          description: isCurrencyRefusal(res.reason)
+            ? t('rfqs.toast.currencyRefused.body', {
+                currency: String(payload.currency),
+                permitted: BID_CURRENCIES.join(', '),
+              })
+            : (refusalText(res.reason) ?? rfqResponseRefusal(t, res.reason ?? '') ?? t('rfqs.toast.submitFailed.body')),
+        });
+        return;
+      }
+      toast({
+        variant: 'success',
+        title: t('rfqs.toast.submitted.title', { rfq: rfqNumber }),
+        description: t('rfqs.toast.submitted.body', { date: deadline }),
+      });
+      setQuotePanelRFQ(null);
+      setForm(emptyQuoteForm);
+      setTieredDraft(null);
+      setSupersedes(null);
+      setActiveTab('quotes');
+    } catch {
+      toast({
+        variant: 'error',
+        title: t('rfqs.toast.submitFailed.title'),
+        description: t('rfqs.toast.submitFailed.body'),
+      });
+    }
+  };
+
+  // RFx spec 2026-09-21 — THE TIERED SUBMIT. One read of the grid
+  // (`readTieredDraft`), judged by the verb's own rule; a refusal is said on the
+  // panel, naming the item, and nothing is sent.
+  const submitTiered = async () => {
+    if (!effectiveQuotePanelRFQ || !tieredDraft) return;
+    const read = readTieredDraft(effectiveQuotePanelRFQ.rfq, supplierId, tieredDraft, (id) => t(`rfqAuthoring.cost.${id}`));
+    if (!read.ok) {
+      setGridRefusal(read.reason);
+      return;
+    }
+    setGridRefusal(null);
+    await dispatchQuote(
+      { ...read.payload, ...(supersedes ? { supersedesQuotationId: supersedes } : {}) },
+      effectiveQuotePanelRFQ.rfqNumber,
+      effectiveQuotePanelRFQ.deadline,
+    );
+  };
+
   const submitQuote = async () => {
     if (!effectiveQuotePanelRFQ) return;
+    if (panelTiered) return submitTiered();
     // The price gate fires FIRST and alone, and it BLOCKS: a price that cannot be
     // read — or a zero, which reads fine but is not a bid — must never become a
     // submitted quotation, because a submitted quotation is immediately a
@@ -966,61 +1202,36 @@ const RfqWorkspace: React.FC<RfqWorkspaceProps> = ({
       // The SAME parsed value the gate above judged — the builder can no longer
       // re-read the string and reach a different number (CP-0 §4).
       unitPrice: bidPrice.value,
-      // 2e-c-2 — the argument that makes the price a price. The form has offered
-      // this selector since before the spine existed and the builder was never
-      // given it, so the platform asked a supplier to name their currency and
-      // then stored every bid as rupiah. Same class as the moq drop (FIND-02),
-      // worse in consequence: a dropped minimum loses a constraint, a dropped
-      // currency RESTATES the number as a different amount of money.
+      // 2e-c-2 — the argument that makes the price a price (see the draft type).
       currency: form.currency,
-      // The days/weeks conversion already happened inside the ONE parse above,
-      // so the builder receives the whole number of days the gate judged — or
-      // `null`, which it omits rather than flattening to a 0-day promise.
+      // The days/weeks conversion already happened inside the ONE parse above.
       leadTimeDays: leadTime.days,
-      // The SAME parsed value the gate above judged (2e-b-2). This argument is
-      // the fix: the form has always had this number and the builder has never
-      // been given it, so the minimum a supplier stated died here.
+      // The SAME parsed value the gate above judged (2e-b-2).
       moq: moq.moq,
       validUntil: form.validUntil,
+      // RFx spec 2026-09-21 — payment terms offered are a real field now. They
+      // were always sent as `''`.
+      paymentTermsOffered: form.paymentTermsOffered.trim(),
       notes: form.notes,
     });
-    try {
-      const res = await submitMutation.mutateAsync({ payload });
-      if (res.status === 'failed') {
-        toast({
-          variant: 'error',
-          title: t('rfqs.toast.submitFailed.title'),
-          // 2e-c-2 — the currency refusal REFUSES BY NAME, in the supplier's
-          // language. Every other reason still falls through to the machine
-          // string, which is the pre-existing behaviour and its own finding
-          // (2e-c-2-FIND-01) — this batch translates the refusal it introduces
-          // rather than leaving a supplier to read a dispatcher constant.
-          description: isCurrencyRefusal(res.reason)
-            ? t('rfqs.toast.currencyRefused.body', {
-                // Named from the form's OWN state, not scraped back out of the
-                // error string: the token the supplier chose is already here.
-                currency: form.currency,
-                permitted: BID_CURRENCIES.join(', '),
-              })
-            : (refusalText(res.reason) ?? res.reason ?? t('rfqs.toast.submitFailed.body')),
-        });
-        return;
-      }
-      toast({
-        variant: 'success',
-        title: t('rfqs.toast.submitted.title', { rfq: effectiveQuotePanelRFQ.rfqNumber }),
-        description: t('rfqs.toast.submitted.body', { date: effectiveQuotePanelRFQ.deadline }),
-      });
-      setQuotePanelRFQ(null);
-      setForm(emptyQuoteForm);
-      setActiveTab('quotes');
-    } catch {
-      toast({
-        variant: 'error',
-        title: t('rfqs.toast.submitFailed.title'),
-        description: t('rfqs.toast.submitFailed.body'),
-      });
-    }
+    await dispatchQuote(
+      {
+        ...payload,
+        // RFx spec 2026-09-21 — the sample offer is SAVED now (it was collected
+        // and dropped), and the attachments replace the dead PDF drop area.
+        ...(form.canSample !== null
+          ? {
+              sampleOffer: form.canSample
+                ? { canSample: true, ...(form.sampleReadyDate ? { readyDate: form.sampleReadyDate } : {}) }
+                : { canSample: false },
+            }
+          : {}),
+        ...(form.attachments.length > 0 ? { attachments: form.attachments.map((a) => ({ ...a })) } : {}),
+        ...(supersedes ? { supersedesQuotationId: supersedes } : {}),
+      },
+      effectiveQuotePanelRFQ.rfqNumber,
+      effectiveQuotePanelRFQ.deadline,
+    );
   };
 
   return (
@@ -1088,12 +1299,13 @@ const RfqWorkspace: React.FC<RfqWorkspaceProps> = ({
         <OpenRFQsTab
           rfqs={openRFQs}
           onSubmitQuote={handleSubmitQuote}
-          onDecline={handleDecline}
-          onAskQuestion={handleAskQuestion}
+          supplierId={supplierId}
+          engagementByRfq={engagementByRfq}
+          clarifications={clarifications}
         />
       )}
       {activeTab === 'quotes' && (
-        <MyQuotesTab quotes={submittedQuotes} />
+        <MyQuotesTab quotes={submittedQuotes} canRevise={canRevise} onRevise={handleRevise} />
       )}
       {activeTab === 'history' && <AwardsTab rows={awardRows} />}
 
@@ -1128,7 +1340,7 @@ const RfqWorkspace: React.FC<RfqWorkspaceProps> = ({
                 // 2e-b-1 — disabled while an unreadable lead time stands, and
                 // while a same-day acknowledgement is owed. `submitQuote` re-checks
                 // both; this is the visible half of the same gate.
-                disabled={submitMutation.isPending || submitBlocked}
+                disabled={submitMutation.isPending || (!panelTiered && submitBlocked)}
                 onClick={submitQuote}
               >
                 {submitMutation.isPending ? t('rfqs.panel.submitting') : t('rfqs.panel.submit')}
@@ -1165,6 +1377,31 @@ const RfqWorkspace: React.FC<RfqWorkspaceProps> = ({
               </div>
             </section>
 
+            {supersedes && (
+              <p className="text-xs text-text-secondary" data-testid="quote-revision-note">
+                {t('rfqResponse.quotes.revising', { quote: supersedes })}
+              </p>
+            )}
+            {panelTiered && tieredDraft && (
+              <>
+                {gridRefusal && (
+                  <div role="alert" data-testid="grid-refusal" className="text-sm text-danger border-l-2 border-danger pl-2">
+                    {rfqResponseRefusal(t, gridRefusal)}
+                  </div>
+                )}
+                <TieredQuoteForm
+                  rfq={effectiveQuotePanelRFQ.rfq}
+                  draft={tieredDraft}
+                  onChange={(next) => {
+                    setTieredDraft(next);
+                    setGridRefusal(null);
+                  }}
+                  flaggedItem={gridRefusal ? refusalItem(gridRefusal) : null}
+                />
+              </>
+            )}
+            {!panelTiered && (
+            <>
             <FormSection
               eyebrow={t('rfqs.panel.step1.eyebrow')}
               title={t('rfqs.panel.step1.title')}
@@ -1437,54 +1674,31 @@ const RfqWorkspace: React.FC<RfqWorkspaceProps> = ({
                 /></label>
               </div>
               <div>
-                <label className={labelClass}>
-                  {t('rfqs.panel.canSample')}
+                <label className="block">
+                  <span className={labelClass}>{t('rfqResponse.paymentTerms')}</span>
+                  <input
+                    type="text"
+                    aria-label={t('rfqResponse.paymentTerms')}
+                    value={form.paymentTermsOffered}
+                    onChange={(e) => setForm({ ...form, paymentTermsOffered: e.target.value })}
+                    className={inputClass}
+                  />
                 </label>
-                <div className="flex gap-2">
-                  {(['yes', 'no'] as const).map((v) => (
-                    <button
-                      key={v}
-                      type="button"
-                      onClick={() => setForm({ ...form, canSample: v })}
-                      className={`px-4 py-1.5 rounded-md text-sm font-semibold border transition-colors ${
-                        form.canSample === v
-                          ? 'bg-action-soft border-action text-action-hover'
-                          : 'bg-bg-surface border-border-input text-text-tertiary hover:text-text-secondary'
-                      }`}
-                    >
-                      {v === 'yes' ? t('rfqs.panel.yes') : t('rfqs.panel.no')}
-                    </button>
-                  ))}
-                </div>
-                {form.canSample === 'yes' && (
-                  <div className="mt-2">
-                    <label className="block"><span className={labelClass}>{t('rfqs.panel.sampleLeadTime')}</span>
-                    <input
-                      type="text"
-                      placeholder={t('rfqs.panel.sampleLeadPlaceholder')}
-                      value={form.sampleLeadTime}
-                      onChange={(e) =>
-                        setForm({
-                          ...form,
-                          sampleLeadTime: e.target.value,
-                        })
-                      }
-                      className={inputClass}
-                      style={{ width: 200 }}
-                    /></label>
-                  </div>
-                )}
               </div>
-              <div>
-                <label className={labelClass}>
-                  {t('rfqs.panel.pdf')}
-                </label>
-                <div className="border-2 border-dashed border-border-input rounded-md p-4 text-center text-xs text-text-tertiary bg-bg-hover">
-                  <Upload size={20} className="text-teal mx-auto mb-1" />
-                  {t('rfqs.panel.pdfDrop')}
-                </div>
-              </div>
+              <SampleOfferFields
+                canSample={form.canSample}
+                readyDate={form.sampleReadyDate}
+                onChange={(canSample, sampleReadyDate) => setForm({ ...form, canSample, sampleReadyDate })}
+              />
+              <SessionAttachments
+                label={t('rfqResponse.attachments')}
+                testId="quote-attachments"
+                value={form.attachments}
+                onChange={(attachments) => setForm({ ...form, attachments })}
+              />
             </FormSection>
+            </>
+            )}
           </div>
         )}
       </SidePanel>
@@ -1500,7 +1714,8 @@ const RfqWorkspace: React.FC<RfqWorkspaceProps> = ({
 // the quote/award tabs stay illustrative (pilled).
 const SupplierRFQs: React.FC = () => {
   const { t } = useTranslation();
-  const crumb = [t('rfqs.crumb.section'), t('rfqs.crumb.page')];
+  // The eyebrow is the menu section alone (the `PageHeader` rule).
+  const crumb = [t('hub.nav.section.sourcing')];
   const { identity } = useCurrentIdentity();
   const { supplierId } = identity;
   const supplierQuery = useCurrentSupplier();
@@ -1511,7 +1726,11 @@ const SupplierRFQs: React.FC = () => {
   // component returns early four ways, and a hook below them is a CONDITIONAL
   // hook ("Rendered more hooks than during the previous render"), which is how
   // the first draft of this change took 44 specs down.
-  const nowIso = useMemo(() => new Date().toISOString(), []);
+  // ⚠️ THE HUB'S REFERENCE CLOCK, NOT THE WALL CLOCK. This read `new Date()`,
+  // so the card counted Oslo's deadline against real time ("0 days remaining")
+  // while every buyer RFx page reads "As of" the simulated `rfxNow()` — the same
+  // deadline, two day-counts, depending on who was looking.
+  const nowIso = useMemo(() => rfxNow(), []);
 
   if (!supplierId) return <NoSupplierIdentity />;
   if (
@@ -1553,7 +1772,7 @@ const SupplierRFQs: React.FC = () => {
 
   const initialRfqs = rfqs
     .filter((r) => r.status === 'Open')
-    .map((r) => toOpenRfq(r, nowIso));
+    .map((r) => toOpenRfq(r, nowIso, t));
 
   // Award outcome is a real read: the supplier's terminal quotations joined to
   // their RFQ. Awarding an RFQ (buyer) flips this supplier's quote to Awarded /
@@ -1569,6 +1788,7 @@ const SupplierRFQs: React.FC = () => {
       quotations={quotations}
       rfqById={rfqById}
       awardRows={awardRows}
+      nowIso={nowIso}
     />
   );
 };

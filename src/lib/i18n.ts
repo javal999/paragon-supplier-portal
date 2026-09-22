@@ -94,6 +94,7 @@ import { rfxEn, rfxId } from './i18n/rfx';
 import { rfxAuthoringEn, rfxAuthoringId } from './i18n/rfxAuthoring';
 // — RFx spec 2026-09-21: the rebuilt RFQ authoring + session-only attachments —
 import { rfqAuthoringEn, rfqAuthoringId } from './i18n/rfqAuthoring';
+import { rfqResponseEn, rfqResponseId } from './i18n/rfqResponse';
 // — RFx spec 2026-09-21: RFQ evaluation and the per-item split award —
 import { rfqCompareEn, rfqCompareId } from './i18n/rfqCompare';
 // — BL-51 3PL tracking links (REQ-E07-04 BR-05) —
@@ -190,6 +191,7 @@ export const resources = {
       ...rfxEn,
       ...rfxAuthoringEn,
       ...rfqAuthoringEn,
+      ...rfqResponseEn,
       ...rfqCompareEn,
       ...threePlEn,
       ...adminSettingsEn,
@@ -644,6 +646,7 @@ export const resources = {
       ...rfxId,
       ...rfxAuthoringId,
       ...rfqAuthoringId,
+      ...rfqResponseId,
       ...rfqCompareId,
       ...threePlId,
       ...adminSettingsId,

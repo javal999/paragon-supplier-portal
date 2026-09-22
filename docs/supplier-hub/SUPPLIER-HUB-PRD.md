@@ -4,7 +4,7 @@
 |---|---|
 | Product | Supplier Hub (Supplier Portal, "SC Collaboration Hub") |
 | Company | PT Paragon Technology and Innovation (PTI) |
-| Version | 0.7 draft, 2026-09-21 |
+| Version | 0.8 draft, 2026-09-22 |
 | Scope | MVP (Phase 1, "Foundation to Transact"). Phase 2 and 3 appear only in section 9 |
 | Steering Committee | Yogi Sapta Prakoso (VP Supply Chain), Ilauddin (CFO), Risman Adnan (CTO) [C] |
 | Technology Product Owners | Achmad Fahlevi, Vergiant Yoga Perdana (Supply Chain); Indita Ramasaphira (FATL) [C] |
@@ -231,11 +231,15 @@ Acceptance criteria: TBD by the Foundation team. The hub **replaces PROCIO** for
 | ID | Story | Req | Status |
 |---|---|---|---|
 | US-50 | As a buyer, I want to filter suppliers by category, purchasing group, and further parameters, with their OTIF visible, so that I invite the right suppliers | REQ-E03-01 | [V] |
-| US-51 | As a buyer, I want to send an RFI and receive capability, experience, facility, and product information so that I know what suppliers can offer | REQ-E03-02 | [V] |
-| US-52 | As a buyer, I want to create an RFQ from scratch, from an RFI, or from a purchase requisition so that I collect comparable quotes | REQ-E03-03 | [V] |
-| US-53 | As a buyer, I want to send an RFP asking for commercial terms so that I can compare proposals term by term | REQ-E03-04 | [V]; template [P] |
-| US-54 | As a buyer, I want to compare scored quotes and run negotiation rounds with shortlisted suppliers so that I reach the best final offer with an audit trail | REQ-E03-05 | [V] negotiation; [P] detail |
-| US-55 | As a buyer, I want to award one event to more than 1 supplier with a quantity split so that I can dual-source | REQ-E03-05 | [V] |
+| US-51 | As a buyer, I want to send an RFI with sectioned, typed questions and receive capability, experience, facility, and product information so that I know what suppliers can offer | REQ-E03-02 | [V]; question detail [P] |
+| US-52 | As a buyer, I want to create an RFQ from scratch, a template, a past RFQ, an RFI, an RFP, or a purchase requisition, with items, spec sheets and quantity breaks, so that I collect comparable firm quotes | REQ-E03-03 | [V] owner 2026-09-21 (RFX-D2, RFX-D3); item detail [P] |
+| US-53 | As a buyer, I want to send an RFP asking for commercial terms, options and indicative prices so that I can compare proposals term by term and option by option before asking for firm prices | REQ-E03-04 | [V] owner 2026-09-21 (RFX-D4); template [P] |
+| US-54 | As a buyer, I want to compare scored quotes item by item at a chosen quantity break and run negotiation rounds with shortlisted suppliers so that I reach the best final offer with an audit trail | REQ-E03-05 | [V] negotiation; [P] detail |
+| US-55 | As a buyer, I want to award each item of an RFQ to 1 or more suppliers by percentage share so that I can dual-source | REQ-E03-05 | [V] owner 2026-09-21 (RFX-D5) |
+| US-56 | As a buyer, I want to save an RFI, RFQ or RFP as a template and copy a past event so that I do not rebuild the same event every time | REQ-E03-02 to REQ-E03-04; section 3.6a | [V] owner 2026-09-21 (RFX-D2) |
+| US-57 | As a supplier, I want to say whether I will respond, and decline with a reason, so that PTI knows early who is quoting | REQ-E03-03 | [P] |
+| US-58 | As a supplier, I want to price each item at every quantity break, with MOQ, lead time, one-time costs and an alternative where allowed, so that my quote matches how I actually price | REQ-E03-03 | [P] |
+| US-59 | As a supplier, I want to ask a clarification question and see the answers PTI publishes to all invitees so that every supplier quotes on the same understanding | REQ-E03-03 | [P] |
 
 **Acceptance criteria.**
 - US-50:
@@ -245,21 +249,38 @@ Acceptance criteria: TBD by the Foundation team. The hub **replaces PROCIO** for
 - US-51:
   - An RFI can be sent with no RFQ.
   - Suppliers submit capability, experience, facility, and product entries, each with a description.
+  - The buyer can add sections and questions of 11 types; a choice question needs at least 2 options.
+  - A confidential RFI shows nothing to a supplier until it accepts the terms.
 - US-52:
-  - An RFQ can be created with or without an RFI, and a purchase requisition is never required.
-  - When created from an RFI or a purchase requisition, its fields are pre-filled and editable.
-  - Suppliers cannot see each other's quotes.
+  - An RFQ can be created with or without an RFI or RFP, and a purchase requisition is never required.
+  - When created from an RFI, an RFP, a template, a past RFQ or a purchase requisition, its fields are pre-filled and editable, and the RFQ records its source.
+  - Items carry buyer-filled and supplier-filled spec fields; the RFQ carries 1 to 8 quantity breaks, per variant or total.
+  - Suppliers cannot see each other's quotes. Every RFQ price is labelled Firm.
 - US-53:
-  - An RFP lists required commercial terms.
-  - Suppliers respond per term.
+  - An RFP lists required commercial terms, standard or custom.
+  - Suppliers respond per term, after accepting the T&Cs where the RFP has them.
+  - Suppliers price options at quantity points and can propose their own; every price is labelled Indicative.
 - US-54:
   - A supplier that fails the compliance gate (CR-23: halal, BPOM, GMP where the material needs it, status, minimum OTIF) can be invited and can quote, but cannot be awarded, and the reason is shown.
   - Qualified suppliers are scored on price 40%, lead time 20%, reliability 40% (CR-15).
   - Only suppliers invited to a negotiation round can submit a revised quote.
   - Every quote version is kept.
+  - On an RFQ with items, total cost at the chosen break = unit price × quantity + one-time costs, and the lowest price at each break is marked.
 - US-55:
   - An award to 2 or more suppliers cannot be saved unless each item's split totals 100%.
+  - The award records the break it was made at, and names the item in any refusal.
   - Each supplier sees only its own award outcome.
+- US-56:
+  - A template keeps the content and never the invitees or dates; a copy keeps the invitees and clears the dates.
+  - The central library is not changed by saving a template.
+- US-57:
+  - A decline needs a reason from a list and the supplier's own words; the buyer sees both.
+  - A supplier that declined cannot quote.
+- US-58:
+  - A quote missing a break price, a required supplier spec value or a requested one-time cost is refused, naming the item.
+  - An alternative is shown apart and not ranked.
+- US-59:
+  - A published answer reaches every invitee without the asker's name; a private one reaches only the asker.
 
 #### Supplier Performance (E10)
 
@@ -290,13 +311,14 @@ Acceptance criteria: TBD by the Foundation team. The hub **replaces PROCIO** for
 | Supplier approval of PTI stock access changes | PTI decides | [V] Q-06 |
 | Recording PR, PO, goods receipt, financial posting, or payment | SAP S/4HANA remains the system of record. The hub manages supplier interaction, visibility, acknowledgements, collaboration data, and designated sourcing processes | [C] |
 | Raw material manufacturers | Listed as out of scope in the charter. Whether this excludes manufacturers only, while raw material distributors such as the pilot suppliers stay in, is open (section 9.4) | [C] |
-| Sourcing request intake (a planner or requester raising a request that Procurement turns into an event), saving a new RFx template in the hub, an admin screen for the question and term library, and an approval step before an event is sent | The buyer creates and sends events from the central library; the library changes through IT. Revisit when sourcing volume grows (section 3.6a of the requirements) | Owner, 2026-09-18 (A-04) |
+| Sourcing request intake (a planner or requester raising a request that Procurement turns into an event), an admin screen for the question library, term list and item-type spec templates, and an approval step before an event is sent | The buyer creates and sends events; the library changes through IT. Revisit when sourcing volume grows (section 3.6a of the requirements). Saving a template and copying a past event were on this list until 2026-09-21 and are now in the MVP (RFX-D2) | Owner, 2026-09-18 (A-04); amended 2026-09-21 |
+| RFx features beyond the MVP: Excel bid-sheet upload and download, weighted team scoring, knock-out and show-if questions, two-stage sealed bids, sample tracking after the event, AI drafting and AI extraction of supplier quotes, award optimisation, amendments that notify invitees | Leading-edge practice, kept for later ("RFx: later, not in the MVP" in section 5.2 of the requirements) | [P], 2026-09-21 |
 | Prototype features outside the Supplier Hub scope: marketplace, supplier discovery, storefront, should-cost model, purchase requisitions and intake review, plan grid, supply risk, contract pages | Parked and hidden during the pilot. The list and status are kept in `BUILD-GAP.md` | Owner, 2026-09-17 |
 | Indirect suppliers (5,000+) in the MVP rollout | Charter sizes the problem on 500+ direct and 5,000+ indirect suppliers; which are targeted in Phase 1 is TBD | [P]; [C] for counts |
 
 ### 2.4 Navigation and Screen Conventions
 
-The hub's menu follows its own sections (Order collaboration, Forecast, Inventory & capacity, Call-offs, Sourcing, Invoices, Performance), filtered by PTI role, with a task-list Home for PTI users and suppliers [V, owner 2026-09-17]. The menu per persona and the screen rules are defined once, in sections 3.7 and 3.8 of `SUPPLIER-HUB-REQUIREMENTS.md`.
+The hub's menu follows its own sections (Order collaboration, Forecast, Inventory & capacity, Call-offs, Sourcing, Invoices, Performance), filtered by PTI role; under Sourcing, RFI, RFQ and RFP are separate modules with their own menu items (owner 2026-09-21, RFX-D1), with a task-list Home for PTI users and suppliers [V, owner 2026-09-17]. The menu per persona and the screen rules are defined once, in sections 3.7 and 3.8 of `SUPPLIER-HUB-REQUIREMENTS.md`.
 
 ---
 
@@ -464,10 +486,13 @@ sequenceDiagram
 | T14 | Shipped heads-up late | Expected arrival after need date | Call-off At Risk | Flag visible to planner |
 | T15 | Commitment below forecast [P] | Commit 800 of 1,000 without reason | Blocked | Error names the missing reason |
 | T16 | RFQ from RFI | Create RFQ from closed RFI | Specs and invitees pre-filled | Fields match RFI; all editable |
+| T16a | RFQ quote missing a break | Supplier leaves the 50K price of item 2 empty | Quote refused | Refusal names item 2 |
+| T16b | Confidential RFQ | Supplier opens a confidential RFQ without accepting | No spec values, notes or files shown | Quote refused until the terms are accepted |
+| T16c | Template | Save an RFQ as a template, start a new RFQ from it | Items, breaks and questions carried | No invitees, no dates |
 | T17 | Supplier filter | Category + purchasing group | Matching active suppliers with OTIF | No blacklisted or deactivated supplier listed |
 | T18 | OTIF calculation [P formula] | Call-off received in full on need date | OTIF = 1 for that call-off | Dashboard reflects it for the period |
 | T19 | Duplicate invoice [P] | Same invoice number twice from one supplier | Second blocked | Error names duplicate |
-| T20 | Split award | Award 70% to A and 20% to B | Save blocked | Error names the 10% not awarded |
+| T20 | Split award | Award item 1: 70% to A and 20% to B | Save blocked | Error names item 1 and the 90% total |
 | T21 | Negotiation round | Round opened for suppliers A and B; supplier C tries to revise | C blocked; A and B revise | 2 quote versions kept for A and B |
 | T22 | Invoice price match | Invoice 1.5% above invoiced quantity × PO price | Exception: Price variance | Rule CR-12 applied |
 | T23 | Menu by role | Finance user signs in | Sees Home, Invoices | No Order collaboration or Call-offs sections |

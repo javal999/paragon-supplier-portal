@@ -47,7 +47,7 @@ Decided on 2026-09-21 and ready to build. Priority: first what protects money an
 
 | Priority | ID | Item | Rule | Size | Placeholder until decided |
 |---|---|---|---|---|---|
-| 1 | BL-33 to BL-39, BL-74 to BL-80, BL-83, BL-84 | The remaining "can start today" items in section 4, in the order listed there | — | — | — |
+| 1 | BL-33 to BL-35, BL-38, BL-39, BL-74 to BL-80, BL-83, BL-84, BL-93, BL-94, BL-96 to BL-98 | The remaining "can start today" items in section 4, in the order listed there | — | — | — |
 
 ### Build work waiting on a decision
 
@@ -67,10 +67,11 @@ The prototype holds everything in the browser. These need a real backend, which 
 | BL-24 | Real SAP integration: POs, goods receipts and invoice status arriving as messages, and PO responses, ASNs and invoices going back | L | REQ-E07-08, BL-11 |
 | BL-25 | Supplier API sync for stock, replacing the simulated Sync button | M | REQ-E08-02 |
 | BL-26 | Email delivery of alerts, reminders and escalations. Today they exist only inside the hub | M | REQ-E08-05, E06-03, E07-02 |
-| BL-27 | File storage, so RFI attachment questions, receipt-dispute attachments and the e-Faktur hold a real file rather than a file name | M | REQ-E03-02, E07-06, E07-07 |
+| BL-27 | File storage, so RFx attachments (buyer files on RFI, RFP and RFQ events and items, attachment answers, supplier quotation files; today kept for the session only), receipt-dispute attachments and the e-Faktur hold a real file rather than a file name | M | REQ-E03-02 to E03-04 (CE-11), E07-06, E07-07 |
 | BL-28 | Real sign-in for PTI staff and supplier users, replacing the demo persona switch | M | PRD 4.3 |
 | BL-29 | Scheduled jobs, so deadlines, escalations and reminders fire on a clock rather than being derived when a page is read | M | REQ-E07-02, E09-03 |
 | BL-30 | Durable storage, so what a user enters survives a reload | L | PRD section 4 |
+| BL-95 | Share saved RFx templates across the team. Templates are stored in each buyer's browser (`paragon.rfqTemplates`, `paragon.rfiTemplates`, `paragon.rfpTemplates`), so a colleague never sees them and clearing the browser loses them. Needs a store behind the backend (BL-30). CE-04 says a saved template is for every buyer | M | Requirements 3.6a CE-04 |
 
 ---
 
@@ -83,8 +84,6 @@ Nothing blocks these.
 | BL-33 | Sample data so a "Received without ASN" receipt exists | The code path is built and rendered but no sample data produces it, so nobody can see it | S | REQ-E07-06 |
 | BL-34 | One "as of" date across the app: the order pages read the demo clock, other pages read today. Also seen: a recorded award and the admin change history are dated with the real clock while the page says "As of 31 Aug 2026" | Two clocks in one demo confuse a reviewer | S | U-12 in `BUILD-GAP.md` |
 | BL-35 | An RFI and an RFP awaiting an answer from the main demo supplier | Today that starting point sits on a different supplier, so the main walkthrough cannot show it | S | Phase 6a note |
-| BL-36 | Option editor for one-off RFI questions, so a buyer can add single-choice and multiple-choice questions, not only the other five types | The template supports them; the one-off form does not | S | REQ-E03-02 |
-| BL-37 | Split-award entry across several items in one pass | The rule and the record are per item; the form handles one item at a time | M | REQ-E03-05 |
 | BL-38 | Supplier call-offs table: 10 columns still scroll sideways at 1280px | Same problem the Order summary solved by grouping | S | Phase 3 note |
 | BL-39 | Non-conformance and complaint tracking (E10.02), the part of Supplier Performance never detailed | Named in the deck as MVP, still a stub | M | Requirements section 6 |
 | BL-74 | Goods receipt GR-2026-015 shows quality result "Approved" while its status reads "Partially Approved" | A reviewer sees two answers on one receipt | S | REQ-E07-06 |
@@ -95,6 +94,11 @@ Nothing blocks these.
 | BL-79 | Retire superseded supply-data-collaboration code: the hidden chase page counts a 7-day calendar-day threshold nobody decided (`parseGrid` was removed with BL-73) | Dead code and a rule nobody decided | S | BUILD-GAP section 6 |
 | BL-80 | A value-only PO line (BL-49) shows quantity 0 on PO and ASN screens outside the call-off pages | Only the call-off screens know the line has no quantity | S | CR-04 |
 | BL-83 | Text run-ons: Indonesian "closing soon" pill joins its date ("Segera ditutup02 Sep 2026"); the in-transit read-out reads "0nothing in transit"; `formatNumber` uses the Indonesian thousands dot in the English UI outside the Stock page | Small display defects seen in the BL-72/73 check | S | SC conventions |
+| BL-93 | Edit a draft RFI, RFQ or RFP. No surface edits a Draft event: the RFQ panel's "Continue draft" button was withdrawn because nothing behind it existed, and the RFI and RFP pages offer only Send. Today the only way to change a draft is to copy it into a new event | A buyer who saves a draft cannot finish it | M | REQ-E03-02 BR-16, E03-03 BR-24, E03-04 BR-13 |
+| BL-94 | Oslo demo: sup-007, the main supplier persona, fails the compliance gate on RFQ-2026-021 (OTIF 50% under the 80% placeholder), so it can quote but never be awarded a share. Give the persona a passing record on an Oslo-shaped RFQ, or add one it passes | The main walkthrough cannot show the persona winning part of a split award | S | REQ-E03-05; `BUILD-GAP.md` 3.3 |
+| BL-96 | RFP → RFQ pre-fill from the chosen options, responders as invitees (RFX-D3). **In progress (B5)**; the mapping `prefillRfqItemsFromRfp` exists without a caller | The last of the four allowed links | S | REQ-E03-03 BR-06, AC-14 |
+| BL-97 | Label RFQ prices "Firm" wherever they are shown; RFI and RFP prices already read "Indicative" | CE-10 asks for both labels | S | REQ-E03-03 BR-20 |
+| BL-98 | "Created from …" on every event with a source: the RFQ event page shows only an RFI source, by its internal id (`rfi-002`) rather than its number; a copy, a template or a requisition source is recorded but not shown | CE-09 | S | Requirements 3.6a CE-09 |
 | BL-84 | Accessibility items left by BL-31: field errors not tied to their field (many forms); h1 jumping to h3 on marketplace, discovery, storefront, WhatsApp demo, supplier comm hub and shipments; unnamed controls in the contract wizard obligation grid and WhatsApp demo; top-bar menu button does nothing and the notification count is not in its name; login contrast and missing h1; 404 title in English only; then a session with a real screen reader | Needed before UAT (SC-07) | M | `BUILD-GAP.md` "Accessibility (BL-31)" |
 
 ---
@@ -105,6 +109,14 @@ Nothing blocks these.
 |---|---|---|---|
 | BL-40 | Foundation epics E01 and E02: supplier registration, onboarding, master data, and the PROCIO migration | Foundation team | Requirements 5.1, `prompts/foundation-requirements-contribution.md` |
 | BL-41 | Sourcing request intake: a planner or requester raising a request that Procurement turns into an event | Owner ruled it out of the MVP (A-04); revisit when sourcing volume grows | Requirements 3.6a |
+| BL-85 | Excel bid-sheet download and upload for RFQs, with per-line validation (the comparison already exports a CSV). Later, not in the MVP (requirements 5.2) | Build team, after the MVP | Requirements 5.2 and 8.3 |
+| BL-86 | Weighted scoring by an evaluator team; knock-out questions; show-if (conditional) questions. Later, not in the MVP | Build team, after the MVP | Requirements 5.2 and 8.3 |
+| BL-87 | Two-stage sealed bids: technical envelope before commercial. Later, not in the MVP | Build team, after the MVP | Requirements 5.2 and 8.3 |
+| BL-88 | Sample tracking after the event: requested, due, received, approved. Later, not in the MVP. No platform has a native object for it | Build team, after the MVP | Requirements 5.2 and 8.3 |
+| BL-89 | AI drafting of an event from an email or brief; AI extraction of a supplier's PDF or Excel quote into the grid, confirmed by the buyer. Later, not in the MVP; Phase 3 "AI for sourcing" (PRD 3) | Build team, after the MVP | Requirements 5.2 and 8.3 |
+| BL-90 | Award optimisation: scenarios with constraints such as maximum suppliers or capacity. Later, not in the MVP | Build team, after the MVP | Requirements 5.2 and 8.3 |
+| BL-91 | Admin screen for the RFx libraries: question library, term list, item-type spec templates (CE-05). Later, not in the MVP; Procurement asks IT meanwhile. Same family as BL-32 | Build team, after the MVP | Requirements 3.6a |
+| BL-92 | Amendments to a live RFx event that notify invitees and flag responses to revisit (deadline extension exists). Later, not in the MVP | Build team, after the MVP | Requirements 5.2 and 8.3 |
 | BL-42 | Phase 2 epics: contract management (E04), catalog management (E05), reporting and analytics (E11), API shipment aggregator (E13.02), supplier quality | Per the deck and charter | Requirements section 6 |
 
 ---
@@ -152,5 +164,7 @@ Nothing blocks these.
 | BL-53 | KPI definitions on the performance pages | 2026-09-21 | Built: OTIF and CFOT definitions as calculated (window, early, grain, date change, in full) on both performance pages; targets read "Baseline period — no target yet". One difference from the requirements is stated as the code does it and left for a decision: a PO counter-offer moves the CFOT date as soon as it is sent |
 | BL-72 | "ROUND {{ROUND}}" on the RFQ event page | 2026-09-21 | Fixed: a header key for the column; one more un-interpolated string found and fixed (supplier application toast); guard test over the tree |
 | BL-73 | Second stock entry path | 2026-09-21 | Fixed: the supplier and PTI chat triage pages pre-fill the Stock page's own entry form (same fields, checks and verb); a PTI recording shows "Entered by PTI"; the old grid parser and hooks removed |
+| BL-36 | Option editor for RFI questions | 2026-09-21 | Built in PR #25: single-choice and multiple-choice questions written in an option editor (at least 2 options, none blank or repeated), with the same rule in the editor, the create verb and the template store; part of 11 question types |
+| BL-37 | Split award across several items in one pass | 2026-09-21 | Built in PR #26: a tiered RFQ is awarded per item by % share in one form at one evaluation break, each item totalling 100%, through the existing award verb; a split marks every named quote Awarded. Legacy single-price RFQs keep their earlier form |
 | BL-31 | Accessibility pass | 2026-09-21 | Done: 68 pages audited by keyboard and automated checks against WCAG 2.1 AA; keyboard-operable rows, one focus contract for every drawer and dialog, skip link, named nav and search, 39 form labels tied to fields, text contrast raised to AA; guard tests. What remains is BL-84 |
 | BL-32 | Admin screen for the remaining configuration | 2026-09-22 | Built: tolerances and rule values, alert thresholds and stale periods (default and per supplier × material), and reason codes (add, rename, retire; never deleted) on `/buyer/admin`, each change governed, validated, logged and resettable; the rules read the setting when they run |
