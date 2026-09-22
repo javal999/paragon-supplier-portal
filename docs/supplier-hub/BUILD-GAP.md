@@ -97,6 +97,7 @@ Everything runs on sample data held in the browser. There is no backend, no SAP 
 | X-38 | RFQ comparison per item at an evaluation break and per-item split award (BL-37, RFX-D5); CSV export | Done (PR #26) |
 | X-39 | RFQ supplier response: intent and decline, confidentiality gate, quote grid, revisions, clarifications, per-break negotiation rounds | Done (PR #27) |
 | X-40 | RFP → RFQ pre-fill from the chosen options, responders as invitees (REQ-E03-03 BR-06) | In progress (B5) |
+| X-41 | Admin screen for rule values, alert thresholds, stale periods (default and per supplier × material) and reason codes (BL-32): each change governed (`t_setting_set`, reason-code verbs), refused when nonsensical, logged old → new, resettable to default, and read by the rules when they run. Placeholder values (BL-54, BL-55, BL-56) are labelled as such. An invoice whose recorded match differs from the values in force says so | Done |
 
 ### 2.1 Navigation and screens
 
@@ -118,7 +119,7 @@ Everything runs on sample data held in the browser. There is no backend, no SAP 
 
 ## 3. Where the calculations live
 
-The `CR-` rules are implemented in the hub's own modules and covered by their own tests. The prototype sources they were taken from are recorded in the requirements' `[Code]` tags.
+The `CR-` rules are implemented in the hub's own modules and covered by their own tests. The prototype sources they were taken from are recorded in the requirements' `[Code]` tags. **Since BL-32 the values are changed on the admin screen** (`/buyer/admin`: Tolerances and rule values, Alert thresholds and stale periods, Reason codes, Working calendar, 3PL list), through the governed verb `t_setting_set`; the config modules below hold the defaults and read the setting each time a rule runs.
 
 | Rules | Module |
 |---|---|
@@ -254,7 +255,6 @@ Sample data so a planner can see every CR-24 outcome on `/buyer/inventory`, `/su
 - **RFx later, not in the MVP** (requirements section 5.2): Excel bid upload and download (BL-85), weighted team scoring with knock-out and show-if questions (BL-86), two-stage sealed bids (BL-87), sample tracking after the event (BL-88), AI drafting and AI extraction of supplier quotes (BL-89), award optimisation (BL-90), an admin screen for the RFx libraries (BL-91), amendments that notify invitees (BL-92). The comparison exports a CSV today; nothing is uploaded.
 - **A backend.** No database, no sign-in for real users, no scheduled jobs; changes are lost on reload. The pilot needs all of these (PRD section 4).
 - **Accessibility testing with assistive technology** (H-03): the BL-31 pass below was done with automated checks and the keyboard; no session with a real screen reader or real users has been run.
-- **The rest of the administration screen** (BL-32): reason codes, tolerances, alert thresholds and stale periods still live in configuration files. The working calendar and the 3PL list are its first two pages and are built.
 - **KPI calculation aligned with the agreed definitions** (BL-66, BL-82): the performance pages state what the code measures; five differences from REQ-E10-01 wait on a decision.
 - **Known defects found in the 2026-09-21 builds**: BL-72 to BL-80 in the backlog.
 - **The real SAP factory calendar.** The calendar load is simulated sample data; the administrator's rulings are kept in the browser only.

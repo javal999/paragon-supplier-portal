@@ -7,7 +7,7 @@ import type { StatusTone } from '../../lib/statusTone';
 import type { Invoice, InvoiceLine, InvoiceMatchStatus } from '../../services/data/types';
 import { normalizeQty } from '../../lib/localeNumber';
 import {
-  INVOICE_PRICE_TOLERANCE,
+  invoicePriceTolerance,
   checkInvoicePrices,
   type InvoiceLinePriceCheck,
   type PriceCheck,
@@ -50,8 +50,9 @@ export const MatchResult: React.FC<{ status: InvoiceMatchStatus }> = ({ status }
       <MatchPill status={status} />
       <p className="mt-1 text-xs text-text-secondary">
         {t(`fc.inv.match.explain.${explain}`, {
-          pct: INVOICE_PRICE_TOLERANCE.standardPct,
-          cap: fmtIdr(INVOICE_PRICE_TOLERANCE.standardCapIdr),
+          contractPct: invoicePriceTolerance().contractPricePct,
+          pct: invoicePriceTolerance().standardPct,
+          cap: fmtIdr(invoicePriceTolerance().standardCapIdr),
         })}
       </p>
     </section>
@@ -80,11 +81,11 @@ export const PriceCheckCell: React.FC<{
     check.rule === 'contract'
       ? t('fc.inv.price.rule.contract', {
           contract: contractNumber ?? '',
-          pct: INVOICE_PRICE_TOLERANCE.contractPricePct,
+          pct: invoicePriceTolerance().contractPricePct,
         })
       : t('fc.inv.price.rule.standard', {
-          pct: INVOICE_PRICE_TOLERANCE.standardPct,
-          cap: fmtIdr(INVOICE_PRICE_TOLERANCE.standardCapIdr),
+          pct: invoicePriceTolerance().standardPct,
+          cap: fmtIdr(invoicePriceTolerance().standardCapIdr),
         });
   return (
     <div data-testid={testId}>
@@ -95,9 +96,9 @@ export const PriceCheckCell: React.FC<{
           percent: check.percent === null ? '' : fmtPct(check.percent),
           pct:
             check.rule === 'contract'
-              ? INVOICE_PRICE_TOLERANCE.contractPricePct
-              : INVOICE_PRICE_TOLERANCE.standardPct,
-          cap: fmtIdr(INVOICE_PRICE_TOLERANCE.standardCapIdr),
+              ? invoicePriceTolerance().contractPricePct
+              : invoicePriceTolerance().standardPct,
+          cap: fmtIdr(invoicePriceTolerance().standardCapIdr),
         })}
       </div>
     </div>
@@ -121,7 +122,14 @@ export const InvoiceLinesSection: React.FC<{
   invoiceDate: string | null;
   taxInvoiceFile: string | null;
   amount?: number;
-}> = ({ lines, invoiceDate, taxInvoiceFile, amount }) => {
+  /**
+   * The match result RECORDED when the invoice was checked (BL-32). The line
+   * checks above are re-read under the tolerances in force NOW, so when the
+   * administrator has changed a tolerance since, the two can disagree — and the
+   * page says so rather than showing two answers without comment.
+   */
+  matchStatus?: InvoiceMatchStatus;
+}> = ({ lines, invoiceDate, taxInvoiceFile, amount, matchStatus }) => {
   const { t } = useTranslation();
   const priced =
     amount === undefined
@@ -207,6 +215,12 @@ export const InvoiceLinesSection: React.FC<{
           <div className="text-text-tertiary">{t('fc.inv.price.unsplit.note')}</div>
         </div>
       )}
+      {priced && lines.length > 0 && matchStatus !== undefined &&
+        ((matchStatus === 'Price Variance' && !priced.held) || (matchStatus === 'Matched' && priced.held)) && (
+          <p className="mt-2 text-xs text-warning-hover" data-testid="invoice-tolerance-changed">
+            {t(priced.held ? 'fc.inv.price.changedSince.nowHeld' : 'fc.inv.price.changedSince.nowPasses')}
+          </p>
+        )}
       {(invoiceDate || taxInvoiceFile) && (
         <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
           <div>

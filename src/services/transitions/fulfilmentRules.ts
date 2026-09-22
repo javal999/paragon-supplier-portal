@@ -128,11 +128,17 @@ export function asnSubmitRefusal(fields: {
 /**
  * CR-25 — what a received quantity means against what was shipped:
  *   exact       — received exactly what was shipped
- *   over        — any quantity above what was shipped (flagged: a decision, not a default)
+ *   overWithin  — over by no more than the over-delivery tolerance (not flagged).
+ *                 Unreachable at the decided 0%; exists because the
+ *                 administrator can set more (BL-32), and "received as shipped"
+ *                 would then be a false sentence about a line that was not
+ *   over        — over by more than the over-delivery tolerance; at the decided
+ *                 0%, any quantity above what was shipped (flagged: a decision,
+ *                 not a default)
  *   shortWithin — short by no more than the material's tolerance (closes, not flagged)
  *   shortOver   — short by more than the tolerance (flagged; the receipt stays open)
  */
-export type ReceiptQtyOutcome = 'exact' | 'over' | 'shortWithin' | 'shortOver';
+export type ReceiptQtyOutcome = 'exact' | 'overWithin' | 'over' | 'shortWithin' | 'shortOver';
 
 /**
  * CR-25 for one line. PURE. The percentage test is written as
@@ -142,7 +148,7 @@ export function receiptQtyOutcome(materialCode: string, shipped: number, receive
   const difference = received - shipped;
   if (difference === 0) return 'exact';
   const tol = receiptQtyToleranceFor(materialCode);
-  if (difference > 0) return difference * 100 <= shipped * tol.overPct ? 'exact' : 'over';
+  if (difference > 0) return difference * 100 <= shipped * tol.overPct ? 'overWithin' : 'over';
   return -difference * 100 <= shipped * tol.shortPct ? 'shortWithin' : 'shortOver';
 }
 

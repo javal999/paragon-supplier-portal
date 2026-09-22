@@ -25,6 +25,7 @@ import {
   trackingUrlFor,
   type ThreePl,
 } from '../../services/transitions/threePlStore';
+import AdminSectionNav from './AdminSectionNav';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ADMINISTRATION · 3PL TRACKING LINKS — BL-51, REQ-E07-04 BR-05 (ADM persona).
@@ -114,6 +115,8 @@ const AdminThreePls: React.FC = () => {
         {/* The 3PLs and their addresses are illustrative (SC-04). */}
         <SampleDataBadge className="ml-3 align-middle" />
       </PageMetaLine>
+
+      <AdminSectionNav />
 
       {/* ── The one entrance to the verb ─────────────────────────────────── */}
       {held ? (

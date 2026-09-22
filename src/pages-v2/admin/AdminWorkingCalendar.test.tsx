@@ -3,6 +3,7 @@ import { screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { renderWithProviders, BUYER } from '../../test/test-utils';
 import { workingCalendarStore } from '../../services/transitions/workingCalendarStore';
 import AdminWorkingCalendar from './AdminWorkingCalendar';
+import { ADMIN_SECTIONS } from './adminSections';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // BL-50 · the administration page for the hub's working calendar.
@@ -20,9 +21,14 @@ describe('BL-50 · AdminWorkingCalendar', () => {
     const independence = screen.getByTestId('admin-cal-day-2026-08-17');
     expect(within(independence).getByText('SAP factory calendar')).toBeTruthy();
     expect(within(independence).getByText('Non-working')).toBeTruthy();
-    // Only built admin sections are listed — the rest are named in words.
-    expect(screen.getByTestId('admin-section-working-calendar')).toBeTruthy();
-    expect(screen.getByTestId('admin-sections-later').textContent).toMatch(/not built yet/);
+    // ⚠️ PREMISE CHANGED AT BL-32: the page used to list only itself and name
+    // the unbuilt sections in words ("not built yet"). Every section is built
+    // now, so every section in ADMIN_SECTIONS is a tab here and the sentence
+    // is gone — a sentence promising sections that exist would be as false as
+    // a tab for one that does not.
+    for (const s of ADMIN_SECTIONS) expect(screen.getByTestId(`admin-section-${s.id}`)).toBeTruthy();
+    expect(screen.getByTestId('admin-section-tolerances')).toBeTruthy();
+    expect(screen.queryByTestId('admin-sections-later')).toBeNull();
   });
 
   it('BL50-PAGE-02 · a seat holding calendar:set gets the one form; a planner gets the wait, not the form', () => {

@@ -1,0 +1,331 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// THE HUB'S RULE VALUES — ONE REGISTRY (BL-32, REQ-E08-05 BR-03, §3.6).
+//
+// Section 3.6 says ADM can change every threshold; until BL-32 each value was a
+// module constant and a change needed a developer. This file is the ONE list
+// of values the Hub administrator may change, with, for each:
+//
+//   · its DEFAULT — the value the owner decided on 2026-09-21, or the named
+//     placeholder while a decision is open (BL-54, BL-55, BL-56). This is the
+//     only place a default is written; "reset to default" writes it back
+//     through the same verb as any other change;
+//   · its UNIT and its bounds, and the ORDER RULES that tie values together
+//     (a band that would come out empty or inverted is refused by name);
+//   · the RULE it belongs to (`CR-nn`) and the page section it is shown in.
+//
+// ⚠️ **PURE. NO STORE, NO CLOCK, NO IMPORTS FROM THE CONFIG MODULES.** The
+// config modules read the value in force from `hubSettingsStore.ts`, which
+// reads this registry; an import back from a config module would be a cycle
+// and, worse, a second place a default could be written.
+//
+// ⚠️ **THE POPULATION IS DERIVED, NOT LISTED FROM MEMORY.** Every value below
+// was a constant exported by a config module (`callOffTolerance.ts`,
+// `fulfilmentConfig.ts`, `forecastConfig.ts`, `inventoryConfig.ts`,
+// `complianceGateConfig.ts`). `hubSettings.bl32.test.ts` scans those modules,
+// asserts every former constant is gone, and pins the readers of each value.
+// What stayed a constant, and why, is written beside it in its module.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** The admin page a value is changed on. */
+export type HubSettingSection = 'tolerances' | 'alerts';
+
+/** How a value is read and shown. */
+export type HubSettingUnit =
+  | 'pct' // a percentage, 0–100 unless the key says otherwise
+  | 'days' // calendar days
+  | 'workingDays' // working days on the hub calendar
+  | 'idr' // whole rupiah
+  | 'multiple' // × a lead time
+  | 'boolean';
+
+/** Who decides a value that is still a placeholder (the owner i18n key suffix). */
+export type PlaceholderOwner = 'finance' | 'procurement' | 'warehousePlanner';
+
+export interface HubSettingDef {
+  readonly key: string;
+  readonly section: HubSettingSection;
+  /** The requirement rule the value belongs to. */
+  readonly rule: string;
+  readonly unit: HubSettingUnit;
+  /** A whole number only. */
+  readonly integer?: boolean;
+  readonly min?: number;
+  readonly max?: number;
+  /** A strict lower bound (the value must be ABOVE it). */
+  readonly above?: number;
+  readonly defaultValue: number | boolean;
+  /** Set while the owner has not decided: the page says so, with the backlog id. */
+  readonly placeholder?: { readonly owner: PlaceholderOwner; readonly backlogId: string };
+}
+
+// ── The values ────────────────────────────────────────────────────────────────
+
+const DEFS = [
+  // CR-05 — call-off quantity and date tolerance (REQ-E09-03, BL-47).
+  { key: 'callOff.overPct', section: 'tolerances', rule: 'CR-05', unit: 'pct', min: 0, max: 100, defaultValue: 5 },
+  {
+    key: 'callOff.earlyAllowanceDays', section: 'tolerances', rule: 'CR-05', unit: 'days', integer: true,
+    min: 0, max: 60, defaultValue: 0, placeholder: { owner: 'warehousePlanner', backlogId: 'BL-56' },
+  },
+  // REQ-E09-03 BR-05 — the supplier confirms a released call-off within 1 working day.
+  {
+    key: 'callOff.confirmWorkingDays', section: 'tolerances', rule: 'REQ-E09-03', unit: 'workingDays', integer: true,
+    min: 1, max: 20, defaultValue: 1,
+  },
+  // CR-12 — invoice price match (REQ-E07-07, BL-44).
+  { key: 'invoice.contractPricePct', section: 'tolerances', rule: 'CR-12', unit: 'pct', min: 0, max: 100, defaultValue: 0 },
+  { key: 'invoice.standardPct', section: 'tolerances', rule: 'CR-12', unit: 'pct', min: 0, max: 100, defaultValue: 2 },
+  {
+    key: 'invoice.standardCapIdr', section: 'tolerances', rule: 'CR-12', unit: 'idr', integer: true,
+    min: 0, max: 1_000_000_000_000, defaultValue: 500_000, placeholder: { owner: 'finance', backlogId: 'BL-54' },
+  },
+  // CR-25 — goods receipt quantity tolerance (REQ-E07-06, BL-45). The default
+  // for every material; per-material values stay in `fulfilmentConfig.ts`.
+  { key: 'receipt.overPct', section: 'tolerances', rule: 'CR-25', unit: 'pct', min: 0, max: 100, defaultValue: 0 },
+  { key: 'receipt.shortPct', section: 'tolerances', rule: 'CR-25', unit: 'pct', min: 0, max: 100, defaultValue: 2 },
+  // CR-21 — forecast commitment tolerance: the share below forecast accepted
+  // without the planner, per zone.
+  { key: 'commitment.firmShortfallPct', section: 'tolerances', rule: 'CR-21', unit: 'pct', min: 0, max: 100, defaultValue: 0 },
+  { key: 'commitment.tradeOffShortfallPct', section: 'tolerances', rule: 'CR-21', unit: 'pct', min: 0, max: 100, defaultValue: 10 },
+  // CR-26 — forecast commitment deadlines, in working days after publication.
+  {
+    key: 'commitment.firmDeadlineWorkingDays', section: 'tolerances', rule: 'CR-26', unit: 'workingDays', integer: true,
+    min: 1, max: 20, defaultValue: 1,
+  },
+  {
+    key: 'commitment.otherDeadlineWorkingDays', section: 'tolerances', rule: 'CR-26', unit: 'workingDays', integer: true,
+    min: 1, max: 20, defaultValue: 3,
+  },
+  // CR-22 — commitment ÷ forecast gap colours, as a percentage of forecast.
+  { key: 'gap.greenFromPct', section: 'tolerances', rule: 'CR-22', unit: 'pct', min: 1, max: 200, defaultValue: 100 },
+  { key: 'gap.amberFromPct', section: 'tolerances', rule: 'CR-22', unit: 'pct', min: 0, max: 200, defaultValue: 80 },
+  // CR-23 — the compliance gate's open values (A-05).
+  {
+    key: 'gate.minOtifPct', section: 'tolerances', rule: 'CR-23', unit: 'pct', min: 0, max: 100, defaultValue: 80,
+    placeholder: { owner: 'procurement', backlogId: 'BL-55' },
+  },
+  {
+    key: 'gate.noHistoryPasses', section: 'tolerances', rule: 'CR-23', unit: 'boolean', defaultValue: true,
+    placeholder: { owner: 'procurement', backlogId: 'BL-55' },
+  },
+
+  // CR-24 — risk class against the supplier lead time (REQ-E08-05 BR-02).
+  {
+    key: 'risk.mediumBelowMultiple', section: 'alerts', rule: 'CR-24', unit: 'multiple', above: 1, max: 10,
+    defaultValue: 1.5,
+  },
+  // CR-02 — day bands, the fallback where no lead time is on record.
+  { key: 'bands.criticalBelowDays', section: 'alerts', rule: 'CR-02', unit: 'days', integer: true, min: 1, max: 365, defaultValue: 14 },
+  { key: 'bands.warningBelowDays', section: 'alerts', rule: 'CR-02', unit: 'days', integer: true, min: 1, max: 365, defaultValue: 30 },
+  { key: 'bands.healthyUpToDays', section: 'alerts', rule: 'CR-02', unit: 'days', integer: true, min: 1, max: 365, defaultValue: 60 },
+  // CR-03 — supplier coverage, as a percentage of firm demand.
+  { key: 'coverage.coveredFromPct', section: 'alerts', rule: 'CR-03', unit: 'pct', min: 1, max: 500, defaultValue: 100 },
+  { key: 'coverage.atRiskFromPct', section: 'alerts', rule: 'CR-03', unit: 'pct', min: 0, max: 500, defaultValue: 80 },
+  // REQ-E08-01 — the stale period: a supplier figure older than this is stale.
+  { key: 'stale.defaultDays', section: 'alerts', rule: 'REQ-E08-01', unit: 'days', integer: true, min: 1, max: 365, defaultValue: 7 },
+] as const satisfies readonly HubSettingDef[];
+
+/** A fixed setting key. Stale-period overrides are keyed separately (below). */
+export type HubSettingKey = (typeof DEFS)[number]['key'];
+
+/** The numeric keys — every key except the one boolean. */
+export type NumericSettingKey = Exclude<HubSettingKey, 'gate.noHistoryPasses'>;
+
+export const HUB_SETTINGS: readonly HubSettingDef[] = Object.freeze(DEFS.map((d) => Object.freeze({ ...d })));
+
+const BY_KEY = new Map<string, HubSettingDef>(HUB_SETTINGS.map((d) => [d.key, d]));
+
+export const hubSettingDef = (key: string): HubSettingDef | undefined => BY_KEY.get(key);
+
+export const isHubSettingKey = (key: unknown): key is HubSettingKey => typeof key === 'string' && BY_KEY.has(key);
+
+// ── Stale-period overrides per supplier × material (REQ-E08-01 edge case) ────
+
+/**
+ * An override of the stale period for one supplier × material: the data-update
+ * SLA "varies by material and supplier, because each moves differently".
+ * Keyed `stale.override:<supplierId>|<materialCode>`; its value is whole days,
+ * or `null` for "no override — the default stale period applies".
+ */
+export const STALE_OVERRIDE_PREFIX = 'stale.override:';
+const STALE_OVERRIDE_KEY = /^stale\.override:(sup-[a-z0-9-]+)\|([A-Z0-9][A-Z0-9-]*)$/;
+
+export const staleOverrideKey = (supplierId: string, materialCode: string): string =>
+  `${STALE_OVERRIDE_PREFIX}${supplierId}|${materialCode}`;
+
+/** The supplier and material an override key names, or null when it is not one. */
+export function parseStaleOverrideKey(key: unknown): { supplierId: string; materialCode: string } | null {
+  if (typeof key !== 'string') return null;
+  const m = STALE_OVERRIDE_KEY.exec(key);
+  return m ? { supplierId: m[1], materialCode: m[2] } : null;
+}
+
+/** Bounds of an override: the same as the default stale period. */
+export const STALE_OVERRIDE_BOUNDS = Object.freeze({ min: 1, max: 365 });
+
+/**
+ * THE SHIPPED OVERRIDES — sample master data (was `UPDATE_SLA_OVERRIDES` in
+ * `inventoryConfig.ts`). API-connected suppliers sync daily, so their stale
+ * period is 1 day; sup-007's PET bottles are reviewed every 3 days. Resetting
+ * one of these writes it back; resetting any other override removes it.
+ */
+export const SEEDED_STALE_OVERRIDES: Readonly<Record<string, number>> = Object.freeze({
+  [staleOverrideKey('sup-001', 'RM-COCO-8200')]: 1,
+  [staleOverrideKey('sup-001', 'RM-LAURIC-7200')]: 1,
+  [staleOverrideKey('sup-003', 'FR-WARD-4410')]: 1,
+  [staleOverrideKey('sup-003', 'FR-EMIN-4420')]: 1,
+  [staleOverrideKey('sup-007', 'PK-PETB-8801')]: 3,
+  [staleOverrideKey('sup-007', 'PK-PETB-8802')]: 3,
+});
+
+// ── Values ────────────────────────────────────────────────────────────────────
+
+/** A stored value: a number, a yes/no, or (overrides only) "no override". */
+export type HubSettingValue = number | boolean | null;
+
+/** Any key the verb can address: a fixed key or a well-formed override key. */
+export const isAddressableSettingKey = (key: unknown): key is string =>
+  isHubSettingKey(key) || parseStaleOverrideKey(key) !== null;
+
+/** Which page section a key's changes are shown in. */
+export function sectionOfKey(key: string): HubSettingSection | null {
+  if (parseStaleOverrideKey(key)) return 'alerts';
+  return hubSettingDef(key)?.section ?? null;
+}
+
+/** The default of any addressable key (an override with no seed: `null`). */
+export function defaultOfKey(key: string): HubSettingValue | undefined {
+  const def = hubSettingDef(key);
+  if (def) return def.defaultValue;
+  if (parseStaleOverrideKey(key)) return SEEDED_STALE_OVERRIDES[key] ?? null;
+  return undefined;
+}
+
+/** The value of every fixed key, and the override map, as one state. */
+export interface HubSettingState {
+  readonly values: Readonly<Record<string, number | boolean>>;
+  readonly staleOverrides: Readonly<Record<string, number>>;
+}
+
+export const DEFAULT_SETTING_STATE: HubSettingState = Object.freeze({
+  values: Object.freeze(Object.fromEntries(HUB_SETTINGS.map((d) => [d.key, d.defaultValue]))),
+  staleOverrides: SEEDED_STALE_OVERRIDES,
+});
+
+/** The state with one key changed. Assumes the change was checked. */
+export function withSetting(state: HubSettingState, key: string, value: HubSettingValue): HubSettingState {
+  if (parseStaleOverrideKey(key)) {
+    const staleOverrides = { ...state.staleOverrides };
+    if (value === null) delete staleOverrides[key];
+    else staleOverrides[key] = value as number;
+    return { values: state.values, staleOverrides };
+  }
+  return { values: { ...state.values, [key]: value as number | boolean }, staleOverrides: state.staleOverrides };
+}
+
+/** The value a key has in a state (an override with none: `null`). */
+export function valueIn(state: HubSettingState, key: string): HubSettingValue | undefined {
+  if (parseStaleOverrideKey(key)) return state.staleOverrides[key] ?? null;
+  return state.values[key];
+}
+
+// ── The rule a change must pass — the verb's policy AND the store's re-read ──
+
+const num = (state: HubSettingState, key: HubSettingKey): number => state.values[key] as number;
+
+/**
+ * THE ORDER RULES. Each names the keys it ties together and the sentence a
+ * refusal says. Checked on the state AFTER the change, so a change that would
+ * leave a band empty or inverted is refused whichever end it moves.
+ */
+const ORDER_RULES: readonly {
+  readonly keys: readonly HubSettingKey[];
+  readonly holds: (s: HubSettingState) => boolean;
+  readonly says: (s: HubSettingState) => string;
+}[] = [
+  {
+    keys: ['invoice.contractPricePct', 'invoice.standardPct'],
+    holds: (s) => num(s, 'invoice.contractPricePct') <= num(s, 'invoice.standardPct'),
+    says: (s) =>
+      `a contract-price line may not be allowed more than a line without one (contract ${num(s, 'invoice.contractPricePct')}% > other lines ${num(s, 'invoice.standardPct')}%)`,
+  },
+  {
+    keys: ['commitment.firmShortfallPct', 'commitment.tradeOffShortfallPct'],
+    holds: (s) => num(s, 'commitment.firmShortfallPct') <= num(s, 'commitment.tradeOffShortfallPct'),
+    says: (s) =>
+      `Firm periods may not accept a larger shortfall than Trade-off periods (Firm ${num(s, 'commitment.firmShortfallPct')}% > Trade-off ${num(s, 'commitment.tradeOffShortfallPct')}%)`,
+  },
+  {
+    keys: ['commitment.firmDeadlineWorkingDays', 'commitment.otherDeadlineWorkingDays'],
+    holds: (s) => num(s, 'commitment.firmDeadlineWorkingDays') <= num(s, 'commitment.otherDeadlineWorkingDays'),
+    says: (s) =>
+      `the Firm deadline may not be later than the Trade-off and Forecast deadline (${num(s, 'commitment.firmDeadlineWorkingDays')} > ${num(s, 'commitment.otherDeadlineWorkingDays')} working days)`,
+  },
+  {
+    keys: ['gap.amberFromPct', 'gap.greenFromPct'],
+    holds: (s) => num(s, 'gap.amberFromPct') < num(s, 'gap.greenFromPct'),
+    says: (s) =>
+      `amber must start below green (amber from ${num(s, 'gap.amberFromPct')}%, green from ${num(s, 'gap.greenFromPct')}%)`,
+  },
+  {
+    keys: ['bands.criticalBelowDays', 'bands.warningBelowDays'],
+    holds: (s) => num(s, 'bands.criticalBelowDays') < num(s, 'bands.warningBelowDays'),
+    says: (s) =>
+      `bands out of order: Critical must end below where Warning ends (Critical below ${num(s, 'bands.criticalBelowDays')}, Warning below ${num(s, 'bands.warningBelowDays')} days)`,
+  },
+  {
+    keys: ['bands.warningBelowDays', 'bands.healthyUpToDays'],
+    holds: (s) => num(s, 'bands.warningBelowDays') <= num(s, 'bands.healthyUpToDays'),
+    says: (s) =>
+      `bands out of order: Healthy would be empty (Warning below ${num(s, 'bands.warningBelowDays')}, Healthy up to ${num(s, 'bands.healthyUpToDays')} days)`,
+  },
+  {
+    keys: ['coverage.atRiskFromPct', 'coverage.coveredFromPct'],
+    holds: (s) => num(s, 'coverage.atRiskFromPct') < num(s, 'coverage.coveredFromPct'),
+    says: (s) =>
+      `At risk must start below Covered (At risk from ${num(s, 'coverage.atRiskFromPct')}%, Covered from ${num(s, 'coverage.coveredFromPct')}%)`,
+  },
+];
+
+/** Why a number is outside a definition's bounds, or null. */
+function boundsRefusal(label: string, value: number, def: Pick<HubSettingDef, 'integer' | 'min' | 'max' | 'above'>): string | null {
+  if (def.integer && !Number.isInteger(value)) return `${label} must be a whole number, got ${value}`;
+  if (def.min !== undefined && value < def.min) {
+    return def.min === 0 ? `${label} cannot be negative, got ${value}` : `${label} must be at least ${def.min}, got ${value}`;
+  }
+  if (def.above !== undefined && value <= def.above) return `${label} must be more than ${def.above}, got ${value}`;
+  if (def.max !== undefined && value > def.max) return `${label} must be at most ${def.max}, got ${value}`;
+  return null;
+}
+
+/**
+ * Why setting `key` to `value` in `state` is refused, or null when it is
+ * acceptable. Every refusal names the key and what was wrong with the value.
+ * The ONE predicate: the `t_setting_set` policy calls it, and the store calls
+ * it again on every change it reads back from this browser.
+ */
+export function settingRefusal(key: unknown, value: unknown, state: HubSettingState): string | null {
+  if (!isAddressableSettingKey(key)) return `'${String(key)}' is not a setting the administrator can change`;
+  const override = parseStaleOverrideKey(key);
+  if (override) {
+    if (value === null) return null;
+    if (typeof value !== 'number' || !Number.isFinite(value)) {
+      return `${key} must be a number of days or null (no override), got ${JSON.stringify(value)}`;
+    }
+    return boundsRefusal(key, value, { integer: true, ...STALE_OVERRIDE_BOUNDS });
+  }
+  const def = hubSettingDef(key)!;
+  if (def.unit === 'boolean') {
+    return typeof value === 'boolean' ? null : `${key} must be true or false, got ${JSON.stringify(value)}`;
+  }
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    return `${key} must be a number, got ${JSON.stringify(value)}`;
+  }
+  const bounds = boundsRefusal(key, value, def);
+  if (bounds) return bounds;
+  const next = withSetting(state, key, value);
+  for (const rule of ORDER_RULES) {
+    if ((rule.keys as readonly string[]).includes(key) && !rule.holds(next)) return `${key}: ${rule.says(next)}`;
+  }
+  return null;
+}

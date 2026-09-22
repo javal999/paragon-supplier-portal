@@ -26,7 +26,7 @@ import {
   openQtyForLine,
   supplierInvoiceStage,
 } from '../../transitions/fulfilmentRules';
-import { INVOICE_PRICE_TOLERANCE } from '../../transitions/fulfilmentConfig';
+import { invoicePriceTolerance } from '../../transitions/fulfilmentConfig';
 import { NO_PERSON } from '../../../context/noPerson';
 
 const svc = new MockCommandService();
@@ -480,16 +480,16 @@ describe('invoice — the match runs at submission (CR-12, CR-13)', () => {
   // the percentage side is pinned on its own where the cap does not bind.
   it('CR-12 CAP BOUNDARY — at the cap it is Matched; one rupiah past it is a Price variance and stays Submitted', async () => {
     receiveGr002();
-    const atCap = await submitWith(EXPECTED + INVOICE_PRICE_TOLERANCE.standardCapIdr);
+    const atCap = await submitWith(EXPECTED + invoicePriceTolerance().standardCapIdr);
     expect(atCap.matchStatus).toBe('Matched');
 
     invoiceStore.reset();
-    const past = await submitWith(EXPECTED + INVOICE_PRICE_TOLERANCE.standardCapIdr + 1);
+    const past = await submitWith(EXPECTED + invoicePriceTolerance().standardCapIdr + 1);
     expect(past.matchStatus).toBe('Price Variance');
     expect(past.status).toBe('Submitted');
 
     invoiceStore.reset();
-    const under = await submitWith(EXPECTED - INVOICE_PRICE_TOLERANCE.standardCapIdr);
+    const under = await submitWith(EXPECTED - invoicePriceTolerance().standardCapIdr);
     expect(under.matchStatus).toBe('Matched');
 
     // And 1% of this order — inside the old tolerance — is now held, because

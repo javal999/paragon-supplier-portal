@@ -15,7 +15,7 @@ import { sdcClock } from '../../services/sdc/clock';
 import { isClosingSoon, isPastDeadline } from '../../services/transitions/rfxRules';
 import type { InviteeResponseState } from '../../services/sourcing/views';
 import type { GateResult } from '../../services/sourcing/complianceGate';
-import { GATE_MIN_OTIF_PCT } from '../../services/sourcing/complianceGateConfig';
+import { gateMinOtifPct } from '../../services/sourcing/complianceGateConfig';
 
 /** The RFx lane's "now" — the same simulated clock the read model uses. */
 export const rfxNow = (): string => sdcClock.now();
@@ -135,7 +135,9 @@ export const GateMarker: React.FC<{ gate: GateResult | undefined; showPass?: boo
     ) : null;
   }
   const criteria = gate.failed
-    .map((c) => t(`rfx.gate.criterion.${c}`, { min: GATE_MIN_OTIF_PCT }))
+    .map((c) =>
+      t(c === 'otif' && gate.otifNoHistory ? 'rfx.gate.criterion.otifNoHistory' : `rfx.gate.criterion.${c}`, { min: gateMinOtifPct() }),
+    )
     .join(', ');
   return (
     <span className="inline-flex flex-col items-start gap-0.5" data-testid={testId}>

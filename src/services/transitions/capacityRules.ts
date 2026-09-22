@@ -17,7 +17,8 @@ import type {
   PurchaseOrder,
 } from '../data/types';
 import type { ForecastLine, MaterialMasterEntry } from '../sdc/types';
-import { CAPACITY_HORIZON_WEEKS, isCapacityReason } from './inventoryConfig';
+import { CAPACITY_HORIZON_WEEKS } from './inventoryConfig';
+import { isActiveReasonCode } from './reasonCodes';
 import { addDays, dayOf, isIsoDay, mondayOf, weekDemand } from './inventoryRules';
 
 /** The 13 Mondays of the capacity horizon, starting with the current week. */
@@ -172,7 +173,7 @@ export function capacitySubmissionRefusal(
       return { refusal: 'invalidQuantity', week: w.week };
     }
     if ((w.allocated as number) < demandFor(w.week)) {
-      if (!isCapacityReason(w.reason)) return { refusal: 'reasonRequired', week: w.week };
+      if (!isActiveReasonCode('capacityShortfall', w.reason)) return { refusal: 'reasonRequired', week: w.week };
       if (w.reason === 'other' && (typeof w.note !== 'string' || w.note.trim() === '')) {
         return { refusal: 'noteRequired', week: w.week };
       }

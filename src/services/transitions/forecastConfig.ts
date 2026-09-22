@@ -1,9 +1,11 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// FORECAST COLLABORATION SETTINGS — the ONE config module (REQ-E06-01 to 03).
+// FORECAST COLLABORATION SETTINGS — read here (REQ-E06-01 to 03, BL-32).
 //
 // Every number the forecast publication, commitment and gap rules compare
-// against lives here, so a setting is changed in one place (the prototype has
-// no admin screen; section 3.6 says ADM can change every threshold):
+// against is read through this module. CR-21, CR-22 and CR-26 are the Hub
+// administrator's (BL-32: defaults in `hubSettings.ts`, changed on the admin
+// page); the period grid, zone lengths and lead times stay here — they are the
+// shape of the forecast and sample master data, not thresholds:
 //   · REQ-E06-01 BR-02 / BR-03 — cadence, horizon and the weekly-to-monthly
 //     cut-over per material type.
 //   · REQ-E06-01 BR-05 — zone lengths per supplier × material group; the Firm
@@ -15,8 +17,8 @@
 //   · Section 3.6 — starter reason codes for a commitment below forecast.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { CapacityReason } from '../data/types';
 import type { ForecastStream, MaterialType } from '../sdc/types';
+import { hubSetting } from './hubSettingsStore';
 
 /** REQ-E06-01 BR-02 — packaging is published weekly, raw material monthly. */
 export const PUBLICATION_CADENCE: Readonly<Record<ForecastStream, 'weekly' | 'monthly'>> = Object.freeze({
@@ -80,40 +82,47 @@ export function zoneLengthsFor(supplierId: string, materialGroup: string, materi
   };
 }
 
-/**
- * CR-21 — the share below forecast accepted without planner action, per zone.
- * Firm: none. Trade-off: 10% (mirrors CR-05). Forecast: acknowledgement only.
- */
-export const COMMITMENT_TOLERANCE = Object.freeze({
-  firmShortfall: 0,
-  tradeOffShortfall: 0.1,
-});
+// ── The administrator's values (BL-32) ───────────────────────────────────────
+// CR-21, CR-22 and CR-26 have their defaults in `hubSettings.ts` and are changed
+// on Administration → Tolerances and rule values; these accessors read the
+// value in force each time a rule runs, never a copy taken at load.
 
-/** CR-22 — commitment ÷ forecast: Green at 1.0 or more, Amber from 0.8, Red below. */
-export const GAP_COLOUR_THRESHOLDS = Object.freeze({
-  greenFrom: 1,
-  amberFrom: 0.8,
-});
-
-/** CR-26 / REQ-E06-02 BR-07 — Firm periods due 1 working day after publication. */
-export const FIRM_DEADLINE_WORKING_DAYS = 1;
 /**
- * CR-26 / REQ-E06-02 BR-07 — Trade-off and Forecast periods due 3 WORKING days
- * after publication (owner, 2026-09-21; BL-48). It was 7 calendar days, which
- * no rule stated. Both deadlines count on the hub's working calendar (BL-50).
+ * CR-21 — the share below forecast accepted without planner action, per zone,
+ * as a fraction. Firm: none. Trade-off: 10% (mirrors CR-05). Forecast:
+ * acknowledgement only. In force now.
  */
-export const OTHER_DEADLINE_WORKING_DAYS = 3;
-/** REQ-E06-03 BR-06 — the first reminder goes out at half the deadline. */
+export function commitmentTolerance(): { readonly firmShortfall: number; readonly tradeOffShortfall: number } {
+  return {
+    firmShortfall: hubSetting('commitment.firmShortfallPct') / 100,
+    tradeOffShortfall: hubSetting('commitment.tradeOffShortfallPct') / 100,
+  };
+}
+
+/** CR-22 — commitment ÷ forecast: Green at 1.0 or more, Amber from 0.8, Red below (defaults). In force now. */
+export function gapColourThresholds(): { readonly greenFrom: number; readonly amberFrom: number } {
+  return { greenFrom: hubSetting('gap.greenFromPct') / 100, amberFrom: hubSetting('gap.amberFromPct') / 100 };
+}
+
+/**
+ * CR-26 / REQ-E06-02 BR-07 — working days after publication a commitment is due:
+ * Firm 1, Trade-off and Forecast 3 (owner, 2026-09-21; BL-48 — it was 7
+ * calendar days, which no rule stated). Both count on the hub's working
+ * calendar (BL-50). In force now.
+ */
+export function commitmentDeadlineWorkingDays(): { readonly firm: number; readonly other: number } {
+  return {
+    firm: hubSetting('commitment.firmDeadlineWorkingDays'),
+    other: hubSetting('commitment.otherDeadlineWorkingDays'),
+  };
+}
+
+/**
+ * REQ-E06-03 BR-06 — the first reminder goes out at half the deadline. Stays a
+ * constant: it is a reminder's timing, not a rule value a party is measured by,
+ * and §3.6 names no rule for it.
+ */
 export const REMINDER_FRACTION = 0.5;
 
-/** Section 3.6 starter reason codes for a commitment below forecast; `other` needs a note. */
-export const COMMITMENT_REASONS: readonly CapacityReason[] = Object.freeze([
-  'capacity',
-  'material',
-  'logistics',
-  'quality',
-  'other',
-]);
-
-export const isCommitmentReason = (value: unknown): value is CapacityReason =>
-  typeof value === 'string' && (COMMITMENT_REASONS as readonly string[]).includes(value);
+// Section 3.6 starter reason codes for a commitment below forecast are the Hub
+// administrator's list since BL-32: `reasonCodes.ts`, list `commitmentShortfall`.

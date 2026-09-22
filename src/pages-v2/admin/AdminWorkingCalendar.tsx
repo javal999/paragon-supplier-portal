@@ -1,6 +1,5 @@
 import React, { useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { useTranslation } from 'react-i18next';
-import { NavLink } from 'react-router-dom';
 import { AlertTriangle, ShieldCheck } from 'lucide-react';
 import AppShellV2 from '../../components/layout-v2/AppShellV2';
 import PageHeader from '../../components/ui-v2/PageHeader';
@@ -29,7 +28,7 @@ import {
   type CalendarDayView,
 } from '../../services/transitions/workingCalendarStore';
 import type { CalendarDayKind } from '../../lib/workingCalendar';
-import { ADMIN_SECTIONS } from './adminSections';
+import AdminSectionNav from './AdminSectionNav';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ADMINISTRATION · WORKING CALENDAR — BL-50, REQUIREMENTS §3.4 (ADM persona).
@@ -68,38 +67,6 @@ function useWeekday(): (date: string) => string {
   );
   return (date: string) => fmt.format(new Date(`${date}T00:00:00.000Z`));
 }
-
-const AdminSectionNav: React.FC = () => {
-  const { t } = useTranslation();
-  return (
-    <nav aria-label={t('adminCal.sections.label')} className="mb-6">
-      <ul className="flex flex-wrap items-center gap-2 border-b border-border-subtle">
-        {ADMIN_SECTIONS.map((s) => {
-          const Icon = s.icon;
-          return (
-            <li key={s.id}>
-              <NavLink
-                to={s.path}
-                data-testid={`admin-section-${s.id}`}
-                className={({ isActive }) =>
-                  `inline-flex items-center gap-2 px-3 py-2 text-sm border-b-2 -mb-px ${
-                    isActive ? 'border-action text-action-hover font-medium' : 'border-transparent text-text-secondary'
-                  }`
-                }
-              >
-                <Icon size={14} aria-hidden="true" />
-                {t(s.labelKey)}
-              </NavLink>
-            </li>
-          );
-        })}
-      </ul>
-      <p className="text-xs text-text-tertiary mt-2" data-testid="admin-sections-later">
-        {t('adminCal.sections.later')}
-      </p>
-    </nav>
-  );
-};
 
 /** The current forecast versions' commitment deadlines, on the calendar in force. */
 const DeadlinesPanel: React.FC<{ calendarVersion: number }> = ({ calendarVersion }) => {
