@@ -41,7 +41,7 @@ export function rfqEngagementViews(readerSupplierId: string | null): readonly Rf
       rfqId,
       supplierId,
       supplierName: rfxSupplierName(supplierId),
-      ...(intent ? { intent: stripId(intent) } : {}),
+      ...(intent ? { intent: stripId(intent), intentId: intent.id } : {}),
       ...(accepted ? { confidentialityAcceptedAt: accepted.acceptedAt } : {}),
     };
   });

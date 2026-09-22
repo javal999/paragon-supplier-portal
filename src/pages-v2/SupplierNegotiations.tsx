@@ -15,9 +15,10 @@ import { useToast } from '../hooks/useToast';
 import { formatDate } from '../lib/format';
 import { BASE_CURRENCY } from '../lib/currencyPolicy';
 import { useCurrentIdentity } from '../context/CurrentIdentityContext';
-import { useAwards, useNegotiationRounds, useQuotations } from '../services/query/hooks';
+import { useAwards, useNegotiationRounds, useQuotations, useRFQs } from '../services/query/hooks';
 import { useRfxCommand } from '../services/query/commandHooks';
 import { DeadlinePill, money, rfxNow } from './rfx/rfxDisplay';
+import TieredRevisionFields, { readRevision, revisionPricesFrom, type RevisionPrices } from './rfqs/TieredRevisionFields';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SUPPLIER REVISED QUOTES — REQ-E03-05 (SUP).
@@ -42,6 +43,9 @@ const SupplierNegotiations: React.FC = () => {
   const command = useRfxCommand();
   const [price, setPrice] = useState<Record<string, string>>({});
   const [lead, setLead] = useState<Record<string, string>>({});
+  // RFx spec 2026-09-21 — on a tiered RFQ the revision re-prices per break.
+  const rfqs = useRFQs();
+  const [tierPrices, setTierPrices] = useState<Record<string, RevisionPrices>>({});
 
   const crumb = [t('hub.nav.section.sourcing'), t('rfx.neg.supplier.title')];
   const items = useMemo(() => rounds.data?.items ?? [], [rounds.data]);
@@ -101,6 +105,10 @@ const SupplierNegotiations: React.FC = () => {
           const already = versions.find((q) => q.roundNumber === round.roundNumber) ?? null;
           const currency = last?.currency ?? BASE_CURRENCY;
           const locked = submit.kind !== 'held' || round.closed || already !== null;
+          const rfq = (rfqs.data?.items ?? []).find((r) => r.id === round.rfqId);
+          const tiered = Boolean(rfq && (rfq.items ?? []).length > 0 && last?.itemQuotes);
+          const typedTiers = tierPrices[round.id] ?? revisionPricesFrom(last);
+          const revision = tiered && rfq && last ? readRevision(rfq, last, typedTiers) : null;
 
           return (
             <section
@@ -142,6 +150,17 @@ const SupplierNegotiations: React.FC = () => {
                 )}
 
                 <div className="flex flex-wrap items-end gap-3">
+                  {tiered && rfq && (
+                    <TieredRevisionFields
+                      rfq={rfq}
+                      roundId={round.id}
+                      prices={typedTiers}
+                      disabled={locked}
+                      onChange={(next) => setTierPrices((prev) => ({ ...prev, [round.id]: next }))}
+                    />
+                  )}
+                  {!tiered && (
+                  <>
                   <div>
                     <label className="block text-xs font-semibold text-text-secondary mb-1" htmlFor={`price-${round.id}`}>
                       {t('rfx.cmp.row.unitPrice')}
@@ -168,12 +187,34 @@ const SupplierNegotiations: React.FC = () => {
                       className="bg-white border border-border-input rounded-md px-3 h-10 text-sm focus:outline-none focus:border-action disabled:bg-bg-hover"
                     />
                   </div>
+                  </>
+                  )}
                   <Button
                     variant="outline"
-                    disabled={locked || !price[round.id]}
+                    disabled={locked || (tiered ? revision === null : !price[round.id])}
                     data-testid={`supplier-round-submit-${round.id}`}
                     onClick={() =>
-                      revise({
+                      tiered && revision && last
+                        ? revise({
+                            verb: 'reviseQuote',
+                            roundId: round.id,
+                            rfqId: round.rfqId,
+                            supplierId,
+                            roundNumber: round.roundNumber,
+                            supersedesQuotationId: last.id,
+                            unitPrice: revision.unitPrice,
+                            leadTimeDays: revision.leadTimeDays,
+                            currency,
+                            itemQuotes: revision.itemQuotes,
+                            ...(last.alternatives ? { alternatives: last.alternatives } : {}),
+                            ...(last.answers ? { answers: last.answers } : {}),
+                            ...(last.sampleOffer ? { sampleOffer: last.sampleOffer } : {}),
+                            ...(last.attachments ? { attachments: last.attachments } : {}),
+                            ...(last.paymentTermsOffered ? { paymentTermsOffered: last.paymentTermsOffered } : {}),
+                            ...(last.validUntil ? { validUntil: last.validUntil } : {}),
+                            ...(round.bestAndFinal ? { bestAndFinal: true } : {}),
+                          })
+                        : revise({
                         verb: 'reviseQuote',
                         roundId: round.id,
                         rfqId: round.rfqId,

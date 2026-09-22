@@ -70,6 +70,8 @@ export interface RfqEngagementView {
   readonly supplierId: string;
   readonly supplierName: string;
   readonly intent?: RfqIntent;
+  /** The intent record's key — what a withdraw names. */
+  readonly intentId?: string;
   readonly confidentialityAcceptedAt?: string;
 }
 
