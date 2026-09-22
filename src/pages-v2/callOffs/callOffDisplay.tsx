@@ -126,8 +126,16 @@ export const ToleranceTags: React.FC<{
   const { t } = useTranslation();
   const tags = check.findings.filter((f) => f.kind !== 'asRequested');
   if (tags.length === 0) return null;
-  const verdictOf = (f: ToleranceFinding) =>
-    !f.needsApproval ? 'accepted' : approval === 'approved' ? 'approved' : 'needsApproval';
+  // BL-32 — the verdict is the one RECORDED when the supplier sent the answer.
+  // The findings are re-read under the values in force, so after an
+  // administrator changes CR-05 they can disagree with the record; the record
+  // wins on the tag and a note says what today's values would decide.
+  const drift = toleranceDrift(check, approval);
+  const verdictOf = (f: ToleranceFinding) => {
+    if (approval === 'approved') return f.needsApproval ? 'approved' : 'accepted';
+    if (approval === 'auto') return 'accepted';
+    return f.needsApproval || (drift === 'nowAccepted' && f.kind !== 'short') ? 'needsApproval' : 'accepted';
+  };
   return (
     <div data-testid={testId} className="mt-1 space-y-0.5">
       {tags.map((f, i) => (
@@ -144,9 +152,28 @@ export const ToleranceTags: React.FC<{
           })}
         </div>
       ))}
+      {drift && (
+        <div className="text-[11px] text-text-tertiary" data-testid={testId ? `${testId}-changed` : undefined}>
+          {t(`co.tol.changedSince.${drift}`)}
+        </div>
+      )}
     </div>
   );
 };
+
+/**
+ * BL-32 — whether today's CR-05 values would decide this answer differently
+ * from what was recorded when it was sent. `null` when they agree.
+ */
+export function toleranceDrift(
+  check: ToleranceCheck,
+  approval: CallOffConfirmation['approval'],
+): 'nowAccepted' | 'nowNeedsApproval' | null {
+  const needsNow = check.findings.some((f) => f.needsApproval);
+  if (approval === 'awaiting' && !needsNow) return 'nowAccepted';
+  if (approval === 'auto' && needsNow) return 'nowNeedsApproval';
+  return null;
+}
 
 /** The call-off projection for the current scope, with its loading state. */
 export function useCallOffViews() {

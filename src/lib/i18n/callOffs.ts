@@ -81,6 +81,10 @@ export const callOffsEn: Record<string, string> = {
   'co.tol.verdict.accepted': 'accepted',
   'co.tol.verdict.needsApproval': 'needs approval',
   'co.tol.verdict.approved': 'approved by PTI',
+  'co.tol.changedSince.nowAccepted':
+    'Recorded as needing approval when it was sent. Under the tolerance in force now it would be accepted; it stays with the planner until approved or rejected.',
+  'co.tol.changedSince.nowNeedsApproval':
+    'Accepted automatically when it was sent. Under the tolerance in force now it would need approval; the recorded acceptance stands.',
   'co.otif.met': 'Yes',
   'co.otif.missed': 'No',
   'co.panel.title': 'Call-off {{number}}',
@@ -263,6 +267,10 @@ export const callOffsId: Record<string, string> = {
   'co.tol.verdict.accepted': 'diterima',
   'co.tol.verdict.needsApproval': 'perlu persetujuan',
   'co.tol.verdict.approved': 'disetujui PTI',
+  'co.tol.changedSince.nowAccepted':
+    'Tercatat perlu persetujuan saat dikirim. Dengan toleransi yang berlaku sekarang jawaban ini akan diterima; tetap di perencana sampai disetujui atau ditolak.',
+  'co.tol.changedSince.nowNeedsApproval':
+    'Diterima otomatis saat dikirim. Dengan toleransi yang berlaku sekarang jawaban ini akan perlu persetujuan; penerimaan yang tercatat tetap berlaku.',
   'co.otif.met': 'Ya',
   'co.otif.missed': 'Tidak',
   'co.panel.title': 'Call-off {{number}}',
