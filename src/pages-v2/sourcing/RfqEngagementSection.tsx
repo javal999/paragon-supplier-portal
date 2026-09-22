@@ -102,7 +102,7 @@ const RfqEngagementSection: React.FC<{ rfq: RFQ; nameOf: (supplierId: string) =>
                 {intent?.intent === 'decline'
                   ? t('rfqResponse.intent.declined')
                   : intent
-                    ? t('rfqResponse.intent.responding')
+                    ? t('rfqResponse.buyer.responding')
                     : t('rfqResponse.buyer.noAnswer')}
               </StatusPill>
               {intent?.intent === 'decline' && (

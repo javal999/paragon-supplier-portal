@@ -108,6 +108,7 @@ export const rfqResponseEn: Record<string, string> = {
 
   // — The buyer's side panel —
   'rfqResponse.buyer.title': 'Supplier responses',
+  'rfqResponse.buyer.responding': 'Will respond',
   'rfqResponse.buyer.noAnswer': 'No answer yet',
   'rfqResponse.buyer.termsNotAccepted': 'Terms not accepted',
   'rfqResponse.buyer.clarifications': 'Clarification questions',
@@ -276,6 +277,7 @@ export const rfqResponseId: Record<string, string> = {
 
   // — Panel samping pembeli —
   'rfqResponse.buyer.title': 'Tanggapan pemasok',
+  'rfqResponse.buyer.responding': 'Akan menanggapi',
   'rfqResponse.buyer.noAnswer': 'Belum menjawab',
   'rfqResponse.buyer.termsNotAccepted': 'Syarat belum diterima',
   'rfqResponse.buyer.clarifications': 'Pertanyaan klarifikasi',
