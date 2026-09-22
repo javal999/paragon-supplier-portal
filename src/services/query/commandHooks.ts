@@ -554,6 +554,49 @@ export function useRfqCreate() {
   });
 }
 
+// ─── RFQ revise draft (BL-93) ──────────────────────────────────────────────────
+// The buyer edits a DRAFT RFQ through `t_rfq_revise_draft` — the same payload
+// the create verb takes, judged by the same `rfq_create_valid` hook — and may
+// send it in the same act. Both dispatches carry `expectedState: 'Draft'`: a
+// draft a colleague sent while this buyer was editing is refused STALE_STATE
+// rather than silently rewritten under the suppliers now quoting it.
+
+export interface RfqReviseDraftVars {
+  rfqId: string;
+  payload: Record<string, unknown>;
+  /** Send it once saved (`t_rfq_publish`). Needs `rfq:publish`. */
+  publish?: boolean;
+}
+
+/** Save an edited draft RFQ, and optionally send it. */
+export function useRfqReviseDraft() {
+  const svc = useDataService();
+  const scope = useScope();
+  const invalidate = useInvalidateProcurement();
+
+  return useMutation<CommandResult, Error, RfqReviseDraftVars>({
+    mutationFn: async ({ rfqId, payload, publish }) => {
+      const revised = await svc.commands.dispatch(scope, {
+        transitionId: 't_rfq_revise_draft',
+        entity: 'rfq',
+        entityId: rfqId,
+        expectedState: 'Draft',
+        payload,
+      });
+      if (revised.status === 'failed' || !publish) return revised;
+      return svc.commands.dispatch(scope, {
+        transitionId: 't_rfq_publish',
+        entity: 'rfq',
+        entityId: rfqId,
+        expectedState: 'Draft',
+      });
+    },
+    // Invalidate on every settle: a revise that saved and a publish that was
+    // then refused still changed the draft.
+    onSettled: () => invalidate(scope),
+  });
+}
+
 // ─── RFQ award (Step 4 batch iv) — the cascade-class verb ────────────────────
 // Buyer awards an RFQ to a chosen quotation. The dispatcher fans out (winner →
 // Awarded, every other → Rejected) under one causation group; a non-failed
@@ -2175,6 +2218,25 @@ export type RfxCommandVars =
       /** Send it to the invitees in the same act. */
       publish?: boolean;
     } & RfxAuthoringVars)
+  | ({
+      /**
+       * BL-93 — edit a DRAFT RFI (`t_rfi_revise_draft`). The whole content,
+       * as the create verb takes it; `publish` then sends it in the same act.
+       * Both dispatches carry `expectedState: 'Draft'`, so a draft somebody
+       * else sent in the meantime is refused STALE_STATE, not overwritten.
+       */
+      verb: 'reviseRfi';
+      rfiId: string;
+      title: string;
+      description?: string;
+      templateId: string;
+      materialCategory: string;
+      purchasingGroup?: string;
+      responseDeadline: string;
+      invitedSupplierIds: readonly string[];
+      questions?: readonly RfiQuestion[];
+      publish?: boolean;
+    } & RfxAuthoringVars)
   | { verb: 'publishRfi'; rfiId: string }
   | { verb: 'closeRfi'; rfiId: string }
   | { verb: 'extendRfi'; rfiId: string; deadline: string; supplierIds?: readonly string[] }
@@ -2202,6 +2264,23 @@ export type RfxCommandVars =
       publish?: boolean;
       /** The RFI this RFP is created from (spec D3). */
       sourceRfiId?: string;
+      questions?: readonly RfiQuestion[];
+      termsDocument?: RfpTermsDocument;
+      pricing?: RfpPricingRequest;
+    } & RfxAuthoringVars)
+  | ({
+      /** BL-93 — edit a DRAFT RFP (`t_rfp_revise_draft`); as `reviseRfi`. */
+      verb: 'reviseRfp';
+      rfpId: string;
+      title: string;
+      scope: string;
+      materialCategory: string;
+      purchasingGroup?: string;
+      responseDeadline: string;
+      currency: string;
+      invitedSupplierIds: readonly string[];
+      terms: readonly RfpTermRow[];
+      publish?: boolean;
       questions?: readonly RfiQuestion[];
       termsDocument?: RfpTermsDocument;
       pricing?: RfpPricingRequest;
@@ -2303,6 +2382,24 @@ export function useRfxCommand() {
             payload: {},
           });
         }
+        case 'reviseRfi': {
+          const { verb, rfiId, publish, ...payload } = vars;
+          const revised = await svc.commands.dispatch(scope, {
+            transitionId: 't_rfi_revise_draft',
+            entity: 'rfiEvent',
+            entityId: rfiId,
+            expectedState: 'Draft',
+            payload: { ...payload, invitedSupplierIds: [...payload.invitedSupplierIds] },
+          });
+          if (revised.status === 'failed' || !publish) return revised;
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_rfi_publish',
+            entity: 'rfiEvent',
+            entityId: rfiId,
+            expectedState: 'Draft',
+            payload: {},
+          });
+        }
         case 'publishRfi':
           return svc.commands.dispatch(scope, {
             transitionId: 't_rfi_publish',
@@ -2371,6 +2468,28 @@ export function useRfxCommand() {
             transitionId: 't_rfp_publish',
             entity: 'rfpEvent',
             entityId: created.entityId,
+            payload: {},
+          });
+        }
+        case 'reviseRfp': {
+          const { verb, rfpId, publish, ...payload } = vars;
+          const revised = await svc.commands.dispatch(scope, {
+            transitionId: 't_rfp_revise_draft',
+            entity: 'rfpEvent',
+            entityId: rfpId,
+            expectedState: 'Draft',
+            payload: {
+              ...payload,
+              invitedSupplierIds: [...payload.invitedSupplierIds],
+              terms: [...payload.terms],
+            },
+          });
+          if (revised.status === 'failed' || !publish) return revised;
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_rfp_publish',
+            entity: 'rfpEvent',
+            entityId: rfpId,
+            expectedState: 'Draft',
             payload: {},
           });
         }

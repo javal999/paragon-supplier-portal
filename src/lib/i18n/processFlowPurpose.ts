@@ -440,12 +440,16 @@ export const processFlowPurposeEn: Record<string, string> = {
     'Buying starts from the question set Procurement keeps for the category, then adds or removes questions for this one event.',
   'processFlows.purpose.t_rfi_publish':
     'The questions reach the invited suppliers. Until this happens they are still being prepared and nobody outside PTI sees them.',
+  'processFlows.purpose.t_rfi_revise_draft':
+    'Buying reopens a request it has not sent yet and changes any part of it: questions, invitees, dates, files. Suppliers still see none of it, and every edit is recorded with who made it and when.',
   'processFlows.purpose.t_rfi_extend':
     'Buying gives every invited supplier — or only the ones it names — more time to answer.',
   'processFlows.purpose.t_rfi_close':
     'The answering window ends, and buying compares what came in.',
   'processFlows.purpose.t_rfi_cancel':
     'PTI drops the request, so suppliers stop spending time on it.',
+  'processFlows.purpose.t_rfq_revise_draft':
+    'Buying reopens a price request it has not sent yet and changes any part of it: items, quantity breaks, invitees, dates. Suppliers still see none of it, and every edit is recorded with who made it and when.',
   'processFlows.purpose.t_rfq_extend':
     'Buying gives every invited supplier — or only the ones it names — more time to price the work.',
   'processFlows.purpose.t_quotation_revise':
@@ -462,6 +466,8 @@ export const processFlowPurposeEn: Record<string, string> = {
     'Buying picks the terms it needs answered from the standard list and states what PTI is asking for on each one.',
   'processFlows.purpose.t_rfp_publish':
     'The terms reach the invited suppliers, and only then can a proposal arrive.',
+  'processFlows.purpose.t_rfp_revise_draft':
+    'Buying reopens a proposal request it has not sent yet and changes any part of it: terms, options, invitees, dates. Suppliers still see none of it, and every edit is recorded with who made it and when.',
   'processFlows.purpose.t_rfp_extend':
     'Buying gives every invited supplier — or only the ones it names — more time to propose.',
   'processFlows.purpose.t_rfp_close':
@@ -883,12 +889,16 @@ export const processFlowPurposeId: Record<string, string> = {
     'Pembelian mulai dari kumpulan pertanyaan yang dipelihara Procurement untuk kategori itu, lalu menambah atau menghapus pertanyaan khusus acara ini.',
   'processFlows.purpose.t_rfi_publish':
     'Pertanyaan sampai ke pemasok yang diundang. Sebelum itu masih disiapkan dan tidak terlihat di luar PTI.',
+  'processFlows.purpose.t_rfi_revise_draft':
+    'Pembelian membuka lagi permintaan yang belum dikirim dan mengubah bagian mana pun: pertanyaan, undangan, tanggal, berkas. Tetap berupa draf, dan setiap perubahan dicatat beserta siapa dan kapan.',
   'processFlows.purpose.t_rfi_extend':
     'Pembelian memberi semua pemasok yang diundang — atau hanya yang disebut — waktu tambahan untuk menjawab.',
   'processFlows.purpose.t_rfi_close':
     'Masa menjawab berakhir, dan pembelian membandingkan yang masuk.',
   'processFlows.purpose.t_rfi_cancel':
     'PTI membatalkan permintaan, sehingga pemasok berhenti mengerjakannya.',
+  'processFlows.purpose.t_rfq_revise_draft':
+    'Pembelian membuka lagi permintaan harga yang belum dikirim dan mengubah bagian mana pun: item, jenjang jumlah, undangan, tanggal. Tetap berupa draf, dan setiap perubahan dicatat beserta siapa dan kapan.',
   'processFlows.purpose.t_rfq_extend':
     'Pembelian memberi semua pemasok yang diundang — atau hanya yang disebut — waktu tambahan untuk memberi harga.',
   'processFlows.purpose.t_quotation_revise':
@@ -905,6 +915,8 @@ export const processFlowPurposeId: Record<string, string> = {
     'Pembelian memilih syarat yang perlu dijawab dari daftar standar dan menyatakan apa yang diminta PTI pada masing-masing.',
   'processFlows.purpose.t_rfp_publish':
     'Syarat sampai ke pemasok yang diundang, dan baru setelah itu proposal bisa masuk.',
+  'processFlows.purpose.t_rfp_revise_draft':
+    'Pembelian membuka lagi permintaan proposal yang belum dikirim dan mengubah bagian mana pun: syarat, opsi, undangan, tanggal. Tetap berupa draf, dan setiap perubahan dicatat beserta siapa dan kapan.',
   'processFlows.purpose.t_rfp_extend':
     'Pembelian memberi semua pemasok yang diundang — atau hanya yang disebut — waktu tambahan untuk mengusulkan.',
   'processFlows.purpose.t_rfp_close':

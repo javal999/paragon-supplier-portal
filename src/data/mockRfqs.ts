@@ -1,5 +1,5 @@
 import type { FxPin } from '../lib/fxPin';
-import type { DeadlineExtension, RfxInvitee } from '../services/sourcing/types';
+import type { DeadlineExtension, DraftRevision, RfxInvitee } from '../services/sourcing/types';
 import { DECLARED_PRESENT } from '../services/data/fixturePresent';
 import type { BidCurrency } from '../lib/currencyPolicy';
 import type { RfqAuthoringFields } from '../services/sourcing/rfqModel';
@@ -108,6 +108,8 @@ export interface RFQ extends RfqAuthoringFields {
   inviteeDeadlines?: readonly RfxInvitee[];
   /** The extensions the buyer granted, in order. */
   extensions?: readonly DeadlineExtension[];
+  /** BL-93 — every edit made while it was a Draft (CE-08). */
+  revisions?: readonly DraftRevision[];
 }
 
 // ────────────────────────────────────────────────────────────────────────────

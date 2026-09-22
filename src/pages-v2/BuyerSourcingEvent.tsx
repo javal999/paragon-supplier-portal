@@ -26,14 +26,10 @@ import {
   useNegotiationRounds,
   useQuotations,
   useRFQs,
-  useRequisitions,
-  useRfiEvents,
   useRfqComplianceGate,
-  useRfpEvents,
   useSuppliers,
 } from '../services/query/hooks';
-import { rfqTemplateStore } from '../services/sourcing/rfqTemplates';
-import type { RFQ } from '../data/mockRfqs';
+import { RfqSourceLinks } from './rfx/rfqSources';
 import { useRfxCommand } from '../services/query/commandHooks';
 import { awardSplitRefusal, effectiveDeadline, reliabilityScoreFor } from '../services/transitions/rfxRules';
 import type { AwardLine } from '../services/sourcing/types';
@@ -996,87 +992,3 @@ function byId<T extends { id: string }>(rows: readonly T[], id: string): T {
 }
 
 export default BuyerSourcingEvent;
-
-/**
- * D3 / D2 — "Created from …", for EVERY source the tree records, by the source's
- * DOCUMENT NUMBER (never its internal id), linked where a page shows it:
- *
- * - `sourceRfiId` → RFI-2026-… (the RFI board, opened on it);
- * - `sourceRfpId` → RFP-2026-… (the RFP board, opened on it);
- * - the requisition → PR-2026-… (the requisitions page, opened on it). The RFQ
- *   does not store the requisition id; the PR does — `t_pr_source` writes this
- *   RFQ's number onto the PR's `linkedDoc` — so the link is read from there;
- * - `copiedFromRfqId` → RFQ-2026-… (its own event page);
- * - `templateId` → the template's name (no page shows a template).
- *
- * A source the reads cannot resolve (once they have settled) still says what it
- * is, by id, rather than vanishing: the record claims a source, and hiding the claim would be a lie of
- * omission.
- */
-const RfqSourceLinks: React.FC<{ rfq: RFQ; rfqs: readonly RFQ[] }> = ({ rfq, rfqs }) => {
-  const { t } = useTranslation();
-  const rfis = useRfiEvents();
-  const rfps = useRfpEvents();
-  const prs = useRequisitions();
-  const link = 'text-xs text-action-hover hover:underline';
-  const note = 'text-xs text-text-tertiary';
-  const rfi = rfq.sourceRfiId ? (rfis.data?.items ?? []).find((e) => e.id === rfq.sourceRfiId) : undefined;
-  const rfp = rfq.sourceRfpId ? (rfps.data?.items ?? []).find((e) => e.id === rfq.sourceRfpId) : undefined;
-  const pr = (prs.data?.items ?? []).find((p) => p.linkedDoc === rfq.rfqNumber);
-  const copied = rfq.copiedFromRfqId ? rfqs.find((r) => r.id === rfq.copiedFromRfqId) : undefined;
-  const template = rfq.templateId ? rfqTemplateStore.byId(rfq.templateId) : undefined;
-  const templateName = template ? (template.nameKey ? t(template.nameKey) : (template.name ?? template.id)) : undefined;
-  return (
-    <>
-      {rfq.sourceRfiId && !rfis.isPending && (
-        <span className={note} data-testid="event-from-rfi">
-          {t('rfx.event.createdFrom')}{' '}
-          {rfi ? (
-            <Link to={`/buyer/rfi?open=${encodeURIComponent(rfi.id)}`} className={link}>
-              <Data>{rfi.eventNumber}</Data>
-            </Link>
-          ) : (
-            <Data>{rfq.sourceRfiId}</Data>
-          )}
-        </span>
-      )}
-      {rfq.sourceRfpId && !rfps.isPending && (
-        <span className={note} data-testid="event-from-rfp">
-          {t('rfx.event.createdFrom')}{' '}
-          {rfp ? (
-            <Link to={`/buyer/rfp?open=${encodeURIComponent(rfp.id)}`} className={link}>
-              <Data>{rfp.eventNumber}</Data>
-            </Link>
-          ) : (
-            <Data>{rfq.sourceRfpId}</Data>
-          )}
-        </span>
-      )}
-      {pr && (
-        <span className={note} data-testid="event-from-pr">
-          {t('rfx.event.createdFrom')}{' '}
-          <Link to={`/buyer/purchase-requisition?open=${encodeURIComponent(pr.id)}`} className={link}>
-            <Data>{pr.prNumber}</Data>
-          </Link>
-        </span>
-      )}
-      {rfq.copiedFromRfqId && (
-        <span className={note} data-testid="event-copied-from">
-          {t('rfx.event.copiedFrom')}{' '}
-          {copied ? (
-            <Link to={`/buyer/rfq/${encodeURIComponent(copied.id)}`} className={link}>
-              <Data>{copied.rfqNumber}</Data>
-            </Link>
-          ) : (
-            <Data>{rfq.copiedFromRfqId}</Data>
-          )}
-        </span>
-      )}
-      {rfq.templateId && (
-        <span className={note} data-testid="event-from-template">
-          {t('rfx.event.fromTemplate', { name: templateName ?? rfq.templateId })}
-        </span>
-      )}
-    </>
-  );
-};

@@ -110,18 +110,18 @@ describe('section 3.6a — the buyer raises an information request', () => {
 
     // The board lands on the NEW event, in Open — the act just performed is the
     // one in view, and its number came from the store rather than from the page.
-    const detail = await screen.findByTestId('rfi-detail-rfi-0003');
-    expect(detail).toHaveTextContent('RFI-2026-003');
+    const detail = await screen.findByTestId('rfi-detail-rfi-0004');
+    expect(detail).toHaveTextContent('RFI-2026-004');
     expect(detail).toHaveTextContent(TITLE);
     expect(within(detail).getByText('Open')).toBeInTheDocument();
     // An Open event offers Close, never Send again.
-    expect(screen.queryByTestId('rfi-send-rfi-0003')).not.toBeInTheDocument();
-    expect(screen.getByTestId('rfi-close-rfi-0003')).toBeInTheDocument();
+    expect(screen.queryByTestId('rfi-send-rfi-0004')).not.toBeInTheDocument();
+    expect(screen.getByTestId('rfi-close-rfi-0004')).toBeInTheDocument();
 
     // ...and the invitation actually reached the supplier.
     cleanup();
     renderWithProviders(<SupplierRfi />, { identity: SUP_007 });
-    const sent = await screen.findByTestId('supplier-rfi-rfi-0003');
+    const sent = await screen.findByTestId('supplier-rfi-rfi-0004');
     expect(sent).toHaveTextContent(TITLE);
   });
 
@@ -131,18 +131,18 @@ describe('section 3.6a — the buyer raises an information request', () => {
 
     fireEvent.click(screen.getByTestId('rfi-new-save-draft'));
 
-    const detail = await screen.findByTestId('rfi-detail-rfi-0003');
+    const detail = await screen.findByTestId('rfi-detail-rfi-0004');
     expect(within(detail).getByText('Draft')).toBeInTheDocument();
-    expect(screen.getByTestId('rfi-draft-notice-rfi-0003')).toBeInTheDocument();
+    expect(screen.getByTestId('rfi-draft-notice-rfi-0004')).toBeInTheDocument();
     // A Draft offers Send and not Close.
-    expect(screen.getByTestId('rfi-send-rfi-0003')).toBeInTheDocument();
-    expect(screen.queryByTestId('rfi-close-rfi-0003')).not.toBeInTheDocument();
+    expect(screen.getByTestId('rfi-send-rfi-0004')).toBeInTheDocument();
+    expect(screen.queryByTestId('rfi-close-rfi-0004')).not.toBeInTheDocument();
 
     // THE INVITED supplier reads nothing — it was invited to a draft.
     cleanup();
     renderWithProviders(<SupplierRfi />, { identity: SUP_007 });
     await screen.findByTestId('supplier-rfi-rfi-001'); // its real invitation
-    expect(screen.queryByTestId('supplier-rfi-rfi-0003')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('supplier-rfi-rfi-0004')).not.toBeInTheDocument();
   });
 
   it('⚠️ the READ PATH is what hides a draft, not the page — asserted at the read', () => {
@@ -261,11 +261,11 @@ describe('section 3.6a — the buyer raises an information request', () => {
     next();
     await screen.findByTestId('rfi-new-review');
     fireEvent.click(screen.getByRole('button', { name: 'Send to suppliers' }));
-    await screen.findByTestId('rfi-detail-rfi-0003');
+    await screen.findByTestId('rfi-detail-rfi-0004');
 
     cleanup();
     renderWithProviders(<SupplierRfi />, { identity: SUP_007 });
-    fireEvent.click(await screen.findByTestId('supplier-rfi-open-rfi-0003'));
+    fireEvent.click(await screen.findByTestId('supplier-rfi-open-rfi-0004'));
     expect(await screen.findByTestId('rfi-field-event-1')).toHaveTextContent(
       'Which port do you ship from?',
     );

@@ -109,16 +109,16 @@ describe('section 3.6a — the buyer raises a proposal request', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Send to suppliers' }));
 
-    const detail = await screen.findByTestId('rfp-detail-rfp-0004');
-    expect(detail).toHaveTextContent('RFP-2026-004');
+    const detail = await screen.findByTestId('rfp-detail-rfp-0005');
+    expect(detail).toHaveTextContent('RFP-2026-005');
     expect(detail).toHaveTextContent(TITLE);
     expect(within(detail).getByText('Open')).toBeInTheDocument();
     // An Open event offers Close, never Send again.
-    expect(screen.queryByTestId('rfp-send-rfp-0004')).not.toBeInTheDocument();
-    expect(screen.getByTestId('rfp-close-rfp-0004')).toBeInTheDocument();
+    expect(screen.queryByTestId('rfp-send-rfp-0005')).not.toBeInTheDocument();
+    expect(screen.getByTestId('rfp-close-rfp-0005')).toBeInTheDocument();
 
     // The store holds the terms in the STANDARD LIST's order, values trimmed.
-    expect(rfpEventStore.get('rfp-0004')?.terms).toEqual([
+    expect(rfpEventStore.get('rfp-0005')?.terms).toEqual([
       { termId: 'paymentTerms', requestedValue: '60' },
       { termId: 'leadTime', requestedValue: '21' },
     ]);
@@ -128,11 +128,11 @@ describe('section 3.6a — the buyer raises a proposal request', () => {
     await openWizard();
     await walkToReview();
     fireEvent.click(screen.getByRole('button', { name: 'Send to suppliers' }));
-    await screen.findByTestId('rfp-detail-rfp-0004');
+    await screen.findByTestId('rfp-detail-rfp-0005');
 
     cleanup();
     renderWithProviders(<SupplierRfp />, { identity: SUP_007 });
-    fireEvent.click(await screen.findByTestId('supplier-rfp-open-rfp-0004'));
+    fireEvent.click(await screen.findByTestId('supplier-rfp-open-rfp-0005'));
 
     const payment = await screen.findByTestId('supplier-rfp-term-paymentTerms');
     expect(payment).toHaveTextContent('Payment terms (days)');
@@ -149,32 +149,32 @@ describe('section 3.6a — the buyer raises a proposal request', () => {
     await walkToReview();
     fireEvent.click(screen.getByTestId('rfp-new-save-draft'));
 
-    const detail = await screen.findByTestId('rfp-detail-rfp-0004');
+    const detail = await screen.findByTestId('rfp-detail-rfp-0005');
     expect(within(detail).getByText('Draft')).toBeInTheDocument();
-    expect(screen.getByTestId('rfp-draft-notice-rfp-0004')).toBeInTheDocument();
-    expect(screen.getByTestId('rfp-send-rfp-0004')).toBeInTheDocument();
-    expect(screen.queryByTestId('rfp-close-rfp-0004')).not.toBeInTheDocument();
+    expect(screen.getByTestId('rfp-draft-notice-rfp-0005')).toBeInTheDocument();
+    expect(screen.getByTestId('rfp-send-rfp-0005')).toBeInTheDocument();
+    expect(screen.queryByTestId('rfp-close-rfp-0005')).not.toBeInTheDocument();
 
     // The read path hides it from the invitee, and DOES return its real one.
     const supplierIds = rfpEventViews(rfxNow(), 'sup-007').map((e) => e.id);
-    expect(supplierIds).not.toContain('rfp-0004');
+    expect(supplierIds).not.toContain('rfp-0005');
     expect(supplierIds).toContain('rfp-001');
 
     cleanup();
     renderWithProviders(<SupplierRfp />, { identity: SUP_007 });
     await screen.findByTestId('supplier-rfp-rfp-001');
-    expect(screen.queryByTestId('supplier-rfp-rfp-0004')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('supplier-rfp-rfp-0005')).not.toBeInTheDocument();
   });
 
   it('a Draft can be SENT from the board afterwards — creating and sending stay apart', async () => {
     await openWizard();
     await walkToReview();
     fireEvent.click(screen.getByTestId('rfp-new-save-draft'));
-    await screen.findByTestId('rfp-detail-rfp-0004');
+    await screen.findByTestId('rfp-detail-rfp-0005');
 
-    fireEvent.click(screen.getByTestId('rfp-send-rfp-0004'));
-    await waitFor(() => expect(rfpEventStore.get('rfp-0004')?.status).toBe('Open'));
-    expect(await screen.findByTestId('rfp-close-rfp-0004')).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('rfp-send-rfp-0005'));
+    await waitFor(() => expect(rfpEventStore.get('rfp-0005')?.status).toBe('Open'));
+    expect(await screen.findByTestId('rfp-close-rfp-0005')).toBeInTheDocument();
   });
 
   it('CE-07 · no deadline in the future ⇒ the wizard will not advance; a future one unblocks it', async () => {

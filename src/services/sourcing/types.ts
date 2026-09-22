@@ -14,6 +14,7 @@
 
 import type { BidCurrency } from '../../lib/currencyPolicy';
 import type { AttachmentMeta } from '../attachments/sessionAttachments';
+import type { ActorAttribution } from '../../lib/enforcement';
 
 /**
  * The question kinds an RFI (or an RFP's questions section) may ask.
@@ -153,6 +154,17 @@ export interface DeadlineExtension {
 
 export type RfxEventStatus = 'Draft' | 'Open' | 'Closed' | 'Cancelled';
 
+/**
+ * BL-93 / CE-08 — one edit of a DRAFT event (the revise-draft verbs). WHO is
+ * the session's actor and WHEN is the store's clock; neither comes from the
+ * payload, so a caller cannot backdate or reassign its own edit. Appended,
+ * never replaced: the trail shows every edit, in order.
+ */
+export interface DraftRevision {
+  readonly at: string;
+  readonly by: ActorAttribution;
+}
+
 /** REQ-E03-02 — a Request for Information. */
 export interface RfiEvent {
   readonly id: string;
@@ -180,6 +192,8 @@ export interface RfiEvent {
   readonly attachments?: readonly AttachmentMeta[];
   /** Present = the supplier must accept before reading the event. */
   readonly confidentiality?: RfxConfidentiality;
+  /** BL-93 — every edit made while it was a Draft (CE-08). */
+  readonly revisions?: readonly DraftRevision[];
 }
 
 export type RfxResponseStatus = 'Draft' | 'Submitted';
@@ -331,6 +345,8 @@ export interface RfpEvent {
   readonly termsDocument?: RfpTermsDocument;
   /** Present = the RFP asks for indicative prices (options × quantity points). */
   readonly pricing?: RfpPricingRequest;
+  /** BL-93 — every edit made while it was a Draft (CE-08). */
+  readonly revisions?: readonly DraftRevision[];
 }
 
 /** REQ-E03-04 — one supplier's proposal. A Draft is invisible to PTI. */

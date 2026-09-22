@@ -584,3 +584,51 @@ export const RFQ_SAMPLE_AWARD_SEED: readonly AwardRecord[] = [
     notAwardedSupplierIds: ['sup-008'],
   },
 ];
+
+// ── BL-93 — a DRAFT shaped like Iron, so "Edit draft" has something real to
+//    open. Tiered (five total breaks), one unit box item with a buyer-filled
+//    spec sheet, two invitees, dates set. Nothing has been sent: suppliers do
+//    not see it (the read excludes Draft). Sample data, like the rest.
+
+export const RFQ_SAMPLE_DRAFT_SEED: readonly RFQ[] = [
+  {
+    id: 'rfq-025',
+    rfqNumber: 'RFQ-2026-025',
+    title: 'Iron refill carton — papercard',
+    projectName: 'Iron',
+    materialCategory: 'Packaging',
+    materialIds: [],
+    buyerId: 'buyer-001',
+    status: 'Draft',
+    createdAt: day(-1),
+    responseDeadline: day(14),
+    awardDeadline: day(21),
+    invitedSupplierIds: ['sup-008', 'sup-015'],
+    respondedSupplierIds: [],
+    totalQty: 5_000,
+    uom: 'PCS',
+    currency: 'IDR',
+    incoterms: 'DDP Jakarta',
+    paymentTerms: 'Net 45',
+    items: [
+      {
+        ...IRON_ITEMS[0]!,
+        description: 'Iron refill carton',
+        specFields: sheet('unitBox', {
+          boxType: 'Crash-lock bottom',
+          materialGsm: 'Ivory papercard 350 gsm',
+          formedSize: '60 × 60 × 140',
+          flatSize: '240 × 300',
+          printing: '4C offset',
+          finishing: 'Matte lamination',
+          dieCutType: 'flatbed',
+        }),
+        note: 'Same artwork family as the Iron unit box (RFQ-2026-022).',
+      },
+    ],
+    tiers: [5_000, 10_000, 15_000, 20_000, 30_000].map((qty) => ({ qty, basis: 'total' as const })),
+    allowAlternatives: false,
+    confidential: false,
+    extensions: [],
+  },
+];

@@ -29,6 +29,7 @@ import RfiCreateWizard from './rfx/RfiCreateWizard';
 import RfxSaveTemplate from './rfx/RfxSaveTemplate';
 import { DeadlinePill, EmptyRow, OtifOrNoHistory, ResponseStatePill, rfxNow } from './rfx/rfxDisplay';
 import { IndicativePill, answerText, authored, sectionTitle } from './rfx/rfxAuthoringDisplay';
+import { DraftRevisionNote } from './rfx/draftEdit';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PTI INFORMATION REQUESTS — REQ-E03-02 (BUY).
@@ -61,6 +62,12 @@ import { IndicativePill, answerText, authored, sectionTitle } from './rfx/rfxAut
 // (reopening a window somebody asked for) while `t_rfi_close` does not run twice.
 // A button the machine would refuse is worse than an absent one: it teaches the
 // buyer that the screen does not know the rules.
+//
+// BL-93 — a Draft also offers **Edit draft**: the create wizard, re-opened on
+// every stored field, saving through `t_rfi_revise_draft`. It needs
+// `rfi:create` (the seat that may draft may finish its draft), so a seat
+// without it reads whose act it is in the button's own slot; the wizard itself
+// is gated on the same atom, not only its door.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const BuyerRfi: React.FC = () => {
@@ -73,6 +80,9 @@ const BuyerRfi: React.FC = () => {
   const createRfp = useVerbAvailability('rfp:create');
   const command = useRfxCommand();
   const [wizardOpen, setWizardOpen] = useState(false);
+  // BL-93 — the Draft being edited, by id; the event is re-derived from the
+  // live read so the wizard opens on what the store holds now.
+  const [editingId, setEditingId] = useState<string | null>(null);
   // `?open=<id>` lands on one event — the RFQ event page's "Created from RFI-…"
   // link points here.
   const [params] = useSearchParams();
@@ -89,6 +99,7 @@ const BuyerRfi: React.FC = () => {
     return <ErrorState breadcrumb={crumb} error={events.error} onRetry={() => events.refetch()} />;
 
   const open = items.find((e) => e.id === openId) ?? null;
+  const editing = items.find((e) => e.id === editingId && e.status === 'Draft') ?? null;
 
   const run = (vars: Parameters<typeof command.mutate>[0], successKey: string) =>
     command.mutate(vars, {
@@ -196,6 +207,21 @@ const BuyerRfi: React.FC = () => {
           setExtendOnly={setExtendOnly}
           canPublish={publish.kind === 'held'}
           publishAvailability={publish}
+          createAvailability={create}
+          onEdit={() => setEditingId(open.id)}
+        />
+      )}
+
+      {editing && create.kind === 'held' && (
+        <RfiCreateWizard
+          key={editing.id}
+          editing={editing}
+          canPublish={publish.kind === 'held'}
+          onCancel={() => setEditingId(null)}
+          onCreated={(rfiId) => {
+            setEditingId(null);
+            setOpenId(rfiId);
+          }}
         />
       )}
 
@@ -230,6 +256,9 @@ interface DetailProps {
   canPublish: boolean;
   /** Whose act publishing is, when this seat does not hold it. */
   publishAvailability: VerbAvailability;
+  /** BL-93 — editing a draft is `rfi:create`. */
+  createAvailability: VerbAvailability;
+  onEdit: () => void;
 }
 
 const RfiDetail: React.FC<DetailProps> = ({
@@ -244,6 +273,8 @@ const RfiDetail: React.FC<DetailProps> = ({
   setExtendOnly,
   canPublish,
   publishAvailability,
+  createAvailability,
+  onEdit,
 }) => {
   const { t } = useTranslation();
   const only = extendOnly[event.id] ?? [];
@@ -260,8 +291,17 @@ const RfiDetail: React.FC<DetailProps> = ({
             <StatusPill variant={event.closed ? 'neutral' : 'info'} className="mt-1">
               {t(`rfx.status.${event.status}`)}
             </StatusPill>
+            <DraftRevisionNote revisions={event.revisions} testId={`rfi-last-edited-${event.id}`} />
           </div>
           <div className="flex flex-wrap items-center gap-3">
+            {event.status === 'Draft' &&
+              (createAvailability.kind === 'held' ? (
+                <Button variant="secondary" onClick={onEdit} data-testid={`rfi-edit-${event.id}`}>
+                  {t('rfxEdit.edit')}
+                </Button>
+              ) : (
+                <HandoffNotice availability={createAvailability} testId={`handoff-rfi-edit-${event.id}`} />
+              ))}
             {publishAvailability.kind !== 'held' && (
               <HandoffNotice availability={publishAvailability} testId={`handoff-rfi-lifecycle-${event.id}`} />
             )}

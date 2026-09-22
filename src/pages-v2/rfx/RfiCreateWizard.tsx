@@ -26,6 +26,13 @@
 // Every library prompt is a key resolved through `t()`; a question typed here
 // cannot be, because nobody translated it. It renders as the buyer's sentence
 // in both locales (`authored`), which is the honest outcome.
+//
+// ⚠️ **BL-93 — THE SAME WIZARD EDITS A DRAFT.** With `editing`, it opens on
+// every stored field of that Draft RFI (dates included — it is the same event,
+// not a copy) and saves through `t_rfi_revise_draft` instead of creating a
+// second event. "Save changes" keeps it a draft; "Save and send" also sends it,
+// which still needs `rfi:publish`. Start-from is hidden: replacing a draft's
+// content from a template is a new event, not an edit.
 // ────────────────────────────────────────────────────────────────────────────
 
 import React, { useMemo, useState } from 'react';
@@ -55,6 +62,7 @@ import RfxQuestionEditor from './RfxQuestionEditor';
 import RfxSaveTemplate from './RfxSaveTemplate';
 import RfxStartFrom, { type StartOption } from './RfxStartFrom';
 import { rfxNow } from './rfxDisplay';
+import { draftEditRefusal } from './draftEdit';
 
 interface Draft {
   title: string;
@@ -67,6 +75,8 @@ interface Draft {
   attachments: readonly AttachmentMeta[];
   confidential: boolean;
   confidentialityTerms: string;
+  /** Not authored here: carried so an edit keeps the event's purchasing group. */
+  purchasingGroup?: string;
 }
 
 const EMPTY: Draft = {
@@ -91,7 +101,24 @@ interface RfiCreateWizardProps {
   canPublish: boolean;
   /** Past events the buyer may copy (D2). */
   pastEvents?: readonly RfiEvent[];
+  /** BL-93 — the Draft RFI being edited. Absent = a new RFI. */
+  editing?: RfiEvent;
 }
+
+/** BL-93 — a stored Draft RFI as the wizard edits it: every field, dates kept. */
+const draftOf = (e: RfiEvent): Draft => ({
+  title: e.title,
+  family: rfxFamilyForCategory(e.materialCategory)?.id ?? '',
+  description: e.description ?? '',
+  responseDeadline: e.responseDeadline,
+  questions: e.questions,
+  customSections: e.customSections ?? [],
+  invitedSupplierIds: e.invitees.map((i) => i.supplierId),
+  attachments: e.attachments ?? [],
+  confidential: !!e.confidentiality,
+  confidentialityTerms: e.confidentiality?.terms ?? '',
+  ...(e.purchasingGroup ? { purchasingGroup: e.purchasingGroup } : {}),
+});
 
 /** The template content this draft would save (D2): content only, never who or when. */
 const contentOf = (d: Draft): RfiTemplateContent => ({
@@ -103,12 +130,18 @@ const contentOf = (d: Draft): RfiTemplateContent => ({
   ...(d.confidential && d.confidentialityTerms.trim() ? { confidentialityTerms: d.confidentialityTerms.trim() } : {}),
 });
 
-const RfiCreateWizard: React.FC<RfiCreateWizardProps> = ({ onCancel, onCreated, canPublish, pastEvents = [] }) => {
+const RfiCreateWizard: React.FC<RfiCreateWizardProps> = ({
+  onCancel,
+  onCreated,
+  canPublish,
+  pastEvents = [],
+  editing,
+}) => {
   const { t } = useTranslation();
   const { toast } = useToast();
   const command = useRfxCommand();
   const [step, setStep] = useState(0);
-  const [draft, setDraft] = useState<Draft>(EMPTY);
+  const [draft, setDraft] = useState<Draft>(() => (editing ? draftOf(editing) : EMPTY));
   // Bumped after a save or delete so the picker re-reads the store.
   const [storeVersion, setStoreVersion] = useState(0);
 
@@ -195,11 +228,12 @@ const RfiCreateWizard: React.FC<RfiCreateWizardProps> = ({ onCancel, onCreated, 
   const create = (publish: boolean) =>
     command.mutate(
       {
-        verb: 'createRfi',
+        ...(editing ? { verb: 'reviseRfi' as const, rfiId: editing.id } : { verb: 'createRfi' as const }),
         title: draft.title.trim(),
         ...(draft.description.trim() ? { description: draft.description.trim() } : {}),
         templateId: template?.id ?? '',
         materialCategory: family?.supplierCategory ?? '',
+        ...(draft.purchasingGroup ? { purchasingGroup: draft.purchasingGroup } : {}),
         responseDeadline: draft.responseDeadline,
         invitedSupplierIds: draft.invitedSupplierIds,
         questions: draft.questions,
@@ -213,12 +247,23 @@ const RfiCreateWizard: React.FC<RfiCreateWizardProps> = ({ onCancel, onCreated, 
       {
         onSuccess: (res) => {
           if (res.status === 'failed') {
-            toast({ variant: 'error', title: t('rfx.toast.refused', { reason: res.reason ?? '' }) });
+            toast({
+              variant: 'error',
+              title: draftEditRefusal(t, res.reason) ?? t('rfx.toast.refused', { reason: res.reason ?? '' }),
+            });
             return;
           }
           toast({
             variant: 'success',
-            title: t(publish ? 'rfx.toast.published' : 'rfx.toast.draftCreated'),
+            title: t(
+              editing
+                ? publish
+                  ? 'rfxEdit.toast.sent'
+                  : 'rfxEdit.toast.saved'
+                : publish
+                  ? 'rfx.toast.published'
+                  : 'rfx.toast.draftCreated',
+            ),
           });
           // ⚠️ THE ID COMES FROM THE STORE, NOT FROM HERE. A client-minted id
           // would land the buyer on an event that does not exist.
@@ -247,17 +292,26 @@ const RfiCreateWizard: React.FC<RfiCreateWizardProps> = ({ onCancel, onCreated, 
       description: t('rfx.create.step.scope.desc'),
       content: (
         <div className="space-y-5">
-          <RfxStartFrom
-            options={startOptions}
-            onApply={applyStart}
-            onDeleteSaved={(key) => {
-              rfiTemplateStore.remove(key.slice('saved:'.length));
-              setStoreVersion((v) => v + 1);
-            }}
-            unreadable={saved.unreadable}
-            rejected={saved.rejected}
-            testIdPrefix="rfi-new"
-          />
+          {editing ? (
+            <div className="text-sm text-text-secondary bg-bg-hover border border-border-subtle rounded-md px-3 py-2" data-testid="rfi-edit-banner">
+              <span className="font-semibold text-text-primary">
+                {t('rfxEdit.editing', { number: editing.eventNumber })}
+              </span>{' '}
+              {t('rfxEdit.editing.hint')}
+            </div>
+          ) : (
+            <RfxStartFrom
+              options={startOptions}
+              onApply={applyStart}
+              onDeleteSaved={(key) => {
+                rfiTemplateStore.remove(key.slice('saved:'.length));
+                setStoreVersion((v) => v + 1);
+              }}
+              unreadable={saved.unreadable}
+              rejected={saved.rejected}
+              testIdPrefix="rfi-new"
+            />
+          )}
           <div>
             <label className={labelClass} htmlFor="rfi-new-title">
               {t('rfx.create.field.title')}
@@ -445,7 +499,7 @@ const RfiCreateWizard: React.FC<RfiCreateWizardProps> = ({ onCancel, onCreated, 
               onClick={() => create(false)}
               data-testid="rfi-new-save-draft"
             >
-              {t('rfx.create.saveDraft')}
+              {t(editing ? 'rfxEdit.saveChanges' : 'rfx.create.saveDraft')}
             </Button>
           </div>
           {!canPublish && (
@@ -469,7 +523,7 @@ const RfiCreateWizard: React.FC<RfiCreateWizardProps> = ({ onCancel, onCreated, 
         onCancel={onCancel}
         onComplete={() => create(true)}
         isStepValid={(n) => (n === steps.length - 1 ? canPublish && sendable : stepValid(n))}
-        completeLabel={t('rfx.create.send')}
+        completeLabel={t(editing ? 'rfxEdit.saveAndSend' : 'rfx.create.send')}
       />
     </ModalOverlay>
   );

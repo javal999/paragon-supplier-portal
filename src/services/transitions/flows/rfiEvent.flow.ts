@@ -17,6 +17,13 @@
 import type { FlowDefinition } from '../schema';
 import { POLICY_HOOKS } from '../policyHooks';
 
+/**
+ * The fields a RFI is not a RFI without. ONE list, read by the
+ * create verb and by the revise-draft verb (BL-93), so an edit can never save a
+ * draft the create verb would have refused, and the two cannot drift.
+ */
+const RFI_CONTENT_FIELDS: readonly string[] = ['title', 'templateId', 'materialCategory', 'responseDeadline'];
+
 export const rfiEventFlow: FlowDefinition = {
   entity: 'rfiEvent',
   version: 1,
@@ -33,7 +40,28 @@ export const rfiEventFlow: FlowDefinition = {
       to: 'Draft',
       trigger: 'creation',
       requiredRole: 'rfi:create',
-      requiredFields: ['title', 'templateId', 'materialCategory', 'responseDeadline'],
+      requiredFields: [...RFI_CONTENT_FIELDS],
+      policyHooks: [POLICY_HOOKS.RFI_CREATE_VALID],
+      surfaceable: { surfaced: true },
+      version: 1,
+    },
+    {
+      // BL-93 — the buyer edits a DRAFT: every stored field, replaced by the
+      // wizard's whole payload. STATE-PRESERVING and legal from `Draft` ONLY, so
+      // an event already sent is refused by name (ILLEGAL_TRANSITION) rather than
+      // rewritten under the suppliers answering it. Same atom as create (CE-06:
+      // a seat that may draft may finish its draft without being able to send
+      // it), same required fields and the SAME policy hook, reused — not a copy.
+      // Callers pass `expectedState: 'Draft'`, so a draft somebody else sent in
+      // the meantime is refused STALE_STATE and not overwritten. The target
+      // appends WHO and WHEN to `revisions` (CE-08).
+      id: 't_rfi_revise_draft',
+      from: ['Draft'],
+      to: 'Draft',
+      statePreserving: true,
+      trigger: 'user',
+      requiredRole: 'rfi:create',
+      requiredFields: [...RFI_CONTENT_FIELDS],
       policyHooks: [POLICY_HOOKS.RFI_CREATE_VALID],
       surfaceable: { surfaced: true },
       version: 1,

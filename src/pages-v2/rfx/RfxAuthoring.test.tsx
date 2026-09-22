@@ -84,13 +84,13 @@ describe('the option editor (BL-36) — a choice question is written, refused, t
     next();
     await screen.findByTestId('rfi-new-review');
     fireEvent.click(screen.getByRole('button', { name: 'Send to suppliers' }));
-    await screen.findByTestId('rfi-detail-rfi-0003');
-    const stored = rfiEventStore.get('rfi-0003')!.questions.find((q) => q.id === 'event-1')!;
+    await screen.findByTestId('rfi-detail-rfi-0004');
+    const stored = rfiEventStore.get('rfi-0004')!.questions.find((q) => q.id === 'event-1')!;
     expect(stored.optionLabels).toEqual({ o1: 'Roll', o2: 'Sheet' });
 
     cleanup();
     renderWithProviders(<SupplierRfi />, { identity: SUP_007 });
-    fireEvent.click(await screen.findByTestId('supplier-rfi-open-rfi-0003'));
+    fireEvent.click(await screen.findByTestId('supplier-rfi-open-rfi-0004'));
     const field = await screen.findByTestId('rfi-field-event-1');
     expect(within(field).getByRole('option', { name: 'Sheet' })).toBeInTheDocument();
   });
@@ -159,7 +159,7 @@ describe('RFI → RFP (D3)', () => {
 
   it('?rfi= opens the wizard pre-filled, and the sent RFP shows "Created from RFI-…"', async () => {
     renderWithProviders(<BuyerRfp />, { identity: BUYER_SEAT, route: '/buyer/rfp?rfi=rfi-002' });
-    expect(await screen.findByTestId('rfp-new-from-rfi')).toHaveTextContent('Created from RFI-2026-002');
+    expect(await screen.findByTestId('rfp-new-from-rfi')).toHaveTextContent('Pre-filled from RFI-2026-002');
     expect(screen.getByLabelText('Title')).toHaveValue('Oslo sticker capability — variant labels 2027');
     const scope = screen.getByLabelText('Scope') as HTMLTextAreaElement;
     expect(scope.value).toMatch(/8 variant stickers/);
@@ -178,10 +178,10 @@ describe('RFI → RFP (D3)', () => {
     next();
     await screen.findByTestId('rfp-new-review');
     fireEvent.click(screen.getByRole('button', { name: 'Send to suppliers' }));
-    const detail = await screen.findByTestId('rfp-detail-rfp-0004');
-    expect(within(detail).getByTestId('rfp-from-rfi-rfp-0004')).toHaveTextContent('Created from RFI-2026-002');
-    expect(rfpEventStore.get('rfp-0004')!.sourceRfiId).toBe('rfi-002');
-    expect(rfpEventStore.get('rfp-0004')!.invitees.map((i) => i.supplierId)).toEqual(['sup-008']);
+    const detail = await screen.findByTestId('rfp-detail-rfp-0005');
+    expect(within(detail).getByTestId('rfp-from-rfi-rfp-0005')).toHaveTextContent('Created from RFI-2026-002');
+    expect(rfpEventStore.get('rfp-0005')!.sourceRfiId).toBe('rfi-002');
+    expect(rfpEventStore.get('rfp-0005')!.invitees.map((i) => i.supplierId)).toEqual(['sup-008']);
   });
 });
 
