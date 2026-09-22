@@ -2,8 +2,8 @@
 
 | | |
 |---|---|
-| Version | 1.0, 2026-09-21 |
-| Covers | BL-01 to BL-19b in `BACKLOG.md` — the 21 decisions that block or confirm work |
+| Version | 1.1, 2026-09-22 |
+| Covers | BL-01 to BL-19b in `BACKLOG.md` — the 21 decisions that block or confirm work; and the five RFx decisions RFX-D1 to RFX-D5 (2026-09-21) |
 | Purpose | Give the project owner a defensible recommendation to take to each owner: what the market does, what we suggest for PTI, and what would change our mind |
 | Status | **18 of the 21 were decided on 2026-09-21**, mostly as recommended; the outcomes are in section 9 of the requirements and in the Closed section of `BACKLOG.md`. Still open: BL-01 REPL, BL-11 interface technology, BL-12 call-off record, and three values (BL-54 invoice cap, BL-55 gate OTIF minimum, BL-56 early allowance). Where the owner decided differently from this guide — the hub keeps its own calendar (BL-14), capacity stays at 13 weekly buckets (BL-08), Web Tukar Faktur stays separate (BL-17), and TMS access becomes a 3PL tracking link (BL-03) — the decision stands and this guide is kept as the reasoning behind the others. All decided items are built and in production as of 2026-09-21 (BL-43 to BL-53). The builds raised six new questions, BL-66 to BL-71 in the backlog, which this guide does not yet cover |
 | Evidence | Market practice is cited at the end. Where a claim is a judgement rather than a published practice, it says so |
@@ -177,6 +177,47 @@ These eight are one number or one list each. The prototype ships defensible defa
 
 ---
 
+## RFx decisions (decided 2026-09-21)
+
+The owner took these five during the RFx overhaul. They are recorded as RFX-D1 to RFX-D5 in section 9 of the requirements and built in PRs #21 and #24 to #27, except the RFP → RFQ link (in progress, B5). They are kept here in the same form as the others so the reasoning travels with them. The research behind them is `research/RFX-BEST-PRACTICE-2026-09.md`.
+
+### RFX-D1 · RFI, RFQ and RFP as separate modules
+**Market practice.** Suites keep one event engine with an event type (Ariba, Oracle, Coupa), but buyers meet them as different jobs: an RFI qualifies suppliers, an RFP compares proposals and terms, an RFQ collects firm prices. Supplier guides from Coupa and Ariba customers describe each type separately.
+
+**Decision.** Three modules, each its own menu item under Sourcing, for buyers and suppliers (NV-07). This replaces the single sourcing page with RFI / RFQ / RFP tabs. The modules share their building blocks (questions, attachments, confidentiality gate, templates) and are linked only by pre-fill (RFX-D3).
+
+**What would change this.** If buyers routinely run all three for the same need, a sourcing project that groups them (the Ariba project container) becomes worth adding on top; the modules would stay.
+
+### RFX-D2 · Templates and copying a past event
+**Market practice.** Every leading platform creates events from templates and by copying a past event, choosing what carries over (Ariba `itemsToIncludeForCopy`: content, line items, suppliers, even prior bids; Coupa "from template" and "Copy Event"). Template administration sits with a small admin group.
+
+**Decision.** Buyers can save a template, start from one, and copy a past event, for RFI, RFQ and RFP. A template keeps content, never invitees or dates; a copy keeps invitees and clears dates. This reverses CE-04 and part of A-04 (2026-09-18). The central library stays owned by Procurement, changed by IT on request, with no admin screen (CE-05 stands).
+
+**What would change this.** If saved templates multiply and drift from the library, Procurement may want to approve templates before others can use them; that is the admin screen (BL-91), not a reversal.
+
+### RFX-D3 · Independent events with allowed links
+**Market practice.** An RFI is used as a qualifying round and its information is reused in a follow-on RFP or RFQ, usually by copying (Ariba, Oracle "Cross Copy RFI to RFQ"). No platform forces a sequence.
+
+**Decision.** The three are independent and each can be created alone. Allowed links: RFI → RFQ, RFI → RFP, RFP → RFQ, purchase requisition → RFQ. The new event is pre-filled, fully editable, and records and shows its source (CE-09).
+
+**What would change this.** A need to go back the other way (an RFQ turned into an RFP when quotes reveal the spec was wrong). Nothing has asked for it.
+
+### RFX-D4 · Open-spec requests in the RFP or RFI, prices labelled indicative
+**Market practice.** When the need is not yet specified, buyers use an RFI or an RFP in which the supplier proposes the solution, and RFI prices are non-binding by convention. No vendor checked has a native "indicative vs firm" flag; the basis is carried by the event type, a price-validity term, or a follow-on round.
+
+**Decision.** Recommendations, options, samples and indicative prices go in an RFP (or an RFI price range), and every such price reads "Indicative"; firm prices by quantity break go in the RFQ and read "Firm" (CE-10). Tundra and ICY are RFPs; Oslo, Iron and Redwood 2.0 are RFQs.
+
+**What would change this.** If suppliers treat "indicative" as a commitment in practice (or refuse to give one), the RFP pricing step would need a validity date and an explicit non-binding statement; the validity date already exists.
+
+### RFX-D5 · Split award per item on an RFQ
+**Market practice.** Manual award scenarios award per line item and split by percentage or quantity (Ariba); Oracle awards by supplier or by line. With quantity breaks the cheapest supplier often changes with volume, which is what a split exists for.
+
+**Decision.** An RFQ can be awarded to several suppliers, per item, split by %, and every item totals 100%. The award is made at one evaluation break, recorded on every line, and needs a reason when an item's best-scored quote gets no share (REQ-E03-05).
+
+**What would change this.** If the business wants to split by quantity rather than by share, or award different items at different breaks, the award record already holds a quantity and a break per line; the rule would change, not the data.
+
+---
+
 ## Sources
 
 Market practice above draws on these, read 2026-09-21, plus the vendor research already recorded in section 8 of the requirements:
@@ -186,4 +227,5 @@ Market practice above draws on these, read 2026-09-21, plus the vendor research 
 - [OTIF meaning, benchmarks and best practice](https://redstagfulfillment.com/on-time-and-in-full-otif/) and [OTIF formula and benchmarks](https://www.linenow.co/blog/glossary/on-time-in-full) — delivery windows, the 95% benchmark, retailer penalties
 - [On-time delivery and the 98% benchmark](https://www.symestic.com/en-us/what-is/on-time-delivery-otd) — measurement grain
 - [Frozen zone, slushy zone and time fences](https://www.erp-information.com/frozen-zone.html) and [the frozen planning period](https://www.brightworkresearch.com/frozen-period/) — zone lengths tied to lead time
+- RFx practice (RFX-D1 to RFX-D5): `research/RFX-BEST-PRACTICE-2026-09.md`, summarised in section 8.3 of the requirements, including the [SAP Ariba Event Management API guide](https://help.sap.com/doc/7b8bf5aa499341489687038610fa0bea/cloud/en-US/f342574f194c4af6a24a42087a665607.pdf), [Oracle negotiation types](https://docs.oracle.com/en/cloud/saas/procurement/25c/oaprc/negotiation-types.html) and [Ariba manual award scenarios](https://learning.sap.com/courses/project-monitoring-and-event-administration-within-sap-ariba-guided-sourcing/creating-manual-award-scenarios-to-award-guided-sourcing-events)
 - [SAP over- and under-delivery tolerances](https://community.sap.com/t5/enterprise-resource-planning-blog-posts-by-members/over-delivery-under-delivery-tolerances/ba-p/13522481) and [applying tolerances and the delivery completed indicator](https://learning.sap.com/courses/inventory-management-and-physical-inventory-in-sap-s-4hana/applying-tolerances-and-the-delivery-completed-indicator) — where tolerances are held and how goods receipt checks them
