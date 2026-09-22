@@ -109,6 +109,21 @@ describe('BL-94 — a split award giving sup-007 a share of an Oslo item is acce
     expect(quotationStore.get('qt-021s7')!.status).toBe('Awarded');
   });
 
+  it('the award is stamped on the hub clock (the declared present), never the machine clock', async () => {
+    addQuote('qt-021s7', 'sup-007');
+    const res = await award([
+      line('sup-015', 'qt-021a', 1, 50),
+      line('sup-007', 'qt-021s7', 1, 50),
+      line('sup-013', 'qt-021b', 2, 100),
+    ]);
+    expect(res.status, res.reason).toBe('done');
+    const rec = awardStore.all().find((a) => a.rfqId === 'rfq-021')!;
+    // The same clock the handler scored the quotes at, so the record and its
+    // best-scored ids describe one moment.
+    expect(rec.awardedAt).toBe(rfxNow());
+    expect(rec.awardedAt.slice(0, 10)).toBe(DECLARED_PRESENT);
+  });
+
   it('KNOWN-BAD twin — the SAME split with sup-008 in sup-007’s place is refused by name, and nothing is awarded', async () => {
     addQuote('qt-021s8', 'sup-008');
     const res = await award([

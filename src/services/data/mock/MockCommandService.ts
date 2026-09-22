@@ -1363,7 +1363,7 @@ const rfqTarget: CommandTarget = {
                 ...only.map((supplierId) => ({ supplierId, deadline })),
               ],
             }),
-        extensions: [...(r.extensions ?? []), { at: new Date().toISOString(), deadline, supplierIds: only }],
+        extensions: [...(r.extensions ?? []), { at: rfxNow(), deadline, supplierIds: only }],
       }));
       return;
     }
@@ -1428,7 +1428,7 @@ const rfqTarget: CommandTarget = {
       awardStore.add({
         id: awardStore.nextId(),
         rfqId: id,
-        awardedAt: new Date().toISOString(),
+        awardedAt: rfxNow(),
         lines,
         ...(typeof payload.awardReason === 'string' && payload.awardReason.trim()
           ? { reason: payload.awardReason.trim() }
@@ -1472,7 +1472,7 @@ const rfqTarget: CommandTarget = {
                 // Store-assigned, never payload-supplied: when a pin was
                 // recorded is a fact about the system, and a caller that could
                 // set it could backdate its own audit entry.
-                pinnedAt: new Date().toISOString(),
+                pinnedAt: rfxNow(),
                 source: payload.source as FxPinSource,
                 ...(typeof payload.rateType === 'string' ? { rateType: payload.rateType } : {}),
                 // SIMULATED until a real rate feed lands (the Stage-F seam). A
@@ -1501,7 +1501,7 @@ const rfqTarget: CommandTarget = {
       rfqNumber,
       buyerId: 'buyer-001',
       status: toState as RFQStatus, // 'Draft' (PF-1a · D-1 — reverses FORK-2B)
-      createdAt: new Date().toISOString().slice(0, 10),
+      createdAt: rfxNow().slice(0, 10),
       respondedSupplierIds: [],
       // REQ-E03-03 BR-02 — the RFI this RFQ was created from. Carried ONLY when
       // present: most RFQs come from no RFI (REQ-E03-02 BR-03).
@@ -1567,7 +1567,7 @@ const quotationTarget: CommandTarget = {
       id: quoteNumber, // store keyed by id; the assigned number doubles as the id
       rfqId: str('rfqId'),
       supplierId: str('supplierId'),
-      submittedAt: new Date().toISOString().slice(0, 10),
+      submittedAt: rfxNow().slice(0, 10),
       unitPrice,
       // The currency the price is denominated in (2e-c-2). The flow REQUIRES it
       // and the `quotation_submit_currency_permitted` policy proves it is a
