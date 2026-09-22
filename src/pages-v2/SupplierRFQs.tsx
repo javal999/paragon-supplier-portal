@@ -83,6 +83,8 @@ import { readMoq, type MoqRefusalReason } from './rfqs/quotationMoq';
 import { daysUntil } from '../services/data/dayProjection';
 import type { RFQ, Quotation, Supplier } from '../services/data/types';
 import { CHART_SERIES } from '../lib/chartPalette';
+import { CRITERIA_WEIGHTS } from '../lib/quoteScore';
+import { rfxNow } from './rfx/rfxDisplay';
 import { formatDate, formatMoney, formatNumber } from '../lib/format';
 import { useRefusalText } from '../hooks/useRefusalText';
 
@@ -109,12 +111,11 @@ interface OpenRFQ {
    * card shows illustrative text, marked as such.
    */
   specialRequirements: { text: string; sample: boolean };
+  /** How the quote is scored — the platform's CR-15 weights, in percent. */
   evaluationCriteria: {
     price: number;
-    quality: number;
     leadTime: number;
-    sustainability: number;
-    risk: number;
+    reliability: number;
   };
   status: string;
   receivedVia: string;
@@ -241,10 +242,8 @@ const EVAL_SEGMENTS: {
 }[] = [
   // DP-2: single teal→navy ramp (chartPalette CHART_SERIES), not a rainbow.
   { key: 'price', labelKey: 'rfqs.eval.price', color: CHART_SERIES[0] },
-  { key: 'quality', labelKey: 'rfqs.eval.quality', color: CHART_SERIES[1] },
-  { key: 'leadTime', labelKey: 'rfqs.eval.leadTime', color: CHART_SERIES[2] },
-  { key: 'sustainability', labelKey: 'rfqs.eval.sustainability', color: CHART_SERIES[3] },
-  { key: 'risk', labelKey: 'rfqs.eval.risk', color: CHART_SERIES[4] },
+  { key: 'leadTime', labelKey: 'rfqs.eval.leadTime', color: CHART_SERIES[1] },
+  { key: 'reliability', labelKey: 'rfqs.eval.reliability', color: CHART_SERIES[2] },
 ];
 
 const CHANNEL_ICON: Record<string, LucideIcon> = {
@@ -508,12 +507,14 @@ const RFQCard: React.FC<RFQCardProps> = ({
         </div>
 
         <div className="mb-4">
-          <div className="text-label text-text-tertiary uppercase mb-2 flex items-center gap-2">
-            {t('rfqs.card.evalCriteria')}
-            {/* The RFQ entity carries no evaluation weights: still sample. */}
-            <StatusPill variant="neutral">{t('rfqs.card.sampleDetail')}</StatusPill>
-          </div>
+          <div className="text-label text-text-tertiary uppercase mb-2">{t('rfqs.card.evalCriteria')}</div>
+          {/* The REAL scoring (CR-15, after the CR-23 gate) — the weights PTI's
+              comparison actually applies. The invented five-way split that
+              stood here ("Quality 25%, Sustainability 10%…") is gone. */}
           <EvalBar criteria={rfq.evaluationCriteria} />
+          <p className="text-xs text-text-tertiary mt-1" data-testid={`rfq-eval-gate-${rfq.id}`}>
+            {t('rfqs.eval.gate')}
+          </p>
         </div>
 
         <div className="mb-3 space-y-3">
@@ -808,19 +809,19 @@ const AwardsTab: React.FC<{ rows: AwardRow[] }> = ({ rows }) => {
   );
 };
 
-const SAMPLE_EVAL: OpenRFQ['evaluationCriteria'] = {
-  price: 40,
-  quality: 25,
-  leadTime: 15,
-  sustainability: 10,
-  risk: 10,
+/** CR-15's weights as percentages — read from the policy, never restated. */
+const EVAL_WEIGHTS: OpenRFQ['evaluationCriteria'] = {
+  price: Math.round(CRITERIA_WEIGHTS.price * 100),
+  leadTime: Math.round(CRITERIA_WEIGHTS.leadTime * 100),
+  reliability: Math.round(CRITERIA_WEIGHTS.reliability * 100),
 };
 
 // Adapter: canonical RFQ → the page's OpenRFQ display shape. Real fields come
 // from the read (number, material, category, qty, deadline, received date);
-// the supplier-facing detail the RFQ entity does NOT carry — evaluation weights,
-// special requirements, delivery location, received-via — is illustrative
-// sample, flagged with a "Sample detail" pill per card (partial migration).
+// the evaluation weights are the platform's own CR-15 policy (`CRITERIA_WEIGHTS`);
+// the detail the RFQ entity does NOT carry — special requirements on a legacy
+// RFQ, received-via — is illustrative sample, flagged with a "Sample detail"
+// pill (partial migration).
 // ⚠️ `RFQ_TODAY_MS = new Date('2026-04-25')` IS DELETED. It was the SECOND pin
 // in this app and it disagreed with `BuyerSourcing`'s by 23 days, so the same
 // RFQ deadline produced two different day-counts depending on which persona was
@@ -875,7 +876,7 @@ const toOpenRfq = (r: RFQ, nowIso: string, t: TFunction): OpenRFQ => {
     deadline: r.responseDeadline,
     daysRemaining,
     specialRequirements: specialRequirementsOf(r, t),
-    evaluationCriteria: SAMPLE_EVAL,
+    evaluationCriteria: EVAL_WEIGHTS,
     status: r.status === 'Open' ? 'Open — Awaiting Your Quote' : r.status,
     receivedVia: 'Web Portal',
     receivedDate: r.createdAt,
@@ -904,7 +905,8 @@ const RfqWorkspace: React.FC<RfqWorkspaceProps> = ({
   const { toast } = useToast();
   const { t } = useTranslation();
   const refusalText = useRefusalText();
-  const crumb = [t('rfqs.crumb.section'), t('rfqs.crumb.page')];
+  // The eyebrow is the menu section alone (the `PageHeader` rule).
+  const crumb = [t('hub.nav.section.sourcing')];
   const submitMutation = useQuotationSubmit();
   const [activeTab, setActiveTab] = useState<TabKey>('open');
   const quoteAvailability = useVerbAvailability('quotation:submit');
@@ -1712,7 +1714,8 @@ const RfqWorkspace: React.FC<RfqWorkspaceProps> = ({
 // the quote/award tabs stay illustrative (pilled).
 const SupplierRFQs: React.FC = () => {
   const { t } = useTranslation();
-  const crumb = [t('rfqs.crumb.section'), t('rfqs.crumb.page')];
+  // The eyebrow is the menu section alone (the `PageHeader` rule).
+  const crumb = [t('hub.nav.section.sourcing')];
   const { identity } = useCurrentIdentity();
   const { supplierId } = identity;
   const supplierQuery = useCurrentSupplier();
@@ -1723,7 +1726,11 @@ const SupplierRFQs: React.FC = () => {
   // component returns early four ways, and a hook below them is a CONDITIONAL
   // hook ("Rendered more hooks than during the previous render"), which is how
   // the first draft of this change took 44 specs down.
-  const nowIso = useMemo(() => new Date().toISOString(), []);
+  // ⚠️ THE HUB'S REFERENCE CLOCK, NOT THE WALL CLOCK. This read `new Date()`,
+  // so the card counted Oslo's deadline against real time ("0 days remaining")
+  // while every buyer RFx page reads "As of" the simulated `rfxNow()` — the same
+  // deadline, two day-counts, depending on who was looking.
+  const nowIso = useMemo(() => rfxNow(), []);
 
   if (!supplierId) return <NoSupplierIdentity />;
   if (

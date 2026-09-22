@@ -10,7 +10,7 @@ import TableRow from '../../components/ui-v2/TableRow';
 import TableCell from '../../components/ui-v2/TableCell';
 import SessionAttachments from '../../components/ui-v2/SessionAttachments';
 import { formatDate } from '../../lib/format';
-import type { ScoringOptions, QuoteScore } from '../../lib/quoteScore';
+import { compositeText, scoreStanding, type ScoringOptions, type QuoteScore } from '../../lib/quoteScore';
 import type { RFQ } from '../../data/mockRfqs';
 import type { Quotation } from '../../data/mockQuotations';
 import type { GateResult } from '../../services/sourcing/complianceGate';
@@ -38,6 +38,7 @@ import {
   type TieredAwardRefusal,
 } from '../../services/sourcing/rfqComparison';
 import { EmptyRow, GateMarker, money, qty } from './rfxDisplay';
+import { FirmPill } from './rfxAuthoringDisplay';
 
 // ────────────────────────────────────────────────────────────────────────────
 // THE TIERED RFQ ON ITS EVENT PAGE (RFx spec 2026-09-21, "Evaluation and
@@ -299,8 +300,12 @@ const ItemComparison: React.FC<ComparisonProps & { item: RfqItem }> = ({
   const scoring = scoreItemAt(rfq, item, ranked, evalQty, reliabilityOf, scoringOpts);
   const scoreById = new Map<string, QuoteScore>(scoring.kind === 'scored' ? scoring.scores.map((s) => [s.quoteId, s]) : []);
   const ordered = [...ranked].sort(
-    (a, b) => (scoreById.get(b.id)?.composite ?? -1) - (scoreById.get(a.id)?.composite ?? -1),
+    (a, b) => (scoreById.get(b.id)?.compositeExact ?? -1) - (scoreById.get(a.id)?.compositeExact ?? -1),
   );
+  // Tie honesty, the event page's rule (`scoreStanding`): one decimal when two
+  // scores round alike, "Tied for best" on a genuine tie.
+  const standing = scoreStanding(scoring.kind === 'scored' ? scoring.scores : []);
+  const tied = standing.tiedIds.length > 1;
   // The best price per break is marked among the RANKED suppliers only: a
   // supplier that cannot be awarded does not set the bar a buyer compares to.
   const bestPrice = bestPriceByBreak(rfq, item, ranked);
@@ -328,9 +333,14 @@ const ItemComparison: React.FC<ComparisonProps & { item: RfqItem }> = ({
         <TableCell className="min-w-[12rem]">
           <div className="text-sm text-text-primary">
             {supplierName(q.supplierId)}
-            {score?.topRanked && (
+            {!tied && score?.topRanked && (
               <span className="ml-2" data-testid={`item-best-${item.lineNo}-${q.supplierId}`}>
                 <StatusPill variant="success">{t('rfqCompare.cmp.bestScored')}</StatusPill>
+              </span>
+            )}
+            {tied && standing.tiedIds.includes(q.id) && (
+              <span className="ml-2" data-testid={`item-tied-${item.lineNo}-${q.supplierId}`}>
+                <StatusPill variant="success">{t('rfx.cmp.tied')}</StatusPill>
               </span>
             )}
           </div>
@@ -354,14 +364,27 @@ const ItemComparison: React.FC<ComparisonProps & { item: RfqItem }> = ({
               className={`whitespace-nowrap ${best ? 'bg-success-soft' : ''} ${tier.qty === evalTier?.qty ? 'border-x border-border-subtle' : ''}`}
               data-testid={`item-price-${item.lineNo}-${q.supplierId}-${tier.qty}`}
               data-best={best ? 'true' : undefined}
-              title={best ? t('rfqCompare.cmp.bestPrice') : undefined}
             >
               {price === undefined ? (
                 <span className="text-xs text-text-tertiary">{t('rfqCompare.cmp.notPriced')}</span>
               ) : (
                 <Data>{money(price, cur)}</Data>
               )}
-              {best && <span className="sr-only"> {t('rfqCompare.cmp.bestPrice')}</span>}
+              {/* A compact marker, explained once by the legend under the
+                  table. The short word is hidden from assistive technology and
+                  the full phrase is read instead, so a screen reader still
+                  hears what "Lowest" means in every cell. */}
+              {best && (
+                <>
+                  <span
+                    aria-hidden="true"
+                    className="ml-1 inline-flex items-center rounded-sm border px-1.5 py-0.5 text-[10px] font-medium bg-success-soft text-success border-success/30"
+                  >
+                    {t('rfqCompare.cmp.lowest')}
+                  </span>
+                  <span className="sr-only"> {t('rfqCompare.cmp.bestPrice')}</span>
+                </>
+              )}
             </TableCell>
           );
         })}
@@ -387,7 +410,7 @@ const ItemComparison: React.FC<ComparisonProps & { item: RfqItem }> = ({
         </TableCell>
         <TableCell>
           {isRanked ? (
-            <Data className="font-semibold">{score?.composite ?? '—'}</Data>
+            <Data className="font-semibold">{score ? compositeText(score, standing) : '—'}</Data>
           ) : (
             <span className="text-xs text-text-tertiary">{t('rfx.gate.notScored')}</span>
           )}
@@ -407,6 +430,7 @@ const ItemComparison: React.FC<ComparisonProps & { item: RfqItem }> = ({
             {t('rfqCompare.cmp.pieces', { pieces: qty(tierPieces(evalTier, item)) })}
           </span>
         )}
+        <FirmPill testId={`item-cmp-firm-${item.lineNo}`} />
       </div>
       <div className="overflow-x-auto">
         <Table>
@@ -436,6 +460,16 @@ const ItemComparison: React.FC<ComparisonProps & { item: RfqItem }> = ({
           </tbody>
         </Table>
       </div>
+      {bestPrice.size > 0 && (
+        <p className="px-4 py-2 text-xs text-text-tertiary border-t border-border-subtle" data-testid={`item-legend-${item.lineNo}`}>
+          {t('rfqCompare.cmp.lowestLegend')}
+        </p>
+      )}
+      {(standing.oneDecimal || tied) && (
+        <p className="px-4 py-2 text-xs text-text-tertiary border-t border-border-subtle" data-testid={`item-score-note-${item.lineNo}`}>
+          {t(tied ? 'rfx.cmp.tieNote' : 'rfx.cmp.decimalNote')}
+        </p>
+      )}
       {failing.length > 0 && (
         <p className="px-4 py-2 text-xs text-text-tertiary border-t border-border-subtle">{t('rfqCompare.cmp.failing')}</p>
       )}
@@ -552,7 +586,10 @@ export const TieredAwardForm: React.FC<AwardFormProps> = ({
             <Table>
               <TableHeader>
                 <TableHeaderCell>{t('rfx.award.col.supplier')}</TableHeaderCell>
-                <TableHeaderCell>{t('rfqCompare.cmp.col.totalAtBreak', { qty: qty(evalQty) })}</TableHeaderCell>
+                <TableHeaderCell>
+                  {t('rfqCompare.cmp.col.totalAtBreak', { qty: qty(evalQty) })}
+                  <FirmPill className="ml-2 normal-case" testId={`award-firm-${item.lineNo}`} />
+                </TableHeaderCell>
                 <TableHeaderCell>{t('rfx.award.col.share')}</TableHeaderCell>
                 <TableHeaderCell>{t('rfqCompare.award.qty')}</TableHeaderCell>
               </TableHeader>

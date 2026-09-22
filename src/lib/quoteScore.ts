@@ -145,8 +145,14 @@ export interface QuoteScore {
   leadTimeScore: number;
   /** SIMULATED — the input value, passed through untouched. */
   reliabilityScore: number;
-  /** Weighted roll-up of the three axes. */
+  /** Weighted roll-up of the three axes, rounded for display. */
   composite: number;
+  /**
+   * The same roll-up UNROUNDED — what `topRanked` is decided on. Carried so a
+   * surface can say why one of two "72"s is best (72.0 against 71.6) instead of
+   * showing a recommendation the displayed numbers cannot explain.
+   */
+  compositeExact: number;
   /** Weakest-link liveness of the composite (SIMULATED while any input is). */
   compositeLiveness: Liveness;
   /** argmax(composite) across the set — carries the composite's liveness. */
@@ -321,6 +327,7 @@ export function scoreQuotations(
       leadTimeScore,
       reliabilityScore: q.reliabilityScore,
       composite,
+      compositeExact: exact,
       compositeLiveness,
       topRanked: false,
     };
@@ -342,3 +349,39 @@ export function scoreQuotations(
     basis: { currency: basisCurrency, pins: usedPins, homogeneous },
   };
 }
+
+// ── How the top of a scored set reads (tie honesty) ─────────────────────────
+
+/**
+ * How the best of a scored set should be READ, so the "Best scored" marker never
+ * contradicts the numbers beside it.
+ *
+ * - `tiedIds` — every quote whose UNROUNDED composite equals the best. More than
+ *   one is a GENUINE tie: the engine keeps its stable first-listed pick for the
+ *   award rule, but a surface must not present that pick as a ranking — it shows
+ *   all of them as tied.
+ * - `oneDecimal` — true when there is ONE best but another quote ROUNDS to the
+ *   same whole number (Oslo at 3,000: 72.0 against 71.6, both "72"). The stated
+ *   tie-break is then the unrounded score, and the surface shows one decimal so
+ *   the reader can see it.
+ */
+export interface ScoreStanding {
+  readonly tiedIds: readonly string[];
+  readonly oneDecimal: boolean;
+}
+
+/** Equal within float noise: a weighted sum of integers is never closer than 0.001 apart unless equal. */
+const SAME = 1e-9;
+
+export function scoreStanding(scores: readonly QuoteScore[]): ScoreStanding {
+  if (scores.length === 0) return { tiedIds: [], oneDecimal: false };
+  const best = Math.max(...scores.map((s) => s.compositeExact));
+  const tiedIds = scores.filter((s) => Math.abs(s.compositeExact - best) < SAME).map((s) => s.quoteId);
+  const bestRounded = Math.round(best);
+  const collides = scores.filter((s) => s.composite === bestRounded).length > tiedIds.length;
+  return { tiedIds, oneDecimal: tiedIds.length === 1 && collides };
+}
+
+/** The composite as a surface should print it under a standing. */
+export const compositeText = (score: QuoteScore, standing: ScoreStanding): string =>
+  standing.oneDecimal ? score.compositeExact.toFixed(1) : String(score.composite);

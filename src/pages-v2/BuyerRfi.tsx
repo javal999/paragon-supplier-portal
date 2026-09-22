@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import AppShellV2 from '../components/layout-v2/AppShellV2';
 import PageHeader from '../components/ui-v2/PageHeader';
@@ -73,11 +73,15 @@ const BuyerRfi: React.FC = () => {
   const createRfp = useVerbAvailability('rfp:create');
   const command = useRfxCommand();
   const [wizardOpen, setWizardOpen] = useState(false);
-  const [openId, setOpenId] = useState<string | null>(null);
+  // `?open=<id>` lands on one event — the RFQ event page's "Created from RFI-…"
+  // link points here.
+  const [params] = useSearchParams();
+  const [openId, setOpenId] = useState<string | null>(() => params.get('open'));
   const [extendFor, setExtendFor] = useState<Record<string, string>>({});
   const [extendOnly, setExtendOnly] = useState<Record<string, string[]>>({});
 
-  const crumb = [t('hub.nav.section.sourcing'), t('rfx.rfi.title')];
+  // The eyebrow is the menu section alone (the `PageHeader` rule).
+  const crumb = [t('hub.nav.section.sourcing')];
   const items = useMemo(() => events.data?.items ?? [], [events.data]);
 
   if (events.isPending) return <LoadingState breadcrumb={crumb} />;

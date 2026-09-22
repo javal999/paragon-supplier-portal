@@ -26,7 +26,7 @@
 
 import type { BidCurrency } from '../../lib/currencyPolicy';
 import { BASE_CURRENCY } from '../../lib/currencyPolicy';
-import { scoreQuotations, type ScoringOptions, type ScoringOutcome } from '../../lib/quoteScore';
+import { scoreQuotations, scoreStanding, type ScoringOptions, type ScoringOutcome } from '../../lib/quoteScore';
 import type { AwardLine } from './types';
 import {
   tierPieces,
@@ -270,9 +270,18 @@ export function scoreRfqAt(
   return scoreQuotations(scorable, opts);
 }
 
-/** The top-ranked quote id of a scoring outcome, or null when it is unrankable. */
-export const topRankedOf = (outcome: ScoringOutcome): string | null =>
-  outcome.kind === 'scored' ? (outcome.scores.find((s) => s.topRanked)?.quoteId ?? null) : null;
+/**
+ * The best-scored quote id of a scoring outcome, or null when there is none to
+ * follow: an unrankable set, OR A GENUINE TIE. On an exact tie the engine still
+ * marks its stable first pick `topRanked`, but that is list order, not a ranking
+ * — so the award's reason rule has no single best to depart from, and the
+ * comparison shows the tied quotes as "Tied for best" (`scoreStanding`).
+ */
+export const topRankedOf = (outcome: ScoringOutcome): string | null => {
+  if (outcome.kind !== 'scored') return null;
+  if (scoreStanding(outcome.scores).tiedIds.length > 1) return null;
+  return outcome.scores.find((s) => s.topRanked)?.quoteId ?? null;
+};
 
 /** The best-scored quote per item at the break (item line → quote id or null). */
 export function bestScoredByItemAt(

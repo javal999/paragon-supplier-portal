@@ -52,6 +52,20 @@ export const IndicativePill: React.FC<{ className?: string; testId?: string }> =
   );
 };
 
+/**
+ * D4's other half — "every price field is labelled indicative or firm". An RFQ
+ * price is a FIRM quote by tier, and it says so with the same quiet tag the
+ * indicative one uses, wherever it is entered or compared.
+ */
+export const FirmPill: React.FC<{ className?: string; testId?: string }> = ({ className = '', testId }) => {
+  const { t } = useTranslation();
+  return (
+    <StatusPill variant="neutral" className={className}>
+      <span data-testid={testId}>{t('rfxa.firm')}</span>
+    </StatusPill>
+  );
+};
+
 /** One answer as a reader sees it, in the question's kind. `—` when unanswered. */
 export function answerText(t: TFunction, q: RfiQuestion, a: RfiAnswer | undefined): string {
   if (!a) return '—';

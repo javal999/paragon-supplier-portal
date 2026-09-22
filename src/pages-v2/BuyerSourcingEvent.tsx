@@ -20,15 +20,20 @@ import { useVerbAvailability } from '../hooks/useVerbAvailability';
 import { useToast } from '../hooks/useToast';
 import { formatDate } from '../lib/format';
 import { BASE_CURRENCY } from '../lib/currencyPolicy';
-import { scoreQuotations } from '../lib/quoteScore';
+import { compositeText, scoreQuotations, scoreStanding } from '../lib/quoteScore';
 import {
   useAwards,
   useNegotiationRounds,
   useQuotations,
   useRFQs,
+  useRequisitions,
+  useRfiEvents,
   useRfqComplianceGate,
+  useRfpEvents,
   useSuppliers,
 } from '../services/query/hooks';
+import { rfqTemplateStore } from '../services/sourcing/rfqTemplates';
+import type { RFQ } from '../data/mockRfqs';
 import { useRfxCommand } from '../services/query/commandHooks';
 import { awardSplitRefusal, effectiveDeadline, reliabilityScoreFor } from '../services/transitions/rfxRules';
 import type { AwardLine } from '../services/sourcing/types';
@@ -175,6 +180,16 @@ const BuyerSourcingEvent: React.FC = () => {
     [scoring],
   );
   const bestId = scoring.kind === 'scored' ? (scoring.scores.find((s) => s.topRanked)?.quoteId ?? null) : null;
+  // ⚠️ TIE HONESTY. Two quotes can both READ "72" while one is best on the
+  // unrounded score (Oslo at 3,000: 72.0 against 71.6) — the scores are then
+  // shown to one decimal and the note states that rule. A GENUINE tie marks
+  // every tied quote "Tied for best" and no single "Best scored": the engine's
+  // stable pick is not a ranking, and presenting it as one would be invented.
+  const standing = useMemo(
+    () => scoreStanding(scoring.kind === 'scored' ? scoring.scores : []),
+    [scoring],
+  );
+  const tied = standing.tiedIds.length > 1;
 
   // The board panel's "Award RFQ" / "View award details" open this page at its
   // award section (`?section=award`), so the footer lands where its act is.
@@ -265,11 +280,7 @@ const BuyerSourcingEvent: React.FC = () => {
           {t('rfx.event.back')}
         </Link>
         <StatusPill variant={rfq.status === 'Awarded' ? 'success' : 'info'}>{rfq.status}</StatusPill>
-        {rfq.sourceRfiId && (
-          <span className="text-xs text-text-tertiary" data-testid="event-from-rfi">
-            {t('rfx.event.fromRfi', { event: rfq.sourceRfiId })}
-          </span>
-        )}
+        <RfqSourceLinks rfq={rfq} rfqs={rfqs.data?.items ?? []} />
       </div>
 
       {/* — REQ-E03-03 BR-05: the response window, for everyone or for named invitees — */}
@@ -445,10 +456,15 @@ const BuyerSourcingEvent: React.FC = () => {
               {current.map((q) => (
                 <TableHeaderCell key={q.id}>
                   {supplierName(q.supplierId)}
-                  {q.id === bestId && (
+                  {!tied && q.id === bestId && (
                     <StatusPill variant="success" className="ml-2">
                       {t('rfx.cmp.best')}
                     </StatusPill>
+                  )}
+                  {tied && standing.tiedIds.includes(q.id) && (
+                    <span className="ml-2" data-testid={`cmp-tied-${q.supplierId}`}>
+                      <StatusPill variant="success">{t('rfx.cmp.tied')}</StatusPill>
+                    </span>
                   )}
                   {(q.roundNumber ?? 0) > 0 && (
                     <div className="text-xs font-normal normal-case text-text-tertiary">
@@ -509,9 +525,14 @@ const BuyerSourcingEvent: React.FC = () => {
                   {t('rfx.cmp.row.weighted')}
                 </TableCell>
                 {current.map((q) => (
-                  <TableCell key={q.id} className={q.id === bestId ? 'bg-success-soft' : ''}>
+                  <TableCell
+                    key={q.id}
+                    className={(tied ? standing.tiedIds.includes(q.id) : q.id === bestId) ? 'bg-success-soft' : ''}
+                  >
                     {qualifies(q.supplierId) ? (
-                      <Data className="font-semibold">{scoreById.get(q.id)?.composite ?? '—'}</Data>
+                      <Data className="font-semibold">
+                        {scoreById.has(q.id) ? compositeText(scoreById.get(q.id)!, standing) : '—'}
+                      </Data>
                     ) : (
                       // BR-01a — the quote stays visible; it is not scored.
                       <span className="text-xs text-text-tertiary" data-testid={`cmp-not-scored-${q.supplierId}`}>
@@ -523,6 +544,11 @@ const BuyerSourcingEvent: React.FC = () => {
               </TableRow>
             </tbody>
           </Table>
+        )}
+        {(standing.oneDecimal || tied) && current.length > 0 && (
+          <p className="px-4 py-2 text-xs text-text-tertiary" data-testid={tied ? 'cmp-tie-note' : 'cmp-decimal-note'}>
+            {t(tied ? 'rfx.cmp.tieNote' : 'rfx.cmp.decimalNote')}
+          </p>
         )}
         {current.length > 0 && qualified.length === 0 && scoring.kind === 'scored' && (
           <p className="px-4 py-2 text-xs text-warning-hover" data-testid="cmp-none-qualified">
@@ -970,3 +996,87 @@ function byId<T extends { id: string }>(rows: readonly T[], id: string): T {
 }
 
 export default BuyerSourcingEvent;
+
+/**
+ * D3 / D2 — "Created from …", for EVERY source the tree records, by the source's
+ * DOCUMENT NUMBER (never its internal id), linked where a page shows it:
+ *
+ * - `sourceRfiId` → RFI-2026-… (the RFI board, opened on it);
+ * - `sourceRfpId` → RFP-2026-… (the RFP board, opened on it);
+ * - the requisition → PR-2026-… (the requisitions page, opened on it). The RFQ
+ *   does not store the requisition id; the PR does — `t_pr_source` writes this
+ *   RFQ's number onto the PR's `linkedDoc` — so the link is read from there;
+ * - `copiedFromRfqId` → RFQ-2026-… (its own event page);
+ * - `templateId` → the template's name (no page shows a template).
+ *
+ * A source the reads cannot resolve (once they have settled) still says what it
+ * is, by id, rather than vanishing: the record claims a source, and hiding the claim would be a lie of
+ * omission.
+ */
+const RfqSourceLinks: React.FC<{ rfq: RFQ; rfqs: readonly RFQ[] }> = ({ rfq, rfqs }) => {
+  const { t } = useTranslation();
+  const rfis = useRfiEvents();
+  const rfps = useRfpEvents();
+  const prs = useRequisitions();
+  const link = 'text-xs text-action-hover hover:underline';
+  const note = 'text-xs text-text-tertiary';
+  const rfi = rfq.sourceRfiId ? (rfis.data?.items ?? []).find((e) => e.id === rfq.sourceRfiId) : undefined;
+  const rfp = rfq.sourceRfpId ? (rfps.data?.items ?? []).find((e) => e.id === rfq.sourceRfpId) : undefined;
+  const pr = (prs.data?.items ?? []).find((p) => p.linkedDoc === rfq.rfqNumber);
+  const copied = rfq.copiedFromRfqId ? rfqs.find((r) => r.id === rfq.copiedFromRfqId) : undefined;
+  const template = rfq.templateId ? rfqTemplateStore.byId(rfq.templateId) : undefined;
+  const templateName = template ? (template.nameKey ? t(template.nameKey) : (template.name ?? template.id)) : undefined;
+  return (
+    <>
+      {rfq.sourceRfiId && !rfis.isPending && (
+        <span className={note} data-testid="event-from-rfi">
+          {t('rfx.event.createdFrom')}{' '}
+          {rfi ? (
+            <Link to={`/buyer/rfi?open=${encodeURIComponent(rfi.id)}`} className={link}>
+              <Data>{rfi.eventNumber}</Data>
+            </Link>
+          ) : (
+            <Data>{rfq.sourceRfiId}</Data>
+          )}
+        </span>
+      )}
+      {rfq.sourceRfpId && !rfps.isPending && (
+        <span className={note} data-testid="event-from-rfp">
+          {t('rfx.event.createdFrom')}{' '}
+          {rfp ? (
+            <Link to={`/buyer/rfp?open=${encodeURIComponent(rfp.id)}`} className={link}>
+              <Data>{rfp.eventNumber}</Data>
+            </Link>
+          ) : (
+            <Data>{rfq.sourceRfpId}</Data>
+          )}
+        </span>
+      )}
+      {pr && (
+        <span className={note} data-testid="event-from-pr">
+          {t('rfx.event.createdFrom')}{' '}
+          <Link to={`/buyer/purchase-requisition?open=${encodeURIComponent(pr.id)}`} className={link}>
+            <Data>{pr.prNumber}</Data>
+          </Link>
+        </span>
+      )}
+      {rfq.copiedFromRfqId && (
+        <span className={note} data-testid="event-copied-from">
+          {t('rfx.event.copiedFrom')}{' '}
+          {copied ? (
+            <Link to={`/buyer/rfq/${encodeURIComponent(copied.id)}`} className={link}>
+              <Data>{copied.rfqNumber}</Data>
+            </Link>
+          ) : (
+            <Data>{rfq.copiedFromRfqId}</Data>
+          )}
+        </span>
+      )}
+      {rfq.templateId && (
+        <span className={note} data-testid="event-from-template">
+          {t('rfx.event.fromTemplate', { name: templateName ?? rfq.templateId })}
+        </span>
+      )}
+    </>
+  );
+};

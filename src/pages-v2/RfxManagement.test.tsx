@@ -57,7 +57,18 @@ const SUP_015 = supplierSeat('sup-015', 'PT Sample Flexible Packaging');
 describe('RFx — the strings are bilingual, both directions', () => {
   it('every EN key has an ID twin, and vice versa', () => {
     expect(Object.keys(rfxEn).length).toBeGreaterThan(150); // population control
-    expect(Object.keys(rfxEn).sort()).toEqual(Object.keys(rfxId).sort());
+    // ⚠️ PLURAL-AWARE, for the reason `fragments.test.ts` gives: English has a
+    // `_one` form and Indonesian has only `_other`, so `rfx.rfp.proposals_one`
+    // existing in EN alone is correct i18next, not a missing translation. The
+    // EN `_one` of a key whose `_other` exists is dropped before comparing.
+    const enComparable = Object.keys(rfxEn).filter(
+      (k) => !(k.endsWith('_one') && `${k.slice(0, -4)}_other` in rfxEn),
+    );
+    expect(enComparable.sort()).toEqual(Object.keys(rfxId).sort());
+    // known-good plural: the `_one` exists in EN only, the `_other` in both
+    expect(rfxEn['rfx.rfp.proposals_one']).toBeDefined();
+    expect(rfxId['rfx.rfp.proposals_one']).toBeUndefined();
+    expect(rfxId['rfx.rfp.proposals_other']).toBeDefined();
     expect(Object.values(rfxId).every((v) => v.trim().length > 0)).toBe(true);
     // known-good / known-bad on the instrument itself
     expect(rfxEn['rfx.noHistory']).toBeDefined();

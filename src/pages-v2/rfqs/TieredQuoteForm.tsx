@@ -11,6 +11,7 @@ import { formatDate, formatNumber } from '../../lib/format';
 import type { RFQ } from '../../data/mockRfqs';
 import { tiersForItem, type RfqItem, type RfqSpecField } from '../../services/sourcing/rfqModel';
 import RfqQuestionField from './RfqQuestionField';
+import { FirmPill } from '../rfx/rfxAuthoringDisplay';
 import type { ItemDraft, TieredDraft } from './tieredQuoteModel';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -173,8 +174,9 @@ const ItemBlock: React.FC<{
       )}
 
       <div>
-        <div className="text-xs font-semibold text-text-secondary mb-2">
+        <div className="text-xs font-semibold text-text-secondary mb-2 flex items-center gap-2">
           {t('rfqResponse.grid.unitPrices')}
+          <FirmPill testId={`${tid}-firm`} />
         </div>
         <BreakPrices
           rfq={rfq}
@@ -473,7 +475,7 @@ export const SampleOfferFields: React.FC<{
       </span>
       {requested && (
         <p className="text-xs text-text-tertiary mb-2">
-          {t('rfqResponse.sample.requested', { qty: formatNumber(requested.qty), date: formatDate(requested.neededBy) })}
+          {t('rfqResponse.sample.requested', { count: requested.qty, qty: formatNumber(requested.qty), date: formatDate(requested.neededBy) })}
         </p>
       )}
       <div className="flex gap-2">

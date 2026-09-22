@@ -185,7 +185,8 @@ export const sourcingEn: Record<string, string> = {
   'sourcing.cmp.row.result': 'Result',
   'sourcing.cmp.row.status': 'Status',
   'sourcing.cmp.row.select': 'Select',
-  'sourcing.cmp.leadTimeDays': '{{count}} days',
+  'sourcing.cmp.leadTimeDays_one': '{{count}} day',
+  'sourcing.cmp.leadTimeDays_other': '{{count}} days',
   'sourcing.cmp.award': 'Award',
   'sourcing.cmp.moveToReview': 'Move to review',
   // — CI-2 should-cost-vs-quote spread (read-only, MODELED × SIMULATED) —
@@ -527,7 +528,7 @@ export const sourcingId: Record<string, string> = {
   'sourcing.cmp.row.result': 'Hasil',
   'sourcing.cmp.row.status': 'Status',
   'sourcing.cmp.row.select': 'Pilih',
-  'sourcing.cmp.leadTimeDays': '{{count}} hari',
+  'sourcing.cmp.leadTimeDays_other': '{{count}} hari',
   'sourcing.cmp.award': 'Menangkan',
   'sourcing.cmp.moveToReview': 'Pindahkan ke tinjauan',
   // — Selisih should-cost vs penawaran CI-2 (hanya-baca, MODELED × SIMULASI) —
