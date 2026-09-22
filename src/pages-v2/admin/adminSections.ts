@@ -1,13 +1,14 @@
-import { CalendarDays, type LucideIcon } from 'lucide-react';
+import { BellRing, CalendarDays, Link2, ListChecks, SlidersHorizontal, type LucideIcon } from 'lucide-react';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// THE ADMINISTRATION AREA — its sections, one definition (BL-50, BL-32).
+// THE ADMINISTRATION AREA — its sections, one definition (BL-50, BL-51, BL-32).
 //
-// The working calendar is the first page of the admin screen BL-32 describes.
-// Reason codes, tolerances, alert thresholds and stale periods join this list
-// as they are built. ⚠️ ONLY BUILT SECTIONS ARE LISTED: a tab for a page that
-// does not exist yet would be a false affordance, so the page says in words
-// what is coming instead.
+// The admin screen BL-32 describes, complete: the working calendar (BL-50), the
+// 3PL list (BL-51), and the values that lived in configuration files until
+// BL-32 — tolerances and rule values, alert thresholds and stale periods, and
+// reason codes. ⚠️ ONLY BUILT SECTIONS ARE LISTED: a tab for a page that does
+// not exist would be a false affordance. Every admin page renders its tabs
+// from this list (`AdminSectionNav`), so a page cannot forget a sibling.
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface AdminSection {
@@ -25,5 +26,29 @@ export const ADMIN_SECTIONS: readonly AdminSection[] = [
     labelKey: 'adminCal.section.workingCalendar',
     icon: CalendarDays,
     path: `${ADMIN_BASE_PATH}/working-calendar`,
+  },
+  {
+    id: '3pl-tracking',
+    labelKey: 'hub.nav.util.threePls',
+    icon: Link2,
+    path: `${ADMIN_BASE_PATH}/3pl-tracking`,
+  },
+  {
+    id: 'tolerances',
+    labelKey: 'hub.nav.util.tolerances',
+    icon: SlidersHorizontal,
+    path: `${ADMIN_BASE_PATH}/tolerances`,
+  },
+  {
+    id: 'alert-thresholds',
+    labelKey: 'hub.nav.util.alertThresholds',
+    icon: BellRing,
+    path: `${ADMIN_BASE_PATH}/alert-thresholds`,
+  },
+  {
+    id: 'reason-codes',
+    labelKey: 'hub.nav.util.reasonCodes',
+    icon: ListChecks,
+    path: `${ADMIN_BASE_PATH}/reason-codes`,
   },
 ];

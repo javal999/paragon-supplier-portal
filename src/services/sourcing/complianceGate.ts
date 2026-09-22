@@ -14,7 +14,7 @@
 //     (material type `ROH`);
 //   · status — not Suspended and not Blacklisted;
 //   · otif  — measured OTIF at or above the gate minimum; "No history" is
-//     judged by `GATE_NO_HISTORY_PASSES` (both values: BL-55 placeholders).
+//     judged by `gateNoHistoryPasses()` (both values: BL-55 placeholders).
 //
 // ⚠️ **`UNDETERMINED` IS NOT `REQUIRED`.** A material the master has not
 // classified asks for no certificate here: the gate refuses an award on a rule
@@ -38,7 +38,7 @@ import { schemeValid } from '../data/complianceProjection';
 import type { ComplianceRegistryEntry } from '../data/types';
 import { MATERIAL_MASTER } from '../sdc/fixtures';
 import type { MaterialMaster } from '../sdc/types';
-import { GATE_MIN_OTIF_PCT, GATE_NO_HISTORY_PASSES } from './complianceGateConfig';
+import { gateMinOtifPct, gateNoHistoryPasses } from './complianceGateConfig';
 
 /** The criteria of CR-23, in the order a buyer reads them. */
 export const GATE_CRITERIA = ['halal', 'bpom', 'gmp', 'status', 'otif'] as const;
@@ -48,6 +48,13 @@ export type GateCriterion = (typeof GATE_CRITERIA)[number];
 export interface GateResult {
   readonly passes: boolean;
   readonly failed: readonly GateCriterion[];
+  /**
+   * Present (true) only when `otif` failed because the supplier has NO history
+   * and the administrator has ruled that "No history" does not pass (BL-55,
+   * BL-32) — so the reason can say so, rather than "OTIF below N%" about a
+   * supplier with no OTIF at all.
+   */
+  readonly otifNoHistory?: true;
 }
 
 /** What the gate reads about a supplier — a supplier master row, narrowed. */
@@ -103,8 +110,8 @@ function holdsFor(
 
 /** True when a measured OTIF (or its absence) clears the gate minimum. */
 export function otifPassesGate(otif: number | null | undefined): boolean {
-  if (otif === null || otif === undefined) return GATE_NO_HISTORY_PASSES;
-  return otif >= GATE_MIN_OTIF_PCT;
+  if (otif === null || otif === undefined) return gateNoHistoryPasses();
+  return otif >= gateMinOtifPct();
 }
 
 /**
@@ -146,7 +153,8 @@ export function complianceGate(
     otif: otifOk,
   };
   const failed = GATE_CRITERIA.filter((k) => !ok[k]);
-  return { passes: failed.length === 0, failed };
+  const noHistoryFail = !otifOk && (otif === null || otif === undefined);
+  return { passes: failed.length === 0, failed, ...(noHistoryFail ? { otifNoHistory: true as const } : {}) };
 }
 
 /** The refusal an award line naming a failing supplier earns (REQ-E03-05 BR-01a). */

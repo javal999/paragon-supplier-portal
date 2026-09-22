@@ -47,15 +47,14 @@ Decided on 2026-09-21 and ready to build. Priority: first what protects money an
 
 | Priority | ID | Item | Rule | Size | Placeholder until decided |
 |---|---|---|---|---|---|
-| 1 | BL-32 | Admin screen for the remaining configuration: reason codes, tolerances, thresholds, stale periods (section 4). The working calendar and the 3PL list are its first two pages | REQ-E08-05 BR-03 | M | — |
-| 2 | BL-33 to BL-35, BL-38, BL-39, BL-74 to BL-80, BL-83, BL-84, BL-93, BL-94, BL-96 to BL-98 | The remaining "can start today" items in section 4, in the order listed there | — | — | — |
+| 1 | BL-33 to BL-35, BL-38, BL-39, BL-74 to BL-80, BL-83, BL-84, BL-93, BL-94, BL-96 to BL-98 | The remaining "can start today" items in section 4, in the order listed there | — | — | — |
 
 ### Build work waiting on a decision
 
 | ID | Item | Blocked by | Size | Detail |
 |---|---|---|---|---|
 | BL-20 | SAP ROP replenishment recommendations released as call-offs | BL-01; forecast source decided (BL-10) | L | REQ-E09-01, X-16 |
-| BL-23 | Replace the placeholder values above with the agreed ones | BL-54, BL-55, BL-56 | S | Config modules named in `BUILD-GAP.md` section 3 |
+| BL-23 | Enter the agreed values once decided, on the admin screen (Tolerances and rule values); no developer needed since BL-32 | BL-54, BL-55, BL-56 | S | `/buyer/admin` |
 | BL-81 | Apply the answers to BL-67 to BL-71 (tolerance refusal, days-of-cover basis, late convention, admin roles, receipt measure and reopening) | BL-67 to BL-71 | S each | Decisions in section 1 |
 | BL-82 | Align the OTIF and CFOT calculation with the agreed KPI definitions, and update the definitions shown on the performance pages | BL-66 | M | REQ-E10-01 |
 
@@ -82,7 +81,6 @@ Nothing blocks these.
 
 | ID | Item | Why | Size | Detail |
 |---|---|---|---|---|
-| BL-32 | Admin screen for the values now held in configuration files: reason codes, tolerances, alert thresholds, stale periods, the working calendar | Today a change needs a developer. ADM is a named persona in the requirements with nothing to use | M | REQ-E08-05 BR-03, 3.6 |
 | BL-33 | Sample data so a "Received without ASN" receipt exists | The code path is built and rendered but no sample data produces it, so nobody can see it | S | REQ-E07-06 |
 | BL-34 | One "as of" date across the app: the order pages read the demo clock, other pages read today. Also seen: a recorded award and the admin change history are dated with the real clock while the page says "As of 31 Aug 2026" | Two clocks in one demo confuse a reviewer | S | U-12 in `BUILD-GAP.md` |
 | BL-35 | An RFI and an RFP awaiting an answer from the main demo supplier | Today that starting point sits on a different supplier, so the main walkthrough cannot show it | S | Phase 6a note |
@@ -169,3 +167,4 @@ Nothing blocks these.
 | BL-97 | "Firm" label on RFQ prices | 2026-09-22 | Built in PR #30 |
 | BL-98 | "Created from …" on every event with a source | 2026-09-22 | Built in PR #30 |
 | BL-93 | Edit a draft RFI, RFQ or RFP | 2026-09-22 | Built in PR #31: Edit draft on a Draft's side panel (RFQ) or detail (RFI, RFP) re-opens the create wizard on every stored field and saves through a revise-draft verb per event type (same atom, fields and policy as create; Draft only; compare-and-set on Draft; who and when recorded); Save changes keeps it a draft, Save and send also sends it with the publish permission. Discard draft on a Draft RFI or RFP through the existing cancel verbs (the RFQ panel already had Cancel) |
+| BL-32 | Admin screen for the remaining configuration | 2026-09-22 | Built: tolerances and rule values, alert thresholds and stale periods (default and per supplier × material), and reason codes (add, rename, retire; never deleted) on `/buyer/admin`, each change governed, validated, logged and resettable; the rules read the setting when they run |

@@ -11,7 +11,7 @@ import { mockGoodsReceipts } from '../../data/mockGoodsReceipts';
 import { MOCK_ASNS } from '../data/mock/fixtures/supplierShipments';
 import { SDC_SIMULATED_NOW } from '../sdc/clock';
 import { DECLARED_PRESENT } from '../data/fixturePresent';
-import { CALL_OFF_EARLY_ALLOWANCE_DAYS, CALL_OFF_OVER_PCT, CALL_OFF_TOLERANCE } from './callOffTolerance';
+import { callOffTolerance } from './callOffTolerance';
 import {
   callOffOtif,
   callOffViews,
@@ -146,9 +146,9 @@ describe('REQ-E09-03 · confirmation answers and tolerance (CR-05 revised 2026-0
   // earlier to approval until the warehouse answers (BL-56). Rewritten to the
   // decided rule, each boundary probed on BOTH sides.
   it('the defaults: 5% over for every type, early allowance the BL-56 placeholder of 0 days', () => {
-    expect(CALL_OFF_TOLERANCE).toEqual({ overPct: 5, earlyDays: 0 });
-    expect(CALL_OFF_OVER_PCT).toBe(5);
-    expect(CALL_OFF_EARLY_ALLOWANCE_DAYS).toBe(0);
+    // BL-32: the values are read in force from the administrator's settings;
+    // with nothing changed they are the decided defaults.
+    expect(callOffTolerance()).toEqual({ overPct: 5, earlyDays: 0 });
   });
 
   it.each(['forecast', 'jit'] as const)('%s: exactly +5%% is accepted; one unit more waits for the planner', (type) => {
@@ -193,7 +193,7 @@ describe('REQ-E09-03 · confirmation answers and tolerance (CR-05 revised 2026-0
   });
 
   it('the early allowance is honoured when BL-56 sets one: inside it accepted, one day past it not', () => {
-    const tol = { ...CALL_OFF_TOLERANCE, earlyDays: 2 };
+    const tol = { ...callOffTolerance(), earlyDays: 2 };
     const inside = checkTolerance(base, [{ quantity: 1000, date: '2026-09-08' }], tol);
     expect(inside).toMatchObject({ within: true, early: false });
     expect(inside.findings).toEqual([{ kind: 'early', needsApproval: false, days: 2, date: '2026-09-08', limit: 2 }]);

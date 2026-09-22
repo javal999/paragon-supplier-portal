@@ -49,6 +49,8 @@ import ProcessFlows from '../pages-v2/ProcessFlows';
 import InterfaceMonitor from '../pages-v2/InterfaceMonitor';
 import AdminWorkingCalendar from '../pages-v2/admin/AdminWorkingCalendar';
 import AdminThreePls from '../pages-v2/admin/AdminThreePls';
+import { AdminAlertThresholds, AdminTolerances } from '../pages-v2/admin/AdminRuleValues';
+import AdminReasonCodes from '../pages-v2/admin/AdminReasonCodes';
 import RolesCatalogue from '../pages-v2/RolesCatalogue';
 import RoleDetail from '../pages-v2/RoleDetail';
 // GL-1 — the glossary surface. PERSONA-NEUTRAL by route, deliberately: the term
@@ -179,6 +181,10 @@ const AppRouter: React.FC = () => {
           <Route path="/buyer/admin/working-calendar" element={<AdminWorkingCalendar />} />
           {/* BL-51 — administration (ADM): the 3PL list behind every ASN tracking link. */}
           <Route path="/buyer/admin/3pl-tracking" element={<AdminThreePls />} />
+          {/* BL-32 — administration (ADM): the rule values that lived in configuration files. */}
+          <Route path="/buyer/admin/tolerances" element={<AdminTolerances />} />
+          <Route path="/buyer/admin/alert-thresholds" element={<AdminAlertThresholds />} />
+          <Route path="/buyer/admin/reason-codes" element={<AdminReasonCodes />} />
           <Route path="/buyer/roles" element={<RolesCatalogue />} />
           <Route path="/buyer/roles/:roleId" element={<RoleDetail />} />
           <Route path="/glossary" element={<Glossary />} />

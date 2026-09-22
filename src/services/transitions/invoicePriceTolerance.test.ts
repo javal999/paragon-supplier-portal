@@ -15,10 +15,10 @@
 import { describe, expect, it } from 'vitest';
 import { checkPrice, deriveMatchVerdict } from './invoiceRollup';
 import { checkInvoicePrices, deriveInvoiceVerdict, linePriceRule } from './fulfilmentRules';
-import { INVOICE_PRICE_TOLERANCE } from './fulfilmentConfig';
+import { invoicePriceTolerance } from './fulfilmentConfig';
 import type { InvoiceLine } from '../data/types';
 
-const CAP = INVOICE_PRICE_TOLERANCE.standardCapIdr;
+const CAP = invoicePriceTolerance().standardCapIdr;
 
 /** A line of 100 units at Rp 10,000 — expected Rp 1,000,000, where 2% (20,000) is well under the cap. */
 const smallLine = (over: Partial<InvoiceLine> = {}): InvoiceLine => ({
@@ -45,7 +45,9 @@ describe('CR-12 · which rule applies', () => {
   it('the placeholder cap is the BL-54 value and the percentages are the owner decision', () => {
     // The numbers live in ONE place; this pins what that place holds today, so
     // changing the cap (BL-54's one-line change) is a visible, deliberate act.
-    expect(INVOICE_PRICE_TOLERANCE).toEqual({ contractPricePct: 0, standardPct: 2, standardCapIdr: 500_000 });
+    // BL-32: the ONE place is now the registry `hubSettings.ts`, changed on the
+    // admin page; with nothing changed, the value in force is the default.
+    expect(invoicePriceTolerance()).toEqual({ contractPricePct: 0, standardPct: 2, standardCapIdr: 500_000 });
   });
 });
 
@@ -79,7 +81,7 @@ describe('CR-12 · no contract price — 2% AND the cap, both limits, both sides
     const overCap = checkPrice('standard', 100_000_000, 100_000_000 + CAP + 1);
     expect(overCap).toMatchObject({ outcome: 'overCap', held: true });
     // It is held by the CAP, not by the percentage: 500,001 of 100,000,000 is 0.5%.
-    expect(overCap.percent!).toBeLessThan(INVOICE_PRICE_TOLERANCE.standardPct);
+    expect(overCap.percent!).toBeLessThan(invoicePriceTolerance().standardPct);
     expect(checkPrice('standard', 100_000_000, 100_000_000 - CAP - 1)).toMatchObject({ outcome: 'overCap', held: true });
   });
 

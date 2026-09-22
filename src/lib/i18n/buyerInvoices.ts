@@ -142,7 +142,7 @@ export const buyerInvoicesEn: Record<string, string> = {
   'buyerInvoices.match.qtyMismatch':
     'Delivered quantity does not match invoiced quantity. Credit note required.',
   'buyerInvoices.match.priceVariance':
-    'A line is outside its CR-12 price tolerance: a contract price allows no difference, any other line up to {{pct}}% and {{cap}}. The invoiced lines below say which line and why.',
+    'A line is outside its CR-12 price tolerance: a contract price allows up to {{contractPct}}%, any other line up to {{pct}}% and {{cap}}. The invoiced lines below say which line and why.',
   // — Confirm-release warning (interleaved <Data> amount + bank) —
   'buyerInvoices.confirm.title': 'Confirm payment release',
   'buyerInvoices.confirm.body.pre': 'This action cannot be undone. Payment of ',
@@ -306,7 +306,7 @@ export const buyerInvoicesId: Record<string, string> = {
   'buyerInvoices.match.qtyMismatch':
     'Kuantitas yang dikirim tidak cocok dengan kuantitas yang difakturkan. Nota kredit diperlukan.',
   'buyerInvoices.match.priceVariance':
-    'Ada baris di luar toleransi harga CR-12: harga kontrak tidak mengizinkan selisih, baris lain sampai {{pct}}% dan {{cap}}. Baris yang ditagih di bawah menjelaskan baris mana dan alasannya.',
+    'Ada baris di luar toleransi harga CR-12: harga kontrak mengizinkan sampai {{contractPct}}%, baris lain sampai {{pct}}% dan {{cap}}. Baris yang ditagih di bawah menjelaskan baris mana dan alasannya.',
   // — Confirm-release warning —
   'buyerInvoices.confirm.title': 'Konfirmasi pelepasan pembayaran',
   'buyerInvoices.confirm.body.pre':

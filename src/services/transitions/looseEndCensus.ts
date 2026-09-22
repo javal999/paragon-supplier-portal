@@ -248,6 +248,32 @@ export const LOOSE_END_CENSUS: readonly CensusEntry[] = Object.freeze([
       'the state is correctly declared terminal. The deadlines a ruling moves are derived at read from ' +
       'the calendar and are never states of any machine.',
   },
+  // ── reasonCode (BL-32) ─────────────────────────────────────────────────────
+  {
+    entity: 'reasonCode',
+    kind: 'initial-integrity',
+    subject: 'Maintained',
+    reason: 'substrate-only',
+    note:
+      'THE SAME DEGENERATE SINGLE-STATE LEDGER SHAPE AS THE 3PL LIST: the entity IS one code on one ' +
+      'reason list, addressed by <list>:<code>, and setting a code the list does not yet hold adds it — ' +
+      'so there is no separate creation verb to be an entry. There is no delete: a retired code stays ' +
+      'so the records that carry it keep their label. The verb is statePreserving, so the state is ' +
+      'correctly declared terminal.',
+  },
+  // ── hubSetting (BL-32) ─────────────────────────────────────────────────────
+  {
+    entity: 'hubSetting',
+    kind: 'initial-integrity',
+    subject: 'Maintained',
+    reason: 'substrate-only',
+    note:
+      'THE SAME DEGENERATE SINGLE-STATE LEDGER SHAPE AS THE CALENDAR AND 3PL MACHINES: the entity IS a ' +
+      'rule value, addressed by a key the registry defines (or a stale-period override of an assigned ' +
+      'supplier and material) — not rows anybody creates. The recording verb is statePreserving, so it ' +
+      'is neither an entry nor an exit, and the state is correctly declared terminal. The verdicts a ' +
+      'value decides are derived at read by the rules that read it and are never states of any machine.',
+  },
   // ── stockAccess (REQ-E08-03) ───────────────────────────────────────────────
   {
     entity: 'stockAccess',

@@ -32,6 +32,7 @@ import type {
   CallOffType,
 } from '../data/types';
 import type { AsnLineInput } from '../transitions/fulfilmentRules';
+import { reasonCodeEntityId, type ReasonListId } from '../transitions/reasonCodes';
 
 /**
  * The COMMAND scope — tenancy plus the seat's business roles.
@@ -1380,6 +1381,73 @@ export function useCalendarDaySet() {
         entity: 'workingCalendar',
         entityId: date,
         payload: { kind, reason, setBy: identity.actor },
+      }),
+    onSuccess: (result) => {
+      if (result.status !== 'failed') void qc.invalidateQueries();
+    },
+  });
+}
+
+// ── BL-32 · ONE RULE VALUE THE HUB ADMINISTRATOR CHANGES ─────────────────────
+//
+// ⚠️ **`entityId` IS THE SETTING KEY, AND THERE IS NO KEY PAYLOAD FIELD.**
+// `setBy` comes from the session, never the form (C10 §6.2). "Reset to
+// default" is this same hook writing the default back. Every query is refreshed
+// on success, because a value moves verdicts on pages whose data is cached
+// (positions carry their stale period; call-off views their tolerance check).
+export interface SettingSetVars {
+  /** The setting key — the command's entityId. */
+  key: string;
+  /** The new value; `null` removes a stale-period override. */
+  value: number | boolean | null;
+}
+
+/** Change one rule value, or set it back to its default (`t_setting_set`). */
+export function useSettingSet() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+  const { identity } = useCurrentIdentity();
+
+  return useMutation<CommandResult, Error, SettingSetVars>({
+    mutationFn: ({ key, value }) =>
+      svc.commands.dispatch(scope, {
+        transitionId: 't_setting_set',
+        entity: 'hubSetting',
+        entityId: key,
+        payload: { value, setBy: identity.actor },
+      }),
+    onSuccess: (result) => {
+      if (result.status !== 'failed') void qc.invalidateQueries();
+    },
+  });
+}
+
+// ── BL-32 · ONE CODE ON ONE REASON LIST ──────────────────────────────────────
+// `entityId` IS `<list>:<code>`; there is no delete — retiring is `active:
+// false`. `setBy` comes from the session, never the form.
+export interface ReasonCodeSetVars {
+  list: ReasonListId;
+  code: string;
+  labelEn: string;
+  labelId: string;
+  active: boolean;
+}
+
+/** Add, rename, retire or re-offer one reason code (`t_reasoncode_set`). */
+export function useReasonCodeSet() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+  const { identity } = useCurrentIdentity();
+
+  return useMutation<CommandResult, Error, ReasonCodeSetVars>({
+    mutationFn: ({ list, code, labelEn, labelId, active }) =>
+      svc.commands.dispatch(scope, {
+        transitionId: 't_reasoncode_set',
+        entity: 'reasonCode',
+        entityId: reasonCodeEntityId(list, code),
+        payload: { labelEn, labelId, active, setBy: identity.actor },
       }),
     onSuccess: (result) => {
       if (result.status !== 'failed') void qc.invalidateQueries();

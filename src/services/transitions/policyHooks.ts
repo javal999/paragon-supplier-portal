@@ -332,6 +332,22 @@ export const POLICY_HOOKS = {
    * ruling on read, so a hand-edited store is held to the verb's rule.
    */
   CALENDAR_DAY_GOVERNED: 'calendar_day_governed',
+  /**
+   * BL-32 — one rule value the Hub administrator changes: a key the registry
+   * defines (or a stale-period override), a value of the key's type inside its
+   * bounds, the order rules that tie values together still holding after the
+   * change (no negative %, no min above max, no band out of order), and a
+   * well-formed attribution. Every refusal names the key and what was wrong.
+   * The same predicate re-checks a stored change on read.
+   */
+  SETTING_GOVERNED: 'setting_governed',
+  /**
+   * BL-32 — one code on one reason list: a known list, a well-formed code,
+   * non-empty English and Indonesian labels no other code on the list shows, a
+   * boolean `active`, never the last offered code retired, and a well-formed
+   * attribution. The same predicate re-checks a stored change on read.
+   */
+  REASON_CODE_GOVERNED: 'reason_code_governed',
 
   /**
    * PR reject (§67): the rejection reason must be SUBSTANCE, not presence.

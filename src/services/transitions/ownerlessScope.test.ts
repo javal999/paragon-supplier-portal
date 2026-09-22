@@ -112,6 +112,8 @@ import {
 import { customRoleStore } from './customRoles';
 import { workingCalendarStore } from './workingCalendarStore';
 import { threePlStore } from './threePlStore';
+import { hubSettingsStore, settingValue } from './hubSettingsStore';
+import { reasonCodeStore } from './reasonCodes';
 
 const svc = new MockCommandService();
 const ABSENT = 'zzz-no-such-entity-0000';
@@ -194,6 +196,10 @@ async function realIds(): Promise<Record<string, string | null>> {
     workingCalendar: '2026-09-09',
     // BL-51 — `entityId` IS the 3PL id; a sample-list row exists from the start.
     threePl: 'tpl-sample-express',
+    // BL-32 — `entityId` IS the setting key; every registry key exists from the start.
+    hubSetting: 'callOff.overPct',
+    // BL-32 — `entityId` IS `<list>:<code>`; every starter code exists from the start.
+    reasonCode: 'poAdjust:capacity',
     supplierDocument: supplierDocumentStore.all()[0]?.id ?? null,
     supplierApplication: raised.entityId ?? null,
     receiptDiscrepancy: receiptDiscrepancyStore.all()[0]?.receiptId ?? null,
@@ -285,6 +291,8 @@ async function walk(entity: string, t: TransitionDef): Promise<Walk | null> {
   if (entity === 'role') return at('receiving', 'Defined');
   if (entity === 'workingCalendar') return at('2026-09-09', 'Maintained');
   if (entity === 'threePl') return at('tpl-sample-express', 'Maintained');
+  if (entity === 'hubSetting') return at('callOff.overPct', 'Maintained');
+  if (entity === 'reasonCode') return at('poAdjust:capacity', 'Maintained');
   if (entity === 'supplierApplication') {
     const raised = await svc.dispatch(buyerSeat('procurement'), {
       transitionId: 't_application_submit', entity,
@@ -327,6 +335,8 @@ const resetAll = () => {
   customRoleStore.reset();
   workingCalendarStore.reset();
   threePlStore.reset();
+  hubSettingsStore.reset();
+  reasonCodeStore.reset();
 };
 
 beforeEach(resetAll);
@@ -481,10 +491,14 @@ describe('THE LEGITIMATE PATHS — the half a "refuse everyone" fix would break'
     expect(ownerless.sort()).toEqual(
       [
         'enforcement',
+        // BL-32 — the rule values are PTI's; no supplier is their owner.
+        'hubSetting',
         // REQ-E03-05 — a negotiation round is PTI's window; a supplier answers
         // it through its own quotation, never by addressing the round.
         'negotiationRound',
         'purchaseRequisition',
+        // BL-32 — the reason lists are PTI's; no supplier is their owner.
+        'reasonCode',
         // REQ-E03-02 / REQ-E03-04 — an RFI and an RFP EVENT name no supplier.
         'rfiEvent',
         'rfpEvent',
@@ -551,6 +565,20 @@ describe('THE LEGITIMATE PATHS — the half a "refuse everyone" fix would break'
     });
     expect(tplRes.status, tplRes.reason).toBe('done');
     expect(threePlStore.changes().map((c) => c.id)).toContain('tpl-sample-express');
+    // BL-32 — the Hub administrator's lane (compliance) can still change a rule value.
+    const setRes = await svc.dispatch(buyerSeat('compliance'), {
+      transitionId: 't_setting_set', entity: 'hubSetting', entityId: 'callOff.overPct',
+      payload: { value: 7, setBy: NO_PERSON },
+    });
+    expect(setRes.status, setRes.reason).toBe('done');
+    expect(settingValue('callOff.overPct')).toBe(7);
+    // BL-32 — the Hub administrator's lane (compliance) can still add a reason code.
+    const rsnRes = await svc.dispatch(buyerSeat('compliance'), {
+      transitionId: 't_reasoncode_set', entity: 'reasonCode', entityId: 'poAdjust:tooling',
+      payload: { labelEn: 'Tooling change', labelId: 'Perubahan perkakas', active: true, setBy: NO_PERSON },
+    });
+    expect(rsnRes.status, rsnRes.reason).toBe('done');
+    expect(reasonCodeStore.get('poAdjust', 'tooling')?.active).toBe(true);
 
     const raised = await svc.dispatch(buyerSeat('procurement'), {
       transitionId: 't_application_submit', entity: 'supplierApplication',

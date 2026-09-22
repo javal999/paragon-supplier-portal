@@ -28,7 +28,8 @@ import {
   supplyBand,
   validateStockRows,
 } from './inventoryRules';
-import { DEFAULT_UPDATE_SLA, SUPPLY_BANDS, updateSlaFor } from './inventoryConfig';
+import { supplyBands, updateSlaFor } from './inventoryConfig';
+import { hubSetting } from './hubSettingsStore';
 
 const NOW = '2026-08-31T12:00:00.000Z';
 
@@ -61,7 +62,7 @@ const position = (over: Partial<InventoryPosition> = {}): InventoryPosition => (
 
 describe('CR-02 — the ONE band function, at every boundary', () => {
   it('Critical below 14; Warning 14 to 29; Healthy 30 to 60; Excess above 60', () => {
-    expect(SUPPLY_BANDS).toEqual({ criticalBelow: 14, warningBelow: 30, healthyUpTo: 60 });
+    expect(supplyBands()).toEqual({ criticalBelow: 14, warningBelow: 30, healthyUpTo: 60 }); // the defaults (BL-32: read in force)
     expect(supplyBand(0)).toBe('critical');
     expect(supplyBand(13.99)).toBe('critical');
     expect(supplyBand(14)).toBe('warning');
@@ -127,7 +128,7 @@ describe('CR-03 — coverage', () => {
 
 describe('freshness against the data-update SLA (AC-05, edge case)', () => {
   it('current within the SLA, stale past it, missing without figures', () => {
-    expect(DEFAULT_UPDATE_SLA).toBe(7);
+    expect(hubSetting('stale.defaultDays')).toBe(7); // the default stale period (BL-32: read in force)
     expect(updateSlaFor('sup-999', 'X')).toBe(7);
     expect(updateSlaFor('sup-001', 'RM-COCO-8200')).toBe(1);
     expect(stockFreshness(position({ lastUpdatedAt: '2026-08-24T12:00:00.000Z' }), NOW)).toBe('current');

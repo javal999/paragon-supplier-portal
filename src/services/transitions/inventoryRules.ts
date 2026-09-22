@@ -31,10 +31,10 @@ import type { ForecastLine, InventoryDeclaration, MaterialMasterEntry, StockChan
 import type { CallOffView } from './callOffRules';
 import { normalizeQty } from '../../lib/localeNumber';
 import {
-  COVERAGE_THRESHOLDS,
+  coverageThresholds,
   DEMAND_WINDOW,
-  LEAD_TIME_RISK,
-  SUPPLY_BANDS,
+  leadTimeRisk,
+  supplyBands,
   updateSlaFor,
 } from './inventoryConfig';
 
@@ -141,9 +141,11 @@ export function daysOfSupply(soh: number | null, avgDailyDemand: number | null):
 /** CR-02 — THE band function. Null when days of supply cannot be computed. */
 export function supplyBand(days: number | null): SupplyBand | null {
   if (days === null) return null;
-  if (days < SUPPLY_BANDS.criticalBelow) return 'critical';
-  if (days < SUPPLY_BANDS.warningBelow) return 'warning';
-  if (days <= SUPPLY_BANDS.healthyUpTo) return 'healthy';
+  // The administrator's bands in force at THIS call (BL-32).
+  const bands = supplyBands();
+  if (days < bands.criticalBelow) return 'critical';
+  if (days < bands.warningBelow) return 'warning';
+  if (days <= bands.healthyUpTo) return 'healthy';
   return 'excess';
 }
 
@@ -182,7 +184,7 @@ export function riskFor(daysOfCover: number | null, leadTimeDays: number | null)
   if (daysOfCover === null) return { riskClass: 'low', basis: { kind: 'noCover', leadTimeDays: lead } };
   if (lead !== null) {
     const riskClass: RiskClass =
-      daysOfCover < lead ? 'high' : daysOfCover < LEAD_TIME_RISK.mediumBelowMultiple * lead ? 'medium' : 'low';
+      daysOfCover < lead ? 'high' : daysOfCover < leadTimeRisk().mediumBelowMultiple * lead ? 'medium' : 'low';
     return { riskClass, basis: { kind: 'leadTime', leadTimeDays: lead, daysOfCover } };
   }
   const band = supplyBand(daysOfCover) as SupplyBand;
@@ -264,8 +266,9 @@ export function coverage(
   if (demand <= 0 || p.supplierSoh === null) return { ratio: null, status: 'covered' };
   const supply = (p.supplierSoh ?? 0) + incomingTotals(p.incoming).total;
   const ratio = supply / demand;
+  const thresholds = coverageThresholds();
   const status: CoverageStatus =
-    ratio >= COVERAGE_THRESHOLDS.coveredFrom ? 'covered' : ratio >= COVERAGE_THRESHOLDS.atRiskFrom ? 'atRisk' : 'uncovered';
+    ratio >= thresholds.coveredFrom ? 'covered' : ratio >= thresholds.atRiskFrom ? 'atRisk' : 'uncovered';
   return { ratio, status };
 }
 

@@ -11,7 +11,7 @@
 // ────────────────────────────────────────────────────────────────────────────
 
 import type { Invoice, InvoiceStatus, GRStatus } from '../data/types';
-import { INVOICE_PRICE_TOLERANCE } from './fulfilmentConfig';
+import { invoicePriceTolerance } from './fulfilmentConfig';
 
 /** True when the match sub-flow has rolled up to a clean 3-way `Matched`. */
 export function isMatched(inv: Invoice): boolean {
@@ -83,16 +83,18 @@ export function checkPrice(rule: PriceRule, expected: number, billed: number): P
   if (!(expected > 0)) return { ...base, percent: null, outcome: 'noBasis', held: true };
   const percent = (abs / expected) * 100;
   const withinPct = (pct: number) => abs * 100 <= expected * pct;
+  // The administrator's values in force at THIS check (BL-32), never a copy.
+  const tol = invoicePriceTolerance();
   if (abs === 0) return { ...base, percent, outcome: 'exact', held: false };
   if (rule === 'contract') {
-    return withinPct(INVOICE_PRICE_TOLERANCE.contractPricePct)
+    return withinPct(tol.contractPricePct)
       ? { ...base, percent, outcome: 'withinTolerance', held: false }
       : { ...base, percent, outcome: 'contractDiffers', held: true };
   }
-  if (!withinPct(INVOICE_PRICE_TOLERANCE.standardPct)) {
+  if (!withinPct(tol.standardPct)) {
     return { ...base, percent, outcome: 'overPercent', held: true };
   }
-  if (abs > INVOICE_PRICE_TOLERANCE.standardCapIdr) {
+  if (abs > tol.standardCapIdr) {
     return { ...base, percent, outcome: 'overCap', held: true };
   }
   return { ...base, percent, outcome: 'withinTolerance', held: false };

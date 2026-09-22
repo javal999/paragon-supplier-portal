@@ -32,6 +32,7 @@ import type {
   Uom,
 } from './types';
 import { declarationGranularity, declarationRecency } from './inventory';
+import { coverageThresholds } from '../transitions/inventoryConfig';
 
 // ─── Policy constants (P2 display layer — NOT schema) ─────────────────────────
 
@@ -46,12 +47,18 @@ import { declarationGranularity, declarationRecency } from './inventory';
 export const RESPONSE_DUE_DAYS = 7;
 
 /**
- * The at-risk floor for the supplier-coverage indicator: coverage ratio ≥ 1 is
- * covered; ≥ this floor is at-risk; below it is uncovered. A display-layer
- * banding knob (like RESPONSE_DUE_DAYS), tuned at the real-planner validation
- * checkpoint — not a schema fact.
+ * The supplier-coverage bands: ratio ≥ Covered is covered; ≥ At risk is
+ * at-risk; below it is uncovered. ⚠️ **THESE ARE CR-03's, READ IN FORCE
+ * (BL-32).** Until BL-32 this was a second constant (`COVERAGE_AT_RISK_FLOOR =
+ * 0.8`, with `ratio >= 1` written inline) pinned equal to CR-03 by a test —
+ * which held only while nobody could change CR-03. With the administrator able
+ * to, a copy would have kept 0.8 while the inventory alerts moved: two
+ * coverage rules. Found by deriving the readers of the CR-03 values, not by
+ * the config module's import list (this file never imported it).
  */
-export const COVERAGE_AT_RISK_FLOOR = 0.8;
+export function coverageBands(): { readonly coveredFrom: number; readonly atRiskFrom: number } {
+  return coverageThresholds();
+}
 
 // ─── Small pure date helpers (UTC, bucket-native) ─────────────────────────────
 
@@ -483,8 +490,9 @@ export function supplierCoverageEntries(
       0,
     );
     const ratio = demand > 0 ? (soh + incoming) / demand : Infinity;
+    const bands = coverageBands();
 
-    if (ratio >= 1) {
+    if (ratio >= bands.coveredFrom) {
       return {
         supplierId,
         materialCode,
@@ -505,7 +513,7 @@ export function supplierCoverageEntries(
     const unbridgeable =
       leadTimes.length > 0 && Math.min(...leadTimes) > daysUntil(now, bucketEndMs(lastBucket));
 
-    const kind = ratio >= COVERAGE_AT_RISK_FLOOR ? ('at-risk' as const) : ('uncovered' as const);
+    const kind = ratio >= bands.atRiskFrom ?('at-risk' as const) : ('uncovered' as const);
     return {
       supplierId,
       materialCode,

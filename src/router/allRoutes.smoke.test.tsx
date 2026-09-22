@@ -63,6 +63,8 @@ import ProcessFlows from '../pages-v2/ProcessFlows';
 import InterfaceMonitor from '../pages-v2/InterfaceMonitor';
 import AdminWorkingCalendar from '../pages-v2/admin/AdminWorkingCalendar';
 import AdminThreePls from '../pages-v2/admin/AdminThreePls';
+import { AdminAlertThresholds, AdminTolerances } from '../pages-v2/admin/AdminRuleValues';
+import AdminReasonCodes from '../pages-v2/admin/AdminReasonCodes';
 import RolesCatalogue from '../pages-v2/RolesCatalogue';
 import RoleDetail from '../pages-v2/RoleDetail';
 import Glossary from '../pages-v2/Glossary';
@@ -152,6 +154,9 @@ const ROUTES: RouteCase[] = [
   { name: 'buyer/interface-monitor', pattern: '/buyer/interface-monitor', at: '/buyer/interface-monitor', element: <InterfaceMonitor />, identity: BUYER },
   { name: 'buyer/admin/working-calendar', pattern: '/buyer/admin/working-calendar', at: '/buyer/admin/working-calendar', element: <AdminWorkingCalendar />, identity: BUYER },
   { name: 'buyer/admin/3pl-tracking', pattern: '/buyer/admin/3pl-tracking', at: '/buyer/admin/3pl-tracking', element: <AdminThreePls />, identity: BUYER },
+  { name: 'buyer/admin/tolerances', pattern: '/buyer/admin/tolerances', at: '/buyer/admin/tolerances', element: <AdminTolerances />, identity: BUYER },
+  { name: 'buyer/admin/alert-thresholds', pattern: '/buyer/admin/alert-thresholds', at: '/buyer/admin/alert-thresholds', element: <AdminAlertThresholds />, identity: BUYER },
+  { name: 'buyer/admin/reason-codes', pattern: '/buyer/admin/reason-codes', at: '/buyer/admin/reason-codes', element: <AdminReasonCodes />, identity: BUYER },
   { name: 'buyer/roles', pattern: '/buyer/roles', at: '/buyer/roles', element: <RolesCatalogue />, identity: BUYER },
   { name: 'buyer/roles/:roleId', pattern: '/buyer/roles/:roleId', at: '/buyer/roles/finance', element: <RoleDetail />, identity: BUYER },
   // ⚠️ THESE TWO WERE NEVER IN THE SMOKE, AND THE OLD SELF-REFERENTIAL GUARD

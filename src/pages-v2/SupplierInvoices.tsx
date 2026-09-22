@@ -61,7 +61,7 @@ import {
   useInvoiceResubmit,
   useInvoiceSubmit,
 } from '../services/query/commandHooks';
-import { INVOICE_PRICE_TOLERANCE } from '../services/transitions/fulfilmentConfig';
+import { invoicePriceTolerance } from '../services/transitions/fulfilmentConfig';
 import {
   INVOICEABLE_PO_STATES,
   INVOICEABLE_RECEIPT_STATES,
@@ -1015,6 +1015,7 @@ const SupplierInvoices: React.FC = () => {
                 invoiceDate={selected.invoiceDate}
                 taxInvoiceFile={selected.taxInvoiceFile}
                 amount={selected.amount}
+                matchStatus={selected.matchStatus}
               />
             )}
 
@@ -1249,8 +1250,9 @@ const SupplierInvoices: React.FC = () => {
               onChange={(e) => setNewAmount(e.target.value)}
             />
             <div className="mt-1 text-xs text-text-tertiary">{t('fc.inv.new.tolerance', {
-                  pct: INVOICE_PRICE_TOLERANCE.standardPct,
-                  cap: fmtIdr(INVOICE_PRICE_TOLERANCE.standardCapIdr),
+                  contractPct: invoicePriceTolerance().contractPricePct,
+                  pct: invoicePriceTolerance().standardPct,
+                  cap: fmtIdr(invoicePriceTolerance().standardCapIdr),
                 })}</div>
             {/* UNSEEDED field, so the 2e-a rule applies: an untouched blank does
                 not nag on sight. */}

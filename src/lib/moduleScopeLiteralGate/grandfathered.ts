@@ -61,7 +61,6 @@ export const S2_GRANDFATHERED: readonly string[] = [
   'src/pages-v2/SupplierDocuments.tsx::CATEGORY_FILTERS',
   'src/pages-v2/SupplierDocuments.tsx::CERT_TYPES',
   'src/pages-v2/SupplierForecasts.tsx::ADVANCE_VERBS',
-  'src/pages-v2/SupplierForecasts.tsx::ROOT_CAUSE_LEVELS',
   'src/pages-v2/SupplierMyStorefront.tsx::CATEGORY_OPTIONS',
   'src/pages-v2/SupplierMyStorefront.tsx::CERT_OPTIONS',
   'src/pages-v2/SupplierMyStorefront.tsx::COMPLETENESS_ITEMS',

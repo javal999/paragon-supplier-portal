@@ -17,7 +17,7 @@ import {
 } from '../fixtures';
 import {
   RESPONSE_DUE_DAYS,
-  COVERAGE_AT_RISK_FLOOR,
+  coverageBands,
   currentPublication,
   consolidationRows,
   supplierRollups,
@@ -367,7 +367,7 @@ describe('supplier-coverage indicator (the ONE projection that is ours)', () => 
       NOW_BEFORE_DUE,
     );
     expect(e.status).toEqual({ kind: 'uncovered', ratio: 0.5, unbridgeable: false, expiryBlind: false });
-    expect(COVERAGE_AT_RISK_FLOOR).toBe(0.8);
+    expect(coverageBands().atRiskFrom).toBe(0.8); // CR-03 at its default (BL-32: read in force)
   });
 
   it('a manufacturer shortfall is never flagged unbridgeable (no modeled lead time)', () => {

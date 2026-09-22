@@ -1,6 +1,7 @@
 import {
   AlertTriangle,
   Award,
+  BellRing,
   BookOpen,
   Boxes,
   Building2,
@@ -16,6 +17,7 @@ import {
   Gauge,
   KeyRound,
   Link2,
+  ListChecks,
   ListTodo,
   MessageSquareReply,
   PackageCheck,
@@ -23,6 +25,7 @@ import {
   Receipt,
   ShieldCheck,
   ShoppingCart,
+  SlidersHorizontal,
   Truck,
   Users,
   Workflow,
@@ -200,6 +203,10 @@ export const UTILITY_NAV: Record<Persona, readonly NavItem[]> = {
     { labelKey: 'hub.nav.util.workingCalendar', icon: CalendarDays, path: '/buyer/admin/working-calendar' },
     // BL-51 — the 3PL list behind every ASN tracking link (maintained by ADM).
     { labelKey: 'hub.nav.util.threePls', icon: Link2, path: '/buyer/admin/3pl-tracking' },
+    // BL-32 — the values that lived in configuration files (ADM, REQ-E08-05 BR-03).
+    { labelKey: 'hub.nav.util.tolerances', icon: SlidersHorizontal, path: '/buyer/admin/tolerances' },
+    { labelKey: 'hub.nav.util.alertThresholds', icon: BellRing, path: '/buyer/admin/alert-thresholds' },
+    { labelKey: 'hub.nav.util.reasonCodes', icon: ListChecks, path: '/buyer/admin/reason-codes' },
   ],
   supplier: [{ labelKey: 'hub.nav.util.glossary', icon: BookOpen, path: '/glossary' }],
 };

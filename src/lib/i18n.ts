@@ -99,6 +99,9 @@ import { rfqResponseEn, rfqResponseId } from './i18n/rfqResponse';
 import { rfqCompareEn, rfqCompareId } from './i18n/rfqCompare';
 // — BL-51 3PL tracking links (REQ-E07-04 BR-05) —
 import { threePlEn, threePlId } from './i18n/threePl';
+// — BL-32 the administrator's rule values (REQ-E08-05 BR-03, §3.6) —
+import { adminSettingsEn, adminSettingsId } from './i18n/adminSettings';
+import { adminReasonsEn, adminReasonsId } from './i18n/adminReasons';
 // — BL-52 supplier filters (REQ-E03-01 BR-05) —
 import { supplierFiltersEn, supplierFiltersId } from './i18n/supplierFilters';
 // — The read path's failure surface, shared by 31 pages —
@@ -191,6 +194,8 @@ export const resources = {
       ...rfqResponseEn,
       ...rfqCompareEn,
       ...threePlEn,
+      ...adminSettingsEn,
+      ...adminReasonsEn,
       ...supplierFiltersEn,
       ...errorStateEn,
       ...loadingStateEn,
@@ -644,6 +649,8 @@ export const resources = {
       ...rfqResponseId,
       ...rfqCompareId,
       ...threePlId,
+      ...adminSettingsId,
+      ...adminReasonsId,
       ...supplierFiltersId,
       ...errorStateId,
       ...loadingStateId,

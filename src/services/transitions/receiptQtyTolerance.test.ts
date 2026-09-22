@@ -19,7 +19,7 @@ import {
 } from './fulfilmentRules';
 import {
   RECEIPT_QTY_TOLERANCE_BY_MATERIAL,
-  RECEIPT_QTY_TOLERANCE_DEFAULT,
+  receiptQtyToleranceDefault,
   receiptQtyToleranceFor,
 } from './fulfilmentConfig';
 import type { GoodsReceipt } from '../../data/mockGoodsReceipts';
@@ -45,9 +45,9 @@ const receipt = (qtyExpected: number, qtyReceived: number, qtyRejected = 0) =>
 
 describe('CR-25 · the values', () => {
   it('0% over and 2% short by default, and no material overrides the default yet', () => {
-    expect(RECEIPT_QTY_TOLERANCE_DEFAULT).toEqual({ overPct: 0, shortPct: 2 });
+    expect(receiptQtyToleranceDefault()).toEqual({ overPct: 0, shortPct: 2 }); // the defaults (BL-32: read in force)
     expect(Object.keys(RECEIPT_QTY_TOLERANCE_BY_MATERIAL)).toEqual([]);
-    expect(receiptQtyToleranceFor(MAT)).toBe(RECEIPT_QTY_TOLERANCE_DEFAULT);
+    expect(receiptQtyToleranceFor(MAT)).toEqual(receiptQtyToleranceDefault());
   });
 });
 
