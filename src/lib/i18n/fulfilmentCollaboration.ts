@@ -129,9 +129,9 @@ export const fulfilmentCollaborationEn: Record<string, string> = {
   'fc.inv.match.pending': 'Not checked yet',
   'fc.inv.match.pendingGr': 'Waiting for the goods receipt',
   'fc.inv.match.explain.matched':
-    'Every line is billed within its price tolerance — nothing differs from a contract price, and no other line is more than {{pct}}% or {{cap}} off invoiced quantity × PO unit price — and nothing was rejected on the receipts.',
+    'Every line is billed within its price tolerance — no line with a contract price is more than {{contractPct}}% off it, and no other line is more than {{pct}}% or {{cap}} off invoiced quantity × PO unit price — and nothing was rejected on the receipts.',
   'fc.inv.match.explain.priceVariance':
-    'At least one line is outside its price tolerance: a contract price allows no difference, and any other line allows up to {{pct}}% and {{cap}}. The line and the reason are shown below. Finance will review it.',
+    'At least one line is outside its price tolerance: a line with a contract price allows up to {{contractPct}}%, and any other line allows up to {{pct}}% and {{cap}}. The line and the reason are shown below. Finance will review it.',
   'fc.inv.match.explain.qtyMismatch':
     'Quantity was rejected at PTI inspection on a receipt this invoice uses. Finance will review it.',
   'fc.inv.match.explain.pending': 'The check runs when the invoice is submitted.',
@@ -161,14 +161,18 @@ export const fulfilmentCollaborationEn: Record<string, string> = {
   'fc.inv.new.noFile': 'No file chosen',
   'fc.inv.new.expected': 'Expected value (quantity × PO unit price)',
   'fc.inv.new.tolerance':
-    'A line priced by a contract must be billed exactly. Any other line is matched automatically when it is within {{pct}}% of the expected value and within {{cap}}.',
+    'A line priced by a contract is matched automatically within {{contractPct}}% of the expected value. Any other line is matched automatically when it is within {{pct}}% of the expected value and within {{cap}}.',
   'fc.inv.price.col.billed': 'Billed',
   'fc.inv.price.col.check': 'Price check (CR-12)',
-  'fc.inv.price.rule.contract': 'Contract price {{contract}} · no difference allowed',
+  'fc.inv.price.rule.contract': 'Contract price {{contract}} · up to {{pct}}% difference',
   'fc.inv.price.rule.standard': 'No contract price · up to {{pct}}% and {{cap}}',
+  'fc.inv.price.changedSince.nowPasses':
+    'The match recorded a price variance when this invoice was checked. The tolerances have changed since, and under the values in force now its prices pass. The recorded result stands until the invoice is checked again.',
+  'fc.inv.price.changedSince.nowHeld':
+    'The match recorded this invoice as matched when it was checked. The tolerances have changed since, and under the values in force now a price would be held. The recorded result stands until the invoice is checked again.',
   'fc.inv.price.outcome.exact': 'Passes: billed exactly the expected value.',
   'fc.inv.price.outcome.withinTolerance': 'Passes: {{diff}} ({{percent}}), within {{pct}}% and within {{cap}}.',
-  'fc.inv.price.outcome.contractDiffers': 'Held: {{diff}} against a contract price, which allows no difference.',
+  'fc.inv.price.outcome.contractDiffers': 'Held: {{diff}} against a contract price, which allows {{pct}}%.',
   'fc.inv.price.outcome.overPercent': 'Held: {{diff}} ({{percent}}), more than {{pct}}%.',
   'fc.inv.price.outcome.overCap': 'Held: {{diff}} ({{percent}}) is within {{pct}}% but more than the {{cap}} cap.',
   'fc.inv.price.outcome.noBasis': 'Held: there is no purchase order value to compare this with.',
@@ -318,9 +322,9 @@ export const fulfilmentCollaborationId: Record<string, string> = {
   'fc.inv.match.pending': 'Belum diperiksa',
   'fc.inv.match.pendingGr': 'Menunggu penerimaan barang',
   'fc.inv.match.explain.matched':
-    'Setiap baris ditagih dalam batas toleransi harganya — tidak ada yang ditagih berbeda dari harga kontrak, dan baris lain tidak lebih dari {{pct}}% maupun {{cap}} dari kuantitas ditagih × harga satuan PO — dan tidak ada yang ditolak pada penerimaan.',
+    'Setiap baris ditagih dalam batas toleransi harganya — tidak ada baris berharga kontrak yang selisihnya lebih dari {{contractPct}}%, dan baris lain tidak lebih dari {{pct}}% maupun {{cap}} dari kuantitas ditagih × harga satuan PO — dan tidak ada yang ditolak pada penerimaan.',
   'fc.inv.match.explain.priceVariance':
-    'Setidaknya satu baris di luar toleransi harganya: harga kontrak tidak mengizinkan selisih, baris lain mengizinkan sampai {{pct}}% dan {{cap}}. Baris dan alasannya ditampilkan di bawah. Finance akan meninjaunya.',
+    'Setidaknya satu baris di luar toleransi harganya: baris berharga kontrak mengizinkan sampai {{contractPct}}%, baris lain mengizinkan sampai {{pct}}% dan {{cap}}. Baris dan alasannya ditampilkan di bawah. Finance akan meninjaunya.',
   'fc.inv.match.explain.qtyMismatch':
     'Ada kuantitas yang ditolak saat pemeriksaan PTI pada penerimaan yang dipakai faktur ini. Finance akan meninjaunya.',
   'fc.inv.match.explain.pending': 'Pemeriksaan berjalan saat faktur diajukan.',
@@ -350,14 +354,18 @@ export const fulfilmentCollaborationId: Record<string, string> = {
   'fc.inv.new.noFile': 'Belum ada file',
   'fc.inv.new.expected': 'Nilai yang diharapkan (kuantitas × harga satuan PO)',
   'fc.inv.new.tolerance':
-    'Baris dengan harga kontrak harus ditagih persis. Baris lain otomatis dianggap cocok bila dalam {{pct}}% dari nilai yang diharapkan dan dalam {{cap}}.',
+    'Baris dengan harga kontrak otomatis dianggap cocok bila dalam {{contractPct}}% dari nilai yang diharapkan. Baris lain otomatis dianggap cocok bila dalam {{pct}}% dari nilai yang diharapkan dan dalam {{cap}}.',
   'fc.inv.price.col.billed': 'Ditagih',
   'fc.inv.price.col.check': 'Pemeriksaan harga (CR-12)',
-  'fc.inv.price.rule.contract': 'Harga kontrak {{contract}} · tanpa selisih',
+  'fc.inv.price.rule.contract': 'Harga kontrak {{contract}} · selisih sampai {{pct}}%',
   'fc.inv.price.rule.standard': 'Tanpa harga kontrak · sampai {{pct}}% dan {{cap}}',
+  'fc.inv.price.changedSince.nowPasses':
+    'Pencocokan mencatat selisih harga saat faktur ini diperiksa. Toleransi telah berubah sejak itu, dan dengan nilai yang berlaku sekarang harganya lolos. Hasil yang tercatat tetap berlaku sampai faktur diperiksa ulang.',
+  'fc.inv.price.changedSince.nowHeld':
+    'Pencocokan mencatat faktur ini cocok saat diperiksa. Toleransi telah berubah sejak itu, dan dengan nilai yang berlaku sekarang sebuah harga akan ditahan. Hasil yang tercatat tetap berlaku sampai faktur diperiksa ulang.',
   'fc.inv.price.outcome.exact': 'Lolos: ditagih persis sesuai nilai yang diharapkan.',
   'fc.inv.price.outcome.withinTolerance': 'Lolos: {{diff}} ({{percent}}), dalam {{pct}}% dan dalam {{cap}}.',
-  'fc.inv.price.outcome.contractDiffers': 'Ditahan: {{diff}} terhadap harga kontrak, yang tidak mengizinkan selisih.',
+  'fc.inv.price.outcome.contractDiffers': 'Ditahan: {{diff}} terhadap harga kontrak, yang mengizinkan {{pct}}%.',
   'fc.inv.price.outcome.overPercent': 'Ditahan: {{diff}} ({{percent}}), lebih dari {{pct}}%.',
   'fc.inv.price.outcome.overCap': 'Ditahan: {{diff}} ({{percent}}) masih dalam {{pct}}% tetapi melebihi batas {{cap}}.',
   'fc.inv.price.outcome.noBasis': 'Ditahan: tidak ada nilai pesanan pembelian sebagai pembanding.',

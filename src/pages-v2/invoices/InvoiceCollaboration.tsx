@@ -50,6 +50,7 @@ export const MatchResult: React.FC<{ status: InvoiceMatchStatus }> = ({ status }
       <MatchPill status={status} />
       <p className="mt-1 text-xs text-text-secondary">
         {t(`fc.inv.match.explain.${explain}`, {
+          contractPct: invoicePriceTolerance().contractPricePct,
           pct: invoicePriceTolerance().standardPct,
           cap: fmtIdr(invoicePriceTolerance().standardCapIdr),
         })}
@@ -121,7 +122,14 @@ export const InvoiceLinesSection: React.FC<{
   invoiceDate: string | null;
   taxInvoiceFile: string | null;
   amount?: number;
-}> = ({ lines, invoiceDate, taxInvoiceFile, amount }) => {
+  /**
+   * The match result RECORDED when the invoice was checked (BL-32). The line
+   * checks above are re-read under the tolerances in force NOW, so when the
+   * administrator has changed a tolerance since, the two can disagree — and the
+   * page says so rather than showing two answers without comment.
+   */
+  matchStatus?: InvoiceMatchStatus;
+}> = ({ lines, invoiceDate, taxInvoiceFile, amount, matchStatus }) => {
   const { t } = useTranslation();
   const priced =
     amount === undefined
@@ -207,6 +215,12 @@ export const InvoiceLinesSection: React.FC<{
           <div className="text-text-tertiary">{t('fc.inv.price.unsplit.note')}</div>
         </div>
       )}
+      {priced && lines.length > 0 && matchStatus !== undefined &&
+        ((matchStatus === 'Price Variance' && !priced.held) || (matchStatus === 'Matched' && priced.held)) && (
+          <p className="mt-2 text-xs text-warning-hover" data-testid="invoice-tolerance-changed">
+            {t(priced.held ? 'fc.inv.price.changedSince.nowHeld' : 'fc.inv.price.changedSince.nowPasses')}
+          </p>
+        )}
       {(invoiceDate || taxInvoiceFile) && (
         <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
           <div>

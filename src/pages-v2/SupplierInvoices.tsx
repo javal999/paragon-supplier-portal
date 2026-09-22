@@ -1015,6 +1015,7 @@ const SupplierInvoices: React.FC = () => {
                 invoiceDate={selected.invoiceDate}
                 taxInvoiceFile={selected.taxInvoiceFile}
                 amount={selected.amount}
+                matchStatus={selected.matchStatus}
               />
             )}
 
@@ -1249,6 +1250,7 @@ const SupplierInvoices: React.FC = () => {
               onChange={(e) => setNewAmount(e.target.value)}
             />
             <div className="mt-1 text-xs text-text-tertiary">{t('fc.inv.new.tolerance', {
+                  contractPct: invoicePriceTolerance().contractPricePct,
                   pct: invoicePriceTolerance().standardPct,
                   cap: fmtIdr(invoicePriceTolerance().standardCapIdr),
                 })}</div>

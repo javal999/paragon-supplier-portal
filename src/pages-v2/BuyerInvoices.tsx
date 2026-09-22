@@ -1248,6 +1248,7 @@ const BuyerInvoicesView: React.FC<{ invoices: BuyerInvoice[] }> = ({ invoices: a
                 </div>
                 <div className="text-text-secondary mt-1">
                   {t(MATCH_DESC_KEY[selected.matchStatus], {
+                    contractPct: invoicePriceTolerance().contractPricePct,
                     pct: invoicePriceTolerance().standardPct,
                     cap: fmtIdr(invoicePriceTolerance().standardCapIdr),
                   })}
@@ -1271,6 +1272,7 @@ const BuyerInvoicesView: React.FC<{ invoices: BuyerInvoice[] }> = ({ invoices: a
               invoiceDate={selected.invoiceDate}
               taxInvoiceFile={selected.taxInvoiceFile}
               amount={selected.amount}
+              matchStatus={selected.matchStatus}
             />
 
             <section>
