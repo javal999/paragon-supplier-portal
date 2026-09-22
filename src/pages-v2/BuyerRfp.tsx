@@ -255,6 +255,20 @@ const BuyerRfp: React.FC = () => {
                     {t('rfx.rfp.publish')}
                   </Button>
                 )}
+                {/* BL-93 — DISCARD a draft: the existing `t_rfp_cancel` (legal
+                    from Draft), the same `rfp:publish` atom as Send; a seat
+                    without it reads the page's publish notice. */}
+                {open.status === 'Draft' && (
+                  <Button
+                    variant="secondary"
+                    className="text-danger"
+                    disabled={publish.kind !== 'held'}
+                    data-testid={`rfp-discard-${open.id}`}
+                    onClick={() => run({ verb: 'discardRfp', rfpId: open.id }, 'rfxEdit.toast.discarded')}
+                  >
+                    {t('rfxEdit.discard')}
+                  </Button>
+                )}
                 {open.status === 'Open' && (
                   <Button
                     variant="secondary"

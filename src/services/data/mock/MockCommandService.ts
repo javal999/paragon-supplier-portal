@@ -1390,7 +1390,7 @@ const rfqTarget: CommandTarget = {
         ...(r.inviteeDeadlines ? { inviteeDeadlines: r.inviteeDeadlines } : {}),
         ...(r.fxPins ? { fxPins: r.fxPins } : {}),
         // CE-08 — who edited it and when: the session's actor, the store's clock.
-        revisions: [...(r.revisions ?? []), { at: new Date().toISOString(), by: scope.actor ?? NO_PERSON }],
+        revisions: [...(r.revisions ?? []), { at: sdcClock.now(), by: scope.actor ?? NO_PERSON }],
       }));
       return;
     }

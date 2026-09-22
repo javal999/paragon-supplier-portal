@@ -2238,6 +2238,8 @@ export type RfxCommandVars =
       publish?: boolean;
     } & RfxAuthoringVars)
   | { verb: 'publishRfi'; rfiId: string }
+  /** BL-93 — discard a DRAFT RFI (`t_rfi_cancel`, compare-and-set on Draft). */
+  | { verb: 'discardRfi'; rfiId: string }
   | { verb: 'closeRfi'; rfiId: string }
   | { verb: 'extendRfi'; rfiId: string; deadline: string; supplierIds?: readonly string[] }
   | {
@@ -2286,6 +2288,8 @@ export type RfxCommandVars =
       pricing?: RfpPricingRequest;
     } & RfxAuthoringVars)
   | { verb: 'publishRfp'; rfpId: string }
+  /** BL-93 — discard a DRAFT RFP (`t_rfp_cancel`, compare-and-set on Draft). */
+  | { verb: 'discardRfp'; rfpId: string }
   | { verb: 'closeRfp'; rfpId: string }
   | { verb: 'extendRfp'; rfpId: string; deadline: string; supplierIds?: readonly string[] }
   | {
@@ -2400,6 +2404,14 @@ export function useRfxCommand() {
             payload: {},
           });
         }
+        case 'discardRfi':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_rfi_cancel',
+            entity: 'rfiEvent',
+            entityId: vars.rfiId,
+            expectedState: 'Draft',
+            payload: {},
+          });
         case 'publishRfi':
           return svc.commands.dispatch(scope, {
             transitionId: 't_rfi_publish',
@@ -2493,6 +2505,14 @@ export function useRfxCommand() {
             payload: {},
           });
         }
+        case 'discardRfp':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_rfp_cancel',
+            entity: 'rfpEvent',
+            entityId: vars.rfpId,
+            expectedState: 'Draft',
+            payload: {},
+          });
         case 'publishRfp':
           return svc.commands.dispatch(scope, {
             transitionId: 't_rfp_publish',

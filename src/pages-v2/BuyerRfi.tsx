@@ -315,6 +315,20 @@ const RfiDetail: React.FC<DetailProps> = ({
                 {t('rfx.rfi.publish')}
               </Button>
             )}
+            {/* BL-93 — DISCARD a draft: the existing `t_rfi_cancel`, which is
+                legal from Draft. Same atom as Send (`rfi:publish`), so a seat
+                without it reads the lifecycle notice above. */}
+            {event.status === 'Draft' && (
+              <Button
+                variant="secondary"
+                className="text-danger"
+                disabled={!canPublish}
+                data-testid={`rfi-discard-${event.id}`}
+                onClick={() => run({ verb: 'discardRfi', rfiId: event.id }, 'rfxEdit.toast.discarded')}
+              >
+                {t('rfxEdit.discard')}
+              </Button>
+            )}
             {event.status === 'Open' && (
               <Button
                 variant="secondary"

@@ -364,3 +364,30 @@ describe('BL-93 · RFP — Edit draft on the event detail', () => {
     expect(screen.queryByTestId('rfp-edit-rfp-001')).not.toBeInTheDocument();
   });
 });
+
+// ── Discard draft — the existing cancel verbs, which are legal from Draft ───
+
+describe('BL-93 · Discard draft (t_rfi_cancel / t_rfp_cancel from Draft)', () => {
+  it('RFI — the draft is Cancelled, nothing was sent, and Edit is gone', async () => {
+    renderWithProviders(<><BuyerRfi /><Toaster /></>, { identity: BUYER_SEAT, route: `/buyer/rfi?open=${RFI_ID}` });
+    fireEvent.click(await screen.findByTestId(`rfi-discard-${RFI_ID}`));
+    await waitFor(() => expect(rfiEventStore.get(RFI_ID)!.status).toBe('Cancelled'));
+    await waitFor(() => expect(screen.queryByTestId(`rfi-edit-${RFI_ID}`)).not.toBeInTheDocument());
+    expect(screen.queryByTestId(`rfi-discard-${RFI_ID}`)).not.toBeInTheDocument();
+  });
+
+  it('RFP — the same, and a seat without rfp:publish cannot press it', async () => {
+    const { unmount } = renderWithProviders(<BuyerRfp />, { identity: DRAFTER_SEAT, route: `/buyer/rfp?open=${RFP_ID}` });
+    expect(await screen.findByTestId(`rfp-discard-${RFP_ID}`)).toBeDisabled();
+    unmount();
+    renderWithProviders(<BuyerRfp />, { identity: BUYER_SEAT, route: `/buyer/rfp?open=${RFP_ID}` });
+    fireEvent.click(await screen.findByTestId(`rfp-discard-${RFP_ID}`));
+    await waitFor(() => expect(rfpEventStore.get(RFP_ID)!.status).toBe('Cancelled'));
+  });
+
+  it('KNOWN-BAD twin — an Open event offers no Discard', async () => {
+    renderWithProviders(<BuyerRfi />, { identity: BUYER_SEAT, route: '/buyer/rfi?open=rfi-001' });
+    await screen.findByTestId('rfi-detail-rfi-001');
+    expect(screen.queryByTestId('rfi-discard-rfi-001')).not.toBeInTheDocument();
+  });
+});
