@@ -13,6 +13,7 @@ import {
   useASNs,
 } from '../../services/query/hooks';
 import * as d from './buyerDerivations';
+import { sdcClock } from '../../services/sdc/clock';
 
 // The buyer triage line — the aggregated exception count above the widget grid.
 // It reads the SAME derivations the widgets do, so the bar and the widget flags
@@ -45,7 +46,7 @@ const BuyerAlertsBar: React.FC = () => {
   const asns = useASNs();
 
   const flags = useMemo<Flag[]>(() => {
-    const now = new Date();
+    const now = new Date(sdcClock.now());
     const invItems = invoices.data?.items ?? [];
     const poItems = pos.data?.items ?? [];
     const rfqItems = rfqs.data?.items ?? [];

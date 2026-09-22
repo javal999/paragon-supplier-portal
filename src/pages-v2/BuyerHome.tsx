@@ -62,7 +62,7 @@ const BuyerHome: React.FC = () => {
   const sap = useSapInterface();
 
   const tasks = useMemo<HomeTask[]>(() => {
-    const now = new Date();
+    const now = new Date(ordersNow());
     // ⚠️ THE ORDER LANE'S CLOCK, NOT THE WALL CLOCK — the same reading the
     // negotiation task below takes, and for the same reason: the purchase-order
     // fixtures are dated relative to the declared present, which is frozen,

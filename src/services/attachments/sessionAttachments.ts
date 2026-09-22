@@ -14,6 +14,7 @@
 // ────────────────────────────────────────────────────────────────────────────
 
 import type { AttachmentMeta } from '../sourcing/rfqModel';
+import { sdcClock } from '../sdc/clock';
 
 export type { AttachmentMeta };
 
@@ -37,7 +38,7 @@ export const sessionAttachments = {
     const id = `att-${Date.now().toString(36)}-${seq}`;
     const url = makeUrl(file);
     if (url) urls.set(id, url);
-    return { id, name: file.name, size: file.size, type: file.type ?? '', addedAt: new Date().toISOString() };
+    return { id, name: file.name, size: file.size, type: file.type ?? '', addedAt: sdcClock.now() };
   },
   /** The object URL, or `null` when the file is not held in this session. */
   urlFor(id: string): string | null {

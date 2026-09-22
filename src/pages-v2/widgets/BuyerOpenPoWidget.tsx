@@ -17,6 +17,7 @@ import {
   unacknowledgedOver48h,
   poTier,
 } from './buyerDerivations';
+import { sdcClock } from '../../services/sdc/clock';
 
 // Buyer PO board — LIVE from the PO store. Count is open POs; the urgency flag is
 // the honest exception: orders still unacknowledged more than 48h after placing.
@@ -25,7 +26,7 @@ const BuyerOpenPoWidget: React.FC = () => {
   const navigate = useNavigate();
   const query = usePurchaseOrders();
 
-  const now = new Date();
+  const now = new Date(sdcClock.now());
   const items = query.data?.items ?? [];
   const open = useMemo(() => openPurchaseOrders(items), [query.data]);
   const unackIds = useMemo(

@@ -49,6 +49,7 @@ import { formatDate } from '../../lib/format';
 import { useRefusalText } from '../../hooks/useRefusalText';
 import { refusedByPolicy } from '../../services/transitions/refusalMessage';
 import { POLICY_HOOKS } from '../../services/transitions/policyHooks';
+import { sdcClock } from '../../services/sdc/clock';
 
 /**
  * §91e — what the wizard hands up when a settle it AWAITED came back a fault.
@@ -636,7 +637,11 @@ const GRInspectionWizard: React.FC<GRInspectionWizardProps> = ({
   const [manualASN, setManualASN] = useState('');
 
   // Step 2 state
-  const [receivedDate, setReceivedDate] = useState('2026-05-20');
+  // The receipt is dated on the HUB clock by default — the day the demo hub says
+  // it is (`sdcClock`), not a literal and not the machine's calendar. It read
+  // `'2026-05-20'` (the day the wizard was authored), so every receipt recorded
+  // in the demo was back-dated three months behind the hub around it.
+  const [receivedDate, setReceivedDate] = useState(() => sdcClock.now().slice(0, 10));
   const [receivedBy, setReceivedBy] = useState(ROLES[0]);
   const [warehouse, setWarehouse] = useState(LOCATIONS[0]);
   const [notes, setNotes] = useState('');
@@ -777,7 +782,13 @@ const GRInspectionWizard: React.FC<GRInspectionWizardProps> = ({
   // at one moment and the certificate at another, so a lapse falling between
   // them would produce an inspection nothing could explain. ONE READ, ONE NAME,
   // BOTH DERIVATIONS.
-  const inspectionInstant = useMemo(() => new Date().toISOString(), []);
+  //
+  // ⚠️ **AND THAT ONE READ IS THE HUB CLOCK (2026-09-22).** It was the machine
+  // clock, by the 2026-09-10 ruling that treated it as a fact about THIS
+  // reading. The operator reversed that: the demo hub runs on ONE clock, so an
+  // inspection is judged against the enforcement ledger and certificates at the
+  // hub's present, the same present every seeded row is coherent at.
+  const inspectionInstant = useMemo(() => sdcClock.now(), []);
 
   /**
    * Does a required-and-unanswered check STOP the step? Read, never assumed.

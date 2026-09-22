@@ -77,6 +77,7 @@ import { statusTone } from '../lib/statusTone';
 // GL-1 - the glossary destination for this surface's refusals.
 import GlossaryTermChip from '../components/ui-v2/GlossaryTermChip';
 import { useRefusalText, useDataErrorText } from '../hooks/useRefusalText';
+import { sdcClock } from '../services/sdc/clock';
 
 // ────────────────────────────────────────────────────────────────────────────
 // SupplierForecasts (SDC-2b → SDC-3b) — the P1 supplier SUBMISSION HUB. One
@@ -987,7 +988,7 @@ const ForecastWorkspace: React.FC<WorkspaceProps> = ({
       sessionRef.current = openSubmissionSession(
         `ss-p1-${Date.now().toString(36)}`,
         supplierId,
-        new Date().toISOString(),
+        sdcClock.now(),
       );
     }
     sessionRef.current.attempt(kind, res.entityId ?? '', res.correlationId);

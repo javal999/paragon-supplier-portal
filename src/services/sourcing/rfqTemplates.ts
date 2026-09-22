@@ -35,6 +35,7 @@ import {
   type RfqQuantityTier,
 } from './rfqModel';
 import { specSheetFor } from './rfqItemTypes';
+import { sdcClock } from '../sdc/clock';
 
 /** What a template carries. No invitees, no dates. */
 export interface RfqTemplateContent {
@@ -273,7 +274,7 @@ export const rfqTemplateStore = {
       id: `tpl-${Date.now().toString(36)}-${saved.length + 1}`,
       name: trimmed,
       system: false,
-      createdAt: new Date().toISOString(),
+      createdAt: sdcClock.now(),
       content,
     };
     saved = [...saved, template];

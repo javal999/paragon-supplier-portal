@@ -17,6 +17,7 @@ import NoSupplierIdentity from '../components/ui-v2/NoSupplierIdentity';
 import Data from '../components/ui-v2/Data';
 import { useTranslation } from 'react-i18next';
 import { useCurrentIdentity } from '../context/CurrentIdentityContext';
+import { sdcClock } from '../services/sdc/clock';
 
 const WHATSAPP_GREEN_HEADER = '#075E54';
 const WHATSAPP_BG = '#ECE5DD';
@@ -183,7 +184,7 @@ const LANGUAGES: { flag: string; key: string }[] = [
 ];
 
 const getTime = (): string =>
-  new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  new Date(sdcClock.now()).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
 
 const FormatMsg: React.FC<{ text: string }> = ({ text }) => {
   const lines = text.split('\n');
@@ -964,7 +965,7 @@ const EmailPanel: React.FC = () => {
             supplier@sample-packaging.example ·{' '}
             <span className="text-text-primary font-semibold">Sent:</span>{' '}
             <Data>
-              {new Date().toLocaleDateString('en-GB', {
+              {new Date(sdcClock.now()).toLocaleDateString('en-GB', {
                 day: '2-digit',
                 month: 'short',
                 year: 'numeric',
@@ -1246,19 +1247,14 @@ const SupplierWhatsApp: React.FC = () => {
   const { supplierId, supplierName } = identity;
   const [channel, setChannel] = useState<Channel>('whatsapp');
 
-  // ⚠️ **WALL CLOCK ON PURPOSE — DO NOT ANCHOR THIS.** It renders
-  // `supplierWhatsApp.meta.sessionOpened`, which is a fact about THIS SESSION
-  // and not about the fixture set: pinning it to `DECLARED_PRESENT` would tell
-  // a reader their own simulator session opened weeks ago. It is the reason
-  // this page is absent from `anchoredSurfaces.guard.test.tsx` — an instrument
-  // sweeping for clock drift WILL flag this line, and the answer is that the
-  // value is supposed to move. (`EmailPanel`'s "Sent:" date is a different
-  // case: a simulated DOCUMENT date, anchorable, but it renders only on the
-  // email channel and this page cannot hold two clocks, so it rides with the
-  // batch that anchors the surface as a whole.)
+  // ⚠️ **THE HUB CLOCK (operator, 2026-09-22).** This read the machine clock on
+  // purpose ("a fact about THIS SESSION"). Reversed: the demo hub runs on one
+  // clock, so a session opened "22 Sep" on a hub whose present is 31 Aug read
+  // as a defect, not as a fact. The message stamps (`getTime`) and the email
+  // panel's "Sent:" date read the same clock, so the page holds ONE clock.
   const lastUpdated = useMemo(
     () =>
-      new Date().toLocaleString('en-GB', {
+      new Date(sdcClock.now()).toLocaleString('en-GB', {
         day: '2-digit',
         month: 'short',
         year: 'numeric',

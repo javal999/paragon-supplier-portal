@@ -20,6 +20,7 @@
 // ────────────────────────────────────────────────────────────────────────────
 
 import { normalizeQty, type QtyRefusalReason } from '../../lib/localeNumber';
+import { sdcClock } from '../../services/sdc/clock';
 
 /**
  * Why a typed rate was refused. Extends the parser's vocabulary with the one
@@ -65,7 +66,7 @@ export type FxVintageOutcome =
  * DAY granularity: a rate stated as of today is not in the future merely
  * because the clock has advanced past midnight UTC in some other timezone.
  */
-export function readFxVintage(raw: string, now: Date = new Date()): FxVintageOutcome {
+export function readFxVintage(raw: string, now: Date = new Date(sdcClock.now())): FxVintageOutcome {
   const s = raw.trim();
   if (s === '') return { ok: false, reason: 'EMPTY_VINTAGE' };
   const parsed = new Date(s);

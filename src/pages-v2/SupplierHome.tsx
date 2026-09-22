@@ -34,6 +34,7 @@ import { deadlineState } from '../services/transitions/forecastRules';
 import { forecastNow } from './forecasts/forecastDisplay';
 import Data from '../components/ui-v2/Data';
 import { RiskPill, inventoryNow } from './inventory/inventoryDisplay';
+import { sdcClock } from '../services/sdc/clock';
 
 // Supplier Home — "To do" (REQUIREMENTS §3.8 SC-01): what Paragon is waiting for
 // from this supplier. Filters match the supplier dashboard widgets they replace.
@@ -70,7 +71,7 @@ const SupplierHome: React.FC = () => {
       (po) => po.status === POStatus.SENT || po.status === POStatus.ACKNOWLEDGED,
     );
     const readyToShip = poItems.filter((po) => po.status === POStatus.CONFIRMED);
-    const now = Date.now();
+    const now = Date.parse(sdcClock.now());
     const openRfqs = (rfqs.data?.items ?? []).filter(
       (r) => r.status === 'Open' && !!supplierId && !r.respondedSupplierIds.includes(supplierId),
     );

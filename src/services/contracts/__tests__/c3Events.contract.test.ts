@@ -244,9 +244,12 @@ describe('⚠️ the instant is INJECTED, and the shared spine holds no clock', 
   });
 
   it('⚠️ KNOWN-GOOD FIRST — the matcher FINDS clock reads where they really are', () => {
-    // The mock service reads the wall clock many times over. A zero here means
-    // the matcher is broken and every assertion below is vacuous.
-    expect(clockReadsIn(MOCK_COMMAND)).toBeGreaterThan(5);
+    // The mock service reads the wall clock at EXACTLY ONE site: the dispatcher
+    // wiring C3 names (`now: () => new Date().toISOString()`). Every record
+    // stamp beside it moved to the hub clock (2026-09-22, machineClockGate), so
+    // the old "> 5" is now exactly 1. A zero here means the matcher is broken
+    // and every assertion below is vacuous; a 2 means a stamp crept back.
+    expect(clockReadsIn(MOCK_COMMAND)).toBe(1);
   });
 
   it('⚠️ and it does NOT count a PARSE — `new Date(asOf)` is not a clock read', () => {

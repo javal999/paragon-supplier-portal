@@ -57,6 +57,7 @@ import BuyerAsnInboundWidget from './widgets/BuyerAsnInboundWidget';
 import BuyerInventoryWidget from './widgets/BuyerInventoryWidget';
 import BuyerRiskWidget from './widgets/BuyerRiskWidget';
 import BuyerComplianceWidget from './widgets/BuyerComplianceWidget';
+import { sdcClock } from '../services/sdc/clock';
 
 type RangeId = 'today' | 'week' | 'month';
 
@@ -141,7 +142,7 @@ const BuyerDashboard: React.FC = () => {
   const openPoCount = openPurchaseOrders(posQuery.data.items).length;
   const unackPoCount = unacknowledgedOver48h(
     posQuery.data.items,
-    new Date(),
+    new Date(sdcClock.now()),
   ).length;
 
   if (productionLines.length === 0 && supplierHealth.length === 0)

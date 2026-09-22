@@ -57,6 +57,7 @@ import {
 } from '../services/data/documentDisplayState';
 import { daysUntil } from '../services/data/dayProjection';
 import { DECLARED_PRESENT } from '../services/data/fixturePresent';
+import { sdcClock } from '../services/sdc/clock';
 
 // ⚠️ ANCHORED — this surface rendered values derived from anchored
 // fixture data against the WALL CLOCK, so what a reader saw moved every day
@@ -463,16 +464,13 @@ const SupplierDashboard: React.FC = () => {
   );
   const remaining = activeActions.length;
 
-  // ⚠️ **WALL CLOCK BY RULING, NOT BY OVERSIGHT (operator, 2026-09-10).**
-  // This is the briefing greeting — a rendered DATE, so anchoring it does not
-  // reconcile two numbers, it changes what the reader is told today is. That
-  // puts it with `SupplierWhatsApp`'s `sessionOpened` and the wizard's
-  // `inspectionInstant`: a fact about THIS reading, not a projection over
-  // fixture data. The clock-derived BADGES on this page stay anchored above —
-  // that is the read/write split this batch is built on, not a half-anchor.
-  // `anchoredSurfaces.guard.test.tsx` asserts BOTH halves, so re-anchoring
-  // this line goes red by name rather than passing quietly.
-  const today = new Date().toLocaleDateString('en-GB', {
+  // ⚠️ **THE HUB CLOCK, BY RULING (operator, 2026-09-22).** This greeting was
+  // held on the machine clock by the 2026-09-10 ruling ("a fact about THIS
+  // reading"). Reversed: the demo hub runs on one clock, and a briefing that
+  // says a different day from every badge beneath it tells the reader two
+  // things at once. `anchoredSurfaces.guard.test.tsx` now asserts the greeting
+  // is anchored AND that it names the declared present.
+  const today = new Date(sdcClock.now()).toLocaleDateString('en-GB', {
     weekday: 'long',
     day: '2-digit',
     month: 'long',

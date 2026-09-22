@@ -206,7 +206,7 @@ const CommHubInbound: React.FC = () => {
       sessionRef.current = openSubmissionSession(
         `ss-c2-${Date.now().toString(36)}`,
         supplierId,
-        new Date().toISOString(),
+        sdcClock.now(),
       );
     }
     sessionRef.current.attempt('InventoryDeclaration', res.entityId ?? '', res.correlationId);

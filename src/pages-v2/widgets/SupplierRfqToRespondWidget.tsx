@@ -16,6 +16,7 @@ import { formatDate } from '../../lib/format';
 import { useCurrentIdentity } from '../../context/CurrentIdentityContext';
 import { useRFQs } from '../../services/query/hooks';
 import type { RFQ } from '../../services/data/types';
+import { sdcClock } from '../../services/sdc/clock';
 
 // Supplier RFQ-to-respond — LIVE from the RFQ store (PR #41). The service already
 // scopes the read to RFQs this supplier was invited to; we surface the Open ones
@@ -38,7 +39,7 @@ const SupplierRfqToRespondWidget: React.FC = () => {
     [query.data, supplierId],
   );
   const count = open.length;
-  const now = new Date();
+  const now = new Date(sdcClock.now());
   const late = useMemo(
     () => open.filter((r) => new Date(r.responseDeadline).getTime() < now.getTime()).length,
     [open],
