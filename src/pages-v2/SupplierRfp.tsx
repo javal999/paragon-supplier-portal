@@ -74,7 +74,8 @@ const SupplierRfp: React.FC = () => {
   const [pDraft, setPDraft] = useState<Record<string, RfpPricingAnswer>>({});
   const [tcTicked, setTcTicked] = useState<Record<string, boolean>>({});
 
-  const crumb = [t('hub.nav.section.sourcing'), t('rfx.rfp.supplier.title')];
+  // The eyebrow is the menu section alone (the `PageHeader` rule).
+  const crumb = [t('hub.nav.section.sourcing')];
   const items = useMemo(() => events.data?.items ?? [], [events.data]);
 
   if (events.isPending) return <LoadingState breadcrumb={crumb} />;

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   ClipboardList,
   FileText,
@@ -49,7 +49,7 @@ import NextActLine from '../components/ui-v2/NextActLine';
 import { DataError } from '../services/data/types';
 import { formatNumber, formatIDR, formatDate } from '../lib/format';
 import { normalizeQty, type QtyRefusalReason } from '../lib/localeNumber';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import type { PurchaseRequisition, PRStatus } from '../services/data/types';
 import type { ActorAttribution, UnattributedReason } from '../lib/enforcement';
 // GL-1 - the glossary destination for this surface's refusals.
@@ -239,6 +239,22 @@ const BuyerRequisitions: React.FC = () => {
 
   const reqQuery = useRequisitions();
   const prs = reqQuery.data?.items ?? [];
+
+  // `?open=<id>` lands on one requisition's panel — the RFQ event page's
+  // "Created from PR-…" link points here. Consumed once, so closing the panel
+  // does not re-open it.
+  const [openParams, setOpenParams] = useSearchParams();
+  const openParam = openParams.get('open');
+  useEffect(() => {
+    if (!openParam) return;
+    const pr = prs.find((p) => p.id === openParam);
+    if (!pr) return;
+    setSelectedRow(pr);
+    const next = new URLSearchParams(openParams);
+    next.delete('open');
+    setOpenParams(next, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openParam, prs]);
   const createPr = usePurchaseRequisitionCreate();
   const approvePr = useRequisitionApprove();
   const rejectPr = useRequisitionReject();

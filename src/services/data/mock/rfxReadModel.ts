@@ -27,6 +27,7 @@ import {
   defaultEvaluationTierQty,
   isTieredRfq,
   scoreRfqAt,
+  topRankedOf,
 } from '../../sourcing/rfqComparison';
 import { bandOf, certificateValidity } from '../../sourcing/supplierFilters';
 import {
@@ -354,9 +355,8 @@ export function rfqScoring(rfq: RFQ, nowIso: string, evalTierQty?: number): Scor
 
 /** The best-scored quotation id for an RFQ, or null when the set is unrankable. */
 export function bestScoredQuotationId(rfq: RFQ, nowIso: string, evalTierQty?: number): string | null {
-  const outcome = rfqScoring(rfq, nowIso, evalTierQty);
-  if (outcome.kind !== 'scored') return null;
-  return outcome.scores.find((s) => s.topRanked)?.quoteId ?? null;
+  // A genuine tie has no single best to follow (`topRankedOf`).
+  return topRankedOf(rfqScoring(rfq, nowIso, evalTierQty));
 }
 
 /**

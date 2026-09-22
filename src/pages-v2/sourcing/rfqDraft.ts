@@ -3,10 +3,10 @@
 // the ONE generic seed every "start from…" entrance fills it through.
 //
 // ⚠️ **ONE SEED SHAPE, MANY SOURCES.** An RFQ can start from an RFI, a template,
-// a past RFQ, and (in a later batch) an RFP. Each of those is a function from
-// its own record to `RfqDraftSeed`, and the wizard knows only the seed. That is
-// what lets the RFP source plug in later without the wizard being reworked: it
-// is one more `seedFrom…` beside the ones below, and nothing else changes.
+// a past RFQ, and an RFP. Each of those is a function from its own record to
+// `RfqDraftSeed`, and the wizard knows only the seed. That is what let the RFP
+// source plug in without the wizard being reworked: `seedFromRfp` is one more
+// `seedFrom…` beside the others, and nothing else changed.
 // (The purchase-requisition entrance predates this and keeps its own
 // `applyPrefill`, because its cascade key `sourceRequisitionId` is load-bearing
 // and already pinned by its own specs.)
@@ -16,11 +16,13 @@
 // `tiersRefusal`), so the step gate and the dispatch cannot disagree.
 // ────────────────────────────────────────────────────────────────────────────
 
-import type { BidCurrency } from '../../lib/currencyPolicy';
+import { BID_CURRENCIES, type BidCurrency } from '../../lib/currencyPolicy';
 import { normalizeQty } from '../../lib/localeNumber';
 import type { RFQ } from '../../data/mockRfqs';
 import type { RfiQuestion } from '../../services/sourcing/types';
-import type { RfqPrefill } from '../../services/sourcing/rfxPrefill';
+import type { RfqPrefill, RfqSeedFromRfp } from '../../services/sourcing/rfxPrefill';
+
+const isBidCurrency = (c: string): c is BidCurrency => (BID_CURRENCIES as readonly string[]).includes(c);
 import {
   itemRefusal,
   tiersRefusal,
@@ -280,6 +282,61 @@ export function seedFromRfiPrefill(p: RfqPrefill, eventNumber: string): RfqDraft
         ),
       };
     }),
+  };
+}
+
+/**
+ * The item type an RFP option names OBVIOUSLY, from its title alone — or
+ * `other`. Deliberately a short keyword list, not a classifier: a wrong guess
+ * would put a spec sheet on the item that asks for the wrong things, so anything
+ * the title does not name plainly stays "Other" and the buyer picks the type.
+ */
+export function obviousItemType(title: string): RfqItemTypeId {
+  const s = title.toLowerCase();
+  if (/\b(sticker|label)s?\b/.test(s)) return 'sticker';
+  if (/\b(unit box|carton|box)(es)?\b/.test(s)) return 'unitBox';
+  if (/\b(mou?ld)s?\b/.test(s)) return 'moldComponent';
+  if (/\b(bottle|pump|cap|closure|jar)s?\b/.test(s)) return 'bottleClosure';
+  return 'other';
+}
+
+/**
+ * RFP → RFQ (spec D3). `prefillRfqItemsFromRfp` already chose the options, the
+ * quantity points and the responders, and left every indicative price behind
+ * (an RFQ asks for FIRM prices, D4). This only re-expresses that neutral seed
+ * as the wizard's draft:
+ *
+ * - each chosen option becomes an item of the obvious type (or Other), whose
+ *   description is the option's title plus its detail;
+ * - the quantity points become the RFQ's breaks, on the RFP's basis;
+ * - the responders become the invitees; title, category and currency carry.
+ *
+ * The total quantity is the first break across the items — the same reading the
+ * Oslo sample uses — so the basics step opens valid rather than blank. Every
+ * field stays editable, and a type's required spec fields are left for the
+ * buyer: the RFP asked the suppliers to recommend them, so no value exists to
+ * carry.
+ */
+export function seedFromRfp(p: RfqSeedFromRfp, eventNumber: string): RfqDraftSeed {
+  const points = p.items[0]?.quantityPoints ?? [];
+  const basis = p.items[0]?.quantityBasis ?? 'total';
+  const items = p.items.map((i) => {
+    const base = newItemDraft(obviousItemType(i.description));
+    return { ...base, description: i.note ? `${i.description} — ${i.note}` : i.description };
+  });
+  return {
+    origin: { kind: 'rfp', label: eventNumber },
+    title: p.title,
+    category: p.materialCategory,
+    ...(isBidCurrency(p.currency) ? { currency: p.currency } : {}),
+    invitedSupplierIds: p.invitedSupplierIds,
+    sourceRfpId: p.sourceRfpId,
+    ...(points.length > 0 && p.items.length > 0 ? { totalQty: String(points[0]! * p.items.length) } : {}),
+    tiers: points.map((qty) => ({ qty, basis })),
+    // The RFQ's unit follows its items (all a type's default, PCS today), so
+    // the header quantity is not read in the wizard's KG default.
+    ...(items[0] ? { uom: items[0].uom } : {}),
+    items,
   };
 }
 

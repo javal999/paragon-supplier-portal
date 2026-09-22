@@ -67,6 +67,7 @@ import {
   useInviteeCandidates,
   useRfqComplianceGate,
   useRfiEvents,
+  useRfpEvents,
   useAwards,
 } from '../services/query/hooks';
 import {
@@ -95,13 +96,14 @@ import {
   newItemDraft,
   optionsStepRefusal,
   seedFromRfiPrefill,
+  seedFromRfp,
   templateContentFromDraft,
   templateContentFromRfq,
   tiersStepRefusal,
   type RfqAuthoringDraft,
   type RfqDraftSeed,
 } from './sourcing/rfqDraft';
-import { prefillRfqFromRfi } from '../services/sourcing/rfxPrefill';
+import { prefillRfqFromRfi, prefillRfqItemsFromRfp } from '../services/sourcing/rfxPrefill';
 import type { RfqTemplateContent } from '../services/sourcing/rfqTemplates';
 import { GateMarker } from './rfx/rfxDisplay';
 import { matchesSupplierFilters } from '../services/sourcing/supplierFilters';
@@ -1568,6 +1570,43 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
     setSearchParams(next, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rfiParam, rfiEvents.isPending, rfiEvents.data]);
+
+  // RFP → RFQ (spec D3) — the same entrance as `?rfi=`, and the same rule: the
+  // ids travel, not the prefill. `?rfp=<id>&options=<id>,<id>` names the RFP and
+  // the options the buyer chose on it (PTI's or a supplier's own); this page
+  // reads the RFP from its own live query, runs the existing pure
+  // `prefillRfqItemsFromRfp`, and opens the wizard through the generic seed. An
+  // RFP it cannot find, or options that name nothing on it, open NOTHING
+  // pre-filled and say so — never a blank wizard that looks like a pre-fill.
+  const rfpParam = searchParams.get('rfp');
+  const optionsParam = searchParams.get('options');
+  const rfpEvents = useRfpEvents();
+  const consumedRfp = useRef<string | null>(null);
+  useEffect(() => {
+    if (!rfpParam || consumedRfp.current === rfpParam || rfpEvents.isPending) return;
+    consumedRfp.current = rfpParam;
+    const event = (rfpEvents.data?.items ?? []).find((e) => e.id === rfpParam);
+    const chosen = (optionsParam ?? '').split(',').map((s) => s.trim()).filter(Boolean);
+    const seed = event ? prefillRfqItemsFromRfp(event, event.responses, chosen) : null;
+    if (rfqCreateAvailability.kind !== 'held') {
+      // The entrance is the unit (§84): a seat without `rfq:create` does not get
+      // a wizard the dispatcher would refuse at the end. The page header's
+      // handoff notice already names whose act it is.
+    } else if (event && seed && seed.items.length > 0) {
+      openWizardFromSeed(seedFromRfp(seed, event.eventNumber));
+    } else {
+      toast({
+        variant: 'error',
+        title: t('rfqAuthoring.prefill.rfpMissing.title'),
+        description: t('rfqAuthoring.prefill.rfpMissing.desc', { id: rfpParam }),
+      });
+    }
+    const next = new URLSearchParams(searchParams);
+    next.delete('rfp');
+    next.delete('options');
+    setSearchParams(next, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rfpParam, rfpEvents.isPending, rfpEvents.data]);
 
   const updateDraft = <K extends keyof DraftRfq>(
     key: K,

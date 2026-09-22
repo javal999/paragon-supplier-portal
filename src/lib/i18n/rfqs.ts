@@ -4,8 +4,6 @@
 // currency, material/category data, and certificate names stay verbatim.
 export const rfqsEn: Record<string, string> = {
   // breadcrumb
-  'rfqs.crumb.section': 'ACQUIRE',
-  'rfqs.crumb.page': 'MY RFQS & QUOTES',
   // header + meta
   'rfqs.header.title': 'Quotation requests',
   'rfqs.rounds.link': 'Revised quotes (negotiation rounds)',
@@ -27,13 +25,14 @@ export const rfqsEn: Record<string, string> = {
   'rfqs.tab.history': 'Awards & history',
   // evaluation segments
   'rfqs.eval.price': 'Price',
-  'rfqs.eval.quality': 'Quality',
-  'rfqs.eval.leadTime': 'Lead Time',
-  'rfqs.eval.sustainability': 'Sustainability',
-  'rfqs.eval.risk': 'Risk',
+  'rfqs.eval.leadTime': 'Lead time',
+  'rfqs.eval.reliability': 'Reliability',
+  'rfqs.eval.gate': 'Only suppliers that pass the compliance gate (halal, BPOM, GMP, active status, on-time delivery) are scored. Reliability is your on-time-in-full record; no history scores 50.',
   // RFQ card
-  'rfqs.card.daysRemaining': '{{count}} days remaining',
-  'rfqs.card.daysToDeadline': '{{count}} days to deadline',
+  'rfqs.card.daysRemaining_one': '{{count}} day remaining',
+  'rfqs.card.daysRemaining_other': '{{count}} days remaining',
+  'rfqs.card.daysToDeadline_one': '{{count}} day to deadline',
+  'rfqs.card.daysToDeadline_other': '{{count}} days to deadline',
   'rfqs.card.sampleDetail': 'Sample detail',
   'rfqs.card.via': 'via {{channel}}',
   'rfqs.card.received': 'Received {{date}}',
@@ -199,8 +198,6 @@ export const rfqsEn: Record<string, string> = {
 
 export const rfqsId: Record<string, string> = {
   // breadcrumb
-  'rfqs.crumb.section': 'PENGADAAN',
-  'rfqs.crumb.page': 'RFQ & PENAWARAN SAYA',
   // header + meta
   'rfqs.header.title': 'Permintaan penawaran harga',
   'rfqs.rounds.link': 'Penawaran revisi (putaran negosiasi)',
@@ -222,13 +219,12 @@ export const rfqsId: Record<string, string> = {
   'rfqs.tab.history': 'Pemenangan & riwayat',
   // evaluation segments
   'rfqs.eval.price': 'Harga',
-  'rfqs.eval.quality': 'Kualitas',
-  'rfqs.eval.leadTime': 'Waktu Tunggu',
-  'rfqs.eval.sustainability': 'Keberlanjutan',
-  'rfqs.eval.risk': 'Risiko',
+  'rfqs.eval.leadTime': 'Waktu tunggu',
+  'rfqs.eval.reliability': 'Keandalan',
+  'rfqs.eval.gate': 'Hanya pemasok yang lolos gerbang kepatuhan (halal, BPOM, GMP, status aktif, ketepatan pengiriman) yang dinilai. Keandalan adalah catatan tepat waktu dan lengkap Anda; tanpa riwayat bernilai 50.',
   // RFQ card
-  'rfqs.card.daysRemaining': '{{count}} hari tersisa',
-  'rfqs.card.daysToDeadline': '{{count}} hari menuju tenggat',
+  'rfqs.card.daysRemaining_other': '{{count}} hari tersisa',
+  'rfqs.card.daysToDeadline_other': '{{count}} hari menuju tenggat',
   'rfqs.card.sampleDetail': 'Detail contoh',
   'rfqs.card.via': 'melalui {{channel}}',
   'rfqs.card.received': 'Diterima {{date}}',

@@ -58,7 +58,8 @@ const SupplierRfi: React.FC = () => {
   const [openId, setOpenId] = useState<string | null>(null);
   const [draft, setDraft] = useState<Record<string, RfiAnswer[]>>({});
 
-  const crumb = [t('hub.nav.section.sourcing'), t('rfx.rfi.supplier.title')];
+  // The eyebrow is the menu section alone (the `PageHeader` rule).
+  const crumb = [t('hub.nav.section.sourcing')];
   const items = useMemo(() => events.data?.items ?? [], [events.data]);
 
   if (events.isPending) return <LoadingState breadcrumb={crumb} />;

@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import AppShellV2 from '../components/layout-v2/AppShellV2';
 import PageHeader from '../components/ui-v2/PageHeader';
@@ -71,10 +71,14 @@ const BuyerRfp: React.FC = () => {
   const command = useRfxCommand();
   const [params, setParams] = useSearchParams();
   const [wizardOpen, setWizardOpen] = useState(false);
-  const [openId, setOpenId] = useState<string | null>(null);
+  // `?open=<id>` lands on one event — the RFQ event page's "Created from RFP-…"
+  // link points here.
+  const [openId, setOpenId] = useState<string | null>(() => params.get('open'));
   const [extendTo, setExtendTo] = useState<Record<string, string>>({});
 
-  const crumb = [t('hub.nav.section.sourcing'), t('rfx.rfp.title')];
+  // The eyebrow is the menu section alone (the `PageHeader` rule): it read
+  // "Sourcing · Proposal requests" above the title "Proposal requests".
+  const crumb = [t('hub.nav.section.sourcing')];
   const items = useMemo(() => events.data?.items ?? [], [events.data]);
 
   // D3 — `?rfi=<id>` asks for an RFP pre-filled from that RFI. Only a seat
@@ -174,8 +178,8 @@ const BuyerRfp: React.FC = () => {
                   {event.pricing && (
                     <div className="text-xs text-text-tertiary">
                       {t('rfxa.pricing.summary', {
-                        options: event.pricing.options.length,
-                        points: event.pricing.quantityPoints.length,
+                        options: t('rfxa.pricing.optionCount', { count: event.pricing.options.length }),
+                        points: t('rfxa.pricing.pointCount', { count: event.pricing.quantityPoints.length }),
                       })}
                     </div>
                   )}
@@ -336,6 +340,7 @@ const BuyerRfp: React.FC = () => {
 
           <RfpInvitees event={open} />
           <RfpComparison event={open} />
+          {rfpToRfqOffered(open) && <RfpToRfq event={open} />}
           {open.pricing && (
             <RfpPricingComparison
               request={open.pricing}
@@ -369,6 +374,91 @@ const BuyerRfp: React.FC = () => {
         />
       )}
     </AppShellV2>
+  );
+};
+
+/**
+ * D3 — "Create RFQ from this RFP" is offered only where it can do something: an
+ * RFP that asked for indicative prices on options AND holds at least one
+ * submitted proposal (the view carries submitted proposals only). Without
+ * options there is nothing to turn into items; without a proposal there is
+ * nobody to invite and no supplier option to choose — a button there would be a
+ * false affordance.
+ */
+const rfpToRfqOffered = (event: RfpEventView): boolean =>
+  (event.pricing?.options.length ?? 0) > 0 && event.responses.length > 0;
+
+/**
+ * The buyer picks the options — PTI's own and any a supplier proposed — and the
+ * RFQ wizard opens pre-filled from them (`/buyer/rfq?rfp=…&options=…`, read by
+ * the sourcing board through `prefillRfqItemsFromRfp`). Creating an RFQ is
+ * `rfq:create`; a seat without it reads whose act it is instead (§72a).
+ */
+const RfpToRfq: React.FC<{ event: RfpEventView }> = ({ event }) => {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const create = useVerbAvailability('rfq:create');
+  const [chosen, setChosen] = useState<string[]>([]);
+  const options = [
+    ...(event.pricing?.options ?? []).map((o) => ({ option: o, by: null as string | null })),
+    ...event.responses.flatMap((r) =>
+      (r.pricing?.proposedOptions ?? []).map((o) => ({ option: o, by: r.supplierName })),
+    ),
+  ];
+  const toggle = (id: string) =>
+    setChosen((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  const go = () =>
+    navigate(
+      `/buyer/rfq?rfp=${encodeURIComponent(event.id)}&options=${chosen.map(encodeURIComponent).join(',')}`,
+    );
+  return (
+    <div
+      className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm p-4"
+      data-testid={`rfp-to-rfq-${event.id}`}
+    >
+      <h4 className="text-sm font-semibold text-text-primary">{t('rfx.rfp.toRfq.title')}</h4>
+      <p className="text-xs text-text-tertiary mt-1">{t('rfx.rfp.toRfq.hint')}</p>
+      <fieldset className="mt-3 space-y-2">
+        <legend className="sr-only">{t('rfx.rfp.toRfq.title')}</legend>
+        {options.map(({ option, by }) => (
+          <label key={option.id} className="flex items-start gap-2 text-sm text-text-primary">
+            <input
+              type="checkbox"
+              className="mt-1"
+              checked={chosen.includes(option.id)}
+              onChange={() => toggle(option.id)}
+              data-testid={`rfp-to-rfq-option-${option.id}`}
+            />
+            <span>
+              {option.title}
+              <span className="block text-xs text-text-tertiary">
+                {by ? t('rfx.rfp.toRfq.proposedBy', { supplier: by }) : t('rfx.rfp.toRfq.pti')}
+                {option.description ? ` · ${option.description}` : ''}
+              </span>
+            </span>
+          </label>
+        ))}
+      </fieldset>
+      <div className="flex flex-wrap items-center gap-3 mt-4">
+        {create.kind === 'held' ? (
+          <>
+            <Button
+              variant="outline"
+              disabled={chosen.length === 0}
+              onClick={go}
+              data-testid={`rfp-to-rfq-btn-${event.id}`}
+            >
+              {t('rfx.rfp.toRfq.button')}
+            </Button>
+            {chosen.length === 0 && (
+              <span className="text-xs text-text-tertiary">{t('rfx.rfp.toRfq.pick')}</span>
+            )}
+          </>
+        ) : (
+          <HandoffNotice availability={create} testId="handoff-rfp-to-rfq" />
+        )}
+      </div>
+    </div>
   );
 };
 

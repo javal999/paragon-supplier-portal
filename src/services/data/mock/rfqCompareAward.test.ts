@@ -133,9 +133,14 @@ describe('changing the evaluation break changes the ranking', () => {
     expect(bestScoredQuotationId(oslo(), rfxNow(), 50_000)).toBe('qt-021a');
   });
 
-  it('per item: at 3K item 1 goes to sup-015 and item 2 to sup-013; at 50K both to sup-015', () => {
+  it('per item: at 3K item 1 is a TIE and item 2 goes to sup-013; at 50K both to sup-015', () => {
+    // ⚠️ Item 1 at 3K scores 72 for both suppliers, exactly (B5). It used to be
+    // "won" by sup-015 only because its quote is listed first — the engine's
+    // stable pick on a tie, which is list order, not a ranking. A tie now has no
+    // single best to follow (`topRankedOf`), so the award rule asks no reason
+    // for either supplier on that item.
     expect([...bestScoredByItem(oslo(), rfxNow(), 3_000)]).toEqual([
-      [1, 'qt-021a'],
+      [1, null],
       [2, 'qt-021b'],
     ]);
     expect([...bestScoredByItem(oslo(), rfxNow(), 50_000)]).toEqual([
@@ -224,10 +229,8 @@ describe('a multi-supplier award per item, recorded with its break', () => {
     ]);
     // a tiered line names its item by LINE; `itemCode` stays a material-code field
     expect(rec.lines.every((l) => l.itemCode === '')).toBe(true);
-    expect(rec.bestScoredByItem).toEqual([
-      { itemLineNo: 1, quotationId: 'qt-021a' },
-      { itemLineNo: 2, quotationId: 'qt-021b' },
-    ]);
+    // Item 1 ties at 3K, so only item 2 has a best to record (B5).
+    expect(rec.bestScoredByItem).toEqual([{ itemLineNo: 2, quotationId: 'qt-021b' }]);
     // suppliers with no share on any item are the not-awarded list
     expect([...rec.notAwardedSupplierIds].sort()).toEqual(['sup-007', 'sup-008']);
     // BL-37 — BOTH winners' quotes are Awarded; before, the second was Rejected.
@@ -290,14 +293,20 @@ describe('a supplier that fails the compliance gate cannot take a share', () => 
 });
 
 describe('a departure from an item’s best score needs a reason, naming the item', () => {
-  /** Item 1 all to sup-013, whose quote is NOT item 1's best at 3K. */
-  const departing = () => [lineFor('sup-013', 'qt-021b', 1, 100), lineFor('sup-013', 'qt-021b', 2, 100)];
+  /** Item 2 all to sup-015, whose quote is NOT item 2's best at 3K. */
+  const departing = () => [lineFor('sup-015', 'qt-021a', 1, 100), lineFor('sup-015', 'qt-021a', 2, 100)];
 
   it('KNOWN-BAD — no reason', async () => {
     const res = await award(departing());
     expect(res.status).toBe('failed');
-    expect(res.reason).toMatch(/AWARD_REASON_REQUIRED: the award for item 1 \(Oslo front sticker\)/);
+    expect(res.reason).toMatch(/AWARD_REASON_REQUIRED: the award for item 2 \(Oslo back sticker/);
     nothingAwarded();
+  });
+
+  it('A TIE HAS NO BEST TO DEPART FROM — item 1 at 3K to either supplier needs no reason (B5)', async () => {
+    const toSup013 = [lineFor('sup-013', 'qt-021b', 1, 100), lineFor('sup-013', 'qt-021b', 2, 100)];
+    const res = await award(toSup013);
+    expect(res.status, res.reason).toBe('done');
   });
 
   it('KNOWN-GOOD twin — the same award with a reason is recorded, and the departure shows', async () => {

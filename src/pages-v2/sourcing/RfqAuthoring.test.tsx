@@ -227,6 +227,82 @@ describe('RFI → RFQ pre-fill (/buyer/rfq?rfi=<id>)', () => {
   });
 });
 
+describe('RFP → RFQ pre-fill (/buyer/rfq?rfp=<id>&options=<ids>, spec D3)', () => {
+  it('Tundra: "pump and cap only" and the supplier-proposed stock bottle land as items, points as breaks, responders invited', async () => {
+    renderWithProviders(<BuyerSourcing />, { route: '/buyer/rfq?rfp=rfp-002&options=opt-pump-cap,sup-opt-1' });
+    const title = await screen.findByPlaceholderText(/e\.g\. Q3 2026 Fragrance Sourcing/i);
+    expect(title).toHaveValue('Tundra — open-spec bottle and pump');
+    // The first break across both items: 10,000 × 2.
+    expect(screen.getByLabelText('Total quantity')).toHaveValue('20000');
+    await fillScope();
+    next();
+    // One item per chosen option; the description is the title plus its detail,
+    // and the type is the obvious one (bottle and closure) for both.
+    expect(screen.getByTestId('rfq-item-1-description')).toHaveValue(
+      'Pump and cap only — PTI sources the bottle; you supply a matching pump and over-cap.',
+    );
+    expect(screen.getByTestId('rfq-item-2-description')).toHaveValue(
+      'Stock 150 ml bottle with 24/410 lotion pump — Our existing mould, so no bottle tooling cost; shape differs slightly from the reference.',
+    );
+    expect(screen.getByTestId('rfq-item-1-type')).toHaveValue('bottleClosure');
+    expect(screen.queryByTestId('rfq-item-3')).not.toBeInTheDocument();
+    // The RFP asked suppliers to RECOMMEND the spec, so the required buyer
+    // fields are the buyer's to fill — the step holds until they are.
+    expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled();
+    for (const n of [1, 2]) {
+      fireEvent.change(screen.getByTestId(`rfq-item-${n}-value-component`), { target: { value: 'Pump and over-cap' } });
+      fireEvent.change(screen.getByTestId(`rfq-item-${n}-value-material`), { target: { value: 'PP' } });
+      fireEvent.change(screen.getByTestId(`rfq-item-${n}-value-colour`), { target: { value: 'White' } });
+      fireEvent.change(screen.getByTestId(`rfq-item-${n}-value-netVolume`), { target: { value: '150' } });
+    }
+    next();
+    // The quantity points are the breaks, already there.
+    expect(screen.getAllByTestId('rfq-tiers-chip').map((c) => c.textContent)).toEqual([
+      expect.stringContaining('10.000'),
+      expect.stringContaining('50.000'),
+      expect.stringContaining('100.000'),
+    ]);
+    next();
+    next();
+    // The responder (sup-007) is invited; the invitee who never answered is not.
+    expect(within(await screen.findByTestId('invitee-row-sup-007')).getByRole('checkbox')).toBeChecked();
+    expect(within(screen.getByTestId('invitee-row-sup-015')).getByRole('checkbox')).not.toBeChecked();
+    next();
+    fillTerms();
+    next();
+    expect(await screen.findByText('RFP RFP-2026-002')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Save RFQ draft' }));
+    await waitFor(() => expect(newest()).toBeDefined());
+    const rfq = newest()!;
+    expect(rfq.sourceRfpId).toBe('rfp-002');
+    expect(rfq.currency).toBe('IDR');
+    expect(rfq.uom).toBe('PCS');
+    expect(rfq.invitedSupplierIds).toEqual(['sup-007']);
+    expect(rfq.tiers).toEqual([
+      { qty: 10_000, basis: 'total' },
+      { qty: 50_000, basis: 'total' },
+      { qty: 100_000, basis: 'total' },
+    ]);
+    // No indicative price travels: an RFQ asks for firm ones (D4).
+    expect(JSON.stringify(rfq)).not.toMatch(/2650|3600/);
+  });
+
+  it('KNOWN-BAD twin — options that name nothing on the RFP open nothing and say so', async () => {
+    renderWithProviders(<BuyerSourcing />, { route: '/buyer/rfq?rfp=rfp-002&options=opt-nope' });
+    expect(await screen.findByText('RFP options not found')).toBeInTheDocument();
+    expect(screen.queryByPlaceholderText(/e\.g\. Q3 2026 Fragrance Sourcing/i)).not.toBeInTheDocument();
+  });
+
+  it('a seat without rfq:create gets no wizard from the link (the entrance is the unit)', async () => {
+    renderWithProviders(<BuyerSourcing />, {
+      identity: RECEIVING,
+      route: '/buyer/rfq?rfp=rfp-002&options=opt-pump-cap',
+    });
+    expect(await screen.findByTestId('handoff-rfq-create')).toBeInTheDocument();
+    expect(screen.queryByPlaceholderText(/e\.g\. Q3 2026 Fragrance Sourcing/i)).not.toBeInTheDocument();
+  });
+});
+
 describe('templates and copying (D2)', () => {
   it('"Templates" is a working action: Start from template opens the wizard pre-filled', async () => {
     renderWithProviders(<BuyerSourcing />);

@@ -158,10 +158,11 @@ describe('the award, item by item', () => {
   it('asks for a reason when an item does not follow its best score, and names the item', async () => {
     renderEvent('rfq-021');
     await screen.findByTestId('tiered-award-form');
-    share(1, 'sup-013', '100');
-    share(2, 'sup-013', '100');
+    // Item 1 ties at 3K (B5), so the departure is item 2's: its best is sup-013.
+    share(1, 'sup-015', '100');
+    share(2, 'sup-015', '100');
     const reason = await screen.findByTestId('award-reason-required');
-    expect(reason).toHaveTextContent('item 1 (Oslo front sticker)');
+    expect(reason).toHaveTextContent('item 2 (Oslo back sticker (ingredients))');
     expect(screen.getByTestId('award-confirm')).toBeDisabled();
     fireEvent.change(screen.getByLabelText('Award reason'), { target: { value: 'One printer keeps the colours matched.' } });
     expect(screen.getByTestId('award-confirm')).toBeEnabled();

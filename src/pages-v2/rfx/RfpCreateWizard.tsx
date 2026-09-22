@@ -651,8 +651,8 @@ const RfpCreateWizard: React.FC<RfpCreateWizardProps> = ({
                 {draft.pricing ? (
                   <>
                     {t('rfxa.pricing.summary', {
-                      options: draft.pricing.options.length,
-                      points: draft.pricing.quantityPoints.length,
+                      options: t('rfxa.pricing.optionCount', { count: draft.pricing.options.length }),
+                      points: t('rfxa.pricing.pointCount', { count: draft.pricing.quantityPoints.length }),
                     })}{' '}
                     <IndicativePill />
                   </>
