@@ -15,6 +15,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { MockCommandService } from './MockCommandService';
 import { rfqStore } from './stores/rfqStore';
 import { quotationStore } from './stores/quotationStore';
+import { rfxNow } from './rfxReadModel';
 import type { QueryScope } from '../types';
 import { PERSONA_SYSTEM_ROLES } from '../../../services/transitions/businessRoles';
 
@@ -61,11 +62,11 @@ describe('t_rfq_fx_pin — recording the basis', () => {
   });
 
   it('stamps pinnedAt ITSELF — a caller cannot backdate its own audit entry', async () => {
-    const before = new Date().toISOString();
     await svc.dispatch(buyer, pin({ pinnedAt: '1999-01-01T00:00:00.000Z' }));
     const [p] = rfqStore.get(RFQ)!.fxPins!;
     expect(p.pinnedAt).not.toBe('1999-01-01T00:00:00.000Z');
-    expect(p.pinnedAt >= before).toBe(true);
+    // Stamped on the hub clock, the one every RFx read is judged at.
+    expect(p.pinnedAt).toBe(rfxNow());
   });
 
   it('STATE-PRESERVING — pinning does NOT move the RFQ', async () => {
