@@ -163,6 +163,8 @@ import {
   type FxRateRefusalReason,
   type FxVintageRefusalReason,
 } from './sourcing/fxRateInput';
+// RFx spec 2026-09-21 — invitees' intent and the clarification Q&A (B3).
+import RfqEngagementSection from './sourcing/RfqEngagementSection';
 import { MATERIAL_BASKET_CLASSIFICATION } from '../services/data/mock/fixtures/commodityMaterialMap';
 import {
   ROOT_BENCHMARKS,
@@ -3103,6 +3105,7 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
                 {t('rfqAuthoring.template.saveAs')}
               </Button>
             </div>
+            <RfqEngagementSection rfq={selectedRfq} nameOf={(id) => supplierNameById.get(id) ?? id} />
             {selectedRfq.status === 'Awarded' && (
               <section className="bg-success-soft border border-success/30 rounded-md p-4">
                 <div className="flex items-center gap-2 mb-3">

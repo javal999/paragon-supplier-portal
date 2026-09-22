@@ -168,6 +168,26 @@ export const processFlowPurposeEn: Record<string, string> = {
   'processFlows.purpose.t_rfq_reopen':
     'Reopens a finished event for further responses — too few answers, or a requirement that moved. It reuses the request rather than starting a new one.',
 
+  // ── RFQ response: intent, confidentiality, clarifications ────────────────
+  'processFlows.purpose.entity.rfqIntent':
+    'Whether an invited supplier will answer a price request at all, and if not, why — so a silent supplier and one that said no are not the same row.',
+  'processFlows.purpose.t_rfqintent_respond':
+    'The supplier says it will send a quote.',
+  'processFlows.purpose.t_rfqintent_decline':
+    'The supplier says it will not quote, picks why from the list and explains in its own words. Buying reads both.',
+  'processFlows.purpose.t_rfqintent_withdraw':
+    'A supplier that said it would quote changes its mind, picks why from the list and explains in its own words. What it first said stays on record.',
+  'processFlows.purpose.entity.rfqConfidentiality':
+    'The confidentiality terms a supplier accepts before it may read a confidential request’s specification, notes and files.',
+  'processFlows.purpose.t_rfqconfidentiality_accept':
+    'The supplier accepts the terms once, the time is recorded, and the hidden content opens to it.',
+  'processFlows.purpose.entity.rfqClarification':
+    'Something a supplier wants explained about a price request while it is open, and what buying replies.',
+  'processFlows.purpose.t_rfqclarification_ask':
+    'An invited supplier asks buying what something in the request means.',
+  'processFlows.purpose.t_rfqclarification_answer':
+    'Buying replies, either to the supplier that raised it or to every invited supplier without saying who raised it.',
+
   // ── quotation ──────────────────────────────────────────────────────────────
   'processFlows.purpose.entity.quotation':
     'A supplier’s offer against one sourcing request — the price and the delivery promise it is prepared to stand behind.',
@@ -596,6 +616,26 @@ export const processFlowPurposeId: Record<string, string> = {
     'Pembelian membatalkan acaranya sebelum memilih siapa pun — kebutuhannya berubah, atau anggarannya hilang. Para pemasok diberi tahu, bukan dibiarkan menunggu.',
   'processFlows.purpose.t_rfq_reopen':
     'Membuka kembali acara yang sudah berakhir untuk tanggapan tambahan — jawabannya terlalu sedikit, atau kebutuhannya bergeser. Permintaan yang sama dipakai ulang alih-alih membuat yang baru.',
+
+  // ── Respons RFQ: niat, kerahasiaan, klarifikasi ──────────────────────────
+  'processFlows.purpose.entity.rfqIntent':
+    'Apakah pemasok yang diundang akan menjawab permintaan harga, dan jika tidak, mengapa — sehingga pemasok yang diam dan yang menolak tidak tampil sebagai baris yang sama.',
+  'processFlows.purpose.t_rfqintent_respond':
+    'Pemasok menyatakan akan mengirim penawaran.',
+  'processFlows.purpose.t_rfqintent_decline':
+    'Pemasok menyatakan tidak akan menawar, memilih alasan dari daftar dan menjelaskannya dengan kata-katanya sendiri. Pembelian membaca keduanya.',
+  'processFlows.purpose.t_rfqintent_withdraw':
+    'Pemasok yang tadinya akan menawar berubah pikiran, dengan alasan dan penjelasannya sendiri. Pernyataan pertamanya tetap tercatat.',
+  'processFlows.purpose.entity.rfqConfidentiality':
+    'Syarat kerahasiaan yang diterima pemasok sebelum boleh membaca spesifikasi, catatan, dan berkas permintaan yang rahasia.',
+  'processFlows.purpose.t_rfqconfidentiality_accept':
+    'Pemasok menerima syaratnya sekali, waktunya dicatat, dan isi yang disembunyikan terbuka baginya.',
+  'processFlows.purpose.entity.rfqClarification':
+    'Pertanyaan pemasok tentang permintaan harga selama masih terbuka, beserta jawaban pembelian.',
+  'processFlows.purpose.t_rfqclarification_ask':
+    'Pemasok yang diundang bertanya kepada pembelian apa maksud sesuatu dalam permintaan.',
+  'processFlows.purpose.t_rfqclarification_answer':
+    'Pembelian menjawab, hanya kepada pemasok yang bertanya atau kepada semua pemasok yang diundang tanpa menyebut siapa yang bertanya.',
 
   // ── quotation ──────────────────────────────────────────────────────────────
   'processFlows.purpose.entity.quotation':

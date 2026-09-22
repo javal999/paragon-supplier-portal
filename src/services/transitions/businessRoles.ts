@@ -143,6 +143,10 @@ const LANE_BUNDLES = Object.freeze({
     procurement: Object.freeze([
       'rfq:create', 'rfq:publish', 'rfq:award', 'rfq:fx-pin', 'rfq:cancel', 'rfq:reopen',
       'quotation:review',
+      // RFx spec 2026-09-21 — answering a supplier's clarification question,
+      // privately or published to every invitee. The person running the event
+      // is the one who says what it means.
+      'rfqclarification:answer',
       // ── REQ-E03-02 / REQ-E03-04 / REQ-E03-05 — the other two RFx event types
       //    and the negotiation window ──────────────────────────────────────
       // Raising an RFI or an RFP is the same authority as raising an RFQ one
@@ -307,6 +311,12 @@ const LANE_BUNDLES = Object.freeze({
     // talks to.
     commercial: Object.freeze([
       'quotation:submit',
+      // RFx spec 2026-09-21 — saying "I will respond" or declining, accepting a
+      // confidential RFQ's terms, and asking the buyer a question about it. The
+      // same seat that quotes: all three are the start of the same bid.
+      'rfqintent:declare',
+      'rfqconfidentiality:accept',
+      'rfqclarification:ask',
       // REQ-E03-02 / REQ-E03-04 — answering an RFI or an RFP is the same seat's
       // work as quoting: what the company can make, on what terms, at what
       // price. The three are one conversation and one lane.

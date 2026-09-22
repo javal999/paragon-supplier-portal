@@ -214,7 +214,14 @@ import type {
   RfxResponseStatus,
 } from '../../sourcing/types';
 import { BID_CURRENCIES } from '../../../lib/currencyPolicy';
-import { readRfqAuthoringFields } from '../../sourcing/rfqModel';
+import { deriveQuoteHeader, readRfqAuthoringFields } from '../../sourcing/rfqModel';
+// RFx spec 2026-09-21 — the supplier's side of a tiered RFQ (intent,
+// confidentiality, clarifications) and the tiered quotation rule.
+import {
+  rfqClarificationTarget,
+  rfqConfidentialityTarget,
+  rfqIntentTarget,
+} from './rfqEngagementCommand';
 import {
   isAttachmentMeta,
   type AttachmentMeta,
@@ -1496,7 +1503,15 @@ const quotationTarget: CommandTarget = {
     const str = (k: string) => (typeof payload[k] === 'string' ? (payload[k] as string) : '');
     const num = (k: string) => (typeof payload[k] === 'number' ? (payload[k] as number) : 0);
     const rfq = rfqStore.get(str('rfqId'));
-    const unitPrice = num('unitPrice');
+    // RFx spec 2026-09-21 — on a tiered RFQ the header is DERIVED from the
+    // per-item, per-break prices (`deriveQuoteHeader`), never taken from the
+    // payload, so the figure the ranking reads cannot disagree with the grid.
+    // `quotation_tiered_well_formed` has already refused an incomplete grid.
+    const tiered =
+      rfq && Array.isArray(payload.itemQuotes)
+        ? deriveQuoteHeader(rfq, payload.itemQuotes as NonNullable<Quotation['itemQuotes']>)
+        : null;
+    const unitPrice = tiered ? tiered.unitPrice : num('unitPrice');
     const quotation: Quotation = {
       id: quoteNumber, // store keyed by id; the assigned number doubles as the id
       rfqId: str('rfqId'),
@@ -1516,8 +1531,9 @@ const quotationTarget: CommandTarget = {
       // REQ-E03-03 — the total is the SUM OF THE LINES when the quote carries
       // them, and unit × the event quantity when it does not. Derived either
       // way, so a header figure can never disagree with the detail under it.
-      totalPrice:
-        Array.isArray(payload.lines) && (payload.lines as unknown[]).length > 0
+      totalPrice: tiered
+        ? tiered.totalPrice
+        : Array.isArray(payload.lines) && (payload.lines as unknown[]).length > 0
           ? quoteLinesTotal(payload.lines as QuoteLineInput[])
           : unitPrice * (rfq?.totalQty ?? 0),
       // Required by the flow's `requiredFields`, so `num()`'s 0 fallback is
@@ -1544,6 +1560,23 @@ const quotationTarget: CommandTarget = {
       ...(typeof payload.roundNumber === 'number' ? { roundNumber: payload.roundNumber as number } : {}),
       ...(str('supersedesQuotationId') ? { supersedesQuotationId: str('supersedesQuotationId') } : {}),
       ...(payload.bestAndFinal === true ? { bestAndFinal: true } : {}),
+      // RFx spec 2026-09-21 — the tiered answer, stored whole: the per-item
+      // prices and spec values, alternatives, the answers to the buyer's
+      // questions, the sample offer (which used to be dropped) and the
+      // attachment metadata. Each only when sent, the `moq` precedent.
+      ...(tiered ? { itemQuotes: payload.itemQuotes as Quotation['itemQuotes'] } : {}),
+      ...(Array.isArray(payload.alternatives) && payload.alternatives.length > 0
+        ? { alternatives: payload.alternatives as Quotation['alternatives'] }
+        : {}),
+      ...(Array.isArray(payload.answers) && payload.answers.length > 0
+        ? { answers: payload.answers as Quotation['answers'] }
+        : {}),
+      ...(payload.sampleOffer && typeof payload.sampleOffer === 'object'
+        ? { sampleOffer: payload.sampleOffer as Quotation['sampleOffer'] }
+        : {}),
+      ...(Array.isArray(payload.attachments) && payload.attachments.length > 0
+        ? { attachments: payload.attachments as Quotation['attachments'] }
+        : {}),
       // DECLARED-SIMULATED axes — documented baseline, passed through the engine
       // and marked "Simulated" at read. Never zero, never a profile lookup.
       complianceScore: SIMULATED_AXIS_BASELINE,
@@ -3888,6 +3921,10 @@ const TARGETS: Record<string, CommandTarget> = {
   invoice: invoiceTarget,
   rfq: rfqTarget,
   quotation: quotationTarget,
+  // RFx spec 2026-09-21 — each ships in the same commit as its flow.
+  rfqIntent: rfqIntentTarget,
+  rfqConfidentiality: rfqConfidentialityTarget,
+  rfqClarification: rfqClarificationTarget,
   purchaseRequisition: purchaseRequisitionTarget,
   requirementResponse: requirementResponseTarget,
   inventoryDeclaration: inventoryDeclarationTarget,
