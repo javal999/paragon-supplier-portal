@@ -257,6 +257,61 @@ describe('the RFQ panel defers a tiered award to the event page', () => {
     expect(document.querySelector('input[name="award-select"]')).toBeNull();
   });
 
+  it('the panel ranks Oslo at the default break, and agrees with the event page', async () => {
+    const { bestScoredQuotationId, rfxNow } = await import('../../services/data/mock/rfxReadModel');
+    const { defaultEvaluationTierQty } = await import('../../services/sourcing/rfqComparison');
+    const oslo = rfqStore.get('rfq-021')!;
+    const best = bestScoredQuotationId(oslo, rfxNow(), defaultEvaluationTierQty(oslo)!);
+    expect(best).toBe('qt-021b'); // population control: the event page's best at 3K
+    renderWithProviders(<BuyerSourcing />, { identity: BUYER_SEAT });
+    fireEvent.click(await screen.findByText('RFQ-2026-021'));
+    const note = await screen.findByTestId('panel-eval-break');
+    expect(note).toHaveTextContent('3,000 break');
+    expect(within(note).getByTestId('panel-compare-by-break')).toHaveAttribute(
+      'href',
+      expect.stringMatching(/\/buyer\/rfq\/rfq-021$/),
+    );
+    await waitFor(() => expect(screen.getByTestId('panel-cmp-head-sup-013')).toHaveTextContent('Top-ranked'));
+    expect(screen.getByTestId('panel-cmp-head-sup-015')).not.toHaveTextContent('Top-ranked');
+  });
+
+  it('⚠️ where the default break is NOT the first break, the panel follows the break, not the stored header', async () => {
+    // 400,000 pieces = 25K per variant × 8 × 2, so the default break is 25K,
+    // where sup-015 ranks first — while the first-break header would rank sup-013.
+    rfqStore.update('rfq-021', (r) => ({ ...r, totalQty: 400_000 }));
+    const { bestScoredQuotationId, rfxNow } = await import('../../services/data/mock/rfxReadModel');
+    expect(bestScoredQuotationId(rfqStore.get('rfq-021')!, rfxNow(), 25_000)).toBe('qt-021a');
+    renderWithProviders(<BuyerSourcing />, { identity: BUYER_SEAT });
+    fireEvent.click(await screen.findByText('RFQ-2026-021'));
+    expect(await screen.findByTestId('panel-eval-break')).toHaveTextContent('25,000 break');
+    await waitFor(() => expect(screen.getByTestId('panel-cmp-head-sup-015')).toHaveTextContent('Top-ranked'));
+    expect(screen.getByTestId('panel-cmp-head-sup-013')).not.toHaveTextContent('Top-ranked');
+  });
+
+  it('the footer offers only acts that exist: none for an Open RFQ still awaiting bids', async () => {
+    renderWithProviders(<BuyerSourcing />, { identity: BUYER_SEAT });
+    fireEvent.click(await screen.findByText('RFQ-2026-021'));
+    await screen.findByTestId('panel-tiered-award');
+    expect(screen.queryByTestId('panel-footer-action')).not.toBeInTheDocument();
+    expect(screen.queryByText('Send reminder')).not.toBeInTheDocument();
+    expect(screen.queryByText('Reject all')).not.toBeInTheDocument();
+  });
+
+  it('KNOWN-GOOD twin — an awarded RFQ’s footer opens its award on the event page', async () => {
+    renderWithProviders(
+      <Routes>
+        <Route path="/" element={<BuyerSourcing />} />
+        <Route path="/buyer/rfq/:rfqId" element={<BuyerSourcingEvent />} />
+      </Routes>,
+      { identity: BUYER_SEAT, route: '/' },
+    );
+    fireEvent.click(await screen.findByText('RFQ-2026-024'));
+    const action = await screen.findByTestId('panel-footer-action');
+    expect(action).toHaveTextContent('View award details');
+    fireEvent.click(action);
+    expect(await screen.findByTestId('award-recorded')).toBeInTheDocument();
+  });
+
   it('KNOWN-GOOD twin — a legacy RFQ keeps its pick and has no such box', async () => {
     renderWithProviders(<BuyerSourcing />, { identity: BUYER_SEAT });
     fireEvent.click(await screen.findByText('RFQ-2026-011'));

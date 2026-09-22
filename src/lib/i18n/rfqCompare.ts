@@ -89,6 +89,9 @@ export const rfqCompareEn: Record<string, string> = {
   'rfqCompare.history.split': 'Split per item',
   'rfqCompare.panel.awardOnEvent': 'Tiered RFQs are awarded item by item on the event page.',
   'rfqCompare.panel.openAward': 'Open the per-item award',
+  'rfqCompare.panel.atBreak': 'Priced and scored at the {{qty}} break, as the event page opens.',
+  'rfqCompare.panel.compareByBreak': 'Compare by break on the event page',
+  'rfqCompare.footer.openEvent': 'Open the sourcing event',
 };
 
 export const rfqCompareId: Record<string, string> = {
@@ -178,6 +181,9 @@ export const rfqCompareId: Record<string, string> = {
   'rfqCompare.history.split': 'Dibagi per item',
   'rfqCompare.panel.awardOnEvent': 'RFQ berjenjang ditetapkan per item di halaman event.',
   'rfqCompare.panel.openAward': 'Buka penetapan per item',
+  'rfqCompare.panel.atBreak': 'Harga dan skor pada jenjang {{qty}}, sama seperti saat halaman event dibuka.',
+  'rfqCompare.panel.compareByBreak': 'Bandingkan per jenjang di halaman event',
+  'rfqCompare.footer.openEvent': 'Buka event sourcing',
 };
 
 /** The CSV header, in the reader's language. */

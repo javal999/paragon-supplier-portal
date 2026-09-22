@@ -69,7 +69,13 @@ import {
   useRfiEvents,
   useAwards,
 } from '../services/query/hooks';
-import { isTieredRfq } from '../services/sourcing/rfqComparison';
+import {
+  defaultEvaluationTierQty,
+  eventPiecesAt,
+  isTieredRfq,
+  quoteTotalAt,
+  scoreRfqAt,
+} from '../services/sourcing/rfqComparison';
 import { downloadComparison } from './rfx/comparisonExport';
 // RFx spec 2026-09-21 — the rebuilt authoring: items, breaks, questions and
 // options, templates and copying, and the generic "start from…" seed.
@@ -627,16 +633,34 @@ const buildTimeline = (r: RFQ, t: TFunction): TimelineEvent[] => {
   ];
 };
 
-export const FOOTER_LABEL = (r: RFQ, t: TFunction): string => {
+/**
+ * THE PANEL FOOTER'S ONE ACT, or `null` when there is no act to offer.
+ *
+ * ⚠️ **EVERY LABEL HERE NOW HAS A DESTINATION, AND THE ONES THAT HAD NONE ARE
+ * GONE.** The button used to render one of five labels with NO handler at all.
+ * Award and View award now open the event page at its award section, where the
+ * award verb and the award record live; a Closed or Cancelled RFQ opens the
+ * event page (a Closed one can still be awarded there). "Send reminder" and
+ * "Continue draft" are withdrawn: no reminder write path exists for an RFQ, and
+ * no surface edits a Draft RFQ, so a button for either would be a promise.
+ * "View final report" is withdrawn with them — there is no report.
+ */
+export const FOOTER_ACTION = (r: RFQ): { labelKey: string; to: string } | null => {
+  const event = `/buyer/rfq/${r.id}`;
   if (r.status === 'Open') {
-    return isAllResponded(r)
-      ? t('sourcing.footer.awardRfq')
-      : t('sourcing.footer.sendReminder');
+    return isAllResponded(r) ? { labelKey: 'sourcing.footer.awardRfq', to: `${event}?section=award` } : null;
   }
-  if (r.status === 'Awarded') return t('sourcing.footer.viewAward');
-  if (r.status === 'Closed' || r.status === 'Cancelled')
-    return t('sourcing.footer.viewReport');
-  return t('sourcing.footer.continueDraft');
+  if (r.status === 'Awarded') return { labelKey: 'sourcing.footer.viewAward', to: `${event}?section=award` };
+  if (r.status === 'Closed' || r.status === 'Cancelled') {
+    return { labelKey: 'rfqCompare.footer.openEvent', to: event };
+  }
+  return null;
+};
+
+/** The footer label, or `null` when the footer offers no act. */
+export const FOOTER_LABEL = (r: RFQ, t: TFunction): string | null => {
+  const action = FOOTER_ACTION(r);
+  return action ? t(action.labelKey) : null;
 };
 
 // ⚠️ §68 — THIS USED TO RETURN `'primary'` FOR THE AWARD STATE. DP2-BUTTON-01
@@ -1332,16 +1356,30 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
   // author is, the performance record can. A supplier with no OTIF history
   // scores 50 — the rule says so, and `reliabilityScoreFor` is where it lives so
   // the screen and the award verb cannot disagree about it.
+  // THE PANEL NEVER DISAGREES WITH THE EVENT PAGE ON A TIERED RFQ. It reads the
+  // same default evaluation break the event page opens at (nearest
+  // `totalQty`) and shows each quote's cost per piece and total AT THAT
+  // BREAK, not the stored first-break header; the ranking below is scored with
+  // the same rule (`scoreRfqAt`). Choosing another break happens on the event
+  // page, which the panel links to.
+  const panelEvalQty =
+    selectedRfq && isTieredRfq(selectedRfq) ? defaultEvaluationTierQty(selectedRfq) : null;
   const pricedQuotes = useMemo(
     () =>
-      quotesForSelected.map((q) => ({
-        ...q,
-        currency: q.currency ?? BASE_CURRENCY,
-        reliabilityScore: reliabilityScoreFor(
-          suppliers.find((s) => s.id === q.supplierId)?.otif ?? null,
-        ),
-      })),
-    [quotesForSelected, suppliers],
+      quotesForSelected.map((q) => {
+        const atBreak =
+          selectedRfq && panelEvalQty !== null ? quoteTotalAt(selectedRfq, q, panelEvalQty) : null;
+        const pieces = selectedRfq && panelEvalQty !== null ? eventPiecesAt(selectedRfq, panelEvalQty) : 0;
+        return {
+          ...q,
+          ...(atBreak !== null && pieces > 0 ? { unitPrice: atBreak / pieces, totalPrice: atBreak } : {}),
+          currency: q.currency ?? BASE_CURRENCY,
+          reliabilityScore: reliabilityScoreFor(
+            suppliers.find((s) => s.id === q.supplierId)?.otif ?? null,
+          ),
+        };
+      }),
+    [quotesForSelected, suppliers, selectedRfq, panelEvalQty],
   );
 
   // The actually-awarded quotation (Awarded RFQs only), resolved from the real
@@ -1381,8 +1419,17 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
   /** BL-64 — the gate has answered and no quoting supplier passes it: nothing can be awarded. */
   const noneAwardable = rfqGates.data !== undefined && pricedQuotes.length > 0 && qualifiedQuotes.length === 0;
   const scoring = useMemo(
-    () => scoreQuotations(qualifiedQuotes, { pins: selectedRfq?.fxPins }),
-    [qualifiedQuotes, selectedRfq?.fxPins],
+    () =>
+      selectedRfq && panelEvalQty !== null
+        ? scoreRfqAt(
+            selectedRfq,
+            qualifiedQuotes,
+            panelEvalQty,
+            (sid) => reliabilityScoreFor(suppliers.find((s) => s.id === sid)?.otif ?? null),
+            { pins: selectedRfq.fxPins },
+          )
+        : scoreQuotations(qualifiedQuotes, { pins: selectedRfq?.fxPins }),
+    [qualifiedQuotes, selectedRfq, panelEvalQty, suppliers],
   );
   /** The non-base currencies actually bid on this RFQ — what needs a basis. */
   const foreignCurrencies = useMemo(
@@ -3008,16 +3055,15 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
               >
                 {t('sourcing.panel.exportComparison')}
               </Button>
-              <Button
-                variant={FOOTER_VARIANT(selectedRfq)}
-                disabled={
-                  selectedRfq.status === 'Open' &&
-                  isAllResponded(selectedRfq) &&
-                  !selectedQuoteId
-                }
-              >
-                {FOOTER_LABEL(selectedRfq, t)}
-              </Button>
+              {FOOTER_ACTION(selectedRfq) && (
+                <Button
+                  variant={FOOTER_VARIANT(selectedRfq)}
+                  data-testid="panel-footer-action"
+                  onClick={() => navigate(FOOTER_ACTION(selectedRfq)!.to)}
+                >
+                  {FOOTER_LABEL(selectedRfq, t)}
+                </Button>
+              )}
             </>
           )
         }
@@ -3309,6 +3355,18 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
                   { count: quotesForSelected.length },
                 )}
               </h3>
+              {panelEvalQty !== null && (
+                <p className="mb-3 text-xs text-text-secondary" data-testid="panel-eval-break">
+                  {t('rfqCompare.panel.atBreak', { qty: panelEvalQty.toLocaleString('en-US') })}{' '}
+                  <Link
+                    to={`/buyer/rfq/${selectedRfq.id}`}
+                    className="text-action hover:underline"
+                    data-testid="panel-compare-by-break"
+                  >
+                    {t('rfqCompare.panel.compareByBreak')}
+                  </Link>
+                </p>
+              )}
               {/* 2e-c-3 — the refusal, stated ABOVE the table it applies to.
                   The bids are still shown (they are facts the supplier stated);
                   what is withheld is the RANKING, because ranking them would
@@ -3377,6 +3435,7 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
                           return (
                             <th
                               key={q.id}
+                              data-testid={`panel-cmp-head-${q.supplierId}`}
                               className={`align-bottom px-2 pt-2 pb-2 font-semibold text-text-primary text-left min-w-[10rem] ${
                                 q.id === topRankedId
                                   ? 'border-2 border-action rounded-t-md bg-action-soft/40'
@@ -3760,9 +3819,9 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
                     ) : (
                       <HandoffNotice availability={rfqVerbs.award} testId="handoff-rfq-award" />
                     )}
-                    <Button variant="secondary">
-                      {t('sourcing.award.rejectAll')}
-                    </Button>
+                    {/* "Reject all" stood here with no handler. Rejecting is
+                        the award cascade's act (`t_quotation_reject`), not a
+                        buyer verb on its own, so the dead button is removed. */}
                   </div>
                 </section>
               )}

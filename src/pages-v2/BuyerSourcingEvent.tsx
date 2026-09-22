@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import AppShellV2 from '../components/layout-v2/AppShellV2';
 import PageHeader from '../components/ui-v2/PageHeader';
@@ -175,6 +175,16 @@ const BuyerSourcingEvent: React.FC = () => {
     [scoring],
   );
   const bestId = scoring.kind === 'scored' ? (scoring.scores.find((s) => s.topRanked)?.quoteId ?? null) : null;
+
+  // The board panel's "Award RFQ" / "View award details" open this page at its
+  // award section (`?section=award`), so the footer lands where its act is.
+  const [params] = useSearchParams();
+  const loaded = !rfqs.isPending && !quotes.isPending && !gates.isPending && rfq !== null;
+  useEffect(() => {
+    if (loaded && params.get('section') === 'award') {
+      document.getElementById('event-award')?.scrollIntoView?.({ block: 'start' });
+    }
+  }, [loaded, params]);
 
   if (rfqs.isPending || quotes.isPending || gates.isPending) return <LoadingState breadcrumb={crumb} />;
   if (rfqs.isError) return <ErrorState breadcrumb={crumb} error={rfqs.error} onRetry={() => rfqs.refetch()} />;
@@ -760,7 +770,7 @@ const BuyerSourcingEvent: React.FC = () => {
       </section>
 
       {/* — REQ-E03-05 BR-06 to BR-09: the award — */}
-      <section className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm">
+      <section id="event-award" className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm">
         <div className="px-4 py-3 border-b border-border-subtle text-sm font-semibold text-text-primary">
           {t('rfx.award.title')}
         </div>
