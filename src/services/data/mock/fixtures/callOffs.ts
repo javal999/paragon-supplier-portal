@@ -9,6 +9,7 @@
 //
 // Umbrella PO lines:
 //   · po-007 / li-007a — sup-007, PET bottle PK-PETB-8801, 200,000 PCS
+//   · po-008 / li-008a — sup-007, PET bottle PK-PETB-8802, 150,000 PCS
 //   · po-017 / li-017a — sup-008, shipper box PK-CART-9910, 20,000 PCS
 //   · po-002 / li-002a — sup-002, emulsifier RM-EMUL-9410, 8,000 KG
 //   · po-024 / li-024a — sup-007, PET bottle PK-PETB-8801, 60,000 PCS
@@ -20,7 +21,10 @@
 //   Confirmation · 0004 new date Awaiting Approval · 0005 At Risk · 0006
 //   Confirmed, due within 7 days with no dispatch notice · 0007 and 0008 Missed
 //   (delivery drift) · 0009 Escalated · 0010 partial Awaiting Approval · 0011
-//   Rejected · 0012 Draft · 0013 Delivered on time and in full.
+//   Rejected · 0012 Draft · 0013 Delivered on time and in full · 0043, 0044,
+//   0045 and 0046 Delivered on time and in full, 80, 60, 40 and 25 days ago —
+//   sup-007's delivery history (BL-94), which puts its 90-day OTIF at 83% (5 of
+//   6) so it passes the compliance gate on the Oslo RFQ.
 //
 // And the CR-05 / CR-04 cases (BL-47, BL-49):
 //   exactly +5% accepted: 0005 (JIT) and 0017 (forecast) · +5.1% awaiting
@@ -501,4 +505,49 @@ export const CALL_OFF_SEED: readonly CallOff[] = [
     dispatches: [],
     notes: [],
   },
+
+  // ── BL-94 · sup-007's delivery history ─────────────────────────────────────
+  // Four past call-offs on the 100ml PET line, each received ON its date and IN
+  // FULL (GR-2026-018..021 in `mockGoodsReceipts.ts`), so the main supplier
+  // persona has a real OTIF record: 5 met of 6 decided in the 90-day window
+  // (these four, 0013, and the late 0001) = 83%, which clears the compliance
+  // gate's 80% and lets sup-007 take a share of the Oslo award (rfq-021).
+  //
+  // ⚠️ THE LINE IS NOT FREE. li-007a has exactly 15,000 left (draft 0012's
+  // remainder) and li-024a exactly 37,000 (draft 0019's), so any release on
+  // either would flip a CR-04 demo. li-008a (150,000) had 55,000 left after
+  // 0013; these four take 48,000 and leave 7,000.
+  //
+  // ⚠️ THE DATES ARE NOT FREE EITHER. The matcher pairs a receipt with a
+  // call-off on supplier + material within ±7 days and uses each receipt once,
+  // so every date here is 12 days or more from every other sup-007 call-off and
+  // receipt (the nearest: GR-2026-015 at −13 days, on the 200ml code). Nothing
+  // else re-decides; 0001 stays Late and 0013 stays on time.
+  //
+  // Numbered after the gate demo's CO-2026-0042 so no number is reused.
+  ...[
+    { n: 43, need: -80 },
+    { n: 44, need: -60 },
+    { n: 45, need: -40 },
+    { n: 46, need: -25 },
+  ].map(
+    ({ n, need }): CallOff => ({
+      ...PET_100,
+      id: `co-00${n}`,
+      callOffNumber: `CO-2026-00${n}`,
+      quantity: 12000,
+      needDate: day(need),
+      type: 'forecast',
+      status: 'Confirmed',
+      releasedAt: at(need - 10, 2),
+      confirmation: {
+        kind: 'confirm',
+        deliveries: [{ quantity: 12000, date: day(need) }],
+        confirmedAt: at(need - 9, 4),
+        approval: 'auto',
+      },
+      dispatches: [],
+      notes: [],
+    }),
+  ),
 ];

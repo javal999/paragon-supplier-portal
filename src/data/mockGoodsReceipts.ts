@@ -611,6 +611,60 @@ const mockGoodsReceiptsRaw: GoodsReceipt[] = [
     disposition: 'Accept',
   },
 
+  // ⚠️ BL-94 — sup-007's DELIVERY HISTORY: one receipt per past call-off
+  // CO-2026-0043..0046 (`callOffs.ts`), each received ON the approved date and
+  // IN FULL (12,000 of 12,000), so four more call-offs read on time in full and
+  // sup-007's 90-day OTIF is 83% (5 of 6). Authored dates, shifted +103 days
+  // like every row here: 2026-03-01 / 03-21 / 04-10 / 04-25 land 80, 60, 40 and
+  // 25 days before the declared present.
+  //
+  // ⚠️ They are on `PO-2025-00108`, the call-offs' umbrella, whose confirmed
+  // delivery date is empty — so CFOT (which reads receipts by PO number for
+  // orders confirmed in the period) does not move, and the order is not
+  // invoiceable (`Sent`), so no invoice line appears from them. `Approved`,
+  // like GR-2026-003 on the same order, and NOT `Posted to SAP`: a posted
+  // receipt is a landed one, and `receiptsForInvoice` would then pair the
+  // disputed INV-2025-BRL-0043 on this PO with them
+  // (`invoiceMatchPairing.test.ts` names the one pairing the corpus holds).
+  // No ASN: the call-offs had none, and the receipt pages say "Received
+  // without ASN".
+  // Every date is 12 days or more from every other sup-007 receipt and call-off
+  // (see the header above gr-015), so no other delivery re-decides.
+  ...(
+    [
+      [18, '2026-03-01'],
+      [19, '2026-03-21'],
+      [20, '2026-04-10'],
+      [21, '2026-04-25'],
+    ] as const
+  ).map(
+    ([n, receivedDate]): GoodsReceipt => ({
+      id: `gr-0${n}`,
+      grNumber: `GR-2026-0${n}`,
+      asnId: '',
+      asnNumber: '',
+      poNumber: 'PO-2025-00108',
+      supplierId: 'sup-007',
+      supplierName: 'PT Sample Packaging Indonesia',
+      receivedDate,
+      receivedBy: 'Warehouse Supervisor',
+      status: 'Approved',
+      inspectionResults: [
+        {
+          materialCode: 'PK-PETB-8802',
+          description: 'PET Bottle 100ml Clear — Emina Series',
+          qtyExpected: 12000,
+          qtyReceived: 12000,
+          qtyAccepted: 12000,
+          qtyRejected: 0,
+          visualCheck: 'Pass',
+          packagingCheck: 'Pass',
+          bpomLotCheck: 'N/A',
+        },
+      ],
+      disposition: 'Accept',
+    }),
+  ),
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
