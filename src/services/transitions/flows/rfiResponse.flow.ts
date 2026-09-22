@@ -29,7 +29,7 @@ export const rfiResponseFlow: FlowDefinition = {
       trigger: 'creation',
       requiredRole: 'rfiresponse:answer',
       requiredFields: ['rfiId', 'supplierId'],
-      policyHooks: [POLICY_HOOKS.RFX_RESPONSE_INVITED],
+      policyHooks: [POLICY_HOOKS.RFX_RESPONSE_INVITED, POLICY_HOOKS.RFX_RESPONSE_ACCEPTANCE_GATE],
       surfaceable: { surfaced: true },
       version: 1,
     },

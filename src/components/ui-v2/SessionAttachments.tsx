@@ -20,11 +20,14 @@ import {
 
 interface SessionAttachmentsProps {
   value: readonly AttachmentMeta[];
-  onChange: (next: readonly AttachmentMeta[]) => void;
+  /** Absent = read-only (the RFI/RFP read surfaces pass none). */
+  onChange?: (next: readonly AttachmentMeta[]) => void;
   label: string;
   testId: string;
   /** Read-only lists render no add or remove control. */
   readOnly?: boolean;
+  /** One file only (an RFP's T&C document): adding replaces it. */
+  single?: boolean;
 }
 
 const SessionAttachments: React.FC<SessionAttachmentsProps> = ({
@@ -32,20 +35,30 @@ const SessionAttachments: React.FC<SessionAttachmentsProps> = ({
   onChange,
   label,
   testId,
-  readOnly = false,
+  readOnly: readOnlyProp = false,
+  single = false,
 }) => {
   const { t } = useTranslation();
   const inputId = useId();
   const input = useRef<HTMLInputElement>(null);
+  // A control with nothing to call is a false affordance, so no handler means
+  // no add and no remove — the same as an explicit `readOnly`.
+  const readOnly = readOnlyProp || !onChange;
 
   const onFiles = (files: FileList | null) => {
-    if (!files || files.length === 0) return;
+    if (!files || files.length === 0 || !onChange) return;
     const added = [...files].map((f) => sessionAttachments.add(f));
-    onChange([...value, ...added]);
+    if (single) {
+      value.forEach((a) => sessionAttachments.release(a.id));
+      onChange(added.slice(0, 1));
+    } else {
+      onChange([...value, ...added]);
+    }
     if (input.current) input.current.value = '';
   };
 
   const remove = (id: string) => {
+    if (!onChange) return;
     sessionAttachments.release(id);
     onChange(value.filter((a) => a.id !== id));
   };
@@ -60,7 +73,8 @@ const SessionAttachments: React.FC<SessionAttachmentsProps> = ({
               ref={input}
               id={inputId}
               type="file"
-              multiple
+              multiple={!single}
+
               className="sr-only"
               data-testid={`${testId}-input`}
               aria-label={label}

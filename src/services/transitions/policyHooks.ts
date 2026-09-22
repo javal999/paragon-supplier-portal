@@ -457,16 +457,30 @@ export const POLICY_HOOKS = {
    */
   RFX_RESPONSE_INVITED: 'rfx_response_invited',
   /**
+   * RFI / RFP response save (RFx authoring): a save that CARRIES ANSWERS is
+   * refused while the event's confidentiality terms stand unaccepted
+   * (`CONFIDENTIALITY_NOT_ACCEPTED`), and on an RFP with a T&C document while
+   * the T&C stands unaccepted (`TC_NOT_ACCEPTED`). An acceptance-only save is
+   * how the supplier accepts, so it passes. The READ withholds a confidential
+   * event's content until then; this is the write-side half of the same gate.
+   */
+  RFX_RESPONSE_ACCEPTANCE_GATE: 'rfx_response_acceptance_gate',
+  /**
    * RFI submit (REQ-E03-02 template rule): every REQUIRED question is answered,
    * and the response deadline in force for this supplier has not passed. The
    * refusal names the questions, so it is a refusal a supplier can act on.
    */
   RFI_SUBMIT_COMPLETE: 'rfi_submit_complete',
   /**
-   * RFP create (REQ-E03-04): every term row names a term from the STANDARD
-   * LIST and carries PTI's requested value. An off-list term id would produce a
-   * comparison column no supplier's answer can be read against.
+   * RFP create (REQ-E03-04 + RFx authoring): every term row is either a term
+   * from the STANDARD LIST or a CUSTOM term (`custom-…`) carrying its own label,
+   * value kind and — for a choice — options; every row carries PTI's requested
+   * value in its kind. An off-list id WITHOUT the custom prefix is still refused
+   * (`UNKNOWN_TERM`): it would be a comparison column nothing can label. The
+   * optional questions, indicative-pricing and T&C sections are validated here
+   * by the same predicates the template store reads.
    */
+
   RFP_CREATE_TERMS_KNOWN: 'rfp_create_terms_known',
   /**
    * RFP submit (REQ-E03-04): every term the buyer asked for is answered, every

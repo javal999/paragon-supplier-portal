@@ -2135,12 +2135,24 @@ import type {
   AwardLine,
   RfiAnswer,
   RfiQuestion,
+  RfpPricingAnswer,
+  RfpPricingRequest,
   RfpTermAnswer,
   RfpTermRow,
+  RfpTermsDocument,
+  RfxConfidentiality,
+  RfxCustomSection,
 } from '../sourcing/types';
+import type { AttachmentMeta } from '../attachments/sessionAttachments';
+
+/** The authoring fields an RFI and an RFP both carry (RFx authoring batch). */
+interface RfxAuthoringVars {
+  customSections?: readonly RfxCustomSection[];
+  attachments?: readonly AttachmentMeta[];
+  confidentiality?: RfxConfidentiality;
+}
 import type { QuoteLineInput } from '../transitions/rfxRules';
 import type {
-  AttachmentMeta,
   QuotationAlternative,
   QuotationItemQuote,
   RfqDeclineReason,
@@ -2149,7 +2161,7 @@ import type {
 
 export type RfxCommandVars =
   // — REQ-E03-02 · RFI —
-  | {
+  | ({
       verb: 'createRfi';
       title: string;
       /** What PTI wants to learn (section 3.6a CE-07). */
@@ -2162,7 +2174,7 @@ export type RfxCommandVars =
       questions?: readonly RfiQuestion[];
       /** Send it to the invitees in the same act. */
       publish?: boolean;
-    }
+    } & RfxAuthoringVars)
   | { verb: 'publishRfi'; rfiId: string }
   | { verb: 'closeRfi'; rfiId: string }
   | { verb: 'extendRfi'; rfiId: string; deadline: string; supplierIds?: readonly string[] }
@@ -2174,8 +2186,10 @@ export type RfxCommandVars =
       /** Draft only — PTI does not see it (REQ-E03-02 edge case). */
       draftOnly?: boolean;
     }
+  /** The supplier accepts a confidential RFI's terms (an answer-free save). */
+  | { verb: 'acceptRfi'; rfiId: string; supplierId: string }
   // — REQ-E03-04 · RFP —
-  | {
+  | ({
       verb: 'createRfp';
       title: string;
       scope: string;
@@ -2186,7 +2200,12 @@ export type RfxCommandVars =
       invitedSupplierIds: readonly string[];
       terms: readonly RfpTermRow[];
       publish?: boolean;
-    }
+      /** The RFI this RFP is created from (spec D3). */
+      sourceRfiId?: string;
+      questions?: readonly RfiQuestion[];
+      termsDocument?: RfpTermsDocument;
+      pricing?: RfpPricingRequest;
+    } & RfxAuthoringVars)
   | { verb: 'publishRfp'; rfpId: string }
   | { verb: 'closeRfp'; rfpId: string }
   | { verb: 'extendRfp'; rfpId: string; deadline: string; supplierIds?: readonly string[] }
@@ -2196,8 +2215,15 @@ export type RfxCommandVars =
       supplierId: string;
       answers: readonly RfpTermAnswer[];
       otherTerms?: string;
+      questionAnswers?: readonly RfiAnswer[];
+      pricing?: RfpPricingAnswer;
       draftOnly?: boolean;
     }
+  /**
+   * The supplier accepts an RFP's confidentiality terms and/or its T&C document
+   * (an answer-free save; the times are store-assigned).
+   */
+  | { verb: 'acceptRfp'; rfpId: string; supplierId: string; confidentiality?: boolean; terms?: boolean }
   // — REQ-E03-03 · RFQ deadline —
   | { verb: 'extendRfq'; rfqId: string; deadline: string; supplierIds?: readonly string[] }
   // — REQ-E03-05 · negotiation and award —
@@ -2312,6 +2338,23 @@ export function useRfxCommand() {
             payload: {},
           });
         }
+        case 'acceptRfi':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_rfiresponse_save',
+            entity: 'rfiResponse',
+            payload: { rfiId: vars.rfiId, supplierId: vars.supplierId, acceptConfidentiality: true },
+          });
+        case 'acceptRfp':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_rfpresponse_save',
+            entity: 'rfpResponse',
+            payload: {
+              rfpId: vars.rfpId,
+              supplierId: vars.supplierId,
+              ...(vars.confidentiality ? { acceptConfidentiality: true } : {}),
+              ...(vars.terms ? { acceptTerms: true } : {}),
+            },
+          });
         case 'createRfp': {
           const { verb, publish, ...payload } = vars;
           const created = await svc.commands.dispatch(scope, {
@@ -2361,7 +2404,10 @@ export function useRfxCommand() {
               supplierId: vars.supplierId,
               answers: [...vars.answers],
               ...(vars.otherTerms !== undefined ? { otherTerms: vars.otherTerms } : {}),
+              ...(vars.questionAnswers !== undefined ? { questionAnswers: [...vars.questionAnswers] } : {}),
+              ...(vars.pricing !== undefined ? { pricing: vars.pricing } : {}),
             },
+
           });
           if (saved.status === 'failed' || vars.draftOnly || !saved.entityId) return saved;
           return svc.commands.dispatch(scope, {
