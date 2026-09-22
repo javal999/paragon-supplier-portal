@@ -678,6 +678,11 @@ describe('E1 — ⚠️ HEADLESS. NO STORE, NO CONSUMER, NO CLOCK', () => {
       // UNANSWERED in both directions, read off that array rather than a second
       // list beside it.
       '/src/pages-v2/glossary/appearances.test.ts',
+      // ⚠️ THE ONE-CLOCK BATCH (machineClockGate) — drives the wizard to a
+      // stored GR to prove the receipt is dated at the declared present. It
+      // consumes `EnforcementSetting` as a TYPE for the empty ledger prop, the
+      // §91 shape exactly. Authorised by the hub-clock batch.
+      '/src/pages-v2/hubClockStamps.test.tsx',
       '/src/services/data/mock/enforcementSeam.test.ts',
       '/src/services/data/mock/enforcementSeed.test.ts',
       '/src/services/data/mock/enforcementSetCommand.test.ts',

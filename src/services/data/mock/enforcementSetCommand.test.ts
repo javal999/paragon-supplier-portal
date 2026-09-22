@@ -19,6 +19,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 
 import { MockCommandService, commandAuditSink } from './MockCommandService';
 import { enforcementSettingStore } from './stores/enforcementSettingStore';
+import { sdcClock } from '../../sdc/clock';
 import { DataError } from '../types';
 import type { QueryScope } from '../types';
 import {
@@ -115,7 +116,6 @@ describe('t_enforcement_set — the recorded act', () => {
     // The `pinnedAt` discipline, and it is load-bearing here: `setAt` is the
     // ledger's ORDERING key, so a forgeable one would let a caller insert itself
     // ahead of a decision it did not know about.
-    const before = NOW();
     await svc.dispatch(
       buyer,
       set({
@@ -126,7 +126,9 @@ describe('t_enforcement_set — the recorded act', () => {
     );
     const [row] = enforcementSettingStore.all();
     expect(row.setAt).not.toBe('1999-01-01T00:00:00.000Z');
-    expect(row.setAt >= before).toBe(true);
+    // Stamped by the store on the HUB clock — exactly the hub's present, not
+    // merely "some time after the call" on the machine clock.
+    expect(row.setAt).toBe(sdcClock.now());
   });
 
   it('a BLOCK keeps a null reviewBy rather than inventing one', async () => {

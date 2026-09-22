@@ -45,8 +45,11 @@
 // `INVOICE_NOW` rather than `new Date()`. The surface is asserted below like any
 // other, at the same two instants ~5 years apart.
 //
-// ⚠️ **WHAT IS STILL DELIBERATELY NOT HERE: `BuyerDashboard` and the two widgets
-// rendered only on it.** Their day-counts come from PO and RFQ derivations that
+// ⚠️ **`BuyerDashboard` HAS JOINED TOO (2026-09-22).** The paragraph below is the
+// exclusion it carried, kept as the record of why it was out:
+//
+// WHAT WAS DELIBERATELY NOT HERE: `BuyerDashboard` and the two widgets
+// rendered only on it. Their day-counts come from PO and RFQ derivations that
 // take a `now` off the wall clock (`BuyerDashboard.tsx:144`,
 // `widgets/BuyerAlertsBar.tsx:48`). **The invoice half of that exclusion is
 // spent; so, now, is half of what remained**, and collapsing them into one
@@ -79,6 +82,7 @@ import BuyerContracts from './BuyerContracts';
 import BuyerRisk from './BuyerRisk';
 import BuyerSourcing from './BuyerSourcing';
 import SupplierDashboard from './SupplierDashboard';
+import BuyerDashboard from './BuyerDashboard';
 import SupplierDocuments from './SupplierDocuments';
 import SupplierStorefront from './SupplierStorefront';
 import SupplierCertsExpiringWidget from './widgets/SupplierCertsExpiringWidget';
@@ -290,13 +294,14 @@ describe('anchored surfaces — clock-independent by construction', () => {
     await expectAnchored({ el: <BuyerSourcing />, route: '/buyer/rfq' });
   });
 
-  // ⚠️ **SUPPLIERDASHBOARD IS ASSERTED IN TWO HALVES, BY RULING.** Its badges
-  //    reconcile numbers against anchored fixtures and ARE anchored; its
-  //    briefing greeting renders a DATE to the reader, and anchoring that would
-  //    change what the reader is told today is rather than reconciling anything.
-  //    The operator withheld it (2026-09-10). Both halves are asserted here so
-  //    the withheld read cannot be quietly anchored later, and the anchored ones
-  //    cannot quietly regress.
+  // ⚠️ **SUPPLIERDASHBOARD WAS ASSERTED IN TWO HALVES, BY RULING — AND THE
+  //    RULING IS REVERSED (operator, 2026-09-22).** Its briefing greeting was
+  //    withheld from anchoring on 2026-09-10 ("anchoring that would change what
+  //    the reader is told today is"). The demo hub now runs on ONE clock, so the
+  //    greeting tells the reader the hub's day, the same day every badge beneath
+  //    it is computed at. The withheld-half test is not deleted but INVERTED: it
+  //    asserted the greeting MOVES; it now asserts the greeting is anchored AND
+  //    names the declared present, so re-withholding it goes red by name.
   const GREETING = /(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday), \d{2} \w+ \d{4}/;
   const supplierDash: Surface = {
     el: <SupplierDashboard />,
@@ -304,24 +309,29 @@ describe('anchored surfaces — clock-independent by construction', () => {
     supplier: true,
   };
 
-  it('SupplierDashboard — its clock-derived BADGES are anchored', async () => {
-    const a = await textAt(supplierDash, Date.now() + FAR_A);
-    const b = await textAt(supplierDash, Date.now() + FAR_B);
-    expect(a.length).toBeGreaterThan(200);
-    // strip ONLY the deliberately-unanchored greeting; everything else must match
-    expect(b.replace(GREETING, '<greeting>')).toBe(a.replace(GREETING, '<greeting>'));
+  it('SupplierDashboard is anchored — badges AND greeting', async () => {
+    await expectAnchored(supplierDash);
   });
 
-  it('SupplierDashboard — the briefing GREETING is deliberately NOT anchored (ruling)', async () => {
+  it('SupplierDashboard — the briefing GREETING names the declared present', async () => {
     const a = await textAt(supplierDash, Date.now() + FAR_A);
-    const b = await textAt(supplierDash, Date.now() + FAR_B);
-    const ga = a.match(GREETING)?.[0];
-    const gb = b.match(GREETING)?.[0];
-    // non-vacuity: the greeting must actually be on screen in both renders
-    expect(ga).toBeTruthy();
-    expect(gb).toBeTruthy();
-    // and it must MOVE — anchoring this line is the regression this catches
-    expect(gb).not.toBe(ga);
+    const expected = new Date(`${DECLARED_PRESENT}T12:00:00.000Z`).toLocaleDateString('en-GB', {
+      weekday: 'long',
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+    });
+    // non-vacuity: the greeting is on screen, and it is the hub's day
+    expect(a.match(GREETING)?.[0]).toBe(expected);
+  });
+
+  // ⚠️ **BUYERDASHBOARD JOINS THE POPULATION.** Its exclusion (header) rested
+  //    on wall-clock reads — the 48h-unacknowledged count (`BuyerDashboard.tsx`)
+  //    and the widgets' day counts (`BuyerAlertsBar`, `BuyerOpenPoWidget`,
+  //    `BuyerRfqAwaitingAwardWidget`, `BuyerComplianceWidget`). All now read the
+  //    hub clock, and `src/lib/machineClockGate` keeps them there.
+  it('BuyerDashboard is anchored', async () => {
+    await expectAnchored({ el: <BuyerDashboard />, route: '/buyer/dashboard' });
   });
 
   it('SupplierDocuments is anchored', async () => {

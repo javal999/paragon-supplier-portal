@@ -16,6 +16,7 @@ import { useComplianceRegistry } from '../../services/query/hooks';
 import { computeStatus, daysRemaining } from '../../services/data/complianceProjection';
 import { certTypeLabelKey } from '../../lib/complianceView';
 import { statusTone } from '../../lib/statusTone';
+import { sdcClock } from '../../services/sdc/clock';
 
 // Capability "compliance": the canonical registry is a buyer-side fixture (no
 // wired CommandTarget) → the LivenessRegistry derives SIMULATED → amber "Sample"
@@ -27,7 +28,7 @@ import { statusTone } from '../../lib/statusTone';
 const BuyerComplianceWidget: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const now = useMemo(() => new Date().toISOString(), []);
+  const now = useMemo(() => sdcClock.now(), []);
   const query = useComplianceRegistry();
 
   // Flagged = a computed Expiring/Expired status (law 0.5 — derived, not stored).

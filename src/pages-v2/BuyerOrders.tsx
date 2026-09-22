@@ -370,7 +370,7 @@ const BuyerOrders: React.FC = () => {
   }, [orders]);
 
   const filtered = useMemo(() => {
-    const refDate = new Date(maxOrderDate || new Date().toISOString());
+    const refDate = new Date(maxOrderDate || nowIso);
     const rangeDays =
       range === '7d' ? 7 : range === '30d' ? 30 : range === '90d' ? 90 : null;
     const cutoff = rangeDays

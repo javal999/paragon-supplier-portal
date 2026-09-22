@@ -9,6 +9,7 @@ import { MATERIAL_MASTER } from '../../services/sdc/fixtures';
 import { COMPLIANCE_REGISTRY } from '../../services/data/mock/fixtures/complianceRegistry';
 import { verifyHalalAtReceipt } from '../../services/data/halalVerification';
 import GRInspectionWizard from './GRInspectionWizard';
+import { sdcClock } from '../../services/sdc/clock';
 import { enforcementSettingStore } from '../../services/data/mock/stores/enforcementSettingStore';
 import { seedEnforcementLedger, SEEDED_CHECKS } from '../../services/data/mock/enforcementSeed';
 import {
@@ -1117,8 +1118,13 @@ describe('CP-3 · H4 — the certificate notice TELLS, and does not STOP', () =>
   const openAt = async (asnNumber: string, isoDay: string) => {
     cleanup();
     asnStore.reset();
+    // THE HUB CLOCK is the inspection's present (`inspectionInstant` reads
+    // `sdcClock`). The MACHINE clock is pinned to the OPPOSITE side of the
+    // mandate, so a wizard that read the machine again would show the other
+    // state and every assertion below would go red.
     vi.useFakeTimers({ shouldAdvanceTime: true });
-    vi.setSystemTime(new Date(`${isoDay}T09:00:00.000Z`));
+    vi.setSystemTime(new Date(`${isoDay === '2026-10-17' ? '2026-08-20' : '2026-10-17'}T09:00:00.000Z`));
+    sdcClock.set(`${isoDay}T09:00:00.000Z`);
     renderWithProviders(
       <GRInspectionWizard
         onClose={() => {}}
@@ -1138,6 +1144,7 @@ describe('CP-3 · H4 — the certificate notice TELLS, and does not STOP', () =>
 
   afterEach(() => {
     vi.useRealTimers();
+    sdcClock.reset();
   });
 
   it('⚠️ THE FIXTURE IS REACHABLE — the mandate exemplar is on a RECEIVABLE source', () => {

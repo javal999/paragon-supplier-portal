@@ -33,6 +33,7 @@ import {
   type FxPin,
   type FxRefusalReason,
 } from './fxPin';
+import { sdcClock } from '../services/sdc/clock';
 
 export type Liveness = 'live' | 'simulated';
 
@@ -239,7 +240,7 @@ export function scoreQuotations(
   quotes: readonly ScorableQuote[],
   opts: ScoringOptions = {},
 ): ScoringOutcome {
-  const { pins = [], weights = CRITERIA_WEIGHTS, now = new Date() } = opts;
+  const { pins = [], weights = CRITERIA_WEIGHTS, now = new Date(sdcClock.now()) } = opts;
   if (quotes.length === 0) {
     return {
       kind: 'scored',

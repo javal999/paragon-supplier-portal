@@ -20,8 +20,15 @@
 // to real dates). This module deliberately does NOT call `new Date()`.
 //
 // INJECTABLE (set/reset) for TESTS ONLY — the app never mutates it; the default
-// IS the simulated now. Non-SDC command stamps (invoice / PO / RFQ / quotation)
-// keep their own clocks — this is the SDC loop's clock alone.
+// IS the simulated now.
+//
+// ⚠️ **IT IS NOW THE HUB CLOCK, NOT THE SDC LOOP'S ALONE.** The sentence that
+// stood here said non-SDC command stamps "keep their own clocks". They did —
+// the machine clock — and that is how an RFQ award made in the demo read
+// "22 Sept 2026" beside a hub at 31 Aug 2026 (PR #34). Every lane now stamps
+// and projects from this clock (`rfxNow`, `ordersNow`, `forecastNow`,
+// `inventoryNow` are aliases of it), and `src/lib/machineClockGate` fails the
+// build on any machine-clock read that is not allowlisted with its reason.
 // ────────────────────────────────────────────────────────────────────────────
 
 import { DECLARED_PRESENT } from '../data/fixturePresent';

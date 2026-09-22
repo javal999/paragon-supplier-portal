@@ -283,7 +283,7 @@ const purchaseOrderTarget: CommandTarget = {
     // One target serves every PO verb, and the verbs are told apart by what
     // they carry — the dispatcher has already proved the payload's shape
     // through each verb's required fields and policy hook.
-    const now = new Date().toISOString();
+    const now = sdcClock.now();
     const text = (v: unknown): string | undefined =>
       typeof v === 'string' && v.trim() ? v.trim() : undefined;
     purchaseOrderStore.update(id, (po) => {
@@ -383,7 +383,7 @@ const recordShipmentStarted = (asnNumber: string, poNumber: string, shipDate?: s
     ...p,
     shippingNotice: {
       ...p.shippingNotice,
-      startedOn: shipDate || new Date().toISOString().slice(0, 10),
+      startedOn: shipDate || sdcClock.now().slice(0, 10),
       startedByAsn: asnNumber,
     },
   }));
@@ -786,7 +786,7 @@ const invoiceTarget: CommandTarget = {
   readScopeOwner: (id) => invoiceStore.get(id)?.supplierId ?? null,
   readEntity: (id) => invoiceStore.get(id) ?? null,
   applyTransition: (id, toState, payload) => {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = sdcClock.now().slice(0, 10);
     invoiceStore.update(id, (inv) => {
       const next: Invoice = {
         ...inv,
@@ -832,7 +832,7 @@ const invoiceTarget: CommandTarget = {
     const submittedDate =
       typeof payload.submittedDate === 'string' && payload.submittedDate
         ? payload.submittedDate
-        : new Date().toISOString().slice(0, 10);
+        : sdcClock.now().slice(0, 10);
     const dueDate =
       typeof payload.dueDate === 'string' && payload.dueDate
         ? payload.dueDate
@@ -953,7 +953,7 @@ const receiptDiscrepancyTarget: CommandTarget = {
       ...r,
       status: toState as ReceiptDiscrepancyStatus,
       ...(toState === 'Resolved'
-        ? { resolutionComment: nonBlank(payload.resolutionComment), resolvedAt: new Date().toISOString() }
+        ? { resolutionComment: nonBlank(payload.resolutionComment), resolvedAt: sdcClock.now() }
         : {}),
     }));
   },
@@ -968,7 +968,7 @@ const receiptDiscrepancyTarget: CommandTarget = {
       supplierId: gr.supplierId,
       status: toState as ReceiptDiscrepancyStatus,
       comment: nonBlank(payload.comment) ?? '',
-      respondedAt: new Date().toISOString(),
+      respondedAt: sdcClock.now(),
     });
     return { entityId: gr.id };
   },
@@ -1754,7 +1754,7 @@ const purchaseRequisitionTarget: CommandTarget = {
       requestor: str('requestor'),
       costCenter: str('costCenter'),
       status: toState as PRStatus,
-      createdDate: new Date().toISOString().slice(0, 10),
+      createdDate: sdcClock.now().slice(0, 10),
       approvalLevel: '',
       sourceOfSupply: '',
       linkedDoc: '',
@@ -3542,7 +3542,7 @@ const enforcementTarget: CommandTarget = {
   applyTransition: (id, _toState, payload) => {
     const mode = payload.mode as EnforcementMode;
     const setBy = asActorAttribution(payload.setBy)!;
-    const setAt = new Date().toISOString();
+    const setAt = sdcClock.now();
     const checkId = id as GovernedCheckId;
     enforcementSettingStore.append(
       mode === 'BLOCK'
@@ -3592,7 +3592,7 @@ const workingCalendarTarget: CommandTarget = {
       kind: payload.kind as 'working' | 'non-working',
       reason: (payload.reason as string).trim(),
       setBy: asActorAttribution(payload.setBy)!,
-      setAt: new Date().toISOString(),
+      setAt: sdcClock.now(),
     });
   },
 };
@@ -3612,7 +3612,7 @@ const roleTarget: CommandTarget = {
       // THE DRIFT BASELINE, never the resolution source (D1).
       parentAtomsAtGrant: [...SYSTEM_ROLES[parent]],
       grantedBy: asActorAttribution(payload.grantedBy)!,
-      grantedAt: new Date().toISOString(),
+      grantedAt: sdcClock.now(),
     });
   },
 };
@@ -3629,7 +3629,7 @@ const threePlTarget: CommandTarget = {
   readScopeOwner: () => null,
   readEntity: (id) => (THREE_PL_ID.test(id) ? threePlStore.get(id) ?? null : null),
   applyTransition: (id, _toState, payload) => {
-    const change = threePlChangeFrom(id, payload, new Date().toISOString());
+    const change = threePlChangeFrom(id, payload, sdcClock.now());
     // The policy hook has already refused every payload this could reject.
     if (change) threePlStore.append(change);
   },
@@ -3671,7 +3671,7 @@ const reasonCodeTarget: CommandTarget = {
       labelId: String(payload.labelId),
       active: payload.active as boolean,
       setBy: asActorAttribution(payload.setBy)!,
-      setAt: new Date().toISOString(),
+      setAt: sdcClock.now(),
     });
   },
 };
@@ -3687,7 +3687,7 @@ const hubSettingTarget: CommandTarget = {
       key: id,
       value: payload.value as number | boolean | null,
       setBy: asActorAttribution(payload.setBy)!,
-      setAt: new Date().toISOString(),
+      setAt: sdcClock.now(),
     });
   },
 };
@@ -3746,7 +3746,7 @@ function declarationFrom(
     expiresOn: expires === '' ? null : expires,
     scopeText: str('scopeText'),
     // STORE-ASSIGNED, never payload-supplied — the `pinnedAt` discipline.
-    declaredAt: new Date().toISOString(),
+    declaredAt: sdcClock.now(),
     // FROM THE SESSION, never from the form (C10 §6.2). Today always
     // `UNATTRIBUTED: NO_PERSON_IN_SESSION`, which is a claim the platform is
     // entitled to make rather than a placeholder.
@@ -3801,7 +3801,7 @@ const supplierDocumentTarget: CommandTarget = {
       ...(toState === 'Rejected'
         ? {
             rejectionReason: String(payload.rejectionReason).trim(),
-            rejectedAt: new Date().toISOString(),
+            rejectedAt: sdcClock.now(),
             rejectedBy: scope.actor ?? NO_PERSON,
           }
         : {}),
@@ -3986,13 +3986,13 @@ const supplierApplicationTarget: CommandTarget = {
       status: toState as SupplierApplicationStatus,
       // Picking it up is a fact with a time. `null` until then, never a
       // guessed date — the queue's whole question is who has not started.
-      ...(toState === 'Under Review' ? { reviewStartedAt: new Date().toISOString() } : {}),
+      ...(toState === 'Under Review' ? { reviewStartedAt: sdcClock.now() } : {}),
       // ⚠️ **WHO DECIDED, FROM THE SESSION AND NEVER FROM `payload`** (C10
       // §6.2, the shape `PR_APPROVAL_ATTRIBUTED` established). Today it is
       // always `UNATTRIBUTED: NO_PERSON_IN_SESSION`, which is the honest
       // absence a name-shaped payload field could never be.
       ...(toState === 'Approved'
-        ? { decidedAt: new Date().toISOString(), decidedBy: scope.actor ?? NO_PERSON }
+        ? { decidedAt: sdcClock.now(), decidedBy: scope.actor ?? NO_PERSON }
         : {}),
       // The refusal trio, written together or not at all. `rejectionReason` is
       // a `requiredField` AND is proven non-blank by
@@ -4001,7 +4001,7 @@ const supplierApplicationTarget: CommandTarget = {
       // trust the guard standing in front of it.
       ...(toState === 'Rejected'
         ? {
-            decidedAt: new Date().toISOString(),
+            decidedAt: sdcClock.now(),
             decidedBy: scope.actor ?? NO_PERSON,
             rejectionReason: String(payload.rejectionReason).trim(),
           }
@@ -4066,7 +4066,7 @@ const supplierApplicationTarget: CommandTarget = {
       // and for the two vendor-free request types nobody was ever asked.
       s4Vendor: s4Vendor === '' ? null : s4Vendor,
       declarations: readDeclarations(payload),
-      submittedAt: new Date().toISOString(),
+      submittedAt: sdcClock.now(),
       submittedBy: scope.actor ?? NO_PERSON,
       reviewStartedAt: null,
       decidedAt: null,
@@ -4360,7 +4360,7 @@ const settleFinalize = (ctx: SettleContext): void => {
       status: 'Payment Released',
       sapFiDoc: inv.sapFiDoc ?? invoiceStore.nextFiDoc(),
       paymentRef: inv.paymentRef ?? invoiceStore.nextPaymentRef(),
-      paymentDate: inv.paymentDate ?? new Date().toISOString().slice(0, 10),
+      paymentDate: inv.paymentDate ?? sdcClock.now().slice(0, 10),
     }));
   }
 };

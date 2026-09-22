@@ -18,6 +18,7 @@ import {
   quoteCountByRfq,
   rfqAwardTier,
 } from './buyerDerivations';
+import { sdcClock } from '../../services/sdc/clock';
 
 // Buyer sourcing — LIVE: RFQs with quotations in but not yet Awarded, read from
 // the RFQ + quotation stores (award verb, PR #41). The award is a decision, so
@@ -28,7 +29,7 @@ const BuyerRfqAwaitingAwardWidget: React.FC = () => {
   const rfqQuery = useRFQs();
   const quoteQuery = useQuotations();
 
-  const now = new Date();
+  const now = new Date(sdcClock.now());
   const pending = useMemo(
     () => pendingAwardRfqs(rfqQuery.data?.items ?? [], quoteQuery.data?.items ?? []),
     [rfqQuery.data, quoteQuery.data],

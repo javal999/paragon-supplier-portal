@@ -11,6 +11,8 @@ import BuyerSourcing from './BuyerSourcing';
 import { mockRfqs } from '../data/mockRfqs';
 import { PERSONA_SYSTEM_ROLES } from '../services/transitions/businessRoles';
 import { mockSuppliers } from '../data/mockSuppliers';
+// The hub's present — the day a rate recorded in the demo is 'today'.
+import { sdcClock } from '../services/sdc/clock';
 
 /**
  * ⚠️ PREMISE CHANGE (BL-43). The FX specs probe RFQ-2026-009 because its two
@@ -548,7 +550,7 @@ describe('BuyerSourcing — a comparison with no FX basis withholds the ranking'
     // comparison the engine refused becomes one it can make.
     makeMixed();
     // BOTH currencies, because neither is the base — see the naming test above.
-    const today = new Date().toISOString().slice(0, 10);
+    const today = sdcClock.now().slice(0, 10);
     const svc = new MockCommandService();
     for (const quote of ['EUR', 'USD'] as const) {
       const res = await svc.dispatch(
@@ -583,7 +585,7 @@ describe('BuyerSourcing — a comparison with no FX basis withholds the ranking'
         payload: {
           quote: 'USD',
           rate: 17_250,
-          asOf: new Date().toISOString().slice(0, 10),
+          asOf: sdcClock.now().slice(0, 10),
           source: 'MANUAL',
         },
       },
@@ -648,7 +650,7 @@ describe('BuyerSourcing — the FX basis is visible, and recordable (2e-c-4)', (
   const makeMixed = () =>
     quotationStore.update('qt-009a', (q) => ({ ...q, currency: 'EUR' }));
 
-  const today = () => new Date().toISOString().slice(0, 10);
+  const today = () => sdcClock.now().slice(0, 10);
 
   const recordPin = async (quote: 'EUR' | 'USD', rate: number, asOf = today()) =>
     new MockCommandService().dispatch(
@@ -742,7 +744,7 @@ describe('BuyerSourcing — recording a rate is confirm-before-commit (2e-c-4)',
           payload: {
             quote: 'USD',
             rate: 17_250,
-            asOf: new Date().toISOString().slice(0, 10),
+            asOf: sdcClock.now().slice(0, 10),
             source: 'MANUAL',
           },
         },
@@ -812,7 +814,7 @@ describe('BuyerSourcing — recording a rate is confirm-before-commit (2e-c-4)',
       target: { value: '18000' },
     });
     fireEvent.change(screen.getByLabelText('Rate date'), {
-      target: { value: new Date().toISOString().slice(0, 10) },
+      target: { value: sdcClock.now().slice(0, 10) },
     });
     fireEvent.click(screen.getByRole('button', { name: 'Record rate' }));
 
@@ -945,7 +947,7 @@ describe('BuyerSourcing — a supersede reads as a NEW RECORDED ACT (2e-c-4)', (
       target: { value: '18000' },
     });
     fireEvent.change(screen.getByLabelText('Rate date'), {
-      target: { value: new Date().toISOString().slice(0, 10) },
+      target: { value: sdcClock.now().slice(0, 10) },
     });
     fireEvent.click(screen.getByRole('button', { name: 'Record new rate' }));
 

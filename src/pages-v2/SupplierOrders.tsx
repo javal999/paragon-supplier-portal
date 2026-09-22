@@ -409,7 +409,7 @@ const SupplierOrders: React.FC = () => {
             });
             return;
           }
-          const time = new Date().toLocaleTimeString('en-GB', {
+          const time = new Date(ordersNow()).toLocaleTimeString('en-GB', {
             hour: '2-digit',
             minute: '2-digit',
           });

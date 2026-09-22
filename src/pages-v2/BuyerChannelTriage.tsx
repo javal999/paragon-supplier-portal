@@ -209,7 +209,7 @@ const BuyerChannelTriage: React.FC<BuyerChannelTriageProps> = ({ onRecorded }) =
       sessionRef.current = openSubmissionSession(
         `ss-c4d-${Date.now().toString(36)}`,
         message.supplierId, // the SUBJECT supplier — the envelope is "about X"
-        new Date().toISOString(),
+        sdcClock.now(),
       );
     }
     sessionRef.current.attempt('InventoryDeclaration', res.entityId ?? '', res.correlationId);
