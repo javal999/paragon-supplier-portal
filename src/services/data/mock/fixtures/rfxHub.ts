@@ -22,6 +22,8 @@
 //     option of its own.
 //   · rfp-003  — ICY, full-service lip product: formula and pack options at
 //     25K/50K per variant, CONFIDENTIAL with a T&C document, not yet accepted.
+//   · rfi-003 / rfp-004 — Redwood 2.0 DRAFTS (BL-93): not sent, so only the
+//     buyer sees them, and "Edit draft" re-opens their wizard.
 //   · Attachments on seeded events are metadata only — the hub never held the
 //     bytes, so every surface reads them as "not available in this session".
 //   · sup-013  — invited and quoting with NO OTIF HISTORY, so every surface has
@@ -227,6 +229,24 @@ export const RFI_EVENT_SEED: readonly RfiEvent[] = [
         required: false,
       },
     ],
+    extensions: [],
+  },
+  {
+    // BL-93 — a DRAFT RFI, so "Edit draft" has something to open on the RFI
+    // board: Redwood 2.0 mold makers, not yet sent. Suppliers do not see it.
+    id: 'rfi-003',
+    eventNumber: 'RFI-2026-003',
+    title: 'Redwood 2.0 mold makers — capability check',
+    description:
+      'PTI is looking for mold makers for the five Redwood 2.0 lip cream components (outer cap, inner cap, base, applicator wand, wiper).',
+    templateId: 'packaging',
+    materialCategory: 'Packaging',
+    purchasingGroup: '104',
+    status: 'Draft',
+    createdAt: at(-1),
+    responseDeadline: day(12),
+    invitees: [{ supplierId: 'sup-007' }, { supplierId: 'sup-013' }],
+    questions: PACKAGING_QUESTIONS,
     extensions: [],
   },
 ];
@@ -559,6 +579,27 @@ export const RFP_EVENT_SEED: readonly RfpEvent[] = [
       quantityBasis: 'perVariant',
       samplesRequested: true,
     },
+    extensions: [],
+  },
+  {
+    // BL-93 — a DRAFT RFP: Redwood 2.0 mold tooling terms, not yet sent.
+    id: 'rfp-004',
+    eventNumber: 'RFP-2026-004',
+    title: 'Redwood 2.0 — mold tooling terms',
+    scope:
+      'Terms for building and holding the Redwood 2.0 molds: who owns the tooling, how long a trial run takes, and the payment schedule for the mold cost.',
+    materialCategory: 'Packaging',
+    purchasingGroup: '104',
+    status: 'Draft',
+    createdAt: at(-1),
+    responseDeadline: day(13),
+    currency: 'IDR',
+    invitees: [{ supplierId: 'sup-007' }, { supplierId: 'sup-013' }],
+    terms: [
+      { termId: 'paymentTerms', requestedValue: '60' },
+      { termId: 'leadTime', requestedValue: '45' },
+      { termId: 'contractDuration', requestedValue: '24 months' },
+    ],
     extensions: [],
   },
 ];

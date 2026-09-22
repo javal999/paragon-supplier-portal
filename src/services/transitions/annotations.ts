@@ -312,6 +312,7 @@ export const TRANSITION_PURPOSE: FlowAnnotations = Object.freeze({
   t_forecastview_record: { purposeKey: 'processFlows.purpose.t_forecastview_record' },
   // REQ-E03-02 / REQ-E03-04 / REQ-E03-05 — RFx management.
   t_rfi_create: { purposeKey: 'processFlows.purpose.t_rfi_create' },
+  t_rfi_revise_draft: { purposeKey: 'processFlows.purpose.t_rfi_revise_draft' },
   t_rfi_publish: { purposeKey: 'processFlows.purpose.t_rfi_publish' },
   t_rfi_extend: { purposeKey: 'processFlows.purpose.t_rfi_extend' },
   t_rfi_close: { purposeKey: 'processFlows.purpose.t_rfi_close' },
@@ -319,6 +320,7 @@ export const TRANSITION_PURPOSE: FlowAnnotations = Object.freeze({
   t_rfiresponse_save: { purposeKey: 'processFlows.purpose.t_rfiresponse_save' },
   t_rfiresponse_submit: { purposeKey: 'processFlows.purpose.t_rfiresponse_submit' },
   t_rfp_create: { purposeKey: 'processFlows.purpose.t_rfp_create' },
+  t_rfp_revise_draft: { purposeKey: 'processFlows.purpose.t_rfp_revise_draft' },
   t_rfp_publish: { purposeKey: 'processFlows.purpose.t_rfp_publish' },
   t_rfp_extend: { purposeKey: 'processFlows.purpose.t_rfp_extend' },
   t_rfp_close: { purposeKey: 'processFlows.purpose.t_rfp_close' },
@@ -326,6 +328,7 @@ export const TRANSITION_PURPOSE: FlowAnnotations = Object.freeze({
   t_rfpresponse_save: { purposeKey: 'processFlows.purpose.t_rfpresponse_save' },
   t_rfpresponse_submit: { purposeKey: 'processFlows.purpose.t_rfpresponse_submit' },
   t_rfq_extend: { purposeKey: 'processFlows.purpose.t_rfq_extend' },
+  t_rfq_revise_draft: { purposeKey: 'processFlows.purpose.t_rfq_revise_draft' },
   t_quotation_revise: { purposeKey: 'processFlows.purpose.t_quotation_revise' },
   t_negotiationround_open: { purposeKey: 'processFlows.purpose.t_negotiationround_open' },
   t_negotiationround_close: { purposeKey: 'processFlows.purpose.t_negotiationround_close' },

@@ -200,6 +200,7 @@ import { rfiTemplate } from '../../sourcing/rfxConfig';
 import type {
   AwardLine,
   RfiAnswer,
+  RfiEvent,
   RfiQuestion,
   RfiResponse,
   RfpEvent,
@@ -1284,11 +1285,61 @@ const RFQ_CATEGORIES: readonly RFQCategory[] = [
 ];
 const RFQ_UOMS: readonly RFQ['uom'][] = ['KG', 'PCS', 'L', 'MT'];
 
+/**
+ * THE CONTENT an RFQ payload stores — everything the buyer authors, and the one
+ * reading both `t_rfq_create` and `t_rfq_revise_draft` (BL-93) go through, so
+ * an edited draft is stored exactly as a new one would be. Provenance
+ * (`sourceRfiId`, `sourceRfpId`, `copiedFromRfqId`, `templateId`) is read here
+ * for create and PINNED by the revise branch: where an RFQ came from is a fact
+ * about its birth, and an edit does not rewrite it.
+ */
+function rfqContentOf(payload: Record<string, unknown>): Omit<
+  RFQ,
+  'id' | 'rfqNumber' | 'buyerId' | 'status' | 'createdAt' | 'respondedSupplierIds'
+> {
+  const str = (k: string) => (typeof payload[k] === 'string' ? (payload[k] as string) : '');
+  const num = (k: string) => (typeof payload[k] === 'number' ? (payload[k] as number) : 0);
+  const strArr = (k: string) =>
+    Array.isArray(payload[k]) ? (payload[k] as unknown[]).filter((x): x is string => typeof x === 'string') : [];
+  const materialCategory = RFQ_CATEGORIES.includes(payload.materialCategory as RFQCategory)
+    ? (payload.materialCategory as RFQCategory)
+    : 'Other';
+  const uom = RFQ_UOMS.includes(payload.uom as RFQ['uom']) ? (payload.uom as RFQ['uom']) : 'KG';
+  return {
+    title: str('title'),
+    materialCategory,
+    materialIds: strArr('materialIds'),
+    responseDeadline: str('responseDeadline'),
+    awardDeadline: str('awardDeadline'),
+    invitedSupplierIds: strArr('invitedSupplierIds'),
+    // Required by the flow's `requiredFields` since 2e-b-4a, so `num()`'s 0
+    // fallback is unreachable here — an absent quantity fails MISSING_FIELDS
+    // before this is ever called, rather than minting an RFQ for nothing.
+    totalQty: num('totalQty'),
+    uom,
+    // The buyer's estimated budget (2e-b-4a) — preserved ONLY when the payload
+    // actually carries one. Deliberately NOT `num('estimatedValue')`: that
+    // helper returns 0 for an absent field, which would mint "this event is
+    // budgeted at Rp 0" out of a buyer who specified nothing. Absence stays
+    // absence. Same reasoning, same shape, as `moq` on the quotation target.
+    ...(typeof payload.estimatedValue === 'number'
+      ? { estimatedValue: payload.estimatedValue as number }
+      : {}),
+    incoterms: str('incoterms'),
+    paymentTerms: str('paymentTerms'),
+    // The rebuilt authoring fields — project, items, breaks, questions,
+    // options, provenance — AND THE CURRENCY. This used to be the literal
+    // `currency: 'IDR'`, so a buyer who chose USD raised a rupiah RFQ. The
+    // payload is already judged by `rfq_create_valid`.
+    ...readRfqAuthoringFields(payload),
+  };
+}
+
 const rfqTarget: CommandTarget = {
   readState: (id) => rfqStore.get(id)?.status ?? null,
   readScopeOwner: () => null,
   readEntity: (id) => rfqStore.get(id) ?? null,
-  applyTransition: (id, toState, payload) => {
+  applyTransition: (id, toState, payload, scope) => {
     // REQ-E03-03 BR-05 — the extension branch. `applyTransition` receives no
     // transitionId, so the payload is the discriminator, exactly as the FX pin
     // below discriminates on `quote`. `t_rfq_extend` is the ONLY rfq verb
@@ -1313,6 +1364,35 @@ const rfqTarget: CommandTarget = {
               ],
             }),
         extensions: [...(r.extensions ?? []), { at: new Date().toISOString(), deadline, supplierIds: only }],
+      }));
+      return;
+    }
+    // BL-93 — the revise-draft branch. `t_rfq_revise_draft` is the ONLY rfq verb
+    // that lands in `Draft` (create mints there; nothing else returns to it),
+    // so the target state is the discriminator. The record is REBUILT from the
+    // payload rather than merged, so a field the buyer cleared (a budget, a
+    // sample request, an attachment) is gone rather than surviving the edit.
+    // Identity, lifecycle and provenance are the stored ones.
+    if (toState === 'Draft') {
+      rfqStore.update(id, (r) => ({
+        ...rfqContentOf(payload),
+        id: r.id,
+        rfqNumber: r.rfqNumber,
+        buyerId: r.buyerId,
+        status: r.status,
+        createdAt: r.createdAt,
+        respondedSupplierIds: r.respondedSupplierIds,
+        sourceRfiId: r.sourceRfiId,
+        sourceRfpId: r.sourceRfpId,
+        copiedFromRfqId: r.copiedFromRfqId,
+        templateId: r.templateId,
+        // Not authored in the wizard, so never in the payload: kept as stored.
+        ...(r.lineItems ? { lineItems: r.lineItems } : {}),
+        ...(r.extensions ? { extensions: r.extensions } : {}),
+        ...(r.inviteeDeadlines ? { inviteeDeadlines: r.inviteeDeadlines } : {}),
+        ...(r.fxPins ? { fxPins: r.fxPins } : {}),
+        // CE-08 — who edited it and when: the session's actor, the store's clock.
+        revisions: [...(r.revisions ?? []), { at: sdcClock.now(), by: scope.actor ?? NO_PERSON }],
       }));
       return;
     }
@@ -1416,50 +1496,19 @@ const rfqTarget: CommandTarget = {
   creationOwner: () => null,
   create: (payload, toState) => {
     const rfqNumber = rfqStore.nextNumber();
-    const str = (k: string) => (typeof payload[k] === 'string' ? (payload[k] as string) : '');
-    const num = (k: string) => (typeof payload[k] === 'number' ? (payload[k] as number) : 0);
-    const strArr = (k: string) =>
-      Array.isArray(payload[k]) ? (payload[k] as unknown[]).filter((x): x is string => typeof x === 'string') : [];
-    const materialCategory = RFQ_CATEGORIES.includes(payload.materialCategory as RFQCategory)
-      ? (payload.materialCategory as RFQCategory)
-      : 'Other';
-    const uom = RFQ_UOMS.includes(payload.uom as RFQ['uom']) ? (payload.uom as RFQ['uom']) : 'KG';
     const rfq: RFQ = {
       id: rfqNumber, // store keyed by id; the assigned number doubles as the id
       rfqNumber,
-      title: str('title'),
-      materialCategory,
-      materialIds: strArr('materialIds'),
       buyerId: 'buyer-001',
       status: toState as RFQStatus, // 'Draft' (PF-1a · D-1 — reverses FORK-2B)
       createdAt: new Date().toISOString().slice(0, 10),
-      responseDeadline: str('responseDeadline'),
-      awardDeadline: str('awardDeadline'),
-      invitedSupplierIds: strArr('invitedSupplierIds'),
       respondedSupplierIds: [],
-      // Required by the flow's `requiredFields` since 2e-b-4a, so `num()`'s 0
-      // fallback is unreachable here — an absent quantity fails MISSING_FIELDS
-      // before create is ever called, rather than minting an RFQ for nothing.
-      totalQty: num('totalQty'),
-      uom,
-      // The buyer's estimated budget (2e-b-4a) — preserved ONLY when the payload
-      // actually carries one. Deliberately NOT `num('estimatedValue')`: that
-      // helper returns 0 for an absent field, which would mint "this event is
-      // budgeted at Rp 0" out of a buyer who specified nothing. Absence stays
-      // absence. Same reasoning, same shape, as `moq` on the quotation target.
-      ...(typeof payload.estimatedValue === 'number'
-        ? { estimatedValue: payload.estimatedValue as number }
-        : {}),
-      incoterms: str('incoterms'),
-      paymentTerms: str('paymentTerms'),
       // REQ-E03-03 BR-02 — the RFI this RFQ was created from. Carried ONLY when
       // present: most RFQs come from no RFI (REQ-E03-02 BR-03).
-      ...(str('sourceRfiId') ? { sourceRfiId: str('sourceRfiId') } : {}),
-      // The rebuilt authoring fields — project, items, breaks, questions,
-      // options, provenance — AND THE CURRENCY. This used to be the literal
-      // `currency: 'IDR'`, so a buyer who chose USD raised a rupiah RFQ. The
-      // payload is already judged by `rfq_create_valid`.
-      ...readRfqAuthoringFields(payload),
+      ...(typeof payload.sourceRfiId === 'string' && payload.sourceRfiId
+        ? { sourceRfiId: payload.sourceRfiId }
+        : {}),
+      ...rfqContentOf(payload),
     };
     rfqStore.add(rfq);
     return { entityId: rfqNumber };
@@ -2636,13 +2685,48 @@ const rfxInvited = (
   supplierId: string,
 ): boolean => !!event && event.status === 'Open' && event.invitees.some((i) => i.supplierId === supplierId);
 
+/**
+ * THE CONTENT an RFI payload stores — read by `t_rfi_create` and by
+ * `t_rfi_revise_draft` (BL-93), so an edited draft is stored exactly as a new
+ * one would be.
+ */
+function rfiContentOf(payload: Record<string, unknown>): Omit<
+  RfiEvent,
+  'id' | 'eventNumber' | 'status' | 'createdAt' | 'extensions'
+> {
+  const template = rfiTemplate(String(payload.templateId))!;
+  const str = (k: string) => (typeof payload[k] === 'string' ? (payload[k] as string) : '');
+  // The event carries its OWN question list from birth. A buyer's additions
+  // and removals apply to THIS event only, and a later edit to the template
+  // never rewrites an event suppliers have already answered.
+  const questions = Array.isArray(payload.questions)
+    ? (payload.questions as RfiQuestion[])
+    : template.questions;
+  return {
+    title: str('title'),
+    // Stored only when the buyer wrote one: an empty string on the event
+    // would read as "PTI described this and said nothing".
+    ...(str('description') ? { description: str('description') } : {}),
+    templateId: template.id,
+    materialCategory: str('materialCategory'),
+    ...(str('purchasingGroup') ? { purchasingGroup: str('purchasingGroup') } : {}),
+    responseDeadline: str('responseDeadline'),
+    invitees: (Array.isArray(payload.invitedSupplierIds)
+      ? (payload.invitedSupplierIds as unknown[]).filter((x): x is string => typeof x === 'string')
+      : []
+    ).map((supplierId) => ({ supplierId })),
+    questions,
+    ...rfxAuthoringFields(payload),
+  };
+}
+
 /** REQ-E03-02 — the RFI event. `entityId` is its id. */
 const rfiEventTarget: CommandTarget = {
   readState: (id) => rfiEventStore.get(id)?.status ?? null,
   // Buyer-only: a supplier answers an RFI, it never publishes one.
   readScopeOwner: () => null,
   readEntity: (id) => rfiEventStore.get(id) ?? null,
-  applyTransition: (id, toState, payload) => {
+  applyTransition: (id, toState, payload, scope) => {
     if (payload.deadline !== undefined) {
       const deadline = String(payload.deadline);
       const only = Array.isArray(payload.supplierIds)
@@ -2659,40 +2743,32 @@ const rfiEventTarget: CommandTarget = {
       }));
       return;
     }
+    // BL-93 — `t_rfi_revise_draft` is the only RFI verb that lands in `Draft`.
+    // Rebuilt, not merged, so a cleared description or attachment is gone.
+    if (toState === 'Draft') {
+      rfiEventStore.update(id, (e) => ({
+        ...rfiContentOf(payload),
+        id: e.id,
+        eventNumber: e.eventNumber,
+        status: e.status,
+        createdAt: e.createdAt,
+        extensions: e.extensions,
+        revisions: [...(e.revisions ?? []), { at: sdcClock.now(), by: scope.actor ?? NO_PERSON }],
+      }));
+      return;
+    }
     rfiEventStore.update(id, (e) => ({ ...e, status: toState as RfxEventStatus }));
   },
   creationOwner: () => null,
   create: (payload, toState) => {
     const id = rfiEventStore.nextId();
-    const template = rfiTemplate(String(payload.templateId))!;
-    const str = (k: string) => (typeof payload[k] === 'string' ? (payload[k] as string) : '');
-    // The event carries its OWN question list from birth. A buyer's additions
-    // and removals apply to THIS event only, and a later edit to the template
-    // never rewrites an event suppliers have already answered.
-    const questions = Array.isArray(payload.questions)
-      ? (payload.questions as RfiQuestion[])
-      : template.questions;
-    const authoring = rfxAuthoringFields(payload);
     rfiEventStore.add({
       id,
       eventNumber: `RFI-2026-${id.slice(-3)}`,
-      title: str('title'),
-      // Stored only when the buyer wrote one: an empty string on the event
-      // would read as "PTI described this and said nothing".
-      ...(str('description') ? { description: str('description') } : {}),
-      templateId: template.id,
-      materialCategory: str('materialCategory'),
-      ...(str('purchasingGroup') ? { purchasingGroup: str('purchasingGroup') } : {}),
       status: toState as RfxEventStatus,
       createdAt: sdcClock.now(),
-      responseDeadline: str('responseDeadline'),
-      invitees: (Array.isArray(payload.invitedSupplierIds)
-        ? (payload.invitedSupplierIds as unknown[]).filter((x): x is string => typeof x === 'string')
-        : []
-      ).map((supplierId) => ({ supplierId })),
-      questions,
       extensions: [],
-      ...authoring,
+      ...rfiContentOf(payload),
     });
     return { entityId: id };
   },
@@ -2752,12 +2828,49 @@ const rfiResponseTarget: CommandTarget = {
   },
 };
 
+/**
+ * THE CONTENT an RFP payload stores — read by `t_rfp_create` and by
+ * `t_rfp_revise_draft` (BL-93). `sourceRfiId` is not content: it is set at
+ * create and pinned on revise, because where an RFP came from does not change.
+ */
+function rfpContentOf(payload: Record<string, unknown>): Omit<
+  RfpEvent,
+  'id' | 'eventNumber' | 'status' | 'createdAt' | 'extensions' | 'sourceRfiId'
+> {
+  const str = (k: string) => (typeof payload[k] === 'string' ? (payload[k] as string) : '');
+  return {
+    title: str('title'),
+    scope: str('scope'),
+    materialCategory: str('materialCategory'),
+    ...(str('purchasingGroup') ? { purchasingGroup: str('purchasingGroup') } : {}),
+    responseDeadline: str('responseDeadline'),
+    currency: (BID_CURRENCIES as readonly string[]).includes(str('currency'))
+      ? (str('currency') as BidCurrency)
+      : BASE_CURRENCY,
+    invitees: (Array.isArray(payload.invitedSupplierIds)
+      ? (payload.invitedSupplierIds as unknown[]).filter((x): x is string => typeof x === 'string')
+      : []
+    ).map((supplierId) => ({ supplierId })),
+    terms: Array.isArray(payload.terms) ? (payload.terms as RfpTermRow[]) : [],
+    ...rfxAuthoringFields(payload),
+    ...(Array.isArray(payload.questions) && payload.questions.length > 0
+      ? { questions: payload.questions as RfiQuestion[] }
+      : {}),
+    ...(payload.termsDocument && typeof payload.termsDocument === 'object'
+      ? { termsDocument: payload.termsDocument as RfpTermsDocument }
+      : {}),
+    ...(payload.pricing && typeof payload.pricing === 'object'
+      ? { pricing: payload.pricing as RfpPricingRequest }
+      : {}),
+  };
+}
+
 /** REQ-E03-04 — the RFP event. */
 const rfpEventTarget: CommandTarget = {
   readState: (id) => rfpEventStore.get(id)?.status ?? null,
   readScopeOwner: () => null,
   readEntity: (id) => rfpEventStore.get(id) ?? null,
-  applyTransition: (id, toState, payload) => {
+  applyTransition: (id, toState, payload, scope) => {
     if (payload.deadline !== undefined) {
       const deadline = String(payload.deadline);
       const only = Array.isArray(payload.supplierIds)
@@ -2774,43 +2887,34 @@ const rfpEventTarget: CommandTarget = {
       }));
       return;
     }
+    // BL-93 — `t_rfp_revise_draft` is the only RFP verb that lands in `Draft`.
+    if (toState === 'Draft') {
+      rfpEventStore.update(id, (e) => ({
+        ...rfpContentOf(payload),
+        id: e.id,
+        eventNumber: e.eventNumber,
+        status: e.status,
+        createdAt: e.createdAt,
+        extensions: e.extensions,
+        ...(e.sourceRfiId ? { sourceRfiId: e.sourceRfiId } : {}),
+        revisions: [...(e.revisions ?? []), { at: sdcClock.now(), by: scope.actor ?? NO_PERSON }],
+      }));
+      return;
+    }
     rfpEventStore.update(id, (e) => ({ ...e, status: toState as RfxEventStatus }));
   },
   creationOwner: () => null,
   create: (payload, toState) => {
     const id = rfpEventStore.nextId();
-    const str = (k: string) => (typeof payload[k] === 'string' ? (payload[k] as string) : '');
-    const authoring = rfxAuthoringFields(payload);
+    const sourceRfiId = typeof payload.sourceRfiId === 'string' ? payload.sourceRfiId : '';
     rfpEventStore.add({
       id,
       eventNumber: `RFP-2026-${id.slice(-3)}`,
-      title: str('title'),
-      scope: str('scope'),
-      materialCategory: str('materialCategory'),
-      ...(str('purchasingGroup') ? { purchasingGroup: str('purchasingGroup') } : {}),
       status: toState as RfxEventStatus,
       createdAt: sdcClock.now(),
-      responseDeadline: str('responseDeadline'),
-      currency: (BID_CURRENCIES as readonly string[]).includes(str('currency'))
-        ? (str('currency') as BidCurrency)
-        : BASE_CURRENCY,
-      invitees: (Array.isArray(payload.invitedSupplierIds)
-        ? (payload.invitedSupplierIds as unknown[]).filter((x): x is string => typeof x === 'string')
-        : []
-      ).map((supplierId) => ({ supplierId })),
-      terms: Array.isArray(payload.terms) ? (payload.terms as RfpTermRow[]) : [],
       extensions: [],
-      ...authoring,
-      ...(str('sourceRfiId') ? { sourceRfiId: str('sourceRfiId') } : {}),
-      ...(Array.isArray(payload.questions) && payload.questions.length > 0
-        ? { questions: payload.questions as RfiQuestion[] }
-        : {}),
-      ...(payload.termsDocument && typeof payload.termsDocument === 'object'
-        ? { termsDocument: payload.termsDocument as RfpTermsDocument }
-        : {}),
-      ...(payload.pricing && typeof payload.pricing === 'object'
-        ? { pricing: payload.pricing as RfpPricingRequest }
-        : {}),
+      ...rfpContentOf(payload),
+      ...(sourceRfiId ? { sourceRfiId } : {}),
     });
     return { entityId: id };
   },

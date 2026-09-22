@@ -199,7 +199,6 @@ export const rfxAuthoringEn: Record<string, string> = {
   // — RFI → RFP (D3) ——————————————————————————————————————————————————
   'rfxa.rfi.createRfp': 'Create a proposal request from this',
   'rfxa.fromRfi.notes': 'Scope notes from the information request:',
-  'rfxa.fromRfi.editable': 'The title, scope and invited suppliers are copied and stay editable.',
 
   // — Toasts ——————————————————————————————————————————————————————————
   'rfxa.toast.accepted': 'Accepted. PTI has a record of when.',
@@ -427,7 +426,6 @@ export const rfxAuthoringId: Record<string, string> = {
   // — RFI → RFP (D3) ——————————————————————————————————————————————————
   'rfxa.rfi.createRfp': 'Buat permintaan proposal dari sini',
   'rfxa.fromRfi.notes': 'Catatan lingkup dari permintaan informasi:',
-  'rfxa.fromRfi.editable': 'Judul, lingkup, dan pemasok yang diundang disalin dan tetap dapat diubah.',
 
   // — Notifikasi ——————————————————————————————————————————————————————
   'rfxa.toast.accepted': 'Disetujui. PTI mencatat waktunya.',

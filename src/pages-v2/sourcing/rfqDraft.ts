@@ -97,6 +97,17 @@ export interface RfqDraftSeed {
   readonly sourceRfpId?: string;
   readonly copiedFromRfqId?: string;
   readonly templateId?: string;
+  // ── BL-93 — carried only by `seedForEdit`: an edit is the SAME event, so
+  //    its dates, files, budget and chosen materials come back too. A copy and
+  //    a template deliberately never carry these (D2: a copy's dates are
+  //    cleared), which is why they are separate fields and not folded into the
+  //    ones above.
+  readonly responseDeadline?: string;
+  readonly awardDeadline?: string;
+  readonly samplesNeededBy?: string;
+  readonly attachments?: readonly AttachmentMeta[];
+  readonly budget?: string;
+  readonly materials?: readonly string[];
 }
 
 let uidSeq = 0;
@@ -393,6 +404,36 @@ export function seedFromRfq(rfq: RFQ): RfqDraftSeed {
     ...(rfq.samplesRequested ? { samplesQty: String(rfq.samplesRequested.qty) } : {}),
     ...(rfq.confidential !== undefined ? { confidential: rfq.confidential } : {}),
     ...(rfq.sourceRfiId ? { sourceRfiId: rfq.sourceRfiId } : {}),
+  };
+}
+
+/**
+ * BL-93 — a stored DRAFT RFQ → the seed that re-opens the wizard on it for an
+ * edit. Everything the create verb stored comes back: items (with their files),
+ * breaks, questions, options, invitees, AND the dates, the sample date, the
+ * RFQ-level files, the budget and the materials — the fields a copy clears.
+ * Provenance is carried so the payload restates it; the revise verb keeps the
+ * stored values regardless (where an RFQ came from is not editable).
+ */
+export function seedForEdit(rfq: RFQ): RfqDraftSeed {
+  const copy = seedFromRfq(rfq);
+  return {
+    ...copy,
+    origin: undefined,
+    copiedFromRfqId: rfq.copiedFromRfqId,
+    sourceRfiId: rfq.sourceRfiId,
+    sourceRfpId: rfq.sourceRfpId,
+    templateId: rfq.templateId,
+    projectName: rfq.projectName ?? '',
+    questions: rfq.questions ?? [],
+    allowAlternatives: rfq.allowAlternatives ?? false,
+    confidential: rfq.confidential ?? false,
+    responseDeadline: rfq.responseDeadline,
+    awardDeadline: rfq.awardDeadline,
+    ...(rfq.samplesRequested ? { samplesNeededBy: rfq.samplesRequested.neededBy } : {}),
+    attachments: rfq.attachments ?? [],
+    budget: rfq.estimatedValue !== undefined ? String(rfq.estimatedValue) : '',
+    materials: rfq.materialIds,
   };
 }
 

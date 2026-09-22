@@ -25,7 +25,12 @@
 // ⚠️ **CREATED FROM AN RFI (D3).** With a `prefill`, the wizard opens on the
 // RFI's title, family, scope (its description, and its questions as scope
 // notes) and responders, and the created RFP stores `sourceRfiId`. Every field
-// stays editable.
+// stays editable, and step 1 says where it came from ("Pre-filled from RFI-…").
+//
+// ⚠️ **BL-93 — THE SAME WIZARD EDITS A DRAFT.** With `editing`, it opens on
+// every stored field of that Draft RFP (dates, terms, pricing options, T&C,
+// files, invitees) and saves through `t_rfp_revise_draft`. The RFI it came from
+// is not editable content: the verb keeps the stored `sourceRfiId`.
 // ────────────────────────────────────────────────────────────────────────────
 
 import React, { useMemo, useState } from 'react';
@@ -71,6 +76,8 @@ import { CustomTermEditor, TermValueInput } from './RfpTermControls';
 import { RfpPricingEditor } from './RfpPricing';
 import { IndicativePill, authored, termLabel } from './rfxAuthoringDisplay';
 import { rfxNow } from './rfxDisplay';
+import { draftEditRefusal } from './draftEdit';
+import { PrefillBanner } from './rfqSources';
 
 interface Draft {
   title: string;
@@ -92,6 +99,8 @@ interface Draft {
   termsText: string;
   termsFile: readonly AttachmentMeta[];
   sourceRfiId: string;
+  /** Not authored here: carried so an edit keeps the event's purchasing group. */
+  purchasingGroup?: string;
 }
 
 const EMPTY: Draft = {
@@ -123,6 +132,8 @@ interface RfpCreateWizardProps {
   pastEvents?: readonly RfpEvent[];
   /** Open pre-filled from an RFI (D3). */
   prefill?: RfpPrefill & { readonly sourceRfiNumber: string };
+  /** BL-93 — the Draft RFP being edited. Absent = a new RFP. */
+  editing?: RfpEvent;
 }
 
 /** Split a stored term list into the wizard's two halves. */
@@ -131,18 +142,41 @@ const splitTerms = (rows: readonly RfpTermRow[]) => ({
   customTerms: rows.filter((r) => !rfpTerm(r.termId)),
 });
 
+/** BL-93 — a stored Draft RFP as the wizard edits it: every field, dates kept. */
+const draftOf = (e: RfpEvent): Draft => ({
+  title: e.title,
+  family: rfxFamilyForCategory(e.materialCategory)?.id ?? '',
+  scope: e.scope,
+  currency: e.currency,
+  responseDeadline: e.responseDeadline,
+  ...splitTerms(e.terms),
+  invitedSupplierIds: e.invitees.map((i) => i.supplierId),
+  questions: e.questions ?? [],
+  customSections: e.customSections ?? [],
+  pricing: e.pricing,
+  attachments: e.attachments ?? [],
+  confidential: !!e.confidentiality,
+  confidentialityTerms: e.confidentiality?.terms ?? '',
+  termsText: e.termsDocument?.text ?? '',
+  termsFile: e.termsDocument?.attachment ? [e.termsDocument.attachment] : [],
+  sourceRfiId: e.sourceRfiId ?? '',
+  ...(e.purchasingGroup ? { purchasingGroup: e.purchasingGroup } : {}),
+});
+
 const RfpCreateWizard: React.FC<RfpCreateWizardProps> = ({
   onCancel,
   onCreated,
   canPublish,
   pastEvents = [],
   prefill,
+  editing,
 }) => {
   const { t } = useTranslation();
   const { toast } = useToast();
   const command = useRfxCommand();
   const [step, setStep] = useState(0);
   const [draft, setDraft] = useState<Draft>(() => {
+    if (editing) return draftOf(editing);
     if (!prefill) return EMPTY;
     // D3 — the RFI's questions become the RFP's scope notes, resolved here
     // because only a component can translate.
@@ -273,10 +307,11 @@ const RfpCreateWizard: React.FC<RfpCreateWizardProps> = ({
   const create = (publish: boolean) =>
     command.mutate(
       {
-        verb: 'createRfp',
+        ...(editing ? { verb: 'reviseRfp' as const, rfpId: editing.id } : { verb: 'createRfp' as const }),
         title: draft.title.trim(),
         scope: draft.scope.trim(),
         materialCategory: family?.supplierCategory ?? '',
+        ...(draft.purchasingGroup ? { purchasingGroup: draft.purchasingGroup } : {}),
         responseDeadline: draft.responseDeadline,
         currency: draft.currency,
         invitedSupplierIds: draft.invitedSupplierIds,
@@ -302,12 +337,23 @@ const RfpCreateWizard: React.FC<RfpCreateWizardProps> = ({
       {
         onSuccess: (res) => {
           if (res.status === 'failed') {
-            toast({ variant: 'error', title: t('rfx.toast.refused', { reason: res.reason ?? '' }) });
+            toast({
+              variant: 'error',
+              title: draftEditRefusal(t, res.reason) ?? t('rfx.toast.refused', { reason: res.reason ?? '' }),
+            });
             return;
           }
           toast({
             variant: 'success',
-            title: t(publish ? 'rfx.toast.published' : 'rfx.toast.draftCreated'),
+            title: t(
+              editing
+                ? publish
+                  ? 'rfxEdit.toast.sent'
+                  : 'rfxEdit.toast.saved'
+                : publish
+                  ? 'rfx.toast.published'
+                  : 'rfx.toast.draftCreated',
+            ),
           });
           if (res.entityId) onCreated(res.entityId);
           else onCancel();
@@ -349,22 +395,29 @@ const RfpCreateWizard: React.FC<RfpCreateWizardProps> = ({
       description: t('rfx.create.step.scope.desc'),
       content: (
         <div className="space-y-5">
-          {prefill && (
-            <p className="text-sm text-action-hover bg-action-soft rounded px-3 py-2" data-testid="rfp-new-from-rfi">
-              {t('rfx.event.fromRfi', { event: prefill.sourceRfiNumber })}. {t('rfxa.fromRfi.editable')}
-            </p>
+          {/* B6 — the one-line source note, the same banner the RFQ wizard
+              shows, naming the RFI by its number (the view's resolver). */}
+          {prefill && !editing && <PrefillBanner source={prefill.sourceRfiNumber} testId="rfp-new-from-rfi" />}
+          {editing ? (
+            <div className="text-sm text-text-secondary bg-bg-hover border border-border-subtle rounded-md px-3 py-2" data-testid="rfp-edit-banner">
+              <span className="font-semibold text-text-primary">
+                {t('rfxEdit.editing', { number: editing.eventNumber })}
+              </span>{' '}
+              {t('rfxEdit.editing.hint')}
+            </div>
+          ) : (
+            <RfxStartFrom
+              options={startOptions}
+              onApply={applyStart}
+              onDeleteSaved={(key) => {
+                rfpTemplateStore.remove(key.slice('saved:'.length));
+                setStoreVersion((v) => v + 1);
+              }}
+              unreadable={saved.unreadable}
+              rejected={saved.rejected}
+              testIdPrefix="rfp-new"
+            />
           )}
-          <RfxStartFrom
-            options={startOptions}
-            onApply={applyStart}
-            onDeleteSaved={(key) => {
-              rfpTemplateStore.remove(key.slice('saved:'.length));
-              setStoreVersion((v) => v + 1);
-            }}
-            unreadable={saved.unreadable}
-            rejected={saved.rejected}
-            testIdPrefix="rfp-new"
-          />
           <div>
             <label className={labelClass} htmlFor="rfp-new-title">
               {t('rfx.create.field.title')}
@@ -691,7 +744,7 @@ const RfpCreateWizard: React.FC<RfpCreateWizardProps> = ({
               onClick={() => create(false)}
               data-testid="rfp-new-save-draft"
             >
-              {t('rfx.create.saveDraft')}
+              {t(editing ? 'rfxEdit.saveChanges' : 'rfx.create.saveDraft')}
             </Button>
           </div>
           {!canPublish && (
@@ -715,7 +768,7 @@ const RfpCreateWizard: React.FC<RfpCreateWizardProps> = ({
         onCancel={onCancel}
         onComplete={() => create(true)}
         isStepValid={(n) => (n === steps.length - 1 ? canPublish && sendable : stepValid(n))}
-        completeLabel={t('rfx.create.send')}
+        completeLabel={t(editing ? 'rfxEdit.saveAndSend' : 'rfx.create.send')}
       />
     </ModalOverlay>
   );

@@ -31,6 +31,7 @@ import RfxSaveTemplate from './rfx/RfxSaveTemplate';
 import { RfpPricingComparison } from './rfx/RfpPricing';
 import { DeadlinePill, EmptyRow, OtifOrNoHistory, ResponseStatePill, rfxNow } from './rfx/rfxDisplay';
 import { answerText, authored, sectionTitle, termLabel, termValueText } from './rfx/rfxAuthoringDisplay';
+import { DraftRevisionNote } from './rfx/draftEdit';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PTI PROPOSAL REQUESTS — REQ-E03-04 (BUY).
@@ -59,6 +60,10 @@ import { answerText, authored, sectionTitle, termLabel, termValueText } from './
 //
 // `?rfi=<id>` opens the wizard pre-filled from that RFI (D3); the created RFP
 // records `sourceRfiId` and the detail shows "Created from RFI-…".
+//
+// BL-93 — a Draft offers **Edit draft** (`rfp:create`, the create wizard
+// re-opened on every stored field, saving through `t_rfp_revise_draft`); a seat
+// without the atom reads whose act it is in the button's own slot.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const BuyerRfp: React.FC = () => {
@@ -71,6 +76,7 @@ const BuyerRfp: React.FC = () => {
   const command = useRfxCommand();
   const [params, setParams] = useSearchParams();
   const [wizardOpen, setWizardOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   // `?open=<id>` lands on one event — the RFQ event page's "Created from RFP-…"
   // link points here.
   const [openId, setOpenId] = useState<string | null>(() => params.get('open'));
@@ -98,6 +104,7 @@ const BuyerRfp: React.FC = () => {
     return <ErrorState breadcrumb={crumb} error={events.error} onRetry={() => events.refetch()} />;
 
   const open = items.find((e) => e.id === openId) ?? null;
+  const editing = items.find((e) => e.id === editingId && e.status === 'Draft') ?? null;
   const showWizard = create.kind === 'held' && (wizardOpen || !!prefill);
 
   const closeWizard = () => {
@@ -227,8 +234,17 @@ const BuyerRfp: React.FC = () => {
                     {t('rfx.event.fromRfi', { event: open.sourceRfiNumber })}
                   </p>
                 )}
+                <DraftRevisionNote revisions={open.revisions} testId={`rfp-last-edited-${open.id}`} />
               </div>
               <div className="flex flex-wrap items-center gap-3">
+                {open.status === 'Draft' &&
+                  (create.kind === 'held' ? (
+                    <Button variant="secondary" onClick={() => setEditingId(open.id)} data-testid={`rfp-edit-${open.id}`}>
+                      {t('rfxEdit.edit')}
+                    </Button>
+                  ) : (
+                    <HandoffNotice availability={create} testId={`handoff-rfp-edit-${open.id}`} />
+                  ))}
                 {open.status === 'Draft' && (
                   <Button
                     variant="outline"
@@ -237,6 +253,20 @@ const BuyerRfp: React.FC = () => {
                     onClick={() => run({ verb: 'publishRfp', rfpId: open.id }, 'rfx.toast.published')}
                   >
                     {t('rfx.rfp.publish')}
+                  </Button>
+                )}
+                {/* BL-93 — DISCARD a draft: the existing `t_rfp_cancel` (legal
+                    from Draft), the same `rfp:publish` atom as Send; a seat
+                    without it reads the page's publish notice. */}
+                {open.status === 'Draft' && (
+                  <Button
+                    variant="secondary"
+                    className="text-danger"
+                    disabled={publish.kind !== 'held'}
+                    data-testid={`rfp-discard-${open.id}`}
+                    onClick={() => run({ verb: 'discardRfp', rfpId: open.id }, 'rfxEdit.toast.discarded')}
+                  >
+                    {t('rfxEdit.discard')}
                   </Button>
                 )}
                 {open.status === 'Open' && (
@@ -357,6 +387,19 @@ const BuyerRfp: React.FC = () => {
         <div className="mt-4">
           <HandoffNotice availability={create} testId="handoff-rfp-from-rfi" />
         </div>
+      )}
+
+      {editing && create.kind === 'held' && (
+        <RfpCreateWizard
+          key={`edit-${editing.id}`}
+          editing={editing}
+          canPublish={publish.kind === 'held'}
+          onCancel={() => setEditingId(null)}
+          onCreated={(rfpId) => {
+            setEditingId(null);
+            setOpenId(rfpId);
+          }}
+        />
       )}
 
       {showWizard && (

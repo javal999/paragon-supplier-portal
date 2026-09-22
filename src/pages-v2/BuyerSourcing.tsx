@@ -17,6 +17,7 @@ import {
   Archive,
   Ban,
   RotateCcw,
+  Pencil,
   ArrowLeftRight,
 } from 'lucide-react';
 import AppShellV2 from '../components/layout-v2/AppShellV2';
@@ -95,6 +96,7 @@ import {
   itemsStepRefusal,
   newItemDraft,
   optionsStepRefusal,
+  seedForEdit,
   seedFromRfiPrefill,
   seedFromRfp,
   templateContentFromDraft,
@@ -106,6 +108,8 @@ import {
 import { prefillRfqFromRfi, prefillRfqItemsFromRfp } from '../services/sourcing/rfxPrefill';
 import type { RfqTemplateContent } from '../services/sourcing/rfqTemplates';
 import { GateMarker } from './rfx/rfxDisplay';
+import { RfqPrefillBanner } from './rfx/rfqSources';
+import { DraftRevisionNote, draftEditRefusal } from './rfx/draftEdit';
 import { matchesSupplierFilters } from '../services/sourcing/supplierFilters';
 import SupplierFilterBar, {
   bandLabel,
@@ -117,6 +121,7 @@ import { PURCHASING_GROUPS, purchasingGroupNameKey } from '../services/sourcing/
 import { reliabilityScoreFor } from '../services/transitions/rfxRules';
 import {
   useRfqCreate,
+  useRfqReviseDraft,
   useRfqAward,
   useRfqFxPin,
   useRfqCancel,
@@ -645,8 +650,10 @@ const buildTimeline = (r: RFQ, t: TFunction): TimelineEvent[] => {
  * Award and View award now open the event page at its award section, where the
  * award verb and the award record live; a Closed or Cancelled RFQ opens the
  * event page (a Closed one can still be awarded there). "Send reminder" and
- * "Continue draft" are withdrawn: no reminder write path exists for an RFQ, and
- * no surface edits a Draft RFQ, so a button for either would be a promise.
+ * "Continue draft" are withdrawn: no reminder write path exists for an RFQ, so
+ * a reminder button would be a promise. A Draft's act is **Edit draft**
+ * (BL-93), offered in the panel's lifecycle section beside Publish, where its
+ * handoff notice lives — not duplicated here.
  * "View final report" is withdrawn with them — there is no report.
  */
 export const FOOTER_ACTION = (r: RFQ): { labelKey: string; to: string } | null => {
@@ -937,6 +944,13 @@ const applySeed = (base: DraftRfq, seed: RfqDraftSeed): DraftRfq => ({
   ...(seed.allowAlternatives !== undefined ? { allowAlternatives: seed.allowAlternatives } : {}),
   ...(seed.samplesQty !== undefined ? { samplesOn: true, samplesQty: seed.samplesQty } : {}),
   ...(seed.confidential !== undefined ? { confidential: seed.confidential } : {}),
+  // BL-93 — only `seedForEdit` carries these: an edit is the same event.
+  ...(seed.responseDeadline !== undefined ? { responseDeadline: seed.responseDeadline } : {}),
+  ...(seed.awardDeadline !== undefined ? { awardDeadline: seed.awardDeadline } : {}),
+  ...(seed.samplesNeededBy !== undefined ? { samplesNeededBy: seed.samplesNeededBy } : {}),
+  ...(seed.attachments !== undefined ? { attachments: [...seed.attachments] } : {}),
+  ...(seed.budget !== undefined ? { budget: seed.budget } : {}),
+  ...(seed.materials !== undefined ? { materials: [...seed.materials] } : {}),
   sourceRfiId: seed.sourceRfiId,
   sourceRfpId: seed.sourceRfpId,
   copiedFromRfqId: seed.copiedFromRfqId,
@@ -993,6 +1007,15 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
   // act, so it is confirm-before-commit like every other one on this surface.
   const [pinDraft, setPinDraft] = useState<PinDraft | null>(null);
   const [wizardOpen, setWizardOpen] = useState(false);
+  // BL-93 — the Draft RFQ the open wizard is EDITING, by id. Null = the wizard
+  // raises a new RFQ. Held as an id and re-derived from the live list, so a
+  // draft that leaves Draft underneath the wizard (a colleague sent it) is
+  // seen as no longer editable rather than edited from a snapshot.
+  const [editingRfqId, setEditingRfqId] = useState<string | null>(null);
+  const editingRfq = useMemo(
+    () => (editingRfqId ? (baseRfqs.find((r) => r.id === editingRfqId) ?? null) : null),
+    [baseRfqs, editingRfqId],
+  );
 
   // §73 — the seat's authority over `t_rfq_create` (atom `rfq:create`,
   // held by `procurement`). One verb, one notice, one placement.
@@ -1073,6 +1096,7 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
     );
   };
   const createMutation = useRfqCreate();
+  const reviseMutation = useRfqReviseDraft();
   const awardMutation = useRfqAward();
   const cancelMutation = useRfqCancel();
   const reopenMutation = useRfqReopen();
@@ -1470,6 +1494,7 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
   // `prefillFromRequisition`. One entry shape, three callers — a second opener
   // taking a different shape is how C.3 would end up rewriting C.2.
   const openWizard = (prefill?: RequisitionPrefill) => {
+    setEditingRfqId(null);
     setDraft(prefill ? applyPrefill(emptyDraft(), prefill) : emptyDraft());
     setWizardStep(0);
     setSupplierSearch('');
@@ -1481,6 +1506,7 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
   // open the wizard through here. An RFP source is one more `seedFrom…` feeding
   // this same function; nothing in the wizard changes for it.
   const openWizardFromSeed = (seed: RfqDraftSeed) => {
+    setEditingRfqId(null);
     setDraft(applySeed(emptyDraft(), seed));
     setWizardStep(0);
     setSupplierSearch('');
@@ -1502,8 +1528,19 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
     );
   };
 
+  // BL-93 — THE EDIT ENTRANCE. The same wizard, opened on every stored field
+  // of a Draft RFQ (`seedForEdit`), saving through `t_rfq_revise_draft`.
+  const openWizardForEdit = (rfq: RFQ) => {
+    setEditingRfqId(rfq.id);
+    setDraft(applySeed(emptyDraft(), seedForEdit(rfq)));
+    setWizardStep(0);
+    setSupplierSearch('');
+    setWizardOpen(true);
+  };
+
   const closeWizard = () => {
     setWizardOpen(false);
+    setEditingRfqId(null);
   };
 
   // ⚠️ **C.3's DEEP LINK — A THIRD CALLER OF `openWizard`, NOT A SECOND ENTRY
@@ -1706,6 +1743,55 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
   // store-assigned (honest); a non-failed outcome invalidates the reads so the new
   // Open RFQ arrives on the board via getRFQs. Both failure channels leave the
   // board unchanged and surface an honest toast.
+  // BL-93 — save the edited draft (`t_rfq_revise_draft`, compare-and-set on
+  // Draft), and with `send` publish it in the same act. The payload is the one
+  // create builds, from the same parsed numbers, so an edit cannot store a
+  // shape the create verb would have refused.
+  const saveEdit = (send: boolean) => {
+    if (!editingRfqId) return;
+    if (!rfqNumbers.ok) {
+      toast({
+        variant: 'error',
+        title: t('sourcing.toast.numberRefused.title'),
+        description: t(rfqRefusalKey(rfqNumbers)),
+      });
+      return;
+    }
+    reviseMutation.mutate(
+      {
+        rfqId: editingRfqId,
+        publish: send,
+        payload: {
+          ...buildRfqCreatePayload(draft, rfqNumbers.value),
+          ...buildRfqAuthoringPayload(draft),
+        },
+      },
+      {
+        onSuccess: (result) => {
+          if (result.status === 'failed') {
+            toast({
+              variant: 'error',
+              title: t('sourcing.toast.createFailed.title'),
+              description:
+                draftEditRefusal(t, result.reason) ??
+                refusalText(result.reason) ??
+                (result.reason ? refusalMessage(t, result.reason) : t('sourcing.toast.createFailed.default')),
+            });
+            return;
+          }
+          closeWizard();
+          toast({ variant: 'success', title: t(send ? 'rfxEdit.toast.sent' : 'rfxEdit.toast.saved') });
+        },
+        onError: () =>
+          toast({
+            variant: 'error',
+            title: t('sourcing.toast.createFailed.title'),
+            description: t('sourcing.toast.createFailed.dispatch'),
+          }),
+      },
+    );
+  };
+
   const submitWizard = () => {
     // The parse gate fires FIRST and it BLOCKS. `isStepValid(0)` already keeps
     // the wizard from reaching this step, so this is the SECOND lock: a
@@ -1720,6 +1806,10 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
         title: t('sourcing.toast.numberRefused.title'),
         description: t(rfqRefusalKey(rfqNumbers)),
       });
+      return;
+    }
+    if (editingRfqId) {
+      saveEdit(false);
       return;
     }
     const invitedCount = draft.invitedSupplierIds.length;
@@ -1858,6 +1948,24 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
               path and cascades onto nothing. Choosing one fills the fields it
               can carry and sets `sourceRequisitionId`, which is the payload key
               the dispatcher's cascade resolver reads. */}
+          {/* B6 — where this wizard's content came from, one line, named by the
+              event page's own resolver. BL-93 — an edit says which draft it is
+              instead, and offers no requisition entrance: a requisition is
+              linked once, when the RFQ is raised. */}
+          {editingRfq ? (
+            <div
+              className="text-sm text-text-secondary bg-bg-hover border border-border-subtle rounded-md px-3 py-2"
+              data-testid="rfq-edit-banner"
+            >
+              <span className="font-semibold text-text-primary">
+                {t('rfxEdit.editing', { number: editingRfq.rfqNumber })}
+              </span>{' '}
+              {t('rfxEdit.editing.hint')}
+            </div>
+          ) : (
+            draft.origin && <RfqPrefillBanner kind={draft.origin.kind} refs={draft} rfqs={rfqs} />
+          )}
+          {!editingRfqId && (
           <div>
             <label
               htmlFor="rfq-source-requisition"
@@ -1906,6 +2014,7 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
               </>
             )}
           </div>
+          )}
           <div>
             <label className="block"><span className="text-label text-text-tertiary uppercase block mb-1.5">
               {t('sourcing.wizard.field.title')}{' '}
@@ -2582,6 +2691,26 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
           {/* D2 — the draft's content kept as a template in this browser: items,
               sheets, breaks, costs, questions and options. Not invitees, not
               dates, not files. */}
+          {/* BL-93 — an edited draft may also be SENT from here, in the same
+              act as the save. Sending is `rfq:publish`; a seat without it reads
+              whose act it is in the button's own slot, and can still save. */}
+          {editingRfqId && (
+            <div className="flex flex-wrap items-center justify-end gap-3">
+              {rfqVerbs.publish.kind === 'held' ? (
+                <Button
+                  variant="outline"
+                  icon={Send}
+                  disabled={reviseMutation.isPending || ![0, 1, 2, 3, 4, 5].every(isStepValid)}
+                  onClick={() => saveEdit(true)}
+                  data-testid="rfq-edit-send"
+                >
+                  {t('rfxEdit.saveAndSend')}
+                </Button>
+              ) : (
+                <HandoffNotice availability={rfqVerbs.publish} testId="handoff-rfq-edit-send" />
+              )}
+            </div>
+          )}
           <div className="flex justify-end">
             <Button
               variant="secondary"
@@ -3232,6 +3361,7 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
                   <Data as="dd" className="text-text-primary font-medium">
                     {formatDate(selectedRfq.createdAt)}
                   </Data>
+                  <DraftRevisionNote revisions={selectedRfq.revisions} testId="rfq-last-edited" />
                 </div>
                 <div>
                   <dt className="text-text-tertiary">
@@ -3321,6 +3451,22 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
                       exists, and reads nothing on an Open RFQ, where it does
                       not. A notice outside the from-state would advertise a
                       wait for an act the machine would refuse anyway. */}
+                  {/* BL-93 — EDIT DRAFT, Draft only. It is `rfq:create` (the seat
+                      that may draft may finish its draft), so a seat without
+                      it reads the owner here, in the button's own slot. */}
+                  {selectedRfq.status === 'Draft' &&
+                    (rfqCreateAvailability.kind === 'held' ? (
+                      <Button
+                        variant="secondary"
+                        icon={Pencil}
+                        onClick={() => openWizardForEdit(selectedRfq)}
+                        data-testid="rfq-edit-draft"
+                      >
+                        {t('rfxEdit.edit')}
+                      </Button>
+                    ) : (
+                      <HandoffNotice availability={rfqCreateAvailability} testId="handoff-rfq-edit" />
+                    ))}
                   {selectedRfq.status === 'Draft' &&
                     (rfqVerbs.publish.kind === 'held' ? (
                       <Button
@@ -4068,7 +4214,7 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
         />
       )}
 
-      {wizardOpen && (
+      {wizardOpen && rfqCreateAvailability.kind === 'held' && (
         <ModalOverlay onClose={closeWizard}>
           <Wizard
             steps={wizardSteps}
@@ -4077,7 +4223,7 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
             onCancel={closeWizard}
             onComplete={submitWizard}
             isStepValid={isStepValid}
-            completeLabel={t('sourcing.wizard.complete')}
+            completeLabel={t(editingRfqId ? 'rfxEdit.saveChanges' : 'sourcing.wizard.complete')}
           />
         </ModalOverlay>
       )}

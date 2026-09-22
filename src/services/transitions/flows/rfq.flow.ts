@@ -17,6 +17,13 @@
 import type { FlowDefinition } from '../schema';
 import { POLICY_HOOKS } from '../policyHooks';
 
+/**
+ * The fields an RFQ is not an RFQ without. ONE list, read by the create verb
+ * and by the revise-draft verb (BL-93), so an edit can never save a draft the
+ * create verb would have refused, and the two cannot drift.
+ */
+const RFQ_CONTENT_FIELDS: readonly string[] = ['title', 'materialCategory', 'totalQty'];
+
 export const rfqFlow: FlowDefinition = {
   entity: 'rfq',
   version: 1,
@@ -60,9 +67,31 @@ export const rfqFlow: FlowDefinition = {
       to: 'Draft',
       trigger: 'creation',
       requiredRole: 'rfq:create',
-      requiredFields: ['title', 'materialCategory', 'totalQty'],
+      requiredFields: [...RFQ_CONTENT_FIELDS],
       // The rebuilt RFQ (items, quantity breaks, currency) is judged here, BY
       // NAME, when it is sent. See `rfqModel.rfqCreateRefusal`.
+      policyHooks: [POLICY_HOOKS.RFQ_CREATE_VALID],
+      surfaceable: { surfaced: true },
+      version: 1,
+    },
+    {
+      // BL-93 — the buyer edits a DRAFT RFQ: every stored field, replaced by the
+      // wizard's whole payload. STATE-PRESERVING and legal from `Draft` ONLY, so
+      // an RFQ already sent is refused by name (ILLEGAL_TRANSITION) rather than
+      // rewritten under the suppliers quoting it. Same atom as create (CE-06: a
+      // seat that may draft may finish its draft without being able to send it),
+      // same required fields and the SAME `rfq_create_valid` hook, reused.
+      // Callers pass `expectedState: 'Draft'`, so a draft somebody else sent in
+      // the meantime is refused STALE_STATE and not overwritten. The target
+      // appends WHO and WHEN to `revisions` (CE-08). It never cascades: the
+      // requisition an RFQ was raised from is linked once, at create.
+      id: 't_rfq_revise_draft',
+      from: ['Draft'],
+      to: 'Draft',
+      statePreserving: true,
+      trigger: 'user',
+      requiredRole: 'rfq:create',
+      requiredFields: [...RFQ_CONTENT_FIELDS],
       policyHooks: [POLICY_HOOKS.RFQ_CREATE_VALID],
       surfaceable: { surfaced: true },
       version: 1,

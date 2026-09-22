@@ -179,7 +179,7 @@ These eight are one number or one list each. The prototype ships defensible defa
 
 ## RFx decisions (decided 2026-09-21)
 
-The owner took these five during the RFx overhaul. They are recorded as RFX-D1 to RFX-D5 in section 9 of the requirements and built in PRs #21 and #24 to #27, except the RFP → RFQ link (in progress, B5). They are kept here in the same form as the others so the reasoning travels with them. The research behind them is `research/RFX-BEST-PRACTICE-2026-09.md`.
+The owner took these five during the RFx overhaul. They are recorded as RFX-D1 to RFX-D5 in section 9 of the requirements and built in PRs #21 and #24 to #27, and the RFP → RFQ link in PR #30. They are kept here in the same form as the others so the reasoning travels with them. The research behind them is `research/RFX-BEST-PRACTICE-2026-09.md`.
 
 ### RFX-D1 · RFI, RFQ and RFP as separate modules
 **Market practice.** Suites keep one event engine with an event type (Ariba, Oracle, Coupa), but buyers meet them as different jobs: an RFI qualifies suppliers, an RFP compares proposals and terms, an RFQ collects firm prices. Supplier guides from Coupa and Ariba customers describe each type separately.
