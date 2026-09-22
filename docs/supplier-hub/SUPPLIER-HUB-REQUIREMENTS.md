@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 0.11 draft, 2026-09-21 |
+| Version | 0.12 draft, 2026-09-22 |
 | Sources | `SUPPLIER-HUB-BASELINE.md` (kick-off deck, Aug 2026); `KICKOFF-MEETING-NOTES.md` (business user feedback, reviewed 2026-09-17); owner review of the prototype gap review (2026-09-17) |
 | Scope of this version | Detailed: Order Collaboration, Inventory & Capacity Collaboration, RFx (validated); Forecast Collaboration, Call-off Management, and the undiscussed parts of Order and Inventory Collaboration (proposed). Hub navigation and screen conventions (validated). Foundation is reserved for the Foundation team. The remaining epics are stubs |
 | Not in scope | The codebase. This file states what the Supplier Hub must do, not what is built. What the prototype does today, and where, is tracked only in `BUILD-GAP.md` |
@@ -217,7 +217,7 @@ The menu follows the hub's own sections, not procurement stages, and each PTI us
 | Company | Profile & documents | Foundation |
 
 **Rules.**
-- NV-01. Help, glossary, and administration (reason codes, working calendar, tolerances, SAP interface monitor, roles) sit in the user menu, not the main menu [Owner].
+- NV-01. Help, glossary, and administration (reason codes, working calendar, tolerances and rule values, alert thresholds and stale periods, 3PL list, SAP interface monitor, roles) sit in the user menu, not the main menu [Owner]. Every administration change is recorded with who, when, and the old and new value.
 - NV-02. The persona switch reads "PTI / Supplier". The PTI role is chosen from the user menu [Owner].
 - NV-03. A menu item stays highlighted on its detail pages (for example a PO opened from Purchase orders) [Owner].
 - NV-04. Every menu item has its own icon [Owner].
@@ -1658,3 +1658,4 @@ Research date: 2026-09-17. Vendor pages were read directly unless marked "snippe
 | 0.9 | 2026-09-21 | Inventory collaboration feedback (INV-FB): supplier-triggered sync with PTI stock limited to granted materials, one stock entry with identical fields, in-transit from the ASN, optional manufacturing date, one list on the supplier view, capacity label and filters. CAP-1 opened |
 | 0.10 | 2026-09-21 | Text aligned with the builds of BL-44 to BL-53 (CR-12 per line, CR-05 for every call-off type, CR-24 in inventory). Open items KPI-D, CO-1, CR24-1, DL-1, ADM-1 and GR-1 added from what the builds found |
 | 0.11 | 2026-09-21 | NV-07: RFI, RFQ and RFP as three separate menu items for buyers and suppliers (owner decision, built in PR #21); menu tables updated |
+| 0.12 | 2026-09-22 | NV-01 lists the administration sections built with BL-32 and records that every change is logged |

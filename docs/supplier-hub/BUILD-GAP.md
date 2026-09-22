@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 2.9, 2026-09-21 |
+| Version | 3.0, 2026-09-22 |
 | Compares | `SUPPLIER-HUB-REQUIREMENTS.md` v0.10 with the prototype on `main` (production deploy of 2026-09-21) |
 | Owner decisions | 2026-09-17, recorded in section 9 of the requirements (RFX-1 to RFX-3, GAP-1 to GAP-4, E06-R); 2026-09-21 for the working calendar (Q-18, BL-14) and the commitment deadline (CR-26, BL-05), built as BL-50 and BL-48 |
 | Rule | This is the **only** document that describes what the prototype does for the Supplier Hub. The PRD and the requirements describe the product and never the code. Update this file when a build item lands |
@@ -92,6 +92,7 @@ Everything runs on sample data held in the browser. There is no backend, no SAP 
 | X-33 | No raw `{{…}}` placeholder on screen (BL-72): the "Round" column header of the quote versions and negotiation rounds tables on the RFQ event page, and the buyer's "application raised" message, which now names the company | Done; a source check over every `t()` call with a literal key now fails the build on a missing variable |
 | X-34 | One stock entry, second path closed (BL-73): the chat-reply triage (supplier Channel Inbox and PTI Communication Hub) pre-fills the Stock page's entry form instead of recording through its own one-field path; same fields (ROP, in production, completion date, batches with manufacturing and expiry), same CR-18 and CR-19 checks, same governed verb. The old path and its parser were removed | Done |
 | X-35 | RFI, RFQ and RFP as three separate menu items and pages (NV-07): buyer `/buyer/rfi`, `/buyer/rfq`, `/buyer/rfp`; supplier `/supplier/rfi`, `/supplier/rfq`, `/supplier/rfq/rounds`, `/supplier/rfp`. The old `/buyer/sourcing*` and `/supplier/rfqs*` addresses redirect, keeping query and state. Built in PR #21 | Done |
+| X-36 | Admin screen for rule values, alert thresholds, stale periods (default and per supplier × material) and reason codes (BL-32): each change governed (`t_setting_set`, reason-code verbs), refused when nonsensical, logged old → new, resettable to default, and read by the rules when they run. Placeholder values (BL-54, BL-55, BL-56) are labelled as such. An invoice whose recorded match differs from the values in force says so | Done |
 
 ### 2.1 Navigation and screens
 
@@ -113,7 +114,7 @@ Everything runs on sample data held in the browser. There is no backend, no SAP 
 
 ## 3. Where the calculations live
 
-The `CR-` rules are implemented in the hub's own modules and covered by their own tests. The prototype sources they were taken from are recorded in the requirements' `[Code]` tags.
+The `CR-` rules are implemented in the hub's own modules and covered by their own tests. The prototype sources they were taken from are recorded in the requirements' `[Code]` tags. **Since BL-32 the values are changed on the admin screen** (`/buyer/admin`: Tolerances and rule values, Alert thresholds and stale periods, Reason codes, Working calendar, 3PL list), through the governed verb `t_setting_set`; the config modules below hold the defaults and read the setting each time a rule runs.
 
 | Rules | Module |
 |---|---|
@@ -227,7 +228,6 @@ Sample data so a planner can see every CR-24 outcome on `/buyer/inventory`, `/su
 - **Sourcing event creation beyond the central library** (A-04): no sourcing request intake, no save-as-template, no admin screen for the question and term library, no approval step before sending. All four were ruled out of the MVP rather than left undone.
 - **A backend.** No database, no sign-in for real users, no scheduled jobs; changes are lost on reload. The pilot needs all of these (PRD section 4).
 - **Accessibility testing with assistive technology** (H-03): the BL-31 pass below was done with automated checks and the keyboard; no session with a real screen reader or real users has been run.
-- **The rest of the administration screen** (BL-32): reason codes, tolerances, alert thresholds and stale periods still live in configuration files. The working calendar and the 3PL list are its first two pages and are built.
 - **KPI calculation aligned with the agreed definitions** (BL-66, BL-82): the performance pages state what the code measures; five differences from REQ-E10-01 wait on a decision.
 - **Known defects found in the 2026-09-21 builds**: BL-72 to BL-80 in the backlog.
 - **The real SAP factory calendar.** The calendar load is simulated sample data; the administrator's rulings are kept in the browser only.
