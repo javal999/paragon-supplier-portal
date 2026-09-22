@@ -90,6 +90,8 @@ import { inventoryCapacityEn, inventoryCapacityId } from './i18n/inventoryCapaci
 import { forecastCollaborationEn, forecastCollaborationId } from './i18n/forecastCollaboration';
 // — Phase 6a RFx management (REQ-E03-01 to REQ-E03-05) —
 import { rfxEn, rfxId } from './i18n/rfx';
+// — RFx authoring (RFI/RFP batch, 2026-09-21) and session-held attachments —
+import { rfxAuthoringEn, rfxAuthoringId } from './i18n/rfxAuthoring';
 // — RFx spec 2026-09-21: the rebuilt RFQ authoring + session-only attachments —
 import { rfqAuthoringEn, rfqAuthoringId } from './i18n/rfqAuthoring';
 // — RFx spec 2026-09-21: RFQ evaluation and the per-item split award —
@@ -183,6 +185,7 @@ export const resources = {
       ...inventoryCapacityEn,
       ...forecastCollaborationEn,
       ...rfxEn,
+      ...rfxAuthoringEn,
       ...rfqAuthoringEn,
       ...rfqCompareEn,
       ...threePlEn,
@@ -634,6 +637,7 @@ export const resources = {
       ...inventoryCapacityId,
       ...forecastCollaborationId,
       ...rfxId,
+      ...rfxAuthoringId,
       ...rfqAuthoringId,
       ...rfqCompareId,
       ...threePlId,

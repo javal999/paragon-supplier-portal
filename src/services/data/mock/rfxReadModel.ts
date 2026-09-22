@@ -48,6 +48,7 @@ import type {
   RfqSupplierGateView,
   RfxInviteeView,
 } from '../../sourcing/views';
+import type { RfiResponse, RfpResponse } from '../../sourcing/types';
 import { rfqStore } from './stores/rfqStore';
 import { quotationStore } from './stores/quotationStore';
 import {
@@ -143,16 +144,33 @@ export const rfqSupplierGate = (rfq: RFQ, supplierId: string, nowIso: string): G
 
 // ── REQ-E03-02 / REQ-E03-04 — the event views ───────────────────────────────
 
+/** What the invitee read needs from a response, whichever event type it answers. */
+interface InviteeResponseFacts {
+  readonly status: string;
+  readonly submittedAt?: string;
+  readonly confidentialityAcceptedAt?: string;
+  readonly termsAcceptedAt?: string;
+  /** True when the row holds nothing but an acceptance (no answer of any kind). */
+  readonly empty: boolean;
+}
+
 const inviteeViews = (
   event: { responseDeadline: string; invitees: readonly { supplierId: string; deadline?: string }[] },
-  responseFor: (supplierId: string) => { status: string; submittedAt?: string } | undefined,
+  responseFor: (supplierId: string) => InviteeResponseFacts | undefined,
   nowIso: string,
 ): readonly RfxInviteeView[] =>
   event.invitees.map((invitee) => {
     const deadline = effectiveDeadline(event.responseDeadline, event.invitees, invitee.supplierId);
     const response = responseFor(invitee.supplierId);
+    // A Draft that holds only an acceptance (the confidentiality gate or the
+    // T&C) is not a started answer: reading it as "Draft" would tell the buyer
+    // the supplier had begun answering when it had only agreed to read.
     const responseState: InviteeResponseState =
-      response?.status === 'Submitted' ? 'submitted' : response ? 'draft' : 'notStarted';
+      response?.status === 'Submitted'
+        ? 'submitted'
+        : response && !response.empty
+          ? 'draft'
+          : 'notStarted';
     return {
       supplierId: invitee.supplierId,
       supplierName: rfxSupplierName(invitee.supplierId),
@@ -161,8 +179,24 @@ const inviteeViews = (
       submittedAt: response?.submittedAt ?? null,
       otif: rfxSupplierOtif(invitee.supplierId),
       overdue: responseState !== 'submitted' && isPastDeadline(deadline, nowIso),
+      confidentialityAcceptedAt: response?.confidentialityAcceptedAt ?? null,
+      termsAcceptedAt: response?.termsAcceptedAt ?? null,
     };
   });
+
+const rfiFacts = (r: RfiResponse | undefined): InviteeResponseFacts | undefined =>
+  r && { ...r, empty: r.status !== 'Submitted' && r.answers.length === 0 };
+
+const rfpFacts = (r: RfpResponse | undefined): InviteeResponseFacts | undefined =>
+  r && {
+    ...r,
+    empty:
+      r.status !== 'Submitted' &&
+      r.answers.length === 0 &&
+      (r.questionAnswers ?? []).length === 0 &&
+      !r.pricing &&
+      !r.otherTerms,
+  };
 
 /**
  * The RFI board for a scope.
@@ -181,11 +215,18 @@ export function rfiEventViews(nowIso: string, supplierId: string | null): readon
       const visible = supplierId
         ? mine.filter((r) => r.supplierId === supplierId)
         : mine.filter((r) => r.status === 'Submitted');
+      // ⚠️ THE CONFIDENTIALITY GATE IS A READ RULE. A supplier that has not
+      // accepted is handed the event WITHOUT its description, attachments and
+      // questions — not a screen that hides them, a view that never held them.
+      const locked =
+        !!supplierId && !!event.confidentiality && !visible[0]?.confidentialityAcceptedAt;
       return {
         ...event,
+        ...(locked ? { description: undefined, questions: [], customSections: [], attachments: [] } : {}),
+        confidentialityLocked: locked,
         invitedSuppliers: inviteeViews(
           event,
-          (sid) => mine.find((r) => r.supplierId === sid),
+          (sid) => rfiFacts(mine.find((r) => r.supplierId === sid)),
           nowIso,
         ),
         responses: visible.map((r) => ({
@@ -209,13 +250,32 @@ export function rfpEventViews(nowIso: string, supplierId: string | null): readon
       const visible = supplierId
         ? mine.filter((r) => r.supplierId === supplierId)
         : mine.filter((r) => r.status === 'Submitted');
+      // The same read rule as the RFI: an unaccepted confidential RFP reaches
+      // the supplier without its scope, terms, questions, pricing, T&C or files.
+      const locked =
+        !!supplierId && !!event.confidentiality && !visible[0]?.confidentialityAcceptedAt;
+      const source = event.sourceRfiId ? rfiEventStore.get(event.sourceRfiId) : undefined;
       return {
         ...event,
+        ...(locked
+          ? {
+              scope: '',
+              terms: [],
+              questions: [],
+              customSections: [],
+              attachments: [],
+              termsDocument: undefined,
+              pricing: undefined,
+            }
+          : {}),
+        confidentialityLocked: locked,
+        sourceRfiNumber: source?.eventNumber ?? null,
         invitedSuppliers: inviteeViews(
           event,
-          (sid) => mine.find((r) => r.supplierId === sid),
+          (sid) => rfpFacts(mine.find((r) => r.supplierId === sid)),
           nowIso,
         ),
+
         responses: visible.map((r) => ({
           ...r,
           supplierName: rfxSupplierName(r.supplierId),

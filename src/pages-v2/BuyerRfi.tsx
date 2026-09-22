@@ -21,10 +21,14 @@ import { useToast } from '../hooks/useToast';
 import { formatDate } from '../lib/format';
 import { useRfiEvents } from '../services/query/hooks';
 import { useRfxCommand } from '../services/query/commandHooks';
-import { RFI_SECTION_ORDER } from '../services/sourcing/rfxConfig';
+import { rfxFamilyForCategory, rfxSectionsOf } from '../services/sourcing/rfxConfig';
+import { rfiTemplateStore } from '../services/sourcing/rfxTemplates';
 import type { RfiEventView } from '../services/sourcing/views';
+import SessionAttachments from '../components/ui-v2/SessionAttachments';
 import RfiCreateWizard from './rfx/RfiCreateWizard';
+import RfxSaveTemplate from './rfx/RfxSaveTemplate';
 import { DeadlinePill, EmptyRow, OtifOrNoHistory, ResponseStatePill, rfxNow } from './rfx/rfxDisplay';
+import { IndicativePill, answerText, authored, sectionTitle } from './rfx/rfxAuthoringDisplay';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PTI INFORMATION REQUESTS — REQ-E03-02 (BUY).
@@ -42,7 +46,13 @@ import { DeadlinePill, EmptyRow, OtifOrNoHistory, ResponseStatePill, rfxNow } fr
 //
 // "Create a quotation request from this" carries the RFI forward (REQ-E03-03
 // AC-02): it opens the RFQ wizard with the event named, and every pre-filled
-// field stays editable there.
+// field stays editable there. "Create a proposal request from this" (spec D3)
+// does the same into the RFP wizard (`/buyer/rfp?rfi=…`), offered on an Open or
+// Closed RFI — a Draft has no responders to carry, a Cancelled one no standing.
+//
+// RFx authoring: the detail shows the buyer's attachments, WHO HAS ACCEPTED a
+// confidential event's terms and when, every answer in its question's kind
+// (an indicative price range labelled so), and "Save as template" (D2).
 //
 // ⚠️ **THE EVENT IS RAISED HERE TOO (section 3.6a), AND THE LIFECYCLE IS OFFERED
 // BY STATE RATHER THAN BY GUESS.** "New RFI" opens the wizard; a Draft offers
@@ -60,6 +70,7 @@ const BuyerRfi: React.FC = () => {
   const events = useRfiEvents();
   const publish = useVerbAvailability('rfi:publish');
   const create = useVerbAvailability('rfi:create');
+  const createRfp = useVerbAvailability('rfp:create');
   const command = useRfxCommand();
   const [wizardOpen, setWizardOpen] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
@@ -168,10 +179,25 @@ const BuyerRfi: React.FC = () => {
         </Table>
       </div>
 
-      {open && <RfiDetail event={open} run={run} onCreateRfq={() => navigate(`/buyer/rfq?rfi=${open.id}`)} extendFor={extendFor} setExtendFor={setExtendFor} extendOnly={extendOnly} setExtendOnly={setExtendOnly} canPublish={publish.kind === 'held'} publishAvailability={publish} />}
+      {open && (
+        <RfiDetail
+          event={open}
+          run={run}
+          onCreateRfq={() => navigate(`/buyer/rfq?rfi=${open.id}`)}
+          onCreateRfp={() => navigate(`/buyer/rfp?rfi=${open.id}`)}
+          createRfpAvailability={createRfp}
+          extendFor={extendFor}
+          setExtendFor={setExtendFor}
+          extendOnly={extendOnly}
+          setExtendOnly={setExtendOnly}
+          canPublish={publish.kind === 'held'}
+          publishAvailability={publish}
+        />
+      )}
 
       {wizardOpen && (
         <RfiCreateWizard
+          pastEvents={items}
           canPublish={publish.kind === 'held'}
           onCancel={() => setWizardOpen(false)}
           onCreated={(rfiId) => {
@@ -190,6 +216,9 @@ interface DetailProps {
   event: RfiEventView;
   run: (vars: Parameters<ReturnType<typeof useRfxCommand>['mutate']>[0], successKey: string) => void;
   onCreateRfq: () => void;
+  onCreateRfp: () => void;
+  /** Whose act raising an RFP is, when this seat does not hold `rfp:create`. */
+  createRfpAvailability: VerbAvailability;
   extendFor: Record<string, string>;
   setExtendFor: React.Dispatch<React.SetStateAction<Record<string, string>>>;
   extendOnly: Record<string, string[]>;
@@ -203,6 +232,8 @@ const RfiDetail: React.FC<DetailProps> = ({
   event,
   run,
   onCreateRfq,
+  onCreateRfp,
+  createRfpAvailability,
   extendFor,
   setExtendFor,
   extendOnly,
@@ -263,6 +294,54 @@ const RfiDetail: React.FC<DetailProps> = ({
             {t('rfx.status.draftHiddenFromSuppliers')}
           </p>
         )}
+        {(event.attachments ?? []).length > 0 && (
+          <div className="mt-3">
+            <SessionAttachments
+              value={event.attachments ?? []}
+              label={t('rfxa.att.buyer')}
+              testId={`rfi-attachments-${event.id}`}
+            />
+          </div>
+        )}
+        {event.confidentiality && (
+          <p className="text-xs text-text-tertiary mt-3" data-testid={`rfi-confidential-${event.id}`}>
+            {t('rfxa.conf.buyerNote')}
+          </p>
+        )}
+        {/* D3 — RFI → RFP. Offered on an Open or Closed event: a Draft has no
+            responders to carry forward, and a Cancelled one no standing. */}
+        {(event.status === 'Open' || event.status === 'Closed') && (
+          <div className="flex flex-wrap items-center gap-3 mt-4">
+            {createRfpAvailability.kind === 'held' ? (
+              <Button variant="outline" onClick={onCreateRfp} data-testid={`rfi-to-rfp-${event.id}`}>
+                {t('rfxa.rfi.createRfp')}
+              </Button>
+            ) : (
+              <HandoffNotice availability={createRfpAvailability} testId={`handoff-rfi-to-rfp-${event.id}`} />
+            )}
+          </div>
+        )}
+        <div className="mt-4">
+          <RfxSaveTemplate
+            key={event.id}
+            testIdPrefix={`rfi-${event.id}`}
+            defaultName={event.title}
+            onSave={(name) =>
+              rfiTemplateStore.save(
+                name,
+                {
+                  familyId: rfxFamilyForCategory(event.materialCategory)?.id ?? '',
+                  ...(event.description ? { description: event.description } : {}),
+                  questions: event.questions,
+                  customSections: event.customSections ?? [],
+                  confidential: !!event.confidentiality,
+                  ...(event.confidentiality?.terms ? { confidentialityTerms: event.confidentiality.terms } : {}),
+                },
+                rfxNow(),
+              )
+            }
+          />
+        </div>
       </div>
 
       {/* — Invitees, their OTIF and where their answer stands — */}
@@ -276,6 +355,7 @@ const RfiDetail: React.FC<DetailProps> = ({
             <TableHeaderCell>{t('rfx.invite.col.otif')}</TableHeaderCell>
             <TableHeaderCell>{t('rfx.deadline.own')}</TableHeaderCell>
             <TableHeaderCell>{t('rfx.response.submitted')}</TableHeaderCell>
+            {event.confidentiality && <TableHeaderCell>{t('rfxa.conf.col')}</TableHeaderCell>}
             <TableHeaderCell>{t('rfx.rfi.extendSelected')}</TableHeaderCell>
           </TableHeader>
           <tbody>
@@ -291,6 +371,15 @@ const RfiDetail: React.FC<DetailProps> = ({
                 <TableCell>
                   <ResponseStatePill state={invitee.responseState} />
                 </TableCell>
+                {event.confidentiality && (
+                  <TableCell data-testid={`rfi-accepted-${event.id}-${invitee.supplierId}`}>
+                    {invitee.confidentialityAcceptedAt ? (
+                      <Data>{formatDate(invitee.confidentialityAcceptedAt)}</Data>
+                    ) : (
+                      <span className="text-xs text-text-tertiary">{t('rfxa.conf.notYet')}</span>
+                    )}
+                  </TableCell>
+                )}
                 <TableCell>
                   <input
                     type="checkbox"
@@ -376,36 +465,26 @@ const RfiDetail: React.FC<DetailProps> = ({
               ))}
             </TableHeader>
             <tbody>
-              {RFI_SECTION_ORDER.flatMap((section) =>
+              {rfxSectionsOf(event.customSections).flatMap((section) =>
                 event.questions
-                  .filter((q) => q.sectionId === section)
+                  .filter((q) => q.sectionId === section.id)
                   .map((q) => (
                     <TableRow key={q.id} data-testid={`rfi-answer-row-${q.id}`}>
                       <TableCell className="align-top">
-                        <div className="text-xs text-text-tertiary">{t(`rfx.section.${section}`)}</div>
-                        <div className="text-sm text-text-primary">{t(q.promptKey)}</div>
+                        <div className="text-xs text-text-tertiary">{sectionTitle(t, section)}</div>
+                        <div className="text-sm text-text-primary">{authored(t, q.promptKey)}</div>
                         {q.required && (
                           <StatusPill variant="neutral" className="mt-1">
                             {t('rfx.rfi.required')}
                           </StatusPill>
                         )}
+                        {q.type === 'priceRange' && <IndicativePill className="mt-1 ml-1" />}
                       </TableCell>
                       {event.responses.map((r) => {
                         const answer = r.answers.find((a) => a.questionId === q.id);
-                        const value = answer?.value;
-                        const text = Array.isArray(value)
-                          ? value.map((v) => t(`rfx.opt.${v}`, { defaultValue: String(v) })).join(', ')
-                          : value === undefined
-                            ? '—'
-                            : q.type === 'yesNo' || q.type === 'singleChoice'
-                              ? t(`rfx.opt.${value}`, { defaultValue: String(value) })
-                              : String(value);
                         return (
-                          <TableCell key={r.id} className="align-top">
-                            <div className="text-sm text-text-primary">
-                              {text}
-                              {q.unitKey && value !== undefined ? ` ${t(q.unitKey)}` : ''}
-                            </div>
+                          <TableCell key={r.id} className="align-top" data-testid={`rfi-answer-${q.id}-${r.supplierId}`}>
+                            <div className="text-sm text-text-primary">{answerText(t, q, answer)}</div>
                             {answer?.description && (
                               <div className="text-xs text-text-tertiary mt-1">{answer.description}</div>
                             )}
@@ -416,6 +495,7 @@ const RfiDetail: React.FC<DetailProps> = ({
                   )),
               )}
             </tbody>
+
           </Table>
         )}
       </div>

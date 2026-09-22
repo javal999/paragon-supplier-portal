@@ -124,6 +124,14 @@ import {
   quoteLinesRefusal,
   quoteLinesTotal,
   unansweredTerms,
+  // RFx authoring — typed questions, custom terms, indicative pricing.
+  customSectionsRefusal,
+  invalidAnswers,
+  invalidTermAnswers,
+  rfiQuestionsRefusal,
+  rfpPricingAnswerRefusal,
+  rfpPricingRequestRefusal,
+  rfpTermsRefusal,
   type QuoteLineInput,
   type AsnLineInput,
   type CommandTarget,
@@ -186,38 +194,36 @@ import {
   tieredRefusalText,
 } from '../../sourcing/rfqComparison';
 import { gateRefusal } from '../../sourcing/complianceGate';
-import { rfiTemplate, rfpTerm } from '../../sourcing/rfxConfig';
+import { rfiTemplate } from '../../sourcing/rfxConfig';
 import type {
   AwardLine,
   RfiAnswer,
   RfiQuestion,
-  RfiQuestionType,
   RfiResponse,
+  RfpEvent,
+  RfpPricingAnswer,
+  RfpPricingRequest,
   RfpResponse,
   RfpTermAnswer,
   RfpTermRow,
+  RfpTermsDocument,
+  RfxConfidentiality,
+  RfxCustomSection,
   RfxEventStatus,
   RfxInvitee,
   RfxResponseStatus,
 } from '../../sourcing/types';
 import { BID_CURRENCIES } from '../../../lib/currencyPolicy';
 import { readRfqAuthoringFields } from '../../sourcing/rfqModel';
+import {
+  isAttachmentMeta,
+  type AttachmentMeta,
+} from '../../attachments/sessionAttachments';
 
-/**
- * The question kinds this build can render and score. Named as DATA so the
- * create hook proves MEMBERSHIP rather than presence — the
- * `QUOTATION_SUBMIT_CURRENCY_PERMITTED` shape: an off-list token is refused by
- * name instead of stored as a kind no surface can draw.
- */
-const RFI_QUESTION_TYPES: readonly RfiQuestionType[] = [
-  'yesNo',
-  'singleChoice',
-  'multipleChoice',
-  'numberWithUnit',
-  'date',
-  'text',
-  'attachment',
-];
+
+// The question kinds this build can render and score live in ONE list,
+// `RFX_QUESTION_TYPES` (`sourcing/rfxConfig`), and the create hook reaches them
+// through `rfiQuestionsRefusal` — the same predicate the template store reads.
 import {
   currentVersion,
   isForecastVersion,
@@ -2631,6 +2637,7 @@ const rfiEventTarget: CommandTarget = {
     const questions = Array.isArray(payload.questions)
       ? (payload.questions as RfiQuestion[])
       : template.questions;
+    const authoring = rfxAuthoringFields(payload);
     rfiEventStore.add({
       id,
       eventNumber: `RFI-2026-${id.slice(-3)}`,
@@ -2650,6 +2657,7 @@ const rfiEventTarget: CommandTarget = {
       ).map((supplierId) => ({ supplierId })),
       questions,
       extensions: [],
+      ...authoring,
     });
     return { entityId: id };
   },
@@ -2676,13 +2684,23 @@ const rfiResponseTarget: CommandTarget = {
   create: (payload, toState) => {
     const rfiId = String(payload.rfiId);
     const supplierId = String(payload.supplierId);
-    const answers = Array.isArray(payload.answers) ? (payload.answers as RfiAnswer[]) : [];
+    const hasAnswers = Array.isArray(payload.answers);
+    const answers = hasAnswers ? (payload.answers as RfiAnswer[]) : [];
+    // The acceptance time is STORE-ASSIGNED and set ONCE: a payload can say
+    // "I accept", never "I accepted at 09:00" (the `grantedAt` discipline).
+    const accepting = payload.acceptConfidentiality === true;
     // ONE response per supplier × event. Saving again REPLACES the draft's
     // answers rather than minting a second row — two drafts for one invitation
-    // would make "which one did they send?" unanswerable.
+    // would make "which one did they send?" unanswerable. An acceptance-only
+    // save carries no answers and leaves the stored ones alone.
     const existing = rfiResponseStore.all().find((r) => r.rfiId === rfiId && r.supplierId === supplierId);
     if (existing) {
-      rfiResponseStore.update(existing.id, (r) => ({ ...r, answers, updatedAt: sdcClock.now() }));
+      rfiResponseStore.update(existing.id, (r) => ({
+        ...r,
+        ...(hasAnswers ? { answers } : {}),
+        ...(accepting && !r.confidentialityAcceptedAt ? { confidentialityAcceptedAt: sdcClock.now() } : {}),
+        updatedAt: sdcClock.now(),
+      }));
       return { entityId: existing.id };
     }
     const id = rfiResponseStore.nextId();
@@ -2693,6 +2711,7 @@ const rfiResponseTarget: CommandTarget = {
       status: toState as RfxResponseStatus,
       updatedAt: sdcClock.now(),
       answers,
+      ...(accepting ? { confidentialityAcceptedAt: sdcClock.now() } : {}),
     });
     return { entityId: id };
   },
@@ -2726,6 +2745,7 @@ const rfpEventTarget: CommandTarget = {
   create: (payload, toState) => {
     const id = rfpEventStore.nextId();
     const str = (k: string) => (typeof payload[k] === 'string' ? (payload[k] as string) : '');
+    const authoring = rfxAuthoringFields(payload);
     rfpEventStore.add({
       id,
       eventNumber: `RFP-2026-${id.slice(-3)}`,
@@ -2745,6 +2765,17 @@ const rfpEventTarget: CommandTarget = {
       ).map((supplierId) => ({ supplierId })),
       terms: Array.isArray(payload.terms) ? (payload.terms as RfpTermRow[]) : [],
       extensions: [],
+      ...authoring,
+      ...(str('sourceRfiId') ? { sourceRfiId: str('sourceRfiId') } : {}),
+      ...(Array.isArray(payload.questions) && payload.questions.length > 0
+        ? { questions: payload.questions as RfiQuestion[] }
+        : {}),
+      ...(payload.termsDocument && typeof payload.termsDocument === 'object'
+        ? { termsDocument: payload.termsDocument as RfpTermsDocument }
+        : {}),
+      ...(payload.pricing && typeof payload.pricing === 'object'
+        ? { pricing: payload.pricing as RfpPricingRequest }
+        : {}),
     });
     return { entityId: id };
   },
@@ -2771,15 +2802,32 @@ const rfpResponseTarget: CommandTarget = {
   create: (payload, toState) => {
     const rfpId = String(payload.rfpId);
     const supplierId = String(payload.supplierId);
-    const answers = Array.isArray(payload.answers) ? (payload.answers as RfpTermAnswer[]) : [];
+    const hasAnswers = Array.isArray(payload.answers);
+    const answers = hasAnswers ? (payload.answers as RfpTermAnswer[]) : [];
     const otherTerms = typeof payload.otherTerms === 'string' ? payload.otherTerms : undefined;
+    const questionAnswers = Array.isArray(payload.questionAnswers)
+      ? (payload.questionAnswers as RfiAnswer[])
+      : undefined;
+    const pricing =
+      payload.pricing && typeof payload.pricing === 'object' ? (payload.pricing as RfpPricingAnswer) : undefined;
+    // Both acceptances are STORE-ASSIGNED and set once (see the RFI response).
+    const now = sdcClock.now();
+    const accepted = (r: RfpResponse | undefined) => ({
+      ...(payload.acceptConfidentiality === true && !r?.confidentialityAcceptedAt
+        ? { confidentialityAcceptedAt: now }
+        : {}),
+      ...(payload.acceptTerms === true && !r?.termsAcceptedAt ? { termsAcceptedAt: now } : {}),
+    });
     const existing = rfpResponseStore.all().find((r) => r.rfpId === rfpId && r.supplierId === supplierId);
     if (existing) {
       rfpResponseStore.update(existing.id, (r) => ({
         ...r,
-        answers,
+        ...(hasAnswers ? { answers } : {}),
         ...(otherTerms !== undefined ? { otherTerms } : {}),
-        updatedAt: sdcClock.now(),
+        ...(questionAnswers !== undefined ? { questionAnswers } : {}),
+        ...(pricing !== undefined ? { pricing } : {}),
+        ...accepted(r),
+        updatedAt: now,
       }));
       return { entityId: existing.id };
     }
@@ -2789,9 +2837,12 @@ const rfpResponseTarget: CommandTarget = {
       rfpId,
       supplierId,
       status: toState as RfxResponseStatus,
-      updatedAt: sdcClock.now(),
+      updatedAt: now,
       answers,
       ...(otherTerms !== undefined ? { otherTerms } : {}),
+      ...(questionAnswers !== undefined ? { questionAnswers } : {}),
+      ...(pricing !== undefined ? { pricing } : {}),
+      ...accepted(undefined),
     });
     return { entityId: id };
   },
@@ -2849,20 +2900,19 @@ bindPolicyHook(POLICY_HOOKS.RFI_CREATE_VALID, ({ payload }) => {
   if (!isCalendarDate(String(payload.responseDeadline))) {
     return { ok: false, reason: 'BAD_DEADLINE: the response deadline must be a date' };
   }
+  const sections = Array.isArray(payload.customSections) ? (payload.customSections as RfxCustomSection[]) : [];
   if (payload.questions !== undefined) {
     if (!Array.isArray(payload.questions) || payload.questions.length === 0) {
       return { ok: false, reason: 'NO_QUESTIONS: an RFI asks at least one question' };
     }
-    for (const q of payload.questions as RfiQuestion[]) {
-      if (!RFI_QUESTION_TYPES.includes(q?.type)) {
-        return { ok: false, reason: `UNKNOWN_QUESTION_TYPE: ${String(q?.type)}` };
-      }
-      if (!q.id || !q.promptKey) {
-        return { ok: false, reason: 'QUESTION_INCOMPLETE: every question names itself and what it asks' };
-      }
-    }
+    const refusal = rfiQuestionsRefusal(payload.questions as RfiQuestion[], sections);
+    if (refusal) return { ok: false, reason: refusal };
+  } else {
+    const refusal = customSectionsRefusal(sections);
+    if (refusal) return { ok: false, reason: refusal };
   }
-  return { ok: true };
+  const authoring = rfxAuthoringRefusal(payload);
+  return authoring ? { ok: false, reason: authoring } : { ok: true };
 });
 
 // REQ-E03-01 BR-04 — publication is when the invitation actually goes out, so
@@ -2925,8 +2975,9 @@ bindPolicyHook(POLICY_HOOKS.RFX_RESPONSE_INVITED, ({ payload }) => {
     : { ok: false, reason: 'NOT_INVITED: this supplier was not invited to the event' };
 });
 
-// REQ-E03-02 — every required question answered, and the deadline in force for
-// THIS supplier not yet passed. The refusal names the questions.
+// REQ-E03-02 — every required question answered, every answer fitting its
+// question, and the deadline in force for THIS supplier not yet passed. The
+// refusal names the questions.
 bindPolicyHook(POLICY_HOOKS.RFI_SUBMIT_COMPLETE, ({ target, entityId }) => {
   const response = target.readEntity(entityId) as RfiResponse | null;
   if (!response) return { ok: false, reason: 'response not found' };
@@ -2936,26 +2987,76 @@ bindPolicyHook(POLICY_HOOKS.RFI_SUBMIT_COMPLETE, ({ target, entityId }) => {
   if (isPastDeadline(deadline, rfxNow())) {
     return { ok: false, reason: `PAST_DEADLINE: answers closed on ${deadline}` };
   }
+  if (event.confidentiality && !response.confidentialityAcceptedAt) {
+    return { ok: false, reason: 'CONFIDENTIALITY_NOT_ACCEPTED: accept the confidentiality terms first' };
+  }
   const missing = missingRequiredAnswers(event.questions, response.answers);
-  return missing.length === 0
+  if (missing.length > 0) return { ok: false, reason: `REQUIRED_UNANSWERED: ${missing.join(', ')}` };
+  const invalid = invalidAnswers(event.questions, response.answers);
+  return invalid.length === 0
     ? { ok: true }
-    : { ok: false, reason: `REQUIRED_UNANSWERED: ${missing.join(', ')}` };
+    : { ok: false, reason: `ANSWER_INVALID: ${invalid.join(', ')}` };
 });
 
-// REQ-E03-04 — the buyer picks terms from the STANDARD LIST, and each row
-// carries PTI's requested value.
+// REQ-E03-04 + RFx authoring — the buyer picks STANDARD terms or writes CUSTOM
+// ones, and every row carries PTI's requested value in the row's value kind.
+// The optional sections (questions, indicative pricing, T&C) are validated by
+// the same predicates the template store reads.
 bindPolicyHook(POLICY_HOOKS.RFP_CREATE_TERMS_KNOWN, ({ payload }) => {
   if (!isCalendarDate(String(payload.responseDeadline))) {
     return { ok: false, reason: 'BAD_DEADLINE: the response deadline must be a date' };
   }
   const terms = Array.isArray(payload.terms) ? (payload.terms as RfpTermRow[]) : [];
-  if (terms.length === 0) return { ok: false, reason: 'NO_TERMS: an RFP lists at least one commercial term' };
-  for (const row of terms) {
-    if (!rfpTerm(row?.termId)) {
-      return { ok: false, reason: `UNKNOWN_TERM: ${String(row?.termId)} is not on the standard term list` };
+  const termRefusal = rfpTermsRefusal(terms);
+  if (termRefusal) return { ok: false, reason: termRefusal };
+  const sections = Array.isArray(payload.customSections) ? (payload.customSections as RfxCustomSection[]) : [];
+  const questions = Array.isArray(payload.questions) ? (payload.questions as RfiQuestion[]) : [];
+  const questionRefusal = rfiQuestionsRefusal(questions, sections);
+  if (questionRefusal) return { ok: false, reason: questionRefusal };
+  const pricingRefusal = rfpPricingRequestRefusal(payload.pricing as RfpPricingRequest | undefined);
+  if (pricingRefusal) return { ok: false, reason: pricingRefusal };
+  if (payload.termsDocument !== undefined) {
+    const doc = payload.termsDocument as RfpTermsDocument | null;
+    const hasDocText = typeof doc?.text === 'string' && doc.text.trim().length > 0;
+    if (!doc || (!hasDocText && !doc.attachment)) {
+      return { ok: false, reason: 'TC_DOCUMENT_EMPTY: a T&C document carries its text or a file' };
     }
-    if (!row.requestedValue || String(row.requestedValue).trim().length === 0) {
-      return { ok: false, reason: `TERM_VALUE_REQUIRED: ${row.termId} needs PTI's requested value` };
+    if (doc.attachment && !isAttachmentMeta(doc.attachment)) {
+      return { ok: false, reason: 'ATTACHMENT_MALFORMED: the T&C file is not a file record' };
+    }
+  }
+  if (payload.sourceRfiId !== undefined && !rfiEventStore.get(String(payload.sourceRfiId))) {
+    return { ok: false, reason: `UNKNOWN_SOURCE_RFI: ${String(payload.sourceRfiId)}` };
+  }
+  const authoring = rfxAuthoringRefusal(payload);
+  return authoring ? { ok: false, reason: authoring } : { ok: true };
+});
+
+// RFx authoring — the confidentiality gate and the T&C acceptance, AT THE VERB.
+// A confidential event's content is withheld by the read until the supplier
+// accepts; a save that carries answers before that acceptance is refused by
+// name, so a hand-made dispatch cannot answer questions it was never shown.
+bindPolicyHook(POLICY_HOOKS.RFX_RESPONSE_ACCEPTANCE_GATE, ({ payload }) => {
+  const supplierId = String(payload.supplierId);
+  const isRfi = payload.rfiId !== undefined;
+  const event = isRfi ? rfiEventStore.get(String(payload.rfiId)) : rfpEventStore.get(String(payload.rfpId));
+  if (!event) return { ok: false, reason: 'event not found' };
+  const prior = isRfi
+    ? rfiResponseStore.all().find((r) => r.rfiId === event.id && r.supplierId === supplierId)
+    : rfpResponseStore.all().find((r) => r.rfpId === event.id && r.supplierId === supplierId);
+  const carriesAnswers =
+    (Array.isArray(payload.answers) && payload.answers.length > 0) ||
+    (Array.isArray(payload.questionAnswers) && payload.questionAnswers.length > 0) ||
+    (payload.pricing !== undefined && payload.pricing !== null);
+  if (!carriesAnswers) return { ok: true };
+  if (event.confidentiality && !prior?.confidentialityAcceptedAt && payload.acceptConfidentiality !== true) {
+    return { ok: false, reason: 'CONFIDENTIALITY_NOT_ACCEPTED: accept the confidentiality terms first' };
+  }
+  if (!isRfi) {
+    const rfp = event as RfpEvent;
+    const rfpPrior = prior as RfpResponse | undefined;
+    if (rfp.termsDocument && !rfpPrior?.termsAcceptedAt && payload.acceptTerms !== true) {
+      return { ok: false, reason: 'TC_NOT_ACCEPTED: accept the terms and conditions before answering' };
     }
   }
   return { ok: true };
@@ -2971,15 +3072,74 @@ bindPolicyHook(POLICY_HOOKS.RFP_SUBMIT_TERMS_ANSWERED, ({ target, entityId }) =>
   if (isPastDeadline(deadline, rfxNow())) {
     return { ok: false, reason: `PAST_DEADLINE: proposals closed on ${deadline}` };
   }
+  if (event.confidentiality && !response.confidentialityAcceptedAt) {
+    return { ok: false, reason: 'CONFIDENTIALITY_NOT_ACCEPTED: accept the confidentiality terms first' };
+  }
+  if (event.termsDocument && !response.termsAcceptedAt) {
+    return { ok: false, reason: 'TC_NOT_ACCEPTED: accept the terms and conditions before answering' };
+  }
   const unanswered = unansweredTerms(event.terms, response.answers);
   if (unanswered.length > 0) {
     return { ok: false, reason: `TERMS_UNANSWERED: ${unanswered.join(', ')}` };
   }
+  const badValues = invalidTermAnswers(event.terms, response.answers);
+  if (badValues.length > 0) {
+    return { ok: false, reason: `TERM_ANSWER_INVALID: ${badValues.join(', ')}` };
+  }
   const uncommented = deviationsWithoutComment(response.answers);
-  return uncommented.length === 0
-    ? { ok: true }
-    : { ok: false, reason: `DEVIATION_NEEDS_COMMENT: ${uncommented.join(', ')}` };
+  if (uncommented.length > 0) {
+    return { ok: false, reason: `DEVIATION_NEEDS_COMMENT: ${uncommented.join(', ')}` };
+  }
+  const questions = event.questions ?? [];
+  const qAnswers = response.questionAnswers ?? [];
+  const missing = missingRequiredAnswers(questions, qAnswers);
+  if (missing.length > 0) return { ok: false, reason: `REQUIRED_UNANSWERED: ${missing.join(', ')}` };
+  const invalid = invalidAnswers(questions, qAnswers);
+  if (invalid.length > 0) return { ok: false, reason: `ANSWER_INVALID: ${invalid.join(', ')}` };
+  const pricing = rfpPricingAnswerRefusal(event.pricing, response.pricing);
+  return pricing ? { ok: false, reason: pricing } : { ok: true };
 });
+
+/**
+ * The authoring fields an RFI or RFP create stores beside its own: the buyer's
+ * custom sections, attachments and confidentiality gate. Each is stored only
+ * when present, so an event raised without one reads honestly as without it.
+ */
+function rfxAuthoringFields(payload: Record<string, unknown>): {
+  customSections?: readonly RfxCustomSection[];
+  attachments?: readonly AttachmentMeta[];
+  confidentiality?: RfxConfidentiality;
+} {
+  const conf = payload.confidentiality as RfxConfidentiality | undefined;
+  return {
+    ...(Array.isArray(payload.customSections) && payload.customSections.length > 0
+      ? { customSections: payload.customSections as RfxCustomSection[] }
+      : {}),
+    ...(Array.isArray(payload.attachments) && payload.attachments.length > 0
+      ? { attachments: payload.attachments as AttachmentMeta[] }
+      : {}),
+    ...(conf && typeof conf === 'object'
+      ? { confidentiality: typeof conf.terms === 'string' && conf.terms.trim() ? { terms: conf.terms.trim() } : {} }
+      : {}),
+  };
+}
+
+/** The refusal the shared authoring fields earn, or null. */
+function rfxAuthoringRefusal(payload: Record<string, unknown>): string | null {
+  if (payload.attachments !== undefined) {
+    if (!Array.isArray(payload.attachments) || !payload.attachments.every(isAttachmentMeta)) {
+      return 'ATTACHMENT_MALFORMED: every attachment is a file record (name, size, type)';
+    }
+  }
+  if (payload.confidentiality !== undefined) {
+    const conf = payload.confidentiality as { terms?: unknown } | null;
+    if (!conf || typeof conf !== 'object' || (conf.terms !== undefined && typeof conf.terms !== 'string')) {
+      return 'CONFIDENTIALITY_MALFORMED: the confidentiality gate carries optional terms text';
+    }
+  }
+  return null;
+}
+
 
 // REQ-E03-03 AC-05 — no quote after the deadline in force for this supplier.
 bindPolicyHook(POLICY_HOOKS.QUOTATION_SUBMIT_BEFORE_DEADLINE, ({ payload }) => {

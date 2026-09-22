@@ -39,6 +39,10 @@ export interface RfxInviteeView {
   /** REQ-E03-01 AC-02 — `null` is "No history", never 0%. */
   readonly otif: number | null;
   readonly overdue: boolean;
+  /** When this invitee accepted the event's confidentiality terms; null = not (yet). */
+  readonly confidentialityAcceptedAt: string | null;
+  /** When this invitee accepted the RFP's T&C document; null = not (yet). */
+  readonly termsAcceptedAt: string | null;
 }
 
 export interface RfiResponseView extends RfiResponse {
@@ -52,6 +56,12 @@ export interface RfiEventView extends RfiEvent {
   /** Buyer: the SUBMITTED responses. Supplier: its own, draft included. */
   readonly responses: readonly RfiResponseView[];
   readonly closed: boolean;
+  /**
+   * Supplier read only: the event is confidential and this supplier has not
+   * accepted, so the read withheld its description, attachments and questions.
+   * Always false for the buyer.
+   */
+  readonly confidentialityLocked: boolean;
 }
 
 export interface RfpResponseView extends RfpResponse {
@@ -64,7 +74,12 @@ export interface RfpEventView extends RfpEvent {
   readonly invitedSuppliers: readonly RfxInviteeView[];
   readonly responses: readonly RfpResponseView[];
   readonly closed: boolean;
+  /** As on the RFI view: the read withheld the content until the supplier accepts. */
+  readonly confidentialityLocked: boolean;
+  /** The event number of `sourceRfiId`, resolved at read; null when none. */
+  readonly sourceRfiNumber: string | null;
 }
+
 
 export interface NegotiationParticipantView {
   readonly supplierId: string;
