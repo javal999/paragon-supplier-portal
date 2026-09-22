@@ -23,7 +23,18 @@ import { RFX_RFQ_SEED } from '../fixtures/rfxHub';
 // BL-64 — the compliance gate demo RFQs (CR-23), on the same board.
 import { GATE_DEMO_RFQ_SEED } from '../fixtures/gateDemo';
 
-const SEED: readonly RFQ[] = [...RFX_RFQ_SEED, ...GATE_DEMO_RFQ_SEED, ...mockRfqs];
+// RFx spec 2026-09-21 — the tiered RFQs shaped like the real samples (Oslo,
+// Iron, Redwood 2.0). LAST, so no existing row's position on the board moves.
+import { RFQ_SAMPLE_HISTORY_SEED, RFQ_SAMPLE_SEED } from '../fixtures/rfqSamples';
+
+const SEED: readonly RFQ[] = [
+  ...RFX_RFQ_SEED,
+  ...GATE_DEMO_RFQ_SEED,
+  ...mockRfqs,
+  ...RFQ_SAMPLE_SEED,
+  // The Amplify split award (rfq-024), last so no existing row moves.
+  ...RFQ_SAMPLE_HISTORY_SEED,
+];
 
 function clone(r: RFQ): RFQ {
   return { ...r, materialIds: [...r.materialIds], invitedSupplierIds: [...r.invitedSupplierIds], respondedSupplierIds: [...r.respondedSupplierIds] };

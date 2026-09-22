@@ -28,6 +28,7 @@ import { PERSONA_SYSTEM_ROLES } from '../../transitions/businessRoles';
 import { rfxNow } from './rfxReadModel';
 import { sdcClock } from '../../sdc';
 import { NO_PERSON } from '../../../context/noPerson';
+import { rfpTermKindOf } from '../../sourcing/rfxConfig';
 
 const svc = new MockCommandService();
 const reads = new MockProcurementService();
@@ -404,9 +405,19 @@ describe('REQ-E03-02 — a required question blocks sending, and a draft stays p
     const event = rfiEventStore.get('rfi-001')!;
     const answers = event.questions
       .filter((q) => q.required)
+      // Each answer is of its question's KIND — the submit verb now refuses an
+      // answer that does not fit (`ANSWER_INVALID`), so "stated" for a yes/no
+      // question is no longer a way to clear the required rule.
       .map((q) => ({
         questionId: q.id,
-        value: q.type === 'numberWithUnit' ? 10 : q.type === 'multipleChoice' ? [q.options![0]] : (q.options?.[0] ?? 'stated'),
+        value:
+          q.type === 'numberWithUnit'
+            ? 10
+            : q.type === 'multipleChoice'
+              ? [q.options![0]]
+              : q.type === 'yesNo'
+                ? 'yes'
+                : (q.options?.[0] ?? 'stated'),
       }));
     const saved = await svc.dispatch(sup013, {
       transitionId: 't_rfiresponse_save',
@@ -457,7 +468,9 @@ const answersFor = (stanceOnFirst: 'comply' | 'deviate', comment?: string) => {
   const event = rfpEventStore.get('rfp-001')!;
   return event.terms.map((row, i) => ({
     termId: row.termId,
-    proposedValue: 'as requested',
+    // A number-kind term (price basis, lead time) is answered with a number:
+    // the submit verb refuses a value that does not read as the term's kind.
+    proposedValue: rfpTermKindOf(row) === 'numberWithUnit' ? '10' : 'as requested',
     stance: i === 0 ? stanceOnFirst : ('comply' as const),
     ...(i === 0 && comment ? { comment } : {}),
   }));

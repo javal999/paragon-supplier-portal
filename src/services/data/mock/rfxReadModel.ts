@@ -22,6 +22,12 @@ import { BASE_CURRENCY } from '../../../lib/currencyPolicy';
 import { scoreQuotations, type ScoringOutcome } from '../../../lib/quoteScore';
 import { complianceGate, type GateResult } from '../../sourcing/complianceGate';
 import { COMPLIANCE_REGISTRY } from './fixtures/complianceRegistry';
+import {
+  bestScoredByItemAt,
+  defaultEvaluationTierQty,
+  isTieredRfq,
+  scoreRfqAt,
+} from '../../sourcing/rfqComparison';
 import { bandOf, certificateValidity } from '../../sourcing/supplierFilters';
 import {
   complianceScoreFor,
@@ -42,6 +48,7 @@ import type {
   RfqSupplierGateView,
   RfxInviteeView,
 } from '../../sourcing/views';
+import type { RfiResponse, RfpResponse } from '../../sourcing/types';
 import { rfqStore } from './stores/rfqStore';
 import { quotationStore } from './stores/quotationStore';
 import {
@@ -137,16 +144,33 @@ export const rfqSupplierGate = (rfq: RFQ, supplierId: string, nowIso: string): G
 
 // ── REQ-E03-02 / REQ-E03-04 — the event views ───────────────────────────────
 
+/** What the invitee read needs from a response, whichever event type it answers. */
+interface InviteeResponseFacts {
+  readonly status: string;
+  readonly submittedAt?: string;
+  readonly confidentialityAcceptedAt?: string;
+  readonly termsAcceptedAt?: string;
+  /** True when the row holds nothing but an acceptance (no answer of any kind). */
+  readonly empty: boolean;
+}
+
 const inviteeViews = (
   event: { responseDeadline: string; invitees: readonly { supplierId: string; deadline?: string }[] },
-  responseFor: (supplierId: string) => { status: string; submittedAt?: string } | undefined,
+  responseFor: (supplierId: string) => InviteeResponseFacts | undefined,
   nowIso: string,
 ): readonly RfxInviteeView[] =>
   event.invitees.map((invitee) => {
     const deadline = effectiveDeadline(event.responseDeadline, event.invitees, invitee.supplierId);
     const response = responseFor(invitee.supplierId);
+    // A Draft that holds only an acceptance (the confidentiality gate or the
+    // T&C) is not a started answer: reading it as "Draft" would tell the buyer
+    // the supplier had begun answering when it had only agreed to read.
     const responseState: InviteeResponseState =
-      response?.status === 'Submitted' ? 'submitted' : response ? 'draft' : 'notStarted';
+      response?.status === 'Submitted'
+        ? 'submitted'
+        : response && !response.empty
+          ? 'draft'
+          : 'notStarted';
     return {
       supplierId: invitee.supplierId,
       supplierName: rfxSupplierName(invitee.supplierId),
@@ -155,8 +179,24 @@ const inviteeViews = (
       submittedAt: response?.submittedAt ?? null,
       otif: rfxSupplierOtif(invitee.supplierId),
       overdue: responseState !== 'submitted' && isPastDeadline(deadline, nowIso),
+      confidentialityAcceptedAt: response?.confidentialityAcceptedAt ?? null,
+      termsAcceptedAt: response?.termsAcceptedAt ?? null,
     };
   });
+
+const rfiFacts = (r: RfiResponse | undefined): InviteeResponseFacts | undefined =>
+  r && { ...r, empty: r.status !== 'Submitted' && r.answers.length === 0 };
+
+const rfpFacts = (r: RfpResponse | undefined): InviteeResponseFacts | undefined =>
+  r && {
+    ...r,
+    empty:
+      r.status !== 'Submitted' &&
+      r.answers.length === 0 &&
+      (r.questionAnswers ?? []).length === 0 &&
+      !r.pricing &&
+      !r.otherTerms,
+  };
 
 /**
  * The RFI board for a scope.
@@ -175,11 +215,18 @@ export function rfiEventViews(nowIso: string, supplierId: string | null): readon
       const visible = supplierId
         ? mine.filter((r) => r.supplierId === supplierId)
         : mine.filter((r) => r.status === 'Submitted');
+      // ⚠️ THE CONFIDENTIALITY GATE IS A READ RULE. A supplier that has not
+      // accepted is handed the event WITHOUT its description, attachments and
+      // questions — not a screen that hides them, a view that never held them.
+      const locked =
+        !!supplierId && !!event.confidentiality && !visible[0]?.confidentialityAcceptedAt;
       return {
         ...event,
+        ...(locked ? { description: undefined, questions: [], customSections: [], attachments: [] } : {}),
+        confidentialityLocked: locked,
         invitedSuppliers: inviteeViews(
           event,
-          (sid) => mine.find((r) => r.supplierId === sid),
+          (sid) => rfiFacts(mine.find((r) => r.supplierId === sid)),
           nowIso,
         ),
         responses: visible.map((r) => ({
@@ -203,13 +250,32 @@ export function rfpEventViews(nowIso: string, supplierId: string | null): readon
       const visible = supplierId
         ? mine.filter((r) => r.supplierId === supplierId)
         : mine.filter((r) => r.status === 'Submitted');
+      // The same read rule as the RFI: an unaccepted confidential RFP reaches
+      // the supplier without its scope, terms, questions, pricing, T&C or files.
+      const locked =
+        !!supplierId && !!event.confidentiality && !visible[0]?.confidentialityAcceptedAt;
+      const source = event.sourceRfiId ? rfiEventStore.get(event.sourceRfiId) : undefined;
       return {
         ...event,
+        ...(locked
+          ? {
+              scope: '',
+              terms: [],
+              questions: [],
+              customSections: [],
+              attachments: [],
+              termsDocument: undefined,
+              pricing: undefined,
+            }
+          : {}),
+        confidentialityLocked: locked,
+        sourceRfiNumber: source?.eventNumber ?? null,
         invitedSuppliers: inviteeViews(
           event,
-          (sid) => mine.find((r) => r.supplierId === sid),
+          (sid) => rfpFacts(mine.find((r) => r.supplierId === sid)),
           nowIso,
         ),
+
         responses: visible.map((r) => ({
           ...r,
           supplierName: rfxSupplierName(r.supplierId),
@@ -260,21 +326,54 @@ export function quoteVersionsFor(rfqId: string, supplierId: string): readonly Qu
     .sort((a, b) => (a.roundNumber ?? 0) - (b.roundNumber ?? 0) || a.submittedAt.localeCompare(b.submittedAt));
 }
 
-/** The CR-15 outcome for an RFQ's current quotes from QUALIFIED suppliers, honouring CR-16 (FX). */
-export function rfqScoring(rfq: RFQ, nowIso: string): ScoringOutcome {
-  // REQ-E03-05 BR-01a — only suppliers that pass the gate (CR-23) are scored.
-  const qualified = currentQuotesFor(rfq.id).filter((q) => rfqSupplierGate(rfq, q.supplierId, nowIso).passes);
-  return scoreQuotations(qualified.map(scorableQuote), {
-    pins: rfq.fxPins,
-    now: new Date(nowIso),
-  });
+/** REQ-E03-05 BR-01a — the current quotes whose supplier passes the gate (CR-23). */
+const qualifiedQuotesFor = (rfq: RFQ, nowIso: string): readonly Quotation[] =>
+  currentQuotesFor(rfq.id).filter((q) => rfqSupplierGate(rfq, q.supplierId, nowIso).passes);
+
+/** CR-15's reliability input for a supplier: its measured OTIF, scored. */
+const reliabilityOf = (supplierId: string): number => reliabilityScoreFor(rfxSupplierOtif(supplierId));
+
+/**
+ * The CR-15 outcome for an RFQ's current quotes from QUALIFIED suppliers,
+ * honouring CR-16 (FX).
+ *
+ * A TIERED RFQ (one with items) scores PRICE AS TOTAL COST AT THE EVALUATION
+ * BREAK (`rfqComparison.scoreRfqAt`), at `evalTierQty` or, absent, the default
+ * break nearest `totalQty`. The weights are unchanged. A legacy RFQ scores its
+ * header unit price exactly as before.
+ */
+export function rfqScoring(rfq: RFQ, nowIso: string, evalTierQty?: number): ScoringOutcome {
+  const qualified = qualifiedQuotesFor(rfq, nowIso);
+  const opts = { pins: rfq.fxPins, now: new Date(nowIso) };
+  if (isTieredRfq(rfq)) {
+    const qty = evalTierQty ?? defaultEvaluationTierQty(rfq);
+    if (qty !== null) return scoreRfqAt(rfq, qualified, qty, reliabilityOf, opts);
+  }
+  return scoreQuotations(qualified.map(scorableQuote), opts);
 }
 
 /** The best-scored quotation id for an RFQ, or null when the set is unrankable. */
-export function bestScoredQuotationId(rfq: RFQ, nowIso: string): string | null {
-  const outcome = rfqScoring(rfq, nowIso);
+export function bestScoredQuotationId(rfq: RFQ, nowIso: string, evalTierQty?: number): string | null {
+  const outcome = rfqScoring(rfq, nowIso, evalTierQty);
   if (outcome.kind !== 'scored') return null;
   return outcome.scores.find((s) => s.topRanked)?.quoteId ?? null;
+}
+
+/**
+ * A tiered RFQ's best-scored quote PER ITEM at the evaluation break, from
+ * qualified suppliers only. The award's reason rule is judged item by item
+ * against this. Empty for a legacy RFQ.
+ */
+export function bestScoredByItem(
+  rfq: RFQ,
+  nowIso: string,
+  evalTierQty: number,
+): ReadonlyMap<number, string | null> {
+  if (!isTieredRfq(rfq)) return new Map();
+  return bestScoredByItemAt(rfq, qualifiedQuotesFor(rfq, nowIso), evalTierQty, reliabilityOf, {
+    pins: rfq.fxPins,
+    now: new Date(nowIso),
+  });
 }
 
 /**
@@ -360,9 +459,15 @@ export function awardViews(supplierId: string | null): readonly AwardView[] {
           sharePct: Math.round(agg.sharePct / (lines.filter((l) => l.supplierId === sid).length || 1)),
           quantity: agg.quantity,
         })),
-        departedFromBestScore:
-          award.bestScoredQuotationId !== undefined &&
-          !award.lines.some((l) => l.quotationId === award.bestScoredQuotationId),
+        // A PER-ITEM award (a tiered RFQ) departs when ANY item's lines leave
+        // out that item's best-scored quote; an event-level award departs when
+        // its lines leave out the event's.
+        departedFromBestScore: award.bestScoredByItem
+          ? award.bestScoredByItem.some(
+              (b) => !award.lines.some((l) => l.itemLineNo === b.itemLineNo && l.quotationId === b.quotationId),
+            )
+          : award.bestScoredQuotationId !== undefined &&
+            !award.lines.some((l) => l.quotationId === award.bestScoredQuotationId),
       };
     });
 }

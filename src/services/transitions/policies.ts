@@ -17,6 +17,7 @@ import { deriveHeaderDisposition, type GrHeaderDisposition } from './grRollup';
 import { isMatched } from './invoiceRollup';
 import { BASE_CURRENCY, BID_CURRENCIES, isBidCurrency } from '../../lib/currencyPolicy';
 import { isUsableRate } from '../../lib/fxPin';
+import { rfqCreateRefusal } from '../sourcing/rfqModel';
 import {
   ENFORCEMENT_MODES,
   GOVERNED_CHECK_IDS,
@@ -308,6 +309,23 @@ const rfqFxPinWellFormed: PolicyHookFn = ({ payload }) => {
 };
 
 bindPolicyHook(POLICY_HOOKS.RFQ_FX_PIN_WELL_FORMED, rfqFxPinWellFormed);
+
+// — RFQ create: the rebuilt shape is SOUND when it is sent (RFx spec 2026-09-21)
+//
+// Items (at least one; a known type; a description; at least one variant; every
+// required buyer field filled), quantity breaks (1 to 8, positive, strictly
+// increasing), typed questions, a well-formed sample request, and a currency in
+// `BID_CURRENCIES`. Each arm refuses BY NAME (`NO_ITEMS`, `TIER_COUNT`,
+// `TIERS_NOT_INCREASING`, `ITEM_SPEC_MISSING`, `CURRENCY_NOT_PERMITTED`, …).
+//
+// The rule itself lives in `rfqModel.ts` so the wizard's step gate and the
+// template store call the SAME judgement; this is only its binding. Every arm is
+// conditional on its key being present: a legacy single-item dispatch carries
+// none of them and is not refused for that (the versioning rule).
+bindPolicyHook(POLICY_HOOKS.RFQ_CREATE_VALID, ({ payload }) => {
+  const reason = rfqCreateRefusal(payload);
+  return reason ? { ok: false, reason } : { ok: true };
+});
 
 // — Enforcement set: the recorded relaxation must be GOVERNED (CP-3 · E2) ——————
 //

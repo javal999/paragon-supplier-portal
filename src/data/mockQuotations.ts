@@ -1,5 +1,6 @@
 import type { BidCurrency } from '../lib/currencyPolicy';
 import { shiftRfqDay } from './mockRfqs';
+import type { QuotationTieredFields } from '../services/sourcing/rfqModel';
 
 /**
  * REQ-E03-03 — one priced line of a quotation: the supplier's answer to one
@@ -21,7 +22,14 @@ export type QuotationStatus =
   | 'Awarded'
   | 'Rejected';
 
-export interface Quotation {
+/**
+ * A supplier's bid. The tiered fields (a price per quantity break per item,
+ * one-time costs, alternatives, answers, a sample offer) come from
+ * `QuotationTieredFields`, all optional. When a quote carries them, the header
+ * `unitPrice` / `totalPrice` are DERIVED from them (`deriveQuoteHeader`), so the
+ * existing scoring and comparison keep reading figures they understand.
+ */
+export interface Quotation extends QuotationTieredFields {
   id: string;
   rfqId: string;
   supplierId: string;
