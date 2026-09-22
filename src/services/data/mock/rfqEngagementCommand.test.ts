@@ -24,7 +24,8 @@ import { resetRfxStores } from './stores/rfxStores';
 import type { QueryScope } from '../types';
 import { PERSONA_SYSTEM_ROLES } from '../../transitions/businessRoles';
 import { sdcClock } from '../../sdc';
-import { rfxNow } from './rfxReadModel';
+import { currentQuotesFor, rfxNow } from './rfxReadModel';
+import { comparisonRows } from '../../sourcing/rfqComparison';
 import { NO_PERSON } from '../../../context/noPerson';
 import { deriveQuoteHeader, type QuotationItemQuote } from '../../sourcing/rfqModel';
 
@@ -422,5 +423,34 @@ describe('clarification Q&A — who reads what', () => {
         payload: { rfqId: 'rfq-023', supplierId: 'sup-015', question: 'Cavities?' },
       }),
     ).rejects.toMatchObject({ code: 'SCOPE_DENIED' });
+  });
+});
+
+describe("the grid's quote is what B4's comparison and award read", () => {
+  it('sup-007\'s grid quote lands in the per-item comparison with its costs and payment terms; the decliner is nowhere in it', async () => {
+    const res = await submit(sup007, osloQuote({
+      alternatives: [{ itemLineNo: 2, description: 'Paper back label', tierPrices: prices(300) }],
+    }));
+    expect(res.status).toBe('done');
+    const oslo = rfqStore.get('rfq-021')!;
+    const current = currentQuotesFor('rfq-021');
+    const rows = comparisonRows(oslo, current, (id) => id).filter((r) => r.supplier === 'sup-007');
+    // 2 items × 6 breaks, each carrying the item's one-time costs.
+    expect(rows).toHaveLength(12);
+    expect(rows.find((r) => r.item.startsWith('1 ') && r.breakQty === 3000)).toMatchObject({
+      unitPrice: 400,
+      oneTimeCosts: 3_000_000,
+      leadTimeDays: 20,
+    });
+    const mine = current.find((q) => q.supplierId === 'sup-007')!;
+    expect(mine.paymentTermsOffered).toBe('Net 45');
+    expect(mine.alternatives?.[0]?.description).toBe('Paper back label');
+    // sup-008 declined Oslo: it holds no current quote, so no comparison row
+    // and no award line can name it (an award line must name a quote on the event).
+    expect(current.some((q) => q.supplierId === 'sup-008')).toBe(false);
+    // …and a supplier that has quoted cannot slip into "declined" afterwards.
+    await intent(sup007, 't_rfqintent_respond', { rfqId: 'rfq-021', supplierId: 'sup-007' });
+    const w = await intent(sup007, 't_rfqintent_withdraw', { reason: 'noCapacity', text: 'x' }, rfqIntentStore.all().find((r) => r.supplierId === 'sup-007')!.id);
+    expect(w.reason).toMatch(/QUOTE_ALREADY_SUBMITTED/);
   });
 });

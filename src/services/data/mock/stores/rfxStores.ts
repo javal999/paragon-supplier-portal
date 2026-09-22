@@ -25,6 +25,7 @@ import {
   RFP_EVENT_SEED,
   RFP_RESPONSE_SEED,
 } from '../fixtures/rfxHub';
+import { RFQ_SAMPLE_AWARD_SEED } from '../fixtures/rfqSamples';
 import type {
   AwardRecord,
   NegotiationRound,
@@ -67,7 +68,8 @@ export const rfiResponseStore = collection<RfiResponse>(RFI_RESPONSE_SEED, 'rfi-
 export const rfpEventStore = collection<RfpEvent>(RFP_EVENT_SEED, 'rfp');
 export const rfpResponseStore = collection<RfpResponse>(RFP_RESPONSE_SEED, 'rfp-resp');
 export const negotiationRoundStore = collection<NegotiationRound>(NEGOTIATION_ROUND_SEED, 'nr');
-export const awardStore = collection<AwardRecord>(AWARD_SEED, 'aw');
+// The Amplify split award (rfq-024) joins after the hub's seeded award.
+export const awardStore = collection<AwardRecord>([...AWARD_SEED, ...RFQ_SAMPLE_AWARD_SEED], 'aw');
 
 /** The one response a supplier holds for an event, or undefined. */
 export const responseOf = <T extends { supplierId: string }>(

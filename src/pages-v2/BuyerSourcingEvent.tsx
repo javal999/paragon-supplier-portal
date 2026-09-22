@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import AppShellV2 from '../components/layout-v2/AppShellV2';
 import PageHeader from '../components/ui-v2/PageHeader';
@@ -32,7 +32,22 @@ import {
 import { useRfxCommand } from '../services/query/commandHooks';
 import { awardSplitRefusal, effectiveDeadline, reliabilityScoreFor } from '../services/transitions/rfxRules';
 import type { AwardLine } from '../services/sourcing/types';
+import {
+  bestScoredByItemAt,
+  defaultEvaluationTierQty,
+  eventPiecesAt,
+  isTieredRfq,
+  quoteTotalAt,
+  scoreRfqAt,
+} from '../services/sourcing/rfqComparison';
 import { DeadlinePill, EmptyRow, GateMarker, OtifOrNoHistory, money, qty, rfxNow } from './rfx/rfxDisplay';
+import {
+  EvaluationBreakSelect,
+  RfqContentSection,
+  TieredAwardForm,
+  TieredAwardLines,
+  TieredComparison,
+} from './rfx/TieredRfq';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ONE SOURCING EVENT — REQ-E03-03 and REQ-E03-05 (BUY).
@@ -93,9 +108,16 @@ const BuyerSourcingEvent: React.FC = () => {
   const [awardReason, setAwardReason] = useState('');
   const [extendTo, setExtendTo] = useState('');
   const [extendOnly, setExtendOnly] = useState<string[]>([]);
+  // RFx spec "Evaluation and award" — the break a TIERED RFQ is compared and
+  // awarded at. Unset = the default, the break nearest the RFQ's `totalQty`.
+  const [chosenBreak, setChosenBreak] = useState<number | null>(null);
 
-  const crumb = [t('hub.nav.section.sourcing'), t('rfx.event.title')];
+  // The eyebrow is the menu section alone: "Sourcing", as the board's is. It
+  // read "Sourcing · Sourcing event", naming the section twice.
+  const crumb = [t('hub.nav.section.sourcing')];
   const rfq = useMemo(() => (rfqs.data?.items ?? []).find((r) => r.id === rfqId) ?? null, [rfqs.data, rfqId]);
+  const tiered = rfq !== null && isTieredRfq(rfq);
+  const evalQty = rfq && tiered ? (chosenBreak ?? defaultEvaluationTierQty(rfq)) : null;
 
   const supplierName = (id: string) => suppliers.data?.items.find((s) => s.id === id)?.name ?? id;
   const supplierOtif = (id: string) => suppliers.data?.items.find((s) => s.id === id)?.otif ?? null;
@@ -116,27 +138,53 @@ const BuyerSourcingEvent: React.FC = () => {
     [current, gates.data],
   );
 
+  // CR-15 — reliability IS the supplier's OTIF; no history scores 50.
+  const reliabilityOf = (id: string) => reliabilityScoreFor(supplierOtif(id));
+  const scoringOpts = { pins: rfq?.fxPins, now: new Date(rfxNow()) };
   const scoring = useMemo(
     () =>
-      scoreQuotations(
-        qualified.map((q) => ({
-          id: q.id,
-          unitPrice: q.unitPrice,
-          currency: q.currency ?? BASE_CURRENCY,
-          leadTimeDays: q.leadTimeDays,
-          // CR-15 — reliability IS the supplier's OTIF; no history scores 50.
-          reliabilityScore: reliabilityScoreFor(supplierOtif(q.supplierId)),
-        })),
-        { pins: rfq?.fxPins, now: new Date(rfxNow()) },
-      ),
+      // A TIERED RFQ scores PRICE AS TOTAL COST AT THE EVALUATION BREAK — the
+      // same rule the award verb reads (`rfxReadModel.rfqScoring`). A legacy
+      // RFQ scores its header unit price exactly as before.
+      rfq && tiered && evalQty !== null
+        ? scoreRfqAt(rfq, qualified, evalQty, reliabilityOf, scoringOpts)
+        : scoreQuotations(
+            qualified.map((q) => ({
+              id: q.id,
+              unitPrice: q.unitPrice,
+              currency: q.currency ?? BASE_CURRENCY,
+              leadTimeDays: q.leadTimeDays,
+              reliabilityScore: reliabilityOf(q.supplierId),
+            })),
+            scoringOpts,
+          ),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [qualified, rfq?.fxPins, suppliers.data],
+    [qualified, rfq, tiered, evalQty, suppliers.data],
+  );
+  /** Per item, the best-scored quote at the break (a tiered RFQ only). */
+  const bestByItem = useMemo(
+    () =>
+      rfq && tiered && evalQty !== null
+        ? bestScoredByItemAt(rfq, qualified, evalQty, reliabilityOf, scoringOpts)
+        : new Map<number, string | null>(),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [qualified, rfq, tiered, evalQty, suppliers.data],
   );
   const scoreById = useMemo(
     () => new Map(scoring.kind === 'scored' ? scoring.scores.map((s) => [s.quoteId, s] as const) : []),
     [scoring],
   );
   const bestId = scoring.kind === 'scored' ? (scoring.scores.find((s) => s.topRanked)?.quoteId ?? null) : null;
+
+  // The board panel's "Award RFQ" / "View award details" open this page at its
+  // award section (`?section=award`), so the footer lands where its act is.
+  const [params] = useSearchParams();
+  const loaded = !rfqs.isPending && !quotes.isPending && !gates.isPending && rfq !== null;
+  useEffect(() => {
+    if (loaded && params.get('section') === 'award') {
+      document.getElementById('event-award')?.scrollIntoView?.({ block: 'start' });
+    }
+  }, [loaded, params]);
 
   if (rfqs.isPending || quotes.isPending || gates.isPending) return <LoadingState breadcrumb={crumb} />;
   if (rfqs.isError) return <ErrorState breadcrumb={crumb} error={rfqs.error} onRetry={() => rfqs.refetch()} />;
@@ -145,6 +193,28 @@ const BuyerSourcingEvent: React.FC = () => {
   const eventRounds = (rounds.data?.items ?? []).filter((r) => r.rfqId === rfq.id);
   const award = (awards.data?.items ?? []).find((a) => a.rfqId === rfq.id) ?? null;
   const currency = rfq.currency;
+
+  /**
+   * A tiered quote's figures AT THE EVALUATION BREAK — its total cost there and
+   * that total per piece. `undefined` for a legacy RFQ, whose header figures
+   * are the comparison, and for a quote with no price at the break.
+   */
+  const atBreak = (id: string): { total: number; perPiece: number } | undefined => {
+    if (!tiered || evalQty === null) return undefined;
+    const total = quoteTotalAt(rfq, byId(current, id), evalQty);
+    const pieces = eventPiecesAt(rfq, evalQty);
+    return total === null || pieces <= 0 ? undefined : { total, perPiece: total / pieces };
+  };
+  /** The price rows say which break they are read at, on a tiered RFQ. */
+  const rowLabel = (labelKey: string): string => {
+    if (tiered && evalQty !== null && labelKey === 'rfx.cmp.row.unitPrice') {
+      return t('rfqCompare.cmp.unitAtBreak', { qty: qty(evalQty) });
+    }
+    if (tiered && evalQty !== null && labelKey === 'rfx.cmp.row.totalPrice') {
+      return t('rfqCompare.cmp.eventTotal', { qty: qty(evalQty) });
+    }
+    return t(labelKey);
+  };
 
   /** The award lines the form currently describes. */
   const awardLines: AwardLine[] = qualified
@@ -345,12 +415,20 @@ const BuyerSourcingEvent: React.FC = () => {
         </div>
       )}
 
+      {/* — RFx spec: the tiered RFQ's content — items, spec, costs, files, breaks, questions, flags — */}
+      {tiered && <RfqContentSection rfq={rfq} />}
+
       {/* — REQ-E03-05 AC-01: the comparison — */}
       <section className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto mb-6">
         <div className="px-4 py-3 border-b border-border-subtle">
           <h2 className="text-sm font-semibold text-text-primary">{t('rfx.cmp.title')}</h2>
           <p className="text-xs text-text-tertiary mt-1">{t('rfx.cmp.basis')}</p>
           <p className="text-xs text-text-tertiary">{t('rfx.cmp.notAutomatic')}</p>
+          {tiered && evalQty !== null && (
+            <div className="mt-3">
+              <EvaluationBreakSelect rfq={rfq} value={evalQty} onChange={setChosenBreak} />
+            </div>
+          )}
         </div>
         {scoring.kind === 'refused' ? (
           <p className="px-4 py-8 text-center text-sm text-warning-hover" data-testid="cmp-refused">
@@ -383,8 +461,8 @@ const BuyerSourcingEvent: React.FC = () => {
             <tbody>
               {(
                 [
-                  ['rfx.cmp.row.unitPrice', (id: string) => money(byId(current, id).unitPrice, byId(current, id).currency ?? currency)],
-                  ['rfx.cmp.row.totalPrice', (id: string) => money(byId(current, id).totalPrice, byId(current, id).currency ?? currency)],
+                  ['rfx.cmp.row.unitPrice', (id: string) => money(atBreak(id)?.perPiece ?? byId(current, id).unitPrice, byId(current, id).currency ?? currency)],
+                  ['rfx.cmp.row.totalPrice', (id: string) => money(atBreak(id)?.total ?? byId(current, id).totalPrice, byId(current, id).currency ?? currency)],
                   ['rfx.cmp.row.leadTime', (id: string) => `${byId(current, id).leadTimeDays} ${t('rfx.unit.days')}`],
                   ['rfx.cmp.row.moq', (id: string) => (byId(current, id).moq === undefined ? '—' : qty(byId(current, id).moq!))],
                   ['rfx.cmp.row.payment', (id: string) => byId(current, id).paymentTermsOffered],
@@ -393,7 +471,7 @@ const BuyerSourcingEvent: React.FC = () => {
                 ] as const
               ).map(([labelKey, render]) => (
                 <TableRow key={labelKey} data-testid={`cmp-row-${labelKey}`}>
-                  <TableCell className="text-sm text-text-secondary">{t(labelKey)}</TableCell>
+                  <TableCell className="text-sm text-text-secondary">{rowLabel(labelKey)}</TableCell>
                   {current.map((q) => (
                     <TableCell key={q.id}>
                       <Data>{render(q.id)}</Data>
@@ -455,6 +533,20 @@ const BuyerSourcingEvent: React.FC = () => {
           <p className="px-4 py-2 text-xs text-text-tertiary" data-testid="cmp-single">
             {t('rfx.cmp.single')}
           </p>
+        )}
+        {tiered && evalQty !== null && current.length > 0 && (
+          <div className="p-4 border-t border-border-subtle">
+            <TieredComparison
+              rfq={rfq}
+              quotes={current}
+              evalQty={evalQty}
+              qualifies={qualifies}
+              gateOf={gateOf}
+              supplierName={supplierName}
+              reliabilityOf={reliabilityOf}
+              scoringOpts={scoringOpts}
+            />
+          </div>
         )}
       </section>
 
@@ -678,7 +770,7 @@ const BuyerSourcingEvent: React.FC = () => {
       </section>
 
       {/* — REQ-E03-05 BR-06 to BR-09: the award — */}
-      <section className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm">
+      <section id="event-award" className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm">
         <div className="px-4 py-3 border-b border-border-subtle text-sm font-semibold text-text-primary">
           {t('rfx.award.title')}
         </div>
@@ -688,6 +780,9 @@ const BuyerSourcingEvent: React.FC = () => {
             <p className="text-sm text-text-secondary">
               {t('rfx.award.recorded', { date: formatDate(award.awardedAt) })}
             </p>
+            {tiered ? (
+              <TieredAwardLines rfq={rfq} lines={award.lines} supplierName={supplierName} />
+            ) : (
             <Table>
               <TableHeader>
                 <TableHeaderCell>{t('rfx.award.col.supplier')}</TableHeaderCell>
@@ -710,6 +805,7 @@ const BuyerSourcingEvent: React.FC = () => {
                 ))}
               </tbody>
             </Table>
+            )}
             {award.reason && <p className="text-sm text-text-secondary">{award.reason}</p>}
             {award.departedFromBestScore && (
               <p className="text-sm text-warning-hover" data-testid="award-departed">
@@ -727,6 +823,43 @@ const BuyerSourcingEvent: React.FC = () => {
         ) : awardVerb.kind !== 'held' ? (
           <div className="p-4">
             <HandoffNotice availability={awardVerb} testId="handoff-rfq-award" />
+          </div>
+        ) : tiered && evalQty !== null ? (
+          // BL-37 — a tiered RFQ is awarded ITEM BY ITEM at the evaluation
+          // break, by the SAME verb (`t_rfq_award`) and the same policy.
+          <div className="p-4 space-y-3">
+            {noneAwardable ? (
+              <p className="text-sm text-warning-hover" role="status" data-testid="award-none-qualified">
+                {t('rfx.gate.noAward')}
+              </p>
+            ) : (
+              <TieredAwardForm
+                // The form's shares are per quote; a new break keeps them and
+                // re-derives every quantity and every best score.
+                rfq={rfq}
+                quotes={current}
+                evalQty={evalQty}
+                bestByItem={bestByItem}
+                qualifies={qualifies}
+                gateOf={gateOf}
+                supplierName={supplierName}
+                pending={command.isPending}
+                onConfirm={(lines, reason) =>
+                  run(
+                    {
+                      verb: 'award',
+                      rfqId: rfq.id,
+                      awardedQuotationId: lines[0]!.quotationId,
+                      awardedSupplierId: lines[0]!.supplierId,
+                      awardLines: lines,
+                      ...(reason ? { awardReason: reason } : {}),
+                    },
+                    'rfx.toast.awarded',
+                  )
+                }
+              />
+            )}
+            <p className="text-xs text-text-tertiary">{t('rfx.award.noPo')}</p>
           </div>
         ) : (
           <div className="p-4 space-y-3">
