@@ -186,6 +186,20 @@ describe('clarification Q&A on the card', () => {
   });
 });
 
+describe("a seat without the atoms reads the wait, in each control's own slot", () => {
+  it('a fulfilment-only seat: intent and the question box name Commercial; the box still opens', async () => {
+    renderWithProviders(<SupplierRFQs />, {
+      identity: { ...SUPPLIER, businessRoles: ['supplier', 'fulfilment'] },
+    });
+    const oslo = await card('rfq-021');
+    expect(oslo.getByTestId('handoff-rfqintent-declare')).toBeInTheDocument();
+    expect(oslo.queryByTestId('intent-respond-rfq-021')).toBeNull();
+    fireEvent.click(oslo.getByRole('button', { name: 'Ask question' }));
+    expect(oslo.getByTestId('handoff-rfqclarification-ask')).toBeInTheDocument();
+    expect(oslo.queryByTestId('clarification-send-rfq-021')).toBeNull();
+  });
+});
+
 describe("the buyer's side panel — read-only intent, and the answer", () => {
   it('shows the decline with its reason and words, and answers a question published with the asker hidden', async () => {
     rfqClarificationStore.add({

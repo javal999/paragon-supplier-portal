@@ -345,10 +345,6 @@ const LANE_BUNDLES = Object.freeze({
     // and is recorded rather than argued away.
     fulfilment: Object.freeze([
       'po:view', 'po:acknowledge', 'po:confirm',
-      // RFx spec 2026-09-21 — asking procurement what an RFQ means. It was an
-      // ungoverned toast; now it is a real write, and the lane that cannot quote
-      // keeps its voice: the people who will ship the order ask about delivery.
-      'rfqclarification:ask',
       // REQ-E07-02 / REQ-E07-05 — the other two answers to an order, and the
       // shipping notice on a confirmed one.
       'po:adjust', 'po:reject', 'po:shipping-notice',
