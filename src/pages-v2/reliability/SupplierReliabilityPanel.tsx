@@ -10,7 +10,7 @@ import { MissSplitLine, Rate, mascOf, pctOf } from './reliabilityDisplay';
 // THE SUPPLIER'S OWN RELIABILITY — REQ-E14-02 BR-07 / AC-03 (owner ENG-D3).
 //
 // A supplier sees its own confirmation rate, its commitment reliability, its
-// missed lines by cause, and PTI's plan-change figure for ITS materials — and
+// delivered-on-the-confirmed-date figure (CFOT, BL-82), its missed lines by cause, and PTI's plan-change figure for ITS materials — and
 // never another supplier's. That isolation is not enforced here: the service
 // returns this supplier's row and nothing else (`getSupplierReliability`
 // scopes before the page sees any data), so there is no other row to leak.
@@ -53,7 +53,7 @@ const SupplierReliabilityPanel: React.FC = () => {
           {t('rel.sup.empty')}
         </p>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3">
           <Tile label={t('rel.kpi.confirmation')} testId="rel-sup-confirmation">
             <div className="text-lg font-semibold">
               <Rate value={pctOf(row.confirmation.rate)} />
@@ -67,6 +67,12 @@ const SupplierReliabilityPanel: React.FC = () => {
               <Rate value={pctOf(row.commitment.rate)} />
             </div>
             <div className="text-xs text-text-tertiary">{t('rel.kpi.commitment.sub')}</div>
+          </Tile>
+          <Tile label={t('rel.kpi.cfot')} testId="rel-sup-cfot">
+            <div className="text-lg font-semibold">
+              <Rate value={pctOf(row.cfot.rate)} />
+            </div>
+            <div className="text-xs text-text-tertiary">{t('rel.kpi.cfot.sub', { count: row.cfot.pos })}</div>
           </Tile>
           <Tile label={t('rel.kpi.misses')} testId="rel-sup-misses">
             <div className="text-lg font-semibold">

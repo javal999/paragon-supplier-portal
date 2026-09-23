@@ -1048,10 +1048,15 @@ const callOffTarget: CommandTarget = {
         });
       } else {
         // The planner changes a released call-off: the supplier confirms again.
+        // What both sides had agreed is kept, so OTIF measures against it until
+        // the supplier confirms the change (BL-66 (2)); with no accepted
+        // confirmation now, the earlier agreement (if any) stands.
         callOffStore.update(id, (c) => {
           const { confirmation: _dropped, rejectionReason: _cleared, ...rest } = withQtyDate(c);
+          const agreed = isConfirmedAndAccepted(c) && c.confirmation ? c.confirmation.deliveries : c.agreedDeliveries;
           return {
             ...rest,
+            ...(agreed ? { agreedDeliveries: agreed } : {}),
             status: 'Awaiting Confirmation',
             releasedAt: now,
             notes: [...c.notes, { action: 'change', text: reason ?? '', at: now }],

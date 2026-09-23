@@ -27,6 +27,7 @@ import type { GoodsReceipt } from '../../data/mockGoodsReceipts';
 import { generateSchedule } from '../delivery/generator';
 import type { ReleaseCadence } from '../delivery/types';
 import { DELIVERY_GRACE_DAYS, MATCH_WINDOW_DAYS } from '../delivery/fulfillment';
+import { EARLY_DELIVERY_WINDOW_DAYS } from '../data/kpiWindow';
 import { ANTICIPATION_DAYS, DRIFT_COUNT } from '../chase/deliveryChase';
 import { addWorkingDays, documentInstant, type WorkingCalendar } from '../../lib/workingCalendar';
 import { hubWorkingCalendar } from './workingCalendarStore';
@@ -371,11 +372,14 @@ export const isConfirmedAndAccepted = (c: Pick<CallOff, 'status' | 'confirmation
 
 /**
  * The approved need date(s) and quantities OTIF is measured against (BR-07):
- * the accepted confirmation's deliveries, or the released call-off while it is
- * not yet confirmed.
+ * the accepted confirmation's deliveries; else what both sides last agreed
+ * (BL-66 (2) — a planner's change applies only once the supplier confirms it
+ * and that confirmation is accepted); else the released call-off, which is all
+ * there is before the supplier has ever confirmed.
  */
 export function approvedDeliveries(c: CallOff): readonly CallOffDelivery[] {
   if (c.confirmation && isConfirmedAndAccepted(c)) return c.confirmation.deliveries;
+  if (c.agreedDeliveries && c.agreedDeliveries.length > 0) return c.agreedDeliveries;
   return [{ quantity: c.quantity, date: c.needDate }];
 }
 
@@ -489,9 +493,13 @@ export interface DeliveryResult {
   readonly timing: DeliveryTiming;
   /** CR-08: received (or dispatched) quantity ≥ approved quantity; null while pending or missed. */
   readonly inFull: boolean | null;
-  /** What the result rests on: a goods receipt, the supplier's heads-up, or nothing yet. */
+  /** What the result rests on: goods receipts, the supplier's heads-up, or nothing yet. */
   readonly basis: 'receipt' | 'dispatch' | 'none';
+  /** The first receipt matched (or the heads-up). */
   readonly ref?: string;
+  /** Every receipt counted toward this delivery, first match first (BL-66 (3)). */
+  readonly refs?: readonly string[];
+  /** The quantity counted: the SUM of the matched receipts (or the heads-up's). */
   readonly quantity?: number;
 }
 
@@ -502,12 +510,24 @@ export const isMeasured = (c: CallOff): boolean => isReleased(c);
  * Delivery results for every measured call-off, per approved delivery.
  *
  * CR-06: a receipt counts toward a delivery of the same supplier and material
- * within MATCH_WINDOW_DAYS of its approved date; deliveries take receipts in
+ * when it arrives no more than EARLY_DELIVERY_WINDOW_DAYS before the approved
+ * date and no more than MATCH_WINDOW_DAYS after it. Deliveries take receipts in
  * date order, each the closest date then the closest quantity, and a receipt is
- * used once. Without a receipt, the call-off's own heads-ups (ASN or notice)
- * stand in, dated by expected arrival. CR-07: on time on or before the approved
- * date; missed when nothing arrived DELIVERY_GRACE_DAYS after it; pending
- * before that.
+ * used once.
+ *
+ * CR-08 (BL-66 (3)): "in full" is the SUM of every receipt matched to the
+ * delivery. After each delivery has taken its closest receipt, every receipt
+ * still unused goes to the nearest delivery (same supplier and material, inside
+ * its window) that is still short — so two partial receipts add up, while a
+ * receipt that is another call-off's closest match is never taken from it. A
+ * delivery is on time only when every receipt counted for it arrived on or
+ * before its approved date (CR-07).
+ *
+ * CR-07 (BL-66 (5)): with no receipt, a delivery is MISSED once
+ * DELIVERY_GRACE_DAYS have passed after its approved date — whether or not the
+ * supplier sent a heads-up. Before then a heads-up (ASN or notice, dated by
+ * expected arrival) stands in as a provisional result, and nothing at all is
+ * pending.
  */
 export function deliveryResults(
   callOffs: readonly CallOff[],
@@ -519,53 +539,88 @@ export function deliveryResults(
     .filter(isMeasured)
     .flatMap((c) => approvedDeliveries(c).map((d, seq) => ({ c, d, seq })))
     .sort((a, b) => a.d.date.localeCompare(b.d.date) || a.c.id.localeCompare(b.c.id) || a.seq - b.seq);
+  type Slot = (typeof slots)[number];
+  const matchable = (s: Slot, r: ReceiptEvent): boolean => {
+    const offset = daysBetween(s.d.date, r.date);
+    return (
+      r.supplierId === s.c.supplierId &&
+      r.materialCode === s.c.materialCode &&
+      offset >= -EARLY_DELIVERY_WINDOW_DAYS &&
+      offset <= MATCH_WINDOW_DAYS
+    );
+  };
   const used = new Set<ReceiptEvent>();
+  const matched = new Map<Slot, ReceiptEvent[]>();
+
+  // Pass 1 — CR-06: each delivery takes its closest receipt.
+  for (const s of slots) {
+    const candidates = receipts.filter((r) => !used.has(r) && matchable(s, r));
+    if (candidates.length === 0) continue;
+    const pick = [...candidates].sort(
+      (a, b) =>
+        Math.abs(daysBetween(s.d.date, a.date)) - Math.abs(daysBetween(s.d.date, b.date)) ||
+        Math.abs(a.quantity - s.d.quantity) - Math.abs(b.quantity - s.d.quantity) ||
+        a.ref.localeCompare(b.ref),
+    )[0];
+    used.add(pick);
+    matched.set(s, [pick]);
+  }
+
+  // Pass 2 — CR-08: a receipt left over tops up the nearest delivery still short.
+  const total = (rs: readonly ReceiptEvent[]): number => rs.reduce((t, r) => t + r.quantity, 0);
+  const leftovers = receipts
+    .filter((r) => !used.has(r))
+    .sort((a, b) => a.date.localeCompare(b.date) || a.ref.localeCompare(b.ref));
+  for (const r of leftovers) {
+    const short = slots.filter((s) => {
+      const got = matched.get(s);
+      return got !== undefined && total(got) < s.d.quantity && matchable(s, r);
+    });
+    if (short.length === 0) continue;
+    // `slots` is date-ordered, so a tie on distance goes to the earlier delivery.
+    const target = [...short].sort(
+      (a, b) => Math.abs(daysBetween(a.d.date, r.date)) - Math.abs(daysBetween(b.d.date, r.date)),
+    )[0];
+    used.add(r);
+    matched.get(target)!.push(r);
+  }
+
   const headsUpCache = new Map<string, HeadsUp[]>();
   const nowDay = nowIso.slice(0, 10);
   const out: DeliveryResult[] = [];
-
-  for (const { c, d, seq } of slots) {
+  for (const s of slots) {
+    const { c, d, seq } = s;
     const base = { callOffId: c.id, seq, approvedDate: d.date, approvedQty: d.quantity };
-    const candidates = receipts.filter(
-      (r) =>
-        !used.has(r) &&
-        r.supplierId === c.supplierId &&
-        r.materialCode === c.materialCode &&
-        Math.abs(daysBetween(d.date, r.date)) <= MATCH_WINDOW_DAYS,
-    );
-    if (candidates.length > 0) {
-      const pick = [...candidates].sort(
-        (a, b) =>
-          Math.abs(daysBetween(d.date, a.date)) - Math.abs(daysBetween(d.date, b.date)) ||
-          Math.abs(a.quantity - d.quantity) - Math.abs(b.quantity - d.quantity) ||
-          a.ref.localeCompare(b.ref),
-      )[0];
-      used.add(pick);
+    const got = matched.get(s);
+    if (got) {
+      const quantity = total(got);
       out.push({
         ...base,
-        timing: pick.date <= d.date ? 'onTime' : 'late',
-        inFull: pick.quantity >= d.quantity,
+        timing: got.every((r) => r.date <= d.date) ? 'onTime' : 'late',
+        inFull: quantity >= d.quantity,
         basis: 'receipt',
-        ref: pick.ref,
-        quantity: pick.quantity,
+        ref: got[0].ref,
+        refs: got.map((r) => r.ref),
+        quantity,
       });
       continue;
     }
     if (!headsUpCache.has(c.id)) headsUpCache.set(c.id, [...headsUpsFor(c, asns)]);
-    const pool = headsUpCache.get(c.id)!;
-    const h = pool.shift();
+    const h = headsUpCache.get(c.id)!.shift();
+    const missed = daysBetween(d.date, nowDay) > DELIVERY_GRACE_DAYS;
     if (h) {
       out.push({
         ...base,
-        timing: h.expectedArrival <= d.date ? 'onTime' : 'late',
-        inFull: h.quantity >= d.quantity,
+        // Nothing received DELIVERY_GRACE_DAYS after the date: missed, even
+        // though it was dispatched (BL-66 (5)). Before then, the heads-up.
+        timing: missed ? 'missed' : h.expectedArrival <= d.date ? 'onTime' : 'late',
+        inFull: missed ? null : h.quantity >= d.quantity,
         basis: 'dispatch',
         ref: h.ref,
         quantity: h.quantity,
       });
       continue;
     }
-    const missed = daysBetween(d.date, nowDay) > DELIVERY_GRACE_DAYS;
     out.push({ ...base, timing: missed ? 'missed' : 'pending', inFull: null, basis: 'none' });
   }
   return out;

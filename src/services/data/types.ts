@@ -63,6 +63,7 @@ import type {
   ReleaseCommandResult,
 } from '../delivery/views';
 import type { SupplierReliability } from '../engine/reliability';
+import type { SupplierCfot } from '../engine/cfot';
 import type { ReleaseSelection } from '../delivery/release';
 import type { EditPolicyPatch } from '../delivery/policy';
 // The unified chase read view (SDC-5c). TYPE-ONLY — the `chase` module composes
@@ -475,6 +476,14 @@ export interface CallOff {
   /** When the supplier was last asked to confirm; the 1-working-day deadline counts from here. */
   readonly releasedAt?: string;
   readonly confirmation?: CallOffConfirmation;
+  /**
+   * The deliveries last agreed by BOTH sides (BL-66 (2); REQ-E10-01 edge case
+   * "measure against the latest date agreed by both sides"). Kept when the
+   * planner changes a call-off the supplier had confirmed and that confirmation
+   * was accepted; OTIF measures against these until the supplier confirms the
+   * change and it is accepted. Absent when nothing was ever agreed.
+   */
+  readonly agreedDeliveries?: readonly CallOffDelivery[];
   /** The supplier's reason when it rejected the call-off. */
   readonly rejectionReason?: string;
   readonly dispatches: readonly CallOffDispatch[];
@@ -728,6 +737,8 @@ export type ReliabilityWindowWeeks = (typeof RELIABILITY_WINDOWS)[number];
 /** One supplier's reliability row as served (REQ-E14-02). Computed at read, never stored. */
 export interface SupplierReliabilityView extends SupplierReliability {
   readonly supplierName: string;
+  /** Delivered on the confirmed date (CFOT), per PO, on the engine data (`engine/cfot.agreedCfot`, BL-82). */
+  readonly cfot: SupplierCfot;
   /** The window measured, inclusive (`YYYY-MM-DD`). */
   readonly windowFrom: string;
   readonly windowTo: string;

@@ -58,8 +58,8 @@
 //     carried each period, taken on the latest version in the window.
 //     S = 0 (no seasonal movement) or n ≤ m has no scale: MASC is null, never 0.
 //
-// ⚠️ CFOT IS NOT REPORTED HERE. It waits on BL-66 (REQ-E14-02 open item); the
-// definition used to calibrate the synthetic dataset is `./cfot.ts`.
+// CFOT is not computed HERE: it lives in `./cfot.ts` (`agreedCfot`, since
+// BL-82), and the reliability read joins it per supplier beside these measures.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { grossRequirement } from './bom';
