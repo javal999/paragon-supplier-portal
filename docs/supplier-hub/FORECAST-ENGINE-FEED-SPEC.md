@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 0.1 draft, 2026-09-23 |
+| Version | 0.2 draft, 2026-09-23 |
 | For | The Master Data Management team, who own the engine's input data and its SAP integration (ENG-D1) |
 | What this is | Every input the in-house forecast engine reads: fields, key, grain, refresh, freshness limit, quality checks, and the likely SAP source |
 | What this is not | An interface design. How the data travels (API, events, files) is open under BL-11 (PQ-06) and belongs to IT |
@@ -228,6 +228,38 @@ The order below is the build order: section 2.1 feeds the first engine step (E14
 - **Stock-out flag:** SAP has no such field. It has to be derived, for example from days with zero stock at the distribution centre. The rule is MDM's to propose. Without it, a week of zero sales during a stock-out is read as zero demand, and the forecast learns to under-forecast (E14-01 BR-02).
 - **Likely SAP source:** billing or outbound delivery documents (VBRK, VBRP or LIKP, LIPS). Sell-in or sell-out is still open (ENG-D10).
 
+**FgPlanSnapshot: SAP's finished-goods plan as it stood each week** (added for E14-03, E14-04)
+
+| Field | Type | Meaning | Required |
+|---|---|---|---|
+| skuCode | text | Finished good | yes |
+| madeAt | date | Monday the plan was made | yes |
+| weekStart | date | Monday of the planned week | yes |
+| quantity | number | Planned quantity | yes |
+
+- **Key:** skuCode + madeAt + weekStart. **History:** at least 30 past plans, each covering the lead time plus review period, so safety stock can be learned from the plan's errors (E14-04 BR-05). **Refresh:** weekly.
+- **Why:** until PTI's own demand model (E14-07) is live, material requirements are calculated from SAP's plan, and safety stock from that plan's errors.
+- **Likely SAP source:** the demand plan (planned independent requirements, PBIM/PBED) or the IBP consensus plan, snapshotted weekly. To confirm with MDM.
+
+**SalesOrderWeek: open sales orders per finished good and week** (added for E14-03 forecast consumption)
+
+| Field | Type | Meaning | Required |
+|---|---|---|---|
+| skuCode | text | Finished good | yes |
+| weekStart | date | Monday of the delivery week | yes |
+| quantity | number | Open order quantity | yes |
+
+- **Key:** skuCode + weekStart. **Refresh:** daily. **Likely SAP source:** sales order schedule lines (VBAK, VBAP, VBEP). To confirm with MDM.
+
+**SapSafetyStock: SAP's current safety stock per material** (added for E14-04)
+
+| Field | Type | Meaning | Required |
+|---|---|---|---|
+| materialCode | text | Resolves in the master | yes |
+| quantity | number | Safety stock, base unit | yes |
+
+- **Key:** materialCode. **Refresh:** weekly. **Use:** the fallback where the engine has too little history, and the comparison on the Safety stock page. **Likely SAP source:** plant data (MARC-EISBE). To confirm with MDM.
+
 **Later feeds (not in the first build).** The engine will also need these when E14-07 and E14-08 are built. They will be specified then:
 - price history
 - the promotion calendar (ENG-D12)
@@ -249,3 +281,4 @@ The order below is the build order: section 2.1 feeds the first engine step (E14
 | Version | Date | Change |
 |---|---|---|
 | 0.1 | 2026-09-23 | First draft for the Master Data Management team (BL-103) |
+| 0.2 | 2026-09-23 | Added FgPlanSnapshot, SalesOrderWeek and SapSafetyStock, from the E14-03 and E14-04 build (PR #39) |

@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 2.0, 2026-09-23 |
+| Version | 2.1, 2026-09-23 |
 | What this is | Everything known to be outstanding for the Supplier Hub, in one list: decisions waiting on people, work waiting on those decisions, work waiting on the backend, and work that can start today |
 | What this is not | A plan or a commitment. Nothing here has a date. Sequencing belongs to the project owner |
 | Sources | Open items (section 7 of `SUPPLIER-HUB-REQUIREMENTS.md`), open decisions (section 9.3 of `SUPPLIER-HUB-PRD.md`), what is not built (section 5 of `BUILD-GAP.md`), stubs (section 6 of the requirements), and defects or debts found while building |
@@ -32,7 +32,6 @@ Still open. Items decided on 2026-09-21 are in section 6.
 | BL-57 | **A-01** — compliance and capability check for RFx with Mas Ary Hidayat | Procurement | Confirms the gate criteria in CR-23 | REQ-E03-01 |
 | BL-58 | **Q-19** — the PQ-10 answer ends with "They"; confirm nothing is missing | Material Planner | Confirms the delivery execution scope | REQ-E09-04 |
 | BL-65 | **CAP-1** — does supplier capacity usually stay the same every week or change? Being discussed | Material Planner | How capacity is entered (one number with overrides, or per week) | REQ-E08-04 |
-| BL-66 | **KPI definitions vs the calculation** (found building BL-53). The code differs from REQ-E10-01 / CR-08 in five places: (1) a supplier's counter-offer moves the CFOT date when sent, not when the planner accepts; (2) a planner's need-date change applies to OTIF before the supplier re-confirms; (3) "in full" compares one receipt, two partial receipts are not added; (4) OTIF counts up to 7 days early as on time, CFOT any earliness; (5) a dispatched call-off with no receipt stays pending and never counts as missed. Recommended: fix 1–3 to the requirements, decide 4 with BL-56, count 5 as missed after the window. Fixing moves supplier scores | Procurement, Material Planner | BL-82 | REQ-E10-01, CR-08 |
 | BL-67 | **Call-off over tolerance: refuse or approve?** Today a confirmation above +5% is allowed and waits for planner approval, as REQ-E09-03 BR-04 describes. Alternative: the supplier cannot send it | Material Planner | CR-05 wording | REQ-E09-03 |
 | BL-68 | **Days of cover in CR-24: supplier stock or PTI stock?** Today supplier stock ÷ demand (the existing days-of-supply figure) | Material Planner | CR-24 wording | REQ-E08-05 |
 | BL-69 | **Late at the deadline or after it?** Forecast commitments are late at the deadline minute; PO and call-off responses only after it. Recommended: one rule, late after the deadline | Material Planner | One convention in CR-26 and the response deadlines | REQ-E06-02, E07-02, E09-03 |
@@ -57,7 +56,6 @@ Decided on 2026-09-21 and ready to build. Priority: first what protects money an
 | BL-20 | SAP ROP replenishment recommendations released as call-offs | BL-01; forecast source decided (BL-10) | L | REQ-E09-01, X-16 |
 | BL-23 | Enter the agreed values once decided, on the admin screen (Tolerances and rule values); no developer needed since BL-32 | BL-54, BL-55, BL-56 | S | `/buyer/admin` |
 | BL-81 | Apply the answers to BL-67 to BL-71 (tolerance refusal, days-of-cover basis, late convention, admin roles, receipt measure and reopening) | BL-67 to BL-71 | S each | Decisions in section 1 |
-| BL-82 | Align the OTIF and CFOT calculation with the agreed KPI definitions, and update the definitions shown on the performance pages | BL-66 | M | REQ-E10-01 |
 
 ## 3. Build work waiting on the backend (Stage F)
 
@@ -173,3 +171,7 @@ Nothing blocks these.
 | BL-94 | Oslo demo: sup-007 fails the compliance gate on RFQ-2026-021 | 2026-09-22 | Fixed in PR #33: sup-007 now has a real delivery history, four past call-offs on the 100ml PET line (CO-2026-0043 to 0046, 80, 60, 40 and 25 days before the present) each received on its date and in full (GR-2026-018 to 021). Its calculated 90-day OTIF is 83% (5 of 6), so it passes the gate on Oslo, is ranked, and can take a share of the award. The gate minimum, the gate and the late CO-2026-0001 are unchanged; sup-008 (0%) still fails |
 | BL-99 | Supplier reliability and plan-change measures (E14-02) | 2026-09-23 | Built in PR #37 on synthetic data: planner page Forecast → Supplier reliability, supplier panel "Your reliability". CFOT waits on BL-66 |
 | BL-102 | Synthetic dataset for the forecast engine | 2026-09-23 | Built in PR #37: deterministic, calibrated to the slide measures (confirmation 65.9%, CFOT 36.7% by definition, packaging warehouse 124–136%, raw material 105–107%), labelled simulated |
+| BL-66 | KPI definitions vs the calculation | 2026-09-23 | Decided as recommended (KPI-1 to KPI-4 in section 9 of the requirements): fix the five differences; one 7-day early window for OTIF and CFOT until BL-56 sets the allowance. Built as BL-82 |
+| BL-82 | OTIF and CFOT aligned with the agreed definitions | 2026-09-23 | Built in PR #38: counter-offer counts on acceptance, planner change after re-confirmation, partial receipts summed, one early window (`kpiWindow.ts`), dispatched-but-not-received counts as missed after 3 days; definitions updated on both performance pages; CFOT shown on the reliability page and panel. No sample supplier's score moved |
+| BL-104 | Material requirement (E14-03) | 2026-09-23 | Built in PR #39 on synthetic data: BOM explosion, netting against stock and supplier-confirmed receipts, interim MOQ round-up; page Forecast → Material requirement |
+| BL-105 | Safety stock, safety lead time and reorder point (E14-04) | 2026-09-23 | Built in PR #39 on synthetic data: fill-rate safety stock from the plan's errors, tiers 95/90/85, safety lead time per supplier, ROP; zero safety stock flagged, not floored; page Forecast → Safety stock |

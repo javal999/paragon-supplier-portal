@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 0.3 draft, 2026-09-23 |
+| Version | 0.4 draft, 2026-09-23 |
 | What this is | Detailed requirements for the demand and material forecast engine PTI builds itself (owner decision ENG-1), with each calculation explained |
 | Status | Every requirement is **Proposed**. The decision to build is Validated (ENG-1), and 6 of the 13 engine decisions are decided (ENG-D1, D2, D3, D5, D8, D9, section 4). The rest of the detail has not yet been reviewed by the Material Planner |
 | Sources | ENG-1 (`SUPPLIER-HUB-REQUIREMENTS.md` section 9); methods and evidence in `research/FORECAST-METHOD-SPEC.md`; problem analysis in `research/FORECAST-BEST-PRACTICE-2026-09.md` |
@@ -853,6 +853,19 @@ Choices the first build (BL-102, BL-99) had to make where the requirements were 
 | ENG-B4 | The tolerance band (ENG-D8: ±10% per version, ±20% cumulative) also applies to PO quantity changes when classifying a missed line | E14-02 BR-03 |
 | ENG-B5 | The confirmation rate counts PO lines only, until forecast-period commitments are part of the engine's input | E14-02 BR-01 |
 
+### 4.1b Build decisions accepted (owner, 2026-09-23, PR #39)
+
+| ID | Decision | Applied in |
+|---|---|---|
+| ENG-B6 | A slow mover is a material needed in fewer than 3 of every 4 weeks over the last 52 (average demand interval ≥ 4/3); a material with no requirement is slow too | E14-04 BR-02 |
+| ENG-B7 | Volume for the default tiers is measured in pallets, so pieces and kilograms compare | E14-04 BR-02 |
+| ENG-B8 | Order quantity per cycle for the fill-rate rule = one review week of expected demand, rounded up to MOQ and order multiple | E14-04 BR-01, BR-02 |
+| ENG-B9 | Planned orders go to the largest-share supplier and are not split by share (interim, until E14-05) | E14-03 BR-06 |
+| ENG-B10 | In netting, a confirmed line counts at its latest confirmation even if late; open lines more than 14 days overdue are treated as closed | E14-03 BR-04 |
+| ENG-B11 | The forecast-consumption window defaults to the order's own week until set per SKU group | E14-03 BR-01 |
+| ENG-B12 | The safety-lead-time group default is the pooled percentile of the group; 0, marked, below 5 receipts | E14-04 BR-03 |
+| ENG-B13 | No safety-stock minimum. A floor of demand over the safety lead time would double-count the earlier release E14-03 applies for late suppliers. A material whose engine safety stock is zero while an order is expected is flagged "relies on the order lot (MOQ) — review" | E14-04 BR-01 |
+
 ### 4.2 Still open
 
 | ID | Decision | Owner | Blocks |
@@ -878,3 +891,4 @@ Choices the first build (BL-102, BL-99) had to make where the requirements were 
 | 0.1 | 2026-09-23 | First draft: E14-01 to E14-12 with calculation explanations, from ENG-1 and `research/FORECAST-METHOD-SPEC.md` |
 | 0.2 | 2026-09-23 | Owner decided ENG-D1, D2, D3, D5, D8 and D9. Data owned by the Master Data Management team, synthetic data until SAP is connected (E14-01 BR-06, BR-07); stock-accuracy tolerance 2%; suppliers see their own measures; tiered fill-rate targets; ±10% per version plus ±20% cumulative; damping 0.5 / 0. New open items ENG-D8a and ENG-D14 |
 | 0.3 | 2026-09-23 | Build decisions ENG-B1 to ENG-B5 from the first build (PR #37) accepted by the owner, section 4.1a |
+| 0.4 | 2026-09-23 | Build decisions ENG-B6 to ENG-B13 from PR #39 (E14-03, E14-04) accepted, section 4.1b |
