@@ -34,9 +34,12 @@
 //      (latest confirmation, less what was already received). An unconfirmed
 //      line counts ONLY when the planner includes it, at PTI's requested date
 //      and quantity, and is then marked (AC-02). SS is E14-04's safety stock.
-//   5. PLANNED ORDER (M2 step 5, BR-06). ⚠️ INTERIM SIZING: the net requirement
-//      rounded UP to the order multiple, and at least the MOQ. E14-05 (order
-//      sizing within warehouse space) replaces this; every result says so.
+//   5. PLANNED ORDER (M2 step 5, BR-06). Sized by E14-05 (`orderSizing.ts`):
+//      the caller passes the planned receipts E14-05 chose (`plannedReceipts`)
+//      and the netting re-runs on them, so every figure reconciles by the same
+//      formula. Without them the INTERIM sizing applies — the net requirement
+//      rounded UP to the order multiple, and at least the MOQ — which is also
+//      E14-05's last-resort fallback. Every result says which (`sizing`).
 //   6. RELEASE (M2 step 6, BR-05). Release week = need week − ⌈(lead time +
 //      safety lead time) ÷ 7⌉ weeks. A release week already past is "late to
 //      release", shown with its shortfall week — never silently moved.
@@ -343,6 +346,12 @@ export interface NettingInput {
   readonly safetyLeadTimeDays: number;
   readonly moq: number;
   readonly orderMultiple: number;
+  /**
+   * E14-05's planned receipts per week. When given, they ARE the planned
+   * orders (a week absent from the map has none); when absent, the interim
+   * round-up sizes each week's net requirement.
+   */
+  readonly plannedReceipts?: ReadonlyMap<IsoDate, number>;
 }
 
 export interface NettedWeek {
@@ -372,7 +381,9 @@ export function netMaterial(input: NettingInput): NettedWeek[] {
     const gross = input.gross.get(w) ?? 0;
     const receipts = input.receipts.get(w) ?? 0;
     const net = Math.max(0, gross + input.safetyStock - (poh + receipts));
-    const plannedReceipt = interimOrderSize(net, input.moq, input.orderMultiple);
+    const plannedReceipt = input.plannedReceipts
+      ? (input.plannedReceipts.get(w) ?? 0)
+      : interimOrderSize(net, input.moq, input.orderMultiple);
     const releaseWeek = plannedReceipt > 0 ? addDays(w, -7 * offset) : null;
     const end = poh + receipts + plannedReceipt - gross;
     const row: NettedWeek = {
@@ -426,6 +437,12 @@ export interface MaterialRequirementOptions {
   readonly safetyStock: ReadonlyMap<string, SafetyStockInput>;
   /** Per `supplierId|materialCode` (E14-04 BR-03). Absent: none. */
   readonly safetyLeadTime: ReadonlyMap<string, SafetyLeadTimeInput>;
+  /**
+   * E14-05's planned receipts per material and week (`plannedReceiptsOf`). A
+   * material in the map is sized by E14-05; one absent is sized by the interim
+   * round-up. Absent altogether: the whole run is interim.
+   */
+  readonly plannedReceipts?: ReadonlyMap<string, ReadonlyMap<IsoDate, number>>;
 }
 
 export const DEFAULT_HORIZON_WEEKS = 26;
@@ -475,8 +492,11 @@ export interface MaterialRequirementRun {
   readonly planMadeAt: IsoDate | null;
   readonly weeks: readonly IsoDate[];
   readonly method: { readonly name: 'MRP gross-to-net'; readonly spec: 'METHOD-SPEC M1, M2, M7'; readonly version: 1 };
-  /** ⚠️ E14-05 is not built: planned orders are rounded up to MOQ and multiple only. */
-  readonly sizing: 'interim';
+  /**
+   * `orderSizing`: planned orders come from E14-05 (MOQ, multiple, warehouse
+   * space, cost). `interim`: rounded up to MOQ and multiple only.
+   */
+  readonly sizing: 'interim' | 'orderSizing';
   readonly parameters: {
     readonly horizonWeeks: number;
     readonly consumptionWindow: ConsumptionWindow;
@@ -572,6 +592,7 @@ export function materialRequirement(data: EngineDataset, options: MaterialRequir
         safetyLeadTimeDays: slt.days,
         moq: src?.moq ?? 0,
         orderMultiple: src?.orderMultiple ?? 1,
+        plannedReceipts: options.plannedReceipts?.get(m.materialCode),
       });
       const stockFlagged = flagged.has(m.materialCode) || onHand === undefined;
       const rows: MaterialWeek[] = netted.map((n) => ({
@@ -613,7 +634,7 @@ export function materialRequirement(data: EngineDataset, options: MaterialRequir
     planMadeAt,
     weeks,
     method: { name: 'MRP gross-to-net', spec: 'METHOD-SPEC M1, M2, M7', version: 1 },
-    sizing: 'interim',
+    sizing: options.plannedReceipts ? 'orderSizing' : 'interim',
     parameters: {
       horizonWeeks: options.horizonWeeks,
       consumptionWindow: options.consumptionWindow,

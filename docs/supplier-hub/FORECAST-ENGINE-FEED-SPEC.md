@@ -197,6 +197,19 @@ The order below is the build order: section 2.1 feeds the first engine step (E14
 - **Checks:** unitsPerPallet > 0; every material with stock has a value.
 - **Likely SAP source:** alternative units of measure (MARM) with a pallet unit, or packing instructions.
 
+**MaterialValue: what one unit of a material is worth** (added with the E14-05 build)
+
+| Field | Type | Meaning | Required |
+|---|---|---|---|
+| materialCode | text | Resolves in the master | yes |
+| unitValueIdr | number | Rupiah per one base unit | yes |
+
+- **Key:** materialCode. **Refresh:** monthly, and on a price change.
+- **Use:** holding cost = value × the holding rate per year (ENG-D6, set by Finance). A material with no value cannot be weighed for holding cost; order sizing then keeps the interim round-up for it and marks it.
+- **Checks:** unitValueIdr > 0; every purchased material has a value.
+- **Likely SAP source:** material valuation (MBEW: standard price STPRS or moving average price VERPR, divided by the price unit PEINH).
+- **Until the feed exists** the synthetic dataset carries an invented value per material, by BOM slot (for example a closure a few hundred rupiah, a kilogram of an active several hundred thousand).
+
 ### 2.4 Finished goods and sales history (E14-07)
 
 **FinishedGood**
@@ -282,3 +295,4 @@ The order below is the build order: section 2.1 feeds the first engine step (E14
 |---|---|---|
 | 0.1 | 2026-09-23 | First draft for the Master Data Management team (BL-103) |
 | 0.2 | 2026-09-23 | Added FgPlanSnapshot, SalesOrderWeek and SapSafetyStock, from the E14-03 and E14-04 build (PR #39) |
+| 0.3 | 2026-09-23 | Added MaterialValue (value per unit, for holding cost), from the E14-05 build |

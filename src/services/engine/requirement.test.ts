@@ -77,6 +77,7 @@ function example(over: { counted?: number } = {}): EngineDataset {
     fgPlan: plan,
     salesOrders: [],
     sapSafetyStock: [{ materialCode: MAT, quantity: 3000 }],
+    materialValues: [{ materialCode: MAT, unitValueIdr: 2500 }],
   };
 }
 

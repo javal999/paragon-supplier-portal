@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import AppShellV2 from '../components/layout-v2/AppShellV2';
 import PageHeader from '../components/ui-v2/PageHeader';
 import PageMetaLine from '../components/ui-v2/PageMetaLine';
@@ -34,8 +35,8 @@ import { qtyOf } from './materialPlan/planDisplay';
 // count unconfirmed order lines, and they are then marked (AC-02).
 //
 // Every figure is computed by the forecast engine at read time on its
-// SYNTHETIC dataset (the `engineDataset` pill, X-03). Planned-order sizing is
-// the interim round-up; the page says so.
+// SYNTHETIC dataset (the `engineDataset` pill, X-03). Planned orders are sized
+// by E14-05 (the Order plan page); the page says which sizing the run used.
 // ─────────────────────────────────────────────────────────────────────────────
 
 type ReceiptsMode = 'confirmed' | 'include';
@@ -253,9 +254,18 @@ const BuyerMaterialRequirement: React.FC = () => {
         {t('mrq.synthetic')}
       </p>
       <p className="text-xs text-text-tertiary mb-1">{t('mrq.planSource')}</p>
-      <p className="text-xs text-text-tertiary mb-4" data-testid="mrq-interim-note">
-        {t('mrq.interim')}
-      </p>
+      {run?.sizing === 'orderSizing' ? (
+        <p className="text-xs text-text-tertiary mb-4" data-testid="mrq-sized-note">
+          {t('mrq.sized')}{' '}
+          <Link to="/buyer/order-plan" className="text-action underline">
+            {t('mrq.sized.link')}
+          </Link>
+        </p>
+      ) : (
+        <p className="text-xs text-text-tertiary mb-4" data-testid="mrq-interim-note">
+          {t('mrq.interim')}
+        </p>
+      )}
 
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <FilterChipsBar<ReceiptsMode> options={modeOptions} value={mode} onChange={setMode} />

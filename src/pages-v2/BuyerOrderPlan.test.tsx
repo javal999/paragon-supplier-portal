@@ -1,0 +1,150 @@
+import { describe, it, expect, afterEach, beforeEach } from 'vitest';
+import { screen, within, fireEvent, waitFor } from '@testing-library/react';
+import { renderWithProviders, BUYER } from '../test/test-utils';
+import BuyerOrderPlan from './BuyerOrderPlan';
+import { mockDataService } from '../services/data/mock/mockDataService';
+import { callOffStore } from '../services/data/mock/stores/callOffStore';
+import { purchaseOrderStore } from '../services/data/mock/stores/purchaseOrderStore';
+import { isLive } from '../services/liveness';
+import { PERSONA_SYSTEM_ROLES, SEEDED_SEAT_ROLES } from '../services/transitions/businessRoles';
+import { CALL_OFF_PO_STATES } from '../services/transitions/callOffRules';
+import i18n from '../lib/i18n';
+import type { QueryScope } from '../services/data/types';
+import { draftNeedDate, umbrellaLineFor } from './orderPlan/orderPlanRelease';
+import { sdcClock } from '../services/sdc/clock';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// REQ-E14-05 — the planner's Order plan page. Every figure is read back from
+// the service for the same scope, never restated. Release (BR-05) ends in the
+// call-off STORE, as a DRAFT on the supplier's open umbrella line.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const buyerScope: QueryScope = { personaType: 'buyer', supplierId: null, businessRoles: PERSONA_SYSTEM_ROLES.buyer };
+const supplierScope: QueryScope = { personaType: 'supplier', supplierId: 'sup-007', businessRoles: PERSONA_SYSTEM_ROLES.supplier };
+const PLANNER = { ...BUYER, businessRoles: SEEDED_SEAT_ROLES.buyer };
+
+beforeEach(() => {
+  callOffStore.reset();
+  purchaseOrderStore.reset();
+});
+afterEach(() => {
+  void i18n.changeLanguage('en');
+});
+
+const plan = async () => (await mockDataService.procurement.getOrderPlan(buyerScope))!;
+const openPos = async () =>
+  (await mockDataService.procurement.getPurchaseOrders(buyerScope, { status: [...CALL_OFF_PO_STATES] })).items;
+
+describe('BuyerOrderPlan — the planner page (REQ-E14-05)', () => {
+  it('renders inside the app shell with the SIMULATED engine pill — never Live — and every cost rate labelled a placeholder', async () => {
+    expect(isLive('engineDataset')).toBe(false);
+    renderWithProviders(<BuyerOrderPlan />, { identity: PLANNER, route: '/buyer/order-plan' });
+    expect(await screen.findByRole('heading', { name: 'Order plan' })).toBeInTheDocument();
+    expect(screen.getByText('Synthetic data · awaiting the MDM SAP feed')).toBeInTheDocument();
+    expect(screen.queryByText('Live')).toBeNull();
+    for (const k of ['holding', 'order', 'rent']) {
+      expect(screen.getByTestId(`op-cost-placeholder-${k}`)).toHaveTextContent('Placeholder — Finance to confirm');
+    }
+    expect(screen.getByTestId('op-cost-placeholder-penalty')).toHaveTextContent('Placeholder — the Material Planner to confirm');
+    expect(screen.getByTestId('op-cost-rent')).toHaveTextContent('Rp 35.000');
+    expect(screen.getAllByRole('navigation').length).toBeGreaterThan(0);
+  });
+
+  it('AC-02: the packaging fill for every week, against capacity, with rented pallets and their cost — the service’s own figures', async () => {
+    const p = await plan();
+    const pk = p.warehouses.find((w) => w.kind === 'packaging')!;
+    renderWithProviders(<BuyerOrderPlan />, { identity: PLANNER, route: '/buyer/order-plan' });
+    await screen.findByTestId('op-fill');
+    expect(screen.getByTestId('op-capacity')).toHaveTextContent('SYN-WH-PK');
+    expect(screen.getByTestId('op-capacity')).toHaveTextContent('1.800 pallets');
+    for (const wk of pk.weeks) {
+      expect(screen.getByTestId(`op-fill-plan-${wk.weekStart}`)).toHaveTextContent(`${Math.round(wk.fill! * 100)}%`);
+    }
+    const over = pk.weeks.find((wk) => wk.rentedPallets > 0)!;
+    expect(screen.getByTestId(`op-rent-${over.weekStart}`).textContent).toMatch(/^Rp /);
+    expect(within(screen.getByTestId(`op-fill-${over.weekStart}`)).getByText('Over capacity')).toBeInTheDocument();
+    expect(screen.getByTestId('op-kpi-orders')).toHaveTextContent(String(pk.after.orders));
+  });
+
+  it('BR-04: every recommendation shows the constraint that bound it and its saving', async () => {
+    const p = await plan();
+    const recs = p.warehouses.find((w) => w.kind === 'packaging')!.materials.flatMap((m) => m.recommendations);
+    renderWithProviders(<BuyerOrderPlan />, { identity: PLANNER, route: '/buyer/order-plan' });
+    await screen.findByTestId('op-recs');
+    for (const r of recs) {
+      expect(screen.getByTestId(`op-rec-${r.materialCode}-${r.weekStart}`)).toBeInTheDocument();
+      expect(screen.getByTestId(`op-binding-${r.materialCode}-${r.weekStart}`).textContent).not.toBe('');
+    }
+    const withSaving = recs.find((r) => r.savedIdr !== null && r.savedIdr > 0)!;
+    expect(screen.getByTestId(`op-saved-${withSaving.materialCode}-${withSaving.weekStart}`).textContent).toMatch(/^Rp [\d.]+ less than/);
+  });
+
+  it('the raw-material warehouse is planned separately (ENG-D7): its own capacity, and no order needed on this data', async () => {
+    const p = await plan();
+    const rm = p.warehouses.find((w) => w.kind === 'rawMaterial')!;
+    renderWithProviders(<BuyerOrderPlan />, { identity: PLANNER, route: '/buyer/order-plan' });
+    fireEvent.click(await screen.findByRole('radio', { name: 'Raw material warehouse' }));
+    expect(screen.getByTestId('op-capacity')).toHaveTextContent('SYN-WH-RM');
+    expect(rm.after.orders).toBe(0);
+    expect(screen.getByTestId('op-recs-empty')).toBeInTheDocument();
+  });
+
+  it('BR-05: “Create draft call-off” dispatches the existing draft verb on the supplier’s open line — a DRAFT in the store, nothing released', async () => {
+    const p = await plan();
+    const pos = await openPos();
+    const today = sdcClock.now().slice(0, 10);
+    const candidates = p.warehouses
+      .flatMap((w) => w.materials.flatMap((m) => m.recommendations))
+      .filter((r) => umbrellaLineFor(pos, r.supplierId, r.materialCode) !== null);
+    expect(candidates.length).toBeGreaterThan(0);
+    const r = candidates[0];
+    const line = umbrellaLineFor(pos, r.supplierId, r.materialCode)!;
+    const before = callOffStore.all().length;
+    renderWithProviders(<BuyerOrderPlan />, { identity: PLANNER, route: '/buyer/order-plan' });
+    fireEvent.click(await screen.findByTestId(`op-draft-${r.materialCode}-${r.weekStart}`));
+    await waitFor(() => expect(callOffStore.all().length).toBe(before + 1));
+    const made = callOffStore.all().find((c) => c.poLineId === line.line.id && c.quantity === r.quantity)!;
+    expect(made.status).toBe('Draft');
+    expect(made.needDate).toBe(draftNeedDate(r.weekStart, today));
+    expect(made.releasedAt).toBeUndefined();
+    expect(await screen.findByText('Draft created')).toBeInTheDocument();
+  });
+
+  it('a recommendation with no open agreement for its supplier and material says “No PO” and offers no act', async () => {
+    const p = await plan();
+    const pos = await openPos();
+    const blocked = p.warehouses
+      .flatMap((w) => w.materials.flatMap((m) => m.recommendations))
+      .find((r) => umbrellaLineFor(pos, r.supplierId, r.materialCode) === null)!;
+    renderWithProviders(<BuyerOrderPlan />, { identity: PLANNER, route: '/buyer/order-plan' });
+    const row = await screen.findByTestId(`op-rec-${blocked.materialCode}-${blocked.weekStart}`);
+    expect(within(row).getByText('No PO')).toBeInTheDocument();
+    expect(within(row).queryByRole('button')).toBeNull();
+  });
+
+  it('a PTI seat without the planning lane sees who acts, not the draft control', async () => {
+    renderWithProviders(<BuyerOrderPlan />, { identity: { ...BUYER, businessRoles: ['finance'] }, route: '/buyer/order-plan' });
+    await screen.findByTestId('op-recs');
+    expect(screen.queryByRole('button', { name: 'Create draft call-off' })).toBeNull();
+    expect(screen.getAllByTestId('handoff-orderplan-draft').length).toBeGreaterThan(0);
+  });
+
+  it('X-03: a supplier scope gets nothing — simulated engine output is PTI’s only', async () => {
+    expect(await mockDataService.procurement.getOrderPlan(supplierScope)).toBeNull();
+  });
+
+  it('BR-03 is live on the page: the run compares against last week’s plan, and says as of when', async () => {
+    const p = await plan();
+    expect(p.hasPreviousPlan).toBe(true);
+    expect(p.previousAsOf).not.toBeNull();
+    renderWithProviders(<BuyerOrderPlan />, { identity: PLANNER, route: '/buyer/order-plan' });
+    expect(await screen.findByText(/weighed against last week’s plan/)).toBeInTheDocument();
+  });
+
+  it('renders in Indonesian', async () => {
+    await i18n.changeLanguage('id');
+    renderWithProviders(<BuyerOrderPlan />, { identity: PLANNER, route: '/buyer/order-plan' });
+    expect(await screen.findByRole('heading', { name: 'Rencana pesanan' })).toBeInTheDocument();
+    expect(screen.getByTestId('op-cost-placeholder-rent')).toHaveTextContent('Sementara — menunggu konfirmasi Keuangan');
+  });
+});

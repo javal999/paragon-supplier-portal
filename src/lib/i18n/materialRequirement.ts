@@ -16,7 +16,10 @@ export const materialRequirementEn: Record<string, string> = {
     'Calculated on synthetic data built to reproduce PTI’s current measures. It proves the calculations, not the business answer.',
   'mrq.planSource': 'The finished-goods plan is SAP’s until PTI’s own demand forecast is live.',
   'mrq.interim':
-    'Planned orders are rounded up to the minimum order quantity and the order multiple only. Sizing within warehouse space comes later.',
+    'Planned orders are rounded up to the minimum order quantity and the order multiple only, without weighing warehouse space.',
+  'mrq.sized':
+    'Planned orders are sized by the order plan: MOQ and order multiple kept, and warehouse space weighed against the cost of another order.',
+  'mrq.sized.link': 'Open the order plan',
 
   'mrq.receipts.confirmed': 'Confirmed deliveries only',
   'mrq.receipts.include': 'Also count unconfirmed lines',
@@ -83,7 +86,7 @@ export const materialRequirementEn: Record<string, string> = {
   'mrq.def.net':
     'Net requirement: gross requirement + safety stock − (stock at the start of the week + confirmed receipts in the week), and never below zero. Receipts count at the date and quantity the supplier confirmed.',
   'mrq.def.planned':
-    'Planned order: the net requirement rounded up to the order multiple, and at least the minimum order quantity. It is released the lead time (plus any safety lead time) before the week it is needed.',
+    'Planned order: sized by the order plan — at least the net requirement and the minimum order quantity, a whole number of order multiples, and possibly covering later weeks where one order costs less than several. It is released the lead time (plus any safety lead time) before the week it is needed.',
   'mrq.def.end': 'Stock at end: stock at start + receipts + planned order − gross requirement.',
 };
 
@@ -99,7 +102,10 @@ export const materialRequirementId: Record<string, string> = {
     'Dihitung dengan data sintetis yang dibuat untuk meniru ukuran PTI saat ini. Ini membuktikan perhitungannya, bukan jawaban bisnisnya.',
   'mrq.planSource': 'Rencana barang jadi berasal dari SAP sampai prakiraan permintaan PTI sendiri aktif.',
   'mrq.interim':
-    'Pesanan terencana hanya dibulatkan ke atas ke jumlah pesanan minimum dan kelipatan pesanan. Penyesuaian dengan kapasitas gudang menyusul.',
+    'Pesanan terencana hanya dibulatkan ke atas ke jumlah pesanan minimum dan kelipatan pesanan, tanpa menimbang ruang gudang.',
+  'mrq.sized':
+    'Pesanan terencana ditentukan oleh rencana pesanan: MOQ dan kelipatan pesanan dijaga, dan ruang gudang ditimbang terhadap biaya satu pesanan lagi.',
+  'mrq.sized.link': 'Buka rencana pesanan',
 
   'mrq.receipts.confirmed': 'Hanya pengiriman terkonfirmasi',
   'mrq.receipts.include': 'Ikut hitung baris belum dikonfirmasi',
@@ -166,6 +172,6 @@ export const materialRequirementId: Record<string, string> = {
   'mrq.def.net':
     'Kebutuhan bersih: kebutuhan kotor + stok pengaman − (stok awal minggu + penerimaan terkonfirmasi pada minggu itu), dan tidak pernah di bawah nol. Penerimaan dihitung pada tanggal dan jumlah yang dikonfirmasi pemasok.',
   'mrq.def.planned':
-    'Pesanan terencana: kebutuhan bersih dibulatkan ke atas ke kelipatan pesanan, dan minimal jumlah pesanan minimum. Dirilis sebesar waktu tunggu (ditambah waktu tunggu pengaman, bila ada) sebelum minggu kebutuhannya.',
+    'Pesanan terencana: ditentukan oleh rencana pesanan — minimal kebutuhan bersih dan jumlah pesanan minimum, kelipatan pesanan yang utuh, dan dapat mencakup minggu berikutnya bila satu pesanan lebih murah daripada beberapa. Dirilis sebesar waktu tunggu (ditambah waktu tunggu pengaman, bila ada) sebelum minggu kebutuhannya.',
   'mrq.def.end': 'Stok akhir: stok awal + penerimaan + pesanan terencana − kebutuhan kotor.',
 };

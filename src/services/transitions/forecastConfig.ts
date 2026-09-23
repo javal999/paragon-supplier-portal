@@ -138,6 +138,27 @@ export function safetyLeadTimePercentile(): number {
 }
 
 /**
+ * ENG-D6 / REQ-E14-05 — the order-sizing cost rates in force: holding cost as
+ * a fraction of value per year, rupiah per order, rupiah per rented pallet per
+ * week, and (BR-03) rupiah per pallet an order inside the lead time changes.
+ * ⚠️ PLACEHOLDERS until Finance and the Material Planner decide — the page
+ * says so. The engine takes them as an argument (X-01).
+ */
+export function orderSizingCosts(): {
+  readonly orderCostIdr: number;
+  readonly holdingRatePerYear: number;
+  readonly rentIdrPerPalletWeek: number;
+  readonly changePenaltyIdrPerPallet: number;
+} {
+  return {
+    orderCostIdr: hubSetting('engine.orderCostIdr'),
+    holdingRatePerYear: hubSetting('engine.holdingCostPctPerYear') / 100,
+    rentIdrPerPalletWeek: hubSetting('engine.rentedSpaceIdrPerPalletWeek'),
+    changePenaltyIdrPerPallet: hubSetting('engine.changePenaltyIdrPerPallet'),
+  };
+}
+
+/**
  * REQ-E06-03 BR-06 — the first reminder goes out at half the deadline. Stays a
  * constant: it is a reminder's timing, not a rule value a party is measured by,
  * and §3.6 names no rule for it.

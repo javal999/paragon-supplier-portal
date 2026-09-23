@@ -43,6 +43,7 @@ export function integrityViolations(d: EngineDataset, ctx: IntegrityContext): In
   d.poLines.forEach((l) => material(`poLines ${l.poNumber}/${l.line}`, l.materialCode));
   d.planVersions.forEach((v) => material(`planVersions ${v.supplierId} v${v.versionNo}`, v.materialCode));
   d.sapSafetyStock.forEach((s) => material('sapSafetyStock', s.materialCode));
+  d.materialValues.forEach((v) => material('materialValues', v.materialCode));
 
   for (const id of new Set([...d.sources.map((s) => s.supplierId), ...d.poLines.map((l) => l.supplierId)])) {
     if (!ctx.isKnownSupplier(id)) out.push({ rule: 'UNKNOWN_SUPPLIER', where: 'sources/poLines', detail: id });

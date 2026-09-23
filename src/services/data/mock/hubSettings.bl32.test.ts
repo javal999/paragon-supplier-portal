@@ -41,8 +41,9 @@ import { otifPassesGate } from '../../sourcing/complianceGate';
 import { coverage, riskFor, stockFreshness, supplyBand } from '../../transitions/inventoryRules';
 import { updateSlaFor } from '../../transitions/inventoryConfig';
 import { coverageBands } from '../../sdc/consolidation';
-import { engineServiceTargets, safetyLeadTimePercentile } from '../../transitions/forecastConfig';
+import { engineServiceTargets, orderSizingCosts, safetyLeadTimePercentile } from '../../transitions/forecastConfig';
 import { empiricalQuantile, fillRateSafetyStock } from '../../engine/safetyStock';
+import { singleItemSolver, type SizingItem } from '../../engine/orderSizing';
 import { getKnownFlows } from '../../transitions';
 import { sdcClock } from '../../sdc';
 
@@ -198,6 +199,11 @@ describe('BL32-POP · the population of rule values is derived from the config m
       'invoice.standardCapIdr': 'BL-54',
       'gate.minOtifPct': 'BL-55',
       'gate.noHistoryPasses': 'BL-55',
+      // ENG-D6 — Finance's cost rates; REQ-E14-05 BR-03 — the Material Planner's penalty.
+      'engine.holdingCostPctPerYear': 'ENG-D6',
+      'engine.orderCostIdr': 'ENG-D6',
+      'engine.rentedSpaceIdrPerPalletWeek': 'ENG-D6',
+      'engine.changePenaltyIdrPerPallet': 'REQ-E14-05 BR-03',
     });
   });
 });
@@ -278,6 +284,8 @@ describe('BL32-READ · every reader of a value reads it through its accessor, at
       // takes them as arguments (X-01); the engine never reads the store.
       engineServiceTargets: ['src/services/data/mock/MockProcurementService.ts', 'src/services/transitions/forecastConfig.ts'],
       safetyLeadTimePercentile: ['src/services/data/mock/MockProcurementService.ts', 'src/services/transitions/forecastConfig.ts'],
+      // ENG-D6 / REQ-E14-05 — the same shape: the service passes them to the engine.
+      orderSizingCosts: ['src/services/data/mock/MockProcurementService.ts', 'src/services/transitions/forecastConfig.ts'],
     };
     for (const [fn, files] of Object.entries(table)) expect(callersOf(fn), fn).toEqual(files);
     // Known-true through a second door: the SDC coverage indicator never
@@ -318,6 +326,33 @@ interface Flip {
 /** REQ-E14-04's worked example: ten plan errors, a 5,000 order per cycle, and ten delivery delays. */
 const PLAN_ERRORS = [600, -800, 2600, 0, -1200, 1500, 200, -300, 900, 400];
 const DELAYS = [0, 0, 0, 1, 1, 2, 2, 3, 5, 9];
+
+/**
+ * REQ-E14-05's worked example, priced with the rates in force: 1,000 a week for
+ * 3 weeks of a material worth Rp 50,000 a unit, 100 units a pallet. The rule
+ * outcome is how many orders the sizing places. `space` adds a 15-pallet
+ * warehouse; `previous` is last run's weekly plan, all inside the lead time.
+ */
+const ordersPlaced = (opts: { space?: boolean; previous?: number[] } = {}): number => {
+  const c = orderSizingCosts();
+  const item: SizingItem = {
+    materialCode: 'PK-PETB-8801',
+    startStock: 0,
+    gross: [1000, 1000, 1000],
+    receipts: [0, 0, 0],
+    safetyStock: 0,
+    moq: 0,
+    orderMultiple: 1,
+    offsetWeeks: 3,
+    palletsPerUnit: 1 / 100,
+    holdingPerUnitWeek: (50_000 * c.holdingRatePerYear) / 52,
+    ...(opts.previous ? { previous: opts.previous } : {}),
+  };
+  const space = opts.space
+    ? { capacityPallets: 15, rentIdrPerPalletWeek: c.rentIdrPerPalletWeek }
+    : { capacityPallets: Infinity, rentIdrPerPalletWeek: 0 };
+  return singleItemSolver(item, [0, 0, 0], space, c).plan().filter((x) => x > 0).length;
+};
 
 const FLIPS: Record<string, Flip> = {
   'callOff.overPct': {
@@ -441,6 +476,18 @@ const FLIPS: Record<string, Flip> = {
     read: () => fillRateSafetyStock(PLAN_ERRORS, 5000, engineServiceTargets().slow),
     atDefault: 0,
     afterChange: 200,
+  },
+  // ENG-D6 at the placeholders: one order of 3,000 (Rp 750,000 + 3,000 unit-weeks × Rp 240).
+  'engine.orderCostIdr': { to: 250_000, read: () => ordersPlaced(), atDefault: 1, afterChange: 2 },
+  'engine.holdingCostPctPerYear': { to: 100, read: () => ordersPlaced(), atDefault: 1, afterChange: 3 },
+  // 15 pallets of room: one order spills 5 pallets for a week; at Rp 100,000 a pallet two orders win.
+  'engine.rentedSpaceIdrPerPalletWeek': { to: 100_000, read: () => ordersPlaced({ space: true }), atDefault: 1, afterChange: 2 },
+  // BR-03: last run planned 1,000 a week, all inside the lead time; with no penalty the plan re-sizes.
+  'engine.changePenaltyIdrPerPallet': {
+    to: 0,
+    read: () => ordersPlaced({ previous: [1000, 1000, 1000] }),
+    atDefault: 3,
+    afterChange: 1,
   },
   'engine.safetyLeadTimePercentile': {
     to: 90,

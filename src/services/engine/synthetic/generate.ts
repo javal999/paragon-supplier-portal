@@ -47,6 +47,11 @@
 //   generated after everything else, so adding them moved no existing row: the
 //   BL-102 calibration measures are exactly what they were.
 //
+// ── MATERIAL VALUE (E14-05) ─────────────────────────────────────────────────
+//   Rupiah per unit per material, for the holding cost order sizing weighs.
+//   Invented bands by BOM slot. Its own stream (`seed ^ VALUE_STREAM`), drawn
+//   last, for the same reason: no earlier row moves.
+//
 // ── PURITY (X-01) ───────────────────────────────────────────────────────────
 //   Inputs in, dataset out. The present, the lead-time rule and the
 //   confirmation-deadline rule are ARGUMENTS; there is no clock read, no store
@@ -69,6 +74,7 @@ import type {
   IsoDate,
   IsoInstant,
   MaterialSource,
+  MaterialValue,
   MaterialVolume,
   PlanVersion,
   PoLine,
@@ -140,6 +146,8 @@ export const DEFAULT_SIZES: GeneratorSizes = Object.freeze({
 
 /** XOR-ed into the seed for the plan stream, so it never shares draws with the rest. */
 const PLAN_STREAM = 0x5eed0e14;
+/** XOR-ed into the seed for the material-value stream (E14-05), for the same reason. */
+const VALUE_STREAM = 0x5eed0e15;
 
 /** The calibration targets the generator steers at (the calibration test measures them). */
 export const WAREHOUSE_TARGETS = Object.freeze({
@@ -795,6 +803,31 @@ function buildSapSafetyStock(materials: readonly EngineMaterial[], baseline: Rea
   }));
 }
 
+/**
+ * Rupiah per base unit, by BOM slot (E14-05: holding cost = a share of value
+ * per year). Invented bands of the right order for Indonesian cosmetics
+ * packaging and ingredients: a closure a few hundred rupiah, a bottle a few
+ * thousand; a kilogram of base oil tens of thousands, of an active hundreds of
+ * thousands. Rounded to Rp 50 (PCS) or Rp 1,000 (KG).
+ */
+const VALUE_BANDS: Readonly<Record<Slot, readonly [number, number]>> = Object.freeze({
+  container: [1_200, 4_000],
+  closure: [300, 1_200],
+  carton: [600, 2_500],
+  base: [18_000, 45_000],
+  feedstock: [25_000, 70_000],
+  active: [350_000, 1_200_000],
+  fragrance: [300_000, 900_000],
+});
+
+function buildMaterialValues(materials: readonly GeneratorMaterial[], rng: Rng): MaterialValue[] {
+  return materials.map((m) => {
+    const [lo, hi] = VALUE_BANDS[slotOf(m)];
+    const step = m.canonicalUom === 'PCS' ? 50 : 1_000;
+    return { materialCode: m.materialCode, unitValueIdr: Math.round(rng.range(lo, hi) / step) * step };
+  });
+}
+
 // ── The dataset ─────────────────────────────────────────────────────────────
 
 export function generateEngineDataset(input: GeneratorInput): EngineDataset {
@@ -837,6 +870,8 @@ export function generateEngineDataset(input: GeneratorInput): EngineDataset {
   const fgPlan = buildFgPlan(finishedGoods, sales, thisMonday, sizes, planRng);
   const salesOrders = buildSalesOrders(fgPlan, thisMonday, planRng);
   const sapSafetyStock = buildSapSafetyStock(materials, baseline, planRng);
+  // The value stream (E14-05) — last, on its own seed: no earlier row moves.
+  const materialValues = buildMaterialValues(sortedInput, createRng((input.seed ^ VALUE_STREAM) >>> 0));
 
   return {
     provenance: { liveness: 'SIMULATED', generator: 'synthetic', seed: input.seed, present: today },
@@ -854,5 +889,6 @@ export function generateEngineDataset(input: GeneratorInput): EngineDataset {
     fgPlan,
     salesOrders,
     sapSafetyStock,
+    materialValues,
   };
 }

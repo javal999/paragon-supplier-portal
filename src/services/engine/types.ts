@@ -231,6 +231,16 @@ export interface SapSafetyStock {
   readonly quantity: number;
 }
 
+/**
+ * A material's value per ONE base unit, in rupiah — SAP's material valuation
+ * (E14-05: the holding cost is a share of value per year, ENG-D6). Added with
+ * E14-05; SYNTHETIC until the Master Data Management feed carries it.
+ */
+export interface MaterialValue {
+  readonly materialCode: string;
+  readonly unitValueIdr: number;
+}
+
 /** Where the dataset came from — X-03: every result says so. */
 export interface DatasetProvenance {
   readonly liveness: 'SIMULATED';
@@ -263,6 +273,8 @@ export interface EngineDataset {
   readonly salesOrders: readonly SalesOrderWeek[];
   /** SAP's safety stock per material (E14-04 BR-05 fallback and comparison). */
   readonly sapSafetyStock: readonly SapSafetyStock[];
+  /** Value per unit per material (E14-05 holding cost). */
+  readonly materialValues: readonly MaterialValue[];
 }
 
 /** The key that joins a line's changes, confirmations and receipts. */
