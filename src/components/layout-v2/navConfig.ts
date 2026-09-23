@@ -25,6 +25,7 @@ import {
   Radio,
   Receipt,
   ShieldCheck,
+  ShieldHalf,
   ShoppingCart,
   SlidersHorizontal,
   Target,
@@ -92,6 +93,7 @@ export const PTI_NAV: readonly NavSection[] = [
       { labelKey: 'hub.nav.pti.commitments', icon: ChartLine, path: '/buyer/collaboration' },
       { labelKey: 'hub.nav.pti.reliability', icon: Target, path: '/buyer/reliability' },
       { labelKey: 'hub.nav.pti.materialRequirement', icon: Layers, path: '/buyer/material-requirement' },
+      { labelKey: 'hub.nav.pti.safetyStock', icon: ShieldHalf, path: '/buyer/safety-stock' },
     ],
   },
   {

@@ -76,6 +76,7 @@ import BuyerForecasts from '../pages-v2/BuyerForecasts';
 import BuyerCommitments from '../pages-v2/BuyerCommitments';
 import BuyerReliability from '../pages-v2/BuyerReliability';
 import BuyerMaterialRequirement from '../pages-v2/BuyerMaterialRequirement';
+import BuyerSafetyStock from '../pages-v2/BuyerSafetyStock';
 import SupplierForecastCommitments from '../pages-v2/SupplierForecastCommitments';
 import SupplierPerformance from '../pages-v2/SupplierPerformance';
 import NotFound from '../pages-v2/NotFound';
@@ -144,6 +145,8 @@ const AppRouter: React.FC = () => {
           <Route path="/buyer/reliability" element={<BuyerReliability />} />
           {/* REQ-E14-03 — material requirement (forecast engine, SIMULATED). */}
           <Route path="/buyer/material-requirement" element={<BuyerMaterialRequirement />} />
+          {/* REQ-E14-04 — safety stock, safety lead time and reorder point (SIMULATED). */}
+          <Route path="/buyer/safety-stock" element={<BuyerSafetyStock />} />
           <Route
             path="/buyer/collaboration/responses"
             element={

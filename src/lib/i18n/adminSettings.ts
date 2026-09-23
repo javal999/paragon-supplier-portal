@@ -96,6 +96,8 @@ export const adminSettingsEn: Record<string, string> = {
   'adminSet.rule.CR-02': 'CR-02 · Day bands, used only where no lead time is on record',
   'adminSet.rule.CR-03': 'CR-03 · Supplier coverage',
   'adminSet.rule.REQ-E08-01': 'REQ-E08-01 · Stale period',
+  'adminSet.rule.ENG-D5': 'ENG-D5 · Forecast engine fill-rate targets',
+  'adminSet.rule.REQ-E14-04': 'REQ-E14-04 · Forecast engine safety lead time',
 
   // ── One label and hint per value ────────────────────────────────────────
   'adminSet.key.callOff.overPct.label': 'Over the released quantity, accepted without the planner',
@@ -144,6 +146,14 @@ export const adminSettingsEn: Record<string, string> = {
   'adminSet.key.coverage.atRiskFromPct.hint': 'Below this is Uncovered. Must be below Covered.',
   'adminSet.key.stale.defaultDays.label': 'Default stale period',
   'adminSet.key.stale.defaultDays.hint': 'A supplier stock figure older than this shows as out of date, unless the pair has its own period below.',
+  'adminSet.key.engine.fillRateHighPct.label': 'Fill-rate target, high-volume materials',
+  'adminSet.key.engine.fillRateHighPct.hint': 'The share of demand filled from stock the safety stock is sized for. Until the Material Planner lists the tiers, the top 20% of materials by volume.',
+  'adminSet.key.engine.fillRateStandardPct.label': 'Fill-rate target, other materials',
+  'adminSet.key.engine.fillRateStandardPct.hint': 'Every material that is neither high-volume nor a slow mover. No higher than the high-volume target.',
+  'adminSet.key.engine.fillRateSlowPct.label': 'Fill-rate target, slow movers',
+  'adminSet.key.engine.fillRateSlowPct.hint': 'Materials needed in fewer than three weeks of every four. No higher than the target for other materials.',
+  'adminSet.key.engine.safetyLeadTimePercentile.label': 'Share of late deliveries the safety lead time covers',
+  'adminSet.key.engine.safetyLeadTimePercentile.hint': 'Orders are released early by the delay this share of a supplier’s deliveries arrived within, after the confirmed date.',
 
   // ── Stale period per supplier and material ──────────────────────────────
   'adminSet.stale.title': 'Stale period per supplier and material',
@@ -259,6 +269,8 @@ export const adminSettingsId: Record<string, string> = {
   'adminSet.rule.CR-02': 'CR-02 · Rentang hari, hanya jika waktu tunggu tidak tercatat',
   'adminSet.rule.CR-03': 'CR-03 · Cakupan pemasok',
   'adminSet.rule.REQ-E08-01': 'REQ-E08-01 · Periode data usang',
+  'adminSet.rule.ENG-D5': 'ENG-D5 · Target tingkat pemenuhan mesin prakiraan',
+  'adminSet.rule.REQ-E14-04': 'REQ-E14-04 · Waktu tunggu pengaman mesin prakiraan',
 
   'adminSet.key.callOff.overPct.label': 'Kelebihan dari kuantitas yang dirilis, diterima tanpa perencana',
   'adminSet.key.callOff.overPct.hint': 'Konfirmasi yang melebihi batas ini menunggu perencana. Berlaku untuk setiap jenis call-off. Kekurangan tidak pernah menunggu: ditampilkan sebagai pengiriman sebagian.',
@@ -306,6 +318,14 @@ export const adminSettingsId: Record<string, string> = {
   'adminSet.key.coverage.atRiskFromPct.hint': 'Di bawah ini Tidak tercakup. Harus di bawah Tercakup.',
   'adminSet.key.stale.defaultDays.label': 'Periode data usang bawaan',
   'adminSet.key.stale.defaultDays.hint': 'Angka stok pemasok yang lebih lama dari ini tampil usang, kecuali pasangan itu punya periode sendiri di bawah.',
+  'adminSet.key.engine.fillRateHighPct.label': 'Target tingkat pemenuhan, material volume tinggi',
+  'adminSet.key.engine.fillRateHighPct.hint': 'Porsi permintaan yang dipenuhi dari stok, dasar ukuran stok pengaman. Sampai Material Planner menetapkan tingkatnya, 20% material teratas menurut volume.',
+  'adminSet.key.engine.fillRateStandardPct.label': 'Target tingkat pemenuhan, material lain',
+  'adminSet.key.engine.fillRateStandardPct.hint': 'Setiap material yang bukan volume tinggi dan bukan bergerak lambat. Tidak lebih tinggi dari target volume tinggi.',
+  'adminSet.key.engine.fillRateSlowPct.label': 'Target tingkat pemenuhan, material bergerak lambat',
+  'adminSet.key.engine.fillRateSlowPct.hint': 'Material yang dibutuhkan kurang dari tiga dari setiap empat minggu. Tidak lebih tinggi dari target material lain.',
+  'adminSet.key.engine.safetyLeadTimePercentile.label': 'Porsi pengiriman terlambat yang ditutup waktu tunggu pengaman',
+  'adminSet.key.engine.safetyLeadTimePercentile.hint': 'Pesanan dirilis lebih awal sebesar keterlambatan yang dicapai porsi pengiriman pemasok ini, setelah tanggal terkonfirmasi.',
 
   'adminSet.stale.title': 'Periode data usang per pemasok dan material',
   'adminSet.stale.intro':

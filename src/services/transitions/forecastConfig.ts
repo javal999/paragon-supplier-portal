@@ -15,6 +15,8 @@
 //   · CR-26 / REQ-E06-02 BR-07 — commitment deadlines in working days on the
 //     hub calendar; REQ-E06-03 BR-06 — reminders.
 //   · Section 3.6 — starter reason codes for a commitment below forecast.
+//   · ENG-D5 / REQ-E14-04 — the forecast engine's fill-rate targets per tier
+//     and the safety-lead-time percentile (the administrator's, BL-32).
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { ForecastStream, MaterialType } from '../sdc/types';
@@ -115,6 +117,24 @@ export function commitmentDeadlineWorkingDays(): { readonly firm: number; readon
     firm: hubSetting('commitment.firmDeadlineWorkingDays'),
     other: hubSetting('commitment.otherDeadlineWorkingDays'),
   };
+}
+
+/**
+ * ENG-D5 / REQ-E14-04 BR-02 — the forecast engine's fill-rate target per
+ * service tier, as fractions (95% / 90% / 85% by default). In force now; the
+ * engine itself takes them as an argument (X-01).
+ */
+export function engineServiceTargets(): { readonly high: number; readonly standard: number; readonly slow: number } {
+  return {
+    high: hubSetting('engine.fillRateHighPct') / 100,
+    standard: hubSetting('engine.fillRateStandardPct') / 100,
+    slow: hubSetting('engine.fillRateSlowPct') / 100,
+  };
+}
+
+/** REQ-E14-04 BR-03 — the delay percentile the safety lead time covers, as a fraction (0.8). In force now. */
+export function safetyLeadTimePercentile(): number {
+  return hubSetting('engine.safetyLeadTimePercentile') / 100;
 }
 
 /**

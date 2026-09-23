@@ -117,11 +117,14 @@ import type {
   ReliabilityWindowWeeks,
   SupplierReliabilityView,
   MaterialRequirementView,
+  SafetyStockView,
 } from '../types';
 import { PR_INTAKE_LINES } from './fixtures/prIntake';
 import { engineDataset } from './fixtures/engineDataset';
 import { supplierReliability, trailingWindow } from '../../engine/reliability';
 import { defaultRequirementOptions, materialRequirement } from '../../engine/requirement';
+import { DEFAULT_SAFETY_STOCK_OPTIONS, requirementInputs, safetyStockRun, type SafetyStockRun } from '../../engine/safetyStock';
+import { engineServiceTargets, safetyLeadTimePercentile } from '../../transitions/forecastConfig';
 import { dayOf } from '../../engine/dates';
 import { labelOf } from '../../sdc/materialMaster';
 import { sdcClock } from '../../sdc/clock';
@@ -276,6 +279,16 @@ function trendForScope(scope: QueryScope): PerformancePoint[] {
 // ─────────────────────────────────────────────────────────────────────────────
 const INVOICE_NOW = `${DECLARED_PRESENT}T00:00:00.000Z`;
 
+/** REQ-E14-04 on the engine dataset, at the hub's present, with the values in force. */
+function engineSafetyStock(): SafetyStockRun {
+  return safetyStockRun(engineDataset(), {
+    ...DEFAULT_SAFETY_STOCK_OPTIONS,
+    asOf: dayOf(sdcClock.now()),
+    targets: engineServiceTargets(),
+    safetyLeadTimePercentile: safetyLeadTimePercentile(),
+  });
+}
+
 export class MockProcurementService implements IProcurementService {
   // ─── Purchase orders ──────────────────────────────────────────────────────
 
@@ -403,14 +416,12 @@ export class MockProcurementService implements IProcurementService {
     if (scope.personaType === 'supplier') return null;
     const data = engineDataset();
     const base = defaultRequirementOptions(dayOf(sdcClock.now()));
-    // Until E14-04 is wired, SAP's safety stock is the placeholder input (marked).
-    const safetyStock = new Map(
-      data.sapSafetyStock.map((s) => [s.materialCode, { quantity: s.quantity, source: 'sapPlaceholder' as const }]),
-    );
+    // E14-04 feeds the netting: its safety stock, and its safety lead time on
+    // the release timing (each marked with where it came from).
     const run = materialRequirement(data, {
       ...base,
       receipts: { ...base.receipts, includeUnconfirmed },
-      safetyStock,
+      ...requirementInputs(engineSafetyStock()),
     });
     return {
       ...run,
@@ -420,6 +431,21 @@ export class MockProcurementService implements IProcurementService {
         supplierName: m.supplierId ? forecastSupplierName(m.supplierId) : null,
       })),
       finishedGoodNames: Object.fromEntries(data.finishedGoods.map((f) => [f.skuCode, f.name])),
+    };
+  }
+
+  async getSafetyStock(scope: QueryScope): Promise<SafetyStockView | null> {
+    // REQ-E14-04, computed at read on the hub clock with the administrator's
+    // targets in force (X-05). PTI only (X-03).
+    if (scope.personaType === 'supplier') return null;
+    const run = engineSafetyStock();
+    return {
+      ...run,
+      materials: run.materials.map((m) => ({
+        ...m,
+        materialLabel: labelOf(m.materialCode),
+        supplierName: m.supplierId ? forecastSupplierName(m.supplierId) : null,
+      })),
     };
   }
 
