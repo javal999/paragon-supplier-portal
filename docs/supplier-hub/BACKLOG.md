@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 1.8, 2026-09-23 |
+| Version | 1.9, 2026-09-23 |
 | What this is | Everything known to be outstanding for the Supplier Hub, in one list: decisions waiting on people, work waiting on those decisions, work waiting on the backend, and work that can start today |
 | What this is not | A plan or a commitment. Nothing here has a date. Sequencing belongs to the project owner |
 | Sources | Open items (section 7 of `SUPPLIER-HUB-REQUIREMENTS.md`), open decisions (section 9.3 of `SUPPLIER-HUB-PRD.md`), what is not built (section 5 of `BUILD-GAP.md`), stubs (section 6 of the requirements), and defects or debts found while building |
@@ -73,7 +73,7 @@ The prototype holds everything in the browser. These need a real backend, which 
 | BL-29 | Scheduled jobs, so deadlines, escalations and reminders fire on a clock rather than being derived when a page is read | M | REQ-E07-02, E09-03 |
 | BL-30 | Durable storage, so what a user enters survives a reload | L | PRD section 4 |
 | BL-95 | Share saved RFx templates across the team. Templates are stored in each buyer's browser (`paragon.rfqTemplates`, `paragon.rfiTemplates`, `paragon.rfpTemplates`), so a colleague never sees them and clearing the browser loses them. Needs a store behind the backend (BL-30). CE-04 says a saved template is for every buyer | M | Requirements 3.6a CE-04 |
-| BL-100 | Forecast engine input data in the hub: finished-goods sales history (2 to 3 years, weekly), price and promotion calendar, launch plan, bills of materials with scrap and yield, MOQs and multiples, warehouse volume per item and owned capacity | L | PRD I14; `research/FORECAST-METHOD-SPEC.md` section 5 |
+| BL-100 | Forecast engine input data in the hub, from SAP through the Master Data Management team (ENG-D1): finished-goods sales history (2 to 3 years, weekly), price and promotion calendar, launch plan, bills of materials with scrap and yield, MOQs and multiples, warehouse volume per item and owned capacity | L | PRD I14; `research/FORECAST-METHOD-SPEC.md` section 5 |
 
 ---
 
@@ -97,7 +97,8 @@ Nothing blocks these.
 | BL-80 | A value-only PO line (BL-49) shows quantity 0 on PO and ASN screens outside the call-off pages | Only the call-off screens know the line has no quantity | S | CR-04 |
 | BL-83 | Text run-ons: Indonesian "closing soon" pill joins its date ("Segera ditutup02 Sep 2026"); the in-transit read-out reads "0nothing in transit"; `formatNumber` uses the Indonesian thousands dot in the English UI outside the Stock page | Small display defects seen in the BL-72/73 check | S | SC conventions |
 | BL-84 | Accessibility items left by BL-31: field errors not tied to their field (many forms); h1 jumping to h3 on marketplace, discovery, storefront, WhatsApp demo, supplier comm hub and shipments; unnamed controls in the contract wizard obligation grid and WhatsApp demo; top-bar menu button does nothing and the notification count is not in its name; login contrast and missing h1; 404 title in English only; then a session with a real screen reader | Needed before UAT (SC-07) | M | `BUILD-GAP.md` "Accessibility (BL-31)" |
-| BL-99 | Forecast engine step 1: plan-change measures (MASC, % of schedules changed inside the supplier lead time), commitment reliability, and a split of each miss into PTI-caused, supplier-caused, or never confirmed | Uses data the hub already holds, and shows how much of the low CFOT is suppliers not confirming | M | `research/FORECAST-METHOD-SPEC.md` G1, G3, G4 |
+| BL-99 | Forecast engine step 1: plan-change measures (MASC, % of schedules changed inside the supplier lead time), commitment reliability, and a split of each miss into PTI-caused, supplier-caused, or never confirmed | Uses data the hub already holds, and shows how much of the low CFOT is suppliers not confirming | M | `research/FORECAST-METHOD-SPEC.md` G1, G3, G4. Runs on BL-102 until SAP is connected; its CFOT figures wait on BL-66 |
+| BL-102 | Synthetic dataset for the forecast engine: finished goods, bills of materials, stock, POs, confirmations and receipts, built to reproduce the slide measures (confirmation near 67%, CFOT near 36%, warehouses over capacity) and labelled simulated | The engine can be built and shown before SAP is connected (ENG-D1) | M | `FORECAST-ENGINE-REQUIREMENTS.md` E14-01 BR-07 |
 
 ---
 
@@ -116,6 +117,7 @@ Nothing blocks these.
 | BL-91 | Admin screen for the RFx libraries: question library, term list, item-type spec templates (CE-05). Later, not in the MVP; Procurement asks IT meanwhile. Same family as BL-32 | Build team, after the MVP | Requirements 3.6a |
 | BL-92 | Amendments to a live RFx event that notify invitees and flag responses to revisit (deadline extension exists). Later, not in the MVP | Build team, after the MVP | Requirements 5.2 and 8.3 |
 | BL-42 | Phase 2 epics: contract management (E04), catalog management (E05), reporting and analytics (E11), API shipment aggregator (E13.02), supplier quality | Per the deck and charter | Requirements section 6 |
+| BL-103 | Forecast engine feed specification: each input, its grain, refresh and quality check, handed to the Master Data Management team, who own the data and the SAP integration | Master Data Management team | `FORECAST-ENGINE-REQUIREMENTS.md` E14-01; PRD I14 |
 
 ---
 

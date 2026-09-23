@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 0.14 draft, 2026-09-23 |
+| Version | 0.15 draft, 2026-09-23 |
 | Sources | `SUPPLIER-HUB-BASELINE.md` (kick-off deck, Aug 2026); `KICKOFF-MEETING-NOTES.md` (business user feedback, reviewed 2026-09-17); owner review of the prototype gap review (2026-09-17); owner RFx decisions RFX-D1 to RFX-D5 (2026-09-21); RFx best-practice research, `research/RFX-BEST-PRACTICE-2026-09.md` (2026-09-21); owner decision ENG-1 (2026-09-23) with the forecast research `research/FORECAST-BEST-PRACTICE-2026-09.md` and `research/FORECAST-METHOD-SPEC.md` |
 | Scope of this version | Detailed: Order Collaboration, Inventory & Capacity Collaboration, RFx (validated); Forecast Collaboration, Call-off Management, and the undiscussed parts of Order and Inventory Collaboration (proposed). Hub navigation and screen conventions (validated). Foundation is reserved for the Foundation team. The remaining epics are stubs |
 | Not in scope | The codebase. This file states what the Supplier Hub must do, not what is built. What the prototype does today, and where, is tracked only in `BUILD-GAP.md` |
@@ -1660,7 +1660,7 @@ All requirements in this section are **Proposed**, written from market practice 
 
 ### 5.9 Planning: In-house Forecast Engine (E14)
 
-Detailed in `FORECAST-ENGINE-REQUIREMENTS.md`, which uses this file's template plus a Calculation block per requirement. The epic follows owner decision ENG-1 (section 9); every requirement in it is Proposed. Its open decisions are ENG-D1 to ENG-D13.
+Detailed in `FORECAST-ENGINE-REQUIREMENTS.md`, which uses this file's template plus a Calculation block per requirement. The epic follows owner decision ENG-1 (section 9); every requirement in it is Proposed. ENG-D1, D2, D3, D5, D8 and D9 are decided (section 9); the rest are listed in section 4 of that file.
 
 ## 6. Stubs
 
@@ -1779,6 +1779,12 @@ Research date: 2026-09-21. The full note, with every source link, is `research/R
 | BL-09 / PQ-03 | Alert risk class | Days of cover against supplier lead time (CR-24); day bands only as a fallback |
 | BL-10 / PQ-07 | Forecast source | MRP for weeks 1–13, IBP for months 4–6, published as one forecast. **Superseded 2026-09-23 by ENG-1**; applies only until the engine is live |
 | ENG-1 | Who calculates the demand forecast, material requirement, ROP, and replenishment | PTI builds its own forecast engine. It runs in the hub first and moves to SOMO later. SAP IBP and other external planning engines are not used. Supersedes MN-INV-14 and the PQ-07 answer. Methods: `research/FORECAST-METHOD-SPEC.md` (owner, 2026-09-23) |
+| ENG-D1 | Who owns the forecast engine's input data | The Master Data Management team: forecast inputs, bill-of-materials breakdown, stock, ERP master data. Synthetic data until they connect SAP (owner, 2026-09-23) |
+| ENG-D2 | Stock-accuracy tolerance for the engine | 2% to start; flag, do not block; tighten per material class after the first counting cycle (owner, 2026-09-23) |
+| ENG-D3 | Show suppliers their confirmation rate from day one | Yes, their own measures plus PTI's plan-change figure for their materials (owner, 2026-09-23) |
+| ENG-D5 | Service targets for safety stock | Fill rate, tiered 95% / 90% / 85% (owner, 2026-09-23) |
+| ENG-D8 | Trade-off tolerance band | ±10% per version plus a cumulative cap from first publication, starting at ±20% (owner, 2026-09-23) |
+| ENG-D9 | Plan damping weight | 0.5 in Trade-off, 0 in Forecast, tuned from the backtest (owner, 2026-09-23) |
 | BL-13 / PQ-12 | Umbrella PO grain | Quantity per line, so call-off release checks remaining quantity |
 | BL-14 / Q-18 | Working calendar | The hub keeps its own calendar, maintained by the Hub administrator, loaded from the SAP factory calendar with overrides in the hub |
 | BL-15 / Q-20 | Quality inspection | Keep the result display in the hub; non-conformance and corrective action come with Supplier Quality in Phase 2 |
@@ -1818,3 +1824,4 @@ Research date: 2026-09-21. The full note, with every source link, is `research/R
 | 0.12 | 2026-09-22 | RFx overhaul. Owner decisions RFX-D1 to RFX-D5 recorded (section 9): separate modules, templates and copies (CE-04 replaced, A-04 amended), independent events with allowed links (CE-09), indicative vs firm prices (CE-10), per-item split award. REQ-E03-02 to REQ-E03-05 rewritten: sections and 11 question types, option editor, attachments (CE-11), confidentiality gate, custom RFP terms and T&C acceptance, RFP indicative pricing, RFQ items with buyer- and supplier-filled spec fields, quantity breaks per variant or total, one-time costs, alternatives, samples, questions, intent and decline, clarifications, comparison at an evaluation break, per-item split award. "RFx: later, not in the MVP" list added. Section 8.3 summarises the RFx best-practice research |
 | 0.13 | 2026-09-22 | NV-01 lists the administration sections built with BL-32 and records that every change is logged |
 | 0.14 | 2026-09-23 | ENG-1: PTI calculates forecast, material requirement, ROP, and replenishment in its own engine (hub first, SOMO later), superseding MN-INV-14 and the PQ-07 answer. REQ-E06-01 BR-01, REQ-E08 BR-04, and REQ-E09-01 rewritten with SAP as the source until the engine is live. Glossary ROP updated. New epic E14 (In-house Forecast Engine), REQ-E14-01 to REQ-E14-12, detailed in `FORECAST-ENGINE-REQUIREMENTS.md` (section 5.9) |
+| 0.15 | 2026-09-23 | Engine decisions ENG-D1, D2, D3, D5, D8, D9 recorded in section 9 and applied in `FORECAST-ENGINE-REQUIREMENTS.md` 0.2 |

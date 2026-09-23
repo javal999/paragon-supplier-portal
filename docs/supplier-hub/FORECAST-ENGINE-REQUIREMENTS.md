@@ -2,9 +2,9 @@
 
 | | |
 |---|---|
-| Version | 0.1 draft, 2026-09-23 |
+| Version | 0.2 draft, 2026-09-23 |
 | What this is | Detailed requirements for the demand and material forecast engine PTI builds itself (owner decision ENG-1), with each calculation explained |
-| Status | Every requirement is **Proposed**. The decision to build is Validated (ENG-1); the detail below has not yet been reviewed by the Material Planner |
+| Status | Every requirement is **Proposed**. The decision to build is Validated (ENG-1), and 6 of the 13 engine decisions are decided (ENG-D1, D2, D3, D5, D8, D9, section 4). The rest of the detail has not yet been reviewed by the Material Planner |
 | Sources | ENG-1 (`SUPPLIER-HUB-REQUIREMENTS.md` section 9); methods and evidence in `research/FORECAST-METHOD-SPEC.md`; problem analysis in `research/FORECAST-BEST-PRACTICE-2026-09.md` |
 
 ## How to read this
@@ -86,7 +86,7 @@
 
 | Maps to | Phase | Priority | Business owner | Users | Status |
 |---|---|---|---|---|---|
-| ENG-1; BL-100; PRD I14 | MVP | P0 [Proposed] | Material Planner (content); IT (feeds) | MP, ADM | Proposed |
+| ENG-1; ENG-D1; BL-100; PRD I14 | MVP | P0 [Proposed] | Master Data Management team (data); IT (SAP integration) | MP, ADM | Proposed |
 
 **Business value.** Every calculation in the engine depends on clean inputs. The owner's slides name low stock accuracy as a gap, and a wrong on-hand figure makes the engine reorder stock PTI already holds, which makes the excess problem worse. This requirement defines the inputs and refuses to run a calculation whose inputs fail a quality check.
 
@@ -103,17 +103,22 @@
 **Business rules.**
 - BR-01. The engine reads the inputs in the table under **Data and integration**. Each input has a named source and a freshness limit [Proposed].
 - BR-02. **Sales history** is weekly per finished-good SKU, 2 to 3 years deep. A week in which the SKU was out of stock is flagged, so zero sales in that week are not read as zero demand [Spec D1].
-- BR-03. **Stock accuracy check.** The engine flags a material as low-confidence when its latest cycle count differed from system stock by more than the administrator's tolerance. For flagged materials:
+- BR-03. **Stock accuracy check.** The engine flags a material as low-confidence when its latest cycle count differed from system stock by more than the tolerance: **2% to start**, set by the administrator and tightened per material class after the first counting cycle. High-volume packaging is counted most often. For flagged materials:
   - the recommendation is marked for review
   - it is not released automatically
 
-  [Proposed]
+  [Owner, 2026-09-23, ENG-D2]
 - BR-04. **Minimum history.** A SKU with less than one full season of history (52 weeks) is forecast by E14-08 (launch method) rather than E14-07 [Spec D1, D6].
 - BR-05. A calculation whose required input is missing or older than its freshness limit either:
   - does not run for the affected items, and says so, or
   - runs with the stale input clearly marked, if the planner chooses
 
   It never runs silently on stale data [Proposed].
+- BR-06. **Data ownership.** The Master Data Management team owns the engine's input data: the forecast inputs, the breakdown through the bill of materials, stock, and ERP master data. The feeds are integrated with SAP later [Owner, 2026-09-23, ENG-D1].
+- BR-07. **Synthetic data until SAP is connected.** Until the Master Data Management team connects SAP, the engine runs on a synthetic dataset [Owner, 2026-09-23, ENG-D1]:
+  - It is built to reproduce the measures on the owner's "Challenge & Gaps" slides: a confirmation rate near 67%, CFOT near 36%, and warehouses over capacity. The screens and measures then behave realistically [Proposed].
+  - Every result from it carries the simulated label (X-03) and is never shown to a supplier [Code].
+  - Results on synthetic data prove the calculations, not the business answer. How much of the low CFOT comes from suppliers not confirming is answered only on SAP data [Proposed].
 
 **Calculation.** No formula; this requirement defines what goes in.
 
@@ -149,8 +154,7 @@ The one check with arithmetic is **stock accuracy**:
 **Metrics.** Leading: share of materials passing all quality checks. Lagging: stock-accuracy rate.
 
 **Open items.**
-- ENG-D1: who owns each feed.
-- ENG-D2: the stock-accuracy tolerance.
+- BL-103: the feed specification handed to the Master Data Management team.
 - C8-IDENTITY-GRAIN: material identity between the SOMO master and the Hub.
 
 ---
@@ -190,6 +194,7 @@ The one check with arithmetic is **stock accuracy**:
   - share of schedules changed inside the supplier lead time [Spec G1]
   - MASC, the size of the changes (see Calculation)
 - BR-06. CFOT is reported against both the requested date and the committed date. The gap between the two is shown [Spec G3].
+- BR-07. **Suppliers see their own measures from day one:** confirmation rate, commitment reliability, and PTI's plan-change figure for their materials. A supplier never sees another supplier's figures [Owner, 2026-09-23, ENG-D3].
 
 **Calculation.**
 
@@ -229,13 +234,12 @@ The one check with arithmetic is **stock accuracy**:
 - call-offs (REQ-E09)
 - goods receipts (REQ-E07-06)
 
-It feeds supplier performance (REQ-E10-01) and sourcing filters (REQ-E03-01).
+It feeds supplier performance (REQ-E10-01) and sourcing filters (REQ-E03-01). Until SAP is connected it runs on the synthetic dataset (E14-01 BR-07).
 
 **Metrics.** Leading: confirmation rate. Lagging: CFOT; share of misses that are never confirmed.
 
 **Open items.**
-- BL-66: the CFOT calculation differs from its definition in five places.
-- ENG-D3: whether the confirmation rate is published to suppliers from day one.
+- BL-66: the CFOT calculation differs from its definition in five places. Fix it before E14-02 reports CFOT.
 
 ---
 
@@ -326,7 +330,12 @@ It feeds supplier performance (REQ-E10-01) and sourcing filters (REQ-E03-01).
 
 **Business rules.**
 - BR-01. **Safety stock comes from the engine's own forecast errors,** measured over the lead time plus the review period at many past points. The safety stock is the error level that is exceeded only as often as the service target allows [Spec M3].
-- BR-02. **The service target is a fill rate for packaging**, the share of demand filled from stock, not a cycle service level. With large MOQ lots, a cycle-service target over-buffers [Spec M3; Proposed].
+- BR-02. **The service target is a fill rate**, the share of demand filled from stock, not a cycle service level. With large MOQ lots, a cycle-service target over-buffers. The targets are tiered [Owner, 2026-09-23, ENG-D5]:
+  - **95%** for high-volume packaging on production-critical lines
+  - **90%** for other materials
+  - **85%** for slow-moving materials
+
+  Until the Material Planner names the materials in each tier, the engine assigns them by volume: the top 20% of materials by volume get 95%, and slow movers (E14-07 BR-03) get 85%. This default is marked on screen (ENG-D14).
 - BR-03. **Safety lead time per supplier and material group** = the delay between the confirmed date and the actual receipt date that is exceeded only as often as the administrator allows [Spec M7].
 - BR-04. **Reorder point** = expected demand over (lead time + review period) + safety stock [Spec M3].
 - BR-05. Until a material has enough history (30 backtest points), it uses SAP's safety stock, and this is marked [Proposed].
@@ -366,7 +375,7 @@ It feeds supplier performance (REQ-E10-01) and sourcing filters (REQ-E03-01).
 - Lagging: shortage weeks; average stock ÷ warehouse capacity.
 
 **Open items.**
-- ENG-D5: service targets per material group, set by the Material Planner.
+- ENG-D14: the Material Planner's list of materials per service tier.
 - REPL: which replenishment method applies to which segment.
 
 ---
@@ -466,9 +475,10 @@ Without space limits, one big order is cheapest.
 - BR-01. **Firm zone** = at least the supplier's firm lead time for the material group. The Hub's rule today already defaults it to the lead time (`src/services/transitions/forecastConfig.ts:76-83`) [Code].
 - BR-02. **Trade-off zone** = from the end of Firm to the supplier's raw-material lead time. **Forecast zone** beyond that [Spec M6; Proposed].
 - BR-03. **Firm quantities never change** once published, as today (`forecastRules.ts:239-275`) [Code].
-- BR-04. **Damping:** before publication, each Trade-off period's new value is blended with its previously published value, using a weight set by the administrator. Forecast-zone periods are not damped [Spec M6].
-- BR-05. **Tolerance band:** a Trade-off period may move at most the band (default ±10%, the CR-21 value) from its previously published value.
-  - Whether the band applies per version or cumulatively from the first version is an owner decision (ENG-D8).
+- BR-04. **Damping:** before publication, each Trade-off period's new value is blended with its previously published value. The weight is **0.5 in the Trade-off zone and 0 in the Forecast zone** (no damping), and is tuned from the backtest (E14-10). The administrator holds the value [Owner, 2026-09-23, ENG-D9].
+- BR-05. **Tolerance band:** a Trade-off period has 2 limits [Owner, 2026-09-23, ENG-D8]:
+  - **per version:** it may move at most **±10%** from its previously published value (the CR-21 value)
+  - **cumulative:** it may move at most **±20%** from the first value the supplier saw for that week. The ±20% is a starting value to agree with the pilot suppliers.
   - A move beyond the band needs the planner's reason, and the period returns to "awaiting commitment" [Spec G4; Code CR-21].
 - BR-06. **Range:** Trade-off and Forecast periods show the P50 quantity plus an upper figure (default P90) from E14-09 [Spec G5].
 - BR-07. **Retraining:** the demand model is retrained on a set cycle (starting point: every 8 weeks), not every week. More frequent retraining makes the plan move more [Spec M6, Zanotti 2026].
@@ -482,6 +492,10 @@ Without space limits, one big order is cheapest.
 *Band check*
 - Allowed range = previous value × (1 ± band).
 - *Example:* 1,200 × 0.9 to 1,200 × 1.1 = **1,080 to 1,320**. 1,350 is outside, so it needs a reason, or it is capped at 1,320.
+
+*Cumulative cap*
+- Allowed range = first value the supplier saw × (1 ± 20%).
+- *Example:* the supplier first saw 1,000 for that week. Version 2 moved it to 1,100 (+10%) and version 3 to 1,200 (+9%). Version 4 moves it to 1,300. That is +8% on version 3, inside ±10%, but +30% on what the supplier first saw, beyond the ±20% range (800 to 1,200). It needs a reason. The cumulative cap catches drift that per-version checks miss: 3 steps of +10% add up to +33%.
 
 *Range*
 - The supplier sees 1,350 (P50) and up to 1,700 (P90) for that week, and can commit an upside against the 1,700.
@@ -502,8 +516,7 @@ Without space limits, one big order is cheapest.
 **Metrics.** Leading: share of Trade-off revisions within the band; MASC (E14-02). Lagging: confirmation rate; CFOT.
 
 **Open items.**
-- ENG-D8: band per version or cumulative.
-- ENG-D9: the damping weight per zone.
+- ENG-D8a: the cumulative cap agreed with the pilot suppliers (starting at ±20%).
 - C8-CLASS-PROJECTION (C8 §2.2): the commercial meaning of Firm.
 
 ---
@@ -815,28 +828,40 @@ Without space limits, one big order is cheapest.
 
 ---
 
-## 4. Open decisions for E14
+## 4. Engine decisions
+
+### 4.1 Decided (owner, 2026-09-23)
+
+| ID | Decision | Answer | Applied in |
+|---|---|---|---|
+| ENG-D1 | Owner of each input feed | The Master Data Management team owns the input data (forecast inputs, bill-of-materials breakdown, stock, ERP master data). Synthetic data until they connect SAP | E14-01 BR-06, BR-07 |
+| ENG-D2 | Stock-accuracy tolerance | 2% to start; flag, do not block; high-volume packaging counted most often; tighten per class after the first cycle | E14-01 BR-03 |
+| ENG-D3 | Show the confirmation rate to suppliers from day one | Yes: each supplier sees its own measures plus PTI's plan-change figure for its materials | E14-02 BR-07 |
+| ENG-D5 | Service targets | Fill rate, tiered 95% / 90% / 85%; default tiering by volume until ENG-D14 | E14-04 BR-02 |
+| ENG-D8 | Tolerance band | ±10% per version plus a cumulative cap from first publication, starting at ±20% | E14-06 BR-05 |
+| ENG-D9 | Damping weight | 0.5 in Trade-off, 0 in Forecast, tuned from the backtest | E14-06 BR-04 |
+
+### 4.2 Still open
 
 | ID | Decision | Owner | Blocks |
 |---|---|---|---|
-| ENG-D1 | Owner of each input feed | IT, Material Planner | E14-01 |
-| ENG-D2 | Stock-accuracy tolerance | Material Planner, Warehouse | E14-01, E14-03 |
-| ENG-D3 | Publish the confirmation rate to suppliers from day one | Procurement | E14-02 |
 | ENG-D4 | Other plants and intercompany transfers in scope | Material Planner | E14-03 |
-| ENG-D5 | Service (fill-rate) targets per material group | Material Planner | E14-04 |
 | ENG-D6 | Holding, ordering and rented-space cost rates | Finance | E14-05 |
 | ENG-D7 | One warehouse capacity or separate for packaging and raw material | Warehouse | E14-05 |
-| ENG-D8 | Tolerance band per version or cumulative | Material Planner, Procurement | E14-06 |
-| ENG-D9 | Damping weight per zone | Material Planner | E14-06 |
+| ENG-D8a | The cumulative cap agreed with pilot suppliers | Material Planner, Procurement | Confirms E14-06 BR-05 (runs on ±20% meanwhile) |
 | ENG-D10 | Forecast grain: sell-in or sell-out, per channel or not | Demand Planning | E14-07 |
 | ENG-D11 | Who reviews the forecast before it drives material plans | Material Planner, Demand Planning | E14-07 |
 | ENG-D12 | Owner of the promotion calendar and how far ahead it is fixed | Marketing | E14-08 |
-| ENG-D13 | Plan-stability limit used in model selection | Material Planner | E14-10 |
+| ENG-D13 | Plan-stability limit used in model selection | Material Planner | E14-10 (set after the first backtest) |
+| ENG-D14 | Materials per service tier | Material Planner | Confirms E14-04 BR-02 (runs on volume ranking meanwhile) |
 | C8 §8 | SOMO ratifies the engine producing the totals | SOMO | Publishing engine totals on C8 (BL-101) |
 | REPL | Replenishment method per material segment | Material Planner (consultant) | E14-12, parts of E14-04 |
+
+**Nothing open blocks the first build** (E14-01 to E14-04 on synthetic data). BL-66, the CFOT definition fix, must land before E14-02 reports CFOT. Recommendations for the open items are in `DECISION-GUIDE.md`, section "Forecast engine (E14)".
 
 ## 5. Change log
 
 | Version | Date | Change |
 |---|---|---|
 | 0.1 | 2026-09-23 | First draft: E14-01 to E14-12 with calculation explanations, from ENG-1 and `research/FORECAST-METHOD-SPEC.md` |
+| 0.2 | 2026-09-23 | Owner decided ENG-D1, D2, D3, D5, D8 and D9. Data owned by the Master Data Management team, synthetic data until SAP is connected (E14-01 BR-06, BR-07); stock-accuracy tolerance 2%; suppliers see their own measures; tiered fill-rate targets; ±10% per version plus ±20% cumulative; damping 0.5 / 0. New open items ENG-D8a and ENG-D14 |

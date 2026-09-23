@@ -2,8 +2,8 @@
 
 | | |
 |---|---|
-| Version | 1.2, 2026-09-23 |
-| Covers | BL-01 to BL-19b in `BACKLOG.md` — the 21 decisions that block or confirm work; and the five RFx decisions RFX-D1 to RFX-D5 (2026-09-21) |
+| Version | 1.3, 2026-09-23 |
+| Covers | BL-01 to BL-19b in `BACKLOG.md` — the 21 decisions that block or confirm work; the five RFx decisions RFX-D1 to RFX-D5 (2026-09-21); and the 15 forecast engine decisions ENG-D1 to ENG-D14 with ENG-D8a (2026-09-23) |
 | Purpose | Give the project owner a defensible recommendation to take to each owner: what the market does, what we suggest for PTI, and what would change our mind |
 | Status | **18 of the 21 were decided on 2026-09-21**, mostly as recommended; the outcomes are in section 9 of the requirements and in the Closed section of `BACKLOG.md`. Still open: BL-01 REPL, BL-11 interface technology, BL-12 call-off record, and three values (BL-54 invoice cap, BL-55 gate OTIF minimum, BL-56 early allowance). Where the owner decided differently from this guide — the hub keeps its own calendar (BL-14), capacity stays at 13 weekly buckets (BL-08), Web Tukar Faktur stays separate (BL-17), and TMS access becomes a 3PL tracking link (BL-03) — the decision stands and this guide is kept as the reasoning behind the others. All decided items are built and in production as of 2026-09-21 (BL-43 to BL-53). The builds raised six new questions, BL-66 to BL-71 in the backlog, which this guide does not yet cover |
 | Evidence | Market practice is cited at the end. Where a claim is a judgement rather than a published practice, it says so |
@@ -222,6 +222,152 @@ The owner took these five during the RFx overhaul. They are recorded as RFX-D1 t
 
 ---
 
+## Forecast engine (E14)
+
+These come from `FORECAST-ENGINE-REQUIREMENTS.md`, the in-house engine the owner decided on 2026-09-23 (ENG-1). They are ordered by what blocks the build.
+- **Decided:** 6, on 2026-09-23, all as recommended.
+- **Open:** 9. None blocks the first build (E14-01 to E14-04 on synthetic data).
+- **Research:** `research/FORECAST-METHOD-SPEC.md`.
+
+**Decided 2026-09-23**
+
+### ENG-D1 · Who owns the engine's input data
+**Market practice.** In the tools reviewed, the ERP stays the system of record for bills of materials, stock and receipts, and the planning layer reads them on a schedule. SAP Business Network extracts net demand after MRP; E2open writes supplier responses back to the buyer's SAP (`research/FORECAST-BEST-PRACTICE-2026-09.md`, section 5).
+
+**Decision.** The Master Data Management team owns the input data:
+- forecast inputs
+- the breakdown through the bill of materials
+- stock
+- ERP master data
+
+The engine runs on a synthetic dataset, labelled simulated and never shown to suppliers, until the team connects SAP. The feed specification is handed over as BL-103; the synthetic dataset is BL-102.
+
+**What would change this.** None expected. The one caution: results on synthetic data prove the calculations, not how much of the low CFOT comes from suppliers not confirming. That waits for SAP data.
+
+### ENG-D2 · Stock-accuracy tolerance
+**Market practice.** Cycle counting by ABC class is standard practice. It was not researched in this pass, so no vendor or paper is cited.
+
+**Decision.**
+- 2% to start.
+- A material over the tolerance is flagged and its recommendations wait for the planner; nothing is blocked outright.
+- High-volume packaging is counted most often.
+- The tolerance tightens per class after the first counting cycle.
+
+**What would change this.** If the first counts show most materials over 2%, the problem is stock control rather than the threshold, and fixing it comes before trusting the engine's net requirements.
+
+### ENG-D3 · Suppliers see their confirmation rate from day one
+**Market practice.**
+- Oracle raises an exception when a commit is past due.
+- E2open sends missing-response alerts and requires a reason code on "No Commit".
+- SCOR measures delivery against the commit date.
+
+**Decision.** Yes. Each supplier sees its own confirmation rate and commitment reliability, plus PTI's plan-change figure for its materials. It never sees another supplier's figures. Showing PTI's own figure keeps the measure fair, since suppliers give worse service to buyers whose plans keep changing (Terwiesch et al. 2005).
+
+**What would change this.** A supplier contract that forbids performance disclosure. None is known.
+
+### ENG-D5 · Service targets for safety stock
+**Market practice.**
+- Inventory optimisation sizes stock to a service target per item; SAP IBP's multistage safety stock is one example.
+- Kourentzes et al. (2020) tuned forecasts for household and personal-care items to a service target. Bias fell by up to 62%.
+
+**Decision.** Fill rate, not cycle service level, tiered:
+- 95% for high-volume packaging on production-critical lines
+- 90% for the rest
+- 85% for slow movers
+
+Until the Material Planner lists the materials in each tier (ENG-D14), the engine assigns them by volume rank.
+
+**What would change this.** If a production line stops for a material in the 85% tier, that material belongs in a higher tier. Keep the tiers; move the material.
+
+### ENG-D8 · Trade-off tolerance band
+**Market practice.**
+- Quantity-flexibility contracts limit how much each period may be revised per planning cycle, with tighter limits as the period gets closer (Tsay and Lovejoy 1999).
+- SAP S/4HANA scheduling agreements attach cost liability to each zone.
+- No paper derives 10% as optimal; it is a policy choice.
+
+**Decision.** Two limits:
+- ±10% per version (the CR-21 value)
+- a cumulative cap from the first value the supplier saw, starting at ±20%
+
+Per-version limits alone let 3 steps of +10% add up to +33%.
+
+**What would change this.** Pilot suppliers asking for a different cap: ENG-D8a is that confirmation.
+
+### ENG-D9 · Plan damping weight
+**Market practice.** Godahewa et al. (IJF 2025) show that one weight blending the new forecast with the previous one trades accuracy against stability.
+
+**Decision.** 0.5 in the Trade-off zone and 0 in the Forecast zone, tuned from the backtest.
+
+**What would change this.** The backtest (E14-10) showing a different weight gives better simulated service at the same stability.
+
+**Still open**
+
+### ENG-D4 · Other plants and intercompany transfers
+**Market practice.** No sourced benchmark; this is a scope decision.
+
+**Recommendation.** Pilot plants only in the MVP; intercompany transfers in Phase 2.
+
+**What would change this.** A pilot material regularly supplied by transfer from another plant. Its requirement would be missed without the transfer in scope.
+
+### ENG-D6 · Cost rates for order sizing
+**Market practice.** Standard lot sizing needs three rates: holding cost, ordering cost and the cost of extra space (Wagner–Whitin and the capacitated models in the method spec, M5).
+
+**Recommendation.** Finance provides:
+- **Holding cost:** % of value per year.
+- **Ordering cost:** per order.
+- **Rented space:** per pallet per week. Take this from the actual 3PL invoices now.
+
+The first two can start as estimates.
+
+**What would change this.** None. Without these rates, E14-05 cannot weigh rented space against extra orders.
+
+### ENG-D7 · One warehouse capacity or separate
+**Market practice.** The capacitated lot-sizing research models capacity per storage resource, and SAP IBP does the same in its optimiser.
+
+**Recommendation.** Separate capacity per physical warehouse, in pallets. This matches the owner's slides, which report packaging and raw material separately. A pooled figure would hide the packaging overload behind raw-material space.
+
+**What would change this.** Packaging and raw material actually sharing floor space.
+
+### ENG-D8a · The cumulative cap agreed with pilot suppliers
+**Recommendation.** Run on ±20% and review it with DP Group and Lautan Luas after the first 8 weekly versions, using MASC-I (E14-02).
+
+**What would change this.** Suppliers needing a tighter cap to hold capacity. A tighter cap then needs a stronger reason rule on PTI's side.
+
+### ENG-D10 · Forecast grain
+**Market practice.** Forecasting shipments (sell-in) and using sell-out as a leading signal is common practice for manufacturers. Not sourced in this pass.
+
+**Recommendation.** Weekly sell-in per SKU, with sell-out as an input where it exists. Channel split later.
+
+**What would change this.** Sell-out data covering most volume and arriving weekly. It would then earn a larger role.
+
+### ENG-D11 · Who reviews the forecast
+**Market practice.** Forecast value added (FVA) measures each step and its owner (Gilliland). A 15-year study found large upward overrides made forecasts 26% worse (Fildes and Goodwin 2021).
+
+**Recommendation.** Demand Planning owns the finished-goods forecast and the Material Planner owns the material plan. Every override needs a reason code (E14-11).
+
+**What would change this.** No Demand Planning team in place. The Material Planner then owns both, and FVA reports per person.
+
+### ENG-D12 · Promotion calendar
+**Market practice.**
+- Modelling promotions explicitly cut promotion forecast error by up to 30% (Trapero et al. 2015).
+- Every M5 winner used promotion inputs.
+
+**Recommendation.** Marketing owns the calendar. A promotion is fixed at least the supplier lead time plus the production lead time before it starts; a later change triggers the band check (E14-06).
+
+**What would change this.** Promotions that are routinely decided inside that window. The engine can then only react, and the buffer must carry them.
+
+### ENG-D13 · Plan-stability limit for choosing models
+**Market practice.** Judge models on service and stability, not accuracy alone (Chin et al. 2026; Godahewa et al. 2025).
+
+**Recommendation.** Set it after the first backtest, from the spread observed. Do not pick a number now.
+
+**What would change this.** Not applicable until the backtest runs.
+
+### ENG-D14 · Materials per service tier
+**Recommendation.** The Material Planner names the production-critical packaging for the 95% tier. Until then the engine uses the top 20% of materials by volume, marked as a default.
+
+**What would change this.** Volume rank and criticality diverging. A low-volume component on a bottleneck line belongs in the top tier.
+
 ## Sources
 
 Market practice above draws on these, read 2026-09-21, plus the vendor research already recorded in section 8 of the requirements:
@@ -232,4 +378,5 @@ Market practice above draws on these, read 2026-09-21, plus the vendor research 
 - [On-time delivery and the 98% benchmark](https://www.symestic.com/en-us/what-is/on-time-delivery-otd) — measurement grain
 - [Frozen zone, slushy zone and time fences](https://www.erp-information.com/frozen-zone.html) and [the frozen planning period](https://www.brightworkresearch.com/frozen-period/) — zone lengths tied to lead time
 - RFx practice (RFX-D1 to RFX-D5): `research/RFX-BEST-PRACTICE-2026-09.md`, summarised in section 8.3 of the requirements, including the [SAP Ariba Event Management API guide](https://help.sap.com/doc/7b8bf5aa499341489687038610fa0bea/cloud/en-US/f342574f194c4af6a24a42087a665607.pdf), [Oracle negotiation types](https://docs.oracle.com/en/cloud/saas/procurement/25c/oaprc/negotiation-types.html) and [Ariba manual award scenarios](https://learning.sap.com/courses/project-monitoring-and-event-administration-within-sap-ariba-guided-sourcing/creating-manual-award-scenarios-to-award-guided-sourcing-events)
+- Forecast engine (ENG-D1 to ENG-D14): `research/FORECAST-METHOD-SPEC.md` and `research/FORECAST-BEST-PRACTICE-2026-09.md`, which cite Terwiesch et al. 2005, Tsay and Lovejoy 1999, Kourentzes et al. 2020, Godahewa et al. 2025, Fildes and Goodwin 2021, Trapero et al. 2015, Chin et al. 2026, and the SAP, Oracle and E2open documentation
 - [SAP over- and under-delivery tolerances](https://community.sap.com/t5/enterprise-resource-planning-blog-posts-by-members/over-delivery-under-delivery-tolerances/ba-p/13522481) and [applying tolerances and the delivery completed indicator](https://learning.sap.com/courses/inventory-management-and-physical-inventory-in-sap-s-4hana/applying-tolerances-and-the-delivery-completed-indicator) — where tolerances are held and how goods receipt checks them
