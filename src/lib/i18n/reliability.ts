@@ -14,8 +14,6 @@ export const reliabilityEn: Record<string, string> = {
   'rel.window.26': 'Last 26 weeks',
   'rel.synthetic':
     'Calculated on synthetic data built to reproduce PTI’s current measures. It proves the calculations, not the business answer.',
-  'rel.cfotPending':
-    'Delivered on the confirmed date is not shown here yet: its calculation is being aligned with the agreed definition.',
   'rel.noData': 'No history',
   'rel.empty': 'No supplier has order lines in this window.',
 
@@ -23,6 +21,9 @@ export const reliabilityEn: Record<string, string> = {
   'rel.kpi.confirmation.sub': '{{confirmed}} of {{due}} order lines',
   'rel.kpi.commitment': 'Delivered as committed',
   'rel.kpi.commitment.sub': 'Quantity received by the committed date',
+  'rel.kpi.cfot': 'Delivered on the confirmed date',
+  'rel.kpi.cfot.sub_one': 'Average over {{count}} purchase order',
+  'rel.kpi.cfot.sub_other': 'Average over {{count}} purchase orders',
   'rel.kpi.misses': 'Missed lines',
   'rel.kpi.misses.sub': 'Never confirmed {{never}} · supplier {{supplier}} · PTI {{pti}}',
   'rel.kpi.planChange': 'PTI changes inside lead time',
@@ -31,6 +32,7 @@ export const reliabilityEn: Record<string, string> = {
   'rel.col.supplier': 'Supplier',
   'rel.col.confirmation': 'Confirmed by the deadline',
   'rel.col.commitment': 'Delivered as committed',
+  'rel.col.cfot': 'Delivered on the confirmed date',
   'rel.col.misses': 'Missed lines',
   'rel.col.planChange': 'PTI changed inside lead time',
   'rel.col.masc': 'Size of PTI’s changes',
@@ -46,6 +48,8 @@ export const reliabilityEn: Record<string, string> = {
     'Confirmed by the deadline: order lines the supplier confirmed by their confirmation deadline, out of all lines whose deadline fell in the window.',
   'rel.def.commitment':
     'Delivered as committed: quantity received on or before the committed date, out of the committed quantity. When PTI changes a line and the supplier confirms again, the new confirmation is the commitment.',
+  'rel.def.cfot':
+    'Delivered on the confirmed date: per purchase order, the quantity received on or before the confirmed date, and no more than {{early}} days before it, divided by the quantity ordered. Receipts are added together. The confirmed date is the latest confirmation; a change PTI makes counts only once the supplier confirms it again, and a line never confirmed is measured against the date PTI asked for. The figure is the average over the orders whose date falls in the window.',
   'rel.def.misses':
     'Every missed line has one cause. Never confirmed: no confirmation by the deadline. PTI: PTI changed the line inside the supplier’s lead time, or by more than the tolerance (10% per change, 20% in total), and the supplier did not confirm again. Supplier: everything else that arrived short or late.',
   'rel.def.planChange':
@@ -70,8 +74,6 @@ export const reliabilityId: Record<string, string> = {
   'rel.window.26': '26 minggu terakhir',
   'rel.synthetic':
     'Dihitung dengan data sintetis yang dibuat untuk meniru ukuran PTI saat ini. Ini membuktikan perhitungannya, bukan jawaban bisnisnya.',
-  'rel.cfotPending':
-    'Pengiriman tepat tanggal konfirmasi belum ditampilkan di sini: perhitungannya sedang diselaraskan dengan definisi yang disepakati.',
   'rel.noData': 'Belum ada riwayat',
   'rel.empty': 'Tidak ada pemasok dengan baris pesanan pada periode ini.',
 
@@ -79,6 +81,8 @@ export const reliabilityId: Record<string, string> = {
   'rel.kpi.confirmation.sub': '{{confirmed}} dari {{due}} baris pesanan',
   'rel.kpi.commitment': 'Dikirim sesuai komitmen',
   'rel.kpi.commitment.sub': 'Jumlah yang diterima sampai tanggal komitmen',
+  'rel.kpi.cfot': 'Terkirim pada tanggal yang dikonfirmasi',
+  'rel.kpi.cfot.sub_other': 'Rata-rata dari {{count}} pesanan pembelian',
   'rel.kpi.misses': 'Baris yang meleset',
   'rel.kpi.misses.sub': 'Tidak pernah dikonfirmasi {{never}} · pemasok {{supplier}} · PTI {{pti}}',
   'rel.kpi.planChange': 'Perubahan PTI di dalam lead time',
@@ -87,6 +91,7 @@ export const reliabilityId: Record<string, string> = {
   'rel.col.supplier': 'Pemasok',
   'rel.col.confirmation': 'Dikonfirmasi sebelum tenggat',
   'rel.col.commitment': 'Dikirim sesuai komitmen',
+  'rel.col.cfot': 'Terkirim pada tanggal yang dikonfirmasi',
   'rel.col.misses': 'Baris yang meleset',
   'rel.col.planChange': 'Diubah PTI di dalam lead time',
   'rel.col.masc': 'Besar perubahan PTI',
@@ -102,6 +107,8 @@ export const reliabilityId: Record<string, string> = {
     'Dikonfirmasi sebelum tenggat: baris pesanan yang dikonfirmasi pemasok sebelum tenggat konfirmasinya, dari semua baris yang tenggatnya jatuh dalam periode.',
   'rel.def.commitment':
     'Dikirim sesuai komitmen: jumlah yang diterima pada atau sebelum tanggal komitmen, dari jumlah yang dikomitmenkan. Bila PTI mengubah baris dan pemasok mengonfirmasi ulang, konfirmasi baru itulah komitmennya.',
+  'rel.def.cfot':
+    'Terkirim pada tanggal yang dikonfirmasi: per pesanan pembelian, jumlah yang diterima pada atau sebelum tanggal yang dikonfirmasi, dan tidak lebih dari {{early}} hari sebelumnya, dibagi jumlah yang dipesan. Penerimaan dijumlahkan. Tanggal yang dikonfirmasi adalah konfirmasi terakhir; perubahan oleh PTI baru dihitung setelah pemasok mengonfirmasinya ulang, dan baris yang tidak pernah dikonfirmasi diukur terhadap tanggal yang diminta PTI. Angkanya adalah rata-rata dari pesanan yang tanggalnya jatuh dalam periode.',
   'rel.def.misses':
     'Setiap baris yang meleset punya satu penyebab. Tidak pernah dikonfirmasi: tidak ada konfirmasi sebelum tenggat. PTI: PTI mengubah baris di dalam lead time pemasok, atau melebihi toleransi (10% per perubahan, 20% total), dan pemasok tidak mengonfirmasi ulang. Pemasok: selebihnya yang datang kurang atau terlambat.',
   'rel.def.planChange':
