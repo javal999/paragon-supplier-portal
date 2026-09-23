@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 0.4 draft, 2026-09-23 |
+| Version | 0.5 draft, 2026-09-23 |
 | What this is | Detailed requirements for the demand and material forecast engine PTI builds itself (owner decision ENG-1), with each calculation explained |
 | Status | Every requirement is **Proposed**. The decision to build is Validated (ENG-1), and 6 of the 13 engine decisions are decided (ENG-D1, D2, D3, D5, D8, D9, section 4). The rest of the detail has not yet been reviewed by the Material Planner |
 | Sources | ENG-1 (`SUPPLIER-HUB-REQUIREMENTS.md` section 9); methods and evidence in `research/FORECAST-METHOD-SPEC.md`; problem analysis in `research/FORECAST-BEST-PRACTICE-2026-09.md` |
@@ -840,6 +840,9 @@ Without space limits, one big order is cheapest.
 | ENG-D5 | Service targets | Fill rate, tiered 95% / 90% / 85%; default tiering by volume until ENG-D14 | E14-04 BR-02 |
 | ENG-D8 | Tolerance band | ±10% per version plus a cumulative cap from first publication, starting at ±20% | E14-06 BR-05 |
 | ENG-D9 | Damping weight | 0.5 in Trade-off, 0 in Forecast, tuned from the backtest | E14-06 BR-04 |
+| ENG-D4 | Other plants and intercompany transfers | Pilot plants only; the engine is single-plant; intercompany transfers in Phase 2 | E14-03 |
+| ENG-D6 | Cost rates for order sizing | Finance supplies holding cost (% of value a year), cost per order, and rented space per pallet per week (from the 3PL invoices). Until then they are admin settings with placeholder values, labelled "placeholder — Finance to confirm" | E14-05 |
+| ENG-D7 | Warehouse capacity | Separate per physical warehouse (packaging, raw material), in pallets | E14-05 |
 
 ### 4.1a Build decisions accepted (owner, 2026-09-23, PR #37)
 
@@ -866,13 +869,20 @@ Choices the first build (BL-102, BL-99) had to make where the requirements were 
 | ENG-B12 | The safety-lead-time group default is the pooled percentile of the group; 0, marked, below 5 receipts | E14-04 BR-03 |
 | ENG-B13 | No safety-stock minimum. A floor of demand over the safety lead time would double-count the earlier release E14-03 applies for late suppliers. A material whose engine safety stock is zero while an order is expected is flagged "relies on the order lot (MOQ) — review" | E14-04 BR-01 |
 
+### 4.1c Build decisions accepted (owner, 2026-09-23, PR #41)
+
+| ID | Decision | Applied in |
+|---|---|---|
+| ENG-B14 | Order sizing is solved by an exact per-material dynamic program plus coordinate descent across the materials of a warehouse (the METHOD-SPEC M5 heuristic). HiGHS was tested and not used: at PTI's size it did not prove optimality within 30 seconds and would add a 3.5 MB WebAssembly file. No new dependency | E14-05 BR-01 |
+| ENG-B15 | The order plan is its own page (Forecast → Order plan); Material requirement nets on its orders | E14-05 |
+| ENG-B16 | A draft call-off from the order plan carries the Monday of the week it is received as need date, or today if that Monday has passed | E14-05 BR-05 |
+| ENG-B17 | The change penalty is priced per pallet changed, against last week's run recomputed now (not a stored copy) | E14-05 BR-03 |
+| ENG-B18 | A call-off drafted from the order plan carries origin "engine" and cannot be released (as a draft or directly) while the engine runs on simulated data (X-03). Editing keeps the origin; editing and dismissing stay allowed; an unknown origin value is refused. Once the engine data is live, earlier drafts become releasable | E14-05 BR-05; REQ-E09-01 |
+
 ### 4.2 Still open
 
 | ID | Decision | Owner | Blocks |
 |---|---|---|---|
-| ENG-D4 | Other plants and intercompany transfers in scope | Material Planner | E14-03 |
-| ENG-D6 | Holding, ordering and rented-space cost rates | Finance | E14-05 |
-| ENG-D7 | One warehouse capacity or separate for packaging and raw material | Warehouse | E14-05 |
 | ENG-D8a | The cumulative cap agreed with pilot suppliers | Material Planner, Procurement | Confirms E14-06 BR-05 (runs on ±20% meanwhile) |
 | ENG-D10 | Forecast grain: sell-in or sell-out, per channel or not | Demand Planning | E14-07 |
 | ENG-D11 | Who reviews the forecast before it drives material plans | Material Planner, Demand Planning | E14-07 |
@@ -892,3 +902,4 @@ Choices the first build (BL-102, BL-99) had to make where the requirements were 
 | 0.2 | 2026-09-23 | Owner decided ENG-D1, D2, D3, D5, D8 and D9. Data owned by the Master Data Management team, synthetic data until SAP is connected (E14-01 BR-06, BR-07); stock-accuracy tolerance 2%; suppliers see their own measures; tiered fill-rate targets; ±10% per version plus ±20% cumulative; damping 0.5 / 0. New open items ENG-D8a and ENG-D14 |
 | 0.3 | 2026-09-23 | Build decisions ENG-B1 to ENG-B5 from the first build (PR #37) accepted by the owner, section 4.1a |
 | 0.4 | 2026-09-23 | Build decisions ENG-B6 to ENG-B13 from PR #39 (E14-03, E14-04) accepted, section 4.1b |
+| 0.5 | 2026-09-23 | ENG-D4, D6, D7 decided; build decisions ENG-B14 to ENG-B18 from PR #41 (E14-05 and the release block), section 4.1c |

@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 0.16 draft, 2026-09-23 |
+| Version | 0.17 draft, 2026-09-23 |
 | Sources | `SUPPLIER-HUB-BASELINE.md` (kick-off deck, Aug 2026); `KICKOFF-MEETING-NOTES.md` (business user feedback, reviewed 2026-09-17); owner review of the prototype gap review (2026-09-17); owner RFx decisions RFX-D1 to RFX-D5 (2026-09-21); RFx best-practice research, `research/RFX-BEST-PRACTICE-2026-09.md` (2026-09-21); owner decision ENG-1 (2026-09-23) with the forecast research `research/FORECAST-BEST-PRACTICE-2026-09.md` and `research/FORECAST-METHOD-SPEC.md` |
 | Scope of this version | Detailed: Order Collaboration, Inventory & Capacity Collaboration, RFx (validated); Forecast Collaboration, Call-off Management, and the undiscussed parts of Order and Inventory Collaboration (proposed). Hub navigation and screen conventions (validated). Foundation is reserved for the Foundation team. The remaining epics are stubs |
 | Not in scope | The codebase. This file states what the Supplier Hub must do, not what is built. What the prototype does today, and where, is tracked only in `BUILD-GAP.md` |
@@ -1788,6 +1788,9 @@ Research date: 2026-09-21. The full note, with every source link, is `research/R
 | KPI-2 | Early deliveries in OTIF and CFOT | One rule for both: on time only if received no more than 7 days before the date (the CR-06 window), until BL-56 sets the early allowance (owner, 2026-09-23) |
 | KPI-3 | Sharing partial receipts across deliveries | Each delivery takes its closest receipt first; leftovers top up the nearest delivery still short (owner, 2026-09-23) |
 | KPI-4 | Two CFOT averages | The reliability page averages CFOT per PO; the performance pages weight by quantity. Both are shown (owner, 2026-09-23) |
+| ENG-D4 | Plants in the forecast engine | Pilot plants only; intercompany transfers in Phase 2 (owner, 2026-09-23) |
+| ENG-D6 | Cost rates for order sizing | From Finance and the 3PL invoices; placeholder admin values until then (owner, 2026-09-23) |
+| ENG-D7 | Warehouse capacity for order sizing | Separate per physical warehouse, in pallets (owner, 2026-09-23) |
 | BL-13 / PQ-12 | Umbrella PO grain | Quantity per line, so call-off release checks remaining quantity |
 | BL-14 / Q-18 | Working calendar | The hub keeps its own calendar, maintained by the Hub administrator, loaded from the SAP factory calendar with overrides in the hub |
 | BL-15 / Q-20 | Quality inspection | Keep the result display in the hub; non-conformance and corrective action come with Supplier Quality in Phase 2 |
@@ -1829,3 +1832,4 @@ Research date: 2026-09-21. The full note, with every source link, is `research/R
 | 0.14 | 2026-09-23 | ENG-1: PTI calculates forecast, material requirement, ROP, and replenishment in its own engine (hub first, SOMO later), superseding MN-INV-14 and the PQ-07 answer. REQ-E06-01 BR-01, REQ-E08 BR-04, and REQ-E09-01 rewritten with SAP as the source until the engine is live. Glossary ROP updated. New epic E14 (In-house Forecast Engine), REQ-E14-01 to REQ-E14-12, detailed in `FORECAST-ENGINE-REQUIREMENTS.md` (section 5.9) |
 | 0.15 | 2026-09-23 | Engine decisions ENG-D1, D2, D3, D5, D8, D9 recorded in section 9 and applied in `FORECAST-ENGINE-REQUIREMENTS.md` 0.2 |
 | 0.16 | 2026-09-23 | KPI-1 to KPI-4 recorded (BL-66, built in PR #38); open item KPI-D closed |
+| 0.17 | 2026-09-23 | ENG-D4, D6, D7 recorded in section 9 |

@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 2.1, 2026-09-23 |
+| Version | 2.2, 2026-09-23 |
 | What this is | Everything known to be outstanding for the Supplier Hub, in one list: decisions waiting on people, work waiting on those decisions, work waiting on the backend, and work that can start today |
 | What this is not | A plan or a commitment. Nothing here has a date. Sequencing belongs to the project owner |
 | Sources | Open items (section 7 of `SUPPLIER-HUB-REQUIREMENTS.md`), open decisions (section 9.3 of `SUPPLIER-HUB-PRD.md`), what is not built (section 5 of `BUILD-GAP.md`), stubs (section 6 of the requirements), and defects or debts found while building |
@@ -175,3 +175,4 @@ Nothing blocks these.
 | BL-82 | OTIF and CFOT aligned with the agreed definitions | 2026-09-23 | Built in PR #38: counter-offer counts on acceptance, planner change after re-confirmation, partial receipts summed, one early window (`kpiWindow.ts`), dispatched-but-not-received counts as missed after 3 days; definitions updated on both performance pages; CFOT shown on the reliability page and panel. No sample supplier's score moved |
 | BL-104 | Material requirement (E14-03) | 2026-09-23 | Built in PR #39 on synthetic data: BOM explosion, netting against stock and supplier-confirmed receipts, interim MOQ round-up; page Forecast → Material requirement |
 | BL-105 | Safety stock, safety lead time and reorder point (E14-04) | 2026-09-23 | Built in PR #39 on synthetic data: fill-rate safety stock from the plan's errors, tiers 95/90/85, safety lead time per supplier, ROP; zero safety stock flagged, not floored; page Forecast → Safety stock |
+| BL-106 | Order sizing within MOQ and warehouse space (E14-05) | 2026-09-23 | Built in PR #41 on synthetic data: warehouse-wide sizing, placeholder cost rates, page Forecast → Order plan, draft call-offs from recommendations; engine-origin drafts cannot be released while the data is simulated. Finding: it cuts packaging orders (101 → 65) but cannot lower the current overload, which is stock already on hand |

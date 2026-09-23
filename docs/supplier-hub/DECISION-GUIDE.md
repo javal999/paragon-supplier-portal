@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 1.3, 2026-09-23 |
+| Version | 1.4, 2026-09-23 |
 | Covers | BL-01 to BL-19b in `BACKLOG.md` — the 21 decisions that block or confirm work; the five RFx decisions RFX-D1 to RFX-D5 (2026-09-21); and the 15 forecast engine decisions ENG-D1 to ENG-D14 with ENG-D8a (2026-09-23) |
 | Purpose | Give the project owner a defensible recommendation to take to each owner: what the market does, what we suggest for PTI, and what would change our mind |
 | Status | **18 of the 21 were decided on 2026-09-21**, mostly as recommended; the outcomes are in section 9 of the requirements and in the Closed section of `BACKLOG.md`. Still open: BL-01 REPL, BL-11 interface technology, BL-12 call-off record, and three values (BL-54 invoice cap, BL-55 gate OTIF minimum, BL-56 early allowance). Where the owner decided differently from this guide — the hub keeps its own calendar (BL-14), capacity stays at 13 weekly buckets (BL-08), Web Tukar Faktur stays separate (BL-17), and TMS access becomes a 3PL tracking link (BL-03) — the decision stands and this guide is kept as the reasoning behind the others. All decided items are built and in production as of 2026-09-21 (BL-43 to BL-53). The builds raised six new questions, BL-66 to BL-71 in the backlog, which this guide does not yet cover |
@@ -225,8 +225,8 @@ The owner took these five during the RFx overhaul. They are recorded as RFX-D1 t
 ## Forecast engine (E14)
 
 These come from `FORECAST-ENGINE-REQUIREMENTS.md`, the in-house engine the owner decided on 2026-09-23 (ENG-1). They are ordered by what blocks the build.
-- **Decided:** 6, on 2026-09-23, all as recommended.
-- **Open:** 9. None blocks the first build (E14-01 to E14-04 on synthetic data).
+- **Decided:** 9, on 2026-09-23, all as recommended.
+- **Open:** 6. None blocks the first build (E14-01 to E14-04 on synthetic data).
 - **Research:** `research/FORECAST-METHOD-SPEC.md`.
 
 **Decided 2026-09-23**
@@ -300,33 +300,36 @@ Per-version limits alone let 3 steps of +10% add up to +33%.
 
 **What would change this.** The backtest (E14-10) showing a different weight gives better simulated service at the same stability.
 
-**Still open**
-
 ### ENG-D4 · Other plants and intercompany transfers
 **Market practice.** No sourced benchmark; this is a scope decision.
 
-**Recommendation.** Pilot plants only in the MVP; intercompany transfers in Phase 2.
+**Decision (2026-09-23).** Pilot plants only in the MVP; intercompany transfers in Phase 2.
 
 **What would change this.** A pilot material regularly supplied by transfer from another plant. Its requirement would be missed without the transfer in scope.
+
 
 ### ENG-D6 · Cost rates for order sizing
 **Market practice.** Standard lot sizing needs three rates: holding cost, ordering cost and the cost of extra space (Wagner–Whitin and the capacitated models in the method spec, M5).
 
-**Recommendation.** Finance provides:
+**Decision (2026-09-23).** Finance provides:
 - **Holding cost:** % of value per year.
 - **Ordering cost:** per order.
 - **Rented space:** per pallet per week. Take this from the actual 3PL invoices now.
 
-The first two can start as estimates.
+Until Finance does, the three rates are admin settings with placeholder values, labelled "placeholder — Finance to confirm" on the admin and Order plan pages.
 
 **What would change this.** None. Without these rates, E14-05 cannot weigh rented space against extra orders.
+
 
 ### ENG-D7 · One warehouse capacity or separate
 **Market practice.** The capacitated lot-sizing research models capacity per storage resource, and SAP IBP does the same in its optimiser.
 
-**Recommendation.** Separate capacity per physical warehouse, in pallets. This matches the owner's slides, which report packaging and raw material separately. A pooled figure would hide the packaging overload behind raw-material space.
+**Decision (2026-09-23).** Separate capacity per physical warehouse, in pallets. This matches the owner's slides, which report packaging and raw material separately. A pooled figure would hide the packaging overload behind raw-material space.
 
 **What would change this.** Packaging and raw material actually sharing floor space.
+
+
+**Still open**
 
 ### ENG-D8a · The cumulative cap agreed with pilot suppliers
 **Recommendation.** Run on ±20% and review it with DP Group and Lautan Luas after the first 8 weekly versions, using MASC-I (E14-02).
