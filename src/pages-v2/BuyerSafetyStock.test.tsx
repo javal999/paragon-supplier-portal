@@ -77,4 +77,18 @@ describe('ENG-D5 targets on the administration page — the tiers stay in order'
     expect(settingRefusal('engine.fillRateSlowPct', 91, DEFAULT_SETTING_STATE)).toMatch(/engine\.fillRateSlowPct: slow movers may not be held/);
     expect(settingRefusal('engine.safetyLeadTimePercentile', 40, DEFAULT_SETTING_STATE)).toMatch(/at least 50/);
   });
+
+  it('flags a material whose safety stock relies on the order lot alone, in EN and ID — and only those', async () => {
+    const run = (await mockDataService.procurement.getSafetyStock(buyerScope))!;
+    const flagged = run.materials.filter((m) => m.reliesOnOrderLot);
+    expect(flagged.length).toBeGreaterThan(0);
+    renderWithProviders(<BuyerSafetyStock />, { identity: BUYER, route: '/buyer/safety-stock' });
+    await screen.findByTestId(`sst-row-${run.materials[0].materialCode}`);
+    for (const m of run.materials) {
+      if (m.reliesOnOrderLot) expect(screen.getByTestId(`sst-lot-${m.materialCode}`)).toHaveTextContent('relies on the order lot');
+      else expect(screen.queryByTestId(`sst-lot-${m.materialCode}`)).toBeNull();
+    }
+    await i18n.changeLanguage('id');
+    expect(await screen.findByTestId(`sst-lot-${flagged[0].materialCode}`)).toHaveTextContent('mengandalkan lot pesanan');
+  });
 });

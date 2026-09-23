@@ -399,6 +399,13 @@ export interface MaterialSafetyStock {
   readonly reorderPoint: number;
   /** Every error the same sign: E14-11 raises a bias alarm (edge case). */
   readonly oneSidedErrors: boolean;
+  /**
+   * The engine's safety stock is zero while an order is expected: the fill-rate
+   * target is met by the MOQ-sized order lot alone. Flagged for the planner to
+   * review rather than floored (owner, 2026-09-23 — a floor of demand over the
+   * safety lead time would double-count the earlier release E14-03 applies).
+   */
+  readonly reliesOnOrderLot: boolean;
 }
 
 export interface SafetyStockRun {
@@ -489,6 +496,7 @@ export function safetyStockRun(data: EngineDataset, options: SafetyStockOptions)
         expectedDemandOverRisk,
         reorderPoint: reorderPoint(expectedDemandOverRisk, safetyStock),
         oneSidedErrors: values.length > 0 && (values.every((e) => e > 0) || values.every((e) => e < 0)),
+        reliesOnOrderLot: enough && safetyStock === 0 && orderQtyPerCycle > 0,
       };
     });
 

@@ -224,6 +224,11 @@ const BuyerSafetyStock: React.FC = () => {
                       <span className="text-text-tertiary">{t('sst.source.engine')}</span>
                     )}
                   </div>
+                  {m.reliesOnOrderLot && (
+                    <div className="text-xs text-warning-hover" data-testid={`sst-lot-${m.materialCode}`}>
+                      {t('sst.reliesOnLot')}
+                    </div>
+                  )}
                   {m.oneSidedErrors && (
                     <div className="text-xs text-warning-hover" data-testid={`sst-bias-${m.materialCode}`}>
                       {t('sst.bias')}

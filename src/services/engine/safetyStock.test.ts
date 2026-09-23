@@ -323,3 +323,31 @@ describe('REQ-E14-04 AC-03 — an independent recalculation from the stored hist
     expect(sample.filter((c) => run.materials.find((x) => x.materialCode === c)!.safetyStock > 0).length).toBeGreaterThanOrEqual(3);
   });
 });
+
+describe('REQ-E14-04 — a zero safety stock is flagged, not floored (owner, 2026-09-23)', () => {
+  const flagged = run.materials.filter((m) => m.reliesOnOrderLot);
+
+  it('examined something: at least one named material relies on its order lot alone', () => {
+    expect(flagged.length).toBeGreaterThan(0);
+    expect(flagged[0].materialCode).toMatch(/^[A-Z]{2}-/);
+  });
+
+  it('flags exactly the engine figures at zero with an order expected — and no others', () => {
+    for (const m of run.materials) {
+      const expected = m.source === 'engine' && m.safetyStock === 0 && m.orderQtyPerCycle > 0;
+      expect(m.reliesOnOrderLot, m.materialCode).toBe(expected);
+    }
+  });
+
+  it('known-good and known-bad: a material with a positive safety stock is never flagged, and no floor is applied', () => {
+    const positive = run.materials.find((m) => m.safetyStock > 0)!;
+    expect(positive.reliesOnOrderLot).toBe(false);
+    for (const m of flagged) expect(m.safetyStock).toBe(0);
+  });
+
+  it('a SAP fallback at zero is not flagged — the flag is about the engine’s own result', () => {
+    const fallback = safetyStockRun(data, opts({ minOrigins: 10_000 }));
+    expect(fallback.materials.every((m) => m.source === 'sap')).toBe(true);
+    expect(fallback.materials.some((m) => m.reliesOnOrderLot)).toBe(false);
+  });
+});

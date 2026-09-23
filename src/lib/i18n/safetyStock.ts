@@ -49,6 +49,7 @@ export const safetyStockEn: Record<string, string> = {
   'sst.history.none': 'No usable past plan',
   'sst.history.fillRate': 'fill rate on history {{value}}',
   'sst.bias': 'Errors all one way: forecast bias',
+  'sst.reliesOnLot': 'No safety stock: relies on the order lot (MOQ) — review',
 
   'sst.detail.title': 'The history behind it',
   'sst.detail.select': 'Select a material to see the errors behind its safety stock.',
@@ -118,6 +119,7 @@ export const safetyStockId: Record<string, string> = {
   'sst.history.none': 'Tidak ada rencana lampau yang dapat dipakai',
   'sst.history.fillRate': 'tingkat pemenuhan atas riwayat {{value}}',
   'sst.bias': 'Kesalahan selalu satu arah: bias prakiraan',
+  'sst.reliesOnLot': 'Tanpa stok pengaman: mengandalkan lot pesanan (MOQ) — tinjau',
 
   'sst.detail.title': 'Riwayat di baliknya',
   'sst.detail.select': 'Pilih material untuk melihat kesalahan di balik stok pengamannya.',
