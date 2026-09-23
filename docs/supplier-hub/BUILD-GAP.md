@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 3.0, 2026-09-22 |
+| Version | 3.1, 2026-09-23 |
 | Compares | `SUPPLIER-HUB-REQUIREMENTS.md` v0.12 with the prototype on `main` at `80a4281` (PR #27 merged, 2026-09-22). The RFx rows cover PRs #21, #24, #25, #26 and #27; the RFP → RFQ pre-fill was built in PR #30 |
 | Owner decisions | 2026-09-17, recorded in section 9 of the requirements (RFX-1 to RFX-3, GAP-1 to GAP-4, E06-R); 2026-09-21 for the working calendar (Q-18, BL-14) and the commitment deadline (CR-26, BL-05), built as BL-50 and BL-48; 2026-09-21 for RFx (RFX-D1 to RFX-D5), built in PRs #21 and #24 to #27 |
 | Rule | This is the **only** document that describes what the prototype does for the Supplier Hub. The PRD and the requirements describe the product and never the code. Update this file when a build item lands |
@@ -47,6 +47,9 @@ Everything runs on sample data held in the browser. There is no backend, no SAP 
 | REQ-E09-04 Delivery execution | Built | Dispatch heads-up or a linked ASN, At Risk when the expected arrival is after the need date, reminders. No dock or slot booking |
 | REQ-E10-01 CFOT and OTIF | Built | Calculated per PO and per call-off from hub data with working period filters, rejections counted, grade bands stated on screen, "No history" where nothing is measurable. Both performance pages state the definitions as calculated — delivery window, early deliveries, grain, date change, in full (BL-53) — and show "Baseline period — no target yet" instead of the 90% target (BL-19). Other scorecard measures stay sample figures and are marked as such |
 | REQ-E13-01 TMS access | Not built | Decided out of the MVP (D-03); covered by the 3PL tracking link on the ASN (BL-51) |
+| REQ-E14-01 Engine data foundation | Partial | The engine's input contract (`src/services/engine/types.ts`) and a deterministic synthetic dataset built to it, calibrated to the owner's slide measures and labelled simulated in the liveness registry (BL-102, PR #37). Not built: the Data health page, freshness limits and the quality checks on arrival; the real feeds (BL-100, specified in `FORECAST-ENGINE-FEED-SPEC.md`) |
+| REQ-E14-02 Supplier reliability and plan-change measures | Built, on synthetic data | Confirmation rate, commitment reliability, the missed-line split (never confirmed, supplier-caused, PTI-caused) with the re-confirmation rule and the ENG-D8 band, share of schedules changed inside the lead time, MASC and MASC-I (`src/services/engine/reliability.ts`). Planner page Forecast → Supplier reliability (`/buyer/reliability`); supplier panel "Your reliability" on `/supplier/forecasts`, scoped to the supplier's own figures. CFOT is not shown until BL-66. Build decisions ENG-B1 to ENG-B5 (BL-99, PR #37) |
+| REQ-E14-03 to REQ-E14-12 Forecast engine | Not built | See `FORECAST-ENGINE-REQUIREMENTS.md` for the build order |
 | Section 3.4 Working calendar (Q-18) | Built | The hub keeps its own calendar (BL-50): the SAP factory calendar as loaded, which is simulated and marked Sample data (there is no SAP connection, and the load includes one sample plant shutdown day), plus rulings by the Hub administrator that make one date working or non-working, with a reason. A ruling is a governed act (`t_calendar_day_set`), held by Compliance and the administrator seat and by no lane the deadlines measure, and is kept in this browser across reloads. The administration page (Help & administration, Working calendar) lists the non-working days with where each came from, the rulings on record, and the commitment deadlines the calendar decides now. Every working-day deadline in the hub reads this calendar: PO response, call-off confirmation and forecast commitment |
 
 ---
@@ -124,6 +127,8 @@ The `CR-` rules are implemented in the hub's own modules and covered by their ow
 | Rules | Module |
 |---|---|
 | Working day arithmetic (section 3.4) | `src/lib/workingCalendar.ts` |
+| Engine input contract, synthetic dataset and its calibration (E14-01) | `src/services/engine/types.ts`, `src/services/engine/synthetic/` |
+| Supplier reliability and plan-change measures (E14-02) | `src/services/engine/reliability.ts` |
 | The calendar in force: SAP load plus administrator rulings (section 3.4, BL-50) | `src/services/transitions/workingCalendarStore.ts` (`hubWorkingCalendar`); the ruling verb `flows/workingCalendar.flow.ts` |
 | PO response and escalation | `src/services/data/poResponseProjection.ts` |
 | Remaining on the umbrella PO line and the release check, quantity first and value only on a line with no quantity (CR-04) | `src/services/transitions/callOffRules.ts` (`umbrellaRemaining`, `releaseCheck`) |

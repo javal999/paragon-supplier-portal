@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 1.9, 2026-09-23 |
+| Version | 2.0, 2026-09-23 |
 | What this is | Everything known to be outstanding for the Supplier Hub, in one list: decisions waiting on people, work waiting on those decisions, work waiting on the backend, and work that can start today |
 | What this is not | A plan or a commitment. Nothing here has a date. Sequencing belongs to the project owner |
 | Sources | Open items (section 7 of `SUPPLIER-HUB-REQUIREMENTS.md`), open decisions (section 9.3 of `SUPPLIER-HUB-PRD.md`), what is not built (section 5 of `BUILD-GAP.md`), stubs (section 6 of the requirements), and defects or debts found while building |
@@ -97,8 +97,6 @@ Nothing blocks these.
 | BL-80 | A value-only PO line (BL-49) shows quantity 0 on PO and ASN screens outside the call-off pages | Only the call-off screens know the line has no quantity | S | CR-04 |
 | BL-83 | Text run-ons: Indonesian "closing soon" pill joins its date ("Segera ditutup02 Sep 2026"); the in-transit read-out reads "0nothing in transit"; `formatNumber` uses the Indonesian thousands dot in the English UI outside the Stock page | Small display defects seen in the BL-72/73 check | S | SC conventions |
 | BL-84 | Accessibility items left by BL-31: field errors not tied to their field (many forms); h1 jumping to h3 on marketplace, discovery, storefront, WhatsApp demo, supplier comm hub and shipments; unnamed controls in the contract wizard obligation grid and WhatsApp demo; top-bar menu button does nothing and the notification count is not in its name; login contrast and missing h1; 404 title in English only; then a session with a real screen reader | Needed before UAT (SC-07) | M | `BUILD-GAP.md` "Accessibility (BL-31)" |
-| BL-99 | Forecast engine step 1: plan-change measures (MASC, % of schedules changed inside the supplier lead time), commitment reliability, and a split of each miss into PTI-caused, supplier-caused, or never confirmed | Uses data the hub already holds, and shows how much of the low CFOT is suppliers not confirming | M | `research/FORECAST-METHOD-SPEC.md` G1, G3, G4. Runs on BL-102 until SAP is connected; its CFOT figures wait on BL-66 |
-| BL-102 | Synthetic dataset for the forecast engine: finished goods, bills of materials, stock, POs, confirmations and receipts, built to reproduce the slide measures (confirmation near 67%, CFOT near 36%, warehouses over capacity) and labelled simulated | The engine can be built and shown before SAP is connected (ENG-D1) | M | `FORECAST-ENGINE-REQUIREMENTS.md` E14-01 BR-07 |
 
 ---
 
@@ -173,3 +171,5 @@ Nothing blocks these.
 | BL-93 | Edit a draft RFI, RFQ or RFP | 2026-09-22 | Built in PR #31: Edit draft on a Draft's side panel (RFQ) or detail (RFI, RFP) re-opens the create wizard on every stored field and saves through a revise-draft verb per event type (same atom, fields and policy as create; Draft only; compare-and-set on Draft; who and when recorded); Save changes keeps it a draft, Save and send also sends it with the publish permission. Discard draft on a Draft RFI or RFP through the existing cancel verbs (the RFQ panel already had Cancel) |
 | BL-32 | Admin screen for the remaining configuration | 2026-09-22 | Built: tolerances and rule values, alert thresholds and stale periods (default and per supplier × material), and reason codes (add, rename, retire; never deleted) on `/buyer/admin`, each change governed, validated, logged and resettable; the rules read the setting when they run |
 | BL-94 | Oslo demo: sup-007 fails the compliance gate on RFQ-2026-021 | 2026-09-22 | Fixed in PR #33: sup-007 now has a real delivery history, four past call-offs on the 100ml PET line (CO-2026-0043 to 0046, 80, 60, 40 and 25 days before the present) each received on its date and in full (GR-2026-018 to 021). Its calculated 90-day OTIF is 83% (5 of 6), so it passes the gate on Oslo, is ranked, and can take a share of the award. The gate minimum, the gate and the late CO-2026-0001 are unchanged; sup-008 (0%) still fails |
+| BL-99 | Supplier reliability and plan-change measures (E14-02) | 2026-09-23 | Built in PR #37 on synthetic data: planner page Forecast → Supplier reliability, supplier panel "Your reliability". CFOT waits on BL-66 |
+| BL-102 | Synthetic dataset for the forecast engine | 2026-09-23 | Built in PR #37: deterministic, calibrated to the slide measures (confirmation 65.9%, CFOT 36.7% by definition, packaging warehouse 124–136%, raw material 105–107%), labelled simulated |
