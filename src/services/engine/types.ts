@@ -192,6 +192,43 @@ export interface EngineMaterial {
   readonly materialCode: string;
   readonly kind: WarehouseKind;
   readonly uom: Uom;
+  /**
+   * The master's material group (E14-04 BR-03: safety lead time is per supplier
+   * × material group). Optional in the contract so a partial feed still loads;
+   * a material without one is treated as a group of its own.
+   */
+  readonly materialGroup?: string;
+}
+
+/**
+ * One week of one snapshot of SAP's finished-goods plan (E14-03 input; E14-04
+ * measures its errors). Until E14-07 exists the engine runs on SAP's plan
+ * (ENG-1). `madeAt` is the Monday of the week the plan was made; a snapshot
+ * covers `weekStart` ≥ `madeAt`. Past snapshots are kept so the plan's errors
+ * against what actually sold can be measured at every past origin (M3).
+ */
+export interface FgPlanSnapshot {
+  readonly skuCode: string;
+  readonly madeAt: IsoDate;
+  readonly weekStart: IsoDate;
+  readonly quantity: number;
+}
+
+/** Open sales-order quantity per SKU per week (M1 forecast consumption). */
+export interface SalesOrderWeek {
+  readonly skuCode: string;
+  readonly weekStart: IsoDate;
+  readonly quantity: number;
+}
+
+/**
+ * SAP's current safety stock per material, in the material's unit. The value
+ * E14-04 compares against, and the one it falls back to while a material has
+ * too little history (E14-04 BR-05).
+ */
+export interface SapSafetyStock {
+  readonly materialCode: string;
+  readonly quantity: number;
 }
 
 /** Where the dataset came from — X-03: every result says so. */
@@ -220,6 +257,12 @@ export interface EngineDataset {
   readonly confirmations: readonly Confirmation[];
   readonly receipts: readonly Receipt[];
   readonly planVersions: readonly PlanVersion[];
+  /** SAP's finished-goods plan, every snapshot (E14-03, E14-04). */
+  readonly fgPlan: readonly FgPlanSnapshot[];
+  /** Open sales orders (E14-03 BR-01, M1). */
+  readonly salesOrders: readonly SalesOrderWeek[];
+  /** SAP's safety stock per material (E14-04 BR-05 fallback and comparison). */
+  readonly sapSafetyStock: readonly SapSafetyStock[];
 }
 
 /** The key that joins a line's changes, confirmations and receipts. */

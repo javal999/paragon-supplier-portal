@@ -63,6 +63,7 @@ import type {
   ReleaseCommandResult,
 } from '../delivery/views';
 import type { SupplierReliability } from '../engine/reliability';
+import type { MaterialPlan, MaterialRequirementRun } from '../engine/requirement';
 import type { ReleaseSelection } from '../delivery/release';
 import type { EditPolicyPatch } from '../delivery/policy';
 // The unified chase read view (SDC-5c). TYPE-ONLY — the `chase` module composes
@@ -731,6 +732,22 @@ export interface SupplierReliabilityView extends SupplierReliability {
   /** The window measured, inclusive (`YYYY-MM-DD`). */
   readonly windowFrom: string;
   readonly windowTo: string;
+}
+
+/** One material's requirement as served (REQ-E14-03), with display names. */
+export interface MaterialPlanView extends MaterialPlan {
+  readonly materialLabel: string;
+  readonly supplierName: string | null;
+}
+
+/**
+ * REQ-E14-03 — the material requirement run as served: computed at read on the
+ * engine's (SIMULATED) dataset, never stored. PTI only; a supplier gets null.
+ */
+export interface MaterialRequirementView extends MaterialRequirementRun {
+  readonly materials: readonly MaterialPlanView[];
+  /** Finished-good SKU → name, for the drill-in behind a gross requirement. */
+  readonly finishedGoodNames: Readonly<Record<string, string>>;
 }
 
 export interface ForecastCoverageRow {
@@ -2289,6 +2306,12 @@ export interface IProcurementService {
    * which carries PTI's plan-change figure for its materials (BR-07, ENG-D3).
    */
   getSupplierReliability(scope: QueryScope, windowWeeks?: ReliabilityWindowWeeks): Promise<Page<SupplierReliabilityView>>;
+  /**
+   * REQ-E14-03 — the material requirement per material and week, computed by
+   * the forecast engine on its (SIMULATED) dataset. PTI only: a supplier scope
+   * gets null (X-03 — simulated engine output is never shown to a supplier).
+   */
+  getMaterialRequirement(scope: QueryScope, includeUnconfirmed?: boolean): Promise<MaterialRequirementView | null>;
 
   // — Sourcing —
   getRFQs(scope: QueryScope, filter?: RFQFilter): Promise<Page<RFQ>>;

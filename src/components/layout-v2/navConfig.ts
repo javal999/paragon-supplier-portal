@@ -16,6 +16,7 @@ import {
   FileText,
   Gauge,
   KeyRound,
+  Layers,
   Link2,
   ListChecks,
   ListTodo,
@@ -90,6 +91,7 @@ export const PTI_NAV: readonly NavSection[] = [
       { labelKey: 'hub.nav.pti.forecasts', icon: CalendarRange, path: '/buyer/forecasts' },
       { labelKey: 'hub.nav.pti.commitments', icon: ChartLine, path: '/buyer/collaboration' },
       { labelKey: 'hub.nav.pti.reliability', icon: Target, path: '/buyer/reliability' },
+      { labelKey: 'hub.nav.pti.materialRequirement', icon: Layers, path: '/buyer/material-requirement' },
     ],
   },
   {

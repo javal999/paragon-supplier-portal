@@ -16,7 +16,8 @@ export interface IntegrityViolation {
     | 'NO_SOURCE'
     | 'ORPHAN_EVENT'
     | 'BOM_PARENT_NOT_FG'
-    | 'FG_IS_A_MATERIAL';
+    | 'FG_IS_A_MATERIAL'
+    | 'UNKNOWN_FG';
   readonly where: string;
   readonly detail: string;
 }
@@ -41,6 +42,7 @@ export function integrityViolations(d: EngineDataset, ctx: IntegrityContext): In
   d.cycleCounts.forEach((c) => material(`cycleCounts ${c.countDate}`, c.materialCode));
   d.poLines.forEach((l) => material(`poLines ${l.poNumber}/${l.line}`, l.materialCode));
   d.planVersions.forEach((v) => material(`planVersions ${v.supplierId} v${v.versionNo}`, v.materialCode));
+  d.sapSafetyStock.forEach((s) => material('sapSafetyStock', s.materialCode));
 
   for (const id of new Set([...d.sources.map((s) => s.supplierId), ...d.poLines.map((l) => l.supplierId)])) {
     if (!ctx.isKnownSupplier(id)) out.push({ rule: 'UNKNOWN_SUPPLIER', where: 'sources/poLines', detail: id });
@@ -69,6 +71,10 @@ export function integrityViolations(d: EngineDataset, ctx: IntegrityContext): In
   const fgs = new Set(d.finishedGoods.map((f) => f.skuCode));
   for (const b of d.bom) {
     if (!fgs.has(b.parentCode)) out.push({ rule: 'BOM_PARENT_NOT_FG', where: 'bom', detail: b.parentCode });
+  }
+  const skus = new Set<string>([...d.fgPlan.map((p) => p.skuCode), ...d.salesOrders.map((o) => o.skuCode)]);
+  for (const sku of skus) {
+    if (!fgs.has(sku)) out.push({ rule: 'UNKNOWN_FG', where: 'fgPlan/salesOrders', detail: sku });
   }
   for (const f of d.finishedGoods) {
     if (ctx.isKnownMaterial(f.skuCode)) out.push({ rule: 'FG_IS_A_MATERIAL', where: 'finishedGoods', detail: f.skuCode });

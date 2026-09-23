@@ -116,10 +116,14 @@ import type {
   SupplierApplication,
   ReliabilityWindowWeeks,
   SupplierReliabilityView,
+  MaterialRequirementView,
 } from '../types';
 import { PR_INTAKE_LINES } from './fixtures/prIntake';
 import { engineDataset } from './fixtures/engineDataset';
 import { supplierReliability, trailingWindow } from '../../engine/reliability';
+import { defaultRequirementOptions, materialRequirement } from '../../engine/requirement';
+import { dayOf } from '../../engine/dates';
+import { labelOf } from '../../sdc/materialMaster';
 import { sdcClock } from '../../sdc/clock';
 
 const matchesList = <T>(value: T, filter: T | T[] | undefined): boolean => {
@@ -391,6 +395,32 @@ export class MockProcurementService implements IProcurementService {
       windowTo: w.to,
     }));
     return { items: applySupplierScope(scope, rows) };
+  }
+
+  async getMaterialRequirement(scope: QueryScope, includeUnconfirmed = false): Promise<MaterialRequirementView | null> {
+    // REQ-E14-03, computed at read on the hub clock. X-03: simulated engine
+    // output is PTI's only — a supplier scope gets nothing.
+    if (scope.personaType === 'supplier') return null;
+    const data = engineDataset();
+    const base = defaultRequirementOptions(dayOf(sdcClock.now()));
+    // Until E14-04 is wired, SAP's safety stock is the placeholder input (marked).
+    const safetyStock = new Map(
+      data.sapSafetyStock.map((s) => [s.materialCode, { quantity: s.quantity, source: 'sapPlaceholder' as const }]),
+    );
+    const run = materialRequirement(data, {
+      ...base,
+      receipts: { ...base.receipts, includeUnconfirmed },
+      safetyStock,
+    });
+    return {
+      ...run,
+      materials: run.materials.map((m) => ({
+        ...m,
+        materialLabel: labelOf(m.materialCode),
+        supplierName: m.supplierId ? forecastSupplierName(m.supplierId) : null,
+      })),
+      finishedGoodNames: Object.fromEntries(data.finishedGoods.map((f) => [f.skuCode, f.name])),
+    };
   }
 
   // ─── Sourcing ─────────────────────────────────────────────────────────────

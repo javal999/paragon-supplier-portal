@@ -30,6 +30,23 @@
 //     materials and never enter the material master.
 //   · Documents: `SYN-PO-…` / `SYN-GR-…`, for the same reason.
 //
+// ── SAP'S FINISHED-GOODS PLAN, OPEN SALES ORDERS, SAP SAFETY STOCK ──────────
+//   Stand-ins for SAP inputs E14-03 and E14-04 read until E14-07 exists (the
+//   engine runs on "SAP's plan", ENG-1). The plan is a weekly snapshot made at
+//   each of the last `fgPlanOrigins` Mondays and at this Monday, each covering
+//   `fgPlanHorizonWeeks`. It is a deliberately imperfect forecast: a
+//   deseasonalised level from the 8 weeks before the origin, re-seasonalised,
+//   times a per-SKU bias and a noise that grows with the horizon — so the
+//   plan's errors against the generated sales EXIST and E14-04 can measure
+//   them. Open sales orders fill part of the next two weeks, sometimes more
+//   than the plan (M1 consumption then has work to do). SAP's safety stock is a
+//   static two to four weeks of recent requirement — SAP's cover rule, which
+//   E14-04 compares its own figure against.
+//
+//   ⚠️ These three draw from a SEPARATE seeded stream (`seed ^ PLAN_STREAM`),
+//   generated after everything else, so adding them moved no existing row: the
+//   BL-102 calibration measures are exactly what they were.
+//
 // ── PURITY (X-01) ───────────────────────────────────────────────────────────
 //   Inputs in, dataset out. The present, the lead-time rule and the
 //   confirmation-deadline rule are ARGUMENTS; there is no clock read, no store
@@ -47,6 +64,7 @@ import type {
   CycleCount,
   EngineDataset,
   EngineMaterial,
+  FgPlanSnapshot,
   FinishedGood,
   IsoDate,
   IsoInstant,
@@ -55,7 +73,9 @@ import type {
   PlanVersion,
   PoLine,
   Receipt,
+  SalesOrderWeek,
   SalesWeek,
+  SapSafetyStock,
   ScheduleChange,
   StockSnapshot,
   Warehouse,
@@ -100,6 +120,10 @@ export interface GeneratorSizes {
   readonly planHorizonWeeks: number;
   /** Weekly stock snapshots ending at the present. */
   readonly stockWeeks: number;
+  /** Past weekly origins of SAP's finished-goods plan (plus this week's). */
+  readonly fgPlanOrigins: number;
+  /** Weeks each finished-goods plan snapshot covers. */
+  readonly fgPlanHorizonWeeks: number;
 }
 
 export const DEFAULT_SIZES: GeneratorSizes = Object.freeze({
@@ -110,7 +134,12 @@ export const DEFAULT_SIZES: GeneratorSizes = Object.freeze({
   planVersions: 13,
   planHorizonWeeks: 8,
   stockWeeks: 26,
+  fgPlanOrigins: 52,
+  fgPlanHorizonWeeks: 26,
 });
+
+/** XOR-ed into the seed for the plan stream, so it never shares draws with the rest. */
+const PLAN_STREAM = 0x5eed0e14;
 
 /** The calibration targets the generator steers at (the calibration test measures them). */
 export const WAREHOUSE_TARGETS = Object.freeze({
@@ -697,6 +726,75 @@ function buildPurchasing(
   return { poLines, scheduleChanges, confirmations, receipts };
 }
 
+// ── SAP's finished-goods plan, open sales orders, SAP safety stock ──────────
+
+/** How many weeks before an origin the plan's level is read from. */
+const PLAN_LEVEL_WEEKS = 8;
+
+function buildFgPlan(
+  fgs: readonly FinishedGood[],
+  sales: readonly SalesWeek[],
+  thisMonday: IsoDate,
+  sizes: GeneratorSizes,
+  rng: Rng,
+): FgPlanSnapshot[] {
+  const bySku = new Map<string, Map<IsoDate, SalesWeek>>();
+  for (const s of sales) {
+    const m = bySku.get(s.skuCode) ?? new Map<IsoDate, SalesWeek>();
+    m.set(s.weekStart, s);
+    bySku.set(s.skuCode, m);
+  }
+  const out: FgPlanSnapshot[] = [];
+  for (const fg of fgs) {
+    const history = bySku.get(fg.skuCode) ?? new Map<IsoDate, SalesWeek>();
+    // SAP's plan for this SKU leans one way — some over-plan, some under.
+    const bias = rng.range(-0.12, 0.15);
+    for (let k = sizes.fgPlanOrigins; k >= 0; k -= 1) {
+      const madeAt = addDays(thisMonday, -k * 7);
+      // The level SAP planned from: the deseasonalised mean of the in-stock
+      // weeks before the origin.
+      const seen: number[] = [];
+      for (let j = 1; j <= PLAN_LEVEL_WEEKS; j += 1) {
+        const w = addDays(madeAt, -j * 7);
+        const s = history.get(w);
+        if (s && !s.stockout) seen.push(s.quantity / seasonality(w));
+      }
+      const level = seen.length >= 4 ? seen.reduce((a, b) => a + b, 0) / seen.length : null;
+      for (let h = 0; h < sizes.fgPlanHorizonWeeks; h += 1) {
+        const w = addDays(madeAt, h * 7);
+        const noise = 1 + (0.08 + 0.01 * h) * rng.normal();
+        if (w < fg.launchDate || (fg.discontinueDate && w >= fg.discontinueDate)) continue;
+        // A SKU without enough history is planned from marketing's launch
+        // figure — stood in for by what it went on to sell, with the same bias.
+        const basis = level !== null ? level * seasonality(w) : (history.get(w)?.quantity ?? null);
+        if (basis === null) continue;
+        out.push({ skuCode: fg.skuCode, madeAt, weekStart: w, quantity: Math.max(0, Math.round(basis * (1 + bias) * noise)) });
+      }
+    }
+  }
+  return out;
+}
+
+function buildSalesOrders(plan: readonly FgPlanSnapshot[], thisMonday: IsoDate, rng: Rng): SalesOrderWeek[] {
+  const out: SalesOrderWeek[] = [];
+  const current = plan.filter((p) => p.madeAt === thisMonday && p.weekStart <= addDays(thisMonday, 7));
+  for (const p of current) {
+    // This week mostly booked (sometimes above plan); next week partly.
+    const share = p.weekStart === thisMonday ? rng.range(0.7, 1.15) : rng.range(0.2, 0.6);
+    const quantity = Math.round(p.quantity * share);
+    if (quantity > 0) out.push({ skuCode: p.skuCode, weekStart: p.weekStart, quantity });
+  }
+  return out;
+}
+
+function buildSapSafetyStock(materials: readonly EngineMaterial[], baseline: ReadonlyMap<string, number>, rng: Rng): SapSafetyStock[] {
+  return materials.map((m) => ({
+    materialCode: m.materialCode,
+    // SAP's static cover: two to four weeks of recent requirement.
+    quantity: Math.round((baseline.get(m.materialCode) ?? 0) * rng.range(2, 4)),
+  }));
+}
+
 // ── The dataset ─────────────────────────────────────────────────────────────
 
 export function generateEngineDataset(input: GeneratorInput): EngineDataset {
@@ -708,7 +806,7 @@ export function generateEngineDataset(input: GeneratorInput): EngineDataset {
 
   const materials: EngineMaterial[] = [...input.materials]
     .sort((a, b) => a.materialCode.localeCompare(b.materialCode))
-    .map((m) => ({ materialCode: m.materialCode, kind: kindOf(m.materialType), uom: m.canonicalUom }));
+    .map((m) => ({ materialCode: m.materialCode, kind: kindOf(m.materialType), uom: m.canonicalUom, materialGroup: m.materialGroup }));
   const byCode = new Map(input.materials.map((m) => [m.materialCode, m]));
   const sortedInput = materials.map((m) => byCode.get(m.materialCode)!);
 
@@ -734,6 +832,12 @@ export function generateEngineDataset(input: GeneratorInput): EngineDataset {
   const planVersions = buildPlanVersions(sources, requirement, baseline, thisMonday, sizes, rng);
   const purchasing = buildPurchasing(input, byCode, sources, requirement, baseline, thisMonday, sizes, rng);
 
+  // The plan stream — after everything above, on its own seed (see header).
+  const planRng = createRng((input.seed ^ PLAN_STREAM) >>> 0);
+  const fgPlan = buildFgPlan(finishedGoods, sales, thisMonday, sizes, planRng);
+  const salesOrders = buildSalesOrders(fgPlan, thisMonday, planRng);
+  const sapSafetyStock = buildSapSafetyStock(materials, baseline, planRng);
+
   return {
     provenance: { liveness: 'SIMULATED', generator: 'synthetic', seed: input.seed, present: today },
     materials,
@@ -747,5 +851,8 @@ export function generateEngineDataset(input: GeneratorInput): EngineDataset {
     cycleCounts,
     ...purchasing,
     planVersions,
+    fgPlan,
+    salesOrders,
+    sapSafetyStock,
   };
 }
