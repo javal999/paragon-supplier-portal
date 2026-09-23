@@ -80,6 +80,7 @@ import SupplierForecasts from '../pages-v2/SupplierForecasts';
 import SupplierForecastCommitments from '../pages-v2/SupplierForecastCommitments';
 import BuyerForecasts from '../pages-v2/BuyerForecasts';
 import BuyerCommitments from '../pages-v2/BuyerCommitments';
+import BuyerReliability from '../pages-v2/BuyerReliability';
 import SupplierShipments from '../pages-v2/SupplierShipments';
 import SupplierGoodsReceipts from '../pages-v2/SupplierGoodsReceipts';
 import SupplierInvoicesV2 from '../pages-v2/SupplierInvoices';
@@ -129,6 +130,7 @@ const ROUTES: RouteCase[] = [
   { name: 'buyer/plan-grid', pattern: '/buyer/plan-grid', at: '/buyer/plan-grid', element: <PlanGrid />, identity: BUYER },
   { name: 'buyer/forecasts', pattern: '/buyer/forecasts', at: '/buyer/forecasts', element: <BuyerForecasts />, identity: BUYER },
   { name: 'buyer/collaboration', pattern: '/buyer/collaboration', at: '/buyer/collaboration', element: <BuyerCommitments />, identity: BUYER },
+  { name: 'buyer/reliability', pattern: '/buyer/reliability', at: '/buyer/reliability', element: <BuyerReliability />, identity: BUYER },
   { name: 'buyer/collaboration/responses', pattern: '/buyer/collaboration/responses', at: '/buyer/collaboration/responses', element: <BuyerCollaboration />, identity: BUYER },
   { name: 'buyer/contracts', pattern: '/buyer/contracts', at: '/buyer/contracts', element: <BuyerContracts />, identity: BUYER },
   { name: 'buyer/contracts/:id', pattern: '/buyer/contracts/:id', at: '/buyer/contracts/ctr-013', element: <BuyerContractDetail />, identity: BUYER },

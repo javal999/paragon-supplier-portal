@@ -26,6 +26,7 @@ import {
   ShieldCheck,
   ShoppingCart,
   SlidersHorizontal,
+  Target,
   Truck,
   Users,
   Workflow,
@@ -88,6 +89,7 @@ export const PTI_NAV: readonly NavSection[] = [
     items: [
       { labelKey: 'hub.nav.pti.forecasts', icon: CalendarRange, path: '/buyer/forecasts' },
       { labelKey: 'hub.nav.pti.commitments', icon: ChartLine, path: '/buyer/collaboration' },
+      { labelKey: 'hub.nav.pti.reliability', icon: Target, path: '/buyer/reliability' },
     ],
   },
   {

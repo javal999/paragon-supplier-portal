@@ -23,6 +23,7 @@ import LoadingState from '../components/ui-v2/LoadingState';
 import ErrorState from '../components/ui-v2/ErrorState';
 import EmptyState from '../components/ui-v2/EmptyState';
 import NoSupplierIdentity from '../components/ui-v2/NoSupplierIdentity';
+import SupplierReliabilityPanel from './reliability/SupplierReliabilityPanel';
 import { HandoffNotice } from '../components/ui-v2/HandoffNotice';
 import { useVerbAvailability } from '../hooks/useVerbAvailability';
 import { useCurrentIdentity } from '../context/CurrentIdentityContext';
@@ -417,6 +418,9 @@ const SupplierForecastCommitments: React.FC = () => {
           )}
         </section>
       )}
+
+      {/* REQ-E14-02 BR-07 — the supplier's own reliability and PTI's plan changes on its materials. */}
+      <SupplierReliabilityPanel />
 
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <SubTabs<ViewMode>

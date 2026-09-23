@@ -88,6 +88,8 @@ import { adminCalendarEn, adminCalendarId } from './i18n/adminCalendar';
 import { performanceEn, performanceId } from './i18n/performance';
 import { inventoryCapacityEn, inventoryCapacityId } from './i18n/inventoryCapacity';
 import { forecastCollaborationEn, forecastCollaborationId } from './i18n/forecastCollaboration';
+// — REQ-E14-02 supplier reliability and PTI plan-change measures (BL-99) —
+import { reliabilityEn, reliabilityId } from './i18n/reliability';
 // — Phase 6a RFx management (REQ-E03-01 to REQ-E03-05) —
 import { rfxEn, rfxId } from './i18n/rfx';
 // — RFx authoring (RFI/RFP batch, 2026-09-21) and session-held attachments —
@@ -188,6 +190,7 @@ export const resources = {
       ...performanceEn,
       ...inventoryCapacityEn,
       ...forecastCollaborationEn,
+      ...reliabilityEn,
       ...rfxEn,
       ...rfxAuthoringEn,
       ...rfqAuthoringEn,
@@ -643,6 +646,7 @@ export const resources = {
       ...performanceId,
       ...inventoryCapacityId,
       ...forecastCollaborationId,
+      ...reliabilityId,
       ...rfxId,
       ...rfxAuthoringId,
       ...rfqAuthoringId,

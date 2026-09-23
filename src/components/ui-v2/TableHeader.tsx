@@ -18,15 +18,19 @@ const TableHeader: React.FC<TableHeaderProps> = ({ children, className = '' }) =
 interface TableHeaderCellProps {
   children: React.ReactNode;
   className?: string;
+  /** Set on the column a table is sorted by, so assistive tech announces it. */
+  ariaSort?: 'ascending' | 'descending';
 }
 
 export const TableHeaderCell: React.FC<TableHeaderCellProps> = ({
   children,
   className = '',
+  ariaSort,
 }) => {
   return (
     <th
       scope="col"
+      aria-sort={ariaSort}
       className={`text-left text-label text-text-tertiary uppercase py-3 px-4 ${className}`}
     >
       {children}
