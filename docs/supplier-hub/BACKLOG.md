@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 1.7, 2026-09-22 |
+| Version | 1.8, 2026-09-23 |
 | What this is | Everything known to be outstanding for the Supplier Hub, in one list: decisions waiting on people, work waiting on those decisions, work waiting on the backend, and work that can start today |
 | What this is not | A plan or a commitment. Nothing here has a date. Sequencing belongs to the project owner |
 | Sources | Open items (section 7 of `SUPPLIER-HUB-REQUIREMENTS.md`), open decisions (section 9.3 of `SUPPLIER-HUB-PRD.md`), what is not built (section 5 of `BUILD-GAP.md`), stubs (section 6 of the requirements), and defects or debts found while building |
@@ -38,6 +38,7 @@ Still open. Items decided on 2026-09-21 are in section 6.
 | BL-69 | **Late at the deadline or after it?** Forecast commitments are late at the deadline minute; PO and call-off responses only after it. Recommended: one rule, late after the deadline | Material Planner | One convention in CR-26 and the response deadlines | REQ-E06-02, E07-02, E09-03 |
 | BL-70 | **Who may change the working calendar and the 3PL list?** Today the Hub administrator and the combined buyer "All" role (offered, not seeded), following the enforcement-settings precedent. Alternative: administrator only | Procurement, IT | Role atoms `calendar:set`, `threepl:maintain` | Requirements 3.4, REQ-E07-04 BR-05 |
 | BL-71 | **Goods receipt: what an over-delivery is measured against, and does "kept open" reopen quantity?** CR-25 says the order; REQ-E07-06 BR-03 says the ASN. The build uses the ASN when linked, else the order. "Kept open" is a label and does not reopen the missing quantity for another shipment | Material Planner, Warehouse | CR-25, REQ-E07-06 wording; possible build | REQ-E07-06 |
+| BL-101 | **C8 §8** — SOMO ratifies the in-house forecast engine amendment (the hub computes the material × period totals until the engine moves to SOMO) | SOMO, with the operator | The engine publishing its own totals on the C8 seam | `docs/contracts/C8-forecast-publication.md` §8 |
 
 ---
 
@@ -72,6 +73,7 @@ The prototype holds everything in the browser. These need a real backend, which 
 | BL-29 | Scheduled jobs, so deadlines, escalations and reminders fire on a clock rather than being derived when a page is read | M | REQ-E07-02, E09-03 |
 | BL-30 | Durable storage, so what a user enters survives a reload | L | PRD section 4 |
 | BL-95 | Share saved RFx templates across the team. Templates are stored in each buyer's browser (`paragon.rfqTemplates`, `paragon.rfiTemplates`, `paragon.rfpTemplates`), so a colleague never sees them and clearing the browser loses them. Needs a store behind the backend (BL-30). CE-04 says a saved template is for every buyer | M | Requirements 3.6a CE-04 |
+| BL-100 | Forecast engine input data in the hub: finished-goods sales history (2 to 3 years, weekly), price and promotion calendar, launch plan, bills of materials with scrap and yield, MOQs and multiples, warehouse volume per item and owned capacity | L | PRD I14; `research/FORECAST-METHOD-SPEC.md` section 5 |
 
 ---
 
@@ -95,6 +97,7 @@ Nothing blocks these.
 | BL-80 | A value-only PO line (BL-49) shows quantity 0 on PO and ASN screens outside the call-off pages | Only the call-off screens know the line has no quantity | S | CR-04 |
 | BL-83 | Text run-ons: Indonesian "closing soon" pill joins its date ("Segera ditutup02 Sep 2026"); the in-transit read-out reads "0nothing in transit"; `formatNumber` uses the Indonesian thousands dot in the English UI outside the Stock page | Small display defects seen in the BL-72/73 check | S | SC conventions |
 | BL-84 | Accessibility items left by BL-31: field errors not tied to their field (many forms); h1 jumping to h3 on marketplace, discovery, storefront, WhatsApp demo, supplier comm hub and shipments; unnamed controls in the contract wizard obligation grid and WhatsApp demo; top-bar menu button does nothing and the notification count is not in its name; login contrast and missing h1; 404 title in English only; then a session with a real screen reader | Needed before UAT (SC-07) | M | `BUILD-GAP.md` "Accessibility (BL-31)" |
+| BL-99 | Forecast engine step 1: plan-change measures (MASC, % of schedules changed inside the supplier lead time), commitment reliability, and a split of each miss into PTI-caused, supplier-caused, or never confirmed | Uses data the hub already holds, and shows how much of the low CFOT is suppliers not confirming | M | `research/FORECAST-METHOD-SPEC.md` G1, G3, G4 |
 
 ---
 
@@ -128,7 +131,7 @@ Nothing blocks these.
 | BL-07 | PQ-05 invoice tolerance | 2026-09-21 | Decided except the rupiah cap (BL-54). Build is BL-44 |
 | BL-08 | PQ-02 capacity horizon | 2026-09-21 | Decided: 13 weekly buckets, as built. No build |
 | BL-09 | PQ-03 alert risk class | 2026-09-21 | Decided (CR-24). Build is BL-46 |
-| BL-10 | PQ-07 forecast source | 2026-09-21 | Decided: MRP weeks 1–13, IBP months 4–6, one published forecast. Build waits on the real SAP feed (BL-24) |
+| BL-10 | PQ-07 forecast source | 2026-09-21 | Decided: MRP weeks 1–13, IBP months 4–6, one published forecast. Build waits on the real SAP feed (BL-24). **Superseded 2026-09-23 by ENG-1**: PTI's own forecast engine calculates it; this SAP source applies until the engine is live (BL-99 to BL-101) |
 | BL-13 | PQ-12 umbrella PO grain | 2026-09-21 | Decided: quantity per line. Build is BL-49 |
 | BL-14 | Q-18 working calendar | 2026-09-21 | Decided: hub-managed by the Hub administrator, loaded from SAP. Build is BL-50 |
 | BL-15 | Q-20 quality inspection | 2026-09-21 | Decided: keep the result display; non-conformance in Phase 2 with BL-39. No build |

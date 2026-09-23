@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 1.1, 2026-09-22 |
+| Version | 1.2, 2026-09-23 |
 | Covers | BL-01 to BL-19b in `BACKLOG.md` — the 21 decisions that block or confirm work; and the five RFx decisions RFX-D1 to RFX-D5 (2026-09-21) |
 | Purpose | Give the project owner a defensible recommendation to take to each owner: what the market does, what we suggest for PTI, and what would change our mind |
 | Status | **18 of the 21 were decided on 2026-09-21**, mostly as recommended; the outcomes are in section 9 of the requirements and in the Closed section of `BACKLOG.md`. Still open: BL-01 REPL, BL-11 interface technology, BL-12 call-off record, and three values (BL-54 invoice cap, BL-55 gate OTIF minimum, BL-56 early allowance). Where the owner decided differently from this guide — the hub keeps its own calendar (BL-14), capacity stays at 13 weekly buckets (BL-08), Web Tukar Faktur stays separate (BL-17), and TMS access becomes a 3PL tracking link (BL-03) — the decision stands and this guide is kept as the reasoning behind the others. All decided items are built and in production as of 2026-09-21 (BL-43 to BL-53). The builds raised six new questions, BL-66 to BL-71 in the backlog, which this guide does not yet cover |
@@ -18,6 +18,8 @@
 **Market practice.** Nobody runs one method across a whole catalogue. The common pattern is to segment materials by demand variability and value (ABC × XYZ), then apply: reorder point or min–max for stable, high-volume items; time-phased MRP for items with a known production plan; vendor-managed inventory for consignment. The planning system calculates; the portal releases and records.
 
 **Recommendation.** Segment first, then decide per segment rather than picking one method for everything. Suggested starting split: reorder point for stable packaging with short lead times; time-phased MRP for raw material tied to the production plan; VMI for the consignment materials already identified. Keep the calculation in SAP, so the hub stays a collaboration layer and never becomes a second planning engine — the requirements already say this (MN-INV-14). Set a quarterly parameter review with a named owner; the method matters less than whether anyone revisits the parameters.
+
+**Superseded in part, 2026-09-23 (ENG-1).** The owner decided PTI calculates forecast, ROP, and replenishment in its own engine, in the hub first and SOMO later. The advice to keep the calculation in SAP no longer applies. The segmentation advice and the quarterly parameter review still do. Methods: `research/FORECAST-METHOD-SPEC.md`.
 
 **What would change this.** If the consultant finds demand variability is low across the board, a single reorder-point method with periodic review is simpler and cheaper to govern.
 
@@ -121,6 +123,8 @@ These eight are one number or one list each. The prototype ships defensible defa
 **Recommendation.** Weeks 1–13 from MRP, months 4–6 from IBP, published as one forecast with the zone marking which is which. Suppliers should never have to reconcile two PTI forecasts; that is the hub's job.
 
 **What would change this.** If IBP is not live for these categories, publish MRP only and state the shorter horizon honestly rather than padding it.
+
+**Superseded 2026-09-23 (ENG-1).** This SAP source applies only until PTI's own forecast engine is live.
 
 ### BL-11 · PQ-06 — interface technology and latency target
 **Market practice.** Current SAP integration favours API-first through the Integration Suite, with events for state changes and IDocs kept only where they already exist. Fifteen minutes is a comfortable target for collaboration data; it is not a real-time requirement.

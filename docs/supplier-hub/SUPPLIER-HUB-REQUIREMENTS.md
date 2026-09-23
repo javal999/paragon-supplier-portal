@@ -2,8 +2,8 @@
 
 | | |
 |---|---|
-| Version | 0.13 draft, 2026-09-22 |
-| Sources | `SUPPLIER-HUB-BASELINE.md` (kick-off deck, Aug 2026); `KICKOFF-MEETING-NOTES.md` (business user feedback, reviewed 2026-09-17); owner review of the prototype gap review (2026-09-17); owner RFx decisions RFX-D1 to RFX-D5 (2026-09-21); RFx best-practice research, `research/RFX-BEST-PRACTICE-2026-09.md` (2026-09-21) |
+| Version | 0.14 draft, 2026-09-23 |
+| Sources | `SUPPLIER-HUB-BASELINE.md` (kick-off deck, Aug 2026); `KICKOFF-MEETING-NOTES.md` (business user feedback, reviewed 2026-09-17); owner review of the prototype gap review (2026-09-17); owner RFx decisions RFX-D1 to RFX-D5 (2026-09-21); RFx best-practice research, `research/RFX-BEST-PRACTICE-2026-09.md` (2026-09-21); owner decision ENG-1 (2026-09-23) with the forecast research `research/FORECAST-BEST-PRACTICE-2026-09.md` and `research/FORECAST-METHOD-SPEC.md` |
 | Scope of this version | Detailed: Order Collaboration, Inventory & Capacity Collaboration, RFx (validated); Forecast Collaboration, Call-off Management, and the undiscussed parts of Order and Inventory Collaboration (proposed). Hub navigation and screen conventions (validated). Foundation is reserved for the Foundation team. The remaining epics are stubs |
 | Not in scope | The codebase. This file states what the Supplier Hub must do, not what is built. What the prototype does today, and where, is tracked only in `BUILD-GAP.md` |
 
@@ -130,7 +130,7 @@ Decided (Q-18, 2026-09-21): the hub keeps its own working calendar, maintained b
 | Term | Meaning | Source |
 |---|---|---|
 | SOH | Stock on hand | MN-INV-03 |
-| ROP | Reorder point. Sourced from SAP | MN-INV-02, MN-INV-14 |
+| ROP | Reorder point. Calculated by PTI's forecast engine; from SAP until the engine is live | MN-INV-02; ENG-1 (supersedes MN-INV-14) |
 | Consignment material | Material under a consignment ("modal sharing") arrangement | MN-INV-10 |
 | Spreadsheet template upload | Called "EDI" by business users. A file upload, not EDIFACT or X12 | MN-INV-07 |
 | TMS | Transportation management system | MN-INV-13 |
@@ -266,7 +266,7 @@ The menu follows the hub's own sections, not procurement stages, and each PTI us
 | REQ-E08-03 | Supplier access to PTI stock | E08 | MVP | Validated |
 | REQ-E08-04 | Capacity confirmation | E08 | MVP | Proposed (confirmation concept validated) |
 | REQ-E08-05 | Inventory and capacity alerts | E08 | MVP | Proposed |
-| REQ-E09-01 | Replenishment recommendation from SAP ROP | E09 | MVP | Proposed (SAP source validated) |
+| REQ-E09-01 | Replenishment recommendation from the forecast engine | E09 | MVP | Proposed (source decided, ENG-1) |
 | REQ-E09-02 | Event-based strategy analysis | E09 | MVP | Proposed |
 | REQ-E09-03 | Call-off release and supplier confirmation | E09 | MVP | Proposed |
 | REQ-E09-04 | Delivery execution: need date and dispatch heads-up | E09 | MVP, P1 | Proposed |
@@ -1063,7 +1063,7 @@ Kept out of the MVP by the RFx overhaul of 2026-09-21 [Proposed]. Each is a back
 - BR-01. Show on-hand stock and upcoming quantity with its date. No separate "available" figure [MN-INV-01].
 - BR-02. Show SOH separately for the supplier and for PTI [MN-INV-03].
 - BR-03. Show 2 ROPs: PTI's and the supplier's [MN-INV-02].
-- BR-04. PTI's ROP comes from SAP. The hub does not calculate a ROP, safety stock, or MOQ of its own [MN-INV-14].
+- BR-04. PTI's ROP and safety stock are calculated by PTI's forecast engine (`research/FORECAST-METHOD-SPEC.md`, M3). Until the engine is live, PTI's ROP comes from SAP. MOQ is master data the engine reads, not a figure it calculates [Owner, 2026-09-23, ENG-1; supersedes MN-INV-14].
 - BR-05. Incoming stock is shown as an aggregate. The per-date detail is in Order Collaboration [MN-INV-04].
 - BR-06. Incoming is split into in production and in transit [MN-INV-05].
 - BR-07. Raw material and packaging are shown separately on the PTI view, because packaging is a finished good at the supplier [MN-INV-06]. On the supplier view they are one list, because a supplier normally supplies one type; the split appears only for a supplier that supplies both [Owner, 2026-09-21].
@@ -1081,7 +1081,7 @@ Kept out of the MVP by the RFx overhaul of 2026-09-21 [Proposed]. Each is a back
 - AC-05. Each supplier figure shows its last update time.
 - AC-06. Each material shows days of supply and its risk class, calculated with CR-01 and CR-24 (CR-02 only without a lead time), and says which basis was used.
 
-**Data and integration.** PTI SOH and PTI ROP from SAP. Supplier SOH, supplier ROP, and in-production quantity from REQ-E08-02. In-transit quantity from ASNs (REQ-E07-04).
+**Data and integration.** PTI SOH from SAP. PTI ROP from the forecast engine, and from SAP until the engine is live. Supplier SOH, supplier ROP, and in-production quantity from REQ-E08-02. In-transit quantity from ASNs (REQ-E07-04).
 
 **Metrics.** Leading: share of materials with supplier stock updated within the agreed period. Lagging: KPI-04.
 
@@ -1281,7 +1281,7 @@ The owner confirmed the recommendations for this section on 2026-09-17 (E06-R). 
 **Business value.** Suppliers cannot plan capacity or feedstock without seeing PTI's demand, and today that demand travels by email and Excel [Deck p.3]. Publishing material requirements on a fixed cadence, with firmness zones, gives suppliers the lead signal that later confirmations depend on. Pilot suppliers DP Group and Lautan Luas validate this [Deck p.11].
 
 **Experience.**
-- MP: reviews the forecast generated from SAP, publishes it, and sees which suppliers have viewed it.
+- MP: reviews the forecast calculated by the forecast engine (from SAP until the engine is live), publishes it, and sees which suppliers have viewed it.
 - SUP: sees the forecast per material and period, the zone of each period, and what changed since the last version. It can download the forecast as a spreadsheet.
 
 **Step-by-step (Supplier, Monday).**
@@ -1292,7 +1292,7 @@ The owner confirmed the recommendations for this section on 2026-09-17 (E06-R). 
 5. The supplier downloads it to plan, then confirms in REQ-E06-02.
 
 **Business rules.**
-- BR-01. The forecast is net material requirement from SAP planning: MRP for weeks 1 to 13, IBP for months 4 to 6, published to the supplier as one forecast with the zone marking each period. The hub does not calculate demand [Owner, 2026-09-21; aligned with MN-INV-14].
+- BR-01. The forecast is the net material requirement calculated by PTI's own forecast engine (`research/FORECAST-METHOD-SPEC.md`). The engine forecasts finished-goods demand, explodes it through the bill of materials, and nets it against stock and open orders. It is published to the supplier as one forecast with the zone marking each period. Until the engine is live, the hub publishes SAP's net requirement (MRP for weeks 1 to 13, IBP for months 4 to 6) as it does today. The engine runs in the hub first and moves to SOMO later; the published forecast and its zones do not change when it moves [Owner, 2026-09-23, ENG-1; supersedes the 2026-09-21 ruling and MN-INV-14].
 - BR-02. Publication cadence: weekly for packaging, monthly for raw material. An emergency re-publication is allowed at any time [Owner; Code design].
 - BR-03. Periods: packaging uses weekly periods for 13 weeks, then monthly up to 6 months; raw material uses monthly periods for 6 months. Horizon and cut-over are configurable [Owner].
 - BR-04. Each period carries a zone [Market]:
@@ -1314,11 +1314,11 @@ The owner confirmed the recommendations for this section on 2026-09-17 (E06-R). 
 - AC-03. A supplier can download the forecast as a spreadsheet.
 - AC-04. A supplier cannot see materials it does not supply.
 
-**Data and integration.** SAP to hub: material, supplier, period, quantity, version date. Zone settings per supplier and material group.
+**Data and integration.** Engine inputs: finished-goods sales history, price and promotion calendar, launch plan, bills of materials, lead times, MOQs, stock on hand, and open orders (`research/FORECAST-METHOD-SPEC.md`, section 5). Until the engine is live, SAP to hub: material, supplier, period, quantity, version date. Zone settings per supplier and material group.
 
 **Metrics.** Leading: share of suppliers that viewed the forecast within 1 working day. Lagging: forecast change in the Firm zone (should be near zero).
 
-**Open items.** PQ-07 (SAP source: MRP or IBP).
+**Open items.** ENG-1 input data: sales history, the promotion calendar, MOQs, and warehouse volume per item are not yet in the hub. PQ-07 (MRP weeks 1 to 13, IBP months 4 to 6) applies only until the engine is live.
 
 #### REQ-E06-02  Foresight / fixed-stock confirmation
 
@@ -1411,28 +1411,28 @@ The owner confirmed the recommendations for this section on 2026-09-17 (E06-R). 
 
 ### 5.6 Planning & Fulfillment: Call-off Management (E09)
 
-All requirements in this section are **Proposed**, written from market practice (section 8). Validated inputs: PO and call-off are separate objects [MN-ORD-01], OTIF is measured per call-off [MN-ORD-09], and ROP comes from SAP [MN-INV-14].
+All requirements in this section are **Proposed**, written from market practice (section 8). Validated inputs: PO and call-off are separate objects [MN-ORD-01], OTIF is measured per call-off [MN-ORD-09], and ROP is calculated by the forecast engine [ENG-1, superseding MN-INV-14].
 
-#### REQ-E09-01  Replenishment recommendation from SAP ROP
+#### REQ-E09-01  Replenishment recommendation from the forecast engine
 
 | Maps to | Phase | Priority | Business owner | Users | Status |
 |---|---|---|---|---|---|
-| E09.01; MN-INV-14 | MVP | P0 [Proposed] | Material Planner | MP | Proposed (SAP source is Validated) |
+| E09.01; ENG-1 | MVP | P0 [Proposed] | Material Planner | MP | Proposed (source decided, ENG-1) |
 
-**Business value.** Call-offs are not model-based today [Deck p.5]. Turning SAP's ROP-based recommendations into a review-and-release list lets planners release call-offs consistently, moving toward the Dynamic OSIP Engine in the roadmap [Deck p.4].
+**Business value.** Call-offs are not model-based today [Deck p.5]. Turning the forecast engine's recommendations into a review-and-release list lets planners release call-offs consistently, moving toward the Dynamic OSIP Engine in the roadmap [Deck p.4].
 
 **Experience.**
 - MP: sees recommended call-offs per material and supplier with quantity and need date, context from inventory visibility, and releases, edits, or dismisses each.
 
 **Step-by-step (Planner).**
-1. The planner opens Recommendations. SAP has proposed 14 call-offs from ROP [MN-INV-14; Proposed].
+1. The planner opens Recommendations. The forecast engine has proposed 14 call-offs [ENG-1; Proposed].
 2. Each row shows PTI SOH, PTI ROP, incoming quantity, and the recommended quantity and date [Proposed].
 3. The planner edits 1 quantity to a full pallet and releases 13 [Proposed].
 4. The planner dismisses 1 with the reason "Promotion cancelled" [Proposed].
 5. Released recommendations become call-offs (REQ-E09-03).
 
 **Business rules.**
-- BR-01. The ROP and recommendation cycle come from SAP (demand sensing). The hub does not calculate them [MN-INV-14].
+- BR-01. The ROP and recommendation cycle are calculated by the forecast engine: net requirement, safety stock, and order size within MOQ and warehouse space (`research/FORECAST-METHOD-SPEC.md`, M2, M3, M5). Until the engine is live they come from SAP [Owner, 2026-09-23, ENG-1; supersedes MN-INV-14]. Which replenishment method applies to which material segment is still open (REPL).
 - BR-02. A recommendation must reference an open umbrella PO with the same supplier and material [MN-ORD-01; Proposed].
 - BR-03. Edited or dismissed recommendations record the planner's reason [Proposed].
 - BR-04. Released call-offs cannot exceed what remains on the umbrella PO. The PO holds value [PQ-01], so the check is on remaining value, or on quantity if PQ-12 confirms quantity is available [Proposed]. Remaining follows CR-04 [Code].
@@ -1442,15 +1442,15 @@ All requirements in this section are **Proposed**, written from market practice 
 - No open umbrella PO: show the recommendation as blocked with "No PO" [Proposed].
 
 **Acceptance criteria.**
-- AC-01. SAP recommendations appear with quantity, date, and inventory context.
+- AC-01. Engine recommendations appear with quantity, date, and inventory context.
 - AC-02. A planner can release, edit, or dismiss each, with a reason for edit and dismiss.
 - AC-03. Release is blocked when it exceeds what remains on the umbrella PO.
 
-**Data and integration.** SAP to hub: recommendation (material, supplier, quantity, date, ROP) and umbrella PO value. Released call-offs are stored in the hub, not sent to SAP [PQ-01].
+**Data and integration.** From the forecast engine: recommendation (material, supplier, quantity, date, ROP). SAP to hub: umbrella PO value. Released call-offs are stored in the hub, not sent to SAP [PQ-01].
 
 **Metrics.** Leading: share of call-offs released from recommendations unedited [Proposed]. Lagging: KPI-04.
 
-**Open items.** REPL (replenishment method, deferred). PQ-07 (demand sensing source in SAP). PQ-11. PQ-12.
+**Open items.** REPL (replenishment method, deferred). PQ-07 (SAP source, until the engine is live). PQ-11. PQ-12.
 
 #### REQ-E09-02  Event-based strategy analysis
 
@@ -1761,7 +1761,8 @@ Research date: 2026-09-21. The full note, with every source link, is `research/R
 | BL-07 / PQ-05 | Invoice price tolerance | 0% where a contract price exists; 2% otherwise, within an absolute rupiah cap set by Finance (CR-12) |
 | BL-08 / PQ-02 | Capacity horizon | 13 weekly buckets |
 | BL-09 / PQ-03 | Alert risk class | Days of cover against supplier lead time (CR-24); day bands only as a fallback |
-| BL-10 / PQ-07 | Forecast source | MRP for weeks 1–13, IBP for months 4–6, published as one forecast |
+| BL-10 / PQ-07 | Forecast source | MRP for weeks 1–13, IBP for months 4–6, published as one forecast. **Superseded 2026-09-23 by ENG-1**; applies only until the engine is live |
+| ENG-1 | Who calculates the demand forecast, material requirement, ROP, and replenishment | PTI builds its own forecast engine. It runs in the hub first and moves to SOMO later. SAP IBP and other external planning engines are not used. Supersedes MN-INV-14 and the PQ-07 answer. Methods: `research/FORECAST-METHOD-SPEC.md` (owner, 2026-09-23) |
 | BL-13 / PQ-12 | Umbrella PO grain | Quantity per line, so call-off release checks remaining quantity |
 | BL-14 / Q-18 | Working calendar | The hub keeps its own calendar, maintained by the Hub administrator, loaded from the SAP factory calendar with overrides in the hub |
 | BL-15 / Q-20 | Quality inspection | Keep the result display in the hub; non-conformance and corrective action come with Supplier Quality in Phase 2 |
@@ -1800,3 +1801,4 @@ Research date: 2026-09-21. The full note, with every source link, is `research/R
 | 0.11 | 2026-09-21 | NV-07: RFI, RFQ and RFP as three separate menu items for buyers and suppliers (owner decision, built in PR #21); menu tables updated |
 | 0.12 | 2026-09-22 | RFx overhaul. Owner decisions RFX-D1 to RFX-D5 recorded (section 9): separate modules, templates and copies (CE-04 replaced, A-04 amended), independent events with allowed links (CE-09), indicative vs firm prices (CE-10), per-item split award. REQ-E03-02 to REQ-E03-05 rewritten: sections and 11 question types, option editor, attachments (CE-11), confidentiality gate, custom RFP terms and T&C acceptance, RFP indicative pricing, RFQ items with buyer- and supplier-filled spec fields, quantity breaks per variant or total, one-time costs, alternatives, samples, questions, intent and decline, clarifications, comparison at an evaluation break, per-item split award. "RFx: later, not in the MVP" list added. Section 8.3 summarises the RFx best-practice research |
 | 0.13 | 2026-09-22 | NV-01 lists the administration sections built with BL-32 and records that every change is logged |
+| 0.14 | 2026-09-23 | ENG-1: PTI calculates forecast, material requirement, ROP, and replenishment in its own engine (hub first, SOMO later), superseding MN-INV-14 and the PQ-07 answer. REQ-E06-01 BR-01, REQ-E08 BR-04, and REQ-E09-01 rewritten with SAP as the source until the engine is live. Glossary ROP updated |
