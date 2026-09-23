@@ -120,6 +120,8 @@ import type {
 import { PR_INTAKE_LINES } from './fixtures/prIntake';
 import { engineDataset } from './fixtures/engineDataset';
 import { supplierReliability, trailingWindow } from '../../engine/reliability';
+import { agreedCfot, supplierCfot } from '../../engine/cfot';
+import { lineHistories } from '../../engine/lines';
 import { sdcClock } from '../../sdc/clock';
 
 const matchesList = <T>(value: T, filter: T | T[] | undefined): boolean => {
@@ -384,9 +386,13 @@ export class MockProcurementService implements IProcurementService {
     // gets ONLY its own row — the scope filter runs HERE, in the service, so
     // another supplier's figures never reach the page at all.
     const w = trailingWindow(sdcClock.now(), windowWeeks);
-    const rows: SupplierReliabilityView[] = supplierReliability(engineDataset(), w).map((r) => ({
+    const data = engineDataset();
+    // BL-82 — CFOT on the same rows, with the same early rule as OTIF.
+    const cfot = agreedCfot(lineHistories(data), w);
+    const rows: SupplierReliabilityView[] = supplierReliability(data, w).map((r) => ({
       ...r,
       supplierName: forecastSupplierName(r.supplierId),
+      cfot: supplierCfot(cfot, r.supplierId),
       windowFrom: w.from,
       windowTo: w.to,
     }));

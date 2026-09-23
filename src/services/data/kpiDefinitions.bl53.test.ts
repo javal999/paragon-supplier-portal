@@ -95,9 +95,10 @@ describe('BL-53 · OTIF — the delivery window, both edges', () => {
 });
 
 describe('BL-53 · OTIF — early deliveries', () => {
-  it(`count as on time up to ${MATCH} days early, and are not matched beyond`, () => {
-    expect(resultFor(callOff(), [receipt(shift(NEED, -MATCH))], nowAfter(1))).toMatchObject({ timing: 'onTime', otif: 1 });
-    expect(resultFor(callOff(), [receipt(shift(NEED, -(MATCH + 1)))], nowAfter(1)).timing).toBe('pending');
+  const EARLY = otif.answers.early.values!.early;
+  it(`count as on time up to ${EARLY} days early, and are not matched beyond`, () => {
+    expect(resultFor(callOff(), [receipt(shift(NEED, -EARLY))], nowAfter(1))).toMatchObject({ timing: 'onTime', otif: 1 });
+    expect(resultFor(callOff(), [receipt(shift(NEED, -(EARLY + 1)))], nowAfter(1)).timing).toBe('pending');
   });
 });
 
@@ -118,20 +119,25 @@ describe('BL-53 · OTIF — the grain and "in full"', () => {
     expect(callOffOtif(partial.id, secondLate)).toBe(0);
   });
 
-  it('a notice of dispatch alone is not a result — and it keeps the call-off out of "missed" for good', () => {
+  // BL-82 retired the pinned "a notice keeps the call-off out of missed for
+  // good" (BL-66 (5)): a notice alone is still not a result, but only until
+  // the missed window has passed.
+  it(`a notice of dispatch alone is not a result — until ${GRACE} days after the date, when it is missed`, () => {
     const noticed = callOff({
       dispatches: [{ id: 'dsp-1', shippedDate: shift(NEED, -2), expectedArrival: NEED, quantity: 100, recordedAt: `${shift(NEED, -2)}T03:00:00.000Z` }],
     } as Partial<CallOff>);
-    const r = resultFor(noticed, [], nowAfter(60));
-    expect(r.otif).toBeNull();
-    expect(r.timing).not.toBe('missed');
+    expect(resultFor(noticed, [], nowAfter(GRACE)).otif).toBeNull();
+    expect(resultFor(noticed, [], nowAfter(GRACE)).timing).not.toBe('missed');
+    expect(resultFor(noticed, [], nowAfter(GRACE + 1))).toMatchObject({ timing: 'missed', otif: 0 });
   });
 
-  it('in full is ONE receipt against the agreed quantity — two partial receipts are not added', () => {
+  // BL-82 retired the pinned "two partial receipts are not added" (BL-66 (3)).
+  it('in full is the SUM of the receipts matched — two partial receipts add up, and still short is short', () => {
     expect(resultFor(callOff(), [receipt(NEED, 100)], nowAfter(10)).inFull).toBe(true);
     const split = resultFor(callOff(), [receipt(NEED, 60, 'GR-A'), receipt(NEED, 40, 'GR-B')], nowAfter(10));
-    expect(split.inFull).toBe(false);
-    expect(split.otif).toBe(0);
+    expect(split).toMatchObject({ inFull: true, otif: 1 });
+    const stillShort = resultFor(callOff(), [receipt(NEED, 60, 'GR-A'), receipt(NEED, 30, 'GR-B')], nowAfter(10));
+    expect(stillShort).toMatchObject({ inFull: false, otif: 0 });
   });
 });
 
@@ -151,9 +157,16 @@ describe('BL-53 · OTIF — when a date changes', () => {
     expect(resultFor(newDate('awaiting'), [receipt(NEW)], nowAfter(20)).timing).toBe('late');
   });
 
-  it('a planner’s change of the need date applies at once, before the supplier confirms again', () => {
-    const changed = callOff({ status: 'Awaiting Confirmation', needDate: NEW, confirmation: undefined });
-    expect(resultFor(changed, [receipt(NEW)], nowAfter(20)).timing).toBe('onTime');
+  // BL-82 retired the pinned "a planner's change applies at once" (BL-66 (2)).
+  it('a planner’s change of the need date waits for the supplier: the date both sides last agreed applies', () => {
+    const changed = callOff({
+      status: 'Awaiting Confirmation',
+      needDate: NEW,
+      confirmation: undefined,
+      agreedDeliveries: [{ quantity: 100, date: NEED }],
+    });
+    expect(resultFor(changed, [receipt(NEW)], nowAfter(20)).timing).toBe('late');
+    expect(resultFor(changed, [receipt(NEED)], nowAfter(20)).timing).toBe('onTime');
   });
 });
 
@@ -174,8 +187,12 @@ describe('BL-53 · CFOT — window, early, grain, date change', () => {
       inspectionResults: [{ materialCode: 'MAT-KPI', qtyReceived: qty }],
     }) as unknown as GoodsReceipt;
 
-  it('received on or before the confirmed date counts, however early; a day late does not', () => {
-    expect(poCfot(po(), [gr(shift(NEED, -60), 100)])!.pct).toBe(100);
+  // BL-82 retired the pinned "however early" (BL-66 (4)): CFOT reads OTIF's early window.
+  const EARLY = KPI_DEFINITIONS.find((d) => d.id === 'cfot')!.answers.early.values!.early;
+  it(`received on or before the confirmed date counts up to ${EARLY} days early; earlier, or a day late, does not`, () => {
+    expect(poCfot(po(), [gr(shift(NEED, -EARLY), 100)])!.pct).toBe(100);
+    expect(poCfot(po(), [gr(shift(NEED, -(EARLY + 1)), 100)])!.pct).toBe(0);
+    expect(poCfot(po(), [gr(shift(NEED, -60), 100)])!.pct).toBe(0);
     expect(poCfot(po(), [gr(shift(NEED, 1), 100)])!.pct).toBe(0);
   });
 
@@ -184,11 +201,9 @@ describe('BL-53 · CFOT — window, early, grain, date change', () => {
     expect(poCfot(po(), [gr(NEED, 150)])!.pct).toBe(100);
   });
 
-  // ⚠️ WHAT THE CODE DOES, PINNED — AND IT DIFFERS FROM ITS OWN COMMENT. The
-  // comment in `confirmedLine` says a counter-offer binds only once accepted;
-  // the guard is `review && decision !== 'accepted'`, so a counter-offer with NO
-  // review yet (still waiting) already moves the date. The page states this
-  // behaviour; the difference is reported, not silently fixed (BL-53 brief).
+  // BL-82 closed what BL-53 pinned here: the guard was `review && decision !==
+  // 'accepted'`, so a counter-offer with NO review yet already moved the date.
+  // It now binds only once the planner accepted it (BL-66 (1)).
   const counter = (decision: 'accepted' | 'rejected' | undefined) =>
     po({
       response: {
@@ -200,8 +215,8 @@ describe('BL-53 · CFOT — window, early, grain, date change', () => {
     } as unknown as Partial<PurchaseOrder>);
   const fiveDaysLate = () => [gr(shift(NEED, 5), 100)];
 
-  it('a counter-offer moves the line’s date as soon as it is sent — waiting or accepted', () => {
-    expect(poCfot(counter(undefined), fiveDaysLate())!.pct).toBe(100);
+  it('a counter-offer moves the line’s date only once the planner accepts it — not while it waits', () => {
+    expect(poCfot(counter(undefined), fiveDaysLate())!.pct).toBe(0);
     expect(poCfot(counter('accepted'), fiveDaysLate())!.pct).toBe(100);
   });
 

@@ -18,6 +18,8 @@ import { formatDate } from '../lib/format';
 import { useSupplierReliability } from '../services/query/hooks';
 import { RELIABILITY_WINDOWS, type ReliabilityWindowWeeks, type SupplierReliabilityView } from '../services/data/types';
 import { portfolioReliability } from '../services/engine/reliability';
+import { portfolioCfot } from '../services/engine/cfot';
+import { EARLY_DELIVERY_WINDOW_DAYS } from '../services/data/kpiWindow';
 import { MissSplitLine, Rate, mascOf, pctOf } from './reliability/reliabilityDisplay';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -30,9 +32,9 @@ import { MissSplitLine, Rate, mascOf, pctOf } from './reliability/reliabilityDis
 // computed by the forecast engine at read time on its SYNTHETIC dataset, and
 // the page says so (the `engineDataset` pill, X-03).
 //
-// CFOT is deliberately absent: it waits on BL-66 (REQ-E14-02 open item), and
-// the page states that in words rather than showing a figure it cannot stand
-// behind.
+// CFOT ("Delivered on the confirmed date") is shown since BL-82: the engine's
+// `agreedCfot`, per PO on the same synthetic rows, with the ONE early window
+// OTIF uses (`data/kpiWindow.ts`). The portfolio figure counts every PO once.
 // ─────────────────────────────────────────────────────────────────────────────
 
 type SortDir = 'ascending' | 'descending';
@@ -59,6 +61,7 @@ const BuyerReliability: React.FC = () => {
   const rows = useMemo(() => query.data?.items ?? [], [query.data]);
   const sorted = useMemo(() => sortRows(rows, dir), [rows, dir]);
   const total = useMemo(() => portfolioReliability(rows), [rows]);
+  const totalCfot = useMemo(() => portfolioCfot(rows.map((r) => r.cfot)), [rows]);
 
   if (query.isPending) return <LoadingState breadcrumb={crumb} />;
   if (query.isError) return <ErrorState breadcrumb={crumb} error={query.error} onRetry={() => query.refetch()} />;
@@ -81,11 +84,8 @@ const BuyerReliability: React.FC = () => {
           </>
         )}
       </PageMetaLine>
-      <p className="text-xs text-text-tertiary mb-1" data-testid="rel-synthetic-note">
+      <p className="text-xs text-text-tertiary mb-4" data-testid="rel-synthetic-note">
         {t('rel.synthetic')}
-      </p>
-      <p className="text-xs text-text-tertiary mb-4" data-testid="rel-cfot-pending">
-        {t('rel.cfotPending')}
       </p>
 
       <div className="mb-4">
@@ -96,7 +96,7 @@ const BuyerReliability: React.FC = () => {
         />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-6" data-testid="rel-portfolio">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-5 mb-6" data-testid="rel-portfolio">
         <KpiCard
           eyebrow={t('rel.kpi.confirmation')}
           value={pctOf(total.confirmation.rate) ?? t('rel.noData')}
@@ -110,6 +110,11 @@ const BuyerReliability: React.FC = () => {
           eyebrow={t('rel.kpi.commitment')}
           value={pctOf(total.commitment.rate) ?? t('rel.noData')}
           subtitle={<span className="text-text-tertiary">{t('rel.kpi.commitment.sub')}</span>}
+        />
+        <KpiCard
+          eyebrow={t('rel.kpi.cfot')}
+          value={<span data-testid="rel-portfolio-cfot">{pctOf(totalCfot.rate) ?? t('rel.noData')}</span>}
+          subtitle={<span className="text-text-tertiary">{t('rel.kpi.cfot.sub', { count: totalCfot.pos })}</span>}
         />
         <KpiCard
           eyebrow={t('rel.kpi.misses')}
@@ -155,6 +160,7 @@ const BuyerReliability: React.FC = () => {
               </button>
             </TableHeaderCell>
             <TableHeaderCell>{t('rel.col.commitment')}</TableHeaderCell>
+            <TableHeaderCell>{t('rel.col.cfot')}</TableHeaderCell>
             <TableHeaderCell>{t('rel.col.misses')}</TableHeaderCell>
             <TableHeaderCell>{t('rel.col.planChange')}</TableHeaderCell>
             <TableHeaderCell>{t('rel.col.masc')}</TableHeaderCell>
@@ -175,6 +181,10 @@ const BuyerReliability: React.FC = () => {
                 </TableCell>
                 <TableCell className="align-top whitespace-nowrap">
                   <Rate value={pctOf(r.commitment.rate)} testId={`rel-commitment-${r.supplierId}`} />
+                </TableCell>
+                <TableCell className="align-top whitespace-nowrap">
+                  <Rate value={pctOf(r.cfot.rate)} testId={`rel-cfot-${r.supplierId}`} />
+                  <div className="text-xs text-text-tertiary">{t('rel.kpi.cfot.sub', { count: r.cfot.pos })}</div>
                 </TableCell>
                 <TableCell className="align-top">
                   <Data data-testid={`rel-misses-${r.supplierId}`}>{r.misses.total}</Data>
@@ -198,7 +208,7 @@ const BuyerReliability: React.FC = () => {
             ))}
             {sorted.length === 0 && (
               <tr>
-                <td colSpan={7} className="text-center text-sm text-text-tertiary py-10">
+                <td colSpan={8}className="text-center text-sm text-text-tertiary py-10">
                   {t('rel.empty')}
                 </td>
               </tr>
@@ -211,6 +221,7 @@ const BuyerReliability: React.FC = () => {
         <h2 className="text-section text-text-primary">{t('rel.def.title')}</h2>
         <p>{t('rel.def.confirmation')}</p>
         <p>{t('rel.def.commitment')}</p>
+        <p data-testid="rel-def-cfot">{t('rel.def.cfot', { early: EARLY_DELIVERY_WINDOW_DAYS })}</p>
         <p>{t('rel.def.misses')}</p>
         <p>{t('rel.def.planChange')}</p>
         <p>{t('rel.def.masc')}</p>

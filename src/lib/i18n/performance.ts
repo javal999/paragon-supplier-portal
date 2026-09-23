@@ -45,23 +45,25 @@ export const performanceEn: Record<string, string> = {
   'perf.kpi.target.baseline': 'Baseline period — no target yet',
   'perf.kpi.target.baselineHint': 'Targets are set from the baseline after {{months}} months of measurement.',
   'perf.kpi.otif.window':
-    'On time: received on or before the agreed date. A goods receipt counts only if it arrives within {{match}} days of that date. Nothing received {{grace}} days after it: missed. Before then: no result yet, and not counted.',
+    'On time: received on or before the agreed date. A goods receipt counts only if it arrives no more than {{early}} days before that date and no more than {{match}} days after it. Nothing received {{grace}} days after the date: missed, even if the supplier sent a notice of dispatch. Before then: no result yet, and not counted.',
   'perf.kpi.otif.early':
-    'Counts as on time, up to {{match}} days early. A receipt earlier than that is not matched to the call-off.',
+    'Counts as on time, up to {{early}} days early. A receipt earlier than that does not count. Delivered on the confirmed date uses the same rule. The {{early}} days are a proposal until the warehouse sets how early a delivery may arrive.',
   'perf.kpi.otif.grain':
-    'Per call-off: every delivery of the call-off must be on time and in full. The percentage is of the call-offs due in the period that have a result; a notice of dispatch alone is not a result.',
+    'Per call-off: every delivery of the call-off must be on time and in full. The percentage is of the call-offs due in the period that have a result. A notice of dispatch alone is not a result, and it does not stop a delivery counting as missed.',
   'perf.kpi.otif.dateChange':
-    'Resets. The date is the one agreed: a new date the supplier confirmed, once accepted (automatically within tolerance, or by the planner). While it waits for the planner, the original date applies. A planner’s change to the need date applies at once.',
+    'Only a date both sides agreed counts. A new date the supplier confirmed applies once it is accepted (automatically within tolerance, or by the planner); while it waits for the planner, the date agreed before applies. A planner’s change to the need date applies only once the supplier confirms it; until then, the date both sides last agreed applies.',
   'perf.kpi.otif.inFull':
-    'One goods receipt of at least the agreed quantity. Two partial receipts are not added together.',
-  'perf.kpi.cfot.window': 'On time: received on or before the confirmed date. There is no earliest date.',
-  'perf.kpi.cfot.early': 'Counts, however early.',
+    'Every goods receipt counted for the delivery is added together and must reach the agreed quantity. Two partial receipts add up.',
+  'perf.kpi.cfot.window':
+    'On time: received on or before the confirmed date, and no more than {{early}} days before it.',
+  'perf.kpi.cfot.early':
+    'Counts as on time, up to {{early}} days early — the same rule as on time and in full. A receipt earlier than that does not count.',
   'perf.kpi.cfot.grain':
     'Per purchase order, by quantity: the quantity confirmed and received by the confirmed date, divided by the quantity ordered. A period takes the orders whose confirmed date falls in it.',
   'perf.kpi.cfot.dateChange':
-    'Resets as soon as the supplier sends a counter-offer: that line’s new date and quantity apply, while it waits for the planner and once accepted. If the planner rejects it, the order as PTI placed it applies again.',
+    'A supplier’s counter-offer applies only once the planner accepts it: then that line’s new date and quantity count. While it waits for the planner, or if the planner rejects it, the order as PTI placed it applies.',
   'perf.kpi.cfot.inFull':
-    'Receipts on or before the date are added together, up to the confirmed quantity.',
+    'Every receipt on time is added together, up to the confirmed quantity.',
 };
 
 export const performanceId: Record<string, string> = {
@@ -98,21 +100,23 @@ export const performanceId: Record<string, string> = {
   'perf.kpi.target.baseline': 'Periode dasar — belum ada target',
   'perf.kpi.target.baselineHint': 'Target ditetapkan dari periode dasar setelah {{months}} bulan pengukuran.',
   'perf.kpi.otif.window':
-    'Tepat waktu: diterima pada atau sebelum tanggal yang disepakati. Penerimaan barang dihitung hanya bila tiba dalam {{match}} hari dari tanggal itu. Tidak ada yang diterima {{grace}} hari setelahnya: terlewat. Sebelum itu: belum ada hasil, dan tidak dihitung.',
+    'Tepat waktu: diterima pada atau sebelum tanggal yang disepakati. Penerimaan barang dihitung hanya bila tiba tidak lebih dari {{early}} hari sebelum tanggal itu dan tidak lebih dari {{match}} hari setelahnya. Tidak ada yang diterima {{grace}} hari setelah tanggal itu: terlewat, meskipun pemasok sudah mengirim pemberitahuan pengiriman. Sebelum itu: belum ada hasil, dan tidak dihitung.',
   'perf.kpi.otif.early':
-    'Dihitung tepat waktu, hingga {{match}} hari lebih awal. Penerimaan yang lebih awal dari itu tidak dicocokkan dengan call-off.',
+    'Dihitung tepat waktu, hingga {{early}} hari lebih awal. Penerimaan yang lebih awal dari itu tidak dihitung. Terkirim pada tanggal yang dikonfirmasi memakai aturan yang sama. {{early}} hari ini adalah usulan sampai gudang menetapkan seberapa awal pengiriman boleh tiba.',
   'perf.kpi.otif.grain':
-    'Per call-off: setiap pengiriman call-off harus tepat waktu dan tepat jumlah. Persentasenya dari call-off yang jatuh tempo pada periode ini dan sudah ada hasilnya; pemberitahuan pengiriman saja bukan hasil.',
+    'Per call-off: setiap pengiriman call-off harus tepat waktu dan tepat jumlah. Persentasenya dari call-off yang jatuh tempo pada periode ini dan sudah ada hasilnya. Pemberitahuan pengiriman saja bukan hasil, dan tidak mencegah pengiriman dihitung terlewat.',
   'perf.kpi.otif.dateChange':
-    'Diatur ulang. Tanggalnya adalah yang disepakati: tanggal baru yang dikonfirmasi pemasok, setelah diterima (otomatis dalam toleransi, atau oleh perencana). Selama menunggu perencana, tanggal semula berlaku. Perubahan tanggal kebutuhan oleh perencana langsung berlaku.',
+    'Hanya tanggal yang disepakati kedua pihak yang dihitung. Tanggal baru yang dikonfirmasi pemasok berlaku setelah diterima (otomatis dalam toleransi, atau oleh perencana); selama menunggu perencana, tanggal yang disepakati sebelumnya berlaku. Perubahan tanggal kebutuhan oleh perencana baru berlaku setelah pemasok mengonfirmasinya; sampai saat itu, tanggal terakhir yang disepakati kedua pihak berlaku.',
   'perf.kpi.otif.inFull':
-    'Satu penerimaan barang sebanyak minimal jumlah yang disepakati. Dua penerimaan sebagian tidak dijumlahkan.',
-  'perf.kpi.cfot.window': 'Tepat waktu: diterima pada atau sebelum tanggal yang dikonfirmasi. Tidak ada tanggal paling awal.',
-  'perf.kpi.cfot.early': 'Dihitung, seawal apa pun.',
+    'Semua penerimaan barang yang dihitung untuk pengiriman itu dijumlahkan dan harus mencapai jumlah yang disepakati. Dua penerimaan sebagian dijumlahkan.',
+  'perf.kpi.cfot.window':
+    'Tepat waktu: diterima pada atau sebelum tanggal yang dikonfirmasi, dan tidak lebih dari {{early}} hari sebelumnya.',
+  'perf.kpi.cfot.early':
+    'Dihitung tepat waktu, hingga {{early}} hari lebih awal — aturan yang sama dengan tepat waktu dan tepat jumlah. Penerimaan yang lebih awal dari itu tidak dihitung.',
   'perf.kpi.cfot.grain':
     'Per pesanan pembelian, menurut jumlah: jumlah yang dikonfirmasi dan diterima sampai tanggal yang dikonfirmasi, dibagi jumlah yang dipesan. Suatu periode mencakup pesanan yang tanggal konfirmasinya jatuh di dalamnya.',
   'perf.kpi.cfot.dateChange':
-    'Diatur ulang begitu pemasok mengirim penawaran balik: tanggal dan jumlah baru pada baris itu berlaku, selama menunggu perencana maupun setelah diterima. Bila perencana menolaknya, pesanan sebagaimana dibuat PTI berlaku kembali.',
+    'Penawaran balik pemasok baru berlaku setelah diterima perencana: sejak itu tanggal dan jumlah baru pada baris itu yang dihitung. Selama menunggu perencana, atau bila perencana menolaknya, pesanan sebagaimana dibuat PTI berlaku.',
   'perf.kpi.cfot.inFull':
-    'Penerimaan pada atau sebelum tanggal itu dijumlahkan, hingga jumlah yang dikonfirmasi.',
+    'Semua penerimaan yang tepat waktu dijumlahkan, hingga jumlah yang dikonfirmasi.',
 };

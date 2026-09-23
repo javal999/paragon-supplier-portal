@@ -26,6 +26,7 @@ import {
   type CallOffView,
 } from '../transitions/callOffRules';
 import { targetStatus, type TargetStatus } from '../../lib/chartPalette';
+import { receivedOnTimeFor } from './kpiWindow';
 
 const DAY_MS = 86_400_000;
 
@@ -164,9 +165,11 @@ function confirmedLine(po: PurchaseOrder, lineId: string, orderedQty: number): {
   if (!response) return fallback;
   if (response.option === 'reject') return { qty: 0, date: fallback.date };
   if (response.option !== 'adjust') return fallback;
-  // A counter-offer only binds once the planner accepted it; while it waits, the
-  // order still stands as PTI asked for it.
-  if (response.review && response.review.decision !== 'accepted') return fallback;
+  // BL-66 (1) — a counter-offer only binds once the planner ACCEPTED it. While
+  // it waits (no review yet) or after a rejection, the order still stands as
+  // PTI placed it. (Until BL-82 the guard read `review && decision !==
+  // 'accepted'`, which let a waiting counter-offer bind the moment it was sent.)
+  if (response.review?.decision !== 'accepted') return fallback;
   const line = response.lines?.find((l) => l.lineId === lineId);
   if (!line) return fallback;
   return { qty: line.counterQty, date: line.counterDate.slice(0, 10) };
@@ -178,7 +181,12 @@ function confirmedLine(po: PurchaseOrder, lineId: string, orderedQty: number): {
  *
  * Receipts are matched to the order by its number — the goods receipt names the
  * PO it fulfils — and then to the line by material, so a short delivery on one
- * material cannot be made up by an over-delivery on another.
+ * material cannot be made up by an over-delivery on another. Every receipt on
+ * time is added (CR-08: partial receipts add up).
+ *
+ * BL-66 (4) — "on time" is the SAME rule OTIF uses: on or before the confirmed
+ * date and no more than EARLY_DELIVERY_WINDOW_DAYS before it. A receipt earlier
+ * than that does not count (PROPOSED until BL-56 sets the early allowance).
  */
 export function poCfot(po: PurchaseOrder, receipts: readonly GoodsReceipt[]): PoCfot | null {
   const orderedQty = po.lineItems.reduce((s, li) => s + li.quantity, 0);
@@ -191,7 +199,7 @@ export function poCfot(po: PurchaseOrder, receipts: readonly GoodsReceipt[]): Po
     const c = confirmedLine(po, li.id, li.quantity);
     confirmedQty += c.qty;
     const received = mine
-      .filter((g) => g.receivedDate.slice(0, 10) <= c.date)
+      .filter((g) => receivedOnTimeFor(g.receivedDate, c.date))
       .flatMap((g) => g.inspectionResults)
       .filter((r) => r.materialCode === li.materialCode)
       .reduce((s, r) => s + r.qtyReceived, 0);

@@ -11,6 +11,8 @@ import { NO_PERSON } from '../context/noPerson';
 import i18n from '../lib/i18n';
 import type { CurrentIdentity } from '../context/CurrentIdentityContext';
 import type { QueryScope } from '../services/data/types';
+import { portfolioCfot } from '../services/engine/cfot';
+import { EARLY_DELIVERY_WINDOW_DAYS } from '../services/data/kpiWindow';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // REQ-E14-02 (BL-99) — the planner's Supplier reliability page and the
@@ -50,10 +52,26 @@ describe('BuyerReliability — the planner page', () => {
     }
   });
 
-  it('does not show a CFOT figure — it says why instead (BL-66)', async () => {
+  // BL-82 retired "does not show a CFOT figure — it says why instead (BL-66)".
+  it('shows CFOT per supplier and for the portfolio — the service’s figures, the pending note gone (BL-82)', async () => {
+    const rows = (await mockDataService.procurement.getSupplierReliability(buyerScope)).items;
+    const withCfot = rows.filter((r) => r.cfot.rate !== null);
+    expect(withCfot.map((r) => r.supplierId)).toContain('sup-007'); // population control: a named member
     renderWithProviders(<BuyerReliability />, { identity: BUYER, route: '/buyer/reliability' });
-    expect(await screen.findByTestId('rel-cfot-pending')).toBeInTheDocument();
-    expect(screen.queryByText(/Delivered on the confirmed date \d/)).toBeNull();
+    await screen.findByTestId('rel-row-sup-007');
+    expect(screen.queryByTestId('rel-cfot-pending')).toBeNull();
+    expect(screen.queryByText(/being aligned with the agreed definition/)).toBeNull();
+    for (const r of withCfot) {
+      expect(screen.getByTestId(`rel-cfot-${r.supplierId}`)).toHaveTextContent(pct(r.cfot.rate)!);
+    }
+    const total = portfolioCfot(rows.map((r) => r.cfot));
+    expect(screen.getByTestId('rel-portfolio-cfot')).toHaveTextContent(pct(total.rate)!);
+    expect(screen.getByTestId('rel-def-cfot')).toHaveTextContent(`no more than ${EARLY_DELIVERY_WINDOW_DAYS} days before it`);
+  });
+
+  it('the portfolio CFOT counts every PO once (not a mean of supplier means)', () => {
+    expect(portfolioCfot([{ rate: 1, pos: 3 }, { rate: 0, pos: 1 }]).rate).toBe(0.75);
+    expect(portfolioCfot([{ rate: null, pos: 0 }]).rate).toBeNull();
   });
 
   it('sorts by confirmation rate, lowest first, and the header flips it', async () => {
@@ -74,6 +92,8 @@ describe('BuyerReliability — the planner page', () => {
     renderWithProviders(<BuyerReliability />, { identity: BUYER, route: '/buyer/reliability' });
     expect(await screen.findByRole('heading', { name: 'Keandalan pemasok' })).toBeInTheDocument();
     expect(screen.getByText('Cara menghitungnya')).toBeInTheDocument();
+    expect(screen.getByTestId('rel-def-cfot')).toHaveTextContent(`tidak lebih dari ${EARLY_DELIVERY_WINDOW_DAYS} hari sebelumnya`);
+    expect(screen.getAllByText('Terkirim pada tanggal yang dikonfirmasi').length).toBeGreaterThan(0);
   });
 });
 
@@ -94,6 +114,8 @@ describe('SupplierReliabilityPanel — the supplier sees only its own figures (A
     expect(within(panel).getByText('Synthetic data · awaiting the MDM SAP feed')).toBeInTheDocument();
     expect(within(screen.getByTestId('rel-sup-confirmation')).getByText(pct(mine.confirmation.rate)!)).toBeInTheDocument();
     expect(within(screen.getByTestId('rel-sup-planchange')).getByText(pct(mine.planChange.share)!)).toBeInTheDocument();
+    // BL-82 — the supplier's own CFOT, the service's figure for it.
+    expect(within(screen.getByTestId('rel-sup-cfot')).getByText(pct(mine.cfot.rate)!)).toBeInTheDocument();
   });
 
   it('another supplier’s figures never render — sup-002 sees its own confirmation, not sup-007’s', async () => {

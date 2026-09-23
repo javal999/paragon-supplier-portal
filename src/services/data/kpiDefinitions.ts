@@ -13,7 +13,9 @@
 // boundary — so if the arithmetic changes and this text does not, a named test
 // goes red. Where the code differs from the decided wording in the
 // requirements, the page shows what the code does (and the difference is
-// reported, not silently fixed).
+// reported, not silently fixed). Since BL-82 the five BL-66 differences are
+// closed and the text describes the aligned calculation; the early window is
+// a PROPOSED value until BL-56 (`kpiWindow.ts`).
 //
 // ⚠️ **NO TARGET IS SHOWN.** BL-19 decided to measure a baseline before any
 // target is set, so both measures read "Baseline period" and the CR-17 90%
@@ -21,6 +23,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { DELIVERY_GRACE_DAYS, MATCH_WINDOW_DAYS } from '../delivery/fulfillment';
+import { EARLY_DELIVERY_WINDOW_DAYS } from './kpiWindow';
 
 /** BL-19 — the baseline is measured for this many months before a target is set. */
 export const BASELINE_MONTHS = 3;
@@ -37,24 +40,30 @@ export interface KpiDefinition {
   readonly answers: Readonly<Record<KpiQuestion, { readonly key: string; readonly values?: Readonly<Record<string, number>> }>>;
 }
 
-export const KPI_DEFINITIONS: readonly KpiDefinition[] = Object.freeze([
+export const KPI_DEFINITIONS: readonly KpiDefinition[] = Object.freeze<KpiDefinition[]>([
   {
     id: 'otif',
     nameKey: 'perf.otif',
     answers: {
-      // CR-06 / CR-07: a receipt counts toward a delivery when it is within
-      // MATCH_WINDOW_DAYS of the approved date (either side); on time = on or
-      // before that date; nothing received DELIVERY_GRACE_DAYS after it = missed.
-      window: { key: 'perf.kpi.otif.window', values: { match: MATCH_WINDOW_DAYS, grace: DELIVERY_GRACE_DAYS } },
-      // Early counts as on time — but only inside the match window.
-      early: { key: 'perf.kpi.otif.early', values: { match: MATCH_WINDOW_DAYS } },
+      // CR-06 / CR-07: a receipt counts toward a delivery when it arrives no
+      // more than EARLY_DELIVERY_WINDOW_DAYS before the approved date and no
+      // more than MATCH_WINDOW_DAYS after it; on time = on or before that
+      // date; nothing received DELIVERY_GRACE_DAYS after it = missed, even when
+      // dispatched (BL-66 (5)).
+      window: {
+        key: 'perf.kpi.otif.window',
+        values: { early: EARLY_DELIVERY_WINDOW_DAYS, match: MATCH_WINDOW_DAYS, grace: DELIVERY_GRACE_DAYS },
+      },
+      // BL-66 (4): early counts as on time only inside the ONE shared window —
+      // the same value CFOT reads. PROPOSED until BL-56.
+      early: { key: 'perf.kpi.otif.early', values: { early: EARLY_DELIVERY_WINDOW_DAYS } },
       // BR-02 / BR-06: per call-off; % of the call-offs due in the period whose
       // result is decided; one still pending is left out.
       grain: { key: 'perf.kpi.otif.grain' },
-      // `approvedDeliveries`: the accepted confirmation's dates, else the
-      // released need date — so a planner's change moves the date at once.
+      // `approvedDeliveries` (BL-66 (2)): the accepted confirmation's dates,
+      // else what both sides last agreed, else the released need date.
       dateChange: { key: 'perf.kpi.otif.dateChange' },
-      // CR-08: the ONE matched receipt against the approved quantity.
+      // CR-08 (BL-66 (3)): the SUM of the receipts matched to the delivery.
       inFull: { key: 'perf.kpi.otif.inFull' },
     },
   },
@@ -62,17 +71,15 @@ export const KPI_DEFINITIONS: readonly KpiDefinition[] = Object.freeze([
     id: 'cfot',
     nameKey: 'perf.cfot',
     answers: {
-      // `poCfot`: received on or before the confirmed date; no earliest date.
-      window: { key: 'perf.kpi.cfot.window' },
-      early: { key: 'perf.kpi.cfot.early' },
+      // `poCfot` (BL-66 (4)): on or before the confirmed date, and no more
+      // than EARLY_DELIVERY_WINDOW_DAYS before it — OTIF's early rule.
+      window: { key: 'perf.kpi.cfot.window', values: { early: EARLY_DELIVERY_WINDOW_DAYS } },
+      early: { key: 'perf.kpi.cfot.early', values: { early: EARLY_DELIVERY_WINDOW_DAYS } },
       // BR-01 / BR-05: per PO, by quantity; a period takes the POs whose
       // confirmed date falls in it.
       grain: { key: 'perf.kpi.cfot.grain' },
-      // `confirmedLine`: a counter-offer's line date and quantity from the
-      // moment it is SENT (the guard only falls back on a review that is not
-      // 'accepted', and a waiting counter-offer has no review) — although its
-      // own comment says it binds only once accepted. Stated as the code does
-      // it; the difference is reported under BL-53, not silently fixed.
+      // `confirmedLine` (BL-66 (1)): a counter-offer's line date and quantity
+      // apply only once the planner ACCEPTED it.
       dateChange: { key: 'perf.kpi.cfot.dateChange' },
       inFull: { key: 'perf.kpi.cfot.inFull' },
     },
