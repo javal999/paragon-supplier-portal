@@ -90,7 +90,11 @@ export type Capability =
   // POs, supplier-health and production-line fixtures; no single transactional
   // capability describes them, and leaving them the only unmarked figures on an
   // otherwise-marked page is the inversion this batch exists to end.
-  | 'dashboard';
+  | 'dashboard'
+  // BL-102 / REQ-E14-01 BR-07 — the forecast engine's input dataset. SYNTHETIC
+  // until the Master Data Management team connects SAP (owner decision ENG-D1);
+  // every engine result shown on a surface reads it.
+  | 'engineDataset';
 
 // The ONLY hand-authored fact here: which command entity/flow each capability
 // reads from (`null` = pure fixture, no lifecycle entity). The TIER is never
@@ -176,6 +180,8 @@ const CAPABILITY_BACKING: Record<Capability, string | null> = {
   analytics: null,
   messaging: null,
   dashboard: null,
+  // No command writes engine inputs — they are a read-only feed.
+  engineDataset: null,
 };
 
 // — Gate-2: harvest gating (LIVENESS-DATASOURCE-01) —————————————————————————————
@@ -269,6 +275,14 @@ const HARVEST_GATED: Partial<Record<Capability, HarvestGate>> = {
   supplierDiscovery: {
     readinessNoteKey: 'widget.honesty.awaitingDiscoveryFeed',
     source: 'Discovery feed',
+  },
+  // BL-102 — the engine runs on a SYNTHETIC dataset built to reproduce the
+  // owner's measures (E14-01 BR-07). It awaits the Master Data Management
+  // team's SAP feed (ENG-D1, BR-06); the note names whose feed replaces it
+  // rather than a generic "sample".
+  engineDataset: {
+    readinessNoteKey: 'widget.honesty.awaitingMdmFeed',
+    source: 'MDM SAP feed',
   },
 };
 

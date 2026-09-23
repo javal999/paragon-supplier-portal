@@ -188,6 +188,10 @@ describe('LivenessRegistry — harvest gate (LIVENESS-DATASOURCE-01, gate-2)', (
       // ruling, not by a missing wire. Wiring, a seed and a working door must
       // never render green.
       'supplierApplications',
+      // BL-102 - the forecast engine's synthetic dataset, awaiting the Master
+      // Data Management team's SAP feed (ENG-D1). No command writes it, so
+      // gate-1 is SIMULATED as well; gate-2 names whose feed replaces it.
+      'engineDataset',
     ]);
     for (const cap of ALL_CAPABILITIES) {
       if (gated.has(cap)) continue;
@@ -226,6 +230,19 @@ describe('LivenessRegistry — harvest gate (LIVENESS-DATASOURCE-01, gate-2)', (
     expect(note?.readinessNoteKey).toBe('widget.honesty.awaitingC8Feed');
     expect(note?.source).toBe('SOMO C8');
     expect(isLive('forecastPublications')).toBe(false); // guarded → Sample render
+  });
+
+  it('⭐ engineDataset (BL-102): SIMULATED on both gates, and the note names the MDM SAP feed', () => {
+    // The forecast engine's synthetic dataset (E14-01 BR-07, ENG-D1). Nothing
+    // writes it (no backing), and its real source is the Master Data Management
+    // team's SAP feed — so both gates are shut and the pill names that owner.
+    expect(capabilityBacking.engineDataset).toBeNull();
+    expect(liveness('engineDataset')).toBe('SIMULATED');
+    expect(awaitsHarvest('engineDataset')).toBe(true);
+    const note = readinessNote('engineDataset');
+    expect(note?.readinessNoteKey).toBe('widget.honesty.awaitingMdmFeed');
+    expect(note?.source).toBe('MDM SAP feed');
+    expect(isLive('engineDataset')).toBe(false);
   });
 
   it('⭐ inventory after the SDC-3b backing flip: wired (gate-1 LIVE) yet STILL never green', () => {
