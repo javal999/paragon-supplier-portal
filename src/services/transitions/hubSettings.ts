@@ -123,6 +123,17 @@ const DEFS = [
   { key: 'coverage.atRiskFromPct', section: 'alerts', rule: 'CR-03', unit: 'pct', min: 0, max: 500, defaultValue: 80 },
   // REQ-E08-01 — the stale period: a supplier figure older than this is stale.
   { key: 'stale.defaultDays', section: 'alerts', rule: 'REQ-E08-01', unit: 'days', integer: true, min: 1, max: 365, defaultValue: 7 },
+
+  // ENG-D5 — the forecast engine's fill-rate targets per service tier
+  // (REQ-E14-04 BR-02): 95% high-volume, 90% other, 85% slow movers.
+  { key: 'engine.fillRateHighPct', section: 'tolerances', rule: 'ENG-D5', unit: 'pct', min: 50, max: 99.9, defaultValue: 95 },
+  { key: 'engine.fillRateStandardPct', section: 'tolerances', rule: 'ENG-D5', unit: 'pct', min: 50, max: 99.9, defaultValue: 90 },
+  { key: 'engine.fillRateSlowPct', section: 'tolerances', rule: 'ENG-D5', unit: 'pct', min: 50, max: 99.9, defaultValue: 85 },
+  // REQ-E14-04 BR-03 — the delay percentile the safety lead time covers.
+  {
+    key: 'engine.safetyLeadTimePercentile', section: 'tolerances', rule: 'REQ-E14-04', unit: 'pct', integer: true,
+    min: 50, max: 100, defaultValue: 80,
+  },
 ] as const satisfies readonly HubSettingDef[];
 
 /** A fixed setting key. Stale-period overrides are keyed separately (below). */
@@ -278,6 +289,18 @@ const ORDER_RULES: readonly {
     holds: (s) => num(s, 'bands.warningBelowDays') <= num(s, 'bands.healthyUpToDays'),
     says: (s) =>
       `bands out of order: Healthy would be empty (Warning below ${num(s, 'bands.warningBelowDays')}, Healthy up to ${num(s, 'bands.healthyUpToDays')} days)`,
+  },
+  {
+    keys: ['engine.fillRateSlowPct', 'engine.fillRateStandardPct'],
+    holds: (s) => num(s, 'engine.fillRateSlowPct') <= num(s, 'engine.fillRateStandardPct'),
+    says: (s) =>
+      `slow movers may not be held to a higher fill rate than other materials (slow ${num(s, 'engine.fillRateSlowPct')}% > other ${num(s, 'engine.fillRateStandardPct')}%)`,
+  },
+  {
+    keys: ['engine.fillRateStandardPct', 'engine.fillRateHighPct'],
+    holds: (s) => num(s, 'engine.fillRateStandardPct') <= num(s, 'engine.fillRateHighPct'),
+    says: (s) =>
+      `other materials may not be held to a higher fill rate than high-volume ones (other ${num(s, 'engine.fillRateStandardPct')}% > high-volume ${num(s, 'engine.fillRateHighPct')}%)`,
   },
   {
     keys: ['coverage.atRiskFromPct', 'coverage.coveredFromPct'],

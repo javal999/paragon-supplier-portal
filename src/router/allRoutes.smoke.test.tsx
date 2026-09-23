@@ -81,6 +81,8 @@ import SupplierForecastCommitments from '../pages-v2/SupplierForecastCommitments
 import BuyerForecasts from '../pages-v2/BuyerForecasts';
 import BuyerCommitments from '../pages-v2/BuyerCommitments';
 import BuyerReliability from '../pages-v2/BuyerReliability';
+import BuyerMaterialRequirement from '../pages-v2/BuyerMaterialRequirement';
+import BuyerSafetyStock from '../pages-v2/BuyerSafetyStock';
 import SupplierShipments from '../pages-v2/SupplierShipments';
 import SupplierGoodsReceipts from '../pages-v2/SupplierGoodsReceipts';
 import SupplierInvoicesV2 from '../pages-v2/SupplierInvoices';
@@ -131,6 +133,8 @@ const ROUTES: RouteCase[] = [
   { name: 'buyer/forecasts', pattern: '/buyer/forecasts', at: '/buyer/forecasts', element: <BuyerForecasts />, identity: BUYER },
   { name: 'buyer/collaboration', pattern: '/buyer/collaboration', at: '/buyer/collaboration', element: <BuyerCommitments />, identity: BUYER },
   { name: 'buyer/reliability', pattern: '/buyer/reliability', at: '/buyer/reliability', element: <BuyerReliability />, identity: BUYER },
+  { name: 'buyer/material-requirement', pattern: '/buyer/material-requirement', at: '/buyer/material-requirement', element: <BuyerMaterialRequirement />, identity: BUYER },
+  { name: 'buyer/safety-stock', pattern: '/buyer/safety-stock', at: '/buyer/safety-stock', element: <BuyerSafetyStock />, identity: BUYER },
   { name: 'buyer/collaboration/responses', pattern: '/buyer/collaboration/responses', at: '/buyer/collaboration/responses', element: <BuyerCollaboration />, identity: BUYER },
   { name: 'buyer/contracts', pattern: '/buyer/contracts', at: '/buyer/contracts', element: <BuyerContracts />, identity: BUYER },
   { name: 'buyer/contracts/:id', pattern: '/buyer/contracts/:id', at: '/buyer/contracts/ctr-013', element: <BuyerContractDetail />, identity: BUYER },

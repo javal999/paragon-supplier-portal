@@ -90,6 +90,10 @@ import { inventoryCapacityEn, inventoryCapacityId } from './i18n/inventoryCapaci
 import { forecastCollaborationEn, forecastCollaborationId } from './i18n/forecastCollaboration';
 // — REQ-E14-02 supplier reliability and PTI plan-change measures (BL-99) —
 import { reliabilityEn, reliabilityId } from './i18n/reliability';
+// — REQ-E14-03 material requirement —
+import { materialRequirementEn, materialRequirementId } from './i18n/materialRequirement';
+// — REQ-E14-04 safety stock, safety lead time and reorder point —
+import { safetyStockEn, safetyStockId } from './i18n/safetyStock';
 // — Phase 6a RFx management (REQ-E03-01 to REQ-E03-05) —
 import { rfxEn, rfxId } from './i18n/rfx';
 // — RFx authoring (RFI/RFP batch, 2026-09-21) and session-held attachments —
@@ -191,6 +195,8 @@ export const resources = {
       ...inventoryCapacityEn,
       ...forecastCollaborationEn,
       ...reliabilityEn,
+      ...materialRequirementEn,
+      ...safetyStockEn,
       ...rfxEn,
       ...rfxAuthoringEn,
       ...rfqAuthoringEn,
@@ -647,6 +653,8 @@ export const resources = {
       ...inventoryCapacityId,
       ...forecastCollaborationId,
       ...reliabilityId,
+      ...materialRequirementId,
+      ...safetyStockId,
       ...rfxId,
       ...rfxAuthoringId,
       ...rfqAuthoringId,

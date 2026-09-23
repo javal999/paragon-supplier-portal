@@ -91,6 +91,19 @@ export const useSupplierReliability = (windowWeeks: ReliabilityWindowWeeks = 26)
     svc.procurement.getSupplierReliability(scope, windowWeeks),
   );
 
+/**
+ * REQ-E14-03 — the material requirement run (PTI only). `includeUnconfirmed`
+ * is the planner's AC-02 choice: count unconfirmed open lines, marked.
+ */
+export const useMaterialRequirement = (includeUnconfirmed = false) =>
+  useServiceQuery(['procurement', 'materialRequirement', includeUnconfirmed], (svc, scope) =>
+    svc.procurement.getMaterialRequirement(scope, includeUnconfirmed),
+  );
+
+/** REQ-E14-04 — safety stock, safety lead time and reorder point (PTI only). */
+export const useSafetyStock = () =>
+  useServiceQuery(['procurement', 'safetyStock'], (svc, scope) => svc.procurement.getSafetyStock(scope));
+
 // ── RFx management (REQ-E03-01 to REQ-E03-05) ──────────────────────────────
 
 /**
