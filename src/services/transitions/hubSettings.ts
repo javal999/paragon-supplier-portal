@@ -39,7 +39,7 @@ export type HubSettingUnit =
   | 'boolean';
 
 /** Who decides a value that is still a placeholder (the owner i18n key suffix). */
-export type PlaceholderOwner = 'finance' | 'procurement' | 'warehousePlanner';
+export type PlaceholderOwner = 'finance' | 'procurement' | 'warehousePlanner' | 'materialPlanner';
 
 export interface HubSettingDef {
   readonly key: string;
@@ -133,6 +133,28 @@ const DEFS = [
   {
     key: 'engine.safetyLeadTimePercentile', section: 'tolerances', rule: 'REQ-E14-04', unit: 'pct', integer: true,
     min: 50, max: 100, defaultValue: 80,
+  },
+  // ENG-D6 — the order-sizing cost rates (REQ-E14-05 BR-01). Finance and the
+  // 3PL invoices will supply them; until then each is a PLACEHOLDER, named as
+  // one wherever it is shown. The defaults are orders of magnitude only.
+  {
+    key: 'engine.holdingCostPctPerYear', section: 'tolerances', rule: 'ENG-D6', unit: 'pct',
+    min: 0, max: 100, defaultValue: 25, placeholder: { owner: 'finance', backlogId: 'ENG-D6' },
+  },
+  {
+    key: 'engine.orderCostIdr', section: 'tolerances', rule: 'ENG-D6', unit: 'idr', integer: true,
+    min: 0, max: 1_000_000_000, defaultValue: 750_000, placeholder: { owner: 'finance', backlogId: 'ENG-D6' },
+  },
+  {
+    key: 'engine.rentedSpaceIdrPerPalletWeek', section: 'tolerances', rule: 'ENG-D6', unit: 'idr', integer: true,
+    min: 0, max: 100_000_000, defaultValue: 35_000, placeholder: { owner: 'finance', backlogId: 'ENG-D6' },
+  },
+  // REQ-E14-05 BR-03 — the change penalty inside the supplier lead time, per
+  // pallet by which an already-planned order changes. A policy weight, not a
+  // cost Finance reports, so the Material Planner sets it.
+  {
+    key: 'engine.changePenaltyIdrPerPallet', section: 'tolerances', rule: 'REQ-E14-05', unit: 'idr', integer: true,
+    min: 0, max: 100_000_000, defaultValue: 150_000, placeholder: { owner: 'materialPlanner', backlogId: 'REQ-E14-05 BR-03' },
   },
 ] as const satisfies readonly HubSettingDef[];
 

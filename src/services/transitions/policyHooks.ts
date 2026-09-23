@@ -133,6 +133,15 @@ export const POLICY_HOOKS = {
   CALLOFF_AWAITING_APPROVAL: 'calloff_awaiting_approval',
   /** Planner rejection of a confirmation: the comment is substance. */
   CALLOFF_REVIEW_COMMENT_AUTHORED: 'calloff_review_comment_authored',
+  /**
+   * Call-off release (X-03, owner decision 2026-09-23): a call-off whose origin
+   * is the forecast engine (a draft the Order plan created) is not released to
+   * the supplier while the engine dataset is not live — simulated output is
+   * never shown to a supplier. Reads the call-off through `target.readEntity`
+   * and the liveness registry's `isLive('engineDataset')` at call time.
+   * Refused by name: ENGINE_DATA_SIMULATED. Ordinary call-offs are untouched.
+   */
+  CALLOFF_ENGINE_DATA_LIVE: 'calloff_engine_data_live',
   /** Dispatch heads-up (REQ-E09-04): the confirmation is accepted, the dates are
    *  dates with arrival on or after shipping, and the quantity is positive. */
   CALLOFF_DISPATCH_VALID: 'calloff_dispatch_valid',

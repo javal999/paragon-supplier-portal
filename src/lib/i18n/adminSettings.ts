@@ -30,6 +30,7 @@ export const adminSettingsEn: Record<string, string> = {
   'adminSet.owner.finance': 'Finance',
   'adminSet.owner.procurement': 'Procurement',
   'adminSet.owner.warehousePlanner': 'the Warehouse (with the Material Planner)',
+  'adminSet.owner.materialPlanner': 'the Material Planner',
   'adminSet.action.change': 'Change',
   'adminSet.action.reset': 'Reset to default',
 
@@ -98,6 +99,8 @@ export const adminSettingsEn: Record<string, string> = {
   'adminSet.rule.REQ-E08-01': 'REQ-E08-01 · Stale period',
   'adminSet.rule.ENG-D5': 'ENG-D5 · Forecast engine fill-rate targets',
   'adminSet.rule.REQ-E14-04': 'REQ-E14-04 · Forecast engine safety lead time',
+  'adminSet.rule.ENG-D6': 'ENG-D6 · Forecast engine order-sizing cost rates',
+  'adminSet.rule.REQ-E14-05': 'REQ-E14-05 · Forecast engine change penalty',
 
   // ── One label and hint per value ────────────────────────────────────────
   'adminSet.key.callOff.overPct.label': 'Over the released quantity, accepted without the planner',
@@ -154,6 +157,14 @@ export const adminSettingsEn: Record<string, string> = {
   'adminSet.key.engine.fillRateSlowPct.hint': 'Materials needed in fewer than three weeks of every four. No higher than the target for other materials.',
   'adminSet.key.engine.safetyLeadTimePercentile.label': 'Share of late deliveries the safety lead time covers',
   'adminSet.key.engine.safetyLeadTimePercentile.hint': 'Orders are released early by the delay this share of a supplier’s deliveries arrived within, after the confirmed date.',
+  'adminSet.key.engine.holdingCostPctPerYear.label': 'Holding cost, share of value per year',
+  'adminSet.key.engine.holdingCostPctPerYear.hint': 'What keeping one unit in stock for a year costs, as a share of its value. Order sizing weighs it against the cost of another order.',
+  'adminSet.key.engine.orderCostIdr.label': 'Cost per order',
+  'adminSet.key.engine.orderCostIdr.hint': 'The cost of placing and receiving one order. A higher cost favours fewer, larger orders.',
+  'adminSet.key.engine.rentedSpaceIdrPerPalletWeek.label': 'Rented space, per pallet per week',
+  'adminSet.key.engine.rentedSpaceIdrPerPalletWeek.hint': 'What a pallet above the owned warehouse capacity costs for a week, from the 3PL invoices.',
+  'adminSet.key.engine.changePenaltyIdrPerPallet.label': 'Change penalty inside the lead time, per pallet',
+  'adminSet.key.engine.changePenaltyIdrPerPallet.hint': 'What order sizing counts for changing an order it already planned, once that order is inside the supplier’s lead time. A higher value keeps the plan steadier close in.',
 
   // ── Stale period per supplier and material ──────────────────────────────
   'adminSet.stale.title': 'Stale period per supplier and material',
@@ -206,6 +217,7 @@ export const adminSettingsId: Record<string, string> = {
   'adminSet.owner.finance': 'Keuangan',
   'adminSet.owner.procurement': 'Pengadaan',
   'adminSet.owner.warehousePlanner': 'Gudang (bersama Perencana Material)',
+  'adminSet.owner.materialPlanner': 'Perencana Material',
   'adminSet.action.change': 'Ubah',
   'adminSet.action.reset': 'Kembalikan ke bawaan',
 
@@ -271,6 +283,8 @@ export const adminSettingsId: Record<string, string> = {
   'adminSet.rule.REQ-E08-01': 'REQ-E08-01 · Periode data usang',
   'adminSet.rule.ENG-D5': 'ENG-D5 · Target tingkat pemenuhan mesin prakiraan',
   'adminSet.rule.REQ-E14-04': 'REQ-E14-04 · Waktu tunggu pengaman mesin prakiraan',
+  'adminSet.rule.ENG-D6': 'ENG-D6 · Tarif biaya penentuan ukuran pesanan mesin prakiraan',
+  'adminSet.rule.REQ-E14-05': 'REQ-E14-05 · Penalti perubahan mesin prakiraan',
 
   'adminSet.key.callOff.overPct.label': 'Kelebihan dari kuantitas yang dirilis, diterima tanpa perencana',
   'adminSet.key.callOff.overPct.hint': 'Konfirmasi yang melebihi batas ini menunggu perencana. Berlaku untuk setiap jenis call-off. Kekurangan tidak pernah menunggu: ditampilkan sebagai pengiriman sebagian.',
@@ -326,6 +340,14 @@ export const adminSettingsId: Record<string, string> = {
   'adminSet.key.engine.fillRateSlowPct.hint': 'Material yang dibutuhkan kurang dari tiga dari setiap empat minggu. Tidak lebih tinggi dari target material lain.',
   'adminSet.key.engine.safetyLeadTimePercentile.label': 'Porsi pengiriman terlambat yang ditutup waktu tunggu pengaman',
   'adminSet.key.engine.safetyLeadTimePercentile.hint': 'Pesanan dirilis lebih awal sebesar keterlambatan yang dicapai porsi pengiriman pemasok ini, setelah tanggal terkonfirmasi.',
+  'adminSet.key.engine.holdingCostPctPerYear.label': 'Biaya penyimpanan, porsi nilai per tahun',
+  'adminSet.key.engine.holdingCostPctPerYear.hint': 'Biaya menyimpan satu unit selama setahun, sebagai porsi nilainya. Penentuan ukuran pesanan menimbangnya terhadap biaya satu pesanan lagi.',
+  'adminSet.key.engine.orderCostIdr.label': 'Biaya per pesanan',
+  'adminSet.key.engine.orderCostIdr.hint': 'Biaya membuat dan menerima satu pesanan. Biaya lebih tinggi mendorong pesanan lebih sedikit dan lebih besar.',
+  'adminSet.key.engine.rentedSpaceIdrPerPalletWeek.label': 'Ruang sewa, per palet per minggu',
+  'adminSet.key.engine.rentedSpaceIdrPerPalletWeek.hint': 'Biaya satu palet di atas kapasitas gudang sendiri selama seminggu, dari tagihan 3PL.',
+  'adminSet.key.engine.changePenaltyIdrPerPallet.label': 'Penalti perubahan dalam waktu tunggu, per palet',
+  'adminSet.key.engine.changePenaltyIdrPerPallet.hint': 'Biaya yang dihitung penentuan ukuran pesanan bila mengubah pesanan yang sudah direncanakan, setelah pesanan itu masuk waktu tunggu pemasok. Nilai lebih tinggi membuat rencana lebih stabil menjelang pengiriman.',
 
   'adminSet.stale.title': 'Periode data usang per pemasok dan material',
   'adminSet.stale.intro':

@@ -12,6 +12,7 @@ import {
 import { callOffsForPo } from './orders/orderSummaryModel';
 import PageMetaLine from '../components/ui-v2/PageMetaLine';
 import SampleDataBadge from '../components/ui-v2/SampleDataBadge';
+import StatusPill from '../components/ui-v2/StatusPill';
 import Table from '../components/ui-v2/Table';
 import TableHeader, { TableHeaderCell } from '../components/ui-v2/TableHeader';
 import TableRow from '../components/ui-v2/TableRow';
@@ -25,6 +26,9 @@ import { HandoffNotice } from '../components/ui-v2/HandoffNotice';
 import { useToast } from '../hooks/useToast';
 import { useRefusalText } from '../hooks/useRefusalText';
 import { useVerbAvailability } from '../hooks/useVerbAvailability';
+import { isLive } from '../services/liveness';
+import { refusedByPolicy } from '../services/transitions/refusalMessage';
+import { POLICY_HOOKS } from '../services/transitions/policyHooks';
 import { formatDate, formatDateTime, formatIDR } from '../lib/format';
 import { usePurchaseOrders } from '../services/query/hooks';
 import { useCallOffCommand, type CallOffCommandVars } from '../services/query/commandHooks';
@@ -33,6 +37,7 @@ import {
   CALL_OFF_CADENCES,
   CALL_OFF_TYPES,
   deliveryDrift,
+  engineReleaseWithheld,
   generateCallOffSeries,
   isConfirmedAndAccepted,
   releaseCheck,
@@ -109,6 +114,23 @@ const ExceedsNotice: React.FC<{ check: ReleaseCheck | null; uom: string; testId:
             remaining: formatIDR(check.remaining.remainingValue),
           })}
     </p>
+  );
+};
+
+/**
+ * X-03 (owner decision 2026-09-23) — a draft the Order plan made from an engine
+ * recommendation, while the engine dataset is not live: it is marked, and its
+ * release is withheld. The predicate is the one the release verb's policy runs,
+ * fed the registry's own liveness at render.
+ */
+const releaseWithheld = (c: CallOffView['callOff']): boolean => engineReleaseWithheld(c, isLive('engineDataset'));
+
+const EngineOriginMarker: React.FC<{ testId: string }> = ({ testId }) => {
+  const { t } = useTranslation();
+  return (
+    <span data-testid={testId}>
+      <StatusPill variant="warning">{t('co.origin.engine')}</StatusPill>
+    </span>
   );
 };
 
@@ -215,7 +237,11 @@ const BuyerCallOffs: React.FC = () => {
     try {
       const res = await command.mutateAsync(vars);
       if (res.status === 'failed') {
-        toast({ variant: 'warning', title: t('co.toast.refused'), description: refusalText(res.reason) ?? res.reason ?? '' });
+        // X-03 — the engine-data refusal is said in the reader's language, not as the hook's own text.
+        const description = refusedByPolicy(res.reason, POLICY_HOOKS.CALLOFF_ENGINE_DATA_LIVE)
+          ? t('co.refusal.engineDataSimulated')
+          : refusalText(res.reason) ?? res.reason ?? '';
+        toast({ variant: 'warning', title: t('co.toast.refused'), description });
         return false;
       }
       toast({ variant: 'success', title: success });
@@ -436,6 +462,11 @@ const BuyerCallOffs: React.FC = () => {
                           <Data className="text-xs font-bold text-text-primary whitespace-nowrap">
                             {v.callOff.callOffNumber}
                           </Data>
+                          {releaseWithheld(v.callOff) && (
+                            <div className="mt-1">
+                              <EngineOriginMarker testId={`calloff-origin-engine-${v.callOff.id}`} />
+                            </div>
+                          )}
                         </TableCell>
                         <TableCell className="text-xs text-text-secondary whitespace-nowrap">
                           {t(`co.type.${v.callOff.type}`)}
@@ -760,6 +791,7 @@ const CallOffPanelBody: React.FC<PanelBodyProps> = ({
   // CR-04 / BL-49 — releasing a draft uses the draft's OWN quantity; changing a
   // released call-off uses the quantity being typed. Both run the same check.
   const draftRelease = isDraft ? checkRelease(c.quantity) : null;
+  const withheld = releaseWithheld(c);
   const changeRelease = checkRelease(changedQty);
   const edits = {
     ...(Number.isFinite(changedQty) && changedQty !== c.quantity ? { quantity: changedQty } : {}),
@@ -768,6 +800,7 @@ const CallOffPanelBody: React.FC<PanelBodyProps> = ({
 
   return (
     <div className="space-y-6">
+      {withheld && <EngineOriginMarker testId="calloff-panel-origin-engine" />}
       <dl className="grid grid-cols-[150px_1fr] gap-y-2 text-sm">
         <dt className="text-text-tertiary">{t('co.col.supplier')}</dt>
         <dd className="text-text-primary">{c.supplierName}</dd>
@@ -964,13 +997,25 @@ const CallOffPanelBody: React.FC<PanelBodyProps> = ({
                 >
                   {t('co.draft.save')}
                 </Button>
-                <Button
-                  variant="outline"
-                  disabled={busy || (draftRelease?.exceeds ?? false)}
-                  onClick={() => void run({ verb: 'releaseDraft', id: c.id }, t('co.toast.released'))}
-                >
-                  {t('co.draft.release')}
-                </Button>
+                {/* X-03 — the release is withheld and says why, rather than acting
+                    and being refused. Edit and dismiss above stay available. */}
+                {withheld ? (
+                  <p
+                    role="note"
+                    className="basis-full text-xs text-text-secondary text-right"
+                    data-testid="calloff-draft-release-withheld"
+                  >
+                    {t('co.draft.releaseWithheld')}
+                  </p>
+                ) : (
+                  <Button
+                    variant="outline"
+                    disabled={busy || (draftRelease?.exceeds ?? false)}
+                    onClick={() => void run({ verb: 'releaseDraft', id: c.id }, t('co.toast.released'))}
+                  >
+                    {t('co.draft.release')}
+                  </Button>
+                )}
               </div>
             </>
           ) : (

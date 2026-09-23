@@ -94,6 +94,7 @@ import { reliabilityEn, reliabilityId } from './i18n/reliability';
 import { materialRequirementEn, materialRequirementId } from './i18n/materialRequirement';
 // — REQ-E14-04 safety stock, safety lead time and reorder point —
 import { safetyStockEn, safetyStockId } from './i18n/safetyStock';
+import { orderPlanEn, orderPlanId } from './i18n/orderPlan';
 // — Phase 6a RFx management (REQ-E03-01 to REQ-E03-05) —
 import { rfxEn, rfxId } from './i18n/rfx';
 // — RFx authoring (RFI/RFP batch, 2026-09-21) and session-held attachments —
@@ -197,6 +198,7 @@ export const resources = {
       ...reliabilityEn,
       ...materialRequirementEn,
       ...safetyStockEn,
+      ...orderPlanEn,
       ...rfxEn,
       ...rfxAuthoringEn,
       ...rfqAuthoringEn,
@@ -655,6 +657,7 @@ export const resources = {
       ...reliabilityId,
       ...materialRequirementId,
       ...safetyStockId,
+      ...orderPlanId,
       ...rfxId,
       ...rfxAuthoringId,
       ...rfqAuthoringId,

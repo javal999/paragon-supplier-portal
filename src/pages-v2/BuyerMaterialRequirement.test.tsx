@@ -22,13 +22,15 @@ afterEach(() => {
 });
 
 describe('BuyerMaterialRequirement — the planner page', () => {
-  it('renders inside the app shell with the SIMULATED engine pill and the interim-sizing note — never Live', async () => {
+  it('renders inside the app shell with the SIMULATED engine pill and the E14-05 sizing note — never Live', async () => {
     expect(isLive('engineDataset')).toBe(false);
     renderWithProviders(<BuyerMaterialRequirement />, { identity: BUYER, route: '/buyer/material-requirement' });
     expect(await screen.findByRole('heading', { name: 'Material requirement' })).toBeInTheDocument();
     expect(screen.getByText('Synthetic data · awaiting the MDM SAP feed')).toBeInTheDocument();
     expect(screen.queryByText('Live')).toBeNull();
-    expect(screen.getByTestId('mrq-interim-note')).toBeInTheDocument();
+    // E14-05 now sizes the planned orders (the interim note is the fallback's).
+    expect(screen.getByTestId('mrq-sized-note')).toBeInTheDocument();
+    expect(screen.queryByTestId('mrq-interim-note')).toBeNull();
     expect(screen.getAllByRole('navigation').length).toBeGreaterThan(0);
   });
 

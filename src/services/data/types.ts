@@ -65,6 +65,7 @@ import type {
 import type { SupplierReliability } from '../engine/reliability';
 import type { MaterialPlan, MaterialRequirementRun } from '../engine/requirement';
 import type { MaterialSafetyStock, SafetyStockRun } from '../engine/safetyStock';
+import type { MaterialOrderPlan, OrderPlanRun, WarehousePlan } from '../engine/orderSizing';
 import type { SupplierCfot } from '../engine/cfot';
 import type { ReleaseSelection } from '../delivery/release';
 import type { EditPolicyPatch } from '../delivery/policy';
@@ -456,6 +457,9 @@ export interface CallOffNote {
   readonly at: string;
 }
 
+/** The origin a call-off can carry (see `CallOff.origin`). */
+export type CallOffOrigin = 'engine';
+
 export interface CallOff {
   readonly id: string;
   readonly callOffNumber: string;
@@ -488,6 +492,14 @@ export interface CallOff {
   readonly agreedDeliveries?: readonly CallOffDelivery[];
   /** The supplier's reason when it rejected the call-off. */
   readonly rejectionReason?: string;
+  /**
+   * Where the call-off came from, when not typed by the planner. `'engine'`: a
+   * draft the Order plan created from a forecast-engine recommendation
+   * (REQ-E14-05 BR-05). While the engine dataset is not live, such a draft is
+   * refused on release (X-03, owner decision 2026-09-23). Absent for every
+   * call-off created on the Call-offs page.
+   */
+  readonly origin?: CallOffOrigin;
   readonly dispatches: readonly CallOffDispatch[];
   readonly notes: readonly CallOffNote[];
 }
@@ -774,6 +786,29 @@ export interface MaterialSafetyStockView extends MaterialSafetyStock {
  */
 export interface SafetyStockView extends SafetyStockRun {
   readonly materials: readonly MaterialSafetyStockView[];
+}
+
+/** One material's E14-05 order plan as served, with display names. */
+export interface MaterialOrderPlanView extends MaterialOrderPlan {
+  readonly materialLabel: string;
+  readonly supplierName: string | null;
+}
+
+export interface WarehousePlanView extends WarehousePlan {
+  readonly materials: readonly MaterialOrderPlanView[];
+}
+
+/**
+ * REQ-E14-05 — the order plan as served: computed at read on the engine's
+ * (SIMULATED) dataset with the cost rates in force (ENG-D6 placeholders). PTI
+ * only; a supplier gets null.
+ */
+export interface OrderPlanView extends OrderPlanRun {
+  /** The finished-goods plan snapshot the requirement used. */
+  readonly planMadeAt: string | null;
+  /** BR-03 compares against the run as of this day (last week's). */
+  readonly previousAsOf: string | null;
+  readonly warehouses: readonly WarehousePlanView[];
 }
 
 export interface ForecastCoverageRow {
@@ -2344,6 +2379,12 @@ export interface IProcurementService {
    * on the engine's (SIMULATED) dataset. PTI only: a supplier scope gets null.
    */
   getSafetyStock(scope: QueryScope): Promise<SafetyStockView | null>;
+  /**
+   * REQ-E14-05 — recommended orders per material and week, sized jointly per
+   * warehouse within MOQ, multiple and pallet space, with the projected fill
+   * and rented space; on the engine's (SIMULATED) dataset. PTI only.
+   */
+  getOrderPlan(scope: QueryScope): Promise<OrderPlanView | null>;
 
   // — Sourcing —
   getRFQs(scope: QueryScope, filter?: RFQFilter): Promise<Page<RFQ>>;

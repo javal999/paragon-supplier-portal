@@ -104,6 +104,10 @@ export const useMaterialRequirement = (includeUnconfirmed = false) =>
 export const useSafetyStock = () =>
   useServiceQuery(['procurement', 'safetyStock'], (svc, scope) => svc.procurement.getSafetyStock(scope));
 
+/** REQ-E14-05 — the order plan: sized orders, warehouse fill and rented space (PTI only). */
+export const useOrderPlan = () =>
+  useServiceQuery(['procurement', 'orderPlan'], (svc, scope) => svc.procurement.getOrderPlan(scope));
+
 // ── RFx management (REQ-E03-01 to REQ-E03-05) ──────────────────────────────
 
 /**

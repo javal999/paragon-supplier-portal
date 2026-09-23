@@ -57,6 +57,7 @@ describe('menu and copy (section 3.7)', () => {
       ['hub.nav.pti.reliability', '/buyer/reliability'],
       ['hub.nav.pti.materialRequirement', '/buyer/material-requirement'],
       ['hub.nav.pti.safetyStock', '/buyer/safety-stock'],
+      ['hub.nav.pti.orderPlan', '/buyer/order-plan'],
     ]);
   });
 

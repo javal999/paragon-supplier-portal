@@ -118,14 +118,17 @@ import type {
   SupplierReliabilityView,
   MaterialRequirementView,
   SafetyStockView,
+  OrderPlanView,
 } from '../types';
 import { PR_INTAKE_LINES } from './fixtures/prIntake';
 import { engineDataset } from './fixtures/engineDataset';
 import { supplierReliability, trailingWindow } from '../../engine/reliability';
-import { defaultRequirementOptions, materialRequirement } from '../../engine/requirement';
+import { defaultRequirementOptions } from '../../engine/requirement';
 import { DEFAULT_SAFETY_STOCK_OPTIONS, requirementInputs, safetyStockRun, type SafetyStockRun } from '../../engine/safetyStock';
-import { engineServiceTargets, safetyLeadTimePercentile } from '../../transitions/forecastConfig';
-import { dayOf } from '../../engine/dates';
+import { plannedReceiptsOf, sizedRequirement } from '../../engine/orderSizing';
+import { engineServiceTargets, orderSizingCosts, safetyLeadTimePercentile } from '../../transitions/forecastConfig';
+import { addDays, dayOf } from '../../engine/dates';
+import type { EngineDataset } from '../../engine/types';
 import { labelOf } from '../../sdc/materialMaster';
 import { agreedCfot, supplierCfot } from '../../engine/cfot';
 import { lineHistories } from '../../engine/lines';
@@ -281,14 +284,45 @@ function trendForScope(scope: QueryScope): PerformancePoint[] {
 // ─────────────────────────────────────────────────────────────────────────────
 const INVOICE_NOW = `${DECLARED_PRESENT}T00:00:00.000Z`;
 
-/** REQ-E14-04 on the engine dataset, at the hub's present, with the values in force. */
-function engineSafetyStock(): SafetyStockRun {
+/** REQ-E14-04 on the engine dataset, at the hub's present (or `asOf`), with the values in force. */
+function engineSafetyStock(asOf: string = dayOf(sdcClock.now())): SafetyStockRun {
   return safetyStockRun(engineDataset(), {
     ...DEFAULT_SAFETY_STOCK_OPTIONS,
-    asOf: dayOf(sdcClock.now()),
+    asOf,
     targets: engineServiceTargets(),
     safetyLeadTimePercentile: safetyLeadTimePercentile(),
   });
+}
+
+/**
+ * REQ-E14-03 → E14-05 → E14-03 at a day, with the values in force: E14-04's
+ * safety stock and safety lead time feed the netting, E14-05 sizes every
+ * warehouse at the cost rates in force (ENG-D6 placeholders), and the netting
+ * re-runs on the orders it chose.
+ *
+ * BR-03's "already-planned order" is LAST WEEK'S RUN: the same chain as of
+ * seven days earlier, computed now from the dataset (itself without a previous
+ * plan). ⚠️ It is recomputed rather than stored, so a confirmation or line the
+ * dataset gained since then is not unwound — the previous plan is the one last
+ * week's inputs would give on today's record of them.
+ */
+function engineSizing(
+  asOf: string,
+  includeUnconfirmed: boolean,
+  withPrevious: boolean,
+): ReturnType<typeof sizedRequirement> & { readonly data: EngineDataset; readonly previousAsOf: string | null } {
+  const data = engineDataset();
+  const base = defaultRequirementOptions(asOf);
+  const previous: Map<string, Map<string, number>> | undefined = withPrevious ? plannedReceiptsOf(engineSizing(addDays(asOf, -7), false, false).plan) : undefined;
+  return {
+    data,
+    previousAsOf: withPrevious ? addDays(asOf, -7) : null,
+    ...sizedRequirement(
+      data,
+      { ...base, receipts: { ...base.receipts, includeUnconfirmed }, ...requirementInputs(engineSafetyStock(asOf)) },
+      { costs: orderSizingCosts(), ...(previous ? { previous } : {}) },
+    ),
+  };
 }
 
 export class MockProcurementService implements IProcurementService {
@@ -420,15 +454,10 @@ export class MockProcurementService implements IProcurementService {
     // REQ-E14-03, computed at read on the hub clock. X-03: simulated engine
     // output is PTI's only — a supplier scope gets nothing.
     if (scope.personaType === 'supplier') return null;
-    const data = engineDataset();
-    const base = defaultRequirementOptions(dayOf(sdcClock.now()));
-    // E14-04 feeds the netting: its safety stock, and its safety lead time on
-    // the release timing (each marked with where it came from).
-    const run = materialRequirement(data, {
-      ...base,
-      receipts: { ...base.receipts, includeUnconfirmed },
-      ...requirementInputs(engineSafetyStock()),
-    });
+    // E14-04 feeds the netting (its safety stock, and its safety lead time on
+    // the release timing, each marked with where it came from); E14-05 sizes
+    // the planned orders, and the netting re-runs on them.
+    const { data, sized: run } = engineSizing(dayOf(sdcClock.now()), includeUnconfirmed, true);
     return {
       ...run,
       materials: run.materials.map((m) => ({
@@ -437,6 +466,26 @@ export class MockProcurementService implements IProcurementService {
         supplierName: m.supplierId ? forecastSupplierName(m.supplierId) : null,
       })),
       finishedGoodNames: Object.fromEntries(data.finishedGoods.map((f) => [f.skuCode, f.name])),
+    };
+  }
+
+  async getOrderPlan(scope: QueryScope): Promise<OrderPlanView | null> {
+    // REQ-E14-05, computed at read on the hub clock with the cost rates in
+    // force (X-05; ENG-D6 placeholders). PTI only (X-03).
+    if (scope.personaType === 'supplier') return null;
+    const { plan, sized, previousAsOf } = engineSizing(dayOf(sdcClock.now()), false, true);
+    return {
+      ...plan,
+      planMadeAt: sized.planMadeAt,
+      previousAsOf,
+      warehouses: plan.warehouses.map((w) => ({
+        ...w,
+        materials: w.materials.map((m) => ({
+          ...m,
+          materialLabel: labelOf(m.materialCode),
+          supplierName: m.supplierId ? forecastSupplierName(m.supplierId) : null,
+        })),
+      })),
     };
   }
 

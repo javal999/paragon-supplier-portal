@@ -59,6 +59,17 @@ const RELEASED_STATES: readonly CallOffStatus[] = ['Awaiting Confirmation', ...C
 
 export const isReleased = (c: Pick<CallOff, 'status'>): boolean => RELEASED_STATES.includes(c.status);
 
+/**
+ * X-03 (owner decision 2026-09-23) — a draft the Order plan created from an
+ * engine recommendation is not released to a supplier while the engine runs on
+ * simulated data. `engineLive` is the liveness registry's own answer for
+ * `engineDataset`, read by the caller at the moment it asks (the policy hook at
+ * dispatch, the page at render) — never a copied flag. Editing and dismissing
+ * such a draft are unaffected.
+ */
+export const engineReleaseWithheld = (c: Pick<CallOff, 'origin'>, engineLive: boolean): boolean =>
+  c.origin === 'engine' && !engineLive;
+
 export const isNonBlank = (v: unknown): v is string => typeof v === 'string' && v.trim().length > 0;
 
 /** A real calendar date written `YYYY-MM-DD`. */

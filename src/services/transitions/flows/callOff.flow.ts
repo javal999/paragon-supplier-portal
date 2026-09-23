@@ -9,7 +9,9 @@
 //     · releases a call-off (`creation` → Awaiting Confirmation), or drafts one
 //       (a generated series), edits or dismisses a draft with a reason, and
 //       releases a draft. Release is refused beyond what remains on the
-//       umbrella PO (CR-04, policy).
+//       umbrella PO (CR-04, policy), and refused for a draft the Order plan
+//       made from an engine recommendation while the engine dataset is
+//       simulated (X-03, policy).
 //     · changes a released call-off with a reason — it returns to Awaiting
 //       Confirmation (edge case of REQ-E09-03).
 //     · approves or rejects a confirmation outside tolerance. Approval is the
@@ -63,7 +65,13 @@ export const callOffFlow: FlowDefinition = {
       trigger: 'creation',
       requiredRole: 'calloff:plan',
       requiredFields: ['poId', 'poLineId', 'quantity', 'needDate', 'type'],
-      policyHooks: [POLICY_HOOKS.CALLOFF_LINE_VALID, POLICY_HOOKS.CALLOFF_WITHIN_REMAINING],
+      // X-03: a call-off that names the engine as its origin is refused here
+      // too, so the rule cannot be stepped around by releasing without a draft.
+      policyHooks: [
+        POLICY_HOOKS.CALLOFF_LINE_VALID,
+        POLICY_HOOKS.CALLOFF_WITHIN_REMAINING,
+        POLICY_HOOKS.CALLOFF_ENGINE_DATA_LIVE,
+      ],
       surfaceable: { surfaced: true },
       version: 1,
     },
@@ -97,7 +105,9 @@ export const callOffFlow: FlowDefinition = {
       trigger: 'user',
       requiredRole: 'calloff:plan',
       requiredFields: [],
-      policyHooks: [POLICY_HOOKS.CALLOFF_WITHIN_REMAINING],
+      // X-03 (owner decision 2026-09-23): an engine-origin draft stays a draft
+      // while the engine dataset is simulated.
+      policyHooks: [POLICY_HOOKS.CALLOFF_WITHIN_REMAINING, POLICY_HOOKS.CALLOFF_ENGINE_DATA_LIVE],
       surfaceable: { surfaced: true },
       version: 1,
     },
