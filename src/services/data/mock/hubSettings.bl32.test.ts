@@ -41,6 +41,8 @@ import { otifPassesGate } from '../../sourcing/complianceGate';
 import { coverage, riskFor, stockFreshness, supplyBand } from '../../transitions/inventoryRules';
 import { updateSlaFor } from '../../transitions/inventoryConfig';
 import { coverageBands } from '../../sdc/consolidation';
+import { engineServiceTargets, safetyLeadTimePercentile } from '../../transitions/forecastConfig';
+import { empiricalQuantile, fillRateSafetyStock } from '../../engine/safetyStock';
 import { getKnownFlows } from '../../transitions';
 import { sdcClock } from '../../sdc';
 
@@ -272,6 +274,10 @@ describe('BL32-READ · every reader of a value reads it through its accessor, at
         'src/services/transitions/inventoryRules.ts',
       ],
       updateSlaFor: ['src/services/transitions/inventoryConfig.ts', 'src/services/transitions/inventoryRules.ts'],
+      // ENG-D5 / REQ-E14-04 — read by the service that runs the engine, which
+      // takes them as arguments (X-01); the engine never reads the store.
+      engineServiceTargets: ['src/services/data/mock/MockProcurementService.ts', 'src/services/transitions/forecastConfig.ts'],
+      safetyLeadTimePercentile: ['src/services/data/mock/MockProcurementService.ts', 'src/services/transitions/forecastConfig.ts'],
     };
     for (const [fn, files] of Object.entries(table)) expect(callersOf(fn), fn).toEqual(files);
     // Known-true through a second door: the SDC coverage indicator never
@@ -308,6 +314,10 @@ interface Flip {
   readonly atDefault: unknown;
   readonly afterChange: unknown;
 }
+
+/** REQ-E14-04's worked example: ten plan errors, a 5,000 order per cycle, and ten delivery delays. */
+const PLAN_ERRORS = [600, -800, 2600, 0, -1200, 1500, 200, -300, 900, 400];
+const DELAYS = [0, 0, 0, 1, 1, 2, 2, 3, 5, 9];
 
 const FLIPS: Record<string, Flip> = {
   'callOff.overPct': {
@@ -413,6 +423,30 @@ const FLIPS: Record<string, Flip> = {
     read: () => [coverage(pos(225)).status, coverageBands().atRiskFrom],
     atDefault: ['uncovered', 0.8],
     afterChange: ['atRisk', 0.7],
+  },
+  'engine.fillRateHighPct': {
+    to: 90,
+    read: () => fillRateSafetyStock(PLAN_ERRORS, 5000, engineServiceTargets().high),
+    atDefault: 834,
+    afterChange: 200,
+  },
+  'engine.fillRateStandardPct': {
+    to: 85,
+    read: () => fillRateSafetyStock(PLAN_ERRORS, 5000, engineServiceTargets().standard),
+    atDefault: 200,
+    afterChange: 0,
+  },
+  'engine.fillRateSlowPct': {
+    to: 90,
+    read: () => fillRateSafetyStock(PLAN_ERRORS, 5000, engineServiceTargets().slow),
+    atDefault: 0,
+    afterChange: 200,
+  },
+  'engine.safetyLeadTimePercentile': {
+    to: 90,
+    read: () => empiricalQuantile(DELAYS, safetyLeadTimePercentile()),
+    atDefault: 3,
+    afterChange: 5,
   },
   'stale.defaultDays': {
     to: 10,

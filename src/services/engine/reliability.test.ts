@@ -144,6 +144,9 @@ describe('REQ-E14-02 — the worked examples, verbatim', () => {
       confirmations: [],
       receipts: [],
       planVersions: [],
+      fgPlan: [],
+      salesOrders: [],
+      sapSafetyStock: [],
     };
     const [row] = supplierReliability(data, WINDOW);
     expect(row.planChange.schedules).toBe(50);
