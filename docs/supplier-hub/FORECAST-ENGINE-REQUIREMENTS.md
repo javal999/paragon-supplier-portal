@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 0.5 draft, 2026-09-23 |
+| Version | 0.6 draft, 2026-09-23 |
 | What this is | Detailed requirements for the demand and material forecast engine PTI builds itself (owner decision ENG-1), with each calculation explained |
 | Status | Every requirement is **Proposed**. The decision to build is Validated (ENG-1), and 6 of the 13 engine decisions are decided (ENG-D1, D2, D3, D5, D8, D9, section 4). The rest of the detail has not yet been reviewed by the Material Planner |
 | Sources | ENG-1 (`SUPPLIER-HUB-REQUIREMENTS.md` section 9); methods and evidence in `research/FORECAST-METHOD-SPEC.md`; problem analysis in `research/FORECAST-BEST-PRACTICE-2026-09.md` |
@@ -54,6 +54,7 @@
    E14-06 Stabilise and publish ──► REQ-E06-01 forecast publication to suppliers
 
    Around all of it: E14-10 model selection by service · E14-11 bias and override control
+   Warehouse relief: E14-13 reschedule or cancel open orders (reads E14-03, E14-04, E14-05)
    Phase 2: E14-12 where to hold buffers
 ```
 
@@ -828,6 +829,120 @@ Without space limits, one big order is cheapest.
 
 ---
 
+### REQ-E14-13  Reschedule or cancel open orders (warehouse relief)
+
+| Maps to | Phase | Priority | Business owner | Users | Status |
+|---|---|---|---|---|---|
+| ENG-1; BL-106 finding; owner slides (warehouse 121% to 142%) | MVP | P0 [Proposed] | Material Planner | MP, BUY, SUP | Proposed |
+
+**Business value.**
+- Order sizing (E14-05) cannot lower today's warehouse overload. On the synthetic data every over-capacity week is stock already received or already on order, and the first new order falls after it (BL-106).
+- The remaining lever is the orders already placed: open PO lines and call-offs that will arrive before the stock is needed.
+- This requirement finds them and proposes to move each one later (reschedule out), bring it earlier (reschedule in), reduce it, or cancel it. Each proposal carries:
+  - the pallet-weeks it frees
+  - the rented-space cost it saves
+  - what it costs with the supplier
+- Rescheduling out and cancelling lower warehouse utilisation and rented-space cost. Rescheduling in prevents shortage.
+- **The risk to manage:** every change PTI makes inside a supplier's lead time counts as PTI-caused in E14-02 and makes the plan less stable, which lowers supplier service (Terwiesch et al. 2005). So this report prefers changes outside the lead time. It shows the cost of every change and never sends one automatically.
+
+**Experience.**
+- MP: opens "Reschedule open orders" under Forecast. For each warehouse it shows:
+  - the projected fill before and after the proposals
+  - a ranked list of proposals: material, supplier, order, current date and quantity, proposed date and quantity, pallet-weeks freed, rented-space saving, and whether the change falls inside the supplier's lead time
+- MP: for a call-off, sends the change to the supplier from the list; the supplier re-confirms as today. For a PO line, the list says the change is made in SAP and records that the planner took it there.
+- BUY: sees proposals that need a commercial conversation, such as a cancellation inside the Trade-off zone that carries a liability.
+- SUP: sees nothing new. A rescheduled call-off arrives as today's call-off change, with PTI's reason.
+
+**Step-by-step (Planner, Monday).**
+1. The packaging warehouse is projected at 127% this week, falling to 84% in week 8.
+2. The report proposes 14 moves. The top one: call-off CO-2026-0141, carton CT-10, 20,000 units due in week 3, moved to week 5. It is not needed before then, it frees 20 pallet-weeks, and it saves about Rp 700,000 at the placeholder rented-space rate. Week 3 is 21 days away and the supplier's lead time is 14 days, so the change is outside the lead time.
+3. The planner selects the top 9 proposals, all outside the lead time. The projected fill for weeks 3 to 6 drops by 11 to 18 points.
+4. The planner sends the 6 call-off changes with the reason "Warehouse capacity: not needed until week 5". The 3 PO-line changes are marked "to change in SAP".
+5. Suppliers re-confirm the new dates. Until they do, the planner's view shows the lines as awaiting confirmation. Nothing is counted as moved until confirmed.
+
+**Business rules.**
+- BR-01. **Candidates:** open PO lines and open call-offs with a quantity not yet received. Lines already dispatched (ASN sent) are shown for information only, never proposed [Proposed].
+- BR-02. **Need date of a line:** the first week in which projected stock *without* that line would fall below safety stock (E14-03 netting with E14-04 safety stock). The projection takes lines in due-date order, so earlier lines cover earlier weeks [Spec M2; Proposed].
+- BR-03. **Proposal types** [Proposed]:
+  - **Reschedule out:** the line is due at least one week (ENG-D15) before its need date. Propose the need date.
+  - **Reschedule in:** the line is due after its need date, which would cause a shortage. Propose the need date. This moves shortage, not space, and is listed separately.
+  - **Reduce:** only part of the line is needed within the horizon. Propose the needed quantity, rounded up to MOQ and order multiple.
+  - **Cancel:** none of the line is needed within the horizon.
+- BR-04. **What may be proposed depends on where the line sits in the supplier's zones** (REQ-E06-01 BR-04, CR-21) [Owner CR-21; Proposed]:
+  - **Firm zone**, or inside the supplier's lead time: shown, but marked "needs supplier agreement". It is ranked last, and counts as a PTI change inside the lead time if sent (E14-02).
+  - **Trade-off zone:** a quantity change is limited to the band (ENG-D8: ±10% per change, ±20% cumulative). A larger change or a cancellation carries the supplier's liability for material already bought (ENG-D17).
+  - **Forecast zone:** free to move.
+- BR-05. **Ranking:** by net saving, which is rented-space cost saved minus change cost, where:
+  - rented-space cost saved = pallet-weeks freed inside over-capacity weeks × the rented-space rate (ENG-D6)
+  - change cost = the change penalty inside the lead time (E14-05 BR-03) + any liability (BR-04)
+
+  Proposals that free space only in weeks already under capacity have no saving and are not listed as warehouse relief [Proposed].
+- BR-06. **Proposals are chosen together per warehouse.** Accepting one updates the projection before the next is valued, so two proposals never claim the same pallet-weeks [Proposed].
+- BR-07. **How a proposal is carried out** [Code; Proposed]:
+  - **Call-off:** through the existing planner change (`t_calloff_change`, a reason required). The supplier re-confirms as for any change.
+  - **PO line:** the Hub does not edit a PO (REQ-E07-01 BR-02), so the change is made in SAP. The report records the planner's "taken to SAP" mark and the time.
+  - Nothing is sent automatically.
+- BR-08. **Honesty (X-03):** while the engine runs on synthetic data, proposals are shown with the simulated label. A change sent from them follows the E14-05 release rule (ENG-B18): it cannot reach a supplier until the data is live [Proposed].
+- BR-09. **Guard on supplier stability:** the report shows how many proposals fall inside the lead time, and how PTI's share of schedules changed inside the lead time (E14-02) would move if all selected proposals were sent [Proposed].
+
+**Calculation.**
+
+*Need date (BR-02)*
+- Carton CT-10: 40,000 on hand, safety stock 8,000, use of 8,000 a week.
+- Open call-off CO-2026-0141 is 20,000 units, due in week 3.
+- Without CO-2026-0141, projected stock at the end of each week:
+
+| Week | 1 | 2 | 3 | 4 | 5 | 6 |
+|---|---|---|---|---|---|---|
+| Stock | 32,000 | 24,000 | 16,000 | 8,000 | 0 | −8,000 |
+
+- It first falls below safety stock in week 5, so the need date is the start of week 5.
+
+*Proposal (BR-03)*
+- Due in week 3, needed in week 5: two weeks early, which is more than the 1-week threshold. Propose **reschedule out to week 5**.
+
+*Space freed*
+- 2,000 cartons fit on a pallet, so 20,000 is 10 pallets.
+- Moving the call-off from week 3 to week 5 keeps 10 pallets out of the warehouse for 2 weeks: **20 pallet-weeks**.
+- If weeks 3 and 4 are both over capacity, all 20 count.
+
+*Net saving (BR-05)*
+- Rented-space saving: 20 × Rp 35,000 (placeholder rate) = **Rp 700,000**.
+- The change is made 21 days before the original date and the supplier's lead time is 14 days, so it is outside the lead time: no penalty.
+- Net saving **Rp 700,000**.
+- Had it been inside the lead time, the change penalty of 10 pallets × Rp 150,000 = Rp 1,500,000 would make the net saving negative. It would then rank last, marked "needs supplier agreement".
+
+*Together (BR-06)*
+- After accepting CO-2026-0141, weeks 3 and 4 hold 10 fewer pallets. A second proposal that frees space only in week 4 is revalued against the new week-4 fill. If week 4 is now under capacity, its saving becomes zero and it drops off the relief list.
+
+**Edge cases.**
+- A line whose supplier has a minimum call-off size: a reduction never goes below it [Proposed].
+- A cancellation of a PO line that is the last open line on an umbrella PO: flagged for the buyer, because the contract may carry a commitment [Proposed].
+- Stock on hand alone is above capacity with no open lines left: the report says no open order can relieve the week. The remaining levers are using up surplus stock or moving it, which are outside this report [Proposed].
+
+**Acceptance criteria.**
+- AC-01. Every proposal shows its type, current and proposed date and quantity, pallet-weeks freed, rented-space saving, change cost, and zone or lead-time position.
+- AC-02. No proposal is sent to a supplier or changed in SAP without an explicit planner act, and none reaches a supplier while the engine data is simulated.
+- AC-03. The projected fill after the selected proposals equals the fill recalculated from the changed lines (independent recalculation).
+- AC-04. Two selected proposals never claim the same pallet-weeks.
+
+**Data and integration.** Reads:
+- E14-03 netting and E14-04 safety stock
+- open PO lines and call-offs with confirmations and ASNs (E14-01 feeds)
+- warehouse capacity and volume (E14-05)
+- the cost rates (ENG-D6)
+
+Writes only through the existing call-off change verb and a "taken to SAP" mark.
+
+**Metrics.** Leading: pallet-weeks freed by accepted proposals; share of proposals outside the lead time. Lagging: warehouse utilisation against 80%; rented-space cost; PTI-caused changes inside the lead time (E14-02) must not rise.
+
+**Open items.**
+- ENG-D15: how many weeks early a line must be before a reschedule-out is proposed. Start with 1 week.
+- ENG-D16: who agrees PO-line changes with suppliers in SAP (buyer or planner).
+- ENG-D17: supplier liability on a Trade-off cancellation (material already bought). Needs procurement and finance, as C8 §2.2 already asks for the Firm zone.
+
+---
+
 ## 4. Engine decisions
 
 ### 4.1 Decided (owner, 2026-09-23)
@@ -889,6 +1004,9 @@ Choices the first build (BL-102, BL-99) had to make where the requirements were 
 | ENG-D12 | Owner of the promotion calendar and how far ahead it is fixed | Marketing | E14-08 |
 | ENG-D13 | Plan-stability limit used in model selection | Material Planner | E14-10 (set after the first backtest) |
 | ENG-D14 | Materials per service tier | Material Planner | Confirms E14-04 BR-02 (runs on volume ranking meanwhile) |
+| ENG-D15 | Weeks early before a reschedule-out is proposed (start with 1) | Material Planner | E14-13 |
+| ENG-D16 | Who agrees PO-line changes with suppliers in SAP (buyer or planner) | Procurement, Material Planner | E14-13 BR-07 |
+| ENG-D17 | Supplier liability on a Trade-off cancellation (material already bought) | Procurement, Finance | E14-13 BR-04 |
 | C8 §8 | SOMO ratifies the engine producing the totals | SOMO | Publishing engine totals on C8 (BL-101) |
 | REPL | Replenishment method per material segment | Material Planner (consultant) | E14-12, parts of E14-04 |
 
@@ -903,3 +1021,4 @@ Choices the first build (BL-102, BL-99) had to make where the requirements were 
 | 0.3 | 2026-09-23 | Build decisions ENG-B1 to ENG-B5 from the first build (PR #37) accepted by the owner, section 4.1a |
 | 0.4 | 2026-09-23 | Build decisions ENG-B6 to ENG-B13 from PR #39 (E14-03, E14-04) accepted, section 4.1b |
 | 0.5 | 2026-09-23 | ENG-D4, D6, D7 decided; build decisions ENG-B14 to ENG-B18 from PR #41 (E14-05 and the release block), section 4.1c |
+| 0.6 | 2026-09-23 | REQ-E14-13 Reschedule or cancel open orders added (Proposed), from the E14-05 finding that order sizing cannot lower the current overload; ENG-D15 to ENG-D17 opened |
