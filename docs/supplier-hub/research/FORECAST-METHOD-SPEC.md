@@ -579,7 +579,7 @@ Report CFOT against both the requested and the committed date. The gap between t
 
 **Documents this reverses.** The owner's 2026-09-23 decision needs 2 updates, which this spec does not make:
 - REQ-E06-01 BR-01 says "The hub does not calculate demand" (`SUPPLIER-HUB-REQUIREMENTS.md:1295`).
-- C8 §1 rules that SOMO emits the plan and the portal only allocates (`docs/contracts/C8-forecast-publication.md:94-107`).
+- C8 §1 rules that SOMO emits the plan and the portal only allocates (`docs/contracts/C8-forecast-publication.md:96-109`).
 
 ---
 

@@ -79,8 +79,8 @@ Items 1 and 3 belong in the Hub. Item 2 belongs upstream in SAP planning. Severa
 
 **Data flow, as documented:**
 1. SAP planning produces net material requirements: MRP for weeks 1 to 13 and IBP for months 4 to 6. "The hub does not calculate demand" (`docs/supplier-hub/SUPPLIER-HUB-REQUIREMENTS.md:1295`, documented only). Which SAP source applies is still open as PQ-07 (`:1321`).
-2. SOMO emits a material × period total with no vendor split, and the Hub owns the allocation to suppliers (`docs/contracts/C8-forecast-publication.md:94-107`, ratified). No type in the code represents SOMO's emission (`C8-forecast-publication.md:127-131`, documented only).
-3. The supplier's confirmation is to be written back to the Snowflake commons for SOMO's replan. That write-back is spec only, with zero code (`C8-forecast-publication.md:559-576`, documented only).
+2. SOMO emits a material × period total with no vendor split, and the Hub owns the allocation to suppliers (`docs/contracts/C8-forecast-publication.md:96-109`, ratified). No type in the code represents SOMO's emission (`C8-forecast-publication.md:129-133`, documented only).
+3. The supplier's confirmation is to be written back to the Snowflake commons for SOMO's replan. That write-back is spec only, with zero code (`C8-forecast-publication.md:561-578`, documented only).
 
 **What the code does (all in `src/services/transitions/`):**
 
@@ -116,7 +116,7 @@ Items 1 and 3 belong in the Hub. Item 2 belongs upstream in SAP planning. Severa
 - Supplier: `/supplier/forecasts` (commitments) and `/supplier/forecasts/responses` (`src/router/AppRouter.tsx:137-219`).
 
 **3 tensions worth knowing:**
-- **The zone rule in the code is not the one in the contract.** The code sets Firm from the supplier's lead time, as REQ-E06-01 BR-05 says (`SUPPLIER-HUB-REQUIREMENTS.md:1302`). C8 says the zone class should be projected from SOMO's `lockState` and `approvalState`, and that projection is still unratified pending named owners in procurement and finance (`C8-forecast-publication.md:193-230`). Section 5 shows that SAP S/4HANA scheduling agreements already carry firm and trade-off zones with cost liability, which is a third candidate source.
+- **The zone rule in the code is not the one in the contract.** The code sets Firm from the supplier's lead time, as REQ-E06-01 BR-05 says (`SUPPLIER-HUB-REQUIREMENTS.md:1302`). C8 says the zone class should be projected from SOMO's `lockState` and `approvalState`, and that projection is still unratified pending named owners in procurement and finance (`C8-forecast-publication.md:195-232`). Section 5 shows that SAP S/4HANA scheduling agreements already carry firm and trade-off zones with cost liability, which is a third candidate source.
 - **The reminder rule is only half built.** REQ-E06-03 BR-06 asks for reminders at half the deadline *and* at the deadline (`SUPPLIER-HUB-REQUIREMENTS.md:1395`). The code sends only the first reminder; after the deadline the line becomes overdue (`forecastRules.ts:410-430`).
 - **The requirement status is stated two ways.** The requirement index lists REQ-E06-01 to 03 as "Validated (owner, E06-R)" (`SUPPLIER-HUB-REQUIREMENTS.md:253-255`). Each requirement's own header says "Proposed" (`:1279`).
 
