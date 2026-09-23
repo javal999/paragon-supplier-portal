@@ -1,6 +1,6 @@
 # C1 — Method Surface
 
-Three distinct axes. **78** (service surface) · **163** (transition catalog) · **34** (wired
+Three distinct axes. **79** (service surface) · **163** (transition catalog) · **34** (wired
 targets). They measure different things; this file keeps them separate.
 
 > ⚠️ **THIS DOCUMENT IS PINNED TO THE TREE, AND THE PIN IS WHY THE NUMBERS ABOVE ARE ALLOWED TO
@@ -32,7 +32,7 @@ Source of truth: `src/services/data/types.ts` (service + command types),
 
 ---
 
-## Axis 1 — the 78-method service surface (`IDataService`)
+## Axis 1 — the 79-method service surface (`IDataService`)
 
 The single interface the Phase-F1 real adapter implements; pages call it through
 `useDataService()` and do not change when the mock is swapped for `httpDataService`. Every method
@@ -60,7 +60,7 @@ interface IDataService {
 | Sub-service | Count | Methods |
 |---|---|---|
 | `ISupplierService` | 3 | `list`, `getById`, `getCurrent` |
-| `IProcurementService` | 39 | `getPurchaseOrders`, `getPurchaseOrder`, `getInventory`, `getStockAccess`, `getCapacityPlans`, `getInventoryAlerts`, `getForecastVersions`, `getForecastCommitments`, `getForecastCoverage`, `getRFQs`, `getQuotations`, `getInviteeCandidates`, `getRfiEvents`, `getRfpEvents`, `getNegotiationRounds`, `getAwards`, `getRfqEngagement`, `getRfqClarifications`, `getRfqComplianceGate`, `getShipments`, `getASNs`, `getGoodsReceipts`, `getCallOffs`, `getBuyerInvoices`, `getSupplierInvoices`, `getContracts`, `getObligations`, `getDocuments`, `getStorefrontCatalog`, `getStorefrontCerts`, `getStorefrontProducts`, `getKpis`, `getPerformanceTrend`, `getSupplierScorecards`, `getRequisitions`, `getPrIntake`, `getSupplierApplications`, `getProductionLines`, `getSupplierHealth` |
+| `IProcurementService` | 40 | `getPurchaseOrders`, `getPurchaseOrder`, `getInventory`, `getStockAccess`, `getCapacityPlans`, `getInventoryAlerts`, `getForecastVersions`, `getForecastCommitments`, `getForecastCoverage`, `getSupplierReliability`, `getRFQs`, `getQuotations`, `getInviteeCandidates`, `getRfiEvents`, `getRfpEvents`, `getNegotiationRounds`, `getAwards`, `getRfqEngagement`, `getRfqClarifications`, `getRfqComplianceGate`, `getShipments`, `getASNs`, `getGoodsReceipts`, `getCallOffs`, `getBuyerInvoices`, `getSupplierInvoices`, `getContracts`, `getObligations`, `getDocuments`, `getStorefrontCatalog`, `getStorefrontCerts`, `getStorefrontProducts`, `getKpis`, `getPerformanceTrend`, `getSupplierScorecards`, `getRequisitions`, `getPrIntake`, `getSupplierApplications`, `getProductionLines`, `getSupplierHealth` |
 | `IRiskService` | 7 | `getRiskAlerts`, `getGeoRisks`, `getExposure`, `getScenarios`, `getCompliance`, `getComplianceRegistry`, `getCommodities` |
 | `IDiscoveryService` | 4 | `getRecommended`, `getQualifications`, `getMarketIntel`, `getSingleSourceItems` |
 | `IAnalyticsService` | 7 | `getSummary`, `getSpendByCategory`, `getTopSuppliers`, `getOtifTrend`, `getPoVolumeTrend`, `getChannelMix`, `getSupplierPerformance` |
@@ -68,10 +68,10 @@ interface IDataService {
 | `IDeliveryService` | 4 | `getAgreements`, `releaseLines`, `confirmMatch`, `editPolicy` |
 | `IChaseService` | 1 | `getUnifiedChase` |
 | `IEnforcementService` | 1 | `getEnforcementSettings` |
-| **read subtotal** | **74** | |
+| **read subtotal** | **75** | |
 | `ICommandService` | 3 | `dispatch`, `getCommandStatus`, `settle` |
 | top-level | 1 | `getCapabilities` |
-| **TOTAL** | **78** | |
+| **TOTAL** | **79** | |
 
 **Return contract:** list reads return `Page<T>` (DR-5 — see C2); single reads return `T | null`;
 `getSummary` returns a summary object or `null` (buyer-populated, supplier-null). Failure is

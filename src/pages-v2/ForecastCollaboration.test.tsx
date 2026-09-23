@@ -49,11 +49,12 @@ const responsesFor = (supplierId: string, material: string, period: string) =>
   requirementResponseStore.all().filter((r) => r.supplierId === supplierId && r.materialCode === material && r.periodBucket === period);
 
 describe('menu and copy (section 3.7)', () => {
-  it('PTI Forecast: Forecasts first, then Commitments & gaps', () => {
+  it('PTI Forecast: Forecasts first, then Commitments & gaps, then Supplier reliability (REQ-E14-02)', () => {
     const forecast = PTI_NAV.find((s) => s.id === 'forecast')!;
     expect(forecast.items.map((i) => [i.labelKey, i.path])).toEqual([
       ['hub.nav.pti.forecasts', '/buyer/forecasts'],
       ['hub.nav.pti.commitments', '/buyer/collaboration'],
+      ['hub.nav.pti.reliability', '/buyer/reliability'],
     ]);
   });
 

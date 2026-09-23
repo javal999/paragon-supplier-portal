@@ -22,6 +22,7 @@ import type {
   ObligationFilter,
   PRFilter,
   TrendRange,
+  ReliabilityWindowWeeks,
 } from '../data/types';
 import type { InviteeFilter } from '../transitions/rfxRules';
 
@@ -80,6 +81,15 @@ export const useForecastCommitments = () =>
 /** Supplier coverage per material against Firm demand (REQ-E06-03 BR-07). */
 export const useForecastCoverage = () =>
   useServiceQuery(['procurement', 'forecastCoverage'], (svc, scope) => svc.procurement.getForecastCoverage(scope));
+
+/**
+ * REQ-E14-02 — supplier reliability and PTI's plan-change measures. The planner
+ * reads every supplier; a supplier reads only its own row (scoped in the service).
+ */
+export const useSupplierReliability = (windowWeeks: ReliabilityWindowWeeks = 26) =>
+  useServiceQuery(['procurement', 'supplierReliability', windowWeeks], (svc, scope) =>
+    svc.procurement.getSupplierReliability(scope, windowWeeks),
+  );
 
 // ── RFx management (REQ-E03-01 to REQ-E03-05) ──────────────────────────────
 

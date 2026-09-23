@@ -9,7 +9,7 @@ import {
   suppliersWithAssignments,
 } from './inventoryReadModel';
 import { stockAccessStore } from './stores/inventoryHubStores';
-import { allCommitmentLines, allCoverageRows, allVersionViews } from './forecastReadModel';
+import { allCommitmentLines, allCoverageRows, allVersionViews, forecastSupplierName } from './forecastReadModel';
 import { maskForSupplier } from '../../transitions/inventoryRules';
 import { PTI_ONLY_RULES } from '../../transitions/inventoryAlertRules';
 import { mockShipments } from '../../../data/mockShipments';
@@ -114,8 +114,13 @@ import type {
   PRFilter,
   PrIntakeLine,
   SupplierApplication,
+  ReliabilityWindowWeeks,
+  SupplierReliabilityView,
 } from '../types';
 import { PR_INTAKE_LINES } from './fixtures/prIntake';
+import { engineDataset } from './fixtures/engineDataset';
+import { supplierReliability, trailingWindow } from '../../engine/reliability';
+import { sdcClock } from '../../sdc/clock';
 
 const matchesList = <T>(value: T, filter: T | T[] | undefined): boolean => {
   if (filter === undefined) return true;
@@ -369,6 +374,23 @@ export class MockProcurementService implements IProcurementService {
     // REQ-E06-03 BR-07 — the planner's view; a supplier reads nothing here.
     if (scope.personaType !== 'buyer') return { items: [] };
     return { items: allCoverageRows() };
+  }
+
+  async getSupplierReliability(
+    scope: QueryScope,
+    windowWeeks: ReliabilityWindowWeeks = 26,
+  ): Promise<Page<SupplierReliabilityView>> {
+    // REQ-E14-02, computed at read on the hub clock. BR-07 / ENG-D3: a supplier
+    // gets ONLY its own row — the scope filter runs HERE, in the service, so
+    // another supplier's figures never reach the page at all.
+    const w = trailingWindow(sdcClock.now(), windowWeeks);
+    const rows: SupplierReliabilityView[] = supplierReliability(engineDataset(), w).map((r) => ({
+      ...r,
+      supplierName: forecastSupplierName(r.supplierId),
+      windowFrom: w.from,
+      windowTo: w.to,
+    }));
+    return { items: applySupplierScope(scope, rows) };
   }
 
   // ─── Sourcing ─────────────────────────────────────────────────────────────

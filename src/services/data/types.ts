@@ -62,6 +62,7 @@ import type {
   EditPolicyCommandResult,
   ReleaseCommandResult,
 } from '../delivery/views';
+import type { SupplierReliability } from '../engine/reliability';
 import type { ReleaseSelection } from '../delivery/release';
 import type { EditPolicyPatch } from '../delivery/policy';
 // The unified chase read view (SDC-5c). TYPE-ONLY — the `chase` module composes
@@ -720,6 +721,18 @@ export interface ForecastCommitmentLine {
 }
 
 /** REQ-E06-03 BR-07 — supplier coverage per material, with distributor lead times (an estimate). */
+/** REQ-E14-02 — the trailing windows the reliability read offers. */
+export const RELIABILITY_WINDOWS = [13, 26] as const;
+export type ReliabilityWindowWeeks = (typeof RELIABILITY_WINDOWS)[number];
+
+/** One supplier's reliability row as served (REQ-E14-02). Computed at read, never stored. */
+export interface SupplierReliabilityView extends SupplierReliability {
+  readonly supplierName: string;
+  /** The window measured, inclusive (`YYYY-MM-DD`). */
+  readonly windowFrom: string;
+  readonly windowTo: string;
+}
+
 export interface ForecastCoverageRow {
   readonly stream: ForecastStream;
   readonly supplierId: string;
@@ -2269,6 +2282,13 @@ export interface IProcurementService {
   getForecastCommitments(scope: QueryScope): Promise<Page<ForecastCommitmentLine>>;
   /** Supplier coverage per material against Firm demand (CR-03), PTI only. */
   getForecastCoverage(scope: QueryScope): Promise<Page<ForecastCoverageRow>>;
+  /**
+   * REQ-E14-02 — supplier reliability and PTI's plan-change measures over a
+   * trailing window, computed by the forecast engine on its (SIMULATED)
+   * dataset. The planner sees every supplier; a supplier sees ONLY its own row,
+   * which carries PTI's plan-change figure for its materials (BR-07, ENG-D3).
+   */
+  getSupplierReliability(scope: QueryScope, windowWeeks?: ReliabilityWindowWeeks): Promise<Page<SupplierReliabilityView>>;
 
   // — Sourcing —
   getRFQs(scope: QueryScope, filter?: RFQFilter): Promise<Page<RFQ>>;
