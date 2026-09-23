@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 1.7, 2026-09-22 |
+| Version | 2.0, 2026-09-23 |
 | What this is | Everything known to be outstanding for the Supplier Hub, in one list: decisions waiting on people, work waiting on those decisions, work waiting on the backend, and work that can start today |
 | What this is not | A plan or a commitment. Nothing here has a date. Sequencing belongs to the project owner |
 | Sources | Open items (section 7 of `SUPPLIER-HUB-REQUIREMENTS.md`), open decisions (section 9.3 of `SUPPLIER-HUB-PRD.md`), what is not built (section 5 of `BUILD-GAP.md`), stubs (section 6 of the requirements), and defects or debts found while building |
@@ -38,6 +38,7 @@ Still open. Items decided on 2026-09-21 are in section 6.
 | BL-69 | **Late at the deadline or after it?** Forecast commitments are late at the deadline minute; PO and call-off responses only after it. Recommended: one rule, late after the deadline | Material Planner | One convention in CR-26 and the response deadlines | REQ-E06-02, E07-02, E09-03 |
 | BL-70 | **Who may change the working calendar and the 3PL list?** Today the Hub administrator and the combined buyer "All" role (offered, not seeded), following the enforcement-settings precedent. Alternative: administrator only | Procurement, IT | Role atoms `calendar:set`, `threepl:maintain` | Requirements 3.4, REQ-E07-04 BR-05 |
 | BL-71 | **Goods receipt: what an over-delivery is measured against, and does "kept open" reopen quantity?** CR-25 says the order; REQ-E07-06 BR-03 says the ASN. The build uses the ASN when linked, else the order. "Kept open" is a label and does not reopen the missing quantity for another shipment | Material Planner, Warehouse | CR-25, REQ-E07-06 wording; possible build | REQ-E07-06 |
+| BL-101 | **C8 §8** — SOMO ratifies the in-house forecast engine amendment (the hub computes the material × period totals until the engine moves to SOMO) | SOMO, with the operator | The engine publishing its own totals on the C8 seam | `docs/contracts/C8-forecast-publication.md` §8 |
 
 ---
 
@@ -72,6 +73,7 @@ The prototype holds everything in the browser. These need a real backend, which 
 | BL-29 | Scheduled jobs, so deadlines, escalations and reminders fire on a clock rather than being derived when a page is read | M | REQ-E07-02, E09-03 |
 | BL-30 | Durable storage, so what a user enters survives a reload | L | PRD section 4 |
 | BL-95 | Share saved RFx templates across the team. Templates are stored in each buyer's browser (`paragon.rfqTemplates`, `paragon.rfiTemplates`, `paragon.rfpTemplates`), so a colleague never sees them and clearing the browser loses them. Needs a store behind the backend (BL-30). CE-04 says a saved template is for every buyer | M | Requirements 3.6a CE-04 |
+| BL-100 | Forecast engine input data in the hub, from SAP through the Master Data Management team (ENG-D1): finished-goods sales history (2 to 3 years, weekly), price and promotion calendar, launch plan, bills of materials with scrap and yield, MOQs and multiples, warehouse volume per item and owned capacity | L | PRD I14; `research/FORECAST-METHOD-SPEC.md` section 5 |
 
 ---
 
@@ -113,6 +115,7 @@ Nothing blocks these.
 | BL-91 | Admin screen for the RFx libraries: question library, term list, item-type spec templates (CE-05). Later, not in the MVP; Procurement asks IT meanwhile. Same family as BL-32 | Build team, after the MVP | Requirements 3.6a |
 | BL-92 | Amendments to a live RFx event that notify invitees and flag responses to revisit (deadline extension exists). Later, not in the MVP | Build team, after the MVP | Requirements 5.2 and 8.3 |
 | BL-42 | Phase 2 epics: contract management (E04), catalog management (E05), reporting and analytics (E11), API shipment aggregator (E13.02), supplier quality | Per the deck and charter | Requirements section 6 |
+| BL-103 | Forecast engine feed specification: each input, its grain, refresh and quality check, handed to the Master Data Management team, who own the data and the SAP integration | Master Data Management team | Drafted: `FORECAST-ENGINE-FEED-SPEC.md` (2026-09-23), handed to the team for confirmation of sources and owners. `FORECAST-ENGINE-REQUIREMENTS.md` E14-01; PRD I14 |
 
 ---
 
@@ -128,7 +131,7 @@ Nothing blocks these.
 | BL-07 | PQ-05 invoice tolerance | 2026-09-21 | Decided except the rupiah cap (BL-54). Build is BL-44 |
 | BL-08 | PQ-02 capacity horizon | 2026-09-21 | Decided: 13 weekly buckets, as built. No build |
 | BL-09 | PQ-03 alert risk class | 2026-09-21 | Decided (CR-24). Build is BL-46 |
-| BL-10 | PQ-07 forecast source | 2026-09-21 | Decided: MRP weeks 1–13, IBP months 4–6, one published forecast. Build waits on the real SAP feed (BL-24) |
+| BL-10 | PQ-07 forecast source | 2026-09-21 | Decided: MRP weeks 1–13, IBP months 4–6, one published forecast. Build waits on the real SAP feed (BL-24). **Superseded 2026-09-23 by ENG-1**: PTI's own forecast engine calculates it; this SAP source applies until the engine is live (BL-99 to BL-101) |
 | BL-13 | PQ-12 umbrella PO grain | 2026-09-21 | Decided: quantity per line. Build is BL-49 |
 | BL-14 | Q-18 working calendar | 2026-09-21 | Decided: hub-managed by the Hub administrator, loaded from SAP. Build is BL-50 |
 | BL-15 | Q-20 quality inspection | 2026-09-21 | Decided: keep the result display; non-conformance in Phase 2 with BL-39. No build |
@@ -168,3 +171,5 @@ Nothing blocks these.
 | BL-93 | Edit a draft RFI, RFQ or RFP | 2026-09-22 | Built in PR #31: Edit draft on a Draft's side panel (RFQ) or detail (RFI, RFP) re-opens the create wizard on every stored field and saves through a revise-draft verb per event type (same atom, fields and policy as create; Draft only; compare-and-set on Draft; who and when recorded); Save changes keeps it a draft, Save and send also sends it with the publish permission. Discard draft on a Draft RFI or RFP through the existing cancel verbs (the RFQ panel already had Cancel) |
 | BL-32 | Admin screen for the remaining configuration | 2026-09-22 | Built: tolerances and rule values, alert thresholds and stale periods (default and per supplier × material), and reason codes (add, rename, retire; never deleted) on `/buyer/admin`, each change governed, validated, logged and resettable; the rules read the setting when they run |
 | BL-94 | Oslo demo: sup-007 fails the compliance gate on RFQ-2026-021 | 2026-09-22 | Fixed in PR #33: sup-007 now has a real delivery history, four past call-offs on the 100ml PET line (CO-2026-0043 to 0046, 80, 60, 40 and 25 days before the present) each received on its date and in full (GR-2026-018 to 021). Its calculated 90-day OTIF is 83% (5 of 6), so it passes the gate on Oslo, is ranked, and can take a share of the award. The gate minimum, the gate and the late CO-2026-0001 are unchanged; sup-008 (0%) still fails |
+| BL-99 | Supplier reliability and plan-change measures (E14-02) | 2026-09-23 | Built in PR #37 on synthetic data: planner page Forecast → Supplier reliability, supplier panel "Your reliability". CFOT waits on BL-66 |
+| BL-102 | Synthetic dataset for the forecast engine | 2026-09-23 | Built in PR #37: deterministic, calibrated to the slide measures (confirmation 65.9%, CFOT 36.7% by definition, packaging warehouse 124–136%, raw material 105–107%), labelled simulated |

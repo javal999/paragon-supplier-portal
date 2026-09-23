@@ -4,7 +4,7 @@
 |---|---|
 | Product | Supplier Hub (Supplier Portal, "SC Collaboration Hub") |
 | Company | PT Paragon Technology and Innovation (PTI) |
-| Version | 0.8 draft, 2026-09-22 |
+| Version | 0.9 draft, 2026-09-23 |
 | Scope | MVP (Phase 1, "Foundation to Transact"). Phase 2 and 3 appear only in section 9 |
 | Steering Committee | Yogi Sapta Prakoso (VP Supply Chain), Ilauddin (CFO), Risman Adnan (CTO) [C] |
 | Technology Product Owners | Achmad Fahlevi, Vergiant Yoga Perdana (Supply Chain); Indita Ramasaphira (FATL) [C] |
@@ -304,7 +304,6 @@ Acceptance criteria: TBD by the Foundation team. The hub **replaces PROCIO** for
 | Supplier Quality module | Phase 2 | [D] p.9 |
 | Web scraping and AI for sourcing | Phase 3 | [D] p.9 |
 | Dock, slot, or delivery schedule management | Only a shipped heads-up is needed now | [V] PQ-10 |
-| Calculating forecasts, ROP, or replenishment in the hub | These come from SAP | [V] MN-INV-14 |
 | An "available stock" figure | On-hand is enough; stock is deducted as used | [V] Q-02 |
 | SFTP or other automated file-drop channel for supplier data | Spreadsheet upload, API sync, and manual entry are enough | Owner, 2026-09-17 |
 | Sending call-offs to SAP | Call-offs are managed outside SAP today; the hub becomes their record | [V] PQ-01; [P] PQ-11 |
@@ -371,8 +370,9 @@ The production tech stack, hosting, database, and authentication are **TBD by IT
 |---|---|---|---|---|---|
 | I1 | Umbrella PO (value) and quantity/timing breakdown | SAP | Hub | Scheduled or event, TBD | [V] MN-ORD-03, PQ-01; quantity per line open (PQ-12) |
 | I2 | PO response (approve, adjust, reject) | Hub | SAP | TBD | [P] |
-| I3 | Forecast / net requirements | SAP | Hub | Weekly publication [P] | [P]; SAP source open (PQ-07) |
-| I4 | ROP and replenishment recommendation | SAP | Hub | TBD | [V] MN-INV-14 |
+| I3 | Forecast / net requirements | Hub forecast engine; SAP until the engine is live | Hub | Weekly publication [P] | Owner, 2026-09-23 (ENG-1); SAP source per PQ-07 in the meantime |
+| I4 | ROP and replenishment recommendation | Hub forecast engine; SAP until the engine is live | Hub | Per planning run | Owner, 2026-09-23 (ENG-1), superseding MN-INV-14 |
+| I14 | Forecast engine inputs: sales history, price and promotion calendar, bills of materials, lead times, MOQs, warehouse volume per item | SAP, through the Master Data Management team | Hub | TBD. Synthetic data until connected | Owner, 2026-09-23 (ENG-1, ENG-D1); feed specification `FORECAST-ENGINE-FEED-SPEC.md` (BL-103) |
 | I5 | PTI stock on hand | SAP | Hub | TBD | [V] MN-INV-03 |
 | I6 | Supplier stock, ROP, in production | Supplier ERP, spreadsheet, manual | Hub | API sync on the supplier's or PTI's Sync button, plus a schedule; upload; screen | [V] MN-INV-07, amended 2026-09-21 |
 | I7 | ASN as inbound delivery | Hub | SAP | TBD | [D] E07.05; [P] |

@@ -15,6 +15,8 @@ side (plan → accepted), not the same seam.
 (`063adca`) · additive, docs-only. Supersedes `docs/C8_Forecast_Publication_Seam_Proposal.md`
 (2026-07-16), which was a **proposal, never ratified**. Carries SOMO's rulings of 2026-08-03 as
 **ratified** where marked, and **two items as explicitly UNRATIFIED / NOT DEFAULTED** (§2.2, §4.4).
+**Amended 2026-09-23 with §8, a PROPOSED amendment not yet ratified by SOMO.** No ratified text
+above or below §8 is changed by it.
 
 **The three items SOMO requires for ratification are in §3.2, §4.3 and §4.5** — recorded in the
 DOCUMENT, not in correspondence, per our own rule held to us: **a ruling that stays on one
@@ -598,6 +600,46 @@ never mistake an acknowledgment for a commitment — there is no number to misre
 | GG-3′ | bucket-native on C8 | **CLOSED our side**; cross-seam ask stands (§5) |
 | GG-7, GG-8 | cadence + net-change · horizon boundary | **OPEN** — co-design (§5) |
 | C4-FEEDBACK | Supplier response → Snowflake commons | **SPEC** — gated on F1/F2 (§6) |
+| **C8-ENGINE-HUB** | PTI builds its own forecast engine (owner, 2026-09-23). Until it moves to SOMO, the **portal computes the material × period totals** that §1 has SOMO emit; C8-FANOUT is unchanged. SAP's net requirement remains the source until the engine is live. | **PROPOSED — pending SOMO ratification** (§8) |
+
+
+## 8. In-house forecast engine (**PROPOSED — pending SOMO ratification**)
+
+**Owner decision, 2026-09-23 (ENG-1 in `docs/supplier-hub/SUPPLIER-HUB-REQUIREMENTS.md` §9):** PTI
+builds its own demand and material forecast engine. It runs in the portal first and moves into
+SOMO later. External planning engines, SAP IBP included, are not used. The methods are specified
+in `docs/supplier-hub/research/FORECAST-METHOD-SPEC.md`.
+
+**This section is a proposal, not a ratified ruling.** It changes what produces the totals on this
+seam for a period of time. It does not rewrite §1–§7, and until SOMO ratifies it the ratified text
+governs.
+
+### 8.1 What changes
+
+| Topic | Ratified position | Proposed during the interim | After the engine moves to SOMO |
+|---|---|---|---|
+| Who produces the material × period total | SOMO emits it (§1, §1.2) | **The portal's engine computes it** from finished-goods demand, bills of materials, stock and open orders | SOMO emits it again, in the §1.2 shape |
+| Fan-out to suppliers | The portal owns allocation (C8-FANOUT) | Unchanged | Unchanged |
+| `commitmentClass` projection | Named open decision (§2.2) | Unchanged and still open. The engine does not settle it | Unchanged |
+| Material identity | §4, option 3 then option 2 | Unchanged. The engine reads the portal's declared master (§4.0) | Joined through `material_master_ref` when it freezes |
+| Supplier response write-back | Snowflake commons for SOMO's replan (§6, SPEC) | Also read directly by the engine (commitment reliability, safety lead time) | Snowflake commons, read by the engine inside SOMO |
+| Source until the engine is live | — | SAP's net requirement (MRP weeks 1 to 13, IBP months 4 to 6), as today | — |
+
+### 8.2 What stays true for suppliers
+
+The published forecast, its periods, its zones, and the commitment rules do not change when the
+engine moves from the portal to SOMO. Suppliers see one forecast throughout.
+
+### 8.3 What SOMO is asked to ratify
+
+1. That the portal may compute the material × period totals until the engine moves, with the
+   provenance source on each published line naming the engine rather than SOMO.
+2. That when the engine moves, SOMO emits the totals in the §1.2 shape and the portal's engine is
+   retired, so two engines never publish at once.
+3. That the engine's calculation methods (`FORECAST-METHOD-SPEC.md`) are the shared baseline for
+   the version that runs inside SOMO.
+
+Tracked as BL-101 in `docs/supplier-hub/BACKLOG.md`.
 
 ---
 
