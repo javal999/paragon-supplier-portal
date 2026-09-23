@@ -102,6 +102,7 @@ import {
   isPositiveQty,
   proposedDeliveries,
   umbrellaRefusal,
+  engineReleaseWithheld,
   addDays,
   capacitySubmissionRefusal,
   dayOf,
@@ -257,6 +258,10 @@ import {
   requireUom,
   sdcClock,
 } from '../../sdc';
+// X-03 — the engine dataset's liveness, read at call time by the call-off
+// release hook. The registry reads `WIRED_COMMAND_TARGETS` from this module
+// lazily, so the two-way import is safe in either load order.
+import { isLive } from '../../liveness/registry';
 import type {
   Acknowledgment,
   IncomingShipment,
@@ -1150,6 +1155,8 @@ const callOffTarget: CommandTarget = {
       type: payload.type as CallOffType,
       status: toState as CallOffStatus,
       ...(toState === 'Awaiting Confirmation' ? { releasedAt: sdcClock.now() } : {}),
+      // X-03 — the Order plan names the engine as the origin of its drafts.
+      ...(payload.origin === 'engine' ? { origin: 'engine' as const } : {}),
       dispatches: [],
       notes: [],
     };
@@ -1169,7 +1176,29 @@ bindPolicyHook(POLICY_HOOKS.CALLOFF_LINE_VALID, ({ payload }) => {
   if (!isCallOffDate(payload.needDate)) return { ok: false, reason: 'need date must be a date (YYYY-MM-DD)' };
   if (String(payload.needDate) < sdcClock.now().slice(0, 10)) return { ok: false, reason: 'need date is in the past' };
   if (!CALL_OFF_TYPES.includes(payload.type as CallOffType)) return { ok: false, reason: 'type must be JIT or forecast-based' };
+  // An origin, when given, is one the hub knows — an unknown token is refused
+  // rather than dropped, so a misspelt 'engine' cannot slip past X-03.
+  if (payload.origin !== undefined && payload.origin !== 'engine') {
+    return { ok: false, reason: 'origin, when given, must be engine' };
+  }
   return { ok: true };
+});
+
+// X-03 (owner decision 2026-09-23) — simulated engine output is never shown to
+// a supplier. A call-off whose origin is the engine (a draft the Order plan
+// created) is refused on release while `engineDataset` is not live. The
+// call-off is read through the target; the liveness through the registry's own
+// predicate, at call time. A creation-time release reads the origin from the
+// payload, because there is no call-off to read yet.
+bindPolicyHook(POLICY_HOOKS.CALLOFF_ENGINE_DATA_LIVE, ({ entityId, payload, target }) => {
+  const existing = entityId ? (target.readEntity(entityId) as CallOff | null) : null;
+  const origin = existing ? existing.origin : payload.origin === 'engine' ? 'engine' : undefined;
+  if (!engineReleaseWithheld({ origin }, isLive('engineDataset'))) return { ok: true };
+  return {
+    ok: false,
+    reason:
+      'ENGINE_DATA_SIMULATED: this call-off comes from an order-plan recommendation calculated on simulated data; it can be released once the Master Data Management team’s SAP feed is live',
+  };
 });
 
 // REQ-E09-01 BR-04 / AC-03, CR-04 — never beyond what remains on the umbrella PO

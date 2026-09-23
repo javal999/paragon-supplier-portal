@@ -30,6 +30,7 @@ import type { Recommendation } from '../services/engine/orderSizing';
 import type { WarehouseKind } from '../services/engine/types';
 import { isoWeek } from '../services/engine/dates';
 import { sdcClock } from '../services/sdc/clock';
+import { isLive } from '../services/liveness';
 import { qtyOf } from './materialPlan/planDisplay';
 import { draftNeedDate, umbrellaLineFor } from './orderPlan/orderPlanRelease';
 
@@ -53,6 +54,9 @@ import { draftNeedDate, umbrellaLineFor } from './orderPlan/orderPlanRelease';
 // here is the EXISTING draft verb on the supplier's open umbrella line
 // (`orderPlanRelease.ts`); release, with the umbrella-balance check, stays on
 // the Call-offs page. A seat without `calloff:plan` sees who acts instead.
+// The draft carries `origin: 'engine'`; while the engine dataset is not live the
+// release verb refuses it (X-03, owner decision 2026-09-23), and this page says
+// so beside the button rather than letting the planner find out on release.
 //
 // Every figure is computed by the forecast engine at read time on its
 // SYNTHETIC dataset (the `engineDataset` pill, X-03).
@@ -184,6 +188,8 @@ const BuyerOrderPlan: React.FC = () => {
   const crumb = [t('hub.nav.section.forecast'), t('op.title')];
   const run = query.data ?? null;
   const today = sdcClock.now().slice(0, 10);
+  // X-03 — the registry's own answer, read at render; the verb reads it again at release.
+  const releaseWithheld = !isLive('engineDataset');
 
   const w = run?.warehouses.find((x) => x.kind === kind) ?? run?.warehouses[0] ?? null;
   const rows: RecRow[] = useMemo(
@@ -224,13 +230,18 @@ const BuyerOrderPlan: React.FC = () => {
         quantity: r.quantity,
         needDate: draftNeedDate(r.weekStart, today),
         type: 'forecast',
+        origin: 'engine',
       });
       if (res.status === 'failed') {
         toast({ variant: 'warning', title: t('op.toast.refused'), description: refusalText(res.reason) ?? res.reason ?? '' });
         return;
       }
       setDrafted((prev) => new Set(prev).add(keyOf(r)));
-      toast({ variant: 'success', title: t('op.toast.drafted'), description: t('op.toast.draftedDesc') });
+      toast({
+        variant: 'success',
+        title: t('op.toast.drafted'),
+        description: t(releaseWithheld ? 'op.toast.draftedDescWithheld' : 'op.toast.draftedDesc'),
+      });
     } catch {
       toast({ variant: 'error', title: t('op.toast.refused') });
     }
@@ -459,6 +470,14 @@ const BuyerOrderPlan: React.FC = () => {
                                 <div className="text-xs text-text-tertiary mt-1">
                                   {t('op.action.onPo', { po: line.po.poNumber })}
                                 </div>
+                                {releaseWithheld && (
+                                  <div
+                                    className="text-xs text-warning-hover mt-1 max-w-[16rem]"
+                                    data-testid={`op-release-withheld-${r.materialCode}-${r.weekStart}`}
+                                  >
+                                    {t('op.action.releaseWithheld')}
+                                  </div>
+                                )}
                               </div>
                             ) : (
                               <HandoffNotice availability={planAvailability} testId="handoff-orderplan-draft" />

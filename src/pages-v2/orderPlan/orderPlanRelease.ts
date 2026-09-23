@@ -6,7 +6,9 @@
 // BR-02). The act is the EXISTING draft verb (`t_calloff_draft`, REQ-E09-01
 // BR-05): the draft is the planner's alone (a supplier never sees a draft),
 // and releasing it on the Call-offs page runs the umbrella-balance check
-// (BR-04, CR-04) there. No new write path.
+// (BR-04, CR-04) there. No new write path. The draft names the engine as its
+// origin, and release refuses such a draft while the engine dataset is not
+// live (X-03, `CALLOFF_ENGINE_DATA_LIVE`, owner decision 2026-09-23).
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { CALL_OFF_PO_STATES } from '../../services/transitions/callOffRules';

@@ -30,6 +30,7 @@ import type {
   InvoiceLine,
   CallOffDelivery,
   CallOffType,
+  CallOffOrigin,
 } from '../data/types';
 import type { AsnLineInput } from '../transitions/fulfilmentRules';
 import { reasonCodeEntityId, type ReasonListId } from '../transitions/reasonCodes';
@@ -1897,7 +1898,16 @@ export function useApplicationReject() {
 
 export type CallOffCommandVars =
   | { verb: 'release'; poId: string; poLineId: string; quantity: number; needDate: string; type: CallOffType }
-  | { verb: 'draft'; poId: string; poLineId: string; quantity: number; needDate: string; type: CallOffType }
+  | {
+      verb: 'draft';
+      poId: string;
+      poLineId: string;
+      quantity: number;
+      needDate: string;
+      type: CallOffType;
+      /** X-03 — set by the Order plan: the draft comes from an engine recommendation. */
+      origin?: CallOffOrigin;
+    }
   | { verb: 'editDraft'; id: string; reason: string; quantity?: number; needDate?: string; type?: CallOffType }
   | { verb: 'releaseDraft'; id: string }
   | { verb: 'dismiss'; id: string; reason: string }

@@ -288,7 +288,15 @@ const HARVEST_GATED: Partial<Record<Capability, HarvestGate>> = {
 
 // Membership set built once from the exported census. Reading this — rather than
 // re-listing entities — is what makes liveness impossible to drift from wiring.
-const WIRED = new Set<string>(WIRED_COMMAND_TARGETS);
+//
+// Built on FIRST USE, not at import: the call-off release hook in
+// `MockCommandService` reads `isLive` (X-03), so the two modules import each
+// other. Whichever loads first, the census is complete by the time anything
+// asks — building it at import would read it before `MockCommandService`
+// finished when that module loads first. The set is the same one; only the
+// moment it is read moved.
+let wiredMemo: ReadonlySet<string> | null = null;
+const wired = (): ReadonlySet<string> => (wiredMemo ??= new Set<string>(WIRED_COMMAND_TARGETS));
 
 /** Every registered capability (stable insertion order). */
 export const ALL_CAPABILITIES = Object.keys(CAPABILITY_BACKING) as Capability[];
@@ -301,7 +309,7 @@ export const capabilityBacking: Readonly<Record<Capability, string | null>> =
  * Gate-1, PURE + INJECTABLE: the wiring tier of a backing entity against a given
  * wired-target set. Extracted so the flip harness can prove SIMULATED→LIVE on a
  * single wiring change WITHOUT mutating the process-wide census. `liveness()`
- * calls it with the real `WIRED` set — there is no second source.
+ * calls it with the real wired set — there is no second source.
  */
 export function livenessFrom(
   backing: string | null,
@@ -316,7 +324,7 @@ export function livenessFrom(
  * NOTE: gate-1 alone is NOT green for a harvest-gated capability — see `isLive`.
  */
 export function liveness(capability: Capability): Tier {
-  return livenessFrom(CAPABILITY_BACKING[capability], WIRED);
+  return livenessFrom(CAPABILITY_BACKING[capability], wired());
 }
 
 /**
@@ -359,7 +367,7 @@ export function isGreenFrom(
 export function isLive(capability: Capability): boolean {
   return isGreenFrom(
     CAPABILITY_BACKING[capability],
-    WIRED,
+    wired(),
     awaitsHarvest(capability),
   );
 }

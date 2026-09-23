@@ -107,7 +107,36 @@ describe('BuyerOrderPlan — the planner page (REQ-E14-05)', () => {
     expect(made.status).toBe('Draft');
     expect(made.needDate).toBe(draftNeedDate(r.weekStart, today));
     expect(made.releasedAt).toBeUndefined();
+    // X-03 — the draft names the engine as its origin, so release refuses it while simulated.
+    expect(made.origin).toBe('engine');
     expect(await screen.findByText('Draft created')).toBeInTheDocument();
+  });
+
+  it('X-03: beside “Create draft call-off” the page says such drafts cannot be released until the SAP feed is live — EN and ID', async () => {
+    expect(isLive('engineDataset')).toBe(false);
+    const p = await plan();
+    const pos = await openPos();
+    const r = p.warehouses
+      .flatMap((w) => w.materials.flatMap((m) => m.recommendations))
+      .find((x) => umbrellaLineFor(pos, x.supplierId, x.materialCode) !== null)!;
+    renderWithProviders(<BuyerOrderPlan />, { identity: PLANNER, route: '/buyer/order-plan' });
+    const row = await screen.findByTestId(`op-rec-${r.materialCode}-${r.weekStart}`);
+    expect(within(row).getByTestId(`op-draft-${r.materialCode}-${r.weekStart}`)).toBeInTheDocument();
+    expect(within(row).getByTestId(`op-release-withheld-${r.materialCode}-${r.weekStart}`)).toHaveTextContent(
+      'cannot be released to the supplier until the Master Data Management team’s SAP feed is live',
+    );
+    await i18n.changeLanguage('id');
+    await waitFor(() =>
+      expect(screen.getByTestId(`op-release-withheld-${r.materialCode}-${r.weekStart}`)).toHaveTextContent(
+        'tidak dapat dirilis ke pemasok sampai data SAP dari tim Master Data Management tersedia',
+      ),
+    );
+  });
+
+  it('X-03: a seat that cannot draft sees no release note — the note belongs to the act', async () => {
+    renderWithProviders(<BuyerOrderPlan />, { identity: { ...BUYER, businessRoles: ['finance'] }, route: '/buyer/order-plan' });
+    await screen.findByTestId('op-recs');
+    expect(screen.queryAllByTestId(/^op-release-withheld-/)).toEqual([]);
   });
 
   it('a recommendation with no open agreement for its supplier and material says “No PO” and offers no act', async () => {

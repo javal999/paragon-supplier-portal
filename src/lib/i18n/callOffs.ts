@@ -123,6 +123,11 @@ export const callOffsEn: Record<string, string> = {
   'co.draft.save': 'Save changes',
   'co.draft.dismiss': 'Dismiss draft',
   'co.draft.release': 'Release to supplier',
+  'co.origin.engine': 'From the order plan — simulated data',
+  'co.draft.releaseWithheld':
+    'Not released to the supplier: this draft comes from an order-plan recommendation calculated on simulated data. It can be released once the Master Data Management team’s SAP feed is live. You can still edit or dismiss it.',
+  'co.refusal.engineDataSimulated':
+    'This recommendation was calculated on simulated data, so it was not released to the supplier. It can be released once the Master Data Management team’s SAP feed is live.',
   'co.change.title': 'Change call-off',
   'co.change.intro': 'Changing the quantity or need date sends the call-off back to the supplier to confirm again.',
   'co.change.submit': 'Change and ask again',
@@ -309,6 +314,11 @@ export const callOffsId: Record<string, string> = {
   'co.draft.save': 'Simpan perubahan',
   'co.draft.dismiss': 'Batalkan draf',
   'co.draft.release': 'Rilis ke pemasok',
+  'co.origin.engine': 'Dari rencana pesanan — data simulasi',
+  'co.draft.releaseWithheld':
+    'Tidak dirilis ke pemasok: draf ini berasal dari rekomendasi rencana pesanan yang dihitung dengan data simulasi. Draf dapat dirilis setelah data SAP dari tim Master Data Management tersedia. Anda tetap dapat mengubah atau membatalkannya.',
+  'co.refusal.engineDataSimulated':
+    'Rekomendasi ini dihitung dengan data simulasi, sehingga tidak dirilis ke pemasok. Rekomendasi dapat dirilis setelah data SAP dari tim Master Data Management tersedia.',
   'co.change.title': 'Ubah call-off',
   'co.change.intro': 'Mengubah kuantitas atau tanggal kebutuhan mengembalikan call-off ke pemasok untuk dikonfirmasi ulang.',
   'co.change.submit': 'Ubah dan minta konfirmasi ulang',

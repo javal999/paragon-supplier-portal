@@ -457,6 +457,9 @@ export interface CallOffNote {
   readonly at: string;
 }
 
+/** The origin a call-off can carry (see `CallOff.origin`). */
+export type CallOffOrigin = 'engine';
+
 export interface CallOff {
   readonly id: string;
   readonly callOffNumber: string;
@@ -489,6 +492,14 @@ export interface CallOff {
   readonly agreedDeliveries?: readonly CallOffDelivery[];
   /** The supplier's reason when it rejected the call-off. */
   readonly rejectionReason?: string;
+  /**
+   * Where the call-off came from, when not typed by the planner. `'engine'`: a
+   * draft the Order plan created from a forecast-engine recommendation
+   * (REQ-E14-05 BR-05). While the engine dataset is not live, such a draft is
+   * refused on release (X-03, owner decision 2026-09-23). Absent for every
+   * call-off created on the Call-offs page.
+   */
+  readonly origin?: CallOffOrigin;
   readonly dispatches: readonly CallOffDispatch[];
   readonly notes: readonly CallOffNote[];
 }

@@ -102,8 +102,11 @@ export const orderPlanEn: Record<string, string> = {
   'op.action.noPo': 'No PO',
   'op.action.noPo.hint': 'No open agreement with this supplier for this material, so there is nothing to call off against.',
   'op.action.onPo': 'On {{po}}',
+  'op.action.releaseWithheld':
+    'Drafts from this plan cannot be released to the supplier until the Master Data Management team’s SAP feed is live: the plan is calculated on simulated data.',
   'op.toast.drafted': 'Draft call-off created',
   'op.toast.draftedDesc': 'Release it from the Call-offs page.',
+  'op.toast.draftedDescWithheld': 'It stays a draft on the Call-offs page until the Master Data Management team’s SAP feed is live.',
   'op.toast.refused': 'The draft was not created',
 
   'op.def.title': 'How the plan is sized',
@@ -213,8 +216,11 @@ export const orderPlanId: Record<string, string> = {
   'op.action.noPo': 'Tidak ada PO',
   'op.action.noPo.hint': 'Tidak ada perjanjian terbuka dengan pemasok ini untuk material ini, sehingga tidak ada yang dapat di-call-off.',
   'op.action.onPo': 'Pada {{po}}',
+  'op.action.releaseWithheld':
+    'Draf dari rencana ini tidak dapat dirilis ke pemasok sampai data SAP dari tim Master Data Management tersedia: rencana ini dihitung dengan data simulasi.',
   'op.toast.drafted': 'Draf call-off dibuat',
   'op.toast.draftedDesc': 'Rilis dari halaman Call-off.',
+  'op.toast.draftedDescWithheld': 'Draf tetap di halaman Call-off sampai data SAP dari tim Master Data Management tersedia.',
   'op.toast.refused': 'Draf tidak dibuat',
 
   'op.def.title': 'Cara rencana dihitung',
