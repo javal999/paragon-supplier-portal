@@ -31,7 +31,7 @@ export function isAwaitingResponse(po: PurchaseOrder): boolean {
  * on the hub's calendar (BL-50 — an administrator's ruling moves it).
  */
 export function responseDeadline(
-  po: PurchaseOrder,
+  po: Pick<PurchaseOrder, 'orderDate' | 'responseRequestedAt'>,
   cal: WorkingCalendar = hubWorkingCalendar(),
 ): Date {
   const askedAt = po.responseRequestedAt ?? po.orderDate;

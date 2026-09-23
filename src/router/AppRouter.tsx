@@ -74,6 +74,7 @@ import SupplierCallOffs from '../pages-v2/SupplierCallOffs';
 import SupplierCapacity from '../pages-v2/SupplierCapacity';
 import BuyerForecasts from '../pages-v2/BuyerForecasts';
 import BuyerCommitments from '../pages-v2/BuyerCommitments';
+import BuyerReliability from '../pages-v2/BuyerReliability';
 import SupplierForecastCommitments from '../pages-v2/SupplierForecastCommitments';
 import SupplierPerformance from '../pages-v2/SupplierPerformance';
 import NotFound from '../pages-v2/NotFound';
@@ -138,6 +139,8 @@ const AppRouter: React.FC = () => {
               The earlier response review stays reachable under the same menu item. */}
           <Route path="/buyer/forecasts" element={<BuyerForecasts />} />
           <Route path="/buyer/collaboration" element={<BuyerCommitments />} />
+          {/* REQ-E14-02 — supplier reliability and PTI's plan-change measures (BL-99). */}
+          <Route path="/buyer/reliability" element={<BuyerReliability />} />
           <Route
             path="/buyer/collaboration/responses"
             element={

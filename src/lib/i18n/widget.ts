@@ -32,6 +32,9 @@ export const widgetEn: Record<string, string> = {
   'widget.honesty.awaitingSupplierFeed': 'Sample data',
   // DISCOVERY-REAL-SUBJECTS-01 (C) — the discovery candidate pool has no source.
   'widget.honesty.awaitingDiscoveryFeed': 'Sample data',
+  // BL-102 — the forecast engine's inputs are synthetic until the Master Data
+  // Management team's SAP feed lands (ENG-D1).
+  'widget.honesty.awaitingMdmFeed': 'Synthetic data · awaiting the MDM SAP feed',
   // D-CENSUS-8 — the VERB axis of ProvenanceMarker. Says the narrow true thing
   // and no more: acting here really dispatches and is really recorded, in an
   // in-memory ledger that does not survive a reload and never reaches SAP.
@@ -131,6 +134,7 @@ export const widgetId: Record<string, string> = {
   'widget.honesty.awaitingSupplierIdentities': 'Data contoh',
   'widget.honesty.awaitingSupplierFeed': 'Data contoh',
   'widget.honesty.awaitingDiscoveryFeed': 'Data contoh',
+  'widget.honesty.awaitingMdmFeed': 'Data sintetis · menunggu data SAP dari tim MDM',
   'widget.honesty.commandsDispatch': 'Perubahan hilang saat dimuat ulang',
   'widget.allClear': 'Semua beres',
   'widget.aria.expand': 'Perluas {{title}}',
