@@ -117,7 +117,7 @@ Nothing blocks these.
 | BL-91 | Admin screen for the RFx libraries: question library, term list, item-type spec templates (CE-05). Later, not in the MVP; Procurement asks IT meanwhile. Same family as BL-32 | Build team, after the MVP | Requirements 3.6a |
 | BL-92 | Amendments to a live RFx event that notify invitees and flag responses to revisit (deadline extension exists). Later, not in the MVP | Build team, after the MVP | Requirements 5.2 and 8.3 |
 | BL-42 | Phase 2 epics: contract management (E04), catalog management (E05), reporting and analytics (E11), API shipment aggregator (E13.02), supplier quality | Per the deck and charter | Requirements section 6 |
-| BL-103 | Forecast engine feed specification: each input, its grain, refresh and quality check, handed to the Master Data Management team, who own the data and the SAP integration | Master Data Management team | `FORECAST-ENGINE-REQUIREMENTS.md` E14-01; PRD I14 |
+| BL-103 | Forecast engine feed specification: each input, its grain, refresh and quality check, handed to the Master Data Management team, who own the data and the SAP integration | Master Data Management team | Drafted: `FORECAST-ENGINE-FEED-SPEC.md` (2026-09-23), handed to the team for confirmation of sources and owners. `FORECAST-ENGINE-REQUIREMENTS.md` E14-01; PRD I14 |
 
 ---
 

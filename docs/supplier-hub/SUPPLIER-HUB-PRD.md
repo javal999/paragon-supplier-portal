@@ -372,7 +372,7 @@ The production tech stack, hosting, database, and authentication are **TBD by IT
 | I2 | PO response (approve, adjust, reject) | Hub | SAP | TBD | [P] |
 | I3 | Forecast / net requirements | Hub forecast engine; SAP until the engine is live | Hub | Weekly publication [P] | Owner, 2026-09-23 (ENG-1); SAP source per PQ-07 in the meantime |
 | I4 | ROP and replenishment recommendation | Hub forecast engine; SAP until the engine is live | Hub | Per planning run | Owner, 2026-09-23 (ENG-1), superseding MN-INV-14 |
-| I14 | Forecast engine inputs: sales history, price and promotion calendar, bills of materials, lead times, MOQs, warehouse volume per item | SAP, through the Master Data Management team | Hub | TBD. Synthetic data until connected | Owner, 2026-09-23 (ENG-1, ENG-D1); feed specification BL-103 |
+| I14 | Forecast engine inputs: sales history, price and promotion calendar, bills of materials, lead times, MOQs, warehouse volume per item | SAP, through the Master Data Management team | Hub | TBD. Synthetic data until connected | Owner, 2026-09-23 (ENG-1, ENG-D1); feed specification `FORECAST-ENGINE-FEED-SPEC.md` (BL-103) |
 | I5 | PTI stock on hand | SAP | Hub | TBD | [V] MN-INV-03 |
 | I6 | Supplier stock, ROP, in production | Supplier ERP, spreadsheet, manual | Hub | API sync on the supplier's or PTI's Sync button, plus a schedule; upload; screen | [V] MN-INV-07, amended 2026-09-21 |
 | I7 | ASN as inbound delivery | Hub | SAP | TBD | [D] E07.05; [P] |

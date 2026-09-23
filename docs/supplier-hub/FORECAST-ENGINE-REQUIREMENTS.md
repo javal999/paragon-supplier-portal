@@ -154,7 +154,7 @@ The one check with arithmetic is **stock accuracy**:
 **Metrics.** Leading: share of materials passing all quality checks. Lagging: stock-accuracy rate.
 
 **Open items.**
-- BL-103: the feed specification handed to the Master Data Management team.
+- BL-103: the feed specification, drafted as `FORECAST-ENGINE-FEED-SPEC.md`, for the Master Data Management team to confirm.
 - C8-IDENTITY-GRAIN: material identity between the SOMO master and the Hub.
 
 ---
