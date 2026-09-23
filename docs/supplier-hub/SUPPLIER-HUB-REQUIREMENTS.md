@@ -272,6 +272,18 @@ The menu follows the hub's own sections, not procurement stages, and each PTI us
 | REQ-E09-04 | Delivery execution: need date and dispatch heads-up | E09 | MVP, P1 | Proposed |
 | REQ-E10-01 | CFOT and OTIF measurement | E10 | MVP | Validated (definitions); Proposed (formulas) |
 | REQ-E13-01 | Supplier access to TMS shipment tracking | E13 | Phase decision open (D-03) | Validated |
+| REQ-E14-01 | Engine data foundation | E14 | MVP | Proposed |
+| REQ-E14-02 | Supplier reliability and plan-change measures | E14 | MVP | Proposed |
+| REQ-E14-03 | Material requirement calculation | E14 | MVP | Proposed |
+| REQ-E14-04 | Safety stock, safety lead time and reorder point | E14 | MVP | Proposed |
+| REQ-E14-05 | Order sizing within MOQ and warehouse space | E14 | MVP | Proposed |
+| REQ-E14-06 | Stabilise and publish the plan to suppliers | E14 | MVP | Proposed |
+| REQ-E14-07 | Finished-goods demand forecast | E14 | MVP | Proposed |
+| REQ-E14-08 | Launches and promotions | E14 | MVP | Proposed |
+| REQ-E14-09 | Demand range | E14 | MVP | Proposed |
+| REQ-E14-10 | Choosing models by service, not accuracy | E14 | MVP | Proposed |
+| REQ-E14-11 | Forecast bias and planner override control | E14 | MVP | Proposed |
+| REQ-E14-12 | Where to hold buffers | E14 | Phase 2 | Proposed |
 | E04, E05, E11, E12, E13 (other) | Contract, Catalog, Reporting, API ERP, Shipment Aggregator | | Phase 2 or MVP per deck | Stub |
 
 ---
@@ -1646,6 +1658,10 @@ All requirements in this section are **Proposed**, written from market practice 
 
 ---
 
+### 5.9 Planning: In-house Forecast Engine (E14)
+
+Detailed in `FORECAST-ENGINE-REQUIREMENTS.md`, which uses this file's template plus a Calculation block per requirement. The epic follows owner decision ENG-1 (section 9); every requirement in it is Proposed. Its open decisions are ENG-D1 to ENG-D13.
+
 ## 6. Stubs
 
 | Epic | Deck scope | Phase | Status |
@@ -1801,4 +1817,4 @@ Research date: 2026-09-21. The full note, with every source link, is `research/R
 | 0.11 | 2026-09-21 | NV-07: RFI, RFQ and RFP as three separate menu items for buyers and suppliers (owner decision, built in PR #21); menu tables updated |
 | 0.12 | 2026-09-22 | RFx overhaul. Owner decisions RFX-D1 to RFX-D5 recorded (section 9): separate modules, templates and copies (CE-04 replaced, A-04 amended), independent events with allowed links (CE-09), indicative vs firm prices (CE-10), per-item split award. REQ-E03-02 to REQ-E03-05 rewritten: sections and 11 question types, option editor, attachments (CE-11), confidentiality gate, custom RFP terms and T&C acceptance, RFP indicative pricing, RFQ items with buyer- and supplier-filled spec fields, quantity breaks per variant or total, one-time costs, alternatives, samples, questions, intent and decline, clarifications, comparison at an evaluation break, per-item split award. "RFx: later, not in the MVP" list added. Section 8.3 summarises the RFx best-practice research |
 | 0.13 | 2026-09-22 | NV-01 lists the administration sections built with BL-32 and records that every change is logged |
-| 0.14 | 2026-09-23 | ENG-1: PTI calculates forecast, material requirement, ROP, and replenishment in its own engine (hub first, SOMO later), superseding MN-INV-14 and the PQ-07 answer. REQ-E06-01 BR-01, REQ-E08 BR-04, and REQ-E09-01 rewritten with SAP as the source until the engine is live. Glossary ROP updated |
+| 0.14 | 2026-09-23 | ENG-1: PTI calculates forecast, material requirement, ROP, and replenishment in its own engine (hub first, SOMO later), superseding MN-INV-14 and the PQ-07 answer. REQ-E06-01 BR-01, REQ-E08 BR-04, and REQ-E09-01 rewritten with SAP as the source until the engine is live. Glossary ROP updated. New epic E14 (In-house Forecast Engine), REQ-E14-01 to REQ-E14-12, detailed in `FORECAST-ENGINE-REQUIREMENTS.md` (section 5.9) |
