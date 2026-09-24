@@ -276,6 +276,17 @@ export const POLICY_HOOKS = {
   /** REQ-E06-01 BR-02 — publish names a forecast stream (packaging or raw material). */
   FORECAST_PUBLISH_VALID: 'forecast_publish_valid',
   /**
+   * REQ-E14-06 (X-03, ENG-B35) — a publication whose source is the forecast
+   * engine (`source: 'engine'`) is refused: while the engine dataset is not
+   * live, by name ENGINE_DATA_SIMULATED (simulated output is never shown to a
+   * supplier); once it is live, by name C8_ENGINE_SOURCE_UNRATIFIED until SOMO
+   * ratifies C8 §8 (the portal computing the totals, BL-101). Reads the
+   * liveness registry's `isLive('engineDataset')` at call time. A publication
+   * that names no source (SAP's plan, as today) is untouched; any other source
+   * is refused by name.
+   */
+  FORECAST_ENGINE_PUBLISH_ALLOWED: 'forecast_engine_publish_allowed',
+  /**
    * REQ-E06-03 BR-05 — reassign moves a line of the CURRENT version to a
    * different supplier qualified for the material, with a note.
    */

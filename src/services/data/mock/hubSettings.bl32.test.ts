@@ -41,7 +41,14 @@ import { otifPassesGate } from '../../sourcing/complianceGate';
 import { coverage, riskFor, stockFreshness, supplyBand } from '../../transitions/inventoryRules';
 import { updateSlaFor } from '../../transitions/inventoryConfig';
 import { coverageBands } from '../../sdc/consolidation';
-import { engineServiceTargets, orderSizingCosts, rescheduleOutThresholdWeeks, safetyLeadTimePercentile } from '../../transitions/forecastConfig';
+import {
+  engineServiceTargets,
+  orderSizingCosts,
+  rescheduleOutThresholdWeeks,
+  safetyLeadTimePercentile,
+  stabiliseDampingWeight,
+} from '../../transitions/forecastConfig';
+import { DEFAULT_STABILISE_PARAMS, stabilisePeriod } from '../../engine/stabilise';
 import { empiricalQuantile, fillRateSafetyStock } from '../../engine/safetyStock';
 import { singleItemSolver, type SizingItem } from '../../engine/orderSizing';
 import { reschedule, termsKey } from '../../engine/reschedule';
@@ -290,6 +297,8 @@ describe('BL32-READ · every reader of a value reads it through its accessor, at
       orderSizingCosts: ['src/services/data/mock/MockProcurementService.ts', 'src/services/transitions/forecastConfig.ts'],
       // ENG-D15 / REQ-E14-13 — the same shape: the service passes it to the engine.
       rescheduleOutThresholdWeeks: ['src/services/data/mock/MockProcurementService.ts', 'src/services/transitions/forecastConfig.ts'],
+      // ENG-D9 / REQ-E14-06 — the same shape: the service passes it to the engine.
+      stabiliseDampingWeight: ['src/services/data/mock/MockProcurementService.ts', 'src/services/transitions/forecastConfig.ts'],
     };
     for (const [fn, files] of Object.entries(table)) expect(callersOf(fn), fn).toEqual(files);
     // Known-true through a second door: the SDC coverage indicator never
@@ -519,6 +528,18 @@ const FLIPS: Record<string, Flip> = {
     read: () => ordersPlaced({ previous: [1000, 1000, 1000] }),
     atDefault: 3,
     afterChange: 1,
+  },
+  // ENG-D9: REQ-E14-06's worked example — 1,200 → 1,500 damps to 1,350 at 50%,
+  // beyond the band, so 1,320 is published; at 90% it damps to 1,230, inside.
+  'engine.dampingWeightPct': {
+    to: 90,
+    read: () =>
+      stabilisePeriod(
+        { period: '2026-10-12', zone: 'tradeOff', raw: 1500, previous: 1200, first: 1200 },
+        { ...DEFAULT_STABILISE_PARAMS, tradeOffWeight: stabiliseDampingWeight() },
+      ).published,
+    atDefault: 1320,
+    afterChange: 1230,
   },
   // ENG-D15: two weeks early is proposed at the default of 1; at 3 it is not.
   'engine.rescheduleOutWeeks': { to: 3, read: () => rescheduleFor(), atDefault: 'rescheduleOut', afterChange: 'none' },

@@ -112,6 +112,10 @@ export const useOrderPlan = () =>
 export const useReschedule = () =>
   useServiceQuery(['procurement', 'reschedule'], (svc, scope) => svc.procurement.getReschedule(scope));
 
+/** REQ-E14-06 — the plan stabilised before publication (PTI only). */
+export const useStabilisedPlan = () =>
+  useServiceQuery(['procurement', 'stabilisedPlan'], (svc, scope) => svc.procurement.getStabilisedPlan(scope));
+
 // ── RFx management (REQ-E03-01 to REQ-E03-05) ──────────────────────────────
 
 /**

@@ -165,6 +165,12 @@ const DEFS = [
     key: 'engine.rescheduleOutWeeks', section: 'tolerances', rule: 'ENG-D15', unit: 'weeks', integer: true,
     min: 1, max: 26, defaultValue: 1,
   },
+  // ENG-D9 (decided by the owner 2026-09-23) — REQ-E14-06 BR-04: the weight on
+  // the previously published value when a Trade-off period is damped before
+  // publication. 50% to start, tuned from the backtest (E14-10). Below 100%:
+  // at 100% a Trade-off period could never move. The Forecast zone's weight
+  // stays 0 (ENG-D9, ENG-B34).
+  { key: 'engine.dampingWeightPct', section: 'tolerances', rule: 'ENG-D9', unit: 'pct', min: 0, max: 90, defaultValue: 50 },
 ] as const satisfies readonly HubSettingDef[];
 
 /** A fixed setting key. Stale-period overrides are keyed separately (below). */

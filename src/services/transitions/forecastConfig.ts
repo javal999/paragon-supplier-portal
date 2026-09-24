@@ -18,7 +18,8 @@
 //   · ENG-D5 / REQ-E14-04 — the forecast engine's fill-rate targets per tier
 //     and the safety-lead-time percentile (the administrator's, BL-32).
 //   · ENG-D6 / REQ-E14-05 — the order-sizing cost rates; ENG-D15 / REQ-E14-13
-//     — the reschedule-out threshold in weeks.
+//     — the reschedule-out threshold in weeks; ENG-D9 / REQ-E14-06 — the
+//     damping weight.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { ForecastStream, MaterialType } from '../sdc/types';
@@ -167,6 +168,15 @@ export function orderSizingCosts(): {
  */
 export function rescheduleOutThresholdWeeks(): number {
   return hubSetting('engine.rescheduleOutWeeks');
+}
+
+/**
+ * ENG-D9 / REQ-E14-06 BR-04 — the weight on the previously published value
+ * when a Trade-off period is damped before publication, as a fraction (0.5).
+ * In force now; the engine takes it as an argument (X-01).
+ */
+export function stabiliseDampingWeight(): number {
+  return hubSetting('engine.dampingWeightPct') / 100;
 }
 
 /**

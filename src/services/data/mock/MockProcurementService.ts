@@ -120,6 +120,8 @@ import type {
   SafetyStockView,
   OrderPlanView,
   RescheduleView,
+  StabiliseRunView,
+  StabilisedPlanView,
 } from '../types';
 import { PR_INTAKE_LINES } from './fixtures/prIntake';
 import { engineDataset } from './fixtures/engineDataset';
@@ -133,8 +135,11 @@ import {
   orderSizingCosts,
   rescheduleOutThresholdWeeks,
   safetyLeadTimePercentile,
+  stabiliseDampingWeight,
   zoneLengthsFor,
 } from '../../transitions/forecastConfig';
+import { DEFAULT_STABILISE_PARAMS, stabilisePlan, type StabiliseRun } from '../../engine/stabilise';
+import { planHistoryInputs, stabiliseInputs, versionDays } from './stabiliseReadModel';
 import { planChangeGuard, poOrderLines, reschedule, termsKey, type LineTerms, type OpenOrderLine } from '../../engine/reschedule';
 import { callOffViews } from '../../transitions/callOffRules';
 import { callOffOrderLines } from './rescheduleReadModel';
@@ -583,6 +588,37 @@ export class MockProcurementService implements IProcurementService {
       planChangeWindowWeeks: WINDOW_WEEKS,
       unconfirmedPoLines,
       sapMarks: [...sapChangeMarkStore.all()].reverse(),
+    };
+  }
+
+  async getStabilisedPlan(scope: QueryScope): Promise<StabilisedPlanView | null> {
+    // REQ-E14-06, computed at read on the hub clock with the damping weight in
+    // force (X-05, ENG-D9). PTI only: engine output on synthetic data is never
+    // shown to a supplier (X-03), so a supplier scope gets nothing at all.
+    if (scope.personaType === 'supplier') return null;
+    const now = sdcClock.now();
+    const asOf = dayOf(now);
+    const data = engineDataset();
+    const params = { ...DEFAULT_STABILISE_PARAMS, tradeOffWeight: stabiliseDampingWeight() };
+    const { inputs, current } = stabiliseInputs(data, asOf, (d) => engineSafetyStock(d));
+    const uom = new Map(current.materials.map((m) => [m.materialCode, m.uom] as const));
+    const named = (run: StabiliseRun): StabiliseRunView => ({
+      ...run,
+      series: run.series.map((x) => ({
+        ...x,
+        supplierName: forecastSupplierName(x.supplierId),
+        materialLabel: labelOf(x.materialCode),
+        uom: uom.get(x.materialCode) ?? ('PCS' as const),
+      })),
+    });
+    return {
+      asOf,
+      planMadeAt: current.planMadeAt,
+      params,
+      versions: { packaging: versionDays(asOf, 'packaging'), rawMaterial: versionDays(asOf, 'rawMaterial') },
+      engine: named(stabilisePlan(inputs, params)),
+      sapHistory: named(stabilisePlan(planHistoryInputs(data, now, inputs), params)),
+      rangeAvailable: false,
     };
   }
 

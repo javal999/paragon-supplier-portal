@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 0.19 draft, 2026-09-24 |
+| Version | 0.20 draft, 2026-09-24 |
 | Sources | `SUPPLIER-HUB-BASELINE.md` (kick-off deck, Aug 2026); `KICKOFF-MEETING-NOTES.md` (business user feedback, reviewed 2026-09-17); owner review of the prototype gap review (2026-09-17); owner RFx decisions RFX-D1 to RFX-D5 (2026-09-21); RFx best-practice research, `research/RFX-BEST-PRACTICE-2026-09.md` (2026-09-21); owner decision ENG-1 (2026-09-23) with the forecast research `research/FORECAST-BEST-PRACTICE-2026-09.md` and `research/FORECAST-METHOD-SPEC.md` |
 | Scope of this version | Detailed: Order Collaboration, Inventory & Capacity Collaboration, RFx (validated); Forecast Collaboration, Call-off Management, and the undiscussed parts of Order and Inventory Collaboration (proposed). Hub navigation and screen conventions (validated). Foundation is reserved for the Foundation team. The remaining epics are stubs |
 | Not in scope | The codebase. This file states what the Supplier Hub must do, not what is built. What the prototype does today, and where, is tracked only in `BUILD-GAP.md` |
@@ -277,7 +277,7 @@ The menu follows the hub's own sections, not procurement stages, and each PTI us
 | REQ-E14-03 | Material requirement calculation | E14 | MVP | Proposed |
 | REQ-E14-04 | Safety stock, safety lead time and reorder point | E14 | MVP | Proposed |
 | REQ-E14-05 | Order sizing within MOQ and warehouse space | E14 | MVP | Proposed |
-| REQ-E14-06 | Stabilise and publish the plan to suppliers | E14 | MVP | Proposed |
+| REQ-E14-06 | Stabilise and publish the plan to suppliers | E14 | MVP | Proposed; built on synthetic data (BL-108, PR #TBD) |
 | REQ-E14-07 | Finished-goods demand forecast | E14 | MVP | Proposed |
 | REQ-E14-08 | Launches and promotions | E14 | MVP | Proposed |
 | REQ-E14-09 | Demand range | E14 | MVP | Proposed |
@@ -1839,3 +1839,4 @@ Research date: 2026-09-21. The full note, with every source link, is `research/R
 | 0.17 | 2026-09-23 | ENG-D4, D6, D7 recorded in section 9 |
 | 0.18 | 2026-09-23 | REQ-E14-13 added to the index (detail in `FORECAST-ENGINE-REQUIREMENTS.md`) |
 | 0.19 | 2026-09-24 | ENG-D15, D16, D17 recorded in section 9; REQ-E14-13 built on synthetic data (PR #44) |
+| 0.20 | 2026-09-24 | REQ-E14-06 built on synthetic data (PR #TBD); build decisions ENG-B29 to ENG-B38 in `FORECAST-ENGINE-REQUIREMENTS.md` section 4.1e |
