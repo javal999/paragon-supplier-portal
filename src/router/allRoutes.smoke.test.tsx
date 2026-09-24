@@ -86,6 +86,7 @@ import BuyerSafetyStock from '../pages-v2/BuyerSafetyStock';
 import BuyerOrderPlan from '../pages-v2/BuyerOrderPlan';
 import BuyerReschedule from '../pages-v2/BuyerReschedule';
 import BuyerStabilise from '../pages-v2/BuyerStabilise';
+import BuyerDataHealth from '../pages-v2/BuyerDataHealth';
 import SupplierShipments from '../pages-v2/SupplierShipments';
 import SupplierGoodsReceipts from '../pages-v2/SupplierGoodsReceipts';
 import SupplierInvoicesV2 from '../pages-v2/SupplierInvoices';
@@ -141,6 +142,7 @@ const ROUTES: RouteCase[] = [
   { name: 'buyer/order-plan', pattern: '/buyer/order-plan', at: '/buyer/order-plan', element: <BuyerOrderPlan />, identity: BUYER },
   { name: 'buyer/reschedule', pattern: '/buyer/reschedule', at: '/buyer/reschedule', element: <BuyerReschedule />, identity: BUYER },
   { name: 'buyer/stabilise', pattern: '/buyer/stabilise', at: '/buyer/stabilise', element: <BuyerStabilise />, identity: BUYER },
+  { name: 'buyer/data-health', pattern: '/buyer/data-health', at: '/buyer/data-health', element: <BuyerDataHealth />, identity: BUYER },
   { name: 'buyer/collaboration/responses', pattern: '/buyer/collaboration/responses', at: '/buyer/collaboration/responses', element: <BuyerCollaboration />, identity: BUYER },
   { name: 'buyer/contracts', pattern: '/buyer/contracts', at: '/buyer/contracts', element: <BuyerContracts />, identity: BUYER },
   { name: 'buyer/contracts/:id', pattern: '/buyer/contracts/:id', at: '/buyer/contracts/ctr-013', element: <BuyerContractDetail />, identity: BUYER },

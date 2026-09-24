@@ -161,6 +161,15 @@ const DEFS = [
   // weeks before its need week an open line must arrive before a reschedule-out
   // is proposed. 1 week to start; the Material Planner's value, beside the
   // E14-05 cost rates it is weighed with.
+  // REQ-E14-05 edge case (BL-117) — the most rented space order sizing may
+  // plan, as a share of owned capacity, beside the rented-space rate it caps.
+  // A week that does not fit even with it is shown with its shortfall and the
+  // planner's choice (rent beyond it, or a later delivery). 25% is a
+  // PLACEHOLDER — what the 3PL contract allows is the Warehouse's to confirm.
+  {
+    key: 'engine.maxRentedSpacePct', section: 'tolerances', rule: 'REQ-E14-05', unit: 'pct',
+    min: 0, max: 500, defaultValue: 25, placeholder: { owner: 'warehousePlanner', backlogId: 'REQ-E14-05' },
+  },
   {
     key: 'engine.rescheduleOutWeeks', section: 'tolerances', rule: 'ENG-D15', unit: 'weeks', integer: true,
     min: 1, max: 26, defaultValue: 1,
@@ -171,6 +180,25 @@ const DEFS = [
   // at 100% a Trade-off period could never move. The Forecast zone's weight
   // stays 0 (ENG-D9, ENG-B34).
   { key: 'engine.dampingWeightPct', section: 'tolerances', rule: 'ENG-D9', unit: 'pct', min: 0, max: 90, defaultValue: 50 },
+  // REQ-E14-01 BR-01, BR-05 — the freshness limit per engine feed, in days:
+  // a feed whose last arrival is older than this is stale on the Data health
+  // page and names the engine steps it affects. The defaults are the feed
+  // spec's limits (FORECAST-ENGINE-FEED-SPEC.md §2); where the spec states a
+  // refresh but no limit (FgPlanSnapshot, SalesOrderWeek, SapSafetyStock,
+  // MaterialValue) the limit is the refresh period (ENG-B42). One key per feed
+  // that has a limit; the Hub's own records and "on change" feeds have none.
+  { key: 'engine.freshnessDays.poLines', section: 'tolerances', rule: 'REQ-E14-01', unit: 'days', integer: true, min: 1, max: 365, defaultValue: 1 },
+  { key: 'engine.freshnessDays.scheduleChanges', section: 'tolerances', rule: 'REQ-E14-01', unit: 'days', integer: true, min: 1, max: 365, defaultValue: 1 },
+  { key: 'engine.freshnessDays.receipts', section: 'tolerances', rule: 'REQ-E14-01', unit: 'days', integer: true, min: 1, max: 365, defaultValue: 1 },
+  { key: 'engine.freshnessDays.sources', section: 'tolerances', rule: 'REQ-E14-01', unit: 'days', integer: true, min: 1, max: 365, defaultValue: 7 },
+  { key: 'engine.freshnessDays.bom', section: 'tolerances', rule: 'REQ-E14-01', unit: 'days', integer: true, min: 1, max: 365, defaultValue: 7 },
+  { key: 'engine.freshnessDays.stock', section: 'tolerances', rule: 'REQ-E14-01', unit: 'days', integer: true, min: 1, max: 365, defaultValue: 1 },
+  { key: 'engine.freshnessDays.materialValues', section: 'tolerances', rule: 'REQ-E14-01', unit: 'days', integer: true, min: 1, max: 365, defaultValue: 31 },
+  { key: 'engine.freshnessDays.finishedGoods', section: 'tolerances', rule: 'REQ-E14-01', unit: 'days', integer: true, min: 1, max: 365, defaultValue: 7 },
+  { key: 'engine.freshnessDays.sales', section: 'tolerances', rule: 'REQ-E14-01', unit: 'days', integer: true, min: 1, max: 365, defaultValue: 7 },
+  { key: 'engine.freshnessDays.fgPlan', section: 'tolerances', rule: 'REQ-E14-01', unit: 'days', integer: true, min: 1, max: 365, defaultValue: 7 },
+  { key: 'engine.freshnessDays.salesOrders', section: 'tolerances', rule: 'REQ-E14-01', unit: 'days', integer: true, min: 1, max: 365, defaultValue: 1 },
+  { key: 'engine.freshnessDays.sapSafetyStock', section: 'tolerances', rule: 'REQ-E14-01', unit: 'days', integer: true, min: 1, max: 365, defaultValue: 7 },
 ] as const satisfies readonly HubSettingDef[];
 
 /** A fixed setting key. Stale-period overrides are keyed separately (below). */

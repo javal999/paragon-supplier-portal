@@ -43,12 +43,14 @@ import { updateSlaFor } from '../../transitions/inventoryConfig';
 import { coverageBands } from '../../sdc/consolidation';
 import {
   engineServiceTargets,
+  feedFreshnessLimitsDays,
   orderSizingCosts,
   rescheduleOutThresholdWeeks,
   safetyLeadTimePercentile,
   stabiliseDampingWeight,
 } from '../../transitions/forecastConfig';
 import { DEFAULT_STABILISE_PARAMS, stabilisePeriod } from '../../engine/stabilise';
+import { freshnessOf } from '../../engine/dataHealth';
 import { empiricalQuantile, fillRateSafetyStock } from '../../engine/safetyStock';
 import { singleItemSolver, type SizingItem } from '../../engine/orderSizing';
 import { reschedule, termsKey } from '../../engine/reschedule';
@@ -213,6 +215,8 @@ describe('BL32-POP · the population of rule values is derived from the config m
       'engine.orderCostIdr': 'ENG-D6',
       'engine.rentedSpaceIdrPerPalletWeek': 'ENG-D6',
       'engine.changePenaltyIdrPerPallet': 'REQ-E14-05 BR-03',
+      // BL-117 — the Warehouse's cap on rented space (the 3PL contract).
+      'engine.maxRentedSpacePct': 'REQ-E14-05',
     });
   });
 });
@@ -299,6 +303,8 @@ describe('BL32-READ · every reader of a value reads it through its accessor, at
       rescheduleOutThresholdWeeks: ['src/services/data/mock/MockProcurementService.ts', 'src/services/transitions/forecastConfig.ts'],
       // ENG-D9 / REQ-E14-06 — the same shape: the service passes it to the engine.
       stabiliseDampingWeight: ['src/services/data/mock/MockProcurementService.ts', 'src/services/transitions/forecastConfig.ts'],
+      // REQ-E14-01 — the same shape: the service passes the limits to the data-health check.
+      feedFreshnessLimitsDays: ['src/services/data/mock/MockProcurementService.ts', 'src/services/transitions/forecastConfig.ts'],
     };
     for (const [fn, files] of Object.entries(table)) expect(callersOf(fn), fn).toEqual(files);
     // Known-true through a second door: the SDC coverage indicator never
@@ -346,7 +352,7 @@ const DELAYS = [0, 0, 0, 1, 1, 2, 2, 3, 5, 9];
  * outcome is how many orders the sizing places. `space` adds a 15-pallet
  * warehouse; `previous` is last run's weekly plan, all inside the lead time.
  */
-const ordersPlaced = (opts: { space?: boolean; previous?: number[] } = {}): number => {
+const ordersPlaced = (opts: { space?: boolean; cap?: boolean; previous?: number[] } = {}): number => {
   const c = orderSizingCosts();
   const item: SizingItem = {
     materialCode: 'PK-PETB-8801',
@@ -362,7 +368,12 @@ const ordersPlaced = (opts: { space?: boolean; previous?: number[] } = {}): numb
     ...(opts.previous ? { previous: opts.previous } : {}),
   };
   const space = opts.space
-    ? { capacityPallets: 15, rentIdrPerPalletWeek: c.rentIdrPerPalletWeek }
+    ? {
+        capacityPallets: 15,
+        rentIdrPerPalletWeek: c.rentIdrPerPalletWeek,
+        // BL-117 — the cap on rented space in force, as the service passes it.
+        ...(opts.cap ? { limitPallets: 15 + 15 * c.maxRentedShare } : {}),
+      }
     : { capacityPallets: Infinity, rentIdrPerPalletWeek: 0 };
   return singleItemSolver(item, [0, 0, 0], space, c).plan().filter((x) => x > 0).length;
 };
@@ -394,7 +405,22 @@ const rescheduleFor = (): string => {
   return run.warehouses[0].proposals[0]?.type ?? 'none';
 };
 
+/**
+ * REQ-E14-01 — a feed's freshness at an age one day past its DEFAULT limit:
+ * stale at the default, fresh once the limit is raised by five days. Read
+ * through the accessor the service passes to the data-health check.
+ */
+const FRESHNESS_KEYS = HUB_SETTINGS.filter((d) => d.key.startsWith('engine.freshnessDays.'));
+const freshnessFlips: Record<string, Flip> = Object.fromEntries(
+  FRESHNESS_KEYS.map((d) => {
+    const feed = d.key.slice('engine.freshnessDays.'.length) as keyof ReturnType<typeof feedFreshnessLimitsDays>;
+    const age = (d.defaultValue as number) + 1;
+    return [d.key, { to: age + 4, read: () => freshnessOf(age, feedFreshnessLimitsDays()[feed]), atDefault: 'stale', afterChange: 'fresh' }];
+  }),
+);
+
 const FLIPS: Record<string, Flip> = {
+  ...freshnessFlips,
   'callOff.overPct': {
     to: 10,
     read: () => checkTolerance(CALL_OFF, [{ quantity: 1070, date: CALL_OFF.needDate }]).within,
@@ -522,6 +548,9 @@ const FLIPS: Record<string, Flip> = {
   'engine.holdingCostPctPerYear': { to: 100, read: () => ordersPlaced(), atDefault: 1, afterChange: 3 },
   // 15 pallets of room: one order spills 5 pallets for a week; at Rp 100,000 a pallet two orders win.
   'engine.rentedSpaceIdrPerPalletWeek': { to: 100_000, read: () => ordersPlaced({ space: true }), atDefault: 1, afterChange: 2 },
+  // BL-117: at 25% the one-order plan's 20 pallets pass 15 + 3.75 — no plan may rent past the cap, so two
+  // orders; at 50% (22.5) it fits and renting is cheaper, so one.
+  'engine.maxRentedSpacePct': { to: 50, read: () => ordersPlaced({ space: true, cap: true }), atDefault: 2, afterChange: 1 },
   // BR-03: last run planned 1,000 a week, all inside the lead time; with no penalty the plan re-sizes.
   'engine.changePenaltyIdrPerPallet': {
     to: 0,

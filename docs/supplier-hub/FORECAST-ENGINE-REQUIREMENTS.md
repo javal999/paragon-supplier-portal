@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 0.8 draft, 2026-09-24 |
+| Version | 0.10 draft, 2026-09-24 |
 | What this is | Detailed requirements for the demand and material forecast engine PTI builds itself (owner decision ENG-1), with each calculation explained |
 | Status | Every requirement is **Proposed**. The decision to build is Validated (ENG-1), and 12 of the 18 engine decisions are decided (ENG-D1 to D9 and ENG-D15 to D17, section 4). The rest of the detail has not yet been reviewed by the Material Planner |
 | Sources | ENG-1 (`SUPPLIER-HUB-REQUIREMENTS.md` section 9); methods and evidence in `research/FORECAST-METHOD-SPEC.md`; problem analysis in `research/FORECAST-BEST-PRACTICE-2026-09.md` |
@@ -157,6 +157,8 @@ The one check with arithmetic is **stock accuracy**:
 **Open items.**
 - BL-103: the feed specification, drafted as `FORECAST-ENGINE-FEED-SPEC.md`, for the Master Data Management team to confirm.
 - C8-IDENTITY-GRAIN: material identity between the SOMO master and the Hub.
+
+**Build.** The input contract and synthetic dataset were built with BL-102 (PR #37). The Data health page, the freshness limits and the quality checks on arrival were built on synthetic data (BL-109, PR #46); the choices the build made are ENG-B40 to ENG-B49 (section 4.1e). Not built: leaving refused records out of the calculations and marking the engine's results (BR-05, AC-02, ENG-B46); the stock-accuracy tolerance as an administrator setting (ENG-B45); the real feeds (BL-100).
 
 ---
 
@@ -1016,7 +1018,41 @@ Choices the E14-13 build made where the requirement was silent. For the owner to
 | ENG-B27 | A call-off is only proposed when the change verb can take it: dispatched, awaiting the supplier's answer, awaiting the planner's approval, a change pending, or two confirmed deliveries are shown for information. A call-off cancellation has no Hub verb (the change verb needs a quantity above zero); the page says to agree it with the supplier | E14-13 BR-01, BR-07 |
 | ENG-B28 | The stability guard uses E14-02's portfolio share over its 26-week window; a PO line adds to it when created in the window, not already changed inside the lead time, and the change is inside the lead time. Call-offs are not in the E14-02 measure; the page counts them among the selected proposals inside the lead time | E14-13 BR-09 |
 
-### 4.1e Build decisions for review (PR #48, BL-108)
+### 4.1e Build decisions for review (PR #46, BL-109)
+
+Choices the E14-01 build (Data health page, freshness limits, quality checks on arrival) made where the requirement and the feed spec were silent. For the owner to accept or change.
+
+| ID | Decision | Applied in |
+|---|---|---|
+| ENG-B40 | A feed is one entity of the engine's input contract: 17 feeds. The material list itself is not a feed; it is the Hub's material master (C8 §4.0), which every material code is checked against. The owner shown is the Master Data Management team (ENG-D1) for 15 feeds and the Supplier Hub for Confirmation and PlanVersion, which the feed spec says the Hub holds | E14-01 BR-01, BR-06; AC-01 |
+| ENG-B41 | On the synthetic dataset every feed's last arrival is the hub's present: the dataset is generated at that instant on every read. A real feed will carry its own arrival time. So no feed reads stale in the demo except through the per-warehouse stock check (ENG-B43) | E14-01 BR-05, BR-07 |
+| ENG-B42 | Freshness limits are administrator settings, one per feed that has a limit (`engine.freshnessDays.<feed>`, Tolerances page, rule REQ-E14-01). Defaults are the feed spec's limits. Where the spec states a refresh but no limit, the limit is the refresh period: SAP finished-goods plan 7 days, open sales orders 1, SAP safety stock 7, material value 31. The Hub's own records (confirmations, plan versions), the "on change" feeds (warehouses, units per pallet) and cycle counts ("as counted") have no limit. Age is in whole days; a feed at its limit is fresh, one day over is stale; a feed with a limit that never arrived is missing | E14-01 BR-01, BR-05; X-05 |
+| ENG-B43 | Stock is also judged per warehouse, on the date of its newest snapshot against the stock limit. One stale warehouse makes the stock feed stale, and the page lists the materials whose stock that warehouse holds (the E14-01 step-by-step example) | E14-01 BR-05 |
+| ENG-B44 | Checks added beside the feed spec's per-entity checks: no duplicate key in any feed (the spec's key); every material code resolves in the master (spec §1); a confirmation's line exists; the SKU of a sales week, plan snapshot or sales order is a known finished good; a BOM component is a known material or a bulk that is itself a parent. Coverage checks list the missing item: an active finished good (launched, not discontinued on the hub date) with no BOM valid that day, a stocked material with no units per pallet, a material with a source but no value. When a material's shares miss 1 by more than 0.001, every source of it is listed. A sales gap is a missing Monday between a SKU's first and last week | E14-01 BR-01; feed spec §1, §2 |
+| ENG-B45 | Two outcomes of a failed check: refused (the spec's rule, the record is kept out of the calculation) and flagged (stock accuracy only, ENG-D2: flag, do not block). Stock accuracy is judged on the latest count per material and warehouse with the same tolerance E14-03 uses, the ENG-D2 2%. The tolerance is not yet an administrator setting (BR-03 says the administrator sets it); it stays one constant so the page and E14-03 cannot disagree | E14-01 BR-03 |
+| ENG-B46 | Not built: leaving refused records out of the calculations, and marking the engine's result pages when a feed is stale or a check failed (BR-05, AC-02 run log). The report works out each step's status (clear, flagged, affected), but the result pages do not read it yet. On the synthetic dataset no record is refused, so leaving refused records out would change no figure | E14-01 BR-05, AC-02 |
+| ENG-B47 | A BOM line's `validTo` is read as the first day it is no longer valid, as the engine's contract (`types.ts`) and calculations (`bom.ts`, `requirement.ts`) read it. The feed spec calls it the last valid day. The overlap check and "has a BOM today" follow the contract; the spec wording is for the Master Data Management team to settle | E14-01; feed spec §2.2 BomLine |
+| ENG-B48 | A failure affects the steps that read the feed today plus every step downstream of them: E14-04 feeds E14-03, E14-03 feeds E14-05, E14-05 and E14-02 feed E14-13. A failed BOM check therefore affects E14-02 (plan-change measures), E14-03, E14-04, E14-05 and E14-13. Finished goods are read directly only by E14-07, which is shown as not built yet | E14-01 Experience (MP) |
+| ENG-B49 | The demo shows no deliberately failing records: the calibrated synthetic dataset is untouched, and the tests inject one bad record per check to prove each fires, by the record's key. What the page shows is the real result on the synthetic data: 58 checks over 17 feeds, 57 passing, no record refused; stock accuracy flags 6 materials (latest count 3.2% to 8.4% off system stock), so E14-03, E14-05 and E14-13 read "flagged" | E14-01 AC-01, AC-03 |
+
+### 4.1f Build decisions for review (PR #47, BL-115 to BL-117)
+
+Choices the builds of the E14-03, E14-04 and E14-05 leftovers made where the requirement was silent or read two ways. For the owner to accept or change.
+
+| ID | Decision | Applied in |
+|---|---|---|
+| ENG-B50 | Yield divides the requirement on each BOM line, beside scrap: component quantity = qtyPer × (1 + scrap) ÷ yield. BR-03 and METHOD-SPEC M2 step 5 put "÷ yield" on the order quantity; it is applied per BOM line instead, because yield is a property of each line and a material used by several finished goods can carry several yields, which one divisor on the order could not honour. The same factor is used for the history (E14-04's plan errors, E14-02), so errors are measured on the requirement that is planned | E14-03 BR-03, calculation step 1 |
+| ENG-B51 | The contract field is `yieldPct`, a fraction like `scrapPct`, required on every BOM line; a value outside (0, 1] is named on arrival (`BOM_YIELD_OUT_OF_RANGE`). The synthetic BOM carries 1 on every line, as a constant rather than a random draw, so no calibrated figure moves (confirmation 65.9%, CFOT 36.7%, packaging 124–136%, raw material 105–107% unchanged, bit for bit). The Material requirement drill-in shows each finished good's part with the scrap and yield of the BOM line it came through | E14-03 BR-03; E14-01 |
+| ENG-B52 | "The last run" is the same pure calculation at the previous run date of the material's stream, recomputed at read (X-04): packaging 7 days before, raw material 28 days before (four weekly buckets; a calendar month would move the week boundaries). Nothing is stored, the same trade as ENG-B17: a receipt recorded since then is not unwound, and both runs use the administrator's values in force, so a target change by the administrator is not shown as a cause | E14-04 BR-06; X-01, X-04 |
+| ENG-B53 | A change is counted in whole units, the figures the page shows. Its cause is read from the two runs' inputs, never inferred from its size: the method switched (history reached or lost the 30 past plans), the tier moved, the target changed, past plans entered or left the error history, the expected order per cycle changed, the risk window changed, or (on the SAP fallback) SAP's value changed; for the reorder point also a new plan. A material absent from the last run is "new". A material whose figures did not move lists no cause | E14-04 BR-06 |
+| ENG-B54 | The Safety stock page shows, per material, the change in safety stock and reorder point with the figure it came from and each cause, and above the table the two run dates compared and how many materials changed. Changes are not coloured: a rise is not a fault | E14-04 BR-06; AC-01 |
+| ENG-B55 | The maximum rented space is an administrator value beside the E14-05 cost rates (X-05): `engine.maxRentedSpacePct`, a share of owned capacity applied to each warehouse (ENG-D7), placeholder 25% until the Warehouse confirms what the 3PL contract allows. It is a hard limit, not a price: plans are compared first on pallet-weeks beyond capacity plus the cap, then on cost, so the sizing never rents past it to save money and nothing changes when it does not bind | E14-05 BR-01, edge case |
+| ENG-B56 | At the default 25% the synthetic results do not change: every planned order and every cost is identical to the uncapped plan. Packaging does not fit in the current week (2,289 pallets against 1,800 + 450, short 39) and raw material fits; at 20% three packaging weeks would not fit | E14-05 edge case |
+| ENG-B57 | "No plan fits" is a week still beyond capacity plus the cap after the capped sizing; "unavoidable" marks one where even the lowest possible stock (each week's need exactly, no MOQ or multiple) is beyond it, meaning stock on hand or confirmed deliveries fill the space. Each such week shows both choices costed: rent the shortfall beyond the cap at the rented-space rate (already inside the page's rent figure), or deliver later: every recommended order and confirmed PO line arriving by that week, each checked alone for whether moving it to the week after keeps the material at its safety stock, and whether the movable ones free enough | E14-05 edge case |
+| ENG-B58 | The planner's choice is made on the page and is not stored: it changes no order and does not re-plan. The chosen option says where to act (the 3PL booking; the Reschedule open orders page for a confirmed line; a later date on the draft call-off for a recommended order). Recording the choice as an override with a reason (X-06) is a follow-up | E14-05 edge case; X-06 |
+| ENG-B59 | Released call-offs are not among the later-delivery candidates, because E14-03 and E14-05 do not net call-offs yet (ENG-B19); they appear once they are netted | E14-05 edge case |
+
+### 4.1g Build decisions for review (PR #48, BL-108)
 
 Choices the E14-06 build made where the requirement was silent or read two ways. For the owner to accept or change.
 
@@ -1059,4 +1095,6 @@ Choices the E14-06 build made where the requirement was silent or read two ways.
 | 0.5 | 2026-09-23 | ENG-D4, D6, D7 decided; build decisions ENG-B14 to ENG-B18 from PR #41 (E14-05 and the release block), section 4.1c |
 | 0.6 | 2026-09-23 | REQ-E14-13 Reschedule or cancel open orders added (Proposed), from the E14-05 finding that order sizing cannot lower the current overload; ENG-D15 to ENG-D17 opened |
 | 0.7 | 2026-09-24 | ENG-D15, D16, D17 decided by the owner on the defaults (1 week; the Material Planner in SAP, the Hub records "taken to SAP"; liability flagged, not priced). REQ-E14-13 built on synthetic data (BL-107, PR #44); build decisions ENG-B19 to ENG-B28 for review, section 4.1d |
-| 0.8 | 2026-09-24 | REQ-E14-06 built on synthetic data (BL-108, PR #48); build decisions ENG-B29 to ENG-B38 for review, section 4.1e. The range beside the quantity (BR-06) is not built: it needs E14-09 |
+| 0.8 | 2026-09-24 | REQ-E14-01 Data health page, freshness limits and quality checks on arrival built on synthetic data (BL-109, PR #46); build decisions ENG-B40 to ENG-B49 for review, section 4.1e |
+| 0.9 | 2026-09-24 | Leftovers of E14-03, E14-04 and E14-05 built on synthetic data (BL-115 yield, BL-116 change since the last run, BL-117 cap on rented space; PR #47); build decisions ENG-B50 to ENG-B59 for review, section 4.1f |
+| 0.10 | 2026-09-24 | REQ-E14-06 built on synthetic data (BL-108, PR #48); build decisions ENG-B29 to ENG-B38 for review, section 4.1g. The range beside the quantity (BR-06) is not built: it needs E14-09 |

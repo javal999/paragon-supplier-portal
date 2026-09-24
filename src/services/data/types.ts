@@ -64,11 +64,13 @@ import type {
 } from '../delivery/views';
 import type { SupplierReliability } from '../engine/reliability';
 import type { MaterialPlan, MaterialRequirementRun } from '../engine/requirement';
-import type { MaterialSafetyStock, SafetyStockRun } from '../engine/safetyStock';
+import type { MaterialSafetyStock, SafetyStockChange, SafetyStockRun } from '../engine/safetyStock';
 import type { MaterialOrderPlan, OrderPlanRun, WarehousePlan } from '../engine/orderSizing';
 import type { InfoLine, PlanChangeBaseline, Proposal, ProposalType, RescheduleRun, WarehouseReschedule } from '../engine/reschedule';
 import type { SupplierCfot } from '../engine/cfot';
 import type { SeriesResult, StabiliseParams, StabiliseRun } from '../engine/stabilise';
+import type { DataHealthReport } from '../engine/dataHealth';
+import type { DatasetProvenance } from '../engine/types';
 import type { ReleaseSelection } from '../delivery/release';
 import type { EditPolicyPatch } from '../delivery/policy';
 // The unified chase read view (SDC-5c). TYPE-ONLY — the `chase` module composes
@@ -780,6 +782,8 @@ export interface MaterialRequirementView extends MaterialRequirementRun {
 export interface MaterialSafetyStockView extends MaterialSafetyStock {
   readonly materialLabel: string;
   readonly supplierName: string | null;
+  /** BR-06 (BL-116) — the change since the last run of the material's stream, and why. */
+  readonly change: SafetyStockChange;
 }
 
 /**
@@ -788,6 +792,8 @@ export interface MaterialSafetyStockView extends MaterialSafetyStock {
  */
 export interface SafetyStockView extends SafetyStockRun {
   readonly materials: readonly MaterialSafetyStockView[];
+  /** BR-06 — the last run each stream is compared with (X-04: packaging weekly, raw material monthly). */
+  readonly previousAsOf: { readonly packaging: string; readonly rawMaterial: string };
 }
 
 /** One material's E14-05 order plan as served, with display names. */
@@ -896,6 +902,18 @@ export interface StabilisedPlanView {
   readonly sapHistory: StabiliseRunView;
   /** BR-06 — the range (P50 / P90) beside the quantity needs E14-09, which is not built. */
   readonly rangeAvailable: false;
+}
+
+/**
+ * REQ-E14-01 — the engine's data health, as served: every feed's last arrival
+ * and freshness against the administrator's limit, its record count and the
+ * feed spec's quality checks with the failing records by key, and the engine
+ * steps each failure would affect. Computed at read on the engine's
+ * (SIMULATED) dataset. PTI only; a supplier gets null.
+ */
+export interface DataHealthView extends DataHealthReport {
+  /** Where the dataset came from (X-03): SIMULATED until the MDM feed is live. */
+  readonly provenance: DatasetProvenance;
 }
 
 export interface ForecastCoverageRow {
@@ -2486,6 +2504,12 @@ export interface IProcurementService {
    * plan-change measures; on the engine's (SIMULATED) dataset. PTI only.
    */
   getStabilisedPlan(scope: QueryScope): Promise<StabilisedPlanView | null>;
+  /**
+   * REQ-E14-01 — data health of the engine's inputs: freshness per feed
+   * against the administrator's limits, and the feed spec's quality checks on
+   * arrival with the failing records. On the engine's (SIMULATED) dataset. PTI only.
+   */
+  getDataHealth(scope: QueryScope): Promise<DataHealthView | null>;
 
   // — Sourcing —
   getRFQs(scope: QueryScope, filter?: RFQFilter): Promise<Page<RFQ>>;

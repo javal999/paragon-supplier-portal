@@ -19,6 +19,7 @@
 //                                                 the E14-04 safety stock held)
 //     · x_it = 0, or x_it ≥ MOQ_i and a whole multiple of m_i
 //     · Σ_i v_i·I_it ≤ Cap + O_t, O_t ≥ 0        (owned pallets; overflow rented)
+//     · O_t ≤ R                                   (the most rented space, BL-117)
 //
 //   K = cost per order, h_i = value_i × holding rate ÷ 52, v_i = pallets per
 //   unit (1 ÷ units per pallet), p = rented space per pallet-week, λ = the
@@ -55,6 +56,18 @@
 //      than an extra order (Boonphakdee et al., Computation 2025). The cheaper
 //      of the two starts is kept, so the result is never worse than the
 //      interim round-up on the same costs.
+//
+// ── THE CAP ON RENTED SPACE (edge case, BL-117) ─────────────────────────────
+//   R = owned capacity × the administrator's maximum rented share (X-05). The
+//   cap is HARD: plans are compared first on pallet-weeks beyond Cap + R, then
+//   on cost — so the engine never rents past R to save money, and with no cap
+//   (or a cap that does not bind) every figure is exactly as before. A week
+//   still beyond Cap + R after that is a week where NO PLAN FITS: it is shown
+//   with its shortfall and the planner's two ways out — rent the shortfall
+//   beyond the cap (at the rate), or have deliveries arriving by that week
+//   come later (each listed with whether moving it keeps the safety stock).
+//   "Unavoidable" marks a week where even the lowest possible stock (each
+//   week's need exactly, no MOQ or multiple) is beyond Cap + R.
 //
 // ── FALLBACKS (BR-02) ───────────────────────────────────────────────────────
 //   When the joint calculation cannot run for a warehouse (no capacity record,
@@ -102,6 +115,12 @@ export interface SizingCosts {
   readonly rentIdrPerPalletWeek: number;
   /** λ — BR-03, rupiah per pallet by which an order inside the lead time changes. */
   readonly changePenaltyIdrPerPallet: number;
+  /**
+   * The most rented space the plan may use, as a share of owned capacity
+   * (0.25 = up to 25% above capacity; X-05, BL-117). Absent: no cap — every
+   * figure is exactly what it was before the cap existed.
+   */
+  readonly maxRentedShare?: number;
 }
 
 const EPS = 1e-6;
@@ -137,7 +156,29 @@ export interface SizingItem {
 export interface SpaceTerms {
   readonly capacityPallets: number;
   readonly rentIdrPerPalletWeek: number;
+  /**
+   * Owned capacity + the most rented space allowed (BL-117). Pallets above it
+   * fit nowhere: the plan first minimises them, then the cost (lexicographic,
+   * see `better`). Absent: no cap.
+   */
+  readonly limitPallets?: number;
 }
+
+/**
+ * BL-117 — the cap on rented space is a HARD limit, not a price: a plan that
+ * puts fewer pallet-weeks beyond it always wins, and cost decides only
+ * between plans equally beyond it (usually both at zero). Compared as a pair
+ * rather than priced with a big number, so no rupiah figure moves when the cap
+ * does not bind and no float rounding can reorder two plans (ENG-B55).
+ */
+interface Scored {
+  /** Pallet-weeks beyond owned capacity + the rented-space cap. */
+  readonly beyond: number;
+  readonly cost: number;
+}
+
+const better = (a: Scored, b: Scored): boolean =>
+  a.beyond < b.beyond - EPS || (Math.abs(a.beyond - b.beyond) <= EPS && a.cost < b.cost - EPS);
 
 const stepOf = (item: Pick<SizingItem, 'orderMultiple'>) => (item.orderMultiple > 0 ? item.orderMultiple : 1);
 /** The smallest order allowed: at least the MOQ, a whole multiple, above zero. */
@@ -250,6 +291,8 @@ export interface OrderOption {
   readonly quantity: number;
   /** This week's cost of it plus the cheapest plan after it. */
   readonly total: number;
+  /** Pallet-weeks beyond the rented-space cap from this week on, under it (BL-117; 0 with no cap). */
+  readonly beyond: number;
 }
 
 interface Solver {
@@ -276,11 +319,14 @@ export function singleItemSolver(
   const cn = cumulativeNeed(item);
   const step = stepOf(item);
   const xmin = minimumOrder(item);
+  const limit = space.limitPallets ?? Infinity;
   const weekCost = (t: number, stock: number) => {
     const over = Math.max(0, (others[t] ?? 0) + stock * item.palletsPerUnit - space.capacityPallets);
     return item.holdingPerUnitWeek * stock + space.rentIdrPerPalletWeek * over;
   };
-  const memo = new Map<string, { cost: number; x: number }>();
+  const weekBeyond = (t: number, stock: number) =>
+    limit === Infinity ? 0 : Math.max(0, (others[t] ?? 0) + stock * item.palletsPerUnit - limit);
+  const memo = new Map<string, { beyond: number; cost: number; x: number }>();
 
   const candidates = (t: number, q: number): number[] => {
     const out: number[] = [];
@@ -310,15 +356,18 @@ export function singleItemSolver(
     changePenalty(item, t, x, costs.changePenaltyIdrPerPallet) +
     weekCost(t, q + x - cn[t] + item.safetyStock);
 
-  const solve = (t: number, q: number): { cost: number; x: number } => {
-    if (t >= T) return { cost: 0, x: 0 };
+  const stepBeyond = (t: number, q: number, x: number) => weekBeyond(t, q + x - cn[t] + item.safetyStock);
+
+  const solve = (t: number, q: number): { beyond: number; cost: number; x: number } => {
+    if (t >= T) return { beyond: 0, cost: 0, x: 0 };
     const key = `${t}|${q}`;
     const hit = memo.get(key);
     if (hit) return hit;
-    let best = { cost: Infinity, x: 0 };
+    let best = { beyond: Infinity, cost: Infinity, x: 0 };
     for (const x of candidates(t, q)) {
-      const c = stepCost(t, q, x) + solve(t + 1, q + x).cost;
-      if (c < best.cost - EPS) best = { cost: c, x };
+      const next = solve(t + 1, q + x);
+      const c = { beyond: stepBeyond(t, q, x) + next.beyond, cost: stepCost(t, q, x) + next.cost, x };
+      if (better(c, best)) best = c;
     }
     memo.set(key, best);
     return best;
@@ -327,7 +376,10 @@ export function singleItemSolver(
   return {
     best: (t, q) => solve(t, q).cost,
     options: (t, q) =>
-      candidates(t, q).map((x) => ({ quantity: x, total: stepCost(t, q, x) + solve(t + 1, q + x).cost })),
+      candidates(t, q).map((x) => {
+        const next = solve(t + 1, q + x);
+        return { quantity: x, total: stepCost(t, q, x) + next.cost, beyond: stepBeyond(t, q, x) + next.beyond };
+      }),
     plan: () => {
       const out: number[] = [];
       let q = 0;
@@ -373,6 +425,8 @@ export const overflowOf = (pallets: readonly number[], capacity: number): number
 export interface JointResult {
   readonly plans: readonly (readonly number[])[];
   readonly totalIdr: number;
+  /** Pallet-weeks beyond owned capacity + the rented-space cap (BL-117; 0 with no cap). */
+  readonly beyondPalletWeeks: number;
   readonly rounds: number;
   readonly start: 'unconstrained' | 'interim';
 }
@@ -389,8 +443,13 @@ export function jointPlan(
   costs: SizingCosts,
 ): JointResult {
   const T = fixedPallets.length;
-  const space: SpaceTerms = { capacityPallets, rentIdrPerPalletWeek: costs.rentIdrPerPalletWeek };
-  const total = (plans: readonly (readonly number[])[]) => {
+  const limitPallets = rentedSpaceLimit(capacityPallets, costs);
+  const space: SpaceTerms = {
+    capacityPallets,
+    rentIdrPerPalletWeek: costs.rentIdrPerPalletWeek,
+    ...(limitPallets !== null ? { limitPallets } : {}),
+  };
+  const total = (plans: readonly (readonly number[])[]): Scored => {
     const pallets = [...fixedPallets];
     let c = 0;
     items.forEach((it, i) => {
@@ -398,11 +457,14 @@ export function jointPlan(
       const b = itemCost(it, plans[i], costs);
       c += b.orderingIdr + b.holdingIdr + b.changePenaltyIdr;
     });
-    return c + overflowOf(pallets, capacityPallets).reduce((s, o) => s + o * costs.rentIdrPerPalletWeek, 0);
+    return {
+      beyond: limitPallets === null ? 0 : overflowOf(pallets, limitPallets).reduce((s, o) => s + o, 0),
+      cost: c + overflowOf(pallets, capacityPallets).reduce((s, o) => s + o * costs.rentIdrPerPalletWeek, 0),
+    };
   };
   const descend = (start: number[][]) => {
     let plans = start;
-    let cost = total(plans);
+    let score = total(plans);
     let rounds = 0;
     for (; rounds < MAX_DESCENT_ROUNDS; rounds += 1) {
       let improved = false;
@@ -414,22 +476,26 @@ export function jointPlan(
         const candidate = singleItemSolver(items[i], others, space, costs).plan();
         const next = plans.map((p, k) => (k === i ? candidate : p));
         const c = total(next);
-        if (c < cost - EPS) {
+        if (better(c, score)) {
           plans = next;
-          cost = c;
+          score = c;
           improved = true;
         }
       }
       if (!improved) break;
     }
-    return { plans, cost, rounds: rounds + 1 };
+    return { plans, score, rounds: rounds + 1 };
   };
   const zero = new Array<number>(T).fill(0);
   const free = descend(items.map((it) => singleItemSolver(it, zero, { capacityPallets: Infinity, rentIdrPerPalletWeek: 0 }, costs).plan()));
   const interim = descend(items.map((it) => interimPlan(it)));
-  const pick = interim.cost < free.cost - EPS ? { ...interim, start: 'interim' as const } : { ...free, start: 'unconstrained' as const };
-  return { plans: pick.plans, totalIdr: pick.cost, rounds: pick.rounds, start: pick.start };
+  const pick = better(interim.score, free.score) ? { ...interim, start: 'interim' as const } : { ...free, start: 'unconstrained' as const };
+  return { plans: pick.plans, totalIdr: pick.score.cost, beyondPalletWeeks: pick.score.beyond, rounds: pick.rounds, start: pick.start };
 }
+
+/** Owned capacity + the rented-space cap, in pallets (BL-117); null with no cap. */
+export const rentedSpaceLimit = (capacityPallets: number, costs: Pick<SizingCosts, 'maxRentedShare'>): number | null =>
+  costs.maxRentedShare === undefined ? null : capacityPallets + capacityPallets * costs.maxRentedShare;
 
 // ── The run over a material requirement ─────────────────────────────────────
 
@@ -510,6 +576,55 @@ export interface WarehouseWeek {
   readonly rentedPallets: number;
   readonly interimRentedPallets: number;
   readonly rentIdr: number;
+  /** Pallets beyond owned capacity + the rented-space cap: they fit nowhere (BL-117; 0 with no cap). */
+  readonly beyondCapPallets: number;
+}
+
+/** A delivery that arrives by a shortfall week and could be moved after it (BL-117). */
+export interface LaterDelivery {
+  readonly materialCode: string;
+  readonly supplierId: string | null;
+  /** `planned`: an order-plan recommendation; `confirmed`: an open PO line at its confirmed date (E14-03). */
+  readonly source: 'planned' | 'confirmed';
+  /** The week it is received now (a Monday). */
+  readonly weekStart: IsoDate;
+  readonly quantity: number;
+  readonly pallets: number;
+  /**
+   * Moved to the week after the shortfall week, the material's stock stays at
+   * or above its safety stock every week in between (each delivery judged on
+   * its own — moving two of the same material is not judged together).
+   */
+  readonly keepsSafetyStock: boolean;
+}
+
+/**
+ * REQ-E14-05 edge case (BL-117): a week where no plan fits the warehouse even
+ * with the maximum rented space. Shown with the shortfall and the planner's two
+ * ways out, each with what it costs — rent beyond the cap, or a later delivery.
+ */
+export interface ShortfallWeek {
+  readonly weekStart: IsoDate;
+  readonly pallets: number;
+  /** Owned capacity + the rented-space cap. */
+  readonly limitPallets: number;
+  /** Pallets beyond the limit. */
+  readonly shortfallPallets: number;
+  /**
+   * Even the lowest any plan could hold (each week's need exactly, no MOQ or
+   * multiple) is beyond the limit: no re-sizing of orders can fix it — stock
+   * already on hand or already confirmed fills the space.
+   */
+  readonly unavoidable: boolean;
+  /** Option 1 — rent the shortfall beyond the cap, at the rented-space rate. */
+  readonly rent: { readonly pallets: number; readonly costIdr: number };
+  /** Option 2 — deliver later: what arrives by this week, and how much could move without breaking safety stock. */
+  readonly later: {
+    readonly deliveries: readonly LaterDelivery[];
+    readonly movablePallets: number;
+    /** The movable deliveries free at least the shortfall. */
+    readonly enough: boolean;
+  };
 }
 
 export interface WarehousePlan {
@@ -523,6 +638,10 @@ export interface WarehousePlan {
   readonly materials: readonly MaterialOrderPlan[];
   readonly before: CostSummary;
   readonly after: CostSummary;
+  /** The most rented space allowed, in pallets (X-05, BL-117); null with no cap or no capacity record. */
+  readonly maxRentedPallets: number | null;
+  /** Weeks where no plan fits even with the maximum rented space (edge case, BL-117). */
+  readonly shortfallWeeks: readonly ShortfallWeek[];
 }
 
 export interface OrderPlanRun {
@@ -638,6 +757,8 @@ export function orderPlan(run: MaterialRequirementRun, master: OrderPlanMaster, 
     const overAfter = overflowOf(after, cap);
     const overBefore = overflowOf(before, cap);
     const fillOf = (p: number) => (capacity !== null ? p / capacity : null);
+    const limit = capacity !== null ? rentedSpaceLimit(capacity, costs) : null;
+    const beyondAfter = limit === null ? after.map(() => 0) : overflowOf(after, limit);
 
     const materials = items.map((it, i): MaterialOrderPlan => {
       const m = mats[i];
@@ -650,7 +771,12 @@ export function orderPlan(run: MaterialRequirementRun, master: OrderPlanMaster, 
       let free: Solver | null = null;
       if (method === 'joint') {
         const others = after.map((p, t) => p - stock[t] * it.palletsPerUnit);
-        solver = singleItemSolver(it, others, { capacityPallets: cap, rentIdrPerPalletWeek: costs.rentIdrPerPalletWeek }, costs);
+        solver = singleItemSolver(
+          it,
+          others,
+          { capacityPallets: cap, rentIdrPerPalletWeek: costs.rentIdrPerPalletWeek, ...(limit !== null ? { limitPallets: limit } : {}) },
+          costs,
+        );
         free = singleItemSolver(it, new Array<number>(T).fill(0), { capacityPallets: Infinity, rentIdrPerPalletWeek: 0 }, costs);
       }
       const recs: Recommendation[] = [];
@@ -747,6 +873,49 @@ export function orderPlan(run: MaterialRequirementRun, master: OrderPlanMaster, 
       };
     };
 
+    // BL-117 — weeks beyond owned capacity + the cap, each with the planner's
+    // two ways out. A delivery counts when it arrives by that week; moving it
+    // to the week after frees its pallets in every week between.
+    const shortfallWeeks: ShortfallWeek[] = [];
+    if (limit !== null) {
+      run.weeks.forEach((w, t) => {
+        if (beyondAfter[t] <= EPS) return;
+        const deliveries: LaterDelivery[] = [];
+        items.forEach((it, i) => {
+          const stock = projectedStock(it, plans[i]);
+          const keeps = (s: number, qty: number) => stock.slice(s, t + 1).every((v) => v - qty >= it.safetyStock - EPS);
+          for (let s = 0; s <= t; s += 1) {
+            for (const [source, qty] of [
+              ['planned', plans[i][s] ?? 0],
+              ['confirmed', it.receipts[s] ?? 0],
+            ] as const) {
+              if (qty <= EPS) continue;
+              deliveries.push({
+                materialCode: it.materialCode,
+                supplierId: mats[i].supplierId,
+                source,
+                weekStart: run.weeks[s],
+                quantity: qty,
+                pallets: qty * it.palletsPerUnit,
+                keepsSafetyStock: keeps(s, qty),
+              });
+            }
+          }
+        });
+        deliveries.sort((a, b) => b.pallets - a.pallets || a.materialCode.localeCompare(b.materialCode) || a.weekStart.localeCompare(b.weekStart));
+        const movablePallets = deliveries.filter((d) => d.keepsSafetyStock).reduce((sum, d) => sum + d.pallets, 0);
+        shortfallWeeks.push({
+          weekStart: w,
+          pallets: after[t],
+          limitPallets: limit,
+          shortfallPallets: beyondAfter[t],
+          unavoidable: lowest[t] > limit + EPS,
+          rent: { pallets: beyondAfter[t], costIdr: beyondAfter[t] * costs.rentIdrPerPalletWeek },
+          later: { deliveries, movablePallets, enough: movablePallets >= beyondAfter[t] - EPS },
+        });
+      });
+    }
+
     return {
       warehouseId: wh?.warehouseId ?? null,
       kind,
@@ -754,6 +923,8 @@ export function orderPlan(run: MaterialRequirementRun, master: OrderPlanMaster, 
       method: fallbackReason === null ? 'joint' : 'fallback',
       fallbackReason,
       rounds,
+      maxRentedPallets: limit !== null && capacity !== null && costs.maxRentedShare !== undefined ? capacity * costs.maxRentedShare : null,
+      shortfallWeeks,
       weeks: run.weeks.map((w, t) => ({
         weekStart: w,
         pallets: after[t],
@@ -765,6 +936,7 @@ export function orderPlan(run: MaterialRequirementRun, master: OrderPlanMaster, 
         rentedPallets: overAfter[t],
         interimRentedPallets: overBefore[t],
         rentIdr: overAfter[t] * costs.rentIdrPerPalletWeek,
+        beyondCapPallets: beyondAfter[t],
       })),
       materials,
       before: summary('before', overBefore),

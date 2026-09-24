@@ -58,6 +58,31 @@ describe('BuyerSafetyStock — the planner page', () => {
     expect(within(detail).getAllByTestId(/^sst-err-/).length).toBe(m.errors.length);
   });
 
+  it('BR-06 (BL-116): each material shows its change since the last run and the cause, read back from the service', async () => {
+    const run = (await mockDataService.procurement.getSafetyStock(buyerScope))!;
+    const moved = run.materials.filter((m) => m.change.safetyStockDelta !== 0);
+    const still = run.materials.filter((m) => m.change.causes.length === 0);
+    expect(moved.length).toBeGreaterThan(0);
+    renderWithProviders(<BuyerSafetyStock />, { identity: BUYER, route: '/buyer/safety-stock' });
+    await screen.findByTestId(`sst-row-${run.materials[0].materialCode}`);
+    expect(screen.getByTestId('sst-last-run')).toHaveTextContent(`${moved.length} materials’ safety stock changed since the last run`);
+    for (const m of moved) {
+      const d = m.change.safetyStockDelta;
+      expect(screen.getByTestId(`sst-change-ss-${m.materialCode}`)).toHaveTextContent(
+        d > 0 ? `+${qtyOf(d, m.uom)}` : `−${qtyOf(-d, m.uom)}`,
+      );
+      for (const cause of m.change.causes) expect(screen.getByTestId(`sst-cause-${m.materialCode}-${cause}`)).toBeInTheDocument();
+    }
+    for (const m of still) expect(screen.getByTestId(`sst-change-${m.materialCode}`)).toHaveTextContent('No change');
+    // A named cause reads in business language, with its figures.
+    expect(run.materials.filter((m) => m.change.causes.includes('tier')).map((m) => m.materialCode)).toEqual([
+      'AI-PANTO-6640',
+      'RM-EMUL-3320',
+    ]);
+    expect(screen.getByTestId('sst-cause-RM-EMUL-3320-tier')).toHaveTextContent('Tier changed: High volume → Standard');
+    expect(screen.getByTestId('sst-cause-AI-PANTO-6640-tier')).toHaveTextContent('Tier changed: Slow mover → Standard');
+  });
+
   it('a supplier scope gets nothing (X-03)', async () => {
     expect(await mockDataService.procurement.getSafetyStock(supplierScope)).toBeNull();
   });

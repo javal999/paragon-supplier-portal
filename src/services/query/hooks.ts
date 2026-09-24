@@ -116,6 +116,10 @@ export const useReschedule = () =>
 export const useStabilisedPlan = () =>
   useServiceQuery(['procurement', 'stabilisedPlan'], (svc, scope) => svc.procurement.getStabilisedPlan(scope));
 
+/** REQ-E14-01 — data health of the forecast engine's inputs (PTI only). */
+export const useDataHealth = () =>
+  useServiceQuery(['procurement', 'dataHealth'], (svc, scope) => svc.procurement.getDataHealth(scope));
+
 // ── RFx management (REQ-E03-01 to REQ-E03-05) ──────────────────────────────
 
 /**
