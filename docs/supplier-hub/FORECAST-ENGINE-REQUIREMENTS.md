@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 0.10 draft, 2026-09-24 |
+| Version | 0.11 draft, 2026-09-24 |
 | What this is | Detailed requirements for the demand and material forecast engine PTI builds itself (owner decision ENG-1), with each calculation explained |
 | Status | Every requirement is **Proposed**. The decision to build is Validated (ENG-1), and 12 of the 18 engine decisions are decided (ENG-D1 to D9 and ENG-D15 to D17, section 4). The rest of the detail has not yet been reviewed by the Material Planner |
 | Sources | ENG-1 (`SUPPLIER-HUB-REQUIREMENTS.md` section 9); methods and evidence in `research/FORECAST-METHOD-SPEC.md`; problem analysis in `research/FORECAST-BEST-PRACTICE-2026-09.md` |
@@ -269,7 +269,7 @@ It feeds supplier performance (REQ-E10-01) and sourcing filters (REQ-E03-01). Un
 **Business rules.**
 - BR-01. **Forecast consumption:** sales orders replace the forecast in the weeks they fall into, so the two are not counted twice. The window is set per SKU group [Spec M1].
 - BR-02. **Explosion order:** items are processed by low-level code, finished goods first, then bulk, then materials, so every item's full requirement is known before it is netted [Spec M2].
-- BR-03. **Scrap and yield:** the component quantity is raised by its scrap percentage, and the order quantity is divided by its yield [Spec M2].
+- BR-03. **Scrap and yield:** the component quantity is raised by its scrap percentage and divided by the yield of the parent's process, both on the BOM line: qty per × (1 + scrap) ÷ yield. Yield lives on the BOM line (feed spec BomLine), so this is the same as dividing the parent's order quantity by its yield before exploding it [Spec M2; ENG-B50].
 - BR-04. **Netting uses:**
   - stock on hand, subject to E14-01 BR-03
   - open POs and call-offs at the **supplier-confirmed** date and quantity
@@ -1098,3 +1098,4 @@ Choices the E14-06 build made where the requirement was silent or read two ways.
 | 0.8 | 2026-09-24 | REQ-E14-01 Data health page, freshness limits and quality checks on arrival built on synthetic data (BL-109, PR #46); build decisions ENG-B40 to ENG-B49 for review, section 4.1e |
 | 0.9 | 2026-09-24 | Leftovers of E14-03, E14-04 and E14-05 built on synthetic data (BL-115 yield, BL-116 change since the last run, BL-117 cap on rented space; PR #47); build decisions ENG-B50 to ENG-B59 for review, section 4.1f |
 | 0.10 | 2026-09-24 | REQ-E14-06 built on synthetic data (BL-108, PR #48); build decisions ENG-B29 to ENG-B38 for review, section 4.1g. The range beside the quantity (BR-06) is not built: it needs E14-09 |
+| 0.11 | 2026-09-24 | E14-03 BR-03 reworded to match ENG-B50: yield applied on the BOM line beside scrap (same result as dividing the parent's order quantity); the backlog wording for BL-115 had caused the mismatch |
