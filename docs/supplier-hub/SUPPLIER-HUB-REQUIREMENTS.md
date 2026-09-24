@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 0.17 draft, 2026-09-23 |
+| Version | 0.18 draft, 2026-09-23 |
 | Sources | `SUPPLIER-HUB-BASELINE.md` (kick-off deck, Aug 2026); `KICKOFF-MEETING-NOTES.md` (business user feedback, reviewed 2026-09-17); owner review of the prototype gap review (2026-09-17); owner RFx decisions RFX-D1 to RFX-D5 (2026-09-21); RFx best-practice research, `research/RFX-BEST-PRACTICE-2026-09.md` (2026-09-21); owner decision ENG-1 (2026-09-23) with the forecast research `research/FORECAST-BEST-PRACTICE-2026-09.md` and `research/FORECAST-METHOD-SPEC.md` |
 | Scope of this version | Detailed: Order Collaboration, Inventory & Capacity Collaboration, RFx (validated); Forecast Collaboration, Call-off Management, and the undiscussed parts of Order and Inventory Collaboration (proposed). Hub navigation and screen conventions (validated). Foundation is reserved for the Foundation team. The remaining epics are stubs |
 | Not in scope | The codebase. This file states what the Supplier Hub must do, not what is built. What the prototype does today, and where, is tracked only in `BUILD-GAP.md` |
@@ -284,6 +284,7 @@ The menu follows the hub's own sections, not procurement stages, and each PTI us
 | REQ-E14-10 | Choosing models by service, not accuracy | E14 | MVP | Proposed |
 | REQ-E14-11 | Forecast bias and planner override control | E14 | MVP | Proposed |
 | REQ-E14-12 | Where to hold buffers | E14 | Phase 2 | Proposed |
+| REQ-E14-13 | Reschedule or cancel open orders (warehouse relief) | E14 | MVP | Proposed |
 | E04, E05, E11, E12, E13 (other) | Contract, Catalog, Reporting, API ERP, Shipment Aggregator | | Phase 2 or MVP per deck | Stub |
 
 ---
@@ -1833,3 +1834,4 @@ Research date: 2026-09-21. The full note, with every source link, is `research/R
 | 0.15 | 2026-09-23 | Engine decisions ENG-D1, D2, D3, D5, D8, D9 recorded in section 9 and applied in `FORECAST-ENGINE-REQUIREMENTS.md` 0.2 |
 | 0.16 | 2026-09-23 | KPI-1 to KPI-4 recorded (BL-66, built in PR #38); open item KPI-D closed |
 | 0.17 | 2026-09-23 | ENG-D4, D6, D7 recorded in section 9 |
+| 0.18 | 2026-09-23 | REQ-E14-13 added to the index (detail in `FORECAST-ENGINE-REQUIREMENTS.md`) |

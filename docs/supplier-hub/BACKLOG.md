@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 2.2, 2026-09-23 |
+| Version | 2.3, 2026-09-23 |
 | What this is | Everything known to be outstanding for the Supplier Hub, in one list: decisions waiting on people, work waiting on those decisions, work waiting on the backend, and work that can start today |
 | What this is not | A plan or a commitment. Nothing here has a date. Sequencing belongs to the project owner |
 | Sources | Open items (section 7 of `SUPPLIER-HUB-REQUIREMENTS.md`), open decisions (section 9.3 of `SUPPLIER-HUB-PRD.md`), what is not built (section 5 of `BUILD-GAP.md`), stubs (section 6 of the requirements), and defects or debts found while building |
@@ -56,6 +56,7 @@ Decided on 2026-09-21 and ready to build. Priority: first what protects money an
 | BL-20 | SAP ROP replenishment recommendations released as call-offs | BL-01; forecast source decided (BL-10) | L | REQ-E09-01, X-16 |
 | BL-23 | Enter the agreed values once decided, on the admin screen (Tolerances and rule values); no developer needed since BL-32 | BL-54, BL-55, BL-56 | S | `/buyer/admin` |
 | BL-81 | Apply the answers to BL-67 to BL-71 (tolerance refusal, days-of-cover basis, late convention, admin roles, receipt measure and reopening) | BL-67 to BL-71 | S each | Decisions in section 1 |
+| BL-107 | Reschedule or cancel open orders report (E14-13): proposals that move, reduce or cancel open PO lines and call-offs arriving before they are needed, valued in pallet-weeks and rented-space cost, sent through the existing call-off change or taken to SAP | Owner review of REQ-E14-13; ENG-D15 to ENG-D17 (can start on defaults: 1 week, planner, liability flagged not priced) | M | `FORECAST-ENGINE-REQUIREMENTS.md` REQ-E14-13 |
 
 ## 3. Build work waiting on the backend (Stage F)
 
