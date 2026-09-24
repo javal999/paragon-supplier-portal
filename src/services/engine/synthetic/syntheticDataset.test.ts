@@ -219,6 +219,24 @@ describe('BL-102 — referential integrity', () => {
     expect(rules).toContain('BOM_PARENT_NOT_FG:PK-PETB-8801');
   });
 
+  it('BL-115: a yield outside (0, 1] is named (it would divide by zero or turn a loss into a gain); 1 and 0.9 pass', () => {
+    const b = data.bom[0];
+    const probe = (yieldPct: number) =>
+      integrityViolations({ ...data, bom: [{ ...b, yieldPct }] }, ctx)
+        .filter((v) => v.rule === 'BOM_YIELD_OUT_OF_RANGE')
+        .map((v) => v.detail);
+    expect(probe(1)).toEqual([]);
+    expect(probe(0.9)).toEqual([]);
+    expect(probe(0)).toEqual([`${b.componentCode} yield 0`]);
+    expect(probe(1.2)).toEqual([`${b.componentCode} yield 1.2`]);
+    expect(probe(Number.NaN)).toEqual([`${b.componentCode} yield NaN`]);
+  });
+
+  it('BL-115: the synthetic BOM carries yield 1 on every line (no loss until the BOM feed carries yield)', () => {
+    expect(data.bom.length).toBeGreaterThan(0);
+    expect(new Set(data.bom.map((l) => l.yieldPct))).toEqual(new Set([1]));
+  });
+
   it('finished goods are new synthetic identities, never materials', () => {
     for (const f of data.finishedGoods) {
       expect(f.skuCode.startsWith('SYN-FG-')).toBe(true);

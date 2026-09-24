@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 0.20 draft, 2026-09-24 |
+| Version | 0.21 draft, 2026-09-24 |
 | Sources | `SUPPLIER-HUB-BASELINE.md` (kick-off deck, Aug 2026); `KICKOFF-MEETING-NOTES.md` (business user feedback, reviewed 2026-09-17); owner review of the prototype gap review (2026-09-17); owner RFx decisions RFX-D1 to RFX-D5 (2026-09-21); RFx best-practice research, `research/RFX-BEST-PRACTICE-2026-09.md` (2026-09-21); owner decision ENG-1 (2026-09-23) with the forecast research `research/FORECAST-BEST-PRACTICE-2026-09.md` and `research/FORECAST-METHOD-SPEC.md` |
 | Scope of this version | Detailed: Order Collaboration, Inventory & Capacity Collaboration, RFx (validated); Forecast Collaboration, Call-off Management, and the undiscussed parts of Order and Inventory Collaboration (proposed). Hub navigation and screen conventions (validated). Foundation is reserved for the Foundation team. The remaining epics are stubs |
 | Not in scope | The codebase. This file states what the Supplier Hub must do, not what is built. What the prototype does today, and where, is tracked only in `BUILD-GAP.md` |
@@ -1840,3 +1840,4 @@ Research date: 2026-09-21. The full note, with every source link, is `research/R
 | 0.18 | 2026-09-23 | REQ-E14-13 added to the index (detail in `FORECAST-ENGINE-REQUIREMENTS.md`) |
 | 0.19 | 2026-09-24 | ENG-D15, D16, D17 recorded in section 9; REQ-E14-13 built on synthetic data (PR #44) |
 | 0.20 | 2026-09-24 | REQ-E14-01 index status: Data health page, freshness limits and quality checks on arrival built on synthetic data (BL-109, PR #46) |
+| 0.21 | 2026-09-24 | Leftovers of E14-03, E14-04 and E14-05 built on synthetic data (BL-115 yield, BL-116 safety-stock change since the last run, BL-117 cap on rented space; PR #47); build decisions ENG-B50 to ENG-B59 in `FORECAST-ENGINE-REQUIREMENTS.md` 0.9. One new administrator value, the most rented space (REQ-E14-05, placeholder 25% until the Warehouse confirms) |

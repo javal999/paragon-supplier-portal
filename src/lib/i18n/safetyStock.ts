@@ -34,6 +34,26 @@ export const safetyStockEn: Record<string, string> = {
   'sst.col.slt': 'Safety lead time',
   'sst.col.rop': 'Reorder point',
   'sst.col.history': 'History',
+  'sst.col.change': 'Since last run',
+  'sst.change.none': 'No change',
+  'sst.change.from': 'from {{value}}',
+  'sst.change.rop': 'Reorder point',
+  'sst.change.lastRun_one': '{{count}} material’s safety stock changed since the last run —',
+  'sst.change.lastRun_other': '{{count}} materials’ safety stock changed since the last run —',
+  'sst.change.lastRunPackaging': 'packaging (weekly) as of',
+  'sst.change.lastRunRaw': 'raw material (monthly) as of',
+  'sst.change.recomputed':
+    'The last run is recalculated on today’s records at its own date, so a delivery recorded since then is included and the administrator’s current targets are used.',
+  'sst.cause.historyReached': 'Enough history now: the engine’s value replaces SAP’s',
+  'sst.cause.historyLost': 'Too little history now: SAP’s value is used',
+  'sst.cause.tier': 'Tier changed: {{from}} → {{to}}',
+  'sst.cause.target': 'Target changed: {{from}} → {{to}}',
+  'sst.cause.errors': 'Forecast errors updated: {{added}} past plans added, {{dropped}} dropped',
+  'sst.cause.orderLot': 'Expected order per cycle changed: {{from}} → {{to}}',
+  'sst.cause.window': 'Lead time window changed: {{from}} → {{to}} weeks',
+  'sst.cause.sapValue': 'SAP’s safety stock changed',
+  'sst.cause.plan': 'New plan: expected demand over the window changed (reorder point)',
+  'sst.cause.new': 'Not in the last run',
 
   'sst.tier.high': 'High volume',
   'sst.tier.standard': 'Standard',
@@ -72,6 +92,8 @@ export const safetyStockEn: Record<string, string> = {
   'sst.def.slt':
     'Safety lead time: of the supplier’s deliveries in the last 26 weeks, the delay after the confirmed date that the set share arrived within. Fewer than 5 deliveries: the material group’s value, marked.',
   'sst.def.rop': 'Reorder point: expected demand over the lead time plus the review week, plus the safety stock.',
+  'sst.def.change':
+    'Since last run: each run is compared with the last run of its stream — packaging a week before, raw material four weeks before — and the cause is read from what changed in the inputs: the tier or target, the forecast errors, the expected order per cycle, the lead time window, or, for the reorder point, the plan.',
 };
 
 export const safetyStockId: Record<string, string> = {
@@ -104,6 +126,25 @@ export const safetyStockId: Record<string, string> = {
   'sst.col.slt': 'Waktu tunggu pengaman',
   'sst.col.rop': 'Titik pesan ulang',
   'sst.col.history': 'Riwayat',
+  'sst.col.change': 'Sejak perhitungan terakhir',
+  'sst.change.none': 'Tidak berubah',
+  'sst.change.from': 'dari {{value}}',
+  'sst.change.rop': 'Titik pesan ulang',
+  'sst.change.lastRun_other': 'Stok pengaman {{count}} material berubah sejak perhitungan terakhir —',
+  'sst.change.lastRunPackaging': 'kemasan (mingguan) per',
+  'sst.change.lastRunRaw': 'bahan baku (bulanan) per',
+  'sst.change.recomputed':
+    'Perhitungan terakhir dihitung ulang dengan catatan hari ini pada tanggalnya sendiri, sehingga pengiriman yang tercatat sejak itu ikut dihitung dan target administrator yang berlaku sekarang dipakai.',
+  'sst.cause.historyReached': 'Riwayat kini cukup: nilai mesin menggantikan nilai SAP',
+  'sst.cause.historyLost': 'Riwayat kini terlalu sedikit: nilai SAP dipakai',
+  'sst.cause.tier': 'Tingkat berubah: {{from}} → {{to}}',
+  'sst.cause.target': 'Target berubah: {{from}} → {{to}}',
+  'sst.cause.errors': 'Kesalahan prakiraan diperbarui: {{added}} rencana lampau ditambahkan, {{dropped}} dikeluarkan',
+  'sst.cause.orderLot': 'Perkiraan pesanan per siklus berubah: {{from}} → {{to}}',
+  'sst.cause.window': 'Jendela waktu tunggu berubah: {{from}} → {{to}} minggu',
+  'sst.cause.sapValue': 'Stok pengaman SAP berubah',
+  'sst.cause.plan': 'Rencana baru: perkiraan permintaan selama jendela berubah (titik pesan ulang)',
+  'sst.cause.new': 'Tidak ada pada perhitungan terakhir',
 
   'sst.tier.high': 'Volume tinggi',
   'sst.tier.standard': 'Standar',
@@ -142,4 +183,6 @@ export const safetyStockId: Record<string, string> = {
   'sst.def.slt':
     'Waktu tunggu pengaman: dari pengiriman pemasok dalam 26 minggu terakhir, keterlambatan setelah tanggal terkonfirmasi yang dicapai porsi yang ditetapkan. Kurang dari 5 pengiriman: nilai grup material, ditandai.',
   'sst.def.rop': 'Titik pesan ulang: perkiraan permintaan selama waktu tunggu ditambah minggu tinjauan, ditambah stok pengaman.',
+  'sst.def.change':
+    'Sejak perhitungan terakhir: setiap perhitungan dibandingkan dengan perhitungan terakhir alirannya — kemasan seminggu sebelumnya, bahan baku empat minggu sebelumnya — dan penyebabnya dibaca dari masukan yang berubah: tingkat atau target, kesalahan prakiraan, perkiraan pesanan per siklus, jendela waktu tunggu, atau, untuk titik pesan ulang, rencananya.',
 };

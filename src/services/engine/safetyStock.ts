@@ -527,3 +527,139 @@ export function requirementInputs(run: SafetyStockRun): {
   }
   return { safetyStock, safetyLeadTime };
 }
+
+// ── BR-06 · the change since the last run (BL-116) ──────────────────────────
+//
+// "Safety stock and ROP are recalculated each run, and the change from the
+// last run is shown." The engine computes at read on the hub clock and stores
+// no run (X-01, X-02 by recomputation), so THE LAST RUN IS THIS SAME PURE
+// FUNCTION AT THE PREVIOUS RUN DATE OF THE CADENCE (X-04; ENG-B52):
+//   · packaging runs weekly — the last run is 7 days before;
+//   · raw material runs monthly — the last run is 28 days before (four weekly
+//     buckets: the engine is bucketed by week, so a calendar month would land
+//     on a different weekday each time and move the bucket boundaries).
+// ⚠️ Recomputed, not stored — the same trade ENG-B17 made for E14-05's
+// previous plan: a receipt or confirmation the dataset gained since then is
+// not unwound, and an administrator's target change is not seen (both runs
+// use the values in force). The previous run is the one the last run date's
+// inputs would give on today's record of them.
+//
+// The CAUSE is read off the two runs' own inputs, per material — never
+// inferred from the size of the change. SS = f(errors, Q, target) on the
+// engine method, or SAP's value on the fallback; ROP = SS + expected demand
+// over the risk window. So:
+//   history   — the method switched (enough history reached, or lost)
+//   tier      — the default tier moved (volume ranking or slow-mover test)
+//   target    — same tier, a different fill-rate target
+//   errors    — past plans entered or left the error history, or one changed
+//   orderLot  — the expected order per cycle (Q) changed
+//   window    — the risk window (lead time + review) changed
+//   sapValue  — on the fallback both times, SAP's value changed
+//   plan      — ROP only: the expected demand over the window changed
+//   new       — the material was not in the last run
+// A change is a change in WHOLE UNITS (the figures are shown rounded); a
+// material whose figures did not move lists no cause, even if an input did.
+
+export type SafetyStockChangeCause =
+  | 'historyReached'
+  | 'historyLost'
+  | 'tier'
+  | 'target'
+  | 'errors'
+  | 'orderLot'
+  | 'window'
+  | 'sapValue'
+  | 'plan'
+  | 'new';
+
+/** Days back to the last run, per stream (X-04 cadence; ENG-B52). */
+export const RUN_INTERVAL_DAYS: Readonly<Record<WarehouseKind, number>> = Object.freeze({ packaging: 7, rawMaterial: 28 });
+
+/** The previous run date of a stream's cadence. */
+export const previousRunDate = (kind: WarehouseKind, asOf: IsoDate): IsoDate => addDays(asOf, -RUN_INTERVAL_DAYS[kind]);
+
+export interface SafetyStockChange {
+  readonly previousAsOf: IsoDate;
+  /** The last run's figures (null: the material was not in it). */
+  readonly previous: Pick<
+    MaterialSafetyStock,
+    'safetyStock' | 'reorderPoint' | 'tier' | 'target' | 'orderQtyPerCycle' | 'riskWeeks' | 'source' | 'expectedDemandOverRisk'
+  > | null;
+  /** Now − last run, in whole units (0 when unchanged). */
+  readonly safetyStockDelta: number;
+  readonly reorderPointDelta: number;
+  /** Past plans that entered, and left, the error history since the last run. */
+  readonly originsAdded: number;
+  readonly originsDropped: number;
+  /** Why, in the order above; empty when neither figure moved. */
+  readonly causes: readonly SafetyStockChangeCause[];
+}
+
+/** BR-06 — each material's change against the last run of its own stream. */
+export function safetyStockChanges(
+  current: SafetyStockRun,
+  previousByKind: Readonly<Record<WarehouseKind, SafetyStockRun>>,
+): Map<string, SafetyStockChange> {
+  const out = new Map<string, SafetyStockChange>();
+  for (const m of current.materials) {
+    const prevRun = previousByKind[m.kind];
+    const p = prevRun.materials.find((x) => x.materialCode === m.materialCode) ?? null;
+    if (!p) {
+      out.set(m.materialCode, {
+        previousAsOf: prevRun.asOf,
+        previous: null,
+        safetyStockDelta: Math.round(m.safetyStock),
+        reorderPointDelta: Math.round(m.reorderPoint),
+        originsAdded: m.errors.length,
+        originsDropped: 0,
+        causes: ['new'],
+      });
+      continue;
+    }
+    const ssDelta = Math.round(m.safetyStock) - Math.round(p.safetyStock);
+    const ropDelta = Math.round(m.reorderPoint) - Math.round(p.reorderPoint);
+    const before = new Map(p.errors.map((e) => [e.origin, e.error]));
+    const now = new Map(m.errors.map((e) => [e.origin, e.error]));
+    const originsAdded = [...now.keys()].filter((o) => !before.has(o)).length;
+    const originsDropped = [...before.keys()].filter((o) => !now.has(o)).length;
+    const errorsMoved = originsAdded > 0 || originsDropped > 0 || [...now].some(([o, e]) => before.get(o) !== e);
+
+    const ssCauses: SafetyStockChangeCause[] = [];
+    if (ssDelta !== 0) {
+      if (p.source !== m.source) ssCauses.push(m.source === 'engine' ? 'historyReached' : 'historyLost');
+      else if (m.source === 'sap') {
+        if (p.sapSafetyStock !== m.sapSafetyStock) ssCauses.push('sapValue');
+      } else {
+        if (p.tier !== m.tier) ssCauses.push('tier');
+        else if (p.target !== m.target) ssCauses.push('target');
+        if (errorsMoved) ssCauses.push('errors');
+        if (p.orderQtyPerCycle !== m.orderQtyPerCycle) ssCauses.push('orderLot');
+        if (p.riskWeeks !== m.riskWeeks) ssCauses.push('window');
+      }
+    }
+    const causes = [...ssCauses];
+    if (ropDelta !== 0 && Math.round(p.expectedDemandOverRisk) !== Math.round(m.expectedDemandOverRisk)) {
+      if (p.riskWeeks !== m.riskWeeks && !causes.includes('window')) causes.push('window');
+      causes.push('plan');
+    }
+    out.set(m.materialCode, {
+      previousAsOf: prevRun.asOf,
+      previous: {
+        safetyStock: p.safetyStock,
+        reorderPoint: p.reorderPoint,
+        tier: p.tier,
+        target: p.target,
+        orderQtyPerCycle: p.orderQtyPerCycle,
+        riskWeeks: p.riskWeeks,
+        source: p.source,
+        expectedDemandOverRisk: p.expectedDemandOverRisk,
+      },
+      safetyStockDelta: ssDelta,
+      reorderPointDelta: ropDelta,
+      originsAdded,
+      originsDropped,
+      causes,
+    });
+  }
+  return out;
+}

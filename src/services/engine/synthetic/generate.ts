@@ -304,6 +304,10 @@ function buildBom(
       qtyPer,
       uom: m.canonicalUom,
       scrapPct: round4(rng.range(0.005, 0.03)),
+      // BL-115 — no yield loss until the BOM feed carries yield (BL-103). A
+      // constant, not a draw: drawing would shift every later draw of the
+      // seeded stream and move every calibrated figure (ENG-B51).
+      yieldPct: 1,
       validFrom,
       ...(validTo ? { validTo } : {}),
     });

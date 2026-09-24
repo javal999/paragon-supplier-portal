@@ -7,7 +7,8 @@
 // difference between the two readings is measured, not described. Known-good
 // and known-bad probes for both fallback rules (BR-05 and the <5-receipts edge
 // case), the default tiers, the feed into E14-03, and AC-03: an independent
-// recalculation from the stored history reproduces the safety stock.
+// recalculation from the stored history reproduces the safety stock; BR-06,
+// the change since the last run and its cause per material (BL-116).
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { describe, expect, it } from 'vitest';
@@ -18,11 +19,14 @@ import {
   expectedShortPerCycle,
   fillRateAt,
   fillRateSafetyStock,
+  previousRunDate,
   reorderPoint,
   requirementInputs,
   safetyLeadTimes,
+  safetyStockChanges,
   safetyStockRun,
   type SafetyStockOptions,
+  type SafetyStockRun,
 } from './safetyStock';
 import { defaultRequirementOptions, materialRequirement, primarySource } from './requirement';
 import { addDays, mondayOf } from './dates';
@@ -183,9 +187,9 @@ describe('REQ-E14-04 BR-02 — default tiers by volume, marked', () => {
       materials: ['RM-EMUL-9410', 'RM-EMUL-9430', 'RM-EMUL-9440', 'RM-COCO-8200', 'RM-PALM-7100'].map((materialCode) => ({ materialCode, kind: 'rawMaterial', uom: 'KG' })),
       volumes: ['RM-EMUL-9410', 'RM-EMUL-9430', 'RM-EMUL-9440', 'RM-COCO-8200', 'RM-PALM-7100'].map((materialCode) => ({ materialCode, unitsPerPallet: 1000 })),
       bom: [
-        { parentCode: 'SYN-FG-001', componentCode: 'RM-EMUL-9410', qtyPer: 1, uom: 'KG', scrapPct: 0, validFrom: '2020-01-06' },
-        { parentCode: 'SYN-FG-002', componentCode: 'RM-EMUL-9430', qtyPer: 1, uom: 'KG', scrapPct: 0, validFrom: '2020-01-06' },
-        { parentCode: 'SYN-FG-003', componentCode: 'RM-EMUL-9440', qtyPer: 1, uom: 'KG', scrapPct: 0, validFrom: '2020-01-06' },
+        { parentCode: 'SYN-FG-001', componentCode: 'RM-EMUL-9410', qtyPer: 1, uom: 'KG', scrapPct: 0, yieldPct: 1, validFrom: '2020-01-06' },
+        { parentCode: 'SYN-FG-002', componentCode: 'RM-EMUL-9430', qtyPer: 1, uom: 'KG', scrapPct: 0, yieldPct: 1, validFrom: '2020-01-06' },
+        { parentCode: 'SYN-FG-003', componentCode: 'RM-EMUL-9440', qtyPer: 1, uom: 'KG', scrapPct: 0, yieldPct: 1, validFrom: '2020-01-06' },
       ],
       sales: [
         // Every week, large: the high tier.
@@ -272,7 +276,7 @@ describe('REQ-E14-04 AC-03 — an independent recalculation from the stored hist
         for (const b of lines) {
           if (b.parentCode !== r.skuCode) continue;
           if (r.weekStart < b.validFrom || (b.validTo && r.weekStart >= b.validTo)) continue;
-          out.set(r.weekStart, (out.get(r.weekStart) ?? 0) + r.quantity * b.qtyPer * (1 + b.scrapPct));
+          out.set(r.weekStart, (out.get(r.weekStart) ?? 0) + (r.quantity * b.qtyPer * (1 + b.scrapPct)) / b.yieldPct);
         }
       }
       return out;
@@ -349,5 +353,84 @@ describe('REQ-E14-04 — a zero safety stock is flagged, not floored (owner, 202
     const fallback = safetyStockRun(data, opts({ minOrigins: 10_000 }));
     expect(fallback.materials.every((m) => m.source === 'sap')).toBe(true);
     expect(fallback.materials.some((m) => m.reliesOnOrderLot)).toBe(false);
+  });
+});
+
+// ── BR-06 · the change since the last run, and its cause (BL-116) ───────────
+
+describe('REQ-E14-04 BR-06 — the change since the last run, and its cause, per material (BL-116)', () => {
+  const previousByKind = {
+    packaging: safetyStockRun(data, opts({ asOf: previousRunDate('packaging', asOf) })),
+    rawMaterial: safetyStockRun(data, opts({ asOf: previousRunDate('rawMaterial', asOf) })),
+  };
+  const changes = safetyStockChanges(run, previousByKind);
+
+  it('the last run follows the cadence (X-04): packaging a week before, raw material four weeks before', () => {
+    expect(previousRunDate('packaging', '2026-08-31')).toBe('2026-08-24');
+    expect(previousRunDate('rawMaterial', '2026-08-31')).toBe('2026-08-03');
+    for (const m of run.materials) expect(changes.get(m.materialCode)!.previousAsOf).toBe(previousByKind[m.kind].asOf);
+  });
+
+  it('every material is compared; the deltas are now − last run in whole units; a change always names a cause, no change names none', () => {
+    expect([...changes.keys()].sort()).toEqual(run.materials.map((m) => m.materialCode).sort());
+    let moved = 0;
+    for (const m of run.materials) {
+      const c = changes.get(m.materialCode)!;
+      const p = previousByKind[m.kind].materials.find((x) => x.materialCode === m.materialCode)!;
+      expect(c.safetyStockDelta).toBe(Math.round(m.safetyStock) - Math.round(p.safetyStock));
+      expect(c.reorderPointDelta).toBe(Math.round(m.reorderPoint) - Math.round(p.reorderPoint));
+      if (c.safetyStockDelta !== 0 || c.reorderPointDelta !== 0) {
+        moved += 1;
+        expect(c.causes.length, m.materialCode).toBeGreaterThan(0);
+      } else expect(c.causes, m.materialCode).toEqual([]);
+      // A safety-stock change is explained by a safety-stock input, never by the plan alone.
+      if (c.safetyStockDelta !== 0) expect(c.causes.some((x) => x !== 'plan'), m.materialCode).toBe(true);
+    }
+    expect(moved).toBeGreaterThan(10);
+  });
+
+  it('named members on the synthetic data: a new week of errors and a smaller order lot raise PK-PETB-8801; a tier change lowers RM-EMUL-3320', () => {
+    const pet = changes.get('PK-PETB-8801')!;
+    expect([pet.previous!.safetyStock, pet.safetyStockDelta]).toEqual([15_987, 417]);
+    expect(pet.causes).toEqual(['errors', 'orderLot', 'plan']);
+    expect([pet.originsAdded, pet.originsDropped]).toEqual([1, 0]);
+    const emul = changes.get('RM-EMUL-3320')!;
+    expect([emul.previous!.tier, emul.previous!.safetyStock, emul.safetyStockDelta]).toEqual(['high', 513, -295]);
+    expect(emul.causes[0]).toBe('tier');
+    expect(emul.originsAdded).toBe(4); // four weekly origins in the four weeks since the monthly run
+  });
+
+  it('known-good: a run against itself changes nothing and names no cause', () => {
+    const self = safetyStockChanges(run, { packaging: run, rawMaterial: run });
+    for (const c of self.values()) {
+      expect([c.safetyStockDelta, c.reorderPointDelta, c.causes.length, c.originsAdded, c.originsDropped]).toEqual([0, 0, 0, 0, 0]);
+    }
+  });
+
+  it('history reached: the last run had too little history (SAP’s value), this one uses the engine — named as such', () => {
+    const sapOnly = safetyStockRun(data, opts({ minOrigins: 10_000 }));
+    const c = safetyStockChanges(run, { packaging: sapOnly, rawMaterial: sapOnly });
+    const moved = run.materials.filter((m) => m.source === 'engine' && Math.round(m.safetyStock) !== Math.round(m.sapSafetyStock));
+    expect(moved.length).toBeGreaterThan(0);
+    for (const m of moved) expect(c.get(m.materialCode)!.causes[0]).toBe('historyReached');
+    // And the reverse direction reads as lost.
+    const back = safetyStockChanges(sapOnly, { packaging: run, rawMaterial: run });
+    for (const m of moved) expect(back.get(m.materialCode)!.causes[0]).toBe('historyLost');
+  });
+
+  it('a different fill-rate target on the same tier is named "target", not "errors"', () => {
+    const lower = safetyStockRun(data, opts({ targets: { high: 0.9, standard: 0.85, slow: 0.8 } }));
+    const c = safetyStockChanges(run, { packaging: lower, rawMaterial: lower });
+    const moved = [...c.entries()].filter(([, x]) => x.safetyStockDelta !== 0);
+    expect(moved.length).toBeGreaterThan(0);
+    for (const [, x] of moved) expect(x.causes).toEqual(['target']);
+  });
+
+  it('a material not in the last run is named new', () => {
+    const [first] = run.materials;
+    const without: SafetyStockRun = { ...run, materials: run.materials.filter((m) => m.materialCode !== first.materialCode) };
+    const c = safetyStockChanges(run, { packaging: without, rawMaterial: without });
+    expect(c.get(first.materialCode)!.causes).toEqual(['new']);
+    expect(c.get(first.materialCode)!.previous).toBeNull();
   });
 });

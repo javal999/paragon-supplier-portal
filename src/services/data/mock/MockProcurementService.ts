@@ -126,7 +126,14 @@ import { PR_INTAKE_LINES } from './fixtures/prIntake';
 import { engineDataset } from './fixtures/engineDataset';
 import { supplierReliability, trailingWindow } from '../../engine/reliability';
 import { DEFAULT_RECEIPT_OPTIONS, defaultRequirementOptions, openReceipts } from '../../engine/requirement';
-import { DEFAULT_SAFETY_STOCK_OPTIONS, requirementInputs, safetyStockRun, type SafetyStockRun } from '../../engine/safetyStock';
+import {
+  DEFAULT_SAFETY_STOCK_OPTIONS,
+  previousRunDate,
+  requirementInputs,
+  safetyStockChanges,
+  safetyStockRun,
+  type SafetyStockRun,
+} from '../../engine/safetyStock';
 import { plannedReceiptsOf, sizedRequirement } from '../../engine/orderSizing';
 import {
   STREAM_MATERIAL_TYPE,
@@ -614,13 +621,23 @@ export class MockProcurementService implements IProcurementService {
     // REQ-E14-04, computed at read on the hub clock with the administrator's
     // targets in force (X-05). PTI only (X-03).
     if (scope.personaType === 'supplier') return null;
-    const run = engineSafetyStock();
+    const asOf = dayOf(sdcClock.now());
+    const run = engineSafetyStock(asOf);
+    // BR-06 (BL-116, ENG-B52) — the last run of each stream is the same pure
+    // function at the previous run date of its cadence (X-04), recomputed now.
+    const previousAsOf = { packaging: previousRunDate('packaging', asOf), rawMaterial: previousRunDate('rawMaterial', asOf) };
+    const changes = safetyStockChanges(run, {
+      packaging: engineSafetyStock(previousAsOf.packaging),
+      rawMaterial: engineSafetyStock(previousAsOf.rawMaterial),
+    });
     return {
       ...run,
+      previousAsOf,
       materials: run.materials.map((m) => ({
         ...m,
         materialLabel: labelOf(m.materialCode),
         supplierName: m.supplierId ? forecastSupplierName(m.supplierId) : null,
+        change: changes.get(m.materialCode)!,
       })),
     };
   }

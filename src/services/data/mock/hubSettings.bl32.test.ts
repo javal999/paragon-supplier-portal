@@ -207,6 +207,8 @@ describe('BL32-POP · the population of rule values is derived from the config m
       'engine.orderCostIdr': 'ENG-D6',
       'engine.rentedSpaceIdrPerPalletWeek': 'ENG-D6',
       'engine.changePenaltyIdrPerPallet': 'REQ-E14-05 BR-03',
+      // BL-117 — the Warehouse's cap on rented space (the 3PL contract).
+      'engine.maxRentedSpacePct': 'REQ-E14-05',
     });
   });
 });
@@ -340,7 +342,7 @@ const DELAYS = [0, 0, 0, 1, 1, 2, 2, 3, 5, 9];
  * outcome is how many orders the sizing places. `space` adds a 15-pallet
  * warehouse; `previous` is last run's weekly plan, all inside the lead time.
  */
-const ordersPlaced = (opts: { space?: boolean; previous?: number[] } = {}): number => {
+const ordersPlaced = (opts: { space?: boolean; cap?: boolean; previous?: number[] } = {}): number => {
   const c = orderSizingCosts();
   const item: SizingItem = {
     materialCode: 'PK-PETB-8801',
@@ -356,7 +358,12 @@ const ordersPlaced = (opts: { space?: boolean; previous?: number[] } = {}): numb
     ...(opts.previous ? { previous: opts.previous } : {}),
   };
   const space = opts.space
-    ? { capacityPallets: 15, rentIdrPerPalletWeek: c.rentIdrPerPalletWeek }
+    ? {
+        capacityPallets: 15,
+        rentIdrPerPalletWeek: c.rentIdrPerPalletWeek,
+        // BL-117 — the cap on rented space in force, as the service passes it.
+        ...(opts.cap ? { limitPallets: 15 + 15 * c.maxRentedShare } : {}),
+      }
     : { capacityPallets: Infinity, rentIdrPerPalletWeek: 0 };
   return singleItemSolver(item, [0, 0, 0], space, c).plan().filter((x) => x > 0).length;
 };
@@ -531,6 +538,9 @@ const FLIPS: Record<string, Flip> = {
   'engine.holdingCostPctPerYear': { to: 100, read: () => ordersPlaced(), atDefault: 1, afterChange: 3 },
   // 15 pallets of room: one order spills 5 pallets for a week; at Rp 100,000 a pallet two orders win.
   'engine.rentedSpaceIdrPerPalletWeek': { to: 100_000, read: () => ordersPlaced({ space: true }), atDefault: 1, afterChange: 2 },
+  // BL-117: at 25% the one-order plan's 20 pallets pass 15 + 3.75 — no plan may rent past the cap, so two
+  // orders; at 50% (22.5) it fits and renting is cheaper, so one.
+  'engine.maxRentedSpacePct': { to: 50, read: () => ordersPlaced({ space: true, cap: true }), atDefault: 2, afterChange: 1 },
   // BR-03: last run planned 1,000 a week, all inside the lead time; with no penalty the plan re-sizes.
   'engine.changePenaltyIdrPerPallet': {
     to: 0,

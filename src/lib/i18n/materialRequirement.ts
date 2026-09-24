@@ -76,13 +76,15 @@ export const materialRequirementEn: Record<string, string> = {
   'mrq.pegs.week': 'Week',
   'mrq.pegs.sku': 'Finished good',
   'mrq.pegs.fgQty': 'Finished-good quantity',
+  'mrq.pegs.scrap': 'Scrap',
+  'mrq.pegs.yield': 'Yield',
   'mrq.pegs.part': 'Requirement',
   'mrq.pegs.close': 'Close',
   'mrq.pegs.total': 'Total',
 
   'mrq.def.title': 'How it is calculated',
   'mrq.def.gross':
-    'Gross requirement: the finished-goods quantities that use the material × the quantity per unit × (1 + scrap). Sales orders replace the forecast in the weeks they fall into, so the two are not counted twice.',
+    'Gross requirement: the finished-goods quantities that use the material × the quantity per unit × (1 + scrap) ÷ yield. Yield is the share of the material that ends up in good finished goods; 100% means no loss. Sales orders replace the forecast in the weeks they fall into, so the two are not counted twice.',
   'mrq.def.net':
     'Net requirement: gross requirement + safety stock − (stock at the start of the week + confirmed receipts in the week), and never below zero. Receipts count at the date and quantity the supplier confirmed.',
   'mrq.def.planned':
@@ -162,13 +164,15 @@ export const materialRequirementId: Record<string, string> = {
   'mrq.pegs.week': 'Minggu',
   'mrq.pegs.sku': 'Barang jadi',
   'mrq.pegs.fgQty': 'Jumlah barang jadi',
+  'mrq.pegs.scrap': 'Susut',
+  'mrq.pegs.yield': 'Hasil (yield)',
   'mrq.pegs.part': 'Kebutuhan',
   'mrq.pegs.close': 'Tutup',
   'mrq.pegs.total': 'Total',
 
   'mrq.def.title': 'Cara menghitungnya',
   'mrq.def.gross':
-    'Kebutuhan kotor: jumlah barang jadi yang memakai material × jumlah per unit × (1 + susut). Pesanan penjualan menggantikan prakiraan pada minggunya, sehingga keduanya tidak dihitung dua kali.',
+    'Kebutuhan kotor: jumlah barang jadi yang memakai material × jumlah per unit × (1 + susut) ÷ hasil (yield). Hasil adalah bagian material yang menjadi barang jadi yang baik; 100% berarti tidak ada kehilangan. Pesanan penjualan menggantikan prakiraan pada minggunya, sehingga keduanya tidak dihitung dua kali.',
   'mrq.def.net':
     'Kebutuhan bersih: kebutuhan kotor + stok pengaman − (stok awal minggu + penerimaan terkonfirmasi pada minggu itu), dan tidak pernah di bawah nol. Penerimaan dihitung pada tanggal dan jumlah yang dikonfirmasi pemasok.',
   'mrq.def.planned':

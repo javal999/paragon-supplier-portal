@@ -17,7 +17,8 @@
 //   · Section 3.6 — starter reason codes for a commitment below forecast.
 //   · ENG-D5 / REQ-E14-04 — the forecast engine's fill-rate targets per tier
 //     and the safety-lead-time percentile (the administrator's, BL-32).
-//   · ENG-D6 / REQ-E14-05 — the order-sizing cost rates; ENG-D15 / REQ-E14-13
+//   · ENG-D6 / REQ-E14-05 — the order-sizing cost rates and (BL-117) the cap
+//     on rented space; ENG-D15 / REQ-E14-13
 //     — the reschedule-out threshold in weeks.
 //   · REQ-E14-01 — the freshness limit per engine feed, in days.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -143,7 +144,8 @@ export function safetyLeadTimePercentile(): number {
 /**
  * ENG-D6 / REQ-E14-05 — the order-sizing cost rates in force: holding cost as
  * a fraction of value per year, rupiah per order, rupiah per rented pallet per
- * week, and (BR-03) rupiah per pallet an order inside the lead time changes.
+ * week, (BR-03) rupiah per pallet an order inside the lead time changes, and
+ * (edge case, BL-117) the most rented space as a share of owned capacity.
  * ⚠️ PLACEHOLDERS until Finance and the Material Planner decide — the page
  * says so. The engine takes them as an argument (X-01).
  */
@@ -152,12 +154,14 @@ export function orderSizingCosts(): {
   readonly holdingRatePerYear: number;
   readonly rentIdrPerPalletWeek: number;
   readonly changePenaltyIdrPerPallet: number;
+  readonly maxRentedShare: number;
 } {
   return {
     orderCostIdr: hubSetting('engine.orderCostIdr'),
     holdingRatePerYear: hubSetting('engine.holdingCostPctPerYear') / 100,
     rentIdrPerPalletWeek: hubSetting('engine.rentedSpaceIdrPerPalletWeek'),
     changePenaltyIdrPerPallet: hubSetting('engine.changePenaltyIdrPerPallet'),
+    maxRentedShare: hubSetting('engine.maxRentedSpacePct') / 100,
   };
 }
 

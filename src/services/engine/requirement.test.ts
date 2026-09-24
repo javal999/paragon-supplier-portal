@@ -6,7 +6,7 @@
 // every material × week of the synthetic run; AC-02 (unconfirmed lines) and
 // AC-03 (traceability) each with a known-good and a known-bad probe; shared
 // packaging summing; the BOM-cycle refusal; forecast consumption; the
-// stock-accuracy flag; late to release.
+// stock-accuracy flag; late to release; yield beside scrap (BR-03, BL-115).
 //
 // Material codes are real MATERIAL_MASTER codes (PK-CART-9901 stands in for
 // the example's bullet case BC-220); finished goods are synthetic SYN-FG ids.
@@ -24,6 +24,7 @@ import {
   openReceipts,
   type MaterialRequirementOptions,
 } from './requirement';
+import { componentFactor, grossRequirement } from './bom';
 import { addDays, isoWeek } from './dates';
 import { lineHistories } from './lines';
 import type { BomLine, EngineDataset, FgPlanSnapshot } from './types';
@@ -38,12 +39,13 @@ const WEEK10 = '2027-03-08';
 const WEEK6 = '2027-02-08';
 const SKUS = ['SYN-FG-001', 'SYN-FG-002', 'SYN-FG-003'] as const;
 
-const bomLine = (parent: string, component: string, qtyPer = 1, scrapPct = 0.02): BomLine => ({
+const bomLine = (parent: string, component: string, qtyPer = 1, scrapPct = 0.02, yieldPct = 1): BomLine => ({
   parentCode: parent,
   componentCode: component,
   qtyPer,
   uom: 'PCS',
   scrapPct,
+  yieldPct,
   validFrom: '2020-01-06',
 });
 
@@ -325,6 +327,77 @@ describe('REQ-E14-03 AC-03 — every gross requirement traces to the finished go
     expect(g.get('PK-CAPF-8820')!.get('2027-02-22')!.quantity).toBe(10);
     expect(g.get('PK-CAPF-8820')!.has(WEEK10)).toBe(false);
     expect(g.get('PK-ALCP-2441')!.get(WEEK10)!.quantity).toBe(20);
+  });
+});
+
+// ── BR-03 · yield beside scrap (BL-115) ─────────────────────────────────────
+
+describe('REQ-E14-03 BR-03 — yield divides the requirement, beside scrap (BL-115)', () => {
+  const withYield = (y: number): EngineDataset => {
+    const d = example();
+    return { ...d, bom: d.bom.map((b) => ({ ...b, yieldPct: y })) };
+  };
+
+  it('the worked example at 85% yield: gross 20,000 × 1.02 ÷ 0.85 = 24,000; net 16,000; order 20,000; end 7,000', () => {
+    const w = week(withYield(0.85), opts(WEEK1), WEEK10);
+    expect(w.gross).toBeCloseTo(24_000, 9);
+    expect(w.net).toBeCloseTo(24_000 + 3_000 - (5_000 + 6_000), 9);
+    expect(w.plannedReceipt).toBe(20_000); // 16,000 → MOQ 10,000, multiple 5,000
+    expect(w.projectedEnd).toBeCloseTo(5_000 + 6_000 + 20_000 - 24_000, 9);
+    // Each finished good's part carries the yield it came through (the page shows it).
+    expect(w.pegs.map((p) => p.yieldPct)).toEqual([0.85, 0.85, 0.85]);
+    expect(w.pegs.reduce((s, p) => s + p.quantity, 0)).toBeCloseTo(w.gross, 9);
+  });
+
+  it('known-good: at 100% yield every figure is the scrap-only figure, bit for bit (÷ 1 is exact)', () => {
+    const w = week(withYield(1), opts(WEEK1), WEEK10);
+    expect(w.gross).toBe(8000 * (1 * (1 + 0.02)) + 7000 * (1 * (1 + 0.02)) + 5000 * (1 * (1 + 0.02)));
+    expect(componentFactor({ qtyPer: 0.0833, scrapPct: 0.0137, yieldPct: 1 })).toBe(0.0833 * (1 + 0.0137));
+    // The history path (E14-04's errors, E14-02) keeps its old order of operations too.
+    const sales = [{ skuCode: 'SYN-FG-001', weekStart: WEEK10, quantity: 1234, stockout: false }];
+    expect(grossRequirement(sales, [bomLine('SYN-FG-001', MAT, 0.0833, 0.0137, 1)]).get(MAT)!.get(WEEK10)).toBe(
+      1234 * 0.0833 * (1 + 0.0137),
+    );
+  });
+
+  it('known-bad direction: a lower yield always needs more, never less (monotone)', () => {
+    const at = (y: number) => week(withYield(y), opts(WEEK1), WEEK10).gross;
+    expect(at(0.95)).toBeGreaterThan(at(1));
+    expect(at(0.8)).toBeGreaterThan(at(0.95));
+  });
+
+  it('per BOM line: a material shared by two finished goods with different yields keeps each part at its own yield', () => {
+    const g = explode(
+      [
+        { skuCode: 'SYN-FG-001', weekStart: WEEK10, quantity: 900 },
+        { skuCode: 'SYN-FG-002', weekStart: WEEK10, quantity: 800 },
+      ],
+      [bomLine('SYN-FG-001', MAT, 1, 0, 0.9), bomLine('SYN-FG-002', MAT, 1, 0, 0.8)],
+      (c) => c === MAT,
+    );
+    const cell = g.get(MAT)!.get(WEEK10)!;
+    expect(cell.quantity).toBeCloseTo(1000 + 1000, 9);
+    expect(cell.pegs.map((p) => [p.skuCode, Math.round(p.quantity), p.yieldPct])).toEqual([
+      ['SYN-FG-001', 1000, 0.9],
+      ['SYN-FG-002', 1000, 0.8],
+    ]);
+  });
+
+  it('through a bulk, both lines divide: 1,000 × 0.05 ÷ 0.95 × 0.2 × 1.01 ÷ 0.9', () => {
+    const g = explode(
+      [{ skuCode: 'SYN-FG-001', weekStart: WEEK10, quantity: 1000 }],
+      [bomLine('SYN-FG-001', 'SYN-BULK-01', 0.05, 0, 0.95), bomLine('SYN-BULK-01', 'RM-EMUL-9410', 0.2, 0.01, 0.9)],
+      (c) => c === 'RM-EMUL-9410',
+    );
+    const cell = g.get('RM-EMUL-9410')!.get(WEEK10)!;
+    expect(cell.quantity).toBeCloseTo((1000 * 0.05 * 0.2 * 1.01) / 0.95 / 0.9, 9);
+    // The part names the finished good, and the last line's scrap and yield.
+    expect([cell.pegs[0].skuCode, cell.pegs[0].scrapPct, cell.pegs[0].yieldPct]).toEqual(['SYN-FG-001', 0.01, 0.9]);
+  });
+
+  it('the history path divides too: E14-04 measures errors on the same requirement E14-03 plans', () => {
+    const sales = [{ skuCode: 'SYN-FG-001', weekStart: WEEK10, quantity: 900, stockout: false }];
+    expect(grossRequirement(sales, [bomLine('SYN-FG-001', MAT, 1, 0, 0.9)]).get(MAT)!.get(WEEK10)).toBeCloseTo(1000, 9);
   });
 });
 

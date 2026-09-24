@@ -117,6 +117,46 @@ export const orderPlanEn: Record<string, string> = {
   'op.def.fill': 'Fill: stock at the end of the week in pallets (quantity ÷ units per pallet) ÷ owned capacity.',
   'op.def.fallback':
     'Where the joint sizing cannot run, a material is sized on its own (Wagner–Whitin, then rounded up to MOQ and multiple) and marked.',
+  'op.def.cap':
+    'Most rented space: the plan never rents more than the administrator’s share of owned capacity to save money. A week that cannot fit even so is listed above the fill, for the planner to choose between renting beyond the limit and a later delivery.',
+
+  'op.costs.maxRent': 'Most rented space',
+  'op.costs.maxRentValue': '{{value}}% of owned capacity',
+  'op.costs.placeholderWarehouse': 'Placeholder — the Warehouse to confirm',
+  'op.warehouse.maxRented': 'most rented',
+  'op.fill.beyondCap': '{{value}} beyond the limit',
+  'op.short.title': 'Weeks that do not fit, even with the most rented space',
+  'op.short.intro':
+    'In these weeks the stock is above owned capacity plus the {{max}} rented pallets the plan may use. Choose for each week: rent beyond the limit, or have a delivery come later.',
+  'op.short.notStored':
+    'Your choice here is not saved and changes no order: act on it with the 3PL, on the Reschedule open orders page, or by giving a recommended order’s draft call-off a later date on the Call-offs page.',
+  'op.short.pallets': '{{value}} pallets short',
+  'op.short.against': '{{pallets}} pallets against a limit of {{limit}}',
+  'op.short.unavoidable':
+    'No change to the recommended orders can fix this week: even ordering each week’s need exactly, the stock already on hand or already confirmed fills the space.',
+  'op.short.choose': 'Choose how to cover the shortfall',
+  'op.short.rent': 'Rent beyond the limit',
+  'op.short.rent.detail': '{{pallets}} pallets for the week at {{rate}} a pallet: {{cost}}.',
+  'op.short.later': 'Deliver later',
+  'op.short.later.none': 'Nothing arrives by this week that could come later.',
+  'op.short.later.enough_one':
+    '{{count}} delivery arrives by this week; moving it after the week frees {{movable}} pallets while keeping safety stock — enough.',
+  'op.short.later.enough_other':
+    '{{count}} deliveries arrive by this week; those that can move after the week while keeping safety stock free {{movable}} pallets — enough.',
+  'op.short.later.notEnough_one':
+    '{{count}} delivery arrives by this week; moving it while keeping safety stock frees {{movable}} pallets — not enough on its own.',
+  'op.short.later.notEnough_other':
+    '{{count}} deliveries arrive by this week; those that can move while keeping safety stock free {{movable}} pallets — not enough on their own.',
+  'op.short.col.source': 'Delivery',
+  'op.short.col.safety': 'Moved after the week',
+  'op.short.source.planned': 'Recommended order',
+  'op.short.source.confirmed': 'Confirmed order line',
+  'op.short.keeps': 'Safety stock holds',
+  'op.short.breaks': 'Stock falls below safety stock',
+  'op.short.next.rent': 'Book {{pallets}} more pallets with the 3PL for this week; the rented space cost above already counts them.',
+  'op.short.next.later':
+    'Ask the supplier to deliver after this week: a confirmed order line is proposed on the Reschedule open orders page; a recommended order’s draft call-off is given a later date on the Call-offs page.',
+  'op.short.next.laterLink': 'Open Reschedule open orders',
 };
 
 export const orderPlanId: Record<string, string> = {
@@ -231,4 +271,40 @@ export const orderPlanId: Record<string, string> = {
   'op.def.fill': 'Isi: stok di akhir minggu dalam palet (jumlah ÷ unit per palet) ÷ kapasitas sendiri.',
   'op.def.fallback':
     'Bila perhitungan bersama tidak dapat dijalankan, material dihitung sendiri (Wagner–Whitin, lalu dibulatkan ke atas ke MOQ dan kelipatan) dan ditandai.',
+  'op.def.cap':
+    'Ruang sewa terbanyak: rencana tidak pernah menyewa lebih dari bagian kapasitas sendiri yang ditetapkan administrator demi menghemat biaya. Minggu yang tetap tidak muat dicantumkan di atas isi gudang, agar perencana memilih antara menyewa melebihi batas atau pengiriman yang lebih lambat.',
+
+  'op.costs.maxRent': 'Ruang sewa terbanyak',
+  'op.costs.maxRentValue': '{{value}}% dari kapasitas sendiri',
+  'op.costs.placeholderWarehouse': 'Sementara — menunggu konfirmasi Gudang',
+  'op.warehouse.maxRented': 'sewa terbanyak',
+  'op.fill.beyondCap': '{{value}} melebihi batas',
+  'op.short.title': 'Minggu yang tidak muat, meski dengan ruang sewa terbanyak',
+  'op.short.intro':
+    'Pada minggu-minggu ini stok melebihi kapasitas sendiri ditambah {{max}} palet sewa yang boleh dipakai rencana. Pilih untuk setiap minggu: menyewa melebihi batas, atau pengiriman datang lebih lambat.',
+  'op.short.notStored':
+    'Pilihan di sini tidak disimpan dan tidak mengubah pesanan apa pun: tindak lanjuti dengan 3PL, di halaman Jadwal ulang pesanan terbuka, atau dengan memberi draf call-off dari pesanan yang direkomendasikan tanggal yang lebih lambat di halaman Call-off.',
+  'op.short.pallets': 'kurang {{value}} palet',
+  'op.short.against': '{{pallets}} palet terhadap batas {{limit}}',
+  'op.short.unavoidable':
+    'Tidak ada perubahan pada pesanan yang direkomendasikan yang dapat mengatasi minggu ini: meski memesan tepat kebutuhan setiap minggu, stok yang sudah ada atau sudah dikonfirmasi memenuhi ruangnya.',
+  'op.short.choose': 'Pilih cara menutup kekurangan',
+  'op.short.rent': 'Sewa melebihi batas',
+  'op.short.rent.detail': '{{pallets}} palet untuk minggu ini dengan {{rate}} per palet: {{cost}}.',
+  'op.short.later': 'Kirim lebih lambat',
+  'op.short.later.none': 'Tidak ada pengiriman hingga minggu ini yang dapat datang lebih lambat.',
+  'op.short.later.enough_other':
+    '{{count}} pengiriman tiba hingga minggu ini; yang dapat dipindah setelah minggu itu dengan stok pengaman tetap terjaga membebaskan {{movable}} palet — cukup.',
+  'op.short.later.notEnough_other':
+    '{{count}} pengiriman tiba hingga minggu ini; yang dapat dipindah dengan stok pengaman tetap terjaga membebaskan {{movable}} palet — belum cukup sendiri.',
+  'op.short.col.source': 'Pengiriman',
+  'op.short.col.safety': 'Dipindah setelah minggu itu',
+  'op.short.source.planned': 'Pesanan yang direkomendasikan',
+  'op.short.source.confirmed': 'Baris pesanan terkonfirmasi',
+  'op.short.keeps': 'Stok pengaman terjaga',
+  'op.short.breaks': 'Stok turun di bawah stok pengaman',
+  'op.short.next.rent': 'Pesan {{pallets}} palet tambahan ke 3PL untuk minggu ini; biaya ruang sewa di atas sudah menghitungnya.',
+  'op.short.next.later':
+    'Minta pemasok mengirim setelah minggu ini: baris pesanan terkonfirmasi diusulkan di halaman Jadwal ulang pesanan terbuka; draf call-off dari pesanan yang direkomendasikan diberi tanggal yang lebih lambat di halaman Call-off.',
+  'op.short.next.laterLink': 'Buka Jadwal ulang pesanan terbuka',
 };

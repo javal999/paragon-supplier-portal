@@ -161,6 +161,15 @@ const DEFS = [
   // weeks before its need week an open line must arrive before a reschedule-out
   // is proposed. 1 week to start; the Material Planner's value, beside the
   // E14-05 cost rates it is weighed with.
+  // REQ-E14-05 edge case (BL-117) — the most rented space order sizing may
+  // plan, as a share of owned capacity, beside the rented-space rate it caps.
+  // A week that does not fit even with it is shown with its shortfall and the
+  // planner's choice (rent beyond it, or a later delivery). 25% is a
+  // PLACEHOLDER — what the 3PL contract allows is the Warehouse's to confirm.
+  {
+    key: 'engine.maxRentedSpacePct', section: 'tolerances', rule: 'REQ-E14-05', unit: 'pct',
+    min: 0, max: 500, defaultValue: 25, placeholder: { owner: 'warehousePlanner', backlogId: 'REQ-E14-05' },
+  },
   {
     key: 'engine.rescheduleOutWeeks', section: 'tolerances', rule: 'ENG-D15', unit: 'weeks', integer: true,
     min: 1, max: 26, defaultValue: 1,
