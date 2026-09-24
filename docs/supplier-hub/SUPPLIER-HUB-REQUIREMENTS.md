@@ -272,7 +272,7 @@ The menu follows the hub's own sections, not procurement stages, and each PTI us
 | REQ-E09-04 | Delivery execution: need date and dispatch heads-up | E09 | MVP, P1 | Proposed |
 | REQ-E10-01 | CFOT and OTIF measurement | E10 | MVP | Validated (definitions); Proposed (formulas) |
 | REQ-E13-01 | Supplier access to TMS shipment tracking | E13 | Phase decision open (D-03) | Validated |
-| REQ-E14-01 | Engine data foundation | E14 | MVP | Proposed; partly built on synthetic data (BL-102, PR #37; BL-109, PR #PRNUM) |
+| REQ-E14-01 | Engine data foundation | E14 | MVP | Proposed; partly built on synthetic data (BL-102, PR #37; BL-109, PR #46) |
 | REQ-E14-02 | Supplier reliability and plan-change measures | E14 | MVP | Proposed |
 | REQ-E14-03 | Material requirement calculation | E14 | MVP | Proposed |
 | REQ-E14-04 | Safety stock, safety lead time and reorder point | E14 | MVP | Proposed |
@@ -1839,4 +1839,4 @@ Research date: 2026-09-21. The full note, with every source link, is `research/R
 | 0.17 | 2026-09-23 | ENG-D4, D6, D7 recorded in section 9 |
 | 0.18 | 2026-09-23 | REQ-E14-13 added to the index (detail in `FORECAST-ENGINE-REQUIREMENTS.md`) |
 | 0.19 | 2026-09-24 | ENG-D15, D16, D17 recorded in section 9; REQ-E14-13 built on synthetic data (PR #44) |
-| 0.20 | 2026-09-24 | REQ-E14-01 index status: Data health page, freshness limits and quality checks on arrival built on synthetic data (BL-109, PR #PRNUM) |
+| 0.20 | 2026-09-24 | REQ-E14-01 index status: Data health page, freshness limits and quality checks on arrival built on synthetic data (BL-109, PR #46) |

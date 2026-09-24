@@ -158,7 +158,7 @@ The one check with arithmetic is **stock accuracy**:
 - BL-103: the feed specification, drafted as `FORECAST-ENGINE-FEED-SPEC.md`, for the Master Data Management team to confirm.
 - C8-IDENTITY-GRAIN: material identity between the SOMO master and the Hub.
 
-**Build.** The input contract and synthetic dataset were built with BL-102 (PR #37). The Data health page, the freshness limits and the quality checks on arrival were built on synthetic data (BL-109, PR #PRNUM); the choices the build made are ENG-B40 to ENG-B49 (section 4.1e). Not built: leaving refused records out of the calculations and marking the engine's results (BR-05, AC-02, ENG-B46); the stock-accuracy tolerance as an administrator setting (ENG-B45); the real feeds (BL-100).
+**Build.** The input contract and synthetic dataset were built with BL-102 (PR #37). The Data health page, the freshness limits and the quality checks on arrival were built on synthetic data (BL-109, PR #46); the choices the build made are ENG-B40 to ENG-B49 (section 4.1e). Not built: leaving refused records out of the calculations and marking the engine's results (BR-05, AC-02, ENG-B46); the stock-accuracy tolerance as an administrator setting (ENG-B45); the real feeds (BL-100).
 
 ---
 
@@ -1018,7 +1018,7 @@ Choices the E14-13 build made where the requirement was silent. For the owner to
 | ENG-B27 | A call-off is only proposed when the change verb can take it: dispatched, awaiting the supplier's answer, awaiting the planner's approval, a change pending, or two confirmed deliveries are shown for information. A call-off cancellation has no Hub verb (the change verb needs a quantity above zero); the page says to agree it with the supplier | E14-13 BR-01, BR-07 |
 | ENG-B28 | The stability guard uses E14-02's portfolio share over its 26-week window; a PO line adds to it when created in the window, not already changed inside the lead time, and the change is inside the lead time. Call-offs are not in the E14-02 measure; the page counts them among the selected proposals inside the lead time | E14-13 BR-09 |
 
-### 4.1e Build decisions for review (PR #PRNUM, BL-109)
+### 4.1e Build decisions for review (PR #46, BL-109)
 
 Choices the E14-01 build (Data health page, freshness limits, quality checks on arrival) made where the requirement and the feed spec were silent. For the owner to accept or change.
 
@@ -1061,4 +1061,4 @@ Choices the E14-01 build (Data health page, freshness limits, quality checks on 
 | 0.5 | 2026-09-23 | ENG-D4, D6, D7 decided; build decisions ENG-B14 to ENG-B18 from PR #41 (E14-05 and the release block), section 4.1c |
 | 0.6 | 2026-09-23 | REQ-E14-13 Reschedule or cancel open orders added (Proposed), from the E14-05 finding that order sizing cannot lower the current overload; ENG-D15 to ENG-D17 opened |
 | 0.7 | 2026-09-24 | ENG-D15, D16, D17 decided by the owner on the defaults (1 week; the Material Planner in SAP, the Hub records "taken to SAP"; liability flagged, not priced). REQ-E14-13 built on synthetic data (BL-107, PR #44); build decisions ENG-B19 to ENG-B28 for review, section 4.1d |
-| 0.8 | 2026-09-24 | REQ-E14-01 Data health page, freshness limits and quality checks on arrival built on synthetic data (BL-109, PR #PRNUM); build decisions ENG-B40 to ENG-B49 for review, section 4.1e |
+| 0.8 | 2026-09-24 | REQ-E14-01 Data health page, freshness limits and quality checks on arrival built on synthetic data (BL-109, PR #46); build decisions ENG-B40 to ENG-B49 for review, section 4.1e |
