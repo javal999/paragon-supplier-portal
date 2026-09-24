@@ -1,4 +1,4 @@
-import { screen, fireEvent, within } from '@testing-library/react';
+import { screen, fireEvent, within, waitFor } from '@testing-library/react';
 import { useLocation } from 'react-router-dom';
 import { renderWithProviders, SUPPLIER } from '../../test/test-utils';
 import SidebarV2 from './SidebarV2';
@@ -68,5 +68,34 @@ describe('SidebarV2 — hub sections (REQUIREMENTS §3.7)', () => {
       expect(within(nav).getByRole('button', { name })).toBeInTheDocument();
     }
     expect(within(nav).queryByRole('button', { name: 'Channel Inbox' })).toBeNull();
+  });
+});
+
+describe('SidebarV2 — restores sidebar scroll position', () => {
+  beforeEach(() => {
+    sessionStorage.clear();
+  });
+  it('restores scroll position from sessionStorage on mount', async () => {
+    sessionStorage.setItem('sidebar-scroll-position', '500');
+    renderWithProviders(<SidebarV2 />, { route: '/buyer/home' });
+    const nav = screen.getByRole('navigation');
+    Object.defineProperty(nav, 'scrollTop', {
+      writable: true,
+      value: 0,
+    });
+    await waitFor(() => {
+      expect(nav.scrollTop).toBe(500);
+    });
+  });
+
+  it('updates sessionStorage when sidebar is scrolled', () => {
+    renderWithProviders(<SidebarV2 />, { route: '/buyer/home' });
+    const nav = screen.getByRole('navigation');
+    fireEvent.scroll(nav, {
+      target: {
+        scrollTop: 300,
+      },
+    });
+    expect(sessionStorage.getItem('sidebar-scroll-position')).toBe('300');
   });
 });

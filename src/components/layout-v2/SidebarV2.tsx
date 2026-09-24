@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useCurrentIdentity } from '../../context/CurrentIdentityContext';
@@ -12,6 +12,8 @@ const SEED_SUPPLIER_ID = 'sup-007';
 const SEED_SUPPLIER_NAME =
   mockSuppliers.find((s) => s.id === SEED_SUPPLIER_ID)?.name ?? null;
 
+const SIDEBAR_SCROLL_KEY = 'sidebar-scroll-position';
+
 const SidebarV2: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -22,6 +24,22 @@ const SidebarV2: React.FC = () => {
 
   const [hubRole] = useHubRole();
   const groups = navFor(persona, hubRole);
+
+  const navRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const nav = navRef.current;
+
+    if (!nav) return;
+
+    const savedPosition = sessionStorage.getItem(SIDEBAR_SCROLL_KEY);
+
+    if (savedPosition !== null) {
+      requestAnimationFrame(() => {
+        nav.scrollTop = Number(savedPosition);
+      });
+    }
+  }, []);
 
   return (
     <aside className="w-60 shrink-0 h-full bg-bg-sidebar border-r border-border-subtle flex flex-col">
@@ -74,7 +92,17 @@ const SidebarV2: React.FC = () => {
       </div>
 
       {/* Nav groups */}
-      <nav aria-label={t('hub.nav.primaryLabel')} className="flex-1 overflow-y-auto px-3 pb-4 space-y-4">
+      <nav
+        ref={navRef}
+        aria-label={t('hub.nav.primaryLabel')}
+        onScroll={(e) =>
+          sessionStorage.setItem(
+            SIDEBAR_SCROLL_KEY,
+            String(e.currentTarget.scrollTop)
+          )
+        }
+        className="flex-1 overflow-y-auto px-3 pb-4 space-y-4"
+      >
         {groups.map((group) => (
           <div key={group.id}>
             <div id={`nav-group-${group.id}`} className="text-label text-text-tertiary px-3 py-2 uppercase">
