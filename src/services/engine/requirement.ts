@@ -18,12 +18,18 @@
 //      is passed on (BR-02).
 //   3. GROSS REQUIREMENT (M2 step 2, BR-03). For a component c of parent p in
 //      week t, using the BOM line valid in t:
-//        GR_c,t = Σ_p release_p,t × qtyPer_p,c × (1 + scrap_p,c)
+//        GR_c,t = Σ_p release_p,t × qtyPer_p,c × (1 + scrap_p,c) ÷ yield_p,c
 //      A finished good's release is its demand (the finished-goods plan is the
 //      production plan); an intermediate (bulk) passes its gross on lot-for-lot
 //      in the same week. Every gross figure keeps its PEGS — the finished good,
 //      its week and quantity behind each part — so it can be traced (AC-03).
-//      (The contract has no yield field yet, so BR-03's "÷ yield" is 1.)
+//      Yield (BL-115) divides beside scrap, on the BOM line: a component
+//      that loses 5% in the parent's production is needed ÷ 0.95. BR-03's
+//      text puts "÷ yield" on the ORDER quantity (METHOD-SPEC M2 step 5);
+//      it is applied here instead because yield is a property of each BOM
+//      line, and a material used by several parents can have several yields —
+//      one order-level divisor could not honour them (ENG-B50). A yield of 1
+//      leaves every figure exactly as before.
 //   4. NETTING (M2 steps 3–4, BR-04). Per purchased material:
 //        NR_t  = max(0, GR_t + SS − (POH_{t−1} + SR_t))
 //        POH_t = POH_{t−1} + SR_t + PR_t − GR_t
@@ -50,6 +56,7 @@
 // 20,400 = 5,600. `requirement.test.ts` runs it verbatim.
 // ─────────────────────────────────────────────────────────────────────────────
 
+import { componentFactor } from './bom';
 import { addDays, mondayOf } from './dates';
 import { latestConfirmation, lineHistories, receivedBy, requirementAt, type LineHistory } from './lines';
 import { DEFAULT_STOCK_ACCURACY_TOLERANCE, stockAccuracy } from './stock';
@@ -188,6 +195,14 @@ export interface Peg {
   readonly fgQuantity: number;
   /** This part of the item's gross requirement, in the item's unit. */
   readonly quantity: number;
+  /**
+   * The scrap and yield of the BOM line this part came through into the item
+   * (the last step of the explosion), as fractions — shown beside the part so
+   * the planner sees what raised it (BR-03, BL-115). Absent only on a finished
+   * good's own demand, which no BOM line produced.
+   */
+  readonly scrapPct?: number;
+  readonly yieldPct?: number;
 }
 
 export interface GrossCell {
@@ -241,12 +256,12 @@ export function explode(
     for (const [w, cell] of [...series.entries()].sort(([a], [b]) => a.localeCompare(b))) {
       for (const b of lines) {
         if (!validIn(b, w)) continue;
-        const factor = b.qtyPer * (1 + b.scrapPct);
+        const factor = componentFactor(b);
         add(
           b.componentCode,
           w,
           cell.quantity * factor,
-          cell.pegs.map((p) => ({ ...p, quantity: p.quantity * factor })),
+          cell.pegs.map((p) => ({ ...p, quantity: p.quantity * factor, scrapPct: b.scrapPct, yieldPct: b.yieldPct })),
         );
       }
     }

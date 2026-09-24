@@ -169,6 +169,9 @@ export const adminSettingsEn: Record<string, string> = {
   'adminSet.key.engine.rentedSpaceIdrPerPalletWeek.hint': 'What a pallet above the owned warehouse capacity costs for a week, from the 3PL invoices.',
   'adminSet.key.engine.changePenaltyIdrPerPallet.label': 'Change penalty inside the lead time, per pallet',
   'adminSet.key.engine.changePenaltyIdrPerPallet.hint': 'What order sizing counts for changing an order it already planned, once that order is inside the supplier’s lead time. A higher value keeps the plan steadier close in.',
+  'adminSet.key.engine.maxRentedSpacePct.label': 'Most rented space, as a share of owned capacity',
+  'adminSet.key.engine.maxRentedSpacePct.hint':
+    'The most space above the owned warehouse that order sizing may plan to rent. A week that does not fit even with it is shown on the order plan with its shortfall, for the planner to choose between renting more and a later delivery.',
   'adminSet.key.engine.rescheduleOutWeeks.label': 'Weeks early before a later date is proposed',
   'adminSet.key.engine.rescheduleOutWeeks.hint': 'An open order line that arrives at least this many weeks before the week it is needed is proposed to come later, to free warehouse space. The change is priced with the rented-space rate and the change penalty above.',
 
@@ -357,6 +360,9 @@ export const adminSettingsId: Record<string, string> = {
   'adminSet.key.engine.rentedSpaceIdrPerPalletWeek.hint': 'Biaya satu palet di atas kapasitas gudang sendiri selama seminggu, dari tagihan 3PL.',
   'adminSet.key.engine.changePenaltyIdrPerPallet.label': 'Penalti perubahan dalam waktu tunggu, per palet',
   'adminSet.key.engine.changePenaltyIdrPerPallet.hint': 'Biaya yang dihitung penentuan ukuran pesanan bila mengubah pesanan yang sudah direncanakan, setelah pesanan itu masuk waktu tunggu pemasok. Nilai lebih tinggi membuat rencana lebih stabil menjelang pengiriman.',
+  'adminSet.key.engine.maxRentedSpacePct.label': 'Ruang sewa terbanyak, sebagai bagian dari kapasitas sendiri',
+  'adminSet.key.engine.maxRentedSpacePct.hint':
+    'Ruang terbanyak di atas gudang sendiri yang boleh direncanakan untuk disewa oleh penentuan ukuran pesanan. Minggu yang tetap tidak muat meski dengan ruang itu ditampilkan di rencana pesanan beserta kekurangannya, agar perencana memilih antara menyewa lebih banyak atau pengiriman yang lebih lambat.',
   'adminSet.key.engine.rescheduleOutWeeks.label': 'Minggu lebih awal sebelum tanggal yang lebih lambat diusulkan',
   'adminSet.key.engine.rescheduleOutWeeks.hint': 'Baris pesanan terbuka yang tiba sedikitnya sekian minggu sebelum minggu dibutuhkan diusulkan untuk datang lebih lambat, agar ruang gudang lega. Perubahan dihitung dengan tarif ruang sewa dan penalti perubahan di atas.',
 

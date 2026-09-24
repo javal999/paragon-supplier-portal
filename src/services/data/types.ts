@@ -64,7 +64,7 @@ import type {
 } from '../delivery/views';
 import type { SupplierReliability } from '../engine/reliability';
 import type { MaterialPlan, MaterialRequirementRun } from '../engine/requirement';
-import type { MaterialSafetyStock, SafetyStockRun } from '../engine/safetyStock';
+import type { MaterialSafetyStock, SafetyStockChange, SafetyStockRun } from '../engine/safetyStock';
 import type { MaterialOrderPlan, OrderPlanRun, WarehousePlan } from '../engine/orderSizing';
 import type { InfoLine, PlanChangeBaseline, Proposal, ProposalType, RescheduleRun, WarehouseReschedule } from '../engine/reschedule';
 import type { SupplierCfot } from '../engine/cfot';
@@ -779,6 +779,8 @@ export interface MaterialRequirementView extends MaterialRequirementRun {
 export interface MaterialSafetyStockView extends MaterialSafetyStock {
   readonly materialLabel: string;
   readonly supplierName: string | null;
+  /** BR-06 (BL-116) — the change since the last run of the material's stream, and why. */
+  readonly change: SafetyStockChange;
 }
 
 /**
@@ -787,6 +789,8 @@ export interface MaterialSafetyStockView extends MaterialSafetyStock {
  */
 export interface SafetyStockView extends SafetyStockRun {
   readonly materials: readonly MaterialSafetyStockView[];
+  /** BR-06 — the last run each stream is compared with (X-04: packaging weekly, raw material monthly). */
+  readonly previousAsOf: { readonly packaging: string; readonly rawMaterial: string };
 }
 
 /** One material's E14-05 order plan as served, with display names. */

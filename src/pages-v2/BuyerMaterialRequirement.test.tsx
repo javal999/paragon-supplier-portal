@@ -61,6 +61,13 @@ describe('BuyerMaterialRequirement — the planner page', () => {
     const pegs = screen.getByTestId('mrq-pegs');
     expect(within(pegs).getByTestId('mrq-pegs-total')).toHaveTextContent(qtyOf(w.gross, m.uom));
     for (const p of w.pegs) expect(within(pegs).getAllByTestId(`mrq-peg-${p.skuCode}`).length).toBeGreaterThan(0);
+    // BL-115 — each part shows the scrap and yield of the BOM line it came
+    // through, where scrap is shown. The synthetic BOM has no yield loss: 100%.
+    const p0 = w.pegs[0];
+    expect(p0.yieldPct).toBe(1);
+    expect(within(pegs).getAllByTestId(`mrq-peg-yield-${p0.skuCode}`)[0]).toHaveTextContent('100%');
+    expect(within(pegs).getAllByTestId(`mrq-peg-scrap-${p0.skuCode}`)[0].textContent).toMatch(/^\d+([.,]\d)?%$/);
+    expect(screen.getByTestId('mrq-definitions')).toHaveTextContent('÷ yield');
   });
 
   it('counting unconfirmed lines is the planner’s choice, and they are then marked (AC-02)', async () => {

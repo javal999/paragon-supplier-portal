@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 0.7 draft, 2026-09-24 |
+| Version | 0.8 draft, 2026-09-24 |
 | What this is | Detailed requirements for the demand and material forecast engine PTI builds itself (owner decision ENG-1), with each calculation explained |
 | Status | Every requirement is **Proposed**. The decision to build is Validated (ENG-1), and 12 of the 18 engine decisions are decided (ENG-D1 to D9 and ENG-D15 to D17, section 4). The rest of the detail has not yet been reviewed by the Material Planner |
 | Sources | ENG-1 (`SUPPLIER-HUB-REQUIREMENTS.md` section 9); methods and evidence in `research/FORECAST-METHOD-SPEC.md`; problem analysis in `research/FORECAST-BEST-PRACTICE-2026-09.md` |
@@ -1016,6 +1016,23 @@ Choices the E14-13 build made where the requirement was silent. For the owner to
 | ENG-B27 | A call-off is only proposed when the change verb can take it: dispatched, awaiting the supplier's answer, awaiting the planner's approval, a change pending, or two confirmed deliveries are shown for information. A call-off cancellation has no Hub verb (the change verb needs a quantity above zero); the page says to agree it with the supplier | E14-13 BR-01, BR-07 |
 | ENG-B28 | The stability guard uses E14-02's portfolio share over its 26-week window; a PO line adds to it when created in the window, not already changed inside the lead time, and the change is inside the lead time. Call-offs are not in the E14-02 measure; the page counts them among the selected proposals inside the lead time | E14-13 BR-09 |
 
+### 4.1e Build decisions for review (PR #TBD, BL-115 to BL-117)
+
+Choices the builds of the E14-03, E14-04 and E14-05 leftovers made where the requirement was silent or read two ways. For the owner to accept or change.
+
+| ID | Decision | Applied in |
+|---|---|---|
+| ENG-B50 | Yield divides the requirement on each BOM line, beside scrap: component quantity = qtyPer × (1 + scrap) ÷ yield. BR-03 and METHOD-SPEC M2 step 5 put "÷ yield" on the order quantity; it is applied per BOM line instead, because yield is a property of each line and a material used by several finished goods can carry several yields, which one divisor on the order could not honour. The same factor is used for the history (E14-04's plan errors, E14-02), so errors are measured on the requirement that is planned | E14-03 BR-03, calculation step 1 |
+| ENG-B51 | The contract field is `yieldPct`, a fraction like `scrapPct`, required on every BOM line; a value outside (0, 1] is named on arrival (`BOM_YIELD_OUT_OF_RANGE`). The synthetic BOM carries 1 on every line, as a constant rather than a random draw, so no calibrated figure moves (confirmation 65.9%, CFOT 36.7%, packaging 124–136%, raw material 105–107% unchanged, bit for bit). The Material requirement drill-in shows each finished good's part with the scrap and yield of the BOM line it came through | E14-03 BR-03; E14-01 |
+| ENG-B52 | "The last run" is the same pure calculation at the previous run date of the material's stream, recomputed at read (X-04): packaging 7 days before, raw material 28 days before (four weekly buckets; a calendar month would move the week boundaries). Nothing is stored, the same trade as ENG-B17: a receipt recorded since then is not unwound, and both runs use the administrator's values in force, so a target change by the administrator is not shown as a cause | E14-04 BR-06; X-01, X-04 |
+| ENG-B53 | A change is counted in whole units, the figures the page shows. Its cause is read from the two runs' inputs, never inferred from its size: the method switched (history reached or lost the 30 past plans), the tier moved, the target changed, past plans entered or left the error history, the expected order per cycle changed, the risk window changed, or (on the SAP fallback) SAP's value changed; for the reorder point also a new plan. A material absent from the last run is "new". A material whose figures did not move lists no cause | E14-04 BR-06 |
+| ENG-B54 | The Safety stock page shows, per material, the change in safety stock and reorder point with the figure it came from and each cause, and above the table the two run dates compared and how many materials changed. Changes are not coloured: a rise is not a fault | E14-04 BR-06; AC-01 |
+| ENG-B55 | The maximum rented space is an administrator value beside the E14-05 cost rates (X-05): `engine.maxRentedSpacePct`, a share of owned capacity applied to each warehouse (ENG-D7), placeholder 25% until the Warehouse confirms what the 3PL contract allows. It is a hard limit, not a price: plans are compared first on pallet-weeks beyond capacity plus the cap, then on cost, so the sizing never rents past it to save money and nothing changes when it does not bind | E14-05 BR-01, edge case |
+| ENG-B56 | At the default 25% the synthetic results do not change: every planned order and every cost is identical to the uncapped plan. Packaging does not fit in the current week (2,289 pallets against 1,800 + 450, short 39) and raw material fits; at 20% three packaging weeks would not fit | E14-05 edge case |
+| ENG-B57 | "No plan fits" is a week still beyond capacity plus the cap after the capped sizing; "unavoidable" marks one where even the lowest possible stock (each week's need exactly, no MOQ or multiple) is beyond it, meaning stock on hand or confirmed deliveries fill the space. Each such week shows both choices costed: rent the shortfall beyond the cap at the rented-space rate (already inside the page's rent figure), or deliver later: every recommended order and confirmed PO line arriving by that week, each checked alone for whether moving it to the week after keeps the material at its safety stock, and whether the movable ones free enough | E14-05 edge case |
+| ENG-B58 | The planner's choice is made on the page and is not stored: it changes no order and does not re-plan. The chosen option says where to act (the 3PL booking; the Reschedule open orders page for a confirmed line; a later date on the draft call-off for a recommended order). Recording the choice as an override with a reason (X-06) is a follow-up | E14-05 edge case; X-06 |
+| ENG-B59 | Released call-offs are not among the later-delivery candidates, because E14-03 and E14-05 do not net call-offs yet (ENG-B19); they appear once they are netted | E14-05 edge case |
+
 ### 4.2 Still open
 
 | ID | Decision | Owner | Blocks |
@@ -1042,3 +1059,4 @@ Choices the E14-13 build made where the requirement was silent. For the owner to
 | 0.5 | 2026-09-23 | ENG-D4, D6, D7 decided; build decisions ENG-B14 to ENG-B18 from PR #41 (E14-05 and the release block), section 4.1c |
 | 0.6 | 2026-09-23 | REQ-E14-13 Reschedule or cancel open orders added (Proposed), from the E14-05 finding that order sizing cannot lower the current overload; ENG-D15 to ENG-D17 opened |
 | 0.7 | 2026-09-24 | ENG-D15, D16, D17 decided by the owner on the defaults (1 week; the Material Planner in SAP, the Hub records "taken to SAP"; liability flagged, not priced). REQ-E14-13 built on synthetic data (BL-107, PR #44); build decisions ENG-B19 to ENG-B28 for review, section 4.1d |
+| 0.8 | 2026-09-24 | Leftovers of E14-03, E14-04 and E14-05 built on synthetic data (BL-115 yield, BL-116 change since the last run, BL-117 cap on rented space; PR #TBD); build decisions ENG-B50 to ENG-B59 for review, section 4.1e |
