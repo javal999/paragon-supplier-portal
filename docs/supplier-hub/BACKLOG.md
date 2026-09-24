@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 2.4, 2026-09-24 |
+| Version | 2.5, 2026-09-24 |
 | What this is | Everything known to be outstanding for the Supplier Hub, in one list: decisions waiting on people, work waiting on those decisions, work waiting on the backend, and work that can start today |
 | What this is not | A plan or a commitment. Nothing here has a date. Sequencing belongs to the project owner |
 | Sources | Open items (section 7 of `SUPPLIER-HUB-REQUIREMENTS.md`), open decisions (section 9.3 of `SUPPLIER-HUB-PRD.md`), what is not built (section 5 of `BUILD-GAP.md`), stubs (section 6 of the requirements), and defects or debts found while building |
@@ -23,7 +23,7 @@ Still open. Items decided on 2026-09-21 are in section 6.
 
 | ID | Decision | Owner | What it unblocks | Detail |
 |---|---|---|---|---|
-| BL-01 | **REPL** — replenishment method and governance | Material Planner (consultant engaged) | BL-20 SAP replenishment recommendations, and the shape of REQ-E09-01 | PRD 9.3 |
+| BL-01 | **REPL** — replenishment method and governance | Material Planner (consultant engaged) | The shape of REQ-E09-01, and BL-118 where to hold buffers (E14-12) | PRD 9.3 |
 | BL-11 | **PQ-06** — interface technology and latency target | IT | The real SAP interface, and what the interface monitor watches | REQ-E07-08 |
 | BL-12 | **PQ-11** — is the hub the long-term record for call-offs? Recommended: the hub holds them for the pilot, and SAP scheduling agreement releases become the long-term record. **Awaiting the owner's yes** | Material Planner, IT | Integration scope (BL-11), and whether call-offs migrate to SAP later | REQ-E09-01, E09-03 |
 | BL-54 | **PQ-05 cap** — the absolute rupiah cap on invoice price variance (the 0% and 2% tolerances are decided) | Finance | The final value in CR-12; the build uses a placeholder until then | REQ-E07-07 |
@@ -38,6 +38,7 @@ Still open. Items decided on 2026-09-21 are in section 6.
 | BL-70 | **Who may change the working calendar and the 3PL list?** Today the Hub administrator and the combined buyer "All" role (offered, not seeded), following the enforcement-settings precedent. Alternative: administrator only | Procurement, IT | Role atoms `calendar:set`, `threepl:maintain` | Requirements 3.4, REQ-E07-04 BR-05 |
 | BL-71 | **Goods receipt: what an over-delivery is measured against, and does "kept open" reopen quantity?** CR-25 says the order; REQ-E07-06 BR-03 says the ASN. The build uses the ASN when linked, else the order. "Kept open" is a label and does not reopen the missing quantity for another shipment | Material Planner, Warehouse | CR-25, REQ-E07-06 wording; possible build | REQ-E07-06 |
 | BL-101 | **C8 §8** — SOMO ratifies the in-house forecast engine amendment (the hub computes the material × period totals until the engine moves to SOMO) | SOMO, with the operator | The engine publishing its own totals on the C8 seam | `docs/contracts/C8-forecast-publication.md` §8 |
+| BL-119 | **Forecast engine decisions still open**: ENG-D8a cumulative cap agreed with pilot suppliers; ENG-D10 forecast grain (sell-in or sell-out, per channel); ENG-D11 who reviews the forecast before it drives material plans; ENG-D12 owner of the promotion calendar and how far ahead it is fixed; ENG-D13 plan-stability limit in model selection (set after the first backtest); ENG-D14 materials per service tier | Material Planner, Procurement, Demand Planning, Marketing | BL-108 (D8a confirms), BL-110 (D10, D11), BL-112 (D13), BL-113 (D12); D14 confirms E14-04 tiers | `FORECAST-ENGINE-REQUIREMENTS.md` section 4.2 |
 
 ---
 
@@ -49,11 +50,29 @@ Decided on 2026-09-21 and ready to build. Priority: first what protects money an
 |---|---|---|---|---|---|
 | 1 | BL-33 to BL-35, BL-38, BL-39, BL-74 to BL-80, BL-83, BL-84, BL-93, BL-96 to BL-98 | The remaining "can start today" items in section 4, in the order listed there | — | — | — |
 
+### Forecast engine build order
+
+The rest of the in-house forecast engine (ENG-1), in the order recommended on 2026-09-24. Every item runs on the synthetic dataset first (BL-102) and switches to SAP data when BL-100 lands; nothing calculated on synthetic data reaches a supplier (X-03). Steps E14-02 to E14-05 and E14-13 are built (section 6).
+
+| Order | ID | Item | Why this position | Blocked by | Size | Detail |
+|---|---|---|---|---|---|---|
+| 1 | BL-108 | **Stabilise and publish the plan to suppliers (E14-06)**: Firm zone frozen, Trade-off moves held to the ENG-D8 band, small week-to-week noise damped before publication, a range beside the quantity once BL-111 exists | Moves Scheduled Confirmed and CFOT directly: suppliers confirm a plan that stops changing (Terwiesch 2005). Runs on SAP's plan, so it does not wait for the demand model | Nothing to start; ENG-D8a confirms the cap (runs on ±20%); publishing to suppliers waits on live data (BL-100) | L | REQ-E14-06 |
+| 2 | BL-109 | **Data health page and quality checks on arrival (E14-01)**: freshness limits per feed, the checks in the feed spec, what is stale or failed | Needed before the first real SAP feed arrives, so bad data is caught before it drives orders | Nothing | M | REQ-E14-01; `FORECAST-ENGINE-FEED-SPEC.md` |
+| 3 | BL-110 | **Finished-goods demand forecast (E14-07)**: one LightGBM model trained across SKUs, the Comb or Theta fallback, SBA or TSB for slow and intermittent SKUs, SKU, brand and total reconciled (MinT-shrink); replaces SAP's plan as the input to E14-03 | Every later step depends on it; until it exists E14-03 to E14-06 run on SAP's plan | ENG-D10, ENG-D11 (BL-119); meaningful results need sales history (BL-100) | L | REQ-E14-07 |
+| 4 | BL-111 | **Demand range (E14-09)**: P50 and P90 per SKU and material, conformal calibration, how often actuals fell outside | Feeds safety stock (E14-04) and the supplier range (E14-06 BR-06) | BL-110 | M | REQ-E14-09 |
+| 5 | BL-112 | **Choosing models by service, not accuracy (E14-10)**: replay PTI's ordering on past data and pick each SKU's model by fill rate and warehouse space | Accuracy is not service (Chin 2026); guards against a model that scores well and fills the warehouse | BL-110; ENG-D13 set after the first backtest | L | REQ-E14-10 |
+| 6 | BL-113 | **Launches and promotions (E14-08)**: new-SKU forecasts from look-alikes, promotion uplift from the calendar | Cuts shortage in promotions and excess after them | BL-110; ENG-D12 (BL-119) | M | REQ-E14-08 |
+| 7 | BL-114 | **Forecast bias and planner override control (E14-11)**: a bias alarm per SKU and material (tracking signal), and the value each type of planner override adds or loses (FVA) | Stops a steady high bias filling the warehouse; shows which overrides help | BL-110 | M | REQ-E14-11; X-06 |
+| 8 | BL-115 | **Yield in the material requirement (E14-03)**: a yield field on the BOM line, used in the gross requirement beside scrap | The only part of E14-03 not built | Synthetic default until the BOM feed carries yield (BL-103) | S | REQ-E14-03 |
+| 9 | BL-116 | **Safety stock change since the last run (E14-04 BR-06)**: show the change and its cause per material | The only part of E14-04 not built | Nothing | S | REQ-E14-04 BR-06 |
+| 10 | BL-117 | **Cap on rented space in order sizing (E14-05)**: the "no plan fits" edge case: when no plan fits even with maximum rented space, show the shortfall weeks and let the planner choose rented space or a later delivery | The only part of E14-05 not built | Nothing | S | REQ-E14-05 edge cases |
+
+Phase 2: BL-118 (E14-12), section 5.
+
 ### Build work waiting on a decision
 
 | ID | Item | Blocked by | Size | Detail |
 |---|---|---|---|---|
-| BL-20 | SAP ROP replenishment recommendations released as call-offs | BL-01; forecast source decided (BL-10) | L | REQ-E09-01, X-16 |
 | BL-23 | Enter the agreed values once decided, on the admin screen (Tolerances and rule values); no developer needed since BL-32 | BL-54, BL-55, BL-56 | S | `/buyer/admin` |
 | BL-81 | Apply the answers to BL-67 to BL-71 (tolerance refusal, days-of-cover basis, late convention, admin roles, receipt measure and reopening) | BL-67 to BL-71 | S each | Decisions in section 1 |
 
@@ -114,6 +133,7 @@ Nothing blocks these.
 | BL-92 | Amendments to a live RFx event that notify invitees and flag responses to revisit (deadline extension exists). Later, not in the MVP | Build team, after the MVP | Requirements 5.2 and 8.3 |
 | BL-42 | Phase 2 epics: contract management (E04), catalog management (E05), reporting and analytics (E11), API shipment aggregator (E13.02), supplier quality | Per the deck and charter | Requirements section 6 |
 | BL-103 | Forecast engine feed specification: each input, its grain, refresh and quality check, handed to the Master Data Management team, who own the data and the SAP integration | Master Data Management team | Drafted: `FORECAST-ENGINE-FEED-SPEC.md` (2026-09-23), handed to the team for confirmation of sources and owners. `FORECAST-ENGINE-REQUIREMENTS.md` E14-01; PRD I14 |
+| BL-118 | Where to hold buffers (E14-12, Phase 2): guaranteed-service model with the MOQ extension, deciding at which level (finished good, bulk, packaging) safety stock sits | Build team, Phase 2; after REPL (BL-01) | `FORECAST-ENGINE-REQUIREMENTS.md` REQ-E14-12 |
 
 ---
 
@@ -177,3 +197,4 @@ Nothing blocks these.
 | BL-105 | Safety stock, safety lead time and reorder point (E14-04) | 2026-09-23 | Built in PR #39 on synthetic data: fill-rate safety stock from the plan's errors, tiers 95/90/85, safety lead time per supplier, ROP; zero safety stock flagged, not floored; page Forecast → Safety stock |
 | BL-107 | Reschedule or cancel open orders (E14-13) | 2026-09-24 | ENG-D15 to D17 decided on the defaults. Built in PR #44 on synthetic data: page Forecast → Reschedule open orders; call-off changes through the existing change verb, PO lines recorded as taken to SAP, both refused while the data is simulated. Finding (as of 2026-08-31): packaging is 1,972 pallet-weeks over capacity; 50 reschedule-outs free 1,152 of them (Rp 40.3M rented space at the placeholder rate, Rp 31.8M change penalty), but only the 22 that need no supplier agreement are free to send, and they free 398 (Rp 13.9M). Of the 820 pallet-weeks that remain, 741 are stock on hand. Raw material is 379 over; its stock on hand covers the whole 26-week horizon, so all 96 open lines come out as cancellations, all needing supplier agreement; 130 of the 138 that remain are stock on hand. Sending every relief proposal would raise PTI's share of schedules changed inside the lead time from 18.4% to 28.3% |
 | BL-106 | Order sizing within MOQ and warehouse space (E14-05) | 2026-09-23 | Built in PR #41 on synthetic data: warehouse-wide sizing, placeholder cost rates, page Forecast → Order plan, draft call-offs from recommendations; engine-origin drafts cannot be released while the data is simulated. Finding: it cuts packaging orders (101 → 65) but cannot lower the current overload, which is stock already on hand |
+| BL-20 | SAP ROP replenishment recommendations released as call-offs | 2026-09-24 | Superseded by ENG-1: PTI's engine replaces SAP for ROP and replenishment. ROP built in PR #39 (E14-04), recommendations as draft call-offs in PR #41 (E14-05). Releasing them to suppliers waits on live data (BL-100) |
