@@ -215,6 +215,10 @@ async function realIds(): Promise<Record<string, string | null>> {
     // REQ-E06-01 — the version and view stores are seeded.
     forecastVersion: forecastVersionStore.all()[0]?.publicationId ?? null,
     forecastView: forecastViewStore.all()[0]?.id ?? null,
+    // REQ-E14-13 — a "taken to SAP" mark is creation-only (unprobeable) and its
+    // store starts empty (nothing is marked while the engine data is simulated);
+    // the id is a well-formed one so the coverage control can see the target.
+    sapChangeMark: 'sap-0001',
     // REQ-E03-02 / REQ-E03-04 / REQ-E03-05 — every RFx store is seeded, so each
     // first row is a real id. The two RESPONSE targets are supplier-owned and
     // therefore land in `ownerful`; the three buyer-owned ones land in
@@ -401,7 +405,8 @@ describe('POPULATION — nothing below means anything without this', () => {
     // A negotiation round's only non-creation verb closes it, so it IS probeable
     // and lands in `ownerless` with the other buyer-owned targets.
     // A confidentiality acceptance is the same creation-only shape.
-    expect(unprobeable).toEqual(['rfqConfidentiality', 'inventoryDeclaration', 'stockSync', 'capacitySubmission', 'forecastVersion', 'forecastView']);
+    // A "taken to SAP" mark (REQ-E14-13) is the same creation-only record shape.
+    expect(unprobeable).toEqual(['rfqConfidentiality', 'inventoryDeclaration', 'stockSync', 'capacitySubmission', 'forecastVersion', 'forecastView', 'sapChangeMark']);
   });
 
   it('CONTROL — the walk lands every probe in one of its verb\'s from-states', async () => {

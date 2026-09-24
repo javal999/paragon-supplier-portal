@@ -179,6 +179,11 @@ import {
 } from './inventoryReadModel';
 import { API_CONNECTIONS } from './fixtures/inventoryHub';
 import { forecastVersionStore, forecastViewStore } from './stores/forecastHubStores';
+// ── REQ-E14-13 — reschedule proposals taken to SAP ─────────────────────────
+import { sapChangeMarkStore } from './stores/sapChangeMarkStore';
+import { engineDataset } from './fixtures/engineDataset';
+import { lineHistories, requirementAt } from '../../engine/lines';
+import type { ProposalType } from '../../engine/reschedule';
 // ── REQ-E03-01 to REQ-E03-05 — RFx management ──────────────────────────────
 import {
   awardStore,
@@ -1190,14 +1195,21 @@ bindPolicyHook(POLICY_HOOKS.CALLOFF_LINE_VALID, ({ payload }) => {
 // call-off is read through the target; the liveness through the registry's own
 // predicate, at call time. A creation-time release reads the origin from the
 // payload, because there is no call-off to read yet.
+//
+// REQ-E14-13 BR-08 — the same rule on a CHANGE: a change the reschedule report
+// sends names the engine as its origin in the payload (the call-off itself was
+// typed by a planner), and is refused while the engine data is simulated, so
+// nothing calculated on synthetic data reaches a supplier.
 bindPolicyHook(POLICY_HOOKS.CALLOFF_ENGINE_DATA_LIVE, ({ entityId, payload, target }) => {
   const existing = entityId ? (target.readEntity(entityId) as CallOff | null) : null;
-  const origin = existing ? existing.origin : payload.origin === 'engine' ? 'engine' : undefined;
+  const fromReport = payload.origin === 'engine' && existing !== null && existing.status !== 'Draft';
+  const origin = payload.origin === 'engine' ? 'engine' : existing ? existing.origin : undefined;
   if (!engineReleaseWithheld({ origin }, isLive('engineDataset'))) return { ok: true };
   return {
     ok: false,
-    reason:
-      'ENGINE_DATA_SIMULATED: this call-off comes from an order-plan recommendation calculated on simulated data; it can be released once the Master Data Management team’s SAP feed is live',
+    reason: fromReport
+      ? 'ENGINE_DATA_SIMULATED: this change comes from the reschedule report, calculated on simulated data; it can be sent to the supplier once the Master Data Management team’s SAP feed is live'
+      : 'ENGINE_DATA_SIMULATED: this call-off comes from an order-plan recommendation calculated on simulated data; it can be released once the Master Data Management team’s SAP feed is live',
   };
 });
 
@@ -1238,6 +1250,11 @@ bindPolicyHook(POLICY_HOOKS.CALLOFF_EDIT_VALID, ({ payload }) => {
   }
   if (payload.type !== undefined && !CALL_OFF_TYPES.includes(payload.type as CallOffType)) {
     return { ok: false, reason: 'type must be JIT or forecast-based' };
+  }
+  // REQ-E14-13 — a change from the reschedule report names the engine; an
+  // origin the hub does not know is refused rather than dropped (X-03).
+  if (payload.origin !== undefined && payload.origin !== 'engine') {
+    return { ok: false, reason: 'origin, when given, must be engine' };
   }
   return { ok: true };
 });
@@ -2706,6 +2723,73 @@ const forecastViewTarget: CommandTarget = {
   },
 };
 
+// ── REQ-E14-13 BR-07 — A RESCHEDULE PROPOSAL TAKEN TO SAP ─────────────────
+// Creation-only; `entityId` is the mark's own id. Owner-less: the mark is the
+// Material Planner's, so every supplier is denied at SCOPE (§86). The PO line
+// is read from the engine's dataset (the SAP-grain lines the report proposes
+// on), never taken on the form's word.
+const PROPOSAL_TYPES: readonly ProposalType[] = ['rescheduleOut', 'rescheduleIn', 'reduce', 'cancel'];
+
+const engineLineOf = (poNumber: unknown, line: unknown) =>
+  lineHistories(engineDataset()).find((h) => h.line.poNumber === poNumber && h.line.line === line) ?? null;
+
+const sapChangeMarkTarget: CommandTarget = {
+  readState: (id) => (sapChangeMarkStore.get(id) ? 'Recorded' : null),
+  readScopeOwner: () => null,
+  readEntity: (id) => sapChangeMarkStore.get(id) ?? null,
+  applyTransition: () => {
+    /* no-op — a mark is recorded once; a later one is a new mark */
+  },
+  creationOwner: () => null,
+  create: (payload, _toState, scope) => {
+    const poNumber = String(payload.poNumber);
+    const line = Number(payload.line);
+    const cancel = payload.proposalType === 'cancel';
+    const made = sapChangeMarkStore.add({
+      lineId: `po:${poNumber}#${line}`,
+      poNumber,
+      line,
+      proposalType: payload.proposalType as ProposalType,
+      proposedDate: cancel ? null : String(payload.proposedDate),
+      proposedQuantity: cancel ? 0 : Number(payload.proposedQuantity),
+      markedAt: sdcClock.now(),
+      markedBy: scope.actor ?? NO_PERSON,
+    });
+    return { entityId: made.id };
+  },
+};
+
+bindPolicyHook(POLICY_HOOKS.SAP_CHANGE_MARK_VALID, ({ payload }) => {
+  const h = engineLineOf(payload.poNumber, payload.line);
+  if (!h) return { ok: false, reason: 'NO_SUCH_LINE: no open PO line with that number in the engine data' };
+  const inForce = requirementAt(h).qty;
+  if (inForce === 0) return { ok: false, reason: `LINE_CANCELLED: ${h.line.poNumber}/${h.line.line} is already cancelled` };
+  if (!PROPOSAL_TYPES.includes(payload.proposalType as ProposalType)) {
+    return { ok: false, reason: 'proposal type must be reschedule out, reschedule in, reduce or cancel' };
+  }
+  const qty = payload.proposedQuantity;
+  if (typeof qty !== 'number' || !Number.isFinite(qty) || qty < 0 || qty > inForce) {
+    return { ok: false, reason: `quantity must be a number from 0 to ${inForce}` };
+  }
+  if (payload.proposalType === 'cancel') return qty === 0 ? { ok: true } : { ok: false, reason: 'a cancellation carries quantity 0' };
+  if (!isCallOffDate(payload.proposedDate)) return { ok: false, reason: 'date must be a date (YYYY-MM-DD)' };
+  if (String(payload.proposedDate) < sdcClock.now().slice(0, 10)) return { ok: false, reason: 'date is in the past' };
+  return { ok: true };
+});
+
+// X-03 (ENG-B24) — a change taken to SAP reaches the supplier through SAP, so a
+// proposal calculated on simulated data may not be taken there. The liveness is
+// the registry's own answer, read at call time.
+bindPolicyHook(POLICY_HOOKS.SAP_CHANGE_ENGINE_DATA_LIVE, () =>
+  isLive('engineDataset')
+    ? { ok: true }
+    : {
+        ok: false,
+        reason:
+          'ENGINE_DATA_SIMULATED: this proposal was calculated on simulated data; it can be taken to SAP once the Master Data Management team’s SAP feed is live',
+      },
+);
+
 // ── RFx MANAGEMENT (REQ-E03-01 to REQ-E03-05) ──────────────────────────────
 //
 // Five targets and eleven policy hooks. The shape is the one the rest of this
@@ -4165,6 +4249,8 @@ const TARGETS: Record<string, CommandTarget> = {
   // REQ-E06-01 / REQ-E06-03 — forecast versions and supplier views.
   forecastVersion: forecastVersionTarget,
   forecastView: forecastViewTarget,
+  // REQ-E14-13 BR-07 — a reschedule proposal taken to SAP (ENG-D16).
+  sapChangeMark: sapChangeMarkTarget,
   // REQ-E03-02 / REQ-E03-04 / REQ-E03-05 — the RFx event types, the answers to
   // them, and the negotiation window. Each ships in the same commit as its flow,
   // so no entity joins the target-less set even for one merge.

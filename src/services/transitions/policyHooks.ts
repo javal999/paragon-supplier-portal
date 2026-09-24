@@ -137,11 +137,27 @@ export const POLICY_HOOKS = {
    * Call-off release (X-03, owner decision 2026-09-23): a call-off whose origin
    * is the forecast engine (a draft the Order plan created) is not released to
    * the supplier while the engine dataset is not live — simulated output is
-   * never shown to a supplier. Reads the call-off through `target.readEntity`
+   * never shown to a supplier. Call-off CHANGE too (REQ-E14-13 BR-08): a change
+   * the reschedule report sends names the engine as its origin and is refused
+   * the same way. Reads the call-off through `target.readEntity`
    * and the liveness registry's `isLive('engineDataset')` at call time.
    * Refused by name: ENGINE_DATA_SIMULATED. Ordinary call-offs are untouched.
    */
   CALLOFF_ENGINE_DATA_LIVE: 'calloff_engine_data_live',
+  /**
+   * "Taken to SAP" (REQ-E14-13 BR-07): the line is an open PO line of the
+   * engine's dataset, the proposal type is one of the four, the quantity is a
+   * whole non-negative number no larger than the line, and a date (except for a
+   * cancellation) is a real date on or after today.
+   */
+  SAP_CHANGE_MARK_VALID: 'sapchange_mark_valid',
+  /**
+   * "Taken to SAP" (X-03, ENG-B24): refused while the engine dataset is not
+   * live — a change taken to SAP reaches the supplier through SAP, so a
+   * proposal calculated on simulated data may not be taken there. Refused by
+   * name: ENGINE_DATA_SIMULATED.
+   */
+  SAP_CHANGE_ENGINE_DATA_LIVE: 'sapchange_engine_data_live',
   /** Dispatch heads-up (REQ-E09-04): the confirmation is accepted, the dates are
    *  dates with arrival on or after shipping, and the quantity is positive. */
   CALLOFF_DISPATCH_VALID: 'calloff_dispatch_valid',

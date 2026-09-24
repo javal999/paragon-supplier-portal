@@ -443,6 +443,11 @@ export const processFlowPurposeEn: Record<string, string> = {
   'processFlows.purpose.t_forecastview_record':
     'Opening a forecast version records that the supplier has seen it.',
 
+  'processFlows.purpose.entity.sapChangeMark':
+    'The record that a Material Planner took a proposed change to an open purchase order into SAP. The hub never changes a purchase order itself, so this is how the reschedule report knows which of its proposals were acted on.',
+  'processFlows.purpose.t_sapchange_mark':
+    'The Material Planner marks a proposal to move, reduce or cancel part of a purchase order as taken to SAP, with the change and the time. It is refused while the forecast engine runs on simulated data, because a change made in SAP reaches the supplier.',
+
   // ── RFx management (REQ-E03-02 / REQ-E03-04 / REQ-E03-05) ─────────────────
   'processFlows.purpose.entity.rfiEvent':
     'A structured set of questions about what a supplier can make, where, and how — asked before anybody talks about price.',
@@ -900,6 +905,11 @@ export const processFlowPurposeId: Record<string, string> = {
     'Saat pemasok pertama kali membuka versi prakiraan, agar perencana tahu siapa yang sudah melihat rencananya.',
   'processFlows.purpose.t_forecastview_record':
     'Membuka versi prakiraan mencatat bahwa pemasok sudah melihatnya.',
+
+  'processFlows.purpose.entity.sapChangeMark':
+    'Catatan bahwa Perencana Material membawa usulan perubahan baris pesanan pembelian terbuka ke SAP. Hub tidak pernah mengubah pesanan pembelian sendiri, jadi dengan catatan ini laporan penjadwalan ulang tahu usulan mana yang sudah ditindaklanjuti.',
+  'processFlows.purpose.t_sapchange_mark':
+    'Perencana Material menandai usulan untuk memindahkan, mengurangi, atau membatalkan baris pesanan pembelian sebagai sudah dibawa ke SAP, beserta perubahan dan waktunya. Ditolak selama mesin prakiraan memakai data simulasi, karena perubahan di SAP sampai ke pemasok.',
 
   // ── RFx (REQ-E03-02 / REQ-E03-04 / REQ-E03-05) ────────────────────────────
   'processFlows.purpose.entity.rfiEvent':

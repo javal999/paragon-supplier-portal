@@ -17,6 +17,8 @@
 //   · Section 3.6 — starter reason codes for a commitment below forecast.
 //   · ENG-D5 / REQ-E14-04 — the forecast engine's fill-rate targets per tier
 //     and the safety-lead-time percentile (the administrator's, BL-32).
+//   · ENG-D6 / REQ-E14-05 — the order-sizing cost rates; ENG-D15 / REQ-E14-13
+//     — the reschedule-out threshold in weeks.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { ForecastStream, MaterialType } from '../sdc/types';
@@ -156,6 +158,15 @@ export function orderSizingCosts(): {
     rentIdrPerPalletWeek: hubSetting('engine.rentedSpaceIdrPerPalletWeek'),
     changePenaltyIdrPerPallet: hubSetting('engine.changePenaltyIdrPerPallet'),
   };
+}
+
+/**
+ * ENG-D15 / REQ-E14-13 BR-03 — whole weeks an open order line must arrive
+ * before its need week for a reschedule-out to be proposed (1 by default). In
+ * force now; the engine takes it as an argument (X-01).
+ */
+export function rescheduleOutThresholdWeeks(): number {
+  return hubSetting('engine.rescheduleOutWeeks');
 }
 
 /**

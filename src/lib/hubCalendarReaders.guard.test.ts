@@ -180,6 +180,8 @@ const CALENDAR_DAY_ALLOWLIST: Readonly<Record<string, string>> = {
     "The superseded SDC design's interim chase threshold (RESPONSE_DUE_DAYS) on /buyer/chase, a route hidden from the MVP menu (NV-06) and replaced by REQ-E06-03. No Supplier Hub rule defines it, so changing it would invent one. Reported as a follow-up rather than left silently.",
   'services/engine/requirement.ts#openReceipts':
     'REQ-E14-03 — an open PO line whose confirmed delivery date passed more than the grace window (14 calendar days) is treated as closed in netting: a physical delivery window counted in calendar days, like CR-07, not a response deadline anybody answers.',
+  'services/data/mock/rescheduleReadModel.ts#callOffOrderLines':
+    'REQ-E14-13 — the same E14-03 grace window applied to an open call-off (ENG-B10): a delivery date passed more than 14 calendar days ago is treated as closed. A physical delivery window, not a response deadline.',
 };
 
 describe('BL-50 · the deadline population reads the hub calendar', () => {

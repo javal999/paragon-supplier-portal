@@ -36,6 +36,7 @@ export type HubSettingUnit =
   | 'workingDays' // working days on the hub calendar
   | 'idr' // whole rupiah
   | 'multiple' // × a lead time
+  | 'weeks' // whole weeks
   | 'boolean';
 
 /** Who decides a value that is still a placeholder (the owner i18n key suffix). */
@@ -155,6 +156,14 @@ const DEFS = [
   {
     key: 'engine.changePenaltyIdrPerPallet', section: 'tolerances', rule: 'REQ-E14-05', unit: 'idr', integer: true,
     min: 0, max: 100_000_000, defaultValue: 150_000, placeholder: { owner: 'materialPlanner', backlogId: 'REQ-E14-05 BR-03' },
+  },
+  // ENG-D15 (decided by the owner 2026-09-24) — REQ-E14-13 BR-03: how many
+  // weeks before its need week an open line must arrive before a reschedule-out
+  // is proposed. 1 week to start; the Material Planner's value, beside the
+  // E14-05 cost rates it is weighed with.
+  {
+    key: 'engine.rescheduleOutWeeks', section: 'tolerances', rule: 'ENG-D15', unit: 'weeks', integer: true,
+    min: 1, max: 26, defaultValue: 1,
   },
 ] as const satisfies readonly HubSettingDef[];
 

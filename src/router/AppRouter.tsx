@@ -78,6 +78,7 @@ import BuyerReliability from '../pages-v2/BuyerReliability';
 import BuyerMaterialRequirement from '../pages-v2/BuyerMaterialRequirement';
 import BuyerSafetyStock from '../pages-v2/BuyerSafetyStock';
 import BuyerOrderPlan from '../pages-v2/BuyerOrderPlan';
+import BuyerReschedule from '../pages-v2/BuyerReschedule';
 import SupplierForecastCommitments from '../pages-v2/SupplierForecastCommitments';
 import SupplierPerformance from '../pages-v2/SupplierPerformance';
 import NotFound from '../pages-v2/NotFound';
@@ -149,6 +150,8 @@ const AppRouter: React.FC = () => {
           {/* REQ-E14-04 — safety stock, safety lead time and reorder point (SIMULATED). */}
           <Route path="/buyer/safety-stock" element={<BuyerSafetyStock />} />
           <Route path="/buyer/order-plan" element={<BuyerOrderPlan />} />
+          {/* REQ-E14-13 — reschedule or cancel open orders for warehouse relief (SIMULATED). */}
+          <Route path="/buyer/reschedule" element={<BuyerReschedule />} />
           <Route
             path="/buyer/collaboration/responses"
             element={

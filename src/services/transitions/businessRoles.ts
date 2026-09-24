@@ -295,6 +295,9 @@ const LANE_BUNDLES = Object.freeze({
       // REQ-E06-01 / REQ-E06-03 BR-05 — the planner publishes forecast versions
       // and moves a period's demand to another supplier.
       'forecast:publish',
+      // REQ-E14-13 BR-07 / ENG-D16 — the Material Planner agrees a PO-line
+      // change with the supplier in SAP and records here that it was taken there.
+      'sapchange:mark',
     ]),
     // Raising and revising a requisition — split from approving one, which is
     // the segregation `pr:approve` living in `procurement` expresses.

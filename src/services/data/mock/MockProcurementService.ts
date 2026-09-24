@@ -119,14 +119,26 @@ import type {
   MaterialRequirementView,
   SafetyStockView,
   OrderPlanView,
+  RescheduleView,
 } from '../types';
 import { PR_INTAKE_LINES } from './fixtures/prIntake';
 import { engineDataset } from './fixtures/engineDataset';
 import { supplierReliability, trailingWindow } from '../../engine/reliability';
-import { defaultRequirementOptions } from '../../engine/requirement';
+import { DEFAULT_RECEIPT_OPTIONS, defaultRequirementOptions, openReceipts } from '../../engine/requirement';
 import { DEFAULT_SAFETY_STOCK_OPTIONS, requirementInputs, safetyStockRun, type SafetyStockRun } from '../../engine/safetyStock';
 import { plannedReceiptsOf, sizedRequirement } from '../../engine/orderSizing';
-import { engineServiceTargets, orderSizingCosts, safetyLeadTimePercentile } from '../../transitions/forecastConfig';
+import {
+  STREAM_MATERIAL_TYPE,
+  engineServiceTargets,
+  orderSizingCosts,
+  rescheduleOutThresholdWeeks,
+  safetyLeadTimePercentile,
+  zoneLengthsFor,
+} from '../../transitions/forecastConfig';
+import { planChangeGuard, poOrderLines, reschedule, termsKey, type LineTerms, type OpenOrderLine } from '../../engine/reschedule';
+import { callOffViews } from '../../transitions/callOffRules';
+import { callOffOrderLines } from './rescheduleReadModel';
+import { sapChangeMarkStore } from './stores/sapChangeMarkStore';
 import { addDays, dayOf } from '../../engine/dates';
 import type { EngineDataset } from '../../engine/types';
 import { labelOf } from '../../sdc/materialMaster';
@@ -486,6 +498,91 @@ export class MockProcurementService implements IProcurementService {
           supplierName: m.supplierId ? forecastSupplierName(m.supplierId) : null,
         })),
       })),
+    };
+  }
+
+  async getReschedule(scope: QueryScope): Promise<RescheduleView | null> {
+    // REQ-E14-13, computed at read on the hub clock: the same sized chain the
+    // Order plan reads (E14-04 → E14-03 → E14-05 → E14-03), E14-03's open PO
+    // lines plus the Hub's open call-offs (ENG-B19), the cost rates and the
+    // ENG-D15 threshold in force. PTI only (X-03).
+    if (scope.personaType === 'supplier') return null;
+    const now = sdcClock.now();
+    const asOf = dayOf(now);
+    const { data, sized } = engineSizing(asOf, false, true);
+    const engineMaterials = new Set(data.materials.map((m) => m.materialCode));
+    const callOffs = callOffOrderLines(
+      callOffViews(callOffStore.all(), asnStore.all(), goodsReceiptStore.all(), now),
+      asOf,
+      DEFAULT_RECEIPT_OPTIONS.overdueGraceDays,
+      engineMaterials,
+    );
+    const lines: OpenOrderLine[] = [...poOrderLines(data, sized), ...callOffs];
+    // REQ-E06-01 BR-05 — zone lengths per supplier × material group; the Firm
+    // zone is the lead time the source carries (the dataset takes it from here).
+    const byCode = new Map(data.materials.map((m) => [m.materialCode, m]));
+    const terms = new Map<string, LineTerms>(
+      data.sources.map((s) => {
+        const m = byCode.get(s.materialCode);
+        const z = m ? zoneLengthsFor(s.supplierId, m.materialGroup ?? m.materialCode, STREAM_MATERIAL_TYPE[m.kind]) : null;
+        return [
+          termsKey(s.supplierId, s.materialCode),
+          {
+            leadTimeDays: s.leadTimeDays,
+            firmDays: z?.firmDays ?? s.leadTimeDays,
+            tradeOffDays: z?.tradeOffDays ?? 0,
+            moq: s.moq,
+            orderMultiple: s.orderMultiple,
+          },
+        ];
+      }),
+    );
+    const WINDOW_WEEKS = 26;
+    const guard = planChangeGuard(data, now, WINDOW_WEEKS, lines);
+    const costs = orderSizingCosts();
+    const perPallet = new Map(data.volumes.map((v) => [v.materialCode, v.unitsPerPallet]));
+    const run = reschedule({
+      asOf,
+      weeks: sized.weeks,
+      warehouses: data.warehouses,
+      materials: sized.materials.map((m) => ({
+        materialCode: m.materialCode,
+        kind: m.kind,
+        uom: m.uom,
+        startStock: m.startStock,
+        safetyStock: m.safetyStock,
+        gross: m.weeks.map((w) => w.gross),
+        planned: m.weeks.map((w) => w.plannedReceipt),
+        unitsPerPallet: perPallet.get(m.materialCode) ?? null,
+      })),
+      lines,
+      terms,
+      costs: { rentIdrPerPalletWeek: costs.rentIdrPerPalletWeek, changePenaltyIdrPerPallet: costs.changePenaltyIdrPerPallet },
+      thresholdWeeks: rescheduleOutThresholdWeeks(),
+      addsToPlanChange: guard.adds,
+      insideLeadTimeByMeasure: guard.inside,
+    });
+    const last = sized.weeks[sized.weeks.length - 1];
+    const unconfirmedPoLines = openReceipts(lineHistories(data), asOf, { ...DEFAULT_RECEIPT_OPTIONS, includeUnconfirmed: true }).filter(
+      (r) => !r.confirmed && r.weekStart <= last,
+    ).length;
+    const names = (materialCode: string, supplierId: string) => ({
+      materialLabel: labelOf(materialCode),
+      supplierName: forecastSupplierName(supplierId),
+      uom: byCode.get(materialCode)?.uom ?? ('PCS' as const),
+    });
+    return {
+      ...run,
+      planMadeAt: sized.planMadeAt,
+      warehouses: run.warehouses.map((w) => ({
+        ...w,
+        proposals: w.proposals.map((p) => ({ ...p, ...names(p.line.materialCode, p.line.supplierId) })),
+        info: w.info.map((i) => ({ ...i, ...names(i.line.materialCode, i.line.supplierId) })),
+      })),
+      planChange: guard.baseline,
+      planChangeWindowWeeks: WINDOW_WEEKS,
+      unconfirmedPoLines,
+      sapMarks: [...sapChangeMarkStore.all()].reverse(),
     };
   }
 

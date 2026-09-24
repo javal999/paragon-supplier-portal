@@ -13,7 +13,9 @@
 //       made from an engine recommendation while the engine dataset is
 //       simulated (X-03, policy).
 //     · changes a released call-off with a reason — it returns to Awaiting
-//       Confirmation (edge case of REQ-E09-03).
+//       Confirmation (edge case of REQ-E09-03). A change the reschedule report
+//       sends (REQ-E14-13) names the engine as its origin and is refused while
+//       the engine dataset is simulated (X-03, policy).
 //     · approves or rejects a confirmation outside tolerance. Approval is the
 //       second axis of BR-04 and is carried on the confirmation record, so
 //       approving preserves the confirmation state; rejecting returns the
@@ -132,7 +134,14 @@ export const callOffFlow: FlowDefinition = {
       trigger: 'user',
       requiredRole: 'calloff:plan',
       requiredFields: ['reason'],
-      policyHooks: [POLICY_HOOKS.CALLOFF_EDIT_VALID, POLICY_HOOKS.CALLOFF_CHANGEABLE, POLICY_HOOKS.CALLOFF_WITHIN_REMAINING],
+      // REQ-E14-13 BR-08 (X-03): a change the reschedule report sends names the
+      // engine as its origin and is refused while the engine data is simulated.
+      policyHooks: [
+        POLICY_HOOKS.CALLOFF_EDIT_VALID,
+        POLICY_HOOKS.CALLOFF_CHANGEABLE,
+        POLICY_HOOKS.CALLOFF_WITHIN_REMAINING,
+        POLICY_HOOKS.CALLOFF_ENGINE_DATA_LIVE,
+      ],
       surfaceable: { surfaced: true },
       version: 1,
     },

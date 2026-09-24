@@ -41,9 +41,11 @@ import { otifPassesGate } from '../../sourcing/complianceGate';
 import { coverage, riskFor, stockFreshness, supplyBand } from '../../transitions/inventoryRules';
 import { updateSlaFor } from '../../transitions/inventoryConfig';
 import { coverageBands } from '../../sdc/consolidation';
-import { engineServiceTargets, orderSizingCosts, safetyLeadTimePercentile } from '../../transitions/forecastConfig';
+import { engineServiceTargets, orderSizingCosts, rescheduleOutThresholdWeeks, safetyLeadTimePercentile } from '../../transitions/forecastConfig';
 import { empiricalQuantile, fillRateSafetyStock } from '../../engine/safetyStock';
 import { singleItemSolver, type SizingItem } from '../../engine/orderSizing';
+import { reschedule, termsKey } from '../../engine/reschedule';
+import { addDays } from '../../engine/dates';
 import { getKnownFlows } from '../../transitions';
 import { sdcClock } from '../../sdc';
 
@@ -286,6 +288,8 @@ describe('BL32-READ · every reader of a value reads it through its accessor, at
       safetyLeadTimePercentile: ['src/services/data/mock/MockProcurementService.ts', 'src/services/transitions/forecastConfig.ts'],
       // ENG-D6 / REQ-E14-05 — the same shape: the service passes them to the engine.
       orderSizingCosts: ['src/services/data/mock/MockProcurementService.ts', 'src/services/transitions/forecastConfig.ts'],
+      // ENG-D15 / REQ-E14-13 — the same shape: the service passes it to the engine.
+      rescheduleOutThresholdWeeks: ['src/services/data/mock/MockProcurementService.ts', 'src/services/transitions/forecastConfig.ts'],
     };
     for (const [fn, files] of Object.entries(table)) expect(callersOf(fn), fn).toEqual(files);
     // Known-true through a second door: the SDC coverage indicator never
@@ -352,6 +356,33 @@ const ordersPlaced = (opts: { space?: boolean; previous?: number[] } = {}): numb
     ? { capacityPallets: 15, rentIdrPerPalletWeek: c.rentIdrPerPalletWeek }
     : { capacityPallets: Infinity, rentIdrPerPalletWeek: 0 };
   return singleItemSolver(item, [0, 0, 0], space, c).plan().filter((x) => x > 0).length;
+};
+
+/**
+ * ENG-D15 at its default: REQ-E14-13's worked example — a 20,000-unit call-off
+ * due in week 3 is not needed until week 5, two weeks early. The rule outcome is
+ * the proposal type for it ('none' when nothing is proposed).
+ */
+const rescheduleFor = (): string => {
+  const weeks = Array.from({ length: 8 }, (_, i) => addDays('2026-09-14', 7 * i));
+  const c = orderSizingCosts();
+  const run = reschedule({
+    asOf: '2026-09-07',
+    weeks,
+    warehouses: [{ warehouseId: 'WH-PK', kind: 'packaging', capacityPallets: 4 }],
+    materials: [{
+      materialCode: 'PK-CART-9910', kind: 'packaging', uom: 'PCS', startStock: 40_000, safetyStock: 8_000,
+      gross: weeks.map(() => 8_000), planned: weeks.map(() => 0), unitsPerPallet: 2_000,
+    }],
+    lines: [{
+      id: 'co:x', kind: 'callOff', reference: 'CO-X', callOffId: 'x', poNumber: 'PO-X', poLine: null, supplierId: 'sup-008',
+      materialCode: 'PK-CART-9910', quantity: 20_000, receivedQuantity: 0, firstQuantity: 20_000, date: weeks[2], confirmed: true, info: null,
+    }],
+    terms: new Map([[termsKey('sup-008', 'PK-CART-9910'), { leadTimeDays: 14, firmDays: 14, tradeOffDays: 42, moq: 0, orderMultiple: 1 }]]),
+    costs: { rentIdrPerPalletWeek: c.rentIdrPerPalletWeek, changePenaltyIdrPerPallet: c.changePenaltyIdrPerPallet },
+    thresholdWeeks: rescheduleOutThresholdWeeks(),
+  });
+  return run.warehouses[0].proposals[0]?.type ?? 'none';
 };
 
 const FLIPS: Record<string, Flip> = {
@@ -489,6 +520,8 @@ const FLIPS: Record<string, Flip> = {
     atDefault: 3,
     afterChange: 1,
   },
+  // ENG-D15: two weeks early is proposed at the default of 1; at 3 it is not.
+  'engine.rescheduleOutWeeks': { to: 3, read: () => rescheduleFor(), atDefault: 'rescheduleOut', afterChange: 'none' },
   'engine.safetyLeadTimePercentile': {
     to: 90,
     read: () => empiricalQuantile(DELAYS, safetyLeadTimePercentile()),

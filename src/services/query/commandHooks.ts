@@ -33,6 +33,7 @@ import type {
   CallOffOrigin,
 } from '../data/types';
 import type { AsnLineInput } from '../transitions/fulfilmentRules';
+import type { ProposalType } from '../engine/reschedule';
 import { reasonCodeEntityId, type ReasonListId } from '../transitions/reasonCodes';
 
 /**
@@ -1911,7 +1912,15 @@ export type CallOffCommandVars =
   | { verb: 'editDraft'; id: string; reason: string; quantity?: number; needDate?: string; type?: CallOffType }
   | { verb: 'releaseDraft'; id: string }
   | { verb: 'dismiss'; id: string; reason: string }
-  | { verb: 'change'; id: string; reason: string; quantity?: number; needDate?: string }
+  | {
+      verb: 'change';
+      id: string;
+      reason: string;
+      quantity?: number;
+      needDate?: string;
+      /** REQ-E14-13 — set by the reschedule report: the change comes from an engine proposal (X-03). */
+      origin?: CallOffOrigin;
+    }
   | { verb: 'confirm'; id: string; comment?: string }
   | { verb: 'confirmNewDate'; id: string; confirmedDate: string; comment?: string }
   | { verb: 'confirmChanges'; id: string; confirmedQty: number; confirmedDate?: string; comment?: string }
@@ -1966,8 +1975,47 @@ export function useCallOffCommand() {
       if (result.status === 'failed') return;
       qc.invalidateQueries({
         predicate: (q) =>
-          q.queryKey[0] === 'procurement' && (q.queryKey[1] === 'callOffs' || q.queryKey[1] === 'asns'),
+          q.queryKey[0] === 'procurement' &&
+          (q.queryKey[1] === 'callOffs' || q.queryKey[1] === 'asns' || q.queryKey[1] === 'reschedule'),
       });
+    },
+  });
+}
+
+// ─── Reschedule proposals taken to SAP (REQ-E14-13 BR-07, ENG-D16) ──────────
+//
+// The Hub does not edit a PO; the Material Planner records that a PO-line
+// proposal was taken to SAP. Refused while the engine data is simulated (X-03).
+
+export interface SapChangeMarkVars {
+  readonly poNumber: string;
+  readonly line: number;
+  readonly proposalType: ProposalType;
+  readonly proposedDate: string | null;
+  readonly proposedQuantity: number;
+}
+
+export function useSapChangeMarkCommand() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+
+  return useMutation<CommandResult, Error, SapChangeMarkVars>({
+    mutationFn: (vars) =>
+      svc.commands.dispatch(scope, {
+        transitionId: 't_sapchange_mark',
+        entity: 'sapChangeMark',
+        payload: {
+          poNumber: vars.poNumber,
+          line: vars.line,
+          proposalType: vars.proposalType,
+          proposedQuantity: vars.proposedQuantity,
+          ...(vars.proposedDate !== null ? { proposedDate: vars.proposedDate } : {}),
+        },
+      }),
+    onSuccess: (result) => {
+      if (result.status === 'failed') return;
+      qc.invalidateQueries({ predicate: (q) => q.queryKey[0] === 'procurement' && q.queryKey[1] === 'reschedule' });
     },
   });
 }

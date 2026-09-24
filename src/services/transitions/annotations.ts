@@ -310,6 +310,7 @@ export const TRANSITION_PURPOSE: FlowAnnotations = Object.freeze({
   t_forecastversion_publish: { purposeKey: 'processFlows.purpose.t_forecastversion_publish' },
   t_forecastversion_reassign: { purposeKey: 'processFlows.purpose.t_forecastversion_reassign' },
   t_forecastview_record: { purposeKey: 'processFlows.purpose.t_forecastview_record' },
+  t_sapchange_mark: { purposeKey: 'processFlows.purpose.t_sapchange_mark' },
   // REQ-E03-02 / REQ-E03-04 / REQ-E03-05 — RFx management.
   t_rfi_create: { purposeKey: 'processFlows.purpose.t_rfi_create' },
   t_rfi_revise_draft: { purposeKey: 'processFlows.purpose.t_rfi_revise_draft' },
@@ -378,6 +379,7 @@ export const ENTITY_PURPOSE: FlowAnnotations = Object.freeze({
   inventoryAlert: { purposeKey: 'processFlows.purpose.entity.inventoryAlert' },
   forecastVersion: { purposeKey: 'processFlows.purpose.entity.forecastVersion' },
   forecastView: { purposeKey: 'processFlows.purpose.entity.forecastView' },
+  sapChangeMark: { purposeKey: 'processFlows.purpose.entity.sapChangeMark' },
   rfiEvent: { purposeKey: 'processFlows.purpose.entity.rfiEvent' },
   rfiResponse: { purposeKey: 'processFlows.purpose.entity.rfiResponse' },
   rfpEvent: { purposeKey: 'processFlows.purpose.entity.rfpEvent' },
