@@ -19,6 +19,7 @@
 //     and the safety-lead-time percentile (the administrator's, BL-32).
 //   · ENG-D6 / REQ-E14-05 — the order-sizing cost rates; ENG-D15 / REQ-E14-13
 //     — the reschedule-out threshold in weeks.
+//   · REQ-E14-01 — the freshness limit per engine feed, in days.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { ForecastStream, MaterialType } from '../sdc/types';
@@ -167,6 +168,41 @@ export function orderSizingCosts(): {
  */
 export function rescheduleOutThresholdWeeks(): number {
   return hubSetting('engine.rescheduleOutWeeks');
+}
+
+/**
+ * REQ-E14-01 BR-01, BR-05 — the freshness limit in days of every engine feed
+ * that has one, keyed by the feed (the `EngineDataset` field). In force now;
+ * the engine takes them as an argument (X-01, X-05).
+ */
+export function feedFreshnessLimitsDays(): {
+  readonly poLines: number;
+  readonly scheduleChanges: number;
+  readonly receipts: number;
+  readonly sources: number;
+  readonly bom: number;
+  readonly stock: number;
+  readonly materialValues: number;
+  readonly finishedGoods: number;
+  readonly sales: number;
+  readonly fgPlan: number;
+  readonly salesOrders: number;
+  readonly sapSafetyStock: number;
+} {
+  return {
+    poLines: hubSetting('engine.freshnessDays.poLines'),
+    scheduleChanges: hubSetting('engine.freshnessDays.scheduleChanges'),
+    receipts: hubSetting('engine.freshnessDays.receipts'),
+    sources: hubSetting('engine.freshnessDays.sources'),
+    bom: hubSetting('engine.freshnessDays.bom'),
+    stock: hubSetting('engine.freshnessDays.stock'),
+    materialValues: hubSetting('engine.freshnessDays.materialValues'),
+    finishedGoods: hubSetting('engine.freshnessDays.finishedGoods'),
+    sales: hubSetting('engine.freshnessDays.sales'),
+    fgPlan: hubSetting('engine.freshnessDays.fgPlan'),
+    salesOrders: hubSetting('engine.freshnessDays.salesOrders'),
+    sapSafetyStock: hubSetting('engine.freshnessDays.sapSafetyStock'),
+  };
 }
 
 /**

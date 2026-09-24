@@ -41,7 +41,8 @@ import { otifPassesGate } from '../../sourcing/complianceGate';
 import { coverage, riskFor, stockFreshness, supplyBand } from '../../transitions/inventoryRules';
 import { updateSlaFor } from '../../transitions/inventoryConfig';
 import { coverageBands } from '../../sdc/consolidation';
-import { engineServiceTargets, orderSizingCosts, rescheduleOutThresholdWeeks, safetyLeadTimePercentile } from '../../transitions/forecastConfig';
+import { engineServiceTargets, feedFreshnessLimitsDays, orderSizingCosts, rescheduleOutThresholdWeeks, safetyLeadTimePercentile } from '../../transitions/forecastConfig';
+import { freshnessOf } from '../../engine/dataHealth';
 import { empiricalQuantile, fillRateSafetyStock } from '../../engine/safetyStock';
 import { singleItemSolver, type SizingItem } from '../../engine/orderSizing';
 import { reschedule, termsKey } from '../../engine/reschedule';
@@ -290,6 +291,8 @@ describe('BL32-READ · every reader of a value reads it through its accessor, at
       orderSizingCosts: ['src/services/data/mock/MockProcurementService.ts', 'src/services/transitions/forecastConfig.ts'],
       // ENG-D15 / REQ-E14-13 — the same shape: the service passes it to the engine.
       rescheduleOutThresholdWeeks: ['src/services/data/mock/MockProcurementService.ts', 'src/services/transitions/forecastConfig.ts'],
+      // REQ-E14-01 — the same shape: the service passes the limits to the data-health check.
+      feedFreshnessLimitsDays: ['src/services/data/mock/MockProcurementService.ts', 'src/services/transitions/forecastConfig.ts'],
     };
     for (const [fn, files] of Object.entries(table)) expect(callersOf(fn), fn).toEqual(files);
     // Known-true through a second door: the SDC coverage indicator never
@@ -385,7 +388,22 @@ const rescheduleFor = (): string => {
   return run.warehouses[0].proposals[0]?.type ?? 'none';
 };
 
+/**
+ * REQ-E14-01 — a feed's freshness at an age one day past its DEFAULT limit:
+ * stale at the default, fresh once the limit is raised by five days. Read
+ * through the accessor the service passes to the data-health check.
+ */
+const FRESHNESS_KEYS = HUB_SETTINGS.filter((d) => d.key.startsWith('engine.freshnessDays.'));
+const freshnessFlips: Record<string, Flip> = Object.fromEntries(
+  FRESHNESS_KEYS.map((d) => {
+    const feed = d.key.slice('engine.freshnessDays.'.length) as keyof ReturnType<typeof feedFreshnessLimitsDays>;
+    const age = (d.defaultValue as number) + 1;
+    return [d.key, { to: age + 4, read: () => freshnessOf(age, feedFreshnessLimitsDays()[feed]), atDefault: 'stale', afterChange: 'fresh' }];
+  }),
+);
+
 const FLIPS: Record<string, Flip> = {
+  ...freshnessFlips,
   'callOff.overPct': {
     to: 10,
     read: () => checkTolerance(CALL_OFF, [{ quantity: 1070, date: CALL_OFF.needDate }]).within,
