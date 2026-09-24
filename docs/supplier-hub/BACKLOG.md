@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 2.3, 2026-09-23 |
+| Version | 2.4, 2026-09-24 |
 | What this is | Everything known to be outstanding for the Supplier Hub, in one list: decisions waiting on people, work waiting on those decisions, work waiting on the backend, and work that can start today |
 | What this is not | A plan or a commitment. Nothing here has a date. Sequencing belongs to the project owner |
 | Sources | Open items (section 7 of `SUPPLIER-HUB-REQUIREMENTS.md`), open decisions (section 9.3 of `SUPPLIER-HUB-PRD.md`), what is not built (section 5 of `BUILD-GAP.md`), stubs (section 6 of the requirements), and defects or debts found while building |
@@ -56,7 +56,6 @@ Decided on 2026-09-21 and ready to build. Priority: first what protects money an
 | BL-20 | SAP ROP replenishment recommendations released as call-offs | BL-01; forecast source decided (BL-10) | L | REQ-E09-01, X-16 |
 | BL-23 | Enter the agreed values once decided, on the admin screen (Tolerances and rule values); no developer needed since BL-32 | BL-54, BL-55, BL-56 | S | `/buyer/admin` |
 | BL-81 | Apply the answers to BL-67 to BL-71 (tolerance refusal, days-of-cover basis, late convention, admin roles, receipt measure and reopening) | BL-67 to BL-71 | S each | Decisions in section 1 |
-| BL-107 | Reschedule or cancel open orders report (E14-13): proposals that move, reduce or cancel open PO lines and call-offs arriving before they are needed, valued in pallet-weeks and rented-space cost, sent through the existing call-off change or taken to SAP | Owner review of REQ-E14-13; ENG-D15 to ENG-D17 (can start on defaults: 1 week, planner, liability flagged not priced) | M | `FORECAST-ENGINE-REQUIREMENTS.md` REQ-E14-13 |
 
 ## 3. Build work waiting on the backend (Stage F)
 
@@ -176,4 +175,5 @@ Nothing blocks these.
 | BL-82 | OTIF and CFOT aligned with the agreed definitions | 2026-09-23 | Built in PR #38: counter-offer counts on acceptance, planner change after re-confirmation, partial receipts summed, one early window (`kpiWindow.ts`), dispatched-but-not-received counts as missed after 3 days; definitions updated on both performance pages; CFOT shown on the reliability page and panel. No sample supplier's score moved |
 | BL-104 | Material requirement (E14-03) | 2026-09-23 | Built in PR #39 on synthetic data: BOM explosion, netting against stock and supplier-confirmed receipts, interim MOQ round-up; page Forecast → Material requirement |
 | BL-105 | Safety stock, safety lead time and reorder point (E14-04) | 2026-09-23 | Built in PR #39 on synthetic data: fill-rate safety stock from the plan's errors, tiers 95/90/85, safety lead time per supplier, ROP; zero safety stock flagged, not floored; page Forecast → Safety stock |
+| BL-107 | Reschedule or cancel open orders (E14-13) | 2026-09-24 | ENG-D15 to D17 decided on the defaults. Built in PR #44 on synthetic data: page Forecast → Reschedule open orders; call-off changes through the existing change verb, PO lines recorded as taken to SAP, both refused while the data is simulated. Finding (as of 2026-08-31): packaging is 1,972 pallet-weeks over capacity; 50 reschedule-outs free 1,152 of them (Rp 40.3M rented space at the placeholder rate, Rp 31.8M change penalty), but only the 22 that need no supplier agreement are free to send, and they free 398 (Rp 13.9M). Of the 820 pallet-weeks that remain, 741 are stock on hand. Raw material is 379 over; its stock on hand covers the whole 26-week horizon, so all 96 open lines come out as cancellations, all needing supplier agreement; 130 of the 138 that remain are stock on hand. Sending every relief proposal would raise PTI's share of schedules changed inside the lead time from 18.4% to 28.3% |
 | BL-106 | Order sizing within MOQ and warehouse space (E14-05) | 2026-09-23 | Built in PR #41 on synthetic data: warehouse-wide sizing, placeholder cost rates, page Forecast → Order plan, draft call-offs from recommendations; engine-origin drafts cannot be released while the data is simulated. Finding: it cuts packaging orders (101 → 65) but cannot lower the current overload, which is stock already on hand |

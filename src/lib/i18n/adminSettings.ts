@@ -41,6 +41,8 @@ export const adminSettingsEn: Record<string, string> = {
   'adminSet.unit.workingDays_other': '{{count}} working days',
   'adminSet.unit.idr': 'Rp {{value}}',
   'adminSet.unit.multiple': '{{value}} × lead time',
+  'adminSet.unit.weeks_one': '{{count}} week',
+  'adminSet.unit.weeks_other': '{{count}} weeks',
   'adminSet.unit.yes': 'Yes',
   'adminSet.unit.no': 'No',
   'adminSet.unit.noOverride': 'No override (default applies)',
@@ -49,6 +51,7 @@ export const adminSettingsEn: Record<string, string> = {
   'adminSet.unit.input.workingDays': 'working days',
   'adminSet.unit.input.idr': 'rupiah',
   'adminSet.unit.input.multiple': '× lead time',
+  'adminSet.unit.input.weeks': 'weeks',
 
   'adminSet.form.title': 'Change a value',
   'adminSet.form.intro':
@@ -101,6 +104,7 @@ export const adminSettingsEn: Record<string, string> = {
   'adminSet.rule.REQ-E14-04': 'REQ-E14-04 · Forecast engine safety lead time',
   'adminSet.rule.ENG-D6': 'ENG-D6 · Forecast engine order-sizing cost rates',
   'adminSet.rule.REQ-E14-05': 'REQ-E14-05 · Forecast engine change penalty',
+  'adminSet.rule.ENG-D15': 'ENG-D15 · Rescheduling open orders out',
 
   // ── One label and hint per value ────────────────────────────────────────
   'adminSet.key.callOff.overPct.label': 'Over the released quantity, accepted without the planner',
@@ -165,6 +169,8 @@ export const adminSettingsEn: Record<string, string> = {
   'adminSet.key.engine.rentedSpaceIdrPerPalletWeek.hint': 'What a pallet above the owned warehouse capacity costs for a week, from the 3PL invoices.',
   'adminSet.key.engine.changePenaltyIdrPerPallet.label': 'Change penalty inside the lead time, per pallet',
   'adminSet.key.engine.changePenaltyIdrPerPallet.hint': 'What order sizing counts for changing an order it already planned, once that order is inside the supplier’s lead time. A higher value keeps the plan steadier close in.',
+  'adminSet.key.engine.rescheduleOutWeeks.label': 'Weeks early before a later date is proposed',
+  'adminSet.key.engine.rescheduleOutWeeks.hint': 'An open order line that arrives at least this many weeks before the week it is needed is proposed to come later, to free warehouse space. The change is priced with the rented-space rate and the change penalty above.',
 
   // ── Stale period per supplier and material ──────────────────────────────
   'adminSet.stale.title': 'Stale period per supplier and material',
@@ -226,6 +232,7 @@ export const adminSettingsId: Record<string, string> = {
   'adminSet.unit.workingDays_other': '{{count}} hari kerja',
   'adminSet.unit.idr': 'Rp {{value}}',
   'adminSet.unit.multiple': '{{value}} × waktu tunggu',
+  'adminSet.unit.weeks_other': '{{count}} minggu',
   'adminSet.unit.yes': 'Ya',
   'adminSet.unit.no': 'Tidak',
   'adminSet.unit.noOverride': 'Tanpa periode sendiri (bawaan berlaku)',
@@ -234,6 +241,7 @@ export const adminSettingsId: Record<string, string> = {
   'adminSet.unit.input.workingDays': 'hari kerja',
   'adminSet.unit.input.idr': 'rupiah',
   'adminSet.unit.input.multiple': '× waktu tunggu',
+  'adminSet.unit.input.weeks': 'minggu',
 
   'adminSet.form.title': 'Ubah nilai',
   'adminSet.form.intro':
@@ -285,6 +293,7 @@ export const adminSettingsId: Record<string, string> = {
   'adminSet.rule.REQ-E14-04': 'REQ-E14-04 · Waktu tunggu pengaman mesin prakiraan',
   'adminSet.rule.ENG-D6': 'ENG-D6 · Tarif biaya penentuan ukuran pesanan mesin prakiraan',
   'adminSet.rule.REQ-E14-05': 'REQ-E14-05 · Penalti perubahan mesin prakiraan',
+  'adminSet.rule.ENG-D15': 'ENG-D15 · Menjadwalkan ulang pesanan terbuka ke belakang',
 
   'adminSet.key.callOff.overPct.label': 'Kelebihan dari kuantitas yang dirilis, diterima tanpa perencana',
   'adminSet.key.callOff.overPct.hint': 'Konfirmasi yang melebihi batas ini menunggu perencana. Berlaku untuk setiap jenis call-off. Kekurangan tidak pernah menunggu: ditampilkan sebagai pengiriman sebagian.',
@@ -348,6 +357,8 @@ export const adminSettingsId: Record<string, string> = {
   'adminSet.key.engine.rentedSpaceIdrPerPalletWeek.hint': 'Biaya satu palet di atas kapasitas gudang sendiri selama seminggu, dari tagihan 3PL.',
   'adminSet.key.engine.changePenaltyIdrPerPallet.label': 'Penalti perubahan dalam waktu tunggu, per palet',
   'adminSet.key.engine.changePenaltyIdrPerPallet.hint': 'Biaya yang dihitung penentuan ukuran pesanan bila mengubah pesanan yang sudah direncanakan, setelah pesanan itu masuk waktu tunggu pemasok. Nilai lebih tinggi membuat rencana lebih stabil menjelang pengiriman.',
+  'adminSet.key.engine.rescheduleOutWeeks.label': 'Minggu lebih awal sebelum tanggal yang lebih lambat diusulkan',
+  'adminSet.key.engine.rescheduleOutWeeks.hint': 'Baris pesanan terbuka yang tiba sedikitnya sekian minggu sebelum minggu dibutuhkan diusulkan untuk datang lebih lambat, agar ruang gudang lega. Perubahan dihitung dengan tarif ruang sewa dan penalti perubahan di atas.',
 
   'adminSet.stale.title': 'Periode data usang per pemasok dan material',
   'adminSet.stale.intro':

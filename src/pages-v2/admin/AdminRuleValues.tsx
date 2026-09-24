@@ -83,6 +83,8 @@ function useValueText(): (def: Pick<HubSettingDef, 'unit'> | null, value: HubSet
         return t('adminSet.unit.idr', { value: value.toLocaleString('id-ID') });
       case 'multiple':
         return t('adminSet.unit.multiple', { value: n });
+      case 'weeks':
+        return t('adminSet.unit.weeks', { count: value });
       default:
         return n;
     }

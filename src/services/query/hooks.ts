@@ -108,6 +108,10 @@ export const useSafetyStock = () =>
 export const useOrderPlan = () =>
   useServiceQuery(['procurement', 'orderPlan'], (svc, scope) => svc.procurement.getOrderPlan(scope));
 
+/** REQ-E14-13 — reschedule or cancel open orders for warehouse relief (PTI only). */
+export const useReschedule = () =>
+  useServiceQuery(['procurement', 'reschedule'], (svc, scope) => svc.procurement.getReschedule(scope));
+
 // ── RFx management (REQ-E03-01 to REQ-E03-05) ──────────────────────────────
 
 /**

@@ -8,6 +8,7 @@ import {
   ClipboardCheck,
   Container,
   CalendarClock,
+  CalendarSync,
   CalendarDays,
   CalendarRange,
   ChartLine,
@@ -96,6 +97,7 @@ export const PTI_NAV: readonly NavSection[] = [
       { labelKey: 'hub.nav.pti.materialRequirement', icon: Layers, path: '/buyer/material-requirement' },
       { labelKey: 'hub.nav.pti.safetyStock', icon: ShieldHalf, path: '/buyer/safety-stock' },
       { labelKey: 'hub.nav.pti.orderPlan', icon: Container, path: '/buyer/order-plan' },
+      { labelKey: 'hub.nav.pti.reschedule', icon: CalendarSync, path: '/buyer/reschedule' },
     ],
   },
   {

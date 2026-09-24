@@ -2,9 +2,9 @@
 
 | | |
 |---|---|
-| Version | 0.6 draft, 2026-09-23 |
+| Version | 0.7 draft, 2026-09-24 |
 | What this is | Detailed requirements for the demand and material forecast engine PTI builds itself (owner decision ENG-1), with each calculation explained |
-| Status | Every requirement is **Proposed**. The decision to build is Validated (ENG-1), and 6 of the 13 engine decisions are decided (ENG-D1, D2, D3, D5, D8, D9, section 4). The rest of the detail has not yet been reviewed by the Material Planner |
+| Status | Every requirement is **Proposed**. The decision to build is Validated (ENG-1), and 12 of the 18 engine decisions are decided (ENG-D1 to D9 and ENG-D15 to D17, section 4). The rest of the detail has not yet been reviewed by the Material Planner |
 | Sources | ENG-1 (`SUPPLIER-HUB-REQUIREMENTS.md` section 9); methods and evidence in `research/FORECAST-METHOD-SPEC.md`; problem analysis in `research/FORECAST-BEST-PRACTICE-2026-09.md` |
 
 ## How to read this
@@ -936,10 +936,12 @@ Writes only through the existing call-off change verb and a "taken to SAP" mark.
 
 **Metrics.** Leading: pallet-weeks freed by accepted proposals; share of proposals outside the lead time. Lagging: warehouse utilisation against 80%; rented-space cost; PTI-caused changes inside the lead time (E14-02) must not rise.
 
-**Open items.**
-- ENG-D15: how many weeks early a line must be before a reschedule-out is proposed. Start with 1 week.
-- ENG-D16: who agrees PO-line changes with suppliers in SAP (buyer or planner).
-- ENG-D17: supplier liability on a Trade-off cancellation (material already bought). Needs procurement and finance, as C8 §2.2 already asks for the Firm zone.
+**Decided (owner, 2026-09-24).**
+- ENG-D15: a reschedule-out is proposed when the line arrives at least 1 week before its need week. An administrator setting, beside the E14-05 cost rates.
+- ENG-D16: the Material Planner agrees PO-line changes with the supplier in SAP; the Hub only records "taken to SAP".
+- ENG-D17: the supplier's liability on a Trade-off cancellation is flagged ("liability — not priced"), not priced.
+
+**Build.** Built on synthetic data (BL-107, PR #44); the choices the build made are ENG-B19 to ENG-B28 (section 4.1d).
 
 ---
 
@@ -958,6 +960,9 @@ Writes only through the existing call-off change verb and a "taken to SAP" mark.
 | ENG-D4 | Other plants and intercompany transfers | Pilot plants only; the engine is single-plant; intercompany transfers in Phase 2 | E14-03 |
 | ENG-D6 | Cost rates for order sizing | Finance supplies holding cost (% of value a year), cost per order, and rented space per pallet per week (from the 3PL invoices). Until then they are admin settings with placeholder values, labelled "placeholder — Finance to confirm" | E14-05 |
 | ENG-D7 | Warehouse capacity | Separate per physical warehouse (packaging, raw material), in pallets | E14-05 |
+| ENG-D15 | Weeks early before a reschedule-out is proposed | 1 week, an administrator setting beside the E14-05 cost rates (owner, 2026-09-24) | E14-13 BR-03 |
+| ENG-D16 | Who agrees PO-line changes with suppliers in SAP | The Material Planner; the Hub records only "taken to SAP" (owner, 2026-09-24) | E14-13 BR-07 |
+| ENG-D17 | Supplier liability on a Trade-off cancellation | Flagged "liability — not priced"; not priced (owner, 2026-09-24) | E14-13 BR-04 |
 
 ### 4.1a Build decisions accepted (owner, 2026-09-23, PR #37)
 
@@ -994,6 +999,23 @@ Choices the first build (BL-102, BL-99) had to make where the requirements were 
 | ENG-B17 | The change penalty is priced per pallet changed, against last week's run recomputed now (not a stored copy) | E14-05 BR-03 |
 | ENG-B18 | A call-off drafted from the order plan carries origin "engine" and cannot be released (as a draft or directly) while the engine runs on simulated data (X-03). Editing keeps the origin; editing and dismissing stay allowed; an unknown origin value is refused. Once the engine data is live, earlier drafts become releasable | E14-05 BR-05; REQ-E09-01 |
 
+### 4.1d Build decisions for review (PR #44, BL-107)
+
+Choices the E14-13 build made where the requirement was silent. For the owner to accept or change.
+
+| ID | Decision | Applied in |
+|---|---|---|
+| ENG-B19 | Open call-offs come from the Hub's own call-off record (the SAP-grain feed carries PO lines only). A released call-off not yet received is projected at its approved delivery date beside E14-03's PO lines. E14-03 and E14-05 do not net call-offs yet, so this report's "now" fill is the order-plan fill plus call-offs | E14-13 BR-01 |
+| ENG-B20 | PO lines follow E14-03's defaults: confirmed lines only (unconfirmed ones are counted on the page, not projected); a line more than 14 days overdue is closed (ENG-B10), call-offs too. The fill includes E14-05's planned orders; the need date does not (they are re-planned around the open lines), and they are not re-planned after a proposal | E14-13 BR-02 |
+| ENG-B21 | One proposal per line: cancel, then reduce, then reschedule out, then reschedule in. A reduction also moves to the need week when the line is early by the threshold (one change, not two). Reductions round up to the source's MOQ and multiple (the Hub holds no minimum call-off size). "Needed within the horizon" includes the safety stock at the end of E14-03's 26 weeks | E14-13 BR-03 |
+| ENG-B22 | Zone by days from today to the line's date in force; Firm = the lead time (REQ-E06-01 BR-01), Trade-off from the REQ-E06-01 zone lengths. A line E14-02 reads as inside the lead time (against PTI's requested date) is inside here too. A reschedule-in to a date inside the lead time also needs supplier agreement | E14-13 BR-04 |
+| ENG-B23 | In the Trade-off zone a reduction is held to the ENG-D8 band (the smallest quantity inside ±10% of the quantity in force and ±20% of the first). A call-off keeps no quantity history, so its first quantity is the one in force; a PO line's is its ordered quantity. Liability is flagged on a Firm or Trade-off cancellation and on a Firm reduction beyond the band | E14-13 BR-04; ENG-D8, D17 |
+| ENG-B24 | The change penalty is E14-05's rate per pallet changed (all pallets for a reschedule, removed pallets for a reduction or cancellation), only inside the lead time | E14-13 BR-05 |
+| ENG-B25 | Joint valuation is greedy per warehouse: rank tier first (free; a liability to agree; inside the lead time), then highest net saving against the projection as it stands. A row's value is its marginal in rank order; a planner's selection is valued by recomputing from the baseline, and that total is what the page shows | E14-13 BR-05, BR-06 |
+| ENG-B26 | "Taken to SAP" is a new record `t_sapchange_mark` on a new planning atom `sapchange:mark` (ENG-D16). It is refused while the engine data is simulated, like the call-off change (`t_calloff_change` now carries `calloff_engine_data_live`), because a change made in SAP reaches the supplier | E14-13 BR-07, BR-08 |
+| ENG-B27 | A call-off is only proposed when the change verb can take it: dispatched, awaiting the supplier's answer, awaiting the planner's approval, a change pending, or two confirmed deliveries are shown for information. A call-off cancellation has no Hub verb (the change verb needs a quantity above zero); the page says to agree it with the supplier | E14-13 BR-01, BR-07 |
+| ENG-B28 | The stability guard uses E14-02's portfolio share over its 26-week window; a PO line adds to it when created in the window, not already changed inside the lead time, and the change is inside the lead time. Call-offs are not in the E14-02 measure; the page counts them among the selected proposals inside the lead time | E14-13 BR-09 |
+
 ### 4.2 Still open
 
 | ID | Decision | Owner | Blocks |
@@ -1004,9 +1026,6 @@ Choices the first build (BL-102, BL-99) had to make where the requirements were 
 | ENG-D12 | Owner of the promotion calendar and how far ahead it is fixed | Marketing | E14-08 |
 | ENG-D13 | Plan-stability limit used in model selection | Material Planner | E14-10 (set after the first backtest) |
 | ENG-D14 | Materials per service tier | Material Planner | Confirms E14-04 BR-02 (runs on volume ranking meanwhile) |
-| ENG-D15 | Weeks early before a reschedule-out is proposed (start with 1) | Material Planner | E14-13 |
-| ENG-D16 | Who agrees PO-line changes with suppliers in SAP (buyer or planner) | Procurement, Material Planner | E14-13 BR-07 |
-| ENG-D17 | Supplier liability on a Trade-off cancellation (material already bought) | Procurement, Finance | E14-13 BR-04 |
 | C8 §8 | SOMO ratifies the engine producing the totals | SOMO | Publishing engine totals on C8 (BL-101) |
 | REPL | Replenishment method per material segment | Material Planner (consultant) | E14-12, parts of E14-04 |
 
@@ -1022,3 +1041,4 @@ Choices the first build (BL-102, BL-99) had to make where the requirements were 
 | 0.4 | 2026-09-23 | Build decisions ENG-B6 to ENG-B13 from PR #39 (E14-03, E14-04) accepted, section 4.1b |
 | 0.5 | 2026-09-23 | ENG-D4, D6, D7 decided; build decisions ENG-B14 to ENG-B18 from PR #41 (E14-05 and the release block), section 4.1c |
 | 0.6 | 2026-09-23 | REQ-E14-13 Reschedule or cancel open orders added (Proposed), from the E14-05 finding that order sizing cannot lower the current overload; ENG-D15 to ENG-D17 opened |
+| 0.7 | 2026-09-24 | ENG-D15, D16, D17 decided by the owner on the defaults (1 week; the Material Planner in SAP, the Hub records "taken to SAP"; liability flagged, not priced). REQ-E14-13 built on synthetic data (BL-107, PR #44); build decisions ENG-B19 to ENG-B28 for review, section 4.1d |

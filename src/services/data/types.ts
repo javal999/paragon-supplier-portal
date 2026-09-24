@@ -66,6 +66,7 @@ import type { SupplierReliability } from '../engine/reliability';
 import type { MaterialPlan, MaterialRequirementRun } from '../engine/requirement';
 import type { MaterialSafetyStock, SafetyStockRun } from '../engine/safetyStock';
 import type { MaterialOrderPlan, OrderPlanRun, WarehousePlan } from '../engine/orderSizing';
+import type { InfoLine, PlanChangeBaseline, Proposal, ProposalType, RescheduleRun, WarehouseReschedule } from '../engine/reschedule';
 import type { SupplierCfot } from '../engine/cfot';
 import type { ReleaseSelection } from '../delivery/release';
 import type { EditPolicyPatch } from '../delivery/policy';
@@ -809,6 +810,58 @@ export interface OrderPlanView extends OrderPlanRun {
   /** BR-03 compares against the run as of this day (last week's). */
   readonly previousAsOf: string | null;
   readonly warehouses: readonly WarehousePlanView[];
+}
+
+/** REQ-E14-13 — display names beside an order line (a proposal or an information line). */
+export interface RescheduleLineNames {
+  readonly materialLabel: string;
+  readonly supplierName: string | null;
+  readonly uom: import('../sdc/types').Uom;
+}
+
+export type RescheduleProposalView = Proposal & RescheduleLineNames;
+export type RescheduleInfoView = InfoLine & RescheduleLineNames;
+
+export interface WarehouseRescheduleView extends WarehouseReschedule {
+  readonly proposals: readonly RescheduleProposalView[];
+  readonly info: readonly RescheduleInfoView[];
+}
+
+/**
+ * REQ-E14-13 BR-07 / ENG-D16 — the Material Planner's record that a PO-line
+ * proposal was taken to SAP (the Hub does not edit a PO). A ledger: the latest
+ * mark per line is the one in force.
+ */
+export interface SapChangeMark {
+  readonly id: string;
+  /** `po:<poNumber>#<line>` — the proposal's line id. */
+  readonly lineId: string;
+  readonly poNumber: string;
+  readonly line: number;
+  readonly proposalType: ProposalType;
+  /** Null for a cancellation. */
+  readonly proposedDate: string | null;
+  readonly proposedQuantity: number;
+  readonly markedAt: string;
+  readonly markedBy: ActorAttribution;
+}
+
+/**
+ * REQ-E14-13 — reschedule or cancel open orders, as served: computed at read
+ * on the engine's (SIMULATED) dataset plus the Hub's open call-offs, with the
+ * cost rates and threshold in force. PTI only; a supplier gets null.
+ */
+export interface RescheduleView extends RescheduleRun {
+  /** The finished-goods plan snapshot the requirement used. */
+  readonly planMadeAt: string | null;
+  readonly warehouses: readonly WarehouseRescheduleView[];
+  /** BR-09 — E14-02's portfolio plan-change share over its window, before any proposal is sent. */
+  readonly planChange: PlanChangeBaseline;
+  readonly planChangeWindowWeeks: number;
+  /** Open PO lines not yet confirmed: not in the projection (E14-03's default), counted here. */
+  readonly unconfirmedPoLines: number;
+  /** "Taken to SAP" marks, latest first. */
+  readonly sapMarks: readonly SapChangeMark[];
 }
 
 export interface ForecastCoverageRow {
@@ -2385,6 +2438,13 @@ export interface IProcurementService {
    * and rented space; on the engine's (SIMULATED) dataset. PTI only.
    */
   getOrderPlan(scope: QueryScope): Promise<OrderPlanView | null>;
+  /**
+   * REQ-E14-13 — proposals to reschedule, reduce or cancel open PO lines and
+   * call-offs for warehouse relief, valued jointly per warehouse, with the
+   * stock-on-hand overload no open order can relieve and the plan-change guard;
+   * on the engine's (SIMULATED) dataset. PTI only.
+   */
+  getReschedule(scope: QueryScope): Promise<RescheduleView | null>;
 
   // — Sourcing —
   getRFQs(scope: QueryScope, filter?: RFQFilter): Promise<Page<RFQ>>;
