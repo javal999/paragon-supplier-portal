@@ -1,4 +1,5 @@
 import {
+  Anchor,
   AlertTriangle,
   Award,
   BellRing,
@@ -100,6 +101,7 @@ export const PTI_NAV: readonly NavSection[] = [
       { labelKey: 'hub.nav.pti.safetyStock', icon: ShieldHalf, path: '/buyer/safety-stock' },
       { labelKey: 'hub.nav.pti.orderPlan', icon: Container, path: '/buyer/order-plan' },
       { labelKey: 'hub.nav.pti.reschedule', icon: CalendarSync, path: '/buyer/reschedule' },
+      { labelKey: 'hub.nav.pti.stabilise', icon: Anchor, path: '/buyer/stabilise' },
     ],
   },
   {

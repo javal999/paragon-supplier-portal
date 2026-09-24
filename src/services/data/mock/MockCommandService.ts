@@ -2676,6 +2676,29 @@ bindPolicyHook(POLICY_HOOKS.FORECAST_PUBLISH_VALID, ({ payload }) => {
     : { ok: false, reason: 'no earlier version of this stream to re-publish' };
 });
 
+// REQ-E14-06 (X-03, ENG-B35) — a publication sourced from the forecast engine.
+// Refused by name while the engine dataset is simulated: engine output on
+// synthetic data is never shown to a supplier. Once it is live, still refused
+// until SOMO ratifies C8 §8 — today a published line names SOMO as the source
+// of its totals, and the engine taking that place is the proposal C8 §8 puts
+// to SOMO (BL-101). Nothing is created either way.
+bindPolicyHook(POLICY_HOOKS.FORECAST_ENGINE_PUBLISH_ALLOWED, ({ payload }) => {
+  if (payload.source === undefined) return { ok: true };
+  if (payload.source !== 'engine') return { ok: false, reason: 'UNKNOWN_SOURCE: a publication names no source, or the engine' };
+  if (!isLive('engineDataset')) {
+    return {
+      ok: false,
+      reason:
+        'ENGINE_DATA_SIMULATED: the stabilised plan is calculated on simulated data and is never shown to a supplier; it can be published once the Master Data Management team’s SAP feed is live',
+    };
+  }
+  return {
+    ok: false,
+    reason:
+      'C8_ENGINE_SOURCE_UNRATIFIED: a published forecast names SOMO as the source of its totals; the engine can publish once SOMO ratifies C8 §8',
+  };
+});
+
 // REQ-E06-03 BR-05 — reassign: a line of the CURRENT version, a different
 // supplier qualified for the material, and a note the supplier can read.
 bindPolicyHook(POLICY_HOOKS.FORECAST_REASSIGN_VALID, ({ payload }) => {

@@ -2161,7 +2161,7 @@ export interface ForecastLineRef {
 }
 
 export type ForecastCommandVars =
-  | { verb: 'publish'; stream: 'packaging' | 'rawMaterial'; emergency?: boolean }
+  | { verb: 'publish'; stream: 'packaging' | 'rawMaterial'; emergency?: boolean; /** REQ-E14-06 — the stabilised engine plan (refused while simulated, ENG-B35). */ source?: 'engine' }
   | {
       verb: 'reassign';
       publicationId: string;
@@ -2212,7 +2212,11 @@ export function useForecastCommand() {
           return svc.commands.dispatch(scope, {
             transitionId: 't_forecastversion_publish',
             entity: 'forecastVersion',
-            payload: { stream: vars.stream, ...(vars.emergency ? { emergency: true } : {}) },
+            payload: {
+              stream: vars.stream,
+              ...(vars.emergency ? { emergency: true } : {}),
+              ...(vars.source ? { source: vars.source } : {}),
+            },
           });
         case 'reassign': {
           const { verb, ...payload } = vars;

@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 0.9 draft, 2026-09-24 |
+| Version | 0.10 draft, 2026-09-24 |
 | What this is | Detailed requirements for the demand and material forecast engine PTI builds itself (owner decision ENG-1), with each calculation explained |
 | Status | Every requirement is **Proposed**. The decision to build is Validated (ENG-1), and 12 of the 18 engine decisions are decided (ENG-D1 to D9 and ENG-D15 to D17, section 4). The rest of the detail has not yet been reviewed by the Material Planner |
 | Sources | ENG-1 (`SUPPLIER-HUB-REQUIREMENTS.md` section 9); methods and evidence in `research/FORECAST-METHOD-SPEC.md`; problem analysis in `research/FORECAST-BEST-PRACTICE-2026-09.md` |
@@ -1052,6 +1052,23 @@ Choices the builds of the E14-03, E14-04 and E14-05 leftovers made where the req
 | ENG-B58 | The planner's choice is made on the page and is not stored: it changes no order and does not re-plan. The chosen option says where to act (the 3PL booking; the Reschedule open orders page for a confirmed line; a later date on the draft call-off for a recommended order). Recording the choice as an override with a reason (X-06) is a follow-up | E14-05 edge case; X-06 |
 | ENG-B59 | Released call-offs are not among the later-delivery candidates, because E14-03 and E14-05 do not net call-offs yet (ENG-B19); they appear once they are netted | E14-05 edge case |
 
+### 4.1g Build decisions for review (PR #48, BL-108)
+
+Choices the E14-06 build made where the requirement was silent or read two ways. For the owner to accept or change.
+
+| ID | Decision | Applied in |
+|---|---|---|
+| ENG-B29 | The quantity stabilised and published per supplier × material × week is the material's net requirement lot-for-lot (REQ-E06-01 BR-01), from E14-03's netting with E14-04's safety stock, split by the supplier's source share (C8 fan-out). E14-05's order lots are not published: they become call-offs, and a lot that moves one week reads as a 100% change in two weeks (on the synthetic data the order plan's lots alternate with empty weeks) | E14-06 Data and integration |
+| ENG-B30 | No engine plan has been published, so the versions a supplier would have seen are replayed: the chain as of each of the last 12 weeks and today, on today's record (the ENG-B17 shape). Packaging keeps every weekly version, raw material every fourth (X-04, REQ-E06-01 BR-02). Periods are the engine's weeks, not REQ-E06-01 BR-03's monthly buckets | E14-06; X-04 |
+| ENG-B31 | The ±20% cumulative cap is measured from the value the supplier saw when the week entered the Trade-off zone (the first value it was asked to commit against), not from a Forecast-zone value, which moves freely. A move published beyond the band with the planner's reason re-anchors the cap at that value. BR-05 says "the first value the supplier saw"; read literally, a week whose Forecast value moved would be held at entry to Trade-off, and after an override the two bands could not meet | E14-06 BR-05; ENG-D8 |
+| ENG-B32 | The plan-change share at forecast grain (RL.3.27, E14-02): of the weeks that sat inside the supplier's lead time in a later version, the share whose quantity changed there. MASC is E14-02's own (`reliability.ts`), per consecutive version pair, with E14-02's scale | E14-06 Metrics; E14-02 BR-05 |
+| ENG-B33 | The page also runs the stabiliser on SAP's published plan history (the stand-in E14-02 measures), to show what stabilising would have done to the plan suppliers actually saw | E14-06 |
+| ENG-B34 | The Trade-off damping weight is an administrator setting (Tolerances, `engine.dampingWeightPct`, 50%, 0 to 90%: at 100% a Trade-off week could never move). The Forecast weight stays 0 and the band stays ±10% / ±20% in code, as in E14-02 and E14-13; neither is on the administration page yet | E14-06 BR-04, BR-05; X-05 |
+| ENG-B35 | Publishing asks the existing verb (`t_forecastversion_publish`) with the engine as source. It is refused by name while the engine data is simulated (X-03), and, once it is live, until SOMO ratifies C8 §8, because a published line today names SOMO as the source of its totals. Nothing is created either way; publishing SAP's plan is unchanged | E14-06; X-03; C8 §8 (BL-101) |
+| ENG-B36 | The Firm zone is the longer of the REQ-E06-01 zone length and the supplier's lead time (BR-01 "at least the lead time") | E14-06 BR-01 |
+| ENG-B37 | A Trade-off week whose last published value was 0 cannot move without a reason (±10% of 0 is 0). It is held at 0 and flagged; on the synthetic data this holds one real need of 54,513 units at 0 | E14-06 BR-05 |
+| ENG-B38 | A week beyond the band is held at the band edge by default and flagged "needs a reason". The engine publishes the damped value with a reason when given one (tested), but the page has no reason entry yet: reasons are entered with the publication, which is refused (ENG-B35) | E14-06 BR-05, AC-02 |
+
 ### 4.2 Still open
 
 | ID | Decision | Owner | Blocks |
@@ -1080,3 +1097,4 @@ Choices the builds of the E14-03, E14-04 and E14-05 leftovers made where the req
 | 0.7 | 2026-09-24 | ENG-D15, D16, D17 decided by the owner on the defaults (1 week; the Material Planner in SAP, the Hub records "taken to SAP"; liability flagged, not priced). REQ-E14-13 built on synthetic data (BL-107, PR #44); build decisions ENG-B19 to ENG-B28 for review, section 4.1d |
 | 0.8 | 2026-09-24 | REQ-E14-01 Data health page, freshness limits and quality checks on arrival built on synthetic data (BL-109, PR #46); build decisions ENG-B40 to ENG-B49 for review, section 4.1e |
 | 0.9 | 2026-09-24 | Leftovers of E14-03, E14-04 and E14-05 built on synthetic data (BL-115 yield, BL-116 change since the last run, BL-117 cap on rented space; PR #47); build decisions ENG-B50 to ENG-B59 for review, section 4.1f |
+| 0.10 | 2026-09-24 | REQ-E14-06 built on synthetic data (BL-108, PR #48); build decisions ENG-B29 to ENG-B38 for review, section 4.1g. The range beside the quantity (BR-06) is not built: it needs E14-09 |
