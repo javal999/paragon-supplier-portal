@@ -120,6 +120,7 @@ import type {
   SafetyStockView,
   OrderPlanView,
   RescheduleView,
+  DataHealthView,
 } from '../types';
 import { PR_INTAKE_LINES } from './fixtures/prIntake';
 import { engineDataset } from './fixtures/engineDataset';
@@ -130,6 +131,7 @@ import { plannedReceiptsOf, sizedRequirement } from '../../engine/orderSizing';
 import {
   STREAM_MATERIAL_TYPE,
   engineServiceTargets,
+  feedFreshnessLimitsDays,
   orderSizingCosts,
   rescheduleOutThresholdWeeks,
   safetyLeadTimePercentile,
@@ -141,7 +143,9 @@ import { callOffOrderLines } from './rescheduleReadModel';
 import { sapChangeMarkStore } from './stores/sapChangeMarkStore';
 import { addDays, dayOf } from '../../engine/dates';
 import type { EngineDataset } from '../../engine/types';
-import { labelOf } from '../../sdc/materialMaster';
+import { labelOf, materialEntry } from '../../sdc/materialMaster';
+import { FEEDS, dataHealth } from '../../engine/dataHealth';
+import { DEFAULT_STOCK_ACCURACY_TOLERANCE } from '../../engine/stock';
 import { agreedCfot, supplierCfot } from '../../engine/cfot';
 import { lineHistories } from '../../engine/lines';
 import { sdcClock } from '../../sdc/clock';
@@ -584,6 +588,26 @@ export class MockProcurementService implements IProcurementService {
       unconfirmedPoLines,
       sapMarks: [...sapChangeMarkStore.all()].reverse(),
     };
+  }
+
+  async getDataHealth(scope: QueryScope): Promise<DataHealthView | null> {
+    // REQ-E14-01, computed at read on the hub clock with the freshness limits
+    // in force (X-05). PTI only (X-03). ⚠️ The synthetic dataset is generated
+    // at the hub's present on every read, so every feed "arrived" at that
+    // instant (ENG-B41); a real feed will carry its own arrival time. The
+    // stock-accuracy tolerance is the one E14-03 flags with (ENG-D2).
+    if (scope.personaType === 'supplier') return null;
+    const now = sdcClock.now();
+    const data = engineDataset();
+    const report = dataHealth({
+      data,
+      now,
+      arrivals: Object.fromEntries(FEEDS.map((f) => [f.feed, now])),
+      limitsDays: feedFreshnessLimitsDays(),
+      stockAccuracyTolerance: DEFAULT_STOCK_ACCURACY_TOLERANCE,
+      context: { masterUom: (code) => materialEntry(code)?.canonicalUom ?? null },
+    });
+    return { ...report, provenance: data.provenance };
   }
 
   async getSafetyStock(scope: QueryScope): Promise<SafetyStockView | null> {
