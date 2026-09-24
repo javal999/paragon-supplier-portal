@@ -174,6 +174,25 @@ const DEFS = [
     key: 'engine.rescheduleOutWeeks', section: 'tolerances', rule: 'ENG-D15', unit: 'weeks', integer: true,
     min: 1, max: 26, defaultValue: 1,
   },
+  // REQ-E14-01 BR-01, BR-05 — the freshness limit per engine feed, in days:
+  // a feed whose last arrival is older than this is stale on the Data health
+  // page and names the engine steps it affects. The defaults are the feed
+  // spec's limits (FORECAST-ENGINE-FEED-SPEC.md §2); where the spec states a
+  // refresh but no limit (FgPlanSnapshot, SalesOrderWeek, SapSafetyStock,
+  // MaterialValue) the limit is the refresh period (ENG-B42). One key per feed
+  // that has a limit; the Hub's own records and "on change" feeds have none.
+  { key: 'engine.freshnessDays.poLines', section: 'tolerances', rule: 'REQ-E14-01', unit: 'days', integer: true, min: 1, max: 365, defaultValue: 1 },
+  { key: 'engine.freshnessDays.scheduleChanges', section: 'tolerances', rule: 'REQ-E14-01', unit: 'days', integer: true, min: 1, max: 365, defaultValue: 1 },
+  { key: 'engine.freshnessDays.receipts', section: 'tolerances', rule: 'REQ-E14-01', unit: 'days', integer: true, min: 1, max: 365, defaultValue: 1 },
+  { key: 'engine.freshnessDays.sources', section: 'tolerances', rule: 'REQ-E14-01', unit: 'days', integer: true, min: 1, max: 365, defaultValue: 7 },
+  { key: 'engine.freshnessDays.bom', section: 'tolerances', rule: 'REQ-E14-01', unit: 'days', integer: true, min: 1, max: 365, defaultValue: 7 },
+  { key: 'engine.freshnessDays.stock', section: 'tolerances', rule: 'REQ-E14-01', unit: 'days', integer: true, min: 1, max: 365, defaultValue: 1 },
+  { key: 'engine.freshnessDays.materialValues', section: 'tolerances', rule: 'REQ-E14-01', unit: 'days', integer: true, min: 1, max: 365, defaultValue: 31 },
+  { key: 'engine.freshnessDays.finishedGoods', section: 'tolerances', rule: 'REQ-E14-01', unit: 'days', integer: true, min: 1, max: 365, defaultValue: 7 },
+  { key: 'engine.freshnessDays.sales', section: 'tolerances', rule: 'REQ-E14-01', unit: 'days', integer: true, min: 1, max: 365, defaultValue: 7 },
+  { key: 'engine.freshnessDays.fgPlan', section: 'tolerances', rule: 'REQ-E14-01', unit: 'days', integer: true, min: 1, max: 365, defaultValue: 7 },
+  { key: 'engine.freshnessDays.salesOrders', section: 'tolerances', rule: 'REQ-E14-01', unit: 'days', integer: true, min: 1, max: 365, defaultValue: 1 },
+  { key: 'engine.freshnessDays.sapSafetyStock', section: 'tolerances', rule: 'REQ-E14-01', unit: 'days', integer: true, min: 1, max: 365, defaultValue: 7 },
 ] as const satisfies readonly HubSettingDef[];
 
 /** A fixed setting key. Stale-period overrides are keyed separately (below). */

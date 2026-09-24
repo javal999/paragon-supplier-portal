@@ -54,6 +54,7 @@ describe('menu and copy (section 3.7)', () => {
     expect(forecast.items.map((i) => [i.labelKey, i.path])).toEqual([
       ['hub.nav.pti.forecasts', '/buyer/forecasts'],
       ['hub.nav.pti.commitments', '/buyer/collaboration'],
+      ['hub.nav.pti.dataHealth', '/buyer/data-health'],
       ['hub.nav.pti.reliability', '/buyer/reliability'],
       ['hub.nav.pti.materialRequirement', '/buyer/material-requirement'],
       ['hub.nav.pti.safetyStock', '/buyer/safety-stock'],

@@ -68,6 +68,8 @@ import type { MaterialSafetyStock, SafetyStockChange, SafetyStockRun } from '../
 import type { MaterialOrderPlan, OrderPlanRun, WarehousePlan } from '../engine/orderSizing';
 import type { InfoLine, PlanChangeBaseline, Proposal, ProposalType, RescheduleRun, WarehouseReschedule } from '../engine/reschedule';
 import type { SupplierCfot } from '../engine/cfot';
+import type { DataHealthReport } from '../engine/dataHealth';
+import type { DatasetProvenance } from '../engine/types';
 import type { ReleaseSelection } from '../delivery/release';
 import type { EditPolicyPatch } from '../delivery/policy';
 // The unified chase read view (SDC-5c). TYPE-ONLY — the `chase` module composes
@@ -866,6 +868,18 @@ export interface RescheduleView extends RescheduleRun {
   readonly unconfirmedPoLines: number;
   /** "Taken to SAP" marks, latest first. */
   readonly sapMarks: readonly SapChangeMark[];
+}
+
+/**
+ * REQ-E14-01 — the engine's data health, as served: every feed's last arrival
+ * and freshness against the administrator's limit, its record count and the
+ * feed spec's quality checks with the failing records by key, and the engine
+ * steps each failure would affect. Computed at read on the engine's
+ * (SIMULATED) dataset. PTI only; a supplier gets null.
+ */
+export interface DataHealthView extends DataHealthReport {
+  /** Where the dataset came from (X-03): SIMULATED until the MDM feed is live. */
+  readonly provenance: DatasetProvenance;
 }
 
 export interface ForecastCoverageRow {
@@ -2449,6 +2463,12 @@ export interface IProcurementService {
    * on the engine's (SIMULATED) dataset. PTI only.
    */
   getReschedule(scope: QueryScope): Promise<RescheduleView | null>;
+  /**
+   * REQ-E14-01 — data health of the engine's inputs: freshness per feed
+   * against the administrator's limits, and the feed spec's quality checks on
+   * arrival with the failing records. On the engine's (SIMULATED) dataset. PTI only.
+   */
+  getDataHealth(scope: QueryScope): Promise<DataHealthView | null>;
 
   // — Sourcing —
   getRFQs(scope: QueryScope, filter?: RFQFilter): Promise<Page<RFQ>>;

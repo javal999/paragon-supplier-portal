@@ -79,6 +79,7 @@ import BuyerMaterialRequirement from '../pages-v2/BuyerMaterialRequirement';
 import BuyerSafetyStock from '../pages-v2/BuyerSafetyStock';
 import BuyerOrderPlan from '../pages-v2/BuyerOrderPlan';
 import BuyerReschedule from '../pages-v2/BuyerReschedule';
+import BuyerDataHealth from '../pages-v2/BuyerDataHealth';
 import SupplierForecastCommitments from '../pages-v2/SupplierForecastCommitments';
 import SupplierPerformance from '../pages-v2/SupplierPerformance';
 import NotFound from '../pages-v2/NotFound';
@@ -152,6 +153,8 @@ const AppRouter: React.FC = () => {
           <Route path="/buyer/order-plan" element={<BuyerOrderPlan />} />
           {/* REQ-E14-13 — reschedule or cancel open orders for warehouse relief (SIMULATED). */}
           <Route path="/buyer/reschedule" element={<BuyerReschedule />} />
+          {/* REQ-E14-01 — data health of the engine's inputs (SIMULATED). */}
+          <Route path="/buyer/data-health" element={<BuyerDataHealth />} />
           <Route
             path="/buyer/collaboration/responses"
             element={
