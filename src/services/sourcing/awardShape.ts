@@ -18,9 +18,15 @@
 // allowed is the VERB's question (the final award refuses AWARD_ITEMS_OPEN, the
 // partial award refuses AWARD_NOTHING_OPEN), because it depends on which verb
 // was sent; this rule judges only the lines the award does carry.
+//
+// RFx D2 — an RFP award is judged by the SAME rule: `awardItemsOfRfp`
+// (`rfpAward.ts`) makes one item per option of a closed firm-offer round, its
+// breaks the round's quantity points, and the item answers for itself whether
+// a line's firm offer counts (`lineRefusal`). Only the item list and the offer
+// lookup differ; the split, the break and the "already awarded" rules are one.
 // ────────────────────────────────────────────────────────────────────────────
 
-import type { AwardLine, AwardRecord, AwardSplitBasis } from './types';
+import type { AnyAwardLine, AwardEventType, AwardRecord, AwardSplitBasis } from './types';
 import { tierPieces, type RfqItem } from './rfqModel';
 import {
   evaluationBreaks,
@@ -60,6 +66,17 @@ export interface AwardItem {
   readonly priced: (quote: AwardQuoteShape, breakQty: number) => boolean;
   /** The id of an earlier award of the event that already awarded this item. */
   readonly awardedIn?: string;
+  /**
+   * RFx D2 — an RFP option: the ref its award lines name (`RfpAwardLine.optionRef`).
+   * Absent on every RFQ item.
+   */
+  readonly optionRef?: string;
+  /**
+   * RFx D2 — an item that judges its own lines' offers (an RFP option: the
+   * line's firm offer must be the supplier's price in force at the break, and
+   * still valid). When present it replaces the quote lookup for this item.
+   */
+  readonly lineRefusal?: (line: AnyAwardLine, breakQty: number) => AwardRefusal | null;
 }
 
 /** The RFQ fields `awardItemsOf` reads. */
@@ -75,10 +92,16 @@ export interface AwardableRfq extends TieredRfqShape {
 /** The key of the one item a legacy RFQ without line items has. */
 export const WHOLE_EVENT_ITEM_KEY = 'event';
 
-const lineMatches = (item: Pick<AwardItem, 'tiered' | 'lineNo' | 'itemCode'>, line: AwardLine): boolean =>
-  item.tiered
-    ? line.itemLineNo !== undefined && line.itemLineNo === item.lineNo
-    : line.itemLineNo === undefined && line.itemCode === item.itemCode;
+const lineMatches = (
+  item: Pick<AwardItem, 'tiered' | 'lineNo' | 'itemCode' | 'optionRef'>,
+  line: AnyAwardLine,
+): boolean =>
+  item.optionRef !== undefined
+    ? line.optionRef === item.optionRef
+    : line.optionRef === undefined &&
+      (item.tiered
+        ? line.itemLineNo !== undefined && line.itemLineNo === item.lineNo
+        : line.itemLineNo === undefined && line.itemCode === item.itemCode);
 
 /**
  * The items of an RFQ, as the award rule sees them. `priorAwards` are the
@@ -128,18 +151,18 @@ export function awardItemsOf(rfq: AwardableRfq, priorAwards: readonly AwardRecor
 }
 
 /** The item an award line names, or undefined. */
-export const itemOfAwardLine = (items: readonly AwardItem[], line: AwardLine): AwardItem | undefined =>
+export const itemOfAwardLine = (items: readonly AwardItem[], line: AnyAwardLine): AwardItem | undefined =>
   items.find((item) => lineMatches(item, line));
 
 /**
  * The break a line was awarded at. A legacy line sent without one is read at
  * its item's only break; a tiered line must name one.
  */
-export const lineBreakOf = (item: AwardItem, line: AwardLine): number | undefined =>
+export const lineBreakOf = (item: AwardItem, line: AnyAwardLine): number | undefined =>
   line.awardTierQty ?? (item.tiered ? undefined : item.breaks[0]?.qty);
 
 /** A line's basis; absent is `pct`, the only basis before NR-3. */
-export const basisOf = (line: AwardLine): AwardSplitBasis => line.splitBasis ?? 'pct';
+export const basisOf = (line: AnyAwardLine): AwardSplitBasis => line.splitBasis ?? 'pct';
 
 // ── Refusals ────────────────────────────────────────────────────────────────
 
@@ -153,14 +176,18 @@ export type AwardShapeRefusalCode =
   | 'AWARD_SPLIT_INCOMPLETE'
   | 'AWARD_ITEM_NOT_QUOTED'
   | 'AWARD_QTY_NOT_DERIVED'
-  | 'AWARD_ITEM_ALREADY_AWARDED';
+  | 'AWARD_ITEM_ALREADY_AWARDED'
+  // RFx D2 (NR-2 edge case 2) — the firm offer a line names has lapsed.
+  | 'AWARD_OFFER_EXPIRED';
 
 /** Every code an award can earn by name, the verb-level ones included. */
 export type AwardRefusalCode =
   | AwardShapeRefusalCode
   | 'AWARD_ITEMS_OPEN'
   | 'AWARD_NOTHING_OPEN'
-  | 'AWARD_REASON_REQUIRED';
+  | 'AWARD_REASON_REQUIRED'
+  // RFx D2 (NR-2 BR-08) — the option is already placed through the other route.
+  | 'AWARD_OPTION_SOURCED_ELSEWHERE';
 
 /** A refusal, structured so the verb can state it and the page can translate it. */
 export interface AwardRefusal {
@@ -179,8 +206,26 @@ export interface AwardRefusal {
 
 const units = (n: number): string => n.toLocaleString('en-US');
 
-/** The refusal as the verb states it: `CODE: sentence`. */
-export function awardRefusalText(r: AwardRefusal): string {
+/**
+ * The refusal as the verb states it: `CODE: sentence`. `eventType` picks the
+ * words where an RFQ and an RFP differ (an item vs an option, a quote vs a
+ * firm offer); the codes are the same.
+ */
+export function awardRefusalText(r: AwardRefusal, eventType: AwardEventType = 'rfq'): string {
+  if (eventType === 'rfp') {
+    switch (r.code) {
+      case 'AWARD_ITEM_UNKNOWN':
+        return `AWARD_ITEM_UNKNOWN: ${r.detail ?? 'an award line'} is not an option of a closed firm-offer round of this RFP; an RFP is awarded option by option on firm offers`;
+      case 'AWARD_TIER_UNKNOWN':
+        return `AWARD_TIER_UNKNOWN: the lines for ${r.item} record one quantity point of its firm-offer round (${r.detail ?? 'none'})`;
+      case 'AWARD_ITEM_NOT_QUOTED':
+        return `AWARD_ITEM_NOT_QUOTED: ${r.detail} has no firm offer in force on ${r.item} at this quantity point`;
+      case 'AWARD_REASON_REQUIRED':
+        return 'AWARD_REASON_REQUIRED: every RFP award needs a reason';
+      default:
+        break;
+    }
+  }
   switch (r.code) {
     case 'AWARD_EMPTY':
       return 'AWARD_EMPTY: an award names at least one supplier';
@@ -212,6 +257,10 @@ export function awardRefusalText(r: AwardRefusal): string {
       return 'AWARD_NOTHING_OPEN: this award settles every item, so it is the final award, not a partial one';
     case 'AWARD_REASON_REQUIRED':
       return `AWARD_REASON_REQUIRED: the award for ${r.item} does not follow the best score, so it needs a reason`;
+    case 'AWARD_OFFER_EXPIRED':
+      return `AWARD_OFFER_EXPIRED: the firm offer ${r.detail} on ${r.item} is no longer valid; open a new firm-offer round`;
+    case 'AWARD_OPTION_SOURCED_ELSEWHERE':
+      return `AWARD_OPTION_SOURCED_ELSEWHERE: ${r.item} is already ${r.detail}`;
   }
 }
 
@@ -225,8 +274,8 @@ const round2 = (n: number): number => Math.round(n * 100) / 100;
 /** An award's lines, grouped by the item they name, in item order. */
 function groupsOf(
   items: readonly AwardItem[],
-  lines: readonly AwardLine[],
-): { item: AwardItem; lines: AwardLine[] }[] {
+  lines: readonly AnyAwardLine[],
+): { item: AwardItem; lines: AnyAwardLine[] }[] {
   return items
     .map((item) => ({ item, lines: lines.filter((l) => lineMatches(item, l)) }))
     .filter((g) => g.lines.length > 0);
@@ -237,7 +286,7 @@ function groupsOf(
  * the break, rounded, with any remainder unit placed on the item's FIRST line
  * when the shares total 100% (edge case 2: 33.33% × 3 places every unit).
  */
-export function derivedQuantities(pieces: number, lines: readonly AwardLine[]): number[] {
+export function derivedQuantities(pieces: number, lines: readonly AnyAwardLine[]): number[] {
   return splitQuantities(
     pieces,
     lines.map((l) => l.sharePct),
@@ -257,14 +306,20 @@ export function derivedQuantities(pieces: number, lines: readonly AwardLine[]): 
  */
 export function awardShapeRefusal(
   items: readonly AwardItem[],
-  lines: readonly AwardLine[],
+  lines: readonly AnyAwardLine[],
   quotes: readonly AwardQuoteShape[],
 ): AwardRefusal | null {
   if (lines.length === 0) return { code: 'AWARD_EMPTY' };
   for (const line of lines) {
     if (!itemOfAwardLine(items, line)) {
       const detail =
-        line.itemLineNo !== undefined ? `item ${line.itemLineNo}` : line.itemCode ? line.itemCode : undefined;
+        line.optionRef !== undefined
+          ? `"${line.optionRef}"`
+          : line.itemLineNo !== undefined
+            ? `item ${line.itemLineNo}`
+            : line.itemCode
+              ? line.itemCode
+              : undefined;
       return { code: 'AWARD_ITEM_UNKNOWN', ...(detail ? { detail } : {}) };
     }
   }
@@ -293,6 +348,11 @@ export function awardShapeRefusal(
   for (const { item, lines: its } of groups) {
     const brk = breakOf.get(item.key)!;
     for (const line of its) {
+      if (item.lineRefusal) {
+        const refused = item.lineRefusal(line, brk.qty);
+        if (refused) return refused;
+        continue;
+      }
       const quote = quotes.find((q) => q.id === line.quotationId);
       if (quote && !item.priced(quote, brk.qty)) {
         return { code: 'AWARD_ITEM_NOT_QUOTED', item: item.name, detail: quote.supplierId };
@@ -324,7 +384,7 @@ export function awardShapeRefusal(
  */
 export function itemsOpenAfter(
   items: readonly AwardItem[],
-  lines: readonly AwardLine[],
+  lines: readonly AnyAwardLine[],
   notAwardedKeys: readonly string[] = [],
 ): readonly AwardItem[] {
   return items.filter(
@@ -339,7 +399,7 @@ export function itemsOpenAfter(
  */
 export function awardItemsDepartingBest(
   items: readonly AwardItem[],
-  lines: readonly AwardLine[],
+  lines: readonly AnyAwardLine[],
   bestOf: (item: AwardItem, breakQty: number) => string | null,
 ): readonly AwardItem[] {
   return groupsOf(items, lines)
@@ -354,7 +414,7 @@ export function awardItemsDepartingBest(
 /** The break each awarded item's lines record, by item (for the stored best scores). */
 export function awardedItemBreaks(
   items: readonly AwardItem[],
-  lines: readonly AwardLine[],
+  lines: readonly AnyAwardLine[],
 ): readonly { item: AwardItem; breakQty: number }[] {
   return groupsOf(items, lines).flatMap(({ item, lines: its }) => {
     const breakQty = lineBreakOf(item, its[0]!);

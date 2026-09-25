@@ -46,13 +46,15 @@ import type {
   NegotiationRoundView,
   RfiEventView,
   RfpEventView,
+  RfpAwardView,
   RfpOfferRoundView,
   RfpRoundOptionView,
   RfqSupplierGateView,
   RfxInviteeView,
 } from '../../sourcing/views';
 import { awardStatusOf, cancellationOf, sapMarkOf, type AwardTrail } from '../../sourcing/awardStatus';
-import type { RfiResponse, RfpEvent, RfpResponse } from '../../sourcing/types';
+import type { RfiResponse, RfpEvent, RfpResponse, RfqAwardRecord } from '../../sourcing/types';
+import { isRfpAward } from '../../sourcing/rfpAward';
 import { firmPricesInForce, parseRfpOptionRef, rfpOptionRef } from '../../sourcing/rfpFirmOffer';
 import { rfqStore } from './stores/rfqStore';
 import { quotationStore } from './stores/quotationStore';
@@ -528,9 +530,10 @@ export function awardViews(supplierId: string | null): readonly AwardView[] {
   const trail: AwardTrail = { cancellations: awardCancellationStore.all(), sapMarks: awardSapMarkStore.all() };
   return awardStore
     .all()
-    // AR-02 — the record names its event type; only the RFQ arm exists (the
-    // RFP award adds its own arm here, task D2).
-    .filter((a) => a.eventType === 'rfq')
+    // AR-02 — the record names its event type. This is the RFQ arm; the RFP
+    // arm is `rfpAwardViews` below (RFx D2), whose lines name an option and a
+    // firm offer rather than an item and a quote.
+    .filter((a): a is RfqAwardRecord => a.eventType === 'rfq')
     .filter((a) =>
       supplierId
         ? a.lines.some((l) => l.supplierId === supplierId) || a.notAwardedSupplierIds.includes(supplierId)
@@ -584,5 +587,60 @@ export function awardViews(supplierId: string | null): readonly AwardView[] {
         ...(!supplierId && cancellation ? { cancellation } : {}),
         ...(!supplierId && sapMark ? { sapMark } : {}),
       };
+    });
+}
+
+/**
+ * RFx D2 (NR-2 BR-09, AC-07; NR-3 BR-12) — the RFP awards a scope may read.
+ *
+ * `supplierId` null = the buyer: every award, every line, the reason, the
+ * cancellation and the SAP marking. `supplierId` set = that supplier: only an
+ * award it is named on (a line, or the final award's "not awarded"), only its
+ * OWN lines, and its outcome — `Withdrawn` once the award is cancelled. There
+ * is no cascade onto the RFP responses; this read IS each responder's outcome.
+ */
+export function rfpAwardViews(supplierId: string | null): readonly RfpAwardView[] {
+  const trail: AwardTrail = { cancellations: awardCancellationStore.all(), sapMarks: awardSapMarkStore.all() };
+  return awardStore
+    .all()
+    .filter(isRfpAward)
+    .filter((a) =>
+      supplierId
+        ? a.lines.some((l) => l.supplierId === supplierId) || a.notAwardedSupplierIds.includes(supplierId)
+        : true,
+    )
+    .map((award) => {
+      const rfp = rfpEventStore.get(award.eventId);
+      const titles = new Map((rfp ? rfpRoundOptions(rfp) : []).map((o) => [o.ref, o.title] as const));
+      const status = awardStatusOf(award.id, trail);
+      const cancellation = cancellationOf(award.id, trail);
+      const sapMark = sapMarkOf(award.id, trail);
+      const lines = (supplierId ? award.lines.filter((l) => l.supplierId === supplierId) : award.lines).map(
+        (l) => ({
+          ...l,
+          supplierName: rfxSupplierName(l.supplierId),
+          optionTitle: titles.get(l.optionRef) ?? l.optionRef,
+        }),
+      );
+      return {
+        id: award.id,
+        eventType: 'rfp' as const,
+        eventId: award.eventId,
+        rfpNumber: rfp?.eventNumber ?? award.eventId,
+        rfpTitle: rfp?.title ?? '',
+        awardedAt: award.awardedAt,
+        lines,
+        notAwardedSupplierIds: supplierId
+          ? award.notAwardedSupplierIds.filter((s) => s === supplierId)
+          : award.notAwardedSupplierIds,
+        status,
+        ...(cancellation ? { withdrawnAt: cancellation.cancelledAt } : {}),
+        ...(!supplierId ? { reason: award.reason } : {}),
+        ...(!supplierId && cancellation ? { cancellation } : {}),
+        ...(!supplierId && sapMark ? { sapMark } : {}),
+        ...(supplierId
+          ? { outcome: status === 'Cancelled' ? 'Withdrawn' : lines.length > 0 ? 'Awarded' : 'Not awarded' }
+          : {}),
+      } satisfies RfpAwardView;
     });
 }

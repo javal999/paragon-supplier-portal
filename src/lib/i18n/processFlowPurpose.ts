@@ -499,6 +499,16 @@ export const processFlowPurposeEn: Record<string, string> = {
     'The proposing window ends, and buying compares the terms side by side.',
   'processFlows.purpose.t_rfp_cancel':
     'PTI drops the request, so suppliers stop spending time on it.',
+  'processFlows.purpose.t_rfp_award':
+    'Buying awards the proposal option by option on the firm offers, with a reason. Each responder learns its own outcome, and the PO or contract is raised in SAP.',
+  'processFlows.purpose.t_rfp_award_partial':
+    'Buying awards the options that are ready on their firm offers and comes back for the rest. Nobody is turned down yet.',
+  'processFlows.purpose.t_rfp_award_cancel':
+    'Buying withdraws an RFP award, with a reason, before it is raised in SAP. The award stays on record and its options can be decided again.',
+  'processFlows.purpose.t_rfp_award_cancel_partial':
+    'Buying withdraws one RFP award while others stand. Its options reopen and every step stays on record.',
+  'processFlows.purpose.t_rfp_award_sap_raised':
+    'Records that an RFP award was raised in SAP, with the SAP document number. From here changes are made in SAP.',
   'processFlows.purpose.entity.rfpResponse':
     'One supplier’s proposed terms: what it offers on each point PTI raised, whether it will match it, and why where it will not.',
   'processFlows.purpose.t_rfpresponse_save':
@@ -984,6 +994,16 @@ export const processFlowPurposeId: Record<string, string> = {
     'Masa mengusulkan berakhir, dan pembelian membandingkan syarat berdampingan.',
   'processFlows.purpose.t_rfp_cancel':
     'PTI membatalkan permintaan, sehingga pemasok berhenti mengerjakannya.',
+  'processFlows.purpose.t_rfp_award':
+    'Pembelian menetapkan pemenang proposal per opsi berdasarkan penawaran tetap, dengan alasan. Setiap pemasok yang menjawab tahu hasilnya sendiri, dan PO atau kontrak dibuat di SAP.',
+  'processFlows.purpose.t_rfp_award_partial':
+    'Pembelian menetapkan opsi yang sudah siap berdasarkan penawaran tetapnya dan kembali untuk sisanya. Belum ada yang ditolak.',
+  'processFlows.purpose.t_rfp_award_cancel':
+    'Pembelian menarik penetapan pemenang RFP, dengan alasan, sebelum dibuat di SAP. Catatannya tetap tersimpan dan opsinya bisa diputuskan lagi.',
+  'processFlows.purpose.t_rfp_award_cancel_partial':
+    'Pembelian menarik satu penetapan pemenang RFP sementara yang lain tetap berlaku. Opsinya dibuka kembali dan setiap langkah tetap tercatat.',
+  'processFlows.purpose.t_rfp_award_sap_raised':
+    'Mencatat bahwa penetapan pemenang RFP sudah dibuat di SAP, beserta nomor dokumen SAP-nya. Sejak itu perubahan dilakukan di SAP.',
   'processFlows.purpose.entity.rfpResponse':
     'Syarat yang diusulkan satu pemasok: apa yang ditawarkan pada tiap pokok yang diangkat PTI, apakah bisa dipenuhi, dan alasannya bila tidak.',
   'processFlows.purpose.t_rfpresponse_save':

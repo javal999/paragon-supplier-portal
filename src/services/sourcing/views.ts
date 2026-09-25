@@ -14,7 +14,6 @@
 
 import type {
   AwardCancellation,
-  AwardRecord,
   AwardSapMark,
   AwardStatus,
   NegotiationRound,
@@ -23,7 +22,9 @@ import type {
   RfpEvent,
   RfpFirmOffer,
   RfpOfferRound,
+  RfpAwardLine,
   RfpResponse,
+  RfqAwardRecord,
 } from './types';
 import type { GateCriterion } from './complianceGate';
 
@@ -168,7 +169,7 @@ export interface AwardedSupplierView {
   readonly quantity: number;
 }
 
-export interface AwardView extends AwardRecord {
+export interface AwardView extends RfqAwardRecord {
   readonly rfqNumber: string;
   readonly rfqTitle: string;
   readonly uom: string;
@@ -186,4 +187,47 @@ export interface AwardView extends AwardRecord {
   readonly cancellation?: AwardCancellation;
   /** The SAP marking with its document number. The buyer's read only. */
   readonly sapMark?: AwardSapMark;
+}
+
+/** RFx D2 — one line of an RFP award, with the words a screen shows it in. */
+export interface RfpAwardLineView extends RfpAwardLine {
+  readonly supplierName: string;
+  /** The option's title, in the words of whoever wrote it (edge case 3). */
+  readonly optionTitle: string;
+}
+
+/**
+ * RFx D2 (NR-2 BR-09, AC-07; NR-3 BR-12) — how one supplier reads an RFP award:
+ * awarded (it has lines), not awarded (a final award named it among the
+ * responders), or withdrawn (the award was cancelled).
+ */
+export type RfpAwardOutcome = 'Awarded' | 'Not awarded' | 'Withdrawn';
+
+/**
+ * RFx D2 — an award on an RFP, as a scope may read it. The buyer reads every
+ * line, the reason, the cancellation and the SAP marking. A supplier reads only
+ * an award it is named on, only its OWN lines and its own "not awarded", and
+ * its `outcome`; never another supplier's share, the reason or the SAP number.
+ */
+export interface RfpAwardView {
+  readonly id: string;
+  readonly eventType: 'rfp';
+  readonly eventId: string;
+  readonly rfpNumber: string;
+  readonly rfpTitle: string;
+  readonly awardedAt: string;
+  readonly lines: readonly RfpAwardLineView[];
+  readonly notAwardedSupplierIds: readonly string[];
+  /** NR-2 BR-06 — why. The buyer's read only. */
+  readonly reason?: string;
+  /** DERIVED from the appended cancellation and SAP marking (AR-08). */
+  readonly status: AwardStatus;
+  /** When the award was withdrawn; the date a supplier is shown. */
+  readonly withdrawnAt?: string;
+  /** The buyer's read only. */
+  readonly cancellation?: AwardCancellation;
+  /** The buyer's read only. */
+  readonly sapMark?: AwardSapMark;
+  /** A supplier's read only: its own outcome on this award. */
+  readonly outcome?: RfpAwardOutcome;
 }

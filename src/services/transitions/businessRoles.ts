@@ -167,6 +167,12 @@ const LANE_BUNDLES = Object.freeze({
       // Beside `rfq:negotiate` for the same reason it sits beside `rfq:award`:
       // the same person's job today, a separate act on a separate event type.
       'rfp:negotiate',
+      // RFx D2 (NR-2 BR-05, NR-3 BR-09 / BR-10) — awarding an RFP on firm
+      // offers, cancelling that award, and marking it "Raised in SAP". Beside
+      // the RFQ's three for the same reason `rfp:negotiate` sits beside
+      // `rfq:negotiate`; separate atoms so award and correction can be split
+      // by seat without a new role (D-5).
+      'rfp:award', 'rfp:award-cancel', 'rfp:award-sap',
       'contract:draft', 'contract:activate', 'contract:renew', 'contract:terminate',
       'obligation:track', 'obligation:complete',
       'pr:approve', 'pr:reject',

@@ -22,6 +22,9 @@ export const rfxEn: Record<string, string> = {
   'rfx.status.Open': 'Open',
   'rfx.status.Closed': 'Closed',
   'rfx.status.Cancelled': 'Cancelled',
+  // RFx D2 — an RFP's award states.
+  'rfx.status.Partly awarded': 'Partly awarded',
+  'rfx.status.Awarded': 'Awarded',
   'rfx.response.notStarted': 'Not started',
   'rfx.response.draft': 'Draft',
   'rfx.response.submitted': 'Submitted',
@@ -421,6 +424,8 @@ export const rfxId: Record<string, string> = {
   'rfx.status.Open': 'Terbuka',
   'rfx.status.Closed': 'Ditutup',
   'rfx.status.Cancelled': 'Dibatalkan',
+  'rfx.status.Partly awarded': 'Sebagian ditetapkan',
+  'rfx.status.Awarded': 'Ditetapkan',
   'rfx.response.notStarted': 'Belum dimulai',
   'rfx.response.draft': 'Draf',
   'rfx.response.submitted': 'Terkirim',

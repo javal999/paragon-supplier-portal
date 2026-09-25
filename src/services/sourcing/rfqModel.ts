@@ -151,6 +151,12 @@ export interface RfqAuthoringFields {
   attachments?: readonly AttachmentMeta[];
   /** The RFP this RFQ was created from (D3). */
   sourceRfpId?: string;
+  /**
+   * RFx D2 (NR-2 BR-08) — the RFP options this RFQ sources, by ref
+   * (`rfpOptionRef`). An option named here cannot also be awarded on the RFP,
+   * and an option already awarded there cannot be named here.
+   */
+  sourceRfpOptionRefs?: readonly string[];
   /** The past RFQ this one was copied from (D2). */
   copiedFromRfqId?: string;
   /** The template this RFQ started from (D2). */
@@ -487,6 +493,10 @@ export function readRfqAuthoringFields(payload: Record<string, unknown>): RfqAut
     out.attachments = payload.attachments as AttachmentMeta[];
   }
   if (str('sourceRfpId')) out.sourceRfpId = str('sourceRfpId');
+  if (Array.isArray(payload.sourceRfpOptionRefs)) {
+    const refs = (payload.sourceRfpOptionRefs as unknown[]).filter((x): x is string => typeof x === 'string' && x.length > 0);
+    if (refs.length > 0) out.sourceRfpOptionRefs = refs;
+  }
   if (str('copiedFromRfqId')) out.copiedFromRfqId = str('copiedFromRfqId');
   if (str('templateId')) out.templateId = str('templateId');
   return out;

@@ -205,6 +205,13 @@ import {
   rfxNow,
 } from './rfxReadModel';
 import { firmOfferRefusal, rfpOfferRoundRefusal } from '../../sourcing/rfpFirmOffer';
+import {
+  awardItemsOfRfp,
+  isRfpAward,
+  rfpAwardedOptionRefs,
+  rfpOptionSourcedRefusal,
+  rfqSourcedOptionRefs,
+} from '../../sourcing/rfpAward';
 import { isTieredRfq } from '../../sourcing/rfqComparison';
 import {
   awardedItemBreaks,
@@ -229,6 +236,8 @@ import { gateRefusal } from '../../sourcing/complianceGate';
 import { rfiTemplate } from '../../sourcing/rfxConfig';
 import type {
   AwardLine,
+  RfqAwardRecord,
+  RfpAwardLine,
   RfiAnswer,
   RfiEvent,
   RfiQuestion,
@@ -245,6 +254,7 @@ import type {
   RfxConfidentiality,
   RfxCustomSection,
   RfxEventStatus,
+  RfpEventStatus,
   RfxInvitee,
   RfxResponseStatus,
 } from '../../sourcing/types';
@@ -1465,6 +1475,7 @@ const rfqTarget: CommandTarget = {
           respondedSupplierIds: r.respondedSupplierIds,
           sourceRfiId: r.sourceRfiId,
           sourceRfpId: r.sourceRfpId,
+          sourceRfpOptionRefs: r.sourceRfpOptionRefs,
           copiedFromRfqId: r.copiedFromRfqId,
           templateId: r.templateId,
           // Not authored in the wizard, so never in the payload: kept as stored.
@@ -3125,10 +3136,61 @@ const rfpEventTarget: CommandTarget = {
         }));
         return;
       }
+      // RFx D2 (NR-2 BR-05 to BR-09) — an RFP award RECORDS itself on the
+      // shared award record (AR-02): its lines (option ref, firm offer, share,
+      // quantity, point, the side typed), its reason, and — on the final award —
+      // the responders no award of the RFP names. NO cascade: the responses
+      // stay Submitted and each outcome is derived from the award read.
+      case 't_rfp_award':
+      case 't_rfp_award_partial': {
+        const rfp = rfpEventStore.get(id);
+        if (!rfp) break;
+        const items = rfpAwardItems(rfp);
+        const lines = rfpAwardLinesOf(payload).map((l) => recordedRfpAwardLine(items, l));
+        const final = transitionId === 't_rfp_award';
+        const named = new Set([
+          ...rfpAwardsOf(id).flatMap((a) => a.lines.map((l) => l.supplierId)),
+          ...lines.map((l) => l.supplierId),
+        ]);
+        awardStore.add({
+          id: awardStore.nextId(),
+          eventType: 'rfp',
+          eventId: id,
+          awardedAt: rfxNow(),
+          lines,
+          reason: typeof payload.awardReason === 'string' ? payload.awardReason.trim() : '',
+          notAwardedSupplierIds: final ? rfpRespondedSupplierIds(id).filter((sid) => !named.has(sid)) : [],
+        });
+        break;
+      }
+      // RFx D2 (NR-3 BR-09, BR-11) — the cancel APPENDS a cancellation naming
+      // the award, as on an RFQ; the award record is kept unedited.
+      case 't_rfp_award_cancel':
+      case 't_rfp_award_cancel_partial': {
+        awardCancellationStore.add({
+          id: awardCancellationStore.nextId(),
+          awardId: String(payload.awardId),
+          cancelledAt: rfxNow(),
+          reason: String(payload.cancelReason ?? '').trim(),
+          by: scope.actor ?? NO_PERSON,
+        });
+        break;
+      }
+      // RFx D2 (NR-3 BR-10) — "Raised in SAP" APPENDS a marking; state-preserving.
+      case 't_rfp_award_sap_raised': {
+        awardSapMarkStore.add({
+          id: awardSapMarkStore.nextId(),
+          awardId: String(payload.awardId),
+          sapDocumentNo: String(payload.sapDocumentNo).trim(),
+          markedAt: rfxNow(),
+          by: scope.actor ?? NO_PERSON,
+        });
+        return;
+      }
       default:
         break;
     }
-    rfpEventStore.update(id, (e) => ({ ...e, status: toState as RfxEventStatus }));
+    rfpEventStore.update(id, (e) => ({ ...e, status: toState as RfpEventStatus }));
   },
   creationOwner: () => null,
   create: (payload, toState) => {
@@ -3753,8 +3815,8 @@ const awardTrail = (): AwardTrail => ({
 });
 
 /** Every award recorded on an RFQ, cancelled ones included (newest first). */
-const rfqAwardRecordsOf = (rfqId: string) =>
-  awardStore.all().filter((a) => a.eventType === 'rfq' && a.eventId === rfqId);
+const rfqAwardRecordsOf = (rfqId: string): RfqAwardRecord[] =>
+  awardStore.all().filter((a): a is RfqAwardRecord => a.eventType === 'rfq' && a.eventId === rfqId);
 
 /**
  * The awards IN FORCE on an RFQ (the store keeps the newest first). RFx C2 —
@@ -3884,6 +3946,139 @@ bindPolicyHook(POLICY_HOOKS.RFQ_AWARD_SAP_GOVERNED, ({ payload, entityId }) => {
     trail: awardTrail(),
   });
   return refusal ? { ok: false, reason: awardCancelRefusalText(refusal) } : { ok: true };
+});
+
+// ── RFx D2 — the RFP award (NR-2 BR-01, BR-05 to BR-10; NR-3) ────────────────
+
+/** Every award recorded on an RFP, cancelled ones included (newest first). */
+const rfpAwardRecordsOf = (rfpId: string) => awardStore.all().filter(isRfpAward).filter((a) => a.eventId === rfpId);
+
+/** The awards IN FORCE on an RFP: a cancelled one's options are open again. */
+const rfpAwardsOf = (rfpId: string) => awardsInForce(rfpAwardRecordsOf(rfpId), awardTrail());
+
+/** The RFP's award items: the options of its closed firm-offer rounds (`awardItemsOfRfp`). */
+const rfpAwardItems = (rfp: RfpEvent): readonly AwardItem[] =>
+  awardItemsOfRfp(rfp, rfpOfferRoundStore.all(), rfpFirmOfferStore.all(), {
+    nowIso: rfxNow(),
+    options: rfpRoundOptions(rfp),
+    priorAwards: rfpAwardsOf(rfp.id),
+  });
+
+/** The award lines a payload names (the rule refuses a line that names no option). */
+const rfpAwardLinesOf = (payload: Record<string, unknown>): RfpAwardLine[] =>
+  Array.isArray(payload.awardLines) ? (payload.awardLines as RfpAwardLine[]) : [];
+
+/**
+ * A line as it is recorded: only the RFP line's own fields (a stray
+ * `quotationId` is never kept), the side typed and its point.
+ */
+function recordedRfpAwardLine(items: readonly AwardItem[], line: RfpAwardLine): RfpAwardLine {
+  const item = itemOfAwardLine(items, line);
+  const breakQty = item ? lineBreakOf(item, line) : line.awardTierQty;
+  return {
+    supplierId: line.supplierId,
+    optionRef: line.optionRef,
+    firmOfferId: line.firmOfferId,
+    sharePct: line.sharePct,
+    quantity: line.quantity,
+    splitBasis: basisOf(line),
+    ...(breakQty !== undefined ? { awardTierQty: breakQty } : {}),
+  };
+}
+
+// ONE policy for the RFP's final and partial award, told apart by the target
+// state, over the SAME shape rule the RFQ uses. In order: the shape over the
+// options of the closed rounds (the firm offer in force, still valid) · no
+// option already sourced by an RFQ created from this RFP (NR-2 BR-08) · the
+// options left open · CR-23 for every awarded supplier (BR-07) · a reason
+// (BR-06). `awardRefusalText(…, 'rfp')` words the codes for an RFP.
+bindPolicyHook(POLICY_HOOKS.RFP_AWARD_GOVERNED, ({ payload, entityId, toState }) => {
+  const rfp = rfpEventStore.get(entityId);
+  if (!rfp) return { ok: false, reason: 'RFP_NOT_FOUND: the award names no RFP this hub holds' };
+  const lines = rfpAwardLinesOf(payload);
+  const options = rfpRoundOptions(rfp);
+  const items = rfpAwardItems(rfp);
+  const shape = awardShapeRefusal(items, lines, []);
+  if (shape) return { ok: false, reason: awardRefusalText(shape, 'rfp') };
+  const sourced = rfqSourcedOptionRefs(rfqStore.all(), rfp.id);
+  const elsewhere = rfpOptionSourcedRefusal(
+    lines.map((l) => l.optionRef),
+    sourced,
+    (rfqNumber) => `sourced by ${rfqNumber}, an RFQ created from this RFP`,
+    options,
+  );
+  if (elsewhere) return { ok: false, reason: awardRefusalText(elsewhere, 'rfp') };
+  // NR-3 BR-06 — an option an RFQ sources is settled there, so it does not
+  // hold the RFP open; "Will not award" rides on the final award only.
+  const final = toState === 'Awarded';
+  const willNotAward = final ? notAwardedItemsOf(payload) : [];
+  const unknown = willNotAward.find((key) => !items.some((i) => i.key === key));
+  if (unknown !== undefined) {
+    return { ok: false, reason: awardRefusalText({ code: 'AWARD_ITEM_UNKNOWN', detail: `"${unknown}"` }, 'rfp') };
+  }
+  const open = itemsOpenAfter(items, lines, [...willNotAward, ...sourced.keys()]);
+  if (final && open.length > 0) {
+    return {
+      ok: false,
+      reason: awardRefusalText({ code: 'AWARD_ITEMS_OPEN', item: open.map((i) => i.name).join(', ') }, 'rfp'),
+    };
+  }
+  if (!final && open.length === 0) {
+    return { ok: false, reason: awardRefusalText({ code: 'AWARD_NOTHING_OPEN' }, 'rfp') };
+  }
+  // NR-2 BR-07 / edge case 4 — CR-23 at award, for every awarded supplier.
+  const now = rfxNow();
+  for (const supplierId of [...new Set(lines.map((l) => l.supplierId))]) {
+    const gate = rfpSupplierGate(supplierId, now);
+    if (!gate.passes) return { ok: false, reason: gateRefusal(supplierId, gate.failed) };
+  }
+  // NR-2 BR-06 — every RFP award needs a reason.
+  const reason = typeof payload.awardReason === 'string' ? payload.awardReason.trim() : '';
+  if (reason.length === 0) return { ok: false, reason: awardRefusalText({ code: 'AWARD_REASON_REQUIRED' }, 'rfp') };
+  return { ok: true };
+});
+
+// RFx D2 (NR-3 BR-09) — the RFP's cancel pair, by the rule the RFQ's uses.
+bindPolicyHook(POLICY_HOOKS.RFP_AWARD_CANCEL_GOVERNED, ({ payload, entityId, toState }) => {
+  const refusal = awardCancelRefusal({
+    awardId: typeof payload.awardId === 'string' ? payload.awardId : '',
+    reason: typeof payload.cancelReason === 'string' ? payload.cancelReason : '',
+    eventAwards: rfpAwardRecordsOf(entityId),
+    trail: awardTrail(),
+    partial: toState === 'Partly awarded',
+    eventType: 'rfp',
+  });
+  return refusal ? { ok: false, reason: awardCancelRefusalText(refusal) } : { ok: true };
+});
+
+// RFx D2 (NR-3 BR-10) — "Raised in SAP" on an RFP award.
+bindPolicyHook(POLICY_HOOKS.RFP_AWARD_SAP_GOVERNED, ({ payload, entityId }) => {
+  const refusal = awardSapMarkRefusal({
+    awardId: typeof payload.awardId === 'string' ? payload.awardId : '',
+    sapDocumentNo: typeof payload.sapDocumentNo === 'string' ? payload.sapDocumentNo : '',
+    eventAwards: rfpAwardRecordsOf(entityId),
+    trail: awardTrail(),
+  });
+  return refusal ? { ok: false, reason: awardCancelRefusalText(refusal) } : { ok: true };
+});
+
+// RFx D2 (NR-2 BR-08, AC-06) — an RFQ created from an RFP may not source an
+// option an award in force on that RFP already placed; the other options pass.
+// The rule is the one the RFP → RFQ pre-fill leaves such options out by.
+bindPolicyHook(POLICY_HOOKS.RFQ_CREATE_RFP_OPTIONS_FREE, ({ payload }) => {
+  const rfpId = typeof payload.sourceRfpId === 'string' ? payload.sourceRfpId.trim() : '';
+  const refs = Array.isArray(payload.sourceRfpOptionRefs)
+    ? (payload.sourceRfpOptionRefs as unknown[]).filter((x): x is string => typeof x === 'string')
+    : [];
+  if (!rfpId || refs.length === 0) return { ok: true };
+  const rfp = rfpEventStore.get(rfpId);
+  const refusal = rfpOptionSourcedRefusal(
+    refs,
+    rfpAwardedOptionRefs(rfpAwardsOf(rfpId)),
+    (awardId) => `awarded on ${rfp?.eventNumber ?? rfpId} (${awardId})`,
+    rfp ? rfpRoundOptions(rfp) : [],
+  );
+  return refusal ? { ok: false, reason: awardRefusalText(refusal, 'rfp') } : { ok: true };
 });
 
 const incomingShipmentTarget: CommandTarget = {
@@ -4789,7 +4984,8 @@ const resolveCascades = (ctx: CascadeContext): CascadeCommand[] => {
     // machine's: a named quote in any other state is refused and recorded.
     if (ctx.transitionId === 't_rfq_award_cancel' || ctx.transitionId === 't_rfq_award_cancel_partial') {
       const cancelled = awardStore.get(typeof ctx.payload.awardId === 'string' ? ctx.payload.awardId : '');
-      if (!cancelled) return [];
+      // The RFQ cascade reverses an RFQ award only (an RFP award has none).
+      if (!cancelled || cancelled.eventType !== 'rfq') return [];
       const stillNamed = new Set(rfqAwardsOf(ctx.entityId).flatMap((a) => a.lines.map((l) => l.quotationId)));
       const named = new Set(cancelled.lines.map((l) => l.quotationId).filter((q) => !stillNamed.has(q)));
       const siblings = quotationStore.forRfq(ctx.entityId);

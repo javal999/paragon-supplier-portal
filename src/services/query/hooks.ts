@@ -150,6 +150,10 @@ export const useNegotiationRounds = () =>
 export const useRfpOfferRounds = () =>
   useServiceQuery(['procurement', 'rfpOfferRounds'], (svc, scope) => svc.procurement.getRfpOfferRounds(scope));
 
+/** RFx D2 — awards on an RFP. A supplier reads only its own outcome. */
+export const useRfpAwards = () =>
+  useServiceQuery(['procurement', 'rfpAwards'], (svc, scope) => svc.procurement.getRfpAwards(scope));
+
 /** RFx spec 2026-09-21 — invitees' intent and confidentiality acceptance. */
 export const useRfqEngagement = () =>
   useServiceQuery(['procurement', 'rfqEngagement'], (svc, scope) => svc.procurement.getRfqEngagement(scope));

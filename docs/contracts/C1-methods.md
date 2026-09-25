@@ -1,6 +1,6 @@
 # C1 — Method Surface
 
-Three distinct axes. **86** (service surface) · **173** (transition catalog) · **37** (wired
+Three distinct axes. **87** (service surface) · **178** (transition catalog) · **37** (wired
 targets). They measure different things; this file keeps them separate.
 
 > ⚠️ **THIS DOCUMENT IS PINNED TO THE TREE, AND THE PIN IS WHY THE NUMBERS ABOVE ARE ALLOWED TO
@@ -32,7 +32,7 @@ Source of truth: `src/services/data/types.ts` (service + command types),
 
 ---
 
-## Axis 1 — the 86-method service surface (`IDataService`)
+## Axis 1 — the 87-method service surface (`IDataService`)
 
 The single interface the Phase-F1 real adapter implements; pages call it through
 `useDataService()` and do not change when the mock is swapped for `httpDataService`. Every method
@@ -60,7 +60,7 @@ interface IDataService {
 | Sub-service | Count | Methods |
 |---|---|---|
 | `ISupplierService` | 3 | `list`, `getById`, `getCurrent` |
-| `IProcurementService` | 47 | `getPurchaseOrders`, `getPurchaseOrder`, `getInventory`, `getStockAccess`, `getCapacityPlans`, `getInventoryAlerts`, `getForecastVersions`, `getForecastCommitments`, `getForecastCoverage`, `getSupplierReliability`, `getMaterialRequirement`, `getSafetyStock`, `getOrderPlan`, `getReschedule`, `getDataHealth`, `getStabilisedPlan`, `getRFQs`, `getQuotations`, `getInviteeCandidates`, `getRfiEvents`, `getRfpEvents`, `getNegotiationRounds`, `getRfpOfferRounds`, `getAwards`, `getRfqEngagement`, `getRfqClarifications`, `getRfqComplianceGate`, `getShipments`, `getASNs`, `getGoodsReceipts`, `getCallOffs`, `getBuyerInvoices`, `getSupplierInvoices`, `getContracts`, `getObligations`, `getDocuments`, `getStorefrontCatalog`, `getStorefrontCerts`, `getStorefrontProducts`, `getKpis`, `getPerformanceTrend`, `getSupplierScorecards`, `getRequisitions`, `getPrIntake`, `getSupplierApplications`, `getProductionLines`, `getSupplierHealth` |
+| `IProcurementService` | 48 | `getPurchaseOrders`, `getPurchaseOrder`, `getInventory`, `getStockAccess`, `getCapacityPlans`, `getInventoryAlerts`, `getForecastVersions`, `getForecastCommitments`, `getForecastCoverage`, `getSupplierReliability`, `getMaterialRequirement`, `getSafetyStock`, `getOrderPlan`, `getReschedule`, `getDataHealth`, `getStabilisedPlan`, `getRFQs`, `getQuotations`, `getInviteeCandidates`, `getRfiEvents`, `getRfpEvents`, `getNegotiationRounds`, `getRfpOfferRounds`, `getAwards`, `getRfpAwards`, `getRfqEngagement`, `getRfqClarifications`, `getRfqComplianceGate`, `getShipments`, `getASNs`, `getGoodsReceipts`, `getCallOffs`, `getBuyerInvoices`, `getSupplierInvoices`, `getContracts`, `getObligations`, `getDocuments`, `getStorefrontCatalog`, `getStorefrontCerts`, `getStorefrontProducts`, `getKpis`, `getPerformanceTrend`, `getSupplierScorecards`, `getRequisitions`, `getPrIntake`, `getSupplierApplications`, `getProductionLines`, `getSupplierHealth` |
 | `IRiskService` | 7 | `getRiskAlerts`, `getGeoRisks`, `getExposure`, `getScenarios`, `getCompliance`, `getComplianceRegistry`, `getCommodities` |
 | `IDiscoveryService` | 4 | `getRecommended`, `getQualifications`, `getMarketIntel`, `getSingleSourceItems` |
 | `IAnalyticsService` | 7 | `getSummary`, `getSpendByCategory`, `getTopSuppliers`, `getOtifTrend`, `getPoVolumeTrend`, `getChannelMix`, `getSupplierPerformance` |
@@ -68,10 +68,10 @@ interface IDataService {
 | `IDeliveryService` | 4 | `getAgreements`, `releaseLines`, `confirmMatch`, `editPolicy` |
 | `IChaseService` | 1 | `getUnifiedChase` |
 | `IEnforcementService` | 1 | `getEnforcementSettings` |
-| **read subtotal** | **82** | |
+| **read subtotal** | **83** | |
 | `ICommandService` | 3 | `dispatch`, `getCommandStatus`, `settle` |
 | top-level | 1 | `getCapabilities` |
-| **TOTAL** | **86** | |
+| **TOTAL** | **87** | |
 
 **Return contract:** list reads return `Page<T>` (DR-5 — see C2); single reads return `T | null`;
 `getSummary` returns a summary object or `null` (buyer-populated, supplier-null). Failure is
@@ -87,7 +87,7 @@ the string, because those are different claims and only the first is the contrac
 
 ---
 
-## Axis 2 — the 173-transition catalog (43 flows)
+## Axis 2 — the 178-transition catalog (43 flows)
 
 Every authored state-machine edge across the registered flows (`id: 't_<entity>_<verb>'`). Derived
 from `getKnownFlows()` — the seeded registry — never from a grep over the flow files, because a
@@ -134,12 +134,12 @@ transition id can be assembled at a call site rather than written as a literal (
 | `sapChangeMark.flow.ts` | `sapChangeMark` | 1 | `t_sapchange_mark` | **wired** |
 | `rfiEvent.flow.ts` | `rfiEvent` | 6 | `t_rfi_create`, `t_rfi_revise_draft`, `t_rfi_publish`, `t_rfi_extend`, `t_rfi_close`, `t_rfi_cancel` | **wired** |
 | `rfiResponse.flow.ts` | `rfiResponse` | 2 | `t_rfiresponse_save`, `t_rfiresponse_submit` | **wired** |
-| `rfpEvent.flow.ts` | `rfpEvent` | 6 | `t_rfp_create`, `t_rfp_revise_draft`, `t_rfp_publish`, `t_rfp_extend`, `t_rfp_close`, `t_rfp_cancel` | **wired** |
+| `rfpEvent.flow.ts` | `rfpEvent` | 11 | `t_rfp_create`, `t_rfp_revise_draft`, `t_rfp_publish`, `t_rfp_extend`, `t_rfp_close`, `t_rfp_award`, `t_rfp_award_partial`, `t_rfp_award_cancel`, `t_rfp_award_cancel_partial`, `t_rfp_award_sap_raised`, `t_rfp_cancel` | **wired** |
 | `rfpResponse.flow.ts` | `rfpResponse` | 2 | `t_rfpresponse_save`, `t_rfpresponse_submit` | **wired** |
 | `negotiationRound.flow.ts` | `negotiationRound` | 2 | `t_negotiationround_open`, `t_negotiationround_close` | **wired** |
 | `rfpOfferRound.flow.ts` | `rfpOfferRound` | 2 | `t_rfp_round_open`, `t_rfp_round_close` | **wired** |
 | `rfpFirmOffer.flow.ts` | `rfpFirmOffer` | 2 | `t_rfpfirmoffer_submit`, `t_rfpfirmoffer_revise` | **wired** |
-| **TOTAL** | | **173** | | |
+| **TOTAL** | | **178** | | |
 
 **Flow shape** (`schema.ts`, `FlowDefinition` / `TransitionDef`): each transition declares
 `from[]` / `to` / `trigger` / `requiredRole` / `requiredFields[]` / `policyHooks[]` /

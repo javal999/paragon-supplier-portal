@@ -2306,6 +2306,7 @@ export function useForecastCommand() {
 
 import type {
   AwardLine,
+  RfpAwardLine,
   RfiAnswer,
   RfiQuestion,
   RfpFirmPrice,
@@ -2521,7 +2522,21 @@ export type RfxCommandVars =
       awardedSupplierId: string;
       awardLines: readonly AwardLine[];
       awardReason?: string;
-    };
+    }
+  // — RFx D2 · award an RFP per option on firm offers, cancel, SAP marking —
+  | {
+      // The FINAL award (`t_rfp_award`): every option of the closed rounds
+      // settled, now or earlier, or named in `notAwardedItems` (by option ref).
+      verb: 'awardRfp';
+      rfpId: string;
+      awardLines: readonly RfpAwardLine[];
+      awardReason: string;
+      notAwardedItems?: readonly string[];
+    }
+  | { verb: 'awardRfpPartial'; rfpId: string; awardLines: readonly RfpAwardLine[]; awardReason: string }
+  | { verb: 'cancelRfpAward'; rfpId: string; awardId: string; cancelReason: string }
+  | { verb: 'cancelRfpAwardPartial'; rfpId: string; awardId: string; cancelReason: string }
+  | { verb: 'markRfpAwardSap'; rfpId: string; awardId: string; sapDocumentNo: string };
 
 /** Every read an RFx act can change, on either persona. */
 const RFX_READS = new Set([
@@ -2530,6 +2545,7 @@ const RFX_READS = new Set([
   'negotiationRounds',
   'rfpOfferRounds',
   'awards',
+  'rfpAwards',
   'rfqs',
   'quotations',
   'inviteeCandidates',
@@ -2825,6 +2841,36 @@ export function useRfxCommand() {
             payload: { ...payload, awardLines: awardLines.map((l) => ({ ...l })) },
           });
         }
+        case 'awardRfp':
+        case 'awardRfpPartial': {
+          const { verb, rfpId, awardLines, ...rest } = vars;
+          const notAwardedItems = verb === 'awardRfp' ? vars.notAwardedItems : undefined;
+          return svc.commands.dispatch(scope, {
+            transitionId: verb === 'awardRfp' ? 't_rfp_award' : 't_rfp_award_partial',
+            entity: 'rfpEvent',
+            entityId: rfpId,
+            payload: {
+              awardReason: rest.awardReason,
+              awardLines: awardLines.map((l) => ({ ...l })),
+              ...(notAwardedItems ? { notAwardedItems: [...notAwardedItems] } : {}),
+            },
+          });
+        }
+        case 'cancelRfpAward':
+        case 'cancelRfpAwardPartial':
+          return svc.commands.dispatch(scope, {
+            transitionId: vars.verb === 'cancelRfpAward' ? 't_rfp_award_cancel' : 't_rfp_award_cancel_partial',
+            entity: 'rfpEvent',
+            entityId: vars.rfpId,
+            payload: { awardId: vars.awardId, cancelReason: vars.cancelReason },
+          });
+        case 'markRfpAwardSap':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_rfp_award_sap_raised',
+            entity: 'rfpEvent',
+            entityId: vars.rfpId,
+            payload: { awardId: vars.awardId, sapDocumentNo: vars.sapDocumentNo },
+          });
       }
     },
     onSettled: () => {

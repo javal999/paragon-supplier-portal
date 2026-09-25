@@ -155,6 +155,13 @@ export interface DeadlineExtension {
 export type RfxEventStatus = 'Draft' | 'Open' | 'Closed' | 'Cancelled';
 
 /**
+ * RFx D2 — an RFP's states: the RFx ones plus the two its award reaches
+ * (`rfpEvent.flow.ts`). An RFI is never awarded (RFX-D1), so the shared union
+ * stays as it is.
+ */
+export type RfpEventStatus = RfxEventStatus | 'Partly awarded' | 'Awarded';
+
+/**
  * BL-93 / CE-08 — one edit of a DRAFT event (the revise-draft verbs). WHO is
  * the session's actor and WHEN is the store's clock; neither comes from the
  * payload, so a caller cannot backdate or reassign its own edit. Appended,
@@ -327,7 +334,7 @@ export interface RfpEvent {
   readonly scope: string;
   readonly materialCategory: string;
   readonly purchasingGroup?: string;
-  readonly status: RfxEventStatus;
+  readonly status: RfpEventStatus;
   readonly createdAt: string;
   readonly responseDeadline: string;
   readonly currency: BidCurrency;
@@ -482,23 +489,82 @@ export interface AwardLine {
    * read at its item's only break, and recorded with it.
    */
   readonly awardTierQty?: number;
+  /** RFx D2 — an RFQ line names no RFP option and no firm offer. */
+  readonly optionRef?: never;
+  readonly firmOfferId?: never;
 }
+
+/**
+ * RFx D2 (NR-2 BR-05, AR-02) — one line of an RFP award: a share of ONE option
+ * at one quantity point of a firm-offer round, on one supplier's FIRM OFFER.
+ * It names the option and the offer in place of an RFQ item and quotation; an
+ * offer id is never put in `quotationId`, so no RFQ-side reader can take an
+ * RFP line for a quote.
+ */
+export interface RfpAwardLine {
+  readonly supplierId: string;
+  /**
+   * The option, by its ref (`rfpOptionRef`): a buyer option's id, or
+   * `${proposerSupplierId}:${optionId}` for a supplier-proposed one, so two
+   * suppliers' `sup-opt-1` stay two options.
+   */
+  readonly optionRef: string;
+  /** The `RfpFirmOffer` whose firm price this share is awarded on. */
+  readonly firmOfferId: string;
+  readonly sharePct: number;
+  readonly quantity: number;
+  /** NR-3 BR-02 — the side the buyer typed; recorded on every line. */
+  readonly splitBasis?: AwardSplitBasis;
+  /** The quantity point of the round this line was awarded at (NR-2 BR-05). */
+  readonly awardTierQty?: number;
+  /** An RFP line names no RFQ quotation and no RFQ item. */
+  readonly quotationId?: never;
+  readonly itemCode?: never;
+  readonly itemLineNo?: never;
+}
+
+/** Either arm's line, where a rule reads both (the shared award shape rule). */
+export type AnyAwardLine = AwardLine | RfpAwardLine;
 
 /** NR-3 BR-02 — the side of an award line the buyer typed. */
 export type AwardSplitBasis = 'pct' | 'qty';
 
 /**
- * AR-02 — the kind of sourcing event an award record belongs to. Only the RFQ
- * arm exists; the RFP arm is added by the RFP award (NR-2, task D2), which
- * reuses this record rather than adding a parallel one.
+ * AR-02 — the kind of sourcing event an award record belongs to. RFx D2 adds
+ * the RFP arm, which reuses this record rather than adding a parallel one.
  */
-export type AwardEventType = 'rfq';
+export type AwardEventType = 'rfq' | 'rfp';
 
 /** REQ-E03-05 BR-09 — the hub's record of an award. No PO, no contract. */
-export interface AwardRecord {
+export type AwardRecord = RfqAwardRecord | RfpAwardRecord;
+
+/**
+ * RFx D2 (NR-2 BR-05 to BR-07) — an award on an RFP: per option, on firm
+ * offers. The same record as the RFQ's, with its own lines. The reason is
+ * always there (NR-2 BR-06: every RFP award needs one).
+ */
+export interface RfpAwardRecord {
+  readonly id: string;
+  readonly eventType: 'rfp';
+  readonly eventId: string;
+  readonly awardedAt: string;
+  readonly lines: readonly RfpAwardLine[];
+  readonly reason: string;
+  /**
+   * NR-2 BR-09 — the responders told they were not awarded. Empty on a partial
+   * award; the final award names every responder no award of the RFP named.
+   */
+  readonly notAwardedSupplierIds: readonly string[];
+  /** An RFP award is not judged against a best-scored quote (NR-2 BR-06). */
+  readonly bestScoredQuotationId?: never;
+  readonly bestScoredByItem?: never;
+}
+
+/** REQ-E03-05 BR-09 — the hub's record of an award on an RFQ. */
+export interface RfqAwardRecord {
   readonly id: string;
   /** AR-02 — the event type and id this award is for (was `rfqId`). */
-  readonly eventType: AwardEventType;
+  readonly eventType: 'rfq';
   readonly eventId: string;
   readonly awardedAt: string;
   readonly lines: readonly AwardLine[];
