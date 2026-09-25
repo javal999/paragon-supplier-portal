@@ -163,6 +163,10 @@ const LANE_BUNDLES = Object.freeze({
       'rfi:create', 'rfi:publish',
       'rfp:create', 'rfp:publish',
       'rfq:negotiate',
+      // NR-2 BR-02 (D-1) — asking shortlisted RFP suppliers for FIRM prices.
+      // Beside `rfq:negotiate` for the same reason it sits beside `rfq:award`:
+      // the same person's job today, a separate act on a separate event type.
+      'rfp:negotiate',
       'contract:draft', 'contract:activate', 'contract:renew', 'contract:terminate',
       'obligation:track', 'obligation:complete',
       'pr:approve', 'pr:reject',
@@ -350,6 +354,10 @@ const LANE_BUNDLES = Object.freeze({
       // price. The three are one conversation and one lane.
       'rfiresponse:answer',
       'rfpresponse:answer',
+      // NR-2 BR-01 / BR-03 (D-1) — a firm offer in an RFP round binds the
+      // supplier to its price until the validity date: the same seat that
+      // answered the RFP and that quotes.
+      'rfpfirmoffer:submit',
       'requirementresponse:submit',
       // REQ-E06-01 — opening a forecast version is recorded for PTI; the people
       // who commit against the forecast are the ones who read it.

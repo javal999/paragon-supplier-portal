@@ -511,6 +511,18 @@ export const processFlowPurposeEn: Record<string, string> = {
     'Buying asks the suppliers it shortlisted to improve what they offered, with a date to answer by and an optional message and target figure. Nobody else may answer.',
   'processFlows.purpose.t_negotiationround_close':
     'Buying stops taking improved offers for this round. A supplier that said nothing keeps what it offered before.',
+  'processFlows.purpose.entity.rfpOfferRound':
+    'A round of asking shortlisted RFP suppliers for firm prices on the options buying chose, at set quantities, with a date to answer by.',
+  'processFlows.purpose.t_rfp_round_open':
+    'After the proposals are in, buying asks the suppliers that answered and pass the compliance check for firm prices on chosen options and quantities. Nobody else may answer.',
+  'processFlows.purpose.t_rfp_round_close':
+    'Buying stops taking firm offers for this round. Offers already sent stay on record.',
+  'processFlows.purpose.entity.rfpFirmOffer':
+    'One supplier’s firm offer in a round: what it will charge per option and quantity, and the date it holds that until. Every version it sent is kept.',
+  'processFlows.purpose.t_rfpfirmoffer_submit':
+    'The supplier commits to what it will charge for the options and quantities asked, until a date no earlier than the round deadline.',
+  'processFlows.purpose.t_rfpfirmoffer_revise':
+    'The supplier changes its firm offer before the round closes. The earlier version is kept and the new one counts.',
 };
 
 export const processFlowPurposeId: Record<string, string> = {
@@ -984,4 +996,16 @@ export const processFlowPurposeId: Record<string, string> = {
     'Pembelian meminta pemasok dalam daftar pendek memperbaiki tawarannya, dengan tanggal untuk menjawab serta pesan dan angka target bila ada. Pihak lain tidak boleh menjawab.',
   'processFlows.purpose.t_negotiationround_close':
     'Pembelian berhenti menerima tawaran perbaikan untuk putaran ini. Pemasok yang tidak menjawab tetap pada tawaran sebelumnya.',
+  'processFlows.purpose.entity.rfpOfferRound':
+    'Satu putaran meminta pemasok RFP dalam daftar pendek memberi harga pasti untuk opsi yang dipilih pembelian, pada kuantitas tertentu, dengan tanggal untuk menjawab.',
+  'processFlows.purpose.t_rfp_round_open':
+    'Setelah proposal masuk, pembelian meminta pemasok yang menjawab dan lolos pemeriksaan kepatuhan memberi harga pasti untuk opsi dan kuantitas yang dipilih. Pihak lain tidak boleh menjawab.',
+  'processFlows.purpose.t_rfp_round_close':
+    'Pembelian berhenti menerima penawaran pasti untuk putaran ini. Penawaran yang sudah dikirim tetap tercatat.',
+  'processFlows.purpose.entity.rfpFirmOffer':
+    'Harga pasti satu pemasok dalam satu putaran: per opsi dan kuantitas, beserta tanggal berlakunya. Setiap versi yang dikirim disimpan.',
+  'processFlows.purpose.t_rfpfirmoffer_submit':
+    'Pemasok berkomitmen pada harga pasti untuk opsi dan kuantitas yang diminta, sampai tanggal yang tidak lebih awal dari batas waktu putaran.',
+  'processFlows.purpose.t_rfpfirmoffer_revise':
+    'Pemasok mengubah penawaran pastinya sebelum putaran ditutup. Versi sebelumnya disimpan dan versi baru yang berlaku.',
 };

@@ -338,6 +338,10 @@ export const TRANSITION_PURPOSE: FlowAnnotations = Object.freeze({
   t_quotation_revise: { purposeKey: 'processFlows.purpose.t_quotation_revise' },
   t_negotiationround_open: { purposeKey: 'processFlows.purpose.t_negotiationround_open' },
   t_negotiationround_close: { purposeKey: 'processFlows.purpose.t_negotiationround_close' },
+  t_rfp_round_open: { purposeKey: 'processFlows.purpose.t_rfp_round_open' },
+  t_rfp_round_close: { purposeKey: 'processFlows.purpose.t_rfp_round_close' },
+  t_rfpfirmoffer_submit: { purposeKey: 'processFlows.purpose.t_rfpfirmoffer_submit' },
+  t_rfpfirmoffer_revise: { purposeKey: 'processFlows.purpose.t_rfpfirmoffer_revise' },
 });
 
 /**
@@ -390,6 +394,8 @@ export const ENTITY_PURPOSE: FlowAnnotations = Object.freeze({
   rfpEvent: { purposeKey: 'processFlows.purpose.entity.rfpEvent' },
   rfpResponse: { purposeKey: 'processFlows.purpose.entity.rfpResponse' },
   negotiationRound: { purposeKey: 'processFlows.purpose.entity.negotiationRound' },
+  rfpOfferRound: { purposeKey: 'processFlows.purpose.entity.rfpOfferRound' },
+  rfpFirmOffer: { purposeKey: 'processFlows.purpose.entity.rfpFirmOffer' },
 });
 
 /**

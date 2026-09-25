@@ -586,6 +586,18 @@ export const POLICY_HOOKS = {
    */
   NEGOTIATION_ROUND_VALID: 'negotiation_round_valid',
   /**
+   * RFP firm-offer round open (NR-2 BR-02): the RFP is Closed, the options
+   * exist (the buyer's or a submitted proposal's), the quantity points are
+   * above zero, and every invitee submitted a response and passes CR-23.
+   */
+  RFP_OFFER_ROUND_VALID: 'rfp_offer_round_valid',
+  /**
+   * RFP firm offer submit / revise (NR-2 BR-01 / BR-03): an invited supplier,
+   * an open round inside its deadline, prices only for the round's options and
+   * points and above zero, and a validity reaching the round deadline.
+   */
+  RFP_FIRM_OFFER_VALID: 'rfp_firm_offer_valid',
+  /**
    * RFQ award (REQ-E03-05 BR-06 / BR-07): **each item's shares total 100%**,
    * every share and quantity is positive, and an award that does NOT follow the
    * best-scored quote carries a reason.

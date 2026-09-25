@@ -71,6 +71,8 @@ export { rfiResponseFlow } from './flows/rfiResponse.flow';
 export { rfpEventFlow } from './flows/rfpEvent.flow';
 export { rfpResponseFlow } from './flows/rfpResponse.flow';
 export { negotiationRoundFlow } from './flows/negotiationRound.flow';
+export { rfpOfferRoundFlow } from './flows/rfpOfferRound.flow';
+export { rfpFirmOfferFlow } from './flows/rfpFirmOffer.flow';
 export { rfqIntentFlow } from './flows/rfqIntent.flow';
 export { rfqConfidentialityFlow } from './flows/rfqConfidentiality.flow';
 export { rfqClarificationFlow } from './flows/rfqClarification.flow';
@@ -118,6 +120,8 @@ import { rfiResponseFlow } from './flows/rfiResponse.flow';
 import { rfpEventFlow } from './flows/rfpEvent.flow';
 import { rfpResponseFlow } from './flows/rfpResponse.flow';
 import { negotiationRoundFlow } from './flows/negotiationRound.flow';
+import { rfpOfferRoundFlow } from './flows/rfpOfferRound.flow';
+import { rfpFirmOfferFlow } from './flows/rfpFirmOffer.flow';
 
 // Seed the shipped flows onto the singleton.
 flowRegistry.register(purchaseOrderFlow); // Step 3.1 — PO
@@ -198,3 +202,5 @@ flowRegistry.register(rfiResponseFlow); // REQ-E03-02 — the supplier's RFI ans
 flowRegistry.register(rfpEventFlow); // REQ-E03-04 — Request for Proposal
 flowRegistry.register(rfpResponseFlow); // REQ-E03-04 — the supplier's proposal
 flowRegistry.register(negotiationRoundFlow); // REQ-E03-05 — negotiation rounds
+flowRegistry.register(rfpOfferRoundFlow); // NR-2 BR-02 — firm-offer rounds on an RFP
+flowRegistry.register(rfpFirmOfferFlow); // NR-2 BR-01 / BR-03 — a supplier's firm offer in a round

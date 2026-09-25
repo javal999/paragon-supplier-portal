@@ -191,9 +191,20 @@ import {
   rfiEventStore,
   rfiResponseStore,
   rfpEventStore,
+  rfpFirmOfferStore,
+  rfpOfferRoundStore,
   rfpResponseStore,
 } from './stores/rfxStores';
-import { bestScoredByItem, bestScoredQuotationId, rfqSupplierGate, rfxNow } from './rfxReadModel';
+import {
+  bestScoredByItem,
+  bestScoredQuotationId,
+  rfpRespondedSupplierIds,
+  rfpRoundOptions,
+  rfpSupplierGate,
+  rfqSupplierGate,
+  rfxNow,
+} from './rfxReadModel';
+import { firmOfferRefusal, rfpOfferRoundRefusal } from '../../sourcing/rfpFirmOffer';
 import { isTieredRfq } from '../../sourcing/rfqComparison';
 import {
   awardedItemBreaks,
@@ -223,6 +234,8 @@ import type {
   RfiQuestion,
   RfiResponse,
   RfpEvent,
+  RfpFirmOffer,
+  RfpFirmPrice,
   RfpPricingAnswer,
   RfpPricingRequest,
   RfpResponse,
@@ -3242,6 +3255,132 @@ const negotiationRoundTarget: CommandTarget = {
   },
 };
 
+/**
+ * NR-2 BR-02 — a firm-offer round on a Closed RFP. Append-only: asking again is
+ * a new round; closing stamps `closedAt` once and edits nothing else.
+ */
+const rfpOfferRoundTarget: CommandTarget = {
+  readState: (id) => {
+    const round = rfpOfferRoundStore.get(id);
+    return round ? (round.closedAt !== undefined ? 'Closed' : 'Open') : null;
+  },
+  // Buyer-only. A supplier answers through `t_rfpfirmoffer_submit` on its own
+  // offer and never addresses the round, as with the RFQ negotiation round.
+  readScopeOwner: () => null,
+  readEntity: (id) => rfpOfferRoundStore.get(id) ?? null,
+  applyTransition: (id) => {
+    rfpOfferRoundStore.update(id, (r) => (r.closedAt !== undefined ? r : { ...r, closedAt: sdcClock.now() }));
+  },
+  creationOwner: () => null,
+  create: (payload) => {
+    const id = rfpOfferRoundStore.nextId();
+    const rfpId = String(payload.rfpId);
+    const strs = (v: unknown) =>
+      Array.isArray(v) ? [...new Set(v.filter((x): x is string => typeof x === 'string'))] : [];
+    rfpOfferRoundStore.add({
+      id,
+      rfpId,
+      roundNumber: rfpOfferRoundStore.all().filter((r) => r.rfpId === rfpId).length + 1,
+      optionRefs: strs(payload.optionRefs),
+      quantityPoints: [...new Set((payload.quantityPoints as number[]).filter((q) => typeof q === 'number'))].sort(
+        (a, b) => a - b,
+      ),
+      invitedSupplierIds: strs(payload.invitedSupplierIds),
+      deadline: String(payload.deadline),
+      ...(typeof payload.message === 'string' && payload.message.trim() ? { message: payload.message.trim() } : {}),
+      openedAt: sdcClock.now(),
+    });
+    return { entityId: id };
+  },
+};
+
+/** The firm prices a payload carries, as stored (the policy has checked them). */
+const firmPricesOf = (payload: Record<string, unknown>): RfpFirmPrice[] =>
+  (payload.prices as RfpFirmPrice[]).map((p) => ({ optionRef: p.optionRef, qty: p.qty, unitPrice: p.unitPrice }));
+
+/** The documents a payload carries, only when present. */
+const firmDocsOf = (payload: Record<string, unknown>): { documents?: readonly AttachmentMeta[] } =>
+  Array.isArray(payload.documents) && payload.documents.length > 0
+    ? { documents: payload.documents as AttachmentMeta[] }
+    : {};
+
+/**
+ * The next version of a firm offer, APPENDED (NR-2 BR-04). The top fields
+ * become the new version; `versions` keeps every earlier one.
+ */
+function withFirmVersion(offer: RfpFirmOffer, payload: Record<string, unknown>): RfpFirmOffer {
+  const now = sdcClock.now();
+  const docs = firmDocsOf(payload);
+  const next = {
+    version: offer.versions.length + 1,
+    prices: firmPricesOf(payload),
+    validUntil: String(payload.validUntil),
+    ...docs,
+    submittedAt: now,
+  };
+  // Rebuilt, not spread, so a revision without documents drops the earlier
+  // version's documents from the fields in force (they stay in `versions`).
+  return {
+    id: offer.id,
+    roundId: offer.roundId,
+    rfpId: offer.rfpId,
+    supplierId: offer.supplierId,
+    prices: next.prices,
+    validUntil: next.validUntil,
+    ...docs,
+    versions: [...offer.versions, next],
+    submittedAt: now,
+  };
+}
+
+/**
+ * NR-2 BR-01 / BR-03 — one supplier's firm offer in one round. The supplier
+ * owns it: another supplier's revise is refused at scope.
+ */
+const rfpFirmOfferTarget: CommandTarget = {
+  readState: (id) => (rfpFirmOfferStore.get(id) ? 'Submitted' : null),
+  readScopeOwner: (id) => rfpFirmOfferStore.get(id)?.supplierId ?? null,
+  readEntity: (id) => rfpFirmOfferStore.get(id) ?? null,
+  applyTransition: (id, _toState, payload) => {
+    rfpFirmOfferStore.update(id, (o) => withFirmVersion(o, payload));
+  },
+  // The supplier NAMES ITSELF, and the dispatcher holds a supplier scope to
+  // exactly that name. Whether it was asked is the policy's question, answered
+  // with ONE refusal for "no such round" and "not asked" (ROUND_NOT_INVITED),
+  // so a supplier cannot probe which rounds exist.
+  requireCreationOwner: true,
+  creationOwner: (payload) =>
+    typeof payload.supplierId === 'string' && payload.supplierId ? payload.supplierId : null,
+  create: (payload) => {
+    const roundId = String(payload.roundId);
+    const supplierId = String(payload.supplierId);
+    // ONE offer per supplier × round. Sending again appends a version to it
+    // rather than minting a second row, so "which offer counts?" has one answer.
+    const existing = rfpFirmOfferStore.all().find((o) => o.roundId === roundId && o.supplierId === supplierId);
+    if (existing) {
+      rfpFirmOfferStore.update(existing.id, (o) => withFirmVersion(o, payload));
+      return { entityId: existing.id };
+    }
+    const id = rfpFirmOfferStore.nextId();
+    const now = sdcClock.now();
+    const prices = firmPricesOf(payload);
+    const validUntil = String(payload.validUntil);
+    const docs = firmDocsOf(payload);
+    rfpFirmOfferStore.add({
+      id,
+      roundId,
+      rfpId: rfpOfferRoundStore.get(roundId)!.rfpId,
+      supplierId,
+      prices,
+      validUntil,
+      ...docs,
+      versions: [{ version: 1, prices, validUntil, ...docs, submittedAt: now }],
+      submittedAt: now,
+    });
+    return { entityId: id };
+  },
+};
+
 // — The RFx policy hooks ————————————————————————————————————————————————
 
 // REQ-E03-02 — the template must be one Procurement keeps, the deadline a date,
@@ -3555,6 +3694,54 @@ bindPolicyHook(POLICY_HOOKS.NEGOTIATION_ROUND_VALID, ({ payload }) => {
     return { ok: false, reason: 'BAD_TARGET: a target price is a number above zero' };
   }
   return { ok: true };
+});
+
+// NR-2 BR-02 — a firm-offer round opens on a Closed RFP, for options that exist
+// (the buyer's or a submitted proposal's), at quantity points above zero, and
+// only for suppliers that submitted a response and pass CR-23.
+bindPolicyHook(POLICY_HOOKS.RFP_OFFER_ROUND_VALID, ({ payload }) => {
+  const rfp = rfpEventStore.get(String(payload.rfpId));
+  const now = rfxNow();
+  const refusal = rfpOfferRoundRefusal(
+    {
+      optionRefs: payload.optionRefs,
+      quantityPoints: payload.quantityPoints,
+      invitedSupplierIds: payload.invitedSupplierIds,
+      deadline: payload.deadline,
+    },
+    {
+      rfpStatus: rfp?.status ?? null,
+      knownOptionRefs: rfp ? rfpRoundOptions(rfp).map((o) => o.ref) : [],
+      respondedSupplierIds: rfp ? rfpRespondedSupplierIds(rfp.id) : [],
+      gate: (sid) => rfpSupplierGate(sid, now),
+    },
+  );
+  return refusal ? { ok: false, reason: refusal } : { ok: true };
+});
+
+// NR-2 BR-01 / BR-03 — a firm offer (and each revision) comes from an invited
+// supplier, inside an open round, prices only what the round asks and above
+// zero, and holds until at least the round deadline. On a revise the round is
+// the one the offer was sent in, never one the payload names.
+bindPolicyHook(POLICY_HOOKS.RFP_FIRM_OFFER_VALID, ({ payload, entityId, target }) => {
+  const offer = entityId ? (target.readEntity(entityId) as RfpFirmOffer | null) : null;
+  const round = rfpOfferRoundStore.get(offer ? offer.roundId : String(payload.roundId));
+  const supplierId = offer ? offer.supplierId : String(payload.supplierId);
+  const refusal = firmOfferRefusal(
+    round
+      ? {
+          optionRefs: round.optionRefs,
+          quantityPoints: round.quantityPoints,
+          invitedSupplierIds: round.invitedSupplierIds,
+          deadline: round.deadline,
+          closed: round.closedAt !== undefined,
+        }
+      : null,
+    supplierId,
+    { prices: payload.prices, validUntil: payload.validUntil, documents: payload.documents },
+    rfxNow(),
+  );
+  return refusal ? { ok: false, reason: refusal } : { ok: true };
 });
 
 // ── RFx C1 — the award (NR-3 BR-02 to BR-08; AR-04) ─────────────────────────
@@ -4423,6 +4610,9 @@ const TARGETS: Record<string, CommandTarget> = {
   rfpEvent: rfpEventTarget,
   rfpResponse: rfpResponseTarget,
   negotiationRound: negotiationRoundTarget,
+  // NR-2 (D-1) — the firm-offer round on an RFP and the supplier's firm offer.
+  rfpOfferRound: rfpOfferRoundTarget,
+  rfpFirmOffer: rfpFirmOfferTarget,
 };
 
 // The behavior-wiring census (was the contract package's "6"; 7 with the G1.1
