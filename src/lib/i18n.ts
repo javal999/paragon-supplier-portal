@@ -96,6 +96,7 @@ import { materialRequirementEn, materialRequirementId } from './i18n/materialReq
 import { safetyStockEn, safetyStockId } from './i18n/safetyStock';
 import { orderPlanEn, orderPlanId } from './i18n/orderPlan';
 import { rescheduleEn, rescheduleId } from './i18n/reschedule';
+import { stabiliseEn, stabiliseId } from './i18n/stabilise';
 import { dataHealthEn, dataHealthId } from './i18n/dataHealth';
 // — Phase 6a RFx management (REQ-E03-01 to REQ-E03-05) —
 import { rfxEn, rfxId } from './i18n/rfx';
@@ -202,6 +203,7 @@ export const resources = {
       ...safetyStockEn,
       ...orderPlanEn,
       ...rescheduleEn,
+      ...stabiliseEn,
       ...dataHealthEn,
       ...rfxEn,
       ...rfxAuthoringEn,
@@ -663,6 +665,7 @@ export const resources = {
       ...safetyStockId,
       ...orderPlanId,
       ...rescheduleId,
+      ...stabiliseId,
       ...dataHealthId,
       ...rfxId,
       ...rfxAuthoringId,

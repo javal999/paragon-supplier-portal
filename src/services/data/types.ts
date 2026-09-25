@@ -64,10 +64,11 @@ import type {
 } from '../delivery/views';
 import type { SupplierReliability } from '../engine/reliability';
 import type { MaterialPlan, MaterialRequirementRun } from '../engine/requirement';
-import type { MaterialSafetyStock, SafetyStockRun } from '../engine/safetyStock';
+import type { MaterialSafetyStock, SafetyStockChange, SafetyStockRun } from '../engine/safetyStock';
 import type { MaterialOrderPlan, OrderPlanRun, WarehousePlan } from '../engine/orderSizing';
 import type { InfoLine, PlanChangeBaseline, Proposal, ProposalType, RescheduleRun, WarehouseReschedule } from '../engine/reschedule';
 import type { SupplierCfot } from '../engine/cfot';
+import type { SeriesResult, StabiliseParams, StabiliseRun } from '../engine/stabilise';
 import type { DataHealthReport } from '../engine/dataHealth';
 import type { DatasetProvenance } from '../engine/types';
 import type { ReleaseSelection } from '../delivery/release';
@@ -781,6 +782,8 @@ export interface MaterialRequirementView extends MaterialRequirementRun {
 export interface MaterialSafetyStockView extends MaterialSafetyStock {
   readonly materialLabel: string;
   readonly supplierName: string | null;
+  /** BR-06 (BL-116) — the change since the last run of the material's stream, and why. */
+  readonly change: SafetyStockChange;
 }
 
 /**
@@ -789,6 +792,8 @@ export interface MaterialSafetyStockView extends MaterialSafetyStock {
  */
 export interface SafetyStockView extends SafetyStockRun {
   readonly materials: readonly MaterialSafetyStockView[];
+  /** BR-06 — the last run each stream is compared with (X-04: packaging weekly, raw material monthly). */
+  readonly previousAsOf: { readonly packaging: string; readonly rawMaterial: string };
 }
 
 /** One material's E14-05 order plan as served, with display names. */
@@ -864,6 +869,39 @@ export interface RescheduleView extends RescheduleRun {
   readonly unconfirmedPoLines: number;
   /** "Taken to SAP" marks, latest first. */
   readonly sapMarks: readonly SapChangeMark[];
+}
+
+/** REQ-E14-06 — one supplier × material, with its display names. */
+export interface StabilisedSeriesView extends SeriesResult {
+  readonly supplierName: string;
+  readonly materialLabel: string;
+  readonly uom: import('../sdc/types').Uom;
+}
+
+/** REQ-E14-06 — the stabiliser run over one source of plan versions. */
+export interface StabiliseRunView extends Omit<StabiliseRun, 'series'> {
+  readonly series: readonly StabilisedSeriesView[];
+}
+
+/**
+ * REQ-E14-06 — stabilise and publish the plan, as served: computed at read on
+ * the engine's (SIMULATED) dataset with the damping weight in force (X-05).
+ * PTI only; a supplier gets null (X-03).
+ */
+export interface StabilisedPlanView {
+  /** The day the version to publish is made (the hub's present). */
+  readonly asOf: string;
+  /** The finished-goods plan snapshot today's requirement used. */
+  readonly planMadeAt: string | null;
+  readonly params: StabiliseParams;
+  /** The replayed version days per stream, oldest first (ENG-B30). */
+  readonly versions: { readonly packaging: readonly string[]; readonly rawMaterial: readonly string[] };
+  /** On the engine's material plan: E14-04 → E14-03, net requirement lot-for-lot (ENG-B29). */
+  readonly engine: StabiliseRunView;
+  /** On SAP's published plan history, the stand-in E14-02 measures (ENG-B33). */
+  readonly sapHistory: StabiliseRunView;
+  /** BR-06 — the range (P50 / P90) beside the quantity needs E14-09, which is not built. */
+  readonly rangeAvailable: false;
 }
 
 /**
@@ -2459,6 +2497,13 @@ export interface IProcurementService {
    * on the engine's (SIMULATED) dataset. PTI only.
    */
   getReschedule(scope: QueryScope): Promise<RescheduleView | null>;
+  /**
+   * REQ-E14-06 — the plan stabilised before publication (Firm frozen,
+   * Trade-off damped and held to the ENG-D8 band), the raw and stabilised
+   * values per supplier × material × week, and the effect on E14-02's
+   * plan-change measures; on the engine's (SIMULATED) dataset. PTI only.
+   */
+  getStabilisedPlan(scope: QueryScope): Promise<StabilisedPlanView | null>;
   /**
    * REQ-E14-01 — data health of the engine's inputs: freshness per feed
    * against the administrator's limits, and the feed spec's quality checks on

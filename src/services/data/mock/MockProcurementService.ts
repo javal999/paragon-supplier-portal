@@ -120,13 +120,22 @@ import type {
   SafetyStockView,
   OrderPlanView,
   RescheduleView,
+  StabiliseRunView,
+  StabilisedPlanView,
   DataHealthView,
 } from '../types';
 import { PR_INTAKE_LINES } from './fixtures/prIntake';
 import { engineDataset } from './fixtures/engineDataset';
 import { supplierReliability, trailingWindow } from '../../engine/reliability';
 import { DEFAULT_RECEIPT_OPTIONS, defaultRequirementOptions, openReceipts } from '../../engine/requirement';
-import { DEFAULT_SAFETY_STOCK_OPTIONS, requirementInputs, safetyStockRun, type SafetyStockRun } from '../../engine/safetyStock';
+import {
+  DEFAULT_SAFETY_STOCK_OPTIONS,
+  previousRunDate,
+  requirementInputs,
+  safetyStockChanges,
+  safetyStockRun,
+  type SafetyStockRun,
+} from '../../engine/safetyStock';
 import { plannedReceiptsOf, sizedRequirement } from '../../engine/orderSizing';
 import {
   STREAM_MATERIAL_TYPE,
@@ -135,8 +144,11 @@ import {
   orderSizingCosts,
   rescheduleOutThresholdWeeks,
   safetyLeadTimePercentile,
+  stabiliseDampingWeight,
   zoneLengthsFor,
 } from '../../transitions/forecastConfig';
+import { DEFAULT_STABILISE_PARAMS, stabilisePlan, type StabiliseRun } from '../../engine/stabilise';
+import { planHistoryInputs, stabiliseInputs, versionDays } from './stabiliseReadModel';
 import { planChangeGuard, poOrderLines, reschedule, termsKey, type LineTerms, type OpenOrderLine } from '../../engine/reschedule';
 import { callOffViews } from '../../transitions/callOffRules';
 import { callOffOrderLines } from './rescheduleReadModel';
@@ -590,6 +602,37 @@ export class MockProcurementService implements IProcurementService {
     };
   }
 
+  async getStabilisedPlan(scope: QueryScope): Promise<StabilisedPlanView | null> {
+    // REQ-E14-06, computed at read on the hub clock with the damping weight in
+    // force (X-05, ENG-D9). PTI only: engine output on synthetic data is never
+    // shown to a supplier (X-03), so a supplier scope gets nothing at all.
+    if (scope.personaType === 'supplier') return null;
+    const now = sdcClock.now();
+    const asOf = dayOf(now);
+    const data = engineDataset();
+    const params = { ...DEFAULT_STABILISE_PARAMS, tradeOffWeight: stabiliseDampingWeight() };
+    const { inputs, current } = stabiliseInputs(data, asOf, (d) => engineSafetyStock(d));
+    const uom = new Map(current.materials.map((m) => [m.materialCode, m.uom] as const));
+    const named = (run: StabiliseRun): StabiliseRunView => ({
+      ...run,
+      series: run.series.map((x) => ({
+        ...x,
+        supplierName: forecastSupplierName(x.supplierId),
+        materialLabel: labelOf(x.materialCode),
+        uom: uom.get(x.materialCode) ?? ('PCS' as const),
+      })),
+    });
+    return {
+      asOf,
+      planMadeAt: current.planMadeAt,
+      params,
+      versions: { packaging: versionDays(asOf, 'packaging'), rawMaterial: versionDays(asOf, 'rawMaterial') },
+      engine: named(stabilisePlan(inputs, params)),
+      sapHistory: named(stabilisePlan(planHistoryInputs(data, now, inputs), params)),
+      rangeAvailable: false,
+    };
+  }
+
   async getDataHealth(scope: QueryScope): Promise<DataHealthView | null> {
     // REQ-E14-01, computed at read on the hub clock with the freshness limits
     // in force (X-05). PTI only (X-03). ⚠️ The synthetic dataset is generated
@@ -614,13 +657,23 @@ export class MockProcurementService implements IProcurementService {
     // REQ-E14-04, computed at read on the hub clock with the administrator's
     // targets in force (X-05). PTI only (X-03).
     if (scope.personaType === 'supplier') return null;
-    const run = engineSafetyStock();
+    const asOf = dayOf(sdcClock.now());
+    const run = engineSafetyStock(asOf);
+    // BR-06 (BL-116, ENG-B52) — the last run of each stream is the same pure
+    // function at the previous run date of its cadence (X-04), recomputed now.
+    const previousAsOf = { packaging: previousRunDate('packaging', asOf), rawMaterial: previousRunDate('rawMaterial', asOf) };
+    const changes = safetyStockChanges(run, {
+      packaging: engineSafetyStock(previousAsOf.packaging),
+      rawMaterial: engineSafetyStock(previousAsOf.rawMaterial),
+    });
     return {
       ...run,
+      previousAsOf,
       materials: run.materials.map((m) => ({
         ...m,
         materialLabel: labelOf(m.materialCode),
         supplierName: m.supplierId ? forecastSupplierName(m.supplierId) : null,
+        change: changes.get(m.materialCode)!,
       })),
     };
   }

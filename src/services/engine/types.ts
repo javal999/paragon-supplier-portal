@@ -68,6 +68,14 @@ export interface BomLine {
   readonly uom: Uom;
   /** Scrap as a fraction (0.02 = 2%). */
   readonly scrapPct: number;
+  /**
+   * Yield as a fraction (0.95 = 95%): the share of the component issued that
+   * ends up in good parent units (E14-03 BR-03, BL-115). The requirement is
+   * DIVIDED by it, beside scrap: qtyPer × (1 + scrap) ÷ yield. 1 = no loss.
+   * Must be above 0 and at most 1; the integrity check names any other value
+   * (`BOM_YIELD_OUT_OF_RANGE`). SYNTHETIC 1 until the BOM feed carries it (BL-103).
+   */
+  readonly yieldPct: number;
   readonly validFrom: IsoDate;
   readonly validTo?: IsoDate;
 }

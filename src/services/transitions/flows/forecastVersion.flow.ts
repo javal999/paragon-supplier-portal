@@ -10,6 +10,11 @@
 // version from sample demand on the working calendar's "now". Both verbs are
 // the planner's; suppliers are notified through their Home task, which is
 // derived from the versions they have not opened yet.
+//
+// REQ-E14-06 — the stabilised engine plan asks to publish through the same
+// verb with `source: 'engine'`. That is refused (ENG-B35): while the engine
+// dataset is simulated (X-03), and — once it is live — until SOMO ratifies
+// C8 §8, because a publication today names SOMO as the source of its totals.
 // ────────────────────────────────────────────────────────────────────────────
 
 import type { FlowDefinition } from '../schema';
@@ -30,7 +35,9 @@ export const forecastVersionFlow: FlowDefinition = {
       trigger: 'creation',
       requiredRole: 'forecast:publish',
       requiredFields: ['stream'],
-      policyHooks: [POLICY_HOOKS.FORECAST_PUBLISH_VALID],
+      // REQ-E14-06 (X-03): a publication sourced from the forecast engine is
+      // refused while its data is simulated, and until C8 §8 is ratified.
+      policyHooks: [POLICY_HOOKS.FORECAST_PUBLISH_VALID, POLICY_HOOKS.FORECAST_ENGINE_PUBLISH_ALLOWED],
       surfaceable: { surfaced: true },
       version: 1,
     },

@@ -27,7 +27,9 @@ import { qtyOf } from './materialPlan/planDisplay';
 // and SAP's safety stock beside it — how much the new calculation frees, in
 // units and pallets. A material with too little history shows SAP's value,
 // marked (AC-02). Selecting a material shows the errors the figure was read
-// from, so it can be recalculated by hand (AC-03).
+// from, so it can be recalculated by hand (AC-03). BR-06 (BL-116): each
+// material shows its change since the last run of its stream and the cause,
+// read off the two runs' inputs (engine `safetyStockChanges`).
 //
 // Computed by the forecast engine at read time on its SYNTHETIC dataset, with
 // the administrator's targets in force (the `engineDataset` pill, X-03).
@@ -35,6 +37,61 @@ import { qtyOf } from './materialPlan/planDisplay';
 
 const pct = (x: number | null) => (x === null ? '—' : `${Math.round(x * 1000) / 10}%`);
 const pallets = (x: number) => formatNumber(Math.round(x));
+/** A change with its sign: +417, −295, 0. */
+const signed = (x: number, uom: MaterialSafetyStockView['uom']) => (x > 0 ? `+${qtyOf(x, uom)}` : x < 0 ? `−${qtyOf(-x, uom)}` : qtyOf(0, uom));
+
+/** BR-06 (BL-116) — the change since the last run and why, per material. */
+const ChangeCell: React.FC<{ m: MaterialSafetyStockView }> = ({ m }) => {
+  const { t } = useTranslation();
+  const c = m.change;
+  const p = c.previous;
+  if (c.causes.length === 0) {
+    return (
+      <span className="text-xs text-text-tertiary" data-testid={`sst-change-${m.materialCode}`}>
+        {t('sst.change.none')}
+      </span>
+    );
+  }
+  const text = (cause: (typeof c.causes)[number]) => {
+    switch (cause) {
+      case 'tier':
+        return t('sst.cause.tier', { from: p ? t(`sst.tier.${p.tier}`) : '—', to: t(`sst.tier.${m.tier}`) });
+      case 'target':
+        return t('sst.cause.target', { from: pct(p?.target ?? null), to: pct(m.target) });
+      case 'errors':
+        return t('sst.cause.errors', { added: c.originsAdded, dropped: c.originsDropped });
+      case 'orderLot':
+        return t('sst.cause.orderLot', { from: p ? qtyOf(p.orderQtyPerCycle, m.uom) : '—', to: qtyOf(m.orderQtyPerCycle, m.uom) });
+      case 'window':
+        return t('sst.cause.window', { from: p?.riskWeeks ?? '—', to: m.riskWeeks });
+      default:
+        return t(`sst.cause.${cause}`);
+    }
+  };
+  return (
+    <div data-testid={`sst-change-${m.materialCode}`}>
+      <div>
+        <Data data-testid={`sst-change-ss-${m.materialCode}`}>{signed(c.safetyStockDelta, m.uom)}</Data>
+        {p && (
+          <span className="text-xs text-text-tertiary">
+            {' '}
+            {t('sst.change.from', { value: qtyOf(p.safetyStock, m.uom) })}
+          </span>
+        )}
+      </div>
+      <div className="text-xs text-text-tertiary">
+        {t('sst.change.rop')} <Data data-testid={`sst-change-rop-${m.materialCode}`}>{signed(c.reorderPointDelta, m.uom)}</Data>
+      </div>
+      <ul className="text-xs text-text-secondary mt-1 list-disc pl-4" data-testid={`sst-causes-${m.materialCode}`}>
+        {c.causes.map((cause) => (
+          <li key={cause} data-testid={`sst-cause-${m.materialCode}-${cause}`}>
+            {text(cause)}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
 
 const HistoryPanel: React.FC<{ m: MaterialSafetyStockView }> = ({ m }) => {
   const { t } = useTranslation();
@@ -119,6 +176,7 @@ const BuyerSafetyStock: React.FC = () => {
   const tierCount = (tier: string) => materials.filter((m) => m.tier === tier).length;
   const fallback = materials.filter((m) => m.source === 'sap').length;
   const groupDefault = materials.filter((m) => m.safetyLeadTimeSource === 'groupDefault').length;
+  const changedSs = materials.filter((m) => m.change.safetyStockDelta !== 0).length;
   const params = run?.parameters;
 
   return (
@@ -145,6 +203,14 @@ const BuyerSafetyStock: React.FC = () => {
       {params && (
         <p className="text-xs text-text-tertiary mb-4" data-testid="sst-targets">
           {t('sst.targets', { high: pct(params.targets.high), standard: pct(params.targets.standard), slow: pct(params.targets.slow) })}
+        </p>
+      )}
+
+      {run?.previousAsOf && (
+        <p className="text-xs text-text-tertiary -mt-3 mb-4" data-testid="sst-last-run">
+          {t('sst.change.lastRun', { count: changedSs })} {t('sst.change.lastRunPackaging')}{' '}
+          <Data>{formatDate(run.previousAsOf.packaging)}</Data> · {t('sst.change.lastRunRaw')}{' '}
+          <Data>{formatDate(run.previousAsOf.rawMaterial)}</Data>. {t('sst.change.recomputed')}
         </p>
       )}
 
@@ -189,6 +255,7 @@ const BuyerSafetyStock: React.FC = () => {
             <TableHeaderCell>{t('sst.col.freed')}</TableHeaderCell>
             <TableHeaderCell>{t('sst.col.slt')}</TableHeaderCell>
             <TableHeaderCell>{t('sst.col.rop')}</TableHeaderCell>
+            <TableHeaderCell>{t('sst.col.change')}</TableHeaderCell>
             <TableHeaderCell>{t('sst.col.history')}</TableHeaderCell>
           </TableHeader>
           <tbody>
@@ -257,6 +324,9 @@ const BuyerSafetyStock: React.FC = () => {
                 <TableCell className="align-top">
                   <Data data-testid={`sst-rop-${m.materialCode}`}>{qtyOf(m.reorderPoint, m.uom)}</Data>
                 </TableCell>
+                <TableCell className="align-top min-w-[12rem]">
+                  <ChangeCell m={m} />
+                </TableCell>
                 <TableCell className="align-top text-xs text-text-secondary">
                   {m.errors.length > 0 ? (
                     <>
@@ -285,6 +355,7 @@ const BuyerSafetyStock: React.FC = () => {
         <p>{t('sst.def.fallback')}</p>
         <p>{t('sst.def.slt')}</p>
         <p>{t('sst.def.rop')}</p>
+        <p>{t('sst.def.change')}</p>
       </section>
     </AppShellV2>
   );

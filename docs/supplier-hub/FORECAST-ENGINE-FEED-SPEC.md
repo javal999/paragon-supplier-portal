@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 0.2 draft, 2026-09-23 |
+| Version | 0.4 draft, 2026-09-24 |
 | For | The Master Data Management team, who own the engine's input data and its SAP integration (ENG-D1) |
 | What this is | Every input the in-house forecast engine reads: fields, key, grain, refresh, freshness limit, quality checks, and the likely SAP source |
 | What this is not | An interface design. How the data travels (API, events, files) is open under BL-11 (PQ-06) and belongs to IT |
@@ -137,13 +137,14 @@ The order below is the build order: section 2.1 feeds the first engine step (E14
 | componentCode | text | Bulk or material; materials resolve in the master | yes |
 | qtyPer | number | Component quantity per 1 parent unit | yes |
 | uom | text | Component base unit | yes |
-| scrapPct | number | Component scrap, percent | yes (0 if none) |
+| scrapPct | number | Component scrap, as a fraction (0.02 = 2%) | yes (0 if none) |
+| yieldPct | number | Component yield, as a fraction (0.95 = 95%): the share of the component that ends up in good parent units. The requirement is divided by it, beside scrap (E14-03 BR-03) | yes (1 if no loss) |
 | validFrom | date | First valid day | yes |
 | validTo | date | Last valid day | no |
 
 - **Key:** parentCode + componentCode + validFrom. **Refresh:** weekly, and on every formula change. **Freshness limit:** 7 days.
-- **Checks:** qtyPer > 0; validity periods for one parent–component pair do not overlap; every active finished good has a bill of materials; no parent is its own component at any depth.
-- **Likely SAP source:** BOM header and items (STKO, STPO, linked through MAST); component scrap STPO-AUSCH; assembly scrap MARC-AUSSS. The owner has named the Master Data Management team as owner of the breakdown from forecast into the bill of materials (ENG-D1). Whether SOMO's formulation master or SAP is the source of formula BOMs is open (contract C8 §4.4, C8-IDENTITY-GRAIN).
+- **Checks:** qtyPer > 0; 0 < yieldPct ≤ 1 (the engine names any other value, `BOM_YIELD_OUT_OF_RANGE`); validity periods for one parent–component pair do not overlap; every active finished good has a bill of materials; no parent is its own component at any depth.
+- **Likely SAP source:** BOM header and items (STKO, STPO, linked through MAST); component scrap STPO-AUSCH; assembly scrap MARC-AUSSS; yield has no single standard BOM-item field (1 − the operation or assembly scrap is the usual reading), so MDM is asked to name its source (section 3). The owner has named the Master Data Management team as owner of the breakdown from forecast into the bill of materials (ENG-D1). Whether SOMO's formulation master or SAP is the source of formula BOMs is open (contract C8 §4.4, C8-IDENTITY-GRAIN).
 
 **StockSnapshot: stock on hand at a warehouse on a day**
 
@@ -287,7 +288,8 @@ The order below is the build order: section 2.1 feeds the first engine step (E14
 3. **Stock-out rule.** The rule for the stock-out flag on sales history.
 4. **Warehouse capacity.** Where capacity and pallet conversion are held.
 5. **Formula BOMs.** Whether formula bills of materials come from SAP or from SOMO's formulation master (C8 §4.4).
-6. **Priority.** The feeds in section 2.1 come first, because they unblock the first engine step.
+6. **Yield.** Where each BOM line's yield is held, and whether it is per BOM line or per parent. The engine takes it per line and uses 100% until the feed carries it.
+7. **Priority.** The feeds in section 2.1 come first, because they unblock the first engine step.
 
 ## 4. Change log
 
@@ -296,3 +298,4 @@ The order below is the build order: section 2.1 feeds the first engine step (E14
 | 0.1 | 2026-09-23 | First draft for the Master Data Management team (BL-103) |
 | 0.2 | 2026-09-23 | Added FgPlanSnapshot, SalesOrderWeek and SapSafetyStock, from the E14-03 and E14-04 build (PR #39) |
 | 0.3 | 2026-09-23 | Added MaterialValue (value per unit, for holding cost), from the E14-05 build |
+| 0.4 | 2026-09-24 | BomLine: added yieldPct (BL-115, E14-03 BR-03) with its check and a confirmation item; scrapPct described as the fraction the code holds (it read "percent") |

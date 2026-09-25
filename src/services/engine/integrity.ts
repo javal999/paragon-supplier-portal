@@ -16,6 +16,7 @@ export interface IntegrityViolation {
     | 'NO_SOURCE'
     | 'ORPHAN_EVENT'
     | 'BOM_PARENT_NOT_FG'
+    | 'BOM_YIELD_OUT_OF_RANGE'
     | 'FG_IS_A_MATERIAL'
     | 'UNKNOWN_FG';
   readonly where: string;
@@ -72,6 +73,11 @@ export function integrityViolations(d: EngineDataset, ctx: IntegrityContext): In
   const fgs = new Set(d.finishedGoods.map((f) => f.skuCode));
   for (const b of d.bom) {
     if (!fgs.has(b.parentCode)) out.push({ rule: 'BOM_PARENT_NOT_FG', where: 'bom', detail: b.parentCode });
+    // BL-115 — the requirement divides by yield: it must be above 0 and at most
+    // 1 (0 would divide by zero; above 1 would make a loss into a gain).
+    if (!(b.yieldPct > 0 && b.yieldPct <= 1)) {
+      out.push({ rule: 'BOM_YIELD_OUT_OF_RANGE', where: `bom ${b.parentCode}`, detail: `${b.componentCode} yield ${b.yieldPct}` });
+    }
   }
   const skus = new Set<string>([...d.fgPlan.map((p) => p.skuCode), ...d.salesOrders.map((o) => o.skuCode)]);
   for (const sku of skus) {

@@ -282,7 +282,7 @@ Sales orders replace the forecast they fall inside, so orders and forecast are n
 2. **Gross requirement.** GR_c,t = independent demand_c,t + Σ over parents p of (planned order release_p,t × quantity-per_p,c × (1 + scrap%_p,c)). *Proposal:* the exact form, with the scrap multiplier, is standard practice written out for PTI.
 3. **Projected on hand.** POH_t = POH_{t−1} + scheduled receipts_t + planned receipts_t − GR_t.
 4. **Net requirement.** NR_t = max(0, GR_t + safety stock − (POH_{t−1} + scheduled receipts_t)). Safety stock comes from M3.
-5. **Planned order receipt.** Apply M5 (lot sizing, MOQ, multiples) to NR_t. For yield losses, divide by the yield: quantity ÷ yield%.
+5. **Planned order receipt.** Apply M5 (lot sizing, MOQ, multiples) to NR_t. For yield losses, divide by the yield: quantity ÷ yield%. Where yield is carried on the BOM line (as in the Hub's feed spec), apply it in step 2 on each component instead (qty per × (1 + scrap) ÷ yield); for a made item the result is the same.
 6. **Planned order release.** The receipt at t is released at t − lead time. Where M7 applies, use lead time plus the safety lead time.
 
 **Inputs:**

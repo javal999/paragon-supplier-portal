@@ -41,7 +41,15 @@ import { otifPassesGate } from '../../sourcing/complianceGate';
 import { coverage, riskFor, stockFreshness, supplyBand } from '../../transitions/inventoryRules';
 import { updateSlaFor } from '../../transitions/inventoryConfig';
 import { coverageBands } from '../../sdc/consolidation';
-import { engineServiceTargets, feedFreshnessLimitsDays, orderSizingCosts, rescheduleOutThresholdWeeks, safetyLeadTimePercentile } from '../../transitions/forecastConfig';
+import {
+  engineServiceTargets,
+  feedFreshnessLimitsDays,
+  orderSizingCosts,
+  rescheduleOutThresholdWeeks,
+  safetyLeadTimePercentile,
+  stabiliseDampingWeight,
+} from '../../transitions/forecastConfig';
+import { DEFAULT_STABILISE_PARAMS, stabilisePeriod } from '../../engine/stabilise';
 import { freshnessOf } from '../../engine/dataHealth';
 import { empiricalQuantile, fillRateSafetyStock } from '../../engine/safetyStock';
 import { singleItemSolver, type SizingItem } from '../../engine/orderSizing';
@@ -207,6 +215,8 @@ describe('BL32-POP · the population of rule values is derived from the config m
       'engine.orderCostIdr': 'ENG-D6',
       'engine.rentedSpaceIdrPerPalletWeek': 'ENG-D6',
       'engine.changePenaltyIdrPerPallet': 'REQ-E14-05 BR-03',
+      // BL-117 — the Warehouse's cap on rented space (the 3PL contract).
+      'engine.maxRentedSpacePct': 'REQ-E14-05',
     });
   });
 });
@@ -291,6 +301,8 @@ describe('BL32-READ · every reader of a value reads it through its accessor, at
       orderSizingCosts: ['src/services/data/mock/MockProcurementService.ts', 'src/services/transitions/forecastConfig.ts'],
       // ENG-D15 / REQ-E14-13 — the same shape: the service passes it to the engine.
       rescheduleOutThresholdWeeks: ['src/services/data/mock/MockProcurementService.ts', 'src/services/transitions/forecastConfig.ts'],
+      // ENG-D9 / REQ-E14-06 — the same shape: the service passes it to the engine.
+      stabiliseDampingWeight: ['src/services/data/mock/MockProcurementService.ts', 'src/services/transitions/forecastConfig.ts'],
       // REQ-E14-01 — the same shape: the service passes the limits to the data-health check.
       feedFreshnessLimitsDays: ['src/services/data/mock/MockProcurementService.ts', 'src/services/transitions/forecastConfig.ts'],
     };
@@ -340,7 +352,7 @@ const DELAYS = [0, 0, 0, 1, 1, 2, 2, 3, 5, 9];
  * outcome is how many orders the sizing places. `space` adds a 15-pallet
  * warehouse; `previous` is last run's weekly plan, all inside the lead time.
  */
-const ordersPlaced = (opts: { space?: boolean; previous?: number[] } = {}): number => {
+const ordersPlaced = (opts: { space?: boolean; cap?: boolean; previous?: number[] } = {}): number => {
   const c = orderSizingCosts();
   const item: SizingItem = {
     materialCode: 'PK-PETB-8801',
@@ -356,7 +368,12 @@ const ordersPlaced = (opts: { space?: boolean; previous?: number[] } = {}): numb
     ...(opts.previous ? { previous: opts.previous } : {}),
   };
   const space = opts.space
-    ? { capacityPallets: 15, rentIdrPerPalletWeek: c.rentIdrPerPalletWeek }
+    ? {
+        capacityPallets: 15,
+        rentIdrPerPalletWeek: c.rentIdrPerPalletWeek,
+        // BL-117 — the cap on rented space in force, as the service passes it.
+        ...(opts.cap ? { limitPallets: 15 + 15 * c.maxRentedShare } : {}),
+      }
     : { capacityPallets: Infinity, rentIdrPerPalletWeek: 0 };
   return singleItemSolver(item, [0, 0, 0], space, c).plan().filter((x) => x > 0).length;
 };
@@ -531,12 +548,27 @@ const FLIPS: Record<string, Flip> = {
   'engine.holdingCostPctPerYear': { to: 100, read: () => ordersPlaced(), atDefault: 1, afterChange: 3 },
   // 15 pallets of room: one order spills 5 pallets for a week; at Rp 100,000 a pallet two orders win.
   'engine.rentedSpaceIdrPerPalletWeek': { to: 100_000, read: () => ordersPlaced({ space: true }), atDefault: 1, afterChange: 2 },
+  // BL-117: at 25% the one-order plan's 20 pallets pass 15 + 3.75 — no plan may rent past the cap, so two
+  // orders; at 50% (22.5) it fits and renting is cheaper, so one.
+  'engine.maxRentedSpacePct': { to: 50, read: () => ordersPlaced({ space: true, cap: true }), atDefault: 2, afterChange: 1 },
   // BR-03: last run planned 1,000 a week, all inside the lead time; with no penalty the plan re-sizes.
   'engine.changePenaltyIdrPerPallet': {
     to: 0,
     read: () => ordersPlaced({ previous: [1000, 1000, 1000] }),
     atDefault: 3,
     afterChange: 1,
+  },
+  // ENG-D9: REQ-E14-06's worked example — 1,200 → 1,500 damps to 1,350 at 50%,
+  // beyond the band, so 1,320 is published; at 90% it damps to 1,230, inside.
+  'engine.dampingWeightPct': {
+    to: 90,
+    read: () =>
+      stabilisePeriod(
+        { period: '2026-10-12', zone: 'tradeOff', raw: 1500, previous: 1200, first: 1200 },
+        { ...DEFAULT_STABILISE_PARAMS, tradeOffWeight: stabiliseDampingWeight() },
+      ).published,
+    atDefault: 1320,
+    afterChange: 1230,
   },
   // ENG-D15: two weeks early is proposed at the default of 1; at 3 it is not.
   'engine.rescheduleOutWeeks': { to: 3, read: () => rescheduleFor(), atDefault: 'rescheduleOut', afterChange: 'none' },

@@ -161,10 +161,25 @@ const DEFS = [
   // weeks before its need week an open line must arrive before a reschedule-out
   // is proposed. 1 week to start; the Material Planner's value, beside the
   // E14-05 cost rates it is weighed with.
+  // REQ-E14-05 edge case (BL-117) — the most rented space order sizing may
+  // plan, as a share of owned capacity, beside the rented-space rate it caps.
+  // A week that does not fit even with it is shown with its shortfall and the
+  // planner's choice (rent beyond it, or a later delivery). 25% is a
+  // PLACEHOLDER — what the 3PL contract allows is the Warehouse's to confirm.
+  {
+    key: 'engine.maxRentedSpacePct', section: 'tolerances', rule: 'REQ-E14-05', unit: 'pct',
+    min: 0, max: 500, defaultValue: 25, placeholder: { owner: 'warehousePlanner', backlogId: 'REQ-E14-05' },
+  },
   {
     key: 'engine.rescheduleOutWeeks', section: 'tolerances', rule: 'ENG-D15', unit: 'weeks', integer: true,
     min: 1, max: 26, defaultValue: 1,
   },
+  // ENG-D9 (decided by the owner 2026-09-23) — REQ-E14-06 BR-04: the weight on
+  // the previously published value when a Trade-off period is damped before
+  // publication. 50% to start, tuned from the backtest (E14-10). Below 100%:
+  // at 100% a Trade-off period could never move. The Forecast zone's weight
+  // stays 0 (ENG-D9, ENG-B34).
+  { key: 'engine.dampingWeightPct', section: 'tolerances', rule: 'ENG-D9', unit: 'pct', min: 0, max: 90, defaultValue: 50 },
   // REQ-E14-01 BR-01, BR-05 — the freshness limit per engine feed, in days:
   // a feed whose last arrival is older than this is stale on the Data health
   // page and names the engine steps it affects. The defaults are the feed

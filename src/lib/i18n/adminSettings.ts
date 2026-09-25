@@ -105,6 +105,7 @@ export const adminSettingsEn: Record<string, string> = {
   'adminSet.rule.ENG-D6': 'ENG-D6 · Forecast engine order-sizing cost rates',
   'adminSet.rule.REQ-E14-05': 'REQ-E14-05 · Forecast engine change penalty',
   'adminSet.rule.ENG-D15': 'ENG-D15 · Rescheduling open orders out',
+  'adminSet.rule.ENG-D9': 'ENG-D9 · Damping the plan before publication',
   'adminSet.rule.REQ-E14-01': 'REQ-E14-01 · Forecast engine data freshness',
 
   // ── One label and hint per value ────────────────────────────────────────
@@ -170,8 +171,13 @@ export const adminSettingsEn: Record<string, string> = {
   'adminSet.key.engine.rentedSpaceIdrPerPalletWeek.hint': 'What a pallet above the owned warehouse capacity costs for a week, from the 3PL invoices.',
   'adminSet.key.engine.changePenaltyIdrPerPallet.label': 'Change penalty inside the lead time, per pallet',
   'adminSet.key.engine.changePenaltyIdrPerPallet.hint': 'What order sizing counts for changing an order it already planned, once that order is inside the supplier’s lead time. A higher value keeps the plan steadier close in.',
+  'adminSet.key.engine.maxRentedSpacePct.label': 'Most rented space, as a share of owned capacity',
+  'adminSet.key.engine.maxRentedSpacePct.hint':
+    'The most space above the owned warehouse that order sizing may plan to rent. A week that does not fit even with it is shown on the order plan with its shortfall, for the planner to choose between renting more and a later delivery.',
   'adminSet.key.engine.rescheduleOutWeeks.label': 'Weeks early before a later date is proposed',
   'adminSet.key.engine.rescheduleOutWeeks.hint': 'An open order line that arrives at least this many weeks before the week it is needed is proposed to come later, to free warehouse space. The change is priced with the rented-space rate and the change penalty above.',
+  'adminSet.key.engine.dampingWeightPct.label': 'Damping weight in the Trade-off zone',
+  'adminSet.key.engine.dampingWeightPct.hint': 'Before a new plan is published, each Trade-off week is blended with the value the supplier saw last time: this share of the old value, the rest from the new one. Higher keeps the plan steadier; 0 publishes the new value as calculated. Forecast weeks are not damped.',
 
   // REQ-E14-01 — freshness limit per engine feed.
   'adminSet.key.engine.freshnessDays.poLines.label': 'Freshness limit: Purchase order lines',
@@ -321,6 +327,7 @@ export const adminSettingsId: Record<string, string> = {
   'adminSet.rule.ENG-D6': 'ENG-D6 · Tarif biaya penentuan ukuran pesanan mesin prakiraan',
   'adminSet.rule.REQ-E14-05': 'REQ-E14-05 · Penalti perubahan mesin prakiraan',
   'adminSet.rule.ENG-D15': 'ENG-D15 · Menjadwalkan ulang pesanan terbuka ke belakang',
+  'adminSet.rule.ENG-D9': 'ENG-D9 · Peredaman rencana sebelum dipublikasikan',
   'adminSet.rule.REQ-E14-01': 'REQ-E14-01 · Kesegaran data mesin prakiraan',
 
   'adminSet.key.callOff.overPct.label': 'Kelebihan dari kuantitas yang dirilis, diterima tanpa perencana',
@@ -385,8 +392,13 @@ export const adminSettingsId: Record<string, string> = {
   'adminSet.key.engine.rentedSpaceIdrPerPalletWeek.hint': 'Biaya satu palet di atas kapasitas gudang sendiri selama seminggu, dari tagihan 3PL.',
   'adminSet.key.engine.changePenaltyIdrPerPallet.label': 'Penalti perubahan dalam waktu tunggu, per palet',
   'adminSet.key.engine.changePenaltyIdrPerPallet.hint': 'Biaya yang dihitung penentuan ukuran pesanan bila mengubah pesanan yang sudah direncanakan, setelah pesanan itu masuk waktu tunggu pemasok. Nilai lebih tinggi membuat rencana lebih stabil menjelang pengiriman.',
+  'adminSet.key.engine.maxRentedSpacePct.label': 'Ruang sewa terbanyak, sebagai bagian dari kapasitas sendiri',
+  'adminSet.key.engine.maxRentedSpacePct.hint':
+    'Ruang terbanyak di atas gudang sendiri yang boleh direncanakan untuk disewa oleh penentuan ukuran pesanan. Minggu yang tetap tidak muat meski dengan ruang itu ditampilkan di rencana pesanan beserta kekurangannya, agar perencana memilih antara menyewa lebih banyak atau pengiriman yang lebih lambat.',
   'adminSet.key.engine.rescheduleOutWeeks.label': 'Minggu lebih awal sebelum tanggal yang lebih lambat diusulkan',
   'adminSet.key.engine.rescheduleOutWeeks.hint': 'Baris pesanan terbuka yang tiba sedikitnya sekian minggu sebelum minggu dibutuhkan diusulkan untuk datang lebih lambat, agar ruang gudang lega. Perubahan dihitung dengan tarif ruang sewa dan penalti perubahan di atas.',
+  'adminSet.key.engine.dampingWeightPct.label': 'Bobot peredaman di zona Trade-off',
+  'adminSet.key.engine.dampingWeightPct.hint': 'Sebelum rencana baru dipublikasikan, setiap minggu Trade-off dicampur dengan nilai yang terakhir dilihat pemasok: sebesar bagian ini dari nilai lama, sisanya dari nilai baru. Makin tinggi, rencana makin stabil; 0 memublikasikan nilai baru apa adanya. Minggu Forecast tidak diredam.',
 
   // REQ-E14-01 — freshness limit per engine feed.
   'adminSet.key.engine.freshnessDays.poLines.label': 'Batas kesegaran: Baris pesanan pembelian',

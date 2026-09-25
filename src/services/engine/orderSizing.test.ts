@@ -555,3 +555,116 @@ describe('REQ-E14-03 × E14-05 — the E14-03 worked example still sizes to 15,0
     expect(materialRequirement(data, defaultRequirementOptions(data.provenance.present)).sizing).toBe('interim');
   });
 });
+
+// ── BL-117 · the cap on rented space; weeks where no plan fits ──────────────
+
+/** The worked example's run with stock on hand, confirmed receipts and a safety stock set. */
+function capRun(over: { startStock: number; receipts?: number[]; safetyStock?: number }) {
+  const run = exampleRun() as unknown as { materials: Record<string, unknown>[]; weeks: string[] };
+  const m = run.materials[0];
+  return {
+    ...run,
+    materials: [
+      {
+        ...m,
+        startStock: over.startStock,
+        safetyStock: over.safetyStock ?? 0,
+        weeks: run.weeks.map((w, t) => ({ weekStart: w, gross: 1000, receipts: over.receipts?.[t] ?? 0 })),
+      },
+    ],
+  } as unknown as Parameters<typeof orderPlan>[0];
+}
+
+describe('REQ-E14-05 edge case — the cap on rented space, and weeks where no plan fits (BL-117)', () => {
+  it('the cap is hard: renting past it is never bought, however cheap the rent — known-bad without the cap, known-good with room', () => {
+    const cheap = costs({ rentIdrPerPalletWeek: 0.01 });
+    // No cap: the single order (1,100 + 500 pallet-weeks × 0.01) beats two orders (1,200).
+    expect(jointPlan([item()], [0, 0, 0], 1500, cheap).plans[0]).toEqual([3000, 0, 0]);
+    // Cap 20% (limit 1,800): the single order's 2,000 would pass it, so two orders — and nothing is beyond.
+    const capped = jointPlan([item()], [0, 0, 0], 1500, { ...cheap, maxRentedShare: 0.2 });
+    expect(capped.plans[0]).toEqual([2000, 0, 1000]);
+    expect(capped.beyondPalletWeeks).toBe(0);
+    // Cap 50% (limit 2,250): the single order fits, and is kept, at the same cost as with no cap.
+    const roomy = jointPlan([item()], [0, 0, 0], 1500, { ...cheap, maxRentedShare: 0.5 });
+    expect(roomy.plans[0]).toEqual([3000, 0, 0]);
+    expect(roomy.totalIdr).toBe(jointPlan([item()], [0, 0, 0], 1500, cheap).totalIdr);
+  });
+
+  it('no plan fits: 3,500 on hand against 1,500 owned + 300 rentable — week 1 is short 700 pallets, unavoidable, with both choices costed', () => {
+    const plan = orderPlan(capRun({ startStock: 3500 }), EXAMPLE_MASTER(1500), { costs: costs({ maxRentedShare: 0.2 }) });
+    const w = plan.warehouses[0];
+    expect(w.maxRentedPallets).toBeCloseTo(300, 9);
+    expect(w.shortfallWeeks).toHaveLength(1);
+    const [sw] = w.shortfallWeeks;
+    expect(sw.weekStart).toBe('2027-01-04');
+    expect([sw.pallets, sw.limitPallets, sw.shortfallPallets]).toEqual([2500, 1800, 700]);
+    expect(sw.unavoidable).toBe(true);
+    // Choice 1 — rent the 700 beyond the cap, at the rate (1.0 a pallet-week here).
+    expect(sw.rent).toEqual({ pallets: 700, costIdr: 700 });
+    // Choice 2 — nothing arrives by week 1 to deliver later: the page must say rent is the only way out.
+    expect(sw.later).toEqual({ deliveries: [], movablePallets: 0, enough: false });
+    expect(w.weeks.map((x) => x.beyondCapPallets)).toEqual([700, 0, 0]);
+  });
+
+  it('a later delivery: a confirmed 1,000 arriving in week 1 could move after it, freeing 1,000 — enough for the 700, and safety stock holds', () => {
+    const plan = orderPlan(capRun({ startStock: 2500, receipts: [1000, 0, 0] }), EXAMPLE_MASTER(1500), {
+      costs: costs({ maxRentedShare: 0.2 }),
+    });
+    const [sw] = plan.warehouses[0].shortfallWeeks;
+    expect(sw.shortfallPallets).toBe(700);
+    expect(sw.later.deliveries).toEqual([
+      { materialCode: 'PK-CART-9901', supplierId: 'sup-008', source: 'confirmed', weekStart: '2027-01-04', quantity: 1000, pallets: 1000, keepsSafetyStock: true },
+    ]);
+    expect([sw.later.movablePallets, sw.later.enough]).toEqual([1000, true]);
+  });
+
+  it('known-bad for the later delivery: with a safety stock of 2,000, moving that 1,000 would drop stock to 1,500 — flagged, not counted', () => {
+    const plan = orderPlan(capRun({ startStock: 2500, receipts: [1000, 0, 0], safetyStock: 2000 }), EXAMPLE_MASTER(1500), {
+      costs: costs({ maxRentedShare: 0.2 }),
+    });
+    const [sw] = plan.warehouses[0].shortfallWeeks;
+    expect(sw.later.deliveries.map((d) => [d.source, d.quantity, d.keepsSafetyStock])).toEqual([['confirmed', 1000, false]]);
+    expect([sw.later.movablePallets, sw.later.enough]).toEqual([0, false]);
+  });
+
+  it('no cap: no week is ever short, and nothing reports a cap', () => {
+    const plan = orderPlan(capRun({ startStock: 3500 }), EXAMPLE_MASTER(1500), { costs: costs() });
+    expect(plan.warehouses[0].maxRentedPallets).toBeNull();
+    expect(plan.warehouses[0].shortfallWeeks).toEqual([]);
+    expect(plan.warehouses[0].weeks.every((x) => x.beyondCapPallets === 0)).toBe(true);
+  });
+
+  it('on the synthetic data at the default 25%: the plan is exactly the uncapped plan; packaging is short in its first week only, unavoidably', () => {
+    const data = engineDataset();
+    const { plan } = syntheticChain(data);
+    const asOf = data.provenance.present;
+    const ss = safetyStockRun(data, { ...DEFAULT_SAFETY_STOCK_OPTIONS, asOf });
+    const options: MaterialRequirementOptions = { ...defaultRequirementOptions(asOf), ...requirementInputs(ss) };
+    const capped = sizedRequirement(data, options, { costs: { ...PLACEHOLDER_COSTS, maxRentedShare: 0.25 } }).plan;
+    // The default changes no synthetic order: every planned receipt and every cost is identical.
+    expect(capped.warehouses.map((w) => w.materials.map((m) => m.plannedReceipts))).toEqual(
+      plan.warehouses.map((w) => w.materials.map((m) => m.plannedReceipts)),
+    );
+    expect(capped.warehouses.map((w) => w.after.totalIdr)).toEqual(plan.warehouses.map((w) => w.after.totalIdr));
+    const pk = capped.warehouses.find((w) => w.kind === 'packaging')!;
+    const rm = capped.warehouses.find((w) => w.kind === 'rawMaterial')!;
+    expect([pk.maxRentedPallets, rm.maxRentedPallets]).toEqual([450, 300]);
+    expect(rm.shortfallWeeks).toEqual([]);
+    expect(pk.shortfallWeeks.map((x) => x.weekStart)).toEqual([capped.weeks[0]]);
+    const [sw] = pk.shortfallWeeks;
+    expect(sw.shortfallPallets).toBeCloseTo(sw.pallets - 2250, 6);
+    expect(Math.round(sw.shortfallPallets)).toBe(39);
+    expect(sw.unavoidable).toBe(true);
+    expect(sw.rent.costIdr).toBeCloseTo(sw.shortfallPallets * PLACEHOLDER_COSTS.rentIdrPerPalletWeek, 3);
+    // Every delivery listed arrives by that week, and its safety-stock verdict is its own.
+    expect(sw.later.deliveries.length).toBeGreaterThan(0);
+    for (const d of sw.later.deliveries) expect(d.weekStart <= sw.weekStart).toBe(true);
+    expect(sw.later.movablePallets).toBeCloseTo(
+      sw.later.deliveries.filter((d) => d.keepsSafetyStock).reduce((a, d) => a + d.pallets, 0),
+      9,
+    );
+    // Tightened to 20%, three weeks are short — the detection follows the setting, it is not pinned to week 1.
+    const tight = sizedRequirement(data, options, { costs: { ...PLACEHOLDER_COSTS, maxRentedShare: 0.2 } }).plan;
+    expect(tight.warehouses.find((w) => w.kind === 'packaging')!.shortfallWeeks.map((x) => x.weekStart)).toEqual(capped.weeks.slice(0, 3));
+  });
+});

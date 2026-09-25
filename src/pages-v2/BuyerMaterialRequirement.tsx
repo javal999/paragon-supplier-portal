@@ -16,7 +16,7 @@ import Data from '../components/ui-v2/Data';
 import Button from '../components/ui-v2/Button';
 import LoadingState from '../components/ui-v2/LoadingState';
 import ErrorState from '../components/ui-v2/ErrorState';
-import { formatDate } from '../lib/format';
+import { formatDate, formatNumber } from '../lib/format';
 import { useMaterialRequirement } from '../services/query/hooks';
 import type { MaterialPlanView, MaterialRequirementView } from '../services/data/types';
 import type { MaterialWeek } from '../services/engine/requirement';
@@ -31,7 +31,8 @@ import { qtyOf } from './materialPlan/planDisplay';
 // week: gross requirement, stock at start, confirmed receipts, safety stock,
 // net requirement, planned order, release week and stock at end — which
 // reconcile by the formula the definitions state (AC-01). The gross
-// requirement opens onto the finished goods behind it (AC-03). The planner may
+// requirement opens onto the finished goods behind it (AC-03), each part with
+// the scrap and yield of the BOM line it came through (BR-03, BL-115). The planner may
 // count unconfirmed order lines, and they are then marked (AC-02).
 //
 // Every figure is computed by the forecast engine at read time on its
@@ -42,6 +43,8 @@ import { qtyOf } from './materialPlan/planDisplay';
 type ReceiptsMode = 'confirmed' | 'include';
 
 const weekLabel = (w: string) => `W${isoWeek(w)}`;
+/** A BOM fraction as a percentage, to 0.1% (2.35% scrap reads 2.4%); — when the part came through no BOM line. */
+const pctOf = (x: number | undefined) => (x === undefined ? '—' : `${formatNumber(Math.round(x * 1000) / 10)}%`);
 
 const PegsPanel: React.FC<{
   week: MaterialWeek;
@@ -65,6 +68,8 @@ const PegsPanel: React.FC<{
           <TableHeaderCell>{t('mrq.pegs.sku')}</TableHeaderCell>
           <TableHeaderCell>{t('mrq.pegs.week')}</TableHeaderCell>
           <TableHeaderCell>{t('mrq.pegs.fgQty')}</TableHeaderCell>
+          <TableHeaderCell>{t('mrq.pegs.scrap')}</TableHeaderCell>
+          <TableHeaderCell>{t('mrq.pegs.yield')}</TableHeaderCell>
           <TableHeaderCell>{t('mrq.pegs.part')}</TableHeaderCell>
         </TableHeader>
         <tbody>
@@ -81,12 +86,23 @@ const PegsPanel: React.FC<{
                 <Data>{qtyOf(p.fgQuantity, 'PCS')}</Data>
               </TableCell>
               <TableCell>
+                <Data data-testid={`mrq-peg-scrap-${p.skuCode}`}>{pctOf(p.scrapPct)}</Data>
+              </TableCell>
+              <TableCell>
+                <Data
+                  data-testid={`mrq-peg-yield-${p.skuCode}`}
+                  className={p.yieldPct !== undefined && p.yieldPct < 1 ? 'text-warning-hover' : ''}
+                >
+                  {pctOf(p.yieldPct)}
+                </Data>
+              </TableCell>
+              <TableCell>
                 <Data>{qtyOf(p.quantity, plan.uom)}</Data>
               </TableCell>
             </TableRow>
           ))}
           <tr>
-            <td className="py-2 px-4 text-sm text-text-secondary" colSpan={3}>
+            <td className="py-2 px-4 text-sm text-text-secondary" colSpan={5}>
               {t('mrq.pegs.total')}
             </td>
             <td className="py-2 px-4">
