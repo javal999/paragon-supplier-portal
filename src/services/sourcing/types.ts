@@ -260,6 +260,26 @@ export interface RfiEvent {
 
 export type RfxResponseStatus = 'Draft' | 'Submitted';
 
+/**
+ * NR-1 BR-08 (D-6) — one submitted version of an RFI or RFP response. Appended
+ * on each submit and each revise, never edited or removed (RFX-R3, AR-05). The
+ * response's own fields always hold the latest version. `number` is 1-based.
+ * A seeded Submitted response carries no versions and is read as version 1
+ * (`responseVersions` in `sourcing/responseVersions`).
+ */
+export interface ResponseVersion<TAnswer> {
+  readonly number: number;
+  readonly submittedAt: string;
+  readonly answers: readonly TAnswer[];
+  /** RFP only — the answers to the RFP's questions section. */
+  readonly questionAnswers?: readonly RfiAnswer[];
+  /** RFP only — the indicative pricing. */
+  readonly pricing?: RfpPricingAnswer;
+  /** RFP only — terms the supplier wants to add. */
+  readonly otherTerms?: string;
+  readonly documents?: readonly ResponseDocument[];
+}
+
 /** REQ-E03-02 — one supplier's RFI response. A Draft is invisible to PTI. */
 export interface RfiResponse {
   readonly id: string;
@@ -273,6 +293,8 @@ export interface RfiResponse {
   readonly confidentialityAcceptedAt?: string;
   /** NR-1 BR-01 — the supplier's files. Only its author and, once Submitted, PTI read them. */
   readonly documents?: readonly ResponseDocument[];
+  /** NR-1 BR-08 — every submitted version, oldest first. Absent on seeds (read as version 1). */
+  readonly versions?: readonly ResponseVersion<RfiAnswer>[];
 }
 
 // ── RFP (REQ-E03-04) ────────────────────────────────────────────────────────
@@ -435,6 +457,8 @@ export interface RfpResponse {
   readonly termsAcceptedAt?: string;
   /** NR-1 BR-01 — the supplier's files. Only its author and, once Submitted, PTI read them. */
   readonly documents?: readonly ResponseDocument[];
+  /** NR-1 BR-08 — every submitted version, oldest first. Absent on seeds (read as version 1). */
+  readonly versions?: readonly ResponseVersion<RfpTermAnswer>[];
 }
 
 

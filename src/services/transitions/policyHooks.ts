@@ -553,6 +553,13 @@ export const POLICY_HOOKS = {
    * the file limits.
    */
   RFX_RESPONSE_DOCUMENTS_COMPLETE: 'rfx_response_documents_complete',
+  /**
+   * RFI / RFP response save and revise (NR-1 BR-08, AC-07, D-6):
+   * `responseWindowRefusal` — refused `RESPONSE_DEADLINE_PASSED` when the event
+   * is not Open or the deadline in force for this supplier has passed. A
+   * screen that hides "Revise" is not enough; the verb refuses.
+   */
+  RFX_RESPONSE_WINDOW_OPEN: 'rfx_response_window_open',
   /** Quotation submit (NR-1 BR-03 to BR-05): the same rule over the quote's documents and the RFQ's requests. */
   QUOTATION_DOCUMENTS_COMPLETE: 'quotation_documents_complete',
   /**

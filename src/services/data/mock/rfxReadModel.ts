@@ -50,6 +50,7 @@ import type {
   RfxInviteeView,
 } from '../../sourcing/views';
 import type { RfiResponse, RfpResponse } from '../../sourcing/types';
+import { responseVersions } from '../../sourcing/responseVersions';
 import { rfqStore } from './stores/rfqStore';
 import { quotationStore } from './stores/quotationStore';
 import {
@@ -233,10 +234,14 @@ export function rfiEventViews(nowIso: string, supplierId: string | null): readon
           (sid) => rfiFacts(mine.find((r) => r.supplierId === sid)),
           nowIso,
         ),
+        // NR-1 BR-08 — the response is its latest version; every version rides
+        // along. `visible` is already narrowed, so a supplier reads only its
+        // own versions and the buyer only submitted ones (RFX-R4).
         responses: visible.map((r) => ({
           ...r,
           supplierName: rfxSupplierName(r.supplierId),
           score: rfiResponseScore(event.questions, r.answers)?.score ?? null,
+          versions: responseVersions(r),
         })),
         closed: event.status === 'Closed' || event.status === 'Cancelled',
       };
@@ -286,6 +291,8 @@ export function rfpEventViews(nowIso: string, supplierId: string | null): readon
           supplierName: rfxSupplierName(r.supplierId),
           complianceScore: complianceScoreFor(r.answers),
           deviationCount: r.answers.filter((a) => a.stance === 'deviate').length,
+          // NR-1 BR-08 — as the RFI board: narrowed with `visible`.
+          versions: responseVersions(r),
         })),
         closed: event.status === 'Closed' || event.status === 'Cancelled',
       };

@@ -132,6 +132,7 @@ import {
   rfpPricingAnswerRefusal,
   rfpPricingRequestRefusal,
   rfpTermsRefusal,
+  responseWindowRefusal,
   type QuoteLineInput,
   type AsnLineInput,
   type CommandTarget,
@@ -240,6 +241,12 @@ import {
 import './rfxDocumentsCommand';
 import { documentRequestsRefusal, stampDocuments } from '../../transitions/rfxDocumentRules';
 import type { DocumentRequest } from '../../sourcing/types';
+// NR-1 BR-08 — revise until the deadline, with an appended version history.
+import {
+  revisedRfiResponse,
+  revisedRfpResponse,
+  versionsAfterSubmit,
+} from '../../sourcing/responseVersions';
 
 
 // The question kinds this build can render and score live in ONE list,
@@ -2930,13 +2937,22 @@ const rfiResponseTarget: CommandTarget = {
   readState: (id) => rfiResponseStore.get(id)?.status ?? null,
   readScopeOwner: (id) => rfiResponseStore.get(id)?.supplierId ?? null,
   readEntity: (id) => rfiResponseStore.get(id) ?? null,
-  applyTransition: (id, toState) => {
-    rfiResponseStore.update(id, (r) => ({
-      ...r,
-      status: toState as RfxResponseStatus,
-      updatedAt: sdcClock.now(),
-      ...(toState === 'Submitted' ? { submittedAt: sdcClock.now() } : {}),
-    }));
+  // `t_rfiresponse_submit` (Draft → Submitted) and `t_rfiresponse_revise`
+  // (Submitted, state-preserving). A revise applies the payload's content
+  // first. Both append the result as the next version (NR-1 BR-08): the
+  // earlier versions are copied forward untouched, never edited.
+  applyTransition: (id, toState, payload) => {
+    const now = sdcClock.now();
+    rfiResponseStore.update(id, (r) => {
+      const content = r.status === 'Submitted' ? revisedRfiResponse(r, payload, now) : r;
+      const next: RfiResponse = {
+        ...content,
+        status: toState as RfxResponseStatus,
+        updatedAt: now,
+        ...(toState === 'Submitted' ? { submittedAt: now } : {}),
+      };
+      return toState === 'Submitted' ? { ...next, versions: versionsAfterSubmit(r, next, now) } : next;
+    });
   },
   requireCreationOwner: true,
   creationOwner: (payload) => {
@@ -3083,13 +3099,20 @@ const rfpResponseTarget: CommandTarget = {
   readState: (id) => rfpResponseStore.get(id)?.status ?? null,
   readScopeOwner: (id) => rfpResponseStore.get(id)?.supplierId ?? null,
   readEntity: (id) => rfpResponseStore.get(id) ?? null,
-  applyTransition: (id, toState) => {
-    rfpResponseStore.update(id, (r) => ({
-      ...r,
-      status: toState as RfxResponseStatus,
-      updatedAt: sdcClock.now(),
-      ...(toState === 'Submitted' ? { submittedAt: sdcClock.now() } : {}),
-    }));
+  // Submit and revise, as the RFI response: the revised content (if any) is
+  // applied, then appended as the next version (NR-1 BR-08).
+  applyTransition: (id, toState, payload) => {
+    const now = sdcClock.now();
+    rfpResponseStore.update(id, (r) => {
+      const content = r.status === 'Submitted' ? revisedRfpResponse(r, payload, now) : r;
+      const next: RfpResponse = {
+        ...content,
+        status: toState as RfxResponseStatus,
+        updatedAt: now,
+        ...(toState === 'Submitted' ? { submittedAt: now } : {}),
+      };
+      return toState === 'Submitted' ? { ...next, versions: versionsAfterSubmit(r, next, now) } : next;
+    });
   },
   requireCreationOwner: true,
   creationOwner: (payload) => {
@@ -3278,12 +3301,32 @@ bindPolicyHook(POLICY_HOOKS.RFX_RESPONSE_INVITED, ({ payload }) => {
     : { ok: false, reason: 'NOT_INVITED: this supplier was not invited to the event' };
 });
 
+// NR-1 BR-08 / AC-07 (D-6) — a supplier changes its response only while the
+// event is Open and before the deadline in force for it. On the draft save
+// (creation: the event and supplier come from the payload) and on the revise
+// verbs (the stored response names them). `responseWindowRefusal` is the rule.
+bindPolicyHook(POLICY_HOOKS.RFX_RESPONSE_WINDOW_OPEN, ({ payload, target, entityId }) => {
+  const stored = entityId ? (target.readEntity(entityId) as RfiResponse | RfpResponse | null) : null;
+  if (entityId && !stored) return { ok: false, reason: 'response not found' };
+  const supplierId = stored ? stored.supplierId : String(payload.supplierId);
+  const rfiId = stored ? ('rfiId' in stored ? stored.rfiId : undefined) : payload.rfiId;
+  const event =
+    rfiId !== undefined
+      ? rfiEventStore.get(String(rfiId))
+      : rfpEventStore.get(String(stored ? (stored as RfpResponse).rfpId : payload.rfpId));
+  if (!event) return { ok: false, reason: 'event not found' };
+  const refusal = responseWindowRefusal(event, supplierId, rfxNow());
+  return refusal ? { ok: false, reason: refusal } : { ok: true };
+});
+
 // REQ-E03-02 — every required question answered, every answer fitting its
 // question, and the deadline in force for THIS supplier not yet passed. The
-// refusal names the questions.
-bindPolicyHook(POLICY_HOOKS.RFI_SUBMIT_COMPLETE, ({ target, entityId }) => {
-  const response = target.readEntity(entityId) as RfiResponse | null;
-  if (!response) return { ok: false, reason: 'response not found' };
+// refusal names the questions. On `t_rfiresponse_revise` (the response is
+// already Submitted) the rule judges the REVISED content the payload carries.
+bindPolicyHook(POLICY_HOOKS.RFI_SUBMIT_COMPLETE, ({ target, entityId, currentState, payload }) => {
+  const stored = target.readEntity(entityId) as RfiResponse | null;
+  if (!stored) return { ok: false, reason: 'response not found' };
+  const response = currentState === 'Submitted' ? revisedRfiResponse(stored, payload, rfxNow()) : stored;
   const event = rfiEventStore.get(response.rfiId);
   if (!event) return { ok: false, reason: 'RFI not found' };
   const deadline = effectiveDeadline(event.responseDeadline, event.invitees, response.supplierId);
@@ -3368,9 +3411,11 @@ bindPolicyHook(POLICY_HOOKS.RFX_RESPONSE_ACCEPTANCE_GATE, ({ payload }) => {
 });
 
 // REQ-E03-04 — every asked term answered, and A DEVIATION CARRIES A COMMENT.
-bindPolicyHook(POLICY_HOOKS.RFP_SUBMIT_TERMS_ANSWERED, ({ target, entityId }) => {
-  const response = target.readEntity(entityId) as RfpResponse | null;
-  if (!response) return { ok: false, reason: 'proposal not found' };
+// On `t_rfpresponse_revise` the rule judges the revised proposal (NR-1 BR-08).
+bindPolicyHook(POLICY_HOOKS.RFP_SUBMIT_TERMS_ANSWERED, ({ target, entityId, currentState, payload }) => {
+  const stored = target.readEntity(entityId) as RfpResponse | null;
+  if (!stored) return { ok: false, reason: 'proposal not found' };
+  const response = currentState === 'Submitted' ? revisedRfpResponse(stored, payload, rfxNow()) : stored;
   const event = rfpEventStore.get(response.rfpId);
   if (!event) return { ok: false, reason: 'RFP not found' };
   const deadline = effectiveDeadline(event.responseDeadline, event.invitees, response.supplierId);

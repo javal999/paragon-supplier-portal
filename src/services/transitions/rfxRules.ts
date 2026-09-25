@@ -154,6 +154,25 @@ export function isPastDeadline(deadline: string, nowIso: string): boolean {
   return now > end;
 }
 
+/**
+ * NR-1 BR-08 / AC-07 (D-6) — why a supplier may no longer change its response,
+ * or `null`. Refused `RESPONSE_DEADLINE_PASSED` when the event is not Open, or
+ * when the deadline in force for THIS supplier (its own extension, or the
+ * event's) has passed. Read by the revise verbs and the draft save, and by a
+ * screen deciding whether to offer "Revise response" (RFX-R2).
+ */
+export function responseWindowRefusal(
+  event: { readonly status: string; readonly responseDeadline: string; readonly invitees: readonly RfxInvitee[] },
+  supplierId: string,
+  nowIso: string,
+): string | null {
+  if (event.status !== 'Open') {
+    return `RESPONSE_DEADLINE_PASSED: the event is ${event.status}`;
+  }
+  const deadline = effectiveDeadline(event.responseDeadline, event.invitees, supplierId);
+  return isPastDeadline(deadline, nowIso) ? `RESPONSE_DEADLINE_PASSED: responses closed on ${deadline}` : null;
+}
+
 /** Whole days from `nowIso` to the end of the deadline day (negative = past). */
 export function daysToDeadline(deadline: string, nowIso: string): number {
   const end = Date.parse(`${deadline.slice(0, 10)}T23:59:59.999Z`);

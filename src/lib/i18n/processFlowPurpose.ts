@@ -475,6 +475,8 @@ export const processFlowPurposeEn: Record<string, string> = {
     'A half-finished answer is kept for the supplier to come back to, and PTI cannot see it yet.',
   'processFlows.purpose.t_rfiresponse_submit':
     'The supplier sends its answers to PTI. Every question marked as needed has to be answered first, so what arrives is comparable.',
+  'processFlows.purpose.t_rfiresponse_revise':
+    'The supplier corrects answers it already sent, up to the deadline. Each sent version is kept, so PTI reads the latest and can still see what came before.',
   'processFlows.purpose.entity.rfpEvent':
     'A request for the commercial terms a supplier will trade on — payment, delivery, service level and contract — rather than a unit figure alone.',
   'processFlows.purpose.t_rfp_create':
@@ -495,6 +497,8 @@ export const processFlowPurposeEn: Record<string, string> = {
     'A partly filled proposal is kept for the supplier to come back to, and PTI cannot see it yet.',
   'processFlows.purpose.t_rfpresponse_submit':
     'The supplier sends its terms to PTI. Anything it will not match has to carry an explanation, so a departure is never silent.',
+  'processFlows.purpose.t_rfpresponse_revise':
+    'The supplier corrects a proposal it already sent, up to the deadline, with the same checks as the first send. Each sent version and its files are kept, so PTI reads the latest and can still see the earlier ones.',
   'processFlows.purpose.entity.negotiationRound':
     'A round of asking a shortlist to improve what they offered, with a date to answer by and an optional target.',
   'processFlows.purpose.t_negotiationround_open':
@@ -938,6 +942,8 @@ export const processFlowPurposeId: Record<string, string> = {
     'Jawaban yang belum selesai disimpan agar pemasok bisa melanjutkan, dan PTI belum bisa melihatnya.',
   'processFlows.purpose.t_rfiresponse_submit':
     'Pemasok mengirim jawabannya ke PTI. Semua pertanyaan yang ditandai wajib harus terjawab lebih dulu agar hasilnya bisa dibandingkan.',
+  'processFlows.purpose.t_rfiresponse_revise':
+    'Pemasok memperbaiki jawaban yang sudah dikirim, sampai batas waktu. Setiap versi yang dikirim disimpan, sehingga PTI membaca yang terbaru dan tetap bisa melihat yang sebelumnya.',
   'processFlows.purpose.entity.rfpEvent':
     'Permintaan syarat komersial yang akan dipakai pemasok — pembayaran, pengiriman, tingkat layanan, dan kontrak — bukan sekadar angka satuan.',
   'processFlows.purpose.t_rfp_create':
@@ -958,6 +964,8 @@ export const processFlowPurposeId: Record<string, string> = {
     'Proposal yang belum lengkap disimpan agar pemasok bisa melanjutkan, dan PTI belum bisa melihatnya.',
   'processFlows.purpose.t_rfpresponse_submit':
     'Pemasok mengirim syaratnya ke PTI. Hal yang tidak bisa dipenuhi wajib disertai penjelasan, sehingga penyimpangan tidak pernah senyap.',
+  'processFlows.purpose.t_rfpresponse_revise':
+    'Pemasok memperbaiki proposal yang sudah dikirim, sampai batas waktu, dengan pemeriksaan yang sama seperti pengiriman pertama. Setiap versi yang dikirim beserta berkasnya disimpan, sehingga PTI membaca yang terbaru dan tetap bisa melihat yang sebelumnya.',
   'processFlows.purpose.entity.negotiationRound':
     'Satu putaran meminta daftar pendek memperbaiki tawarannya, dengan tanggal untuk menjawab dan target yang boleh dicantumkan.',
   'processFlows.purpose.t_negotiationround_open':
