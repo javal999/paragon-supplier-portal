@@ -235,6 +235,11 @@ import {
   isAttachmentMeta,
   type AttachmentMeta,
 } from '../../attachments/sessionAttachments';
+// NR-1 — document requests and response documents. Importing the module binds
+// the document policies (side effect), the `rfqEngagementCommand` precedent.
+import './rfxDocumentsCommand';
+import { documentRequestsRefusal, stampDocuments } from '../../transitions/rfxDocumentRules';
+import type { DocumentRequest } from '../../sourcing/types';
 
 
 // The question kinds this build can render and score live in ONE list,
@@ -1679,6 +1684,11 @@ const quotationTarget: CommandTarget = {
       ...(Array.isArray(payload.attachments) && payload.attachments.length > 0
         ? { attachments: payload.attachments as Quotation['attachments'] }
         : {}),
+      // NR-1 BR-01 — the supplier's documents, judged on submit by
+      // `quotation_documents_complete`; upload times are the store's.
+      ...(Array.isArray(payload.documents) && payload.documents.length > 0
+        ? { documents: stampDocuments(payload.documents, [], rfxNow()) }
+        : {}),
       // DECLARED-SIMULATED axes — documented baseline, passed through the engine
       // and marked "Simulated" at read. Never zero, never a profile lookup.
       complianceScore: SIMULATED_AXIS_BASELINE,
@@ -2946,10 +2956,16 @@ const rfiResponseTarget: CommandTarget = {
     // would make "which one did they send?" unanswerable. An acceptance-only
     // save carries no answers and leaves the stored ones alone.
     const existing = rfiResponseStore.all().find((r) => r.rfiId === rfiId && r.supplierId === supplierId);
+    // NR-1 BR-01 — the documents REPLACE the stored set, like the answers; a
+    // save that carries none leaves them alone. Upload times are the store's.
+    const documents = Array.isArray(payload.documents)
+      ? stampDocuments(payload.documents, existing?.documents ?? [], sdcClock.now())
+      : undefined;
     if (existing) {
       rfiResponseStore.update(existing.id, (r) => ({
         ...r,
         ...(hasAnswers ? { answers } : {}),
+        ...(documents !== undefined ? { documents } : {}),
         ...(accepting && !r.confidentialityAcceptedAt ? { confidentialityAcceptedAt: sdcClock.now() } : {}),
         updatedAt: sdcClock.now(),
       }));
@@ -2963,6 +2979,7 @@ const rfiResponseTarget: CommandTarget = {
       status: toState as RfxResponseStatus,
       updatedAt: sdcClock.now(),
       answers,
+      ...(documents !== undefined ? { documents } : {}),
       ...(accepting ? { confidentialityAcceptedAt: sdcClock.now() } : {}),
     });
     return { entityId: id };
@@ -3099,6 +3116,10 @@ const rfpResponseTarget: CommandTarget = {
       ...(payload.acceptTerms === true && !r?.termsAcceptedAt ? { termsAcceptedAt: now } : {}),
     });
     const existing = rfpResponseStore.all().find((r) => r.rfpId === rfpId && r.supplierId === supplierId);
+    // NR-1 BR-01 — as the RFI response: replaced when sent, store-stamped.
+    const documents = Array.isArray(payload.documents)
+      ? stampDocuments(payload.documents, existing?.documents ?? [], now)
+      : undefined;
     if (existing) {
       rfpResponseStore.update(existing.id, (r) => ({
         ...r,
@@ -3106,6 +3127,7 @@ const rfpResponseTarget: CommandTarget = {
         ...(otherTerms !== undefined ? { otherTerms } : {}),
         ...(questionAnswers !== undefined ? { questionAnswers } : {}),
         ...(pricing !== undefined ? { pricing } : {}),
+        ...(documents !== undefined ? { documents } : {}),
         ...accepted(r),
         updatedAt: now,
       }));
@@ -3122,6 +3144,7 @@ const rfpResponseTarget: CommandTarget = {
       ...(otherTerms !== undefined ? { otherTerms } : {}),
       ...(questionAnswers !== undefined ? { questionAnswers } : {}),
       ...(pricing !== undefined ? { pricing } : {}),
+      ...(documents !== undefined ? { documents } : {}),
       ...accepted(undefined),
     });
     return { entityId: id };
@@ -3327,7 +3350,9 @@ bindPolicyHook(POLICY_HOOKS.RFX_RESPONSE_ACCEPTANCE_GATE, ({ payload }) => {
   const carriesAnswers =
     (Array.isArray(payload.answers) && payload.answers.length > 0) ||
     (Array.isArray(payload.questionAnswers) && payload.questionAnswers.length > 0) ||
-    (payload.pricing !== undefined && payload.pricing !== null);
+    (payload.pricing !== undefined && payload.pricing !== null) ||
+    // NR-1 — a file answers requests the supplier was only shown after accepting.
+    (Array.isArray(payload.documents) && payload.documents.length > 0);
   if (!carriesAnswers) return { ok: true };
   if (event.confidentiality && !prior?.confidentialityAcceptedAt && payload.acceptConfidentiality !== true) {
     return { ok: false, reason: 'CONFIDENTIALITY_NOT_ACCEPTED: accept the confidentiality terms first' };
@@ -3389,9 +3414,14 @@ function rfxAuthoringFields(payload: Record<string, unknown>): {
   customSections?: readonly RfxCustomSection[];
   attachments?: readonly AttachmentMeta[];
   confidentiality?: RfxConfidentiality;
+  documentRequests?: readonly DocumentRequest[];
 } {
   const conf = payload.confidentiality as RfxConfidentiality | undefined;
   return {
+    // NR-1 BR-02 — the buyer's document requests, judged by `rfxAuthoringRefusal`.
+    ...(Array.isArray(payload.documentRequests) && payload.documentRequests.length > 0
+      ? { documentRequests: payload.documentRequests as DocumentRequest[] }
+      : {}),
     ...(Array.isArray(payload.customSections) && payload.customSections.length > 0
       ? { customSections: payload.customSections as RfxCustomSection[] }
       : {}),
@@ -3416,6 +3446,10 @@ function rfxAuthoringRefusal(payload: Record<string, unknown>): string | null {
     if (!conf || typeof conf !== 'object' || (conf.terms !== undefined && typeof conf.terms !== 'string')) {
       return 'CONFIDENTIALITY_MALFORMED: the confidentiality gate carries optional terms text';
     }
+  }
+  // NR-1 BR-02 — an RFI or RFP has no items, so no request may name one.
+  if (payload.documentRequests !== undefined) {
+    return documentRequestsRefusal(payload.documentRequests);
   }
   return null;
 }

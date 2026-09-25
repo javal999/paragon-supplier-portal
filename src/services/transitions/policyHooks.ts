@@ -541,6 +541,21 @@ export const POLICY_HOOKS = {
    */
   RFP_SUBMIT_TERMS_ANSWERED: 'rfp_submit_terms_answered',
   /**
+   * RFI / RFP response save (NR-1 BR-05, D-3): every document the save carries
+   * is a file record within the file limits. A draft is not held to the
+   * required requests yet: that is the submit's rule.
+   */
+  RFX_RESPONSE_DOCUMENTS_WITHIN_LIMITS: 'rfx_response_documents_within_limits',
+  /**
+   * RFI / RFP response submit (NR-1 BR-03 to BR-05): `responseDocumentsRefusal`
+   * over the stored documents and the event's requests: no unknown request, no
+   * required request without a file (named), certificate fields present, and
+   * the file limits.
+   */
+  RFX_RESPONSE_DOCUMENTS_COMPLETE: 'rfx_response_documents_complete',
+  /** Quotation submit (NR-1 BR-03 to BR-05): the same rule over the quote's documents and the RFQ's requests. */
+  QUOTATION_DOCUMENTS_COMPLETE: 'quotation_documents_complete',
+  /**
    * Quotation submit (REQ-E03-03 AC-05): no quote after the response deadline
    * in force for THIS supplier (its own extension, or the event's).
    */

@@ -9,12 +9,21 @@
 // Pure. It reads only SUBMITTED responses — a draft is invisible to the buyer
 // (REQ-E03-02 edge case), so pre-filling from one would leak an answer the
 // supplier has not sent.
+//
+// NR-1 BR-11 — every pre-fill here copies the BUYER'S document requests and
+// never a supplier's documents: a file answers one event's request, so it is
+// not presented as an answer to a new one. The new event links back to its
+// source instead (`sourceRfiId`, `sourceRfpId`).
 // ────────────────────────────────────────────────────────────────────────────
 
 import type { RfqLineItem } from '../../data/mockRfqs';
-import type { RfiEvent, RfiResponse, RfpEvent, RfpResponse } from './types';
+import type { DocumentRequest, RfiEvent, RfiResponse, RfpEvent, RfpResponse } from './types';
 import type { AttachmentMeta } from '../attachments/sessionAttachments';
 import { rfxFamilyForCategory, rfxSectionsOf } from './rfxConfig';
+
+/** The buyer's requests, copied as they stand (a fresh array, same ids). */
+const copyRequests = (requests: readonly DocumentRequest[] | undefined): readonly DocumentRequest[] =>
+  (requests ?? []).map((r) => ({ ...r }));
 
 /** The editable draft an RFQ opens on when it is created from an RFI. */
 export interface RfqPrefill {
@@ -23,6 +32,8 @@ export interface RfqPrefill {
   readonly sourceRfiId: string;
   readonly invitedSupplierIds: readonly string[];
   readonly lineItems: readonly RfqLineItem[];
+  /** NR-1 BR-11 — the RFI's document requests. */
+  readonly documentRequests: readonly DocumentRequest[];
 }
 
 const answerText = (response: RfiResponse, questionId: string): string => {
@@ -82,6 +93,7 @@ export function prefillRfqFromRfi(
     sourceRfiId: rfi.id,
     invitedSupplierIds: chosen.map((r) => r.supplierId),
     lineItems,
+    documentRequests: copyRequests(rfi.documentRequests),
   };
 }
 
@@ -111,6 +123,8 @@ export interface RfpPrefill {
   readonly confidential: boolean;
   readonly confidentialityTerms?: string;
   readonly sourceRfiId: string;
+  /** NR-1 BR-11 — the RFI's document requests. */
+  readonly documentRequests: readonly DocumentRequest[];
 }
 
 export function prefillRfpFromRfi(
@@ -134,6 +148,7 @@ export function prefillRfpFromRfi(
     confidential: !!rfi.confidentiality,
     ...(rfi.confidentiality?.terms ? { confidentialityTerms: rfi.confidentiality.terms } : {}),
     sourceRfiId: rfi.id,
+    documentRequests: copyRequests(rfi.documentRequests),
   };
 }
 
@@ -165,6 +180,8 @@ export interface RfqSeedFromRfp {
   /** Submitted responders that priced at least one chosen option. */
   readonly invitedSupplierIds: readonly string[];
   readonly items: readonly RfqItemSeedFromRfp[];
+  /** NR-1 BR-11 — the RFP's document requests. */
+  readonly documentRequests: readonly DocumentRequest[];
 }
 
 export function prefillRfqItemsFromRfp(
@@ -204,5 +221,6 @@ export function prefillRfqItemsFromRfp(
     sourceRfpId: rfp.id,
     invitedSupplierIds: [...new Set(invited)],
     items,
+    documentRequests: copyRequests(rfp.documentRequests),
   };
 }

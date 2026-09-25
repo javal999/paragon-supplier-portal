@@ -944,6 +944,8 @@ const applySeed = (base: DraftRfq, seed: RfqDraftSeed): DraftRfq => ({
   ...(seed.allowAlternatives !== undefined ? { allowAlternatives: seed.allowAlternatives } : {}),
   ...(seed.samplesQty !== undefined ? { samplesOn: true, samplesQty: seed.samplesQty } : {}),
   ...(seed.confidential !== undefined ? { confidential: seed.confidential } : {}),
+  // NR-1 BR-11 — the buyer's document requests, from every source.
+  ...(seed.documentRequests !== undefined ? { documentRequests: [...seed.documentRequests] } : {}),
   // BL-93 — only `seedForEdit` carries these: an edit is the same event.
   ...(seed.responseDeadline !== undefined ? { responseDeadline: seed.responseDeadline } : {}),
   ...(seed.awardDeadline !== undefined ? { awardDeadline: seed.awardDeadline } : {}),

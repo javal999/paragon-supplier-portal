@@ -186,7 +186,7 @@ const inviteeViews = (
   });
 
 const rfiFacts = (r: RfiResponse | undefined): InviteeResponseFacts | undefined =>
-  r && { ...r, empty: r.status !== 'Submitted' && r.answers.length === 0 };
+  r && { ...r, empty: r.status !== 'Submitted' && r.answers.length === 0 && (r.documents ?? []).length === 0 };
 
 const rfpFacts = (r: RfpResponse | undefined): InviteeResponseFacts | undefined =>
   r && {
@@ -196,7 +196,8 @@ const rfpFacts = (r: RfpResponse | undefined): InviteeResponseFacts | undefined 
       r.answers.length === 0 &&
       (r.questionAnswers ?? []).length === 0 &&
       !r.pricing &&
-      !r.otherTerms,
+      !r.otherTerms &&
+      (r.documents ?? []).length === 0,
   };
 
 /**
@@ -223,7 +224,9 @@ export function rfiEventViews(nowIso: string, supplierId: string | null): readon
         !!supplierId && !!event.confidentiality && !visible[0]?.confidentialityAcceptedAt;
       return {
         ...event,
-        ...(locked ? { description: undefined, questions: [], customSections: [], attachments: [] } : {}),
+        ...(locked
+          ? { description: undefined, questions: [], customSections: [], attachments: [], documentRequests: [] }
+          : {}),
         confidentialityLocked: locked,
         invitedSuppliers: inviteeViews(
           event,
@@ -267,6 +270,7 @@ export function rfpEventViews(nowIso: string, supplierId: string | null): readon
               attachments: [],
               termsDocument: undefined,
               pricing: undefined,
+              documentRequests: [],
             }
           : {}),
         confidentialityLocked: locked,

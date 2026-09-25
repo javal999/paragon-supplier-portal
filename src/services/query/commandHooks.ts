@@ -776,8 +776,12 @@ export function useRfqReopen() {
 // read (#78). t_quotation_review is the buyer's Submitted → Under Review move.
 
 export interface QuotationSubmitVars {
-  /** The t_quotation_submit payload (rfqId + unitPrice + leadTimeDays required). */
-  payload: Record<string, unknown>;
+  /**
+   * The t_quotation_submit payload (rfqId + unitPrice + leadTimeDays required).
+   * NR-1 BR-01 — `documents` carries the supplier's files; the store stamps
+   * their upload times.
+   */
+  payload: Record<string, unknown> & { documents?: readonly ResponseDocumentInput[] };
 }
 
 /** Submit a quotation against an invited RFQ (fires the `creation` verb `t_quotation_submit`). */
@@ -2306,6 +2310,8 @@ export function useForecastCommand() {
 
 import type {
   AwardLine,
+  DocumentRequest,
+  ResponseDocument,
   RfiAnswer,
   RfiQuestion,
   RfpPricingAnswer,
@@ -2318,11 +2324,16 @@ import type {
 } from '../sourcing/types';
 import type { AttachmentMeta } from '../attachments/sessionAttachments';
 
+/** A response document as a supplier sends it: the store stamps `uploadedAt`. */
+type ResponseDocumentInput = Omit<ResponseDocument, 'uploadedAt'>;
+
 /** The authoring fields an RFI and an RFP both carry (RFx authoring batch). */
 interface RfxAuthoringVars {
   customSections?: readonly RfxCustomSection[];
   attachments?: readonly AttachmentMeta[];
   confidentiality?: RfxConfidentiality;
+  /** NR-1 BR-02 — the documents the buyer asks every supplier for. */
+  documentRequests?: readonly DocumentRequest[];
 }
 import type { QuoteLineInput } from '../transitions/rfxRules';
 import type {
@@ -2377,6 +2388,8 @@ export type RfxCommandVars =
       rfiId: string;
       supplierId: string;
       answers: readonly RfiAnswer[];
+      /** NR-1 BR-01 — replaces the stored documents when sent; the upload times are the store's. */
+      documents?: readonly ResponseDocumentInput[];
       /** Draft only — PTI does not see it (REQ-E03-02 edge case). */
       draftOnly?: boolean;
     }
@@ -2430,6 +2443,8 @@ export type RfxCommandVars =
       otherTerms?: string;
       questionAnswers?: readonly RfiAnswer[];
       pricing?: RfpPricingAnswer;
+      /** NR-1 BR-01 — as `answerRfi`. */
+      documents?: readonly ResponseDocumentInput[];
       draftOnly?: boolean;
     }
   /**
@@ -2567,7 +2582,12 @@ export function useRfxCommand() {
           const saved = await svc.commands.dispatch(scope, {
             transitionId: 't_rfiresponse_save',
             entity: 'rfiResponse',
-            payload: { rfiId: vars.rfiId, supplierId: vars.supplierId, answers: [...vars.answers] },
+            payload: {
+              rfiId: vars.rfiId,
+              supplierId: vars.supplierId,
+              answers: [...vars.answers],
+              ...(vars.documents !== undefined ? { documents: vars.documents.map((d) => ({ ...d })) } : {}),
+            },
           });
           if (saved.status === 'failed' || vars.draftOnly || !saved.entityId) return saved;
           return svc.commands.dispatch(scope, {
@@ -2675,6 +2695,7 @@ export function useRfxCommand() {
               ...(vars.otherTerms !== undefined ? { otherTerms: vars.otherTerms } : {}),
               ...(vars.questionAnswers !== undefined ? { questionAnswers: [...vars.questionAnswers] } : {}),
               ...(vars.pricing !== undefined ? { pricing: vars.pricing } : {}),
+              ...(vars.documents !== undefined ? { documents: vars.documents.map((d) => ({ ...d })) } : {}),
             },
 
           });

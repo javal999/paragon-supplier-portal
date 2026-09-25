@@ -56,7 +56,7 @@ import {
 } from '../../services/sourcing/rfxConfig';
 import { rfiTemplateStore, type RfiTemplateContent } from '../../services/sourcing/rfxTemplates';
 import { isPastDeadline } from '../../services/transitions/rfxRules';
-import type { RfiEvent, RfiQuestion, RfxCustomSection } from '../../services/sourcing/types';
+import type { DocumentRequest, RfiEvent, RfiQuestion, RfxCustomSection } from '../../services/sourcing/types';
 import RfxInviteeStep from './RfxInviteeStep';
 import RfxQuestionEditor from './RfxQuestionEditor';
 import RfxSaveTemplate from './RfxSaveTemplate';
@@ -77,6 +77,11 @@ interface Draft {
   confidentialityTerms: string;
   /** Not authored here: carried so an edit keeps the event's purchasing group. */
   purchasingGroup?: string;
+  /**
+   * NR-1 BR-02 — carried through edit, copy and template so the requests
+   * survive; the step that edits them is B3.
+   */
+  documentRequests: readonly DocumentRequest[];
 }
 
 const EMPTY: Draft = {
@@ -90,6 +95,7 @@ const EMPTY: Draft = {
   attachments: [],
   confidential: false,
   confidentialityTerms: '',
+  documentRequests: [],
 };
 
 interface RfiCreateWizardProps {
@@ -118,6 +124,7 @@ const draftOf = (e: RfiEvent): Draft => ({
   confidential: !!e.confidentiality,
   confidentialityTerms: e.confidentiality?.terms ?? '',
   ...(e.purchasingGroup ? { purchasingGroup: e.purchasingGroup } : {}),
+  documentRequests: e.documentRequests ?? [],
 });
 
 /** The template content this draft would save (D2): content only, never who or when. */
@@ -128,6 +135,7 @@ const contentOf = (d: Draft): RfiTemplateContent => ({
   customSections: d.customSections,
   confidential: d.confidential,
   ...(d.confidential && d.confidentialityTerms.trim() ? { confidentialityTerms: d.confidentialityTerms.trim() } : {}),
+  ...(d.documentRequests.length > 0 ? { documentRequests: d.documentRequests } : {}),
 });
 
 const RfiCreateWizard: React.FC<RfiCreateWizardProps> = ({
@@ -165,6 +173,7 @@ const RfiCreateWizard: React.FC<RfiCreateWizardProps> = ({
       customSections: c.customSections,
       confidential: c.confidential,
       confidentialityTerms: c.confidentialityTerms ?? '',
+      documentRequests: c.documentRequests ?? [],
     }));
 
   const applyStart = (key: string) => {
@@ -190,6 +199,8 @@ const RfiCreateWizard: React.FC<RfiCreateWizardProps> = ({
         attachments: e.attachments ?? [],
         confidential: !!e.confidentiality,
         confidentialityTerms: e.confidentiality?.terms ?? '',
+        // NR-1 BR-11 — the buyer's requests copy; supplier documents never do.
+        documentRequests: e.documentRequests ?? [],
       });
     }
   };
@@ -239,6 +250,7 @@ const RfiCreateWizard: React.FC<RfiCreateWizardProps> = ({
         questions: draft.questions,
         ...(draft.customSections.length > 0 ? { customSections: draft.customSections } : {}),
         ...(draft.attachments.length > 0 ? { attachments: draft.attachments } : {}),
+        ...(draft.documentRequests.length > 0 ? { documentRequests: draft.documentRequests } : {}),
         ...(draft.confidential
           ? { confidentiality: draft.confidentialityTerms.trim() ? { terms: draft.confidentialityTerms.trim() } : {} }
           : {}),
