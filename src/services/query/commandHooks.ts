@@ -600,37 +600,11 @@ export function useRfqReviseDraft() {
   });
 }
 
-// ─── RFQ award (Step 4 batch iv) — the cascade-class verb ────────────────────
-// Buyer awards an RFQ to a chosen quotation. The dispatcher fans out (winner →
-// Awarded, every other → Rejected) under one causation group; a non-failed
-// outcome invalidates the buyer's procurement reads so the sourcing board, the
-// awards history, and the quotation statuses all re-derive together.
-
-export interface RfqAwardVars {
-  rfqId: string;
-  awardedQuotationId: string;
-  awardedSupplierId: string;
-}
-
-/** Award an Open/Closed RFQ to a quotation (fires the cascade source `t_rfq_award`). */
-export function useRfqAward() {
-  const svc = useDataService();
-  const scope = useScope();
-  const invalidate = useInvalidateProcurement();
-
-  return useMutation<CommandResult, Error, RfqAwardVars>({
-    mutationFn: ({ rfqId, awardedQuotationId, awardedSupplierId }) =>
-      svc.commands.dispatch(scope, {
-        transitionId: 't_rfq_award',
-        entity: 'rfq',
-        entityId: rfqId,
-        payload: { awardedQuotationId, awardedSupplierId },
-      }),
-    onSuccess: (result) => {
-      if (result.status !== 'failed') invalidate(scope);
-    },
-  });
-}
+// ─── RFQ award — RFx C3 (AR-03): `useRfqAward` is GONE ───────────────────────
+// It sent a single winner with no lines and no reason, from the RFQ list page
+// only, so a legacy RFQ could be awarded around the split rules. Every award
+// now goes through `useRfxCommand` (`award` / `awardPartial`) from the award
+// panel on the event page, which the list page links to.
 
 // ─── FX basis (CP-0 · 2e-c-3/4) — the buyer records the rate a multi-currency
 //     comparison is ranked against ───────────────────────────────────────────
@@ -2536,7 +2510,17 @@ export type RfxCommandVars =
   | { verb: 'awardRfpPartial'; rfpId: string; awardLines: readonly RfpAwardLine[]; awardReason: string }
   | { verb: 'cancelRfpAward'; rfpId: string; awardId: string; cancelReason: string }
   | { verb: 'cancelRfpAwardPartial'; rfpId: string; awardId: string; cancelReason: string }
-  | { verb: 'markRfpAwardSap'; rfpId: string; awardId: string; sapDocumentNo: string };
+  | { verb: 'markRfpAwardSap'; rfpId: string; awardId: string; sapDocumentNo: string }
+  /**
+   * RFx C2/C3 (NR-3 BR-09) — cancel an award with a reason. `cancelAward` is
+   * `t_rfq_award_cancel` (no other award stays in force: the RFQ returns to
+   * Closed); `cancelAwardPartial` is `t_rfq_award_cancel_partial` (another award
+   * stays: the RFQ stays Partly awarded). The page picks one with
+   * `othersInForceAfterCancel`, the function the policy refuses the wrong one by.
+   */
+  | { verb: 'cancelAward' | 'cancelAwardPartial'; rfqId: string; awardId: string; cancelReason: string }
+  /** RFx C2/C3 (NR-3 BR-10) — mark an award "Raised in SAP" (`t_rfq_award_sap_raised`). */
+  | { verb: 'markAwardSapRaised'; rfqId: string; awardId: string; sapDocumentNo: string };
 
 /** Every read an RFx act can change, on either persona. */
 const RFX_READS = new Set([
@@ -2869,6 +2853,21 @@ export function useRfxCommand() {
             transitionId: 't_rfp_award_sap_raised',
             entity: 'rfpEvent',
             entityId: vars.rfpId,
+            payload: { awardId: vars.awardId, sapDocumentNo: vars.sapDocumentNo },
+          });
+        case 'cancelAward':
+        case 'cancelAwardPartial':
+          return svc.commands.dispatch(scope, {
+            transitionId: vars.verb === 'cancelAward' ? 't_rfq_award_cancel' : 't_rfq_award_cancel_partial',
+            entity: 'rfq',
+            entityId: vars.rfqId,
+            payload: { awardId: vars.awardId, cancelReason: vars.cancelReason },
+          });
+        case 'markAwardSapRaised':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_rfq_award_sap_raised',
+            entity: 'rfq',
+            entityId: vars.rfqId,
             payload: { awardId: vars.awardId, sapDocumentNo: vars.sapDocumentNo },
           });
       }

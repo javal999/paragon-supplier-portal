@@ -266,3 +266,71 @@ describe('BR-06 — t_rfq_award refuses AWARD_ITEMS_OPEN while an item is open',
     expect(rfqStore.get('rfq-014')!.status).toBe('Partly awarded');
   });
 });
+
+// RFx C3 (NR-3 BR-06) — "Will not award the rest": a FINAL award with no lines
+// on a Partly awarded RFQ, whose `notAwardedItems` covers every open item. The
+// final award's cascade still runs: every quote no award in force named is
+// Rejected, and the earlier award's winner is kept.
+describe('C3 — a final award with no lines settles the rest of a Partly awarded RFQ', () => {
+  const firstLine: AwardLine = {
+    supplierId: 'sup-013',
+    quotationId: 'qt-014c',
+    itemCode: 'PK-PETB-8802',
+    sharePct: 100,
+    quantity: 600_000,
+  };
+  const settleRest = (transitionId: 't_rfq_award' | 't_rfq_award_partial', extra: Record<string, unknown>) =>
+    svc.dispatch(buyer, {
+      transitionId,
+      entity: 'rfq',
+      entityId: 'rfq-014',
+      payload: { awardedQuotationId: 'qt-014c', awardedSupplierId: 'sup-013', awardLines: [], ...extra },
+    });
+
+  beforeEach(async () => {
+    const partial = await dispatchAward('t_rfq_award_partial', 'rfq-014', [firstLine], { awardReason: 'Single source.' });
+    expect(partial.status, partial.reason).toBe('done');
+    expect(rfqStore.get('rfq-014')!.status).toBe('Partly awarded');
+  });
+
+  it('KNOWN-GOOD — every open item marked Will not award: Awarded, and the cascade rejects the unnamed quotes', async () => {
+    const res = await settleRest('t_rfq_award', { notAwardedItems: ['PK-CAPF-8820'] });
+    expect(res.status, res.reason).toBe('done');
+    expect(rfqStore.get('rfq-014')!.status).toBe('Awarded');
+    expect(quotationStore.get('qt-014c')!.status).toBe('Awarded'); // the earlier award's winner stays
+    for (const id of ['qt-014a', 'qt-014b', 'qt-014d-r1']) expect(quotationStore.get(id)!.status).toBe('Rejected');
+    const final = awardsOf('rfq-014').find((a) => a.lines.length === 0)!;
+    expect([...final.notAwardedSupplierIds].sort()).toEqual(['sup-007', 'sup-008', 'sup-015']);
+  });
+
+  it('KNOWN-BAD — the open item not marked: AWARD_EMPTY, and nothing moves', async () => {
+    const res = await settleRest('t_rfq_award', {});
+    expect(res.status).toBe('failed');
+    expect(res.reason).toMatch(/rfq_award_governed:AWARD_EMPTY/);
+    expect(rfqStore.get('rfq-014')!.status).toBe('Partly awarded');
+    expect(quotationStore.get('qt-014a')!.status).toBe('Under Review');
+  });
+
+  it('KNOWN-BAD — the same empty payload as a PARTIAL award: AWARD_EMPTY', async () => {
+    const res = await settleRest('t_rfq_award_partial', { notAwardedItems: ['PK-CAPF-8820'] });
+    expect(res.reason).toMatch(/rfq_award_governed:AWARD_EMPTY/);
+  });
+});
+
+describe('C3 — an empty final award on an RFQ that is not Partly awarded stays AWARD_EMPTY', () => {
+  it('KNOWN-BAD — rfq-014 Closed, every item marked Will not award', async () => {
+    const res = await svc.dispatch(buyer, {
+      transitionId: 't_rfq_award',
+      entity: 'rfq',
+      entityId: 'rfq-014',
+      payload: {
+        awardedQuotationId: 'qt-014c',
+        awardedSupplierId: 'sup-013',
+        awardLines: [],
+        notAwardedItems: ['PK-PETB-8802', 'PK-CAPF-8820'],
+      },
+    });
+    expect(res.reason).toMatch(/rfq_award_governed:AWARD_EMPTY/);
+    expect(rfqStore.get('rfq-014')!.status).toBe('Closed');
+  });
+});

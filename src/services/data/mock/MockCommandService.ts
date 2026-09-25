@@ -3826,11 +3826,12 @@ const rfqAwardRecordsOf = (rfqId: string): RfqAwardRecord[] =>
 const rfqAwardsOf = (rfqId: string) => awardsInForce(rfqAwardRecordsOf(rfqId), awardTrail());
 
 /**
- * The award lines a payload describes. `awardLines` when sent. Without them —
- * `useRfqAward`'s single winner — a LEGACY RFQ is awarded 1 line per item at
- * 100% to that winner (RFX-R9: the event-level meaning it always had). A TIERED
- * RFQ keeps the one line naming no item, which the rule refuses by name: the
- * list page links a tiered RFQ to its event page instead.
+ * The award lines a payload describes. `awardLines` when sent (RFx C3: an EMPTY
+ * array is a final award with no lines, which only a "Will not award the rest"
+ * passes). Without them — a payload naming only the principal winner; no screen
+ * sends one since C3 removed `useRfqAward` — a LEGACY RFQ is awarded 1 line per
+ * item at 100% to that winner, judged by the same rule. A TIERED RFQ keeps the
+ * one line naming no item, which the rule refuses by name.
  */
 function awardLinesOfPayload(rfq: RFQ, payload: Record<string, unknown>): AwardLine[] {
   if (Array.isArray(payload.awardLines)) return payload.awardLines as AwardLine[];
@@ -3865,18 +3866,25 @@ const notAwardedItemsOf = (payload: Record<string, unknown>): string[] =>
 // function the page pre-checks with) · the items left open · every line on a
 // quote of this event · CR-23 for every awarded supplier · BR-07 per awarded
 // item, at that item's break.
-bindPolicyHook(POLICY_HOOKS.RFQ_AWARD_GOVERNED, ({ payload, entityId, toState }) => {
+bindPolicyHook(POLICY_HOOKS.RFQ_AWARD_GOVERNED, ({ payload, entityId, currentState, toState }) => {
   const rfq = rfqStore.get(entityId);
   if (!rfq) return { ok: false, reason: 'sourcing event not found' };
   const lines = awardLinesOfPayload(rfq, payload);
   const onEventQuotes = quotationStore.all().filter((q) => q.rfqId === rfq.id);
   const items = awardItemsOf(rfq, rfqAwardsOf(rfq.id));
-  const shape = awardShapeRefusal(items, lines, onEventQuotes);
-  if (shape) return { ok: false, reason: awardRefusalText(shape) };
   // NR-3 BR-06 — the final award settles every item; a partial award leaves at
   // least one open. "Will not award" rides on the final award only.
   const final = toState === 'Awarded';
   const willNotAward = final ? notAwardedItemsOf(payload) : [];
+  // RFx C3 — a final award may carry NO lines when it only marks the rest of a
+  // Partly awarded event "Will not award"; the rule decides (`settle`).
+  const shape = awardShapeRefusal(
+    items,
+    lines,
+    onEventQuotes,
+    final ? { partlyAwarded: currentState === 'Partly awarded', notAwardedKeys: willNotAward } : undefined,
+  );
+  if (shape) return { ok: false, reason: awardRefusalText(shape) };
   const unknown = willNotAward.find((key) => !items.some((i) => i.key === key));
   if (unknown !== undefined) {
     return { ok: false, reason: awardRefusalText({ code: 'AWARD_ITEM_UNKNOWN', detail: `"${unknown}"` }) };
@@ -5000,14 +5008,17 @@ const resolveCascades = (ctx: CascadeContext): CascadeCommand[] => {
     // BL-37 — A SPLIT HAS SEVERAL WINNERS. Every quotation an award line names
     // is awarded, not only the principal one: before this, a 70/30 split marked
     // the 30% supplier's quote Rejected while the award record said it won.
-    const winnerIds = new Set([
-      winnerId,
-      ...(Array.isArray(ctx.payload.awardLines)
+    // RFx C3 — when the payload carries its lines, THE LINES are the winners.
+    // A final award with no lines ("Will not award the rest") names the
+    // principal of an earlier award only to fill the verb's required fields;
+    // it awards nobody, and its rejection half still runs below.
+    const winnerIds = new Set(
+      Array.isArray(ctx.payload.awardLines)
         ? (ctx.payload.awardLines as { quotationId?: unknown }[])
             .map((l) => l?.quotationId)
             .filter((x): x is string => typeof x === 'string')
-        : []),
-    ]);
+        : [winnerId],
+    );
     // RFx C1 — a quote an EARLIER (partial) award of this event named is a
     // winner too, so the final award never rejects it. Read from the store: the
     // award records are the event's history, the payload only this award's.

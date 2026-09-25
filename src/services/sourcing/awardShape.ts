@@ -294,8 +294,34 @@ export function derivedQuantities(pieces: number, lines: readonly AnyAwardLine[]
 }
 
 /**
+ * RFx C3 (NR-3 BR-06) — what a FINAL award with no lines needs to be read as
+ * "Will not award the rest": the event is Partly awarded, and the payload's
+ * "Will not award" keys cover every item still open. Only the final award
+ * passes it; the partial award never does, so an empty partial award stays
+ * AWARD_EMPTY.
+ */
+export interface AwardSettleRest {
+  /** The event is `Partly awarded`: an earlier award of it is in force. */
+  readonly partlyAwarded: boolean;
+  /** The award's "Will not award" items, by `AwardItem.key`. */
+  readonly notAwardedKeys: readonly string[];
+}
+
+/**
+ * True when an award with NO lines only settles the rest: on a Partly awarded
+ * event, every open item (not awarded by an award in force) is marked "Will
+ * not award". Anything else with no lines is AWARD_EMPTY.
+ */
+export function settlesRestWithoutLines(items: readonly AwardItem[], settle: AwardSettleRest): boolean {
+  if (!settle.partlyAwarded) return false;
+  const open = items.filter((item) => !item.awardedIn);
+  return open.length > 0 && open.every((item) => settle.notAwardedKeys.includes(item.key));
+}
+
+/**
  * Why an award's SHAPE is refused, or `null`. Checked in this order: lines
- * exist · each names an item · each item's lines record one of its breaks, the
+ * exist (or, RFx C3, the award only marks the rest "Will not award" — see
+ * `settlesRestWithoutLines`) · each names an item · each item's lines record one of its breaks, the
  * same one · shares above zero · quantities above zero · each awarded item
  * totals its break (by the side the buyer typed) · each quote priced the item
  * at the break · the derived side matches the typed side · no item was already
@@ -308,8 +334,9 @@ export function awardShapeRefusal(
   items: readonly AwardItem[],
   lines: readonly AnyAwardLine[],
   quotes: readonly AwardQuoteShape[],
+  settle?: AwardSettleRest,
 ): AwardRefusal | null {
-  if (lines.length === 0) return { code: 'AWARD_EMPTY' };
+  if (lines.length === 0) return settle && settlesRestWithoutLines(items, settle) ? null : { code: 'AWARD_EMPTY' };
   for (const line of lines) {
     if (!itemOfAwardLine(items, line)) {
       const detail =

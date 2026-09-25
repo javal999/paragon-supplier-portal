@@ -90,6 +90,27 @@ function awardOnEvent(
 }
 
 /**
+ * How many OTHER awards of the event stay in force once this one is cancelled.
+ * More than none means the cancel is the PARTIAL one (`t_rfq_award_cancel_partial`,
+ * the event stays Partly awarded); none means the full cancel
+ * (`t_rfq_award_cancel`, the event returns to Closed). The policy refuses the
+ * wrong verb with this, and a screen picks the verb with it (RFx C3, RFX-R2).
+ */
+export const othersInForceAfterCancel = (
+  awardId: string,
+  eventAwards: readonly Pick<AwardRecord, 'id'>[],
+  trail: AwardTrail,
+): number => awardsInForce(eventAwards, trail).filter((a) => a.id !== awardId).length;
+
+/** The trail as the buyer's award read carries it (each view's own records). */
+export const trailOfViews = (
+  views: readonly { readonly cancellation?: AwardCancellation; readonly sapMark?: AwardSapMark }[],
+): AwardTrail => ({
+  cancellations: views.flatMap((v) => (v.cancellation ? [v.cancellation] : [])),
+  sapMarks: views.flatMap((v) => (v.sapMark ? [v.sapMark] : [])),
+});
+
+/**
  * NR-3 BR-09 — may this award be cancelled by this verb? In order: the award
  * is an active award of the event · it is not raised in SAP (edge case 4: the
  * refusal names the SAP document) · a reason is given · the verb is the right
@@ -114,7 +135,7 @@ export function awardCancelRefusal(input: {
   const mark = sapMarkOf(awardId, trail);
   if (mark) return { code: 'AWARD_RAISED_IN_SAP', detail: mark.sapDocumentNo };
   if (input.reason.trim().length === 0) return { code: 'AWARD_REASON_REQUIRED' };
-  const othersInForce = awardsInForce(eventAwards, trail).filter((a) => a.id !== awardId).length;
+  const othersInForce = othersInForceAfterCancel(awardId, eventAwards, trail);
   if (partial && othersInForce === 0) {
     return {
       code: 'AWARD_CANCEL_TARGET_WRONG',
