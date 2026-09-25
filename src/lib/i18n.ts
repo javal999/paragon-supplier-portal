@@ -481,6 +481,15 @@ export const resources = {
       'ui.search': 'Search',
       'ui.expandSection': 'Expand section',
       'ui.collapseSection': 'Collapse section',
+      // SelectField (shared standard/combobox select primitive) — see
+      // src/components/ui-v2/SelectField.tsx for the >10-options rule.
+      'ui.select.placeholder': 'Select…',
+      'ui.select.searchPlaceholder': 'Search…',
+      'ui.select.empty': 'No options available',
+      'ui.select.noResults': 'No matching results',
+      'ui.select.noResultsHint': 'Try a different search term.',
+      'ui.select.loading': 'Loading options…',
+      'ui.select.unavailableValue': 'Unavailable: {{value}}',
       'topbar.searchLabel': 'Search the portal',
       // — PO confirm (Step 3.10 proof surface) —
       'po.confirm.action': 'Confirm order',
@@ -929,6 +938,13 @@ export const resources = {
       'ui.search': 'Cari',
       'ui.expandSection': 'Buka bagian',
       'ui.collapseSection': 'Tutup bagian',
+      'ui.select.placeholder': 'Pilih…',
+      'ui.select.searchPlaceholder': 'Cari…',
+      'ui.select.empty': 'Tidak ada opsi tersedia',
+      'ui.select.noResults': 'Tidak ada hasil yang cocok',
+      'ui.select.noResultsHint': 'Coba kata kunci pencarian lain.',
+      'ui.select.loading': 'Memuat opsi…',
+      'ui.select.unavailableValue': 'Tidak tersedia: {{value}}',
       'topbar.searchLabel': 'Cari di portal',
       // — PO confirm (ID stub — refined in the Phase 3′ ID-first sweep) —
       'po.confirm.action': 'Konfirmasi pesanan',
