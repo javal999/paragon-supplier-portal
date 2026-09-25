@@ -70,9 +70,8 @@ export interface RfqAuthoringDraft {
   copiedFromRfqId?: string;
   templateId?: string;
   /**
-   * NR-1 BR-02 — the buyer's document requests. Optional so a wizard that does
-   * not edit them yet still type-checks; the "Documents from suppliers" step
-   * is B3.
+   * NR-1 BR-02 — the buyer's document requests, edited on the RFQ wizard's
+   * "Documents from suppliers" step (B3). Optional: absent reads as none.
    */
   documentRequests?: DocumentRequest[];
 }

@@ -14,6 +14,7 @@ import Toaster from '../../components/ui-v2/Toaster';
 import { rfqStore } from '../../services/data/mock/stores/rfqStore';
 import { quotationStore } from '../../services/data/mock/stores/quotationStore';
 import { rfqTemplateStore } from '../../services/sourcing/rfqTemplates';
+import { mockDataService } from '../../services/data/mock/mockDataService';
 
 // `<Toaster />` lives in AppRouter, not in the page, so it is mounted here for
 // the toasts these specs read (the BuyerComplianceRequest precedent).
@@ -134,6 +135,7 @@ describe('the RFQ wizard authors a multi-item tiered RFQ', () => {
     fillTerms();
     fireEvent.click(screen.getByRole('radio', { name: 'USD' }));
     next();
+    next(); // + the Documents step (B3), optional, so it passes empty
 
     // Review names the items and the breaks.
     expect(await screen.findByTestId('rfq-review-item-1')).toHaveTextContent('Sticker / label · Front sticker · variants: 8');
@@ -208,6 +210,7 @@ describe('RFI → RFQ pre-fill (/buyer/rfq?rfi=<id>)', () => {
     next();
     fillTerms();
     next();
+    next(); // + the Documents step (B3), optional, so it passes empty
     expect(await screen.findByText('RFI RFI-2026-001')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Save RFQ draft' }));
     await waitFor(() => expect(newest()).toBeDefined());
@@ -271,6 +274,7 @@ describe('RFP → RFQ pre-fill (/buyer/rfq?rfp=<id>&options=<ids>, spec D3)', ()
     next();
     fillTerms();
     next();
+    next(); // + the Documents step (B3), optional, so it passes empty
     expect(await screen.findByText('RFP RFP-2026-002')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Save RFQ draft' }));
     await waitFor(() => expect(newest()).toBeDefined());
@@ -384,4 +388,47 @@ describe('the board', () => {
     expect(await screen.findByTestId('rfq-project-tag-rfq-021')).toHaveTextContent('Oslo');
     expect(screen.queryByTestId('rfq-project-tag-rfq-001')).not.toBeInTheDocument();
   });
+});
+
+describe('NR-1 BR-02 — the buyer asks for documents on the RFQ (B3)', () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it('a required Certificate request for one item is dispatched with the RFQ and listed on the review', async () => {
+    const dispatch = vi.spyOn(mockDataService.commands, 'dispatch');
+    // The RFI pre-fill brings two items, so the walk reaches the new step fast.
+    renderWithProviders(<BuyerSourcing />, { route: '/buyer/rfq?rfi=rfi-001' });
+    await screen.findByPlaceholderText(/e\.g\. Q3 2026 Fragrance Sourcing/i);
+    await fillScope();
+    next();
+    await screen.findByTestId('rfq-item-1-description');
+    next();
+    addTier('50000');
+    next();
+    next();
+    await screen.findByTestId('invitee-row-sup-007');
+    next();
+    fillTerms();
+    next();
+
+    // The Documents step, just before the review — on an RFQ with a level.
+    fireEvent.click(await screen.findByTestId('rfq-new-doc-add'));
+    fireEvent.change(screen.getByTestId('rfq-new-doc-doc-1-name'), { target: { value: 'Halal certificate' } });
+    fireEvent.change(screen.getByTestId('rfq-new-doc-doc-1-type'), { target: { value: 'certificate' } });
+    fireEvent.change(screen.getByTestId('rfq-new-doc-doc-1-level'), { target: { value: '1' } });
+    fireEvent.click(screen.getByTestId('rfq-new-doc-doc-1-required'));
+    next();
+
+    const listed = await screen.findByTestId('rfq-new-review-doc-doc-1');
+    expect(listed).toHaveTextContent('Halal certificate');
+    expect(listed).toHaveTextContent('Certificate');
+    expect(listed).toHaveTextContent('Required');
+    expect(listed).toHaveTextContent('Item 1 · PET bottle 100ml airless pump');
+    fireEvent.click(screen.getByRole('button', { name: 'Save RFQ draft' }));
+    await waitFor(() => expect(newest()).toBeDefined());
+
+    const REQUEST = { id: 'doc-1', name: 'Halal certificate', type: 'certificate', required: true, itemLineNo: 1 };
+    const create = dispatch.mock.calls.map(([, input]) => input).find((i) => i.transitionId === 't_rfq_create');
+    expect(create?.payload).toMatchObject({ documentRequests: [REQUEST] });
+    expect(newest()!.documentRequests).toEqual([REQUEST]);
+  }, 20000); // a long wizard walk, like THE LOCK above
 });

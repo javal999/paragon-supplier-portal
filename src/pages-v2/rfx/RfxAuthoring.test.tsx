@@ -82,6 +82,7 @@ describe('the option editor (BL-36) — a choice question is written, refused, t
     next();
     fireEvent.click(await screen.findByTestId('rfi-new-invitee-row-sup-007'));
     next();
+    next(); // + the Documents step (B3), optional, so it passes empty
     await screen.findByTestId('rfi-new-review');
     fireEvent.click(screen.getByRole('button', { name: 'Send to suppliers' }));
     await screen.findByTestId('rfi-detail-rfi-0004');
@@ -176,6 +177,7 @@ describe('RFI → RFP (D3)', () => {
     // The responder (sup-008) arrives already invited.
     await screen.findByTestId('rfp-new-invitee-row-sup-008');
     next();
+    next(); // + the Documents step (B3), optional, so it passes empty
     await screen.findByTestId('rfp-new-review');
     fireEvent.click(screen.getByRole('button', { name: 'Send to suppliers' }));
     const detail = await screen.findByTestId('rfp-detail-rfp-0005');
