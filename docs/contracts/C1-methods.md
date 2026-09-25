@@ -1,6 +1,6 @@
 # C1 — Method Surface
 
-Three distinct axes. **85** (service surface) · **164** (transition catalog) · **35** (wired
+Three distinct axes. **89** (service surface) · **164** (transition catalog) · **35** (wired
 targets). They measure different things; this file keeps them separate.
 
 > ⚠️ **THIS DOCUMENT IS PINNED TO THE TREE, AND THE PIN IS WHY THE NUMBERS ABOVE ARE ALLOWED TO
@@ -32,14 +32,24 @@ Source of truth: `src/services/data/types.ts` (service + command types),
 
 ---
 
-## Axis 1 — the 85-method service surface (`IDataService`)
+## Axis 1 — the 89-method service surface (`IDataService`)
 
 The single interface the Phase-F1 real adapter implements; pages call it through
 `useDataService()` and do not change when the mock is swapped for `httpDataService`. Every method
 takes `QueryScope` as its first argument (the scoping contract — a supplier only ever sees its
-own data; the buyer sees the superset).
+own data; the buyer sees the superset), **except the file seam's**.
 
-`IDataService` is nine read sub-services + one command sub-service + one top-level method:
+**The file seam (`IFileService`, RFx A2 · AR-07).** File bytes sit behind the data service so that
+BL-27's real storage is an adapter swap and no component changes. `put(file: File):
+Promise<AttachmentMeta>` keeps a file and returns the metadata the record stores; `urlFor(id):
+string | null` returns a URL that opens it, or `null` when it is not held; `release(id): void`
+lets it go; `isHeld(id): boolean` says whether it is openable now. `put` is async because the real
+adapter uploads; the other three are synchronous lookups. It takes no `QueryScope`: who may see a
+record's files is the read model's narrowing, not this seam's. Today's adapter is
+`SessionFileService` over the session store — the bytes last for this browser session only and
+`urlFor` answers `null` after a reload (CE-11).
+
+`IDataService` is ten read sub-services + one command sub-service + one top-level method:
 
 ```ts
 interface IDataService {
@@ -52,6 +62,7 @@ interface IDataService {
   delivery: IDeliveryService;
   chase: IChaseService;
   enforcement: IEnforcementService;
+  files: IFileService;
   commands: ICommandService;
   getCapabilities(scope: QueryScope): Promise<CapabilitySet>;
 }
@@ -68,10 +79,11 @@ interface IDataService {
 | `IDeliveryService` | 4 | `getAgreements`, `releaseLines`, `confirmMatch`, `editPolicy` |
 | `IChaseService` | 1 | `getUnifiedChase` |
 | `IEnforcementService` | 1 | `getEnforcementSettings` |
-| **read subtotal** | **81** | |
+| `IFileService` | 4 | `put`, `urlFor`, `release`, `isHeld` |
+| **read subtotal** | **85** | |
 | `ICommandService` | 3 | `dispatch`, `getCommandStatus`, `settle` |
 | top-level | 1 | `getCapabilities` |
-| **TOTAL** | **85** | |
+| **TOTAL** | **89** | |
 
 **Return contract:** list reads return `Page<T>` (DR-5 — see C2); single reads return `T | null`;
 `getSummary` returns a summary object or `null` (buyer-populated, supplier-null). Failure is
