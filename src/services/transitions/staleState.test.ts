@@ -172,13 +172,39 @@ describe('POPULATION — what a STATE precondition can and cannot see, derived',
   it('⚠️ the BLIND set is non-empty too, and this gate does NOT close it', () => {
     const { blind } = partition();
     expect(blind.pairs.size).toBeGreaterThan(0);
-    // Every blind row is a state-preserving verb, by construction — if one ever
-    // is not, the reasoning in this file's header no longer covers it.
+    // Every blind row is a verb that LEAVES THE ENTITY WHERE IT WAS — a
+    // state-preserving verb, or (RFx C1) a SELF-LOOP: `t_rfq_award_partial`
+    // is legal from `Partly awarded` and lands there, so a second partial award
+    // raced at that state is invisible to a state comparison exactly as hole 2
+    // describes. Its policy refuses re-awarding an item already awarded
+    // (AWARD_ITEM_ALREADY_AWARDED), which covers the same-item race; a
+    // different-item race is the content precondition this file pins as OPEN.
+    // If a blind row is ever neither, the reasoning in the header no longer
+    // covers it.
     for (const row of blind.triples) {
-      const [entity, aId] = row.split('|');
+      const [entity, aId, , S] = row.split('|');
       const A = getFlow(entity)!.transitions.find((t) => t.id === aId)!;
-      expect(A.statePreserving, `${row} is blind but ${aId} is not statePreserving`).toBe(true);
+      expect(
+        A.statePreserving === true || A.to === S,
+        `${row} is blind but ${aId} neither preserves state nor loops on ${S}`,
+      ).toBe(true);
     }
+    expect([...blind.pairs]).toContain('rfq|t_rfq_award_partial|t_rfq_award_partial');
+    // RFx C2 — two more of the same two kinds, pinned by name. The partial
+    // cancel is a SELF-LOOP at `Partly awarded`: a second cancel raced there
+    // is invisible to a state comparison. Its policy refuses cancelling an
+    // award already cancelled (AWARD_NOT_ACTIVE), which covers the same-award
+    // race; a race on a different award is the open content precondition.
+    // "Raised in SAP" is STATE-PRESERVING: a cancel raced after a marking
+    // passes this gate and is refused by its policy (AWARD_RAISED_IN_SAP).
+    expect([...blind.pairs]).toContain('rfq|t_rfq_award_cancel_partial|t_rfq_award_cancel_partial');
+    expect([...blind.pairs]).toContain('rfq|t_rfq_award_sap_raised|t_rfq_award_cancel');
+    // RFx D2 — the RFP's award verbs mirror the RFQ's, so the same three blind
+    // pairs appear on `rfpEvent`, covered by the same policies
+    // (AWARD_ITEM_ALREADY_AWARDED, AWARD_NOT_ACTIVE, AWARD_RAISED_IN_SAP).
+    expect([...blind.pairs]).toContain('rfpEvent|t_rfp_award_partial|t_rfp_award_partial');
+    expect([...blind.pairs]).toContain('rfpEvent|t_rfp_award_cancel_partial|t_rfp_award_cancel_partial');
+    expect([...blind.pairs]).toContain('rfpEvent|t_rfp_award_sap_raised|t_rfp_award_cancel');
     expect([...blind.pairs]).toContain('enforcement|t_enforcement_set|t_enforcement_set');
     expect([...blind.pairs]).toContain('rfq|t_rfq_fx_pin|t_rfq_award');
   });

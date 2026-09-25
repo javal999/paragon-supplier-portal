@@ -12,6 +12,14 @@
 //     edited and never reopened, asking again is a new round
 //   · awardStore                              — append-only: the hub's record of
 //     an award (BR-09), no PO and no contract
+//   · awardCancellationStore / awardSapMarkStore — append-only (RFx C2, AR-08):
+//     a cancel or a "Raised in SAP" marking is a NEW record naming the award,
+//     so the award itself is never edited and its status is derived at read
+//   · rfpOfferRoundStore                      — NR-2: firm-offer rounds on an
+//     RFP; append-only like the negotiation round, closing only stamps `closedAt`
+//   · rfpFirmOfferStore                       — NR-2: one firm offer per
+//     supplier × round; a revision APPENDS a version. Both start EMPTY: no
+//     sample RFP is Closed, so no round could have been opened on one
 //
 // The RFQ and quotation rows the RFx demo needs live in `rfqStore` /
 // `quotationStore` beside the legacy set — one RFQ list, not two.
@@ -27,11 +35,15 @@ import {
 } from '../fixtures/rfxHub';
 import { RFQ_SAMPLE_AWARD_SEED } from '../fixtures/rfqSamples';
 import type {
+  AwardCancellation,
   AwardRecord,
+  AwardSapMark,
   NegotiationRound,
   RfiEvent,
   RfiResponse,
   RfpEvent,
+  RfpFirmOffer,
+  RfpOfferRound,
   RfpResponse,
 } from '../../../sourcing/types';
 
@@ -63,13 +75,28 @@ export function collection<T extends { readonly id: string }>(seed: readonly T[]
   };
 }
 
+/**
+ * RFx C2 (AR-08) — a store that can only be APPENDED to: the collection above
+ * without `update`. The award trail is kept in these, so nothing can edit what
+ * was awarded, withdrawn or raised in SAP after the fact (RFX-R3).
+ */
+export function appendOnly<T extends { readonly id: string }>(seed: readonly T[], prefix: string) {
+  const { all, get, add, nextId, reset } = collection<T>(seed, prefix);
+  return { all, get, add, nextId, reset };
+}
+
 export const rfiEventStore = collection<RfiEvent>(RFI_EVENT_SEED, 'rfi');
 export const rfiResponseStore = collection<RfiResponse>(RFI_RESPONSE_SEED, 'rfi-resp');
 export const rfpEventStore = collection<RfpEvent>(RFP_EVENT_SEED, 'rfp');
 export const rfpResponseStore = collection<RfpResponse>(RFP_RESPONSE_SEED, 'rfp-resp');
 export const negotiationRoundStore = collection<NegotiationRound>(NEGOTIATION_ROUND_SEED, 'nr');
 // The Amplify split award (rfq-024) joins after the hub's seeded award.
-export const awardStore = collection<AwardRecord>([...AWARD_SEED, ...RFQ_SAMPLE_AWARD_SEED], 'aw');
+export const awardStore = appendOnly<AwardRecord>([...AWARD_SEED, ...RFQ_SAMPLE_AWARD_SEED], 'aw');
+// RFx C2 — the award trail. Nothing is seeded: every seeded award is in force.
+export const awardCancellationStore = appendOnly<AwardCancellation>([], 'awc');
+export const awardSapMarkStore = appendOnly<AwardSapMark>([], 'aws');
+export const rfpOfferRoundStore = collection<RfpOfferRound>([], 'fr');
+export const rfpFirmOfferStore = collection<RfpFirmOffer>([], 'fo');
 
 /** The one response a supplier holds for an event, or undefined. */
 export const responseOf = <T extends { supplierId: string }>(
@@ -86,4 +113,8 @@ export function resetRfxStores(): void {
   rfpResponseStore.reset();
   negotiationRoundStore.reset();
   awardStore.reset();
+  awardCancellationStore.reset();
+  awardSapMarkStore.reset();
+  rfpOfferRoundStore.reset();
+  rfpFirmOfferStore.reset();
 }

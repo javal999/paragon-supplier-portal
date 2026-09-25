@@ -23,6 +23,11 @@ import Toaster from '../../components/ui-v2/Toaster';
 import BuyerSourcingEvent from '../BuyerSourcingEvent';
 import BuyerSourcingPage from '../BuyerSourcing';
 import { buildComparisonCsv } from './comparisonExport';
+import { MockCommandService } from '../../services/data/mock/MockCommandService';
+import { PERSONA_SYSTEM_ROLES } from '../../services/transitions/businessRoles';
+import { NO_PERSON } from '../../context/noPerson';
+import type { QueryScope } from '../../services/data/types';
+import type { AwardLine } from '../../services/sourcing/types';
 
 const BUYER_SEAT = { ...BUYER, businessRoles: SEEDED_SEAT_ROLES.buyer };
 
@@ -90,7 +95,10 @@ describe('the event page shows the RFQ content (Oslo, rfq-021)', () => {
     expect(await screen.findByTestId('cmp-row-rfx.cmp.row.unitPrice')).toHaveTextContent('Unit price');
     expect(screen.queryByTestId('rfq-content')).not.toBeInTheDocument();
     expect(screen.queryByTestId('eval-break')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('tiered-award-form')).not.toBeInTheDocument();
+    // RFx C3 (NR-3 BR-07) — and it is awarded through the SAME panel, per line.
+    const form = screen.getByTestId('award-form');
+    expect(within(form).getByTestId('award-item-PK-PETB-8802')).toBeInTheDocument();
+    expect(within(form).getByTestId('award-item-PK-CAPF-8820')).toBeInTheDocument();
   });
 });
 
@@ -130,12 +138,14 @@ describe('the per-item comparison at the evaluation break', () => {
 describe('the award, item by item', () => {
   it('refuses by name while an item is short of 100%, then records the split with its break', async () => {
     renderEvent('rfq-021');
-    await screen.findByTestId('tiered-award-form');
+    await screen.findByTestId('award-form');
     expect(screen.getByTestId('award-confirm')).toBeDisabled();
     share(1, 'sup-015', '70');
     share(1, 'sup-013', '30');
     expect(screen.getByTestId('award-item-refusal')).toHaveTextContent(
-      'item 2 (Oslo back sticker (ingredients)) totals 0%. Each item must total 100%.',
+      // RFx C1 — this form sends the FINAL award, so an item with no share is
+      // refused as open (AWARD_ITEMS_OPEN), as the verb refuses it.
+      'item 2 (Oslo back sticker (ingredients)) has no share yet. Give every item shares that total 100%.',
     );
     share(2, 'sup-013', '90');
     expect(screen.getByTestId('award-item-refusal')).toHaveTextContent('totals 90%');
@@ -152,12 +162,12 @@ describe('the award, item by item', () => {
     expect(within(recorded).getByTestId('award-line-1-sup-015')).toHaveTextContent('70%');
     expect(within(recorded).getByTestId('award-line-1-sup-015')).toHaveTextContent('3,000');
     expect(within(recorded).getByTestId('award-line-2-sup-013')).toHaveTextContent('100%');
-    expect(awardStore.all().find((a) => a.rfqId === 'rfq-021')!.lines.every((l) => l.awardTierQty === 3_000)).toBe(true);
+    expect(awardStore.all().find((a) => a.eventId === 'rfq-021')!.lines.every((l) => l.awardTierQty === 3_000)).toBe(true);
   });
 
   it('asks for a reason when an item does not follow its best score, and names the item', async () => {
     renderEvent('rfq-021');
-    await screen.findByTestId('tiered-award-form');
+    await screen.findByTestId('award-form');
     // Item 1 ties at 3K (B5), so the departure is item 2's: its best is sup-013.
     share(1, 'sup-015', '100');
     share(2, 'sup-015', '100');
@@ -187,6 +197,202 @@ describe('the award, item by item', () => {
     expect(within(recorded).getByTestId('award-line-1-sup-015')).toHaveTextContent('40%');
     expect(within(recorded).getByTestId('award-line-2-sup-015')).toHaveTextContent('70%');
     expect(within(recorded).getByTestId('award-line-2-sup-013')).toHaveTextContent('10,000');
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RFx C3 — the one award panel on a LEGACY RFQ: split by quantity, a partial
+// award, "Will not award the rest", cancel and "Raised in SAP" (NR-3 AC-01 to
+// AC-06). rfq-014 is a Closed legacy tender; for these specs its bottle line is
+// 100,000 pieces and a third line (a label) is added, so an item can be left
+// open. sup-013 and sup-015 both pass CR-23 on it.
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('RFx C3 — the award panel on a legacy RFQ (rfq-014)', () => {
+  const BOTTLE = 'PK-PETB-8802';
+  const CAP = 'PK-CAPF-8820';
+  const LABEL = 'PK-LBL-0001';
+  const svc = new MockCommandService();
+  const buyerScope: QueryScope = {
+    personaType: 'buyer',
+    supplierId: null,
+    businessRoles: PERSONA_SYSTEM_ROLES.buyer,
+    actor: NO_PERSON,
+  };
+
+  const withLines = (three: boolean) =>
+    rfqStore.update('rfq-014', (r) => ({
+      ...r,
+      lineItems: [
+        { ...r.lineItems![0]!, quantity: 100_000 },
+        r.lineItems![1]!,
+        ...(three ? [{ lineNo: 3, materialCode: LABEL, description: 'Front label', quantity: 50_000, uom: 'PCS' as const }] : []),
+      ],
+    }));
+  const input = (key: string, supplierId: string, label: RegExp) =>
+    within(screen.getByTestId(`award-input-${key}-${supplierId}`)).getByLabelText(label);
+  const type = (key: string, supplierId: string, value: string, label: RegExp = /Share/i) =>
+    fireEvent.change(input(key, supplierId, label), { target: { value } });
+  /** The legacy best score may or may not be among the lines; give a reason when asked. */
+  const reasonIfAsked = () => {
+    const field = screen.queryByLabelText('Award reason');
+    if (field) fireEvent.change(field, { target: { value: 'Dual sourced for supply security.' } });
+  };
+  const awardsOf014 = () => awardStore.all().filter((a) => a.eventId === 'rfq-014');
+  const recordAward = (transitionId: 't_rfq_award' | 't_rfq_award_partial', lines: AwardLine[], extra = {}) =>
+    svc.dispatch(buyerScope, {
+      transitionId,
+      entity: 'rfq',
+      entityId: 'rfq-014',
+      payload: {
+        awardedQuotationId: lines[0]!.quotationId,
+        awardedSupplierId: lines[0]!.supplierId,
+        awardLines: lines,
+        awardReason: 'Single source.',
+        ...extra,
+      },
+    });
+  const whole = (itemCode: string, quantity: number): AwardLine => ({
+    supplierId: 'sup-013',
+    quotationId: 'qt-014c',
+    itemCode,
+    sharePct: 100,
+    quantity,
+  });
+
+  it('AC-01 — item 1 split 70,000 / 30,000 by quantity and item 2 at 60/40, dispatched and shown', async () => {
+    withLines(false);
+    renderEvent('rfq-014');
+    await screen.findByTestId('award-form');
+    fireEvent.click(screen.getByTestId(`award-basis-${BOTTLE}-qty`));
+    type(BOTTLE, 'sup-015', '70000', /Quantity/i);
+    type(BOTTLE, 'sup-013', '30000', /Quantity/i);
+    // the derived side is shown read-only: the share each quantity is
+    expect(screen.getByTestId(`award-qty-${BOTTLE}-sup-015`)).toHaveTextContent('70%');
+    expect(screen.getByTestId(`award-item-total-${BOTTLE}`)).toHaveTextContent('100,000 of 100,000');
+    type(CAP, 'sup-015', '60');
+    type(CAP, 'sup-013', '40');
+    expect(screen.getByTestId(`award-qty-${CAP}-sup-013`)).toHaveTextContent('120,000 PCS');
+    reasonIfAsked();
+    expect(screen.queryByTestId('award-item-refusal')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('award-confirm'));
+
+    const recorded = await screen.findByTestId('award-recorded');
+    expect(within(recorded).getByTestId(`award-line-${BOTTLE}-sup-015`)).toHaveTextContent('70,000');
+    expect(within(recorded).getByTestId(`award-line-${BOTTLE}-sup-015`)).toHaveTextContent('70%');
+    expect(within(recorded).getByTestId(`award-line-${CAP}-sup-013`)).toHaveTextContent('40%');
+    expect(rfqStore.get('rfq-014')!.status).toBe('Awarded');
+    const [rec] = awardsOf014();
+    const saved = rec!.lines.map((l) => [l.itemCode, l.supplierId, l.sharePct, l.quantity, l.splitBasis].join(' '));
+    expect(saved.sort()).toEqual([
+      `${CAP} sup-013 40 120000 pct`,
+      `${CAP} sup-015 60 180000 pct`,
+      `${BOTTLE} sup-013 30 30000 qty`,
+      `${BOTTLE} sup-015 70 70000 qty`,
+    ]);
+  });
+
+  it('AC-02 — a quantity split that does not total the break is refused AWARD_SPLIT_INCOMPLETE, naming the item', async () => {
+    withLines(false);
+    renderEvent('rfq-014');
+    await screen.findByTestId('award-form');
+    fireEvent.click(screen.getByTestId(`award-basis-${BOTTLE}-qty`));
+    type(BOTTLE, 'sup-015', '70000', /Quantity/i);
+    type(BOTTLE, 'sup-013', '20000', /Quantity/i);
+    const refusal = screen.getByTestId('award-item-refusal');
+    expect(refusal).toHaveAttribute('data-code', 'AWARD_SPLIT_INCOMPLETE');
+    expect(refusal).toHaveTextContent('item 1 (PET Bottle 100ml Clear — Emina Series) totals 90,000, not 100,000');
+    expect(screen.getByTestId('award-confirm')).toBeDisabled();
+    // KNOWN-GOOD twin — the full 100,000 clears it (item 2 is then the open item)
+    type(BOTTLE, 'sup-013', '30000', /Quantity/i);
+    expect(screen.getByTestId('award-item-refusal')).toHaveAttribute('data-code', 'AWARD_ITEMS_OPEN');
+  });
+
+  it('AC-03 — item 3 left "Not awarded now" gives Partly awarded; awarding it later gives Awarded', async () => {
+    withLines(true);
+    renderEvent('rfq-014');
+    await screen.findByTestId('award-form');
+    type(BOTTLE, 'sup-013', '100');
+    type(CAP, 'sup-015', '100');
+    fireEvent.change(screen.getByTestId(`award-choice-${LABEL}`), { target: { value: 'open' } });
+    expect(screen.getByTestId('award-partial-note')).toBeInTheDocument();
+    expect(screen.getByTestId('award-confirm')).toHaveTextContent('Award these items');
+    reasonIfAsked();
+    fireEvent.click(screen.getByTestId('award-confirm'));
+    await waitFor(() => expect(rfqStore.get('rfq-014')!.status).toBe('Partly awarded'));
+
+    // The panel starts afresh over the open item; the awarded ones name their award.
+    const labelRow = await screen.findByTestId(`award-input-${LABEL}-sup-015`);
+    expect(labelRow).toBeInTheDocument();
+    expect(screen.getByTestId(`award-item-awarded-${BOTTLE}`)).toHaveTextContent(awardsOf014()[0]!.id);
+    type(LABEL, 'sup-015', '100');
+    reasonIfAsked();
+    fireEvent.click(screen.getByTestId('award-confirm'));
+    await waitFor(() => expect(rfqStore.get('rfq-014')!.status).toBe('Awarded'));
+    expect(awardsOf014()).toHaveLength(2);
+  });
+
+  it('"Will not award the rest" on a Partly awarded RFQ settles it with no new lines', async () => {
+    withLines(true);
+    const partial = await recordAward('t_rfq_award_partial', [whole(BOTTLE, 100_000), whole(CAP, 300_000)]);
+    expect(partial.status, partial.reason).toBe('done');
+    renderEvent('rfq-014');
+    fireEvent.click(await screen.findByTestId('award-will-not-rest'));
+    await waitFor(() => expect(rfqStore.get('rfq-014')!.status).toBe('Awarded'));
+    const final = awardsOf014().find((a) => a.lines.length === 0)!;
+    expect(await screen.findByTestId(`award-no-lines-${final.id}`)).toBeInTheDocument();
+    // the final award's cascade still ran: a quote no award named is Rejected
+    expect(quotationStore.get('qt-014a')!.status).toBe('Rejected');
+  });
+
+  it('AC-05 — cancel needs a reason, keeps the record, and returns the panel to awardable', async () => {
+    withLines(false);
+    const res = await recordAward('t_rfq_award', [whole(BOTTLE, 100_000), whole(CAP, 300_000)]);
+    expect(res.status, res.reason).toBe('done');
+    const id = awardsOf014()[0]!.id;
+    renderEvent('rfq-014');
+    expect(await screen.findByTestId(`award-status-${id}`)).toHaveTextContent('Active');
+    expect(screen.queryByTestId('award-form')).not.toBeInTheDocument(); // Awarded: nothing to award
+    fireEvent.click(screen.getByTestId(`award-cancel-${id}`));
+    expect(screen.getByTestId(`award-cancel-confirm-${id}`)).toBeDisabled(); // no reason yet
+    fireEvent.change(screen.getByLabelText('Reason for cancelling'), { target: { value: 'Wrong split entered.' } });
+    fireEvent.click(screen.getByTestId(`award-cancel-confirm-${id}`));
+    await waitFor(() => expect(screen.getByTestId(`award-status-${id}`)).toHaveTextContent('Cancelled'));
+    expect(screen.getByTestId(`award-cancelled-${id}`)).toHaveTextContent('Wrong split entered.');
+    expect(rfqStore.get('rfq-014')!.status).toBe('Closed');
+    expect(await screen.findByTestId('award-form')).toBeInTheDocument();
+    expect(screen.getByTestId(`award-input-${BOTTLE}-sup-013`)).toBeInTheDocument();
+  });
+
+  it('AC-06 — once marked "Raised in SAP", cancel is no longer offered', async () => {
+    withLines(false);
+    await recordAward('t_rfq_award', [whole(BOTTLE, 100_000), whole(CAP, 300_000)]);
+    const id = awardsOf014()[0]!.id;
+    renderEvent('rfq-014');
+    // KNOWN-GOOD twin first: an active award offers cancel
+    expect(await screen.findByTestId(`award-cancel-${id}`)).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId(`award-sap-mark-${id}`));
+    expect(screen.getByTestId(`award-sap-confirm-${id}`)).toBeDisabled();
+    fireEvent.change(screen.getByLabelText('SAP document number'), { target: { value: '4500012345' } });
+    fireEvent.click(screen.getByTestId(`award-sap-confirm-${id}`));
+    await waitFor(() => expect(screen.getByTestId(`award-status-${id}`)).toHaveTextContent('Raised in SAP'));
+    expect(screen.getByTestId(`award-sap-${id}`)).toHaveTextContent('4500012345');
+    expect(screen.queryByTestId(`award-cancel-${id}`)).not.toBeInTheDocument();
+  });
+
+  it('a seat without the cancel and SAP atoms reads whose act each is', async () => {
+    withLines(false);
+    await recordAward('t_rfq_award', [whole(BOTTLE, 100_000), whole(CAP, 300_000)]);
+    const id = awardsOf014()[0]!.id;
+    renderWithProviders(
+      <Routes>
+        <Route path="/buyer/rfq/:rfqId" element={<BuyerSourcingEvent />} />
+      </Routes>,
+      { identity: { ...BUYER, businessRoles: ['receiving'] }, route: '/buyer/rfq/rfq-014' },
+    );
+    expect(await screen.findByTestId('handoff-rfq-award-cancel')).toHaveTextContent('Awaiting Procurement');
+    expect(screen.getByTestId('handoff-rfq-award-sap')).toHaveTextContent('Awaiting Procurement');
+    expect(screen.queryByTestId(`award-cancel-${id}`)).not.toBeInTheDocument();
   });
 });
 
@@ -313,12 +519,15 @@ describe('the RFQ panel defers a tiered award to the event page', () => {
     expect(await screen.findByTestId('award-recorded')).toBeInTheDocument();
   });
 
-  it('KNOWN-GOOD twin — a legacy RFQ keeps its pick and has no such box', async () => {
+  it('RFx C3 (AR-03) — a legacy RFQ now gets the same box, and no one-winner pick', async () => {
     renderWithProviders(<BuyerSourcing />, { identity: BUYER_SEAT });
     fireEvent.click(await screen.findByText('RFQ-2026-011'));
     await screen.findByText(/QUOTE COMPARISON/i);
-    expect(document.querySelector('input[name="award-select"]')).not.toBeNull();
-    expect(screen.queryByTestId('panel-tiered-award')).not.toBeInTheDocument();
+    expect(document.querySelector('input[name="award-select"]')).toBeNull();
+    expect(within(screen.getByTestId('panel-tiered-award')).getByTestId('panel-open-tiered-award')).toHaveAttribute(
+      'href',
+      expect.stringMatching(/\/buyer\/rfq\/rfq-011$/),
+    );
   });
 });
 

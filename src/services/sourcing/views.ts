@@ -12,7 +12,20 @@
 // the answers (law 0.5) — no surface reads a stored one, because there is none.
 // ────────────────────────────────────────────────────────────────────────────
 
-import type { RfiEvent, RfiResponse, RfpEvent, RfpResponse, NegotiationRound, AwardRecord } from './types';
+import type {
+  AwardCancellation,
+  AwardSapMark,
+  AwardStatus,
+  NegotiationRound,
+  RfiEvent,
+  RfiResponse,
+  RfpEvent,
+  RfpFirmOffer,
+  RfpOfferRound,
+  RfpAwardLine,
+  RfpResponse,
+  RfqAwardRecord,
+} from './types';
 import type { GateCriterion } from './complianceGate';
 
 /**
@@ -97,6 +110,58 @@ export interface NegotiationRoundView extends NegotiationRound {
   readonly awaiting: number;
 }
 
+/** NR-2 — one option of a firm-offer round, in the words of whoever wrote it (edge case 3). */
+export interface RfpRoundOptionView {
+  /** The name a round and a firm price use (`rfpOptionRef`). */
+  readonly ref: string;
+  /** The option's own id: the buyer's, or the proposer's `sup-opt-N`. */
+  readonly id: string;
+  readonly title: string;
+  readonly description?: string;
+  /** True for an option a supplier proposed in its RFP response (`sup-opt-…`). */
+  readonly supplierProposed: boolean;
+  /** The supplier that proposed it; absent on a buyer option. */
+  readonly proposerSupplierId?: string;
+}
+
+/** NR-2 BR-04 — the firm price in force for one supplier × option × quantity point. */
+export interface RfpFirmPriceView {
+  readonly supplierId: string;
+  readonly supplierName: string;
+  readonly roundId: string;
+  readonly roundNumber: number;
+  readonly optionRef: string;
+  readonly qty: number;
+  readonly unitPrice: number;
+  readonly validUntil: string;
+  readonly submittedAt: string;
+}
+
+/**
+ * NR-2 — a firm-offer round as a reader may see it. The buyer reads every
+ * invitee and offer; a supplier reads a round only when invited, and then only
+ * itself and its own offer.
+ */
+export interface RfpOfferRoundView extends RfpOfferRound {
+  readonly rfpNumber: string;
+  readonly rfpTitle: string;
+  readonly currency: string;
+  readonly options: readonly RfpRoundOptionView[];
+  /** The buyer closed the round (`closedAt` is set). */
+  readonly closed: boolean;
+  /** Still Open, but past its deadline, so no offer is accepted. Derived at read. */
+  readonly overdue: boolean;
+  /** Buyer: every invitee's offer. Supplier: its own, if any. */
+  readonly offers: readonly RfpFirmOffer[];
+  /** How many visible invitees have not sent an offer in this round. */
+  readonly awaiting: number;
+  /**
+   * BR-04 — the LAST firm price per supplier × option × point across every
+   * round of this RFP the reader may see, whichever round it came from.
+   */
+  readonly firmPrices: readonly RfpFirmPriceView[];
+}
+
 export interface AwardedSupplierView {
   readonly supplierId: string;
   readonly supplierName: string;
@@ -104,11 +169,81 @@ export interface AwardedSupplierView {
   readonly quantity: number;
 }
 
-export interface AwardView extends AwardRecord {
+export interface AwardView extends RfqAwardRecord {
   readonly rfqNumber: string;
   readonly rfqTitle: string;
   readonly uom: string;
   readonly awardedSuppliers: readonly AwardedSupplierView[];
   /** True when the award passed over the best-scored quote (BR-07). */
   readonly departedFromBestScore: boolean;
+  /**
+   * RFx C2 — DERIVED from the appended cancellation and SAP marking (AR-08).
+   * A supplier reads it too: a `Cancelled` award is its "Award withdrawn".
+   */
+  readonly status: AwardStatus;
+  /** NR-3 BR-12 — when the award was withdrawn; the date a supplier is shown. */
+  readonly withdrawnAt?: string;
+  /** The cancellation with its reason and actor. The buyer's read only. */
+  readonly cancellation?: AwardCancellation;
+  /** The SAP marking with its document number. The buyer's read only. */
+  readonly sapMark?: AwardSapMark;
+  /**
+   * RFx C3 (NR-3 BR-12) — the items this award awarded, by `AwardItem.key`,
+   * to ANY supplier. A supplier reads it too, with no supplier, share or
+   * quantity attached: it is how a supplier on the award learns an item it
+   * holds no line on is settled ("Not awarded") rather than still open
+   * ("Pending"). Derived from the record at read.
+   */
+  readonly settledItemKeys: readonly string[];
+}
+
+/** RFx D2 — one line of an RFP award, with the words a screen shows it in. */
+export interface RfpAwardLineView extends RfpAwardLine {
+  readonly supplierName: string;
+  /** The option's title, in the words of whoever wrote it (edge case 3). */
+  readonly optionTitle: string;
+}
+
+/**
+ * RFx D2 (NR-2 BR-09, AC-07; NR-3 BR-12) — how one supplier reads an RFP award:
+ * awarded (it has lines), not awarded (a final award named it among the
+ * responders), or withdrawn (the award was cancelled).
+ */
+export type RfpAwardOutcome = 'Awarded' | 'Not awarded' | 'Withdrawn';
+
+/**
+ * RFx D2 — an award on an RFP, as a scope may read it. The buyer reads every
+ * line, the reason, the cancellation and the SAP marking. A supplier reads only
+ * an award it is named on, only its OWN lines and its own "not awarded", and
+ * its `outcome`; never another supplier's share, the reason or the SAP number.
+ */
+export interface RfpAwardView {
+  readonly id: string;
+  readonly eventType: 'rfp';
+  readonly eventId: string;
+  readonly rfpNumber: string;
+  readonly rfpTitle: string;
+  readonly awardedAt: string;
+  readonly lines: readonly RfpAwardLineView[];
+  readonly notAwardedSupplierIds: readonly string[];
+  /** NR-2 BR-06 — why. The buyer's read only. */
+  readonly reason?: string;
+  /** DERIVED from the appended cancellation and SAP marking (AR-08). */
+  readonly status: AwardStatus;
+  /** When the award was withdrawn; the date a supplier is shown. */
+  readonly withdrawnAt?: string;
+  /** The buyer's read only. */
+  readonly cancellation?: AwardCancellation;
+  /** The buyer's read only. */
+  readonly sapMark?: AwardSapMark;
+  /** A supplier's read only: its own outcome on this award. */
+  readonly outcome?: RfpAwardOutcome;
+  /**
+   * RFx D3 (NR-2 BR-09; NR-3 BR-12) — the option refs this award awarded, to
+   * ANY supplier. A supplier reads it too, with no supplier, share or quantity
+   * attached: it is how a supplier on the award reads "Not awarded" on an
+   * option it holds no line on, rather than "Pending" (the RFQ's
+   * `settledItemKeys`). Derived from the full record at read.
+   */
+  readonly settledOptionRefs: readonly string[];
 }
