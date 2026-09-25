@@ -17,6 +17,7 @@ import { BASE_CURRENCY } from '../lib/currencyPolicy';
 import { useCurrentIdentity } from '../context/CurrentIdentityContext';
 import { useAwards, useNegotiationRounds, useQuotations, useRFQs } from '../services/query/hooks';
 import { useRfxCommand } from '../services/query/commandHooks';
+import { documentsOf } from '../services/transitions/rfxDocumentRules';
 import { DeadlinePill, money, rfxNow } from './rfx/rfxDisplay';
 import TieredRevisionFields, { readRevision, revisionPricesFrom, type RevisionPrices } from './rfqs/TieredRevisionFields';
 
@@ -209,7 +210,9 @@ const SupplierNegotiations: React.FC = () => {
                             ...(last.alternatives ? { alternatives: last.alternatives } : {}),
                             ...(last.answers ? { answers: last.answers } : {}),
                             ...(last.sampleOffer ? { sampleOffer: last.sampleOffer } : {}),
-                            ...(last.attachments ? { attachments: last.attachments } : {}),
+                            // NR-1 — the files carry forward as documents (legacy
+                            // `attachments` read through `documentsOf`).
+                            ...(documentsOf(last).length > 0 ? { documents: documentsOf(last) } : {}),
                             ...(last.paymentTermsOffered ? { paymentTermsOffered: last.paymentTermsOffered } : {}),
                             ...(last.validUntil ? { validUntil: last.validUntil } : {}),
                             ...(round.bestAndFinal ? { bestAndFinal: true } : {}),
@@ -221,6 +224,7 @@ const SupplierNegotiations: React.FC = () => {
                         supplierId,
                         roundNumber: round.roundNumber,
                         ...(last ? { supersedesQuotationId: last.id } : {}),
+                        ...(last && documentsOf(last).length > 0 ? { documents: documentsOf(last) } : {}),
                         unitPrice: Number(price[round.id]),
                         leadTimeDays: Number(lead[round.id] ?? last?.leadTimeDays ?? 0),
                         currency,

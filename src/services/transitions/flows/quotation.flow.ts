@@ -91,6 +91,9 @@ export const quotationFlow: FlowDefinition = {
         POLICY_HOOKS.QUOTATION_LINES_WELL_FORMED,
         // RFx spec 2026-09-21 — the tiered quote, per item and per break.
         POLICY_HOOKS.QUOTATION_TIERED_WELL_FORMED,
+        // NR-1 BR-09 — a revised quote carries files, so the requested
+        // documents and the file limits are judged as on submit (B4).
+        POLICY_HOOKS.QUOTATION_DOCUMENTS_COMPLETE,
       ],
       surfaceable: { surfaced: true },
       version: 1,
