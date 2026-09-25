@@ -18,12 +18,39 @@ import { isPastDeadline } from '../transitions/rfxRules';
 import { gateRefusal, type GateResult } from './complianceGate';
 import type { RfpFirmOffer, RfpFirmPrice } from './types';
 
+/** The id prefix a supplier gives its own proposed options (`RfpPricingAnswer.proposedOptions`). */
+const PROPOSED_PREFIX = 'sup-opt-';
+
+/**
+ * THE ONE NAME FOR AN RFP OPTION IN A ROUND OR A FIRM PRICE.
+ *
+ * A buyer option id (`RfpPricingRequest.options`) is unique on its RFP and is
+ * its own ref. A supplier-proposed id (`sup-opt-N`) is unique only within ONE
+ * supplier's response, so two suppliers' `sup-opt-1` are two different options;
+ * its ref is `${proposerSupplierId}:${optionId}`, which says whose option it is.
+ */
+export function rfpOptionRef(optionId: string, proposerSupplierId?: string): string {
+  return proposerSupplierId ? `${proposerSupplierId}:${optionId}` : optionId;
+}
+
+/**
+ * The option a ref names. Only `<supplier>:sup-opt-…` reads as supplier-proposed;
+ * anything else is a buyer option id, taken as-is.
+ */
+export function parseRfpOptionRef(ref: string): { readonly optionId: string; readonly proposerSupplierId?: string } {
+  const at = ref.indexOf(':');
+  if (at > 0 && ref.slice(at + 1).startsWith(PROPOSED_PREFIX)) {
+    return { optionId: ref.slice(at + 1), proposerSupplierId: ref.slice(0, at) };
+  }
+  return { optionId: ref };
+}
+
 const strings = (v: unknown): readonly string[] | null =>
   Array.isArray(v) && v.every((x) => typeof x === 'string' && x.length > 0) ? (v as string[]) : null;
 
 /** What the buyer asks for when opening a round (the verb payload, unchecked). */
 export interface RfpRoundRequest {
-  readonly optionIds: unknown;
+  readonly optionRefs: unknown;
   readonly quantityPoints: unknown;
   readonly invitedSupplierIds: unknown;
   readonly deadline: unknown;
@@ -33,8 +60,8 @@ export interface RfpRoundRequest {
 export interface RfpRoundFacts {
   /** The RFP's stored status; null when there is no such RFP. */
   readonly rfpStatus: string | null;
-  /** The RFP's own options plus the options suppliers proposed in a SUBMITTED response. */
-  readonly knownOptionIds: readonly string[];
+  /** Refs of the RFP's own options plus those suppliers proposed in a SUBMITTED response. */
+  readonly knownOptionRefs: readonly string[];
   /** Suppliers with a SUBMITTED response to this RFP. */
   readonly respondedSupplierIds: readonly string[];
   /** CR-23 for one supplier on this RFP. */
@@ -57,9 +84,10 @@ export function rfpOfferRoundRefusal(req: RfpRoundRequest, facts: RfpRoundFacts)
   if (typeof req.deadline !== 'string' || !isCalendarDate(req.deadline)) {
     return 'BAD_DEADLINE: the round needs a deadline date';
   }
-  const optionIds = strings(req.optionIds);
-  if (!optionIds || optionIds.length === 0) return 'ROUND_NO_OPTIONS: name at least one option';
-  const unknown = optionIds.filter((id) => !facts.knownOptionIds.includes(id));
+  const optionRefs = strings(req.optionRefs);
+  if (!optionRefs || optionRefs.length === 0) return 'ROUND_NO_OPTIONS: name at least one option';
+  // A bare `sup-opt-N` is not a ref (whose option?), so it is unknown here too.
+  const unknown = optionRefs.filter((ref) => !facts.knownOptionRefs.includes(ref));
   if (unknown.length > 0) return `ROUND_OPTION_UNKNOWN: ${unknown.join(', ')}`;
   const points = req.quantityPoints;
   if (
@@ -82,7 +110,7 @@ export function rfpOfferRoundRefusal(req: RfpRoundRequest, facts: RfpRoundFacts)
 
 /** What a firm offer is checked against: the round as stored. */
 export interface FirmOfferRoundFacts {
-  readonly optionIds: readonly string[];
+  readonly optionRefs: readonly string[];
   readonly quantityPoints: readonly number[];
   readonly invitedSupplierIds: readonly string[];
   readonly deadline: string;
@@ -126,17 +154,17 @@ export function firmOfferRefusal(
   for (const raw of prices as unknown[]) {
     const p = (raw ?? {}) as Partial<RfpFirmPrice>;
     if (
-      typeof p.optionId !== 'string' ||
+      typeof p.optionRef !== 'string' ||
       typeof p.qty !== 'number' ||
-      !round.optionIds.includes(p.optionId) ||
+      !round.optionRefs.includes(p.optionRef) ||
       !round.quantityPoints.includes(p.qty)
     ) {
-      return `OFFER_OUTSIDE_ROUND: ${String(p.optionId)} at ${String(p.qty)} is not asked in this round`;
+      return `OFFER_OUTSIDE_ROUND: ${String(p.optionRef)} at ${String(p.qty)} is not asked in this round`;
     }
     if (typeof p.unitPrice !== 'number' || !Number.isFinite(p.unitPrice) || p.unitPrice <= 0) {
-      return `OFFER_PRICE_INVALID: ${p.optionId} at ${p.qty} needs a unit price above zero`;
+      return `OFFER_PRICE_INVALID: ${p.optionRef} at ${p.qty} needs a unit price above zero`;
     }
-    const cell = `${p.optionId}@${p.qty}`;
+    const cell = `${p.optionRef}@${p.qty}`;
     if (cells.has(cell)) return `OFFER_PRICE_DUPLICATE: ${cell}`;
     cells.add(cell);
   }
@@ -162,7 +190,7 @@ export interface FirmPriceInForce {
   readonly supplierId: string;
   readonly roundId: string;
   readonly roundNumber: number;
-  readonly optionId: string;
+  readonly optionRef: string;
   readonly qty: number;
   readonly unitPrice: number;
   readonly validUntil: string;
@@ -171,7 +199,7 @@ export interface FirmPriceInForce {
 
 /**
  * NR-2 BR-04 — the LAST firm offer per supplier and option counts. For each
- * supplier × option, the offer from the latest round that priced the option
+ * supplier × option REF, the offer from the latest round that priced the option
  * (a later version within a round is already the offer's own top fields)
  * supplies every price for that option; earlier rounds' prices for it lapse.
  */
@@ -180,21 +208,21 @@ export function firmPricesInForce(offers: readonly NumberedFirmOffer[]): readonl
   const later = (a: NumberedFirmOffer, b: NumberedFirmOffer) =>
     a.roundNumber !== b.roundNumber ? a.roundNumber > b.roundNumber : a.submittedAt > b.submittedAt;
   for (const offer of offers) {
-    for (const optionId of new Set(offer.prices.map((p) => p.optionId))) {
-      const key = `${offer.supplierId}|${optionId}`;
+    for (const optionRef of new Set(offer.prices.map((p) => p.optionRef))) {
+      const key = `${offer.supplierId}|${optionRef}`;
       const held = latest.get(key);
       if (!held || later(offer, held)) latest.set(key, offer);
     }
   }
   return [...latest.entries()].flatMap(([key, offer]) => {
-    const optionId = key.slice(key.indexOf('|') + 1);
+    const optionRef = key.slice(key.indexOf('|') + 1);
     return offer.prices
-      .filter((p) => p.optionId === optionId)
+      .filter((p) => p.optionRef === optionRef)
       .map((p) => ({
         supplierId: offer.supplierId,
         roundId: offer.roundId,
         roundNumber: offer.roundNumber,
-        optionId,
+        optionRef,
         qty: p.qty,
         unitPrice: p.unitPrice,
         validUntil: offer.validUntil,

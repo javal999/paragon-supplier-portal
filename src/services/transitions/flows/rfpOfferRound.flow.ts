@@ -30,7 +30,7 @@ export const rfpOfferRoundFlow: FlowDefinition = {
       to: 'Open',
       trigger: 'creation',
       requiredRole: 'rfp:negotiate',
-      requiredFields: ['rfpId', 'optionIds', 'quantityPoints', 'invitedSupplierIds', 'deadline'],
+      requiredFields: ['rfpId', 'optionRefs', 'quantityPoints', 'invitedSupplierIds', 'deadline'],
       policyHooks: [POLICY_HOOKS.RFP_OFFER_ROUND_VALID],
       surfaceable: { surfaced: true },
       version: 1,

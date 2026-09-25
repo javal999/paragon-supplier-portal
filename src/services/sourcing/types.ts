@@ -398,8 +398,12 @@ export interface RfpOfferRound {
   readonly id: string;
   readonly rfpId: string;
   readonly roundNumber: number;
-  /** Buyer options (`RfpPricingRequest.options`) or supplier-proposed ones (`sup-opt-…`). */
-  readonly optionIds: readonly string[];
+  /**
+   * Option REFS (`rfpOptionRef`): a buyer option's id as-is, or
+   * `<proposerSupplierId>:sup-opt-N` for an option a supplier proposed, since a
+   * `sup-opt-N` id is unique only within its proposer's response.
+   */
+  readonly optionRefs: readonly string[];
   readonly quantityPoints: readonly number[];
   readonly invitedSupplierIds: readonly string[];
   readonly deadline: string;
@@ -411,7 +415,8 @@ export interface RfpOfferRound {
 
 /** One firm price: one option at one quantity point (NR-2 BR-03). */
 export interface RfpFirmPrice {
-  readonly optionId: string;
+  /** The option's ref, as in `RfpOfferRound.optionRefs`. */
+  readonly optionRef: string;
   readonly qty: number;
   readonly unitPrice: number;
 }

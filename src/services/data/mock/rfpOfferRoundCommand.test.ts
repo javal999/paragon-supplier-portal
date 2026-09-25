@@ -31,7 +31,13 @@ import { PERSONA_SYSTEM_ROLES } from '../../transitions/businessRoles';
 import { rfpSupplierGate, rfxNow } from './rfxReadModel';
 import { sdcClock } from '../../sdc';
 import { NO_PERSON } from '../../../context/noPerson';
-import { firmOfferRefusal, firmPricesInForce, rfpOfferRoundRefusal } from '../../sourcing/rfpFirmOffer';
+import {
+  firmOfferRefusal,
+  firmPricesInForce,
+  parseRfpOptionRef,
+  rfpOfferRoundRefusal,
+  rfpOptionRef,
+} from '../../sourcing/rfpFirmOffer';
 
 const svc = new MockCommandService();
 const reads = new MockProcurementService();
@@ -95,7 +101,7 @@ const closeRfp002 = async () => {
 /** The known-good round: two options (one supplier-proposed) at 50K, sup-007 asked. */
 const goodRound = () => ({
   rfpId: 'rfp-002',
-  optionIds: ['opt-full-set', 'sup-opt-1'],
+  optionRefs: ['opt-full-set', 'sup-007:sup-opt-1'],
   quantityPoints: [50_000],
   invitedSupplierIds: ['sup-007'],
   deadline: dayFromNow(5),
@@ -118,8 +124,8 @@ const goodOffer = (roundId: string) => ({
   roundId,
   supplierId: 'sup-007',
   prices: [
-    { optionId: 'opt-full-set', qty: 50_000, unitPrice: 4_150 },
-    { optionId: 'sup-opt-1', qty: 50_000, unitPrice: 3_550 },
+    { optionRef: 'opt-full-set', qty: 50_000, unitPrice: 4_150 },
+    { optionRef: 'sup-007:sup-opt-1', qty: 50_000, unitPrice: 3_550 },
   ],
   validUntil: dayFromNow(60),
 });
@@ -165,7 +171,7 @@ describe('NR-2 BR-02 — t_rfp_round_open', () => {
     expect(round).toMatchObject({
       rfpId: 'rfp-002',
       roundNumber: 1,
-      optionIds: ['opt-full-set', 'sup-opt-1'],
+      optionRefs: ['opt-full-set', 'sup-007:sup-opt-1'],
       quantityPoints: [50_000],
       invitedSupplierIds: ['sup-007'],
       message: 'Firm prices for the full set and your stock bottle, please.',
@@ -194,7 +200,7 @@ describe('NR-2 BR-02 — t_rfp_round_open', () => {
   // Each row changes ONE field of the known-good round; the known-good above opens.
   it.each([
     ['ROUND_NOT_RESPONDED', { invitedSupplierIds: ['sup-007', 'sup-015'] }],
-    ['ROUND_OPTION_UNKNOWN', { optionIds: ['opt-full-set', 'opt-nobody-asked'] }],
+    ['ROUND_OPTION_UNKNOWN', { optionRefs: ['opt-full-set', 'opt-nobody-asked'] }],
     ['ROUND_QTY_INVALID', { quantityPoints: [50_000, 0] }],
     ['BAD_DEADLINE', { deadline: 'next week' }],
     ['RFP_NOT_FOUND', { rfpId: 'rfp-999' }],
@@ -251,8 +257,8 @@ describe('NR-2 BR-03 / BR-04 — t_rfpfirmoffer_submit and t_rfpfirmoffer_revise
       entityId: offerId,
       payload: {
         prices: [
-          { optionId: 'opt-full-set', qty: 50_000, unitPrice: 4_050 },
-          { optionId: 'sup-opt-1', qty: 50_000, unitPrice: 3_500 },
+          { optionRef: 'opt-full-set', qty: 50_000, unitPrice: 4_050 },
+          { optionRef: 'sup-007:sup-opt-1', qty: 50_000, unitPrice: 3_500 },
         ],
         validUntil: dayFromNow(90),
       },
@@ -262,8 +268,8 @@ describe('NR-2 BR-03 / BR-04 — t_rfpfirmoffer_submit and t_rfpfirmoffer_revise
     const offer = rfpFirmOfferStore.get(offerId)!;
     expect(rfpFirmOfferStore.all()).toHaveLength(1);
     expect(offer.versions.map((v) => v.version)).toEqual([1, 2]);
-    expect(offer.versions[0]!.prices.find((p) => p.optionId === 'opt-full-set')!.unitPrice).toBe(4_150);
-    expect(offer.versions[1]!.prices.find((p) => p.optionId === 'opt-full-set')!.unitPrice).toBe(4_050);
+    expect(offer.versions[0]!.prices.find((p) => p.optionRef === 'opt-full-set')!.unitPrice).toBe(4_150);
+    expect(offer.versions[1]!.prices.find((p) => p.optionRef === 'opt-full-set')!.unitPrice).toBe(4_050);
     // The fields in force are the last version's.
     expect(offer.prices).toEqual(offer.versions[1]!.prices);
     expect(offer.validUntil).toBe(offer.versions[1]!.validUntil);
@@ -317,7 +323,7 @@ describe('NR-2 BR-03 / BR-04 — t_rfpfirmoffer_submit and t_rfpfirmoffer_revise
     // `opt-pump-cap` is on the RFP but not asked in THIS round.
     const res = await submit(sup007, {
       ...goodOffer(roundId),
-      prices: [...goodOffer(roundId).prices, { optionId: 'opt-pump-cap', qty: 50_000, unitPrice: 2_250 }],
+      prices: [...goodOffer(roundId).prices, { optionRef: 'opt-pump-cap', qty: 50_000, unitPrice: 2_250 }],
     });
     expect(res.status).toBe('failed');
     expect(res.reason).toMatch(/:OFFER_OUTSIDE_ROUND: opt-pump-cap/);
@@ -345,17 +351,17 @@ describe('NR-2 BR-03 / BR-04 — t_rfpfirmoffer_submit and t_rfpfirmoffer_revise
 
   // Each row changes ONE field of the known-good offer; the known-good submits (above).
   it.each([
-    ['OFFER_PRICE_INVALID', { prices: [{ optionId: 'opt-full-set', qty: 50_000, unitPrice: 0 }] }],
+    ['OFFER_PRICE_INVALID', { prices: [{ optionRef: 'opt-full-set', qty: 50_000, unitPrice: 0 }] }],
     [
       'OFFER_PRICE_DUPLICATE',
       {
         prices: [
-          { optionId: 'opt-full-set', qty: 50_000, unitPrice: 4_150 },
-          { optionId: 'opt-full-set', qty: 50_000, unitPrice: 4_100 },
+          { optionRef: 'opt-full-set', qty: 50_000, unitPrice: 4_150 },
+          { optionRef: 'opt-full-set', qty: 50_000, unitPrice: 4_100 },
         ],
       },
     ],
-    ['OFFER_OUTSIDE_ROUND', { prices: [{ optionId: 'opt-full-set', qty: 10_000, unitPrice: 4_850 }] }],
+    ['OFFER_OUTSIDE_ROUND', { prices: [{ optionRef: 'opt-full-set', qty: 10_000, unitPrice: 4_850 }] }],
     ['ATTACHMENT_MALFORMED', { documents: [{ name: 'offer.pdf' }] }],
   ] as const)('KNOWN-BAD — %s is refused by name', async (code, change) => {
     const roundId = await openGoodRound();
@@ -408,7 +414,7 @@ describe('NR-2 — getRfpOfferRounds narrows the supplier read', () => {
     const b = await submit(sup015, {
       ...goodOffer(roundId),
       supplierId: 'sup-015',
-      prices: [{ optionId: 'opt-full-set', qty: 50_000, unitPrice: 3_990 }],
+      prices: [{ optionRef: 'opt-full-set', qty: 50_000, unitPrice: 3_990 }],
     });
     expect(b.status, b.reason).toBe('done');
     return roundId;
@@ -422,7 +428,7 @@ describe('NR-2 — getRfpOfferRounds narrows the supplier read', () => {
     expect(round!.awaiting).toBe(0);
     expect(round!.rfpNumber).toBe(rfpEventStore.get('rfp-002')!.eventNumber);
     // Edge case 3 — the supplier-proposed option enters in the supplier's words.
-    expect(round!.options.find((o) => o.id === 'sup-opt-1')).toMatchObject({
+    expect(round!.options.find((o) => o.ref === 'sup-007:sup-opt-1')).toMatchObject({
       title: 'Stock 150 ml bottle with 24/410 lotion pump',
       supplierProposed: true,
     });
@@ -450,16 +456,108 @@ describe('NR-2 — getRfpOfferRounds narrows the supplier read', () => {
     await submit(sup007, goodOffer(first));
     await svc.dispatch(buyer, { transitionId: 't_rfp_round_close', entity: 'rfpOfferRound', entityId: first });
     // Round 2 asks for opt-full-set only; sup-opt-1's price from round 1 stays in force.
-    const second = await openRound({ ...goodRound(), optionIds: ['opt-full-set'] });
+    const second = await openRound({ ...goodRound(), optionRefs: ['opt-full-set'] });
     await submit(sup007, {
       roundId: second.entityId!,
       supplierId: 'sup-007',
-      prices: [{ optionId: 'opt-full-set', qty: 50_000, unitPrice: 3_980 }],
+      prices: [{ optionRef: 'opt-full-set', qty: 50_000, unitPrice: 3_980 }],
       validUntil: dayFromNow(60),
     });
     const [view] = (await reads.getRfpOfferRounds(buyer)).items.filter((r) => r.id === second.entityId);
-    const inForce = view!.firmPrices.map((p) => `${p.optionId}@${p.qty}=${p.unitPrice}#${p.roundNumber}`).sort();
-    expect(inForce).toEqual(['opt-full-set@50000=3980#2', 'sup-opt-1@50000=3550#1']);
+    const inForce = view!.firmPrices.map((p) => `${p.optionRef}@${p.qty}=${p.unitPrice}#${p.roundNumber}`).sort();
+    expect(inForce).toEqual(['opt-full-set@50000=3980#2', 'sup-007:sup-opt-1@50000=3550#1']);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Option refs — a supplier's `sup-opt-N` is unique only within its own
+// response, so a round and a firm price name it `<proposer>:sup-opt-N`.
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('NR-2 — two suppliers proposing the same sup-opt id stay two options', () => {
+  /** sup-015 also proposes a `sup-opt-1` on rfp-002, in its own words. */
+  function sup015ProposesSupOpt1(): void {
+    rfpResponseStore.add({
+      id: 'rfp-resp-probe-sup-015-opt',
+      rfpId: 'rfp-002',
+      supplierId: 'sup-015',
+      status: 'Submitted',
+      updatedAt: rfxNow(),
+      submittedAt: rfxNow(),
+      answers: [],
+      pricing: {
+        prices: [{ optionId: 'sup-opt-1', qty: 50_000, unitPrice: 3_700 }],
+        proposedOptions: [{ id: 'sup-opt-1', title: 'Airless pump in recycled PP' }],
+      },
+    });
+  }
+  const bothRefs = ['sup-007:sup-opt-1', 'sup-015:sup-opt-1'];
+
+  it('the buyer opens a round with both; each is a distinct ref with its own proposer’s title', async () => {
+    sup015ProposesSupOpt1();
+    const roundId = await openGoodRound({ optionRefs: bothRefs, invitedSupplierIds: ['sup-007', 'sup-015'] });
+    expect(rfpOfferRoundStore.get(roundId)!.optionRefs).toEqual(bothRefs);
+    const [round] = (await reads.getRfpOfferRounds(buyer)).items.filter((r) => r.id === roundId);
+    expect(round!.options.map((o) => [o.ref, o.id, o.proposerSupplierId, o.title])).toEqual([
+      ['sup-007:sup-opt-1', 'sup-opt-1', 'sup-007', 'Stock 150 ml bottle with 24/410 lotion pump'],
+      ['sup-015:sup-opt-1', 'sup-opt-1', 'sup-015', 'Airless pump in recycled PP'],
+    ]);
+  });
+
+  it('firm prices on each ref stay distinct, and a supplier may price the other’s option in the round', async () => {
+    sup015ProposesSupOpt1();
+    const roundId = await openGoodRound({ optionRefs: bothRefs, invitedSupplierIds: ['sup-007', 'sup-015'] });
+    const a = await submit(sup007, {
+      roundId,
+      supplierId: 'sup-007',
+      prices: [
+        { optionRef: 'sup-007:sup-opt-1', qty: 50_000, unitPrice: 3_550 },
+        { optionRef: 'sup-015:sup-opt-1', qty: 50_000, unitPrice: 3_800 },
+      ],
+      validUntil: dayFromNow(60),
+    });
+    expect(a.status, a.reason).toBe('done');
+    const b = await submit(sup015, {
+      roundId,
+      supplierId: 'sup-015',
+      prices: [{ optionRef: 'sup-015:sup-opt-1', qty: 50_000, unitPrice: 3_650 }],
+      validUntil: dayFromNow(60),
+    });
+    expect(b.status, b.reason).toBe('done');
+    const [round] = (await reads.getRfpOfferRounds(buyer)).items.filter((r) => r.id === roundId);
+    const inForce = round!.firmPrices.map((p) => `${p.supplierId}|${p.optionRef}=${p.unitPrice}`).sort();
+    expect(inForce).toEqual([
+      'sup-007|sup-007:sup-opt-1=3550',
+      'sup-007|sup-015:sup-opt-1=3800',
+      'sup-015|sup-015:sup-opt-1=3650',
+    ]);
+  });
+
+  it('KNOWN-BAD — a bare sup-opt-1 in a round payload is refused ROUND_OPTION_UNKNOWN', async () => {
+    sup015ProposesSupOpt1();
+    await closeRfp002();
+    const res = await openRound({ ...goodRound(), optionRefs: ['sup-opt-1'] });
+    expect(res.status).toBe('failed');
+    expect(codeOf(res.reason)).toBe('ROUND_OPTION_UNKNOWN');
+    expect(rfpOfferRoundStore.all()).toEqual([]);
+  });
+
+  it('KNOWN-BAD — a bare sup-opt-1 in a firm price is refused OFFER_OUTSIDE_ROUND', async () => {
+    const roundId = await openGoodRound();
+    const res = await submit(sup007, {
+      ...goodOffer(roundId),
+      prices: [{ optionRef: 'sup-opt-1', qty: 50_000, unitPrice: 3_550 }],
+    });
+    expect(codeOf(res.reason)).toBe('OFFER_OUTSIDE_ROUND');
+  });
+
+  it('rfpOptionRef / parseRfpOptionRef — a buyer id is its own ref; a proposed one names its proposer', () => {
+    expect(rfpOptionRef('opt-full-set')).toBe('opt-full-set');
+    expect(rfpOptionRef('sup-opt-1', 'sup-015')).toBe('sup-015:sup-opt-1');
+    expect(parseRfpOptionRef('sup-015:sup-opt-1')).toEqual({ optionId: 'sup-opt-1', proposerSupplierId: 'sup-015' });
+    expect(parseRfpOptionRef('opt-full-set')).toEqual({ optionId: 'opt-full-set' });
+    // A colon alone does not make a proposed option; only `<supplier>:sup-opt-…` does.
+    expect(parseRfpOptionRef('opt:a')).toEqual({ optionId: 'opt:a' });
   });
 });
 
@@ -470,11 +568,11 @@ describe('NR-2 — getRfpOfferRounds narrows the supplier read', () => {
 describe('NR-2 — the pure rules', () => {
   const facts = {
     rfpStatus: 'Closed',
-    knownOptionIds: ['a'],
+    knownOptionRefs: ['a'],
     respondedSupplierIds: ['s1'],
     gate: () => ({ passes: true, failed: [] }),
   };
-  const req = { optionIds: ['a'], quantityPoints: [10], invitedSupplierIds: ['s1'], deadline: '2026-10-01' };
+  const req = { optionRefs: ['a'], quantityPoints: [10], invitedSupplierIds: ['s1'], deadline: '2026-10-01' };
 
   it('rfpOfferRoundRefusal — known-good is null, and one changed fact refuses', () => {
     expect(rfpOfferRoundRefusal(req, facts)).toBeNull();
@@ -485,19 +583,19 @@ describe('NR-2 — the pure rules', () => {
   // MISSING_FIELDS refusal there), so these codes serve a page's pre-check and
   // are probed on the rule itself.
   it('rfpOfferRoundRefusal — an empty option list or shortlist is refused by name', () => {
-    expect(rfpOfferRoundRefusal({ ...req, optionIds: [] }, facts)).toMatch(/^ROUND_NO_OPTIONS/);
+    expect(rfpOfferRoundRefusal({ ...req, optionRefs: [] }, facts)).toMatch(/^ROUND_NO_OPTIONS/);
     expect(rfpOfferRoundRefusal({ ...req, invitedSupplierIds: [] }, facts)).toMatch(/^ROUND_NO_INVITEES/);
   });
 
   it('firmOfferRefusal — known-good is null, and one changed field refuses', () => {
     const round = {
-      optionIds: ['a'],
+      optionRefs: ['a'],
       quantityPoints: [10],
       invitedSupplierIds: ['s1'],
       deadline: '2026-10-01',
       closed: false,
     };
-    const offer = { prices: [{ optionId: 'a', qty: 10, unitPrice: 5 }], validUntil: '2026-10-01' };
+    const offer = { prices: [{ optionRef: 'a', qty: 10, unitPrice: 5 }], validUntil: '2026-10-01' };
     const now = '2026-09-20T00:00:00.000Z';
     expect(firmOfferRefusal(round, 's1', offer, now)).toBeNull();
     expect(firmOfferRefusal(round, 's1', { ...offer, validUntil: undefined }, now)).toMatch(/^OFFER_VALIDITY_MISSING/);
@@ -514,11 +612,11 @@ describe('NR-2 — the pure rules', () => {
         roundNumber: 1,
         submittedAt: '2026-09-01',
         prices: [
-          { optionId: 'a', qty: 10, unitPrice: 5 },
-          { optionId: 'a', qty: 20, unitPrice: 4 },
+          { optionRef: 'a', qty: 10, unitPrice: 5 },
+          { optionRef: 'a', qty: 20, unitPrice: 4 },
         ],
       },
-      { ...base, id: 'o2', roundId: 'fr2', roundNumber: 2, submittedAt: '2026-09-05', prices: [{ optionId: 'a', qty: 20, unitPrice: 3 }] },
+      { ...base, id: 'o2', roundId: 'fr2', roundNumber: 2, submittedAt: '2026-09-05', prices: [{ optionRef: 'a', qty: 20, unitPrice: 3 }] },
     ]);
     expect(inForce.map((p) => `${p.qty}=${p.unitPrice}`)).toEqual(['20=3']);
   });

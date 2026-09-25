@@ -108,11 +108,16 @@ export interface NegotiationRoundView extends NegotiationRound {
 
 /** NR-2 — one option of a firm-offer round, in the words of whoever wrote it (edge case 3). */
 export interface RfpRoundOptionView {
+  /** The name a round and a firm price use (`rfpOptionRef`). */
+  readonly ref: string;
+  /** The option's own id: the buyer's, or the proposer's `sup-opt-N`. */
   readonly id: string;
   readonly title: string;
   readonly description?: string;
   /** True for an option a supplier proposed in its RFP response (`sup-opt-…`). */
   readonly supplierProposed: boolean;
+  /** The supplier that proposed it; absent on a buyer option. */
+  readonly proposerSupplierId?: string;
 }
 
 /** NR-2 BR-04 — the firm price in force for one supplier × option × quantity point. */
@@ -121,7 +126,7 @@ export interface RfpFirmPriceView {
   readonly supplierName: string;
   readonly roundId: string;
   readonly roundNumber: number;
-  readonly optionId: string;
+  readonly optionRef: string;
   readonly qty: number;
   readonly unitPrice: number;
   readonly validUntil: string;

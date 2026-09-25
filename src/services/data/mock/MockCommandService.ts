@@ -3229,7 +3229,7 @@ const rfpOfferRoundTarget: CommandTarget = {
       id,
       rfpId,
       roundNumber: rfpOfferRoundStore.all().filter((r) => r.rfpId === rfpId).length + 1,
-      optionIds: strs(payload.optionIds),
+      optionRefs: strs(payload.optionRefs),
       quantityPoints: [...new Set((payload.quantityPoints as number[]).filter((q) => typeof q === 'number'))].sort(
         (a, b) => a - b,
       ),
@@ -3244,7 +3244,7 @@ const rfpOfferRoundTarget: CommandTarget = {
 
 /** The firm prices a payload carries, as stored (the policy has checked them). */
 const firmPricesOf = (payload: Record<string, unknown>): RfpFirmPrice[] =>
-  (payload.prices as RfpFirmPrice[]).map((p) => ({ optionId: p.optionId, qty: p.qty, unitPrice: p.unitPrice }));
+  (payload.prices as RfpFirmPrice[]).map((p) => ({ optionRef: p.optionRef, qty: p.qty, unitPrice: p.unitPrice }));
 
 /** The documents a payload carries, only when present. */
 const firmDocsOf = (payload: Record<string, unknown>): { documents?: readonly AttachmentMeta[] } =>
@@ -3652,14 +3652,14 @@ bindPolicyHook(POLICY_HOOKS.RFP_OFFER_ROUND_VALID, ({ payload }) => {
   const now = rfxNow();
   const refusal = rfpOfferRoundRefusal(
     {
-      optionIds: payload.optionIds,
+      optionRefs: payload.optionRefs,
       quantityPoints: payload.quantityPoints,
       invitedSupplierIds: payload.invitedSupplierIds,
       deadline: payload.deadline,
     },
     {
       rfpStatus: rfp?.status ?? null,
-      knownOptionIds: rfp ? rfpRoundOptions(rfp).map((o) => o.id) : [],
+      knownOptionRefs: rfp ? rfpRoundOptions(rfp).map((o) => o.ref) : [],
       respondedSupplierIds: rfp ? rfpRespondedSupplierIds(rfp.id) : [],
       gate: (sid) => rfpSupplierGate(sid, now),
     },
@@ -3678,7 +3678,7 @@ bindPolicyHook(POLICY_HOOKS.RFP_FIRM_OFFER_VALID, ({ payload, entityId, target }
   const refusal = firmOfferRefusal(
     round
       ? {
-          optionIds: round.optionIds,
+          optionRefs: round.optionRefs,
           quantityPoints: round.quantityPoints,
           invitedSupplierIds: round.invitedSupplierIds,
           deadline: round.deadline,

@@ -2455,7 +2455,8 @@ export type RfxCommandVars =
   | {
       verb: 'openRfpRound';
       rfpId: string;
-      optionIds: readonly string[];
+      /** Option refs (`rfpOptionRef`), never a bare supplier `sup-opt-N` id. */
+      optionRefs: readonly string[];
       quantityPoints: readonly number[];
       invitedSupplierIds: readonly string[];
       deadline: string;
@@ -2743,7 +2744,7 @@ export function useRfxCommand() {
             entity: 'rfpOfferRound',
             payload: {
               ...payload,
-              optionIds: [...payload.optionIds],
+              optionRefs: [...payload.optionRefs],
               quantityPoints: [...payload.quantityPoints],
               invitedSupplierIds: [...payload.invitedSupplierIds],
             },

@@ -52,7 +52,7 @@ import type {
   RfxInviteeView,
 } from '../../sourcing/views';
 import type { RfiResponse, RfpEvent, RfpResponse } from '../../sourcing/types';
-import { firmPricesInForce } from '../../sourcing/rfpFirmOffer';
+import { firmPricesInForce, parseRfpOptionRef, rfpOptionRef } from '../../sourcing/rfpFirmOffer';
 import { rfqStore } from './stores/rfqStore';
 import { quotationStore } from './stores/quotationStore';
 import {
@@ -451,12 +451,20 @@ export const rfpRespondedSupplierIds = (rfpId: string): readonly string[] =>
  * A draft's proposal is invisible to PTI, so it cannot enter a round either.
  */
 export function rfpRoundOptions(rfp: RfpEvent): readonly RfpRoundOptionView[] {
-  const own = (rfp.pricing?.options ?? []).map((o) => ({ ...o, supplierProposed: false }));
+  const own = (rfp.pricing?.options ?? []).map((o) => ({ ...o, ref: rfpOptionRef(o.id), supplierProposed: false }));
+  // Each proposed option keeps its PROPOSER: `sup-opt-1` from two suppliers is
+  // two options, told apart by the ref.
   const proposed = rfpResponseStore
     .all()
     .filter((r) => r.rfpId === rfp.id && r.status === 'Submitted')
-    .flatMap((r) => r.pricing?.proposedOptions ?? [])
-    .map((o) => ({ ...o, supplierProposed: true }));
+    .flatMap((r) =>
+      (r.pricing?.proposedOptions ?? []).map((o) => ({
+        ...o,
+        ref: rfpOptionRef(o.id, r.supplierId),
+        supplierProposed: true,
+        proposerSupplierId: r.supplierId,
+      })),
+    );
   return [...own, ...proposed];
 }
 
@@ -479,7 +487,7 @@ export function rfpOfferRoundViews(nowIso: string, supplierId: string | null): r
       const rfp = rfpEventStore.get(round.rfpId);
       const invited = supplierId ? [supplierId] : round.invitedSupplierIds;
       const offers = visibleOffers.filter((o) => o.roundId === round.id);
-      const byId = new Map((rfp ? rfpRoundOptions(rfp) : []).map((o) => [o.id, o] as const));
+      const byRef = new Map((rfp ? rfpRoundOptions(rfp) : []).map((o) => [o.ref, o] as const));
       const closed = round.closedAt !== undefined;
       const onRfp = visibleOffers
         .filter((o) => o.rfpId === round.rfpId && numberOf.has(o.roundId))
@@ -490,9 +498,18 @@ export function rfpOfferRoundViews(nowIso: string, supplierId: string | null): r
         rfpNumber: rfp?.eventNumber ?? round.rfpId,
         rfpTitle: rfp?.title ?? '',
         currency: rfp?.currency ?? BASE_CURRENCY,
-        options: round.optionIds.map(
-          (id) => byId.get(id) ?? { id, title: id, supplierProposed: id.startsWith('sup-opt-') },
-        ),
+        options: round.optionRefs.map((ref) => {
+          const known = byRef.get(ref);
+          if (known) return known;
+          const { optionId, proposerSupplierId } = parseRfpOptionRef(ref);
+          return {
+            ref,
+            id: optionId,
+            title: optionId,
+            supplierProposed: proposerSupplierId !== undefined,
+            ...(proposerSupplierId ? { proposerSupplierId } : {}),
+          };
+        }),
         closed,
         overdue: !closed && isPastDeadline(round.deadline, nowIso),
         offers,

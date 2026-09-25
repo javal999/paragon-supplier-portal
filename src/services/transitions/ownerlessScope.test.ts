@@ -193,7 +193,7 @@ async function realIds(): Promise<Record<string, string | null>> {
   const round = await svc.dispatch(buyerSeat('procurement'), {
     transitionId: 't_rfp_round_open', entity: 'rfpOfferRound',
     payload: {
-      rfpId: 'rfp-002', optionIds: ['opt-full-set'], quantityPoints: [50_000],
+      rfpId: 'rfp-002', optionRefs: ['opt-full-set'], quantityPoints: [50_000],
       invitedSupplierIds: ['sup-007'], deadline: inFiveDays,
     },
   });
@@ -202,7 +202,7 @@ async function realIds(): Promise<Record<string, string | null>> {
         transitionId: 't_rfpfirmoffer_submit', entity: 'rfpFirmOffer',
         payload: {
           roundId: round.entityId, supplierId: 'sup-007',
-          prices: [{ optionId: 'opt-full-set', qty: 50_000, unitPrice: 4_150 }], validUntil: inFiveDays,
+          prices: [{ optionRef: 'opt-full-set', qty: 50_000, unitPrice: 4_150 }], validUntil: inFiveDays,
         },
       })
     : null;
