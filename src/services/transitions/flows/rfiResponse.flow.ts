@@ -36,6 +36,8 @@ export const rfiResponseFlow: FlowDefinition = {
         POLICY_HOOKS.RFX_RESPONSE_DOCUMENTS_WITHIN_LIMITS,
         // NR-1 AC-07 — no upload, replace or delete after the deadline.
         POLICY_HOOKS.RFX_RESPONSE_WINDOW_OPEN,
+        // NR-1 BR-08 — a Submitted response changes only through revise.
+        POLICY_HOOKS.RFX_RESPONSE_NOT_SUBMITTED,
       ],
       surfaceable: { surfaced: true },
       version: 1,

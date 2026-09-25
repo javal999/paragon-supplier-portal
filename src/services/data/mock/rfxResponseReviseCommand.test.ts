@@ -319,6 +319,56 @@ describe('NR-1 BR-08 — the RFI response revises the same way', () => {
 
 });
 
+describe('NR-1 BR-08 / BR-10 — a save never changes a Submitted response (RESPONSE_ALREADY_SUBMITTED)', () => {
+  it('KNOWN-BAD — a save on a Submitted RFP response is refused; the response and its versions are unchanged', async () => {
+    const rfpId = await publishedRfp();
+    const responseId = await submittedProposal(rfpId);
+    const before = structuredClone(rfpResponseStore.get(responseId));
+    const res = await svc.dispatch(sup007, {
+      transitionId: 't_rfpresponse_save',
+      entity: 'rfpResponse',
+      payload: { rfpId, supplierId: 'sup-007', ...proposal(900) },
+    });
+    expect(res.status).toBe('failed');
+    expect(res.reason).toMatch(/RESPONSE_ALREADY_SUBMITTED: use revise/);
+    expect(rfpResponseStore.get(responseId)).toEqual(before);
+  });
+
+  it('KNOWN-BAD — a save on a Submitted RFI response is refused; the response and its versions are unchanged', async () => {
+    const seed = rfiResponseStore.get('rfi-resp-001')!;
+    expect(seed.status).toBe('Submitted');
+    const before = structuredClone(seed);
+    const res = await svc.dispatch(sup007, {
+      transitionId: 't_rfiresponse_save',
+      entity: 'rfiResponse',
+      payload: { rfiId: seed.rfiId, supplierId: 'sup-007', answers: [] },
+    });
+    expect(res.status).toBe('failed');
+    expect(res.reason).toMatch(/RESPONSE_ALREADY_SUBMITTED: use revise/);
+    expect(rfiResponseStore.get('rfi-resp-001')).toEqual(before);
+  });
+
+  it('KNOWN-GOOD twin — a save on a Draft response still replaces the draft', async () => {
+    const rfpId = await publishedRfp();
+    const first = await svc.dispatch(sup007, {
+      transitionId: 't_rfpresponse_save',
+      entity: 'rfpResponse',
+      payload: { rfpId, supplierId: 'sup-007', ...proposal(1_200) },
+    });
+    expect(first.status, first.reason).toBe('done');
+    const again = await svc.dispatch(sup007, {
+      transitionId: 't_rfpresponse_save',
+      entity: 'rfpResponse',
+      payload: { rfpId, supplierId: 'sup-007', ...proposal(1_100) },
+    });
+    expect(again.status, again.reason).toBe('done');
+    expect(again.entityId).toBe(first.entityId);
+    const stored = rfpResponseStore.get(first.entityId!)!;
+    expect(stored.status).toBe('Draft');
+    expect(stored.pricing!.prices[0]!.unitPrice).toBe(1_100);
+  });
+});
+
 describe('revise is only for a SUBMITTED response', () => {
   it('KNOWN-BAD — a Draft proposal cannot be revised: a draft is sent with submit', async () => {
     const rfpId = await publishedRfp();

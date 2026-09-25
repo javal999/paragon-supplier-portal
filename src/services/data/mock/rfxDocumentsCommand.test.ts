@@ -370,14 +370,17 @@ describe('NR-1 BR-03 — the quotation submit verb', () => {
 
 describe('NR-1 — the RFI response verbs carry documents too', () => {
   it('an RFI draft save stores the documents, replacing them on the next save', async () => {
-    const payload = (documents: unknown[]) => ({ rfiId: 'rfi-001', supplierId: 'sup-007', answers: [], documents });
-    const first = await svc.dispatch(sup007, {
+    // sup-013 holds a DRAFT on rfi-001 (sup-007's is Submitted, and a save on a
+    // Submitted response is refused RESPONSE_ALREADY_SUBMITTED since B2).
+    const sup013 = supplier('sup-013');
+    const payload = (documents: unknown[]) => ({ rfiId: 'rfi-001', supplierId: 'sup-013', answers: [], documents });
+    const first = await svc.dispatch(sup013, {
       transitionId: 't_rfiresponse_save',
       entity: 'rfiResponse',
       payload: payload([{ id: 'd-a', attachment: file('a.pdf') }]),
     });
     expect(first.status, first.reason).toBe('done');
-    await svc.dispatch(sup007, {
+    await svc.dispatch(sup013, {
       transitionId: 't_rfiresponse_save',
       entity: 'rfiResponse',
       payload: payload([{ id: 'd-b', attachment: file('b.pdf') }]),

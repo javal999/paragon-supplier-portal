@@ -133,6 +133,7 @@ import {
   rfpPricingRequestRefusal,
   rfpTermsRefusal,
   responseWindowRefusal,
+  responseAlreadySubmittedRefusal,
   type QuoteLineInput,
   type AsnLineInput,
   type CommandTarget,
@@ -3316,6 +3317,18 @@ bindPolicyHook(POLICY_HOOKS.RFX_RESPONSE_WINDOW_OPEN, ({ payload, target, entity
       : rfpEventStore.get(String(stored ? (stored as RfpResponse).rfpId : payload.rfpId));
   if (!event) return { ok: false, reason: 'event not found' };
   const refusal = responseWindowRefusal(event, supplierId, rfxNow());
+  return refusal ? { ok: false, reason: refusal } : { ok: true };
+});
+
+// NR-1 BR-08 / BR-10 — the draft save never touches a Submitted response: it
+// would change it in place with no version. Revise is the only way.
+bindPolicyHook(POLICY_HOOKS.RFX_RESPONSE_NOT_SUBMITTED, ({ payload }) => {
+  const supplierId = String(payload.supplierId);
+  const existing =
+    payload.rfiId !== undefined
+      ? rfiResponseStore.all().find((r) => r.rfiId === String(payload.rfiId) && r.supplierId === supplierId)
+      : rfpResponseStore.all().find((r) => r.rfpId === String(payload.rfpId) && r.supplierId === supplierId);
+  const refusal = responseAlreadySubmittedRefusal(existing?.status);
   return refusal ? { ok: false, reason: refusal } : { ok: true };
 });
 

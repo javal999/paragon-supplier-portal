@@ -173,6 +173,16 @@ export function responseWindowRefusal(
   return isPastDeadline(deadline, nowIso) ? `RESPONSE_DEADLINE_PASSED: responses closed on ${deadline}` : null;
 }
 
+/**
+ * NR-1 BR-08 / BR-10 — why a draft save may not touch this supplier's stored
+ * response, or `null`. A Submitted response changes only through revise, which
+ * appends a version; a save would change it in place with no version. `status`
+ * is the stored response's status, `undefined` when there is none yet.
+ */
+export function responseAlreadySubmittedRefusal(status: string | undefined): string | null {
+  return status === 'Submitted' ? 'RESPONSE_ALREADY_SUBMITTED: use revise' : null;
+}
+
 /** Whole days from `nowIso` to the end of the deadline day (negative = past). */
 export function daysToDeadline(deadline: string, nowIso: string): number {
   const end = Date.parse(`${deadline.slice(0, 10)}T23:59:59.999Z`);
