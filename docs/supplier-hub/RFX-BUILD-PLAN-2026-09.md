@@ -169,4 +169,5 @@ Each item was found by a task builder and checked against the code before it was
 | FU-4 | The legacy single-price RFQ comparison has no "Documents" row (B5 covered tiered RFQs and RFPs). The documents panel on that page still shows complete or missing | A small consistency gap | F1 records it, or a later polish task |
 | FU-5 | `t_rfq_award` still accepts a payload without `awardLines` (read as 1 line per item at 100%) for legacy RFQs, though no screen sends one after C3 | Dead path kept for C1's command tests | Remove together with those tests in a later tidy-up |
 | FU-6 | Page tests time out when many builders run the full suite at once (load average above 150) | False red runs. Each passed alone and on a full re-run | None. Note it for parallel work |
+| FU-7 | A firm-offer round can open only on a Closed RFP (D1), so a Partly awarded RFP cannot run another round for its open options (found in D2, #66) | The buyer must use RFP → RFQ for options still open after a partial award | Owner decision: allow rounds on Partly awarded RFPs, or keep RFQ as the path. Then a small D1 policy change |
 
