@@ -31,9 +31,9 @@ import {
   itemCostAt,
   quoteTotalAt,
   scoreRfqAt,
-  tieredAwardShapeRefusal,
   topRankedOf,
 } from '../../sourcing/rfqComparison';
+import { awardItemsOf, awardShapeRefusal } from '../../sourcing/awardShape';
 
 const svc = new MockCommandService();
 const buyer: QueryScope = {
@@ -214,14 +214,14 @@ const award = (lines: readonly AwardLine[], reason?: string) =>
 
 const nothingAwarded = () => {
   expect(oslo().status).toBe('Open');
-  expect(awardStore.all().some((a) => a.rfqId === 'rfq-021')).toBe(false);
+  expect(awardStore.all().some((a) => a.eventId === 'rfq-021')).toBe(false);
 };
 
 describe('a multi-supplier award per item, recorded with its break', () => {
   it('KNOWN-GOOD — 70/30 on item 1 and 100% on item 2 is recorded, line by line', async () => {
     const res = await award(goodSplit());
     expect(res.status, res.reason).toBe('done');
-    const rec = awardStore.all().find((a) => a.rfqId === 'rfq-021')!;
+    const rec = awardStore.all().find((a) => a.eventId === 'rfq-021')!;
     expect(rec.lines.map((l) => [l.itemLineNo, l.supplierId, l.sharePct, l.quantity, l.awardTierQty])).toEqual([
       [1, 'sup-015', 70, 16_800, 3_000],
       [1, 'sup-013', 30, 7_200, 3_000],
@@ -246,7 +246,7 @@ describe('a multi-supplier award per item, recorded with its break', () => {
       [q('qt-021a'), q('qt-021b')],
     );
     expect(built).toEqual(goodSplit());
-    expect(tieredAwardShapeRefusal(oslo(), built, [q('qt-021a'), q('qt-021b')])).toBeNull();
+    expect(awardShapeRefusal(awardItemsOf(oslo()), built, [q('qt-021a'), q('qt-021b')])).toBeNull();
   });
 });
 
@@ -262,8 +262,24 @@ describe('an item not at 100% is refused, naming the item', () => {
   it('KNOWN-BAD — an item left out entirely totals 0% and is named', async () => {
     const res = await award(goodSplit().slice(0, 2));
     expect(res.status).toBe('failed');
-    expect(res.reason).toMatch(/AWARD_SPLIT_INCOMPLETE: item 2 .* totals 0%/);
+    expect(res.reason).toMatch(/AWARD_ITEMS_OPEN: item 2 \(Oslo back sticker \(ingredients\)\)/);
     nothingAwarded();
+  });
+
+  it('KNOWN-GOOD sibling — the SAME lines sent as a PARTIAL award go through, to Partly awarded', async () => {
+    const lines = goodSplit().slice(0, 2);
+    const res = await svc.dispatch(buyer, {
+      transitionId: 't_rfq_award_partial',
+      entity: 'rfq',
+      entityId: 'rfq-021',
+      payload: {
+        awardedQuotationId: lines[0]!.quotationId,
+        awardedSupplierId: lines[0]!.supplierId,
+        awardLines: lines.map((l) => ({ ...l })),
+      },
+    });
+    expect(res.status, res.reason).toBe('done');
+    expect(oslo().status).toBe('Partly awarded');
   });
 
   it('KNOWN-GOOD twin — the same item at 100% goes through', async () => {
@@ -312,16 +328,16 @@ describe('a departure from an item’s best score needs a reason, naming the ite
   it('KNOWN-GOOD twin — the same award with a reason is recorded, and the departure shows', async () => {
     const res = await award(departing(), 'One printer for both stickers keeps the colours matched.');
     expect(res.status, res.reason).toBe('done');
-    const rec = awardStore.all().find((a) => a.rfqId === 'rfq-021')!;
+    const rec = awardStore.all().find((a) => a.eventId === 'rfq-021')!;
     expect(rec.reason).toMatch(/colours matched/);
-    const view = (await import('./rfxReadModel')).awardViews(null).find((a) => a.rfqId === 'rfq-021')!;
+    const view = (await import('./rfxReadModel')).awardViews(null).find((a) => a.eventId === 'rfq-021')!;
     expect(view.departedFromBestScore).toBe(true);
   });
 
   it('POSITIVE TWIN — a split that gives each item’s best a share needs no reason', async () => {
     const res = await award(goodSplit());
     expect(res.status, res.reason).toBe('done');
-    const view = (await import('./rfxReadModel')).awardViews(null).find((a) => a.rfqId === 'rfq-021')!;
+    const view = (await import('./rfxReadModel')).awardViews(null).find((a) => a.eventId === 'rfq-021')!;
     expect(view.departedFromBestScore).toBe(false);
   });
 
@@ -388,7 +404,7 @@ describe('the seeded Amplify split (rfq-024) tells the truth about itself', () =
     expect(seeded.bestScoredByItem).toEqual(live);
     expect(seeded.bestScoredQuotationId).toBe(bestScoredQuotationId(rfq, rfxNow(), 10_000));
     expect(
-      tieredAwardShapeRefusal(rfq, seeded.lines, quotationStore.forRfq('rfq-024')),
+      awardShapeRefusal(awardItemsOf(rfq), seeded.lines, quotationStore.forRfq('rfq-024')),
     ).toBeNull();
     // two suppliers on EACH item — a split per item, not one winner per item
     for (const lineNo of [1, 2]) {

@@ -73,6 +73,23 @@ export const CASCADES: Record<string, readonly CascadeLink[]> = {
     { targetEntity: 'quotation', targetTransitionId: 't_quotation_award' },
     { targetEntity: 'quotation', targetTransitionId: 't_quotation_reject' },
   ],
+  // RFx C1 — a PARTIAL award marks its named quotes Awarded and rejects NONE:
+  // a supplier with no share yet may still win an item left open. The final
+  // award (`t_rfq_award`) rejects every quote no award of the event named.
+  t_rfq_award_partial: [
+    { targetEntity: 'quotation', targetTransitionId: 't_quotation_award' },
+  ],
+  // RFx C2 (AR-06) — cancelling an award reverses its cascade: the quotes the
+  // cancelled award named go back to Under Review, unless another award in
+  // force still names them; and when the cancel takes the event out of
+  // Awarded, so do the quotes the final award rejected. The resolver picks
+  // the ids from the award record and the store.
+  t_rfq_award_cancel: [
+    { targetEntity: 'quotation', targetTransitionId: 't_quotation_reinstate' },
+  ],
+  t_rfq_award_cancel_partial: [
+    { targetEntity: 'quotation', targetTransitionId: 't_quotation_reinstate' },
+  ],
 };
 
 /** The cascade links declared for a source transition (empty if none). */

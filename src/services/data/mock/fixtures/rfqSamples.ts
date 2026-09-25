@@ -556,6 +556,7 @@ const amplifyLine = (supplierId: string, quotationId: string, lineNo: number, sh
   itemLineNo: lineNo,
   sharePct,
   quantity: Math.round((AMPLIFY_ITEM_PIECES * sharePct) / 100),
+  splitBasis: 'pct',
   awardTierQty: 10_000,
 });
 
@@ -567,7 +568,8 @@ const amplifyLine = (supplierId: string, quotationId: string, lineNo: number, sh
 export const RFQ_SAMPLE_AWARD_SEED: readonly AwardRecord[] = [
   {
     id: 'aw-0002',
-    rfqId: 'rfq-024',
+    eventType: 'rfq',
+    eventId: 'rfq-024',
     awardedAt: `${day(-48)}T03:00:00.000Z`,
     lines: [
       amplifyLine('sup-013', 'qt-024b', 1, 60),
