@@ -1,7 +1,8 @@
-import { screen, fireEvent, within, waitFor } from '@testing-library/react';
-import { useLocation } from 'react-router-dom';
+import { screen, fireEvent, within } from '@testing-library/react';
+import { Route, Routes, useLocation } from 'react-router-dom';
 import { renderWithProviders, SUPPLIER } from '../../test/test-utils';
 import SidebarV2 from './SidebarV2';
+import AppShellV2 from './AppShellV2';
 import { setHubRole } from './hubRole';
 
 // Surfaces the current route so we can assert the toggle navigates (NAV-01).
@@ -11,6 +12,25 @@ const LocationProbe = () => {
 };
 
 afterEach(() => setHubRole('ALL'));
+
+// jsdom does not keep scrollTop. The restore runs in a layout effect, i.e. before
+// the test gets the element back, so give every element a writable scrollTop up front.
+const realScrollTop = Object.getOwnPropertyDescriptor(Element.prototype, 'scrollTop');
+const scrollTops = new WeakMap<Element, number>();
+const installScrollTop = () =>
+  Object.defineProperty(HTMLElement.prototype, 'scrollTop', {
+    configurable: true,
+    get(this: Element) {
+      return scrollTops.get(this) ?? 0;
+    },
+    set(this: Element, value: number) {
+      scrollTops.set(this, value);
+    },
+  });
+const removeScrollTop = () => {
+  delete (HTMLElement.prototype as { scrollTop?: number }).scrollTop;
+  if (realScrollTop) Object.defineProperty(Element.prototype, 'scrollTop', realScrollTop);
+};
 
 describe('SidebarV2 — persona switch goes to that persona\'s Home (NV-02)', () => {
   it('switching to Supplier navigates to the supplier Home', () => {
@@ -74,18 +94,14 @@ describe('SidebarV2 — hub sections (REQUIREMENTS §3.7)', () => {
 describe('SidebarV2 — restores sidebar scroll position', () => {
   beforeEach(() => {
     sessionStorage.clear();
+    installScrollTop();
   });
-  it('restores scroll position from sessionStorage on mount', async () => {
-    sessionStorage.setItem('sidebar-scroll-position', '500');
+  afterEach(removeScrollTop);
+  it('restores scroll position from sessionStorage on mount', () => {
+    sessionStorage.setItem('pti-hub.sidebar-scroll.buyer', '500');
     renderWithProviders(<SidebarV2 />, { route: '/buyer/home' });
     const nav = screen.getByRole('navigation');
-    Object.defineProperty(nav, 'scrollTop', {
-      writable: true,
-      value: 0,
-    });
-    await waitFor(() => {
-      expect(nav.scrollTop).toBe(500);
-    });
+    expect(nav.scrollTop).toBe(500);
   });
 
   it('updates sessionStorage when sidebar is scrolled', () => {
@@ -96,6 +112,77 @@ describe('SidebarV2 — restores sidebar scroll position', () => {
         scrollTop: 300,
       },
     });
-    expect(sessionStorage.getItem('sidebar-scroll-position')).toBe('300');
+    expect(sessionStorage.getItem('pti-hub.sidebar-scroll.buyer')).toBe('300');
+  });
+});
+
+// Each page renders its own AppShellV2, so navigating between pages remounts the
+// sidebar. These pages mirror that: distinct components, one shell each.
+const BuyerHomePage = () => <AppShellV2><p>buyer home</p></AppShellV2>;
+const BuyerSuppliersPage = () => <AppShellV2><p>buyer suppliers</p></AppShellV2>;
+const SupplierHomePage = () => <AppShellV2><p>supplier home</p></AppShellV2>;
+
+const renderPages = () =>
+  renderWithProviders(
+    <Routes>
+      <Route path="/buyer/home" element={<BuyerHomePage />} />
+      <Route path="/buyer/suppliers" element={<BuyerSuppliersPage />} />
+      <Route path="/supplier/home" element={<SupplierHomePage />} />
+    </Routes>,
+    { route: '/buyer/home' },
+  );
+
+describe('SidebarV2 — scroll position survives navigation', () => {
+  beforeEach(() => {
+    sessionStorage.clear();
+    installScrollTop();
+  });
+  afterEach(removeScrollTop);
+
+  it('keeps the scroll position when a sidebar item navigates and the sidebar remounts', () => {
+    renderPages();
+    const firstNav = screen.getByRole('navigation', { name: 'Main navigation' });
+    fireEvent.scroll(firstNav, { target: { scrollTop: 400 } });
+
+    fireEvent.click(within(firstNav).getByRole('button', { name: 'Suppliers' }));
+    expect(screen.getByText('buyer suppliers')).toBeInTheDocument();
+
+    const nextNav = screen.getByRole('navigation', { name: 'Main navigation' });
+    expect(nextNav).not.toBe(firstNav);
+    expect(nextNav.scrollTop).toBe(400);
+  });
+
+  it('does not carry the PTI menu position into the supplier menu, and restores it on return', () => {
+    renderPages();
+    const buyerNav = screen.getByRole('navigation', { name: 'Main navigation' });
+    fireEvent.scroll(buyerNav, { target: { scrollTop: 500 } });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Supplier' }));
+    expect(screen.getByText('supplier home')).toBeInTheDocument();
+    const supplierNav = screen.getByRole('navigation', { name: 'Main navigation' });
+    expect(supplierNav.scrollTop).toBe(0);
+
+    fireEvent.click(screen.getByRole('button', { name: 'PTI' }));
+    expect(screen.getByText('buyer home')).toBeInTheDocument();
+    const backNav = screen.getByRole('navigation', { name: 'Main navigation' });
+    expect(backNav.scrollTop).toBe(500);
+  });
+
+  it('keeps working when storage throws', () => {
+    const setItem = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new Error('QuotaExceededError');
+    });
+    // React reports a throwing handler to window rather than to fireEvent's caller.
+    const uncaught = vi.fn((e: ErrorEvent) => e.preventDefault());
+    window.addEventListener('error', uncaught);
+    try {
+      renderWithProviders(<SidebarV2 />, { route: '/buyer/home' });
+      const nav = screen.getByRole('navigation');
+      fireEvent.scroll(nav, { target: { scrollTop: 200 } });
+      expect(uncaught).not.toHaveBeenCalled();
+    } finally {
+      window.removeEventListener('error', uncaught);
+      setItem.mockRestore();
+    }
   });
 });
