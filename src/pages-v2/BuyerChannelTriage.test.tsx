@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { screen, waitFor, within, fireEvent } from '@testing-library/react';
-import { renderWithProviders, SUPPLIER } from '../test/test-utils';
+import { renderWithProviders, SUPPLIER, pickSelectFieldOption } from '../test/test-utils';
 import BuyerChannelTriage from './BuyerChannelTriage';
 import SupplierInventory from './SupplierInventory';
 import { commandAuditSink } from '../services/data/mock/MockCommandService';
@@ -45,13 +45,10 @@ afterEach(() => {
 
 const panel = () => within(document.querySelector('aside[role="dialog"]') as HTMLElement);
 
-// The supplier picker is populated by an async read — wait for its options
-// before selecting, else the value can't bind (the option does not exist yet).
-async function pickSupplier(id: string) {
-  const select = screen.getByTestId('triage-supplier') as HTMLSelectElement;
-  await waitFor(() => expect(within(select).getAllByRole('option').length).toBeGreaterThan(1));
-  fireEvent.change(select, { target: { value: id } });
-}
+// The supplier picker is populated by an async read — pickSelectFieldOption
+// waits for it, and works whether the fixture size renders a plain <select>
+// or (as it does here, at 22 suppliers) a searchable combobox.
+const pickSupplier = (id: string) => pickSelectFieldOption('triage-supplier', id);
 const typeMessage = (text: string) =>
   fireEvent.change(screen.getByTestId('triage-message'), { target: { value: text } });
 const clickParse = () => fireEvent.click(screen.getByTestId('triage-parse'));
@@ -86,8 +83,13 @@ describe('BuyerChannelTriage — the binding is first, and never a free supplier
     // Now the paste field appears, bound to the chosen supplier.
     expect(screen.getByTestId('triage-message')).toBeInTheDocument();
     expect(screen.getByText(/Recording for/i)).toBeInTheDocument();
-    // The subject is a SELECT (picked), and there is NEVER a free supplierId field.
-    expect(screen.getByTestId('triage-supplier').tagName).toBe('SELECT');
+    // The subject is PICKED from a SelectField (a plain <select> at ≤10
+    // suppliers, a searchable-combobox <input> above it — 22 in this fixture,
+    // so an INPUT here), and there is NEVER a free-typed supplierId field.
+    // Typing garbage into the combobox without picking a row never binds it
+    // (SelectField's own suite covers that); this only re-asserts no OTHER,
+    // separate raw-id field exists on this surface.
+    expect(['SELECT', 'INPUT']).toContain(screen.getByTestId('triage-supplier').tagName);
     expect(screen.queryByLabelText(/supplier id/i)).not.toBeInTheDocument();
     // Parse, then open the entry form: the supplier is SHOWN, locked — the form's
     // own supplier select is not offered here.

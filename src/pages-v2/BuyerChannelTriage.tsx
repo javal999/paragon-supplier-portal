@@ -4,6 +4,7 @@ import { Inbox, Info, MessageSquare, PenLine, RotateCcw, CheckCircle2, AlertTria
 import Button from '../components/ui-v2/Button';
 import Data from '../components/ui-v2/Data';
 import StatusPill from '../components/ui-v2/StatusPill';
+import SelectField from '../components/ui-v2/SelectField';
 import { useInventory, useSuppliers } from '../services/query/hooks';
 import StockEntryPanel from './inventory/StockEntryPanel';
 import { HandoffNotice } from '../components/ui-v2/HandoffNotice';
@@ -240,20 +241,16 @@ const BuyerChannelTriage: React.FC<BuyerChannelTriageProps> = ({ onRecorded }) =
           <label className={labelClass} htmlFor="triage-supplier">
             {t('buyerCommHub.triage.supplierLabel')}
           </label>
-          <select
+          <SelectField
             id="triage-supplier"
-            className={inputClass}
+            testId="triage-supplier"
+            options={suppliers.map((s) => ({ value: s.id, label: s.name }))}
             value={subjectSupplierId}
-            onChange={(e) => pickSupplier(e.target.value)}
-            data-testid="triage-supplier"
-          >
-            <option value="">{t('buyerCommHub.triage.supplierSelect')}</option>
-            {suppliers.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
-            ))}
-          </select>
+            onChange={pickSupplier}
+            placeholder={t('buyerCommHub.triage.supplierSelect')}
+            loading={suppliersQuery.isPending}
+            name="triage-supplier"
+          />
           <p className="mt-1 text-[11px] text-text-tertiary">{t('buyerCommHub.triage.supplierHint')}</p>
         </div>
 

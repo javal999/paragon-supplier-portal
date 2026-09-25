@@ -1,5 +1,5 @@
 import React from 'react';
-import { render } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { I18nextProvider } from 'react-i18next';
@@ -95,4 +95,37 @@ export function renderWithProviders(
     </QueryClientProvider>
     </I18nextProvider>,
   );
+}
+
+// Picks an option on a `SelectField` (src/components/ui-v2/SelectField.tsx)
+// by its VALUE, whichever mode it's currently rendering in — a plain
+// <select> (≤10 options) or a searchable combobox (>10). A test that only
+// knows the id (not the label) can't target a combobox row by visible text,
+// so SelectField carries `data-value` on every rendered option for exactly
+// this. Async because the combobox path waits for its portaled listbox.
+export async function pickSelectFieldOption(testId: string, value: string) {
+  // Re-queries by testid on every retry, not once up front — while the
+  // supplying data is still loading, SelectField renders a disabled
+  // placeholder (see its `loading` short-circuit), which a stale element
+  // reference would click inertly once the real control replaces it.
+  const control = await waitFor(() => {
+    const el = screen.getByTestId(testId);
+    if (el.tagName === 'SELECT') {
+      if (within(el).getAllByRole('option').length <= 1) throw new Error('select not populated yet');
+      return el as HTMLSelectElement;
+    }
+    if (el.tagName === 'INPUT' && !(el as HTMLInputElement).disabled) return el as HTMLInputElement;
+    throw new Error('SelectField not interactive yet');
+  });
+  if (control.tagName === 'SELECT') {
+    fireEvent.change(control, { target: { value } });
+    return;
+  }
+  fireEvent.click(control);
+  const row = await waitFor(() => {
+    const el = document.querySelector(`[role="option"][data-value="${value}"]`);
+    if (!el) throw new Error(`SelectField "${testId}": no option with value "${value}"`);
+    return el as HTMLElement;
+  });
+  fireEvent.click(row);
 }
