@@ -237,14 +237,25 @@ describe('REQ-E03-05 BR-03 — a negotiation round is a shortlist, not an invita
 // REQ-E03-05 BR-06 / BR-07 — the split and the reason.
 // ─────────────────────────────────────────────────────────────────────────────
 
+// ⚠️ RFx C1 (AR-04, NR-3 AC-04): rfq-014 is a legacy RFQ with TWO line items,
+// and a legacy RFQ is now awarded per line — every line awarded or the final
+// award refuses AWARD_ITEMS_OPEN. These specs used to award the first line only
+// (the old rule read `lineItems[0]`); the split is now applied to both lines,
+// which is what the event page sends. Each rule below is unchanged.
+const RFQ_014_LINES = [
+  ['PK-PETB-8802', 600_000],
+  ['PK-CAPF-8820', 300_000],
+] as const;
 const awardLines = (split: readonly [string, string, number][]) =>
-  split.map(([supplierId, quotationId, sharePct]) => ({
-    supplierId,
-    quotationId,
-    itemCode: 'PK-PETB-8802',
-    sharePct,
-    quantity: Math.round((600_000 * sharePct) / 100),
-  }));
+  RFQ_014_LINES.flatMap(([itemCode, lineQty]) =>
+    split.map(([supplierId, quotationId, sharePct]) => ({
+      supplierId,
+      quotationId,
+      itemCode,
+      sharePct,
+      quantity: Math.round((lineQty * sharePct) / 100),
+    })),
+  );
 
 describe('REQ-E03-05 BR-06 — each item’s shares must total 100%', () => {
   it('KNOWN-BAD — a split totalling 90% is refused by name, and awards nothing', async () => {
@@ -266,7 +277,7 @@ describe('REQ-E03-05 BR-06 — each item’s shares must total 100%', () => {
     expect(res.status).toBe('failed');
     expect(res.reason).toMatch(/AWARD_SPLIT_INCOMPLETE/);
     expect(rfqStore.get('rfq-014')!.status).toBe('Closed');
-    expect(awardStore.all().some((a) => a.rfqId === 'rfq-014')).toBe(false);
+    expect(awardStore.all().some((a) => a.eventId === 'rfq-014')).toBe(false);
   });
 
   it('KNOWN-GOOD — the SAME award at 70/30 is recorded, with the loser named', async () => {
@@ -290,10 +301,12 @@ describe('REQ-E03-05 BR-06 — each item’s shares must total 100%', () => {
     });
     expect(res.status, res.reason).toBe('done');
     expect(rfqStore.get('rfq-014')!.status).toBe('Awarded');
-    const recorded = awardStore.all().find((a) => a.rfqId === 'rfq-014')!;
-    expect(recorded.lines.map((l) => [l.supplierId, l.sharePct])).toEqual([
-      ['sup-015', 70],
-      ['sup-013', 30],
+    const recorded = awardStore.all().find((a) => a.eventId === 'rfq-014')!;
+    expect(recorded.lines.map((l) => [l.itemCode, l.supplierId, l.sharePct])).toEqual([
+      ['PK-PETB-8802', 'sup-015', 70],
+      ['PK-PETB-8802', 'sup-013', 30],
+      ['PK-CAPF-8820', 'sup-015', 70],
+      ['PK-CAPF-8820', 'sup-013', 30],
     ]);
     // BR-08 — every other invited supplier is recorded as not awarded.
     expect([...recorded.notAwardedSupplierIds].sort()).toEqual(['sup-007', 'sup-008']);
@@ -359,7 +372,7 @@ describe('REQ-E03-05 BR-07 — an award that leaves the best-scored quote out st
       },
     });
     expect(res.status, res.reason).toBe('done');
-    const recorded = awardStore.all().find((a) => a.rfqId === 'rfq-014')!;
+    const recorded = awardStore.all().find((a) => a.eventId === 'rfq-014')!;
     expect(recorded.reason).toMatch(/launch window/);
     expect(recorded.bestScoredQuotationId).toBe(best);
   });
@@ -678,7 +691,7 @@ describe('REQ-E03-05 BR-01a — an award line naming a supplier that fails the c
     expect(res.status).toBe('failed');
     expect(res.reason).toMatch(/COMPLIANCE_GATE_FAILED: sup-008 .*\(otif\)/);
     expect(rfqStore.get('rfq-014')!.status).toBe('Closed');
-    expect(awardStore.all().some((a) => a.rfqId === 'rfq-014')).toBe(false);
+    expect(awardStore.all().some((a) => a.eventId === 'rfq-014')).toBe(false);
   });
 
   it('KNOWN-GOOD — the SAME award to sup-013, which passes, is recorded', async () => {

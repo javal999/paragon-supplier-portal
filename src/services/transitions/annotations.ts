@@ -165,6 +165,7 @@ export const TRANSITION_PURPOSE: FlowAnnotations = Object.freeze({
   t_rfq_publish: { purposeKey: 'processFlows.purpose.t_rfq_publish' },
   t_rfq_close: { purposeKey: 'processFlows.purpose.t_rfq_close' },
   t_rfq_award: { purposeKey: 'processFlows.purpose.t_rfq_award' },
+  t_rfq_award_partial: { purposeKey: 'processFlows.purpose.t_rfq_award_partial' },
   t_rfq_fx_pin: { purposeKey: 'processFlows.purpose.t_rfq_fx_pin' },
   t_rfq_cancel: { purposeKey: 'processFlows.purpose.t_rfq_cancel' },
   t_rfq_reopen: { purposeKey: 'processFlows.purpose.t_rfq_reopen' },

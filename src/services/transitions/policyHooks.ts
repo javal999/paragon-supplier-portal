@@ -596,6 +596,13 @@ export const POLICY_HOOKS = {
    * reason is exactly the decision the charter's audit trail exists to explain.
    * Neither is a field being empty, so neither is expressible in
    * `requiredFields`.
+   *
+   * RFx C1 — ONE hook for the final award (`t_rfq_award`) and the partial
+   * award (`t_rfq_award_partial`), told apart by the target state: the final
+   * award may leave no item open (AWARD_ITEMS_OPEN), the partial award must
+   * leave one (AWARD_NOTHING_OPEN). Everything else — the item rule
+   * (`awardShapeRefusal`), CR-23, "on this event" and the reason — is the same
+   * code for both, so the two verbs cannot drift.
    */
   RFQ_AWARD_GOVERNED: 'rfq_award_governed',
 } as const;

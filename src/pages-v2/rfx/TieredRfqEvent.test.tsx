@@ -135,7 +135,9 @@ describe('the award, item by item', () => {
     share(1, 'sup-015', '70');
     share(1, 'sup-013', '30');
     expect(screen.getByTestId('award-item-refusal')).toHaveTextContent(
-      'item 2 (Oslo back sticker (ingredients)) totals 0%. Each item must total 100%.',
+      // RFx C1 — this form sends the FINAL award, so an item with no share is
+      // refused as open (AWARD_ITEMS_OPEN), as the verb refuses it.
+      'item 2 (Oslo back sticker (ingredients)) has no share yet. Give every item shares that total 100%.',
     );
     share(2, 'sup-013', '90');
     expect(screen.getByTestId('award-item-refusal')).toHaveTextContent('totals 90%');
@@ -152,7 +154,7 @@ describe('the award, item by item', () => {
     expect(within(recorded).getByTestId('award-line-1-sup-015')).toHaveTextContent('70%');
     expect(within(recorded).getByTestId('award-line-1-sup-015')).toHaveTextContent('3,000');
     expect(within(recorded).getByTestId('award-line-2-sup-013')).toHaveTextContent('100%');
-    expect(awardStore.all().find((a) => a.rfqId === 'rfq-021')!.lines.every((l) => l.awardTierQty === 3_000)).toBe(true);
+    expect(awardStore.all().find((a) => a.eventId === 'rfq-021')!.lines.every((l) => l.awardTierQty === 3_000)).toBe(true);
   });
 
   it('asks for a reason when an item does not follow its best score, and names the item', async () => {

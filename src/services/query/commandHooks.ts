@@ -2474,11 +2474,24 @@ export type RfxCommandVars =
       attachments?: readonly AttachmentMeta[];
     }
   | {
+      // The FINAL award (`t_rfq_award`): every item awarded, now or earlier, or
+      // named in `notAwardedItems` ("Will not award", by `AwardItem.key`).
       verb: 'award';
       rfqId: string;
       awardedQuotationId: string;
       awardedSupplierId: string;
       awardLines?: readonly AwardLine[];
+      awardReason?: string;
+      notAwardedItems?: readonly string[];
+    }
+  | {
+      // RFx C1 — the PARTIAL award (`t_rfq_award_partial`): some items now,
+      // the rest later. The same payload, the same policy, a different verb.
+      verb: 'awardPartial';
+      rfqId: string;
+      awardedQuotationId: string;
+      awardedSupplierId: string;
+      awardLines: readonly AwardLine[];
       awardReason?: string;
     };
 
@@ -2717,12 +2730,25 @@ export function useRfxCommand() {
           });
         }
         case 'award': {
-          const { verb, rfqId, awardLines, ...payload } = vars;
+          const { verb, rfqId, awardLines, notAwardedItems, ...payload } = vars;
           return svc.commands.dispatch(scope, {
             transitionId: 't_rfq_award',
             entity: 'rfq',
             entityId: rfqId,
-            payload: { ...payload, ...(awardLines ? { awardLines: awardLines.map((l) => ({ ...l })) } : {}) },
+            payload: {
+              ...payload,
+              ...(awardLines ? { awardLines: awardLines.map((l) => ({ ...l })) } : {}),
+              ...(notAwardedItems ? { notAwardedItems: [...notAwardedItems] } : {}),
+            },
+          });
+        }
+        case 'awardPartial': {
+          const { verb, rfqId, awardLines, ...payload } = vars;
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_rfq_award_partial',
+            entity: 'rfq',
+            entityId: rfqId,
+            payload: { ...payload, awardLines: awardLines.map((l) => ({ ...l })) },
           });
         }
       }

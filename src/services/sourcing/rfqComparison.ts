@@ -13,8 +13,9 @@
 //     weights UNCHANGED) scores PRICE AS THAT TOTAL COST. Ratio-to-best is
 //     scale-invariant, so scoring the total or the total ÷ quantity gives the
 //     same ranking; the total is passed because it is what the spec names;
-//   · the award is PER ITEM, split by % across suppliers that pass the gate,
-//     each item totalling 100%, and each line records the break it was made at.
+//   · the award is PER ITEM, split across suppliers that pass the gate, and
+//     each line records the break it was made at. The award RULE lives in
+//     `awardShape.ts` (RFx C1), one rule for tiered and legacy RFQs alike.
 //
 // ⚠️ **THIS IS A PARALLEL DERIVATION, NOT A CHANGE TO `deriveQuoteHeader`.** The
 // stored header on a quote (`unitPrice` / `totalPrice`) stays what B1 defined —
@@ -308,9 +309,28 @@ export function awardQuantity(rfq: TieredRfqShape, item: RfqItem, qty: number, s
 }
 
 /**
+ * The quantities a set of shares of ONE item derives at a break of `pieces`:
+ * each share of the break, rounded, and — when the shares total 100% within
+ * 0.01 — the remainder unit(s) placed on the FIRST line, so an awarded item is
+ * fully placed (NR-3 BR-03, edge case 2: 33.33% × 3 of 100,000 is 33,340 +
+ * 33,330 + 33,330). The award rule (`awardShape.ts`) derives with this too.
+ */
+export function splitQuantities(pieces: number, sharePcts: readonly number[]): number[] {
+  const out = sharePcts.map((pct) => Math.round((pieces * pct) / 100));
+  // Rounded to 2 places BEFORE the comparison: 99.99 − 100 is 0.0100000…05 in
+  // floating point, which would put 33.33% × 3 outside its own tolerance.
+  const off = Math.round(Math.abs(sharePcts.reduce((s, p) => s + p, 0) - 100) * 100) / 100;
+  if (out.length > 0 && off <= 0.01) {
+    out[0] = out[0]! + (pieces - out.reduce((s, n) => s + n, 0));
+  }
+  return out;
+}
+
+/**
  * The award lines a set of per-item shares describes. `shares` is
  * item line (as text) → quotationId → percent; a blank, zero or unreadable share is not a
- * line. Every line records the evaluation break it was made at.
+ * line. Every line records the evaluation break it was made at, and its
+ * quantity is derived by `splitQuantities`, as the verb derives it.
  */
 export function buildTieredAwardLines(
   rfq: TieredRfqShape,
@@ -320,121 +340,25 @@ export function buildTieredAwardLines(
 ): AwardLine[] {
   const lines: AwardLine[] = [];
   for (const item of rfq.items ?? []) {
-    for (const q of quotes) {
+    const picked = quotes.flatMap((q) => {
       const pct = Number(shares[String(item.lineNo)]?.[q.id]);
-      if (!Number.isFinite(pct) || pct <= 0) continue;
+      return Number.isFinite(pct) && pct > 0 ? [{ q, pct }] : [];
+    });
+    const tier = itemTierAt(rfq, item, qty);
+    const qtys = splitQuantities(tier ? tierPieces(tier, item) : 0, picked.map((p) => p.pct));
+    picked.forEach(({ q, pct }, i) => {
       lines.push({
         supplierId: q.supplierId,
         quotationId: q.id,
         itemCode: '',
         itemLineNo: item.lineNo,
         sharePct: pct,
-        quantity: awardQuantity(rfq, item, qty, pct),
+        quantity: qtys[i]!,
         awardTierQty: qty,
       });
-    }
+    });
   }
   return lines;
-}
-
-/** The refusal codes a tiered award can earn from its SHAPE. */
-export type TieredAwardRefusalCode =
-  | 'AWARD_EMPTY'
-  | 'AWARD_ITEM_UNKNOWN'
-  | 'AWARD_TIER_UNKNOWN'
-  | 'AWARD_SHARE_INVALID'
-  | 'AWARD_SPLIT_INCOMPLETE'
-  | 'AWARD_ITEM_NOT_QUOTED'
-  | 'AWARD_QTY_NOT_DERIVED'
-  | 'AWARD_REASON_REQUIRED';
-
-/** A refusal, structured so the verb can state it and the page can translate it. */
-export interface TieredAwardRefusal {
-  readonly code: TieredAwardRefusalCode;
-  /** The item concerned, when there is one. */
-  readonly item?: string;
-  /** The item's total share, for AWARD_SPLIT_INCOMPLETE. */
-  readonly pct?: number;
-  /** The offending item line, supplier or break, as text. */
-  readonly detail?: string;
-}
-
-/** The refusal as the verb states it: `CODE: sentence`. */
-export function tieredRefusalText(r: TieredAwardRefusal): string {
-  switch (r.code) {
-    case 'AWARD_EMPTY':
-      return 'AWARD_EMPTY: an award names at least one supplier';
-    case 'AWARD_ITEM_UNKNOWN':
-      return r.detail
-        ? `AWARD_ITEM_UNKNOWN: ${r.detail} is not an item on this RFQ; a tiered RFQ is awarded item by item`
-        : 'AWARD_ITEM_UNKNOWN: an award line names no item; a tiered RFQ is awarded item by item';
-    case 'AWARD_TIER_UNKNOWN':
-      return `AWARD_TIER_UNKNOWN: every line records one quantity break of this RFQ (${r.detail ?? 'none'})`;
-    case 'AWARD_SHARE_INVALID':
-      return 'AWARD_SHARE_INVALID: every share is a percentage above zero';
-    case 'AWARD_SPLIT_INCOMPLETE':
-      return `AWARD_SPLIT_INCOMPLETE: ${r.item} totals ${r.pct}%, not 100%`;
-    case 'AWARD_ITEM_NOT_QUOTED':
-      return `AWARD_ITEM_NOT_QUOTED: ${r.detail} did not price ${r.item} at this break`;
-    case 'AWARD_QTY_NOT_DERIVED':
-      return `AWARD_QTY_NOT_DERIVED: the quantity for ${r.item} is not the share of the break`;
-    case 'AWARD_REASON_REQUIRED':
-      return `AWARD_REASON_REQUIRED: the award for ${r.item} does not follow the best score, so it needs a reason`;
-  }
-}
-
-/** Round a share total for display and the tolerance check alike. */
-const roundPct = (n: number): number => Math.round(n * 100) / 100;
-
-/**
- * Why a tiered award's SHAPE is refused, or `null`. Checked in this order:
- * lines exist · each names an item of this RFQ · all record the same break of
- * this RFQ · shares are positive · EVERY item totals 100% (an item with no line
- * totals 0% and is named) · each awarded quote priced the item at the break ·
- * each quantity is the share of the break.
- *
- * The compliance gate, "the quote is on this event" and the reason rule need
- * the stores and the clock, so the verb checks those; this is the part a page
- * can check before it dispatches, with the verb's own words.
- */
-export function tieredAwardShapeRefusal(
-  rfq: TieredRfqShape,
-  lines: readonly AwardLine[],
-  quotes: readonly Pick<TieredQuoteShape, 'id' | 'supplierId' | 'itemQuotes'>[],
-): TieredAwardRefusal | null {
-  if (lines.length === 0) return { code: 'AWARD_EMPTY' };
-  for (const line of lines) {
-    if (!itemOfLine(rfq, line.itemLineNo)) {
-      return {
-        code: 'AWARD_ITEM_UNKNOWN',
-        ...(line.itemLineNo !== undefined ? { detail: `item ${line.itemLineNo}` } : {}),
-      };
-    }
-  }
-  const breaks = evaluationBreaks(rfq);
-  const tierQtys = [...new Set(lines.map((l) => l.awardTierQty))];
-  if (tierQtys.length !== 1 || typeof tierQtys[0] !== 'number' || !breaks.includes(tierQtys[0])) {
-    return { code: 'AWARD_TIER_UNKNOWN', detail: tierQtys.map(String).join(', ') };
-  }
-  const qty = tierQtys[0];
-  if (lines.some((l) => !Number.isFinite(l.sharePct) || l.sharePct <= 0)) return { code: 'AWARD_SHARE_INVALID' };
-  for (const item of rfq.items ?? []) {
-    const total = roundPct(
-      lines.filter((l) => l.itemLineNo === item.lineNo).reduce((s, l) => s + l.sharePct, 0),
-    );
-    if (Math.abs(total - 100) > 0.01) return { code: 'AWARD_SPLIT_INCOMPLETE', item: itemName(item), pct: total };
-  }
-  for (const line of lines) {
-    const item = itemOfLine(rfq, line.itemLineNo)!;
-    const quote = quotes.find((q) => q.id === line.quotationId);
-    if (quote && !itemCostAt(rfq, item, quote, qty)) {
-      return { code: 'AWARD_ITEM_NOT_QUOTED', item: itemName(item), detail: quote.supplierId };
-    }
-    if (line.quantity !== awardQuantity(rfq, item, qty, line.sharePct)) {
-      return { code: 'AWARD_QTY_NOT_DERIVED', item: itemName(item) };
-    }
-  }
-  return null;
 }
 
 /**

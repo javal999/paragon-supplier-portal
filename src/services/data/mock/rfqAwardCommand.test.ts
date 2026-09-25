@@ -16,6 +16,7 @@ import { MockCommandService, commandAuditSink } from './MockCommandService';
 import { rfqStore } from './stores/rfqStore';
 import { quotationStore } from './stores/quotationStore';
 import { purchaseOrderStore } from './stores/purchaseOrderStore';
+import { resetRfxStores } from './stores/rfxStores';
 import type { QueryScope } from '../types';
 import { PERSONA_SYSTEM_ROLES } from '../../../services/transitions/businessRoles';
 
@@ -48,6 +49,9 @@ const award = (scope: QueryScope, rfqId = RFQ, quotationId = WINNER, supplierId 
   });
 
 beforeEach(() => {
+  // RFx C1 — the award store is reset too: an award recorded by an earlier
+  // spec would otherwise mark rfq-003's item as already awarded.
+  resetRfxStores();
   rfqStore.reset();
   quotationStore.reset();
   purchaseOrderStore.reset();

@@ -31,7 +31,8 @@ import {
 } from '../services/query/hooks';
 import { RfqSourceLinks } from './rfx/rfqSources';
 import { useRfxCommand } from '../services/query/commandHooks';
-import { awardSplitRefusal, effectiveDeadline, reliabilityScoreFor } from '../services/transitions/rfxRules';
+import { effectiveDeadline, reliabilityScoreFor } from '../services/transitions/rfxRules';
+import { awardItemsDepartingBest, awardItemsOf, awardShapeRefusal } from '../services/sourcing/awardShape';
 import type { AwardLine } from '../services/sourcing/types';
 import {
   bestScoredByItemAt,
@@ -40,6 +41,7 @@ import {
   isTieredRfq,
   quoteTotalAt,
   scoreRfqAt,
+  splitQuantities,
 } from '../services/sourcing/rfqComparison';
 import { DeadlinePill, EmptyRow, GateMarker, OtifOrNoHistory, money, qty, rfxNow } from './rfx/rfxDisplay';
 import {
@@ -202,7 +204,7 @@ const BuyerSourcingEvent: React.FC = () => {
   if (!rfq) return <NotFound />;
 
   const eventRounds = (rounds.data?.items ?? []).filter((r) => r.rfqId === rfq.id);
-  const award = (awards.data?.items ?? []).find((a) => a.rfqId === rfq.id) ?? null;
+  const award = (awards.data?.items ?? []).find((a) => a.eventId === rfq.id) ?? null;
   const currency = rfq.currency;
 
   /**
@@ -227,27 +229,36 @@ const BuyerSourcingEvent: React.FC = () => {
     return t(labelKey);
   };
 
-  /** The award lines the form currently describes. */
-  const awardLines: AwardLine[] = qualified
-    .map((q) => {
-      const pct = Number(shares[q.id]);
-      if (!Number.isFinite(pct) || pct <= 0) return null;
-      const item = rfq.lineItems?.[0]?.materialCode ?? '';
-      const total = rfq.lineItems?.[0]?.quantity ?? rfq.totalQty;
-      return {
-        supplierId: q.supplierId,
-        quotationId: q.id,
-        itemCode: item,
-        sharePct: pct,
-        quantity: Math.round((total * pct) / 100),
-      };
-    })
-    .filter((l): l is AwardLine => l !== null);
+  /**
+   * The award lines the legacy form describes. RFx C1 (RFX-R9) — each
+   * supplier's share applies to EVERY line item, today's event-level meaning,
+   * so a 70/30 split is 70/30 on each line at that line's quantity. Judged by
+   * the same item rule the verb calls (`awardShapeRefusal`). The per-line panel
+   * is task C3.
+   */
+  const awardItems = tiered ? [] : awardItemsOf(rfq);
+  const picked = qualified.flatMap((q) => {
+    const pct = Number(shares[q.id]);
+    return Number.isFinite(pct) && pct > 0 ? [{ q, pct }] : [];
+  });
+  const awardLines: AwardLine[] = awardItems.flatMap((item) => {
+    const brk = item.breaks[0]!;
+    const qtys = splitQuantities(brk.pieces, picked.map((p) => p.pct));
+    return picked.map(({ q, pct }, i) => ({
+      supplierId: q.supplierId,
+      quotationId: q.id,
+      itemCode: item.itemCode,
+      sharePct: pct,
+      quantity: qtys[i]!,
+      splitBasis: 'pct' as const,
+      awardTierQty: brk.qty,
+    }));
+  });
 
-  const splitRefusal = awardLines.length > 0 ? awardSplitRefusal(awardLines) : null;
+  const splitRefusal = awardLines.length > 0 ? awardShapeRefusal(awardItems, awardLines, current) : null;
   /** BL-64 — quotes exist and not one comes from a supplier passing CR-23: nothing can be awarded. */
   const noneAwardable = current.length > 0 && qualified.length === 0;
-  const departs = bestId !== null && awardLines.length > 0 && !awardLines.some((l) => l.quotationId === bestId);
+  const departs = awardLines.length > 0 && awardItemsDepartingBest(awardItems, awardLines, () => bestId).length > 0;
 
   const run = (vars: Parameters<typeof command.mutate>[0], successKey: string) =>
     command.mutate(vars, {

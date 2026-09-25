@@ -65,11 +65,15 @@ export const rfqCompareEn: Record<string, string> = {
   'rfqCompare.award.reasonItems': 'This award does not follow the best score for: {{items}}',
   'rfqCompare.refusal.AWARD_EMPTY': 'Give at least one supplier a share.',
   'rfqCompare.refusal.AWARD_ITEM_UNKNOWN': 'An award line names an item this RFQ does not have.',
-  'rfqCompare.refusal.AWARD_TIER_UNKNOWN': 'Every line must record the same quantity break of this RFQ.',
+  'rfqCompare.refusal.AWARD_TIER_UNKNOWN': 'The lines for {{item}} must record one quantity break of that item.',
+  'rfqCompare.refusal.AWARD_QTY_INVALID': 'Every award line carries a quantity above zero.',
   'rfqCompare.refusal.AWARD_SHARE_INVALID': 'Every share is a percentage above zero.',
   'rfqCompare.refusal.AWARD_SPLIT_INCOMPLETE': '{{item}} totals {{pct}}%. Each item must total 100%.',
   'rfqCompare.refusal.AWARD_ITEM_NOT_QUOTED': '{{detail}} did not price {{item}} at this break.',
   'rfqCompare.refusal.AWARD_QTY_NOT_DERIVED': 'The quantity for {{item}} is not the share of the break.',
+  'rfqCompare.refusal.AWARD_ITEM_ALREADY_AWARDED': '{{item}} was already awarded.',
+  'rfqCompare.refusal.AWARD_ITEMS_OPEN': '{{item}} has no share yet. Give every item shares that total 100%.',
+  'rfqCompare.refusal.AWARD_NOTHING_OPEN': 'This award settles every item, so confirm it as the final award.',
   'rfqCompare.refusal.AWARD_REASON_REQUIRED': 'The award for {{item}} does not follow the best score. Give a reason.',
 
   // — Export —
@@ -158,11 +162,15 @@ export const rfqCompareId: Record<string, string> = {
   'rfqCompare.award.reasonItems': 'Penetapan ini tidak mengikuti skor terbaik untuk: {{items}}',
   'rfqCompare.refusal.AWARD_EMPTY': 'Berikan porsi kepada setidaknya satu pemasok.',
   'rfqCompare.refusal.AWARD_ITEM_UNKNOWN': 'Satu baris penetapan menyebut item yang tidak ada di RFQ ini.',
-  'rfqCompare.refusal.AWARD_TIER_UNKNOWN': 'Setiap baris harus mencatat jenjang kuantitas yang sama dari RFQ ini.',
+  'rfqCompare.refusal.AWARD_TIER_UNKNOWN': 'Baris untuk {{item}} harus mencatat satu jenjang kuantitas dari item itu.',
+  'rfqCompare.refusal.AWARD_QTY_INVALID': 'Setiap baris penetapan memuat kuantitas di atas nol.',
   'rfqCompare.refusal.AWARD_SHARE_INVALID': 'Setiap porsi adalah persentase di atas nol.',
   'rfqCompare.refusal.AWARD_SPLIT_INCOMPLETE': '{{item}} berjumlah {{pct}}%. Setiap item harus berjumlah 100%.',
   'rfqCompare.refusal.AWARD_ITEM_NOT_QUOTED': '{{detail}} tidak memberi harga {{item}} pada jenjang ini.',
   'rfqCompare.refusal.AWARD_QTY_NOT_DERIVED': 'Kuantitas untuk {{item}} bukan porsi dari jenjang.',
+  'rfqCompare.refusal.AWARD_ITEM_ALREADY_AWARDED': '{{item}} sudah ditetapkan sebelumnya.',
+  'rfqCompare.refusal.AWARD_ITEMS_OPEN': '{{item}} belum mendapat porsi. Berikan setiap item porsi yang berjumlah 100%.',
+  'rfqCompare.refusal.AWARD_NOTHING_OPEN': 'Penetapan ini menyelesaikan setiap item, jadi konfirmasikan sebagai penetapan akhir.',
   'rfqCompare.refusal.AWARD_REASON_REQUIRED':
     'Penetapan untuk {{item}} tidak mengikuti skor terbaik. Berikan alasannya.',
 

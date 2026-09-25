@@ -406,17 +406,38 @@ export interface AwardLine {
   readonly sharePct: number;
   readonly quantity: number;
   /**
-   * The quantity break the award was made at, on a tiered RFQ (RFx spec,
-   * "the award records the break it was made at"). Absent on an untiered
-   * event, where there is no break to name.
+   * NR-3 BR-02 (D-2) — which side of the line the buyer TYPED: the share
+   * (`pct`, the quantity derived from it) or the quantity (`qty`, the share
+   * derived from it). Both are stored either way. Absent reads as `pct`, the
+   * only basis before NR-3; the award verb records it on every line it keeps.
+   */
+  readonly splitBasis?: AwardSplitBasis;
+  /**
+   * The quantity break THIS LINE was awarded at (NR-3 BR-04: a break per item,
+   * so per line, never per award). On a tiered RFQ, one of its evaluation
+   * breaks; on a legacy RFQ, the line item's own quantity — its only break.
+   * The lines of one item share one break. A legacy line sent without it is
+   * read at its item's only break, and recorded with it.
    */
   readonly awardTierQty?: number;
 }
 
+/** NR-3 BR-02 — the side of an award line the buyer typed. */
+export type AwardSplitBasis = 'pct' | 'qty';
+
+/**
+ * AR-02 — the kind of sourcing event an award record belongs to. Only the RFQ
+ * arm exists; the RFP arm is added by the RFP award (NR-2, task D2), which
+ * reuses this record rather than adding a parallel one.
+ */
+export type AwardEventType = 'rfq';
+
 /** REQ-E03-05 BR-09 — the hub's record of an award. No PO, no contract. */
 export interface AwardRecord {
   readonly id: string;
-  readonly rfqId: string;
+  /** AR-02 — the event type and id this award is for (was `rfqId`). */
+  readonly eventType: AwardEventType;
+  readonly eventId: string;
   readonly awardedAt: string;
   readonly lines: readonly AwardLine[];
   /** BR-07 — required when the award does not follow the best-scored quote. */
@@ -425,9 +446,15 @@ export interface AwardRecord {
   readonly bestScoredQuotationId?: string;
   /**
    * A tiered RFQ is awarded ITEM BY ITEM, so the best score it departs from is
-   * per item: the quotation CR-15 ranked first for each item at the award's
-   * break, when the award was recorded. Absent on a legacy (event-level) award.
+   * per item: the quotation CR-15 ranked first for each item AWARDED HERE, at
+   * that item's break, when the award was recorded. Absent on a legacy award.
    */
   readonly bestScoredByItem?: readonly { readonly itemLineNo: number; readonly quotationId: string }[];
+  /**
+   * BR-08 — the invited suppliers told they were not awarded. Empty on a
+   * PARTIAL award (NR-3 BR-06): a supplier with no share yet may still win an
+   * item left open. The final award names every invitee no award of the event
+   * named.
+   */
   readonly notAwardedSupplierIds: readonly string[];
 }

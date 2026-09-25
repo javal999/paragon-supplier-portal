@@ -161,6 +161,8 @@ export const processFlowPurposeEn: Record<string, string> = {
     'The response window ends. Late offers are not compared, which is what makes the comparison fair to everyone who answered on time.',
   'processFlows.purpose.t_rfq_award':
     'Buying picks the winning offer and records why. Everyone who bid learns where they stand, in one act rather than by rumour.',
+  'processFlows.purpose.t_rfq_award_partial':
+    'Buying awards the items that are ready and comes back for the rest later. Nobody is turned down yet, because a supplier may still win an item not decided.',
   'processFlows.purpose.t_rfq_fx_pin':
     'Records the exchange basis foreign offers are being compared on, so a decision taken today can still be explained a year from now.',
   'processFlows.purpose.t_rfq_cancel':
@@ -631,6 +633,8 @@ export const processFlowPurposeId: Record<string, string> = {
     'Jendela tanggapan berakhir. Penawaran yang terlambat tidak ikut dibandingkan, dan itulah yang membuat perbandingannya adil bagi semua yang menjawab tepat waktu.',
   'processFlows.purpose.t_rfq_award':
     'Pembelian memilih penawaran pemenang dan mencatat alasannya. Semua yang ikut menawar tahu posisinya, lewat satu tindakan, bukan lewat kabar burung.',
+  'processFlows.purpose.t_rfq_award_partial':
+    'Pembelian menetapkan item yang sudah siap dan kembali untuk sisanya nanti. Belum ada yang ditolak, karena pemasok masih bisa memenangkan item yang belum diputuskan.',
   'processFlows.purpose.t_rfq_fx_pin':
     'Mencatat dasar kurs yang dipakai membandingkan penawaran bermata uang asing, agar keputusan hari ini masih bisa dijelaskan setahun kemudian.',
   'processFlows.purpose.t_rfq_cancel':
