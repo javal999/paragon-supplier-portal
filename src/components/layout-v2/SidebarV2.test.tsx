@@ -17,16 +17,20 @@ afterEach(() => setHubRole('ALL'));
 // the test gets the element back, so give every element a writable scrollTop up front.
 const realScrollTop = Object.getOwnPropertyDescriptor(Element.prototype, 'scrollTop');
 const scrollTops = new WeakMap<Element, number>();
-const installScrollTop = () =>
+let scrollTopWrites: Element[] = [];
+const installScrollTop = () => {
+  scrollTopWrites = [];
   Object.defineProperty(HTMLElement.prototype, 'scrollTop', {
     configurable: true,
     get(this: Element) {
       return scrollTops.get(this) ?? 0;
     },
     set(this: Element, value: number) {
+      scrollTopWrites.push(this);
       scrollTops.set(this, value);
     },
   });
+};
 const removeScrollTop = () => {
   delete (HTMLElement.prototype as { scrollTop?: number }).scrollTop;
   if (realScrollTop) Object.defineProperty(Element.prototype, 'scrollTop', realScrollTop);
@@ -98,10 +102,21 @@ describe('SidebarV2 — restores sidebar scroll position', () => {
   });
   afterEach(removeScrollTop);
   it('restores scroll position from sessionStorage on mount', () => {
-    sessionStorage.setItem('pti-hub.sidebar-scroll.buyer', '500');
+    sessionStorage.setItem('paragon.sidebarScroll.buyer', '500');
     renderWithProviders(<SidebarV2 />, { route: '/buyer/home' });
     const nav = screen.getByRole('navigation');
     expect(nav.scrollTop).toBe(500);
+  });
+
+  it.each([
+    ['no stored position', null],
+    ['a non-numeric stored position', 'abc'],
+  ])('leaves scrollTop untouched with %s', (_label, stored) => {
+    if (stored !== null) sessionStorage.setItem('paragon.sidebarScroll.buyer', stored);
+    renderWithProviders(<SidebarV2 />, { route: '/buyer/home' });
+    const nav = screen.getByRole('navigation');
+    expect(scrollTopWrites).not.toContain(nav);
+    expect(nav.scrollTop).toBe(0);
   });
 
   it('updates sessionStorage when sidebar is scrolled', () => {
@@ -112,7 +127,7 @@ describe('SidebarV2 — restores sidebar scroll position', () => {
         scrollTop: 300,
       },
     });
-    expect(sessionStorage.getItem('pti-hub.sidebar-scroll.buyer')).toBe('300');
+    expect(sessionStorage.getItem('paragon.sidebarScroll.buyer')).toBe('300');
   });
 });
 

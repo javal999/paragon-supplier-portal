@@ -15,7 +15,7 @@ const SEED_SUPPLIER_NAME =
 // Keyed per persona so the PTI menu's offset is never applied to the supplier
 // menu. Every access is guarded, like orderSummaryViewState.ts: a blocked or
 // full store must not break the menu.
-const sidebarScrollKey = (persona: Persona): string => `pti-hub.sidebar-scroll.${persona}`;
+const sidebarScrollKey = (persona: Persona): string => `paragon.sidebarScroll.${persona}`;
 
 function readSidebarScroll(persona: Persona): number | null {
   try {
