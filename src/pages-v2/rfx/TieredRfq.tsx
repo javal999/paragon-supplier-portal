@@ -39,6 +39,8 @@ import {
 } from '../../services/sourcing/rfqComparison';
 import { EmptyRow, GateMarker, money, qty } from './rfxDisplay';
 import { FirmPill } from './rfxAuthoringDisplay';
+import { DocumentsStatus } from './SupplierDocumentsPanel';
+import { documentsOf } from '../../services/transitions/rfxDocumentRules';
 
 // ────────────────────────────────────────────────────────────────────────────
 // THE TIERED RFQ ON ITS EVENT PAGE (RFx spec 2026-09-21, "Evaluation and
@@ -276,6 +278,37 @@ export const TieredComparison: React.FC<ComparisonProps> = (props) => {
       {(props.rfq.items ?? []).map((item) => (
         <ItemComparison key={item.lineNo} item={item} {...props} />
       ))}
+      <DocumentsComparison {...props} />
+    </div>
+  );
+};
+
+/** RFx B5 — NR-1 buyer step 6: a "Documents" row per supplier, against the required requests. */
+const DocumentsComparison: React.FC<ComparisonProps> = ({ rfq, quotes, supplierName }) => {
+  const { t } = useTranslation();
+  if (quotes.length === 0) return null;
+  return (
+    <div className="border border-border-subtle rounded-md overflow-x-auto" data-testid="tiered-documents">
+      <Table>
+        <TableHeader>
+          <TableHeaderCell>{t('rfqCompare.cmp.col.supplier')}</TableHeaderCell>
+          <TableHeaderCell>{t('rfxFiles.docs.row')}</TableHeaderCell>
+        </TableHeader>
+        <tbody>
+          {quotes.map((q) => (
+            <TableRow key={q.id} data-testid={`tiered-documents-${q.supplierId}`}>
+              <TableCell className="text-sm text-text-primary">{supplierName(q.supplierId)}</TableCell>
+              <TableCell>
+                <DocumentsStatus
+                  requests={rfq.documentRequests ?? []}
+                  documents={documentsOf(q)}
+                  testId={`tiered-documents-status-${q.supplierId}`}
+                />
+              </TableCell>
+            </TableRow>
+          ))}
+        </tbody>
+      </Table>
     </div>
   );
 };

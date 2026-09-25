@@ -30,8 +30,9 @@ import RfpCreateWizard from './rfx/RfpCreateWizard';
 import RfxSaveTemplate from './rfx/RfxSaveTemplate';
 import { RfpPricingComparison } from './rfx/RfpPricing';
 import { DeadlinePill, EmptyRow, OtifOrNoHistory, ResponseStatePill, rfxNow } from './rfx/rfxDisplay';
-import { answerText, authored, sectionTitle, termLabel, termValueText } from './rfx/rfxAuthoringDisplay';
+import { AnswerValue, authored, sectionTitle, termLabel, termValueText } from './rfx/rfxAuthoringDisplay';
 import { DraftRevisionNote } from './rfx/draftEdit';
+import { DocumentsStatus, SupplierDocumentsPanel } from './rfx/SupplierDocumentsPanel';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PTI PROPOSAL REQUESTS — REQ-E03-04 (BUY).
@@ -380,6 +381,15 @@ const BuyerRfp: React.FC = () => {
             />
           )}
           {(open.questions ?? []).length > 0 && <RfpQuestionAnswers event={open} />}
+          {/* RFx B5 — every supplier file, submitted proposals only (NR-1 buyer step 5). */}
+          <SupplierDocumentsPanel
+            requests={open.documentRequests}
+            responses={open.responses}
+            deadlineFor={(supplierId) =>
+              open.invitedSuppliers.find((i) => i.supplierId === supplierId)?.deadline ?? open.responseDeadline
+            }
+            testId={`rfp-documents-${open.id}`}
+          />
         </section>
       )}
 
@@ -651,6 +661,20 @@ const RfpComparison: React.FC<{ event: RfpEventView }> = ({ event }) => {
               </TableCell>
             ))}
           </TableRow>
+          {/* RFx B5 — NR-1 buyer step 6: the required documents, per supplier. */}
+          <TableRow data-testid="rfp-documents-row">
+            <TableCell className="align-top text-sm text-text-primary">{t('rfxFiles.docs.row')}</TableCell>
+            <TableCell className="align-top text-sm text-text-tertiary">—</TableCell>
+            {event.responses.map((r) => (
+              <TableCell key={r.id} className="align-top">
+                <DocumentsStatus
+                  requests={event.documentRequests ?? []}
+                  documents={r.documents ?? []}
+                  testId={`rfp-documents-${r.supplierId}`}
+                />
+              </TableCell>
+            ))}
+          </TableRow>
         </tbody>
       </Table>
       {scoring === null && (
@@ -690,7 +714,11 @@ const RfpQuestionAnswers: React.FC<{ event: RfpEventView }> = ({ event }) => {
                   </TableCell>
                   {event.responses.map((r) => (
                     <TableCell key={r.id} className="align-top text-sm">
-                      {answerText(t, q, (r.questionAnswers ?? []).find((a) => a.questionId === q.id))}
+                      <AnswerValue
+                        q={q}
+                        a={(r.questionAnswers ?? []).find((a) => a.questionId === q.id)}
+                        testId={`rfp-answer-files-${q.id}-${r.supplierId}`}
+                      />
                     </TableCell>
                   ))}
                 </TableRow>
