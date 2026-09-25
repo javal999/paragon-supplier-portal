@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 0.11 draft, 2026-09-24 |
+| Version | 0.12 draft, 2026-09-25 |
 | What this is | Detailed requirements for the demand and material forecast engine PTI builds itself (owner decision ENG-1), with each calculation explained |
 | Status | Every requirement is **Proposed**. The decision to build is Validated (ENG-1), and 12 of the 18 engine decisions are decided (ENG-D1 to D9 and ENG-D15 to D17, section 4). The rest of the detail has not yet been reviewed by the Material Planner |
 | Sources | ENG-1 (`SUPPLIER-HUB-REQUIREMENTS.md` section 9); methods and evidence in `research/FORECAST-METHOD-SPEC.md`; problem analysis in `research/FORECAST-BEST-PRACTICE-2026-09.md` |
@@ -1001,9 +1001,7 @@ Choices the first build (BL-102, BL-99) had to make where the requirements were 
 | ENG-B17 | The change penalty is priced per pallet changed, against last week's run recomputed now (not a stored copy) | E14-05 BR-03 |
 | ENG-B18 | A call-off drafted from the order plan carries origin "engine" and cannot be released (as a draft or directly) while the engine runs on simulated data (X-03). Editing keeps the origin; editing and dismissing stay allowed; an unknown origin value is refused. Once the engine data is live, earlier drafts become releasable | E14-05 BR-05; REQ-E09-01 |
 
-### 4.1d Build decisions for review (PR #44, BL-107)
-
-Choices the E14-13 build made where the requirement was silent. For the owner to accept or change.
+### 4.1d Build decisions accepted (owner, 2026-09-25, PR #44)
 
 | ID | Decision | Applied in |
 |---|---|---|
@@ -1018,9 +1016,7 @@ Choices the E14-13 build made where the requirement was silent. For the owner to
 | ENG-B27 | A call-off is only proposed when the change verb can take it: dispatched, awaiting the supplier's answer, awaiting the planner's approval, a change pending, or two confirmed deliveries are shown for information. A call-off cancellation has no Hub verb (the change verb needs a quantity above zero); the page says to agree it with the supplier | E14-13 BR-01, BR-07 |
 | ENG-B28 | The stability guard uses E14-02's portfolio share over its 26-week window; a PO line adds to it when created in the window, not already changed inside the lead time, and the change is inside the lead time. Call-offs are not in the E14-02 measure; the page counts them among the selected proposals inside the lead time | E14-13 BR-09 |
 
-### 4.1e Build decisions for review (PR #46, BL-109)
-
-Choices the E14-01 build (Data health page, freshness limits, quality checks on arrival) made where the requirement and the feed spec were silent. For the owner to accept or change.
+### 4.1e Build decisions accepted (owner, 2026-09-25, PR #46)
 
 | ID | Decision | Applied in |
 |---|---|---|
@@ -1035,9 +1031,9 @@ Choices the E14-01 build (Data health page, freshness limits, quality checks on 
 | ENG-B48 | A failure affects the steps that read the feed today plus every step downstream of them: E14-04 feeds E14-03, E14-03 feeds E14-05, E14-05 and E14-02 feed E14-13. A failed BOM check therefore affects E14-02 (plan-change measures), E14-03, E14-04, E14-05 and E14-13. Finished goods are read directly only by E14-07, which is shown as not built yet | E14-01 Experience (MP) |
 | ENG-B49 | The demo shows no deliberately failing records: the calibrated synthetic dataset is untouched, and the tests inject one bad record per check to prove each fires, by the record's key. What the page shows is the real result on the synthetic data: 58 checks over 17 feeds, 57 passing, no record refused; stock accuracy flags 6 materials (latest count 3.2% to 8.4% off system stock), so E14-03, E14-05 and E14-13 read "flagged" | E14-01 AC-01, AC-03 |
 
-### 4.1f Build decisions for review (PR #47, BL-115 to BL-117)
+### 4.1f Build decisions accepted (owner, 2026-09-25, PR #47)
 
-Choices the builds of the E14-03, E14-04 and E14-05 leftovers made where the requirement was silent or read two ways. For the owner to accept or change.
+The 25% cap in ENG-B55 is accepted as the approach; the value stays a placeholder until the Warehouse confirms what the 3PL contract allows.
 
 | ID | Decision | Applied in |
 |---|---|---|
@@ -1052,9 +1048,9 @@ Choices the builds of the E14-03, E14-04 and E14-05 leftovers made where the req
 | ENG-B58 | The planner's choice is made on the page and is not stored: it changes no order and does not re-plan. The chosen option says where to act (the 3PL booking; the Reschedule open orders page for a confirmed line; a later date on the draft call-off for a recommended order). Recording the choice as an override with a reason (X-06) is a follow-up | E14-05 edge case; X-06 |
 | ENG-B59 | Released call-offs are not among the later-delivery candidates, because E14-03 and E14-05 do not net call-offs yet (ENG-B19); they appear once they are netted | E14-05 edge case |
 
-### 4.1g Build decisions for review (PR #48, BL-108)
+### 4.1g Build decisions accepted (owner, 2026-09-25, PR #48)
 
-Choices the E14-06 build made where the requirement was silent or read two ways. For the owner to accept or change.
+ENG-B31 settles E14-06 BR-05: the cumulative cap is measured from the value when the week entered the Trade-off zone, not from a Forecast-zone value.
 
 | ID | Decision | Applied in |
 |---|---|---|
@@ -1099,3 +1095,4 @@ Choices the E14-06 build made where the requirement was silent or read two ways.
 | 0.9 | 2026-09-24 | Leftovers of E14-03, E14-04 and E14-05 built on synthetic data (BL-115 yield, BL-116 change since the last run, BL-117 cap on rented space; PR #47); build decisions ENG-B50 to ENG-B59 for review, section 4.1f |
 | 0.10 | 2026-09-24 | REQ-E14-06 built on synthetic data (BL-108, PR #48); build decisions ENG-B29 to ENG-B38 for review, section 4.1g. The range beside the quantity (BR-06) is not built: it needs E14-09 |
 | 0.11 | 2026-09-24 | E14-03 BR-03 reworded to match ENG-B50: yield applied on the BOM line beside scrap (same result as dividing the parent's order quantity); the backlog wording for BL-115 had caused the mismatch |
+| 0.12 | 2026-09-25 | Build decisions ENG-B19 to ENG-B59 (PRs #44, #46, #47, #48) accepted by the owner as recommended, sections 4.1d to 4.1g. The rented-space cap value (ENG-B55) stays a placeholder for the Warehouse |
