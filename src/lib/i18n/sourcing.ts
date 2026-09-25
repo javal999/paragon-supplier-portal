@@ -184,10 +184,8 @@ export const sourcingEn: Record<string, string> = {
   'sourcing.cmp.row.composite': 'Composite',
   'sourcing.cmp.row.result': 'Result',
   'sourcing.cmp.row.status': 'Status',
-  'sourcing.cmp.row.select': 'Select',
   'sourcing.cmp.leadTimeDays_one': '{{count}} day',
   'sourcing.cmp.leadTimeDays_other': '{{count}} days',
-  'sourcing.cmp.award': 'Award',
   'sourcing.cmp.moveToReview': 'Move to review',
   // — CI-2 should-cost-vs-quote spread (read-only, MODELED × SIMULATED) —
   'sourcing.cmp.row.spread': 'vs Should-Cost',
@@ -203,10 +201,6 @@ export const sourcingEn: Record<string, string> = {
   'sourcing.cmp.spread.silent.unmapped': 'No should-cost reference — material not yet mapped to a basket',
   // — Award action panel —
   'sourcing.award.title': 'Award action',
-  'sourcing.award.selected': 'Selected: {{name}}',
-  'sourcing.award.selectPrompt': 'Select a quote above to enable the award action.',
-  'sourcing.award.submit': 'Award to selected',
-  'sourcing.award.submitting': 'Awarding…',
   'sourcing.award.rejectAll': 'Reject all & resource',
   // — Lifecycle actions (cancel / reopen) —
   'sourcing.lifecycle.actions': 'Lifecycle actions',
@@ -326,12 +320,6 @@ export const sourcingEn: Record<string, string> = {
   'sourcing.wizard.review.invited.one': '{{count}} supplier',
   'sourcing.wizard.review.invited.other': '{{count}} suppliers',
   // — Toasts —
-  'sourcing.toast.awardFailed.title': 'Award failed',
-  'sourcing.toast.awardFailed.default': 'The award could not be completed.',
-  'sourcing.toast.awardFailed.dispatch': 'The award could not be dispatched.',
-  'sourcing.toast.awarded.title': '{{rfqNumber}} awarded',
-  'sourcing.toast.awarded.desc': '{{supplier}} awarded — other quotations rejected.',
-  'sourcing.toast.awarded.fallbackSupplier': 'Selected supplier',
   'sourcing.toast.reviewed.title': 'Quote moved to review',
   'sourcing.toast.reviewed.desc': 'The quotation is now under evaluation.',
   'sourcing.toast.reviewFailed.title': 'Review failed',
@@ -527,9 +515,7 @@ export const sourcingId: Record<string, string> = {
   'sourcing.cmp.row.composite': 'Komposit',
   'sourcing.cmp.row.result': 'Hasil',
   'sourcing.cmp.row.status': 'Status',
-  'sourcing.cmp.row.select': 'Pilih',
   'sourcing.cmp.leadTimeDays_other': '{{count}} hari',
-  'sourcing.cmp.award': 'Menangkan',
   'sourcing.cmp.moveToReview': 'Pindahkan ke tinjauan',
   // — Selisih should-cost vs penawaran CI-2 (hanya-baca, MODELED × SIMULASI) —
   'sourcing.cmp.row.spread': 'vs Should-Cost',
@@ -545,10 +531,6 @@ export const sourcingId: Record<string, string> = {
   'sourcing.cmp.spread.silent.unmapped': 'Tanpa rujukan should-cost — material belum dipetakan ke basket',
   // — Award action panel —
   'sourcing.award.title': 'Tindakan pemenangan',
-  'sourcing.award.selected': 'Dipilih: {{name}}',
-  'sourcing.award.selectPrompt': 'Pilih penawaran di atas untuk mengaktifkan tindakan pemenangan.',
-  'sourcing.award.submit': 'Menangkan yang dipilih',
-  'sourcing.award.submitting': 'Memenangkan…',
   'sourcing.award.rejectAll': 'Tolak semua & sumber ulang',
   // — Lifecycle actions (batal / buka kembali) —
   'sourcing.lifecycle.actions': 'Tindakan siklus hidup',
@@ -660,12 +642,6 @@ export const sourcingId: Record<string, string> = {
   'sourcing.wizard.review.invited.one': '{{count}} pemasok',
   'sourcing.wizard.review.invited.other': '{{count}} pemasok',
   // — Toasts —
-  'sourcing.toast.awardFailed.title': 'Pemenangan gagal',
-  'sourcing.toast.awardFailed.default': 'Pemenangan tidak dapat diselesaikan.',
-  'sourcing.toast.awardFailed.dispatch': 'Pemenangan tidak dapat dikirim.',
-  'sourcing.toast.awarded.title': '{{rfqNumber}} dimenangkan',
-  'sourcing.toast.awarded.desc': '{{supplier}} dimenangkan — penawaran lain ditolak.',
-  'sourcing.toast.awarded.fallbackSupplier': 'Pemasok terpilih',
   'sourcing.toast.reviewed.title': 'Penawaran dipindahkan ke tinjauan',
   'sourcing.toast.reviewed.desc': 'Penawaran kini sedang dievaluasi.',
   'sourcing.toast.reviewFailed.title': 'Tinjauan gagal',

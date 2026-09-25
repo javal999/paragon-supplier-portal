@@ -310,15 +310,18 @@ export const rfxEn: Record<string, string> = {
   'rfx.award.col.share': 'Share',
   'rfx.award.col.qty': 'Quantity',
   'rfx.award.reason': 'Award reason',
-  'rfx.award.reasonRequired': 'An award that does not follow the best-scored quote needs a reason.',
-  'rfx.award.splitHint': 'Each item’s shares must total 100%.',
   'rfx.award.confirm': 'Award the event',
-  'rfx.award.recorded': 'Awarded {{date}}',
   'rfx.award.notAwarded': 'Not awarded',
   'rfx.award.yourShare': 'Your share: {{share}}% ({{qty}})',
   'rfx.award.departed': 'This award did not follow the best-scored quote.',
   'rfx.award.noPo': 'The hub records the award. The purchase order or contract is raised in SAP.',
   'rfx.award.empty': 'No award has been recorded.',
+  // RFx C3 (NR-3 BR-12) — the supplier's outcome, item by item.
+  'rfx.award.outcome.item': 'Item',
+  'rfx.award.outcome.result': 'Outcome',
+  'rfx.award.outcome.pending': 'Pending',
+  'rfx.award.outcome.withdrawn': 'Award withdrawn {{date}}',
+  'rfx.award.outcome.atBreak': 'at the {{qty}} break',
 
   // — Toasts ——————————————————————————————————————————————————————————
   'rfx.toast.saved': 'Draft saved',
@@ -327,6 +330,8 @@ export const rfxEn: Record<string, string> = {
   'rfx.toast.extended': 'Deadline extended',
   'rfx.toast.roundOpened': 'Negotiation round opened',
   'rfx.toast.awarded': 'Award recorded',
+  'rfx.toast.awardCancelled': 'Award cancelled',
+  'rfx.toast.sapMarked': 'Award marked raised in SAP',
   'rfx.toast.refused': 'Refused: {{reason}}',
 
   // — Creating an event (section 3.6a, CE-01 to CE-08) ————————————————————
@@ -696,15 +701,18 @@ export const rfxId: Record<string, string> = {
   'rfx.award.col.share': 'Porsi',
   'rfx.award.col.qty': 'Jumlah',
   'rfx.award.reason': 'Alasan penetapan',
-  'rfx.award.reasonRequired': 'Penetapan yang tidak mengikuti penawaran bernilai tertinggi memerlukan alasan.',
-  'rfx.award.splitHint': 'Porsi setiap item harus berjumlah 100%.',
   'rfx.award.confirm': 'Tetapkan pemenang',
-  'rfx.award.recorded': 'Ditetapkan {{date}}',
   'rfx.award.notAwarded': 'Tidak menang',
   'rfx.award.yourShare': 'Porsi Anda: {{share}}% ({{qty}})',
   'rfx.award.departed': 'Penetapan ini tidak mengikuti penawaran bernilai tertinggi.',
   'rfx.award.noPo': 'Hub mencatat penetapan. Pesanan pembelian atau kontrak dibuat di SAP.',
   'rfx.award.empty': 'Belum ada penetapan yang dicatat.',
+  // RFx C3 (NR-3 BR-12) — hasil pemasok, per item.
+  'rfx.award.outcome.item': 'Item',
+  'rfx.award.outcome.result': 'Hasil',
+  'rfx.award.outcome.pending': 'Menunggu',
+  'rfx.award.outcome.withdrawn': 'Penetapan ditarik {{date}}',
+  'rfx.award.outcome.atBreak': 'pada jenjang {{qty}}',
 
   'rfx.toast.saved': 'Draf disimpan',
   'rfx.toast.sent': 'Terkirim ke PTI',
@@ -712,6 +720,8 @@ export const rfxId: Record<string, string> = {
   'rfx.toast.extended': 'Batas waktu diperpanjang',
   'rfx.toast.roundOpened': 'Putaran negosiasi dibuka',
   'rfx.toast.awarded': 'Penetapan dicatat',
+  'rfx.toast.awardCancelled': 'Penetapan dibatalkan',
+  'rfx.toast.sapMarked': 'Penetapan ditandai sudah dibuat di SAP',
   'rfx.toast.refused': 'Ditolak: {{reason}}',
 
   // — Membuat acara (bagian 3.6a, CE-01 sampai CE-08) ————————————————————

@@ -132,4 +132,12 @@ export interface AwardView extends AwardRecord {
   readonly cancellation?: AwardCancellation;
   /** The SAP marking with its document number. The buyer's read only. */
   readonly sapMark?: AwardSapMark;
+  /**
+   * RFx C3 (NR-3 BR-12) — the items this award awarded, by `AwardItem.key`,
+   * to ANY supplier. A supplier reads it too, with no supplier, share or
+   * quantity attached: it is how a supplier on the award learns an item it
+   * holds no line on is settled ("Not awarded") rather than still open
+   * ("Pending"). Derived from the record at read.
+   */
+  readonly settledItemKeys: readonly string[];
 }
