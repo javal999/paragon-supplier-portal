@@ -245,10 +245,13 @@ const BuyerChannelTriage: React.FC<BuyerChannelTriageProps> = ({ onRecorded }) =
             id="triage-supplier"
             testId="triage-supplier"
             options={suppliers.map((s) => ({ value: s.id, label: s.name }))}
-            value={subjectSupplierId}
-            onChange={pickSupplier}
+            value={subjectSupplierId || null}
+            onChange={(id) => pickSupplier(id ?? '')}
+            clearable
             placeholder={t('buyerCommHub.triage.supplierSelect')}
             loading={suppliersQuery.isPending}
+            error={suppliersQuery.isError}
+            onRetry={() => suppliersQuery.refetch()}
             name="triage-supplier"
           />
           <p className="mt-1 text-[11px] text-text-tertiary">{t('buyerCommHub.triage.supplierHint')}</p>

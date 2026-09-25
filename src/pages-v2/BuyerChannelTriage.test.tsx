@@ -7,6 +7,10 @@ import { commandAuditSink } from '../services/data/mock/MockCommandService';
 import { inventoryDeclarationStore } from '../services/data/mock/stores/inventoryDeclarationStore';
 import { channelProvenanceStore } from '../services/channel/provenanceStore';
 import i18n from '../lib/i18n';
+import { DEFAULT_COMBOBOX_THRESHOLD } from '../components/ui-v2/SelectField';
+import { mockSuppliers } from '../data/mockSuppliers';
+import { mockDataService } from '../services/data/mock/mockDataService';
+import { withChaos } from '../services/data/mock/withChaos';
 
 // ────────────────────────────────────────────────────────────────────────────
 // Comm Hub C4d — the buyer in-place triage. The SUBJECT supplier is bound at
@@ -47,7 +51,7 @@ const panel = () => within(document.querySelector('aside[role="dialog"]') as HTM
 
 // The supplier picker is populated by an async read — pickSelectFieldOption
 // waits for it, and works whether the fixture size renders a plain <select>
-// or (as it does here, at 22 suppliers) a searchable combobox.
+// or a searchable combobox (which one is derived below, never restated).
 const pickSupplier = (id: string) => pickSelectFieldOption('triage-supplier', id);
 const typeMessage = (text: string) =>
   fireEvent.change(screen.getByTestId('triage-message'), { target: { value: text } });
@@ -83,13 +87,15 @@ describe('BuyerChannelTriage — the binding is first, and never a free supplier
     // Now the paste field appears, bound to the chosen supplier.
     expect(screen.getByTestId('triage-message')).toBeInTheDocument();
     expect(screen.getByText(/Recording for/i)).toBeInTheDocument();
-    // The subject is PICKED from a SelectField (a plain <select> at ≤10
-    // suppliers, a searchable-combobox <input> above it — 22 in this fixture,
-    // so an INPUT here), and there is NEVER a free-typed supplierId field.
+    // The subject is PICKED from a SelectField, and there is NEVER a
+    // free-typed supplierId field. The render mode is DERIVED from the
+    // roster the buyer read returns against SelectField's own threshold, so a
+    // fixture change moves the expectation instead of staling a comment.
     // Typing garbage into the combobox without picking a row never binds it
     // (SelectField's own suite covers that); this only re-asserts no OTHER,
     // separate raw-id field exists on this surface.
-    expect(['SELECT', 'INPUT']).toContain(screen.getByTestId('triage-supplier').tagName);
+    const expectedTag = mockSuppliers.length > DEFAULT_COMBOBOX_THRESHOLD ? 'INPUT' : 'SELECT';
+    expect(screen.getByTestId('triage-supplier').tagName).toBe(expectedTag);
     expect(screen.queryByLabelText(/supplier id/i)).not.toBeInTheDocument();
     // Parse, then open the entry form: the supplier is SHOWN, locked — the form's
     // own supplier select is not offered here.
@@ -99,6 +105,37 @@ describe('BuyerChannelTriage — the binding is first, and never a free supplier
     expect(panel().getByTestId('stock-entry-supplier-locked')).toHaveTextContent('PT Sample Packaging');
     expect(panel().queryByLabelText('Supplier')).toBeNull();
     expect(panel().queryByLabelText(/supplier id/i)).toBeNull();
+  });
+
+  it('re-picking the SAME supplier keeps the parsed work (no reset)', async () => {
+    renderWithProviders(<BuyerChannelTriage />);
+    await pickSupplier(SUBJECT);
+    typeMessage('STOK PK-PETB-8810 2400 KG');
+    clickParse();
+    await screen.findByTestId('triage-enter-0');
+    await pickSupplier(SUBJECT);
+    expect(screen.getByTestId('triage-enter-0')).toBeInTheDocument();
+  });
+
+  it('a FAILED supplier read says so and offers retry — never "no options"', async () => {
+    renderWithProviders(<BuyerChannelTriage />, {
+      service: withChaos(mockDataService, { minMs: 0, maxMs: 0, failureRate: 1 }),
+    });
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent(/Couldn’t load options/);
+    expect(within(alert).getByRole('button', { name: 'Retry' })).toBeInTheDocument();
+    expect(screen.queryByText('No options available')).not.toBeInTheDocument();
+  });
+
+  it('the binding can be cleared back to "pick a supplier first"', async () => {
+    renderWithProviders(<BuyerChannelTriage />);
+    await pickSupplier(SUBJECT);
+    typeMessage('STOK PK-PETB-8810 2400 KG');
+    clickParse();
+    fireEvent.click(screen.getByTestId('triage-supplier-clear'));
+    expect(screen.queryByTestId('triage-message')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('triage-enter-0')).not.toBeInTheDocument();
+    expect(screen.getByTestId('triage-supplier')).toHaveValue('');
   });
 });
 

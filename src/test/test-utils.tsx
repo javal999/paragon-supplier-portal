@@ -118,7 +118,15 @@ export async function pickSelectFieldOption(testId: string, value: string) {
     throw new Error('SelectField not interactive yet');
   });
   if (control.tagName === 'SELECT') {
-    fireEvent.change(control, { target: { value } });
+    // Native <option> values are indexes; the SelectField value rides in
+    // `data-value`. A value with no option must be refused, not "picked" —
+    // jsdom would otherwise fall back silently and the test would "pass"
+    // against an unbound state (review G5).
+    const opt = control.querySelector<HTMLOptionElement>(`option[data-value="${value}"]`);
+    if (!opt) throw new Error(`SelectField "${testId}": no option with value "${value}"`);
+    fireEvent.change(control, { target: { value: opt.value } });
+    const bound = (control as HTMLSelectElement).selectedOptions[0]?.dataset.value;
+    if (bound !== value) throw new Error(`SelectField "${testId}": value did not bind to "${value}"`);
     return;
   }
   fireEvent.click(control);

@@ -490,6 +490,9 @@ export const resources = {
       'ui.select.noResultsHint': 'Try a different search term.',
       'ui.select.loading': 'Loading options…',
       'ui.select.unavailableValue': 'Unavailable: {{value}}',
+      'ui.select.clear': 'Clear selection',
+      'ui.select.error': 'Couldn’t load options',
+      'ui.select.retry': 'Retry',
       'topbar.searchLabel': 'Search the portal',
       // — PO confirm (Step 3.10 proof surface) —
       'po.confirm.action': 'Confirm order',
@@ -945,6 +948,9 @@ export const resources = {
       'ui.select.noResultsHint': 'Coba kata kunci pencarian lain.',
       'ui.select.loading': 'Memuat opsi…',
       'ui.select.unavailableValue': 'Tidak tersedia: {{value}}',
+      'ui.select.clear': 'Hapus pilihan',
+      'ui.select.error': 'Gagal memuat opsi',
+      'ui.select.retry': 'Coba lagi',
       'topbar.searchLabel': 'Cari di portal',
       // — PO confirm (ID stub — refined in the Phase 3′ ID-first sweep) —
       'po.confirm.action': 'Konfirmasi pesanan',
