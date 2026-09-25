@@ -1,4 +1,5 @@
-import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { ChevronDown, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
@@ -39,11 +40,15 @@ interface SelectFieldProps {
   searchPlaceholder?: string;
   name?: string;
   id?: string;
+  /** Forwarded as `data-testid` to whichever control actually renders. */
+  testId?: string;
 }
 
 const ROW_HEIGHT_PLAIN = 36;
 const ROW_HEIGHT_WITH_DESCRIPTION = 52;
-const PANEL_MAX_HEIGHT = 288; // 8 plain rows
+const PANEL_MAX_HEIGHT = 288; // 8 plain rows — the ceiling, not a guarantee
+const PANEL_MIN_HEIGHT = 120; // last-resort floor if the trigger sits very low
+const PANEL_BOTTOM_MARGIN = 24; // stays clear of the viewport edge, not flush
 const SEARCH_DEBOUNCE_MS = 300;
 const DEFAULT_COMBOBOX_THRESHOLD = 10;
 const DEFAULT_VIRTUALIZE_THRESHOLD = 300;
@@ -83,6 +88,7 @@ const SelectField: React.FC<SelectFieldProps> = ({
   searchPlaceholder,
   name,
   id,
+  testId,
 }) => {
   const { t } = useTranslation();
   const generatedId = useId();
@@ -98,9 +104,17 @@ const SelectField: React.FC<SelectFieldProps> = ({
   const [scrollTop, setScrollTop] = useState(0);
 
   const rootRef = useRef<HTMLDivElement>(null);
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  // The trigger IS the search input — one control, not a button opening a
+  // panel that contains a second, separate input.
+  const triggerRef = useRef<HTMLInputElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const listboxRef = useRef<HTMLUListElement>(null);
+  const [panelPos, setPanelPos] = useState<{
+    left: number;
+    width: number;
+    top: number;
+    maxHeight: number;
+  } | null>(null);
 
   const selected = options.find((o) => o.value === value);
   const hasInvalidValue = value !== '' && !selected;
@@ -137,10 +151,19 @@ const SelectField: React.FC<SelectFieldProps> = ({
 
   const openMenu = useCallback(() => {
     if (disabled) return;
-    const startIndex = selected ? filteredOptions.findIndex((o) => o.value === selected.value) : -1;
+    // Opening always starts from a blank query — the full list is what
+    // "browse by scrolling" means, and the previous selection stays visible
+    // as normal (unfocused) display text once the panel closes again.
+    setQuery('');
+    const startIndex = selected ? options.findIndex((o) => o.value === selected.value) : -1;
     setActiveIndex(startIndex >= 0 ? startIndex : 0);
     setOpen(true);
-  }, [disabled, selected, filteredOptions]);
+  }, [disabled, selected, options]);
+
+  const onInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!open) openMenu();
+    setQuery(e.target.value);
+  };
 
   // Debounced server-side search.
   useEffect(() => {
@@ -157,22 +180,53 @@ const SelectField: React.FC<SelectFieldProps> = ({
     });
   }, [filteredOptions.length]);
 
-  // Focus the filter box the moment the panel opens.
-  useEffect(() => {
-    if (open) inputRef.current?.focus();
-  }, [open]);
-
-  // Close on outside pointerdown (matches LanguageMenu's convention).
+  // Close on outside pointerdown (matches LanguageMenu's convention). The
+  // panel is portaled to <body> (see below — an ancestor's `overflow-hidden`,
+  // e.g. a card/FormSection, otherwise clips it silently: the options render
+  // correctly in the DOM but are visually cut to nothing), so "outside" is
+  // "outside both the trigger and the portaled panel", not rootRef alone.
   useEffect(() => {
     if (!open) return undefined;
     const onDocPointer = (e: MouseEvent) => {
-      if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
-        setOpen(false);
-        setQuery('');
-      }
+      const target = e.target as Node;
+      if (triggerRef.current?.contains(target)) return;
+      if (panelRef.current?.contains(target)) return;
+      setOpen(false);
+      setQuery('');
     };
     document.addEventListener('mousedown', onDocPointer);
     return () => document.removeEventListener('mousedown', onDocPointer);
+  }, [open]);
+
+  // Track the trigger's viewport position while open, so the portaled panel
+  // stays anchored under it across page scroll/resize (capture-phase scroll
+  // catches scroll on any nested scrollable ancestor, not just the window).
+  //
+  // Always opens BELOW the trigger — never flips above it — but caps its own
+  // height so it stops PANEL_BOTTOM_MARGIN short of the viewport edge instead
+  // of running off it: a trigger near the bottom of the page otherwise pushes
+  // the last rows out of reach with no way to scroll to them.
+  useLayoutEffect(() => {
+    if (!open) return undefined;
+    const update = () => {
+      const rect = triggerRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      const top = rect.bottom + 4;
+      const spaceBelow = window.innerHeight - top - PANEL_BOTTOM_MARGIN;
+      setPanelPos({
+        left: rect.left,
+        width: rect.width,
+        top,
+        maxHeight: Math.max(PANEL_MIN_HEIGHT, Math.min(PANEL_MAX_HEIGHT, spaceBelow)),
+      });
+    };
+    update();
+    window.addEventListener('scroll', update, true);
+    window.addEventListener('resize', update);
+    return () => {
+      window.removeEventListener('scroll', update, true);
+      window.removeEventListener('resize', update);
+    };
   }, [open]);
 
   // Keep the keyboard-highlighted row inside the scrolled viewport.
@@ -202,14 +256,20 @@ const SelectField: React.FC<SelectFieldProps> = ({
     [filteredOptions],
   );
 
-  const onTriggerKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      openMenu();
-    }
-  };
-
+  // The input IS the trigger (no separate search box): closed, it displays
+  // the selection and behaves like a native <select> — a key that would open
+  // one (ArrowDown/Enter/Space) opens this instead. Once open, the same keys
+  // drive the highlighted row. Typing is handled by onChange, not here — a
+  // printable key mutates the input's value before any handler runs, so
+  // onChange is where "closed and the user just started typing" is caught.
   const onInputKeyDown = (e: React.KeyboardEvent) => {
+    if (!open) {
+      if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        openMenu();
+      }
+      return;
+    }
     switch (e.key) {
       case 'ArrowDown':
         e.preventDefault();
@@ -258,6 +318,7 @@ const SelectField: React.FC<SelectFieldProps> = ({
         role="option"
         aria-selected={isSelected}
         aria-disabled={opt.disabled || undefined}
+        data-value={opt.value}
         onMouseEnter={() => setActiveIndex(idx)}
         onClick={() => selectOption(opt)}
         title={opt.label}
@@ -282,6 +343,7 @@ const SelectField: React.FC<SelectFieldProps> = ({
       <button
         type="button"
         disabled
+        data-testid={testId}
         className={`${controlBaseClass} flex items-center gap-2 text-text-tertiary ${className}`}
       >
         <Loader2 size={14} className="animate-spin shrink-0" aria-hidden="true" />
@@ -296,6 +358,7 @@ const SelectField: React.FC<SelectFieldProps> = ({
         type="button"
         disabled
         aria-label={accessibleName}
+        data-testid={testId}
         className={`${controlBaseClass} text-left text-text-tertiary ${className}`}
       >
         {t('ui.select.empty')}
@@ -313,6 +376,7 @@ const SelectField: React.FC<SelectFieldProps> = ({
         disabled={disabled}
         aria-label={ariaLabel}
         onChange={(e) => onChange(e.target.value)}
+        data-testid={testId}
         className={`${controlBaseClass} ${className}`}
       >
         {!hasInvalidValue && (
@@ -333,84 +397,90 @@ const SelectField: React.FC<SelectFieldProps> = ({
   }
 
   // ── Combobox mode: > threshold options ──────────────────────────────────
-  const displayLabel = value === '' ? resolvedPlaceholder : selected ? selected.label : t('ui.select.unavailableValue', { value });
+  // Closed, the input shows the current selection (or is blank, letting the
+  // native placeholder show the hint). Open, it shows the live query — the
+  // SAME field is both the trigger and the filter box, per the reviewed UX:
+  // clicking it is what makes it writable; a ≤10 native <select> never is.
+  const closedText = hasInvalidValue ? t('ui.select.unavailableValue', { value }) : selected ? selected.label : '';
+  const inputValue = open ? query : closedText;
+  const inputPlaceholder = open ? searchPlaceholder ?? t('ui.select.searchPlaceholder') : resolvedPlaceholder;
+  const panelHeight = panelPos?.maxHeight ?? PANEL_MAX_HEIGHT;
   const startIndex = isVirtualized ? Math.max(0, Math.floor(scrollTop / rowHeight) - OVERSCAN) : 0;
-  const visibleCount = isVirtualized ? Math.ceil(PANEL_MAX_HEIGHT / rowHeight) + OVERSCAN * 2 : filteredOptions.length;
+  const visibleCount = isVirtualized ? Math.ceil(panelHeight / rowHeight) + OVERSCAN * 2 : filteredOptions.length;
   const endIndex = isVirtualized ? Math.min(filteredOptions.length, startIndex + visibleCount) : filteredOptions.length;
   const topPad = startIndex * rowHeight;
   const bottomPad = (filteredOptions.length - endIndex) * rowHeight;
 
   return (
     <div ref={rootRef} className={`relative ${className}`}>
-      <button
-        ref={triggerRef}
-        id={controlId}
-        type="button"
-        disabled={disabled}
-        onClick={() => (open ? closeMenu(false) : openMenu())}
-        onKeyDown={onTriggerKeyDown}
-        aria-haspopup="listbox"
-        aria-expanded={open}
-        aria-label={accessibleName}
-        className={`${controlBaseClass} flex items-center justify-between gap-2 text-left`}
-      >
-        <span
-          className={`truncate ${
-            hasInvalidValue ? 'text-warning-hover' : value === '' ? 'text-text-tertiary' : 'text-text-primary'
+      <div className="relative">
+        <input
+          ref={triggerRef}
+          id={controlId}
+          type="text"
+          disabled={disabled}
+          role="combobox"
+          aria-haspopup="listbox"
+          aria-expanded={open}
+          aria-controls={listboxId}
+          aria-autocomplete="list"
+          aria-activedescendant={activeIndex >= 0 ? `${listboxId}-opt-${activeIndex}` : undefined}
+          aria-label={accessibleName}
+          value={inputValue}
+          onClick={() => {
+            if (!open) openMenu();
+          }}
+          onChange={onInputChange}
+          onKeyDown={onInputKeyDown}
+          placeholder={inputPlaceholder}
+          autoComplete="off"
+          title={closedText || undefined}
+          data-testid={testId}
+          className={`${controlBaseClass} pr-9 truncate ${
+            hasInvalidValue && !open ? 'text-warning-hover' : ''
           }`}
-          title={displayLabel}
-        >
-          {displayLabel}
-        </span>
+        />
         <ChevronDown
           size={16}
-          className={`shrink-0 text-text-tertiary transition-transform ${open ? 'rotate-180' : ''}`}
+          className={`pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 shrink-0 text-text-tertiary transition-transform ${
+            open ? 'rotate-180' : ''
+          }`}
           aria-hidden="true"
         />
-      </button>
+      </div>
 
-      {open && (
-        <div className="absolute z-50 mt-1 w-full rounded-md border border-border-subtle bg-bg-surface shadow-lg">
-          <div className="p-2 border-b border-border-subtle">
-            <input
-              ref={inputRef}
-              type="text"
-              role="combobox"
-              aria-expanded={open}
-              aria-controls={listboxId}
-              aria-autocomplete="list"
-              aria-activedescendant={activeIndex >= 0 ? `${listboxId}-opt-${activeIndex}` : undefined}
-              aria-label={accessibleName}
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={onInputKeyDown}
-              placeholder={searchPlaceholder ?? t('ui.select.searchPlaceholder')}
-              className="w-full text-sm outline-none"
-            />
-          </div>
-          <ul
-            ref={listboxRef}
-            id={listboxId}
-            role="listbox"
-            aria-label={accessibleName}
-            onScroll={handleScroll}
-            style={{ maxHeight: PANEL_MAX_HEIGHT, overflowY: 'auto' }}
+      {open &&
+        panelPos &&
+        createPortal(
+          <div
+            ref={panelRef}
+            style={{ position: 'fixed', top: panelPos.top, left: panelPos.left, width: panelPos.width }}
+            className="z-50 rounded-md border border-border-subtle bg-bg-surface shadow-lg"
           >
-            {filteredOptions.length === 0 ? (
-              <li className="px-3 py-4 text-sm text-text-tertiary" role="presentation">
-                <div className="text-text-secondary">{t('ui.select.noResults')}</div>
-                <div className="text-xs mt-0.5">{t('ui.select.noResultsHint')}</div>
-              </li>
-            ) : (
-              <>
-                {isVirtualized && topPad > 0 && <li aria-hidden="true" style={{ height: topPad }} />}
-                {filteredOptions.slice(startIndex, endIndex).map((opt, i) => renderRow(opt, startIndex + i))}
-                {isVirtualized && bottomPad > 0 && <li aria-hidden="true" style={{ height: bottomPad }} />}
-              </>
-            )}
-          </ul>
-        </div>
-      )}
+            <ul
+              ref={listboxRef}
+              id={listboxId}
+              role="listbox"
+              aria-label={accessibleName}
+              onScroll={handleScroll}
+              style={{ maxHeight: panelHeight, overflowY: 'auto' }}
+            >
+              {filteredOptions.length === 0 ? (
+                <li className="px-3 py-4 text-sm text-text-tertiary" role="presentation">
+                  <div className="text-text-secondary">{t('ui.select.noResults')}</div>
+                  <div className="text-xs mt-0.5">{t('ui.select.noResultsHint')}</div>
+                </li>
+              ) : (
+                <>
+                  {isVirtualized && topPad > 0 && <li aria-hidden="true" style={{ height: topPad }} />}
+                  {filteredOptions.slice(startIndex, endIndex).map((opt, i) => renderRow(opt, startIndex + i))}
+                  {isVirtualized && bottomPad > 0 && <li aria-hidden="true" style={{ height: bottomPad }} />}
+                </>
+              )}
+            </ul>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 };
