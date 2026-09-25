@@ -102,8 +102,11 @@ import {
   rfiEventStore,
   rfiResponseStore,
   rfpEventStore,
+  rfpFirmOfferStore,
+  rfpOfferRoundStore,
   rfpResponseStore,
 } from '../data/mock/stores/rfxStores';
+import { rfxNow } from '../data/mock/rfxReadModel';
 import {
   rfqClarificationStore,
   rfqConfidentialityStore,
@@ -179,6 +182,30 @@ async function realIds(): Promise<Record<string, string | null>> {
     entity: 'receiptDiscrepancy',
     payload: { receiptId: 'gr-006', comment: 'raised to probe the scope gate' },
   });
+  // NR-2 — both firm-offer stores start empty (no sample RFP is Closed), so the
+  // probe walks one through the real verbs: close rfp-002, ask sup-007 (which
+  // proposed on it) for a firm price, and let sup-007 send one. A repeat call
+  // finds the RFP already Closed and opens a further round, which is harmless.
+  const inFiveDays = new Date(Date.parse(rfxNow()) + 5 * 86_400_000).toISOString().slice(0, 10);
+  await svc.dispatch(buyerSeat('procurement'), {
+    transitionId: 't_rfp_close', entity: 'rfpEvent', entityId: 'rfp-002',
+  });
+  const round = await svc.dispatch(buyerSeat('procurement'), {
+    transitionId: 't_rfp_round_open', entity: 'rfpOfferRound',
+    payload: {
+      rfpId: 'rfp-002', optionIds: ['opt-full-set'], quantityPoints: [50_000],
+      invitedSupplierIds: ['sup-007'], deadline: inFiveDays,
+    },
+  });
+  const offer = round.entityId
+    ? await svc.dispatch(supplierSeatOf('sup-007', ...PERSONA_SYSTEM_ROLES.supplier), {
+        transitionId: 't_rfpfirmoffer_submit', entity: 'rfpFirmOffer',
+        payload: {
+          roundId: round.entityId, supplierId: 'sup-007',
+          prices: [{ optionId: 'opt-full-set', qty: 50_000, unitPrice: 4_150 }], validUntil: inFiveDays,
+        },
+      })
+    : null;
   return {
     purchaseOrder: purchaseOrderStore.all()[0]?.id ?? null,
     advanceShipNotice: asnStore.all()[0]?.asnNumber ?? null,
@@ -228,6 +255,10 @@ async function realIds(): Promise<Record<string, string | null>> {
     rfpEvent: rfpEventStore.all()[0]?.id ?? null,
     rfpResponse: rfpResponseStore.all()[0]?.id ?? null,
     negotiationRound: negotiationRoundStore.all()[0]?.id ?? null,
+    // NR-2 — walked above. The round is PTI's (owner-less); the offer names
+    // the supplier that sent it (owner-ful).
+    rfpOfferRound: round.entityId ?? null,
+    rfpFirmOffer: offer?.entityId ?? null,
     // RFx spec 2026-09-21 — the supplier-response stores are seeded. An intent
     // and a clarification each name the supplier that raised them, so they land
     // in `ownerful`; an acceptance is creation-only and is `unprobeable`.
@@ -341,6 +372,10 @@ const resetAll = () => {
   threePlStore.reset();
   hubSettingsStore.reset();
   reasonCodeStore.reset();
+  // NR-2 — the id supply closes rfp-002 and opens a firm-offer round.
+  rfpEventStore.reset();
+  rfpOfferRoundStore.reset();
+  rfpFirmOfferStore.reset();
 };
 
 beforeEach(resetAll);
@@ -388,6 +423,9 @@ describe('POPULATION — nothing below means anything without this', () => {
     expect(ownerful).toContain('rfpResponse');
     expect(ownerful).toContain('rfqIntent');
     expect(ownerful).toContain('rfqClarification');
+    // NR-2 — the firm-offer ROUND is PTI's; the firm OFFER is its supplier's.
+    expect(ownerless).toContain('rfpOfferRound');
+    expect(ownerful).toContain('rfpFirmOffer');
     expect(ownerless).not.toContain('purchaseOrder');
     expect(ownerless).not.toContain('invoice');
     expect(ownerful).toContain('purchaseOrder');
@@ -507,6 +545,9 @@ describe('THE LEGITIMATE PATHS — the half a "refuse everyone" fix would break'
         // REQ-E03-02 / REQ-E03-04 — an RFI and an RFP EVENT name no supplier.
         'rfiEvent',
         'rfpEvent',
+        // NR-2 — a firm-offer round is PTI's window, as the negotiation round;
+        // a supplier answers it through its own firm offer.
+        'rfpOfferRound',
         'rfq',
         'role',
         'supplierApplication',
@@ -620,5 +661,13 @@ describe('THE LEGITIMATE PATHS — the half a "refuse everyone" fix would break'
     });
     expect(roundRes.status, roundRes.reason).toBe('done');
     expect(negotiationRoundStore.get(openRound.id)!.closed).toBe(true);
+
+    // NR-2 — the firm-offer round the id supply opened can still be closed.
+    const openOfferRound = rfpOfferRoundStore.all().find((r) => r.closedAt === undefined)!;
+    const offerRoundRes = await svc.dispatch(buyerSeat('procurement'), {
+      transitionId: 't_rfp_round_close', entity: 'rfpOfferRound', entityId: openOfferRound.id,
+    });
+    expect(offerRoundRes.status, offerRoundRes.reason).toBe('done');
+    expect(rfpOfferRoundStore.get(openOfferRound.id)!.closedAt).toBeDefined();
   });
 });

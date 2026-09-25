@@ -146,6 +146,10 @@ export const useNegotiationRounds = () =>
     svc.procurement.getNegotiationRounds(scope),
   );
 
+/** NR-2 — firm-offer rounds on an RFP. A supplier reads only rounds it was asked to. */
+export const useRfpOfferRounds = () =>
+  useServiceQuery(['procurement', 'rfpOfferRounds'], (svc, scope) => svc.procurement.getRfpOfferRounds(scope));
+
 /** RFx spec 2026-09-21 — invitees' intent and confidentiality acceptance. */
 export const useRfqEngagement = () =>
   useServiceQuery(['procurement', 'rfqEngagement'], (svc, scope) => svc.procurement.getRfqEngagement(scope));

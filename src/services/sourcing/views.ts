@@ -12,7 +12,16 @@
 // the answers (law 0.5) — no surface reads a stored one, because there is none.
 // ────────────────────────────────────────────────────────────────────────────
 
-import type { RfiEvent, RfiResponse, RfpEvent, RfpResponse, NegotiationRound, AwardRecord } from './types';
+import type {
+  AwardRecord,
+  NegotiationRound,
+  RfiEvent,
+  RfiResponse,
+  RfpEvent,
+  RfpFirmOffer,
+  RfpOfferRound,
+  RfpResponse,
+} from './types';
 import type { GateCriterion } from './complianceGate';
 
 /**
@@ -95,6 +104,53 @@ export interface NegotiationRoundView extends NegotiationRound {
   readonly overdue: boolean;
   /** How many invitees have not answered yet (a supplier reads its own: 0 or 1). */
   readonly awaiting: number;
+}
+
+/** NR-2 — one option of a firm-offer round, in the words of whoever wrote it (edge case 3). */
+export interface RfpRoundOptionView {
+  readonly id: string;
+  readonly title: string;
+  readonly description?: string;
+  /** True for an option a supplier proposed in its RFP response (`sup-opt-…`). */
+  readonly supplierProposed: boolean;
+}
+
+/** NR-2 BR-04 — the firm price in force for one supplier × option × quantity point. */
+export interface RfpFirmPriceView {
+  readonly supplierId: string;
+  readonly supplierName: string;
+  readonly roundId: string;
+  readonly roundNumber: number;
+  readonly optionId: string;
+  readonly qty: number;
+  readonly unitPrice: number;
+  readonly validUntil: string;
+  readonly submittedAt: string;
+}
+
+/**
+ * NR-2 — a firm-offer round as a reader may see it. The buyer reads every
+ * invitee and offer; a supplier reads a round only when invited, and then only
+ * itself and its own offer.
+ */
+export interface RfpOfferRoundView extends RfpOfferRound {
+  readonly rfpNumber: string;
+  readonly rfpTitle: string;
+  readonly currency: string;
+  readonly options: readonly RfpRoundOptionView[];
+  /** The buyer closed the round (`closedAt` is set). */
+  readonly closed: boolean;
+  /** Still Open, but past its deadline, so no offer is accepted. Derived at read. */
+  readonly overdue: boolean;
+  /** Buyer: every invitee's offer. Supplier: its own, if any. */
+  readonly offers: readonly RfpFirmOffer[];
+  /** How many visible invitees have not sent an offer in this round. */
+  readonly awaiting: number;
+  /**
+   * BR-04 — the LAST firm price per supplier × option × point across every
+   * round of this RFP the reader may see, whichever round it came from.
+   */
+  readonly firmPrices: readonly RfpFirmPriceView[];
 }
 
 export interface AwardedSupplierView {

@@ -2308,6 +2308,7 @@ import type {
   AwardLine,
   RfiAnswer,
   RfiQuestion,
+  RfpFirmPrice,
   RfpPricingAnswer,
   RfpPricingRequest,
   RfpTermAnswer,
@@ -2450,6 +2451,32 @@ export type RfxCommandVars =
       bestAndFinal?: boolean;
     }
   | { verb: 'closeRound'; roundId: string }
+  // — NR-2 · firm-offer round on an RFP (D-1) —
+  | {
+      verb: 'openRfpRound';
+      rfpId: string;
+      optionIds: readonly string[];
+      quantityPoints: readonly number[];
+      invitedSupplierIds: readonly string[];
+      deadline: string;
+      message?: string;
+    }
+  | { verb: 'closeRfpRound'; roundId: string }
+  | {
+      verb: 'submitFirmOffer';
+      roundId: string;
+      supplierId: string;
+      prices: readonly RfpFirmPrice[];
+      validUntil: string;
+      documents?: readonly AttachmentMeta[];
+    }
+  | {
+      verb: 'reviseFirmOffer';
+      offerId: string;
+      prices: readonly RfpFirmPrice[];
+      validUntil: string;
+      documents?: readonly AttachmentMeta[];
+    }
   | {
       verb: 'reviseQuote';
       roundId: string;
@@ -2487,6 +2514,7 @@ const RFX_READS = new Set([
   'rfiEvents',
   'rfpEvents',
   'negotiationRounds',
+  'rfpOfferRounds',
   'awards',
   'rfqs',
   'quotations',
@@ -2708,6 +2736,51 @@ export function useRfxCommand() {
             entityId: vars.roundId,
             payload: {},
           });
+        case 'openRfpRound': {
+          const { verb, ...payload } = vars;
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_rfp_round_open',
+            entity: 'rfpOfferRound',
+            payload: {
+              ...payload,
+              optionIds: [...payload.optionIds],
+              quantityPoints: [...payload.quantityPoints],
+              invitedSupplierIds: [...payload.invitedSupplierIds],
+            },
+          });
+        }
+        case 'closeRfpRound':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_rfp_round_close',
+            entity: 'rfpOfferRound',
+            entityId: vars.roundId,
+            payload: {},
+          });
+        case 'submitFirmOffer': {
+          const { verb, prices, documents, ...payload } = vars;
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_rfpfirmoffer_submit',
+            entity: 'rfpFirmOffer',
+            payload: {
+              ...payload,
+              prices: prices.map((p) => ({ ...p })),
+              ...(documents ? { documents: [...documents] } : {}),
+            },
+          });
+        }
+        case 'reviseFirmOffer': {
+          const { verb, offerId, prices, documents, ...payload } = vars;
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_rfpfirmoffer_revise',
+            entity: 'rfpFirmOffer',
+            entityId: offerId,
+            payload: {
+              ...payload,
+              prices: prices.map((p) => ({ ...p })),
+              ...(documents ? { documents: [...documents] } : {}),
+            },
+          });
+        }
         case 'reviseQuote': {
           const { verb, lines, ...payload } = vars;
           return svc.commands.dispatch(scope, {

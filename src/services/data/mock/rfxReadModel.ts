@@ -46,10 +46,13 @@ import type {
   NegotiationRoundView,
   RfiEventView,
   RfpEventView,
+  RfpOfferRoundView,
+  RfpRoundOptionView,
   RfqSupplierGateView,
   RfxInviteeView,
 } from '../../sourcing/views';
-import type { RfiResponse, RfpResponse } from '../../sourcing/types';
+import type { RfiResponse, RfpEvent, RfpResponse } from '../../sourcing/types';
+import { firmPricesInForce } from '../../sourcing/rfpFirmOffer';
 import { rfqStore } from './stores/rfqStore';
 import { quotationStore } from './stores/quotationStore';
 import {
@@ -58,6 +61,8 @@ import {
   rfiEventStore,
   rfiResponseStore,
   rfpEventStore,
+  rfpFirmOfferStore,
+  rfpOfferRoundStore,
   rfpResponseStore,
 } from './stores/rfxStores';
 
@@ -142,6 +147,15 @@ export function rfqGateViews(rfq: RFQ, nowIso: string): readonly RfqSupplierGate
 /** CR-23 — one supplier against one sourcing event. */
 export const rfqSupplierGate = (rfq: RFQ, supplierId: string, nowIso: string): GateResult =>
   supplierGate(supplierId, rfqMaterialCodes(rfq), nowIso);
+
+/**
+ * CR-23 — one supplier on an RFP (NR-2 BR-02). An RFP names a material
+ * CATEGORY and no material codes, so no material asks for a certificate here:
+ * the gate judges status and OTIF. It is the same gate, over the materials the
+ * event actually names, never a guess at which ones it might mean.
+ */
+export const rfpSupplierGate = (supplierId: string, nowIso: string): GateResult =>
+  supplierGate(supplierId, [], nowIso);
 
 // ── REQ-E03-02 / REQ-E03-04 — the event views ───────────────────────────────
 
@@ -418,6 +432,72 @@ export function negotiationRoundViews(nowIso: string, supplierId: string | null)
         participants,
         overdue: !round.closed && isPastDeadline(round.deadline, nowIso),
         awaiting: supplierId ? (participants[0]?.revisedQuotationId ? 0 : 1) : awaitingAll.length,
+      };
+    });
+}
+
+// ── NR-2 — firm-offer rounds on an RFP ──────────────────────────────────────
+
+/** Suppliers with a SUBMITTED response to one RFP. */
+export const rfpRespondedSupplierIds = (rfpId: string): readonly string[] =>
+  rfpResponseStore
+    .all()
+    .filter((r) => r.rfpId === rfpId && r.status === 'Submitted')
+    .map((r) => r.supplierId);
+
+/**
+ * The options a firm-offer round may name on one RFP (edge case 3): the RFP's
+ * own, then those suppliers proposed in a SUBMITTED response, in their words.
+ * A draft's proposal is invisible to PTI, so it cannot enter a round either.
+ */
+export function rfpRoundOptions(rfp: RfpEvent): readonly RfpRoundOptionView[] {
+  const own = (rfp.pricing?.options ?? []).map((o) => ({ ...o, supplierProposed: false }));
+  const proposed = rfpResponseStore
+    .all()
+    .filter((r) => r.rfpId === rfp.id && r.status === 'Submitted')
+    .flatMap((r) => r.pricing?.proposedOptions ?? [])
+    .map((o) => ({ ...o, supplierProposed: true }));
+  return [...own, ...proposed];
+}
+
+/**
+ * NR-2 — the firm-offer rounds a scope may read.
+ *
+ * `supplierId` null = the buyer: every round, every invitee, every offer.
+ * `supplierId` set = that supplier: only rounds it was invited to, only itself
+ * as invitee, and only its own offers and firm prices (RFX-R4, AC-01).
+ */
+export function rfpOfferRoundViews(nowIso: string, supplierId: string | null): readonly RfpOfferRoundView[] {
+  const rounds = rfpOfferRoundStore.all();
+  const numberOf = new Map(rounds.map((r) => [r.id, r.roundNumber] as const));
+  const visibleOffers = rfpFirmOfferStore
+    .all()
+    .filter((o) => (supplierId ? o.supplierId === supplierId : true));
+  return rounds
+    .filter((r) => (supplierId ? r.invitedSupplierIds.includes(supplierId) : true))
+    .map((round) => {
+      const rfp = rfpEventStore.get(round.rfpId);
+      const invited = supplierId ? [supplierId] : round.invitedSupplierIds;
+      const offers = visibleOffers.filter((o) => o.roundId === round.id);
+      const byId = new Map((rfp ? rfpRoundOptions(rfp) : []).map((o) => [o.id, o] as const));
+      const closed = round.closedAt !== undefined;
+      const onRfp = visibleOffers
+        .filter((o) => o.rfpId === round.rfpId && numberOf.has(o.roundId))
+        .map((o) => ({ ...o, roundNumber: numberOf.get(o.roundId)! }));
+      return {
+        ...round,
+        invitedSupplierIds: invited,
+        rfpNumber: rfp?.eventNumber ?? round.rfpId,
+        rfpTitle: rfp?.title ?? '',
+        currency: rfp?.currency ?? BASE_CURRENCY,
+        options: round.optionIds.map(
+          (id) => byId.get(id) ?? { id, title: id, supplierProposed: id.startsWith('sup-opt-') },
+        ),
+        closed,
+        overdue: !closed && isPastDeadline(round.deadline, nowIso),
+        offers,
+        awaiting: invited.filter((sid) => !offers.some((o) => o.supplierId === sid)).length,
+        firmPrices: firmPricesInForce(onRfp).map((p) => ({ ...p, supplierName: rfxSupplierName(p.supplierId) })),
       };
     });
 }

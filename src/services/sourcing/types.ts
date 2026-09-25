@@ -387,6 +387,63 @@ export interface NegotiationRound {
   readonly closed: boolean;
 }
 
+// ── Firm-offer round on an RFP (NR-2, decision D-1 option A) ────────────────
+
+/**
+ * NR-2 BR-02 — a firm-offer round on a Closed RFP: the options and quantity
+ * points the buyer wants FIRM prices for, and the suppliers asked. Rounds are
+ * append-only: asking again is a new round, never an edit of this one.
+ */
+export interface RfpOfferRound {
+  readonly id: string;
+  readonly rfpId: string;
+  readonly roundNumber: number;
+  /** Buyer options (`RfpPricingRequest.options`) or supplier-proposed ones (`sup-opt-…`). */
+  readonly optionIds: readonly string[];
+  readonly quantityPoints: readonly number[];
+  readonly invitedSupplierIds: readonly string[];
+  readonly deadline: string;
+  readonly message?: string;
+  readonly openedAt: string;
+  /** Set once by `t_rfp_round_close`. Absent = the round is Open. */
+  readonly closedAt?: string;
+}
+
+/** One firm price: one option at one quantity point (NR-2 BR-03). */
+export interface RfpFirmPrice {
+  readonly optionId: string;
+  readonly qty: number;
+  readonly unitPrice: number;
+}
+
+/** One version of a firm offer, as the supplier sent it. */
+export interface RfpFirmOfferVersion {
+  readonly version: number;
+  readonly prices: readonly RfpFirmPrice[];
+  readonly validUntil: string;
+  readonly documents?: readonly AttachmentMeta[];
+  readonly submittedAt: string;
+}
+
+/**
+ * NR-2 BR-01 / BR-03 / BR-04 — one supplier's firm offer in one round. The top
+ * fields are the version in force; `versions` keeps every version, oldest
+ * first, and is only ever appended to.
+ */
+export interface RfpFirmOffer {
+  readonly id: string;
+  readonly roundId: string;
+  readonly rfpId: string;
+  readonly supplierId: string;
+  readonly prices: readonly RfpFirmPrice[];
+  /** The supplier holds these prices until this date (on or after the round deadline). */
+  readonly validUntil: string;
+  readonly documents?: readonly AttachmentMeta[];
+  readonly versions: readonly RfpFirmOfferVersion[];
+  /** When the version in force was sent. */
+  readonly submittedAt: string;
+}
+
 /** REQ-E03-05 BR-06 — one line of a split award. */
 export interface AwardLine {
   readonly supplierId: string;

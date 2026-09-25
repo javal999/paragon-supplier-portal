@@ -12,6 +12,11 @@
 //     edited and never reopened, asking again is a new round
 //   · awardStore                              — append-only: the hub's record of
 //     an award (BR-09), no PO and no contract
+//   · rfpOfferRoundStore                      — NR-2: firm-offer rounds on an
+//     RFP; append-only like the negotiation round, closing only stamps `closedAt`
+//   · rfpFirmOfferStore                       — NR-2: one firm offer per
+//     supplier × round; a revision APPENDS a version. Both start EMPTY: no
+//     sample RFP is Closed, so no round could have been opened on one
 //
 // The RFQ and quotation rows the RFx demo needs live in `rfqStore` /
 // `quotationStore` beside the legacy set — one RFQ list, not two.
@@ -32,6 +37,8 @@ import type {
   RfiEvent,
   RfiResponse,
   RfpEvent,
+  RfpFirmOffer,
+  RfpOfferRound,
   RfpResponse,
 } from '../../../sourcing/types';
 
@@ -70,6 +77,8 @@ export const rfpResponseStore = collection<RfpResponse>(RFP_RESPONSE_SEED, 'rfp-
 export const negotiationRoundStore = collection<NegotiationRound>(NEGOTIATION_ROUND_SEED, 'nr');
 // The Amplify split award (rfq-024) joins after the hub's seeded award.
 export const awardStore = collection<AwardRecord>([...AWARD_SEED, ...RFQ_SAMPLE_AWARD_SEED], 'aw');
+export const rfpOfferRoundStore = collection<RfpOfferRound>([], 'fr');
+export const rfpFirmOfferStore = collection<RfpFirmOffer>([], 'fo');
 
 /** The one response a supplier holds for an event, or undefined. */
 export const responseOf = <T extends { supplierId: string }>(
@@ -86,4 +95,6 @@ export function resetRfxStores(): void {
   rfpResponseStore.reset();
   negotiationRoundStore.reset();
   awardStore.reset();
+  rfpOfferRoundStore.reset();
+  rfpFirmOfferStore.reset();
 }
