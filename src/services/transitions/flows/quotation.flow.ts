@@ -1,11 +1,12 @@
 // ────────────────────────────────────────────────────────────────────────────
 // Quotation flow — v2.2 Step 4 batch (iv).
 //
-// The supplier's response to an RFQ. Its two terminal transitions are the
+// The supplier's response to an RFQ. Its award and reject transitions are the
 // CASCADE TARGETS of `t_rfq_award` (build plan line 91): on award, the winning
 // quotation fires `t_quotation_award` and every other fires `t_quotation_reject`
 // — driven by the dispatcher cascade, one event per transition (each correlatable
-// to the source award via `causationId`, DR-10).
+// to the source award via `causationId`, DR-10). RFx C2: cancelling an award
+// fires `t_quotation_reinstate` the same way, back to Under Review.
 //
 // `t_quotation_submit` (creation, supplier) + `t_quotation_review` (buyer) are
 // AUTHORED-UNWIRED this batch — the supplier quote-submit verb lands in its own
@@ -21,8 +22,13 @@ export const quotationFlow: FlowDefinition = {
   version: 1,
   states: ['Submitted', 'Under Review', 'Awarded', 'Rejected'],
   initial: 'Submitted',
-  /** PF-0 · D-2 — both cascade outcomes are endings. */
-  terminals: ['Awarded', 'Rejected'],
+  /**
+   * PF-0 · D-2 — both cascade outcomes WERE endings. RFx C2 (AR-06): a
+   * cancelled award reinstates the quotes it decided (`t_quotation_reinstate`,
+   * Awarded or Rejected → Under Review), so neither is final any more and the
+   * machine declares no ending.
+   */
+  terminals: [],
   transitions: [
     {
       // Supplier submits a quotation against an invited RFQ. Creation-shape
@@ -138,6 +144,28 @@ export const quotationFlow: FlowDefinition = {
         why:
           'A consequence of the buyer awarding the RFQ (cascade). Losing ' +
           'quotes are not rejected one by one.',
+      },
+      version: 1,
+    },
+    {
+      // RFx C2 (AR-06) — CASCADE TARGET of an award cancel
+      // (`t_rfq_award_cancel` / `_partial`): the mirror of award and reject.
+      // A quote the cancelled award named goes back to Under Review, and so do
+      // the quotes a cancelled FINAL award rejected. Its atom sits in
+      // `AUTOMATION_ATOMS` only: no person holds a quote-reinstating atom.
+      id: 't_quotation_reinstate',
+      from: ['Awarded', 'Rejected'],
+      to: 'Under Review',
+      trigger: 'cascade',
+      requiredRole: 'quotation:reinstate',
+      requiredFields: [],
+      policyHooks: [],
+      surfaceable: {
+        surfaced: false,
+        because: 'computed',
+        why:
+          'A consequence of the buyer cancelling an award (cascade). The ' +
+          'quotes that award decided go back to evaluation in one act.',
       },
       version: 1,
     },

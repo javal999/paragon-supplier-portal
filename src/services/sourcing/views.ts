@@ -12,7 +12,17 @@
 // the answers (law 0.5) — no surface reads a stored one, because there is none.
 // ────────────────────────────────────────────────────────────────────────────
 
-import type { RfiEvent, RfiResponse, RfpEvent, RfpResponse, NegotiationRound, AwardRecord } from './types';
+import type {
+  RfiEvent,
+  RfiResponse,
+  RfpEvent,
+  RfpResponse,
+  NegotiationRound,
+  AwardRecord,
+  AwardStatus,
+  AwardCancellation,
+  AwardSapMark,
+} from './types';
 import type { GateCriterion } from './complianceGate';
 
 /**
@@ -111,4 +121,15 @@ export interface AwardView extends AwardRecord {
   readonly awardedSuppliers: readonly AwardedSupplierView[];
   /** True when the award passed over the best-scored quote (BR-07). */
   readonly departedFromBestScore: boolean;
+  /**
+   * RFx C2 — DERIVED from the appended cancellation and SAP marking (AR-08).
+   * A supplier reads it too: a `Cancelled` award is its "Award withdrawn".
+   */
+  readonly status: AwardStatus;
+  /** NR-3 BR-12 — when the award was withdrawn; the date a supplier is shown. */
+  readonly withdrawnAt?: string;
+  /** The cancellation with its reason and actor. The buyer's read only. */
+  readonly cancellation?: AwardCancellation;
+  /** The SAP marking with its document number. The buyer's read only. */
+  readonly sapMark?: AwardSapMark;
 }

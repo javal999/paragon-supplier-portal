@@ -126,6 +126,10 @@ fan-out; the per-child `correlationId` keeps each child's status independent (DR
 - gets its **own** `correlationId` (independently settleable),
 - carries `causationId` = the award command's `correlationId` (groups the fan-out).
 
+The reverse is recorded the same way (RFx C2): `t_rfq_award_cancel` / `t_rfq_award_cancel_partial`
+fan out `t_quotation_reinstate` (Awarded or Rejected → Under Review) onto the quotes the cancelled
+award decided, each with its own `correlationId` and the cancel's `correlationId` as `causationId`.
+
 The dispatcher runs cascades **post-apply, best-effort**: a sibling already terminal simply no-ops
 (illegal transition) and never breaks the source award. Same discipline for GR-post → invoice-match
 (fires the header `t_invoice_match` only on a genuine `Matched` verdict; a variance verdict writes

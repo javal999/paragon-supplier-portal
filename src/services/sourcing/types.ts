@@ -458,3 +458,37 @@ export interface AwardRecord {
    */
   readonly notAwardedSupplierIds: readonly string[];
 }
+
+/**
+ * RFx C2 (NR-3 BR-09 to BR-11, AR-08) — the status an award is in, DERIVED at
+ * read from the records appended beside it, never stored on the award:
+ * `Active` until a cancellation or a SAP marking is appended for it.
+ */
+export type AwardStatus = 'Active' | 'Cancelled' | 'Raised in SAP';
+
+/**
+ * NR-3 BR-09 / BR-11 — an award withdrawn by the buyer, with who, when and
+ * why. APPENDED to its own store; the `AwardRecord` it names is never edited,
+ * so the trail keeps what was awarded as well as why it was withdrawn.
+ */
+export interface AwardCancellation {
+  readonly id: string;
+  readonly awardId: string;
+  readonly cancelledAt: string;
+  readonly reason: string;
+  /** CE-08 — the session's actor (UNATTRIBUTED until an identity provider lands). */
+  readonly by: ActorAttribution;
+}
+
+/**
+ * NR-3 BR-10 / BR-11 — an award marked "Raised in SAP", with the SAP document
+ * number the buyer typed (no SAP interface). After it the award cannot be
+ * cancelled here: changes happen in SAP. APPENDED to its own store.
+ */
+export interface AwardSapMark {
+  readonly id: string;
+  readonly awardId: string;
+  readonly sapDocumentNo: string;
+  readonly markedAt: string;
+  readonly by: ActorAttribution;
+}

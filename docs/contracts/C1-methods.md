@@ -1,6 +1,6 @@
 # C1 — Method Surface
 
-Three distinct axes. **85** (service surface) · **165** (transition catalog) · **35** (wired
+Three distinct axes. **85** (service surface) · **169** (transition catalog) · **35** (wired
 targets). They measure different things; this file keeps them separate.
 
 > ⚠️ **THIS DOCUMENT IS PINNED TO THE TREE, AND THE PIN IS WHY THE NUMBERS ABOVE ARE ALLOWED TO
@@ -87,7 +87,7 @@ the string, because those are different claims and only the first is the contrac
 
 ---
 
-## Axis 2 — the 165-transition catalog (41 flows)
+## Axis 2 — the 169-transition catalog (41 flows)
 
 Every authored state-machine edge across the registered flows (`id: 't_<entity>_<verb>'`). Derived
 from `getKnownFlows()` — the seeded registry — never from a grep over the flow files, because a
@@ -102,8 +102,8 @@ transition id can be assembled at a call site rather than written as a literal (
 | `goodsReceiptLine.flow.ts` | `goodsReceiptLine` | 6 | `t_grline_inspect`, `t_grline_accept`, `t_grline_reject`, `t_grline_quarantine`, `t_grline_release`, `t_grline_return` | sub-flow (rollup) |
 | `invoice.flow.ts` | `invoice` | 9 | `t_invoice_create`, `t_invoice_submit`, `t_invoice_match`, `t_invoice_approve`, `t_invoice_release_payment`, `t_invoice_remit`, `t_invoice_dispute`, `t_invoice_resubmit`, `t_invoice_resolve` | **wired** |
 | `invoiceMatch.flow.ts` | `invoiceMatch` | 4 | `t_invmatch_await_gr`, `t_invmatch_matched`, `t_invmatch_qty_variance`, `t_invmatch_price_variance` | sub-flow (rollup) |
-| `rfq.flow.ts` | `rfq` | 10 | `t_rfq_create`, `t_rfq_revise_draft`, `t_rfq_publish`, `t_rfq_close`, `t_rfq_award`, `t_rfq_award_partial`, `t_rfq_extend`, `t_rfq_fx_pin`, `t_rfq_cancel`, `t_rfq_reopen` | **wired** |
-| `quotation.flow.ts` | `quotation` | 5 | `t_quotation_submit`, `t_quotation_revise`, `t_quotation_review`, `t_quotation_award`, `t_quotation_reject` | **wired** |
+| `rfq.flow.ts` | `rfq` | 13 | `t_rfq_create`, `t_rfq_revise_draft`, `t_rfq_publish`, `t_rfq_close`, `t_rfq_award`, `t_rfq_award_partial`, `t_rfq_award_cancel`, `t_rfq_award_cancel_partial`, `t_rfq_award_sap_raised`, `t_rfq_extend`, `t_rfq_fx_pin`, `t_rfq_cancel`, `t_rfq_reopen` | **wired** |
+| `quotation.flow.ts` | `quotation` | 6 | `t_quotation_submit`, `t_quotation_revise`, `t_quotation_review`, `t_quotation_award`, `t_quotation_reject`, `t_quotation_reinstate` | **wired** |
 | `rfqIntent.flow.ts` | `rfqIntent` | 3 | `t_rfqintent_respond`, `t_rfqintent_decline`, `t_rfqintent_withdraw` | **wired** |
 | `rfqConfidentiality.flow.ts` | `rfqConfidentiality` | 1 | `t_rfqconfidentiality_accept` | **wired** |
 | `rfqClarification.flow.ts` | `rfqClarification` | 2 | `t_rfqclarification_ask`, `t_rfqclarification_answer` | **wired** |
@@ -137,7 +137,7 @@ transition id can be assembled at a call site rather than written as a literal (
 | `rfpEvent.flow.ts` | `rfpEvent` | 6 | `t_rfp_create`, `t_rfp_revise_draft`, `t_rfp_publish`, `t_rfp_extend`, `t_rfp_close`, `t_rfp_cancel` | **wired** |
 | `rfpResponse.flow.ts` | `rfpResponse` | 2 | `t_rfpresponse_save`, `t_rfpresponse_submit` | **wired** |
 | `negotiationRound.flow.ts` | `negotiationRound` | 2 | `t_negotiationround_open`, `t_negotiationround_close` | **wired** |
-| **TOTAL** | | **165** | | |
+| **TOTAL** | | **169** | | |
 
 **Flow shape** (`schema.ts`, `FlowDefinition` / `TransitionDef`): each transition declares
 `from[]` / `to` / `trigger` / `requiredRole` / `requiredFields[]` / `policyHooks[]` /

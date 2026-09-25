@@ -190,6 +190,15 @@ describe('POPULATION — what a STATE precondition can and cannot see, derived',
       ).toBe(true);
     }
     expect([...blind.pairs]).toContain('rfq|t_rfq_award_partial|t_rfq_award_partial');
+    // RFx C2 — two more of the same two kinds, pinned by name. The partial
+    // cancel is a SELF-LOOP at `Partly awarded`: a second cancel raced there
+    // is invisible to a state comparison. Its policy refuses cancelling an
+    // award already cancelled (AWARD_NOT_ACTIVE), which covers the same-award
+    // race; a race on a different award is the open content precondition.
+    // "Raised in SAP" is STATE-PRESERVING: a cancel raced after a marking
+    // passes this gate and is refused by its policy (AWARD_RAISED_IN_SAP).
+    expect([...blind.pairs]).toContain('rfq|t_rfq_award_cancel_partial|t_rfq_award_cancel_partial');
+    expect([...blind.pairs]).toContain('rfq|t_rfq_award_sap_raised|t_rfq_award_cancel');
     expect([...blind.pairs]).toContain('enforcement|t_enforcement_set|t_enforcement_set');
     expect([...blind.pairs]).toContain('rfq|t_rfq_fx_pin|t_rfq_award');
   });

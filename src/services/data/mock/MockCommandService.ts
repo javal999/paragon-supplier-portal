@@ -184,6 +184,8 @@ import { lineHistories, requirementAt } from '../../engine/lines';
 import type { ProposalType } from '../../engine/reschedule';
 // ── REQ-E03-01 to REQ-E03-05 — RFx management ──────────────────────────────
 import {
+  awardCancellationStore,
+  awardSapMarkStore,
   awardStore,
   negotiationRoundStore,
   rfiEventStore,
@@ -205,6 +207,13 @@ import {
   lineBreakOf,
   type AwardItem,
 } from '../../sourcing/awardShape';
+import {
+  awardCancelRefusal,
+  awardCancelRefusalText,
+  awardSapMarkRefusal,
+  awardsInForce,
+  type AwardTrail,
+} from '../../sourcing/awardStatus';
 import { gateRefusal } from '../../sourcing/complianceGate';
 import { rfiTemplate } from '../../sourcing/rfxConfig';
 import type {
@@ -1501,6 +1510,43 @@ const rfqTarget: CommandTarget = {
           notAwardedSupplierIds: final ? rfq.invitedSupplierIds.filter((sid) => !named.has(sid)) : [],
         });
         break;
+      }
+      // RFx C2 (NR-3 BR-09, BR-11; AR-08) — a cancel APPENDS a cancellation
+      // naming the award, with who, when and why. The award record is not
+      // touched: its status is derived at read. The RFQ's award pointer then
+      // names the newest award still in force, or nothing.
+      case 't_rfq_award_cancel':
+      case 't_rfq_award_cancel_partial': {
+        awardCancellationStore.add({
+          id: awardCancellationStore.nextId(),
+          awardId: String(payload.awardId),
+          cancelledAt: rfxNow(),
+          reason: String(payload.cancelReason ?? '').trim(),
+          by: scope.actor ?? NO_PERSON,
+        });
+        const inForce = rfqAwardsOf(id)[0]?.lines[0];
+        rfqStore.update(id, (r) => {
+          const { awardedQuotationId: _q, awardedSupplierId: _s, ...rest } = r;
+          return {
+            ...rest,
+            status: toState as RFQStatus,
+            ...(inForce ? { awardedQuotationId: inForce.quotationId, awardedSupplierId: inForce.supplierId } : {}),
+          };
+        });
+        return;
+      }
+      // RFx C2 (NR-3 BR-10, BR-11) — "Raised in SAP" APPENDS a marking with
+      // the SAP document number the buyer typed. State-preserving: nothing
+      // below the switch runs for it.
+      case 't_rfq_award_sap_raised': {
+        awardSapMarkStore.add({
+          id: awardSapMarkStore.nextId(),
+          awardId: String(payload.awardId),
+          sapDocumentNo: String(payload.sapDocumentNo).trim(),
+          markedAt: rfxNow(),
+          by: scope.actor ?? NO_PERSON,
+        });
+        return;
       }
       default:
         break;
@@ -3513,9 +3559,22 @@ bindPolicyHook(POLICY_HOOKS.NEGOTIATION_ROUND_VALID, ({ payload }) => {
 
 // ── RFx C1 — the award (NR-3 BR-02 to BR-08; AR-04) ─────────────────────────
 
-/** The awards already recorded on an RFQ (the store keeps the newest first). */
-const rfqAwardsOf = (rfqId: string) =>
+/** RFx C2 — the appended cancellations and SAP markings, as the rules read them. */
+const awardTrail = (): AwardTrail => ({
+  cancellations: awardCancellationStore.all(),
+  sapMarks: awardSapMarkStore.all(),
+});
+
+/** Every award recorded on an RFQ, cancelled ones included (newest first). */
+const rfqAwardRecordsOf = (rfqId: string) =>
   awardStore.all().filter((a) => a.eventType === 'rfq' && a.eventId === rfqId);
+
+/**
+ * The awards IN FORCE on an RFQ (the store keeps the newest first). RFx C2 —
+ * a cancelled award is left out, so its items are open to a new award and its
+ * quotes are no longer "named by an award" (NR-3 BR-09).
+ */
+const rfqAwardsOf = (rfqId: string) => awardsInForce(rfqAwardRecordsOf(rfqId), awardTrail());
 
 /**
  * The award lines a payload describes. `awardLines` when sent. Without them —
@@ -3612,6 +3671,32 @@ bindPolicyHook(POLICY_HOOKS.RFQ_AWARD_GOVERNED, ({ payload, entityId, toState })
     return { ok: false, reason: awardRefusalText({ code: 'AWARD_REASON_REQUIRED', item: departing[0]!.name }) };
   }
   return { ok: true };
+});
+
+// RFx C2 (NR-3 BR-09, D-7) — ONE policy for the cancel pair, told apart by the
+// target state: `Closed` is the full cancel, `Partly awarded` the partial one.
+// The rule is `awardCancelRefusal`, which a screen can pre-check with (RFX-R2).
+bindPolicyHook(POLICY_HOOKS.RFQ_AWARD_CANCEL_GOVERNED, ({ payload, entityId, toState }) => {
+  const refusal = awardCancelRefusal({
+    awardId: typeof payload.awardId === 'string' ? payload.awardId : '',
+    reason: typeof payload.cancelReason === 'string' ? payload.cancelReason : '',
+    eventAwards: rfqAwardRecordsOf(entityId),
+    trail: awardTrail(),
+    partial: toState === 'Partly awarded',
+  });
+  return refusal ? { ok: false, reason: awardCancelRefusalText(refusal) } : { ok: true };
+});
+
+// RFx C2 (NR-3 BR-10) — "Raised in SAP": an active award of this event, not
+// already marked, with a SAP document number.
+bindPolicyHook(POLICY_HOOKS.RFQ_AWARD_SAP_GOVERNED, ({ payload, entityId }) => {
+  const refusal = awardSapMarkRefusal({
+    awardId: typeof payload.awardId === 'string' ? payload.awardId : '',
+    sapDocumentNo: typeof payload.sapDocumentNo === 'string' ? payload.sapDocumentNo : '',
+    eventAwards: rfqAwardRecordsOf(entityId),
+    trail: awardTrail(),
+  });
+  return refusal ? { ok: false, reason: awardCancelRefusalText(refusal) } : { ok: true };
 });
 
 const incomingShipmentTarget: CommandTarget = {
@@ -4503,6 +4588,25 @@ const resolveCascades = (ctx: CascadeContext): CascadeCommand[] => {
         // because the target cannot see which RFQ fired it.
         payload: { linkedRfq: ctx.entityId },
       }));
+    }
+    // ── RFx C2 (AR-06) · an award cancel reinstates the quotes it decided ──
+    // The cancellation is already appended, so `rfqAwardsOf` reads only the
+    // awards still in force. Reinstated: (1) every quote the cancelled award
+    // named that no award in force still names — the award cascade made them
+    // Awarded; (2) every Rejected quote of the event. Only a FINAL award
+    // rejects (C1), and after a cancel the event is never Awarded, so no award
+    // in force is final and no rejection it made still stands. Legality is the
+    // machine's: a named quote in any other state is refused and recorded.
+    if (ctx.transitionId === 't_rfq_award_cancel' || ctx.transitionId === 't_rfq_award_cancel_partial') {
+      const cancelled = awardStore.get(typeof ctx.payload.awardId === 'string' ? ctx.payload.awardId : '');
+      if (!cancelled) return [];
+      const stillNamed = new Set(rfqAwardsOf(ctx.entityId).flatMap((a) => a.lines.map((l) => l.quotationId)));
+      const named = new Set(cancelled.lines.map((l) => l.quotationId).filter((q) => !stillNamed.has(q)));
+      const siblings = quotationStore.forRfq(ctx.entityId);
+      const ids = siblings.filter((q) => named.has(q.id) || q.status === 'Rejected').map((q) => q.id);
+      return cascadesFor(ctx.transitionId).flatMap((link) =>
+        ids.map((entityId) => ({ entity: link.targetEntity, entityId, transitionId: link.targetTransitionId })),
+      );
     }
     if (ctx.transitionId !== 't_rfq_award' && ctx.transitionId !== 't_rfq_award_partial') return [];
     const winnerId =
