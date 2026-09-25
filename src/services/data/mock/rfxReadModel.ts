@@ -654,6 +654,9 @@ export function rfpAwardViews(supplierId: string | null): readonly RfpAwardView[
         ...(supplierId
           ? { outcome: status === 'Cancelled' ? 'Withdrawn' : lines.length > 0 ? 'Awarded' : 'Not awarded' }
           : {}),
+        // RFx D3 (RFX-R4) — WHICH options this award settled, from the FULL
+        // record: refs only, never whose line or what share.
+        settledOptionRefs: [...new Set(award.lines.map((l) => l.optionRef))],
       } satisfies RfpAwardView;
     });
 }

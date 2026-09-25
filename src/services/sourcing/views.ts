@@ -238,4 +238,12 @@ export interface RfpAwardView {
   readonly sapMark?: AwardSapMark;
   /** A supplier's read only: its own outcome on this award. */
   readonly outcome?: RfpAwardOutcome;
+  /**
+   * RFx D3 (NR-2 BR-09; NR-3 BR-12) — the option refs this award awarded, to
+   * ANY supplier. A supplier reads it too, with no supplier, share or quantity
+   * attached: it is how a supplier on the award reads "Not awarded" on an
+   * option it holds no line on, rather than "Pending" (the RFQ's
+   * `settledItemKeys`). Derived from the full record at read.
+   */
+  readonly settledOptionRefs: readonly string[];
 }

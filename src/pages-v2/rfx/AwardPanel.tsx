@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import Button from '../../components/ui-v2/Button';
@@ -8,40 +8,61 @@ import Table from '../../components/ui-v2/Table';
 import TableHeader, { TableHeaderCell } from '../../components/ui-v2/TableHeader';
 import TableRow from '../../components/ui-v2/TableRow';
 import TableCell from '../../components/ui-v2/TableCell';
+import { formatDate } from '../../lib/format';
 import type { RFQ } from '../../data/mockRfqs';
 import type { Quotation } from '../../data/mockQuotations';
 import type { GateResult } from '../../services/sourcing/complianceGate';
-import type { AwardLine, AwardRecord, AwardSplitBasis } from '../../services/sourcing/types';
+import type {
+  AnyAwardLine,
+  AwardLine,
+  AwardRecord,
+  AwardSplitBasis,
+  RfpAwardLine,
+} from '../../services/sourcing/types';
+import type { RfpAwardView, RfpOfferRoundView, RfpRoundOptionView } from '../../services/sourcing/views';
 import { itemCostAt, itemOfLine, splitQuantities } from '../../services/sourcing/rfqComparison';
 import {
   awardItemsDepartingBest,
   awardItemsOf,
   awardShapeRefusal,
+  itemOfAwardLine,
   itemsOpenAfter,
   settlesRestWithoutLines,
   type AwardItem,
   type AwardItemBreak,
+  type AwardQuoteShape,
   type AwardRefusal,
 } from '../../services/sourcing/awardShape';
+import { awardItemsOfRfp } from '../../services/sourcing/rfpAward';
+import { firmPricesInForce, type FirmPriceInForce } from '../../services/sourcing/rfpFirmOffer';
 import { EmptyRow, GateMarker, money, qty } from './rfxDisplay';
 import { FirmPill } from './rfxAuthoringDisplay';
 
 // ────────────────────────────────────────────────────────────────────────────
 // THE AWARD PANEL — ONE PANEL FOR EVERY RFQ (RFx C3; NR-3 BR-02 to BR-07,
-// AR-03, AR-04). It grew out of the tiered per-item award form, and a legacy
-// RFQ renders through it too: the award rule's item list (`awardItemsOf`) is
-// the same for both kinds, so the panel reads items, never "tiered or not".
+// AR-03, AR-04) AND FOR AN RFP (RFx D3; NR-2 BR-05, BR-06). It grew out of the
+// tiered per-item award form, and a legacy RFQ renders through it too: the
+// award rule's item list (`awardItemsOf`) is the same for both kinds, so the
+// panel reads items, never "tiered or not". An RFP renders through it with
+// the rule's RFP item list (`awardItemsOfRfp`: one item per option of a closed
+// firm-offer round, its quantity points as breaks), so a buyer awards an RFP
+// option exactly as an RFQ item.
 //
 // Per item the buyer picks a break, splits by % or by quantity (the other side
 // is derived and shown read-only), or leaves the item "Not awarded now" (it
 // stays open: the award is PARTIAL) or, on the final award, "Will not award".
 //
 // ⚠️ **THE PAGE JUDGES WITH THE VERB'S OWN RULE.** The lines it sends are
-// checked by `awardShapeRefusal` over `awardItemsOf(rfq, awards in force)`, then
-// for items left open and for the reason, exactly as `rfq_award_governed`
-// checks them, so a form the page lets through is one the verb accepts and a
-// refusal reads the same on both sides. The page is the message; the verb is
-// the lock.
+// checked by `awardShapeRefusal` over the verb's own item list, then for items
+// left open and for the reason, exactly as `rfq_award_governed` /
+// `rfp_award_governed` check them, so a form the page lets through is one the
+// verb accepts and a refusal reads the same on both sides. The page is the
+// message; the verb is the lock.
+//
+// The two event kinds differ only in what an ITEM MODEL answers (below): who
+// can be awarded an item (a quote, or a firm offer in force), what price a row
+// shows, how a line is written, and whether a reason is always required (an
+// RFP: NR-2 BR-06) or only when the award departs from the best score (an RFQ).
 // ────────────────────────────────────────────────────────────────────────────
 
 /** What the buyer decided for one open item. */
@@ -52,7 +73,7 @@ interface ItemDraft {
   readonly basis: AwardSplitBasis;
   /** Unset = the default break (the evaluation break on a tiered RFQ). */
   readonly breakQty?: number;
-  /** quotationId → the typed share (%) or quantity, as text. */
+  /** bid key → the typed share (%) or quantity, as text. */
   readonly values: Readonly<Record<string, string>>;
 }
 
@@ -60,15 +81,18 @@ const EMPTY_DRAFT: ItemDraft = { choice: 'award', basis: 'pct', values: {} };
 
 const round2 = (n: number): number => Math.round(n * 100) / 100;
 
-/** The award this panel asks the page to dispatch. */
-export interface PanelAward {
-  /** `award` (the final award) when true, `awardPartial` when false. */
+/** The award a panel asks the page to dispatch. */
+export interface ItemPanelAward<L extends AnyAwardLine> {
+  /** The final award when true, the partial award when false. */
   readonly final: boolean;
-  readonly lines: AwardLine[];
+  readonly lines: L[];
   readonly reason: string;
   /** "Will not award" item keys (final award only). */
   readonly notAwardedItems: string[];
 }
+
+/** The award the RFQ panel asks the page to dispatch (`award` / `awardPartial`). */
+export type PanelAward = ItemPanelAward<AwardLine>;
 
 /** A shape refusal in the reader's language. */
 export const awardRefusalMessage = (t: TFunction, r: AwardRefusal, supplierName: (id: string) => string): string =>
@@ -99,7 +123,236 @@ export function itemLabel(t: TFunction, rfq: RFQ, item: AwardItem): string {
     : t('rfqCompare.award.wholeEvent');
 }
 
-/** The break an item is awarded at in this draft. */
+// ── The item model: what an event kind answers ─────────────────────────────
+
+/** One party that can be awarded an item: an RFQ quote, or an RFP supplier's firm offer. */
+export interface AwardBid {
+  /** The key a typed value is stored under (a quotation id, or a supplier id on an RFP). */
+  readonly key: string;
+  readonly supplierId: string;
+}
+
+/** The typed and derived sides of one line, before the event kind writes it. */
+interface LineValues {
+  readonly sharePct: number;
+  readonly quantity: number;
+  readonly basis: AwardSplitBasis;
+}
+
+interface ItemModel<L extends AnyAwardLine> {
+  /** The verb's own item list, with the awards in force applied (`awardedIn`). */
+  readonly items: readonly AwardItem[];
+  readonly partlyAwarded: boolean;
+  /** The quotes the shape rule reads (none on an RFP: each item judges its own offers). */
+  readonly quotes: readonly AwardQuoteShape[];
+  readonly defaultBreak: number | null;
+  /** NR-2 BR-06 — an RFP award always needs a reason. */
+  readonly reasonAlways: boolean;
+  /** "Will not award the rest": offered only where the verb accepts a final award with no lines. */
+  readonly offerSettleRest: boolean;
+  readonly hintKey: string;
+  readonly partialNoteKey: string;
+  readonly label: (item: AwardItem) => string;
+  readonly bidsFor: (item: AwardItem) => readonly AwardBid[];
+  readonly priceHeader: (item: AwardItem, brk: AwardItemBreak) => string;
+  readonly priceCell: (item: AwardItem, bid: AwardBid, brk: AwardItemBreak) => React.ReactNode;
+  readonly uomOf: (item: AwardItem) => string;
+  readonly lineOf: (item: AwardItem, bid: AwardBid, brk: AwardItemBreak, v: LineValues) => L;
+  /** Which bid a line belongs to (its `AwardBid.key`). */
+  readonly bidKeyOf: (line: L) => string;
+  /** The best-scored bid for an item at a break, or null (none, a tie, or not scored). */
+  readonly bestOf: (item: AwardItem, breakQty: number) => string | null;
+}
+
+/** What every panel takes besides its item model. */
+interface PanelCommon<L extends AnyAwardLine> {
+  qualifies: (supplierId: string) => boolean;
+  gateOf: (supplierId: string) => GateResult | undefined;
+  supplierName: (supplierId: string) => string;
+  /** BL-64 — no bidding supplier passes CR-23: rows show why, and nothing is sent. */
+  noneAwardable: boolean;
+  pending: boolean;
+  onAward: (award: ItemPanelAward<L>) => void;
+}
+
+// ── The RFQ panel (C3) ───────────────────────────────────────────────────────
+
+export interface AwardPanelProps extends PanelCommon<AwardLine> {
+  rfq: RFQ;
+  /** The CURRENT version of each bid on the event. */
+  quotes: readonly Quotation[];
+  /** The awards of this event still in force (not cancelled). */
+  inForce: readonly AwardRecord[];
+  /** The break a tiered item is awarded at unless the buyer picks another. */
+  defaultBreak: number | null;
+  /** The best-scored quote for an item at a break, or null (none, or a tie). */
+  bestOf: (item: AwardItem, breakQty: number) => string | null;
+}
+
+export const AwardPanel: React.FC<AwardPanelProps> = ({ rfq, quotes, inForce, defaultBreak, bestOf, ...common }) => {
+  const { t } = useTranslation();
+  const byId = new Map(quotes.map((q) => [q.id, q] as const));
+  const model: ItemModel<AwardLine> = {
+    items: awardItemsOf(rfq, inForce),
+    partlyAwarded: rfq.status === 'Partly awarded',
+    quotes,
+    defaultBreak,
+    reasonAlways: false,
+    offerSettleRest: true,
+    hintKey: 'rfqCompare.award.hint',
+    partialNoteKey: 'rfqCompare.award.partialNote',
+    label: (item) => itemLabel(t, rfq, item),
+    // A tiered item's quoting suppliers; every bid on a legacy one.
+    bidsFor: (item) =>
+      (item.tiered
+        ? quotes.filter((q) => (q.itemQuotes ?? []).some((iq) => iq.itemLineNo === item.lineNo))
+        : quotes
+      ).map((q) => ({ key: q.id, supplierId: q.supplierId })),
+    priceHeader: (item, brk) =>
+      item.tiered ? t('rfqCompare.cmp.col.totalAtBreak', { qty: qty(brk.qty) }) : t('rfx.cmp.row.unitPrice'),
+    priceCell: (item, bid, brk) => {
+      const q = byId.get(bid.key)!;
+      const rfqItem = item.tiered ? itemOfLine(rfq, item.lineNo) : undefined;
+      if (item.tiered) {
+        const cost = rfqItem ? itemCostAt(rfq, rfqItem, q, brk.qty) : null;
+        return cost ? (
+          <Data>{money(cost.total, q.currency ?? rfq.currency)}</Data>
+        ) : (
+          <span className="text-xs text-text-tertiary">{t('rfqCompare.cmp.notPriced')}</span>
+        );
+      }
+      const lineUnit = q.lines?.find((l) => l.materialCode === item.itemCode)?.unitPrice ?? q.unitPrice;
+      return <Data>{money(lineUnit, q.currency ?? rfq.currency)}</Data>;
+    },
+    uomOf: (item) =>
+      (item.tiered ? itemOfLine(rfq, item.lineNo)?.uom : undefined) ??
+      rfq.lineItems?.find((l) => l.materialCode === item.itemCode)?.uom ??
+      rfq.uom,
+    lineOf: (item, bid, brk, v) => ({
+      supplierId: bid.supplierId,
+      quotationId: bid.key,
+      itemCode: item.itemCode,
+      ...(item.tiered ? { itemLineNo: item.lineNo } : {}),
+      sharePct: v.sharePct,
+      quantity: v.quantity,
+      splitBasis: v.basis,
+      awardTierQty: brk.qty,
+    }),
+    bidKeyOf: (line) => line.quotationId,
+    // The "Best scored" marker is a tiered RFQ's, per item and break.
+    bestOf,
+  };
+  return <ItemAwardForm model={model} {...common} showBestMarker={(item) => item.tiered} />;
+};
+
+// ── The RFP panel (D3) ───────────────────────────────────────────────────────
+
+export interface RfpAwardPanelProps extends PanelCommon<RfpAwardLine> {
+  rfpId: string;
+  /** The RFP's stored status (`Partly awarded` decides the settle-rest rule). */
+  status: string;
+  currency: string;
+  /** Every firm-offer round of this RFP, with its offers (the buyer's read). */
+  rounds: readonly RfpOfferRoundView[];
+  /** The awards of this RFP still in force (not cancelled). */
+  inForce: readonly RfpAwardView[];
+  /** The clock a firm offer's validity is judged at (the verb's `rfxNow`). */
+  nowIso: string;
+}
+
+/** Each option once, by its ref, from the rounds that name it. */
+export const optionsOfRounds = (rounds: readonly RfpOfferRoundView[]): readonly RfpRoundOptionView[] => [
+  ...new Map(rounds.flatMap((r) => r.options).map((o) => [o.ref, o] as const)).values(),
+];
+
+/**
+ * The firm prices the award reads: the LAST offer per supplier and option
+ * across the CLOSED rounds only (NR-2 BR-04), exactly as `awardItemsOfRfp`
+ * judges a line.
+ */
+export function awardableFirmPrices(rounds: readonly RfpOfferRoundView[]): readonly FirmPriceInForce[] {
+  const closed = rounds.filter((r) => r.closedAt !== undefined);
+  return firmPricesInForce(closed.flatMap((r) => r.offers.map((o) => ({ ...o, roundNumber: r.roundNumber }))));
+}
+
+export const RfpAwardPanel: React.FC<RfpAwardPanelProps> = ({
+  rfpId,
+  status,
+  currency,
+  rounds,
+  inForce,
+  nowIso,
+  ...common
+}) => {
+  const { t } = useTranslation();
+  const options = optionsOfRounds(rounds);
+  const offers = rounds.flatMap((r) => r.offers);
+  const prices = awardableFirmPrices(rounds);
+  const priceAt = (supplierId: string, ref: string, breakQty: number) =>
+    prices.find((p) => p.supplierId === supplierId && p.optionRef === ref && p.qty === breakQty);
+  const model: ItemModel<RfpAwardLine> = {
+    items: awardItemsOfRfp({ id: rfpId }, rounds, offers, {
+      nowIso,
+      options,
+      priorAwards: inForce.map((a) => ({ ...a, reason: a.reason ?? '' })),
+    }),
+    partlyAwarded: status === 'Partly awarded',
+    quotes: [],
+    defaultBreak: null,
+    reasonAlways: true,
+    // The RFP verb refuses a final award with no lines (AWARD_EMPTY), so the
+    // zero-line "Will not award the rest" is not offered here.
+    offerSettleRest: false,
+    hintKey: 'rfx.rfpAward.hint',
+    partialNoteKey: 'rfx.rfpAward.partialNote',
+    label: (item) => options.find((o) => o.ref === item.key)?.title ?? item.key,
+    bidsFor: (item) =>
+      [...new Set(prices.filter((p) => p.optionRef === item.key).map((p) => p.supplierId))].map((supplierId) => ({
+        key: supplierId,
+        supplierId,
+      })),
+    priceHeader: (_item, brk) => t('rfx.rfpAward.priceAt', { qty: qty(brk.qty) }),
+    priceCell: (item, bid, brk) => {
+      const p = priceAt(bid.supplierId, item.key, brk.qty);
+      return p ? (
+        <span className="flex flex-col">
+          <Data>{money(p.unitPrice, currency)}</Data>
+          <span className="text-xs text-text-tertiary">
+            {t('rfx.firm.validUntil', { date: formatDate(p.validUntil) })}
+          </span>
+        </span>
+      ) : (
+        <span className="text-xs text-text-tertiary">{t('rfx.rfpAward.noFirmPrice')}</span>
+      );
+    },
+    uomOf: () => '',
+    lineOf: (item, bid, brk, v) => {
+      // The offer the supplier's price in force comes from: the rule refuses a
+      // line naming any other (an older offer, or none at this point).
+      const p =
+        priceAt(bid.supplierId, item.key, brk.qty) ??
+        prices.find((x) => x.supplierId === bid.supplierId && x.optionRef === item.key);
+      const offer = p ? offers.find((o) => o.roundId === p.roundId && o.supplierId === bid.supplierId) : undefined;
+      return {
+        supplierId: bid.supplierId,
+        optionRef: item.key,
+        firmOfferId: offer?.id ?? '',
+        sharePct: v.sharePct,
+        quantity: v.quantity,
+        splitBasis: v.basis,
+        awardTierQty: brk.qty,
+      };
+    },
+    bidKeyOf: (line) => line.supplierId,
+    // An RFP award is not judged against a best score: its reason is always required.
+    bestOf: () => null,
+  };
+  return <ItemAwardForm model={model} {...common} showBestMarker={() => false} />;
+};
+
+// ── The shared form ──────────────────────────────────────────────────────────
+
+/** The breaks an item is awarded at in this draft. */
 function breakOfDraft(item: AwardItem, draft: ItemDraft, defaultBreak: number | null): AwardItemBreak | undefined {
   const wanted = draft.breakQty ?? defaultBreak ?? undefined;
   return item.breaks.find((b) => b.qty === wanted) ?? item.breaks[0];
@@ -110,66 +363,40 @@ function breakOfDraft(item: AwardItem, draft: ItemDraft, defaultBreak: number | 
  * (`splitQuantities`, remainder unit on the first line, as the rule derives
  * it); a quantity derives its share over the break. Blank or zero is no line.
  */
-function linesOfItem(
+function linesOfItem<L extends AnyAwardLine>(
+  model: ItemModel<L>,
   item: AwardItem,
   draft: ItemDraft,
   brk: AwardItemBreak,
-  quotes: readonly Pick<Quotation, 'id' | 'supplierId'>[],
-): AwardLine[] {
-  const picked = quotes.flatMap((q) => {
-    const v = Number(draft.values[q.id]);
-    return Number.isFinite(v) && v > 0 ? [{ q, v }] : [];
+  bids: readonly AwardBid[],
+): L[] {
+  const picked = bids.flatMap((bid) => {
+    const v = Number(draft.values[bid.key]);
+    return Number.isFinite(v) && v > 0 ? [{ bid, v }] : [];
   });
   const qtys = draft.basis === 'pct' ? splitQuantities(brk.pieces, picked.map((p) => p.v)) : [];
-  return picked.map(({ q, v }, i) => ({
-    supplierId: q.supplierId,
-    quotationId: q.id,
-    itemCode: item.itemCode,
-    ...(item.tiered ? { itemLineNo: item.lineNo } : {}),
-    sharePct: draft.basis === 'pct' ? v : round2((v * 100) / brk.pieces),
-    quantity: draft.basis === 'pct' ? qtys[i]! : v,
-    splitBasis: draft.basis,
-    awardTierQty: brk.qty,
-  }));
+  return picked.map(({ bid, v }, i) =>
+    model.lineOf(item, bid, brk, {
+      sharePct: draft.basis === 'pct' ? v : round2((v * 100) / brk.pieces),
+      quantity: draft.basis === 'pct' ? qtys[i]! : v,
+      basis: draft.basis,
+    }),
+  );
 }
 
-export interface AwardPanelProps {
-  rfq: RFQ;
-  /** The CURRENT version of each bid on the event. */
-  quotes: readonly Quotation[];
-  /** The awards of this event still in force (not cancelled). */
-  inForce: readonly AwardRecord[];
-  /** The break a tiered item is awarded at unless the buyer picks another. */
-  defaultBreak: number | null;
-  /** The best-scored quote for an item at a break, or null (none, or a tie). */
-  bestOf: (item: AwardItem, breakQty: number) => string | null;
-  qualifies: (supplierId: string) => boolean;
-  gateOf: (supplierId: string) => GateResult | undefined;
-  supplierName: (supplierId: string) => string;
-  /** BL-64 — no quoting supplier passes CR-23: rows show why, and nothing is sent. */
-  noneAwardable: boolean;
-  pending: boolean;
-  onAward: (award: PanelAward) => void;
+interface ItemAwardFormProps<L extends AnyAwardLine> extends PanelCommon<L> {
+  model: ItemModel<L>;
+  /** Mark the best-scored bid on an item (a tiered RFQ's per-item score). */
+  showBestMarker: (item: AwardItem) => boolean;
 }
 
-export const AwardPanel: React.FC<AwardPanelProps> = ({
-  rfq,
-  quotes,
-  inForce,
-  defaultBreak,
-  bestOf,
-  qualifies,
-  gateOf,
-  supplierName,
-  noneAwardable,
-  pending,
-  onAward,
-}) => {
+function ItemAwardForm<L extends AnyAwardLine>(props: ItemAwardFormProps<L>): React.ReactElement {
+  const { model, qualifies, supplierName, noneAwardable, pending, onAward } = props;
   const { t } = useTranslation();
   const [drafts, setDrafts] = useState<Record<string, ItemDraft>>({});
   const [reason, setReason] = useState('');
-  const qualified = useMemo(() => quotes.filter((q) => qualifies(q.supplierId)), [quotes, qualifies]);
-  const items = awardItemsOf(rfq, inForce);
+  const { items, defaultBreak, partlyAwarded } = model;
+  const qualifiedBids = (item: AwardItem) => model.bidsFor(item).filter((b) => qualifies(b.supplierId));
   const openItems = items.filter((i) => !i.awardedIn);
   const draftOf = (key: string): ItemDraft => drafts[key] ?? EMPTY_DRAFT;
   const setDraft = (key: string, next: ItemDraft) => setDrafts((prev) => ({ ...prev, [key]: next }));
@@ -177,20 +404,19 @@ export const AwardPanel: React.FC<AwardPanelProps> = ({
   const lines = openItems.flatMap((item) => {
     const d = draftOf(item.key);
     const brk = breakOfDraft(item, d, defaultBreak);
-    return d.choice === 'award' && brk ? linesOfItem(item, d, brk, qualified) : [];
+    return d.choice === 'award' && brk ? linesOfItem(model, item, d, brk, qualifiedBids(item)) : [];
   });
   // NR-3 BR-06 — an item left "Not awarded now" makes this a PARTIAL award;
   // "Will not award" rides on the final award only, so the two are exclusive.
   const final = !openItems.some((i) => draftOf(i.key).choice === 'open');
   const willNot = final ? openItems.filter((i) => draftOf(i.key).choice === 'willNot').map((i) => i.key) : [];
-  const partlyAwarded = rfq.status === 'Partly awarded';
   const touched = lines.length > 0 || openItems.some((i) => draftOf(i.key).choice !== 'award');
 
   const shapeRefusal = awardShapeRefusal(
     items,
     lines,
-    quotes,
-    final ? { partlyAwarded, notAwardedKeys: willNot } : undefined,
+    model.quotes,
+    final && model.offerSettleRest ? { partlyAwarded, notAwardedKeys: willNot } : undefined,
   );
   const open = shapeRefusal ? [] : itemsOpenAfter(items, lines, willNot);
   const refusal: AwardRefusal | null =
@@ -200,33 +426,32 @@ export const AwardPanel: React.FC<AwardPanelProps> = ({
       : !final && open.length === 0
         ? { code: 'AWARD_NOTHING_OPEN' }
         : null);
-  const departing = refusal ? [] : awardItemsDepartingBest(items, lines, bestOf);
-  const needsReason = departing.length > 0;
+  const departing = refusal || model.reasonAlways ? [] : awardItemsDepartingBest(items, lines, model.bestOf);
+  const needsReason = model.reasonAlways || departing.length > 0;
 
   // "Will not award the rest" — the final award with NO lines, legal only on a
   // Partly awarded RFQ and only when it marks every open item (C3's rule).
   const openKeys = openItems.map((i) => i.key);
   const canSettleRest =
-    partlyAwarded && settlesRestWithoutLines(items, { partlyAwarded, notAwardedKeys: openKeys });
+    model.offerSettleRest &&
+    partlyAwarded &&
+    settlesRestWithoutLines(items, { partlyAwarded, notAwardedKeys: openKeys });
 
   return (
     <div className="space-y-4" data-testid="award-form">
-      <p className="text-xs text-text-tertiary">{t('rfqCompare.award.hint')}</p>
+      <p className="text-xs text-text-tertiary">{t(model.hintKey)}</p>
       {items.map((item) => (
         <AwardItemRow
           key={item.key}
-          rfq={rfq}
+          {...props}
           item={item}
+          label={model.label(item)}
           draft={draftOf(item.key)}
           brk={breakOfDraft(item, draftOf(item.key), defaultBreak)}
-          lines={lines.filter((l) => itemMatches(item, l))}
-          quotes={quotesFor(item, quotes)}
+          lines={lines.filter((l) => itemOfAwardLine(items, l)?.key === item.key)}
+          bids={model.bidsFor(item)}
           otherOpenNow={openItems.some((i) => i.key !== item.key && draftOf(i.key).choice === 'open')}
           otherWillNot={openItems.some((i) => i.key !== item.key && draftOf(i.key).choice === 'willNot')}
-          bestOf={bestOf}
-          qualifies={qualifies}
-          gateOf={gateOf}
-          supplierName={supplierName}
           onChange={(next) => setDraft(item.key, next)}
         />
       ))}
@@ -238,7 +463,7 @@ export const AwardPanel: React.FC<AwardPanelProps> = ({
       )}
       {!final && !refusal && (
         <p className="text-xs text-text-secondary" data-testid="award-partial-note">
-          {t('rfqCompare.award.partialNote')}
+          {t(model.partialNoteKey)}
         </p>
       )}
       {needsReason && (
@@ -247,7 +472,9 @@ export const AwardPanel: React.FC<AwardPanelProps> = ({
             {t('rfx.award.reason')}
           </label>
           <p className="text-xs text-warning-hover mb-1">
-            {t('rfqCompare.award.reasonItems', { items: departing.map((i) => i.name).join(', ') })}
+            {model.reasonAlways
+              ? t('rfx.rfpAward.reasonAlways')
+              : t('rfqCompare.award.reasonItems', { items: departing.map((i) => i.name).join(', ') })}
           </p>
           <input
             id="award-reason"
@@ -285,40 +512,28 @@ export const AwardPanel: React.FC<AwardPanelProps> = ({
       )}
     </div>
   );
-};
-
-/** Does this award line name this item? (The rule's own match, for display.) */
-const itemMatches = (item: AwardItem, line: AwardLine): boolean =>
-  item.tiered ? line.itemLineNo === item.lineNo : line.itemLineNo === undefined && line.itemCode === item.itemCode;
-
-/** The bids offered on an item: a tiered item's quoting suppliers, every bid on a legacy one. */
-const quotesFor = (item: AwardItem, quotes: readonly Quotation[]): readonly Quotation[] =>
-  item.tiered ? quotes.filter((q) => (q.itemQuotes ?? []).some((iq) => iq.itemLineNo === item.lineNo)) : quotes;
+}
 
 // ── One item ────────────────────────────────────────────────────────────────
 
-interface ItemRowProps {
-  rfq: RFQ;
+interface ItemRowProps<L extends AnyAwardLine> extends ItemAwardFormProps<L> {
   item: AwardItem;
+  label: string;
   draft: ItemDraft;
   brk: AwardItemBreak | undefined;
-  lines: readonly AwardLine[];
-  quotes: readonly Quotation[];
+  lines: readonly L[];
+  bids: readonly AwardBid[];
   /** Another item is "Not awarded now", so this award is partial: no "Will not award". */
   otherOpenNow: boolean;
   /** Another item is "Will not award", so this award is final: no "Not awarded now". */
   otherWillNot: boolean;
-  bestOf: (item: AwardItem, breakQty: number) => string | null;
-  qualifies: (supplierId: string) => boolean;
-  gateOf: (supplierId: string) => GateResult | undefined;
-  supplierName: (supplierId: string) => string;
   onChange: (next: ItemDraft) => void;
 }
 
 const selectClass =
   'bg-white border border-border-input rounded-md px-3 h-9 text-sm focus:outline-none focus:border-action';
 
-const AwardItemRow: React.FC<ItemRowProps> = (props) => {
+function AwardItemRow<L extends AnyAwardLine>(props: ItemRowProps<L>): React.ReactElement {
   const { t } = useTranslation();
   const { item, draft, brk, lines } = props;
   const key = item.key;
@@ -330,7 +545,7 @@ const AwardItemRow: React.FC<ItemRowProps> = (props) => {
   return (
     <div className="border border-border-subtle rounded-md overflow-hidden" data-testid={`award-item-${key}`}>
       <div className="px-4 py-2 border-b border-border-subtle flex flex-wrap items-baseline justify-between gap-2">
-        <span className="text-sm font-semibold text-text-primary">{itemLabel(t, props.rfq, item)}</span>
+        <span className="text-sm font-semibold text-text-primary">{props.label}</span>
         {!item.awardedIn && draft.choice === 'award' && brk && (
           <Data
             className={`text-xs ${complete ? 'text-success' : 'text-text-tertiary'}`}
@@ -349,15 +564,22 @@ const AwardItemRow: React.FC<ItemRowProps> = (props) => {
       ) : (
         <>
           <ItemControls {...props} />
-          {draft.choice === 'award' && brk && <ItemSupplierTable {...props} brk={brk} />}
+          {draft.choice === 'award' && brk && <ItemBidTable {...props} brk={brk} />}
         </>
       )}
     </div>
   );
-};
+}
 
 /** The item's decision, its break and its split basis. */
-const ItemControls: React.FC<ItemRowProps> = ({ item, draft, brk, otherOpenNow, otherWillNot, onChange }) => {
+function ItemControls<L extends AnyAwardLine>({
+  item,
+  draft,
+  brk,
+  otherOpenNow,
+  otherWillNot,
+  onChange,
+}: ItemRowProps<L>): React.ReactElement {
   const { t } = useTranslation();
   const key = item.key;
   const basisButton = (basis: AwardSplitBasis, label: string) => (
@@ -428,28 +650,28 @@ const ItemControls: React.FC<ItemRowProps> = ({ item, draft, brk, otherOpenNow, 
       )}
     </div>
   );
-};
+}
 
-/** One input per supplier that can be awarded the item, and the derived side. */
-const ItemSupplierTable: React.FC<ItemRowProps & { brk: AwardItemBreak }> = (props) => {
+/** One input per bid that can be awarded the item, and the derived side. */
+function ItemBidTable<L extends AnyAwardLine>(props: ItemRowProps<L> & { brk: AwardItemBreak }): React.ReactElement {
   const { t } = useTranslation();
-  const { item, brk, quotes, draft } = props;
+  const { item, brk, bids, draft, model } = props;
   return (
     <Table>
       <TableHeader>
         <TableHeaderCell>{t('rfx.award.col.supplier')}</TableHeaderCell>
         <TableHeaderCell>
-          {item.tiered ? t('rfqCompare.cmp.col.totalAtBreak', { qty: qty(brk.qty) }) : t('rfx.cmp.row.unitPrice')}
+          {model.priceHeader(item, brk)}
           <FirmPill className="ml-2 normal-case" testId={`award-firm-${item.key}`} />
         </TableHeaderCell>
         <TableHeaderCell>{draft.basis === 'pct' ? t('rfx.award.col.share') : t('rfqCompare.award.qty')}</TableHeaderCell>
         <TableHeaderCell>{draft.basis === 'pct' ? t('rfqCompare.award.qty') : t('rfx.award.col.share')}</TableHeaderCell>
       </TableHeader>
       <tbody>
-        {quotes.map((q) => (
-          <AwardSupplierRow key={q.id} {...props} quote={q} />
+        {bids.map((bid) => (
+          <AwardBidRow key={bid.key} {...props} bid={bid} />
         ))}
-        {quotes.length === 0 && (
+        {bids.length === 0 && (
           <EmptyRow colSpan={4} testId={`award-item-empty-${item.key}`}>
             {t('rfqCompare.cmp.noQuotes')}
           </EmptyRow>
@@ -457,75 +679,63 @@ const ItemSupplierTable: React.FC<ItemRowProps & { brk: AwardItemBreak }> = (pro
       </tbody>
     </Table>
   );
-};
+}
 
-const AwardSupplierRow: React.FC<ItemRowProps & { brk: AwardItemBreak; quote: Quotation }> = ({
-  rfq,
+function AwardBidRow<L extends AnyAwardLine>({
+  model,
   item,
+  label,
   brk,
-  quote: q,
+  bid,
   draft,
   lines,
-  bestOf,
   qualifies,
   gateOf,
   supplierName,
+  showBestMarker,
   onChange,
-}) => {
+}: ItemRowProps<L> & { brk: AwardItemBreak; bid: AwardBid }): React.ReactElement {
   const { t } = useTranslation();
   const key = item.key;
-  const line = lines.find((l) => l.quotationId === q.id);
-  const rfqItem = item.tiered ? itemOfLine(rfq, item.lineNo) : undefined;
-  const cost = rfqItem ? itemCostAt(rfq, rfqItem, q, brk.qty) : null;
-  const lineUnit = q.lines?.find((l) => l.materialCode === item.itemCode)?.unitPrice ?? q.unitPrice;
-  const uom = rfqItem?.uom ?? rfq.lineItems?.find((l) => l.materialCode === item.itemCode)?.uom ?? rfq.uom;
+  const line = lines.find((l) => model.bidKeyOf(l) === bid.key);
+  const uom = model.uomOf(item);
   const side = draft.basis === 'pct' ? t('rfx.award.col.share') : t('rfqCompare.award.qty');
   return (
-    <TableRow data-testid={`award-input-${key}-${q.supplierId}`}>
+    <TableRow data-testid={`award-input-${key}-${bid.supplierId}`}>
       <TableCell>
-        {supplierName(q.supplierId)}
-        {item.tiered && bestOf(item, brk.qty) === q.id && (
+        {supplierName(bid.supplierId)}
+        {showBestMarker(item) && model.bestOf(item, brk.qty) === bid.key && (
           <StatusPill variant="success" className="ml-2">
             {t('rfqCompare.cmp.bestScored')}
           </StatusPill>
         )}
       </TableCell>
-      <TableCell>
-        {item.tiered ? (
-          cost ? (
-            <Data>{money(cost.total, q.currency ?? rfq.currency)}</Data>
-          ) : (
-            <span className="text-xs text-text-tertiary">{t('rfqCompare.cmp.notPriced')}</span>
-          )
-        ) : (
-          <Data>{money(lineUnit, q.currency ?? rfq.currency)}</Data>
-        )}
-      </TableCell>
+      <TableCell>{model.priceCell(item, bid, brk)}</TableCell>
       <TableCell>
         {/* BR-01a — no input for a supplier failing the gate, and the reason
             instead. The verb refuses it too: this is the message, not the lock. */}
-        {!qualifies(q.supplierId) ? (
-          <GateMarker gate={gateOf(q.supplierId)} testId={`award-gate-${key}-${q.supplierId}`} />
+        {!qualifies(bid.supplierId) ? (
+          <GateMarker gate={gateOf(bid.supplierId)} testId={`award-gate-${key}-${bid.supplierId}`} />
         ) : (
           <input
             type="number"
             min={0}
             max={draft.basis === 'pct' ? 100 : undefined}
-            aria-label={`${itemLabel(t, rfq, item)} — ${supplierName(q.supplierId)} — ${side}`}
-            value={draft.values[q.id] ?? ''}
-            onChange={(e) => onChange({ ...draft, values: { ...draft.values, [q.id]: e.target.value } })}
+            aria-label={`${label} — ${supplierName(bid.supplierId)} — ${side}`}
+            value={draft.values[bid.key] ?? ''}
+            onChange={(e) => onChange({ ...draft, values: { ...draft.values, [bid.key]: e.target.value } })}
             className="w-28 bg-white border border-border-input rounded-md px-3 h-9 text-sm focus:outline-none focus:border-action"
           />
         )}
       </TableCell>
       {/* The derived side, read-only: the quantity a share makes, or the share a quantity is. */}
-      <TableCell data-testid={`award-qty-${key}-${q.supplierId}`}>
+      <TableCell data-testid={`award-qty-${key}-${bid.supplierId}`}>
         {line ? (
-          <Data>{draft.basis === 'pct' ? `${qty(line.quantity)} ${uom}` : `${line.sharePct}%`}</Data>
+          <Data>{draft.basis === 'pct' ? `${qty(line.quantity)}${uom ? ` ${uom}` : ''}` : `${line.sharePct}%`}</Data>
         ) : (
           <span className="text-text-tertiary">—</span>
         )}
       </TableCell>
     </TableRow>
   );
-};
+}

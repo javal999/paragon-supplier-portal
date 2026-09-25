@@ -106,6 +106,8 @@ export const rfqCompareEn: Record<string, string> = {
   'rfqCompare.refusal.AWARD_ITEMS_OPEN': '{{item}} has no share yet. Give every item shares that total 100%.',
   'rfqCompare.refusal.AWARD_NOTHING_OPEN': 'This award settles every item, so confirm it as the final award.',
   'rfqCompare.refusal.AWARD_REASON_REQUIRED': 'The award for {{item}} does not follow the best score. Give a reason.',
+  // RFx D3 (NR-2 edge case 2) — an RFP option's firm offer lapsed before the award.
+  'rfqCompare.refusal.AWARD_OFFER_EXPIRED': 'The firm offer on {{item}} is no longer valid. Open a new firm-offer round.',
 
   // — Export —
   'rfqCompare.export.done': 'Comparison exported to CSV',
@@ -235,6 +237,7 @@ export const rfqCompareId: Record<string, string> = {
   'rfqCompare.refusal.AWARD_NOTHING_OPEN': 'Penetapan ini menyelesaikan setiap item, jadi konfirmasikan sebagai penetapan akhir.',
   'rfqCompare.refusal.AWARD_REASON_REQUIRED':
     'Penetapan untuk {{item}} tidak mengikuti skor terbaik. Berikan alasannya.',
+  'rfqCompare.refusal.AWARD_OFFER_EXPIRED': 'Penawaran pasti pada {{item}} tidak berlaku lagi. Buka putaran penawaran pasti baru.',
 
   // — Export —
   'rfqCompare.export.done': 'Perbandingan diekspor ke CSV',
