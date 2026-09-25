@@ -15,7 +15,12 @@ import { renderWithProviders } from '../../test/test-utils';
 import Wizard from '../../components/ui-v2/Wizard';
 import { documentRequestsRefusal } from '../../services/transitions/rfxDocumentRules';
 import type { DocumentRequest } from '../../services/sourcing/types';
-import DocumentRequestsEditor, { DocumentRequestsSummary, type DocumentRequestItem } from './DocumentRequestsEditor';
+import DocumentRequestsEditor, {
+  DocumentRequestsSummary,
+  remapRequestsOnItemRemoved,
+  remapRequestsOnItemsChanged,
+  type DocumentRequestItem,
+} from './DocumentRequestsEditor';
 
 let latest: readonly DocumentRequest[] = [];
 
@@ -153,5 +158,80 @@ describe('DocumentRequestsEditor', () => {
     expect(screen.queryByTestId('t-doc-doc-1-level')).not.toBeInTheDocument();
     // KNOWN-GOOD CONTROL — the row itself rendered, so the absence is the select's.
     expect(screen.getByTestId('t-doc-doc-1-type')).toBeInTheDocument();
+  });
+});
+
+// ── Removing an RFQ item (a request names its item by POSITION) ────────────────
+
+const req = (id: string, itemLineNo?: number): DocumentRequest => ({
+  id,
+  name: id,
+  type: 'drawing',
+  required: false,
+  ...(itemLineNo !== undefined ? { itemLineNo } : {}),
+});
+
+describe('remapRequestsOnItemRemoved', () => {
+  it('a later item\'s request moves down with its item; the removed item\'s becomes whole-response and is reported', () => {
+    const out = remapRequestsOnItemRemoved([req('a', 1), req('b', 2), req('c', 3), req('d')], 2);
+    expect(out.requests).toEqual([req('a', 1), req('b'), req('c', 2), req('d')]);
+    expect(out.requests[1]).not.toHaveProperty('itemLineNo');
+    expect(out.unlinked).toEqual(['b']);
+  });
+
+  it('KNOWN-GOOD TWIN — removing an item no request names changes only the later lines, and reports nothing', () => {
+    const out = remapRequestsOnItemRemoved([req('a', 1), req('c', 3), req('d')], 2);
+    expect(out.requests).toEqual([req('a', 1), req('c', 2), req('d')]);
+    expect(out.unlinked).toEqual([]);
+  });
+});
+
+describe('remapRequestsOnItemsChanged', () => {
+  it('reads each removed line in the list it was taken from (two removals, last first)', () => {
+    const out = remapRequestsOnItemsChanged([req('a', 1), req('b', 2), req('c', 3), req('e', 5)], ['u1', 'u2', 'u3', 'u4', 'u5'], ['u1', 'u3', 'u5']);
+    expect(out.requests).toEqual([req('a', 1), req('b'), req('c', 2), req('e', 3)]);
+    expect(out.unlinked).toEqual(['b']);
+  });
+
+  it('an item added at the end, or an item edited in place, renumbers nothing', () => {
+    const requests = [req('a', 1), req('b', 2)];
+    expect(remapRequestsOnItemsChanged(requests, ['u1', 'u2'], ['u1', 'u2', 'u3'])).toEqual({ requests, unlinked: [] });
+    expect(remapRequestsOnItemsChanged(requests, ['u1', 'u2'], ['u1', 'u2'])).toEqual({ requests, unlinked: [] });
+  });
+});
+
+describe('the unlinked notice', () => {
+  const NoticeHarness: React.FC = () => {
+    const [value, setValue] = useState<readonly DocumentRequest[]>([
+      { id: 'doc-1', name: 'Die-line', type: 'drawing', required: true },
+      { id: 'doc-2', name: 'Cap spec', type: 'specification', required: false },
+    ]);
+    const [unlinked, setUnlinked] = useState<readonly string[]>(['doc-1', 'doc-2']);
+    return (
+      <DocumentRequestsEditor
+        value={value}
+        onChange={setValue}
+        items={[{ lineNo: 1, description: 'Bottle' }]}
+        unlinked={unlinked}
+        onUnlinkedChange={setUnlinked}
+        testIdPrefix="t"
+      />
+    );
+  };
+
+  it('names each request until the buyer edits that row or dismisses its notice', () => {
+    renderWithProviders(<NoticeHarness />);
+    expect(screen.getByTestId('t-docs-unlinked-doc-1')).toHaveTextContent(
+      '"Die-line" was linked to a removed item; it now applies to the whole response.',
+    );
+    expect(screen.getByTestId('t-docs-unlinked-doc-2')).toHaveTextContent('"Cap spec"');
+
+    // Editing the row answers its notice; the other stays.
+    fireEvent.change(screen.getByTestId('t-doc-doc-1-level'), { target: { value: '1' } });
+    expect(screen.queryByTestId('t-docs-unlinked-doc-1')).not.toBeInTheDocument();
+    expect(screen.getByTestId('t-docs-unlinked-doc-2')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId('t-docs-unlinked-doc-2-dismiss'));
+    expect(screen.queryByTestId('t-docs-unlinked')).not.toBeInTheDocument();
   });
 });

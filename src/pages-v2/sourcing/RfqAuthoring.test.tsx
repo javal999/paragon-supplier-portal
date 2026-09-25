@@ -432,3 +432,71 @@ describe('NR-1 BR-02 — the buyer asks for documents on the RFQ (B3)', () => {
     expect(newest()!.documentRequests).toEqual([REQUEST]);
   }, 20000); // a long wizard walk, like THE LOCK above
 });
+
+describe('NR-1 BR-02 — removing an RFQ item remaps the document requests (B3)', () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it('3 items; requests on items 3 and 2; remove item 2 → the item-3 request follows its item, the item-2 one becomes whole-response and is named', async () => {
+    const dispatch = vi.spyOn(mockDataService.commands, 'dispatch');
+    renderWithProviders(<BuyerSourcing />, { route: '/buyer/rfq?rfi=rfi-001' });
+    await screen.findByPlaceholderText(/e\.g\. Q3 2026 Fragrance Sourcing/i);
+    await fillScope();
+    next();
+    // The RFI pre-fill brings two items; a third is added.
+    await screen.findByTestId('rfq-item-2-description');
+    fireEvent.click(screen.getByTestId('rfq-item-add'));
+    fireEvent.change(screen.getByTestId('rfq-item-3-description'), { target: { value: 'Shrink sleeve' } });
+    next();
+    addTier('50000');
+    next();
+    next();
+    await screen.findByTestId('invitee-row-sup-007');
+    next();
+    fillTerms();
+    next();
+
+    // Two requests: one on item 3, one on item 2.
+    fireEvent.click(await screen.findByTestId('rfq-new-doc-add'));
+    fireEvent.change(screen.getByTestId('rfq-new-doc-doc-1-name'), { target: { value: 'Sleeve artwork' } });
+    fireEvent.change(screen.getByTestId('rfq-new-doc-doc-1-level'), { target: { value: '3' } });
+    fireEvent.click(screen.getByTestId('rfq-new-doc-add'));
+    fireEvent.change(screen.getByTestId('rfq-new-doc-doc-2-name'), { target: { value: 'Carton drawing' } });
+    fireEvent.change(screen.getByTestId('rfq-new-doc-doc-2-level'), { target: { value: '2' } });
+
+    // Back to the items step; remove item 2 (the carton).
+    fireEvent.click(screen.getByRole('button', { name: 'Step 2 of 8: Items (completed)' }));
+    expect(screen.getByTestId('rfq-item-2-description')).toHaveValue('Folding carton 12s shipper');
+    fireEvent.click(screen.getByRole('button', { name: 'Remove item 2' }));
+    expect(screen.getByTestId('rfq-item-2-description')).toHaveValue('Shrink sleeve');
+
+    // Forward to the Documents step.
+    next();
+    next();
+    next();
+    next();
+    next();
+    expect(await screen.findByTestId('rfq-new-docs-unlinked-doc-2')).toHaveTextContent(
+      '"Carton drawing" was linked to a removed item; it now applies to the whole response.',
+    );
+    expect(screen.queryByTestId('rfq-new-docs-unlinked-doc-1')).not.toBeInTheDocument();
+    expect(screen.getByTestId('rfq-new-doc-doc-1-level')).toHaveValue('2');
+    expect(screen.getByTestId('rfq-new-doc-doc-2-level')).toHaveValue('');
+    next();
+
+    // The review names the item the request followed.
+    expect(await screen.findByTestId('rfq-new-review-doc-doc-1')).toHaveTextContent('Item 2 · Shrink sleeve');
+    expect(screen.getByTestId('rfq-new-review-doc-doc-2')).toHaveTextContent('Whole response');
+    fireEvent.click(screen.getByRole('button', { name: 'Save RFQ draft' }));
+    await waitFor(() => expect(newest()).toBeDefined());
+
+    const REQUESTS = [
+      { id: 'doc-1', name: 'Sleeve artwork', type: 'other', required: false, itemLineNo: 2 },
+      { id: 'doc-2', name: 'Carton drawing', type: 'other', required: false },
+    ];
+    const create = dispatch.mock.calls.map(([, input]) => input).find((i) => i.transitionId === 't_rfq_create');
+    expect(create?.payload).toMatchObject({ documentRequests: REQUESTS });
+    expect((create?.payload as { documentRequests: object[] }).documentRequests[1]).not.toHaveProperty('itemLineNo');
+    expect(newest()!.documentRequests).toEqual(REQUESTS);
+    expect(newest()!.items![1]!.description).toBe('Shrink sleeve');
+  }, 20000); // a long wizard walk, like THE LOCK above
+});

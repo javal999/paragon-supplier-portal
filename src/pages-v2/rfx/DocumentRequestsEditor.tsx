@@ -10,6 +10,14 @@
 // same function the create and revise verbs call, so the step can never accept
 // a list the verb refuses. The editor only finds WHICH row it names, so the
 // message can point at it in the buyer's language.
+//
+// ⚠️ **A REQUEST NAMES ITS ITEM BY LINE NUMBER, AND LINE NUMBERS ARE POSITIONS.**
+// Removing an RFQ item renumbers every item after it, so the RFQ wizard remaps
+// the requests in the same state update (`remapRequestsOnItemsChanged`): a
+// request on a later item follows its item down, and a request on the removed
+// item becomes response-level and is NAMED in a notice here until the buyer
+// edits or dismisses it. Without the remap it would silently point at the
+// wrong item.
 // ────────────────────────────────────────────────────────────────────────────
 
 import React from 'react';
@@ -39,6 +47,57 @@ const freshId = (requests: readonly DocumentRequest[]): string => {
   while (requests.some((r) => r.id === `doc-${n}`)) n += 1;
   return `doc-${n}`;
 };
+
+/** Requests after an item change, and the ids that lost their item. */
+export interface DocumentRequestsRemap {
+  readonly requests: readonly DocumentRequest[];
+  /** Requests that were on a removed item and now apply to the whole response. */
+  readonly unlinked: readonly string[];
+}
+
+/**
+ * The requests after RFQ item `removedLineNo` is removed. A request on a later
+ * item moves down by one, with its item; a request on the removed item drops
+ * its `itemLineNo` (whole response) and is reported in `unlinked`. Pure.
+ */
+export function remapRequestsOnItemRemoved(
+  requests: readonly DocumentRequest[],
+  removedLineNo: number,
+): DocumentRequestsRemap {
+  const unlinked: string[] = [];
+  const next = requests.map((r) => {
+    if (r.itemLineNo === undefined || r.itemLineNo < removedLineNo) return r;
+    if (r.itemLineNo > removedLineNo) return { ...r, itemLineNo: r.itemLineNo - 1 };
+    unlinked.push(r.id);
+    const { itemLineNo: _removed, ...rest } = r;
+    return rest;
+  });
+  return { requests: next, unlinked };
+}
+
+/**
+ * The requests after the item list changed from `prevKeys` to `nextKeys` (each
+ * item's stable key, in order). Every key missing from `nextKeys` is a removed
+ * item; removals apply from the last line up, so each line number is read in
+ * the list it was taken from. Items added at the end renumber nothing.
+ */
+export function remapRequestsOnItemsChanged(
+  requests: readonly DocumentRequest[],
+  prevKeys: readonly string[],
+  nextKeys: readonly string[],
+): DocumentRequestsRemap {
+  const kept = new Set(nextKeys);
+  const removedLines = prevKeys
+    .map((key, i) => (kept.has(key) ? null : i + 1))
+    .filter((n): n is number => n !== null)
+    .sort((a, b) => b - a);
+  let out: DocumentRequestsRemap = { requests, unlinked: [] };
+  for (const line of removedLines) {
+    const step = remapRequestsOnItemRemoved(out.requests, line);
+    out = { requests: step.requests, unlinked: [...out.unlinked, ...step.unlinked] };
+  }
+  return out;
+}
 
 export interface DocumentRequestsRefusalView {
   /** The index of the row the refusal names. */
@@ -79,6 +138,9 @@ interface DocumentRequestsEditorProps {
   onChange: (next: readonly DocumentRequest[]) => void;
   /** The RFQ's items. Present = an RFQ, and each row offers a level select. */
   items?: readonly DocumentRequestItem[];
+  /** Requests whose item was removed (RFQ); each is named until edited or dismissed. */
+  unlinked?: readonly string[];
+  onUnlinkedChange?: (next: readonly string[]) => void;
   testIdPrefix: string;
 }
 
@@ -86,16 +148,27 @@ const DocumentRequestsEditor: React.FC<DocumentRequestsEditorProps> = ({
   value,
   onChange,
   items,
+  unlinked = [],
+  onUnlinkedChange,
   testIdPrefix: p,
 }) => {
   const { t } = useTranslation();
   const itemLines = (items ?? []).map((i) => i.lineNo);
   const refusal = documentRequestsRefusalView(t, value, itemLines);
+  const notices = value.filter((r) => unlinked.includes(r.id));
 
-  const patch = (id: string, next: Partial<DocumentRequest>) =>
+  /** Editing or removing a row answers its notice. */
+  const settle = (id: string) => {
+    if (unlinked.includes(id)) onUnlinkedChange?.(unlinked.filter((x) => x !== id));
+  };
+
+  const patch = (id: string, next: Partial<DocumentRequest>) => {
+    settle(id);
     onChange(value.map((r) => (r.id === id ? { ...r, ...next } : r)));
+  };
 
   const setLevel = (r: DocumentRequest, level: string) => {
+    settle(r.id);
     const { itemLineNo: _dropped, ...rest } = r;
     onChange(value.map((x) => (x.id === r.id ? (level ? { ...rest, itemLineNo: Number(level) } : rest) : x)));
   };
@@ -103,7 +176,10 @@ const DocumentRequestsEditor: React.FC<DocumentRequestsEditorProps> = ({
   const add = () =>
     onChange([...value, { id: freshId(value), name: '', type: 'other', required: false }]);
 
-  const remove = (id: string) => onChange(value.filter((r) => r.id !== id));
+  const remove = (id: string) => {
+    settle(id);
+    onChange(value.filter((r) => r.id !== id));
+  };
 
   const inputClass =
     'w-full bg-white border border-border-input rounded-md px-3 h-10 text-sm focus:outline-none focus:border-action';
@@ -111,6 +187,27 @@ const DocumentRequestsEditor: React.FC<DocumentRequestsEditorProps> = ({
 
   return (
     <div className="space-y-4" data-testid={`${p}-docs`}>
+      {notices.length > 0 ? (
+        <ul className="space-y-1" data-testid={`${p}-docs-unlinked`}>
+          {notices.map((r) => (
+            <li
+              key={r.id}
+              data-testid={`${p}-docs-unlinked-${r.id}`}
+              className="flex items-start justify-between gap-3 text-sm text-warning-hover bg-warning-soft border border-warning rounded-md px-3 py-2"
+            >
+              <span>{t('rfxa.doc.unlinked', { name: r.name.trim() || t('rfxa.doc.row', { n: value.indexOf(r) + 1 }) })}</span>
+              <button
+                type="button"
+                className="text-xs font-medium shrink-0 hover:underline"
+                data-testid={`${p}-docs-unlinked-${r.id}-dismiss`}
+                onClick={() => settle(r.id)}
+              >
+                {t('rfxa.doc.unlinked.dismiss')}
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : null}
       {value.length === 0 ? (
         <p className="text-sm text-text-tertiary" data-testid={`${p}-docs-empty`}>
           {t('rfxa.doc.empty')}

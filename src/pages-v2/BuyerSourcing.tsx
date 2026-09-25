@@ -120,7 +120,10 @@ import SupplierFilterBar, {
 import { PURCHASING_GROUPS, purchasingGroupNameKey } from '../services/sourcing/rfxConfig';
 import { reliabilityScoreFor } from '../services/transitions/rfxRules';
 import { documentRequestsRefusal } from '../services/transitions/rfxDocumentRules';
-import DocumentRequestsEditor, { DocumentRequestsSummary } from './rfx/DocumentRequestsEditor';
+import DocumentRequestsEditor, {
+  DocumentRequestsSummary,
+  remapRequestsOnItemsChanged,
+} from './rfx/DocumentRequestsEditor';
 import {
   useRfqCreate,
   useRfqReviseDraft,
@@ -870,6 +873,12 @@ interface DraftRfq extends RfqAuthoringDraft {
   sourceRequisitionId?: string;
   /** Where a seeded draft came from — the review names it ("Created from …"). */
   origin?: RfqDraftSeed['origin'];
+  /**
+   * NR-1 BR-02 — document requests whose item the buyer removed. Wizard state
+   * only (never in the payload): the Documents step names each one until it is
+   * edited or dismissed.
+   */
+  unlinkedDocRequestIds?: string[];
 }
 
 /**
@@ -2224,7 +2233,24 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
       content: (
         <ItemsStep
           items={draft.items}
-          onChange={(items) => updateAuthoring({ items })}
+          // NR-1 BR-02 — a request names its item by position, so removing an
+          // item remaps the requests in the SAME update, never after it.
+          onChange={(items) =>
+            setDraft((d) => {
+              if (!d.documentRequests) return { ...d, items };
+              const remap = remapRequestsOnItemsChanged(
+                d.documentRequests,
+                d.items.map((i) => i.uid),
+                items.map((i) => i.uid),
+              );
+              return {
+                ...d,
+                items,
+                documentRequests: [...remap.requests],
+                unlinkedDocRequestIds: [...(d.unlinkedDocRequestIds ?? []), ...remap.unlinked],
+              };
+            })
+          }
           refusal={itemsRefusal}
         />
       ),
@@ -2582,6 +2608,8 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
           value={draft.documentRequests ?? []}
           onChange={(next) => updateAuthoring({ documentRequests: [...next] })}
           items={docItems}
+          unlinked={draft.unlinkedDocRequestIds ?? []}
+          onUnlinkedChange={(next) => setDraft((d) => ({ ...d, unlinkedDocRequestIds: [...next] }))}
           testIdPrefix="rfq-new"
         />
       ),

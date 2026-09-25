@@ -268,6 +268,8 @@ export const rfxAuthoringEn: Record<string, string> = {
   'rfxa.doc.refusal.invalid': 'Request {{n}} cannot be sent as it is.',
   'rfxa.doc.review': 'Documents from suppliers',
   'rfxa.doc.review.none': 'None requested',
+  'rfxa.doc.unlinked': '"{{name}}" was linked to a removed item; it now applies to the whole response.',
+  'rfxa.doc.unlinked.dismiss': 'Dismiss',
 };
 
 export const rfxAuthoringId: Record<string, string> = {
@@ -530,4 +532,6 @@ export const rfxAuthoringId: Record<string, string> = {
   'rfxa.doc.refusal.invalid': 'Permintaan {{n}} tidak dapat dikirim seperti ini.',
   'rfxa.doc.review': 'Dokumen dari pemasok',
   'rfxa.doc.review.none': 'Tidak ada yang diminta',
+  'rfxa.doc.unlinked': '"{{name}}" terkait dengan item yang dihapus; kini berlaku untuk seluruh tanggapan.',
+  'rfxa.doc.unlinked.dismiss': 'Tutup',
 };
