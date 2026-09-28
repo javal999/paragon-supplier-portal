@@ -132,7 +132,7 @@ Everything runs on sample data held in the browser. There is no backend, no SAP 
 | U-09 | Pages outside the MVP hidden from the menu | Done (phase 1) |
 | U-10 | Menu item highlighted on detail pages | Done (phase 1) |
 | U-11 | One icon per menu item | Done (phase 1) |
-| U-12 | One "as of" date for sample data | Partial — each family is anchored to the declared present; the PO family is the last to be aligned |
+| U-12 | One "as of" date for sample data | Done — every family, the PO family included, is anchored to the declared present, and every lane reads the one hub clock (PR #34, #35; BL-34 closed on measurement) |
 | U-13 | One OTIF target of 90% | Done (phase 1); the performance pages now show "Baseline period" instead (BL-19, BL-53). The 90% still colours the analytics page and the supplier dashboard |
 | H-01 | Action banner above summary figures | Done where the built pages carry one |
 | H-02 | Section labels at least 12px | Done (phase 1) |

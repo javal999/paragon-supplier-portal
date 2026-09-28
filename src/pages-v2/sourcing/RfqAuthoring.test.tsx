@@ -115,8 +115,8 @@ describe('the RFQ wizard authors a multi-item tiered RFQ', () => {
     addTier('2.400');
     expect(screen.getByTestId('rfq-tiers-refusal')).toHaveTextContent('can be read two ways');
     expect(screen.getAllByTestId('rfq-tiers-chip').map((c) => c.textContent)).toEqual([
-      expect.stringContaining('3.000'),
-      expect.stringContaining('5.000'),
+      expect.stringContaining('3,000'),
+      expect.stringContaining('5,000'),
     ]);
     next();
 
@@ -141,7 +141,7 @@ describe('the RFQ wizard authors a multi-item tiered RFQ', () => {
 
     // Review names the items and the breaks.
     expect(await screen.findByTestId('rfq-review-item-1')).toHaveTextContent('Sticker / label · Front sticker · variants: 8');
-    expect(screen.getByTestId('rfq-review-tiers')).toHaveTextContent('3.000 per variant · 5.000 per variant');
+    expect(screen.getByTestId('rfq-review-tiers')).toHaveTextContent('3,000 per variant · 5,000 per variant');
     fireEvent.click(screen.getByRole('button', { name: 'Save RFQ draft' }));
 
     await waitFor(() => expect(newest()).toBeDefined());
@@ -264,9 +264,9 @@ describe('RFP → RFQ pre-fill (/buyer/rfq?rfp=<id>&options=<ids>, spec D3)', ()
     next();
     // The quantity points are the breaks, already there.
     expect(screen.getAllByTestId('rfq-tiers-chip').map((c) => c.textContent)).toEqual([
-      expect.stringContaining('10.000'),
-      expect.stringContaining('50.000'),
-      expect.stringContaining('100.000'),
+      expect.stringContaining('10,000'),
+      expect.stringContaining('50,000'),
+      expect.stringContaining('100,000'),
     ]);
     next();
     next();

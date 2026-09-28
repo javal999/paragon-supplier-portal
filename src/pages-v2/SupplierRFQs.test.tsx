@@ -6,6 +6,7 @@ import { rfqStore } from '../services/data/mock/stores/rfqStore';
 import { withChaos } from '../services/data/mock/withChaos';
 import type { IDataService } from '../services/data/types';
 import SupplierRFQs from './SupplierRFQs';
+import i18n from '../lib/i18n';
 
 const alwaysFails = withChaos(mockDataService, { minMs: 0, maxMs: 0, failureRate: 1 });
 const alwaysPending = withChaos(mockDataService, { minMs: 1e7, maxMs: 1e7, failureRate: 0 });
@@ -387,7 +388,7 @@ describe('SupplierRFQs — the minimum order quantity stops being dropped', () =
     // The tile exists on every quote card, so the LABEL is plural here; the
     // VALUE is what identifies this quote, and it is the assertion that matters.
     expect((await screen.findAllByText('Min. order qty')).length).toBeGreaterThan(0);
-    expect(await screen.findByText('100.000 PCS')).toBeInTheDocument();
+    expect(await screen.findByText('100,000 PCS')).toBeInTheDocument();
   });
 
   it('BLANK is LEGAL — no refusal, submit enabled, and the quote mints without a minimum', async () => {
@@ -514,15 +515,26 @@ describe('SupplierRFQs — display consistency (2e-b-3)', () => {
   });
 
   // COS-02. The open-RFQ card grouped its quantity with bare `toLocaleString()`
-  // (runtime locale) while the minimum order quantity beside it used the pinned
+  // (runtime locale) while the minimum order quantity beside it used
   // `formatNumber` — two quantities on one card, two conventions.
-  it('the open-RFQ quantity groups id-ID, matching every other quantity on the card', async () => {
-    render();
-    // rfq-010 — 120,000 PCS, the one Open RFQ sup-007 has not yet quoted.
-    expect(await screen.findByText('RFQ-2026-010')).toBeInTheDocument();
-    expect(screen.getByText(/120\.000 PCS/)).toBeInTheDocument();
-    // The comma form is what `toLocaleString()` produced under this runner.
-    expect(screen.queryByText(/120,000 PCS/)).not.toBeInTheDocument();
+  //
+  // BL-83 — `formatNumber` now groups the way the UI language does, so in
+  // ENGLISH the fixed card and the old defect both print "120,000" and this
+  // test could no longer tell them apart. It runs in INDONESIAN, where the
+  // card's own convention is the dot and the runner's `toLocaleString()` is
+  // still the comma.
+  it('the open-RFQ quantity groups by the UI language, matching every other quantity on the card', async () => {
+    try {
+      await i18n.changeLanguage('id');
+      render();
+      // rfq-010 — 120,000 PCS, the one Open RFQ sup-007 has not yet quoted.
+      expect(await screen.findByText('RFQ-2026-010')).toBeInTheDocument();
+      expect(screen.getByText(/120\.000 PCS/)).toBeInTheDocument();
+      // The comma form is what `toLocaleString()` produces under this runner.
+      expect(screen.queryByText(/120,000 PCS/)).not.toBeInTheDocument();
+    } finally {
+      await i18n.changeLanguage('en');
+    }
   });
 
   // COS-07. `${q.leadTimeDays} ${t('rfqs.unit.days')}` was raw interpolation, so
