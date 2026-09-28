@@ -1,12 +1,18 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { screen, waitFor, within, fireEvent } from '@testing-library/react';
-import { renderWithProviders, SUPPLIER } from '../test/test-utils';
+import { screen, waitFor, within, fireEvent, act } from '@testing-library/react';
+import { QueryClient } from '@tanstack/react-query';
+import { renderWithProviders, SUPPLIER, pickSelectFieldOption } from '../test/test-utils';
 import BuyerChannelTriage from './BuyerChannelTriage';
 import SupplierInventory from './SupplierInventory';
 import { commandAuditSink } from '../services/data/mock/MockCommandService';
 import { inventoryDeclarationStore } from '../services/data/mock/stores/inventoryDeclarationStore';
 import { channelProvenanceStore } from '../services/channel/provenanceStore';
 import i18n from '../lib/i18n';
+import { DEFAULT_COMBOBOX_THRESHOLD } from '../components/ui-v2/SelectField';
+import { mockSuppliers } from '../data/mockSuppliers';
+import { mockDataService } from '../services/data/mock/mockDataService';
+import { withChaos } from '../services/data/mock/withChaos';
+import { DataError } from '../services/data/types';
 
 // ────────────────────────────────────────────────────────────────────────────
 // Comm Hub C4d — the buyer in-place triage. The SUBJECT supplier is bound at
@@ -45,13 +51,10 @@ afterEach(() => {
 
 const panel = () => within(document.querySelector('aside[role="dialog"]') as HTMLElement);
 
-// The supplier picker is populated by an async read — wait for its options
-// before selecting, else the value can't bind (the option does not exist yet).
-async function pickSupplier(id: string) {
-  const select = screen.getByTestId('triage-supplier') as HTMLSelectElement;
-  await waitFor(() => expect(within(select).getAllByRole('option').length).toBeGreaterThan(1));
-  fireEvent.change(select, { target: { value: id } });
-}
+// The supplier picker is populated by an async read — pickSelectFieldOption
+// waits for it, and works whether the fixture size renders a plain <select>
+// or a searchable combobox (which one is derived below, never restated).
+const pickSupplier = (id: string) => pickSelectFieldOption('triage-supplier', id);
 const typeMessage = (text: string) =>
   fireEvent.change(screen.getByTestId('triage-message'), { target: { value: text } });
 const clickParse = () => fireEvent.click(screen.getByTestId('triage-parse'));
@@ -86,8 +89,15 @@ describe('BuyerChannelTriage — the binding is first, and never a free supplier
     // Now the paste field appears, bound to the chosen supplier.
     expect(screen.getByTestId('triage-message')).toBeInTheDocument();
     expect(screen.getByText(/Recording for/i)).toBeInTheDocument();
-    // The subject is a SELECT (picked), and there is NEVER a free supplierId field.
-    expect(screen.getByTestId('triage-supplier').tagName).toBe('SELECT');
+    // The subject is PICKED from a SelectField, and there is NEVER a
+    // free-typed supplierId field. The render mode is DERIVED from the
+    // roster the buyer read returns against SelectField's own threshold, so a
+    // fixture change moves the expectation instead of staling a comment.
+    // Typing garbage into the combobox without picking a row never binds it
+    // (SelectField's own suite covers that); this only re-asserts no OTHER,
+    // separate raw-id field exists on this surface.
+    const expectedTag = mockSuppliers.length > DEFAULT_COMBOBOX_THRESHOLD ? 'INPUT' : 'SELECT';
+    expect(screen.getByTestId('triage-supplier').tagName).toBe(expectedTag);
     expect(screen.queryByLabelText(/supplier id/i)).not.toBeInTheDocument();
     // Parse, then open the entry form: the supplier is SHOWN, locked — the form's
     // own supplier select is not offered here.
@@ -97,6 +107,64 @@ describe('BuyerChannelTriage — the binding is first, and never a free supplier
     expect(panel().getByTestId('stock-entry-supplier-locked')).toHaveTextContent('PT Sample Packaging');
     expect(panel().queryByLabelText('Supplier')).toBeNull();
     expect(panel().queryByLabelText(/supplier id/i)).toBeNull();
+  });
+
+  it('re-picking the SAME supplier keeps the parsed work (no reset)', async () => {
+    renderWithProviders(<BuyerChannelTriage />);
+    await pickSupplier(SUBJECT);
+    typeMessage('STOK PK-PETB-8810 2400 KG');
+    clickParse();
+    await screen.findByTestId('triage-enter-0');
+    await pickSupplier(SUBJECT);
+    expect(screen.getByTestId('triage-enter-0')).toBeInTheDocument();
+  });
+
+  it('a FAILED supplier read says so and offers retry — never "no options"', async () => {
+    renderWithProviders(<BuyerChannelTriage />, {
+      service: withChaos(mockDataService, { minMs: 0, maxMs: 0, failureRate: 1 }),
+    });
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent(/Couldn’t load options/);
+    expect(within(alert).getByRole('button', { name: 'Retry' })).toBeInTheDocument();
+    expect(screen.queryByText('No options available')).not.toBeInTheDocument();
+  });
+
+  it('a failed BACKGROUND refetch keeps the loaded picker — only a read that never landed is an error', async () => {
+    // The first supplier read succeeds; every later one fails. TanStack keeps
+    // the loaded data and flips `isError`, so a picker keyed on `isError` alone
+    // would swap a working, bound field for "Couldn't load options".
+    let listCalls = 0;
+    const suppliers = new Proxy(mockDataService.suppliers, {
+      get(obj, prop) {
+        const v = Reflect.get(obj, prop);
+        if (prop !== 'list' || typeof v !== 'function') return v;
+        return async (...args: unknown[]) => {
+          listCalls += 1;
+          if (listCalls > 1) throw new DataError('CHAOS', 'refetch failed');
+          return (v as (...a: unknown[]) => unknown).apply(obj, args);
+        };
+      },
+    });
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    renderWithProviders(<BuyerChannelTriage />, { service: { ...mockDataService, suppliers }, queryClient });
+    await pickSupplier(SUBJECT);
+    await act(() => queryClient.refetchQueries());
+    await waitFor(() => expect(listCalls).toBe(2));
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    const subjectName = mockSuppliers.find((s) => s.id === SUBJECT)?.name;
+    expect(screen.getByTestId('triage-supplier')).toHaveValue(subjectName);
+    expect(screen.getByTestId('triage-message')).toBeInTheDocument();
+  });
+
+  it('the binding can be cleared back to "pick a supplier first"', async () => {
+    renderWithProviders(<BuyerChannelTriage />);
+    await pickSupplier(SUBJECT);
+    typeMessage('STOK PK-PETB-8810 2400 KG');
+    clickParse();
+    fireEvent.click(screen.getByTestId('triage-supplier-clear'));
+    expect(screen.queryByTestId('triage-message')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('triage-enter-0')).not.toBeInTheDocument();
+    expect(screen.getByTestId('triage-supplier')).toHaveValue('');
   });
 });
 
