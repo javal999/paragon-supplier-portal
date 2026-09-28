@@ -811,7 +811,7 @@ const BuyerInvoicesView: React.FC<{ invoices: BuyerInvoice[] }> = ({ invoices: a
                         </Data>
                       </TableCell>
                       <TableCell>
-                        <div className="text-sm text-text-primary truncate max-w-[14rem]">
+                        <div className="text-sm text-text-primary">
                           {inv.supplierName}
                         </div>
                         <div className="inline-flex items-center gap-1 text-xs text-text-tertiary mt-0.5">

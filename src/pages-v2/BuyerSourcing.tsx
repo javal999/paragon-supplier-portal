@@ -2340,7 +2340,7 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
           <p className="text-xs text-text-tertiary -mt-3">{t('rfx.invite.onlyActive')}</p>
           <p className="text-xs text-text-tertiary -mt-3">{t('rfx.gate.inviteNote')}</p>
 
-          <div className="border border-border-subtle rounded-md overflow-hidden max-h-64 overflow-y-auto">
+          <div className="relative min-w-0 border border-border-subtle rounded-md max-h-64 overflow-auto">
             <table className="w-full text-sm">
               <thead className="bg-bg-hover text-text-tertiary uppercase tracking-wider text-xs sticky top-0">
                 <tr>
@@ -3041,7 +3041,7 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
                     <Data as="div" className="font-semibold text-text-primary">
                       {r.rfqNumber}
                     </Data>
-                    <div className="text-xs text-text-tertiary mt-0.5 max-w-[20rem] truncate">
+                    <div className="text-xs text-text-tertiary mt-0.5">
                       {r.projectName && (
                         <span
                           className="inline-block mr-1.5 px-1.5 py-px rounded border border-border-subtle bg-bg-hover text-[11px] text-text-secondary"
@@ -3183,7 +3183,7 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
                   <TableCell className="font-semibold text-text-primary">
                     <Data>{r.rfqNumber}</Data>
                   </TableCell>
-                  <TableCell className="text-sm text-text-secondary max-w-md truncate">
+                  <TableCell className="text-sm text-text-secondary">
                     {r.title}
                   </TableCell>
                   <TableCell className="text-sm text-text-primary" data-testid={`award-history-supplier-${r.id}`}>

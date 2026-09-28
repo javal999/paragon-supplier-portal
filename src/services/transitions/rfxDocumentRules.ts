@@ -19,6 +19,7 @@ import { isAttachmentMeta } from '../attachments/sessionAttachments';
 import { fileLimitRefusal } from '../attachments/fileRules';
 import { DOCUMENT_TYPES, type DocumentRequest, type ResponseDocument } from '../sourcing/types';
 import { isCalendarDate } from '../../lib/workingCalendar';
+import type { ActorAttribution } from '../../lib/enforcement';
 
 // ── Authoring ───────────────────────────────────────────────────────────────
 
@@ -62,7 +63,7 @@ export function documentRequestsRefusal(requests: unknown, itemLines: readonly n
 
 // ── Submit and save ─────────────────────────────────────────────────────────
 
-/** A response document's shape, as a payload carries it (`uploadedAt` is the store's). */
+/** A response document's shape, as a payload carries it (`uploadedAt` and `uploadedBy` are the store's). */
 export function isResponseDocumentInput(v: unknown): boolean {
   if (!v || typeof v !== 'object') return false;
   const d = v as Record<string, unknown>;
@@ -185,23 +186,39 @@ export function documentsOf(quotation: {
 }
 
 /**
- * Stamp the documents a save or submit carries: a document already held
- * (same id, same file) keeps its upload time; a new or replaced one gets
- * `now`. The time is the store's, never the payload's.
+ * Stamp the documents a save, submit or revise carries (NR-1 BR-10, CE-11i):
+ * WHEN a file arrived and WHO sent it.
+ *
+ * - A document already held (same id, same file) is CARRIED: it keeps its
+ *   stored `uploadedAt` and `uploadedBy` exactly as stored. A carried document
+ *   stored before `uploadedBy` existed stays without one, which reads as "not
+ *   recorded" — it is never back-filled with today's actor.
+ * - Any other document is NEW (a new id, or a new file under an old id): it is
+ *   stamped `now` and `actor`.
+ *
+ * Both stamps are the store's and the SESSION's (C10 §6.2). A payload's own
+ * `uploadedAt` / `uploadedBy` is IGNORED AND OVERWRITTEN, never trusted and not
+ * refused — the `declaredBy` / `declaredAt` precedent on
+ * `t_supplierdoc_declare`, where a caller "naming whoever it likes as the
+ * declarer" is ignored rather than refused. Every path that stores response
+ * documents calls this one function, so "stamp new, keep carried" has one home.
  */
 export function stampDocuments(
   incoming: readonly unknown[],
   prior: readonly ResponseDocument[],
   now: string,
+  actor: ActorAttribution,
 ): readonly ResponseDocument[] {
   return incoming.map((raw) => {
-    const d = raw as Omit<ResponseDocument, 'uploadedAt'>;
+    const d = raw as Omit<ResponseDocument, 'uploadedAt' | 'uploadedBy'>;
     const held = prior.find((p) => p.id === d.id && p.attachment.id === d.attachment.id);
+    const uploadedBy = held ? held.uploadedBy : actor;
     return {
       id: d.id,
       ...(d.requestId !== undefined ? { requestId: d.requestId } : {}),
       attachment: d.attachment,
-      uploadedAt: held?.uploadedAt ?? now,
+      uploadedAt: held ? held.uploadedAt : now,
+      ...(uploadedBy !== undefined ? { uploadedBy } : {}),
       ...(d.certificate ? { certificate: d.certificate } : {}),
     };
   });

@@ -2300,8 +2300,13 @@ import type {
 } from '../sourcing/types';
 import type { AttachmentMeta } from '../attachments/sessionAttachments';
 
-/** A response document as a supplier sends it: the store stamps `uploadedAt`. */
-type ResponseDocumentInput = Omit<ResponseDocument, 'uploadedAt'>;
+/**
+ * A response document as a supplier sends it: the store stamps `uploadedAt`
+ * and the session's `uploadedBy` (CE-11i). A carried document may still hold
+ * both; the store ignores them and keeps its own record.
+ */
+type ResponseDocumentInput = Omit<ResponseDocument, 'uploadedAt' | 'uploadedBy'> &
+  Partial<Pick<ResponseDocument, 'uploadedAt' | 'uploadedBy'>>;
 
 /** The authoring fields an RFI and an RFP both carry (RFx authoring batch). */
 interface RfxAuthoringVars {

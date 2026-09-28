@@ -662,7 +662,7 @@ const BuyerSupplierProfile: React.FC = () => {
                   <TableCell className="text-text-secondary">
                     {m.docType}
                   </TableCell>
-                  <TableCell className="text-text-secondary max-w-md truncate">
+                  <TableCell className="text-text-secondary">
                     {m.preview}
                   </TableCell>
                   <TableCell>

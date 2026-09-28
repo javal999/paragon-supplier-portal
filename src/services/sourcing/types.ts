@@ -160,13 +160,23 @@ export interface CertificateFields {
 /**
  * One file a supplier sends with a response (NR-1 BR-01). `requestId` names
  * the request it answers; absent = one of the supplier's "other documents".
- * `uploadedAt` is store-assigned.
+ * `uploadedAt` and `uploadedBy` are store-assigned (`stampDocuments`).
  */
 export interface ResponseDocument {
   readonly id: string;
   readonly requestId?: string;
   readonly attachment: AttachmentMeta;
   readonly uploadedAt: string;
+  /**
+   * CE-11i / NR-1 BR-10 — WHO sent the file: the SESSION's actor when the file
+   * first arrived, never the payload's (C10 §6.2). Kept unchanged while the
+   * file is carried into a later save or version. OPTIONAL because a document
+   * stored before this field existed (a quote's legacy `attachments` read
+   * through `documentsOf`, any row already held) has no uploader on record, and
+   * back-filling one would invent a fact: absent reads as "Not recorded".
+   * Today every stamp is `UNATTRIBUTED: NO_PERSON_IN_SESSION`.
+   */
+  readonly uploadedBy?: ActorAttribution;
   readonly certificate?: CertificateFields;
 }
 

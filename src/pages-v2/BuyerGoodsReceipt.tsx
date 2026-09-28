@@ -1222,7 +1222,7 @@ const GoodsReceiptWorkspace: React.FC<GoodsReceiptWorkspaceProps> = ({
                           <Data as="div" className="text-xs text-text-primary">
                             {r.materialCode}
                           </Data>
-                          <div className="text-xs text-text-tertiary truncate max-w-[180px]">
+                          <div className="text-xs text-text-tertiary">
                             {r.description}
                           </div>
                           {r.rejectionReason && (

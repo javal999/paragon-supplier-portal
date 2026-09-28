@@ -385,10 +385,7 @@ const ShipmentsList: React.FC<ShipmentsListProps> = ({
                   <Data className="font-bold text-text-primary">
                     {po.poNumber}
                   </Data>
-                  <span
-                    className="text-text-secondary truncate"
-                    title={first?.description ?? '—'}
-                  >
+                  <span className="text-text-secondary">
                     {first?.description ?? '—'}
                   </span>
                   <span className="text-text-tertiary text-xs whitespace-nowrap">
