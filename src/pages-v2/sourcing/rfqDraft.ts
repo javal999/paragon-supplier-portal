@@ -19,7 +19,7 @@
 import { BID_CURRENCIES, type BidCurrency } from '../../lib/currencyPolicy';
 import { normalizeQty } from '../../lib/localeNumber';
 import type { RFQ } from '../../data/mockRfqs';
-import type { RfiQuestion } from '../../services/sourcing/types';
+import type { DocumentRequest, RfiQuestion } from '../../services/sourcing/types';
 import type { RfqPrefill, RfqSeedFromRfp } from '../../services/sourcing/rfxPrefill';
 
 const isBidCurrency = (c: string): c is BidCurrency => (BID_CURRENCIES as readonly string[]).includes(c);
@@ -71,6 +71,12 @@ export interface RfqAuthoringDraft {
   sourceRfpOptionRefs?: readonly string[];
   copiedFromRfqId?: string;
   templateId?: string;
+  /**
+   * NR-1 BR-02 — the buyer's document requests. Optional so a wizard that does
+   * not edit them yet still type-checks; the "Documents from suppliers" step
+   * is B3.
+   */
+  documentRequests?: DocumentRequest[];
 }
 
 /**
@@ -101,6 +107,11 @@ export interface RfqDraftSeed {
   readonly sourceRfpOptionRefs?: readonly string[];
   readonly copiedFromRfqId?: string;
   readonly templateId?: string;
+  /**
+   * NR-1 BR-11 — the buyer's document requests, which every source carries
+   * (RFI, RFP, template, copy, edit). A supplier's documents never travel.
+   */
+  readonly documentRequests?: readonly DocumentRequest[];
   // ── BL-93 — carried only by `seedForEdit`: an edit is the SAME event, so
   //    its dates, files, budget and chosen materials come back too. A copy and
   //    a template deliberately never carry these (D2: a copy's dates are
@@ -247,6 +258,7 @@ export function buildRfqAuthoringPayload(d: RfqAuthoringDraft): Record<string, u
       : {}),
     ...(d.copiedFromRfqId ? { copiedFromRfqId: d.copiedFromRfqId } : {}),
     ...(d.templateId ? { templateId: d.templateId } : {}),
+    ...(d.documentRequests && d.documentRequests.length > 0 ? { documentRequests: d.documentRequests } : {}),
   };
 }
 
@@ -290,6 +302,7 @@ export function seedFromRfiPrefill(p: RfqPrefill, eventNumber: string): RfqDraft
     category: p.materialCategory,
     invitedSupplierIds: p.invitedSupplierIds,
     sourceRfiId: p.sourceRfiId,
+    ...(p.documentRequests.length > 0 ? { documentRequests: p.documentRequests } : {}),
     ...(total > 0 ? { totalQty: String(total) } : {}),
     items: p.lineItems.map((l) => {
       const base = newItemDraft('other');
@@ -351,6 +364,7 @@ export function seedFromRfp(p: RfqSeedFromRfp, eventNumber: string): RfqDraftSee
     ...(isBidCurrency(p.currency) ? { currency: p.currency } : {}),
     invitedSupplierIds: p.invitedSupplierIds,
     sourceRfpId: p.sourceRfpId,
+    ...(p.documentRequests.length > 0 ? { documentRequests: p.documentRequests } : {}),
     sourceRfpOptionRefs: p.sourceRfpOptionRefs,
     ...(points.length > 0 && p.items.length > 0 ? { totalQty: String(points[0]! * p.items.length) } : {}),
     tiers: points.map((qty) => ({ qty, basis })),
@@ -376,6 +390,7 @@ export function seedFromTemplate(tpl: RfqTemplate, label: string): RfqDraftSeed 
     ...(c.allowAlternatives !== undefined ? { allowAlternatives: c.allowAlternatives } : {}),
     ...(c.samplesQty ? { samplesQty: String(c.samplesQty) } : {}),
     ...(c.confidential !== undefined ? { confidential: c.confidential } : {}),
+    ...(c.documentRequests ? { documentRequests: c.documentRequests } : {}),
   };
 }
 
@@ -414,6 +429,7 @@ export function seedFromRfq(rfq: RFQ): RfqDraftSeed {
     ...(rfq.samplesRequested ? { samplesQty: String(rfq.samplesRequested.qty) } : {}),
     ...(rfq.confidential !== undefined ? { confidential: rfq.confidential } : {}),
     ...(rfq.sourceRfiId ? { sourceRfiId: rfq.sourceRfiId } : {}),
+    ...(rfq.documentRequests ? { documentRequests: rfq.documentRequests } : {}),
   };
 }
 
@@ -468,6 +484,7 @@ export function templateContentFromDraft(
     allowAlternatives: d.allowAlternatives,
     ...(d.samplesOn && samplesQty ? { samplesQty } : {}),
     confidential: d.confidential,
+    ...(d.documentRequests && d.documentRequests.length > 0 ? { documentRequests: d.documentRequests } : {}),
   };
 }
 
@@ -488,6 +505,7 @@ export function templateContentFromRfq(rfq: RFQ): RfqTemplateContent | null {
       currency: rfq.currency,
       items: [item],
       tiers: [{ qty: rfq.totalQty, basis: 'total' }],
+      ...(rfq.documentRequests ? { documentRequests: rfq.documentRequests } : {}),
     };
   }
   return {
@@ -503,5 +521,6 @@ export function templateContentFromRfq(rfq: RFQ): RfqTemplateContent | null {
     ...(rfq.allowAlternatives !== undefined ? { allowAlternatives: rfq.allowAlternatives } : {}),
     ...(rfq.samplesRequested ? { samplesQty: rfq.samplesRequested.qty } : {}),
     ...(rfq.confidential !== undefined ? { confidential: rfq.confidential } : {}),
+    ...(rfq.documentRequests ? { documentRequests: rfq.documentRequests } : {}),
   };
 }

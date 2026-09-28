@@ -29,7 +29,12 @@ export const rfiResponseFlow: FlowDefinition = {
       trigger: 'creation',
       requiredRole: 'rfiresponse:answer',
       requiredFields: ['rfiId', 'supplierId'],
-      policyHooks: [POLICY_HOOKS.RFX_RESPONSE_INVITED, POLICY_HOOKS.RFX_RESPONSE_ACCEPTANCE_GATE],
+      policyHooks: [
+        POLICY_HOOKS.RFX_RESPONSE_INVITED,
+        POLICY_HOOKS.RFX_RESPONSE_ACCEPTANCE_GATE,
+        // NR-1 BR-05 — a draft save checks the file limits only.
+        POLICY_HOOKS.RFX_RESPONSE_DOCUMENTS_WITHIN_LIMITS,
+      ],
       surfaceable: { surfaced: true },
       version: 1,
     },
@@ -40,7 +45,7 @@ export const rfiResponseFlow: FlowDefinition = {
       trigger: 'user',
       requiredRole: 'rfiresponse:answer',
       requiredFields: [],
-      policyHooks: [POLICY_HOOKS.RFI_SUBMIT_COMPLETE],
+      policyHooks: [POLICY_HOOKS.RFI_SUBMIT_COMPLETE, POLICY_HOOKS.RFX_RESPONSE_DOCUMENTS_COMPLETE],
       surfaceable: { surfaced: true },
       version: 1,
     },

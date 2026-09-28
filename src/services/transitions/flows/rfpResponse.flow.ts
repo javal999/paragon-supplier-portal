@@ -27,7 +27,12 @@ export const rfpResponseFlow: FlowDefinition = {
       trigger: 'creation',
       requiredRole: 'rfpresponse:answer',
       requiredFields: ['rfpId', 'supplierId'],
-      policyHooks: [POLICY_HOOKS.RFX_RESPONSE_INVITED, POLICY_HOOKS.RFX_RESPONSE_ACCEPTANCE_GATE],
+      policyHooks: [
+        POLICY_HOOKS.RFX_RESPONSE_INVITED,
+        POLICY_HOOKS.RFX_RESPONSE_ACCEPTANCE_GATE,
+        // NR-1 BR-05 — a draft save checks the file limits only.
+        POLICY_HOOKS.RFX_RESPONSE_DOCUMENTS_WITHIN_LIMITS,
+      ],
       surfaceable: { surfaced: true },
       version: 1,
     },
@@ -38,7 +43,7 @@ export const rfpResponseFlow: FlowDefinition = {
       trigger: 'user',
       requiredRole: 'rfpresponse:answer',
       requiredFields: [],
-      policyHooks: [POLICY_HOOKS.RFP_SUBMIT_TERMS_ANSWERED],
+      policyHooks: [POLICY_HOOKS.RFP_SUBMIT_TERMS_ANSWERED, POLICY_HOOKS.RFX_RESPONSE_DOCUMENTS_COMPLETE],
       surfaceable: { surfaced: true },
       version: 1,
     },

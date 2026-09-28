@@ -61,6 +61,7 @@ import {
   termValueFits,
 } from '../../services/transitions/rfxRules';
 import type {
+  DocumentRequest,
   RfiQuestion,
   RfpEvent,
   RfpPricingRequest,
@@ -101,6 +102,11 @@ interface Draft {
   sourceRfiId: string;
   /** Not authored here: carried so an edit keeps the event's purchasing group. */
   purchasingGroup?: string;
+  /**
+   * NR-1 BR-02 — carried through edit, copy, template and RFI pre-fill so the
+   * requests survive; the step that edits them is B3.
+   */
+  documentRequests: readonly DocumentRequest[];
 }
 
 const EMPTY: Draft = {
@@ -121,6 +127,7 @@ const EMPTY: Draft = {
   termsText: '',
   termsFile: [],
   sourceRfiId: '',
+  documentRequests: [],
 };
 
 interface RfpCreateWizardProps {
@@ -161,6 +168,7 @@ const draftOf = (e: RfpEvent): Draft => ({
   termsFile: e.termsDocument?.attachment ? [e.termsDocument.attachment] : [],
   sourceRfiId: e.sourceRfiId ?? '',
   ...(e.purchasingGroup ? { purchasingGroup: e.purchasingGroup } : {}),
+  documentRequests: e.documentRequests ?? [],
 });
 
 const RfpCreateWizard: React.FC<RfpCreateWizardProps> = ({
@@ -194,6 +202,8 @@ const RfpCreateWizard: React.FC<RfpCreateWizardProps> = ({
       confidential: prefill.confidential,
       confidentialityTerms: prefill.confidentialityTerms ?? '',
       sourceRfiId: prefill.sourceRfiId,
+      // NR-1 BR-11 — the RFI's requests carry; its responses' documents do not.
+      documentRequests: prefill.documentRequests,
     };
   });
   const [storeVersion, setStoreVersion] = useState(0);
@@ -223,6 +233,7 @@ const RfpCreateWizard: React.FC<RfpCreateWizardProps> = ({
         confidential: c.confidential,
         confidentialityTerms: c.confidentialityTerms ?? '',
         termsText: c.termsText ?? '',
+        documentRequests: c.documentRequests ?? [],
       }));
     } else if (kind === 'past') {
       const e = pastEvents.find((x) => x.id === id);
@@ -244,6 +255,8 @@ const RfpCreateWizard: React.FC<RfpCreateWizardProps> = ({
         confidentialityTerms: e.confidentiality?.terms ?? '',
         termsText: e.termsDocument?.text ?? '',
         termsFile: e.termsDocument?.attachment ? [e.termsDocument.attachment] : [],
+        // NR-1 BR-11 — the buyer's requests copy; supplier documents never do.
+        documentRequests: e.documentRequests ?? [],
       });
     }
   };
@@ -320,6 +333,7 @@ const RfpCreateWizard: React.FC<RfpCreateWizardProps> = ({
         ...(draft.customSections.length > 0 ? { customSections: draft.customSections } : {}),
         ...(draft.pricing ? { pricing: draft.pricing } : {}),
         ...(draft.attachments.length > 0 ? { attachments: draft.attachments } : {}),
+        ...(draft.documentRequests.length > 0 ? { documentRequests: draft.documentRequests } : {}),
         ...(draft.confidential
           ? { confidentiality: draft.confidentialityTerms.trim() ? { terms: draft.confidentialityTerms.trim() } : {} }
           : {}),
@@ -375,6 +389,7 @@ const RfpCreateWizard: React.FC<RfpCreateWizardProps> = ({
       ? { confidentialityTerms: draft.confidentialityTerms.trim() }
       : {}),
     ...(draft.termsText.trim() ? { termsText: draft.termsText.trim() } : {}),
+    ...(draft.documentRequests.length > 0 ? { documentRequests: draft.documentRequests } : {}),
   });
 
   const saveTemplate = (name: string) => {

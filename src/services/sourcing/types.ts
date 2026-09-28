@@ -110,6 +110,66 @@ export interface RfiTemplate {
   readonly questions: readonly RfiQuestion[];
 }
 
+// ── Documents (NR-1 BR-01 to BR-05, BR-11) ─────────────────────────────────
+
+/**
+ * The kinds of document a buyer can ask for (NR-1 BR-02). Ids, not labels: the
+ * words a screen shows come through `t()`.
+ */
+export type DocumentType =
+  | 'certificate'
+  | 'specification'
+  | 'drawing'
+  | 'samplePhoto'
+  | 'quotation'
+  | 'companyProfile'
+  | 'other';
+
+export const DOCUMENT_TYPES: readonly DocumentType[] = [
+  'certificate',
+  'specification',
+  'drawing',
+  'samplePhoto',
+  'quotation',
+  'companyProfile',
+  'other',
+];
+
+/**
+ * One document the buyer asks every supplier for (NR-1 BR-02). `itemLineNo`
+ * names one RFQ item (`RfqItem.lineNo`) and is refused on an RFI or an RFP:
+ * only an RFQ has items. Absent = the whole response.
+ */
+export interface DocumentRequest {
+  readonly id: string;
+  /** The buyer's own words. */
+  readonly name: string;
+  readonly type: DocumentType;
+  readonly required: boolean;
+  readonly itemLineNo?: number;
+}
+
+/** The certificate fields a Certificate request also takes (NR-1 BR-04). */
+export interface CertificateFields {
+  readonly number: string;
+  readonly issuer: string;
+  /** `YYYY-MM-DD`. Expiry is judged when read (`certificateExpired`), never stored (law 0.5). */
+  readonly expiresOn: string;
+}
+
+/**
+ * One file a supplier sends with a response (NR-1 BR-01). `requestId` names
+ * the request it answers; absent = one of the supplier's "other documents".
+ * `uploadedAt` is store-assigned.
+ */
+export interface ResponseDocument {
+  readonly id: string;
+  readonly requestId?: string;
+  readonly attachment: AttachmentMeta;
+  readonly uploadedAt: string;
+  readonly certificate?: CertificateFields;
+}
+
 /** One supplier's answer to one question. */
 export interface RfiAnswer {
   readonly questionId: string;
@@ -201,6 +261,8 @@ export interface RfiEvent {
   readonly confidentiality?: RfxConfidentiality;
   /** BL-93 — every edit made while it was a Draft (CE-08). */
   readonly revisions?: readonly DraftRevision[];
+  /** NR-1 BR-02 — the documents the buyer asks every supplier for. */
+  readonly documentRequests?: readonly DocumentRequest[];
 }
 
 export type RfxResponseStatus = 'Draft' | 'Submitted';
@@ -216,6 +278,8 @@ export interface RfiResponse {
   readonly answers: readonly RfiAnswer[];
   /** When this supplier accepted the event's confidentiality terms (store-assigned). */
   readonly confidentialityAcceptedAt?: string;
+  /** NR-1 BR-01 — the supplier's files. Only its author and, once Submitted, PTI read them. */
+  readonly documents?: readonly ResponseDocument[];
 }
 
 // ── RFP (REQ-E03-04) ────────────────────────────────────────────────────────
@@ -354,6 +418,8 @@ export interface RfpEvent {
   readonly pricing?: RfpPricingRequest;
   /** BL-93 — every edit made while it was a Draft (CE-08). */
   readonly revisions?: readonly DraftRevision[];
+  /** NR-1 BR-02 — the documents the buyer asks every supplier for. */
+  readonly documentRequests?: readonly DocumentRequest[];
 }
 
 /** REQ-E03-04 — one supplier's proposal. A Draft is invisible to PTI. */
@@ -374,6 +440,8 @@ export interface RfpResponse {
   readonly confidentialityAcceptedAt?: string;
   /** When the supplier accepted the RFP's T&C document (store-assigned). */
   readonly termsAcceptedAt?: string;
+  /** NR-1 BR-01 — the supplier's files. Only its author and, once Submitted, PTI read them. */
+  readonly documents?: readonly ResponseDocument[];
 }
 
 
