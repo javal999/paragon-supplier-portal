@@ -3,15 +3,13 @@ import { useTranslation } from 'react-i18next';
 import { Paperclip, X } from 'lucide-react';
 import Button from './Button';
 import Data from './Data';
-import {
-  formatBytes,
-  sessionAttachments,
-  type AttachmentMeta,
-} from '../../services/attachments/sessionAttachments';
+import { formatBytes, type AttachmentMeta } from '../../services/attachments/sessionAttachments';
+import { useDataService } from '../../services/data/DataServiceContext';
 
 // ────────────────────────────────────────────────────────────────────────────
-// The shared attachment control (BL-27: no file store). It adds files to the
-// session store, hands the RECORD back only their metadata, and says on the
+// The shared attachment control (BL-27: no file store). It puts files through
+// the data service's file seam (`useDataService().files`, the session store
+// today), hands the RECORD back only their metadata, and says on the
 // screen, every time it renders, that the file itself lasts for this session
 // only. A file whose bytes are no longer held (after a reload) is listed with
 // its name and size and an honest "not available in this session" instead of a
@@ -39,27 +37,31 @@ const SessionAttachments: React.FC<SessionAttachmentsProps> = ({
   single = false,
 }) => {
   const { t } = useTranslation();
+  const { files: fileService } = useDataService();
   const inputId = useId();
   const input = useRef<HTMLInputElement>(null);
   // A control with nothing to call is a false affordance, so no handler means
   // no add and no remove — the same as an explicit `readOnly`.
   const readOnly = readOnlyProp || !onChange;
 
-  const onFiles = (files: FileList | null) => {
+  const onFiles = async (files: FileList | null) => {
     if (!files || files.length === 0 || !onChange) return;
-    const added = [...files].map((f) => sessionAttachments.add(f));
+    const picked = [...files];
+    // Clear the input first: the list is copied, and the same file can then be
+    // picked again while `put` is still resolving.
+    if (input.current) input.current.value = '';
+    const added = await Promise.all(picked.map((f) => fileService.put(f)));
     if (single) {
-      value.forEach((a) => sessionAttachments.release(a.id));
+      value.forEach((a) => fileService.release(a.id));
       onChange(added.slice(0, 1));
     } else {
       onChange([...value, ...added]);
     }
-    if (input.current) input.current.value = '';
   };
 
   const remove = (id: string) => {
     if (!onChange) return;
-    sessionAttachments.release(id);
+    fileService.release(id);
     onChange(value.filter((a) => a.id !== id));
   };
 
@@ -78,7 +80,7 @@ const SessionAttachments: React.FC<SessionAttachmentsProps> = ({
               className="sr-only"
               data-testid={`${testId}-input`}
               aria-label={label}
-              onChange={(e) => onFiles(e.target.files)}
+              onChange={(e) => void onFiles(e.target.files)}
             />
             <Button
               variant="secondary"
@@ -96,7 +98,7 @@ const SessionAttachments: React.FC<SessionAttachmentsProps> = ({
       ) : (
         <ul className="space-y-1">
           {value.map((a) => {
-            const url = sessionAttachments.urlFor(a.id);
+            const url = fileService.urlFor(a.id);
             return (
               <li
                 key={a.id}

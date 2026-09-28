@@ -180,7 +180,8 @@ describe('attachments are session-only, and say so', () => {
     );
     const file = new File(['%PDF'], 'die-line.pdf', { type: 'application/pdf' });
     fireEvent.change(within(files).getByTestId('rfq-item-1-files-input'), { target: { files: [file] } });
-    expect(within(files).getByTestId('rfq-item-1-files-row')).toHaveTextContent('die-line.pdf');
+    // The pick handler awaits the file seam's `put` (RFx A2), so the row lands a tick later.
+    expect(await within(files).findByTestId('rfq-item-1-files-row')).toHaveTextContent('die-line.pdf');
     fireEvent.click(within(files).getByRole('button', { name: 'Remove die-line.pdf' }));
     expect(within(files).queryByTestId('rfq-item-1-files-row')).not.toBeInTheDocument();
   });
