@@ -28,9 +28,11 @@ import {
   invalidAnswers,
   invalidTermAnswers,
   missingRequiredAnswers,
+  responseWindowRefusal,
   rfpPricingAnswerRefusal,
   unansweredTerms,
 } from '../services/transitions/rfxRules';
+import { responseDocumentsRefusal } from '../services/transitions/rfxDocumentRules';
 import type { RfiAnswer, RfpPricingAnswer, RfpTermAnswer } from '../services/sourcing/types';
 import type { RfpEventView } from '../services/sourcing/views';
 import { DeadlinePill, rfxNow } from './rfx/rfxDisplay';
@@ -40,6 +42,8 @@ import { TermValueInput } from './rfx/RfpTermControls';
 import { EMPTY_PRICING_ANSWER, RfpPricingForm } from './rfx/RfpPricing';
 import { refusalCode } from './rfx/RfxQuestionEditor';
 import { termLabel, termValueText } from './rfx/rfxAuthoringDisplay';
+import ResponseDocumentsSection, { type DocumentDraft } from './rfx/ResponseDocumentsSection';
+import { ResponseVersionLine, ReviseControls } from './rfx/ResponseRevise';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SUPPLIER PROPOSAL REQUESTS — REQ-E03-04 (SUP).
@@ -58,7 +62,14 @@ import { termLabel, termValueText } from './rfx/rfxAuthoringDisplay';
 //   2. an RFP with a T&C document shows it with an acceptance tick, and the
 //      answer boxes stay shut until it is accepted (refused at the verb too);
 //   3. then the terms, the questions section, and INDICATIVE PRICING — every
-//      price there labelled Indicative, the supplier's own options included.
+//      price there labelled Indicative, the supplier's own options included;
+//   4. then the DOCUMENTS section (NR-1, B4): one slot per document PTI asked
+//      for, and "Other documents", judged by the rule the verbs call.
+//
+// A SUBMITTED proposal is never saved again: before the deadline "Revise
+// response" re-opens the form on the latest version and dispatches the REVISE
+// verb, which appends a version (NR-1 BR-08); after it the proposal and its
+// files are read-only and the action is absent.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const SupplierRfp: React.FC = () => {
@@ -78,6 +89,8 @@ const SupplierRfp: React.FC = () => {
   const [qDraft, setQDraft] = useState<Record<string, RfiAnswer[]>>({});
   const [pDraft, setPDraft] = useState<Record<string, RfpPricingAnswer>>({});
   const [tcTicked, setTcTicked] = useState<Record<string, boolean>>({});
+  const [docDraft, setDocDraft] = useState<Record<string, readonly DocumentDraft[]>>({});
+  const [revising, setRevising] = useState<Record<string, boolean>>({});
 
   // The eyebrow is the menu section alone (the `PageHeader` rule).
   const crumb = [t('hub.nav.section.sourcing')];
@@ -95,6 +108,18 @@ const SupplierRfp: React.FC = () => {
     qDraft[event.id] ?? [...(event.responses[0]?.questionAnswers ?? [])];
   const pricingFor = (event: RfpEventView): RfpPricingAnswer =>
     pDraft[event.id] ?? event.responses[0]?.pricing ?? EMPTY_PRICING_ANSWER;
+
+  const documentsFor = (event: RfpEventView): readonly DocumentDraft[] =>
+    docDraft[event.id] ?? event.responses[0]?.documents ?? [];
+
+  /** Drop the local edits, so the form reads the stored (latest) version. */
+  const resetLocal = (eventId: string) => {
+    setDraft(({ [eventId]: _a, ...rest }) => rest);
+    setOther(({ [eventId]: _o, ...rest }) => rest);
+    setQDraft(({ [eventId]: _q, ...rest }) => rest);
+    setPDraft(({ [eventId]: _p, ...rest }) => rest);
+    setDocDraft(({ [eventId]: _d, ...rest }) => rest);
+  };
 
   const setAnswer = (event: RfpEventView, termId: string, patch: Partial<RfpTermAnswer>) => {
     const current = answersFor(event);
@@ -122,19 +147,41 @@ const SupplierRfp: React.FC = () => {
     onError: () => toast({ variant: 'error', title: t('rfx.toast.refused', { reason: '' }) }),
   });
 
+  /** The proposal in hand, as both the answer and the revise verb carry it. */
+  const contentFor = (event: RfpEventView) => ({
+    answers: answersFor(event),
+    otherTerms: other[event.id] ?? event.responses[0]?.otherTerms ?? '',
+    ...((event.questions ?? []).length > 0 ? { questionAnswers: questionAnswersFor(event) } : {}),
+    ...(event.pricing ? { pricing: pricingFor(event) } : {}),
+    documents: documentsFor(event),
+  });
+
   const send = (event: RfpEventView, draftOnly: boolean) =>
     command.mutate(
       {
         verb: 'answerRfp',
         rfpId: event.id,
         supplierId,
-        answers: answersFor(event),
-        otherTerms: other[event.id] ?? event.responses[0]?.otherTerms ?? '',
-        ...((event.questions ?? []).length > 0 ? { questionAnswers: questionAnswersFor(event) } : {}),
-        ...(event.pricing ? { pricing: pricingFor(event) } : {}),
+        ...contentFor(event),
         ...(draftOnly ? { draftOnly: true } : {}),
       },
       report(draftOnly ? 'rfx.toast.saved' : 'rfx.toast.sent'),
+    );
+
+  // NR-1 BR-08 — the revise verb, never a save: the proposal stays Submitted
+  // and the revision is appended as the next version.
+  const sendRevision = (event: RfpEventView, responseId: string) =>
+    command.mutate(
+      { verb: 'reviseRfpResponse', responseId, ...contentFor(event) },
+      {
+        onSuccess: (res) => {
+          report('rfx.toast.revised').onSuccess(res);
+          if (res.status === 'failed') return;
+          setRevising(({ [event.id]: _r, ...rest }) => rest);
+          resetLocal(event.id);
+        },
+        onError: report('rfx.toast.revised').onError,
+      },
     );
 
   const accept = (event: RfpEventView, what: { confidentiality?: boolean; terms?: boolean }) =>
@@ -180,19 +227,27 @@ const SupplierRfp: React.FC = () => {
           const pricingRefusal = event.pricing ? rfpPricingAnswerRefusal(event.pricing, pricing) : null;
           const opened = openId === event.id;
           const tcPending = !!event.termsDocument && !mine?.termsAcceptedAt;
+          const submitted = mine?.status === 'Submitted';
+          // NR-1 BR-08 — the window the revise verb judges, read by the same rule.
+          const windowOpen = responseWindowRefusal(event, supplierId, rfxNow()) === null;
+          const isRevising = submitted && windowOpen && answerVerb.kind === 'held' && !!revising[event.id];
+          const documents = documentsFor(event);
+          const answerFiles = qAnswers.reduce((n, a) => n + (a.attachments?.length ?? 0), 0);
+          const docRefusal = responseDocumentsRefusal(event.documentRequests ?? [], documents, answerFiles);
           const started =
             !!mine &&
-            (mine.status === 'Submitted' ||
+            (submitted ||
               mine.answers.length > 0 ||
               (mine.questionAnswers ?? []).length > 0 ||
-              !!mine.pricing);
+              !!mine.pricing ||
+              (mine.documents ?? []).length > 0);
           // A CLOSED event locks the form for the same reason a submitted one
           // does: the verb refuses an answer to a non-Open event
           // (`EVENT_NOT_OPEN`), so offering the boxes would offer a gesture the
           // act cannot accept. An unaccepted T&C locks it for the verb's
           // `TC_NOT_ACCEPTED`, for the same reason.
           const locked =
-            mine?.status === 'Submitted' || event.closed || answerVerb.kind !== 'held' || tcPending;
+            (submitted && !isRevising) || event.closed || answerVerb.kind !== 'held' || tcPending;
           const blockers = [
             ...(missing.length > 0 ? ['terms'] : []),
             ...(badValues.length > 0 ? ['termValues'] : []),
@@ -200,6 +255,7 @@ const SupplierRfp: React.FC = () => {
             ...(qMissing.length > 0 ? ['questions'] : []),
             ...(qInvalid.length > 0 ? ['answers'] : []),
           ];
+          const blocked = blockers.length > 0 || pricingRefusal !== null || docRefusal !== null;
           return (
             <section
               key={event.id}
@@ -250,6 +306,9 @@ const SupplierRfp: React.FC = () => {
                     <p className="text-xs text-text-tertiary" data-testid={`supplier-rfp-accepted-${event.id}`}>
                       {t('rfxa.conf.acceptedOn')} <Data>{formatDate(mine.confidentialityAcceptedAt)}</Data>
                     </p>
+                  )}
+                  {submitted && (
+                    <ResponseVersionLine versions={mine.versions} testId={`supplier-rfp-version-${event.id}`} />
                   )}
                   <p className="text-sm text-text-secondary whitespace-pre-line">{event.scope}</p>
                   {(event.attachments ?? []).length > 0 && (
@@ -451,6 +510,15 @@ const SupplierRfp: React.FC = () => {
                     />
                   )}
 
+                  <ResponseDocumentsSection
+                    key={`${event.id}-${isRevising ? 'revising' : 'stored'}-${mine?.versions.length ?? 0}`}
+                    requests={event.documentRequests ?? []}
+                    value={documents}
+                    onChange={locked ? undefined : (next) => setDocDraft((prev) => ({ ...prev, [event.id]: next }))}
+                    filesAlready={answerFiles}
+                    testId={`supplier-rfp-docs-${event.id}`}
+                  />
+
                   {!event.closed && !tcPending && (blockers.length > 0 || pricingRefusal) && (
                     <ul className="text-sm text-danger list-disc pl-5" data-testid={`supplier-rfp-blockers-${event.id}`}>
                       {blockers.map((b) => (
@@ -464,24 +532,48 @@ const SupplierRfp: React.FC = () => {
                     </ul>
                   )}
 
-                  <div className="flex flex-wrap gap-3">
-                    <Button
-                      variant="secondary"
-                      disabled={locked}
-                      onClick={() => send(event, true)}
-                      data-testid={`supplier-rfp-save-${event.id}`}
-                    >
-                      {t('rfx.save')}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      disabled={locked || blockers.length > 0 || pricingRefusal !== null}
-                      onClick={() => send(event, false)}
-                      data-testid={`supplier-rfp-submit-${event.id}`}
-                    >
-                      {t('rfx.rfp.submit')}
-                    </Button>
-                  </div>
+                  {/* NR-1 BR-08 — while revising, Save and Submit give way to the
+                      revise verb's controls: a Submitted response is never saved. */}
+                  {!isRevising && (
+                    <div className="flex flex-wrap gap-3">
+                      <Button
+                        variant="secondary"
+                        disabled={locked}
+                        onClick={() => send(event, true)}
+                        data-testid={`supplier-rfp-save-${event.id}`}
+                      >
+                        {t('rfx.save')}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        disabled={locked || blocked}
+                        onClick={() => send(event, false)}
+                        data-testid={`supplier-rfp-submit-${event.id}`}
+                      >
+                        {t('rfx.rfp.submit')}
+                      </Button>
+                    </div>
+                  )}
+                  {submitted && mine && (
+                    <ReviseControls
+                      windowOpen={windowOpen}
+                      held={answerVerb.kind === 'held'}
+                      revising={isRevising}
+                      closed={event.closed}
+                      nextVersion={mine.versions.length + 1}
+                      blocked={blocked || command.isPending}
+                      onStart={() => {
+                        resetLocal(event.id);
+                        setRevising((prev) => ({ ...prev, [event.id]: true }));
+                      }}
+                      onCancel={() => {
+                        resetLocal(event.id);
+                        setRevising(({ [event.id]: _r, ...rest }) => rest);
+                      }}
+                      onSend={() => sendRevision(event, mine.id)}
+                      testIdPrefix={`supplier-rfp-${event.id}`}
+                    />
+                  )}
                 </div>
               )}
 

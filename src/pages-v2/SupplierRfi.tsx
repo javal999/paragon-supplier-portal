@@ -17,12 +17,15 @@ import { formatDate } from '../lib/format';
 import { useCurrentIdentity } from '../context/CurrentIdentityContext';
 import { useRfiEvents } from '../services/query/hooks';
 import { useRfxCommand } from '../services/query/commandHooks';
-import { invalidAnswers, missingRequiredAnswers } from '../services/transitions/rfxRules';
+import { invalidAnswers, missingRequiredAnswers, responseWindowRefusal } from '../services/transitions/rfxRules';
+import { responseDocumentsRefusal } from '../services/transitions/rfxDocumentRules';
 import type { RfiAnswer } from '../services/sourcing/types';
 import type { RfiEventView } from '../services/sourcing/views';
 import { DeadlinePill, rfxNow } from './rfx/rfxDisplay';
 import RfxQuestionForm from './rfx/RfxQuestionForm';
 import RfxConfidentialityGate from './rfx/RfxConfidentialityGate';
+import ResponseDocumentsSection, { type DocumentDraft } from './rfx/ResponseDocumentsSection';
+import { ResponseVersionLine, ReviseControls } from './rfx/ResponseRevise';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SUPPLIER INFORMATION REQUESTS — REQ-E03-02 (SUP).
@@ -43,6 +46,14 @@ import RfxConfidentialityGate from './rfx/RfxConfidentialityGate';
 // questions, so this page has nothing to render but the terms and the accept
 // button — and accepting is a dispatched act, recorded with its time.
 //
+// NR-1 · THE DOCUMENTS SECTION AND "REVISE RESPONSE" (B4). The form carries
+// the supplier's files (`ResponseDocumentsSection`), judged with the rule the
+// submit and revise verbs call. A SUBMITTED response is never saved again (the
+// save verb refuses `RESPONSE_ALREADY_SUBMITTED`): before the deadline "Revise
+// response" re-opens the form on the latest version and dispatches the REVISE
+// verb, which appends a version; after it, the response and its files are
+// read-only and the action is absent, not disabled (the verb refuses anyway).
+//
 // COMPANY IDENTITY IS NEVER ASKED. Legal name, tax number, address and bank
 // come from the company profile, and the page says so rather than leaving the
 // supplier to wonder why the form starts at "what can you make".
@@ -57,6 +68,8 @@ const SupplierRfi: React.FC = () => {
   const command = useRfxCommand();
   const [openId, setOpenId] = useState<string | null>(null);
   const [draft, setDraft] = useState<Record<string, RfiAnswer[]>>({});
+  const [docDraft, setDocDraft] = useState<Record<string, readonly DocumentDraft[]>>({});
+  const [revising, setRevising] = useState<Record<string, boolean>>({});
 
   // The eyebrow is the menu section alone (the `PageHeader` rule).
   const crumb = [t('hub.nav.section.sourcing')];
@@ -71,6 +84,16 @@ const SupplierRfi: React.FC = () => {
   /** The answers in hand: the local edits, else the stored response. */
   const answersFor = (event: RfiEventView): RfiAnswer[] =>
     draft[event.id] ?? [...(event.responses[0]?.answers ?? [])];
+
+  /** The documents in hand: the local edits, else the stored ones. */
+  const documentsFor = (event: RfiEventView): readonly DocumentDraft[] =>
+    docDraft[event.id] ?? event.responses[0]?.documents ?? [];
+
+  /** Drop the local edits, so the form reads the stored (latest) version. */
+  const resetLocal = (eventId: string) => {
+    setDraft(({ [eventId]: _a, ...rest }) => rest);
+    setDocDraft(({ [eventId]: _d, ...rest }) => rest);
+  };
 
   const setAnswer = (event: RfiEventView, questionId: string, patch: Partial<RfiAnswer>) => {
     const current = answersFor(event);
@@ -98,9 +121,26 @@ const SupplierRfi: React.FC = () => {
         rfiId: event.id,
         supplierId,
         answers: answersFor(event),
+        documents: documentsFor(event),
         ...(draftOnly ? { draftOnly: true } : {}),
       },
       report(draftOnly ? 'rfx.toast.saved' : 'rfx.toast.sent'),
+    );
+
+  // NR-1 BR-08 — the revise verb, never a save: the response stays Submitted
+  // and the revision is appended as the next version.
+  const sendRevision = (event: RfiEventView, responseId: string) =>
+    command.mutate(
+      { verb: 'reviseRfiResponse', responseId, answers: answersFor(event), documents: documentsFor(event) },
+      {
+        onSuccess: (res) => {
+          report('rfx.toast.revised').onSuccess(res);
+          if (res.status === 'failed') return;
+          setRevising(({ [event.id]: _r, ...rest }) => rest);
+          resetLocal(event.id);
+        },
+        onError: report('rfx.toast.revised').onError,
+      },
     );
 
   const accept = (event: RfiEventView) =>
@@ -138,9 +178,19 @@ const SupplierRfi: React.FC = () => {
           const missing = missingRequiredAnswers(event.questions, answers);
           const invalid = invalidAnswers(event.questions, answers);
           const opened = openId === event.id;
-          const locked = mine?.status === 'Submitted' || answer.kind !== 'held' || event.closed;
+          const submitted = mine?.status === 'Submitted';
+          // NR-1 BR-08 — the window the revise verb judges, read by the same rule.
+          const windowOpen = responseWindowRefusal(event, supplierId, rfxNow()) === null;
+          const canRevise = submitted && windowOpen && answer.kind === 'held';
+          const isRevising = canRevise && !!revising[event.id];
+          const locked = (submitted && !isRevising) || answer.kind !== 'held' || event.closed;
+          const documents = documentsFor(event);
+          const answerFiles = answers.reduce((n, a) => n + (a.attachments?.length ?? 0), 0);
+          const docRefusal = responseDocumentsRefusal(event.documentRequests ?? [], documents, answerFiles);
+          const blocked = missing.length > 0 || invalid.length > 0 || docRefusal !== null;
           // An acceptance-only row is not a started answer (the read says the same).
-          const started = !!mine && (mine.status === 'Submitted' || mine.answers.length > 0);
+          const started =
+            !!mine && (submitted || mine.answers.length > 0 || (mine.documents ?? []).length > 0);
           return (
             <section
               key={event.id}
@@ -208,6 +258,9 @@ const SupplierRfi: React.FC = () => {
                     </div>
                   )}
                   <p className="text-xs text-text-tertiary">{t('rfx.rfi.identityFromMaster')}</p>
+                  {submitted && (
+                    <ResponseVersionLine versions={mine.versions} testId={`supplier-rfi-version-${event.id}`} />
+                  )}
                   {mine?.status === 'Draft' && started && (
                     <p className="text-sm text-action-hover bg-action-soft rounded px-3 py-2" data-testid={`supplier-rfi-draft-${event.id}`}>
                       {t('rfx.draftHidden')}
@@ -221,6 +274,15 @@ const SupplierRfi: React.FC = () => {
                     disabled={locked}
                     withDescription
                     onChange={(questionId, patch) => setAnswer(event, questionId, patch)}
+                  />
+
+                  <ResponseDocumentsSection
+                    key={`${event.id}-${isRevising ? 'revising' : 'stored'}-${mine?.versions.length ?? 0}`}
+                    requests={event.documentRequests ?? []}
+                    value={documents}
+                    onChange={locked ? undefined : (next) => setDocDraft((prev) => ({ ...prev, [event.id]: next }))}
+                    filesAlready={answerFiles}
+                    testId={`supplier-rfi-docs-${event.id}`}
                   />
 
                   {missing.length > 0 && !event.closed && (
@@ -246,24 +308,48 @@ const SupplierRfi: React.FC = () => {
                     </p>
                   )}
 
-                  <div className="flex flex-wrap gap-3">
-                    <Button
-                      variant="secondary"
-                      disabled={locked}
-                      onClick={() => send(event, true)}
-                      data-testid={`supplier-rfi-save-${event.id}`}
-                    >
-                      {t('rfx.save')}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      disabled={locked || missing.length > 0 || invalid.length > 0}
-                      onClick={() => send(event, false)}
-                      data-testid={`supplier-rfi-submit-${event.id}`}
-                    >
-                      {t('rfx.rfi.submit')}
-                    </Button>
-                  </div>
+                  {/* NR-1 BR-08 — while revising, Save and Submit give way to the
+                      revise verb's controls: a Submitted response is never saved. */}
+                  {!isRevising && (
+                    <div className="flex flex-wrap gap-3">
+                      <Button
+                        variant="secondary"
+                        disabled={locked}
+                        onClick={() => send(event, true)}
+                        data-testid={`supplier-rfi-save-${event.id}`}
+                      >
+                        {t('rfx.save')}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        disabled={locked || blocked}
+                        onClick={() => send(event, false)}
+                        data-testid={`supplier-rfi-submit-${event.id}`}
+                      >
+                        {t('rfx.rfi.submit')}
+                      </Button>
+                    </div>
+                  )}
+                  {submitted && mine && (
+                    <ReviseControls
+                      windowOpen={windowOpen}
+                      held={answer.kind === 'held'}
+                      revising={isRevising}
+                      closed={event.closed}
+                      nextVersion={mine.versions.length + 1}
+                      blocked={blocked || command.isPending}
+                      onStart={() => {
+                        resetLocal(event.id);
+                        setRevising((prev) => ({ ...prev, [event.id]: true }));
+                      }}
+                      onCancel={() => {
+                        resetLocal(event.id);
+                        setRevising(({ [event.id]: _r, ...rest }) => rest);
+                      }}
+                      onSend={() => sendRevision(event, mine.id)}
+                      testIdPrefix={`supplier-rfi-${event.id}`}
+                    />
+                  )}
                 </div>
               )}
             </section>

@@ -567,7 +567,10 @@ export const POLICY_HOOKS = {
    * revise, which keeps the earlier version.
    */
   RFX_RESPONSE_NOT_SUBMITTED: 'rfx_response_not_submitted',
-  /** Quotation submit (NR-1 BR-03 to BR-05): the same rule over the quote's documents and the RFQ's requests. */
+  /**
+   * Quotation submit and revise (NR-1 BR-03 to BR-05, BR-09): the same rule over
+   * the quote's documents and the RFQ's requests.
+   */
   QUOTATION_DOCUMENTS_COMPLETE: 'quotation_documents_complete',
   /**
    * Quotation submit (REQ-E03-03 AC-05): no quote after the response deadline

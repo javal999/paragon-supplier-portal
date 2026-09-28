@@ -2515,7 +2515,11 @@ export type RfxCommandVars =
       alternatives?: readonly QuotationAlternative[];
       answers?: readonly RfiAnswer[];
       sampleOffer?: SampleOffer;
-      attachments?: readonly AttachmentMeta[];
+      /**
+       * NR-1 BR-09 — the files the revised quote carries (the earlier version's,
+       * carried forward), judged by `quotation_documents_complete` as on submit.
+       */
+      documents?: readonly ResponseDocumentInput[];
     }
   | {
       // The FINAL award (`t_rfq_award`): every item awarded, now or earlier, or

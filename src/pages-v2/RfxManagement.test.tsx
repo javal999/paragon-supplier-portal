@@ -24,10 +24,12 @@ import {
   rfpOfferRoundStore,
   rfpResponseStore,
 } from '../services/data/mock/stores/rfxStores';
+import { mockDataService } from '../services/data/mock/mockDataService';
 import { rfxNow } from './rfx/rfxDisplay';
 import { MockCommandService } from '../services/data/mock/MockCommandService';
 import { PERSONA_SYSTEM_ROLES } from '../services/transitions/businessRoles';
 import type { QueryScope } from '../services/data/types';
+import type { DocumentRequest } from '../services/sourcing/types';
 import { formatDate } from '../lib/format';
 import { rfqStore } from '../services/data/mock/stores/rfqStore';
 import { quotationStore } from '../services/data/mock/stores/quotationStore';
@@ -295,6 +297,134 @@ describe('REQ-E03-04 — terms as rows, suppliers as columns, deviations highlig
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
+// NR-1 BR-08 (B4) — the Documents section and "Revise response" on the RFP form
+// ─────────────────────────────────────────────────────────────────────────────
+
+const DAY_MS = 86_400_000;
+const dayFromNow = (offset: number) =>
+  new Date(Date.parse(rfxNow()) + offset * DAY_MS).toISOString().slice(0, 10);
+const DIELINE: DocumentRequest = { id: 'dr-dieline', name: 'Dieline drawing', type: 'drawing', required: true };
+const buyerScope = { personaType: 'buyer', supplierId: null, businessRoles: SEEDED_SEAT_ROLES.buyer, actor: NO_PERSON } as const;
+const sup007Scope = { personaType: 'supplier', supplierId: 'sup-007', businessRoles: SEEDED_SEAT_ROLES.supplier, actor: NO_PERSON } as const;
+
+/** A published RFP inviting sup-007, deadline in 14 days, asking for 1 required drawing; sup-007's terms saved as a draft. */
+async function rfpWithDraft(): Promise<{ rfpId: string; responseId: string }> {
+  const created = await mockDataService.commands.dispatch(buyerScope, {
+    transitionId: 't_rfp_create',
+    entity: 'rfpEvent',
+    payload: {
+      title: 'Lip tint packaging',
+      scope: 'Tube and cap',
+      materialCategory: 'Packaging',
+      responseDeadline: dayFromNow(14),
+      currency: 'IDR',
+      invitedSupplierIds: ['sup-007'],
+      terms: [{ termId: 'paymentTerms', requestedValue: 'Net 30' }],
+      documentRequests: [DIELINE],
+    },
+  });
+  expect(created.status, created.reason).toBe('done');
+  const rfpId = created.entityId!;
+  const published = await mockDataService.commands.dispatch(buyerScope, {
+    transitionId: 't_rfp_publish',
+    entity: 'rfpEvent',
+    entityId: rfpId,
+    payload: {},
+  });
+  expect(published.status, published.reason).toBe('done');
+  const saved = await mockDataService.commands.dispatch(sup007Scope, {
+    transitionId: 't_rfpresponse_save',
+    entity: 'rfpResponse',
+    payload: {
+      rfpId,
+      supplierId: 'sup-007',
+      answers: [{ termId: 'paymentTerms', proposedValue: 'Net 30', stance: 'comply' }],
+    },
+  });
+  expect(saved.status, saved.reason).toBe('done');
+  return { rfpId, responseId: saved.entityId! };
+}
+
+describe('NR-1 BR-08 — the supplier revises a submitted RFP before the deadline', () => {
+  it('submits with a document, revises before the deadline, and sees version 2', async () => {
+    const { rfpId, responseId } = await rfpWithDraft();
+    renderWithProviders(<SupplierRfp />, { identity: SUP_007 });
+    fireEvent.click(await screen.findByTestId(`supplier-rfp-open-${rfpId}`));
+
+    // The required slot blocks sending, by name, until a file is in it.
+    expect(await screen.findByTestId(`supplier-rfp-docs-${rfpId}-slot-dr-dieline-refusal`)).toHaveTextContent(
+      'Required: Dieline drawing.',
+    );
+    expect(screen.getByTestId(`supplier-rfp-submit-${rfpId}`)).toBeDisabled();
+    fireEvent.change(screen.getByTestId(`supplier-rfp-docs-${rfpId}-slot-dr-dieline-files-input`), {
+      target: { files: [new File(['%PDF'], 'dieline-v1.pdf', { type: 'application/pdf' })] },
+    });
+    expect(await screen.findByText('dieline-v1.pdf')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByTestId(`supplier-rfp-submit-${rfpId}`)).not.toBeDisabled());
+    fireEvent.click(screen.getByTestId(`supplier-rfp-submit-${rfpId}`));
+
+    // Version 1, with the file; Save is shut (the save verb refuses a Submitted
+    // response) and "Revise response" is offered.
+    expect(await screen.findByTestId(`supplier-rfp-version-${rfpId}`)).toHaveTextContent('Version 1');
+    await waitFor(() => expect(rfpResponseStore.get(responseId)?.documents?.map((d) => d.attachment.name)).toEqual(['dieline-v1.pdf']));
+    expect(screen.getByTestId(`supplier-rfp-save-${rfpId}`)).toBeDisabled();
+
+    fireEvent.click(screen.getByTestId(`supplier-rfp-${rfpId}-revise`));
+    expect(await screen.findByTestId(`supplier-rfp-${rfpId}-revising`)).toHaveTextContent('version 2');
+    fireEvent.change(screen.getByLabelText('Other terms'), { target: { value: 'Tooling amortised over 12 months.' } });
+    fireEvent.click(screen.getByTestId(`supplier-rfp-${rfpId}-revise-send`));
+
+    expect(await screen.findByText(/Version 2/)).toBeInTheDocument();
+    const stored = rfpResponseStore.get(responseId)!;
+    expect(stored.status).toBe('Submitted');
+    expect(stored.versions?.map((v) => v.number)).toEqual([1, 2]);
+    // Version 1 is kept with its file, and without the later words.
+    expect(stored.versions?.[0]?.otherTerms ?? '').toBe('');
+    expect(stored.versions?.[0]?.documents?.map((d) => d.attachment.name)).toEqual(['dieline-v1.pdf']);
+    expect(stored.versions?.[1]?.otherTerms).toBe('Tooling amortised over 12 months.');
+  });
+
+  it('after the deadline the form is read-only and "Revise response" is absent', async () => {
+    const { rfpId, responseId } = await rfpWithDraft();
+    const doc = {
+      id: 'd-dieline',
+      requestId: DIELINE.id,
+      attachment: { id: 'a-dieline', name: 'dieline-v1.pdf', size: 1200, type: 'application/pdf', addedAt: rfxNow() },
+    };
+    const saved = await mockDataService.commands.dispatch(sup007Scope, {
+      transitionId: 't_rfpresponse_save',
+      entity: 'rfpResponse',
+      payload: {
+        rfpId,
+        supplierId: 'sup-007',
+        answers: [{ termId: 'paymentTerms', proposedValue: 'Net 30', stance: 'comply' }],
+        documents: [doc],
+      },
+    });
+    expect(saved.status, saved.reason).toBe('done');
+    const sent = await mockDataService.commands.dispatch(sup007Scope, {
+      transitionId: 't_rfpresponse_submit',
+      entity: 'rfpResponse',
+      entityId: responseId,
+      payload: {},
+    });
+    expect(sent.status, sent.reason).toBe('done');
+    sdcClock.set(new Date(Date.parse(rfxNow()) + 20 * DAY_MS).toISOString());
+
+    renderWithProviders(<SupplierRfp />, { identity: SUP_007 });
+    fireEvent.click(await screen.findByTestId(`supplier-rfp-open-${rfpId}`));
+    expect(await screen.findByTestId(`supplier-rfp-${rfpId}-readonly`)).toHaveTextContent(/read-only/);
+    expect(screen.getByTestId(`supplier-rfp-version-${rfpId}`)).toHaveTextContent('Version 1');
+    expect(screen.queryByTestId(`supplier-rfp-${rfpId}-revise`)).toBeNull();
+    // The file is listed; nothing can be added, removed or typed.
+    const docs = screen.getByTestId(`supplier-rfp-docs-${rfpId}`);
+    expect(within(docs).getByText('dieline-v1.pdf')).toBeInTheDocument();
+    expect(within(docs).queryByRole('button')).toBeNull();
+    expect(screen.getByLabelText('Other terms')).toBeDisabled();
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
 // REQ-E03-05 — comparison, rounds, award
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -542,8 +672,7 @@ const supplierScope = (supplierId: string): QueryScope => ({
   businessRoles: PERSONA_SYSTEM_ROLES.supplier,
   actor: NO_PERSON,
 });
-const dayFromNow = (offset: number) =>
-  new Date(Date.parse(rfxNow()) + offset * 86_400_000).toISOString().slice(0, 10);
+// `dayFromNow` is the helper declared with the B4 cases above (same definition).
 
 async function closedTundra(svc: MockCommandService): Promise<void> {
   rfpEventStore.update('rfp-002', (e) => ({ ...e, invitees: [...e.invitees, { supplierId: 'sup-008' }] }));

@@ -11,6 +11,7 @@
 //   t_rfiresponse_submit / t_rfpresponse_submit → rfx_response_documents_complete
 //   t_rfiresponse_revise / t_rfpresponse_revise → rfx_response_documents_complete
 //   t_quotation_submit                        → quotation_documents_complete
+//   t_quotation_revise (negotiation round)    → quotation_documents_complete (B4)
 // ────────────────────────────────────────────────────────────────────────────
 
 import { bindPolicyHook, POLICY_HOOKS } from '../../transitions';
