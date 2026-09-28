@@ -160,7 +160,11 @@ describe('Supplier Call-offs page (REQ-E09-03, REQ-E09-04)', () => {
     renderWithProviders(<SupplierCallOffs />, { identity: SUPPLIER });
     const row = await screen.findByTestId('supplier-calloff-row-co-0003');
     const full = 'PET Bottle 200ml Frosted — Wardah Series';
-    expect(within(row).getByText(full)).toBeInTheDocument();
+    const cell = within(row).getByText(full);
+    // jsdom has no layout, so text in the DOM passes whether or not it is
+    // ellipsized; the class is what decides it. Without this line the spec is
+    // green on the old truncated cell too.
+    expect(cell.className).not.toMatch(/\btruncate\b/);
     // …and the full value is reachable a second way, in the panel this row opens.
     fireEvent.click(within(row).getByRole('button', { name: /Respond/ }));
     expect(panel().getByText(full, { exact: false })).toBeInTheDocument();
