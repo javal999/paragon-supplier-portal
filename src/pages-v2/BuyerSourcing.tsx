@@ -121,6 +121,11 @@ import SupplierFilterBar, {
 } from './suppliers/SupplierFilterBar';
 import { PURCHASING_GROUPS, purchasingGroupNameKey } from '../services/sourcing/rfxConfig';
 import { reliabilityScoreFor } from '../services/transitions/rfxRules';
+import { documentRequestsRefusal } from '../services/transitions/rfxDocumentRules';
+import DocumentRequestsEditor, {
+  DocumentRequestsSummary,
+  remapRequestsOnItemsChanged,
+} from './rfx/DocumentRequestsEditor';
 import {
   useRfqCreate,
   useRfqReviseDraft,
@@ -870,6 +875,12 @@ interface DraftRfq extends RfqAuthoringDraft {
   sourceRequisitionId?: string;
   /** Where a seeded draft came from — the review names it ("Created from …"). */
   origin?: RfqDraftSeed['origin'];
+  /**
+   * NR-1 BR-02 — document requests whose item the buyer removed. Wizard state
+   * only (never in the payload): the Documents step names each one until it is
+   * edited or dismissed.
+   */
+  unlinkedDocRequestIds?: string[];
 }
 
 /**
@@ -1664,6 +1675,14 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
   const itemsRefusal = useMemo(() => itemsStepRefusal(draft.items), [draft.items]);
   const tiersRefusal = useMemo(() => tiersStepRefusal(draft.tiers), [draft.tiers]);
   const optionsRefusal = optionsStepRefusal(draft);
+  // NR-1 BR-02 — the items a document request may name, as the payload numbers
+  // them (`toRfqItem`: line = position + 1), so the level select and the verb's
+  // `itemLineNo` check read the same numbers.
+  const docItems = draft.items.map((item, i) => ({ lineNo: i + 1, description: item.description }));
+  const docsRefusal = documentRequestsRefusal(
+    draft.documentRequests ?? [],
+    docItems.map((i) => i.lineNo),
+  );
   const updateAuthoring = (patch: Partial<RfqAuthoringDraft>) => setDraft((d) => ({ ...d, ...patch }));
 
   const isStepValid = (step: number): boolean => {
@@ -1699,6 +1718,8 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
       if (!draft.responseDeadline || !draft.awardDeadline) return false;
       return new Date(draft.awardDeadline) > new Date(draft.responseDeadline);
     }
+    // NR-1 BR-02 — the create verb's own rule (`rfqCreateRefusal` calls it).
+    if (step === 6) return docsRefusal === null;
     return true;
   };
 
@@ -2174,7 +2195,24 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
       content: (
         <ItemsStep
           items={draft.items}
-          onChange={(items) => updateAuthoring({ items })}
+          // NR-1 BR-02 — a request names its item by position, so removing an
+          // item remaps the requests in the SAME update, never after it.
+          onChange={(items) =>
+            setDraft((d) => {
+              if (!d.documentRequests) return { ...d, items };
+              const remap = remapRequestsOnItemsChanged(
+                d.documentRequests,
+                d.items.map((i) => i.uid),
+                items.map((i) => i.uid),
+              );
+              return {
+                ...d,
+                items,
+                documentRequests: [...remap.requests],
+                unlinkedDocRequestIds: [...(d.unlinkedDocRequestIds ?? []), ...remap.unlinked],
+              };
+            })
+          }
           refusal={itemsRefusal}
         />
       ),
@@ -2523,6 +2561,22 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
       ),
     },
     {
+      id: 'documents',
+      title: t('rfxa.step.documents'),
+      shortTitle: t('rfxa.step.documents.short'),
+      description: t('rfxa.step.documents.desc'),
+      content: (
+        <DocumentRequestsEditor
+          value={draft.documentRequests ?? []}
+          onChange={(next) => updateAuthoring({ documentRequests: [...next] })}
+          items={docItems}
+          unlinked={draft.unlinkedDocRequestIds ?? []}
+          onUnlinkedChange={(next) => setDraft((d) => ({ ...d, unlinkedDocRequestIds: [...next] }))}
+          testIdPrefix="rfq-new"
+        />
+      ),
+    },
+    {
       id: 'review',
       title: t('sourcing.wizard.step.review.title'),
       shortTitle: t('sourcing.wizard.step.review.short'),
@@ -2652,6 +2706,21 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
               [t('sourcing.wizard.review.row.currency'), draft.currency],
             ]}
           />
+          <ReviewSection
+            label={t('rfxa.doc.review')}
+            onEdit={() => setWizardStep(6)}
+            rows={[
+              [
+                t('rfxa.step.documents.short'),
+                <DocumentRequestsSummary
+                  key="docs"
+                  value={draft.documentRequests ?? []}
+                  items={docItems}
+                  testIdPrefix="rfq-new"
+                />,
+              ],
+            ]}
+          />
           {/* D2 — the draft's content kept as a template in this browser: items,
               sheets, breaks, costs, questions and options. Not invitees, not
               dates, not files. */}
@@ -2664,7 +2733,7 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
                 <Button
                   variant="outline"
                   icon={Send}
-                  disabled={reviseMutation.isPending || ![0, 1, 2, 3, 4, 5].every(isStepValid)}
+                  disabled={reviseMutation.isPending || ![0, 1, 2, 3, 4, 5, 6].every(isStepValid)}
                   onClick={() => saveEdit(true)}
                   data-testid="rfq-edit-send"
                 >
