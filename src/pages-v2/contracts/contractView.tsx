@@ -480,7 +480,7 @@ export const ContractDetailBody: React.FC<{
           </p>
         ) : (
           <div className="relative min-w-0 border border-border-subtle rounded-md overflow-x-auto">
-            <table className="w-full min-w-max text-xs">
+            <table className="w-full text-xs">
               <thead className="bg-bg-hover text-text-tertiary uppercase tracking-wider">
                 <tr>
                   <th className="text-left px-3 py-2 font-semibold">

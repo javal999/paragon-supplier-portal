@@ -140,7 +140,7 @@ const RfxInviteeStep: React.FC<RfxInviteeStepProps> = ({
       <p className="text-xs text-text-tertiary -mt-3">{t('rfx.gate.inviteNote')}</p>
 
       <div className="relative min-w-0 border border-border-subtle rounded-md max-h-64 overflow-auto">
-        <table className="w-full min-w-max text-sm">
+        <table className="w-full text-sm">
           <thead className="bg-bg-hover text-text-tertiary uppercase tracking-wider text-xs sticky top-0">
             <tr>
               <th className="px-3 py-2 text-left font-semibold w-10"></th>
