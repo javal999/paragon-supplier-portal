@@ -160,7 +160,8 @@ const StockUploadPanel: React.FC<{ supplierId: string; positions: readonly Inven
           {result.refused.length > 0 && (
             <div>
               <p className="text-sm text-danger mb-2">{t('inv.upload.refused', { count: result.refused.length })}</p>
-              <table className="w-full text-sm" data-testid="stock-upload-refused">
+              <div className="relative w-full min-w-0 overflow-x-auto">
+              <table className="w-full min-w-max text-sm" data-testid="stock-upload-refused">
                 <thead>
                   <tr className="text-label text-text-tertiary uppercase">
                     <th className="text-left py-1">{t('inv.upload.col.row')}</th>
@@ -188,6 +189,7 @@ const StockUploadPanel: React.FC<{ supplierId: string; positions: readonly Inven
                   ))}
                 </tbody>
               </table>
+              </div>
             </div>
           )}
         </div>

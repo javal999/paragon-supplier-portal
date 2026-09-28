@@ -395,7 +395,7 @@ const OrderSummaryView: React.FC<OrderSummaryViewProps> = ({ persona, foresightA
                           onNavigate={rememberPosition}
                           testId={`order-summary-supplier-${po.id}`}
                         >
-                          <span className="text-sm truncate max-w-[7.5rem] inline-block align-bottom" title={po.supplierName}>
+                          <span className="text-sm whitespace-nowrap">
                             {po.supplierName}
                           </span>
                         </DrillLink>

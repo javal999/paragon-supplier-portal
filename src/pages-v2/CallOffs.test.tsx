@@ -152,23 +152,15 @@ describe('Supplier Call-offs page (REQ-E09-03, REQ-E09-04)', () => {
     expect(screen.getByTestId('supplier-calloff-banner')).toHaveTextContent('Call-offs to confirm: 1');
   });
 
-  // ⚠️ NEW BEHAVIOUR — the material description is now BOUNDED. Ten columns is the
-  // widest table in the hub and this is its only free-text one; unbounded it wrapped
-  // over several lines at 1280–1440px and pushed the Action column off the edge.
-  // Truncation is only honest if the whole value stays REACHABLE, so the guard is
-  // bilateral: the cell must truncate AND must still carry the full string, and the
-  // row's side panel must print it in full. A `truncate` with no `title` passes a
-  // "does it truncate?" spec and loses the value, which is the failure this pins.
-  it('the material description is truncated in the row and kept whole on the title', async () => {
+  // Ten columns is the widest table in the hub; the material description is its
+  // only free-text column. The row no longer bounds/truncates it — the table's
+  // own container scrolls horizontally instead, so the full value is always
+  // directly visible in the cell, not hidden behind a `title` tooltip.
+  it('shows the full material description directly in the row', async () => {
     renderWithProviders(<SupplierCallOffs />, { identity: SUPPLIER });
     const row = await screen.findByTestId('supplier-calloff-row-co-0003');
     const full = 'PET Bottle 200ml Frosted — Wardah Series';
-    const cell = within(row).getByTitle(full);
-    expect(cell).toHaveTextContent(full);
-    expect(cell.className).toContain('truncate');
-    // Bounded, not merely clipped: an unbounded `truncate` inside a table cell does
-    // nothing, so the max-width is the half that makes the class bite.
-    expect(cell.className).toMatch(/max-w-\[/);
+    expect(within(row).getByText(full)).toBeInTheDocument();
     // …and the full value is reachable a second way, in the panel this row opens.
     fireEvent.click(within(row).getByRole('button', { name: /Respond/ }));
     expect(panel().getByText(full, { exact: false })).toBeInTheDocument();
