@@ -23,7 +23,8 @@ const file = (name: string): AttachmentMeta => ({
 
 // A test-only resolved actor, so "the session's actor" is distinguishable from
 // every other actor in the file. Shipped code still constructs none (the
-// `simUsrNamespace` tripwire), and this id is outside the `sim-usr-` namespace.
+// `simUsrNamespace` tripwire), and this id is outside the reserved
+// demo-person namespace (C10 §6.3).
 const SESSION: ActorAttribution = { kind: 'RESOLVED', person: { personId: 'p-stamp-test', displayName: 'Session person' } };
 const FORGED: ActorAttribution = { kind: 'RESOLVED', person: { personId: 'p-forged', displayName: 'Forged' } };
 

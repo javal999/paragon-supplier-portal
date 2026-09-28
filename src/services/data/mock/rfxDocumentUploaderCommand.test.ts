@@ -5,9 +5,10 @@
 // submit / revise, quotation submit, and quotation revise in a negotiation
 // round.
 //
-// The session actor is varied per call (two test-only RESOLVED actors, never in
-// the `sim-usr-` namespace), so "stamped from the session" is distinguishable
-// from "stamped from the payload" and from "re-stamped on carry". The payload
+// The session actor is varied per call (two test-only RESOLVED actors, outside
+// the reserved demo-person namespace of C10 §6.3), so "stamped from the
+// session" is distinguishable from "stamped from the payload" and from
+// "re-stamped on carry". The payload
 // always claims a THIRD, forged actor and a backdated time; it must never land.
 // ────────────────────────────────────────────────────────────────────────────
 
