@@ -1390,106 +1390,114 @@ const rfqTarget: CommandTarget = {
   readState: (id) => rfqStore.get(id)?.status ?? null,
   readScopeOwner: () => null,
   readEntity: (id) => rfqStore.get(id) ?? null,
-  applyTransition: (id, toState, payload, scope) => {
-    // REQ-E03-03 BR-05 — the extension branch. `applyTransition` receives no
-    // transitionId, so the payload is the discriminator, exactly as the FX pin
-    // below discriminates on `quote`. `t_rfq_extend` is the ONLY rfq verb
-    // carrying `deadline`, and it is state-preserving, so nothing else here runs.
-    if (payload.deadline !== undefined) {
-      const deadline = String(payload.deadline);
-      const only = Array.isArray(payload.supplierIds)
-        ? (payload.supplierIds as unknown[]).filter((x): x is string => typeof x === 'string')
-        : [];
-      rfqStore.update(id, (r) => ({
-        ...r,
-        // Extended for EVERYONE moves the event's own deadline; extended for
-        // NAMED invitees leaves it alone and records a per-invitee one, so the
-        // two acts stay distinguishable after the fact.
-        ...(only.length === 0 ? { responseDeadline: deadline } : {}),
-        ...(only.length === 0
-          ? {}
-          : {
-              inviteeDeadlines: [
-                ...(r.inviteeDeadlines ?? []).filter((i) => !only.includes(i.supplierId)),
-                ...only.map((supplierId) => ({ supplierId, deadline })),
-              ],
-            }),
-        extensions: [...(r.extensions ?? []), { at: rfxNow(), deadline, supplierIds: only }],
-      }));
-      return;
-    }
-    // BL-93 — the revise-draft branch. `t_rfq_revise_draft` is the ONLY rfq verb
-    // that lands in `Draft` (create mints there; nothing else returns to it),
-    // so the target state is the discriminator. The record is REBUILT from the
-    // payload rather than merged, so a field the buyer cleared (a budget, a
-    // sample request, an attachment) is gone rather than surviving the edit.
-    // Identity, lifecycle and provenance are the stored ones.
-    if (toState === 'Draft') {
-      rfqStore.update(id, (r) => ({
-        ...rfqContentOf(payload),
-        id: r.id,
-        rfqNumber: r.rfqNumber,
-        buyerId: r.buyerId,
-        status: r.status,
-        createdAt: r.createdAt,
-        respondedSupplierIds: r.respondedSupplierIds,
-        sourceRfiId: r.sourceRfiId,
-        sourceRfpId: r.sourceRfpId,
-        copiedFromRfqId: r.copiedFromRfqId,
-        templateId: r.templateId,
-        // Not authored in the wizard, so never in the payload: kept as stored.
-        ...(r.lineItems ? { lineItems: r.lineItems } : {}),
-        ...(r.extensions ? { extensions: r.extensions } : {}),
-        ...(r.inviteeDeadlines ? { inviteeDeadlines: r.inviteeDeadlines } : {}),
-        ...(r.fxPins ? { fxPins: r.fxPins } : {}),
-        // CE-08 — who edited it and when: the session's actor, the store's clock.
-        revisions: [...(r.revisions ?? []), { at: sdcClock.now(), by: scope.actor ?? NO_PERSON }],
-      }));
-      return;
-    }
-    // REQ-E03-05 BR-06 / BR-09 — an award RECORDS itself. The hub keeps the
-    // split, the reason and who was not awarded; it mints no PO and no contract
-    // (the charter's system-of-record rule).
-    if (toState === 'Awarded') {
-      const rfq = rfqStore.get(id);
-      const supplied = Array.isArray(payload.awardLines) ? (payload.awardLines as AwardLine[]) : null;
-      // A single-supplier award is the same record with ONE line at 100% — so
-      // there is one award shape to read, not "a split" and "a plain award".
-      const lines: AwardLine[] = supplied ?? [
-        {
-          supplierId: String(payload.awardedSupplierId),
-          quotationId: String(payload.awardedQuotationId),
-          itemCode: '',
-          sharePct: 100,
-          quantity: rfq?.totalQty ?? 0,
-        },
-      ];
-      const winners = new Set(lines.map((l) => l.supplierId));
-      // A tiered award is judged at the break its lines record (the policy has
-      // already required one break across every line), so the best score it is
-      // stored against is the best score AT THAT BREAK — per item and overall.
-      const awardTierQty = rfq && isTieredRfq(rfq) ? lines[0]?.awardTierQty : undefined;
-      const best = rfq ? bestScoredQuotationId(rfq, rfxNow(), awardTierQty) : null;
-      const bestByItem =
-        rfq && awardTierQty !== undefined
-          ? [...bestScoredByItem(rfq, rfxNow(), awardTierQty).entries()]
-              .filter((e): e is [number, string] => e[1] !== null)
-              .map(([itemLineNo, quotationId]) => ({ itemLineNo, quotationId }))
-          : null;
-      awardStore.add({
-        id: awardStore.nextId(),
-        rfqId: id,
-        awardedAt: rfxNow(),
-        lines,
-        ...(typeof payload.awardReason === 'string' && payload.awardReason.trim()
-          ? { reason: payload.awardReason.trim() }
-          : {}),
-        ...(best ? { bestScoredQuotationId: best } : {}),
-        ...(bestByItem ? { bestScoredByItem: bestByItem } : {}),
-        // BR-08 — every other quote is marked Not awarded and its supplier
-        // notified. The quote status is the cascade's job; this records WHO.
-        notAwardedSupplierIds: (rfq?.invitedSupplierIds ?? []).filter((sid) => !winners.has(sid)),
-      });
+  applyTransition: (id, toState, payload, scope, transitionId) => {
+    // RFx A1 (AR-01) — the VERB is the discriminator. The dispatcher passes the
+    // transition id, so each rfq verb with an effect of its own has a case here.
+    // This used to guess the verb from the payload (`deadline` meant extend) and
+    // the target state (`Draft` meant revise, `Awarded` meant award), so a stray
+    // `deadline` on an award ran the extension and never awarded. Verbs with no
+    // case (publish, close, cancel, reopen, fx-pin) fall through to the status
+    // write below, as before; the FX pin's append there is keyed on its id too.
+    switch (transitionId) {
+      // REQ-E03-03 BR-05 — the extension. `t_rfq_extend` is state-preserving,
+      // so nothing below the switch runs for it.
+      case 't_rfq_extend': {
+        const deadline = String(payload.deadline);
+        const only = Array.isArray(payload.supplierIds)
+          ? (payload.supplierIds as unknown[]).filter((x): x is string => typeof x === 'string')
+          : [];
+        rfqStore.update(id, (r) => ({
+          ...r,
+          // Extended for EVERYONE moves the event's own deadline; extended for
+          // NAMED invitees leaves it alone and records a per-invitee one, so the
+          // two acts stay distinguishable after the fact.
+          ...(only.length === 0 ? { responseDeadline: deadline } : {}),
+          ...(only.length === 0
+            ? {}
+            : {
+                inviteeDeadlines: [
+                  ...(r.inviteeDeadlines ?? []).filter((i) => !only.includes(i.supplierId)),
+                  ...only.map((supplierId) => ({ supplierId, deadline })),
+                ],
+              }),
+          extensions: [...(r.extensions ?? []), { at: rfxNow(), deadline, supplierIds: only }],
+        }));
+        return;
+      }
+      // BL-93 — the revise-draft branch. The record is REBUILT from the payload
+      // rather than merged, so a field the buyer cleared (a budget, a sample
+      // request, an attachment) is gone rather than surviving the edit.
+      // Identity, lifecycle and provenance are the stored ones.
+      case 't_rfq_revise_draft': {
+        rfqStore.update(id, (r) => ({
+          ...rfqContentOf(payload),
+          id: r.id,
+          rfqNumber: r.rfqNumber,
+          buyerId: r.buyerId,
+          status: r.status,
+          createdAt: r.createdAt,
+          respondedSupplierIds: r.respondedSupplierIds,
+          sourceRfiId: r.sourceRfiId,
+          sourceRfpId: r.sourceRfpId,
+          copiedFromRfqId: r.copiedFromRfqId,
+          templateId: r.templateId,
+          // Not authored in the wizard, so never in the payload: kept as stored.
+          ...(r.lineItems ? { lineItems: r.lineItems } : {}),
+          ...(r.extensions ? { extensions: r.extensions } : {}),
+          ...(r.inviteeDeadlines ? { inviteeDeadlines: r.inviteeDeadlines } : {}),
+          ...(r.fxPins ? { fxPins: r.fxPins } : {}),
+          // CE-08 — who edited it and when: the session's actor, the store's clock.
+          revisions: [...(r.revisions ?? []), { at: sdcClock.now(), by: scope.actor ?? NO_PERSON }],
+        }));
+        return;
+      }
+      // REQ-E03-05 BR-06 / BR-09 — an award RECORDS itself. The hub keeps the
+      // split, the reason and who was not awarded; it mints no PO and no contract
+      // (the charter's system-of-record rule).
+      case 't_rfq_award': {
+        const rfq = rfqStore.get(id);
+        const supplied = Array.isArray(payload.awardLines) ? (payload.awardLines as AwardLine[]) : null;
+        // A single-supplier award is the same record with ONE line at 100% — so
+        // there is one award shape to read, not "a split" and "a plain award".
+        const lines: AwardLine[] = supplied ?? [
+          {
+            supplierId: String(payload.awardedSupplierId),
+            quotationId: String(payload.awardedQuotationId),
+            itemCode: '',
+            sharePct: 100,
+            quantity: rfq?.totalQty ?? 0,
+          },
+        ];
+        const winners = new Set(lines.map((l) => l.supplierId));
+        // A tiered award is judged at the break its lines record (the policy has
+        // already required one break across every line), so the best score it is
+        // stored against is the best score AT THAT BREAK — per item and overall.
+        const awardTierQty = rfq && isTieredRfq(rfq) ? lines[0]?.awardTierQty : undefined;
+        const best = rfq ? bestScoredQuotationId(rfq, rfxNow(), awardTierQty) : null;
+        const bestByItem =
+          rfq && awardTierQty !== undefined
+            ? [...bestScoredByItem(rfq, rfxNow(), awardTierQty).entries()]
+                .filter((e): e is [number, string] => e[1] !== null)
+                .map(([itemLineNo, quotationId]) => ({ itemLineNo, quotationId }))
+            : null;
+        awardStore.add({
+          id: awardStore.nextId(),
+          rfqId: id,
+          awardedAt: rfxNow(),
+          lines,
+          ...(typeof payload.awardReason === 'string' && payload.awardReason.trim()
+            ? { reason: payload.awardReason.trim() }
+            : {}),
+          ...(best ? { bestScoredQuotationId: best } : {}),
+          ...(bestByItem ? { bestScoredByItem: bestByItem } : {}),
+          // BR-08 — every other quote is marked Not awarded and its supplier
+          // notified. The quote status is the cascade's job; this records WHO.
+          notAwardedSupplierIds: (rfq?.invitedSupplierIds ?? []).filter((sid) => !winners.has(sid)),
+        });
+        break;
+      }
+      default:
+        break;
     }
     rfqStore.update(id, (r) => ({
       ...r,
@@ -1509,8 +1517,9 @@ const rfqTarget: CommandTarget = {
       //
       // The payload is already gated by `rfq_fx_pin_well_formed` (permitted
       // non-base currency, finite positive rate, readable vintage, known
-      // source), so the reads below cannot mint a malformed basis.
-      ...(payload.quote === undefined
+      // source), so the reads below cannot mint a malformed basis. Only
+      // `t_rfq_fx_pin` appends one (RFx A1): a `quote` on another verb is ignored.
+      ...(transitionId !== 't_rfq_fx_pin'
         ? {}
         : {
             fxPins: [
@@ -2867,36 +2876,42 @@ const rfiEventTarget: CommandTarget = {
   // Buyer-only: a supplier answers an RFI, it never publishes one.
   readScopeOwner: () => null,
   readEntity: (id) => rfiEventStore.get(id) ?? null,
-  applyTransition: (id, toState, payload, scope) => {
-    if (payload.deadline !== undefined) {
-      const deadline = String(payload.deadline);
-      const only = Array.isArray(payload.supplierIds)
-        ? (payload.supplierIds as unknown[]).filter((x): x is string => typeof x === 'string')
-        : [];
-      rfiEventStore.update(id, (e) => ({
-        ...e,
-        ...(only.length === 0 ? { responseDeadline: deadline } : {}),
-        invitees:
-          only.length === 0
-            ? e.invitees
-            : e.invitees.map((i) => (only.includes(i.supplierId) ? { ...i, deadline } : i)),
-        extensions: [...e.extensions, { at: sdcClock.now(), deadline, supplierIds: only }],
-      }));
-      return;
-    }
-    // BL-93 — `t_rfi_revise_draft` is the only RFI verb that lands in `Draft`.
-    // Rebuilt, not merged, so a cleared description or attachment is gone.
-    if (toState === 'Draft') {
-      rfiEventStore.update(id, (e) => ({
-        ...rfiContentOf(payload),
-        id: e.id,
-        eventNumber: e.eventNumber,
-        status: e.status,
-        createdAt: e.createdAt,
-        extensions: e.extensions,
-        revisions: [...(e.revisions ?? []), { at: sdcClock.now(), by: scope.actor ?? NO_PERSON }],
-      }));
-      return;
+  applyTransition: (id, toState, payload, scope, transitionId) => {
+    // RFx A1 (AR-01) — the verb is the discriminator, not a `deadline` in the
+    // payload or the `Draft` target state. Other verbs write the status below.
+    switch (transitionId) {
+      case 't_rfi_extend': {
+        const deadline = String(payload.deadline);
+        const only = Array.isArray(payload.supplierIds)
+          ? (payload.supplierIds as unknown[]).filter((x): x is string => typeof x === 'string')
+          : [];
+        rfiEventStore.update(id, (e) => ({
+          ...e,
+          ...(only.length === 0 ? { responseDeadline: deadline } : {}),
+          invitees:
+            only.length === 0
+              ? e.invitees
+              : e.invitees.map((i) => (only.includes(i.supplierId) ? { ...i, deadline } : i)),
+          extensions: [...e.extensions, { at: sdcClock.now(), deadline, supplierIds: only }],
+        }));
+        return;
+      }
+      // BL-93 — revise-draft. Rebuilt, not merged, so a cleared description or
+      // attachment is gone.
+      case 't_rfi_revise_draft': {
+        rfiEventStore.update(id, (e) => ({
+          ...rfiContentOf(payload),
+          id: e.id,
+          eventNumber: e.eventNumber,
+          status: e.status,
+          createdAt: e.createdAt,
+          extensions: e.extensions,
+          revisions: [...(e.revisions ?? []), { at: sdcClock.now(), by: scope.actor ?? NO_PERSON }],
+        }));
+        return;
+      }
+      default:
+        break;
     }
     rfiEventStore.update(id, (e) => ({ ...e, status: toState as RfxEventStatus }));
   },
@@ -3011,36 +3026,42 @@ const rfpEventTarget: CommandTarget = {
   readState: (id) => rfpEventStore.get(id)?.status ?? null,
   readScopeOwner: () => null,
   readEntity: (id) => rfpEventStore.get(id) ?? null,
-  applyTransition: (id, toState, payload, scope) => {
-    if (payload.deadline !== undefined) {
-      const deadline = String(payload.deadline);
-      const only = Array.isArray(payload.supplierIds)
-        ? (payload.supplierIds as unknown[]).filter((x): x is string => typeof x === 'string')
-        : [];
-      rfpEventStore.update(id, (e) => ({
-        ...e,
-        ...(only.length === 0 ? { responseDeadline: deadline } : {}),
-        invitees:
-          only.length === 0
-            ? e.invitees
-            : e.invitees.map((i) => (only.includes(i.supplierId) ? { ...i, deadline } : i)),
-        extensions: [...e.extensions, { at: sdcClock.now(), deadline, supplierIds: only }],
-      }));
-      return;
-    }
-    // BL-93 — `t_rfp_revise_draft` is the only RFP verb that lands in `Draft`.
-    if (toState === 'Draft') {
-      rfpEventStore.update(id, (e) => ({
-        ...rfpContentOf(payload),
-        id: e.id,
-        eventNumber: e.eventNumber,
-        status: e.status,
-        createdAt: e.createdAt,
-        extensions: e.extensions,
-        ...(e.sourceRfiId ? { sourceRfiId: e.sourceRfiId } : {}),
-        revisions: [...(e.revisions ?? []), { at: sdcClock.now(), by: scope.actor ?? NO_PERSON }],
-      }));
-      return;
+  applyTransition: (id, toState, payload, scope, transitionId) => {
+    // RFx A1 (AR-01) — the verb is the discriminator, not a `deadline` in the
+    // payload or the `Draft` target state. Other verbs write the status below.
+    switch (transitionId) {
+      case 't_rfp_extend': {
+        const deadline = String(payload.deadline);
+        const only = Array.isArray(payload.supplierIds)
+          ? (payload.supplierIds as unknown[]).filter((x): x is string => typeof x === 'string')
+          : [];
+        rfpEventStore.update(id, (e) => ({
+          ...e,
+          ...(only.length === 0 ? { responseDeadline: deadline } : {}),
+          invitees:
+            only.length === 0
+              ? e.invitees
+              : e.invitees.map((i) => (only.includes(i.supplierId) ? { ...i, deadline } : i)),
+          extensions: [...e.extensions, { at: sdcClock.now(), deadline, supplierIds: only }],
+        }));
+        return;
+      }
+      // BL-93 — revise-draft. Rebuilt, not merged, like the RFI's.
+      case 't_rfp_revise_draft': {
+        rfpEventStore.update(id, (e) => ({
+          ...rfpContentOf(payload),
+          id: e.id,
+          eventNumber: e.eventNumber,
+          status: e.status,
+          createdAt: e.createdAt,
+          extensions: e.extensions,
+          ...(e.sourceRfiId ? { sourceRfiId: e.sourceRfiId } : {}),
+          revisions: [...(e.revisions ?? []), { at: sdcClock.now(), by: scope.actor ?? NO_PERSON }],
+        }));
+        return;
+      }
+      default:
+        break;
     }
     rfpEventStore.update(id, (e) => ({ ...e, status: toState as RfxEventStatus }));
   },
