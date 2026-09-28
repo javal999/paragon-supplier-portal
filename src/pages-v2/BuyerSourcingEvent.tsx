@@ -30,7 +30,7 @@ import {
   useSuppliers,
 } from '../services/query/hooks';
 import { RfqSourceLinks } from './rfx/rfqSources';
-import { SupplierDocumentsPanel } from './rfx/SupplierDocumentsPanel';
+import { DocumentsStatus, SupplierDocumentsPanel } from './rfx/SupplierDocumentsPanel';
 import { documentsOf } from '../services/transitions/rfxDocumentRules';
 import { useRfxCommand } from '../services/query/commandHooks';
 import { effectiveDeadline, reliabilityScoreFor } from '../services/transitions/rfxRules';
@@ -545,6 +545,23 @@ const BuyerSourcingEvent: React.FC = () => {
                   </TableCell>
                 ))}
               </TableRow>
+              {/* BL-126 (CE-11l) — NR-1 buyer step 6 on a LEGACY RFQ: the
+                  required documents, per supplier. A tiered RFQ carries this
+                  row in its own comparison below, so it is not repeated here. */}
+              {!tiered && (
+                <TableRow data-testid="cmp-row-documents">
+                  <TableCell className="text-sm text-text-secondary">{t('rfxFiles.docs.row')}</TableCell>
+                  {current.map((q) => (
+                    <TableCell key={q.id}>
+                      <DocumentsStatus
+                        requests={rfq.documentRequests ?? []}
+                        documents={documentsOf(q)}
+                        testId={`cmp-documents-${q.supplierId}`}
+                      />
+                    </TableCell>
+                  ))}
+                </TableRow>
+              )}
             </tbody>
           </Table>
         )}

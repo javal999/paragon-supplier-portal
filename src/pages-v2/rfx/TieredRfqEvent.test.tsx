@@ -161,6 +161,48 @@ describe('the Documents row (RFx B5, NR-1 buyer step 6)', () => {
     // the event's documents panel lists the file under its supplier
     expect(screen.getByTestId('event-documents-sup-015')).toHaveTextContent('halal.pdf');
   });
+
+  // BL-126 (CE-11l) — the LEGACY single-price comparison carries the same row,
+  // read through `documentsOf` so a legacy quote's `attachments` count too.
+  it('a legacy RFQ (rfq-014) reads "Missing: Halal certificate" and "Complete" in its comparison', async () => {
+    rfqStore.update('rfq-014', (r) => ({
+      ...r,
+      documentRequests: [{ id: 'dr-halal', name: 'Halal certificate', type: 'certificate', required: true }],
+    }));
+    // sup-007 answers the request; sup-008 sends nothing against it.
+    quotationStore.update('qt-014a', (q) => ({
+      ...q,
+      documents: [
+        {
+          id: 'd-halal-014',
+          requestId: 'dr-halal',
+          attachment: { id: 'att-halal-014', name: 'halal-014.pdf', size: 1024, type: 'application/pdf', addedAt: '2026-09-20T00:00:00.000Z' },
+          uploadedAt: '2026-09-20T00:00:00.000Z',
+          certificate: { number: 'HLL-14', issuer: 'BPJPH', expiresOn: '2099-01-01' },
+        },
+      ],
+    }));
+    renderEvent('rfq-014');
+    const row = await screen.findByTestId('cmp-row-documents');
+    expect(row).toHaveTextContent('Documents');
+    expect(within(row).getByTestId('cmp-documents-sup-008')).toHaveTextContent('Missing: Halal certificate');
+    expect(within(row).getByTestId('cmp-documents-sup-007')).toHaveTextContent('Complete');
+    // the tiered table is not there to carry it
+    expect(screen.queryByTestId('tiered-documents')).not.toBeInTheDocument();
+  });
+
+  it('a legacy RFQ that asks for no documents reads as the tiered row does, "No documents requested"', async () => {
+    rfqStore.update('rfq-014', (r) => ({ ...r, documentRequests: [] }));
+    renderEvent('rfq-014');
+    const row = await screen.findByTestId('cmp-row-documents');
+    expect(within(row).getByTestId('cmp-documents-sup-007')).toHaveTextContent('No documents requested');
+  });
+
+  it('a tiered RFQ keeps its one Documents table; the legacy row is not repeated above it', async () => {
+    renderEvent('rfq-021');
+    await screen.findByTestId('tiered-documents');
+    expect(screen.queryByTestId('cmp-row-documents')).not.toBeInTheDocument();
+  });
 });
 
 describe('the award, item by item', () => {

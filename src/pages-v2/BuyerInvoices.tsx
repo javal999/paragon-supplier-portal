@@ -1381,7 +1381,7 @@ const BuyerInvoicesView: React.FC<{ invoices: BuyerInvoice[] }> = ({ invoices: a
                 <h3 className="text-label text-text-tertiary uppercase mb-3">
                   {t('buyerInvoices.section.remittance')}
                 </h3>
-                <div className="border border-border-subtle rounded-md overflow-hidden">
+                <div className="relative min-w-0 border border-border-subtle rounded-md overflow-x-auto">
                   <table className="w-full text-xs">
                     <tbody>
                       {[
