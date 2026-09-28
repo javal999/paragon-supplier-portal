@@ -24,7 +24,8 @@
 
 import { BID_CURRENCIES, type BidCurrency } from '../../lib/currencyPolicy';
 import { normalizeQty } from '../../lib/localeNumber';
-import type { RfiAnswer, RfiQuestion, RfiQuestionType } from './types';
+import type { DocumentRequest, ResponseDocument, RfiAnswer, RfiQuestion, RfiQuestionType } from './types';
+import { documentRequestsRefusal } from '../transitions/rfxDocumentRules';
 
 // ── The item ────────────────────────────────────────────────────────────────
 
@@ -151,10 +152,18 @@ export interface RfqAuthoringFields {
   attachments?: readonly AttachmentMeta[];
   /** The RFP this RFQ was created from (D3). */
   sourceRfpId?: string;
+  /**
+   * RFx D2 (NR-2 BR-08) — the RFP options this RFQ sources, by ref
+   * (`rfpOptionRef`). An option named here cannot also be awarded on the RFP,
+   * and an option already awarded there cannot be named here.
+   */
+  sourceRfpOptionRefs?: readonly string[];
   /** The past RFQ this one was copied from (D2). */
   copiedFromRfqId?: string;
   /** The template this RFQ started from (D2). */
   templateId?: string;
+  /** NR-1 BR-02 — the documents the buyer asks every supplier for. */
+  documentRequests?: readonly DocumentRequest[];
 }
 
 // ── The supplier's answer (the quotation extension) ─────────────────────────
@@ -213,7 +222,13 @@ export interface QuotationTieredFields {
   alternatives?: readonly QuotationAlternative[];
   answers?: readonly RfiAnswer[];
   sampleOffer?: SampleOffer;
+  /**
+   * The files a quote carried before NR-1. Read them through `documentsOf`,
+   * which returns them as documents answering no request.
+   */
   attachments?: readonly AttachmentMeta[];
+  /** NR-1 BR-01 — the supplier's files, each answering a request or none. */
+  documents?: readonly ResponseDocument[];
 }
 
 // ── The supplier-response records (model only; the screens come later) ──────
@@ -452,6 +467,14 @@ export function rfqCreateRefusal(payload: Record<string, unknown>): string | nul
       return 'SAMPLES_INVALID: a sample request needs a positive quantity and the date it is needed';
     }
   }
+  if (payload.documentRequests !== undefined) {
+    // NR-1 BR-02 — an `itemLineNo` must name an item of THIS RFQ.
+    const lineNos = Array.isArray(payload.items)
+      ? (payload.items as Partial<RfqItem>[]).map((i) => i?.lineNo).filter((n): n is number => typeof n === 'number')
+      : [];
+    const d = documentRequestsRefusal(payload.documentRequests, lineNos);
+    if (d) return d;
+  }
   return null;
 }
 
@@ -487,8 +510,15 @@ export function readRfqAuthoringFields(payload: Record<string, unknown>): RfqAut
     out.attachments = payload.attachments as AttachmentMeta[];
   }
   if (str('sourceRfpId')) out.sourceRfpId = str('sourceRfpId');
+  if (Array.isArray(payload.sourceRfpOptionRefs)) {
+    const refs = (payload.sourceRfpOptionRefs as unknown[]).filter((x): x is string => typeof x === 'string' && x.length > 0);
+    if (refs.length > 0) out.sourceRfpOptionRefs = refs;
+  }
   if (str('copiedFromRfqId')) out.copiedFromRfqId = str('copiedFromRfqId');
   if (str('templateId')) out.templateId = str('templateId');
+  if (Array.isArray(payload.documentRequests) && payload.documentRequests.length > 0) {
+    out.documentRequests = payload.documentRequests as DocumentRequest[];
+  }
   return out;
 }
 

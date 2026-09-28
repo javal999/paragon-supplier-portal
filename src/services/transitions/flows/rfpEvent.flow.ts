@@ -23,7 +23,11 @@ const RFP_CONTENT_FIELDS: readonly string[] = ['title', 'materialCategory', 'res
 export const rfpEventFlow: FlowDefinition = {
   entity: 'rfpEvent',
   version: 1,
-  states: ['Draft', 'Open', 'Closed', 'Cancelled'],
+  // RFx D2 (NR-2 BR-05, NR-3 BR-06) — an RFP is awarded per option on firm
+  // offers: `Partly awarded` while an option of a closed firm-offer round is
+  // still open, `Awarded` when every one is settled. Neither is a terminal:
+  // an award can be cancelled until it is marked "Raised in SAP" (D-7).
+  states: ['Draft', 'Open', 'Closed', 'Partly awarded', 'Awarded', 'Cancelled'],
   initial: 'Draft',
   terminals: ['Cancelled'],
   transitions: [
@@ -90,6 +94,87 @@ export const rfpEventFlow: FlowDefinition = {
       requiredRole: 'rfp:publish',
       requiredFields: [],
       policyHooks: [],
+      surfaceable: { surfaced: true },
+      version: 1,
+    },
+    {
+      // RFx D2 (NR-2 BR-01, BR-05 to BR-08; NR-3 BR-01 to BR-08) — the FINAL
+      // award of an RFP: every option of its closed firm-offer rounds is
+      // settled (awarded now or earlier, sourced by an RFQ, or named in
+      // `notAwardedItems`). Each line names an option by ref and the supplier's
+      // firm offer in force on it (never a quote), at one quantity point of the
+      // round; a reason is always required (NR-2 BR-06) and CR-23 is checked
+      // for every awarded supplier (BR-07). The C1 shape rule judges the split.
+      // NO CASCADE: the suppliers' RFP responses stay Submitted, and each
+      // responder's outcome is DERIVED from the award read (NR-2 BR-09).
+      id: 't_rfp_award',
+      from: ['Closed', 'Partly awarded'],
+      to: 'Awarded',
+      trigger: 'user',
+      requiredRole: 'rfp:award',
+      // The reason is judged by the policy (AWARD_REASON_REQUIRED), so a blank
+      // one is refused by name rather than as a missing field.
+      requiredFields: ['awardLines'],
+      policyHooks: [POLICY_HOOKS.RFP_AWARD_GOVERNED],
+      surfaceable: { surfaced: true },
+      version: 1,
+    },
+    {
+      // RFx D2 — the PARTIAL award, as the RFQ's pair: some options now, the
+      // rest later. Same role, fields and ONE policy hook as the final award;
+      // refuses AWARD_NOTHING_OPEN when it would settle every option.
+      id: 't_rfp_award_partial',
+      from: ['Closed', 'Partly awarded'],
+      to: 'Partly awarded',
+      trigger: 'user',
+      requiredRole: 'rfp:award',
+      requiredFields: ['awardLines'],
+      policyHooks: [POLICY_HOOKS.RFP_AWARD_GOVERNED],
+      surfaceable: { surfaced: true },
+      version: 1,
+    },
+    {
+      // RFx D2 (NR-3 BR-09, D-7) — cancelling an RFP award with a reason until
+      // it is marked "Raised in SAP"; the full cancel (no other award of the
+      // RFP stays in force) returns the RFP to Closed. The cancellation is
+      // APPENDED (AR-08); the award record is kept. Its own atom, apart from
+      // `rfp:award` (D-5), mirroring `t_rfq_award_cancel`.
+      id: 't_rfp_award_cancel',
+      from: ['Awarded', 'Partly awarded'],
+      to: 'Closed',
+      trigger: 'user',
+      requiredRole: 'rfp:award-cancel',
+      requiredFields: ['awardId'],
+      policyHooks: [POLICY_HOOKS.RFP_AWARD_CANCEL_GOVERNED],
+      surfaceable: { surfaced: true },
+      version: 1,
+    },
+    {
+      // RFx D2 — the PARTIAL cancel: another award of the RFP stays in force,
+      // so the RFP is `Partly awarded` afterwards. One policy with the full
+      // cancel, which refuses AWARD_CANCEL_TARGET_WRONG for the wrong verb.
+      id: 't_rfp_award_cancel_partial',
+      from: ['Awarded', 'Partly awarded'],
+      to: 'Partly awarded',
+      trigger: 'user',
+      requiredRole: 'rfp:award-cancel',
+      requiredFields: ['awardId'],
+      policyHooks: [POLICY_HOOKS.RFP_AWARD_CANCEL_GOVERNED],
+      surfaceable: { surfaced: true },
+      version: 1,
+    },
+    {
+      // RFx D2 (NR-2 BR-10, NR-3 BR-10) — the buyer marks an RFP award "Raised
+      // in SAP" with the SAP document number it typed. STATE-PRESERVING, as the
+      // RFQ's: recording a fact about one award is not a step in the machine.
+      id: 't_rfp_award_sap_raised',
+      from: ['Awarded', 'Partly awarded'],
+      to: 'Awarded',
+      statePreserving: true,
+      trigger: 'user',
+      requiredRole: 'rfp:award-sap',
+      requiredFields: ['awardId', 'sapDocumentNo'],
+      policyHooks: [POLICY_HOOKS.RFP_AWARD_SAP_GOVERNED],
       surfaceable: { surfaced: true },
       version: 1,
     },

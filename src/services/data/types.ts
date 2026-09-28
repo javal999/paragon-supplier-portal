@@ -31,6 +31,8 @@ import type {
   NegotiationRoundView,
   RfiEventView,
   RfpEventView,
+  RfpAwardView,
+  RfpOfferRoundView,
   RfqSupplierGateView,
 } from '../sourcing/views';
 
@@ -77,6 +79,7 @@ import type { EditPolicyPatch } from '../delivery/policy';
 // the collaboration + delivery reads one level up; the data layer only names the
 // shape it returns. Acyclic: chase reads sdc/delivery types, never data/types.
 import type { SupplierChaseView } from '../chase';
+import type { AttachmentMeta } from '../sourcing/rfqModel';
 
 // ─── PO enums (canonical home; relocated from types/purchaseOrder.types.ts) ──
 export enum POStatus {
@@ -2524,8 +2527,20 @@ export interface IProcurementService {
   getRfpEvents(scope: QueryScope): Promise<Page<RfpEventView>>;
   /** REQ-E03-05 — negotiation rounds. A supplier reads only its own thread (BR-05). */
   getNegotiationRounds(scope: QueryScope): Promise<Page<NegotiationRoundView>>;
+  /**
+   * NR-2 — firm-offer rounds on an RFP, with the offers and the last firm price
+   * per supplier and option. A supplier reads only rounds it was invited to and
+   * only its own offers (AC-01).
+   */
+  getRfpOfferRounds(scope: QueryScope): Promise<Page<RfpOfferRoundView>>;
   /** REQ-E03-05 — recorded awards. A supplier reads only its own outcome (AC-05). */
   getAwards(scope: QueryScope): Promise<Page<AwardView>>;
+  /**
+   * RFx D2 (NR-2 BR-09, AC-07) — awards on an RFP, per option on firm offers.
+   * A supplier reads only awards it is named on, only its own lines, and its
+   * outcome (awarded, not awarded, or withdrawn after a cancel).
+   */
+  getRfpAwards(scope: QueryScope): Promise<Page<RfpAwardView>>;
   /** RFx spec 2026-09-21 — invitees' intent and confidentiality acceptance. A supplier reads its own. */
   getRfqEngagement(scope: QueryScope): Promise<Page<RfqEngagementView>>;
   /** RFx spec 2026-09-21 — clarification Q&A. A supplier reads its own questions and the published answers, asker hidden. */
@@ -2756,6 +2771,47 @@ export interface IEnforcementService {
   getEnforcementSettings(scope: QueryScope): Promise<Page<EnforcementSetting>>;
 }
 
+// ─── File seam (RFx A2 · AR-07 — file bytes behind the data service) ────────
+//
+// The bytes of an attached file sit behind this seam like every other read and
+// write, so BL-27's real storage is an adapter swap and no component changes.
+// Today's adapter is the session store (`sessionAttachments`): the record keeps
+// the metadata `put` returns, the bytes last for this browser session only, and
+// `urlFor` answers `null` after a reload (CE-11).
+//
+// No `QueryScope` argument: the session store holds only what this browser
+// attached. Who may SEE a record's files is the read model's narrowing, not
+// this seam's. `put` is async because the real adapter uploads over the
+// network; the session adapter resolves at once. The other lookups are
+// synchronous. The access log (RFx B5) records each open or download of a
+// file with who and when; it is appended and never edited.
+export interface IFileService {
+  /** Keep a file and return the metadata the record stores. */
+  put(file: File): Promise<AttachmentMeta>;
+  /** A URL that opens the file, or `null` when it is not held. */
+  urlFor(id: string): string | null;
+  /** Let go of a file. The record's metadata is the caller's to drop. */
+  release(id: string): void;
+  /** Is this file's content held (openable) right now? */
+  isHeld(id: string): boolean;
+  /**
+   * Record that someone opened or downloaded a file (NR-1 BR-10, RFX-R3). The
+   * seam stamps the time; the entry is appended and never edited. A download
+   * is a read, not a state change, so it is recorded here and not by a verb.
+   */
+  recordAccess(fileId: string, by: ActorAttribution): void;
+  /** Every recorded access of a file, oldest first. Empty when never opened. */
+  accessLog(fileId: string): readonly FileAccess[];
+}
+
+/** One recorded open or download of a file (NR-1 BR-10). Append-only. */
+export interface FileAccess {
+  readonly fileId: string;
+  readonly by: ActorAttribution;
+  /** Seam-assigned, never the caller's. */
+  readonly at: string;
+}
+
 export interface IDataService {
   suppliers: ISupplierService;
   procurement: IProcurementService;
@@ -2771,6 +2827,8 @@ export interface IDataService {
   /** Enforcement read seam (CP-3 · E2) — the append-only setting ledger,
    *  buyer-scoped. The mode in force is derived by the caller, never served. */
   enforcement: IEnforcementService;
+  /** File seam (RFx A2) — file bytes; the session store today, BL-27 later. */
+  files: IFileService;
   /** Write seam — the single dispatcher (Step 3.4). */
   commands: ICommandService;
   /** What the current scope may do (Step 3.9 DNA seed; mock-backed today). */

@@ -138,7 +138,7 @@ describe('BL-93 · RFQ — Edit draft on the side panel', () => {
     // No requisition entrance on an edit: a requisition is linked once, at create.
     expect(screen.queryByTestId('rfq-source-select')).not.toBeInTheDocument();
     expect(screen.queryByTestId('rfq-source-empty')).not.toBeInTheDocument();
-    walk(6);
+    walk(7); // + the Documents step (B3)
     fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));
     await waitFor(() => expect(rfqStore.get(RFQ_ID)!.revisions).toHaveLength(2));
     expect(withoutTrail(rfqStore.get(RFQ_ID))).toEqual(before);
@@ -154,7 +154,7 @@ describe('BL-93 · RFQ — Edit draft on the side panel', () => {
     fireEvent.click(screen.getByRole('button', { name: /Remove break 30/ }));
     fireEvent.change(screen.getByTestId('rfq-tiers-input'), { target: { value: '12000' } });
     fireEvent.click(screen.getByTestId('rfq-tiers-add'));
-    walk(4);
+    walk(5); // + the Documents step (B3)
     fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));
     await waitFor(() => expect(rfqStore.get(RFQ_ID)!.revisions).toHaveLength(1));
     const saved = rfqStore.get(RFQ_ID)!;
@@ -163,7 +163,7 @@ describe('BL-93 · RFQ — Edit draft on the side panel', () => {
     expect(await screen.findByText('Draft saved. Suppliers still see nothing of it.')).toBeInTheDocument();
 
     fireEvent.click(await screen.findByTestId('rfq-edit-draft'));
-    walk(6);
+    walk(7); // + the Documents step (B3)
     fireEvent.click(screen.getByTestId('rfq-edit-send'));
     await waitFor(() => expect(rfqStore.get(RFQ_ID)!.status).toBe('Open'));
     expect(rfqStore.get(RFQ_ID)!.tiers!.map((t) => t.qty)).toContain(12_000);
@@ -172,7 +172,7 @@ describe('BL-93 · RFQ — Edit draft on the side panel', () => {
   it('a seat with create but not publish can edit and save, and reads whose act sending is', async () => {
     await openRfqPanel(DRAFTER_SEAT);
     fireEvent.click(await screen.findByTestId('rfq-edit-draft'));
-    walk(6);
+    walk(7); // + the Documents step (B3)
     expect(screen.queryByTestId('rfq-edit-send')).not.toBeInTheDocument();
     expect(screen.getByTestId('handoff-rfq-edit-send')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));
@@ -197,7 +197,7 @@ describe('BL-93 · RFQ — Edit draft on the side panel', () => {
   it('a draft sent by someone else while the wizard was open is refused, not overwritten', async () => {
     await openRfqPanel(BUYER_SEAT);
     fireEvent.click(await screen.findByTestId('rfq-edit-draft'));
-    walk(6);
+    walk(7); // + the Documents step (B3)
     await svc.dispatch(scope, { transitionId: 't_rfq_publish', entity: 'rfq', entityId: RFQ_ID });
     const sent = withoutTrail(rfqStore.get(RFQ_ID));
     fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));
@@ -267,7 +267,7 @@ describe('BL-93 · RFI — Edit draft on the event detail', () => {
     renderWithProviders(<><BuyerRfi /><Toaster /></>, { identity: BUYER_SEAT, route: `/buyer/rfi?open=${RFI_ID}` });
     fireEvent.click(await screen.findByTestId(`rfi-edit-${RFI_ID}`));
     expect(await screen.findByTestId('rfi-edit-banner')).toHaveTextContent('Editing draft RFI-2026-003');
-    walk(3);
+    walk(4); // + the Documents step (B3)
     fireEvent.click(screen.getByTestId('rfi-new-save-draft'));
     await waitFor(() => expect(rfiEventStore.get(RFI_ID)!.revisions).toHaveLength(2));
     expect(withoutTrail(rfiEventStore.get(RFI_ID))).toEqual(before);
@@ -275,7 +275,7 @@ describe('BL-93 · RFI — Edit draft on the event detail', () => {
 
     fireEvent.click(screen.getByTestId(`rfi-edit-${RFI_ID}`));
     fireEvent.change(await screen.findByLabelText('Title'), { target: { value: 'Redwood 2.0 mold makers' } });
-    walk(3);
+    walk(4); // + the Documents step (B3)
     fireEvent.click(screen.getByRole('button', { name: 'Save and send' }));
     await waitFor(() => expect(rfiEventStore.get(RFI_ID)!.status).toBe('Open'));
     expect(rfiEventStore.get(RFI_ID)!.title).toBe('Redwood 2.0 mold makers');
@@ -286,7 +286,7 @@ describe('BL-93 · RFI — Edit draft on the event detail', () => {
   it('a drafter seat can save the edit and cannot send it', async () => {
     renderWithProviders(<BuyerRfi />, { identity: DRAFTER_SEAT, route: `/buyer/rfi?open=${RFI_ID}` });
     fireEvent.click(await screen.findByTestId(`rfi-edit-${RFI_ID}`));
-    walk(3);
+    walk(4); // + the Documents step (B3)
     expect(screen.getByRole('button', { name: 'Save and send' })).toBeDisabled();
     fireEvent.click(screen.getByTestId('rfi-new-save-draft'));
     await waitFor(() => expect(rfiEventStore.get(RFI_ID)!.revisions).toHaveLength(1));
@@ -349,7 +349,7 @@ describe('BL-93 · RFP — Edit draft on the event detail', () => {
     renderWithProviders(<><BuyerRfp /><Toaster /></>, { identity: BUYER_SEAT, route: `/buyer/rfp?open=${RFP_ID}` });
     fireEvent.click(await screen.findByTestId(`rfp-edit-${RFP_ID}`));
     expect(await screen.findByTestId('rfp-edit-banner')).toHaveTextContent('Editing draft RFP-2026-004');
-    walk(5);
+    walk(6); // + the Documents step (B3)
     fireEvent.click(screen.getByTestId('rfp-new-save-draft'));
     await waitFor(() => expect(rfpEventStore.get(RFP_ID)!.revisions).toHaveLength(2));
     expect(withoutTrail(rfpEventStore.get(RFP_ID))).toEqual(before);
