@@ -16,7 +16,11 @@ import { renderWithProviders, BUYER } from '../test/test-utils';
 import type { CurrentIdentity } from '../context/CurrentIdentityContext';
 import { SEEDED_SEAT_ROLES } from '../services/transitions/businessRoles';
 import { NO_PERSON } from '../context/noPerson';
-import { resetRfxStores } from '../services/data/mock/stores/rfxStores';
+import { awardCancellationStore, awardStore, resetRfxStores } from '../services/data/mock/stores/rfxStores';
+import { MockCommandService } from '../services/data/mock/MockCommandService';
+import { PERSONA_SYSTEM_ROLES } from '../services/transitions/businessRoles';
+import type { QueryScope } from '../services/data/types';
+import { formatDate } from '../lib/format';
 import { rfqStore } from '../services/data/mock/stores/rfqStore';
 import { quotationStore } from '../services/data/mock/stores/quotationStore';
 import { sdcClock } from '../services/sdc';
@@ -39,6 +43,12 @@ beforeEach(() => {
 });
 
 const BUYER_SEAT = { ...BUYER, businessRoles: SEEDED_SEAT_ROLES.buyer };
+const BUYER_SCOPE: QueryScope = {
+  personaType: 'buyer',
+  supplierId: null,
+  businessRoles: PERSONA_SYSTEM_ROLES.buyer,
+  actor: NO_PERSON,
+};
 const supplierSeat = (supplierId: string, supplierName: string): CurrentIdentity => ({
   personaType: 'supplier',
   supplierId,
@@ -335,24 +345,35 @@ describe('REQ-E03-05 — the bid comparison', () => {
     openEvent();
     const confirm = await screen.findByTestId('award-confirm');
     expect(confirm).toBeDisabled(); // nothing entered yet
-    const share = within(screen.getByTestId('award-input-sup-015')).getByLabelText(/Share/i);
+    // RFx C3 — the legacy form is gone: rfq-014 is awarded per LINE on the one
+    // panel, so the shares are typed per line item.
+    const share = within(screen.getByTestId('award-input-PK-PETB-8802-sup-015')).getByLabelText(/Share/i);
     fireEvent.change(share, { target: { value: '70' } });
-    await waitFor(() => expect(screen.getByTestId('award-split-invalid')).toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.getByTestId('award-item-refusal')).toHaveAttribute('data-code', 'AWARD_SPLIT_INCOMPLETE'),
+    );
     expect(screen.getByTestId('award-confirm')).toBeDisabled();
     // POSITIVE TWIN — completing the split to 100% enables it. ⚠️ PREMISE
     // CHANGE (BL-43): the second share used to go to sup-007, which then failed
     // the compliance gate (OTIF 50% < 80%; it passes at 83% since BL-94);
     // sup-013 passes.
-    const second = within(screen.getByTestId('award-input-sup-013')).getByLabelText(/Share/i);
+    const second = within(screen.getByTestId('award-input-PK-PETB-8802-sup-013')).getByLabelText(/Share/i);
     fireEvent.change(second, { target: { value: '30' } });
-    await waitFor(() => expect(screen.queryByTestId('award-split-invalid')).not.toBeInTheDocument());
+    // The bottle line totals 100%; the refusal moves on to the cap line, still open.
+    await waitFor(() =>
+      expect(screen.getByTestId('award-item-refusal')).toHaveAttribute('data-code', 'AWARD_ITEMS_OPEN'),
+    );
+    fireEvent.change(within(screen.getByTestId('award-input-PK-CAPF-8820-sup-013')).getByLabelText(/Share/i), {
+      target: { value: '100' },
+    });
+    await waitFor(() => expect(screen.queryByTestId('award-item-refusal')).not.toBeInTheDocument());
   });
 
   it('BR-09 — a recorded award shows the split and says SAP raises the order', async () => {
     renderEvent('rfq-015');
     const recorded = await screen.findByTestId('award-recorded');
-    expect(within(recorded).getByTestId('award-line-sup-015')).toHaveTextContent('70%');
-    expect(within(recorded).getByTestId('award-line-sup-008')).toHaveTextContent('30%');
+    expect(within(recorded).getByTestId('award-line-PK-CART-9910-sup-015')).toHaveTextContent('70%');
+    expect(within(recorded).getByTestId('award-line-PK-CART-9910-sup-008')).toHaveTextContent('30%');
     expect(within(recorded).getByTestId('award-not-awarded')).toHaveTextContent(
       'PT Sample Packaging Indonesia',
     );
@@ -388,11 +409,11 @@ describe('CR-23 — the compliance gate is shown on the event (BL-43)', () => {
 
   it('BR-01a — the award form offers no share for a failing supplier and shows the reason instead', async () => {
     openEvent();
-    const failing = await screen.findByTestId('award-input-sup-008');
+    const failing = await screen.findByTestId('award-input-PK-PETB-8802-sup-008');
     expect(within(failing).queryByLabelText(/Share/i)).not.toBeInTheDocument();
-    expect(within(failing).getByTestId('award-gate-sup-008')).toHaveTextContent('OTIF below 80%');
+    expect(within(failing).getByTestId('award-gate-PK-PETB-8802-sup-008')).toHaveTextContent('OTIF below 80%');
     // KNOWN-GOOD twin — a passing supplier can be given a share.
-    expect(within(screen.getByTestId('award-input-sup-013')).getByLabelText(/Share/i)).toBeInTheDocument();
+    expect(within(screen.getByTestId('award-input-PK-PETB-8802-sup-013')).getByLabelText(/Share/i)).toBeInTheDocument();
   });
 
   it('BL-64 — when EVERY bidder fails (rfq-020), the award section says it cannot be awarded and offers no confirm', async () => {
@@ -401,9 +422,9 @@ describe('CR-23 — the compliance gate is shown on the event (BL-43)', () => {
     expect(notice).toHaveTextContent(rfxEn['rfx.gate.noAward']);
     expect(screen.queryByTestId('award-confirm')).not.toBeInTheDocument();
     // The reasons stay visible, by supplier — the notice does not replace them.
-    expect(screen.getByTestId('award-gate-sup-011')).toHaveTextContent('no GMP / ISO 22716');
-    expect(screen.getByTestId('award-gate-sup-004')).toHaveTextContent('no valid BPOM registration');
-    expect(screen.getByTestId('award-gate-sup-009')).toHaveTextContent('no valid halal certificate');
+    expect(screen.getByTestId('award-gate-event-sup-011')).toHaveTextContent('no GMP / ISO 22716');
+    expect(screen.getByTestId('award-gate-event-sup-004')).toHaveTextContent('no valid BPOM registration');
+    expect(screen.getByTestId('award-gate-event-sup-009')).toHaveTextContent('no valid halal certificate');
     // ID locale carries the same notice.
     expect(rfxId['rfx.gate.noAward']).toMatch(/tidak dapat dimenangkan/);
   });
@@ -412,8 +433,8 @@ describe('CR-23 — the compliance gate is shown on the event (BL-43)', () => {
     renderEvent('rfq-016');
     expect(await screen.findByTestId('award-confirm')).toBeInTheDocument();
     expect(screen.queryByTestId('award-none-qualified')).not.toBeInTheDocument();
-    expect(within(screen.getByTestId('award-input-sup-017')).getByLabelText(/Share/i)).toBeInTheDocument();
-    expect(within(screen.getByTestId('award-input-sup-018')).queryByLabelText(/Share/i)).not.toBeInTheDocument();
+    expect(within(screen.getByTestId('award-input-event-sup-017')).getByLabelText(/Share/i)).toBeInTheDocument();
+    expect(within(screen.getByTestId('award-input-event-sup-018')).queryByLabelText(/Share/i)).not.toBeInTheDocument();
   });
 });
 
@@ -429,7 +450,7 @@ describe('REQ-E03-05 BR-05 — a supplier sees only its own thread and its own o
 
   it('AC-05 — an awarded supplier reads its OWN share', async () => {
     renderWithProviders(<SupplierNegotiations />, { identity: SUP_015 });
-    const award = await screen.findByTestId('supplier-award-aw-0001');
+    const award = await screen.findByTestId('supplier-outcome-rfq-015-PK-CART-9910');
     expect(award).toHaveTextContent('Your share: 70%');
     // KNOWN-BAD twin — the OTHER winner's 30% is not on this page.
     expect(award).not.toHaveTextContent('30%');
@@ -437,9 +458,61 @@ describe('REQ-E03-05 BR-05 — a supplier sees only its own thread and its own o
 
   it('AC-05 — a supplier that lost reads "Not awarded", and no share at all', async () => {
     renderWithProviders(<SupplierNegotiations />, { identity: SUP_007 });
-    const loser = await screen.findByTestId('supplier-award-aw-0001');
+    const loser = await screen.findByTestId('supplier-outcome-rfq-015-PK-CART-9910');
     expect(loser).toHaveTextContent('Not awarded');
     expect(loser).not.toHaveTextContent('Your share');
+  });
+
+  // RFx C3 (NR-3 BR-12, AC-07) — per item: Awarded, Pending while an item is
+  // open, and "Award withdrawn" with its date after a cancel. rfq-014 (legacy,
+  // 2 lines): the bottle line goes 60/40 to sup-015 / sup-013 in a PARTIAL
+  // award, so the cap line stays open.
+  const partialOn014 = async () => {
+    const svc = new MockCommandService();
+    const res = await svc.dispatch(BUYER_SCOPE, {
+      transitionId: 't_rfq_award_partial',
+      entity: 'rfq',
+      entityId: 'rfq-014',
+      payload: {
+        awardedQuotationId: 'qt-014d-r1',
+        awardedSupplierId: 'sup-015',
+        awardReason: 'Dual sourced.',
+        awardLines: [
+          { supplierId: 'sup-015', quotationId: 'qt-014d-r1', itemCode: 'PK-PETB-8802', sharePct: 60, quantity: 360_000 },
+          { supplierId: 'sup-013', quotationId: 'qt-014c', itemCode: 'PK-PETB-8802', sharePct: 40, quantity: 240_000 },
+        ],
+      },
+    });
+    expect(res.status, res.reason).toBe('done');
+    return { svc, awardId: awardStore.all().find((a) => a.eventId === 'rfq-014')!.id };
+  };
+
+  it('AC-07 — the supplier reads its share on the awarded item and Pending on the open one', async () => {
+    await partialOn014();
+    renderWithProviders(<SupplierNegotiations />, { identity: SUP_015 });
+    const bottle = await screen.findByTestId('supplier-outcome-rfq-014-PK-PETB-8802');
+    expect(bottle).toHaveTextContent('Your share: 60% (360,000) at the 600,000 break');
+    expect(bottle).not.toHaveTextContent('40%'); // the other winner's share is not here
+    expect(screen.getByTestId('supplier-outcome-rfq-014-PK-CAPF-8820')).toHaveTextContent('Pending');
+  });
+
+  it('AC-07 — after a cancel the supplier reads "Award withdrawn" with the date, and the open item stays Pending', async () => {
+    const { svc, awardId } = await partialOn014();
+    const cancel = await svc.dispatch(BUYER_SCOPE, {
+      transitionId: 't_rfq_award_cancel',
+      entity: 'rfq',
+      entityId: 'rfq-014',
+      payload: { awardId, cancelReason: 'Wrong split entered.' },
+    });
+    expect(cancel.status, cancel.reason).toBe('done');
+    renderWithProviders(<SupplierNegotiations />, { identity: SUP_015 });
+    const bottle = await screen.findByTestId('supplier-outcome-rfq-014-PK-PETB-8802');
+    const withdrawnAt = awardCancellationStore.all()[0]!.cancelledAt;
+    expect(bottle).toHaveTextContent(`Award withdrawn ${formatDate(withdrawnAt)}`);
+    expect(bottle).not.toHaveTextContent('Your share');
+    expect(screen.getByTestId('supplier-outcome-rfq-014-PK-CAPF-8820')).toHaveTextContent('Pending');
+    // the buyer's reason stays on the buyer's read
+    expect(screen.queryByText(/Wrong split entered/)).not.toBeInTheDocument();
   });
 });
 

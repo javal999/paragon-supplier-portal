@@ -49,8 +49,9 @@ import type {
   RfqSupplierGateView,
   RfxInviteeView,
 } from '../../sourcing/views';
-import type { RfiResponse, RfpResponse } from '../../sourcing/types';
+import type { AwardLine, RfiResponse, RfpResponse } from '../../sourcing/types';
 import { awardStatusOf, cancellationOf, sapMarkOf, type AwardTrail } from '../../sourcing/awardStatus';
+import { awardItemsOf, itemOfAwardLine } from '../../sourcing/awardShape';
 import { rfqStore } from './stores/rfqStore';
 import { quotationStore } from './stores/quotationStore';
 import {
@@ -425,6 +426,13 @@ export function negotiationRoundViews(nowIso: string, supplierId: string | null)
     });
 }
 
+/** RFx C3 — the item keys an award's lines settled (see `AwardView.settledItemKeys`). */
+function settledKeysOf(rfq: RFQ | undefined, lines: readonly AwardLine[]): string[] {
+  if (!rfq) return [];
+  const items = awardItemsOf(rfq);
+  return [...new Set(lines.flatMap((l) => itemOfAwardLine(items, l)?.key ?? []))];
+}
+
 /** The awards a scope may read. A supplier reads only awards it is named on. */
 export function awardViews(supplierId: string | null): readonly AwardView[] {
   // RFx C2 (AR-08) — each award's status is derived from the appended trail.
@@ -486,6 +494,11 @@ export function awardViews(supplierId: string | null): readonly AwardView[] {
         ...(cancellation ? { withdrawnAt: cancellation.cancelledAt } : {}),
         ...(!supplierId && cancellation ? { cancellation } : {}),
         ...(!supplierId && sapMark ? { sapMark } : {}),
+        // RFx C3 (NR-3 BR-12; RFX-R4) — WHICH items this award settled, read
+        // from the FULL record: item keys only, never whose line or what share,
+        // so a supplier on the award can read "Not awarded" on an item another
+        // supplier won without learning who won it or how much.
+        settledItemKeys: settledKeysOf(rfq, award.lines),
       };
     });
 }

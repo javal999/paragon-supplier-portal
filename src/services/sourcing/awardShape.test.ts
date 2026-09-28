@@ -130,6 +130,41 @@ describe('AWARD_EMPTY', () => {
   it('KNOWN-GOOD — one line per item', () => expect(codeOf(legacyWhole())).toBeNull());
 });
 
+// RFx C3 (NR-3 BR-06) — a FINAL award with no lines that only marks the open
+// items "Will not award" on a Partly awarded event. Item 1 was awarded by an
+// earlier award in force (`aw-p`), so item 2 (M-CAP) is the only open item.
+describe('AWARD_EMPTY — "Will not award the rest" (settlesRestWithoutLines)', () => {
+  const prior: AwardRecord = {
+    id: 'aw-p',
+    eventType: 'rfq',
+    eventId: 'rfq-t',
+    awardedAt: '2026-09-01T00:00:00Z',
+    lines: [byPct('M-BOTTLE', 'qa', 100, 100_000)],
+    notAwardedSupplierIds: [],
+  };
+  const partly = () => awardItemsOf(LEGACY, [prior]);
+  const settle = (partlyAwarded: boolean, notAwardedKeys: readonly string[]) =>
+    awardShapeRefusal(partly(), [], LEGACY_QUOTES, { partlyAwarded, notAwardedKeys })?.code ?? null;
+
+  it('KNOWN-GOOD — Partly awarded, and every open item is marked Will not award', () => {
+    expect(settle(true, ['M-CAP'])).toBeNull();
+  });
+  it('KNOWN-BAD — Partly awarded, but the open item is not marked', () => {
+    expect(settle(true, [])).toBe('AWARD_EMPTY');
+  });
+  it('KNOWN-BAD — Partly awarded, marking only an item already awarded', () => {
+    expect(settle(true, ['M-BOTTLE'])).toBe('AWARD_EMPTY');
+  });
+  it('KNOWN-BAD — not Partly awarded: marking every item is still an empty award', () => {
+    expect(awardShapeRefusal(legacyItems(), [], LEGACY_QUOTES, { partlyAwarded: false, notAwardedKeys: ['M-BOTTLE', 'M-CAP'] })?.code).toBe(
+      'AWARD_EMPTY',
+    );
+  });
+  it('KNOWN-BAD — no settle argument (the partial award): AWARD_EMPTY as before', () => {
+    expect(awardShapeRefusal(partly(), [], LEGACY_QUOTES)?.code).toBe('AWARD_EMPTY');
+  });
+});
+
 describe('AWARD_ITEM_UNKNOWN', () => {
   it('KNOWN-BAD — a legacy line naming a material the RFQ does not have, named', () => {
     const r = awardShapeRefusal(legacyItems(), [byPct('M-OTHER', 'qa', 100, 100_000)], LEGACY_QUOTES)!;
