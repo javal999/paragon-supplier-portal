@@ -161,6 +161,14 @@ export const processFlowPurposeEn: Record<string, string> = {
     'The response window ends. Late offers are not compared, which is what makes the comparison fair to everyone who answered on time.',
   'processFlows.purpose.t_rfq_award':
     'Buying picks the winning offer and records why. Everyone who bid learns where they stand, in one act rather than by rumour.',
+  'processFlows.purpose.t_rfq_award_partial':
+    'Buying awards the items that are ready and comes back for the rest later. Nobody is turned down yet, because a supplier may still win an item not decided.',
+  'processFlows.purpose.t_rfq_award_cancel':
+    'Buying withdraws an award, with a reason, before it is raised in SAP. The award stays on record, a new winner can be chosen, and the offers it decided go back to evaluation.',
+  'processFlows.purpose.t_rfq_award_cancel_partial':
+    'Buying withdraws one award while others stand. Its items reopen, the other awards are untouched, and every step stays on record.',
+  'processFlows.purpose.t_rfq_award_sap_raised':
+    'Records that an award was raised in SAP, with the SAP document number. From here changes are made in SAP, not by cancelling in the hub.',
   'processFlows.purpose.t_rfq_fx_pin':
     'Records the exchange basis foreign offers are being compared on, so a decision taken today can still be explained a year from now.',
   'processFlows.purpose.t_rfq_cancel':
@@ -199,6 +207,8 @@ export const processFlowPurposeEn: Record<string, string> = {
     'This offer won. It follows from the buying decision on the request, and is never entered against a single supplier by hand.',
   'processFlows.purpose.t_quotation_reject':
     'This offer did not win. It lands at the same moment as the winning one, so nobody is left wondering and no one has to be told individually.',
+  'processFlows.purpose.t_quotation_reinstate':
+    'The award this offer depended on was withdrawn, so the offer goes back to evaluation instead of standing as won or lost.',
 
   // ── shipment ───────────────────────────────────────────────────────────────
   'processFlows.purpose.entity.shipment':
@@ -491,6 +501,16 @@ export const processFlowPurposeEn: Record<string, string> = {
     'The proposing window ends, and buying compares the terms side by side.',
   'processFlows.purpose.t_rfp_cancel':
     'PTI drops the request, so suppliers stop spending time on it.',
+  'processFlows.purpose.t_rfp_award':
+    'Buying awards the proposal option by option on the firm offers, with a reason. Each responder learns its own outcome, and the PO or contract is raised in SAP.',
+  'processFlows.purpose.t_rfp_award_partial':
+    'Buying awards the options that are ready on their firm offers and comes back for the rest. Nobody is turned down yet.',
+  'processFlows.purpose.t_rfp_award_cancel':
+    'Buying withdraws an RFP award, with a reason, before it is raised in SAP. The award stays on record and its options can be decided again.',
+  'processFlows.purpose.t_rfp_award_cancel_partial':
+    'Buying withdraws one RFP award while others stand. Its options reopen and every step stays on record.',
+  'processFlows.purpose.t_rfp_award_sap_raised':
+    'Records that an RFP award was raised in SAP, with the SAP document number. From here changes are made in SAP.',
   'processFlows.purpose.entity.rfpResponse':
     'One supplier’s proposed terms: what it offers on each point PTI raised, whether it will match it, and why where it will not.',
   'processFlows.purpose.t_rfpresponse_save':
@@ -505,6 +525,18 @@ export const processFlowPurposeEn: Record<string, string> = {
     'Buying asks the suppliers it shortlisted to improve what they offered, with a date to answer by and an optional message and target figure. Nobody else may answer.',
   'processFlows.purpose.t_negotiationround_close':
     'Buying stops taking improved offers for this round. A supplier that said nothing keeps what it offered before.',
+  'processFlows.purpose.entity.rfpOfferRound':
+    'A round of asking shortlisted RFP suppliers for firm prices on the options buying chose, at set quantities, with a date to answer by.',
+  'processFlows.purpose.t_rfp_round_open':
+    'After the proposals are in, buying asks the suppliers that answered and pass the compliance check for firm prices on chosen options and quantities. Nobody else may answer.',
+  'processFlows.purpose.t_rfp_round_close':
+    'Buying stops taking firm offers for this round. Offers already sent stay on record.',
+  'processFlows.purpose.entity.rfpFirmOffer':
+    'One supplier’s firm offer in a round: what it will charge per option and quantity, and the date it holds that until. Every version it sent is kept.',
+  'processFlows.purpose.t_rfpfirmoffer_submit':
+    'The supplier commits to what it will charge for the options and quantities asked, until a date no earlier than the round deadline.',
+  'processFlows.purpose.t_rfpfirmoffer_revise':
+    'The supplier changes its firm offer before the round closes. The earlier version is kept and the new one counts.',
 };
 
 export const processFlowPurposeId: Record<string, string> = {
@@ -635,6 +667,14 @@ export const processFlowPurposeId: Record<string, string> = {
     'Jendela tanggapan berakhir. Penawaran yang terlambat tidak ikut dibandingkan, dan itulah yang membuat perbandingannya adil bagi semua yang menjawab tepat waktu.',
   'processFlows.purpose.t_rfq_award':
     'Pembelian memilih penawaran pemenang dan mencatat alasannya. Semua yang ikut menawar tahu posisinya, lewat satu tindakan, bukan lewat kabar burung.',
+  'processFlows.purpose.t_rfq_award_partial':
+    'Pembelian menetapkan item yang sudah siap dan kembali untuk sisanya nanti. Belum ada yang ditolak, karena pemasok masih bisa memenangkan item yang belum diputuskan.',
+  'processFlows.purpose.t_rfq_award_cancel':
+    'Pembelian menarik sebuah penetapan pemenang, dengan alasan, sebelum dibuat di SAP. Catatannya tetap tersimpan, event terbuka untuk penetapan baru, dan penawaran yang diputuskannya kembali dievaluasi.',
+  'processFlows.purpose.t_rfq_award_cancel_partial':
+    'Pembelian menarik satu penetapan pemenang sementara yang lain tetap berlaku. Itemnya dibuka kembali, penetapan lain tidak tersentuh, dan setiap langkah tetap tercatat.',
+  'processFlows.purpose.t_rfq_award_sap_raised':
+    'Mencatat bahwa penetapan pemenang sudah dibuat di SAP, beserta nomor dokumen SAP-nya. Sejak itu perubahan dilakukan di SAP, bukan dengan membatalkan di hub.',
   'processFlows.purpose.t_rfq_fx_pin':
     'Mencatat dasar kurs yang dipakai membandingkan penawaran bermata uang asing, agar keputusan hari ini masih bisa dijelaskan setahun kemudian.',
   'processFlows.purpose.t_rfq_cancel':
@@ -673,6 +713,8 @@ export const processFlowPurposeId: Record<string, string> = {
     'Penawaran ini menang. Ia mengikuti keputusan pembelian atas permintaannya, dan tidak pernah dimasukkan satu per satu secara manual.',
   'processFlows.purpose.t_quotation_reject':
     'Penawaran ini tidak menang. Ia jatuh pada saat yang sama dengan yang menang, sehingga tak ada yang dibiarkan menerka dan tak seorang pun perlu dikabari satu per satu.',
+  'processFlows.purpose.t_quotation_reinstate':
+    'Penetapan pemenang yang menjadi dasar penawaran ini ditarik, sehingga penawaran kembali dievaluasi dan tidak lagi berstatus menang atau kalah.',
 
   // ── shipment ───────────────────────────────────────────────────────────────
   'processFlows.purpose.entity.shipment':
@@ -958,6 +1000,16 @@ export const processFlowPurposeId: Record<string, string> = {
     'Masa mengusulkan berakhir, dan pembelian membandingkan syarat berdampingan.',
   'processFlows.purpose.t_rfp_cancel':
     'PTI membatalkan permintaan, sehingga pemasok berhenti mengerjakannya.',
+  'processFlows.purpose.t_rfp_award':
+    'Pembelian menetapkan pemenang proposal per opsi berdasarkan penawaran tetap, dengan alasan. Setiap pemasok yang menjawab tahu hasilnya sendiri, dan PO atau kontrak dibuat di SAP.',
+  'processFlows.purpose.t_rfp_award_partial':
+    'Pembelian menetapkan opsi yang sudah siap berdasarkan penawaran tetapnya dan kembali untuk sisanya. Belum ada yang ditolak.',
+  'processFlows.purpose.t_rfp_award_cancel':
+    'Pembelian menarik penetapan pemenang RFP, dengan alasan, sebelum dibuat di SAP. Catatannya tetap tersimpan dan opsinya bisa diputuskan lagi.',
+  'processFlows.purpose.t_rfp_award_cancel_partial':
+    'Pembelian menarik satu penetapan pemenang RFP sementara yang lain tetap berlaku. Opsinya dibuka kembali dan setiap langkah tetap tercatat.',
+  'processFlows.purpose.t_rfp_award_sap_raised':
+    'Mencatat bahwa penetapan pemenang RFP sudah dibuat di SAP, beserta nomor dokumen SAP-nya. Sejak itu perubahan dilakukan di SAP.',
   'processFlows.purpose.entity.rfpResponse':
     'Syarat yang diusulkan satu pemasok: apa yang ditawarkan pada tiap pokok yang diangkat PTI, apakah bisa dipenuhi, dan alasannya bila tidak.',
   'processFlows.purpose.t_rfpresponse_save':
@@ -972,4 +1024,16 @@ export const processFlowPurposeId: Record<string, string> = {
     'Pembelian meminta pemasok dalam daftar pendek memperbaiki tawarannya, dengan tanggal untuk menjawab serta pesan dan angka target bila ada. Pihak lain tidak boleh menjawab.',
   'processFlows.purpose.t_negotiationround_close':
     'Pembelian berhenti menerima tawaran perbaikan untuk putaran ini. Pemasok yang tidak menjawab tetap pada tawaran sebelumnya.',
+  'processFlows.purpose.entity.rfpOfferRound':
+    'Satu putaran meminta pemasok RFP dalam daftar pendek memberi harga pasti untuk opsi yang dipilih pembelian, pada kuantitas tertentu, dengan tanggal untuk menjawab.',
+  'processFlows.purpose.t_rfp_round_open':
+    'Setelah proposal masuk, pembelian meminta pemasok yang menjawab dan lolos pemeriksaan kepatuhan memberi harga pasti untuk opsi dan kuantitas yang dipilih. Pihak lain tidak boleh menjawab.',
+  'processFlows.purpose.t_rfp_round_close':
+    'Pembelian berhenti menerima penawaran pasti untuk putaran ini. Penawaran yang sudah dikirim tetap tercatat.',
+  'processFlows.purpose.entity.rfpFirmOffer':
+    'Harga pasti satu pemasok dalam satu putaran: per opsi dan kuantitas, beserta tanggal berlakunya. Setiap versi yang dikirim disimpan.',
+  'processFlows.purpose.t_rfpfirmoffer_submit':
+    'Pemasok berkomitmen pada harga pasti untuk opsi dan kuantitas yang diminta, sampai tanggal yang tidak lebih awal dari batas waktu putaran.',
+  'processFlows.purpose.t_rfpfirmoffer_revise':
+    'Pemasok mengubah penawaran pastinya sebelum putaran ditutup. Versi sebelumnya disimpan dan versi baru yang berlaku.',
 };

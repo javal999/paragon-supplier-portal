@@ -19,7 +19,8 @@ import { useVerbAvailability } from '../hooks/useVerbAvailability';
 import { useToast } from '../hooks/useToast';
 import { formatDate } from '../lib/format';
 import { useCurrentIdentity } from '../context/CurrentIdentityContext';
-import { useRfpEvents } from '../services/query/hooks';
+import { useRfpAwards, useRfpEvents, useRfpOfferRounds } from '../services/query/hooks';
+import { SupplierFirmOffers } from './rfx/SupplierFirmOffers';
 import { useRfxCommand } from '../services/query/commandHooks';
 import { RFP_TERM_GROUP_ORDER, rfpTermGroupOf } from '../services/sourcing/rfxConfig';
 import {
@@ -65,6 +66,10 @@ const SupplierRfp: React.FC = () => {
   const { toast } = useToast();
   const { identity } = useCurrentIdentity();
   const events = useRfpEvents();
+  // RFx D3 — the firm-offer rounds this supplier was asked to, and its own
+  // award outcome (both narrowed to this supplier by the read, RFX-R4).
+  const offerRounds = useRfpOfferRounds();
+  const rfpAwards = useRfpAwards();
   const answerVerb = useVerbAvailability('rfpresponse:answer');
   const command = useRfxCommand();
   const [openId, setOpenId] = useState<string | null>(null);
@@ -479,6 +484,15 @@ const SupplierRfp: React.FC = () => {
                   </div>
                 </div>
               )}
+
+              <SupplierFirmOffers
+                event={event}
+                rounds={(offerRounds.data?.items ?? []).filter((r) => r.rfpId === event.id)}
+                awards={(rfpAwards.data?.items ?? []).filter((a) => a.eventId === event.id)}
+                supplierId={supplierId}
+                pending={command.isPending}
+                send={(vars, successKey) => command.mutate(vars, report(successKey))}
+              />
             </section>
           );
         })}
