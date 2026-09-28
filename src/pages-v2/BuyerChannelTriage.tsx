@@ -250,7 +250,9 @@ const BuyerChannelTriage: React.FC<BuyerChannelTriageProps> = ({ onRecorded }) =
             clearable
             placeholder={t('buyerCommHub.triage.supplierSelect')}
             loading={suppliersQuery.isPending}
-            error={suppliersQuery.isError}
+            // A failed REFETCH keeps the loaded roster (TanStack retains `data`),
+            // so only a read that never landed is stated as a failure.
+            error={suppliersQuery.isError && !suppliersQuery.data}
             onRetry={() => suppliersQuery.refetch()}
             name="triage-supplier"
           />

@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { screen, waitFor, within, fireEvent } from '@testing-library/react';
+import { screen, waitFor, within, fireEvent, act } from '@testing-library/react';
+import { QueryClient } from '@tanstack/react-query';
 import { renderWithProviders, SUPPLIER, pickSelectFieldOption } from '../test/test-utils';
 import BuyerChannelTriage from './BuyerChannelTriage';
 import SupplierInventory from './SupplierInventory';
@@ -11,6 +12,7 @@ import { DEFAULT_COMBOBOX_THRESHOLD } from '../components/ui-v2/SelectField';
 import { mockSuppliers } from '../data/mockSuppliers';
 import { mockDataService } from '../services/data/mock/mockDataService';
 import { withChaos } from '../services/data/mock/withChaos';
+import { DataError } from '../services/data/types';
 
 // ────────────────────────────────────────────────────────────────────────────
 // Comm Hub C4d — the buyer in-place triage. The SUBJECT supplier is bound at
@@ -125,6 +127,33 @@ describe('BuyerChannelTriage — the binding is first, and never a free supplier
     expect(alert).toHaveTextContent(/Couldn’t load options/);
     expect(within(alert).getByRole('button', { name: 'Retry' })).toBeInTheDocument();
     expect(screen.queryByText('No options available')).not.toBeInTheDocument();
+  });
+
+  it('a failed BACKGROUND refetch keeps the loaded picker — only a read that never landed is an error', async () => {
+    // The first supplier read succeeds; every later one fails. TanStack keeps
+    // the loaded data and flips `isError`, so a picker keyed on `isError` alone
+    // would swap a working, bound field for "Couldn't load options".
+    let listCalls = 0;
+    const suppliers = new Proxy(mockDataService.suppliers, {
+      get(obj, prop) {
+        const v = Reflect.get(obj, prop);
+        if (prop !== 'list' || typeof v !== 'function') return v;
+        return async (...args: unknown[]) => {
+          listCalls += 1;
+          if (listCalls > 1) throw new DataError('CHAOS', 'refetch failed');
+          return (v as (...a: unknown[]) => unknown).apply(obj, args);
+        };
+      },
+    });
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    renderWithProviders(<BuyerChannelTriage />, { service: { ...mockDataService, suppliers }, queryClient });
+    await pickSupplier(SUBJECT);
+    await act(() => queryClient.refetchQueries());
+    await waitFor(() => expect(listCalls).toBe(2));
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    const subjectName = mockSuppliers.find((s) => s.id === SUBJECT)?.name;
+    expect(screen.getByTestId('triage-supplier')).toHaveValue(subjectName);
+    expect(screen.getByTestId('triage-message')).toBeInTheDocument();
   });
 
   it('the binding can be cleared back to "pick a supplier first"', async () => {
