@@ -8,6 +8,7 @@
 | Code read | `main` at `f3fdede` |
 | Delivery | 1 PR per task. Tasks in one lane run in order. Lanes run in parallel and merge one at a time, re-checked against `main` before each merge |
 | Prompts | `docs/supplier-hub/prompts/rfx-build-*.md`. Every task prompt reads `rfx-build-00-brief.md` first |
+| Status | **Done and folded in on 2026-09-28** (task F1). Tasks A1 to D3 were built in PRs #54 (A1), #55 (A2), #56 (B1), #57 (D1), #58 (C1), #59 (B2), #60 (B3), #61 (C2), #62 (B5), #63 (B4), #64 (C3), #66 (D2) and #67 (D3), all merged 2026-09-28; #57 and #66 reached `main` inside #67. Build findings: section 3 (PR #65). The open follow-ups FU-1 to FU-5 and FU-7 are backlog rows BL-123 to BL-128 in `BACKLOG.md`; epic E is BL-27, BL-120, BL-121 and BL-122. This file stays as the record of the plan |
 
 ---
 
