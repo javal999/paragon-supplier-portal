@@ -141,3 +141,33 @@ Last    F1 (after B4, B5, C3, D3)
 
 - A1 and A2 can start together.
 - After them, up to 3 builders can work at once, for example C1, D1 and B1. Most conflict risk is in `MockCommandService.ts`, which C, D and B all touch. Merge one PR at a time, and have the next PR merge `main` in and re-run the gates before merging.
+
+---
+
+## 3. Found during the build (2026-09-25)
+
+Each item was found by a task builder and checked against the code before it was accepted. The PR numbers are the task PRs, all open against `main` when this was written.
+
+### 3.1 Fixed inside the task PR that found it
+
+| Found in | Issue | Fix |
+|---|---|---|
+| C1 (#58) | The C1 prompt said 2 award tests must "pass unchanged" while the record field they read was being replaced | The prompt now lists the allowed test edits (section 2, task C1). The PR lists every edited assertion |
+| B2 (#59) | Saving a draft could overwrite a Submitted response and bypass the version history | Save refuses `RESPONSE_ALREADY_SUBMITTED: use revise` |
+| B3 (#60) | Removing an RFQ item silently moved a document request onto another item, because requests name items by position | The wizard remaps requests when an item is removed. A request on the removed item becomes response-level and is named in a notice |
+| D1 (#57) | Supplier-proposed option ids (`sup-opt-N`) are unique only within one supplier, so 2 suppliers' options collided in a round | Rounds and firm prices name options by `rfpOptionRef`: `<supplierId>:<optionId>` for a proposed option |
+| B4 (#63) | A revised negotiation-round quote (`t_quotation_revise`) did not run the document rules (left open by B1) | The B1 document policy now runs on revise too |
+| C3 (#64) | A final award that only marks open items "Will not award" was refused `AWARD_EMPTY` (left open by C1) | Allowed with no lines only on a Partly awarded RFQ when `notAwardedItems` covers every open item |
+
+### 3.2 Open follow-ups
+
+| # | Item | Why it matters | Suggested owner |
+|---|---|---|---|
+| FU-1 | `ResponseDocument` has no `uploadedBy`. The B1 prompt left it out | NR-1 BR-10 asks who uploaded each file, and the buyer view (B5) cannot show it | A small task after B1 and B5 merge: record the session actor on each document, and show it in the panel |
+| FU-2 | `CLAUDE.md:241` says `quotation:review` and `rfq:award` are "not co-reachable on any RFQ". After C3 the award link shows on every awardable RFQ, so both appear on RFQ-2026-011 | A stale statement in the file every session reads | The operator. `CLAUDE.md` is canon, so it is not edited from a task PR |
+| FU-3 | `IFileService.urlFor` is synchronous (A2). Real storage usually hands out signed URLs asynchronously | BL-27 may need `urlFor` to become async | The BL-27 adapter task |
+| FU-4 | The legacy single-price RFQ comparison has no "Documents" row (B5 covered tiered RFQs and RFPs). The documents panel on that page still shows complete or missing | A small consistency gap | F1 records it, or a later polish task |
+| FU-5 | `t_rfq_award` still accepts a payload without `awardLines` (read as 1 line per item at 100%) for legacy RFQs, though no screen sends one after C3 | Dead path kept for C1's command tests | Remove together with those tests in a later tidy-up |
+| FU-6 | Page tests time out when many builders run the full suite at once (load average above 150) | False red runs. Each passed alone and on a full re-run | None. Note it for parallel work |
+| FU-7 | A firm-offer round can open only on a Closed RFP (D1), so a Partly awarded RFP cannot run another round for its open options (found in D2, #66) | The buyer must use RFP → RFQ for options still open after a partial award | Owner decision: allow rounds on Partly awarded RFPs, or keep RFQ as the path. Then a small D1 policy change |
+

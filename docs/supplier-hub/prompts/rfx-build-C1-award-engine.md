@@ -52,7 +52,7 @@ Keeping the screens working
 ## CONSTRAINTS
 
 - Out of scope: the new award panel and the removal of `useRfqAward` (C3), cancel and SAP marking (C2), RFP award (D2), and optimisation (BL-90).
-- Existing award behaviour on the 5 sample RFQs must be unchanged. `sup007OsloAward.test.ts` and `rfqCompareAward.test.ts` pass unchanged.
+- Award behaviour on the 5 sample RFQs stays the same. In `sup007OsloAward.test.ts` and `rfqCompareAward.test.ts`, edit only: `rfqId` → `eventId`; calls to the deleted rule functions → `awardShapeRefusal(awardItemsOf(rfq), …)`; and the 2 intended changes (a final award that leaves an item open refuses `AWARD_ITEMS_OPEN`; a lineless single-winner payload on a tiered RFQ keeps refusing `AWARD_ITEM_UNKNOWN`, since the 1-line-per-item conversion applies to legacy RFQs only). List every edited assertion in the PR body. (Corrected 2026-09-25: the earlier wording "pass unchanged" contradicted the record change.)
 
 ## DONE WHEN
 
