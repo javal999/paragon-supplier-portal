@@ -188,6 +188,7 @@ export const IncomingPanel: React.FC<{
           <p className="text-sm text-text-secondary">
             {position.materialLabel} · {position.supplierName}
           </p>
+          <div className="relative w-full min-w-0 overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="text-label text-text-tertiary uppercase">
@@ -225,6 +226,7 @@ export const IncomingPanel: React.FC<{
                 ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
     </SidePanel>

@@ -1,6 +1,6 @@
 import { screen, within, fireEvent, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { renderWithProviders } from '../test/test-utils';
+import { renderWithProviders, pickSelectFieldOption } from '../test/test-utils';
 import BuyerCommHub from './BuyerCommHub';
 import { useUnifiedChase } from '../services/query/chaseHooks';
 import { useConsolidationRows } from '../services/query/sdcBuyerHooks';
@@ -174,7 +174,7 @@ describe('BuyerCommHub — the buyer/planner Communication Hub (C4a)', () => {
     expect(within(screen.getByTestId('commhub-provenance')).getByText(/No channel-sourced submissions/)).toBeInTheDocument();
     // Bind the subject, paste, parse, open the entry form, save (BL-73: the form
     // is the Inventory page's own, and its save is the record dispatch).
-    fireEvent.change(screen.getByTestId('triage-supplier'), { target: { value: 'sup-007' } });
+    await pickSelectFieldOption('triage-supplier', 'sup-007');
     fireEvent.change(screen.getByTestId('triage-message'), { target: { value: 'STOK PK-PETB-8810 2400 KG' } });
     fireEvent.click(screen.getByTestId('triage-parse'));
     fireEvent.click(await screen.findByTestId('triage-enter-0'));

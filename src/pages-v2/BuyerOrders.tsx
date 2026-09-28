@@ -608,7 +608,7 @@ const BuyerOrders: React.FC = () => {
                     )}
                   </TableCell>
                   <TableCell>
-                    <div className="text-sm text-text-secondary truncate max-w-[18rem]">
+                    <div className="text-sm text-text-secondary">
                       {firstLine?.description ?? '—'}
                     </div>
                     {moreLines > 0 && (

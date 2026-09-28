@@ -1,5 +1,5 @@
 import { screen, waitFor, within, fireEvent } from '@testing-library/react';
-import { renderWithProviders, BUYER } from '../test/test-utils';
+import { renderWithProviders, BUYER, pickSelectFieldOption } from '../test/test-utils';
 import type { CurrentIdentity } from '../context/CurrentIdentityContext';
 import i18n from '../lib/i18n';
 import { rolesHolding } from '../services/transitions/businessRoles';
@@ -35,9 +35,7 @@ const RECEIVING_ONLY: CurrentIdentity = { ...BUYER, businessRoles: ['receiving']
 // into the Inventory page's entry form (`triage-enter-0`), whose save is the
 // `record` dispatch. The gate is the same atom, on the same row.
 async function reachConfirmStage() {
-  const select = screen.getByTestId('triage-supplier') as HTMLSelectElement;
-  await waitFor(() => expect(within(select).getAllByRole('option').length).toBeGreaterThan(1));
-  fireEvent.change(select, { target: { value: 'sup-007' } });
+  await pickSelectFieldOption('triage-supplier', 'sup-007');
   fireEvent.change(screen.getByTestId('triage-message'), {
     target: { value: 'STOK PK-PETB-8810 2400 KG' },
   });

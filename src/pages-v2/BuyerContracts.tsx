@@ -1451,7 +1451,7 @@ const ContractsWorkspace: React.FC<ContractsWorkspaceProps> = ({
                     <Data as="div" className="font-semibold text-text-primary">
                       {c.contractNumber}
                     </Data>
-                    <div className="text-xs text-text-tertiary mt-0.5 max-w-[18rem] truncate">
+                    <div className="text-xs text-text-tertiary mt-0.5">
                       {c.title}
                     </div>
                   </TableCell>
