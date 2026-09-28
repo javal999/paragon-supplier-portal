@@ -4,6 +4,7 @@ import { Inbox, Info, MessageSquare, PenLine, RotateCcw, CheckCircle2, AlertTria
 import Button from '../components/ui-v2/Button';
 import Data from '../components/ui-v2/Data';
 import StatusPill from '../components/ui-v2/StatusPill';
+import SelectField from '../components/ui-v2/SelectField';
 import { useInventory, useSuppliers } from '../services/query/hooks';
 import StockEntryPanel from './inventory/StockEntryPanel';
 import { HandoffNotice } from '../components/ui-v2/HandoffNotice';
@@ -240,20 +241,21 @@ const BuyerChannelTriage: React.FC<BuyerChannelTriageProps> = ({ onRecorded }) =
           <label className={labelClass} htmlFor="triage-supplier">
             {t('buyerCommHub.triage.supplierLabel')}
           </label>
-          <select
+          <SelectField
             id="triage-supplier"
-            className={inputClass}
-            value={subjectSupplierId}
-            onChange={(e) => pickSupplier(e.target.value)}
-            data-testid="triage-supplier"
-          >
-            <option value="">{t('buyerCommHub.triage.supplierSelect')}</option>
-            {suppliers.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
-            ))}
-          </select>
+            testId="triage-supplier"
+            options={suppliers.map((s) => ({ value: s.id, label: s.name }))}
+            value={subjectSupplierId || null}
+            onChange={(id) => pickSupplier(id ?? '')}
+            clearable
+            placeholder={t('buyerCommHub.triage.supplierSelect')}
+            loading={suppliersQuery.isPending}
+            // A failed REFETCH keeps the loaded roster (TanStack retains `data`),
+            // so only a read that never landed is stated as a failure.
+            error={suppliersQuery.isError && !suppliersQuery.data}
+            onRetry={() => suppliersQuery.refetch()}
+            name="triage-supplier"
+          />
           <p className="mt-1 text-[11px] text-text-tertiary">{t('buyerCommHub.triage.supplierHint')}</p>
         </div>
 
