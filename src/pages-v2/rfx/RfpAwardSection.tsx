@@ -28,7 +28,11 @@ import { rfxNow } from './rfxDisplay';
  * pre-fill use (`rfpAwardedOptionRefs`). A cancelled award frees its options.
  */
 export const awardedRefsOf = (awards: readonly RfpAwardView[]): ReadonlyMap<string, string> =>
-  rfpAwardedOptionRefs(awards.filter((a) => a.status !== 'Cancelled').map((a) => ({ ...a, reason: a.reason ?? '' })));
+  rfpAwardedOptionRefs(awardRecordsInForce(awards));
+
+/** The buyer's award views IN FORCE, as the award records the pure rules read. */
+export const awardRecordsInForce = (awards: readonly RfpAwardView[]) =>
+  awards.filter((a) => a.status !== 'Cancelled').map((a) => ({ ...a, reason: a.reason ?? '' }));
 
 export interface RfpAwardSectionProps {
   event: RfpEventView;

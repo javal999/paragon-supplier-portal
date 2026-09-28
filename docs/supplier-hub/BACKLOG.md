@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 2.9, 2026-09-28 |
+| Version | 2.10, 2026-09-28 |
 | What this is | Everything known to be outstanding for the Supplier Hub, in one list: decisions waiting on people, work waiting on those decisions, work waiting on the backend, and work that can start today |
 | What this is not | A plan or a commitment. Nothing here has a date. Sequencing belongs to the project owner |
 | Sources | Open items (section 7 of `SUPPLIER-HUB-REQUIREMENTS.md`), open decisions (section 9.3 of `SUPPLIER-HUB-PRD.md`), what is not built (section 5 of `BUILD-GAP.md`), stubs (section 6 of the requirements), and defects or debts found while building |
@@ -37,7 +37,6 @@ Still open. Items decided on 2026-09-21 are in section 6.
 | BL-69 | **Late at the deadline or after it?** Forecast commitments are late at the deadline minute; PO and call-off responses only after it. Recommended: one rule, late after the deadline | Material Planner | One convention in CR-26 and the response deadlines | REQ-E06-02, E07-02, E09-03 |
 | BL-70 | **Who may change the working calendar and the 3PL list?** Today the Hub administrator and the combined buyer "All" role (offered, not seeded), following the enforcement-settings precedent. Alternative: administrator only | Procurement, IT | Role atoms `calendar:set`, `threepl:maintain` | Requirements 3.4, REQ-E07-04 BR-05 |
 | BL-71 | **Goods receipt: what an over-delivery is measured against, and does "kept open" reopen quantity?** CR-25 says the order; REQ-E07-06 BR-03 says the ASN. The build uses the ASN when linked, else the order. "Kept open" is a label and does not reopen the missing quantity for another shipment | Material Planner, Warehouse | CR-25, REQ-E07-06 wording; possible build | REQ-E07-06 |
-| BL-128 | **FU-7**: firm-offer round on a Partly awarded RFP. Today a round opens only on a Closed RFP (PR #57), so options still open after a partial award go to an RFQ. Allow a new round for them, or keep RFP → RFQ as their path | Owner, with Procurement | A small change to the round policy (REQ-E03-04 BR-15e) | Requirements section 7; found in PR #66 |
 | BL-101 | **C8 §8** — SOMO ratifies the in-house forecast engine amendment (the hub computes the material × period totals until the engine moves to SOMO) | SOMO, with the operator | The engine publishing its own totals on the C8 seam | `docs/contracts/C8-forecast-publication.md` §8 |
 | BL-119 | **Forecast engine decisions still open**: ENG-D8a cumulative cap agreed with pilot suppliers; ENG-D10 forecast grain (sell-in or sell-out, per channel); ENG-D11 who reviews the forecast before it drives material plans; ENG-D12 owner of the promotion calendar and how far ahead it is fixed; ENG-D13 plan-stability limit in model selection (set after the first backtest); ENG-D14 materials per service tier | Material Planner, Procurement, Demand Planning, Marketing | BL-108 (D8a confirms), BL-110 (D10, D11), BL-112 (D13), BL-113 (D12); D14 confirms E14-04 tiers | `FORECAST-ENGINE-REQUIREMENTS.md` section 4.2 |
 
@@ -149,6 +148,7 @@ Nothing blocks these.
 
 | ID | Item | Closed | By |
 |---|---|---|---|
+| BL-128 | FU-7: firm-offer round on a Partly awarded RFP | 2026-09-28 | Owner decision RFX-D15: allowed, for the options still open. Built in PR #71: the round opens on a Closed or Partly awarded RFP, refuses an option an award in force names or a live RFQ created from the RFP sources (`ROUND_OPTION_SETTLED`), and the final award on the remaining options moves the RFP to Awarded |
 | BL-02 | PQ-09 event-based analysis in the MVP | 2026-09-21 | Decided: not in the MVP; belongs in the planning suite. BL-21 closes with it |
 | BL-03 | D-03 supplier TMS access | 2026-09-21 | Decided: no TMS integration in the MVP; replaced by the 3PL tracking link (BL-51). BL-22 closes with it |
 | BL-04 | A-03 compliance and scoring | 2026-09-21 | Decided: compliance gate at award (CR-23) and new weights (CR-15). Build is BL-43; template and term-list review with users continues as part of A-01 (BL-57) |

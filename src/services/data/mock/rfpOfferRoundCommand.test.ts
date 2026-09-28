@@ -158,10 +158,10 @@ describe('NR-2 — the fixture the round is probed against exists', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe('NR-2 BR-02 — t_rfp_round_open', () => {
-  it('KNOWN-BAD — opening a round on an Open RFP is refused RFP_NOT_CLOSED, and mints nothing', async () => {
+  it('KNOWN-BAD — opening a round on an Open RFP is refused RFP_NOT_ROUND_READY, and mints nothing', async () => {
     const res = await openRound(goodRound());
     expect(res.status).toBe('failed');
-    expect(res.reason).toMatch(/:RFP_NOT_CLOSED/);
+    expect(res.reason).toMatch(/:RFP_NOT_ROUND_READY/);
     expect(rfpOfferRoundStore.all()).toEqual([]);
   });
 
@@ -568,7 +568,8 @@ describe('NR-2 — two suppliers proposing the same sup-opt id stay two options'
 describe('NR-2 — the pure rules', () => {
   const facts = {
     rfpStatus: 'Closed',
-    knownOptionRefs: ['a'],
+    knownOptionRefs: ['a', 'b'],
+    settledOptionRefs: ['b'],
     respondedSupplierIds: ['s1'],
     gate: () => ({ passes: true, failed: [] }),
   };
@@ -576,7 +577,23 @@ describe('NR-2 — the pure rules', () => {
 
   it('rfpOfferRoundRefusal — known-good is null, and one changed fact refuses', () => {
     expect(rfpOfferRoundRefusal(req, facts)).toBeNull();
-    expect(rfpOfferRoundRefusal(req, { ...facts, rfpStatus: 'Open' })).toMatch(/^RFP_NOT_CLOSED/);
+    expect(rfpOfferRoundRefusal(req, { ...facts, rfpStatus: 'Open' })).toMatch(/^RFP_NOT_ROUND_READY/);
+  });
+
+  // RFX-D15 — Partly awarded is round-ready too; any other status is not, and
+  // a settled option is refused by name on either round-ready status.
+  it('rfpOfferRoundRefusal — Partly awarded passes, other statuses refuse, and a settled option refuses (RFX-D15)', () => {
+    expect(rfpOfferRoundRefusal(req, { ...facts, rfpStatus: 'Partly awarded' })).toBeNull();
+    for (const status of ['Draft', 'Open', 'Awarded', 'Cancelled']) {
+      expect(rfpOfferRoundRefusal(req, { ...facts, rfpStatus: status })).toBe(
+        `RFP_NOT_ROUND_READY: a firm-offer round opens on a Closed or Partly awarded RFP; this one is ${status}`,
+      );
+    }
+    for (const status of ['Closed', 'Partly awarded']) {
+      expect(rfpOfferRoundRefusal({ ...req, optionRefs: ['a', 'b'] }, { ...facts, rfpStatus: status })).toBe(
+        'ROUND_OPTION_SETTLED: b',
+      );
+    }
   });
 
   // An empty list never reaches the policy through the dispatcher (it is a

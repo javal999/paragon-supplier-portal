@@ -139,6 +139,34 @@ export function rfqSourcedOptionRefs(rfqs: readonly RfqSourcingShape[], rfpId: s
   return out;
 }
 
+/** How one RFP option was settled: awarded on the RFP, or sourced by an RFQ created from it. */
+export type RfpOptionSettlement =
+  | { readonly by: 'award'; readonly awardId: string }
+  | { readonly by: 'rfq'; readonly rfqNumber: string };
+
+/**
+ * RFX-D15 — the options of one RFP that are no longer OPEN, each with how it
+ * was settled: named by an RFP award in force (`rfpAwardedOptionRefs`), or
+ * sourced by a live RFQ created from the RFP (`rfqSourcedOptionRefs`). These
+ * are the same two reads the RFP award and the RFQ create policy judge BR-08
+ * by, so a firm-offer round, its policy and the page's option picker all ask
+ * one rule which options a new round may still name.
+ */
+export function rfpSettledOptionRefs(
+  rfpId: string,
+  awardsInForce: readonly AwardRecord[],
+  rfqs: readonly RfqSourcingShape[],
+): ReadonlyMap<string, RfpOptionSettlement> {
+  const out = new Map<string, RfpOptionSettlement>();
+  for (const [ref, awardId] of rfpAwardedOptionRefs(awardsInForce.filter((a) => a.eventId === rfpId))) {
+    out.set(ref, { by: 'award', awardId });
+  }
+  for (const [ref, rfqNumber] of rfqSourcedOptionRefs(rfqs, rfpId)) {
+    if (!out.has(ref)) out.set(ref, { by: 'rfq', rfqNumber });
+  }
+  return out;
+}
+
 /**
  * NR-2 BR-08 — the refusal for the first of `refs` already placed through the
  * other route, or null. `taken` maps a ref to where it went; `how` words it

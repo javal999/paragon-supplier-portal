@@ -212,6 +212,7 @@ import {
   isRfpAward,
   rfpAwardedOptionRefs,
   rfpOptionSourcedRefusal,
+  rfpSettledOptionRefs,
   rfqSourcedOptionRefs,
 } from '../../sourcing/rfpAward';
 import { isTieredRfq } from '../../sourcing/rfqComparison';
@@ -3850,9 +3851,11 @@ bindPolicyHook(POLICY_HOOKS.NEGOTIATION_ROUND_VALID, ({ payload }) => {
   return { ok: true };
 });
 
-// NR-2 BR-02 — a firm-offer round opens on a Closed RFP, for options that exist
-// (the buyer's or a submitted proposal's), at quantity points above zero, and
-// only for suppliers that submitted a response and pass CR-23.
+// NR-2 BR-02 — a firm-offer round opens on a Closed or Partly awarded RFP
+// (RFX-D15), for options that exist (the buyer's or a submitted proposal's) and
+// are still open (`rfpSettledOptionRefs`: no award in force names them and no
+// live RFQ created from the RFP sources them), at quantity points above zero,
+// and only for suppliers that submitted a response and pass CR-23.
 bindPolicyHook(POLICY_HOOKS.RFP_OFFER_ROUND_VALID, ({ payload }) => {
   const rfp = rfpEventStore.get(String(payload.rfpId));
   const now = rfxNow();
@@ -3866,6 +3869,7 @@ bindPolicyHook(POLICY_HOOKS.RFP_OFFER_ROUND_VALID, ({ payload }) => {
     {
       rfpStatus: rfp?.status ?? null,
       knownOptionRefs: rfp ? rfpRoundOptions(rfp).map((o) => o.ref) : [],
+      settledOptionRefs: rfp ? [...rfpSettledOptionRefs(rfp.id, rfpAwardsOf(rfp.id), rfqStore.all()).keys()] : [],
       respondedSupplierIds: rfp ? rfpRespondedSupplierIds(rfp.id) : [],
       gate: (sid) => rfpSupplierGate(sid, now),
     },
