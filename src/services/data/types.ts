@@ -72,6 +72,7 @@ import type { InfoLine, PlanChangeBaseline, Proposal, ProposalType, RescheduleRu
 import type { SupplierCfot } from '../engine/cfot';
 import type { SeriesResult, StabiliseParams, StabiliseRun } from '../engine/stabilise';
 import type { DataHealthReport } from '../engine/dataHealth';
+import type { DemandForecastRun } from '../engine/demandForecast';
 import type { DatasetProvenance } from '../engine/types';
 import type { ReleaseSelection } from '../delivery/release';
 import type { EditPolicyPatch } from '../delivery/policy';
@@ -917,6 +918,21 @@ export interface StabilisedPlanView {
 export interface DataHealthView extends DataHealthReport {
   /** Where the dataset came from (X-03): SIMULATED until the MDM feed is live. */
   readonly provenance: DatasetProvenance;
+}
+
+/**
+ * REQ-E14-07 — the finished-goods demand forecast, as served: weekly sell-in
+ * per SKU for the next 26 weeks with the method that made it, SKU, brand and
+ * total reconciled, OEM products left out, and SAP's plan in force beside it.
+ * Computed at read on the engine's (SIMULATED) dataset. PTI only; a supplier
+ * gets null. It does not feed E14-03: SAP's plan stays the input until the
+ * backtest (E14-10) exists (ENG-B66).
+ */
+export interface DemandForecastView extends DemandForecastRun {
+  /** Where the dataset came from (X-03): SIMULATED until the MDM feed is live. */
+  readonly provenance: DatasetProvenance;
+  /** The source E14-03 to E14-06 and E14-13 plan on today. */
+  readonly materialPlanningSource: 'sapPlan';
 }
 
 export interface ForecastCoverageRow {
@@ -2513,6 +2529,12 @@ export interface IProcurementService {
    * arrival with the failing records. On the engine's (SIMULATED) dataset. PTI only.
    */
   getDataHealth(scope: QueryScope): Promise<DataHealthView | null>;
+  /**
+   * REQ-E14-07 — the finished-goods demand forecast: per SKU × week, the
+   * method that made it, SKU / brand / total reconciled, OEM products left
+   * out (ENG-D20). On the engine's (SIMULATED) dataset. PTI only.
+   */
+  getDemandForecast(scope: QueryScope): Promise<DemandForecastView | null>;
 
   // — Sourcing —
   getRFQs(scope: QueryScope, filter?: RFQFilter): Promise<Page<RFQ>>;
