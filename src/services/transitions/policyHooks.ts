@@ -618,6 +618,18 @@ export const POLICY_HOOKS = {
    */
   NEGOTIATION_ROUND_VALID: 'negotiation_round_valid',
   /**
+   * RFP firm-offer round open (NR-2 BR-02): the RFP is Closed, the options
+   * exist (the buyer's or a submitted proposal's), the quantity points are
+   * above zero, and every invitee submitted a response and passes CR-23.
+   */
+  RFP_OFFER_ROUND_VALID: 'rfp_offer_round_valid',
+  /**
+   * RFP firm offer submit / revise (NR-2 BR-01 / BR-03): an invited supplier,
+   * an open round inside its deadline, prices only for the round's options and
+   * points and above zero, and a validity reaching the round deadline.
+   */
+  RFP_FIRM_OFFER_VALID: 'rfp_firm_offer_valid',
+  /**
    * RFQ award (REQ-E03-05 BR-06 / BR-07): **each item's shares total 100%**,
    * every share and quantity is positive, and an award that does NOT follow the
    * best-scored quote carries a reason.
@@ -628,8 +640,53 @@ export const POLICY_HOOKS = {
    * reason is exactly the decision the charter's audit trail exists to explain.
    * Neither is a field being empty, so neither is expressible in
    * `requiredFields`.
+   *
+   * RFx C1 — ONE hook for the final award (`t_rfq_award`) and the partial
+   * award (`t_rfq_award_partial`), told apart by the target state: the final
+   * award may leave no item open (AWARD_ITEMS_OPEN), the partial award must
+   * leave one (AWARD_NOTHING_OPEN). Everything else — the item rule
+   * (`awardShapeRefusal`), CR-23, "on this event" and the reason — is the same
+   * code for both, so the two verbs cannot drift.
    */
   RFQ_AWARD_GOVERNED: 'rfq_award_governed',
+  /**
+   * RFx C2 (NR-3 BR-09, D-7) — ONE hook for the cancel pair
+   * (`t_rfq_award_cancel` → Closed, `t_rfq_award_cancel_partial` → Partly
+   * awarded), told apart by the target state. Refuses AWARD_NOT_ACTIVE (the
+   * award is not an active award of this event), AWARD_RAISED_IN_SAP (naming
+   * the SAP document), AWARD_REASON_REQUIRED (blank reason) and
+   * AWARD_CANCEL_TARGET_WRONG (the other verb of the pair fits: whether another
+   * award stays in force). The rule is `awardCancelRefusal` in
+   * `sourcing/awardStatus.ts`.
+   */
+  RFQ_AWARD_CANCEL_GOVERNED: 'rfq_award_cancel_governed',
+  /**
+   * RFx C2 (NR-3 BR-10) — "Raised in SAP": the award is an active award of this
+   * event, not already marked (AWARD_RAISED_IN_SAP), and the SAP document number
+   * is not blank. The rule is `awardSapMarkRefusal`.
+   */
+  RFQ_AWARD_SAP_GOVERNED: 'rfq_award_sap_governed',
+  /**
+   * RFx D2 (NR-2 BR-01, BR-05 to BR-08) — ONE hook for the RFP's final award
+   * (`t_rfp_award`) and partial award (`t_rfp_award_partial`), told apart by
+   * the target state. The C1 shape rule over `awardItemsOfRfp` (options of
+   * closed firm-offer rounds; AWARD_ITEM_NOT_QUOTED / AWARD_OFFER_EXPIRED for a
+   * line whose firm offer does not count), the open options (AWARD_ITEMS_OPEN /
+   * AWARD_NOTHING_OPEN), AWARD_OPTION_SOURCED_ELSEWHERE for an option an RFQ
+   * created from the RFP sources, CR-23 per awarded supplier, and
+   * AWARD_REASON_REQUIRED on every RFP award.
+   */
+  RFP_AWARD_GOVERNED: 'rfp_award_governed',
+  /** RFx D2 (NR-3 BR-09) — the cancel pair on an RFP; the rule is `awardCancelRefusal`. */
+  RFP_AWARD_CANCEL_GOVERNED: 'rfp_award_cancel_governed',
+  /** RFx D2 (NR-3 BR-10) — "Raised in SAP" on an RFP award; the rule is `awardSapMarkRefusal`. */
+  RFP_AWARD_SAP_GOVERNED: 'rfp_award_sap_governed',
+  /**
+   * RFx D2 (NR-2 BR-08) — an RFQ created from an RFP may not source an option
+   * an award in force on that RFP already placed (AWARD_OPTION_SOURCED_ELSEWHERE).
+   * The rule is `rfpOptionSourcedRefusal`, the one the RFP → RFQ pre-fill uses.
+   */
+  RFQ_CREATE_RFP_OPTIONS_FREE: 'rfq_create_rfp_options_free',
 } as const;
 
 for (const name of Object.values(POLICY_HOOKS)) registerPolicyHook(name);

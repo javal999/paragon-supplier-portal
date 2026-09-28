@@ -46,19 +46,30 @@ import type {
   NegotiationRoundView,
   RfiEventView,
   RfpEventView,
+  RfpAwardView,
+  RfpOfferRoundView,
+  RfpRoundOptionView,
   RfqSupplierGateView,
   RfxInviteeView,
 } from '../../sourcing/views';
-import type { RfiResponse, RfpResponse } from '../../sourcing/types';
 import { responseVersions } from '../../sourcing/responseVersions';
+import { awardStatusOf, cancellationOf, sapMarkOf, type AwardTrail } from '../../sourcing/awardStatus';
+import type { AwardLine, RfiResponse, RfpEvent, RfpResponse, RfqAwardRecord } from '../../sourcing/types';
+import { isRfpAward } from '../../sourcing/rfpAward';
+import { firmPricesInForce, parseRfpOptionRef, rfpOptionRef } from '../../sourcing/rfpFirmOffer';
+import { awardItemsOf, itemOfAwardLine } from '../../sourcing/awardShape';
 import { rfqStore } from './stores/rfqStore';
 import { quotationStore } from './stores/quotationStore';
 import {
+  awardCancellationStore,
+  awardSapMarkStore,
   awardStore,
   negotiationRoundStore,
   rfiEventStore,
   rfiResponseStore,
   rfpEventStore,
+  rfpFirmOfferStore,
+  rfpOfferRoundStore,
   rfpResponseStore,
 } from './stores/rfxStores';
 
@@ -143,6 +154,15 @@ export function rfqGateViews(rfq: RFQ, nowIso: string): readonly RfqSupplierGate
 /** CR-23 — one supplier against one sourcing event. */
 export const rfqSupplierGate = (rfq: RFQ, supplierId: string, nowIso: string): GateResult =>
   supplierGate(supplierId, rfqMaterialCodes(rfq), nowIso);
+
+/**
+ * CR-23 — one supplier on an RFP (NR-2 BR-02). An RFP names a material
+ * CATEGORY and no material codes, so no material asks for a certificate here:
+ * the gate judges status and OTIF. It is the same gate, over the materials the
+ * event actually names, never a guess at which ones it might mean.
+ */
+export const rfpSupplierGate = (supplierId: string, nowIso: string): GateResult =>
+  supplierGate(supplierId, [], nowIso);
 
 // ── REQ-E03-02 / REQ-E03-04 — the event views ───────────────────────────────
 
@@ -433,17 +453,115 @@ export function negotiationRoundViews(nowIso: string, supplierId: string | null)
     });
 }
 
+// ── NR-2 — firm-offer rounds on an RFP ──────────────────────────────────────
+
+/** Suppliers with a SUBMITTED response to one RFP. */
+export const rfpRespondedSupplierIds = (rfpId: string): readonly string[] =>
+  rfpResponseStore
+    .all()
+    .filter((r) => r.rfpId === rfpId && r.status === 'Submitted')
+    .map((r) => r.supplierId);
+
+/**
+ * The options a firm-offer round may name on one RFP (edge case 3): the RFP's
+ * own, then those suppliers proposed in a SUBMITTED response, in their words.
+ * A draft's proposal is invisible to PTI, so it cannot enter a round either.
+ */
+export function rfpRoundOptions(rfp: RfpEvent): readonly RfpRoundOptionView[] {
+  const own = (rfp.pricing?.options ?? []).map((o) => ({ ...o, ref: rfpOptionRef(o.id), supplierProposed: false }));
+  // Each proposed option keeps its PROPOSER: `sup-opt-1` from two suppliers is
+  // two options, told apart by the ref.
+  const proposed = rfpResponseStore
+    .all()
+    .filter((r) => r.rfpId === rfp.id && r.status === 'Submitted')
+    .flatMap((r) =>
+      (r.pricing?.proposedOptions ?? []).map((o) => ({
+        ...o,
+        ref: rfpOptionRef(o.id, r.supplierId),
+        supplierProposed: true,
+        proposerSupplierId: r.supplierId,
+      })),
+    );
+  return [...own, ...proposed];
+}
+
+/**
+ * NR-2 — the firm-offer rounds a scope may read.
+ *
+ * `supplierId` null = the buyer: every round, every invitee, every offer.
+ * `supplierId` set = that supplier: only rounds it was invited to, only itself
+ * as invitee, and only its own offers and firm prices (RFX-R4, AC-01).
+ */
+export function rfpOfferRoundViews(nowIso: string, supplierId: string | null): readonly RfpOfferRoundView[] {
+  const rounds = rfpOfferRoundStore.all();
+  const numberOf = new Map(rounds.map((r) => [r.id, r.roundNumber] as const));
+  const visibleOffers = rfpFirmOfferStore
+    .all()
+    .filter((o) => (supplierId ? o.supplierId === supplierId : true));
+  return rounds
+    .filter((r) => (supplierId ? r.invitedSupplierIds.includes(supplierId) : true))
+    .map((round) => {
+      const rfp = rfpEventStore.get(round.rfpId);
+      const invited = supplierId ? [supplierId] : round.invitedSupplierIds;
+      const offers = visibleOffers.filter((o) => o.roundId === round.id);
+      const byRef = new Map((rfp ? rfpRoundOptions(rfp) : []).map((o) => [o.ref, o] as const));
+      const closed = round.closedAt !== undefined;
+      const onRfp = visibleOffers
+        .filter((o) => o.rfpId === round.rfpId && numberOf.has(o.roundId))
+        .map((o) => ({ ...o, roundNumber: numberOf.get(o.roundId)! }));
+      return {
+        ...round,
+        invitedSupplierIds: invited,
+        rfpNumber: rfp?.eventNumber ?? round.rfpId,
+        rfpTitle: rfp?.title ?? '',
+        currency: rfp?.currency ?? BASE_CURRENCY,
+        options: round.optionRefs.map((ref) => {
+          const known = byRef.get(ref);
+          if (known) return known;
+          const { optionId, proposerSupplierId } = parseRfpOptionRef(ref);
+          return {
+            ref,
+            id: optionId,
+            title: optionId,
+            supplierProposed: proposerSupplierId !== undefined,
+            ...(proposerSupplierId ? { proposerSupplierId } : {}),
+          };
+        }),
+        closed,
+        overdue: !closed && isPastDeadline(round.deadline, nowIso),
+        offers,
+        awaiting: invited.filter((sid) => !offers.some((o) => o.supplierId === sid)).length,
+        firmPrices: firmPricesInForce(onRfp).map((p) => ({ ...p, supplierName: rfxSupplierName(p.supplierId) })),
+      };
+    });
+}
+
+/** RFx C3 — the item keys an award's lines settled (see `AwardView.settledItemKeys`). */
+function settledKeysOf(rfq: RFQ | undefined, lines: readonly AwardLine[]): string[] {
+  if (!rfq) return [];
+  const items = awardItemsOf(rfq);
+  return [...new Set(lines.flatMap((l) => itemOfAwardLine(items, l)?.key ?? []))];
+}
+
 /** The awards a scope may read. A supplier reads only awards it is named on. */
 export function awardViews(supplierId: string | null): readonly AwardView[] {
+  // RFx C2 (AR-08) — each award's status is derived from the appended trail.
+  const trail: AwardTrail = { cancellations: awardCancellationStore.all(), sapMarks: awardSapMarkStore.all() };
   return awardStore
     .all()
+    // AR-02 — the record names its event type. This is the RFQ arm; the RFP
+    // arm is `rfpAwardViews` below (RFx D2), whose lines name an option and a
+    // firm offer rather than an item and a quote.
+    .filter((a): a is RfqAwardRecord => a.eventType === 'rfq')
     .filter((a) =>
       supplierId
         ? a.lines.some((l) => l.supplierId === supplierId) || a.notAwardedSupplierIds.includes(supplierId)
         : true,
     )
     .map((award) => {
-      const rfq = rfqStore.get(award.rfqId);
+      const rfq = rfqStore.get(award.eventId);
+      const cancellation = cancellationOf(award.id, trail);
+      const sapMark = sapMarkOf(award.id, trail);
       // BR-05 / AC-05 — a supplier sees ONLY ITS OWN OUTCOME. The share another
       // supplier won is another supplier's commercial position.
       const lines = supplierId ? award.lines.filter((l) => l.supplierId === supplierId) : award.lines;
@@ -461,7 +579,7 @@ export function awardViews(supplierId: string | null): readonly AwardView[] {
         notAwardedSupplierIds: supplierId
           ? award.notAwardedSupplierIds.filter((s) => s === supplierId)
           : award.notAwardedSupplierIds,
-        rfqNumber: rfq?.rfqNumber ?? award.rfqId,
+        rfqNumber: rfq?.rfqNumber ?? award.eventId,
         rfqTitle: rfq?.title ?? '',
         uom: rfq?.uom ?? '',
         awardedSuppliers: [...bySupplier.entries()].map(([sid, agg]) => ({
@@ -479,6 +597,77 @@ export function awardViews(supplierId: string | null): readonly AwardView[] {
             )
           : award.bestScoredQuotationId !== undefined &&
             !award.lines.some((l) => l.quotationId === award.bestScoredQuotationId),
+        // RFx C2 (NR-3 BR-12, AC-07) — a supplier reads the status and the
+        // date its award was withdrawn, and only on an award it already reads
+        // (its own lines, or its own "not awarded"). The buyer's reason, the
+        // actor and the SAP document number stay on the buyer's read.
+        status: awardStatusOf(award.id, trail),
+        ...(cancellation ? { withdrawnAt: cancellation.cancelledAt } : {}),
+        ...(!supplierId && cancellation ? { cancellation } : {}),
+        ...(!supplierId && sapMark ? { sapMark } : {}),
+        // RFx C3 (NR-3 BR-12; RFX-R4) — WHICH items this award settled, read
+        // from the FULL record: item keys only, never whose line or what share,
+        // so a supplier on the award can read "Not awarded" on an item another
+        // supplier won without learning who won it or how much.
+        settledItemKeys: settledKeysOf(rfq, award.lines),
       };
+    });
+}
+
+/**
+ * RFx D2 (NR-2 BR-09, AC-07; NR-3 BR-12) — the RFP awards a scope may read.
+ *
+ * `supplierId` null = the buyer: every award, every line, the reason, the
+ * cancellation and the SAP marking. `supplierId` set = that supplier: only an
+ * award it is named on (a line, or the final award's "not awarded"), only its
+ * OWN lines, and its outcome — `Withdrawn` once the award is cancelled. There
+ * is no cascade onto the RFP responses; this read IS each responder's outcome.
+ */
+export function rfpAwardViews(supplierId: string | null): readonly RfpAwardView[] {
+  const trail: AwardTrail = { cancellations: awardCancellationStore.all(), sapMarks: awardSapMarkStore.all() };
+  return awardStore
+    .all()
+    .filter(isRfpAward)
+    .filter((a) =>
+      supplierId
+        ? a.lines.some((l) => l.supplierId === supplierId) || a.notAwardedSupplierIds.includes(supplierId)
+        : true,
+    )
+    .map((award) => {
+      const rfp = rfpEventStore.get(award.eventId);
+      const titles = new Map((rfp ? rfpRoundOptions(rfp) : []).map((o) => [o.ref, o.title] as const));
+      const status = awardStatusOf(award.id, trail);
+      const cancellation = cancellationOf(award.id, trail);
+      const sapMark = sapMarkOf(award.id, trail);
+      const lines = (supplierId ? award.lines.filter((l) => l.supplierId === supplierId) : award.lines).map(
+        (l) => ({
+          ...l,
+          supplierName: rfxSupplierName(l.supplierId),
+          optionTitle: titles.get(l.optionRef) ?? l.optionRef,
+        }),
+      );
+      return {
+        id: award.id,
+        eventType: 'rfp' as const,
+        eventId: award.eventId,
+        rfpNumber: rfp?.eventNumber ?? award.eventId,
+        rfpTitle: rfp?.title ?? '',
+        awardedAt: award.awardedAt,
+        lines,
+        notAwardedSupplierIds: supplierId
+          ? award.notAwardedSupplierIds.filter((s) => s === supplierId)
+          : award.notAwardedSupplierIds,
+        status,
+        ...(cancellation ? { withdrawnAt: cancellation.cancelledAt } : {}),
+        ...(!supplierId ? { reason: award.reason } : {}),
+        ...(!supplierId && cancellation ? { cancellation } : {}),
+        ...(!supplierId && sapMark ? { sapMark } : {}),
+        ...(supplierId
+          ? { outcome: status === 'Cancelled' ? 'Withdrawn' : lines.length > 0 ? 'Awarded' : 'Not awarded' }
+          : {}),
+        // RFx D3 (RFX-R4) — WHICH options this award settled, from the FULL
+        // record: refs only, never whose line or what share.
+        settledOptionRefs: [...new Set(award.lines.map((l) => l.optionRef))],
+      } satisfies RfpAwardView;
     });
 }

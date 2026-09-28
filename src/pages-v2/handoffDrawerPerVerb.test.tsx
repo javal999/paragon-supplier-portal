@@ -48,6 +48,9 @@ const AWARD_RFQ = 'RFQ-2026-009'; //   Open + ALL invited suppliers responded �
 // `handoff-rfq-drawer` group this batch retires: that notice took its
 // availability from `review` and rendered in the AWARD slot, so on every
 // awardable RFQ it named the owner of an act that was not on the screen.
+// ⚠️ RFx C3 changed the award slot's condition (every RFQ that can be awarded,
+// no longer "all responded"), so the two ARE now co-reachable on REVIEW_RFQ.
+// The argument against the group notice stands: the two still answer apart.
 
 const openRfq = async (rfqNumber: string) => {
   fireEvent.click(await screen.findByText(rfqNumber));
@@ -143,15 +146,18 @@ describe('§76 · the drawer — move to review (PER QUOTE)', () => {
   });
 });
 
+// ⚠️ RFx C3 (AR-03) — the drawer's "Award to selected" button is GONE with the
+// single-winner award. The drawer's award slot is now a link to the event
+// page's award panel, and the notice still answers for `rfq:award` in that slot.
 describe('§76 · the drawer — award', () => {
-  it('HELD: a procurement seat keeps Award to selected and reads no notice', async () => {
+  it('HELD: a procurement seat gets the award link and reads no notice', async () => {
     renderWithProviders(<BuyerSourcing />, { identity: PROCUREMENT });
     await openRfq(AWARD_RFQ);
-    expect(await screen.findByRole('button', { name: /Award to selected/i })).toBeInTheDocument();
+    expect(await screen.findByTestId('panel-open-tiered-award')).toBeInTheDocument();
     expect(screen.queryByTestId('handoff-rfq-award')).not.toBeInTheDocument();
   });
 
-  it('WITHHELD: a receiving seat reads the owner where the award button was', async () => {
+  it('WITHHELD: a receiving seat reads the owner in the award slot', async () => {
     renderWithProviders(<BuyerSourcing />, { identity: RECEIVING });
     await openRfq(AWARD_RFQ);
     expect(await screen.findByTestId('handoff-rfq-award')).toHaveTextContent(
@@ -171,15 +177,18 @@ describe('§76 · the grouping is GONE, and cannot come back quietly', () => {
     }
   });
 
-  it('review and award answer SEPARATELY, on the two RFQs where each is reachable', async () => {
-    // The pair §74 collapsed into `handoff-rfq-drawer`. They are asserted on
-    // DIFFERENT documents because the tree affords them on different documents
-    // — which is the finding, not a workaround: one notice could never have
-    // been right for both.
+  it('review and award answer SEPARATELY, each in its own slot', async () => {
+    // The pair §74 collapsed into `handoff-rfq-drawer`.
+    // ⚠️ PREMISE CHANGE (RFx C3): they used to be asserted on DIFFERENT
+    // documents because the one-winner award slot needed every invitee to have
+    // answered, so no RFQ offered both. The award slot now links to the event
+    // page for every RFQ that can be awarded (Open, Closed, Partly awarded), so
+    // REVIEW_RFQ offers both — and they still answer as TWO notices, never one.
     const { unmount } = renderWithProviders(<BuyerSourcing />, { identity: RECEIVING });
     await openRfq(REVIEW_RFQ);
     expect(await screen.findByTestId('handoff-rfq-review')).toBeInTheDocument();
-    expect(screen.queryByTestId('handoff-rfq-award')).not.toBeInTheDocument();
+    expect(screen.getByTestId('handoff-rfq-award')).toBeInTheDocument();
+    expect(screen.queryByTestId('handoff-rfq-drawer')).not.toBeInTheDocument();
     unmount();
 
     renderWithProviders(<BuyerSourcing />, { identity: RECEIVING });

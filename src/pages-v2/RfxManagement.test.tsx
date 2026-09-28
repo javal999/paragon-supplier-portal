@@ -16,10 +16,21 @@ import { renderWithProviders, BUYER } from '../test/test-utils';
 import type { CurrentIdentity } from '../context/CurrentIdentityContext';
 import { SEEDED_SEAT_ROLES } from '../services/transitions/businessRoles';
 import { NO_PERSON } from '../context/noPerson';
-import { resetRfxStores, rfpResponseStore } from '../services/data/mock/stores/rfxStores';
+import {
+  awardCancellationStore,
+  awardStore,
+  resetRfxStores,
+  rfpEventStore,
+  rfpOfferRoundStore,
+  rfpResponseStore,
+} from '../services/data/mock/stores/rfxStores';
 import { mockDataService } from '../services/data/mock/mockDataService';
-import { rfxNow } from '../services/data/mock/rfxReadModel';
+import { rfxNow } from './rfx/rfxDisplay';
+import { MockCommandService } from '../services/data/mock/MockCommandService';
+import { PERSONA_SYSTEM_ROLES } from '../services/transitions/businessRoles';
+import type { QueryScope } from '../services/data/types';
 import type { DocumentRequest } from '../services/sourcing/types';
+import { formatDate } from '../lib/format';
 import { rfqStore } from '../services/data/mock/stores/rfqStore';
 import { quotationStore } from '../services/data/mock/stores/quotationStore';
 import { sdcClock } from '../services/sdc';
@@ -42,6 +53,12 @@ beforeEach(() => {
 });
 
 const BUYER_SEAT = { ...BUYER, businessRoles: SEEDED_SEAT_ROLES.buyer };
+const BUYER_SCOPE: QueryScope = {
+  personaType: 'buyer',
+  supplierId: null,
+  businessRoles: PERSONA_SYSTEM_ROLES.buyer,
+  actor: NO_PERSON,
+};
 const supplierSeat = (supplierId: string, supplierName: string): CurrentIdentity => ({
   personaType: 'supplier',
   supplierId,
@@ -466,24 +483,35 @@ describe('REQ-E03-05 — the bid comparison', () => {
     openEvent();
     const confirm = await screen.findByTestId('award-confirm');
     expect(confirm).toBeDisabled(); // nothing entered yet
-    const share = within(screen.getByTestId('award-input-sup-015')).getByLabelText(/Share/i);
+    // RFx C3 — the legacy form is gone: rfq-014 is awarded per LINE on the one
+    // panel, so the shares are typed per line item.
+    const share = within(screen.getByTestId('award-input-PK-PETB-8802-sup-015')).getByLabelText(/Share/i);
     fireEvent.change(share, { target: { value: '70' } });
-    await waitFor(() => expect(screen.getByTestId('award-split-invalid')).toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.getByTestId('award-item-refusal')).toHaveAttribute('data-code', 'AWARD_SPLIT_INCOMPLETE'),
+    );
     expect(screen.getByTestId('award-confirm')).toBeDisabled();
     // POSITIVE TWIN — completing the split to 100% enables it. ⚠️ PREMISE
     // CHANGE (BL-43): the second share used to go to sup-007, which then failed
     // the compliance gate (OTIF 50% < 80%; it passes at 83% since BL-94);
     // sup-013 passes.
-    const second = within(screen.getByTestId('award-input-sup-013')).getByLabelText(/Share/i);
+    const second = within(screen.getByTestId('award-input-PK-PETB-8802-sup-013')).getByLabelText(/Share/i);
     fireEvent.change(second, { target: { value: '30' } });
-    await waitFor(() => expect(screen.queryByTestId('award-split-invalid')).not.toBeInTheDocument());
+    // The bottle line totals 100%; the refusal moves on to the cap line, still open.
+    await waitFor(() =>
+      expect(screen.getByTestId('award-item-refusal')).toHaveAttribute('data-code', 'AWARD_ITEMS_OPEN'),
+    );
+    fireEvent.change(within(screen.getByTestId('award-input-PK-CAPF-8820-sup-013')).getByLabelText(/Share/i), {
+      target: { value: '100' },
+    });
+    await waitFor(() => expect(screen.queryByTestId('award-item-refusal')).not.toBeInTheDocument());
   });
 
   it('BR-09 — a recorded award shows the split and says SAP raises the order', async () => {
     renderEvent('rfq-015');
     const recorded = await screen.findByTestId('award-recorded');
-    expect(within(recorded).getByTestId('award-line-sup-015')).toHaveTextContent('70%');
-    expect(within(recorded).getByTestId('award-line-sup-008')).toHaveTextContent('30%');
+    expect(within(recorded).getByTestId('award-line-PK-CART-9910-sup-015')).toHaveTextContent('70%');
+    expect(within(recorded).getByTestId('award-line-PK-CART-9910-sup-008')).toHaveTextContent('30%');
     expect(within(recorded).getByTestId('award-not-awarded')).toHaveTextContent(
       'PT Sample Packaging Indonesia',
     );
@@ -519,11 +547,11 @@ describe('CR-23 — the compliance gate is shown on the event (BL-43)', () => {
 
   it('BR-01a — the award form offers no share for a failing supplier and shows the reason instead', async () => {
     openEvent();
-    const failing = await screen.findByTestId('award-input-sup-008');
+    const failing = await screen.findByTestId('award-input-PK-PETB-8802-sup-008');
     expect(within(failing).queryByLabelText(/Share/i)).not.toBeInTheDocument();
-    expect(within(failing).getByTestId('award-gate-sup-008')).toHaveTextContent('OTIF below 80%');
+    expect(within(failing).getByTestId('award-gate-PK-PETB-8802-sup-008')).toHaveTextContent('OTIF below 80%');
     // KNOWN-GOOD twin — a passing supplier can be given a share.
-    expect(within(screen.getByTestId('award-input-sup-013')).getByLabelText(/Share/i)).toBeInTheDocument();
+    expect(within(screen.getByTestId('award-input-PK-PETB-8802-sup-013')).getByLabelText(/Share/i)).toBeInTheDocument();
   });
 
   it('BL-64 — when EVERY bidder fails (rfq-020), the award section says it cannot be awarded and offers no confirm', async () => {
@@ -532,9 +560,9 @@ describe('CR-23 — the compliance gate is shown on the event (BL-43)', () => {
     expect(notice).toHaveTextContent(rfxEn['rfx.gate.noAward']);
     expect(screen.queryByTestId('award-confirm')).not.toBeInTheDocument();
     // The reasons stay visible, by supplier — the notice does not replace them.
-    expect(screen.getByTestId('award-gate-sup-011')).toHaveTextContent('no GMP / ISO 22716');
-    expect(screen.getByTestId('award-gate-sup-004')).toHaveTextContent('no valid BPOM registration');
-    expect(screen.getByTestId('award-gate-sup-009')).toHaveTextContent('no valid halal certificate');
+    expect(screen.getByTestId('award-gate-event-sup-011')).toHaveTextContent('no GMP / ISO 22716');
+    expect(screen.getByTestId('award-gate-event-sup-004')).toHaveTextContent('no valid BPOM registration');
+    expect(screen.getByTestId('award-gate-event-sup-009')).toHaveTextContent('no valid halal certificate');
     // ID locale carries the same notice.
     expect(rfxId['rfx.gate.noAward']).toMatch(/tidak dapat dimenangkan/);
   });
@@ -543,8 +571,8 @@ describe('CR-23 — the compliance gate is shown on the event (BL-43)', () => {
     renderEvent('rfq-016');
     expect(await screen.findByTestId('award-confirm')).toBeInTheDocument();
     expect(screen.queryByTestId('award-none-qualified')).not.toBeInTheDocument();
-    expect(within(screen.getByTestId('award-input-sup-017')).getByLabelText(/Share/i)).toBeInTheDocument();
-    expect(within(screen.getByTestId('award-input-sup-018')).queryByLabelText(/Share/i)).not.toBeInTheDocument();
+    expect(within(screen.getByTestId('award-input-event-sup-017')).getByLabelText(/Share/i)).toBeInTheDocument();
+    expect(within(screen.getByTestId('award-input-event-sup-018')).queryByLabelText(/Share/i)).not.toBeInTheDocument();
   });
 });
 
@@ -560,7 +588,7 @@ describe('REQ-E03-05 BR-05 — a supplier sees only its own thread and its own o
 
   it('AC-05 — an awarded supplier reads its OWN share', async () => {
     renderWithProviders(<SupplierNegotiations />, { identity: SUP_015 });
-    const award = await screen.findByTestId('supplier-award-aw-0001');
+    const award = await screen.findByTestId('supplier-outcome-rfq-015-PK-CART-9910');
     expect(award).toHaveTextContent('Your share: 70%');
     // KNOWN-BAD twin — the OTHER winner's 30% is not on this page.
     expect(award).not.toHaveTextContent('30%');
@@ -568,9 +596,246 @@ describe('REQ-E03-05 BR-05 — a supplier sees only its own thread and its own o
 
   it('AC-05 — a supplier that lost reads "Not awarded", and no share at all', async () => {
     renderWithProviders(<SupplierNegotiations />, { identity: SUP_007 });
-    const loser = await screen.findByTestId('supplier-award-aw-0001');
+    const loser = await screen.findByTestId('supplier-outcome-rfq-015-PK-CART-9910');
     expect(loser).toHaveTextContent('Not awarded');
     expect(loser).not.toHaveTextContent('Your share');
+  });
+
+  // RFx C3 (NR-3 BR-12, AC-07) — per item: Awarded, Pending while an item is
+  // open, and "Award withdrawn" with its date after a cancel. rfq-014 (legacy,
+  // 2 lines): the bottle line goes 60/40 to sup-015 / sup-013 in a PARTIAL
+  // award, so the cap line stays open.
+  const partialOn014 = async () => {
+    const svc = new MockCommandService();
+    const res = await svc.dispatch(BUYER_SCOPE, {
+      transitionId: 't_rfq_award_partial',
+      entity: 'rfq',
+      entityId: 'rfq-014',
+      payload: {
+        awardedQuotationId: 'qt-014d-r1',
+        awardedSupplierId: 'sup-015',
+        awardReason: 'Dual sourced.',
+        awardLines: [
+          { supplierId: 'sup-015', quotationId: 'qt-014d-r1', itemCode: 'PK-PETB-8802', sharePct: 60, quantity: 360_000 },
+          { supplierId: 'sup-013', quotationId: 'qt-014c', itemCode: 'PK-PETB-8802', sharePct: 40, quantity: 240_000 },
+        ],
+      },
+    });
+    expect(res.status, res.reason).toBe('done');
+    return { svc, awardId: awardStore.all().find((a) => a.eventId === 'rfq-014')!.id };
+  };
+
+  it('AC-07 — the supplier reads its share on the awarded item and Pending on the open one', async () => {
+    await partialOn014();
+    renderWithProviders(<SupplierNegotiations />, { identity: SUP_015 });
+    const bottle = await screen.findByTestId('supplier-outcome-rfq-014-PK-PETB-8802');
+    expect(bottle).toHaveTextContent('Your share: 60% (360,000) at the 600,000 break');
+    expect(bottle).not.toHaveTextContent('40%'); // the other winner's share is not here
+    expect(screen.getByTestId('supplier-outcome-rfq-014-PK-CAPF-8820')).toHaveTextContent('Pending');
+  });
+
+  it('AC-07 — after a cancel the supplier reads "Award withdrawn" with the date, and the open item stays Pending', async () => {
+    const { svc, awardId } = await partialOn014();
+    const cancel = await svc.dispatch(BUYER_SCOPE, {
+      transitionId: 't_rfq_award_cancel',
+      entity: 'rfq',
+      entityId: 'rfq-014',
+      payload: { awardId, cancelReason: 'Wrong split entered.' },
+    });
+    expect(cancel.status, cancel.reason).toBe('done');
+    renderWithProviders(<SupplierNegotiations />, { identity: SUP_015 });
+    const bottle = await screen.findByTestId('supplier-outcome-rfq-014-PK-PETB-8802');
+    const withdrawnAt = awardCancellationStore.all()[0]!.cancelledAt;
+    expect(bottle).toHaveTextContent(`Award withdrawn ${formatDate(withdrawnAt)}`);
+    expect(bottle).not.toHaveTextContent('Your share');
+    expect(screen.getByTestId('supplier-outcome-rfq-014-PK-CAPF-8820')).toHaveTextContent('Pending');
+    // the buyer's reason stays on the buyer's read
+    expect(screen.queryByText(/Wrong split entered/)).not.toBeInTheDocument();
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RFx D3 (NR-2) — the RFP screens: firm-offer rounds and the award
+//
+// rfp-002 (Tundra) is the fixture: PTI's options "Full set: bottle, pump and
+// cap" (`opt-full-set`) and `opt-pump-cap` at 10K / 50K / 100K, and sup-007's
+// submitted proposal. sup-015 (passes CR-23) and sup-008 (OTIF 0%: fails it)
+// are added as submitted responders, as in rfpAwardCommand.test, and the RFP
+// is closed by its verb.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const FULL_SET = 'opt-full-set';
+const FULL_SET_TITLE = 'Full set: bottle, pump and cap';
+const supplierScope = (supplierId: string): QueryScope => ({
+  personaType: 'supplier',
+  supplierId,
+  businessRoles: PERSONA_SYSTEM_ROLES.supplier,
+  actor: NO_PERSON,
+});
+// `dayFromNow` is the helper declared with the B4 cases above (same definition).
+
+async function closedTundra(svc: MockCommandService): Promise<void> {
+  rfpEventStore.update('rfp-002', (e) => ({ ...e, invitees: [...e.invitees, { supplierId: 'sup-008' }] }));
+  for (const supplierId of ['sup-015', 'sup-008']) {
+    rfpResponseStore.add({
+      id: `rfp-resp-d3-${supplierId}`,
+      rfpId: 'rfp-002',
+      supplierId,
+      status: 'Submitted',
+      updatedAt: rfxNow(),
+      submittedAt: rfxNow(),
+      answers: [],
+    });
+  }
+  const closed = await svc.dispatch(BUYER_SCOPE, { transitionId: 't_rfp_close', entity: 'rfpEvent', entityId: 'rfp-002', payload: {} });
+  expect(closed.status, closed.reason).toBe('done');
+}
+
+/** A round on the full set at 10K and 50K asking sup-007 and sup-015; returns its id. */
+async function fullSetRound(svc: MockCommandService): Promise<string> {
+  const round = await svc.dispatch(BUYER_SCOPE, {
+    transitionId: 't_rfp_round_open',
+    entity: 'rfpOfferRound',
+    payload: {
+      rfpId: 'rfp-002',
+      optionRefs: [FULL_SET],
+      quantityPoints: [10_000, 50_000],
+      invitedSupplierIds: ['sup-007', 'sup-015'],
+      deadline: dayFromNow(5),
+    },
+  });
+  expect(round.status, round.reason).toBe('done');
+  return round.entityId!;
+}
+
+/** Both suppliers send firm prices on the full set, and the buyer closes the round. */
+async function fullSetOffersClosed(svc: MockCommandService): Promise<Record<string, string>> {
+  const roundId = await fullSetRound(svc);
+  const offers: Record<string, string> = {};
+  for (const [supplierId, p10, p50] of [
+    ['sup-007', 4_500, 4_100],
+    ['sup-015', 4_600, 4_180],
+  ] as const) {
+    const res = await svc.dispatch(supplierScope(supplierId), {
+      transitionId: 't_rfpfirmoffer_submit',
+      entity: 'rfpFirmOffer',
+      payload: {
+        roundId,
+        supplierId,
+        prices: [
+          { optionRef: FULL_SET, qty: 10_000, unitPrice: p10 },
+          { optionRef: FULL_SET, qty: 50_000, unitPrice: p50 },
+        ],
+        validUntil: dayFromNow(60),
+      },
+    });
+    expect(res.status, res.reason).toBe('done');
+    offers[supplierId] = res.entityId!;
+  }
+  const close = await svc.dispatch(BUYER_SCOPE, { transitionId: 't_rfp_round_close', entity: 'rfpOfferRound', entityId: roundId, payload: {} });
+  expect(close.status, close.reason).toBe('done');
+  return offers;
+}
+
+describe('RFx D3 — the RFP screens for firm-offer rounds and award (NR-2)', () => {
+  it('buyer steps 2–4 / BR-02 — the buyer opens a firm-offer round; a supplier failing CR-23 cannot be selected', async () => {
+    await closedTundra(new MockCommandService());
+    renderWithProviders(<BuyerRfp />, { identity: BUYER_SEAT });
+    fireEvent.click(await screen.findByTestId('rfp-open-rfp-002'));
+    fireEvent.click(await screen.findByTestId('rfp-ask-firm-rfp-002'));
+    const form = await screen.findByTestId('rfp-round-form-rfp-002');
+    // sup-008 is listed with the reason and cannot be picked; sup-015 can.
+    await waitFor(() => expect(within(form).getByTestId('rfp-round-supplier-sup-008')).toBeDisabled());
+    expect(within(form).getByTestId('rfp-round-gate-sup-008')).toHaveTextContent('OTIF below 80%');
+    expect(within(form).getByTestId('rfp-round-supplier-sup-015')).toBeEnabled();
+    // Nothing picked yet: the verb's own rule holds the button.
+    expect(within(form).getByTestId('rfp-round-open-rfp-002')).toBeDisabled();
+    fireEvent.click(within(form).getByTestId(`rfp-round-option-${FULL_SET}`));
+    fireEvent.click(within(form).getByTestId('rfp-round-supplier-sup-007'));
+    fireEvent.click(within(form).getByTestId('rfp-round-supplier-sup-015'));
+    fireEvent.change(within(form).getByLabelText('Round deadline'), { target: { value: dayFromNow(5) } });
+    await waitFor(() => expect(within(form).getByTestId('rfp-round-open-rfp-002')).toBeEnabled());
+    fireEvent.click(within(form).getByTestId('rfp-round-open-rfp-002'));
+    await waitFor(() => expect(rfpOfferRoundStore.all()).toHaveLength(1));
+    const [round] = rfpOfferRoundStore.all();
+    expect(round!.invitedSupplierIds).toEqual(['sup-007', 'sup-015']);
+    expect(round!.optionRefs).toEqual([FULL_SET]);
+    expect(await screen.findByTestId(`rfp-round-${round!.id}`)).toHaveTextContent('Round 1');
+  });
+
+  it('supplier steps 2–3 / BR-03 — the supplier sends a firm offer and reads it labelled Firm with its validity', async () => {
+    const svc = new MockCommandService();
+    await closedTundra(svc);
+    const roundId = await fullSetRound(svc);
+    renderWithProviders(<SupplierRfp />, { identity: SUP_007 });
+    expect(await screen.findByTestId(`supplier-round-notice-${roundId}`)).toHaveTextContent(
+      'Prices you give in this round are firm offers until the validity date you set.',
+    );
+    fireEvent.change(screen.getByLabelText(`${FULL_SET_TITLE} — 10,000`), { target: { value: '4500' } });
+    fireEvent.change(screen.getByLabelText(`${FULL_SET_TITLE} — 50,000`), { target: { value: '4100' } });
+    // The validity date is required: without it the send waits.
+    expect(screen.getByTestId(`supplier-round-send-${roundId}`)).toBeDisabled();
+    const validUntil = dayFromNow(60);
+    fireEvent.change(screen.getByLabelText('Valid until'), { target: { value: validUntil } });
+    fireEvent.click(screen.getByTestId(`supplier-round-send-${roundId}`));
+    const offer = await screen.findByTestId(`supplier-round-offer-${roundId}`);
+    expect(offer).toHaveTextContent('Firm');
+    expect(offer).toHaveTextContent(`Valid until ${formatDate(validUntil)}`);
+    // Sent once, the same form now revises it.
+    expect(screen.getByTestId(`supplier-round-send-${roundId}`)).toHaveTextContent('Revise firm offer');
+  });
+
+  it('buyer steps 5–7 / BR-08 — the buyer awards option 1 at 60/40: the RFP reads Awarded, "Create RFQ" is gone for option 1 and kept for option 2', async () => {
+    const svc = new MockCommandService();
+    await closedTundra(svc);
+    await fullSetOffersClosed(svc);
+    renderWithProviders(<BuyerRfp />, { identity: BUYER_SEAT });
+    fireEvent.click(await screen.findByTestId('rfp-open-rfp-002'));
+    // BR-03 — the firm prices sit beside the indicative ones, labelled Firm.
+    expect(await screen.findByTestId(`rfp-pricing-rfp-002-firm-${FULL_SET}-sup-015`)).toHaveTextContent('Firm');
+    const item = await screen.findByTestId(`award-item-${FULL_SET}`);
+    fireEvent.change(within(within(item).getByTestId(`award-input-${FULL_SET}-sup-007`)).getByLabelText(/Share/i), {
+      target: { value: '60' },
+    });
+    fireEvent.change(within(within(item).getByTestId(`award-input-${FULL_SET}-sup-015`)).getByLabelText(/Share/i), {
+      target: { value: '40' },
+    });
+    // BR-06 — every RFP award needs a reason: the confirm waits for it.
+    expect(screen.getByTestId('award-confirm')).toBeDisabled();
+    fireEvent.change(screen.getByLabelText('Award reason'), { target: { value: 'Dual source on the full set.' } });
+    await waitFor(() => expect(screen.getByTestId('award-confirm')).toBeEnabled());
+    fireEvent.click(screen.getByTestId('award-confirm'));
+    await waitFor(() => expect(rfpEventStore.get('rfp-002')!.status).toBe('Awarded'));
+    await waitFor(() => expect(screen.getByTestId('rfp-row-rfp-002')).toHaveTextContent('Awarded'));
+    expect(await screen.findByTestId(`award-line-${FULL_SET}-sup-007`)).toHaveTextContent('60%');
+    const toRfq = screen.getByTestId('rfp-to-rfq-rfp-002');
+    expect(within(toRfq).queryByTestId(`rfp-to-rfq-option-${FULL_SET}`)).not.toBeInTheDocument();
+    expect(within(toRfq).getByTestId('rfp-to-rfq-option-opt-pump-cap')).toBeInTheDocument();
+  });
+
+  it('BR-09 / AC-07 — the supplier reads its own share on option 1, and no rival share', async () => {
+    const svc = new MockCommandService();
+    await closedTundra(svc);
+    const offers = await fullSetOffersClosed(svc);
+    const res = await svc.dispatch(BUYER_SCOPE, {
+      transitionId: 't_rfp_award',
+      entity: 'rfpEvent',
+      entityId: 'rfp-002',
+      payload: {
+        awardReason: 'Dual source on the full set.',
+        awardLines: [
+          { supplierId: 'sup-007', optionRef: FULL_SET, firmOfferId: offers['sup-007'], sharePct: 60, quantity: 6_000, splitBasis: 'pct', awardTierQty: 10_000 },
+          { supplierId: 'sup-015', optionRef: FULL_SET, firmOfferId: offers['sup-015'], sharePct: 40, quantity: 4_000, splitBasis: 'pct', awardTierQty: 10_000 },
+        ],
+      },
+    });
+    expect(res.status, res.reason).toBe('done');
+    renderWithProviders(<SupplierRfp />, { identity: SUP_007 });
+    const outcome = await screen.findByTestId(`supplier-rfp-outcome-rfp-002-${FULL_SET}`);
+    expect(outcome).toHaveTextContent('Your share: 60% (6,000) at the 10,000 quantity point');
+    expect(outcome).not.toHaveTextContent('40%');
+    // The buyer's reason stays on the buyer's read.
+    expect(screen.queryByText(/Dual source on the full set/)).not.toBeInTheDocument();
   });
 });
 

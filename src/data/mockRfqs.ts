@@ -27,6 +27,7 @@ export type RFQStatus =
   | 'Draft'
   | 'Open'
   | 'Closed'
+  | 'Partly awarded'
   | 'Awarded'
   | 'Cancelled';
 

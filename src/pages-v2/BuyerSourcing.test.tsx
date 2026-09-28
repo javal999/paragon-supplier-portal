@@ -1026,13 +1026,46 @@ describe('BuyerSourcing drawer — an RFQ no bidder can win says so (BL-64)', ()
       /cannot be awarded: no supplier that quoted passes the compliance gate/,
     );
     expect(screen.queryByRole('button', { name: 'Award to selected' })).not.toBeInTheDocument();
-    expect(screen.getByTestId('drawer-award-blocked-sup-004')).toHaveTextContent('Cannot be awarded');
+    // RFx C3 — the per-quote pick row that carried `drawer-award-blocked-*` is
+    // gone with the single-winner award; the compliance row names the reason.
+    expect(screen.getByTestId('drawer-gate-sup-004')).toHaveTextContent('Cannot be awarded');
   });
 
-  it('KNOWN-GOOD twin — rfq-016 has passing bidders, so the prompt and the award button stay', async () => {
+  it('KNOWN-GOOD twin — rfq-016 has passing bidders, so the prompt and the award link stay', async () => {
     await openDrawer('rfq-016', 'RFQ-2026-016');
-    await waitFor(() => expect(screen.getByTestId('drawer-award-blocked-sup-018')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByTestId('drawer-gate-sup-018')).toHaveTextContent('Cannot be awarded'));
     expect(screen.queryByTestId('drawer-award-none-qualified')).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Award to selected' })).toBeInTheDocument();
+    // RFx C3 — the award is the event page's: a link, not an "Award to selected" button.
+    expect(screen.getByTestId('panel-open-tiered-award')).toBeInTheDocument();
+  });
+});
+
+// ── RFx C3 (AR-03, NR-3 BR-07, AC-04) — a LEGACY RFQ's panel links to the one
+// award panel and offers no single-winner award ───────────────────────────────
+//
+// rfq-014 is a Closed legacy tender with quotes from four suppliers. Before C3
+// its panel offered a one-winner radio pick and "Award to selected", which sent
+// one winner and no lines, so no split could be given. Both are gone; the panel links
+// to the event page, where every RFQ is awarded item by item.
+describe('BuyerSourcing drawer — a legacy RFQ is awarded on the event page (AC-04)', () => {
+  it('rfq-014: the event-page award link, and no one-winner pick or button', async () => {
+    renderWithProviders(<BuyerSourcing />);
+    fireEvent.click(await screen.findByText('RFQ-2026-014'));
+    const box = await screen.findByTestId('panel-tiered-award');
+    expect(within(box).getByTestId('panel-open-tiered-award')).toHaveAttribute(
+      'href',
+      expect.stringMatching(/\/buyer\/rfq\/rfq-014$/),
+    );
+    expect(document.querySelector('input[name="award-select"]')).toBeNull();
+    expect(screen.queryByRole('button', { name: /Award to selected/i })).not.toBeInTheDocument();
+    // the seat holds the award atom, so no handoff notice stands in the box
+    expect(within(box).queryByTestId('handoff-rfq-award')).not.toBeInTheDocument();
+  });
+
+  it('KNOWN-GOOD twin — an Awarded legacy RFQ (rfq-015) has nothing left to award: no box', async () => {
+    renderWithProviders(<BuyerSourcing />);
+    fireEvent.click(await screen.findByText('RFQ-2026-015'));
+    await screen.findByText(/QUOTE COMPARISON/i);
+    expect(screen.queryByTestId('panel-tiered-award')).not.toBeInTheDocument();
   });
 });

@@ -272,7 +272,7 @@ describe('BL-64 — what can and cannot be awarded', () => {
     ]);
     expect(res.status, res.reason).toBe('done');
     expect(rfqStore.get('rfq-016')!.status).toBe('Awarded');
-    const award = awardStore.all().find((a) => a.rfqId === 'rfq-016')!;
+    const award = awardStore.all().find((a) => a.eventId === 'rfq-016')!;
     expect(award.lines.map((l) => [l.supplierId, l.sharePct])).toEqual([
       ['sup-001', 60],
       ['sup-017', 40],

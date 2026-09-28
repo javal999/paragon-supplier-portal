@@ -20,6 +20,10 @@ import { useRfxCommand } from '../services/query/commandHooks';
 import { documentsOf } from '../services/transitions/rfxDocumentRules';
 import { DeadlinePill, money, rfxNow } from './rfx/rfxDisplay';
 import TieredRevisionFields, { readRevision, revisionPricesFrom, type RevisionPrices } from './rfqs/TieredRevisionFields';
+import { itemLabel } from './rfx/AwardPanel';
+import { supplierItemOutcomes, type SupplierItemOutcome } from '../services/sourcing/awardOutcome';
+import type { AwardView } from '../services/sourcing/views';
+import type { RFQ } from '../data/mockRfqs';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SUPPLIER REVISED QUOTES — REQ-E03-05 (SUP).
@@ -30,7 +34,11 @@ import TieredRevisionFields, { readRevision, revisionPricesFrom, type RevisionPr
 // there is no rival's bid on this page to leak even by accident.
 //
 // The outcome lives here too (AC-05): a supplier sees ITS OWN share when it is
-// awarded and "Not awarded" when it is not, never anybody else's split.
+// awarded and "Not awarded" when it is not, never anybody else's split. RFx C3
+// (NR-3 BR-12, AC-07): the outcome is shown ITEM BY ITEM — Awarded (share,
+// quantity, break), Not awarded, Pending (the item is still open) or "Award
+// withdrawn" with the date, derived by `supplierItemOutcomes` from the
+// supplier's own narrowed award read.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const SupplierNegotiations: React.FC = () => {
@@ -57,6 +65,11 @@ const SupplierNegotiations: React.FC = () => {
 
   const supplierId = identity.supplierId ?? '';
   const myQuotes = (quotes.data?.items ?? []).filter((q) => q.supplierId === supplierId);
+  // The events this supplier reads an award on, each with its awards (RFx C3).
+  const outcomeEvents = (rfqs.data?.items ?? []).flatMap((rfq) => {
+    const own = (awards.data?.items ?? []).filter((a) => a.eventType === 'rfq' && a.eventId === rfq.id);
+    return own.length > 0 ? [{ rfq, awards: own }] : [];
+  });
 
   /** Dispatch a revision and report what the verb actually decided. */
   const revise = (vars: Parameters<typeof command.mutate>[0]) =>
@@ -243,41 +256,78 @@ const SupplierNegotiations: React.FC = () => {
         })}
       </div>
 
-      {/* AC-05 — this supplier's own outcome, and nobody else's share. */}
+      {/* AC-05 / NR-3 BR-12 — this supplier's own outcome, per item, and nobody else's share. */}
       <section className="mt-6">
         <h2 className="text-sm font-semibold text-text-primary mb-2">{t('rfx.award.title')}</h2>
-        {(awards.data?.items ?? []).length === 0 ? (
+        {outcomeEvents.length === 0 ? (
           <p className="text-sm text-text-tertiary" data-testid="supplier-awards-empty">
             {t('rfx.award.empty')}
           </p>
         ) : (
           <ul className="space-y-2">
-            {(awards.data?.items ?? []).map((award) => {
-              const mine = award.lines.find((l) => l.supplierId === supplierId) ?? null;
-              return (
-                <li
-                  key={award.id}
-                  className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm px-4 py-3 text-sm"
-                  data-testid={`supplier-award-${award.id}`}
-                >
-                  <Data className="font-semibold">{award.rfqNumber}</Data> {award.rfqTitle}
-                  <div className="mt-1">
-                    {mine ? (
-                      <StatusPill variant="success">
-                        {t('rfx.award.yourShare', { share: mine.sharePct, qty: mine.quantity })}
-                      </StatusPill>
-                    ) : (
-                      <StatusPill variant="neutral">{t('rfx.award.notAwarded')}</StatusPill>
-                    )}
-                  </div>
-                </li>
-              );
-            })}
+            {outcomeEvents.map(({ rfq, awards: eventAwards }) => (
+              <SupplierEventOutcome key={rfq.id} rfq={rfq} awards={eventAwards} supplierId={supplierId} />
+            ))}
           </ul>
         )}
       </section>
     </AppShellV2>
   );
 };
+
+/** One event's outcome for this supplier, item by item. */
+const SupplierEventOutcome: React.FC<{ rfq: RFQ; awards: readonly AwardView[]; supplierId: string }> = ({
+  rfq,
+  awards,
+  supplierId,
+}) => {
+  const { t } = useTranslation();
+  const rows = supplierItemOutcomes(rfq, awards, supplierId);
+  return (
+    <li
+      className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm px-4 py-3 text-sm"
+      data-testid={`supplier-outcome-${rfq.id}`}
+    >
+      <Data className="font-semibold">{rfq.rfqNumber}</Data> {rfq.title}
+      <ul className="mt-2 space-y-1">
+        {rows.map(({ item, outcome }) => (
+          <li
+            key={item.key}
+            className="flex flex-wrap items-center gap-2"
+            data-testid={`supplier-outcome-${rfq.id}-${item.key}`}
+          >
+            <span className="text-text-secondary">{itemLabel(t, rfq, item)}</span>
+            <OutcomePill outcome={outcome} />
+          </li>
+        ))}
+      </ul>
+    </li>
+  );
+};
+
+const OutcomePill: React.FC<{ outcome: SupplierItemOutcome }> = ({ outcome }) => {
+  const { t } = useTranslation();
+  switch (outcome.kind) {
+    case 'awarded':
+      return (
+        <StatusPill variant="success">
+          {t('rfx.award.yourShare', { share: outcome.sharePct, qty: qtyText(outcome.quantity) })}
+          {outcome.breakQty !== undefined ? ` ${t('rfx.award.outcome.atBreak', { qty: qtyText(outcome.breakQty) })}` : ''}
+        </StatusPill>
+      );
+    case 'notAwarded':
+      return <StatusPill variant="neutral">{t('rfx.award.notAwarded')}</StatusPill>;
+    case 'withdrawn':
+      return (
+        <StatusPill variant="warning">
+          {t('rfx.award.outcome.withdrawn', { date: formatDate(outcome.withdrawnAt) })}
+        </StatusPill>
+      );
+    case 'pending':
+      return <StatusPill variant="info">{t('rfx.award.outcome.pending')}</StatusPill>;
+  }
+};
+
+const qtyText = (n: number): string => n.toLocaleString('en-US', { maximumFractionDigits: 2 });
 
 export default SupplierNegotiations;

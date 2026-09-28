@@ -67,6 +67,8 @@ export interface RfqAuthoringDraft {
   attachments: AttachmentMeta[];
   sourceRfiId?: string;
   sourceRfpId?: string;
+  /** RFx D3 (NR-2 BR-08) — the RFP options this RFQ sources, by ref. */
+  sourceRfpOptionRefs?: readonly string[];
   copiedFromRfqId?: string;
   templateId?: string;
   /**
@@ -101,6 +103,8 @@ export interface RfqDraftSeed {
   readonly confidential?: boolean;
   readonly sourceRfiId?: string;
   readonly sourceRfpId?: string;
+  /** RFx D3 (NR-2 BR-08) — the RFP options the pre-fill carried, by ref. */
+  readonly sourceRfpOptionRefs?: readonly string[];
   readonly copiedFromRfqId?: string;
   readonly templateId?: string;
   /**
@@ -247,6 +251,11 @@ export function buildRfqAuthoringPayload(d: RfqAuthoringDraft): Record<string, u
     ...(d.attachments.length > 0 ? { attachments: d.attachments } : {}),
     ...(d.sourceRfiId ? { sourceRfiId: d.sourceRfiId } : {}),
     ...(d.sourceRfpId ? { sourceRfpId: d.sourceRfpId } : {}),
+    // RFx D3 — the create policy refuses an option an RFP award already placed
+    // (NR-2 BR-08), and the RFP refuses to award one this RFQ sources.
+    ...(d.sourceRfpId && d.sourceRfpOptionRefs && d.sourceRfpOptionRefs.length > 0
+      ? { sourceRfpOptionRefs: [...d.sourceRfpOptionRefs] }
+      : {}),
     ...(d.copiedFromRfqId ? { copiedFromRfqId: d.copiedFromRfqId } : {}),
     ...(d.templateId ? { templateId: d.templateId } : {}),
     ...(d.documentRequests && d.documentRequests.length > 0 ? { documentRequests: d.documentRequests } : {}),
@@ -356,6 +365,7 @@ export function seedFromRfp(p: RfqSeedFromRfp, eventNumber: string): RfqDraftSee
     invitedSupplierIds: p.invitedSupplierIds,
     sourceRfpId: p.sourceRfpId,
     ...(p.documentRequests.length > 0 ? { documentRequests: p.documentRequests } : {}),
+    sourceRfpOptionRefs: p.sourceRfpOptionRefs,
     ...(points.length > 0 && p.items.length > 0 ? { totalQty: String(points[0]! * p.items.length) } : {}),
     tiers: points.map((qty) => ({ qty, basis })),
     // The RFQ's unit follows its items (all a type's default, PCS today), so

@@ -1009,11 +1009,13 @@ export const NEGOTIATION_ROUND_SEED: readonly NegotiationRound[] = [
 export const AWARD_SEED: readonly AwardRecord[] = [
   {
     id: 'aw-0001',
-    rfqId: 'rfq-015',
+    eventType: 'rfq',
+    eventId: 'rfq-015',
     awardedAt: at(-12),
+    // A legacy RFQ's line item has one break: its own quantity (RFx C1).
     lines: [
-      { supplierId: 'sup-015', quotationId: 'qt-015a', itemCode: 'PK-CART-9910', sharePct: 70, quantity: 280_000 },
-      { supplierId: 'sup-008', quotationId: 'qt-015b', itemCode: 'PK-CART-9910', sharePct: 30, quantity: 120_000 },
+      { supplierId: 'sup-015', quotationId: 'qt-015a', itemCode: 'PK-CART-9910', sharePct: 70, quantity: 280_000, splitBasis: 'pct', awardTierQty: 400_000 },
+      { supplierId: 'sup-008', quotationId: 'qt-015b', itemCode: 'PK-CART-9910', sharePct: 30, quantity: 120_000, splitBasis: 'pct', awardTierQty: 400_000 },
     ],
     reason: 'Dual sourced for supply security: the second source covers the single die-cutting line risk.',
     bestScoredQuotationId: 'qt-015a',
