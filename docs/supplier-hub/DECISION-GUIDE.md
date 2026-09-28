@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Version | 1.5, 2026-09-28 |
-| Covers | BL-01 to BL-19b in `BACKLOG.md` — the 21 decisions that block or confirm work; the RFx decisions RFX-D1 to RFX-D5 (2026-09-21) and RFX-D6 to RFX-D14 (2026-09-25); and the 15 forecast engine decisions ENG-D1 to ENG-D14 with ENG-D8a (2026-09-23) |
+| Covers | BL-01 to BL-19b in `BACKLOG.md` — the 21 decisions that block or confirm work; the RFx decisions RFX-D1 to RFX-D5 (2026-09-21) and RFX-D6 to RFX-D14 (2026-09-25) and RFX-D15 (2026-09-28); and the 15 forecast engine decisions ENG-D1 to ENG-D14 with ENG-D8a (2026-09-23) |
 | Purpose | Give the project owner a defensible recommendation to take to each owner: what the market does, what we suggest for PTI, and what would change our mind |
 | Status | **18 of the 21 were decided on 2026-09-21**, mostly as recommended; the outcomes are in section 9 of the requirements and in the Closed section of `BACKLOG.md`. Still open: BL-01 REPL, BL-11 interface technology, BL-12 call-off record, and three values (BL-54 invoice cap, BL-55 gate OTIF minimum, BL-56 early allowance). Where the owner decided differently from this guide — the hub keeps its own calendar (BL-14), capacity stays at 13 weekly buckets (BL-08), Web Tukar Faktur stays separate (BL-17), and TMS access becomes a 3PL tracking link (BL-03) — the decision stands and this guide is kept as the reasoning behind the others. All decided items are built and in production as of 2026-09-21 (BL-43 to BL-53). The builds raised six new questions, BL-66 to BL-71 in the backlog, which this guide does not yet cover |
 | Evidence | Market practice is cited at the end. Where a claim is a judgement rather than a published practice, it says so |
@@ -235,7 +235,7 @@ The owner accepted every recommendation in section 7 of `RFX-IMPROVEMENT-REQUIRE
 
 **Decision.** Option A. The buyer opens a firm-offer round inside a Closed RFP for named options and quantity points, and invites only suppliers that submitted and pass the compliance gate. Each supplier gives firm prices with a validity date. The award is made per option on those firm offers, with a reason, and binds PTI to place the business through SAP and the supplier to hold its offer until the validity date. Firm-offer prices read "Firm"; every other RFP price stays "Indicative". An option awarded in the RFP cannot also go to an RFQ. **Amends** RFX-D4, CE-10 and REQ-E03-04 BR-08; adds REQ-E03-04 BR-15 and BR-16. Built in PR #57 (round), #66 (award) and #67 (screens).
 
-**What would change this.** If suppliers will not give firm prices outside an RFQ, the round adds a step without saving one, and option B (selection only, firm prices through RFP → RFQ) is the fallback. Open beside it: FU-7, whether a Partly awarded RFP may run a new round for its open options (section 7 of the requirements, BL-128).
+**What would change this.** If suppliers will not give firm prices outside an RFQ, the round adds a step without saving one, and option B (selection only, firm prices through RFP → RFQ) is the fallback. FU-7, whether a Partly awarded RFP may run a new round for its open options, was decided on 2026-09-28 as RFX-D15.
 
 ### RFX-D7 · Split by quantity as well as percentage (D-2)
 **Market practice.** Ariba splits "by percentage or quantity", Oracle by quantity, and Jaggaer "by quantity count or quantity percentages".
@@ -292,6 +292,13 @@ The owner accepted every recommendation in section 7 of `RFX-IMPROVEMENT-REQUIRE
 **Decision.** Accept the submission and flag the certificate to the buyer, so a supplier that is renewing is not locked out and the buyer sees the flag at award. CE-11d. Built in PR #56 (rule) and #62 (flag in the buyer's file view). An RFx certificate does not update the compliance registry or the compliance gate (CR-23).
 
 **What would change this.** If an expired certificate reaches an award unnoticed, the flag should block the award line instead of the submission.
+
+### RFX-D15 · Firm-offer round on a Partly awarded RFP (FU-7, decided 2026-09-28)
+**Market practice.** Ariba opens a new round of bidding after bidding closes and before items are awarded, the same source graded A for RFX-D6 and D-1 (section 10 of `RFX-IMPROVEMENT-REQUIREMENTS-2026-09.md`). Nothing there requires every item to be unawarded, so a round for the items still open after a partial award follows the same practice.
+
+**Decision.** Allow it. A firm-offer round opens on a Closed or a Partly awarded RFP, for the options still open: an option named by an award in force, or sourced by an RFQ created from the RFP, is refused by name. The newer round's firm prices replace the older ones for the same supplier and option, and the final award on the remaining options moves the RFP to Awarded. RFP → RFQ stays available for any open option. **Amends** REQ-E03-04 BR-15e; closes FU-7 and BL-128. Built in PR-D15-TBD.
+
+**What would change this.** If buyers keep sending the open options to an RFQ anyway, the second round adds a path nobody uses and could be withdrawn. If suppliers reprice options already awarded through a later round, the settled check already refuses that; a need to reopen an awarded option would instead mean cancelling its award first.
 
 ---
 

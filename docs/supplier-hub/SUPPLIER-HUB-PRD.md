@@ -4,7 +4,7 @@
 |---|---|
 | Product | Supplier Hub (Supplier Portal, "SC Collaboration Hub") |
 | Company | PT Paragon Technology and Innovation (PTI) |
-| Version | 0.10 draft, 2026-09-28 |
+| Version | 0.11 draft, 2026-09-28 |
 | Scope | MVP (Phase 1, "Foundation to Transact"). Phase 2 and 3 appear only in section 9 |
 | Steering Committee | Yogi Sapta Prakoso (VP Supply Chain), Ilauddin (CFO), Risman Adnan (CTO) [C] |
 | Technology Product Owners | Achmad Fahlevi, Vergiant Yoga Perdana (Supply Chain); Indita Ramasaphira (FATL) [C] |
@@ -304,7 +304,7 @@ US-70 to US-79 were US-RFX-01 to US-RFX-10 in `RFX-IMPROVEMENT-REQUIREMENTS-2026
   - Supplier A never sees a file uploaded by supplier B.
   - The comparison shows each supplier's documents as Complete or Missing.
 - US-73:
-  - A firm-offer round opens only on a Closed RFP and only for suppliers that submitted and pass the compliance gate.
+  - A firm-offer round opens only on a Closed or Partly awarded RFP (RFX-D15), only for options still open, and only for suppliers that submitted and pass the compliance gate.
 - US-74:
   - An award without a reason, or naming a supplier with no valid firm offer on the option, is refused, naming the option.
   - An awarded option cannot also go into an RFQ.

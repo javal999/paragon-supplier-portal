@@ -2,8 +2,8 @@
 
 | | |
 |---|---|
-| Version | 0.24 draft, 2026-09-28 |
-| Sources | `SUPPLIER-HUB-BASELINE.md` (kick-off deck, Aug 2026); `KICKOFF-MEETING-NOTES.md` (business user feedback, reviewed 2026-09-17); owner review of the prototype gap review (2026-09-17); owner RFx decisions RFX-D1 to RFX-D5 (2026-09-21); owner RFx decisions RFX-D6 to RFX-D14 (2026-09-25), from `RFX-IMPROVEMENT-REQUIREMENTS-2026-09.md`; RFx best-practice research, `research/RFX-BEST-PRACTICE-2026-09.md` (2026-09-21); owner decision ENG-1 (2026-09-23) with the forecast research `research/FORECAST-BEST-PRACTICE-2026-09.md` and `research/FORECAST-METHOD-SPEC.md` |
+| Version | 0.25 draft, 2026-09-28 |
+| Sources | `SUPPLIER-HUB-BASELINE.md` (kick-off deck, Aug 2026); `KICKOFF-MEETING-NOTES.md` (business user feedback, reviewed 2026-09-17); owner review of the prototype gap review (2026-09-17); owner RFx decisions RFX-D1 to RFX-D5 (2026-09-21); owner RFx decisions RFX-D6 to RFX-D14 (2026-09-25), from `RFX-IMPROVEMENT-REQUIREMENTS-2026-09.md`; owner RFx decision RFX-D15 (2026-09-28); RFx best-practice research, `research/RFX-BEST-PRACTICE-2026-09.md` (2026-09-21); owner decision ENG-1 (2026-09-23) with the forecast research `research/FORECAST-BEST-PRACTICE-2026-09.md` and `research/FORECAST-METHOD-SPEC.md` |
 | Scope of this version | Detailed: Order Collaboration, Inventory & Capacity Collaboration, RFx (validated); Forecast Collaboration, Call-off Management, and the undiscussed parts of Order and Inventory Collaboration (proposed). Hub navigation and screen conventions (validated). Foundation is reserved for the Foundation team. The remaining epics are stubs |
 | Not in scope | The codebase. This file states what the Supplier Hub must do, not what is built. What the prototype does today, and where, is tracked only in `BUILD-GAP.md` |
 
@@ -524,7 +524,7 @@ Template rules:
 
 | Maps to | Phase | Priority | Business owner | Users | Status |
 |---|---|---|---|---|---|
-| E03.02; MN-RFX-05; RFX-D1 to RFX-D4, RFX-D6 to RFX-D14 | MVP | P1 [Proposed] | Procurement | BUY, SUP | Validated; authoring detail Proposed (A-03); firm-offer round and award Validated (RFX-D6) |
+| E03.02; MN-RFX-05; RFX-D1 to RFX-D4, RFX-D6 to RFX-D15 | MVP | P1 [Proposed] | Procurement | BUY, SUP | Validated; authoring detail Proposed (A-03); firm-offer round and award Validated (RFX-D6) |
 
 **Business value.** Some purchases need commercial terms, not only a unit price, and some start before the spec is known: Tundra (a bottle and pump whose material and neck are open for the supplier's recommendation) and ICY (a full-service lip product with formula and pack options, samples and a timeline). An RFP collects terms, options and indicative prices in a comparable, auditable form. It ends either in an award on firm offers made inside the RFP or in a firm RFQ, so a full-service decision is recorded without re-running it as an RFQ (RFX-D6).
 
@@ -559,7 +559,7 @@ Template rules:
   - BR-15b. An invited supplier gives a firm unit price per option and quantity point and a validity date on or after the round deadline, and can revise until the round closes. The screen tells it: "Prices you give in this round are firm offers until the validity date you set." [Owner, 2026-09-25; PR #57, #67].
   - BR-15c. Rounds can repeat. The last firm offer per supplier and option counts, and every version is kept [Owner, 2026-09-25; PR #57].
   - BR-15d. A supplier's own option is named together with the supplier that proposed it, so options from different suppliers never merge in a round, a firm price or an award [Owner, 2026-09-25; PR #57, #66].
-  - BR-15e. A round opens only on a Closed RFP. A Partly awarded RFP cannot run another round for its open options, which go to an RFQ instead, until the owner decides otherwise (section 7, FU-7) [Owner, 2026-09-25; PR #57, #66].
+  - BR-15e. A round opens on a Closed or a Partly awarded RFP, and on no other status. It names only options that are still open: an option named by an award in force on the RFP, or sourced by an RFQ created from the RFP that is not cancelled, is refused by name, on either status. A Closed RFP holds no award in force, because the cancel that returns it to Closed is the one that leaves none, so there the check only ever finds an option an RFQ sources. The new round's firm prices replace the older ones for the same supplier and option (BR-15c), and awarding the remaining options with the final award moves the RFP from Partly awarded to Awarded [Owner, 2026-09-28, RFX-D15; PR #57, #66, PR-D15-TBD].
 - BR-16. **Award from an RFP** (NR-2 BR-05 to BR-10, NR-3) [Owner, 2026-09-25, RFX-D6]:
   - BR-16a. The buyer awards each option at one quantity point to 1 or more suppliers, split under REQ-E03-05 BR-06, as a final award or as a partial award that leaves options open. The RFP becomes Awarded, or Partly awarded while options stay open. The responses stay Submitted [Owner, 2026-09-25, RFX-D6, RFX-D7, RFX-D9; PR #66, #67].
   - BR-16b. An award line counts only on the supplier's latest firm offer for that option from a closed round, still valid on the award date; otherwise it is refused, naming the option [Owner, 2026-09-25; PR #66].
@@ -587,7 +587,7 @@ Template rules:
 - AC-06. The buyer sees options against suppliers, including options a supplier proposed.
 - AC-07. A buyer can save the RFP as a template and start from it, or copy a past RFP.
 - AC-08. A buyer can create an RFQ from an RFP (REQ-E03-03 AC-14).
-- AC-09. The buyer can open a firm-offer round on a Closed RFP, only for submitted suppliers that pass the compliance gate.
+- AC-09. The buyer can open a firm-offer round on a Closed or Partly awarded RFP, only for options still open and only for submitted suppliers that pass the compliance gate (RFX-D15).
 - AC-10. Prices from a round read "Firm" with their validity; every other RFP price still reads "Indicative".
 - AC-11. An award naming a supplier with no valid firm offer on the option is refused, naming the option; an award without a reason is refused.
 - AC-12. A successful award moves the RFP to Awarded, or Partly awarded, and records option, supplier, share, quantity, quantity point and reason.
@@ -621,7 +621,7 @@ Template rules:
 
 **Metrics.** Lagging: KPI-06. Starting targets, reviewed after 3 months [Owner, 2026-09-25, RFX-D13]: RFPs ending in an award or an RFQ ÷ closed RFPs, 90%; sourcing events per awarded full-service need, 1.3 on average; RFP cycle time from publish to award, recorded first and targeted after 3 months; RFP awards with a reason, 100%.
 
-**Open items.** A-03 (RFP template and standard term list review with Procurement). FU-7 (firm-offer round on a Partly awarded RFP, section 7).
+**Open items.** A-03 (RFP template and standard term list review with Procurement).
 
 #### REQ-E03-05  Bid comparison, negotiation, and awarding
 
@@ -1759,7 +1759,6 @@ Detailed in `FORECAST-ENGINE-REQUIREMENTS.md`, which uses this file's template p
 | DL-1 | Late at the deadline (forecast commitments, built) or after it (PO and call-off responses, built): one convention | REQ-E06-02, REQ-E07-02, REQ-E09-03 |
 | ADM-1 | Whether the combined buyer "All" role may change the working calendar and the 3PL list, or the Hub administrator only | Section 3.4, REQ-E07-04 |
 | GR-1 | Over-delivery measured against the order (CR-25) or the ASN (REQ-E07-06 BR-03); whether a receipt kept open reopens the missing quantity | REQ-E07-06 |
-| FU-7 | Firm-offer round on a Partly awarded RFP: allow a new round for the options still open, or keep RFP → RFQ as their path (built: a round opens only on a Closed RFP; found in PR #66) | REQ-E03-04 BR-15e |
 
 ---
 
@@ -1890,6 +1889,7 @@ Research date: 2026-09-21. The full note, with every source link, is `research/R
 | RFX-D12 | Cancel an award (owner, 2026-09-25, D-7) | Cancel with a reason until the award is marked "Raised in SAP", keeping the cancelled record. Replaces the REQ-E03-05 edge case "the event returns to evaluation"; REQ-E03-05 BR-13 and BR-14. Built in PR #61, #64, #66 and #67 |
 | RFX-D13 | Response targets in the metrics tables (owner, 2026-09-25, D-8) | The proposed targets of the RFx improvement analysis (sections 4j, 5j and 6j) are starting targets, reviewed after 3 months. CE-11m and the metrics of REQ-E03-04 and REQ-E03-05. No build |
 | RFX-D14 | Certificate expired at the deadline (owner, 2026-09-25, D-9) | Accept the submission and flag the certificate to the buyer. CE-11d. Built in PR #56 and #62 |
+| RFX-D15 | Firm-offer round on a Partly awarded RFP (owner, 2026-09-28, FU-7) | Allow it, for the options still open (not awarded on the RFP and not sourced by an RFQ created from it). The remaining options are awarded on the new round's firm prices. Amends REQ-E03-04 BR-15e; closes FU-7 and BL-128. Built in PR-D15-TBD |
 | E06-R | Forecast Collaboration recommendations | Confirmed as recommended: periods and cadence by material type, zones, split deadline, pre-filled commitment, tolerance CR-21, gap colours CR-22, re-publication, ranking, planner actions, reminders, spreadsheet round-trip, supplier coverage, upside |
 
 ## 10. Change log
@@ -1920,3 +1920,4 @@ Research date: 2026-09-21. The full note, with every source link, is `research/R
 | 0.22 | 2026-09-24 | REQ-E14-06 built on synthetic data (PR #48); build decisions ENG-B29 to ENG-B38 in `FORECAST-ENGINE-REQUIREMENTS.md` section 4.1g |
 | 0.23 | 2026-09-25 | Forecast engine build decisions ENG-B19 to ENG-B59 accepted by the owner (`FORECAST-ENGINE-REQUIREMENTS.md` 0.12, sections 4.1d to 4.1g) |
 | 0.24 | 2026-09-28 | RFx improvements folded in as built (PRs #54 to #64, #66, #67). Owner decisions D-1 to D-9 of 2026-09-25 recorded as RFX-D6 to RFX-D14 (section 9). CE-10 amended (firm-offer prices read Firm); CE-11a to CE-11m added (supplier documents, limits, certificates, revise until the deadline, access log, starting targets). REQ-E03-02 BR-17 and BR-18; REQ-E03-03 BR-25; REQ-E03-04 BR-08 amended, BR-14 to BR-16 added (firm-offer round and award); REQ-E03-05 BR-06 and BR-06a amended, BR-11 to BR-17 added (quantity split, break per item, partial award, legacy RFQs on one panel, cancel, raised in SAP, supplier outcome, no approval). Starting metric targets (RFX-D13). Open item FU-7 added. Source: `RFX-IMPROVEMENT-REQUIREMENTS-2026-09.md` |
+| 0.25 | 2026-09-28 | Owner decision RFX-D15 recorded (section 9): a firm-offer round may open on a Partly awarded RFP for its open options. REQ-E03-04 BR-15e amended. Open item FU-7 closed and removed from section 7. Built in PR-D15-TBD |
