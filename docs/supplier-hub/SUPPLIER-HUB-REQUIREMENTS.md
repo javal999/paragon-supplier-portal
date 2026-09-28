@@ -2,8 +2,8 @@
 
 | | |
 |---|---|
-| Version | 0.23 draft, 2026-09-25 |
-| Sources | `SUPPLIER-HUB-BASELINE.md` (kick-off deck, Aug 2026); `KICKOFF-MEETING-NOTES.md` (business user feedback, reviewed 2026-09-17); owner review of the prototype gap review (2026-09-17); owner RFx decisions RFX-D1 to RFX-D5 (2026-09-21); RFx best-practice research, `research/RFX-BEST-PRACTICE-2026-09.md` (2026-09-21); owner decision ENG-1 (2026-09-23) with the forecast research `research/FORECAST-BEST-PRACTICE-2026-09.md` and `research/FORECAST-METHOD-SPEC.md` |
+| Version | 0.24 draft, 2026-09-28 |
+| Sources | `SUPPLIER-HUB-BASELINE.md` (kick-off deck, Aug 2026); `KICKOFF-MEETING-NOTES.md` (business user feedback, reviewed 2026-09-17); owner review of the prototype gap review (2026-09-17); owner RFx decisions RFX-D1 to RFX-D5 (2026-09-21); owner RFx decisions RFX-D6 to RFX-D14 (2026-09-25), from `RFX-IMPROVEMENT-REQUIREMENTS-2026-09.md`; RFx best-practice research, `research/RFX-BEST-PRACTICE-2026-09.md` (2026-09-21); owner decision ENG-1 (2026-09-23) with the forecast research `research/FORECAST-BEST-PRACTICE-2026-09.md` and `research/FORECAST-METHOD-SPEC.md` |
 | Scope of this version | Detailed: Order Collaboration, Inventory & Capacity Collaboration, RFx (validated); Forecast Collaboration, Call-off Management, and the undiscussed parts of Order and Inventory Collaboration (proposed). Hub navigation and screen conventions (validated). Foundation is reserved for the Foundation team. The remaining epics are stubs |
 | Not in scope | The codebase. This file states what the Supplier Hub must do, not what is built. What the prototype does today, and where, is tracked only in `BUILD-GAP.md` |
 
@@ -174,7 +174,7 @@ Every requirement that calculates something refers to a rule here by its `CR-` I
 
 ### 3.6a Creating a sourcing event
 
-How an RFI, RFQ or RFP comes into being, before it reaches suppliers [Owner, A-04, 2026-09-18; amended by the owner on 2026-09-21, RFX-D1 to RFX-D5 in section 9]. The same rules apply to all 3 event types.
+How an RFI, RFQ or RFP comes into being, before it reaches suppliers [Owner, A-04, 2026-09-18; amended by the owner on 2026-09-21, RFX-D1 to RFX-D5, and on 2026-09-25, RFX-D6 to RFX-D14, in section 9]. The same rules apply to all 3 event types.
 
 - CE-01. The buyer creates the event. There is no sourcing request object in the MVP: a planner or requester asks Procurement outside the hub. Sourcing request (E03.01) stays a stub for a later phase [Owner].
 - CE-02. Where a purchase requisition exists, the buyer can start an RFQ from it, and its fields are pre-filled (REQ-E03-03 BR-04). A requisition is never required [Owner].
@@ -185,8 +185,23 @@ How an RFI, RFQ or RFP comes into being, before it reaches suppliers [Owner, A-0
 - CE-07. Every event carries a response deadline, at least 1 invited supplier, and the scope the suppliers answer, before it can be sent [Proposed].
 - CE-08. The whole event is auditable: who created it, what was added or removed against the template, who sent it, and when [Proposed; charter requires 100% sourcing documentation].
 - CE-09. RFI, RFQ and RFP are independent: each can be created alone, and none is a required step before another [Owner, 2026-09-21, RFX-D3; MN-RFX-04]. The allowed links are RFI → RFQ, RFI → RFP, RFP → RFQ, and purchase requisition → RFQ. The new event is pre-filled from its source, every field stays editable, the event records its source, and it shows "Created from …" with the source's number [Owner, 2026-09-21, RFX-D3].
-- CE-10. Open-spec requests, where PTI wants recommendations, options, samples or indicative prices, are run as an RFP or an RFI; firm prices by quantity break are asked for in an RFQ [Owner, 2026-09-21, RFX-D4]. Every price a supplier gives is labelled on screen as **Indicative** (RFI price range, RFP pricing) or **Firm** (RFQ). No leading platform has a native flag for this, so it is an explicit field of the hub [Owner, 2026-09-21; Market, section 8.3].
-- CE-11. Files a buyer or supplier attaches to an event (brief, drawings, reference images, a quotation PDF) are part of the event record and are kept with it [Proposed]. Until file storage exists (BACKLOG BL-27), the hub must say plainly when a file is kept only for the session [Owner, 2026-09-17, SC-04].
+- CE-10. Open-spec requests, where PTI wants recommendations, options, samples or indicative prices, are run as an RFP or an RFI; firm prices by quantity break are asked for in an RFQ, or in a firm-offer round inside the RFP (REQ-E03-04 BR-15) [Owner, 2026-09-21, RFX-D4; amended 2026-09-25, RFX-D6]. Every price a supplier gives is labelled on screen as **Indicative** (RFI price range, RFP pricing) or **Firm** (RFQ, and a price given in an RFP firm-offer round, shown with its validity date). No leading platform has a native flag for this, so it is an explicit field of the hub [Owner, 2026-09-21; Market, section 8.3; firm-offer label Owner, 2026-09-25, RFX-D6; PR #57, #67].
+- CE-11. Files a buyer or supplier attaches to an event (brief, drawings, reference images, a quotation PDF, the supplier's response documents) are part of the event record and are kept with it [Proposed]. Until file storage exists (BACKLOG BL-27), the hub must say plainly when a file is kept only for the session, and the buyer's file view says which files are no longer held [Owner, 2026-09-17, SC-04; buyer view Owner, 2026-09-25; PR #55, #62].
+
+**Supplier documents in responses** (NR-1 in `RFX-IMPROVEMENT-REQUIREMENTS-2026-09.md`). These rules apply to the RFI, the RFP and the RFQ alike. A rule that shipped is tagged with the owner's acceptance of 2026-09-25 and the PR that built it; a rule not yet built keeps its original tag.
+- CE-11a. Every RFI, RFP and RFQ response has a response-level file area, whether or not the buyer asked for a document (NR-1 BR-01) [Owner, 2026-09-25; PR #56, #63].
+- CE-11b. The buyer can add document requests to an RFI, RFP or RFQ before sending it: a name, a type (Certificate, Specification, Drawing, Sample photo, Quotation, Company profile, Other), required or optional, and on an RFQ the whole response or one item. A request after sending waits on amendments (BL-92), so meanwhile the buyer asks through a clarification (NR-1 BR-02) [Owner, 2026-09-25; PR #56, #60].
+- CE-11c. Submit is refused while a required request has no file, and the refusal names the request (NR-1 BR-03) [Owner, 2026-09-25; PR #56, #63].
+- CE-11d. A Certificate request also takes the certificate number, issuer and expiry date. A certificate that has expired by the supplier's deadline is flagged to the buyer, and the submission is not refused (NR-1 BR-04) [Owner, 2026-09-25, RFX-D14; PR #56, #62, #63]. An RFx certificate is evidence for the buyer only: it does not update the compliance registry or the compliance gate (CR-23) [Proposed; NR-1 section k].
+- CE-11e. File limits: at most 25 MB per file and 30 files per response. Allowed types: PDF, DOC/DOCX, XLS/XLSX, PPT/PPTX, JPG, PNG, DWG, DXF, STEP, STP. No ZIP and no executables. A file over a limit is refused when it is picked, and the verb refuses it again on save and submit (NR-1 BR-05) [Owner, 2026-09-25, RFX-D8; PR #55, #56, #63].
+- CE-11f. A supplier's files are visible only to that supplier and to PTI, never to another supplier. Files on a Draft response are invisible to PTI. On a confidential event the document requests are withheld until the supplier accepts the terms (NR-1 BR-06, BR-07) [Owner, 2026-09-25; PR #56, #62].
+- CE-11g. A submitted response can be revised until the supplier's deadline, extensions included. Each revision is a new version, every version is kept with its files, and the buyer reads the latest. A save on a submitted response is refused and the supplier is told to revise. After the deadline, save, submit and revise are all refused by the verb, not only hidden (NR-1 BR-08, AC-07). This amends the RFI and RFP response lifecycles: a submitted response is no longer final before the deadline (REQ-E03-02 BR-18, REQ-E03-04 BR-14) [Owner, 2026-09-25, RFX-D11; PR #59, #63].
+- CE-11h. A revised quote in a negotiation round can carry files and passes the same document rules (NR-1 BR-09) [Owner, 2026-09-25; PR #63]. A firm offer in an RFP firm-offer round (REQ-E03-04 BR-15) can also carry files [Proposed; not yet on the screen, BACKLOG BL-129].
+- CE-11i. The record keeps when each file was uploaded, the version that first holds it, and every time PTI opens or downloads it, with who and when (NR-1 BR-10) [Owner, 2026-09-25; PR #56, #59, #62]. Who uploaded each file is also recorded [Proposed; not yet built, BACKLOG BL-123]. The access log lasts as long as the session until file storage exists (BL-27).
+- CE-11j. Supplier files are never copied into a follow-on event; the new event shows "Created from …" (CE-09). Document requests do carry over through templates, copies and pre-fills (NR-1 BR-11) [Owner, 2026-09-25; PR #56].
+- CE-11k. The buyer opens and downloads each supplier file from the event page, grouped by supplier, with its request, type, size, upload time, certificate fields and version (NR-1 buyer step 5) [Owner, 2026-09-25; PR #62]. "Download all" as 1 ZIP waits on file storage (NR-1 AC-04) [Proposed; BACKLOG BL-122].
+- CE-11l. The comparison shows a "Documents" row per supplier: Complete, or Missing with the names of the required requests left empty (NR-1 buyer step 6) [Owner, 2026-09-25; PR #62].
+- CE-11m. Starting targets, reviewed after 3 months [Owner, 2026-09-25, RFX-D13]: supplier files retrievable at award ÷ supplier files uploaded, 100% (needs BL-27); responses with every required request filled at submit ÷ submitted responses, 95%; buyer clarifications asking for a missing document, down 80% within 3 months.
 
 **Why it is worth revisiting later.** CE-01 leaves the ask in email, and CE-05 means a new question or spec field waits on an IT change. Both are acceptable while the pilot runs a handful of events; neither scales to routine sourcing. The candidates are the sourcing request (E03.01) and an admin screen for the library.
 
@@ -246,10 +261,10 @@ The menu follows the hub's own sections, not procurement stages, and each PTI us
 |---|---|---|---|---|
 | REQ-E01-nn, REQ-E02-nn | Foundation | E01, E02 | MVP | Reserved |
 | REQ-E03-01 | Supplier filtering for sourcing events | E03 | MVP | Validated |
-| REQ-E03-02 | Request for Information (RFI) | E03 | MVP | Validated; authoring detail Proposed (A-03) |
+| REQ-E03-02 | Request for Information (RFI) | E03 | MVP | Validated; authoring detail Proposed (A-03); documents and revise Validated (RFX-D8, RFX-D11) |
 | REQ-E03-03 | Request for Quotation (RFQ) with RFI reuse | E03 | MVP | Validated (RFX-D1 to RFX-D5); Proposed (item, break and response detail) |
-| REQ-E03-04 | Request for Proposal (RFP) | E03 | MVP | Validated; authoring detail Proposed (A-03) |
-| REQ-E03-05 | Bid comparison, negotiation, and awarding | E03 | MVP | Validated (negotiation, per-item split award, RFX-D5); Proposed (detail) |
+| REQ-E03-04 | Request for Proposal (RFP) | E03 | MVP | Validated; authoring detail Proposed (A-03); firm-offer round and award Validated (RFX-D6) |
+| REQ-E03-05 | Bid comparison, negotiation, and awarding | E03 | MVP | Validated (negotiation; per-item split award by % or quantity, partial award, cancel before SAP; RFX-D5, RFX-D7, RFX-D9, RFX-D12); Proposed (detail) |
 | REQ-E06-01 | Forecast publication | E06 | MVP | Validated (owner, E06-R) |
 | REQ-E06-02 | Foresight / fixed-stock confirmation | E06 | MVP | Validated (owner, E06-R) |
 | REQ-E06-03 | Forecast-commit gap monitoring | E06 | MVP | Validated (owner, E06-R) |
@@ -342,13 +357,13 @@ Reserved for the Foundation team: E01 Supplier Registration & Onboarding and E02
 
 | Maps to | Phase | Priority | Business owner | Users | Status |
 |---|---|---|---|---|---|
-| E03.02; MN-RFX-02, MN-RFX-03, MN-RFX-04; RFX-D1 to RFX-D4 | MVP | P1 [Proposed] | Procurement | BUY, SUP | Validated; authoring detail Proposed (A-03) |
+| E03.02; MN-RFX-02, MN-RFX-03, MN-RFX-04; RFX-D1 to RFX-D4, RFX-D8, RFX-D11, RFX-D14 | MVP | P1 [Proposed] | Procurement | BUY, SUP | Validated; authoring detail Proposed (A-03); documents and revise Validated (RFX-D8, RFX-D11) |
 
 **Business value.** Before asking for prices, buyers need to know what a supplier can make, where, and how. A structured RFI replaces ad-hoc email questionnaires [Deck p.3, C2] and creates reusable supplier capability data for later RFQs and RFPs.
 
 **Experience.**
-- BUY: creates an RFI from the category template, a saved template, or a copy of a past RFI (section 3.6a); groups questions in sections, adding its own; chooses a type for each question; attaches the brief, drawings or reference images; optionally asks suppliers to accept confidentiality terms first; reviews responses side by side; turns the RFI into an RFQ or an RFP.
-- SUP: receives the invitation, accepts the confidentiality terms where the RFI has them, fills in capability, experience, facility, and product entries and the buyer's questions, and submits.
+- BUY: creates an RFI from the category template, a saved template, or a copy of a past RFI (section 3.6a); groups questions in sections, adding its own; chooses a type for each question; attaches the brief, drawings or reference images; lists the documents it needs from suppliers; optionally asks suppliers to accept confidentiality terms first; reviews responses and supplier documents side by side; turns the RFI into an RFQ or an RFP.
+- SUP: receives the invitation, accepts the confidentiality terms where the RFI has them, fills in capability, experience, facility, and product entries and the buyer's questions, attaches its documents, submits, and can revise until the deadline.
 
 **Step-by-step (Supplier, responding to an RFI).**
 1. The supplier opens the RFI invitation from its task list.
@@ -376,6 +391,8 @@ Reserved for the Foundation team: E01 Supplier Registration & Onboarding and E02
 - BR-14. From an open or closed RFI the buyer can create an RFP: the title, category family, scope, the RFI's questions as scope notes, the suppliers who submitted, and the attachments are copied, and the RFP shows that it was created from the RFI. The buyer can also create an RFQ from it (REQ-E03-03 BR-02) [Owner, 2026-09-21, RFX-D3].
 - BR-15. Question weights stay as they are: a weighted question produces a response score that shortlists and never awards [Proposed]. Knock-out and show-if questions are later (section 5.2, "RFx: later, not in the MVP").
 - BR-16. The buyer can edit a draft RFI before sending it [Proposed].
+- BR-17. The RFI can carry document requests, and the response carries the supplier's documents, under CE-11a to CE-11l [Owner, 2026-09-25, RFX-D8; PR #56, #60, #62, #63].
+- BR-18. A submitted RFI response can be revised until the supplier's deadline, and every version is kept with its files (CE-11g) [Owner, 2026-09-25, RFX-D11; PR #59, #63].
 
 **Edge cases.**
 - The supplier saves a partial response: keep it as a draft, not visible to the buyer until submitted [Proposed].
@@ -393,6 +410,8 @@ Reserved for the Foundation team: E01 Supplier Registration & Onboarding and E02
 - AC-07. An indicative price range reads "Indicative" wherever it is shown.
 - AC-08. A buyer can save the RFI as a template and start a new RFI from it; a copy of a past RFI carries its content and invitees, and its dates are empty.
 - AC-09. "Create RFP" on an RFI opens an RFP pre-filled with the scope, scope notes and submitted responders, all editable, and the RFP shows its source.
+- AC-10. A supplier can attach a file to an RFI response with no document request; a required request left empty blocks submission and is named.
+- AC-11. A submitted RFI response revised before the deadline shows as the new version and the earlier version stays readable; after the deadline the verb refuses the revision.
 
 **RFI template** [Proposed; Market; pending user use cases, A-03]. How an event is created from a template is in section 3.6a. A template is a set of reusable sections plus questions from a question library. Procurement keeps 1 template per category family, such as "Packaging RFI" and "Raw material RFI". The buyer starts from a template and can add or remove questions for one event. Company identity (legal name, tax ID, address, bank) is read from the supplier master (Foundation) and never asked again.
 
@@ -410,7 +429,7 @@ Template rules:
 - Sections A to D map to the capability, experience, facility, and product structure in BR-02, so answers are stored against the supplier and reused (BR-04).
 - The buyer can give a question an optional weight. Weighted questions produce a response score used only to shortlist suppliers for an RFQ or RFP.
 
-**Data and integration.** RFI event with its sections, questions, attachments, confidentiality terms and source (template or copied event); invitee list; confidentiality acceptance per supplier with time; response with capability, experience, facility, and product lines and typed answers. Product lines overlap with Catalog Management (E05), which the deck puts in Phase 2 (D-07).
+**Data and integration.** RFI event with its sections, questions, attachments, confidentiality terms and source (template or copied event); invitee list; confidentiality acceptance per supplier with time; response with capability, experience, facility, and product lines, typed answers, response documents and its submitted versions; document requests on the event. Product lines overlap with Catalog Management (E05), which the deck puts in Phase 2 (D-07).
 
 **Metrics.** Leading: RFI response rate; median time to respond. Lagging: KPI-06.
 
@@ -420,7 +439,7 @@ Template rules:
 
 | Maps to | Phase | Priority | Business owner | Users | Status |
 |---|---|---|---|---|---|
-| E03.02, E03.03; MN-RFX-04; RFX-D1 to RFX-D5 | MVP | P1 [Proposed] | Procurement | BUY, SUP | Validated (independence, reuse, templates, firm tiered prices); Proposed (item, break and response detail) |
+| E03.02, E03.03; MN-RFX-04; RFX-D1 to RFX-D5, RFX-D8, RFX-D14 | MVP | P1 [Proposed] | Procurement | BUY, SUP | Validated (independence, reuse, templates, firm tiered prices, supplier documents); Proposed (item, break and response detail) |
 
 **Business value.** RFQs run by email today [Deck p.3, C2]. Paragon's real RFQs (Oslo stickers, Iron unit box, Redwood 2.0 mold) ask for several items, each with a spec sheet, priced at 3 to 6 quantity breaks, with plate or mold costs on top. A hub RFQ with that shape collects quotes that can actually be compared, and reusing RFI, RFP and past RFQ content saves the buyer re-typing specifications.
 
@@ -461,13 +480,14 @@ Template rules:
 - BR-15. Before quoting, the supplier states its intent: "I will respond", or decline with a reason from a list (no capacity, not our product, lead time too short, quantity too small, spec unclear, other) and its own words. The buyer sees each invitee's intent, reason and words. A supplier that declined cannot quote; a supplier with a live quote cannot decline [Proposed; Market, section 8.3].
 - BR-16. On a confidential RFQ, a supplier sees no spec values, item notes or files until it accepts the confidentiality terms; the acceptance is recorded once, with the time. A quote on a confidential RFQ whose terms were not accepted is refused [Proposed; Market, section 8.3].
 - BR-17. The quote has one block per item: every supplier spec field, a firm unit price at every break, MOQ, lead time in days (more than 0), and the one-time costs (BR-10). Where alternatives are allowed, the supplier can add an alternative per item: a description and a price per break. An alternative is shown apart from the main quote and is not ranked [Proposed; Market, section 8.3].
-- BR-18. At RFQ level the quote carries the currency, a validity date, the payment terms offered, the answers, the sample offer (can sample, and a ready date) where samples were requested, notes, and attachments (CE-11) [Proposed].
+- BR-18. At RFQ level the quote carries the currency, a validity date, the payment terms offered, the answers, the sample offer (can sample, and a ready date) where samples were requested, notes, and the supplier's documents (CE-11) [Proposed; documents Owner, 2026-09-25, PR #56, #63].
 - BR-19. A quote is refused, naming the item or field, when a break price, a required supplier spec value, a requested one-time cost, a required answer or a requested sample offer is missing, when an alternative is sent that the RFQ does not allow, or when it is not a per-item quote on an RFQ with items [Proposed].
 - BR-20. Every RFQ price is labelled **Firm** (CE-10) [Owner, 2026-09-21, RFX-D4].
 - BR-21. The supplier can revise its quote until the deadline. Each revision is a new version that names the one it replaces, and both are kept [Proposed].
 - BR-22. Clarification questions: an invited supplier asks a question on the RFQ. The buyer answers privately (only the asker sees it) or publishes it (every invitee sees the question and answer, with the asker's name removed). The buyer always sees who asked [Proposed; Market, section 8.3].
 - BR-23. The buyer can save the RFQ as a template and start from a template, or copy a past RFQ (CE-04) [Owner, 2026-09-21, RFX-D2].
 - BR-24. The buyer can edit a draft RFQ before sending it [Proposed].
+- BR-25. The buyer can add document requests to the RFQ, each for the whole response or for one item (CE-11b). When an item is removed from a draft, a request on a later item moves with its item, and a request on the removed item applies to the whole response and is named to the buyer [Owner, 2026-09-25; PR #56, #60].
 
 **Edge cases.**
 - The RFI had suppliers that should not be invited to the RFQ: the buyer removes them before sending [Proposed].
@@ -492,6 +512,7 @@ Template rules:
 - AC-14. A buyer can create an RFQ from an RFP, and the chosen options and responders are pre-filled and editable.
 - AC-15. Every RFQ price reads "Firm" and every RFP or RFI price reads "Indicative".
 - AC-16. A buyer can open a draft RFQ, change it, and then send it.
+- AC-17. A quote with a required document request left empty is refused, naming the request; a 26 MB file and a .zip file are each refused when picked, with the reason.
 
 **Data and integration.** RFQ event with project name, currency, items (type, variants, unit, spec fields with filled-by, note, attachments, one-time costs requested, break override), breaks (quantity, basis), questions, options, attachments, and its source (RFI, RFP, past RFQ, template, requisition). Intent per invitee; confidentiality acceptance with time; clarifications with visibility. Quote versions with per-item spec values, break prices, MOQ, lead time, one-time costs, alternatives, answers, sample offer, attachments.
 
@@ -503,20 +524,20 @@ Template rules:
 
 | Maps to | Phase | Priority | Business owner | Users | Status |
 |---|---|---|---|---|---|
-| E03.02; MN-RFX-05; RFX-D1 to RFX-D4 | MVP | P1 [Proposed] | Procurement | BUY, SUP | Validated; authoring detail Proposed (A-03) |
+| E03.02; MN-RFX-05; RFX-D1 to RFX-D4, RFX-D6 to RFX-D14 | MVP | P1 [Proposed] | Procurement | BUY, SUP | Validated; authoring detail Proposed (A-03); firm-offer round and award Validated (RFX-D6) |
 
-**Business value.** Some purchases need commercial terms, not only a unit price, and some start before the spec is known: Tundra (a bottle and pump whose material and neck are open for the supplier's recommendation) and ICY (a full-service lip product with formula and pack options, samples and a timeline). An RFP collects terms, options and indicative prices in a comparable, auditable form, and feeds a firm RFQ once the choice is made.
+**Business value.** Some purchases need commercial terms, not only a unit price, and some start before the spec is known: Tundra (a bottle and pump whose material and neck are open for the supplier's recommendation) and ICY (a full-service lip product with formula and pack options, samples and a timeline). An RFP collects terms, options and indicative prices in a comparable, auditable form. It ends either in an award on firm offers made inside the RFP or in a firm RFQ, so a full-service decision is recorded without re-running it as an RFQ (RFX-D6).
 
 **Experience.**
-- BUY: creates an RFP from the term list, a saved template, a copy of a past RFP, or an RFI (section 3.6a); writes the scope and attaches reference files; picks standard terms and adds its own; optionally attaches T&Cs to be accepted and makes the RFP confidential; optionally lists options and quantity points for indicative pricing and asks for samples; optionally adds questions; compares proposals term by term and option by option; turns the RFP into an RFQ.
-- SUP: accepts the confidentiality terms and the T&Cs where asked; responds to each term with comply or deviate; gives indicative prices per option and quantity point, can propose its own options, and states a sample offer, a timeline and a validity date; answers questions; submits.
+- BUY: creates an RFP from the term list, a saved template, a copy of a past RFP, or an RFI (section 3.6a); writes the scope and attaches reference files; picks standard terms and adds its own; optionally attaches T&Cs to be accepted and makes the RFP confidential; optionally lists options and quantity points for indicative pricing and asks for samples; optionally adds questions and document requests; compares proposals term by term and option by option; asks shortlisted suppliers for firm offers and awards each option to 1 or more suppliers, or turns the RFP into an RFQ.
+- SUP: accepts the confidentiality terms and the T&Cs where asked; responds to each term with comply or deviate; gives indicative prices per option and quantity point, can propose its own options, and states a sample offer, a timeline and a validity date; answers questions; attaches its documents; submits and can revise until the deadline; gives firm prices with a validity date when invited to a firm-offer round; sees its own outcome per option.
 
 **Step-by-step (Buyer, the Tundra open-spec RFP).**
 1. The buyer creates an RFP, standalone or after an RFI [MN-RFX-04].
 2. The buyer writes the scope, attaches the reference image, and lists the commercial terms required, such as payment terms, pricing validity, and delivery terms, adding a custom term with its requested value [MN-RFX-05; term examples Proposed].
 3. The buyer lists 2 options ("Full set: bottle, pump and cap"; "Pump and cap only") and quantity points 10K / 50K / 100K.
 4. Suppliers submit proposals, pricing the options they choose and proposing their own. Every price reads "Indicative".
-5. The buyer compares proposals term by term and option by option, then creates an RFQ from the chosen options for firm prices [Owner, 2026-09-21, RFX-D3, RFX-D4].
+5. The buyer compares proposals term by term and option by option. For the options it is ready to decide, it asks the shortlisted suppliers for firm offers and awards on them (BR-15, BR-16); for the others it creates an RFQ from the chosen options for firm prices [Owner, 2026-09-21, RFX-D3, RFX-D4; amended 2026-09-25, RFX-D6].
 
 **Business rules.**
 - BR-01. An RFP asks for commercial terms [MN-RFX-05].
@@ -526,17 +547,36 @@ Template rules:
 - BR-05. The buyer can attach a T&C document (text, a file, or both). A supplier must accept it before it can save or submit a response [Proposed; Market, section 8.3].
 - BR-06. The buyer can make the RFP confidential, with the same effect as REQ-E03-02 BR-12: without acceptance a supplier sees no scope, questions, terms, pricing, T&Cs or files [Proposed; Market, section 8.3].
 - BR-07. Indicative pricing (optional): the buyer lists options, each with a title and an optional description, and quantity points, each per variant or total, and can ask for samples. The supplier prices any options it chooses at the quantity points, can propose its own options, and states a sample offer (can sample, ready date), a timeline and a validity date [Proposed; Market, section 8.3].
-- BR-08. Every RFP price is labelled **Indicative** to the buyer and the supplier; firm prices are asked for in an RFQ (CE-10) [Owner, 2026-09-21, RFX-D4].
+- BR-08. Every RFP price is labelled **Indicative** to the buyer and the supplier, except a price given in a firm-offer round, which reads **Firm** with its validity date (BR-15). Firm prices are asked for in a firm-offer round or in an RFQ (CE-10) [Owner, 2026-09-21, RFX-D4; amended 2026-09-25, RFX-D6; PR #57, #67].
 - BR-09. The buyer can add a questions section with the RFI question types (REQ-E03-02 BR-07) [Proposed].
 - BR-10. The buyer can attach files to the RFP (CE-11) [Proposed].
 - BR-11. The buyer can save the RFP as a template, start from a template, or copy a past RFP (CE-04) [Owner, 2026-09-21, RFX-D2].
-- BR-12. From an RFP the buyer can create an RFQ pre-filled from the chosen options, with the responders as invitees (REQ-E03-03 BR-06) [Owner, 2026-09-21, RFX-D3].
+- BR-12. From an RFP the buyer can create an RFQ pre-filled from the chosen options, with the responders as invitees (REQ-E03-03 BR-06) [Owner, 2026-09-21, RFX-D3]. An option already awarded in the RFP is left out (BR-16d) [Owner, 2026-09-25; PR #66, #67].
 - BR-13. The buyer can edit a draft RFP before sending it [Proposed].
+- BR-14. The RFP can carry document requests, and the response carries the supplier's documents, under CE-11a to CE-11l. A submitted RFP response can be revised until the supplier's deadline, and every version is kept with its files (CE-11g) [Owner, 2026-09-25, RFX-D8, RFX-D11; PR #56, #59, #60, #62, #63].
+- BR-15. **Firm-offer round** (NR-2 BR-01 to BR-04) [Owner, 2026-09-25, RFX-D6]:
+  - BR-15a. After the RFP closes, the buyer can open a firm-offer round for named options (PTI's or a supplier's own) and quantity points, with a deadline and an optional message. Only suppliers that submitted and pass the compliance gate can be invited, and a failing supplier is shown with the reason. On an RFP the gate judges supplier status and OTIF only, because an RFP names a category and no material codes [Owner, 2026-09-25; PR #57, #67].
+  - BR-15b. An invited supplier gives a firm unit price per option and quantity point and a validity date on or after the round deadline, and can revise until the round closes. The screen tells it: "Prices you give in this round are firm offers until the validity date you set." [Owner, 2026-09-25; PR #57, #67].
+  - BR-15c. Rounds can repeat. The last firm offer per supplier and option counts, and every version is kept [Owner, 2026-09-25; PR #57].
+  - BR-15d. A supplier's own option is named together with the supplier that proposed it, so options from different suppliers never merge in a round, a firm price or an award [Owner, 2026-09-25; PR #57, #66].
+  - BR-15e. A round opens only on a Closed RFP. A Partly awarded RFP cannot run another round for its open options, which go to an RFQ instead, until the owner decides otherwise (section 7, FU-7) [Owner, 2026-09-25; PR #57, #66].
+- BR-16. **Award from an RFP** (NR-2 BR-05 to BR-10, NR-3) [Owner, 2026-09-25, RFX-D6]:
+  - BR-16a. The buyer awards each option at one quantity point to 1 or more suppliers, split under REQ-E03-05 BR-06, as a final award or as a partial award that leaves options open. The RFP becomes Awarded, or Partly awarded while options stay open. The responses stay Submitted [Owner, 2026-09-25, RFX-D6, RFX-D7, RFX-D9; PR #66, #67].
+  - BR-16b. An award line counts only on the supplier's latest firm offer for that option from a closed round, still valid on the award date; otherwise it is refused, naming the option [Owner, 2026-09-25; PR #66].
+  - BR-16c. Every RFP award needs a reason, and a supplier failing the compliance gate at award is refused [Owner, 2026-09-25; CR-23 Owner, 2026-09-21; PR #66].
+  - BR-16d. An option awarded in the RFP cannot go into an RFQ created from it, and an option that such an RFQ already covers cannot be awarded in the RFP. Options not placed either way can still go to an RFQ [Owner, 2026-09-25; PR #66, #67].
+  - BR-16e. The award can be cancelled with a reason, or marked "Raised in SAP" with the SAP document number, as on an RFQ (REQ-E03-05 BR-13, BR-14) [Owner, 2026-09-25, RFX-D12; PR #66, #67].
+  - BR-16f. The buyer can mark the options left open "Will not award", and the RFP becomes Awarded for the options awarded (NR-3 BR-06) [Proposed; built for the RFQ only (PR #64), the RFP is BACKLOG BL-130].
+  - BR-16g. Each responder sees only its own outcome per option: Awarded with share and quantity point, Not awarded, Pending, or Award withdrawn. It never sees another supplier's share, the reason, the cancellation or the SAP number [Owner, 2026-09-25; PR #66, #67]. A message outside the hub waits on email [Proposed; BACKLOG BL-120].
+  - BR-16h. The PO or contract is created in SAP (REQ-E03-05 BR-09) [Proposed; BACKLOG BL-121].
 
 **Edge cases.**
 - A supplier proposes a term outside the listed ones: allow a free-text "other terms" field [Proposed].
 - A supplier prices only some options: allowed; the comparison shows the gaps [Proposed].
 - A supplier tries to respond before accepting the T&Cs: the save and the submission are refused with the reason [Proposed].
+- Only 1 firm offer on an option: it can be awarded, and the comparison shows "Single firm offer" [Owner, 2026-09-25; PR #67].
+- A firm offer's validity has passed on the award date: the line is refused, and the buyer opens a new round [Owner, 2026-09-25; PR #66].
+- The RFP has no pricing step: no award is offered, and the page says firm prices are needed [Owner, 2026-09-25; PR #67].
 
 **Acceptance criteria.**
 - AC-01. A buyer can create an RFP with a list of required commercial terms.
@@ -547,6 +587,13 @@ Template rules:
 - AC-06. The buyer sees options against suppliers, including options a supplier proposed.
 - AC-07. A buyer can save the RFP as a template and start from it, or copy a past RFP.
 - AC-08. A buyer can create an RFQ from an RFP (REQ-E03-03 AC-14).
+- AC-09. The buyer can open a firm-offer round on a Closed RFP, only for submitted suppliers that pass the compliance gate.
+- AC-10. Prices from a round read "Firm" with their validity; every other RFP price still reads "Indicative".
+- AC-11. An award naming a supplier with no valid firm offer on the option is refused, naming the option; an award without a reason is refused.
+- AC-12. A successful award moves the RFP to Awarded, or Partly awarded, and records option, supplier, share, quantity, quantity point and reason.
+- AC-13. After award, "Create RFQ from this RFP" leaves out an awarded option and still offers the others.
+- AC-14. Each responder sees only its own outcome.
+- AC-15. A submitted RFP response revised before the deadline shows as the new version, and the earlier version and its files stay viewable.
 
 **RFP template** [Proposed; Market; pending user use cases, A-03]. How an event is created from the term list is in section 3.6a. An RFP has 3 parts: the buyer's scope, a commercial terms table, and supporting attachments, plus the optional indicative pricing and questions (BR-07, BR-09). The terms table is the part suppliers answer and buyers compare.
 
@@ -570,23 +617,23 @@ Template rules:
 - Price and lead time can be scored with CR-15 when the RFP carries them.
 - Custom terms appear in the comparison in their group and are labelled as custom.
 
-**Data and integration.** RFP event with scope, attachments, terms (standard and custom, value kind, requested value), T&C document, confidentiality terms, options and quantity points, questions, and source (RFI, template or copied event); T&C and confidentiality acceptance per supplier with time; proposals with term answers, indicative prices per option and point, supplier-proposed options, sample offer, timeline and validity.
+**Data and integration.** RFP event with scope, attachments, terms (standard and custom, value kind, requested value), T&C document, confidentiality terms, options and quantity points, questions, and source (RFI, template or copied event); T&C and confidentiality acceptance per supplier with time; proposals with term answers, indicative prices per option and point, supplier-proposed options, sample offer, timeline, validity, response documents and submitted versions; document requests on the event; firm-offer rounds (options named by reference to their proposer, quantity points, invitees, deadline, message, closing time) and firm offers (prices, validity, versions); RFP award records as for REQ-E03-05.
 
-**Metrics.** Lagging: KPI-06.
+**Metrics.** Lagging: KPI-06. Starting targets, reviewed after 3 months [Owner, 2026-09-25, RFX-D13]: RFPs ending in an award or an RFQ ÷ closed RFPs, 90%; sourcing events per awarded full-service need, 1.3 on average; RFP cycle time from publish to award, recorded first and targeted after 3 months; RFP awards with a reason, 100%.
 
-**Open items.** A-03 (RFP template and standard term list review with Procurement).
+**Open items.** A-03 (RFP template and standard term list review with Procurement). FU-7 (firm-offer round on a Partly awarded RFP, section 7).
 
 #### REQ-E03-05  Bid comparison, negotiation, and awarding
 
 | Maps to | Phase | Priority | Business owner | Users | Status |
 |---|---|---|---|---|---|
-| E03.04, E03.05; RFX-D5 | MVP | P1 [Proposed] | Procurement | BUY, SUP | Validated (negotiation step; award to more than 1 supplier, per item, split by %) [Owner]; Proposed (detail) |
+| E03.04, E03.05; RFX-D5, RFX-D6, RFX-D7, RFX-D9, RFX-D10, RFX-D12, RFX-D13 | MVP | P1 [Proposed] | Procurement | BUY, SUP | Validated (negotiation step; award to more than 1 supplier, per item, split by % or quantity, partial award, cancel before SAP) [Owner]; Proposed (detail) |
 
 **Business value.** Buyers compare quotes in spreadsheets and negotiate by email today [Deck p.3, C2]. Comparing on one scored view, negotiating in rounds inside the hub, and awarding with a recorded split gives every award an audit trail, which the charter requires for 100% of sourcing documentation (PRD section 1), and supports dual sourcing. With quantity breaks, the cheapest supplier often changes between low and high volumes, so the comparison and the award have to be made at a stated break.
 
 **Experience.**
-- BUY: compares quotes item by item, with the suppliers as rows and the breaks as columns; picks the evaluation break; sees one-time costs, lead time, MOQ and the supplier-filled spec values beside the prices, and the score at that break; shortlists suppliers, runs 1 or more negotiation rounds, then awards each item to 1 or more suppliers by percentage share.
-- SUP: receives a negotiation request, submits a revised quote per item and per break, and sees whether it was awarded, and for what share.
+- BUY: compares quotes item by item, with the suppliers as rows and the breaks as columns; picks the evaluation break; sees one-time costs, lead time, MOQ and the supplier-filled spec values beside the prices, and the score at that break; shortlists suppliers, runs 1 or more negotiation rounds, then awards each item to 1 or more suppliers by percentage or quantity, at a break chosen per item, now or later for items left open; cancels an award, with a reason, until it is raised in SAP.
+- SUP: receives a negotiation request, submits a revised quote per item and per break, and sees per item whether it was awarded, with share, quantity and break, or that an award was withdrawn.
 
 **Step-by-step (Buyer, splitting the Oslo award).**
 1. The Oslo RFQ closes with quotes from 3 suppliers. One fails the compliance gate (CR-23); it is listed with the reason and not ranked.
@@ -601,20 +648,29 @@ Template rules:
 - BR-01b. The buyer chooses an **evaluation break**; it starts at the break nearest the RFQ's total quantity. Total cost of an item at that break = unit price × break quantity (× the number of variants for a per-variant break) + the item's one-time costs. The composite score (CR-15, weights unchanged) scores price as that total [Proposed].
 - BR-01c. Alternative offers are shown apart from the main quotes and are not ranked [Proposed; Market, section 8.3].
 - BR-02. The hub highlights the best-scored quote, per item on an RFQ with items. The score supports the buyer's decision and never awards automatically [Proposed].
-- BR-03. A negotiation step is available after the response deadline [Owner]. The buyer invites 1 or more shortlisted suppliers to a round with a deadline and an optional message or target. Invited suppliers submit a revised quote, per item and per break on an RFQ with items; suppliers not invited cannot [Proposed].
+- BR-03. A negotiation step is available after the response deadline [Owner]. The buyer invites 1 or more shortlisted suppliers to a round with a deadline and an optional message or target. Invited suppliers submit a revised quote, per item and per break on an RFQ with items; suppliers not invited cannot [Proposed]. A revised quote can carry files (CE-11h) [Owner, 2026-09-25; PR #63].
 - BR-04. Rounds can repeat. The buyer can mark a round as best and final offer. Every quote version, message, and deadline is kept [Proposed; Market].
 - BR-05. A supplier sees only its own quotes and the buyer's messages to it, never another supplier's price or rank [Proposed; REQ-E03-03 BR-03].
-- BR-06. An event can be awarded to more than 1 supplier [Owner]. On an RFQ with items, each item has its own award, split by percentage across 1 or more suppliers, and every item's shares must total 100% [Owner, 2026-09-21, RFX-D5]. The quantity of each award line is derived from its share of the break, not typed [Proposed].
-- BR-06a. The award is made at one break, which every award line records [Proposed]. An award is refused, naming the item where one applies, when: an item does not total 100%; a line names no item or an unknown item; lines miss the break or record different breaks; a quantity is not the share of the break; a supplier did not price the item at that break; a supplier fails the compliance gate [Proposed].
-- BR-07. An award needs a reason when it does not follow the best-scored quote; on an RFQ with items, when any item's award gives its best-scored quote no share [Proposed].
-- BR-08. On award, awarded suppliers are notified with their share, and every other quote is marked Not awarded and its supplier notified [Code; Proposed notification]. On a split award every quote an award line names is marked Awarded [Proposed].
+- BR-06. An event can be awarded to more than 1 supplier [Owner]. This holds for tiered RFQs, legacy RFQs and RFP options alike (NR-3 BR-01) [Owner, 2026-09-25; PR #58, #64, #66]. Each item (on an RFP, each option) has its own award, split across 1 or more suppliers by percentage or by quantity; every line stores both, and typing one derives the other [Owner, 2026-09-21, RFX-D5; amended 2026-09-25, RFX-D7; PR #58, #64]. Each awarded item totals its break quantity within 1 unit, and an item may be left "Not awarded now" for a later award [Owner, 2026-09-25, RFX-D9; PR #58, #64].
+- BR-06a. Each item has its own break (on an RFP, its quantity point), which every award line of that item records; items in one award can be at different breaks [Owner, 2026-09-25, RFX-D9; PR #58, #64]. An award is refused, naming the item where one applies, when: an awarded item does not total its break quantity; a line names no item or an unknown item; a line names a break the item does not have; a quantity does not match its share; a supplier did not price the item at that break (on an RFP, holds no valid firm offer for it); a supplier fails the compliance gate; the item is already awarded; a final award leaves an item neither awarded nor marked "Will not award" [Owner, 2026-09-25, RFX-D9; PR #58, #64, #66].
+- BR-07. An award needs a reason when it does not follow the best-scored quote; on an RFQ with items, when any item's award gives its best-scored quote no share [Proposed]. Every RFP award needs a reason (REQ-E03-04 BR-16c) [Owner, 2026-09-25; PR #66].
+- BR-08. On award, awarded suppliers are notified with their share, and every other quote is marked Not awarded and its supplier notified [Code; Proposed notification]. On a split award every quote an award line names is marked Awarded [Proposed]. A partial award marks the quotes it names Awarded and rejects none; the final award rejects every quote that no award in force named [Owner, 2026-09-25; PR #58, #64]. In the hub the notice is the supplier's own outcome per item (BR-15); a message outside the hub waits on email [Proposed; BACKLOG BL-120].
 - BR-09. The hub records the award. The PO or contract is created in SAP, per the charter's system-of-record rule (PRD section 2.3) [Proposed].
 - BR-10. The comparison can be downloaded as a spreadsheet file: items × suppliers × breaks [Proposed].
+- BR-11. An event with items still open after an award is **Partly awarded**. It becomes Awarded when the last item is awarded, or when the buyer marks every open item "Will not award" (NR-3 BR-06) [Owner, 2026-09-25, RFX-D9; PR #58, #64]. On an RFP the "Will not award" close-out is not built yet (REQ-E03-04 BR-16f).
+- BR-12. Legacy RFQs are awarded per line on the same award panel as tiered RFQs, and the RFQ list links to it for every RFQ that can still be awarded. There is no single-winner award (NR-3 BR-07) [Owner, 2026-09-25; PR #58, #64].
+- BR-13. An award can be cancelled with a reason until it is marked "Raised in SAP". The cancelled record is kept, and a correction is a cancel followed by a new award. Cancelling the only award in force returns the event to Closed; cancelling one of several leaves it Partly awarded. On an RFQ, the quotes the cancelled award named (unless another award in force names them) and every Rejected quote of the event return to Under Review, so a new award can use them (NR-3 BR-09) [Owner, 2026-09-25, RFX-D12; PR #61, #64, #66].
+- BR-14. "Raised in SAP" takes the SAP document number, typed by the buyer until the SAP interface sends it back. After it, the award cannot be cancelled in the hub, and changes are made in SAP (NR-3 BR-10) [Owner, 2026-09-25, RFX-D12; PR #61, #64, #66].
+- BR-15. Each supplier sees only its own outcome per item: Awarded with share, quantity and break; Not awarded; Pending; or "Award withdrawn" with the date. It never sees another supplier's share, the cancel reason or the SAP number (NR-3 BR-12) [Owner, 2026-09-25; PR #61, #64].
+- BR-16. Every award, cancellation and SAP marking keeps when and why, and an actor field that names the person once sign-in exists (NR-3 BR-11) [Owner, 2026-09-25; PR #61].
+- BR-17. No approval step before award in the MVP. Award, cancel and SAP marking are separate permissions, so Procurement can give them to different people (NR-3 BR-13) [Owner, 2026-09-25, RFX-D10; PR #61, #66].
 
 **Edge cases.**
 - Only 1 quote received: the buyer can still negotiate and award, and the comparison view shows "Single quote" [Proposed].
 - A supplier does not respond in a negotiation round: its last valid quote stands [Proposed].
-- The buyer cancels an award before it is sent to SAP: the event returns to evaluation [Proposed].
+- The buyer cancels an award before it is raised in SAP: BR-13 applies [Owner, 2026-09-25, RFX-D12].
+- The buyer tries to cancel an award already raised in SAP: refused, naming the SAP document [Owner, 2026-09-25; PR #61].
+- A split of 60,000 and 45,000 on a 100,000 break: refused, naming the item and the 105,000 total. A split of 33.33% three ways: accepted, with the remaining unit on the first line [Owner, 2026-09-25; PR #58].
 - Every quoting supplier fails the compliance gate: the page says no award is possible [Owner, 2026-09-21].
 - A supplier that declined (REQ-E03-03 BR-15) holds no quote, so it appears in neither the comparison nor the award [Proposed].
 
@@ -622,15 +678,20 @@ Template rules:
 - AC-01. The comparison view shows each criterion score and the weighted score, and highlights the best-scored quote.
 - AC-02. A buyer can run a negotiation round for selected suppliers, and only those suppliers can submit a revised quote.
 - AC-03. Every quote version in every round is kept and viewable by the buyer.
-- AC-04. A buyer can award 1 event to 2 or more suppliers, and the award cannot be saved unless each item's split totals 100%.
+- AC-04. A buyer can award 1 event to 2 or more suppliers, and the award cannot be saved unless each awarded item totals its break quantity.
 - AC-05. Awarded and non-awarded suppliers are notified, and a supplier sees only its own outcome.
 - AC-06. On an RFQ with items, changing the evaluation break changes the total cost and can change the best-scored supplier; the lowest price at each break is marked.
 - AC-07. An award naming a supplier that did not price the item at the award break, or a supplier that fails the gate, is refused with the item named.
 - AC-08. A 70 / 30 split marks both quotes Awarded and records the break.
+- AC-09. In one award a buyer splits 1 item 60% / 40% and another by quantity 70,000 / 30,000, and both are saved with share and quantity.
+- AC-10. Awarding 2 of 3 items moves the RFQ to Partly awarded, and awarding the third later moves it to Awarded.
+- AC-11. A legacy RFQ with 2 lines can be split per line, and the RFQ list offers no single-winner award.
+- AC-12. Cancelling an award with a reason returns the RFQ to Closed, keeps the cancelled record, and returns the affected quotes to Under Review; cancel is refused after "Raised in SAP".
+- AC-13. Each supplier sees its own outcome per item, and "Award withdrawn" after a cancel, and never another supplier's share.
 
-**Data and integration.** Quote versions per round; negotiation round (invitees, deadline, message, best-and-final flag); award lines (supplier, item, share, quantity, break, reason); the best-scored quote per item at the award. Award to SAP for PO or contract creation [Proposed; interface per PQ-06].
+**Data and integration.** Quote versions per round; negotiation round (invitees, deadline, message, best-and-final flag); award records for an RFQ or an RFP, with lines (supplier, item or option, split basis, share, quantity, break, reason); cancellations and SAP markings appended beside the award, never written over it; the best-scored quote per item at the award. Award to SAP for PO or contract creation [Proposed; interface per PQ-06].
 
-**Metrics.** Leading: share of awards with a recorded reason; negotiated saving = first quote − final quote. Lagging: KPI-06; charter sourcing administration time.
+**Metrics.** Leading: share of awards with a recorded reason; negotiated saving = first quote − final quote. Lagging: KPI-06; charter sourcing administration time. Starting targets, reviewed after 3 months [Owner, 2026-09-25, RFX-D13]: multi-supplier awards recorded in the hub ÷ multi-supplier decisions, 90%; award corrections made through cancel ÷ award corrections known, 100%; awards with a reason where one is required, 100%; negotiated saving not lowered by split awards.
 
 **Open items.** Sourcing request (E03.01) is not yet detailed. A-03 (score weights review with Procurement).
 
@@ -646,6 +707,11 @@ Kept out of the MVP by the RFx overhaul of 2026-09-21 [Proposed]. Each is a back
 - Award optimisation (scenarios with constraints).
 - An admin screen for the question library, the term list and the item-type spec templates (CE-05).
 - Amendments to a live event that notify invitees. Deadline extension already exists (REQ-E03-03 BR-05).
+
+Added on 2026-09-28 from the RFx improvement analysis of 2026-09-25:
+- An approval step before award, by value. The MVP has none (REQ-E03-05 BR-17) [Owner, 2026-09-25, RFX-D10].
+- RFx certificates feeding the compliance registry and the compliance gate (CE-11d) [Proposed].
+- Intent to respond, and decline with a reason, on the RFI and the RFP, as the RFQ has (REQ-E03-03 BR-15) [Proposed; BACKLOG BL-132].
 
 ### 5.3 Planning & Fulfillment: Order Collaboration (E07)
 
@@ -1693,6 +1759,7 @@ Detailed in `FORECAST-ENGINE-REQUIREMENTS.md`, which uses this file's template p
 | DL-1 | Late at the deadline (forecast commitments, built) or after it (PO and call-off responses, built): one convention | REQ-E06-02, REQ-E07-02, REQ-E09-03 |
 | ADM-1 | Whether the combined buyer "All" role may change the working calendar and the 3PL list, or the Hub administrator only | Section 3.4, REQ-E07-04 |
 | GR-1 | Over-delivery measured against the order (CR-25) or the ASN (REQ-E07-06 BR-03); whether a receipt kept open reopens the missing quantity | REQ-E07-06 |
+| FU-7 | Firm-offer round on a Partly awarded RFP: allow a new round for the options still open, or keep RFP → RFQ as their path (built: a round opens only on a Closed RFP; found in PR #66) | REQ-E03-04 BR-15e |
 
 ---
 
@@ -1813,7 +1880,16 @@ Research date: 2026-09-21. The full note, with every source link, is `research/R
 | RFX-D2 | Templates and copies (owner, 2026-09-21) | Buyers can save templates, copy a past event, and start from a template, for RFI, RFQ and RFP. Reverses CE-04 and that part of A-04. The central library stays owned by Procurement with no admin screen (CE-05) |
 | RFX-D3 | Links between event types (owner, 2026-09-21) | The three are independent. Allowed links: RFI → RFQ, RFI → RFP, RFP → RFQ, purchase requisition → RFQ. The new event records its source (CE-09) |
 | RFX-D4 | Open-spec requests and price basis (owner, 2026-09-21) | Recommendations, options, samples and indicative prices go in an RFP or RFI, with prices labelled Indicative; firm prices by quantity break go in the RFQ (CE-10) |
-| RFX-D5 | Split award on an RFQ (owner, 2026-09-21) | An RFQ can be awarded to several suppliers, per item, split by %, and each item totals 100% (REQ-E03-05 BR-06) |
+| RFX-D5 | Split award on an RFQ (owner, 2026-09-21) | An RFQ can be awarded to several suppliers, per item, split by %, and each item totals 100% (REQ-E03-05 BR-06). **Amended 2026-09-25 by RFX-D7 and RFX-D9** |
+| RFX-D6 | What an RFP award binds each party to (owner, 2026-09-25, D-1) | Option A: a firm-offer round inside the RFP, then an award on those firm prices. Firm-offer prices read Firm with their validity; every other RFP price stays Indicative. Amends RFX-D4, CE-10 and REQ-E03-04 BR-08; adds REQ-E03-04 BR-15 and BR-16. Built in PR #57, #66 and #67 |
+| RFX-D7 | Split by quantity as well as percentage (owner, 2026-09-25, D-2) | Add quantity. Every award line stores both, and typing one derives the other. Amends RFX-D5 and REQ-E03-05 BR-06. Built in PR #58 and #64 |
+| RFX-D8 | File limits (owner, 2026-09-25, D-3) | At most 25 MB per file and 30 files per response; the types in CE-11e; no ZIP or executables. A value the owner can move. New rule CE-11e. Built in PR #55, #56 and #63 |
+| RFX-D9 | Partial award and a break per item (owner, 2026-09-25, D-4) | Both allowed: each item has its own break, an item can stay "Not awarded now", and the event is Partly awarded until the rest is awarded or marked "Will not award". Amends REQ-E03-05 BR-06 and BR-06a; adds BR-11. Built in PR #58 and #64; "Will not award" on an RFP is BL-130 |
+| RFX-D10 | Approval before award (owner, 2026-09-25, D-5) | None in the MVP, as CE-06 for sending. Award, cancel and SAP marking are separate permissions, so Procurement can split them by role. An approval by value stays later. REQ-E03-05 BR-17. Built in PR #61 and #66 |
+| RFX-D11 | Revise after submit for RFI and RFP (owner, 2026-09-25, D-6) | Allow revise until the supplier's deadline, keeping every version. Amends the RFI and RFP response lifecycles, where a submitted response was final. CE-11g, REQ-E03-02 BR-18, REQ-E03-04 BR-14. Built in PR #59 and #63 |
+| RFX-D12 | Cancel an award (owner, 2026-09-25, D-7) | Cancel with a reason until the award is marked "Raised in SAP", keeping the cancelled record. Replaces the REQ-E03-05 edge case "the event returns to evaluation"; REQ-E03-05 BR-13 and BR-14. Built in PR #61, #64, #66 and #67 |
+| RFX-D13 | Response targets in the metrics tables (owner, 2026-09-25, D-8) | The proposed targets of the RFx improvement analysis (sections 4j, 5j and 6j) are starting targets, reviewed after 3 months. CE-11m and the metrics of REQ-E03-04 and REQ-E03-05. No build |
+| RFX-D14 | Certificate expired at the deadline (owner, 2026-09-25, D-9) | Accept the submission and flag the certificate to the buyer. CE-11d. Built in PR #56 and #62 |
 | E06-R | Forecast Collaboration recommendations | Confirmed as recommended: periods and cadence by material type, zones, split deadline, pre-filled commitment, tolerance CR-21, gap colours CR-22, re-publication, ranking, planner actions, reminders, spreadsheet round-trip, supplier coverage, upside |
 
 ## 10. Change log
@@ -1843,3 +1919,4 @@ Research date: 2026-09-21. The full note, with every source link, is `research/R
 | 0.21 | 2026-09-24 | Leftovers of E14-03, E14-04 and E14-05 built on synthetic data (BL-115 yield, BL-116 safety-stock change since the last run, BL-117 cap on rented space; PR #47); build decisions ENG-B50 to ENG-B59 in `FORECAST-ENGINE-REQUIREMENTS.md` 0.9. One new administrator value, the most rented space (REQ-E14-05, placeholder 25% until the Warehouse confirms) |
 | 0.22 | 2026-09-24 | REQ-E14-06 built on synthetic data (PR #48); build decisions ENG-B29 to ENG-B38 in `FORECAST-ENGINE-REQUIREMENTS.md` section 4.1g |
 | 0.23 | 2026-09-25 | Forecast engine build decisions ENG-B19 to ENG-B59 accepted by the owner (`FORECAST-ENGINE-REQUIREMENTS.md` 0.12, sections 4.1d to 4.1g) |
+| 0.24 | 2026-09-28 | RFx improvements folded in as built (PRs #54 to #64, #66, #67). Owner decisions D-1 to D-9 of 2026-09-25 recorded as RFX-D6 to RFX-D14 (section 9). CE-10 amended (firm-offer prices read Firm); CE-11a to CE-11m added (supplier documents, limits, certificates, revise until the deadline, access log, starting targets). REQ-E03-02 BR-17 and BR-18; REQ-E03-03 BR-25; REQ-E03-04 BR-08 amended, BR-14 to BR-16 added (firm-offer round and award); REQ-E03-05 BR-06 and BR-06a amended, BR-11 to BR-17 added (quantity split, break per item, partial award, legacy RFQs on one panel, cancel, raised in SAP, supplier outcome, no approval). Starting metric targets (RFX-D13). Open item FU-7 added. Source: `RFX-IMPROVEMENT-REQUIREMENTS-2026-09.md` |

@@ -2,8 +2,8 @@
 
 | | |
 |---|---|
-| Version | 1.4, 2026-09-23 |
-| Covers | BL-01 to BL-19b in `BACKLOG.md` — the 21 decisions that block or confirm work; the five RFx decisions RFX-D1 to RFX-D5 (2026-09-21); and the 15 forecast engine decisions ENG-D1 to ENG-D14 with ENG-D8a (2026-09-23) |
+| Version | 1.5, 2026-09-28 |
+| Covers | BL-01 to BL-19b in `BACKLOG.md` — the 21 decisions that block or confirm work; the RFx decisions RFX-D1 to RFX-D5 (2026-09-21) and RFX-D6 to RFX-D14 (2026-09-25); and the 15 forecast engine decisions ENG-D1 to ENG-D14 with ENG-D8a (2026-09-23) |
 | Purpose | Give the project owner a defensible recommendation to take to each owner: what the market does, what we suggest for PTI, and what would change our mind |
 | Status | **18 of the 21 were decided on 2026-09-21**, mostly as recommended; the outcomes are in section 9 of the requirements and in the Closed section of `BACKLOG.md`. Still open: BL-01 REPL, BL-11 interface technology, BL-12 call-off record, and three values (BL-54 invoice cap, BL-55 gate OTIF minimum, BL-56 early allowance). Where the owner decided differently from this guide — the hub keeps its own calendar (BL-14), capacity stays at 13 weekly buckets (BL-08), Web Tukar Faktur stays separate (BL-17), and TMS access becomes a 3PL tracking link (BL-03) — the decision stands and this guide is kept as the reasoning behind the others. All decided items are built and in production as of 2026-09-21 (BL-43 to BL-53). The builds raised six new questions, BL-66 to BL-71 in the backlog, which this guide does not yet cover |
 | Evidence | Market practice is cited at the end. Where a claim is a judgement rather than a published practice, it says so |
@@ -213,12 +213,85 @@ The owner took these five during the RFx overhaul. They are recorded as RFX-D1 t
 
 **What would change this.** If suppliers treat "indicative" as a commitment in practice (or refuse to give one), the RFP pricing step would need a validity date and an explicit non-binding statement; the validity date already exists.
 
+**Amended 2026-09-25 (RFX-D6).** Firm prices can now also be given in a firm-offer round inside the RFP, and those read "Firm" with their validity. Every other RFP price still reads "Indicative".
+
 ### RFX-D5 · Split award per item on an RFQ
 **Market practice.** Manual award scenarios award per line item and split by percentage or quantity (Ariba); Oracle awards by supplier or by line. With quantity breaks the cheapest supplier often changes with volume, which is what a split exists for.
 
 **Decision.** An RFQ can be awarded to several suppliers, per item, split by %, and every item totals 100%. The award is made at one evaluation break, recorded on every line, and needs a reason when an item's best-scored quote gets no share (REQ-E03-05).
 
 **What would change this.** If the business wants to split by quantity rather than by share, or award different items at different breaks, the award record already holds a quantity and a break per line; the rule would change, not the data.
+
+**Amended 2026-09-25 (RFX-D7, RFX-D9).** That case arrived: an award now splits by % or by quantity, each item has its own break, and items can be left open for a later award.
+
+---
+
+## RFx decisions (decided 2026-09-25)
+
+The owner accepted every recommendation in section 7 of `RFX-IMPROVEMENT-REQUIREMENTS-2026-09.md` (D-1 to D-9) on 2026-09-25. They are recorded as RFX-D6 to RFX-D14 in section 9 of the requirements and were built in PRs #54 to #64, #66 and #67 (merged 2026-09-28). Market sources and their grades are in section 10 of that file.
+
+### RFX-D6 · What an RFP award binds each party to (D-1)
+**Market practice.** Award from an RFP is standard: the SAP Ariba Award tab covers RFPs and RFIs, and Coupa awards RFP, RFI and RFQ events at line level. Prices are firmed up by a new round before award (Ariba). No vendor documents whether an RFP price binds at award; Ariba's framework agreement "is not a binding contract".
+
+**Decision.** Option A. The buyer opens a firm-offer round inside a Closed RFP for named options and quantity points, and invites only suppliers that submitted and pass the compliance gate. Each supplier gives firm prices with a validity date. The award is made per option on those firm offers, with a reason, and binds PTI to place the business through SAP and the supplier to hold its offer until the validity date. Firm-offer prices read "Firm"; every other RFP price stays "Indicative". An option awarded in the RFP cannot also go to an RFQ. **Amends** RFX-D4, CE-10 and REQ-E03-04 BR-08; adds REQ-E03-04 BR-15 and BR-16. Built in PR #57 (round), #66 (award) and #67 (screens).
+
+**What would change this.** If suppliers will not give firm prices outside an RFQ, the round adds a step without saving one, and option B (selection only, firm prices through RFP → RFQ) is the fallback. Open beside it: FU-7, whether a Partly awarded RFP may run a new round for its open options (section 7 of the requirements, BL-128).
+
+### RFX-D7 · Split by quantity as well as percentage (D-2)
+**Market practice.** Ariba splits "by percentage or quantity", Oracle by quantity, and Jaggaer "by quantity count or quantity percentages".
+
+**Decision.** Add quantity. The buyer chooses "Split by %" or "Split by quantity" per item, the other side is derived, and every line stores both. **Amends** RFX-D5 and REQ-E03-05 BR-06. Built in PR #58 (rule) and #64 (panel).
+
+**What would change this.** If buyers only ever type percentages, the quantity toggle is screen weight with no use; the data would still hold both.
+
+### RFX-D8 · File limits (D-3)
+**Market practice.** Coupa allows 250 MB per upload and bars ZIP and executables; Ariba defaults to 100 MB; Jaggaer to 50 MB.
+
+**Decision.** At most 25 MB per file and 30 files per response. Allowed: PDF, DOC/DOCX, XLS/XLSX, PPT/PPTX, JPG, PNG, DWG, DXF, STEP, STP. No ZIP or executables. The limits are named constants, so a change is a 1-line edit. New rule CE-11e. Built in PR #55 (rule), #56 (verbs) and #63 (checked on pick).
+
+**What would change this.** A real dieline, mold drawing or sample-photo set above 25 MB, or a supplier that needs more files than the limit. Both are values the owner can move.
+
+### RFX-D9 · Partial award and a break per item (D-4)
+**Market practice.** Fairmarkit lets the buyer "award the remaining line items later"; Oracle leaves remaining units "not awarded". Quantity tiers that differ per award line were not found for any vendor.
+
+**Decision.** Allow both. Each item has its own break, an item can stay "Not awarded now", and the event is Partly awarded until the last item is awarded or the rest is marked "Will not award". **Amends** REQ-E03-05 BR-06 and BR-06a; adds BR-11. Built in PR #58 and #64. On an RFP, "Will not award the rest" is not offered yet (PR #67, BL-130).
+
+**What would change this.** If Partly awarded events pile up with open items nobody closes, the hub would need a reminder or an automatic close after the quotes expire.
+
+### RFX-D10 · Approval before award (D-5)
+**Market practice.** Ariba has "Approval for Award"; Oracle approves awards above an amount limit.
+
+**Decision.** No approval in the MVP, matching CE-06 for sending an event. Award, cancel and "Raised in SAP" are separate permissions, so Procurement can give them to different people. An approval by value needs approval-policy and approval-act ledgers this platform does not have, and stays on the later list. REQ-E03-05 BR-17. The separate permissions were built in PR #61 (RFQ) and #66 (RFP).
+
+**What would change this.** An audit finding on an award, or a finance rule that awards above a value need a second signature.
+
+### RFX-D11 · Revise after submit for RFI and RFP (D-6)
+**Market practice.** Suppliers revise until the deadline and "the last submitted response" counts (Ariba customer guide); Coupa suppliers "update your information as many times as needed"; Oracle keeps revised and archived responses.
+
+**Decision.** Allow revise until the supplier's deadline, as the RFQ quote already allowed. Every version is kept with its files, and the buyer reads the latest. **Amends** the RFI and RFP response lifecycles, in which a submitted response was final. CE-11g, REQ-E03-02 BR-18, REQ-E03-04 BR-14. Built in PR #59 (verbs and versions) and #63 (screens).
+
+**What would change this.** If buyers start evaluating before the deadline and suppliers use revisions to react to what they hear, a sealed period (BL-87) would be needed.
+
+### RFX-D12 · Cancel an award (D-7)
+**Market practice.** Oracle reopens an award decision with a reason, and "This activity is recorded"; Ariba lets a resubmitted award scenario overwrite the earlier one.
+
+**Decision.** An award can be cancelled with a reason until it is marked "Raised in SAP" with the SAP document number. The cancelled record is kept, and a correction is a cancel followed by a new award. **Replaces** the REQ-E03-05 edge case that returned the event to evaluation; REQ-E03-05 BR-13 and BR-14. Built in PR #61 (RFQ verbs), #64 (RFQ screens), #66 (RFP verbs) and #67 (RFP screens).
+
+**What would change this.** Once SAP sends the document number back (SAP seam, BL-121), "Raised in SAP" should be set by the interface rather than typed.
+
+### RFX-D13 · Response targets in the metrics tables (D-8)
+**Market practice.** None; these are PTI's own targets. No baselines exist.
+
+**Decision.** Accept the proposed targets of sections 4j, 5j and 6j of the analysis as starting targets, and review them after 3 months. Recorded in CE-11m and in the metrics of REQ-E03-04 and REQ-E03-05. No build.
+
+**What would change this.** The first 3 months of measurement.
+
+### RFX-D14 · Certificate expired at the deadline (D-9)
+**Market practice.** Ariba's certificate answer carries a number and effective and expiry dates. No vendor rule for an expired certificate at submission was found.
+
+**Decision.** Accept the submission and flag the certificate to the buyer, so a supplier that is renewing is not locked out and the buyer sees the flag at award. CE-11d. Built in PR #56 (rule) and #62 (flag in the buyer's file view). An RFx certificate does not update the compliance registry or the compliance gate (CR-23).
+
+**What would change this.** If an expired certificate reaches an award unnoticed, the flag should block the award line instead of the submission.
 
 ---
 

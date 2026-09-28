@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 2.8, 2026-09-24 |
+| Version | 2.9, 2026-09-28 |
 | What this is | Everything known to be outstanding for the Supplier Hub, in one list: decisions waiting on people, work waiting on those decisions, work waiting on the backend, and work that can start today |
 | What this is not | A plan or a commitment. Nothing here has a date. Sequencing belongs to the project owner |
 | Sources | Open items (section 7 of `SUPPLIER-HUB-REQUIREMENTS.md`), open decisions (section 9.3 of `SUPPLIER-HUB-PRD.md`), what is not built (section 5 of `BUILD-GAP.md`), stubs (section 6 of the requirements), and defects or debts found while building |
@@ -37,6 +37,7 @@ Still open. Items decided on 2026-09-21 are in section 6.
 | BL-69 | **Late at the deadline or after it?** Forecast commitments are late at the deadline minute; PO and call-off responses only after it. Recommended: one rule, late after the deadline | Material Planner | One convention in CR-26 and the response deadlines | REQ-E06-02, E07-02, E09-03 |
 | BL-70 | **Who may change the working calendar and the 3PL list?** Today the Hub administrator and the combined buyer "All" role (offered, not seeded), following the enforcement-settings precedent. Alternative: administrator only | Procurement, IT | Role atoms `calendar:set`, `threepl:maintain` | Requirements 3.4, REQ-E07-04 BR-05 |
 | BL-71 | **Goods receipt: what an over-delivery is measured against, and does "kept open" reopen quantity?** CR-25 says the order; REQ-E07-06 BR-03 says the ASN. The build uses the ASN when linked, else the order. "Kept open" is a label and does not reopen the missing quantity for another shipment | Material Planner, Warehouse | CR-25, REQ-E07-06 wording; possible build | REQ-E07-06 |
+| BL-128 | **FU-7**: firm-offer round on a Partly awarded RFP. Today a round opens only on a Closed RFP (PR #57), so options still open after a partial award go to an RFQ. Allow a new round for them, or keep RFP → RFQ as their path | Owner, with Procurement | A small change to the round policy (REQ-E03-04 BR-15e) | Requirements section 7; found in PR #66 |
 | BL-101 | **C8 §8** — SOMO ratifies the in-house forecast engine amendment (the hub computes the material × period totals until the engine moves to SOMO) | SOMO, with the operator | The engine publishing its own totals on the C8 seam | `docs/contracts/C8-forecast-publication.md` §8 |
 | BL-119 | **Forecast engine decisions still open**: ENG-D8a cumulative cap agreed with pilot suppliers; ENG-D10 forecast grain (sell-in or sell-out, per channel); ENG-D11 who reviews the forecast before it drives material plans; ENG-D12 owner of the promotion calendar and how far ahead it is fixed; ENG-D13 plan-stability limit in model selection (set after the first backtest); ENG-D14 materials per service tier | Material Planner, Procurement, Demand Planning, Marketing | BL-108 (D8a confirms), BL-110 (D10, D11), BL-112 (D13), BL-113 (D12); D14 confirms E14-04 tiers | `FORECAST-ENGINE-REQUIREMENTS.md` section 4.2 |
 
@@ -48,7 +49,7 @@ Decided on 2026-09-21 and ready to build. Priority: first what protects money an
 
 | Priority | ID | Item | Rule | Size | Placeholder until decided |
 |---|---|---|---|---|---|
-| 1 | BL-33 to BL-35, BL-38, BL-39, BL-74 to BL-80, BL-83, BL-84, BL-93, BL-96 to BL-98 | The remaining "can start today" items in section 4, in the order listed there | — | — | — |
+| 1 | BL-33 to BL-35, BL-38, BL-39, BL-74 to BL-80, BL-83, BL-84, BL-93, BL-96 to BL-98, BL-123, BL-124, BL-126, BL-127, BL-129 to BL-131 | The remaining "can start today" items in section 4, in the order listed there | — | — | — |
 
 ### Forecast engine build order
 
@@ -80,7 +81,11 @@ The prototype holds everything in the browser. These need a real backend, which 
 | BL-24 | Real SAP integration: POs, goods receipts and invoice status arriving as messages, and PO responses, ASNs and invoices going back | L | REQ-E07-08, BL-11 |
 | BL-25 | Supplier API sync for stock, replacing the simulated Sync button | M | REQ-E08-02 |
 | BL-26 | Email delivery of alerts, reminders and escalations. Today they exist only inside the hub | M | REQ-E08-05, E06-03, E07-02 |
-| BL-27 | File storage, so RFx attachments (buyer files on RFI, RFP and RFQ events and items, attachment answers, supplier quotation files; today kept for the session only), receipt-dispute attachments and the e-Faktur hold a real file rather than a file name | M | REQ-E03-02 to E03-04 (CE-11), E07-06, E07-07 |
+| BL-27 | File storage, so RFx attachments (buyer files on RFI, RFP and RFQ events and items, attachment answers, supplier quotation files and response documents; today kept for the session only), receipt-dispute attachments and the e-Faktur hold a real file rather than a file name. **The seam is built** (task A2, PR #55): `IFileService` on the data service, with `SessionFileService` as its first adapter and the access log added in PR #62, so storage is a new adapter and the screens do not change. The adapter also keeps the access log across reloads and adds virus scanning | M | REQ-E03-02 to E03-04 (CE-11, CE-11e, CE-11i), E07-06, E07-07; BL-122, BL-125 |
+| BL-120 | Email notifications for RFx: invitations, deadline reminders, firm-offer rounds, award outcomes and "Award withdrawn". Today a supplier sees them only when it opens the hub (finding F-08 of `RFX-IMPROVEMENT-REQUIREMENTS-2026-09.md`). Same family as BL-26 | M | REQ-E03-04 BR-16g, REQ-E03-05 BR-08, BR-15 |
+| BL-121 | Award hand-off to SAP: each award raises a PO, contract or scheduling agreement in SAP, and the SAP document number comes back to mark the award "Raised in SAP", which the buyer types today (PR #61, #66) | L | REQ-E03-05 BR-09, BR-14; needs BL-11 (PQ-06) and BL-24 |
+| BL-122 | "Download all" of an event's supplier documents as 1 ZIP. Left out of PR #62, because a control that cannot do what it says is a defect | S | CE-11k (NR-1 AC-04); needs BL-27 |
+| BL-125 | FU-3: `IFileService.urlFor` is synchronous (PR #55). Real storage usually hands out signed addresses asynchronously, so the BL-27 adapter may need `urlFor` to become async and its callers to wait for it | S | With BL-27 |
 | BL-28 | Real sign-in for PTI staff and supplier users, replacing the demo persona switch | M | PRD 4.3 |
 | BL-29 | Scheduled jobs, so deadlines, escalations and reminders fire on a clock rather than being derived when a page is read | M | REQ-E07-02, E09-03 |
 | BL-30 | Durable storage, so what a user enters survives a reload | L | PRD section 4 |
@@ -108,6 +113,13 @@ Nothing blocks these.
 | BL-79 | Retire superseded supply-data-collaboration code: the hidden chase page counts a 7-day calendar-day threshold nobody decided (`parseGrid` was removed with BL-73) | Dead code and a rule nobody decided | S | BUILD-GAP section 6 |
 | BL-80 | A value-only PO line (BL-49) shows quantity 0 on PO and ASN screens outside the call-off pages | Only the call-off screens know the line has no quantity | S | CR-04 |
 | BL-83 | Text run-ons: Indonesian "closing soon" pill joins its date ("Segera ditutup02 Sep 2026"); the in-transit read-out reads "0nothing in transit"; `formatNumber` uses the Indonesian thousands dot in the English UI outside the Stock page | Small display defects seen in the BL-72/73 check | S | SC conventions |
+| BL-123 | FU-1: record who uploaded each supplier document (`ResponseDocument` has no `uploadedBy`) and show it in the buyer's "Supplier documents" panel | CE-11i asks who uploaded each file, and the panel cannot show it (PR #62) | S | CE-11i |
+| BL-124 | FU-2: `CLAUDE.md:241` says the RFQ review and award verbs are "not co-reachable on any RFQ in the tree". Since PR #64 both show on the same RFQ | A stale sentence in the file every session reads. The operator edits `CLAUDE.md`; task PRs do not | S | PR #64 notes |
+| BL-126 | FU-4: a "Documents" row in the legacy single-price RFQ comparison (`BuyerSourcingEvent.tsx`). PR #62 covered the tiered RFQ and RFP comparisons; the documents panel on the legacy page already shows Complete or Missing | Consistency across the comparisons | S | CE-11l |
+| BL-127 | FU-5 and tidy-ups left by the RFx build: remove the lineless legacy award payload that `t_rfq_award` still accepts, together with the C1 command tests that pin it (no screen sends it since PR #64); correct the stale `applyTransition` comments in the purchase-requisition and supplier-application targets (PR #54, not done) and the `rfxPrefill.ts` comment calling the RFP → RFQ wizard wiring a later batch (build plan AR-09) | A dead path, and comments that describe code that no longer exists | S | PR #54, #64 |
+| BL-129 | Files on an RFP firm offer: the record has room for them, but the firm-offer form has no Documents section (PR #67, not done) | A round often changes the drawing or the material (NR-1 BR-09) | S | CE-11h |
+| BL-130 | "Will not award the rest" on an RFP: the RFP award policy refuses an award with no lines (`AWARD_EMPTY`), so the panel hides the action and a Partly awarded RFP cannot be closed out without awarding (PR #67, not done) | RFX-D9 applies to the RFP as well | S | REQ-E03-04 BR-16f |
+| BL-131 | A test that fails the compliance gate at RFP award time. CR-23 is checked at award, but no test makes a supplier fail between the round and the award (PR #66, not done) | The rule has no failing probe | S | REQ-E03-04 BR-16c |
 | BL-84 | Accessibility items left by BL-31: field errors not tied to their field (many forms); h1 jumping to h3 on marketplace, discovery, storefront, WhatsApp demo, supplier comm hub and shipments; unnamed controls in the contract wizard obligation grid and WhatsApp demo; top-bar menu button does nothing and the notification count is not in its name; login contrast and missing h1; 404 title in English only; then a session with a real screen reader | Needed before UAT (SC-07) | M | `BUILD-GAP.md` "Accessibility (BL-31)" |
 
 ---
@@ -126,6 +138,7 @@ Nothing blocks these.
 | BL-90 | Award optimisation: scenarios with constraints such as maximum suppliers or capacity. Later, not in the MVP | Build team, after the MVP | Requirements 5.2 and 8.3 |
 | BL-91 | Admin screen for the RFx libraries: question library, term list, item-type spec templates (CE-05). Later, not in the MVP; Procurement asks IT meanwhile. Same family as BL-32 | Build team, after the MVP | Requirements 3.6a |
 | BL-92 | Amendments to a live RFx event that notify invitees and flag responses to revisit (deadline extension exists). Later, not in the MVP | Build team, after the MVP | Requirements 5.2 and 8.3 |
+| BL-132 | Intent to respond, and decline with a reason, on the RFI and the RFP, as the RFQ has. Proposed as a follow-on, not part of the 2026-09-25 decisions (finding F-13 of `RFX-IMPROVEMENT-REQUIREMENTS-2026-09.md`) | Build team, after owner review | Requirements 5.2 |
 | BL-42 | Phase 2 epics: contract management (E04), catalog management (E05), reporting and analytics (E11), API shipment aggregator (E13.02), supplier quality | Per the deck and charter | Requirements section 6 |
 | BL-103 | Forecast engine feed specification: each input, its grain, refresh and quality check, handed to the Master Data Management team, who own the data and the SAP integration | Master Data Management team | Drafted: `FORECAST-ENGINE-FEED-SPEC.md` (2026-09-23), handed to the team for confirmation of sources and owners. `FORECAST-ENGINE-REQUIREMENTS.md` E14-01; PRD I14 |
 | BL-118 | Where to hold buffers (E14-12, Phase 2): guaranteed-service model with the MOQ extension, deciding at which level (finished good, bulk, packaging) safety stock sits | Build team, Phase 2; after REPL (BL-01) | `FORECAST-ENGINE-REQUIREMENTS.md` REQ-E14-12 |

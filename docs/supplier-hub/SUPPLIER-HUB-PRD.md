@@ -4,7 +4,7 @@
 |---|---|
 | Product | Supplier Hub (Supplier Portal, "SC Collaboration Hub") |
 | Company | PT Paragon Technology and Innovation (PTI) |
-| Version | 0.9 draft, 2026-09-23 |
+| Version | 0.10 draft, 2026-09-28 |
 | Scope | MVP (Phase 1, "Foundation to Transact"). Phase 2 and 3 appear only in section 9 |
 | Steering Committee | Yogi Sapta Prakoso (VP Supply Chain), Ilauddin (CFO), Risman Adnan (CTO) [C] |
 | Technology Product Owners | Achmad Fahlevi, Vergiant Yoga Perdana (Supply Chain); Indita Ramasaphira (FATL) [C] |
@@ -235,11 +235,23 @@ Acceptance criteria: TBD by the Foundation team. The hub **replaces PROCIO** for
 | US-52 | As a buyer, I want to create an RFQ from scratch, a template, a past RFQ, an RFI, an RFP, or a purchase requisition, with items, spec sheets and quantity breaks, so that I collect comparable firm quotes | REQ-E03-03 | [V] owner 2026-09-21 (RFX-D2, RFX-D3); item detail [P] |
 | US-53 | As a buyer, I want to send an RFP asking for commercial terms, options and indicative prices so that I can compare proposals term by term and option by option before asking for firm prices | REQ-E03-04 | [V] owner 2026-09-21 (RFX-D4); template [P] |
 | US-54 | As a buyer, I want to compare scored quotes item by item at a chosen quantity break and run negotiation rounds with shortlisted suppliers so that I reach the best final offer with an audit trail | REQ-E03-05 | [V] negotiation; [P] detail |
-| US-55 | As a buyer, I want to award each item of an RFQ to 1 or more suppliers by percentage share so that I can dual-source | REQ-E03-05 | [V] owner 2026-09-21 (RFX-D5) |
+| US-55 | As a buyer, I want to award each item of an RFQ to 1 or more suppliers by percentage share so that I can dual-source | REQ-E03-05 | [V] owner 2026-09-21 (RFX-D5); amended 2026-09-25 (RFX-D7, RFX-D9), see US-77 |
 | US-56 | As a buyer, I want to save an RFI, RFQ or RFP as a template and copy a past event so that I do not rebuild the same event every time | REQ-E03-02 to REQ-E03-04; section 3.6a | [V] owner 2026-09-21 (RFX-D2) |
 | US-57 | As a supplier, I want to say whether I will respond, and decline with a reason, so that PTI knows early who is quoting | REQ-E03-03 | [P] |
 | US-58 | As a supplier, I want to price each item at every quantity break, with MOQ, lead time, one-time costs and an alternative where allowed, so that my quote matches how I actually price | REQ-E03-03 | [P] |
 | US-59 | As a supplier, I want to ask a clarification question and see the answers PTI publishes to all invitees so that every supplier quotes on the same understanding | REQ-E03-03 | [P] |
+| US-70 | As a supplier, I want to attach my documents to any RFI, RFP or RFQ response, and replace a wrong one before the deadline, so that my proposal is complete without an email beside it | CE-11a, CE-11c to CE-11g; REQ-E03-02 BR-17, BR-18; REQ-E03-03 BR-18; REQ-E03-04 BR-14 | [V] owner 2026-09-25 (RFX-D8, RFX-D11, RFX-D14) |
+| US-71 | As a buyer, I want to list the documents I need and mark them required, so that I do not chase missing papers after the deadline | CE-11b, CE-11c; REQ-E03-03 BR-25 | [V] owner 2026-09-25 |
+| US-72 | As a buyer, I want to open and download every supplier file, with who sent it and when, so that I evaluate in the hub and the award can be traced to its documents | CE-11i, CE-11k, CE-11l | [V] owner 2026-09-25; uploader and ZIP download [P] |
+| US-73 | As a buyer, I want to ask shortlisted RFP suppliers for firm prices on the options I chose, so that I can award from the RFP without re-running it as an RFQ | REQ-E03-04 BR-15 | [V] owner 2026-09-25 (RFX-D6) |
+| US-74 | As a buyer, I want to award an RFP option to 1 or more suppliers with a recorded reason, so that the decision on a full-service request has an audit trail | REQ-E03-04 BR-16 | [V] owner 2026-09-25 (RFX-D6) |
+| US-75 | As a supplier, I want to know when my RFP prices become a firm commitment, and until when, so that I do not commit by accident | CE-10; REQ-E03-04 BR-08, BR-15b | [V] owner 2026-09-25 (RFX-D6) |
+| US-76 | As a supplier, I want to see whether my proposal was awarded, for which option and share, so that I can plan capacity | REQ-E03-04 BR-16g | [V] owner 2026-09-25 (RFX-D6) |
+| US-77 | As a buyer, I want to split any item of an RFQ or RFP by quantity or percentage, and award some items now and others later, so that the award matches the volumes I agreed | REQ-E03-05 BR-06, BR-06a, BR-11, BR-12 | [V] owner 2026-09-25 (RFX-D7, RFX-D9) |
+| US-78 | As a buyer, I want to cancel or correct an award before it is raised in SAP, with a reason, so that a mistake is fixed on the record | REQ-E03-05 BR-13, BR-14 | [V] owner 2026-09-25 (RFX-D12) |
+| US-79 | As a supplier, I want to see my share, quantity and break per item, and be told when an award changes | REQ-E03-05 BR-15 | [V] owner 2026-09-25; notice outside the hub [P] |
+
+US-70 to US-79 were US-RFX-01 to US-RFX-10 in `RFX-IMPROVEMENT-REQUIREMENTS-2026-09.md`, in the same order. They take the next free block of story numbers because US-50 to US-59 are used and US-60 belongs to Supplier Performance.
 
 **Acceptance criteria.**
 - US-50:
@@ -267,7 +279,7 @@ Acceptance criteria: TBD by the Foundation team. The hub **replaces PROCIO** for
   - Every quote version is kept.
   - On an RFQ with items, total cost at the chosen break = unit price × quantity + one-time costs, and the lowest price at each break is marked.
 - US-55:
-  - An award to 2 or more suppliers cannot be saved unless each item's split totals 100%.
+  - An award to 2 or more suppliers cannot be saved unless each awarded item totals its break quantity (amended 2026-09-25, RFX-D7 and RFX-D9; see US-77).
   - The award records the break it was made at, and names the item in any refusal.
   - Each supplier sees only its own award outcome.
 - US-56:
@@ -281,6 +293,33 @@ Acceptance criteria: TBD by the Foundation team. The hub **replaces PROCIO** for
   - An alternative is shown apart and not ranked.
 - US-59:
   - A published answer reaches every invitee without the asker's name; a private one reaches only the asker.
+- US-70:
+  - A supplier can attach a file to an RFI, RFP or RFQ response with no document request.
+  - A file above 25 MB, or a .zip, is refused when picked, with the reason.
+  - A submitted RFI or RFP response revised before the deadline shows as the new version, and the earlier version stays readable; after the deadline nothing can change.
+- US-71:
+  - Submission with an empty required request is refused, and the refusal names the request.
+- US-72:
+  - The buyer opens and downloads each file of a submitted response from the event page, and each open is recorded with who and when.
+  - Supplier A never sees a file uploaded by supplier B.
+  - The comparison shows each supplier's documents as Complete or Missing.
+- US-73:
+  - A firm-offer round opens only on a Closed RFP and only for suppliers that submitted and pass the compliance gate.
+- US-74:
+  - An award without a reason, or naming a supplier with no valid firm offer on the option, is refused, naming the option.
+  - An awarded option cannot also go into an RFQ.
+- US-75:
+  - Prices from a firm-offer round read "Firm" with their validity date; every other RFP price reads "Indicative".
+- US-76:
+  - Each responder sees only its own outcome per option.
+- US-77:
+  - One item split 60% / 40% and another 70,000 / 30,000 by quantity are saved in one award.
+  - Awarding 2 of 3 items leaves the RFQ Partly awarded; awarding the third makes it Awarded.
+  - A legacy RFQ with 2 lines can be split per line.
+- US-78:
+  - Cancelling with a reason returns the event to Closed and keeps the cancelled record; cancel is refused after "Raised in SAP".
+- US-79:
+  - After a cancel the supplier sees "Award withdrawn" with the date, and never another supplier's share.
 
 #### Supplier Performance (E10)
 

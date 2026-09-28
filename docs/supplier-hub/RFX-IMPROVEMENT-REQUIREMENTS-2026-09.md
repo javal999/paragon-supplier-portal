@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | Owner accepted every recommendation in section 7 (D-1 to D-9) on 2026-09-25. Build plan: `RFX-BUILD-PLAN-2026-09.md`. `SUPPLIER-HUB-REQUIREMENTS.md` is updated after the build (task F1) |
+| Status | **Folded in on 2026-09-28** (task F1). Owner accepted every recommendation in section 7 (D-1 to D-9) on 2026-09-25; they are recorded as RFX-D6 to RFX-D14 in section 9 of `SUPPLIER-HUB-REQUIREMENTS.md` 0.24 and in `DECISION-GUIDE.md`. The NR-1 to NR-3 rules are now CE-11a to CE-11m, REQ-E03-02 BR-17 and BR-18, REQ-E03-03 BR-25, REQ-E03-04 BR-14 to BR-16 and REQ-E03-05 BR-11 to BR-17; US-RFX-01 to US-RFX-10 are US-70 to US-79 in the PRD. What was built, and where it differs from this file, is in `BUILD-GAP.md`. Built in PRs #54 (A1), #55 (A2), #56 (B1), #57 (D1), #58 (C1), #59 (B2), #60 (B3), #61 (C2), #62 (B5), #63 (B4), #64 (C3), #66 (D2) and #67 (D3), all merged 2026-09-28; #57 and #66 reached `main` inside #67. This file stays as the record of the analysis and is not updated further |
 | Date | 2026-09-25 |
 | Code read | `main` at `f3fdede` (same as `origin/main` on the day) |
 | Covers | NR-1 supplier attachments in responses, NR-2 award from an RFP, NR-3 award to more than 1 supplier in an RFQ or RFP, and a review of the RFI, RFQ and RFP experience against the market |
