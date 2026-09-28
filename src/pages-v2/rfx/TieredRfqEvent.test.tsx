@@ -135,6 +135,34 @@ describe('the per-item comparison at the evaluation break', () => {
   });
 });
 
+describe('the Documents row (RFx B5, NR-1 buyer step 6)', () => {
+  it('reads "Missing: Halal certificate" for a supplier without that required document', async () => {
+    rfqStore.update('rfq-021', (r) => ({
+      ...r,
+      documentRequests: [{ id: 'dr-halal', name: 'Halal certificate', type: 'certificate', required: true }],
+    }));
+    // sup-015 answers the request; sup-013 sends nothing against it.
+    quotationStore.update('qt-021a', (q) => ({
+      ...q,
+      documents: [
+        {
+          id: 'd-halal',
+          requestId: 'dr-halal',
+          attachment: { id: 'att-halal', name: 'halal.pdf', size: 1024, type: 'application/pdf', addedAt: '2026-09-20T00:00:00.000Z' },
+          uploadedAt: '2026-09-20T00:00:00.000Z',
+          certificate: { number: 'HLL-1', issuer: 'BPJPH', expiresOn: '2099-01-01' },
+        },
+      ],
+    }));
+    renderEvent('rfq-021');
+    const row = await screen.findByTestId('tiered-documents');
+    expect(within(row).getByTestId('tiered-documents-status-sup-013')).toHaveTextContent('Missing: Halal certificate');
+    expect(within(row).getByTestId('tiered-documents-status-sup-015')).toHaveTextContent('Complete');
+    // the event's documents panel lists the file under its supplier
+    expect(screen.getByTestId('event-documents-sup-015')).toHaveTextContent('halal.pdf');
+  });
+});
+
 describe('the award, item by item', () => {
   it('refuses by name while an item is short of 100%, then records the split with its break', async () => {
     renderEvent('rfq-021');

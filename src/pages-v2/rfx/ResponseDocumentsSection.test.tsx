@@ -30,6 +30,9 @@ function stubFiles() {
     urlFor: vi.fn(() => null),
     release: vi.fn(),
     isHeld: vi.fn(() => false),
+    // The access log (RFx B5) is on the seam too, so the typed stub implements it.
+    recordAccess: vi.fn(),
+    accessLog: vi.fn(() => []),
   };
   const service: IDataService = { ...mockDataService, files };
   return { files, service };

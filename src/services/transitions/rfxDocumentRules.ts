@@ -96,6 +96,18 @@ export function documentLimitsRefusal(
   return null;
 }
 
+/**
+ * The required requests no document answers (NR-1 BR-03), in request order.
+ * The submit refusal below and the buyer's "Documents" comparison row read
+ * the same list (RFX-R2).
+ */
+export function missingRequiredDocuments(
+  requests: readonly DocumentRequest[],
+  documents: readonly Pick<ResponseDocument, 'requestId'>[],
+): readonly DocumentRequest[] {
+  return requests.filter((r) => r.required && !documents.some((d) => d.requestId === r.id));
+}
+
 const blank = (v: string | undefined): boolean => typeof v !== 'string' || v.trim() === '';
 
 /**
@@ -121,7 +133,7 @@ export function responseDocumentsRefusal(
   if (unknown) {
     return `DOCUMENT_REQUEST_UNKNOWN: ${unknown.attachment.name} answers ${String(unknown.requestId)}, which this event does not ask for`;
   }
-  const missing = requests.filter((r) => r.required && !documents.some((d) => d.requestId === r.id));
+  const missing = missingRequiredDocuments(requests, documents);
   if (missing.length > 0) {
     return `DOCUMENT_REQUIRED_MISSING: ${missing.map((r) => r.name).join(', ')}`;
   }

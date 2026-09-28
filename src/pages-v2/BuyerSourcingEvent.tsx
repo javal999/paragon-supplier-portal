@@ -30,6 +30,8 @@ import {
   useSuppliers,
 } from '../services/query/hooks';
 import { RfqSourceLinks } from './rfx/rfqSources';
+import { SupplierDocumentsPanel } from './rfx/SupplierDocumentsPanel';
+import { documentsOf } from '../services/transitions/rfxDocumentRules';
 import { useRfxCommand } from '../services/query/commandHooks';
 import { effectiveDeadline, reliabilityScoreFor } from '../services/transitions/rfxRules';
 import type { AwardItem } from '../services/sourcing/awardShape';
@@ -576,6 +578,24 @@ const BuyerSourcingEvent: React.FC = () => {
           </div>
         )}
       </section>
+
+      {/* — RFx B5: every supplier file on the current quotes (NR-1 buyer step 5) — */}
+      <div className="mb-6">
+        <SupplierDocumentsPanel
+          requests={rfq.documentRequests}
+          responses={current.map((q) => ({
+            id: q.id,
+            supplierId: q.supplierId,
+            supplierName: supplierName(q.supplierId),
+            status: q.status,
+            documents: documentsOf(q),
+          }))}
+          deadlineFor={(supplierId) =>
+            effectiveDeadline(rfq.responseDeadline, rfq.inviteeDeadlines ?? [], supplierId)
+          }
+          testId="event-documents"
+        />
+      </div>
 
       {/* — REQ-E03-05 AC-03: every quote version, kept and viewable — */}
       {allQuotes.length > current.length && (

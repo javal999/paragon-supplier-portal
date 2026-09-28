@@ -2782,8 +2782,9 @@ export interface IEnforcementService {
 // No `QueryScope` argument: the session store holds only what this browser
 // attached. Who may SEE a record's files is the read model's narrowing, not
 // this seam's. `put` is async because the real adapter uploads over the
-// network; the session adapter resolves at once. The other three are
-// synchronous lookups.
+// network; the session adapter resolves at once. The other lookups are
+// synchronous. The access log (RFx B5) records each open or download of a
+// file with who and when; it is appended and never edited.
 export interface IFileService {
   /** Keep a file and return the metadata the record stores. */
   put(file: File): Promise<AttachmentMeta>;
@@ -2793,6 +2794,22 @@ export interface IFileService {
   release(id: string): void;
   /** Is this file's content held (openable) right now? */
   isHeld(id: string): boolean;
+  /**
+   * Record that someone opened or downloaded a file (NR-1 BR-10, RFX-R3). The
+   * seam stamps the time; the entry is appended and never edited. A download
+   * is a read, not a state change, so it is recorded here and not by a verb.
+   */
+  recordAccess(fileId: string, by: ActorAttribution): void;
+  /** Every recorded access of a file, oldest first. Empty when never opened. */
+  accessLog(fileId: string): readonly FileAccess[];
+}
+
+/** One recorded open or download of a file (NR-1 BR-10). Append-only. */
+export interface FileAccess {
+  readonly fileId: string;
+  readonly by: ActorAttribution;
+  /** Seam-assigned, never the caller's. */
+  readonly at: string;
 }
 
 export interface IDataService {

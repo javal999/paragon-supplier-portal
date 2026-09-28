@@ -107,6 +107,7 @@ import { rfqAuthoringEn, rfqAuthoringId } from './i18n/rfqAuthoring';
 import { rfqResponseEn, rfqResponseId } from './i18n/rfqResponse';
 // — RFx spec 2026-09-21: RFQ evaluation and the per-item split award —
 import { rfqCompareEn, rfqCompareId } from './i18n/rfqCompare';
+import { rfxFilesEn, rfxFilesId } from './i18n/rfxFiles';
 // — BL-51 3PL tracking links (REQ-E07-04 BR-05) —
 import { threePlEn, threePlId } from './i18n/threePl';
 // — BL-32 the administrator's rule values (REQ-E08-05 BR-03, §3.6) —
@@ -210,6 +211,7 @@ export const resources = {
       ...rfqAuthoringEn,
       ...rfqResponseEn,
       ...rfqCompareEn,
+      ...rfxFilesEn,
       ...threePlEn,
       ...adminSettingsEn,
       ...adminReasonsEn,
@@ -672,6 +674,7 @@ export const resources = {
       ...rfqAuthoringId,
       ...rfqResponseId,
       ...rfqCompareId,
+      ...rfxFilesId,
       ...threePlId,
       ...adminSettingsId,
       ...adminReasonsId,

@@ -22,6 +22,8 @@ function stubFiles() {
       held.delete(id);
     }),
     isHeld: vi.fn((id: string) => held.has(id)),
+    recordAccess: vi.fn(),
+    accessLog: vi.fn(() => []),
   };
   const service: IDataService = { ...mockDataService, files };
   return { files, service };
