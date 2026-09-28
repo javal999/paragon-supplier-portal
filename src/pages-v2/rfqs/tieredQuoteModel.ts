@@ -19,7 +19,6 @@ import type { RfiAnswer } from '../../services/sourcing/types';
 import {
   deriveQuoteHeader,
   tiersForItem,
-  type AttachmentMeta,
   type OneTimeCostQuote,
   type QuotationAlternative,
   type QuotationItemQuote,
@@ -31,6 +30,8 @@ import { headerLeadTimeDays, tieredQuoteRefusal } from '../../services/sourcing/
 import { readBidPrice } from './quotationPrice';
 import { readMoq } from './quotationMoq';
 import { readLeadTimeDays } from './quotationLeadTime';
+import { documentsOf, responseDocumentsRefusal } from '../../services/transitions/rfxDocumentRules';
+import type { DocumentDraft } from '../rfx/ResponseDocumentsSection';
 
 /** A cost the supplier added beyond the ones the buyer asked for. */
 export interface ExtraCostDraft {
@@ -68,7 +69,8 @@ export interface TieredDraft {
   /** `null` = not answered yet. */
   readonly canSample: boolean | null;
   readonly sampleReadyDate: string;
-  readonly attachments: readonly AttachmentMeta[];
+  /** NR-1 — the Documents section: the requested slots and "Other documents". */
+  readonly documents: readonly DocumentDraft[];
   readonly items: readonly ItemDraft[];
 }
 
@@ -93,7 +95,7 @@ export function emptyTieredDraft(rfq: RFQ): TieredDraft {
     answers: {},
     canSample: null,
     sampleReadyDate: '',
-    attachments: [],
+    documents: [],
     items: (rfq.items ?? []).map(emptyItem),
   };
 }
@@ -116,7 +118,9 @@ export function draftFromQuote(rfq: RFQ, quote: Quotation): TieredDraft {
     answers: Object.fromEntries((quote.answers ?? []).map((a) => [a.questionId, a])),
     canSample: quote.sampleOffer ? quote.sampleOffer.canSample : null,
     sampleReadyDate: quote.sampleOffer?.readyDate ?? '',
-    attachments: quote.attachments ?? [],
+    // A quote from before NR-1 carries `attachments`: read as documents
+    // answering no request, so a revision keeps them under "Other documents".
+    documents: documentsOf(quote),
     items: base.items.map((d) => {
       const q = quote.itemQuotes?.find((x) => x.itemLineNo === d.lineNo);
       const alt = quote.alternatives?.find((x) => x.itemLineNo === d.lineNo);
@@ -254,10 +258,15 @@ export function readTieredDraft(
             : { canSample: false },
         }
       : {}),
-    ...(draft.attachments.length > 0 ? { attachments: draft.attachments.map((a) => ({ ...a })) } : {}),
+    ...(draft.documents.length > 0 ? { documents: draft.documents.map((d) => ({ ...d })) } : {}),
   };
   const refusal = tieredQuoteRefusal(rfq, payload);
-  return refusal ? { ok: false, reason: refusal } : { ok: true, payload };
+  if (refusal) return { ok: false, reason: refusal };
+  // NR-1 BR-03 to BR-05 — the rule `quotation_documents_complete` binds, over
+  // the same documents and the files on the answers.
+  const answerFiles = answers.reduce((n, a) => n + (a.attachments?.length ?? 0), 0);
+  const documentRefusal = responseDocumentsRefusal(rfq.documentRequests ?? [], draft.documents, answerFiles);
+  return documentRefusal ? { ok: false, reason: documentRefusal } : { ok: true, payload };
 }
 
 /** The item number a `CODE: … item N …` refusal names, or `null`. */

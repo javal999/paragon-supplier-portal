@@ -36,6 +36,7 @@
 // ────────────────────────────────────────────────────────────────────────────
 
 import type {
+  DocumentRequest,
   RfiQuestion,
   RfpPricingRequest,
   RfpTermRow,
@@ -48,6 +49,7 @@ import {
   rfpPricingRequestRefusal,
   rfpTermsRefusal,
 } from '../transitions/rfxRules';
+import { documentRequestsRefusal } from '../transitions/rfxDocumentRules';
 import { BID_CURRENCIES } from '../../lib/currencyPolicy';
 
 export const RFI_TEMPLATES_KEY = 'paragon.rfiTemplates';
@@ -64,6 +66,8 @@ export interface RfiTemplateContent {
   readonly customSections: readonly RfxCustomSection[];
   readonly confidential: boolean;
   readonly confidentialityTerms?: string;
+  /** NR-1 BR-11 — the buyer's document requests. Never a supplier's documents. */
+  readonly documentRequests?: readonly DocumentRequest[];
 }
 
 /** What an RFP template carries. */
@@ -79,6 +83,8 @@ export interface RfpTemplateContent {
   readonly confidentialityTerms?: string;
   /** The T&C text. A T&C FILE is session-held and is not kept in a template. */
   readonly termsText?: string;
+  /** NR-1 BR-11 — the buyer's document requests. Never a supplier's documents. */
+  readonly documentRequests?: readonly DocumentRequest[];
 }
 
 export interface SavedTemplate<C> {
@@ -138,6 +144,10 @@ export function rfiTemplateContentRefusal(c: RfiTemplateContent): string | null 
   if (!optionalText(c.description) || !optionalText(c.confidentialityTerms)) {
     return 'TEMPLATE_MALFORMED: descriptions are text';
   }
+  if (c.documentRequests !== undefined) {
+    const docs = documentRequestsRefusal(c.documentRequests);
+    if (docs) return docs;
+  }
   return rfiQuestionsRefusal(c.questions, c.customSections);
 }
 
@@ -165,6 +175,7 @@ export function rfpTemplateContentRefusal(c: RfpTemplateContent): string | null 
   if (!optionalText(c.confidentialityTerms) || !optionalText(c.termsText)) {
     return 'TEMPLATE_MALFORMED: terms texts are text';
   }
+  if (c.documentRequests !== undefined) return documentRequestsRefusal(c.documentRequests);
   return null;
 }
 

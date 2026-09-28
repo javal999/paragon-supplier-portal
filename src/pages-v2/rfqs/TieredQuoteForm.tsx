@@ -5,13 +5,13 @@ import Button from '../../components/ui-v2/Button';
 import Data from '../../components/ui-v2/Data';
 import FormSection from '../../components/ui-v2/FormSection';
 import StatusPill from '../../components/ui-v2/StatusPill';
-import SessionAttachments from '../../components/ui-v2/SessionAttachments';
 import { BID_CURRENCIES, isBidCurrency } from '../../lib/currencyPolicy';
 import { formatDate, formatNumber } from '../../lib/format';
 import type { RFQ } from '../../data/mockRfqs';
 import { tiersForItem, type RfqItem, type RfqSpecField } from '../../services/sourcing/rfqModel';
 import RfqQuestionField from './RfqQuestionField';
 import { FirmPill } from '../rfx/rfxAuthoringDisplay';
+import ResponseDocumentsSection from '../rfx/ResponseDocumentsSection';
 import type { ItemDraft, TieredDraft } from './tieredQuoteModel';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -21,7 +21,8 @@ import type { ItemDraft, TieredDraft } from './tieredQuoteModel';
 // MOQ and lead time, the requested one-time costs plus any the supplier adds,
 // and an alternative offer where the buyer allows one. Then the RFQ-level
 // fields: currency, validity, payment terms, the buyer's questions, the sample
-// offer, notes and attachments.
+// offer, notes, and the Documents section (NR-1: one slot per document the
+// buyer asked for, then "Other documents").
 //
 // It only COLLECTS. What is complete is decided by `readTieredDraft`, which
 // runs the verb's own rule; the panel says the refusal before Submit is sent.
@@ -445,11 +446,12 @@ const TieredQuoteForm: React.FC<{
             className={`${inputClass} resize-y`}
           />
         </label>
-        <SessionAttachments
-          label={t('rfqResponse.attachments')}
-          testId="grid-attachments"
-          value={draft.attachments}
-          onChange={(attachments) => onChange({ ...draft, attachments })}
+        <ResponseDocumentsSection
+          requests={rfq.documentRequests ?? []}
+          value={draft.documents}
+          onChange={(documents) => onChange({ ...draft, documents })}
+          filesAlready={Object.values(draft.answers).reduce((n, a) => n + (a.attachments?.length ?? 0), 0)}
+          testId="grid-documents"
         />
       </FormSection>
     </div>

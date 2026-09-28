@@ -22,7 +22,12 @@ const UNATTRIBUTED_KEY: Record<UnattributedReason, string> = {
   IDENTITY_PROVIDER_UNAVAILABLE: 'rfxEdit.who.idpDown',
 };
 
-const who = (t: TFunction, actor: ActorAttribution): string =>
+/**
+ * An RFx actor as the lane names it: the person, or the lane's wording for why
+ * nobody could be named. Party-neutral, so a supplier's upload (CE-11i) reads
+ * through it as a buyer's draft edit does.
+ */
+export const rfxActorName = (t: TFunction, actor: ActorAttribution): string =>
   actor.kind === 'RESOLVED' ? actor.person.displayName : t(UNATTRIBUTED_KEY[actor.reason]);
 
 /** "Last edited 22 Sep 2026 by …" — nothing when the draft was never edited. */
@@ -35,7 +40,7 @@ export const DraftRevisionNote: React.FC<{ revisions?: readonly DraftRevision[];
   if (!last) return null;
   return (
     <p className="text-xs text-text-tertiary mt-1" data-testid={testId}>
-      {t('rfxEdit.lastEdited')} <Data>{formatDate(last.at)}</Data> {t('rfxEdit.by', { who: who(t, last.by) })}
+      {t('rfxEdit.lastEdited')} <Data>{formatDate(last.at)}</Data> {t('rfxEdit.by', { who: rfxActorName(t, last.by) })}
     </p>
   );
 };

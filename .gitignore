@@ -19,3 +19,6 @@ qa*.png
 
 # Claude Code agent worktrees (never committed)
 .claude/worktrees/
+
+# TypeScript incremental build cache (written by tsc, never source)
+*.tsbuildinfo

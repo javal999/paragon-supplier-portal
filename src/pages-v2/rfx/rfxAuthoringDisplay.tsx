@@ -19,6 +19,7 @@ import { formatMoney } from '../../lib/format';
 import { BID_CURRENCIES, type BidCurrency } from '../../lib/currencyPolicy';
 import type { RfiAnswer, RfiQuestion, RfpTermRow } from '../../services/sourcing/types';
 import { rfpTerm, rfpTermKindOf, type RfxSectionView } from '../../services/sourcing/rfxConfig';
+import { FileOpenLink } from './SupplierDocumentsPanel';
 
 /** A key when the catalogue has one; otherwise the words exactly as written. */
 export const authored = (t: TFunction, text: string | undefined): string =>
@@ -82,11 +83,9 @@ export function answerText(t: TFunction, q: RfiQuestion, a: RfiAnswer | undefine
     case 'percentage':
       return a.value === undefined ? '—' : `${a.value}%`;
     case 'attachment':
-      return a.attachments && a.attachments.length > 0
-        ? a.attachments.map((f) => f.name).join(', ')
-        : typeof a.value === 'string' && a.value
-          ? a.value
-          : '—';
+      // The files themselves render as links through `AnswerValue` (F-02);
+      // this is the text an attachment answer carries without a file.
+      return typeof a.value === 'string' && a.value ? a.value : '—';
     case 'yesNo':
     case 'singleChoice':
       return a.value === undefined ? '—' : optionLabel(t, q, String(a.value));
@@ -98,6 +97,31 @@ export function answerText(t: TFunction, q: RfiQuestion, a: RfiAnswer | undefine
       return a.value === undefined || a.value === '' ? '—' : `${String(a.value)}${unit}`;
   }
 }
+
+/**
+ * One answer as the buyer reads it. An attachment answer lists its files as
+ * links through the same open action as the "Supplier documents" panel, so
+ * each open is recorded (F-02, NR-1 BR-10); a file the session no longer holds
+ * shows the session-only note. Every other kind reads as `answerText`.
+ */
+export const AnswerValue: React.FC<{ q: RfiQuestion; a: RfiAnswer | undefined; testId: string }> = ({
+  q,
+  a,
+  testId,
+}) => {
+  const { t } = useTranslation();
+  const files = q.type === 'attachment' ? (a?.attachments ?? []) : [];
+  if (files.length === 0) return <>{answerText(t, q, a)}</>;
+  return (
+    <ul data-testid={testId}>
+      {files.map((f) => (
+        <li key={f.id}>
+          <FileOpenLink file={f} testId={`${testId}-${f.id}`} />
+        </li>
+      ))}
+    </ul>
+  );
+};
 
 /** A term row's label: the standard term's i18n label, or the buyer's own. */
 export const termLabel = (t: TFunction, row: RfpTermRow): string => {

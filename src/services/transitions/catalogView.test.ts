@@ -328,7 +328,9 @@ describe('PF-1 — cross-entity links come from cascades.ts, in both directions'
     const quotation = view.flows.find((f) => f.entity === 'quotation')!;
     expect(
       quotation.transitions.find((t) => t.def.id === 't_quotation_award')!.firedBy,
-    ).toEqual(['t_rfq_award']);
+    // RFx C1 — the partial award fires it too (it rejects nothing, so it
+    // names no `t_quotation_reject` link).
+    ).toEqual(['t_rfq_award', 't_rfq_award_partial']);
     const pr = view.flows.find((f) => f.entity === 'purchaseRequisition')!;
     // C.1 — `t_pr_source` now NAMES what fires it. The "names nothing" half of
     // this test moved to `t_pr_convert`, which is unauthored by ruling (F2), so

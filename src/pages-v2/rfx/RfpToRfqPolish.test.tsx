@@ -134,10 +134,14 @@ describe('"Create RFQ from this RFP" on the board', () => {
     const button = within(panel).getByTestId('rfp-to-rfq-btn-rfp-002');
     expect(button).toBeDisabled();
     fireEvent.click(within(panel).getByTestId('rfp-to-rfq-option-opt-pump-cap'));
-    fireEvent.click(within(panel).getByTestId('rfp-to-rfq-option-sup-opt-1'));
+    // PREMISE CHANGED (RFx D3, NR-2 BR-08): options travel by REF, so the
+    // supplier's own `sup-opt-1` names its proposer (`sup-007:sup-opt-1`).
+    fireEvent.click(within(panel).getByTestId('rfp-to-rfq-option-sup-007:sup-opt-1'));
     expect(button).toBeEnabled();
     fireEvent.click(button);
-    expect(await screen.findByTestId('at')).toHaveTextContent('/buyer/rfq?rfp=rfp-002&options=opt-pump-cap,sup-opt-1');
+    expect(await screen.findByTestId('at')).toHaveTextContent(
+      '/buyer/rfq?rfp=rfp-002&options=opt-pump-cap,sup-007%3Asup-opt-1',
+    );
   });
 
   it('NO FALSE AFFORDANCE — no button on an RFP without options (rfp-001) or without a proposal (ICY, rfp-003)', async () => {
