@@ -148,7 +148,7 @@ Nothing blocks these.
 
 | ID | Item | Closed | By |
 |---|---|---|---|
-| BL-128 | FU-7: firm-offer round on a Partly awarded RFP | 2026-09-28 | Owner decision RFX-D15: allowed, for the options still open. Built in PR-D15-TBD: the round opens on a Closed or Partly awarded RFP, refuses an option an award in force names or a live RFQ created from the RFP sources (`ROUND_OPTION_SETTLED`), and the final award on the remaining options moves the RFP to Awarded |
+| BL-128 | FU-7: firm-offer round on a Partly awarded RFP | 2026-09-28 | Owner decision RFX-D15: allowed, for the options still open. Built in PR #71: the round opens on a Closed or Partly awarded RFP, refuses an option an award in force names or a live RFQ created from the RFP sources (`ROUND_OPTION_SETTLED`), and the final award on the remaining options moves the RFP to Awarded |
 | BL-02 | PQ-09 event-based analysis in the MVP | 2026-09-21 | Decided: not in the MVP; belongs in the planning suite. BL-21 closes with it |
 | BL-03 | D-03 supplier TMS access | 2026-09-21 | Decided: no TMS integration in the MVP; replaced by the 3PL tracking link (BL-51). BL-22 closes with it |
 | BL-04 | A-03 compliance and scoring | 2026-09-21 | Decided: compliance gate at award (CR-23) and new weights (CR-15). Build is BL-43; template and term-list review with users continues as part of A-01 (BL-57) |
