@@ -163,6 +163,12 @@ export const processFlowPurposeEn: Record<string, string> = {
     'Buying picks the winning offer and records why. Everyone who bid learns where they stand, in one act rather than by rumour.',
   'processFlows.purpose.t_rfq_award_partial':
     'Buying awards the items that are ready and comes back for the rest later. Nobody is turned down yet, because a supplier may still win an item not decided.',
+  'processFlows.purpose.t_rfq_award_cancel':
+    'Buying withdraws an award, with a reason, before it is raised in SAP. The award stays on record, a new winner can be chosen, and the offers it decided go back to evaluation.',
+  'processFlows.purpose.t_rfq_award_cancel_partial':
+    'Buying withdraws one award while others stand. Its items reopen, the other awards are untouched, and every step stays on record.',
+  'processFlows.purpose.t_rfq_award_sap_raised':
+    'Records that an award was raised in SAP, with the SAP document number. From here changes are made in SAP, not by cancelling in the hub.',
   'processFlows.purpose.t_rfq_fx_pin':
     'Records the exchange basis foreign offers are being compared on, so a decision taken today can still be explained a year from now.',
   'processFlows.purpose.t_rfq_cancel':
@@ -201,6 +207,8 @@ export const processFlowPurposeEn: Record<string, string> = {
     'This offer won. It follows from the buying decision on the request, and is never entered against a single supplier by hand.',
   'processFlows.purpose.t_quotation_reject':
     'This offer did not win. It lands at the same moment as the winning one, so nobody is left wondering and no one has to be told individually.',
+  'processFlows.purpose.t_quotation_reinstate':
+    'The award this offer depended on was withdrawn, so the offer goes back to evaluation instead of standing as won or lost.',
 
   // ── shipment ───────────────────────────────────────────────────────────────
   'processFlows.purpose.entity.shipment':
@@ -635,6 +643,12 @@ export const processFlowPurposeId: Record<string, string> = {
     'Pembelian memilih penawaran pemenang dan mencatat alasannya. Semua yang ikut menawar tahu posisinya, lewat satu tindakan, bukan lewat kabar burung.',
   'processFlows.purpose.t_rfq_award_partial':
     'Pembelian menetapkan item yang sudah siap dan kembali untuk sisanya nanti. Belum ada yang ditolak, karena pemasok masih bisa memenangkan item yang belum diputuskan.',
+  'processFlows.purpose.t_rfq_award_cancel':
+    'Pembelian menarik sebuah penetapan pemenang, dengan alasan, sebelum dibuat di SAP. Catatannya tetap tersimpan, event terbuka untuk penetapan baru, dan penawaran yang diputuskannya kembali dievaluasi.',
+  'processFlows.purpose.t_rfq_award_cancel_partial':
+    'Pembelian menarik satu penetapan pemenang sementara yang lain tetap berlaku. Itemnya dibuka kembali, penetapan lain tidak tersentuh, dan setiap langkah tetap tercatat.',
+  'processFlows.purpose.t_rfq_award_sap_raised':
+    'Mencatat bahwa penetapan pemenang sudah dibuat di SAP, beserta nomor dokumen SAP-nya. Sejak itu perubahan dilakukan di SAP, bukan dengan membatalkan di hub.',
   'processFlows.purpose.t_rfq_fx_pin':
     'Mencatat dasar kurs yang dipakai membandingkan penawaran bermata uang asing, agar keputusan hari ini masih bisa dijelaskan setahun kemudian.',
   'processFlows.purpose.t_rfq_cancel':
@@ -673,6 +687,8 @@ export const processFlowPurposeId: Record<string, string> = {
     'Penawaran ini menang. Ia mengikuti keputusan pembelian atas permintaannya, dan tidak pernah dimasukkan satu per satu secara manual.',
   'processFlows.purpose.t_quotation_reject':
     'Penawaran ini tidak menang. Ia jatuh pada saat yang sama dengan yang menang, sehingga tak ada yang dibiarkan menerka dan tak seorang pun perlu dikabari satu per satu.',
+  'processFlows.purpose.t_quotation_reinstate':
+    'Penetapan pemenang yang menjadi dasar penawaran ini ditarik, sehingga penawaran kembali dievaluasi dan tidak lagi berstatus menang atau kalah.',
 
   // ── shipment ───────────────────────────────────────────────────────────────
   'processFlows.purpose.entity.shipment':

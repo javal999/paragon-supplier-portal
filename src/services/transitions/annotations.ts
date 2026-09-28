@@ -166,6 +166,9 @@ export const TRANSITION_PURPOSE: FlowAnnotations = Object.freeze({
   t_rfq_close: { purposeKey: 'processFlows.purpose.t_rfq_close' },
   t_rfq_award: { purposeKey: 'processFlows.purpose.t_rfq_award' },
   t_rfq_award_partial: { purposeKey: 'processFlows.purpose.t_rfq_award_partial' },
+  t_rfq_award_cancel: { purposeKey: 'processFlows.purpose.t_rfq_award_cancel' },
+  t_rfq_award_cancel_partial: { purposeKey: 'processFlows.purpose.t_rfq_award_cancel_partial' },
+  t_rfq_award_sap_raised: { purposeKey: 'processFlows.purpose.t_rfq_award_sap_raised' },
   t_rfq_fx_pin: { purposeKey: 'processFlows.purpose.t_rfq_fx_pin' },
   t_rfq_cancel: { purposeKey: 'processFlows.purpose.t_rfq_cancel' },
   t_rfq_reopen: { purposeKey: 'processFlows.purpose.t_rfq_reopen' },
@@ -182,6 +185,7 @@ export const TRANSITION_PURPOSE: FlowAnnotations = Object.freeze({
   t_rfqclarification_answer: { purposeKey: 'processFlows.purpose.t_rfqclarification_answer' },
   t_quotation_award: { purposeKey: 'processFlows.purpose.t_quotation_award' },
   t_quotation_reject: { purposeKey: 'processFlows.purpose.t_quotation_reject' },
+  t_quotation_reinstate: { purposeKey: 'processFlows.purpose.t_quotation_reinstate' },
 
   // ── shipment ───────────────────────────────────────────────────────────────
   t_shipment_create: { purposeKey: 'processFlows.purpose.t_shipment_create' },

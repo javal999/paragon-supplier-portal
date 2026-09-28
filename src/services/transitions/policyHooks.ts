@@ -605,6 +605,23 @@ export const POLICY_HOOKS = {
    * code for both, so the two verbs cannot drift.
    */
   RFQ_AWARD_GOVERNED: 'rfq_award_governed',
+  /**
+   * RFx C2 (NR-3 BR-09, D-7) — ONE hook for the cancel pair
+   * (`t_rfq_award_cancel` → Closed, `t_rfq_award_cancel_partial` → Partly
+   * awarded), told apart by the target state. Refuses AWARD_NOT_ACTIVE (the
+   * award is not an active award of this event), AWARD_RAISED_IN_SAP (naming
+   * the SAP document), AWARD_REASON_REQUIRED (blank reason) and
+   * AWARD_CANCEL_TARGET_WRONG (the other verb of the pair fits: whether another
+   * award stays in force). The rule is `awardCancelRefusal` in
+   * `sourcing/awardStatus.ts`.
+   */
+  RFQ_AWARD_CANCEL_GOVERNED: 'rfq_award_cancel_governed',
+  /**
+   * RFx C2 (NR-3 BR-10) — "Raised in SAP": the award is an active award of this
+   * event, not already marked (AWARD_RAISED_IN_SAP), and the SAP document number
+   * is not blank. The rule is `awardSapMarkRefusal`.
+   */
+  RFQ_AWARD_SAP_GOVERNED: 'rfq_award_sap_governed',
 } as const;
 
 for (const name of Object.values(POLICY_HOOKS)) registerPolicyHook(name);

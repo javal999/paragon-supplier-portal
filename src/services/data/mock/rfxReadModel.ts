@@ -50,9 +50,12 @@ import type {
   RfxInviteeView,
 } from '../../sourcing/views';
 import type { RfiResponse, RfpResponse } from '../../sourcing/types';
+import { awardStatusOf, cancellationOf, sapMarkOf, type AwardTrail } from '../../sourcing/awardStatus';
 import { rfqStore } from './stores/rfqStore';
 import { quotationStore } from './stores/quotationStore';
 import {
+  awardCancellationStore,
+  awardSapMarkStore,
   awardStore,
   negotiationRoundStore,
   rfiEventStore,
@@ -424,6 +427,8 @@ export function negotiationRoundViews(nowIso: string, supplierId: string | null)
 
 /** The awards a scope may read. A supplier reads only awards it is named on. */
 export function awardViews(supplierId: string | null): readonly AwardView[] {
+  // RFx C2 (AR-08) — each award's status is derived from the appended trail.
+  const trail: AwardTrail = { cancellations: awardCancellationStore.all(), sapMarks: awardSapMarkStore.all() };
   return awardStore
     .all()
     // AR-02 — the record names its event type; only the RFQ arm exists (the
@@ -436,6 +441,8 @@ export function awardViews(supplierId: string | null): readonly AwardView[] {
     )
     .map((award) => {
       const rfq = rfqStore.get(award.eventId);
+      const cancellation = cancellationOf(award.id, trail);
+      const sapMark = sapMarkOf(award.id, trail);
       // BR-05 / AC-05 — a supplier sees ONLY ITS OWN OUTCOME. The share another
       // supplier won is another supplier's commercial position.
       const lines = supplierId ? award.lines.filter((l) => l.supplierId === supplierId) : award.lines;
@@ -471,6 +478,14 @@ export function awardViews(supplierId: string | null): readonly AwardView[] {
             )
           : award.bestScoredQuotationId !== undefined &&
             !award.lines.some((l) => l.quotationId === award.bestScoredQuotationId),
+        // RFx C2 (NR-3 BR-12, AC-07) — a supplier reads the status and the
+        // date its award was withdrawn, and only on an award it already reads
+        // (its own lines, or its own "not awarded"). The buyer's reason, the
+        // actor and the SAP document number stay on the buyer's read.
+        status: awardStatusOf(award.id, trail),
+        ...(cancellation ? { withdrawnAt: cancellation.cancelledAt } : {}),
+        ...(!supplierId && cancellation ? { cancellation } : {}),
+        ...(!supplierId && sapMark ? { sapMark } : {}),
       };
     });
 }
