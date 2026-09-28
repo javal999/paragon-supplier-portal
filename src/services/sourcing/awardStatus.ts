@@ -9,7 +9,7 @@
 // this module, so a screen (task C3) can pre-check with the same functions.
 // ────────────────────────────────────────────────────────────────────────────
 
-import type { AwardCancellation, AwardRecord, AwardSapMark, AwardStatus } from './types';
+import type { AwardCancellation, AwardEventType, AwardRecord, AwardSapMark, AwardStatus } from './types';
 
 /** The appended records an award's status is derived from. */
 export interface AwardTrail {
@@ -125,8 +125,11 @@ export function awardCancelRefusal(input: {
   readonly trail: AwardTrail;
   /** True for `t_rfq_award_cancel_partial`, false for `t_rfq_award_cancel`. */
   readonly partial: boolean;
+  /** RFx D2 — whose verbs the refusal names (the RFP's pair mirrors the RFQ's). Default `rfq`. */
+  readonly eventType?: AwardEventType;
 }): AwardCancelRefusal | null {
   const { awardId, eventAwards, trail, partial } = input;
+  const verb = input.eventType === 'rfp' ? 't_rfp_award_cancel' : 't_rfq_award_cancel';
   const notActive = awardOnEvent(awardId, eventAwards, trail);
   if (notActive) return notActive;
   const mark = sapMarkOf(awardId, trail);
@@ -136,13 +139,13 @@ export function awardCancelRefusal(input: {
   if (partial && othersInForce === 0) {
     return {
       code: 'AWARD_CANCEL_TARGET_WRONG',
-      detail: 'no other award of this event stays in force, so the event returns to Closed (t_rfq_award_cancel)',
+      detail: `no other award of this event stays in force, so the event returns to Closed (${verb})`,
     };
   }
   if (!partial && othersInForce > 0) {
     return {
       code: 'AWARD_CANCEL_TARGET_WRONG',
-      detail: `${othersInForce} other award(s) of this event stay in force, so the event stays Partly awarded (t_rfq_award_cancel_partial)`,
+      detail: `${othersInForce} other award(s) of this event stay in force, so the event stays Partly awarded (${verb}_partial)`,
     };
   }
   return null;

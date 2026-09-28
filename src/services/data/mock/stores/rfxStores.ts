@@ -15,6 +15,11 @@
 //   · awardCancellationStore / awardSapMarkStore — append-only (RFx C2, AR-08):
 //     a cancel or a "Raised in SAP" marking is a NEW record naming the award,
 //     so the award itself is never edited and its status is derived at read
+//   · rfpOfferRoundStore                      — NR-2: firm-offer rounds on an
+//     RFP; append-only like the negotiation round, closing only stamps `closedAt`
+//   · rfpFirmOfferStore                       — NR-2: one firm offer per
+//     supplier × round; a revision APPENDS a version. Both start EMPTY: no
+//     sample RFP is Closed, so no round could have been opened on one
 //
 // The RFQ and quotation rows the RFx demo needs live in `rfqStore` /
 // `quotationStore` beside the legacy set — one RFQ list, not two.
@@ -37,6 +42,8 @@ import type {
   RfiEvent,
   RfiResponse,
   RfpEvent,
+  RfpFirmOffer,
+  RfpOfferRound,
   RfpResponse,
 } from '../../../sourcing/types';
 
@@ -88,6 +95,8 @@ export const awardStore = appendOnly<AwardRecord>([...AWARD_SEED, ...RFQ_SAMPLE_
 // RFx C2 — the award trail. Nothing is seeded: every seeded award is in force.
 export const awardCancellationStore = appendOnly<AwardCancellation>([], 'awc');
 export const awardSapMarkStore = appendOnly<AwardSapMark>([], 'aws');
+export const rfpOfferRoundStore = collection<RfpOfferRound>([], 'fr');
+export const rfpFirmOfferStore = collection<RfpFirmOffer>([], 'fo');
 
 /** The one response a supplier holds for an event, or undefined. */
 export const responseOf = <T extends { supplierId: string }>(
@@ -106,4 +115,6 @@ export function resetRfxStores(): void {
   awardStore.reset();
   awardCancellationStore.reset();
   awardSapMarkStore.reset();
+  rfpOfferRoundStore.reset();
+  rfpFirmOfferStore.reset();
 }

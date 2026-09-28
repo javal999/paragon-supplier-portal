@@ -2280,8 +2280,10 @@ export function useForecastCommand() {
 
 import type {
   AwardLine,
+  RfpAwardLine,
   RfiAnswer,
   RfiQuestion,
+  RfpFirmPrice,
   RfpPricingAnswer,
   RfpPricingRequest,
   RfpTermAnswer,
@@ -2424,6 +2426,33 @@ export type RfxCommandVars =
       bestAndFinal?: boolean;
     }
   | { verb: 'closeRound'; roundId: string }
+  // — NR-2 · firm-offer round on an RFP (D-1) —
+  | {
+      verb: 'openRfpRound';
+      rfpId: string;
+      /** Option refs (`rfpOptionRef`), never a bare supplier `sup-opt-N` id. */
+      optionRefs: readonly string[];
+      quantityPoints: readonly number[];
+      invitedSupplierIds: readonly string[];
+      deadline: string;
+      message?: string;
+    }
+  | { verb: 'closeRfpRound'; roundId: string }
+  | {
+      verb: 'submitFirmOffer';
+      roundId: string;
+      supplierId: string;
+      prices: readonly RfpFirmPrice[];
+      validUntil: string;
+      documents?: readonly AttachmentMeta[];
+    }
+  | {
+      verb: 'reviseFirmOffer';
+      offerId: string;
+      prices: readonly RfpFirmPrice[];
+      validUntil: string;
+      documents?: readonly AttachmentMeta[];
+    }
   | {
       verb: 'reviseQuote';
       roundId: string;
@@ -2468,6 +2497,20 @@ export type RfxCommandVars =
       awardLines: readonly AwardLine[];
       awardReason?: string;
     }
+  // — RFx D2 · award an RFP per option on firm offers, cancel, SAP marking —
+  | {
+      // The FINAL award (`t_rfp_award`): every option of the closed rounds
+      // settled, now or earlier, or named in `notAwardedItems` (by option ref).
+      verb: 'awardRfp';
+      rfpId: string;
+      awardLines: readonly RfpAwardLine[];
+      awardReason: string;
+      notAwardedItems?: readonly string[];
+    }
+  | { verb: 'awardRfpPartial'; rfpId: string; awardLines: readonly RfpAwardLine[]; awardReason: string }
+  | { verb: 'cancelRfpAward'; rfpId: string; awardId: string; cancelReason: string }
+  | { verb: 'cancelRfpAwardPartial'; rfpId: string; awardId: string; cancelReason: string }
+  | { verb: 'markRfpAwardSap'; rfpId: string; awardId: string; sapDocumentNo: string }
   /**
    * RFx C2/C3 (NR-3 BR-09) — cancel an award with a reason. `cancelAward` is
    * `t_rfq_award_cancel` (no other award stays in force: the RFQ returns to
@@ -2484,7 +2527,9 @@ const RFX_READS = new Set([
   'rfiEvents',
   'rfpEvents',
   'negotiationRounds',
+  'rfpOfferRounds',
   'awards',
+  'rfpAwards',
   'rfqs',
   'quotations',
   'inviteeCandidates',
@@ -2705,6 +2750,51 @@ export function useRfxCommand() {
             entityId: vars.roundId,
             payload: {},
           });
+        case 'openRfpRound': {
+          const { verb, ...payload } = vars;
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_rfp_round_open',
+            entity: 'rfpOfferRound',
+            payload: {
+              ...payload,
+              optionRefs: [...payload.optionRefs],
+              quantityPoints: [...payload.quantityPoints],
+              invitedSupplierIds: [...payload.invitedSupplierIds],
+            },
+          });
+        }
+        case 'closeRfpRound':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_rfp_round_close',
+            entity: 'rfpOfferRound',
+            entityId: vars.roundId,
+            payload: {},
+          });
+        case 'submitFirmOffer': {
+          const { verb, prices, documents, ...payload } = vars;
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_rfpfirmoffer_submit',
+            entity: 'rfpFirmOffer',
+            payload: {
+              ...payload,
+              prices: prices.map((p) => ({ ...p })),
+              ...(documents ? { documents: [...documents] } : {}),
+            },
+          });
+        }
+        case 'reviseFirmOffer': {
+          const { verb, offerId, prices, documents, ...payload } = vars;
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_rfpfirmoffer_revise',
+            entity: 'rfpFirmOffer',
+            entityId: offerId,
+            payload: {
+              ...payload,
+              prices: prices.map((p) => ({ ...p })),
+              ...(documents ? { documents: [...documents] } : {}),
+            },
+          });
+        }
         case 'reviseQuote': {
           const { verb, lines, ...payload } = vars;
           return svc.commands.dispatch(scope, {
@@ -2735,6 +2825,36 @@ export function useRfxCommand() {
             payload: { ...payload, awardLines: awardLines.map((l) => ({ ...l })) },
           });
         }
+        case 'awardRfp':
+        case 'awardRfpPartial': {
+          const { verb, rfpId, awardLines, ...rest } = vars;
+          const notAwardedItems = verb === 'awardRfp' ? vars.notAwardedItems : undefined;
+          return svc.commands.dispatch(scope, {
+            transitionId: verb === 'awardRfp' ? 't_rfp_award' : 't_rfp_award_partial',
+            entity: 'rfpEvent',
+            entityId: rfpId,
+            payload: {
+              awardReason: rest.awardReason,
+              awardLines: awardLines.map((l) => ({ ...l })),
+              ...(notAwardedItems ? { notAwardedItems: [...notAwardedItems] } : {}),
+            },
+          });
+        }
+        case 'cancelRfpAward':
+        case 'cancelRfpAwardPartial':
+          return svc.commands.dispatch(scope, {
+            transitionId: vars.verb === 'cancelRfpAward' ? 't_rfp_award_cancel' : 't_rfp_award_cancel_partial',
+            entity: 'rfpEvent',
+            entityId: vars.rfpId,
+            payload: { awardId: vars.awardId, cancelReason: vars.cancelReason },
+          });
+        case 'markRfpAwardSap':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_rfp_award_sap_raised',
+            entity: 'rfpEvent',
+            entityId: vars.rfpId,
+            payload: { awardId: vars.awardId, sapDocumentNo: vars.sapDocumentNo },
+          });
         case 'cancelAward':
         case 'cancelAwardPartial':
           return svc.commands.dispatch(scope, {

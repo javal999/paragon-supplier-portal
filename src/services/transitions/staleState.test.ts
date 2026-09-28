@@ -199,6 +199,12 @@ describe('POPULATION — what a STATE precondition can and cannot see, derived',
     // passes this gate and is refused by its policy (AWARD_RAISED_IN_SAP).
     expect([...blind.pairs]).toContain('rfq|t_rfq_award_cancel_partial|t_rfq_award_cancel_partial');
     expect([...blind.pairs]).toContain('rfq|t_rfq_award_sap_raised|t_rfq_award_cancel');
+    // RFx D2 — the RFP's award verbs mirror the RFQ's, so the same three blind
+    // pairs appear on `rfpEvent`, covered by the same policies
+    // (AWARD_ITEM_ALREADY_AWARDED, AWARD_NOT_ACTIVE, AWARD_RAISED_IN_SAP).
+    expect([...blind.pairs]).toContain('rfpEvent|t_rfp_award_partial|t_rfp_award_partial');
+    expect([...blind.pairs]).toContain('rfpEvent|t_rfp_award_cancel_partial|t_rfp_award_cancel_partial');
+    expect([...blind.pairs]).toContain('rfpEvent|t_rfp_award_sap_raised|t_rfp_award_cancel');
     expect([...blind.pairs]).toContain('enforcement|t_enforcement_set|t_enforcement_set');
     expect([...blind.pairs]).toContain('rfq|t_rfq_fx_pin|t_rfq_award');
   });

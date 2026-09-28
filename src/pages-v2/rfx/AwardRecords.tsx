@@ -10,8 +10,8 @@ import TableCell from '../../components/ui-v2/TableCell';
 import { HandoffNotice } from '../../components/ui-v2/HandoffNotice';
 import { formatDate } from '../../lib/format';
 import type { RFQ } from '../../data/mockRfqs';
-import type { AwardView } from '../../services/sourcing/views';
-import type { AwardStatus } from '../../services/sourcing/types';
+import type { AwardView, RfpAwardView } from '../../services/sourcing/views';
+import type { AwardEventType, AwardStatus } from '../../services/sourcing/types';
 import type { VerbAvailability } from '../../services/transitions/handoff';
 import { awardItemsOf, itemOfAwardLine } from '../../services/sourcing/awardShape';
 import {
@@ -24,10 +24,11 @@ import { qty } from './rfxDisplay';
 import { itemLabel } from './AwardPanel';
 
 // ────────────────────────────────────────────────────────────────────────────
-// THE RECORDED AWARDS OF ONE RFQ (RFx C3; NR-3 BR-09 to BR-11). Every award the
-// event has had, newest first, each with its status (Active, Cancelled, Raised
-// in SAP) derived from the appended trail — a cancelled award is kept and read,
-// never removed (AR-08).
+// THE RECORDED AWARDS OF ONE EVENT (RFx C3; NR-3 BR-09 to BR-11). Every award
+// the event has had, newest first, each with its status (Active, Cancelled,
+// Raised in SAP) derived from the appended trail — a cancelled award is kept
+// and read, never removed (AR-08). An RFQ's awards and an RFP's (RFx D3) read
+// through the same card; only the lines table differs (an item, or an option).
 //
 // "Cancel award" needs a reason, "Mark raised in SAP" the SAP document number.
 // Each is offered on an ACTIVE award only, and only to a seat holding its atom;
@@ -49,19 +50,58 @@ const STATUS_VARIANT: Record<AwardStatus, 'success' | 'neutral' | 'info'> = {
   'Raised in SAP': 'info',
 };
 
-export interface AwardRecordsProps {
-  rfq: RFQ;
-  /** Every award of this event, cancelled ones included. */
-  awards: readonly AwardView[];
+/** What a recorded award card reads, on either event type. */
+type AnyAwardView = AwardView | RfpAwardView;
+
+interface RecordActions<A extends AnyAwardView> {
   supplierName: (supplierId: string) => string;
   cancelVerb: VerbAvailability;
   sapVerb: VerbAvailability;
   pending: boolean;
-  onCancel: (award: AwardView, reason: string, partial: boolean) => void;
-  onMarkSap: (award: AwardView, sapDocumentNo: string) => void;
+  onCancel: (award: A, reason: string, partial: boolean) => void;
+  onMarkSap: (award: A, sapDocumentNo: string) => void;
 }
 
-export const AwardRecords: React.FC<AwardRecordsProps> = (props) => {
+export interface AwardRecordsProps extends RecordActions<AwardView> {
+  rfq: RFQ;
+  /** Every award of this event, cancelled ones included. */
+  awards: readonly AwardView[];
+}
+
+export const AwardRecords: React.FC<AwardRecordsProps> = ({ rfq, awards, ...actions }) => (
+  <RecordList
+    eventType="rfq"
+    awards={awards}
+    {...actions}
+    departed={(a) => a.departedFromBestScore}
+    renderLines={(award) => <AwardLinesTable rfq={rfq} award={award} supplierName={actions.supplierName} />}
+  />
+);
+
+export interface RfpAwardRecordsProps extends RecordActions<RfpAwardView> {
+  /** Every award of this RFP, cancelled ones included. */
+  awards: readonly RfpAwardView[];
+}
+
+/** RFx D3 — the recorded awards of one RFP, per option, with cancel and SAP marking. */
+export const RfpAwardRecords: React.FC<RfpAwardRecordsProps> = ({ awards, ...actions }) => (
+  <RecordList
+    eventType="rfp"
+    awards={awards}
+    {...actions}
+    departed={() => false}
+    renderLines={(award) => <RfpAwardLinesTable award={award} />}
+  />
+);
+
+interface RecordListProps<A extends AnyAwardView> extends RecordActions<A> {
+  eventType: AwardEventType;
+  awards: readonly A[];
+  departed: (award: A) => boolean;
+  renderLines: (award: A) => React.ReactNode;
+}
+
+function RecordList<A extends AnyAwardView>(props: RecordListProps<A>): React.ReactElement {
   const { t } = useTranslation();
   return (
     <div className="space-y-4" data-testid="award-recorded">
@@ -71,9 +111,9 @@ export const AwardRecords: React.FC<AwardRecordsProps> = (props) => {
       <p className="text-xs text-text-tertiary">{t('rfx.award.noPo')}</p>
     </div>
   );
-};
+}
 
-const AwardRecordCard: React.FC<AwardRecordsProps & { award: AwardView }> = (props) => {
+function AwardRecordCard<A extends AnyAwardView>(props: RecordListProps<A> & { award: A }): React.ReactElement {
   const { t } = useTranslation();
   const { award, supplierName } = props;
   return (
@@ -87,14 +127,14 @@ const AwardRecordCard: React.FC<AwardRecordsProps & { award: AwardView }> = (pro
         </span>
       </div>
       {award.lines.length > 0 ? (
-        <AwardLinesTable rfq={props.rfq} award={award} supplierName={supplierName} />
+        props.renderLines(award)
       ) : (
         <p className="text-sm text-text-secondary" data-testid={`award-no-lines-${award.id}`}>
           {t('rfqCompare.award.noLines')}
         </p>
       )}
       {!!award.reason && <p className="text-sm text-text-secondary">{award.reason}</p>}
-      {award.departedFromBestScore && (
+      {props.departed(award) && (
         <p className="text-sm text-warning-hover" data-testid="award-departed">
           {t('rfx.award.departed')}
         </p>
@@ -123,7 +163,7 @@ const AwardRecordCard: React.FC<AwardRecordsProps & { award: AwardView }> = (pro
       {award.status === 'Active' && <AwardRecordActions {...props} />}
     </div>
   );
-};
+}
 
 /** One award's lines: item, supplier, share, quantity and the break. */
 const AwardLinesTable: React.FC<{ rfq: RFQ; award: AwardView; supplierName: (id: string) => string }> = ({
@@ -173,11 +213,48 @@ const AwardLinesTable: React.FC<{ rfq: RFQ; award: AwardView; supplierName: (id:
   );
 };
 
+/** One RFP award's lines: option, supplier, share, quantity and the quantity point. */
+const RfpAwardLinesTable: React.FC<{ award: RfpAwardView }> = ({ award }) => {
+  const { t } = useTranslation();
+  return (
+    <Table>
+      <TableHeader>
+        <TableHeaderCell>{t('rfxa.pricing.col.option')}</TableHeaderCell>
+        <TableHeaderCell>{t('rfx.award.col.supplier')}</TableHeaderCell>
+        <TableHeaderCell>{t('rfx.award.col.share')}</TableHeaderCell>
+        <TableHeaderCell>{t('rfx.award.col.qty')}</TableHeaderCell>
+        <TableHeaderCell>{t('rfx.rfpAward.col.point')}</TableHeaderCell>
+      </TableHeader>
+      <tbody>
+        {award.lines.map((line) => (
+          <TableRow
+            key={`${line.optionRef}-${line.supplierId}`}
+            data-testid={`award-line-${line.optionRef}-${line.supplierId}`}
+          >
+            <TableCell className="text-sm">{line.optionTitle}</TableCell>
+            <TableCell>{line.supplierName}</TableCell>
+            <TableCell>
+              <Data>{line.sharePct}%</Data>
+            </TableCell>
+            <TableCell>
+              <Data>{qty(line.quantity)}</Data>
+            </TableCell>
+            <TableCell>
+              <Data>{line.awardTierQty === undefined ? '—' : qty(line.awardTierQty)}</Data>
+            </TableCell>
+          </TableRow>
+        ))}
+      </tbody>
+    </Table>
+  );
+};
+
 const inputClass =
   'w-full bg-white border border-border-input rounded-md px-3 h-10 text-sm focus:outline-none focus:border-action';
 
 /** Cancel (with a reason) and "Raised in SAP" (with the document number) on an active award. */
-const AwardRecordActions: React.FC<AwardRecordsProps & { award: AwardView }> = ({
+function AwardRecordActions<A extends AnyAwardView>({
+  eventType,
   award,
   awards,
   cancelVerb,
@@ -185,14 +262,15 @@ const AwardRecordActions: React.FC<AwardRecordsProps & { award: AwardView }> = (
   pending,
   onCancel,
   onMarkSap,
-}) => {
+}: RecordListProps<A> & { award: A }): React.ReactElement {
   const { t } = useTranslation();
   const [mode, setMode] = useState<'none' | 'cancel' | 'sap'>('none');
   const [reason, setReason] = useState('');
   const [sapNo, setSapNo] = useState('');
   const trail = trailOfViews(awards);
   const partial = othersInForceAfterCancel(award.id, awards, trail) > 0;
-  const cancelBlocked = awardCancelRefusal({ awardId: award.id, reason, eventAwards: awards, trail, partial }) !== null;
+  const cancelBlocked =
+    awardCancelRefusal({ awardId: award.id, reason, eventAwards: awards, trail, partial, eventType }) !== null;
   const sapBlocked =
     awardSapMarkRefusal({ awardId: award.id, sapDocumentNo: sapNo, eventAwards: awards, trail }) !== null;
   const close = () => {
@@ -200,6 +278,14 @@ const AwardRecordActions: React.FC<AwardRecordsProps & { award: AwardView }> = (
     setReason('');
     setSapNo('');
   };
+  const cancelNote =
+    eventType === 'rfp'
+      ? partial
+        ? 'rfx.rfpAward.cancelToPartly'
+        : 'rfx.rfpAward.cancelToClosed'
+      : partial
+        ? 'rfqCompare.award.cancelToPartly'
+        : 'rfqCompare.award.cancelToClosed';
 
   if (mode === 'cancel' && cancelVerb.kind === 'held') {
     return (
@@ -214,9 +300,7 @@ const AwardRecordActions: React.FC<AwardRecordsProps & { award: AwardView }> = (
           onChange={(e) => setReason(e.target.value)}
           className={inputClass}
         />
-        <p className="text-xs text-text-tertiary">
-          {partial ? t('rfqCompare.award.cancelToPartly') : t('rfqCompare.award.cancelToClosed')}
-        </p>
+        <p className="text-xs text-text-tertiary">{t(cancelNote)}</p>
         <div className="flex flex-wrap gap-2">
           <Button
             variant="outline"
@@ -277,15 +361,21 @@ const AwardRecordActions: React.FC<AwardRecordsProps & { award: AwardView }> = (
           {t('rfqCompare.award.cancel')}
         </Button>
       ) : (
-        <HandoffNotice availability={cancelVerb} testId="handoff-rfq-award-cancel" />
+        <HandoffNotice
+          availability={cancelVerb}
+          testId={eventType === 'rfp' ? 'handoff-rfp-award-cancel' : 'handoff-rfq-award-cancel'}
+        />
       )}
       {sapVerb.kind === 'held' ? (
         <Button variant="secondary" data-testid={`award-sap-mark-${award.id}`} onClick={() => setMode('sap')}>
           {t('rfqCompare.award.sapMark')}
         </Button>
       ) : (
-        <HandoffNotice availability={sapVerb} testId="handoff-rfq-award-sap" />
+        <HandoffNotice
+          availability={sapVerb}
+          testId={eventType === 'rfp' ? 'handoff-rfp-award-sap' : 'handoff-rfq-award-sap'}
+        />
       )}
     </div>
   );
-};
+}

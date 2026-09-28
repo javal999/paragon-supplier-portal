@@ -69,8 +69,10 @@ import {
   useRfqComplianceGate,
   useRfiEvents,
   useRfpEvents,
+  useRfpAwards,
   useAwards,
 } from '../services/query/hooks';
+import { awardedRefsOf } from './rfx/RfpAwardSection';
 import {
   defaultEvaluationTierQty,
   eventPiecesAt,
@@ -953,6 +955,7 @@ const applySeed = (base: DraftRfq, seed: RfqDraftSeed): DraftRfq => ({
   ...(seed.materials !== undefined ? { materials: [...seed.materials] } : {}),
   sourceRfiId: seed.sourceRfiId,
   sourceRfpId: seed.sourceRfpId,
+  ...(seed.sourceRfpOptionRefs !== undefined ? { sourceRfpOptionRefs: [...seed.sourceRfpOptionRefs] } : {}),
   copiedFromRfqId: seed.copiedFromRfqId,
   templateId: seed.templateId,
 });
@@ -1571,13 +1574,19 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
   const rfpParam = searchParams.get('rfp');
   const optionsParam = searchParams.get('options');
   const rfpEvents = useRfpEvents();
+  // RFx D3 (NR-2 BR-08) — the RFP's awards in force: an option one of them
+  // placed is left out of the pre-fill, by the rule the create policy refuses it by.
+  const rfpAwards = useRfpAwards();
   const consumedRfp = useRef<string | null>(null);
   useEffect(() => {
-    if (!rfpParam || consumedRfp.current === rfpParam || rfpEvents.isPending) return;
+    if (!rfpParam || consumedRfp.current === rfpParam || rfpEvents.isPending || rfpAwards.isPending) return;
     consumedRfp.current = rfpParam;
     const event = (rfpEvents.data?.items ?? []).find((e) => e.id === rfpParam);
     const chosen = (optionsParam ?? '').split(',').map((s) => s.trim()).filter(Boolean);
-    const seed = event ? prefillRfqItemsFromRfp(event, event.responses, chosen) : null;
+    const awarded = [
+      ...awardedRefsOf((rfpAwards.data?.items ?? []).filter((a) => a.eventId === rfpParam)).keys(),
+    ];
+    const seed = event ? prefillRfqItemsFromRfp(event, event.responses, chosen, awarded) : null;
     if (rfqCreateAvailability.kind !== 'held') {
       // The entrance is the unit (§84): a seat without `rfq:create` does not get
       // a wizard the dispatcher would refuse at the end. The page header's
@@ -1596,7 +1605,7 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
     next.delete('options');
     setSearchParams(next, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rfpParam, rfpEvents.isPending, rfpEvents.data]);
+  }, [rfpParam, rfpEvents.isPending, rfpEvents.data, rfpAwards.isPending, rfpAwards.data]);
 
   const updateDraft = <K extends keyof DraftRfq>(
     key: K,

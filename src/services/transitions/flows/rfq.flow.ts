@@ -76,8 +76,10 @@ export const rfqFlow: FlowDefinition = {
       requiredRole: 'rfq:create',
       requiredFields: [...RFQ_CONTENT_FIELDS],
       // The rebuilt RFQ (items, quantity breaks, currency) is judged here, BY
-      // NAME, when it is sent. See `rfqModel.rfqCreateRefusal`.
-      policyHooks: [POLICY_HOOKS.RFQ_CREATE_VALID],
+      // NAME, when it is sent. See `rfqModel.rfqCreateRefusal`. RFx D2 (NR-2
+      // BR-08) — an RFQ created from an RFP may not source an option already
+      // awarded there (`rfq_create_rfp_options_free`).
+      policyHooks: [POLICY_HOOKS.RFQ_CREATE_VALID, POLICY_HOOKS.RFQ_CREATE_RFP_OPTIONS_FREE],
       surfaceable: { surfaced: true },
       version: 1,
     },
@@ -99,7 +101,9 @@ export const rfqFlow: FlowDefinition = {
       trigger: 'user',
       requiredRole: 'rfq:create',
       requiredFields: [...RFQ_CONTENT_FIELDS],
-      policyHooks: [POLICY_HOOKS.RFQ_CREATE_VALID],
+      // The SAME hooks as create. RFx D2's option guard judges the payload's
+      // refs; the target pins the stored ones, which the RFP could not award.
+      policyHooks: [POLICY_HOOKS.RFQ_CREATE_VALID, POLICY_HOOKS.RFQ_CREATE_RFP_OPTIONS_FREE],
       surfaceable: { surfaced: true },
       version: 1,
     },
