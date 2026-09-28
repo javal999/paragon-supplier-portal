@@ -129,6 +129,47 @@ describe('BuyerChannelTriage — the binding is first, and never a free supplier
     expect(screen.queryByText('No options available')).not.toBeInTheDocument();
   });
 
+  it('Retry after a failed first read shows loading while it runs, then the picker', async () => {
+    // The first supplier read fails; the retry is held open so the in-flight
+    // state can be observed. PR #52 review N4 claimed the alert would stay up
+    // during the retry with no loading state. Measured false: TanStack v5
+    // resets a query that holds no data back to `pending` when it fetches
+    // again (query-core `fetchState`), so `loading={isPending}` already covers
+    // it. This pins that behaviour, so a change to the loading/error wiring
+    // cannot quietly reintroduce the dead-looking Retry.
+    let listCalls = 0;
+    let release: () => void = () => {};
+    const held = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const suppliers = new Proxy(mockDataService.suppliers, {
+      get(obj, prop) {
+        const v = Reflect.get(obj, prop);
+        if (prop !== 'list' || typeof v !== 'function') return v;
+        return async (...args: unknown[]) => {
+          listCalls += 1;
+          if (listCalls === 1) throw new DataError('CHAOS', 'first read failed');
+          await held;
+          return (v as (...a: unknown[]) => unknown).apply(obj, args);
+        };
+      },
+    });
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    renderWithProviders(<BuyerChannelTriage />, { service: { ...mockDataService, suppliers }, queryClient });
+    const alert = await screen.findByRole('alert');
+    fireEvent.click(within(alert).getByRole('button', { name: 'Retry' }));
+    await waitFor(() => expect(listCalls).toBe(2));
+    expect(await screen.findByText('Loading options…')).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    await act(async () => {
+      release();
+    });
+    await waitFor(() => expect(screen.queryByText('Loading options…')).not.toBeInTheDocument());
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    await pickSupplier(SUBJECT);
+    expect(screen.getByTestId('triage-message')).toBeInTheDocument();
+  });
+
   it('a failed BACKGROUND refetch keeps the loaded picker — only a read that never landed is an error', async () => {
     // The first supplier read succeeds; every later one fails. TanStack keeps
     // the loaded data and flips `isError`, so a picker keyed on `isError` alone

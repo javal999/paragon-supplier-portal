@@ -854,7 +854,7 @@ const BuyerOrders: React.FC = () => {
               <h3 className="text-label text-text-tertiary uppercase mb-3">
                 {t('buyerOrders.panel.lineItems')}
               </h3>
-              <div className="border border-border-subtle rounded-md overflow-hidden">
+              <div className="relative min-w-0 border border-border-subtle rounded-md overflow-x-auto">
                 <table className="w-full text-xs">
                   <thead className="bg-bg-hover text-text-tertiary uppercase tracking-wider">
                     <tr>
