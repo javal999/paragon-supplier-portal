@@ -741,7 +741,7 @@ const BuyerRequisitions: React.FC = () => {
                     </Data>
                   </TableCell>
                   <TableCell>
-                    <div className="font-semibold text-text-primary truncate max-w-[14rem]">
+                    <div className="font-semibold text-text-primary">
                       {pr.material}
                     </div>
                   </TableCell>
