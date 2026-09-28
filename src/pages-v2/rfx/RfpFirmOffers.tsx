@@ -8,18 +8,21 @@ import { useVerbAvailability } from '../../hooks/useVerbAvailability';
 import type { GateResult } from '../../services/sourcing/complianceGate';
 import type { RfpEventView, RfpOfferRoundView } from '../../services/sourcing/views';
 import type { RfxCommandVars } from '../../services/query/commandHooks';
-import { rfpOfferRoundRefusal, rfpOptionRef } from '../../services/sourcing/rfpFirmOffer';
+import { RFP_ROUND_READY_STATUSES, rfpOfferRoundRefusal, rfpOptionRef } from '../../services/sourcing/rfpFirmOffer';
+import type { RfpOptionSettlement } from '../../services/sourcing/rfpAward';
 import { DeadlinePill, GateMarker, qty } from './rfxDisplay';
 import { refusalCode } from './RfxQuestionEditor';
 
 // ────────────────────────────────────────────────────────────────────────────
 // RFx D3 — THE BUYER'S FIRM-OFFER ROUNDS ON AN RFP (NR-2 buyer steps 2 to 4,
-// BR-02). On a Closed RFP, "Ask for firm offers" picks options (PTI's and
-// those a supplier proposed, in the proposer's words), quantity points,
-// suppliers and a deadline, and dispatches `openRfpRound`. A supplier that
-// fails CR-23 is listed with the reason and cannot be picked. Every round is
-// listed, open and closed, with its deadline, who has offered, and "Close
-// round".
+// BR-02). On a Closed or Partly awarded RFP (RFX-D15), "Ask for firm offers"
+// picks options (PTI's and those a supplier proposed, in the proposer's
+// words), quantity points, suppliers and a deadline, and dispatches
+// `openRfpRound`. An option already settled (awarded on the RFP, or sourced by
+// an RFQ created from it) is listed disabled with how it was settled, so a
+// Partly awarded RFP asks only for its open options. A supplier that fails
+// CR-23 is listed with the reason and cannot be picked. Every round is listed,
+// open and closed, with its deadline, who has offered, and "Close round".
 //
 // The form is pre-checked with the verb's own rule (`rfpOfferRoundRefusal`,
 // RFX-R2), over the same CR-23 gate the policy judges with (`supplierGate`
@@ -52,15 +55,27 @@ export interface RfpFirmOfferRoundsProps {
   /** This RFP's rounds (the buyer's read: every invitee and offer). */
   rounds: readonly RfpOfferRoundView[];
   gateOf: (supplierId: string) => GateResult;
+  /**
+   * RFX-D15 — this RFP's options that are no longer open, with how each was
+   * settled (`rfpSettledOptionRefs`, the rule the round policy judges by).
+   */
+  settled: ReadonlyMap<string, RfpOptionSettlement>;
   pending: boolean;
   run: (vars: RfxCommandVars, successKey: string) => void;
 }
 
-export const RfpFirmOfferRounds: React.FC<RfpFirmOfferRoundsProps> = ({ event, rounds, gateOf, pending, run }) => {
+export const RfpFirmOfferRounds: React.FC<RfpFirmOfferRoundsProps> = ({
+  event,
+  rounds,
+  gateOf,
+  settled,
+  pending,
+  run,
+}) => {
   const { t } = useTranslation();
   const negotiate = useVerbAvailability('rfp:negotiate');
   const [asking, setAsking] = useState(false);
-  const canAsk = event.status === 'Closed' && !!event.pricing;
+  const canAsk = RFP_ROUND_READY_STATUSES.includes(event.status) && !!event.pricing;
   return (
     <div
       className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm p-4 space-y-4"
@@ -84,6 +99,7 @@ export const RfpFirmOfferRounds: React.FC<RfpFirmOfferRoundsProps> = ({ event, r
         <RoundForm
           event={event}
           gateOf={gateOf}
+          settled={settled}
           pending={pending}
           onCancel={() => setAsking(false)}
           onOpen={(vars) => {
@@ -173,10 +189,11 @@ const inputClass =
 const RoundForm: React.FC<{
   event: RfpEventView;
   gateOf: (supplierId: string) => GateResult;
+  settled: ReadonlyMap<string, RfpOptionSettlement>;
   pending: boolean;
   onCancel: () => void;
   onOpen: (vars: RfxCommandVars) => void;
-}> = ({ event, gateOf, pending, onCancel, onOpen }) => {
+}> = ({ event, gateOf, settled, pending, onCancel, onOpen }) => {
   const { t } = useTranslation();
   const choices = roundOptionChoices(event);
   const allPoints = event.pricing?.quantityPoints ?? [];
@@ -191,6 +208,7 @@ const RoundForm: React.FC<{
     {
       rfpStatus: event.status,
       knownOptionRefs: choices.map((c) => c.ref),
+      settledOptionRefs: [...settled.keys()],
       respondedSupplierIds: event.responses.map((r) => r.supplierId),
       gate: gateOf,
     },
@@ -210,23 +228,37 @@ const RoundForm: React.FC<{
       <p className="text-xs text-text-tertiary">{t('rfx.firm.askHint')}</p>
       <fieldset className="space-y-1">
         <legend className="text-xs font-semibold text-text-secondary mb-1">{t('rfx.firm.options')}</legend>
-        {choices.map((c) => (
-          <label key={c.ref} className="flex items-start gap-2 text-sm text-text-primary">
-            <input
-              type="checkbox"
-              className="mt-1"
-              checked={optionRefs.includes(c.ref)}
-              onChange={() => setOptionRefs((prev) => toggle(prev, c.ref))}
-              data-testid={`rfp-round-option-${c.ref}`}
-            />
-            <span>
-              {c.title}
-              <span className="block text-xs text-text-tertiary">
-                {c.proposer ? t('rfx.rfp.toRfq.proposedBy', { supplier: c.proposer }) : t('rfx.rfp.toRfq.pti')}
+        {choices.map((c) => {
+          // RFX-D15 — a settled option is shown, disabled, with how it was
+          // settled. One ticked before it was settled (the form outlives the
+          // read) can still be unticked, and the pre-check names it.
+          const done = settled.get(c.ref);
+          return (
+            <label key={c.ref} className="flex items-start gap-2 text-sm text-text-primary">
+              <input
+                type="checkbox"
+                className="mt-1"
+                disabled={done !== undefined && !optionRefs.includes(c.ref)}
+                checked={optionRefs.includes(c.ref)}
+                onChange={() => setOptionRefs((prev) => toggle(prev, c.ref))}
+                data-testid={`rfp-round-option-${c.ref}`}
+              />
+              <span className={done ? 'text-text-tertiary' : undefined}>
+                {c.title}
+                <span className="block text-xs text-text-tertiary">
+                  {c.proposer ? t('rfx.rfp.toRfq.proposedBy', { supplier: c.proposer }) : t('rfx.rfp.toRfq.pti')}
+                </span>
+                {done && (
+                  <span className="block text-xs text-text-secondary" data-testid={`rfp-round-option-settled-${c.ref}`}>
+                    {done.by === 'award'
+                      ? t('rfx.firm.settled.award')
+                      : t('rfx.firm.settled.rfq', { rfq: done.rfqNumber })}
+                  </span>
+                )}
               </span>
-            </span>
-          </label>
-        ))}
+            </label>
+          );
+        })}
       </fieldset>
       <fieldset className="flex flex-wrap gap-3">
         <legend className="text-xs font-semibold text-text-secondary mb-1">{t('rfx.firm.points')}</legend>

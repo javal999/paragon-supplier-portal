@@ -25,12 +25,14 @@ import {
   useRfpAwards,
   useRfpEvents,
   useRfpOfferRounds,
+  useRFQs,
 } from '../services/query/hooks';
 import { useRfxCommand } from '../services/query/commandHooks';
 import type { GateResult } from '../services/sourcing/complianceGate';
 import { rfpOptionRef } from '../services/sourcing/rfpFirmOffer';
 import { RfpFirmOfferRounds } from './rfx/RfpFirmOffers';
-import { RfpAwardSection, awardedRefsOf } from './rfx/RfpAwardSection';
+import { RfpAwardSection, awardRecordsInForce, awardedRefsOf } from './rfx/RfpAwardSection';
+import { rfpSettledOptionRefs, type RfpOptionSettlement } from '../services/sourcing/rfpAward';
 import { RFP_TERM_GROUP_ORDER, rfpTermGroupOf, rfxFamilyForCategory, rfxSectionsOf } from '../services/sourcing/rfxConfig';
 import { prefillRfpFromRfi } from '../services/sourcing/rfxPrefill';
 import { rfpTemplateStore } from '../services/sourcing/rfxTemplates';
@@ -76,8 +78,9 @@ import { DocumentsStatus, SupplierDocumentsPanel } from './rfx/SupplierDocuments
 // re-opened on every stored field, saving through `t_rfp_revise_draft`); a seat
 // without the atom reads whose act it is in the button's own slot.
 //
-// RFx D3 (NR-2) — a Closed RFP offers "Ask for firm offers" (`rfp:negotiate`)
-// and lists its firm-offer rounds; the pricing comparison shows each firm
+// RFx D3 (NR-2) — a Closed or Partly awarded RFP (RFX-D15) offers "Ask for firm
+// offers" (`rfp:negotiate`) for its options still open, and lists its
+// firm-offer rounds; the pricing comparison shows each firm
 // price labelled Firm with its validity beside the Indicative ones; the award
 // section is the shared award panel over the options of the closed rounds
 // (`rfp:award`), with the recorded awards, cancel and "Raised in SAP"; and
@@ -98,6 +101,8 @@ const BuyerRfp: React.FC = () => {
   const command = useRfxCommand();
   const offerRounds = useRfpOfferRounds();
   const rfpAwards = useRfpAwards();
+  // RFX-D15 — the RFQs created from an RFP settle the options they source.
+  const rfqs = useRFQs();
   // CR-23 on an RFP judges no material (it names none): the candidate read's
   // gate, with no material codes, is the gate the round and award policies use.
   const candidates = useInviteeCandidates();
@@ -161,6 +166,11 @@ const BuyerRfp: React.FC = () => {
     (candidates.data?.items ?? []).find((c) => c.supplierId === supplierId)?.gate ?? NOT_SELECTABLE;
   const openRounds = open ? (offerRounds.data?.items ?? []).filter((r) => r.rfpId === open.id) : [];
   const openAwards = open ? (rfpAwards.data?.items ?? []).filter((a) => a.eventId === open.id) : [];
+  // RFX-D15 — the options a new firm-offer round may no longer name, by the
+  // rule the round policy judges with (`rfpSettledOptionRefs`).
+  const openSettled = open
+    ? rfpSettledOptionRefs(open.id, awardRecordsInForce(openAwards), rfqs.data?.items ?? [])
+    : new Map<string, RfpOptionSettlement>();
   const supplierName = (supplierId: string): string =>
     open?.invitedSuppliers.find((i) => i.supplierId === supplierId)?.supplierName ?? supplierId;
 
@@ -418,6 +428,7 @@ const BuyerRfp: React.FC = () => {
               event={open}
               rounds={openRounds}
               gateOf={gateOf}
+              settled={openSettled}
               pending={command.isPending}
               run={run}
             />

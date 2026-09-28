@@ -62,24 +62,33 @@ export interface RfpRoundFacts {
   readonly rfpStatus: string | null;
   /** Refs of the RFP's own options plus those suppliers proposed in a SUBMITTED response. */
   readonly knownOptionRefs: readonly string[];
+  /**
+   * RFX-D15 — refs no longer OPEN on this RFP: named by an RFP award in force
+   * or sourced by a live RFQ created from the RFP (`rfpSettledOptionRefs`).
+   */
+  readonly settledOptionRefs: readonly string[];
   /** Suppliers with a SUBMITTED response to this RFP. */
   readonly respondedSupplierIds: readonly string[];
   /** CR-23 for one supplier on this RFP. */
   readonly gate: (supplierId: string) => GateResult;
 }
 
+/** RFX-D15 — the RFP statuses a firm-offer round may open on. */
+export const RFP_ROUND_READY_STATUSES: readonly string[] = ['Closed', 'Partly awarded'];
+
 /**
  * NR-2 BR-02 — the refusal a firm-offer round earns, or null.
  *
- * The RFP is Closed (proposals are in, and the round does not reopen it); the
- * options exist on the RFP or in a submitted proposal (edge case 3); the
- * quantity points are above zero; and every invitee submitted a response and
- * passes CR-23.
+ * The RFP is Closed or Partly awarded (RFX-D15: proposals are in, and the round
+ * changes neither status); the options exist on the RFP or in a submitted
+ * proposal (edge case 3) and are still OPEN, neither awarded on the RFP nor
+ * sourced by an RFQ created from it; the quantity points are above zero; and
+ * every invitee submitted a response and passes CR-23.
  */
 export function rfpOfferRoundRefusal(req: RfpRoundRequest, facts: RfpRoundFacts): string | null {
   if (facts.rfpStatus === null) return 'RFP_NOT_FOUND: the round names no RFP this hub holds';
-  if (facts.rfpStatus !== 'Closed') {
-    return `RFP_NOT_CLOSED: a firm-offer round opens on a Closed RFP; this one is ${facts.rfpStatus}`;
+  if (!RFP_ROUND_READY_STATUSES.includes(facts.rfpStatus)) {
+    return `RFP_NOT_ROUND_READY: a firm-offer round opens on a Closed or Partly awarded RFP; this one is ${facts.rfpStatus}`;
   }
   if (typeof req.deadline !== 'string' || !isCalendarDate(req.deadline)) {
     return 'BAD_DEADLINE: the round needs a deadline date';
@@ -89,6 +98,10 @@ export function rfpOfferRoundRefusal(req: RfpRoundRequest, facts: RfpRoundFacts)
   // A bare `sup-opt-N` is not a ref (whose option?), so it is unknown here too.
   const unknown = optionRefs.filter((ref) => !facts.knownOptionRefs.includes(ref));
   if (unknown.length > 0) return `ROUND_OPTION_UNKNOWN: ${unknown.join(', ')}`;
+  // RFX-D15 — a settled option takes no new firm prices: its award (or RFQ)
+  // already placed it, and the RFP award would refuse it anyway (NR-2 BR-08).
+  const settled = optionRefs.filter((ref) => facts.settledOptionRefs.includes(ref));
+  if (settled.length > 0) return `ROUND_OPTION_SETTLED: ${settled.join(', ')}`;
   const points = req.quantityPoints;
   if (
     !Array.isArray(points) ||

@@ -666,6 +666,7 @@ describe('REQ-E03-05 BR-05 — a supplier sees only its own thread and its own o
 
 const FULL_SET = 'opt-full-set';
 const FULL_SET_TITLE = 'Full set: bottle, pump and cap';
+const PUMP_CAP = 'opt-pump-cap';
 const supplierScope = (supplierId: string): QueryScope => ({
   personaType: 'supplier',
   supplierId,
@@ -836,6 +837,78 @@ describe('RFx D3 — the RFP screens for firm-offer rounds and award (NR-2)', ()
     expect(outcome).not.toHaveTextContent('40%');
     // The buyer's reason stays on the buyer's read.
     expect(screen.queryByText(/Dual source on the full set/)).not.toBeInTheDocument();
+  });
+
+  it('RFX-D15 — a Partly awarded RFP offers "Ask for firm offers" with only the open option selectable', async () => {
+    const svc = new MockCommandService();
+    await closedTundra(svc);
+    // Round 1 names both options; both suppliers price the full set, which is
+    // then awarded partially, leaving the pump and cap open.
+    const round = await svc.dispatch(BUYER_SCOPE, {
+      transitionId: 't_rfp_round_open',
+      entity: 'rfpOfferRound',
+      payload: {
+        rfpId: 'rfp-002',
+        optionRefs: [FULL_SET, PUMP_CAP],
+        quantityPoints: [50_000],
+        invitedSupplierIds: ['sup-007', 'sup-015'],
+        deadline: dayFromNow(5),
+      },
+    });
+    expect(round.status, round.reason).toBe('done');
+    const offers: Record<string, string> = {};
+    for (const [supplierId, price] of [
+      ['sup-007', 4_100],
+      ['sup-015', 4_180],
+    ] as const) {
+      const res = await svc.dispatch(supplierScope(supplierId), {
+        transitionId: 't_rfpfirmoffer_submit',
+        entity: 'rfpFirmOffer',
+        payload: {
+          roundId: round.entityId,
+          supplierId,
+          prices: [{ optionRef: FULL_SET, qty: 50_000, unitPrice: price }],
+          validUntil: dayFromNow(60),
+        },
+      });
+      expect(res.status, res.reason).toBe('done');
+      offers[supplierId] = res.entityId!;
+    }
+    const close = await svc.dispatch(BUYER_SCOPE, { transitionId: 't_rfp_round_close', entity: 'rfpOfferRound', entityId: round.entityId!, payload: {} });
+    expect(close.status, close.reason).toBe('done');
+    const partial = await svc.dispatch(BUYER_SCOPE, {
+      transitionId: 't_rfp_award_partial',
+      entity: 'rfpEvent',
+      entityId: 'rfp-002',
+      payload: {
+        awardReason: 'Dual source on the full set.',
+        awardLines: [
+          { supplierId: 'sup-007', optionRef: FULL_SET, firmOfferId: offers['sup-007'], sharePct: 60, quantity: 30_000, splitBasis: 'pct', awardTierQty: 50_000 },
+          { supplierId: 'sup-015', optionRef: FULL_SET, firmOfferId: offers['sup-015'], sharePct: 40, quantity: 20_000, splitBasis: 'pct', awardTierQty: 50_000 },
+        ],
+      },
+    });
+    expect(partial.status, partial.reason).toBe('done');
+    expect(rfpEventStore.get('rfp-002')!.status).toBe('Partly awarded');
+
+    renderWithProviders(<BuyerRfp />, { identity: BUYER_SEAT });
+    fireEvent.click(await screen.findByTestId('rfp-open-rfp-002'));
+    fireEvent.click(await screen.findByTestId('rfp-ask-firm-rfp-002'));
+    const form = await screen.findByTestId('rfp-round-form-rfp-002');
+    // The awarded full set is listed, disabled, saying why; the pump and cap can be picked.
+    await waitFor(() => expect(within(form).getByTestId(`rfp-round-option-${FULL_SET}`)).toBeDisabled());
+    expect(within(form).getByTestId(`rfp-round-option-settled-${FULL_SET}`)).toHaveTextContent('Awarded on this RFP');
+    expect(within(form).getByTestId(`rfp-round-option-${PUMP_CAP}`)).toBeEnabled();
+    expect(within(form).queryByTestId(`rfp-round-option-settled-${PUMP_CAP}`)).not.toBeInTheDocument();
+    fireEvent.click(within(form).getByTestId(`rfp-round-option-${PUMP_CAP}`));
+    fireEvent.click(within(form).getByTestId('rfp-round-supplier-sup-007'));
+    fireEvent.change(within(form).getByLabelText('Round deadline'), { target: { value: dayFromNow(5) } });
+    await waitFor(() => expect(within(form).getByTestId('rfp-round-open-rfp-002')).toBeEnabled());
+    fireEvent.click(within(form).getByTestId('rfp-round-open-rfp-002'));
+    await waitFor(() => expect(rfpOfferRoundStore.all()).toHaveLength(2));
+    const second = rfpOfferRoundStore.all().find((r) => r.roundNumber === 2)!;
+    expect(second.optionRefs).toEqual([PUMP_CAP]);
+    expect(rfpEventStore.get('rfp-002')!.status).toBe('Partly awarded');
   });
 });
 

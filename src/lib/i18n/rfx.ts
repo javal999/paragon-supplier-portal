@@ -472,6 +472,10 @@ export const rfxEn: Record<string, string> = {
   'rfx.firm.refusal.ROUND_NO_OPTIONS': 'Pick at least one option.',
   'rfx.firm.refusal.ROUND_QTY_INVALID': 'Pick at least one quantity point.',
   'rfx.firm.refusal.ROUND_NO_INVITEES': 'Pick at least one supplier.',
+  'rfx.firm.refusal.ROUND_OPTION_SETTLED':
+    'An option you picked is already awarded on this RFP or sourced by an RFQ. Untick it to ask for the open options.',
+  'rfx.firm.settled.award': 'Awarded on this RFP. A new round asks only for open options.',
+  'rfx.firm.settled.rfq': 'Sourced by {{rfq}}, an RFQ created from this RFP.',
   'rfx.firm.supplier.title': 'Firm-offer request · round {{n}}',
   'rfx.firm.supplier.notice': 'Prices you give in this round are firm offers until the validity date you set.',
   'rfx.firm.supplier.message': 'PTI’s message',
@@ -949,6 +953,10 @@ export const rfxId: Record<string, string> = {
   'rfx.firm.refusal.ROUND_NO_OPTIONS': 'Pilih setidaknya satu opsi.',
   'rfx.firm.refusal.ROUND_QTY_INVALID': 'Pilih setidaknya satu titik kuantitas.',
   'rfx.firm.refusal.ROUND_NO_INVITEES': 'Pilih setidaknya satu pemasok.',
+  'rfx.firm.refusal.ROUND_OPTION_SETTLED':
+    'Opsi yang Anda pilih sudah ditetapkan pada RFP ini atau sudah diadakan lewat RFQ. Hapus centangnya untuk meminta opsi yang masih terbuka.',
+  'rfx.firm.settled.award': 'Sudah ditetapkan pada RFP ini. Putaran baru hanya meminta opsi yang masih terbuka.',
+  'rfx.firm.settled.rfq': 'Diadakan lewat {{rfq}}, RFQ yang dibuat dari RFP ini.',
   'rfx.firm.supplier.title': 'Permintaan penawaran pasti · putaran {{n}}',
   'rfx.firm.supplier.notice': 'Harga yang Anda berikan pada putaran ini adalah penawaran pasti sampai tanggal berlaku yang Anda tetapkan.',
   'rfx.firm.supplier.message': 'Pesan PTI',
