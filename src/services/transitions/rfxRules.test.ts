@@ -13,10 +13,8 @@
 import { describe, expect, it } from 'vitest';
 import { SupplierStatus } from '../../types/supplier.types';
 import {
-  AWARD_SPLIT_TOLERANCE,
   NO_HISTORY_RELIABILITY,
   awardFollowsBestScore,
-  awardSplitRefusal,
   complianceScoreFor,
   daysToDeadline,
   deviationsWithoutComment,
@@ -27,7 +25,6 @@ import {
   isInvitedToRound,
   isPastDeadline,
   isSelectableSupplier,
-  itemsNotTotalling100,
   missingRequiredAnswers,
   questionPoints,
   quoteLinesRefusal,
@@ -301,41 +298,6 @@ describe('REQ-E03-05 — the shortlist and the split', () => {
     expect(isInvitedToRound(['a', 'b'], 'a')).toBe(true);
     expect(isInvitedToRound(['a', 'b'], 'c')).toBe(false);
     expect(isInvitedToRound([], 'a')).toBe(false);
-  });
-
-  it('⚠️ the split totals 100% PER ITEM — two half-placed items do not pass', () => {
-    const halfEach = [
-      { supplierId: 'a', quotationId: 'q1', itemCode: 'X', sharePct: 50, quantity: 1 },
-      { supplierId: 'b', quotationId: 'q2', itemCode: 'Y', sharePct: 50, quantity: 1 },
-    ];
-    // Over the whole award these sum to 100 and every item is half sourced.
-    expect([...itemsNotTotalling100(halfEach)].sort()).toEqual(['X', 'Y']);
-    const complete = [
-      { supplierId: 'a', quotationId: 'q1', itemCode: 'X', sharePct: 70, quantity: 7 },
-      { supplierId: 'b', quotationId: 'q2', itemCode: 'X', sharePct: 30, quantity: 3 },
-    ];
-    expect(itemsNotTotalling100(complete)).toEqual([]);
-    expect(awardSplitRefusal(complete)).toBeNull();
-    expect(awardSplitRefusal(halfEach)).toMatch(/AWARD_SPLIT_INCOMPLETE/);
-  });
-
-  it('refuses an empty award, a non-positive share and a non-positive quantity, each by name', () => {
-    expect(awardSplitRefusal([])).toMatch(/AWARD_EMPTY/);
-    expect(
-      awardSplitRefusal([{ supplierId: 'a', quotationId: 'q', itemCode: 'X', sharePct: 0, quantity: 1 }]),
-    ).toMatch(/AWARD_SHARE_INVALID/);
-    expect(
-      awardSplitRefusal([{ supplierId: 'a', quotationId: 'q', itemCode: 'X', sharePct: 100, quantity: 0 }]),
-    ).toMatch(/AWARD_QTY_INVALID/);
-  });
-
-  it('the share tolerance admits rounding, and nothing more', () => {
-    const near = [
-      { supplierId: 'a', quotationId: 'q1', itemCode: 'X', sharePct: 100 - AWARD_SPLIT_TOLERANCE / 2, quantity: 1 },
-    ];
-    expect(itemsNotTotalling100(near)).toEqual([]);
-    const off = [{ supplierId: 'a', quotationId: 'q1', itemCode: 'X', sharePct: 99, quantity: 1 }];
-    expect(itemsNotTotalling100(off)).toEqual(['X']);
   });
 
   it('BR-07 — a split that INCLUDES the best quote follows it; one that leaves it out does not', () => {

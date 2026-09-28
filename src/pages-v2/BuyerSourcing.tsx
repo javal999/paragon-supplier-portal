@@ -69,8 +69,10 @@ import {
   useRfqComplianceGate,
   useRfiEvents,
   useRfpEvents,
+  useRfpAwards,
   useAwards,
 } from '../services/query/hooks';
+import { awardedRefsOf } from './rfx/RfpAwardSection';
 import {
   defaultEvaluationTierQty,
   eventPiecesAt,
@@ -127,7 +129,6 @@ import DocumentRequestsEditor, {
 import {
   useRfqCreate,
   useRfqReviseDraft,
-  useRfqAward,
   useRfqFxPin,
   useRfqCancel,
   useRfqPublish,
@@ -294,6 +295,7 @@ const STATUS_VARIANT: Record<
   Draft: 'neutral',
   Open: 'info',
   Closed: 'neutral',
+  'Partly awarded': 'info',
   Awarded: 'success',
   Cancelled: 'danger',
 };
@@ -966,6 +968,7 @@ const applySeed = (base: DraftRfq, seed: RfqDraftSeed): DraftRfq => ({
   ...(seed.materials !== undefined ? { materials: [...seed.materials] } : {}),
   sourceRfiId: seed.sourceRfiId,
   sourceRfpId: seed.sourceRfpId,
+  ...(seed.sourceRfpOptionRefs !== undefined ? { sourceRfpOptionRefs: [...seed.sourceRfpOptionRefs] } : {}),
   copiedFromRfqId: seed.copiedFromRfqId,
   templateId: seed.templateId,
 });
@@ -1004,7 +1007,6 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
   // because the panel was still reading an RFQ with no `fxPins` on it.
   const [selectedRfqId, setSelectedRfqId] = useState<string | null>(null);
   const [awardsOpen, setAwardsOpen] = useState(true);
-  const [selectedQuoteId, setSelectedQuoteId] = useState<string | null>(null);
   // DERIVED from the live list, so a command that mutates this RFQ is reflected
   // in the OPEN panel — the whole point of holding the id rather than the row.
   const selectedRfq = useMemo(
@@ -1086,7 +1088,7 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
   // BL-37 — the award records, so the history can name EVERY supplier of a split.
   const awardsQuery = useAwards();
   const awardByRfq = useMemo(
-    () => new Map((awardsQuery.data?.items ?? []).map((a) => [a.rfqId, a] as const)),
+    () => new Map((awardsQuery.data?.items ?? []).map((a) => [a.eventId, a] as const)),
     [awardsQuery.data],
   );
   /**
@@ -1110,7 +1112,6 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
   };
   const createMutation = useRfqCreate();
   const reviseMutation = useRfqReviseDraft();
-  const awardMutation = useRfqAward();
   const cancelMutation = useRfqCancel();
   const reopenMutation = useRfqReopen();
   const publishMutation = useRfqPublish();
@@ -1119,7 +1120,6 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
 
   const openRfq = (r: RFQ) => {
     setSelectedRfqId(r.id);
-    setSelectedQuoteId(null);
   };
 
   // Award the selected quotation (fires the cascade source t_rfq_award): the
@@ -1177,49 +1177,6 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
             variant: 'error',
             title: t('sourcing.toast.fxPinFailed.title'),
             description: t('sourcing.toast.fxPinFailed.default'),
-          }),
-      },
-    );
-  };
-
-  const handleAward = () => {
-    if (!selectedRfq || !selectedQuoteId) return;
-    const quote = quotesForSelected.find((q) => q.id === selectedQuoteId);
-    if (!quote) return;
-    const rfqNumber = selectedRfq.rfqNumber;
-    awardMutation.mutate(
-      {
-        rfqId: selectedRfq.id,
-        awardedQuotationId: quote.id,
-        awardedSupplierId: quote.supplierId,
-      },
-      {
-        onSuccess: (result) => {
-          if (result.status === 'failed') {
-            toast({
-              variant: 'error',
-              title: t('sourcing.toast.awardFailed.title'),
-              description:
-                refusalText(result.reason) ?? result.reason ?? t('sourcing.toast.awardFailed.default'),
-            });
-            return;
-          }
-          toast({
-            variant: 'success',
-            title: t('sourcing.toast.awarded.title', { rfqNumber }),
-            description: t('sourcing.toast.awarded.desc', {
-              supplier:
-                supplierNameById.get(quote.supplierId) ??
-                t('sourcing.toast.awarded.fallbackSupplier'),
-            }),
-          });
-          closePanel();
-        },
-        onError: () =>
-          toast({
-            variant: 'error',
-            title: t('sourcing.toast.awardFailed.title'),
-            description: t('sourcing.toast.awardFailed.dispatch'),
           }),
       },
     );
@@ -1376,7 +1333,6 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
 
   const closePanel = () => {
     setSelectedRfqId(null);
-    setSelectedQuoteId(null);
   };
 
   const quotesForSelected = useMemo(() => {
@@ -1631,13 +1587,19 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
   const rfpParam = searchParams.get('rfp');
   const optionsParam = searchParams.get('options');
   const rfpEvents = useRfpEvents();
+  // RFx D3 (NR-2 BR-08) — the RFP's awards in force: an option one of them
+  // placed is left out of the pre-fill, by the rule the create policy refuses it by.
+  const rfpAwards = useRfpAwards();
   const consumedRfp = useRef<string | null>(null);
   useEffect(() => {
-    if (!rfpParam || consumedRfp.current === rfpParam || rfpEvents.isPending) return;
+    if (!rfpParam || consumedRfp.current === rfpParam || rfpEvents.isPending || rfpAwards.isPending) return;
     consumedRfp.current = rfpParam;
     const event = (rfpEvents.data?.items ?? []).find((e) => e.id === rfpParam);
     const chosen = (optionsParam ?? '').split(',').map((s) => s.trim()).filter(Boolean);
-    const seed = event ? prefillRfqItemsFromRfp(event, event.responses, chosen) : null;
+    const awarded = [
+      ...awardedRefsOf((rfpAwards.data?.items ?? []).filter((a) => a.eventId === rfpParam)).keys(),
+    ];
+    const seed = event ? prefillRfqItemsFromRfp(event, event.responses, chosen, awarded) : null;
     if (rfqCreateAvailability.kind !== 'held') {
       // The entrance is the unit (§84): a seat without `rfq:create` does not get
       // a wizard the dispatcher would refuse at the end. The page header's
@@ -1656,7 +1618,7 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
     next.delete('options');
     setSearchParams(next, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rfpParam, rfpEvents.isPending, rfpEvents.data]);
+  }, [rfpParam, rfpEvents.isPending, rfpEvents.data, rfpAwards.isPending, rfpAwards.data]);
 
   const updateDraft = <K extends keyof DraftRfq>(
     key: K,
@@ -3970,37 +3932,6 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
                             </ComparisonCell>
                           ))}
                         </ComparisonRow>
-                        {/* BL-37 — a TIERED RFQ has no one-winner pick: it is
-                            awarded item by item on the event page, by the same
-                            verb. The verb refuses a whole-event line on it. */}
-                        {!isTieredRfq(selectedRfq) && (
-                        <ComparisonRow label={t('sourcing.cmp.row.select')}>
-                          {quotesForSelected.map((q) => (
-                            <ComparisonCell key={q.id} highlight={q.id === topRankedId}>
-                              {gateOf(q.supplierId)?.passes !== true ? (
-                                // BR-01a — not selectable; the reason instead.
-                                <span className="text-xs text-text-tertiary" data-testid={`drawer-award-blocked-${q.supplierId}`}>
-                                  {t('rfx.gate.cannotAward')}
-                                </span>
-                              ) : (
-                              <label className="inline-flex items-center gap-2 cursor-pointer">
-                                <input
-                                  type="radio"
-                                  name="award-select"
-                                  value={q.id}
-                                  checked={selectedQuoteId === q.id}
-                                  onChange={() => setSelectedQuoteId(q.id)}
-                                  className="accent-teal"
-                                />
-                                <span className="text-xs text-text-secondary">
-                                  {t('sourcing.cmp.award')}
-                                </span>
-                              </label>
-                              )}
-                            </ComparisonCell>
-                          ))}
-                        </ComparisonRow>
-                        )}
                         </>
                       )}
                     </tbody>
@@ -4009,78 +3940,39 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
               )}
             </section>
 
-            {/* BL-37 — the panel's award AGREES with the event page by being
-                the event page: a tiered RFQ links to its per-item award rather
-                than offering a second, one-winner form beside it. */}
-            {isTieredRfq(selectedRfq) &&
-              (selectedRfq.status === 'Open' || selectedRfq.status === 'Closed') &&
+            {/* RFx C3 (AR-03, NR-3 BR-07) — THE PANEL'S AWARD IS THE EVENT
+                PAGE'S, FOR EVERY RFQ. The one-winner pick and its
+                single-winner dispatch are gone: a legacy RFQ awarded from here
+                skipped the split rules. Every RFQ that can still be awarded
+                (Open, Closed, Partly awarded) links to the one award panel,
+                as a tiered RFQ always did. The seat's award authority is read
+                here too, so a seat without it is told whose act it is. */}
+            {(selectedRfq.status === 'Open' ||
+              selectedRfq.status === 'Closed' ||
+              selectedRfq.status === 'Partly awarded') &&
               quotesForSelected.length > 0 && (
                 <section className="bg-teal-soft border border-teal/20 rounded-md p-4" data-testid="panel-tiered-award">
                   <h3 className="text-section text-text-primary mb-2">{t('sourcing.award.title')}</h3>
-                  <p className="text-sm text-text-secondary mb-2">{t('rfqCompare.panel.awardOnEvent')}</p>
-                  <Link
-                    to={`/buyer/rfq/${selectedRfq.id}`}
-                    className="text-sm text-action hover:underline"
-                    data-testid="panel-open-tiered-award"
-                  >
-                    {t('rfqCompare.panel.openAward')}
-                  </Link>
-                </section>
-              )}
-
-            {!isTieredRfq(selectedRfq) &&
-              selectedRfq.status === 'Open' &&
-              isAllResponded(selectedRfq) &&
-              quotesForSelected.length > 0 && (
-                <section className="bg-teal-soft border border-teal/20 rounded-md p-4">
-                  <h3 className="text-section text-text-primary mb-2">
-                    {t('sourcing.award.title')}
-                  </h3>
                   {/* BL-64 / BR-01a — no quoting supplier passes the gate: the
-                      award is impossible, and the drawer says so instead of
-                      prompting a selection no row can accept. Only once the
-                      gate read has answered — a pass is never assumed, and
-                      neither is a universal fail. */}
+                      award is impossible, and the panel says so. */}
                   {noneAwardable ? (
-                    <p className="text-sm text-warning-hover mb-3" role="status" data-testid="drawer-award-none-qualified">
+                    <p className="text-sm text-warning-hover mb-2" role="status" data-testid="drawer-award-none-qualified">
                       {t('rfx.gate.noAward')}
                     </p>
                   ) : (
-                    <p className="text-sm text-text-secondary mb-3">
-                      {selectedQuoteId
-                        ? t('sourcing.award.selected', {
-                            name:
-                              supplierNameById.get(
-                                quotesForSelected.find(
-                                  (q) => q.id === selectedQuoteId,
-                                )?.supplierId ?? '',
-                              ) ?? '—',
-                          })
-                        : t('sourcing.award.selectPrompt')}
-                    </p>
+                    <p className="text-sm text-text-secondary mb-2">{t('rfqCompare.panel.awardOnEvent')}</p>
                   )}
-                  <div className="flex flex-wrap items-center gap-2">
-                    {/* AWARD — the drawer's own act, and the last one. Its
-                        notice replaces its button in place; it no longer
-                        speaks for `quotation:review`, which now answers for
-                        itself in the comparison cells above. */}
-                    {noneAwardable ? null : rfqVerbs.award.kind === 'held' ? (
-                      <Button
-                        variant="outline"
-                        icon={Trophy}
-                        disabled={!selectedQuoteId || awardMutation.isPending}
-                        onClick={handleAward}
-                      >
-                        {awardMutation.isPending
-                          ? t('sourcing.award.submitting')
-                          : t('sourcing.award.submit')}
-                      </Button>
-                    ) : (
+                  <div className="flex flex-wrap items-center gap-3">
+                    <Link
+                      to={`/buyer/rfq/${selectedRfq.id}`}
+                      className="text-sm text-action hover:underline"
+                      data-testid="panel-open-tiered-award"
+                    >
+                      {t('rfqCompare.panel.openAward')}
+                    </Link>
+                    {rfqVerbs.award.kind !== 'held' && (
                       <HandoffNotice availability={rfqVerbs.award} testId="handoff-rfq-award" />
                     )}
-                    {/* "Reject all" stood here with no handler. Rejecting is
-                        the award cascade's act (`t_quotation_reject`), not a
-                        buyer verb on its own, so the dead button is removed. */}
                   </div>
                 </section>
               )}

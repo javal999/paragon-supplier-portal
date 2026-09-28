@@ -29,8 +29,10 @@ import type {
   RfpPricingOption,
   RfpPricingRequest,
 } from '../../services/sourcing/types';
-import type { RfpResponseView } from '../../services/sourcing/views';
-import { IndicativePill, moneyIn } from './rfxAuthoringDisplay';
+import type { RfpFirmPriceView, RfpResponseView } from '../../services/sourcing/views';
+import { rfpOptionRef } from '../../services/sourcing/rfpFirmOffer';
+import StatusPill from '../../components/ui-v2/StatusPill';
+import { FirmPill, IndicativePill, moneyIn } from './rfxAuthoringDisplay';
 import { refusalCode } from './RfxQuestionEditor';
 
 const inputClass =
@@ -463,12 +465,62 @@ export const RfpPricingForm: React.FC<{
 
 // ── The buyer's comparison: options × suppliers ─────────────────────────────
 
+/** One supplier's indicative prices on one option, by quantity point. */
+const IndicativePriceList: React.FC<{ prices: readonly RfpIndicativePrice[]; currency: string }> = ({
+  prices,
+  currency,
+}) => (
+  <ul className="space-y-0.5">
+    {prices.map((x) => (
+      <li key={x.qty} className="text-sm">
+        <Data className="text-text-tertiary">{qtyText(x.qty)}</Data>
+        {' · '}
+        <Data>{moneyIn(x.unitPrice, currency)}</Data>
+      </li>
+    ))}
+  </ul>
+);
+
+/**
+ * RFx D3 (NR-2 BR-03, AC-02, edge case 1) — the firm prices one supplier holds
+ * on one option, from a firm-offer round: labelled **Firm** with their
+ * validity, beside the indicative prices of the same cell, which keep their
+ * own label. Every other RFP price on the page stays Indicative.
+ */
+const FirmPricesInCell: React.FC<{ prices: readonly RfpFirmPriceView[]; currency: string; testId: string }> = ({
+  prices,
+  currency,
+  testId,
+}) => {
+  const { t } = useTranslation();
+  const sorted = [...prices].sort((a, b) => a.qty - b.qty);
+  return (
+    <div className="mt-2 pt-2 border-t border-border-subtle space-y-0.5" data-testid={testId}>
+      <FirmPill />
+      <ul className="space-y-0.5">
+        {sorted.map((p) => (
+          <li key={p.qty} className="text-sm">
+            <Data className="text-text-tertiary">{qtyText(p.qty)}</Data>
+            {' · '}
+            <Data>{moneyIn(p.unitPrice, currency)}</Data>
+          </li>
+        ))}
+      </ul>
+      <div className="text-xs text-text-tertiary">
+        {t('rfx.firm.validUntil', { date: formatDate(sorted[0]!.validUntil) })}
+      </div>
+    </div>
+  );
+};
+
 export const RfpPricingComparison: React.FC<{
   request: RfpPricingRequest;
   currency: string;
   responses: readonly RfpResponseView[];
   testId: string;
-}> = ({ request, currency, responses, testId }) => {
+  /** RFx D3 — the firm prices in force from the RFP's firm-offer rounds (the buyer's read). */
+  firmPrices?: readonly RfpFirmPriceView[];
+}> = ({ request, currency, responses, testId, firmPrices = [] }) => {
   const { t } = useTranslation();
   const proposed = responses.flatMap((r) =>
     (r.pricing?.proposedOptions ?? []).map((o) => ({ option: o, by: r })),
@@ -477,6 +529,8 @@ export const RfpPricingComparison: React.FC<{
     ...request.options.map((option) => ({ option })),
     ...proposed,
   ];
+  const firmOn = (ref: string, supplierId?: string) =>
+    firmPrices.filter((p) => p.optionRef === ref && (supplierId === undefined || p.supplierId === supplierId));
 
   return (
     <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto" data-testid={testId}>
@@ -499,41 +553,47 @@ export const RfpPricingComparison: React.FC<{
             ))}
           </TableHeader>
           <tbody>
-            {rows.map(({ option, by }) => (
-              <TableRow key={`${by?.id ?? 'pti'}-${option.id}`} data-testid={`${testId}-row-${option.id}`}>
-                <TableCell className="align-top">
-                  <div className="text-sm text-text-primary">{option.title}</div>
-                  {option.description && <div className="text-xs text-text-tertiary">{option.description}</div>}
-                  {by && (
-                    <div className="text-xs text-text-tertiary mt-1">
-                      {t('rfxa.pricing.proposedBy', { supplier: by.supplierName })}
-                    </div>
-                  )}
-                </TableCell>
-                {responses.map((r) => {
-                  const prices = (r.pricing?.prices ?? [])
-                    .filter((x) => x.optionId === option.id && (!by || by.id === r.id))
-                    .sort((a, b) => a.qty - b.qty);
-                  return (
-                    <TableCell key={r.id} className="align-top" data-testid={`${testId}-cell-${option.id}-${r.supplierId}`}>
-                      {prices.length === 0 ? (
-                        <span className="text-xs text-text-tertiary">{t('rfxa.pricing.notPriced')}</span>
-                      ) : (
-                        <ul className="space-y-0.5">
-                          {prices.map((x) => (
-                            <li key={x.qty} className="text-sm">
-                              <Data className="text-text-tertiary">{qtyText(x.qty)}</Data>
-                              {' · '}
-                              <Data>{moneyIn(x.unitPrice, currency)}</Data>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </TableCell>
-                  );
-                })}
-              </TableRow>
-            ))}
+            {rows.map(({ option, by }) => {
+              const ref = rfpOptionRef(option.id, by?.supplierId);
+              const firmBy = new Set(firmOn(ref).map((p) => p.supplierId));
+              return (
+                <TableRow key={`${by?.id ?? 'pti'}-${option.id}`} data-testid={`${testId}-row-${option.id}`}>
+                  <TableCell className="align-top">
+                    <div className="text-sm text-text-primary">{option.title}</div>
+                    {option.description && <div className="text-xs text-text-tertiary">{option.description}</div>}
+                    {by && (
+                      <div className="text-xs text-text-tertiary mt-1">
+                        {t('rfxa.pricing.proposedBy', { supplier: by.supplierName })}
+                      </div>
+                    )}
+                    {firmBy.size === 1 && (
+                      <StatusPill variant="neutral" className="mt-1">
+                        <span data-testid={`${testId}-single-${ref}`}>{t('rfx.firm.single')}</span>
+                      </StatusPill>
+                    )}
+                  </TableCell>
+                  {responses.map((r) => {
+                    const prices = (r.pricing?.prices ?? [])
+                      .filter((x) => x.optionId === option.id && (!by || by.id === r.id))
+                      .sort((a, b) => a.qty - b.qty);
+                    const firm = firmOn(ref, r.supplierId);
+                    return (
+                      <TableCell key={r.id} className="align-top" data-testid={`${testId}-cell-${option.id}-${r.supplierId}`}>
+                        {firm.length > 0 && prices.length > 0 && <IndicativePill />}
+                        {prices.length === 0 ? (
+                          <span className="text-xs text-text-tertiary">{t('rfxa.pricing.notPriced')}</span>
+                        ) : (
+                          <IndicativePriceList prices={prices} currency={currency} />
+                        )}
+                        {firm.length > 0 && (
+                          <FirmPricesInCell prices={firm} currency={currency} testId={`${testId}-firm-${ref}-${r.supplierId}`} />
+                        )}
+                      </TableCell>
+                    );
+                  })}
+                </TableRow>
+              );
+            })}
             <TableRow data-testid={`${testId}-sample`}>
               <TableCell className="align-top text-sm text-text-primary">{t('rfxa.pricing.sampleOffer')}</TableCell>
               {responses.map((r) => (

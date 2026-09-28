@@ -15,6 +15,8 @@ import { rfqStore } from '../../services/data/mock/stores/rfqStore';
 import { quotationStore } from '../../services/data/mock/stores/quotationStore';
 import { rfqTemplateStore } from '../../services/sourcing/rfqTemplates';
 import { mockDataService } from '../../services/data/mock/mockDataService';
+import { awardStore, resetRfxStores } from '../../services/data/mock/stores/rfxStores';
+import { sdcClock } from '../../services/sdc';
 
 // `<Toaster />` lives in AppRouter, not in the page, so it is mounted here for
 // the toasts these specs read (the BuyerComplianceRequest precedent).
@@ -296,6 +298,68 @@ describe('RFP → RFQ pre-fill (/buyer/rfq?rfp=<id>&options=<ids>, spec D3)', ()
     renderWithProviders(<BuyerSourcing />, { route: '/buyer/rfq?rfp=rfp-002&options=opt-nope' });
     expect(await screen.findByText('RFP options not found')).toBeInTheDocument();
     expect(screen.queryByPlaceholderText(/e\.g\. Q3 2026 Fragrance Sourcing/i)).not.toBeInTheDocument();
+  });
+
+  // RFx D3 (NR-2 BR-08, AC-06) — the RFP → RFQ path end to end: an option an
+  // award in force on the RFP placed is NOT offered by the pre-fill, and the
+  // create payload carries the refs of the options the RFQ does source, so
+  // the RFP can no longer award them either.
+  describe('with an award in force on the RFP', () => {
+    beforeEach(() => {
+      resetRfxStores();
+      sdcClock.reset();
+      awardStore.add({
+        id: 'AWD-RFP-D3',
+        eventType: 'rfp',
+        eventId: 'rfp-002',
+        awardedAt: '2026-09-20T09:00:00.000Z',
+        lines: [
+          {
+            supplierId: 'sup-007',
+            optionRef: 'opt-full-set',
+            firmOfferId: 'rfo-d3',
+            sharePct: 100,
+            quantity: 10_000,
+            splitBasis: 'pct',
+            awardTierQty: 10_000,
+          },
+        ],
+        reason: 'Full set awarded on the RFP.',
+        notAwardedSupplierIds: [],
+      });
+    });
+    afterEach(() => resetRfxStores());
+
+    it('the awarded option is left out, and the saved RFQ carries the refs it sources', async () => {
+      renderWithProviders(<BuyerSourcing />, { route: '/buyer/rfq?rfp=rfp-002&options=opt-full-set,opt-pump-cap' });
+      await screen.findByPlaceholderText(/e\.g\. Q3 2026 Fragrance Sourcing/i);
+      // One option left, one item: the first break alone (10,000 × 1).
+      expect(screen.getByLabelText('Total quantity')).toHaveValue('10000');
+      await fillScope();
+      next();
+      expect(screen.getByTestId('rfq-item-1-description')).toHaveValue(
+        'Pump and cap only — PTI sources the bottle; you supply a matching pump and over-cap.',
+      );
+      // KNOWN-BAD twin — the awarded "Full set" is not an item.
+      expect(screen.queryByTestId('rfq-item-2')).not.toBeInTheDocument();
+      fireEvent.change(screen.getByTestId('rfq-item-1-value-component'), { target: { value: 'Pump and over-cap' } });
+      fireEvent.change(screen.getByTestId('rfq-item-1-value-material'), { target: { value: 'PP' } });
+      fireEvent.change(screen.getByTestId('rfq-item-1-value-colour'), { target: { value: 'White' } });
+      fireEvent.change(screen.getByTestId('rfq-item-1-value-netVolume'), { target: { value: '150' } });
+      next();
+      next();
+      next();
+      await screen.findByTestId('invitee-row-sup-007');
+      next();
+      fillTerms();
+      next();
+      next(); // + the Documents step (B3), optional, so it passes empty
+      fireEvent.click(await screen.findByRole('button', { name: 'Save RFQ draft' }));
+      await waitFor(() => expect(newest()).toBeDefined());
+      const rfq = newest()!;
+      expect(rfq.sourceRfpId).toBe('rfp-002');
+      expect(rfq.sourceRfpOptionRefs).toEqual(['opt-pump-cap']);
+    });
   });
 
   it('a seat without rfq:create gets no wizard from the link (the entrance is the unit)', async () => {

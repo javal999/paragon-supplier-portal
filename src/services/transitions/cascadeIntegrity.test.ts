@@ -205,7 +205,8 @@ describe('cascade-map coverage gate — the population', () => {
     // verbs, today. Nothing in the tree keys by it — and this file is what keeps
     // that true for cascades specifically.
     expect(colliding.length).toBeGreaterThan(0);
-    expect(bySuffix.get('award')).toEqual(['t_rfq_award', 't_quotation_award']);
+    // RFx D2 — the RFP award joins the same bare verb, by design.
+    expect(bySuffix.get('award')).toEqual(['t_rfq_award', 't_quotation_award', 't_rfp_award']);
   });
 });
 

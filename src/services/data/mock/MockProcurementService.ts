@@ -34,6 +34,8 @@ import {
   negotiationRoundViews,
   rfiEventViews,
   rfpEventViews,
+  rfpAwardViews,
+  rfpOfferRoundViews,
   rfqGateViews,
   rfxNow,
 } from './rfxReadModel';
@@ -43,6 +45,8 @@ import type {
   NegotiationRoundView,
   RfiEventView,
   RfpEventView,
+  RfpAwardView,
+  RfpOfferRoundView,
   RfqSupplierGateView,
 } from '../../sourcing/views';
 import { quotationStore } from './stores/quotationStore';
@@ -756,6 +760,18 @@ export class MockProcurementService implements IProcurementService {
   async getNegotiationRounds(scope: QueryScope): Promise<Page<NegotiationRoundView>> {
     // REQ-E03-05 BR-05 — a supplier reads only its own thread.
     return { items: [...negotiationRoundViews(rfxNow(), scope.personaType === 'buyer' ? null : scope.supplierId ?? '')] };
+  }
+
+  async getRfpOfferRounds(scope: QueryScope): Promise<Page<RfpOfferRoundView>> {
+    // NR-2 — a supplier reads only the rounds it was asked to, and only its own
+    // offer and firm prices; the rule lives in the read model, once.
+    return { items: [...rfpOfferRoundViews(rfxNow(), scope.personaType === 'buyer' ? null : scope.supplierId ?? '')] };
+  }
+
+  async getRfpAwards(scope: QueryScope): Promise<Page<RfpAwardView>> {
+    // RFx D2 — a supplier reads only its own outcome; the rule lives in the
+    // read model, once.
+    return { items: [...rfpAwardViews(scope.personaType === 'buyer' ? null : scope.supplierId ?? '')] };
   }
 
   async getRfqEngagement(scope: QueryScope): Promise<Page<RfqEngagementView>> {

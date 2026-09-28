@@ -368,16 +368,63 @@ describe('NR-1 BR-03 — the quotation submit verb', () => {
   });
 });
 
+// B4 — a revised quote in a negotiation round carries its files forward
+// (NR-1 BR-09), so `t_quotation_revise` runs the same document rule as submit.
+describe('NR-1 BR-03 / BR-09 — the quotation revise verb (negotiation round)', () => {
+  const revise = (documents?: unknown[]) => ({
+    roundId: 'nr-0001',
+    rfqId: 'rfq-014',
+    supplierId: 'sup-007',
+    roundNumber: 1,
+    supersedesQuotationId: 'qt-014a',
+    unitPrice: 1_000,
+    leadTimeDays: 18,
+    currency: 'IDR',
+    ...(documents ? { documents } : {}),
+  });
+
+  it('KNOWN-BAD — a revision missing the required document is refused, naming it', async () => {
+    rfqStore.update('rfq-014', (r) => ({ ...r, documentRequests: [HALAL] }));
+    const res = await svc.dispatch(sup007, { transitionId: 't_quotation_revise', entity: 'quotation', payload: revise() });
+    expect(res.status).toBe('failed');
+    expect(res.reason).toMatch(/DOCUMENT_REQUIRED_MISSING: Halal certificate/);
+  });
+
+  it('KNOWN-GOOD — the same revision carrying the certificate is accepted and stores it', async () => {
+    rfqStore.update('rfq-014', (r) => ({ ...r, documentRequests: [HALAL] }));
+    const res = await svc.dispatch(sup007, {
+      transitionId: 't_quotation_revise',
+      entity: 'quotation',
+      payload: revise([halalDoc('sup-007')]),
+    });
+    expect(res.status, res.reason).toBe('done');
+    expect(quotationStore.get(res.entityId!)!.documents?.[0].requestId).toBe(HALAL.id);
+  });
+
+  it('KNOWN-BAD — a revision carrying a ZIP is refused by the file limits', async () => {
+    const res = await svc.dispatch(sup007, {
+      transitionId: 't_quotation_revise',
+      entity: 'quotation',
+      payload: revise([{ id: 'd-zip', attachment: file('samples.zip') }]),
+    });
+    expect(res.status).toBe('failed');
+    expect(res.reason).toMatch(/FILE_TYPE_NOT_ALLOWED: samples.zip/);
+  });
+});
+
 describe('NR-1 — the RFI response verbs carry documents too', () => {
   it('an RFI draft save stores the documents, replacing them on the next save', async () => {
-    const payload = (documents: unknown[]) => ({ rfiId: 'rfi-001', supplierId: 'sup-007', answers: [], documents });
-    const first = await svc.dispatch(sup007, {
+    // sup-013 holds a DRAFT on rfi-001 (sup-007's is Submitted, and a save on a
+    // Submitted response is refused RESPONSE_ALREADY_SUBMITTED since B2).
+    const sup013 = supplier('sup-013');
+    const payload = (documents: unknown[]) => ({ rfiId: 'rfi-001', supplierId: 'sup-013', answers: [], documents });
+    const first = await svc.dispatch(sup013, {
       transitionId: 't_rfiresponse_save',
       entity: 'rfiResponse',
       payload: payload([{ id: 'd-a', attachment: file('a.pdf') }]),
     });
     expect(first.status, first.reason).toBe('done');
-    await svc.dispatch(sup007, {
+    await svc.dispatch(sup013, {
       transitionId: 't_rfiresponse_save',
       entity: 'rfiResponse',
       payload: payload([{ id: 'd-b', attachment: file('b.pdf') }]),

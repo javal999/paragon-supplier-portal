@@ -43,7 +43,7 @@ import {
   useRfqClarifications,
   useRfqEngagement,
 } from '../services/query/hooks';
-import SessionAttachments from '../components/ui-v2/SessionAttachments';
+import ResponseDocumentsSection, { type DocumentDraft } from './rfx/ResponseDocumentsSection';
 import TieredQuoteForm, { SampleOfferFields } from './rfqs/TieredQuoteForm';
 import {
   RfqClarifications,
@@ -58,7 +58,8 @@ import {
   type TieredDraft,
 } from './rfqs/tieredQuoteModel';
 import { rfqResponseRefusal } from './rfqs/rfqResponseText';
-import { tiersForItem, type AttachmentMeta } from '../services/sourcing/rfqModel';
+import { tiersForItem } from '../services/sourcing/rfqModel';
+import { documentsOf, responseDocumentsRefusal } from '../services/transitions/rfxDocumentRules';
 import type { RfqClarificationView, RfqEngagementView } from '../services/sourcing/rfqResponse';
 import { useQuotationSubmit } from '../services/query/commandHooks';
 import { useVerbAvailability } from '../hooks/useVerbAvailability';
@@ -307,7 +308,8 @@ interface QuoteForm {
   canSample: boolean | null;
   sampleReadyDate: string;
   paymentTermsOffered: string;
-  attachments: readonly AttachmentMeta[];
+  /** NR-1 — the Documents section: the requested slots and "Other documents". */
+  documents: readonly DocumentDraft[];
 }
 
 const emptyQuoteForm: QuoteForm = {
@@ -322,7 +324,7 @@ const emptyQuoteForm: QuoteForm = {
   canSample: null,
   sampleReadyDate: '',
   paymentTermsOffered: '',
-  attachments: [],
+  documents: [],
 };
 
 const EvalBar: React.FC<{ criteria: OpenRFQ['evaluationCriteria'] }> = ({
@@ -1022,7 +1024,8 @@ const RfqWorkspace: React.FC<RfqWorkspaceProps> = ({
       paymentTermsOffered: q.quote.paymentTermsOffered,
       canSample: q.quote.sampleOffer ? q.quote.sampleOffer.canSample : null,
       sampleReadyDate: q.quote.sampleOffer?.readyDate ?? '',
-      attachments: q.quote.attachments ?? [],
+      // A quote from before NR-1 carries `attachments`: read as documents.
+      documents: documentsOf(q.quote),
     });
     setTieredDraft((rfq.items ?? []).length > 0 ? draftFromQuote(rfq, q.quote) : null);
     setSupersedes(q.quote.id);
@@ -1186,6 +1189,21 @@ const RfqWorkspace: React.FC<RfqWorkspaceProps> = ({
       });
       return;
     }
+    // NR-1 BR-03 to BR-05 — the rule `quotation_documents_complete` binds,
+    // said before anything is sent; the section names the slot too.
+    const documentRefusal = responseDocumentsRefusal(
+      effectiveQuotePanelRFQ.rfq.documentRequests ?? [],
+      form.documents,
+      0,
+    );
+    if (documentRefusal) {
+      toast({
+        variant: 'error',
+        title: t('rfqs.toast.submitFailed.title'),
+        description: rfqResponseRefusal(t, documentRefusal),
+      });
+      return;
+    }
     const missing: string[] = [];
     if (!form.validUntil.trim()) missing.push(t('rfqs.field.validUntil'));
     if (missing.length > 0) {
@@ -1218,7 +1236,7 @@ const RfqWorkspace: React.FC<RfqWorkspaceProps> = ({
       {
         ...payload,
         // RFx spec 2026-09-21 — the sample offer is SAVED now (it was collected
-        // and dropped), and the attachments replace the dead PDF drop area.
+        // and dropped). NR-1 — the files travel as `documents` (B4).
         ...(form.canSample !== null
           ? {
               sampleOffer: form.canSample
@@ -1226,7 +1244,7 @@ const RfqWorkspace: React.FC<RfqWorkspaceProps> = ({
                 : { canSample: false },
             }
           : {}),
-        ...(form.attachments.length > 0 ? { attachments: form.attachments.map((a) => ({ ...a })) } : {}),
+        ...(form.documents.length > 0 ? { documents: form.documents.map((d) => ({ ...d })) } : {}),
         ...(supersedes ? { supersedesQuotationId: supersedes } : {}),
       },
       effectiveQuotePanelRFQ.rfqNumber,
@@ -1690,11 +1708,11 @@ const RfqWorkspace: React.FC<RfqWorkspaceProps> = ({
                 readyDate={form.sampleReadyDate}
                 onChange={(canSample, sampleReadyDate) => setForm({ ...form, canSample, sampleReadyDate })}
               />
-              <SessionAttachments
-                label={t('rfqResponse.attachments')}
-                testId="quote-attachments"
-                value={form.attachments}
-                onChange={(attachments) => setForm({ ...form, attachments })}
+              <ResponseDocumentsSection
+                requests={effectiveQuotePanelRFQ.rfq.documentRequests ?? []}
+                value={form.documents}
+                onChange={(documents) => setForm({ ...form, documents })}
+                testId="quote-documents"
               />
             </FormSection>
             </>
