@@ -26,6 +26,7 @@ import { rfiEventStore, rfiResponseStore, rfpEventStore, rfpResponseStore } from
 import { rfqStore } from './stores/rfqStore';
 import { revisedRfiResponse, revisedRfpResponse } from '../../sourcing/responseVersions';
 import { sdcClock } from '../../sdc';
+import { NO_PERSON } from '../../../context/noPerson';
 
 /** Files held on attachment answers: they count toward the 30 per response (D-3). */
 const answerFiles = (answers: readonly RfiAnswer[] | undefined): number =>
@@ -70,7 +71,7 @@ bindPolicyHook(POLICY_HOOKS.RFX_RESPONSE_DOCUMENTS_WITHIN_LIMITS, ({ payload }) 
 // BR-08: the response is already Submitted) the rule judges the revised
 // response the payload would leave, so a revise that drops a required
 // document is refused as a submit would be.
-bindPolicyHook(POLICY_HOOKS.RFX_RESPONSE_DOCUMENTS_COMPLETE, ({ target, entityId, currentState, payload }) => {
+bindPolicyHook(POLICY_HOOKS.RFX_RESPONSE_DOCUMENTS_COMPLETE, ({ target, entityId, currentState, payload, scope }) => {
   const stored = target.readEntity(entityId) as (RfiResponse | RfpResponse) | null;
   if (!stored) return { ok: false, reason: 'response not found' };
   let response: RfiResponse | RfpResponse = stored;
@@ -78,7 +79,11 @@ bindPolicyHook(POLICY_HOOKS.RFX_RESPONSE_DOCUMENTS_COMPLETE, ({ target, entityId
     const parsed = payloadDocuments(payload);
     if (!parsed.ok) return { ok: false, reason: parsed.reason };
     const now = sdcClock.now();
-    response = 'rfiId' in stored ? revisedRfiResponse(stored, payload, now) : revisedRfpResponse(stored, payload, now);
+    const actor = scope.actor ?? NO_PERSON;
+    response =
+      'rfiId' in stored
+        ? revisedRfiResponse(stored, payload, now, actor)
+        : revisedRfpResponse(stored, payload, now, actor);
   }
   const rfi = 'rfiId' in response ? response : null;
   const event = rfi ? rfiEventStore.get(rfi.rfiId) : rfpEventStore.get((response as RfpResponse).rfpId);

@@ -1699,7 +1699,7 @@ const quotationTarget: CommandTarget = {
     const sid = String(payload.supplierId);
     return rfq && rfq.invitedSupplierIds.includes(sid) ? sid : null;
   },
-  create: (payload, toState) => {
+  create: (payload, toState, scope) => {
     const quoteNumber = quotationStore.nextNumber();
     const str = (k: string) => (typeof payload[k] === 'string' ? (payload[k] as string) : '');
     const num = (k: string) => (typeof payload[k] === 'number' ? (payload[k] as number) : 0);
@@ -1779,9 +1779,22 @@ const quotationTarget: CommandTarget = {
         ? { attachments: payload.attachments as Quotation['attachments'] }
         : {}),
       // NR-1 BR-01 — the supplier's documents, judged on submit by
-      // `quotation_documents_complete`; upload times are the store's.
+      // `quotation_documents_complete`. CE-11i — upload times are the store's
+      // and uploaders the SESSION's; a file this supplier already sent on an
+      // earlier quote of this RFQ (a negotiation-round revise carries its files
+      // forward) keeps its first stamp rather than being re-stamped as new.
       ...(Array.isArray(payload.documents) && payload.documents.length > 0
-        ? { documents: stampDocuments(payload.documents, [], rfxNow()) }
+        ? {
+            documents: stampDocuments(
+              payload.documents,
+              quotationStore
+                .all()
+                .filter((q) => q.rfqId === str('rfqId') && q.supplierId === str('supplierId'))
+                .flatMap((q) => q.documents ?? []),
+              rfxNow(),
+              scope.actor ?? NO_PERSON,
+            ),
+          }
         : {}),
       // DECLARED-SIMULATED axes — documented baseline, passed through the engine
       // and marked "Simulated" at read. Never zero, never a profile lookup.
@@ -3034,10 +3047,10 @@ const rfiResponseTarget: CommandTarget = {
   // (Submitted, state-preserving). A revise applies the payload's content
   // first. Both append the result as the next version (NR-1 BR-08): the
   // earlier versions are copied forward untouched, never edited.
-  applyTransition: (id, toState, payload) => {
+  applyTransition: (id, toState, payload, scope) => {
     const now = sdcClock.now();
     rfiResponseStore.update(id, (r) => {
-      const content = r.status === 'Submitted' ? revisedRfiResponse(r, payload, now) : r;
+      const content = r.status === 'Submitted' ? revisedRfiResponse(r, payload, now, scope.actor ?? NO_PERSON) : r;
       const next: RfiResponse = {
         ...content,
         status: toState as RfxResponseStatus,
@@ -3052,7 +3065,7 @@ const rfiResponseTarget: CommandTarget = {
     const sid = String(payload.supplierId);
     return rfxInvited(rfiEventStore.get(String(payload.rfiId)), sid) ? sid : null;
   },
-  create: (payload, toState) => {
+  create: (payload, toState, scope) => {
     const rfiId = String(payload.rfiId);
     const supplierId = String(payload.supplierId);
     const hasAnswers = Array.isArray(payload.answers);
@@ -3068,7 +3081,7 @@ const rfiResponseTarget: CommandTarget = {
     // NR-1 BR-01 — the documents REPLACE the stored set, like the answers; a
     // save that carries none leaves them alone. Upload times are the store's.
     const documents = Array.isArray(payload.documents)
-      ? stampDocuments(payload.documents, existing?.documents ?? [], sdcClock.now())
+      ? stampDocuments(payload.documents, existing?.documents ?? [], sdcClock.now(), scope.actor ?? NO_PERSON)
       : undefined;
     if (existing) {
       rfiResponseStore.update(existing.id, (r) => ({
@@ -3251,10 +3264,10 @@ const rfpResponseTarget: CommandTarget = {
   readEntity: (id) => rfpResponseStore.get(id) ?? null,
   // Submit and revise, as the RFI response: the revised content (if any) is
   // applied, then appended as the next version (NR-1 BR-08).
-  applyTransition: (id, toState, payload) => {
+  applyTransition: (id, toState, payload, scope) => {
     const now = sdcClock.now();
     rfpResponseStore.update(id, (r) => {
-      const content = r.status === 'Submitted' ? revisedRfpResponse(r, payload, now) : r;
+      const content = r.status === 'Submitted' ? revisedRfpResponse(r, payload, now, scope.actor ?? NO_PERSON) : r;
       const next: RfpResponse = {
         ...content,
         status: toState as RfxResponseStatus,
@@ -3269,7 +3282,7 @@ const rfpResponseTarget: CommandTarget = {
     const sid = String(payload.supplierId);
     return rfxInvited(rfpEventStore.get(String(payload.rfpId)), sid) ? sid : null;
   },
-  create: (payload, toState) => {
+  create: (payload, toState, scope) => {
     const rfpId = String(payload.rfpId);
     const supplierId = String(payload.supplierId);
     const hasAnswers = Array.isArray(payload.answers);
@@ -3291,7 +3304,7 @@ const rfpResponseTarget: CommandTarget = {
     const existing = rfpResponseStore.all().find((r) => r.rfpId === rfpId && r.supplierId === supplierId);
     // NR-1 BR-01 — as the RFI response: replaced when sent, store-stamped.
     const documents = Array.isArray(payload.documents)
-      ? stampDocuments(payload.documents, existing?.documents ?? [], now)
+      ? stampDocuments(payload.documents, existing?.documents ?? [], now, scope.actor ?? NO_PERSON)
       : undefined;
     if (existing) {
       rfpResponseStore.update(existing.id, (r) => ({
@@ -3611,10 +3624,11 @@ bindPolicyHook(POLICY_HOOKS.RFX_RESPONSE_NOT_SUBMITTED, ({ payload }) => {
 // question, and the deadline in force for THIS supplier not yet passed. The
 // refusal names the questions. On `t_rfiresponse_revise` (the response is
 // already Submitted) the rule judges the REVISED content the payload carries.
-bindPolicyHook(POLICY_HOOKS.RFI_SUBMIT_COMPLETE, ({ target, entityId, currentState, payload }) => {
+bindPolicyHook(POLICY_HOOKS.RFI_SUBMIT_COMPLETE, ({ target, entityId, currentState, payload, scope }) => {
   const stored = target.readEntity(entityId) as RfiResponse | null;
   if (!stored) return { ok: false, reason: 'response not found' };
-  const response = currentState === 'Submitted' ? revisedRfiResponse(stored, payload, rfxNow()) : stored;
+  const response =
+    currentState === 'Submitted' ? revisedRfiResponse(stored, payload, rfxNow(), scope.actor ?? NO_PERSON) : stored;
   const event = rfiEventStore.get(response.rfiId);
   if (!event) return { ok: false, reason: 'RFI not found' };
   const deadline = effectiveDeadline(event.responseDeadline, event.invitees, response.supplierId);
@@ -3700,10 +3714,11 @@ bindPolicyHook(POLICY_HOOKS.RFX_RESPONSE_ACCEPTANCE_GATE, ({ payload }) => {
 
 // REQ-E03-04 — every asked term answered, and A DEVIATION CARRIES A COMMENT.
 // On `t_rfpresponse_revise` the rule judges the revised proposal (NR-1 BR-08).
-bindPolicyHook(POLICY_HOOKS.RFP_SUBMIT_TERMS_ANSWERED, ({ target, entityId, currentState, payload }) => {
+bindPolicyHook(POLICY_HOOKS.RFP_SUBMIT_TERMS_ANSWERED, ({ target, entityId, currentState, payload, scope }) => {
   const stored = target.readEntity(entityId) as RfpResponse | null;
   if (!stored) return { ok: false, reason: 'proposal not found' };
-  const response = currentState === 'Submitted' ? revisedRfpResponse(stored, payload, rfxNow()) : stored;
+  const response =
+    currentState === 'Submitted' ? revisedRfpResponse(stored, payload, rfxNow(), scope.actor ?? NO_PERSON) : stored;
   const event = rfpEventStore.get(response.rfpId);
   if (!event) return { ok: false, reason: 'RFP not found' };
   const deadline = effectiveDeadline(event.responseDeadline, event.invitees, response.supplierId);

@@ -16,6 +16,10 @@
 //     (`certificateExpired`, D-9: flagged, never refused).
 //   · The VERSION column appears only when a response carries `versions`
 //     (task B2), so it lights up once version history exists.
+//   · UPLOADED BY (CE-11i): the actor the store stamped when the file arrived,
+//     with the supplier it belongs to. While no person can be resolved that is
+//     the RFx lane's own "unnamed user" wording (`rfxActorName`), never a
+//     name; a file stored before the stamp existed reads "Not recorded".
 //
 // No "Download all" control: the ZIP waits for BL-27, and a control that
 // cannot do what it says is a defect.
@@ -37,6 +41,7 @@ import type { ActorAttribution, UnattributedReason } from '../../lib/enforcement
 import { formatBytes, type AttachmentMeta } from '../../services/attachments/sessionAttachments';
 import type { DocumentRequest, ResponseDocument } from '../../services/sourcing/types';
 import { certificateExpired, missingRequiredDocuments } from '../../services/transitions/rfxDocumentRules';
+import { rfxActorName } from './draftEdit';
 
 // ── The open action (shared with the RFI/RFP answer cells) ──────────────────
 
@@ -239,6 +244,7 @@ const SupplierFiles: React.FC<{
             <TableHeaderCell>{t('rfxFiles.col.type')}</TableHeaderCell>
             <TableHeaderCell>{t('rfxFiles.col.size')}</TableHeaderCell>
             <TableHeaderCell>{t('rfxFiles.col.uploaded')}</TableHeaderCell>
+            <TableHeaderCell>{t('rfxFiles.col.uploadedBy')}</TableHeaderCell>
             {showVersion && <TableHeaderCell>{t('rfxFiles.col.version')}</TableHeaderCell>}
             <TableHeaderCell>{t('rfxFiles.col.certificate')}</TableHeaderCell>
             <TableHeaderCell>{t('rfxFiles.col.openedBy')}</TableHeaderCell>
@@ -249,6 +255,7 @@ const SupplierFiles: React.FC<{
                 key={doc.id}
                 doc={doc}
                 request={requests.find((q) => q.id === doc.requestId)}
+                supplierName={response.supplierName}
                 deadline={deadline}
                 version={showVersion ? versionOf(doc, response.versions ?? []) : undefined}
                 testId={`${testId}-file-${doc.id}`}
@@ -265,12 +272,14 @@ const SupplierFiles: React.FC<{
 const DocumentRow: React.FC<{
   doc: ResponseDocument;
   request: DocumentRequest | undefined;
+  /** The supplier the file belongs to (the response's own), shown beside the uploader. */
+  supplierName: string;
   deadline: string;
   /** `undefined` = no version column; `null` = a column with no version known. */
   version: number | null | undefined;
   testId: string;
   onOpened: () => void;
-}> = ({ doc, request, deadline, version, testId, onOpened }) => {
+}> = ({ doc, request, supplierName, deadline, version, testId, onOpened }) => {
   const { t } = useTranslation();
   return (
     <TableRow data-testid={testId}>
@@ -286,6 +295,11 @@ const DocumentRow: React.FC<{
       </TableCell>
       <TableCell className="whitespace-nowrap">
         <Data>{formatDateTime(doc.uploadedAt)}</Data>
+      </TableCell>
+      <TableCell className="text-xs text-text-secondary" data-testid={`${testId}-uploaded-by`}>
+        {doc.uploadedBy
+          ? t('rfxFiles.uploadedByLine', { who: rfxActorName(t, doc.uploadedBy), supplier: supplierName })
+          : t('rfxFiles.uploadedByNotRecorded')}
       </TableCell>
       {version !== undefined && (
         <TableCell data-testid={`${testId}-version`}>

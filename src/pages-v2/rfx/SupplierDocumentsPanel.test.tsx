@@ -18,6 +18,7 @@ import { sessionAttachments } from '../../services/attachments/sessionAttachment
 import type { AttachmentMeta } from '../../services/attachments/sessionAttachments';
 import type { DocumentRequest, ResponseDocument } from '../../services/sourcing/types';
 import BuyerRfp from '../BuyerRfp';
+import { NO_PERSON } from '../../context/noPerson';
 import { SupplierDocumentsPanel } from './SupplierDocumentsPanel';
 
 const BUYER_SEAT = { ...BUYER, businessRoles: SEEDED_SEAT_ROLES.buyer };
@@ -85,6 +86,16 @@ describe('the RFP detail lists every supplier file (rfp-001)', () => {
     const valid = within(panel).getByTestId('rfp-documents-rfp-001-sup-015-file-d-new-cert');
     expect(valid).toHaveTextContent('HLL-0042');
     expect(within(valid).queryByTestId('rfp-documents-rfp-001-sup-015-file-d-new-cert-expired')).toBeNull();
+  });
+
+  it('CE-11i — a document stored before the uploader was recorded reads "Not recorded", never a name', async () => {
+    // `certDoc` is the shape every document had before CE-11i: no `uploadedBy`.
+    const { service } = freshService();
+    renderWithProviders(<BuyerRfp />, { identity: BUYER_SEAT, route: '/buyer/rfp?open=rfp-001', service });
+    const panel = await screen.findByTestId('rfp-documents-rfp-001');
+    const cell = within(panel).getByTestId('rfp-documents-rfp-001-sup-007-file-d-old-uploaded-by');
+    expect(cell).toHaveTextContent(/^Not recorded$/);
+    expect(cell).not.toHaveTextContent('unnamed user');
   });
 
   it('the comparison has a Documents row: Complete, or Missing with the request named', async () => {
@@ -157,6 +168,35 @@ describe('the panel itself', () => {
     );
     expect(within(cell).queryByRole('link')).toBeNull();
     expect(screen.getByTestId('docs-note')).toHaveTextContent(/for this session/i);
+  });
+
+  it('CE-11i — "Uploaded by": the unattributed wording with the supplier, a resolved name, or "Not recorded"', () => {
+    const { service } = freshService();
+    const unattributed: ResponseDocument = { ...certDoc('d-u', '2099-01-01'), uploadedBy: NO_PERSON };
+    const resolved: ResponseDocument = {
+      ...certDoc('d-r', '2099-01-01'),
+      uploadedBy: { kind: 'RESOLVED', person: { personId: 'p-panel-test', displayName: 'Rina Kusuma' } },
+    };
+    const legacy = certDoc('d-l', '2099-01-01');
+    panel(
+      [
+        {
+          id: 'r-1',
+          supplierId: 'sup-007',
+          supplierName: 'PT Kemas',
+          status: 'Submitted',
+          documents: [unattributed, resolved, legacy],
+        },
+      ],
+      service,
+    );
+    // The RFx lane's own wording for NO_PERSON_IN_SESSION (`rfxEdit.who.noPerson`),
+    // with the supplier the file belongs to — never "PTI", which is the buyer.
+    const u = screen.getByTestId('docs-sup-007-file-d-u-uploaded-by');
+    expect(u).toHaveTextContent('an unnamed user (sign-in names nobody yet) at PT Kemas');
+    expect(u).not.toHaveTextContent('PTI');
+    expect(screen.getByTestId('docs-sup-007-file-d-r-uploaded-by')).toHaveTextContent('Rina Kusuma at PT Kemas');
+    expect(screen.getByTestId('docs-sup-007-file-d-l-uploaded-by')).toHaveTextContent(/^Not recorded$/);
   });
 
   it('shows the version column only when a response carries versions (B2)', () => {
