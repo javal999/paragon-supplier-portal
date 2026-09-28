@@ -26,6 +26,8 @@ import { HandoffNotice } from '../components/ui-v2/HandoffNotice';
 import { useToast } from '../hooks/useToast';
 import { useRefusalText } from '../hooks/useRefusalText';
 import { useVerbAvailability } from '../hooks/useVerbAvailability';
+import { useUrlEnumParam } from '../hooks/useUrlEnumParam';
+import FilterChipsBar from '../components/ui-v2/FilterChipsBar';
 import { isLive } from '../services/liveness';
 import { refusedByPolicy } from '../services/transitions/refusalMessage';
 import { POLICY_HOOKS } from '../services/transitions/policyHooks';
@@ -74,6 +76,10 @@ type Panel =
   | { kind: 'series'; poId: string; lineId: string }
   | { kind: 'callOff'; id: string }
   | null;
+
+/** The four exception groups the My Tasks / alerts summaries name (REQ deep-link). */
+type StatusFilter = 'all' | 'awaitingApproval' | 'escalated' | 'atRisk' | 'drift';
+const STATUS_FILTERS: readonly StatusFilter[] = ['all', 'awaitingApproval', 'escalated', 'atRisk', 'drift'];
 
 /** The row action a planner is offered: review, open the draft, or view. */
 const actionKey = (v: CallOffView) =>
@@ -144,6 +150,10 @@ const BuyerCallOffs: React.FC = () => {
   const planAvailability = useVerbAvailability('calloff:plan');
   const reviewAvailability = useVerbAvailability('calloff:review');
   const [panel, setPanel] = useState<Panel>(null);
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  // Deep-link read: `?status=awaitingApproval|escalated|atRisk|drift` narrows
+  // the umbrella sections below to the call-offs the linking task/alert named.
+  useUrlEnumParam('status', STATUS_FILTERS, setStatusFilter);
   const [form, setForm] = useState({ quantity: '', needDate: '', type: 'forecast' as CallOffType, reason: '', comment: '' });
   const [series, setSeries] = useState({ total: '', perCallOff: '', cadence: 'weekly' as ReleaseCadence, firstDate: '' });
   const [seriesRows, setSeriesRows] = useState<SeriesRow[]>([]);
@@ -165,23 +175,42 @@ const BuyerCallOffs: React.FC = () => {
     [views, drilledPo],
   );
 
+  // Deep-link filter (REQ: "every filter needed to show the item's issues is
+  // selected"): the three row-level exceptions narrow which call-offs render
+  // inside a section; `drift` narrows which SECTIONS render, since drift is a
+  // property of the supplier×material umbrella, not of one call-off.
+  const driftKeys = useMemo(
+    () => new Set(deliveryDrift(views).map((d) => `${d.supplierId}|${d.materialCode}`)),
+    [views],
+  );
+  const rowFilterActive =
+    statusFilter === 'awaitingApproval' || statusFilter === 'escalated' || statusFilter === 'atRisk';
+  const matchesStatusFilter = (v: CallOffView): boolean =>
+    statusFilter === 'awaitingApproval'
+      ? v.confirmation === 'Awaiting Approval'
+      : statusFilter === 'escalated'
+        ? v.confirmation === 'Escalated'
+        : v.delivery === 'atRisk';
+
   const sections = useMemo(() => {
     const pos: readonly PurchaseOrder[] = posQuery.data?.items ?? [];
     const all = views.map((v) => v.callOff);
     return pos
       .flatMap((po) =>
-        po.lineItems.map((line) => ({
-          po,
-          line,
-          remaining: umbrellaRemaining(line, all),
-          rows: (drilledViews ?? views)
-            .filter((v) => v.callOff.poLineId === line.id)
-            .sort((a, b) => a.callOff.needDate.localeCompare(b.callOff.needDate)),
-        })),
+        po.lineItems.map((line) => {
+          const baseRows = (drilledViews ?? views).filter((v) => v.callOff.poLineId === line.id);
+          const rows = (rowFilterActive ? baseRows.filter(matchesStatusFilter) : baseRows).sort((a, b) =>
+            a.callOff.needDate.localeCompare(b.callOff.needDate),
+          );
+          return { po, line, remaining: umbrellaRemaining(line, all), rows };
+        }),
       )
       .filter((s) => drilledPo === null || s.po.id === drilledPo)
+      .filter((s) => !rowFilterActive || s.rows.length > 0)
+      .filter((s) => statusFilter !== 'drift' || driftKeys.has(`${s.po.supplierId}|${s.line.materialCode}`))
       .sort((a, b) => b.rows.length - a.rows.length || a.po.poNumber.localeCompare(b.po.poNumber));
-  }, [posQuery.data, views, drilledViews, drilledPo]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [posQuery.data, views, drilledViews, drilledPo, statusFilter, driftKeys]);
 
   if (posQuery.isPending || isPending || drill.kind === 'pending')
     return <LoadingState breadcrumb={crumb} />;
@@ -360,6 +389,25 @@ const BuyerCallOffs: React.FC = () => {
             </div>
           ))}
         </div>
+      )}
+
+      <FilterChipsBar<StatusFilter>
+        options={[
+          { id: 'all', label: t('co.pti.filter.all') },
+          { id: 'awaitingApproval', label: t('co.pti.filter.awaitingApproval'), count: awaitingApproval },
+          { id: 'escalated', label: t('co.pti.filter.escalated'), count: escalated },
+          { id: 'atRisk', label: t('co.pti.filter.atRisk'), count: atRisk },
+          { id: 'drift', label: t('co.pti.filter.drift'), count: drift.length },
+        ]}
+        value={statusFilter}
+        onChange={setStatusFilter}
+        className="mb-4"
+      />
+
+      {statusFilter !== 'all' && sections.length === 0 && (
+        <p className="text-sm text-text-tertiary py-8 text-center" data-testid="calloff-filter-empty">
+          {t('co.pti.filter.empty')}
+        </p>
       )}
 
       <div className="space-y-6">

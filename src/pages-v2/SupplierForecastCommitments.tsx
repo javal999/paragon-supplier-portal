@@ -6,6 +6,7 @@ import {
   PoFilterBanner,
   usePoDrillFilter,
 } from './orders/PoDrillFilter';
+import { useUrlEnumParam } from '../hooks/useUrlEnumParam';
 import { Download, Upload } from 'lucide-react';
 import AppShellV2 from '../components/layout-v2/AppShellV2';
 import PageHeader from '../components/ui-v2/PageHeader';
@@ -123,6 +124,10 @@ const SupplierForecastCommitments: React.FC = () => {
   const [stream, setStream] = useState<ForecastStream | null>(null);
   const [mode, setMode] = useState<ViewMode>('forecast');
   const [material, setMaterial] = useState<string>(params.get('material') ?? '');
+  // Deep-link read: `?stream=` / `?mode=` land a forecast task on the right
+  // stream and view.
+  useUrlEnumParam<ForecastStream>('stream', ['packaging', 'rawMaterial'], setStream);
+  useUrlEnumParam<ViewMode>('mode', ['forecast', 'changes'], setMode);
   const [drafts, setDrafts] = useState<Record<string, RowDraft>>({});
   const [upload, setUpload] = useState<UploadResult | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);

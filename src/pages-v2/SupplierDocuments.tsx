@@ -65,6 +65,7 @@ import { HandoffNotice } from '../components/ui-v2/HandoffNotice';
 import { formatDate } from '../lib/format';
 import { useTranslation } from 'react-i18next';
 import { useRefusalText } from '../hooks/useRefusalText';
+import { useUrlEnumParam } from '../hooks/useUrlEnumParam';
 import { DECLARED_PRESENT } from '../services/data/fixturePresent';
 
 // ⚠️ ANCHORED — this surface rendered values derived from anchored
@@ -257,6 +258,10 @@ const SupplierDocuments: React.FC = () => {
   const nowIso = TODAY;
   const [filterCat, setFilterCat] = useState<CategoryFilter>('All');
   const [search, setSearch] = useState('');
+  const [expiryFilter, setExpiryFilter] = useState<'all' | 'expired' | 'expiring'>('all');
+  // Deep-link read: `?expiry=expired|expiring` narrows the "certificates
+  // expired or expiring" task to exactly those documents.
+  useUrlEnumParam<'all' | 'expired' | 'expiring'>('expiry', ['all', 'expired', 'expiring'], setExpiryFilter);
   const [panelMode, setPanelMode] = useState<PanelMode>('closed');
   const [activeDoc, setActiveDoc] = useState<SupplierDocument | null>(null);
   const [uploaded, setUploaded] = useState(false);
@@ -297,9 +302,11 @@ const SupplierDocuments: React.FC = () => {
           q === '' ||
           d.name.toLowerCase().includes(q) ||
           d.issuedBy.toLowerCase().includes(q);
-        return matchCat && matchSearch;
+        const matchExpiry =
+          expiryFilter === 'all' || documentDisplayState(d, nowIso) === expiryFilter;
+        return matchCat && matchSearch && matchExpiry;
       }),
-    [filterCat, search, docs],
+    [filterCat, search, docs, expiryFilter, nowIso],
   );
 
   const expiringSoon = useMemo(
@@ -583,6 +590,15 @@ const SupplierDocuments: React.FC = () => {
             options={categoryOptions}
             value={filterCat}
             onChange={setFilterCat}
+          />
+          <FilterChipsBar<'all' | 'expired' | 'expiring'>
+            options={[
+              { id: 'all', label: t('inv.filter.all') },
+              { id: 'expired', label: t('supplierDocuments.filter.expired') },
+              { id: 'expiring', label: t('supplierDocuments.filter.expiring') },
+            ]}
+            value={expiryFilter}
+            onChange={setExpiryFilter}
           />
           <span className="text-meta text-text-tertiary">
             {t('supplierDocuments.filter.count', {

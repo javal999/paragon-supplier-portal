@@ -14,6 +14,7 @@ import {
 } from '../../services/query/hooks';
 import * as d from './buyerDerivations';
 import { sdcClock } from '../../services/sdc/clock';
+import { deepLink } from '../../lib/deepLink';
 
 // The buyer triage line — the aggregated exception count above the widget grid.
 // It reads the SAME derivations the widgets do, so the bar and the widget flags
@@ -59,19 +60,19 @@ const BuyerAlertsBar: React.FC = () => {
         label: t('widget.alertsBar.flag.overdueInvoices'),
         count: d.overdueInvoices(invItems).length,
         severity: d.invoiceTier(invItems),
-        to: '/buyer/invoices',
+        to: deepLink('/buyer/invoices', { tab: 'queue', status: 'Overdue' }),
       },
       {
         label: t('widget.alertsBar.flag.unackPo'),
         count: d.unacknowledgedOver48h(poItems, now).length,
         severity: d.poTier(poItems, now),
-        to: '/buyer/orders',
+        to: deepLink('/buyer/orders', { tab: 'pending' }),
       },
       {
         label: t('widget.alertsBar.flag.rfqAward'),
         count: d.pendingAwardRfqs(rfqItems, quoteItems).length,
         severity: d.rfqAwardTier(rfqItems, quoteItems, now),
-        to: '/buyer/rfq',
+        to: deepLink('/buyer/rfq', { tab: 'pending' }),
       },
       {
         label: t('widget.alertsBar.flag.receiptsReview'),
@@ -83,7 +84,7 @@ const BuyerAlertsBar: React.FC = () => {
         label: t('widget.alertsBar.flag.inboundAsn'),
         count: d.pendingAsns(asnItems).length,
         severity: d.asnTier(asnItems),
-        to: '/buyer/shipments',
+        to: deepLink('/buyer/shipments', { tab: 'pending' }),
       },
     ].filter((f) => f.count > 0);
   }, [invoices.data, pos.data, rfqs.data, quotes.data, grs.data, asns.data, t]);

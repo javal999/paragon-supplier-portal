@@ -18,6 +18,7 @@ import {
   usePoDrillFilter,
 } from './orders/PoDrillFilter';
 import { receiptsForPo } from './orders/orderSummaryModel';
+import { useUrlEnumParam } from '../hooks/useUrlEnumParam';
 import SapDataAgeBanner from '../components/ui-v2/SapDataAgeBanner';
 import PageMetaLine from '../components/ui-v2/PageMetaLine';
 import ProvenanceMarker from '../components/ui-v2/ProvenanceMarker';
@@ -221,6 +222,11 @@ const GoodsReceiptWorkspace: React.FC<GoodsReceiptWorkspaceProps> = ({
     [suppliers],
   );
   const [tab, setTab] = useState<GroupTab>('all');
+  useUrlEnumParam<GroupTab>(
+    'tab',
+    ['all', 'pending', 'under-inspection', 'approved', 'hold', 'rejected', 'posted'],
+    setTab,
+  );
   const [search, setSearch] = useState('');
   const [dateFilter, setDateFilter] = useState<DateFilter>('all');
   const [selectedId, setSelectedId] = useState<string | null>(null);

@@ -15,10 +15,11 @@ import LoadingState from '../components/ui-v2/LoadingState';
 import ErrorState from '../components/ui-v2/ErrorState';
 import { HandoffNotice } from '../components/ui-v2/HandoffNotice';
 import { useVerbAvailability } from '../hooks/useVerbAvailability';
+import { useUrlEnumParam } from '../hooks/useUrlEnumParam';
 import { formatDate, formatDateTime } from '../lib/format';
 import { useInventoryAlerts } from '../services/query/hooks';
 import type { InventoryAlert, RiskClass } from '../services/data/types';
-import { groupAlertsBySupplier } from '../services/transitions/inventoryAlertRules';
+import { alertHref, groupAlertsBySupplier } from '../services/transitions/inventoryAlertRules';
 import {
   RiskBasisNote,
   RiskPill,
@@ -43,12 +44,8 @@ import {
 type StatusTab = 'open' | 'closed';
 type RiskFilter = 'all' | RiskClass;
 
-const linkFor = (a: InventoryAlert): string =>
-  a.rule === 'capacityBelowDemand'
-    ? '/buyer/capacity'
-    : a.rule === 'commitmentBelowForecast'
-      ? `/buyer/collaboration?material=${encodeURIComponent(a.subject)}`
-      : '/buyer/inventory';
+const STATUS_TABS: readonly StatusTab[] = ['open', 'closed'];
+const RISK_FILTERS: readonly RiskFilter[] = ['all', 'high', 'medium', 'low'];
 
 const BuyerAlerts: React.FC = () => {
   const { t } = useTranslation();
@@ -57,6 +54,12 @@ const BuyerAlerts: React.FC = () => {
   const { run, pending } = useInventoryRunner();
   const [tab, setTab] = useState<StatusTab>('open');
   const [risk, setRisk] = useState<RiskFilter>('all');
+  // Deep-link read: `?tab=open|closed&risk=all|high|medium|low`, so a task or
+  // alert item that names "the open High-risk alerts" lands with exactly that
+  // tab and chip already selected (REQ deep-link). Unknown/absent values leave
+  // the defaults above untouched, so a plain nav-menu visit is unaffected.
+  useUrlEnumParam('tab', STATUS_TABS, setTab);
+  useUrlEnumParam('risk', RISK_FILTERS, setRisk);
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [closing, setClosing] = useState<InventoryAlert | null>(null);
   const [note, setNote] = useState('');
@@ -171,7 +174,7 @@ const BuyerAlerts: React.FC = () => {
                             </div>
                           )}
                         </div>
-                        <Link to={linkFor(a)} className="text-sm text-action hover:underline">
+                        <Link to={alertHref(a, 'buyer')} className="text-sm text-action hover:underline">
                           {t(
                             a.rule === 'capacityBelowDemand'
                               ? 'inv.alerts.openCapacity'

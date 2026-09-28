@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { InvoiceLinesSection, fmtIdr } from './invoices/InvoiceCollaboration';
+import { useUrlEnumParam } from '../hooks/useUrlEnumParam';
 import { invoicePriceTolerance } from '../services/transitions';
 import {
   BarChart,
@@ -234,6 +235,14 @@ const BuyerInvoicesView: React.FC<{ invoices: BuyerInvoice[] }> = ({ invoices: a
   const resolveMutation = useInvoiceResolve();
   const [tab, setTab] = useState<TabKey>('queue');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  // Deep-link read: `?tab=queue&status=Overdue` lands the "overdue supplier
+  // invoices" task on the queue tab, filtered to overdue.
+  useUrlEnumParam<TabKey>('tab', ['queue', 'analytics', 'aging'], setTab);
+  useUrlEnumParam<StatusFilter>(
+    'status',
+    ['all', 'Pending Match', 'Approved', 'Disputed', 'Payment Released', 'Overdue'],
+    setStatusFilter,
+  );
   const [selectedId, setSelectedId] = useState<string | null>(null);
   // ── REQ-E07-03 · the drill-through filter ─────────────────────────────────
   // The receipts join is what makes "an invoice covering several POs appears

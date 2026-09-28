@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useUrlEnumParam } from '../hooks/useUrlEnumParam';
 import {
   FileText,
   Send,
@@ -752,6 +753,9 @@ const SupplierShipments: React.FC = () => {
   const wizardHeld =
     wizardVerbs.create.kind === 'held' && wizardVerbs.submit.kind === 'held';
   const [tab, setTab] = useState<TabKey>('shipments');
+  // Deep-link read: `?tab=create` jumps the "confirmed orders ready to ship"
+  // task straight into the create-ASN wizard.
+  useUrlEnumParam<TabKey>('tab', ['shipments', 'create'], setTab);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('All');
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [step, setStep] = useState(0);

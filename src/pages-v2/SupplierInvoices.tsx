@@ -1,4 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useUrlEnumParam } from '../hooks/useUrlEnumParam';
+import FilterChipsBar from '../components/ui-v2/FilterChipsBar';
 import {
   CheckCircle2,
   Clock,
@@ -285,6 +287,11 @@ const SupplierInvoices: React.FC = () => {
     [INVOICES, RECEIPTS, drilledPo],
   );
   const [selected, setSelected] = useState<SupplierInvoice | null>(null);
+  const [stageFilter, setStageFilter] = useState<'all' | 'Returned'>('all');
+  // Deep-link read: `?stage=Returned` narrows the "returned invoices to
+  // correct and resubmit" task to those Finance sent back.
+  useUrlEnumParam<'all' | 'Returned'>('stage', ['all', 'Returned'], setStageFilter);
+  const shown = stageFilter === 'Returned' ? listed.filter((i) => i.stage === 'Returned') : listed;
   // AC-03 — exactly one record behind the cell arrives OPEN, not as a list of one.
   const onlyInvoice = drilledPo !== null && listed.length === 1 ? listed[0] : null;
   useEffect(() => {
@@ -741,6 +748,22 @@ const SupplierInvoices: React.FC = () => {
         </p>
       )}
 
+      <FilterChipsBar<'all' | 'Returned'>
+        options={[
+          { id: 'all', label: t('inv.filter.all') },
+          { id: 'Returned', label: t('supplierInvoices.filter.returned'), count: counts.returned },
+        ]}
+        value={stageFilter}
+        onChange={setStageFilter}
+        className="mb-4"
+      />
+
+      {stageFilter !== 'all' && shown.length === 0 && (
+        <p className="text-sm text-text-tertiary py-8 text-center" data-testid="supplier-invoices-filter-empty">
+          {t('supplierInvoices.filter.empty')}
+        </p>
+      )}
+
       <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto mb-6">
         <Table>
           <TableHeader>
@@ -754,7 +777,7 @@ const SupplierInvoices: React.FC = () => {
             <TableHeaderCell className="text-right">{t('supplierInvoices.table.action')}</TableHeaderCell>
           </TableHeader>
           <tbody>
-            {listed.map((inv) => {
+            {shown.map((inv) => {
               const Channel = CHANNEL_ICON[inv.channel];
               const isPaid = inv.stage === 'Paid';
               return (

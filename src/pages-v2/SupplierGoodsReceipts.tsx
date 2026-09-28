@@ -15,6 +15,7 @@ import PageMetaLine from '../components/ui-v2/PageMetaLine';
 import SampleDataBadge from '../components/ui-v2/SampleDataBadge';
 import StatusPill from '../components/ui-v2/StatusPill';
 import Table from '../components/ui-v2/Table';
+import FilterChipsBar from '../components/ui-v2/FilterChipsBar';
 import TableHeader, { TableHeaderCell } from '../components/ui-v2/TableHeader';
 import TableRow from '../components/ui-v2/TableRow';
 import TableCell from '../components/ui-v2/TableCell';
@@ -28,6 +29,7 @@ import NoSupplierIdentity from '../components/ui-v2/NoSupplierIdentity';
 import { HandoffNotice } from '../components/ui-v2/HandoffNotice';
 import { useCurrentIdentity } from '../context/CurrentIdentityContext';
 import { useToast } from '../hooks/useToast';
+import { useUrlEnumParam } from '../hooks/useUrlEnumParam';
 import { useRefusalText } from '../hooks/useRefusalText';
 import { useVerbAvailability } from '../hooks/useVerbAvailability';
 import { formatDate, formatDateTime } from '../lib/format';
@@ -80,6 +82,10 @@ const SupplierGoodsReceipts: React.FC = () => {
   const respondAvailability = useVerbAvailability('receiptdiscrepancy:respond');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [comment, setComment] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'awaiting'>('all');
+  // Deep-link read: `?status=awaiting` narrows the "receipt discrepancies to
+  // acknowledge or dispute" task to the receipts still awaiting this supplier's answer.
+  useUrlEnumParam<'all' | 'awaiting'>('status', ['all', 'awaiting'], setStatusFilter);
   const crumb = [t('hub.nav.section.supplierOrders'), t('fc.gr.title')];
   // REQ-E07-03 — the drill-through filter, with the summary's own predicate.
   const drill = usePoDrillFilter();
@@ -198,6 +204,16 @@ const SupplierGoodsReceipts: React.FC = () => {
         </div>
       )}
 
+      <FilterChipsBar<'all' | 'awaiting'>
+        options={[
+          { id: 'all', label: t('inv.filter.all') },
+          { id: 'awaiting', label: t('fc.gr.filter.awaiting'), count: awaiting },
+        ]}
+        value={statusFilter}
+        onChange={setStatusFilter}
+        className="mb-4"
+      />
+
       <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto">
         <Table>
           <TableHeader>
@@ -213,7 +229,8 @@ const SupplierGoodsReceipts: React.FC = () => {
             <TableHeaderCell className="text-right">{t('fc.gr.col.action')}</TableHeaderCell>
           </TableHeader>
           <tbody>
-            {rows.map(({ gr, lines, flagged, keptOpen, awaiting: needsAnswer, qc, withoutAsn }) => (
+            {(statusFilter === 'awaiting' ? rows.filter((r) => r.awaiting) : rows).map(
+              ({ gr, lines, flagged, keptOpen, awaiting: needsAnswer, qc, withoutAsn }) => (
               <TableRow key={gr.id} data-testid={`supplier-gr-row-${gr.id}`}>
                 <TableCell>
                   <Data className="text-xs font-bold text-text-primary whitespace-nowrap">{gr.grNumber}</Data>

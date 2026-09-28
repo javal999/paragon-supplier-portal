@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { isActiveAsn } from '../services/transitions/fulfilmentRules';
 import { useSearchParams } from 'react-router-dom';
+import { useUrlEnumParam } from '../hooks/useUrlEnumParam';
 import {
   OrderNotFound,
   PoFilterBanner,
@@ -183,6 +184,9 @@ const SupplierOrders: React.FC = () => {
   const shippingAvailability = useVerbAvailability('po:shipping-notice');
   const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<TabKey>('all');
+  // Deep-link read: `?tab=action` lands the "purchase orders to respond to"
+  // task on the orders awaiting this supplier's action.
+  useUrlEnumParam<TabKey>('tab', ['all', 'action', 'progress', 'completed'], setActiveTab);
   const [selected, setSelected] = useState<PurchaseOrder | null>(null);
   const [panelMode, setPanelMode] = useState<PanelMode>('detail');
   // ⚠️ **THE MODE IS DERIVED, NOT READ, AND THAT IS WHAT MAKES THE GUARD COVER

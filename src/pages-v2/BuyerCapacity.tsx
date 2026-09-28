@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useReasonLabel } from './admin/reasonCodeDisplay';
 import { useSearchParams } from 'react-router-dom';
+import { useUrlEnumParam } from '../hooks/useUrlEnumParam';
 import { AlertTriangle, ChevronDown, ChevronRight } from 'lucide-react';
 import AppShellV2 from '../components/layout-v2/AppShellV2';
 import PageHeader from '../components/ui-v2/PageHeader';
@@ -48,6 +49,7 @@ import {
 // ─────────────────────────────────────────────────────────────────────────────
 
 type StatusFilter = 'all' | CapacityConfirmationStatus;
+const STATUS_FILTERS: readonly StatusFilter[] = ['all', 'gap', 'notStarted', 'outdated', 'confirmed'];
 
 const BuyerCapacity: React.FC = () => {
   const { t } = useTranslation();
@@ -56,6 +58,9 @@ const BuyerCapacity: React.FC = () => {
   const [filter, setStatusFilter] = useState<StatusFilter>('all');
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [params, setParams] = useSearchParams();
+  // Deep-link read: `?status=gap` lands the "suppliers with capacity below
+  // demand" task on exactly the gap chip already selected.
+  useUrlEnumParam('status', STATUS_FILTERS, setStatusFilter);
   const filters = readCapacityFilters(params);
   const setFilter = (key: Parameters<typeof withCapacityFilter>[1], value: string | boolean | null) =>
     setParams(withCapacityFilter(params, key, value), { replace: true });

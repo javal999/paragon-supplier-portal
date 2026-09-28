@@ -267,7 +267,7 @@ describe('Alert, Home tasks and the Order summary', () => {
     const alert = await screen.findByTestId('alert-commitmentBelowForecast|RM-STEAR-7300|sup-002');
     expect(alert).toHaveTextContent('Committed quantity below forecast beyond tolerance');
     expect(within(alert).getByText('High')).toBeInTheDocument();
-    expect(within(alert).getByRole('link', { name: 'Open commitments & gaps' })).toHaveAttribute('href', '/buyer/collaboration?material=RM-STEAR-7300');
+    expect(within(alert).getByRole('link', { name: 'Open commitments & gaps' })).toHaveAttribute('href', '/buyer/collaboration?material=RM-STEAR-7300&supplier=sup-002');
   });
 
   // ⚠️ PREMISE CHANGED BY BL-48 (CR-26): at 3 working days sup-007's Trade-off

@@ -15,6 +15,8 @@ export const inventoryCapacityEn: Record<string, string> = {
   'inv.type.VERP': 'Packaging',
 
   'inv.filter.all': 'All',
+  'inv.highlight.missing': 'The row you followed a link for is no longer here — it may have been closed or updated.',
+  'inv.sup.filter.stale': 'Needs update',
   'inv.filter.stale': 'Out of date',
 
   'inv.col.material': 'Material',
@@ -336,6 +338,8 @@ export const inventoryCapacityId: Record<string, string> = {
   'inv.type.VERP': 'Kemasan',
 
   'inv.filter.all': 'Semua',
+  'inv.highlight.missing': 'Baris yang Anda ikuti tautannya sudah tidak ada di sini — mungkin sudah ditutup atau diperbarui.',
+  'inv.sup.filter.stale': 'Perlu diperbarui',
   'inv.filter.stale': 'Kedaluwarsa',
 
   'inv.col.material': 'Material',

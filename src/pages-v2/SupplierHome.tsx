@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import AppShellV2 from '../components/layout-v2/AppShellV2';
 import PageHeader from '../components/ui-v2/PageHeader';
@@ -30,11 +31,13 @@ import { isDueWithoutHeadsUp } from '../services/transitions/callOffRules';
 import { useCallOffViews } from './callOffs/callOffDisplay';
 import { planStatus } from '../services/transitions/capacityRules';
 import { stockFreshness } from '../services/transitions/inventoryRules';
+import { alertHref } from '../services/transitions/inventoryAlertRules';
 import { deadlineState } from '../services/transitions/forecastRules';
 import { forecastNow } from './forecasts/forecastDisplay';
 import Data from '../components/ui-v2/Data';
 import { RiskPill, inventoryNow } from './inventory/inventoryDisplay';
 import { sdcClock } from '../services/sdc/clock';
+import { deepLink } from '../lib/deepLink';
 
 // Supplier Home — "To do" (REQUIREMENTS §3.8 SC-01): what Paragon is waiting for
 // from this supplier. Filters match the supplier dashboard widgets they replace.
@@ -89,13 +92,22 @@ const SupplierHome: React.FC = () => {
       awaitsSupplierAnswer(gr, asnItems.find((a) => a.asnNumber === gr.asnNumber)),
     );
     const returned = (invoices.data?.items ?? []).filter((i) => i.stage === 'Returned');
+    const capacityDuePlans = (capacity.data?.items ?? []).filter(
+      (p) => planStatus(p) === 'notStarted' || planStatus(p) === 'outdated',
+    );
+    const newForecastVersions = (forecastVersions.data?.items ?? []).filter(
+      (v) => v.isCurrent && v.suppliers.some((s) => s.supplierId === supplierId && s.viewedAt === null),
+    );
+    const overdueLines = (forecastLines.data?.items ?? []).filter((l) => deadlineState(l, forecastNow()) === 'overdue');
+    const dueSoonLines = (forecastLines.data?.items ?? []).filter((l) => deadlineState(l, forecastNow()) === 'dueSoon');
+    const revisionLines = (forecastLines.data?.items ?? []).filter((l) => l.state === 'revisionRequested');
     return [
       {
         id: 'confirm-orders',
         label: t('hub.home.task.sup.confirmOrders'),
         count: toConfirm.length,
         severity: 'critical',
-        to: '/supplier/orders',
+        to: deepLink('/supplier/orders', { tab: 'action' }),
       },
       {
         // REQ-E09-03 — released call-offs waiting for this supplier's answer.
@@ -103,7 +115,7 @@ const SupplierHome: React.FC = () => {
         label: t('hub.home.task.sup.callOffsConfirm'),
         count: callOffs.views.filter((v) => v.callOff.status === 'Awaiting Confirmation').length,
         severity: callOffs.views.some((v) => v.confirmation === 'Escalated') ? 'critical' : 'warning',
-        to: '/supplier/call-offs',
+        to: deepLink('/supplier/call-offs', { status: 'toConfirm' }),
       },
       {
         // CR-09 — confirmed, due within 7 days, and no ASN or dispatch notice yet.
@@ -111,7 +123,7 @@ const SupplierHome: React.FC = () => {
         label: t('hub.home.task.sup.callOffsDue'),
         count: callOffs.views.filter((v) => isDueWithoutHeadsUp(v, callOffs.nowIso)).length,
         severity: 'warning',
-        to: '/supplier/call-offs',
+        to: deepLink('/supplier/call-offs', { status: 'dueSoon' }),
       },
       {
         // REQ-E08-01 AC-05 — figures past their data-update SLA, or never sent.
@@ -119,49 +131,47 @@ const SupplierHome: React.FC = () => {
         label: t('hub.home.task.sup.staleStock'),
         count: (stock.data?.items ?? []).filter((p) => stockFreshness(p, inventoryNow()) !== 'current').length,
         severity: 'warning',
-        to: '/supplier/inventory',
+        to: deepLink('/supplier/inventory', { stale: 'stale' }),
       },
       {
         // REQ-E08-04 — a material group with no current capacity confirmation.
         id: 'capacity-due',
         label: t('hub.home.task.sup.capacityDue'),
-        count: (capacity.data?.items ?? []).filter((p) => planStatus(p) === 'notStarted' || planStatus(p) === 'outdated').length,
+        count: capacityDuePlans.length,
         severity: 'warning',
-        to: '/supplier/capacity',
+        to: deepLink('/supplier/capacity', { group: capacityDuePlans[0]?.materialGroup }),
       },
       {
         // REQ-E06-01 — a published version this supplier has not opened yet.
         id: 'new-forecast',
         label: t('hub.home.task.sup.newForecast'),
-        count: (forecastVersions.data?.items ?? []).filter(
-          (v) => v.isCurrent && v.suppliers.some((s) => s.supplierId === supplierId && s.viewedAt === null),
-        ).length,
+        count: newForecastVersions.length,
         severity: 'warning',
-        to: '/supplier/forecasts',
+        to: deepLink('/supplier/forecasts', { stream: newForecastVersions[0]?.stream }),
       },
       {
         // REQ-E06-03 BR-06 — the reminder at the deadline.
         id: 'commitments-overdue',
         label: t('hub.home.task.sup.commitmentsOverdue'),
-        count: (forecastLines.data?.items ?? []).filter((l) => deadlineState(l, forecastNow()) === 'overdue').length,
+        count: overdueLines.length,
         severity: 'critical',
-        to: '/supplier/forecasts',
+        to: deepLink('/supplier/forecasts', { stream: overdueLines[0]?.stream }),
       },
       {
         // REQ-E06-03 BR-06 — the reminder at half the deadline.
         id: 'commitments-due-soon',
         label: t('hub.home.task.sup.commitmentsDueSoon'),
-        count: (forecastLines.data?.items ?? []).filter((l) => deadlineState(l, forecastNow()) === 'dueSoon').length,
+        count: dueSoonLines.length,
         severity: 'warning',
-        to: '/supplier/forecasts',
+        to: deepLink('/supplier/forecasts', { stream: dueSoonLines[0]?.stream }),
       },
       {
         // REQ-E06-03 BR-05 — the planner asked for a revision, with a note.
         id: 'commitments-revision',
         label: t('hub.home.task.sup.revisionRequested'),
-        count: (forecastLines.data?.items ?? []).filter((l) => l.state === 'revisionRequested').length,
+        count: revisionLines.length,
         severity: 'warning',
-        to: '/supplier/forecasts',
+        to: deepLink('/supplier/forecasts', { stream: revisionLines[0]?.stream }),
       },
       {
         // REQ-E07-05 — a confirmed order still owes its expected completion date.
@@ -180,14 +190,14 @@ const SupplierHome: React.FC = () => {
         label: t('hub.home.task.sup.createAsn'),
         count: readyToShip.length,
         severity: 'warning',
-        to: '/supplier/shipments',
+        to: deepLink('/supplier/shipments', { tab: 'create' }),
       },
       {
         id: 'receipt-discrepancies',
         label: t('hub.home.task.sup.receiptDiscrepancies'),
         count: toAnswer.length,
         severity: 'warning',
-        to: '/supplier/goods-receipts',
+        to: deepLink('/supplier/goods-receipts', { status: 'awaiting' }),
       },
       {
         // REQ-E07-07 — Finance returned the invoice with a reason.
@@ -195,14 +205,14 @@ const SupplierHome: React.FC = () => {
         label: t('hub.home.task.sup.returnedInvoices'),
         count: returned.length,
         severity: 'critical',
-        to: '/supplier/invoices',
+        to: deepLink('/supplier/invoices', { stage: 'Returned' }),
       },
       {
         id: 'rfq',
         label: t('hub.home.task.sup.rfq'),
         count: openRfqs.length,
         severity: lateRfqs.length > 0 ? 'critical' : 'warning',
-        to: '/supplier/rfq',
+        to: deepLink('/supplier/rfq', { tab: 'open' }),
       },
       {
         // REQ-E03-02 — an information request still to answer: invited, and no
@@ -239,7 +249,7 @@ const SupplierHome: React.FC = () => {
         label: t('hub.home.task.sup.certs'),
         count: expired.length + expiring.length,
         severity: expired.length > 0 ? 'critical' : 'warning',
-        to: '/supplier/documents',
+        to: deepLink('/supplier/documents', { expiry: expired.length > 0 ? 'expired' : expiring.length > 0 ? 'expiring' : undefined }),
       },
       {
         id: 'invoices',
@@ -275,6 +285,15 @@ const SupplierHome: React.FC = () => {
                 <span className="text-xs text-text-secondary">
                   {a.rule === 'capacityBelowDemand' ? t(`inv.group.${a.subject}`) : <Data>{a.subject}</Data>}
                 </span>
+                <Link to={alertHref(a, 'supplier')} className="text-sm text-action hover:underline">
+                  {t(
+                    a.rule === 'capacityBelowDemand'
+                      ? 'inv.alerts.openCapacity'
+                      : a.rule === 'commitmentBelowForecast'
+                        ? 'inv.alerts.openCommitments'
+                        : 'inv.alerts.openInventory',
+                  )}
+                </Link>
               </li>
             ))}
           </ul>

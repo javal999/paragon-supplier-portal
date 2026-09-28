@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useReasonLabel } from './admin/reasonCodeDisplay';
 import { Link, useSearchParams } from 'react-router-dom';
+import { useUrlEnumParam } from '../hooks/useUrlEnumParam';
 import {
   OrderNotFound,
   PoFilterBanner,
@@ -102,8 +103,14 @@ const BuyerCommitments: React.FC = () => {
   const drill = usePoDrillFilter();
   const drillMaterials = drill.kind === 'filtered' ? drill.materials : null;
   const [stream, setStream] = useState<ForecastStream | null>(null);
-  const [supplier, setSupplier] = useState(drill.kind === 'filtered' ? drill.po.supplierId : '');
+  const [supplier, setSupplier] = useState(
+    params.get('supplier') ?? (drill.kind === 'filtered' ? drill.po.supplierId : ''),
+  );
   const [material, setMaterial] = useState(params.get('material') ?? '');
+  // Deep-link read: `?stream=packaging|rawMaterial` lands the "missing
+  // commitments" / "commitment exceptions" tasks on the stream that actually
+  // holds them — the exceptions table below already covers both categories.
+  useUrlEnumParam<ForecastStream>('stream', ['packaging', 'rawMaterial'], setStream);
   const [action, setAction] = useState<Action | null>(null);
   const [note, setNote] = useState('');
   const [toSupplier, setToSupplier] = useState('');

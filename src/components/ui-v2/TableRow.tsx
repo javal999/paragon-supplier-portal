@@ -38,27 +38,27 @@ export function rowActivation<E extends HTMLElement>(
 
 export const ROW_FOCUS_CLASS = ROW_FOCUS;
 
-const TableRow: React.FC<TableRowProps> = ({
-  children,
-  className = '',
-  onClick,
-  onKeyDown,
-  tabIndex,
-  ...rest
-}) => {
-  return (
-    <tr
-      className={`border-b border-border-subtle hover:bg-bg-hover transition-colors ${
-        onClick ? ROW_FOCUS : ''
-      } ${className}`}
-      onClick={onClick}
-      {...rowActivation(onClick, onKeyDown)}
-      {...(tabIndex !== undefined ? { tabIndex } : {})}
-      {...rest}
-    >
-      {children}
-    </tr>
-  );
-};
+// forwardRef so a deep-linked row can be scrolled into view (`useRowHighlight`)
+// without every existing caller having to change — untouched callers pass no
+// ref and get exactly the element they got before.
+const TableRow = React.forwardRef<HTMLTableRowElement, TableRowProps>(
+  ({ children, className = '', onClick, onKeyDown, tabIndex, ...rest }, ref) => {
+    return (
+      <tr
+        ref={ref}
+        className={`border-b border-border-subtle hover:bg-bg-hover transition-colors ${
+          onClick ? ROW_FOCUS : ''
+        } ${className}`}
+        onClick={onClick}
+        {...rowActivation(onClick, onKeyDown)}
+        {...(tabIndex !== undefined ? { tabIndex } : {})}
+        {...rest}
+      >
+        {children}
+      </tr>
+    );
+  },
+);
+TableRow.displayName = 'TableRow';
 
 export default TableRow;

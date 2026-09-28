@@ -23,6 +23,8 @@ import LoadingState from '../components/ui-v2/LoadingState';
 import ErrorState from '../components/ui-v2/ErrorState';
 import EmptyState from '../components/ui-v2/EmptyState';
 import NoSupplierIdentity from '../components/ui-v2/NoSupplierIdentity';
+import FilterChipsBar from '../components/ui-v2/FilterChipsBar';
+import { useUrlEnumParam } from '../hooks/useUrlEnumParam';
 import { HandoffNotice } from '../components/ui-v2/HandoffNotice';
 import { useCurrentIdentity } from '../context/CurrentIdentityContext';
 import { useToast } from '../hooks/useToast';
@@ -94,6 +96,10 @@ const SupplierCallOffs: React.FC = () => {
   const dispatchAvailability = useVerbAvailability('calloff:dispatch');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [form, setForm] = useState(EMPTY);
+  const [statusFilter, setStatusFilter] = useState<'all' | 'toConfirm' | 'dueSoon'>('all');
+  // Deep-link read: `?status=toConfirm|dueSoon` narrows to the call-offs the
+  // linking task named.
+  useUrlEnumParam<'all' | 'toConfirm' | 'dueSoon'>('status', ['all', 'toConfirm', 'dueSoon'], setStatusFilter);
   const crumb = [t('hub.nav.section.supplierOrders'), t('co.sup.title')];
   // REQ-E07-03 — the drill-through filter. The supplier's own read already
   // excludes drafts and dismissed drafts, so the predicate only narrows by PO.
@@ -116,14 +122,20 @@ const SupplierCallOffs: React.FC = () => {
     );
 
   const scoped = drilledPo === null ? views : callOffsForPo(views, drilledPo);
-  const rows = [...scoped].sort((a, b) => a.dueDate.localeCompare(b.dueDate));
-  const toConfirm = rows.filter((v) => v.callOff.status === 'Awaiting Confirmation').length;
-  const dueSoon = rows.filter((v) => isDueWithoutHeadsUp(v, nowIso)).length;
-  const selected: CallOffView | null = rows.find((v) => v.callOff.id === selectedId) ?? null;
+  const allRows = [...scoped].sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+  const toConfirm = allRows.filter((v) => v.callOff.status === 'Awaiting Confirmation').length;
+  const dueSoon = allRows.filter((v) => isDueWithoutHeadsUp(v, nowIso)).length;
+  const rows =
+    statusFilter === 'toConfirm'
+      ? allRows.filter((v) => v.callOff.status === 'Awaiting Confirmation')
+      : statusFilter === 'dueSoon'
+        ? allRows.filter((v) => isDueWithoutHeadsUp(v, nowIso))
+        : allRows;
+  const selected: CallOffView | null = allRows.find((v) => v.callOff.id === selectedId) ?? null;
 
   const open = (id: string) => {
     setSelectedId(id);
-    const v = rows.find((x) => x.callOff.id === id);
+    const v = allRows.find((x) => x.callOff.id === id);
     setForm({
       ...EMPTY,
       dispatchQty: v ? String(v.callOff.confirmation?.deliveries.reduce((s, d) => s + d.quantity, 0) ?? v.callOff.quantity) : '',
@@ -205,6 +217,23 @@ const SupplierCallOffs: React.FC = () => {
           )}
           {dueSoon > 0 && <div>{t('co.sup.banner.dueSoon', { count: dueSoon })}</div>}
         </div>
+      )}
+
+      <FilterChipsBar<'all' | 'toConfirm' | 'dueSoon'>
+        options={[
+          { id: 'all', label: t('co.pti.filter.all') },
+          { id: 'toConfirm', label: t('co.sup.filter.toConfirm'), count: toConfirm },
+          { id: 'dueSoon', label: t('co.sup.filter.dueSoon'), count: dueSoon },
+        ]}
+        value={statusFilter}
+        onChange={setStatusFilter}
+        className="mb-4"
+      />
+
+      {statusFilter !== 'all' && rows.length === 0 && (
+        <p className="text-sm text-text-tertiary py-8 text-center" data-testid="supplier-calloff-filter-empty">
+          {t('co.pti.filter.empty')}
+        </p>
       )}
 
       <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto">

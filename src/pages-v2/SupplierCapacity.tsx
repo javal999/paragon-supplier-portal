@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import AppShellV2 from '../components/layout-v2/AppShellV2';
 import PageHeader from '../components/ui-v2/PageHeader';
@@ -70,7 +71,10 @@ const SupplierCapacity: React.FC = () => {
   const plansQuery = useCapacityPlans();
   const confirm = useVerbAvailability('capacity:confirm');
   const { run, pending } = useInventoryRunner();
-  const [group, setGroup] = useState<string | null>(null);
+  const [searchParams] = useSearchParams();
+  // Deep-link read: `?group=<materialGroup>` lands the "capacity confirmations
+  // due" task on the group that needs one.
+  const [group, setGroup] = useState<string | null>(searchParams.get('group'));
   const [draft, setDraft] = useState<WeekDraft[]>([]);
   const nowIso = inventoryNow();
   const crumb = [t('hub.nav.section.planning'), t('inv.capacity.sup.title')];

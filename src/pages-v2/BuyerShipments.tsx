@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useUrlEnumParam } from '../hooks/useUrlEnumParam';
 import { useTranslation } from 'react-i18next';
 import { useModeLabel } from '../hooks/useModeLabel';
 import {
@@ -176,6 +177,9 @@ const BuyerShipments: React.FC = () => {
     [suppliersQuery.data],
   );
   const [tab, setTab] = useState<GroupTab>('all');
+  // Deep-link read: `?tab=pending` lands the "inbound shipments to receive"
+  // task on the ASN-pending group.
+  useUrlEnumParam<GroupTab>('tab', ['all', 'pending', 'in-transit', 'at-dock', 'delivered', 'delayed'], setTab);
   const [search, setSearch] = useState('');
   const [selectedModes, setSelectedModes] = useState<ShipmentMode[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);

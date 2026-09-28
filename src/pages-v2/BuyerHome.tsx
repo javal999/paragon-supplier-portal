@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import AppShellV2 from '../components/layout-v2/AppShellV2';
 import PageHeader from '../components/ui-v2/PageHeader';
 import SampleDataBadge from '../components/ui-v2/SampleDataBadge';
+import { deepLink } from '../lib/deepLink';
 import {
   useASNs,
   useBuyerInvoices,
@@ -77,6 +78,9 @@ const BuyerHome: React.FC = () => {
     const grItems = grs.data?.items ?? [];
     const asnItems = asns.data?.items ?? [];
     const chaseRows = chase.data ?? [];
+    const forecastLineItems = forecastLines.data?.items ?? [];
+    const overdueForecastLines = forecastLineItems.filter((l) => deadlineState(l, forecastNow()) === 'overdue');
+    const exceptionForecastLines = forecastLineItems.filter((l) => l.state === 'exception');
     const all: RoleTask[] = [
       {
         // REQ-E07-02 BR-09 — no response by the 1-working-day deadline. Derived
@@ -86,7 +90,7 @@ const BuyerHome: React.FC = () => {
         label: t('hub.home.task.escalatedPo'),
         count: poItems.filter((po) => isEscalated(po, nowIso)).length,
         severity: 'critical',
-        to: '/buyer/orders?tab=escalated',
+        to: deepLink('/buyer/orders', { tab: 'escalated' }),
       },
       {
         // REQ-E07-02 BR-08 — a rejection is PTI's to act on.
@@ -95,7 +99,7 @@ const BuyerHome: React.FC = () => {
         label: t('hub.home.task.rejectedPo'),
         count: poItems.filter((po) => po.status === POStatus.REJECTED).length,
         severity: 'critical',
-        to: '/buyer/orders?tab=rejected',
+        to: deepLink('/buyer/orders', { tab: 'rejected' }),
       },
       {
         id: 'counter-offers',
@@ -103,7 +107,7 @@ const BuyerHome: React.FC = () => {
         label: t('hub.home.task.counterOffers'),
         count: poItems.filter((po) => po.status === POStatus.ADJUSTED).length,
         severity: 'warning',
-        to: '/buyer/orders?tab=review',
+        to: deepLink('/buyer/orders', { tab: 'review' }),
       },
       {
         // REQ-E07-05 — the supplier moved the expected completion date later.
@@ -120,7 +124,7 @@ const BuyerHome: React.FC = () => {
         label: t('hub.home.task.callOffsApproval'),
         count: callOffs.views.filter((v) => v.confirmation === 'Awaiting Approval').length,
         severity: 'warning',
-        to: '/buyer/call-offs',
+        to: deepLink('/buyer/call-offs', { status: 'awaitingApproval' }),
       },
       {
         id: 'calloffs-escalated',
@@ -128,7 +132,7 @@ const BuyerHome: React.FC = () => {
         label: t('hub.home.task.callOffsEscalated'),
         count: callOffs.views.filter((v) => v.confirmation === 'Escalated').length,
         severity: 'critical',
-        to: '/buyer/call-offs',
+        to: deepLink('/buyer/call-offs', { status: 'escalated' }),
       },
       {
         id: 'calloffs-at-risk',
@@ -136,7 +140,7 @@ const BuyerHome: React.FC = () => {
         label: t('hub.home.task.callOffsAtRisk'),
         count: callOffs.views.filter((v) => v.delivery === 'atRisk').length,
         severity: 'warning',
-        to: '/buyer/call-offs',
+        to: deepLink('/buyer/call-offs', { status: 'atRisk' }),
       },
       {
         id: 'calloffs-drift',
@@ -144,7 +148,7 @@ const BuyerHome: React.FC = () => {
         label: t('hub.home.task.callOffsDrift'),
         count: deliveryDrift(callOffs.views).length,
         severity: 'critical',
-        to: '/buyer/call-offs',
+        to: deepLink('/buyer/call-offs', { status: 'drift' }),
       },
       {
         id: 'inventory-high-alerts',
@@ -152,7 +156,7 @@ const BuyerHome: React.FC = () => {
         label: t('hub.home.task.inventoryHighAlerts'),
         count: (alerts.data?.items ?? []).filter((a) => a.status === 'open' && a.riskClass === 'high').length,
         severity: 'critical',
-        to: '/buyer/alerts',
+        to: deepLink('/buyer/alerts', { tab: 'open', risk: 'high' }),
       },
       {
         // REQ-E08-04 edge case — a submitted update that creates a gap notifies the planner.
@@ -161,25 +165,25 @@ const BuyerHome: React.FC = () => {
         label: t('hub.home.task.capacityGaps'),
         count: (capacity.data?.items ?? []).filter((p) => planStatus(p) === 'gap').length,
         severity: 'warning',
-        to: '/buyer/capacity',
+        to: deepLink('/buyer/capacity', { status: 'gap' }),
       },
       {
         // REQ-E06-03 BR-06 — after the deadline, a missing commitment escalates to the planner.
         id: 'missing-commitments',
         roles: ['MP'],
         label: t('hub.home.task.missingCommitments'),
-        count: (forecastLines.data?.items ?? []).filter((l) => deadlineState(l, forecastNow()) === 'overdue').length,
+        count: overdueForecastLines.length,
         severity: 'critical',
-        to: '/buyer/collaboration',
+        to: deepLink('/buyer/collaboration', { stream: overdueForecastLines[0]?.stream }),
       },
       {
         // REQ-E06-02 BR-05 — a commitment outside tolerance is an exception for the planner.
         id: 'commitment-exceptions',
         roles: ['MP'],
         label: t('hub.home.task.commitmentExceptions'),
-        count: (forecastLines.data?.items ?? []).filter((l) => l.state === 'exception').length,
+        count: exceptionForecastLines.length,
         severity: 'warning',
-        to: '/buyer/collaboration',
+        to: deepLink('/buyer/collaboration', { stream: exceptionForecastLines[0]?.stream }),
       },
       {
         id: 'chase',
@@ -213,7 +217,7 @@ const BuyerHome: React.FC = () => {
         label: t('hub.home.task.inboundAsn'),
         count: d.pendingAsns(asnItems).length,
         severity: d.asnTier(asnItems),
-        to: '/buyer/shipments',
+        to: deepLink('/buyer/shipments', { tab: 'pending' }),
       },
       {
         // REQ-E03-05 BR-03 — a round whose deadline is close and whose invitees
@@ -230,7 +234,7 @@ const BuyerHome: React.FC = () => {
           (r) => !r.closed && r.awaiting > 0 && isClosingSoon(r.deadline, rfxNow()),
         ).length,
         severity: 'warning',
-        to: '/buyer/rfq',
+        to: deepLink('/buyer/rfq', { tab: 'open' }),
       },
       {
         id: 'rfq-award',
@@ -238,7 +242,7 @@ const BuyerHome: React.FC = () => {
         label: t('hub.home.task.rfqAward'),
         count: d.pendingAwardRfqs(rfqItems, quoteItems).length,
         severity: d.rfqAwardTier(rfqItems, quoteItems, now),
-        to: '/buyer/rfq',
+        to: deepLink('/buyer/rfq', { tab: 'pending' }),
       },
       {
         // REQ-E07-08 AC-02 — only a RETRYABLE failure is a task: a business
@@ -256,7 +260,7 @@ const BuyerHome: React.FC = () => {
         label: t('hub.home.task.overdueInvoices'),
         count: d.overdueInvoices(invItems).length,
         severity: d.invoiceTier(invItems),
-        to: '/buyer/invoices',
+        to: deepLink('/buyer/invoices', { tab: 'queue', status: 'Overdue' }),
       },
     ];
     return role === 'ALL' ? all : all.filter((task) => task.roles.includes(role));

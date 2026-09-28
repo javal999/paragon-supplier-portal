@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AlertTriangle, MessageSquarePlus, RefreshCw } from 'lucide-react';
 import AppShellV2 from '../components/layout-v2/AppShellV2';
@@ -21,6 +21,9 @@ import ErrorState from '../components/ui-v2/ErrorState';
 import EmptyState from '../components/ui-v2/EmptyState';
 import { HandoffNotice } from '../components/ui-v2/HandoffNotice';
 import { useVerbAvailability } from '../hooks/useVerbAvailability';
+import { useUrlEnumParam } from '../hooks/useUrlEnumParam';
+import { HIGHLIGHTED_ROW_CLASS, useRowHighlight } from '../hooks/useRowHighlight';
+import { useSearchParams } from 'react-router-dom';
 import { formatDate, formatDateTime } from '../lib/format';
 import { useInventory } from '../services/query/hooks';
 import type { InventoryPosition, RiskClass } from '../services/data/types';
@@ -59,15 +62,29 @@ const BuyerInventory: React.FC = () => {
   const record = useVerbAvailability('inventorydeclaration:record');
   const sync = useVerbAvailability('stocksync:run');
   const { run, pending } = useInventoryRunner();
+  const [searchParams] = useSearchParams();
   const [type, setType] = useState<MaterialType>('ROH');
   const [band, setBand] = useState<BandFilter>('all');
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState(searchParams.get('material') ?? '');
+  // Deep-link read: `?type=ROH|VERP&band=high|medium|low|stale&material=<code>`
+  // lands an inventory alert on the exact risk band and material it named.
+  useUrlEnumParam<MaterialType>('type', ['ROH', 'VERP'], setType);
+  useUrlEnumParam<BandFilter>('band', ['all', 'high', 'medium', 'low', 'stale'], setBand);
   const [incoming, setIncoming] = useState<InventoryPosition | null>(null);
   const [recordOpen, setRecordOpen] = useState(false);
   const nowIso = inventoryNow();
   const crumb = [t('hub.nav.section.inventory'), t('inv.pti.title')];
 
   const rows = useMemo(() => inventory.data?.items ?? [], [inventory.data]);
+  // A `?material=` deep link may name a material in the OTHER type view; pick
+  // the type that actually holds it so the row is not silently hidden.
+  useEffect(() => {
+    const code = searchParams.get('material');
+    if (!code) return;
+    const match = rows.find((r) => r.materialCode === code);
+    if (match) setType(match.materialType);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, rows.length]);
   const ofType = rows.filter((r) => r.materialType === type);
   const bandCount = (b: BandFilter) =>
     b === 'all'
@@ -92,6 +109,10 @@ const BuyerInventory: React.FC = () => {
     for (const r of rows) if (r.apiConnected && !bySupplier.has(r.supplierId)) bySupplier.set(r.supplierId, r);
     return [...bySupplier.values()];
   }, [rows]);
+
+  // Deep-link read: `?highlight=<supplierId>-<materialCode>` scrolls to and
+  // selects the exact row an alert named (REQUIRED BEHAVIOR — specific row).
+  const highlight = useRowHighlight((id) => rows.some((r) => `${r.supplierId}-${r.materialCode}` === id));
 
   if (inventory.isPending) return <LoadingState breadcrumb={crumb} />;
   if (inventory.isError)
@@ -125,6 +146,18 @@ const BuyerInventory: React.FC = () => {
         {t('inv.asOf')} <Data>{formatDate(nowIso)}</Data>
         <SampleDataBadge className="ml-3 align-middle" />
       </PageMetaLine>
+
+      {/* Constraint 6 — the row an alert named no longer exists: the page and
+          its tab/filter still land, with a short, non-blocking notice. */}
+      {highlight.missing && (
+        <div
+          role="status"
+          data-testid="inv-highlight-missing"
+          className="bg-bg-hover border-l-2 border-border-subtle rounded px-4 py-3 mb-4 text-sm text-text-secondary"
+        >
+          {t('inv.highlight.missing')}
+        </div>
+      )}
 
       {/* REQ-E07-08 AC-03 — this page reads SAP data; say how old it is. */}
       <SapDataAgeBanner page="inventory" className="mb-4" />
@@ -229,8 +262,17 @@ const BuyerInventory: React.FC = () => {
             <TableHeaderCell>{t('inv.col.lastUpdate')}</TableHeaderCell>
           </TableHeader>
           <tbody>
-            {shown.map((p) => (
-              <TableRow key={`${p.supplierId}-${p.materialCode}`} data-testid={`pti-stock-row-${p.supplierId}-${p.materialCode}`}>
+            {shown.map((p) => {
+              const rowId = `${p.supplierId}-${p.materialCode}`;
+              const isHighlighted = highlight.id === rowId;
+              return (
+              <TableRow
+                key={rowId}
+                ref={isHighlighted ? highlight.scrollRef : undefined}
+                data-testid={`pti-stock-row-${p.supplierId}-${p.materialCode}`}
+                aria-selected={isHighlighted || undefined}
+                className={isHighlighted ? HIGHLIGHTED_ROW_CLASS : undefined}
+              >
                 {/* Nine columns, six of them `whitespace-nowrap` figures: the two
                     free-text ones have to be bounded or they wrap over several lines
                     and push the right-hand columns out. Same bound-and-truncate as
@@ -279,7 +321,8 @@ const BuyerInventory: React.FC = () => {
                   <LastUpdateCell position={p} nowIso={nowIso} />
                 </TableCell>
               </TableRow>
-            ))}
+              );
+            })}
             {shown.length === 0 && (
               <tr>
                 <td colSpan={9} className="py-10 text-center text-sm text-text-tertiary">

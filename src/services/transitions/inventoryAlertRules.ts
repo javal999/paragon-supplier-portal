@@ -33,6 +33,7 @@ import type {
   RiskClass,
 } from '../data/types';
 import type { ActorAttribution } from '../../lib/enforcement';
+import { deepLink } from '../../lib/deepLink';
 import { gapWeeks } from './capacityRules';
 import {
   coverage,
@@ -215,4 +216,30 @@ export function groupAlertsBySupplier(
   return [...groups.values()].sort(
     (a, b) => RISK_ORDER.indexOf(a.riskClass) - RISK_ORDER.indexOf(b.riskClass) || a.supplierName.localeCompare(b.supplierName),
   );
+}
+
+/**
+ * ONE destination per alert, for every surface that renders one (the Alerts
+ * page's own "open X" link and the Home alerts list alike — REQ deep-link).
+ * Each alert is a GROUP (one supplier × material/condition), so the
+ * destination narrows to that group; no single row is highlighted.
+ */
+export function alertHref(a: InventoryAlert, persona: 'buyer' | 'supplier'): string {
+  if (a.rule === 'capacityBelowDemand') {
+    return persona === 'buyer'
+      ? deepLink('/buyer/capacity', { supplier: a.supplierId, materialGroup: a.subject, status: 'gap' })
+      : deepLink('/supplier/capacity', { group: a.subject });
+  }
+  if (a.rule === 'commitmentBelowForecast') {
+    return persona === 'buyer'
+      ? deepLink('/buyer/collaboration', { material: a.subject, supplier: a.supplierId })
+      : deepLink('/supplier/forecasts', { material: a.subject });
+  }
+  return persona === 'buyer'
+    ? deepLink('/buyer/inventory', {
+        band: a.riskClass,
+        material: a.subject,
+        highlight: `${a.supplierId}-${a.subject}`,
+      })
+    : deepLink('/supplier/inventory', { highlight: a.subject });
 }

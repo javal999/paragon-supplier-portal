@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
+import { useUrlEnumParam } from '../hooks/useUrlEnumParam';
 import type { TFunction } from 'i18next';
 import {
   Inbox,
@@ -911,6 +912,9 @@ const RfqWorkspace: React.FC<RfqWorkspaceProps> = ({
   const crumb = [t('hub.nav.section.sourcing')];
   const submitMutation = useQuotationSubmit();
   const [activeTab, setActiveTab] = useState<TabKey>('open');
+  // Deep-link read: `?tab=open` lands the "sourcing invitations to answer"
+  // task on the open, unanswered invitations.
+  useUrlEnumParam<TabKey>('tab', ['open', 'quotes', 'history'], setActiveTab);
   const quoteAvailability = useVerbAvailability('quotation:submit');
   const [quotePanelRFQ, setQuotePanelRFQ] = useState<OpenRFQ | null>(null);
   // ⚠️ **THE PANEL IS DERIVED, NOT READ — `SupplierOrders.effectivePanelMode`'s

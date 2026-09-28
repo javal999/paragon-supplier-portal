@@ -60,6 +60,7 @@ import LoadingState from '../components/ui-v2/LoadingState';
 import ErrorState from '../components/ui-v2/ErrorState';
 import EmptyState from '../components/ui-v2/EmptyState';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { useUrlEnumParam } from '../hooks/useUrlEnumParam';
 import {
   useRFQs,
   useQuotations,
@@ -996,6 +997,10 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
     [suppliers],
   );
   const [group, setGroup] = useState<GroupTab>('all');
+  // Deep-link read: `?tab=pending` lands the "sourcing events ready to award"
+  // task on the group awaiting an award decision; `?tab=open` lands the
+  // "negotiation rounds closing soon" task on open events.
+  useUrlEnumParam<GroupTab>('tab', ['all', 'open', 'pending', 'awarded', 'closed'], setGroup);
   const [selectedCats, setSelectedCats] = useState<RFQCategory[]>([]);
   const [search, setSearch] = useState('');
   // 2e-c-4 — the panel holds the selected RFQ's ID, and the RFQ itself is
