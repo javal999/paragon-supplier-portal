@@ -80,12 +80,20 @@ export interface CommandTarget {
    * construct a `RESOLVED` actor yet. Reproducing it on a second verb would
    * have doubled the seam that has to be closed before the first resolved
    * record exists. Every existing target ignores the parameter.
+   *
+   * `transitionId` IS THE FIFTH PARAMETER SO A TARGET CAN TELL ITS VERBS APART
+   * (RFx AR-01). Without it a target with several verbs had to guess the verb
+   * from payload fields or the target state, and a stray field sent a verb down
+   * another verb's branch. It is optional so every target that has one verb per
+   * state compiles and behaves unchanged; the `rfq`, `rfiEvent` and `rfpEvent`
+   * targets branch on it.
    */
   applyTransition(
     entityId: string,
     toState: string,
     payload: Record<string, unknown>,
     scope: QueryScope,
+    transitionId?: string,
   ): void;
   /**
    * Creation scope: the intended owner derived from the payload's parent
@@ -655,6 +663,7 @@ export function createDispatcher(deps: DispatcherDeps): Dispatcher {
         transition.statePreserving ? currentState! : transition.to,
         payload,
         scope,
+        input.transitionId,
       );
       result = fin(scope, transition.id, outcome, undefined, input.entityId);
     }

@@ -234,6 +234,42 @@ export const rfxAuthoringEn: Record<string, string> = {
   'rfxa.refusal.UNKNOWN_FAMILY': 'Choose a category family first.',
   'rfxa.refusal.STORE_UNREADABLE': 'Your saved templates could not be read, so nothing was saved.',
   'rfxa.refusal.STORAGE_UNAVAILABLE': 'This browser did not keep the template.',
+
+  // — Documents from suppliers (NR-1 BR-02, B3) ————————————————————————
+  'rfxa.step.documents': 'Documents from suppliers',
+  'rfxa.step.documents.short': 'Documents',
+  'rfxa.step.documents.desc':
+    'Optional. List the documents every supplier sends with its response, and mark the ones it must send.',
+  'rfxa.doc.empty': 'No documents requested. Suppliers can still attach their own files.',
+  'rfxa.doc.add': 'Add a document request',
+  'rfxa.doc.row': 'Request {{n}}',
+  'rfxa.doc.name': 'Document name',
+  'rfxa.doc.name.ph': 'e.g. Halal certificate',
+  'rfxa.doc.type': 'Type',
+  'rfxa.doc.type.certificate': 'Certificate',
+  'rfxa.doc.type.specification': 'Specification',
+  'rfxa.doc.type.drawing': 'Drawing',
+  'rfxa.doc.type.samplePhoto': 'Sample photo',
+  'rfxa.doc.type.quotation': 'Quotation',
+  'rfxa.doc.type.companyProfile': 'Company profile',
+  'rfxa.doc.type.other': 'Other',
+  'rfxa.doc.required': 'Required',
+  'rfxa.doc.optional': 'Optional',
+  'rfxa.doc.level': 'For',
+  'rfxa.doc.level.response': 'Whole response',
+  'rfxa.doc.level.item': 'Item {{n}}',
+  'rfxa.doc.remove': 'Remove document request',
+  'rfxa.doc.certificateNote':
+    'A Certificate request also asks the supplier for the certificate number, issuer and expiry date.',
+  'rfxa.doc.refusal.noName': 'Request {{n}} needs a name.',
+  'rfxa.doc.refusal.duplicate': 'Request {{n}}, "{{name}}", is already on the list. Give each document its own name.',
+  'rfxa.doc.refusal.item':
+    'Request {{n}}, "{{name}}", is for an item this RFQ no longer has. Choose what it is for again.',
+  'rfxa.doc.refusal.invalid': 'Request {{n}} cannot be sent as it is.',
+  'rfxa.doc.review': 'Documents from suppliers',
+  'rfxa.doc.review.none': 'None requested',
+  'rfxa.doc.unlinked': '"{{name}}" was linked to a removed item; it now applies to the whole response.',
+  'rfxa.doc.unlinked.dismiss': 'Dismiss',
 };
 
 export const rfxAuthoringId: Record<string, string> = {
@@ -461,4 +497,41 @@ export const rfxAuthoringId: Record<string, string> = {
   'rfxa.refusal.UNKNOWN_FAMILY': 'Pilih kelompok kategori terlebih dahulu.',
   'rfxa.refusal.STORE_UNREADABLE': 'Templat tersimpan Anda tidak dapat dibaca, sehingga tidak ada yang disimpan.',
   'rfxa.refusal.STORAGE_UNAVAILABLE': 'Peramban ini tidak menyimpan templat.',
+
+  // — Dokumen dari pemasok (NR-1 BR-02, B3) ——————————————————————————————
+  'rfxa.step.documents': 'Dokumen dari pemasok',
+  'rfxa.step.documents.short': 'Dokumen',
+  'rfxa.step.documents.desc':
+    'Opsional. Cantumkan dokumen yang dikirim setiap pemasok bersama tanggapannya, dan tandai yang wajib dikirim.',
+  'rfxa.doc.empty': 'Belum ada dokumen yang diminta. Pemasok tetap dapat melampirkan berkasnya sendiri.',
+  'rfxa.doc.add': 'Tambah permintaan dokumen',
+  'rfxa.doc.row': 'Permintaan {{n}}',
+  'rfxa.doc.name': 'Nama dokumen',
+  'rfxa.doc.name.ph': 'mis. Sertifikat halal',
+  'rfxa.doc.type': 'Jenis',
+  'rfxa.doc.type.certificate': 'Sertifikat',
+  'rfxa.doc.type.specification': 'Spesifikasi',
+  'rfxa.doc.type.drawing': 'Gambar teknik',
+  'rfxa.doc.type.samplePhoto': 'Foto sampel',
+  'rfxa.doc.type.quotation': 'Penawaran harga',
+  'rfxa.doc.type.companyProfile': 'Profil perusahaan',
+  'rfxa.doc.type.other': 'Lainnya',
+  'rfxa.doc.required': 'Wajib',
+  'rfxa.doc.optional': 'Opsional',
+  'rfxa.doc.level': 'Untuk',
+  'rfxa.doc.level.response': 'Seluruh tanggapan',
+  'rfxa.doc.level.item': 'Item {{n}}',
+  'rfxa.doc.remove': 'Hapus permintaan dokumen',
+  'rfxa.doc.certificateNote':
+    'Permintaan Sertifikat juga meminta nomor sertifikat, penerbit, dan tanggal kedaluwarsa dari pemasok.',
+  'rfxa.doc.refusal.noName': 'Permintaan {{n}} memerlukan nama.',
+  'rfxa.doc.refusal.duplicate':
+    'Permintaan {{n}}, "{{name}}", sudah ada di daftar. Beri setiap dokumen namanya sendiri.',
+  'rfxa.doc.refusal.item':
+    'Permintaan {{n}}, "{{name}}", untuk item yang tidak lagi ada di RFQ ini. Pilih lagi untuk apa dokumen ini.',
+  'rfxa.doc.refusal.invalid': 'Permintaan {{n}} tidak dapat dikirim seperti ini.',
+  'rfxa.doc.review': 'Dokumen dari pemasok',
+  'rfxa.doc.review.none': 'Tidak ada yang diminta',
+  'rfxa.doc.unlinked': '"{{name}}" terkait dengan item yang dihapus; kini berlaku untuk seluruh tanggapan.',
+  'rfxa.doc.unlinked.dismiss': 'Tutup',
 };

@@ -1,7 +1,6 @@
-import React, { useMemo, useState } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
-import Button from '../../components/ui-v2/Button';
 import Data from '../../components/ui-v2/Data';
 import StatusPill from '../../components/ui-v2/StatusPill';
 import Table from '../../components/ui-v2/Table';
@@ -14,7 +13,6 @@ import { compositeText, scoreStanding, type ScoringOptions, type QuoteScore } fr
 import type { RFQ } from '../../data/mockRfqs';
 import type { Quotation } from '../../data/mockQuotations';
 import type { GateResult } from '../../services/sourcing/complianceGate';
-import type { AwardLine } from '../../services/sourcing/types';
 import { rfqItemType } from '../../services/sourcing/rfqItemTypes';
 import {
   tierPieces,
@@ -24,18 +22,12 @@ import {
   type RfqSpecField,
 } from '../../services/sourcing/rfqModel';
 import {
-  awardQuantity,
   bestPriceByBreak,
-  buildTieredAwardLines,
   defaultEvaluationTierQty,
   evaluationBreaks,
   itemCostAt,
-  itemName,
   itemTierAt,
-  itemsDepartingBestScore,
   scoreItemAt,
-  tieredAwardShapeRefusal,
-  type TieredAwardRefusal,
 } from '../../services/sourcing/rfqComparison';
 import { EmptyRow, GateMarker, money, qty } from './rfxDisplay';
 import { FirmPill } from './rfxAuthoringDisplay';
@@ -44,15 +36,10 @@ import { documentsOf } from '../../services/transitions/rfxDocumentRules';
 
 // ────────────────────────────────────────────────────────────────────────────
 // THE TIERED RFQ ON ITS EVENT PAGE (RFx spec 2026-09-21, "Evaluation and
-// award"). Three sections the rebuilt RFQ needs and a single-price RFQ never
-// had: what is being quoted, the comparison ITEM BY ITEM at an evaluation
-// break, and the award ITEM BY ITEM split by % across suppliers.
-//
-// ⚠️ **THE PAGE JUDGES WITH THE VERB'S OWN RULES.** The lines the award form
-// sends are built by `buildTieredAwardLines` and checked by
-// `tieredAwardShapeRefusal` — the same functions `rfq_award_governed` calls —
-// so a form the page lets through is one the verb accepts, and a refusal reads
-// the same on both sides. The page is the message; the verb is the lock.
+// award"). Two sections the rebuilt RFQ needs and a single-price RFQ never
+// had: what is being quoted, and the comparison ITEM BY ITEM at an evaluation
+// break. The award, item by item, is the one award panel every RFQ shares
+// (`AwardPanel.tsx`, RFx C3).
 // ────────────────────────────────────────────────────────────────────────────
 
 const fieldLabel = (t: TFunction, f: RfqSpecField): string => (f.labelKey ? t(f.labelKey) : (f.label ?? f.key));
@@ -543,230 +530,5 @@ const ItemComparison: React.FC<ComparisonProps & { item: RfqItem }> = ({
   );
 };
 
-// ── The award, item by item ─────────────────────────────────────────────────
-
-/** A shape refusal in the reader's language. */
-export const tieredRefusalMessage = (
-  t: TFunction,
-  r: TieredAwardRefusal,
-  supplierName: (id: string) => string,
-): string =>
-  t(`rfqCompare.refusal.${r.code}`, {
-    item: r.item ?? '',
-    pct: r.pct ?? 0,
-    detail: r.detail ? supplierName(r.detail) : '',
-  });
-
-interface AwardFormProps {
-  rfq: RFQ;
-  quotes: readonly Quotation[];
-  evalQty: number;
-  bestByItem: ReadonlyMap<number, string | null>;
-  qualifies: (supplierId: string) => boolean;
-  gateOf: (supplierId: string) => GateResult | undefined;
-  supplierName: (supplierId: string) => string;
-  pending: boolean;
-  onConfirm: (lines: AwardLine[], reason: string) => void;
-}
-
-export const TieredAwardForm: React.FC<AwardFormProps> = ({
-  rfq,
-  quotes,
-  evalQty,
-  bestByItem,
-  qualifies,
-  gateOf,
-  supplierName,
-  pending,
-  onConfirm,
-}) => {
-  const { t } = useTranslation();
-  const [shares, setShares] = useState<Record<string, Record<string, string>>>({});
-  const [reason, setReason] = useState('');
-  const qualified = useMemo(() => quotes.filter((q) => qualifies(q.supplierId)), [quotes, qualifies]);
-  const lines = buildTieredAwardLines(rfq, evalQty, shares, qualified);
-  const shape = lines.length > 0 ? tieredAwardShapeRefusal(rfq, lines, quotes) : null;
-  const departing = lines.length > 0 && !shape ? itemsDepartingBestScore(rfq, lines, bestByItem) : [];
-  const setShare = (code: string, quoteId: string, value: string) =>
-    setShares((prev) => ({ ...prev, [code]: { ...(prev[code] ?? {}), [quoteId]: value } }));
-
-  return (
-    <div className="space-y-4" data-testid="tiered-award-form">
-      <p className="text-xs text-text-tertiary">{t('rfqCompare.award.hint')}</p>
-      <p className="text-xs text-text-secondary" data-testid="tiered-award-break">
-        {t('rfqCompare.award.atBreak', { qty: qty(evalQty) })}
-      </p>
-      {(rfq.items ?? []).map((item) => {
-        const code = String(item.lineNo);
-        const quoting = quotes.filter((q) => (q.itemQuotes ?? []).some((iq) => iq.itemLineNo === item.lineNo));
-        const total =
-          Math.round(
-            lines.filter((l) => l.itemLineNo === item.lineNo).reduce((s, l) => s + l.sharePct, 0) * 100,
-          ) / 100;
-        return (
-          <div key={code} className="border border-border-subtle rounded-md overflow-hidden" data-testid={`award-item-${item.lineNo}`}>
-            <div className="px-4 py-2 border-b border-border-subtle flex flex-wrap items-baseline justify-between gap-2">
-              <span className="text-sm font-semibold text-text-primary">
-                {t('rfqCompare.content.item', { n: item.lineNo })} · {item.description}
-              </span>
-              <Data
-                className={`text-xs ${Math.abs(total - 100) <= 0.01 ? 'text-success' : 'text-text-tertiary'}`}
-                data-testid={`award-item-total-${item.lineNo}`}
-              >
-                {t('rfqCompare.award.itemTotal', { pct: total })}
-              </Data>
-            </div>
-            <Table>
-              <TableHeader>
-                <TableHeaderCell>{t('rfx.award.col.supplier')}</TableHeaderCell>
-                <TableHeaderCell>
-                  {t('rfqCompare.cmp.col.totalAtBreak', { qty: qty(evalQty) })}
-                  <FirmPill className="ml-2 normal-case" testId={`award-firm-${item.lineNo}`} />
-                </TableHeaderCell>
-                <TableHeaderCell>{t('rfx.award.col.share')}</TableHeaderCell>
-                <TableHeaderCell>{t('rfqCompare.award.qty')}</TableHeaderCell>
-              </TableHeader>
-              <tbody>
-                {quoting.map((q) => {
-                  const cost = itemCostAt(rfq, item, q, evalQty);
-                  const value = shares[code]?.[q.id] ?? '';
-                  const pct = Number(value);
-                  return (
-                    <TableRow key={q.id} data-testid={`award-input-${item.lineNo}-${q.supplierId}`}>
-                      <TableCell>
-                        {supplierName(q.supplierId)}
-                        {bestByItem.get(item.lineNo) === q.id && (
-                          <StatusPill variant="success" className="ml-2">
-                            {t('rfqCompare.cmp.bestScored')}
-                          </StatusPill>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {cost ? (
-                          <Data>{money(cost.total, q.currency ?? rfq.currency)}</Data>
-                        ) : (
-                          <span className="text-xs text-text-tertiary">{t('rfqCompare.cmp.notPriced')}</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {/* BR-01a — no share field for a supplier failing the
-                            gate, and the reason instead. The verb refuses it
-                            too, so this is the message, not the lock. */}
-                        {!qualifies(q.supplierId) ? (
-                          <GateMarker gate={gateOf(q.supplierId)} testId={`award-gate-${item.lineNo}-${q.supplierId}`} />
-                        ) : (
-                          <input
-                            type="number"
-                            min={0}
-                            max={100}
-                            aria-label={`${item.description} — ${supplierName(q.supplierId)} — ${t('rfx.award.col.share')}`}
-                            value={value}
-                            onChange={(e) => setShare(code, q.id, e.target.value)}
-                            className="w-24 bg-white border border-border-input rounded-md px-3 h-9 text-sm focus:outline-none focus:border-action"
-                          />
-                        )}
-                      </TableCell>
-                      <TableCell data-testid={`award-qty-${item.lineNo}-${q.supplierId}`}>
-                        {Number.isFinite(pct) && pct > 0 ? (
-                          <Data>
-                            {qty(awardQuantity(rfq, item, evalQty, pct))} {item.uom}
-                          </Data>
-                        ) : (
-                          <span className="text-text-tertiary">—</span>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-                {quoting.length === 0 && (
-                  <EmptyRow colSpan={4} testId={`award-item-empty-${item.lineNo}`}>
-                    {t('rfqCompare.cmp.noQuotes')}
-                  </EmptyRow>
-                )}
-              </tbody>
-            </Table>
-          </div>
-        );
-      })}
-
-      {shape && (
-        <p className="text-sm text-danger" role="alert" data-testid="award-item-refusal">
-          {tieredRefusalMessage(t, shape, supplierName)}
-        </p>
-      )}
-      {departing.length > 0 && (
-        <div data-testid="award-reason-required">
-          <label className="block text-xs font-semibold text-text-secondary mb-1" htmlFor="tiered-award-reason">
-            {t('rfx.award.reason')}
-          </label>
-          <p className="text-xs text-warning-hover mb-1">
-            {t('rfqCompare.award.reasonItems', { items: departing.map(itemName).join(', ') })}
-          </p>
-          <input
-            id="tiered-award-reason"
-            type="text"
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
-            className="w-full bg-white border border-border-input rounded-md px-3 h-10 text-sm focus:outline-none focus:border-action"
-          />
-        </div>
-      )}
-      <Button
-        variant="outline"
-        disabled={pending || lines.length === 0 || shape !== null || (departing.length > 0 && !reason.trim())}
-        data-testid="award-confirm"
-        onClick={() => onConfirm(lines, reason.trim())}
-      >
-        {t('rfx.award.confirm')}
-      </Button>
-    </div>
-  );
-};
-
-/** A recorded per-item award: item, supplier, share, quantity and the break. */
-export const TieredAwardLines: React.FC<{
-  rfq: RFQ;
-  lines: readonly AwardLine[];
-  supplierName: (supplierId: string) => string;
-}> = ({ rfq, lines, supplierName }) => {
-  const { t } = useTranslation();
-  const itemOf = (lineNo: number | undefined) => (rfq.items ?? []).find((i) => i.lineNo === lineNo);
-  return (
-    <Table>
-      <TableHeader>
-        <TableHeaderCell>{t('rfqCompare.award.col.item')}</TableHeaderCell>
-        <TableHeaderCell>{t('rfx.award.col.supplier')}</TableHeaderCell>
-        <TableHeaderCell>{t('rfx.award.col.share')}</TableHeaderCell>
-        <TableHeaderCell>{t('rfx.award.col.qty')}</TableHeaderCell>
-        <TableHeaderCell>{t('rfqCompare.award.col.break')}</TableHeaderCell>
-      </TableHeader>
-      <tbody>
-        {lines.map((line) => {
-          const item = itemOf(line.itemLineNo);
-          return (
-            <TableRow
-              key={`${line.itemLineNo}-${line.supplierId}`}
-              data-testid={`award-line-${line.itemLineNo}-${line.supplierId}`}
-            >
-              <TableCell className="text-sm">
-                {item ? `${t('rfqCompare.content.item', { n: item.lineNo })} · ${item.description}` : line.itemCode || '—'}
-              </TableCell>
-              <TableCell>{supplierName(line.supplierId)}</TableCell>
-              <TableCell>
-                <Data>{line.sharePct}%</Data>
-              </TableCell>
-              <TableCell>
-                <Data>
-                  {qty(line.quantity)} {item?.uom ?? rfq.uom}
-                </Data>
-              </TableCell>
-              <TableCell>
-                <Data>{line.awardTierQty === undefined ? '—' : qty(line.awardTierQty)}</Data>
-              </TableCell>
-            </TableRow>
-          );
-        })}
-      </tbody>
-    </Table>
-  );
-};
+// The award, item by item, is `AwardPanel.tsx` (RFx C3): one panel for every
+// RFQ, grown from the tiered per-item form that stood here.

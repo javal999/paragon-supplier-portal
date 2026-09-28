@@ -1,4 +1,4 @@
-import React, { useId, useRef } from 'react';
+import React, { useId, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Paperclip, X } from 'lucide-react';
 import Button from './Button';
@@ -26,6 +26,13 @@ interface SessionAttachmentsProps {
   readOnly?: boolean;
   /** One file only (an RFP's T&C document): adding replaces it. */
   single?: boolean;
+  /**
+   * NR-1 BR-05 — the pre-check on pick. Called for each picked file, in order,
+   * with how many files of this pick were accepted before it; a returned text
+   * refuses that file, which is never put, and the text is shown. Absent =
+   * every file is taken.
+   */
+  refuse?: (file: File, acceptedBefore: number) => string | null;
 }
 
 const SessionAttachments: React.FC<SessionAttachmentsProps> = ({
@@ -35,6 +42,7 @@ const SessionAttachments: React.FC<SessionAttachmentsProps> = ({
   testId,
   readOnly: readOnlyProp = false,
   single = false,
+  refuse,
 }) => {
   const { t } = useTranslation();
   const { files: fileService } = useDataService();
@@ -43,6 +51,7 @@ const SessionAttachments: React.FC<SessionAttachmentsProps> = ({
   // A control with nothing to call is a false affordance, so no handler means
   // no add and no remove — the same as an explicit `readOnly`.
   const readOnly = readOnlyProp || !onChange;
+  const [refusals, setRefusals] = useState<readonly string[]>([]);
 
   const onFiles = async (files: FileList | null) => {
     if (!files || files.length === 0 || !onChange) return;
@@ -50,7 +59,16 @@ const SessionAttachments: React.FC<SessionAttachmentsProps> = ({
     // Clear the input first: the list is copied, and the same file can then be
     // picked again while `put` is still resolving.
     if (input.current) input.current.value = '';
-    const added = await Promise.all(picked.map((f) => fileService.put(f)));
+    const accepted: File[] = [];
+    const refused: string[] = [];
+    for (const f of picked) {
+      const reason = refuse ? refuse(f, accepted.length) : null;
+      if (reason) refused.push(reason);
+      else accepted.push(f);
+    }
+    setRefusals(refused);
+    if (accepted.length === 0) return;
+    const added = await Promise.all(accepted.map((f) => fileService.put(f)));
     if (single) {
       value.forEach((a) => fileService.release(a.id));
       onChange(added.slice(0, 1));
@@ -93,6 +111,13 @@ const SessionAttachments: React.FC<SessionAttachmentsProps> = ({
           </>
         )}
       </div>
+      {refusals.length > 0 && (
+        <ul role="alert" className="text-xs text-danger space-y-0.5" data-testid={`${testId}-refusal`}>
+          {refusals.map((r) => (
+            <li key={r}>{r}</li>
+          ))}
+        </ul>
+      )}
       {value.length === 0 ? (
         <p className="text-xs text-text-tertiary">{t('attachments.none')}</p>
       ) : (

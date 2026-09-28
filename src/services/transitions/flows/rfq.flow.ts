@@ -27,10 +27,17 @@ const RFQ_CONTENT_FIELDS: readonly string[] = ['title', 'materialCategory', 'tot
 export const rfqFlow: FlowDefinition = {
   entity: 'rfq',
   version: 1,
-  states: ['Draft', 'Open', 'Closed', 'Awarded', 'Cancelled'],
+  // RFx C1 (NR-3 BR-06) — `Partly awarded`: some items are awarded and at
+  // least one is still open. Not a terminal: the buyer returns to award the
+  // rest (`t_rfq_award_partial` again, or the final `t_rfq_award`).
+  states: ['Draft', 'Open', 'Closed', 'Partly awarded', 'Awarded', 'Cancelled'],
   initial: 'Draft',
-  /** PF-0 · D-2 — an awarded or cancelled RFQ is done. */
-  terminals: ['Awarded', 'Cancelled'],
+  /**
+   * PF-0 · D-2 — a cancelled RFQ is done. RFx C2 (NR-3 BR-09, D-7): an
+   * AWARDED RFQ is no longer final — an award can be cancelled until it is
+   * marked "Raised in SAP" — so `Awarded` left this list with its new exits.
+   */
+  terminals: ['Cancelled'],
   transitions: [
     {
       // CREATION verb (Phase A/2, WIRED). Buyer raises a sourcing event. Mirrors
@@ -69,8 +76,10 @@ export const rfqFlow: FlowDefinition = {
       requiredRole: 'rfq:create',
       requiredFields: [...RFQ_CONTENT_FIELDS],
       // The rebuilt RFQ (items, quantity breaks, currency) is judged here, BY
-      // NAME, when it is sent. See `rfqModel.rfqCreateRefusal`.
-      policyHooks: [POLICY_HOOKS.RFQ_CREATE_VALID],
+      // NAME, when it is sent. See `rfqModel.rfqCreateRefusal`. RFx D2 (NR-2
+      // BR-08) — an RFQ created from an RFP may not source an option already
+      // awarded there (`rfq_create_rfp_options_free`).
+      policyHooks: [POLICY_HOOKS.RFQ_CREATE_VALID, POLICY_HOOKS.RFQ_CREATE_RFP_OPTIONS_FREE],
       surfaceable: { surfaced: true },
       version: 1,
     },
@@ -92,7 +101,9 @@ export const rfqFlow: FlowDefinition = {
       trigger: 'user',
       requiredRole: 'rfq:create',
       requiredFields: [...RFQ_CONTENT_FIELDS],
-      policyHooks: [POLICY_HOOKS.RFQ_CREATE_VALID],
+      // The SAME hooks as create. RFx D2's option guard judges the payload's
+      // refs; the target pins the stored ones, which the RFP could not award.
+      policyHooks: [POLICY_HOOKS.RFQ_CREATE_VALID, POLICY_HOOKS.RFQ_CREATE_RFP_OPTIONS_FREE],
       surfaceable: { surfaced: true },
       version: 1,
     },
@@ -148,13 +159,91 @@ export const rfqFlow: FlowDefinition = {
       // award is therefore byte-identical to what it was, and a two-supplier
       // award is the same verb with one more field, rather than a second award
       // verb that could drift from this one.
+      //
+      // ⚠️ **RFx C1 — THIS IS NOW THE FINAL AWARD (NR-3 BR-06).** It must leave
+      // every item settled: awarded here or by an earlier partial award, or
+      // named in the payload's `notAwardedItems` ("Will not award"). Otherwise
+      // it refuses `AWARD_ITEMS_OPEN`, naming the open items. Legal from
+      // `Partly awarded` too, to settle an event a partial award left open.
       id: 't_rfq_award',
-      from: ['Open', 'Closed'],
+      from: ['Open', 'Closed', 'Partly awarded'],
       to: 'Awarded',
       trigger: 'user',
       requiredRole: 'rfq:award',
       requiredFields: ['awardedQuotationId', 'awardedSupplierId'],
       policyHooks: [POLICY_HOOKS.RFQ_AWARD_GOVERNED],
+      surfaceable: { surfaced: true },
+      version: 1,
+    },
+    {
+      // RFx C1 (NR-3 BR-06, D-4) — the PARTIAL award: some items now, the rest
+      // later. A second verb because a transition has one target state; it
+      // shares `t_rfq_award`'s role, required fields and ONE policy hook, so
+      // the rule cannot drift between the two. Refuses `AWARD_NOTHING_OPEN`
+      // when it would settle every item (that is the final award). Its cascade
+      // marks only its named quotes Awarded and rejects none: a supplier with no
+      // share yet may still win an item left open.
+      id: 't_rfq_award_partial',
+      from: ['Open', 'Closed', 'Partly awarded'],
+      to: 'Partly awarded',
+      trigger: 'user',
+      requiredRole: 'rfq:award',
+      requiredFields: ['awardedQuotationId', 'awardedSupplierId'],
+      policyHooks: [POLICY_HOOKS.RFQ_AWARD_GOVERNED],
+      surfaceable: { surfaced: true },
+      version: 1,
+    },
+    {
+      // RFx C2 (NR-3 BR-09, D-7) — the buyer CANCELS an award, with a reason,
+      // until it is marked "Raised in SAP". The cancellation is APPENDED as its
+      // own record (AR-08); the award record is kept unedited. This is the full
+      // cancel: no other award of the event stays in force, so the event
+      // returns to `Closed` for a new award. Its cascade reinstates the quotes
+      // the cancelled award decided (`t_quotation_reinstate`, AR-06). Its own
+      // atom, apart from `rfq:award`, so Procurement can split who awards from
+      // who corrects without a new role (D-5).
+      id: 't_rfq_award_cancel',
+      from: ['Awarded', 'Partly awarded'],
+      to: 'Closed',
+      trigger: 'user',
+      requiredRole: 'rfq:award-cancel',
+      // The reason is judged by the policy (AWARD_REASON_REQUIRED), not here,
+      // so a blank one is refused by name rather than as a missing field.
+      requiredFields: ['awardId'],
+      policyHooks: [POLICY_HOOKS.RFQ_AWARD_CANCEL_GOVERNED],
+      surfaceable: { surfaced: true },
+      version: 1,
+    },
+    {
+      // RFx C2 — the PARTIAL cancel: another award of the event stays in force
+      // (after partial awards), so the event is `Partly awarded` afterwards. A
+      // second verb for the reason C1's award is a pair: one target state per
+      // transition. It shares the role and ONE policy hook with the full
+      // cancel, which refuses AWARD_CANCEL_TARGET_WRONG for the wrong one.
+      id: 't_rfq_award_cancel_partial',
+      from: ['Awarded', 'Partly awarded'],
+      to: 'Partly awarded',
+      trigger: 'user',
+      requiredRole: 'rfq:award-cancel',
+      requiredFields: ['awardId'],
+      policyHooks: [POLICY_HOOKS.RFQ_AWARD_CANCEL_GOVERNED],
+      surfaceable: { surfaced: true },
+      version: 1,
+    },
+    {
+      // RFx C2 (NR-3 BR-10) — the buyer marks an award "Raised in SAP" with the
+      // SAP document number it typed (there is no SAP interface). After it the
+      // award cannot be cancelled here: changes happen in SAP. STATE-PRESERVING
+      // for the reason the FX pin is: recording a fact about one award is not a
+      // step in the sourcing machine. APPENDED as its own record (AR-08).
+      id: 't_rfq_award_sap_raised',
+      from: ['Awarded', 'Partly awarded'],
+      to: 'Awarded',
+      statePreserving: true,
+      trigger: 'user',
+      requiredRole: 'rfq:award-sap',
+      requiredFields: ['awardId', 'sapDocumentNo'],
+      policyHooks: [POLICY_HOOKS.RFQ_AWARD_SAP_GOVERNED],
       surfaceable: { surfaced: true },
       version: 1,
     },

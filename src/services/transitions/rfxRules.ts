@@ -154,6 +154,35 @@ export function isPastDeadline(deadline: string, nowIso: string): boolean {
   return now > end;
 }
 
+/**
+ * NR-1 BR-08 / AC-07 (D-6) — why a supplier may no longer change its response,
+ * or `null`. Refused `RESPONSE_DEADLINE_PASSED` when the event is not Open, or
+ * when the deadline in force for THIS supplier (its own extension, or the
+ * event's) has passed. Read by the revise verbs and the draft save, and by a
+ * screen deciding whether to offer "Revise response" (RFX-R2).
+ */
+export function responseWindowRefusal(
+  event: { readonly status: string; readonly responseDeadline: string; readonly invitees: readonly RfxInvitee[] },
+  supplierId: string,
+  nowIso: string,
+): string | null {
+  if (event.status !== 'Open') {
+    return `RESPONSE_DEADLINE_PASSED: the event is ${event.status}`;
+  }
+  const deadline = effectiveDeadline(event.responseDeadline, event.invitees, supplierId);
+  return isPastDeadline(deadline, nowIso) ? `RESPONSE_DEADLINE_PASSED: responses closed on ${deadline}` : null;
+}
+
+/**
+ * NR-1 BR-08 / BR-10 — why a draft save may not touch this supplier's stored
+ * response, or `null`. A Submitted response changes only through revise, which
+ * appends a version; a save would change it in place with no version. `status`
+ * is the stored response's status, `undefined` when there is none yet.
+ */
+export function responseAlreadySubmittedRefusal(status: string | undefined): string | null {
+  return status === 'Submitted' ? 'RESPONSE_ALREADY_SUBMITTED: use revise' : null;
+}
+
 /** Whole days from `nowIso` to the end of the deadline day (negative = past). */
 export function daysToDeadline(deadline: string, nowIso: string): number {
   const end = Date.parse(`${deadline.slice(0, 10)}T23:59:59.999Z`);
@@ -618,42 +647,10 @@ export const isInvitedToRound = (
   supplierId: string,
 ): boolean => invitedSupplierIds.includes(supplierId);
 
-/** The share tolerance on an award split, in percentage points. */
-export const AWARD_SPLIT_TOLERANCE = 0.01;
-
-/**
- * REQ-E03-05 BR-06 / AC-04 — the award lines, grouped per item, whose shares do
- * NOT total 100%. An empty result is a legal split.
- *
- * ⚠️ **PER ITEM, NEVER OVER THE WHOLE EVENT.** Two items each at 50% sum to
- * 100% across the award and are two half-sourced items; the rule is that EACH
- * item is fully placed, and a total over the event cannot see the difference.
- */
-export function itemsNotTotalling100(lines: readonly AwardLine[]): readonly string[] {
-  const perItem = new Map<string, number>();
-  for (const line of lines) {
-    perItem.set(line.itemCode, (perItem.get(line.itemCode) ?? 0) + line.sharePct);
-  }
-  return [...perItem.entries()]
-    .filter(([, total]) => Math.abs(total - 100) > AWARD_SPLIT_TOLERANCE)
-    .map(([itemCode]) => itemCode);
-}
-
-/** REQ-E03-05 BR-06 — the refusal an ill-formed award earns, or null. */
-export function awardSplitRefusal(lines: readonly AwardLine[]): string | null {
-  if (lines.length === 0) return 'AWARD_EMPTY: an award names at least one supplier';
-  if (lines.some((l) => !Number.isFinite(l.sharePct) || l.sharePct <= 0)) {
-    return 'AWARD_SHARE_INVALID: every share is a percentage above zero';
-  }
-  if (lines.some((l) => !Number.isFinite(l.quantity) || l.quantity <= 0)) {
-    return 'AWARD_QTY_INVALID: every award line carries a quantity above zero';
-  }
-  const broken = itemsNotTotalling100(lines);
-  if (broken.length > 0) {
-    return `AWARD_SPLIT_INCOMPLETE: each item's shares must total 100% (${broken.join(', ')})`;
-  }
-  return null;
-}
+// REQ-E03-05 BR-06 — the split rule moved (RFx C1, AR-04). `awardSplitRefusal`
+// and `itemsNotTotalling100` judged a legacy award per `itemCode` beside a
+// second rule for tiered RFQs; both RFQ kinds are now judged by ONE item-based
+// rule, `awardShapeRefusal` in `src/services/sourcing/awardShape.ts`.
 
 /**
  * REQ-E03-05 BR-07 — does this award follow the best-scored quote?

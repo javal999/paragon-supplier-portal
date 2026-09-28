@@ -31,6 +31,8 @@ import type {
   NegotiationRoundView,
   RfiEventView,
   RfpEventView,
+  RfpAwardView,
+  RfpOfferRoundView,
   RfqSupplierGateView,
 } from '../sourcing/views';
 
@@ -2525,8 +2527,20 @@ export interface IProcurementService {
   getRfpEvents(scope: QueryScope): Promise<Page<RfpEventView>>;
   /** REQ-E03-05 — negotiation rounds. A supplier reads only its own thread (BR-05). */
   getNegotiationRounds(scope: QueryScope): Promise<Page<NegotiationRoundView>>;
+  /**
+   * NR-2 — firm-offer rounds on an RFP, with the offers and the last firm price
+   * per supplier and option. A supplier reads only rounds it was invited to and
+   * only its own offers (AC-01).
+   */
+  getRfpOfferRounds(scope: QueryScope): Promise<Page<RfpOfferRoundView>>;
   /** REQ-E03-05 — recorded awards. A supplier reads only its own outcome (AC-05). */
   getAwards(scope: QueryScope): Promise<Page<AwardView>>;
+  /**
+   * RFx D2 (NR-2 BR-09, AC-07) — awards on an RFP, per option on firm offers.
+   * A supplier reads only awards it is named on, only its own lines, and its
+   * outcome (awarded, not awarded, or withdrawn after a cancel).
+   */
+  getRfpAwards(scope: QueryScope): Promise<Page<RfpAwardView>>;
   /** RFx spec 2026-09-21 — invitees' intent and confidentiality acceptance. A supplier reads its own. */
   getRfqEngagement(scope: QueryScope): Promise<Page<RfqEngagementView>>;
   /** RFx spec 2026-09-21 — clarification Q&A. A supplier reads its own questions and the published answers, asker hidden. */
