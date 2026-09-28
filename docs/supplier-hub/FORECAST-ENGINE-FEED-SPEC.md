@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 0.4 draft, 2026-09-24 |
+| Version | 0.5 draft, 2026-09-28 |
 | For | The Master Data Management team, who own the engine's input data and its SAP integration (ENG-D1) |
 | What this is | Every input the in-house forecast engine reads: fields, key, grain, refresh, freshness limit, quality checks, and the likely SAP source |
 | What this is not | An interface design. How the data travels (API, events, files) is open under BL-11 (PQ-06) and belongs to IT |
@@ -240,7 +240,7 @@ The order below is the build order: section 2.1 feeds the first engine step (E14
 - **Key:** skuCode + weekStart. **Grain:** one record per SKU per week, zeros included. **History:** 2 to 3 years at the first load. **Refresh:** weekly. **Freshness limit:** 7 days.
 - **Checks:** quantity ≥ 0; no gaps in the weekly series.
 - **Stock-out flag:** SAP has no such field. It has to be derived, for example from days with zero stock at the distribution centre. The rule is MDM's to propose. Without it, a week of zero sales during a stock-out is read as zero demand, and the forecast learns to under-forecast (E14-01 BR-02).
-- **Likely SAP source:** billing or outbound delivery documents (VBRK, VBRP or LIKP, LIPS). Sell-in or sell-out is still open (ENG-D10).
+- **Likely SAP source:** billing or outbound delivery documents (VBRK, VBRP or LIKP, LIPS). Sell-in, decided 2026-09-28 (ENG-D10): PTI's shipments to its DCs and distributors, own brands only. OEM products come from the brand's POs instead (ENG-D20).
 
 **FgPlanSnapshot: SAP's finished-goods plan as it stood each week** (added for E14-03, E14-04)
 
@@ -299,3 +299,4 @@ The order below is the build order: section 2.1 feeds the first engine step (E14
 | 0.2 | 2026-09-23 | Added FgPlanSnapshot, SalesOrderWeek and SapSafetyStock, from the E14-03 and E14-04 build (PR #39) |
 | 0.3 | 2026-09-23 | Added MaterialValue (value per unit, for holding cost), from the E14-05 build |
 | 0.4 | 2026-09-24 | BomLine: added yieldPct (BL-115, E14-03 BR-03) with its check and a confirmation item; scrapPct described as the fraction the code holds (it read "percent") |
+| 0.5 | 2026-09-28 | SalesWeek: sell-in decided (ENG-D10); OEM demand comes from the brand's POs (ENG-D20) |

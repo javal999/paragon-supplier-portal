@@ -2,9 +2,9 @@
 
 | | |
 |---|---|
-| Version | 0.12 draft, 2026-09-25 |
+| Version | 0.13 draft, 2026-09-28 |
 | What this is | Detailed requirements for the demand and material forecast engine PTI builds itself (owner decision ENG-1), with each calculation explained |
-| Status | Every requirement is **Proposed**. The decision to build is Validated (ENG-1), and 12 of the 18 engine decisions are decided (ENG-D1 to D9 and ENG-D15 to D17, section 4). The rest of the detail has not yet been reviewed by the Material Planner |
+| Status | Every requirement is **Proposed**. The decision to build is Validated (ENG-1), and the engine decisions in section 4.1 are decided; section 4.2 lists what is still open. The rest of the detail has not yet been reviewed by the Material Planner |
 | Sources | ENG-1 (`SUPPLIER-HUB-REQUIREMENTS.md` section 9); methods and evidence in `research/FORECAST-METHOD-SPEC.md`; problem analysis in `research/FORECAST-BEST-PRACTICE-2026-09.md` |
 
 ## How to read this
@@ -377,8 +377,7 @@ It feeds supplier performance (REQ-E10-01) and sourcing filters (REQ-E03-01). Un
 - Leading: achieved fill rate against target, per material group.
 - Lagging: shortage weeks; average stock ÷ warehouse capacity.
 
-**Open items.**
-- ENG-D14: the Material Planner's list of materials per service tier.
+**Open items.** None. ENG-D14 is decided: the volume ranking stays (owner, 2026-09-28).
 - REPL: which replenishment method applies to which segment.
 
 ---
@@ -518,8 +517,7 @@ Without space limits, one big order is cheapest.
 
 **Metrics.** Leading: share of Trade-off revisions within the band; MASC (E14-02). Lagging: confirmation rate; CFOT.
 
-**Open items.**
-- ENG-D8a: the cumulative cap agreed with the pilot suppliers (starting at ±20%).
+**Open items.** None. ENG-D8a is decided: ±20% (owner, 2026-09-28).
 - C8-CLASS-PROJECTION (C8 §2.2): the commercial meaning of Firm.
 
 ---
@@ -593,9 +591,7 @@ Without space limits, one big order is cheapest.
 
 **Metrics.** Leading: backtest service result (E14-10). Lagging: shortage weeks; forecast bias (E14-11).
 
-**Open items.**
-- ENG-D10: the grain, sell-in or sell-out, and whether per channel.
-- ENG-D11: who reviews the forecast before it drives material plans (Demand Planning or MP).
+**Open items.** None blocking. ENG-D10: sell-in for now, own brands only; OEM products are planned from the brand's POs, not forecast (ENG-D20). ENG-D11: the Material Planning team reviews. A per-channel split is not decided and not needed to start.
 
 ---
 
@@ -652,7 +648,7 @@ Without space limits, one big order is cheapest.
 
 **Metrics.** Lagging: launch forecast error in the first 13 weeks; excess stock 8 weeks after a promotion.
 
-**Open items.** ENG-D12: which team owns the promotion calendar, and how far ahead it is fixed.
+**Open items.** ENG-D12a: how far ahead the promotion calendar is fixed. The owner is decided (ENG-D12): Marketing, with the owner filling it in meanwhile.
 
 ---
 
@@ -965,6 +961,15 @@ Writes only through the existing call-off change verb and a "taken to SAP" mark.
 | ENG-D15 | Weeks early before a reschedule-out is proposed | 1 week, an administrator setting beside the E14-05 cost rates (owner, 2026-09-24) | E14-13 BR-03 |
 | ENG-D16 | Who agrees PO-line changes with suppliers in SAP | The Material Planner; the Hub records only "taken to SAP" (owner, 2026-09-24) | E14-13 BR-07 |
 | ENG-D17 | Supplier liability on a Trade-off cancellation | Flagged "liability — not priced"; not priced (owner, 2026-09-24) | E14-13 BR-04 |
+| ENG-D8a | The cumulative cap agreed with pilot suppliers | ±20% from first publication, as the engine already runs (owner, 2026-09-28) | E14-06 BR-05 |
+| ENG-D10 | Forecast grain | Sell-in for now: PTI's shipments to its DCs and distributors, for PTI's own brands. A per-channel split is not decided and not needed to start. OEM products are not forecast (ENG-D20) (owner, 2026-09-28) | E14-07 |
+| ENG-D11 | Who reviews the forecast before it drives material plans | The Material Planning team (owner, 2026-09-28) | E14-07, E14-11 |
+| ENG-D12 | Owner of the promotion calendar | The Marketing team. Until they take it over, the owner fills it in for them. How far ahead it is fixed is still open (ENG-D12a) (owner, 2026-09-28) | E14-08 |
+| ENG-D14 | Materials per service tier | Keep the volume ranking (the ENG-D5 default) (owner, 2026-09-28) | E14-04 BR-02 |
+| ENG-D18 | Capacity check against the LTP | Two levels. Above capacity: amber, "needs the additional capacity". Above BE (capacity + additional capacity, the supplier's total): red, "cannot be supplied", and the planner acts (bring demand forward, split to another source, or cut) (team review, 2026-09-28) | REQ-E08-04 |
+| ENG-D19 | How the supplier confirms | Capacity before the LTP (pokayoke): a week's LTP cannot be confirmed until that week's capacity is. One "Submit all" per week; a week above BE needs a reason before it can be submitted (team review, 2026-09-28) | REQ-E08-04, REQ-E06-02 |
+| ENG-D20 | OEM demand (PTI makes the product for another brand) | The brand's POs, shipped to the brand's DC, are the demand. They are exploded through the BOM as firm orders; OEM products are not forecast by E14-07, and PTI keeps no fuller OEM record (team review, 2026-09-28) | E14-03, E14-07 |
+| ENG-D21 | Fixed stock (FS) reconcile | Per supplier and material at the end of a period: what the supplier committed (REQ-E06-02), what PTI called off, and what the supplier holds, against the supplier's maximum stock where one is agreed. The settlement of a shortfall in call-offs follows ENG-D17 (team review, 2026-09-28). The requirement is still to be written | New requirement |
 
 ### 4.1a Build decisions accepted (owner, 2026-09-23, PR #37)
 
@@ -1069,12 +1074,9 @@ ENG-B31 settles E14-06 BR-05: the cumulative cap is measured from the value when
 
 | ID | Decision | Owner | Blocks |
 |---|---|---|---|
-| ENG-D8a | The cumulative cap agreed with pilot suppliers | Material Planner, Procurement | Confirms E14-06 BR-05 (runs on ±20% meanwhile) |
-| ENG-D10 | Forecast grain: sell-in or sell-out, per channel or not | Demand Planning | E14-07 |
-| ENG-D11 | Who reviews the forecast before it drives material plans | Material Planner, Demand Planning | E14-07 |
-| ENG-D12 | Owner of the promotion calendar and how far ahead it is fixed | Marketing | E14-08 |
 | ENG-D13 | Plan-stability limit used in model selection | Material Planner | E14-10 (set after the first backtest) |
-| ENG-D14 | Materials per service tier | Material Planner | Confirms E14-04 BR-02 (runs on volume ranking meanwhile) |
+| ENG-D12a | How far ahead the promotion calendar is fixed | Marketing | E14-08 BR-04 |
+| ENG-D22 | The team's Demand Anticipation (DA = LTP + ROP PTI − SOH). ROP PTI includes lead-time demand (confirmed 2026-09-28), so DA keeps about one lead time of extra stock on hand. Recommended: net to safety stock and count open orders, as E14-03 does, and use the ROP only as the order trigger against stock plus open orders | Material Planning team | The team's DA process; E14-03 already nets this way |
 | C8 §8 | SOMO ratifies the engine producing the totals | SOMO | Publishing engine totals on C8 (BL-101) |
 | REPL | Replenishment method per material segment | Material Planner (consultant) | E14-12, parts of E14-04 |
 
@@ -1096,3 +1098,4 @@ ENG-B31 settles E14-06 BR-05: the cumulative cap is measured from the value when
 | 0.10 | 2026-09-24 | REQ-E14-06 built on synthetic data (BL-108, PR #48); build decisions ENG-B29 to ENG-B38 for review, section 4.1g. The range beside the quantity (BR-06) is not built: it needs E14-09 |
 | 0.11 | 2026-09-24 | E14-03 BR-03 reworded to match ENG-B50: yield applied on the BOM line beside scrap (same result as dividing the parent's order quantity); the backlog wording for BL-115 had caused the mismatch |
 | 0.12 | 2026-09-25 | Build decisions ENG-B19 to ENG-B59 (PRs #44, #46, #47, #48) accepted by the owner as recommended, sections 4.1d to 4.1g. The rented-space cap value (ENG-B55) stays a placeholder for the Warehouse |
+| 0.13 | 2026-09-28 | Owner decided ENG-D8a (±20%), D10 (sell-in for now), D11 (Material Planning reviews), D12 (Marketing owns the promotion calendar; the owner fills it meanwhile), D14 (volume ranking). Team review of the LTP / DA / capacity process added ENG-D18 to D21 (two-level capacity check with BE, capacity before LTP with Submit all per week, OEM demand from the brand's POs, fixed stock reconcile) and opened ENG-D12a and ENG-D22 (the DA formula) |
