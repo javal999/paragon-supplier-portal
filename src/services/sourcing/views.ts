@@ -17,13 +17,16 @@ import type {
   AwardSapMark,
   AwardStatus,
   NegotiationRound,
+  ResponseVersion,
+  RfiAnswer,
   RfiEvent,
   RfiResponse,
+  RfpAwardLine,
   RfpEvent,
   RfpFirmOffer,
   RfpOfferRound,
-  RfpAwardLine,
   RfpResponse,
+  RfpTermAnswer,
   RfqAwardRecord,
 } from './types';
 import type { GateCriterion } from './complianceGate';
@@ -62,6 +65,12 @@ export interface RfiResponseView extends RfiResponse {
   readonly supplierName: string;
   /** REQ-E03-02 — the weighted response score, or `null` when nothing is weighted. */
   readonly score: number | null;
+  /**
+   * NR-1 BR-08 — every submitted version, oldest first; the last is the one the
+   * response's own fields hold. A seed with none reads as version 1. The buyer
+   * reads them on submitted responses, a supplier only on its own.
+   */
+  readonly versions: readonly ResponseVersion<RfiAnswer>[];
 }
 
 export interface RfiEventView extends RfiEvent {
@@ -81,6 +90,8 @@ export interface RfpResponseView extends RfpResponse {
   readonly supplierName: string;
   readonly complianceScore: number;
   readonly deviationCount: number;
+  /** NR-1 BR-08 — as on the RFI response view. */
+  readonly versions: readonly ResponseVersion<RfpTermAnswer>[];
 }
 
 export interface RfpEventView extends RfpEvent {

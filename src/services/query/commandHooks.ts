@@ -2369,6 +2369,18 @@ export type RfxCommandVars =
       /** Draft only — PTI does not see it (REQ-E03-02 edge case). */
       draftOnly?: boolean;
     }
+  /**
+   * NR-1 BR-08 (D-6) — the supplier revises its SUBMITTED RFI response until
+   * the deadline (`t_rfiresponse_revise`). The payload is the revised content;
+   * the response stays Submitted and the revision is appended as the next
+   * version. Not `reviseRfi`, which is the buyer's draft-edit verb.
+   */
+  | {
+      verb: 'reviseRfiResponse';
+      responseId: string;
+      answers: readonly RfiAnswer[];
+      documents?: readonly ResponseDocumentInput[];
+    }
   /** The supplier accepts a confidential RFI's terms (an answer-free save). */
   | { verb: 'acceptRfi'; rfiId: string; supplierId: string }
   // — REQ-E03-04 · RFP —
@@ -2422,6 +2434,20 @@ export type RfxCommandVars =
       /** NR-1 BR-01 — as `answerRfi`. */
       documents?: readonly ResponseDocumentInput[];
       draftOnly?: boolean;
+    }
+  /**
+   * NR-1 BR-08 (D-6) — the supplier revises its SUBMITTED proposal until the
+   * deadline (`t_rfpresponse_revise`); as `reviseRfiResponse`. Not `reviseRfp`,
+   * which is the buyer's draft-edit verb.
+   */
+  | {
+      verb: 'reviseRfpResponse';
+      responseId: string;
+      answers: readonly RfpTermAnswer[];
+      otherTerms?: string;
+      questionAnswers?: readonly RfiAnswer[];
+      pricing?: RfpPricingAnswer;
+      documents?: readonly ResponseDocumentInput[];
     }
   /**
    * The supplier accepts an RFP's confidentiality terms and/or its T&C document
@@ -2639,6 +2665,31 @@ export function useRfxCommand() {
             payload: {},
           });
         }
+        case 'reviseRfiResponse':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_rfiresponse_revise',
+            entity: 'rfiResponse',
+            entityId: vars.responseId,
+            expectedState: 'Submitted',
+            payload: {
+              answers: [...vars.answers],
+              ...(vars.documents !== undefined ? { documents: vars.documents.map((d) => ({ ...d })) } : {}),
+            },
+          });
+        case 'reviseRfpResponse':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_rfpresponse_revise',
+            entity: 'rfpResponse',
+            entityId: vars.responseId,
+            expectedState: 'Submitted',
+            payload: {
+              answers: [...vars.answers],
+              ...(vars.otherTerms !== undefined ? { otherTerms: vars.otherTerms } : {}),
+              ...(vars.questionAnswers !== undefined ? { questionAnswers: [...vars.questionAnswers] } : {}),
+              ...(vars.pricing !== undefined ? { pricing: vars.pricing } : {}),
+              ...(vars.documents !== undefined ? { documents: vars.documents.map((d) => ({ ...d })) } : {}),
+            },
+          });
         case 'acceptRfi':
           return svc.commands.dispatch(scope, {
             transitionId: 't_rfiresponse_save',

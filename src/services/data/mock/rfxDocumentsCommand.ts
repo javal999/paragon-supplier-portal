@@ -9,6 +9,7 @@
 //
 //   t_rfiresponse_save / t_rfpresponse_save  → rfx_response_documents_within_limits
 //   t_rfiresponse_submit / t_rfpresponse_submit → rfx_response_documents_complete
+//   t_rfiresponse_revise / t_rfpresponse_revise → rfx_response_documents_complete
 //   t_quotation_submit                        → quotation_documents_complete
 // ────────────────────────────────────────────────────────────────────────────
 
@@ -22,6 +23,8 @@ import {
 import type { RfiAnswer, RfiResponse, RfpResponse, ResponseDocument } from '../../sourcing/types';
 import { rfiEventStore, rfiResponseStore, rfpEventStore, rfpResponseStore } from './stores/rfxStores';
 import { rfqStore } from './stores/rfqStore';
+import { revisedRfiResponse, revisedRfpResponse } from '../../sourcing/responseVersions';
+import { sdcClock } from '../../sdc';
 
 /** Files held on attachment answers: they count toward the 30 per response (D-3). */
 const answerFiles = (answers: readonly RfiAnswer[] | undefined): number =>
@@ -62,10 +65,20 @@ bindPolicyHook(POLICY_HOOKS.RFX_RESPONSE_DOCUMENTS_WITHIN_LIMITS, ({ payload }) 
 });
 
 // NR-1 BR-03 to BR-05 — on submit, the stored documents against the event's
-// requests. The entity says which event type it answers.
-bindPolicyHook(POLICY_HOOKS.RFX_RESPONSE_DOCUMENTS_COMPLETE, ({ target, entityId }) => {
-  const response = target.readEntity(entityId) as (RfiResponse | RfpResponse) | null;
-  if (!response) return { ok: false, reason: 'response not found' };
+// requests. The entity says which event type it answers. On a revise (NR-1
+// BR-08: the response is already Submitted) the rule judges the revised
+// response the payload would leave, so a revise that drops a required
+// document is refused as a submit would be.
+bindPolicyHook(POLICY_HOOKS.RFX_RESPONSE_DOCUMENTS_COMPLETE, ({ target, entityId, currentState, payload }) => {
+  const stored = target.readEntity(entityId) as (RfiResponse | RfpResponse) | null;
+  if (!stored) return { ok: false, reason: 'response not found' };
+  let response: RfiResponse | RfpResponse = stored;
+  if (currentState === 'Submitted') {
+    const parsed = payloadDocuments(payload);
+    if (!parsed.ok) return { ok: false, reason: parsed.reason };
+    const now = sdcClock.now();
+    response = 'rfiId' in stored ? revisedRfiResponse(stored, payload, now) : revisedRfpResponse(stored, payload, now);
+  }
   const rfi = 'rfiId' in response ? response : null;
   const event = rfi ? rfiEventStore.get(rfi.rfiId) : rfpEventStore.get((response as RfpResponse).rfpId);
   if (!event) return { ok: false, reason: 'event not found' };

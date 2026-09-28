@@ -1,6 +1,6 @@
 # C1 — Method Surface
 
-Three distinct axes. **91** (service surface) · **178** (transition catalog) · **37** (wired
+Three distinct axes. **91** (service surface) · **180** (transition catalog) · **37** (wired
 targets). They measure different things; this file keeps them separate.
 
 > ⚠️ **THIS DOCUMENT IS PINNED TO THE TREE, AND THE PIN IS WHY THE NUMBERS ABOVE ARE ALLOWED TO
@@ -99,7 +99,7 @@ the string, because those are different claims and only the first is the contrac
 
 ---
 
-## Axis 2 — the 178-transition catalog (43 flows)
+## Axis 2 — the 180-transition catalog (43 flows)
 
 Every authored state-machine edge across the registered flows (`id: 't_<entity>_<verb>'`). Derived
 from `getKnownFlows()` — the seeded registry — never from a grep over the flow files, because a
@@ -145,13 +145,13 @@ transition id can be assembled at a call site rather than written as a literal (
 | `forecastView.flow.ts` | `forecastView` | 1 | `t_forecastview_record` | **wired** |
 | `sapChangeMark.flow.ts` | `sapChangeMark` | 1 | `t_sapchange_mark` | **wired** |
 | `rfiEvent.flow.ts` | `rfiEvent` | 6 | `t_rfi_create`, `t_rfi_revise_draft`, `t_rfi_publish`, `t_rfi_extend`, `t_rfi_close`, `t_rfi_cancel` | **wired** |
-| `rfiResponse.flow.ts` | `rfiResponse` | 2 | `t_rfiresponse_save`, `t_rfiresponse_submit` | **wired** |
+| `rfiResponse.flow.ts` | `rfiResponse` | 3 | `t_rfiresponse_save`, `t_rfiresponse_submit`, `t_rfiresponse_revise` | **wired** |
 | `rfpEvent.flow.ts` | `rfpEvent` | 11 | `t_rfp_create`, `t_rfp_revise_draft`, `t_rfp_publish`, `t_rfp_extend`, `t_rfp_close`, `t_rfp_award`, `t_rfp_award_partial`, `t_rfp_award_cancel`, `t_rfp_award_cancel_partial`, `t_rfp_award_sap_raised`, `t_rfp_cancel` | **wired** |
-| `rfpResponse.flow.ts` | `rfpResponse` | 2 | `t_rfpresponse_save`, `t_rfpresponse_submit` | **wired** |
+| `rfpResponse.flow.ts` | `rfpResponse` | 3 | `t_rfpresponse_save`, `t_rfpresponse_submit`, `t_rfpresponse_revise` | **wired** |
 | `negotiationRound.flow.ts` | `negotiationRound` | 2 | `t_negotiationround_open`, `t_negotiationround_close` | **wired** |
 | `rfpOfferRound.flow.ts` | `rfpOfferRound` | 2 | `t_rfp_round_open`, `t_rfp_round_close` | **wired** |
 | `rfpFirmOffer.flow.ts` | `rfpFirmOffer` | 2 | `t_rfpfirmoffer_submit`, `t_rfpfirmoffer_revise` | **wired** |
-| **TOTAL** | | **178** | | |
+| **TOTAL** | | **180** | | |
 
 **Flow shape** (`schema.ts`, `FlowDefinition` / `TransitionDef`): each transition declares
 `from[]` / `to` / `trigger` / `requiredRole` / `requiredFields[]` / `policyHooks[]` /
