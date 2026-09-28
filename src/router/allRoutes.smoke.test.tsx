@@ -81,6 +81,7 @@ import SupplierForecastCommitments from '../pages-v2/SupplierForecastCommitments
 import BuyerForecasts from '../pages-v2/BuyerForecasts';
 import BuyerCommitments from '../pages-v2/BuyerCommitments';
 import BuyerReliability from '../pages-v2/BuyerReliability';
+import { BuyerFixedStockReconcile, SupplierFixedStockReconcile } from '../pages-v2/FixedStockReconcile';
 import BuyerMaterialRequirement from '../pages-v2/BuyerMaterialRequirement';
 import BuyerSafetyStock from '../pages-v2/BuyerSafetyStock';
 import BuyerOrderPlan from '../pages-v2/BuyerOrderPlan';
@@ -136,6 +137,7 @@ const ROUTES: RouteCase[] = [
   { name: 'buyer/plan-grid', pattern: '/buyer/plan-grid', at: '/buyer/plan-grid', element: <PlanGrid />, identity: BUYER },
   { name: 'buyer/forecasts', pattern: '/buyer/forecasts', at: '/buyer/forecasts', element: <BuyerForecasts />, identity: BUYER },
   { name: 'buyer/collaboration', pattern: '/buyer/collaboration', at: '/buyer/collaboration', element: <BuyerCommitments />, identity: BUYER },
+  { name: 'buyer/fs-reconcile', pattern: '/buyer/fs-reconcile', at: '/buyer/fs-reconcile', element: <BuyerFixedStockReconcile />, identity: BUYER },
   { name: 'buyer/reliability', pattern: '/buyer/reliability', at: '/buyer/reliability', element: <BuyerReliability />, identity: BUYER },
   { name: 'buyer/material-requirement', pattern: '/buyer/material-requirement', at: '/buyer/material-requirement', element: <BuyerMaterialRequirement />, identity: BUYER },
   { name: 'buyer/safety-stock', pattern: '/buyer/safety-stock', at: '/buyer/safety-stock', element: <BuyerSafetyStock />, identity: BUYER },
@@ -192,6 +194,7 @@ const ROUTES: RouteCase[] = [
   { name: 'supplier/rfp', pattern: '/supplier/rfp', at: '/supplier/rfp', element: <SupplierRfp />, identity: SUPPLIER },
   { name: 'supplier/rfq/rounds', pattern: '/supplier/rfq/rounds', at: '/supplier/rfq/rounds', element: <SupplierNegotiations />, identity: SUPPLIER },
   { name: 'supplier/forecasts', pattern: '/supplier/forecasts', at: '/supplier/forecasts', element: <SupplierForecastCommitments />, identity: SUPPLIER },
+  { name: 'supplier/fs-reconcile', pattern: '/supplier/fs-reconcile', at: '/supplier/fs-reconcile', element: <SupplierFixedStockReconcile />, identity: SUPPLIER },
   { name: 'supplier/forecasts/responses', pattern: '/supplier/forecasts/responses', at: '/supplier/forecasts/responses', element: <SupplierForecasts />, identity: SUPPLIER },
   { name: 'supplier/shipments', pattern: '/supplier/shipments', at: '/supplier/shipments', element: <SupplierShipments />, identity: SUPPLIER },
   { name: 'supplier/goods-receipts', pattern: '/supplier/goods-receipts', at: '/supplier/goods-receipts', element: <SupplierGoodsReceipts />, identity: SUPPLIER },

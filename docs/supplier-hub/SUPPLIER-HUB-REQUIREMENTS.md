@@ -215,7 +215,7 @@ The menu follows the hub's own sections, not procurement stages, and each PTI us
 |---|---|---|---|
 | Home | My tasks | All | Section 3.8 |
 | Order collaboration | Order summary; Purchase orders; Shipments & ASN; Goods receipts | MP | REQ-E07-01 to REQ-E07-06 |
-| Forecast | Forecasts; Commitments & gaps | MP | REQ-E06-01 to REQ-E06-03 |
+| Forecast | Forecasts; Commitments & gaps; Fixed stock reconcile | MP | REQ-E06-01 to REQ-E06-04 |
 | Inventory & capacity | Inventory; Capacity; Alerts; Supplier access | MP | REQ-E08-01 to REQ-E08-05 |
 | Call-offs | Recommendations; Call-offs | MP | REQ-E09-01 to REQ-E09-04 |
 | Sourcing | RFI; RFQ (quotation requests); RFP; Suppliers | BUY | REQ-E03-01 to REQ-E03-05; Foundation |
@@ -228,7 +228,7 @@ The menu follows the hub's own sections, not procurement stages, and each PTI us
 |---|---|---|
 | Home | To do | Section 3.8 |
 | Orders | Purchase orders; Call-offs; Shipments & ASN; Goods receipts | REQ-E07-01 to REQ-E07-06, REQ-E09-03, REQ-E09-04 |
-| Planning | Forecast & commitments; Stock; Capacity | REQ-E06-01, REQ-E06-02, REQ-E08-02, REQ-E08-04 |
+| Planning | Forecast & commitments; Fixed stock reconcile; Stock; Capacity | REQ-E06-01, REQ-E06-02, REQ-E06-04, REQ-E08-02, REQ-E08-04 |
 | Sourcing | RFI invitations; RFQ invitations (with negotiation rounds); RFP invitations | REQ-E03-02 to REQ-E03-05 |
 | Invoices | Invoices | REQ-E07-07 |
 | Performance | My performance | REQ-E10-01 |
@@ -268,6 +268,7 @@ The menu follows the hub's own sections, not procurement stages, and each PTI us
 | REQ-E06-01 | Forecast publication | E06 | MVP | Validated (owner, E06-R) |
 | REQ-E06-02 | Foresight / fixed-stock confirmation | E06 | MVP | Validated (owner, E06-R) |
 | REQ-E06-03 | Forecast-commit gap monitoring | E06 | MVP | Validated (owner, E06-R) |
+| REQ-E06-04 | Fixed stock (FS) reconcile | E06 | MVP | Proposed (reconcile decided by the team, 2026-09-28, ENG-D21) |
 | REQ-E07-01 | PO visibility with quantity and timing breakdown | E07 | MVP | Validated |
 | REQ-E07-02 | PO response: approve, adjust, reject, escalate | E07 | MVP | Validated |
 | REQ-E07-03 | Order Collaboration Summary | E07 | MVP | Validated (drill-through and lifecycle columns, 2026-09-19) |
@@ -1487,6 +1488,69 @@ The owner confirmed the recommendations for this section on 2026-09-17 (E06-R). 
 **Metrics.** Leading: open exceptions older than 2 working days [Proposed]. Lagging: KPI-04; KPI-05.
 
 **Open items.** PQ-08 (confirm CR-21 and CR-22 values).
+
+#### REQ-E06-04  Fixed stock (FS) reconcile
+
+| Maps to | Phase | Priority | Business owner | Users | Status |
+|---|---|---|---|---|---|
+| E06.02; ENG-D21; BL-134 | MVP | P1 [Proposed] | Material Planner | MP, SUP | Proposed (the reconcile itself decided by the team, 2026-09-28, ENG-D21) |
+
+**Business value.** The foresight / fixed-stock commitment (REQ-E06-02) asks the supplier to make and hold stock for PTI. Nothing today checks, at the end of a cycle, whether PTI then called that stock off, and whether the supplier really holds what was not called off. The reconcile closes that loop: it shows where PTI under-called a commitment (a settlement question for PTI), where the supplier does not hold what it committed, and where stock sits above the agreed maximum [Owner/Team, 2026-09-28].
+
+**Experience.**
+- MP: sees, per supplier, material and cycle, what the supplier committed, what PTI called off, what the supplier holds, the agreed maximum stock, and the outcome, with a count per outcome. Under-called rows carry the quantity flagged "liability — not priced". A cycle still running is marked provisional [Owner/Team, 2026-09-28; screen Proposed].
+- SUP: sees the same rows for its own materials only, so both sides read the same figures before the settlement conversation [Proposed].
+
+**Step-by-step (Planner, end of W3).**
+1. The planner opens Forecast → Fixed stock reconcile.
+2. Material X from supplier A reads: committed 99,600; called off 88,000; not called off 11,600; held 85,000; outcome "PTI under-called"; liability — not priced 11,600.
+3. The planner takes the flagged quantity to the settlement conversation with the supplier, outside the Hub (ENG-D17).
+
+**Business rules.**
+- BR-01. **Cycle.** Packaging is reconciled at the end of each 3-week cycle, W1 to W3 [Owner/Team, 2026-09-28: "FS Reconcile end W3"]. Cycles run back to back from a fixed Monday, the first week of the Hub's first published packaging forecast (2026-08-31) [Proposed]. Raw material is committed per month (REQ-E06-01 BR-03), so it is reconciled at the end of each month [Proposed]. The cycle length is the shape of the reconcile, like the period grid, not an administrator value [Proposed].
+- BR-02. **Rows.** One row per supplier, material and cycle that has started, where something was committed or called off. A pair with nothing committed and nothing called off has no row [Proposed].
+- BR-03. **Committed** is the sum of the supplier's submitted Firm and Trade-off commitments for the cycle's periods (REQ-E06-02). A period still awaiting a commitment counts as zero and is shown as awaiting. Forecast-zone periods carry only an acknowledgement and are not counted. A packaging month beyond the weekly horizon is not read: it is re-cut into weeks before its cycle starts [Proposed]. For each period the commitment standing in the latest version that covers the period is used, so a period that has left the current version keeps the commitment it ended with; if that version moved the period's demand away from the supplier, the supplier has nothing committed for it [Proposed].
+- BR-04. **Called off** is the quantity PTI released on call-offs (REQ-E09-03) for the supplier and material with a need date in the cycle. The planner's drafts and dismissed drafts are not releases and do not count. A call-off the supplier rejected still counts: PTI did call the stock off [Proposed].
+- BR-05. **Held** is the supplier's stock on hand (REQ-E08-02): while the cycle runs, the current figure the Stock page shows; once it has ended, the latest figure submitted by the cycle end. With no such figure, held is "not reported" — never assumed to be zero [Proposed].
+- BR-06. **Maximum stock** is the most the supplier may hold for PTI of the material, agreed per supplier and material [Owner/Team, 2026-09-28: "where one is agreed"]. None is agreed yet, so every row reads "No max stock agreed", and nothing is capped or above the maximum [Proposed]. An agreed value becomes supplier-material master data.
+- BR-07. **Not called off** = committed − called off. Negative when PTI called off beyond the commitment, which is shown as information [Proposed].
+- BR-08. **Outcome**, the first that applies [Proposed]:
+  1. Not called off above zero and held not reported → **Stock not reported**.
+  2. Not called off above zero and held below it → **Supplier short** (short = not called off − held).
+  3. Not called off above zero and held at least that → **PTI under-called**.
+  4. Everything called off and held above the agreed maximum → **Above max stock**.
+  5. Otherwise → **Balanced**.
+- BR-09. **Settlement.** For "PTI under-called" and "Supplier short", the quantity flagged is min(not called off, held, maximum stock where agreed), shown as "liability — not priced". It is flagged, not priced, and agreed outside the Hub [Owner/Team, 2026-09-28, following ENG-D17]. Stock above the agreed maximum is the supplier's own and is never flagged [Proposed]. "Stock not reported" flags nothing until the supplier submits a figure [Proposed].
+- BR-10. **Provisional and final.** A cycle is read from its first day. Until it ends the row is provisional, because PTI can still call off; after its end it is final [Proposed].
+- BR-11. The list is sorted most urgent first: Supplier short, PTI under-called, Stock not reported, Above max stock, Balanced; then the latest cycle first [Proposed].
+- BR-12. **Who sees what.** The planner sees every supplier. A supplier sees only its own rows, scoped by the service, never by the page [Owner/Team, 2026-09-28 for the planner; supplier view Proposed].
+
+**Worked example.** Supplier A, PET bottle 200 ml, cycle W1 to W3 (31 Aug to 20 Sep 2026). Commitments: W1 34,300, W2 31,000, W3 34,300 → committed 99,600. Call-offs released with need dates in the cycle total 88,000. Held at the end of W3: 85,000. Maximum stock agreed: 90,000.
+- Not called off = 99,600 − 88,000 = 11,600. Held 85,000 ≥ 11,600 → **PTI under-called**; liability — not priced = min(11,600; 85,000; 90,000) = **11,600**.
+- If held were 7,000: **Supplier short** by 11,600 − 7,000 = 4,600; liability — not priced 7,000.
+- If no stock figure were submitted: **Stock not reported**; nothing flagged.
+- If PTI had called off 101,000: **Balanced**, 1,400 called off beyond the commitment. With 95,000 held: **Above max stock**, 5,000 the supplier's own.
+- If the maximum stock were 10,000: liability capped at **10,000**; 75,000 above the maximum.
+
+**Edge cases.**
+- No stock figure: held "not reported"; an uncalled commitment reads "Stock not reported" (BR-05, BR-08).
+- No maximum stock agreed: "No max stock agreed"; nothing capped, nothing above the maximum (BR-06).
+- Called off with nothing committed: "Balanced", the call-offs shown as beyond the commitment.
+- A stock figure submitted after an ended cycle's end is not used for that cycle.
+- Units: committed, called off and held are in the material's unit; no conversion is made.
+
+**Acceptance criteria.**
+- AC-01. For each supplier, material and started cycle, the page shows committed, called off, not called off, held (or "Not reported"), maximum stock (or "No max stock agreed"), the outcome, and whether the row is provisional or final.
+- AC-02. The outcome follows BR-08, and the flagged quantity follows BR-09, labelled "liability — not priced" and never priced.
+- AC-03. Drafts and dismissed drafts are not counted as called off; Forecast-zone periods are not counted as committed.
+- AC-04. A supplier sees only its own rows.
+- AC-05. The worked example above reproduces exactly (`src/services/transitions/fixedStockReconcile.test.ts`).
+
+**Data and integration.** Reads REQ-E06-02 (commitments, per forecast version), REQ-E09-03 (call-offs), REQ-E08-02 (stock submissions), and the agreed maximum stock per supplier and material (not yet held anywhere; BR-06). Holds no state of its own. Computed at read.
+
+**Metrics.** Leading: rows "Stock not reported" at cycle end (should be zero). Lagging: quantity flagged "liability — not priced" per cycle; share of committed quantity called off per cycle.
+
+**Open items.** Who agrees the maximum stock and where it is kept (supplier-material master data). Whether the reconcile should raise a Home task or alert at cycle end. Whether a rejected call-off should instead count against the supplier.
 
 ### 5.6 Planning & Fulfillment: Call-off Management (E09)
 

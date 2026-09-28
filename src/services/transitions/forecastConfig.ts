@@ -88,6 +88,36 @@ export function zoneLengthsFor(supplierId: string, materialGroup: string, materi
   };
 }
 
+// ── Fixed stock (FS) reconcile — REQ-E06-04 (ENG-D21) ────────────────────────
+// The shape of the reconcile cycle, like the period grid above — not a
+// threshold, so not an administrator value.
+
+/**
+ * REQ-E06-04 BR-01 — packaging is reconciled at the end of each 3-week cycle
+ * ("FS Reconcile end W3", team review 2026-09-28). Raw material, committed
+ * monthly, is reconciled at the end of each month.
+ */
+export const FS_RECONCILE_CYCLE_WEEKS = 3;
+
+/**
+ * REQ-E06-04 BR-01 [Proposed] — the Monday packaging cycles are counted from:
+ * the first week of the Hub's first published packaging forecast. Cycles run
+ * W1 to W3 from it, back to back.
+ */
+export const FS_RECONCILE_CYCLE_ANCHOR = '2026-08-31';
+
+/**
+ * REQ-E06-04 BR-06 — the maximum stock agreed per supplier × material
+ * (`supplierId|materialCode`), in the material's unit. None is agreed yet, so
+ * every row reads "No max stock agreed"; an agreed value is added here until it
+ * becomes supplier-material master data.
+ */
+export const AGREED_MAX_STOCK: Readonly<Record<string, number>> = Object.freeze({});
+
+/** BR-06 — the agreed maximum stock for a supplier × material, or null when none is agreed. */
+export const agreedMaxStock = (supplierId: string, materialCode: string): number | null =>
+  AGREED_MAX_STOCK[`${supplierId}|${materialCode}`] ?? null;
+
 // ── The administrator's values (BL-32) ───────────────────────────────────────
 // CR-21, CR-22 and CR-26 have their defaults in `hubSettings.ts` and are changed
 // on Administration → Tolerances and rule values; these accessors read the
