@@ -13,6 +13,7 @@
 // ────────────────────────────────────────────────────────────────────────────
 
 import { stampDocuments } from '../transitions/rfxDocumentRules';
+import type { ActorAttribution } from '../../lib/enforcement';
 import type {
   ResponseVersion,
   RfiAnswer,
@@ -71,20 +72,31 @@ export function versionsAfterSubmit(
 /**
  * The RFI response a revise payload would leave: each field the payload
  * carries replaces the stored one, as a save does; the rest is kept. Document
- * upload times are the store's (`stampDocuments`).
+ * upload times and uploaders are the store's and the session's
+ * (`stampDocuments`): `actor` is the SESSION's, never a payload field.
  */
-export function revisedRfiResponse(r: RfiResponse, payload: Record<string, unknown>, now: string): RfiResponse {
+export function revisedRfiResponse(
+  r: RfiResponse,
+  payload: Record<string, unknown>,
+  now: string,
+  actor: ActorAttribution,
+): RfiResponse {
   return {
     ...r,
     ...(Array.isArray(payload.answers) ? { answers: payload.answers as RfiAnswer[] } : {}),
     ...(Array.isArray(payload.documents)
-      ? { documents: stampDocuments(payload.documents, r.documents ?? [], now) }
+      ? { documents: stampDocuments(payload.documents, r.documents ?? [], now, actor) }
       : {}),
   };
 }
 
 /** The RFP response a revise payload would leave; as `revisedRfiResponse`. */
-export function revisedRfpResponse(r: RfpResponse, payload: Record<string, unknown>, now: string): RfpResponse {
+export function revisedRfpResponse(
+  r: RfpResponse,
+  payload: Record<string, unknown>,
+  now: string,
+  actor: ActorAttribution,
+): RfpResponse {
   return {
     ...r,
     ...(Array.isArray(payload.answers) ? { answers: payload.answers as RfpTermAnswer[] } : {}),
@@ -92,7 +104,7 @@ export function revisedRfpResponse(r: RfpResponse, payload: Record<string, unkno
     ...(Array.isArray(payload.questionAnswers) ? { questionAnswers: payload.questionAnswers as RfiAnswer[] } : {}),
     ...(payload.pricing && typeof payload.pricing === 'object' ? { pricing: payload.pricing as RfpPricingAnswer } : {}),
     ...(Array.isArray(payload.documents)
-      ? { documents: stampDocuments(payload.documents, r.documents ?? [], now) }
+      ? { documents: stampDocuments(payload.documents, r.documents ?? [], now, actor) }
       : {}),
   };
 }
