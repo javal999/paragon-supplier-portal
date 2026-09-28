@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 1.5, 2026-09-28 |
+| Version | 1.6, 2026-09-28 |
 | Covers | BL-01 to BL-19b in `BACKLOG.md` — the 21 decisions that block or confirm work; the RFx decisions RFX-D1 to RFX-D5 (2026-09-21) and RFX-D6 to RFX-D14 (2026-09-25) and RFX-D15 (2026-09-28); and the 15 forecast engine decisions ENG-D1 to ENG-D14 with ENG-D8a (2026-09-23) |
 | Purpose | Give the project owner a defensible recommendation to take to each owner: what the market does, what we suggest for PTI, and what would change our mind |
 | Status | **18 of the 21 were decided on 2026-09-21**, mostly as recommended; the outcomes are in section 9 of the requirements and in the Closed section of `BACKLOG.md`. Still open: BL-01 REPL, BL-11 interface technology, BL-12 call-off record, and three values (BL-54 invoice cap, BL-55 gate OTIF minimum, BL-56 early allowance). Where the owner decided differently from this guide — the hub keeps its own calendar (BL-14), capacity stays at 13 weekly buckets (BL-08), Web Tukar Faktur stays separate (BL-17), and TMS access becomes a 3PL tracking link (BL-03) — the decision stands and this guide is kept as the reasoning behind the others. All decided items are built and in production as of 2026-09-21 (BL-43 to BL-53). The builds raised six new questions, BL-66 to BL-71 in the backlog, which this guide does not yet cover |
@@ -412,11 +412,15 @@ Until Finance does, the three rates are admin settings with placeholder values, 
 **Still open**
 
 ### ENG-D8a · The cumulative cap agreed with pilot suppliers
+**Decided (owner, 2026-09-28).** ±20%, as recommended.
+
 **Recommendation.** Run on ±20% and review it with DP Group and Lautan Luas after the first 8 weekly versions, using MASC-I (E14-02).
 
 **What would change this.** Suppliers needing a tighter cap to hold capacity. A tighter cap then needs a stronger reason rule on PTI's side.
 
 ### ENG-D10 · Forecast grain
+**Decided (owner, 2026-09-28).** Sell-in for now, own brands only. OEM products are planned from the brand's POs (ENG-D20).
+
 **Market practice.** Forecasting shipments (sell-in) and using sell-out as a leading signal is common practice for manufacturers. Not sourced in this pass.
 
 **Recommendation.** Weekly sell-in per SKU, with sell-out as an input where it exists. Channel split later.
@@ -424,6 +428,8 @@ Until Finance does, the three rates are admin settings with placeholder values, 
 **What would change this.** Sell-out data covering most volume and arriving weekly. It would then earn a larger role.
 
 ### ENG-D11 · Who reviews the forecast
+**Decided (owner, 2026-09-28).** The Material Planning team reviews the forecast before it drives material plans.
+
 **Market practice.** Forecast value added (FVA) measures each step and its owner (Gilliland). A 15-year study found large upward overrides made forecasts 26% worse (Fildes and Goodwin 2021).
 
 **Recommendation.** Demand Planning owns the finished-goods forecast and the Material Planner owns the material plan. Every override needs a reason code (E14-11).
@@ -431,6 +437,8 @@ Until Finance does, the three rates are admin settings with placeholder values, 
 **What would change this.** No Demand Planning team in place. The Material Planner then owns both, and FVA reports per person.
 
 ### ENG-D12 · Promotion calendar
+**Decided in part (owner, 2026-09-28).** Marketing owns it; the owner fills it in for them meanwhile. How far ahead it is fixed stays open (ENG-D12a).
+
 **Market practice.**
 - Modelling promotions explicitly cut promotion forecast error by up to 30% (Trapero et al. 2015).
 - Every M5 winner used promotion inputs.
@@ -447,6 +455,8 @@ Until Finance does, the three rates are admin settings with placeholder values, 
 **What would change this.** Not applicable until the backtest runs.
 
 ### ENG-D14 · Materials per service tier
+**Decided (owner, 2026-09-28).** Keep the volume ranking.
+
 **Recommendation.** The Material Planner names the production-critical packaging for the 95% tier. Until then the engine uses the top 20% of materials by volume, marked as a default.
 
 **What would change this.** Volume rank and criticality diverging. A low-volume component on a bottleneck line belongs in the top tier.
