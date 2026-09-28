@@ -48,7 +48,7 @@ Decided on 2026-09-21 and ready to build. Priority: first what protects money an
 
 | Priority | ID | Item | Rule | Size | Placeholder until decided |
 |---|---|---|---|---|---|
-| 1 | BL-33 to BL-35, BL-38, BL-39, BL-74 to BL-80, BL-83, BL-84, BL-93, BL-96 to BL-98, BL-123, BL-124, BL-127, BL-129 to BL-131 | The remaining "can start today" items in section 4, in the order listed there | — | — | — |
+| 1 | BL-33 to BL-35, BL-38, BL-39, BL-74 to BL-80, BL-83, BL-84, BL-93, BL-96 to BL-98, BL-124, BL-127, BL-129 to BL-131 | The remaining "can start today" items in section 4, in the order listed there | — | — | — |
 
 ### Forecast engine build order
 
@@ -112,7 +112,6 @@ Nothing blocks these.
 | BL-79 | Retire superseded supply-data-collaboration code: the hidden chase page counts a 7-day calendar-day threshold nobody decided (`parseGrid` was removed with BL-73) | Dead code and a rule nobody decided | S | BUILD-GAP section 6 |
 | BL-80 | A value-only PO line (BL-49) shows quantity 0 on PO and ASN screens outside the call-off pages | Only the call-off screens know the line has no quantity | S | CR-04 |
 | BL-83 | Text run-ons: Indonesian "closing soon" pill joins its date ("Segera ditutup02 Sep 2026"); the in-transit read-out reads "0nothing in transit"; `formatNumber` uses the Indonesian thousands dot in the English UI outside the Stock page | Small display defects seen in the BL-72/73 check | S | SC conventions |
-| BL-123 | FU-1: record who uploaded each supplier document (`ResponseDocument` has no `uploadedBy`) and show it in the buyer's "Supplier documents" panel | CE-11i asks who uploaded each file, and the panel cannot show it (PR #62) | S | CE-11i |
 | BL-124 | FU-2: `CLAUDE.md:241` says the RFQ review and award verbs are "not co-reachable on any RFQ in the tree". Since PR #64 both show on the same RFQ | A stale sentence in the file every session reads. The operator edits `CLAUDE.md`; task PRs do not | S | PR #64 notes |
 | BL-127 | FU-5 and tidy-ups left by the RFx build: remove the lineless legacy award payload that `t_rfq_award` still accepts, together with the C1 command tests that pin it (no screen sends it since PR #64); correct the stale `applyTransition` comments in the purchase-requisition and supplier-application targets (PR #54, not done) and the `rfxPrefill.ts` comment calling the RFP → RFQ wizard wiring a later batch (build plan AR-09) | A dead path, and comments that describe code that no longer exists | S | PR #54, #64 |
 | BL-129 | Files on an RFP firm offer: the record has room for them, but the firm-offer form has no Documents section (PR #67, not done) | A round often changes the drawing or the material (NR-1 BR-09) | S | CE-11h |
@@ -147,6 +146,7 @@ Nothing blocks these.
 
 | ID | Item | Closed | By |
 |---|---|---|---|
+| BL-123 | FU-1: record who uploaded each supplier document | 2026-09-28 | Built in PR #73: `ResponseDocument.uploadedBy`, stamped from the session by one rule (`stampDocuments`) on RFI and RFP response save, submit and revise and on quotation submit and negotiation-round revise; a file carried into a later save or version keeps its first stamp, and an uploader named in the payload is ignored. The buyer's "Supplier documents" panel has an "Uploaded by" column; a file stored before the change reads "Not recorded". Files on an RFP firm offer are not response documents and stay with BL-129 |
 | BL-126 | FU-4: a "Documents" row in the legacy single-price RFQ comparison | 2026-09-28 | Built in PR #72: the legacy comparison on the RFQ event page shows Complete, Missing with the request names, or No documents requested per supplier, with the shared `DocumentsStatus`, reading legacy attachments too. A tiered RFQ keeps its own Documents table |
 | BL-128 | FU-7: firm-offer round on a Partly awarded RFP | 2026-09-28 | Owner decision RFX-D15: allowed, for the options still open. Built in PR #71: the round opens on a Closed or Partly awarded RFP, refuses an option an award in force names or a live RFQ created from the RFP sources (`ROUND_OPTION_SETTLED`), and the final award on the remaining options moves the RFP to Awarded |
 | BL-02 | PQ-09 event-based analysis in the MVP | 2026-09-21 | Decided: not in the MVP; belongs in the planning suite. BL-21 closes with it |
