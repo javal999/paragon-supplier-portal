@@ -112,11 +112,26 @@ export function allPositions(nowIso: string = sdcClock.now()): InventoryPosition
   );
 }
 
+/**
+ * The capacity rows: every inventory row, plus every supplier × material the
+ * current forecast versions give an LTP to. BL-133 (ENG-D19): a supplier cannot
+ * submit a commitment until it has confirmed the week's capacity, so every
+ * group it has an LTP in must be a group it CAN confirm capacity for.
+ */
+function capacityAssignments(): { supplierId: string; materialCode: string }[] {
+  const pairs = new Map(assignments().map((a) => [`${a.supplierId}|${a.materialCode}`, a]));
+  for (const l of allCommitmentLines(null)) {
+    const k = `${l.supplierId}|${l.materialCode}`;
+    if (!pairs.has(k) && materialEntry(l.materialCode)) pairs.set(k, { supplierId: l.supplierId, materialCode: l.materialCode });
+  }
+  return [...pairs.values()];
+}
+
 /** Every supplier × material group with capacity against demand. */
 export function allCapacityPlans(nowIso: string = sdcClock.now()): CapacityPlan[] {
   return buildCapacityPlans(
     {
-      assignments: assignments(),
+      assignments: capacityAssignments(),
       master: materialEntry,
       supplierName: supplierNameOf,
       submissions: capacityStore.all(),

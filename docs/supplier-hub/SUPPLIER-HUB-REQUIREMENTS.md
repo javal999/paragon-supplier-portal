@@ -1282,6 +1282,10 @@ Added on 2026-09-28 from the RFx improvement analysis of 2026-09-25:
 - BR-05. Suppliers may state extra capacity they could give PTI on request, above their allocation. The field is labelled "Extra capacity if requested" and explained where it is entered [Proposed; Market; label Owner, 2026-09-21].
 - BR-06. Capacity is kept per material group, not per SKU, because one supplier line usually makes several PTI materials [Owner, 2026-09-21].
 - BR-07. The planner can filter the capacity view by supplier, material group, material, and gap weeks only, and the filter is kept in the page address [Owner, 2026-09-21].
+- BR-08. The LTP (the current forecast version the supplier commits against) is compared with capacity per material group and week: the group's LTP for a week is the sum of the supplier's LTP for every material of the group, each period spread evenly over its days [Owner, 2026-09-28; ENG-D18].
+- BR-09. BE, the supplier's total for a week, is the capacity plus the additional capacity ("Extra capacity if requested", BR-05). It is derived, never entered or stored separately [Owner, 2026-09-28; ENG-D18].
+- BR-10. A week whose LTP is above capacity, up to and including BE, shows amber, "needs the additional capacity". A week whose LTP is above BE shows red, "cannot be supplied", and the planner acts (bring demand forward, split to another source, or cut) [Owner, 2026-09-28; ENG-D18].
+- BR-11. The supplier confirms a week's capacity before it can submit the LTP for that week (REQ-E06-02 BR-11) [Owner, 2026-09-28; ENG-D19].
 
 **Edge cases.**
 - Supplier shares one line across several PTI materials: capacity is entered per material group, not per material [Proposed].
@@ -1292,6 +1296,8 @@ Added on 2026-09-28 from the RFx improvement analysis of 2026-09-25:
 - AC-02. A week with allocation below demand cannot be submitted without a reason.
 - AC-03. The planner sees capacity against demand with gap weeks highlighted.
 - AC-04. The planner can narrow the capacity view by supplier, material group, material, and gaps only.
+- AC-05. Exactly at capacity is not flagged; above capacity and exactly at BE is amber; above BE is red [Owner, 2026-09-28].
+- AC-06. The supplier and the planner see each week's LTP, capacity and BE with its amber or red flag [Owner, 2026-09-28].
 
 **Data and integration.** Capacity record: supplier, material group, week, allocated quantity, upside quantity, reason. Demand from REQ-E06-01.
 
@@ -1428,6 +1434,9 @@ The owner confirmed the recommendations for this section on 2026-09-17 (E06-R). 
 - BR-08. A supplier may commit an optional upside quantity above forecast [Market; Owner].
 - BR-09. The commitment starts pre-filled with the forecast quantity. The supplier still submits it [Owner].
 - BR-10. A commitment is kept as a draft until submitted, and the planner does not see drafts [Owner; Code].
+- BR-11. A commitment for a period cannot be submitted until the supplier has confirmed capacity (REQ-E08-04) for every week the period touches, for the material's group. Weeks beyond the capacity horizon are not asked. The rule is enforced by the system, not only by the page [Owner, 2026-09-28; ENG-D19].
+- BR-12. A period whose group LTP is above BE (REQ-E08-04 BR-10) in one of its weeks needs a predefined reason before it can be submitted; "Other" needs a note [Owner, 2026-09-28; ENG-D19].
+- BR-13. The supplier submits one period at a time with one "Submit all", which sends every material of that period [Owner, 2026-09-28; ENG-D19].
 
 **Edge cases.**
 - Forecast re-published after commitment: periods whose quantity did not change keep their commitment; changed periods return to "awaiting commitment" [Owner; Code].
@@ -1438,6 +1447,9 @@ The owner confirmed the recommendations for this section on 2026-09-17 (E06-R). 
 - AC-02. A commit below forecast cannot be submitted without a reason.
 - AC-03. A commit within tolerance needs no planner action. A commit outside tolerance appears as an exception.
 - AC-04. Missing commitments at the deadline are escalated.
+- AC-05. Submitting a period without confirmed capacity for its weeks is refused, and names the week; with capacity confirmed it is accepted [Owner, 2026-09-28].
+- AC-06. Submitting a period above BE without a reason is refused; with a reason it is accepted [Owner, 2026-09-28].
+- AC-07. "Submit all" for a period submits every material of that period at once [Owner, 2026-09-28].
 
 **Data and integration.** Commitment record: version, material, period, committed quantity, date, upside quantity, reason, submitted by.
 

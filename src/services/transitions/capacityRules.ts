@@ -14,6 +14,7 @@ import type {
   CapacityPlan,
   CapacitySubmission,
   CapacityWeekEntry,
+  ForecastCommitmentLine,
   PurchaseOrder,
 } from '../data/types';
 import type { ForecastLine, MaterialMasterEntry } from '../sdc/types';
@@ -181,5 +182,192 @@ export function capacitySubmissionRefusal(
   }
   const missing = horizon.find((w) => !seen.has(w));
   if (missing) return { refusal: 'missingWeek', week: missing };
+  return null;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BL-133 — CAPACITY BEFORE THE LTP (ENG-D18, ENG-D19; REQ-E08-04 BR-08..BR-11,
+// REQ-E06-02 BR-11..BR-13).
+//
+// The LTP is the current forecast version the supplier commits against. It is
+// per MATERIAL and period; capacity is per MATERIAL GROUP and week. They meet
+// at the group × week: the group's LTP for a week is the SUM of the supplier's
+// LTP lines for every material of the group, each spread evenly over its
+// period by day (a weekly line lands whole in its week; a monthly line lands
+// by the days of the month that fall in the week). That sum is compared with
+// the week's capacity and BE:
+//
+//   · BE (the supplier's total) = capacity + additional capacity. DERIVED at
+//     read from the week's entry, never stored (`upside` is the additional
+//     capacity, REQ-E08-04 BR-05).
+//   · LTP ≤ capacity                → within.
+//   · capacity < LTP ≤ BE           → needsAdditional (amber). Exactly at BE is
+//                                     amber: the supplier can supply it, with
+//                                     the additional capacity.
+//   · LTP > BE                      → cannotSupply (red).
+//   · the week has no stated capacity → unconfirmed.
+//
+// ENG-D19 — a commitment for a period cannot be SUBMITTED until capacity is
+// confirmed for every horizon week the period touches, and a period touching a
+// red week needs a reason. Weeks outside the capacity horizon are not asked
+// (capacity cannot be stated there), so a period wholly beyond it is not gated.
+// Nothing here is stored: every figure is derived from the latest capacity
+// submission and the current forecast version.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** BE — the supplier's total for a week: capacity + additional capacity. */
+export const beOf = (entry: Pick<CapacityWeekEntry, 'allocated' | 'upside'>): number =>
+  entry.allocated + (entry.upside ?? 0);
+
+export type LtpCapacityLevel = 'unconfirmed' | 'within' | 'needsAdditional' | 'cannotSupply';
+
+/** ENG-D18 — where a week's LTP stands against its capacity and BE. */
+export function ltpCapacityLevel(
+  ltp: number,
+  entry: Pick<CapacityWeekEntry, 'allocated' | 'upside'> | null,
+): LtpCapacityLevel {
+  if (!entry) return 'unconfirmed';
+  if (ltp <= entry.allocated) return 'within';
+  if (ltp <= beOf(entry)) return 'needsAdditional';
+  return 'cannotSupply';
+}
+
+/** The fields of a forecast line the LTP sum reads. */
+export type LtpLine = Pick<
+  ForecastCommitmentLine,
+  'supplierId' | 'materialGroup' | 'periodStart' | 'periodEnd' | 'forecastQty'
+>;
+
+const daysInclusive = (from: string, to: string): number => {
+  let n = 0;
+  for (let d = from; d <= to; d = addDays(d, 1)) n += 1;
+  return n;
+};
+
+/** Days a period and a week (Monday + 6) share. */
+function overlapDays(periodStart: string, periodEnd: string, week: string): number {
+  const from = periodStart > week ? periodStart : week;
+  const weekEnd = addDays(week, 6);
+  const to = periodEnd < weekEnd ? periodEnd : weekEnd;
+  return from > to ? 0 : daysInclusive(from, to);
+}
+
+/** The group's LTP for one week: the sum of its lines, each spread by day. Whole units. */
+export function groupWeekLtp(
+  lines: readonly LtpLine[],
+  supplierId: string,
+  materialGroup: string,
+  week: string,
+): number {
+  let total = 0;
+  for (const l of lines) {
+    if (l.supplierId !== supplierId || l.materialGroup !== materialGroup) continue;
+    const shared = overlapDays(l.periodStart, l.periodEnd, week);
+    if (shared === 0) continue;
+    total += (l.forecastQty * shared) / daysInclusive(l.periodStart, l.periodEnd);
+  }
+  return Math.round(total);
+}
+
+export interface LtpCapacityWeek {
+  readonly week: string;
+  readonly ltp: number;
+  /** The stated capacity, or null when the week has none. */
+  readonly capacity: number | null;
+  /** Capacity + additional capacity (derived), or null. */
+  readonly be: number | null;
+  readonly level: LtpCapacityLevel;
+}
+
+/** ENG-D18 — the LTP against capacity and BE for every horizon week of a plan. */
+export function ltpCapacityWeeks(plan: CapacityPlan, lines: readonly LtpLine[]): LtpCapacityWeek[] {
+  return plan.weeks.map((w) => {
+    const ltp = groupWeekLtp(lines, plan.supplierId, plan.materialGroup, w.week);
+    return {
+      week: w.week,
+      ltp,
+      capacity: w.entry ? w.entry.allocated : null,
+      be: w.entry ? beOf(w.entry) : null,
+      level: ltpCapacityLevel(ltp, w.entry),
+    };
+  });
+}
+
+/** The horizon weeks a period touches (Mondays, ascending). */
+export function periodHorizonWeeks(periodStart: string, periodEnd: string, horizon: readonly string[]): string[] {
+  return horizon.filter((week) => overlapDays(periodStart, periodEnd, week) > 0);
+}
+
+const LEVEL_RANK: Record<LtpCapacityLevel, number> = { unconfirmed: 0, cannotSupply: 1, needsAdditional: 2, within: 3 };
+
+export interface PeriodCapacityCheck {
+  /** Worst level over the horizon weeks the period touches; null when it touches none. */
+  readonly level: LtpCapacityLevel | null;
+  /** The weeks checked, with their figures. */
+  readonly weeks: readonly LtpCapacityWeek[];
+  /** The first week with no stated capacity, if any. */
+  readonly unconfirmedWeek: string | null;
+  /** The first week above BE, if any. */
+  readonly redWeek: string | null;
+}
+
+/**
+ * ENG-D18 / ENG-D19 — one period of one supplier × material group against the
+ * group's capacity. `plan` is null when the supplier has no capacity plan for
+ * the group: every horizon week the period touches is then unconfirmed.
+ */
+export function periodCapacityCheck(
+  plan: CapacityPlan | null,
+  lines: readonly LtpLine[],
+  supplierId: string,
+  materialGroup: string,
+  periodStart: string,
+  periodEnd: string,
+  horizon: readonly string[],
+): PeriodCapacityCheck {
+  const touched = periodHorizonWeeks(periodStart, periodEnd, horizon);
+  const weeks: LtpCapacityWeek[] = touched.map((week) => {
+    const entry = plan?.weeks.find((w) => w.week === week)?.entry ?? null;
+    const ltp = groupWeekLtp(lines, supplierId, materialGroup, week);
+    return {
+      week,
+      ltp,
+      capacity: entry ? entry.allocated : null,
+      be: entry ? beOf(entry) : null,
+      level: ltpCapacityLevel(ltp, entry),
+    };
+  });
+  const level =
+    weeks.length === 0
+      ? null
+      : weeks.reduce<LtpCapacityLevel>((worst, w) => (LEVEL_RANK[w.level] < LEVEL_RANK[worst] ? w.level : worst), 'within');
+  return {
+    level,
+    weeks,
+    unconfirmedWeek: weeks.find((w) => w.level === 'unconfirmed')?.week ?? null,
+    redWeek: weeks.find((w) => w.level === 'cannotSupply')?.week ?? null,
+  };
+}
+
+export type CommitmentCapacityRefusal = 'capacityNotConfirmed' | 'aboveBeNeedsReason' | 'aboveBeNoteRequired';
+
+/**
+ * ENG-D19 — the ONE check the submit policy and the page's Submit all both
+ * call: capacity confirmed for every horizon week the period touches, and a
+ * starter reason (`other` with a note) when one of them is above BE.
+ */
+export function commitmentCapacityRefusal(
+  check: PeriodCapacityCheck,
+  rootCause: { readonly level1?: unknown; readonly note?: unknown } | undefined,
+): { refusal: CommitmentCapacityRefusal; week: string } | null {
+  if (check.unconfirmedWeek) return { refusal: 'capacityNotConfirmed', week: check.unconfirmedWeek };
+  if (check.redWeek) {
+    if (!rootCause || !isActiveReasonCode('commitmentShortfall', rootCause.level1)) {
+      return { refusal: 'aboveBeNeedsReason', week: check.redWeek };
+    }
+    if (rootCause.level1 === 'other' && (typeof rootCause.note !== 'string' || rootCause.note.trim() === '')) {
+      return { refusal: 'aboveBeNoteRequired', week: check.redWeek };
+    }
+  }
   return null;
 }

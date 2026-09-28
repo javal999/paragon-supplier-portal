@@ -291,6 +291,12 @@ import {
 // `RFX_QUESTION_TYPES` (`sourcing/rfxConfig`), and the create hook reaches them
 // through `rfiQuestionsRefusal` — the same predicate the template store reads.
 import {
+  commitmentCapacityRefusal,
+  horizonWeeks,
+  periodCapacityCheck,
+} from '../../transitions/capacityRules';
+import {
+  allCommitmentLines,
   currentVersion,
   isForecastVersion,
   forecastPublicationById,
@@ -2271,6 +2277,52 @@ bindPolicyHook(POLICY_HOOKS.RR_SUBMIT_COMMITMENT_DETAIL, ({ payload }) => {
     return { ok: false, reason: 'committedDate must be a date (YYYY-MM-DD)' };
   }
   return { ok: true };
+});
+
+// BL-133 (ENG-D19) — capacity before the LTP, on the SUBMISSION (the
+// promotion). The response names its line; the line names its period and
+// material group; the group's latest capacity submission says whether every
+// horizon week the period touches is confirmed, and whether the group's LTP is
+// above BE in one of them. SDC-0 publications predate the rule (the BR-08 date
+// rule's precedent) and keep their shape; a line of a version no longer
+// current is found by supplier × material × period on the current version.
+bindPolicyHook(POLICY_HOOKS.RR_PROMOTE_CAPACITY_CONFIRMED, ({ entityId, target }) => {
+  const r = target.readEntity(entityId) as
+    | { publicationId?: string; supplierId?: string; materialCode?: string; periodBucket?: string; rootCause?: { level1?: unknown; note?: unknown } }
+    | null
+    | undefined;
+  if (!r || !isForecastVersion(String(r.publicationId))) return { ok: true };
+  const lines = allCommitmentLines(null);
+  const line = lines.find(
+    (l) => l.supplierId === r.supplierId && l.materialCode === r.materialCode && l.periodBucket === r.periodBucket,
+  );
+  if (!line) return { ok: true };
+  const plan =
+    allCapacityPlans().find((p) => p.supplierId === line.supplierId && p.materialGroup === line.materialGroup) ?? null;
+  const check = periodCapacityCheck(
+    plan,
+    lines,
+    line.supplierId,
+    line.materialGroup,
+    line.periodStart,
+    line.periodEnd,
+    horizonWeeks(sdcClock.now()),
+  );
+  const refusal = commitmentCapacityRefusal(check, r.rootCause);
+  if (!refusal) return { ok: true };
+  if (refusal.refusal === 'capacityNotConfirmed') {
+    return {
+      ok: false,
+      reason: `CAPACITY_NOT_CONFIRMED: confirm the capacity for ${line.materialGroup} in the week of ${refusal.week} before submitting its LTP`,
+    };
+  }
+  if (refusal.refusal === 'aboveBeNoteRequired') {
+    return { ok: false, reason: 'OTHER_REASON_NEEDS_NOTE: the reason "other" needs a note' };
+  }
+  return {
+    ok: false,
+    reason: `ABOVE_BE_NEEDS_REASON: the LTP for ${line.materialGroup} in the week of ${refusal.week} is above capacity plus additional capacity; choose a reason`,
+  };
 });
 
 // RR dispute / resolve — the authored text must be SUBSTANCE, not presence.
