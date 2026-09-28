@@ -289,6 +289,7 @@ const STATUS_VARIANT: Record<
   Draft: 'neutral',
   Open: 'info',
   Closed: 'neutral',
+  'Partly awarded': 'info',
   Awarded: 'success',
   Cancelled: 'danger',
 };
@@ -1073,7 +1074,7 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
   // BL-37 — the award records, so the history can name EVERY supplier of a split.
   const awardsQuery = useAwards();
   const awardByRfq = useMemo(
-    () => new Map((awardsQuery.data?.items ?? []).map((a) => [a.rfqId, a] as const)),
+    () => new Map((awardsQuery.data?.items ?? []).map((a) => [a.eventId, a] as const)),
     [awardsQuery.data],
   );
   /**

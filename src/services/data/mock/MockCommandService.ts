@@ -112,8 +112,6 @@ import {
   standingClosure,
   // REQ-E03-01 to REQ-E03-05 — the RFx rules. The verb and the screen read the
   // SAME predicates, so a refusal and a disabled button can never disagree.
-  awardFollowsBestScore,
-  awardSplitRefusal,
   deviationsWithoutComment,
   effectiveDeadline,
   isExtension,
@@ -194,13 +192,19 @@ import {
   rfpResponseStore,
 } from './stores/rfxStores';
 import { bestScoredByItem, bestScoredQuotationId, rfqSupplierGate, rfxNow } from './rfxReadModel';
+import { isTieredRfq } from '../../sourcing/rfqComparison';
 import {
-  isTieredRfq,
-  itemName,
-  itemsDepartingBestScore,
-  tieredAwardShapeRefusal,
-  tieredRefusalText,
-} from '../../sourcing/rfqComparison';
+  awardedItemBreaks,
+  awardItemsDepartingBest,
+  awardItemsOf,
+  awardRefusalText,
+  awardShapeRefusal,
+  basisOf,
+  itemOfAwardLine,
+  itemsOpenAfter,
+  lineBreakOf,
+  type AwardItem,
+} from '../../sourcing/awardShape';
 import { gateRefusal } from '../../sourcing/complianceGate';
 import { rfiTemplate } from '../../sourcing/rfxConfig';
 import type {
@@ -1454,35 +1458,39 @@ const rfqTarget: CommandTarget = {
       // REQ-E03-05 BR-06 / BR-09 — an award RECORDS itself. The hub keeps the
       // split, the reason and who was not awarded; it mints no PO and no contract
       // (the charter's system-of-record rule).
-      case 't_rfq_award': {
+      // RFx C1 — the final award and the partial award record the same way:
+      // ONE appended record per award, naming its event (AR-02), its lines
+      // (each with the side the buyer typed and its own break), and its reason.
+      case 't_rfq_award':
+      case 't_rfq_award_partial': {
         const rfq = rfqStore.get(id);
-        const supplied = Array.isArray(payload.awardLines) ? (payload.awardLines as AwardLine[]) : null;
-        // A single-supplier award is the same record with ONE line at 100% — so
-        // there is one award shape to read, not "a split" and "a plain award".
-        const lines: AwardLine[] = supplied ?? [
-          {
-            supplierId: String(payload.awardedSupplierId),
-            quotationId: String(payload.awardedQuotationId),
-            itemCode: '',
-            sharePct: 100,
-            quantity: rfq?.totalQty ?? 0,
-          },
-        ];
-        const winners = new Set(lines.map((l) => l.supplierId));
-        // A tiered award is judged at the break its lines record (the policy has
-        // already required one break across every line), so the best score it is
-        // stored against is the best score AT THAT BREAK — per item and overall.
-        const awardTierQty = rfq && isTieredRfq(rfq) ? lines[0]?.awardTierQty : undefined;
-        const best = rfq ? bestScoredQuotationId(rfq, rfxNow(), awardTierQty) : null;
-        const bestByItem =
-          rfq && awardTierQty !== undefined
-            ? [...bestScoredByItem(rfq, rfxNow(), awardTierQty).entries()]
-                .filter((e): e is [number, string] => e[1] !== null)
-                .map(([itemLineNo, quotationId]) => ({ itemLineNo, quotationId }))
-            : null;
+        if (!rfq) break;
+        const items = awardItemsOf(rfq, rfqAwardsOf(id));
+        const lines = awardLinesOfPayload(rfq, payload).map((l) => recordedAwardLine(items, l));
+        const final = transitionId === 't_rfq_award';
+        // BR-07 per item: the best score each awarded item's lines are judged
+        // against, at that item's break. The event-level best is kept at the
+        // first line's break, as before.
+        const tiered = isTieredRfq(rfq);
+        const best = bestScoredQuotationId(rfq, rfxNow(), tiered ? lines[0]?.awardTierQty : undefined);
+        const bestByItem = tiered
+          ? awardedItemBreaks(items, lines).flatMap(({ item, breakQty }) => {
+              const q = bestScoredByItem(rfq, rfxNow(), breakQty).get(item.lineNo!) ?? null;
+              return q ? [{ itemLineNo: item.lineNo!, quotationId: q }] : [];
+            })
+          : null;
+        // BR-08 — the suppliers told they were not awarded. Only the FINAL
+        // award tells anyone: a partial award leaves items open that a supplier
+        // with no share yet may still win. The final award names every invitee
+        // that no award of this event names.
+        const named = new Set([
+          ...rfqAwardsOf(id).flatMap((a) => a.lines.map((l) => l.supplierId)),
+          ...lines.map((l) => l.supplierId),
+        ]);
         awardStore.add({
           id: awardStore.nextId(),
-          rfqId: id,
+          eventType: 'rfq',
+          eventId: id,
           awardedAt: rfxNow(),
           lines,
           ...(typeof payload.awardReason === 'string' && payload.awardReason.trim()
@@ -1490,9 +1498,7 @@ const rfqTarget: CommandTarget = {
             : {}),
           ...(best ? { bestScoredQuotationId: best } : {}),
           ...(bestByItem ? { bestScoredByItem: bestByItem } : {}),
-          // BR-08 — every other quote is marked Not awarded and its supplier
-          // notified. The quote status is the cascade's job; this records WHO.
-          notAwardedSupplierIds: (rfq?.invitedSupplierIds ?? []).filter((sid) => !winners.has(sid)),
+          notAwardedSupplierIds: final ? rfq.invitedSupplierIds.filter((sid) => !named.has(sid)) : [],
         });
         break;
       }
@@ -3505,39 +3511,79 @@ bindPolicyHook(POLICY_HOOKS.NEGOTIATION_ROUND_VALID, ({ payload }) => {
   return { ok: true };
 });
 
-// REQ-E03-05 BR-06 / BR-07 — the split totals 100% per item, and an award that
-// passes over the best-scored quote states why. BR-01a — every awarded supplier
-// passes the compliance gate (CR-23).
-bindPolicyHook(POLICY_HOOKS.RFQ_AWARD_GOVERNED, ({ payload, entityId }) => {
+// ── RFx C1 — the award (NR-3 BR-02 to BR-08; AR-04) ─────────────────────────
+
+/** The awards already recorded on an RFQ (the store keeps the newest first). */
+const rfqAwardsOf = (rfqId: string) =>
+  awardStore.all().filter((a) => a.eventType === 'rfq' && a.eventId === rfqId);
+
+/**
+ * The award lines a payload describes. `awardLines` when sent. Without them —
+ * `useRfqAward`'s single winner — a LEGACY RFQ is awarded 1 line per item at
+ * 100% to that winner (RFX-R9: the event-level meaning it always had). A TIERED
+ * RFQ keeps the one line naming no item, which the rule refuses by name: the
+ * list page links a tiered RFQ to its event page instead.
+ */
+function awardLinesOfPayload(rfq: RFQ, payload: Record<string, unknown>): AwardLine[] {
+  if (Array.isArray(payload.awardLines)) return payload.awardLines as AwardLine[];
+  const supplierId = String(payload.awardedSupplierId);
+  const quotationId = String(payload.awardedQuotationId);
+  if (isTieredRfq(rfq)) return [{ supplierId, quotationId, itemCode: '', sharePct: 100, quantity: rfq.totalQty }];
+  return awardItemsOf(rfq).map((item) => ({
+    supplierId,
+    quotationId,
+    itemCode: item.itemCode,
+    sharePct: 100,
+    quantity: item.breaks[0]!.pieces,
+  }));
+}
+
+/** A line as it is recorded: the side the buyer typed, and its own break. */
+function recordedAwardLine(items: readonly AwardItem[], line: AwardLine): AwardLine {
+  const item = itemOfAwardLine(items, line);
+  const breakQty = item ? lineBreakOf(item, line) : line.awardTierQty;
+  return { ...line, splitBasis: basisOf(line), ...(breakQty !== undefined ? { awardTierQty: breakQty } : {}) };
+}
+
+/** The payload's "Will not award" items, by item key. */
+const notAwardedItemsOf = (payload: Record<string, unknown>): string[] =>
+  Array.isArray(payload.notAwardedItems)
+    ? (payload.notAwardedItems as unknown[]).filter((x): x is string => typeof x === 'string')
+    : [];
+
+// ONE policy for the final award (`t_rfq_award`) and the partial award
+// (`t_rfq_award_partial`), told apart by the target state, so the rule cannot
+// drift between them. In order: the shape (`awardShapeRefusal`, the same
+// function the page pre-checks with) · the items left open · every line on a
+// quote of this event · CR-23 for every awarded supplier · BR-07 per awarded
+// item, at that item's break.
+bindPolicyHook(POLICY_HOOKS.RFQ_AWARD_GOVERNED, ({ payload, entityId, toState }) => {
   const rfq = rfqStore.get(entityId);
   if (!rfq) return { ok: false, reason: 'sourcing event not found' };
-  const supplied = Array.isArray(payload.awardLines) ? (payload.awardLines as AwardLine[]) : null;
-  const lines: AwardLine[] = supplied ?? [
-    {
-      supplierId: String(payload.awardedSupplierId),
-      quotationId: String(payload.awardedQuotationId),
-      itemCode: '',
-      sharePct: 100,
-      quantity: rfq.totalQty,
-    },
-  ];
-  // RFx spec "Evaluation and award" (BL-37) — a TIERED RFQ is awarded ITEM BY
-  // ITEM at one evaluation break: every line names an item of this RFQ, every
-  // item totals 100% (the item is NAMED when it does not), the break is recorded
-  // on every line, and each quantity is the share of that break. The same verb
-  // and the same hook as the event-level award; only the shape rule differs.
-  const tiered = isTieredRfq(rfq);
+  const lines = awardLinesOfPayload(rfq, payload);
   const onEventQuotes = quotationStore.all().filter((q) => q.rfqId === rfq.id);
-  const refusal = tiered
-    ? (() => {
-        const r = tieredAwardShapeRefusal(rfq, lines, onEventQuotes);
-        return r ? tieredRefusalText(r) : null;
-      })()
-    : awardSplitRefusal(lines);
-  if (refusal) return { ok: false, reason: refusal };
+  const items = awardItemsOf(rfq, rfqAwardsOf(rfq.id));
+  const shape = awardShapeRefusal(items, lines, onEventQuotes);
+  if (shape) return { ok: false, reason: awardRefusalText(shape) };
+  // NR-3 BR-06 — the final award settles every item; a partial award leaves at
+  // least one open. "Will not award" rides on the final award only.
+  const final = toState === 'Awarded';
+  const willNotAward = final ? notAwardedItemsOf(payload) : [];
+  const unknown = willNotAward.find((key) => !items.some((i) => i.key === key));
+  if (unknown !== undefined) {
+    return { ok: false, reason: awardRefusalText({ code: 'AWARD_ITEM_UNKNOWN', detail: `"${unknown}"` }) };
+  }
+  const open = itemsOpenAfter(items, lines, willNotAward);
+  if (final && open.length > 0) {
+    return {
+      ok: false,
+      reason: awardRefusalText({ code: 'AWARD_ITEMS_OPEN', item: open.map((i) => i.name).join(', ') }),
+    };
+  }
+  if (!final && open.length === 0) return { ok: false, reason: awardRefusalText({ code: 'AWARD_NOTHING_OPEN' }) };
   // Every awarded line names a real quotation ON THIS EVENT. Without this an
   // award could record a share against a bid from another tender.
-  const onEvent = new Set(quotationStore.all().filter((q) => q.rfqId === rfq.id).map((q) => q.id));
+  const onEvent = new Set(onEventQuotes.map((q) => q.id));
   const foreign = lines.filter((l) => !onEvent.has(l.quotationId));
   if (foreign.length > 0) {
     return { ok: false, reason: `QUOTE_NOT_ON_EVENT: ${foreign.map((l) => l.quotationId).join(', ')}` };
@@ -3552,29 +3598,18 @@ bindPolicyHook(POLICY_HOOKS.RFQ_AWARD_GOVERNED, ({ payload, entityId }) => {
     const gate = rfqSupplierGate(rfq, supplierId, rfxNow());
     if (!gate.passes) return { ok: false, reason: gateRefusal(supplierId, gate.failed) };
   }
+  // BR-07 / NR-3 BR-08, PER AWARDED ITEM — the reason is owed when an item's
+  // lines leave out that item's best-scored quote at the item's own break. A
+  // legacy quote prices the whole event, so its items share the event's best.
   const reason = typeof payload.awardReason === 'string' ? payload.awardReason.trim() : '';
-  if (tiered) {
-    // BR-07, PER ITEM — the reason is owed when ANY item's award leaves out
-    // that item's best-scored quote at the award's break. The item is named.
-    const departing = itemsDepartingBestScore(
-      rfq,
-      lines,
-      bestScoredByItem(rfq, rfxNow(), lines[0]!.awardTierQty!),
-    );
-    if (departing.length > 0 && reason.length === 0) {
-      return {
-        ok: false,
-        reason: tieredRefusalText({ code: 'AWARD_REASON_REQUIRED', item: itemName(departing[0]!) }),
-      };
-    }
-    return { ok: true };
-  }
-  const best = bestScoredQuotationId(rfq, rfxNow());
-  if (!awardFollowsBestScore(lines, best) && reason.length === 0) {
-    return {
-      ok: false,
-      reason: 'AWARD_REASON_REQUIRED: an award that does not follow the best-scored quote needs a reason',
-    };
+  let eventBest: string | null | undefined;
+  const departing = awardItemsDepartingBest(items, lines, (item, breakQty) => {
+    if (item.tiered) return bestScoredByItem(rfq, rfxNow(), breakQty).get(item.lineNo!) ?? null;
+    if (eventBest === undefined) eventBest = bestScoredQuotationId(rfq, rfxNow());
+    return eventBest;
+  });
+  if (departing.length > 0 && reason.length === 0) {
+    return { ok: false, reason: awardRefusalText({ code: 'AWARD_REASON_REQUIRED', item: departing[0]!.name }) };
   }
   return { ok: true };
 });
@@ -4469,6 +4504,7 @@ const resolveCascades = (ctx: CascadeContext): CascadeCommand[] => {
         payload: { linkedRfq: ctx.entityId },
       }));
     }
+    if (ctx.transitionId !== 't_rfq_award' && ctx.transitionId !== 't_rfq_award_partial') return [];
     const winnerId =
       typeof ctx.payload.awardedQuotationId === 'string' ? ctx.payload.awardedQuotationId : '';
     // BL-37 — A SPLIT HAS SEVERAL WINNERS. Every quotation an award line names
@@ -4482,16 +4518,24 @@ const resolveCascades = (ctx: CascadeContext): CascadeCommand[] => {
             .filter((x): x is string => typeof x === 'string')
         : []),
     ]);
+    // RFx C1 — a quote an EARLIER (partial) award of this event named is a
+    // winner too, so the final award never rejects it. Read from the store: the
+    // award records are the event's history, the payload only this award's.
+    const namedByAnyAward = new Set([
+      ...winnerIds,
+      ...rfqAwardsOf(ctx.entityId).flatMap((a) => a.lines.map((l) => l.quotationId)),
+    ]);
     const siblings = quotationStore.forRfq(ctx.entityId);
     const cmds: CascadeCommand[] = [];
     for (const link of cascadesFor(ctx.transitionId)) {
       if (link.targetTransitionId === 't_quotation_award') {
-        for (const winner of siblings.filter((q) => winnerIds.has(q.id))) {
+        // A quote an earlier partial award already made Awarded is skipped.
+        for (const winner of siblings.filter((q) => winnerIds.has(q.id) && q.status !== 'Awarded')) {
           cmds.push({ entity: link.targetEntity, entityId: winner.id, transitionId: link.targetTransitionId });
         }
       } else {
         for (const q of siblings) {
-          if (!winnerIds.has(q.id)) {
+          if (!namedByAnyAward.has(q.id)) {
             cmds.push({ entity: link.targetEntity, entityId: q.id, transitionId: link.targetTransitionId });
           }
         }

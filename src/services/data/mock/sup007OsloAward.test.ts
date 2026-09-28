@@ -101,7 +101,7 @@ describe('BL-94 — a split award giving sup-007 a share of an Oslo item is acce
       line('sup-013', 'qt-021b', 2, 100),
     ]);
     expect(res.status, res.reason).toBe('done');
-    const rec = awardStore.all().find((a) => a.rfqId === 'rfq-021')!;
+    const rec = awardStore.all().find((a) => a.eventId === 'rfq-021')!;
     expect(rec.lines.filter((l) => l.supplierId === 'sup-007').map((l) => [l.itemLineNo, l.sharePct, l.quantity])).toEqual([
       [1, 50, 12_000],
     ]);
@@ -117,7 +117,7 @@ describe('BL-94 — a split award giving sup-007 a share of an Oslo item is acce
       line('sup-013', 'qt-021b', 2, 100),
     ]);
     expect(res.status, res.reason).toBe('done');
-    const rec = awardStore.all().find((a) => a.rfqId === 'rfq-021')!;
+    const rec = awardStore.all().find((a) => a.eventId === 'rfq-021')!;
     // The same clock the handler scored the quotes at, so the record and its
     // best-scored ids describe one moment.
     expect(rec.awardedAt).toBe(rfxNow());
@@ -133,7 +133,7 @@ describe('BL-94 — a split award giving sup-007 a share of an Oslo item is acce
     ]);
     expect(res.status).toBe('failed');
     expect(res.reason).toMatch(/COMPLIANCE_GATE_FAILED: sup-008/);
-    expect(awardStore.all().some((a) => a.rfqId === 'rfq-021')).toBe(false);
+    expect(awardStore.all().some((a) => a.eventId === 'rfq-021')).toBe(false);
     expect(oslo().status).toBe('Open');
   });
 });

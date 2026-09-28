@@ -426,13 +426,16 @@ export function negotiationRoundViews(nowIso: string, supplierId: string | null)
 export function awardViews(supplierId: string | null): readonly AwardView[] {
   return awardStore
     .all()
+    // AR-02 — the record names its event type; only the RFQ arm exists (the
+    // RFP award adds its own arm here, task D2).
+    .filter((a) => a.eventType === 'rfq')
     .filter((a) =>
       supplierId
         ? a.lines.some((l) => l.supplierId === supplierId) || a.notAwardedSupplierIds.includes(supplierId)
         : true,
     )
     .map((award) => {
-      const rfq = rfqStore.get(award.rfqId);
+      const rfq = rfqStore.get(award.eventId);
       // BR-05 / AC-05 — a supplier sees ONLY ITS OWN OUTCOME. The share another
       // supplier won is another supplier's commercial position.
       const lines = supplierId ? award.lines.filter((l) => l.supplierId === supplierId) : award.lines;
@@ -450,7 +453,7 @@ export function awardViews(supplierId: string | null): readonly AwardView[] {
         notAwardedSupplierIds: supplierId
           ? award.notAwardedSupplierIds.filter((s) => s === supplierId)
           : award.notAwardedSupplierIds,
-        rfqNumber: rfq?.rfqNumber ?? award.rfqId,
+        rfqNumber: rfq?.rfqNumber ?? award.eventId,
         rfqTitle: rfq?.title ?? '',
         uom: rfq?.uom ?? '',
         awardedSuppliers: [...bySupplier.entries()].map(([sid, agg]) => ({

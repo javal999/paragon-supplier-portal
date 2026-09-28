@@ -27,7 +27,10 @@ const RFQ_CONTENT_FIELDS: readonly string[] = ['title', 'materialCategory', 'tot
 export const rfqFlow: FlowDefinition = {
   entity: 'rfq',
   version: 1,
-  states: ['Draft', 'Open', 'Closed', 'Awarded', 'Cancelled'],
+  // RFx C1 (NR-3 BR-06) — `Partly awarded`: some items are awarded and at
+  // least one is still open. Not a terminal: the buyer returns to award the
+  // rest (`t_rfq_award_partial` again, or the final `t_rfq_award`).
+  states: ['Draft', 'Open', 'Closed', 'Partly awarded', 'Awarded', 'Cancelled'],
   initial: 'Draft',
   /** PF-0 · D-2 — an awarded or cancelled RFQ is done. */
   terminals: ['Awarded', 'Cancelled'],
@@ -148,9 +151,33 @@ export const rfqFlow: FlowDefinition = {
       // award is therefore byte-identical to what it was, and a two-supplier
       // award is the same verb with one more field, rather than a second award
       // verb that could drift from this one.
+      //
+      // ⚠️ **RFx C1 — THIS IS NOW THE FINAL AWARD (NR-3 BR-06).** It must leave
+      // every item settled: awarded here or by an earlier partial award, or
+      // named in the payload's `notAwardedItems` ("Will not award"). Otherwise
+      // it refuses `AWARD_ITEMS_OPEN`, naming the open items. Legal from
+      // `Partly awarded` too, to settle an event a partial award left open.
       id: 't_rfq_award',
-      from: ['Open', 'Closed'],
+      from: ['Open', 'Closed', 'Partly awarded'],
       to: 'Awarded',
+      trigger: 'user',
+      requiredRole: 'rfq:award',
+      requiredFields: ['awardedQuotationId', 'awardedSupplierId'],
+      policyHooks: [POLICY_HOOKS.RFQ_AWARD_GOVERNED],
+      surfaceable: { surfaced: true },
+      version: 1,
+    },
+    {
+      // RFx C1 (NR-3 BR-06, D-4) — the PARTIAL award: some items now, the rest
+      // later. A second verb because a transition has one target state; it
+      // shares `t_rfq_award`'s role, required fields and ONE policy hook, so
+      // the rule cannot drift between the two. Refuses `AWARD_NOTHING_OPEN`
+      // when it would settle every item (that is the final award). Its cascade
+      // marks only its named quotes Awarded and rejects none: a supplier with no
+      // share yet may still win an item left open.
+      id: 't_rfq_award_partial',
+      from: ['Open', 'Closed', 'Partly awarded'],
+      to: 'Partly awarded',
       trigger: 'user',
       requiredRole: 'rfq:award',
       requiredFields: ['awardedQuotationId', 'awardedSupplierId'],

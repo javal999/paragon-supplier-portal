@@ -34,9 +34,13 @@ import {
   itemTierAt,
   itemsDepartingBestScore,
   scoreItemAt,
-  tieredAwardShapeRefusal,
-  type TieredAwardRefusal,
 } from '../../services/sourcing/rfqComparison';
+import {
+  awardItemsOf,
+  awardShapeRefusal,
+  itemsOpenAfter,
+  type AwardRefusal,
+} from '../../services/sourcing/awardShape';
 import { EmptyRow, GateMarker, money, qty } from './rfxDisplay';
 import { FirmPill } from './rfxAuthoringDisplay';
 
@@ -48,7 +52,8 @@ import { FirmPill } from './rfxAuthoringDisplay';
 //
 // ⚠️ **THE PAGE JUDGES WITH THE VERB'S OWN RULES.** The lines the award form
 // sends are built by `buildTieredAwardLines` and checked by
-// `tieredAwardShapeRefusal` — the same functions `rfq_award_governed` calls —
+// `awardShapeRefusal` over `awardItemsOf(rfq)`, then for items left open —
+// the same functions `rfq_award_governed` calls for the final award —
 // so a form the page lets through is one the verb accepts, and a refusal reads
 // the same on both sides. The page is the message; the verb is the lock.
 // ────────────────────────────────────────────────────────────────────────────
@@ -515,7 +520,7 @@ const ItemComparison: React.FC<ComparisonProps & { item: RfqItem }> = ({
 /** A shape refusal in the reader's language. */
 export const tieredRefusalMessage = (
   t: TFunction,
-  r: TieredAwardRefusal,
+  r: AwardRefusal,
   supplierName: (id: string) => string,
 ): string =>
   t(`rfqCompare.refusal.${r.code}`, {
@@ -552,7 +557,16 @@ export const TieredAwardForm: React.FC<AwardFormProps> = ({
   const [reason, setReason] = useState('');
   const qualified = useMemo(() => quotes.filter((q) => qualifies(q.supplierId)), [quotes, qualifies]);
   const lines = buildTieredAwardLines(rfq, evalQty, shares, qualified);
-  const shape = lines.length > 0 ? tieredAwardShapeRefusal(rfq, lines, quotes) : null;
+  // This form sends the FINAL award (`t_rfq_award`), so an item with no share
+  // is refused as open, as the verb refuses it (RFx C1). Partial award and
+  // "Will not award" arrive with the per-line award panel (task C3).
+  const items = awardItemsOf(rfq);
+  const open = lines.length > 0 ? itemsOpenAfter(items, lines) : [];
+  const shape: AwardRefusal | null =
+    lines.length === 0
+      ? null
+      : (awardShapeRefusal(items, lines, quotes) ??
+        (open.length > 0 ? { code: 'AWARD_ITEMS_OPEN', item: open.map((i) => i.name).join(', ') } : null));
   const departing = lines.length > 0 && !shape ? itemsDepartingBestScore(rfq, lines, bestByItem) : [];
   const setShare = (code: string, quoteId: string, value: string) =>
     setShares((prev) => ({ ...prev, [code]: { ...(prev[code] ?? {}), [quoteId]: value } }));
