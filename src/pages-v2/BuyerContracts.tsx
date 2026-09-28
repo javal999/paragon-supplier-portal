@@ -791,7 +791,7 @@ const ContractsWorkspace: React.FC<ContractsWorkspaceProps> = ({
                 placeholder={t('contracts.wizard.search.supplier')}
               />
             </div>
-            <div className="border border-border-subtle rounded-md overflow-hidden max-h-56 overflow-y-auto">
+            <div className="relative min-w-0 border border-border-subtle rounded-md overflow-x-auto max-h-56 overflow-y-auto">
               <table className="w-full text-sm">
                 <tbody>
                   {supplierTableFiltered.map((s) => (
@@ -1120,7 +1120,7 @@ const ContractsWorkspace: React.FC<ContractsWorkspaceProps> = ({
                   count: draft.obligations.length,
                 })}
               </h4>
-              <div className="border border-border-subtle rounded-md overflow-hidden">
+              <div className="relative min-w-0 border border-border-subtle rounded-md overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead className="bg-bg-hover text-text-tertiary uppercase tracking-wider text-xs">
                     <tr>
