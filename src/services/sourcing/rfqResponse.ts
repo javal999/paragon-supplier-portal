@@ -147,7 +147,8 @@ export function clarificationViewFor(
  */
 export function maskConfidential(rfq: RFQ): RFQ {
   if (!rfq.confidential) return rfq;
-  const { attachments: _hiddenAttachments, ...rest } = rfq;
+  // NR-1 — the document requests are content too, withheld until acceptance.
+  const { attachments: _hiddenAttachments, documentRequests: _hiddenRequests, ...rest } = rfq;
   return {
     ...rest,
     ...(rfq.items

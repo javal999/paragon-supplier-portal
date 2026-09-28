@@ -30,9 +30,12 @@ import {
   useSuppliers,
 } from '../services/query/hooks';
 import { RfqSourceLinks } from './rfx/rfqSources';
+import { SupplierDocumentsPanel } from './rfx/SupplierDocumentsPanel';
+import { documentsOf } from '../services/transitions/rfxDocumentRules';
 import { useRfxCommand } from '../services/query/commandHooks';
-import { awardSplitRefusal, effectiveDeadline, reliabilityScoreFor } from '../services/transitions/rfxRules';
-import type { AwardLine } from '../services/sourcing/types';
+import { effectiveDeadline, reliabilityScoreFor } from '../services/transitions/rfxRules';
+import type { AwardItem } from '../services/sourcing/awardShape';
+import { awardsInForce, trailOfViews } from '../services/sourcing/awardStatus';
 import {
   bestScoredByItemAt,
   defaultEvaluationTierQty,
@@ -42,13 +45,9 @@ import {
   scoreRfqAt,
 } from '../services/sourcing/rfqComparison';
 import { DeadlinePill, EmptyRow, GateMarker, OtifOrNoHistory, money, qty, rfxNow } from './rfx/rfxDisplay';
-import {
-  EvaluationBreakSelect,
-  RfqContentSection,
-  TieredAwardForm,
-  TieredAwardLines,
-  TieredComparison,
-} from './rfx/TieredRfq';
+import { EvaluationBreakSelect, RfqContentSection, TieredComparison } from './rfx/TieredRfq';
+import { AwardPanel, type PanelAward } from './rfx/AwardPanel';
+import { AwardRecords } from './rfx/AwardRecords';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ONE SOURCING EVENT — REQ-E03-03 and REQ-E03-05 (BUY).
@@ -95,6 +94,10 @@ const BuyerSourcingEvent: React.FC = () => {
   const gates = useRfqComplianceGate(rfqId);
   const negotiate = useVerbAvailability('rfq:negotiate');
   const awardVerb = useVerbAvailability('rfq:award');
+  // RFx C3 (NR-3 BR-09, BR-10) — cancelling an award and marking it raised in
+  // SAP are their own atoms, so a seat may hold one without the other.
+  const cancelVerb = useVerbAvailability('rfq:award-cancel');
+  const sapVerb = useVerbAvailability('rfq:award-sap');
   // REQ-E03-03 BR-05 — moving the response window is the PUBLISH authority, the
   // same atom that sent the invitation out; it is not the award authority.
   const publish = useVerbAvailability('rfq:publish');
@@ -105,8 +108,6 @@ const BuyerSourcingEvent: React.FC = () => {
   const [roundMessage, setRoundMessage] = useState('');
   const [roundTarget, setRoundTarget] = useState('');
   const [bestAndFinal, setBestAndFinal] = useState(false);
-  const [shares, setShares] = useState<Record<string, string>>({});
-  const [awardReason, setAwardReason] = useState('');
   const [extendTo, setExtendTo] = useState('');
   const [extendOnly, setExtendOnly] = useState<string[]>([]);
   // RFx spec "Evaluation and award" — the break a TIERED RFQ is compared and
@@ -162,15 +163,6 @@ const BuyerSourcingEvent: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [qualified, rfq, tiered, evalQty, suppliers.data],
   );
-  /** Per item, the best-scored quote at the break (a tiered RFQ only). */
-  const bestByItem = useMemo(
-    () =>
-      rfq && tiered && evalQty !== null
-        ? bestScoredByItemAt(rfq, qualified, evalQty, reliabilityOf, scoringOpts)
-        : new Map<number, string | null>(),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [qualified, rfq, tiered, evalQty, suppliers.data],
-  );
   const scoreById = useMemo(
     () => new Map(scoring.kind === 'scored' ? scoring.scores.map((s) => [s.quoteId, s] as const) : []),
     [scoring],
@@ -202,7 +194,11 @@ const BuyerSourcingEvent: React.FC = () => {
   if (!rfq) return <NotFound />;
 
   const eventRounds = (rounds.data?.items ?? []).filter((r) => r.rfqId === rfq.id);
-  const award = (awards.data?.items ?? []).find((a) => a.rfqId === rfq.id) ?? null;
+  // RFx C3 — every award the event has had (cancelled ones are kept, AR-08),
+  // and the ones still in force, derived with the rule the verbs use.
+  const eventAwards = (awards.data?.items ?? []).filter((a) => a.eventType === 'rfq' && a.eventId === rfq.id);
+  const inForce = awardsInForce(eventAwards, trailOfViews(eventAwards));
+  const awardable = rfq.status === 'Open' || rfq.status === 'Closed' || rfq.status === 'Partly awarded';
   const currency = rfq.currency;
 
   /**
@@ -227,27 +223,38 @@ const BuyerSourcingEvent: React.FC = () => {
     return t(labelKey);
   };
 
-  /** The award lines the form currently describes. */
-  const awardLines: AwardLine[] = qualified
-    .map((q) => {
-      const pct = Number(shares[q.id]);
-      if (!Number.isFinite(pct) || pct <= 0) return null;
-      const item = rfq.lineItems?.[0]?.materialCode ?? '';
-      const total = rfq.lineItems?.[0]?.quantity ?? rfq.totalQty;
-      return {
-        supplierId: q.supplierId,
-        quotationId: q.id,
-        itemCode: item,
-        sharePct: pct,
-        quantity: Math.round((total * pct) / 100),
-      };
-    })
-    .filter((l): l is AwardLine => l !== null);
-
-  const splitRefusal = awardLines.length > 0 ? awardSplitRefusal(awardLines) : null;
   /** BL-64 — quotes exist and not one comes from a supplier passing CR-23: nothing can be awarded. */
   const noneAwardable = current.length > 0 && qualified.length === 0;
-  const departs = bestId !== null && awardLines.length > 0 && !awardLines.some((l) => l.quotationId === bestId);
+  /**
+   * The best-scored quote for an item at a break — the reason rule's anchor,
+   * read as the verb reads it: per item at that item's own break on a tiered
+   * RFQ, the event's best on a legacy one. A genuine tie has no single best.
+   */
+  const bestOf = (item: AwardItem, breakQty: number): string | null =>
+    item.tiered
+      ? (bestScoredByItemAt(rfq, qualified, breakQty, reliabilityOf, scoringOpts).get(item.lineNo!) ?? null)
+      : tied
+        ? null
+        : bestId;
+  /** Dispatch the panel's award: `award` (final) or `awardPartial`, by whether an item stays open. */
+  const sendAward = (a: PanelAward) => {
+    // The verb's required principal: the first line, or — for a final award
+    // with no lines ("Will not award the rest") — an award already in force.
+    const principal = a.lines[0] ?? inForce.find((x) => x.lines.length > 0)?.lines[0];
+    const base = {
+      rfqId: rfq.id,
+      awardedQuotationId: principal?.quotationId ?? '',
+      awardedSupplierId: principal?.supplierId ?? '',
+      awardLines: a.lines,
+      ...(a.reason ? { awardReason: a.reason } : {}),
+    };
+    run(
+      a.final
+        ? { verb: 'award', ...base, ...(a.notAwardedItems.length > 0 ? { notAwardedItems: a.notAwardedItems } : {}) }
+        : { verb: 'awardPartial', ...base },
+      'rfx.toast.awarded',
+    );
+  };
 
   const run = (vars: Parameters<typeof command.mutate>[0], successKey: string) =>
     command.mutate(vars, {
@@ -572,6 +579,24 @@ const BuyerSourcingEvent: React.FC = () => {
         )}
       </section>
 
+      {/* — RFx B5: every supplier file on the current quotes (NR-1 buyer step 5) — */}
+      <div className="mb-6">
+        <SupplierDocumentsPanel
+          requests={rfq.documentRequests}
+          responses={current.map((q) => ({
+            id: q.id,
+            supplierId: q.supplierId,
+            supplierName: supplierName(q.supplierId),
+            status: q.status,
+            documents: documentsOf(q),
+          }))}
+          deadlineFor={(supplierId) =>
+            effectiveDeadline(rfq.responseDeadline, rfq.inviteeDeadlines ?? [], supplierId)
+          }
+          testId="event-documents"
+        />
+      </div>
+
       {/* — REQ-E03-05 AC-03: every quote version, kept and viewable — */}
       {allQuotes.length > current.length && (
         <section className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto mb-6">
@@ -797,189 +822,62 @@ const BuyerSourcingEvent: React.FC = () => {
           {t('rfx.award.title')}
         </div>
 
-        {award ? (
-          <div className="p-4 space-y-3" data-testid="award-recorded">
-            <p className="text-sm text-text-secondary">
-              {t('rfx.award.recorded', { date: formatDate(award.awardedAt) })}
-            </p>
-            {tiered ? (
-              <TieredAwardLines rfq={rfq} lines={award.lines} supplierName={supplierName} />
-            ) : (
-            <Table>
-              <TableHeader>
-                <TableHeaderCell>{t('rfx.award.col.supplier')}</TableHeaderCell>
-                <TableHeaderCell>{t('rfx.award.col.share')}</TableHeaderCell>
-                <TableHeaderCell>{t('rfx.award.col.qty')}</TableHeaderCell>
-              </TableHeader>
-              <tbody>
-                {award.lines.map((line) => (
-                  <TableRow key={`${line.supplierId}-${line.itemCode}`} data-testid={`award-line-${line.supplierId}`}>
-                    <TableCell>{supplierName(line.supplierId)}</TableCell>
-                    <TableCell>
-                      <Data>{line.sharePct}%</Data>
-                    </TableCell>
-                    <TableCell>
-                      <Data>
-                        {qty(line.quantity)} {rfq.uom}
-                      </Data>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </tbody>
-            </Table>
-            )}
-            {award.reason && <p className="text-sm text-text-secondary">{award.reason}</p>}
-            {award.departedFromBestScore && (
-              <p className="text-sm text-warning-hover" data-testid="award-departed">
-                {t('rfx.award.departed')}
-              </p>
-            )}
-            {award.notAwardedSupplierIds.length > 0 && (
-              <p className="text-sm text-text-tertiary" data-testid="award-not-awarded">
-                {t('rfx.award.notAwarded')}:{' '}
-                {award.notAwardedSupplierIds.map((s) => supplierName(s)).join(', ')}
-              </p>
-            )}
-            <p className="text-xs text-text-tertiary">{t('rfx.award.noPo')}</p>
+        {eventAwards.length > 0 && (
+          <div className="p-4 border-b border-border-subtle">
+            <AwardRecords
+              rfq={rfq}
+              awards={eventAwards}
+              supplierName={supplierName}
+              cancelVerb={cancelVerb}
+              sapVerb={sapVerb}
+              pending={command.isPending}
+              onCancel={(award, cancelReason, partial) =>
+                run(
+                  { verb: partial ? 'cancelAwardPartial' : 'cancelAward', rfqId: rfq.id, awardId: award.id, cancelReason },
+                  'rfx.toast.awardCancelled',
+                )
+              }
+              onMarkSap={(award, sapDocumentNo) =>
+                run({ verb: 'markAwardSapRaised', rfqId: rfq.id, awardId: award.id, sapDocumentNo }, 'rfx.toast.sapMarked')
+              }
+            />
           </div>
-        ) : awardVerb.kind !== 'held' ? (
+        )}
+        {/* RFx C3 (NR-3 BR-02 to BR-07) — ONE award panel for every RFQ, while
+            it can still be awarded: Open, Closed, or Partly awarded. */}
+        {!awardable ? null : awardVerb.kind !== 'held' ? (
           <div className="p-4">
             <HandoffNotice availability={awardVerb} testId="handoff-rfq-award" />
-          </div>
-        ) : tiered && evalQty !== null ? (
-          // BL-37 — a tiered RFQ is awarded ITEM BY ITEM at the evaluation
-          // break, by the SAME verb (`t_rfq_award`) and the same policy.
-          <div className="p-4 space-y-3">
-            {noneAwardable ? (
-              <p className="text-sm text-warning-hover" role="status" data-testid="award-none-qualified">
-                {t('rfx.gate.noAward')}
-              </p>
-            ) : (
-              <TieredAwardForm
-                // The form's shares are per quote; a new break keeps them and
-                // re-derives every quantity and every best score.
-                rfq={rfq}
-                quotes={current}
-                evalQty={evalQty}
-                bestByItem={bestByItem}
-                qualifies={qualifies}
-                gateOf={gateOf}
-                supplierName={supplierName}
-                pending={command.isPending}
-                onConfirm={(lines, reason) =>
-                  run(
-                    {
-                      verb: 'award',
-                      rfqId: rfq.id,
-                      awardedQuotationId: lines[0]!.quotationId,
-                      awardedSupplierId: lines[0]!.supplierId,
-                      awardLines: lines,
-                      ...(reason ? { awardReason: reason } : {}),
-                    },
-                    'rfx.toast.awarded',
-                  )
-                }
-              />
-            )}
-            <p className="text-xs text-text-tertiary">{t('rfx.award.noPo')}</p>
           </div>
         ) : (
           <div className="p-4 space-y-3">
             {/* BL-64 / BR-01a — every quoting supplier fails the gate: say the
-                award is impossible, rather than show a split hint and a form no
-                entry can ever complete. The table below still names each reason. */}
-            {noneAwardable ? (
+                award is impossible. The rows below still name each reason. */}
+            {noneAwardable && (
               <p className="text-sm text-warning-hover" role="status" data-testid="award-none-qualified">
                 {t('rfx.gate.noAward')}
               </p>
-            ) : (
-              <p className="text-xs text-text-tertiary">{t('rfx.award.splitHint')}</p>
             )}
-            <Table>
-              <TableHeader>
-                <TableHeaderCell>{t('rfx.award.col.supplier')}</TableHeaderCell>
-                <TableHeaderCell>{t('rfx.cmp.row.weighted')}</TableHeaderCell>
-                <TableHeaderCell>{t('rfx.award.col.share')}</TableHeaderCell>
-              </TableHeader>
-              <tbody>
-                {current.map((q) => (
-                  <TableRow key={q.id} data-testid={`award-input-${q.supplierId}`}>
-                    <TableCell>{supplierName(q.supplierId)}</TableCell>
-                    <TableCell>
-                      <Data>{scoreById.get(q.id)?.composite ?? '—'}</Data>
-                    </TableCell>
-                    <TableCell>
-                      {/* BR-01a — a supplier that fails the gate cannot be
-                          selected: no share field, and the reason instead. The
-                          verb refuses it too, so this is the message, not the lock. */}
-                      {!qualifies(q.supplierId) ? (
-                        <GateMarker gate={gateOf(q.supplierId)} testId={`award-gate-${q.supplierId}`} />
-                      ) : (
-                      <input
-                        type="number"
-                        min={0}
-                        max={100}
-                        aria-label={`${supplierName(q.supplierId)} — ${t('rfx.award.col.share')}`}
-                        value={shares[q.id] ?? ''}
-                        onChange={(e) => setShares((prev) => ({ ...prev, [q.id]: e.target.value }))}
-                        className="w-24 bg-white border border-border-input rounded-md px-3 h-9 text-sm focus:outline-none focus:border-action"
-                      />
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {current.length === 0 && (
-                  <EmptyRow colSpan={3} testId="award-no-quotes">
-                    {t('rfx.cmp.empty')}
-                  </EmptyRow>
-                )}
-              </tbody>
-            </Table>
-
-            {departs && (
-              <div data-testid="award-reason-required">
-                <label className="block text-xs font-semibold text-text-secondary mb-1" htmlFor="award-reason">
-                  {t('rfx.award.reason')}
-                </label>
-                <p className="text-xs text-warning-hover mb-1">{t('rfx.award.reasonRequired')}</p>
-                <input
-                  id="award-reason"
-                  type="text"
-                  value={awardReason}
-                  onChange={(e) => setAwardReason(e.target.value)}
-                  className="w-full bg-white border border-border-input rounded-md px-3 h-10 text-sm focus:outline-none focus:border-action"
-                />
-              </div>
-            )}
-            {splitRefusal && (
-              <p className="text-sm text-danger" data-testid="award-split-invalid">
-                {t('rfx.award.splitHint')}
-              </p>
-            )}
-            {!noneAwardable && (
-              <Button
-                variant="outline"
-                disabled={awardLines.length === 0 || splitRefusal !== null || (departs && !awardReason.trim())}
-                data-testid="award-confirm"
-                onClick={() =>
-                  run(
-                    {
-                      verb: 'award',
-                      rfqId: rfq.id,
-                      awardedQuotationId: awardLines[0].quotationId,
-                      awardedSupplierId: awardLines[0].supplierId,
-                      awardLines,
-                      ...(awardReason.trim() ? { awardReason: awardReason.trim() } : {}),
-                    },
-                    'rfx.toast.awarded',
-                  )
-                }
-              >
-                {t('rfx.award.confirm')}
-              </Button>
-            )}
-            <p className="text-xs text-text-tertiary">{t('rfx.award.noPo')}</p>
+            <AwardPanel
+              // Keyed on the awards in force, so a recorded or cancelled award
+              // starts the panel afresh over the items still open.
+              key={inForce.map((a) => a.id).join('|')}
+              rfq={rfq}
+              quotes={current}
+              inForce={inForce}
+              defaultBreak={evalQty}
+              bestOf={bestOf}
+              qualifies={qualifies}
+              gateOf={gateOf}
+              supplierName={supplierName}
+              noneAwardable={noneAwardable}
+              pending={command.isPending}
+              onAward={sendAward}
+            />
           </div>
+        )}
+        {eventAwards.length === 0 && (
+          <p className="px-4 pb-4 text-xs text-text-tertiary">{t('rfx.award.noPo')}</p>
         )}
       </section>
     </AppShellV2>

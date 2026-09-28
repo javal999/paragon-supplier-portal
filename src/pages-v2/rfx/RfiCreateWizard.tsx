@@ -2,8 +2,9 @@
 // RAISING AN INFORMATION REQUEST — section 3.6a (CE-01 to CE-08), REQ-E03-02,
 // and the RFx authoring batch (2026-09-21).
 //
-// Four steps, in the order the act actually happens: what the request is about,
-// what it asks, who is asked, and a last look before it leaves the building.
+// Five steps, in the order the act actually happens: what the request is about,
+// what it asks, who is asked, which documents each supplier sends back (NR-1
+// BR-02), and a last look before it leaves the building.
 //
 // ⚠️ **"SAVE DRAFT" AND "SEND TO SUPPLIERS" ARE TWO ACTS, NOT ONE BUTTON WITH A
 // CONFIRMATION (CE-06).** Creating and sending are separate permissions — a
@@ -56,7 +57,9 @@ import {
 } from '../../services/sourcing/rfxConfig';
 import { rfiTemplateStore, type RfiTemplateContent } from '../../services/sourcing/rfxTemplates';
 import { isPastDeadline } from '../../services/transitions/rfxRules';
-import type { RfiEvent, RfiQuestion, RfxCustomSection } from '../../services/sourcing/types';
+import { documentRequestsRefusal } from '../../services/transitions/rfxDocumentRules';
+import type { DocumentRequest, RfiEvent, RfiQuestion, RfxCustomSection } from '../../services/sourcing/types';
+import DocumentRequestsEditor, { DocumentRequestsSummary } from './DocumentRequestsEditor';
 import RfxInviteeStep from './RfxInviteeStep';
 import RfxQuestionEditor from './RfxQuestionEditor';
 import RfxSaveTemplate from './RfxSaveTemplate';
@@ -77,6 +80,8 @@ interface Draft {
   confidentialityTerms: string;
   /** Not authored here: carried so an edit keeps the event's purchasing group. */
   purchasingGroup?: string;
+  /** NR-1 BR-02 — edited on the "Documents from suppliers" step (B3). */
+  documentRequests: readonly DocumentRequest[];
 }
 
 const EMPTY: Draft = {
@@ -90,6 +95,7 @@ const EMPTY: Draft = {
   attachments: [],
   confidential: false,
   confidentialityTerms: '',
+  documentRequests: [],
 };
 
 interface RfiCreateWizardProps {
@@ -118,6 +124,7 @@ const draftOf = (e: RfiEvent): Draft => ({
   confidential: !!e.confidentiality,
   confidentialityTerms: e.confidentiality?.terms ?? '',
   ...(e.purchasingGroup ? { purchasingGroup: e.purchasingGroup } : {}),
+  documentRequests: e.documentRequests ?? [],
 });
 
 /** The template content this draft would save (D2): content only, never who or when. */
@@ -128,6 +135,7 @@ const contentOf = (d: Draft): RfiTemplateContent => ({
   customSections: d.customSections,
   confidential: d.confidential,
   ...(d.confidential && d.confidentialityTerms.trim() ? { confidentialityTerms: d.confidentialityTerms.trim() } : {}),
+  ...(d.documentRequests.length > 0 ? { documentRequests: d.documentRequests } : {}),
 });
 
 const RfiCreateWizard: React.FC<RfiCreateWizardProps> = ({
@@ -165,6 +173,7 @@ const RfiCreateWizard: React.FC<RfiCreateWizardProps> = ({
       customSections: c.customSections,
       confidential: c.confidential,
       confidentialityTerms: c.confidentialityTerms ?? '',
+      documentRequests: c.documentRequests ?? [],
     }));
 
   const applyStart = (key: string) => {
@@ -190,6 +199,8 @@ const RfiCreateWizard: React.FC<RfiCreateWizardProps> = ({
         attachments: e.attachments ?? [],
         confidential: !!e.confidentiality,
         confidentialityTerms: e.confidentiality?.terms ?? '',
+        // NR-1 BR-11 — the buyer's requests copy; supplier documents never do.
+        documentRequests: e.documentRequests ?? [],
       });
     }
   };
@@ -220,10 +231,12 @@ const RfiCreateWizard: React.FC<RfiCreateWizardProps> = ({
     if (n === 0) return draft.title.trim().length > 0 && draft.family !== '' && deadlineInFuture;
     if (n === 1) return draft.questions.length > 0;
     if (n === 2) return draft.invitedSupplierIds.length > 0;
+    // NR-1 BR-02 — the create verb's own rule; an RFI has no items.
+    if (n === 3) return documentRequestsRefusal(draft.documentRequests) === null;
     return true;
   };
 
-  const sendable = stepValid(0) && stepValid(1) && stepValid(2);
+  const sendable = stepValid(0) && stepValid(1) && stepValid(2) && stepValid(3);
 
   const create = (publish: boolean) =>
     command.mutate(
@@ -239,6 +252,7 @@ const RfiCreateWizard: React.FC<RfiCreateWizardProps> = ({
         questions: draft.questions,
         ...(draft.customSections.length > 0 ? { customSections: draft.customSections } : {}),
         ...(draft.attachments.length > 0 ? { attachments: draft.attachments } : {}),
+        ...(draft.documentRequests.length > 0 ? { documentRequests: draft.documentRequests } : {}),
         ...(draft.confidential
           ? { confidentiality: draft.confidentialityTerms.trim() ? { terms: draft.confidentialityTerms.trim() } : {} }
           : {}),
@@ -436,6 +450,19 @@ const RfiCreateWizard: React.FC<RfiCreateWizardProps> = ({
       ),
     },
     {
+      id: 'documents',
+      title: t('rfxa.step.documents'),
+      shortTitle: t('rfxa.step.documents.short'),
+      description: t('rfxa.step.documents.desc'),
+      content: (
+        <DocumentRequestsEditor
+          value={draft.documentRequests}
+          onChange={(next) => setDraft((d) => ({ ...d, documentRequests: next }))}
+          testIdPrefix="rfi-new"
+        />
+      ),
+    },
+    {
       id: 'review',
       title: t('rfx.create.step.review'),
       shortTitle: t('rfx.create.step.review.short'),
@@ -485,6 +512,12 @@ const RfiCreateWizard: React.FC<RfiCreateWizardProps> = ({
               <dt className="text-xs uppercase text-text-tertiary">{t('rfx.create.review.invitees')}</dt>
               <dd className="text-text-primary">
                 {t('rfx.invite.selected', { count: draft.invitedSupplierIds.length })}
+              </dd>
+            </div>
+            <div className="sm:col-span-2">
+              <dt className="text-xs uppercase text-text-tertiary">{t('rfxa.doc.review')}</dt>
+              <dd className="text-text-primary">
+                <DocumentRequestsSummary value={draft.documentRequests} testIdPrefix="rfi-new" />
               </dd>
             </div>
           </dl>

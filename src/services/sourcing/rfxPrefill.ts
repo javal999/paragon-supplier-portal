@@ -9,12 +9,23 @@
 // Pure. It reads only SUBMITTED responses — a draft is invisible to the buyer
 // (REQ-E03-02 edge case), so pre-filling from one would leak an answer the
 // supplier has not sent.
+//
+// NR-1 BR-11 — every pre-fill here copies the BUYER'S document requests and
+// never a supplier's documents: a file answers one event's request, so it is
+// not presented as an answer to a new one. The new event links back to its
+// source instead (`sourceRfiId`, `sourceRfpId`).
 // ────────────────────────────────────────────────────────────────────────────
 
 import type { RfqLineItem } from '../../data/mockRfqs';
-import type { RfiEvent, RfiResponse, RfpEvent, RfpResponse } from './types';
+import type { DocumentRequest, RfiEvent, RfiResponse, RfpEvent, RfpResponse } from './types';
 import type { AttachmentMeta } from '../attachments/sessionAttachments';
 import { rfxFamilyForCategory, rfxSectionsOf } from './rfxConfig';
+import { parseRfpOptionRef, rfpOptionRef } from './rfpFirmOffer';
+import { rfpOptionSourcedRefusal } from './rfpAward';
+
+/** The buyer's requests, copied as they stand (a fresh array, same ids). */
+const copyRequests = (requests: readonly DocumentRequest[] | undefined): readonly DocumentRequest[] =>
+  (requests ?? []).map((r) => ({ ...r }));
 
 /** The editable draft an RFQ opens on when it is created from an RFI. */
 export interface RfqPrefill {
@@ -23,6 +34,8 @@ export interface RfqPrefill {
   readonly sourceRfiId: string;
   readonly invitedSupplierIds: readonly string[];
   readonly lineItems: readonly RfqLineItem[];
+  /** NR-1 BR-11 — the RFI's document requests. */
+  readonly documentRequests: readonly DocumentRequest[];
 }
 
 const answerText = (response: RfiResponse, questionId: string): string => {
@@ -82,6 +95,7 @@ export function prefillRfqFromRfi(
     sourceRfiId: rfi.id,
     invitedSupplierIds: chosen.map((r) => r.supplierId),
     lineItems,
+    documentRequests: copyRequests(rfi.documentRequests),
   };
 }
 
@@ -111,6 +125,8 @@ export interface RfpPrefill {
   readonly confidential: boolean;
   readonly confidentialityTerms?: string;
   readonly sourceRfiId: string;
+  /** NR-1 BR-11 — the RFI's document requests. */
+  readonly documentRequests: readonly DocumentRequest[];
 }
 
 export function prefillRfpFromRfi(
@@ -134,6 +150,7 @@ export function prefillRfpFromRfi(
     confidential: !!rfi.confidentiality,
     ...(rfi.confidentiality?.terms ? { confidentialityTerms: rfi.confidentiality.terms } : {}),
     sourceRfiId: rfi.id,
+    documentRequests: copyRequests(rfi.documentRequests),
   };
 }
 
@@ -149,6 +166,11 @@ export function prefillRfpFromRfi(
 /** One RFQ item seed, from one RFP option (PTI's or a supplier's own). */
 export interface RfqItemSeedFromRfp {
   readonly sourceOptionId: string;
+  /**
+   * RFx D2 — the option's ref (`rfpOptionRef`): the buyer option's id, or
+   * `${proposer}:${sup-opt-N}`, so two suppliers' `sup-opt-1` stay apart.
+   */
+  readonly sourceOptionRef: string;
   readonly description: string;
   readonly note?: string;
   /** Set when the option was proposed by a supplier rather than by PTI. */
@@ -165,27 +187,55 @@ export interface RfqSeedFromRfp {
   /** Submitted responders that priced at least one chosen option. */
   readonly invitedSupplierIds: readonly string[];
   readonly items: readonly RfqItemSeedFromRfp[];
+  /** NR-1 BR-11 — the RFP's document requests. */
+  readonly documentRequests: readonly DocumentRequest[];
+  /**
+   * RFx D2 (NR-2 BR-08) — the option refs this RFQ will source; the RFQ create
+   * payload carries them, so the RFP cannot award them as well.
+   */
+  readonly sourceRfpOptionRefs: readonly string[];
 }
 
+/**
+ * `chosenOptions` names each option by its ref (`rfpOptionRef`). A bare
+ * supplier-proposed id (`sup-opt-N`, the form links carried before D2) is read
+ * only when exactly one submitted response proposes it; two suppliers' same
+ * id is ambiguous and skipped, never guessed.
+ *
+ * RFx D2 (NR-2 BR-08) — `awardedOptionRefs` are the options an award in force
+ * on the RFP already placed. They are left out through the same rule the RFQ
+ * create policy refuses them by (`rfpOptionSourcedRefusal`).
+ */
 export function prefillRfqItemsFromRfp(
   rfp: RfpEvent,
   responses: readonly RfpResponse[],
-  chosenOptionIds: readonly string[],
+  chosenOptions: readonly string[],
+  awardedOptionRefs: readonly string[] = [],
 ): RfqSeedFromRfp {
   const submitted = responses.filter((r) => r.rfpId === rfp.id && r.status === 'Submitted');
   const points = rfp.pricing?.quantityPoints ?? [];
   const basis = rfp.pricing?.quantityBasis ?? 'total';
+  const awarded = new Map(awardedOptionRefs.map((ref) => [ref, ref] as const));
   const items: RfqItemSeedFromRfp[] = [];
-  for (const optionId of [...new Set(chosenOptionIds)]) {
-    const own = rfp.pricing?.options.find((o) => o.id === optionId);
-    const proposer = own
-      ? undefined
-      : submitted.find((r) => r.pricing?.proposedOptions.some((o) => o.id === optionId));
+  for (const chosen of [...new Set(chosenOptions)]) {
+    const { optionId, proposerSupplierId } = parseRfpOptionRef(chosen);
+    const own = proposerSupplierId ? undefined : rfp.pricing?.options.find((o) => o.id === optionId);
+    const proposers = own
+      ? []
+      : submitted.filter(
+          (r) =>
+            (proposerSupplierId === undefined || r.supplierId === proposerSupplierId) &&
+            (r.pricing?.proposedOptions ?? []).some((o) => o.id === optionId),
+        );
+    const proposer = proposers.length === 1 ? proposers[0] : undefined;
     const option = own ?? proposer?.pricing?.proposedOptions.find((o) => o.id === optionId);
-    // An id that names no option on this RFP is skipped, never invented.
+    // An id that names no option on this RFP, or names two, is skipped, never invented.
     if (!option) continue;
+    const ref = rfpOptionRef(option.id, proposer?.supplierId);
+    if (rfpOptionSourcedRefusal([ref], awarded, () => 'awarded on this RFP')) continue;
     items.push({
       sourceOptionId: option.id,
+      sourceOptionRef: ref,
       description: option.title,
       ...(option.description ? { note: option.description } : {}),
       ...(proposer ? { proposedBySupplierId: proposer.supplierId } : {}),
@@ -193,10 +243,13 @@ export function prefillRfqItemsFromRfp(
       quantityBasis: basis,
     });
   }
-  const chosen = new Set(items.map((i) => i.sourceOptionId));
-  const invited = submitted
-    .filter((r) => (r.pricing?.prices ?? []).some((p) => chosen.has(p.optionId)))
-    .map((r) => r.supplierId);
+  // A responder priced a chosen option when its own prices name it: a buyer
+  // option by id, a supplier-proposed one only in its proposer's answer (another
+  // supplier's `sup-opt-1` is another option).
+  const pricedBy = (r: RfpResponse, item: RfqItemSeedFromRfp): boolean =>
+    (item.proposedBySupplierId === undefined || item.proposedBySupplierId === r.supplierId) &&
+    (r.pricing?.prices ?? []).some((p) => p.optionId === item.sourceOptionId);
+  const invited = submitted.filter((r) => items.some((i) => pricedBy(r, i))).map((r) => r.supplierId);
   return {
     title: rfp.title,
     materialCategory: rfp.materialCategory,
@@ -204,5 +257,7 @@ export function prefillRfqItemsFromRfp(
     sourceRfpId: rfp.id,
     invitedSupplierIds: [...new Set(invited)],
     items,
+    documentRequests: copyRequests(rfp.documentRequests),
+    sourceRfpOptionRefs: items.map((i) => i.sourceOptionRef),
   };
 }

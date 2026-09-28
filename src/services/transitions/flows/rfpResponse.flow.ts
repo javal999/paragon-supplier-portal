@@ -27,7 +27,16 @@ export const rfpResponseFlow: FlowDefinition = {
       trigger: 'creation',
       requiredRole: 'rfpresponse:answer',
       requiredFields: ['rfpId', 'supplierId'],
-      policyHooks: [POLICY_HOOKS.RFX_RESPONSE_INVITED, POLICY_HOOKS.RFX_RESPONSE_ACCEPTANCE_GATE],
+      policyHooks: [
+        POLICY_HOOKS.RFX_RESPONSE_INVITED,
+        POLICY_HOOKS.RFX_RESPONSE_ACCEPTANCE_GATE,
+        // NR-1 BR-05 — a draft save checks the file limits only.
+        POLICY_HOOKS.RFX_RESPONSE_DOCUMENTS_WITHIN_LIMITS,
+        // NR-1 AC-07 — no upload, replace or delete after the deadline.
+        POLICY_HOOKS.RFX_RESPONSE_WINDOW_OPEN,
+        // NR-1 BR-08 — a Submitted response changes only through revise.
+        POLICY_HOOKS.RFX_RESPONSE_NOT_SUBMITTED,
+      ],
       surfaceable: { surfaced: true },
       version: 1,
     },
@@ -38,7 +47,27 @@ export const rfpResponseFlow: FlowDefinition = {
       trigger: 'user',
       requiredRole: 'rfpresponse:answer',
       requiredFields: [],
-      policyHooks: [POLICY_HOOKS.RFP_SUBMIT_TERMS_ANSWERED],
+      policyHooks: [POLICY_HOOKS.RFP_SUBMIT_TERMS_ANSWERED, POLICY_HOOKS.RFX_RESPONSE_DOCUMENTS_COMPLETE],
+      surfaceable: { surfaced: true },
+      version: 1,
+    },
+    {
+      // NR-1 BR-08 (D-6) — as `t_rfiresponse_revise`: state-preserving, the
+      // revised proposal appended as the next version, judged by the submit
+      // rules (a deviation still needs its comment) and refused
+      // RESPONSE_DEADLINE_PASSED outside the window.
+      id: 't_rfpresponse_revise',
+      from: ['Submitted'],
+      to: 'Submitted',
+      statePreserving: true,
+      trigger: 'user',
+      requiredRole: 'rfpresponse:answer',
+      requiredFields: [],
+      policyHooks: [
+        POLICY_HOOKS.RFX_RESPONSE_WINDOW_OPEN,
+        POLICY_HOOKS.RFP_SUBMIT_TERMS_ANSWERED,
+        POLICY_HOOKS.RFX_RESPONSE_DOCUMENTS_COMPLETE,
+      ],
       surfaceable: { surfaced: true },
       version: 1,
     },

@@ -2,8 +2,9 @@
 // RAISING A PROPOSAL REQUEST — section 3.6a (CE-01 to CE-08), REQ-E03-04, and
 // the RFx authoring batch (2026-09-21).
 //
-// Six steps: what it is about, the terms PTI asks for, indicative pricing
-// (optional), questions (optional), who is asked, and a last look.
+// Seven steps: what it is about, the terms PTI asks for, indicative pricing
+// (optional), questions (optional), who is asked, the documents each supplier
+// sends back (optional, NR-1 BR-02), and a last look.
 //
 // ⚠️ **A PICKED TERM WITHOUT PTI'S REQUESTED VALUE IS NOT A TERM (REQ-E03-04).**
 // The comparison renders "PTI asks for" beside every supplier's answer, and a
@@ -60,13 +61,16 @@ import {
   rfpPricingRequestRefusal,
   termValueFits,
 } from '../../services/transitions/rfxRules';
+import { documentRequestsRefusal } from '../../services/transitions/rfxDocumentRules';
 import type {
+  DocumentRequest,
   RfiQuestion,
   RfpEvent,
   RfpPricingRequest,
   RfpTermRow,
   RfxCustomSection,
 } from '../../services/sourcing/types';
+import DocumentRequestsEditor, { DocumentRequestsSummary } from './DocumentRequestsEditor';
 import RfxInviteeStep from './RfxInviteeStep';
 import RfxQuestionEditor from './RfxQuestionEditor';
 import RfxSaveTemplate from './RfxSaveTemplate';
@@ -101,6 +105,11 @@ interface Draft {
   sourceRfiId: string;
   /** Not authored here: carried so an edit keeps the event's purchasing group. */
   purchasingGroup?: string;
+  /**
+   * NR-1 BR-02 — edited on the "Documents from suppliers" step (B3), and
+   * carried through edit, copy, template and RFI pre-fill.
+   */
+  documentRequests: readonly DocumentRequest[];
 }
 
 const EMPTY: Draft = {
@@ -121,6 +130,7 @@ const EMPTY: Draft = {
   termsText: '',
   termsFile: [],
   sourceRfiId: '',
+  documentRequests: [],
 };
 
 interface RfpCreateWizardProps {
@@ -161,6 +171,7 @@ const draftOf = (e: RfpEvent): Draft => ({
   termsFile: e.termsDocument?.attachment ? [e.termsDocument.attachment] : [],
   sourceRfiId: e.sourceRfiId ?? '',
   ...(e.purchasingGroup ? { purchasingGroup: e.purchasingGroup } : {}),
+  documentRequests: e.documentRequests ?? [],
 });
 
 const RfpCreateWizard: React.FC<RfpCreateWizardProps> = ({
@@ -194,6 +205,8 @@ const RfpCreateWizard: React.FC<RfpCreateWizardProps> = ({
       confidential: prefill.confidential,
       confidentialityTerms: prefill.confidentialityTerms ?? '',
       sourceRfiId: prefill.sourceRfiId,
+      // NR-1 BR-11 — the RFI's requests carry; its responses' documents do not.
+      documentRequests: prefill.documentRequests,
     };
   });
   const [storeVersion, setStoreVersion] = useState(0);
@@ -223,6 +236,7 @@ const RfpCreateWizard: React.FC<RfpCreateWizardProps> = ({
         confidential: c.confidential,
         confidentialityTerms: c.confidentialityTerms ?? '',
         termsText: c.termsText ?? '',
+        documentRequests: c.documentRequests ?? [],
       }));
     } else if (kind === 'past') {
       const e = pastEvents.find((x) => x.id === id);
@@ -244,6 +258,8 @@ const RfpCreateWizard: React.FC<RfpCreateWizardProps> = ({
         confidentialityTerms: e.confidentiality?.terms ?? '',
         termsText: e.termsDocument?.text ?? '',
         termsFile: e.termsDocument?.attachment ? [e.termsDocument.attachment] : [],
+        // NR-1 BR-11 — the buyer's requests copy; supplier documents never do.
+        documentRequests: e.documentRequests ?? [],
       });
     }
   };
@@ -288,10 +304,12 @@ const RfpCreateWizard: React.FC<RfpCreateWizardProps> = ({
     if (n === 2) return pricingRefusal === null;
     if (n === 3) return questionsRefusal === null;
     if (n === 4) return draft.invitedSupplierIds.length > 0;
+    // NR-1 BR-02 — the create verb's own rule; an RFP has no items.
+    if (n === 5) return documentRequestsRefusal(draft.documentRequests) === null;
     return true;
   };
 
-  const sendable = [0, 1, 2, 3, 4].every(stepValid);
+  const sendable = [0, 1, 2, 3, 4, 5].every(stepValid);
 
   /** The rows in the STANDARD LIST's own order, then the buyer's own terms. */
   const termRows = (): RfpTermRow[] => [
@@ -320,6 +338,7 @@ const RfpCreateWizard: React.FC<RfpCreateWizardProps> = ({
         ...(draft.customSections.length > 0 ? { customSections: draft.customSections } : {}),
         ...(draft.pricing ? { pricing: draft.pricing } : {}),
         ...(draft.attachments.length > 0 ? { attachments: draft.attachments } : {}),
+        ...(draft.documentRequests.length > 0 ? { documentRequests: draft.documentRequests } : {}),
         ...(draft.confidential
           ? { confidentiality: draft.confidentialityTerms.trim() ? { terms: draft.confidentialityTerms.trim() } : {} }
           : {}),
@@ -375,6 +394,7 @@ const RfpCreateWizard: React.FC<RfpCreateWizardProps> = ({
       ? { confidentialityTerms: draft.confidentialityTerms.trim() }
       : {}),
     ...(draft.termsText.trim() ? { termsText: draft.termsText.trim() } : {}),
+    ...(draft.documentRequests.length > 0 ? { documentRequests: draft.documentRequests } : {}),
   });
 
   const saveTemplate = (name: string) => {
@@ -653,6 +673,19 @@ const RfpCreateWizard: React.FC<RfpCreateWizardProps> = ({
       ),
     },
     {
+      id: 'documents',
+      title: t('rfxa.step.documents'),
+      shortTitle: t('rfxa.step.documents.short'),
+      description: t('rfxa.step.documents.desc'),
+      content: (
+        <DocumentRequestsEditor
+          value={draft.documentRequests}
+          onChange={(next) => setDraft((d) => ({ ...d, documentRequests: next }))}
+          testIdPrefix="rfp-new"
+        />
+      ),
+    },
+    {
       id: 'review',
       title: t('rfx.create.step.review'),
       shortTitle: t('rfx.create.step.review.short'),
@@ -730,6 +763,12 @@ const RfpCreateWizard: React.FC<RfpCreateWizardProps> = ({
               <dt className="text-xs uppercase text-text-tertiary">{t('rfx.create.review.invitees')}</dt>
               <dd className="text-text-primary">
                 {t('rfx.invite.selected', { count: draft.invitedSupplierIds.length })}
+              </dd>
+            </div>
+            <div className="sm:col-span-2">
+              <dt className="text-xs uppercase text-text-tertiary">{t('rfxa.doc.review')}</dt>
+              <dd className="text-text-primary">
+                <DocumentRequestsSummary value={draft.documentRequests} testIdPrefix="rfp-new" />
               </dd>
             </div>
           </dl>

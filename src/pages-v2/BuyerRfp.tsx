@@ -19,8 +19,18 @@ import { HandoffNotice } from '../components/ui-v2/HandoffNotice';
 import { useVerbAvailability } from '../hooks/useVerbAvailability';
 import { useToast } from '../hooks/useToast';
 import { formatDate } from '../lib/format';
-import { useRfiEvents, useRfpEvents } from '../services/query/hooks';
+import {
+  useInviteeCandidates,
+  useRfiEvents,
+  useRfpAwards,
+  useRfpEvents,
+  useRfpOfferRounds,
+} from '../services/query/hooks';
 import { useRfxCommand } from '../services/query/commandHooks';
+import type { GateResult } from '../services/sourcing/complianceGate';
+import { rfpOptionRef } from '../services/sourcing/rfpFirmOffer';
+import { RfpFirmOfferRounds } from './rfx/RfpFirmOffers';
+import { RfpAwardSection, awardedRefsOf } from './rfx/RfpAwardSection';
 import { RFP_TERM_GROUP_ORDER, rfpTermGroupOf, rfxFamilyForCategory, rfxSectionsOf } from '../services/sourcing/rfxConfig';
 import { prefillRfpFromRfi } from '../services/sourcing/rfxPrefill';
 import { rfpTemplateStore } from '../services/sourcing/rfxTemplates';
@@ -30,8 +40,9 @@ import RfpCreateWizard from './rfx/RfpCreateWizard';
 import RfxSaveTemplate from './rfx/RfxSaveTemplate';
 import { RfpPricingComparison } from './rfx/RfpPricing';
 import { DeadlinePill, EmptyRow, OtifOrNoHistory, ResponseStatePill, rfxNow } from './rfx/rfxDisplay';
-import { answerText, authored, sectionTitle, termLabel, termValueText } from './rfx/rfxAuthoringDisplay';
+import { AnswerValue, authored, sectionTitle, termLabel, termValueText } from './rfx/rfxAuthoringDisplay';
 import { DraftRevisionNote } from './rfx/draftEdit';
+import { DocumentsStatus, SupplierDocumentsPanel } from './rfx/SupplierDocumentsPanel';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PTI PROPOSAL REQUESTS — REQ-E03-04 (BUY).
@@ -64,7 +75,18 @@ import { DraftRevisionNote } from './rfx/draftEdit';
 // BL-93 — a Draft offers **Edit draft** (`rfp:create`, the create wizard
 // re-opened on every stored field, saving through `t_rfp_revise_draft`); a seat
 // without the atom reads whose act it is in the button's own slot.
+//
+// RFx D3 (NR-2) — a Closed RFP offers "Ask for firm offers" (`rfp:negotiate`)
+// and lists its firm-offer rounds; the pricing comparison shows each firm
+// price labelled Firm with its validity beside the Indicative ones; the award
+// section is the shared award panel over the options of the closed rounds
+// (`rfp:award`), with the recorded awards, cancel and "Raised in SAP"; and
+// "Create RFQ from this RFP" leaves out every option an award in force
+// placed (NR-2 BR-08), naming the options by ref.
 // ─────────────────────────────────────────────────────────────────────────────
+
+/** CR-23 for a supplier the candidate read does not list (suspended, blacklisted, unknown). */
+const NOT_SELECTABLE: GateResult = { passes: false, failed: ['status'] };
 
 const BuyerRfp: React.FC = () => {
   const { t } = useTranslation();
@@ -74,6 +96,11 @@ const BuyerRfp: React.FC = () => {
   const publish = useVerbAvailability('rfp:publish');
   const create = useVerbAvailability('rfp:create');
   const command = useRfxCommand();
+  const offerRounds = useRfpOfferRounds();
+  const rfpAwards = useRfpAwards();
+  // CR-23 on an RFP judges no material (it names none): the candidate read's
+  // gate, with no material codes, is the gate the round and award policies use.
+  const candidates = useInviteeCandidates();
   const [params, setParams] = useSearchParams();
   const [wizardOpen, setWizardOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -129,6 +156,13 @@ const BuyerRfp: React.FC = () => {
       { verb: 'extendRfp', rfpId: event.id, deadline: extendTo[event.id] ?? '' },
       'rfx.toast.extended',
     );
+
+  const gateOf = (supplierId: string): GateResult =>
+    (candidates.data?.items ?? []).find((c) => c.supplierId === supplierId)?.gate ?? NOT_SELECTABLE;
+  const openRounds = open ? (offerRounds.data?.items ?? []).filter((r) => r.rfpId === open.id) : [];
+  const openAwards = open ? (rfpAwards.data?.items ?? []).filter((a) => a.eventId === open.id) : [];
+  const supplierName = (supplierId: string): string =>
+    open?.invitedSuppliers.find((i) => i.supplierId === supplierId)?.supplierName ?? supplierId;
 
   return (
     <AppShellV2>
@@ -370,16 +404,50 @@ const BuyerRfp: React.FC = () => {
 
           <RfpInvitees event={open} />
           <RfpComparison event={open} />
-          {rfpToRfqOffered(open) && <RfpToRfq event={open} />}
           {open.pricing && (
             <RfpPricingComparison
               request={open.pricing}
               currency={open.currency}
               responses={open.responses}
               testId={`rfp-pricing-${open.id}`}
+              firmPrices={openRounds[0]?.firmPrices ?? []}
             />
           )}
+          {open.status !== 'Draft' && !!open.pricing && (
+            <RfpFirmOfferRounds
+              event={open}
+              rounds={openRounds}
+              gateOf={gateOf}
+              pending={command.isPending}
+              run={run}
+            />
+          )}
+          {/* Edge case 6 — an RFP with no pricing step says it cannot be
+              awarded; a priced one shows the section once it is past Open. */}
+          {open.status !== 'Draft' && (open.status !== 'Open' || !open.pricing) && (
+            <RfpAwardSection
+              event={open}
+              rounds={openRounds}
+              awards={openAwards}
+              gateOf={gateOf}
+              supplierName={supplierName}
+              pending={command.isPending}
+              run={run}
+            />
+          )}
+          {rfpToRfqOffered(open) && (
+            <RfpToRfq event={open} awardedRefs={awardedRefsOf(openAwards)} />
+          )}
           {(open.questions ?? []).length > 0 && <RfpQuestionAnswers event={open} />}
+          {/* RFx B5 — every supplier file, submitted proposals only (NR-1 buyer step 5). */}
+          <SupplierDocumentsPanel
+            requests={open.documentRequests}
+            responses={open.responses}
+            deadlineFor={(supplierId) =>
+              open.invitedSuppliers.find((i) => i.supplierId === supplierId)?.deadline ?? open.responseDeadline
+            }
+            testId={`rfp-documents-${open.id}`}
+          />
         </section>
       )}
 
@@ -436,18 +504,30 @@ const rfpToRfqOffered = (event: RfpEventView): boolean =>
  * RFQ wizard opens pre-filled from them (`/buyer/rfq?rfp=…&options=…`, read by
  * the sourcing board through `prefillRfqItemsFromRfp`). Creating an RFQ is
  * `rfq:create`; a seat without it reads whose act it is instead (§72a).
+ *
+ * RFx D3 (NR-2 BR-08, AC-06) — each option travels by its REF
+ * (`rfpOptionRef`: a supplier's `sup-opt-N` names its proposer), and an option
+ * an award in force already placed is not offered: it cannot go to an RFQ as
+ * well, while the others stay available.
  */
-const RfpToRfq: React.FC<{ event: RfpEventView }> = ({ event }) => {
+const RfpToRfq: React.FC<{ event: RfpEventView; awardedRefs: ReadonlyMap<string, string> }> = ({
+  event,
+  awardedRefs,
+}) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const create = useVerbAvailability('rfq:create');
   const [chosen, setChosen] = useState<string[]>([]);
   const options = [
-    ...(event.pricing?.options ?? []).map((o) => ({ option: o, by: null as string | null })),
+    ...(event.pricing?.options ?? []).map((o) => ({ option: o, ref: rfpOptionRef(o.id), by: null as string | null })),
     ...event.responses.flatMap((r) =>
-      (r.pricing?.proposedOptions ?? []).map((o) => ({ option: o, by: r.supplierName })),
+      (r.pricing?.proposedOptions ?? []).map((o) => ({
+        option: o,
+        ref: rfpOptionRef(o.id, r.supplierId),
+        by: r.supplierName,
+      })),
     ),
-  ];
+  ].filter((o) => !awardedRefs.has(o.ref));
   const toggle = (id: string) =>
     setChosen((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   const go = () =>
@@ -463,14 +543,14 @@ const RfpToRfq: React.FC<{ event: RfpEventView }> = ({ event }) => {
       <p className="text-xs text-text-tertiary mt-1">{t('rfx.rfp.toRfq.hint')}</p>
       <fieldset className="mt-3 space-y-2">
         <legend className="sr-only">{t('rfx.rfp.toRfq.title')}</legend>
-        {options.map(({ option, by }) => (
-          <label key={option.id} className="flex items-start gap-2 text-sm text-text-primary">
+        {options.map(({ option, ref, by }) => (
+          <label key={ref} className="flex items-start gap-2 text-sm text-text-primary">
             <input
               type="checkbox"
               className="mt-1"
-              checked={chosen.includes(option.id)}
-              onChange={() => toggle(option.id)}
-              data-testid={`rfp-to-rfq-option-${option.id}`}
+              checked={chosen.includes(ref)}
+              onChange={() => toggle(ref)}
+              data-testid={`rfp-to-rfq-option-${ref}`}
             />
             <span>
               {option.title}
@@ -651,6 +731,20 @@ const RfpComparison: React.FC<{ event: RfpEventView }> = ({ event }) => {
               </TableCell>
             ))}
           </TableRow>
+          {/* RFx B5 — NR-1 buyer step 6: the required documents, per supplier. */}
+          <TableRow data-testid="rfp-documents-row">
+            <TableCell className="align-top text-sm text-text-primary">{t('rfxFiles.docs.row')}</TableCell>
+            <TableCell className="align-top text-sm text-text-tertiary">—</TableCell>
+            {event.responses.map((r) => (
+              <TableCell key={r.id} className="align-top">
+                <DocumentsStatus
+                  requests={event.documentRequests ?? []}
+                  documents={r.documents ?? []}
+                  testId={`rfp-documents-${r.supplierId}`}
+                />
+              </TableCell>
+            ))}
+          </TableRow>
         </tbody>
       </Table>
       {scoring === null && (
@@ -690,7 +784,11 @@ const RfpQuestionAnswers: React.FC<{ event: RfpEventView }> = ({ event }) => {
                   </TableCell>
                   {event.responses.map((r) => (
                     <TableCell key={r.id} className="align-top text-sm">
-                      {answerText(t, q, (r.questionAnswers ?? []).find((a) => a.questionId === q.id))}
+                      <AnswerValue
+                        q={q}
+                        a={(r.questionAnswers ?? []).find((a) => a.questionId === q.id)}
+                        testId={`rfp-answer-files-${q.id}-${r.supplierId}`}
+                      />
                     </TableCell>
                   ))}
                 </TableRow>

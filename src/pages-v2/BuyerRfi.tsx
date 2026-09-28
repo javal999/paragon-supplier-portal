@@ -28,8 +28,9 @@ import SessionAttachments from '../components/ui-v2/SessionAttachments';
 import RfiCreateWizard from './rfx/RfiCreateWizard';
 import RfxSaveTemplate from './rfx/RfxSaveTemplate';
 import { DeadlinePill, EmptyRow, OtifOrNoHistory, ResponseStatePill, rfxNow } from './rfx/rfxDisplay';
-import { IndicativePill, answerText, authored, sectionTitle } from './rfx/rfxAuthoringDisplay';
+import { AnswerValue, IndicativePill, authored, sectionTitle } from './rfx/rfxAuthoringDisplay';
 import { DraftRevisionNote } from './rfx/draftEdit';
+import { SupplierDocumentsPanel } from './rfx/SupplierDocumentsPanel';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PTI INFORMATION REQUESTS — REQ-E03-02 (BUY).
@@ -542,7 +543,9 @@ const RfiDetail: React.FC<DetailProps> = ({
                         const answer = r.answers.find((a) => a.questionId === q.id);
                         return (
                           <TableCell key={r.id} className="align-top" data-testid={`rfi-answer-${q.id}-${r.supplierId}`}>
-                            <div className="text-sm text-text-primary">{answerText(t, q, answer)}</div>
+                            <div className="text-sm text-text-primary">
+                              <AnswerValue q={q} a={answer} testId={`rfi-answer-files-${q.id}-${r.supplierId}`} />
+                            </div>
                             {answer?.description && (
                               <div className="text-xs text-text-tertiary mt-1">{answer.description}</div>
                             )}
@@ -557,6 +560,16 @@ const RfiDetail: React.FC<DetailProps> = ({
           </Table>
         )}
       </div>
+
+      {/* — RFx B5: every supplier file, submitted responses only (NR-1 buyer step 5) — */}
+      <SupplierDocumentsPanel
+        requests={event.documentRequests}
+        responses={event.responses}
+        deadlineFor={(supplierId) =>
+          event.invitedSuppliers.find((i) => i.supplierId === supplierId)?.deadline ?? event.responseDeadline
+        }
+        testId={`rfi-documents-${event.id}`}
+      />
     </section>
   );
 };

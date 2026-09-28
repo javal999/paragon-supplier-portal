@@ -14,7 +14,7 @@
 
 import React from 'react';
 import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderWithProviders, BUYER } from '../../test/test-utils';
 import type { CurrentIdentity } from '../../context/CurrentIdentityContext';
 import { SEEDED_SEAT_ROLES } from '../../services/transitions/businessRoles';
@@ -98,6 +98,7 @@ const walkToReview = async (deadline = dayFromNow(14)) => {
   next();
   fireEvent.click(await screen.findByTestId('rfi-new-invitee-row-sup-007'));
   next();
+  next(); // + the Documents step (B3), optional, so it passes empty
   await screen.findByTestId('rfi-new-review');
 };
 
@@ -259,6 +260,7 @@ describe('section 3.6a — the buyer raises an information request', () => {
     next();
     fireEvent.click(await screen.findByTestId('rfi-new-invitee-row-sup-007'));
     next();
+    next(); // + the Documents step (B3), optional, so it passes empty
     await screen.findByTestId('rfi-new-review');
     fireEvent.click(screen.getByRole('button', { name: 'Send to suppliers' }));
     await screen.findByTestId('rfi-detail-rfi-0004');
@@ -346,5 +348,50 @@ describe('REQ-E03-02 — closing the window stops the answers', () => {
     expect(screen.queryByTestId('supplier-rfi-closed-rfi-001')).not.toBeInTheDocument();
     fireEvent.click(screen.getByTestId('supplier-rfi-save-rfi-001'));
     await waitFor(() => expect(screen.getByTestId('toast-spy').textContent).toMatch(/Draft saved/i));
+  });
+});
+
+describe('NR-1 BR-02 — the buyer asks for documents on the RFI (B3)', () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it('a required Certificate request is dispatched with the RFI, listed on the review, and back on edit-draft', async () => {
+    const dispatch = vi.spyOn(mockDataService.commands, 'dispatch');
+    await openWizard();
+    fillScope();
+    next();
+    await screen.findByTestId('rfi-new-question-a-categories');
+    next();
+    fireEvent.click(await screen.findByTestId('rfi-new-invitee-row-sup-007'));
+    next();
+
+    // The Documents step, just before the review.
+    fireEvent.click(await screen.findByTestId('rfi-new-doc-add'));
+    fireEvent.change(screen.getByTestId('rfi-new-doc-doc-1-name'), { target: { value: 'Halal certificate' } });
+    fireEvent.change(screen.getByTestId('rfi-new-doc-doc-1-type'), { target: { value: 'certificate' } });
+    fireEvent.click(screen.getByTestId('rfi-new-doc-doc-1-required'));
+    next();
+
+    const listed = within(await screen.findByTestId('rfi-new-review')).getByTestId('rfi-new-review-doc-doc-1');
+    expect(listed).toHaveTextContent('Halal certificate');
+    expect(listed).toHaveTextContent('Certificate');
+    expect(listed).toHaveTextContent('Required');
+
+    fireEvent.click(screen.getByTestId('rfi-new-save-draft'));
+    await screen.findByTestId('rfi-detail-rfi-0004');
+
+    const REQUEST = { id: 'doc-1', name: 'Halal certificate', type: 'certificate', required: true };
+    const create = dispatch.mock.calls.map(([, input]) => input).find((i) => i.transitionId === 't_rfi_create');
+    expect(create?.payload).toMatchObject({ documentRequests: [REQUEST] });
+    expect(rfiEventStore.get('rfi-0004')?.documentRequests).toEqual([REQUEST]);
+
+    // Edit-draft re-opens the wizard with the request filled in.
+    fireEvent.click(screen.getByTestId('rfi-edit-rfi-0004'));
+    await screen.findByTestId('rfi-edit-banner');
+    next();
+    next();
+    next();
+    expect(await screen.findByTestId('rfi-new-doc-doc-1-name')).toHaveValue('Halal certificate');
+    expect(screen.getByTestId('rfi-new-doc-doc-1-type')).toHaveValue('certificate');
+    expect(screen.getByTestId('rfi-new-doc-doc-1-required')).toBeChecked();
   });
 });

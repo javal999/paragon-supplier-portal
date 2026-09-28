@@ -14,6 +14,9 @@ import Toaster from '../../components/ui-v2/Toaster';
 import { rfqStore } from '../../services/data/mock/stores/rfqStore';
 import { quotationStore } from '../../services/data/mock/stores/quotationStore';
 import { rfqTemplateStore } from '../../services/sourcing/rfqTemplates';
+import { mockDataService } from '../../services/data/mock/mockDataService';
+import { awardStore, resetRfxStores } from '../../services/data/mock/stores/rfxStores';
+import { sdcClock } from '../../services/sdc';
 
 // `<Toaster />` lives in AppRouter, not in the page, so it is mounted here for
 // the toasts these specs read (the BuyerComplianceRequest precedent).
@@ -134,6 +137,7 @@ describe('the RFQ wizard authors a multi-item tiered RFQ', () => {
     fillTerms();
     fireEvent.click(screen.getByRole('radio', { name: 'USD' }));
     next();
+    next(); // + the Documents step (B3), optional, so it passes empty
 
     // Review names the items and the breaks.
     expect(await screen.findByTestId('rfq-review-item-1')).toHaveTextContent('Sticker / label · Front sticker · variants: 8');
@@ -178,7 +182,8 @@ describe('attachments are session-only, and say so', () => {
     );
     const file = new File(['%PDF'], 'die-line.pdf', { type: 'application/pdf' });
     fireEvent.change(within(files).getByTestId('rfq-item-1-files-input'), { target: { files: [file] } });
-    expect(within(files).getByTestId('rfq-item-1-files-row')).toHaveTextContent('die-line.pdf');
+    // The pick handler awaits the file seam's `put` (RFx A2), so the row lands a tick later.
+    expect(await within(files).findByTestId('rfq-item-1-files-row')).toHaveTextContent('die-line.pdf');
     fireEvent.click(within(files).getByRole('button', { name: 'Remove die-line.pdf' }));
     expect(within(files).queryByTestId('rfq-item-1-files-row')).not.toBeInTheDocument();
   });
@@ -207,6 +212,7 @@ describe('RFI → RFQ pre-fill (/buyer/rfq?rfi=<id>)', () => {
     next();
     fillTerms();
     next();
+    next(); // + the Documents step (B3), optional, so it passes empty
     expect(await screen.findByText('RFI RFI-2026-001')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Save RFQ draft' }));
     await waitFor(() => expect(newest()).toBeDefined());
@@ -270,6 +276,7 @@ describe('RFP → RFQ pre-fill (/buyer/rfq?rfp=<id>&options=<ids>, spec D3)', ()
     next();
     fillTerms();
     next();
+    next(); // + the Documents step (B3), optional, so it passes empty
     expect(await screen.findByText('RFP RFP-2026-002')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Save RFQ draft' }));
     await waitFor(() => expect(newest()).toBeDefined());
@@ -291,6 +298,68 @@ describe('RFP → RFQ pre-fill (/buyer/rfq?rfp=<id>&options=<ids>, spec D3)', ()
     renderWithProviders(<BuyerSourcing />, { route: '/buyer/rfq?rfp=rfp-002&options=opt-nope' });
     expect(await screen.findByText('RFP options not found')).toBeInTheDocument();
     expect(screen.queryByPlaceholderText(/e\.g\. Q3 2026 Fragrance Sourcing/i)).not.toBeInTheDocument();
+  });
+
+  // RFx D3 (NR-2 BR-08, AC-06) — the RFP → RFQ path end to end: an option an
+  // award in force on the RFP placed is NOT offered by the pre-fill, and the
+  // create payload carries the refs of the options the RFQ does source, so
+  // the RFP can no longer award them either.
+  describe('with an award in force on the RFP', () => {
+    beforeEach(() => {
+      resetRfxStores();
+      sdcClock.reset();
+      awardStore.add({
+        id: 'AWD-RFP-D3',
+        eventType: 'rfp',
+        eventId: 'rfp-002',
+        awardedAt: '2026-09-20T09:00:00.000Z',
+        lines: [
+          {
+            supplierId: 'sup-007',
+            optionRef: 'opt-full-set',
+            firmOfferId: 'rfo-d3',
+            sharePct: 100,
+            quantity: 10_000,
+            splitBasis: 'pct',
+            awardTierQty: 10_000,
+          },
+        ],
+        reason: 'Full set awarded on the RFP.',
+        notAwardedSupplierIds: [],
+      });
+    });
+    afterEach(() => resetRfxStores());
+
+    it('the awarded option is left out, and the saved RFQ carries the refs it sources', async () => {
+      renderWithProviders(<BuyerSourcing />, { route: '/buyer/rfq?rfp=rfp-002&options=opt-full-set,opt-pump-cap' });
+      await screen.findByPlaceholderText(/e\.g\. Q3 2026 Fragrance Sourcing/i);
+      // One option left, one item: the first break alone (10,000 × 1).
+      expect(screen.getByLabelText('Total quantity')).toHaveValue('10000');
+      await fillScope();
+      next();
+      expect(screen.getByTestId('rfq-item-1-description')).toHaveValue(
+        'Pump and cap only — PTI sources the bottle; you supply a matching pump and over-cap.',
+      );
+      // KNOWN-BAD twin — the awarded "Full set" is not an item.
+      expect(screen.queryByTestId('rfq-item-2')).not.toBeInTheDocument();
+      fireEvent.change(screen.getByTestId('rfq-item-1-value-component'), { target: { value: 'Pump and over-cap' } });
+      fireEvent.change(screen.getByTestId('rfq-item-1-value-material'), { target: { value: 'PP' } });
+      fireEvent.change(screen.getByTestId('rfq-item-1-value-colour'), { target: { value: 'White' } });
+      fireEvent.change(screen.getByTestId('rfq-item-1-value-netVolume'), { target: { value: '150' } });
+      next();
+      next();
+      next();
+      await screen.findByTestId('invitee-row-sup-007');
+      next();
+      fillTerms();
+      next();
+      next(); // + the Documents step (B3), optional, so it passes empty
+      fireEvent.click(await screen.findByRole('button', { name: 'Save RFQ draft' }));
+      await waitFor(() => expect(newest()).toBeDefined());
+      const rfq = newest()!;
+      expect(rfq.sourceRfpId).toBe('rfp-002');
+      expect(rfq.sourceRfpOptionRefs).toEqual(['opt-pump-cap']);
+    });
   });
 
   it('a seat without rfq:create gets no wizard from the link (the entrance is the unit)', async () => {
@@ -383,4 +452,115 @@ describe('the board', () => {
     expect(await screen.findByTestId('rfq-project-tag-rfq-021')).toHaveTextContent('Oslo');
     expect(screen.queryByTestId('rfq-project-tag-rfq-001')).not.toBeInTheDocument();
   });
+});
+
+describe('NR-1 BR-02 — the buyer asks for documents on the RFQ (B3)', () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it('a required Certificate request for one item is dispatched with the RFQ and listed on the review', async () => {
+    const dispatch = vi.spyOn(mockDataService.commands, 'dispatch');
+    // The RFI pre-fill brings two items, so the walk reaches the new step fast.
+    renderWithProviders(<BuyerSourcing />, { route: '/buyer/rfq?rfi=rfi-001' });
+    await screen.findByPlaceholderText(/e\.g\. Q3 2026 Fragrance Sourcing/i);
+    await fillScope();
+    next();
+    await screen.findByTestId('rfq-item-1-description');
+    next();
+    addTier('50000');
+    next();
+    next();
+    await screen.findByTestId('invitee-row-sup-007');
+    next();
+    fillTerms();
+    next();
+
+    // The Documents step, just before the review — on an RFQ with a level.
+    fireEvent.click(await screen.findByTestId('rfq-new-doc-add'));
+    fireEvent.change(screen.getByTestId('rfq-new-doc-doc-1-name'), { target: { value: 'Halal certificate' } });
+    fireEvent.change(screen.getByTestId('rfq-new-doc-doc-1-type'), { target: { value: 'certificate' } });
+    fireEvent.change(screen.getByTestId('rfq-new-doc-doc-1-level'), { target: { value: '1' } });
+    fireEvent.click(screen.getByTestId('rfq-new-doc-doc-1-required'));
+    next();
+
+    const listed = await screen.findByTestId('rfq-new-review-doc-doc-1');
+    expect(listed).toHaveTextContent('Halal certificate');
+    expect(listed).toHaveTextContent('Certificate');
+    expect(listed).toHaveTextContent('Required');
+    expect(listed).toHaveTextContent('Item 1 · PET bottle 100ml airless pump');
+    fireEvent.click(screen.getByRole('button', { name: 'Save RFQ draft' }));
+    await waitFor(() => expect(newest()).toBeDefined());
+
+    const REQUEST = { id: 'doc-1', name: 'Halal certificate', type: 'certificate', required: true, itemLineNo: 1 };
+    const create = dispatch.mock.calls.map(([, input]) => input).find((i) => i.transitionId === 't_rfq_create');
+    expect(create?.payload).toMatchObject({ documentRequests: [REQUEST] });
+    expect(newest()!.documentRequests).toEqual([REQUEST]);
+  }, 20000); // a long wizard walk, like THE LOCK above
+});
+
+describe('NR-1 BR-02 — removing an RFQ item remaps the document requests (B3)', () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it('3 items; requests on items 3 and 2; remove item 2 → the item-3 request follows its item, the item-2 one becomes whole-response and is named', async () => {
+    const dispatch = vi.spyOn(mockDataService.commands, 'dispatch');
+    renderWithProviders(<BuyerSourcing />, { route: '/buyer/rfq?rfi=rfi-001' });
+    await screen.findByPlaceholderText(/e\.g\. Q3 2026 Fragrance Sourcing/i);
+    await fillScope();
+    next();
+    // The RFI pre-fill brings two items; a third is added.
+    await screen.findByTestId('rfq-item-2-description');
+    fireEvent.click(screen.getByTestId('rfq-item-add'));
+    fireEvent.change(screen.getByTestId('rfq-item-3-description'), { target: { value: 'Shrink sleeve' } });
+    next();
+    addTier('50000');
+    next();
+    next();
+    await screen.findByTestId('invitee-row-sup-007');
+    next();
+    fillTerms();
+    next();
+
+    // Two requests: one on item 3, one on item 2.
+    fireEvent.click(await screen.findByTestId('rfq-new-doc-add'));
+    fireEvent.change(screen.getByTestId('rfq-new-doc-doc-1-name'), { target: { value: 'Sleeve artwork' } });
+    fireEvent.change(screen.getByTestId('rfq-new-doc-doc-1-level'), { target: { value: '3' } });
+    fireEvent.click(screen.getByTestId('rfq-new-doc-add'));
+    fireEvent.change(screen.getByTestId('rfq-new-doc-doc-2-name'), { target: { value: 'Carton drawing' } });
+    fireEvent.change(screen.getByTestId('rfq-new-doc-doc-2-level'), { target: { value: '2' } });
+
+    // Back to the items step; remove item 2 (the carton).
+    fireEvent.click(screen.getByRole('button', { name: 'Step 2 of 8: Items (completed)' }));
+    expect(screen.getByTestId('rfq-item-2-description')).toHaveValue('Folding carton 12s shipper');
+    fireEvent.click(screen.getByRole('button', { name: 'Remove item 2' }));
+    expect(screen.getByTestId('rfq-item-2-description')).toHaveValue('Shrink sleeve');
+
+    // Forward to the Documents step.
+    next();
+    next();
+    next();
+    next();
+    next();
+    expect(await screen.findByTestId('rfq-new-docs-unlinked-doc-2')).toHaveTextContent(
+      '"Carton drawing" was linked to a removed item; it now applies to the whole response.',
+    );
+    expect(screen.queryByTestId('rfq-new-docs-unlinked-doc-1')).not.toBeInTheDocument();
+    expect(screen.getByTestId('rfq-new-doc-doc-1-level')).toHaveValue('2');
+    expect(screen.getByTestId('rfq-new-doc-doc-2-level')).toHaveValue('');
+    next();
+
+    // The review names the item the request followed.
+    expect(await screen.findByTestId('rfq-new-review-doc-doc-1')).toHaveTextContent('Item 2 · Shrink sleeve');
+    expect(screen.getByTestId('rfq-new-review-doc-doc-2')).toHaveTextContent('Whole response');
+    fireEvent.click(screen.getByRole('button', { name: 'Save RFQ draft' }));
+    await waitFor(() => expect(newest()).toBeDefined());
+
+    const REQUESTS = [
+      { id: 'doc-1', name: 'Sleeve artwork', type: 'other', required: false, itemLineNo: 2 },
+      { id: 'doc-2', name: 'Carton drawing', type: 'other', required: false },
+    ];
+    const create = dispatch.mock.calls.map(([, input]) => input).find((i) => i.transitionId === 't_rfq_create');
+    expect(create?.payload).toMatchObject({ documentRequests: REQUESTS });
+    expect((create?.payload as { documentRequests: object[] }).documentRequests[1]).not.toHaveProperty('itemLineNo');
+    expect(newest()!.documentRequests).toEqual(REQUESTS);
+    expect(newest()!.items![1]!.description).toBe('Shrink sleeve');
+  }, 20000); // a long wizard walk, like THE LOCK above
 });

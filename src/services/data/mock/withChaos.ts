@@ -55,6 +55,21 @@ export function withChaos(inner: IDataService, cfg: ChaosConfig): IDataService {
     delivery: chaosProxy(inner.delivery, cfg),
     chase: chaosProxy(inner.chase, cfg),
     enforcement: chaosProxy(inner.enforcement, cfg),
+    // Files: only `put` is async, so only `put` takes chaos. `chaosProxy` would
+    // turn the synchronous lookups (and the access log) into Promises and break their callers.
+    files: {
+      put: async (file) => {
+        await sleep(jitter(cfg.minMs, cfg.maxMs));
+        if (Math.random() < cfg.failureRate)
+          throw new DataError('CHAOS', 'Injected chaos failure on put()');
+        return inner.files.put(file);
+      },
+      urlFor: (id) => inner.files.urlFor(id),
+      release: (id) => inner.files.release(id),
+      isHeld: (id) => inner.files.isHeld(id),
+      recordAccess: (fileId, by) => inner.files.recordAccess(fileId, by),
+      accessLog: (fileId) => inner.files.accessLog(fileId),
+    },
     // Commands go through chaos too (reads-only chaos → commands too, Step 3.5).
     commands: chaosProxy(inner.commands, cfg),
     getCapabilities: (scope) => inner.getCapabilities(scope),

@@ -142,6 +142,11 @@ const LANE_BUNDLES = Object.freeze({
     // vary by value, plant, category or date without minting a role per band.
     procurement: Object.freeze([
       'rfq:create', 'rfq:publish', 'rfq:award', 'rfq:fx-pin', 'rfq:cancel', 'rfq:reopen',
+      // RFx C2 (NR-3 BR-09 / BR-10) — cancelling an award and marking it
+      // "Raised in SAP". Atoms of their own, beside `rfq:award`, so a seat that
+      // corrects awards without making them is expressible without a new role
+      // (D-5).
+      'rfq:award-cancel', 'rfq:award-sap',
       'quotation:review',
       // RFx spec 2026-09-21 — answering a supplier's clarification question,
       // privately or published to every invitee. The person running the event
@@ -158,6 +163,16 @@ const LANE_BUNDLES = Object.freeze({
       'rfi:create', 'rfi:publish',
       'rfp:create', 'rfp:publish',
       'rfq:negotiate',
+      // NR-2 BR-02 (D-1) — asking shortlisted RFP suppliers for FIRM prices.
+      // Beside `rfq:negotiate` for the same reason it sits beside `rfq:award`:
+      // the same person's job today, a separate act on a separate event type.
+      'rfp:negotiate',
+      // RFx D2 (NR-2 BR-05, NR-3 BR-09 / BR-10) — awarding an RFP on firm
+      // offers, cancelling that award, and marking it "Raised in SAP". Beside
+      // the RFQ's three for the same reason `rfp:negotiate` sits beside
+      // `rfq:negotiate`; separate atoms so award and correction can be split
+      // by seat without a new role (D-5).
+      'rfp:award', 'rfp:award-cancel', 'rfp:award-sap',
       'contract:draft', 'contract:activate', 'contract:renew', 'contract:terminate',
       'obligation:track', 'obligation:complete',
       'pr:approve', 'pr:reject',
@@ -345,6 +360,10 @@ const LANE_BUNDLES = Object.freeze({
       // price. The three are one conversation and one lane.
       'rfiresponse:answer',
       'rfpresponse:answer',
+      // NR-2 BR-01 / BR-03 (D-1) — a firm offer in an RFP round binds the
+      // supplier to its price until the validity date: the same seat that
+      // answered the RFP and that quotes.
+      'rfpfirmoffer:submit',
       'requirementresponse:submit',
       // REQ-E06-01 — opening a forecast version is recorded for PTI; the people
       // who commit against the forecast are the ones who read it.
@@ -560,6 +579,9 @@ export const AUTOMATION_ATOMS: readonly TransitionRole[] = Object.freeze([
   'invoice:match', 'invoice:pay',
   'rfq:close',
   'quotation:award', 'quotation:reject',
+  // RFx C2 (AR-06) — the award-cancel cascade reinstates the quotes the
+  // cancelled award decided. A machine act only: no bundle holds it.
+  'quotation:reinstate',
   'pr:source', 'pr:convert',
   'shipment:create', 'shipment:advance',
   // ⚠️ **`supplierdoc:verify` / `:reject` LEFT THIS LIST AT §82, BECAUSE THEIR

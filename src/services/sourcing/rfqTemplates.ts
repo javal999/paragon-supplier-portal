@@ -26,7 +26,7 @@
 
 import type { BidCurrency } from '../../lib/currencyPolicy';
 import { BID_CURRENCIES } from '../../lib/currencyPolicy';
-import type { RfiQuestion } from './types';
+import type { DocumentRequest, RfiQuestion } from './types';
 import {
   itemRefusal,
   rfqCreateRefusal,
@@ -35,6 +35,7 @@ import {
   type RfqQuantityTier,
 } from './rfqModel';
 import { specSheetFor } from './rfqItemTypes';
+import { documentRequestsRefusal } from '../transitions/rfxDocumentRules';
 import { sdcClock } from '../sdc/clock';
 
 /** What a template carries. No invitees, no dates. */
@@ -49,6 +50,8 @@ export interface RfqTemplateContent {
   /** The sample quantity only — the date it is needed is a date, and dates are not kept. */
   readonly samplesQty?: number;
   readonly confidential?: boolean;
+  /** NR-1 BR-11 — the buyer's document requests. Never a supplier's documents. */
+  readonly documentRequests?: readonly DocumentRequest[];
 }
 
 export interface RfqTemplate {
@@ -164,6 +167,11 @@ export function templateContentRefusal(content: unknown): string | null {
   }
   const rest = rfqCreateRefusal({ ...(c.questions ? { questions: c.questions } : {}) });
   if (rest) return rest;
+  // NR-1 BR-02 — a request naming an item is judged against the template's own items.
+  if (c.documentRequests !== undefined) {
+    const docs = documentRequestsRefusal(c.documentRequests, c.items.map((i) => i.lineNo));
+    if (docs) return docs;
+  }
   return null;
 }
 

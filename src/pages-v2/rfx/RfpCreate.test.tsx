@@ -13,7 +13,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderWithProviders, BUYER } from '../../test/test-utils';
 import type { CurrentIdentity } from '../../context/CurrentIdentityContext';
 import { SEEDED_SEAT_ROLES } from '../../services/transitions/businessRoles';
@@ -23,6 +23,7 @@ import { rfqStore } from '../../services/data/mock/stores/rfqStore';
 import { quotationStore } from '../../services/data/mock/stores/quotationStore';
 import { sdcClock } from '../../services/sdc';
 import { rfpEventViews } from '../../services/data/mock/rfxReadModel';
+import { mockDataService } from '../../services/data/mock/mockDataService';
 import BuyerRfp from '../BuyerRfp';
 import SupplierRfp from '../SupplierRfp';
 import { rfxNow } from './rfxDisplay';
@@ -95,6 +96,7 @@ const walkToReview = async () => {
   await skipOptionalSteps();
   fireEvent.click(await screen.findByTestId('rfp-new-invitee-row-sup-007'));
   next();
+  next(); // + the Documents step (B3), optional, so it passes empty
   await screen.findByTestId('rfp-new-review');
 };
 
@@ -281,5 +283,43 @@ describe('REQ-E03-04 — closing the window stops the proposals', () => {
     fireEvent.click(await screen.findByTestId('supplier-rfp-open-rfp-001'));
     expect(screen.queryByTestId('supplier-rfp-closed-rfp-001')).not.toBeInTheDocument();
     expect(screen.getByTestId('supplier-rfp-save-rfp-001')).not.toBeDisabled();
+  });
+});
+
+describe('NR-1 BR-02 — the buyer asks for documents on the RFP (B3)', () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it('a required Certificate request is dispatched with the sent RFP and listed on the review', async () => {
+    const dispatch = vi.spyOn(mockDataService.commands, 'dispatch');
+    await openWizard();
+    fillScope();
+    next();
+    await screen.findByTestId('rfp-new-term-paymentTerms');
+    pickTerm('paymentTerms', 'Payment terms (days)', '60');
+    next();
+    await skipOptionalSteps();
+    fireEvent.click(await screen.findByTestId('rfp-new-invitee-row-sup-007'));
+    next();
+
+    // The Documents step, just before the review.
+    fireEvent.click(await screen.findByTestId('rfp-new-doc-add'));
+    fireEvent.change(screen.getByTestId('rfp-new-doc-doc-1-name'), { target: { value: 'Halal certificate' } });
+    fireEvent.change(screen.getByTestId('rfp-new-doc-doc-1-type'), { target: { value: 'certificate' } });
+    fireEvent.click(screen.getByTestId('rfp-new-doc-doc-1-required'));
+    next();
+
+    const listed = within(await screen.findByTestId('rfp-new-review')).getByTestId('rfp-new-review-doc-doc-1');
+    expect(listed).toHaveTextContent('Halal certificate');
+    expect(listed).toHaveTextContent('Certificate');
+    expect(listed).toHaveTextContent('Required');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Send to suppliers' }));
+    await screen.findByTestId('rfp-detail-rfp-0005');
+
+    const REQUEST = { id: 'doc-1', name: 'Halal certificate', type: 'certificate', required: true };
+    const create = dispatch.mock.calls.map(([, input]) => input).find((i) => i.transitionId === 't_rfp_create');
+    expect(create?.payload).toMatchObject({ documentRequests: [REQUEST] });
+    expect(rfpEventStore.get('rfp-0005')?.documentRequests).toEqual([REQUEST]);
+    expect(rfpEventStore.get('rfp-0005')?.status).toBe('Open');
   });
 });
