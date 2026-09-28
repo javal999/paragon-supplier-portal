@@ -967,7 +967,7 @@ describe('RFx D3 — the RFP screens for firm-offer rounds and award (NR-2)', ()
     await screen.findByTestId(`supplier-round-offer-${roundId}`);
     const [offer] = rfpFirmOfferStore.all().filter((o) => o.roundId === roundId);
     expect(offer!.documents?.map((d) => d.name)).toEqual(['revised-drawing.pdf']);
-    expect(offer!.versions.at(-1)!.documents?.map((d) => d.name)).toEqual(['revised-drawing.pdf']);
+    expect(offer!.versions[offer!.versions.length - 1]!.documents?.map((d) => d.name)).toEqual(['revised-drawing.pdf']);
 
     // A revision that leaves the files untouched keeps them in force.
     fireEvent.change(screen.getByLabelText(`${FULL_SET_TITLE} — 50,000`), { target: { value: '4050' } });
