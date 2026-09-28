@@ -8,9 +8,11 @@ import TableHeader, { TableHeaderCell } from '../../components/ui-v2/TableHeader
 import TableRow from '../../components/ui-v2/TableRow';
 import TableCell from '../../components/ui-v2/TableCell';
 import { HandoffNotice } from '../../components/ui-v2/HandoffNotice';
+import SessionAttachments from '../../components/ui-v2/SessionAttachments';
 import { useVerbAvailability } from '../../hooks/useVerbAvailability';
 import { formatDate } from '../../lib/format';
 import type { RfxCommandVars } from '../../services/query/commandHooks';
+import type { AttachmentMeta } from '../../services/attachments/sessionAttachments';
 import type { RfpFirmOffer, RfpFirmPrice } from '../../services/sourcing/types';
 import type { RfpAwardView, RfpEventView, RfpOfferRoundView } from '../../services/sourcing/views';
 import { firmOfferRefusal } from '../../services/sourcing/rfpFirmOffer';
@@ -34,8 +36,11 @@ import { optionsOfRounds } from './AwardPanel';
 // RFX-R2). The read gives this supplier only the rounds it was asked to and
 // only its own offer (RFX-R4), so nothing here can show a rival's price.
 //
-// The files part of a firm offer (the B4 documents section) is not built: B4
-// is not in this base.
+// BL-129 (CE-11h) — the firm offer carries its own files: a round often
+// changes the drawing or the material (NR-1 BR-09), so the supplier can attach
+// the revised ones. They travel on the verb (`documents`) and are checked by
+// the same rule; a revision sends the files in force, so one left untouched is
+// kept, and every version keeps the files it was sent with.
 // ────────────────────────────────────────────────────────────────────────────
 
 const cellKey = (ref: string, point: number) => `${ref}@${point}`;
@@ -98,6 +103,7 @@ const FirmOfferRequest: React.FC<{
     Object.fromEntries((offer?.prices ?? []).map((p) => [cellKey(p.optionRef, p.qty), String(p.unitPrice)])),
   );
   const [validUntil, setValidUntil] = useState(offer?.validUntil ?? '');
+  const [documents, setDocuments] = useState<readonly AttachmentMeta[]>(offer?.documents ?? []);
   const prices: RfpFirmPrice[] = round.options.flatMap((o) =>
     round.quantityPoints.flatMap((point) => {
       const raw = cells[cellKey(o.ref, point)]?.trim() ?? '';
@@ -113,14 +119,16 @@ const FirmOfferRequest: React.FC<{
       closed: round.closed,
     },
     supplierId,
-    { prices, validUntil },
+    { prices, validUntil, documents },
     rfxNow(),
   );
+  // Always sent, even empty: a revision without them drops the files in force.
+  const files = { documents: [...documents] };
   const submit = () =>
     send(
       offer
-        ? { verb: 'reviseFirmOffer', offerId: offer.id, prices, validUntil }
-        : { verb: 'submitFirmOffer', roundId: round.id, supplierId, prices, validUntil },
+        ? { verb: 'reviseFirmOffer', offerId: offer.id, prices, validUntil, ...files }
+        : { verb: 'submitFirmOffer', roundId: round.id, supplierId, prices, validUntil, ...files },
       'rfx.toast.firmOfferSent',
     );
   const priceOf = (ref: string, point: number) =>
@@ -165,6 +173,14 @@ const FirmOfferRequest: React.FC<{
           onChange={(ref, point, v) => setCells((prev) => ({ ...prev, [cellKey(ref, point)]: v }))}
         />
       </div>
+      {(editable || (offer?.documents ?? []).length > 0) && (
+        <SessionAttachments
+          value={editable ? documents : (offer?.documents ?? [])}
+          onChange={editable ? setDocuments : undefined}
+          label={t('rfx.firm.documents')}
+          testId={`supplier-round-docs-${round.id}`}
+        />
+      )}
       {editable && (
         <div className="flex flex-wrap items-end gap-3">
           <div>

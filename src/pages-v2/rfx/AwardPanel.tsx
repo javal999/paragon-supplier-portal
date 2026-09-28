@@ -150,6 +150,8 @@ interface ItemModel<L extends AnyAwardLine> {
   readonly reasonAlways: boolean;
   /** "Will not award the rest": offered only where the verb accepts a final award with no lines. */
   readonly offerSettleRest: boolean;
+  /** The words under "Will not award the rest" (an item on an RFQ, an option on an RFP). */
+  readonly settleRestHelpKey: string;
   readonly hintKey: string;
   readonly partialNoteKey: string;
   readonly label: (item: AwardItem) => string;
@@ -199,6 +201,7 @@ export const AwardPanel: React.FC<AwardPanelProps> = ({ rfq, quotes, inForce, de
     defaultBreak,
     reasonAlways: false,
     offerSettleRest: true,
+    settleRestHelpKey: 'rfqCompare.award.willNotRestHelp',
     hintKey: 'rfqCompare.award.hint',
     partialNoteKey: 'rfqCompare.award.partialNote',
     label: (item) => itemLabel(t, rfq, item),
@@ -300,9 +303,10 @@ export const RfpAwardPanel: React.FC<RfpAwardPanelProps> = ({
     quotes: [],
     defaultBreak: null,
     reasonAlways: true,
-    // The RFP verb refuses a final award with no lines (AWARD_EMPTY), so the
-    // zero-line "Will not award the rest" is not offered here.
-    offerSettleRest: false,
+    // BL-130 (REQ-E03-04 BR-16f) — the RFP verb takes a final award with no
+    // lines when it marks every open option "Will not award", as the RFQ's does.
+    offerSettleRest: true,
+    settleRestHelpKey: 'rfx.rfpAward.willNotRestHelp',
     hintKey: 'rfx.rfpAward.hint',
     partialNoteKey: 'rfx.rfpAward.partialNote',
     label: (item) => options.find((o) => o.ref === item.key)?.title ?? item.key,
@@ -499,12 +503,21 @@ function ItemAwardForm<L extends AnyAwardLine>(props: ItemAwardFormProps<L>): Re
       )}
       {canSettleRest && (
         <div className="border-t border-border-subtle pt-3 space-y-2" data-testid="award-settle-rest">
-          <p className="text-xs text-text-tertiary">{t('rfqCompare.award.willNotRestHelp')}</p>
+          <p className="text-xs text-text-tertiary">{t(model.settleRestHelpKey)}</p>
+          {/* An RFP award always needs a reason (NR-2 BR-06), this one included:
+              it takes the reason typed above. */}
           <Button
             variant="outline"
-            disabled={pending}
+            disabled={pending || (model.reasonAlways && !reason.trim())}
             data-testid="award-will-not-rest"
-            onClick={() => onAward({ final: true, lines: [], reason: '', notAwardedItems: openKeys })}
+            onClick={() =>
+              onAward({
+                final: true,
+                lines: [],
+                reason: model.reasonAlways ? reason.trim() : '',
+                notAwardedItems: openKeys,
+              })
+            }
           >
             {t('rfqCompare.award.willNotRest')}
           </Button>
