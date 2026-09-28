@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 2.10, 2026-09-28 |
+| Version | 2.11, 2026-09-28 |
 | What this is | Everything known to be outstanding for the Supplier Hub, in one list: decisions waiting on people, work waiting on those decisions, work waiting on the backend, and work that can start today |
 | What this is not | A plan or a commitment. Nothing here has a date. Sequencing belongs to the project owner |
 | Sources | Open items (section 7 of `SUPPLIER-HUB-REQUIREMENTS.md`), open decisions (section 9.3 of `SUPPLIER-HUB-PRD.md`), what is not built (section 5 of `BUILD-GAP.md`), stubs (section 6 of the requirements), and defects or debts found while building |
@@ -48,7 +48,7 @@ Decided on 2026-09-21 and ready to build. Priority: first what protects money an
 
 | Priority | ID | Item | Rule | Size | Placeholder until decided |
 |---|---|---|---|---|---|
-| 1 | BL-33 to BL-35, BL-38, BL-39, BL-74 to BL-80, BL-83, BL-84, BL-93, BL-96 to BL-98, BL-123, BL-124, BL-126, BL-127, BL-129 to BL-131 | The remaining "can start today" items in section 4, in the order listed there | — | — | — |
+| 1 | BL-33 to BL-35, BL-38, BL-39, BL-74 to BL-80, BL-83, BL-84, BL-93, BL-96 to BL-98, BL-123, BL-124, BL-127, BL-129 to BL-131 | The remaining "can start today" items in section 4, in the order listed there | — | — | — |
 
 ### Forecast engine build order
 
@@ -114,7 +114,6 @@ Nothing blocks these.
 | BL-83 | Text run-ons: Indonesian "closing soon" pill joins its date ("Segera ditutup02 Sep 2026"); the in-transit read-out reads "0nothing in transit"; `formatNumber` uses the Indonesian thousands dot in the English UI outside the Stock page | Small display defects seen in the BL-72/73 check | S | SC conventions |
 | BL-123 | FU-1: record who uploaded each supplier document (`ResponseDocument` has no `uploadedBy`) and show it in the buyer's "Supplier documents" panel | CE-11i asks who uploaded each file, and the panel cannot show it (PR #62) | S | CE-11i |
 | BL-124 | FU-2: `CLAUDE.md:241` says the RFQ review and award verbs are "not co-reachable on any RFQ in the tree". Since PR #64 both show on the same RFQ | A stale sentence in the file every session reads. The operator edits `CLAUDE.md`; task PRs do not | S | PR #64 notes |
-| BL-126 | FU-4: a "Documents" row in the legacy single-price RFQ comparison (`BuyerSourcingEvent.tsx`). PR #62 covered the tiered RFQ and RFP comparisons; the documents panel on the legacy page already shows Complete or Missing | Consistency across the comparisons | S | CE-11l |
 | BL-127 | FU-5 and tidy-ups left by the RFx build: remove the lineless legacy award payload that `t_rfq_award` still accepts, together with the C1 command tests that pin it (no screen sends it since PR #64); correct the stale `applyTransition` comments in the purchase-requisition and supplier-application targets (PR #54, not done) and the `rfxPrefill.ts` comment calling the RFP → RFQ wizard wiring a later batch (build plan AR-09) | A dead path, and comments that describe code that no longer exists | S | PR #54, #64 |
 | BL-129 | Files on an RFP firm offer: the record has room for them, but the firm-offer form has no Documents section (PR #67, not done) | A round often changes the drawing or the material (NR-1 BR-09) | S | CE-11h |
 | BL-130 | "Will not award the rest" on an RFP: the RFP award policy refuses an award with no lines (`AWARD_EMPTY`), so the panel hides the action and a Partly awarded RFP cannot be closed out without awarding (PR #67, not done) | RFX-D9 applies to the RFP as well | S | REQ-E03-04 BR-16f |
@@ -148,6 +147,7 @@ Nothing blocks these.
 
 | ID | Item | Closed | By |
 |---|---|---|---|
+| BL-126 | FU-4: a "Documents" row in the legacy single-price RFQ comparison | 2026-09-28 | Built in PR #72: the legacy comparison on the RFQ event page shows Complete, Missing with the request names, or No documents requested per supplier, with the shared `DocumentsStatus`, reading legacy attachments too. A tiered RFQ keeps its own Documents table |
 | BL-128 | FU-7: firm-offer round on a Partly awarded RFP | 2026-09-28 | Owner decision RFX-D15: allowed, for the options still open. Built in PR #71: the round opens on a Closed or Partly awarded RFP, refuses an option an award in force names or a live RFQ created from the RFP sources (`ROUND_OPTION_SETTLED`), and the final award on the remaining options moves the RFP to Awarded |
 | BL-02 | PQ-09 event-based analysis in the MVP | 2026-09-21 | Decided: not in the MVP; belongs in the planning suite. BL-21 closes with it |
 | BL-03 | D-03 supplier TMS access | 2026-09-21 | Decided: no TMS integration in the MVP; replaced by the 3PL tracking link (BL-51). BL-22 closes with it |
