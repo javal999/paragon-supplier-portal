@@ -57,7 +57,7 @@ describe('BuyerOrderPlan — the planner page (REQ-E14-05)', () => {
     renderWithProviders(<BuyerOrderPlan />, { identity: PLANNER, route: '/buyer/order-plan' });
     await screen.findByTestId('op-fill');
     expect(screen.getByTestId('op-capacity')).toHaveTextContent('SYN-WH-PK');
-    expect(screen.getByTestId('op-capacity')).toHaveTextContent('1.800 pallets');
+    expect(screen.getByTestId('op-capacity')).toHaveTextContent('1,800 pallets');
     for (const wk of pk.weeks) {
       expect(screen.getByTestId(`op-fill-plan-${wk.weekStart}`)).toHaveTextContent(`${Math.round(wk.fill! * 100)}%`);
     }

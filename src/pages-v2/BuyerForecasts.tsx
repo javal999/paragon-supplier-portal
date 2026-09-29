@@ -138,7 +138,10 @@ const BuyerForecasts: React.FC = () => {
                         <span className="text-text-primary">{s.supplierName}</span>
                         {s.viewedAt ? (
                           <StatusPill variant="success">
-                            {t('fc.pti.versions.viewed')} <Data>{formatDateTime(s.viewedAt)}</Data>
+                            {/* BL-83 — one inline span keeps the space the inline-flex pill drops. */}
+                            <span>
+                              {t('fc.pti.versions.viewed')} <Data>{formatDateTime(s.viewedAt)}</Data>
+                            </span>
                           </StatusPill>
                         ) : (
                           <StatusPill variant="neutral">{t('fc.pti.versions.notViewed')}</StatusPill>
