@@ -46,16 +46,41 @@ import {
 } from './stores/inventoryHubStores';
 import {
   API_CONNECTIONS,
+  type ApiStockFigure,
   PLANNING_DAILY_DEMAND,
   PTI_STOCK,
   SUPPLIER_LEAD_TIME_DAYS,
   SUPPLY_ASSIGNMENTS,
 } from './fixtures/inventoryHub';
+import { stockUpdateModeOf } from './supplierMaster';
 
 export const supplierNameOf = (supplierId: string): string =>
   mockSuppliers.find((s) => s.id === supplierId)?.name ?? supplierId;
 
-export const isApiConnected = (supplierId: string): boolean => supplierId in API_CONNECTIONS;
+/**
+ * Material A1 (AR-06) — THE one answer to "is this supplier API-connected?":
+ * its governed stock update mode, through the supplier resolver. Every reader
+ * (the positions, the pages through them, the sync verbs' policy hook) asks
+ * this, never the sample connection list.
+ */
+export const isApiConnected = (supplierId: string): boolean => stockUpdateModeOf(supplierId) === 'api';
+
+/** What one simulated pull of a supplier's system returns. */
+export type SimulatedPull =
+  | { readonly outcome: 'success'; readonly figures: readonly ApiStockFigure[] }
+  | { readonly outcome: 'failed'; readonly errorKey: string };
+
+/**
+ * THE SYNC OUTCOME READ — the only place the sample connection list is read by
+ * key. An API supplier the list holds answers as the list says; one it does not
+ * hold has no connection details at all, so the pull fails with `NO_ENDPOINT`
+ * rather than `timeout` ("we have no endpoint" is not "their system did not
+ * answer", and the planner acts differently on each).
+ */
+export const simulatedPullOf = (supplierId: string): SimulatedPull =>
+  Object.prototype.hasOwnProperty.call(API_CONNECTIONS, supplierId)
+    ? API_CONNECTIONS[supplierId]
+    : { outcome: 'failed', errorKey: 'NO_ENDPOINT' };
 
 /**
  * Is this material assigned to the supplier? The hub's supply assignments, or
@@ -112,16 +137,31 @@ export function allPositions(nowIso: string = sdcClock.now()): InventoryPosition
   );
 }
 
+/**
+ * The capacity rows: every inventory row, plus every supplier × material the
+ * current forecast versions give an LTP to. BL-133 (ENG-D19): a supplier cannot
+ * submit a commitment until it has confirmed the week's capacity, so every
+ * group it has an LTP in must be a group it CAN confirm capacity for.
+ */
+function capacityAssignments(): { supplierId: string; materialCode: string }[] {
+  const pairs = new Map(assignments().map((a) => [`${a.supplierId}|${a.materialCode}`, a]));
+  for (const l of allCommitmentLines(null)) {
+    const k = `${l.supplierId}|${l.materialCode}`;
+    if (!pairs.has(k) && materialEntry(l.materialCode)) pairs.set(k, { supplierId: l.supplierId, materialCode: l.materialCode });
+  }
+  return [...pairs.values()];
+}
+
 /** Every supplier × material group with capacity against demand. */
 export function allCapacityPlans(nowIso: string = sdcClock.now()): CapacityPlan[] {
   return buildCapacityPlans(
     {
-      assignments: assignments(),
+      assignments: capacityAssignments(),
       master: materialEntry,
       supplierName: supplierNameOf,
       submissions: capacityStore.all(),
-      forecastLines: forecastLines(),
-      planningEstimate,
+      // Owner, 2026-09-29 — the LTP is the one capacity demand figure.
+      ltpLines: allCommitmentLines(null),
     },
     nowIso,
   );

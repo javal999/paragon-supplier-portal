@@ -31,6 +31,7 @@ import type {
   CallOffDelivery,
   CallOffType,
   CallOffOrigin,
+  StockUpdateMode,
 } from '../data/types';
 import type { AsnLineInput } from '../transitions/fulfilmentRules';
 import type { ProposalType } from '../engine/reschedule';
@@ -1329,6 +1330,38 @@ export function useThreePlSet() {
   });
 }
 
+// ── Material A1 · A SUPPLIER'S STOCK UPDATE MODE (MR-1 BR-02, AC-06) ──────────
+//
+// `entityId` IS the supplier id; there is no supplier payload field. `setBy`
+// and `setAt` are stamped by the target from the session and the hub clock.
+// The mode decides whether the supplier's stock rows read as API-connected, so
+// the whole cache is invalidated rather than a guessed list of keys.
+export interface SupplierSetUpdateModeVars {
+  supplierId: string;
+  stockUpdateMode: StockUpdateMode;
+  reason?: string;
+}
+
+/** Set a supplier's stock update mode (`t_supplier_set_update_mode`). */
+export function useSupplierSetUpdateMode() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+
+  return useMutation<CommandResult, Error, SupplierSetUpdateModeVars>({
+    mutationFn: ({ supplierId, stockUpdateMode, reason }) =>
+      svc.commands.dispatch(scope, {
+        transitionId: 't_supplier_set_update_mode',
+        entity: 'supplierOverlay',
+        entityId: supplierId,
+        payload: { stockUpdateMode, ...(reason && reason.trim() !== '' ? { reason: reason.trim() } : {}) },
+      }),
+    onSuccess: (result) => {
+      if (result.status !== 'failed') void qc.invalidateQueries();
+    },
+  });
+}
+
 // ── BL-50 · A RULING ON ONE DAY OF THE HUB'S WORKING CALENDAR ────────────────
 //
 // ⚠️ **`entityId` IS THE DATE, AND THERE IS NO `date` PAYLOAD FIELD** — the
@@ -2042,7 +2075,7 @@ export type InventoryCommandVars =
       materialGroup: string;
       weeks: readonly { week: string; allocated: number; upside?: number; reason?: string; note?: string }[];
     }
-  | { verb: 'closeAlert'; key: string; actionNote: string };
+  | { verb: 'closeAlert'; key: string; closeReason: string; actionNote?: string };
 
 const INVENTORY_READS = new Set(['inventory', 'stockAccess', 'capacityPlans', 'inventoryAlerts']);
 
@@ -2105,7 +2138,7 @@ export function useInventoryCommand() {
             transitionId: 't_inventoryalert_close',
             entity: 'inventoryAlert',
             entityId: vars.key,
-            payload: { actionNote: vars.actionNote },
+            payload: { closeReason: vars.closeReason, ...(vars.actionNote ? { actionNote: vars.actionNote } : {}) },
           });
       }
     },

@@ -107,6 +107,11 @@ export const rfpEventFlow: FlowDefinition = {
       // for every awarded supplier (BR-07). The C1 shape rule judges the split.
       // NO CASCADE: the suppliers' RFP responses stay Submitted, and each
       // responder's outcome is DERIVED from the award read (NR-2 BR-09).
+      //
+      // BL-130 (REQ-E03-04 BR-16f) — a final award may carry NO lines when it
+      // only marks the options left open on a Partly awarded RFP "Will not
+      // award", as `t_rfq_award` may. So `awardLines` is not a required field
+      // here: the policy decides, and refuses AWARD_EMPTY in every other case.
       id: 't_rfp_award',
       from: ['Closed', 'Partly awarded'],
       to: 'Awarded',
@@ -114,7 +119,7 @@ export const rfpEventFlow: FlowDefinition = {
       requiredRole: 'rfp:award',
       // The reason is judged by the policy (AWARD_REASON_REQUIRED), so a blank
       // one is refused by name rather than as a missing field.
-      requiredFields: ['awardLines'],
+      requiredFields: [],
       policyHooks: [POLICY_HOOKS.RFP_AWARD_GOVERNED],
       surfaceable: { surfaced: true },
       version: 1,

@@ -54,6 +54,7 @@ export { enforcementFlow } from './flows/enforcement.flow';
 export { roleFlow } from './flows/role.flow';
 export { workingCalendarFlow } from './flows/workingCalendar.flow';
 export { threePlFlow } from './flows/threePl.flow';
+export { supplierOverlayFlow } from './flows/supplierOverlay.flow';
 export { hubSettingFlow } from './flows/hubSetting.flow';
 export { reasonCodeFlow } from './flows/reasonCode.flow';
 export { supplierApplicationFlow } from './flows/supplierApplication.flow';
@@ -103,6 +104,7 @@ import { enforcementFlow } from './flows/enforcement.flow';
 import { roleFlow } from './flows/role.flow';
 import { workingCalendarFlow } from './flows/workingCalendar.flow';
 import { threePlFlow } from './flows/threePl.flow';
+import { supplierOverlayFlow } from './flows/supplierOverlay.flow';
 import { hubSettingFlow } from './flows/hubSetting.flow';
 import { reasonCodeFlow } from './flows/reasonCode.flow';
 import { supplierApplicationFlow } from './flows/supplierApplication.flow';
@@ -178,6 +180,10 @@ flowRegistry.register(workingCalendarFlow); // BL-50 — Working calendar
 // shape: a 3PL on the list has no lifecycle, it has a ledger of changes. WIRED,
 // so every change to where a tracking link points lands in the audit trail.
 flowRegistry.register(threePlFlow); // BL-51 — 3PL list
+// Material A1 — a supplier's hub-mastered fields (its stock update mode). The
+// same degenerate single-state ledger shape; WIRED, so every change of a
+// supplier's mode lands in the audit trail with who and when (MR-1 AC-06).
+flowRegistry.register(supplierOverlayFlow); // Material A1 — supplier overlay
 // BL-32 — the administrator's rule values: one verb with typed keys, the same
 // degenerate single-state ledger shape. Every rule reads the value in force at
 // evaluation, so nothing cascades from a change.

@@ -108,6 +108,7 @@ import {
   dayOf,
   isIsoDay,
   batchDatesProblem,
+  alertCloseRefusal,
   parseAlertKey,
   standingClosure,
   // REQ-E03-01 to REQ-E03-05 — the RFx rules. The verb and the screen read the
@@ -174,11 +175,13 @@ import {
   isApiConnected,
   isAssignedMaterial,
   observeAlertConditions,
+  simulatedPullOf,
   supplierNameOf,
   suppliersWithAssignments,
 } from './inventoryReadModel';
-import { API_CONNECTIONS } from './fixtures/inventoryHub';
 import { forecastVersionStore, forecastViewStore } from './stores/forecastHubStores';
+// Material A1 — the supplier overlay (its own module, plan AD-5).
+import { supplierOverlayTarget } from './targets/supplierOverlay';
 // ── REQ-E14-13 — reschedule proposals taken to SAP ─────────────────────────
 import { sapChangeMarkStore } from './stores/sapChangeMarkStore';
 import { engineDataset } from './fixtures/engineDataset';
@@ -291,6 +294,12 @@ import {
 // `RFX_QUESTION_TYPES` (`sourcing/rfxConfig`), and the create hook reaches them
 // through `rfiQuestionsRefusal` — the same predicate the template store reads.
 import {
+  commitmentCapacityRefusal,
+  horizonWeeks,
+  periodCapacityCheck,
+} from '../../transitions/capacityRules';
+import {
+  allCommitmentLines,
   currentVersion,
   isForecastVersion,
   forecastPublicationById,
@@ -2273,6 +2282,52 @@ bindPolicyHook(POLICY_HOOKS.RR_SUBMIT_COMMITMENT_DETAIL, ({ payload }) => {
   return { ok: true };
 });
 
+// BL-133 (ENG-D19) — capacity before the LTP, on the SUBMISSION (the
+// promotion). The response names its line; the line names its period and
+// material group; the group's latest capacity submission says whether every
+// horizon week the period touches is confirmed, and whether the group's LTP is
+// above BE in one of them. SDC-0 publications predate the rule (the BR-08 date
+// rule's precedent) and keep their shape; a line of a version no longer
+// current is found by supplier × material × period on the current version.
+bindPolicyHook(POLICY_HOOKS.RR_PROMOTE_CAPACITY_CONFIRMED, ({ entityId, target }) => {
+  const r = target.readEntity(entityId) as
+    | { publicationId?: string; supplierId?: string; materialCode?: string; periodBucket?: string; rootCause?: { level1?: unknown; note?: unknown } }
+    | null
+    | undefined;
+  if (!r || !isForecastVersion(String(r.publicationId))) return { ok: true };
+  const lines = allCommitmentLines(null);
+  const line = lines.find(
+    (l) => l.supplierId === r.supplierId && l.materialCode === r.materialCode && l.periodBucket === r.periodBucket,
+  );
+  if (!line) return { ok: true };
+  const plan =
+    allCapacityPlans().find((p) => p.supplierId === line.supplierId && p.materialGroup === line.materialGroup) ?? null;
+  const check = periodCapacityCheck(
+    plan,
+    lines,
+    line.supplierId,
+    line.materialGroup,
+    line.periodStart,
+    line.periodEnd,
+    horizonWeeks(sdcClock.now()),
+  );
+  const refusal = commitmentCapacityRefusal(check, r.rootCause);
+  if (!refusal) return { ok: true };
+  if (refusal.refusal === 'capacityNotConfirmed') {
+    return {
+      ok: false,
+      reason: `CAPACITY_NOT_CONFIRMED: confirm the capacity for ${line.materialGroup} in the week of ${refusal.week} before submitting its LTP`,
+    };
+  }
+  if (refusal.refusal === 'aboveBeNoteRequired') {
+    return { ok: false, reason: 'OTHER_REASON_NEEDS_NOTE: the reason "other" needs a note' };
+  }
+  return {
+    ok: false,
+    reason: `ABOVE_BE_NEEDS_REASON: the LTP for ${line.materialGroup} in the week of ${refusal.week} is above capacity plus additional capacity; choose a reason`,
+  };
+});
+
 // RR dispute / resolve — the authored text must be SUBSTANCE, not presence.
 //
 // ⚠️ WHICH FIELD IS ASKED FOR IS DERIVED FROM THE MACHINE, NEVER FROM THE
@@ -2552,9 +2607,12 @@ const stockSyncTarget: CommandTarget = {
   create: (payload) => {
     const supplierId = String(payload.supplierId);
     const now = sdcClock.now();
-    const connection = API_CONNECTIONS[supplierId];
+    // Material A1 (AR-06) — the policy hook has already asked the ONE resolver
+    // whether this supplier is API-connected; this reads only what the
+    // simulated pull returns (`NO_ENDPOINT` when the sample list has no entry).
+    const connection = simulatedPullOf(supplierId);
     const id = stockSyncStore.nextId();
-    if (connection && connection.outcome === 'success') {
+    if (connection.outcome === 'success') {
       // The supplier's system answered: its figures land as API submissions.
       for (const f of connection.figures) {
         inventoryDeclarationStore.add({
@@ -2580,7 +2638,7 @@ const stockSyncTarget: CommandTarget = {
         supplierId,
         at: now,
         outcome: 'failed',
-        errorKey: connection && connection.outcome === 'failed' ? connection.errorKey : 'timeout',
+        errorKey: connection.errorKey,
       });
     }
     return { entityId: id };
@@ -2710,16 +2768,30 @@ const inventoryAlertTarget: CommandTarget = {
   readEntity: (key) => allAlerts().find((a) => a.key === key) ?? null,
   applyTransition: (key, _toState, payload, scope) => {
     inventoryAlertLedger.append([
-      { key, kind: 'closed', at: sdcClock.now(), note: nonBlank(payload.actionNote) ?? '', actor: scope.actor ?? NO_PERSON },
+      {
+        key,
+        kind: 'closed',
+        at: sdcClock.now(),
+        closeReason: String(payload.closeReason),
+        ...(nonBlank(payload.actionNote) ? { note: nonBlank(payload.actionNote) } : {}),
+        actor: scope.actor ?? NO_PERSON,
+      },
     ]);
   },
 };
 
-bindPolicyHook(POLICY_HOOKS.ALERT_ACTION_NOTE_AUTHORED, ({ payload }) =>
-  nonBlank(payload.actionNote)
-    ? { ok: true }
-    : { ok: false, reason: 'closing an alert needs an action note' },
-);
+// MR-9 BR-04 — an active close reason; "Other" needs a note (AR-14).
+bindPolicyHook(POLICY_HOOKS.ALERT_CLOSE_REASON_GIVEN, ({ payload }) => {
+  const refusal = alertCloseRefusal(payload.closeReason, payload.actionNote);
+  if (refusal === null) return { ok: true };
+  return {
+    ok: false,
+    reason:
+      refusal === 'NOTE_REQUIRED'
+        ? 'NOTE_REQUIRED: the reason "other" needs a note'
+        : `REASON_UNKNOWN: ${JSON.stringify(payload.closeReason)} is not an active alert close reason`,
+  };
+});
 
 // — Forecast collaboration (REQ-E06-01, REQ-E06-03) ————————————————————————
 //   A version is a snapshot of one stream and is never edited; publish and
@@ -4111,15 +4183,29 @@ function recordedRfpAwardLine(items: readonly AwardItem[], line: RfpAwardLine): 
 // option already sourced by an RFQ created from this RFP (NR-2 BR-08) · the
 // options left open · CR-23 for every awarded supplier (BR-07) · a reason
 // (BR-06). `awardRefusalText(…, 'rfp')` words the codes for an RFP.
-bindPolicyHook(POLICY_HOOKS.RFP_AWARD_GOVERNED, ({ payload, entityId, toState }) => {
+bindPolicyHook(POLICY_HOOKS.RFP_AWARD_GOVERNED, ({ payload, entityId, currentState, toState }) => {
   const rfp = rfpEventStore.get(entityId);
   if (!rfp) return { ok: false, reason: 'RFP_NOT_FOUND: the award names no RFP this hub holds' };
   const lines = rfpAwardLinesOf(payload);
   const options = rfpRoundOptions(rfp);
   const items = rfpAwardItems(rfp);
-  const shape = awardShapeRefusal(items, lines, []);
-  if (shape) return { ok: false, reason: awardRefusalText(shape, 'rfp') };
   const sourced = rfqSourcedOptionRefs(rfqStore.all(), rfp.id);
+  // NR-3 BR-06 — "Will not award" rides on the final award only.
+  const final = toState === 'Awarded';
+  const willNotAward = final ? notAwardedItemsOf(payload) : [];
+  // BL-130 (REQ-E03-04 BR-16f) — a final award may carry NO lines when it only
+  // marks the rest of a Partly awarded RFP "Will not award", by the rule the
+  // RFQ uses (`settlesRestWithoutLines`). An option an RFQ created from this
+  // RFP sources is settled there, so it counts as settled here too.
+  const shape = awardShapeRefusal(
+    items,
+    lines,
+    [],
+    final
+      ? { partlyAwarded: currentState === 'Partly awarded', notAwardedKeys: [...willNotAward, ...sourced.keys()] }
+      : undefined,
+  );
+  if (shape) return { ok: false, reason: awardRefusalText(shape, 'rfp') };
   const elsewhere = rfpOptionSourcedRefusal(
     lines.map((l) => l.optionRef),
     sourced,
@@ -4128,9 +4214,7 @@ bindPolicyHook(POLICY_HOOKS.RFP_AWARD_GOVERNED, ({ payload, entityId, toState })
   );
   if (elsewhere) return { ok: false, reason: awardRefusalText(elsewhere, 'rfp') };
   // NR-3 BR-06 — an option an RFQ sources is settled there, so it does not
-  // hold the RFP open; "Will not award" rides on the final award only.
-  const final = toState === 'Awarded';
-  const willNotAward = final ? notAwardedItemsOf(payload) : [];
+  // hold the RFP open.
   const unknown = willNotAward.find((key) => !items.some((i) => i.key === key));
   if (unknown !== undefined) {
     return { ok: false, reason: awardRefusalText({ code: 'AWARD_ITEM_UNKNOWN', detail: `"${unknown}"` }, 'rfp') };
@@ -4889,6 +4973,8 @@ const TARGETS: Record<string, CommandTarget> = {
   // BL-51 — the 3PL list. Wired so every change to where a tracking link points
   // lands in the DR-10 trail with who made it and when.
   threePl: threePlTarget,
+  // Material A1 — a supplier's stock update mode (MR-1 BR-02, AC-06).
+  supplierOverlay: supplierOverlayTarget,
   // BL-32 — the rule values. Wired so every change to a tolerance, deadline,
   // threshold or stale period — and every reset — lands in the DR-10 trail.
   hubSetting: hubSettingTarget,

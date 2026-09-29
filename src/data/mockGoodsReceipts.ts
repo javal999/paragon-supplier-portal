@@ -536,7 +536,12 @@ const mockGoodsReceiptsRaw: GoodsReceipt[] = [
     supplierName: 'PT Sample Packaging Indonesia',
     receivedDate: '2026-05-07',
     receivedBy: 'Warehouse Supervisor',
-    status: 'Partially Approved',
+    // BL-74 — Approved, because its one line accepted everything it received:
+    // the header rule (`deriveHeaderDisposition`) says so, and the supplier's
+    // quality result reads that rule. It stored "Partially Approved", so one
+    // receipt showed both answers. The shortfall is not a quality result: it is
+    // the CR-25 "kept open" label, derived from the quantities.
+    status: 'Approved',
     inspectionResults: [
       {
         materialCode: 'PK-PETB-8801',

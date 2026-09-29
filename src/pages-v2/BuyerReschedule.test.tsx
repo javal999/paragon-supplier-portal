@@ -66,7 +66,7 @@ describe('BuyerReschedule — the planner page (REQ-E14-13)', () => {
       expect(screen.getByTestId(`rs-penalty-${p.id}`).textContent).toMatch(/^Rp /);
       expect(screen.getByTestId(`rs-zone-${p.id}`).textContent).not.toBe('');
     }
-    expect(screen.getByTestId('rs-kpi-relief')).toHaveTextContent(Math.round(pk.totals.reliefPalletWeeks).toLocaleString('id-ID'));
+    expect(screen.getByTestId('rs-kpi-relief')).toHaveTextContent(Math.round(pk.totals.reliefPalletWeeks).toLocaleString('en-US'));
     expect(screen.getByTestId('rs-kpi-onhand')).toHaveTextContent(Math.round(pk.totals.onHandOverPalletWeeks).toLocaleString('id-ID'));
   });
 
@@ -101,7 +101,7 @@ describe('BuyerReschedule — the planner page (REQ-E14-13)', () => {
     renderWithProviders(<BuyerReschedule />, { identity: PLANNER, route: '/buyer/reschedule' });
     fireEvent.click(await screen.findByTestId(`rs-select-${inside.id}`));
     await waitFor(() =>
-      expect(screen.getByTestId('rs-guard-after')).toHaveTextContent(`${Math.round(after.share! * 1000) / 10}`.replace('.', ',')),
+      expect(screen.getByTestId('rs-guard-after')).toHaveTextContent(`${Math.round(after.share! * 1000) / 10}`),
     );
     expect(within(screen.getByTestId(`rs-relief-${inside.id}`)).getByText('Needs supplier agreement')).toBeInTheDocument();
   });

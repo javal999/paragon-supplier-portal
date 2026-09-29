@@ -999,8 +999,16 @@ export interface InventoryAlert {
   readonly riskClass: RiskClass;
   /** CR-24 — what the class was decided on (derived with the alert, never stored). */
   readonly riskBasis: RiskBasis;
+  /**
+   * MR-9 BR-03 — days until the risk bites, the order within a class (derived
+   * with the alert, never stored): days of cover or to the projected stock-out,
+   * days to the first capacity gap week, minus the days stale, else 0.
+   */
+  readonly daysToImpact: number;
   readonly status: 'open' | 'closed';
   readonly closedAt?: string;
+  /** MR-9 BR-04 — the `alertClose` code; absent on a closure recorded before reasons (counts as Other). */
+  readonly closeReason?: string;
   readonly actionNote?: string;
 }
 
@@ -2451,6 +2459,41 @@ export interface CapabilitySet {
   transitions: readonly string[];
 }
 
+// ─── Supplier overlay — the hub-mastered supplier fields (Material A1) ─────
+
+/**
+ * MR-1 BR-02 — how a supplier shares its stock with the hub: pulled from its
+ * own system (`api`) or entered by template or by hand (`manual`). Hub-mastered:
+ * the supplier master (the SAP stand-in) does not carry it, so it lives in an
+ * append-only overlay and is read through ONE resolver (`stockUpdateModeOf`).
+ */
+export type StockUpdateMode = 'api' | 'manual';
+
+/** One change of a supplier's stock update mode, as recorded. Never edited. */
+export interface SupplierUpdateModeChange {
+  readonly supplierId: string;
+  readonly stockUpdateMode: StockUpdateMode;
+  /** Store-assigned from the hub clock, never a payload field. */
+  readonly setAt: string;
+  /** From the session (`QueryScope.actor`), never from the form. */
+  readonly setBy: ActorAttribution;
+  readonly reason?: string;
+}
+
+/** A supplier's stock update mode as the hub resolves it, with its history. */
+export interface SupplierStockUpdateMode {
+  readonly supplierId: string;
+  readonly supplierName: string;
+  readonly stockUpdateMode: StockUpdateMode;
+  /**
+   * `overlay`: the Hub administrator set it. `default`: nobody has, so it
+   * follows the sample connection list (API when the supplier is on it).
+   */
+  readonly source: 'overlay' | 'default';
+  /** Every change on record for this supplier, oldest first. */
+  readonly history: readonly SupplierUpdateModeChange[];
+}
+
 // ─── Service interfaces — the contract Phase 3 implements ───────────────────
 
 export interface ISupplierService {
@@ -2460,6 +2503,11 @@ export interface ISupplierService {
   getById(scope: QueryScope, id: string): Promise<Supplier | null>;
   /** Supplier: returns self. Buyer: returns null. */
   getCurrent(scope: QueryScope): Promise<Supplier | null>;
+  /**
+   * Material A1 (MR-1 BR-02) — each supplier's stock update mode and its change
+   * history. Buyer: every supplier. Supplier: its own row only.
+   */
+  getStockUpdateModes(scope: QueryScope): Promise<Page<SupplierStockUpdateMode>>;
 }
 
 export interface IProcurementService {
