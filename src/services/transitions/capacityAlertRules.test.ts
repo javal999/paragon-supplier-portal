@@ -136,6 +136,7 @@ const position = (over: Partial<InventoryPosition> = {}): InventoryPosition => (
   channel: 'manual',
   updateSla: 7,
   staleAt: null,
+  lastPullFailedAt: null,
   apiConnected: false,
   lastSync: null,
   batches: [],

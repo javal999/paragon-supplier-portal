@@ -127,9 +127,10 @@ describe('staleness by mode — MR-1 BR-05 through stockFreshness (AR-07)', () =
     const api = { ...base, mode: 'api' as const, lastUpdatedAt: '2026-09-01T02:00:00.000Z', lastSuccessfulPullAt: null };
     expect(freshness(api, '2026-09-02T01:00:00.000Z', failedEarlier)).toBe('current');
     expect(freshness(api, '2026-09-02T03:00:00.000Z', failedEarlier)).toBe('stale');
-    // A failed pull AFTER the figure still flags it at once (REQ-E08-02 edge case, BL-59).
+    // Owner ruling 2026-09-29: a failed pull AFTER the figure does not make it stale either.
     const failedAfter = { ...failedEarlier, at: '2026-09-01T04:00:00.000Z' };
-    expect(freshness(api, '2026-09-01T05:00:00.000Z', failedAfter)).toBe('stale');
+    expect(freshness(api, '2026-09-01T05:00:00.000Z', failedAfter)).toBe('current');
+    expect(freshness(api, '2026-09-02T02:00:00.001Z', failedAfter)).toBe('stale');
   });
 
   it('the API threshold is the setting in force (stale.apiHours)', () => {

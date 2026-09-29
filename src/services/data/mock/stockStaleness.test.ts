@@ -72,3 +72,39 @@ describe('edge case 1 · a mode change mid-cycle takes effect at the next cycle'
     expect(stockFreshness(positionAt(friday, 'sup-008', 'PK-CART-9901'), friday)).toBe('current');
   });
 });
+
+describe('owner ruling 2026-09-29 · API: 24 hours after the last SUCCESSFUL pull wins; a failed pull only warns', () => {
+  // sup-008 is set to API well before this cycle, pulled successfully on
+  // Monday 31 Aug 08:00 WIB, and its pull failed at 09:00 WIB. No override.
+  const SUCCESS = '2026-08-31T01:00:00.000Z';
+  const FAILED = '2026-08-31T02:00:00.000Z';
+  beforeEach(() => {
+    supplierOverlayStore.append({ supplierId: 'sup-008', stockUpdateMode: 'api', setAt: '2026-08-01T00:00:00.000Z', setBy: NO_PERSON });
+    const figure = inventoryDeclarationStore.latestFor('sup-008', 'PK-CART-9901')!;
+    inventoryDeclarationStore.add({ ...figure, id: 'inv-test-b1', declaredAt: SUCCESS, channel: 'api' });
+    stockSyncStore.add({ id: 'sync-b1-ok', supplierId: 'sup-008', at: SUCCESS, outcome: 'success' });
+    stockSyncStore.add({ id: 'sync-b1-ko', supplierId: 'sup-008', at: FAILED, outcome: 'failed', errorKey: 'timeout' });
+  });
+
+  it('the failed pull at 09:00 leaves the figure current, with the warning, until 24 h after the success', () => {
+    const monday = '2026-08-31T12:00:00.000Z';
+    const p = positionAt(monday, 'sup-008', 'PK-CART-9901');
+    expect(p.lastPullFailedAt).toBe(FAILED);
+    expect(p.staleAt).toBe('2026-09-01T01:00:00.000Z');
+    expect(stockFreshness(p, monday)).toBe('current');
+    expect(staleKeys(monday)).not.toContain('staleData|PK-CART-9901|sup-008');
+    const atLimit = '2026-09-01T01:00:00.000Z';
+    expect(stockFreshness(positionAt(atLimit, 'sup-008', 'PK-CART-9901'), atLimit)).toBe('current');
+  });
+
+  it('after 24 h it is stale and raises staleData', () => {
+    const past = '2026-09-01T01:00:00.001Z';
+    expect(stockFreshness(positionAt(past, 'sup-008', 'PK-CART-9901'), past)).toBe('stale');
+    expect(staleKeys(past)).toContain('staleData|PK-CART-9901|sup-008');
+  });
+
+  it('known-good: a later successful pull clears the warning', () => {
+    stockSyncStore.add({ id: 'sync-b1-ok2', supplierId: 'sup-008', at: '2026-08-31T03:00:00.000Z', outcome: 'success' });
+    expect(positionAt('2026-08-31T12:00:00.000Z', 'sup-008', 'PK-CART-9901').lastPullFailedAt).toBeNull();
+  });
+});

@@ -55,6 +55,7 @@ const position = (over: Partial<InventoryPosition> = {}): InventoryPosition => (
   channel: 'template',
   updateSla: 7,
   staleAt: null,
+  lastPullFailedAt: null,
   apiConnected: false,
   lastSync: null,
   batches: [],
@@ -137,10 +138,12 @@ describe('freshness against the data-update SLA (AC-05, edge case)', () => {
     expect(stockFreshness(position({ lastUpdatedAt: null }), NOW)).toBe('missing');
   });
 
-  it('a failed API sync after the last figures flags them stale even within the SLA', () => {
+  // PREMISE CHANGED (Material B1, owner ruling 2026-09-29): a failed API sync
+  // after the figures used to flag them stale at once (REQ-E08-02 edge case,
+  // BL-59). It is now a warning only; the figure is judged by its staleAt.
+  it('a failed API sync after the last figures does NOT make them stale', () => {
     const failed = { id: 's', supplierId: 'sup-003', at: '2026-08-31T06:00:00.000Z', outcome: 'failed' as const, errorKey: 'timeout' };
-    expect(stockFreshness(position({ lastUpdatedAt: '2026-08-31T02:00:00.000Z', lastSync: failed }), NOW)).toBe('stale');
-    // A failure BEFORE a newer submission does not taint it.
+    expect(stockFreshness(position({ lastUpdatedAt: '2026-08-31T02:00:00.000Z', lastSync: failed }), NOW)).toBe('current');
     expect(stockFreshness(position({ lastUpdatedAt: '2026-08-31T08:00:00.000Z', lastSync: failed }), NOW)).toBe('current');
   });
 });

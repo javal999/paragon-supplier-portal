@@ -104,16 +104,16 @@ const stockOutDays = (p: InventoryPosition, dailyDemand: number): number =>
 
 /**
  * MR-9 BR-03 — stale data: minus the whole days since the figure went stale,
- * so the oldest comes first. A figure goes stale when its SLA runs out, or at
- * a failed sync after it, whichever is earlier. A supplier that never
- * submitted has no figure at all, so it is the oldest of all.
+ * so the oldest comes first. A figure goes stale at its `staleAt` (Material
+ * B1: by update mode; a failed sync no longer makes it stale — owner ruling
+ * 2026-09-29), or, on a position without one, when its stale period in days
+ * runs out. A supplier that never submitted has no figure at all, so it is
+ * the oldest of all.
  */
 function staleDaysToImpact(p: InventoryPosition, nowIso: string): number {
   if (p.lastUpdatedAt === null) return -NO_DAYS_TO_IMPACT;
-  const slaEnd = Date.parse(p.lastUpdatedAt) + p.updateSla * DAY_MS;
-  const failedAt =
-    p.lastSync?.outcome === 'failed' && p.lastSync.at >= p.lastUpdatedAt ? Date.parse(p.lastSync.at) : slaEnd;
-  const since = Math.floor((Date.parse(nowIso) - Math.min(slaEnd, failedAt)) / DAY_MS);
+  const staleFrom = p.staleAt ? Date.parse(p.staleAt) : Date.parse(p.lastUpdatedAt) + p.updateSla * DAY_MS;
+  const since = Math.floor((Date.parse(nowIso) - staleFrom) / DAY_MS);
   return -Math.max(0, since);
 }
 

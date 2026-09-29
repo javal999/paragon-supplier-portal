@@ -607,6 +607,13 @@ export interface InventoryPosition {
    * figure. Derived at read time, never stored (AD-1).
    */
   readonly staleAt: string | null;
+  /**
+   * Material B1 (owner ruling 2026-09-29) — when the latest API pull failed
+   * after the figure on hand; null otherwise. A WARNING only: a failed pull
+   * does not make the figure stale — the figure goes stale `stale.apiHours`
+   * after the last SUCCESSFUL pull (`staleAt`).
+   */
+  readonly lastPullFailedAt: string | null;
   readonly apiConnected: boolean;
   /** The latest API sync attempt for this supplier, if any. */
   readonly lastSync: StockSyncAttempt | null;

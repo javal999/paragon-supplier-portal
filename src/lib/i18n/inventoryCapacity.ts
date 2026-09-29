@@ -47,6 +47,7 @@ export const inventoryCapacityEn: Record<string, string> = {
   'inv.freshness.stale': 'Out of date',
   'inv.freshness.missing': 'No figures yet',
   'inv.freshness.current': 'Up to date',
+  'inv.freshness.pullFailed': 'Last pull failed',
 
   'inv.channel.template': 'Template upload',
   'inv.channel.manual': 'Entered on screen',
@@ -81,7 +82,7 @@ export const inventoryCapacityEn: Record<string, string> = {
   'inv.sync.never': 'Not synced yet',
   'inv.sync.lastSuccess': 'Last synced',
   'inv.sync.lastFailed': 'Last sync failed: {{error}}',
-  'inv.sync.keptStale': 'previous figures kept and marked out of date',
+  'inv.sync.keptStale': 'previous figures kept; they stay up to date until the last successful sync is too old',
   'inv.sync.error.timeout': 'the supplier system did not respond',
   'inv.sync.error.NO_ENDPOINT': 'the hub holds no connection details for the supplier system',
   'inv.sync.action': 'Sync',
@@ -398,6 +399,7 @@ export const inventoryCapacityId: Record<string, string> = {
   'inv.freshness.stale': 'Kedaluwarsa',
   'inv.freshness.missing': 'Belum ada angka',
   'inv.freshness.current': 'Terbaru',
+  'inv.freshness.pullFailed': 'Tarikan terakhir gagal',
 
   'inv.channel.template': 'Unggah templat',
   'inv.channel.manual': 'Diisi di layar',
@@ -432,7 +434,7 @@ export const inventoryCapacityId: Record<string, string> = {
   'inv.sync.never': 'Belum pernah disinkronkan',
   'inv.sync.lastSuccess': 'Terakhir disinkronkan',
   'inv.sync.lastFailed': 'Sinkronisasi terakhir gagal: {{error}}',
-  'inv.sync.keptStale': 'angka sebelumnya dipertahankan dan ditandai kedaluwarsa',
+  'inv.sync.keptStale': 'angka sebelumnya dipertahankan; tetap terbaru sampai sinkronisasi terakhir yang berhasil terlalu lama',
   'inv.sync.error.timeout': 'sistem pemasok tidak menjawab',
   'inv.sync.error.NO_ENDPOINT': 'hub belum memiliki detail koneksi ke sistem pemasok',
   'inv.sync.action': 'Sinkronkan',

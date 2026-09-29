@@ -284,11 +284,15 @@ export function coverage(
 export type StockFreshness = 'missing' | 'stale' | 'current';
 
 /**
- * Missing when the supplier never submitted; stale when an API sync failed
- * after the last figure (the previous figures are kept, flagged — REQ-E08-02
- * edge case, BL-59), or when `now` is past the position's `staleAt` (Material
- * B1: by update mode, cycle and calendar, computed once in
- * `buildInventoryPositions` — MR-1 BR-05, AR-07); otherwise current.
+ * Missing when the supplier never submitted; stale when `now` is past the
+ * position's `staleAt` (Material B1: by update mode, cycle and calendar,
+ * computed once in `buildInventoryPositions` — MR-1 BR-05, AR-07); otherwise
+ * current.
+ *
+ * A failed API sync after the figure does NOT make it stale (owner ruling
+ * 2026-09-29, reversing the REQ-E08-02 edge case / BL-59 flag): the previous
+ * figures are kept and stay current until `stale.apiHours` after the last
+ * successful pull. The failure shows as a warning (`lastPullFailedAt`).
  *
  * A position that carries no `staleAt` (one built outside the read model)
  * falls back to the stale period in days, `updateSla` — the only place the
@@ -299,7 +303,6 @@ export function stockFreshness(
   nowIso: string,
 ): StockFreshness {
   if (p.lastUpdatedAt === null) return 'missing';
-  if (p.lastSync?.outcome === 'failed' && p.lastSync.at >= p.lastUpdatedAt) return 'stale';
   if (p.staleAt) return Date.parse(nowIso) > Date.parse(p.staleAt) ? 'stale' : 'current';
   const ageMs = Date.parse(nowIso) - Date.parse(p.lastUpdatedAt);
   return ageMs > p.updateSla * DAY_MS ? 'stale' : 'current';
@@ -427,6 +430,8 @@ export function buildInventoryPositions(input: PositionInputs, nowIso: string): 
       staleAt,
       apiConnected: input.apiConnected(supplierId),
       lastSync: syncs[0] ?? null,
+      lastPullFailedAt:
+        syncs[0]?.outcome === 'failed' && (lastUpdatedAt === null || syncs[0].at >= lastUpdatedAt) ? syncs[0].at : null,
       batches: (decl?.batches ?? []).map((b) => ({
         batchNumber: b.batchNumber,
         qty: b.qty,
