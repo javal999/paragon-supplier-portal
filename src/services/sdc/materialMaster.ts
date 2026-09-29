@@ -32,7 +32,8 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { MATERIAL_MASTER } from './fixtures';
-import type { MaterialMaster, MaterialMasterEntry, Uom } from './types';
+import { materialOverlayStore } from '../data/mock/stores/materialOverlayStore';
+import type { MaterialMaster, MaterialMasterEntry, MaterialOverlayRow, Uom } from './types';
 
 /** Why a material lookup cannot be answered. Never a fallback value — a unit the
  *  master cannot name is refused, in the caller's own words (the FX_UNPINNED
@@ -60,13 +61,51 @@ export function isKnownMaterial(
   return Object.prototype.hasOwnProperty.call(master, materialCode);
 }
 
+/** The default planning group of a material group, until C5 creates the
+ *  groups: 1 per SAP material group, same materials (MR-8 BR-02). */
+export function defaultPlanningGroupId(materialGroup: string): string {
+  return `pg-${materialGroup}`;
+}
+
+/** The `shelfLifeRelevant` default (MR-6 BR-07, MAT-D6): true when master data
+ *  carries a minimum shelf life, or for raw material; packaging without one is
+ *  false until an administrator sets it. */
+export function defaultShelfLifeRelevant(entry: MaterialMasterEntry): boolean {
+  return entry.minRemainingShelfLifeMonths !== undefined || entry.materialType === 'ROH';
+}
+
+/** Fold overlay rows oldest first: the latest row that sets a field wins. */
+function latestOverlay(
+  rows: readonly MaterialOverlayRow[],
+): { shelfLifeRelevant?: boolean; planningGroupId?: string } {
+  const out: { shelfLifeRelevant?: boolean; planningGroupId?: string } = {};
+  for (const r of rows) {
+    if (r.shelfLifeRelevant !== undefined) out.shelfLifeRelevant = r.shelfLifeRelevant;
+    if (r.planningGroupId !== undefined) out.planningGroupId = r.planningGroupId;
+  }
+  return out;
+}
+
 /** The master entry for a code, or null. The ONE read; `uomOf` / `labelOf` are
- *  its two projections. */
+ *  its two projections.
+ *
+ *  Material A2 (plan AD-4): the fixture entry merged with the hub-mastered
+ *  overlay (`materialOverlayStore`). For `shelfLifeRelevant` and
+ *  `planningGroupId` the order is overlay, then fixture, then the default, so
+ *  a resolved entry always carries both. */
 export function materialEntry(
   materialCode: string,
   master: MaterialMaster = MATERIAL_MASTER,
 ): MaterialMasterEntry | null {
-  return isKnownMaterial(materialCode, master) ? master[materialCode] : null;
+  if (!isKnownMaterial(materialCode, master)) return null;
+  const entry = master[materialCode];
+  const overlay = latestOverlay(materialOverlayStore.forMaterial(materialCode));
+  return {
+    ...entry,
+    shelfLifeRelevant: overlay.shelfLifeRelevant ?? entry.shelfLifeRelevant ?? defaultShelfLifeRelevant(entry),
+    planningGroupId:
+      overlay.planningGroupId ?? entry.planningGroupId ?? defaultPlanningGroupId(entry.materialGroup),
+  };
 }
 
 /**

@@ -305,6 +305,18 @@ export const STORED_FIELD_ALLOWLIST: readonly Exemption[] = Object.freeze([
   // (§41). **The gate went red BEFORE this row was removed** — `AN EXEMPTION
   // OUTLIVED ITS SUBJECT · DataError.cause — the field no longer exists` — which
   // is the whole point of the bilateral half and its first exercise.
+  {
+    key: 'MaterialMasterEntry.mrpController',
+    reason: 'data-in-waiting',
+    why:
+      'The SAP MRP controller code copied onto every material master row (MR-5 BR-01, BR-05), as ' +
+      'fixture data labelled by the materialMasterSap liveness capability until the MDM feed runs. ' +
+      'Material A2 lands the field only; no screen shows it yet by design (A2 constraint: no screen changes).',
+    consumer:
+      'Material task C4: the MRP controller column and "My materials" filter on inventory, alerts, ' +
+      'call-offs, the ASN line and the stock simulation (MR-5 BR-03, BR-04)',
+    since: 'Material A2 (2026-09-29)',
+  },
 ]);
 
 /** Rows still awaiting a ruling. Published by the gate so the debt is a number
