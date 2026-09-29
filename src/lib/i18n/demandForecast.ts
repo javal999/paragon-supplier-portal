@@ -139,7 +139,7 @@ export const demandForecastEn: Record<string, string> = {
   'df.range.kpi.uncorrected': 'Above P90 without the weekly correction',
   'df.range.kpi.uncorrected.sub': 'the same checks without P90’s weekly adjustment',
   'df.range.kpi.width': 'P90 above P50, total',
-  'df.range.kpi.width.sub': 'over the {{weeks}} weeks',
+  'df.range.kpi.width.sub': 'each week’s range, added over the {{weeks}} weeks',
   'df.range.week': 'Week shown',
   'df.range.levels.title': 'Total and brands',
   'df.range.levels.intro':
@@ -309,7 +309,7 @@ export const demandForecastId: Record<string, string> = {
   'df.range.kpi.uncorrected': 'Di atas P90 tanpa koreksi mingguan',
   'df.range.kpi.uncorrected.sub': 'pemeriksaan yang sama tanpa penyesuaian mingguan P90',
   'df.range.kpi.width': 'P90 di atas P50, total',
-  'df.range.kpi.width.sub': 'selama {{weeks}} minggu',
+  'df.range.kpi.width.sub': 'rentang setiap minggu, dijumlahkan selama {{weeks}} minggu',
   'df.range.week': 'Minggu yang ditampilkan',
   'df.range.levels.title': 'Total dan merek',
   'df.range.levels.intro':
