@@ -76,6 +76,16 @@ export const BUILT_IN_LABEL_PREFIX: Readonly<Record<ReasonListId, string>> = Obj
   alertClose: 'inv.alerts.closeReason.',
 });
 
+/**
+ * BL-156 (FU-6) — the key prefix of a built-in code's RECORD name, where it
+ * differs from its form label. The form offers "Other (note required)"; a
+ * closed record, a filter over records and a count read the reason's name
+ * only ("Other"). A code with no record key reads its form label everywhere.
+ */
+export const BUILT_IN_RECORD_LABEL_PREFIX: Readonly<Partial<Record<ReasonListId, string>>> = Object.freeze({
+  alertClose: 'inv.alerts.closeReasonName.',
+});
+
 /** The code that needs a note with it, on the lists that have one. */
 export const NOTE_REQUIRED_CODE = 'other';
 

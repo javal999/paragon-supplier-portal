@@ -82,7 +82,7 @@ const CloseReasonCounts: React.FC<{ alerts: readonly InventoryAlert[] }> = ({ al
             {rows.map((r) => (
               <tr key={`${r.rule}|${r.reason}`} className="border-t border-border-subtle" data-testid={`alert-reason-count-${r.rule}-${r.reason}`}>
                 <td className="py-2">{t(`inv.alerts.rule.${r.rule}`)}</td>
-                <td className="py-2">{reasonLabel('alertClose', r.reason)}</td>
+                <td className="py-2">{reasonLabel('alertClose', r.reason, 'record')}</td>
                 <td className="py-2 text-right">
                   <Data>{r.count}</Data>
                 </td>
@@ -279,7 +279,7 @@ const BuyerAlerts: React.FC = () => {
               <option value="">{t('inv.alerts.filter.allReasons')}</option>
               {reasonOptions.map((code) => (
                 <option key={code} value={code}>
-                  {`${reasonLabel('alertClose', code)} (${closed.filter((a) => closeReasonOf(a) === code).length})`}
+                  {`${reasonLabel('alertClose', code, 'record')} (${closed.filter((a) => closeReasonOf(a) === code).length})`}
                 </option>
               ))}
             </select>
@@ -340,7 +340,7 @@ const BuyerAlerts: React.FC = () => {
                           {a.status === 'closed' && (
                             <div className="text-xs text-text-secondary mt-1" data-testid={`alert-closure-${a.key}`}>
                               {t('inv.alerts.closedAt')} <Data>{formatDateTime(a.closedAt ?? '')}</Data> —{' '}
-                              {reasonLabel('alertClose', closeReasonOf(a))}
+                              {reasonLabel('alertClose', closeReasonOf(a), 'record')}
                               {a.actionNote ? `: ${a.actionNote}` : ''}
                             </div>
                           )}

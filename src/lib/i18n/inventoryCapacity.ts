@@ -305,6 +305,8 @@ export const inventoryCapacityEn: Record<string, string> = {
   'inv.alerts.closeReason.data-error': 'Data error, no real risk',
   'inv.alerts.closeReason.risk-accepted': 'Risk accepted',
   'inv.alerts.closeReason.other': 'Other (note required)',
+  // BL-156 — the reason's name on a closed record, the filter and the counts.
+  'inv.alerts.closeReasonName.other': 'Other',
   'inv.capacity.refusal.noWeeks': 'Enter capacity for the weeks shown.',
   'inv.capacity.refusal.weekOutsideHorizon': 'A week is outside the 13-week horizon.',
   'inv.capacity.refusal.duplicateWeek': 'A week appears twice.',
@@ -704,6 +706,7 @@ export const inventoryCapacityId: Record<string, string> = {
   'inv.alerts.closeReason.data-error': 'Kesalahan data, tidak ada risiko nyata',
   'inv.alerts.closeReason.risk-accepted': 'Risiko diterima',
   'inv.alerts.closeReason.other': 'Lainnya (catatan wajib)',
+  'inv.alerts.closeReasonName.other': 'Lainnya',
   'inv.capacity.refusal.noWeeks': 'Isi kapasitas untuk minggu yang ditampilkan.',
   'inv.capacity.refusal.weekOutsideHorizon': 'Ada minggu di luar cakupan 13 minggu.',
   'inv.capacity.refusal.duplicateWeek': 'Ada minggu yang muncul dua kali.',
