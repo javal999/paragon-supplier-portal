@@ -427,7 +427,9 @@ export function alertHref(a: InventoryAlert, persona: 'buyer' | 'supplier'): str
   }
   return persona === 'buyer'
     ? deepLink('/buyer/inventory', {
-        band: a.riskClass,
+        // A stale-data alert's class is the rule's own (Low), not the
+        // position's risk, so its row sits in the Stale band, not the Low one.
+        band: a.rule === 'staleData' ? 'stale' : a.riskClass,
         material: a.subject,
         highlight: `${a.supplierId}-${a.subject}`,
       })
