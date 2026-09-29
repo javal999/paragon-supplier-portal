@@ -67,6 +67,7 @@ export { inventoryAlertFlow } from './flows/inventoryAlert.flow';
 export { forecastVersionFlow } from './flows/forecastVersion.flow';
 export { forecastViewFlow } from './flows/forecastView.flow';
 export { sapChangeMarkFlow } from './flows/sapChangeMark.flow';
+export { forecastOverrideFlow } from './flows/forecastOverride.flow';
 export { rfiEventFlow } from './flows/rfiEvent.flow';
 export { rfiResponseFlow } from './flows/rfiResponse.flow';
 export { rfpEventFlow } from './flows/rfpEvent.flow';
@@ -117,6 +118,7 @@ import { inventoryAlertFlow } from './flows/inventoryAlert.flow';
 import { forecastVersionFlow } from './flows/forecastVersion.flow';
 import { forecastViewFlow } from './flows/forecastView.flow';
 import { sapChangeMarkFlow } from './flows/sapChangeMark.flow';
+import { forecastOverrideFlow } from './flows/forecastOverride.flow';
 import { rfiEventFlow } from './flows/rfiEvent.flow';
 import { rfiResponseFlow } from './flows/rfiResponse.flow';
 import { rfpEventFlow } from './flows/rfpEvent.flow';
@@ -200,6 +202,7 @@ flowRegistry.register(inventoryAlertFlow); // REQ-E08-05 — inventory and capac
 flowRegistry.register(forecastVersionFlow); // REQ-E06-01 / REQ-E06-03 — forecast versions
 flowRegistry.register(forecastViewFlow); // REQ-E06-01 — supplier views of a version
 flowRegistry.register(sapChangeMarkFlow); // REQ-E14-13 BR-07 — a reschedule proposal taken to SAP
+flowRegistry.register(forecastOverrideFlow); // REQ-E14-11 X-06 — a planner's override of the demand forecast
 // REQ-E03-02 / REQ-E03-04 / REQ-E03-05 — the RFx event types and the
 // negotiation window. RFQ keeps its own machine (`rfqFlow`); these are the two
 // event types it did not cover plus the round the award is negotiated in.

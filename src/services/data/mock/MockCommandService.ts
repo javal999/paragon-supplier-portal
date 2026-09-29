@@ -185,6 +185,8 @@ import {
 import { forecastVersionStore, forecastViewStore } from './stores/forecastHubStores';
 // Material A1 — the supplier overlay (its own module, plan AD-5).
 import { supplierOverlayTarget } from './targets/supplierOverlay';
+// REQ-E14-11 X-06 — the planner's forecast override (its own module).
+import { forecastOverrideTarget } from './targets/forecastOverride';
 // ── REQ-E14-13 — reschedule proposals taken to SAP ─────────────────────────
 import { sapChangeMarkStore } from './stores/sapChangeMarkStore';
 import { engineDataset } from './fixtures/engineDataset';
@@ -5043,6 +5045,7 @@ const TARGETS: Record<string, CommandTarget> = {
   forecastView: forecastViewTarget,
   // REQ-E14-13 BR-07 — a reschedule proposal taken to SAP (ENG-D16).
   sapChangeMark: sapChangeMarkTarget,
+  forecastOverride: forecastOverrideTarget,
   // REQ-E03-02 / REQ-E03-04 / REQ-E03-05 — the RFx event types, the answers to
   // them, and the negotiation window. Each ships in the same commit as its flow,
   // so no entity joins the target-less set even for one merge.

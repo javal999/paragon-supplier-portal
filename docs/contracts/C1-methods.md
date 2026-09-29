@@ -1,6 +1,6 @@
 # C1 — Method Surface
 
-Three distinct axes. **95** (service surface) · **181** (transition catalog) · **38** (wired
+Three distinct axes. **96** (service surface) · **182** (transition catalog) · **39** (wired
 targets). They measure different things; this file keeps them separate.
 
 > ⚠️ **THIS DOCUMENT IS PINNED TO THE TREE, AND THE PIN IS WHY THE NUMBERS ABOVE ARE ALLOWED TO
@@ -32,7 +32,7 @@ Source of truth: `src/services/data/types.ts` (service + command types),
 
 ---
 
-## Axis 1 — the 95-method service surface (`IDataService`)
+## Axis 1 — the 96-method service surface (`IDataService`)
 
 The single interface the Phase-F1 real adapter implements; pages call it through
 `useDataService()` and do not change when the mock is swapped for `httpDataService`. Every method
@@ -76,7 +76,7 @@ interface IDataService {
 | Sub-service | Count | Methods |
 |---|---|---|
 | `ISupplierService` | 4 | `list`, `getById`, `getCurrent`, `getStockUpdateModes` |
-| `IProcurementService` | 49 | `getPurchaseOrders`, `getPurchaseOrder`, `getInventory`, `getStockAccess`, `getCapacityPlans`, `getInventoryAlerts`, `getForecastVersions`, `getForecastCommitments`, `getForecastCoverage`, `getSupplierReliability`, `getMaterialRequirement`, `getSafetyStock`, `getOrderPlan`, `getReschedule`, `getDataHealth`, `getDemandForecast`, `getStabilisedPlan`, `getRFQs`, `getQuotations`, `getInviteeCandidates`, `getRfiEvents`, `getRfpEvents`, `getNegotiationRounds`, `getRfpOfferRounds`, `getAwards`, `getRfpAwards`, `getRfqEngagement`, `getRfqClarifications`, `getRfqComplianceGate`, `getShipments`, `getASNs`, `getGoodsReceipts`, `getCallOffs`, `getBuyerInvoices`, `getSupplierInvoices`, `getContracts`, `getObligations`, `getDocuments`, `getStorefrontCatalog`, `getStorefrontCerts`, `getStorefrontProducts`, `getKpis`, `getPerformanceTrend`, `getSupplierScorecards`, `getRequisitions`, `getPrIntake`, `getSupplierApplications`, `getProductionLines`, `getSupplierHealth` |
+| `IProcurementService` | 50 | `getPurchaseOrders`, `getPurchaseOrder`, `getInventory`, `getStockAccess`, `getCapacityPlans`, `getInventoryAlerts`, `getForecastVersions`, `getForecastCommitments`, `getForecastCoverage`, `getSupplierReliability`, `getMaterialRequirement`, `getSafetyStock`, `getOrderPlan`, `getReschedule`, `getDataHealth`, `getDemandForecast`, `getForecastBias`, `getStabilisedPlan`, `getRFQs`, `getQuotations`, `getInviteeCandidates`, `getRfiEvents`, `getRfpEvents`, `getNegotiationRounds`, `getRfpOfferRounds`, `getAwards`, `getRfpAwards`, `getRfqEngagement`, `getRfqClarifications`, `getRfqComplianceGate`, `getShipments`, `getASNs`, `getGoodsReceipts`, `getCallOffs`, `getBuyerInvoices`, `getSupplierInvoices`, `getContracts`, `getObligations`, `getDocuments`, `getStorefrontCatalog`, `getStorefrontCerts`, `getStorefrontProducts`, `getKpis`, `getPerformanceTrend`, `getSupplierScorecards`, `getRequisitions`, `getPrIntake`, `getSupplierApplications`, `getProductionLines`, `getSupplierHealth` |
 | `IRiskService` | 7 | `getRiskAlerts`, `getGeoRisks`, `getExposure`, `getScenarios`, `getCompliance`, `getComplianceRegistry`, `getCommodities` |
 | `IDiscoveryService` | 4 | `getRecommended`, `getQualifications`, `getMarketIntel`, `getSingleSourceItems` |
 | `IAnalyticsService` | 7 | `getSummary`, `getSpendByCategory`, `getTopSuppliers`, `getOtifTrend`, `getPoVolumeTrend`, `getChannelMix`, `getSupplierPerformance` |
@@ -85,10 +85,10 @@ interface IDataService {
 | `IChaseService` | 1 | `getUnifiedChase` |
 | `IEnforcementService` | 1 | `getEnforcementSettings` |
 | `IFileService` | 6 | `put`, `urlFor`, `release`, `isHeld`, `recordAccess`, `accessLog` |
-| **read subtotal** | **91** | |
+| **read subtotal** | **92** | |
 | `ICommandService` | 3 | `dispatch`, `getCommandStatus`, `settle` |
 | top-level | 1 | `getCapabilities` |
-| **TOTAL** | **95** | |
+| **TOTAL** | **96** | |
 
 **Return contract:** list reads return `Page<T>` (DR-5 — see C2); single reads return `T | null`;
 `getSummary` returns a summary object or `null` (buyer-populated, supplier-null). Failure is
@@ -104,7 +104,7 @@ the string, because those are different claims and only the first is the contrac
 
 ---
 
-## Axis 2 — the 181-transition catalog (44 flows)
+## Axis 2 — the 182-transition catalog (45 flows)
 
 Every authored state-machine edge across the registered flows (`id: 't_<entity>_<verb>'`). Derived
 from `getKnownFlows()` — the seeded registry — never from a grep over the flow files, because a
@@ -150,6 +150,7 @@ transition id can be assembled at a call site rather than written as a literal (
 | `forecastVersion.flow.ts` | `forecastVersion` | 2 | `t_forecastversion_publish`, `t_forecastversion_reassign` | **wired** |
 | `forecastView.flow.ts` | `forecastView` | 1 | `t_forecastview_record` | **wired** |
 | `sapChangeMark.flow.ts` | `sapChangeMark` | 1 | `t_sapchange_mark` | **wired** |
+| `forecastOverride.flow.ts` | `forecastOverride` | 1 | `t_forecastoverride_record` | **wired** |
 | `rfiEvent.flow.ts` | `rfiEvent` | 6 | `t_rfi_create`, `t_rfi_revise_draft`, `t_rfi_publish`, `t_rfi_extend`, `t_rfi_close`, `t_rfi_cancel` | **wired** |
 | `rfiResponse.flow.ts` | `rfiResponse` | 3 | `t_rfiresponse_save`, `t_rfiresponse_submit`, `t_rfiresponse_revise` | **wired** |
 | `rfpEvent.flow.ts` | `rfpEvent` | 11 | `t_rfp_create`, `t_rfp_revise_draft`, `t_rfp_publish`, `t_rfp_extend`, `t_rfp_close`, `t_rfp_award`, `t_rfp_award_partial`, `t_rfp_award_cancel`, `t_rfp_award_cancel_partial`, `t_rfp_award_sap_raised`, `t_rfp_cancel` | **wired** |
@@ -157,7 +158,7 @@ transition id can be assembled at a call site rather than written as a literal (
 | `negotiationRound.flow.ts` | `negotiationRound` | 2 | `t_negotiationround_open`, `t_negotiationround_close` | **wired** |
 | `rfpOfferRound.flow.ts` | `rfpOfferRound` | 2 | `t_rfp_round_open`, `t_rfp_round_close` | **wired** |
 | `rfpFirmOffer.flow.ts` | `rfpFirmOffer` | 2 | `t_rfpfirmoffer_submit`, `t_rfpfirmoffer_revise` | **wired** |
-| **TOTAL** | | **181** | | |
+| **TOTAL** | | **182** | | |
 
 **Flow shape** (`schema.ts`, `FlowDefinition` / `TransitionDef`): each transition declares
 `from[]` / `to` / `trigger` / `requiredRole` / `requiredFields[]` / `policyHooks[]` /
@@ -173,12 +174,12 @@ system reference is minted only on `settle` (see C5, SAP boundary).
 
 ---
 
-## Axis 3 — the 38 wired CommandTargets
+## Axis 3 — the 39 wired CommandTargets
 
-A `CommandTarget` is the per-entity adapter the dispatcher reads/writes through. **38 exist**, the
+A `CommandTarget` is the per-entity adapter the dispatcher reads/writes through. **39 exist**, the
 runtime export `WIRED_COMMAND_TARGETS` (`MockCommandService.ts` `TARGETS`):
 
-- **wired:** `purchaseOrder`, `advanceShipNotice`, `goodsReceipt`, `invoice`, `rfq`, `quotation`, `rfqIntent`, `rfqConfidentiality`, `rfqClarification`, `purchaseRequisition`, `supplierDocument`, `requirementResponse`, `inventoryDeclaration`, `incomingShipment`, `enforcement`, `role`, `workingCalendar`, `threePl`, `supplierOverlay`, `supplierApplication`, `receiptDiscrepancy`, `callOff`, `stockSync`, `stockAccess`, `capacitySubmission`, `inventoryAlert`, `forecastVersion`, `forecastView`, `sapChangeMark`, `rfiEvent`, `rfiResponse`, `rfpEvent`, `rfpResponse`, `negotiationRound`, `rfpOfferRound`, `rfpFirmOffer`, `hubSetting`, `reasonCode`
+- **wired:** `purchaseOrder`, `advanceShipNotice`, `goodsReceipt`, `invoice`, `rfq`, `quotation`, `rfqIntent`, `rfqConfidentiality`, `rfqClarification`, `purchaseRequisition`, `supplierDocument`, `requirementResponse`, `inventoryDeclaration`, `incomingShipment`, `enforcement`, `role`, `workingCalendar`, `threePl`, `supplierOverlay`, `supplierApplication`, `receiptDiscrepancy`, `callOff`, `stockSync`, `stockAccess`, `capacitySubmission`, `inventoryAlert`, `forecastVersion`, `forecastView`, `sapChangeMark`, `forecastOverride`, `rfiEvent`, `rfiResponse`, `rfpEvent`, `rfpResponse`, `negotiationRound`, `rfpOfferRound`, `rfpFirmOffer`, `hubSetting`, `reasonCode`
 
 The interface is **7 members** (`dispatcher.ts`, `CommandTarget`):
 
@@ -203,9 +204,9 @@ transitions — scope is derived from the payload's **parent** (`creationOwner`,
 compare"** (§86). The dispatcher's supplier arm compares `owner !== scope.supplierId`
 unconditionally; a target that wants a supplier to reach a verb must NAME that supplier.
 
-### Wiring census (44 flows → 3 states)
+### Wiring census (45 flows → 3 states)
 
-- **38 behavior-wired** — have a `CommandTarget`, dispatch runs against in-memory stores. Named
+- **39 behavior-wired** — have a `CommandTarget`, dispatch runs against in-memory stores. Named
   above.
 - **2 rolled-up sub-flows** — authored, participate via terminal rollup (`grRollup.ts` /
   `invoiceRollup.ts`), **no standalone target**: `goodsReceiptLine`, `invoiceMatch`.

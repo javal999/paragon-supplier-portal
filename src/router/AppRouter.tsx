@@ -83,6 +83,7 @@ import BuyerReschedule from '../pages-v2/BuyerReschedule';
 import BuyerStabilise from '../pages-v2/BuyerStabilise';
 import BuyerDataHealth from '../pages-v2/BuyerDataHealth';
 import BuyerDemandForecast from '../pages-v2/BuyerDemandForecast';
+import BuyerForecastBias from '../pages-v2/BuyerForecastBias';
 import SupplierForecastCommitments from '../pages-v2/SupplierForecastCommitments';
 import SupplierPerformance from '../pages-v2/SupplierPerformance';
 import NotFound from '../pages-v2/NotFound';
@@ -162,6 +163,8 @@ const AppRouter: React.FC = () => {
           <Route path="/buyer/data-health" element={<BuyerDataHealth />} />
           {/* REQ-E14-07 — the finished-goods demand forecast (SIMULATED; PTI only). */}
           <Route path="/buyer/demand-forecast" element={<BuyerDemandForecast />} />
+          {/* REQ-E14-11 — forecast bias and planner overrides (SIMULATED; PTI only). */}
+          <Route path="/buyer/forecast-bias" element={<BuyerForecastBias />} />
           <Route
             path="/buyer/collaboration/responses"
             element={

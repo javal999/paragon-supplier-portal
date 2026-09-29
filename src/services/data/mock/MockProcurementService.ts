@@ -128,6 +128,7 @@ import type {
   StabilisedPlanView,
   DataHealthView,
   DemandForecastView,
+  ForecastBiasView,
 } from '../types';
 import { PR_INTAKE_LINES } from './fixtures/prIntake';
 import { engineDataset } from './fixtures/engineDataset';
@@ -162,14 +163,13 @@ import { addDays, dayOf } from '../../engine/dates';
 import type { EngineDataset } from '../../engine/types';
 import { labelOf, materialEntry } from '../../sdc/materialMaster';
 import { FEEDS, dataHealth } from '../../engine/dataHealth';
-import { demandForecast, type DemandForecastRun } from '../../engine/demandForecast';
+import { currentDemandForecast, currentForecastBias, withOverrides } from './demandForecastRun';
+import { forecastOverrideStore } from './stores/forecastOverrideStore';
+import { overrideValue } from '../../engine/forecastOverrides';
 import { DEFAULT_STOCK_ACCURACY_TOLERANCE } from '../../engine/stock';
 import { agreedCfot, supplierCfot } from '../../engine/cfot';
 import { lineHistories } from '../../engine/lines';
 import { sdcClock } from '../../sdc/clock';
-
-/** REQ-E14-07 — the demand forecast per engine dataset (see getDemandForecast). */
-const demandForecastMemo = new WeakMap<EngineDataset, DemandForecastRun>();
 
 const matchesList = <T>(value: T, filter: T | T[] | undefined): boolean => {
   if (filter === undefined) return true;
@@ -666,15 +666,38 @@ export class MockProcurementService implements IProcurementService {
     // REQ-E14-07, computed at read on the hub's date (X-01). PTI only: engine
     // output on synthetic data is never shown to a supplier (X-03). The run is
     // memoised per dataset (the dataset is itself memoised per present).
+    // The forecast shown carries the planner overrides in force (REQ-E14-11
+    // X-06, ENG-B103); the engine's own values stay beside it.
     if (scope.personaType === 'supplier') return null;
     const data = engineDataset();
-    const asOf = dayOf(sdcClock.now());
-    let run = demandForecastMemo.get(data);
-    if (!run || run.asOf !== asOf) {
-      run = demandForecast({ finishedGoods: data.finishedGoods, sales: data.sales, fgPlan: data.fgPlan, asOf });
-      demandForecastMemo.set(data, run);
-    }
-    return { ...run, provenance: data.provenance, materialPlanningSource: 'sapPlan' };
+    const run = currentDemandForecast();
+    return { ...run, ...withOverrides(run, forecastOverrideStore.all()), provenance: data.provenance, materialPlanningSource: 'sapPlan' };
+  }
+
+  async getForecastBias(scope: QueryScope): Promise<ForecastBiasView | null> {
+    // REQ-E14-11, computed at read on the hub's date (X-01). PTI only (X-03).
+    // BR-01 replays the engine at past origins (memoised with the run); the
+    // override ledger starts empty — no override history is invented.
+    if (scope.personaType === 'supplier') return null;
+    const data = engineDataset();
+    const run = currentDemandForecast();
+    const bias = currentForecastBias();
+    const records = forecastOverrideStore.all();
+    const shown = withOverrides(run, records);
+    const sales = new Map(data.sales.map((x) => [`${x.skuCode}|${x.weekStart}`, x] as const));
+    const actualOf = (sku: string, week: string) => {
+      const row = sales.get(`${sku}|${week}`);
+      return row && !row.stockout ? row.quantity : null;
+    };
+    return {
+      ...bias,
+      provenance: data.provenance,
+      current: { weeks: run.weeks, skus: shown.skus, total: shown.total },
+      overrides: [...records].reverse(),
+      value: overrideValue(records, actualOf, run.asOf),
+      serviceJudgement: 'awaitsBacktest',
+      materialPlanningSource: 'sapPlan',
+    };
   }
 
   async getSafetyStock(scope: QueryScope): Promise<SafetyStockView | null> {

@@ -72,7 +72,9 @@ import type { InfoLine, PlanChangeBaseline, Proposal, ProposalType, RescheduleRu
 import type { SupplierCfot } from '../engine/cfot';
 import type { SeriesResult, StabiliseParams, StabiliseRun } from '../engine/stabilise';
 import type { DataHealthReport } from '../engine/dataHealth';
-import type { DemandForecastRun } from '../engine/demandForecast';
+import type { DemandForecastRun, LevelForecast, SkuForecast } from '../engine/demandForecast';
+import type { ForecastBiasRun } from '../engine/forecastBias';
+import type { OverrideRecord, OverrideValueReport } from '../engine/forecastOverrides';
 import type { DatasetProvenance } from '../engine/types';
 import type { ReleaseSelection } from '../delivery/release';
 import type { EditPolicyPatch } from '../delivery/policy';
@@ -932,6 +934,62 @@ export interface DemandForecastView extends DemandForecastRun {
   /** Where the dataset came from (X-03): SIMULATED until the MDM feed is live. */
   readonly provenance: DatasetProvenance;
   /** The source E14-03 to E14-06 and E14-13 plan on today. */
+  readonly materialPlanningSource: 'sapPlan';
+  /**
+   * REQ-E14-11 X-06 — `forecast` is the forecast SHOWN: the engine's with the
+   * planner overrides in force applied (ENG-B103); `engineForecast` is the
+   * engine's own. Without overrides the two are the same.
+   */
+  readonly skus: readonly DemandForecastSkuView[];
+  readonly brands: readonly DemandForecastLevelView[];
+  readonly total: DemandForecastLevelView;
+  /** Override cells of this run in force. */
+  readonly overrideCells: number;
+}
+
+export interface DemandForecastSkuView extends SkuForecast {
+  /** The engine's reconciled forecast, before overrides. */
+  readonly engineForecast: readonly number[];
+  /** Week indexes carrying a planner override. */
+  readonly overridden: readonly number[];
+}
+
+export interface DemandForecastLevelView extends LevelForecast {
+  /** The sum of its SKUs' engine forecasts, before overrides. */
+  readonly engineForecast: readonly number[];
+}
+
+/**
+ * REQ-E14-11 X-06 — one planner override of one SKU × week of the demand
+ * forecast: who, when, the old value, the new value, the engine's value and the
+ * reason code. A ledger: the latest per cell is in force.
+ */
+export interface ForecastOverride extends OverrideRecord {
+  readonly recordedBy: ActorAttribution;
+}
+
+/**
+ * REQ-E14-11 — forecast bias and planner override control, as served: the
+ * tracking signal per SKU and material on the engine's forecast and on SAP's
+ * plan (BR-01), the current run with the overrides applied, the override
+ * ledger, and the override value report (BR-02, BR-03). Computed at read on
+ * the engine's (SIMULATED) dataset. PTI only; a supplier gets null.
+ */
+export interface ForecastBiasView extends ForecastBiasRun {
+  readonly provenance: DatasetProvenance;
+  /** The current forecast run, for the override panel: engine and shown values per SKU × week. */
+  readonly current: {
+    readonly weeks: readonly string[];
+    readonly skus: readonly DemandForecastSkuView[];
+    readonly total: DemandForecastLevelView;
+  };
+  /** Every override recorded, latest first. */
+  readonly overrides: readonly ForecastOverride[];
+  /** BR-02 / BR-03. Empty until overrides are entered and their weeks have sold. */
+  readonly value: OverrideValueReport;
+  /** BR-04 — judging overrides by service needs E14-10's replay (BL-112); not here. */
+  readonly serviceJudgement: 'awaitsBacktest';
+  /** Overrides do not drive material planning (ENG-B66). */
   readonly materialPlanningSource: 'sapPlan';
 }
 
@@ -2590,6 +2648,12 @@ export interface IProcurementService {
    * out (ENG-D20). On the engine's (SIMULATED) dataset. PTI only.
    */
   getDemandForecast(scope: QueryScope): Promise<DemandForecastView | null>;
+  /**
+   * REQ-E14-11 — forecast bias (tracking signal per SKU and material, engine
+   * and SAP's plan), the planner override ledger and the override value
+   * report. On the engine's (SIMULATED) dataset. PTI only.
+   */
+  getForecastBias(scope: QueryScope): Promise<ForecastBiasView | null>;
 
   // — Sourcing —
   getRFQs(scope: QueryScope, filter?: RFQFilter): Promise<Page<RFQ>>;
