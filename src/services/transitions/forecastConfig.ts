@@ -205,6 +205,17 @@ export function stabiliseDampingWeight(): number {
 }
 
 /**
+ * ENG-D13 / REQ-E14-10 BR-03 — the MASC limit on model selection, as a ratio
+ * (40% → 0.4), or null while it is NOT SET (the stored 0): not enforced until
+ * the Material Planner sets it after the first backtest (ENG-B87). In force
+ * now; the engine takes it as an argument (X-01).
+ */
+export function backtestMascLimit(): number | null {
+  const pct = hubSetting('engine.backtestMascLimitPct');
+  return pct > 0 ? pct / 100 : null;
+}
+
+/**
  * REQ-E14-09 BR-01 — the quantile the administrator adds to the demand range
  * beside P50 and P90, in percent (0 = none). In force now; the engine takes the
  * levels as an argument (X-01, X-05).
