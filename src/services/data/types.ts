@@ -74,6 +74,7 @@ import type { SupplierCfot } from '../engine/cfot';
 import type { SeriesResult, StabiliseParams, StabiliseRun } from '../engine/stabilise';
 import type { DataHealthReport } from '../engine/dataHealth';
 import type { DemandForecastRun } from '../engine/demandForecast';
+import type { DemandRangeRun } from '../engine/demandRange';
 import type { DatasetProvenance } from '../engine/types';
 import type { ReleaseSelection } from '../delivery/release';
 import type { EditPolicyPatch } from '../delivery/policy';
@@ -599,6 +600,21 @@ export interface InventoryPosition {
   readonly channel: StockChannel | null;
   /** The data-update SLA for this supplier × material, in days (AC-05). */
   readonly updateSla: number;
+  /**
+   * Material B1 (MR-1 BR-05, AR-07) — the instant the figure turns stale, by
+   * the supplier's update mode: manual at the cutoff of the cycle after the
+   * last update, API `stale.apiHours` after the last successful pull, a BL-32
+   * override that many days after the last update. Null when there is no
+   * figure. Derived at read time, never stored (AD-1).
+   */
+  readonly staleAt: string | null;
+  /**
+   * Material B1 (owner ruling 2026-09-29) — when the latest API pull failed
+   * after the figure on hand; null otherwise. A WARNING only: a failed pull
+   * does not make the figure stale — the figure goes stale `stale.apiHours`
+   * after the last SUCCESSFUL pull (`staleAt`).
+   */
+  readonly lastPullFailedAt: string | null;
   readonly apiConnected: boolean;
   /** The latest API sync attempt for this supplier, if any. */
   readonly lastSync: StockSyncAttempt | null;
@@ -1026,8 +1042,14 @@ export interface StabilisedPlanView {
   readonly engine: StabiliseRunView;
   /** On SAP's published plan history, the stand-in E14-02 measures (ENG-B33). */
   readonly sapHistory: StabiliseRunView;
-  /** BR-06 — the range (P50 / P90) beside the quantity needs E14-09, which is not built. */
-  readonly rangeAvailable: false;
+  /** BR-06 — the demand range (P50 / P90, E14-09) is built: the Demand forecast page (BL-111). */
+  readonly rangeBuilt: true;
+  /**
+   * BR-06 — and it is NOT beside the published quantity: the quantities here are
+   * material net requirements from SAP's plan (ENG-B66), and publishing from the
+   * engine is refused while its data is simulated (ENG-B35, ENG-B99).
+   */
+  readonly rangePublished: false;
 }
 
 /**
@@ -1051,6 +1073,13 @@ export interface DataHealthView extends DataHealthReport {
  * backtest (E14-10) exists (ENG-B66).
  */
 export interface DemandForecastView extends DemandForecastRun {
+  /**
+   * REQ-E14-09 — P50, P90 (and the administrator's extra quantile) per SKU,
+   * brand, total and material, calibrated on a replay of the past year's
+   * forecasts, with how often actuals fell outside. Not published to suppliers
+   * and not read by E14-04 (ENG-B66, ENG-B97).
+   */
+  readonly range: DemandRangeRun;
   /** Where the dataset came from (X-03): SIMULATED until the MDM feed is live. */
   readonly provenance: DatasetProvenance;
   /** The source E14-03 to E14-06 and E14-13 plan on today. */

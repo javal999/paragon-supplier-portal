@@ -24,6 +24,7 @@ import type {
   RiskClass,
   StockAccessGrant,
   StockSyncAttempt,
+  StockUpdateMode,
   SupplyBand,
   DemandSource,
 } from '../data/types';
@@ -34,9 +35,14 @@ import {
   coverageThresholds,
   DEMAND_WINDOW,
   leadTimeRisk,
+  staleApiHours,
+  staleOverrideDaysFor,
   supplyBands,
+  updateCycleSettings,
   updateSlaFor,
 } from './inventoryConfig';
+import { staleAtFor, updateCycleFor } from './updateCycle';
+import type { WorkingCalendar } from '../../lib/workingCalendar';
 
 // ── Dates (UTC calendar days, `YYYY-MM-DD`) ──────────────────────────────────
 
@@ -278,16 +284,26 @@ export function coverage(
 export type StockFreshness = 'missing' | 'stale' | 'current';
 
 /**
- * Missing when the supplier never submitted; stale when the last figure is
- * older than the SLA, or when an API sync failed after it (the previous
- * figures are kept, flagged — REQ-E08-02 edge case); otherwise current.
+ * Missing when the supplier never submitted; stale when `now` is past the
+ * position's `staleAt` (Material B1: by update mode, cycle and calendar,
+ * computed once in `buildInventoryPositions` — MR-1 BR-05, AR-07); otherwise
+ * current.
+ *
+ * A failed API sync after the figure does NOT make it stale (owner ruling
+ * 2026-09-29, reversing the REQ-E08-02 edge case / BL-59 flag): the previous
+ * figures are kept and stay current until `stale.apiHours` after the last
+ * successful pull. The failure shows as a warning (`lastPullFailedAt`).
+ *
+ * A position that carries no `staleAt` (one built outside the read model)
+ * falls back to the stale period in days, `updateSla` — the only place the
+ * default stale period (`stale.defaultDays`) still decides freshness.
  */
 export function stockFreshness(
-  p: Pick<InventoryPosition, 'lastUpdatedAt' | 'updateSla' | 'lastSync'>,
+  p: Pick<InventoryPosition, 'lastUpdatedAt' | 'updateSla' | 'lastSync'> & Partial<Pick<InventoryPosition, 'staleAt'>>,
   nowIso: string,
 ): StockFreshness {
   if (p.lastUpdatedAt === null) return 'missing';
-  if (p.lastSync?.outcome === 'failed' && p.lastSync.at >= p.lastUpdatedAt) return 'stale';
+  if (p.staleAt) return Date.parse(nowIso) > Date.parse(p.staleAt) ? 'stale' : 'current';
   const ageMs = Date.parse(nowIso) - Date.parse(p.lastUpdatedAt);
   return ageMs > p.updateSla * DAY_MS ? 'stale' : 'current';
 }
@@ -351,11 +367,23 @@ export interface PositionInputs {
   readonly callOffViews: readonly Pick<CallOffView, 'callOff' | 'delivery'>[];
   readonly apiConnected: (supplierId: string) => boolean;
   readonly syncAttempts: readonly StockSyncAttempt[];
+  /**
+   * Material B1 — the supplier's stock update mode as it stood at an instant
+   * (the resolver, `stockUpdateModeOf`). Read at the start of the current
+   * update cycle, so a mode changed mid-cycle takes effect next cycle (MR-1
+   * edge case 1).
+   */
+  readonly updateModeAt: (supplierId: string, atIso: string) => StockUpdateMode;
+  /** The hub working calendar in force (BL-50) — it moves a holiday cutoff. */
+  readonly calendar: WorkingCalendar;
 }
 
 /** Every assigned supplier × material, projected. PTI stock is present for all rows. */
 export function buildInventoryPositions(input: PositionInputs, nowIso: string): InventoryPosition[] {
   const rows: InventoryPosition[] = [];
+  const cycleSettings = updateCycleSettings();
+  const apiHours = staleApiHours();
+  const cycleStart = updateCycleFor(nowIso, input.calendar, cycleSettings).start;
   for (const { supplierId, materialCode } of input.assignments) {
     const entry = input.master(materialCode);
     if (!entry) continue;
@@ -368,6 +396,16 @@ export function buildInventoryPositions(input: PositionInputs, nowIso: string): 
         ? [{ source: 'production', date: decl.productionCompletionDate ?? null, quantity: decl.inProductionQty, reference: null }]
         : [];
     const syncs = input.syncAttempts.filter((a) => a.supplierId === supplierId).sort((a, b) => b.at.localeCompare(a.at));
+    const lastUpdatedAt = decl ? decl.declaredAt : null;
+    const staleAt = staleAtFor({
+      lastUpdatedAt,
+      mode: input.updateModeAt(supplierId, cycleStart),
+      lastSuccessfulPullAt: syncs.find((a) => a.outcome === 'success')?.at ?? null,
+      overrideDays: staleOverrideDaysFor(supplierId, materialCode),
+      calendar: input.calendar,
+      cycle: cycleSettings,
+      apiHours,
+    });
     rows.push({
       supplierId,
       supplierName: input.supplierName(supplierId),
@@ -386,11 +424,14 @@ export function buildInventoryPositions(input: PositionInputs, nowIso: string): 
       avgDailyDemand: demand.value,
       demandSource: demand.source,
       leadTimeDays: input.leadTime(supplierId, materialCode),
-      lastUpdatedAt: decl ? decl.declaredAt : null,
+      lastUpdatedAt,
       channel: decl ? (decl.channel ?? 'manual') : null,
       updateSla: updateSlaFor(supplierId, materialCode),
+      staleAt,
       apiConnected: input.apiConnected(supplierId),
       lastSync: syncs[0] ?? null,
+      lastPullFailedAt:
+        syncs[0]?.outcome === 'failed' && (lastUpdatedAt === null || syncs[0].at >= lastUpdatedAt) ? syncs[0].at : null,
       batches: (decl?.batches ?? []).map((b) => ({
         batchNumber: b.batchNumber,
         qty: b.qty,

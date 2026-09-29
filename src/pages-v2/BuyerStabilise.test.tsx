@@ -39,10 +39,18 @@ describe('BuyerStabilise — the planner page (REQ-E14-06)', () => {
     expect(screen.getAllByRole('navigation').length).toBeGreaterThan(0);
   });
 
-  it('BR-06 is not built: the page says the range needs the demand range, and shows the quantity only', async () => {
+  it('BR-06: the page says the demand range now exists but is not published, links to it, and shows the quantity only', async () => {
     renderWithProviders(<BuyerStabilise />, { identity: PLANNER, route: '/buyer/stabilise' });
-    expect(await screen.findByTestId('stb-range-note')).toHaveTextContent('needs the demand range, which is not built yet');
-    expect((await plan()).rangeAvailable).toBe(false);
+    const note = await screen.findByTestId('stb-range-note');
+    expect(note).toHaveTextContent('now exists on the Demand forecast page');
+    expect(note).toHaveTextContent('It is not published here');
+    expect(note).toHaveTextContent('Suppliers see the quantity only');
+    expect(screen.getByTestId('stb-range-link')).toHaveAttribute('href', '/buyer/demand-forecast');
+    const p = await plan();
+    expect(p.rangeBuilt).toBe(true);
+    expect(p.rangePublished).toBe(false);
+    // Known-false: no P50 / P90 column sits beside the published quantity.
+    expect(screen.queryByText('P90')).toBeNull();
   });
 
   it('X-03: the publish act is withheld in place — no publish button while the engine data is simulated', async () => {
