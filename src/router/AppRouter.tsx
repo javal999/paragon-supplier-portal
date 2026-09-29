@@ -30,6 +30,7 @@ import BuyerDeliveryAgreements from '../pages-v2/BuyerDeliveryAgreements';
 import BuyerCallOffs from '../pages-v2/BuyerCallOffs';
 import BuyerChase from '../pages-v2/BuyerChase';
 import BuyerInventory from '../pages-v2/BuyerInventory';
+import BuyerStockSimulation from '../pages-v2/BuyerStockSimulation';
 import BuyerCapacity from '../pages-v2/BuyerCapacity';
 import BuyerAlerts from '../pages-v2/BuyerAlerts';
 import BuyerSupplierAccess from '../pages-v2/BuyerSupplierAccess';
@@ -185,6 +186,8 @@ const AppRouter: React.FC = () => {
           <Route path="/buyer/call-offs" element={<BuyerCallOffs />} />
           <Route path="/buyer/chase" element={<BuyerChase />} />
           <Route path="/buyer/inventory" element={<BuyerInventory />} />
+          {/* Material E2 — the stock simulation (MR-7; PTI only). */}
+          <Route path="/buyer/stock-simulation" element={<BuyerStockSimulation />} />
           <Route path="/buyer/capacity" element={<BuyerCapacity />} />
           <Route path="/buyer/alerts" element={<BuyerAlerts />} />
           <Route path="/buyer/supplier-access" element={<BuyerSupplierAccess />} />

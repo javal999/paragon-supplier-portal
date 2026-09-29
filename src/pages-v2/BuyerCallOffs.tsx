@@ -1,5 +1,6 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router-dom';
 import { AlertTriangle } from 'lucide-react';
 import AppShellV2 from '../components/layout-v2/AppShellV2';
 import PageHeader from '../components/ui-v2/PageHeader';
@@ -206,6 +207,35 @@ const BuyerCallOffs: React.FC = () => {
       .sort((a, b) => b.rows.length - a.rows.length || a.po.poNumber.localeCompare(b.po.poNumber));
   }, [posQuery.data, views, drilledViews, drilledPo]);
 
+  // Material E2 (MR-7 step 6) — "Create call-off" from the stock simulation
+  // lands here with `?newFor=<supplier>&material=<code>` and opens the new
+  // call-off form on that supplier's agreement line for the material (the one
+  // with the most left to release). It creates nothing: the planner still saves
+  // the draft or releases. Consumed once, so closing the form does not reopen it.
+  const [prefillParams, setPrefillParams] = useSearchParams();
+  const prefillSupplier = prefillParams.get('newFor');
+  const prefillMaterial = prefillParams.get('material');
+  const [prefillMissing, setPrefillMissing] = useState<{ supplier: string; material: string } | null>(null);
+  useEffect(() => {
+    if (!prefillSupplier || !prefillMaterial || posQuery.isPending || isPending) return;
+    const lines = sections
+      .filter((s) => s.po.supplierId === prefillSupplier && s.line.materialCode === prefillMaterial)
+      .sort((a, b) => (b.remaining.remainingQty ?? 0) - (a.remaining.remainingQty ?? 0));
+    const first = lines[0];
+    if (first) {
+      setForm({ quantity: '', needDate: '', type: 'forecast', reason: '', comment: '' });
+      setPanel({ kind: 'new', poId: first.po.id, lineId: first.line.id });
+      setPrefillMissing(null);
+    } else {
+      setPrefillMissing({ supplier: prefillSupplier, material: prefillMaterial });
+    }
+    const next = new URLSearchParams(prefillParams);
+    next.delete('newFor');
+    next.delete('material');
+    setPrefillParams(next, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prefillSupplier, prefillMaterial, sections, posQuery.isPending, isPending]);
+
   if (posQuery.isPending || isPending || drill.kind === 'pending')
     return <LoadingState breadcrumb={crumb} />;
   // AC-08 — an address naming a PO that does not exist, with a way back.
@@ -368,6 +398,12 @@ const BuyerCallOffs: React.FC = () => {
 
       {/* BR-04 / AC-02 — the filter is visible, and the way back is offered. */}
       <PoFilterBanner drill={drill} persona="buyer" count={drilledViews?.length} />
+
+      {prefillMissing ? (
+        <p role="status" className="text-sm text-text-secondary mb-4" data-testid="calloff-prefill-no-line">
+          {t('co.prefill.noLine', { supplier: prefillMissing.supplier, material: prefillMissing.material })}
+        </p>
+      ) : null}
 
       {(awaitingApproval > 0 || escalated > 0 || atRisk > 0 || drift.length > 0) && (
         <div

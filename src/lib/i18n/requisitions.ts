@@ -178,6 +178,8 @@ export const requisitionsEn: Record<string, string> = {
   //   while the verb produced a draft, which is the false-affordance class
   //   living in a string rather than in a handler.
   'requisitions.new.submit': 'Create requisition',
+  // Material E2 — "Create PO request" from the stock simulation, pre-filled.
+  'requisitions.new.prefill.fromSimulation': 'From the stock simulation: {{material}}, supplier {{supplier}}.',
   'requisitions.new.step1.eyebrow': 'Step 1',
   'requisitions.new.step1.title': 'Material & quantity',
   'requisitions.new.step1.desc': "What's being requested?",
@@ -365,6 +367,7 @@ export const requisitionsId: Record<string, string> = {
   'requisitions.new.title': 'Permintaan Pembelian Baru',
   'requisitions.new.cancel': 'Batal',
   'requisitions.new.submit': 'Buat permintaan',
+  'requisitions.new.prefill.fromSimulation': 'Dari simulasi stok: {{material}}, pemasok {{supplier}}.',
   'requisitions.new.step1.eyebrow': 'Langkah 1',
   'requisitions.new.step1.title': 'Material & kuantitas',
   'requisitions.new.step1.desc': 'Apa yang diminta?',

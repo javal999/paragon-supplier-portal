@@ -116,6 +116,7 @@ export const PTI_NAV: readonly NavSection[] = [
     roles: ['MP'],
     items: [
       { labelKey: 'hub.nav.pti.inventory', icon: Boxes, path: '/buyer/inventory' },
+      { labelKey: 'hub.nav.pti.stockSimulation', icon: CalendarClock, path: '/buyer/stock-simulation' },
       { labelKey: 'hub.nav.pti.capacity', icon: Gauge, path: '/buyer/capacity' },
       { labelKey: 'hub.nav.pti.alerts', icon: AlertTriangle, path: '/buyer/alerts' },
       { labelKey: 'hub.nav.pti.supplierAccess', icon: KeyRound, path: '/buyer/supplier-access' },

@@ -109,8 +109,11 @@ export function assignedMaterialCodesOf(supplierId: string): string[] {
   return [...codes].filter((c) => materialEntry(c)).sort();
 }
 
-/** The inventory rows: every supply assignment, plus any pair a supplier has submitted stock for. */
-function assignments(): { supplierId: string; materialCode: string }[] {
+/**
+ * The inventory rows: every supply assignment, plus any pair a supplier has
+ * submitted stock for. Material E2 — the stock simulation lists the same pairs.
+ */
+export function assignments(): { supplierId: string; materialCode: string }[] {
   const pairs = new Map<string, { supplierId: string; materialCode: string }>();
   for (const a of SUPPLY_ASSIGNMENTS) pairs.set(`${a.supplierId}|${a.materialCode}`, a);
   for (const d of inventoryDeclarationStore.all()) {

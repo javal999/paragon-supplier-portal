@@ -19,6 +19,8 @@ export const callOffsEn: Record<string, string> = {
   'co.umbrella.noQuantity': 'No quantity on this line: releases are checked against the remaining value.',
   'co.umbrella.byQuantity': 'Releases are checked against the remaining quantity.',
   'co.umbrella.none': 'No call-offs on this order yet.',
+  // Material E2 — "Create call-off" from the stock simulation, pre-filled.
+  'co.prefill.noLine': 'No agreement line for {{supplier}} · {{material}}. A call-off is released against an agreement line.',
   'co.action.new': 'New call-off',
   'co.action.series': 'Generate series',
   'co.action.open': 'View',
@@ -223,6 +225,7 @@ export const callOffsId: Record<string, string> = {
   'co.umbrella.noQuantity': 'Baris ini tidak memiliki kuantitas: rilis diperiksa terhadap sisa nilai.',
   'co.umbrella.byQuantity': 'Rilis diperiksa terhadap sisa kuantitas.',
   'co.umbrella.none': 'Belum ada call-off pada pesanan ini.',
+  'co.prefill.noLine': 'Tidak ada baris perjanjian untuk {{supplier}} · {{material}}. Call-off dirilis terhadap baris perjanjian.',
   'co.action.new': 'Call-off baru',
   'co.action.series': 'Buat rangkaian',
   'co.action.open': 'Lihat',
