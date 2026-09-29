@@ -388,6 +388,14 @@ export const POLICY_HOOKS = {
    */
   SUPPLIER_UPDATE_MODE_VALID: 'supplier_update_mode_valid',
   /**
+   * Material G1 (MR-10 BR-04) — the documents one qualification level requires:
+   * a known level (QUALIFICATION_LEVEL_UNKNOWN), a well-formed, non-repeating
+   * list (QUALIFICATION_RULE_INVALID), and a Preferred list that includes every
+   * Approved document (PREFERRED_MISSING_APPROVED). The rule is
+   * `qualificationRuleRefusal`, the one the admin page's pre-check calls.
+   */
+  QUALIFICATION_RULE_VALID: 'qualification_rule_valid',
+  /**
    * Material C5 (MR-8 BR-01, BR-03, AC-04) — a planning-group change: a name is
    * not blank (NAME_REQUIRED), a new group sits under an SAP group with
    * materials (UNKNOWN_SAP_GROUP), a move names known materials of the group's

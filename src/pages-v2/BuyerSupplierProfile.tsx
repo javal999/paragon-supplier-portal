@@ -39,11 +39,13 @@ import LoadingState from '../components/ui-v2/LoadingState';
 import ErrorState from '../components/ui-v2/ErrorState';
 import {
   useSupplier,
+  useVendorQualifications,
   useStorefrontCatalog,
   useStorefrontCerts,
   usePurchaseOrders,
 } from '../services/query/hooks';
 import { formatIDR, formatNumber, formatDate } from '../lib/format';
+import QualificationPanel from './qualification/QualificationPanel';
 import { useCategoryLabel } from '../hooks/useCategoryLabel';
 import { useChannelLabel } from '../hooks/useChannelLabel';
 import { SupplierTier } from '../types/supplier.types';
@@ -143,6 +145,9 @@ const BuyerSupplierProfile: React.FC = () => {
 
   const supplierQuery = useSupplier(id ?? '');
   const supp = supplierQuery.data ?? null;
+  // Material G1 (MR-10) — the vendor's computed level and its replayed history.
+  const qualifications = useVendorQualifications();
+  const qualification = qualifications.data?.items.find((q) => q.supplierId === id);
 
   // Catalog + compliance fold onto the storefront reads, scoped to this
   // supplier id (replacing the former inline "Sample data" consts).
@@ -334,6 +339,8 @@ const BuyerSupplierProfile: React.FC = () => {
           icon={Wallet}
         />
       </div>
+
+      {qualification ? <QualificationPanel row={qualification} reader="buyer" /> : null}
 
       <Tabs
         tabs={TABS}

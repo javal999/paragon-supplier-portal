@@ -117,6 +117,7 @@ import { customRoleStore } from './customRoles';
 import { workingCalendarStore } from './workingCalendarStore';
 import { threePlStore } from './threePlStore';
 import { supplierOverlayStore } from '../data/mock/stores/supplierOverlayStore';
+import { qualificationRuleStore } from './qualificationRuleStore';
 import { planningGroupStore } from '../data/mock/stores/planningGroupStore';
 import { materialOverlayStore } from '../data/mock/stores/materialOverlayStore';
 import { mrpControllerStore } from './mrpControllerStore';
@@ -232,6 +233,8 @@ async function realIds(): Promise<Record<string, string | null>> {
     // Material A1 — `entityId` IS the supplier id; every master supplier exists,
     // and the overlay names that supplier, so it lands in `ownerful`.
     supplierOverlay: 'sup-001',
+    // Material G1 — `entityId` IS the level; both lists exist from the start.
+    qualificationRule: 'approved',
     // Material C5 — `entityId` IS the planning group id; every SAP material
     // group's default group exists from the start. PTI master data: owner-less.
     planningGroup: 'pg-MG-20',
@@ -393,6 +396,7 @@ const resetAll = () => {
   maxStockStore.reset();
   threePlStore.reset();
   supplierOverlayStore.reset();
+  qualificationRuleStore.reset();
   planningGroupStore.reset();
   materialOverlayStore.reset();
   mrpControllerStore.reset();
@@ -456,6 +460,8 @@ describe('POPULATION — nothing below means anything without this', () => {
     // Material A1 — a supplier's overlay names that supplier: a supplier seat is
     // refused at SCOPE on any other supplier and at ROLE on its own.
     expect(ownerful).toContain('supplierOverlay');
+    // Material G1 — the qualification lists belong to no supplier.
+    expect(ownerless).toContain('qualificationRule');
     // Material C5 — planning groups are PTI master data: no supplier acts on one.
     expect(ownerless).toContain('planningGroup');
     // Material C2 — a trade name names the supplier it belongs to.
@@ -580,6 +586,8 @@ describe('THE LEGITIMATE PATHS — the half a "refuse everyone" fix would break'
         // Material C5 — planning groups are PTI master data (MR-8, MAT-D12).
         'planningGroup',
         'purchaseRequisition',
+        // Material G1 — the qualification lists are PTI's; no supplier is their owner.
+        'qualificationRule',
         // BL-32 — the reason lists are PTI's; no supplier is their owner.
         'reasonCode',
         // REQ-E03-02 / REQ-E03-04 — an RFI and an RFP EVENT name no supplier.
@@ -679,6 +687,13 @@ describe('THE LEGITIMATE PATHS — the half a "refuse everyone" fix would break'
     });
     expect(mrpRes.status, mrpRes.reason).toBe('done');
     expect(mrpControllerStore.get('P13')?.name).toBe('Fragrance planning desk (sample)');
+
+    const qualRes = await svc.dispatch(buyerSeat('compliance'), {
+      transitionId: 't_qualification_rule_set', entity: 'qualificationRule', entityId: 'approved',
+      payload: { requiredDocs: [{ category: 'Tax & Legal', label: 'Business licence and tax ID' }] },
+    });
+    expect(qualRes.status, qualRes.reason).toBe('done');
+    expect(qualificationRuleStore.get('approved').placeholder).toBe(false);
 
     const raised = await svc.dispatch(buyerSeat('procurement'), {
       transitionId: 't_application_submit', entity: 'supplierApplication',
