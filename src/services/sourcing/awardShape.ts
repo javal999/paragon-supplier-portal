@@ -186,6 +186,8 @@ export type AwardRefusalCode =
   | 'AWARD_ITEMS_OPEN'
   | 'AWARD_NOTHING_OPEN'
   | 'AWARD_REASON_REQUIRED'
+  // Material B4 (MR-2 BR-06) — a share goes to a supplier red-flagged on update compliance.
+  | 'AWARD_REASON_COMPLIANCE_FLAG'
   // RFx D2 (NR-2 BR-08) — the option is already placed through the other route.
   | 'AWARD_OPTION_SOURCED_ELSEWHERE';
 
@@ -257,6 +259,8 @@ export function awardRefusalText(r: AwardRefusal, eventType: AwardEventType = 'r
       return 'AWARD_NOTHING_OPEN: this award settles every item, so it is the final award, not a partial one';
     case 'AWARD_REASON_REQUIRED':
       return `AWARD_REASON_REQUIRED: the award for ${r.item} does not follow the best score, so it needs a reason`;
+    case 'AWARD_REASON_COMPLIANCE_FLAG':
+      return `AWARD_REASON_COMPLIANCE_FLAG: ${r.detail} is below the update-compliance flag and gets a share of ${r.item}, so the award needs a reason`;
     case 'AWARD_OFFER_EXPIRED':
       return `AWARD_OFFER_EXPIRED: the firm offer ${r.detail} on ${r.item} is no longer valid; open a new firm-offer round`;
     case 'AWARD_OPTION_SOURCED_ELSEWHERE':
@@ -436,6 +440,100 @@ export function awardItemsDepartingBest(
       return best !== null && !its.some((l) => l.quotationId === best);
     })
     .map((g) => g.item);
+}
+
+// ── Is a reason owed (AR-10; Material B4) ───────────────────────────────────
+//
+// ONE rule for the award panel, `rfq_award_governed` and `rfp_award_governed`.
+// Each `AwardReasonWhy` is one ground a reason can be owed on; a new ground is
+// a new member here, a new option, and a row in `REASON_REFUSAL`.
+
+/** Why an award owes a reason. */
+export type AwardReasonWhy =
+  /** NR-2 BR-06 — every RFP award needs a reason. */
+  | 'always'
+  /** BR-07 / NR-3 BR-08 — the item's lines leave out its best-scored quote. */
+  | 'departsBest'
+  /** MR-2 BR-06 — a red-flagged supplier on update compliance gets a share. */
+  | 'complianceFlag';
+
+/** What the rule is told beyond the items, the lines and the best scores. */
+export interface AwardReasonOptions {
+  /** Every award owes a reason (an RFP). */
+  readonly always?: boolean;
+  /** MR-2 BR-06 — is this supplier red-flagged (compliance below `compliance.flagPct`)? */
+  readonly flagged?: (supplierId: string) => boolean;
+}
+
+/** One awarded item that owes a reason, and why. */
+export interface AwardReasonItem {
+  readonly item: AwardItem;
+  readonly why: readonly AwardReasonWhy[];
+  /** `complianceFlag`: the flagged suppliers with a share of this item. */
+  readonly flaggedSupplierIds: readonly string[];
+}
+
+/** Whether the award owes a reason at all, and the items that owe one. */
+export interface AwardReasonDue {
+  /** True when a reason is owed: `always`, or any item below owes one. */
+  readonly owed: boolean;
+  readonly always: boolean;
+  readonly items: readonly AwardReasonItem[];
+}
+
+/**
+ * AR-10 — is a reason owed, per awarded item, and why. `bestOf` answers per
+ * item and break (`null`: no single best to depart from). With `always`, a
+ * reason is owed even by an award with no lines (an RFP's "Will not award the
+ * rest"). A flag only asks for a reason; it never refuses by itself (MR-2 BR-07).
+ */
+export function awardReasonOwed(
+  items: readonly AwardItem[],
+  lines: readonly AnyAwardLine[],
+  bestOf: (item: AwardItem, breakQty: number) => string | null,
+  options: AwardReasonOptions = {},
+): AwardReasonDue {
+  const always = options.always === true;
+  const departing = new Set(awardItemsDepartingBest(items, lines, bestOf).map((i) => i.key));
+  const owing = groupsOf(items, lines).flatMap(({ item, lines: its }) => {
+    const flaggedSupplierIds = options.flagged
+      ? [...new Set(its.map((l) => l.supplierId))].filter((s) => options.flagged!(s))
+      : [];
+    const why: AwardReasonWhy[] = [
+      ...(always ? (['always'] as const) : []),
+      ...(departing.has(item.key) ? (['departsBest'] as const) : []),
+      ...(flaggedSupplierIds.length > 0 ? (['complianceFlag'] as const) : []),
+    ];
+    return why.length > 0 ? [{ item, why, flaggedSupplierIds }] : [];
+  });
+  return { owed: always || owing.length > 0, always, items: owing };
+}
+
+/** The refusal each ground earns, in the order they are stated. */
+const REASON_REFUSAL: readonly {
+  readonly why: AwardReasonWhy;
+  readonly refusal: (owing: AwardReasonItem) => AwardRefusal;
+}[] = [
+  { why: 'departsBest', refusal: (o) => ({ code: 'AWARD_REASON_REQUIRED', item: o.item.name }) },
+  {
+    why: 'complianceFlag',
+    refusal: (o) => ({ code: 'AWARD_REASON_COMPLIANCE_FLAG', item: o.item.name, detail: o.flaggedSupplierIds[0] }),
+  },
+];
+
+/**
+ * The refusal an award earns when it owes a reason and carries none, or null.
+ * `always` states the RFP's own rule (AWARD_REASON_REQUIRED, no item); then the
+ * first ground in `REASON_REFUSAL` order, naming its first item.
+ */
+export function awardReasonRefusal(due: AwardReasonDue, reason: string): AwardRefusal | null {
+  if (!due.owed || reason.trim().length > 0) return null;
+  if (due.always) return { code: 'AWARD_REASON_REQUIRED' };
+  for (const { why, refusal } of REASON_REFUSAL) {
+    const first = due.items.find((o) => o.why.includes(why));
+    if (first) return refusal(first);
+  }
+  return null;
 }
 
 /** The break each awarded item's lines record, by item (for the stored best scores). */

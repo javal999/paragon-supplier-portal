@@ -104,6 +104,14 @@ export function complianceScoreWeight(): number {
   return hubSetting('compliance.scoreWeight');
 }
 
+/**
+ * MR-2 BR-04 (Material B4) — the amber warning (below `warnPct`, 80) and the
+ * red flag (below `flagPct`, 60) on update compliance, read at call time.
+ */
+export function complianceThresholds(): { readonly warnPct: number; readonly flagPct: number } {
+  return { warnPct: hubSetting('compliance.warnPct'), flagPct: hubSetting('compliance.flagPct') };
+}
+
 /** REQ-E08-04 BR-03 / PQ-02 — weekly buckets for 13 weeks. */
 export const CAPACITY_HORIZON_WEEKS = 13;
 

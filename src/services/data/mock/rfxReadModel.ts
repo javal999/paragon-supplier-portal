@@ -54,7 +54,14 @@ import type {
 } from '../../sourcing/views';
 import { responseVersions } from '../../sourcing/responseVersions';
 import { awardStatusOf, cancellationOf, sapMarkOf, type AwardTrail } from '../../sourcing/awardStatus';
-import type { AwardLine, RfiResponse, RfpEvent, RfpResponse, RfqAwardRecord } from '../../sourcing/types';
+import type {
+  AwardLine,
+  ComplianceAtAward,
+  RfiResponse,
+  RfpEvent,
+  RfpResponse,
+  RfqAwardRecord,
+} from '../../sourcing/types';
 import { isRfpAward } from '../../sourcing/rfpAward';
 import { firmPricesInForce, parseRfpOptionRef, rfpOptionRef } from '../../sourcing/rfpFirmOffer';
 import { awardItemsOf, itemOfAwardLine } from '../../sourcing/awardShape';
@@ -543,6 +550,12 @@ function settledKeysOf(rfq: RFQ | undefined, lines: readonly AwardLine[]): strin
   return [...new Set(lines.flatMap((l) => itemOfAwardLine(items, l)?.key ?? []))];
 }
 
+/** Material B4 (MAT-R4) — the buyer reads every row; a supplier only its own. */
+const ownComplianceAtAward = (
+  rows: readonly ComplianceAtAward[],
+  supplierId: string | null,
+): readonly ComplianceAtAward[] => (supplierId ? rows.filter((r) => r.supplierId === supplierId) : rows);
+
 /** The awards a scope may read. A supplier reads only awards it is named on. */
 export function awardViews(supplierId: string | null): readonly AwardView[] {
   // RFx C2 (AR-08) — each award's status is derived from the appended trail.
@@ -579,6 +592,10 @@ export function awardViews(supplierId: string | null): readonly AwardView[] {
         notAwardedSupplierIds: supplierId
           ? award.notAwardedSupplierIds.filter((s) => s === supplierId)
           : award.notAwardedSupplierIds,
+        // Material B4 (MAT-R4) — a supplier reads only its own compliance at award.
+        ...(award.complianceAtAward
+          ? { complianceAtAward: ownComplianceAtAward(award.complianceAtAward, supplierId) }
+          : {}),
         rfqNumber: rfq?.rfqNumber ?? award.eventId,
         rfqTitle: rfq?.title ?? '',
         uom: rfq?.uom ?? '',
@@ -660,6 +677,10 @@ export function rfpAwardViews(supplierId: string | null): readonly RfpAwardView[
         status,
         ...(cancellation ? { withdrawnAt: cancellation.cancelledAt } : {}),
         ...(!supplierId ? { reason: award.reason } : {}),
+        // Material B4 (MAT-R4) — a supplier reads only its own compliance at award.
+        ...(award.complianceAtAward
+          ? { complianceAtAward: ownComplianceAtAward(award.complianceAtAward, supplierId) }
+          : {}),
         ...(!supplierId && cancellation ? { cancellation } : {}),
         ...(!supplierId && sapMark ? { sapMark } : {}),
         ...(supplierId
