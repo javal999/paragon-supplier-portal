@@ -51,11 +51,15 @@ export const PicCell: React.FC<{ value: MrpControllerRef | undefined; testId?: s
   </span>
 );
 
-/** The PIC column header with its liveness pill beside it (AR-19). */
-export const PicHeader: React.FC = () => {
+/**
+ * The PIC column header with its liveness pill beside it (AR-19). `wrap` lets
+ * the pill drop under "PIC" in a narrow grouped column (BL-38, the supplier
+ * call-offs table); every other table keeps the one-line default.
+ */
+export const PicHeader: React.FC<{ wrap?: boolean }> = ({ wrap = false }) => {
   const { t } = useTranslation();
   return (
-    <span className="inline-flex items-center gap-2 whitespace-nowrap">
+    <span className={wrap ? 'inline-flex flex-wrap items-center gap-x-2 gap-y-0.5' : 'inline-flex items-center gap-2 whitespace-nowrap'}>
       {t('pic.col')}
       <LivenessPill capability="materialMasterSap" />
     </span>
