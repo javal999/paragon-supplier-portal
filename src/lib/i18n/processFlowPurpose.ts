@@ -376,6 +376,12 @@ export const processFlowPurposeEn: Record<string, string> = {
   'processFlows.purpose.t_reasoncode_set':
     'The hub administrator adds a reason code, renames it in English and Indonesian, retires it, or offers it again. A retired code is no longer offered on a new answer but still reads on the answers that carry it.',
 
+  // ── maximum stock (REQ-E06-04) ───────────────────────────────────────
+  'processFlows.purpose.entity.maxStock':
+    'The most a supplier may hold for PTI of one material, agreed with the supplier. The fixed stock reconcile caps what PTI may owe at it, and stock above it is the supplier\u2019s own.',
+  'processFlows.purpose.t_maxstock_set':
+    'Procurement sets, changes or clears the maximum stock of one supplier and material. Every change is kept with the value before it, so a settlement can be read against the maximum that stood at the time.',
+
   // ── supplierApplication ──────────────────────────────────────────────
   'processFlows.purpose.entity.supplierApplication':
     'The record that a company has asked to supply Paragon, who is handling it, and what was decided. Without it a company could finish the sign-up form and be handed a reference number that nothing anywhere stood behind.',
@@ -882,6 +888,12 @@ export const processFlowPurposeId: Record<string, string> = {
     'Satu kode pada daftar alasan yang dipilih pemasok — mengapa baris pesanan pembelian disesuaikan atau ditolak, atau mengapa komitmen atau kapasitas di bawah yang diminta. Kode tidak pernah dihapus, sehingga jawaban lama tetap berlabel.',
   'processFlows.purpose.t_reasoncode_set':
     'Administrator hub menambahkan kode alasan, mengganti namanya dalam bahasa Inggris dan Indonesia, menghentikannya, atau menawarkannya lagi. Kode yang dihentikan tidak ditawarkan lagi pada jawaban baru tetapi tetap terbaca pada jawaban yang memakainya.',
+
+  // ── maximum stock (REQ-E06-04) ───────────────────────────────────────
+  'processFlows.purpose.entity.maxStock':
+    'Jumlah terbanyak yang boleh dipegang pemasok untuk PTI atas satu material, sesuai kesepakatan dengan pemasok. Rekonsiliasi stok tetap membatasi kewajiban PTI sampai angka ini, dan stok di atasnya adalah milik pemasok.',
+  'processFlows.purpose.t_maxstock_set':
+    'Procurement menetapkan, mengubah, atau menghapus stok maksimum satu pemasok dan material. Setiap perubahan disimpan beserta nilai sebelumnya, sehingga penyelesaian dapat dibaca terhadap stok maksimum yang berlaku saat itu.',
 
   // ── supplierApplication ──────────────────────────────────────────────
   'processFlows.purpose.entity.supplierApplication':

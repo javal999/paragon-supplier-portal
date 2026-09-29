@@ -88,6 +88,17 @@ export function zoneLengthsFor(supplierId: string, materialGroup: string, materi
   };
 }
 
+// ── Fixed stock (FS) reconcile — REQ-E06-04 (ENG-D21) ────────────────────────
+// The cycle LENGTH is the administrator's (owner, 2026-09-29; accessor below);
+// the Monday it is counted from stays fixed here.
+
+/**
+ * REQ-E06-04 BR-01 [Proposed] — the Monday packaging cycles are counted from:
+ * the first week of the Hub's first published packaging forecast. Cycles run
+ * W1 to W3 from it, back to back.
+ */
+export const FS_RECONCILE_CYCLE_ANCHOR = '2026-08-31';
+
 // ── The administrator's values (BL-32) ───────────────────────────────────────
 // CR-21, CR-22 and CR-26 have their defaults in `hubSettings.ts` and are changed
 // on Administration → Tolerances and rule values; these accessors read the
@@ -172,6 +183,15 @@ export function orderSizingCosts(): {
  */
 export function rescheduleOutThresholdWeeks(): number {
   return hubSetting('engine.rescheduleOutWeeks');
+}
+
+/**
+ * REQ-E06-04 BR-01 — whole weeks in a packaging fixed stock reconcile cycle
+ * (3 by default: "FS Reconcile end W3"). Raw material reconciles per month
+ * regardless. In force now; the pure rule takes it as an argument.
+ */
+export function fsReconcileCycleWeeks(): number {
+  return hubSetting('forecast.fsReconcileCycleWeeks');
 }
 
 /**

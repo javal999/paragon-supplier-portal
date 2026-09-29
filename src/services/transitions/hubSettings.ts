@@ -175,6 +175,13 @@ const DEFS = [
     key: 'engine.maxRentedSpacePct', section: 'tolerances', rule: 'REQ-E14-05', unit: 'pct',
     min: 0, max: 500, defaultValue: 25, placeholder: { owner: 'warehousePlanner', backlogId: 'REQ-E14-05' },
   },
+  // REQ-E06-04 BR-01 (owner, 2026-09-29) — the fixed stock reconcile cycle for
+  // packaging, in weeks. 3 by default ("FS Reconcile end W3", ENG-D21); the
+  // Monday it is counted from stays fixed (FS_RECONCILE_CYCLE_ANCHOR).
+  {
+    key: 'forecast.fsReconcileCycleWeeks', section: 'tolerances', rule: 'REQ-E06-04', unit: 'weeks', integer: true,
+    min: 1, max: 13, defaultValue: 3,
+  },
   {
     key: 'engine.rescheduleOutWeeks', section: 'tolerances', rule: 'ENG-D15', unit: 'weeks', integer: true,
     min: 1, max: 26, defaultValue: 1,

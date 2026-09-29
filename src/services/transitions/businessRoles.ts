@@ -207,6 +207,13 @@ const LANE_BUNDLES = Object.freeze({
       // enforcement lane unreachable with no consumer to catch it. Sequencing:
       // retire the grant first, move the atom once a caller exists.
       'enforcement:set',
+      // ── REQ-E06-04 BR-06 · MAXIMUM STOCK PER SUPPLIER × MATERIAL (owner, 2026-09-29)
+      // The most a supplier may hold for PTI is a commercial term agreed with
+      // the supplier — this lane's subject matter. NOT `planning`: the planner
+      // raises the reconcile's liability flag, and the flag is capped by this
+      // value, so the party that raises the claim does not also set its cap.
+      // No supplier lane: a supplier may not set the cap on what PTI owes it.
+      'maxstock:set',
     ]),
     // The dock. 13 of the 41 human-owned buyer verbs — the largest single lane,
     // and a dock clerk is not a category manager. `asn:flag` is shared with the
