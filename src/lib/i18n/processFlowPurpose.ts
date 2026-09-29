@@ -373,6 +373,19 @@ export const processFlowPurposeEn: Record<string, string> = {
     'Who handles a material in planning. SAP gives each material an MRP controller code; the hub keeps who that code is: the planner or desk a supplier can ask for, and the hub users behind it.',
   'processFlows.purpose.t_mrpcontroller_set':
     'The hub administrator maps an MRP controller code to the planner or desk behind it and one or more hub users, or changes that mapping. Suppliers see who to contact on their stock, call-offs and shipping notices, so each change is on record with who made it and when.',
+  // ── supplier trade names (Material C2) ───────────────────────────────
+  'processFlows.purpose.entity.materialName':
+    'A supplier’s own name for a PTI material it supplies, with its own material number if it has one. Once Material Planning approves it, the name shows beside PTI’s description, so the supplier recognises its products and a planner can match what the supplier writes.',
+  'processFlows.purpose.t_materialname_submit':
+    'The supplier enters its trade name for a material assigned to it. The name waits for Material Planning, and the name in use stays until Material Planning accepts the new one.',
+  'processFlows.purpose.t_materialname_approve':
+    'Material Planning approves a supplier’s trade name. Each supplier has one name in use per material, so the earlier accepted name steps aside.',
+  'processFlows.purpose.t_materialname_reject':
+    'Material Planning rejects a supplier’s trade name with a reason, which the supplier sees and can answer with a new name.',
+  'processFlows.purpose.t_materialname_load':
+    'PTI loads accepted trade names in bulk from a file of PTI code, supplier, trade name and supplier material number. They take effect on load and are marked as loaded by PTI; a row that matches the name in use changes nothing.',
+  'processFlows.purpose.t_materialname_replace':
+    'A newer name for the same supplier and material takes the place of the earlier one, so only one name is in use at a time and only one waits for a decision.',
 
   // ── the hub's rule values (BL-32) ────────────────────────────────────
   'processFlows.purpose.entity.hubSetting':
@@ -895,6 +908,18 @@ export const processFlowPurposeId: Record<string, string> = {
     'Siapa yang menangani suatu material di perencanaan. SAP memberi setiap material kode MRP controller; hub menyimpan siapa pemilik kode itu: nama yang dapat dihubungi pemasok, dan pengguna hub di baliknya.',
   'processFlows.purpose.t_mrpcontroller_set':
     'Administrator hub memetakan kode MRP controller ke sebuah nama dan satu atau lebih pengguna hub, atau mengubah pemetaan itu. Pemasok melihat nama itu pada stok, call-off, dan pemberitahuan pengirimannya, sehingga setiap perubahan tercatat beserta siapa dan kapan.',
+  'processFlows.purpose.entity.materialName':
+    'Nama dagang pemasok untuk material PTI yang dipasoknya, beserta nomor materialnya sendiri bila ada. Setelah disetujui Material Planning, nama itu tampil di samping deskripsi PTI, sehingga pemasok mengenali produknya dan perencana dapat mencocokkan tulisan pemasok.',
+  'processFlows.purpose.t_materialname_submit':
+    'Pemasok mengisi nama dagangnya untuk material yang ditugaskan kepadanya. Nama itu menunggu Material Planning, dan nama yang sudah disetujui tetap dipakai sampai nama baru disetujui.',
+  'processFlows.purpose.t_materialname_approve':
+    'Material Planning menyetujui nama dagang pemasok. Setiap pemasok memiliki paling banyak satu nama yang disetujui per material, sehingga nama lama yang disetujui digantikan.',
+  'processFlows.purpose.t_materialname_reject':
+    'Material Planning menolak nama dagang pemasok dengan alasan, yang dilihat pemasok dan dapat dijawab dengan nama baru.',
+  'processFlows.purpose.t_materialname_load':
+    'PTI memuat nama dagang yang disetujui secara massal dari berkas berisi kode PTI, pemasok, nama dagang, dan nomor material pemasok. Nama itu langsung disetujui dan ditandai dimuat oleh PTI; baris yang sama dengan nama yang disetujui tidak mengubah apa pun.',
+  'processFlows.purpose.t_materialname_replace':
+    'Nama yang lebih baru untuk pemasok dan material yang sama menggantikan nama sebelumnya, sehingga hanya satu nama yang disetujui dan hanya satu yang menunggu persetujuan.',
 
   'processFlows.purpose.entity.hubSetting':
     'Satu nilai yang menjadi pembanding aturan hub: toleransi, tenggat, ambang peringatan, atau periode data usang. Nilai ini menentukan apa yang diterima tanpa diperiksa orang, sehingga hanya administrator hub yang dapat mengubahnya dan setiap perubahan tercatat.',

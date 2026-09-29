@@ -81,6 +81,7 @@ import type {
   PurchaseOrder,
   POFilter,
   InventoryPosition,
+  MaterialNameRow,
   StockAccessGrant,
   CapacityPlan,
   InventoryAlert,
@@ -167,6 +168,8 @@ import type { EngineDataset } from '../../engine/types';
 import { labelOf, materialEntry } from '../../sdc/materialMaster';
 // Material C4 — each material's MRP controller, narrowed per reader (MR-5 BR-04).
 import { withMrpController } from './mrpControllerReadModel';
+// Material C2 — supplier trade names, narrowed per reader (MR-3 BR-03).
+import { materialNameRowsFor, withTradeName } from './materialNameReadModel';
 import { FEEDS, dataHealth } from '../../engine/dataHealth';
 import { demandForecast, type DemandForecastRun } from '../../engine/demandForecast';
 import { modelBacktest, prepareBacktest, type PreparedBacktest } from '../../engine/modelBacktest';
@@ -415,7 +418,14 @@ export class MockProcurementService implements IProcurementService {
     }
     if (filter?.supplierId) rows = rows.filter((r) => r.supplierId === filter.supplierId);
     if (filter?.materialCode) rows = rows.filter((r) => r.materialCode === filter.materialCode);
-    return { items: rows.map((r) => withMrpController(r, r.materialCode, scope)) };
+    // Material C2 — the supplier's approved trade name beside PTI's description.
+    return { items: rows.map((r) => withTradeName(withMrpController(r, r.materialCode, scope))) };
+  }
+
+  // Material C2 (MR-3 BR-03) — narrowed in the read model: a supplier reads its
+  // own assigned materials and names only.
+  async getMaterialNames(scope: QueryScope): Promise<Page<MaterialNameRow>> {
+    return { items: materialNameRowsFor(scope) };
   }
 
   async getStockAccess(scope: QueryScope): Promise<Page<StockAccessGrant>> {
