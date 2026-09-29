@@ -63,6 +63,15 @@ export const POLICY_HOOKS = {
   /** ASN submit (BR-04): ship date, expected arrival (not before the ship
    *  date) and a batch number on every line. */
   ASN_SUBMIT_COMPLETE: 'asn_submit_complete',
+  /** MR-6 BR-08 — a shelf-life exception request: the ASN would pass every
+   *  submission check but the shelf-life rule, at least one line fails that
+   *  rule, and the reason is substance (`asnLineRefusal`, `onlyShelfLifeRefused`). */
+  ASN_SHELF_LIFE_EXCEPTION_ONLY: 'asn_shelf_life_exception_only',
+  /** MR-6 BR-08 — a shelf-life exception rejected with a reason of substance. */
+  ASN_SHELF_LIFE_REASON_GIVEN: 'asn_shelf_life_reason_given',
+  /** MR-6 edge case 1 — an ETA change on a submitted ASN is legal only when its
+   *  approved exception no longer covers the new ETA (`etaNeedsReapproval`). */
+  ASN_ETA_NEEDS_REAPPROVAL: 'asn_eta_needs_reapproval',
   /** ASN cancel: nothing has been received against the ASN yet. */
   ASN_CANCEL_NOT_RECEIVED: 'asn_cancel_not_received',
   /** ASN create / submit (BL-51, BR-05): a 3PL the ASN names is on the 3PL list
@@ -419,6 +428,12 @@ export const POLICY_HOOKS = {
    * attribution. The same predicate re-checks a stored change on read.
    */
   REASON_CODE_GOVERNED: 'reason_code_governed',
+  /**
+   * REQ-E06-04 BR-06 — a maximum stock for one supplier × material: the entity
+   * is `<supplierId>|<materialCode>`, the quantity a whole number above zero or
+   * null to clear it, and a well-formed attribution.
+   */
+  MAX_STOCK_GOVERNED: 'max_stock_governed',
 
   /**
    * PR reject (§67): the rejection reason must be SUBSTANCE, not presence.

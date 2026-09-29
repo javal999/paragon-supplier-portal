@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 0.13 draft, 2026-09-28 |
+| Version | 0.14 draft, 2026-09-29 |
 | What this is | Detailed requirements for the demand and material forecast engine PTI builds itself (owner decision ENG-1), with each calculation explained |
 | Status | Every requirement is **Proposed**. The decision to build is Validated (ENG-1), and the engine decisions in section 4.1 are decided; section 4.2 lists what is still open. The rest of the detail has not yet been reviewed by the Material Planner |
 | Sources | ENG-1 (`SUPPLIER-HUB-REQUIREMENTS.md` section 9); methods and evidence in `research/FORECAST-METHOD-SPEC.md`; problem analysis in `research/FORECAST-BEST-PRACTICE-2026-09.md` |
@@ -1149,3 +1149,4 @@ REQ-E14-11 built on synthetic data. For the owner's review; nothing here is acce
 | 0.11 | 2026-09-24 | E14-03 BR-03 reworded to match ENG-B50: yield applied on the BOM line beside scrap (same result as dividing the parent's order quantity); the backlog wording for BL-115 had caused the mismatch |
 | 0.12 | 2026-09-25 | Build decisions ENG-B19 to ENG-B59 (PRs #44, #46, #47, #48) accepted by the owner as recommended, sections 4.1d to 4.1g. The rented-space cap value (ENG-B55) stays a placeholder for the Warehouse |
 | 0.13 | 2026-09-28 | Owner decided ENG-D8a (±20%), D10 (sell-in for now), D11 (Material Planning reviews), D12 (Marketing owns the promotion calendar; the owner fills it meanwhile), D14 (volume ranking). Team review of the LTP / DA / capacity process added ENG-D18 to D21 (two-level capacity check with BE, capacity before LTP with Submit all per week, OEM demand from the brand's POs, fixed stock reconcile) and opened ENG-D12a and ENG-D22 (the DA formula) |
+| 0.14 | 2026-09-29 | REQ-E14-07 built on synthetic data (BL-110, PR #81); ENG-B60 to B69 accepted with two changes (a known-event index in the fallback; new SKUs on SAP's plan) and ENG-B70 to B74 accepted (sections 4.1h, 4.1i). ENG-D18 and D19 built with BL-133 (PR #80), ENG-D21 with BL-134 (PR #79, REQ-E06-04 in the main requirements) |
