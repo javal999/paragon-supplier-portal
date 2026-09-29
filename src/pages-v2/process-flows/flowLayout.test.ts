@@ -276,8 +276,11 @@ describe('C.2 — entityVerbOf qualifies a cascade source with its entity', () =
     // change that reintroduces a bare form has something specific to break.
     // REQ-E07-07 added `invoice.t_invoice_match`: it is now also fired by the
     // invoice's own `t_invoice_submit`, whose bare verb collides with itself.
+    // Material C2 added `materialName.t_materialname_replace`: it is fired by
+    // `t_materialname_submit` / `_approve`, whose bare verbs are shared.
     expect(rows.filter((r) => r.ambiguous).map((r) => r.key).sort()).toEqual([
       'invoice.t_invoice_match',
+      'materialName.t_materialname_replace',
       'purchaseRequisition.t_pr_source',
       'quotation.t_quotation_award',
       'quotation.t_quotation_reject',

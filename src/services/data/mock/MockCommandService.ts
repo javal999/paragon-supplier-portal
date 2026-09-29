@@ -196,6 +196,8 @@ import { supplierOverlayTarget } from './targets/supplierOverlay';
 import { planningGroupTarget } from './targets/planningGroup';
 // Material C4 — the MRP controller list (its own module, plan AD-5).
 import { mrpControllerTarget } from './targets/mrpController';
+// Material C2 — supplier trade names (its own module, plan AD-5).
+import { materialNameCascades, materialNameTarget } from './targets/materialName';
 // ── REQ-E14-13 — reschedule proposals taken to SAP ─────────────────────────
 import { sapChangeMarkStore } from './stores/sapChangeMarkStore';
 import { engineDataset } from './fixtures/engineDataset';
@@ -5158,6 +5160,8 @@ const TARGETS: Record<string, CommandTarget> = {
   planningGroup: planningGroupTarget,
   // Material C4 — who each SAP MRP controller code is (MR-5 BR-02).
   mrpController: mrpControllerTarget,
+  // Material C2 — a supplier's trade name for a PTI material (MR-3).
+  materialName: materialNameTarget,
   // BL-32 — the rule values. Wired so every change to a tolerance, deadline,
   // threshold or stale period — and every reset — lands in the DR-10 trail.
   hubSetting: hubSettingTarget,
@@ -5243,6 +5247,8 @@ export const commandTargetFor = (entity: string): CommandTarget | undefined =>
 // declares WHICH verb; the mock resolves WHICH ASN id (the GR's own asnNumber).
 // Best-effort — a GR whose ASN is absent or not in a cascadable state no-ops.
 const resolveCascades = (ctx: CascadeContext): CascadeCommand[] => {
+  // Material C2 — a newer trade name replaces the earlier one (resolver in its own module).
+  if (ctx.entity === 'materialName') return materialNameCascades(ctx);
   if (ctx.entity === 'goodsReceipt') {
     const gr = goodsReceiptStore.get(ctx.entityId);
     if (!gr) return [];

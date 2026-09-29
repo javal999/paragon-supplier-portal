@@ -68,6 +68,10 @@ export const useInventory = (filter?: InventoryFilter) =>
 export const useStockAccess = () =>
   useServiceQuery(['procurement', 'stockAccess'], (svc, scope) => svc.procurement.getStockAccess(scope));
 
+/** Material C2 — supplier trade names per assigned material (MR-3). A supplier reads its own. */
+export const useMaterialNames = () =>
+  useServiceQuery(['procurement', 'materialNames'], (svc, scope) => svc.procurement.getMaterialNames(scope));
+
 /** Capacity against demand per supplier × planning group (REQ-E08-04, MR-8 BR-04). */
 export const useCapacityPlans = () =>
   useServiceQuery(['procurement', 'capacityPlans'], (svc, scope) => svc.procurement.getCapacityPlans(scope));

@@ -1543,6 +1543,116 @@ export function useMrpControllerSet() {
   });
 }
 
+// ── Material C2 · SUPPLIER TRADE NAMES (MR-3 BR-01 to BR-06) ─────────────────
+//
+// The supplier submits; Material Planning approves, rejects or loads in bulk.
+// `submittedBy` / `decidedBy` and the times are stamped by the target from the
+// session and the hub clock. An approved name shows on the stock pages, so the
+// whole cache is invalidated rather than a guessed list of keys.
+export interface MaterialNameSubmitVars {
+  supplierId: string;
+  materialCode: string;
+  tradeName: string;
+  supplierMaterialNo?: string;
+}
+
+/** A supplier submits its trade name for an assigned material (`t_materialname_submit`). */
+export function useMaterialNameSubmit() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+
+  return useMutation<CommandResult, Error, MaterialNameSubmitVars>({
+    mutationFn: ({ supplierId, materialCode, tradeName, supplierMaterialNo }) =>
+      svc.commands.dispatch(scope, {
+        transitionId: 't_materialname_submit',
+        entity: 'materialName',
+        payload: {
+          supplierId,
+          materialCode,
+          tradeName,
+          ...(supplierMaterialNo && supplierMaterialNo.trim() !== '' ? { supplierMaterialNo } : {}),
+        },
+      }),
+    onSuccess: (result) => {
+      if (result.status !== 'failed') void qc.invalidateQueries();
+    },
+  });
+}
+
+export interface MaterialNameDecideVars {
+  id: string;
+  decision: 'approve' | 'reject';
+  rejectionReason?: string;
+}
+
+/** Material Planning approves or rejects a trade name (`t_materialname_approve` / `_reject`). */
+export function useMaterialNameDecide() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+
+  return useMutation<CommandResult, Error, MaterialNameDecideVars>({
+    mutationFn: ({ id, decision, rejectionReason }) =>
+      svc.commands.dispatch(scope, {
+        transitionId: decision === 'approve' ? 't_materialname_approve' : 't_materialname_reject',
+        entity: 'materialName',
+        entityId: id,
+        expectedState: 'Awaiting approval',
+        payload: decision === 'reject' ? { rejectionReason: rejectionReason ?? '' } : {},
+      }),
+    onSuccess: (result) => {
+      if (result.status !== 'failed') void qc.invalidateQueries();
+    },
+  });
+}
+
+/** One row of a bulk load, with its line in the file. */
+export interface MaterialNameLoadRow extends MaterialNameSubmitVars {
+  line: number;
+}
+
+/** The outcome of one bulk-load row. A thrown refusal is reported as its code. */
+export interface MaterialNameLoadOutcome {
+  line: number;
+  status: 'done' | 'failed';
+  reason?: string;
+}
+
+/** PTI loads approved trade names, one `t_materialname_load` per row (BR-06). */
+export function useMaterialNameLoad() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+
+  return useMutation<MaterialNameLoadOutcome[], Error, readonly MaterialNameLoadRow[]>({
+    mutationFn: async (rows) => {
+      const out: MaterialNameLoadOutcome[] = [];
+      for (const r of rows) {
+        try {
+          const result = await svc.commands.dispatch(scope, {
+            transitionId: 't_materialname_load',
+            entity: 'materialName',
+            payload: {
+              supplierId: r.supplierId,
+              materialCode: r.materialCode,
+              tradeName: r.tradeName,
+              ...(r.supplierMaterialNo ? { supplierMaterialNo: r.supplierMaterialNo } : {}),
+            },
+          });
+          out.push({ line: r.line, status: result.status === 'failed' ? 'failed' : 'done', reason: result.reason });
+        } catch (e) {
+          out.push({ line: r.line, status: 'failed', reason: e instanceof DataError ? e.code : (e as Error).message });
+        }
+      }
+      return out;
+    },
+    onSuccess: (outcomes) => {
+      if (outcomes.some((o) => o.status === 'done')) void qc.invalidateQueries();
+    },
+  });
+}
+
 // ── BL-50 · A RULING ON ONE DAY OF THE HUB'S WORKING CALENDAR ────────────────
 //
 // ⚠️ **`entityId` IS THE DATE, AND THERE IS NO `date` PAYLOAD FIELD** — the

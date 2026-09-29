@@ -96,6 +96,18 @@ export function isAssignedMaterial(supplierId: string, materialCode: string): bo
   );
 }
 
+/**
+ * Material C2 — the materials assigned to a supplier (the same membership as
+ * `isAssignedMaterial`), known to the material master, sorted by code.
+ */
+export function assignedMaterialCodesOf(supplierId: string): string[] {
+  const codes = new Set<string>();
+  for (const a of SUPPLY_ASSIGNMENTS) if (a.supplierId === supplierId) codes.add(a.materialCode);
+  for (const r of SUPPLIER_MATERIAL_RELATIONSHIPS) if (r.supplierId === supplierId) codes.add(r.materialCode);
+  for (const p of FORECAST_PUBLICATIONS) for (const l of p.lines) if (l.supplierId === supplierId) codes.add(l.materialCode);
+  return [...codes].filter((c) => materialEntry(c)).sort();
+}
+
 /** The inventory rows: every supply assignment, plus any pair a supplier has submitted stock for. */
 function assignments(): { supplierId: string; materialCode: string }[] {
   const pairs = new Map<string, { supplierId: string; materialCode: string }>();

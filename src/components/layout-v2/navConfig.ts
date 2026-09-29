@@ -33,6 +33,7 @@ import {
   ShieldHalf,
   ShoppingCart,
   SlidersHorizontal,
+  Tags,
   Target,
   TrendingUp,
   Truck,
@@ -119,6 +120,14 @@ export const PTI_NAV: readonly NavSection[] = [
       { labelKey: 'hub.nav.pti.alerts', icon: AlertTriangle, path: '/buyer/alerts' },
       { labelKey: 'hub.nav.pti.supplierAccess', icon: KeyRound, path: '/buyer/supplier-access' },
     ],
+  },
+  {
+    // Material C2 — Materials → Trade names (MR-3 d): Material Planning approves
+    // the names suppliers give PTI materials.
+    id: 'materials',
+    labelKey: 'hub.nav.section.materials',
+    roles: ['MP'],
+    items: [{ labelKey: 'hub.nav.pti.tradeNames', icon: Tags, path: '/buyer/materials/trade-names' }],
   },
   {
     id: 'calloffs',
