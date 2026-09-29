@@ -66,13 +66,20 @@ export const ALERT_RULES: readonly InventoryAlertRule[] = [
   'coverage',
   'commitmentBelowForecast',
   'leadTimeMissing',
+  'callOffNotCovered',
 ];
 
 /**
- * Rules never shown to a supplier: the ones that read PTI stock, and the gap in
- * PTI's own master data (the supplier has nothing to act on there).
+ * Rules never shown to a supplier: the ones that read PTI stock, the gap in
+ * PTI's own master data (the supplier has nothing to act on there), and the
+ * planner's stock-side check of confirmed call-offs (MR-6 BR-13).
  */
-export const PTI_ONLY_RULES: readonly InventoryAlertRule[] = ['ptiBelowRop', 'projectedStockOut', 'leadTimeMissing'];
+export const PTI_ONLY_RULES: readonly InventoryAlertRule[] = [
+  'ptiBelowRop',
+  'projectedStockOut',
+  'leadTimeMissing',
+  'callOffNotCovered',
+];
 
 export const RISK_ORDER: readonly RiskClass[] = ['high', 'medium', 'low'];
 
@@ -133,12 +140,62 @@ export interface CommitmentShortfallSubject {
   readonly firm: boolean;
 }
 
+/** Confirmed call-off deliveries a supplier × material still has to ship (MR-6 BR-13). */
+export interface CallOffCoverInput {
+  readonly supplierId: string;
+  readonly materialCode: string;
+  /** Outstanding deliveries, in date order. */
+  readonly deliveries: readonly { readonly quantity: number; readonly date: string }[];
+}
+
+/** Where a supplier's declared stock falls short of a confirmed call-off (MR-6 BR-13). */
+export interface CallOffCoverGap {
+  /** The need date of the first delivery the stock cannot cover. */
+  readonly needDate: string;
+  /** Every outstanding delivery up to and including that one. */
+  readonly required: number;
+  /** Declared SOH plus in production due before the need date. */
+  readonly available: number;
+  readonly daysToNeed: number;
+}
+
+/**
+ * MR-6 BR-13 — the first confirmed call-off delivery due within the supplier's
+ * lead time (today to today + lead time) that the supplier's declared SOH plus
+ * its production due before the need date cannot cover, counting every
+ * outstanding delivery due up to then. Null when all are covered, when no lead
+ * time is on record (`leadTimeMissing` speaks), or when nothing falls due in
+ * the window. A supplier with no stock record has declared nothing: SOH 0.
+ */
+export function callOffCoverGap(
+  p: Pick<InventoryPosition, 'supplierSoh' | 'incoming' | 'leadTimeDays'>,
+  deliveries: CallOffCoverInput['deliveries'],
+  nowIso: string,
+): CallOffCoverGap | null {
+  if (!hasLeadTime(p.leadTimeDays)) return null;
+  const today = dayOf(nowIso);
+  let required = 0;
+  for (const d of [...deliveries].sort((a, b) => a.date.localeCompare(b.date))) {
+    required += d.quantity;
+    const daysToNeed = daysBetween(today, d.date);
+    if (daysToNeed > p.leadTimeDays) break;
+    if (daysToNeed < 0) continue;
+    const production = p.incoming
+      .filter((i) => i.source === 'production' && i.date !== null && i.date < d.date)
+      .reduce((s, i) => s + i.quantity, 0);
+    const available = (p.supplierSoh ?? 0) + production;
+    if (required > available) return { needDate: d.date, required, available, daysToNeed };
+  }
+  return null;
+}
+
 /** BR-01 — every alert condition active now. Positions must be PTI's unmasked view. */
 export function deriveAlertConditions(
   positions: readonly InventoryPosition[],
   plans: readonly CapacityPlan[],
   nowIso: string,
   commitmentShortfalls: readonly CommitmentShortfallSubject[] = [],
+  callOffSubjects: readonly CallOffCoverInput[] = [],
 ): AlertCondition[] {
   const out = new Map<string, AlertCondition>();
   type Risk = { riskClass: RiskClass; basis: RiskBasis };
@@ -204,6 +261,15 @@ export function deriveAlertConditions(
   // (CR-21): High when a Firm period is short, Medium for Trade-off only.
   for (const c of commitmentShortfalls) {
     push('commitmentBelowForecast', c, c.materialCode, c.materialLabel, byRule(c.firm ? 'high' : 'medium'));
+  }
+  // MR-6 BR-13 — a confirmed call-off inside the lead time the supplier's
+  // declared stock cannot cover. Class by CR-24 (the position's), impact at
+  // the need date.
+  for (const s of callOffSubjects) {
+    const p = positions.find((x) => x.supplierId === s.supplierId && x.materialCode === s.materialCode);
+    if (!p) continue;
+    const gap = callOffCoverGap(p, s.deliveries, nowIso);
+    if (gap) push('callOffNotCovered', p, p.materialCode, p.materialLabel, positionRisk(p), gap.daysToNeed);
   }
   return [...out.values()];
 }

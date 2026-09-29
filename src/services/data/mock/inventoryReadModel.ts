@@ -23,7 +23,7 @@ import {
   materialEntry,
   sdcClock,
 } from '../../sdc';
-import { callOffViews } from '../../transitions/callOffRules';
+import { callOffCoverSubjects, callOffViews } from '../../transitions/callOffRules';
 import { buildInventoryPositions } from '../../transitions/inventoryRules';
 import { buildCapacityPlans } from '../../transitions/capacityRules';
 import { commitmentAlertSubjects } from '../../transitions/forecastRules';
@@ -175,6 +175,8 @@ export function activeAlertConditions(nowIso: string = sdcClock.now()): AlertCon
     nowIso,
     // REQ-E08-05 BR-01 — commitments below forecast beyond tolerance (REQ-E06-03).
     commitmentAlertSubjects(allCommitmentLines()),
+    // MR-6 BR-13 (AR-13) — confirmed call-offs the supplier's stock must cover.
+    callOffCoverSubjects(callOffViews(callOffStore.all(), asnStore.all(), goodsReceiptStore.all(), nowIso)),
   );
 }
 

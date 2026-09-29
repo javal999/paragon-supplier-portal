@@ -312,6 +312,8 @@ export const inventoryCapacityEn: Record<string, string> = {
   'inv.alerts.rule.coverage': 'Supplier stock and incoming do not cover the next 30 days of demand',
   'inv.alerts.rule.commitmentBelowForecast': 'Committed quantity below forecast beyond tolerance',
   'inv.alerts.rule.leadTimeMissing': 'No supplier lead time on record: risk uses the day bands until the master data is fixed',
+  'inv.alerts.rule.callOffNotCovered':
+    'A confirmed call-off due within the lead time is larger than the supplier stock plus production due before the need date',
   'inv.alerts.openInventory': 'Open inventory',
   'inv.alerts.openCapacity': 'Open capacity',
   'inv.alerts.openCommitments': 'Open commitments & gaps',
@@ -339,6 +341,7 @@ export const inventoryCapacityEn: Record<string, string> = {
   'inv.alerts.sup.rule.ptiBelowRop': 'PTI stock is below the PTI reorder point',
   'inv.alerts.sup.rule.projectedStockOut': 'PTI stock runs out before the next incoming delivery',
   'inv.alerts.sup.rule.leadTimeMissing': 'PTI has no lead time on record for this material',
+  'inv.alerts.sup.rule.callOffNotCovered': 'A confirmed call-off is larger than your declared stock and production',
 
   'inv.group.MG-01': 'Surfactants and cleansing actives',
   'inv.group.MG-02': 'Emollients, oils and esters',
@@ -662,6 +665,8 @@ export const inventoryCapacityId: Record<string, string> = {
   'inv.alerts.rule.coverage': 'Stok dan kedatangan pemasok tidak menutup kebutuhan 30 hari ke depan',
   'inv.alerts.rule.commitmentBelowForecast': 'Kuantitas komitmen di bawah prakiraan melebihi toleransi',
   'inv.alerts.rule.leadTimeMissing': 'Waktu tunggu pemasok belum tercatat: risiko memakai pita hari sampai data induk diperbaiki',
+  'inv.alerts.rule.callOffNotCovered':
+    'Call-off terkonfirmasi yang jatuh tempo dalam waktu tunggu melebihi stok pemasok ditambah produksi yang selesai sebelum tanggal kebutuhan',
   'inv.alerts.openInventory': 'Buka stok',
   'inv.alerts.openCapacity': 'Buka kapasitas',
   'inv.alerts.openCommitments': 'Buka komitmen & selisih',
@@ -689,6 +694,7 @@ export const inventoryCapacityId: Record<string, string> = {
   'inv.alerts.sup.rule.ptiBelowRop': 'Stok PTI di bawah titik pemesanan ulang PTI',
   'inv.alerts.sup.rule.projectedStockOut': 'Stok PTI habis sebelum kedatangan berikutnya',
   'inv.alerts.sup.rule.leadTimeMissing': 'PTI belum mencatat waktu tunggu untuk material ini',
+  'inv.alerts.sup.rule.callOffNotCovered': 'Call-off terkonfirmasi melebihi stok dan produksi yang Anda laporkan',
 
   'inv.group.MG-01': 'Surfaktan dan bahan pembersih',
   'inv.group.MG-02': 'Emolien, minyak, dan ester',

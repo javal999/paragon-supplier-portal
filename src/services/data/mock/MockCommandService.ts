@@ -100,6 +100,8 @@ import {
   isAwaitingApproval,
   isCallOffDate,
   isConfirmedAndAccepted,
+  asnCallOffWarnings,
+  callOffViews,
   isPositiveQty,
   proposedDeliveries,
   umbrellaRefusal,
@@ -530,6 +532,12 @@ const mergeAsnLines = (
   return out;
 };
 
+/** MR-6 BR-10 — "last ASN for this call-off", when the payload says; else as stored. */
+const callOffFinalFrom = (payload: Record<string, unknown>, stored: boolean | undefined): { callOffFinal?: boolean } => {
+  const v = typeof payload.callOffFinal === 'boolean' ? payload.callOffFinal : stored;
+  return v === true ? { callOffFinal: true } : {};
+};
+
 /** BL-51 — the 3PL an ASN update leaves in place: named, cleared, or kept. */
 const threePlFromPayload = (payload: Record<string, unknown>, stored: string | undefined): string | undefined =>
   Object.prototype.hasOwnProperty.call(payload, 'threePlId') ? nonBlank(payload.threePlId) : stored;
@@ -549,7 +557,7 @@ const advanceShipNoticeTarget: CommandTarget = {
     // empty value (the carrier typed by name instead) clears it; one that says
     // nothing keeps the draft's.
     const threePlId = threePlFromPayload(payload, current?.threePlId);
-    asnStore.update(id, ({ threePlId: _stored, ...a }) => ({
+    asnStore.update(id, ({ threePlId: _stored, callOffFinal: storedFinal, ...a }) => ({
       ...a,
       ...(threePlId ? { threePlId } : {}),
       status: toState as AsnStatus,
@@ -562,8 +570,19 @@ const advanceShipNoticeTarget: CommandTarget = {
       ...(shipDate ? { shipDate } : {}),
       ...(nonBlank(payload.packingListFile) ? { packingListFile: nonBlank(payload.packingListFile) } : {}),
       ...(nonBlank(payload.overShipReason) ? { overShipReason: nonBlank(payload.overShipReason) } : {}),
+      ...callOffFinalFrom(payload, storedFinal),
       lineItems: entered ? mergeAsnLines(a.lineItems, entered, findPoByNumber(a.poReference)) : a.lineItems,
     }));
+    // MR-6 BR-12 — the call-off warnings the supplier was shown, kept on the
+    // submitted ASN for the record. Computed here from the merged record by the
+    // same rule the form shows (so a payload cannot choose them); never a block.
+    if (toState === 'Submitted') {
+      asnStore.update(id, ({ callOffWarnings: _prev, ...a }) => {
+        const views = callOffViews(callOffStore.all(), asnStore.all(), goodsReceiptStore.all(), sdcClock.now());
+        const warnings = asnCallOffWarnings(a, views, asnStore.all());
+        return warnings.length > 0 ? { ...a, callOffWarnings: warnings } : a;
+      });
+    }
   },
   // Creation scope: a supplier may draft an ASN only against its OWN PO.
   creationOwner: (payload) => findPoByNumber(String(payload.poReference))?.supplierId ?? null,
@@ -613,6 +632,7 @@ const advanceShipNoticeTarget: CommandTarget = {
       ...(nonBlank(payload.packingListFile) ? { packingListFile: nonBlank(payload.packingListFile) } : {}),
       ...(nonBlank(payload.overShipReason) ? { overShipReason: nonBlank(payload.overShipReason) } : {}),
       ...(callOff ? { callOffId: callOff.id } : {}),
+      ...(callOff ? callOffFinalFrom(payload, undefined) : {}),
     };
     asnStore.add(asn);
     return { entityId: asnNumber };

@@ -14,11 +14,13 @@
 
 import type {
   ASN,
+  AsnLineItem,
   CallOff,
   CallOffConfirmationKind,
   CallOffDelivery,
   CallOffStatus,
   CallOffType,
+  CallOffWarning,
   PurchaseOrder,
   POLineItem,
 } from '../data/types';
@@ -468,6 +470,203 @@ export function isAtRisk(c: CallOff, headsUps: readonly HeadsUp[]): boolean {
     }
   }
   return false;
+}
+
+// ── MR-6 BR-10 to BR-12 · the ASN against its call-off (warnings only) ─────
+
+/** The ASN fields the call-off check reads. `asnNumber` is '' for an ASN the wizard has not created yet. */
+export interface AsnForCallOffCheck extends Pick<ASN, 'asnNumber' | 'eta'>, Partial<Pick<ASN, 'shipDate' | 'callOffFinal' | 'callOffId' | 'poReference'>> {
+  /** The lines as entered: material and shipped quantity. */
+  readonly lineItems: readonly Pick<AsnLineItem, 'materialCode' | 'shippedQty'>[];
+}
+
+const shippedOf = (a: { readonly lineItems: readonly Pick<AsnLineItem, 'materialCode' | 'shippedQty'>[] }, materialCode: string): number =>
+  a.lineItems
+    .filter((l) => l.materialCode === materialCode && Number.isFinite(l.shippedQty))
+    .reduce((s, l) => s + l.shippedQty, 0);
+
+/** Order of shipment: ship date (else ETA), then ASN number. */
+const shipKey = (a: Pick<ASN, 'asnNumber' | 'eta'> & Partial<Pick<ASN, 'shipDate'>>): string =>
+  `${(a.shipDate ?? a.eta ?? '').slice(0, 10)}|${a.asnNumber}`;
+
+/**
+ * The call-off's ASNs shipped before this one: linked to it, shipped (a draft
+ * has not left, a cancelled one never will), and earlier by ship date then ASN
+ * number. An ASN not yet numbered (the wizard's) comes after all of them.
+ */
+function earlierAsns(callOffId: string, asns: readonly ASN[], asn: AsnForCallOffCheck): ASN[] {
+  const mine = shipKey(asn);
+  return asns.filter(
+    (a) =>
+      a.callOffId === callOffId &&
+      a.asnNumber !== asn.asnNumber &&
+      SHIPPED_ASN_STATES.includes(a.status) &&
+      (asn.asnNumber === '' || shipKey(a) < mine),
+  );
+}
+
+/**
+ * MR-6 BR-10 — how an ASN differs from the call-off it ships. PURE; warnings
+ * only, never a refusal (BR-12). The same function feeds the wizard's confirm
+ * step, the Submit drawer, the record stored at submit, and the planner's
+ * "Mismatch" marker, which recomputes it on read (edge case 6).
+ *
+ * · Quantity, per material: the call-off's shipped total (its earlier shipped
+ *   ASNs plus this one) against the agreed total — the approved deliveries,
+ *   so a call-off confirmed with changes or re-agreed is compared with what
+ *   was agreed, not the original release (edge case 5). Over by more than
+ *   `callOff.overPct` warns; under warns only once the ASN is marked final.
+ * · Date: the ETA against the agreed delivery this ASN fills (deliveries fill
+ *   in date order, as `isAtRisk` reads them). Earlier than the agreed date
+ *   minus `callOff.earlyAllowanceDays` warns; any day later warns.
+ * · Material: an ASN line whose material is not the call-off's.
+ */
+export function callOffWarnings(
+  callOff: CallOff,
+  asns: readonly ASN[],
+  asn: AsnForCallOffCheck,
+  // Read at every call (BL-32), as `checkTolerance` does.
+  tol: CallOffTolerance = callOffTolerance(),
+): CallOffWarning[] {
+  const out: CallOffWarning[] = [];
+  const callOffNumber = callOff.callOffNumber;
+  for (const l of asn.lineItems) {
+    if (l.materialCode !== callOff.materialCode) {
+      out.push({ kind: 'material', detail: { callOffNumber, materialCode: l.materialCode, expectedMaterial: callOff.materialCode } });
+    }
+  }
+  const prior = earlierAsns(callOff.id, asns, asn).reduce((s, a) => s + shippedOf(a, callOff.materialCode), 0);
+  const shipped = prior + shippedOf(asn, callOff.materialCode);
+  const slots = [...approvedDeliveries(callOff)].sort((a, b) => a.date.localeCompare(b.date));
+  const agreed = slots.reduce((s, d) => s + d.quantity, 0);
+  const diff = shipped - agreed;
+  // Exact comparison, as CR-05's: diff / agreed > pct / 100.
+  if (diff > 0 && diff * 100 > tol.overPct * agreed) {
+    out.push({ kind: 'qtyOver', detail: { callOffNumber, shipped, agreed, pct: pctOf(diff, agreed), limit: tol.overPct } });
+  }
+  if (diff < 0 && asn.callOffFinal === true) {
+    out.push({ kind: 'qtyUnder', detail: { callOffNumber, shipped, agreed, pct: pctOf(-diff, agreed) } });
+  }
+  const eta = (asn.eta ?? '').slice(0, 10);
+  if (isCallOffDate(eta) && slots.length > 0) {
+    let filled = 0;
+    const slot = slots.find((d) => (filled += d.quantity) > prior) ?? slots[slots.length - 1];
+    const days = daysBetween(slot.date, eta);
+    if (days > 0) {
+      out.push({ kind: 'late', detail: { callOffNumber, eta, agreedDate: slot.date, days } });
+    } else if (-days > tol.earlyDays) {
+      out.push({ kind: 'early', detail: { callOffNumber, eta, agreedDate: slot.date, days: -days, limit: tol.earlyDays } });
+    }
+  }
+  return out;
+}
+
+/**
+ * MR-6 BR-11 — an OPEN confirmed call-off: confirmed and accepted, and its
+ * delivery not yet settled (not due, dispatched or at risk — not delivered,
+ * late-received or missed).
+ */
+export function isOpenCallOff(v: Pick<CallOffView, 'callOff' | 'delivery'>): boolean {
+  return (
+    isConfirmedAndAccepted(v.callOff) &&
+    (v.delivery === 'notDue' || v.delivery === 'dispatched' || v.delivery === 'atRisk')
+  );
+}
+
+/**
+ * MR-6 BR-11 — "This PO line has an open call-off; link it?": the ASN names no
+ * call-off, ships the PO line's material, and the line has an open confirmed
+ * call-off. `callOffs` are the open ones (`isOpenCallOff`). A warning only.
+ */
+export function unlinkedCallOffWarning(
+  poLine: Pick<POLineItem, 'id' | 'materialCode'>,
+  callOffs: readonly CallOff[],
+  asn: AsnForCallOffCheck,
+): CallOffWarning | null {
+  if (asn.callOffId) return null;
+  if (shippedOf(asn, poLine.materialCode) <= 0) return null;
+  const open = callOffs.filter(
+    (c) =>
+      c.poLineId === poLine.id &&
+      (asn.poReference === undefined || c.poNumber === asn.poReference) &&
+      isConfirmedAndAccepted(c),
+  );
+  if (open.length === 0) return null;
+  return {
+    kind: 'unlinked',
+    detail: { materialCode: poLine.materialCode, callOffNumbers: open.map((c) => c.callOffNumber) },
+  };
+}
+
+/**
+ * Every call-off warning an ASN carries now: BR-10 against the call-off it
+ * names, else BR-11 for each PO line (read off the PO's call-offs) with an
+ * open confirmed call-off. An ASN naming a call-off that is gone warns nothing.
+ * `views` are the call-off projection (`callOffViews`), which is what knows
+ * whether a call-off is still open.
+ */
+export function asnCallOffWarnings(
+  asn: AsnForCallOffCheck,
+  views: readonly Pick<CallOffView, 'callOff' | 'delivery'>[],
+  asns: readonly ASN[],
+  tol: CallOffTolerance = callOffTolerance(),
+): CallOffWarning[] {
+  if (asn.callOffId) {
+    const c = views.find((v) => v.callOff.id === asn.callOffId)?.callOff;
+    return c ? callOffWarnings(c, asns, asn, tol) : [];
+  }
+  const open = views.filter(isOpenCallOff).map((v) => v.callOff);
+  const lines = new Map<string, Pick<POLineItem, 'id' | 'materialCode'>>();
+  for (const c of open) {
+    if (c.poNumber === asn.poReference && !lines.has(c.poLineId)) lines.set(c.poLineId, { id: c.poLineId, materialCode: c.materialCode });
+  }
+  return [...lines.values()]
+    .map((l) => unlinkedCallOffWarning(l, open, asn))
+    .filter((w): w is CallOffWarning => w !== null);
+}
+
+// ── MR-6 BR-13 · confirmed call-offs the supplier's stock must cover ────────
+
+/** A supplier × material's confirmed call-off deliveries still to ship, in date order. */
+export interface CallOffCoverSubject {
+  readonly supplierId: string;
+  readonly supplierName: string;
+  readonly materialCode: string;
+  readonly deliveries: readonly CallOffDelivery[];
+}
+
+/**
+ * MR-6 BR-13 — what the supplier's stock has to cover: every OPEN confirmed
+ * call-off's approved deliveries (`isOpenCallOff` — a call-off already
+ * received, received late or missed is not asked of stock), less what its
+ * heads-ups (linked shipped ASNs and dispatch notices) already carry, earliest
+ * first. Grouped per supplier × material, so two call-offs that each fit but
+ * together do not are seen together.
+ */
+export function callOffCoverSubjects(
+  views: readonly Pick<CallOffView, 'callOff' | 'delivery' | 'headsUps'>[],
+): CallOffCoverSubject[] {
+  const groups = new Map<string, { supplierId: string; supplierName: string; materialCode: string; deliveries: CallOffDelivery[] }>();
+  for (const v of views) {
+    if (!isOpenCallOff(v)) continue;
+    const c = v.callOff;
+    let sent = v.headsUps.reduce((s, h) => s + h.quantity, 0);
+    const outstanding: CallOffDelivery[] = [];
+    for (const d of [...approvedDeliveries(c)].sort((a, b) => a.date.localeCompare(b.date))) {
+      const take = Math.min(sent, d.quantity);
+      sent -= take;
+      if (d.quantity - take > 0) outstanding.push({ quantity: d.quantity - take, date: d.date });
+    }
+    if (outstanding.length === 0) continue;
+    const key = `${c.supplierId}|${c.materialCode}`;
+    const g = groups.get(key) ?? { supplierId: c.supplierId, supplierName: c.supplierName, materialCode: c.materialCode, deliveries: [] };
+    g.deliveries.push(...outstanding);
+    groups.set(key, g);
+  }
+  return [...groups.values()].map((g) => ({
+    ...g,
+    deliveries: [...g.deliveries].sort((a, b) => a.date.localeCompare(b.date)),
+  }));
 }
 
 // ── CR-06 to CR-08 · delivery result and OTIF (pure; reused by Phase 6) ─────

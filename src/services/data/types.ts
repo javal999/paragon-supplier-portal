@@ -983,7 +983,9 @@ export type InventoryAlertRule =
   /** REQ-E08-05 BR-01 — committed quantity below forecast beyond tolerance (REQ-E06-03). */
   | 'commitmentBelowForecast'
   /** CR-24 / BR-02 — no supplier lead time on record; the risk class fell back to CR-02. */
-  | 'leadTimeMissing';
+  | 'leadTimeMissing'
+  /** MR-6 BR-13 — a confirmed call-off due within the lead time is larger than declared SOH + production. */
+  | 'callOffNotCovered';
 
 export type RiskClass = 'high' | 'medium' | 'low';
 
@@ -1526,6 +1528,48 @@ export interface ASN {
   overShipReason?: string;
   /** The call-off this ASN ships (REQ-E09-03 BR-06). Absent for a PO-level ASN. */
   callOffId?: string;
+  /**
+   * MR-6 BR-10 — the supplier marks this ASN as the last one for its call-off.
+   * Only then is shipping less than the agreed quantity a warning.
+   */
+  callOffFinal?: boolean;
+  /**
+   * MR-6 BR-12 — the call-off warnings shown at submit, kept for the record.
+   * The planner's "Mismatch" marker is recomputed on read (edge case 6); this
+   * copy is never the current comparison.
+   */
+  callOffWarnings?: readonly CallOffWarning[];
+}
+
+/** MR-6 BR-10 / BR-11 — how an ASN differs from its call-off. */
+export type CallOffWarningKind = 'qtyOver' | 'qtyUnder' | 'early' | 'late' | 'material' | 'unlinked';
+
+/** The figures behind one call-off warning (only the ones its kind needs). */
+export interface CallOffWarningDetail {
+  /** The call-off the ASN ships. */
+  readonly callOffNumber?: string;
+  /** qtyOver / qtyUnder — the call-off's shipped total (earlier ASNs plus this one) and agreed total. */
+  readonly shipped?: number;
+  readonly agreed?: number;
+  /** qtyOver / qtyUnder — the difference as a percentage of the agreed total. */
+  readonly pct?: number;
+  /** qtyOver — `callOff.overPct`; early — `callOff.earlyAllowanceDays`. */
+  readonly limit?: number;
+  /** early / late — the ASN's ETA and the agreed date it was compared with. */
+  readonly eta?: string;
+  readonly agreedDate?: string;
+  readonly days?: number;
+  /** material / unlinked — the ASN line's material. */
+  readonly materialCode?: string;
+  /** material — the call-off's material. */
+  readonly expectedMaterial?: string;
+  /** unlinked — the open confirmed call-offs on the PO line. */
+  readonly callOffNumbers?: readonly string[];
+}
+
+export interface CallOffWarning {
+  readonly kind: CallOffWarningKind;
+  readonly detail: CallOffWarningDetail;
 }
 
 export interface CatalogItem {
