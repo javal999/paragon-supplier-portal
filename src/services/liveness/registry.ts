@@ -94,7 +94,15 @@ export type Capability =
   // BL-102 / REQ-E14-01 BR-07 — the forecast engine's input dataset. SYNTHETIC
   // until the Master Data Management team connects SAP (owner decision ENG-D1);
   // every engine result shown on a surface reads it.
-  | 'engineDataset';
+  | 'engineDataset'
+  // Material A2 (MR-5 BR-05, plan AR-19) — the SAP-copied material master
+  // fields (MRP controller, minimum remaining shelf life). Fixture copies until
+  // the MDM material feed runs; a column showing them carries this pill.
+  | 'materialMasterSap'
+  // Material B2 (MR-1 BR-01, d step 1) — the scheduled pull of an API
+  // supplier's stock every `stockSync.intervalHours`. Not running in the
+  // prototype (Stage F): "Next sync" is when it WOULD run.
+  | 'stockSyncSchedule';
 
 // The ONLY hand-authored fact here: which command entity/flow each capability
 // reads from (`null` = pure fixture, no lifecycle entity). The TIER is never
@@ -182,6 +190,10 @@ const CAPABILITY_BACKING: Record<Capability, string | null> = {
   dashboard: null,
   // No command writes engine inputs — they are a read-only feed.
   engineDataset: null,
+  // No command writes SAP-copied master fields — they are a read-only feed.
+  materialMasterSap: null,
+  // No scheduler exists — the Sync button is the only trigger (MR-1 d step 1).
+  stockSyncSchedule: null,
 };
 
 // — Gate-2: harvest gating (LIVENESS-DATASOURCE-01) —————————————————————————————
@@ -283,6 +295,19 @@ const HARVEST_GATED: Partial<Record<Capability, HarvestGate>> = {
   engineDataset: {
     readinessNoteKey: 'widget.honesty.awaitingMdmFeed',
     source: 'MDM SAP feed',
+  },
+  // Material A2 — the SAP-copied material fields are fixture values until the
+  // MDM material feed (BL-103) runs. Same note as the engine dataset: both
+  // wait on the same team's SAP feed.
+  materialMasterSap: {
+    readinessNoteKey: 'widget.honesty.awaitingMdmFeed',
+    source: 'MDM SAP material feed',
+  },
+  // Material B2 — the 2-hour scheduled pull needs Stage F and an API contract
+  // per supplier (MR-1 i). Until then "Next sync" is a projection, not a run.
+  stockSyncSchedule: {
+    readinessNoteKey: 'widget.honesty.awaitingStageF',
+    source: 'Stage F scheduled pull',
   },
 };
 

@@ -4,6 +4,8 @@ import { Link } from 'react-router-dom';
 import StatusPill from '../../components/ui-v2/StatusPill';
 import SidePanel from '../../components/ui-v2/SidePanel';
 import Data from '../../components/ui-v2/Data';
+import { PicCell, PicHeader } from '../materials/picDisplay';
+import { TradeNameBeside } from '../materials/tradeNameDisplay';
 import { useToast } from '../../hooks/useToast';
 import { useRefusalText } from '../../hooks/useRefusalText';
 import { formatDate, formatDateTime } from '../../lib/format';
@@ -17,7 +19,7 @@ import {
   stockFreshness,
   type StockFreshness,
 } from '../../services/transitions/inventoryRules';
-import type { CapacityConfirmationStatus } from '../../services/transitions/capacityRules';
+import type { CapacityConfirmationStatus, LtpCapacityLevel } from '../../services/transitions/capacityRules';
 import { useInventoryCommand, type InventoryCommandVars } from '../../services/query/commandHooks';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -109,8 +111,19 @@ export const LastUpdateCell: React.FC<{ position: InventoryPosition; nowIso: str
         )}
         {position.channel && <ChannelLabel channel={position.channel} />}
       </div>
+      <PullFailedNote position={position} />
     </div>
   );
+};
+
+/** Material B1 (owner ruling 2026-09-29) — a failed API pull after the figure: a warning, not staleness. */
+export const PullFailedNote: React.FC<{ position: Pick<InventoryPosition, 'lastPullFailedAt'> }> = ({ position }) => {
+  const { t } = useTranslation();
+  return position.lastPullFailedAt ? (
+    <div className="text-xs text-warning whitespace-nowrap" data-testid="inv-pull-failed">
+      {t('inv.freshness.pullFailed')} <Data>{formatDateTime(position.lastPullFailedAt)}</Data>
+    </div>
+  ) : null;
 };
 
 export const ChannelLabel: React.FC<{ channel: StockChannel }> = ({ channel }) => {
@@ -133,6 +146,23 @@ const CAPACITY_TONE: Record<CapacityConfirmationStatus, StatusTone> = {
 export const CapacityStatusPill: React.FC<{ status: CapacityConfirmationStatus }> = ({ status }) => {
   const { t } = useTranslation();
   return <StatusPill variant={CAPACITY_TONE[status]}>{t(`inv.capacity.status.${status}`)}</StatusPill>;
+};
+
+/** BL-133 (ENG-D18) — semantic colour for the LTP-against-capacity state only. */
+const LTP_TONE: Record<LtpCapacityLevel, StatusTone> = {
+  unconfirmed: 'neutral',
+  within: 'success',
+  needsAdditional: 'warning',
+  cannotSupply: 'danger',
+};
+
+export const LtpCheckPill: React.FC<{ level: LtpCapacityLevel; testId?: string }> = ({ level, testId }) => {
+  const { t } = useTranslation();
+  return (
+    <span data-testid={testId} data-level={level}>
+      <StatusPill variant={LTP_TONE[level]}>{t(`inv.ltp.level.${level}`)}</StatusPill>
+    </span>
+  );
 };
 
 /** A figure or the business wording for its absence. */
@@ -188,6 +218,18 @@ export const IncomingPanel: React.FC<{
           <p className="text-sm text-text-secondary">
             {position.materialLabel} · {position.supplierName}
           </p>
+          <TradeNameBeside
+            name={position.tradeName}
+            viewer={base === '/supplier' ? 'supplier' : 'pti'}
+            testId="incoming-panel-trade-name"
+          />
+          {/* Material C4 — who handles this material (MR-5 BR-03). */}
+          <div className="flex items-center gap-2 text-sm" data-testid="incoming-panel-pic">
+            <span className="text-label text-text-tertiary uppercase">
+              <PicHeader />
+            </span>
+            <PicCell value={position.mrpController} />
+          </div>
           <div className="relative w-full min-w-0 overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -244,7 +286,9 @@ function refusalKey(reason: string | undefined): string | null {
     ['NOT_SUPPLIED', 'inv.refusal.notSupplied'],
     ['batch total', 'inv.refusal.batchTotal'],
     ['UNKNOWN_MATERIAL', 'inv.refusal.unknownMaterial'],
-    ['action note', 'inv.refusal.actionNote'],
+    ['REASON_UNKNOWN', 'inv.refusal.closeReason'],
+    ['closeReason', 'inv.refusal.closeReason'],
+    ['NOTE_REQUIRED', 'inv.refusal.noteRequired'],
   ];
   return table.find(([needle]) => reason.includes(needle))?.[1] ?? null;
 }
@@ -320,6 +364,7 @@ export const InTransitReadOnly: React.FC<{ position: InventoryPosition; testId?:
       <span className={labelClass}>{t('inv.entry.inTransit', { uom: position.uom })}</span>
       <div className="px-3 py-2 text-sm rounded-md bg-bg-hover border border-border-subtle text-text-primary">
         <Data data-testid={`${testId}-qty`}>{qty(total)}</Data>
+        {/* BL-83 — a real space: the margin alone read "0nothing in transit". */}{' '}
         {refs.length > 0 ? (
           <span className="ml-2 text-xs text-text-secondary" data-testid={`${testId}-source`}>
             {t('inv.entry.inTransitFrom', { refs: refs.join(', ') })}

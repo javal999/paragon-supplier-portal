@@ -35,6 +35,7 @@ import {
   effectiveDeadline,
   filterInvitees,
   isPastDeadline,
+  notQualifiedInvitees,
   reliabilityScoreFor,
   rfiResponseScore,
   type InviteeCandidate,
@@ -54,10 +55,19 @@ import type {
 } from '../../sourcing/views';
 import { responseVersions } from '../../sourcing/responseVersions';
 import { awardStatusOf, cancellationOf, sapMarkOf, type AwardTrail } from '../../sourcing/awardStatus';
-import type { AwardLine, RfiResponse, RfpEvent, RfpResponse, RfqAwardRecord } from '../../sourcing/types';
+import type {
+  AwardLine,
+  ComplianceAtAward,
+  RfiResponse,
+  RfpEvent,
+  RfpResponse,
+  RfqAwardRecord,
+} from '../../sourcing/types';
 import { isRfpAward } from '../../sourcing/rfpAward';
 import { firmPricesInForce, parseRfpOptionRef, rfpOptionRef } from '../../sourcing/rfpFirmOffer';
 import { awardItemsOf, itemOfAwardLine } from '../../sourcing/awardShape';
+import { withOwnQualificationWarnings, type SourcingType } from '../../sourcing/sourcingType';
+import { eligibilityFor, eventSourcingType } from './eligibilityReadModel';
 import { rfqStore } from './stores/rfqStore';
 import { quotationStore } from './stores/quotationStore';
 import {
@@ -99,7 +109,10 @@ export const rfxSupplierOtif = (supplierId: string): number | null =>
 // ── REQ-E03-01 — the invitee search ─────────────────────────────────────────
 
 /** Every supplier master row as an invitee candidate, before any filter. */
-export function inviteeCandidates(materialCodes: readonly string[] = []): readonly InviteeCandidate[] {
+export function inviteeCandidates(
+  materialCodes: readonly string[] = [],
+  sourcingType?: SourcingType,
+): readonly InviteeCandidate[] {
   const now = rfxNow();
   return mockSuppliers.map((s) => {
     const measure = masterMeasure(s.id);
@@ -119,13 +132,23 @@ export function inviteeCandidates(materialCodes: readonly string[] = []): readon
       // is still a candidate (it can be invited and can quote), and the list
       // says it cannot be awarded and why.
       gate: supplierGate(s.id, materialCodes, now),
+      // Material G2 (MR-10 BR-05) — against the event's sourcing type, when known.
+      ...(sourcingType ? { eligibility: eligibilityFor(s.id, sourcingType, now) } : {}),
     };
   });
 }
 
-/** The candidates matching the buyer's active filters (BR-01, BR-04). */
-export const matchingInvitees = (filter: InviteeFilter): readonly InviteeCandidate[] =>
-  filterInvitees(inviteeCandidates(filter.materialCodes ?? []), filter);
+/**
+ * The candidates matching the buyer's active filters (BR-01, BR-04): the ones
+ * offered (`filterInvitees`), then — Material G2 — the Active ones not
+ * qualified for the event's sourcing type, marked `refused`, which the invitee
+ * step lists greyed out with their missing documents and never lets a buyer
+ * select.
+ */
+export const matchingInvitees = (filter: InviteeFilter): readonly InviteeCandidate[] => {
+  const all = inviteeCandidates(filter.materialCodes ?? [], filter.sourcingType);
+  return [...filterInvitees(all, filter), ...notQualifiedInvitees(all, filter)];
+};
 
 // ── CR-23 — the compliance gate ─────────────────────────────────────────────
 
@@ -148,7 +171,14 @@ export function supplierGate(supplierId: string, materialCodes: readonly string[
 /** CR-23 — the gate for every invitee and every bidder of one RFQ. */
 export function rfqGateViews(rfq: RFQ, nowIso: string): readonly RfqSupplierGateView[] {
   const ids = [...new Set([...rfq.invitedSupplierIds, ...currentQuotesFor(rfq.id).map((q) => q.supplierId)])];
-  return ids.map((supplierId) => ({ supplierId, ...rfqSupplierGate(rfq, supplierId, nowIso) }));
+  // Material G2 (MR-10 BR-07, edge case 1) — beside CR-23, not inside it: each
+  // supplier's qualification for the event's sourcing type on this date.
+  const type = eventSourcingType(rfq);
+  return ids.map((supplierId) => ({
+    supplierId,
+    ...rfqSupplierGate(rfq, supplierId, nowIso),
+    eligibility: eligibilityFor(supplierId, type, nowIso),
+  }));
 }
 
 /** CR-23 — one supplier against one sourcing event. */
@@ -180,31 +210,44 @@ const inviteeViews = (
   event: { responseDeadline: string; invitees: readonly { supplierId: string; deadline?: string }[] },
   responseFor: (supplierId: string) => InviteeResponseFacts | undefined,
   nowIso: string,
+  sourcingType: SourcingType,
+  readerSupplierId: string | null,
 ): readonly RfxInviteeView[] =>
-  event.invitees.map((invitee) => {
-    const deadline = effectiveDeadline(event.responseDeadline, event.invitees, invitee.supplierId);
-    const response = responseFor(invitee.supplierId);
-    // A Draft that holds only an acceptance (the confidentiality gate or the
-    // T&C) is not a started answer: reading it as "Draft" would tell the buyer
-    // the supplier had begun answering when it had only agreed to read.
-    const responseState: InviteeResponseState =
-      response?.status === 'Submitted'
-        ? 'submitted'
-        : response && !response.empty
-          ? 'draft'
-          : 'notStarted';
-    return {
-      supplierId: invitee.supplierId,
-      supplierName: rfxSupplierName(invitee.supplierId),
-      deadline,
-      responseState,
-      submittedAt: response?.submittedAt ?? null,
-      otif: rfxSupplierOtif(invitee.supplierId),
-      overdue: responseState !== 'submitted' && isPastDeadline(deadline, nowIso),
-      confidentialityAcceptedAt: response?.confidentialityAcceptedAt ?? null,
-      termsAcceptedAt: response?.termsAcceptedAt ?? null,
-    };
-  });
+  // RFX-R4 — a supplier reads its OWN invitee row and no other: not a rival's
+  // name, answer state, submission time, lateness, acceptances, OTIF or
+  // qualification. It has no business reading the roster it competes against
+  // (as `getInviteeCandidates`). The buyer (`readerSupplierId` null) reads every
+  // row. Narrowed here, in the read model, so no page is handed a row it must
+  // remember to hide.
+  event.invitees
+    .filter((invitee) => readerSupplierId === null || invitee.supplierId === readerSupplierId)
+    .map((invitee) => {
+      const deadline = effectiveDeadline(event.responseDeadline, event.invitees, invitee.supplierId);
+      const response = responseFor(invitee.supplierId);
+      // A Draft that holds only an acceptance (the confidentiality gate or the
+      // T&C) is not a started answer: reading it as "Draft" would tell the buyer
+      // the supplier had begun answering when it had only agreed to read.
+      const responseState: InviteeResponseState =
+        response?.status === 'Submitted'
+          ? 'submitted'
+          : response && !response.empty
+            ? 'draft'
+            : 'notStarted';
+      return {
+        supplierId: invitee.supplierId,
+        supplierName: rfxSupplierName(invitee.supplierId),
+        deadline,
+        responseState,
+        submittedAt: response?.submittedAt ?? null,
+        otif: rfxSupplierOtif(invitee.supplierId),
+        overdue: responseState !== 'submitted' && isPastDeadline(deadline, nowIso),
+        confidentialityAcceptedAt: response?.confidentialityAcceptedAt ?? null,
+        termsAcceptedAt: response?.termsAcceptedAt ?? null,
+        // Material G2 (MR-10 BR-07) — on the event's sourcing type, today. A
+        // supplier reads only its own row, so only its own qualification (MAT-R4).
+        eligibility: eligibilityFor(invitee.supplierId, sourcingType, nowIso),
+      };
+    });
 
 const rfiFacts = (r: RfiResponse | undefined): InviteeResponseFacts | undefined =>
   r && { ...r, empty: r.status !== 'Submitted' && r.answers.length === 0 && (r.documents ?? []).length === 0 };
@@ -244,7 +287,8 @@ export function rfiEventViews(nowIso: string, supplierId: string | null): readon
       const locked =
         !!supplierId && !!event.confidentiality && !visible[0]?.confidentialityAcceptedAt;
       return {
-        ...event,
+        // BL-147 (MAT-R4) — a supplier reads only its own publish warning.
+        ...withOwnQualificationWarnings(event, supplierId),
         ...(locked
           ? { description: undefined, questions: [], customSections: [], attachments: [], documentRequests: [] }
           : {}),
@@ -253,6 +297,8 @@ export function rfiEventViews(nowIso: string, supplierId: string | null): readon
           event,
           (sid) => rfiFacts(mine.find((r) => r.supplierId === sid)),
           nowIso,
+          eventSourcingType(event),
+          supplierId,
         ),
         // NR-1 BR-08 — the response is its latest version; every version rides
         // along. `visible` is already narrowed, so a supplier reads only its
@@ -285,7 +331,8 @@ export function rfpEventViews(nowIso: string, supplierId: string | null): readon
         !!supplierId && !!event.confidentiality && !visible[0]?.confidentialityAcceptedAt;
       const source = event.sourceRfiId ? rfiEventStore.get(event.sourceRfiId) : undefined;
       return {
-        ...event,
+        // BL-147 (MAT-R4) — a supplier reads only its own publish warning.
+        ...withOwnQualificationWarnings(event, supplierId),
         ...(locked
           ? {
               scope: '',
@@ -304,6 +351,8 @@ export function rfpEventViews(nowIso: string, supplierId: string | null): readon
           event,
           (sid) => rfpFacts(mine.find((r) => r.supplierId === sid)),
           nowIso,
+          eventSourcingType(event),
+          supplierId,
         ),
 
         responses: visible.map((r) => ({
@@ -543,6 +592,12 @@ function settledKeysOf(rfq: RFQ | undefined, lines: readonly AwardLine[]): strin
   return [...new Set(lines.flatMap((l) => itemOfAwardLine(items, l)?.key ?? []))];
 }
 
+/** Material B4 (MAT-R4) — the buyer reads every row; a supplier only its own. */
+const ownComplianceAtAward = (
+  rows: readonly ComplianceAtAward[],
+  supplierId: string | null,
+): readonly ComplianceAtAward[] => (supplierId ? rows.filter((r) => r.supplierId === supplierId) : rows);
+
 /** The awards a scope may read. A supplier reads only awards it is named on. */
 export function awardViews(supplierId: string | null): readonly AwardView[] {
   // RFx C2 (AR-08) — each award's status is derived from the appended trail.
@@ -574,11 +629,16 @@ export function awardViews(supplierId: string | null): readonly AwardView[] {
         });
       }
       return {
-        ...award,
+        // BL-147 (MAT-R4) — a supplier reads only its own award warning.
+        ...withOwnQualificationWarnings(award, supplierId),
         lines,
         notAwardedSupplierIds: supplierId
           ? award.notAwardedSupplierIds.filter((s) => s === supplierId)
           : award.notAwardedSupplierIds,
+        // Material B4 (MAT-R4) — a supplier reads only its own compliance at award.
+        ...(award.complianceAtAward
+          ? { complianceAtAward: ownComplianceAtAward(award.complianceAtAward, supplierId) }
+          : {}),
         rfqNumber: rfq?.rfqNumber ?? award.eventId,
         rfqTitle: rfq?.title ?? '',
         uom: rfq?.uom ?? '',
@@ -639,6 +699,7 @@ export function rfpAwardViews(supplierId: string | null): readonly RfpAwardView[
       const status = awardStatusOf(award.id, trail);
       const cancellation = cancellationOf(award.id, trail);
       const sapMark = sapMarkOf(award.id, trail);
+      const warnings = withOwnQualificationWarnings(award, supplierId).qualificationWarnings;
       const lines = (supplierId ? award.lines.filter((l) => l.supplierId === supplierId) : award.lines).map(
         (l) => ({
           ...l,
@@ -660,6 +721,12 @@ export function rfpAwardViews(supplierId: string | null): readonly RfpAwardView[
         status,
         ...(cancellation ? { withdrawnAt: cancellation.cancelledAt } : {}),
         ...(!supplierId ? { reason: award.reason } : {}),
+        // Material B4 (MAT-R4) — a supplier reads only its own compliance at award.
+        ...(award.complianceAtAward
+          ? { complianceAtAward: ownComplianceAtAward(award.complianceAtAward, supplierId) }
+          : {}),
+        // BL-147 (MAT-R4) — the vendors awarded below the level; a supplier its own row only.
+        ...(warnings ? { qualificationWarnings: warnings } : {}),
         ...(!supplierId && cancellation ? { cancellation } : {}),
         ...(!supplierId && sapMark ? { sapMark } : {}),
         ...(supplierId

@@ -4,7 +4,7 @@
 |---|---|
 | Product | Supplier Hub (Supplier Portal, "SC Collaboration Hub") |
 | Company | PT Paragon Technology and Innovation (PTI) |
-| Version | 0.11 draft, 2026-09-28 |
+| Version | 0.12 draft, 2026-09-29 (SC Hub Material stories US-80 to US-93) |
 | Scope | MVP (Phase 1, "Foundation to Transact"). Phase 2 and 3 appear only in section 9 |
 | Steering Committee | Yogi Sapta Prakoso (VP Supply Chain), Ilauddin (CFO), Risman Adnan (CTO) [C] |
 | Technology Product Owners | Achmad Fahlevi, Vergiant Yoga Perdana (Supply Chain); Indita Ramasaphira (FATL) [C] |
@@ -166,14 +166,15 @@ Acceptance criteria: TBD by the Foundation team. The hub **replaces PROCIO** for
   - A Material Planner grants and removes access without supplier approval.
   - Every change is logged.
 - US-23 [P]:
-  - Capacity is entered per material group per week.
+  - Capacity is entered per material group per week; since 2026-09-29 per planning group, which starts equal to the material group until Material Planning splits it (REQ-E08-04 BR-13 to BR-17).
   - A week below demand requires a reason.
   - The planner sees gap weeks highlighted, and can filter by supplier, material group, material and gaps only.
-  - Extra capacity the supplier could give on request is optional and labelled as such.
+  - Additional capacity the supplier could give on request is optional and labelled as such.
 - US-24 [P]:
   - Each alert rule fires on test data.
   - Every alert has a High, Medium, or Low class, judged against the supplier lead time (CR-24); day bands only where the lead time is missing, which raises its own alert.
   - A repeating condition creates no duplicate open alert.
+  - Within a class, the alert with the fewest days to impact comes first, and closing needs a reason from the list (REQ-E08-05 BR-07 to BR-11, owner 2026-09-29).
 
 #### Forecast Collaboration (E06)
 
@@ -332,6 +333,59 @@ US-70 to US-79 were US-RFX-01 to US-RFX-10 in `RFX-IMPROVEMENT-REQUIREMENTS-2026
   - The dashboard shows CFOT and OTIF per supplier for a chosen period.
   - OTIF is calculated per call-off (CR-06 to CR-08) and CFOT per PO.
   - The page states each KPI's definition (delivery window, early deliveries, grain, date change). Targets read "Baseline period" until a 3-month baseline is measured (owner 2026-09-21).
+
+#### SC Hub Material (E08, E07, E03)
+
+From the SC Hub Material meeting of 2026-09-23, decided by the owner on 2026-09-29 (`SC-HUB-MATERIAL-REQUIREMENTS-2026-09.md`) and built in PRs #84 to #93, #97 and #101 to #110.
+
+| ID | Story | Req | Status |
+|---|---|---|---|
+| US-80 | As a planner, I want each supplier's stock to be no older than its agreed cadence, so that a check on any weekday reads a figure I can act on | REQ-E08-02 BR-12 to BR-16 | [V] owner 2026-09-29; the 2-hour scheduled pull needs the backend |
+| US-81 | As a manual supplier, I want to see when my next update is due and which materials are still missing, so that I meet the Thursday deadline without guessing | REQ-E08-02 BR-14, BR-18 | [V] owner 2026-09-29; email reminders need the email service |
+| US-82 | As Procurement, I want to see how reliably each supplier updates its stock, so that update discipline counts when I choose who to award | REQ-E08-02 BR-23 to BR-27; REQ-E03-05 BR-18, BR-19 | [V] owner 2026-09-29 (MAT-D9) |
+| US-83 | As a supplier, I want to see my own update compliance and which weeks I missed, so that I know what hurts my score | REQ-E08-02 BR-23 to BR-25 | [V] owner 2026-09-29 |
+| US-84 | As a supplier, I want to record my trade name for each PTI material I supply, so that I recognise my products everywhere in the hub | REQ-E08-06 BR-01 to BR-03, BR-05 | [V] owner 2026-09-29 |
+| US-85 | As a planner, I want to search materials by any supplier's trade name, so that I find the PTI material a supplier is talking about | REQ-E08-06 BR-04, BR-06 | [V] owner 2026-09-29 |
+| US-86 | As a supplier, I want to pick the batch from my declared stock, so that the ASN carries the right batch and expiry without retyping | REQ-E07-04 BR-06 to BR-09 | [V] owner 2026-09-29 (MAT-D5) |
+| US-87 | As Quality, I want an ASN with less than the minimum shelf life left at arrival stopped before it ships unless I approve it, so that short-dated goods do not reach the warehouse by surprise | REQ-E07-04 BR-10 to BR-14 | [V] owner 2026-09-29 (MAT-D6, MAT-D16) |
+| US-88 | As a planner, I want to see when an ASN does not match its call-off, so that I can act before the goods arrive | REQ-E07-04 BR-15 to BR-18 | [V] owner 2026-09-29 |
+| US-89 | As a planner, I want an estimate of each supplier's stock on the day I plan, so that I can decide whether to raise a new PO or call-off without waiting for Thursday | REQ-E08-08 | [V] owner 2026-09-29 (MAT-D2, MAT-D10, MAT-D11) |
+| US-90 | As a planner, I want to fill in a figure the supplier has not given, so that the estimate still runs when data is missing | REQ-E08-08 BR-05, BR-06, BR-08 | [V] owner 2026-09-29 |
+| US-91 | As Procurement, I want a vendor's qualification to follow its documents automatically, so that nobody has to keep a status list up to date by hand | CE-12a to CE-12d, CE-12i | [V] owner 2026-09-29; document lists open (MAT-D15) |
+| US-92 | As a buyer, I want the invitee list to offer only vendors qualified for the event's type, so that I cannot invite a vendor that is not allowed to bid | CE-12e to CE-12g; REQ-E03-02 BR-19, REQ-E03-03 BR-26, REQ-E03-04 BR-17, REQ-E03-05 BR-20 | [V] owner 2026-09-29; warn-only while lists are placeholders (MAT-D19) |
+| US-93 | As a supplier, I want to see my qualification and the documents missing for the next level, so that I know what to send | CE-12c, CE-12d | [V] owner 2026-09-29 |
+
+US-80 to US-93 were US-MAT-01 to US-MAT-14 in `SC-HUB-MATERIAL-REQUIREMENTS-2026-09.md`, in the same order. They take the next free story numbers after US-79. The planning-group and alert-order changes (MR-8, MR-9) had no stories of their own; they extend US-23 and US-24.
+
+**Acceptance criteria.**
+- US-80:
+  - A material not updated by the cutoff is stale the moment the cutoff passes; an API supplier with no successful pull in 24 hours is stale; a failed pull alone does not make a figure stale.
+- US-81:
+  - The supplier sees its next cutoff, "n of m updated" and the missing materials, and a reminder on the working day before the cutoff and on the cutoff day.
+- US-82:
+  - The award panel shows each bidder's compliance pill; awarding any share to a supplier below 60% without a reason is refused by the verb; the award record keeps the compliance % at award.
+- US-83:
+  - The supplier's performance page shows its compliance % and a 13-week strip; a supplier assigned materials less than 4 weeks ago reads "No history".
+- US-84:
+  - A supplier can submit a name only for a material assigned to it; a rejection without a reason is refused; supplier A never sees supplier B's name.
+- US-85:
+  - "emulsens 200" finds "Emulsense 200"; an unapproved name is not found.
+- US-86:
+  - The batch list shows only declared batches with available quantity, and picking one fills the expiry; a typed batch shows "not in declared stock" to the planner.
+- US-87:
+  - A raw-material line with expiry 5 months after ETA is refused by the verb; with an approved exception the ASN is Submitted and counts as in transit; a planner cannot approve.
+- US-88:
+  - An ASN 10% over the call-off with a 5% tolerance can be submitted and shows "Mismatch" to the planner with the figures.
+- US-89:
+  - The worked example reads 8,300 available, 3,000 called off, 5,300 free to call off and 1,200 PTI inbound, and available stock and PTI inbound are never summed.
+- US-90:
+  - A planner input shows "Planner input" with who and when, and stops being used after the supplier's next stock record.
+- US-91:
+  - Verifying the last missing Preferred document moves the vendor to Preferred at once, and the history names the document.
+- US-92:
+  - A direct RFQ does not offer an Approved-only vendor once a real list is saved; while the lists are placeholders the vendor shows "Not qualified" and an award to it needs a reason.
+- US-93:
+  - The supplier sees its level and the documents missing for the next level.
 
 ### 2.3 Non-Goals (MVP)
 

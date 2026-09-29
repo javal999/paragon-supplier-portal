@@ -81,6 +81,7 @@ import {
 // GL-1 - the glossary destination for this surface's refusals.
 import GlossaryTermChip from '../components/ui-v2/GlossaryTermChip';
 import { useRefusalText } from '../hooks/useRefusalText';
+import { poLineQuantityText } from './orders/poLineQuantity';
 
 type TabKey = 'all' | 'action' | 'progress' | 'completed';
 // `adjusting` and `rejecting` are the other two answers to a PO (REQ-E07-02);
@@ -1063,7 +1064,7 @@ const SupplierOrders: React.FC = () => {
                           </div>
                         </td>
                         <td className="px-3 py-2 text-right text-text-secondary whitespace-nowrap">
-                          <Data>{li.quantity.toLocaleString()} {li.uom}</Data>
+                          <Data>{poLineQuantityText(t, li)}</Data>
                         </td>
                         {effectivePanelMode === 'editing' && (
                           <td className="px-3 py-2 text-right">
@@ -1199,7 +1200,7 @@ const SupplierOrders: React.FC = () => {
                           <span>{t('oc.adjust.lineToggle')}</span>
                           <Data>{li.materialCode}</Data>
                           <span className="text-text-tertiary">
-                            (<Data>{li.quantity.toLocaleString()} {li.uom}</Data>)
+                            (<Data>{poLineQuantityText(t, li)}</Data>)
                           </span>
                         </label>
                         {d.on && (

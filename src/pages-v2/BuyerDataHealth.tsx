@@ -249,7 +249,6 @@ const BuyerDataHealth: React.FC = () => {
                 <span className="text-sm text-text-primary">{t(`dh.step.${s.step}`)}</span>
                 <StatusPill variant={STEP_VARIANT[s.status]}>{t(`dh.steps.${s.status}`)}</StatusPill>
               </div>
-              {s.step === 'E14-07' && <div className="text-xs text-text-tertiary mt-1">{t('dh.steps.notBuilt')}</div>}
               {s.byFeeds.length > 0 && (
                 <div className="text-xs text-text-secondary mt-1" data-testid={`dh-step-by-${s.step}`}>
                   {t('dh.steps.by', { feeds: s.byFeeds.map((f) => t(`dh.feed.${f}`)).join(', ') })}

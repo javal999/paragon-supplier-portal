@@ -41,10 +41,12 @@ import ErrorState from '../components/ui-v2/ErrorState';
 import EmptyState from '../components/ui-v2/EmptyState';
 import type {
   CertType,
+  QualificationRequiredDoc,
   SupplierDocument,
   SupplierDocumentCategory as DocCategory,
 } from '../services/data/types';
-import { useDocuments } from '../services/query/hooks';
+import { useDocuments, useVendorQualifications } from '../services/query/hooks';
+import QualificationPanel from './qualification/QualificationPanel';
 import {
   daysUntil,
   documentExpiry,
@@ -99,6 +101,15 @@ const CERT_TYPES = [
   'ISO',
   'OTHER',
 ] as const satisfies readonly CertType[];
+
+/** The certificate type that files a declared document under a category (the
+ *  target's own mapping, inverted for the categories a declaration can reach). */
+const CERT_TYPE_FOR_CATEGORY: Partial<Record<DocCategory, CertType>> = {
+  'Halal Compliance': 'HALAL_BPJPH',
+  'BPOM Regulatory': 'BPOM',
+  Quality: 'ISO',
+  Other: 'OTHER',
+};
 
 const FIELD_LABEL = 'block text-label text-text-tertiary uppercase mb-1';
 const FIELD_INPUT =
@@ -250,6 +261,9 @@ const SupplierDocuments: React.FC = () => {
     label: t(c.labelKey),
   }));
   const docsQuery = useDocuments();
+  // Material G1 (MR-10 AC-06) — this supplier's own level, narrowed in the read model.
+  const qualifications = useVendorQualifications();
+  const myQualification = qualifications.data?.items.find((q) => q.supplierId === supplierId);
   const docs = docsQuery.data?.items ?? [];
   // ONE clock read for the whole page, captured once so every expiry figure on
   // screen is answered against the SAME instant. Deps are empty deliberately:
@@ -369,6 +383,14 @@ const SupplierDocuments: React.FC = () => {
     setPanelMode('new');
   };
 
+  // Material G1 — the "declare" link beside a missing qualification document
+  // opens the same declaration form, with the certificate type that files the
+  // document under the required category.
+  const openDeclareFor = (req: QualificationRequiredDoc) => {
+    openNewUpload();
+    setForm({ ...EMPTY_FORM, certType: req.certType ?? CERT_TYPE_FOR_CATEGORY[req.category] ?? 'OTHER' });
+  };
+
   const closePanel = () => {
     setPanelMode('closed');
     setActiveDoc(null);
@@ -477,6 +499,10 @@ const SupplierDocuments: React.FC = () => {
             only. Certificate validity here is authored, not verified. */}
         <ProvenanceMarker capability="supplierDocuments" className="ml-3 align-middle" />
       </PageMetaLine>
+
+      {myQualification ? (
+        <QualificationPanel row={myQualification} reader="supplier" onDeclare={openDeclareFor} />
+      ) : null}
 
       {refused.length > 0 && (
         <div

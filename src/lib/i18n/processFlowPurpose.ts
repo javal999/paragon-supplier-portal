@@ -79,6 +79,14 @@ export const processFlowPurposeEn: Record<string, string> = {
     'What turned up did not match what was announced. It follows from the receiving team’s finding, and it is the supplier’s cue that something needs explaining.',
   'processFlows.purpose.t_asn_resolve_discrepancy':
     'The mismatch has been talked through and settled, so the notice stops sitting in an unresolved pile.',
+  'processFlows.purpose.t_asn_request_exception':
+    'The goods would arrive with less shelf life left than Paragon accepts. The supplier says why they should come anyway and asks Quality to decide before anything ships.',
+  'processFlows.purpose.t_asn_approve_exception':
+    'Quality accepts the short-dated goods. The notice goes to the warehouse, and the goods are received into blocked stock.',
+  'processFlows.purpose.t_asn_reject_exception':
+    'Quality refuses the short-dated goods and says why. The notice goes back to the supplier to rework.',
+  'processFlows.purpose.t_asn_change_eta':
+    'The supplier moves the arrival later than the date Quality approved, so the shelf life left at arrival is shorter and Quality decides again.',
 
   // ── goodsReceipt ───────────────────────────────────────────────────────────
   'processFlows.purpose.entity.goodsReceipt':
@@ -355,6 +363,57 @@ export const processFlowPurposeEn: Record<string, string> = {
     'The logistics providers a supplier can choose on a shipping notice, each with the public page where its tracking numbers can be looked up. The hub only links to that page; it never reads a status from it.',
   'processFlows.purpose.t_threepl_set':
     'The hub administrator adds a logistics provider or changes one: what it is called, its public tracking address, and whether new shipping notices may still choose it. Every tracking link in the hub is built from this list, so each change is on record.',
+  // ── the supplier overlay (Material A1) ───────────────────────────────
+  'processFlows.purpose.entity.supplierOverlay':
+    'What the hub itself decides about a supplier, on top of the supplier master copied from SAP. Today that is how the supplier shares its stock: pulled straight from the supplier’s own ERP, or entered by template or by hand.',
+  'processFlows.purpose.t_supplier_set_update_mode':
+    'The hub administrator sets whether a supplier’s stock is pulled from its ERP or entered by the supplier, with an optional reason. The mode decides how often the stock must be updated and when it counts as out of date, so each change is on record with who made it and when.',
+  // ── the qualification lists (Material G1) ───────────────────────────
+  'processFlows.purpose.entity.qualificationRule':
+    'The documents a vendor must hold, valid and in date, to be Approved or Preferred. The hub works out every vendor’s level from these lists and its documents; nobody sets a level by hand.',
+  'processFlows.purpose.t_qualification_rule_set':
+    'Procurement and Quality set the documents one level requires. The Preferred list always includes every Approved document. A change moves vendors up or down at once, so each change is on record with who made it and when.',
+  // ── the sourcing type map (Material G2) ─────────────────────────────
+  'processFlows.purpose.entity.sourcingType':
+    'Whether a sourcing category or purchasing group is Direct or Indirect. An RFI, RFQ or RFP takes its type from its category, and the type decides which vendors may be invited and awarded: Direct needs Preferred, Indirect needs Approved or Preferred.',
+  'processFlows.purpose.t_sourcingtype_set':
+    'Procurement sets a category or purchasing group to Direct or Indirect. Events published earlier keep the type they were published with, so each change is on record with who made it and when.',
+  // ── planning groups (Material C5) ────────────────────────────────────
+  'processFlows.purpose.entity.planningGroup':
+    'A set of materials that share capacity at a supplier, under one SAP material group. Until Material Planning splits an SAP group it has one default planning group with the same materials, so capacity reads as it always did.',
+  'processFlows.purpose.t_planninggroup_create':
+    'Material Planning creates a new, empty planning group under one SAP material group, to split materials that run on different lines at the supplier. The change is on record with who made it and when.',
+  'processFlows.purpose.t_planninggroup_rename':
+    'Material Planning renames a planning group. Suppliers and planners see what it is called on capacity and alerts, so each change is on record.',
+  'processFlows.purpose.t_planninggroup_move_materials':
+    'Material Planning moves materials into a planning group of the same SAP material group. A material is in exactly one group, and the capacity already entered for the weeks ahead on both groups is marked for the supplier to enter again.',
+  'processFlows.purpose.t_planninggroup_retire':
+    'Material Planning retires a planning group once no material is left in it. A group is never deleted, so the capacity entered against it stays readable.',
+  // ── the MRP controller list (Material C4) ───────────────────────────
+  'processFlows.purpose.entity.mrpController':
+    'Who handles a material in planning. SAP gives each material an MRP controller code; the hub keeps who that code is: the planner or desk a supplier can ask for, and the hub users behind it.',
+  'processFlows.purpose.t_mrpcontroller_set':
+    'The hub administrator maps an MRP controller code to the planner or desk behind it and one or more hub users, or changes that mapping. Suppliers see who to contact on their stock, call-offs and shipping notices, so each change is on record with who made it and when.',
+  'processFlows.purpose.t_mrpcontroller_unmap':
+    'The hub administrator removes the mapping of an MRP controller code. Materials with that code then show the code only, and suppliers no longer see who handles them. The removal is on record with who made it and when.',
+  // ── supplier trade names (Material C2) ───────────────────────────────
+  'processFlows.purpose.entity.materialName':
+    'A supplier’s own name for a PTI material it supplies, with its own material number if it has one. Once Material Planning approves it, the name shows beside PTI’s description, so the supplier recognises its products and a planner can match what the supplier writes.',
+  'processFlows.purpose.t_materialname_submit':
+    'The supplier enters its trade name for a material assigned to it. The name waits for Material Planning, and the name in use stays until Material Planning accepts the new one.',
+  'processFlows.purpose.t_materialname_approve':
+    'Material Planning approves a supplier’s trade name. Each supplier has one name in use per material, so the earlier accepted name steps aside.',
+  'processFlows.purpose.t_materialname_reject':
+    'Material Planning rejects a supplier’s trade name with a reason, which the supplier sees and can answer with a new name.',
+  'processFlows.purpose.t_materialname_load':
+    'PTI loads accepted trade names in bulk from a file of PTI code, supplier, trade name and supplier material number. They take effect on load and are marked as loaded by PTI; a row that matches the name in use changes nothing.',
+  'processFlows.purpose.t_materialname_replace':
+    'A newer name for the same supplier and material takes the place of the earlier one, so only one name is in use at a time and only one waits for a decision.',
+  // ── the stock simulation's planner input (Material E1) ─────────────────
+  'processFlows.purpose.entity.simulationOverride':
+    'A figure the planner enters for the stock simulation where the supplier has not given one: stock on hand, a quantity in production with its completion date, or a shipment to the distributor with its arrival date. It is used until the supplier’s next stock update and never changes what the supplier reported.',
+  'processFlows.purpose.t_simulation_override_set':
+    'The planner enters a missing figure so the stock simulation can still run. The simulation shows it as planner input with who entered it and when, and drops it once the supplier sends a new stock update.',
 
   // ── the hub's rule values (BL-32) ────────────────────────────────────
   'processFlows.purpose.entity.hubSetting':
@@ -365,6 +424,12 @@ export const processFlowPurposeEn: Record<string, string> = {
     'One code on a reason list a supplier chooses from — why a purchase order line is adjusted or rejected, or why a commitment or capacity is below what was asked. A code is never deleted, so an old answer keeps its label.',
   'processFlows.purpose.t_reasoncode_set':
     'The hub administrator adds a reason code, renames it in English and Indonesian, retires it, or offers it again. A retired code is no longer offered on a new answer but still reads on the answers that carry it.',
+
+  // ── maximum stock (REQ-E06-04) ───────────────────────────────────────
+  'processFlows.purpose.entity.maxStock':
+    'The most a supplier may hold for PTI of one material, agreed with the supplier. The fixed stock reconcile caps what PTI may owe at it, and stock above it is the supplier\u2019s own.',
+  'processFlows.purpose.t_maxstock_set':
+    'Procurement sets, changes or clears the maximum stock of one supplier and material. Every change is kept with the value before it, so a settlement can be read against the maximum that stood at the time.',
 
   // ── supplierApplication ──────────────────────────────────────────────
   'processFlows.purpose.entity.supplierApplication':
@@ -441,7 +506,7 @@ export const processFlowPurposeEn: Record<string, string> = {
   'processFlows.purpose.entity.inventoryAlert':
     'A warning that stock or capacity is heading for a shortage, with a risk class, so the planner acts before material is missing.',
   'processFlows.purpose.t_inventoryalert_close':
-    'The planner closes an alert and notes what was done. The same condition does not raise it again until it has cleared and come back.',
+    'The planner closes an alert with a reason from the list, and a note when the reason is "Other". The same condition does not raise it again until it has cleared and come back.',
   'processFlows.purpose.entity.forecastVersion':
     'One version of PTI’s forecast for packaging (weekly) or raw material (monthly), with a zone per period. Every version is kept.',
   'processFlows.purpose.t_forecastversion_publish':
@@ -457,6 +522,10 @@ export const processFlowPurposeEn: Record<string, string> = {
     'The record that a Material Planner took a proposed change to an open purchase order into SAP. The hub never changes a purchase order itself, so this is how the reschedule report knows which of its proposals were acted on.',
   'processFlows.purpose.t_sapchange_mark':
     'The Material Planner marks a proposal to move, reduce or cancel part of a purchase order as taken to SAP, with the change and the time. It is refused while the forecast engine runs on simulated data, because a change made in SAP reaches the supplier.',
+  'processFlows.purpose.entity.forecastOverride':
+    'A Material Planning team member’s change to one week of one product’s demand forecast, with the old and new value, the reason, who and when. The latest change of a week is the one in force; the forecast bias page measures whether changes of each kind made the forecast better or worse.',
+  'processFlows.purpose.t_forecastoverride_record':
+    'The Material Planning team overrides the demand forecast for one product and week. Raising it above the engine’s forecast needs a reason code. It does not change material planning, which still runs on SAP’s plan.',
 
   // ── RFx management (REQ-E03-02 / REQ-E03-04 / REQ-E03-05) ─────────────────
   'processFlows.purpose.entity.rfiEvent':
@@ -585,6 +654,14 @@ export const processFlowPurposeId: Record<string, string> = {
     'Yang datang tidak sesuai dengan yang diberitahukan. Ini mengikuti temuan tim penerimaan, dan menjadi tanda bagi pemasok bahwa ada yang harus dijelaskan.',
   'processFlows.purpose.t_asn_resolve_discrepancy':
     'Ketidaksesuaiannya sudah dibicarakan dan dituntaskan, sehingga pemberitahuan ini tidak lagi menumpuk sebagai perkara terbuka.',
+  'processFlows.purpose.t_asn_request_exception':
+    'Barang akan tiba dengan sisa umur simpan lebih pendek dari yang diterima Paragon. Pemasok menjelaskan mengapa barang tetap perlu dikirim dan meminta Mutu memutuskan sebelum apa pun dikirim.',
+  'processFlows.purpose.t_asn_approve_exception':
+    'Mutu menerima barang yang umur simpannya pendek. Pemberitahuan diteruskan ke gudang, dan barang diterima ke stok terblokir.',
+  'processFlows.purpose.t_asn_reject_exception':
+    'Mutu menolak barang yang umur simpannya pendek dan menyebutkan alasannya. Pemberitahuan kembali ke pemasok untuk diperbaiki.',
+  'processFlows.purpose.t_asn_change_eta':
+    'Pemasok memundurkan tanggal tiba melewati tanggal yang disetujui Mutu, sehingga sisa umur simpan saat tiba lebih pendek dan Mutu memutuskan lagi.',
 
   // ── goodsReceipt ───────────────────────────────────────────────────────────
   'processFlows.purpose.entity.goodsReceipt':
@@ -855,6 +932,50 @@ export const processFlowPurposeId: Record<string, string> = {
     'Penyedia logistik yang dapat disebut pemasok pada pemberitahuan pengiriman, masing-masing dengan halaman publik tempat nomor pelacakannya dapat dicari. Hub hanya menautkan ke halaman itu; hub tidak pernah membaca status darinya.',
   'processFlows.purpose.t_threepl_set':
     'Administrator hub menambahkan atau mengubah penyedia logistik: namanya, alamat pelacakan publiknya, dan apakah pemberitahuan pengiriman baru masih boleh menyebutnya. Setiap tautan pelacakan di hub dibuat dari daftar ini, sehingga setiap perubahan tercatat.',
+  'processFlows.purpose.entity.supplierOverlay':
+    'Hal yang ditetapkan hub sendiri tentang seorang pemasok, di atas data induk pemasok yang disalin dari SAP. Saat ini: cara pemasok berbagi stoknya, ditarik dari sistemnya sendiri atau diisi lewat templat atau secara manual.',
+  'processFlows.purpose.t_supplier_set_update_mode':
+    'Administrator hub menetapkan apakah stok pemasok ditarik dari sistemnya atau diisi oleh pemasok, dengan alasan opsional. Cara ini menentukan seberapa sering stok harus diperbarui dan kapan dianggap usang, sehingga setiap perubahan tercatat beserta siapa dan kapan.',
+  'processFlows.purpose.entity.qualificationRule':
+    'Dokumen yang harus dimiliki vendor, sah dan belum kedaluwarsa, agar berstatus Approved atau Preferred. Hub menghitung level setiap vendor dari daftar ini dan dokumennya; tidak ada yang menetapkan level secara manual.',
+  'processFlows.purpose.t_qualification_rule_set':
+    'Procurement dan Quality menetapkan dokumen yang diwajibkan untuk satu level. Daftar Preferred selalu memuat setiap dokumen Approved. Perubahan langsung menaikkan atau menurunkan level vendor, sehingga setiap perubahan tercatat beserta siapa dan kapan.',
+  'processFlows.purpose.entity.sourcingType':
+    'Apakah sebuah kategori sourcing atau purchasing group termasuk Direct atau Indirect. RFI, RFQ, atau RFP mengambil jenisnya dari kategorinya, dan jenis itu menentukan vendor mana yang boleh diundang dan dimenangkan: Direct memerlukan Preferred, Indirect memerlukan Approved atau Preferred.',
+  'processFlows.purpose.t_sourcingtype_set':
+    'Procurement menetapkan kategori atau purchasing group sebagai Direct atau Indirect. Event yang sudah dipublikasikan tetap memakai jenis saat dipublikasikan, sehingga setiap perubahan tercatat beserta siapa dan kapan.',
+  'processFlows.purpose.entity.planningGroup':
+    'Sekumpulan material yang berbagi kapasitas di satu pemasok, di bawah satu grup material SAP. Sebelum Material Planning memecah sebuah grup SAP, grup itu memiliki satu grup perencanaan bawaan dengan material yang sama, sehingga kapasitas terbaca seperti sebelumnya.',
+  'processFlows.purpose.t_planninggroup_create':
+    'Material Planning membuat grup perencanaan baru yang kosong di bawah satu grup material SAP, untuk memisahkan material yang diproduksi di lini berbeda di pemasok. Perubahan tercatat beserta siapa dan kapan.',
+  'processFlows.purpose.t_planninggroup_rename':
+    'Material Planning mengganti nama grup perencanaan. Nama inilah yang dilihat pemasok dan perencana pada kapasitas dan peringatan, sehingga setiap perubahan tercatat.',
+  'processFlows.purpose.t_planninggroup_move_materials':
+    'Material Planning memindahkan material ke grup perencanaan dari grup material SAP yang sama. Satu material hanya berada di satu grup, dan kapasitas yang sudah diisi untuk minggu-minggu mendatang pada kedua grup ditandai agar pemasok mengisinya kembali.',
+  'processFlows.purpose.t_planninggroup_retire':
+    'Material Planning menonaktifkan grup perencanaan setelah tidak ada material tersisa di dalamnya. Grup tidak pernah dihapus, sehingga kapasitas yang pernah diisi tetap dapat dibaca.',
+  'processFlows.purpose.entity.mrpController':
+    'Siapa yang menangani suatu material di perencanaan. SAP memberi setiap material kode MRP controller; hub menyimpan siapa pemilik kode itu: nama yang dapat dihubungi pemasok, dan pengguna hub di baliknya.',
+  'processFlows.purpose.t_mrpcontroller_set':
+    'Administrator hub memetakan kode MRP controller ke sebuah nama dan satu atau lebih pengguna hub, atau mengubah pemetaan itu. Pemasok melihat nama itu pada stok, call-off, dan pemberitahuan pengirimannya, sehingga setiap perubahan tercatat beserta siapa dan kapan.',
+  'processFlows.purpose.t_mrpcontroller_unmap':
+    'Administrator hub menghapus pemetaan sebuah kode MRP controller. Material dengan kode itu kemudian hanya menampilkan kodenya, dan pemasok tidak melihat nama untuknya. Penghapusan itu tercatat beserta siapa dan kapan.',
+  'processFlows.purpose.entity.materialName':
+    'Nama dagang pemasok untuk material PTI yang dipasoknya, beserta nomor materialnya sendiri bila ada. Setelah disetujui Material Planning, nama itu tampil di samping deskripsi PTI, sehingga pemasok mengenali produknya dan perencana dapat mencocokkan tulisan pemasok.',
+  'processFlows.purpose.t_materialname_submit':
+    'Pemasok mengisi nama dagangnya untuk material yang ditugaskan kepadanya. Nama itu menunggu Material Planning, dan nama yang sudah disetujui tetap dipakai sampai nama baru disetujui.',
+  'processFlows.purpose.t_materialname_approve':
+    'Material Planning menyetujui nama dagang pemasok. Setiap pemasok memiliki paling banyak satu nama yang disetujui per material, sehingga nama lama yang disetujui digantikan.',
+  'processFlows.purpose.t_materialname_reject':
+    'Material Planning menolak nama dagang pemasok dengan alasan, yang dilihat pemasok dan dapat dijawab dengan nama baru.',
+  'processFlows.purpose.t_materialname_load':
+    'PTI memuat nama dagang yang disetujui secara massal dari berkas berisi kode PTI, pemasok, nama dagang, dan nomor material pemasok. Nama itu langsung disetujui dan ditandai dimuat oleh PTI; baris yang sama dengan nama yang disetujui tidak mengubah apa pun.',
+  'processFlows.purpose.t_materialname_replace':
+    'Nama yang lebih baru untuk pemasok dan material yang sama menggantikan nama sebelumnya, sehingga hanya satu nama yang disetujui dan hanya satu yang menunggu persetujuan.',
+  'processFlows.purpose.entity.simulationOverride':
+    'Angka yang diisi perencana untuk simulasi stok bila pemasok belum memberikannya: stok di tangan, jumlah dalam produksi beserta tanggal selesainya, atau kiriman ke distributor beserta tanggal tibanya. Angka ini dipakai sampai pembaruan stok berikutnya dari pemasok dan tidak pernah mengubah data yang dilaporkan pemasok.',
+  'processFlows.purpose.t_simulation_override_set':
+    'Perencana mengisi angka yang belum ada agar simulasi stok tetap berjalan. Simulasi menandainya sebagai masukan perencana beserta siapa dan kapan, lalu membuangnya saat pemasok mengirim pembaruan stok baru.',
 
   'processFlows.purpose.entity.hubSetting':
     'Satu nilai yang menjadi pembanding aturan hub: toleransi, tenggat, ambang peringatan, atau periode data usang. Nilai ini menentukan apa yang diterima tanpa diperiksa orang, sehingga hanya administrator hub yang dapat mengubahnya dan setiap perubahan tercatat.',
@@ -864,6 +985,12 @@ export const processFlowPurposeId: Record<string, string> = {
     'Satu kode pada daftar alasan yang dipilih pemasok — mengapa baris pesanan pembelian disesuaikan atau ditolak, atau mengapa komitmen atau kapasitas di bawah yang diminta. Kode tidak pernah dihapus, sehingga jawaban lama tetap berlabel.',
   'processFlows.purpose.t_reasoncode_set':
     'Administrator hub menambahkan kode alasan, mengganti namanya dalam bahasa Inggris dan Indonesia, menghentikannya, atau menawarkannya lagi. Kode yang dihentikan tidak ditawarkan lagi pada jawaban baru tetapi tetap terbaca pada jawaban yang memakainya.',
+
+  // ── maximum stock (REQ-E06-04) ───────────────────────────────────────
+  'processFlows.purpose.entity.maxStock':
+    'Jumlah terbanyak yang boleh dipegang pemasok untuk PTI atas satu material, sesuai kesepakatan dengan pemasok. Rekonsiliasi stok tetap membatasi kewajiban PTI sampai angka ini, dan stok di atasnya adalah milik pemasok.',
+  'processFlows.purpose.t_maxstock_set':
+    'Procurement menetapkan, mengubah, atau menghapus stok maksimum satu pemasok dan material. Setiap perubahan disimpan beserta nilai sebelumnya, sehingga penyelesaian dapat dibaca terhadap stok maksimum yang berlaku saat itu.',
 
   // ── supplierApplication ──────────────────────────────────────────────
   'processFlows.purpose.entity.supplierApplication':
@@ -940,7 +1067,7 @@ export const processFlowPurposeId: Record<string, string> = {
   'processFlows.purpose.entity.inventoryAlert':
     'Peringatan bahwa stok atau kapasitas menuju kekurangan, dengan kelas risiko, agar perencana bertindak sebelum material habis.',
   'processFlows.purpose.t_inventoryalert_close':
-    'Perencana menutup peringatan dan mencatat tindakan yang diambil. Kondisi yang sama tidak memunculkannya lagi sampai kondisi itu pulih lalu terjadi lagi.',
+    'Perencana menutup peringatan dengan alasan dari daftar, dan catatan bila alasannya "Lainnya". Kondisi yang sama tidak memunculkannya lagi sampai kondisi itu pulih lalu terjadi lagi.',
   'processFlows.purpose.entity.forecastVersion':
     'Satu versi prakiraan PTI yang diterbitkan untuk kemasan (mingguan) atau bahan baku (bulanan), dengan zona per periode. Setiap versi disimpan.',
   'processFlows.purpose.t_forecastversion_publish':
@@ -956,6 +1083,10 @@ export const processFlowPurposeId: Record<string, string> = {
     'Catatan bahwa Perencana Material membawa usulan perubahan baris pesanan pembelian terbuka ke SAP. Hub tidak pernah mengubah pesanan pembelian sendiri, jadi dengan catatan ini laporan penjadwalan ulang tahu usulan mana yang sudah ditindaklanjuti.',
   'processFlows.purpose.t_sapchange_mark':
     'Perencana Material menandai usulan untuk memindahkan, mengurangi, atau membatalkan baris pesanan pembelian sebagai sudah dibawa ke SAP, beserta perubahan dan waktunya. Ditolak selama mesin prakiraan memakai data simulasi, karena perubahan di SAP sampai ke pemasok.',
+  'processFlows.purpose.entity.forecastOverride':
+    'Perubahan oleh anggota tim Perencanaan Material pada satu minggu prakiraan permintaan satu produk, beserta nilai lama dan baru, alasan, siapa, dan kapan. Perubahan terakhir pada suatu minggu adalah yang berlaku; halaman bias prakiraan mengukur apakah perubahan tiap jenis membuat prakiraan lebih baik atau lebih buruk.',
+  'processFlows.purpose.t_forecastoverride_record':
+    'Tim Perencanaan Material menyesuaikan prakiraan permintaan satu produk untuk satu minggu. Menaikkannya di atas prakiraan mesin memerlukan kode alasan. Ini tidak mengubah perencanaan material, yang tetap memakai rencana SAP.',
 
   // ── RFx (REQ-E03-02 / REQ-E03-04 / REQ-E03-05) ────────────────────────────
   'processFlows.purpose.entity.rfiEvent':

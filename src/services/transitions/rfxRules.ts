@@ -35,6 +35,7 @@ import { BID_CURRENCIES } from '../../lib/currencyPolicy';
 import { isCalendarDate } from '../../lib/workingCalendar';
 import { isAttachmentMeta } from '../attachments/sessionAttachments';
 import type { GateResult } from '../sourcing/complianceGate';
+import type { BiddingEligibility, SourcingType } from '../sourcing/sourcingType';
 import {
   matchesSupplierFilters,
   type CertValidity,
@@ -79,6 +80,13 @@ export interface InviteeCandidate {
    * list shows it cannot be awarded and why. Absent = not computed.
    */
   readonly gate?: GateResult;
+  /**
+   * Material G2 (MR-10 BR-05) — the vendor against the event's sourcing type,
+   * computed when the filter names one. `refused` is not offered (the step
+   * lists it greyed, with its missing documents); `warn` is offered and marked
+   * (placeholder lists, owner ruling 2026-09-29). Absent = not computed.
+   */
+  readonly eligibility?: BiddingEligibility;
 }
 
 /**
@@ -94,6 +102,13 @@ export interface InviteeFilter extends SupplierFilters {
    * certificates must cover.
    */
   readonly materialCodes?: readonly string[];
+  /**
+   * Material G2 — the event's sourcing type. NOT a narrowing filter of its
+   * own: it decides which Active vendors are qualified to be offered
+   * (`filterInvitees`) and which are listed as not qualified
+   * (`notQualifiedInvitees`).
+   */
+  readonly sourcingType?: SourcingType;
 }
 
 /**
@@ -108,13 +123,29 @@ export function filterInvitees(
   candidates: readonly InviteeCandidate[],
   filter: InviteeFilter = {},
 ): readonly InviteeCandidate[] {
-  return candidates
+  return matchingActive(candidates, filter).filter((c) => c.eligibility?.state !== 'refused');
+}
+
+/** Active candidates matching the buyer's filters, before qualification. */
+const matchingActive = (candidates: readonly InviteeCandidate[], filter: InviteeFilter): readonly InviteeCandidate[] =>
+  candidates
     .filter((c) => isSelectableSupplier(c.status))
     .filter((c) => (filter.category ? c.category === filter.category : true))
     .filter((c) => (filter.purchasingGroup ? c.purchasingGroup === filter.purchasingGroup : true))
     // BL-52 — certificate validity, then performance band, then country (BR-05).
     .filter((c) => matchesSupplierFilters(c, filter));
-}
+
+/**
+ * Material G2 (MR-10 BR-05, section d step 2) — the Active candidates the
+ * filters match that are NOT qualified for the event's sourcing type against
+ * a real list. The invitee step lists them greyed out, with the documents
+ * they lack; they are never selectable. Empty while the lists are
+ * placeholders (warned vendors stay in `filterInvitees`).
+ */
+export const notQualifiedInvitees = (
+  candidates: readonly InviteeCandidate[],
+  filter: InviteeFilter = {},
+): readonly InviteeCandidate[] => matchingActive(candidates, filter).filter((c) => c.eligibility?.state === 'refused');
 
 // ── CR-15 — the reliability axis from OTIF ──────────────────────────────────
 

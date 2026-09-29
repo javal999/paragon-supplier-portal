@@ -2,7 +2,8 @@
 // Inventory and capacity alert — REQ-E08-05.
 //
 // An alert is OPEN while its derived condition holds and nobody has closed it
-// (BR-01, BR-05). The planner closes it with an action note. `entityId` is the
+// (BR-01, BR-05). The planner closes it with a reason from the `alertClose`
+// list, and a note when the reason is "Other" (MR-9 BR-04). `entityId` is the
 // alert key (rule × material or group × supplier), so one condition is one
 // alert. A closed alert reopens only when its condition clears and recurs —
 // that is derived from the closure ledger, not a verb, so no state here moves
@@ -26,8 +27,9 @@ export const inventoryAlertFlow: FlowDefinition = {
       to: 'Closed',
       trigger: 'user',
       requiredRole: 'inventoryalert:close',
-      requiredFields: ['actionNote'],
-      policyHooks: [POLICY_HOOKS.ALERT_ACTION_NOTE_AUTHORED],
+      // MR-9 BR-04 (AR-14) — a reason is required; the note only for "Other".
+      requiredFields: ['closeReason'],
+      policyHooks: [POLICY_HOOKS.ALERT_CLOSE_REASON_GIVEN],
       surfaceable: { surfaced: true },
       version: 1,
     },

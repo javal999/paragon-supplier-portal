@@ -90,6 +90,8 @@ import { inventoryCapacityEn, inventoryCapacityId } from './i18n/inventoryCapaci
 import { forecastCollaborationEn, forecastCollaborationId } from './i18n/forecastCollaboration';
 // — REQ-E14-02 supplier reliability and PTI plan-change measures (BL-99) —
 import { reliabilityEn, reliabilityId } from './i18n/reliability';
+// — REQ-E06-04 fixed stock reconcile (ENG-D21, BL-134) —
+import { fixedStockReconcileEn, fixedStockReconcileId } from './i18n/fixedStockReconcile';
 // — REQ-E14-03 material requirement —
 import { materialRequirementEn, materialRequirementId } from './i18n/materialRequirement';
 // — REQ-E14-04 safety stock, safety lead time and reorder point —
@@ -98,6 +100,9 @@ import { orderPlanEn, orderPlanId } from './i18n/orderPlan';
 import { rescheduleEn, rescheduleId } from './i18n/reschedule';
 import { stabiliseEn, stabiliseId } from './i18n/stabilise';
 import { dataHealthEn, dataHealthId } from './i18n/dataHealth';
+import { demandForecastEn, demandForecastId } from './i18n/demandForecast';
+import { forecastBiasEn, forecastBiasId } from './i18n/forecastBias';
+import { modelBacktestEn, modelBacktestId } from './i18n/modelBacktest';
 // — Phase 6a RFx management (REQ-E03-01 to REQ-E03-05) —
 import { rfxEn, rfxId } from './i18n/rfx';
 // — RFx authoring (RFI/RFP batch, 2026-09-21) and session-held attachments —
@@ -110,6 +115,19 @@ import { rfqCompareEn, rfqCompareId } from './i18n/rfqCompare';
 import { rfxFilesEn, rfxFilesId } from './i18n/rfxFiles';
 // — BL-51 3PL tracking links (REQ-E07-04 BR-05) —
 import { threePlEn, threePlId } from './i18n/threePl';
+// — Material A1 administration · suppliers (MR-1 BR-02) —
+import { adminSuppliersEn, adminSuppliersId } from './i18n/adminSuppliers';
+// — Material G1 vendor qualification (MR-10) —
+import { qualificationEn, qualificationId } from './i18n/qualification';
+// — Material G2 sourcing type and bidding eligibility (MR-10 BR-05 to BR-07) —
+import { biddingEligibilityEn, biddingEligibilityId } from './i18n/biddingEligibility';
+// — Material C5 administration · planning groups (MR-8) —
+import { adminPlanningGroupsEn, adminPlanningGroupsId } from './i18n/adminPlanningGroups';
+// — Material C4 the MRP controller (PIC) on material surfaces (MR-5) —
+import { mrpControllerEn, mrpControllerId } from './i18n/mrpController';
+import { materialNamesEn, materialNamesId } from './i18n/materialNames';
+// — Material E2 the stock simulation page (MR-7) —
+import { stockSimulationEn, stockSimulationId } from './i18n/stockSimulation';
 // — BL-32 the administrator's rule values (REQ-E08-05 BR-03, §3.6) —
 import { adminSettingsEn, adminSettingsId } from './i18n/adminSettings';
 import { adminReasonsEn, adminReasonsId } from './i18n/adminReasons';
@@ -200,12 +218,16 @@ export const resources = {
       ...inventoryCapacityEn,
       ...forecastCollaborationEn,
       ...reliabilityEn,
+      ...fixedStockReconcileEn,
       ...materialRequirementEn,
       ...safetyStockEn,
       ...orderPlanEn,
       ...rescheduleEn,
       ...stabiliseEn,
       ...dataHealthEn,
+      ...demandForecastEn,
+      ...forecastBiasEn,
+      ...modelBacktestEn,
       ...rfxEn,
       ...rfxAuthoringEn,
       ...rfqAuthoringEn,
@@ -213,6 +235,13 @@ export const resources = {
       ...rfqCompareEn,
       ...rfxFilesEn,
       ...threePlEn,
+      ...adminSuppliersEn,
+      ...qualificationEn,
+      ...biddingEligibilityEn,
+      ...adminPlanningGroupsEn,
+      ...mrpControllerEn,
+      ...materialNamesEn,
+      ...stockSimulationEn,
       ...adminSettingsEn,
       ...adminReasonsEn,
       ...supplierFiltersEn,
@@ -675,12 +704,16 @@ export const resources = {
       ...inventoryCapacityId,
       ...forecastCollaborationId,
       ...reliabilityId,
+      ...fixedStockReconcileId,
       ...materialRequirementId,
       ...safetyStockId,
       ...orderPlanId,
       ...rescheduleId,
       ...stabiliseId,
       ...dataHealthId,
+      ...demandForecastId,
+      ...forecastBiasId,
+      ...modelBacktestId,
       ...rfxId,
       ...rfxAuthoringId,
       ...rfqAuthoringId,
@@ -688,6 +721,13 @@ export const resources = {
       ...rfqCompareId,
       ...rfxFilesId,
       ...threePlId,
+      ...adminSuppliersId,
+      ...qualificationId,
+      ...biddingEligibilityId,
+      ...adminPlanningGroupsId,
+      ...mrpControllerId,
+      ...materialNamesId,
+      ...stockSimulationId,
       ...adminSettingsId,
       ...adminReasonsId,
       ...supplierFiltersId,

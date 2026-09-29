@@ -22,6 +22,7 @@ import {
 } from '../../services/sourcing/awardStatus';
 import { qty } from './rfxDisplay';
 import { itemLabel } from './AwardPanel';
+import { QualificationWarningsNote } from './eligibilityDisplay';
 
 // ────────────────────────────────────────────────────────────────────────────
 // THE RECORDED AWARDS OF ONE EVENT (RFx C3; NR-3 BR-09 to BR-11). Every award
@@ -134,6 +135,23 @@ function AwardRecordCard<A extends AnyAwardView>(props: RecordListProps<A> & { a
         </p>
       )}
       {!!award.reason && <p className="text-sm text-text-secondary">{award.reason}</p>}
+      {/* BL-147 — the vendors awarded below the level on placeholder rules, as recorded. */}
+      <QualificationWarningsNote
+        kind="awarded"
+        warnings={award.qualificationWarnings}
+        supplierName={supplierName}
+        {...(award.reason ? { reason: award.reason } : {})}
+        testId={`award-qualification-${award.id}`}
+      />
+      {/* Material B4 (MR-2 BR-06, AC-05) — the compliance kept as shown at award. */}
+      {!!award.complianceAtAward && award.complianceAtAward.length > 0 && (
+        <p className="text-xs text-text-tertiary" data-testid={`award-compliance-at-${award.id}`}>
+          {t('rfqCompare.award.complianceAtAward')}:{' '}
+          {award.complianceAtAward
+            .map((c) => `${supplierName(c.supplierId)} ${c.pct === null ? t('rfx.noHistory') : `${c.pct}%`}`)
+            .join(', ')}
+        </p>
+      )}
       {props.departed(award) && (
         <p className="text-sm text-warning-hover" data-testid="award-departed">
           {t('rfx.award.departed')}

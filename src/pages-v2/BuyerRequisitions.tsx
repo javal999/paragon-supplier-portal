@@ -35,7 +35,8 @@ import EmptyState from '../components/ui-v2/EmptyState';
 import { useToast } from '../hooks/useToast';
 import { useTranslation } from 'react-i18next';
 import { useEnumLabel } from '../hooks/useEnumLabel';
-import { useRequisitions } from '../services/query/hooks';
+import { useRequisitions, useSuppliers } from '../services/query/hooks';
+import { materialEntry } from '../services/sdc/materialMaster';
 import {
   usePurchaseRequisitionCreate,
   useRequisitionApprove,
@@ -317,6 +318,35 @@ const BuyerRequisitions: React.FC = () => {
     // an owner nobody can be.
     sourcing: 'rfq:create',
   } as const);
+
+  // Material E2 (MR-7 step 6) — "Create PO request" from the stock simulation
+  // lands here with `?new=1&material=<code>&supplier=<id>` and opens the New PR
+  // form pre-filled with the material, its unit and a note naming the supplier
+  // (a requisition carries no supplier field). It creates nothing by itself,
+  // and only a seat holding `pr:create` gets the form. Consumed once.
+  const prefillNew = openParams.get('new');
+  const suppliersQuery = useSuppliers();
+  useEffect(() => {
+    if (prefillNew !== '1' || suppliersQuery.isPending) return;
+    const material = openParams.get('material') ?? '';
+    const supplier = openParams.get('supplier') ?? '';
+    if (createAvailability.kind === 'held' && material) {
+      setForm({
+        ...emptyForm,
+        material,
+        uom: materialEntry(material)?.canonicalUom ?? emptyForm.uom,
+        justification: t('requisitions.new.prefill.fromSimulation', {
+          material,
+          supplier: suppliersQuery.data?.items.find((x) => x.id === supplier)?.name ?? supplier,
+        }),
+      });
+      setNewOpen(true);
+    }
+    const next = new URLSearchParams(openParams);
+    for (const k of ['new', 'material', 'supplier']) next.delete(k);
+    setOpenParams(next, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prefillNew, suppliersQuery.isPending]);
 
   const counts = useMemo(() => {
     const by = (s: PRStatus) => prs.filter((p) => p.status === s).length;

@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 0.5 draft, 2026-09-28 |
+| Version | 0.6 draft, 2026-09-29 |
 | For | The Master Data Management team, who own the engine's input data and its SAP integration (ENG-D1) |
 | What this is | Every input the in-house forecast engine reads: fields, key, grain, refresh, freshness limit, quality checks, and the likely SAP source |
 | What this is not | An interface design. How the data travels (API, events, files) is open under BL-11 (PQ-06) and belongs to IT |
@@ -223,9 +223,10 @@ The order below is the build order: section 2.1 feeds the first engine step (E14
 | category | text | Product category | yes |
 | launchDate | date | First sale day | yes |
 | discontinueDate | date | Last planned sale day | no |
+| oem | boolean | PTI makes the product for another brand (OEM). Its demand is that brand's POs, exploded as firm orders; E14-07 does not forecast it (ENG-D20, ENG-B65). Absent means one of PTI's own brands | no |
 
 - **Key:** skuCode. **Refresh:** weekly. **Freshness limit:** 7 days.
-- **Checks:** brand is one of the three; launchDate ≤ discontinueDate.
+- **Checks:** brand is one of the three; launchDate ≤ discontinueDate; oem, when present, is true or false.
 - **Likely SAP source:** material master for finished goods (MARA with a finished-goods material type, MAKT for the description). Brand and category from the material group or classification; which one is the MDM team's call.
 
 **SalesWeek: weekly sell-in per finished good**
@@ -300,3 +301,4 @@ The order below is the build order: section 2.1 feeds the first engine step (E14
 | 0.3 | 2026-09-23 | Added MaterialValue (value per unit, for holding cost), from the E14-05 build |
 | 0.4 | 2026-09-24 | BomLine: added yieldPct (BL-115, E14-03 BR-03) with its check and a confirmation item; scrapPct described as the fraction the code holds (it read "percent") |
 | 0.5 | 2026-09-28 | SalesWeek: sell-in decided (ENG-D10); OEM demand comes from the brand's POs (ENG-D20) |
+| 0.6 | 2026-09-29 | FinishedGood: optional `oem` flag with its check (ENG-B65, PR #81); MDM's feed must carry it or OEM products are forecast as own-brand |

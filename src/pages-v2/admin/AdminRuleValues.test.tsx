@@ -1,8 +1,9 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { renderWithProviders, BUYER } from '../../test/test-utils';
 import { hubSettingsStore, settingValue } from '../../services/transitions/hubSettingsStore';
 import { staleOverrideKey } from '../../services/transitions/hubSettings';
+import i18n from '../../lib/i18n';
 import { AdminAlertThresholds, AdminTolerances } from './AdminRuleValues';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -115,7 +116,115 @@ describe('BL-32 · Alert thresholds and stale periods', () => {
     fireEvent.click(screen.getByTestId('admin-set-stale-submit'));
     await waitFor(() => expect(settingValue(key)).toBeNull());
     await waitFor(() =>
-      expect(within(screen.getByTestId('admin-set-stale-row-sup-007-PK-PETB-8801')).getByText('Default')).toBeTruthy(),
+      expect(within(screen.getByTestId('admin-set-stale-row-sup-007-PK-PETB-8801')).getByText('Update mode')).toBeTruthy(),
     );
+    // Material B2 — with no period of its own, a manual supplier's row names the weekly cutoff.
+    expect(screen.getByTestId('admin-set-stale-period-sup-007-PK-PETB-8801').textContent).toBe('Weekly cutoff (manual)');
+  });
+
+  it('MAT B2 · a row without an override names the rule by update mode; an override keeps its days', async () => {
+    renderWithProviders(<AdminAlertThresholds />, { identity: BUYER });
+    await screen.findByTestId('admin-set-stale-row-sup-001-RM-COCO-8200');
+    // A seeded override keeps its days and its wording.
+    expect(screen.getByTestId('admin-set-stale-period-sup-001-RM-COCO-8200').textContent).toBe('1 day');
+    // Every API row carries a seeded override, so take one away (through the verb) to see the API wording.
+    const key = staleOverrideKey('sup-001', 'RM-LAURIC-7200');
+    fireEvent.click(screen.getByTestId('admin-set-stale-remove-sup-001-RM-LAURIC-7200'));
+    fireEvent.click(screen.getByTestId('admin-set-stale-submit'));
+    await waitFor(() => expect(settingValue(key)).toBeNull());
+    await waitFor(() =>
+      expect(screen.getByTestId('admin-set-stale-period-sup-001-RM-LAURIC-7200').textContent).toBe(
+        '24 h after last successful pull (API)',
+      ),
+    );
+    const rows = screen.getAllByTestId(/^admin-set-stale-row-/);
+    const byMode = rows.filter((r) => within(r).queryByText('Update mode') !== null);
+    const periodOf = (r: HTMLElement) =>
+      screen.getByTestId(r.getAttribute('data-testid')!.replace('admin-set-stale-row-', 'admin-set-stale-period-')).textContent;
+    // sup-001 and sup-003 are connected by API (the resolver's default); the rest are manual.
+    const api = byMode.filter((r) => /^admin-set-stale-row-sup-00[13]-/.test(r.getAttribute('data-testid')!));
+    const manual = byMode.filter((r) => !api.includes(r));
+    expect(api.length).toBeGreaterThan(0);
+    expect(manual.length).toBeGreaterThan(0);
+    for (const r of api) expect(periodOf(r)).toBe('24 h after last successful pull (API)');
+    for (const r of manual) expect(periodOf(r)).toBe('Weekly cutoff (manual)');
+    for (const r of rows.filter((x) => !byMode.includes(x))) expect(within(r).getByText('Its own period')).toBeTruthy();
+  });
+});
+
+describe('MAT A3 · the material values (MR-1, MR-2, MR-6), in EN and ID', () => {
+  afterEach(async () => {
+    await i18n.changeLanguage('en');
+  });
+
+  it('MAT-A3-PAGE-01 · MR-1 sits on the alerts page with its units: hours, a weekday and a WIB time', () => {
+    renderWithProviders(<AdminAlertThresholds />, { identity: BUYER });
+    expect(within(screen.getByTestId('admin-set-group-MR-1')).getByText(/MR-1 · Stock sync schedule/)).toBeTruthy();
+    expect(screen.getByTestId('admin-set-value-stockSync.intervalHours').textContent).toBe('2 h');
+    expect(screen.getByTestId('admin-set-value-stale.apiHours').textContent).toBe('24 h');
+    expect(screen.getByTestId('admin-set-value-stockUpdate.cutoffDay').textContent).toBe('Thursday');
+    expect(screen.getByTestId('admin-set-value-stockUpdate.cutoffTime').textContent).toBe('23:59 WIB');
+    // The old stale period stays as it is, beside them.
+    expect(screen.getByTestId('admin-set-value-stale.defaultDays').textContent).toBe('7 days');
+    // Known-false: MR-2 and MR-6 are on the other page.
+    expect(screen.queryByTestId('admin-set-group-MR-2')).toBeNull();
+  });
+
+  it('MAT-A3-PAGE-02 · MR-2 and MR-6 sit on the tolerances page', () => {
+    renderWithProviders(<AdminTolerances />, { identity: BUYER });
+    expect(screen.getByTestId('admin-set-group-MR-2')).toBeTruthy();
+    expect(screen.getByTestId('admin-set-group-MR-6')).toBeTruthy();
+    expect(screen.getByTestId('admin-set-value-compliance.warnPct').textContent).toBe('80%');
+    expect(screen.getByTestId('admin-set-value-compliance.flagPct').textContent).toBe('60%');
+    expect(screen.getByTestId('admin-set-value-compliance.scoreWeight').textContent).toBe('0.1');
+    expect(screen.getByTestId('admin-set-value-shelfLife.defaultMonths').textContent).toBe('6 months');
+    expect(screen.queryByTestId('admin-set-group-MR-1')).toBeNull();
+  });
+
+  it('MAT-A3-PAGE-03 · in Indonesian', async () => {
+    await i18n.changeLanguage('id');
+    const { unmount } = renderWithProviders(<AdminAlertThresholds />, { identity: BUYER });
+    expect(within(screen.getByTestId('admin-set-group-MR-1')).getByText(/MR-1 · Jadwal sinkronisasi stok/)).toBeTruthy();
+    expect(screen.getByTestId('admin-set-value-stale.apiHours').textContent).toBe('24 jam');
+    expect(screen.getByTestId('admin-set-value-stockUpdate.cutoffDay').textContent).toBe('Kamis');
+    expect(screen.getByTestId('admin-set-value-stockUpdate.cutoffTime').textContent).toBe('23:59 WIB');
+    unmount();
+    renderWithProviders(<AdminTolerances />, { identity: BUYER });
+    expect(within(screen.getByTestId('admin-set-group-MR-2')).getByText('Peringatan di bawah')).toBeTruthy();
+    expect(screen.getByTestId('admin-set-value-compliance.scoreWeight').textContent).toBe('0,1');
+    expect(screen.getByTestId('admin-set-value-shelfLife.defaultMonths').textContent).toBe('6 bulan');
+  });
+
+  it('MAT-A3-PAGE-04 · the cutoff time is typed as a time of day and recorded as minutes after midnight', async () => {
+    renderWithProviders(<AdminAlertThresholds />, { identity: BUYER });
+    fireEvent.click(screen.getByTestId('admin-set-change-stockUpdate.cutoffTime'));
+    const input = screen.getByTestId('admin-set-value') as HTMLInputElement;
+    expect(input.type).toBe('time');
+    expect(input.value).toBe('23:59');
+    fireEvent.change(input, { target: { value: '17:00' } });
+    fireEvent.click(screen.getByTestId('admin-set-submit'));
+    await waitFor(() => expect(settingValue('stockUpdate.cutoffTime')).toBe(1020));
+    expect(screen.getByTestId('admin-set-value-stockUpdate.cutoffTime').textContent).toBe('17:00 WIB');
+  });
+
+  it('MAT-A3-PAGE-05 · the cutoff day is picked from the days of the week', async () => {
+    renderWithProviders(<AdminAlertThresholds />, { identity: BUYER });
+    fireEvent.click(screen.getByTestId('admin-set-change-stockUpdate.cutoffDay'));
+    const select = screen.getByTestId('admin-set-value') as HTMLSelectElement;
+    expect(select.tagName).toBe('SELECT');
+    expect(select.value).toBe('4');
+    fireEvent.change(select, { target: { value: '5' } });
+    fireEvent.click(screen.getByTestId('admin-set-submit'));
+    await waitFor(() => expect(settingValue('stockUpdate.cutoffDay')).toBe(5));
+    expect(screen.getByTestId('admin-set-value-stockUpdate.cutoffDay').textContent).toBe('Friday');
+  });
+
+  it('MAT-A3-PAGE-06 · a flag above the warning is refused by name', async () => {
+    renderWithProviders(<AdminTolerances />, { identity: BUYER });
+    change('compliance.flagPct', '85');
+    await waitFor(() =>
+      expect(screen.getByTestId('admin-set-refusal').textContent).toMatch(/compliance\.flagPct: the red flag must start below the amber warning/),
+    );
+    expect(settingValue('compliance.flagPct')).toBe(60);
   });
 });

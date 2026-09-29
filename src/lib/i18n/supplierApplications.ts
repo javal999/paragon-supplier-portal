@@ -25,6 +25,9 @@ export const supplierApplicationsEn: Record<string, string> = {
 
   // — Tabs —
   'applications.tab.all': 'All',
+  // Material G1 (MR-10 BR-10) — the state `Approved` is shown as this, so it
+  // is never read as the Approved qualification level. The state name is unchanged.
+  'applications.status.accepted': 'Application accepted',
   'applications.tab.waiting': 'Waiting',
   'applications.tab.inReview': 'In review',
   'applications.tab.decided': 'Decided',
@@ -170,6 +173,7 @@ export const supplierApplicationsId: Record<string, string> = {
   'applications.kpi.decided': 'Sudah diputuskan',
 
   'applications.tab.all': 'Semua',
+  'applications.status.accepted': 'Aplikasi diterima',
   'applications.tab.waiting': 'Menunggu',
   'applications.tab.inReview': 'Ditinjau',
   'applications.tab.decided': 'Diputuskan',

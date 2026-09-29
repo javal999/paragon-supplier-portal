@@ -7,7 +7,7 @@ export const adminReasonsEn: Record<string, string> = {
   'adminRsn.crumb': 'Reason codes',
   'adminRsn.title': 'Reason codes',
   'adminRsn.subtitle':
-    'The reasons a supplier chooses from when it adjusts or rejects a purchase order, or commits below forecast or demand. Add a code, rename it, or retire it. A code is never deleted, so an old answer keeps its label.',
+    'The reasons a supplier chooses from when it adjusts or rejects a purchase order, or commits below forecast or demand, and the reasons a planner gives when closing an alert or overriding the demand forecast. Add a code, rename it, or retire it. A code is never deleted, so an old answer keeps its label.',
   'adminRsn.meta.offered': 'Offered: {{count}}',
   'adminRsn.meta.retired': 'Retired: {{count}}',
   'adminRsn.meta.freeText':
@@ -21,6 +21,11 @@ export const adminReasonsEn: Record<string, string> = {
   'adminRsn.list.capacityShortfall.hint': 'REQ-E08-04 · why allocated capacity is below demand in a week. "Other" needs a note.',
   'adminRsn.list.commitmentShortfall': 'Commitment below forecast',
   'adminRsn.list.commitmentShortfall.hint': 'REQ-E06-02 · why a commitment is below the forecast. "Other" needs a note.',
+  'adminRsn.list.alertClose': 'Alert — close',
+  'adminRsn.list.alertClose.hint': 'MR-9 BR-04 · why a planner closes a stock alert. "Other" needs a note.',
+  'adminRsn.list.forecastOverride': 'Demand forecast — override',
+  'adminRsn.list.forecastOverride.hint':
+    'REQ-E14-11 · why a Material Planning team member overrides the demand forecast. Required when the override raises it. "Other" needs a note.',
 
   'adminRsn.col.code': 'Code',
   'adminRsn.col.labelEn': 'English label',
@@ -80,7 +85,7 @@ export const adminReasonsId: Record<string, string> = {
   'adminRsn.crumb': 'Kode alasan',
   'adminRsn.title': 'Kode alasan',
   'adminRsn.subtitle':
-    'Alasan yang dipilih pemasok saat menyesuaikan atau menolak pesanan pembelian, atau berkomitmen di bawah prakiraan atau kebutuhan. Tambahkan kode, ganti namanya, atau hentikan. Kode tidak pernah dihapus, sehingga jawaban lama tetap berlabel.',
+    'Alasan yang dipilih pemasok saat menyesuaikan atau menolak pesanan pembelian, atau berkomitmen di bawah prakiraan atau kebutuhan, serta alasan yang diberikan perencana saat menutup peringatan atau menyesuaikan prakiraan permintaan. Tambahkan kode, ganti namanya, atau hentikan. Kode tidak pernah dihapus, sehingga jawaban lama tetap berlabel.',
   'adminRsn.meta.offered': 'Ditawarkan: {{count}}',
   'adminRsn.meta.retired': 'Dihentikan: {{count}}',
   'adminRsn.meta.freeText':
@@ -94,6 +99,11 @@ export const adminReasonsId: Record<string, string> = {
   'adminRsn.list.capacityShortfall.hint': 'REQ-E08-04 · mengapa kapasitas yang dialokasikan di bawah kebutuhan pada suatu minggu. "Lainnya" memerlukan catatan.',
   'adminRsn.list.commitmentShortfall': 'Komitmen di bawah prakiraan',
   'adminRsn.list.commitmentShortfall.hint': 'REQ-E06-02 · mengapa komitmen di bawah prakiraan. "Lainnya" memerlukan catatan.',
+  'adminRsn.list.alertClose': 'Peringatan — tutup',
+  'adminRsn.list.alertClose.hint': 'MR-9 BR-04 · mengapa perencana menutup peringatan stok. "Lainnya" memerlukan catatan.',
+  'adminRsn.list.forecastOverride': 'Prakiraan permintaan — penyesuaian',
+  'adminRsn.list.forecastOverride.hint':
+    'REQ-E14-11 · mengapa anggota tim Perencanaan Material menyesuaikan prakiraan permintaan. Wajib bila penyesuaian menaikkannya. "Lainnya" memerlukan catatan.',
 
   'adminRsn.col.code': 'Kode',
   'adminRsn.col.labelEn': 'Label bahasa Inggris',

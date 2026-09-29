@@ -3,7 +3,7 @@
 //
 // The supplier states the capacity it allocates to PTI per material group and
 // week for the 13-week horizon, with optional upside (BR-05). A week below
-// PTI's demand cannot be submitted without a starter reason code, and `other`
+// PTI's demand (the LTP: the current forecast, summed per group and week) cannot be submitted without a starter reason code, and `other`
 // needs a note (BR-04, AC-02) — enforced HERE, by policy, not by the page.
 //
 // A submission is a snapshot: a changed plan is a new submission, and the
@@ -29,7 +29,8 @@ export const capacitySubmissionFlow: FlowDefinition = {
       to: 'Submitted',
       trigger: 'creation',
       requiredRole: 'capacity:confirm',
-      requiredFields: ['supplierId', 'materialGroup', 'weeks'],
+      // Material C5 (MR-8 BR-04) — capacity is stated per planning group.
+      requiredFields: ['supplierId', 'planningGroupId', 'weeks'],
       policyHooks: [POLICY_HOOKS.CAPACITY_SUBMISSION_VALID],
       surfaceable: { surfaced: true },
       version: 1,

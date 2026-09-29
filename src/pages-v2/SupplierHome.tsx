@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { usePlanningGroupLabel } from './inventory/planningGroupDisplay';
 import AppShellV2 from '../components/layout-v2/AppShellV2';
 import PageHeader from '../components/ui-v2/PageHeader';
 import SampleDataBadge from '../components/ui-v2/SampleDataBadge';
@@ -38,12 +39,14 @@ import Data from '../components/ui-v2/Data';
 import { RiskPill, inventoryNow } from './inventory/inventoryDisplay';
 import { sdcClock } from '../services/sdc/clock';
 import { deepLink } from '../lib/deepLink';
+import WeeklyUpdatePanel, { weeklyUpdateView } from './inventory/WeeklyUpdatePanel';
 
 // Supplier Home — "To do" (REQUIREMENTS §3.8 SC-01): what Paragon is waiting for
 // from this supplier. Filters match the supplier dashboard widgets they replace.
 
 const SupplierHome: React.FC = () => {
   const { t } = useTranslation();
+  const groupLabel = usePlanningGroupLabel();
   const { identity } = useCurrentIdentity();
   const supplierId = identity.supplierId;
   const pos = usePurchaseOrders();
@@ -134,12 +137,27 @@ const SupplierHome: React.FC = () => {
         to: deepLink('/supplier/inventory', { stale: 'stale' }),
       },
       {
+        // Material B2 (MR-1 d step 2) — the in-hub reminder: from 09:00 WIB on
+        // the working day before the cutoff, a manual supplier's materials
+        // still missing this cycle. Derived, never stored.
+        id: 'weekly-update',
+        label: t('hub.home.task.sup.weeklyUpdate'),
+        count: (() => {
+          const items = stock.data?.items ?? [];
+          if (!supplierId || items.length === 0 || items.some((p) => p.apiConnected)) return 0;
+          const view = weeklyUpdateView(supplierId, items, inventoryNow());
+          return view.reminder === null ? 0 : view.status.missing.length;
+        })(),
+        severity: 'warning',
+        to: '/supplier/inventory',
+      },
+      {
         // REQ-E08-04 — a material group with no current capacity confirmation.
         id: 'capacity-due',
         label: t('hub.home.task.sup.capacityDue'),
         count: capacityDuePlans.length,
         severity: 'warning',
-        to: deepLink('/supplier/capacity', { group: capacityDuePlans[0]?.materialGroup }),
+        to: deepLink('/supplier/capacity', { group: capacityDuePlans[0]?.planningGroupId }),
       },
       {
         // REQ-E06-01 — a published version this supplier has not opened yet.
@@ -273,6 +291,8 @@ const SupplierHome: React.FC = () => {
       <div className="mb-4">
         <SampleDataBadge />
       </div>
+      {/* Material B2 — the weekly update (manual) or the sync schedule (API). */}
+      <WeeklyUpdatePanel supplierId={supplierId} positions={stock.data?.items ?? []} nowIso={inventoryNow()} />
       <TaskList tasks={tasks} />
       {openAlerts.length > 0 && (
         <section className="mt-6" data-testid="supplier-home-alerts">
@@ -283,7 +303,7 @@ const SupplierHome: React.FC = () => {
                 <RiskPill riskClass={a.riskClass} />
                 <span className="text-sm text-text-primary">{t(`inv.alerts.sup.rule.${a.rule}`)}</span>
                 <span className="text-xs text-text-secondary">
-                  {a.rule === 'capacityBelowDemand' ? t(`inv.group.${a.subject}`) : <Data>{a.subject}</Data>}
+                  {a.rule === 'capacityBelowDemand' ? groupLabel(a.subject) : <Data>{a.subject}</Data>}
                 </span>
                 <Link to={alertHref(a, 'supplier')} className="text-sm text-action hover:underline">
                   {t(

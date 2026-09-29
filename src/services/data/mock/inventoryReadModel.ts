@@ -23,7 +23,7 @@ import {
   materialEntry,
   sdcClock,
 } from '../../sdc';
-import { callOffViews } from '../../transitions/callOffRules';
+import { callOffCoverSubjects, callOffViews } from '../../transitions/callOffRules';
 import { buildInventoryPositions } from '../../transitions/inventoryRules';
 import { buildCapacityPlans } from '../../transitions/capacityRules';
 import { commitmentAlertSubjects } from '../../transitions/forecastRules';
@@ -46,16 +46,43 @@ import {
 } from './stores/inventoryHubStores';
 import {
   API_CONNECTIONS,
+  type ApiStockFigure,
   PLANNING_DAILY_DEMAND,
   PTI_STOCK,
   SUPPLIER_LEAD_TIME_DAYS,
   SUPPLY_ASSIGNMENTS,
 } from './fixtures/inventoryHub';
+import { stockUpdateModeOf } from './supplierMaster';
+import { hubWorkingCalendar } from '../../transitions/workingCalendarStore';
+import { planningGroupMoves } from './planningGroupReadModel';
 
 export const supplierNameOf = (supplierId: string): string =>
   mockSuppliers.find((s) => s.id === supplierId)?.name ?? supplierId;
 
-export const isApiConnected = (supplierId: string): boolean => supplierId in API_CONNECTIONS;
+/**
+ * Material A1 (AR-06) — THE one answer to "is this supplier API-connected?":
+ * its governed stock update mode, through the supplier resolver. Every reader
+ * (the positions, the pages through them, the sync verbs' policy hook) asks
+ * this, never the sample connection list.
+ */
+export const isApiConnected = (supplierId: string): boolean => stockUpdateModeOf(supplierId) === 'api';
+
+/** What one simulated pull of a supplier's system returns. */
+export type SimulatedPull =
+  | { readonly outcome: 'success'; readonly figures: readonly ApiStockFigure[] }
+  | { readonly outcome: 'failed'; readonly errorKey: string };
+
+/**
+ * THE SYNC OUTCOME READ — the only place the sample connection list is read by
+ * key. An API supplier the list holds answers as the list says; one it does not
+ * hold has no connection details at all, so the pull fails with `NO_ENDPOINT`
+ * rather than `timeout` ("we have no endpoint" is not "their system did not
+ * answer", and the planner acts differently on each).
+ */
+export const simulatedPullOf = (supplierId: string): SimulatedPull =>
+  Object.prototype.hasOwnProperty.call(API_CONNECTIONS, supplierId)
+    ? API_CONNECTIONS[supplierId]
+    : { outcome: 'failed', errorKey: 'NO_ENDPOINT' };
 
 /**
  * Is this material assigned to the supplier? The hub's supply assignments, or
@@ -70,8 +97,23 @@ export function isAssignedMaterial(supplierId: string, materialCode: string): bo
   );
 }
 
-/** The inventory rows: every supply assignment, plus any pair a supplier has submitted stock for. */
-function assignments(): { supplierId: string; materialCode: string }[] {
+/**
+ * Material C2 — the materials assigned to a supplier (the same membership as
+ * `isAssignedMaterial`), known to the material master, sorted by code.
+ */
+export function assignedMaterialCodesOf(supplierId: string): string[] {
+  const codes = new Set<string>();
+  for (const a of SUPPLY_ASSIGNMENTS) if (a.supplierId === supplierId) codes.add(a.materialCode);
+  for (const r of SUPPLIER_MATERIAL_RELATIONSHIPS) if (r.supplierId === supplierId) codes.add(r.materialCode);
+  for (const p of FORECAST_PUBLICATIONS) for (const l of p.lines) if (l.supplierId === supplierId) codes.add(l.materialCode);
+  return [...codes].filter((c) => materialEntry(c)).sort();
+}
+
+/**
+ * The inventory rows: every supply assignment, plus any pair a supplier has
+ * submitted stock for. Material E2 — the stock simulation lists the same pairs.
+ */
+export function assignments(): { supplierId: string; materialCode: string }[] {
   const pairs = new Map<string, { supplierId: string; materialCode: string }>();
   for (const a of SUPPLY_ASSIGNMENTS) pairs.set(`${a.supplierId}|${a.materialCode}`, a);
   for (const d of inventoryDeclarationStore.all()) {
@@ -80,6 +122,13 @@ function assignments(): { supplierId: string; materialCode: string }[] {
   }
   return [...pairs.values()];
 }
+
+/**
+ * Material B3 — the supplier × material pairs the weekly update is judged on:
+ * the inventory rows, so the compliance measure counts the materials the stock
+ * page shows (MR-2 BR-02).
+ */
+export const stockUpdateAssignments = (): { supplierId: string; materialCode: string }[] => assignments();
 
 const planningEstimate = (supplierId: string, materialCode: string): number | null =>
   PLANNING_DAILY_DEMAND[`${supplierId}|${materialCode}`] ?? null;
@@ -107,21 +156,40 @@ export function allPositions(nowIso: string = sdcClock.now()): InventoryPosition
       callOffViews: callOffViews(callOffStore.all(), asnStore.all(), goodsReceiptStore.all(), nowIso),
       apiConnected: isApiConnected,
       syncAttempts: stockSyncStore.all(),
+      updateModeAt: stockUpdateModeOf,
+      calendar: hubWorkingCalendar(),
     },
     nowIso,
   );
 }
 
-/** Every supplier × material group with capacity against demand. */
+/**
+ * The capacity rows: every inventory row, plus every supplier × material the
+ * current forecast versions give an LTP to. BL-133 (ENG-D19): a supplier cannot
+ * submit a commitment until it has confirmed the week's capacity, so every
+ * group it has an LTP in must be a group it CAN confirm capacity for.
+ */
+function capacityAssignments(): { supplierId: string; materialCode: string }[] {
+  const pairs = new Map(assignments().map((a) => [`${a.supplierId}|${a.materialCode}`, a]));
+  for (const l of allCommitmentLines(null)) {
+    const k = `${l.supplierId}|${l.materialCode}`;
+    if (!pairs.has(k) && materialEntry(l.materialCode)) pairs.set(k, { supplierId: l.supplierId, materialCode: l.materialCode });
+  }
+  return [...pairs.values()];
+}
+
+/** Every supplier × planning group with capacity against demand (MR-8 BR-04). */
 export function allCapacityPlans(nowIso: string = sdcClock.now()): CapacityPlan[] {
   return buildCapacityPlans(
     {
-      assignments: assignments(),
+      assignments: capacityAssignments(),
       master: materialEntry,
       supplierName: supplierNameOf,
       submissions: capacityStore.all(),
-      forecastLines: forecastLines(),
-      planningEstimate,
+      // Owner, 2026-09-29 — the LTP is the one capacity demand figure.
+      ltpLines: allCommitmentLines(null),
+      // Material C5 (MR-8 BR-05) — the planning-group moves, for "Needs re-entry".
+      moves: planningGroupMoves(),
     },
     nowIso,
   );
@@ -135,6 +203,8 @@ export function activeAlertConditions(nowIso: string = sdcClock.now()): AlertCon
     nowIso,
     // REQ-E08-05 BR-01 — commitments below forecast beyond tolerance (REQ-E06-03).
     commitmentAlertSubjects(allCommitmentLines()),
+    // MR-6 BR-13 (AR-13) — confirmed call-offs the supplier's stock must cover.
+    callOffCoverSubjects(callOffViews(callOffStore.all(), asnStore.all(), goodsReceiptStore.all(), nowIso)),
   );
 }
 

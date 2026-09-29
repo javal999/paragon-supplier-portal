@@ -3,8 +3,9 @@ import { useTranslation } from 'react-i18next';
 import { Plus, X } from 'lucide-react';
 import SidePanel from '../../components/ui-v2/SidePanel';
 import Button from '../../components/ui-v2/Button';
+import MaterialSearch from '../../components/ui-v2/MaterialSearch';
 import type { CommandResult, InventoryPosition } from '../../services/data/types';
-import { batchDatesProblem, dayOf, isIsoDay, readStockNumber } from '../../services/transitions/inventoryRules';
+import { batchDatesProblem, dayOf, productionProblem, readStockNumber } from '../../services/transitions/inventoryRules';
 import { InTransitReadOnly, inputClass, inventoryNow, labelClass, useInventoryRunner } from './inventoryDisplay';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -18,6 +19,8 @@ import { InTransitReadOnly, inputClass, inventoryNow, labelClass, useInventoryRu
 // own materials (`declare`, manual channel) and by a PTI planner recording what
 // a supplier sent by WhatsApp or email (`record`, shown as "Entered by PTI").
 // The page mirrors CR-18 and CR-19 for courtesy; the verb's policies decide.
+// MAT-D4 — in production is required (0 allowed) and its completion date is
+// required when it is above 0: the same `productionProblem` the template runs.
 //
 // BL-73 · BR-09 — THIS IS THE ONE STOCK ENTRY. The channel triage surfaces
 // (`CommHubInbound` for a supplier, `BuyerChannelTriage` for PTI) no longer
@@ -69,9 +72,12 @@ const StockEntryPanel: React.FC<StockEntryPanelProps> = ({
   const { run, pending } = useInventoryRunner();
   const [form, setForm] = useState(EMPTY);
   const [batches, setBatches] = useState<BatchRow[]>([]);
+  // Material C3 — the material picker's search (MR-3 BR-04).
+  const [materialQuery, setMaterialQuery] = useState('');
 
   useEffect(() => {
     if (!open) return;
+    setMaterialQuery('');
     const supplierId = initial?.supplierId ?? (mode === 'supplier' ? (positions[0]?.supplierId ?? '') : '');
     setForm({ ...EMPTY, supplierId, materialCode: initial?.materialCode ?? '', soh: initial?.soh ?? '' });
     setBatches([]);
@@ -92,7 +98,11 @@ const StockEntryPanel: React.FC<StockEntryPanelProps> = ({
     read.ok ? null : t(read.reason === 'ambiguousNumber' ? 'inv.entry.error.ambiguous' : 'inv.entry.error.notNumber');
   const batchTotal = batchReads.reduce((s, r) => s + (r.ok && r.value !== null ? r.value : 0), 0);
   const batchMismatch = batches.length > 0 && soh.ok && soh.value !== null && batchTotal !== soh.value;
-  const dateInvalid = form.completion !== '' && !isIsoDay(form.completion);
+  // MAT-D4 — the SAME check the template validator runs: in production is
+  // required (0 allowed), and its completion date is required when it is above 0.
+  const production = inProduction.ok
+    ? productionProblem(inProduction.value, form.completion, mode === 'supplier' ? 'manual' : 'pti')
+    : null;
   const batchIncomplete = batches.some((b, i) => b.batchNumber.trim() === '' || !batchReads[i].ok || batchReads[i].value === null);
   const today = dayOf(inventoryNow());
   const batchDates = batches.map((b) => batchDatesProblem(b, today));
@@ -104,14 +114,14 @@ const StockEntryPanel: React.FC<StockEntryPanelProps> = ({
     soh.value !== null &&
     rop.ok &&
     inProduction.ok &&
-    !dateInvalid &&
+    production === null &&
     !batchMismatch &&
     !batchIncomplete &&
     !batchDateInvalid &&
     !pending;
 
   const submit = async () => {
-    if (!selected || !soh.ok || soh.value === null || !rop.ok || !inProduction.ok) return;
+    if (!selected || !soh.ok || soh.value === null || !rop.ok || !inProduction.ok || production !== null) return;
     const common = {
       ...(causationId ? { causationId } : {}),
       supplierId: selected.supplierId,
@@ -185,24 +195,20 @@ const StockEntryPanel: React.FC<StockEntryPanelProps> = ({
             )}
           </>
         )}
-        <div>
-          <label htmlFor="stock-entry-material" className={labelClass}>
-            {t('inv.entry.material')}
-          </label>
-          <select
-            id="stock-entry-material"
-            className={inputClass}
-            value={form.materialCode}
-            onChange={(e) => setForm({ ...form, materialCode: e.target.value })}
-          >
-            <option value="">{t('inv.entry.select')}</option>
-            {materials.map((p) => (
-              <option key={p.materialCode} value={p.materialCode}>
-                {p.materialCode} · {p.materialLabel}
-              </option>
-            ))}
-          </select>
-        </div>
+        <MaterialSearch
+          mode="picker"
+          id="stock-entry-material"
+          label={t('inv.entry.material')}
+          labelClassName={labelClass}
+          selectClassName={inputClass}
+          emptyLabel={t('inv.entry.select')}
+          options={materials.map((p) => ({ code: p.materialCode, description: p.materialLabel, supplierId: p.supplierId }))}
+          value={form.materialCode}
+          onChange={(code) => setForm({ ...form, materialCode: code })}
+          query={materialQuery}
+          onQueryChange={setMaterialQuery}
+          testId="stock-entry-material-search"
+        />
         <div className="grid grid-cols-2 gap-3">
           <NumberField id="stock-entry-soh" label={t('inv.entry.soh', { uom })} value={form.soh} onChange={(v) => setForm({ ...form, soh: v })} error={numberError(soh)} />
           <NumberField id="stock-entry-rop" label={t('inv.entry.rop', { uom })} value={form.rop} onChange={(v) => setForm({ ...form, rop: v })} error={numberError(rop)} />
@@ -225,6 +231,15 @@ const StockEntryPanel: React.FC<StockEntryPanelProps> = ({
               onChange={(e) => setForm({ ...form, completion: e.target.value })}
             />
           </div>
+          {production?.reason === 'productionDateMissing' ? (
+            <p role="alert" className="col-span-2 text-xs text-danger" data-testid="stock-entry-production-date-missing">
+              {t('inv.entry.error.productionDateMissing')}
+            </p>
+          ) : production?.reason === 'invalidDate' ? (
+            <p role="alert" className="col-span-2 text-xs text-danger">
+              {t('inv.entry.error.invalidDate')}
+            </p>
+          ) : null}
           {selected && (
             <div className="col-span-2">
               <InTransitReadOnly position={selected} testId="stock-entry-in-transit" />
@@ -232,6 +247,9 @@ const StockEntryPanel: React.FC<StockEntryPanelProps> = ({
           )}
         </div>
         <p className="text-xs text-text-tertiary">{t('inv.entry.numberHint')}</p>
+        <p className="text-xs text-text-tertiary" data-testid="stock-entry-production-hint">
+          {t('inv.entry.inProductionHint')}
+        </p>
 
         <section>
           <div className="flex items-center justify-between mb-2">

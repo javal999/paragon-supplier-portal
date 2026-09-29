@@ -47,7 +47,13 @@ describe('menu and copy', () => {
   });
 
   it('every new string exists in EN and ID', () => {
-    expect(Object.keys(callOffsId).sort()).toEqual(Object.keys(callOffsEn).sort());
+    // BL-159 plural rule: compare BASE keys, with the plural suffix stripped.
+    // English has `_one` and `_other`; Indonesian has no plural forms, so its
+    // plural keys carry `_other` only. Which forms each locale carries is
+    // pinned by `src/lib/i18n/fragments.test.ts`; this test pins that every
+    // string exists in both languages.
+    const base = (keys: string[]) => [...new Set(keys.map((k) => k.replace(/_(zero|one|two|few|many|other)$/, '')))].sort();
+    expect(base(Object.keys(callOffsId))).toEqual(base(Object.keys(callOffsEn)));
   });
 });
 
@@ -152,10 +158,40 @@ describe('Supplier Call-offs page (REQ-E09-03, REQ-E09-04)', () => {
     expect(screen.getByTestId('supplier-calloff-banner')).toHaveTextContent('Call-offs to confirm: 1');
   });
 
-  // Ten columns is the widest table in the hub; the material description is its
-  // only free-text column. The row no longer bounds/truncates it — the table's
-  // own container scrolls horizontally instead, so the full value is always
-  // directly visible in the cell, not hidden behind a `title` tooltip.
+  // The material description is the table's only free-text column. The row
+  // does not bound or truncate it, so the full value is always directly
+  // visible in the cell, not hidden behind a `title` tooltip.
+  // BL-38 — 7 columns, not 10, so Confirmation, Delivery and the action stay on
+  // a 1280px screen (measured in a browser: 304px of overflow before, 0 after,
+  // in English and Indonesian). jsdom has no layout, so this holds the SHAPE:
+  // the PO rides under the call-off, the type under the need date, and the
+  // confirm-by deadline under the confirmation, with each header naming both.
+  // The PIC (#90) rides under the material rather than as an eighth column,
+  // which put 257px (EN) / 286px (ID) of overflow back at 1280px.
+  it('BL-38 — seven columns, with the PO, type and confirm-by as second lines', async () => {
+    renderWithProviders(<SupplierCallOffs />, { identity: SUPPLIER });
+    const row = await screen.findByTestId('supplier-calloff-row-co-0003');
+    const headers = screen.getAllByRole('columnheader').map((h) => h.textContent);
+    expect(headers).toEqual([
+      'Call-off Purchase order',
+      'Material PICSynthetic data · awaiting the MDM SAP feed',
+      'Quantity',
+      'Need date Type',
+      'Confirmation Confirm by',
+      'Delivery',
+      'Action',
+    ]);
+    const cells = within(row).getAllByRole('cell');
+    expect(cells).toHaveLength(7);
+    expect(cells[0]).toHaveTextContent(/^CO-2026-0003PO-2025-00107$/);
+    expect(within(cells[1]!).getByTestId('supplier-calloff-pic-co-0003')).toBeInTheDocument();
+    // Awaiting confirmation: the deadline sits under the confirmation, labelled.
+    expect(within(cells[4]!).getByTestId('supplier-calloff-confirm-by-co-0003')).toHaveTextContent(/^Confirm by \d{2} /);
+    // A confirmed call-off has no deadline line.
+    const confirmed = screen.getByTestId('supplier-calloff-row-co-0001');
+    expect(within(confirmed).queryByTestId('supplier-calloff-confirm-by-co-0001')).toBeNull();
+  });
+
   it('shows the full material description directly in the row', async () => {
     renderWithProviders(<SupplierCallOffs />, { identity: SUPPLIER });
     const row = await screen.findByTestId('supplier-calloff-row-co-0003');

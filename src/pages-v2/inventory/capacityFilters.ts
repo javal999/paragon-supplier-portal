@@ -1,7 +1,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // PLANNER CAPACITY FILTERS — REQ-E08-04 BR-07, AC-04 (BL-63).
 //
-// Supplier, material group, material and gap weeks only, KEPT IN THE ADDRESS
+// Supplier, planning group (Material C5, MR-8 BR-07), material and gap weeks only, KEPT IN THE ADDRESS
 // like the Order summary drill filter (`orderSummaryDrill.ts`), so a filtered
 // view can be bookmarked, shared and reloaded. The two compose — the drill
 // narrows to the PO's supplier, groups and weeks, these narrow further.
@@ -24,14 +24,14 @@ import { parseIdParam } from '../orders/orderSummaryDrill';
 
 export const CAPACITY_FILTER_PARAMS = {
   supplier: 'supplier',
-  materialGroup: 'materialGroup',
+  planningGroup: 'planningGroup',
   material: 'materialCode',
   gapsOnly: 'gapsOnly',
 } as const;
 
 export interface CapacityFilters {
   readonly supplierId: string | null;
-  readonly materialGroup: string | null;
+  readonly planningGroupId: string | null;
   readonly materialCode: string | null;
   readonly gapsOnly: boolean;
   /** A value in the address was not id-shaped and was ignored. */
@@ -46,14 +46,14 @@ export function readCapacityFilters(params: URLSearchParams): CapacityFilters {
     return parsed.kind === 'ok' ? parsed.value : null;
   };
   const supplierId = id(CAPACITY_FILTER_PARAMS.supplier);
-  const materialGroup = id(CAPACITY_FILTER_PARAMS.materialGroup);
+  const planningGroupId = id(CAPACITY_FILTER_PARAMS.planningGroup);
   const materialCode = id(CAPACITY_FILTER_PARAMS.material);
   const gapsOnly = params.get(CAPACITY_FILTER_PARAMS.gapsOnly) === '1';
-  return { supplierId, materialGroup, materialCode, gapsOnly, ignoredMalformed };
+  return { supplierId, planningGroupId, materialCode, gapsOnly, ignoredMalformed };
 }
 
 export const anyCapacityFilter = (f: CapacityFilters): boolean =>
-  f.supplierId !== null || f.materialGroup !== null || f.materialCode !== null || f.gapsOnly;
+  f.supplierId !== null || f.planningGroupId !== null || f.materialCode !== null || f.gapsOnly;
 
 /**
  * Write one filter into a COPY of the address, keeping every other parameter
@@ -81,7 +81,7 @@ export function withoutCapacityFilters(params: URLSearchParams): URLSearchParams
 /** Does a plan pass the supplier, group, material and gaps-only filters? */
 export function planMatches(p: CapacityPlan, f: CapacityFilters): boolean {
   if (f.supplierId !== null && p.supplierId !== f.supplierId) return false;
-  if (f.materialGroup !== null && p.materialGroup !== f.materialGroup) return false;
+  if (f.planningGroupId !== null && p.planningGroupId !== f.planningGroupId) return false;
   if (f.materialCode !== null && !p.materials.includes(f.materialCode)) return false;
   if (f.gapsOnly && !p.weeks.some(isGapWeek)) return false;
   return true;

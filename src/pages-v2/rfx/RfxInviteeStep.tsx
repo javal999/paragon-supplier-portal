@@ -30,6 +30,8 @@ import SearchBar from '../../components/ui-v2/SearchBar';
 import { useInviteeCandidates } from '../../services/query/hooks';
 import { PURCHASING_GROUPS, purchasingGroupNameKey } from '../../services/sourcing/rfxConfig';
 import { GateMarker } from './rfxDisplay';
+import { EligibilityMarker, SourcingTypePill } from './eligibilityDisplay';
+import type { SourcingType } from '../../services/sourcing/sourcingType';
 import { matchesSupplierFilters } from '../../services/sourcing/supplierFilters';
 import SupplierFilterBar, {
   bandLabel,
@@ -45,6 +47,11 @@ interface RfxInviteeStepProps {
   onToggle: (supplierId: string) => void;
   /** Distinguishes this picker's rows in a test sweep (`rfi`, `rfp`). */
   testIdPrefix: string;
+  /**
+   * Material G2 (MR-10 BR-05, BR-06) — the event's sourcing type, from its
+   * category. Absent until a family is chosen: nothing is judged yet.
+   */
+  sourcingType?: SourcingType;
 }
 
 const RfxInviteeStep: React.FC<RfxInviteeStepProps> = ({
@@ -52,6 +59,7 @@ const RfxInviteeStep: React.FC<RfxInviteeStepProps> = ({
   selected,
   onToggle,
   testIdPrefix,
+  sourcingType,
 }) => {
   const { t } = useTranslation();
   const [group, setGroup] = useState('');
@@ -60,7 +68,11 @@ const RfxInviteeStep: React.FC<RfxInviteeStepProps> = ({
   const { filters, setFilters } = useSupplierFilterParams();
   const filterLabels = useSupplierFilterLabels();
 
-  const candidates = useInviteeCandidates(group ? { purchasingGroup: group } : undefined);
+  const candidates = useInviteeCandidates(
+    group || sourcingType
+      ? { ...(group ? { purchasingGroup: group } : {}), ...(sourcingType ? { sourcingType } : {}) }
+      : undefined,
+  );
 
   const pool = useMemo(
     () =>
@@ -138,6 +150,13 @@ const RfxInviteeStep: React.FC<RfxInviteeStepProps> = ({
       />
       <p className="text-xs text-text-tertiary -mt-3">{t('rfx.invite.onlyActive')}</p>
       <p className="text-xs text-text-tertiary -mt-3">{t('rfx.gate.inviteNote')}</p>
+      {/* Material G2 — the event's type, and who it lets through. */}
+      {!!sourcingType && (
+        <div className="-mt-2 space-y-1">
+          <SourcingTypePill type={sourcingType} testId={`${testIdPrefix}-sourcing-type`} />
+          <p className="text-xs text-text-tertiary">{t('elig.invite.note')}</p>
+        </div>
+      )}
 
       <div className="relative min-w-0 border border-border-subtle rounded-md max-h-64 overflow-auto">
         <table className="w-full text-sm">
@@ -155,18 +174,23 @@ const RfxInviteeStep: React.FC<RfxInviteeStepProps> = ({
           <tbody>
             {rows.map((s) => {
               const chosen = selected.includes(s.supplierId);
+              // Material G2 — below the level against a real list: listed
+              // greyed, never selectable (MR-10 section d step 2).
+              const offered = s.eligibility?.state !== 'refused';
               return (
                 <tr
                   key={s.supplierId}
                   data-testid={`${testIdPrefix}-invitee-row-${s.supplierId}`}
-                  className="border-t border-border-subtle hover:bg-bg-hover cursor-pointer"
-                  onClick={() => onToggle(s.supplierId)}
+                  data-offered={offered}
+                  className={`border-t border-border-subtle ${offered ? 'hover:bg-bg-hover cursor-pointer' : 'opacity-60'}`}
+                  onClick={offered ? () => onToggle(s.supplierId) : undefined}
                 >
                   <td className="px-3 py-2">
                     <input
                       type="checkbox"
-                      aria-label={s.supplierName}
-                      checked={chosen}
+                      aria-label={offered ? s.supplierName : `${s.supplierName} — ${t('elig.invite.notOffered')}`}
+                      checked={chosen && offered}
+                      disabled={!offered}
                       onChange={() => onToggle(s.supplierId)}
                       onClick={(e) => e.stopPropagation()}
                       className="accent-teal"
@@ -177,6 +201,10 @@ const RfxInviteeStep: React.FC<RfxInviteeStepProps> = ({
                     {/* CR-23 / BR-06 — still selectable; marked as not awardable. */}
                     <div className="mt-1">
                       <GateMarker gate={s.gate} testId={`${testIdPrefix}-invitee-gate-${s.supplierId}`} />
+                    </div>
+                    {/* Material G2 — not qualified for this event's type, with the missing documents. */}
+                    <div className="mt-1">
+                      <EligibilityMarker eligibility={s.eligibility} testId={`${testIdPrefix}-invitee-elig-${s.supplierId}`} />
                     </div>
                   </td>
                   <td className="px-3 py-2 text-text-secondary">

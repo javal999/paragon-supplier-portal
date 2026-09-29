@@ -104,8 +104,13 @@ const SupplierGoodsReceipts: React.FC = () => {
         const lines = compareReceipt(gr, asn);
         return {
           gr,
-          // REQ-E07-06 — goods received with no ASN on record, said plainly.
-          withoutAsn: asn === null,
+          // REQ-E07-06 — goods received with no ASN, said plainly. BL-33: judged
+          // by whether the RECEIPT names an ASN, as PTI's page judges it. It
+          // read `asn === null`, which is also true when the receipt names an
+          // ASN this read cannot resolve, so the label sat under a printed ASN
+          // number on every such row. An unresolved ASN still falls back to the
+          // expected quantity in `compareReceipt`, unchanged.
+          withoutAsn: !gr.asnNumber,
           lines,
           flagged: lines.some((l) => l.flagged),
           // CR-25 — a shortfall beyond tolerance keeps the receipt open (derived).
