@@ -3,6 +3,7 @@ import {
   ALPHA_GRID,
   acf,
   comb,
+  combWith,
   croston,
   holt,
   holtWith,
@@ -163,5 +164,33 @@ describe('Kostenko–Hyndman: SBA whenever v > 2 − 3p/2', () => {
 
   it('is not the popular 1.32 / 0.49 cut-off: p 1.3, v 0.45 is SBA here', () => {
     expect(khChoice(1.3, 0.45)).toBe('sba');
+  });
+});
+
+describe('combWith — the Comb with its parameters held (E14-09 replay, ENG-B90)', () => {
+  const y = Array.from({ length: 60 }, (_, t) => 1000 + 8 * t + ((t * 37) % 11) * 25);
+  const index = { history: y.map((_, t) => (t % 13 === 5 ? 1.2 : 1)), horizon: [1, 1.2, 1, 1] };
+
+  it('held at the parameters comb chose on the same history, it returns comb’s forecast exactly (with and without an event index)', () => {
+    for (const idx of [undefined, index]) {
+      const c = comb(y, 4, true, idx);
+      const w = combWith(y, 4, { ses: c.ses, holt: c.holt, damped: c.damped, seasonal: c.seasonal }, idx);
+      expect(w.forecast).toEqual(c.forecast);
+      expect(w.fitted).toEqual(c.fitted);
+    }
+  });
+
+  it('rolls forward without re-choosing: on a longer history it keeps the old parameters, which comb itself would re-choose', () => {
+    const c = comb(y.slice(0, 40), 4);
+    const params = { ses: c.ses, holt: c.holt, damped: c.damped, seasonal: c.seasonal };
+    const rolled = combWith(y, 4, params);
+    const refit = comb(y, 4);
+    // Hand check of the SES third: SES at the held α over all 60 weeks.
+    const s = sesWith(y, 4, c.ses).forecast[0];
+    const h = holtWith(y, 4, c.holt).forecast[0];
+    const d = holtWith(y, 4, c.damped).forecast[0];
+    expect(rolled.forecast[0]).toBeCloseTo((s + h + d) / 3, 9);
+    // Known-false: the refit on 60 weeks chose differently, so the figures differ.
+    expect(refit.forecast[0]).not.toBe(rolled.forecast[0]);
   });
 });

@@ -214,6 +214,8 @@ export const adminSettingsEn: Record<string, string> = {
   'adminSet.key.engine.rescheduleOutWeeks.hint': 'An open order line that arrives at least this many weeks before the week it is needed is proposed to come later, to free warehouse space. The change is priced with the rented-space rate and the change penalty above.',
   'adminSet.key.engine.dampingWeightPct.label': 'Damping weight in the Trade-off zone',
   'adminSet.key.engine.dampingWeightPct.hint': 'Before a new plan is published, each Trade-off week is blended with the value the supplier saw last time: this share of the old value, the rest from the new one. Higher keeps the plan steadier; 0 publishes the new value as calculated. Forecast weeks are not damped.',
+  'adminSet.key.engine.rangeExtraQuantilePct.label': 'Extra quantile in the demand range',
+  'adminSet.key.engine.rangeExtraQuantilePct.hint': 'The demand range always shows P50 (the likely figure) and P90 (a figure sales exceed in about 1 week in 10). Enter a percentage to add one more, for example 95 for P95 (exceeded in about 1 week in 20). 0 adds none.',
 
   // REQ-E14-01 — freshness limit per engine feed.
   'adminSet.key.engine.freshnessDays.poLines.label': 'Freshness limit: Purchase order lines',
@@ -469,6 +471,8 @@ export const adminSettingsId: Record<string, string> = {
   'adminSet.key.engine.rescheduleOutWeeks.hint': 'Baris pesanan terbuka yang tiba sedikitnya sekian minggu sebelum minggu dibutuhkan diusulkan untuk datang lebih lambat, agar ruang gudang lega. Perubahan dihitung dengan tarif ruang sewa dan penalti perubahan di atas.',
   'adminSet.key.engine.dampingWeightPct.label': 'Bobot peredaman di zona Trade-off',
   'adminSet.key.engine.dampingWeightPct.hint': 'Sebelum rencana baru dipublikasikan, setiap minggu Trade-off dicampur dengan nilai yang terakhir dilihat pemasok: sebesar bagian ini dari nilai lama, sisanya dari nilai baru. Makin tinggi, rencana makin stabil; 0 memublikasikan nilai baru apa adanya. Minggu Forecast tidak diredam.',
+  'adminSet.key.engine.rangeExtraQuantilePct.label': 'Kuantil tambahan pada rentang permintaan',
+  'adminSet.key.engine.rangeExtraQuantilePct.hint': 'Rentang permintaan selalu menampilkan P50 (angka yang paling mungkin) dan P90 (angka yang dilampaui penjualan sekitar 1 dari 10 minggu). Isi persentase untuk menambah satu lagi, misalnya 95 untuk P95 (dilampaui sekitar 1 dari 20 minggu). 0 berarti tidak ada tambahan.',
 
   // REQ-E14-01 — freshness limit per engine feed.
   'adminSet.key.engine.freshnessDays.poLines.label': 'Batas kesegaran: Baris pesanan pembelian',

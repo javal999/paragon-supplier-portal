@@ -150,6 +150,7 @@ import {
   rescheduleOutThresholdWeeks,
   safetyLeadTimePercentile,
   stabiliseDampingWeight,
+  demandRangeExtraQuantilePct,
   zoneLengthsFor,
 } from '../../transitions/forecastConfig';
 import { DEFAULT_STABILISE_PARAMS, stabilisePlan, type StabiliseRun } from '../../engine/stabilise';
@@ -163,6 +164,7 @@ import type { EngineDataset } from '../../engine/types';
 import { labelOf, materialEntry } from '../../sdc/materialMaster';
 import { FEEDS, dataHealth } from '../../engine/dataHealth';
 import { demandForecast, type DemandForecastRun } from '../../engine/demandForecast';
+import { DEFAULT_DEMAND_RANGE_OPTIONS, demandRange, rangeLevels, replayForecasts, type DemandRangeRun, type Replay } from '../../engine/demandRange';
 import { DEFAULT_STOCK_ACCURACY_TOLERANCE } from '../../engine/stock';
 import { agreedCfot, supplierCfot } from '../../engine/cfot';
 import { lineHistories } from '../../engine/lines';
@@ -170,6 +172,8 @@ import { sdcClock } from '../../sdc/clock';
 
 /** REQ-E14-07 — the demand forecast per engine dataset (see getDemandForecast). */
 const demandForecastMemo = new WeakMap<EngineDataset, DemandForecastRun>();
+/** REQ-E14-09 — the replay and the range per engine dataset (see getDemandForecast). */
+const demandRangeMemo = new WeakMap<EngineDataset, { asOf: string; replay: Replay; levels: string; range: DemandRangeRun }>();
 
 const matchesList = <T>(value: T, filter: T | T[] | undefined): boolean => {
   if (filter === undefined) return true;
@@ -638,7 +642,8 @@ export class MockProcurementService implements IProcurementService {
       versions: { packaging: versionDays(asOf, 'packaging'), rawMaterial: versionDays(asOf, 'rawMaterial') },
       engine: named(stabilisePlan(inputs, params)),
       sapHistory: named(stabilisePlan(planHistoryInputs(data, now, inputs), params)),
-      rangeAvailable: false,
+      rangeBuilt: true,
+      rangePublished: false,
     };
   }
 
@@ -674,7 +679,17 @@ export class MockProcurementService implements IProcurementService {
       run = demandForecast({ finishedGoods: data.finishedGoods, sales: data.sales, fgPlan: data.fgPlan, asOf });
       demandForecastMemo.set(data, run);
     }
-    return { ...run, provenance: data.provenance, materialPlanningSource: 'sapPlan' };
+    // REQ-E14-09 — the range around it, with the administrator's levels in force
+    // (X-05). The replay depends on the date only; the range also on the levels.
+    const levels = rangeLevels(demandRangeExtraQuantilePct());
+    let memo = demandRangeMemo.get(data);
+    if (!memo || memo.asOf !== asOf || memo.levels !== levels.join()) {
+      const replay = memo && memo.asOf === asOf ? memo.replay : replayForecasts({ ...data, asOf });
+      const range = demandRange({ ...data, asOf }, run, { ...DEFAULT_DEMAND_RANGE_OPTIONS, levels }, replay);
+      memo = { asOf, replay, levels: levels.join(), range };
+      demandRangeMemo.set(data, memo);
+    }
+    return { ...run, range: memo.range, provenance: data.provenance, materialPlanningSource: 'sapPlan' };
   }
 
   async getSafetyStock(scope: QueryScope): Promise<SafetyStockView | null> {

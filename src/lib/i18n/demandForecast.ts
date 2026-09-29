@@ -125,6 +125,53 @@ export const demandForecastEn: Record<string, string> = {
   'df.def.stockout': 'A week flagged out of stock is not read as low demand: it is filled from the weeks around it, or skipped for slow SKUs.',
   'df.def.recon':
     'Reconciliation (MinT-shrink) adjusts the SKU, brand and total forecasts so they add up, weighting each level by how accurate it has been. A negative result is set to zero.',
+  // REQ-E14-09 — the demand range (BL-111).
+  'df.range.title': 'Demand range (P50 and P90)',
+  'df.range.intro':
+    'P50 is the figure sales are as likely to fall below as above; P90 is a figure sales exceed in about 1 week in 10. Each range is calibrated on the forecasts the engine would have made over the past year, replayed week by week with the model retrained every {{retrain}} weeks: at each horizon, P90 sits where 9 in 10 of those forecasts’ weeks sold at or below it. After each week’s sales come in, P90 moves up a little if sales went above it and down a little if they did not.',
+  'df.range.replay': '{{count}} weekly forecasts replayed, from the week of {{first}} to the week of {{last}}.',
+  'df.range.notPublished':
+    'Shown to the planner only. It is not published to suppliers: Stabilise and publish still shows quantities only, and publishing from the engine is refused while its data is simulated. Safety stock does not use it either: material planning stays on SAP’s plan until the switch is decided (ENG-B66).',
+  'df.range.kpi.aboveP90': 'Sold above P90',
+  'df.range.kpi.aboveP90.sub': 'target 10% · {{checked}} past weekly forecasts checked, all SKUs',
+  'df.range.kpi.aboveP50': 'Sold above P50',
+  'df.range.kpi.aboveP50.sub': 'target 50%',
+  'df.range.kpi.uncorrected': 'Above P90 without the weekly correction',
+  'df.range.kpi.uncorrected.sub': 'the same checks without P90’s weekly adjustment',
+  'df.range.kpi.width': 'P90 above P50, total',
+  'df.range.kpi.width.sub': 'over the {{weeks}} weeks',
+  'df.range.week': 'Week shown',
+  'df.range.levels.title': 'Total and brands',
+  'df.range.levels.intro':
+    'A brand’s range is calibrated on the brand’s own past errors, so it is narrower than its SKUs’ ranges added up: SKUs’ misses partly cancel out.',
+  'df.range.skus.title': 'SKUs',
+  'df.range.skus.intro':
+    'A new SKU on SAP’s plan is calibrated on the past errors of SAP’s plan for that SKU, or of the brand’s SKUs where it has too few, and its range is wider.',
+  'df.range.materials.title': 'Materials',
+  'df.range.materials.intro':
+    'The engine’s forecast through the bill of materials (scrap and yield included), against the requirement of what actually sold. For reference only: material planning uses SAP’s plan.',
+  'df.range.col.level': 'Level',
+  'df.range.col.sku': 'SKU',
+  'df.range.col.material': 'Material',
+  'df.range.col.forecast': 'Forecast',
+  'df.range.col.need': 'Forecast need',
+  'df.range.col.p': 'P{{level}}',
+  'df.range.col.width': 'P90 above P50',
+  'df.range.col.above': 'Sold above P90 (past)',
+  'df.range.col.source': 'Range from',
+  'df.range.above': '{{share}} of {{checked}}',
+  'df.range.noChecks': 'Too little history to check',
+  'df.range.source.engine.own': 'Own history',
+  'df.range.source.engine.group': 'Brand’s history',
+  'df.range.source.sapPlan.own': 'SAP plan’s errors',
+  'df.range.source.sapPlan.group': 'Brand’s SAP plan errors',
+  'df.range.source.material.own': 'Own history',
+  'df.range.source.material.group': 'Warehouse group’s history',
+  'df.range.source.none': 'No range',
+  'df.range.kind.packaging': 'Packaging',
+  'df.range.kind.rawMaterial': 'Raw material',
+  'df.def.range':
+    'The demand range: a past forecast’s error is kept as actual ÷ forecast at each horizon. P50 and P90 are the forecast times the 50th and 90th percentile of those ratios (as safety stock reads its errors), plus a weekly correction that moves up by 5% of the forecast × 0.9 after a week above P90 and down by 5% × 0.1 after a week inside it. With fewer than 10 past ratios at a horizon, the brand’s (or warehouse group’s) are used and marked.',
 };
 
 export const demandForecastId: Record<string, string> = {
@@ -248,4 +295,51 @@ export const demandForecastId: Record<string, string> = {
   'df.def.stockout': 'Minggu yang ditandai kehabisan stok tidak dibaca sebagai permintaan rendah: diisi dari minggu-minggu di sekitarnya, atau dilewati untuk SKU lambat.',
   'df.def.recon':
     'Rekonsiliasi (MinT-shrink) menyesuaikan prakiraan SKU, merek, dan total agar jumlahnya cocok, dengan menimbang setiap level menurut ketepatannya selama ini. Hasil negatif dijadikan nol.',
+  // REQ-E14-09 — rentang permintaan (BL-111).
+  'df.range.title': 'Rentang permintaan (P50 dan P90)',
+  'df.range.intro':
+    'P50 adalah angka yang sama mungkinnya dilampaui atau tidak oleh penjualan; P90 adalah angka yang dilampaui penjualan sekitar 1 dari 10 minggu. Setiap rentang dikalibrasi pada prakiraan yang akan dibuat mesin selama setahun terakhir, diputar ulang minggu demi minggu dengan model dilatih ulang setiap {{retrain}} minggu: pada setiap horizon, P90 berada di titik 9 dari 10 minggu prakiraan tersebut terjual sama dengan atau di bawahnya. Setelah penjualan setiap minggu masuk, P90 naik sedikit bila penjualan melampauinya dan turun sedikit bila tidak.',
+  'df.range.replay': '{{count}} prakiraan mingguan diputar ulang, dari minggu {{first}} sampai minggu {{last}}.',
+  'df.range.notPublished':
+    'Hanya ditampilkan ke perencana. Rentang ini tidak dipublikasikan ke pemasok: Stabilkan dan publikasikan masih hanya menampilkan kuantitas, dan publikasi dari mesin ditolak selama datanya simulasi. Stok pengaman juga belum memakainya: perencanaan material tetap memakai rencana SAP sampai peralihannya diputuskan (ENG-B66).',
+  'df.range.kpi.aboveP90': 'Terjual di atas P90',
+  'df.range.kpi.aboveP90.sub': 'target 10% · {{checked}} prakiraan mingguan lalu diperiksa, semua SKU',
+  'df.range.kpi.aboveP50': 'Terjual di atas P50',
+  'df.range.kpi.aboveP50.sub': 'target 50%',
+  'df.range.kpi.uncorrected': 'Di atas P90 tanpa koreksi mingguan',
+  'df.range.kpi.uncorrected.sub': 'pemeriksaan yang sama tanpa penyesuaian mingguan P90',
+  'df.range.kpi.width': 'P90 di atas P50, total',
+  'df.range.kpi.width.sub': 'selama {{weeks}} minggu',
+  'df.range.week': 'Minggu yang ditampilkan',
+  'df.range.levels.title': 'Total dan merek',
+  'df.range.levels.intro':
+    'Rentang merek dikalibrasi pada kesalahan masa lalu merek itu sendiri, sehingga lebih sempit daripada jumlah rentang SKU-nya: meleset antar-SKU sebagian saling menutup.',
+  'df.range.skus.title': 'SKU',
+  'df.range.skus.intro':
+    'SKU baru yang memakai rencana SAP dikalibrasi pada kesalahan masa lalu rencana SAP untuk SKU itu, atau SKU merek tersebut bila datanya terlalu sedikit, dan rentangnya lebih lebar.',
+  'df.range.materials.title': 'Material',
+  'df.range.materials.intro':
+    'Prakiraan mesin melalui bill of materials (termasuk scrap dan yield), dibandingkan dengan kebutuhan dari yang benar-benar terjual. Hanya sebagai rujukan: perencanaan material memakai rencana SAP.',
+  'df.range.col.level': 'Level',
+  'df.range.col.sku': 'SKU',
+  'df.range.col.material': 'Material',
+  'df.range.col.forecast': 'Prakiraan',
+  'df.range.col.need': 'Kebutuhan prakiraan',
+  'df.range.col.p': 'P{{level}}',
+  'df.range.col.width': 'P90 di atas P50',
+  'df.range.col.above': 'Terjual di atas P90 (lalu)',
+  'df.range.col.source': 'Rentang dari',
+  'df.range.above': '{{share}} dari {{checked}}',
+  'df.range.noChecks': 'Riwayat terlalu sedikit untuk diperiksa',
+  'df.range.source.engine.own': 'Riwayat sendiri',
+  'df.range.source.engine.group': 'Riwayat merek',
+  'df.range.source.sapPlan.own': 'Kesalahan rencana SAP',
+  'df.range.source.sapPlan.group': 'Kesalahan rencana SAP merek',
+  'df.range.source.material.own': 'Riwayat sendiri',
+  'df.range.source.material.group': 'Riwayat kelompok gudang',
+  'df.range.source.none': 'Tanpa rentang',
+  'df.range.kind.packaging': 'Kemasan',
+  'df.range.kind.rawMaterial': 'Bahan baku',
+  'df.def.range':
+    'Rentang permintaan: kesalahan prakiraan lalu disimpan sebagai aktual ÷ prakiraan pada setiap horizon. P50 dan P90 adalah prakiraan dikali persentil ke-50 dan ke-90 dari rasio tersebut (seperti stok pengaman membaca kesalahannya), ditambah koreksi mingguan yang naik 5% dari prakiraan × 0,9 setelah minggu di atas P90 dan turun 5% × 0,1 setelah minggu di dalamnya. Bila kurang dari 10 rasio lalu pada suatu horizon, rasio merek (atau kelompok gudang) dipakai dan ditandai.',
 };

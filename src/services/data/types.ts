@@ -73,6 +73,7 @@ import type { SupplierCfot } from '../engine/cfot';
 import type { SeriesResult, StabiliseParams, StabiliseRun } from '../engine/stabilise';
 import type { DataHealthReport } from '../engine/dataHealth';
 import type { DemandForecastRun } from '../engine/demandForecast';
+import type { DemandRangeRun } from '../engine/demandRange';
 import type { DatasetProvenance } from '../engine/types';
 import type { ReleaseSelection } from '../delivery/release';
 import type { EditPolicyPatch } from '../delivery/policy';
@@ -904,8 +905,14 @@ export interface StabilisedPlanView {
   readonly engine: StabiliseRunView;
   /** On SAP's published plan history, the stand-in E14-02 measures (ENG-B33). */
   readonly sapHistory: StabiliseRunView;
-  /** BR-06 — the range (P50 / P90) beside the quantity needs E14-09, which is not built. */
-  readonly rangeAvailable: false;
+  /** BR-06 — the demand range (P50 / P90, E14-09) is built: the Demand forecast page (BL-111). */
+  readonly rangeBuilt: true;
+  /**
+   * BR-06 — and it is NOT beside the published quantity: the quantities here are
+   * material net requirements from SAP's plan (ENG-B66), and publishing from the
+   * engine is refused while its data is simulated (ENG-B35, ENG-B99).
+   */
+  readonly rangePublished: false;
 }
 
 /**
@@ -929,6 +936,13 @@ export interface DataHealthView extends DataHealthReport {
  * backtest (E14-10) exists (ENG-B66).
  */
 export interface DemandForecastView extends DemandForecastRun {
+  /**
+   * REQ-E14-09 — P50, P90 (and the administrator's extra quantile) per SKU,
+   * brand, total and material, calibrated on a replay of the past year's
+   * forecasts, with how often actuals fell outside. Not published to suppliers
+   * and not read by E14-04 (ENG-B66, ENG-B97).
+   */
+  readonly range: DemandRangeRun;
   /** Where the dataset came from (X-03): SIMULATED until the MDM feed is live. */
   readonly provenance: DatasetProvenance;
   /** The source E14-03 to E14-06 and E14-13 plan on today. */

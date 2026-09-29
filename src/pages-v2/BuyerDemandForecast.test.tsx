@@ -9,6 +9,8 @@ import i18n from '../lib/i18n';
 import { formatNumber } from '../lib/format';
 import { demandForecastEn, demandForecastId } from '../lib/i18n/demandForecast';
 import type { QueryScope } from '../services/data/types';
+import { hubSettingsStore } from '../services/transitions/hubSettingsStore';
+import { sharePct } from './demandForecast/DemandRangeSection';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // REQ-E14-07 — the planner's Demand forecast page. Figures are read back from
@@ -21,6 +23,7 @@ const view = async () => (await mockDataService.procurement.getDemandForecast(bu
 
 afterEach(() => {
   void i18n.changeLanguage('en');
+  hubSettingsStore.reset();
 });
 
 describe('BuyerDemandForecast — the planner page', () => {
@@ -127,5 +130,72 @@ describe('BuyerDemandForecast — the planner page', () => {
     renderWithProviders(<BuyerDemandForecast />, { identity: BUYER, route: '/buyer/demand-forecast' });
     expect(await screen.findByRole('heading', { name: 'Prakiraan permintaan' })).toBeInTheDocument();
     expect(screen.getByTestId('df-main-not-built')).toHaveTextContent('Model utama belum dibangun');
+  });
+});
+
+describe('BuyerDemandForecast — the demand range (REQ-E14-09)', () => {
+  it('shows P50 and P90 per level, SKU and material for the week chosen, read back from the service', async () => {
+    const v = await view();
+    const r = v.range;
+    expect(r.levels).toEqual([0.5, 0.9]);
+    renderWithProviders(<BuyerDemandForecast />, { identity: BUYER, route: '/buyer/demand-forecast' });
+    const section = await screen.findByTestId('df-range');
+    expect(within(section).getByTestId('df-range-level-total-p50')).toHaveTextContent(formatNumber(r.total.bands[0].values[0]!));
+    expect(within(section).getByTestId('df-range-level-total-p90')).toHaveTextContent(formatNumber(r.total.bands[1].values[0]!));
+    for (const s of r.skus) {
+      expect(within(section).getByTestId(`df-range-sku-${s.key}-p90`)).toHaveTextContent(formatNumber(s.bands[1].values[0]!));
+    }
+    const mat = r.materials[0];
+    expect(within(section).getByTestId(`df-range-mat-${mat.key}-p50`)).toHaveTextContent(formatNumber(mat.bands[0].values[0]!));
+    // The week picker moves every figure to that week.
+    fireEvent.change(within(section).getByTestId('df-range-week'), { target: { value: '5' } });
+    expect(within(section).getByTestId('df-range-level-total-p90')).toHaveTextContent(formatNumber(r.total.bands[1].values[5]!));
+    // Known-false: no P95 column unless the administrator adds it.
+    expect(within(section).queryByText('P95')).toBeNull();
+  });
+
+  it('AC-02 and Experience: how often sales went above P90 (target 10%), per level and in all, from the service', async () => {
+    const v = await view();
+    const all = v.range.skuExperience.find((x) => x.key === 'total')!.experience;
+    renderWithProviders(<BuyerDemandForecast />, { identity: BUYER, route: '/buyer/demand-forecast' });
+    const section = await screen.findByTestId('df-range');
+    expect(within(section).getByTestId('df-range-kpi-p90')).toHaveTextContent(sharePct(all.above[1], all.checked)!);
+    expect(within(section).getByTestId('df-range-kpi-uncorrected')).toHaveTextContent(sharePct(all.aboveUncorrected[1], all.checked)!);
+    for (const l of [v.range.total, ...v.range.brands]) {
+      expect(within(section).getByTestId(`df-range-level-above-${l.key}`)).toHaveTextContent(`${sharePct(l.experience.above[1], l.experience.checked)} of ${formatNumber(l.experience.checked)}`);
+    }
+    expect(within(section).getByTestId('df-range-not-published')).toHaveTextContent('It is not published to suppliers');
+  });
+
+  it('a new SKU on SAP’s plan says its range comes from SAP’s plan’s errors', async () => {
+    const v = await view();
+    const fresh = v.range.skus.find((s) => s.method === 'newSkuSap' && s.source[0] === 'own')!;
+    renderWithProviders(<BuyerDemandForecast />, { identity: BUYER, route: '/buyer/demand-forecast' });
+    const section = await screen.findByTestId('df-range');
+    expect(within(section).getByTestId(`df-range-sku-source-${fresh.key}`)).toHaveTextContent('SAP plan’s errors');
+  });
+
+  it('the SKU detail carries P50 and P90 beside each week', async () => {
+    const v = await view();
+    const pick = v.skus.find((s) => s.method === 'comb')!;
+    const range = v.range.skus.find((s) => s.key === pick.skuCode)!;
+    renderWithProviders(<BuyerDemandForecast />, { identity: BUYER, route: '/buyer/demand-forecast' });
+    fireEvent.click(await screen.findByTestId(`df-sku-${pick.skuCode}`));
+    const detail = screen.getByTestId('df-detail');
+    expect(within(detail).getByTestId(`df-week-p90-${v.weeks[3]}`)).toHaveTextContent(formatNumber(range.bands[1].values[3]!));
+  });
+
+  it('X-05: the administrator’s extra quantile (P95) appears as a column, at or above P90', async () => {
+    expect(
+      hubSettingsStore.append({ key: 'engine.rangeExtraQuantilePct', value: 95, setBy: { kind: 'UNATTRIBUTED', reason: 'NO_PERSON_IN_SESSION' }, setAt: '2026-09-29T09:00:00+07:00' }),
+    ).toBe(true);
+    const v = await view();
+    expect(v.range.levels).toEqual([0.5, 0.9, 0.95]);
+    const total = v.range.total;
+    total.bands[2].values.forEach((p95, i) => expect(p95!).toBeGreaterThanOrEqual(total.bands[1].values[i]!));
+    renderWithProviders(<BuyerDemandForecast />, { identity: BUYER, route: '/buyer/demand-forecast' });
+    const section = await screen.findByTestId('df-range');
+    expect(within(section).getAllByText('P95').length).toBeGreaterThan(0);
+    expect(within(section).getByTestId('df-range-level-total-p95')).toHaveTextContent(formatNumber(total.bands[2].values[0]!));
   });
 });

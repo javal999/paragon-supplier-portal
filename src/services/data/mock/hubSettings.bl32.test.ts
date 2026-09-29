@@ -49,9 +49,11 @@ import {
   rescheduleOutThresholdWeeks,
   safetyLeadTimePercentile,
   stabiliseDampingWeight,
+  demandRangeExtraQuantilePct,
 } from '../../transitions/forecastConfig';
 import { DEFAULT_STABILISE_PARAMS, stabilisePeriod } from '../../engine/stabilise';
 import { freshnessOf } from '../../engine/dataHealth';
+import { rangeLevels } from '../../engine/demandRange';
 import { empiricalQuantile, fillRateSafetyStock } from '../../engine/safetyStock';
 import { singleItemSolver, type SizingItem } from '../../engine/orderSizing';
 import { reschedule, termsKey } from '../../engine/reschedule';
@@ -306,6 +308,8 @@ describe('BL32-READ · every reader of a value reads it through its accessor, at
       stabiliseDampingWeight: ['src/services/data/mock/MockProcurementService.ts', 'src/services/transitions/forecastConfig.ts'],
       // REQ-E14-01 — the same shape: the service passes the limits to the data-health check.
       feedFreshnessLimitsDays: ['src/services/data/mock/MockProcurementService.ts', 'src/services/transitions/forecastConfig.ts'],
+      // REQ-E14-09 — the same shape: the service passes the levels to the demand range.
+      demandRangeExtraQuantilePct: ['src/services/data/mock/MockProcurementService.ts', 'src/services/transitions/forecastConfig.ts'],
     };
     for (const [fn, files] of Object.entries(table)) expect(callersOf(fn), fn).toEqual(files);
     // Known-true through a second door: the SDC coverage indicator never
@@ -596,6 +600,8 @@ const FLIPS: Record<string, Flip> = {
     atDefault: 1320,
     afterChange: 1230,
   },
+  // REQ-E14-09 BR-01: P50 and P90 only at the default of 0; at 95 the range adds P95.
+  'engine.rangeExtraQuantilePct': { to: 95, read: () => rangeLevels(demandRangeExtraQuantilePct()), atDefault: [0.5, 0.9], afterChange: [0.5, 0.9, 0.95] },
   // ENG-D15: two weeks early is proposed at the default of 1; at 3 it is not.
   'engine.rescheduleOutWeeks': { to: 3, read: () => rescheduleFor(), atDefault: 'rescheduleOut', afterChange: 'none' },
   'engine.safetyLeadTimePercentile': {
