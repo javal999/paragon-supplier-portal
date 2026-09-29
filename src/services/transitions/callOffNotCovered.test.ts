@@ -44,6 +44,9 @@ const position = (over: Partial<InventoryPosition> = {}): InventoryPosition => (
   apiConnected: false,
   lastSync: null,
   batches: [],
+  // B1 (#88) made these required; this position has no mode-based staleness.
+  staleAt: null,
+  lastPullFailedAt: null,
   ...over,
 });
 
