@@ -192,6 +192,8 @@ import {
 import { forecastVersionStore, forecastViewStore } from './stores/forecastHubStores';
 // Material A1 — the supplier overlay (its own module, plan AD-5).
 import { supplierOverlayTarget } from './targets/supplierOverlay';
+// Material C5 — planning groups (their own module, plan AD-5).
+import { planningGroupTarget } from './targets/planningGroup';
 // Material C4 — the MRP controller list (its own module, plan AD-5).
 import { mrpControllerTarget } from './targets/mrpController';
 // Material C2 — supplier trade names (its own module, plan AD-5).
@@ -311,6 +313,7 @@ import {
   commitmentCapacityRefusal,
   horizonWeeks,
   periodCapacityCheck,
+  capacityGroupOfMaterial,
 } from '../../transitions/capacityRules';
 import {
   allCommitmentLines,
@@ -2453,13 +2456,14 @@ bindPolicyHook(POLICY_HOOKS.RR_PROMOTE_CAPACITY_CONFIRMED, ({ entityId, target }
     (l) => l.supplierId === r.supplierId && l.materialCode === r.materialCode && l.periodBucket === r.periodBucket,
   );
   if (!line) return { ok: true };
-  const plan =
-    allCapacityPlans().find((p) => p.supplierId === line.supplierId && p.materialGroup === line.materialGroup) ?? null;
+  // Material C5 (MR-8 BR-04) — the capacity group is the material's planning group.
+  const cap = capacityGroupOfMaterial(allCapacityPlans(), line.supplierId, line.materialCode, materialEntry);
+  const group = cap.planningGroupId ?? line.materialCode;
   const check = periodCapacityCheck(
-    plan,
+    cap.plan,
     lines,
     line.supplierId,
-    line.materialGroup,
+    cap.materials,
     line.periodStart,
     line.periodEnd,
     horizonWeeks(sdcClock.now()),
@@ -2469,7 +2473,7 @@ bindPolicyHook(POLICY_HOOKS.RR_PROMOTE_CAPACITY_CONFIRMED, ({ entityId, target }
   if (refusal.refusal === 'capacityNotConfirmed') {
     return {
       ok: false,
-      reason: `CAPACITY_NOT_CONFIRMED: confirm the capacity for ${line.materialGroup} in the week of ${refusal.week} before submitting its LTP`,
+      reason: `CAPACITY_NOT_CONFIRMED: confirm the capacity for ${group} in the week of ${refusal.week} before submitting its LTP`,
     };
   }
   if (refusal.refusal === 'aboveBeNoteRequired') {
@@ -2477,7 +2481,7 @@ bindPolicyHook(POLICY_HOOKS.RR_PROMOTE_CAPACITY_CONFIRMED, ({ entityId, target }
   }
   return {
     ok: false,
-    reason: `ABOVE_BE_NEEDS_REASON: the LTP for ${line.materialGroup} in the week of ${refusal.week} is above capacity plus additional capacity; choose a reason`,
+    reason: `ABOVE_BE_NEEDS_REASON: the LTP for ${group} in the week of ${refusal.week} is above capacity plus additional capacity; choose a reason`,
   };
 });
 
@@ -2854,7 +2858,7 @@ bindPolicyHook(POLICY_HOOKS.STOCK_ACCESS_SCOPE_VALID, ({ entityId, payload }) =>
   return { ok: true };
 });
 
-/** REQ-E08-04 — capacity per supplier × material group per week. */
+/** REQ-E08-04 — capacity per supplier × planning group per week (Material C5, MR-8 BR-04). */
 const capacityTarget: CommandTarget = {
   readState: (id) => (capacityStore.get(id) ? 'Submitted' : null),
   readScopeOwner: (id) => capacityStore.get(id)?.supplierId ?? null,
@@ -2865,7 +2869,7 @@ const capacityTarget: CommandTarget = {
   requireCreationOwner: true,
   creationOwner: (payload) => {
     const sid = String(payload.supplierId);
-    return allCapacityPlans().some((p) => p.supplierId === sid && p.materialGroup === String(payload.materialGroup))
+    return allCapacityPlans().some((p) => p.supplierId === sid && p.planningGroupId === String(payload.planningGroupId))
       ? sid
       : null;
   },
@@ -2880,7 +2884,7 @@ const capacityTarget: CommandTarget = {
     const row: CapacitySubmission = {
       id: capacityStore.nextId(),
       supplierId: String(payload.supplierId),
-      materialGroup: String(payload.materialGroup),
+      planningGroupId: String(payload.planningGroupId),
       submittedAt: sdcClock.now(),
       weeks: weeks.sort((a, b) => a.week.localeCompare(b.week)),
     };
@@ -2892,7 +2896,7 @@ const capacityTarget: CommandTarget = {
 // REQ-E08-04 AC-01 / AC-02 — every horizon week, and a reason below demand.
 bindPolicyHook(POLICY_HOOKS.CAPACITY_SUBMISSION_VALID, ({ payload }) => {
   const plan = allCapacityPlans().find(
-    (p) => p.supplierId === String(payload.supplierId) && p.materialGroup === String(payload.materialGroup),
+    (p) => p.supplierId === String(payload.supplierId) && p.planningGroupId === String(payload.planningGroupId),
   );
   if (!plan) return { ok: false, reason: 'no materials of this group are assigned to the supplier' };
   if (!Array.isArray(payload.weeks)) return { ok: false, reason: 'weeks must be a list' };
@@ -5152,6 +5156,8 @@ const TARGETS: Record<string, CommandTarget> = {
   threePl: threePlTarget,
   // Material A1 — a supplier's stock update mode (MR-1 BR-02, AC-06).
   supplierOverlay: supplierOverlayTarget,
+  // Material C5 — planning groups for capacity (MR-8 BR-01 to BR-05).
+  planningGroup: planningGroupTarget,
   // Material C4 — who each SAP MRP controller code is (MR-5 BR-02).
   mrpController: mrpControllerTarget,
   // Material C2 — a supplier's trade name for a PTI material (MR-3).

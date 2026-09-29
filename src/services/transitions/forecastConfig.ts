@@ -19,7 +19,8 @@
 //     and the safety-lead-time percentile (the administrator's, BL-32).
 //   · ENG-D6 / REQ-E14-05 — the order-sizing cost rates and (BL-117) the cap
 //     on rented space; ENG-D15 / REQ-E14-13 — the reschedule-out threshold
-//     in weeks; ENG-D9 / REQ-E14-06 — the damping weight.
+//     in weeks; ENG-D9 / REQ-E14-06 — the damping weight; REQ-E14-09 BR-01 —
+//     the quantile added to the demand range.
 //   · REQ-E14-01 — the freshness limit per engine feed, in days.
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -201,6 +202,15 @@ export function fsReconcileCycleWeeks(): number {
  */
 export function stabiliseDampingWeight(): number {
   return hubSetting('engine.dampingWeightPct') / 100;
+}
+
+/**
+ * REQ-E14-09 BR-01 — the quantile the administrator adds to the demand range
+ * beside P50 and P90, in percent (0 = none). In force now; the engine takes the
+ * levels as an argument (X-01, X-05).
+ */
+export function demandRangeExtraQuantilePct(): number {
+  return hubSetting('engine.rangeExtraQuantilePct');
 }
 
 /**

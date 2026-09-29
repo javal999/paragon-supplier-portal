@@ -55,6 +55,7 @@ export { roleFlow } from './flows/role.flow';
 export { workingCalendarFlow } from './flows/workingCalendar.flow';
 export { threePlFlow } from './flows/threePl.flow';
 export { supplierOverlayFlow } from './flows/supplierOverlay.flow';
+export { planningGroupFlow } from './flows/planningGroup.flow';
 export { mrpControllerFlow } from './flows/mrpController.flow';
 export { materialNameFlow } from './flows/materialName.flow';
 export { hubSettingFlow } from './flows/hubSetting.flow';
@@ -108,6 +109,7 @@ import { roleFlow } from './flows/role.flow';
 import { workingCalendarFlow } from './flows/workingCalendar.flow';
 import { threePlFlow } from './flows/threePl.flow';
 import { supplierOverlayFlow } from './flows/supplierOverlay.flow';
+import { planningGroupFlow } from './flows/planningGroup.flow';
 import { mrpControllerFlow } from './flows/mrpController.flow';
 import { materialNameFlow } from './flows/materialName.flow';
 import { hubSettingFlow } from './flows/hubSetting.flow';
@@ -190,6 +192,9 @@ flowRegistry.register(threePlFlow); // BL-51 — 3PL list
 // same degenerate single-state ledger shape; WIRED, so every change of a
 // supplier's mode lands in the audit trail with who and when (MR-1 AC-06).
 flowRegistry.register(supplierOverlayFlow); // Material A1 — supplier overlay
+// Material C5 — planning groups under SAP material groups (MR-8). WIRED, so
+// every create, rename, move and retirement lands in the audit trail.
+flowRegistry.register(planningGroupFlow); // Material C5 — planning groups
 // Material C4 — the MRP controller list (who a material's SAP planner code is).
 // The same degenerate single-state ledger shape; WIRED, so every mapping change
 // lands in the audit trail with who and when (MR-5 BR-02).

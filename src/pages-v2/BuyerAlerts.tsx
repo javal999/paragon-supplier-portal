@@ -34,6 +34,8 @@ import {
   labelClass,
   useInventoryRunner,
 } from './inventory/inventoryDisplay';
+import { alertPlanningGroup, usePlanningGroupLabel } from './inventory/planningGroupDisplay';
+import { usePlanningGroups } from '../services/query/hooks';
 import { PicCell, PicFilter, PicHeader, usePicFilter } from './materials/picDisplay';
 import MaterialSearch, { MaterialMatchReason, useMaterialMatcher } from '../components/ui-v2/MaterialSearch';
 import { searchMaterials } from '../services/transitions/matchMaterial';
@@ -109,6 +111,10 @@ const BuyerAlerts: React.FC = () => {
   const closeReasons = useActiveReasonCodes('alertClose');
   const [params, setParams] = useSearchParams();
   const reasonFilter = params.get('reason') ?? '';
+  // Material C5 (MR-8 BR-07) — planning group is a filter on alerts.
+  const groupFilter = params.get('planningGroup') ?? '';
+  const groupLabel = usePlanningGroupLabel();
+  const planningGroups = usePlanningGroups().data?.items ?? [];
   // A reason in the address is a Closed-tab filter, so that tab opens.
   const [tab, setTab] = useState<StatusTab>(reasonFilter ? 'closed' : 'open');
   const [risk, setRisk] = useState<RiskFilter>('all');
@@ -133,13 +139,30 @@ const BuyerAlerts: React.FC = () => {
   const ofTab = alerts.filter((a) => a.status === tab);
   const closed = alerts.filter((a) => a.status === 'closed');
   const byReason = (a: InventoryAlert) => tab !== 'closed' || reasonFilter === '' || closeReasonOf(a) === reasonFilter;
-  // Material C4 — the PIC filter (`?pic=`) sits beside the reason filter (`?reason=`).
+  const byGroup = (a: InventoryAlert) => groupFilter === '' || alertPlanningGroup(a, planningGroups) === groupFilter;
+  const groupOptions = [
+    ...new Set(ofTab.map((a) => alertPlanningGroup(a, planningGroups)).filter((g): g is string => g !== null)),
+  ].sort();
+  const setGroupFilter = (id: string) =>
+    setParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        if (id) next.set('planningGroup', id);
+        else next.delete('planningGroup');
+        return next;
+      },
+      { replace: true },
+    );
+  // Material C4 — the PIC filter (`?pic=`) sits beside the reason filter
+  // (`?reason=`); Material C5 — and the planning group filter (`?planningGroup=`).
   // Material C3 — the search matches the alert's material code, PTI description
   // and its supplier's approved trade name (a capacity alert, whose subject is
   // a material group, matches on the group code and label).
   const found = searchMaterials(
     search,
-    ofTab.filter((a) => (risk === 'all' || a.riskClass === risk) && byReason(a) && pic.matches(a.mrpController)),
+    ofTab.filter(
+      (a) => (risk === 'all' || a.riskClass === risk) && byReason(a) && pic.matches(a.mrpController) && byGroup(a),
+    ),
     (a) => ({ code: a.subject, description: a.subjectLabel, supplierId: a.supplierId }),
     matchOf,
   );
@@ -210,6 +233,24 @@ const BuyerAlerts: React.FC = () => {
         onChange={setRisk}
         className="mb-3"
       />
+      <div className="mb-4 max-w-xs">
+        <label htmlFor="alert-group-filter" className={labelClass}>
+          {t('inv.alerts.filter.planningGroup')}
+        </label>
+        <select
+          id="alert-group-filter"
+          className={inputClass}
+          value={groupFilter}
+          onChange={(e) => setGroupFilter(e.target.value)}
+        >
+          <option value="">{t('inv.filter.all')}</option>
+          {groupOptions.map((id) => (
+            <option key={id} value={id}>
+              {groupLabel(id)}
+            </option>
+          ))}
+        </select>
+      </div>
       <div className="flex flex-wrap items-center gap-3 mb-4">
         <div className="flex-1 min-w-[240px]">
           <MaterialSearch mode="filter" query={search} onQueryChange={setSearch} testId="alert-search" />
@@ -281,7 +322,7 @@ const BuyerAlerts: React.FC = () => {
                           <div className="text-sm text-text-primary">{t(`inv.alerts.rule.${a.rule}`)}</div>
                           <div className="text-xs text-text-secondary">
                             {a.rule === 'capacityBelowDemand' ? (
-                              t(`inv.group.${a.subject}`)
+                              groupLabel(a.subject)
                             ) : (
                               <>
                                 <Data>{a.subject}</Data> · {a.subjectLabel}
