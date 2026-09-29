@@ -174,7 +174,7 @@ describe('SDC write verbs — the LAYERED defence against a bogus material', () 
     const res = await svc.dispatch(sup002, {
       transitionId: 't_inventorydeclaration_declare',
       entity: 'inventoryDeclaration',
-      payload: { supplierId: 'sup-002', materialCode: 'RM-EMUL-3310', totalQty: 250 },
+      payload: { supplierId: 'sup-002', materialCode: 'RM-EMUL-3310', totalQty: 250, inProductionQty: 0 },
     });
     expect(res.status).not.toBe('failed');
     const stored = inventoryDeclarationStore.get(res.entityId ?? '');
