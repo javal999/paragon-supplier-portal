@@ -38,6 +38,7 @@ export const dataHealthEn: Record<string, string> = {
   'dh.step.E14-04': 'E14-04 Safety stock',
   'dh.step.E14-05': 'E14-05 Order plan',
   'dh.step.E14-07': 'E14-07 Demand forecast',
+  'dh.step.E14-09': 'E14-09 Demand range',
   'dh.step.E14-13': 'E14-13 Reschedule open orders',
 
   'dh.col.feed': 'Feed',
@@ -183,6 +184,7 @@ export const dataHealthId: Record<string, string> = {
   'dh.step.E14-04': 'E14-04 Stok pengaman',
   'dh.step.E14-05': 'E14-05 Rencana pesanan',
   'dh.step.E14-07': 'E14-07 Prakiraan permintaan',
+  'dh.step.E14-09': 'E14-09 Rentang permintaan',
   'dh.step.E14-13': 'E14-13 Jadwal ulang pesanan terbuka',
 
   'dh.col.feed': 'Umpan',

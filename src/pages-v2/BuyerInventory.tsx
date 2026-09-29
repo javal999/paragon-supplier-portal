@@ -37,6 +37,7 @@ import {
 } from './inventory/inventoryDisplay';
 import StockEntryPanel from './inventory/StockEntryPanel';
 import { PicCell, PicFilter, PicHeader, usePicFilter } from './materials/picDisplay';
+import { TradeNameBeside } from './materials/tradeNameDisplay';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PTI INVENTORY — REQ-E08-01 (visibility), REQ-E08-02 (API sync, recording a
@@ -250,6 +251,8 @@ const BuyerInventory: React.FC = () => {
                   <div className="text-sm text-text-primary">
                     {p.materialLabel}
                   </div>
+                  {/* Material C2 — the supplier's approved trade name (MR-3 d, planner step 3). */}
+                  <TradeNameBeside name={p.tradeName} testId={`pti-stock-trade-name-${p.supplierId}-${p.materialCode}`} />
                   {p.consignment && (
                     <StatusPill variant="info" className="mt-1">
                       {t('inv.consignment')}

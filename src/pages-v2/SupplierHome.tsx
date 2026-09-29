@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { usePlanningGroupLabel } from './inventory/planningGroupDisplay';
 import AppShellV2 from '../components/layout-v2/AppShellV2';
 import PageHeader from '../components/ui-v2/PageHeader';
 import SampleDataBadge from '../components/ui-v2/SampleDataBadge';
@@ -41,6 +42,7 @@ import { sdcClock } from '../services/sdc/clock';
 
 const SupplierHome: React.FC = () => {
   const { t } = useTranslation();
+  const groupLabel = usePlanningGroupLabel();
   const { identity } = useCurrentIdentity();
   const supplierId = identity.supplierId;
   const pos = usePurchaseOrders();
@@ -273,7 +275,7 @@ const SupplierHome: React.FC = () => {
                 <RiskPill riskClass={a.riskClass} />
                 <span className="text-sm text-text-primary">{t(`inv.alerts.sup.rule.${a.rule}`)}</span>
                 <span className="text-xs text-text-secondary">
-                  {a.rule === 'capacityBelowDemand' ? t(`inv.group.${a.subject}`) : <Data>{a.subject}</Data>}
+                  {a.rule === 'capacityBelowDemand' ? groupLabel(a.subject) : <Data>{a.subject}</Data>}
                 </span>
               </li>
             ))}
