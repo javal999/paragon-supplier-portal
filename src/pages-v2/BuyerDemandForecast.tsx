@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import AppShellV2 from '../components/layout-v2/AppShellV2';
 import PageHeader from '../components/ui-v2/PageHeader';
 import PageMetaLine from '../components/ui-v2/PageMetaLine';
@@ -16,8 +17,9 @@ import LoadingState from '../components/ui-v2/LoadingState';
 import ErrorState from '../components/ui-v2/ErrorState';
 import { formatDate, formatNumber } from '../lib/format';
 import { useDemandForecast } from '../services/query/hooks';
-import type { DemandForecastRun, ForecastMethod, SkuForecast } from '../services/engine/demandForecast';
+import type { DemandForecastRun, ForecastMethod } from '../services/engine/demandForecast';
 import type { EventFactor } from '../services/engine/eventCalendar';
+import type { DemandForecastSkuView } from '../services/data/types';
 import type { SeriesRange } from '../services/engine/demandRange';
 import DemandRangeSection from './demandForecast/DemandRangeSection';
 
@@ -53,7 +55,7 @@ const diffPct = (a: number, b: number | null): string => {
 const two = (x: number | undefined) => (x === undefined ? '—' : formatNumber(Math.round(x * 100) / 100));
 
 const SkuDetail: React.FC<{
-  sku: SkuForecast;
+  sku: DemandForecastSkuView;
   weeks: readonly string[];
   events: DemandForecastRun['events']['horizon'];
   range: SeriesRange | null;
@@ -114,6 +116,12 @@ const SkuDetail: React.FC<{
                 </TableCell>
                 <TableCell>
                   <Data data-testid={`df-week-forecast-${w}`}>{formatNumber(sku.forecast[i])}</Data>
+                  {/* REQ-E14-11 X-06 — a planner override in force; the engine's own value beside it. */}
+                  {sku.overridden.includes(i) && (
+                    <div className="text-xs text-text-tertiary whitespace-nowrap" data-testid={`df-week-overridden-${w}`}>
+                      {t('fb.df.overridden')} · {t('fb.df.engineCol')} <Data className="text-text-tertiary">{formatNumber(sku.engineForecast[i])}</Data>
+                    </div>
+                  )}
                 </TableCell>
                 {range?.bands.map((b) => (
                   <TableCell key={b.level}>
@@ -235,8 +243,21 @@ const BuyerDemandForecast: React.FC = () => {
       <p className="text-xs text-text-secondary mb-1" data-testid="df-main-not-built">
         {t('df.mainNotBuilt')}
       </p>
-      <p className="text-xs text-text-tertiary mb-4" data-testid="df-source-note">
+      <p className="text-xs text-text-tertiary mb-1" data-testid="df-source-note">
         {t('df.source')}
+      </p>
+      {/* REQ-E14-11 — the forecast shown carries the Material Planning team's overrides. */}
+      <p className="text-xs text-text-secondary mb-4" data-testid="df-overrides">
+        {run.overrideCells > 0 && <>{t('fb.df.overrides', { count: run.overrideCells })} </>}
+        <Link to="/buyer/forecast-bias" className="text-action hover:underline" data-testid="df-bias-link">
+          {t('fb.df.link')}
+        </Link>
+      </p>
+      {/* REQ-E14-10 — each SKU's model by service is chosen on the Model backtest page (BL-112). */}
+      <p className="text-xs text-text-tertiary mb-4" data-testid="df-backtest-link">
+        <Link to="/buyer/model-backtest" className="text-action underline">
+          {t('mb.link.fromDemandForecast')}
+        </Link>
       </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-6" data-testid="df-kpis">

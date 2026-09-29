@@ -17,6 +17,11 @@
 //   · alertClose          — why a planner closes an alert (MR-9 BR-04, BR-05).
 //                           "Other" needs a note. Read by the alert close
 //                           verb (`alertCloseRefusal`, MAT F1).
+// A sixth, new (REQ-E14-11 X-06 / BR-03, BL-114):
+//   · forecastOverride    — why a Material Planning team member overrides the
+//                           demand forecast. Required on an upward override;
+//                           "Other" needs a note. Read by the override verb
+//                           (`overrideRefusal`), and FVA reports by it (BR-02).
 // ⚠️ Call-off reject / change reasons and goods-receipt dispute reasons are FREE
 // TEXT in this build (`reason`, `comment` fields), not coded lists — there is
 // no list for an administrator to maintain, so none is invented here.
@@ -38,8 +43,9 @@ import { asActorAttribution, type ActorAttribution } from '../../lib/enforcement
 import { orderCollaborationEn, orderCollaborationId } from '../../lib/i18n/orderCollaboration';
 import { inventoryCapacityEn, inventoryCapacityId } from '../../lib/i18n/inventoryCapacity';
 import { forecastCollaborationEn, forecastCollaborationId } from '../../lib/i18n/forecastCollaboration';
+import { forecastBiasEn, forecastBiasId } from '../../lib/i18n/forecastBias';
 
-export const REASON_LISTS = ['poAdjust', 'poReject', 'capacityShortfall', 'commitmentShortfall', 'alertClose'] as const;
+export const REASON_LISTS = ['poAdjust', 'poReject', 'capacityShortfall', 'commitmentShortfall', 'alertClose', 'forecastOverride'] as const;
 export type ReasonListId = (typeof REASON_LISTS)[number];
 
 export const isReasonList = (v: unknown): v is ReasonListId =>
@@ -65,6 +71,16 @@ export const STARTER_REASON_CODES: Readonly<Record<ReasonListId, readonly string
     'risk-accepted',
     'other',
   ]),
+  // REQ-E14-11 X-06 — the starter list for a forecast override (ENG-B104).
+  forecastOverride: Object.freeze([
+    'promotion',
+    'customer-order',
+    'listing-gain',
+    'listing-loss',
+    'market-info',
+    'data-correction',
+    'other',
+  ]),
 });
 
 /** The i18n key prefix a built-in code's label lives under, per list. */
@@ -74,6 +90,7 @@ export const BUILT_IN_LABEL_PREFIX: Readonly<Record<ReasonListId, string>> = Obj
   capacityShortfall: 'inv.capacity.reason.',
   commitmentShortfall: 'fc.reason.',
   alertClose: 'inv.alerts.closeReason.',
+  forecastOverride: 'fb.reason.',
 });
 
 /**
@@ -203,8 +220,8 @@ let hydrated = false;
 let version = 0;
 const listeners = new Set<() => void>();
 
-const EN: Record<string, string> = { ...orderCollaborationEn, ...inventoryCapacityEn, ...forecastCollaborationEn };
-const ID: Record<string, string> = { ...orderCollaborationId, ...inventoryCapacityId, ...forecastCollaborationId };
+const EN: Record<string, string> = { ...orderCollaborationEn, ...inventoryCapacityEn, ...forecastCollaborationEn, ...forecastBiasEn };
+const ID: Record<string, string> = { ...orderCollaborationId, ...inventoryCapacityId, ...forecastCollaborationId, ...forecastBiasId };
 
 /**
  * A built-in code's SHIPPED labels, EN and ID, read from the i18n fragments

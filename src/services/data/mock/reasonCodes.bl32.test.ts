@@ -94,7 +94,7 @@ const callersOf = (re: RegExp) => SHIPPED.filter((f) => re.test(f.code)).map((f)
 
 describe('BL32-RSN-POP · the coded reason lists, derived', () => {
   it('BL32-RSN-POP-01 · the lists, each the §3.6 / BR-06 / MR-9 BR-05 starter list', () => {
-    expect([...REASON_LISTS]).toEqual(['poAdjust', 'poReject', 'capacityShortfall', 'commitmentShortfall', 'alertClose']);
+    expect([...REASON_LISTS]).toEqual(['poAdjust', 'poReject', 'capacityShortfall', 'commitmentShortfall', 'alertClose', 'forecastOverride']);
     expect(STARTER_REASON_CODES.poReject).toEqual(['date', 'quantity', 'quality']);
     for (const l of ['poAdjust', 'capacityShortfall', 'commitmentShortfall'] as const) {
       expect(STARTER_REASON_CODES[l]).toEqual(['capacity', 'material', 'logistics', 'quality', 'other']);
@@ -104,6 +104,11 @@ describe('BL32-RSN-POP · the coded reason lists, derived', () => {
       'calloff-raised', 'po-raised', 'supplier-updated', 'supplier-confirmed-other', 'data-error', 'risk-accepted', 'other',
     ]);
     expect(STARTER_REASON_CODES.alertClose).toContain(NOTE_REQUIRED_CODE);
+    // REQ-E14-11 X-06 — the forecast override reasons (ENG-B104); "Other" needs a note.
+    expect(STARTER_REASON_CODES.forecastOverride).toEqual([
+      'promotion', 'customer-order', 'listing-gain', 'listing-loss', 'market-info', 'data-correction', 'other',
+    ]);
+    expect(STARTER_REASON_CODES.forecastOverride).toContain(NOTE_REQUIRED_CODE);
     expect(NOTE_REQUIRED_CODE).toBe('other');
     // Every starter code of every list has its shipped label in EN and ID.
     for (const l of REASON_LISTS) {
@@ -138,6 +143,7 @@ describe('BL32-RSN-READ · every reader reads the list in force', () => {
   it('BL32-RSN-READ-01 · the verbs and parsers that check a code, pinned', () => {
     expect(callersOf(/\bisActiveReasonCode\s*\(/)).toEqual([
       'src/services/data/mock/MockCommandService.ts',
+      'src/services/data/mock/targets/forecastOverride.ts',
       'src/services/transitions/capacityRules.ts',
       'src/services/transitions/forecastRules.ts',
       'src/services/transitions/inventoryAlertRules.ts',
@@ -149,6 +155,7 @@ describe('BL32-RSN-READ · every reader reads the list in force', () => {
   it('BL32-RSN-READ-02 · the pickers offer the active list; the records read through one label helper', () => {
     expect(callersOf(/\buseActiveReasonCodes\s*\(/)).toEqual([
       'src/pages-v2/BuyerAlerts.tsx',
+      'src/pages-v2/BuyerForecastBias.tsx',
       'src/pages-v2/SupplierCapacity.tsx',
       'src/pages-v2/SupplierForecastCommitments.tsx',
       'src/pages-v2/SupplierForecasts.tsx',
@@ -159,6 +166,7 @@ describe('BL32-RSN-READ · every reader reads the list in force', () => {
       'src/pages-v2/BuyerAlerts.tsx',
       'src/pages-v2/BuyerCapacity.tsx',
       'src/pages-v2/BuyerCommitments.tsx',
+      'src/pages-v2/BuyerForecastBias.tsx',
       'src/pages-v2/SupplierCapacity.tsx',
       'src/pages-v2/SupplierForecastCommitments.tsx',
       'src/pages-v2/SupplierForecasts.tsx',
@@ -168,7 +176,7 @@ describe('BL32-RSN-READ · every reader reads the list in force', () => {
     ]);
     // Known-false: no page builds a reason label from its i18n key itself any
     // more — that would label an added code with its raw key.
-    expect(callersOf(/t\(`(oc\.reason|oc\.cause|inv\.capacity\.reason|fc\.reason)\.\$\{/)).toEqual([]);
+    expect(callersOf(/t\(`(oc\.reason|oc\.cause|inv\.capacity\.reason|fc\.reason|fb\.reason)\.\$\{/)).toEqual([]);
   });
 });
 

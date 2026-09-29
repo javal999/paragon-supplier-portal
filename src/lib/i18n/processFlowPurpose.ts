@@ -522,6 +522,10 @@ export const processFlowPurposeEn: Record<string, string> = {
     'The record that a Material Planner took a proposed change to an open purchase order into SAP. The hub never changes a purchase order itself, so this is how the reschedule report knows which of its proposals were acted on.',
   'processFlows.purpose.t_sapchange_mark':
     'The Material Planner marks a proposal to move, reduce or cancel part of a purchase order as taken to SAP, with the change and the time. It is refused while the forecast engine runs on simulated data, because a change made in SAP reaches the supplier.',
+  'processFlows.purpose.entity.forecastOverride':
+    'A Material Planning team member’s change to one week of one product’s demand forecast, with the old and new value, the reason, who and when. The latest change of a week is the one in force; the forecast bias page measures whether changes of each kind made the forecast better or worse.',
+  'processFlows.purpose.t_forecastoverride_record':
+    'The Material Planning team overrides the demand forecast for one product and week. Raising it above the engine’s forecast needs a reason code. It does not change material planning, which still runs on SAP’s plan.',
 
   // ── RFx management (REQ-E03-02 / REQ-E03-04 / REQ-E03-05) ─────────────────
   'processFlows.purpose.entity.rfiEvent':
@@ -1079,6 +1083,10 @@ export const processFlowPurposeId: Record<string, string> = {
     'Catatan bahwa Perencana Material membawa usulan perubahan baris pesanan pembelian terbuka ke SAP. Hub tidak pernah mengubah pesanan pembelian sendiri, jadi dengan catatan ini laporan penjadwalan ulang tahu usulan mana yang sudah ditindaklanjuti.',
   'processFlows.purpose.t_sapchange_mark':
     'Perencana Material menandai usulan untuk memindahkan, mengurangi, atau membatalkan baris pesanan pembelian sebagai sudah dibawa ke SAP, beserta perubahan dan waktunya. Ditolak selama mesin prakiraan memakai data simulasi, karena perubahan di SAP sampai ke pemasok.',
+  'processFlows.purpose.entity.forecastOverride':
+    'Perubahan oleh anggota tim Perencanaan Material pada satu minggu prakiraan permintaan satu produk, beserta nilai lama dan baru, alasan, siapa, dan kapan. Perubahan terakhir pada suatu minggu adalah yang berlaku; halaman bias prakiraan mengukur apakah perubahan tiap jenis membuat prakiraan lebih baik atau lebih buruk.',
+  'processFlows.purpose.t_forecastoverride_record':
+    'Tim Perencanaan Material menyesuaikan prakiraan permintaan satu produk untuk satu minggu. Menaikkannya di atas prakiraan mesin memerlukan kode alasan. Ini tidak mengubah perencanaan material, yang tetap memakai rencana SAP.',
 
   // ── RFx (REQ-E03-02 / REQ-E03-04 / REQ-E03-05) ────────────────────────────
   'processFlows.purpose.entity.rfiEvent':

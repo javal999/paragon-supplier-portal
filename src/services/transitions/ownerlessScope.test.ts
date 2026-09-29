@@ -273,6 +273,9 @@ async function realIds(): Promise<Record<string, string | null>> {
     // store starts empty (nothing is marked while the engine data is simulated);
     // the id is a well-formed one so the coverage control can see the target.
     sapChangeMark: 'sap-0001',
+    // REQ-E14-11 — a forecast override is creation-only (unprobeable) and its
+    // ledger starts empty (no override history is invented); a well-formed id.
+    forecastOverride: 'fo-0001',
     // Material E1 — a stock simulation planner input is creation-only
     // (unprobeable, AR-20) and its store starts empty; a well-formed id.
     simulationOverride: 'sim-0001',
@@ -495,8 +498,8 @@ describe('POPULATION — nothing below means anything without this', () => {
     // and lands in `ownerless` with the other buyer-owned targets.
     // A confidentiality acceptance is the same creation-only shape.
     // A "taken to SAP" mark (REQ-E14-13) is the same creation-only record shape.
-    // So is a stock simulation planner input (Material E1, AR-20).
-    expect(unprobeable).toEqual(['rfqConfidentiality', 'inventoryDeclaration', 'simulationOverride', 'stockSync', 'capacitySubmission', 'forecastVersion', 'forecastView', 'sapChangeMark']);
+    // So is a stock simulation planner input (Material E1, AR-20) and a forecast override (REQ-E14-11).
+    expect(unprobeable).toEqual(['rfqConfidentiality', 'inventoryDeclaration', 'simulationOverride', 'stockSync', 'capacitySubmission', 'forecastVersion', 'forecastView', 'sapChangeMark', 'forecastOverride']);
   });
 
   it('CONTROL — the walk lands every probe in one of its verb\'s from-states', async () => {

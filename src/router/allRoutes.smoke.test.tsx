@@ -16,6 +16,8 @@ import path from 'node:path';
 
 import { Routes, Route } from 'react-router-dom';
 import { screen, waitFor } from '@testing-library/react';
+import { beforeAll } from 'vitest';
+import { currentForecastBias } from '../services/data/mock/demandForecastRun';
 import { renderWithProviders, SUPPLIER } from '../test/test-utils';
 import type { CurrentIdentity } from '../context/CurrentIdentityContext';
 
@@ -96,6 +98,8 @@ import BuyerReschedule from '../pages-v2/BuyerReschedule';
 import BuyerStabilise from '../pages-v2/BuyerStabilise';
 import BuyerDataHealth from '../pages-v2/BuyerDataHealth';
 import BuyerDemandForecast from '../pages-v2/BuyerDemandForecast';
+import BuyerForecastBias from '../pages-v2/BuyerForecastBias';
+import BuyerModelBacktest from '../pages-v2/BuyerModelBacktest';
 import SupplierShipments from '../pages-v2/SupplierShipments';
 import SupplierGoodsReceipts from '../pages-v2/SupplierGoodsReceipts';
 import SupplierInvoicesV2 from '../pages-v2/SupplierInvoices';
@@ -154,6 +158,8 @@ const ROUTES: RouteCase[] = [
   { name: 'buyer/stabilise', pattern: '/buyer/stabilise', at: '/buyer/stabilise', element: <BuyerStabilise />, identity: BUYER },
   { name: 'buyer/data-health', pattern: '/buyer/data-health', at: '/buyer/data-health', element: <BuyerDataHealth />, identity: BUYER },
   { name: 'buyer/demand-forecast', pattern: '/buyer/demand-forecast', at: '/buyer/demand-forecast', element: <BuyerDemandForecast />, identity: BUYER },
+  { name: 'buyer/forecast-bias', pattern: '/buyer/forecast-bias', at: '/buyer/forecast-bias', element: <BuyerForecastBias />, identity: BUYER },
+  { name: 'buyer/model-backtest', pattern: '/buyer/model-backtest', at: '/buyer/model-backtest', element: <BuyerModelBacktest />, identity: BUYER },
   { name: 'buyer/collaboration/responses', pattern: '/buyer/collaboration/responses', at: '/buyer/collaboration/responses', element: <BuyerCollaboration />, identity: BUYER },
   { name: 'buyer/contracts', pattern: '/buyer/contracts', at: '/buyer/contracts', element: <BuyerContracts />, identity: BUYER },
   { name: 'buyer/contracts/:id', pattern: '/buyer/contracts/:id', at: '/buyer/contracts/ctr-013', element: <BuyerContractDetail />, identity: BUYER },
@@ -224,6 +230,13 @@ const ROUTES: RouteCase[] = [
 ];
 
 describe('sp-001 — every route mounts without crashing', () => {
+  // REQ-E14-11 — the forecast-bias read replays the demand forecast at 52 past
+  // origins (about a second, memoised). Run it once here, outside the per-route
+  // clock, so the route's mount is timed on the mount and not on the replay.
+  beforeAll(() => {
+    currentForecastBias();
+  }, 60_000);
+
   it('⚠️ route table covers all of AppRouter — DERIVED from the source, not counted', () => {
     // ⚠️ **WHAT THIS REPLACED, AND WHY IT COULD NEVER HAVE WORKED.** The guard
     // was `expect(ROUTES.length).toBe(41)` under a comment saying it *"guards

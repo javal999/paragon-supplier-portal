@@ -52,6 +52,7 @@ import { nextSyncAt, staleAtFor, updateCycleFor } from '../../transitions/update
 import { hubWorkingCalendar } from '../../transitions/workingCalendarStore';
 import { coverageBands } from '../../sdc/consolidation';
 import {
+  backtestMascLimit,
   engineServiceTargets,
   feedFreshnessLimitsDays,
   orderSizingCosts,
@@ -67,6 +68,7 @@ import { freshnessOf } from '../../engine/dataHealth';
 import { rangeLevels } from '../../engine/demandRange';
 import { empiricalQuantile, fillRateSafetyStock } from '../../engine/safetyStock';
 import { singleItemSolver, type SizingItem } from '../../engine/orderSizing';
+import { selectModel, type CandidateScore } from '../../engine/modelBacktest';
 import { reschedule, termsKey } from '../../engine/reschedule';
 import { addDays } from '../../engine/dates';
 import { cycleOfDay } from '../../transitions/fixedStockReconcile';
@@ -232,6 +234,8 @@ describe('BL32-POP · the population of rule values is derived from the config m
       'engine.changePenaltyIdrPerPallet': 'REQ-E14-05 BR-03',
       // BL-117 — the Warehouse's cap on rented space (the 3PL contract).
       'engine.maxRentedSpacePct': 'REQ-E14-05',
+      // ENG-D13 — the Material Planner sets the MASC limit after the first backtest.
+      'engine.backtestMascLimitPct': 'ENG-D13',
     });
   });
 });
@@ -360,6 +364,8 @@ describe('BL32-READ · every reader of a value reads it through its accessor, at
       stabiliseDampingWeight: ['src/services/data/mock/MockProcurementService.ts', 'src/services/transitions/forecastConfig.ts'],
       // REQ-E14-01 — the same shape: the service passes the limits to the data-health check.
       feedFreshnessLimitsDays: ['src/services/data/mock/MockProcurementService.ts', 'src/services/transitions/forecastConfig.ts'],
+      // ENG-D13 / REQ-E14-10 — the same shape: the service passes the limit to the backtest.
+      backtestMascLimit: ['src/services/data/mock/MockProcurementService.ts', 'src/services/transitions/forecastConfig.ts'],
       // REQ-E14-09 — the same shape: the service passes the levels to the demand range.
       demandRangeExtraQuantilePct: ['src/services/data/mock/MockProcurementService.ts', 'src/services/transitions/forecastConfig.ts'],
     };
@@ -375,6 +381,12 @@ describe('BL32-READ · every reader of a value reads it through its accessor, at
 // ── 3 · Every value flips a rule outcome, and reset flips it back ─────────────
 
 const CALL_OFF = { quantity: 1000, needDate: '2026-09-10' };
+/** ENG-D13's flip: the floor (Comb) against a better-filling but less stable Theta. */
+const masCase = (candidate: CandidateScore['candidate'], fillRate: number, masc: number): CandidateScore => ({
+  candidate, fillRate, orderCompleteRate: fillRate, unitFillRate: fillRate, palletWeeks: 1000, masc, wape: null, bias: null,
+  counts: { lines: 100, fullLines: Math.round(fillRate * 100), orderWeeks: 100, completeWeeks: Math.round(fillRate * 100) },
+});
+const MASC_CASE: CandidateScore[] = [masCase('comb', 0.9, 0.4), masCase('theta', 0.97, 1.8)];
 const API_PULL = '2026-09-01T02:00:00.000Z';
 const MAT = 'PK-PETB-8801';
 const RELEASED: CallOff = {
@@ -658,6 +670,9 @@ const FLIPS: Record<string, Flip> = {
     atDefault: 1320,
     afterChange: 1230,
   },
+  // ENG-D13: not set (0) → no limit, the better but less stable Theta is chosen;
+  // at 100% (MASC 1.0) Theta's 1.8 is over the limit and the Comb floor stays.
+  'engine.backtestMascLimitPct': { to: 100, read: () => selectModel(MASC_CASE, 'comb', backtestMascLimit()).chosen, atDefault: 'theta', afterChange: 'comb' },
   // REQ-E14-09 BR-01: P50 and P90 only at the default of 0; at 95 the range adds P95.
   'engine.rangeExtraQuantilePct': { to: 95, read: () => rangeLevels(demandRangeExtraQuantilePct()), atDefault: [0.5, 0.9], afterChange: [0.5, 0.9, 0.95] },
   // ENG-D15: two weeks early is proposed at the default of 1; at 3 it is not.
