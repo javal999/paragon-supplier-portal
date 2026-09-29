@@ -28,7 +28,16 @@ import { HandoffNotice } from '../components/ui-v2/HandoffNotice';
 import { useVerbAvailability } from '../hooks/useVerbAvailability';
 import { useCurrentIdentity } from '../context/CurrentIdentityContext';
 import { formatDate, formatDateTime } from '../lib/format';
-import { useForecastCommitments, useForecastVersions } from '../services/query/hooks';
+import { useCapacityPlans, useForecastCommitments, useForecastVersions } from '../services/query/hooks';
+import { useToast } from '../hooks/useToast';
+import {
+  commitmentCapacityRefusal,
+  horizonWeeks,
+  periodCapacityCheck,
+  type CommitmentCapacityRefusal,
+  type PeriodCapacityCheck,
+} from '../services/transitions/capacityRules';
+import { LtpCheckPill } from './inventory/inventoryDisplay';
 import { parseWorkbook } from '../services/sdc';
 import type { CapacityReason, ForecastCommitmentLine } from '../services/data/types';
 import type { ForecastStream } from '../services/sdc/types';
@@ -45,6 +54,7 @@ import {
 } from '../services/transitions/forecastRules';
 import { parseCsv } from '../services/transitions/inventoryRules';
 import { inputClass, readFileText } from './inventory/inventoryDisplay';
+
 import {
   CommitmentDeadline,
   CommitmentStatePill,
@@ -69,6 +79,14 @@ import {
 // below forecast (BR-04), and an optional upside. Commitments can also come
 // from the spreadsheet template, checked row by row (BR-06). Opening a version
 // records the view PTI sees. The verbs' policies decide; the form mirrors them.
+//
+// BL-133 (ENG-D18, ENG-D19) — capacity before the LTP. Commitments are
+// SUBMITTED one period at a time with "Submit all", every material of the
+// period together (a row keeps only Save draft). A period cannot be submitted
+// until the supplier has confirmed capacity for every horizon week it touches,
+// and a period whose group LTP is above BE (capacity + additional capacity) needs a
+// reason. The submit verb's policy (`rr_promote_capacity_confirmed`) refuses
+// both by name; this panel mirrors it so the supplier sees why before trying.
 // ─────────────────────────────────────────────────────────────────────────────
 
 type ViewMode = 'forecast' | 'changes';
@@ -93,6 +111,16 @@ const draftOf = (l: ForecastCommitmentLine): RowDraft => {
   };
 };
 
+interface WeekReason {
+  reason: CapacityReason | '';
+  note: string;
+}
+
+type PeriodRefusal =
+  | { kind: CommitmentCapacityRefusal; group: string }
+  | { kind: 'row' }
+  | { kind: 'nothing' };
+
 interface UploadResult {
   saved: number;
   refused: { row: number; materialCode: string; period: string; reason?: CommitmentRowRefusal; message?: string }[];
@@ -106,6 +134,9 @@ const SupplierForecastCommitments: React.FC = () => {
   const { identity } = useCurrentIdentity();
   const [params] = useSearchParams();
   const linesQuery = useForecastCommitments();
+  const plansQuery = useCapacityPlans();
+  const { toast } = useToast();
+  const [weekReasons, setWeekReasons] = useState<Record<string, WeekReason>>({});
   const versionsQuery = useForecastVersions();
   const submitAvail = useVerbAvailability('requirementresponse:submit');
   const ackAvail = useVerbAvailability('requirementresponse:acknowledge');
@@ -152,7 +183,7 @@ const SupplierForecastCommitments: React.FC = () => {
   }, [current?.publicationId, supplierId, viewAvail.kind]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!supplierId) return <NoSupplierIdentity />;
-  if (linesQuery.isPending || versionsQuery.isPending) return <LoadingState breadcrumb={crumb} />;
+  if (linesQuery.isPending || versionsQuery.isPending || plansQuery.isPending) return <LoadingState breadcrumb={crumb} />;
   if (drill.kind === 'pending') return <LoadingState breadcrumb={crumb} />;
   // AC-07 / AC-08 — identical refusal for an unknown PO and another supplier's.
   if (drill.kind === 'notFound') return <OrderNotFound persona="supplier" breadcrumb={crumb} />;
@@ -259,6 +290,94 @@ const SupplierForecastCommitments: React.FC = () => {
 
   const canCommit = submitAvail.kind === 'held';
   const canAck = ackAvail.kind === 'held';
+
+  // ── BL-133 — Submit all, one period at a time ────────────────────────────
+  const plans = plansQuery.data?.items ?? [];
+  const horizon = horizonWeeks(nowIso);
+  const commitLines = streamLines.filter((l) => l.zone !== 'forecast');
+  /** A line the period's Submit all sends: awaiting, sent back, drafted, or edited here. */
+  const isPending = (l: ForecastCommitmentLine) =>
+    l.state === 'awaiting' || l.state === 'revisionRequested' || l.draft !== null || drafts[l.key] !== undefined;
+  const periodFirsts = [...new Map(commitLines.map((l) => [l.periodBucket, l])).values()].sort((a, b) =>
+    a.periodStart.localeCompare(b.periodStart),
+  );
+  const periodRows = periodFirsts.map((first) => {
+    const bucket = first.periodBucket;
+    const all = commitLines.filter((l) => l.periodBucket === bucket);
+    const pending = all.filter(isPending);
+    const groups = [...new Set(all.map((l) => l.materialGroup))].sort();
+    const checks: { group: string; check: PeriodCapacityCheck }[] = groups.map((group) => ({
+      group,
+      check: periodCapacityCheck(
+        plans.find((p) => p.supplierId === supplierId && p.materialGroup === group) ?? null,
+        lines,
+        supplierId,
+        group,
+        first.periodStart,
+        first.periodEnd,
+        horizon,
+      ),
+    }));
+    const red = checks.some((c) => c.check.redWeek !== null);
+    const wr = weekReasons[bucket] ?? { reason: '', note: '' };
+    /** The row's own reason, else the period's reason when the period is above BE. */
+    const rootFor = (l: ForecastCommitmentLine) => {
+      const d = rowDraft(l);
+      if (d.reason) return { level1: d.reason, note: d.note };
+      if (red && wr.reason) return { level1: wr.reason, note: wr.note };
+      return undefined;
+    };
+    const rowBlocked = (l: ForecastCommitmentLine) => {
+      const r = readRow(l);
+      if (r.qtyValue === null || r.refusal === 'upsideInvalid' || r.refusal === 'dateRequired' || r.refusal === 'qtyRequired') return true;
+      return shortfallRefusal(l.forecastQty, r.qtyValue, rootFor(l)) !== null;
+    };
+    let refusal: PeriodRefusal | null = null;
+    const unconfirmed = checks.find((c) => c.check.unconfirmedWeek !== null);
+    if (pending.length === 0) refusal = { kind: 'nothing' };
+    else if (unconfirmed) refusal = { kind: 'capacityNotConfirmed', group: unconfirmed.group };
+    else {
+      for (const l of pending) {
+        const c = checks.find((x) => x.group === l.materialGroup)?.check;
+        const capRefusal = c ? commitmentCapacityRefusal(c, rootFor(l)) : null;
+        if (capRefusal) {
+          refusal = { kind: capRefusal.refusal, group: l.materialGroup };
+          break;
+        }
+      }
+      if (!refusal && pending.some(rowBlocked)) refusal = { kind: 'row' };
+    }
+    return { first, bucket, pending, checks, red, wr, rootFor, refusal };
+  });
+
+  const submitAll = async (row: (typeof periodRows)[number]) => {
+    let done = 0;
+    for (const l of row.pending) {
+      const { d, qtyValue, upsideValue } = readRow(l);
+      if (qtyValue === null) continue;
+      const rc = row.rootFor(l);
+      const res = await run({
+        verb: 'commit',
+        line: lineRef(l),
+        committedQty: qtyValue,
+        commitmentDate: d.date,
+        ...(upsideValue !== null ? { upsideQty: upsideValue } : {}),
+        ...(rc ? { reason: rc.level1, ...(rc.note.trim() ? { note: rc.note.trim() } : {}) } : {}),
+      });
+      if (!res.ok) {
+        toast({
+          variant: 'warning',
+          title: t('fc.toast.refused'),
+          description: t('fc.sup.week.toast.partial', { done, total: row.pending.length, reason: res.reason ?? '' }),
+        });
+        return;
+      }
+      done += 1;
+      setDrafts((prev) => Object.fromEntries(Object.entries(prev).filter(([k]) => k !== l.key)));
+    }
+    setWeekReasons((prev) => Object.fromEntries(Object.entries(prev).filter(([k]) => k !== row.bucket)));
+    toast({ variant: 'success', title: t('fc.sup.week.toast.submitted', { count: done }) });
+  };
 
   return (
     <AppShellV2>
@@ -421,6 +540,127 @@ const SupplierForecastCommitments: React.FC = () => {
 
       {/* REQ-E14-02 BR-07 — the supplier's own reliability and PTI's plan changes on its materials. */}
       <SupplierReliabilityPanel />
+
+      {/* BL-133 (ENG-D19) — capacity before the LTP; one Submit all per period. */}
+      {periodRows.length > 0 && (
+        <section className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm mb-4" data-testid="fc-sup-weeks">
+          <div className="px-4 py-3 border-b border-border-subtle">
+            <h2 className="text-section text-text-primary">{t('fc.sup.week.title')}</h2>
+            <p className="text-xs text-text-tertiary mt-1">{t('fc.sup.week.help')}</p>
+          </div>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableHeaderCell>{t('fc.sup.week.col.period')}</TableHeaderCell>
+                <TableHeaderCell>{t('fc.sup.week.col.lines')}</TableHeaderCell>
+                <TableHeaderCell>{t('fc.sup.week.col.capacity')}</TableHeaderCell>
+                <TableHeaderCell>{t('fc.sup.week.col.reason')}</TableHeaderCell>
+                <TableHeaderCell>
+                  <span className="sr-only">{t('fc.col.actions')}</span>
+                </TableHeaderCell>
+              </TableHeader>
+              <tbody>
+                {periodRows.map((row) => {
+                  const label = periodLabel(row.bucket);
+                  const setWr = (patch: Partial<WeekReason>) =>
+                    setWeekReasons((prev) => ({ ...prev, [row.bucket]: { ...row.wr, ...patch } }));
+                  return (
+                    <TableRow
+                      key={row.bucket}
+                      data-testid={`fc-week-${row.bucket}`}
+                      className={row.red ? 'bg-danger-soft' : ''}
+                    >
+                      <TableCell className="whitespace-nowrap">{label}</TableCell>
+                      <TableCell>
+                        {row.pending.length > 0 ? (
+                          <span className="text-sm text-text-secondary">{t('fc.sup.week.lines', { count: row.pending.length })}</span>
+                        ) : (
+                          <span className="text-xs text-text-tertiary">{t('fc.sup.week.nothing')}</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="space-y-1">
+                          {row.checks.map(({ group, check }) => (
+                            <div key={group} className="flex flex-wrap items-center gap-2 text-xs">
+                              <span className="text-text-secondary">{t(`inv.group.${group}`)}</span>
+                              {check.level === null ? (
+                                <span className="text-text-tertiary">{t('fc.sup.week.outsideHorizon')}</span>
+                              ) : (
+                                <LtpCheckPill level={check.level} testId={`fc-week-check-${row.bucket}-${group}`} />
+                              )}
+                              {check.level === 'unconfirmed' && (
+                                <Link to="/supplier/capacity" className="text-action-hover hover:underline">
+                                  {t('fc.sup.week.confirmCapacity')}
+                                </Link>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {row.red ? (
+                          <div className="space-y-1 min-w-[160px]">
+                            <select
+                              aria-label={t('fc.sup.week.reasonFor', { period: label })}
+                              className={inputClass}
+                              disabled={!canCommit}
+                              value={row.wr.reason}
+                              onChange={(e) => setWr({ reason: e.target.value as CapacityReason | '' })}
+                            >
+                              <option value="">{t('fc.reason.select')}</option>
+                              {commitmentReasons.map((r) => (
+                                <option key={r} value={r}>
+                                  {reasonLabel('commitmentShortfall', r)}
+                                </option>
+                              ))}
+                            </select>
+                            {row.wr.reason === 'other' && (
+                              <input
+                                aria-label={t('fc.sup.week.noteFor', { period: label })}
+                                className={inputClass}
+                                placeholder={t('fc.reason.notePlaceholder')}
+                                disabled={!canCommit}
+                                value={row.wr.note}
+                                onChange={(e) => setWr({ note: e.target.value })}
+                              />
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-xs text-text-tertiary">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {canCommit ? (
+                          <div className="flex flex-col gap-1 min-w-[140px]">
+                            <Button
+                              variant="outline"
+                              disabled={pending || row.refusal !== null}
+                              onClick={() => void submitAll(row)}
+                              aria-label={t('fc.sup.week.submitAllFor', { period: label })}
+                              data-testid={`fc-week-submit-${row.bucket}`}
+                            >
+                              {t('fc.sup.week.submitAll')}
+                            </Button>
+                            {row.refusal && row.refusal.kind !== 'nothing' && (
+                              <span role="status" className="text-xs text-warning-hover" data-testid={`fc-week-refusal-${row.bucket}`}>
+                                {row.refusal.kind === 'row'
+                                  ? t('fc.sup.week.refusal.row')
+                                  : t(`fc.sup.week.refusal.${row.refusal.kind}`, { group: t(`inv.group.${row.refusal.group}`) })}
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <HandoffNotice availability={submitAvail} testId="handoff-forecast-commit-week" />
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </tbody>
+            </Table>
+          </div>
+        </section>
+      )}
 
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <SubTabs<ViewMode>
@@ -643,14 +883,6 @@ const SupplierForecastCommitments: React.FC = () => {
                               <TableCell>
                                 {canCommit ? (
                                   <div className="flex flex-col gap-1 min-w-[120px]">
-                                    <Button
-                                      variant="outline"
-                                      disabled={pending || refusal !== null}
-                                      onClick={() => void commitRow(l, false)}
-                                      aria-label={t('fc.sup.submitFor', { period: label })}
-                                    >
-                                      {t(l.state === 'awaiting' ? 'fc.sup.submit' : 'fc.sup.revise')}
-                                    </Button>
                                     <Button
                                       variant="secondary"
                                       disabled={pending || qtyValue === null}

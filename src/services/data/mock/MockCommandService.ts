@@ -83,6 +83,7 @@ import {
   INVOICE_AWAITING_MATCH,
   ASN_PO_STATES,
   INVOICEABLE_PO_STATES,
+  asnLineCheckOf,
   asnLineRefusal,
   asnSubmitRefusal,
   deriveInvoiceVerdict,
@@ -108,6 +109,7 @@ import {
   dayOf,
   isIsoDay,
   batchDatesProblem,
+  alertCloseRefusal,
   parseAlertKey,
   standingClosure,
   // REQ-E03-01 to REQ-E03-05 — the RFx rules. The verb and the screen read the
@@ -133,6 +135,8 @@ import {
   responseWindowRefusal,
   responseAlreadySubmittedRefusal,
   type QuoteLineInput,
+  type AsnBatchSource,
+  type AsnLineCheck,
   type AsnLineInput,
   type CommandTarget,
   type CascadeCommand,
@@ -294,6 +298,12 @@ import {
 // `RFX_QUESTION_TYPES` (`sourcing/rfxConfig`), and the create hook reaches them
 // through `rfiQuestionsRefusal` — the same predicate the template store reads.
 import {
+  commitmentCapacityRefusal,
+  horizonWeeks,
+  periodCapacityCheck,
+} from '../../transitions/capacityRules';
+import {
+  allCommitmentLines,
   currentVersion,
   isForecastVersion,
   forecastPublicationById,
@@ -464,6 +474,23 @@ const payloadAsnLines = (payload: Record<string, unknown>): AsnLineInput[] | nul
   Array.isArray(payload.lines) ? (payload.lines as AsnLineInput[]) : null;
 
 /**
+ * MR-6 BR-04 — the batch source stored on a line. A line is `declared` only
+ * when the supplier says it picked the batch AND the batch is in its latest
+ * stock record for the material; anything else is `typed`, so a payload cannot
+ * hide the "not in declared stock" marker from PTI.
+ */
+const batchSourceOf = (
+  supplierId: string | undefined,
+  materialCode: string,
+  lot: string,
+  claimed: unknown,
+): AsnBatchSource => {
+  if (claimed !== 'declared' || !supplierId) return 'typed';
+  const record = inventoryDeclarationStore.latestFor(supplierId, materialCode);
+  return record?.batches?.some((b) => b.batchNumber === lot) ? 'declared' : 'typed';
+};
+
+/**
  * Merge entered lines onto an ASN's stored lines by material. A material the
  * draft does not carry yet is added from its PO line. Stored lines the payload
  * does not mention are kept as they are.
@@ -488,11 +515,13 @@ const mergeAsnLines = (
             lotNumber: '',
             ...(poLine?.uom ? { uom: poLine.uom } : {}),
           };
+    const lot = nonBlank(e.batchNumber);
     const next: AsnLineItem = {
       ...base,
       shippedQty: typeof e.shippedQty === 'number' ? e.shippedQty : base.shippedQty,
-      lotNumber: nonBlank(e.batchNumber) ?? base.lotNumber,
+      lotNumber: lot ?? base.lotNumber,
       ...(nonBlank(e.expiryDate) ? { expiryDate: nonBlank(e.expiryDate) } : {}),
+      ...(lot ? { batchSource: batchSourceOf(po?.supplierId, e.materialCode, lot, e.batchSource) } : {}),
     };
     if (i >= 0) out[i] = next;
     else out.push(next);
@@ -635,12 +664,17 @@ bindPolicyHook(POLICY_HOOKS.ASN_LINES_WITHIN_OPEN, ({ entityId, payload }) => {
   if (!asn && entered && entered.length === 0) {
     return { ok: false, reason: 'an ASN needs at least one line' };
   }
-  const lines: AsnLineInput[] = asn
-    ? mergeAsnLines(asn.lineItems, entered ?? [], po).map((l) => ({
-        materialCode: l.materialCode,
-        shippedQty: l.shippedQty,
-      }))
-    : entered!;
+  // AR-11 — the full line (batch, expiry) with the ETA the ASN will carry.
+  const eta = nonBlank(payload.eta) ?? asn?.eta;
+  const lines: AsnLineCheck[] = asn
+    ? mergeAsnLines(asn.lineItems, entered ?? [], po).map((l) => asnLineCheckOf(l, eta))
+    : entered!.map((e) => ({
+        materialCode: e?.materialCode,
+        shippedQty: e?.shippedQty,
+        ...(e?.batchNumber !== undefined ? { lotNumber: e.batchNumber } : {}),
+        ...(e?.expiryDate !== undefined ? { expiryDate: e.expiryDate } : {}),
+        ...(eta !== undefined ? { eta } : {}),
+      }));
   const seen = new Set<string>();
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
@@ -678,10 +712,24 @@ bindPolicyHook(POLICY_HOOKS.ASN_SUBMIT_COMPLETE, ({ entityId, payload }) => {
     eta: nonBlank(payload.eta) ?? asn.eta,
   });
   if (refusal) return { ok: false, reason: `INCOMPLETE_ASN: ${refusal}` };
-  const noBatch = lines.findIndex((l) => !nonBlank(l.lotNumber));
-  if (noBatch >= 0) return { ok: false, reason: `INCOMPLETE_ASN: batch number missing on line ${noBatch + 1}` };
-  const badQty = lines.findIndex((l) => !(Number.isFinite(l.shippedQty) && l.shippedQty > 0));
-  if (badQty >= 0) return { ok: false, reason: `INCOMPLETE_ASN: shipped quantity missing on line ${badQty + 1}` };
+  // AR-11 — each line through the one line rule, batch required. What the line
+  // itself lacks is reported here; the PO checks (material on the PO, open
+  // quantity) are ASN_LINES_WITHIN_OPEN's, which runs next on the same rule.
+  const po = findPoByNumber(asn.poReference);
+  const eta = nonBlank(payload.eta) ?? asn.eta;
+  for (let i = 0; i < lines.length; i++) {
+    const lineRefusal = asnLineRefusal(asnLineCheckOf(lines[i], eta), po ?? { poNumber: asn.poReference, lineItems: [] }, asnStore.all(), {
+      excludeAsn: asn.asnNumber,
+      overShipReason: payload.overShipReason ?? asn.overShipReason,
+      requireBatch: true,
+    });
+    if (lineRefusal === 'batch') {
+      return { ok: false, reason: `INCOMPLETE_ASN: batch number missing on line ${i + 1}` };
+    }
+    if (lineRefusal === 'quantity') {
+      return { ok: false, reason: `INCOMPLETE_ASN: shipped quantity missing on line ${i + 1}` };
+    }
+  }
   return { ok: true };
 });
 
@@ -2276,6 +2324,52 @@ bindPolicyHook(POLICY_HOOKS.RR_SUBMIT_COMMITMENT_DETAIL, ({ payload }) => {
   return { ok: true };
 });
 
+// BL-133 (ENG-D19) — capacity before the LTP, on the SUBMISSION (the
+// promotion). The response names its line; the line names its period and
+// material group; the group's latest capacity submission says whether every
+// horizon week the period touches is confirmed, and whether the group's LTP is
+// above BE in one of them. SDC-0 publications predate the rule (the BR-08 date
+// rule's precedent) and keep their shape; a line of a version no longer
+// current is found by supplier × material × period on the current version.
+bindPolicyHook(POLICY_HOOKS.RR_PROMOTE_CAPACITY_CONFIRMED, ({ entityId, target }) => {
+  const r = target.readEntity(entityId) as
+    | { publicationId?: string; supplierId?: string; materialCode?: string; periodBucket?: string; rootCause?: { level1?: unknown; note?: unknown } }
+    | null
+    | undefined;
+  if (!r || !isForecastVersion(String(r.publicationId))) return { ok: true };
+  const lines = allCommitmentLines(null);
+  const line = lines.find(
+    (l) => l.supplierId === r.supplierId && l.materialCode === r.materialCode && l.periodBucket === r.periodBucket,
+  );
+  if (!line) return { ok: true };
+  const plan =
+    allCapacityPlans().find((p) => p.supplierId === line.supplierId && p.materialGroup === line.materialGroup) ?? null;
+  const check = periodCapacityCheck(
+    plan,
+    lines,
+    line.supplierId,
+    line.materialGroup,
+    line.periodStart,
+    line.periodEnd,
+    horizonWeeks(sdcClock.now()),
+  );
+  const refusal = commitmentCapacityRefusal(check, r.rootCause);
+  if (!refusal) return { ok: true };
+  if (refusal.refusal === 'capacityNotConfirmed') {
+    return {
+      ok: false,
+      reason: `CAPACITY_NOT_CONFIRMED: confirm the capacity for ${line.materialGroup} in the week of ${refusal.week} before submitting its LTP`,
+    };
+  }
+  if (refusal.refusal === 'aboveBeNoteRequired') {
+    return { ok: false, reason: 'OTHER_REASON_NEEDS_NOTE: the reason "other" needs a note' };
+  }
+  return {
+    ok: false,
+    reason: `ABOVE_BE_NEEDS_REASON: the LTP for ${line.materialGroup} in the week of ${refusal.week} is above capacity plus additional capacity; choose a reason`,
+  };
+});
+
 // RR dispute / resolve — the authored text must be SUBSTANCE, not presence.
 //
 // ⚠️ WHICH FIELD IS ASKED FOR IS DERIVED FROM THE MACHINE, NEVER FROM THE
@@ -2716,16 +2810,30 @@ const inventoryAlertTarget: CommandTarget = {
   readEntity: (key) => allAlerts().find((a) => a.key === key) ?? null,
   applyTransition: (key, _toState, payload, scope) => {
     inventoryAlertLedger.append([
-      { key, kind: 'closed', at: sdcClock.now(), note: nonBlank(payload.actionNote) ?? '', actor: scope.actor ?? NO_PERSON },
+      {
+        key,
+        kind: 'closed',
+        at: sdcClock.now(),
+        closeReason: String(payload.closeReason),
+        ...(nonBlank(payload.actionNote) ? { note: nonBlank(payload.actionNote) } : {}),
+        actor: scope.actor ?? NO_PERSON,
+      },
     ]);
   },
 };
 
-bindPolicyHook(POLICY_HOOKS.ALERT_ACTION_NOTE_AUTHORED, ({ payload }) =>
-  nonBlank(payload.actionNote)
-    ? { ok: true }
-    : { ok: false, reason: 'closing an alert needs an action note' },
-);
+// MR-9 BR-04 — an active close reason; "Other" needs a note (AR-14).
+bindPolicyHook(POLICY_HOOKS.ALERT_CLOSE_REASON_GIVEN, ({ payload }) => {
+  const refusal = alertCloseRefusal(payload.closeReason, payload.actionNote);
+  if (refusal === null) return { ok: true };
+  return {
+    ok: false,
+    reason:
+      refusal === 'NOTE_REQUIRED'
+        ? 'NOTE_REQUIRED: the reason "other" needs a note'
+        : `REASON_UNKNOWN: ${JSON.stringify(payload.closeReason)} is not an active alert close reason`,
+  };
+});
 
 // — Forecast collaboration (REQ-E06-01, REQ-E06-03) ————————————————————————
 //   A version is a snapshot of one stream and is never edited; publish and

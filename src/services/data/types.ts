@@ -73,6 +73,7 @@ import type { InfoLine, PlanChangeBaseline, Proposal, ProposalType, RescheduleRu
 import type { SupplierCfot } from '../engine/cfot';
 import type { SeriesResult, StabiliseParams, StabiliseRun } from '../engine/stabilise';
 import type { DataHealthReport } from '../engine/dataHealth';
+import type { DemandForecastRun } from '../engine/demandForecast';
 import type { DatasetProvenance } from '../engine/types';
 import type { ReleaseSelection } from '../delivery/release';
 import type { EditPolicyPatch } from '../delivery/policy';
@@ -927,6 +928,21 @@ export interface DataHealthView extends DataHealthReport {
   readonly provenance: DatasetProvenance;
 }
 
+/**
+ * REQ-E14-07 — the finished-goods demand forecast, as served: weekly sell-in
+ * per SKU for the next 26 weeks with the method that made it, SKU, brand and
+ * total reconciled, OEM products left out, and SAP's plan in force beside it.
+ * Computed at read on the engine's (SIMULATED) dataset. PTI only; a supplier
+ * gets null. It does not feed E14-03: SAP's plan stays the input until the
+ * backtest (E14-10) exists (ENG-B66).
+ */
+export interface DemandForecastView extends DemandForecastRun {
+  /** Where the dataset came from (X-03): SIMULATED until the MDM feed is live. */
+  readonly provenance: DatasetProvenance;
+  /** The source E14-03 to E14-06 and E14-13 plan on today. */
+  readonly materialPlanningSource: 'sapPlan';
+}
+
 export interface ForecastCoverageRow {
   readonly stream: ForecastStream;
   readonly supplierId: string;
@@ -991,8 +1007,16 @@ export interface InventoryAlert {
   readonly riskClass: RiskClass;
   /** CR-24 — what the class was decided on (derived with the alert, never stored). */
   readonly riskBasis: RiskBasis;
+  /**
+   * MR-9 BR-03 — days until the risk bites, the order within a class (derived
+   * with the alert, never stored): days of cover or to the projected stock-out,
+   * days to the first capacity gap week, minus the days stale, else 0.
+   */
+  readonly daysToImpact: number;
   readonly status: 'open' | 'closed';
   readonly closedAt?: string;
+  /** MR-9 BR-04 — the `alertClose` code; absent on a closure recorded before reasons (counts as Other). */
+  readonly closeReason?: string;
   readonly actionNote?: string;
 }
 
@@ -1444,6 +1468,13 @@ export interface AsnLineItem {
   uom?: string;
   /** Optional expiry date of the batch (`YYYY-MM-DD`). */
   expiryDate?: string;
+  /**
+   * MR-6 BR-04 — `declared` when the batch was picked from the supplier's
+   * declared stock, `typed` when it was typed ("not in declared stock", shown
+   * to PTI). Absent on a line with no batch yet, and on lines stored before
+   * the rule existed.
+   */
+  batchSource?: 'declared' | 'typed';
 }
 
 export interface AsnShipmentDetails {
@@ -2567,6 +2598,12 @@ export interface IProcurementService {
    * arrival with the failing records. On the engine's (SIMULATED) dataset. PTI only.
    */
   getDataHealth(scope: QueryScope): Promise<DataHealthView | null>;
+  /**
+   * REQ-E14-07 — the finished-goods demand forecast: per SKU × week, the
+   * method that made it, SKU / brand / total reconciled, OEM products left
+   * out (ENG-D20). On the engine's (SIMULATED) dataset. PTI only.
+   */
+  getDemandForecast(scope: QueryScope): Promise<DemandForecastView | null>;
 
   // — Sourcing —
   getRFQs(scope: QueryScope, filter?: RFQFilter): Promise<Page<RFQ>>;

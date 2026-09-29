@@ -17,7 +17,7 @@ import {
   stockFreshness,
   type StockFreshness,
 } from '../../services/transitions/inventoryRules';
-import type { CapacityConfirmationStatus } from '../../services/transitions/capacityRules';
+import type { CapacityConfirmationStatus, LtpCapacityLevel } from '../../services/transitions/capacityRules';
 import { useInventoryCommand, type InventoryCommandVars } from '../../services/query/commandHooks';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -135,6 +135,23 @@ export const CapacityStatusPill: React.FC<{ status: CapacityConfirmationStatus }
   return <StatusPill variant={CAPACITY_TONE[status]}>{t(`inv.capacity.status.${status}`)}</StatusPill>;
 };
 
+/** BL-133 (ENG-D18) — semantic colour for the LTP-against-capacity state only. */
+const LTP_TONE: Record<LtpCapacityLevel, StatusTone> = {
+  unconfirmed: 'neutral',
+  within: 'success',
+  needsAdditional: 'warning',
+  cannotSupply: 'danger',
+};
+
+export const LtpCheckPill: React.FC<{ level: LtpCapacityLevel; testId?: string }> = ({ level, testId }) => {
+  const { t } = useTranslation();
+  return (
+    <span data-testid={testId} data-level={level}>
+      <StatusPill variant={LTP_TONE[level]}>{t(`inv.ltp.level.${level}`)}</StatusPill>
+    </span>
+  );
+};
+
 /** A figure or the business wording for its absence. */
 export const Figure: React.FC<{ value: number | null; uom?: string; absentKey: string }> = ({ value, uom, absentKey }) => {
   const { t } = useTranslation();
@@ -244,7 +261,9 @@ function refusalKey(reason: string | undefined): string | null {
     ['NOT_SUPPLIED', 'inv.refusal.notSupplied'],
     ['batch total', 'inv.refusal.batchTotal'],
     ['UNKNOWN_MATERIAL', 'inv.refusal.unknownMaterial'],
-    ['action note', 'inv.refusal.actionNote'],
+    ['REASON_UNKNOWN', 'inv.refusal.closeReason'],
+    ['closeReason', 'inv.refusal.closeReason'],
+    ['NOTE_REQUIRED', 'inv.refusal.noteRequired'],
   ];
   return table.find(([needle]) => reason.includes(needle))?.[1] ?? null;
 }

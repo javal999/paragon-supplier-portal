@@ -83,6 +83,7 @@ import BuyerOrderPlan from '../pages-v2/BuyerOrderPlan';
 import BuyerReschedule from '../pages-v2/BuyerReschedule';
 import BuyerStabilise from '../pages-v2/BuyerStabilise';
 import BuyerDataHealth from '../pages-v2/BuyerDataHealth';
+import BuyerDemandForecast from '../pages-v2/BuyerDemandForecast';
 import SupplierForecastCommitments from '../pages-v2/SupplierForecastCommitments';
 import SupplierPerformance from '../pages-v2/SupplierPerformance';
 import NotFound from '../pages-v2/NotFound';
@@ -162,6 +163,8 @@ const AppRouter: React.FC = () => {
           <Route path="/buyer/stabilise" element={<BuyerStabilise />} />
           {/* REQ-E14-01 — data health of the engine's inputs (SIMULATED). */}
           <Route path="/buyer/data-health" element={<BuyerDataHealth />} />
+          {/* REQ-E14-07 — the finished-goods demand forecast (SIMULATED; PTI only). */}
+          <Route path="/buyer/demand-forecast" element={<BuyerDemandForecast />} />
           <Route
             path="/buyer/collaboration/responses"
             element={

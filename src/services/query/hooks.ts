@@ -133,6 +133,10 @@ export const useStabilisedPlan = () =>
 export const useDataHealth = () =>
   useServiceQuery(['procurement', 'dataHealth'], (svc, scope) => svc.procurement.getDataHealth(scope));
 
+/** REQ-E14-07 — the finished-goods demand forecast (PTI only). */
+export const useDemandForecast = () =>
+  useServiceQuery(['procurement', 'demandForecast'], (svc, scope) => svc.procurement.getDemandForecast(scope));
+
 // ── RFx management (REQ-E03-01 to REQ-E03-05) ──────────────────────────────
 
 /**
