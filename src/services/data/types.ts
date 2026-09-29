@@ -73,6 +73,7 @@ import type { SupplierCfot } from '../engine/cfot';
 import type { SeriesResult, StabiliseParams, StabiliseRun } from '../engine/stabilise';
 import type { DataHealthReport } from '../engine/dataHealth';
 import type { DemandForecastRun } from '../engine/demandForecast';
+import type { ModelBacktestResult } from '../engine/modelBacktest';
 import type { DatasetProvenance } from '../engine/types';
 import type { ReleaseSelection } from '../delivery/release';
 import type { EditPolicyPatch } from '../delivery/policy';
@@ -933,6 +934,24 @@ export interface DemandForecastView extends DemandForecastRun {
   readonly provenance: DatasetProvenance;
   /** The source E14-03 to E14-06 and E14-13 plan on today. */
   readonly materialPlanningSource: 'sapPlan';
+}
+
+/**
+ * REQ-E14-10 — the model backtest, as served: per SKU, each candidate's
+ * simulated fill rate, order-complete rate and warehouse space from replaying
+ * PTI's ordering policy on its forecast at past origins, with MASC, accuracy
+ * and bias beside them, and the model chosen under the MASC limit in force
+ * (ENG-D13; not set = not enforced). On the engine's (SIMULATED) dataset. PTI
+ * only; a supplier gets null. Material planning stays on SAP's plan: switching
+ * it is the owner's decision (ENG-B66).
+ */
+export interface ModelBacktestView extends ModelBacktestResult {
+  /** Where the dataset came from (X-03): SIMULATED until the MDM feed is live. */
+  readonly provenance: DatasetProvenance;
+  /** The source E14-03 to E14-06 and E14-13 plan on today. */
+  readonly materialPlanningSource: 'sapPlan';
+  /** How long the backtest took when it ran (ms, this device); it runs once per hub date and cost rates. */
+  readonly computedInMs: number;
 }
 
 export interface ForecastCoverageRow {
@@ -2583,6 +2602,13 @@ export interface IProcurementService {
    * out (ENG-D20). On the engine's (SIMULATED) dataset. PTI only.
    */
   getDemandForecast(scope: QueryScope): Promise<DemandForecastView | null>;
+  /**
+   * REQ-E14-10 — the model backtest: each SKU's candidate models replayed
+   * through PTI's ordering policy at past origins, chosen by simulated service
+   * (fill rate, warehouse space) within the MASC limit. On the engine's
+   * (SIMULATED) dataset. PTI only.
+   */
+  getModelBacktest(scope: QueryScope): Promise<ModelBacktestView | null>;
 
   // — Sourcing —
   getRFQs(scope: QueryScope, filter?: RFQFilter): Promise<Page<RFQ>>;

@@ -128,6 +128,7 @@ import type {
   StabilisedPlanView,
   DataHealthView,
   DemandForecastView,
+  ModelBacktestView,
 } from '../types';
 import { PR_INTAKE_LINES } from './fixtures/prIntake';
 import { engineDataset } from './fixtures/engineDataset';
@@ -144,6 +145,7 @@ import {
 import { plannedReceiptsOf, sizedRequirement } from '../../engine/orderSizing';
 import {
   STREAM_MATERIAL_TYPE,
+  backtestMascLimit,
   engineServiceTargets,
   feedFreshnessLimitsDays,
   orderSizingCosts,
@@ -163,6 +165,7 @@ import type { EngineDataset } from '../../engine/types';
 import { labelOf, materialEntry } from '../../sdc/materialMaster';
 import { FEEDS, dataHealth } from '../../engine/dataHealth';
 import { demandForecast, type DemandForecastRun } from '../../engine/demandForecast';
+import { modelBacktest, prepareBacktest, type PreparedBacktest } from '../../engine/modelBacktest';
 import { DEFAULT_STOCK_ACCURACY_TOLERANCE } from '../../engine/stock';
 import { agreedCfot, supplierCfot } from '../../engine/cfot';
 import { lineHistories } from '../../engine/lines';
@@ -170,6 +173,8 @@ import { sdcClock } from '../../sdc/clock';
 
 /** REQ-E14-07 — the demand forecast per engine dataset (see getDemandForecast). */
 const demandForecastMemo = new WeakMap<EngineDataset, DemandForecastRun>();
+/** REQ-E14-10 — the backtest's heavy half per engine dataset, keyed by hub date and the values it reads. */
+const backtestMemo = new WeakMap<EngineDataset, { key: string; prep: PreparedBacktest; ms: number }>();
 
 const matchesList = <T>(value: T, filter: T | T[] | undefined): boolean => {
   if (filter === undefined) return true;
@@ -675,6 +680,33 @@ export class MockProcurementService implements IProcurementService {
       demandForecastMemo.set(data, run);
     }
     return { ...run, provenance: data.provenance, materialPlanningSource: 'sapPlan' };
+  }
+
+  async getModelBacktest(scope: QueryScope): Promise<ModelBacktestView | null> {
+    // REQ-E14-10, computed at read on the hub's date (X-01) with the
+    // administrator's values in force (X-05). PTI only (X-03). The replay is
+    // the heavy half and runs once per dataset, date, targets and cost rates;
+    // selection under the MASC limit (ENG-D13) is cheap and runs every read.
+    if (scope.personaType === 'supplier') return null;
+    const data = engineDataset();
+    const asOf = dayOf(sdcClock.now());
+    const targets = engineServiceTargets();
+    const rates = orderSizingCosts();
+    const costs = { orderCostIdr: rates.orderCostIdr, holdingRatePerYear: rates.holdingRatePerYear };
+    const key = JSON.stringify([asOf, targets, costs]);
+    let hit = backtestMemo.get(data);
+    if (!hit || hit.key !== key) {
+      const t0 = performance.now();
+      const prep = prepareBacktest({ data, asOf, targets, costs });
+      hit = { key, prep, ms: performance.now() - t0 };
+      backtestMemo.set(data, hit);
+    }
+    return {
+      ...modelBacktest(hit.prep, backtestMascLimit()),
+      provenance: data.provenance,
+      materialPlanningSource: 'sapPlan',
+      computedInMs: Math.round(hit.ms),
+    };
   }
 
   async getSafetyStock(scope: QueryScope): Promise<SafetyStockView | null> {

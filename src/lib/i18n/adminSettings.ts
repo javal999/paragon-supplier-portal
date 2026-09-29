@@ -123,6 +123,7 @@ export const adminSettingsEn: Record<string, string> = {
   'adminSet.rule.REQ-E14-05': 'REQ-E14-05 · Forecast engine change penalty',
   'adminSet.rule.ENG-D15': 'ENG-D15 · Rescheduling open orders out',
   'adminSet.rule.ENG-D9': 'ENG-D9 · Damping the plan before publication',
+  'adminSet.rule.ENG-D13': 'ENG-D13 · Plan-stability limit in model selection',
   'adminSet.rule.REQ-E14-01': 'REQ-E14-01 · Forecast engine data freshness',
   'adminSet.rule.MR-1': 'MR-1 · Stock sync schedule and the weekly stock update',
   'adminSet.rule.MR-2': 'MR-2 · Stock update compliance',
@@ -214,6 +215,9 @@ export const adminSettingsEn: Record<string, string> = {
   'adminSet.key.engine.rescheduleOutWeeks.hint': 'An open order line that arrives at least this many weeks before the week it is needed is proposed to come later, to free warehouse space. The change is priced with the rented-space rate and the change penalty above.',
   'adminSet.key.engine.dampingWeightPct.label': 'Damping weight in the Trade-off zone',
   'adminSet.key.engine.dampingWeightPct.hint': 'Before a new plan is published, each Trade-off week is blended with the value the supplier saw last time: this share of the old value, the rest from the new one. Higher keeps the plan steadier; 0 publishes the new value as calculated. Forecast weeks are not damped.',
+  'adminSet.key.engine.backtestMascLimitPct.label': 'Most plan change a model may have and still be chosen (MASC)',
+  'adminSet.key.engine.backtestMascLimitPct.hint':
+    'The model backtest chooses each SKU’s forecast model by simulated fill rate and warehouse space, among models whose plan changes between versions (MASC, as a percentage of the SKU’s typical seasonal-naive error) are at most this. 0 means not set: no limit is applied. Choose it from the spread the Model backtest page shows.',
 
   // REQ-E14-01 — freshness limit per engine feed.
   'adminSet.key.engine.freshnessDays.poLines.label': 'Freshness limit: Purchase order lines',
@@ -379,6 +383,7 @@ export const adminSettingsId: Record<string, string> = {
   'adminSet.rule.REQ-E14-05': 'REQ-E14-05 · Penalti perubahan mesin prakiraan',
   'adminSet.rule.ENG-D15': 'ENG-D15 · Menjadwalkan ulang pesanan terbuka ke belakang',
   'adminSet.rule.ENG-D9': 'ENG-D9 · Peredaman rencana sebelum dipublikasikan',
+  'adminSet.rule.ENG-D13': 'ENG-D13 · Batas stabilitas rencana dalam pemilihan model',
   'adminSet.rule.REQ-E14-01': 'REQ-E14-01 · Kesegaran data mesin prakiraan',
   'adminSet.rule.MR-1': 'MR-1 · Jadwal sinkronisasi stok dan pembaruan stok mingguan',
   'adminSet.rule.MR-2': 'MR-2 · Kepatuhan pembaruan stok',
@@ -469,6 +474,9 @@ export const adminSettingsId: Record<string, string> = {
   'adminSet.key.engine.rescheduleOutWeeks.hint': 'Baris pesanan terbuka yang tiba sedikitnya sekian minggu sebelum minggu dibutuhkan diusulkan untuk datang lebih lambat, agar ruang gudang lega. Perubahan dihitung dengan tarif ruang sewa dan penalti perubahan di atas.',
   'adminSet.key.engine.dampingWeightPct.label': 'Bobot peredaman di zona Trade-off',
   'adminSet.key.engine.dampingWeightPct.hint': 'Sebelum rencana baru dipublikasikan, setiap minggu Trade-off dicampur dengan nilai yang terakhir dilihat pemasok: sebesar bagian ini dari nilai lama, sisanya dari nilai baru. Makin tinggi, rencana makin stabil; 0 memublikasikan nilai baru apa adanya. Minggu Forecast tidak diredam.',
+  'adminSet.key.engine.backtestMascLimitPct.label': 'Perubahan rencana terbesar agar model masih dapat dipilih (MASC)',
+  'adminSet.key.engine.backtestMascLimitPct.hint':
+    'Backtest model memilih model prakiraan setiap SKU berdasarkan tingkat pemenuhan dan ruang gudang hasil simulasi, di antara model yang perubahan rencananya antar versi (MASC, sebagai persentase dari galat musiman-naif khas SKU) paling banyak sebesar ini. 0 berarti belum ditetapkan: tidak ada batas yang diterapkan. Pilih dari sebaran yang ditampilkan di halaman Backtest model.',
 
   // REQ-E14-01 — freshness limit per engine feed.
   'adminSet.key.engine.freshnessDays.poLines.label': 'Batas kesegaran: Baris pesanan pembelian',

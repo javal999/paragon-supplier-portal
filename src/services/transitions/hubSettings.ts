@@ -185,6 +185,16 @@ const DEFS = [
   // at 100% a Trade-off period could never move. The Forecast zone's weight
   // stays 0 (ENG-D9, ENG-B34).
   { key: 'engine.dampingWeightPct', section: 'tolerances', rule: 'ENG-D9', unit: 'pct', min: 0, max: 90, defaultValue: 50 },
+  // ENG-D13 (OPEN — set after the first backtest) — REQ-E14-10 BR-03: the
+  // largest plan instability (MASC, as a percentage of the SKU's seasonal-naive
+  // error) a model may have and still be chosen. 0 = NOT SET: no limit is
+  // enforced until the Material Planner sets one from the spread the Model
+  // backtest page shows (ENG-B87). A limit of 0 would forbid every change, so 0
+  // cannot be a real value.
+  {
+    key: 'engine.backtestMascLimitPct', section: 'tolerances', rule: 'ENG-D13', unit: 'pct',
+    min: 0, max: 1000, defaultValue: 0, placeholder: { owner: 'materialPlanner', backlogId: 'ENG-D13' },
+  },
   // REQ-E14-01 BR-01, BR-05 — the freshness limit per engine feed, in days:
   // a feed whose last arrival is older than this is stale on the Data health
   // page and names the engine steps it affects. The defaults are the feed

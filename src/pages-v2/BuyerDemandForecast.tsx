@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import AppShellV2 from '../components/layout-v2/AppShellV2';
 import PageHeader from '../components/ui-v2/PageHeader';
 import PageMetaLine from '../components/ui-v2/PageMetaLine';
@@ -219,8 +220,14 @@ const BuyerDemandForecast: React.FC = () => {
       <p className="text-xs text-text-secondary mb-1" data-testid="df-main-not-built">
         {t('df.mainNotBuilt')}
       </p>
-      <p className="text-xs text-text-tertiary mb-4" data-testid="df-source-note">
+      <p className="text-xs text-text-tertiary mb-1" data-testid="df-source-note">
         {t('df.source')}
+      </p>
+      {/* REQ-E14-10 — each SKU's model by service is chosen on the Model backtest page (BL-112). */}
+      <p className="text-xs text-text-tertiary mb-4" data-testid="df-backtest-link">
+        <Link to="/buyer/model-backtest" className="text-action underline">
+          {t('mb.link.fromDemandForecast')}
+        </Link>
       </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-6" data-testid="df-kpis">

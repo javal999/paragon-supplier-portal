@@ -184,6 +184,17 @@ export function stabiliseDampingWeight(): number {
 }
 
 /**
+ * ENG-D13 / REQ-E14-10 BR-03 — the MASC limit on model selection, as a ratio
+ * (40% → 0.4), or null while it is NOT SET (the stored 0): not enforced until
+ * the Material Planner sets it after the first backtest (ENG-B87). In force
+ * now; the engine takes it as an argument (X-01).
+ */
+export function backtestMascLimit(): number | null {
+  const pct = hubSetting('engine.backtestMascLimitPct');
+  return pct > 0 ? pct / 100 : null;
+}
+
+/**
  * REQ-E14-01 BR-01, BR-05 — the freshness limit in days of every engine feed
  * that has one, keyed by the feed (the `EngineDataset` field). In force now;
  * the engine takes them as an argument (X-01, X-05).
