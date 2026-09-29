@@ -7,6 +7,7 @@
 // NO local seeded copy.
 // ────────────────────────────────────────────────────────────────────────────
 
+import { maxStockEntityId } from '../transitions/maxStock';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useDataService } from '../data/DataServiceContext';
@@ -1603,6 +1604,36 @@ export function useReasonCodeSet() {
         entity: 'reasonCode',
         entityId: reasonCodeEntityId(list, code),
         payload: { labelEn, labelId, active, setBy: identity.actor },
+      }),
+    onSuccess: (result) => {
+      if (result.status !== 'failed') void qc.invalidateQueries();
+    },
+  });
+}
+
+// ── REQ-E06-04 BR-06 · ONE SUPPLIER × MATERIAL'S MAXIMUM STOCK ───────────────
+// `quantity: null` clears it back to "no max stock agreed". `setBy` comes from
+// the session, never the form.
+export interface MaxStockSetVars {
+  supplierId: string;
+  materialCode: string;
+  quantity: number | null;
+}
+
+/** Set, change or clear the maximum stock of one supplier × material (`t_maxstock_set`). */
+export function useMaxStockSet() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+  const { identity } = useCurrentIdentity();
+
+  return useMutation<CommandResult, Error, MaxStockSetVars>({
+    mutationFn: ({ supplierId, materialCode, quantity }) =>
+      svc.commands.dispatch(scope, {
+        transitionId: 't_maxstock_set',
+        entity: 'maxStock',
+        entityId: maxStockEntityId(supplierId, materialCode),
+        payload: { quantity, setBy: identity.actor },
       }),
     onSuccess: (result) => {
       if (result.status !== 'failed') void qc.invalidateQueries();
