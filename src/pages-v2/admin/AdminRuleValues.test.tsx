@@ -116,8 +116,39 @@ describe('BL-32 · Alert thresholds and stale periods', () => {
     fireEvent.click(screen.getByTestId('admin-set-stale-submit'));
     await waitFor(() => expect(settingValue(key)).toBeNull());
     await waitFor(() =>
-      expect(within(screen.getByTestId('admin-set-stale-row-sup-007-PK-PETB-8801')).getByText('Default')).toBeTruthy(),
+      expect(within(screen.getByTestId('admin-set-stale-row-sup-007-PK-PETB-8801')).getByText('Update mode')).toBeTruthy(),
     );
+    // Material B2 — with no period of its own, a manual supplier's row names the weekly cutoff.
+    expect(screen.getByTestId('admin-set-stale-period-sup-007-PK-PETB-8801').textContent).toBe('Weekly cutoff (manual)');
+  });
+
+  it('MAT B2 · a row without an override names the rule by update mode; an override keeps its days', async () => {
+    renderWithProviders(<AdminAlertThresholds />, { identity: BUYER });
+    await screen.findByTestId('admin-set-stale-row-sup-001-RM-COCO-8200');
+    // A seeded override keeps its days and its wording.
+    expect(screen.getByTestId('admin-set-stale-period-sup-001-RM-COCO-8200').textContent).toBe('1 day');
+    // Every API row carries a seeded override, so take one away (through the verb) to see the API wording.
+    const key = staleOverrideKey('sup-001', 'RM-LAURIC-7200');
+    fireEvent.click(screen.getByTestId('admin-set-stale-remove-sup-001-RM-LAURIC-7200'));
+    fireEvent.click(screen.getByTestId('admin-set-stale-submit'));
+    await waitFor(() => expect(settingValue(key)).toBeNull());
+    await waitFor(() =>
+      expect(screen.getByTestId('admin-set-stale-period-sup-001-RM-LAURIC-7200').textContent).toBe(
+        '24 h after last successful pull (API)',
+      ),
+    );
+    const rows = screen.getAllByTestId(/^admin-set-stale-row-/);
+    const byMode = rows.filter((r) => within(r).queryByText('Update mode') !== null);
+    const periodOf = (r: HTMLElement) =>
+      screen.getByTestId(r.getAttribute('data-testid')!.replace('admin-set-stale-row-', 'admin-set-stale-period-')).textContent;
+    // sup-001 and sup-003 are connected by API (the resolver's default); the rest are manual.
+    const api = byMode.filter((r) => /^admin-set-stale-row-sup-00[13]-/.test(r.getAttribute('data-testid')!));
+    const manual = byMode.filter((r) => !api.includes(r));
+    expect(api.length).toBeGreaterThan(0);
+    expect(manual.length).toBeGreaterThan(0);
+    for (const r of api) expect(periodOf(r)).toBe('24 h after last successful pull (API)');
+    for (const r of manual) expect(periodOf(r)).toBe('Weekly cutoff (manual)');
+    for (const r of rows.filter((x) => !byMode.includes(x))) expect(within(r).getByText('Its own period')).toBeTruthy();
   });
 });
 

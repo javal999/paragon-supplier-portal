@@ -1,6 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_WORKING_CALENDAR, withDayRulings } from '../../lib/workingCalendar';
-import { cycleStatus, staleAtFor, updateCycleFor, type StaleAtInputs, type UpdateCycleSettings } from './updateCycle';
+import {
+  activeUpdateReminder,
+  cycleStatus,
+  nextSyncAt,
+  staleAtFor,
+  updateCycleFor,
+  updateReminderTimes,
+  weeklyUpdateStatus,
+  type StaleAtInputs,
+  type UpdateCycleSettings,
+} from './updateCycle';
 import { stockFreshness } from './inventoryRules';
 
 // Material B1 — MR-1 BR-03 to BR-05, edge cases 1 to 5, AC-02 to AC-05.
@@ -150,5 +160,72 @@ describe('staleness by mode — MR-1 BR-05 through stockFreshness (AR-07)', () =
   it('no figure is missing, never stale', () => {
     expect(staleAtFor({ ...base, lastUpdatedAt: null })).toBeNull();
     expect(freshness({ ...base, lastUpdatedAt: null }, '2026-12-01T00:00:00.000Z')).toBe('missing');
+  });
+});
+
+// ── Material B2 — the weekly-update panel, reminders and next sync ──────────
+// The cycle (Thu 3 Sep 23:59 WIB, Thu 10 Sep 23:59 WIB] = (16:59Z, 16:59Z].
+
+describe('weeklyUpdateStatus — MR-1 AC-01: what is updated and what is missing', () => {
+  const rows = [
+    { supplierId: 'sup-x', materialCode: 'M1', lastUpdatedAt: '2026-09-05T03:00:00.000Z' },
+    { supplierId: 'sup-x', materialCode: 'M2', lastUpdatedAt: '2026-09-07T03:00:00.000Z' },
+    { supplierId: 'sup-x', materialCode: 'M3', lastUpdatedAt: '2026-08-30T03:00:00.000Z' },
+    { supplierId: 'sup-x', materialCode: 'M4', lastUpdatedAt: null },
+    { supplierId: 'sup-y', materialCode: 'M9', lastUpdatedAt: null },
+  ];
+
+  it('during the cycle: 2 of 4 updated, 2 missing; only the one never sent missed the closed cycle', () => {
+    const s = weeklyUpdateStatus('sup-x', rows, '2026-09-08T03:00:00.000Z', CAL, THURSDAY_2359);
+    expect(s.cycle.cutoff).toBe('2026-09-10T16:59:00.000Z');
+    expect(s.total).toBe(4);
+    expect(s.updated).toEqual(['M1', 'M2']);
+    expect(s.missing).toEqual(['M3', 'M4']);
+    // M3 was updated in the closed cycle (30 Aug); M4 never was.
+    expect(s.missed).toEqual(['M4']);
+  });
+
+  it('after the cutoff: every material not updated in the closed cycle reads missed until it is sent', () => {
+    const s = weeklyUpdateStatus('sup-x', rows, '2026-09-11T03:00:00.000Z', CAL, THURSDAY_2359);
+    expect(s.cycle.start).toBe('2026-09-10T16:59:00.000Z');
+    expect(s.updated).toEqual([]);
+    expect(s.missed).toEqual(['M3', 'M4']);
+    const sent = rows.map((r) => (r.materialCode === 'M3' ? { ...r, lastUpdatedAt: '2026-09-11T02:00:00.000Z' } : r));
+    expect(weeklyUpdateStatus('sup-x', sent, '2026-09-11T03:00:00.000Z', CAL, THURSDAY_2359).missed).toEqual(['M4']);
+  });
+});
+
+describe('updateReminderTimes / activeUpdateReminder — MR-1 d step 2 (09:00 WIB)', () => {
+  const cycle = cycleOf('2026-09-08T03:00:00.000Z');
+
+  it('Wednesday and Thursday 09:00 WIB before a Thursday cutoff', () => {
+    expect(updateReminderTimes(cycle, CAL)).toEqual(['2026-09-09T02:00:00.000Z', '2026-09-10T02:00:00.000Z']);
+  });
+
+  it('1 working day before the cutoff the reminder is on; 2 working days before it is not', () => {
+    expect(activeUpdateReminder(cycle, '2026-09-08T03:00:00.000Z', CAL)).toBeNull(); // Tuesday 10:00
+    expect(activeUpdateReminder(cycle, '2026-09-09T01:59:00.000Z', CAL)).toBeNull(); // Wednesday 08:59
+    expect(activeUpdateReminder(cycle, '2026-09-09T02:00:00.000Z', CAL)).toBe('2026-09-09T02:00:00.000Z');
+    expect(activeUpdateReminder(cycle, '2026-09-10T05:00:00.000Z', CAL)).toBe('2026-09-10T02:00:00.000Z');
+  });
+
+  it('edge case 5 · a holiday Thursday moves the cutoff and both reminders a working day earlier', () => {
+    const holiday = withDayRulings(CAL, [{ date: '2026-09-10', kind: 'non-working' }]);
+    const moved = updateCycleFor('2026-09-08T03:00:00.000Z', holiday, THURSDAY_2359);
+    expect(moved.cutoff).toBe('2026-09-09T16:59:00.000Z');
+    expect(updateReminderTimes(moved, holiday)).toEqual(['2026-09-08T02:00:00.000Z', '2026-09-09T02:00:00.000Z']);
+  });
+
+  it('a Monday before the weekend: the day before skips Saturday and Sunday', () => {
+    const monday: UpdateCycleSettings = { cutoffDay: 1, cutoffTime: 1439 };
+    const c = updateCycleFor('2026-09-11T03:00:00.000Z', CAL, monday);
+    expect(updateReminderTimes(c, CAL)).toEqual(['2026-09-11T02:00:00.000Z', '2026-09-14T02:00:00.000Z']);
+  });
+});
+
+describe('nextSyncAt — MR-1 BR-01: last attempt + stockSync.intervalHours', () => {
+  it('adds the interval to the last attempt, and has nothing to add to when none is on record', () => {
+    expect(nextSyncAt('2026-09-07T10:00:00.000Z', 2)).toBe('2026-09-07T12:00:00.000Z');
+    expect(nextSyncAt(null, 2)).toBeNull();
   });
 });
