@@ -26,6 +26,7 @@ import type {
 // fulfils it import ONE declaration rather than each holding its own copy.
 import type { InviteeCandidate, InviteeFilter } from '../transitions/rfxRules';
 import type { FsRow } from '../transitions/fixedStockReconcile';
+import type { SimulationRefusal, StockSimulation } from '../transitions/simulateSupplierStock';
 import type { RfqClarificationView, RfqEngagementView } from '../sourcing/rfqResponse';
 import type {
   AwardView,
@@ -974,6 +975,36 @@ export interface SimulationOverride {
   readonly date?: string;
   readonly enteredBy: ActorAttribution;
   readonly enteredAt: string;
+}
+
+/**
+ * Material E2 (MR-7 section e) — one supplier × material row of the stock
+ * simulation page at a check date: E1's `simulateSupplierStock` result, or its
+ * refusal when the check date is before the latest stock record, with what
+ * the page needs to name, filter and act on the row. Nothing here is stored
+ * (AD-1). PTI only: a supplier scope reads an empty page.
+ */
+export interface StockSimulationRow {
+  readonly supplierId: string;
+  readonly supplierName: string;
+  readonly materialCode: string;
+  readonly materialLabel: string;
+  readonly uom: string;
+  /** The material's planning group (MR-8), null when unknown. */
+  readonly planningGroupId: string | null;
+  /** MR-7 BR-09 — a distributor has a to-distributor term; a manufacturer has none. */
+  readonly distributor: boolean;
+  /** Material C4 — the material's MRP controller, projected at read (never stored). */
+  readonly mrpController?: MrpControllerRef;
+  /**
+   * A labelled sample row (the MR-7 section 9g worked example), computed on
+   * its own sample inputs so a reviewer can see the example on screen.
+   */
+  readonly sample: boolean;
+  /** The check date's simulation; null when refused. */
+  readonly simulation: StockSimulation | null;
+  /** Edge case 6 — why there is no simulation (the check date is before the latest update). */
+  readonly refusal: SimulationRefusal | null;
 }
 
 /**
@@ -2505,6 +2536,15 @@ export interface InventoryFilter {
   materialCode?: string;
 }
 
+/**
+ * Material E2 (MR-7 step 2) — the stock simulation's narrowing in the read.
+ * The material search and the PIC filter run on the page over the rows.
+ */
+export interface StockSimulationFilter {
+  supplierId?: string;
+  planningGroupId?: string;
+}
+
 export interface RFQFilter {
   status?: RFQStatus | RFQStatus[];
   category?: RFQCategory | RFQCategory[];
@@ -2958,6 +2998,17 @@ export interface IProcurementService {
    * to those materials, with no change history.
    */
   getPlanningGroups(scope: QueryScope): Promise<Page<PlanningGroupView>>;
+  /**
+   * Material E2 (MR-7 BR-01 to BR-09) — the stock simulation per supplier ×
+   * material at a check date (`YYYY-MM-DD`; today when omitted): the latest
+   * stock record plus what happened since, with the planner's inputs. PTI
+   * only: a supplier scope reads an empty page (it is PTI's estimate).
+   */
+  getStockSimulation(
+    scope: QueryScope,
+    checkDate?: string,
+    filter?: StockSimulationFilter,
+  ): Promise<Page<StockSimulationRow>>;
   /** Inventory and capacity alerts. A supplier sees its own supplier-side rules. */
   getInventoryAlerts(scope: QueryScope): Promise<Page<InventoryAlert>>;
 

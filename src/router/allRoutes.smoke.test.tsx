@@ -45,6 +45,7 @@ import BuyerDeliveryAgreements from '../pages-v2/BuyerDeliveryAgreements';
 import BuyerCallOffs from '../pages-v2/BuyerCallOffs';
 import BuyerChase from '../pages-v2/BuyerChase';
 import BuyerInventory from '../pages-v2/BuyerInventory';
+import BuyerStockSimulation from '../pages-v2/BuyerStockSimulation';
 import BuyerCapacity from '../pages-v2/BuyerCapacity';
 import BuyerAlerts from '../pages-v2/BuyerAlerts';
 import BuyerSupplierAccess from '../pages-v2/BuyerSupplierAccess';
@@ -159,6 +160,7 @@ const ROUTES: RouteCase[] = [
   { name: 'buyer/call-offs', pattern: '/buyer/call-offs', at: '/buyer/call-offs', element: <BuyerCallOffs />, identity: BUYER },
   { name: 'buyer/chase', pattern: '/buyer/chase', at: '/buyer/chase', element: <BuyerChase />, identity: BUYER },
   { name: 'buyer/inventory', pattern: '/buyer/inventory', at: '/buyer/inventory', element: <BuyerInventory />, identity: BUYER },
+  { name: 'buyer/stock-simulation', pattern: '/buyer/stock-simulation', at: '/buyer/stock-simulation', element: <BuyerStockSimulation />, identity: BUYER },
   { name: 'buyer/capacity', pattern: '/buyer/capacity', at: '/buyer/capacity', element: <BuyerCapacity />, identity: BUYER },
   { name: 'buyer/alerts', pattern: '/buyer/alerts', at: '/buyer/alerts', element: <BuyerAlerts />, identity: BUYER },
   { name: 'buyer/supplier-access', pattern: '/buyer/supplier-access', at: '/buyer/supplier-access', element: <BuyerSupplierAccess />, identity: BUYER },
