@@ -23,8 +23,10 @@ import {
   SEEDED_STALE_OVERRIDES,
   STALE_OVERRIDE_BOUNDS,
   defaultOfKey,
+  formatMinutesOfDay,
   hubSettingDef,
   parseStaleOverrideKey,
+  parseTimeOfDay,
   staleOverrideKey,
   type HubSettingDef,
   type HubSettingSection,
@@ -41,9 +43,11 @@ import AdminSectionNav from './AdminSectionNav';
 // Two pages, one component, because they are one verb (`t_setting_set`) over
 // one registry (`hubSettings.ts`), split for reading:
 //   · Tolerances and rule values — CR-05, the call-off confirmation deadline,
-//     CR-12, CR-25, CR-21, CR-26, CR-22, CR-23;
+//     CR-12, CR-25, CR-21, CR-26, CR-22, CR-23, MR-2 (update compliance),
+//     MR-6 (default shelf life);
 //   · Alert thresholds and stale periods — CR-24, CR-02, CR-03, the default
-//     stale period and the stale period per supplier × material.
+//     stale period, MR-1 (sync interval, API stale period, weekly cutoff) and
+//     the stale period per supplier × material.
 //
 // The layout follows the working calendar and the 3PL list (BL-50, BL-51):
 //   · THE VALUES, each with its value in force, its default, and — while an
@@ -85,6 +89,16 @@ function useValueText(): (def: Pick<HubSettingDef, 'unit'> | null, value: HubSet
         return t('adminSet.unit.multiple', { value: n });
       case 'weeks':
         return t('adminSet.unit.weeks', { count: value });
+      case 'months':
+        return t('adminSet.unit.months', { count: value });
+      case 'hours':
+        return t('adminSet.unit.hours', { count: value });
+      case 'weekday':
+        return Number.isInteger(value) && value >= 1 && value <= 7 ? t(`adminSet.unit.weekday.${value}`) : n;
+      case 'time':
+        return Number.isInteger(value) && value >= 0 && value <= 1439
+          ? t('adminSet.unit.time', { value: formatMinutesOfDay(value) })
+          : n;
       default:
         return n;
     }
@@ -109,7 +123,16 @@ interface Draft {
 
 const EMPTY_DRAFT: Draft = { key: '', value: '' };
 
+/** The days a `weekday` value can take, Monday = 1 (ISO 8601). */
+const WEEKDAYS = [1, 2, 3, 4, 5, 6, 7] as const;
+
 const toInput = (v: HubSettingValue | undefined): string => (v === null || v === undefined ? '' : String(v));
+
+/** A key's value as the form's input holds it; a time of day as `HH:MM`. */
+function settingToInput(key: string, v: HubSettingValue | undefined): string {
+  if (hubSettingDef(key)?.unit === 'time' && typeof v === 'number') return formatMinutesOfDay(v);
+  return toInput(v);
+}
 
 /** Read the typed input as the value the verb gets. An empty override is `null`. */
 function fromInput(key: string, raw: string): number | boolean | null | string {
@@ -117,6 +140,8 @@ function fromInput(key: string, raw: string): number | boolean | null | string {
   if (def?.unit === 'boolean') return raw === 'true';
   const trimmed = raw.trim();
   if (trimmed === '' && parseStaleOverrideKey(key)) return null;
+  // A time of day goes to the verb as minutes after midnight; an unreadable one as typed.
+  if (def?.unit === 'time') return parseTimeOfDay(trimmed) ?? trimmed;
   const n = Number(trimmed);
   // An unreadable number goes to the verb as typed, so the refusal names it.
   return trimmed === '' || Number.isNaN(n) ? trimmed : n;
@@ -154,7 +179,7 @@ const RuleValuesPage: React.FC<{ section: HubSettingSection }> = ({ section }) =
   const [refusal, setRefusal] = useState<string | null>(null);
 
   const prefill = (key: string, value: HubSettingValue | undefined) => {
-    setDraft({ key, value: toInput(value) });
+    setDraft({ key, value: settingToInput(key, value) });
     setRefusal(null);
     formRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
   };
@@ -287,6 +312,28 @@ const RuleValuesPage: React.FC<{ section: HubSettingSection }> = ({ section }) =
                     <option value="true">{t('adminSet.unit.yes')}</option>
                     <option value="false">{t('adminSet.unit.no')}</option>
                   </select>
+                ) : draftDef?.unit === 'weekday' ? (
+                  <select
+                    className={INPUT_CLASS}
+                    data-testid="admin-set-value"
+                    value={draft.value}
+                    onChange={(e) => setDraft((d) => ({ ...d, value: e.target.value }))}
+                  >
+                    {WEEKDAYS.map((day) => (
+                      <option key={day} value={String(day)}>
+                        {t(`adminSet.unit.weekday.${day}`)}
+                      </option>
+                    ))}
+                  </select>
+                ) : draftDef?.unit === 'time' ? (
+                  <input
+                    type="time"
+                    className={`${INPUT_CLASS} font-mono`}
+                    data-testid="admin-set-value"
+                    value={draft.value}
+                    onChange={(e) => setDraft((d) => ({ ...d, value: e.target.value }))}
+                    required
+                  />
                 ) : (
                   <input
                     className={`${INPUT_CLASS} font-mono`}

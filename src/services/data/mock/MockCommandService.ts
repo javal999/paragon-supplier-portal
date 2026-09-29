@@ -4163,15 +4163,29 @@ function recordedRfpAwardLine(items: readonly AwardItem[], line: RfpAwardLine): 
 // option already sourced by an RFQ created from this RFP (NR-2 BR-08) · the
 // options left open · CR-23 for every awarded supplier (BR-07) · a reason
 // (BR-06). `awardRefusalText(…, 'rfp')` words the codes for an RFP.
-bindPolicyHook(POLICY_HOOKS.RFP_AWARD_GOVERNED, ({ payload, entityId, toState }) => {
+bindPolicyHook(POLICY_HOOKS.RFP_AWARD_GOVERNED, ({ payload, entityId, currentState, toState }) => {
   const rfp = rfpEventStore.get(entityId);
   if (!rfp) return { ok: false, reason: 'RFP_NOT_FOUND: the award names no RFP this hub holds' };
   const lines = rfpAwardLinesOf(payload);
   const options = rfpRoundOptions(rfp);
   const items = rfpAwardItems(rfp);
-  const shape = awardShapeRefusal(items, lines, []);
-  if (shape) return { ok: false, reason: awardRefusalText(shape, 'rfp') };
   const sourced = rfqSourcedOptionRefs(rfqStore.all(), rfp.id);
+  // NR-3 BR-06 — "Will not award" rides on the final award only.
+  const final = toState === 'Awarded';
+  const willNotAward = final ? notAwardedItemsOf(payload) : [];
+  // BL-130 (REQ-E03-04 BR-16f) — a final award may carry NO lines when it only
+  // marks the rest of a Partly awarded RFP "Will not award", by the rule the
+  // RFQ uses (`settlesRestWithoutLines`). An option an RFQ created from this
+  // RFP sources is settled there, so it counts as settled here too.
+  const shape = awardShapeRefusal(
+    items,
+    lines,
+    [],
+    final
+      ? { partlyAwarded: currentState === 'Partly awarded', notAwardedKeys: [...willNotAward, ...sourced.keys()] }
+      : undefined,
+  );
+  if (shape) return { ok: false, reason: awardRefusalText(shape, 'rfp') };
   const elsewhere = rfpOptionSourcedRefusal(
     lines.map((l) => l.optionRef),
     sourced,
@@ -4180,9 +4194,7 @@ bindPolicyHook(POLICY_HOOKS.RFP_AWARD_GOVERNED, ({ payload, entityId, toState })
   );
   if (elsewhere) return { ok: false, reason: awardRefusalText(elsewhere, 'rfp') };
   // NR-3 BR-06 — an option an RFQ sources is settled there, so it does not
-  // hold the RFP open; "Will not award" rides on the final award only.
-  const final = toState === 'Awarded';
-  const willNotAward = final ? notAwardedItemsOf(payload) : [];
+  // hold the RFP open.
   const unknown = willNotAward.find((key) => !items.some((i) => i.key === key));
   if (unknown !== undefined) {
     return { ok: false, reason: awardRefusalText({ code: 'AWARD_ITEM_UNKNOWN', detail: `"${unknown}"` }, 'rfp') };

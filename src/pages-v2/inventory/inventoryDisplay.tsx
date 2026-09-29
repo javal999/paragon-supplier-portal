@@ -337,6 +337,7 @@ export const InTransitReadOnly: React.FC<{ position: InventoryPosition; testId?:
       <span className={labelClass}>{t('inv.entry.inTransit', { uom: position.uom })}</span>
       <div className="px-3 py-2 text-sm rounded-md bg-bg-hover border border-border-subtle text-text-primary">
         <Data data-testid={`${testId}-qty`}>{qty(total)}</Data>
+        {/* BL-83 — a real space: the margin alone read "0nothing in transit". */}{' '}
         {refs.length > 0 ? (
           <span className="ml-2 text-xs text-text-secondary" data-testid={`${testId}-source`}>
             {t('inv.entry.inTransitFrom', { refs: refs.join(', ') })}

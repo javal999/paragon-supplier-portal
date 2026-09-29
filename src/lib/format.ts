@@ -1,6 +1,6 @@
 // ────────────────────────────────────────────────────────────────────────────
 // Locale formatting — single source of truth for currency / date / number
-// display. id-ID conventions (Rp prefix, dot thousands); dates render in the
+// display. rupiah in id-ID conventions (Rp prefix, dot thousands), plain numbers in the UI language's grouping (BL-83); dates render in the
 // Asia/Jakarta timezone so output is deterministic regardless of runner locale.
 //
 // Consolidation target: the ~127 inline formatting sites across pages-v2
@@ -15,6 +15,7 @@ const JAKARTA = 'Asia/Jakarta';
 const EMPTY = '—';
 
 const idID = new Intl.NumberFormat('id-ID');
+const enUS = new Intl.NumberFormat('en-US');
 
 // Active UI language, read from the i18n singleton (the SSoT). EN output stays
 // byte-identical to the pre-i18n behaviour; only ID mode diverges.
@@ -22,10 +23,18 @@ function isID(): boolean {
   return i18n.language?.toLowerCase().startsWith('id') ?? false;
 }
 
-/** "1.234.567" (id-ID grouping). null/undefined/NaN → "—". */
+/**
+ * A plain number in the UI language's grouping: "1,234,567" in English,
+ * "1.234.567" in Indonesian. null/undefined/NaN → "—".
+ *
+ * BL-83 — it used to group the Indonesian way in both languages, so the
+ * English UI showed "1.234", which an English reader takes for one point two.
+ * Rupiah amounts (`formatIDR`) keep the Indonesian grouping in both: that is
+ * how rupiah is written, and the "Rp" says which convention applies.
+ */
 export function formatNumber(value?: number | null): string {
   if (value == null || Number.isNaN(value)) return EMPTY;
-  return idID.format(value);
+  return (isID() ? idID : enUS).format(value);
 }
 
 /**

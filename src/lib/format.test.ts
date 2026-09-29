@@ -9,13 +9,25 @@ afterEach(async () => {
 });
 
 describe('formatNumber', () => {
-  it('groups with id-ID dot thousands', () => {
+  // BL-83 — a plain number groups the way the UI language does. It used to
+  // group the Indonesian way in English too, where "1.234" reads as 1.234.
+  it('groups with comma thousands and a point decimal in English', () => {
+    expect(formatNumber(1234567)).toBe('1,234,567');
+    expect(formatNumber(12.5)).toBe('12.5');
+  });
+  it('groups with dot thousands and a comma decimal in Indonesian', async () => {
+    await i18n.changeLanguage('id');
     expect(formatNumber(1234567)).toBe('1.234.567');
+    expect(formatNumber(12.5)).toBe('12,5');
   });
   it('handles zero, negative, and large values', () => {
     expect(formatNumber(0)).toBe('0');
-    expect(formatNumber(-1500)).toBe('-1.500');
-    expect(formatNumber(1_250_000_000)).toBe('1.250.000.000');
+    expect(formatNumber(-1500)).toBe('-1,500');
+    expect(formatNumber(1_250_000_000)).toBe('1,250,000,000');
+  });
+  it('leaves rupiah on the Indonesian grouping in both languages', () => {
+    expect(formatIDR(1_250_000)).toBe('Rp 1.250.000');
+    expect(formatNumber(1_250_000)).toBe('1,250,000');
   });
   it('returns em dash for null/undefined/NaN', () => {
     expect(formatNumber(null)).toBe('—');
@@ -84,7 +96,7 @@ describe('locale-aware output (lang = id)', () => {
     expect(formatDate('2026-12-15')).toBe('15 Des 2026');
   });
 
-  it('full IDR + number grouping stay id-ID in both locales', async () => {
+  it('in Indonesian, rupiah and plain numbers both group id-ID', async () => {
     await i18n.changeLanguage('id');
     expect(formatIDR(1_250_000_000)).toBe('Rp 1.250.000.000');
     expect(formatNumber(1234567)).toBe('1.234.567');
