@@ -174,11 +174,13 @@ import {
   isApiConnected,
   isAssignedMaterial,
   observeAlertConditions,
+  simulatedPullOf,
   supplierNameOf,
   suppliersWithAssignments,
 } from './inventoryReadModel';
-import { API_CONNECTIONS } from './fixtures/inventoryHub';
 import { forecastVersionStore, forecastViewStore } from './stores/forecastHubStores';
+// Material A1 — the supplier overlay (its own module, plan AD-5).
+import { supplierOverlayTarget } from './targets/supplierOverlay';
 // ── REQ-E14-13 — reschedule proposals taken to SAP ─────────────────────────
 import { sapChangeMarkStore } from './stores/sapChangeMarkStore';
 import { engineDataset } from './fixtures/engineDataset';
@@ -2552,9 +2554,12 @@ const stockSyncTarget: CommandTarget = {
   create: (payload) => {
     const supplierId = String(payload.supplierId);
     const now = sdcClock.now();
-    const connection = API_CONNECTIONS[supplierId];
+    // Material A1 (AR-06) — the policy hook has already asked the ONE resolver
+    // whether this supplier is API-connected; this reads only what the
+    // simulated pull returns (`NO_ENDPOINT` when the sample list has no entry).
+    const connection = simulatedPullOf(supplierId);
     const id = stockSyncStore.nextId();
-    if (connection && connection.outcome === 'success') {
+    if (connection.outcome === 'success') {
       // The supplier's system answered: its figures land as API submissions.
       for (const f of connection.figures) {
         inventoryDeclarationStore.add({
@@ -2580,7 +2585,7 @@ const stockSyncTarget: CommandTarget = {
         supplierId,
         at: now,
         outcome: 'failed',
-        errorKey: connection && connection.outcome === 'failed' ? connection.errorKey : 'timeout',
+        errorKey: connection.errorKey,
       });
     }
     return { entityId: id };
@@ -4901,6 +4906,8 @@ const TARGETS: Record<string, CommandTarget> = {
   // BL-51 — the 3PL list. Wired so every change to where a tracking link points
   // lands in the DR-10 trail with who made it and when.
   threePl: threePlTarget,
+  // Material A1 — a supplier's stock update mode (MR-1 BR-02, AC-06).
+  supplierOverlay: supplierOverlayTarget,
   // BL-32 — the rule values. Wired so every change to a tolerance, deadline,
   // threshold or stale period — and every reset — lands in the DR-10 trail.
   hubSetting: hubSettingTarget,
