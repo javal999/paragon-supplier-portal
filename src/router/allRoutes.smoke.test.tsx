@@ -16,6 +16,8 @@ import path from 'node:path';
 
 import { Routes, Route } from 'react-router-dom';
 import { screen, waitFor } from '@testing-library/react';
+import { beforeAll } from 'vitest';
+import { currentForecastBias } from '../services/data/mock/demandForecastRun';
 import { renderWithProviders, SUPPLIER } from '../test/test-utils';
 import type { CurrentIdentity } from '../context/CurrentIdentityContext';
 
@@ -213,6 +215,13 @@ const ROUTES: RouteCase[] = [
 ];
 
 describe('sp-001 — every route mounts without crashing', () => {
+  // REQ-E14-11 — the forecast-bias read replays the demand forecast at 52 past
+  // origins (about a second, memoised). Run it once here, outside the per-route
+  // clock, so the route's mount is timed on the mount and not on the replay.
+  beforeAll(() => {
+    currentForecastBias();
+  }, 60_000);
+
   it('⚠️ route table covers all of AppRouter — DERIVED from the source, not counted', () => {
     // ⚠️ **WHAT THIS REPLACED, AND WHY IT COULD NEVER HAVE WORKED.** The guard
     // was `expect(ROUTES.length).toBe(41)` under a comment saying it *"guards
