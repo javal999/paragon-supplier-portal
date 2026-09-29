@@ -952,6 +952,32 @@ export interface WarehouseRescheduleView extends WarehouseReschedule {
 }
 
 /**
+ * Material E1 (MR-7 BR-08) — which figure a planner input stands in for:
+ * the supplier's SOH, its in-production quantity (with the completion date in
+ * `date`), or a to-distributor leg (with its ETA in `date`).
+ */
+export type SimulationOverrideField = 'soh' | 'inProduction' | 'toDistributor';
+
+/**
+ * Material E1 (MR-7 BR-06, BR-08; plan AD-1) — a planner's input to the stock
+ * simulation, APPENDED (MAT-R3). It applies to the simulation only, until the
+ * supplier's next stock record, and never changes the stock record or counts
+ * for update compliance (MR-2). The latest input per field is the one in force.
+ */
+export interface SimulationOverride {
+  readonly id: string;
+  readonly supplierId: string;
+  readonly materialCode: string;
+  readonly field: SimulationOverrideField;
+  /** A quantity in the material's canonical unit. */
+  readonly value: number;
+  /** `YYYY-MM-DD`: the completion date (inProduction) or ETA (toDistributor). */
+  readonly date?: string;
+  readonly enteredBy: ActorAttribution;
+  readonly enteredAt: string;
+}
+
+/**
  * REQ-E14-13 BR-07 / ENG-D16 — the Material Planner's record that a PO-line
  * proposal was taken to SAP (the Hub does not edit a PO). A ledger: the latest
  * mark per line is the one in force.

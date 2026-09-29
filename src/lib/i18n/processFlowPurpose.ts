@@ -402,6 +402,11 @@ export const processFlowPurposeEn: Record<string, string> = {
     'PTI loads accepted trade names in bulk from a file of PTI code, supplier, trade name and supplier material number. They take effect on load and are marked as loaded by PTI; a row that matches the name in use changes nothing.',
   'processFlows.purpose.t_materialname_replace':
     'A newer name for the same supplier and material takes the place of the earlier one, so only one name is in use at a time and only one waits for a decision.',
+  // ── the stock simulation's planner input (Material E1) ─────────────────
+  'processFlows.purpose.entity.simulationOverride':
+    'A figure the planner enters for the stock simulation where the supplier has not given one: stock on hand, a quantity in production with its completion date, or a shipment to the distributor with its arrival date. It is used until the supplier’s next stock update and never changes what the supplier reported.',
+  'processFlows.purpose.t_simulation_override_set':
+    'The planner enters a missing figure so the stock simulation can still run. The simulation shows it as planner input with who entered it and when, and drops it once the supplier sends a new stock update.',
 
   // ── the hub's rule values (BL-32) ────────────────────────────────────
   'processFlows.purpose.entity.hubSetting':
@@ -950,6 +955,10 @@ export const processFlowPurposeId: Record<string, string> = {
     'PTI memuat nama dagang yang disetujui secara massal dari berkas berisi kode PTI, pemasok, nama dagang, dan nomor material pemasok. Nama itu langsung disetujui dan ditandai dimuat oleh PTI; baris yang sama dengan nama yang disetujui tidak mengubah apa pun.',
   'processFlows.purpose.t_materialname_replace':
     'Nama yang lebih baru untuk pemasok dan material yang sama menggantikan nama sebelumnya, sehingga hanya satu nama yang disetujui dan hanya satu yang menunggu persetujuan.',
+  'processFlows.purpose.entity.simulationOverride':
+    'Angka yang diisi perencana untuk simulasi stok bila pemasok belum memberikannya: stok di tangan, jumlah dalam produksi beserta tanggal selesainya, atau kiriman ke distributor beserta tanggal tibanya. Angka ini dipakai sampai pembaruan stok berikutnya dari pemasok dan tidak pernah mengubah data yang dilaporkan pemasok.',
+  'processFlows.purpose.t_simulation_override_set':
+    'Perencana mengisi angka yang belum ada agar simulasi stok tetap berjalan. Simulasi menandainya sebagai masukan perencana beserta siapa dan kapan, lalu membuangnya saat pemasok mengirim pembaruan stok baru.',
 
   'processFlows.purpose.entity.hubSetting':
     'Satu nilai yang menjadi pembanding aturan hub: toleransi, tenggat, ambang peringatan, atau periode data usang. Nilai ini menentukan apa yang diterima tanpa diperiksa orang, sehingga hanya administrator hub yang dapat mengubahnya dan setiap perubahan tercatat.',

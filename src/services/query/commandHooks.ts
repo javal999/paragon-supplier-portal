@@ -38,6 +38,7 @@ import type {
 } from '../data/types';
 import type { AsnLineInput } from '../transitions/fulfilmentRules';
 import type { ProposalType } from '../engine/reschedule';
+import type { SimulationOverrideField } from '../data/types';
 import { reasonCodeEntityId, type ReasonListId } from '../transitions/reasonCodes';
 
 /**
@@ -2391,6 +2392,44 @@ export function useSapChangeMarkCommand() {
     onSuccess: (result) => {
       if (result.status === 'failed') return;
       qc.invalidateQueries({ predicate: (q) => q.queryKey[0] === 'procurement' && q.queryKey[1] === 'reschedule' });
+    },
+  });
+}
+
+// ─── Material E1 · a planner input to the stock simulation (MR-7 BR-08) ──────
+//
+// Creation-only; `enteredBy` / `enteredAt` are stamped by the target from the
+// session and the hub clock. The supplier's stock record is never touched.
+export interface SimulationOverrideVars {
+  readonly supplierId: string;
+  readonly materialCode: string;
+  readonly field: SimulationOverrideField;
+  readonly value: number;
+  /** `YYYY-MM-DD`, for inProduction and toDistributor. */
+  readonly date?: string;
+}
+
+/** Enter a missing figure for the stock simulation (`t_simulation_override_set`). */
+export function useSimulationOverrideSet() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+
+  return useMutation<CommandResult, Error, SimulationOverrideVars>({
+    mutationFn: (vars) =>
+      svc.commands.dispatch(scope, {
+        transitionId: 't_simulation_override_set',
+        entity: 'simulationOverride',
+        payload: {
+          supplierId: vars.supplierId,
+          materialCode: vars.materialCode,
+          field: vars.field,
+          value: vars.value,
+          ...(vars.date ? { date: vars.date } : {}),
+        },
+      }),
+    onSuccess: (result) => {
+      if (result.status !== 'failed') void qc.invalidateQueries();
     },
   });
 }

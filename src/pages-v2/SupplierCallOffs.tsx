@@ -51,6 +51,8 @@ import {
   useCallOffViews,
 } from './callOffs/callOffDisplay';
 import { PicCell, PicFilter, PicHeader, usePicFilter } from './materials/picDisplay';
+import MaterialSearch, { MaterialMatchReason, useMaterialMatcher } from '../components/ui-v2/MaterialSearch';
+import { searchMaterials } from '../services/transitions/matchMaterial';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SUPPLIER CALL-OFFS — REQ-E09-03 (confirmation) and REQ-E09-04 (dispatch).
@@ -102,6 +104,10 @@ const SupplierCallOffs: React.FC = () => {
   const drilledPo = drilledPoId(drill);
   // Material C4 — the PIC filter (by name: a supplier never sees the code).
   const pic = usePicFilter();
+  // Material C3 — the one material search (MR-3 BR-04); a supplier's names
+  // are its own (narrowed in the read model, MAT-R4).
+  const [search, setSearch] = useState('');
+  const matchOf = useMaterialMatcher();
 
   if (!identity.supplierId) return <NoSupplierIdentity />;
   if (isPending || drill.kind === 'pending') return <LoadingState breadcrumb={crumb} />;
@@ -123,7 +129,12 @@ const SupplierCallOffs: React.FC = () => {
   const toConfirm = rows.filter((v) => v.callOff.status === 'Awaiting Confirmation').length;
   const dueSoon = rows.filter((v) => isDueWithoutHeadsUp(v, nowIso)).length;
   const selected: CallOffView | null = rows.find((v) => v.callOff.id === selectedId) ?? null;
-  const listed = rows.filter((v) => pic.matches(v.callOff.mrpController));
+  const listed = searchMaterials(
+    search,
+    rows.filter((v) => pic.matches(v.callOff.mrpController)),
+    (v) => ({ code: v.callOff.materialCode, description: v.callOff.description, supplierId: v.callOff.supplierId }),
+    matchOf,
+  );
 
   const open = (id: string) => {
     setSelectedId(id);
@@ -211,7 +222,10 @@ const SupplierCallOffs: React.FC = () => {
         </div>
       )}
 
-      <div className="mb-4">
+      <div className="flex flex-wrap items-center gap-3 mb-4">
+        <div className="flex-1 min-w-[240px]">
+          <MaterialSearch mode="filter" query={search} onQueryChange={setSearch} testId="supplier-calloff-search" />
+        </div>
         <PicFilter
           refs={rows.map((v) => v.callOff.mrpController)}
           persona="supplier"
@@ -239,7 +253,7 @@ const SupplierCallOffs: React.FC = () => {
             <TableHeaderCell className="text-right">{t('co.col.action')}</TableHeaderCell>
           </TableHeader>
           <tbody>
-            {listed.map((v) => {
+            {listed.map(({ item: v, match }) => {
               const c = v.callOff;
               const needsAnswer = c.status === 'Awaiting Confirmation';
               return (
@@ -257,6 +271,7 @@ const SupplierCallOffs: React.FC = () => {
                     <div className="text-xs text-text-primary">
                       {c.description}
                     </div>
+                    <MaterialMatchReason match={match} testId={`supplier-calloff-match-${c.id}`} />
                   </TableCell>
                   <TableCell>
                     <PicCell value={c.mrpController} testId={`supplier-calloff-pic-${c.id}`} />

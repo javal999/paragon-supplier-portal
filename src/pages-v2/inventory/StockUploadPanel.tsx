@@ -8,6 +8,7 @@ import type { InventoryPosition } from '../../services/data/types';
 import {
   dayOf,
   parseCsv,
+  STOCK_TEMPLATE_FIELDS,
   stockTemplateCsv,
   validateStockRows,
   type RefusedStockRow,
@@ -28,6 +29,52 @@ import { InTransitReadOnly, inventoryNow, readFileText, useInventoryRunner } fro
 // never enters it. The panel shows it read-only per material, beside the
 // in-production figure last submitted, from ASNs and dispatched call-offs.
 // ─────────────────────────────────────────────────────────────────────────────
+
+/** Spreadsheet column letter of the i-th template column (A, B, …). */
+const columnLetter = (i: number) => String.fromCharCode(65 + i);
+
+/**
+ * MR-4 BR-03, AC-03 — every template column with Required or Optional and a
+ * one-line meaning, read from `STOCK_TEMPLATE_FIELDS` so the table cannot
+ * drift from the file; plus the batch note for G to J.
+ */
+const StockTemplateColumns: React.FC = () => {
+  const { t } = useTranslation();
+  return (
+    <details open className="mt-3" data-testid="stock-template-columns">
+      <summary className="text-sm text-action cursor-pointer">{t('inv.upload.columns.toggle')}</summary>
+      <div className="relative w-full min-w-0 overflow-x-auto mt-2">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-label text-text-tertiary uppercase">
+              <th className="text-left py-1 pr-3">{t('inv.upload.columns.col.column')}</th>
+              <th className="text-left py-1 pr-3">{t('inv.upload.columns.col.name')}</th>
+              <th className="text-left py-1 pr-3">{t('inv.upload.columns.col.presence')}</th>
+              <th className="text-left py-1">{t('inv.upload.columns.col.meaning')}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {STOCK_TEMPLATE_FIELDS.map((f, i) => (
+              <tr key={f.field} className="border-t border-border-subtle" data-testid={`stock-template-column-${f.field}`}>
+                <td className="py-1.5 pr-3">
+                  <Data>{columnLetter(i)}</Data>
+                </td>
+                <td className="py-1.5 pr-3 text-text-primary">{t(`inv.template.${f.field}`)}</td>
+                <td className="py-1.5 pr-3 text-text-secondary" data-testid={`stock-template-presence-${f.field}`}>
+                  {t(`inv.upload.columns.presence.${f.presence}`)}
+                </td>
+                <td className="py-1.5 text-text-secondary">{t(`inv.upload.columns.meaning.${f.field}`)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="mt-2 text-xs text-text-tertiary" data-testid="stock-template-batch-note">
+        {t('inv.upload.columns.batchNote')}
+      </p>
+    </details>
+  );
+};
 
 interface UploadResult {
   savedMaterials: string[];
@@ -126,6 +173,7 @@ const StockUploadPanel: React.FC<{ supplierId: string; positions: readonly Inven
           )}
         </div>
       </div>
+      <StockTemplateColumns />
       <details open className="mt-3" data-testid="stock-upload-incoming">
         <summary className="text-sm text-action cursor-pointer">{t('inv.upload.incoming.toggle')}</summary>
         <p className="mt-2 text-xs text-text-tertiary">{t('inv.upload.incoming.hint')}</p>

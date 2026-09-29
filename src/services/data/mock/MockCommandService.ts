@@ -202,6 +202,7 @@ import { planningGroupTarget } from './targets/planningGroup';
 import { mrpControllerTarget } from './targets/mrpController';
 // Material C2 — supplier trade names (its own module, plan AD-5).
 import { materialNameCascades, materialNameTarget } from './targets/materialName';
+import { simulationOverrideTarget } from './targets/simulationOverride';
 // ── REQ-E14-13 — reschedule proposals taken to SAP ─────────────────────────
 import { sapChangeMarkStore } from './stores/sapChangeMarkStore';
 import { engineDataset } from './fixtures/engineDataset';
@@ -5189,6 +5190,7 @@ const TARGETS: Record<string, CommandTarget> = {
   mrpController: mrpControllerTarget,
   // Material C2 — a supplier's trade name for a PTI material (MR-3).
   materialName: materialNameTarget,
+  simulationOverride: simulationOverrideTarget, // Material E1 — stock simulation planner input (MR-7 BR-08)
   // BL-32 — the rule values. Wired so every change to a tolerance, deadline,
   // threshold or stale period — and every reset — lands in the DR-10 trail.
   hubSetting: hubSettingTarget,
