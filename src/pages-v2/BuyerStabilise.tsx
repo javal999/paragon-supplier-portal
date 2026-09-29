@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import AppShellV2 from '../components/layout-v2/AppShellV2';
 import PageHeader from '../components/ui-v2/PageHeader';
 import PageMetaLine from '../components/ui-v2/PageMetaLine';
@@ -43,7 +44,9 @@ import { qtyOf } from './materialPlan/planDisplay';
 // band) is shown raw against stabilised, on two sources: the engine's own plan
 // (replayed, ENG-B30) and SAP's plan history suppliers already saw (ENG-B33).
 //
-// BR-06's range needs E14-09, which is not built: the page says so.
+// BR-06's range: E14-09 is built (BL-111) and shown on the Demand forecast
+// page; it is not published beside these quantities (ENG-B99), and the page
+// says so with a link to it.
 // Publishing goes through the EXISTING verb (`t_forecastversion_publish`,
 // `source: 'engine'`) and is refused while the engine dataset is simulated
 // (X-03) — the page says so in place of the act — and, once live, until SOMO
@@ -392,7 +395,10 @@ const BuyerStabilise: React.FC = () => {
         </p>
       )}
       <p className="text-xs text-text-tertiary mb-1" data-testid="stb-range-note">
-        {t('stb.range')}
+        {t('stb.range')}{' '}
+        <Link to="/buyer/demand-forecast" className="text-action-hover hover:underline" data-testid="stb-range-link">
+          {t('stb.range.link')}
+        </Link>
       </p>
       <p className="text-xs text-text-tertiary mb-4">{t('stb.replay')}</p>
 
