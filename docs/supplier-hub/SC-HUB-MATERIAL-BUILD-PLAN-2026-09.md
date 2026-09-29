@@ -349,8 +349,8 @@ Last    I1 (after every task in A to G)
 
 | Task | PR | Merge commit |
 |---|---|---|
-| B4 | #110 | `d7ac421` (gate record in the PR body) |
-| G2 | #109 | `cf3ad6c` (gate record in the PR body) |
+| B4 | #110 | `d7ac421` (combined run fully green, 7979/513) |
+| G2 | #109 | `cf3ad6c` (combined run fully green, 7952/510) |
 | A3 | #85 | `4cfb5ba` |
 | A1 | #86 | `bdf60ae` |
 | D1 | #89 | `122aa2c` |
@@ -379,15 +379,15 @@ Last    I1 (after every task in A to G)
 | FU-2 | `services/sdc/materialMaster.ts` imports a mock store (`materialOverlayStore`) directly (A2) | The SDC module now depends on the mock layer; needs a seam when `httpDataService` lands | Stage F1 |
 | FU-3 | `supplier:set-update-mode` is held by the whole `compliance` lane and by `buyer_all` (A1), following the `setting:set` precedent (BL-70 open) | "Hub administrator only" (MR-1 AC-06) is not literal | I1 records it; BL-70 decides |
 | FU-5 | D1 (#89): the "above available" batch warning shows on the wizard's confirm step only; the Submit drawer on a draft ASN (a second submit path) shows none. Verified in the browser: 6,000 shipped against a 5,000 batch submitted with no warning | MR-6 BR-03 says the supplier sees it before submitting | D3 (added to its prompt) |
-| FU-6 | F1 (#87): a closed alert shows its reason as "Other (note required)", repeating the form label | Cosmetic | Any task touching `BuyerAlerts.tsx` |
+| FU-6 | F1 (#87): a closed alert shows its reason as "Other (note required)", repeating the form label | Cosmetic | Any task touching `BuyerAlerts.tsx`; built as BL-156 (material polish PR) |
 | FU-7 | D1 (#89): the planner's "Not in declared stock" marker shows only where ASN lines show today (the `/buyer/shipments` drill-through with 1 ASN on the PO) | Planners may miss typed batches | D3 (planner Mismatch marker work) |
-| FU-8 | C4 (#90): a mapped MRP controller code cannot be unmapped | Admin cannot undo a mapping | Later polish |
+| FU-8 | C4 (#90): a mapped MRP controller code cannot be unmapped | Admin cannot undo a mapping | Later polish; built as BL-157 (material polish PR) |
 | FU-9 | G1 (#91): no verb lets a supplier file a "Tax & Legal" document | Under placeholder lists almost no vendor can reach Approved | Owner decision pending (G2 enforcement mode) |
 | FU-10 | C2 (#97): on PTI screens the approved trade name reads "Your name: …" (the supplier's wording) | Misleading label for planners | C3 (added to its brief) |
 | FU-11 | E1 (#103): `IncomingShipment` has no principal id, so the ETA fallback uses the supplier's shortest principal lead time rather than the leg's own | ETA fallback can be early for multi-principal distributors | Data model change when the feed carries the principal |
 | FU-12 | B3 (#105): every fixture supplier with materials reads 0% update compliance (the seed has ~1 stock record per material and no successful pulls), so the demo shows all red | Demo cannot show green/amber/red | B4 (added to its prompt): seed a realistic weekly history for 3 suppliers |
-| FU-13 | Plural wording: two i18n tests disagree on plural keys (`InventoryCapacity`/`CallOffs` tests want identical EN/ID key sets; `fragments.test` wants ID without `_other`), so B2 and D3 avoided plurals and B2 reads "Missed: 1 materials were not updated" | Grammar slip on screen; the two tests need one agreed plural rule | A small test-infrastructure task |
-| FU-14 | G2 (#109): under the placeholder lists 21 of 22 vendors are Registered, so almost every award in the demo asks for a reason (consequence of the warn-only ruling). Stored `qualificationWarnings` are not yet displayed on the event or award record; RFI/RFP invitee tables have no marker | Ends when Procurement and Quality save real lists (MAT-D15) | Owner (lists); a small UI task for the display gaps |
+| FU-13 | Plural wording: two i18n tests disagree on plural keys (`InventoryCapacity`/`CallOffs` tests want identical EN/ID key sets; `fragments.test` wants ID without `_other`), so B2 and D3 avoided plurals and B2 reads "Missed: 1 materials were not updated" | Grammar slip on screen; the two tests need one agreed plural rule | A small test-infrastructure task; built as BL-159 (material polish PR) |
+| FU-14 | G2 (#109): under the placeholder lists 21 of 22 vendors are Registered, so almost every award in the demo asks for a reason (consequence of the warn-only ruling). Stored `qualificationWarnings` are not yet displayed on the event or award record; RFI/RFP invitee tables have no marker | Ends when Procurement and Quality save real lists (MAT-D15) | Owner (lists); a small UI task for the display gaps; built as BL-147 (material polish PR) |
 | FU-4 | A1 edited `docs/contracts/C5-seams.md` (method count) — not in MAT-R5's list | Brief should name it | I1 adds it to MAT-R5 (done in I1) |
 
 Folded into `BACKLOG.md` on 2026-09-29 (task I1): the mapping to BL rows is in the status row at the top of this file.

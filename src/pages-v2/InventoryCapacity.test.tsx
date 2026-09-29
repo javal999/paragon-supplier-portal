@@ -63,7 +63,13 @@ describe('menu and copy (section 3.7)', () => {
   });
 
   it('every new string exists in EN and ID', () => {
-    expect(Object.keys(inventoryCapacityId).sort()).toEqual(Object.keys(inventoryCapacityEn).sort());
+    // BL-159 plural rule: compare BASE keys, with the plural suffix stripped.
+    // English has `_one` and `_other`; Indonesian has no plural forms, so its
+    // plural keys carry `_other` only. Which forms each locale carries is
+    // pinned by `src/lib/i18n/fragments.test.ts`; this test pins that every
+    // string exists in both languages.
+    const base = (keys: string[]) => [...new Set(keys.map((k) => k.replace(/_(zero|one|two|few|many|other)$/, '')))].sort();
+    expect(base(Object.keys(inventoryCapacityId))).toEqual(base(Object.keys(inventoryCapacityEn)));
   });
 });
 
@@ -701,6 +707,8 @@ describe('Alert close reasons (MR-9 BR-04 to BR-06)', () => {
     const offered = within(panel().getByLabelText('Reason')).getAllByRole('option').map((o) => o.getAttribute('value'));
     expect(offered).not.toContain('risk-accepted');
     expect(offered).toContain('po-raised');
+    // BL-156 — the form label keeps its hint; records read the name only.
+    expect(within(panel().getByLabelText('Reason')).getByRole('option', { name: 'Other (note required)' })).toBeTruthy();
   });
 
   it('the Closed tab counts per rule per reason, and the reason filter is kept in the address (AC-04, BR-06)', async () => {
@@ -713,8 +721,10 @@ describe('Alert close reasons (MR-9 BR-04 to BR-06)', () => {
     );
     expect(within(counts).getByTestId('alert-reason-count-staleData-supplier-updated')).toHaveTextContent('Supplier updated its data1');
     // The note-only closure counts as Other, and keeps its note.
-    expect(within(counts).getByTestId('alert-reason-count-capacityBelowDemand-other')).toHaveTextContent('Other (note required)1');
-    expect(screen.getByTestId(`alert-closure-${CAPACITY}`)).toHaveTextContent('Other (note required): Second shift agreed');
+    expect(within(counts).getByTestId('alert-reason-count-capacityBelowDemand-other')).toHaveTextContent('Other1');
+    expect(screen.getByTestId(`alert-closure-${CAPACITY}`)).toHaveTextContent('Other: Second shift agreed');
+    // BL-156 — the closed-tab filter reads the reason's name only.
+    expect(within(screen.getByLabelText('Close reason')).getByRole('option', { name: 'Other (1)' })).toBeTruthy();
     fireEvent.change(screen.getByLabelText('Close reason'), { target: { value: 'other' } });
     expect(new URLSearchParams(search).get('reason')).toBe('other');
     expect(screen.getByTestId(`alert-${CAPACITY}`)).toBeInTheDocument();

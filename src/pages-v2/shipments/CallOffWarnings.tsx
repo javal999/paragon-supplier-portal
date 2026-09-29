@@ -26,13 +26,14 @@ export function callOffWarningText(t: TFunction, w: CallOffWarning): string {
     case 'qtyUnder':
       return t('co.asn.warn.qtyUnder', { shipped: n(d.shipped), agreed: n(d.agreed), pct: n(d.pct), callOff });
     case 'late':
-      return t('co.asn.warn.late', { days: n(d.days), eta: formatDate(d.eta), date: formatDate(d.agreedDate), callOff });
+      // BL-159 — `count` picks the plural form (i18next).
+      return t('co.asn.warn.late', { count: d.days ?? 0, eta: formatDate(d.eta), date: formatDate(d.agreedDate), callOff });
     case 'early':
       return t('co.asn.warn.early', {
-        days: n(d.days),
+        count: d.days ?? 0,
         eta: formatDate(d.eta),
         date: formatDate(d.agreedDate),
-        limit: n(d.limit),
+        limit: t('co.asn.warn.days', { count: d.limit ?? 0 }),
         callOff,
       });
     case 'material':

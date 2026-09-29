@@ -22,6 +22,13 @@ export const biddingEligibilityEn: Record<string, string> = {
     'Only vendors qualified for this event’s sourcing type can be invited. While the qualification lists are placeholders, vendors below the level are marked but can still be invited.',
   'elig.invite.notOffered': 'Not qualified for this event — cannot be invited',
   'elig.award.warnReason': 'Awarding a vendor that is not qualified (placeholder rules) needs a reason: {{vendors}}.',
+  // — BL-147: the warnings kept on the event at publish and on the award record —
+  'elig.published_one': 'Published with {{count}} vendor not qualified (placeholder rules)',
+  'elig.published_other': 'Published with {{count}} vendors not qualified (placeholder rules)',
+  'elig.awarded_one': 'Awarded to {{count}} vendor not qualified (placeholder rules)',
+  'elig.awarded_other': 'Awarded to {{count}} vendors not qualified (placeholder rules)',
+  'elig.awarded.reason': 'Reason given: {{reason}}',
+  'elig.recorded.hint': 'As recorded at the time. The qualification lists were placeholders, so these vendors were let through with a warning.',
   // — Award refusals (the verb's codes, in the reader's language) —
   'rfqCompare.refusal.AWARD_SUPPLIER_NOT_QUALIFIED':
     '{{vendors}} is below the qualification level this event needs, so it cannot be awarded. It can still respond.',
@@ -58,6 +65,10 @@ export const biddingEligibilityId: Record<string, string> = {
     'Hanya vendor yang memenuhi syarat untuk jenis sourcing event ini yang dapat diundang. Selama daftar kualifikasi masih sementara, vendor di bawah level diberi tanda tetapi masih dapat diundang.',
   'elig.invite.notOffered': 'Belum memenuhi syarat untuk event ini — tidak dapat diundang',
   'elig.award.warnReason': 'Memenangkan vendor yang belum memenuhi syarat (aturan sementara) memerlukan alasan: {{vendors}}.',
+  'elig.published_other': 'Dipublikasikan dengan {{count}} vendor yang belum memenuhi syarat (aturan sementara)',
+  'elig.awarded_other': 'Dimenangkan oleh {{count}} vendor yang belum memenuhi syarat (aturan sementara)',
+  'elig.awarded.reason': 'Alasan yang diberikan: {{reason}}',
+  'elig.recorded.hint': 'Sesuai catatan saat itu. Daftar kualifikasi masih sementara, sehingga vendor ini diloloskan dengan peringatan.',
   'rfqCompare.refusal.AWARD_SUPPLIER_NOT_QUALIFIED':
     '{{vendors}} berada di bawah level kualifikasi yang diperlukan event ini, sehingga tidak dapat dimenangkan. Vendor tetap dapat merespons.',
   'elig.refusal.reasonRequired':

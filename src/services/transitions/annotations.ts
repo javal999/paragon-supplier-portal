@@ -288,6 +288,7 @@ export const TRANSITION_PURPOSE: FlowAnnotations = Object.freeze({
   t_planninggroup_move_materials: { purposeKey: 'processFlows.purpose.t_planninggroup_move_materials' },
   t_planninggroup_retire: { purposeKey: 'processFlows.purpose.t_planninggroup_retire' },
   t_mrpcontroller_set: { purposeKey: 'processFlows.purpose.t_mrpcontroller_set' },
+  t_mrpcontroller_unmap: { purposeKey: 'processFlows.purpose.t_mrpcontroller_unmap' },
   t_materialname_submit: { purposeKey: 'processFlows.purpose.t_materialname_submit' },
   t_materialname_approve: { purposeKey: 'processFlows.purpose.t_materialname_approve' },
   t_materialname_reject: { purposeKey: 'processFlows.purpose.t_materialname_reject' },

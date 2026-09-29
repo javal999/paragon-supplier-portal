@@ -6,7 +6,8 @@
 // the CODE (`MaterialMasterEntry.mrpController`, fixture data labelled by the
 // `materialMasterSap` capability until the MDM feed runs). WHO a code is — the
 // name a supplier can ask for and the hub users behind it — is hub-mastered:
-// this list, changed only by the governed verb `t_mrpcontroller_set`.
+// this list, changed only by the governed verbs `t_mrpcontroller_set` and
+// `t_mrpcontroller_unmap` (BL-157: the administrator can undo a mapping).
 //
 // ── WHAT LIVES HERE (the `threePlStore` shape, followed) ─────────────────────
 //   1. THE SAMPLE LIST. Illustrative desks for three of the four fixture codes,
@@ -40,8 +41,14 @@ export interface MrpController {
   readonly userLabels: readonly string[];
 }
 
-/** An administrator's change to one controller, as recorded. Never edited. */
+/**
+ * An administrator's change to one controller, as recorded. Never edited.
+ * BL-157 — an unmapping is a change too, appended like any other: `unmapped`
+ * is true, the name is empty and there are no user labels. From then on the
+ * code reads as unmapped (the code only, MR-5 BR-02) until it is mapped again.
+ */
 export interface MrpControllerChange extends MrpController {
+  readonly unmapped?: true;
   readonly setBy: ActorAttribution;
   /** Store-assigned from the hub clock, never a payload field. */
   readonly setAt: string;
@@ -106,6 +113,24 @@ export function mrpControllerRefusal(code: unknown, name: unknown, userLabels: u
   return null;
 }
 
+/**
+ * BL-157 — why `t_mrpcontroller_unmap` would be refused, or null.
+ * `MRP_CONTROLLER_CODE_INVALID` — not 1 to 3 upper-case letters or digits.
+ * `MRP_CONTROLLER_NOT_MAPPED` — the code has no mapping in force to undo.
+ */
+export function mrpControllerUnmapRefusal(
+  code: unknown,
+  list: readonly MrpController[] = mrpControllerStore.all(),
+): string | null {
+  if (typeof code !== 'string' || !MRP_CONTROLLER_CODE.test(code)) {
+    return `MRP_CONTROLLER_CODE_INVALID: an MRP controller code is 1 to 3 upper-case letters or digits, got ${JSON.stringify(code)}`;
+  }
+  if (!list.some((r) => r.code === code)) {
+    return `MRP_CONTROLLER_NOT_MAPPED: MRP controller ${code} has no mapping to remove`;
+  }
+  return null;
+}
+
 // ── 2 · THE STORE ────────────────────────────────────────────────────────────
 
 let changes: MrpControllerChange[] = [];
@@ -121,7 +146,11 @@ export const mrpControllerStore = {
   /** The list in force: the sample list with the administrator's changes applied, by code. */
   all(): readonly MrpController[] {
     const byCode = new Map<string, MrpController>(SAMPLE_MRP_CONTROLLERS.map((r) => [r.code, r]));
-    for (const c of changes) byCode.set(c.code, { code: c.code, name: c.name, userLabels: c.userLabels });
+    for (const c of changes) {
+      // BL-157 — the latest change wins: an unmapping takes the code off the list.
+      if (c.unmapped) byCode.delete(c.code);
+      else byCode.set(c.code, { code: c.code, name: c.name, userLabels: c.userLabels });
+    }
     return [...byCode.values()].sort((a, b) => a.code.localeCompare(b.code));
   },
   get(code: string): MrpController | undefined {
@@ -131,7 +160,7 @@ export const mrpControllerStore = {
   changes(): readonly MrpControllerChange[] {
     return changes;
   },
-  /** APPEND ONLY — called by the `t_mrpcontroller_set` target and nothing else. */
+  /** APPEND ONLY — called by the `mrpController` target (set and unmap) and nothing else. */
   append(change: MrpControllerChange): void {
     changes = [...changes, change];
     changed();
@@ -165,6 +194,12 @@ export function mrpControllerChangeFrom(
     setBy,
     setAt,
   };
+}
+
+/** BL-157 — the change record an unmapping appends (the target calls this). */
+export function mrpControllerUnmapFrom(code: string, setAt: string, setBy: ActorAttribution): MrpControllerChange | null {
+  if (mrpControllerUnmapRefusal(code)) return null;
+  return { code, name: '', userLabels: [], unmapped: true, setBy, setAt };
 }
 
 // ── 3 · THE RESOLVER ─────────────────────────────────────────────────────────

@@ -19,10 +19,11 @@ import { useVerbAvailability } from '../../hooks/useVerbAvailability';
 import { useRefusalText } from '../../hooks/useRefusalText';
 import { useToast } from '../../hooks/useToast';
 import { formatDateTime } from '../../lib/format';
-import { useMrpControllerSet } from '../../services/query/commandHooks';
+import { useMrpControllerSet, useMrpControllerUnmap } from '../../services/query/commandHooks';
 import {
   mrpControllerRefusal,
   mrpControllerStore,
+  mrpControllerUnmapRefusal,
   userLabelsOf,
 } from '../../services/transitions/mrpControllerStore';
 import AdminSectionNav from './AdminSectionNav';
@@ -41,6 +42,10 @@ import AdminSectionNav from './AdminSectionNav';
 //     `mrpcontroller:manage` reads everything and is told whose act it is.
 //   · The submit is disabled by the SAME rule the verb's policy hook calls
 //     (`mrpControllerRefusal`, MAT-R2).
+//   · BL-157 — "Remove mapping" on a mapped row, through its own governed verb
+//     (`t_mrpcontroller_unmap`), after a confirm on the row. The confirm is
+//     disabled by the verb's own rule (`mrpControllerUnmapRefusal`). The
+//     removal is appended to the changes on record; nothing is erased.
 //   · The changes on record, with who and when — "not attributed" included.
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -60,6 +65,8 @@ const AdminMrpControllers: React.FC = () => {
   const refusalText = useRefusalText();
   const { toast } = useToast();
   const setController = useMrpControllerSet();
+  const unmapController = useMrpControllerUnmap();
+  const [unmapping, setUnmapping] = useState<string | null>(null);
   const availability = useVerbAvailability('mrpcontroller:manage');
   const held = availability.kind === 'held';
   const version = useSyncExternalStore(mrpControllerStore.subscribe, mrpControllerStore.version, mrpControllerStore.version);
@@ -93,6 +100,20 @@ const AdminMrpControllers: React.FC = () => {
     }
     toast({ variant: 'success', title: t('mrpc.toast.saved', { code }) });
     setDraft(EMPTY_DRAFT);
+  };
+
+  const unmap = async (c: string) => {
+    if (mrpControllerUnmapRefusal(c)) return;
+    const result = await unmapController.mutateAsync({ code: c });
+    setUnmapping(null);
+    if (result.status === 'failed') {
+      toast({
+        variant: 'error',
+        title: refusalText(result.reason) ?? t('mrpc.toast.refused', { reason: result.reason ?? '' }),
+      });
+      return;
+    }
+    toast({ variant: 'success', title: t('mrpc.toast.unmapped', { code: c }) });
   };
 
   const CRUMB = [t('mrpc.crumb.administration'), t('mrpc.crumb.page')];
@@ -230,9 +251,30 @@ const AdminMrpControllers: React.FC = () => {
                     </TableCell>
                     {held && (
                       <TableCell className="whitespace-nowrap">
-                        <Button type="button" variant="secondary" data-testid={`mrpc-edit-${c}`} onClick={() => edit(c)}>
-                          {t(row ? 'mrpc.action.edit' : 'mrpc.action.map')}
-                        </Button>
+                        {unmapping === c ? (
+                          <UnmapConfirm
+                            code={c}
+                            pending={unmapController.isPending}
+                            onConfirm={() => void unmap(c)}
+                            onCancel={() => setUnmapping(null)}
+                          />
+                        ) : (
+                          <div className="flex gap-2">
+                            <Button type="button" variant="secondary" data-testid={`mrpc-edit-${c}`} onClick={() => edit(c)}>
+                              {t(row ? 'mrpc.action.edit' : 'mrpc.action.map')}
+                            </Button>
+                            {!!row && (
+                              <Button
+                                type="button"
+                                variant="secondary"
+                                data-testid={`mrpc-unmap-${c}`}
+                                onClick={() => setUnmapping(c)}
+                              >
+                                {t('mrpc.action.unmap')}
+                              </Button>
+                            )}
+                          </div>
+                        )}
                       </TableCell>
                     )}
                   </TableRow>
@@ -265,7 +307,7 @@ const AdminMrpControllers: React.FC = () => {
                       <Data>{c.code}</Data>
                     </TableCell>
                     <TableCell className="text-xs text-text-secondary">
-                      {c.name} · {c.userLabels.join(', ')}
+                      {c.unmapped ? t('mrpc.history.unmapped') : `${c.name} · ${c.userLabels.join(', ')}`}
                     </TableCell>
                     <TableCell className="text-sm text-text-secondary">
                       {c.setBy.kind === 'RESOLVED' ? c.setBy.person.displayName : t('mrpc.history.by.unattributed')}
@@ -281,6 +323,35 @@ const AdminMrpControllers: React.FC = () => {
         )}
       </section>
     </AppShellV2>
+  );
+};
+
+/** BL-157 — the row's confirm before a mapping is removed; the confirm is gated by the verb's rule. */
+const UnmapConfirm: React.FC<{ code: string; pending: boolean; onConfirm: () => void; onCancel: () => void }> = ({
+  code,
+  pending,
+  onConfirm,
+  onCancel,
+}) => {
+  const { t } = useTranslation();
+  return (
+    <div className="flex flex-col items-start gap-2 whitespace-normal" data-testid={`mrpc-unmap-confirm-${code}`}>
+      <p className="text-xs text-text-secondary max-w-xs">{t('mrpc.unmap.warning', { code })}</p>
+      <div className="flex gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          disabled={pending || mrpControllerUnmapRefusal(code) !== null}
+          data-testid={`mrpc-unmap-confirm-button-${code}`}
+          onClick={onConfirm}
+        >
+          {t('mrpc.unmap.confirm')}
+        </Button>
+        <Button type="button" variant="secondary" onClick={onCancel}>
+          {t('mrpc.form.cancel')}
+        </Button>
+      </div>
+    </div>
   );
 };
 

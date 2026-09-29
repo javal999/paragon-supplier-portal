@@ -199,9 +199,16 @@ export const callOffsEn: Record<string, string> = {
   'co.asn.final.hint': 'Tick it when nothing more will ship for the call-off, so a shortfall is shown.',
   'co.asn.warn.qtyOver': 'Quantity {{shipped}} vs {{agreed}} called off on {{callOff}} (+{{pct}}%; allowance {{limit}}%)',
   'co.asn.warn.qtyUnder': 'Quantity {{shipped}} vs {{agreed}} called off on {{callOff}} (−{{pct}}%) on the last ASN',
-  'co.asn.warn.late': 'ETA {{eta}} is after the agreed date {{date}} on {{callOff}}: late by {{days}} day(s)',
-  'co.asn.warn.early':
-    'ETA {{eta}} is before the agreed date {{date}} on {{callOff}}: early by {{days}} day(s), allowance {{limit}} day(s)',
+  // BL-159 — real plurals: `count` is the days late or early; the allowance
+  // is worded by `co.asn.warn.days` and passed in as `limit`.
+  'co.asn.warn.late_one': 'ETA {{eta}} is after the agreed date {{date}} on {{callOff}}: late by {{count}} day',
+  'co.asn.warn.late_other': 'ETA {{eta}} is after the agreed date {{date}} on {{callOff}}: late by {{count}} days',
+  'co.asn.warn.early_one':
+    'ETA {{eta}} is before the agreed date {{date}} on {{callOff}}: early by {{count}} day, allowance {{limit}}',
+  'co.asn.warn.early_other':
+    'ETA {{eta}} is before the agreed date {{date}} on {{callOff}}: early by {{count}} days, allowance {{limit}}',
+  'co.asn.warn.days_one': '{{count}} day',
+  'co.asn.warn.days_other': '{{count}} days',
   'co.asn.warn.material': 'Material {{material}} is not the call-off material {{expected}} ({{callOff}})',
   'co.asn.warn.unlinked': 'This PO line has an open call-off ({{callOffs}}) for {{material}}; link it?',
   'co.asn.warn.hint': 'These are warnings. You can go back and change the ASN, or submit it as it is.',
@@ -403,9 +410,10 @@ export const callOffsId: Record<string, string> = {
   'co.asn.final.hint': 'Centang bila tidak ada lagi yang akan dikirim untuk call-off ini, agar kekurangan terlihat.',
   'co.asn.warn.qtyOver': 'Kuantitas {{shipped}} vs {{agreed}} yang diminta pada {{callOff}} (+{{pct}}%; toleransi {{limit}}%)',
   'co.asn.warn.qtyUnder': 'Kuantitas {{shipped}} vs {{agreed}} yang diminta pada {{callOff}} (−{{pct}}%) pada ASN terakhir',
-  'co.asn.warn.late': 'ETA {{eta}} setelah tanggal yang disepakati {{date}} pada {{callOff}}: terlambat {{days}} hari',
-  'co.asn.warn.early':
-    'ETA {{eta}} sebelum tanggal yang disepakati {{date}} pada {{callOff}}: lebih awal {{days}} hari, toleransi {{limit}} hari',
+  'co.asn.warn.late_other': 'ETA {{eta}} setelah tanggal yang disepakati {{date}} pada {{callOff}}: terlambat {{count}} hari',
+  'co.asn.warn.early_other':
+    'ETA {{eta}} sebelum tanggal yang disepakati {{date}} pada {{callOff}}: lebih awal {{count}} hari, toleransi {{limit}}',
+  'co.asn.warn.days_other': '{{count}} hari',
   'co.asn.warn.material': 'Material {{material}} bukan material call-off {{expected}} ({{callOff}})',
   'co.asn.warn.unlinked': 'Baris PO ini memiliki call-off terbuka ({{callOffs}}) untuk {{material}}; tautkan?',
   'co.asn.warn.hint': 'Ini peringatan. Anda dapat kembali dan mengubah ASN, atau mengirimnya apa adanya.',

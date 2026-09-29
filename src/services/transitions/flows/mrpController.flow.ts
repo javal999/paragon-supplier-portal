@@ -25,7 +25,7 @@ export const mrpControllerFlow: FlowDefinition = {
   // ONE state. A controller on the list has a ledger, not a lifecycle.
   states: ['Maintained'],
   initial: 'Maintained',
-  /** `t_mrpcontroller_set` is statePreserving, so nothing ever leaves it. */
+  /** Both verbs are statePreserving, so nothing ever leaves it. */
   terminals: ['Maintained'],
   transitions: [
     {
@@ -39,6 +39,22 @@ export const mrpControllerFlow: FlowDefinition = {
       requiredRole: 'mrpcontroller:manage',
       requiredFields: ['name', 'userLabels'],
       policyHooks: [POLICY_HOOKS.MRP_CONTROLLER_GOVERNED],
+      surfaceable: { surfaced: true },
+      version: 1,
+    },
+    {
+      // WIRED (BL-157, FU-8 of the material build). The Hub administrator
+      // removes a code's mapping. Appended to the same ledger (MAT-R3): the
+      // code then reads as the code only (MR-5 BR-02), and a supplier sees no
+      // name for it (MR-5 BR-04). Refused when the code has no mapping.
+      id: 't_mrpcontroller_unmap',
+      from: ['Maintained'],
+      to: 'Maintained',
+      statePreserving: true,
+      trigger: 'user',
+      requiredRole: 'mrpcontroller:manage',
+      requiredFields: [],
+      policyHooks: [POLICY_HOOKS.MRP_CONTROLLER_UNMAPPABLE],
       surfaceable: { surfaced: true },
       version: 1,
     },
