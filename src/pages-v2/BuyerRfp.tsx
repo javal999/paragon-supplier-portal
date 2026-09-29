@@ -8,7 +8,7 @@ import SampleDataBadge from '../components/ui-v2/SampleDataBadge';
 import Button from '../components/ui-v2/Button';
 import Data from '../components/ui-v2/Data';
 import StatusPill from '../components/ui-v2/StatusPill';
-import { EventSourcingType } from './rfx/eligibilityDisplay';
+import { EligibilityMarker, EventSourcingType, QualificationWarningsNote } from './rfx/eligibilityDisplay';
 import Table from '../components/ui-v2/Table';
 import TableHeader, { TableHeaderCell } from '../components/ui-v2/TableHeader';
 import TableRow from '../components/ui-v2/TableRow';
@@ -287,6 +287,17 @@ const BuyerRfp: React.FC = () => {
                     testId={`rfp-sourcing-type-${open.id}`}
                   />
                 </div>
+                {/* BL-147 — the invitees published below the level on placeholder rules, as recorded. */}
+                {!!open.qualificationWarnings && open.qualificationWarnings.length > 0 && (
+                  <div className="mt-2">
+                    <QualificationWarningsNote
+                      kind="published"
+                      warnings={open.qualificationWarnings}
+                      supplierName={supplierName}
+                      testId={`rfp-published-warnings-${open.id}`}
+                    />
+                  </div>
+                )}
                 {open.sourceRfiNumber && (
                   <p className="text-xs text-text-tertiary mt-1" data-testid={`rfp-from-rfi-${open.id}`}>
                     {t('rfx.event.fromRfi', { event: open.sourceRfiNumber })}
@@ -631,7 +642,13 @@ const RfpInvitees: React.FC<{ event: RfpEventView }> = ({ event }) => {
         <tbody>
           {event.invitedSuppliers.map((invitee) => (
             <TableRow key={invitee.supplierId} data-testid={`rfp-invitee-${invitee.supplierId}`}>
-              <TableCell>{invitee.supplierName}</TableCell>
+              <TableCell>
+                {invitee.supplierName}
+                {/* BL-147 — Material G2's marker: below the level for this event's type, today. */}
+                <div className="mt-1">
+                  <EligibilityMarker eligibility={invitee.eligibility} testId={`rfp-invitee-elig-${invitee.supplierId}`} />
+                </div>
+              </TableCell>
               <TableCell>
                 <OtifOrNoHistory otif={invitee.otif} testId={`rfp-otif-${invitee.supplierId}`} />
               </TableCell>

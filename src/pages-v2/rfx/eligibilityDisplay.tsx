@@ -16,6 +16,7 @@ import {
   type BiddingEligibility,
   type SourcingEventFacts,
   type NamedEligibility,
+  type QualificationWarning,
   type SourcingType,
   type SourcingTypeMap,
 } from '../../services/sourcing/sourcingType';
@@ -72,6 +73,47 @@ export const EligibilityMarker: React.FC<{ eligibility: BiddingEligibility | und
         {docs ? ` ${t('elig.missing', { docs })}` : ''}
       </span>
     </span>
+  );
+};
+
+/**
+ * BL-147 (FU-14) — the warnings an event kept at publish, or an award record
+ * kept at award, while the qualification lists were placeholders (MAT-D19):
+ * each vendor with its level against the one the event's type needs, and the
+ * documents it was missing, AS RECORDED THEN. `awarded` also shows the reason
+ * the award was given with. Nothing when there is no warning. The read model
+ * narrows the list for a supplier (MAT-R4); nothing is narrowed here.
+ */
+export const QualificationWarningsNote: React.FC<{
+  kind: 'published' | 'awarded';
+  warnings: readonly QualificationWarning[] | undefined;
+  supplierName: (supplierId: string) => string;
+  reason?: string;
+  testId: string;
+}> = ({ kind, warnings, supplierName, reason, testId }) => {
+  const { t } = useTranslation();
+  if (!warnings || warnings.length === 0) return null;
+  return (
+    <div className="rounded-md border border-border-subtle bg-bg-hover px-3 py-2 text-xs" data-testid={testId}>
+      <div className="flex flex-wrap items-center gap-2">
+        <StatusPill variant="warning">{t(`elig.${kind}`, { count: warnings.length })}</StatusPill>
+      </div>
+      <ul className="mt-1 space-y-0.5 text-warning-hover">
+        {warnings.map((w) => (
+          <li key={w.supplierId} data-testid={`${testId}-${w.supplierId}`}>
+            <span className="font-medium">{supplierName(w.supplierId)}</span>{' '}
+            {t('elig.needs', {
+              have: t(`qualification.level.${w.level}`),
+              type: t(`sourcingType.${w.sourcingType}`),
+              need: t(`qualification.level.${w.requiredLevel}`),
+            })}
+            {w.missing.length > 0 ? ` ${t('elig.missing', { docs: w.missing.join(', ') })}` : ''}
+          </li>
+        ))}
+      </ul>
+      {!!reason && <p className="mt-1 text-text-secondary">{t('elig.awarded.reason', { reason })}</p>}
+      <p className="mt-1 text-text-tertiary">{t('elig.recorded.hint')}</p>
+    </div>
   );
 };
 

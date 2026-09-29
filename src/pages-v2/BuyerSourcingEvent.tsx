@@ -47,7 +47,12 @@ import {
 import { DeadlinePill, EmptyRow, GateMarker, OtifOrNoHistory, money, qty, rfxNow } from './rfx/rfxDisplay';
 import { EvaluationBreakSelect, RfqContentSection, TieredComparison } from './rfx/TieredRfq';
 import { AwardPanel, type PanelAward } from './rfx/AwardPanel';
-import { EligibilityMarker, SourcingTypePill, useSourcingTypeMap } from './rfx/eligibilityDisplay';
+import {
+  EligibilityMarker,
+  QualificationWarningsNote,
+  SourcingTypePill,
+  useSourcingTypeMap,
+} from './rfx/eligibilityDisplay';
 import { sourcingTypeOf } from '../services/sourcing/sourcingType';
 import { AwardRecords } from './rfx/AwardRecords';
 
@@ -304,6 +309,17 @@ const BuyerSourcingEvent: React.FC = () => {
         />
         <RfqSourceLinks rfq={rfq} rfqs={rfqs.data?.items ?? []} />
       </div>
+      {/* BL-147 — the invitees published below the level on placeholder rules, as recorded. */}
+      {!!rfq.qualificationWarnings && rfq.qualificationWarnings.length > 0 && (
+        <div className="mb-4">
+          <QualificationWarningsNote
+            kind="published"
+            warnings={rfq.qualificationWarnings}
+            supplierName={supplierName}
+            testId="event-published-warnings"
+          />
+        </div>
+      )}
 
       {/* — REQ-E03-03 BR-05: the response window, for everyone or for named invitees — */}
       <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto mb-6">

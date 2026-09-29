@@ -55,7 +55,7 @@ Decided on 2026-09-21 and ready to build. Priority: first what protects money an
 
 | Priority | ID | Item | Rule | Size | Placeholder until decided |
 |---|---|---|---|---|---|
-| 1 | BL-39, BL-75, BL-76, BL-78, BL-79, BL-84, BL-93, BL-96 to BL-98, BL-124, BL-127, BL-138, BL-139, BL-141 to BL-143, BL-147, BL-156, BL-157, BL-159 | The remaining "can start today" items in section 4, in the order listed there | — | — | — |
+| 1 | BL-39, BL-75, BL-76, BL-78, BL-79, BL-84, BL-93, BL-96 to BL-98, BL-124, BL-127, BL-138, BL-139, BL-141 to BL-143 | The remaining "can start today" items in section 4, in the order listed there | — | — | — |
 
 ### Forecast engine build order
 
@@ -125,10 +125,6 @@ Nothing blocks these.
 | BL-141 | The SAP interface monitor would show the real wall-clock time for a failed SAP post: `sapInterfaceRules.ts:145` copies the audit event's `ts` (wall clock, pinned by contract C3) and `InterfaceMonitor.tsx:67` renders it, while the message's age reads the hub clock. No demo action produces a failed settle today, so nothing shows it yet. Fix: stamp the monitor row from the hub clock and leave `ts` alone | A second "now" on one page, the class BL-34 closed | S | Found checking BL-34 (2026-09-29) |
 | BL-142 | Removing a file from a revised record frees the file for the session, though an earlier version still lists it: `SessionAttachments` calls `files.release` on remove (`SessionAttachments.tsx:73, 82`), and firm offers (BL-129) and response documents keep every version's file list. The earlier version then shows the file as not available | A version's own record points at a file it can no longer open | S | With BL-27 if real storage keeps files per version |
 | BL-143 | `CLAUDE.md:1395` says CI runs "on every push to `main`". Once PR #94 (no post-merge gates run) merges, that is no longer true: `main` is re-tested daily at 00:17 UTC | A stale sentence in the file every session reads. The operator edits `CLAUDE.md`; task PRs do not (as BL-124) | S | PR #94 |
-| BL-147 | FU-14 display gaps: the qualification warnings stored on an event and an award in warn-only mode (MAT-D19) are not shown on the event or the award record, and the RFI and RFP invitee tables have no "Not qualified" marker (PR #109) | A buyer cannot see later why an award asked for a reason | S | CE-12g |
-| BL-156 | FU-6: a closed alert shows its reason as "Other (note required)", repeating the form label (PR #87) | Cosmetic | S | REQ-E08-05 BR-10 |
-| BL-157 | FU-8: a mapped MRP controller code cannot be unmapped (PR #90) | The administrator cannot undo a mapping | S | REQ-E08-07 BR-02 |
-| BL-159 | FU-13: two i18n tests disagree on plural keys (the inventory and call-off page tests want identical EN and ID key sets; `fragments.test` wants ID without `_other`), so the material pages avoid plurals and read, for example, "Missed: 1 materials were not updated" (PR #106) | Grammar slips on screen until one plural rule is agreed | S | Test infrastructure |
 
 ---
 
@@ -158,6 +154,10 @@ Nothing blocks these.
 
 | ID | Item | Closed | By |
 |---|---|---|---|
+| BL-147 | FU-14: the qualification warnings stored in warn-only mode were not shown, and the RFI and RFP invitee tables had no "Not qualified" marker | 2026-09-29 | Built in this PR (`feat/mat-polish-bl147-159`): the RFQ, RFI and RFP event pages show "Published with N vendors not qualified (placeholder rules)" with each vendor's level, the level the event needs and the missing documents; each award record card lists the vendors awarded below the level with the reason given; the RFI and RFP invitee tables carry G2's marker. A supplier's read carries only its own warning row and its own eligibility (MAT-R4) |
+| BL-156 | FU-6: a closed alert showed its reason as "Other (note required)" | 2026-09-29 | Built in this PR: a separate record label key (`inv.alerts.closeReasonName.*`, `BUILT_IN_RECORD_LABEL_PREFIX`); the closed record, the closed-tab filter and the per-reason counts read "Other", the close form keeps "Other (note required)". A label the administrator renamed is shown as typed |
+| BL-157 | FU-8: a mapped MRP controller code could not be unmapped | 2026-09-29 | Built in this PR: `t_mrpcontroller_unmap`, a sibling verb in the MRP controller flow (atom `mrpcontroller:manage`, refusal `MRP_CONTROLLER_NOT_MAPPED`), appended to the changes on record (MAT-R3). "Remove mapping" with a confirm on `/buyer/admin/mrp-controllers`. After it PTI surfaces show the code only and suppliers see no name (REQ-E08-07 BR-02, BR-04) |
+| BL-159 | FU-13: two i18n tests disagreed on plural keys | 2026-09-29 | Fixed in this PR. One rule: a page test compares BASE keys with the plural suffix stripped, and `fragments.test.ts` pins which plural forms each locale carries (English `_one` and `_other`, Indonesian `_other` only). Real plurals now in "Missed: 1 material was not updated" and the call-off late and early warnings ("late by 1 day", "allowance 2 days") |
 | BL-166 | SC Hub Material build, MR-1 to MR-10 | 2026-09-29 | Built: tasks A1 #86, A2 #84, A3 #85, B1 #88, B2 #106, B3 #105, B4 #110, C1 #104, C1b #107, C2 #97, C3 #102, C4 #90, C5 #92, D1 #89, D2 #93, D3 #101, E1 #103, E2 #108, F1 #87, G1 #91, G2 #109; requirements #83. Folded into the documents in task I1. What is not built is BL-144 to BL-159 |
 | BL-165 | FU-12: a realistic weekly update history, so the demo shows green, amber and red compliance | 2026-09-29 | Built in PR #110: a labelled sample history feeds the compliance read only (sup-007 92%, sup-008 69%, sup-003 54%) |
 | BL-164 | FU-10: the approved trade name read "Your name" on PTI screens | 2026-09-29 | Fixed in PR #102: PTI screens read "Supplier's name"; the supplier keeps "Your name" |

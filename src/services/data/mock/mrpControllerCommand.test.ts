@@ -193,3 +193,48 @@ describe('only the Hub administrator lane may map a code', () => {
     expect(mrpControllerStore.changes()).toEqual([]);
   });
 });
+
+describe('BL-157 — t_mrpcontroller_unmap (FU-8; MR-5 BR-02, BR-04)', () => {
+  const unmap = (code: string, scope: QueryScope = admin) =>
+    svc.dispatch(scope, { transitionId: 't_mrpcontroller_unmap', entity: 'mrpController', entityId: code, payload: {} });
+
+  it('removes a mapping by appending a change (MAT-R3); PTI then reads the code only, the supplier nothing', async () => {
+    sdcClock.set('2026-09-30T03:00:00.000Z');
+    const res = await unmap('P12');
+    expect(res.status, res.reason).toBe('done');
+    expect(mrpControllerStore.get('P12')).toBeUndefined();
+    expect(mrpControllerStore.changes()).toEqual([
+      { code: 'P12', name: '', userLabels: [], unmapped: true, setBy: NO_PERSON, setAt: '2026-09-30T03:00:00.000Z' },
+    ]);
+    const pti = (await reads.getInventory(planner)).items.find(
+      (r) => r.supplierId === 'sup-007' && r.materialCode === 'PK-PETB-8801',
+    );
+    expect(pti?.mrpController).toEqual({ code: 'P12' });
+    const sup = (await reads.getInventory(supplierSeat('sup-007'))).items.find((r) => r.materialCode === 'PK-PETB-8801');
+    expect(sup).toBeDefined();
+    expect(sup?.mrpController).toBeUndefined();
+  });
+
+  it('mapping the code again after an unmapping makes the new mapping the one in force', async () => {
+    expect((await unmap('P12')).status).toBe('done');
+    expect((await setController('P12', { name: 'Desk', userLabels: ['A'] })).status).toBe('done');
+    expect(mrpControllerStore.get('P12')?.name).toBe('Desk');
+    expect(mrpControllerStore.changes()).toHaveLength(2);
+  });
+
+  it('MRP_CONTROLLER_NOT_MAPPED: an unmapped code is refused by name; a mapped one passes', async () => {
+    const bad = await unmap('P13');
+    expect(bad.status).toBe('failed');
+    expect(bad.reason).toMatch(/MRP_CONTROLLER_NOT_MAPPED/);
+    expect(mrpControllerStore.changes()).toEqual([]);
+    expect((await unmap('P10')).status).toBe('done');
+  });
+
+  it('a planner is refused; a supplier is denied at scope', async () => {
+    const refused = await unmap('P12', planner);
+    expect(refused.status).toBe('failed');
+    expect(refused.reason).toMatch(/ROLE_NOT_PERMITTED/);
+    await expect(unmap('P12', supplierSeat('sup-007'))).rejects.toMatchObject({ code: 'SCOPE_DENIED' });
+    expect(mrpControllerStore.changes()).toEqual([]);
+  });
+});
