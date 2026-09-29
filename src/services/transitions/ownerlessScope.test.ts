@@ -118,6 +118,7 @@ import { workingCalendarStore } from './workingCalendarStore';
 import { threePlStore } from './threePlStore';
 import { supplierOverlayStore } from '../data/mock/stores/supplierOverlayStore';
 import { mrpControllerStore } from './mrpControllerStore';
+import { materialNameStore } from '../data/mock/stores/materialNameStore';
 import { hubSettingsStore, settingValue } from './hubSettingsStore';
 import { reasonCodeStore } from './reasonCodes';
 
@@ -231,6 +232,10 @@ async function realIds(): Promise<Record<string, string | null>> {
     supplierOverlay: 'sup-001',
     // Material C4 — `entityId` IS the SAP code; a sample-list row exists from the start.
     mrpController: 'P12',
+    // Material C2 — the trade-name store is seeded; a name names its supplier,
+    // so it lands in `ownerful`. The bulk load is a creation verb on the same
+    // entity, so the entity is probeable through approve / reject.
+    materialName: materialNameStore.all()[0]?.id ?? null,
     // BL-32 — `entityId` IS the setting key; every registry key exists from the start.
     hubSetting: 'callOff.overPct',
     // BL-32 — `entityId` IS `<list>:<code>`; every starter code exists from the start.
@@ -384,6 +389,7 @@ const resetAll = () => {
   threePlStore.reset();
   supplierOverlayStore.reset();
   mrpControllerStore.reset();
+  materialNameStore.reset();
   hubSettingsStore.reset();
   reasonCodeStore.reset();
   // NR-2 — the id supply closes rfp-002 and opens a firm-offer round.
@@ -443,6 +449,8 @@ describe('POPULATION — nothing below means anything without this', () => {
     // Material A1 — a supplier's overlay names that supplier: a supplier seat is
     // refused at SCOPE on any other supplier and at ROLE on its own.
     expect(ownerful).toContain('supplierOverlay');
+    // Material C2 — a trade name names the supplier it belongs to.
+    expect(ownerful).toContain('materialName');
     expect(ownerless).not.toContain('purchaseOrder');
     expect(ownerless).not.toContain('invoice');
     expect(ownerful).toContain('purchaseOrder');
