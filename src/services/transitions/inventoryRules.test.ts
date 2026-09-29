@@ -54,6 +54,7 @@ const position = (over: Partial<InventoryPosition> = {}): InventoryPosition => (
   lastUpdatedAt: '2026-08-30T02:00:00.000Z',
   channel: 'template',
   updateSla: 7,
+  staleAt: null,
   apiConnected: false,
   lastSync: null,
   batches: [],

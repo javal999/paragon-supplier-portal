@@ -53,6 +53,7 @@ import {
   SUPPLY_ASSIGNMENTS,
 } from './fixtures/inventoryHub';
 import { stockUpdateModeOf } from './supplierMaster';
+import { hubWorkingCalendar } from '../../transitions/workingCalendarStore';
 
 export const supplierNameOf = (supplierId: string): string =>
   mockSuppliers.find((s) => s.id === supplierId)?.name ?? supplierId;
@@ -132,6 +133,8 @@ export function allPositions(nowIso: string = sdcClock.now()): InventoryPosition
       callOffViews: callOffViews(callOffStore.all(), asnStore.all(), goodsReceiptStore.all(), nowIso),
       apiConnected: isApiConnected,
       syncAttempts: stockSyncStore.all(),
+      updateModeAt: stockUpdateModeOf,
+      calendar: hubWorkingCalendar(),
     },
     nowIso,
   );
