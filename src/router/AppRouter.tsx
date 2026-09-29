@@ -50,6 +50,7 @@ import InterfaceMonitor from '../pages-v2/InterfaceMonitor';
 import AdminWorkingCalendar from '../pages-v2/admin/AdminWorkingCalendar';
 import AdminThreePls from '../pages-v2/admin/AdminThreePls';
 import AdminSuppliers from '../pages-v2/admin/AdminSuppliers';
+import AdminMrpControllers from '../pages-v2/admin/AdminMrpControllers';
 import { AdminAlertThresholds, AdminTolerances } from '../pages-v2/admin/AdminRuleValues';
 import AdminReasonCodes from '../pages-v2/admin/AdminReasonCodes';
 import RolesCatalogue from '../pages-v2/RolesCatalogue';
@@ -204,6 +205,8 @@ const AppRouter: React.FC = () => {
           <Route path="/buyer/admin/3pl-tracking" element={<AdminThreePls />} />
           {/* Material A1 — administration (ADM): each supplier's stock update mode. */}
           <Route path="/buyer/admin/suppliers" element={<AdminSuppliers />} />
+          {/* Material C4 — administration (ADM): who each SAP MRP controller code is. */}
+          <Route path="/buyer/admin/mrp-controllers" element={<AdminMrpControllers />} />
           {/* BL-32 — administration (ADM): the rule values that lived in configuration files. */}
           <Route path="/buyer/admin/tolerances" element={<AdminTolerances />} />
           <Route path="/buyer/admin/alert-thresholds" element={<AdminAlertThresholds />} />

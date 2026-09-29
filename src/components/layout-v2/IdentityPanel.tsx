@@ -12,6 +12,7 @@ import { atomsForSeat } from '../../services/transitions/customRoles';
 import { useNavigate } from 'react-router-dom';
 import { HUB_ROLES, useHubRole } from './hubRole';
 import { UTILITY_NAV } from './navConfig';
+import MyMrpControllerSelect from './MyMrpControllerSelect';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // THE IDENTITY PANEL — the current role and the scope it grants.
@@ -204,6 +205,9 @@ const IdentityPanel: React.FC = () => {
                 ))}
               </select>
               <p className="mt-1 text-xs text-text-tertiary">{t('hub.role.hint')}</p>
+              {/* Material C4 — the seat's own MRP controller code, for "My
+                  materials" (MR-5 AC-02). A view choice, like the menu. */}
+              <MyMrpControllerSelect />
             </div>
           )}
 

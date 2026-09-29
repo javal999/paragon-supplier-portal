@@ -27,6 +27,7 @@ import {
   labelClass,
   useInventoryRunner,
 } from './inventory/inventoryDisplay';
+import { PicCell, PicFilter, PicHeader, usePicFilter } from './materials/picDisplay';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PTI ALERTS — REQ-E08-05.
@@ -60,6 +61,8 @@ const BuyerAlerts: React.FC = () => {
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [closing, setClosing] = useState<InventoryAlert | null>(null);
   const [note, setNote] = useState('');
+  // Material C4 — the PIC filter, kept in the page address (MR-5 BR-03).
+  const pic = usePicFilter();
   const nowIso = inventoryNow();
   const crumb = [t('hub.nav.section.inventory'), t('inv.alerts.title')];
 
@@ -70,7 +73,7 @@ const BuyerAlerts: React.FC = () => {
     return <ErrorState breadcrumb={crumb} error={alertsQuery.error} onRetry={() => alertsQuery.refetch()} />;
 
   const ofTab = alerts.filter((a) => a.status === tab);
-  const shown = ofTab.filter((a) => risk === 'all' || a.riskClass === risk);
+  const shown = ofTab.filter((a) => (risk === 'all' || a.riskClass === risk) && pic.matches(a.mrpController));
   const groups = groupAlertsBySupplier(shown);
   const openCount = (r: RiskClass) => alerts.filter((a) => a.status === 'open' && a.riskClass === r).length;
 
@@ -120,8 +123,17 @@ const BuyerAlerts: React.FC = () => {
         }))}
         value={risk}
         onChange={setRisk}
-        className="mb-4"
+        className="mb-3"
       />
+      <div className="mb-4">
+        <PicFilter
+          refs={ofTab.map((a) => a.mrpController)}
+          persona="buyer"
+          filter={pic.filter}
+          setFilter={pic.setFilter}
+          myCode={pic.myCode}
+        />
+      </div>
 
       {groups.length === 0 ? (
         <p className="text-sm text-text-tertiary py-8 text-center" data-testid="alerts-empty">
@@ -165,6 +177,12 @@ const BuyerAlerts: React.FC = () => {
                             )}
                           </div>
                           <RiskBasisNote basis={a.riskBasis} testId={`alert-basis-${a.key}`} withCover />
+                          {!!a.mrpController && (
+                            <div className="text-xs text-text-secondary mt-1 flex flex-wrap items-center gap-2">
+                              <PicHeader />
+                              <PicCell value={a.mrpController} testId={`alert-pic-${a.key}`} />
+                            </div>
+                          )}
                           {a.status === 'closed' && (
                             <div className="text-xs text-text-secondary mt-1">
                               {t('inv.alerts.closedAt')} <Data>{formatDateTime(a.closedAt ?? '')}</Data> — {a.actionNote}
