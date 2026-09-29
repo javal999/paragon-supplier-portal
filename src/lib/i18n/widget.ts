@@ -35,6 +35,8 @@ export const widgetEn: Record<string, string> = {
   // BL-102 — the forecast engine's inputs are synthetic until the Master Data
   // Management team's SAP feed lands (ENG-D1).
   'widget.honesty.awaitingMdmFeed': 'Synthetic data · awaiting the MDM SAP feed',
+  // Material B2 — the scheduled stock pull is not running until Stage F.
+  'widget.honesty.awaitingStageF': 'Not running · awaiting Stage F',
   // D-CENSUS-8 — the VERB axis of ProvenanceMarker. Says the narrow true thing
   // and no more: acting here really dispatches and is really recorded, in an
   // in-memory ledger that does not survive a reload and never reaches SAP.
@@ -135,6 +137,7 @@ export const widgetId: Record<string, string> = {
   'widget.honesty.awaitingSupplierFeed': 'Data contoh',
   'widget.honesty.awaitingDiscoveryFeed': 'Data contoh',
   'widget.honesty.awaitingMdmFeed': 'Data sintetis · menunggu data SAP dari tim MDM',
+  'widget.honesty.awaitingStageF': 'Belum berjalan · menunggu Stage F',
   'widget.honesty.commandsDispatch': 'Perubahan hilang saat dimuat ulang',
   'widget.allClear': 'Semua beres',
   'widget.aria.expand': 'Perluas {{title}}',

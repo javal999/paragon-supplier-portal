@@ -31,6 +31,20 @@ export const performanceEn: Record<string, string> = {
   'perf.pendingCount_one': '{{count}} delivery in this period has no result yet',
   'perf.pendingCount_other': '{{count}} deliveries in this period have no result yet',
 
+  // Material B3 (MR-2) — weekly update compliance and the 13-week strip.
+  'perf.compliance.title': 'Update compliance',
+  'perf.compliance.value': 'Update compliance {{pct}}%',
+  'perf.compliance.definition':
+    'Share of the last 13 weekly stock updates made on time: every assigned material updated before the weekly cutoff or, for a supplier whose system is connected, a successful sync on every working day. The first 4 weeks after the first material is assigned are not counted.',
+  'perf.compliance.stripLabel': 'Last 13 weeks, oldest first',
+  'perf.compliance.weekLabel': 'Week ending {{date}}: {{state}}',
+  'perf.compliance.week.compliant': 'Updated on time',
+  'perf.compliance.week.missed': 'Missed',
+  'perf.compliance.week.notCounted': 'Not counted',
+  'perf.compliance.weightPrefix': 'Counts for',
+  'perf.compliance.weightSuffix': 'of the overall score.',
+  'perf.compliance.notInScore': 'Not part of the overall score until 4 weeks are counted.',
+
   // BL-53 — the KPI definitions (BL-19): what the hub computes, not a policy.
   'perf.kpi.title': 'How these measures are calculated',
   'perf.kpi.intro':
@@ -86,6 +100,20 @@ export const performanceId: Record<string, string> = {
   'perf.period.ytd': 'Tahun berjalan',
   'perf.periodLabel': 'Periode',
   'perf.pendingCount_other': '{{count}} pengiriman pada periode ini belum ada hasilnya',
+
+  // Material B3 (MR-2) — kepatuhan pembaruan mingguan dan strip 13 minggu.
+  'perf.compliance.title': 'Kepatuhan pembaruan',
+  'perf.compliance.value': 'Kepatuhan pembaruan {{pct}}%',
+  'perf.compliance.definition':
+    'Porsi dari 13 pembaruan stok mingguan terakhir yang tepat waktu: setiap material yang ditugaskan diperbarui sebelum batas waktu mingguan atau, untuk pemasok yang sistemnya terhubung, sinkronisasi berhasil di setiap hari kerja. 4 minggu pertama setelah material pertama ditugaskan tidak dihitung.',
+  'perf.compliance.stripLabel': '13 minggu terakhir, dari yang terlama',
+  'perf.compliance.weekLabel': 'Minggu berakhir {{date}}: {{state}}',
+  'perf.compliance.week.compliant': 'Diperbarui tepat waktu',
+  'perf.compliance.week.missed': 'Terlewat',
+  'perf.compliance.week.notCounted': 'Tidak dihitung',
+  'perf.compliance.weightPrefix': 'Berbobot',
+  'perf.compliance.weightSuffix': 'dari skor keseluruhan.',
+  'perf.compliance.notInScore': 'Belum masuk skor keseluruhan sampai 4 minggu terhitung.',
 
   'perf.kpi.title': 'Cara ukuran ini dihitung',
   'perf.kpi.intro':

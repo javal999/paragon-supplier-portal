@@ -381,6 +381,27 @@ export const inventoryCapacityEn: Record<string, string> = {
   'inv.group.MG-23': 'Paper and board packaging',
   'inv.group.MG-24': 'Flexible packaging',
   'inv.group.MG-25': 'Glass packaging',
+
+  // ── Material B2 — the weekly-update panel, reminders, "This cycle" (MR-1 d) ──
+  'inv.weekly.title': 'Weekly stock update',
+  'inv.weekly.due': 'Weekly stock update due',
+  'inv.weekly.left': '{{time}} left',
+  'inv.weekly.count': '{{updated}} of {{total}} updated',
+  'inv.weekly.missingTitle': 'Still missing this cycle',
+  'inv.weekly.enter': 'Enter stock',
+  'inv.weekly.enterFor': 'Enter stock for {{material}}',
+  'inv.weekly.allDone': 'Every material is updated for this cycle.',
+  'inv.weekly.missed': 'Missed: {{count}} materials were not updated',
+  'inv.weekly.missedHint': 'Each stays marked until you send its figure.',
+  'inv.weekly.reminder': 'Reminder: materials still needing a stock figure before the cutoff: {{count}}',
+  'inv.weekly.sop': 'Weekly update is part of the supplier SOP set by Material Planning.',
+  'inv.weekly.api.title': 'Stock sync schedule',
+  'inv.weekly.api.last': 'Last sync',
+  'inv.weekly.api.next': 'Next sync',
+  'inv.weekly.api.notActive': 'Scheduled sync: not active in the prototype',
+  'inv.col.thisCycle': 'This cycle',
+  'inv.thisCycle.count': '{{updated}} of {{total}}',
+  'inv.thisCycle.api': 'API',
 };
 
 export const inventoryCapacityId: Record<string, string> = {
@@ -759,4 +780,25 @@ export const inventoryCapacityId: Record<string, string> = {
   'inv.group.MG-23': 'Kemasan kertas dan karton',
   'inv.group.MG-24': 'Kemasan fleksibel',
   'inv.group.MG-25': 'Kemasan kaca',
+
+  // ── Material B2 ──
+  'inv.weekly.title': 'Pembaruan stok mingguan',
+  'inv.weekly.due': 'Pembaruan stok mingguan jatuh tempo',
+  'inv.weekly.left': 'sisa {{time}}',
+  'inv.weekly.count': '{{updated}} dari {{total}} diperbarui',
+  'inv.weekly.missingTitle': 'Belum diperbarui siklus ini',
+  'inv.weekly.enter': 'Isi stok',
+  'inv.weekly.enterFor': 'Isi stok untuk {{material}}',
+  'inv.weekly.allDone': 'Semua material sudah diperbarui untuk siklus ini.',
+  'inv.weekly.missed': 'Terlewat: {{count}} material tidak diperbarui',
+  'inv.weekly.missedHint': 'Setiap tanda tetap sampai Anda mengirim angkanya.',
+  'inv.weekly.reminder': 'Pengingat: material yang masih perlu angka stok sebelum batas waktu: {{count}}',
+  'inv.weekly.sop': 'Pembaruan mingguan adalah bagian dari SOP pemasok yang ditetapkan oleh Material Planning.',
+  'inv.weekly.api.title': 'Jadwal sinkronisasi stok',
+  'inv.weekly.api.last': 'Sinkronisasi terakhir',
+  'inv.weekly.api.next': 'Sinkronisasi berikutnya',
+  'inv.weekly.api.notActive': 'Sinkronisasi terjadwal: belum aktif di prototipe',
+  'inv.col.thisCycle': 'Siklus ini',
+  'inv.thisCycle.count': '{{updated}} dari {{total}}',
+  'inv.thisCycle.api': 'API',
 };
