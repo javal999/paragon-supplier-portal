@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 2.13, 2026-09-28 |
+| Version | 2.14, 2026-09-29 |
 | What this is | Everything known to be outstanding for the Supplier Hub, in one list: decisions waiting on people, work waiting on those decisions, work waiting on the backend, and work that can start today |
 | What this is not | A plan or a commitment. Nothing here has a date. Sequencing belongs to the project owner |
 | Sources | Open items (section 7 of `SUPPLIER-HUB-REQUIREMENTS.md`), open decisions (section 9.3 of `SUPPLIER-HUB-PRD.md`), what is not built (section 5 of `BUILD-GAP.md`), stubs (section 6 of the requirements), and defects or debts found while building |
@@ -56,11 +56,12 @@ The rest of the in-house forecast engine (ENG-1), in the order recommended on 20
 
 | Order | ID | Item | Why this position | Blocked by | Size | Detail |
 |---|---|---|---|---|---|---|
-| 3 | BL-110 | **Finished-goods demand forecast (E14-07)**: one LightGBM model trained across SKUs, the Comb or Theta fallback, SBA or TSB for slow and intermittent SKUs, SKU, brand and total reconciled (MinT-shrink); replaces SAP's plan as the input to E14-03 | Every later step depends on it; until it exists E14-03 to E14-06 run on SAP's plan | Nothing to start: ENG-D10 sell-in and ENG-D11 decided 2026-09-28; OEM products left out (ENG-D20); meaningful results need sales history (BL-100) | L | REQ-E14-07 |
 | 4 | BL-111 | **Demand range (E14-09)**: P50 and P90 per SKU and material, conformal calibration, how often actuals fell outside | Feeds safety stock (E14-04) and the supplier range (E14-06 BR-06) | BL-110 | M | REQ-E14-09 |
 | 5 | BL-112 | **Choosing models by service, not accuracy (E14-10)**: replay PTI's ordering on past data and pick each SKU's model by fill rate and warehouse space | Accuracy is not service (Chin 2026); guards against a model that scores well and fills the warehouse | BL-110; ENG-D13 set after the first backtest | L | REQ-E14-10 |
 | 6 | BL-113 | **Launches and promotions (E14-08)**: new-SKU forecasts from look-alikes, promotion uplift from the calendar | Cuts shortage in promotions and excess after them | BL-110; ENG-D12a (BL-119) for the fixing horizon | M | REQ-E14-08 |
 | 7 | BL-114 | **Forecast bias and planner override control (E14-11)**: a bias alarm per SKU and material (tracking signal), and the value each type of planner override adds or loses (FVA) | Stops a steady high bias filling the warehouse; shows which overrides help | BL-110 | M | REQ-E14-11; X-06 |
+| 8 | BL-135 | **Main model (E14-07 BR-01, ENG-B60)**: gradient-boosted trees trained in Python on price, promotion and calendar history; the Hub scores its output through the main-model slot, used only where it beats the fallback in the backtest | The fallback carries the forecast until then; the model is where price and promotion effects come from | Price and promotion history from Marketing and MDM (BL-100); BL-112 backtest | L | REQ-E14-07; ENG-B60 (owner, 2026-09-29) |
+| 9 | BL-136 | **Maximum stock change history**: show the append-only ledger of max-stock changes (value before, value after, who, when) on the fixed stock reconcile page | The ledger is recorded but no page shows it | Nothing | S | REQ-E06-04 |
 
 Phase 2: BL-118 (E14-12), section 5.
 
@@ -99,8 +100,6 @@ Nothing blocks these.
 
 | ID | Item | Why | Size | Detail |
 |---|---|---|---|---|
-| BL-133 | **Capacity before the LTP, one Submit all per week (ENG-D18, ENG-D19)**: the supplier confirms a week's capacity before its LTP; LTP above capacity shows amber ("needs the additional capacity"), above BE (capacity + additional capacity) red ("cannot be supplied") and needs a reason; one Submit all per week | Team review 2026-09-28; the pokayoke stops an LTP being confirmed that the supplier cannot make | M | REQ-E08-04, REQ-E06-02; BL-65 decides whether capacity is one number or per week |
-| BL-134 | **Fixed stock (FS) reconcile (ENG-D21)**: write the requirement, then build: per supplier and material at period end, committed vs called off vs held, against the supplier's maximum stock; shortfall settlement per ENG-D17 | Team review 2026-09-28; closes the loop on the supplier's fixed-stock commitment | M | REQ-E06-02; ENG-D17 |
 | BL-33 | Sample data so a "Received without ASN" receipt exists | The code path is built and rendered but no sample data produces it, so nobody can see it | S | REQ-E07-06 |
 | BL-38 | Supplier call-offs table: 10 columns still scroll sideways at 1280px | Same problem the Order summary solved by grouping | S | Phase 3 note |
 | BL-39 | Non-conformance and complaint tracking (E10.02), the part of Supplier Performance never detailed | Named in the deck as MVP, still a stub | M | Requirements section 6 |
@@ -134,6 +133,7 @@ Nothing blocks these.
 | BL-42 | Phase 2 epics: contract management (E04), catalog management (E05), reporting and analytics (E11), API shipment aggregator (E13.02), supplier quality | Per the deck and charter | Requirements section 6 |
 | BL-103 | Forecast engine feed specification: each input, its grain, refresh and quality check, handed to the Master Data Management team, who own the data and the SAP integration | Master Data Management team | Drafted: `FORECAST-ENGINE-FEED-SPEC.md` (2026-09-23), handed to the team for confirmation of sources and owners. `FORECAST-ENGINE-REQUIREMENTS.md` E14-01; PRD I14 |
 | BL-118 | Where to hold buffers (E14-12, Phase 2): guaranteed-service model with the MOQ extension, deciding at which level (finished good, bulk, packaging) safety stock sits | Build team, Phase 2; after REPL (BL-01) | `FORECAST-ENGINE-REQUIREMENTS.md` REQ-E14-12 |
+| BL-137 | Ramadan and Lebaran date table for the demand forecast's event index: confirm each year against the Ministry of Religious Affairs (Kemenag) and add the next year's row (1449 H is in; add 1450 H before the forecast horizon reaches early 2029) | Material Planning team, yearly | `FORECAST-ENGINE-REQUIREMENTS.md` ENG-B71; `src/services/engine/eventCalendar.ts` |
 
 ---
 
@@ -213,3 +213,6 @@ Nothing blocks these.
 | BL-35 | An RFI and an RFP awaiting an answer from the main demo supplier | 2026-09-28 | Already in the data since `9651e4a` (2026-09-21, a few hours after this item was filed): sup-007, the supplier the demo signs in as, is invited to RFI-2026-002 and RFP-2026-003, both Open and unanswered. Now pinned by name through the supplier's own read (`demoWalkthroughSeeds.test.ts`) |
 | BL-74 | GR-2026-015 read "Approved" and "Partially Approved" at once | 2026-09-28 | Fixed: its stored status is Approved, the result its one fully accepted line rolls up to; the shortfall stays visible as the CR-25 "kept open" label. Checked over every sample receipt: it was the only one whose stored result contradicted its lines, and `demoWalkthroughSeeds.test.ts` now holds that for all of them |
 | BL-83 | Text run-ons and the number grouping | 2026-09-28 | Fixed: the "Closing soon" and "Overdue" pills, and a third the backlog did not list (the buyer's "Viewed" pill on forecast versions), lost the space before their date inside the inline-flex pill; each now wraps its text in one span, and `statusPillSpace.guard.test.ts` scans every pill for the shape. The in-transit read-out has a real space ("0 nothing in transit"). `formatNumber` groups by the UI language ("1,234.5" in English, "1.234,5" in Indonesian); rupiah stays Indonesian in both (`formatIDR`), and the one screen that built a rupiah amount from `formatNumber` (the order plan's saving) now uses `formatIDR` |
+| BL-133 | Capacity before the LTP, one Submit all per week (ENG-D18, ENG-D19) | 2026-09-29 | Built in PR #80: the commitment submit verb refuses a week without confirmed capacity and a week above BE without a reason; one Submit all per week; LTP against capacity and BE (capacity + additional capacity) amber / red on both Capacity pages; the LTP is now the only capacity demand figure (the old "PTI demand" column retired), and "Extra capacity if requested" is renamed "Additional capacity" (owner, 2026-09-29). Groups with no LTP have no capacity demand. BL-65 stays open |
+| BL-110 | Finished-goods demand forecast (E14-07) | 2026-09-29 | Built in PR #81 on synthetic data: weekly sell-in per SKU for 26 weeks, own brands only (OEM left out); Comb (SES, Holt, damped) with a known-event index (payday, double-date, Christmas, Ramadan and the weeks before it, factors estimated per brand), Theta beside it, SBA/Croston/TSB for slow SKUs, MinT-shrink so SKU, brand and total add up; new SKUs stay on SAP's plan; 5.4% under SAP's plan over 26 weeks on the synthetic data. The main model is not built (BL-135) and material planning stays on SAP's plan until the backtest (BL-112). Page Forecast → Demand forecast |
+| BL-134 | Fixed stock (FS) reconcile (ENG-D21) | 2026-09-29 | Specified as REQ-E06-04 and built in PR #79: per supplier × material × cycle (packaging 3 weeks, an admin setting; raw material per month), committed vs accepted call-offs vs held, against a maximum stock Procurement maintains (new verb `t_maxstock_set`); outcomes Supplier short, PTI under-called, Stock not reported, Not committed, Above max stock, Balanced; liability flagged, not priced (ENG-D17). Pages Forecast → Fixed stock reconcile (planner) and Planning → Fixed stock reconcile (supplier, own rows) |

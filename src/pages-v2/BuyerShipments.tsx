@@ -28,6 +28,8 @@ import { useCallOffViews } from './callOffs/callOffDisplay';
 import { asnCallOffWarnings } from '../services/transitions/callOffRules';
 import { isActiveAsn } from '../services/transitions/fulfilmentRules';
 import { AsnPlannerMarkers } from './shipments/CallOffWarnings';
+import AsnShelfLifeExceptions from './shipments/AsnShelfLifeExceptions';
+import { BlockedStockMarker, approvedIntoBlockedStock } from './shipments/ShelfLifeParts';
 import PageMetaLine from '../components/ui-v2/PageMetaLine';
 import ProvenanceMarker from '../components/ui-v2/ProvenanceMarker';
 import KpiCard from '../components/ui-v2/KpiCard';
@@ -602,6 +604,11 @@ const BuyerShipments: React.FC = () => {
         />
       </div>
 
+      {/* MR-6 d "Approver" — ASNs awaiting Quality's shelf-life decision. */}
+      <div className="mb-6">
+        <AsnShelfLifeExceptions asns={asnsQuery.data?.items ?? []} />
+      </div>
+
       {/* BR-04 / AC-02 — the filter is visible, and the way back is offered. */}
       <PoFilterBanner drill={drill} persona="buyer" count={drilledAsns.length} />
 
@@ -665,6 +672,12 @@ const BuyerShipments: React.FC = () => {
                               className="ml-2 inline-block px-1.5 py-0.5 rounded border border-warning bg-warning-soft text-[11px] text-warning-hover"
                             >
                               {t('fc.asn.batch.notDeclared')}
+                            </span>
+                          ) : null}
+                          {/* MR-6 BR-09 — an approved shelf-life exception is received into blocked stock. */}
+                          {approvedIntoBlockedStock(a, li) ? (
+                            <span className="ml-2">
+                              <BlockedStockMarker testId={`asn-line-blocked-${a.asnNumber}-${li.materialCode}`} />
                             </span>
                           ) : null}
                         </li>
