@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 0.27 draft, 2026-09-28 |
+| Version | 0.28 draft, 2026-09-29 |
 | Sources | `SUPPLIER-HUB-BASELINE.md` (kick-off deck, Aug 2026); `KICKOFF-MEETING-NOTES.md` (business user feedback, reviewed 2026-09-17); owner review of the prototype gap review (2026-09-17); owner RFx decisions RFX-D1 to RFX-D5 (2026-09-21); owner RFx decisions RFX-D6 to RFX-D14 (2026-09-25), from `RFX-IMPROVEMENT-REQUIREMENTS-2026-09.md`; owner RFx decision RFX-D15 (2026-09-28); RFx best-practice research, `research/RFX-BEST-PRACTICE-2026-09.md` (2026-09-21); owner decision ENG-1 (2026-09-23) with the forecast research `research/FORECAST-BEST-PRACTICE-2026-09.md` and `research/FORECAST-METHOD-SPEC.md` |
 | Scope of this version | Detailed: Order Collaboration, Inventory & Capacity Collaboration, RFx (validated); Forecast Collaboration, Call-off Management, and the undiscussed parts of Order and Inventory Collaboration (proposed). Hub navigation and screen conventions (validated). Foundation is reserved for the Foundation team. The remaining epics are stubs |
 | Not in scope | The codebase. This file states what the Supplier Hub must do, not what is built. What the prototype does today, and where, is tracked only in `BUILD-GAP.md` |
@@ -2011,3 +2011,4 @@ Research date: 2026-09-21. The full note, with every source link, is `research/R
 | 0.25 | 2026-09-28 | Owner decision RFX-D15 recorded (section 9): a firm-offer round may open on a Partly awarded RFP for its open options. REQ-E03-04 BR-15e amended. Open item FU-7 closed and removed from section 7. Built in PR #71 |
 | 0.26 | 2026-09-28 | CE-11i: who uploaded each supplier file is recorded and shown in the buyer's "Supplier documents" panel (FU-1, BL-123). Built in PR #73 |
 | 0.27 | 2026-09-28 | Forecast engine decisions ENG-D8a, D10, D11, D12, D14 decided and ENG-D18 to D21 added from the team's LTP / DA / capacity review (`FORECAST-ENGINE-REQUIREMENTS.md` 0.13). REQ-E08-04 and REQ-E06-02 gain capacity-before-LTP and Submit all per week when BL-133 is built |
+| 0.28 | 2026-09-29 | REQ-E08-04 BR-08 to BR-12 and REQ-E06-02 BR-11 to BR-13: capacity before the LTP, two-level check against capacity and BE, one Submit all per week, the LTP as the only capacity demand figure, "Additional capacity" (BL-133, PR #80). New REQ-E06-04 Fixed stock reconcile, Validated (BL-134, PR #79) |
