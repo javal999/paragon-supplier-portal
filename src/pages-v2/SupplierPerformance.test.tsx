@@ -73,7 +73,10 @@ describe('My performance — calculated (REQ-E10-01)', () => {
     // measured less the rejection penalty; while every order sat in 2025 it was
     // the OTIF number alone. Checked against the two percentages the page
     // renders beside it rather than restated as a third literal.
-    const expected = Math.round((83 + 40) / 2) - 1 * REJECTION_PENALTY_POINTS;
+    // Material B3 — blended with the update compliance the page shows (weight 0.10).
+    expect(await screen.findByTestId('my-update-compliance-value')).toHaveTextContent('Update compliance 0%');
+    const delivery = Math.round((83 + 40) / 2) - 1 * REJECTION_PENALTY_POINTS;
+    const expected = Math.round(0.9 * delivery + 0.1 * 0);
     expect(await screen.findByTestId('my-performance-grade')).toHaveTextContent(`${expected}/100`);
     expect(
       await screen.findByText(/Grades from the score: A 90\+ · B 80\+ · C 70\+ · D 0\+/),

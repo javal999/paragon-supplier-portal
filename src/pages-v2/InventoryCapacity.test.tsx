@@ -131,6 +131,7 @@ describe('PTI Inventory (REQ-E08-01)', () => {
     fireEvent.change(panel().getByLabelText('Supplier'), { target: { value: 'sup-007' } });
     fireEvent.change(panel().getByLabelText('Material'), { target: { value: 'PK-CAPF-8820' } });
     fireEvent.change(panel().getByLabelText('Stock on hand (PCS)'), { target: { value: '42000' } });
+    fireEvent.change(panel().getByLabelText('In production (PCS)'), { target: { value: '0' } }); // MAT-D4 — required, 0 allowed
     fireEvent.click(panel().getByTestId('stock-entry-submit'));
     await waitFor(() => expect(inventoryDeclarationStore.latestFor('sup-007', 'PK-CAPF-8820')).toMatchObject({ totalQty: 42000, channel: 'pti' }));
   });
@@ -160,7 +161,7 @@ describe('Supplier Stock (REQ-E08-01 SUP, REQ-E08-02, REQ-E08-03)', () => {
     await screen.findByTestId('stock-upload');
     const csv = [
       'Material code,Stock on hand,Unit,Supplier reorder point,In-production quantity,Expected production completion date (YYYY-MM-DD),Batch number,Batch quantity,Expiry date (YYYY-MM-DD)',
-      'PK-CAPF-8820,50000,PCS,20000,,,,,',
+      'PK-CAPF-8820,50000,PCS,20000,0,,,,',
       'RM-STEAR-7300,10,KG,,,,,,',
       'PK-PETB-8802,1.500,PCS,,,,,,',
     ].join('\n');
@@ -179,6 +180,7 @@ describe('Supplier Stock (REQ-E08-01 SUP, REQ-E08-02, REQ-E08-03)', () => {
     fireEvent.click(await screen.findByTestId('stock-entry-open'));
     fireEvent.change(panel().getByLabelText('Material'), { target: { value: 'PK-PETB-8810' } });
     fireEvent.change(panel().getByLabelText('Stock on hand (PCS)'), { target: { value: '1000' } });
+    fireEvent.change(panel().getByLabelText('In production (PCS)'), { target: { value: '0' } }); // MAT-D4 — required, 0 allowed
     fireEvent.click(panel().getByRole('button', { name: 'Add batch' }));
     fireEvent.change(panel().getByLabelText('Batch number'), { target: { value: 'B-1' } });
     fireEvent.change(panel().getByLabelText('Quantity'), { target: { value: '900' } });
@@ -234,6 +236,7 @@ describe('One stock entry (BL-60, REQ-E08-02 BR-06, BR-09, BR-10, AC-04, AC-05)'
   it('manufacturing date: after expiry or in the future blocks Save; a valid one is saved', async () => {
     await openManual();
     fireEvent.change(panel().getByLabelText('Stock on hand (PCS)'), { target: { value: '500' } });
+    fireEvent.change(panel().getByLabelText('In production (PCS)'), { target: { value: '0' } }); // MAT-D4 — required, 0 allowed
     fireEvent.click(panel().getByRole('button', { name: 'Add batch' }));
     fireEvent.change(panel().getByLabelText('Batch number'), { target: { value: 'MD-1' } });
     fireEvent.change(panel().getByLabelText('Quantity'), { target: { value: '500' } });
@@ -256,6 +259,75 @@ describe('One stock entry (BL-60, REQ-E08-02 BR-06, BR-09, BR-10, AC-04, AC-05)'
     );
   });
 
+  it('MAT-D4: the manual form refuses the row the template refuses — blank E, and E = 50 without F', async () => {
+    await openManual();
+    fireEvent.change(panel().getByLabelText('Stock on hand (PCS)'), { target: { value: '100' } });
+    // Blank E: not saveable (in production is required, 0 allowed).
+    expect(panel().getByTestId('stock-entry-submit')).toBeDisabled();
+    fireEvent.change(panel().getByLabelText('In production (PCS)'), { target: { value: '50' } });
+    expect(panel().getByTestId('stock-entry-production-date-missing')).toHaveTextContent(
+      'Enter the expected completion date for the quantity in production.',
+    );
+    expect(panel().getByTestId('stock-entry-submit')).toBeDisabled();
+    // Known-good twins: E = 0 without F, and E = 50 with F.
+    fireEvent.change(panel().getByLabelText('In production (PCS)'), { target: { value: '0' } });
+    expect(panel().queryByTestId('stock-entry-production-date-missing')).toBeNull();
+    expect(panel().getByTestId('stock-entry-submit')).not.toBeDisabled();
+    fireEvent.change(panel().getByLabelText('In production (PCS)'), { target: { value: '50' } });
+    fireEvent.change(panel().getByLabelText('Expected production completion'), { target: { value: '2026-10-15' } });
+    fireEvent.click(panel().getByTestId('stock-entry-submit'));
+    await waitFor(() =>
+      expect(inventoryDeclarationStore.latestFor('sup-007', 'PK-PETB-8801')).toMatchObject({
+        totalQty: 100,
+        inProductionQty: 50,
+        productionCompletionDate: '2026-10-15',
+      }),
+    );
+  });
+
+  it('MR-4 AC-03: the upload panel lists every column A to J as Required or Optional, with the batch note', async () => {
+    renderWithProviders(<SupplierInventory />, { identity: SUPPLIER });
+    const table = await screen.findByTestId('stock-template-columns');
+    const expected: Record<StockTemplateField, string> = {
+      materialCode: 'Required',
+      soh: 'Required',
+      unit: 'Required',
+      supplierRop: 'Optional',
+      inProductionQty: 'Required',
+      productionCompletionDate: 'Required when E is above 0',
+      batchNumber: 'Optional',
+      batchQty: 'Optional',
+      manufacturingDate: 'Optional',
+      expiryDate: 'Optional',
+    };
+    STOCK_TEMPLATE_FIELDS.forEach((f, i) => {
+      const row = within(table).getByTestId(`stock-template-column-${f.field}`);
+      expect(row).toHaveTextContent(String.fromCharCode(65 + i));
+      expect(within(row).getByTestId(`stock-template-presence-${f.field}`)).toHaveTextContent(new RegExp(`^${expected[f.field]}$`));
+    });
+    expect(table.querySelectorAll('tbody tr')).toHaveLength(STOCK_TEMPLATE_FIELDS.length);
+    expect(within(table).getByTestId('stock-template-batch-note')).toHaveTextContent(
+      'Fill G to J only when your batches expire at different times. For each batch row, batch number and quantity are required; add the expiry date so your ASN can fill it in.',
+    );
+  });
+
+  it('MAT-D4: an uploaded row with in production above 0 and no completion date is refused by name', async () => {
+    renderWithProviders(<SupplierInventory />, { identity: SUPPLIER });
+    await screen.findByTestId('stock-upload');
+    const csv = [
+      'Material code,Stock on hand,Unit,In-production quantity,Expected production completion date (YYYY-MM-DD)',
+      'PK-CAPF-8820,300,PCS,50,',
+      'PK-PETB-8802,300,PCS,0,',
+    ].join('\n');
+    fireEvent.change(screen.getByTestId('stock-upload-file'), { target: { files: [new File([csv], 's.csv', { type: 'text/csv' })] } });
+    const result = await screen.findByTestId('stock-upload-result');
+    expect(within(result).getByTestId('stock-upload-saved')).toHaveTextContent('Materials saved: 1');
+    expect(within(result).getByTestId('stock-upload-refused-row-2')).toHaveTextContent(
+      'The in-production quantity is above 0, so the expected production completion date is required',
+    );
+    expect(inventoryDeclarationStore.latestFor('sup-007', 'PK-PETB-8802')).toMatchObject({ totalQty: 300, inProductionQty: 0 });
+  });
+
   it('AC-05: in transit sits beside in production, read-only, naming its call-offs', async () => {
     await openManual();
     const transit = panel().getByTestId('stock-entry-in-transit');
@@ -274,9 +346,9 @@ describe('One stock entry (BL-60, REQ-E08-02 BR-06, BR-09, BR-10, AC-04, AC-05)'
     expect(incoming.querySelector('input, select, textarea')).toBeNull();
     const made = sdcClock.now().slice(0, 10);
     const csv = [
-      'Material code,Stock on hand,Unit,Batch number,Batch quantity,Manufacturing date (YYYY-MM-DD),Expiry date (YYYY-MM-DD)',
-      `PK-CAPF-8820,300,PCS,T-1,300,${made},2028-01-01`,
-      'PK-PETB-8802,300,PCS,T-2,300,2099-01-01,',
+      'Material code,Stock on hand,Unit,In-production quantity,Batch number,Batch quantity,Manufacturing date (YYYY-MM-DD),Expiry date (YYYY-MM-DD)',
+      `PK-CAPF-8820,300,PCS,0,T-1,300,${made},2028-01-01`,
+      'PK-PETB-8802,300,PCS,0,T-2,300,2099-01-01,',
     ].join('\n');
     fireEvent.change(screen.getByTestId('stock-upload-file'), { target: { files: [new File([csv], 's.csv', { type: 'text/csv' })] } });
     const result = await screen.findByTestId('stock-upload-result');

@@ -61,7 +61,16 @@ async function openEntryFromRow() {
   fireEvent.click(await screen.findByTestId('commhub-enter-0'));
   await screen.findByTestId('stock-entry-panel');
 }
-const save = () => fireEvent.click(panel().getByTestId('stock-entry-submit'));
+// MAT-D4 — in production is required (0 allowed). A message that names only the
+// stock reports nothing in production, so the user types 0 before saving.
+const nothingInProductionIfBlank = () => {
+  const field = panel().getByLabelText('In production (PCS)') as HTMLInputElement;
+  if (field.value === '') fireEvent.change(field, { target: { value: '0' } });
+};
+const save = () => {
+  nothingInProductionIfBlank();
+  fireEvent.click(panel().getByTestId('stock-entry-submit'));
+};
 
 const countFor = (material: string) =>
   inventoryDeclarationStore.all().filter((d) => d.supplierId === 'sup-007' && d.materialCode === material).length;
@@ -243,6 +252,7 @@ describe('CommHubInbound — material alias is a visible suggestion, never auto-
     expect(panel().getByTestId('stock-entry-submit')).toBeDisabled();
     // Choosing the material in the form unlocks the save.
     fireEvent.change(material, { target: { value: MAT } });
+    nothingInProductionIfBlank();
     expect(panel().getByTestId('stock-entry-submit')).not.toBeDisabled();
   });
 });

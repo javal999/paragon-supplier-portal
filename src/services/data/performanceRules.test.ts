@@ -342,6 +342,28 @@ describe('the assessment score and the supplier measure', () => {
     expect(assessmentScore(null, 60, 0)).toBe(60); // only CFOT measured
   });
 
+  it('Material B3 · AC-03: weight 0.10, a delivery score of 90 and 50% update compliance give 86', () => {
+    expect(assessmentScore(90, 90, 0, 50, 0.1)).toBe(86);
+    // The weight in force is `compliance.scoreWeight` (0.10 at release).
+    expect(assessmentScore(90, 90, 0, 50)).toBe(86);
+  });
+
+  it('Material B3 · BR-05: "No history" for compliance weighs 0; edge case 4: weight 0 leaves the score as it was', () => {
+    expect(assessmentScore(90, 90, 0, null)).toBe(90);
+    expect(assessmentScore(90, 90, 0, 0, 0)).toBe(90);
+    // Compliance alone never makes a score.
+    expect(assessmentScore(null, null, 0, 100)).toBeNull();
+  });
+
+  it('Material B3 · supplierMeasure blends the compliance the input carries, and carries it on the measure', () => {
+    const compliance = { supplierId: 'sup-007', pct: 50, weeks: [] };
+    const base = input({ callOffs: [callOff()], receipts: [receipt('2026-09-10', 1000)], purchaseOrders: [po()] });
+    const m = supplierMeasure('sup-007', { ...base, updateCompliance: () => compliance }, '90d', NOW);
+    expect(m.score).toBe(95); // 0.9 × 100 + 0.1 × 50
+    expect(m.updateCompliance).toBe(compliance);
+    expect(supplierMeasure('sup-007', base, '90d', NOW).score).toBe(100);
+  });
+
   it('the score never goes below 0 or above 100', () => {
     expect(assessmentScore(10, 10, 20)).toBe(0);
     expect(assessmentScore(100, 100, 0)).toBe(100);

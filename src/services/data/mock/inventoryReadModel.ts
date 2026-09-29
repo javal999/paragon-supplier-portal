@@ -123,6 +123,13 @@ export function assignments(): { supplierId: string; materialCode: string }[] {
   return [...pairs.values()];
 }
 
+/**
+ * Material B3 — the supplier × material pairs the weekly update is judged on:
+ * the inventory rows, so the compliance measure counts the materials the stock
+ * page shows (MR-2 BR-02).
+ */
+export const stockUpdateAssignments = (): { supplierId: string; materialCode: string }[] => assignments();
+
 const planningEstimate = (supplierId: string, materialCode: string): number | null =>
   PLANNING_DAILY_DEMAND[`${supplierId}|${materialCode}`] ?? null;
 
