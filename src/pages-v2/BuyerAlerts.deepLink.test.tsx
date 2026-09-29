@@ -43,8 +43,9 @@ describe('BuyerHome — "17 High-risk inventory and capacity alerts" opens exact
       { route: '/buyer/home' },
     );
     const tasks = await screen.findByTestId('home-tasks');
-    const task = within(tasks).queryByTestId('home-task-inventory-high-alerts');
-    if (!task) return; // no open High alert in today's fixture — nothing to click through
+    // findBy, not queryBy: the task renders once the alert query settles, and a
+    // missing task must FAIL here rather than return early and pass vacuously.
+    const task = await within(tasks).findByTestId('home-task-inventory-high-alerts', {}, { timeout: 4000 });
 
     fireEvent.click(task);
 
