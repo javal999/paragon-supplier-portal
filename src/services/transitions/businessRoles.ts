@@ -298,6 +298,14 @@ const LANE_BUNDLES = Object.freeze({
       // or procurement (who judge them). Beside `setting:set`; admin derives it;
       // `buyer_all` keeps it on the same precedent, pending BL-70.
       'reasoncode:maintain',
+      // ── Material A1 · A SUPPLIER'S STOCK UPDATE MODE (MR-1 BR-02, AC-06) ──
+      // API or manual decides the supplier's update cadence, its staleness
+      // rule and its weekly compliance measure. No supplier lane (it would pick
+      // the rule it is measured by), nor `planning` (which judges the stock it
+      // yields). "Hub administrator only" is not a bundle of its own (AR-04):
+      // it sits beside the other governance acts and `admin` derives it.
+      // `buyer_all` keeps it on the `setting:set` precedent, pending BL-70.
+      'supplier:set-update-mode',
     ]),
     // The SDC / P2 planning lane. `inventorydeclaration:record` is the C4c
     // buyer RECORDING verb — a distinct authority from the supplier's

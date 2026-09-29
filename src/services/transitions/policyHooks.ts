@@ -361,6 +361,13 @@ export const POLICY_HOOKS = {
    */
   THREE_PL_GOVERNED: 'three_pl_governed',
   /**
+   * Material A1 (MR-1 BR-02) — a supplier's stock update mode: the supplier is
+   * on the master (UNKNOWN_SUPPLIER) and the value is `api` or `manual`
+   * (UPDATE_MODE_INVALID). The rule is `supplierUpdateModeRefusal`, the one the
+   * admin page's pre-check calls.
+   */
+  SUPPLIER_UPDATE_MODE_VALID: 'supplier_update_mode_valid',
+  /**
    * BL-50 — a ruling on one day of the hub's working calendar: the date is one
    * the SAP load covers, the kind is working or non-working, the reason is
    * SUBSTANCE rather than presence (`requiredFields` admits a space bar), and

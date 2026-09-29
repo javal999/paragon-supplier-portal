@@ -235,6 +235,19 @@ export const LOOSE_END_CENSUS: readonly CensusEntry[] = Object.freeze([
       'correctly declared terminal. The tracking links built from the list are derived at read and are ' +
       'never states of any machine.',
   },
+  // ── supplierOverlay (Material A1) ──────────────────────────────────────────
+  {
+    entity: 'supplierOverlay',
+    kind: 'initial-integrity',
+    subject: 'Defined',
+    reason: 'substrate-only',
+    note:
+      'THE SAME DEGENERATE SINGLE-STATE LEDGER SHAPE AS THE 3PL LIST: the entity IS a supplier on the ' +
+      'supplier master, addressed by its id, and the master (the SAP stand-in) is where suppliers come ' +
+      'from — the hub never creates one, so there is no creation verb to be an entry. The recording verb ' +
+      'is statePreserving, so it is neither an entry nor an exit, and the state is correctly declared ' +
+      'terminal. The mode in force is derived at read from the latest overlay row and is never a state.',
+  },
   // ── workingCalendar (BL-50) ────────────────────────────────────────────────
   {
     entity: 'workingCalendar',

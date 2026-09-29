@@ -112,6 +112,8 @@ import { rfqCompareEn, rfqCompareId } from './i18n/rfqCompare';
 import { rfxFilesEn, rfxFilesId } from './i18n/rfxFiles';
 // — BL-51 3PL tracking links (REQ-E07-04 BR-05) —
 import { threePlEn, threePlId } from './i18n/threePl';
+// — Material A1 administration · suppliers (MR-1 BR-02) —
+import { adminSuppliersEn, adminSuppliersId } from './i18n/adminSuppliers';
 // — BL-32 the administrator's rule values (REQ-E08-05 BR-03, §3.6) —
 import { adminSettingsEn, adminSettingsId } from './i18n/adminSettings';
 import { adminReasonsEn, adminReasonsId } from './i18n/adminReasons';
@@ -216,6 +218,7 @@ export const resources = {
       ...rfqCompareEn,
       ...rfxFilesEn,
       ...threePlEn,
+      ...adminSuppliersEn,
       ...adminSettingsEn,
       ...adminReasonsEn,
       ...supplierFiltersEn,
@@ -692,6 +695,7 @@ export const resources = {
       ...rfqCompareId,
       ...rfxFilesId,
       ...threePlId,
+      ...adminSuppliersId,
       ...adminSettingsId,
       ...adminReasonsId,
       ...supplierFiltersId,

@@ -116,6 +116,7 @@ import {
 import { customRoleStore } from './customRoles';
 import { workingCalendarStore } from './workingCalendarStore';
 import { threePlStore } from './threePlStore';
+import { supplierOverlayStore } from '../data/mock/stores/supplierOverlayStore';
 import { hubSettingsStore, settingValue } from './hubSettingsStore';
 import { reasonCodeStore } from './reasonCodes';
 
@@ -224,6 +225,9 @@ async function realIds(): Promise<Record<string, string | null>> {
     workingCalendar: '2026-09-09',
     // BL-51 — `entityId` IS the 3PL id; a sample-list row exists from the start.
     threePl: 'tpl-sample-express',
+    // Material A1 — `entityId` IS the supplier id; every master supplier exists,
+    // and the overlay names that supplier, so it lands in `ownerful`.
+    supplierOverlay: 'sup-001',
     // BL-32 — `entityId` IS the setting key; every registry key exists from the start.
     hubSetting: 'callOff.overPct',
     // BL-32 — `entityId` IS `<list>:<code>`; every starter code exists from the start.
@@ -375,6 +379,7 @@ const resetAll = () => {
   workingCalendarStore.reset();
   maxStockStore.reset();
   threePlStore.reset();
+  supplierOverlayStore.reset();
   hubSettingsStore.reset();
   reasonCodeStore.reset();
   // NR-2 — the id supply closes rfp-002 and opens a firm-offer round.
@@ -431,6 +436,9 @@ describe('POPULATION — nothing below means anything without this', () => {
     // NR-2 — the firm-offer ROUND is PTI's; the firm OFFER is its supplier's.
     expect(ownerless).toContain('rfpOfferRound');
     expect(ownerful).toContain('rfpFirmOffer');
+    // Material A1 — a supplier's overlay names that supplier: a supplier seat is
+    // refused at SCOPE on any other supplier and at ROLE on its own.
+    expect(ownerful).toContain('supplierOverlay');
     expect(ownerless).not.toContain('purchaseOrder');
     expect(ownerless).not.toContain('invoice');
     expect(ownerful).toContain('purchaseOrder');

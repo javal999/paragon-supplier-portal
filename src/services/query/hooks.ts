@@ -41,6 +41,12 @@ export const useCurrentSupplier = () =>
     svc.suppliers.getCurrent(scope),
   );
 
+/** Material A1 — each supplier's stock update mode and its change history. */
+export const useStockUpdateModes = () =>
+  useServiceQuery(['suppliers', 'stockUpdateModes'], (svc, scope) =>
+    svc.suppliers.getStockUpdateModes(scope),
+  );
+
 // ─── Procurement ──────────────────────────────────────────────────────────
 
 export const usePurchaseOrders = (filter?: POFilter) =>

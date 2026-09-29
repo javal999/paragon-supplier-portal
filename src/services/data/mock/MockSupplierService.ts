@@ -1,7 +1,8 @@
 import { mockSuppliers } from '../../../data/mockSuppliers';
-import type { ISupplierService, Page, QueryScope, Supplier } from '../types';
+import type { ISupplierService, Page, QueryScope, Supplier, SupplierStockUpdateMode } from '../types';
 import { DataError } from '../types';
 import { allWithMeasures, withMeasures } from './supplierMeasureReadModel';
+import { allStockUpdateModes } from './supplierMaster';
 
 // ⚠️ REQ-E10-01 — OTIF AND THE GRADE ARE PROJECTED HERE, NOT READ FROM THE
 // FIXTURE. Every supplier read goes through `withMeasures`, so a list, a
@@ -31,5 +32,13 @@ export class MockSupplierService implements ISupplierService {
     if (scope.personaType !== 'supplier' || !scope.supplierId) return null;
     const mine = mockSuppliers.find((s) => s.id === scope.supplierId);
     return mine ? withMeasures(mine) : null;
+  }
+
+  // Material A1 — narrowed HERE, not in the page (MAT-R4): a supplier reads
+  // only its own mode and history.
+  async getStockUpdateModes(scope: QueryScope): Promise<Page<SupplierStockUpdateMode>> {
+    const all = allStockUpdateModes();
+    if (scope.personaType === 'supplier') return { items: all.filter((r) => r.supplierId === scope.supplierId) };
+    return { items: all };
   }
 }
