@@ -8,7 +8,7 @@ import {
 } from './demandForecast';
 import { addDays } from './dates';
 import { defaultRequirementOptions, materialRequirement } from './requirement';
-import type { Brand, FinishedGood, SalesWeek } from './types';
+import type { Brand, FgPlanSnapshot, FinishedGood, SalesWeek } from './types';
 import { engineDataset } from '../data/mock/fixtures/engineDataset';
 import { sdcClock } from '../sdc/clock';
 
@@ -58,15 +58,20 @@ const SALES: SalesWeek[] = [
   // Sold 100 in three of every four weeks: p exactly 4/3, identical sizes (v = 0).
   ...rows('G-EVEN', 80, (i) => (i % 4 === 3 ? 0 : 100)),
 ];
-const run = demandForecast({ finishedGoods: FGS, sales: SALES, asOf: AS_OF });
+/** SAP's plan made this Monday: 700 a week for the new SKU, 900 for A-SMOOTH. */
+const PLAN: FgPlanSnapshot[] = Array.from({ length: FORECAST_HORIZON_WEEKS }, (_, i) => addDays(AS_OF, i * 7)).flatMap((w) => [
+  { skuCode: 'D-LAUNCH', madeAt: AS_OF, weekStart: w, quantity: 700 },
+  { skuCode: 'A-SMOOTH', madeAt: AS_OF, weekStart: w, quantity: 900 },
+]);
+const run = demandForecast({ finishedGoods: FGS, sales: SALES, fgPlan: PLAN, asOf: AS_OF });
 const sku = (code: string) => run.skus.find((s) => s.skuCode === code)!;
 
 describe('which method each SKU gets (BR-02, BR-03, BR-04; E14-01 BR-04)', () => {
-  it('smooth → Comb (the fallback); slow → SBA; slow and being discontinued → TSB; short history → the launch stand-in; ended → zero', () => {
+  it('smooth → Comb (the fallback); slow → SBA; slow and being discontinued → TSB; short history → SAP’s plan; ended → zero', () => {
     expect(sku('A-SMOOTH').method).toBe('comb');
     expect(sku('B-SLOW').method).toBe('sba');
     expect(sku('C-DYING').method).toBe('tsb');
-    expect(sku('D-LAUNCH').method).toBe('launchStandIn');
+    expect(sku('D-LAUNCH').method).toBe('newSkuSap');
     expect(sku('E-ENDED').method).toBe('discontinued');
     expect(sku('E-ENDED').forecast.every((v) => v === 0)).toBe(true);
   });
@@ -82,13 +87,27 @@ describe('which method each SKU gets (BR-02, BR-03, BR-04; E14-01 BR-04)', () =>
     expect(run.skus.map((s) => s.skuCode)).toEqual(['A-SMOOTH', 'B-SLOW', 'C-DYING', 'D-LAUNCH', 'E-ENDED', 'G-EVEN']);
     for (const s of run.skus) expect(s.forecast).toHaveLength(FORECAST_HORIZON_WEEKS);
     expect(run.mainModel).toBe('notBuilt');
-    expect(run.methodCounts).toEqual({ main: 0, comb: 1, sba: 1, croston: 1, tsb: 1, launchStandIn: 1, discontinued: 1 });
+    expect(run.methodCounts).toEqual({ main: 0, comb: 1, sba: 1, croston: 1, tsb: 1, newSkuSap: 1, discontinued: 1 });
   });
 
-  it('the Comb and the stand-in carry Theta beside them for E14-10 to choose between; the slow methods do not', () => {
+  it('the Comb carries Theta beside it for E14-10 to choose between; the slow methods and SAP’s plan do not', () => {
     expect(sku('A-SMOOTH').theta).toHaveLength(FORECAST_HORIZON_WEEKS);
-    expect(sku('D-LAUNCH').theta).toHaveLength(FORECAST_HORIZON_WEEKS);
+    expect(sku('D-LAUNCH').theta).toBeNull();
     expect(sku('B-SLOW').theta).toBeNull();
+  });
+
+  it('a new SKU (under 52 weeks) keeps SAP’s plan until E14-08 exists, and the reconciliation holds it there', () => {
+    const d = sku('D-LAUNCH');
+    expect(d.historyWeeks).toBe(20);
+    expect(d.base.every((v) => v === 700)).toBe(true);
+    expect(d.forecast.every((v) => v === 700)).toBe(true);
+    // Known-good control: a SKU with a year of history is forecast, not copied from SAP (900).
+    expect(sku('A-SMOOTH').forecast.some((v) => v !== 900)).toBe(true);
+  });
+
+  it('a new SKU with no SAP plan is forecast as 0, not invented', () => {
+    const r = demandForecast({ finishedGoods: FGS, sales: SALES, asOf: AS_OF });
+    expect(r.skus.find((s) => s.skuCode === 'D-LAUNCH')!.forecast.every((v) => v === 0)).toBe(true);
   });
 });
 
@@ -128,7 +147,7 @@ describe('levels add up with no negative value (AC-02, BR-04)', () => {
     expect(c.endsOn).toBe('2026-12-07');
     expect(sku('A-SMOOTH').endsOn).toBeNull();
     const emina = run.brands.find((b) => b.key === 'Emina')!;
-    expect(emina.forecast[end]).toBe(sku('D-LAUNCH').forecast[end]);
+    expect(emina.forecast[end]).toBe(700); // only the new SKU, held at SAP's plan, is left
   });
 });
 
@@ -169,9 +188,10 @@ describe('on the synthetic dataset (seed 20260924)', () => {
   const asOf = sdcClock.now().slice(0, 10);
   const synthetic = demandForecast({ finishedGoods: data.finishedGoods, sales: data.sales, fgPlan: data.fgPlan, asOf });
 
-  it('names the SKUs per method: 4 launches on the stand-in, SYN-FG-008 ended, the rest Comb; none slow; none OEM', () => {
+  it('names the SKUs per method: 4 new SKUs on SAP’s plan, SYN-FG-008 ended, the rest Comb; none slow; none OEM', () => {
     const by = (m: string) => synthetic.skus.filter((s) => s.method === m).map((s) => s.skuCode);
-    expect(by('launchStandIn')).toEqual(['SYN-FG-005', 'SYN-FG-010', 'SYN-FG-015', 'SYN-FG-020']);
+    expect(by('newSkuSap')).toEqual(['SYN-FG-005', 'SYN-FG-010', 'SYN-FG-015', 'SYN-FG-020']);
+    for (const s of synthetic.skus.filter((x) => x.method === 'newSkuSap')) expect(s.forecast).toEqual(s.sapPlan!.map((v) => Math.round(v ?? 0)));
     expect(by('discontinued')).toEqual(['SYN-FG-008']);
     expect(by('comb')).toHaveLength(15);
     expect(by('sba').length + by('croston').length + by('tsb').length + by('main').length).toBe(0);
@@ -185,6 +205,18 @@ describe('on the synthetic dataset (seed 20260924)', () => {
     for (let i = 0; i < synthetic.weeks.length; i += 1) {
       expect(synthetic.total.forecast[i]).toBe(synthetic.skus.reduce((a, s) => a + s.forecast[i], 0));
     }
+  });
+
+  it('finds the Ramadan and pre-Ramadan effect the synthetic history carries, and no payday, double-date or Christmas effect', () => {
+    const f = (e: string) => synthetic.events.total.find((x) => x.event === e)!;
+    expect(synthetic.events.lead).toBe(3);
+    expect(f('ramadan').status).toBe('effect');
+    expect(f('ramadan').factor).toBeGreaterThan(1.1);
+    expect(f('preRamadan').status).toBe('effect');
+    for (const e of ['payday', 'doubleDate', 'christmas']) expect(f(e).status).toBe('noClearEffect');
+    // Ramadan 1448 (≈ 8 Feb 2027) is inside the horizon, and tagged.
+    expect(synthetic.events.horizon.find((h) => h.weekStart === '2027-02-08')!.events).toContain('ramadan');
+    expect(synthetic.events.horizonBeyondTable).toBe(false);
   });
 
   it('compares against SAP’s plan made this Monday, the plan E14-03 still runs on', () => {

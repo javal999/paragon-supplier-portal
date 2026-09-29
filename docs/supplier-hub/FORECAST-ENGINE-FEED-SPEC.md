@@ -223,9 +223,10 @@ The order below is the build order: section 2.1 feeds the first engine step (E14
 | category | text | Product category | yes |
 | launchDate | date | First sale day | yes |
 | discontinueDate | date | Last planned sale day | no |
+| oem | boolean | PTI makes the product for another brand (OEM). Its demand is that brand's POs, exploded as firm orders; E14-07 does not forecast it (ENG-D20, ENG-B65). Absent means one of PTI's own brands | no |
 
 - **Key:** skuCode. **Refresh:** weekly. **Freshness limit:** 7 days.
-- **Checks:** brand is one of the three; launchDate ≤ discontinueDate.
+- **Checks:** brand is one of the three; launchDate ≤ discontinueDate; oem, when present, is true or false.
 - **Likely SAP source:** material master for finished goods (MARA with a finished-goods material type, MAKT for the description). Brand and category from the material group or classification; which one is the MDM team's call.
 
 **SalesWeek: weekly sell-in per finished good**

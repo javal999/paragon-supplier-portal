@@ -12,9 +12,9 @@
 //   2. Discontinued on or before the first forecast week — zero, left out of
 //      the reconciliation (edge case: a discontinued range forecasts 0).
 //   3. Less than 52 weeks of history (E14-01 BR-04) — the launch method
-//      (E14-08) applies, and it is NOT BUILT. The SKU gets the Comb on its
-//      short history, without seasonality, labelled as a stand-in (ENG-B63),
-//      so every SKU still has a forecast (AC-01) and the brand adds up.
+//      (E14-08) applies, and it is NOT BUILT. The SKU keeps SAP's plan in
+//      force until it is (owner, 2026-09-29; ENG-B63), labelled so, and is
+//      held at that value in the reconciliation.
 //   4. The main model (BR-01, gradient-boosted trees across SKUs) — NOT
 //      BUILT (ENG-B60). The pipeline takes one (`MainModel`) and uses it for a
 //      SKU only where it beat the fallback in the backtest (AC-03, E14-10).
@@ -26,6 +26,9 @@
 //      (BR-03). With p ≥ 4/3 the rule always chooses SBA (2 − 3p/2 ≤ 0).
 //   6. Otherwise the fallback: the Comb benchmark (BR-02), with Theta
 //      computed beside it; the choice between the two is E14-10's (BR-05).
+//      Both apply the brand's calendar index of PTI's demand events (payday,
+//      double-date, Christmas, Ramadan and the weeks before it), each event's
+//      factor estimated from history (`eventCalendar.ts`, ENG-B70 to B74).
 //
 // ── STOCK-OUTS (BR-06) ──────────────────────────────────────────────────────
 //   A week flagged out of stock is not demand. For the smoothing methods its
@@ -38,13 +41,26 @@
 //   Each brand and the total are forecast on their own (Comb on the sum of
 //   their SKUs' cleaned history, current SKU → brand map), then MinT-shrink
 //   reconciles (`reconcile.ts`). A SKU discontinued inside the horizon is out
-//   of the hierarchy from that week; its unconstrained forecast is taken off
-//   its brand's and the total's base forecast for those weeks. SKU values are
+//   of the hierarchy from that week, and a new SKU on SAP's plan is held at
+//   it: what the level's base carried for such a SKU (its unconstrained
+//   forecast, or SAP's plan) is taken off its brand's and the total's base
+//   before reconciling, and its fixed value is added back. SKU values are
 //   rounded to whole units and every level is the sum of the SKUs beneath it,
 //   so AC-02 holds exactly.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { addDays, daysBetween, mondayOf } from './dates';
+import {
+  RAMADAN_TABLE,
+  calendarIndex,
+  estimateEventFactors,
+  estimateLead,
+  ramadanTableCoversUntil,
+  tagWeek,
+  type DemandEvent,
+  type EventFactor,
+  type RamadanDates,
+} from './eventCalendar';
 import {
   comb,
   croston,
@@ -52,6 +68,7 @@ import {
   khChoice,
   theta,
   tsb,
+  type CalendarIndex,
   type HoltParams,
   type MethodFit,
   type SesParams,
@@ -67,10 +84,10 @@ export const MIN_HISTORY_WEEKS = 52;
 export const SLOW_WINDOW_WEEKS = 52;
 export const SLOW_INTERVAL = 4 / 3;
 
-export type ForecastMethod = 'main' | 'comb' | 'sba' | 'croston' | 'tsb' | 'launchStandIn' | 'discontinued';
+export type ForecastMethod = 'main' | 'comb' | 'sba' | 'croston' | 'tsb' | 'newSkuSap' | 'discontinued';
 
 /** The methods in display order. */
-export const FORECAST_METHODS: readonly ForecastMethod[] = ['main', 'comb', 'sba', 'croston', 'tsb', 'launchStandIn', 'discontinued'];
+export const FORECAST_METHODS: readonly ForecastMethod[] = ['main', 'comb', 'sba', 'croston', 'tsb', 'newSkuSap', 'discontinued'];
 
 /**
  * The gradient-boosted main model's slot (BR-01). Trained elsewhere (Python,
@@ -92,6 +109,8 @@ export interface DemandForecastInput {
   readonly asOf: IsoDate;
   readonly horizonWeeks?: number;
   readonly mainModel?: MainModel;
+  /** Ramadan and Eid dates (default: the approximate `RAMADAN_TABLE`, ENG-B71). */
+  readonly ramadanTable?: readonly RamadanDates[];
 }
 
 export interface MethodDetail {
@@ -169,6 +188,20 @@ export interface DemandForecastRun {
     /** SKU × week cells whose reconciled value was negative and set to 0. */
     readonly clippedCells: number;
   };
+  /** PTI's demand events and their factors (owner, 2026-09-29; ENG-B70 to ENG-B74). */
+  readonly events: {
+    /** Pre-Ramadan weeks, estimated on the total's history. */
+    readonly lead: number;
+    readonly ramadan: readonly RamadanDates[];
+    readonly tableCoversUntil: IsoDate;
+    /** The horizon runs past the Ramadan table's last date (events there cannot be tagged). */
+    readonly horizonBeyondTable: boolean;
+    readonly total: readonly EventFactor[];
+    /** Per brand: the factors its SKUs' Comb and Theta apply. */
+    readonly brands: readonly { readonly brand: Brand; readonly factors: readonly EventFactor[] }[];
+    /** The events in each forecast week. */
+    readonly horizon: readonly { readonly weekStart: IsoDate; readonly events: readonly DemandEvent[] }[];
+  };
   /** BR-01 — the main model's state. */
   readonly mainModel: 'notBuilt' | 'supplied';
 }
@@ -218,56 +251,70 @@ const nonNeg = (xs: readonly number[]): number[] => xs.map((v) => (v > 0 ? v : 0
 
 // ── The run ─────────────────────────────────────────────────────────────────
 
-interface Working {
+interface Prepared {
   readonly fg: FinishedGood;
+  readonly history: History | null;
+  readonly qty: readonly number[];
+  readonly stockout: readonly boolean[];
+  /** Stock-outs filled (ENG-B62). */
+  readonly clean: number[];
+  /** In-stock weeks only. */
+  readonly inStock: number[];
+  readonly p: number;
+  readonly v: number;
+}
+
+interface Working extends Prepared {
   readonly method: ForecastMethod;
   readonly detail: MethodDetail;
-  readonly history: History | null;
-  readonly meanInterval: number;
   /** Before the discontinue date is applied. */
   readonly unconstrained: number[];
   readonly base: number[];
   readonly theta: number[] | null;
   /** One-step residual per history week (NaN where none, or a stock-out). */
   readonly residuals: number[];
-  /** The cleaned history (stock-outs filled), for the brand and total series. */
-  readonly clean: number[];
 }
 
-function forecastSku(fg: FinishedGood, rows: readonly SalesWeek[], weeks: readonly IsoDate[], mainModel: MainModel | undefined): Working {
-  const H = weeks.length;
-  const start = weeks[0];
+function prepare(fg: FinishedGood, rows: readonly SalesWeek[], start: IsoDate): Prepared {
   const history = historyOf(rows, start);
   const qty = history?.qty ?? [];
   const stockout = history?.stockout ?? [];
-  const clean = fillStockouts(qty, stockout);
   const inStock = qty.filter((_, t) => !stockout[t]);
-  const window = inStock.slice(-SLOW_WINDOW_WEEKS);
-  const { p, v } = intermittency(window);
+  const { p, v } = intermittency(inStock.slice(-SLOW_WINDOW_WEEKS));
+  return { fg, history, qty, stockout, clean: fillStockouts(qty, stockout), inStock, p, v };
+}
+
+function forecastSku(
+  x: Prepared,
+  weeks: readonly IsoDate[],
+  mainModel: MainModel | undefined,
+  sapPlan: readonly (number | null)[] | null,
+  index: CalendarIndex,
+): Working {
+  const H = weeks.length;
+  const { fg, qty, stockout, clean, inStock, p, v } = x;
   const ended = (w: IsoDate) => fg.discontinueDate !== undefined && w >= fg.discontinueDate;
   const residualsFrom = (fitted: readonly number[]) => clean.map((y, t) => (stockout[t] || Number.isNaN(fitted[t]) ? NaN : y - fitted[t]));
   const done = (method: ForecastMethod, detail: MethodDetail, fit: MethodFit, residuals: number[], th: number[] | null): Working => {
     const unconstrained = nonNeg(fit.forecast);
     return {
-      fg,
+      ...x,
       method,
       detail,
-      history,
-      meanInterval: p,
       unconstrained,
-      base: unconstrained.map((x, i) => (ended(weeks[i]) ? 0 : x)),
-      theta: th ? th.map((x, i) => (ended(weeks[i]) ? 0 : x)) : null,
+      base: unconstrained.map((u, i) => (ended(weeks[i]) ? 0 : u)),
+      theta: th ? th.map((u, i) => (ended(weeks[i]) ? 0 : u)) : null,
       residuals,
-      clean,
     };
   };
 
-  if (fg.discontinueDate !== undefined && fg.discontinueDate <= start) {
+  if (fg.discontinueDate !== undefined && fg.discontinueDate <= weeks[0]) {
     return done('discontinued', {}, { forecast: zeros(H), fitted: [] }, clean.map(() => NaN), null);
   }
   if (qty.length < MIN_HISTORY_WEEKS) {
-    const c = comb(clean, H, false);
-    return done('launchStandIn', { seasonal: false, ses: c.ses, holt: c.holt, damped: c.damped }, c, residualsFrom(c.fitted), nonNeg(theta(clean, H, false).forecast));
+    // E14-08 is not built: SAP's plan stands until it is (owner, 2026-09-29; ENG-B63).
+    const plan = weeks.map((_, i) => sapPlan?.[i] ?? 0);
+    return done('newSkuSap', {}, { forecast: plan, fitted: [] }, clean.map(() => NaN), null);
   }
   if (mainModel && mainModel.beatsFallback(fg.skuCode)) {
     const m = mainModel.forecast(fg.skuCode, clean, H);
@@ -291,8 +338,14 @@ function forecastSku(fg: FinishedGood, rows: readonly SalesWeek[], weeks: readon
     const f = croston(inStock, H, choice === 'sba');
     return done(choice, { p, v }, f, toResiduals(f.fitted), null);
   }
-  const c = comb(clean, H, true);
-  return done('comb', { seasonal: c.seasonal, ses: c.ses, holt: c.holt, damped: c.damped }, c, residualsFrom(c.fitted), nonNeg(theta(clean, H, true).forecast));
+  const c = comb(clean, H, true, index);
+  return done(
+    'comb',
+    { seasonal: c.seasonal, ses: c.ses, holt: c.holt, damped: c.damped },
+    c,
+    residualsFrom(c.fitted),
+    nonNeg(theta(clean, H, true, index).forecast),
+  );
 }
 
 /** SAP's plan in force at `asOf` for the forecast weeks, per SKU. */
@@ -316,47 +369,70 @@ function sapPlanFor(fgPlan: readonly FgPlanSnapshot[] | undefined, asOf: IsoDate
 /** The finished-goods demand forecast (REQ-E14-07). */
 export function demandForecast(input: DemandForecastInput): DemandForecastRun {
   const H = input.horizonWeeks ?? FORECAST_HORIZON_WEEKS;
+  const table = input.ramadanTable ?? RAMADAN_TABLE;
   const start = mondayOf(input.asOf);
   const weeks = Array.from({ length: H }, (_, i) => addDays(start, i * 7));
   const rowsBySku = new Map<string, SalesWeek[]>();
   for (const s of input.sales) rowsBySku.set(s.skuCode, [...(rowsBySku.get(s.skuCode) ?? []), s]);
   const fgs = [...input.finishedGoods].sort((a, b) => a.skuCode.localeCompare(b.skuCode));
+  const sap = sapPlanFor(input.fgPlan, input.asOf, weeks);
 
   const excludedOem: ExcludedSku[] = fgs.filter((f) => f.oem === true).map((f) => ({ skuCode: f.skuCode, name: f.name, brand: f.brand }));
-  const work = fgs.filter((f) => f.oem !== true).map((f) => forecastSku(f, rowsBySku.get(f.skuCode) ?? [], weeks, input.mainModel));
+  const prepared = fgs.filter((f) => f.oem !== true).map((f) => prepare(f, rowsBySku.get(f.skuCode) ?? [], start));
+  const endedBefore = (x: Prepared) => x.fg.discontinueDate !== undefined && x.fg.discontinueDate <= start;
+  const inTreePrep = prepared.filter((x) => !endedBefore(x));
+  const brands = [...new Set(inTreePrep.map((x) => x.fg.brand))].sort();
 
-  // ── The hierarchy: total, brands, SKUs in it (not discontinued before the horizon).
-  const inTree = work.filter((w) => w.method !== 'discontinued');
-  const brands = [...new Set(inTree.map((w) => w.fg.brand))].sort();
-  // A common week axis for residuals and the level series.
-  const origin = inTree.reduce<IsoDate | null>((m, w) => (w.history && (m === null || w.history.start < m) ? w.history.start : m), null) ?? start;
+  // A common week axis for the level series, the event factors and the residuals.
+  const origin = inTreePrep.reduce<IsoDate | null>((m, x) => (x.history && (m === null || x.history.start < m) ? x.history.start : m), null) ?? start;
   const T = Math.max(0, daysBetween(origin, start) / 7);
-  const offset = (w: Working) => (w.history ? daysBetween(origin, w.history.start) / 7 : T);
-  const onAxis = (w: Working, xs: readonly number[], fill: number) => {
+  const axis = Array.from({ length: T }, (_, t) => addDays(origin, t * 7));
+  const offset = (x: Prepared) => (x.history ? daysBetween(origin, x.history.start) / 7 : T);
+  const onAxis = (x: Prepared, xs: readonly number[], fill: number) => {
     const out = new Array<number>(T).fill(fill);
-    const o = offset(w);
-    xs.forEach((x, t) => {
-      if (o + t < T) out[o + t] = x;
+    const o = offset(x);
+    xs.forEach((v, t) => {
+      if (o + t < T) out[o + t] = v;
     });
     return out;
   };
-
-  const levelBase = (members: readonly Working[]) => {
-    const firstWeek = Math.min(...members.map(offset));
+  const levelSeries = (members: readonly Prepared[]) => {
+    const first = members.length ? Math.min(...members.map(offset)) : T;
     const series = new Array<number>(T).fill(0);
-    for (const w of members) onAxis(w, w.clean, 0).forEach((x, t) => (series[t] += x));
-    const own = series.slice(firstWeek);
-    const c = comb(own, H, true);
+    for (const x of members) onAxis(x, x.clean, 0).forEach((v, t) => (series[t] += v));
+    return { first, own: series.slice(first), weeks: axis.slice(first) };
+  };
+
+  // ── PTI's demand events (owner, 2026-09-29): the lead on the total, factors per level.
+  const totalSeries = levelSeries(inTreePrep);
+  const lead = estimateLead(totalSeries.own, totalSeries.weeks, table);
+  const totalFactors = estimateEventFactors(totalSeries.own, totalSeries.weeks, lead, table);
+  const brandSeries = brands.map((b) => levelSeries(inTreePrep.filter((x) => x.fg.brand === b)));
+  const brandFactors = brandSeries.map((s) => estimateEventFactors(s.own, s.weeks, lead, table));
+  const indexFor = (factors: readonly EventFactor[], histWeeks: readonly IsoDate[]): CalendarIndex => ({
+    history: histWeeks.map((w) => calendarIndex(w, factors, lead, table)),
+    horizon: weeks.map((w) => calendarIndex(w, factors, lead, table)),
+  });
+  const skuHistWeeks = (x: Prepared) => (x.history ? x.qty.map((_, t) => addDays(x.history!.start, t * 7)) : []);
+
+  const work = prepared.map((x) => {
+    const b = brands.indexOf(x.fg.brand);
+    const factors = b >= 0 ? brandFactors[b] : [];
+    return forecastSku(x, weeks, input.mainModel, sap.bySku.get(x.fg.skuCode) ?? null, indexFor(factors, skuHistWeeks(x)));
+  });
+  const inTree = work.filter((w) => w.method !== 'discontinued');
+
+  const levelBase = (series: { first: number; own: number[]; weeks: IsoDate[] }, factors: readonly EventFactor[]) => {
+    const c = comb(series.own, H, true, indexFor(factors, series.weeks));
     const residuals = new Array<number>(T).fill(NaN);
-    own.forEach((y, t) => {
-      if (!Number.isNaN(c.fitted[t])) residuals[firstWeek + t] = y - c.fitted[t];
+    series.own.forEach((y, t) => {
+      if (!Number.isNaN(c.fitted[t])) residuals[series.first + t] = y - c.fitted[t];
     });
     return { base: nonNeg(c.forecast), residuals };
   };
-
+  const totalLevel = inTree.length ? levelBase(totalSeries, totalFactors) : { base: zeros(H), residuals: [] as number[] };
+  const brandLevels = brandSeries.map((s, k) => levelBase(s, brandFactors[k]));
   const brandMembers = brands.map((b) => inTree.filter((w) => w.fg.brand === b));
-  const totalLevel = inTree.length ? levelBase(inTree) : { base: zeros(H), residuals: [] as number[] };
-  const brandLevels = brandMembers.map((m) => levelBase(m));
 
   // Node order: total, brands, SKUs. `members` index SKU columns in `inTree`.
   const nodeMembers: number[][] = [
@@ -365,6 +441,15 @@ export function demandForecast(input: DemandForecastInput): DemandForecastRun {
     ...inTree.map((_, j) => [j]),
   ];
   const nodeResiduals: number[][] = [totalLevel.residuals, ...brandLevels.map((l) => l.residuals), ...inTree.map((w) => onAxis(w, w.residuals, NaN))];
+
+  // A SKU is FIXED in a week when it is ended (0) or new on SAP's plan; it is
+  // left out of the reconciliation that week and its value is taken off its
+  // levels' base first (ENG-B63). `implied` is what the level base carried for it.
+  const fixedAt = (w: Working, i: number): { value: number; implied: number } | null => {
+    if (w.method === 'newSkuSap') return { value: w.base[i], implied: w.base[i] };
+    if (w.fg.discontinueDate !== undefined && weeks[i] >= w.fg.discontinueDate) return { value: 0, implied: w.unconstrained[i] };
+    return null;
+  };
 
   // One reconciler per set of SKUs active in a week (usually one set).
   const reconcilers = new Map<string, { h: Hierarchy; r: Reconciler; nodes: number[]; cols: number[] }>();
@@ -385,15 +470,18 @@ export function demandForecast(input: DemandForecastInput): DemandForecastRun {
   let clippedCells = 0;
   let firstReconciler: Reconciler | null = null;
   for (let i = 0; i < H; i += 1) {
-    const active = inTree.map((w) => !(w.fg.discontinueDate !== undefined && weeks[i] >= w.fg.discontinueDate));
+    const fixed = inTree.map((w) => fixedAt(w, i));
+    fixed.forEach((f, j) => {
+      if (f) reconciled[j][i] = Math.round(f.value);
+    });
+    const active = fixed.map((f) => f === null);
     if (!active.some(Boolean)) continue;
     const { h, r, nodes, cols } = reconcilerFor(active);
     firstReconciler ??= r;
-    // The base per node; a level loses the unconstrained forecast of a SKU ended this week.
-    const inactiveOf = (members: readonly number[]) => members.filter((j) => !active[j]).reduce((s, j) => s + inTree[j].unconstrained[i], 0);
+    const impliedOf = (members: readonly number[]) => members.reduce((s, j) => s + (fixed[j]?.implied ?? 0), 0);
     const nodeBase = (n: number): number => {
-      if (n === 0) return Math.max(0, totalLevel.base[i] - inactiveOf(nodeMembers[0]));
-      if (n <= brands.length) return Math.max(0, brandLevels[n - 1].base[i] - inactiveOf(nodeMembers[n]));
+      if (n === 0) return Math.max(0, totalLevel.base[i] - impliedOf(nodeMembers[0]));
+      if (n <= brands.length) return Math.max(0, brandLevels[n - 1].base[i] - impliedOf(nodeMembers[n]));
       return inTree[n - 1 - brands.length].base[i];
     };
     const week = reconcileWeek(h, r.projection, nodes.map(nodeBase));
@@ -401,7 +489,6 @@ export function demandForecast(input: DemandForecastInput): DemandForecastRun {
     cols.forEach((j, k) => (reconciled[j][i] = Math.round(week.skus[k])));
   }
 
-  const sap = sapPlanFor(input.fgPlan, input.asOf, weeks);
   const skus: SkuForecast[] = work.map((w) => {
     const j = inTree.indexOf(w);
     return {
@@ -413,7 +500,7 @@ export function demandForecast(input: DemandForecastInput): DemandForecastRun {
       detail: w.detail,
       historyWeeks: w.history?.qty.length ?? 0,
       stockoutWeeks: w.history?.stockout.filter(Boolean).length ?? 0,
-      meanInterval: w.meanInterval,
+      meanInterval: w.p,
       base: w.base,
       forecast: j >= 0 ? reconciled[j] : zeros(H),
       theta: w.theta,
@@ -456,6 +543,15 @@ export function demandForecast(input: DemandForecastInput): DemandForecastRun {
       lambda: firstReconciler?.lambda ?? null,
       fallback: firstReconciler?.fallback ?? null,
       clippedCells,
+    },
+    events: {
+      lead,
+      ramadan: table,
+      tableCoversUntil: ramadanTableCoversUntil(table),
+      horizonBeyondTable: weeks[H - 1] > ramadanTableCoversUntil(table),
+      total: totalFactors,
+      brands: brands.map((b, k) => ({ brand: b, factors: brandFactors[k] })),
+      horizon: weeks.map((w) => ({ weekStart: w, events: tagWeek(w, lead, table).events })),
     },
     mainModel: input.mainModel ? 'supplied' : 'notBuilt',
   };

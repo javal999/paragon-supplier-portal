@@ -90,6 +90,17 @@ describe('seasonality (M4 test, classical decomposition)', () => {
     expect(comb(y, 26, false).forecast[12]).toBeLessThan(1500);
   });
 
+  it('a calendar index is applied multiplicatively: the history is divided by it and the forecast multiplied by it', () => {
+    const idx = Array.from({ length: 20 }, (_, t) => (t % 5 === 0 ? 1.5 : 1));
+    const y = idx.map((v) => 1000 * v);
+    const c = comb(y, 3, false, { history: idx, horizon: [1, 1.2, 1] });
+    expect(c.forecast.map((v) => Math.round(v * 1e6) / 1e6)).toEqual([1000, 1200, 1000]);
+    // Known-bad control: without the index the 1.5 weeks are read as level.
+    expect(comb(y, 1, false).forecast[0]).not.toBeCloseTo(1000, 3);
+    const th = theta(y, 2, false, { history: idx, horizon: [2, 1] });
+    expect(th.forecast.map((v) => Math.round(v * 1e6) / 1e6)).toEqual([2000, 1000]);
+  });
+
   it('indices: the centred 2×4 average is 2.5 everywhere, so the ratios are 0.4, 0.8, 1.2, 1.6', () => {
     const si = seasonalIndices(periodic.slice(0, 12), 4);
     expect(si.map((v) => Math.round(v * 1e9) / 1e9)).toEqual([0.4, 0.8, 1.2, 1.6]);

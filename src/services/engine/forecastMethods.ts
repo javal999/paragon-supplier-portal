@@ -24,6 +24,9 @@
 //     the first in grid order. A grid rather than a numerical optimiser so the
 //     result is exact, repeatable and portable (ENG-B61).
 //   · Comb = (SES + Holt + Damped) ÷ 3.
+//   · A calendar index of PTI's demand events (`eventCalendar.ts`), when given,
+//     is divided out of the history before the seasonality test and
+//     multiplied back onto the forecast (owner, 2026-09-29; ENG-B61, B73).
 //   · Theta (classic): 0.5·L0 + 0.5·SES(L2), L0 the least-squares line on
 //     time, L2 = 2·y − L0.
 //
@@ -214,16 +217,33 @@ export interface CombFit extends MethodFit {
   readonly damped: HoltParams;
 }
 
+/**
+ * A multiplicative index per week (`eventCalendar.ts`): one per history week
+ * and one per forecast week. The history is divided by it before fitting and
+ * the forecast multiplied by it.
+ */
+export interface CalendarIndex {
+  readonly history: readonly number[];
+  readonly horizon: readonly number[];
+}
+
 /** Deseasonalise (when the test says so), run the three methods, average, reseasonalise. */
 function withSeasonality<T extends MethodFit>(
   y: readonly number[],
   run: (x: readonly number[]) => T,
   allowSeasonal: boolean,
+  index: CalendarIndex | undefined,
 ): { fit: T; seasonal: boolean; forecast: number[]; fitted: number[] } {
-  const seasonal = allowSeasonal && isSeasonal(y);
-  const si = seasonal ? seasonalIndices(y) : null;
+  // The calendar index first (PTI's known events), then the M4 test on what is left.
+  const ev = (t: number) => {
+    const v = index ? (t < y.length ? index.history[t] : index.horizon[t - y.length]) : 1;
+    return v > 0 ? v : 1;
+  };
+  const z = y.map((v, t) => v / ev(t));
+  const seasonal = allowSeasonal && isSeasonal(z);
+  const si = seasonal ? seasonalIndices(z) : null;
   // A position whose index is 0 (no sale there in any season) is left as is.
-  const at = (t: number) => (si && si[t % SEASON_WEEKS] > 0 ? si[t % SEASON_WEEKS] : 1);
+  const at = (t: number) => (si && si[t % SEASON_WEEKS] > 0 ? si[t % SEASON_WEEKS] : 1) * ev(t);
   const n = y.length;
   const x = y.map((v, t) => v / at(t));
   const fit = run(x);
@@ -237,7 +257,7 @@ function withSeasonality<T extends MethodFit>(
  * deseasonalised series. `allowSeasonal` false skips the seasonality test
  * (a short history cannot carry one).
  */
-export function comb(y: readonly number[], horizon: number, allowSeasonal = true): CombFit {
+export function comb(y: readonly number[], horizon: number, allowSeasonal = true, index?: CalendarIndex): CombFit {
   if (y.length < 2) {
     const v = y.length === 1 ? y[0] : 0;
     const flat = { alpha: 0, beta: 0, phi: 1 };
@@ -257,6 +277,7 @@ export function comb(y: readonly number[], horizon: number, allowSeasonal = true
       };
     },
     allowSeasonal,
+    index,
   );
   const p = parts!;
   return { forecast: r.forecast, fitted: r.fitted, seasonal: r.seasonal, ses: p.s.params, holt: p.h.params, damped: p.d.params };
@@ -285,7 +306,7 @@ export interface ThetaFit extends MethodFit {
 }
 
 /** Classic Theta (D2): 0.5·L0 + 0.5·SES(L2), on the deseasonalised series. */
-export function theta(y: readonly number[], horizon: number, allowSeasonal = true): ThetaFit {
+export function theta(y: readonly number[], horizon: number, allowSeasonal = true, index?: CalendarIndex): ThetaFit {
   if (y.length < 2) {
     const v = y.length === 1 ? y[0] : 0;
     return { forecast: new Array<number>(horizon).fill(v), fitted: y.map(() => NaN), seasonal: false, alpha: 0, line: { a: v, b: 0 } };
@@ -305,6 +326,7 @@ export function theta(y: readonly number[], horizon: number, allowSeasonal = tru
       };
     },
     allowSeasonal,
+    index,
   );
   const m = meta!;
   return { forecast: r.forecast, fitted: r.fitted, seasonal: r.seasonal, alpha: m.alpha, line: m.line };

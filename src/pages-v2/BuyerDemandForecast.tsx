@@ -16,7 +16,8 @@ import LoadingState from '../components/ui-v2/LoadingState';
 import ErrorState from '../components/ui-v2/ErrorState';
 import { formatDate, formatNumber } from '../lib/format';
 import { useDemandForecast } from '../services/query/hooks';
-import type { ForecastMethod, SkuForecast } from '../services/engine/demandForecast';
+import type { DemandForecastRun, ForecastMethod, SkuForecast } from '../services/engine/demandForecast';
+import type { EventFactor } from '../services/engine/eventCalendar';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DEMAND FORECAST — REQ-E14-07, the Material Planner's view (Experience: "the
@@ -36,7 +37,7 @@ const METHOD_VARIANT: Record<ForecastMethod, 'success' | 'warning' | 'danger' | 
   sba: 'neutral',
   croston: 'neutral',
   tsb: 'warning',
-  launchStandIn: 'warning',
+  newSkuSap: 'warning',
   discontinued: 'neutral',
 };
 
@@ -48,7 +49,7 @@ const diffPct = (a: number, b: number | null): string => {
 };
 const two = (x: number | undefined) => (x === undefined ? '—' : formatNumber(Math.round(x * 100) / 100));
 
-const SkuDetail: React.FC<{ sku: SkuForecast; weeks: readonly string[] }> = ({ sku, weeks }) => {
+const SkuDetail: React.FC<{ sku: SkuForecast; weeks: readonly string[]; events: DemandForecastRun['events']['horizon'] }> = ({ sku, weeks, events }) => {
   const { t } = useTranslation();
   const d = sku.detail;
   return (
@@ -57,7 +58,7 @@ const SkuDetail: React.FC<{ sku: SkuForecast; weeks: readonly string[] }> = ({ s
         {t('df.detail.title')} · <Data>{sku.skuCode}</Data> <span className="text-sm text-text-secondary">{sku.name}</span>
       </h2>
       <div className="text-xs text-text-secondary space-y-1 mb-3" data-testid="df-detail-method">
-        {(sku.method === 'comb' || sku.method === 'launchStandIn') && d.ses && d.holt && d.damped && (
+        {sku.method === 'comb' && d.ses && d.holt && d.damped && (
           <p>
             {t('df.detail.comb', {
               sesAlpha: two(d.ses.alpha),
@@ -70,7 +71,7 @@ const SkuDetail: React.FC<{ sku: SkuForecast; weeks: readonly string[] }> = ({ s
           </p>
         )}
         {sku.method === 'comb' && <p>{t(d.seasonal ? 'df.detail.seasonal' : 'df.detail.notSeasonal')}</p>}
-        {sku.method === 'launchStandIn' && <p>{t('df.detail.launch')}</p>}
+        {sku.method === 'newSkuSap' && <p>{t('df.detail.newSkuSap')}</p>}
         {(sku.method === 'sba' || sku.method === 'croston' || sku.method === 'tsb') && (
           <>
             <p>{t('df.detail.slow', { p: two(d.p), v: two(d.v) })}</p>
@@ -89,6 +90,7 @@ const SkuDetail: React.FC<{ sku: SkuForecast; weeks: readonly string[] }> = ({ s
             <TableHeaderCell>{t('df.detail.col.forecast')}</TableHeaderCell>
             {sku.theta && <TableHeaderCell>{t('df.detail.col.theta')}</TableHeaderCell>}
             <TableHeaderCell>{t('df.detail.col.sap')}</TableHeaderCell>
+            <TableHeaderCell>{t('df.detail.col.events')}</TableHeaderCell>
           </TableHeader>
           <tbody>
             {weeks.map((w, i) => (
@@ -110,11 +112,72 @@ const SkuDetail: React.FC<{ sku: SkuForecast; weeks: readonly string[] }> = ({ s
                 <TableCell>
                   <Data>{sku.sapPlan ? formatNumber(sku.sapPlan[i]) : '—'}</Data>
                 </TableCell>
+                <TableCell className="text-xs text-text-secondary" data-testid={`df-week-events-${w}`}>
+                  {(events[i]?.events ?? []).map((e) => t(`df.events.event.${e}`)).join(', ')}
+                </TableCell>
               </TableRow>
             ))}
           </tbody>
         </Table>
       </div>
+    </section>
+  );
+};
+
+const EventsSection: React.FC<{ events: DemandForecastRun['events'] }> = ({ events }) => {
+  const { t } = useTranslation();
+  const cols: { key: string; label: string; factors: readonly EventFactor[] }[] = [
+    { key: 'total', label: t('df.events.col.level'), factors: events.total },
+    ...events.brands.map((b) => ({ key: b.brand, label: b.brand, factors: b.factors })),
+  ];
+  const events0 = events.total.map((f) => f.event);
+  return (
+    <section className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-6" data-testid="df-events">
+      <h2 className="text-section text-text-primary mb-1">{t('df.events.title')}</h2>
+      <p className="text-xs text-text-tertiary mb-1">{t('df.events.intro')}</p>
+      <p className="text-xs text-text-secondary mb-3" data-testid="df-events-synthetic">
+        {t('df.events.synthetic')}
+      </p>
+      <div className="overflow-x-auto mb-3">
+        <Table>
+          <TableHeader>
+            <TableHeaderCell>{t('df.events.col.event')}</TableHeaderCell>
+            <TableHeaderCell>{t('df.events.col.when')}</TableHeaderCell>
+            {cols.map((c) => (
+              <TableHeaderCell key={c.key}>{c.label}</TableHeaderCell>
+            ))}
+          </TableHeader>
+          <tbody>
+            {events0.map((e) => (
+              <TableRow key={e} data-testid={`df-event-${e}`}>
+                <TableCell className="text-sm text-text-primary align-top">{t(`df.events.event.${e}`)}</TableCell>
+                <TableCell className="text-xs text-text-secondary align-top">{t(`df.events.when.${e}`, { lead: events.lead })}</TableCell>
+                {cols.map((c) => {
+                  const f = c.factors.find((x) => x.event === e)!;
+                  return (
+                    <TableCell key={c.key} className="align-top whitespace-nowrap" data-testid={`df-event-${e}-${c.key}`}>
+                      <Data>{`× ${formatNumber(Math.round(f.factor * 1000) / 1000)}`}</Data>
+                      <div className="text-xs text-text-tertiary">
+                        {t(`df.events.status.${f.status}`)}
+                        {f.status !== 'notEstimable' && ` · ${t('df.events.occ', { count: f.occurrences })}`}
+                      </div>
+                    </TableCell>
+                  );
+                })}
+              </TableRow>
+            ))}
+          </tbody>
+        </Table>
+      </div>
+      <p className="text-xs text-text-tertiary" data-testid="df-ramadan-table">
+        {t('df.events.ramadanTable')}{' '}
+        {events.ramadan.map((r) => t('df.events.ramadanRow', { year: r.hijriYear, start: formatDate(r.start), eid: formatDate(r.eid) })).join(' · ')}
+      </p>
+      {events.horizonBeyondTable && (
+        <p className="text-xs text-warning-hover mt-1" data-testid="df-ramadan-beyond">
+          {t('df.events.beyondTable', { date: formatDate(events.tableCoversUntil) })}
+        </p>
+      )}
     </section>
   );
 };
@@ -169,7 +232,7 @@ const BuyerDemandForecast: React.FC = () => {
         <KpiCard
           eyebrow={t('df.kpi.fallback')}
           value={<span data-testid="df-kpi-comb">{c.comb}</span>}
-          subtitle={<span className="text-text-tertiary">{t('df.kpi.fallback.sub', { slow: c.sba + c.croston + c.tsb, launch: c.launchStandIn })}</span>}
+          subtitle={<span className="text-text-tertiary">{t('df.kpi.fallback.sub', { slow: c.sba + c.croston + c.tsb, launch: c.newSkuSap })}</span>}
         />
         <KpiCard
           eyebrow={t('df.kpi.total')}
@@ -308,7 +371,9 @@ const BuyerDemandForecast: React.FC = () => {
         </div>
       </section>
 
-      {current && <SkuDetail key={current.skuCode} sku={current} weeks={run.weeks} />}
+      {current && <SkuDetail key={current.skuCode} sku={current} weeks={run.weeks} events={run.events.horizon} />}
+
+      <EventsSection events={run.events} />
 
       <section className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-6" data-testid="df-oem">
         <h2 className="text-section text-text-primary mb-1">{t('df.oem.title')}</h2>

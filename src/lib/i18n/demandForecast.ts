@@ -22,7 +22,7 @@ export const demandForecastEn: Record<string, string> = {
   'df.kpi.skus': 'SKUs forecast',
   'df.kpi.skus.sub': '{{ended}} discontinued at zero · {{oem}} OEM left out',
   'df.kpi.fallback': 'Forecast by the fallback (Comb)',
-  'df.kpi.fallback.sub': '{{slow}} by slow-mover methods · {{launch}} on the launch stand-in',
+  'df.kpi.fallback.sub': '{{slow}} by slow-mover methods · {{launch}} new SKUs on SAP’s plan',
   'df.kpi.total': 'Next 26 weeks, all SKUs',
   'df.kpi.total.sub': 'SAP’s plan: {{sap}} ({{diff}})',
   'df.kpi.total.noSap': 'No SAP plan to compare',
@@ -63,7 +63,7 @@ export const demandForecastEn: Record<string, string> = {
   'df.method.sba': 'SBA (slow mover)',
   'df.method.croston': 'Croston (slow mover)',
   'df.method.tsb': 'TSB (being discontinued)',
-  'df.method.launchStandIn': 'Launch stand-in',
+  'df.method.newSkuSap': 'SAP’s plan (new SKU)',
   'df.method.discontinued': 'Discontinued',
 
   'df.detail.title': 'Weeks',
@@ -72,12 +72,13 @@ export const demandForecastEn: Record<string, string> = {
   'df.detail.col.forecast': 'Reconciled',
   'df.detail.col.theta': 'Theta (alternative)',
   'df.detail.col.sap': 'SAP’s plan',
+  'df.detail.col.events': 'Events',
   'df.detail.comb':
     'Comb: the average of simple exponential smoothing (α {{sesAlpha}}), Holt’s trend (α {{holtAlpha}}, β {{holtBeta}}) and a damped trend (α {{dampedAlpha}}, β {{dampedBeta}}, φ {{phi}}).',
   'df.detail.seasonal': 'Seasonality found and applied.',
   'df.detail.notSeasonal': 'No seasonality found by the test on this history.',
-  'df.detail.launch':
-    'Less than 52 weeks of history, so the launch method (E14-08) applies. It is not built; this is the Comb on the short history, without seasonality.',
+  'df.detail.newSkuSap':
+    'Less than 52 weeks of history, so the launch method (E14-08) applies. It is not built; until it is, this SKU keeps SAP’s plan, and the reconciliation holds it at that value.',
   'df.detail.slow': 'Sold in fewer than 3 of every 4 in-stock weeks: mean interval between sales {{p}}, variation of sale sizes {{v}}.',
   'df.detail.sba': 'SBA: the typical sale size ÷ the typical gap × 0.95. Chosen by the Kostenko–Hyndman rule.',
   'df.detail.croston': 'Croston: the typical sale size ÷ the typical gap. Chosen by the Kostenko–Hyndman rule.',
@@ -86,14 +87,41 @@ export const demandForecastEn: Record<string, string> = {
   'df.detail.main': 'The main model beat the fallback for this SKU in the latest backtest.',
   'df.detail.endsOn': 'Discontinued from the week of {{date}}: zero from then.',
 
+  'df.events.title': 'Demand events',
+  'df.events.intro':
+    'PTI’s known demand events. Each event’s effect is estimated from sales history against the surrounding weeks without events, pulled toward no effect when it has happened only a few times, and capped at ±50%. The fallback (Comb and Theta) applies each brand’s factors to its SKUs; a week with two events takes both.',
+  'df.events.col.event': 'Event',
+  'df.events.col.when': 'Weeks',
+  'df.events.col.level': 'Total',
+  'df.events.occ': '{{count}} times',
+  'df.events.status.effect': 'Effect seen',
+  'df.events.status.noClearEffect': 'No clear effect (within ±5%)',
+  'df.events.status.notEstimable': 'Not in the history: no factor applied',
+  'df.events.event.payday': 'Payday',
+  'df.events.event.doubleDate': 'Double-date promotion',
+  'df.events.event.christmas': 'Christmas',
+  'df.events.event.ramadan': 'Ramadan',
+  'df.events.event.preRamadan': 'Before Ramadan',
+  'df.events.when.payday': 'Weeks containing the 25th to the end of a month',
+  'df.events.when.doubleDate': 'Weeks containing 1.1, 2.2, … 12.12',
+  'df.events.when.christmas': 'Weeks containing 11 to 24 December',
+  'df.events.when.ramadan': 'Weeks containing a day of Ramadan, up to the day before Lebaran',
+  'df.events.when.preRamadan': 'The {{lead}} weeks before the week Ramadan starts (estimated from history)',
+  'df.events.synthetic':
+    'On this synthetic history only Ramadan and the weeks before it show an effect; payday, the double-date promotions and Christmas come out close to 1, because the synthetic sales were not built with them. Real sales will show what PTI actually sees.',
+  'df.events.ramadanTable':
+    'Ramadan dates are approximate and must be confirmed each year against the Ministry of Religious Affairs’ announcement:',
+  'df.events.ramadanRow': '{{year}} H: Ramadan from {{start}}, Lebaran {{eid}}',
+  'df.events.beyondTable': 'The forecast runs past the last Ramadan date in the table ({{date}}): Ramadan weeks after it are not tagged.',
+
   'df.oem.title': 'OEM products left out',
   'df.oem.none': 'No OEM product in this data. An OEM product would be listed here and left out of every level.',
 
   'df.def.title': 'How the forecast is made',
   'df.def.order':
-    'Each SKU gets the first method that applies: OEM products are not forecast; a discontinued SKU is zero; less than 52 weeks of history takes the launch method (not built, stand-in shown); the main model where it beat the fallback (not built); a slow SKU takes SBA, or TSB when it is being discontinued; every other SKU takes the fallback.',
+    'Each SKU gets the first method that applies: OEM products are not forecast; a discontinued SKU is zero; less than 52 weeks of history keeps SAP’s plan until the launch method is built; the main model where it beat the fallback (not built); a slow SKU takes SBA, or TSB when it is being discontinued; every other SKU takes the fallback.',
   'df.def.comb':
-    'The fallback is the Comb benchmark: the average of three exponential smoothing methods, after a seasonality test. Theta is calculated beside it; choosing between them is the backtest’s job.',
+    'The fallback is the Comb benchmark: the average of three exponential smoothing methods, after the demand-event index and a seasonality test. Theta is calculated beside it; choosing between them is the backtest’s job.',
   'df.def.stockout': 'A week flagged out of stock is not read as low demand: it is filled from the weeks around it, or skipped for slow SKUs.',
   'df.def.recon':
     'Reconciliation (MinT-shrink) adjusts the SKU, brand and total forecasts so they add up, weighting each level by how accurate it has been. A negative result is set to zero.',
@@ -117,7 +145,7 @@ export const demandForecastId: Record<string, string> = {
   'df.kpi.skus': 'SKU yang diprakirakan',
   'df.kpi.skus.sub': '{{ended}} dihentikan (nol) · {{oem}} OEM dikecualikan',
   'df.kpi.fallback': 'Diprakirakan metode cadangan (Comb)',
-  'df.kpi.fallback.sub': '{{slow}} dengan metode barang lambat · {{launch}} dengan pengganti peluncuran',
+  'df.kpi.fallback.sub': '{{slow}} dengan metode barang lambat · {{launch}} SKU baru memakai rencana SAP',
   'df.kpi.total': '26 minggu ke depan, semua SKU',
   'df.kpi.total.sub': 'Rencana SAP: {{sap}} ({{diff}})',
   'df.kpi.total.noSap': 'Tidak ada rencana SAP untuk dibandingkan',
@@ -158,7 +186,7 @@ export const demandForecastId: Record<string, string> = {
   'df.method.sba': 'SBA (barang lambat)',
   'df.method.croston': 'Croston (barang lambat)',
   'df.method.tsb': 'TSB (akan dihentikan)',
-  'df.method.launchStandIn': 'Pengganti peluncuran',
+  'df.method.newSkuSap': 'Rencana SAP (SKU baru)',
   'df.method.discontinued': 'Dihentikan',
 
   'df.detail.title': 'Minggu',
@@ -167,12 +195,13 @@ export const demandForecastId: Record<string, string> = {
   'df.detail.col.forecast': 'Hasil rekonsiliasi',
   'df.detail.col.theta': 'Theta (alternatif)',
   'df.detail.col.sap': 'Rencana SAP',
+  'df.detail.col.events': 'Peristiwa',
   'df.detail.comb':
     'Comb: rata-rata simple exponential smoothing (α {{sesAlpha}}), tren Holt (α {{holtAlpha}}, β {{holtBeta}}), dan tren teredam (α {{dampedAlpha}}, β {{dampedBeta}}, φ {{phi}}).',
   'df.detail.seasonal': 'Musiman ditemukan dan diterapkan.',
   'df.detail.notSeasonal': 'Uji tidak menemukan pola musiman pada riwayat ini.',
-  'df.detail.launch':
-    'Riwayat kurang dari 52 minggu, jadi metode peluncuran (E14-08) yang berlaku. Metode itu belum dibangun; ini adalah Comb pada riwayat pendek, tanpa musiman.',
+  'df.detail.newSkuSap':
+    'Riwayat kurang dari 52 minggu, jadi metode peluncuran (E14-08) yang berlaku. Metode itu belum dibangun; sampai ada, SKU ini memakai rencana SAP, dan rekonsiliasi menahannya pada nilai itu.',
   'df.detail.slow': 'Terjual di kurang dari 3 dari setiap 4 minggu yang ada stok: rata-rata jarak antarpenjualan {{p}}, variasi ukuran penjualan {{v}}.',
   'df.detail.sba': 'SBA: ukuran penjualan biasa ÷ jarak biasa × 0,95. Dipilih dengan aturan Kostenko–Hyndman.',
   'df.detail.croston': 'Croston: ukuran penjualan biasa ÷ jarak biasa. Dipilih dengan aturan Kostenko–Hyndman.',
@@ -181,14 +210,41 @@ export const demandForecastId: Record<string, string> = {
   'df.detail.main': 'Model utama mengalahkan metode cadangan untuk SKU ini pada backtest terakhir.',
   'df.detail.endsOn': 'Dihentikan mulai minggu {{date}}: nol sejak saat itu.',
 
+  'df.events.title': 'Peristiwa permintaan',
+  'df.events.intro':
+    'Peristiwa permintaan PTI yang sudah diketahui. Efek tiap peristiwa diestimasi dari riwayat penjualan terhadap minggu-minggu di sekitarnya tanpa peristiwa, ditarik ke arah tanpa efek bila baru terjadi beberapa kali, dan dibatasi ±50%. Metode cadangan (Comb dan Theta) menerapkan faktor tiap merek pada SKU-nya; minggu dengan dua peristiwa mendapat keduanya.',
+  'df.events.col.event': 'Peristiwa',
+  'df.events.col.when': 'Minggu',
+  'df.events.col.level': 'Total',
+  'df.events.occ': '{{count}} kali',
+  'df.events.status.effect': 'Ada efek',
+  'df.events.status.noClearEffect': 'Tidak ada efek jelas (dalam ±5%)',
+  'df.events.status.notEstimable': 'Tidak ada di riwayat: tanpa faktor',
+  'df.events.event.payday': 'Gajian',
+  'df.events.event.doubleDate': 'Promo tanggal kembar',
+  'df.events.event.christmas': 'Natal',
+  'df.events.event.ramadan': 'Ramadan',
+  'df.events.event.preRamadan': 'Menjelang Ramadan',
+  'df.events.when.payday': 'Minggu yang memuat tanggal 25 sampai akhir bulan',
+  'df.events.when.doubleDate': 'Minggu yang memuat 1.1, 2.2, … 12.12',
+  'df.events.when.christmas': 'Minggu yang memuat 11 sampai 24 Desember',
+  'df.events.when.ramadan': 'Minggu yang memuat hari Ramadan, sampai sehari sebelum Lebaran',
+  'df.events.when.preRamadan': '{{lead}} minggu sebelum minggu awal Ramadan (diestimasi dari riwayat)',
+  'df.events.synthetic':
+    'Pada riwayat sintetis ini hanya Ramadan dan minggu-minggu menjelangnya yang menunjukkan efek; gajian, promo tanggal kembar, dan Natal mendekati 1, karena penjualan sintetis tidak dibuat dengan peristiwa itu. Penjualan nyata akan menunjukkan apa yang benar-benar dialami PTI.',
+  'df.events.ramadanTable':
+    'Tanggal Ramadan bersifat perkiraan dan harus dikonfirmasi setiap tahun dengan pengumuman Kementerian Agama:',
+  'df.events.ramadanRow': '{{year}} H: Ramadan mulai {{start}}, Lebaran {{eid}}',
+  'df.events.beyondTable': 'Prakiraan melewati tanggal Ramadan terakhir dalam tabel ({{date}}): minggu Ramadan setelahnya tidak ditandai.',
+
   'df.oem.title': 'Produk OEM yang dikecualikan',
   'df.oem.none': 'Tidak ada produk OEM dalam data ini. Produk OEM akan tercantum di sini dan dikeluarkan dari setiap level.',
 
   'df.def.title': 'Cara prakiraan dibuat',
   'df.def.order':
-    'Setiap SKU mendapat metode pertama yang berlaku: produk OEM tidak diprakirakan; SKU yang dihentikan bernilai nol; riwayat kurang dari 52 minggu memakai metode peluncuran (belum dibangun, ditampilkan penggantinya); model utama jika mengalahkan metode cadangan (belum dibangun); SKU lambat memakai SBA, atau TSB bila akan dihentikan; SKU lainnya memakai metode cadangan.',
+    'Setiap SKU mendapat metode pertama yang berlaku: produk OEM tidak diprakirakan; SKU yang dihentikan bernilai nol; riwayat kurang dari 52 minggu tetap memakai rencana SAP sampai metode peluncuran dibangun; model utama jika mengalahkan metode cadangan (belum dibangun); SKU lambat memakai SBA, atau TSB bila akan dihentikan; SKU lainnya memakai metode cadangan.',
   'df.def.comb':
-    'Metode cadangan adalah tolok ukur Comb: rata-rata tiga metode exponential smoothing, setelah uji musiman. Theta dihitung di sampingnya; memilih di antara keduanya adalah tugas backtest.',
+    'Metode cadangan adalah tolok ukur Comb: rata-rata tiga metode exponential smoothing, setelah indeks peristiwa permintaan dan uji musiman. Theta dihitung di sampingnya; memilih di antara keduanya adalah tugas backtest.',
   'df.def.stockout': 'Minggu yang ditandai kehabisan stok tidak dibaca sebagai permintaan rendah: diisi dari minggu-minggu di sekitarnya, atau dilewati untuk SKU lambat.',
   'df.def.recon':
     'Rekonsiliasi (MinT-shrink) menyesuaikan prakiraan SKU, merek, dan total agar jumlahnya cocok, dengan menimbang setiap level menurut ketepatannya selama ini. Hasil negatif dijadikan nol.',

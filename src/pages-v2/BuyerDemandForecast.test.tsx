@@ -91,6 +91,32 @@ describe('BuyerDemandForecast — the planner page', () => {
     expect(await screen.findByTestId('df-oem')).toHaveTextContent('No OEM product in this data');
   });
 
+  it('demand events: each factor per level, the honest note on the synthetic history, and the approximate Ramadan table', async () => {
+    const v = await view();
+    renderWithProviders(<BuyerDemandForecast />, { identity: BUYER, route: '/buyer/demand-forecast' });
+    const section = await screen.findByTestId('df-events');
+    const ramadan = v.events.total.find((f) => f.event === 'ramadan')!;
+    expect(within(section).getByTestId('df-event-ramadan-total')).toHaveTextContent(`× ${formatNumber(Math.round(ramadan.factor * 1000) / 1000)}`);
+    expect(within(section).getByTestId('df-event-ramadan-total')).toHaveTextContent('Effect seen');
+    expect(within(section).getByTestId('df-event-payday-total')).toHaveTextContent('No clear effect');
+    for (const b of v.brands) expect(within(section).getByTestId(`df-event-ramadan-${b.key}`)).toBeInTheDocument();
+    expect(within(section).getByTestId('df-events-synthetic')).toHaveTextContent('only Ramadan and the weeks before it show an effect');
+    expect(within(section).getByTestId('df-ramadan-table')).toHaveTextContent('must be confirmed each year');
+    expect(within(section).getByTestId('df-event-preRamadan')).toHaveTextContent(`The ${v.events.lead} weeks before`);
+  });
+
+  it('new SKUs are labelled as on SAP’s plan, and their forecast is SAP’s plan', async () => {
+    const v = await view();
+    const fresh = v.skus.filter((s) => s.method === 'newSkuSap');
+    expect(fresh.length).toBeGreaterThan(0);
+    renderWithProviders(<BuyerDemandForecast />, { identity: BUYER, route: '/buyer/demand-forecast' });
+    await screen.findByTestId('df-skus');
+    for (const s of fresh) {
+      expect(screen.getByTestId(`df-method-${s.skuCode}`)).toHaveTextContent('SAP’s plan (new SKU)');
+      expect(s.forecast).toEqual(s.sapPlan!.map((x) => Math.round(x ?? 0)));
+    }
+  });
+
   it('a supplier gets nothing (X-03)', async () => {
     expect(await mockDataService.procurement.getDemandForecast(supplierScope)).toBeNull();
   });
