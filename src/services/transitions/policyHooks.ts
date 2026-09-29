@@ -274,6 +274,16 @@ export const POLICY_HOOKS = {
    * date, and an upside quantity when given is a number of zero or more.
    */
   RR_SUBMIT_COMMITMENT_DETAIL: 'rr_submit_commitment_detail',
+  /**
+   * BL-133 (ENG-D19, REQ-E06-02 BR-11 / BR-12) — the pokayoke. A commitment to
+   * a forecast version is SUBMITTED only when the supplier has confirmed
+   * capacity for every horizon week its period touches (refused by name
+   * CAPACITY_NOT_CONFIRMED), and a period whose group LTP is above BE
+   * (capacity + additional capacity) in one of those weeks carries a starter
+   * reason (ABOVE_BE_NEEDS_REASON; `other` needs a note). Runs on the
+   * promotion, which is the submission — a draft is not gated.
+   */
+  RR_PROMOTE_CAPACITY_CONFIRMED: 'rr_promote_capacity_confirmed',
   /** REQ-E06-01 BR-02 — publish names a forecast stream (packaging or raw material). */
   FORECAST_PUBLISH_VALID: 'forecast_publish_valid',
   /**
