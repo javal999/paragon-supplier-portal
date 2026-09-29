@@ -37,6 +37,7 @@ import type {
   QualificationRuleLevel,
 } from '../data/types';
 import type { AsnLineInput } from '../transitions/fulfilmentRules';
+import type { SourcingType, SourcingTypeKey } from '../sourcing/sourcingType';
 import type { ProposalType } from '../engine/reschedule';
 import { reasonCodeEntityId, type ReasonListId } from '../transitions/reasonCodes';
 
@@ -1486,6 +1487,36 @@ export function useQualificationRuleSet() {
         entity: 'qualificationRule',
         entityId: level,
         payload: { requiredDocs: requiredDocs.map((r) => ({ ...r })) },
+      }),
+    onSuccess: (result) => {
+      if (result.status !== 'failed') void qc.invalidateQueries();
+    },
+  });
+}
+
+// ── Material G2 · THE SOURCING TYPE MAP (MR-10 BR-06) ────────────────────────
+//
+// `entityId` IS the key (`category:<RFQCategory>` or `pg:<code>`). `setBy` and
+// `setAt` are stamped by the target. A Draft's type and every invitee's
+// eligibility read the map, so the whole cache is invalidated.
+export interface SourcingTypeSetVars {
+  key: SourcingTypeKey;
+  sourcingType: SourcingType;
+}
+
+/** Set one category's or purchasing group's sourcing type (`t_sourcingtype_set`). */
+export function useSourcingTypeSet() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+
+  return useMutation<CommandResult, Error, SourcingTypeSetVars>({
+    mutationFn: ({ key, sourcingType }) =>
+      svc.commands.dispatch(scope, {
+        transitionId: 't_sourcingtype_set',
+        entity: 'sourcingType',
+        entityId: key,
+        payload: { sourcingType },
       }),
     onSuccess: (result) => {
       if (result.status !== 'failed') void qc.invalidateQueries();

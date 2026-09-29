@@ -396,6 +396,13 @@ export const POLICY_HOOKS = {
    */
   QUALIFICATION_RULE_VALID: 'qualification_rule_valid',
   /**
+   * Material G2 (MR-10 BR-06) — one key of the sourcing type map: a known
+   * category or purchasing group (SOURCING_TYPE_KEY_UNKNOWN) set to direct or
+   * indirect (SOURCING_TYPE_INVALID). The rule is `sourcingTypeRefusal`, the
+   * one the admin page's pre-check calls.
+   */
+  SOURCING_TYPE_GOVERNED: 'sourcing_type_governed',
+  /**
    * Material C5 (MR-8 BR-01, BR-03, AC-04) — a planning-group change: a name is
    * not blank (NAME_REQUIRED), a new group sits under an SAP group with
    * materials (UNKNOWN_SAP_GROUP), a move names known materials of the group's
@@ -562,6 +569,17 @@ export const POLICY_HOOKS = {
    * invitation actually goes out.
    */
   RFX_PUBLISH_HAS_INVITEES: 'rfx_publish_has_invitees',
+  /**
+   * Material G2 (MR-10 BR-05, BR-07; plan AR-16) — on RFI, RFP and RFQ
+   * publish, every invitee holds the level the event's sourcing type needs
+   * (Direct: Preferred; Indirect: Approved or Preferred). Reads `invitees` on
+   * an RFI / RFP and `invitedSupplierIds` on an RFQ. Refused
+   * SUPPLIER_NOT_QUALIFIED naming the vendor — but only against a real list:
+   * while the list for the needed level is the placeholder (owner ruling
+   * 2026-09-29) publish passes and the event records `qualificationWarnings`.
+   * The rule is `inviteesQualificationRefusal`.
+   */
+  RFX_INVITEES_QUALIFIED: 'rfx_invitees_qualified',
   /**
    * RFI / RFP / RFQ extend (REQ-E03-02 / -03 edge cases): the new date is a
    * readable date and is LATER than the deadline in force. A date that moves

@@ -5,6 +5,7 @@
 // ────────────────────────────────────────────────────────────────────────────
 
 import { beforeEach, describe, expect, it } from 'vitest';
+import { everyVendorQualified } from '../../../test/everyVendorQualified';
 import { MockCommandService } from './MockCommandService';
 import { awardStore, resetRfxStores } from './stores/rfxStores';
 import { rfqStore } from './stores/rfqStore';
@@ -29,6 +30,9 @@ beforeEach(() => {
   rfqStore.reset();
   quotationStore.reset();
   sdcClock.reset();
+  // Material G2 — this spec is about the award's shape and the best-score
+  // reason, not qualification: every vendor qualifies here.
+  everyVendorQualified();
 });
 
 const oslo = () => rfqStore.get('rfq-021')!;

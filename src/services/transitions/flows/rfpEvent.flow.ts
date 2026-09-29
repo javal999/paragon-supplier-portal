@@ -70,7 +70,7 @@ export const rfpEventFlow: FlowDefinition = {
       trigger: 'user',
       requiredRole: 'rfp:publish',
       requiredFields: [],
-      policyHooks: [POLICY_HOOKS.RFX_PUBLISH_HAS_INVITEES],
+      policyHooks: [POLICY_HOOKS.RFX_PUBLISH_HAS_INVITEES, POLICY_HOOKS.RFX_INVITEES_QUALIFIED],
       surfaceable: { surfaced: true },
       version: 1,
     },

@@ -75,7 +75,7 @@ export const rfiEventFlow: FlowDefinition = {
       trigger: 'user',
       requiredRole: 'rfi:publish',
       requiredFields: [],
-      policyHooks: [POLICY_HOOKS.RFX_PUBLISH_HAS_INVITEES],
+      policyHooks: [POLICY_HOOKS.RFX_PUBLISH_HAS_INVITEES, POLICY_HOOKS.RFX_INVITEES_QUALIFIED],
       surfaceable: { surfaced: true },
       version: 1,
     },

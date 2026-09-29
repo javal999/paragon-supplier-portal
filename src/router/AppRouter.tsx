@@ -51,6 +51,7 @@ import AdminWorkingCalendar from '../pages-v2/admin/AdminWorkingCalendar';
 import AdminThreePls from '../pages-v2/admin/AdminThreePls';
 import AdminSuppliers from '../pages-v2/admin/AdminSuppliers';
 import AdminQualification from '../pages-v2/admin/AdminQualification';
+import AdminSourcingTypes from '../pages-v2/admin/AdminSourcingTypes';
 import AdminPlanningGroups from '../pages-v2/admin/AdminPlanningGroups';
 import AdminMrpControllers from '../pages-v2/admin/AdminMrpControllers';
 import BuyerTradeNames from '../pages-v2/materials/BuyerTradeNames';
@@ -216,6 +217,8 @@ const AppRouter: React.FC = () => {
           <Route path="/buyer/admin/suppliers" element={<AdminSuppliers />} />
           {/* Material G1 — administration: the documents each qualification level requires. */}
           <Route path="/buyer/admin/qualification" element={<AdminQualification />} />
+          {/* Material G2 — administration: each sourcing category and purchasing group, Direct or Indirect. */}
+          <Route path="/buyer/admin/sourcing-types" element={<AdminSourcingTypes />} />
           {/* Material C5 — administration: the planning groups capacity is kept by (MR-8). */}
           <Route path="/buyer/admin/planning-groups" element={<AdminPlanningGroups />} />
           {/* Material C4 — administration (ADM): who each SAP MRP controller code is. */}

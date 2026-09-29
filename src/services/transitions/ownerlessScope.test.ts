@@ -118,6 +118,7 @@ import { workingCalendarStore } from './workingCalendarStore';
 import { threePlStore } from './threePlStore';
 import { supplierOverlayStore } from '../data/mock/stores/supplierOverlayStore';
 import { qualificationRuleStore } from './qualificationRuleStore';
+import { sourcingTypeStore } from './sourcingTypeStore';
 import { planningGroupStore } from '../data/mock/stores/planningGroupStore';
 import { materialOverlayStore } from '../data/mock/stores/materialOverlayStore';
 import { mrpControllerStore } from './mrpControllerStore';
@@ -235,6 +236,8 @@ async function realIds(): Promise<Record<string, string | null>> {
     supplierOverlay: 'sup-001',
     // Material G1 — `entityId` IS the level; both lists exist from the start.
     qualificationRule: 'approved',
+    // Material G2 — `entityId` IS the map key; every key exists from the start.
+    sourcingType: 'category:Packaging',
     // Material C5 — `entityId` IS the planning group id; every SAP material
     // group's default group exists from the start. PTI master data: owner-less.
     planningGroup: 'pg-MG-20',
@@ -397,6 +400,7 @@ const resetAll = () => {
   threePlStore.reset();
   supplierOverlayStore.reset();
   qualificationRuleStore.reset();
+  sourcingTypeStore.reset();
   planningGroupStore.reset();
   materialOverlayStore.reset();
   mrpControllerStore.reset();
@@ -462,6 +466,8 @@ describe('POPULATION — nothing below means anything without this', () => {
     expect(ownerful).toContain('supplierOverlay');
     // Material G1 — the qualification lists belong to no supplier.
     expect(ownerless).toContain('qualificationRule');
+    // Material G2 — the sourcing type map belongs to no supplier.
+    expect(ownerless).toContain('sourcingType');
     // Material C5 — planning groups are PTI master data: no supplier acts on one.
     expect(ownerless).toContain('planningGroup');
     // Material C2 — a trade name names the supplier it belongs to.
@@ -598,6 +604,8 @@ describe('THE LEGITIMATE PATHS — the half a "refuse everyone" fix would break'
         'rfpOfferRound',
         'rfq',
         'role',
+        // Material G2 — the sourcing type map is PTI's; no supplier is its owner.
+        'sourcingType',
         'supplierApplication',
         // BL-51 — the 3PL list is PTI's; no supplier is its owner.
         'threePl',
@@ -694,6 +702,13 @@ describe('THE LEGITIMATE PATHS — the half a "refuse everyone" fix would break'
     });
     expect(qualRes.status, qualRes.reason).toBe('done');
     expect(qualificationRuleStore.get('approved').placeholder).toBe(false);
+
+    const typeRes = await svc.dispatch(buyerSeat('procurement'), {
+      transitionId: 't_sourcingtype_set', entity: 'sourcingType', entityId: 'category:Packaging',
+      payload: { sourcingType: 'indirect' },
+    });
+    expect(typeRes.status, typeRes.reason).toBe('done');
+    expect(sourcingTypeStore.get('category:Packaging')).toBe('indirect');
 
     const raised = await svc.dispatch(buyerSeat('procurement'), {
       transitionId: 't_application_submit', entity: 'supplierApplication',
