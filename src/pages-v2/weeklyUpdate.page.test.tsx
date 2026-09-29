@@ -81,7 +81,7 @@ describe('MAT B2 · manual supplier panel (MR-1 AC-01)', () => {
     const { service } = withRows([IN_CYCLE, IN_CYCLE, LAST_CYCLE]);
     renderWithProviders(<SupplierInventory />, { identity: SUPPLIER, service });
     const missed = await screen.findByTestId('weekly-missed');
-    expect(missed.textContent).toMatch(/^Missed: 1 material was not updated/);
+    expect(missed.textContent).toMatch(/^Missed: 1 materials were not updated/);
     expect(screen.getByTestId('weekly-count').textContent).toBe('0 of 3 updated');
   });
 
@@ -98,7 +98,7 @@ describe('MAT B2 · manual supplier panel (MR-1 AC-01)', () => {
     sdcClock.set('2026-09-09T02:00:00.000Z'); // Wednesday 09:00 WIB, 1 working day before
     renderWithProviders(<SupplierHome />, { identity: SUPPLIER, service });
     expect((await screen.findByTestId('weekly-reminder')).textContent).toBe(
-      'Reminder: 1 material still needs its stock figure before the cutoff.',
+      'Reminder: materials still needing a stock figure before the cutoff: 1',
     );
     expect(screen.getByText('Weekly stock update: materials still to send before the cutoff')).toBeTruthy();
   });
