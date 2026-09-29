@@ -11,7 +11,7 @@ import { MockCommandService, commandAuditSink } from './MockCommandService';
 import { MockSupplierService } from './MockSupplierService';
 import { MockProcurementService } from './MockProcurementService';
 import { supplierDocumentStore } from './stores/supplierDocumentStore';
-import { qualificationFor, qualificationHistory } from './qualificationReadModel';
+import { qualificationFor, qualificationHistory, qualificationRulesPlaceholder } from './qualificationReadModel';
 import { qualificationRuleStore } from '../../transitions/qualificationRuleStore';
 import { PLACEHOLDER_RULES } from '../../transitions/qualificationRules';
 import type { QualificationRequiredDoc, QueryScope } from '../types';
@@ -247,20 +247,24 @@ describe('t_qualification_rule_set (BR-04)', () => {
     await setRule('approved', placeholder('approved'));
     expect(qualificationRuleStore.get('approved').placeholder).toBe(false);
     expect(qualificationRuleStore.get('preferred').placeholder).toBe(true);
+    // The per-level flag G2 reads (owner ruling 2026-09-29: placeholder lists warn).
+    expect(qualificationRulesPlaceholder('approved')).toBe(false);
+    expect(qualificationRulesPlaceholder('preferred')).toBe(true);
     expect(qualificationRuleStore.changes()[0]).toMatchObject({ level: 'approved', setAt: '2026-09-05T03:00:00.000Z', setBy: NO_PERSON });
   });
 });
 
 describe('who may set the lists', () => {
-  it('the atom sits in compliance only, and admin holds it by derivation', () => {
-    expect(rolesHolding('qualification:manage')).toEqual(['compliance']);
+  it('the atom sits in procurement and compliance (owner ruling 2026-09-29), and admin holds it by derivation', () => {
+    expect([...rolesHolding('qualification:manage')].sort()).toEqual(['compliance', 'procurement']);
     expect(SYSTEM_ROLES.admin).toContain('qualification:manage');
-    expect(SYSTEM_ROLES.procurement).not.toContain('qualification:manage');
+    expect(SYSTEM_ROLES.planning).not.toContain('qualification:manage');
   });
 
-  it('procurement alone is refused; the compliance seat passes', async () => {
-    const refused = await setRule('preferred', placeholder('preferred'), procurementSeat);
+  it('a planner is refused; procurement and the compliance seat both pass', async () => {
+    const refused = await setRule('preferred', placeholder('preferred'), buyerSeat('planning'));
     expect(refused.reason).toMatch(/ROLE_NOT_PERMITTED/);
+    expect((await setRule('preferred', placeholder('preferred'), procurementSeat)).status).toBe('done');
     expect((await setRule('preferred', placeholder('preferred'), quality)).status).toBe('done');
   });
 

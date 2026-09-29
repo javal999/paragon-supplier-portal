@@ -13,7 +13,13 @@
 // ────────────────────────────────────────────────────────────────────────────
 
 import { mockSuppliers } from '../../../data/mockSuppliers';
-import type { QualificationChange, VendorQualificationStatus, SupplierDocument, VendorQualification } from '../types';
+import type {
+  QualificationChange,
+  QualificationRuleLevel,
+  VendorQualificationStatus,
+  SupplierDocument,
+  VendorQualification,
+} from '../types';
 import { qualificationFromDocuments, qualificationHistoryFrom } from '../../transitions/qualificationRules';
 import { qualificationRuleStore } from '../../transitions/qualificationRuleStore';
 import { sdcClock } from '../../sdc/clock';
@@ -31,6 +37,15 @@ export function qualificationFor(supplierId: string, onDate: string = sdcClock.n
 /** A vendor's level changes, oldest first, replayed from its documents and the lists (AD-2). */
 export function qualificationHistory(supplierId: string, nowIso: string = sdcClock.now()): QualificationChange[] {
   return qualificationHistoryFrom(documentsOf(supplierId), qualificationRuleStore.epochs(), nowIso);
+}
+
+/**
+ * Is the list for this level still the seeded placeholder (MAT-D15)? Owner
+ * ruling 2026-09-29: while it is, bidding eligibility (G2) warns instead of
+ * refusing, so this is the one place G2 asks.
+ */
+export function qualificationRulesPlaceholder(level: QualificationRuleLevel): boolean {
+  return qualificationRuleStore.get(level).placeholder;
 }
 
 /** One vendor's full qualification row, or null for an id the supplier master does not hold. */

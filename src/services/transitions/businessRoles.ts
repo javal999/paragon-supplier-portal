@@ -147,6 +147,9 @@ const LANE_BUNDLES = Object.freeze({
       // corrects awards without making them is expressible without a new role
       // (D-5).
       'rfq:award-cancel', 'rfq:award-sap',
+      // Material G1 · owner ruling 2026-09-29 — Procurement and Quality set the
+      // qualification lists together (MAT-D15), so both lanes hold the atom.
+      'qualification:manage',
       'quotation:review',
       // RFx spec 2026-09-21 — answering a supplier's clarification question,
       // privately or published to every invitee. The person running the event
@@ -302,10 +305,8 @@ const LANE_BUNDLES = Object.freeze({
       // ── Material G1 · THE QUALIFICATION LISTS (MR-10 BR-04, MAT-D15) ──────
       // Which documents make a vendor Approved or Preferred decides who may bid
       // on which events. No supplier lane (it would pick the documents it is
-      // judged by), nor `procurement` (which sources from the vendors the lists
-      // admit). Quality — this lane — verifies the documents the lists name;
-      // `admin` derives it. `buyer_all` keeps it on the `setting:set`
-      // precedent, pending BL-70.
+      // judged by). Owner ruling 2026-09-29: Procurement and Quality set the
+      // lists together, so `procurement` holds it too; `admin` derives it.
       'qualification:manage',
     ]),
     // The SDC / P2 planning lane. `inventorydeclaration:record` is the C4c

@@ -9,12 +9,10 @@
 // commanded and the list recorded cannot disagree. `setAt` is stamped by the
 // target and `setBy` comes from the session, never from the form.
 //
-// ── `qualification:manage` IS A `compliance` ATOM ──────────────────────────
-// The lists decide which vendors may bid on which events (MR-10 BR-05), so no
-// supplier lane (it would pick the documents it is judged by) and not
-// `procurement` (which sources from the vendors the lists admit) may hold it.
-// It sits with the lane that verifies the documents the lists name — Quality,
-// the `compliance` lane (MAT-D6) — and `admin` holds it by derivation.
+// ── `qualification:manage` IS HELD BY `procurement` AND `compliance` ────────
+// Owner ruling 2026-09-29: Procurement and Quality (the `compliance` lane,
+// MAT-D6) set the lists together (MAT-D15). No supplier lane may hold it — it
+// would pick the documents it is judged by — and `admin` holds it by derivation.
 // ────────────────────────────────────────────────────────────────────────────
 
 import type { FlowDefinition } from '../schema';

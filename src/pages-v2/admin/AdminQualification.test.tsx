@@ -10,7 +10,7 @@ import AdminQualification from './AdminQualification';
 // Material G1 · Administration → Vendor qualification (MR-10 BR-04, edge case 2).
 // ─────────────────────────────────────────────────────────────────────────────
 
-const PROCUREMENT = { ...BUYER, businessRoles: ['procurement'] };
+const PLANNER = { ...BUYER, businessRoles: ['planning'] };
 
 beforeEach(() => {
   qualificationRuleStore.reset();
@@ -62,8 +62,8 @@ describe('Material G1 · AdminQualification', () => {
     expect((screen.getByTestId('adminqual-submit') as HTMLButtonElement).disabled).toBe(true);
   });
 
-  it('procurement alone reads the lists and gets the wait, not the form', async () => {
-    renderWithProviders(<AdminQualification />, { identity: PROCUREMENT });
+  it('a planner reads the lists and gets the wait, not the form', async () => {
+    renderWithProviders(<AdminQualification />, { identity: PLANNER });
     expect(await screen.findByTestId('adminqual-gate')).toBeTruthy();
     expect(screen.queryByTestId('adminqual-form')).toBeNull();
     expect(screen.queryByTestId('adminqual-edit-approved')).toBeNull();
