@@ -5,8 +5,8 @@
 // record (t0 = its `declaredAt`) plus what has happened since:
 //
 //   Supplier available stock(d) = SOH(t0)
-//     − ASNs shipped in (t0, d]            (Submitted, In Transit, Delivered, Awaiting exception)
-//     + to-distributor legs with ETA in (t0, d]   (Booked or Shipped; distributors only, BR-09)
+//     − ASNs shipped in (t0, d]            (Submitted, In Transit, Delivered, Discrepancy, Awaiting exception)
+//     + to-distributor legs with ETA in (t0, d]   (Booked, Shipped or Arrived; distributors only, BR-09)
 //     + in production completing in (t0, d], capped by allocated capacity (BR-04)
 //   Already called off, not shipped = confirmed call-offs not yet covered by an ASN (BR-07)
 //   Free to call off = available − already called off, not shipped (BR-07, MAT-D10)
@@ -40,16 +40,20 @@ import { latestSubmission } from './capacityRules';
 /** The weekly series runs 13 weeks from the week of the check date (MR-7 step 4). */
 export const SIMULATION_WEEKS = 13;
 
-/** ASN states that mean the goods have left the supplier (MR-7 BR-01; D2's Awaiting exception). */
+/** ASN states that mean the goods have left the supplier (MR-7 BR-01; D2's Awaiting exception;
+ *  Discrepancy shipped too — orchestrator ruling 2026-09-29, as D3 counts it). */
 export const SIMULATION_SHIPPED_ASN_STATES: readonly ASN['status'][] = [
   'Submitted',
   'In Transit',
   'Delivered',
+  'Discrepancy',
   'Awaiting exception',
 ];
 
-/** To-distributor lifecycles still on their way to the distributor (MR-7 BR-01). */
-const OPEN_LEG_STATES: readonly IncomingShipment['lifecycle'][] = ['Booked', 'Shipped'];
+/** To-distributor lifecycles counted (MR-7 BR-01): on the way, or arrived at the distributor
+ *  after t0 (orchestrator ruling 2026-09-29 — the stock is there but not yet in a record).
+ *  Cancelled stays out (edge case 4). */
+const OPEN_LEG_STATES: readonly IncomingShipment['lifecycle'][] = ['Booked', 'Shipped', 'Arrived'];
 
 // ── Shapes ───────────────────────────────────────────────────────────────────
 

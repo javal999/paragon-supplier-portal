@@ -367,6 +367,20 @@ describe('MR-7 edge cases and BR-09 — each produces its named flag', () => {
     expect(r.ptiInbound).toBe(0);
   });
 
+  it('ruling — an ASN in Discrepancy after t0 has shipped: subtracted from available and covers its call-off', () => {
+    const disc = asn({ asnNumber: 'ASN-3', status: 'Discrepancy', callOffId: 'co-1', shipDate: '2026-10-02', lineItems: [{ materialCode: MAT, description: '', orderedQty: 3000, shippedQty: 500, lotNumber: 'L3' }] });
+    const r = run(q(), world({ asns: [asn(), disc] }));
+    expect(r.components.find((c) => c.reference === 'ASN-3')).toMatchObject({ kind: 'asnShipped', qty: -500 });
+    expect(r.available).toBe(7800);
+    expect(r.calledOffNotShipped).toBe(2500);
+  });
+
+  it('ruling — a to-distributor leg that Arrived after t0 is added, dated by its ETA', () => {
+    const r = run(q(), world({ shipments: [leg({ lifecycle: 'Arrived', eta: '2026-10-04' })] }));
+    expect(r.components.find((c) => c.kind === 'toDistributor')).toMatchObject({ qty: 2000, date: '2026-10-04', reference: 'ish-1' });
+    expect(r.available).toBe(8300);
+  });
+
   it('BR-07 — a confirmed call-off covered by a linked ASN is not "called off, not shipped"', () => {
     const r = run(q(), world({ asns: [asn(), asn({ asnNumber: 'ASN-2', callOffId: 'co-1', shipDate: '2026-10-04', eta: '2026-10-09', lineItems: [{ materialCode: MAT, description: '', orderedQty: 3000, shippedQty: 1000, lotNumber: 'L2' }] })] }));
     expect(r.calledOffNotShipped).toBe(2000);
