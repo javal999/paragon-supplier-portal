@@ -163,7 +163,14 @@ export interface ApiStockFigure {
   readonly completionInDays?: number;
 }
 
-/** API-connected suppliers and what a sync returns (deterministic for tests). */
+/**
+ * SIMULATED pull outcomes: what a sync of each listed supplier's system returns
+ * (deterministic for tests). Material A1 (AR-06): this list no longer decides
+ * WHETHER a supplier is API-connected — its governed stock update mode does
+ * (`stockUpdateModeOf`). Membership here is only the default for a supplier the
+ * administrator has never set, and an API supplier with no entry pulls
+ * `NO_ENDPOINT`.
+ */
 export const API_CONNECTIONS: Readonly<
   Record<string, { readonly outcome: 'success'; readonly figures: readonly ApiStockFigure[] } | { readonly outcome: 'failed'; readonly errorKey: string }>
 > = {

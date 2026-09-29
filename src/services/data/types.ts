@@ -2435,6 +2435,41 @@ export interface CapabilitySet {
   transitions: readonly string[];
 }
 
+// ─── Supplier overlay — the hub-mastered supplier fields (Material A1) ─────
+
+/**
+ * MR-1 BR-02 — how a supplier shares its stock with the hub: pulled from its
+ * own system (`api`) or entered by template or by hand (`manual`). Hub-mastered:
+ * the supplier master (the SAP stand-in) does not carry it, so it lives in an
+ * append-only overlay and is read through ONE resolver (`stockUpdateModeOf`).
+ */
+export type StockUpdateMode = 'api' | 'manual';
+
+/** One change of a supplier's stock update mode, as recorded. Never edited. */
+export interface SupplierUpdateModeChange {
+  readonly supplierId: string;
+  readonly stockUpdateMode: StockUpdateMode;
+  /** Store-assigned from the hub clock, never a payload field. */
+  readonly setAt: string;
+  /** From the session (`QueryScope.actor`), never from the form. */
+  readonly setBy: ActorAttribution;
+  readonly reason?: string;
+}
+
+/** A supplier's stock update mode as the hub resolves it, with its history. */
+export interface SupplierStockUpdateMode {
+  readonly supplierId: string;
+  readonly supplierName: string;
+  readonly stockUpdateMode: StockUpdateMode;
+  /**
+   * `overlay`: the Hub administrator set it. `default`: nobody has, so it
+   * follows the sample connection list (API when the supplier is on it).
+   */
+  readonly source: 'overlay' | 'default';
+  /** Every change on record for this supplier, oldest first. */
+  readonly history: readonly SupplierUpdateModeChange[];
+}
+
 // ─── Service interfaces — the contract Phase 3 implements ───────────────────
 
 export interface ISupplierService {
@@ -2444,6 +2479,11 @@ export interface ISupplierService {
   getById(scope: QueryScope, id: string): Promise<Supplier | null>;
   /** Supplier: returns self. Buyer: returns null. */
   getCurrent(scope: QueryScope): Promise<Supplier | null>;
+  /**
+   * Material A1 (MR-1 BR-02) — each supplier's stock update mode and its change
+   * history. Buyer: every supplier. Supplier: its own row only.
+   */
+  getStockUpdateModes(scope: QueryScope): Promise<Page<SupplierStockUpdateMode>>;
 }
 
 export interface IProcurementService {
