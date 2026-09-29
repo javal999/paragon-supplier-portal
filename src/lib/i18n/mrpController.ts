@@ -56,6 +56,12 @@ export const mrpControllerEn: Record<string, string> = {
   'mrpc.unmapped': 'Not mapped (code only)',
   'mrpc.action.edit': 'Change',
   'mrpc.action.map': 'Map',
+  'mrpc.action.unmap': 'Remove mapping',
+  'mrpc.unmap.warning':
+    'Remove the mapping of {{code}}? Materials with this code will show the code only, and suppliers will see no name for them. The removal is kept on record.',
+  'mrpc.unmap.confirm': 'Remove mapping',
+  'mrpc.history.unmapped': 'Mapping removed (code only)',
+  'mrpc.toast.unmapped': 'Mapping removed for {{code}}',
 
   'mrpc.history.title': 'Changes on record',
   'mrpc.history.empty': 'No changes yet. The list is the sample list.',
@@ -116,6 +122,12 @@ export const mrpControllerId: Record<string, string> = {
   'mrpc.unmapped': 'Belum dipetakan (kode saja)',
   'mrpc.action.edit': 'Ubah',
   'mrpc.action.map': 'Petakan',
+  'mrpc.action.unmap': 'Hapus pemetaan',
+  'mrpc.unmap.warning':
+    'Hapus pemetaan {{code}}? Material dengan kode ini hanya akan menampilkan kodenya, dan pemasok tidak akan melihat nama untuknya. Penghapusan ini tetap tercatat.',
+  'mrpc.unmap.confirm': 'Hapus pemetaan',
+  'mrpc.history.unmapped': 'Pemetaan dihapus (kode saja)',
+  'mrpc.toast.unmapped': 'Pemetaan dihapus untuk {{code}}',
 
   'mrpc.history.title': 'Perubahan tercatat',
   'mrpc.history.empty': 'Belum ada perubahan. Daftar ini adalah daftar contoh.',

@@ -81,7 +81,7 @@ describe('MAT B2 · manual supplier panel (MR-1 AC-01)', () => {
     const { service } = withRows([IN_CYCLE, IN_CYCLE, LAST_CYCLE]);
     renderWithProviders(<SupplierInventory />, { identity: SUPPLIER, service });
     const missed = await screen.findByTestId('weekly-missed');
-    expect(missed.textContent).toMatch(/^Missed: 1 materials were not updated/);
+    expect(missed.textContent).toMatch(/^Missed: 1 material was not updated/);
     expect(screen.getByTestId('weekly-count').textContent).toBe('0 of 3 updated');
   });
 

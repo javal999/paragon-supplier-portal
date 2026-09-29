@@ -188,6 +188,7 @@ import { DEFAULT_STOCK_ACCURACY_TOLERANCE } from '../../engine/stock';
 import { agreedCfot, supplierCfot } from '../../engine/cfot';
 import { lineHistories } from '../../engine/lines';
 import { sdcClock } from '../../sdc/clock';
+import { withOwnQualificationWarnings } from '../../sourcing/sourcingType';
 
 /** REQ-E14-10 — the backtest's heavy half per engine dataset, keyed by hub date and the values it reads. */
 const backtestMemo = new WeakMap<EngineDataset, { key: string; prep: PreparedBacktest; ms: number }>();
@@ -860,6 +861,9 @@ export class MockProcurementService implements IProcurementService {
       // only hid them would still hold them in the payload it was handed.
       const sid = scope.supplierId;
       rows = rows.map((r) => (r.confidential && !acceptanceOf(r.id, sid) ? maskConfidential(r) : r));
+      // BL-147 (MAT-R4) — the publish warning names other invitees' level and
+      // missing documents; a supplier reads only its own row.
+      rows = rows.map((r) => withOwnQualificationWarnings(r, sid));
     }
     if (filter?.status) rows = rows.filter((r) => matchesList(r.status, filter.status));
     if (filter?.category)
