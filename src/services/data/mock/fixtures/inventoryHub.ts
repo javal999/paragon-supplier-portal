@@ -30,6 +30,7 @@
 import { DECLARED_PRESENT } from '../../fixturePresent';
 import type { CapacitySubmission, StockAccessGrant, StockSyncAttempt } from '../../types';
 import type { PtiStockRecord } from '../../../transitions/inventoryRules';
+import { defaultPlanningGroupId } from '../../../sdc/materialMaster';
 
 const DAY_MS = 86_400_000;
 const P = Date.parse(`${DECLARED_PRESENT}T00:00:00.000Z`);
@@ -212,13 +213,16 @@ export const STOCK_ACCESS_SEED: readonly StockAccessGrant[] = [
 const weeks = (allocated: (i: number) => number, extra: (i: number) => Partial<CapacitySubmission['weeks'][number]> = () => ({})) =>
   Array.from({ length: 13 }, (_, i) => ({ week: week(i), allocated: allocated(i), ...extra(i) }));
 
-/** Capacity submissions (REQ-E08-04). */
+/**
+ * Capacity submissions (REQ-E08-04). Material C5 (MR-8 BR-02, AR-15) — keyed on
+ * each SAP group's default planning group, so the figures are today's.
+ */
 export const CAPACITY_SEED: readonly CapacitySubmission[] = [
   {
     // Rigid plastic packaging: week 3 falls short of demand for a material reason.
     id: 'cap-0001',
     supplierId: 'sup-007',
-    materialGroup: 'MG-20',
+    planningGroupId: defaultPlanningGroupId('MG-20'),
     submittedAt: at(-2, 4),
     weeks: weeks(
       (i) => (i === 2 ? 60000 : 90000),
@@ -229,7 +233,7 @@ export const CAPACITY_SEED: readonly CapacitySubmission[] = [
     // Emollients: every week covers demand.
     id: 'cap-0002',
     supplierId: 'sup-002',
-    materialGroup: 'MG-02',
+    planningGroupId: defaultPlanningGroupId('MG-02'),
     submittedAt: at(-1, 3),
     weeks: weeks(() => 1200),
   },
@@ -244,7 +248,7 @@ export const CAPACITY_SEED: readonly CapacitySubmission[] = [
   {
     id: 'cap-0003',
     supplierId: 'sup-005',
-    materialGroup: 'MG-02',
+    planningGroupId: defaultPlanningGroupId('MG-02'),
     submittedAt: at(-3, 2),
     weeks: weeks(
       (i) => (i === 6 || i === 7 ? 400 : 520),
@@ -254,7 +258,7 @@ export const CAPACITY_SEED: readonly CapacitySubmission[] = [
   {
     id: 'cap-0004',
     supplierId: 'sup-012',
-    materialGroup: 'MG-20',
+    planningGroupId: defaultPlanningGroupId('MG-20'),
     submittedAt: at(-1, 5),
     weeks: weeks(() => 17000),
   },

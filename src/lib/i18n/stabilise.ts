@@ -17,7 +17,8 @@ export const stabiliseEn: Record<string, string> = {
   'stb.withheld':
     'Nothing on this page is shown to a supplier: the plan is calculated on simulated data. It can be published once the Master Data Management team’s SAP feed is live and SOMO has ratified the engine producing the totals (C8 §8).',
   'stb.range':
-    'The range beside each quantity (the likely figure and an upper figure suppliers can commit upside against) needs the demand range, which is not built yet. Only the quantity is shown.',
+    'The demand range (P50 and P90) now exists on the Demand forecast page, per SKU, brand and material. It is not published here: the quantities below are material net requirements from SAP’s plan (ENG-B66), and publishing from the engine is refused while its data is simulated. Suppliers see the quantity only.',
+  'stb.range.link': 'Open the demand range',
   'stb.replay':
     'No engine plan has been published yet, so the versions a supplier would have seen are replayed: the engine is run as of each past publication day on today’s record, and each version is stabilised against what the one before it published.',
 
@@ -129,7 +130,8 @@ export const stabiliseId: Record<string, string> = {
   'stb.withheld':
     'Tidak ada isi halaman ini yang ditampilkan ke pemasok: rencana dihitung pada data simulasi. Rencana dapat dipublikasikan setelah feed SAP dari tim Master Data Management aktif dan SOMO mengesahkan mesin sebagai penghasil total (C8 §8).',
   'stb.range':
-    'Rentang di samping setiap kuantitas (angka paling mungkin dan angka atas untuk komitmen tambahan pemasok) memerlukan rentang permintaan, yang belum dibangun. Hanya kuantitas yang ditampilkan.',
+    'Rentang permintaan (P50 dan P90) kini ada di halaman Prakiraan permintaan, per SKU, merek, dan material. Rentang ini tidak dipublikasikan di sini: kuantitas di bawah adalah kebutuhan bersih material dari rencana SAP (ENG-B66), dan publikasi dari mesin ditolak selama datanya simulasi. Pemasok hanya melihat kuantitas.',
+  'stb.range.link': 'Buka rentang permintaan',
   'stb.replay':
     'Belum ada rencana mesin yang pernah dipublikasikan, jadi versi yang akan dilihat pemasok diputar ulang: mesin dijalankan per setiap hari publikasi yang lalu pada catatan hari ini, dan setiap versi distabilkan terhadap apa yang dipublikasikan versi sebelumnya.',
 

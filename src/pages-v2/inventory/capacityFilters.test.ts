@@ -19,7 +19,7 @@ const plan = (over: Partial<CapacityPlan>): CapacityPlan =>
   ({
     supplierId: 'sup-007',
     supplierName: 'S',
-    materialGroup: 'MG-20',
+    planningGroupId: 'pg-MG-20',
     materials: ['PK-PETB-8801'],
     uom: 'PCS',
     weeks: [week('2026-09-14', 100, 100)],
@@ -31,8 +31,8 @@ describe('capacity filters in the address', () => {
   it('reads the four filters, and nothing when the address carries none', () => {
     const none = readCapacityFilters(new URLSearchParams(''));
     expect(anyCapacityFilter(none)).toBe(false);
-    const f = readCapacityFilters(new URLSearchParams('supplier=sup-002&materialGroup=MG-02&materialCode=RM-EMUL-9410&gapsOnly=1'));
-    expect(f).toMatchObject({ supplierId: 'sup-002', materialGroup: 'MG-02', materialCode: 'RM-EMUL-9410', gapsOnly: true, ignoredMalformed: false });
+    const f = readCapacityFilters(new URLSearchParams('supplier=sup-002&planningGroup=pg-MG-02&materialCode=RM-EMUL-9410&gapsOnly=1'));
+    expect(f).toMatchObject({ supplierId: 'sup-002', planningGroupId: 'pg-MG-02', materialCode: 'RM-EMUL-9410', gapsOnly: true, ignoredMalformed: false });
   });
 
   it('a value that is not id-shaped is ignored and reported, never guessed at', () => {
@@ -56,7 +56,8 @@ describe('capacity filters in the address', () => {
     const p = plan({});
     expect(planMatches(p, f('supplier=sup-007'))).toBe(true);
     expect(planMatches(p, f('supplier=sup-002'))).toBe(false);
-    expect(planMatches(p, f('materialGroup=MG-21'))).toBe(false);
+    expect(planMatches(p, f('planningGroup=pg-MG-21'))).toBe(false);
+    expect(planMatches(p, f('planningGroup=pg-MG-20'))).toBe(true);
     expect(planMatches(p, f('materialCode=PK-PETB-8801'))).toBe(true);
     expect(planMatches(p, f('materialCode=PK-CAPF-8820'))).toBe(false);
     expect(planMatches(p, f('gapsOnly=1'))).toBe(false);
