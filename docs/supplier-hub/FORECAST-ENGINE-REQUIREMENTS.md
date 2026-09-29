@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 0.14 draft, 2026-09-29 |
+| Version | 0.15 draft, 2026-09-29 |
 | What this is | Detailed requirements for the demand and material forecast engine PTI builds itself (owner decision ENG-1), with each calculation explained |
 | Status | Every requirement is **Proposed**. The decision to build is Validated (ENG-1), and the engine decisions in section 4.1 are decided; section 4.2 lists what is still open. The rest of the detail has not yet been reviewed by the Material Planner |
 | Sources | ENG-1 (`SUPPLIER-HUB-REQUIREMENTS.md` section 9); methods and evidence in `research/FORECAST-METHOD-SPEC.md`; problem analysis in `research/FORECAST-BEST-PRACTICE-2026-09.md` |
@@ -1107,9 +1107,9 @@ From the owner's decision of 2026-09-29: the fallback applies a calendar index o
 | ENG-B73 | Factors are estimated **per brand** (on the brand's summed history, more signal than one SKU) and applied to every SKU of that brand; the total's own factors apply to the total's forecast. The slow-mover methods (SBA, Croston, TSB) do not apply the index. The index is applied before the seasonality test, so an event is not also read as seasonality | E14-07 BR-02, BR-03 |
 | ENG-B74 | On the synthetic data: lead 3 weeks. Total factors: Ramadan 1.143, before Ramadan 1.137 (effect seen, 2 occurrences each); payday 0.990, double-date 1.005, Christmas 1.037 (no clear effect). Per brand: Ramadan 1.088 (Emina) to 1.191 (Make Over), before Ramadan 1.104 to 1.165; payday, double-date and Christmas within ±5% for every brand. The synthetic sales were not built with payday, double-date or Christmas effects, so those factors are ≈ 1, and the page says so; the dataset and every calibrated figure are unchanged. Ramadan 1448 (from about 8 Feb 2027) is inside the horizon: the weeks from 18 Jan 2027 carry the before-Ramadan factor and from 8 Feb the Ramadan factor | E14-07 |
 
-### 4.1j Build decisions for review (PR #100, BL-111)
+### 4.1j Build decisions accepted (owner, 2026-09-29, PR #100, BL-111)
 
-REQ-E14-09 built on synthetic data, around the forecast BL-110 builds (E14-07). Nothing here changes what E14-03 to E14-06 plan on: material planning stays on SAP's plan (ENG-B66).
+REQ-E14-09 built on synthetic data, around the forecast BL-110 builds (E14-07). Nothing here changes what E14-03 to E14-06 plan on: material planning stays on SAP's plan (ENG-B66). Accepted as recommended (owner, 2026-09-29): the calibration as built, P90 as the upper figure with no extra quantile by default, new SKUs' ranges from SAP's plan's errors, an 8-week retraining cycle in the replay, and safety stock not switched to the range.
 
 | ID | Decision | Applied in |
 |---|---|---|
@@ -1124,9 +1124,9 @@ REQ-E14-09 built on synthetic data, around the forecast BL-110 builds (E14-07). 
 | ENG-B98 | The administrator may add ONE quantile beside P50 and P90: `engine.rangeExtraQuantilePct` on the Tolerances page, 0 (none) by default, 1 to 99 (for example 95 for P95, which METHOD-SPEC D5 lists; 10 gives a lower figure). One value, because the administration page holds single values; 50 and 90 add nothing | E14-09 BR-01; X-05 |
 | ENG-B99 | **The supplier-facing range (E14-06 BR-06) is not built.** The quantities stabilised and published are material net requirements from SAP's plan per supplier (ENG-B29, ENG-B66); the range is on the engine's forecast. Putting P50 and P90 beside a published quantity needs the switch to the engine's forecast and a split of the material range by supplier share, and publishing from the engine is refused while its data is simulated (ENG-B35). The Stabilise and publish page says the range exists and links to it. The range is PTI-only (X-03), computed at read on the hub clock and memoised per dataset and levels, and served inside the Demand forecast read (`DemandForecastView.range`, no new service method). Data health now lists E14-09 as a step: it reads the BOM and SAP's past plans and sits downstream of E14-07, so a failed BOM check also names it (it adds to ENG-B48's list) | E14-06 BR-06; X-01, X-03; E14-01 |
 
-### 4.1k Build decisions for review (PR #96, BL-112)
+### 4.1k Build decisions accepted (owner, 2026-09-29, PR #96, BL-112)
 
-REQ-E14-10 built on synthetic data (`src/services/engine/modelBacktest.ts`; page Forecast → Model backtest). Nothing here is accepted yet. **Material planning is not switched to the engine's forecast** (ENG-B66): ENG-B89 gives the evidence and leaves the switch to the owner.
+REQ-E14-10 built on synthetic data (`src/services/engine/modelBacktest.ts`; page Forecast → Model backtest). Accepted as recommended (owner, 2026-09-29): material planning is not switched to the engine's forecast on this evidence, and ENG-D13 stays unset until the backtest runs on real data; showing each SKU's chosen model on the Demand forecast page is a follow-up (BL-167). **Material planning is not switched to the engine's forecast** (ENG-B66): ENG-B89 gives the evidence and leaves the switch to the owner.
 
 | ID | Decision | Applied in |
 |---|---|---|
@@ -1141,9 +1141,9 @@ REQ-E14-10 built on synthetic data (`src/services/engine/modelBacktest.ts`; page
 | ENG-B88 | **Compute.** Pure and deterministic (no clock, no randomness; the same inputs give an identical result, tested). The heavy half (forecasts at every origin and every replay) runs once per dataset, hub date, service targets and cost rates and is memoised in the service; selection under the limit runs at every read. Measured with 12 origins: **0.36 s and 0.50 s in the browser** (production build, at 1440 and 1280 px, the page shows its own figure), 1.2–2.2 s under Node 22 in the test runner with the machine at a load average of 250–350 from parallel builds (6 origins: 0.22–0.29 s in the browser). Most of it is fitting the Comb grid (16 SKUs × 12 origins). Reductions made for a page load: one version held per origin (no weekly re-forecast), E14-05's single-material sizing instead of the joint plan, and the event index memoised per brand and week. Tables fit 1280 and 1440 px without sideways scroll (measured) | E14-10; X-01 |
 | ENG-B89 | **What it shows on the synthetic data (seed 20260924), and the switch left to the owner.** 16 SKUs compared (4 new SKUs on SAP's plan). Chosen: **Theta for 11, the Comb for 5**. Per method (pooled over the 16): Comb fill rate 98.0%, order-complete 90.7%, 17,114 pallet-weeks, median MASC 1.18, median WAPE 12.0%; Theta 98.3%, 91.7%, 16,791, 0.36, 11.6%; SAP's plan 98.3%, 90.7%, 16,168, 1.51, 13.5% — Theta is steadier than SAP's plan and as good on fill, SAP's plan uses the least space. MASC spread: Comb 0.21–2.12 (quartiles 0.51 / 1.50), Theta 0.13–0.89 (0.21 / 0.46), SAP's plan 1.09–2.10 (1.26 / 1.63). **Engine (chosen model) against SAP's plan: better on both fill rate and space for 0 of 16 SKUs, worse on both for 5; higher fill rate for 8, less space for 3.** Across all 42 materials: fill rate 96.5% on the chosen models, 96.1% on the fallback, 95.1% on SAP's plan; pallet-weeks 11,806, 11,878 and 11,170 — the engine fills about 1.4 points more weeks with about 6% more stock; better on both for 5 materials (5 on the fallback alone), worse on both for 17. Before Ramadan (the 2026-01-19 version) SAP's plan fills far more (95.2% against 77.4% chosen, 75.0% fallback): the synthetic SAP plan is built from the generator's own seasonal curve, which the engine has to estimate from two Ramadans. **Recommendation: do not switch material planning on this evidence** — the engine does not beat SAP's plan on fill rate and space together for any SKU here; re-run when real sales and SAP plans arrive. The switch stays a decision for the owner (ENG-B66) | E14-10; E14-07 Data and integration; ENG-B66 |
 
-### 4.1l Build decisions for review (PR #98, BL-114)
+### 4.1l Build decisions accepted (owner, 2026-09-29, PR #98, BL-114)
 
-REQ-E14-11 built on synthetic data. For the owner's review; nothing here is accepted yet.
+REQ-E14-11 built on synthetic data. Accepted as recommended (owner, 2026-09-29): the reason-code list, a reason required only when an override raises the forecast above the engine's, overrides by the Material Planning team only, and at least 13 weeks of history before the bias alarm fires. Judging overrides by service (BR-04) now that the backtest exists is a follow-up (BL-168).
 
 | ID | Decision | Applied in |
 |---|---|---|
@@ -1188,3 +1188,4 @@ REQ-E14-11 built on synthetic data. For the owner's review; nothing here is acce
 | 0.12 | 2026-09-25 | Build decisions ENG-B19 to ENG-B59 (PRs #44, #46, #47, #48) accepted by the owner as recommended, sections 4.1d to 4.1g. The rented-space cap value (ENG-B55) stays a placeholder for the Warehouse |
 | 0.13 | 2026-09-28 | Owner decided ENG-D8a (±20%), D10 (sell-in for now), D11 (Material Planning reviews), D12 (Marketing owns the promotion calendar; the owner fills it meanwhile), D14 (volume ranking). Team review of the LTP / DA / capacity process added ENG-D18 to D21 (two-level capacity check with BE, capacity before LTP with Submit all per week, OEM demand from the brand's POs, fixed stock reconcile) and opened ENG-D12a and ENG-D22 (the DA formula) |
 | 0.14 | 2026-09-29 | REQ-E14-07 built on synthetic data (BL-110, PR #81); ENG-B60 to B69 accepted with two changes (a known-event index in the fallback; new SKUs on SAP's plan) and ENG-B70 to B74 accepted (sections 4.1h, 4.1i). ENG-D18 and D19 built with BL-133 (PR #80), ENG-D21 with BL-134 (PR #79, REQ-E06-04 in the main requirements) |
+| 0.15 | 2026-09-29 | REQ-E14-09 (BL-111, PR #100), REQ-E14-10 (BL-112, PR #96, merged through PR #98) and REQ-E14-11 (BL-114, PR #98) built on synthetic data; build decisions ENG-B80 to B109 accepted by the owner as recommended (sections 4.1j to 4.1l). Material planning stays on SAP's plan; ENG-D13 unset |
