@@ -237,6 +237,31 @@ export const CAPACITY_SEED: readonly CapacitySubmission[] = [
     submittedAt: at(-1, 3),
     weeks: weeks(() => 1200),
   },
+  // BL-77 — a second supplier in each group that carries demand, so the
+  // filters have something to separate. Since BL-133 the LTP is the one
+  // capacity demand, so only MG-02, MG-10 and MG-20 have any. MG-02: sup-005
+  // short in weeks 7 and 8 for a capacity reason (400 KG against ~497), with
+  // 150 KG of additional capacity, so those weeks are amber ("needs the
+  // additional capacity") rather than a second red group, beside sup-002
+  // confirmed and sup-010 not submitted yet. MG-20: sup-012 covering
+  // every week, beside sup-007's gap. "Gaps only" then shows two suppliers.
+  {
+    id: 'cap-0003',
+    supplierId: 'sup-005',
+    planningGroupId: defaultPlanningGroupId('MG-02'),
+    submittedAt: at(-3, 2),
+    weeks: weeks(
+      (i) => (i === 6 || i === 7 ? 400 : 520),
+      (i) => (i === 6 || i === 7 ? { reason: 'capacity' as const, upside: 150 } : {}),
+    ),
+  },
+  {
+    id: 'cap-0004',
+    supplierId: 'sup-012',
+    planningGroupId: defaultPlanningGroupId('MG-20'),
+    submittedAt: at(-1, 5),
+    weeks: weeks(() => 17000),
+  },
 ];
 
 /** The first Monday of the capacity horizon (exported for tests). */

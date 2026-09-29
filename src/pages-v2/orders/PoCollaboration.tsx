@@ -16,6 +16,7 @@ import {
   type StepState,
 } from '../../services/data/poResponseProjection';
 import { sdcClock } from '../../services/sdc/clock';
+import { poLineQuantityText } from './poLineQuantity';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Order collaboration read blocks shared by the PTI and supplier PO panels:
@@ -171,7 +172,7 @@ export const PoResponseDetails: React.FC<{ po: PurchaseOrder }> = ({ po }) => {
                         </td>
                         <td className="px-3 py-2 text-right">
                           <Data>
-                            {item ? `${formatNumber(item.quantity)} ${item.uom}` : '—'}
+                            {item ? poLineQuantityText(t, item) : '—'}
                           </Data>
                         </td>
                         <td className="px-3 py-2 text-right">

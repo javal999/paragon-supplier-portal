@@ -30,6 +30,8 @@ import BuyerSupplierAccess from './BuyerSupplierAccess';
 import SupplierCapacity from './SupplierCapacity';
 import BuyerCapacity from './BuyerCapacity';
 import BuyerAlerts from './BuyerAlerts';
+import { allCapacityPlans } from '../services/data/mock/inventoryReadModel';
+import { ltpCapacityLevel, planStatus } from '../services/transitions/capacityRules';
 import BuyerHome from './BuyerHome';
 import SupplierHome from './SupplierHome';
 
@@ -550,11 +552,44 @@ describe('Planner capacity filters (BL-63, REQ-E08-04 BR-07, AC-04)', () => {
     renderAt();
     await screen.findByTestId('capacity-plan-sup-007-pg-MG-20');
     fireEvent.click(screen.getByTestId('capacity-filter-gaps'));
-    expect(planIds()).toEqual(['sup-007-pg-MG-20']);
+    // BL-77 — two suppliers' gaps, not one: sup-005's MG-02 (weeks 7 and 8)
+    // beside sup-007's MG-20.
+    expect(planIds().sort()).toEqual(['sup-005-pg-MG-02', 'sup-007-pg-MG-20']);
     expect(new URLSearchParams(search).get('gapsOnly')).toBe('1');
     const rows = within(screen.getByTestId('capacity-plan-sup-007-pg-MG-20')).getAllByRole('row');
     expect(rows).toHaveLength(2); // the header row and the one gap week
     expect(within(screen.getByTestId('capacity-plan-sup-007-pg-MG-20')).getAllByTestId(/capacity-gap-/)).toHaveLength(1);
+    expect(within(screen.getByTestId('capacity-plan-sup-005-pg-MG-02')).getAllByTestId(/capacity-gap-/)).toHaveLength(2);
+  });
+
+  it('BL-77 — the MG-02 filter shows a gap, a confirmed plan and one not submitted yet, from three suppliers', async () => {
+    renderAt('?planningGroup=pg-MG-02');
+    await screen.findByTestId('capacity-plan-sup-005-pg-MG-02');
+    expect(planIds().sort()).toEqual(['sup-002-pg-MG-02', 'sup-005-pg-MG-02', 'sup-010-pg-MG-02']);
+    const byId = new Map<string, ReturnType<typeof allCapacityPlans>[number]>(
+      allCapacityPlans().map((p) => [`${p.supplierId}-${p.planningGroupId}`, p]),
+    );
+    expect(['sup-002-pg-MG-02', 'sup-005-pg-MG-02', 'sup-010-pg-MG-02'].map((id) => planStatus(byId.get(id)!))).toEqual([
+      'confirmed',
+      'gap',
+      'notStarted',
+    ]);
+    expect(screen.getByTestId('capacity-plan-sup-010-pg-MG-02')).toHaveTextContent('Not submitted yet');
+    // sup-005's short weeks are covered by its additional capacity: amber, so
+    // sup-007 MG-20 stays the one red group the planner's banner counts.
+    const levels = byId.get('sup-005-pg-MG-02')!.weeks.map((w) => ltpCapacityLevel(w.demand, w.entry));
+    expect(levels.filter((l) => l !== 'within')).toEqual(['needsAdditional', 'needsAdditional']);
+  });
+
+  it('BL-77 — the MG-20 filter shows two suppliers: sup-007 with a gap, sup-012 covering every week', async () => {
+    renderAt('?planningGroup=pg-MG-20');
+    await screen.findByTestId('capacity-plan-sup-012-pg-MG-20');
+    expect(planIds().sort()).toEqual(['sup-007-pg-MG-20', 'sup-012-pg-MG-20']);
+    const byId = new Map<string, ReturnType<typeof allCapacityPlans>[number]>(
+      allCapacityPlans().map((p) => [`${p.supplierId}-${p.planningGroupId}`, p]),
+    );
+    expect(planStatus(byId.get('sup-007-pg-MG-20')!)).toBe('gap');
+    expect(planStatus(byId.get('sup-012-pg-MG-20')!)).toBe('confirmed');
   });
 
   it('a filtered address reloads to the same view, and composes with the status chips', async () => {
