@@ -171,8 +171,7 @@ describe('BL-133 — the pokayoke on the submit verb (ENG-D19)', () => {
     // Allocation 1 below the LTP, additional capacity 1: LTP exactly at BE.
     await stearCapacity(-1, 1);
     const amber = (await plan(sup002, 'MG-10'));
-    const lines = (await reads.getForecastCommitments(sup002)).items;
-    expect(ltpCapacityWeeks(amber, lines).find((w) => w.week === '2026-11-02')!.level).toBe('needsAdditional');
+    expect(ltpCapacityWeeks(amber).find((w) => w.week === '2026-11-02')!.level).toBe('needsAdditional');
     expect((await promote(sup002, await draft(sup002, l, l.forecastQty))).status).toBe('done');
 
     // Now no additional capacity: the LTP is one above BE.
@@ -188,8 +187,7 @@ describe('BL-133 — the pokayoke on the submit verb (ENG-D19)', () => {
 
   it('on the sample data: sup-007 rigid plastics is red in the week of 14 Sep (LTP 72,800 against BE 60,000)', async () => {
     const mg20 = await plan(sup007, 'MG-20');
-    const lines = (await reads.getForecastCommitments(sup007)).items;
-    const red = ltpCapacityWeeks(mg20, lines).filter((w) => w.level === 'cannotSupply');
+    const red = ltpCapacityWeeks(mg20).filter((w) => w.level === 'cannotSupply');
     expect(red).toEqual([{ week: W[2], ltp: 72800, capacity: 60000, be: 60000, level: 'cannotSupply' }]);
     const l = await lineOf(sup007, 'PK-PETB-8801', W[2]);
     expect((await promote(sup007, await draft(sup007, l, l.forecastQty))).reason).toMatch(/ABOVE_BE_NEEDS_REASON/);

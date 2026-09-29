@@ -18,7 +18,7 @@ import Button from '../components/ui-v2/Button';
 import LoadingState from '../components/ui-v2/LoadingState';
 import ErrorState from '../components/ui-v2/ErrorState';
 import { formatDate, formatDateTime } from '../lib/format';
-import { useCapacityPlans, useForecastCommitments } from '../services/query/hooks';
+import { useCapacityPlans } from '../services/query/hooks';
 import type { CapacityPlan } from '../services/data/types';
 import {
   gapWeeks,
@@ -47,10 +47,11 @@ import {
 // (`capacityFilters.ts`), and compose with the status chips and the Order
 // summary's PO drill filter: drill → supplier/group/material/gaps → status.
 //
-// BL-133 (ENG-D18) — every week also shows the group's LTP (the current
-// forecast, summed over the group's materials) against the allocation and BE
-// (allocation + extra capacity): amber "needs the additional capacity", red
-// "cannot be supplied" — the red week is where the planner acts.
+// BL-133 (ENG-D18) — the ONE demand figure is the group's LTP (the current
+// forecast, summed over the group's materials; owner, 2026-09-29): the gap,
+// "short by", the banner and the filters all read it. Beside it, BE (capacity
+// + additional capacity) and the flag: amber "needs the additional capacity",
+// red "cannot be supplied" — the red week is where the planner acts.
 // ─────────────────────────────────────────────────────────────────────────────
 
 type StatusFilter = 'all' | CapacityConfirmationStatus;
@@ -59,7 +60,6 @@ const BuyerCapacity: React.FC = () => {
   const { t } = useTranslation();
   const reasonLabel = useReasonLabel();
   const plansQuery = useCapacityPlans();
-  const ltpQuery = useForecastCommitments();
   const [filter, setStatusFilter] = useState<StatusFilter>('all');
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [params, setParams] = useSearchParams();
@@ -70,7 +70,6 @@ const BuyerCapacity: React.FC = () => {
   const crumb = [t('hub.nav.section.inventory'), t('inv.capacity.pti.title')];
 
   const allPlans = useMemo(() => plansQuery.data?.items ?? [], [plansQuery.data]);
-  const ltpLines = useMemo(() => ltpQuery.data?.items ?? [], [ltpQuery.data]);
   // ── REQ-E07-03 BR-05 / AC-04 ──────────────────────────────────────────────
   // Capacity is agreed per supplier x material group per week, so a PO cannot be
   // its filter — the PO's SUPPLIER, its MATERIAL GROUPS and its DELIVERY WEEKS
@@ -102,7 +101,7 @@ const BuyerCapacity: React.FC = () => {
 
   const keyOf = (p: CapacityPlan) => `${p.supplierId}-${p.materialGroup}`;
   const withGap = plans.filter((p) => planStatus(p) === 'gap');
-  const ltpByPlan = new Map(plans.map((p) => [keyOf(p), ltpCapacityWeeks(p, ltpLines)]));
+  const ltpByPlan = new Map(plans.map((p) => [keyOf(p), ltpCapacityWeeks(p)]));
   const ltpCount = (p: CapacityPlan, level: 'cannotSupply' | 'needsAdditional') =>
     (ltpByPlan.get(keyOf(p)) ?? []).filter((w) => w.level === level).length;
   const withRed = plans.filter((p) => ltpCount(p, 'cannotSupply') > 0);
@@ -313,11 +312,10 @@ const BuyerCapacity: React.FC = () => {
                     <thead>
                       <tr className="text-label text-text-tertiary uppercase bg-bg-hover">
                         <th className="text-left px-4 py-2">{t('inv.capacity.col.week')}</th>
-                        <th className="text-right px-4 py-2">{t('inv.capacity.col.demand', { uom: p.uom })}</th>
+                        <th className="text-right px-4 py-2">{t('inv.capacity.col.ltp', { uom: p.uom })}</th>
                         <th className="text-right px-4 py-2">{t('inv.capacity.col.allocated', { uom: p.uom })}</th>
                         <th className="text-right px-4 py-2">{t('inv.capacity.col.upside', { uom: p.uom })}</th>
                         <th className="text-right px-4 py-2">{t('inv.capacity.col.be', { uom: p.uom })}</th>
-                        <th className="text-right px-4 py-2">{t('inv.capacity.col.ltp', { uom: p.uom })}</th>
                         <th className="text-left px-4 py-2">{t('inv.capacity.col.ltpCheck')}</th>
                         <th className="text-right px-4 py-2">{t('inv.capacity.col.gap', { uom: p.uom })}</th>
                         <th className="text-left px-4 py-2">{t('inv.capacity.col.reason')}</th>
@@ -340,7 +338,7 @@ const BuyerCapacity: React.FC = () => {
                               <Data>{formatDate(w.week)}</Data>
                             </td>
                             <td className="px-4 py-2 text-right">
-                              <Data>{qty(w.demand)}</Data>
+                              <Data>{qty(lw?.ltp ?? 0)}</Data>
                             </td>
                             <td className="px-4 py-2 text-right">
                               {w.entry ? <Data>{qty(w.entry.allocated)}</Data> : <span className="text-text-tertiary">{t('inv.capacity.notStated')}</span>}
@@ -350,9 +348,6 @@ const BuyerCapacity: React.FC = () => {
                             </td>
                             <td className="px-4 py-2 text-right">
                               {lw?.be != null ? <Data>{qty(lw.be)}</Data> : <span className="text-text-tertiary">—</span>}
-                            </td>
-                            <td className="px-4 py-2 text-right">
-                              <Data>{qty(lw?.ltp ?? 0)}</Data>
                             </td>
                             <td className="px-4 py-2">
                               {lw && <LtpCheckPill level={lw.level} testId={`capacity-ltp-${keyOf(p)}-${w.week}`} />}

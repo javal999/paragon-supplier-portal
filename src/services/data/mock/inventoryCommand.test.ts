@@ -264,27 +264,34 @@ describe('capacity confirmation (REQ-E08-04)', () => {
     expect(planStatus(await plan(sup007, 'MG-21'))).toBe('notStarted');
   });
 
-  it('AC-02 known-bad: a week below demand without a reason is refused, nothing stored', async () => {
-    const closures = await plan(sup007, 'MG-21');
+  it('owner 2026-09-29 — the demand is the LTP: the current forecast summed per group and week, and nothing else', async () => {
+    // sup-007 MG-20, week of 14 Sep: PK-PETB-8801 34,300 + PK-PETB-8802 38,500.
+    expect((await plan(sup007, 'MG-20')).weeks[2].demand).toBe(72800);
+    // Closures carry no LTP line, so no capacity demand — the planning estimate no longer feeds it.
+    expect((await plan(sup007, 'MG-21')).weeks.every((w) => w.demand === 0)).toBe(true);
+  });
+
+  it('AC-02 known-bad: a week below the LTP without a reason is refused, nothing stored', async () => {
+    const closures = await plan(sup002, 'MG-10');
     const before = capacityStore.all().length;
     const weeks = closures.weeks.map((w, i) => ({ week: w.week, allocated: i === 4 ? w.demand - 1 : w.demand }));
-    const res = await submit(weeks);
+    const res = await submit(weeks, 'MG-10', sup002);
     expect(res.reason).toMatch(/BELOW_DEMAND_NEEDS_REASON/);
     expect(capacityStore.all()).toHaveLength(before);
     const other = weeks.map((w, i) => (i === 4 ? { ...w, reason: 'other' } : w));
-    expect((await submit(other)).reason).toMatch(/OTHER_REASON_NEEDS_NOTE/);
+    expect((await submit(other, 'MG-10', sup002)).reason).toMatch(/OTHER_REASON_NEEDS_NOTE/);
   });
 
   it('AC-01 known-good: with a reason the submission lands, the plan shows the gap, and PTI sees it', async () => {
-    const closures = await plan(sup007, 'MG-21');
+    const closures = await plan(sup002, 'MG-10');
     const weeks = closures.weeks.map((w, i) => ({
       week: w.week,
       allocated: i === 4 ? w.demand - 1000 : w.demand,
       ...(i === 4 ? { reason: 'logistics' } : { upside: 500 }),
     }));
-    const res = await submit(weeks);
+    const res = await submit(weeks, 'MG-10', sup002);
     expect(res.status).toBe('done');
-    const after = (await reads.getCapacityPlans(buyer)).items.find((p) => p.supplierId === 'sup-007' && p.materialGroup === 'MG-21')!;
+    const after = (await reads.getCapacityPlans(buyer)).items.find((p) => p.supplierId === 'sup-002' && p.materialGroup === 'MG-10')!;
     expect(planStatus(after)).toBe('gap');
     expect(after.weeks[4].entry).toMatchObject({ reason: 'logistics' });
     expect(after.weeks[0].entry).toMatchObject({ upside: 500 });

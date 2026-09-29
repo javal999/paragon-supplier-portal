@@ -3,11 +3,15 @@
 //
 // Capacity is stated per supplier × material group per week (a supplier line
 // shared by several PTI materials is one group), for 13 weekly buckets
-// starting the current week (PQ-02 default). Demand per week is PTI's forecast
-// for the supplier's materials in the group, prorated by day, with the
-// planning estimate where no forecast exists (same rule as CR-01). A week
-// below demand needs a starter reason code; `other` needs a note. All of it is
-// derived at read time from the latest submission — nothing here is stored.
+// starting the current week (PQ-02 default). Demand per week is THE LTP (owner,
+// 2026-09-29): the current forecast version for the supplier's materials in
+// the group, summed, each line spread over its period by day (`groupWeekLtp`,
+// below). It is the ONE demand figure every capacity surface reads — the gap,
+// the reason rule, the Order summary status, the alerts. The SDC-0 publication
+// and the planning estimate no longer feed capacity; a material with no LTP
+// line has no capacity demand. A week below the LTP needs a starter reason
+// code; `other` needs a note. All of it is derived at read time from the
+// latest submission — nothing here is stored.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type {
@@ -17,10 +21,10 @@ import type {
   ForecastCommitmentLine,
   PurchaseOrder,
 } from '../data/types';
-import type { ForecastLine, MaterialMasterEntry } from '../sdc/types';
+import type { MaterialMasterEntry } from '../sdc/types';
 import { CAPACITY_HORIZON_WEEKS } from './inventoryConfig';
 import { isActiveReasonCode } from './reasonCodes';
-import { addDays, dayOf, isIsoDay, mondayOf, weekDemand } from './inventoryRules';
+import { addDays, dayOf, isIsoDay, mondayOf } from './inventoryRules';
 
 /** The 13 Mondays of the capacity horizon, starting with the current week. */
 export function horizonWeeks(nowIso: string): string[] {
@@ -33,8 +37,8 @@ export interface CapacityInputs {
   readonly master: (materialCode: string) => MaterialMasterEntry | null;
   readonly supplierName: (supplierId: string) => string;
   readonly submissions: readonly CapacitySubmission[];
-  readonly forecastLines: readonly ForecastLine[];
-  readonly planningEstimate: (supplierId: string, materialCode: string) => number | null;
+  /** The current forecast versions' lines — the LTP. */
+  readonly ltpLines: readonly LtpLine[];
 }
 
 /** The latest submission for a supplier × group (submission time, then id). */
@@ -47,21 +51,6 @@ export function latestSubmission(
     .filter((s) => s.supplierId === supplierId && s.materialGroup === materialGroup)
     .sort((a, b) => b.submittedAt.localeCompare(a.submittedAt) || b.id.localeCompare(a.id));
   return mine[0] ?? null;
-}
-
-/** Weekly demand for one supplier × group (rounded to whole units). */
-export function groupWeekDemand(
-  input: Pick<CapacityInputs, 'forecastLines' | 'planningEstimate'>,
-  supplierId: string,
-  materials: readonly string[],
-  week: string,
-): number {
-  let total = 0;
-  for (const code of materials) {
-    const lines = input.forecastLines.filter((l) => l.supplierId === supplierId && l.materialCode === code);
-    total += weekDemand(lines, input.planningEstimate(supplierId, code), week);
-  }
-  return Math.round(total);
 }
 
 /** Every supplier × material group with capacity against demand for the horizon. */
@@ -87,7 +76,7 @@ export function buildCapacityPlans(input: CapacityInputs, nowIso: string): Capac
         uom: g.uom,
         weeks: weeks.map((week) => ({
           week,
-          demand: groupWeekDemand(input, g.supplierId, g.materials, week),
+          demand: groupWeekLtp(input.ltpLines, g.supplierId, g.group, week),
           entry: latest?.weeks.find((w) => w.week === week) ?? null,
         })),
         latest,
@@ -279,10 +268,10 @@ export interface LtpCapacityWeek {
   readonly level: LtpCapacityLevel;
 }
 
-/** ENG-D18 — the LTP against capacity and BE for every horizon week of a plan. */
-export function ltpCapacityWeeks(plan: CapacityPlan, lines: readonly LtpLine[]): LtpCapacityWeek[] {
+/** ENG-D18 — the LTP (the plan's one demand figure) against capacity and BE, every horizon week. */
+export function ltpCapacityWeeks(plan: CapacityPlan): LtpCapacityWeek[] {
   return plan.weeks.map((w) => {
-    const ltp = groupWeekLtp(lines, plan.supplierId, plan.materialGroup, w.week);
+    const ltp = w.demand;
     return {
       week: w.week,
       ltp,

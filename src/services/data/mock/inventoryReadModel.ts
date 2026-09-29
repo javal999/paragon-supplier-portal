@@ -135,8 +135,8 @@ export function allCapacityPlans(nowIso: string = sdcClock.now()): CapacityPlan[
       master: materialEntry,
       supplierName: supplierNameOf,
       submissions: capacityStore.all(),
-      forecastLines: forecastLines(),
-      planningEstimate,
+      // Owner, 2026-09-29 — the LTP is the one capacity demand figure.
+      ltpLines: allCommitmentLines(null),
     },
     nowIso,
   );

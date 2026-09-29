@@ -24,12 +24,11 @@ import { HandoffNotice } from '../components/ui-v2/HandoffNotice';
 import { useVerbAvailability } from '../hooks/useVerbAvailability';
 import { useCurrentIdentity } from '../context/CurrentIdentityContext';
 import { formatDate, formatDateTime } from '../lib/format';
-import { useCapacityPlans, useForecastCommitments } from '../services/query/hooks';
+import { useCapacityPlans } from '../services/query/hooks';
 import type { CapacityPlan, CapacityReason } from '../services/data/types';
 import { useActiveReasonCodes, useReasonLabel } from './admin/reasonCodeDisplay';
 import {
   capacitySubmissionRefusal,
-  groupWeekLtp,
   ltpCapacityLevel,
   planStatus,
 } from '../services/transitions/capacityRules';
@@ -51,10 +50,11 @@ import {
 // starter reason, and "Other" needs a note (BR-04, AC-02). The form mirrors the
 // rule so the supplier sees why Submit is not ready; the verb's policy decides.
 //
-// BL-133 (ENG-D18) — beside each week, the group's LTP (the current forecast
-// for the group's materials, summed) against the allocation and BE (allocation
-// + extra capacity, derived from what is typed): amber above the allocation,
-// red above BE. Capacity is confirmed here BEFORE the LTP is submitted on
+// BL-133 (ENG-D18) — the week's demand IS the group's LTP (the current
+// forecast for the group's materials, summed; owner, 2026-09-29), so the
+// reason rule and the LTP flag read one number. Beside it, BE (capacity +
+// additional capacity, derived from what is typed): amber above the
+// capacity, red above BE. Capacity is confirmed here BEFORE the LTP is submitted on
 // Forecast & commitments (ENG-D19).
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -80,7 +80,6 @@ const SupplierCapacity: React.FC = () => {
   const reasonLabel = useReasonLabel();
   const { identity } = useCurrentIdentity();
   const plansQuery = useCapacityPlans();
-  const ltpQuery = useForecastCommitments();
   const confirm = useVerbAvailability('capacity:confirm');
   const { run, pending } = useInventoryRunner();
   const [group, setGroup] = useState<string | null>(null);
@@ -89,7 +88,6 @@ const SupplierCapacity: React.FC = () => {
   const crumb = [t('hub.nav.section.planning'), t('inv.capacity.sup.title')];
 
   const plans = useMemo(() => plansQuery.data?.items ?? [], [plansQuery.data]);
-  const ltpLines = useMemo(() => ltpQuery.data?.items ?? [], [ltpQuery.data]);
   // ── REQ-E07-03 BR-05 / AC-04 ──────────────────────────────────────────────
   // Arriving from one order selects that order's material group. The WEEK ROWS
   // are NOT filtered, and that is deliberate: this surface SUBMITS the horizon,
@@ -128,7 +126,7 @@ const SupplierCapacity: React.FC = () => {
     const d = draft[i] ?? { allocated: '', upside: '', reason: '', note: '' };
     const allocated = readStockNumber(d.allocated);
     const upside = readStockNumber(d.upside);
-    const ltp = groupWeekLtp(ltpLines, plan.supplierId, plan.materialGroup, w.week);
+    const ltp = w.demand;
     const stated =
       allocated.ok && allocated.value !== null
         ? { allocated: allocated.value, upside: upside.ok && upside.value !== null ? upside.value : undefined }
@@ -220,11 +218,10 @@ const SupplierCapacity: React.FC = () => {
         <Table>
           <TableHeader>
             <TableHeaderCell>{t('inv.capacity.col.week')}</TableHeaderCell>
-            <TableHeaderCell className="text-right">{t('inv.capacity.col.demand', { uom: plan.uom })}</TableHeaderCell>
+            <TableHeaderCell className="text-right">{t('inv.capacity.col.ltp', { uom: plan.uom })}</TableHeaderCell>
             <TableHeaderCell>{t('inv.capacity.col.allocated', { uom: plan.uom })}</TableHeaderCell>
             <TableHeaderCell>{t('inv.capacity.col.upside', { uom: plan.uom })}</TableHeaderCell>
             <TableHeaderCell className="text-right">{t('inv.capacity.col.be', { uom: plan.uom })}</TableHeaderCell>
-            <TableHeaderCell className="text-right">{t('inv.capacity.col.ltp', { uom: plan.uom })}</TableHeaderCell>
             <TableHeaderCell>{t('inv.capacity.col.ltpCheck')}</TableHeaderCell>
             <TableHeaderCell>{t('inv.capacity.col.reason')}</TableHeaderCell>
           </TableHeader>
@@ -244,7 +241,7 @@ const SupplierCapacity: React.FC = () => {
                     <Data>{formatDate(w.week)}</Data>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Data>{qty(w.demand)}</Data>
+                    <Data>{qty(ltp)}</Data>
                   </TableCell>
                   <TableCell>
                     <input
@@ -272,9 +269,6 @@ const SupplierCapacity: React.FC = () => {
                     ) : (
                       <span className="text-text-tertiary">—</span>
                     )}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Data>{qty(ltp)}</Data>
                   </TableCell>
                   <TableCell>
                     <LtpCheckPill level={level} testId={`capacity-ltp-${w.week}`} />

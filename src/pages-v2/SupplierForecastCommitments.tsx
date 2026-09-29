@@ -84,7 +84,7 @@ import {
 // SUBMITTED one period at a time with "Submit all", every material of the
 // period together (a row keeps only Save draft). A period cannot be submitted
 // until the supplier has confirmed capacity for every horizon week it touches,
-// and a period whose group LTP is above BE (capacity + extra capacity) needs a
+// and a period whose group LTP is above BE (capacity + additional capacity) needs a
 // reason. The submit verb's policy (`rr_promote_capacity_confirmed`) refuses
 // both by name; this panel mirrors it so the supplier sees why before trying.
 // ─────────────────────────────────────────────────────────────────────────────

@@ -104,7 +104,7 @@ describe('Supplier — Submit all per period (ENG-D19)', () => {
 });
 
 describe('Capacity pages show the LTP against capacity and BE (ENG-D18)', () => {
-  it('supplier capacity: each week carries its LTP and flag; typing extra capacity moves red to amber', async () => {
+  it('supplier capacity: each week carries its LTP and flag; typing additional capacity moves red to amber', async () => {
     renderWithProviders(<SupplierCapacity />, { identity: SUPPLIER, route: '/supplier/capacity' });
     const red = await screen.findByTestId(`capacity-ltp-${W[2]}`);
     await waitFor(() => expect(red).toHaveAttribute('data-level', 'cannotSupply'));
@@ -112,9 +112,9 @@ describe('Capacity pages show the LTP against capacity and BE (ENG-D18)', () => 
     const week = screen.getByTestId(`capacity-week-${W[2]}`);
     expect(week).toHaveTextContent('72,800');
     // 60,000 + 12,800 = 72,800: exactly at BE is amber.
-    fireEvent.change(within(week).getByLabelText(/^Extra capacity if requested for/), { target: { value: '12800' } });
+    fireEvent.change(within(week).getByLabelText(/^Additional capacity for/), { target: { value: '12800' } });
     expect(screen.getByTestId(`capacity-ltp-${W[2]}`)).toHaveAttribute('data-level', 'needsAdditional');
-    fireEvent.change(within(week).getByLabelText(/^Extra capacity if requested for/), { target: { value: '12799' } });
+    fireEvent.change(within(week).getByLabelText(/^Additional capacity for/), { target: { value: '12799' } });
     expect(screen.getByTestId(`capacity-ltp-${W[2]}`)).toHaveAttribute('data-level', 'cannotSupply');
   });
 
