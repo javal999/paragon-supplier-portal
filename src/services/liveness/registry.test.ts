@@ -192,6 +192,9 @@ describe('LivenessRegistry — harvest gate (LIVENESS-DATASOURCE-01, gate-2)', (
       // Data Management team's SAP feed (ENG-D1). No command writes it, so
       // gate-1 is SIMULATED as well; gate-2 names whose feed replaces it.
       'engineDataset',
+      // Material A2 - the SAP-copied material master fields, fixture values
+      // until the MDM material feed runs. Null-backed, so gate-1 is SIMULATED.
+      'materialMasterSap',
     ]);
     for (const cap of ALL_CAPABILITIES) {
       if (gated.has(cap)) continue;
@@ -243,6 +246,18 @@ describe('LivenessRegistry — harvest gate (LIVENESS-DATASOURCE-01, gate-2)', (
     expect(note?.readinessNoteKey).toBe('widget.honesty.awaitingMdmFeed');
     expect(note?.source).toBe('MDM SAP feed');
     expect(isLive('engineDataset')).toBe(false);
+  });
+
+  it('materialMasterSap (Material A2): SIMULATED on both gates, and the note names the MDM feed', () => {
+    // MRP controller and minimum shelf life are SAP copies held as fixture
+    // values until the MDM material feed runs (MR-5 BR-05, plan AR-19).
+    expect(capabilityBacking.materialMasterSap).toBeNull();
+    expect(liveness('materialMasterSap')).toBe('SIMULATED');
+    expect(awaitsHarvest('materialMasterSap')).toBe(true);
+    const note = readinessNote('materialMasterSap');
+    expect(note?.readinessNoteKey).toBe('widget.honesty.awaitingMdmFeed');
+    expect(note?.source).toBe('MDM SAP material feed');
+    expect(isLive('materialMasterSap')).toBe(false);
   });
 
   it('⭐ inventory after the SDC-3b backing flip: wired (gate-1 LIVE) yet STILL never green', () => {
