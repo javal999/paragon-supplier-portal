@@ -10,27 +10,42 @@ import type { QueryScope } from '../types';
 import { sdcClock } from '../../sdc/clock';
 import {
   COMPLIANCE_WINDOW_WEEKS,
+  complianceCycles,
   complianceOver,
+  isComplianceFlagged,
   type ComplianceSources,
   type UpdateCompliance,
 } from '../../transitions/updateCompliance';
-import { updateCycleSettings } from '../../transitions/inventoryConfig';
+import { complianceThresholds, updateCycleSettings } from '../../transitions/inventoryConfig';
 import { hubWorkingCalendar } from '../../transitions/workingCalendarStore';
 import { inventoryDeclarationStore } from './stores/inventoryDeclarationStore';
 import { stockSyncStore } from './stores/inventoryHubStores';
 import { stockUpdateAssignments } from './inventoryReadModel';
 import { stockUpdateModeOf, supplierEntry } from './supplierMaster';
 import { mockSuppliers } from '../../../data/mockSuppliers';
+import { DECLARED_PRESENT } from '../fixturePresent';
+import { sampleUpdateHistory } from './fixtures/updateHistorySample';
 
 function sources(): ComplianceSources {
+  const calendar = hubWorkingCalendar();
+  const cycle = updateCycleSettings();
+  const assignments = stockUpdateAssignments();
+  // Material B4 — the SAMPLE weekly history (MAT-R14; `updateHistorySample.ts`),
+  // over the 13 cycles ending at the declared present, beside the real rows.
+  const sample = sampleUpdateHistory({
+    cycles: complianceCycles(`${DECLARED_PRESENT}T12:00:00.000Z`, calendar, cycle),
+    calendar,
+    assignments,
+    modeAt: stockUpdateModeOf,
+  });
   return {
-    records: inventoryDeclarationStore.all(),
-    syncAttempts: stockSyncStore.all(),
-    assignments: stockUpdateAssignments(),
+    records: [...inventoryDeclarationStore.all(), ...sample.records],
+    syncAttempts: [...stockSyncStore.all(), ...sample.syncAttempts],
+    assignments,
     onboardedAt: (supplierId) => supplierEntry(supplierId)?.onboardedDate ?? null,
     modeAt: stockUpdateModeOf,
-    calendar: hubWorkingCalendar(),
-    cycle: updateCycleSettings(),
+    calendar,
+    cycle,
   };
 }
 
@@ -41,6 +56,19 @@ export function updateCompliance(
   weeks: number = COMPLIANCE_WINDOW_WEEKS,
 ): UpdateCompliance {
   return complianceOver(sources(), supplierId, asOf, weeks);
+}
+
+/** Material B4 (MR-2 BR-06) — is the supplier red-flagged on update compliance at `asOf`? */
+export function complianceFlaggedAt(supplierId: string, asOf: string): boolean {
+  return isComplianceFlagged(updateCompliance(supplierId, asOf).pct, complianceThresholds().flagPct);
+}
+
+/** Material B4 (MR-2 BR-06, AC-05) — each awarded supplier's compliance at the award, once each. */
+export function complianceSnapshot(
+  supplierIds: readonly string[],
+  asOf: string,
+): { readonly supplierId: string; readonly pct: number | null }[] {
+  return [...new Set(supplierIds)].map((supplierId) => ({ supplierId, pct: updateCompliance(supplierId, asOf).pct }));
 }
 
 /**

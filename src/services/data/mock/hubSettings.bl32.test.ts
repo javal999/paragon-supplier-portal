@@ -29,7 +29,6 @@ import { PERSONA_SYSTEM_ROLES, SYSTEM_ROLES, rolesHolding } from '../../transiti
 import { HUB_SETTINGS, SEEDED_STALE_OVERRIDES, staleOverrideKey } from '../../transitions/hubSettings';
 import {
   HUB_SETTINGS_KEY,
-  hubSetting,
   hubSettingsStore,
   settingValue,
   stalePeriodFor,
@@ -40,7 +39,14 @@ import { receiptQtyOutcome, shelfLifeLineView } from '../../transitions/fulfilme
 import { commitmentDueAt, gapColour, toleranceOutcome } from '../../transitions/forecastRules';
 import { otifPassesGate } from '../../sourcing/complianceGate';
 import { coverage, riskFor, stockFreshness, supplyBand } from '../../transitions/inventoryRules';
-import { staleApiHours, stockSyncIntervalHours, updateCycleSettings, updateSlaFor } from '../../transitions/inventoryConfig';
+import {
+  complianceThresholds,
+  staleApiHours,
+  stockSyncIntervalHours,
+  updateCycleSettings,
+  updateSlaFor,
+} from '../../transitions/inventoryConfig';
+import { compliancePill } from '../../transitions/updateCompliance';
 import { assessmentScore } from '../performanceRules';
 import { nextSyncAt, staleAtFor, updateCycleFor } from '../../transitions/updateCycle';
 import { hubWorkingCalendar } from '../../transitions/workingCalendarStore';
@@ -328,6 +334,14 @@ describe('BL32-READ · every reader of a value reads it through its accessor, at
         'src/services/data/performanceRules.ts',
         'src/services/transitions/inventoryConfig.ts',
       ],
+      // Material B4 — MR-2 BR-04 and BR-06: the award pill, the reason line and
+      // the verbs' flag read the thresholds at call time.
+      complianceThresholds: [
+        'src/pages-v2/rfx/AwardPanel.tsx',
+        'src/pages-v2/rfx/ComplianceAwardPill.tsx',
+        'src/services/data/mock/updateComplianceReadModel.ts',
+        'src/services/transitions/inventoryConfig.ts',
+      ],
       // ENG-D5 / REQ-E14-04 — read by the service that runs the engine, which
       // takes them as arguments (X-01); the engine never reads the store.
       engineServiceTargets: ['src/services/data/mock/MockProcurementService.ts', 'src/services/transitions/forecastConfig.ts'],
@@ -464,28 +478,28 @@ const freshnessFlips: Record<string, Flip> = Object.fromEntries(
 );
 
 /**
- * SC Hub Material (MAT A3) — the values are in the registry before any rule
- * reads them (B1, B3, D2 and F1 do). Until then the outcome that flips is the
- * value in force, read through the same accessor the rules will call. Each
- * task that adds a reader replaces its key's row here with a rule outcome
- * (B1 did: `stale.apiHours`, `stockUpdate.cutoffDay`, `stockUpdate.cutoffTime`
- * are in `FLIPS` below; B2 did `stockSync.intervalHours`, B3 did `compliance.scoreWeight`).
+ * SC Hub Material (MAT A3) — the values were in the registry before any rule
+ * read them. Each task that added a reader replaced its key's placeholder row
+ * with a rule outcome (B1: `stale.apiHours`, `stockUpdate.cutoffDay`,
+ * `stockUpdate.cutoffTime`; B2: `stockSync.intervalHours`; B3:
+ * `compliance.scoreWeight`; B4: `compliance.warnPct`, `compliance.flagPct`).
  */
-const MATERIAL_FLIPS: Record<string, Flip> = Object.fromEntries(
-  (
-    [
-      ['compliance.warnPct', 90],
-      ['compliance.flagPct', 50],
-    ] as const
-  ).map(([key, to]) => {
-    const atDefault = HUB_SETTINGS.find((d) => d.key === key)!.defaultValue;
-    return [key, { to, read: () => hubSetting(key), atDefault, afterChange: to }];
-  }),
-);
-
 const FLIPS: Record<string, Flip> = {
   ...freshnessFlips,
-  ...MATERIAL_FLIPS,
+  // MR-2 BR-04 (Material B4): 85% is a plain pill at the 80% warning, amber at 90%.
+  'compliance.warnPct': {
+    to: 90,
+    read: () => compliancePill(85, complianceThresholds()),
+    atDefault: 'plain',
+    afterChange: 'amber',
+  },
+  // MR-2 BR-04 / BR-06 (Material B4): 55% is a red pill at the 60% flag, amber at 50%.
+  'compliance.flagPct': {
+    to: 50,
+    read: () => compliancePill(55, complianceThresholds()),
+    atDefault: 'red',
+    afterChange: 'amber',
+  },
   'callOff.overPct': {
     to: 10,
     read: () => checkTolerance(CALL_OFF, [{ quantity: 1070, date: CALL_OFF.needDate }]).within,

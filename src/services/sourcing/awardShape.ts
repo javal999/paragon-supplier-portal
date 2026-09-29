@@ -187,6 +187,8 @@ export type AwardRefusalCode =
   | 'AWARD_ITEMS_OPEN'
   | 'AWARD_NOTHING_OPEN'
   | 'AWARD_REASON_REQUIRED'
+  // Material B4 (MR-2 BR-06) — a share goes to a supplier red-flagged on update compliance.
+  | 'AWARD_REASON_COMPLIANCE_FLAG'
   // RFx D2 (NR-2 BR-08) — the option is already placed through the other route.
   | 'AWARD_OPTION_SOURCED_ELSEWHERE'
   // Material G2 (MR-10 BR-07, AC-05) — a supplier below the level the event's
@@ -269,6 +271,8 @@ export function awardRefusalText(r: AwardRefusal, eventType: AwardEventType = 'r
       return r.unqualified
         ? qualificationReasonText(r.unqualified)
         : `AWARD_REASON_REQUIRED: the award for ${r.item} does not follow the best score, so it needs a reason`;
+    case 'AWARD_REASON_COMPLIANCE_FLAG':
+      return `AWARD_REASON_COMPLIANCE_FLAG: ${r.detail} is below the update-compliance flag and gets a share of ${r.item}, so the award needs a reason`;
     case 'AWARD_OFFER_EXPIRED':
       return `AWARD_OFFER_EXPIRED: the firm offer ${r.detail} on ${r.item} is no longer valid; open a new firm-offer round`;
     case 'AWARD_OPTION_SOURCED_ELSEWHERE':
@@ -510,6 +514,12 @@ export interface AwardReasonOwed {
    * `qualificationWarnings`.
    */
   readonly unqualified: readonly NamedEligibility[];
+  /**
+   * Material B4 (MR-2 BR-06, per item) — the awarded items that give a share to
+   * a supplier red-flagged on weekly update compliance, with those suppliers.
+   * A flag only asks for a reason; it never refuses by itself (MR-2 BR-07).
+   */
+  readonly flagged: readonly { readonly item: AwardItem; readonly supplierIds: readonly string[] }[];
   readonly owed: boolean;
 }
 
@@ -524,23 +534,43 @@ export function awardReasonOwed(input: {
   /** Absent on an RFP: it is never judged against a best score. */
   readonly bestOf?: (item: AwardItem, breakQty: number) => string | null;
   readonly eligibilityOf?: (supplierId: string) => NamedEligibility | undefined;
+  /** Material B4 (MR-2 BR-06) — is this supplier red-flagged (compliance below `compliance.flagPct`)? */
+  readonly flagged?: (supplierId: string) => boolean;
 }): AwardReasonOwed {
   const departing = input.always || !input.bestOf ? [] : awardItemsDepartingBest(input.items, input.lines, input.bestOf);
   const unqualified = input.eligibilityOf
     ? awardedVendors(input.lines, input.eligibilityOf).filter((v) => v.eligibility.state === 'warn')
     : [];
+  const isFlagged = input.flagged;
+  const flagged = isFlagged
+    ? groupsOf(input.items, input.lines).flatMap(({ item, lines: its }) => {
+        const supplierIds = [...new Set(its.map((l) => l.supplierId))].filter((sid) => isFlagged(sid));
+        return supplierIds.length > 0 ? [{ item, supplierIds }] : [];
+      })
+    : [];
   return {
     always: input.always,
     departing,
     unqualified,
-    owed: input.always || departing.length > 0 || unqualified.length > 0,
+    flagged,
+    owed: input.always || departing.length > 0 || unqualified.length > 0 || flagged.length > 0,
   };
 }
 
-/** AWARD_REASON_REQUIRED when a reason is owed and none was given; null otherwise. */
+/**
+ * The refusal when a reason is owed and none was given; null otherwise. In
+ * order: a departed best score, a vendor below the level (both
+ * AWARD_REASON_REQUIRED), the RFP's own rule (AWARD_REASON_REQUIRED, so an RFP
+ * reads as before), then Material B4's AWARD_REASON_COMPLIANCE_FLAG naming the
+ * first flagged item and supplier.
+ */
 export function awardReasonRefusal(owed: AwardReasonOwed, reason: string): AwardRefusal | null {
   if (!owed.owed || reason.trim().length > 0) return null;
   if (owed.departing.length > 0) return { code: 'AWARD_REASON_REQUIRED', item: owed.departing[0]!.name };
   if (owed.unqualified.length > 0) return { code: 'AWARD_REASON_REQUIRED', unqualified: owed.unqualified };
+  const firstFlag = owed.flagged[0];
+  if (!owed.always && firstFlag) {
+    return { code: 'AWARD_REASON_COMPLIANCE_FLAG', item: firstFlag.item.name, detail: firstFlag.supplierIds[0] };
+  }
   return { code: 'AWARD_REASON_REQUIRED' };
 }

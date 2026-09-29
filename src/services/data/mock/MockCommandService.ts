@@ -278,6 +278,8 @@ import {
   type AwardTrail,
 } from '../../sourcing/awardStatus';
 import { gateRefusal } from '../../sourcing/complianceGate';
+// Material B4 (MR-2 BR-06) — update compliance at award: the flag and the snapshot.
+import { complianceFlaggedAt, complianceSnapshot } from './updateComplianceReadModel';
 import { rfiTemplate } from '../../sourcing/rfxConfig';
 import type {
   AwardLine,
@@ -1753,6 +1755,11 @@ const rfqTarget: CommandTarget = {
           ...(bestByItem ? { bestScoredByItem: bestByItem } : {}),
           notAwardedSupplierIds: final ? rfq.invitedSupplierIds.filter((sid) => !named.has(sid)) : [],
           ...withWarnings(awardWarnings(rfq, lines.map((l) => l.supplierId))),
+          // MR-2 BR-06 / AC-05 — the compliance each awarded supplier had now.
+          complianceAtAward: complianceSnapshot(
+            lines.map((l) => l.supplierId),
+            rfxNow(),
+          ),
         });
         break;
       }
@@ -3510,6 +3517,11 @@ const rfpEventTarget: CommandTarget = {
           reason: typeof payload.awardReason === 'string' ? payload.awardReason.trim() : '',
           notAwardedSupplierIds: final ? rfpRespondedSupplierIds(id).filter((sid) => !named.has(sid)) : [],
           ...withWarnings(awardWarnings(rfp, lines.map((l) => l.supplierId))),
+          // MR-2 BR-06 / AC-05 — the compliance each awarded supplier had now.
+          complianceAtAward: complianceSnapshot(
+            lines.map((l) => l.supplierId),
+            rfxNow(),
+          ),
         });
         break;
       }
@@ -4380,6 +4392,7 @@ bindPolicyHook(POLICY_HOOKS.RFQ_AWARD_GOVERNED, ({ payload, entityId, currentSta
   // lines leave out that item's best-scored quote at the item's own break. A
   // legacy quote prices the whole event, so its items share the event's best.
   // Material G2 — or when a vendor is below the level on a placeholder list.
+  // Material B4 (MR-2 BR-06) — or when a red-flagged supplier gets a share.
   const reason = typeof payload.awardReason === 'string' ? payload.awardReason.trim() : '';
   let eventBest: string | null | undefined;
   const owed = awardReasonOwed({
@@ -4392,6 +4405,7 @@ bindPolicyHook(POLICY_HOOKS.RFQ_AWARD_GOVERNED, ({ payload, entityId, currentSta
       return eventBest;
     },
     eligibilityOf,
+    flagged: (sid) => complianceFlaggedAt(sid, rfxNow()),
   });
   const missingReason = awardReasonRefusal(owed, reason);
   if (missingReason) return { ok: false, reason: awardRefusalText(missingReason) };
@@ -4525,9 +4539,13 @@ bindPolicyHook(POLICY_HOOKS.RFP_AWARD_GOVERNED, ({ payload, entityId, currentSta
   const eligibilityOf = (sid: string) => namedEligibility(sid, type);
   const unqualified = awardQualificationRefusal(lines, eligibilityOf);
   if (unqualified) return { ok: false, reason: awardRefusalText(unqualified, 'rfp') };
-  // NR-2 BR-06 — every RFP award needs a reason (the one reason rule).
+  // NR-2 BR-06 — every RFP award needs a reason (the one reason rule; Material
+  // B4's red flag rides on it and changes nothing an RFP already required).
   const reason = typeof payload.awardReason === 'string' ? payload.awardReason.trim() : '';
-  const missingReason = awardReasonRefusal(awardReasonOwed({ items, lines, always: true, eligibilityOf }), reason);
+  const missingReason = awardReasonRefusal(
+    awardReasonOwed({ items, lines, always: true, eligibilityOf, flagged: (sid) => complianceFlaggedAt(sid, now) }),
+    reason,
+  );
   if (missingReason) return { ok: false, reason: awardRefusalText(missingReason, 'rfp') };
   return { ok: true };
 });

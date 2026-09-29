@@ -106,6 +106,17 @@ export const rfqCompareEn: Record<string, string> = {
   'rfqCompare.refusal.AWARD_ITEMS_OPEN': '{{item}} has no share yet. Give every item shares that total 100%.',
   'rfqCompare.refusal.AWARD_NOTHING_OPEN': 'This award settles every item, so confirm it as the final award.',
   'rfqCompare.refusal.AWARD_REASON_REQUIRED': 'The award for {{item}} does not follow the best score. Give a reason.',
+  // Material B4 (MR-2 BR-06) — a share to a supplier red-flagged on weekly update compliance.
+  'rfqCompare.refusal.AWARD_REASON_COMPLIANCE_FLAG':
+    '{{detail}} is below the weekly update compliance flag and gets a share of {{item}}. Give a reason.',
+  'rfqCompare.award.reasonFlagged':
+    '{{suppliers}}: weekly update compliance below {{flagPct}}%, with a share of {{items}}. Give a reason.',
+  'rfqCompare.award.compliance.value': 'Updates {{pct}}%',
+  'rfqCompare.award.compliance.tip':
+    'Weekly update compliance {{pct}}%: the share of counted weeks, over the last 13 weekly update cycles, in which the supplier updated the stock of every assigned material (a connected supplier: synced every working day). Amber below {{warnPct}}%, red below {{flagPct}}%. A red supplier can still be awarded, with a reason.',
+  'rfqCompare.award.compliance.tipNoHistory':
+    'No history: fewer than 4 weeks counted in the last 13 weekly update cycles, so no colour and no flag.',
+  'rfqCompare.award.complianceAtAward': 'Weekly update compliance at award',
   // RFx D3 (NR-2 edge case 2) — an RFP option's firm offer lapsed before the award.
   'rfqCompare.refusal.AWARD_OFFER_EXPIRED': 'The firm offer on {{item}} is no longer valid. Open a new firm-offer round.',
 
@@ -237,6 +248,16 @@ export const rfqCompareId: Record<string, string> = {
   'rfqCompare.refusal.AWARD_NOTHING_OPEN': 'Penetapan ini menyelesaikan setiap item, jadi konfirmasikan sebagai penetapan akhir.',
   'rfqCompare.refusal.AWARD_REASON_REQUIRED':
     'Penetapan untuk {{item}} tidak mengikuti skor terbaik. Berikan alasannya.',
+  'rfqCompare.refusal.AWARD_REASON_COMPLIANCE_FLAG':
+    '{{detail}} berada di bawah batas tanda kepatuhan pembaruan mingguan dan mendapat porsi {{item}}. Berikan alasannya.',
+  'rfqCompare.award.reasonFlagged':
+    '{{suppliers}}: kepatuhan pembaruan mingguan di bawah {{flagPct}}%, dengan porsi {{items}}. Berikan alasannya.',
+  'rfqCompare.award.compliance.value': 'Pembaruan {{pct}}%',
+  'rfqCompare.award.compliance.tip':
+    'Kepatuhan pembaruan mingguan {{pct}}%: porsi minggu yang dihitung, dalam 13 siklus pembaruan mingguan terakhir, saat pemasok memperbarui stok setiap material yang ditugaskan (pemasok terhubung API: sinkron setiap hari kerja). Kuning di bawah {{warnPct}}%, merah di bawah {{flagPct}}%. Pemasok merah tetap dapat ditetapkan, dengan alasan.',
+  'rfqCompare.award.compliance.tipNoHistory':
+    'Belum ada riwayat: kurang dari 4 minggu dihitung dalam 13 siklus pembaruan mingguan terakhir, jadi tanpa warna dan tanpa tanda.',
+  'rfqCompare.award.complianceAtAward': 'Kepatuhan pembaruan mingguan saat penetapan',
   'rfqCompare.refusal.AWARD_OFFER_EXPIRED': 'Penawaran pasti pada {{item}} tidak berlaku lagi. Buka putaran penawaran pasti baru.',
 
   // — Export —

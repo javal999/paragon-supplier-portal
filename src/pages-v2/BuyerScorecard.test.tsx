@@ -78,9 +78,9 @@ describe('BuyerScorecard — calculated performance (REQ-E10-01)', () => {
     // REJECTION_PENALTY_POINTS per rejection, blended with the update
     // compliance the page shows (Material B3, weight 0.10) — so the letter
     // beside them cannot disagree with them without this line failing.
-    expect(await screen.findByTestId('scorecard-update-compliance-value')).toHaveTextContent('Update compliance 0%');
+    expect(await screen.findByTestId('scorecard-update-compliance-value')).toHaveTextContent('Update compliance 92%');
     const delivery = Math.round((83 + 40) / 2) - 1 * REJECTION_PENALTY_POINTS;
-    const expected = Math.round(0.9 * delivery + 0.1 * 0);
+    const expected = Math.round(0.9 * delivery + 0.1 * 92);
     expect(await screen.findByTestId('scorecard-grade')).toHaveTextContent(`${expected}/100`);
   });
 
@@ -146,11 +146,12 @@ describe('BuyerScorecard — update compliance (Material B3)', () => {
   it('both calculation paths give the same score for one supplier, and the compliance moved it', async () => {
     renderWithProviders(<BuyerScorecard />);
     // The default supplier (sup-007) over the default period, which is the master window.
-    expect(await screen.findByTestId('scorecard-update-compliance-value')).toHaveTextContent('Update compliance 0%');
+    expect(await screen.findByTestId('scorecard-update-compliance-value')).toHaveTextContent('Update compliance 92%');
     const mock = masterMeasure('sup-007');
-    expect(mock.updateCompliance?.pct).toBe(0);
+    expect(mock.updateCompliance?.pct).toBe(92);
     expect(await screen.findByTestId('scorecard-grade')).toHaveTextContent(`${mock.score}/100`);
-    // Control: without compliance the same inputs score higher, so equality is not vacuous.
+    // Control: without compliance the same inputs score differently (B4's sample
+    // history puts sup-007 at 92%, above its delivery score), so equality is not vacuous.
     const now = sdcClock.now();
     const deliveryOnly = supplierMeasure('sup-007', { ...performanceInput(now), updateCompliance: undefined }, '90d', now);
     expect(deliveryOnly.score).not.toBe(mock.score);

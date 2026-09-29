@@ -682,6 +682,8 @@ export interface RfpAwardRecord {
    * award; the final award names every responder no award of the RFP named.
    */
   readonly notAwardedSupplierIds: readonly string[];
+  /** Material B4 (MR-2 BR-06, AC-05) — see `ComplianceAtAward`. */
+  readonly complianceAtAward?: readonly ComplianceAtAward[];
   /** An RFP award is not judged against a best-scored quote (NR-2 BR-06). */
   readonly bestScoredQuotationId?: never;
   readonly bestScoredByItem?: never;
@@ -724,6 +726,18 @@ export interface RfqAwardRecord {
    * award needed a reason for them; the record keeps the warning.
    */
   readonly qualificationWarnings?: readonly QualificationWarning[];
+  /** Material B4 (MR-2 BR-06, AC-05) — see `ComplianceAtAward`. */
+  readonly complianceAtAward?: readonly ComplianceAtAward[];
+}
+
+/**
+ * Material B4 (MR-2 BR-06, AC-05) — the update compliance an awarded supplier
+ * had when the award was recorded, kept as shown then (`null` = "No history").
+ * One row per awarded supplier. Absent on awards recorded before B4.
+ */
+export interface ComplianceAtAward {
+  readonly supplierId: string;
+  readonly pct: number | null;
 }
 
 /**

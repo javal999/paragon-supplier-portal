@@ -147,6 +147,22 @@ function judgeWeek(
   return { cycle, state: days.every((d) => pulledOn.has(d)) ? 'compliant' : 'missed', mode };
 }
 
+/** The `weeks` update cycles ending with the last cycle completed at `asOf`, oldest first. */
+export function complianceCycles(
+  asOf: string,
+  calendar: WorkingCalendar,
+  settings: UpdateCycleSettings,
+  weeks: number = COMPLIANCE_WINDOW_WEEKS,
+): UpdateCycle[] {
+  const cycles: UpdateCycle[] = [];
+  let c = previousCycle(updateCycleFor(asOf, calendar, settings), calendar, settings);
+  for (let i = 0; i < weeks; i++) {
+    cycles.unshift(c);
+    c = previousCycle(c, calendar, settings);
+  }
+  return cycles;
+}
+
 /**
  * MR-2 BR-01 — the supplier's update compliance over the `weeks` update cycles
  * ending with the last cycle completed at `asOf`.
@@ -157,13 +173,7 @@ export function complianceOver(
   asOf: string,
   weeks: number = COMPLIANCE_WINDOW_WEEKS,
 ): UpdateCompliance {
-  const current = updateCycleFor(asOf, sources.calendar, sources.cycle);
-  const cycles: UpdateCycle[] = [];
-  let c = previousCycle(current, sources.calendar, sources.cycle);
-  for (let i = 0; i < weeks; i++) {
-    cycles.unshift(c);
-    c = previousCycle(c, sources.calendar, sources.cycle);
-  }
+  const cycles = complianceCycles(asOf, sources.calendar, sources.cycle, weeks);
 
   // BR-03 — the cycle holding the first assignment is grace week 1; the grace
   // ends at the cutoff of grace week 4.
@@ -187,3 +197,29 @@ export function complianceOver(
     counted.length < COMPLIANCE_MIN_COUNTED_WEEKS ? null : Math.round((compliant / counted.length) * 100);
   return { supplierId, pct, weeks: judged };
 }
+
+// ── The pill (Material B4; MR-2 step 4, BR-04, BR-06, BR-07) ────────────────
+
+/** How a compliance figure reads beside a bid: plain, amber, red, or "No history". */
+export type CompliancePill = 'plain' | 'amber' | 'red' | 'noHistory';
+
+/**
+ * MR-2 BR-04 — plain at or above `warnPct`, amber below it, red below
+ * `flagPct`. "No history" (null) is never coloured (BR-03).
+ */
+export function compliancePill(
+  pct: number | null,
+  thresholds: { readonly warnPct: number; readonly flagPct: number },
+): CompliancePill {
+  if (pct === null) return 'noHistory';
+  if (pct < thresholds.flagPct) return 'red';
+  return pct < thresholds.warnPct ? 'amber' : 'plain';
+}
+
+/**
+ * MR-2 BR-06 — a red-flagged supplier: compliance below `flagPct`. "No
+ * history" is never flagged. A flag only asks for a reason; it never blocks
+ * (BR-07).
+ */
+export const isComplianceFlagged = (pct: number | null, flagPct: number): boolean =>
+  pct !== null && pct < flagPct;

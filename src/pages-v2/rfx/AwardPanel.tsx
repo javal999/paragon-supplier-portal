@@ -39,6 +39,9 @@ import { EmptyRow, GateMarker, money, qty } from './rfxDisplay';
 import { EligibilityMarker, vendorNames } from './eligibilityDisplay';
 import type { BiddingEligibility, NamedEligibility } from '../../services/sourcing/sourcingType';
 import { FirmPill } from './rfxAuthoringDisplay';
+import LivenessPill from '../../components/ui-v2/LivenessPill';
+import { complianceThresholds } from '../../services/transitions/inventoryConfig';
+import { ComplianceAwardPill, useAwardCompliance } from './ComplianceAwardPill';
 
 // ────────────────────────────────────────────────────────────────────────────
 // THE AWARD PANEL — ONE PANEL FOR EVERY RFQ (RFx C3; NR-3 BR-02 to BR-07,
@@ -411,6 +414,7 @@ function ItemAwardForm<L extends AnyAwardLine>(props: ItemAwardFormProps<L>): Re
   const { t } = useTranslation();
   const [drafts, setDrafts] = useState<Record<string, ItemDraft>>({});
   const [reason, setReason] = useState('');
+  const compliance = useAwardCompliance();
   const { items, defaultBreak, partlyAwarded } = model;
   // CR-23, then Material G2 — a bidder below the level against a real list is
   // not awardable (the verb refuses AWARD_SUPPLIER_NOT_QUALIFIED too).
@@ -450,7 +454,8 @@ function ItemAwardForm<L extends AnyAwardLine>(props: ItemAwardFormProps<L>): Re
         ? { code: 'AWARD_NOTHING_OPEN' }
         : null);
   // THE ONE REASON RULE the verbs call (MAT-R2): best score departed, an RFP,
-  // or — Material G2 — a vendor below the level on a placeholder list.
+  // or — Material G2 — a vendor below the level on a placeholder list, or —
+  // Material B4 (MR-2 BR-06) — a share to a red-flagged supplier.
   const owed = refusal
     ? null
     : awardReasonOwed({
@@ -459,9 +464,11 @@ function ItemAwardForm<L extends AnyAwardLine>(props: ItemAwardFormProps<L>): Re
         always: model.reasonAlways,
         ...(model.reasonAlways ? {} : { bestOf: model.bestOf }),
         eligibilityOf: namedEligibility,
+        flagged: compliance.flagged,
       });
   const departing = owed?.departing ?? [];
   const unqualified = owed?.unqualified ?? [];
+  const flaggedItems = owed?.flagged ?? [];
   const needsReason = model.reasonAlways || (owed?.owed ?? false);
 
   // "Will not award the rest" — the final award with NO lines, legal only on a
@@ -474,7 +481,11 @@ function ItemAwardForm<L extends AnyAwardLine>(props: ItemAwardFormProps<L>): Re
 
   return (
     <div className="space-y-4" data-testid="award-form">
-      <p className="text-xs text-text-tertiary">{t(model.hintKey)}</p>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-xs text-text-tertiary">{t(model.hintKey)}</p>
+        {/* MAT-R14 — the compliance pills are built from sample stock records. */}
+        <LivenessPill capability="inventory" />
+      </div>
       {items.map((item) => (
         <AwardItemRow
           key={item.key}
@@ -516,6 +527,15 @@ function ItemAwardForm<L extends AnyAwardLine>(props: ItemAwardFormProps<L>): Re
           {unqualified.length > 0 && (
             <p className="text-xs text-warning-hover mb-1" data-testid="award-reason-unqualified">
               {t('elig.award.warnReason', { vendors: vendorNames(unqualified) })}
+            </p>
+          )}
+          {flaggedItems.length > 0 && (
+            <p className="text-xs text-danger mb-1" data-testid="award-reason-compliance">
+              {t('rfqCompare.award.reasonFlagged', {
+                suppliers: [...new Set(flaggedItems.flatMap((o) => o.supplierIds))].map(supplierName).join(', '),
+                items: flaggedItems.map((o) => model.label(o.item)).join(', '),
+                flagPct: complianceThresholds().flagPct,
+              })}
             </p>
           )}
           <input
@@ -753,10 +773,16 @@ function AwardBidRow<L extends AnyAwardLine>({
   const uom = model.uomOf(item);
   const side = draft.basis === 'pct' ? t('rfx.award.col.share') : t('rfqCompare.award.qty');
   const eligibility = eligibilityOf?.(bid.supplierId);
+  const compliance = useAwardCompliance();
   return (
     <TableRow data-testid={`award-input-${key}-${bid.supplierId}`}>
       <TableCell>
         {supplierName(bid.supplierId)}
+        {/* Material B4 (MR-2 step 4) — the bidder's weekly update compliance. */}
+        <ComplianceAwardPill
+          pct={compliance.pctOf(bid.supplierId)}
+          testId={`award-compliance-${key}-${bid.supplierId}`}
+        />
         {showBestMarker(item) && model.bestOf(item, brk.qty) === bid.key && (
           <StatusPill variant="success" className="ml-2">
             {t('rfqCompare.cmp.bestScored')}

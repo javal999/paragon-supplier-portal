@@ -28,6 +28,7 @@ import type {
   RfpResponse,
   RfpTermAnswer,
   RfqAwardRecord,
+  ComplianceAtAward,
 } from './types';
 import type { GateCriterion } from './complianceGate';
 import type { BiddingEligibility } from './sourcingType';
@@ -247,6 +248,8 @@ export interface RfpAwardView {
   readonly notAwardedSupplierIds: readonly string[];
   /** NR-2 BR-06 — why. The buyer's read only. */
   readonly reason?: string;
+  /** Material B4 (MR-2 BR-06, AC-05) — compliance at award; a supplier reads only its own row. */
+  readonly complianceAtAward?: readonly ComplianceAtAward[];
   /** DERIVED from the appended cancellation and SAP marking (AR-08). */
   readonly status: AwardStatus;
   /** When the award was withdrawn; the date a supplier is shown. */
