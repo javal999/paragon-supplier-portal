@@ -379,6 +379,16 @@ export const POLICY_HOOKS = {
    */
   SUPPLIER_UPDATE_MODE_VALID: 'supplier_update_mode_valid',
   /**
+   * Material C5 (MR-8 BR-01, BR-03, AC-04) — a planning-group change: a name is
+   * not blank (NAME_REQUIRED), a new group sits under an SAP group with
+   * materials (UNKNOWN_SAP_GROUP), a move names known materials of the group's
+   * own SAP group not already in it (NO_MATERIALS, UNKNOWN_MATERIAL,
+   * MIXED_SAP_GROUP, ALREADY_IN_GROUP), and a retired group is empty
+   * (RETIRE_NOT_EMPTY). The rule is `planningGroupRefusal`, the one the admin
+   * page's pre-check calls.
+   */
+  PLANNING_GROUP_VALID: 'planning_group_valid',
+  /**
    * BL-50 — a ruling on one day of the hub's working calendar: the date is one
    * the SAP load covers, the kind is working or non-working, the reason is
    * SUBSTANCE rather than presence (`requiredFields` admits a space bar), and

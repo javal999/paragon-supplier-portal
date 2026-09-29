@@ -221,6 +221,8 @@ export const UTILITY_NAV: Record<Persona, readonly NavItem[]> = {
     { labelKey: 'hub.nav.util.threePls', icon: Link2, path: '/buyer/admin/3pl-tracking' },
     // Material A1 — each supplier's stock update mode (MR-1 BR-02, set by ADM).
     { labelKey: 'hub.nav.util.suppliers', icon: Building2, path: '/buyer/admin/suppliers' },
+    // Material C5 — the planning groups capacity is kept by (MR-8, Material Planning).
+    { labelKey: 'hub.nav.util.planningGroups', icon: Layers, path: '/buyer/admin/planning-groups' },
     // BL-32 — the values that lived in configuration files (ADM, REQ-E08-05 BR-03).
     { labelKey: 'hub.nav.util.tolerances', icon: SlidersHorizontal, path: '/buyer/admin/tolerances' },
     { labelKey: 'hub.nav.util.alertThresholds', icon: BellRing, path: '/buyer/admin/alert-thresholds' },

@@ -113,6 +113,8 @@ import { rfxFilesEn, rfxFilesId } from './i18n/rfxFiles';
 import { threePlEn, threePlId } from './i18n/threePl';
 // — Material A1 administration · suppliers (MR-1 BR-02) —
 import { adminSuppliersEn, adminSuppliersId } from './i18n/adminSuppliers';
+// — Material C5 administration · planning groups (MR-8) —
+import { adminPlanningGroupsEn, adminPlanningGroupsId } from './i18n/adminPlanningGroups';
 // — BL-32 the administrator's rule values (REQ-E08-05 BR-03, §3.6) —
 import { adminSettingsEn, adminSettingsId } from './i18n/adminSettings';
 import { adminReasonsEn, adminReasonsId } from './i18n/adminReasons';
@@ -218,6 +220,7 @@ export const resources = {
       ...rfxFilesEn,
       ...threePlEn,
       ...adminSuppliersEn,
+      ...adminPlanningGroupsEn,
       ...adminSettingsEn,
       ...adminReasonsEn,
       ...supplierFiltersEn,
@@ -695,6 +698,7 @@ export const resources = {
       ...rfxFilesId,
       ...threePlId,
       ...adminSuppliersId,
+      ...adminPlanningGroupsId,
       ...adminSettingsId,
       ...adminReasonsId,
       ...supplierFiltersId,

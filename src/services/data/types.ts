@@ -631,22 +631,35 @@ export interface CapacityWeekEntry {
 export interface CapacitySubmission {
   readonly id: string;
   readonly supplierId: string;
-  readonly materialGroup: string;
+  /**
+   * Material C5 (MR-8 BR-04) — the planning group the capacity is stated for.
+   * Was the SAP `materialGroup`; every earlier submission migrated to its SAP
+   * group's default planning group (`pg-<materialGroup>`).
+   */
+  readonly planningGroupId: string;
   readonly submittedAt: string;
   readonly weeks: readonly CapacityWeekEntry[];
 }
 
-/** Capacity against demand for one supplier × material group, 13 weekly buckets. */
+/** Capacity against demand for one supplier × planning group, 13 weekly buckets. */
 export interface CapacityPlan {
   readonly supplierId: string;
   readonly supplierName: string;
-  readonly materialGroup: string;
+  /** Material C5 (MR-8 BR-04) — the planning group; its name comes from the store. */
+  readonly planningGroupId: string;
   readonly materials: readonly string[];
   readonly uom: string;
   readonly weeks: readonly {
     readonly week: string;
     readonly demand: number;
     readonly entry: CapacityWeekEntry | null;
+    /**
+     * Material C5 (MR-8 BR-05) — materials moved into or out of the group after
+     * the latest submission, so the figure entered for this week no longer
+     * covers the group's materials. Present only when true; derived from the
+     * move time, never stored.
+     */
+    readonly needsReEntry?: true;
   }[];
   readonly latest: CapacitySubmission | null;
 }
@@ -2501,6 +2514,65 @@ export interface SupplierStockUpdateMode {
   readonly history: readonly SupplierUpdateModeChange[];
 }
 
+// ─── Planning groups — capacity groups under SAP material groups (Material C5) ─
+
+/**
+ * MR-8 BR-01 — a set of materials that share capacity at a supplier. Each group
+ * sits under exactly 1 SAP material group; each material is in exactly 1 group
+ * (the material overlay holds its `planningGroupId`, so it cannot be in 2).
+ * Hub master data for now (MAT-D12).
+ */
+export type PlanningGroupState = 'active' | 'retired';
+
+export interface PlanningGroup {
+  readonly id: string;
+  /** Typed by Material Planning; data, not a translation key (MAT-R6). */
+  readonly name: string;
+  readonly sapMaterialGroup: string;
+  readonly state: PlanningGroupState;
+  /** Null for a default group: derived from its SAP group, never created by anyone. */
+  readonly createdBy: ActorAttribution | null;
+  readonly createdAt: string | null;
+}
+
+/** One governed change to the planning groups, as recorded. Never edited (MAT-R3). */
+export type PlanningGroupEvent =
+  | {
+      readonly kind: 'created';
+      readonly groupId: string;
+      readonly name: string;
+      readonly sapMaterialGroup: string;
+      readonly at: string;
+      readonly by: ActorAttribution;
+    }
+  | { readonly kind: 'renamed'; readonly groupId: string; readonly name: string; readonly at: string; readonly by: ActorAttribution }
+  | {
+      readonly kind: 'moved';
+      /** The group the materials moved into. */
+      readonly groupId: string;
+      /** The groups they left, as resolved at the move. */
+      readonly fromGroupIds: readonly string[];
+      readonly materialCodes: readonly string[];
+      readonly at: string;
+      readonly by: ActorAttribution;
+    }
+  | { readonly kind: 'retired'; readonly groupId: string; readonly at: string; readonly by: ActorAttribution };
+
+/** A planning group as the hub resolves it, with its materials and changes. */
+export interface PlanningGroupView extends PlanningGroup {
+  /** The default group of its SAP group (`pg-<materialGroup>`, MR-8 BR-02). */
+  readonly isDefault: boolean;
+  /**
+   * False for a default group nobody has renamed: its name is then the SAP
+   * group's own (shown from the `inv.group.*` strings). True once named.
+   */
+  readonly named: boolean;
+  /** The materials in the group now, sorted. A supplier sees only its own. */
+  readonly materials: readonly string[];
+  /** Every change naming this group, oldest first. Empty for a supplier. */
+  readonly history: readonly PlanningGroupEvent[];
+}
+
 // ─── Service interfaces — the contract Phase 3 implements ───────────────────
 
 export interface ISupplierService {
@@ -2527,8 +2599,14 @@ export interface IProcurementService {
   getInventory(scope: QueryScope, filter?: InventoryFilter): Promise<Page<InventoryPosition>>;
   /** Supplier access to PTI stock. PTI: every supplier with its log. Supplier: its own. */
   getStockAccess(scope: QueryScope): Promise<Page<StockAccessGrant>>;
-  /** Capacity against demand per supplier × material group, 13 weeks. */
+  /** Capacity against demand per supplier × planning group, 13 weeks. */
   getCapacityPlans(scope: QueryScope): Promise<Page<CapacityPlan>>;
+  /**
+   * Material C5 (MR-8) — the planning groups with their materials and changes.
+   * PTI: every group. Supplier: the groups holding its own materials, narrowed
+   * to those materials, with no change history.
+   */
+  getPlanningGroups(scope: QueryScope): Promise<Page<PlanningGroupView>>;
   /** Inventory and capacity alerts. A supplier sees its own supplier-side rules. */
   getInventoryAlerts(scope: QueryScope): Promise<Page<InventoryAlert>>;
 

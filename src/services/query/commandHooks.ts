@@ -1362,6 +1362,62 @@ export function useSupplierSetUpdateMode() {
   });
 }
 
+// ── Material C5 · PLANNING GROUPS (MR-8 BR-01 to BR-05) ──────────────────────
+//
+// Create mints the id; rename, move and retire name the group as `entityId`
+// (a move names the DESTINATION group). Attribution and time are stamped by
+// the target from the session and the hub clock. A move changes which group
+// capacity is kept by, so the whole cache is invalidated.
+export type PlanningGroupCommandVars =
+  | { verb: 'create'; name: string; sapMaterialGroup: string }
+  | { verb: 'rename'; groupId: string; name: string }
+  | { verb: 'move'; groupId: string; materialCodes: readonly string[] }
+  | { verb: 'retire'; groupId: string };
+
+/** Create, rename, move materials into, or retire a planning group. */
+export function usePlanningGroupCommand() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+
+  return useMutation<CommandResult, Error, PlanningGroupCommandVars>({
+    mutationFn: (vars) => {
+      switch (vars.verb) {
+        case 'create':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_planninggroup_create',
+            entity: 'planningGroup',
+            payload: { name: vars.name.trim(), sapMaterialGroup: vars.sapMaterialGroup },
+          });
+        case 'rename':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_planninggroup_rename',
+            entity: 'planningGroup',
+            entityId: vars.groupId,
+            payload: { name: vars.name.trim() },
+          });
+        case 'move':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_planninggroup_move_materials',
+            entity: 'planningGroup',
+            entityId: vars.groupId,
+            payload: { materialCodes: [...vars.materialCodes] },
+          });
+        case 'retire':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_planninggroup_retire',
+            entity: 'planningGroup',
+            entityId: vars.groupId,
+            payload: {},
+          });
+      }
+    },
+    onSuccess: (result) => {
+      if (result.status !== 'failed') void qc.invalidateQueries();
+    },
+  });
+}
+
 // ── BL-50 · A RULING ON ONE DAY OF THE HUB'S WORKING CALENDAR ────────────────
 //
 // ⚠️ **`entityId` IS THE DATE, AND THERE IS NO `date` PAYLOAD FIELD** — the
@@ -2072,7 +2128,8 @@ export type InventoryCommandVars =
   | {
       verb: 'submitCapacity';
       supplierId: string;
-      materialGroup: string;
+      /** Material C5 (MR-8 BR-04) — the planning group the capacity is for. */
+      planningGroupId: string;
       weeks: readonly { week: string; allocated: number; upside?: number; reason?: string; note?: string }[];
     }
   | { verb: 'closeAlert'; key: string; closeReason: string; actionNote?: string };
@@ -2131,7 +2188,7 @@ export function useInventoryCommand() {
           return svc.commands.dispatch(scope, {
             transitionId: 't_capacity_submit',
             entity: 'capacitySubmission',
-            payload: { supplierId: vars.supplierId, materialGroup: vars.materialGroup, weeks: vars.weeks.map((w) => ({ ...w })) },
+            payload: { supplierId: vars.supplierId, planningGroupId: vars.planningGroupId, weeks: vars.weeks.map((w) => ({ ...w })) },
           });
         case 'closeAlert':
           return svc.commands.dispatch(scope, {

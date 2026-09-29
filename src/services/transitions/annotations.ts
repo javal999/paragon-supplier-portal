@@ -277,6 +277,10 @@ export const TRANSITION_PURPOSE: FlowAnnotations = Object.freeze({
   t_calendar_day_set: { purposeKey: 'processFlows.purpose.t_calendar_day_set' },
   t_threepl_set: { purposeKey: 'processFlows.purpose.t_threepl_set' },
   t_supplier_set_update_mode: { purposeKey: 'processFlows.purpose.t_supplier_set_update_mode' },
+  t_planninggroup_create: { purposeKey: 'processFlows.purpose.t_planninggroup_create' },
+  t_planninggroup_rename: { purposeKey: 'processFlows.purpose.t_planninggroup_rename' },
+  t_planninggroup_move_materials: { purposeKey: 'processFlows.purpose.t_planninggroup_move_materials' },
+  t_planninggroup_retire: { purposeKey: 'processFlows.purpose.t_planninggroup_retire' },
   t_setting_set: { purposeKey: 'processFlows.purpose.t_setting_set' },
   t_reasoncode_set: { purposeKey: 'processFlows.purpose.t_reasoncode_set' },
 
@@ -386,6 +390,7 @@ export const ENTITY_PURPOSE: FlowAnnotations = Object.freeze({
   workingCalendar: { purposeKey: 'processFlows.purpose.entity.workingCalendar' },
   threePl: { purposeKey: 'processFlows.purpose.entity.threePl' },
   supplierOverlay: { purposeKey: 'processFlows.purpose.entity.supplierOverlay' },
+  planningGroup: { purposeKey: 'processFlows.purpose.entity.planningGroup' },
   hubSetting: { purposeKey: 'processFlows.purpose.entity.hubSetting' },
   reasonCode: { purposeKey: 'processFlows.purpose.entity.reasonCode' },
   supplierApplication: { purposeKey: 'processFlows.purpose.entity.supplierApplication' },

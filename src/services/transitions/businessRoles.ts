@@ -321,6 +321,9 @@ const LANE_BUNDLES = Object.freeze({
       // REQ-E14-13 BR-07 / ENG-D16 — the Material Planner agrees a PO-line
       // change with the supplier in SAP and records here that it was taken there.
       'sapchange:mark',
+      // Material C5 (MR-8 BR-03) — Material Planning maintains the planning
+      // groups capacity is kept by: create, rename, move materials, retire.
+      'planninggroup:manage',
     ]),
     // Raising and revising a requisition — split from approving one, which is
     // the segregation `pr:approve` living in `procurement` expresses.

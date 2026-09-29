@@ -34,6 +34,8 @@ import {
   labelClass,
   useInventoryRunner,
 } from './inventory/inventoryDisplay';
+import { alertPlanningGroup, usePlanningGroupLabel } from './inventory/planningGroupDisplay';
+import { usePlanningGroups } from '../services/query/hooks';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PTI ALERTS — REQ-E08-05.
@@ -106,6 +108,10 @@ const BuyerAlerts: React.FC = () => {
   const closeReasons = useActiveReasonCodes('alertClose');
   const [params, setParams] = useSearchParams();
   const reasonFilter = params.get('reason') ?? '';
+  // Material C5 (MR-8 BR-07) — planning group is a filter on alerts.
+  const groupFilter = params.get('planningGroup') ?? '';
+  const groupLabel = usePlanningGroupLabel();
+  const planningGroups = usePlanningGroups().data?.items ?? [];
   // A reason in the address is a Closed-tab filter, so that tab opens.
   const [tab, setTab] = useState<StatusTab>(reasonFilter ? 'closed' : 'open');
   const [risk, setRisk] = useState<RiskFilter>('all');
@@ -125,7 +131,17 @@ const BuyerAlerts: React.FC = () => {
   const ofTab = alerts.filter((a) => a.status === tab);
   const closed = alerts.filter((a) => a.status === 'closed');
   const byReason = (a: InventoryAlert) => tab !== 'closed' || reasonFilter === '' || closeReasonOf(a) === reasonFilter;
-  const shown = ofTab.filter((a) => (risk === 'all' || a.riskClass === risk) && byReason(a));
+  const byGroup = (a: InventoryAlert) => groupFilter === '' || alertPlanningGroup(a, planningGroups) === groupFilter;
+  const groupOptions = [
+    ...new Set(ofTab.map((a) => alertPlanningGroup(a, planningGroups)).filter((g): g is string => g !== null)),
+  ].sort();
+  const setGroupFilter = (id: string) => {
+    const next = new URLSearchParams(params);
+    if (id) next.set('planningGroup', id);
+    else next.delete('planningGroup');
+    setParams(next, { replace: true });
+  };
+  const shown = ofTab.filter((a) => (risk === 'all' || a.riskClass === risk) && byReason(a) && byGroup(a));
   const groups = groupAlertsBySupplier(shown);
   const openCount = (r: RiskClass) => alerts.filter((a) => a.status === 'open' && a.riskClass === r).length;
   // The filter offers every code offered today plus any retired code a closure
@@ -192,6 +208,24 @@ const BuyerAlerts: React.FC = () => {
         onChange={setRisk}
         className="mb-4"
       />
+      <div className="mb-4 max-w-xs">
+        <label htmlFor="alert-group-filter" className={labelClass}>
+          {t('inv.alerts.filter.planningGroup')}
+        </label>
+        <select
+          id="alert-group-filter"
+          className={inputClass}
+          value={groupFilter}
+          onChange={(e) => setGroupFilter(e.target.value)}
+        >
+          <option value="">{t('inv.filter.all')}</option>
+          {groupOptions.map((id) => (
+            <option key={id} value={id}>
+              {groupLabel(id)}
+            </option>
+          ))}
+        </select>
+      </div>
 
       {tab === 'closed' ? (
         <>
@@ -251,7 +285,7 @@ const BuyerAlerts: React.FC = () => {
                           <div className="text-sm text-text-primary">{t(`inv.alerts.rule.${a.rule}`)}</div>
                           <div className="text-xs text-text-secondary">
                             {a.rule === 'capacityBelowDemand' ? (
-                              t(`inv.group.${a.subject}`)
+                              groupLabel(a.subject)
                             ) : (
                               <>
                                 <Data>{a.subject}</Data> · {a.subjectLabel}
