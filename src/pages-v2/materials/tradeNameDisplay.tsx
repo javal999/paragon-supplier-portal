@@ -32,12 +32,19 @@ export const MaterialNameStatePill: React.FC<{ state: MaterialNameState; testId?
   );
 };
 
-/** The approved trade name, shown beside PTI's description on a stock row. */
-export const TradeNameBeside: React.FC<{ name?: string; testId?: string }> = ({ name, testId }) => {
+/**
+ * The approved trade name, shown beside PTI's description on a stock row. The
+ * supplier reads "Your name"; a PTI viewer reads "Supplier's name" (FU-10).
+ */
+export const TradeNameBeside: React.FC<{ name?: string; viewer: 'supplier' | 'pti'; testId?: string }> = ({
+  name,
+  viewer,
+  testId,
+}) => {
   const { t } = useTranslation();
   return name ? (
     <div className="text-xs text-text-secondary" data-testid={testId}>
-      {t('matName.beside', { name })}
+      {t(viewer === 'supplier' ? 'matName.beside' : 'matName.besideSupplier', { name })}
     </div>
   ) : null;
 };

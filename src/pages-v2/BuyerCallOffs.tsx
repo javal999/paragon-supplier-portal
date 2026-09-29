@@ -49,6 +49,8 @@ import type { ReleaseCadence } from '../services/delivery/types';
 import { callOffConfirmWorkingDays, callOffTolerance } from '../services/transitions/callOffTolerance';
 import { numberOf } from './callOffs/callOffDisplay';
 import { PicCell, PicFilter, PicHeader, ptiPicOf, usePicFilter } from './materials/picDisplay';
+import MaterialSearch, { MaterialMatchReason, useMaterialMatcher } from '../components/ui-v2/MaterialSearch';
+import { searchMaterials } from '../services/transitions/matchMaterial';
 import {
   ConfirmationPill,
   DeliveryPill,
@@ -154,6 +156,9 @@ const BuyerCallOffs: React.FC = () => {
   const drill = usePoDrillFilter();
   // Material C4 — the PIC filter, kept in the page address (MR-5 BR-03).
   const pic = usePicFilter();
+  // Material C3 — the one material search (MR-3 BR-04).
+  const [search, setSearch] = useState('');
+  const matchOf = useMaterialMatcher();
   const drilledPo = drilledPoId(drill);
   /**
    * ⚠️ **WHEN A PO FILTER IS IN PLAY THE PAGE LISTS WHAT THE SUMMARY COUNTED,
@@ -207,7 +212,14 @@ const BuyerCallOffs: React.FC = () => {
   const atRisk = views.filter((v) => v.delivery === 'atRisk').length;
   const drift = deliveryDrift(views);
   // Filtered at render only: `panelLine` below still finds a line the filter hides.
-  const shownSections = sections.filter((s) => pic.matches(ptiPicOf(s.line.materialCode)));
+  // Material C3 — the search matches the line's code, PTI description and its
+  // supplier's approved trade name; the best match comes first.
+  const shownSections = searchMaterials(
+    search,
+    sections.filter((s) => pic.matches(ptiPicOf(s.line.materialCode))),
+    (s) => ({ code: s.line.materialCode, description: s.line.description, supplierId: s.po.supplierId }),
+    matchOf,
+  );
 
   const selectedView: CallOffView | null =
     panel?.kind === 'callOff' ? (views.find((v) => v.callOff.id === panel.id) ?? null) : null;
@@ -367,7 +379,10 @@ const BuyerCallOffs: React.FC = () => {
         </div>
       )}
 
-      <div className="mb-4">
+      <div className="flex flex-wrap items-center gap-3 mb-4">
+        <div className="flex-1 min-w-[240px]">
+          <MaterialSearch mode="filter" query={search} onQueryChange={setSearch} testId="calloff-search" />
+        </div>
         <PicFilter
           refs={sections.map((s) => ptiPicOf(s.line.materialCode))}
           persona="buyer"
@@ -380,10 +395,10 @@ const BuyerCallOffs: React.FC = () => {
       <div className="space-y-6">
         {shownSections.length === 0 && (
           <p className="text-sm text-text-tertiary py-8 text-center" data-testid="calloff-pic-empty">
-            {t('pic.filter.empty')}
+            {search.trim() ? t('matSearch.noMatch', { query: search.trim() }) : t('pic.filter.empty')}
           </p>
         )}
-        {shownSections.map(({ po, line, remaining, rows }) => (
+        {shownSections.map(({ item: { po, line, remaining, rows }, match }) => (
           <section
             key={`${po.id}-${line.id}`}
             data-testid={`calloff-umbrella-${po.id}-${line.id}`}
@@ -398,6 +413,7 @@ const BuyerCallOffs: React.FC = () => {
                 <div className="text-xs text-text-secondary mt-0.5">
                   <Data className="text-text-tertiary">{line.materialCode}</Data> · {line.description}
                 </div>
+                <MaterialMatchReason match={match} testId={`calloff-match-${line.id}`} />
                 <div className="text-xs text-text-secondary mt-1 flex flex-wrap items-center gap-2">
                   <PicHeader />
                   <PicCell value={ptiPicOf(line.materialCode)} testId={`calloff-pic-${line.id}`} />
