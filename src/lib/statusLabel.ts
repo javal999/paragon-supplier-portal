@@ -55,6 +55,7 @@ const STATUS_ID: Record<string, string> = {
   Delayed: 'Terlambat',
   'Needs Attention': 'Perlu Perhatian',
   Adjusted: 'Disesuaikan',
+  'Awaiting exception': 'Menunggu Pengecualian',
   // REQ-E07-07 — the supplier's invoice status list.
   Verified: 'Terverifikasi',
   'Scheduled for payment': 'Dijadwalkan untuk dibayar',
