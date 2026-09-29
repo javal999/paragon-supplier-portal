@@ -181,6 +181,7 @@ describe('BuyerCommHub — the buyer/planner Communication Hub (C4a)', () => {
     const form = within(document.querySelector('aside[role="dialog"]') as HTMLElement);
     fireEvent.change(form.getByLabelText('Material'), { target: { value: 'PK-PETB-8810' } });
     fireEvent.change(form.getByLabelText('Stock on hand (PCS)'), { target: { value: '2400' } });
+    fireEvent.change(form.getByLabelText('In production (PCS)'), { target: { value: '0' } }); // MAT-D4 — required, 0 allowed
     fireEvent.click(form.getByTestId('stock-entry-submit'));
     // The onRecorded refresh re-reads the append-only store → a provenance row shows.
     await waitFor(() => expect(screen.getAllByTestId('commhub-provenance-row').length).toBe(1));
