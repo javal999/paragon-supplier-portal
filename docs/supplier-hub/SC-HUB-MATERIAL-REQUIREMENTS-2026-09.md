@@ -2,12 +2,29 @@
 
 | Field | Value |
 |---|---|
-| Status | **Decided, ready to build.** The owner accepted the MOM-review rulings (section 13.1) and every recommendation in section 13.2 (MAT-D1 to MAT-D15) on 2026-09-29. Rules tagged [Proposed] that name one of these decisions are built as written. MAT-D15 still needs the document lists from Procurement and Quality before MR-10 goes live |
+| Status | **Folded in on 2026-09-29** (task I1). Owner accepted the MOM-review rulings (section 13.1) and every recommendation in section 13.2 (MAT-D1 to MAT-D15) on 2026-09-29; they, and the owner's 6 rulings during the build (MAT-D16 to MAT-D21, build plan section 4.1), are recorded in section 9 of `SUPPLIER-HUB-REQUIREMENTS.md` 0.29 and in `DECISION-GUIDE.md`. The MR-1 to MR-10 rules are now the IDs in the fold-in map below; US-MAT-01 to US-MAT-14 are US-80 to US-93 in the PRD. What was built, and where it differs from this file, is in `BUILD-GAP.md` section 1.1; what is not built is `BACKLOG.md` BL-144 to BL-159. Built in PRs #86 (A1), #84 (A2), #85 (A3), #88 (B1), #106 (B2), #105 (B3), #110 (B4), #104 (C1), #107 (C1b), #97 (C2), #102 (C3), #90 (C4), #92 (C5), #89 (D1), #93 (D2), #101 (D3), #103 (E1), #108 (E2), #87 (F1), #91 (G1) and #109 (G2), all merged 2026-09-29. MAT-D15 still needs the document lists from Procurement and Quality; until then the qualification checks only warn (MAT-D19, BL-146). Text corrected at fold-in, marked in place: the atom name (plan AR-02), the update-mode approver (AR-04), the document window (AR-18), and the shelf-life default (MAT-D16). This file stays as the record of the analysis and is not updated further |
 | Date | 2026-09-29 |
 | Source meeting | SC Hub – Material, 2026-09-23. The MOM was reviewed with the owner on 2026-09-29, and its items are cited as [MOM n.n] |
 | Code read | `main` at `6b26e09` |
 | Covers | MR-1 to MR-10 (section 3) |
 | Builds on | REQ-E07-04 (ASN), REQ-E08-01 (inventory visibility), REQ-E08-02 (stock submission), REQ-E08-04 (capacity), REQ-E08-05 (alerts), REQ-E09-03 (call-off), CR-05, CR-18, CR-19, CR-23, CR-24, the RFx award (RFX-D6 to RFX-D15), BL-32 (admin settings and reason codes), BL-50 (hub calendar), ENG-D18 and ENG-D19 |
+
+**Fold-in map** (task I1, 2026-09-29). Every MR rule, as it now reads in `SUPPLIER-HUB-REQUIREMENTS.md` 0.29:
+
+| MR | Rules here | Now | Note |
+|---|---|---|---|
+| MR-1 | BR-01 · BR-02 · BR-03 · BR-04 · BR-05 · BR-06 · BR-07 | REQ-E08-02 BR-13 · BR-12 · BR-14 · BR-15 · BR-16 · BR-17 · BR-18 | AC-01 to AC-06 → REQ-E08-02 AC-07 to AC-10 |
+| MR-2 | BR-01 to BR-05 · BR-06, BR-07 | REQ-E08-02 BR-23 to BR-27 · REQ-E03-05 BR-18, BR-19 | AC-01 to AC-03 → REQ-E08-02 AC-12; AC-04, AC-05 → REQ-E03-05 AC-14 |
+| MR-3 | BR-01 to BR-06 | New REQ-E08-06 BR-01 to BR-06 | AC-01 to AC-05 same numbers |
+| MR-4 | BR-01 to BR-03 · BR-04 | REQ-E08-02 BR-19 to BR-21 · BR-22, with BR-06 amended (MAT-D4, MAT-D21) | AC-01 to AC-03 → REQ-E08-02 AC-11 |
+| MR-5 | BR-01 to BR-05 | New REQ-E08-07 BR-01 to BR-05 | AC-01 to AC-03 same numbers |
+| MR-6 | BR-01 to BR-13 | REQ-E07-04 BR-06 to BR-18, with BR-04 amended (expiry required when shelf-life relevant) | AC-01 to AC-06 → REQ-E07-04 AC-04 to AC-06; AC-07 → REQ-E08-05 AC-06; BR-13 also listed in REQ-E08-05 BR-01 |
+| MR-7 | BR-01 to BR-09 | New REQ-E08-08 BR-01 to BR-09; BR-10 records MAT-D2 and MAT-D3 | AC-01 to AC-06 same numbers |
+| MR-8 | BR-01 to BR-07 | REQ-E08-04 BR-13 to BR-19 | AC-01 to AC-04 → REQ-E08-04 AC-07, AC-08 |
+| MR-9 | BR-01 to BR-07 | REQ-E08-05 BR-06 to BR-12 | AC-01 to AC-04 → REQ-E08-05 AC-04, AC-05 |
+| MR-10 | BR-01 to BR-10 | CE-12a to CE-12j (section 3.6a), cited by REQ-E03-02 BR-19, REQ-E03-03 BR-26, REQ-E03-04 BR-17 and REQ-E03-05 BR-20 | AC-03 to AC-05 → REQ-E03-05 AC-15; AC-01, AC-02, AC-06 are PRD US-91 and US-93 |
+| MAT-D1 to MAT-D15 | Section 13.2 | Section 9 of the requirements; `DECISION-GUIDE.md` | Rulings during the build: MAT-D16 to MAT-D21 |
+| US-MAT-01 to US-MAT-14 | Sections 3 to 12 | PRD US-80 to US-93, in the same order | |
 
 **Tags.** [Code] = built behaviour, cited `path:line`. [MOM n.n] = the 2026-09-23 meeting, as reviewed. [Owner, 2026-09-29] = a ruling the owner gave while reviewing the MOM. [Proposed] = nobody has confirmed it yet; the owner decides it in section 13. Code paths are under `src/` unless they start with `docs/`.
 
@@ -103,7 +120,7 @@ Planners check supplier stock on days when the figure is old. A 7-day stale peri
 
 ### e. Business rules
 - MR-1 BR-01. A system-connected supplier is pulled every 2 hours, set by a hub setting `stockSync.intervalHours` (default 2, min 1, max 24). Needs Stage F [MOM 1.1; Owner, 2026-09-29].
-- MR-1 BR-02. "System-connected" is a supplier-level setting, `stockUpdateMode: 'api' | 'manual'`, kept on the supplier master and changed by the Hub administrator. It replaces the fixture test `supplierId in API_CONNECTIONS` (`inventoryReadModel.ts:58`) as the source of `apiConnected`. Reason: the cadence, the SLA and the compliance measure all depend on it, so it must be visible and governed [Proposed].
+- MR-1 BR-02. "System-connected" is a supplier-level setting, `stockUpdateMode: 'api' | 'manual'`, kept on the supplier master and changed by the Hub administrator [corrected at fold-in: by a `compliance` atom, `supplier:set-update-mode`, because "Hub administrator only" cannot be expressed; plan AR-04]. It replaces the fixture test `supplierId in API_CONNECTIONS` (`inventoryReadModel.ts:58`) as the source of `apiConnected`. Reason: the cadence, the SLA and the compliance measure all depend on it, so it must be visible and governed [Proposed].
 - MR-1 BR-03. A manual supplier's update cycle runs from the previous cutoff (exclusive) to Thursday 23:59 WIB (inclusive). If Thursday is not a working day on the hub calendar, the cutoff is 23:59 on the last working day before it [Owner, 2026-09-29 (Thursday); time and holiday rule Proposed, MAT-D7].
 - MR-1 BR-04. A material counts as updated for a cycle when a stock record for it is accepted inside the cycle, from any channel: `manual`, `template`, `api` or `pti` (recorded by PTI for the supplier). A `pti` record counts because the supplier did send the figure; it stays labelled "Entered by PTI" [Proposed, MAT-D7].
 - MR-1 BR-05. Staleness by mode, replacing the single 7-day default:
@@ -114,7 +131,7 @@ Planners check supplier stock on days when the figure is old. A 7-day stale peri
 - MR-1 BR-07. The weekly update is scheduled with the weekly supplier confirmation, so the supplier does both in one visit. The panel in step 1 shows both deadlines side by side [MOM 3.2; which confirmation, open item].
 
 ### f. Lifecycle and data changes
-- `Supplier.stockUpdateMode: 'api' | 'manual'`, with a governed verb `t_supplier_set_update_mode` held by the Hub administrator.
+- `Supplier.stockUpdateMode: 'api' | 'manual'`, with a governed verb `t_supplier_set_update_mode` held by the Hub administrator [corrected at fold-in: held by the `compliance` lane, plan AR-04].
 - New hub settings: `stockSync.intervalHours` (2), `stale.apiHours` (24), `stockUpdate.cutoffDay` (Thursday), `stockUpdate.cutoffTime` (23:59), time zone WIB.
 - New pure function `updateCycleFor(date, calendar)` returning `{start, cutoff}`, and `cycleStatus(supplierId, cycle)` returning per material `updated | missing`. Computed at read time; nothing new is stored beyond the stock records.
 - `stockFreshness()` reads the mode.
@@ -132,7 +149,7 @@ Planners check supplier stock on days when the figure is old. A 7-day stale peri
 - MR-1 AC-03. An API supplier with no successful pull in 24 hours is shown stale.
 - MR-1 AC-04. A record entered by PTI counts as updated and still reads "Entered by PTI".
 - MR-1 AC-05. With Thursday marked non-working on the hub calendar, the cutoff falls on Wednesday.
-- MR-1 AC-06. Only the Hub administrator can change a supplier's update mode, and the change is logged with who and when.
+- MR-1 AC-06. Only the Hub administrator can change a supplier's update mode, and the change is logged with who and when [corrected at fold-in: only a holder of the `compliance` atom, plan AR-04].
 
 ### i. Dependencies and out of scope
 - The 2-hour pull needs Stage F and an API contract per supplier (REQ-E08-02 data section, RSK-02).
@@ -353,8 +370,8 @@ The ASN checks only that a batch is typed and that an expiry is a valid date (`f
 **Shelf life**
 - MR-6 BR-05. Remaining shelf life is measured from the ASN's `eta`, the only arrival date the ASN holds. The rule: expiry ≥ ETA + the material's minimum remaining shelf life. The default is 6 calendar months [Owner, 2026-09-29 (≥ 6 months from receipt); `eta` as receipt date Proposed].
 - MR-6 BR-06. The minimum is a per-material value `minRemainingShelfLifeMonths` on the material master. It is taken from SAP's minimum remaining shelf life where maintained, and falls back to the hub setting `shelfLife.defaultMonths` (6) [Owner, 2026-09-29].
-- MR-6 BR-07. Expiry becomes required on an ASN line for every material with `shelfLifeRelevant = true`. It is set per material from its master-data shelf life, for raw material and packaging alike, never by material type. Reason: BPOM CPKB treats both as starting materials with an expiry limit [Proposed, MAT-D6].
-- MR-6 BR-08. A line that fails BR-05 blocks submit. The only way forward is an exception request with a reason, approved by the holder of `asn:approveShelfLife`. That atom sits in `compliance` only (Quality), not `planning`, so a planner cannot approve their own urgent receipt. The approved goods are received into blocked stock, as SAP does on a failed shelf-life check [Owner, 2026-09-29 (block plus exception); approver Proposed, MAT-D6].
+- MR-6 BR-07. Expiry becomes required on an ASN line for every material with `shelfLifeRelevant = true`. It is set per material from its master-data shelf life, for raw material and packaging alike, never by material type [amended 2026-09-29, MAT-D16: a raw material (ROH) is shelf-life relevant by default, as is any material with a minimum remaining shelf life; packaging without one is not; an administrator can switch any material]. Reason: BPOM CPKB treats both as starting materials with an expiry limit [Proposed, MAT-D6].
+- MR-6 BR-08. A line that fails BR-05 blocks submit. The only way forward is an exception request with a reason, approved by the holder of `asn:approve-shelf-life` [atom name corrected at fold-in; `asn:approve-shelf-life` breaks the role-name rule, plan AR-02]. That atom sits in `compliance` only (Quality), not `planning`, so a planner cannot approve their own urgent receipt. The approved goods are received into blocked stock, as SAP does on a failed shelf-life check [Owner, 2026-09-29 (block plus exception); approver Proposed, MAT-D6].
 - MR-6 BR-09. An approved exception is recorded on the ASN with approver, time and reason, and shows on the goods receipt.
 
 **Call-off check (poka-yoke)**
@@ -367,7 +384,7 @@ The ASN checks only that a batch is typed and that an expiry is a valid date (`f
 - MR-6 BR-13. New alert rule `callOffNotCovered`, PTI-only: raised when a confirmed call-off due within the supplier's lead time is larger than the supplier's declared SOH plus in production due before the need date. Risk class by CR-24. Reason: this is the poka-yoke on the stock side, before an ASN exists [Proposed; MOM 2.1 as clarified by the owner].
 
 ### f. Lifecycle and data changes
-- `AsnStatus` gains `Awaiting exception` (Draft → Awaiting exception → Submitted, or → Draft on reject). New verbs `t_asn_request_exception` (supplier, `asn:submit`), `t_asn_approve_exception` and `t_asn_reject_exception` (`asn:approveShelfLife`, reason required on reject).
+- `AsnStatus` gains `Awaiting exception` (Draft → Awaiting exception → Submitted, or → Draft on reject). New verbs `t_asn_request_exception` (supplier, `asn:submit`), `t_asn_approve_exception` and `t_asn_reject_exception` (`asn:approve-shelf-life`, reason required on reject).
 - `ASN` gains `shelfLifeException?: {reason, requestedBy, requestedAt, decidedBy?, decidedAt?, decision?, decisionReason?}` and `callOffWarnings?: {kind: 'qtyOver' | 'qtyUnder' | 'early' | 'late' | 'material' | 'unlinked', detail}[]`.
 - `AsnLineItem` gains `batchSource: 'declared' | 'typed'`.
 - `MaterialMasterEntry` gains `minRemainingShelfLifeMonths?` and `shelfLifeRelevant`.
@@ -578,7 +595,7 @@ Today the hub has no such levels. It lets any Active supplier be invited to any 
 
 ### b. Already built
 - Supplier lifecycle `status` Active, Onboarding, Suspended, Blacklisted, and the Active-only invitee gate at filter and publish (`rfxRules.ts:56-60, 107`; `RFX_PUBLISH_HAS_INVITEES`) [Code].
-- Supplier documents with category, status and expiry, and the Expiring (90 days) and Expired projections [Code].
+- Supplier documents with category, status and expiry, and the Expiring (90 days) and Expired projections [Code] [corrected at fold-in: supplier documents use a 180-day expiring window; the 90 days belong to the certificate registry, plan AR-18].
 - CR-23 at scoring and award [Code].
 
 ### c. User stories
@@ -622,7 +639,7 @@ Today the hub has no such levels. It lets any Active supplier be invited to any 
 - MR-10 BR-10. A supplier application approved in onboarding (`supplierApplication.flow.ts`, state "Approved") does not make the vendor an "Approved" vendor. To avoid the clash, the application state is shown as "Application accepted" [Proposed].
 
 ### f. Lifecycle and data changes
-- New admin config `QualificationRule {level: 'approved' | 'preferred', requiredDocs: {category, certType?}[]}`, changed by a governed verb held by `procurement` and the Hub administrator.
+- New admin config `QualificationRule {level: 'approved' | 'preferred', requiredDocs: {category, certType?}[]}`, changed by a governed verb held by `procurement` and the Hub administrator [corrected 2026-09-29, MAT-D18: held by `procurement` and `compliance`].
 - New pure function `qualificationFor(supplierId, onDate)` → `{level, missingFor: {approved: [], preferred: []}, expiringSoon: []}`, computed at read time. The new ledger `QualificationChange {supplierId, from, to, cause, at}` is appended when a recompute differs.
 - `Supplier` gains the projected `qualification` (never stored, like `scorecardGrade`).
 - New admin mapping `SourcingTypeMap {category | purchasingGroup → 'direct' | 'indirect'}`; the RFI, RFQ and RFP event types gain a derived, stored-at-publish `sourcingType`.
@@ -676,7 +693,7 @@ Market practice was researched on 2026-09-29 (sources and grades in section 17).
 | MAT-D3 | Name for manufacturer → distributor | **"To distributor"** | SAP SCC "In transit" = ASNs without goods receipt; SAP S/4 "stock in transit" = left the issuing plant, not yet received (A). Oracle supply types: on hand, in receiving, WIP, POs, in-transits (A). APICS "pipeline stock" (B/C, snippet). No standard term for the manufacturer → distributor leg found | "Incoming" means in production + in transit in the hub today (REQ-E08-01 BR-06). Reusing it for one leg makes the same word mean two numbers on two screens |
 | MAT-D4 | Template columns D to F | **E (in-production qty) required, 0 allowed; F (completion date) required when E > 0; D (supplier ROP) optional** | SAP SCC keeps supplier manufacturing orders and firm receipts as their own key figures, apart from stock on hand (A). Required vs optional per quantity column in SAP's or Oracle's upload templates: not found | The simulation (MR-7) cannot tell "nothing in production" from "not reported", so it under-states supplier stock and triggers call-offs that are not needed |
 | MAT-D5 | ASN batch when no batches are declared | **Free text, marked "not in declared stock"; dropdown when batches are declared** | SAP SCC ship notices take supplier and buyer batch as typed fields; a batch-matching rule exists only for subcontracting components, default off (A). A customer guide has suppliers type the batch (C). GS1 DESADV carries batch and expiry as optional free text (B). A portal that forces a pick from declared stock: not found | A hard dropdown blocks every supplier that follows the template (batch columns optional). No marker means planners cannot see which ASN batches were never declared as stock |
-| MAT-D6 | Shelf-life rule: which materials, who approves | **Changed.** Rule applies to every material with a shelf life in master data, **raw material and packaging alike**, not by material type. Exception approved by **Quality (the `compliance` lane)** only, not planning. An approved short-dated receipt is received into blocked stock | BPOM CPKB treats raw and packaging materials together as starting materials: specs state an expiry limit, expired material is not used, the warehouse warns QC 3 months ahead, deviations are approved by the Head of QC (B). SAP S/4 checks minimum remaining shelf life at GR, warning or error by configuration; on error, goods can go to GR blocked stock (A). SAP's field is client-level, not per plant (C, snippet) | Short-dated goods reach the warehouse unflagged, a CPKB audit finding. A planner approving their own urgent receipt bypasses the quality check the rule exists for |
+| MAT-D6 | Shelf-life rule: which materials, who approves | **Amended 2026-09-29 by MAT-D16:** raw materials (ROH) are shelf-life relevant by default. **Changed.** Rule applies to every material with a shelf life in master data, **raw material and packaging alike**, not by material type. Exception approved by **Quality (the `compliance` lane)** only, not planning. An approved short-dated receipt is received into blocked stock | BPOM CPKB treats raw and packaging materials together as starting materials: specs state an expiry limit, expired material is not used, the warehouse warns QC 3 months ahead, deviations are approved by the Head of QC (B). SAP S/4 checks minimum remaining shelf life at GR, warning or error by configuration; on error, goods can go to GR blocked stock (A). SAP's field is client-level, not per plant (C, snippet) | Short-dated goods reach the warehouse unflagged, a CPKB audit finding. A planner approving their own urgent receipt bypasses the quality check the rule exists for |
 | MAT-D7 | Weekly cycle details | **Thursday 23:59 WIB, earlier working day on holidays; PTI-entered records count and stay labelled; a week is compliant only if every material was updated** | Oracle lets buyer users upload supplier on-hand on the supplier's behalf (A). SAP SCC shows "Last customer update" and "Last supplier update" separately (A). Practitioners advise agreeing the cadence and what happens when a file does not arrive (C). A specific cutoff, holiday rule or all-or-nothing rule: not found | Without a fixed cutoff, "late" is argued supplier by supplier and MR-2 cannot be scored. Counting partial weeks lets a supplier update its easy materials and skip the critical ones |
 | MAT-D8 | API stale threshold | **24 hours** | EDI 846 practice: "daily at minimum, hourly or better" for high-volume retail (C); retailers accept hourly to weekly (C). SAP SCC alerts on transmission failure, not on data age (A). Oracle purges supplier on-hand older than a customer-set number of days (A). A published threshold for supplier inventory integrations: not found | A silent integration failure looks like fresh data; the planner acts on stock that is days old. Practitioners cite shipping on last week's numbers after a failed export (C) |
 | MAT-D9 | How compliance enters the score | **Weighted blend into the score, w = 0.10** (low end of the owner's 10–15%), **fixed at release** | SAP Ariba SPM and S/4 Supplier Evaluation let the customer set weights; no defaults (A). Changing weights later breaks comparison over time (A, snippet). Published example scorecards give responsiveness about 10% (D). A "data update compliance" KPI in a score: not found | A weight set late or changed after launch makes grades jump for reasons suppliers cannot see, and breaks the trend Procurement reviews |
@@ -780,6 +797,7 @@ Researched 2026-09-29. SAP help.sap.com pages were read through its content API 
 
 | Version | Date | Change |
 |---|---|---|
+| 0.4 | 2026-09-29 | Folded in (task I1): status row, fold-in map, and text corrected in place for plan AR-02, AR-04, AR-18 and MAT-D16. Not updated further |
 | 0.3 | 2026-09-29 | Owner accepted every recommendation in section 13.2 (MAT-D1 to MAT-D15); status set to Decided |
 | 0.2 | 2026-09-29 | Section 13.2: market practice and risk per open decision, researched the same day (section 17). Recommendations changed on MAT-D6 (packaging included; Quality approves), MAT-D9 (w = 0.10), MAT-D10 (subtract, "Free to call off") and MAT-D13 (derived from category); rules MR-2 BR-05, MR-6 BR-07/08, MR-7 BR-07, MR-10 BR-06 aligned |
 | 0.1 | 2026-09-29 | First draft from the 2026-09-23 SC Hub Material meeting, as reviewed with the owner on 2026-09-29; code read on `main` at `6b26e09` |
