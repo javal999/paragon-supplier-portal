@@ -356,6 +356,9 @@ const LANE_BUNDLES = Object.freeze({
       // Material C2 (MR-3 BR-02, BR-06) — Material Planning approves or rejects
       // a supplier's trade name, and loads approved names in bulk.
       'materialname:review',
+      // Material E1 (MR-7 BR-08) — the planner fills a figure the supplier has
+      // not given, for the stock simulation only.
+      'inventory:simulate',
     ]),
     // Raising and revising a requisition — split from approving one, which is
     // the segregation `pr:approve` living in `procurement` expresses.

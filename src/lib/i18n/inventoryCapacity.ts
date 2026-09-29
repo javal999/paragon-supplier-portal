@@ -6,7 +6,7 @@
 
 export const inventoryCapacityEn: Record<string, string> = {
   'inv.asOf': 'As of',
-  'inv.search': 'Search material or supplier',
+  'inv.search': 'Search code, description, trade name or supplier',
   'inv.consignment': 'Consignment',
   'inv.table.empty': 'No materials match this view.',
   'inv.toast.refused': 'Not saved',
@@ -385,7 +385,7 @@ export const inventoryCapacityEn: Record<string, string> = {
 
 export const inventoryCapacityId: Record<string, string> = {
   'inv.asOf': 'Per',
-  'inv.search': 'Cari material atau pemasok',
+  'inv.search': 'Cari kode, deskripsi, nama dagang, atau pemasok',
   'inv.consignment': 'Konsinyasi',
   'inv.table.empty': 'Tidak ada material yang cocok dengan tampilan ini.',
   'inv.toast.refused': 'Tidak tersimpan',

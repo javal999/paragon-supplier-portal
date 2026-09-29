@@ -40,6 +40,7 @@ import SupplierSyncPanel from './inventory/SupplierSyncPanel';
 import { PicCell, PicFilter, PicHeader, usePicFilter } from './materials/picDisplay';
 import SupplierMaterialNames from './materials/SupplierMaterialNames';
 import { TradeNameBeside } from './materials/tradeNameDisplay';
+import MaterialSearch, { MaterialMatchReason, useMaterialSearch } from '../components/ui-v2/MaterialSearch';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SUPPLIER STOCK — REQ-E08-01 (SUP view), REQ-E08-02 (template upload, manual
@@ -67,6 +68,7 @@ const SupplierInventory: React.FC = () => {
   const [typeChosen, setTypeChosen] = useState(false);
   const [entryOpen, setEntryOpen] = useState(false);
   const [incoming, setIncoming] = useState<InventoryPosition | null>(null);
+  const [search, setSearch] = useState('');
   // Material C4 — the PIC filter (by name: a supplier never sees the code).
   const pic = usePicFilter();
   // Material C2 — the "My materials" tab (trade names), kept in the address.
@@ -95,7 +97,13 @@ const SupplierInventory: React.FC = () => {
   // appears only for a supplier that supplies both. The PTI view keeps it.
   const splitByType = counts.ROH > 0 && counts.VERP > 0;
   const ofType = splitByType ? rows.filter((r) => r.materialType === activeType) : rows;
-  const shown = ofType.filter((r) => pic.matches(r.mrpController));
+  // Material C3 — the one material search (MR-3 BR-04); the names searched are
+  // this supplier's own (narrowed in the read model, MAT-R4).
+  const shown = useMaterialSearch(
+    search,
+    ofType.filter((r) => pic.matches(r.mrpController)),
+    (r) => ({ code: r.materialCode, description: r.materialLabel, supplierId: r.supplierId }),
+  );
   const needUpdate = rows.filter((r) => stockFreshness(r, nowIso) !== 'current').length;
   const sharesPti = rows.some((r) => r.ptiStockShared);
   const grant = (access.data?.items ?? []).find((g) => g.supplierId === supplierId);
@@ -199,7 +207,10 @@ const SupplierInventory: React.FC = () => {
         />
       )}
 
-      <div className="mb-4">
+      <div className="flex flex-wrap items-center gap-3 mb-4">
+        <div className="flex-1 min-w-[240px]">
+          <MaterialSearch mode="filter" query={search} onQueryChange={setSearch} testId="sup-stock-search" />
+        </div>
         <PicFilter
           refs={ofType.map((r) => r.mrpController)}
           persona="supplier"
@@ -225,14 +236,15 @@ const SupplierInventory: React.FC = () => {
             <TableHeaderCell>{t('inv.col.lastUpdate')}</TableHeaderCell>
           </TableHeader>
           <tbody>
-            {shown.map((p) => (
+            {shown.map(({ item: p, match }) => (
               <TableRow key={p.materialCode} data-testid={`sup-stock-row-${p.materialCode}`}>
                 <TableCell>
                   <Data className="text-xs font-bold text-text-primary">{p.materialCode}</Data>
                   <div className="text-sm text-text-primary">
                     {p.materialLabel}
                   </div>
-                  <TradeNameBeside name={p.tradeName} testId={`sup-stock-trade-name-${p.materialCode}`} />
+                  <TradeNameBeside name={p.tradeName} viewer="supplier" testId={`sup-stock-trade-name-${p.materialCode}`} />
+                  <MaterialMatchReason match={match} testId={`sup-stock-match-${p.materialCode}`} />
                 </TableCell>
                 <TableCell>
                   <PicCell value={p.mrpController} testId={`sup-stock-pic-${p.materialCode}`} />

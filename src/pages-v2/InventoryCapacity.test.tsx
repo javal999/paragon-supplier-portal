@@ -222,8 +222,14 @@ describe('One stock entry (BL-60, REQ-E08-02 BR-06, BR-09, BR-10, AC-04, AC-05)'
       const label = MANUAL_LABEL[f.field];
       if (label) expect(panel().getByLabelText(label), f.field).toBeInTheDocument();
     }
-    // Every typeable control in the panel maps to a template field.
-    const controls = [...document.querySelectorAll('aside[role="dialog"] input, aside[role="dialog"] select')];
+    // Every typeable control in the panel maps to a template field. The material
+    // picker's search box (Material C3, MR-3 BR-04) only narrows the Material
+    // list — it records nothing — so it is part of the materialCode field.
+    const search = panel().getByTestId('stock-entry-material-search');
+    const controls = [...document.querySelectorAll('aside[role="dialog"] input, aside[role="dialog"] select')].filter(
+      (c) => !search.contains(c),
+    );
+    expect(search.querySelectorAll('input')).toHaveLength(1);
     expect(controls).toHaveLength(STOCK_TEMPLATE_FIELDS.filter((f) => MANUAL_LABEL[f.field] !== null).length);
   });
 

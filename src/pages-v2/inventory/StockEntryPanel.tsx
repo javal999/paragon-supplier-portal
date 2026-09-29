@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Plus, X } from 'lucide-react';
 import SidePanel from '../../components/ui-v2/SidePanel';
 import Button from '../../components/ui-v2/Button';
+import MaterialSearch from '../../components/ui-v2/MaterialSearch';
 import type { CommandResult, InventoryPosition } from '../../services/data/types';
 import { batchDatesProblem, dayOf, productionProblem, readStockNumber } from '../../services/transitions/inventoryRules';
 import { InTransitReadOnly, inputClass, inventoryNow, labelClass, useInventoryRunner } from './inventoryDisplay';
@@ -71,9 +72,12 @@ const StockEntryPanel: React.FC<StockEntryPanelProps> = ({
   const { run, pending } = useInventoryRunner();
   const [form, setForm] = useState(EMPTY);
   const [batches, setBatches] = useState<BatchRow[]>([]);
+  // Material C3 — the material picker's search (MR-3 BR-04).
+  const [materialQuery, setMaterialQuery] = useState('');
 
   useEffect(() => {
     if (!open) return;
+    setMaterialQuery('');
     const supplierId = initial?.supplierId ?? (mode === 'supplier' ? (positions[0]?.supplierId ?? '') : '');
     setForm({ ...EMPTY, supplierId, materialCode: initial?.materialCode ?? '', soh: initial?.soh ?? '' });
     setBatches([]);
@@ -189,24 +193,20 @@ const StockEntryPanel: React.FC<StockEntryPanelProps> = ({
             )}
           </>
         )}
-        <div>
-          <label htmlFor="stock-entry-material" className={labelClass}>
-            {t('inv.entry.material')}
-          </label>
-          <select
-            id="stock-entry-material"
-            className={inputClass}
-            value={form.materialCode}
-            onChange={(e) => setForm({ ...form, materialCode: e.target.value })}
-          >
-            <option value="">{t('inv.entry.select')}</option>
-            {materials.map((p) => (
-              <option key={p.materialCode} value={p.materialCode}>
-                {p.materialCode} · {p.materialLabel}
-              </option>
-            ))}
-          </select>
-        </div>
+        <MaterialSearch
+          mode="picker"
+          id="stock-entry-material"
+          label={t('inv.entry.material')}
+          labelClassName={labelClass}
+          selectClassName={inputClass}
+          emptyLabel={t('inv.entry.select')}
+          options={materials.map((p) => ({ code: p.materialCode, description: p.materialLabel, supplierId: p.supplierId }))}
+          value={form.materialCode}
+          onChange={(code) => setForm({ ...form, materialCode: code })}
+          query={materialQuery}
+          onQueryChange={setMaterialQuery}
+          testId="stock-entry-material-search"
+        />
         <div className="grid grid-cols-2 gap-3">
           <NumberField id="stock-entry-soh" label={t('inv.entry.soh', { uom })} value={form.soh} onChange={(v) => setForm({ ...form, soh: v })} error={numberError(soh)} />
           <NumberField id="stock-entry-rop" label={t('inv.entry.rop', { uom })} value={form.rop} onChange={(v) => setForm({ ...form, rop: v })} error={numberError(rop)} />
