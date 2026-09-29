@@ -90,6 +90,8 @@ import { inventoryCapacityEn, inventoryCapacityId } from './i18n/inventoryCapaci
 import { forecastCollaborationEn, forecastCollaborationId } from './i18n/forecastCollaboration';
 // — REQ-E14-02 supplier reliability and PTI plan-change measures (BL-99) —
 import { reliabilityEn, reliabilityId } from './i18n/reliability';
+// — REQ-E06-04 fixed stock reconcile (ENG-D21, BL-134) —
+import { fixedStockReconcileEn, fixedStockReconcileId } from './i18n/fixedStockReconcile';
 // — REQ-E14-03 material requirement —
 import { materialRequirementEn, materialRequirementId } from './i18n/materialRequirement';
 // — REQ-E14-04 safety stock, safety lead time and reorder point —
@@ -205,6 +207,7 @@ export const resources = {
       ...inventoryCapacityEn,
       ...forecastCollaborationEn,
       ...reliabilityEn,
+      ...fixedStockReconcileEn,
       ...materialRequirementEn,
       ...safetyStockEn,
       ...orderPlanEn,
@@ -683,6 +686,7 @@ export const resources = {
       ...inventoryCapacityId,
       ...forecastCollaborationId,
       ...reliabilityId,
+      ...fixedStockReconcileId,
       ...materialRequirementId,
       ...safetyStockId,
       ...orderPlanId,

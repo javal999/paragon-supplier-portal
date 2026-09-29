@@ -284,6 +284,7 @@ export const TRANSITION_PURPOSE: FlowAnnotations = Object.freeze({
   t_mrpcontroller_set: { purposeKey: 'processFlows.purpose.t_mrpcontroller_set' },
   t_setting_set: { purposeKey: 'processFlows.purpose.t_setting_set' },
   t_reasoncode_set: { purposeKey: 'processFlows.purpose.t_reasoncode_set' },
+  t_maxstock_set: { purposeKey: 'processFlows.purpose.t_maxstock_set' },
 
   // ── supplierApplication ────────────────────────────────────────────────────
   t_application_submit: { purposeKey: 'processFlows.purpose.t_application_submit' },
@@ -394,6 +395,7 @@ export const ENTITY_PURPOSE: FlowAnnotations = Object.freeze({
   mrpController: { purposeKey: 'processFlows.purpose.entity.mrpController' },
   hubSetting: { purposeKey: 'processFlows.purpose.entity.hubSetting' },
   reasonCode: { purposeKey: 'processFlows.purpose.entity.reasonCode' },
+  maxStock: { purposeKey: 'processFlows.purpose.entity.maxStock' },
   supplierApplication: { purposeKey: 'processFlows.purpose.entity.supplierApplication' },
   receiptDiscrepancy: { purposeKey: 'processFlows.purpose.entity.receiptDiscrepancy' },
   callOff: { purposeKey: 'processFlows.purpose.entity.callOff' },
