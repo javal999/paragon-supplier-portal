@@ -51,7 +51,7 @@ export const ComplianceAwardPill: React.FC<{ pct: number | null | undefined; tes
       ? t('rfqCompare.award.compliance.tipNoHistory')
       : t('rfqCompare.award.compliance.tip', { pct, ...thresholds });
   return (
-    <span className="inline-flex ml-2" title={tip} aria-label={tip} data-testid={testId} data-pill={pill}>
+    <span className="inline-flex ml-2" title={tip} data-testid={testId} data-pill={pill}>
       <StatusPill variant={VARIANT[pill]}>
         {pct === null ? t('rfx.noHistory') : t('rfqCompare.award.compliance.value', { pct })}
       </StatusPill>
