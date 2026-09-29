@@ -76,6 +76,7 @@ async function recordOne(msg = 'STOK PK-PETB-8810 2400 KG') {
   typeMessage(msg);
   clickParse();
   await openEntryFromRow();
+  fireEvent.change(panel().getByLabelText('In production (PCS)'), { target: { value: '0' } }); // MAT-D4 — required, 0 allowed
   fireEvent.click(panel().getByTestId('stock-entry-submit'));
   await waitFor(() => expect(countFor(MAT)).toBe(base + 1));
 }
@@ -319,6 +320,7 @@ describe('BL-73 · BuyerChannelTriage records through the Inventory page’s ent
     expect(panel().getByTestId('stock-entry-submit')).toBeDisabled();
     // Known-good twin: once they add up, the same form saves.
     fireEvent.change(panel().getByLabelText('Quantity'), { target: { value: '1000' } });
+    fireEvent.change(panel().getByLabelText('In production (PCS)'), { target: { value: '0' } }); // MAT-D4 — required, 0 allowed
     fireEvent.click(panel().getByTestId('stock-entry-submit'));
     await waitFor(() => expect(countFor(MAT)).toBe(1));
   });
