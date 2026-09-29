@@ -347,6 +347,8 @@ export interface AsnCreateVars {
   overShipReason?: string;
   /** REQ-E09-03 BR-06 — the confirmed call-off this ASN ships, if any. */
   callOffId?: string;
+  /** MR-6 BR-10 — the last ASN for its call-off (a shortfall then warns). */
+  callOffFinal?: boolean;
 }
 
 /**
@@ -385,6 +387,8 @@ export interface AsnSubmitVars {
   shipDate?: string;
   lines?: AsnLineInput[];
   overShipReason?: string;
+  /** MR-6 BR-10 — the last ASN for its call-off; omitted keeps the draft's. */
+  callOffFinal?: boolean;
 }
 
 /** Submit a Draft ASN (fires `t_asn_submit`, Draft → Submitted). */
@@ -394,7 +398,7 @@ export function useAdvanceShipNoticeSubmit() {
   const invalidate = useInvalidateProcurement();
 
   return useMutation<CommandResult, Error, AsnSubmitVars>({
-    mutationFn: ({ asnNumber, carrier, threePlId, trackingNumber, eta, shipDate, lines, overShipReason }) =>
+    mutationFn: ({ asnNumber, carrier, threePlId, trackingNumber, eta, shipDate, lines, overShipReason, callOffFinal }) =>
       svc.commands.dispatch(scope, {
         transitionId: 't_asn_submit',
         entity: 'advanceShipNotice',
@@ -407,6 +411,7 @@ export function useAdvanceShipNoticeSubmit() {
           ...(shipDate ? { shipDate } : {}),
           ...(lines ? { lines } : {}),
           ...(overShipReason ? { overShipReason } : {}),
+          ...(callOffFinal !== undefined ? { callOffFinal } : {}),
         },
       }),
     onSuccess: (result) => {
