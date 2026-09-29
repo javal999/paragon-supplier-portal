@@ -414,6 +414,15 @@ export const POLICY_HOOKS = {
    */
   MATERIAL_NAME_VALID: 'material_name_valid',
   /**
+   * Material E1 (MR-7 BR-06, BR-08) — a planner input to the stock simulation:
+   * a known supplier (UNKNOWN_SUPPLIER) and material (UNKNOWN_MATERIAL), one of
+   * soh / inProduction / toDistributor (UNKNOWN_FIELD), a quantity of 0 or more
+   * (INVALID_QUANTITY), and a date for inProduction and toDistributor only
+   * (DATE_REQUIRED, INVALID_DATE, DATE_NOT_ALLOWED). The rule is
+   * `simulationOverrideRefusal`, the one the simulation page's pre-check calls.
+   */
+  SIMULATION_OVERRIDE_VALID: 'simulation_override_valid',
+  /**
    * BL-50 — a ruling on one day of the hub's working calendar: the date is one
    * the SAP load covers, the kind is working or non-working, the reason is
    * SUBSTANCE rather than presence (`requiredFields` admits a space bar), and
