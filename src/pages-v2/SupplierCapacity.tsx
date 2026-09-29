@@ -41,6 +41,7 @@ import {
   qty,
   useInventoryRunner,
 } from './inventory/inventoryDisplay';
+import { ReEntryPill, usePlanningGroupLabel } from './inventory/planningGroupDisplay';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SUPPLIER CAPACITY CONFIRMATION — REQ-E08-04.
@@ -56,6 +57,10 @@ import {
 // additional capacity, derived from what is typed): amber above the
 // capacity, red above BE. Capacity is confirmed here BEFORE the LTP is submitted on
 // Forecast & commitments (ENG-D19).
+//
+// Material C5 (MR-8 BR-04, BR-05) — the tabs are PLANNING groups, named from
+// the planning group store. A week a planning-group move touched reads "Needs
+// re-entry": the supplier confirms it again by submitting the group.
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface WeekDraft {
@@ -75,6 +80,7 @@ const draftFrom = (plan: CapacityPlan): WeekDraft[] =>
 
 const SupplierCapacity: React.FC = () => {
   const { t } = useTranslation();
+  const groupLabel = usePlanningGroupLabel();
   // BL-32 — the administrator's list in force: only active codes are offered.
   const capacityReasons = useActiveReasonCodes('capacityShortfall');
   const reasonLabel = useReasonLabel();
@@ -99,12 +105,12 @@ const SupplierCapacity: React.FC = () => {
     drill.kind === 'filtered' && drill.groups !== null && drill.groups.length > 0 ? drill.groups[0] : null;
   const drillWeeks = drill.kind === 'filtered' ? drill.weeks : null;
   const plan =
-    plans.find((p) => p.materialGroup === (group ?? drillGroup)) ?? plans[0] ?? null;
+    plans.find((p) => p.planningGroupId === (group ?? drillGroup)) ?? plans[0] ?? null;
 
   useEffect(() => {
     if (plan) setDraft(draftFrom(plan));
     // Reset the form when the group or its latest submission changes.
-  }, [plan?.materialGroup, plan?.latest?.id, plansQuery.dataUpdatedAt]);
+  }, [plan?.planningGroupId, plan?.latest?.id, plansQuery.dataUpdatedAt]);
 
   if (!identity.supplierId) return <NoSupplierIdentity />;
   if (plansQuery.isPending || drill.kind === 'pending') return <LoadingState breadcrumb={crumb} />;
@@ -152,7 +158,7 @@ const SupplierCapacity: React.FC = () => {
 
   const submit = () =>
     void run(
-      { verb: 'submitCapacity', supplierId: plan.supplierId, materialGroup: plan.materialGroup, weeks: payloadWeeks },
+      { verb: 'submitCapacity', supplierId: plan.supplierId, planningGroupId: plan.planningGroupId, weeks: payloadWeeks },
       t('inv.capacity.toast.submitted'),
     );
 
@@ -185,8 +191,8 @@ const SupplierCapacity: React.FC = () => {
       )}
 
       <SubTabs<string>
-        options={plans.map((p) => ({ id: p.materialGroup, label: t(`inv.group.${p.materialGroup}`) }))}
-        value={plan.materialGroup}
+        options={plans.map((p) => ({ id: p.planningGroupId, label: groupLabel(p.planningGroupId) }))}
+        value={plan.planningGroupId}
         onChange={setGroup}
         className="mb-4"
       />
@@ -239,6 +245,7 @@ const SupplierCapacity: React.FC = () => {
                 >
                   <TableCell className="whitespace-nowrap">
                     <Data>{formatDate(w.week)}</Data>
+                    {w.needsReEntry ? <ReEntryPill testId={`capacity-reentry-${w.week}`} /> : null}
                   </TableCell>
                   <TableCell className="text-right">
                     <Data>{qty(ltp)}</Data>

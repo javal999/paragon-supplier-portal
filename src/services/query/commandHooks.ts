@@ -1455,6 +1455,62 @@ export function useSupplierSetUpdateMode() {
   });
 }
 
+// ── Material C5 · PLANNING GROUPS (MR-8 BR-01 to BR-05) ──────────────────────
+//
+// Create mints the id; rename, move and retire name the group as `entityId`
+// (a move names the DESTINATION group). Attribution and time are stamped by
+// the target from the session and the hub clock. A move changes which group
+// capacity is kept by, so the whole cache is invalidated.
+export type PlanningGroupCommandVars =
+  | { verb: 'create'; name: string; sapMaterialGroup: string }
+  | { verb: 'rename'; groupId: string; name: string }
+  | { verb: 'move'; groupId: string; materialCodes: readonly string[] }
+  | { verb: 'retire'; groupId: string };
+
+/** Create, rename, move materials into, or retire a planning group. */
+export function usePlanningGroupCommand() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+
+  return useMutation<CommandResult, Error, PlanningGroupCommandVars>({
+    mutationFn: (vars) => {
+      switch (vars.verb) {
+        case 'create':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_planninggroup_create',
+            entity: 'planningGroup',
+            payload: { name: vars.name.trim(), sapMaterialGroup: vars.sapMaterialGroup },
+          });
+        case 'rename':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_planninggroup_rename',
+            entity: 'planningGroup',
+            entityId: vars.groupId,
+            payload: { name: vars.name.trim() },
+          });
+        case 'move':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_planninggroup_move_materials',
+            entity: 'planningGroup',
+            entityId: vars.groupId,
+            payload: { materialCodes: [...vars.materialCodes] },
+          });
+        case 'retire':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_planninggroup_retire',
+            entity: 'planningGroup',
+            entityId: vars.groupId,
+            payload: {},
+          });
+      }
+    },
+    onSuccess: (result) => {
+      if (result.status !== 'failed') void qc.invalidateQueries();
+    },
+  });
+}
+
 // ── Material C4 · ONE MRP CONTROLLER ON THE ADMINISTRATOR'S LIST (MR-5 BR-02) ─
 //
 // `entityId` IS the SAP code; there is no code payload field. `setBy` and
@@ -1483,6 +1539,116 @@ export function useMrpControllerSet() {
       }),
     onSuccess: (result) => {
       if (result.status !== 'failed') void qc.invalidateQueries();
+    },
+  });
+}
+
+// ── Material C2 · SUPPLIER TRADE NAMES (MR-3 BR-01 to BR-06) ─────────────────
+//
+// The supplier submits; Material Planning approves, rejects or loads in bulk.
+// `submittedBy` / `decidedBy` and the times are stamped by the target from the
+// session and the hub clock. An approved name shows on the stock pages, so the
+// whole cache is invalidated rather than a guessed list of keys.
+export interface MaterialNameSubmitVars {
+  supplierId: string;
+  materialCode: string;
+  tradeName: string;
+  supplierMaterialNo?: string;
+}
+
+/** A supplier submits its trade name for an assigned material (`t_materialname_submit`). */
+export function useMaterialNameSubmit() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+
+  return useMutation<CommandResult, Error, MaterialNameSubmitVars>({
+    mutationFn: ({ supplierId, materialCode, tradeName, supplierMaterialNo }) =>
+      svc.commands.dispatch(scope, {
+        transitionId: 't_materialname_submit',
+        entity: 'materialName',
+        payload: {
+          supplierId,
+          materialCode,
+          tradeName,
+          ...(supplierMaterialNo && supplierMaterialNo.trim() !== '' ? { supplierMaterialNo } : {}),
+        },
+      }),
+    onSuccess: (result) => {
+      if (result.status !== 'failed') void qc.invalidateQueries();
+    },
+  });
+}
+
+export interface MaterialNameDecideVars {
+  id: string;
+  decision: 'approve' | 'reject';
+  rejectionReason?: string;
+}
+
+/** Material Planning approves or rejects a trade name (`t_materialname_approve` / `_reject`). */
+export function useMaterialNameDecide() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+
+  return useMutation<CommandResult, Error, MaterialNameDecideVars>({
+    mutationFn: ({ id, decision, rejectionReason }) =>
+      svc.commands.dispatch(scope, {
+        transitionId: decision === 'approve' ? 't_materialname_approve' : 't_materialname_reject',
+        entity: 'materialName',
+        entityId: id,
+        expectedState: 'Awaiting approval',
+        payload: decision === 'reject' ? { rejectionReason: rejectionReason ?? '' } : {},
+      }),
+    onSuccess: (result) => {
+      if (result.status !== 'failed') void qc.invalidateQueries();
+    },
+  });
+}
+
+/** One row of a bulk load, with its line in the file. */
+export interface MaterialNameLoadRow extends MaterialNameSubmitVars {
+  line: number;
+}
+
+/** The outcome of one bulk-load row. A thrown refusal is reported as its code. */
+export interface MaterialNameLoadOutcome {
+  line: number;
+  status: 'done' | 'failed';
+  reason?: string;
+}
+
+/** PTI loads approved trade names, one `t_materialname_load` per row (BR-06). */
+export function useMaterialNameLoad() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+
+  return useMutation<MaterialNameLoadOutcome[], Error, readonly MaterialNameLoadRow[]>({
+    mutationFn: async (rows) => {
+      const out: MaterialNameLoadOutcome[] = [];
+      for (const r of rows) {
+        try {
+          const result = await svc.commands.dispatch(scope, {
+            transitionId: 't_materialname_load',
+            entity: 'materialName',
+            payload: {
+              supplierId: r.supplierId,
+              materialCode: r.materialCode,
+              tradeName: r.tradeName,
+              ...(r.supplierMaterialNo ? { supplierMaterialNo: r.supplierMaterialNo } : {}),
+            },
+          });
+          out.push({ line: r.line, status: result.status === 'failed' ? 'failed' : 'done', reason: result.reason });
+        } catch (e) {
+          out.push({ line: r.line, status: 'failed', reason: e instanceof DataError ? e.code : (e as Error).message });
+        }
+      }
+      return out;
+    },
+    onSuccess: (outcomes) => {
+      if (outcomes.some((o) => o.status === 'done')) void qc.invalidateQueries();
     },
   });
 }
@@ -2269,7 +2435,8 @@ export type InventoryCommandVars =
   | {
       verb: 'submitCapacity';
       supplierId: string;
-      materialGroup: string;
+      /** Material C5 (MR-8 BR-04) — the planning group the capacity is for. */
+      planningGroupId: string;
       weeks: readonly { week: string; allocated: number; upside?: number; reason?: string; note?: string }[];
     }
   | { verb: 'closeAlert'; key: string; closeReason: string; actionNote?: string };
@@ -2328,7 +2495,7 @@ export function useInventoryCommand() {
           return svc.commands.dispatch(scope, {
             transitionId: 't_capacity_submit',
             entity: 'capacitySubmission',
-            payload: { supplierId: vars.supplierId, materialGroup: vars.materialGroup, weeks: vars.weeks.map((w) => ({ ...w })) },
+            payload: { supplierId: vars.supplierId, planningGroupId: vars.planningGroupId, weeks: vars.weeks.map((w) => ({ ...w })) },
           });
         case 'closeAlert':
           return svc.commands.dispatch(scope, {

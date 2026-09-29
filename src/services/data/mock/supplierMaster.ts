@@ -26,12 +26,19 @@ export const isKnownSupplier = (supplierId: string): boolean => mockSuppliers.so
 /**
  * The supplier's stock update mode: its latest overlay row, or — with none —
  * API when the sample connection list holds it and manual otherwise.
+ *
+ * With `asOf` (Material B1, MR-1 edge case 1): the mode as it stood at that
+ * instant — the latest row set at or before it, else the default.
  */
-export function stockUpdateModeOf(supplierId: string): StockUpdateMode {
-  return (
-    supplierOverlayStore.latestFor(supplierId)?.stockUpdateMode ??
-    defaultStockUpdateMode(Object.prototype.hasOwnProperty.call(API_CONNECTIONS, supplierId))
-  );
+export function stockUpdateModeOf(supplierId: string, asOf?: string): StockUpdateMode {
+  const row =
+    asOf === undefined
+      ? supplierOverlayStore.latestFor(supplierId)
+      : supplierOverlayStore
+          .historyFor(supplierId)
+          .filter((r) => Date.parse(r.setAt) <= Date.parse(asOf))
+          .slice(-1)[0];
+  return row?.stockUpdateMode ?? defaultStockUpdateMode(Object.prototype.hasOwnProperty.call(API_CONNECTIONS, supplierId));
 }
 
 /** The fixture supplier merged with its latest overlay row, or null for an unknown id. */

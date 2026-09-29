@@ -68,9 +68,17 @@ export const useInventory = (filter?: InventoryFilter) =>
 export const useStockAccess = () =>
   useServiceQuery(['procurement', 'stockAccess'], (svc, scope) => svc.procurement.getStockAccess(scope));
 
-/** Capacity against demand per supplier × material group (REQ-E08-04). */
+/** Material C2 — supplier trade names per assigned material (MR-3). A supplier reads its own. */
+export const useMaterialNames = () =>
+  useServiceQuery(['procurement', 'materialNames'], (svc, scope) => svc.procurement.getMaterialNames(scope));
+
+/** Capacity against demand per supplier × planning group (REQ-E08-04, MR-8 BR-04). */
 export const useCapacityPlans = () =>
   useServiceQuery(['procurement', 'capacityPlans'], (svc, scope) => svc.procurement.getCapacityPlans(scope));
+
+/** Material C5 (MR-8) — the planning groups, their materials and changes. */
+export const usePlanningGroups = () =>
+  useServiceQuery(['procurement', 'planningGroups'], (svc, scope) => svc.procurement.getPlanningGroups(scope));
 
 /** Inventory and capacity alerts (REQ-E08-05). */
 export const useInventoryAlerts = () =>
@@ -140,6 +148,9 @@ export const useDemandForecast = () =>
 /** REQ-E14-11 — forecast bias, the planner override ledger and override value (PTI only). */
 export const useForecastBias = () =>
   useServiceQuery(['procurement', 'forecastBias'], (svc, scope) => svc.procurement.getForecastBias(scope));
+/** REQ-E14-10 — the model backtest (PTI only). */
+export const useModelBacktest = () =>
+  useServiceQuery(['procurement', 'modelBacktest'], (svc, scope) => svc.procurement.getModelBacktest(scope));
 
 // ── RFx management (REQ-E03-01 to REQ-E03-05) ──────────────────────────────
 

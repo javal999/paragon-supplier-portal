@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router-dom';
 import { AlertTriangle, PencilLine } from 'lucide-react';
 import AppShellV2 from '../components/layout-v2/AppShellV2';
 import PageHeader from '../components/ui-v2/PageHeader';
@@ -37,6 +38,8 @@ import StockEntryPanel from './inventory/StockEntryPanel';
 import StockUploadPanel from './inventory/StockUploadPanel';
 import SupplierSyncPanel from './inventory/SupplierSyncPanel';
 import { PicCell, PicFilter, PicHeader, usePicFilter } from './materials/picDisplay';
+import SupplierMaterialNames from './materials/SupplierMaterialNames';
+import { TradeNameBeside } from './materials/tradeNameDisplay';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SUPPLIER STOCK — REQ-E08-01 (SUP view), REQ-E08-02 (template upload, manual
@@ -66,6 +69,15 @@ const SupplierInventory: React.FC = () => {
   const [incoming, setIncoming] = useState<InventoryPosition | null>(null);
   // Material C4 — the PIC filter (by name: a supplier never sees the code).
   const pic = usePicFilter();
+  // Material C2 — the "My materials" tab (trade names), kept in the address.
+  const [params, setParams] = useSearchParams();
+  const pageTab: 'stock' | 'materials' = params.get('tab') === 'materials' ? 'materials' : 'stock';
+  const setPageTab = (v: 'stock' | 'materials') => {
+    const next = new URLSearchParams(params);
+    if (v === 'materials') next.set('tab', 'materials');
+    else next.delete('tab');
+    setParams(next, { replace: true });
+  };
   const nowIso = inventoryNow();
   const crumb = [t('hub.nav.section.planning'), t('inv.sup.title')];
 
@@ -89,6 +101,25 @@ const SupplierInventory: React.FC = () => {
   const grant = (access.data?.items ?? []).find((g) => g.supplierId === supplierId);
 
   if (!supplierId) return <NoSupplierIdentity />;
+  const pageTabs = (
+    <SubTabs<'stock' | 'materials'>
+      options={[
+        { id: 'stock', label: t('matName.tab.stock') },
+        { id: 'materials', label: t('matName.tab.myMaterials') },
+      ]}
+      value={pageTab}
+      onChange={setPageTab}
+      className="mb-4"
+    />
+  );
+  if (pageTab === 'materials')
+    return (
+      <AppShellV2>
+        <PageHeader breadcrumb={crumb} title={t('inv.sup.title')} subtitle={t('inv.sup.subtitle')} />
+        {pageTabs}
+        <SupplierMaterialNames supplierId={supplierId} />
+      </AppShellV2>
+    );
   if (inventory.isPending) return <LoadingState breadcrumb={crumb} />;
   if (inventory.isError)
     return <ErrorState breadcrumb={crumb} error={inventory.error} onRetry={() => inventory.refetch()} />;
@@ -124,6 +155,8 @@ const SupplierInventory: React.FC = () => {
         {t('inv.asOf')} <Data>{formatDate(nowIso)}</Data>
         <SampleDataBadge className="ml-3 align-middle" />
       </PageMetaLine>
+
+      {pageTabs}
 
       {/* REQ-E07-08 AC-03 — this page reads SAP data; say how old it is. */}
       <SapDataAgeBanner page="inventory" className="mb-4" />
@@ -199,6 +232,7 @@ const SupplierInventory: React.FC = () => {
                   <div className="text-sm text-text-primary">
                     {p.materialLabel}
                   </div>
+                  <TradeNameBeside name={p.tradeName} testId={`sup-stock-trade-name-${p.materialCode}`} />
                 </TableCell>
                 <TableCell>
                   <PicCell value={p.mrpController} testId={`sup-stock-pic-${p.materialCode}`} />

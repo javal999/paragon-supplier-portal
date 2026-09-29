@@ -16,6 +16,7 @@ import {
   ChartLine,
   DatabaseZap,
   Factory,
+  FlaskConical,
   FileQuestion,
   FileSearch,
   FileText,
@@ -31,9 +32,10 @@ import {
   Receipt,
   ShieldCheck,
   ShieldHalf,
-  Scale,
+  Crosshair,
   ShoppingCart,
   SlidersHorizontal,
+  Tags,
   Target,
   TrendingUp,
   Truck,
@@ -102,7 +104,8 @@ export const PTI_NAV: readonly NavSection[] = [
       { labelKey: 'hub.nav.pti.fsReconcile', icon: Scale, path: '/buyer/fs-reconcile' },
       { labelKey: 'hub.nav.pti.dataHealth', icon: DatabaseZap, path: '/buyer/data-health' },
       { labelKey: 'hub.nav.pti.demandForecast', icon: TrendingUp, path: '/buyer/demand-forecast' },
-      { labelKey: 'hub.nav.pti.forecastBias', icon: Scale, path: '/buyer/forecast-bias' },
+      { labelKey: 'hub.nav.pti.forecastBias', icon: Crosshair, path: '/buyer/forecast-bias' },
+      { labelKey: 'hub.nav.pti.modelBacktest', icon: FlaskConical, path: '/buyer/model-backtest' },
       { labelKey: 'hub.nav.pti.reliability', icon: Target, path: '/buyer/reliability' },
       { labelKey: 'hub.nav.pti.materialRequirement', icon: Layers, path: '/buyer/material-requirement' },
       { labelKey: 'hub.nav.pti.safetyStock', icon: ShieldHalf, path: '/buyer/safety-stock' },
@@ -121,6 +124,14 @@ export const PTI_NAV: readonly NavSection[] = [
       { labelKey: 'hub.nav.pti.alerts', icon: AlertTriangle, path: '/buyer/alerts' },
       { labelKey: 'hub.nav.pti.supplierAccess', icon: KeyRound, path: '/buyer/supplier-access' },
     ],
+  },
+  {
+    // Material C2 — Materials → Trade names (MR-3 d): Material Planning approves
+    // the names suppliers give PTI materials.
+    id: 'materials',
+    labelKey: 'hub.nav.section.materials',
+    roles: ['MP'],
+    items: [{ labelKey: 'hub.nav.pti.tradeNames', icon: Tags, path: '/buyer/materials/trade-names' }],
   },
   {
     id: 'calloffs',
@@ -227,6 +238,8 @@ export const UTILITY_NAV: Record<Persona, readonly NavItem[]> = {
     { labelKey: 'hub.nav.util.threePls', icon: Link2, path: '/buyer/admin/3pl-tracking' },
     // Material A1 — each supplier's stock update mode (MR-1 BR-02, set by ADM).
     { labelKey: 'hub.nav.util.suppliers', icon: Building2, path: '/buyer/admin/suppliers' },
+    // Material C5 — the planning groups capacity is kept by (MR-8, Material Planning).
+    { labelKey: 'hub.nav.util.planningGroups', icon: Layers, path: '/buyer/admin/planning-groups' },
     // Material C4 — who each SAP MRP controller code is (MR-5 BR-02, set by ADM).
     { labelKey: 'hub.nav.util.mrpControllers', icon: UserCog, path: '/buyer/admin/mrp-controllers' },
     // BL-32 — the values that lived in configuration files (ADM, REQ-E08-05 BR-03).

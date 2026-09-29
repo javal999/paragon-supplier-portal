@@ -102,6 +102,7 @@ import { stabiliseEn, stabiliseId } from './i18n/stabilise';
 import { dataHealthEn, dataHealthId } from './i18n/dataHealth';
 import { demandForecastEn, demandForecastId } from './i18n/demandForecast';
 import { forecastBiasEn, forecastBiasId } from './i18n/forecastBias';
+import { modelBacktestEn, modelBacktestId } from './i18n/modelBacktest';
 // — Phase 6a RFx management (REQ-E03-01 to REQ-E03-05) —
 import { rfxEn, rfxId } from './i18n/rfx';
 // — RFx authoring (RFI/RFP batch, 2026-09-21) and session-held attachments —
@@ -116,8 +117,11 @@ import { rfxFilesEn, rfxFilesId } from './i18n/rfxFiles';
 import { threePlEn, threePlId } from './i18n/threePl';
 // — Material A1 administration · suppliers (MR-1 BR-02) —
 import { adminSuppliersEn, adminSuppliersId } from './i18n/adminSuppliers';
+// — Material C5 administration · planning groups (MR-8) —
+import { adminPlanningGroupsEn, adminPlanningGroupsId } from './i18n/adminPlanningGroups';
 // — Material C4 the MRP controller (PIC) on material surfaces (MR-5) —
 import { mrpControllerEn, mrpControllerId } from './i18n/mrpController';
+import { materialNamesEn, materialNamesId } from './i18n/materialNames';
 // — BL-32 the administrator's rule values (REQ-E08-05 BR-03, §3.6) —
 import { adminSettingsEn, adminSettingsId } from './i18n/adminSettings';
 import { adminReasonsEn, adminReasonsId } from './i18n/adminReasons';
@@ -217,6 +221,7 @@ export const resources = {
       ...dataHealthEn,
       ...demandForecastEn,
       ...forecastBiasEn,
+      ...modelBacktestEn,
       ...rfxEn,
       ...rfxAuthoringEn,
       ...rfqAuthoringEn,
@@ -225,7 +230,9 @@ export const resources = {
       ...rfxFilesEn,
       ...threePlEn,
       ...adminSuppliersEn,
+      ...adminPlanningGroupsEn,
       ...mrpControllerEn,
+      ...materialNamesEn,
       ...adminSettingsEn,
       ...adminReasonsEn,
       ...supplierFiltersEn,
@@ -697,6 +704,7 @@ export const resources = {
       ...dataHealthId,
       ...demandForecastId,
       ...forecastBiasId,
+      ...modelBacktestId,
       ...rfxId,
       ...rfxAuthoringId,
       ...rfqAuthoringId,
@@ -705,7 +713,9 @@ export const resources = {
       ...rfxFilesId,
       ...threePlId,
       ...adminSuppliersId,
+      ...adminPlanningGroupsId,
       ...mrpControllerId,
+      ...materialNamesId,
       ...adminSettingsId,
       ...adminReasonsId,
       ...supplierFiltersId,

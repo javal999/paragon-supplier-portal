@@ -40,9 +40,12 @@ import { receiptQtyOutcome, shelfLifeLineView } from '../../transitions/fulfilme
 import { commitmentDueAt, gapColour, toleranceOutcome } from '../../transitions/forecastRules';
 import { otifPassesGate } from '../../sourcing/complianceGate';
 import { coverage, riskFor, stockFreshness, supplyBand } from '../../transitions/inventoryRules';
-import { updateSlaFor } from '../../transitions/inventoryConfig';
+import { staleApiHours, updateCycleSettings, updateSlaFor } from '../../transitions/inventoryConfig';
+import { staleAtFor, updateCycleFor } from '../../transitions/updateCycle';
+import { hubWorkingCalendar } from '../../transitions/workingCalendarStore';
 import { coverageBands } from '../../sdc/consolidation';
 import {
+  backtestMascLimit,
   engineServiceTargets,
   feedFreshnessLimitsDays,
   orderSizingCosts,
@@ -51,11 +54,14 @@ import {
   FS_RECONCILE_CYCLE_ANCHOR,
   safetyLeadTimePercentile,
   stabiliseDampingWeight,
+  demandRangeExtraQuantilePct,
 } from '../../transitions/forecastConfig';
 import { DEFAULT_STABILISE_PARAMS, stabilisePeriod } from '../../engine/stabilise';
 import { freshnessOf } from '../../engine/dataHealth';
+import { rangeLevels } from '../../engine/demandRange';
 import { empiricalQuantile, fillRateSafetyStock } from '../../engine/safetyStock';
 import { singleItemSolver, type SizingItem } from '../../engine/orderSizing';
+import { selectModel, type CandidateScore } from '../../engine/modelBacktest';
 import { reschedule, termsKey } from '../../engine/reschedule';
 import { addDays } from '../../engine/dates';
 import { cycleOfDay } from '../../transitions/fixedStockReconcile';
@@ -221,6 +227,8 @@ describe('BL32-POP · the population of rule values is derived from the config m
       'engine.changePenaltyIdrPerPallet': 'REQ-E14-05 BR-03',
       // BL-117 — the Warehouse's cap on rented space (the 3PL contract).
       'engine.maxRentedSpacePct': 'REQ-E14-05',
+      // ENG-D13 — the Material Planner sets the MASC limit after the first backtest.
+      'engine.backtestMascLimitPct': 'ENG-D13',
     });
   });
 });
@@ -300,6 +308,10 @@ describe('BL32-READ · every reader of a value reads it through its accessor, at
         'src/services/transitions/inventoryRules.ts',
       ],
       updateSlaFor: ['src/services/transitions/inventoryConfig.ts', 'src/services/transitions/inventoryRules.ts'],
+      // Material B1 — MR-1 BR-03 and BR-05, read when the positions are built.
+      updateCycleSettings: ['src/services/transitions/inventoryConfig.ts', 'src/services/transitions/inventoryRules.ts'],
+      staleApiHours: ['src/services/transitions/inventoryConfig.ts', 'src/services/transitions/inventoryRules.ts'],
+      staleOverrideDaysFor: ['src/services/transitions/inventoryConfig.ts', 'src/services/transitions/inventoryRules.ts'],
       // ENG-D5 / REQ-E14-04 — read by the service that runs the engine, which
       // takes them as arguments (X-01); the engine never reads the store.
       engineServiceTargets: ['src/services/data/mock/MockProcurementService.ts', 'src/services/transitions/forecastConfig.ts'],
@@ -318,6 +330,10 @@ describe('BL32-READ · every reader of a value reads it through its accessor, at
       stabiliseDampingWeight: ['src/services/data/mock/MockProcurementService.ts', 'src/services/transitions/forecastConfig.ts'],
       // REQ-E14-01 — the same shape: the service passes the limits to the data-health check.
       feedFreshnessLimitsDays: ['src/services/data/mock/MockProcurementService.ts', 'src/services/transitions/forecastConfig.ts'],
+      // ENG-D13 / REQ-E14-10 — the same shape: the service passes the limit to the backtest.
+      backtestMascLimit: ['src/services/data/mock/MockProcurementService.ts', 'src/services/transitions/forecastConfig.ts'],
+      // REQ-E14-09 — the same shape: the service passes the levels to the demand range.
+      demandRangeExtraQuantilePct: ['src/services/data/mock/MockProcurementService.ts', 'src/services/transitions/forecastConfig.ts'],
     };
     for (const [fn, files] of Object.entries(table)) expect(callersOf(fn), fn).toEqual(files);
     // Known-true through a second door: the SDC coverage indicator never
@@ -331,6 +347,13 @@ describe('BL32-READ · every reader of a value reads it through its accessor, at
 // ── 3 · Every value flips a rule outcome, and reset flips it back ─────────────
 
 const CALL_OFF = { quantity: 1000, needDate: '2026-09-10' };
+/** ENG-D13's flip: the floor (Comb) against a better-filling but less stable Theta. */
+const masCase = (candidate: CandidateScore['candidate'], fillRate: number, masc: number): CandidateScore => ({
+  candidate, fillRate, orderCompleteRate: fillRate, unitFillRate: fillRate, palletWeeks: 1000, masc, wape: null, bias: null,
+  counts: { lines: 100, fullLines: Math.round(fillRate * 100), orderWeeks: 100, completeWeeks: Math.round(fillRate * 100) },
+});
+const MASC_CASE: CandidateScore[] = [masCase('comb', 0.9, 0.4), masCase('theta', 0.97, 1.8)];
+const API_PULL = '2026-09-01T02:00:00.000Z';
 const MAT = 'PK-PETB-8801';
 const RELEASED: CallOff = {
   status: 'Awaiting Confirmation',
@@ -436,15 +459,14 @@ const freshnessFlips: Record<string, Flip> = Object.fromEntries(
  * SC Hub Material (MAT A3) — the values are in the registry before any rule
  * reads them (B1, B3, D2 and F1 do). Until then the outcome that flips is the
  * value in force, read through the same accessor the rules will call. Each
- * task that adds a reader replaces its key's row here with a rule outcome.
+ * task that adds a reader replaces its key's row here with a rule outcome
+ * (B1 did: `stale.apiHours`, `stockUpdate.cutoffDay`, `stockUpdate.cutoffTime`
+ * are in `FLIPS` below).
  */
 const MATERIAL_FLIPS: Record<string, Flip> = Object.fromEntries(
   (
     [
       ['stockSync.intervalHours', 4],
-      ['stale.apiHours', 48],
-      ['stockUpdate.cutoffDay', 5],
-      ['stockUpdate.cutoffTime', 1020],
       ['compliance.warnPct', 90],
       ['compliance.flagPct', 50],
       ['compliance.scoreWeight', 0.15],
@@ -616,6 +638,11 @@ const FLIPS: Record<string, Flip> = {
     atDefault: 1320,
     afterChange: 1230,
   },
+  // ENG-D13: not set (0) → no limit, the better but less stable Theta is chosen;
+  // at 100% (MASC 1.0) Theta's 1.8 is over the limit and the Comb floor stays.
+  'engine.backtestMascLimitPct': { to: 100, read: () => selectModel(MASC_CASE, 'comb', backtestMascLimit()).chosen, atDefault: 'theta', afterChange: 'comb' },
+  // REQ-E14-09 BR-01: P50 and P90 only at the default of 0; at 95 the range adds P95.
+  'engine.rangeExtraQuantilePct': { to: 95, read: () => rangeLevels(demandRangeExtraQuantilePct()), atDefault: [0.5, 0.9], afterChange: [0.5, 0.9, 0.95] },
   // ENG-D15: two weeks early is proposed at the default of 1; at 3 it is not.
   // REQ-E06-04 BR-01: 14 Sep 2026 is W3 of the cycle from 31 Aug at 3 weeks, and opens one at 2.
   'forecast.fsReconcileCycleWeeks': {
@@ -630,6 +657,46 @@ const FLIPS: Record<string, Flip> = {
     read: () => empiricalQuantile(DELAYS, safetyLeadTimePercentile()),
     atDefault: 3,
     afterChange: 5,
+  },
+  // MR-1 BR-05 (MAT-D8): a pull 30 hours ago is stale at 24 hours, current at 48.
+  'stale.apiHours': {
+    to: 48,
+    read: () =>
+      stockFreshness(
+        {
+          lastUpdatedAt: API_PULL,
+          updateSla: 7,
+          lastSync: null,
+          staleAt: staleAtFor({
+            lastUpdatedAt: API_PULL,
+            mode: 'api',
+            lastSuccessfulPullAt: API_PULL,
+            overrideDays: null,
+            calendar: hubWorkingCalendar(),
+            cycle: updateCycleSettings(),
+            apiHours: staleApiHours(),
+          }),
+        },
+        '2026-09-02T08:00:00.000Z',
+      ),
+    atDefault: 'stale',
+    afterChange: 'current',
+  },
+  // MR-1 BR-03 (MAT-D7): on Wednesday 9 Sep the cycle closes on Thursday 10 Sep;
+  // with a Friday cutoff it closes on Friday 11 Sep.
+  'stockUpdate.cutoffDay': {
+    to: 5,
+    read: () => updateCycleFor('2026-09-09T03:00:00.000Z', hubWorkingCalendar(), updateCycleSettings()).cutoff,
+    atDefault: '2026-09-10T16:59:00.000Z',
+    afterChange: '2026-09-11T16:59:00.000Z',
+  },
+  // MR-1 BR-03: an upload on Thursday at 18:00 WIB is inside the 23:59 cycle;
+  // with a 17:00 cutoff it falls in the next one (edge case 4).
+  'stockUpdate.cutoffTime': {
+    to: 1020,
+    read: () => updateCycleFor('2026-09-03T11:00:00.000Z', hubWorkingCalendar(), updateCycleSettings()).cutoff,
+    atDefault: '2026-09-03T16:59:00.000Z',
+    afterChange: '2026-09-10T10:00:00.000Z',
   },
   'stale.defaultDays': {
     to: 10,

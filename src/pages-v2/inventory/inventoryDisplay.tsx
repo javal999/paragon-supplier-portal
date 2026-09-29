@@ -5,6 +5,7 @@ import StatusPill from '../../components/ui-v2/StatusPill';
 import SidePanel from '../../components/ui-v2/SidePanel';
 import Data from '../../components/ui-v2/Data';
 import { PicCell, PicHeader } from '../materials/picDisplay';
+import { TradeNameBeside } from '../materials/tradeNameDisplay';
 import { useToast } from '../../hooks/useToast';
 import { useRefusalText } from '../../hooks/useRefusalText';
 import { formatDate, formatDateTime } from '../../lib/format';
@@ -110,8 +111,19 @@ export const LastUpdateCell: React.FC<{ position: InventoryPosition; nowIso: str
         )}
         {position.channel && <ChannelLabel channel={position.channel} />}
       </div>
+      <PullFailedNote position={position} />
     </div>
   );
+};
+
+/** Material B1 (owner ruling 2026-09-29) — a failed API pull after the figure: a warning, not staleness. */
+export const PullFailedNote: React.FC<{ position: Pick<InventoryPosition, 'lastPullFailedAt'> }> = ({ position }) => {
+  const { t } = useTranslation();
+  return position.lastPullFailedAt ? (
+    <div className="text-xs text-warning whitespace-nowrap" data-testid="inv-pull-failed">
+      {t('inv.freshness.pullFailed')} <Data>{formatDateTime(position.lastPullFailedAt)}</Data>
+    </div>
+  ) : null;
 };
 
 export const ChannelLabel: React.FC<{ channel: StockChannel }> = ({ channel }) => {
@@ -206,6 +218,7 @@ export const IncomingPanel: React.FC<{
           <p className="text-sm text-text-secondary">
             {position.materialLabel} · {position.supplierName}
           </p>
+          <TradeNameBeside name={position.tradeName} testId="incoming-panel-trade-name" />
           {/* Material C4 — who handles this material (MR-5 BR-03). */}
           <div className="flex items-center gap-2 text-sm" data-testid="incoming-panel-pic">
             <span className="text-label text-text-tertiary uppercase">

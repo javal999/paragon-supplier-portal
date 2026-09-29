@@ -34,7 +34,7 @@ import {
 } from '../../services/transitions/hubSettings';
 import { hubSettingsStore, settingValue } from '../../services/transitions/hubSettingsStore';
 import { stockFreshness } from '../../services/transitions/inventoryRules';
-import { inventoryNow } from '../inventory/inventoryDisplay';
+import { PullFailedNote, inventoryNow } from '../inventory/inventoryDisplay';
 import AdminSectionNav from './AdminSectionNav';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -660,6 +660,7 @@ const StalePeriodsPanel: React.FC<{
                     <StatusPill variant={freshness === 'current' ? 'success' : 'warning'}>
                       {t(`adminSet.stale.now.${freshness}`)}
                     </StatusPill>
+                    <PullFailedNote position={p} />
                   </TableCell>
                   {held && (
                     <TableCell className="whitespace-nowrap">

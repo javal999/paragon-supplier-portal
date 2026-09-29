@@ -9,6 +9,7 @@ import {
   suppliersWithAssignments,
 } from './inventoryReadModel';
 import { stockAccessStore } from './stores/inventoryHubStores';
+import { allPlanningGroups } from './planningGroupReadModel';
 import { allCommitmentLines, allCoverageRows, allVersionViews, forecastSupplierName } from './forecastReadModel';
 import { allFixedStockRows } from './fixedStockReadModel';
 import { maskForSupplier } from '../../transitions/inventoryRules';
@@ -81,8 +82,10 @@ import type {
   PurchaseOrder,
   POFilter,
   InventoryPosition,
+  MaterialNameRow,
   StockAccessGrant,
   CapacityPlan,
+  PlanningGroupView,
   InventoryAlert,
   ForecastVersionView,
   ForecastCommitmentLine,
@@ -131,6 +134,7 @@ import type {
   DataHealthView,
   DemandForecastView,
   ForecastBiasView,
+  ModelBacktestView,
 } from '../types';
 import { PR_INTAKE_LINES } from './fixtures/prIntake';
 import { engineDataset } from './fixtures/engineDataset';
@@ -147,12 +151,14 @@ import {
 import { plannedReceiptsOf, sizedRequirement } from '../../engine/orderSizing';
 import {
   STREAM_MATERIAL_TYPE,
+  backtestMascLimit,
   engineServiceTargets,
   feedFreshnessLimitsDays,
   orderSizingCosts,
   rescheduleOutThresholdWeeks,
   safetyLeadTimePercentile,
   stabiliseDampingWeight,
+  demandRangeExtraQuantilePct,
   zoneLengthsFor,
 } from '../../transitions/forecastConfig';
 import { DEFAULT_STABILISE_PARAMS, stabilisePlan, type StabiliseRun } from '../../engine/stabilise';
@@ -166,14 +172,23 @@ import type { EngineDataset } from '../../engine/types';
 import { labelOf, materialEntry } from '../../sdc/materialMaster';
 // Material C4 — each material's MRP controller, narrowed per reader (MR-5 BR-04).
 import { withMrpController } from './mrpControllerReadModel';
+// Material C2 — supplier trade names, narrowed per reader (MR-3 BR-03).
+import { materialNameRowsFor, withTradeName } from './materialNameReadModel';
 import { FEEDS, dataHealth } from '../../engine/dataHealth';
 import { currentDemandForecast, currentForecastBias, withOverrides } from './demandForecastRun';
 import { forecastOverrideStore } from './stores/forecastOverrideStore';
 import { overrideValue } from '../../engine/forecastOverrides';
+import { modelBacktest, prepareBacktest, type PreparedBacktest } from '../../engine/modelBacktest';
+import { DEFAULT_DEMAND_RANGE_OPTIONS, demandRange, rangeLevels, replayForecasts, type DemandRangeRun, type Replay } from '../../engine/demandRange';
 import { DEFAULT_STOCK_ACCURACY_TOLERANCE } from '../../engine/stock';
 import { agreedCfot, supplierCfot } from '../../engine/cfot';
 import { lineHistories } from '../../engine/lines';
 import { sdcClock } from '../../sdc/clock';
+
+/** REQ-E14-10 — the backtest's heavy half per engine dataset, keyed by hub date and the values it reads. */
+const backtestMemo = new WeakMap<EngineDataset, { key: string; prep: PreparedBacktest; ms: number }>();
+/** REQ-E14-09 — the replay and the range per engine dataset (see getDemandForecast). */
+const demandRangeMemo = new WeakMap<EngineDataset, { asOf: string; replay: Replay; levels: string; range: DemandRangeRun }>();
 
 const matchesList = <T>(value: T, filter: T | T[] | undefined): boolean => {
   if (filter === undefined) return true;
@@ -410,7 +425,14 @@ export class MockProcurementService implements IProcurementService {
     }
     if (filter?.supplierId) rows = rows.filter((r) => r.supplierId === filter.supplierId);
     if (filter?.materialCode) rows = rows.filter((r) => r.materialCode === filter.materialCode);
-    return { items: rows.map((r) => withMrpController(r, r.materialCode, scope)) };
+    // Material C2 — the supplier's approved trade name beside PTI's description.
+    return { items: rows.map((r) => withTradeName(withMrpController(r, r.materialCode, scope))) };
+  }
+
+  // Material C2 (MR-3 BR-03) — narrowed in the read model: a supplier reads its
+  // own assigned materials and names only.
+  async getMaterialNames(scope: QueryScope): Promise<Page<MaterialNameRow>> {
+    return { items: materialNameRowsFor(scope) };
   }
 
   async getStockAccess(scope: QueryScope): Promise<Page<StockAccessGrant>> {
@@ -432,6 +454,21 @@ export class MockProcurementService implements IProcurementService {
   async getCapacityPlans(scope: QueryScope): Promise<Page<CapacityPlan>> {
     // REQ-E08-04 — capacity against demand per supplier × material group.
     return { items: applySupplierScope(scope, allCapacityPlans()) };
+  }
+
+  async getPlanningGroups(scope: QueryScope): Promise<Page<PlanningGroupView>> {
+    // Material C5 (MR-8) — PTI sees every group with its change log. A supplier
+    // sees only the groups holding materials it has capacity for, narrowed to
+    // those materials, and no log (MAT-R4: it never learns another supplier's
+    // materials or who at PTI changed what).
+    const groups = allPlanningGroups();
+    if (scope.personaType === 'buyer') return { items: groups };
+    const mine = new Set(applySupplierScope(scope, allCapacityPlans()).flatMap((p) => p.materials));
+    return {
+      items: groups
+        .map((g) => ({ ...g, materials: g.materials.filter((m) => mine.has(m)), history: [] }))
+        .filter((g) => g.materials.length > 0),
+    };
   }
 
   async getInventoryAlerts(scope: QueryScope): Promise<Page<InventoryAlert>> {
@@ -649,7 +686,8 @@ export class MockProcurementService implements IProcurementService {
       versions: { packaging: versionDays(asOf, 'packaging'), rawMaterial: versionDays(asOf, 'rawMaterial') },
       engine: named(stabilisePlan(inputs, params)),
       sapHistory: named(stabilisePlan(planHistoryInputs(data, now, inputs), params)),
-      rangeAvailable: false,
+      rangeBuilt: true,
+      rangePublished: false,
     };
   }
 
@@ -682,7 +720,24 @@ export class MockProcurementService implements IProcurementService {
     if (scope.personaType === 'supplier') return null;
     const data = engineDataset();
     const run = currentDemandForecast();
-    return { ...run, ...withOverrides(run, forecastOverrideStore.all()), provenance: data.provenance, materialPlanningSource: 'sapPlan' };
+    const asOf = run.asOf;
+    // REQ-E14-09 — the range around the engine's forecast, with the administrator's
+    // levels in force (X-05). The replay depends on the date only; the range also on the levels.
+    const levels = rangeLevels(demandRangeExtraQuantilePct());
+    let memo = demandRangeMemo.get(data);
+    if (!memo || memo.asOf !== asOf || memo.levels !== levels.join()) {
+      const replay = memo && memo.asOf === asOf ? memo.replay : replayForecasts({ ...data, asOf });
+      const range = demandRange({ ...data, asOf }, run, { ...DEFAULT_DEMAND_RANGE_OPTIONS, levels }, replay);
+      memo = { asOf, replay, levels: levels.join(), range };
+      demandRangeMemo.set(data, memo);
+    }
+    return {
+      ...run,
+      ...withOverrides(run, forecastOverrideStore.all()),
+      range: memo.range,
+      provenance: data.provenance,
+      materialPlanningSource: 'sapPlan',
+    };
   }
 
   async getForecastBias(scope: QueryScope): Promise<ForecastBiasView | null> {
@@ -708,6 +763,33 @@ export class MockProcurementService implements IProcurementService {
       value: overrideValue(records, actualOf, run.asOf),
       serviceJudgement: 'awaitsBacktest',
       materialPlanningSource: 'sapPlan',
+    };
+  }
+
+  async getModelBacktest(scope: QueryScope): Promise<ModelBacktestView | null> {
+    // REQ-E14-10, computed at read on the hub's date (X-01) with the
+    // administrator's values in force (X-05). PTI only (X-03). The replay is
+    // the heavy half and runs once per dataset, date, targets and cost rates;
+    // selection under the MASC limit (ENG-D13) is cheap and runs every read.
+    if (scope.personaType === 'supplier') return null;
+    const data = engineDataset();
+    const asOf = dayOf(sdcClock.now());
+    const targets = engineServiceTargets();
+    const rates = orderSizingCosts();
+    const costs = { orderCostIdr: rates.orderCostIdr, holdingRatePerYear: rates.holdingRatePerYear };
+    const key = JSON.stringify([asOf, targets, costs]);
+    let hit = backtestMemo.get(data);
+    if (!hit || hit.key !== key) {
+      const t0 = performance.now();
+      const prep = prepareBacktest({ data, asOf, targets, costs });
+      hit = { key, prep, ms: performance.now() - t0 };
+      backtestMemo.set(data, hit);
+    }
+    return {
+      ...modelBacktest(hit.prep, backtestMascLimit()),
+      provenance: data.provenance,
+      materialPlanningSource: 'sapPlan',
+      computedInMs: Math.round(hit.ms),
     };
   }
 

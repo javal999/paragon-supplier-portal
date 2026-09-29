@@ -58,6 +58,7 @@ describe('menu and copy (section 3.7)', () => {
       ['hub.nav.pti.dataHealth', '/buyer/data-health'],
       ['hub.nav.pti.demandForecast', '/buyer/demand-forecast'],
       ['hub.nav.pti.forecastBias', '/buyer/forecast-bias'],
+      ['hub.nav.pti.modelBacktest', '/buyer/model-backtest'],
       ['hub.nav.pti.reliability', '/buyer/reliability'],
       ['hub.nav.pti.materialRequirement', '/buyer/material-requirement'],
       ['hub.nav.pti.safetyStock', '/buyer/safety-stock'],
