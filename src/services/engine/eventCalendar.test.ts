@@ -39,8 +39,14 @@ describe('the event calendar on known dates', () => {
   });
 
   it('the Ramadan table is approximate and says how far it reaches', () => {
-    expect(RAMADAN_TABLE.map((r) => r.hijriYear)).toEqual([1445, 1446, 1447, 1448]);
-    expect(ramadanTableCoversUntil()).toBe('2027-03-09');
+    expect(RAMADAN_TABLE.map((r) => r.hijriYear)).toEqual([1445, 1446, 1447, 1448, 1449]);
+    expect(ramadanTableCoversUntil()).toBe('2028-02-25');
+    expect(tagWeek('2028-01-24', 0).occurrence.ramadan).toBe('H1449'); // holds 28 Jan 2028
+  });
+
+  it('a horizon past the table is flagged; the table as it stood before 1449 H would have been passed by a horizon into March 2027', () => {
+    expect(ramadanTableCoversUntil(RAMADAN_TABLE.slice(0, 4))).toBe('2027-03-09');
+    expect(ramadanTableCoversUntil() > addDays('2026-08-31', 25 * 7)).toBe(true);
   });
 });
 

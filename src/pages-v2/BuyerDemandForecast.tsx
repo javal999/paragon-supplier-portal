@@ -155,8 +155,8 @@ const EventsSection: React.FC<{ events: DemandForecastRun['events'] }> = ({ even
                 {cols.map((c) => {
                   const f = c.factors.find((x) => x.event === e)!;
                   return (
-                    <TableCell key={c.key} className="align-top whitespace-nowrap" data-testid={`df-event-${e}-${c.key}`}>
-                      <Data>{`× ${formatNumber(Math.round(f.factor * 1000) / 1000)}`}</Data>
+                    <TableCell key={c.key} className="align-top" data-testid={`df-event-${e}-${c.key}`}>
+                      <Data className="whitespace-nowrap">{`× ${formatNumber(Math.round(f.factor * 1000) / 1000)}`}</Data>
                       <div className="text-xs text-text-tertiary">
                         {t(`df.events.status.${f.status}`)}
                         {f.status !== 'notEstimable' && ` · ${t('df.events.occ', { count: f.occurrences })}`}

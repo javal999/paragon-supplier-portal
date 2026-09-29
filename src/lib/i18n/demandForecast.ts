@@ -89,13 +89,13 @@ export const demandForecastEn: Record<string, string> = {
 
   'df.events.title': 'Demand events',
   'df.events.intro':
-    'PTI’s known demand events. Each event’s effect is estimated from sales history against the surrounding weeks without events, pulled toward no effect when it has happened only a few times, and capped at ±50%. The fallback (Comb and Theta) applies each brand’s factors to its SKUs; a week with two events takes both.',
+    'PTI’s known demand events. Each event’s effect is estimated from sales history against the surrounding weeks without events, pulled toward no effect when it has happened only a few times, and capped at ±50%; a factor within ±5% of 1 reads as no clear effect. The fallback (Comb and Theta) applies each brand’s factors to its SKUs; a week with two events takes both.',
   'df.events.col.event': 'Event',
   'df.events.col.when': 'Weeks',
   'df.events.col.level': 'Total',
   'df.events.occ': '{{count}} times',
   'df.events.status.effect': 'Effect seen',
-  'df.events.status.noClearEffect': 'No clear effect (within ±5%)',
+  'df.events.status.noClearEffect': 'No clear effect',
   'df.events.status.notEstimable': 'Not in the history: no factor applied',
   'df.events.event.payday': 'Payday',
   'df.events.event.doubleDate': 'Double-date promotion',
@@ -212,13 +212,13 @@ export const demandForecastId: Record<string, string> = {
 
   'df.events.title': 'Peristiwa permintaan',
   'df.events.intro':
-    'Peristiwa permintaan PTI yang sudah diketahui. Efek tiap peristiwa diestimasi dari riwayat penjualan terhadap minggu-minggu di sekitarnya tanpa peristiwa, ditarik ke arah tanpa efek bila baru terjadi beberapa kali, dan dibatasi ±50%. Metode cadangan (Comb dan Theta) menerapkan faktor tiap merek pada SKU-nya; minggu dengan dua peristiwa mendapat keduanya.',
+    'Peristiwa permintaan PTI yang sudah diketahui. Efek tiap peristiwa diestimasi dari riwayat penjualan terhadap minggu-minggu di sekitarnya tanpa peristiwa, ditarik ke arah tanpa efek bila baru terjadi beberapa kali, dan dibatasi ±50%; faktor dalam ±5% dari 1 dibaca sebagai tidak ada efek jelas. Metode cadangan (Comb dan Theta) menerapkan faktor tiap merek pada SKU-nya; minggu dengan dua peristiwa mendapat keduanya.',
   'df.events.col.event': 'Peristiwa',
   'df.events.col.when': 'Minggu',
   'df.events.col.level': 'Total',
   'df.events.occ': '{{count}} kali',
   'df.events.status.effect': 'Ada efek',
-  'df.events.status.noClearEffect': 'Tidak ada efek jelas (dalam ±5%)',
+  'df.events.status.noClearEffect': 'Tidak ada efek jelas',
   'df.events.status.notEstimable': 'Tidak ada di riwayat: tanpa faktor',
   'df.events.event.payday': 'Gajian',
   'df.events.event.doubleDate': 'Promo tanggal kembar',

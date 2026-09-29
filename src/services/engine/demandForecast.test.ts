@@ -7,6 +7,7 @@ import {
   type MainModel,
 } from './demandForecast';
 import { addDays } from './dates';
+import { RAMADAN_TABLE } from './eventCalendar';
 import { defaultRequirementOptions, materialRequirement } from './requirement';
 import type { Brand, FgPlanSnapshot, FinishedGood, SalesWeek } from './types';
 import { engineDataset } from '../data/mock/fixtures/engineDataset';
@@ -217,6 +218,10 @@ describe('on the synthetic dataset (seed 20260924)', () => {
     // Ramadan 1448 (≈ 8 Feb 2027) is inside the horizon, and tagged.
     expect(synthetic.events.horizon.find((h) => h.weekStart === '2027-02-08')!.events).toContain('ramadan');
     expect(synthetic.events.horizonBeyondTable).toBe(false);
+    expect(synthetic.events.tableCoversUntil).toBe('2028-02-25');
+    // Known-bad control: a table ending before the horizon does is flagged.
+    const shortTable = demandForecast({ finishedGoods: data.finishedGoods, sales: data.sales, asOf, ramadanTable: RAMADAN_TABLE.slice(0, 3) });
+    expect(shortTable.events.horizonBeyondTable).toBe(true);
   });
 
   it('compares against SAP’s plan made this Monday, the plan E14-03 still runs on', () => {

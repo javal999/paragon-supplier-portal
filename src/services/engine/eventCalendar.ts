@@ -33,8 +33,9 @@
 //
 // ── RAMADAN DATES ARE APPROXIMATE ───────────────────────────────────────────
 //   Indonesia's Ministry of Religious Affairs sets the dates each year (sidang
-//   isbat). The table below is an approximation to be CONFIRMED each year; it
-//   is a constant, not an administrator setting (ENG-B71). A week after the
+//   isbat). The table below is an approximation; the Material Planning team
+//   confirms it each year and adds the next row (owner, 2026-09-29). It is a
+//   constant, not an administrator setting (ENG-B71). A week after the
 //   table's last Eid cannot be tagged, and the run says so.
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -53,14 +54,16 @@ export interface RamadanDates {
 }
 
 /**
- * APPROXIMATE — to be confirmed against the Ministry of Religious Affairs'
- * announcement each year (owner, 2026-09-29).
+ * APPROXIMATE — the Material Planning team confirms the dates against the
+ * Ministry of Religious Affairs' (Kemenag) announcement each year and adds the
+ * next row (owner, 2026-09-29).
  */
 export const RAMADAN_TABLE: readonly RamadanDates[] = Object.freeze([
   { hijriYear: 1445, start: '2024-03-11', eid: '2024-04-10' },
   { hijriYear: 1446, start: '2025-03-01', eid: '2025-03-31' },
   { hijriYear: 1447, start: '2026-02-18', eid: '2026-03-20' },
   { hijriYear: 1448, start: '2027-02-08', eid: '2027-03-10' },
+  { hijriYear: 1449, start: '2028-01-28', eid: '2028-02-26' },
 ]);
 
 /** The window before Ramadan kept out of the baseline, and the longest lead. */
