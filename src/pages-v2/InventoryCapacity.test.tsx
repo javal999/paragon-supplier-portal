@@ -29,6 +29,8 @@ import BuyerSupplierAccess from './BuyerSupplierAccess';
 import SupplierCapacity from './SupplierCapacity';
 import BuyerCapacity from './BuyerCapacity';
 import BuyerAlerts from './BuyerAlerts';
+import { allCapacityPlans } from '../services/data/mock/inventoryReadModel';
+import { planStatus } from '../services/transitions/capacityRules';
 import BuyerHome from './BuyerHome';
 import SupplierHome from './SupplierHome';
 
@@ -452,11 +454,27 @@ describe('Planner capacity filters (BL-63, REQ-E08-04 BR-07, AC-04)', () => {
     renderAt();
     await screen.findByTestId('capacity-plan-sup-007-MG-20');
     fireEvent.click(screen.getByTestId('capacity-filter-gaps'));
-    expect(planIds()).toEqual(['sup-007-MG-20']);
+    // BL-77 — two suppliers' gaps, not one: sup-005's MG-04 (weeks 7 and 8)
+    // beside sup-007's MG-20 (week 3).
+    expect(planIds().sort()).toEqual(['sup-005-MG-04', 'sup-007-MG-20']);
     expect(new URLSearchParams(search).get('gapsOnly')).toBe('1');
     const rows = within(screen.getByTestId('capacity-plan-sup-007-MG-20')).getAllByRole('row');
     expect(rows).toHaveLength(2); // the header row and the one gap week
     expect(within(screen.getByTestId('capacity-plan-sup-007-MG-20')).getAllByTestId(/capacity-gap-/)).toHaveLength(1);
+    expect(within(screen.getByTestId('capacity-plan-sup-005-MG-04')).getAllByTestId(/capacity-gap-/)).toHaveLength(2);
+  });
+
+  it('BL-77 — the MG-04 filter shows a gap, a confirmed plan and one not submitted yet, from three suppliers', async () => {
+    renderAt('?materialGroup=MG-04');
+    await screen.findByTestId('capacity-plan-sup-005-MG-04');
+    expect(planIds().sort()).toEqual(['sup-005-MG-04', 'sup-006-MG-04', 'sup-009-MG-04']);
+    const byId = new Map<string, ReturnType<typeof allCapacityPlans>[number]>(allCapacityPlans().map((p) => [`${p.supplierId}-${p.materialGroup}`, p]));
+    expect(['sup-005-MG-04', 'sup-006-MG-04', 'sup-009-MG-04'].map((id) => planStatus(byId.get(id)!))).toEqual([
+      'gap',
+      'notStarted',
+      'confirmed',
+    ]);
+    expect(screen.getByTestId('capacity-plan-sup-006-MG-04')).toHaveTextContent('Not submitted yet');
   });
 
   it('a filtered address reloads to the same view, and composes with the status chips', async () => {

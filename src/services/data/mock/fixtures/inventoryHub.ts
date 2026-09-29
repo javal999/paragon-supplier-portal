@@ -226,6 +226,28 @@ export const CAPACITY_SEED: readonly CapacitySubmission[] = [
     submittedAt: at(-1, 3),
     weeks: weeks(() => 1200),
   },
+  // BL-77 — MG-04 (actives) is the one group three suppliers share, so its
+  // filter shows the three states side by side: sup-005 short in weeks 7 and 8
+  // for a capacity reason, sup-009 covering every week, and sup-006 with no
+  // submission. It also gives "Gaps only" a second supplier's gap beside
+  // sup-007's. Demand is PTI's (1,484 KG and 413 KG a week, from the forecast).
+  {
+    id: 'cap-0003',
+    supplierId: 'sup-005',
+    materialGroup: 'MG-04',
+    submittedAt: at(-3, 2),
+    weeks: weeks(
+      (i) => (i === 6 || i === 7 ? 1100 : 1500),
+      (i) => (i === 6 || i === 7 ? { reason: 'capacity' as const } : {}),
+    ),
+  },
+  {
+    id: 'cap-0004',
+    supplierId: 'sup-009',
+    materialGroup: 'MG-04',
+    submittedAt: at(-1, 5),
+    weeks: weeks(() => 450),
+  },
 ];
 
 /** The first Monday of the capacity horizon (exported for tests). */

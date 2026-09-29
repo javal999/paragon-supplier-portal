@@ -69,6 +69,7 @@ import { useRefusalText } from '../hooks/useRefusalText';
 import { refusalDetailOf } from '../services/transitions/refusalMessage';
 import TrackingNumber from '../components/ui-v2/TrackingNumber';
 import CarrierPicker, { carrierFor, defaultCarrier } from './shipments/CarrierPicker';
+import { poLineQuantityText } from './orders/poLineQuantity';
 
 type TabKey = 'shipments' | 'create';
 type StatusFilter = AsnStatus | 'All';
@@ -1139,7 +1140,7 @@ const SupplierShipments: React.FC = () => {
                     <div className="text-right shrink-0">
                       <div className="text-xs text-text-tertiary">
                         {t('supplierShipments.wizard.select.qty')}{' '}
-                        <Data>{mat ? `${mat.quantity.toLocaleString()} ${mat.uom}` : '—'}</Data>
+                        <Data>{mat ? poLineQuantityText(t, mat) : '—'}</Data>
                       </div>
                       <div className="text-xs text-text-tertiary">
                         {t('supplierShipments.wizard.select.delivery')}{' '}
