@@ -524,21 +524,28 @@ export function stockTemplateHeader(f: (typeof STOCK_TEMPLATE_FIELDS)[number], l
 
 /**
  * MAT-D4 — the ONE check of the production pair, read by the template
- * validator and the manual form: E must be given (0 allowed); F must be given
+ * validator, the manual form and the declare/record verbs
+ * (`INV_DECLARE_DETAIL_VALID`): E must be given (0 allowed); F must be given
  * when E > 0; F, when given, is a `YYYY-MM-DD` day. Null when the pair is fine.
+ *
+ * Owner ruling 2026-09-29 (C1b): the `api` channel is EXEMPT from the two
+ * "must be given" parts — a supplier ERP that does not send in-production is
+ * accepted and the figure is left unset. A date it does send must still be a day.
  */
 export function productionProblem(
   inProductionQty: number | null,
   productionCompletionDate: string,
+  channel: StockChannel,
 ): {
   readonly reason: 'missingField' | 'productionDateMissing' | 'invalidDate';
   readonly field: 'inProductionQty' | 'productionCompletionDate';
 } | null {
-  if (inProductionQty === null) return { reason: 'missingField', field: 'inProductionQty' };
+  const required = channel !== 'api';
+  if (required && inProductionQty === null) return { reason: 'missingField', field: 'inProductionQty' };
   if (productionCompletionDate !== '' && !isIsoDay(productionCompletionDate)) {
     return { reason: 'invalidDate', field: 'productionCompletionDate' };
   }
-  if (inProductionQty > 0 && productionCompletionDate === '') {
+  if (required && inProductionQty !== null && inProductionQty > 0 && productionCompletionDate === '') {
     return { reason: 'productionDateMissing', field: 'productionCompletionDate' };
   }
   return null;
@@ -773,7 +780,7 @@ export function validateStockRows(
     if (failed) continue;
     const completion = first.productionCompletionDate ?? '';
     // MAT-D4 — E required (0 allowed); F required when E > 0.
-    const production = productionProblem(numbers.inProductionQty ?? null, completion);
+    const production = productionProblem(numbers.inProductionQty ?? null, completion, 'template');
     if (production) {
       refuseAll(production.reason, production.field);
       continue;
@@ -837,6 +844,16 @@ export function validateStockRows(
   }
   refused.sort((a, b) => a.row - b.row);
   return { accepted, refused };
+}
+
+/**
+ * The channel a declare/record submission is stored under (REQ-E08-02 BR-08):
+ * a PTI (buyer) recording is ALWAYS `pti`, whatever the payload says; a
+ * supplier's own submission is `template` when it says so, else `manual`.
+ * Read by the target that stores it and by the hook that checks it.
+ */
+export function submissionChannel(byBuyer: boolean, requested: unknown): StockChannel {
+  return byBuyer ? 'pti' : requested === 'template' ? 'template' : 'manual';
 }
 
 /** The channel label key suffix for a stock figure (REQ-E08-02 BR-08: "Entered by PTI"). */

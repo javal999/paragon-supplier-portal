@@ -24,6 +24,7 @@ import {
   parseCsv,
   positionBand,
   productionProblem,
+  submissionChannel,
   STOCK_TEMPLATE_FIELDS,
   stockFreshness,
   stockTemplateCsv,
@@ -424,11 +425,31 @@ describe('MR-4 — the template marks optional columns; MAT-D4 — in production
   });
 
   it('productionProblem is the one check (both directions)', () => {
-    expect(productionProblem(null, '')).toEqual({ reason: 'missingField', field: 'inProductionQty' });
-    expect(productionProblem(0, '')).toBeNull();
-    expect(productionProblem(50, '')).toEqual({ reason: 'productionDateMissing', field: 'productionCompletionDate' });
-    expect(productionProblem(50, '2026-10-01')).toBeNull();
-    expect(productionProblem(0, '01/10/2026')).toEqual({ reason: 'invalidDate', field: 'productionCompletionDate' });
+    expect(productionProblem(null, '', 'template')).toEqual({ reason: 'missingField', field: 'inProductionQty' });
+    expect(productionProblem(0, '', 'template')).toBeNull();
+    expect(productionProblem(50, '', 'template')).toEqual({ reason: 'productionDateMissing', field: 'productionCompletionDate' });
+    expect(productionProblem(50, '2026-10-01', 'template')).toBeNull();
+    expect(productionProblem(0, '01/10/2026', 'template')).toEqual({ reason: 'invalidDate', field: 'productionCompletionDate' });
+  });
+
+  it('C1b — manual and pti enforce the pair like template; api is exempt (owner ruling 2026-09-29)', () => {
+    for (const ch of ['manual', 'pti'] as const) {
+      expect(productionProblem(null, '', ch)).toEqual({ reason: 'missingField', field: 'inProductionQty' });
+      expect(productionProblem(50, '', ch)).toEqual({ reason: 'productionDateMissing', field: 'productionCompletionDate' });
+      expect(productionProblem(0, '', ch)).toBeNull();
+    }
+    // An ERP that does not send in-production is accepted; nor is a date demanded.
+    expect(productionProblem(null, '', 'api')).toBeNull();
+    expect(productionProblem(50, '', 'api')).toBeNull();
+    // A date it does send must still be a day.
+    expect(productionProblem(null, '01/10/2026', 'api')).toEqual({ reason: 'invalidDate', field: 'productionCompletionDate' });
+  });
+
+  it('submissionChannel — a buyer recording is always pti; a supplier is template or manual', () => {
+    expect(submissionChannel(true, 'template')).toBe('pti');
+    expect(submissionChannel(false, 'template')).toBe('template');
+    expect(submissionChannel(false, 'manual')).toBe('manual');
+    expect(submissionChannel(false, undefined)).toBe('manual');
   });
 });
 
