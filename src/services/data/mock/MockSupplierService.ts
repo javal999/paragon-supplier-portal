@@ -7,9 +7,11 @@ import type {
   VendorQualification,
   SupplierStockUpdateMode,
 } from '../types';
+import type { UpdateCompliance } from '../../transitions/updateCompliance';
 import { DataError } from '../types';
 import { withMeasures } from './supplierMeasureReadModel';
 import { allStockUpdateModes } from './supplierMaster';
+import { updateComplianceFor } from './updateComplianceReadModel';
 import { allQualifications, qualificationFor } from './qualificationReadModel';
 
 // ⚠️ REQ-E10-01 — OTIF AND THE GRADE ARE PROJECTED HERE, NOT READ FROM THE
@@ -52,6 +54,12 @@ export class MockSupplierService implements ISupplierService {
     const all = allStockUpdateModes();
     if (scope.personaType === 'supplier') return { items: all.filter((r) => r.supplierId === scope.supplierId) };
     return { items: all };
+  }
+
+  // Material B3 — narrowed in the read model (MAT-R4): a supplier reads only
+  // its own compliance and week strip.
+  async getUpdateCompliance(scope: QueryScope): Promise<Page<UpdateCompliance>> {
+    return { items: updateComplianceFor(scope) };
   }
 
   // Material G1 — narrowed HERE, not in the page (MAT-R4): a supplier reads

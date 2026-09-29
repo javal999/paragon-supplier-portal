@@ -13,6 +13,7 @@ import {
   useCallOffs,
   useGoodsReceipts,
   usePurchaseOrders,
+  useUpdateCompliance,
 } from '../../services/query/hooks';
 import { sdcClock } from '../../services/sdc';
 import {
@@ -46,31 +47,36 @@ export function usePerformance(period: PerformancePeriod): PerformanceRead {
   const asns = useASNs();
   const receipts = useGoodsReceipts();
   const pos = usePurchaseOrders();
+  // Material B3 (AR-09) — the update compliance the mock path computes, read
+  // once and handed to the SAME `supplierMeasure`, so both paths blend it alike.
+  const compliance = useUpdateCompliance();
   const nowIso = sdcClock.now();
 
-  const input = React.useMemo<PerformanceInput>(
-    () => ({
+  const input = React.useMemo<PerformanceInput>(() => {
+    const byId = new Map((compliance.data?.items ?? []).map((c) => [c.supplierId, c]));
+    return {
       callOffs: callOffs.data?.items ?? [],
       asns: asns.data?.items ?? [],
       receipts: receipts.data?.items ?? [],
       purchaseOrders: pos.data?.items ?? [],
-    }),
-    [callOffs.data, asns.data, receipts.data, pos.data],
-  );
+      updateCompliance: (supplierId: string) => byId.get(supplierId) ?? null,
+    };
+  }, [callOffs.data, asns.data, receipts.data, pos.data, compliance.data]);
 
   const cache = React.useMemo(() => new Map<string, SupplierMeasure>(), [input, period, nowIso]);
 
   return {
     input,
     nowIso,
-    isPending: callOffs.isPending || asns.isPending || receipts.isPending || pos.isPending,
-    isError: callOffs.isError || asns.isError || receipts.isError || pos.isError,
-    error: callOffs.error ?? asns.error ?? receipts.error ?? pos.error,
+    isPending: callOffs.isPending || asns.isPending || receipts.isPending || pos.isPending || compliance.isPending,
+    isError: callOffs.isError || asns.isError || receipts.isError || pos.isError || compliance.isError,
+    error: callOffs.error ?? asns.error ?? receipts.error ?? pos.error ?? compliance.error,
     refetch: () => {
       callOffs.refetch();
       asns.refetch();
       receipts.refetch();
       pos.refetch();
+      compliance.refetch();
     },
     forSupplier: (supplierId: string) => {
       const hit = cache.get(supplierId);

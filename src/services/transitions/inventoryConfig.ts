@@ -96,6 +96,14 @@ export function stockSyncIntervalHours(): number {
   return hubSetting('stockSync.intervalHours');
 }
 
+/**
+ * MR-2 BR-05 (MAT-D9) — the share of the performance score that update
+ * compliance takes (0.10 at release). Read by `assessmentScore` at call time.
+ */
+export function complianceScoreWeight(): number {
+  return hubSetting('compliance.scoreWeight');
+}
+
 /** REQ-E08-04 BR-03 / PQ-02 — weekly buckets for 13 weeks. */
 export const CAPACITY_HORIZON_WEEKS = 13;
 
