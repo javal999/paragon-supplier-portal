@@ -244,14 +244,18 @@ const prep = prepareBacktest(input);
 const run = modelBacktest(prep, null);
 
 describe('E14-10 on the synthetic history', () => {
-  it('BR-01 — the origins the two-year history allows: six, from SAP’s first snapshot, 11.11 and Ramadan 1447 covered', () => {
-    expect(backtestOrigins(data, input.asOf)).toEqual(['2025-09-01', '2025-11-03', '2026-01-05', '2026-03-09', '2026-05-11', '2026-07-13']);
+  it('BR-01 — the origins the two-year history allows: twelve, monthly from SAP’s first snapshot, 11.11 and Ramadan 1447 covered', () => {
+    expect(backtestOrigins(data, input.asOf)).toEqual([
+      '2025-09-01', '2025-09-29', '2025-10-27', '2025-11-24', '2025-12-22', '2026-01-19',
+      '2026-02-16', '2026-03-16', '2026-04-13', '2026-05-11', '2026-06-08', '2026-07-06',
+    ]);
     const at = (o: string) => run.origins.find((x) => x.weekStart === o)!;
-    // The 11.11 week (Mon 10 Nov 2025) is a double-date week driven by the 3 Nov version.
-    expect(at('2025-11-03').events).toContain('doubleDate');
-    // Ramadan 1447 (18 Feb – 19 Mar 2026) and Lebaran: forecast from 5 Jan, and from inside it on 9 Mar.
-    expect(at('2026-01-05').ramadan).toBe('H1447');
-    expect(at('2026-03-09').ramadan).toBe('H1447');
+    // The 11.11 week (Mon 10 Nov 2025) is a double-date week, in force under the 27 Oct version.
+    expect(at('2025-10-27').events).toContain('doubleDate');
+    // Ramadan 1447 (18 Feb – 19 Mar 2026) and Lebaran (20 Mar): forecast from 19 Jan, from its first week and from inside it.
+    expect(at('2026-01-19').ramadan).toBeNull();
+    expect(at('2026-02-16').ramadan).toBe('H1447');
+    expect(at('2026-03-16').ramadan).toBe('H1447');
     expect(run.replay).toMatchObject({ from: '2025-09-01', to: '2026-08-24', historyFrom: '2024-09-02' });
   });
 
@@ -278,7 +282,7 @@ describe('E14-10 on the synthetic history', () => {
   });
 
   it('the Comb and Theta at an origin are exactly what E14-07 would have forecast that day', () => {
-    const o = '2026-01-05';
+    const o = '2026-01-19';
     const k = prep.originWeeks.indexOf(o);
     const df = demandForecast({ finishedGoods: data.finishedGoods, sales: data.sales, asOf: o });
     for (const sku of ['SYN-FG-001', 'SYN-FG-013']) {

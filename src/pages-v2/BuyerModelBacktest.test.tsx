@@ -1,4 +1,4 @@
-import { describe, it, expect, afterEach } from 'vitest';
+import { describe, it, expect, afterEach, beforeAll } from 'vitest';
 import { screen, within, fireEvent } from '@testing-library/react';
 import { renderWithProviders, BUYER } from '../test/test-utils';
 import BuyerModelBacktest from './BuyerModelBacktest';
@@ -19,6 +19,12 @@ const buyerScope: QueryScope = { personaType: 'buyer', supplierId: null, busines
 const supplierScope: QueryScope = { personaType: 'supplier', supplierId: 'sup-007', businessRoles: PERSONA_SYSTEM_ROLES.supplier };
 const view = async () => (await mockDataService.procurement.getModelBacktest(buyerScope))!;
 const pct = (x: number) => `${Math.round(x * 1000) / 10}`;
+
+// The backtest's heavy half runs once per hub date and is memoised by the
+// service; warm it here so no single page test carries its cost.
+beforeAll(async () => {
+  await view();
+}, 60_000);
 
 afterEach(() => {
   void i18n.changeLanguage('en');
@@ -83,8 +89,8 @@ describe('BuyerModelBacktest — the planner page', () => {
     const v = await view();
     renderWithProviders(<BuyerModelBacktest />, { identity: BUYER, route: '/buyer/model-backtest' });
     await screen.findByTestId('mb-origins');
-    expect(screen.getByTestId('mb-origin-events-2025-11-03')).toHaveTextContent('Double-date (incl. 11.11)');
-    expect(screen.getByTestId('mb-origin-events-2026-01-05')).toHaveTextContent('Ramadan 1447 H');
+    expect(screen.getByTestId('mb-origin-events-2025-10-27')).toHaveTextContent('Double-date (incl. 11.11)');
+    expect(screen.getByTestId('mb-origin-events-2026-02-16')).toHaveTextContent('Ramadan 1447 H');
     const section = screen.getByTestId('mb-materials');
     fireEvent.click(within(section).getByRole('radio', { name: /^Raw material/ }));
     for (const m of v.materials) {

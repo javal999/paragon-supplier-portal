@@ -16,11 +16,12 @@
 //   ORIGIN_SPACING_WEEKS while the origin leaves MIN_EVAL_WEEKS of actual
 //   sales after it. Each origin's forecast is the plan in force until the
 //   next origin. On the synthetic history (2024-09-02 to 2026-08-24, SAP's
-//   snapshots from 2025-09-01) that is 6 origins, 2025-09-01 to 2026-07-13:
-//   the 2025-11-03 origin forecasts 11.11; 2026-01-05 forecasts Ramadan 1447
-//   and Lebaran from before them; 2026-03-09 sits inside Ramadan. Ramadan 1446
-//   (March 2025) and 11.11 in 2024 cannot be origins: no SKU had 52 weeks of
-//   history before them and SAP's plan has no snapshot then (ENG-B80).
+//   snapshots from 2025-09-01) that is 12 origins, 2025-09-01 to 2026-07-06,
+//   four weeks apart: the 2025-10-27 version is in force for 11.11; 2026-01-19
+//   forecasts Ramadan 1447 and Lebaran from before them; 2026-02-16 and
+//   2026-03-16 sit inside Ramadan. Ramadan 1446 (March 2025) and 11.11 in 2024
+//   cannot be origins: no SKU had 52 weeks of history before them and SAP's
+//   plan has no snapshot then (ENG-B80).
 //
 // ── CANDIDATES, PER SKU ─────────────────────────────────────────────────────
 //   The SKU's class is read at the LAST origin with E14-07's own rule.
@@ -117,8 +118,8 @@ import type { Brand, EngineDataset, FinishedGood, IsoDate, SalesWeek, WarehouseK
 
 // ── Parameters (ENG-B80 to ENG-B89) ─────────────────────────────────────────
 
-/** Weeks between origins: about two months (ENG-B80). */
-export const ORIGIN_SPACING_WEEKS = 9;
+/** Weeks between origins: four, about a month (ENG-B80). */
+export const ORIGIN_SPACING_WEEKS = 4;
 /** Weeks of actual sales an origin must leave after it. */
 export const MIN_EVAL_WEEKS = 6;
 /** Weeks each version forecasts. */
@@ -636,17 +637,23 @@ function forecastsAt(
     sapAt.set(p.skuCode, row);
   }
   const out = new Map<string, Map<BacktestCandidate, number[]>>();
+  const indexMemo = new Map<Brand, Map<IsoDate, number>>();
   for (const x of prepared) {
     const wanted = candidatesOf.get(x.fg.skuCode);
     if (!wanted || !x.h) continue;
     const ended = (i: number) => x.fg.discontinueDate !== undefined && weeks[i] >= x.fg.discontinueDate;
     const cut = (f: readonly number[]) => nonNeg(f).map((v, i) => (ended(i) ? 0 : v));
     const factors = brandFactors.get(x.fg.brand) ?? [];
-    const histWeeks = x.h.qty.map((_, t) => addDays(x.h!.start, 7 * t));
-    const index: CalendarIndex = {
-      history: histWeeks.map((w) => calendarIndex(w, factors, lead, table)),
-      horizon: weeks.map((w) => calendarIndex(w, factors, lead, table)),
+    // The index of a week depends only on the brand's factors: SKUs of a brand share their weeks' values.
+    const memo = indexMemo.get(x.fg.brand) ?? new Map<IsoDate, number>();
+    indexMemo.set(x.fg.brand, memo);
+    const at = (w: IsoDate) => {
+      let v = memo.get(w);
+      if (v === undefined) memo.set(w, (v = calendarIndex(w, factors, lead, table)));
+      return v;
     };
+    const histWeeks = x.h.qty.map((_, t) => addDays(x.h!.start, 7 * t));
+    const index: CalendarIndex = { history: histWeeks.map(at), horizon: weeks.map(at) };
     // The intermittent methods run on the in-stock weeks only, as E14-07 runs them.
     const inStock = x.h.qty.filter((_, t) => !x.h!.stockout[t]);
     const m = new Map<BacktestCandidate, number[]>();
