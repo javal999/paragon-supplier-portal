@@ -118,6 +118,7 @@ import { threePlStore } from './threePlStore';
 import { supplierOverlayStore } from '../data/mock/stores/supplierOverlayStore';
 import { planningGroupStore } from '../data/mock/stores/planningGroupStore';
 import { materialOverlayStore } from '../data/mock/stores/materialOverlayStore';
+import { mrpControllerStore } from './mrpControllerStore';
 import { hubSettingsStore, settingValue } from './hubSettingsStore';
 import { reasonCodeStore } from './reasonCodes';
 
@@ -232,6 +233,8 @@ async function realIds(): Promise<Record<string, string | null>> {
     // Material C5 — `entityId` IS the planning group id; every SAP material
     // group's default group exists from the start. PTI master data: owner-less.
     planningGroup: 'pg-MG-20',
+    // Material C4 — `entityId` IS the SAP code; a sample-list row exists from the start.
+    mrpController: 'P12',
     // BL-32 — `entityId` IS the setting key; every registry key exists from the start.
     hubSetting: 'callOff.overPct',
     // BL-32 — `entityId` IS `<list>:<code>`; every starter code exists from the start.
@@ -382,6 +385,7 @@ const resetAll = () => {
   supplierOverlayStore.reset();
   planningGroupStore.reset();
   materialOverlayStore.reset();
+  mrpControllerStore.reset();
   hubSettingsStore.reset();
   reasonCodeStore.reset();
   // NR-2 — the id supply closes rfp-002 and opens a firm-offer round.
@@ -553,6 +557,8 @@ describe('THE LEGITIMATE PATHS — the half a "refuse everyone" fix would break'
         'enforcement',
         // BL-32 — the rule values are PTI's; no supplier is their owner.
         'hubSetting',
+        // Material C4 — the MRP controller list is PTI's; no supplier is its owner.
+        'mrpController',
         // REQ-E03-05 — a negotiation round is PTI's window; a supplier answers
         // it through its own quotation, never by addressing the round.
         'negotiationRound',
@@ -644,6 +650,13 @@ describe('THE LEGITIMATE PATHS — the half a "refuse everyone" fix would break'
     });
     expect(rsnRes.status, rsnRes.reason).toBe('done');
     expect(reasonCodeStore.get('poAdjust', 'tooling')?.active).toBe(true);
+    // Material C4 — the Hub administrator's lane (compliance) can still map a code.
+    const mrpRes = await svc.dispatch(buyerSeat('compliance'), {
+      transitionId: 't_mrpcontroller_set', entity: 'mrpController', entityId: 'P13',
+      payload: { name: 'Fragrance planning desk (sample)', userLabels: ['Material Planner, fragrance (sample)'] },
+    });
+    expect(mrpRes.status, mrpRes.reason).toBe('done');
+    expect(mrpControllerStore.get('P13')?.name).toBe('Fragrance planning desk (sample)');
 
     const raised = await svc.dispatch(buyerSeat('procurement'), {
       transitionId: 't_application_submit', entity: 'supplierApplication',

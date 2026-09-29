@@ -4,6 +4,8 @@
 // marks weeks "Needs re-entry", and planning group filters both pages.
 // ─────────────────────────────────────────────────────────────────────────────
 
+import React from 'react';
+import { useLocation } from 'react-router-dom';
 import { screen, fireEvent, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { renderWithProviders, BUYER, SUPPLIER } from '../test/test-utils';
@@ -86,5 +88,25 @@ describe('Material C5 — planning group is a filter on alerts (MR-8 BR-07)', ()
     fireEvent.change(screen.getByLabelText('Planning group'), { target: { value: 'pg-MG-20' } });
     expect(screen.getByTestId('alert-capacityBelowDemand|pg-MG-20|sup-007')).toBeTruthy();
     expect(screen.queryByTestId('alert-group-sup-002')).toBeNull();
+  });
+
+  it('the planning group filter composes with `?reason=` and `?pic=` in the address', async () => {
+    let search = '';
+    const LocationProbe: React.FC = () => {
+      search = useLocation().search;
+      return null;
+    };
+    renderWithProviders(
+      <>
+        <BuyerAlerts />
+        <LocationProbe />
+      </>,
+      { identity: PLANNER, route: '/buyer/alerts?reason=other&pic=P12' },
+    );
+    // `?reason=` opens the Closed tab; the planning groups offered are the Open tab's.
+    fireEvent.click(await screen.findByRole('tab', { name: /Open/ }));
+    fireEvent.change(screen.getByLabelText('Planning group'), { target: { value: 'pg-MG-20' } });
+    const params = new URLSearchParams(search);
+    expect([params.get('reason'), params.get('pic'), params.get('planningGroup')]).toEqual(['other', 'P12', 'pg-MG-20']);
   });
 });

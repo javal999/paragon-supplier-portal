@@ -371,6 +371,11 @@ export const processFlowPurposeEn: Record<string, string> = {
     'Material Planning moves materials into a planning group of the same SAP material group. A material is in exactly one group, and the capacity already entered for the weeks ahead on both groups is marked for the supplier to enter again.',
   'processFlows.purpose.t_planninggroup_retire':
     'Material Planning retires a planning group once no material is left in it. A group is never deleted, so the capacity entered against it stays readable.',
+  // ── the MRP controller list (Material C4) ───────────────────────────
+  'processFlows.purpose.entity.mrpController':
+    'Who handles a material in planning. SAP gives each material an MRP controller code; the hub keeps who that code is: the planner or desk a supplier can ask for, and the hub users behind it.',
+  'processFlows.purpose.t_mrpcontroller_set':
+    'The hub administrator maps an MRP controller code to the planner or desk behind it and one or more hub users, or changes that mapping. Suppliers see who to contact on their stock, call-offs and shipping notices, so each change is on record with who made it and when.',
 
   // ── the hub's rule values (BL-32) ────────────────────────────────────
   'processFlows.purpose.entity.hubSetting':
@@ -885,6 +890,10 @@ export const processFlowPurposeId: Record<string, string> = {
     'Material Planning memindahkan material ke grup perencanaan dari grup material SAP yang sama. Satu material hanya berada di satu grup, dan kapasitas yang sudah diisi untuk minggu-minggu mendatang pada kedua grup ditandai agar pemasok mengisinya kembali.',
   'processFlows.purpose.t_planninggroup_retire':
     'Material Planning menonaktifkan grup perencanaan setelah tidak ada material tersisa di dalamnya. Grup tidak pernah dihapus, sehingga kapasitas yang pernah diisi tetap dapat dibaca.',
+  'processFlows.purpose.entity.mrpController':
+    'Siapa yang menangani suatu material di perencanaan. SAP memberi setiap material kode MRP controller; hub menyimpan siapa pemilik kode itu: nama yang dapat dihubungi pemasok, dan pengguna hub di baliknya.',
+  'processFlows.purpose.t_mrpcontroller_set':
+    'Administrator hub memetakan kode MRP controller ke sebuah nama dan satu atau lebih pengguna hub, atau mengubah pemetaan itu. Pemasok melihat nama itu pada stok, call-off, dan pemberitahuan pengirimannya, sehingga setiap perubahan tercatat beserta siapa dan kapan.',
 
   'processFlows.purpose.entity.hubSetting':
     'Satu nilai yang menjadi pembanding aturan hub: toleransi, tenggat, ambang peringatan, atau periode data usang. Nilai ini menentukan apa yang diterima tanpa diperiksa orang, sehingga hanya administrator hub yang dapat mengubahnya dan setiap perubahan tercatat.',

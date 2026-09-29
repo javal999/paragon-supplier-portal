@@ -76,6 +76,7 @@ import { useRefusalText } from '../hooks/useRefusalText';
 import { refusalDetailOf } from '../services/transitions/refusalMessage';
 import TrackingNumber from '../components/ui-v2/TrackingNumber';
 import CarrierPicker, { carrierFor, defaultCarrier } from './shipments/CarrierPicker';
+import { PicCell, PicFilter, PicHeader, usePicFilter } from './materials/picDisplay';
 
 type TabKey = 'shipments' | 'create';
 type StatusFilter = AsnStatus | 'All';
@@ -347,6 +348,9 @@ const ShipmentsList: React.FC<ShipmentsListProps> = ({
   confirmedPOs,
 }) => {
   const { t } = useTranslation();
+  // Material C4 — the PIC filter (by name: a supplier never sees the code). An
+  // ASN is kept when any of its lines is that controller's material.
+  const pic = usePicFilter();
   // ⚠️ TWO VERBS, TWO SLOTS — never one notice speaking for both (§76). They
   // are co-reachable on this page: a supplier with a confirmed PO and a draft
   // ASN sees the create row and the submit cell at the same time, so a single
@@ -367,10 +371,10 @@ const ShipmentsList: React.FC<ShipmentsListProps> = ({
   } as const);
   const filtered = useMemo(
     () =>
-      statusFilter === 'All'
-        ? asns
-        : asns.filter((a) => a.status === statusFilter),
-    [statusFilter, asns],
+      (statusFilter === 'All' ? asns : asns.filter((a) => a.status === statusFilter)).filter(
+        (a) => pic.filter === '' || a.lineItems.some((li) => pic.matches(li.mrpController)),
+      ),
+    [statusFilter, asns, pic.filter, pic.matches],
   );
 
   const pendingPOs = useMemo(() => {
@@ -444,6 +448,13 @@ const ShipmentsList: React.FC<ShipmentsListProps> = ({
               </span>
             )}
           </h3>
+          <PicFilter
+            refs={asns.flatMap((a) => a.lineItems.map((li) => li.mrpController))}
+            persona="supplier"
+            filter={pic.filter}
+            setFilter={pic.setFilter}
+            myCode={pic.myCode}
+          />
         </div>
         <Table>
           <TableHeader>
@@ -659,6 +670,9 @@ const ShipmentsList: React.FC<ShipmentsListProps> = ({
                                     <th className="text-left py-1">
                                       {t('supplierShipments.lineItems.col.material')}
                                     </th>
+                                    <th className="text-left py-1">
+                                      <PicHeader />
+                                    </th>
                                     <th className="text-right py-1">
                                       {t('supplierShipments.lineItems.col.ordered')}
                                     </th>
@@ -689,6 +703,12 @@ const ShipmentsList: React.FC<ShipmentsListProps> = ({
                                           <div className="text-text-primary">
                                             {li.description}
                                           </div>
+                                        </td>
+                                        <td className="py-1.5">
+                                          <PicCell
+                                            value={li.mrpController}
+                                            testId={`asn-line-pic-${asn.asnNumber}-${li.materialCode}`}
+                                          />
                                         </td>
                                         <td className="py-1.5 text-right text-text-secondary">
                                           <Data>{li.orderedQty.toLocaleString()}</Data>

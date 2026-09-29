@@ -281,6 +281,7 @@ export const TRANSITION_PURPOSE: FlowAnnotations = Object.freeze({
   t_planninggroup_rename: { purposeKey: 'processFlows.purpose.t_planninggroup_rename' },
   t_planninggroup_move_materials: { purposeKey: 'processFlows.purpose.t_planninggroup_move_materials' },
   t_planninggroup_retire: { purposeKey: 'processFlows.purpose.t_planninggroup_retire' },
+  t_mrpcontroller_set: { purposeKey: 'processFlows.purpose.t_mrpcontroller_set' },
   t_setting_set: { purposeKey: 'processFlows.purpose.t_setting_set' },
   t_reasoncode_set: { purposeKey: 'processFlows.purpose.t_reasoncode_set' },
 
@@ -391,6 +392,7 @@ export const ENTITY_PURPOSE: FlowAnnotations = Object.freeze({
   threePl: { purposeKey: 'processFlows.purpose.entity.threePl' },
   supplierOverlay: { purposeKey: 'processFlows.purpose.entity.supplierOverlay' },
   planningGroup: { purposeKey: 'processFlows.purpose.entity.planningGroup' },
+  mrpController: { purposeKey: 'processFlows.purpose.entity.mrpController' },
   hubSetting: { purposeKey: 'processFlows.purpose.entity.hubSetting' },
   reasonCode: { purposeKey: 'processFlows.purpose.entity.reasonCode' },
   supplierApplication: { purposeKey: 'processFlows.purpose.entity.supplierApplication' },
