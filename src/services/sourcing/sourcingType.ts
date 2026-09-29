@@ -234,6 +234,22 @@ export function inviteesQualificationRefusal(invitees: readonly NamedEligibility
   return refused.length > 0 ? `SUPPLIER_NOT_QUALIFIED: ${refused.map(notQualifiedText).join('; ')}` : null;
 }
 
+/**
+ * BL-147 (MAT-R4) — a record's qualification warnings as a scope may read them:
+ * the buyer (`supplierId` null) reads every row; a supplier only its own row,
+ * never another vendor's level or missing documents. The field is dropped when
+ * nothing is left, so a supplier's read never carries an empty list either.
+ */
+export function withOwnQualificationWarnings<T extends { readonly qualificationWarnings?: readonly QualificationWarning[] }>(
+  record: T,
+  supplierId: string | null,
+): T {
+  if (!supplierId || !record.qualificationWarnings) return record;
+  const { qualificationWarnings, ...rest } = record;
+  const own = qualificationWarnings.filter((w) => w.supplierId === supplierId);
+  return (own.length > 0 ? { ...rest, qualificationWarnings: own } : rest) as T;
+}
+
 /** The warnings a publish or an award records: every vendor let through on a placeholder list. */
 export const qualificationWarningsOf = (vendors: readonly NamedEligibility[]): QualificationWarning[] =>
   vendors.filter((v) => v.eligibility.state === 'warn').map((v) => warningOf(v.supplierId, v.eligibility));

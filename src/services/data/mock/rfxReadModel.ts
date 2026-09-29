@@ -66,7 +66,7 @@ import type {
 import { isRfpAward } from '../../sourcing/rfpAward';
 import { firmPricesInForce, parseRfpOptionRef, rfpOptionRef } from '../../sourcing/rfpFirmOffer';
 import { awardItemsOf, itemOfAwardLine } from '../../sourcing/awardShape';
-import type { SourcingType } from '../../sourcing/sourcingType';
+import { withOwnQualificationWarnings, type SourcingType } from '../../sourcing/sourcingType';
 import { eligibilityFor, eventSourcingType } from './eligibilityReadModel';
 import { rfqStore } from './stores/rfqStore';
 import { quotationStore } from './stores/quotationStore';
@@ -211,6 +211,7 @@ const inviteeViews = (
   responseFor: (supplierId: string) => InviteeResponseFacts | undefined,
   nowIso: string,
   sourcingType: SourcingType,
+  readerSupplierId: string | null,
 ): readonly RfxInviteeView[] =>
   event.invitees.map((invitee) => {
     const deadline = effectiveDeadline(event.responseDeadline, event.invitees, invitee.supplierId);
@@ -235,7 +236,11 @@ const inviteeViews = (
       confidentialityAcceptedAt: response?.confidentialityAcceptedAt ?? null,
       termsAcceptedAt: response?.termsAcceptedAt ?? null,
       // Material G2 (MR-10 BR-07) — on the event's sourcing type, today.
-      eligibility: eligibilityFor(invitee.supplierId, sourcingType, nowIso),
+      // BL-147 (MAT-R4) — a supplier reads its own qualification, never
+      // another invitee's.
+      ...(readerSupplierId && readerSupplierId !== invitee.supplierId
+        ? {}
+        : { eligibility: eligibilityFor(invitee.supplierId, sourcingType, nowIso) }),
     };
   });
 
@@ -277,7 +282,8 @@ export function rfiEventViews(nowIso: string, supplierId: string | null): readon
       const locked =
         !!supplierId && !!event.confidentiality && !visible[0]?.confidentialityAcceptedAt;
       return {
-        ...event,
+        // BL-147 (MAT-R4) — a supplier reads only its own publish warning.
+        ...withOwnQualificationWarnings(event, supplierId),
         ...(locked
           ? { description: undefined, questions: [], customSections: [], attachments: [], documentRequests: [] }
           : {}),
@@ -287,6 +293,7 @@ export function rfiEventViews(nowIso: string, supplierId: string | null): readon
           (sid) => rfiFacts(mine.find((r) => r.supplierId === sid)),
           nowIso,
           eventSourcingType(event),
+          supplierId,
         ),
         // NR-1 BR-08 — the response is its latest version; every version rides
         // along. `visible` is already narrowed, so a supplier reads only its
@@ -319,7 +326,8 @@ export function rfpEventViews(nowIso: string, supplierId: string | null): readon
         !!supplierId && !!event.confidentiality && !visible[0]?.confidentialityAcceptedAt;
       const source = event.sourceRfiId ? rfiEventStore.get(event.sourceRfiId) : undefined;
       return {
-        ...event,
+        // BL-147 (MAT-R4) — a supplier reads only its own publish warning.
+        ...withOwnQualificationWarnings(event, supplierId),
         ...(locked
           ? {
               scope: '',
@@ -339,6 +347,7 @@ export function rfpEventViews(nowIso: string, supplierId: string | null): readon
           (sid) => rfpFacts(mine.find((r) => r.supplierId === sid)),
           nowIso,
           eventSourcingType(event),
+          supplierId,
         ),
 
         responses: visible.map((r) => ({
@@ -615,7 +624,8 @@ export function awardViews(supplierId: string | null): readonly AwardView[] {
         });
       }
       return {
-        ...award,
+        // BL-147 (MAT-R4) — a supplier reads only its own award warning.
+        ...withOwnQualificationWarnings(award, supplierId),
         lines,
         notAwardedSupplierIds: supplierId
           ? award.notAwardedSupplierIds.filter((s) => s === supplierId)
@@ -684,6 +694,7 @@ export function rfpAwardViews(supplierId: string | null): readonly RfpAwardView[
       const status = awardStatusOf(award.id, trail);
       const cancellation = cancellationOf(award.id, trail);
       const sapMark = sapMarkOf(award.id, trail);
+      const warnings = withOwnQualificationWarnings(award, supplierId).qualificationWarnings;
       const lines = (supplierId ? award.lines.filter((l) => l.supplierId === supplierId) : award.lines).map(
         (l) => ({
           ...l,
@@ -709,6 +720,8 @@ export function rfpAwardViews(supplierId: string | null): readonly RfpAwardView[
         ...(award.complianceAtAward
           ? { complianceAtAward: ownComplianceAtAward(award.complianceAtAward, supplierId) }
           : {}),
+        // BL-147 (MAT-R4) — the vendors awarded below the level; a supplier its own row only.
+        ...(warnings ? { qualificationWarnings: warnings } : {}),
         ...(!supplierId && cancellation ? { cancellation } : {}),
         ...(!supplierId && sapMark ? { sapMark } : {}),
         ...(supplierId

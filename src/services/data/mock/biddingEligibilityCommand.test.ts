@@ -342,3 +342,81 @@ describe('AC-05 / BR-07 — a vendor that dropped a level cannot be awarded; it 
     expect(award.qualificationWarnings?.[0]?.sourcingType).toBe('direct');
   });
 });
+
+describe('BL-147 (MAT-R4) — the stored warnings reach the buyer; a supplier reads only its own row', () => {
+  const warned = (id: string) => ({
+    supplierId: id,
+    sourcingType: 'direct' as const,
+    level: 'registered' as const,
+    requiredLevel: 'preferred' as const,
+    missing: ['Halal certificate'],
+  });
+
+  it('RFI publish (rfi-003): the buyer reads sup-013 warned; sup-013 its own row; sup-007 none, and no other invitee eligibility', async () => {
+    const res = await svc.dispatch(procurement, { transitionId: 't_rfi_publish', entity: 'rfiEvent', entityId: 'rfi-003' });
+    expect(res.status, res.reason).toBe('done');
+    const buyerRead = (await reads.getRfiEvents(buyer)).items.find((e) => e.id === 'rfi-003')!;
+    expect(buyerRead.qualificationWarnings?.map((w) => w.supplierId)).toEqual(['sup-013']);
+    expect(buyerRead.invitedSuppliers.find((i) => i.supplierId === 'sup-013')?.eligibility?.state).toBe('warn');
+
+    const own = (await reads.getRfiEvents(supplier('sup-013'))).items.find((e) => e.id === 'rfi-003')!;
+    expect(own.qualificationWarnings?.map((w) => w.supplierId)).toEqual(['sup-013']);
+    expect(own.invitedSuppliers.find((i) => i.supplierId === 'sup-007')?.eligibility).toBeUndefined();
+
+    const other = (await reads.getRfiEvents(supplier('sup-007'))).items.find((e) => e.id === 'rfi-003')!;
+    expect(other.qualificationWarnings).toBeUndefined();
+    expect(other.invitedSuppliers.find((i) => i.supplierId === 'sup-013')?.eligibility).toBeUndefined();
+    // Nothing on sup-007's wire carries another vendor's level (its own row may).
+    const othersRows = { ...other, invitedSuppliers: other.invitedSuppliers.filter((i) => i.supplierId !== 'sup-007') };
+    expect(JSON.stringify(othersRows)).not.toContain('"requiredLevel"');
+    expect(JSON.stringify(buyerRead)).toContain('"requiredLevel"');
+  });
+
+  it('RFQ publish: sup-005 is warned; sup-007 reads the RFQ without it, sup-005 with its own row', async () => {
+    const id = draftRfqId();
+    rfqStore.update(id, (r) => ({ ...r, invitedSupplierIds: ['sup-005', 'sup-007'] }));
+    expect((await publishRfq(id)).status).toBe('done');
+    const rfqOf = async (scope: QueryScope) => (await reads.getRFQs(scope)).items.find((r) => r.id === id)!;
+    expect((await rfqOf(buyer)).qualificationWarnings?.map((w) => w.supplierId)).toEqual(['sup-005']);
+    expect((await rfqOf(supplier('sup-005'))).qualificationWarnings?.map((w) => w.supplierId)).toEqual(['sup-005']);
+    expect((await rfqOf(supplier('sup-007'))).qualificationWarnings).toBeUndefined();
+  });
+
+  it('RFQ award (placeholder): the buyer reads the warning; a supplier the award names not-awarded reads none', async () => {
+    const res = await svc.dispatch(procurement, {
+      transitionId: 't_rfq_award', entity: 'rfq', entityId: 'rfq-003',
+      payload: { awardedQuotationId: 'qt-003b', awardedSupplierId: 'sup-002', awardReason: 'Second source.' },
+    });
+    expect(res.status, res.reason).toBe('done');
+    const rec = awardStore.all().find((a) => a.eventId === 'rfq-003')!;
+    const buyerView = (await reads.getAwards(buyer)).items.find((a) => a.id === rec.id)!;
+    expect(buyerView.qualificationWarnings?.map((w) => w.supplierId)).toEqual(['sup-002']);
+    const winner = (await reads.getAwards(supplier('sup-002'))).items.find((a) => a.id === rec.id)!;
+    expect(winner.qualificationWarnings?.map((w) => w.supplierId)).toEqual(['sup-002']);
+    const loserId = rec.notAwardedSupplierIds[0]!;
+    expect(loserId).toBeDefined();
+    const loser = (await reads.getAwards(supplier(loserId))).items.find((a) => a.id === rec.id)!;
+    expect(loser.qualificationWarnings).toBeUndefined();
+  });
+
+  it('RFP award view: the buyer reads every warned vendor; a supplier only its own', async () => {
+    const id = awardStore.nextId();
+    awardStore.add({
+      id,
+      eventType: 'rfp',
+      eventId: 'rfp-002',
+      awardedAt: '2026-09-29T00:00:00.000Z',
+      lines: [
+        { supplierId: 'sup-007', optionRef: 'opt-full-set', firmOfferId: 'fo-x', sharePct: 60, quantity: 30, awardTierQty: 50 },
+        { supplierId: 'sup-015', optionRef: 'opt-full-set', firmOfferId: 'fo-y', sharePct: 40, quantity: 20, awardTierQty: 50 },
+      ],
+      reason: 'Dual source.',
+      notAwardedSupplierIds: [],
+      qualificationWarnings: [warned('sup-007'), warned('sup-015')],
+    });
+    const buyerView = (await reads.getRfpAwards(buyer)).items.find((a) => a.id === id)!;
+    expect(buyerView.qualificationWarnings?.map((w) => w.supplierId)).toEqual(['sup-007', 'sup-015']);
+    const own = (await reads.getRfpAwards(supplier('sup-015'))).items.find((a) => a.id === id)!;
+    expect(own.qualificationWarnings?.map((w) => w.supplierId)).toEqual(['sup-015']);
+  });
+});
