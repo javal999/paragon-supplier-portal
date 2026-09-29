@@ -5,6 +5,7 @@ import StatusPill from '../../components/ui-v2/StatusPill';
 import SidePanel from '../../components/ui-v2/SidePanel';
 import Data from '../../components/ui-v2/Data';
 import { PicCell, PicHeader } from '../materials/picDisplay';
+import { TradeNameBeside } from '../materials/tradeNameDisplay';
 import { useToast } from '../../hooks/useToast';
 import { useRefusalText } from '../../hooks/useRefusalText';
 import { formatDate, formatDateTime } from '../../lib/format';
@@ -217,6 +218,7 @@ export const IncomingPanel: React.FC<{
           <p className="text-sm text-text-secondary">
             {position.materialLabel} · {position.supplierName}
           </p>
+          <TradeNameBeside name={position.tradeName} testId="incoming-panel-trade-name" />
           {/* Material C4 — who handles this material (MR-5 BR-03). */}
           <div className="flex items-center gap-2 text-sm" data-testid="incoming-panel-pic">
             <span className="text-label text-text-tertiary uppercase">

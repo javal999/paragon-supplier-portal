@@ -55,7 +55,7 @@ const position = (over: Partial<InventoryPosition> = {}): InventoryPosition => (
 const plan = (over: Partial<CapacityPlan> = {}): CapacityPlan => ({
   supplierId: 'sup-007',
   supplierName: 'PT Sample Packaging Indonesia',
-  materialGroup: 'MG-20',
+  planningGroupId: 'pg-MG-20',
   materials: [],
   uom: 'PCS',
   weeks: HORIZON.map((week, i) => ({

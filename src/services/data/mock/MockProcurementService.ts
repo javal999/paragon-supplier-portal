@@ -9,6 +9,7 @@ import {
   suppliersWithAssignments,
 } from './inventoryReadModel';
 import { stockAccessStore } from './stores/inventoryHubStores';
+import { allPlanningGroups } from './planningGroupReadModel';
 import { allCommitmentLines, allCoverageRows, allVersionViews, forecastSupplierName } from './forecastReadModel';
 import { allFixedStockRows } from './fixedStockReadModel';
 import { maskForSupplier } from '../../transitions/inventoryRules';
@@ -81,8 +82,10 @@ import type {
   PurchaseOrder,
   POFilter,
   InventoryPosition,
+  MaterialNameRow,
   StockAccessGrant,
   CapacityPlan,
+  PlanningGroupView,
   InventoryAlert,
   ForecastVersionView,
   ForecastCommitmentLine,
@@ -165,6 +168,8 @@ import type { EngineDataset } from '../../engine/types';
 import { labelOf, materialEntry } from '../../sdc/materialMaster';
 // Material C4 — each material's MRP controller, narrowed per reader (MR-5 BR-04).
 import { withMrpController } from './mrpControllerReadModel';
+// Material C2 — supplier trade names, narrowed per reader (MR-3 BR-03).
+import { materialNameRowsFor, withTradeName } from './materialNameReadModel';
 import { FEEDS, dataHealth } from '../../engine/dataHealth';
 import { demandForecast, type DemandForecastRun } from '../../engine/demandForecast';
 import { DEFAULT_STOCK_ACCURACY_TOLERANCE } from '../../engine/stock';
@@ -410,7 +415,14 @@ export class MockProcurementService implements IProcurementService {
     }
     if (filter?.supplierId) rows = rows.filter((r) => r.supplierId === filter.supplierId);
     if (filter?.materialCode) rows = rows.filter((r) => r.materialCode === filter.materialCode);
-    return { items: rows.map((r) => withMrpController(r, r.materialCode, scope)) };
+    // Material C2 — the supplier's approved trade name beside PTI's description.
+    return { items: rows.map((r) => withTradeName(withMrpController(r, r.materialCode, scope))) };
+  }
+
+  // Material C2 (MR-3 BR-03) — narrowed in the read model: a supplier reads its
+  // own assigned materials and names only.
+  async getMaterialNames(scope: QueryScope): Promise<Page<MaterialNameRow>> {
+    return { items: materialNameRowsFor(scope) };
   }
 
   async getStockAccess(scope: QueryScope): Promise<Page<StockAccessGrant>> {
@@ -432,6 +444,21 @@ export class MockProcurementService implements IProcurementService {
   async getCapacityPlans(scope: QueryScope): Promise<Page<CapacityPlan>> {
     // REQ-E08-04 — capacity against demand per supplier × material group.
     return { items: applySupplierScope(scope, allCapacityPlans()) };
+  }
+
+  async getPlanningGroups(scope: QueryScope): Promise<Page<PlanningGroupView>> {
+    // Material C5 (MR-8) — PTI sees every group with its change log. A supplier
+    // sees only the groups holding materials it has capacity for, narrowed to
+    // those materials, and no log (MAT-R4: it never learns another supplier's
+    // materials or who at PTI changed what).
+    const groups = allPlanningGroups();
+    if (scope.personaType === 'buyer') return { items: groups };
+    const mine = new Set(applySupplierScope(scope, allCapacityPlans()).flatMap((p) => p.materials));
+    return {
+      items: groups
+        .map((g) => ({ ...g, materials: g.materials.filter((m) => mine.has(m)), history: [] }))
+        .filter((g) => g.materials.length > 0),
+    };
   }
 
   async getInventoryAlerts(scope: QueryScope): Promise<Page<InventoryAlert>> {

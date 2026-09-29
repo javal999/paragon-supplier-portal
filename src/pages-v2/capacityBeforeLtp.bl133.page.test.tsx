@@ -52,7 +52,7 @@ describe('Supplier — Submit all per period (ENG-D19)', () => {
     renderWithProviders(<SupplierForecastCommitments />, { identity: SUPPLIER, route: '/supplier/forecasts' });
     const weekRow = await screen.findByTestId(`fc-week-${W[6]}`);
     expect(weekRow).toHaveTextContent('Materials: 2');
-    expect(within(weekRow).getByTestId(`fc-week-check-${W[6]}-MG-20`)).toHaveAttribute('data-level', 'within');
+    expect(within(weekRow).getByTestId(`fc-week-check-${W[6]}-pg-MG-20`)).toHaveAttribute('data-level', 'within');
     // A row no longer has its own Submit, only Save draft.
     expect(screen.queryByRole('button', { name: /^Submit commitment for/ })).toBeNull();
     fireEvent.click(screen.getByTestId(`fc-week-submit-${W[6]}`));
@@ -69,7 +69,7 @@ describe('Supplier — Submit all per period (ENG-D19)', () => {
   it('a period above BE is red and cannot be submitted without a reason; with one, it is', async () => {
     renderWithProviders(<SupplierForecastCommitments />, { identity: SUPPLIER, route: '/supplier/forecasts' });
     const weekRow = await screen.findByTestId(`fc-week-${W[2]}`);
-    expect(within(weekRow).getByTestId(`fc-week-check-${W[2]}-MG-20`)).toHaveAttribute('data-level', 'cannotSupply');
+    expect(within(weekRow).getByTestId(`fc-week-check-${W[2]}-pg-MG-20`)).toHaveAttribute('data-level', 'cannotSupply');
     expect(weekRow).toHaveTextContent('Cannot be supplied');
     // Both lines were already committed; editing one puts the period back to
     // submit. Below forecast, the period's reason also covers the row.
@@ -93,7 +93,7 @@ describe('Supplier — Submit all per period (ENG-D19)', () => {
   it('capacity not confirmed: the period says so, links to capacity, and cannot be submitted (sup-002 only sees its own)', async () => {
     renderWithProviders(<SupplierForecastCommitments />, { identity: SUP_002, route: '/supplier/forecasts' });
     const weekRow = await screen.findByTestId(`fc-week-${M[2]}`);
-    expect(within(weekRow).getByTestId(`fc-week-check-${M[2]}-MG-10`)).toHaveAttribute('data-level', 'unconfirmed');
+    expect(within(weekRow).getByTestId(`fc-week-check-${M[2]}-pg-MG-10`)).toHaveAttribute('data-level', 'unconfirmed');
     expect(within(weekRow).getByRole('link', { name: 'Confirm capacity' })).toHaveAttribute('href', expect.stringContaining('/supplier/capacity'));
     expect(screen.getByTestId(`fc-week-submit-${M[2]}`)).toBeDisabled();
     expect(screen.getByTestId(`fc-week-refusal-${M[2]}`)).toHaveTextContent('Confirm capacity for');
@@ -122,9 +122,9 @@ describe('Capacity pages show the LTP against capacity and BE (ENG-D18)', () => 
     renderWithProviders(<BuyerCapacity />, { identity: PLANNER, route: '/buyer/capacity' });
     expect(await screen.findByTestId('pti-capacity-banner-red')).toHaveTextContent(': 1');
     await waitFor(() =>
-      expect(screen.getByTestId(`capacity-ltp-sup-007-MG-20-${W[2]}`)).toHaveAttribute('data-level', 'cannotSupply'),
+      expect(screen.getByTestId(`capacity-ltp-sup-007-pg-MG-20-${W[2]}`)).toHaveAttribute('data-level', 'cannotSupply'),
     );
-    expect(screen.getByTestId(`capacity-ltp-sup-007-MG-20-${W[6]}`)).toHaveAttribute('data-level', 'within');
-    expect(screen.getByTestId('capacity-red-count-sup-007-MG-20')).toHaveTextContent('Cannot be supplied: 1 wk');
+    expect(screen.getByTestId(`capacity-ltp-sup-007-pg-MG-20-${W[6]}`)).toHaveAttribute('data-level', 'within');
+    expect(screen.getByTestId('capacity-red-count-sup-007-pg-MG-20')).toHaveTextContent('Cannot be supplied: 1 wk');
   });
 });

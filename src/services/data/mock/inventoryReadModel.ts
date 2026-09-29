@@ -54,6 +54,7 @@ import {
 } from './fixtures/inventoryHub';
 import { stockUpdateModeOf } from './supplierMaster';
 import { hubWorkingCalendar } from '../../transitions/workingCalendarStore';
+import { planningGroupMoves } from './planningGroupReadModel';
 
 export const supplierNameOf = (supplierId: string): string =>
   mockSuppliers.find((s) => s.id === supplierId)?.name ?? supplierId;
@@ -94,6 +95,18 @@ export function isAssignedMaterial(supplierId: string, materialCode: string): bo
     SUPPLIER_MATERIAL_RELATIONSHIPS.some((r) => r.supplierId === supplierId && r.materialCode === materialCode) ||
     FORECAST_PUBLICATIONS.some((p) => p.lines.some((l) => l.supplierId === supplierId && l.materialCode === materialCode))
   );
+}
+
+/**
+ * Material C2 — the materials assigned to a supplier (the same membership as
+ * `isAssignedMaterial`), known to the material master, sorted by code.
+ */
+export function assignedMaterialCodesOf(supplierId: string): string[] {
+  const codes = new Set<string>();
+  for (const a of SUPPLY_ASSIGNMENTS) if (a.supplierId === supplierId) codes.add(a.materialCode);
+  for (const r of SUPPLIER_MATERIAL_RELATIONSHIPS) if (r.supplierId === supplierId) codes.add(r.materialCode);
+  for (const p of FORECAST_PUBLICATIONS) for (const l of p.lines) if (l.supplierId === supplierId) codes.add(l.materialCode);
+  return [...codes].filter((c) => materialEntry(c)).sort();
 }
 
 /** The inventory rows: every supply assignment, plus any pair a supplier has submitted stock for. */
@@ -155,7 +168,7 @@ function capacityAssignments(): { supplierId: string; materialCode: string }[] {
   return [...pairs.values()];
 }
 
-/** Every supplier × material group with capacity against demand. */
+/** Every supplier × planning group with capacity against demand (MR-8 BR-04). */
 export function allCapacityPlans(nowIso: string = sdcClock.now()): CapacityPlan[] {
   return buildCapacityPlans(
     {
@@ -165,6 +178,8 @@ export function allCapacityPlans(nowIso: string = sdcClock.now()): CapacityPlan[
       submissions: capacityStore.all(),
       // Owner, 2026-09-29 — the LTP is the one capacity demand figure.
       ltpLines: allCommitmentLines(null),
+      // Material C5 (MR-8 BR-05) — the planning-group moves, for "Needs re-entry".
+      moves: planningGroupMoves(),
     },
     nowIso,
   );
