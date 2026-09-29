@@ -19,11 +19,14 @@ import { formatDate, formatNumber } from '../lib/format';
 import { useDemandForecast } from '../services/query/hooks';
 import type { DemandForecastRun, ForecastMethod, SkuForecast } from '../services/engine/demandForecast';
 import type { EventFactor } from '../services/engine/eventCalendar';
+import type { SeriesRange } from '../services/engine/demandRange';
+import DemandRangeSection from './demandForecast/DemandRangeSection';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DEMAND FORECAST — REQ-E14-07, the Material Planner's view (Experience: "the
 // forecast per SKU, brand and total, and which method produced each SKU's
-// forecast").
+// forecast"), and REQ-E14-09's demand range (P50 / P90 per SKU, brand, total
+// and material, and how often sales fell outside it; BL-111).
 //
 // Read-only. The total and each brand (own forecast, reconciled, SAP's plan),
 // every SKU with its method, and a SKU's weeks. Computed at read time on the
@@ -50,7 +53,12 @@ const diffPct = (a: number, b: number | null): string => {
 };
 const two = (x: number | undefined) => (x === undefined ? '—' : formatNumber(Math.round(x * 100) / 100));
 
-const SkuDetail: React.FC<{ sku: SkuForecast; weeks: readonly string[]; events: DemandForecastRun['events']['horizon'] }> = ({ sku, weeks, events }) => {
+const SkuDetail: React.FC<{
+  sku: SkuForecast;
+  weeks: readonly string[];
+  events: DemandForecastRun['events']['horizon'];
+  range: SeriesRange | null;
+}> = ({ sku, weeks, events, range }) => {
   const { t } = useTranslation();
   const d = sku.detail;
   return (
@@ -89,6 +97,9 @@ const SkuDetail: React.FC<{ sku: SkuForecast; weeks: readonly string[]; events: 
             <TableHeaderCell>{t('df.detail.col.week')}</TableHeaderCell>
             <TableHeaderCell>{t('df.detail.col.base')}</TableHeaderCell>
             <TableHeaderCell>{t('df.detail.col.forecast')}</TableHeaderCell>
+            {range?.bands.map((b) => (
+              <TableHeaderCell key={b.level}>{t('df.range.col.p', { level: Math.round(b.level * 100) })}</TableHeaderCell>
+            ))}
             {sku.theta && <TableHeaderCell>{t('df.detail.col.theta')}</TableHeaderCell>}
             <TableHeaderCell>{t('df.detail.col.sap')}</TableHeaderCell>
             <TableHeaderCell>{t('df.detail.col.events')}</TableHeaderCell>
@@ -105,6 +116,11 @@ const SkuDetail: React.FC<{ sku: SkuForecast; weeks: readonly string[]; events: 
                 <TableCell>
                   <Data data-testid={`df-week-forecast-${w}`}>{formatNumber(sku.forecast[i])}</Data>
                 </TableCell>
+                {range?.bands.map((b) => (
+                  <TableCell key={b.level}>
+                    <Data data-testid={`df-week-p${Math.round(b.level * 100)}-${w}`}>{b.values[i] === null ? '—' : formatNumber(b.values[i]!)}</Data>
+                  </TableCell>
+                ))}
                 {sku.theta && (
                   <TableCell>
                     <Data className="text-text-tertiary">{formatNumber(Math.round(sku.theta[i]))}</Data>
@@ -378,7 +394,17 @@ const BuyerDemandForecast: React.FC = () => {
         </div>
       </section>
 
-      {current && <SkuDetail key={current.skuCode} sku={current} weeks={run.weeks} events={run.events.horizon} />}
+      {current && (
+        <SkuDetail
+          key={current.skuCode}
+          sku={current}
+          weeks={run.weeks}
+          events={run.events.horizon}
+          range={run.range.skus.find((r) => r.key === current.skuCode) ?? null}
+        />
+      )}
+
+      <DemandRangeSection range={run.range} />
 
       <EventsSection events={run.events} />
 
@@ -403,6 +429,7 @@ const BuyerDemandForecast: React.FC = () => {
         <p>{t('df.def.comb')}</p>
         <p>{t('df.def.stockout')}</p>
         <p>{t('df.def.recon')}</p>
+        <p>{t('df.def.range')}</p>
       </section>
     </AppShellV2>
   );

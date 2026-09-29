@@ -221,6 +221,8 @@ export const adminSettingsEn: Record<string, string> = {
   'adminSet.key.engine.backtestMascLimitPct.label': 'Most plan change a model may have and still be chosen (MASC)',
   'adminSet.key.engine.backtestMascLimitPct.hint':
     'The model backtest chooses each SKU’s forecast model by simulated fill rate and warehouse space, among models whose plan changes between versions (MASC, as a percentage of the SKU’s typical seasonal-naive error) are at most this. 0 means not set: no limit is applied. Choose it from the spread the Model backtest page shows.',
+  'adminSet.key.engine.rangeExtraQuantilePct.label': 'Extra quantile in the demand range',
+  'adminSet.key.engine.rangeExtraQuantilePct.hint': 'The demand range always shows P50 (the likely figure) and P90 (a figure sales exceed in about 1 week in 10). Enter a percentage to add one more, for example 95 for P95 (exceeded in about 1 week in 20). 0 adds none.',
 
   // REQ-E14-01 — freshness limit per engine feed.
   'adminSet.key.engine.freshnessDays.poLines.label': 'Freshness limit: Purchase order lines',
@@ -483,6 +485,8 @@ export const adminSettingsId: Record<string, string> = {
   'adminSet.key.engine.backtestMascLimitPct.label': 'Perubahan rencana terbesar agar model masih dapat dipilih (MASC)',
   'adminSet.key.engine.backtestMascLimitPct.hint':
     'Backtest model memilih model prakiraan setiap SKU berdasarkan tingkat pemenuhan dan ruang gudang hasil simulasi, di antara model yang perubahan rencananya antar versi (MASC, sebagai persentase dari galat musiman-naif khas SKU) paling banyak sebesar ini. 0 berarti belum ditetapkan: tidak ada batas yang diterapkan. Pilih dari sebaran yang ditampilkan di halaman Backtest model.',
+  'adminSet.key.engine.rangeExtraQuantilePct.label': 'Kuantil tambahan pada rentang permintaan',
+  'adminSet.key.engine.rangeExtraQuantilePct.hint': 'Rentang permintaan selalu menampilkan P50 (angka yang paling mungkin) dan P90 (angka yang dilampaui penjualan sekitar 1 dari 10 minggu). Isi persentase untuk menambah satu lagi, misalnya 95 untuk P95 (dilampaui sekitar 1 dari 20 minggu). 0 berarti tidak ada tambahan.',
 
   // REQ-E14-01 — freshness limit per engine feed.
   'adminSet.key.engine.freshnessDays.poLines.label': 'Batas kesegaran: Baris pesanan pembelian',

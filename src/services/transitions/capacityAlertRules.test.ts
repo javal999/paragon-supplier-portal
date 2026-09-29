@@ -84,7 +84,7 @@ describe('capacity status per plan and per PO (Order summary)', () => {
   const plan = (group: string, entries: ((i: number) => number) | null): CapacityPlan => ({
     supplierId: 'sup-007',
     supplierName: 'x',
-    materialGroup: group,
+    planningGroupId: `pg-${group}`,
     materials: [],
     uom: 'PCS',
     weeks: HORIZON.map((week, i) => ({
@@ -92,7 +92,7 @@ describe('capacity status per plan and per PO (Order summary)', () => {
       demand: 100,
       entry: entries ? { week, allocated: entries(i) } : null,
     })),
-    latest: entries ? { id: 'c', supplierId: 'sup-007', materialGroup: group, submittedAt: NOW, weeks: [] } : null,
+    latest: entries ? { id: 'c', supplierId: 'sup-007', planningGroupId: `pg-${group}`, submittedAt: NOW, weeks: [] } : null,
   });
   const master = (code: string) => ({ 'PK-A': { materialGroup: 'MG-20' }, 'PK-B': { materialGroup: 'MG-21' } } as Record<string, Partial<MaterialMasterEntry>>)[code] as MaterialMasterEntry | null ?? null;
 
@@ -188,7 +188,7 @@ describe('REQ-E08-05 BR-01 — each rule raises an alert when its condition is m
         {
           supplierId: 'sup-007',
           supplierName: 'PT Sample Packaging Indonesia',
-          materialGroup: 'MG-20',
+          planningGroupId: 'pg-MG-20',
           materials: ['P1'],
           uom: 'PCS',
           weeks: [{ week: HORIZON[0], demand: 100, entry: { week: HORIZON[0], allocated: 10, reason: 'capacity' } }],
@@ -205,7 +205,7 @@ describe('REQ-E08-05 BR-01 — each rule raises an alert when its condition is m
         'projectedStockOut|P3|sup-007',
         'staleData|P4|sup-007',
         'coverage|P5|sup-007',
-        'capacityBelowDemand|MG-20|sup-007',
+        'capacityBelowDemand|pg-MG-20|sup-007',
       ]),
     );
     expect(conditions.find((c) => c.key === 'staleData|P4|sup-007')!.riskClass).toBe('low');

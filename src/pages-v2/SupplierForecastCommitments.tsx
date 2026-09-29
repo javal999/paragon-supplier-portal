@@ -31,6 +31,7 @@ import { formatDate, formatDateTime } from '../lib/format';
 import { useCapacityPlans, useForecastCommitments, useForecastVersions } from '../services/query/hooks';
 import { useToast } from '../hooks/useToast';
 import {
+  capacityGroupOfMaterial,
   commitmentCapacityRefusal,
   horizonWeeks,
   periodCapacityCheck,
@@ -38,7 +39,8 @@ import {
   type PeriodCapacityCheck,
 } from '../services/transitions/capacityRules';
 import { LtpCheckPill } from './inventory/inventoryDisplay';
-import { parseWorkbook } from '../services/sdc';
+import { materialEntry, parseWorkbook } from '../services/sdc';
+import { usePlanningGroupLabel } from './inventory/planningGroupDisplay';
 import type { CapacityReason, ForecastCommitmentLine } from '../services/data/types';
 import type { ForecastStream } from '../services/sdc/types';
 import { commitmentDeadlineWorkingDays } from '../services/transitions/forecastConfig';
@@ -131,6 +133,7 @@ const SupplierForecastCommitments: React.FC = () => {
   // BL-32 — the administrator's list in force: only active codes are offered.
   const commitmentReasons = useActiveReasonCodes('commitmentShortfall');
   const reasonLabel = useReasonLabel();
+  const groupLabel = usePlanningGroupLabel();
   const { identity } = useCurrentIdentity();
   const [params] = useSearchParams();
   const linesQuery = useForecastCommitments();
@@ -305,14 +308,18 @@ const SupplierForecastCommitments: React.FC = () => {
     const bucket = first.periodBucket;
     const all = commitLines.filter((l) => l.periodBucket === bucket);
     const pending = all.filter(isPending);
-    const groups = [...new Set(all.map((l) => l.materialGroup))].sort();
-    const checks: { group: string; check: PeriodCapacityCheck }[] = groups.map((group) => ({
+    // Material C5 (MR-8 BR-04) — a line's capacity group is its material's
+    // planning group; the check sums the LTP of the group's materials.
+    const capOf = (l: ForecastCommitmentLine) => capacityGroupOfMaterial(plans, supplierId, l.materialCode, materialEntry);
+    const groupOfLine = (l: ForecastCommitmentLine) => capOf(l).planningGroupId ?? l.materialCode;
+    const groups = [...new Map(all.map((l) => [groupOfLine(l), capOf(l)])).entries()].sort((a, b) => a[0].localeCompare(b[0]));
+    const checks: { group: string; check: PeriodCapacityCheck }[] = groups.map(([group, cap]) => ({
       group,
       check: periodCapacityCheck(
-        plans.find((p) => p.supplierId === supplierId && p.materialGroup === group) ?? null,
+        cap.plan,
         lines,
         supplierId,
-        group,
+        cap.materials,
         first.periodStart,
         first.periodEnd,
         horizon,
@@ -338,10 +345,10 @@ const SupplierForecastCommitments: React.FC = () => {
     else if (unconfirmed) refusal = { kind: 'capacityNotConfirmed', group: unconfirmed.group };
     else {
       for (const l of pending) {
-        const c = checks.find((x) => x.group === l.materialGroup)?.check;
+        const c = checks.find((x) => x.group === groupOfLine(l))?.check;
         const capRefusal = c ? commitmentCapacityRefusal(c, rootFor(l)) : null;
         if (capRefusal) {
-          refusal = { kind: capRefusal.refusal, group: l.materialGroup };
+          refusal = { kind: capRefusal.refusal, group: groupOfLine(l) };
           break;
         }
       }
@@ -582,7 +589,7 @@ const SupplierForecastCommitments: React.FC = () => {
                         <div className="space-y-1">
                           {row.checks.map(({ group, check }) => (
                             <div key={group} className="flex flex-wrap items-center gap-2 text-xs">
-                              <span className="text-text-secondary">{t(`inv.group.${group}`)}</span>
+                              <span className="text-text-secondary">{groupLabel(group)}</span>
                               {check.level === null ? (
                                 <span className="text-text-tertiary">{t('fc.sup.week.outsideHorizon')}</span>
                               ) : (
@@ -645,7 +652,7 @@ const SupplierForecastCommitments: React.FC = () => {
                               <span role="status" className="text-xs text-warning-hover" data-testid={`fc-week-refusal-${row.bucket}`}>
                                 {row.refusal.kind === 'row'
                                   ? t('fc.sup.week.refusal.row')
-                                  : t(`fc.sup.week.refusal.${row.refusal.kind}`, { group: t(`inv.group.${row.refusal.group}`) })}
+                                  : t(`fc.sup.week.refusal.${row.refusal.kind}`, { group: groupLabel(row.refusal.group) })}
                               </span>
                             )}
                           </div>

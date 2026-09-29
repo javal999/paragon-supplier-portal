@@ -82,7 +82,7 @@ describe('the shipped synthetic dataset', () => {
 
   it('steps: E14-03 and everything downstream of it are flagged by stock accuracy; nothing is affected', () => {
     const status = Object.fromEntries(r.steps.map((s) => [s.step, s.status]));
-    expect(status).toEqual({ 'E14-02': 'clear', 'E14-03': 'flagged', 'E14-04': 'clear', 'E14-05': 'flagged', 'E14-07': 'clear', 'E14-13': 'flagged' });
+    expect(status).toEqual({ 'E14-02': 'clear', 'E14-03': 'flagged', 'E14-04': 'clear', 'E14-05': 'flagged', 'E14-07': 'clear', 'E14-09': 'clear', 'E14-13': 'flagged' });
   });
 });
 
@@ -111,9 +111,9 @@ describe('freshness (BR-05)', () => {
     expect(feedOf(fresh, 'sales')).toMatchObject({ ageDays: 7, limitDays: 7, freshness: 'fresh' });
     const stale = run({ arrivals: { ...allArrived(), sales: at(8) } });
     expect(feedOf(stale, 'sales')).toMatchObject({ ageDays: 8, freshness: 'stale' });
-    // Sales feed E14-02 and E14-04 (and E14-07): those and everything downstream are affected.
+    // Sales feed E14-02 and E14-04 (and E14-07, whose forecast E14-09's range is built around): those and everything downstream are affected.
     const affected = stale.steps.filter((s) => s.status === 'affected').map((s) => s.step);
-    expect(affected).toEqual(['E14-02', 'E14-03', 'E14-04', 'E14-05', 'E14-07', 'E14-13']);
+    expect(affected).toEqual(['E14-02', 'E14-03', 'E14-04', 'E14-05', 'E14-07', 'E14-09', 'E14-13']);
     expect(stale.steps.find((s) => s.step === 'E14-02')!.byFeeds).toEqual(['sales']);
   });
 
@@ -303,11 +303,13 @@ describe('what a failure affects', () => {
     expect(affectedSteps(['E14-03'])).toEqual(['E14-03', 'E14-05', 'E14-13']);
     const b = base.bom[0];
     const r = run({ data: mutate('bom', (rows) => rows.map((x) => (x === b ? { ...x, qtyPer: 0 } : x))) });
-    expect(feedOf(r, 'bom').affects).toEqual(['E14-02', 'E14-03', 'E14-04', 'E14-05', 'E14-13']);
+    expect(feedOf(r, 'bom').affects).toEqual(['E14-02', 'E14-03', 'E14-04', 'E14-05', 'E14-09', 'E14-13']);
     expect(feedOf(r, 'bom').refusedRecords).toBe(1);
     const status = Object.fromEntries(r.steps.map((s) => [s.step, s.status]));
     expect(status['E14-03']).toBe('affected');
     expect(status['E14-07']).toBe('clear');
+    // The range explodes the BOM (materials), so it is affected; the forecast is not.
+    expect(status['E14-09']).toBe('affected');
     expect(r.steps.find((s) => s.step === 'E14-03')!.byFeeds).toEqual(['bom']);
   });
 

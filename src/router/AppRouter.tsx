@@ -50,6 +50,7 @@ import InterfaceMonitor from '../pages-v2/InterfaceMonitor';
 import AdminWorkingCalendar from '../pages-v2/admin/AdminWorkingCalendar';
 import AdminThreePls from '../pages-v2/admin/AdminThreePls';
 import AdminSuppliers from '../pages-v2/admin/AdminSuppliers';
+import AdminPlanningGroups from '../pages-v2/admin/AdminPlanningGroups';
 import AdminMrpControllers from '../pages-v2/admin/AdminMrpControllers';
 import BuyerTradeNames from '../pages-v2/materials/BuyerTradeNames';
 import { AdminAlertThresholds, AdminTolerances } from '../pages-v2/admin/AdminRuleValues';
@@ -215,6 +216,8 @@ const AppRouter: React.FC = () => {
           <Route path="/buyer/admin/3pl-tracking" element={<AdminThreePls />} />
           {/* Material A1 — administration (ADM): each supplier's stock update mode. */}
           <Route path="/buyer/admin/suppliers" element={<AdminSuppliers />} />
+          {/* Material C5 — administration: the planning groups capacity is kept by (MR-8). */}
+          <Route path="/buyer/admin/planning-groups" element={<AdminPlanningGroups />} />
           {/* Material C4 — administration (ADM): who each SAP MRP controller code is. */}
           <Route path="/buyer/admin/mrp-controllers" element={<AdminMrpControllers />} />
           <Route path="/buyer/materials/trade-names" element={<BuyerTradeNames />} />

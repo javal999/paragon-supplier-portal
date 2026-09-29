@@ -52,9 +52,11 @@ import {
   FS_RECONCILE_CYCLE_ANCHOR,
   safetyLeadTimePercentile,
   stabiliseDampingWeight,
+  demandRangeExtraQuantilePct,
 } from '../../transitions/forecastConfig';
 import { DEFAULT_STABILISE_PARAMS, stabilisePeriod } from '../../engine/stabilise';
 import { freshnessOf } from '../../engine/dataHealth';
+import { rangeLevels } from '../../engine/demandRange';
 import { empiricalQuantile, fillRateSafetyStock } from '../../engine/safetyStock';
 import { singleItemSolver, type SizingItem } from '../../engine/orderSizing';
 import { selectModel, type CandidateScore } from '../../engine/modelBacktest';
@@ -324,6 +326,8 @@ describe('BL32-READ · every reader of a value reads it through its accessor, at
       feedFreshnessLimitsDays: ['src/services/data/mock/MockProcurementService.ts', 'src/services/transitions/forecastConfig.ts'],
       // ENG-D13 / REQ-E14-10 — the same shape: the service passes the limit to the backtest.
       backtestMascLimit: ['src/services/data/mock/MockProcurementService.ts', 'src/services/transitions/forecastConfig.ts'],
+      // REQ-E14-09 — the same shape: the service passes the levels to the demand range.
+      demandRangeExtraQuantilePct: ['src/services/data/mock/MockProcurementService.ts', 'src/services/transitions/forecastConfig.ts'],
     };
     for (const [fn, files] of Object.entries(table)) expect(callersOf(fn), fn).toEqual(files);
     // Known-true through a second door: the SDC coverage indicator never
@@ -631,6 +635,8 @@ const FLIPS: Record<string, Flip> = {
   // ENG-D13: not set (0) → no limit, the better but less stable Theta is chosen;
   // at 100% (MASC 1.0) Theta's 1.8 is over the limit and the Comb floor stays.
   'engine.backtestMascLimitPct': { to: 100, read: () => selectModel(MASC_CASE, 'comb', backtestMascLimit()).chosen, atDefault: 'theta', afterChange: 'comb' },
+  // REQ-E14-09 BR-01: P50 and P90 only at the default of 0; at 95 the range adds P95.
+  'engine.rangeExtraQuantilePct': { to: 95, read: () => rangeLevels(demandRangeExtraQuantilePct()), atDefault: [0.5, 0.9], afterChange: [0.5, 0.9, 0.95] },
   // ENG-D15: two weeks early is proposed at the default of 1; at 3 it is not.
   // REQ-E06-04 BR-01: 14 Sep 2026 is W3 of the cycle from 31 Aug at 3 weeks, and opens one at 2.
   'forecast.fsReconcileCycleWeeks': {

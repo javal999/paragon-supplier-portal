@@ -29,7 +29,8 @@ export const capacitySubmissionFlow: FlowDefinition = {
       to: 'Submitted',
       trigger: 'creation',
       requiredRole: 'capacity:confirm',
-      requiredFields: ['supplierId', 'materialGroup', 'weeks'],
+      // Material C5 (MR-8 BR-04) — capacity is stated per planning group.
+      requiredFields: ['supplierId', 'planningGroupId', 'weeks'],
       policyHooks: [POLICY_HOOKS.CAPACITY_SUBMISSION_VALID],
       surfaceable: { surfaced: true },
       version: 1,

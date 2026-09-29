@@ -202,6 +202,10 @@ const DEFS = [
     key: 'engine.backtestMascLimitPct', section: 'tolerances', rule: 'ENG-D13', unit: 'pct',
     min: 0, max: 1000, defaultValue: 0, placeholder: { owner: 'materialPlanner', backlogId: 'ENG-D13' },
   },
+  // REQ-E14-09 BR-01 (BL-111) — a quantile the administrator adds to the demand
+  // range beside P50 and P90 (for example 95 for P95, which METHOD-SPEC D5 lists).
+  // 0 = none; 50 and 90 are always produced (ENG-B98).
+  { key: 'engine.rangeExtraQuantilePct', section: 'tolerances', rule: 'REQ-E14-09', unit: 'pct', integer: true, min: 0, max: 99, defaultValue: 0 },
   // REQ-E14-01 BR-01, BR-05 — the freshness limit per engine feed, in days:
   // a feed whose last arrival is older than this is stale on the Data health
   // page and names the engine steps it affects. The defaults are the feed

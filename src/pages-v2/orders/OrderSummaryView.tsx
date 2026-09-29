@@ -141,12 +141,12 @@ const foresightMaterials = (po: PurchaseOrder, answers: readonly ForesightAnswer
     answers.some((a) => a.supplierId === po.supplierId && a.materialCode === code),
   );
 
-/** The material groups of a PO's lines — the capacity destination's filter (BR-05). */
+/** The planning groups of a PO's lines — the capacity destination's filter (BR-05; Material C5, MR-8 BR-04). */
 const poMaterialGroups = (po: PurchaseOrder): readonly string[] =>
   [
     ...new Set(
       po.lineItems
-        .map((li) => materialEntry(li.materialCode)?.materialGroup)
+        .map((li) => materialEntry(li.materialCode)?.planningGroupId)
         .filter((g): g is string => typeof g === 'string'),
     ),
   ].sort();
