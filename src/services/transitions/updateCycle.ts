@@ -173,3 +173,105 @@ export function staleAtFor(i: StaleAtInputs): string | null {
   const own = updateCycleFor(i.lastUpdatedAt, i.calendar, i.cycle);
   return updateCycleFor(new Date(Date.parse(own.cutoff) + 1), i.calendar, i.cycle).cutoff;
 }
+
+// ── The supplier's weekly-update panel and its reminders (Material B2) ──────
+// MR-1 d (steps 1 to 4), AC-01. Derived at read from the positions the
+// supplier already reads; nothing here is stored (AD-1).
+
+/** A position as the panel reads it: which material, when its figure was last accepted. */
+export interface WeeklyUpdateRow {
+  readonly supplierId: string;
+  readonly materialCode: string;
+  readonly lastUpdatedAt: string | null;
+}
+
+export interface WeeklyUpdateStatus {
+  /** The open cycle: `now` is inside it. */
+  readonly cycle: UpdateCycle;
+  /** Materials counted this cycle (edge case 2 leaves some out). */
+  readonly total: number;
+  readonly updated: readonly string[];
+  /** Still missing this cycle — the list the panel and the reminder show. */
+  readonly missing: readonly string[];
+  /**
+   * Missing in the cycle that just closed AND still not updated since: the
+   * panel reads "Missed" for these until the supplier sends each one.
+   */
+  readonly missed: readonly string[];
+}
+
+/**
+ * MR-1 BR-04 over the rows the supplier reads. Each row carries the LATEST
+ * accepted figure for its material, which is enough: a material is updated in
+ * the open cycle exactly when its latest figure falls inside it, and it missed
+ * the closed cycle and is still missing exactly when its latest figure is
+ * older than the closed cycle's start.
+ */
+export function weeklyUpdateStatus(
+  supplierId: string,
+  rows: readonly WeeklyUpdateRow[],
+  nowIso: string,
+  calendar: WorkingCalendar,
+  settings: UpdateCycleSettings,
+): WeeklyUpdateStatus {
+  const own = rows.filter((r) => r.supplierId === supplierId);
+  const records: CycleStockRecord[] = own.flatMap((r) =>
+    r.lastUpdatedAt === null ? [] : [{ supplierId, materialCode: r.materialCode, declaredAt: r.lastUpdatedAt }],
+  );
+  const assignments: CycleAssignment[] = own.map((r) => ({ supplierId, materialCode: r.materialCode }));
+  const cycle = updateCycleFor(nowIso, calendar, settings);
+  const closed = updateCycleFor(cycle.start, calendar, settings);
+  const open = cycleStatus(supplierId, cycle, records, assignments).filter((s) => s.status !== 'notCounted');
+  const before = cycleStatus(supplierId, closed, records, assignments);
+  const missing = open.filter((s) => s.status === 'missing').map((s) => s.materialCode);
+  return {
+    cycle,
+    total: open.length,
+    updated: open.filter((s) => s.status === 'updated').map((s) => s.materialCode),
+    missing,
+    missed: before.filter((s) => s.status === 'missing' && missing.includes(s.materialCode)).map((s) => s.materialCode),
+  };
+}
+
+/** MR-1 d step 2 — the reminders go out at 09:00 WIB (minutes after midnight). */
+export const UPDATE_REMINDER_TIME = 9 * 60;
+
+/**
+ * MR-1 d step 2 — the in-hub reminder instants for a cycle: 09:00 on the
+ * working day before the cutoff day, and 09:00 on the cutoff day. Both follow
+ * the hub calendar, so a holiday cutoff moves them a working day earlier (edge
+ * case 5). A reminder that would fall after the cutoff is dropped. Derived,
+ * never stored — the same way as the forecast `commitmentReminderAt`.
+ */
+export function updateReminderTimes(cycle: UpdateCycle, calendar: WorkingCalendar): string[] {
+  const offsetMs = calendar.utcOffsetHours * HOUR_MS;
+  const cutoffMs = Date.parse(cycle.cutoff);
+  const cutoffDay = new Date(cutoffMs + offsetMs).toISOString().slice(0, 10);
+  let dayBefore = shiftDate(cutoffDay, -1);
+  for (let i = 0; i < 366 && !isWorkingDay(dayBefore, calendar); i++) dayBefore = shiftDate(dayBefore, -1);
+  return [dayBefore, cutoffDay]
+    .map((d) => Date.parse(`${d}T00:00:00.000Z`) + UPDATE_REMINDER_TIME * MINUTE_MS - offsetMs)
+    .filter((ms) => ms <= cutoffMs)
+    .map((ms) => new Date(ms).toISOString());
+}
+
+/**
+ * The reminder in force at `now`: the latest reminder instant that has come,
+ * while the cycle is still open; null before the first one. The pages show it
+ * only while materials are still missing.
+ */
+export function activeUpdateReminder(cycle: UpdateCycle, nowIso: string, calendar: WorkingCalendar): string | null {
+  const now = Date.parse(nowIso);
+  if (now > Date.parse(cycle.cutoff)) return null;
+  const come = updateReminderTimes(cycle, calendar).filter((r) => Date.parse(r) <= now);
+  return come.length > 0 ? come[come.length - 1] : null;
+}
+
+/**
+ * MR-1 BR-01 / d step 2 — an API supplier's next scheduled pull: the last
+ * attempt (successful or not — a failed pull retries at the next slot, d step
+ * 3) plus `stockSync.intervalHours`. Null when no attempt is on record.
+ */
+export function nextSyncAt(lastAttemptAt: string | null, intervalHours: number): string | null {
+  return lastAttemptAt === null ? null : new Date(Date.parse(lastAttemptAt) + intervalHours * HOUR_MS).toISOString();
+}

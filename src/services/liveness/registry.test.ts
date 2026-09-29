@@ -195,6 +195,9 @@ describe('LivenessRegistry — harvest gate (LIVENESS-DATASOURCE-01, gate-2)', (
       // Material A2 - the SAP-copied material master fields, fixture values
       // until the MDM material feed runs. Null-backed, so gate-1 is SIMULATED.
       'materialMasterSap',
+      // Material B2 - the scheduled stock pull, not running until Stage F.
+      // Null-backed, so gate-1 is SIMULATED.
+      'stockSyncSchedule',
     ]);
     for (const cap of ALL_CAPABILITIES) {
       if (gated.has(cap)) continue;
@@ -258,6 +261,15 @@ describe('LivenessRegistry — harvest gate (LIVENESS-DATASOURCE-01, gate-2)', (
     expect(note?.readinessNoteKey).toBe('widget.honesty.awaitingMdmFeed');
     expect(note?.source).toBe('MDM SAP material feed');
     expect(isLive('materialMasterSap')).toBe(false);
+  });
+
+  it('stockSyncSchedule (Material B2): SIMULATED on both gates, and the note names Stage F', () => {
+    // MR-1 BR-01 — the scheduled pull needs Stage F; "Next sync" is a projection.
+    expect(capabilityBacking.stockSyncSchedule).toBeNull();
+    expect(liveness('stockSyncSchedule')).toBe('SIMULATED');
+    expect(awaitsHarvest('stockSyncSchedule')).toBe(true);
+    expect(readinessNote('stockSyncSchedule')?.readinessNoteKey).toBe('widget.honesty.awaitingStageF');
+    expect(isLive('stockSyncSchedule')).toBe(false);
   });
 
   it('⭐ inventory after the SDC-3b backing flip: wired (gate-1 LIVE) yet STILL never green', () => {

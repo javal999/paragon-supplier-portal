@@ -66,6 +66,7 @@ import type {
   ReleaseCommandResult,
 } from '../delivery/views';
 import type { SupplierReliability } from '../engine/reliability';
+import type { UpdateCompliance } from '../transitions/updateCompliance';
 import type { MaterialPlan, MaterialRequirementRun } from '../engine/requirement';
 import type { MaterialSafetyStock, SafetyStockChange, SafetyStockRun } from '../engine/safetyStock';
 import type { MaterialOrderPlan, OrderPlanRun, WarehousePlan } from '../engine/orderSizing';
@@ -948,6 +949,32 @@ export type RescheduleInfoView = InfoLine & RescheduleLineNames;
 export interface WarehouseRescheduleView extends WarehouseReschedule {
   readonly proposals: readonly RescheduleProposalView[];
   readonly info: readonly RescheduleInfoView[];
+}
+
+/**
+ * Material E1 (MR-7 BR-08) — which figure a planner input stands in for:
+ * the supplier's SOH, its in-production quantity (with the completion date in
+ * `date`), or a to-distributor leg (with its ETA in `date`).
+ */
+export type SimulationOverrideField = 'soh' | 'inProduction' | 'toDistributor';
+
+/**
+ * Material E1 (MR-7 BR-06, BR-08; plan AD-1) — a planner's input to the stock
+ * simulation, APPENDED (MAT-R3). It applies to the simulation only, until the
+ * supplier's next stock record, and never changes the stock record or counts
+ * for update compliance (MR-2). The latest input per field is the one in force.
+ */
+export interface SimulationOverride {
+  readonly id: string;
+  readonly supplierId: string;
+  readonly materialCode: string;
+  readonly field: SimulationOverrideField;
+  /** A quantity in the material's canonical unit. */
+  readonly value: number;
+  /** `YYYY-MM-DD`: the completion date (inProduction) or ETA (toDistributor). */
+  readonly date?: string;
+  readonly enteredBy: ActorAttribution;
+  readonly enteredAt: string;
 }
 
 /**
@@ -2901,6 +2928,12 @@ export interface ISupplierService {
    * history. Buyer: every supplier. Supplier: its own row only.
    */
   getStockUpdateModes(scope: QueryScope): Promise<Page<SupplierStockUpdateMode>>;
+  /**
+   * Material B3 (MR-2 BR-01 to BR-03) — each supplier's weekly update
+   * compliance over the rolling 13 update cycles. Buyer: every supplier.
+   * Supplier: its own row only (MAT-R4).
+   */
+  getUpdateCompliance(scope: QueryScope): Promise<Page<UpdateCompliance>>;
   /**
    * Material G1 (MR-10 BR-01 to BR-03) — each vendor's qualification level,
    * the documents it still needs, the documents about to drop it, and its
