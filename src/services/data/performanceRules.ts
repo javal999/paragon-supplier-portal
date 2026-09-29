@@ -27,6 +27,8 @@ import {
 } from '../transitions/callOffRules';
 import { targetStatus, type TargetStatus } from '../../lib/chartPalette';
 import { receivedOnTimeFor } from './kpiWindow';
+import { complianceScoreWeight } from '../transitions/inventoryConfig';
+import type { UpdateCompliance } from '../transitions/updateCompliance';
 
 const DAY_MS = 86_400_000;
 
@@ -294,19 +296,37 @@ export interface SupplierMeasure {
   readonly grade: PerformanceGrade | null;
   /** True when nothing in the period was measurable — the surfaces show "No history". */
   readonly noHistory: boolean;
+  /**
+   * Material B3 (MR-2) — the weekly update compliance blended into `score`,
+   * always over the rolling 13 update cycles whatever the period. Null when
+   * the input carries none (the portfolio, or a caller without the measure).
+   */
+  readonly updateCompliance: UpdateCompliance | null;
 }
 
-/** The score, stated as one arithmetic rather than hidden in the aggregation. */
+/**
+ * The score, stated as one arithmetic rather than hidden in the aggregation.
+ *
+ * Material B3 (MR-2 BR-05, MAT-D9, AR-09) — the delivery score above, blended
+ * with update compliance: (1 − w) × delivery score + w × compliance %, with
+ * w = `compliance.scoreWeight` read at call time. With "No history" for
+ * compliance (null) w is 0 and the score is the delivery score unchanged.
+ * Compliance alone never makes a score: no delivery history is still null.
+ */
 export function assessmentScore(
   otifPct: number | null,
   cfotPct: number | null,
   rejections: number,
+  compliancePct: number | null = null,
+  weight: number = complianceScoreWeight(),
 ): number | null {
   const parts = [otifPct, cfotPct].filter((p): p is number => p !== null);
   if (parts.length === 0) return null;
   const mean = parts.reduce((s, p) => s + p, 0) / parts.length;
   const penalised = mean - rejections * REJECTION_PENALTY_POINTS;
-  return Math.max(0, Math.min(100, Math.round(penalised)));
+  const delivery = Math.max(0, Math.min(100, Math.round(penalised)));
+  if (compliancePct === null) return delivery;
+  return Math.max(0, Math.min(100, Math.round((1 - weight) * delivery + weight * compliancePct)));
 }
 
 export interface PerformanceInput {
@@ -314,6 +334,13 @@ export interface PerformanceInput {
   readonly asns: readonly ASN[];
   readonly receipts: readonly GoodsReceipt[];
   readonly purchaseOrders: readonly PurchaseOrder[];
+  /**
+   * Material B3 (AR-09) — each supplier's update compliance, computed ONCE per
+   * supplier by the caller's source (the mock read model, or the page's
+   * `getUpdateCompliance` read) and blended in `supplierMeasure` only. Absent:
+   * no compliance, so the score is the delivery score.
+   */
+  readonly updateCompliance?: (supplierId: string) => UpdateCompliance | null;
 }
 
 /**
@@ -345,7 +372,8 @@ export function supplierMeasure(
     period,
     nowIso,
   );
-  const score = assessmentScore(otif.pct, cfot.pct, rejections.total);
+  const updateCompliance = input.updateCompliance?.(supplierId) ?? null;
+  const score = assessmentScore(otif.pct, cfot.pct, rejections.total, updateCompliance?.pct ?? null);
   return {
     supplierId,
     period,
@@ -355,6 +383,7 @@ export function supplierMeasure(
     score,
     grade: gradeFor(score),
     noHistory: score === null,
+    updateCompliance,
   };
 }
 
@@ -392,5 +421,6 @@ export function portfolioMeasure(
     score,
     grade: gradeFor(score),
     noHistory: score === null,
+    updateCompliance: null,
   };
 }
