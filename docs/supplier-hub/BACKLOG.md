@@ -2,14 +2,14 @@
 
 | | |
 |---|---|
-| Version | 2.16, 2026-09-29 |
+| Version | 2.17, 2026-09-29 |
 | What this is | Everything known to be outstanding for the Supplier Hub, in one list: decisions waiting on people, work waiting on those decisions, work waiting on the backend, and work that can start today |
 | What this is not | A plan or a commitment. Nothing here has a date. Sequencing belongs to the project owner |
 | Sources | Open items (section 7 of `SUPPLIER-HUB-REQUIREMENTS.md`), open decisions (section 9.3 of `SUPPLIER-HUB-PRD.md`), what is not built (section 5 of `BUILD-GAP.md`), stubs (section 6 of the requirements), and defects or debts found while building |
 
 ## How to use this list
 
-- **Each item has an ID** (`BL-nn`). IDs never change and never get reused. New items take the next free number.
+- **Each item has an ID** (`BL-nn`). IDs never change and never get reused. New items take the next number free across `main` AND every open pull request that edits this file: check the open PRs' diffs before numbering, and renumber your own rows (never theirs) if one lands first.
 - **To add, change or close an item**, branch off `main` with a `docs/` prefix, edit this file, and open a pull request. Same rule as every other document here.
 - **Closing an item**: move it to section 6 with the date and what closed it, rather than deleting the row. A backlog that only shrinks silently teaches nobody anything.
 - **Size** is a rough shape, not an estimate: **S** a day or so, **M** a few days, **L** a week or more, **?** unknown until the decision lands.
