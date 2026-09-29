@@ -239,6 +239,28 @@ const inviteeViews = (
     };
   });
 
+/**
+ * RFX-R4 — an event's invitee rows as a scope may read their performance
+ * figures: the buyer (`supplierId` null) reads every invitee's OTIF; a supplier
+ * only its own. Another invitee's row reaches it WITHOUT `otif` — not `null`,
+ * which would state "No history" about a rival that has one. Narrowed here, in
+ * the read model, so no page is handed a figure it must remember to hide.
+ */
+export function withOwnInviteeFigures<T extends { readonly invitedSuppliers: readonly RfxInviteeView[] }>(
+  view: T,
+  supplierId: string | null,
+): T {
+  if (supplierId === null) return view;
+  return {
+    ...view,
+    invitedSuppliers: view.invitedSuppliers.map((i) => {
+      if (i.supplierId === supplierId) return i;
+      const { otif: _otif, ...rest } = i;
+      return rest;
+    }),
+  };
+}
+
 const rfiFacts = (r: RfiResponse | undefined): InviteeResponseFacts | undefined =>
   r && { ...r, empty: r.status !== 'Submitted' && r.answers.length === 0 && (r.documents ?? []).length === 0 };
 
@@ -299,7 +321,9 @@ export function rfiEventViews(nowIso: string, supplierId: string | null): readon
         })),
         closed: event.status === 'Closed' || event.status === 'Cancelled',
       };
-    });
+    })
+    // RFX-R4 — a supplier reads its own OTIF, never another invitee's.
+    .map((view) => withOwnInviteeFigures(view, supplierId));
 }
 
 /** The RFP board for a scope. Same draft and invitation rules as the RFI one. */
@@ -351,7 +375,9 @@ export function rfpEventViews(nowIso: string, supplierId: string | null): readon
         })),
         closed: event.status === 'Closed' || event.status === 'Cancelled',
       };
-    });
+    })
+    // RFX-R4 — a supplier reads its own OTIF, never another invitee's.
+    .map((view) => withOwnInviteeFigures(view, supplierId));
 }
 
 // ── REQ-E03-05 — comparison, rounds and awards ──────────────────────────────

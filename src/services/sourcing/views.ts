@@ -59,8 +59,12 @@ export interface RfxInviteeView {
   readonly deadline: string;
   readonly responseState: InviteeResponseState;
   readonly submittedAt: string | null;
-  /** REQ-E03-01 AC-02 — `null` is "No history", never 0%. */
-  readonly otif: number | null;
+  /**
+   * REQ-E03-01 AC-02 — `null` is "No history", never 0%. Absent on a
+   * supplier's read of ANOTHER invitee's row (RFX-R4): a rival's delivery
+   * record is PTI's figure, and "No history" would be a false one.
+   */
+  readonly otif?: number | null;
   readonly overdue: boolean;
   /** When this invitee accepted the event's confidentiality terms; null = not (yet). */
   readonly confidentialityAcceptedAt: string | null;
