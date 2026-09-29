@@ -57,7 +57,7 @@ describe('menu and copy (section 3.7)', () => {
     const inventory = PTI_NAV.find((s) => s.id === 'inventory')!;
     expect(inventory.items.map((i) => i.path)).toEqual(['/buyer/inventory', '/buyer/capacity', '/buyer/alerts', '/buyer/supplier-access']);
     const planning = SUPPLIER_NAV.find((s) => s.id === 'planning')!;
-    expect(planning.items.map((i) => i.path)).toEqual(['/supplier/forecasts', '/supplier/inventory', '/supplier/capacity']);
+    expect(planning.items.map((i) => i.path)).toEqual(['/supplier/forecasts', '/supplier/fs-reconcile', '/supplier/inventory', '/supplier/capacity']);
   });
 
   it('every new string exists in EN and ID', () => {

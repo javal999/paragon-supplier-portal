@@ -25,6 +25,7 @@ import type {
 // the entities (`services/sourcing/views`) so the contract and the adapter that
 // fulfils it import ONE declaration rather than each holding its own copy.
 import type { InviteeCandidate, InviteeFilter } from '../transitions/rfxRules';
+import type { FsRow } from '../transitions/fixedStockReconcile';
 import type { RfqClarificationView, RfqEngagementView } from '../sourcing/rfqResponse';
 import type {
   AwardView,
@@ -769,6 +770,13 @@ export interface ForecastCommitmentLine {
   /** REQ-E06-03 BR-05 — the other suppliers qualified for the material (where demand can move). */
   readonly otherQualifiedSuppliers: readonly { readonly supplierId: string; readonly supplierName: string }[];
 }
+
+/**
+ * REQ-E06-04 — one supplier × material × cycle of the fixed stock (FS)
+ * reconcile: committed against called off against held, with the agreed
+ * maximum stock and the outcome. Computed at read, never stored.
+ */
+export type FixedStockReconcileRow = FsRow;
 
 /** REQ-E06-03 BR-07 — supplier coverage per material, with distributor lead times (an estimate). */
 /** REQ-E14-02 — the trailing windows the reliability read offers. */
@@ -2563,6 +2571,12 @@ export interface IProcurementService {
   getForecastCommitments(scope: QueryScope): Promise<Page<ForecastCommitmentLine>>;
   /** Supplier coverage per material against Firm demand (CR-03), PTI only. */
   getForecastCoverage(scope: QueryScope): Promise<Page<ForecastCoverageRow>>;
+  /**
+   * REQ-E06-04 — the fixed stock reconcile per supplier × material × cycle
+   * (ENG-D21). The planner reads every supplier; a supplier reads only its own
+   * rows (scoped in the service).
+   */
+  getFixedStockReconcile(scope: QueryScope): Promise<Page<FixedStockReconcileRow>>;
   /**
    * REQ-E14-02 — supplier reliability and PTI's plan-change measures over a
    * trailing window, computed by the forecast engine on its (SIMULATED)

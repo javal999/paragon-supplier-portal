@@ -159,6 +159,7 @@ import { calendarCovers, workingCalendarStore } from '../../transitions/workingC
 import { isHubSettingKey, parseStaleOverrideKey } from '../../transitions/hubSettings';
 import { hubSettingsStore, settingValue } from '../../transitions/hubSettingsStore';
 import { isActiveReasonCode, parseReasonCodeEntityId, reasonCodeStore } from '../../transitions/reasonCodes';
+import { maxStockChangeFrom, maxStockStore, parseMaxStockEntityId } from '../../transitions/maxStock';
 import {
   THREE_PL_ID,
   asnThreePlRefusal,
@@ -4586,6 +4587,30 @@ const reasonCodeTarget: CommandTarget = {
   },
 };
 
+// ── REQ-E06-04 BR-06 · PROCUREMENT'S MAXIMUM STOCK PER SUPPLIER × MATERIAL ────
+// `entityId` IS `<supplierId>|<materialCode>`. `readState` answers `Maintained`
+// only for a pair the hub actually assigns — a pair nobody supplies is
+// NOT_FOUND rather than a silently created value. Owner-less: the value is a
+// term PTI keeps, and every supplier is denied at SCOPE (§86). APPENDS only;
+// `previous` and `setAt` are stamped here, never read from the payload.
+const maxStockPairExists = (id: string): boolean => {
+  const pair = parseMaxStockEntityId(id);
+  return pair !== null && isAssignedMaterial(pair.supplierId, pair.materialCode);
+};
+const maxStockTarget: CommandTarget = {
+  readState: (id) => (maxStockPairExists(id) ? 'Maintained' : null),
+  readScopeOwner: () => null,
+  readEntity: (id) => {
+    const pair = maxStockPairExists(id) ? parseMaxStockEntityId(id) : null;
+    return pair ? maxStockStore.get(pair.supplierId, pair.materialCode) ?? null : null;
+  },
+  applyTransition: (id, _toState, payload) => {
+    const change = maxStockChangeFrom(id, payload, sdcClock.now());
+    // The policy hook has already refused every payload this could reject.
+    if (change) maxStockStore.append(change);
+  },
+};
+
 const hubSettingTarget: CommandTarget = {
   readState: (id) => (settingKeyExists(id) ? 'Maintained' : null),
   readScopeOwner: () => null,
@@ -5026,6 +5051,9 @@ const TARGETS: Record<string, CommandTarget> = {
   // BL-32 — the reason lists. Wired so every add, rename and retirement lands in
   // the DR-10 trail.
   reasonCode: reasonCodeTarget,
+  // REQ-E06-04 BR-06 — Procurement's maximum stock per supplier × material.
+  // Wired so every set, change and clear lands in the DR-10 trail.
+  maxStock: maxStockTarget,
   // §82 — the document lane's first write path: the supplier's declaration and
   // compliance's review of it.
   supplierDocument: supplierDocumentTarget,
