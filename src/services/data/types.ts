@@ -1436,6 +1436,13 @@ export interface AsnLineItem {
   uom?: string;
   /** Optional expiry date of the batch (`YYYY-MM-DD`). */
   expiryDate?: string;
+  /**
+   * MR-6 BR-04 — `declared` when the batch was picked from the supplier's
+   * declared stock, `typed` when it was typed ("not in declared stock", shown
+   * to PTI). Absent on a line with no batch yet, and on lines stored before
+   * the rule existed.
+   */
+  batchSource?: 'declared' | 'typed';
 }
 
 export interface AsnShipmentDetails {
