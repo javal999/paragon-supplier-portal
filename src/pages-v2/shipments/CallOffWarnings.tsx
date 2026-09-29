@@ -26,10 +26,10 @@ export function callOffWarningText(t: TFunction, w: CallOffWarning): string {
     case 'qtyUnder':
       return t('co.asn.warn.qtyUnder', { shipped: n(d.shipped), agreed: n(d.agreed), pct: n(d.pct), callOff });
     case 'late':
-      return t('co.asn.warn.late', { count: d.days ?? 0, eta: formatDate(d.eta), date: formatDate(d.agreedDate), callOff });
+      return t('co.asn.warn.late', { days: n(d.days), eta: formatDate(d.eta), date: formatDate(d.agreedDate), callOff });
     case 'early':
       return t('co.asn.warn.early', {
-        count: d.days ?? 0,
+        days: n(d.days),
         eta: formatDate(d.eta),
         date: formatDate(d.agreedDate),
         limit: n(d.limit),
