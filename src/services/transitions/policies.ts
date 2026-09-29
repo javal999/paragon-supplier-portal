@@ -12,6 +12,7 @@ import type {
 } from '../data/types';
 import type { GoodsReceipt } from '../../data/mockGoodsReceipts';
 import type { PolicyHookFn } from './dispatcher';
+import { maxStockRefusal, parseMaxStockEntityId } from './maxStock';
 import { POLICY_HOOKS } from './policyHooks';
 import { deriveHeaderDisposition, type GrHeaderDisposition } from './grRollup';
 import { isMatched } from './invoiceRollup';
@@ -584,6 +585,26 @@ const reasonCodeGoverned: PolicyHookFn = ({ entityId, payload }) => {
 };
 
 bindPolicyHook(POLICY_HOOKS.REASON_CODE_GOVERNED, reasonCodeGoverned);
+
+// ── REQ-E06-04 BR-06 · ONE SUPPLIER × MATERIAL'S MAXIMUM STOCK ───────────────
+// The same predicate the page's form calls (`maxStockRefusal`). `quantity` must
+// be PRESENT — a whole number above zero, or null to clear — so an omitted key
+// can never be read as "cleared".
+bindPolicyHook(POLICY_HOOKS.MAX_STOCK_GOVERNED, ({ entityId, payload }) => {
+  if (!parseMaxStockEntityId(entityId)) return { ok: false, reason: `'${entityId}' is not <supplierId>|<materialCode>` };
+  if (!('quantity' in payload)) return { ok: false, reason: 'quantity is required: a whole number, or null to clear it' };
+  const refusal = maxStockRefusal(payload.quantity);
+  if (refusal) return { ok: false, reason: refusal };
+  if (!asActorAttribution(payload.setBy)) {
+    return {
+      ok: false,
+      reason:
+        "setBy must be { kind: 'RESOLVED', person: { personId, displayName } } or " +
+        `{ kind: 'UNATTRIBUTED', reason } (${UNATTRIBUTED_REASONS.join(', ')})`,
+    };
+  }
+  return { ok: true };
+});
 
 // ── §67 · PR REJECT — THE REASON IS SUBSTANCE, NOT PRESENCE ──────────────────
 //
