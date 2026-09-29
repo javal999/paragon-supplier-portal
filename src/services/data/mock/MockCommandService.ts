@@ -105,6 +105,8 @@ import {
   isAwaitingApproval,
   isCallOffDate,
   isConfirmedAndAccepted,
+  asnCallOffWarnings,
+  callOffViews,
   isPositiveQty,
   proposedDeliveries,
   umbrellaRefusal,
@@ -192,6 +194,8 @@ import {
 import { forecastVersionStore, forecastViewStore } from './stores/forecastHubStores';
 // Material A1 — the supplier overlay (its own module, plan AD-5).
 import { supplierOverlayTarget } from './targets/supplierOverlay';
+// Material G1 — the qualification lists (its own module, MAT-R13).
+import { qualificationRuleTarget } from './targets/qualificationRule';
 // Material C5 — planning groups (their own module, plan AD-5).
 import { planningGroupTarget } from './targets/planningGroup';
 // Material C4 — the MRP controller list (its own module, plan AD-5).
@@ -543,6 +547,12 @@ const mergeAsnLines = (
   return out;
 };
 
+/** MR-6 BR-10 — "last ASN for this call-off", when the payload says; else as stored. */
+const callOffFinalFrom = (payload: Record<string, unknown>, stored: boolean | undefined): { callOffFinal?: boolean } => {
+  const v = typeof payload.callOffFinal === 'boolean' ? payload.callOffFinal : stored;
+  return v === true ? { callOffFinal: true } : {};
+};
+
 /**
  * MR-6 BR-09 — the shelf-life exception entry a verb appends, or null for a verb
  * that records none. `by` is the session's actor; `at` the hub clock.
@@ -602,7 +612,7 @@ const advanceShipNoticeTarget: CommandTarget = {
     // empty value (the carrier typed by name instead) clears it; one that says
     // nothing keeps the draft's.
     const threePlId = threePlFromPayload(payload, current?.threePlId);
-    asnStore.update(id, ({ threePlId: _stored, ...a }) => ({
+    asnStore.update(id, ({ threePlId: _stored, callOffFinal: storedFinal, ...a }) => ({
       ...a,
       ...(threePlId ? { threePlId } : {}),
       status: toState as AsnStatus,
@@ -615,9 +625,20 @@ const advanceShipNoticeTarget: CommandTarget = {
       ...(shipDate ? { shipDate } : {}),
       ...(nonBlank(payload.packingListFile) ? { packingListFile: nonBlank(payload.packingListFile) } : {}),
       ...(nonBlank(payload.overShipReason) ? { overShipReason: nonBlank(payload.overShipReason) } : {}),
+      ...callOffFinalFrom(payload, storedFinal),
       lineItems: entered ? mergeAsnLines(a.lineItems, entered, findPoByNumber(a.poReference)) : a.lineItems,
       ...(event ? { shelfLifeException: [...(a.shelfLifeException ?? []), event] } : {}),
     }));
+    // MR-6 BR-12 — the call-off warnings the supplier was shown, kept on the
+    // submitted ASN for the record. Computed here from the merged record by the
+    // same rule the form shows (so a payload cannot choose them); never a block.
+    if (toState === 'Submitted') {
+      asnStore.update(id, ({ callOffWarnings: _prev, ...a }) => {
+        const views = callOffViews(callOffStore.all(), asnStore.all(), goodsReceiptStore.all(), sdcClock.now());
+        const warnings = asnCallOffWarnings(a, views, asnStore.all());
+        return warnings.length > 0 ? { ...a, callOffWarnings: warnings } : a;
+      });
+    }
   },
   // Creation scope: a supplier may draft an ASN only against its OWN PO.
   creationOwner: (payload) => findPoByNumber(String(payload.poReference))?.supplierId ?? null,
@@ -667,6 +688,7 @@ const advanceShipNoticeTarget: CommandTarget = {
       ...(nonBlank(payload.packingListFile) ? { packingListFile: nonBlank(payload.packingListFile) } : {}),
       ...(nonBlank(payload.overShipReason) ? { overShipReason: nonBlank(payload.overShipReason) } : {}),
       ...(callOff ? { callOffId: callOff.id } : {}),
+      ...(callOff ? callOffFinalFrom(payload, undefined) : {}),
     };
     asnStore.add(asn);
     return { entityId: asnNumber };
@@ -4854,6 +4876,9 @@ const supplierDocumentTarget: CommandTarget = {
             rejectedBy: scope.actor ?? NO_PERSON,
           }
         : {}),
+      // Material G1 (plan AD-2) — when the document became valid, from the hub
+      // clock. The qualification history replays from it.
+      ...(toState === 'Valid' ? { verifiedAt: sdcClock.now() } : {}),
     }));
   },
   // ⚠️ **`requireCreationOwner` IS THE HALF THE DECLARE PATH NEVER NEEDED, AND
@@ -5157,6 +5182,8 @@ const TARGETS: Record<string, CommandTarget> = {
   threePl: threePlTarget,
   // Material A1 — a supplier's stock update mode (MR-1 BR-02, AC-06).
   supplierOverlay: supplierOverlayTarget,
+  // Material G1 — the documents each qualification level requires (MR-10 BR-04).
+  qualificationRule: qualificationRuleTarget,
   // Material C5 — planning groups for capacity (MR-8 BR-01 to BR-05).
   planningGroup: planningGroupTarget,
   // Material C4 — who each SAP MRP controller code is (MR-5 BR-02).

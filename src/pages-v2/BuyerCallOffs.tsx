@@ -32,7 +32,10 @@ import { POLICY_HOOKS } from '../services/transitions/policyHooks';
 import { formatDate, formatDateTime, formatIDR } from '../lib/format';
 import { usePurchaseOrders } from '../services/query/hooks';
 import { useCallOffCommand, type CallOffCommandVars } from '../services/query/commandHooks';
-import { POStatus, type CallOffType, type POLineItem, type PurchaseOrder } from '../services/data/types';
+import { POStatus, type ASN, type CallOffType, type CallOffWarning, type POLineItem, type PurchaseOrder } from '../services/data/types';
+import { callOffWarnings } from '../services/transitions/callOffRules';
+import { isActiveAsn } from '../services/transitions/fulfilmentRules';
+import { AsnPlannerMarkers } from './shipments/CallOffWarnings';
 import {
   CALL_OFF_CADENCES,
   CALL_OFF_TYPES,
@@ -49,6 +52,8 @@ import type { ReleaseCadence } from '../services/delivery/types';
 import { callOffConfirmWorkingDays, callOffTolerance } from '../services/transitions/callOffTolerance';
 import { numberOf } from './callOffs/callOffDisplay';
 import { PicCell, PicFilter, PicHeader, ptiPicOf, usePicFilter } from './materials/picDisplay';
+import MaterialSearch, { MaterialMatchReason, useMaterialMatcher } from '../components/ui-v2/MaterialSearch';
+import { searchMaterials } from '../services/transitions/matchMaterial';
 import {
   ConfirmationPill,
   DeliveryPill,
@@ -140,7 +145,19 @@ const BuyerCallOffs: React.FC = () => {
   const { toast } = useToast();
   const refusalText = useRefusalText();
   const posQuery = usePurchaseOrders({ status: [POStatus.CONFIRMED, POStatus.PARTIALLY_DELIVERED] });
-  const { views, nowIso, isPending, error, refetch } = useCallOffViews();
+  const { views, nowIso, isPending, error, refetch, asns } = useCallOffViews();
+  // MR-6 BR-12 (edge case 6) — each call-off's ASNs with the CURRENT comparison,
+  // recomputed on read: the planner's "Mismatch" marker.
+  const linkedAsns = useMemo(() => {
+    const out = new Map<string, LinkedAsn[]>();
+    for (const v of views) {
+      const mine = asns
+        .filter((a) => a.callOffId === v.callOff.id && isActiveAsn(a))
+        .map((a) => ({ asn: a, warnings: callOffWarnings(v.callOff, asns, a) }));
+      if (mine.length > 0) out.set(v.callOff.id, mine);
+    }
+    return out;
+  }, [views, asns]);
   const command = useCallOffCommand();
   const planAvailability = useVerbAvailability('calloff:plan');
   const reviewAvailability = useVerbAvailability('calloff:review');
@@ -154,6 +171,9 @@ const BuyerCallOffs: React.FC = () => {
   const drill = usePoDrillFilter();
   // Material C4 — the PIC filter, kept in the page address (MR-5 BR-03).
   const pic = usePicFilter();
+  // Material C3 — the one material search (MR-3 BR-04).
+  const [search, setSearch] = useState('');
+  const matchOf = useMaterialMatcher();
   const drilledPo = drilledPoId(drill);
   /**
    * ⚠️ **WHEN A PO FILTER IS IN PLAY THE PAGE LISTS WHAT THE SUMMARY COUNTED,
@@ -207,7 +227,14 @@ const BuyerCallOffs: React.FC = () => {
   const atRisk = views.filter((v) => v.delivery === 'atRisk').length;
   const drift = deliveryDrift(views);
   // Filtered at render only: `panelLine` below still finds a line the filter hides.
-  const shownSections = sections.filter((s) => pic.matches(ptiPicOf(s.line.materialCode)));
+  // Material C3 — the search matches the line's code, PTI description and its
+  // supplier's approved trade name; the best match comes first.
+  const shownSections = searchMaterials(
+    search,
+    sections.filter((s) => pic.matches(ptiPicOf(s.line.materialCode))),
+    (s) => ({ code: s.line.materialCode, description: s.line.description, supplierId: s.po.supplierId }),
+    matchOf,
+  );
 
   const selectedView: CallOffView | null =
     panel?.kind === 'callOff' ? (views.find((v) => v.callOff.id === panel.id) ?? null) : null;
@@ -367,7 +394,10 @@ const BuyerCallOffs: React.FC = () => {
         </div>
       )}
 
-      <div className="mb-4">
+      <div className="flex flex-wrap items-center gap-3 mb-4">
+        <div className="flex-1 min-w-[240px]">
+          <MaterialSearch mode="filter" query={search} onQueryChange={setSearch} testId="calloff-search" />
+        </div>
         <PicFilter
           refs={sections.map((s) => ptiPicOf(s.line.materialCode))}
           persona="buyer"
@@ -380,10 +410,10 @@ const BuyerCallOffs: React.FC = () => {
       <div className="space-y-6">
         {shownSections.length === 0 && (
           <p className="text-sm text-text-tertiary py-8 text-center" data-testid="calloff-pic-empty">
-            {t('pic.filter.empty')}
+            {search.trim() ? t('matSearch.noMatch', { query: search.trim() }) : t('pic.filter.empty')}
           </p>
         )}
-        {shownSections.map(({ po, line, remaining, rows }) => (
+        {shownSections.map(({ item: { po, line, remaining, rows }, match }) => (
           <section
             key={`${po.id}-${line.id}`}
             data-testid={`calloff-umbrella-${po.id}-${line.id}`}
@@ -398,6 +428,7 @@ const BuyerCallOffs: React.FC = () => {
                 <div className="text-xs text-text-secondary mt-0.5">
                   <Data className="text-text-tertiary">{line.materialCode}</Data> · {line.description}
                 </div>
+                <MaterialMatchReason match={match} testId={`calloff-match-${line.id}`} />
                 <div className="text-xs text-text-secondary mt-1 flex flex-wrap items-center gap-2">
                   <PicHeader />
                   <PicCell value={ptiPicOf(line.materialCode)} testId={`calloff-pic-${line.id}`} />
@@ -515,6 +546,11 @@ const BuyerCallOffs: React.FC = () => {
                         </TableCell>
                         <TableCell>
                           <DeliveryPill status={v.delivery} />
+                          {(linkedAsns.get(v.callOff.id) ?? []).some((l) => l.warnings.length > 0) ? (
+                            <div className="mt-1" data-testid={`calloff-mismatch-${v.callOff.id}`}>
+                              <StatusPill variant="warning">{t('co.asn.mismatch')}</StatusPill>
+                            </div>
+                          ) : null}
                         </TableCell>
                         <TableCell className="text-right whitespace-nowrap">
                           <Button
@@ -764,6 +800,7 @@ const BuyerCallOffs: React.FC = () => {
             run={run}
             numberOf={numberOf}
             checkRelease={checkForSelected}
+            linkedAsns={linkedAsns.get(selectedView.callOff.id) ?? []}
           />
         )}
       </SidePanel>
@@ -771,8 +808,16 @@ const BuyerCallOffs: React.FC = () => {
   );
 };
 
+/** A call-off's ASN with its current call-off warnings (MR-6 BR-12). */
+interface LinkedAsn {
+  asn: ASN;
+  warnings: CallOffWarning[];
+}
+
 interface PanelBodyProps {
   view: CallOffView;
+  /** The call-off's ASNs, each with the current comparison (edge case 6). */
+  linkedAsns: readonly LinkedAsn[];
   form: { quantity: string; needDate: string; type: CallOffType; reason: string; comment: string };
   setForm: (f: PanelBodyProps['form']) => void;
   busy: boolean;
@@ -787,6 +832,16 @@ interface PanelBodyProps {
   checkRelease: (quantity: number) => ReleaseCheck | null;
 }
 
+/** MR-6 BR-12 / FU-7 — the planner's markers on one heads-up ASN. */
+const HeadsUpMarkers: React.FC<{ asnNumber: string; linkedAsns: readonly LinkedAsn[] }> = ({ asnNumber, linkedAsns }) => {
+  const linked = linkedAsns.find((l) => l.asn.asnNumber === asnNumber);
+  return linked ? (
+    <div className="mt-1">
+      <AsnPlannerMarkers asn={linked.asn} warnings={linked.warnings} />
+    </div>
+  ) : null;
+};
+
 const CallOffPanelBody: React.FC<PanelBodyProps> = ({
   view,
   form,
@@ -800,6 +855,7 @@ const CallOffPanelBody: React.FC<PanelBodyProps> = ({
   run,
   numberOf,
   checkRelease,
+  linkedAsns,
 }) => {
   const { t } = useTranslation();
   const c = view.callOff;
@@ -917,6 +973,7 @@ const CallOffPanelBody: React.FC<PanelBodyProps> = ({
                     · <Data>{h.ref}</Data>
                   </>
                 )}
+                {h.source === 'asn' ? <HeadsUpMarkers asnNumber={h.ref} linkedAsns={linkedAsns} /> : null}
               </li>
             ))}
           </ul>

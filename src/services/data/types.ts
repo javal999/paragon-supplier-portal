@@ -1115,7 +1115,9 @@ export type InventoryAlertRule =
   /** REQ-E08-05 BR-01 — committed quantity below forecast beyond tolerance (REQ-E06-03). */
   | 'commitmentBelowForecast'
   /** CR-24 / BR-02 — no supplier lead time on record; the risk class fell back to CR-02. */
-  | 'leadTimeMissing';
+  | 'leadTimeMissing'
+  /** MR-6 BR-13 — a confirmed call-off due within the lead time is larger than declared SOH + production. */
+  | 'callOffNotCovered';
 
 export type RiskClass = 'high' | 'medium' | 'low';
 
@@ -1385,6 +1387,14 @@ export interface SupplierDocument {
    * D-ID-3 — no typed-name attribution until session-resolved identity exists.
    */
   rejectedBy?: ActorAttribution;
+  /**
+   * Material G1 (MR-10, plan AD-2) — when compliance verified the document
+   * (`t_supplierdoc_verify`). Store-assigned from the hub clock, never a payload
+   * field. The qualification history replays from it: a document counts toward
+   * a level from this instant. Absent on every seeded row, which predates the
+   * verb; those count from their `issuedDate`.
+   */
+  verifiedAt?: string;
   /**
    * The certificate details the supplier stated, present only on a DECLARED
    * document. See `CertificateDeclaration` — the whole object is optional and
@@ -1666,12 +1676,54 @@ export interface ASN {
   /** The call-off this ASN ships (REQ-E09-03 BR-06). Absent for a PO-level ASN. */
   callOffId?: string;
   /**
+   * MR-6 BR-10 — the supplier marks this ASN as the last one for its call-off.
+   * Only then is shipping less than the agreed quantity a warning.
+   */
+  callOffFinal?: boolean;
+  /**
+   * MR-6 BR-12 — the call-off warnings shown at submit, kept for the record.
+   * The planner's "Mismatch" marker is recomputed on read (edge case 6); this
+   * copy is never the current comparison.
+   */
+  callOffWarnings?: readonly CallOffWarning[];
+  /**
    * MR-6 BR-08 / BR-09 — the shelf-life exception record, APPENDED (MAT-R3):
    * each request, each decision and each ETA change that reopened it is a new
    * entry; nothing earlier is edited. Whether an exception stands is derived
    * from the entries (`shelfLifeExceptionOf`). Absent until the first request.
    */
   shelfLifeException?: AsnShelfLifeEvent[];
+}
+
+/** MR-6 BR-10 / BR-11 — how an ASN differs from its call-off. */
+export type CallOffWarningKind = 'qtyOver' | 'qtyUnder' | 'early' | 'late' | 'material' | 'unlinked';
+
+/** The figures behind one call-off warning (only the ones its kind needs). */
+export interface CallOffWarningDetail {
+  /** The call-off the ASN ships. */
+  readonly callOffNumber?: string;
+  /** qtyOver / qtyUnder — the call-off's shipped total (earlier ASNs plus this one) and agreed total. */
+  readonly shipped?: number;
+  readonly agreed?: number;
+  /** qtyOver / qtyUnder — the difference as a percentage of the agreed total. */
+  readonly pct?: number;
+  /** qtyOver — `callOff.overPct`; early — `callOff.earlyAllowanceDays`. */
+  readonly limit?: number;
+  /** early / late — the ASN's ETA and the agreed date it was compared with. */
+  readonly eta?: string;
+  readonly agreedDate?: string;
+  readonly days?: number;
+  /** material / unlinked — the ASN line's material. */
+  readonly materialCode?: string;
+  /** material — the call-off's material. */
+  readonly expectedMaterial?: string;
+  /** unlinked — the open confirmed call-offs on the PO line. */
+  readonly callOffNumbers?: readonly string[];
+}
+
+export interface CallOffWarning {
+  readonly kind: CallOffWarningKind;
+  readonly detail: CallOffWarningDetail;
 }
 
 /** MR-6 BR-08 — one line an exception covers, as it stood when it was asked for. */
@@ -1902,8 +1954,14 @@ export interface SupplierScorecard {
    * calculated measures for the period the page is showing
    * (`services/data/performanceRules.ts`). `id` is the SUPPLIER MASTER id, which
    * is what makes that join real rather than by-name.
+   *
+   * Material G1 (MR-10 BR-09) — the free-text relationship status that stood
+   * here ("Preferred Supplier" / "Approved Supplier") is retired. The vendor's
+   * standing is its computed qualification level, PROJECTED AT READ from its
+   * documents (`getSupplierScorecards`) and absent on the fixture row. The
+   * improvement-plan state it also carried is `impPlan`.
    */
-  status: string;
+  qualification?: QualificationLevel;
   kpis: ScorecardKpi[];
   radar: ScorecardRadarAxis[];
   otifTrend: number[];
@@ -2709,6 +2767,93 @@ export interface SupplierStockUpdateMode {
   readonly history: readonly SupplierUpdateModeChange[];
 }
 
+// ─── Vendor qualification — computed from documents (Material G1) ──────────
+
+/**
+ * MR-10 BR-01 — a vendor's qualification level. Exactly one per vendor,
+ * COMPUTED from its valid documents at read (BR-03), never stored and never
+ * set by hand. Separate from the lifecycle `SupplierStatus` (BR-02).
+ */
+export type QualificationLevel = 'registered' | 'approved' | 'preferred';
+
+/** The two levels a rule list is set for; Registered is "below Approved". */
+export type QualificationRuleLevel = 'approved' | 'preferred';
+
+/**
+ * One document a level requires (BR-04). Matched by `category`, and by the
+ * declared `certType` too when the rule names one (plan AR-18). `label` is the
+ * requirement as Procurement and Quality wrote it: data, not UI copy.
+ */
+export interface QualificationRequiredDoc {
+  readonly category: SupplierDocumentCategory;
+  readonly certType?: CertType;
+  readonly label: string;
+}
+
+/** The documents required for one level (BR-04). */
+export interface QualificationRule {
+  readonly level: QualificationRuleLevel;
+  readonly requiredDocs: readonly QualificationRequiredDoc[];
+  /**
+   * `true` on the seeded starting lists (MAT-D15): shown everywhere with
+   * "Placeholder, awaiting Procurement and Quality" until a person sets the
+   * list through `t_qualification_rule_set`, which records `false`.
+   */
+  readonly placeholder: boolean;
+}
+
+/** One change of a level's list, as recorded. Never edited (MAT-R3). */
+export interface QualificationRuleChange extends QualificationRule {
+  /** Store-assigned from the hub clock, never a payload field. */
+  readonly setAt: string;
+  /** From the session (`QueryScope.actor`), never from the form. */
+  readonly setBy: ActorAttribution;
+}
+
+/** A counted document that would drop the level when it expires (AC-06). */
+export interface QualificationExpiringDoc {
+  readonly documentId: string;
+  readonly name: string;
+  readonly category: SupplierDocumentCategory;
+  readonly expiryDate: string;
+}
+
+/** `qualificationFor` — a vendor's level on a date and what it still lacks. */
+export interface VendorQualificationStatus {
+  readonly level: QualificationLevel;
+  /** The required documents with no counting document, per level. */
+  readonly missingFor: {
+    readonly approved: readonly QualificationRequiredDoc[];
+    readonly preferred: readonly QualificationRequiredDoc[];
+  };
+  /** Counted documents inside the expiry window that hold up the level. */
+  readonly expiringSoon: readonly QualificationExpiringDoc[];
+}
+
+/**
+ * One level change, REPLAYED from the documents and the rule lists (plan
+ * AD-2) — never written on read. `causeDocumentId` names the document whose
+ * verification or expiry moved the level; it is null when a change of the rule
+ * list moved it, and `causeRuleLevel` then names the list.
+ */
+export interface QualificationChange {
+  readonly at: string;
+  readonly from: QualificationLevel;
+  readonly to: QualificationLevel;
+  readonly causeDocumentId: string | null;
+  readonly causeRuleLevel?: QualificationRuleLevel;
+}
+
+/** A vendor's qualification as the hub computes it, with its history. */
+export interface VendorQualification extends VendorQualificationStatus {
+  readonly supplierId: string;
+  readonly supplierName: string;
+  /** Oldest first. */
+  readonly history: readonly QualificationChange[];
+  /** True while any list the level is computed from is still a placeholder. */
+  readonly placeholderRules: boolean;
+}
+
 // ─── Planning groups — capacity groups under SAP material groups (Material C5) ─
 
 /**
@@ -2782,6 +2927,12 @@ export interface ISupplierService {
    * history. Buyer: every supplier. Supplier: its own row only.
    */
   getStockUpdateModes(scope: QueryScope): Promise<Page<SupplierStockUpdateMode>>;
+  /**
+   * Material G1 (MR-10 BR-01 to BR-03) — each vendor's qualification level,
+   * the documents it still needs, the documents about to drop it, and its
+   * replayed history. Buyer: every supplier. Supplier: its own row only.
+   */
+  getVendorQualifications(scope: QueryScope): Promise<Page<VendorQualification>>;
 }
 
 export interface IProcurementService {
