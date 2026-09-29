@@ -44,6 +44,8 @@ const CALENDAR_FNS: Readonly<Record<string, number>> = {
   documentInstant: 2,
   isWorkingDay: 2,
 };
+/** Own-key membership (`Object.hasOwn` needs lib es2022; the spec tsconfig is older). */
+const hasOwn = (o: object, k: string): boolean => Object.prototype.hasOwnProperty.call(o, k);
 const FROZEN_BASE = ['DEFAULT_WORKING_CALENDAR', 'INDONESIA_HOLIDAYS_2026'];
 
 const DAY_CONSTANTS = /^(DAY_MS|MS_PER_DAY)$/;
@@ -53,6 +55,9 @@ const DEADLINE_WORDS = new Set([
   'escalate', 'escalated', 'escalation', 'grace', 'missed', 'remind', 'reminder', 'late',
   'lateness', 'outstanding',
 ]);
+
+const parse = (rel: string, text: string): ts.SourceFile =>
+  ts.createSourceFile(rel, text, ts.ScriptTarget.ES2020, true, rel.endsWith('x') ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
 
 function sources(): ReadonlyMap<string, ts.SourceFile> {
   const out = new Map<string, ts.SourceFile>();
@@ -65,8 +70,7 @@ function sources(): ReadonlyMap<string, ts.SourceFile> {
       }
       if (!/\.tsx?$/.test(e.name) || /\.test\.tsx?$/.test(e.name) || /\.d\.ts$/.test(e.name)) continue;
       const rel = path.relative(SRC, p).split(path.sep).join('/');
-      const text = fs.readFileSync(p, 'utf8');
-      out.set(rel, ts.createSourceFile(rel, text, ts.ScriptTarget.ES2020, true, rel.endsWith('x') ? ts.ScriptKind.TSX : ts.ScriptKind.TS));
+      out.set(rel, parse(rel, fs.readFileSync(p, 'utf8')));
     }
   };
   walk(SRC);
@@ -111,12 +115,15 @@ interface Derived {
   readonly calendarDaySites: Set<string>;
 }
 
-function derive(): Derived {
+// ⚠️ Membership is an OWN-key check, never `in`: `in` walks the prototype chain,
+// so a call to a local `valueOf(…)` or `toString(…)` counted as calendar
+// arithmetic (hit in RFx D3, PR #67). Probed below.
+function derive(files: ReadonlyMap<string, ts.SourceFile> = sources()): Derived {
   const out: Derived = { workingDayCalls: [], calendarDefaults: [], frozenRefs: [], calendarDaySites: new Set() };
-  for (const [file, sf] of sources()) {
+  for (const [file, sf] of files) {
     const visit = (node: ts.Node): void => {
       if (file !== ARITHMETIC_MODULE) {
-        if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text in CALENDAR_FNS) {
+        if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && hasOwn(CALENDAR_FNS, node.expression.text)) {
           out.workingDayCalls.push({
             key: `${file}#${enclosingFunctionName(node)}`,
             fn: node.expression.text,
@@ -200,6 +207,21 @@ describe('BL-50 · the deadline population reads the hub calendar', () => {
     expect(D.calendarDaySites).not.toContain('services/transitions/forecastRules.ts#commitmentDueAt');
   });
 
+  it('PROBE — a prototype-chain name is not a calendar function; a real one is', () => {
+    const probe = derive(new Map([['probe/probe.ts', parse('probe/probe.ts', [
+      'const valueOf = (ref: string, point: number) => point;',
+      'export function priced() { return valueOf(\'r\', 1) + toString(1) + hasOwnProperty(2) + constructor(3); }',
+      'export function due() { return addWorkingDays(now, 3, cal); }',
+    ].join('\n'))]]));
+    const fns = probe.workingDayCalls.map((c) => `${c.key} → ${c.fn}`);
+    // Known-bad: Object.prototype names must NOT count.
+    for (const name of ['valueOf', 'toString', 'hasOwnProperty', 'constructor']) {
+      expect(fns.some((f) => f.endsWith(`→ ${name}`)), name).toBe(false);
+    }
+    // Known-good: the real calendar call MUST count.
+    expect(fns).toEqual(['probe/probe.ts#due → addWorkingDays']);
+  });
+
   it('the modules doing working-day arithmetic are exactly these (the derived list, pinned)', () => {
     const readers = [...new Set(D.workingDayCalls.map((c) => c.key.split('#')[0]))].sort();
     expect(readers).toEqual([
@@ -235,7 +257,7 @@ describe('BL-50 · the deadline population reads the hub calendar', () => {
 
   it('CALENDAR-day deadline arithmetic is exactly the reasoned allowlist, both ways', () => {
     const derived = [...D.calendarDaySites].sort();
-    const unexplained = derived.filter((k) => !(k in CALENDAR_DAY_ALLOWLIST));
+    const unexplained = derived.filter((k) => !hasOwn(CALENDAR_DAY_ALLOWLIST, k));
     const stale = Object.keys(CALENDAR_DAY_ALLOWLIST).filter((k) => !D.calendarDaySites.has(k));
     expect(unexplained, 'a deadline counting calendar days with no stated reason').toEqual([]);
     expect(stale, 'an allowlist row whose site no longer exists').toEqual([]);
