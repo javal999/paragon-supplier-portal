@@ -1,5 +1,6 @@
 import {
   Anchor,
+  Scale,
   AlertTriangle,
   Award,
   BellRing,
@@ -97,6 +98,7 @@ export const PTI_NAV: readonly NavSection[] = [
     items: [
       { labelKey: 'hub.nav.pti.forecasts', icon: CalendarRange, path: '/buyer/forecasts' },
       { labelKey: 'hub.nav.pti.commitments', icon: ChartLine, path: '/buyer/collaboration' },
+      { labelKey: 'hub.nav.pti.fsReconcile', icon: Scale, path: '/buyer/fs-reconcile' },
       { labelKey: 'hub.nav.pti.dataHealth', icon: DatabaseZap, path: '/buyer/data-health' },
       { labelKey: 'hub.nav.pti.demandForecast', icon: TrendingUp, path: '/buyer/demand-forecast' },
       { labelKey: 'hub.nav.pti.reliability', icon: Target, path: '/buyer/reliability' },
@@ -175,6 +177,7 @@ export const SUPPLIER_NAV: readonly NavSection[] = [
     labelKey: 'hub.nav.section.planning',
     items: [
       { labelKey: 'hub.nav.sup.forecast', icon: ChartLine, path: '/supplier/forecasts' },
+      { labelKey: 'hub.nav.sup.fsReconcile', icon: Scale, path: '/supplier/fs-reconcile' },
       { labelKey: 'hub.nav.sup.stock', icon: Boxes, path: '/supplier/inventory' },
       { labelKey: 'hub.nav.sup.capacity', icon: Factory, path: '/supplier/capacity' },
     ],

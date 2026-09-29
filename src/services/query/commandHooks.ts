@@ -7,6 +7,7 @@
 // NO local seeded copy.
 // ────────────────────────────────────────────────────────────────────────────
 
+import { maxStockEntityId } from '../transitions/maxStock';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useDataService } from '../data/DataServiceContext';
@@ -429,6 +430,98 @@ export function useAdvanceShipNoticeCancel() {
         transitionId: 't_asn_cancel',
         entity: 'advanceShipNotice',
         entityId: asnNumber,
+      }),
+    onSuccess: (result) => {
+      if (result.status !== 'failed') invalidate(scope);
+    },
+  });
+}
+
+// ─── Shelf-life exception (MR-6 BR-08, edge case 1) ─────────────────────────
+
+/** A submission's fields plus the supplier's reason (`t_asn_request_exception`). */
+export interface AsnRequestExceptionVars extends AsnSubmitVars {
+  reason: string;
+}
+
+/**
+ * The supplier asks Quality for a shelf-life exception instead of submitting
+ * (Draft → Awaiting exception). Carries what a submission carries.
+ */
+export function useAdvanceShipNoticeRequestException() {
+  const svc = useDataService();
+  const scope = useScope();
+  const invalidate = useInvalidateProcurement();
+
+  return useMutation<CommandResult, Error, AsnRequestExceptionVars>({
+    mutationFn: ({ asnNumber, carrier, threePlId, trackingNumber, eta, shipDate, lines, overShipReason, reason }) =>
+      svc.commands.dispatch(scope, {
+        transitionId: 't_asn_request_exception',
+        entity: 'advanceShipNotice',
+        entityId: asnNumber,
+        payload: {
+          carrier,
+          ...(threePlId !== undefined ? { threePlId } : {}),
+          trackingNumber,
+          eta,
+          ...(shipDate ? { shipDate } : {}),
+          ...(lines ? { lines } : {}),
+          ...(overShipReason ? { overShipReason } : {}),
+          reason,
+        },
+      }),
+    onSuccess: (result) => {
+      if (result.status !== 'failed') invalidate(scope);
+    },
+  });
+}
+
+/** Quality's decision on a shelf-life exception (a reason is required to reject). */
+export interface AsnExceptionDecisionVars {
+  asnNumber: string;
+  decision: 'approve' | 'reject';
+  reason?: string;
+}
+
+/**
+ * Quality approves (Awaiting exception → Submitted) or rejects (→ Draft) a
+ * shelf-life exception.
+ */
+export function useAdvanceShipNoticeExceptionDecision() {
+  const svc = useDataService();
+  const scope = useScope();
+  const invalidate = useInvalidateProcurement();
+
+  return useMutation<CommandResult, Error, AsnExceptionDecisionVars>({
+    mutationFn: ({ asnNumber, decision, reason }) =>
+      svc.commands.dispatch(scope, {
+        transitionId: decision === 'approve' ? 't_asn_approve_exception' : 't_asn_reject_exception',
+        entity: 'advanceShipNotice',
+        entityId: asnNumber,
+        payload: reason?.trim() ? { reason: reason.trim() } : {},
+      }),
+    onSuccess: (result) => {
+      if (result.status !== 'failed') invalidate(scope);
+    },
+  });
+}
+
+/**
+ * MR-6 edge case 1 — the supplier moves an approved ASN's ETA later; a line
+ * still fails there, so Quality decides again (Submitted → Awaiting exception).
+ */
+export function useAdvanceShipNoticeChangeEta() {
+  const svc = useDataService();
+  const scope = useScope();
+  const invalidate = useInvalidateProcurement();
+
+  return useMutation<CommandResult, Error, { asnNumber: string; eta: string }>({
+    mutationFn: ({ asnNumber, eta }) =>
+      svc.commands.dispatch(scope, {
+        transitionId: 't_asn_change_eta',
+        entity: 'advanceShipNotice',
+        entityId: asnNumber,
+        payload: { eta },
       }),
     onSuccess: (result) => {
       if (result.status !== 'failed') invalidate(scope);
@@ -1549,6 +1642,36 @@ export function useReasonCodeSet() {
         entity: 'reasonCode',
         entityId: reasonCodeEntityId(list, code),
         payload: { labelEn, labelId, active, setBy: identity.actor },
+      }),
+    onSuccess: (result) => {
+      if (result.status !== 'failed') void qc.invalidateQueries();
+    },
+  });
+}
+
+// ── REQ-E06-04 BR-06 · ONE SUPPLIER × MATERIAL'S MAXIMUM STOCK ───────────────
+// `quantity: null` clears it back to "no max stock agreed". `setBy` comes from
+// the session, never the form.
+export interface MaxStockSetVars {
+  supplierId: string;
+  materialCode: string;
+  quantity: number | null;
+}
+
+/** Set, change or clear the maximum stock of one supplier × material (`t_maxstock_set`). */
+export function useMaxStockSet() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+  const { identity } = useCurrentIdentity();
+
+  return useMutation<CommandResult, Error, MaxStockSetVars>({
+    mutationFn: ({ supplierId, materialCode, quantity }) =>
+      svc.commands.dispatch(scope, {
+        transitionId: 't_maxstock_set',
+        entity: 'maxStock',
+        entityId: maxStockEntityId(supplierId, materialCode),
+        payload: { quantity, setBy: identity.actor },
       }),
     onSuccess: (result) => {
       if (result.status !== 'failed') void qc.invalidateQueries();

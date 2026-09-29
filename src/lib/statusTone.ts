@@ -62,6 +62,8 @@ const STATUS_TONE: Record<string, StatusTone> = {
   Delayed: 'warning',
   'Needs Attention': 'warning',
   Adjusted: 'warning',
+  // MR-6 BR-08 — an ASN waiting for Quality's shelf-life decision.
+  'Awaiting exception': 'warning',
   // REQ-E07-07 — the supplier's invoice status list.
   Verified: 'success',
   'Scheduled for payment': 'info',

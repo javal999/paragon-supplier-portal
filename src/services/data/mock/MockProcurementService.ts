@@ -11,6 +11,7 @@ import {
 import { stockAccessStore } from './stores/inventoryHubStores';
 import { allPlanningGroups } from './planningGroupReadModel';
 import { allCommitmentLines, allCoverageRows, allVersionViews, forecastSupplierName } from './forecastReadModel';
+import { allFixedStockRows } from './fixedStockReadModel';
 import { maskForSupplier } from '../../transitions/inventoryRules';
 import { PTI_ONLY_RULES } from '../../transitions/inventoryAlertRules';
 import { mockShipments } from '../../../data/mockShipments';
@@ -88,6 +89,7 @@ import type {
   ForecastVersionView,
   ForecastCommitmentLine,
   ForecastCoverageRow,
+  FixedStockReconcileRow,
   InventoryFilter,
   Shipment,
   ShipmentFilter,
@@ -484,6 +486,12 @@ export class MockProcurementService implements IProcurementService {
     // REQ-E06-03 BR-07 — the planner's view; a supplier reads nothing here.
     if (scope.personaType !== 'buyer') return { items: [] };
     return { items: allCoverageRows() };
+  }
+
+  async getFixedStockReconcile(scope: QueryScope): Promise<Page<FixedStockReconcileRow>> {
+    // REQ-E06-04 BR-12 — the planner reads every supplier; a supplier reads only
+    // its own rows, scoped HERE so another supplier's figures never reach the page.
+    return { items: applySupplierScope(scope, allFixedStockRows()) };
   }
 
   async getSupplierReliability(
