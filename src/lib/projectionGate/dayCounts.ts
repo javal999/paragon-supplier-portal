@@ -215,6 +215,13 @@ export const DAY_COUNTS: readonly DayCountRow[] = [
     group: 'not-a-clock-difference',
     reason: 'A principal’s delivery lead time to the distributor (REQ-E06-03 BR-07). A duration, not measured from today.',
   },
+  {
+    owner: 'CallOffWarningDetail',
+    field: 'days',
+    group: 'not-a-clock-difference',
+    reason:
+      'MR-6 BR-10 — the ASN’s ETA against the call-off’s agreed date: two document dates, no clock endpoint.',
+  },
   // `InventoryRecord.daysOfSupply` LEFT BY BEING RETIRED (REQ-E08-01): days of
   // supply is CR-01, computed at read by `inventoryRules.daysOfSupply` and never
   // stored on a DTO, so it has no row here.
