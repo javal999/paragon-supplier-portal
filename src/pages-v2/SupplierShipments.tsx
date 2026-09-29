@@ -84,13 +84,17 @@ import {
   useCallOffs,
   useInventory,
 } from '../services/query/hooks';
-import { isConfirmedAndAccepted } from '../services/transitions/callOffRules';
+import { asnCallOffWarnings, isConfirmedAndAccepted, type AsnForCallOffCheck } from '../services/transitions/callOffRules';
+import { AsnSubmitWarnings, callOffWarningText } from './shipments/CallOffWarnings';
+import { useCallOffViews } from './callOffs/callOffDisplay';
 import type { AsnStatus, ASN, PurchaseOrder } from '../services/data/types';
 import { useRefusalText } from '../hooks/useRefusalText';
 import { refusalDetailOf } from '../services/transitions/refusalMessage';
 import TrackingNumber from '../components/ui-v2/TrackingNumber';
 import CarrierPicker, { carrierFor, defaultCarrier } from './shipments/CarrierPicker';
+import { poLineQuantityText } from './orders/poLineQuantity';
 import { PicCell, PicFilter, PicHeader, usePicFilter } from './materials/picDisplay';
+import MaterialSearch, { MaterialMatchReason, useMaterialSearch } from '../components/ui-v2/MaterialSearch';
 
 type TabKey = 'shipments' | 'create';
 type StatusFilter = AsnStatus | 'All';
@@ -137,6 +141,8 @@ interface AsnForm {
   overShipReason: string;
   /** REQ-E09-03 BR-06 — the confirmed call-off this ASN ships, or '' for a PO-level ASN. */
   callOffId: string;
+  /** MR-6 BR-10 — the last ASN for the call-off (a shortfall then warns). */
+  callOffFinal: boolean;
   /** MR-6 BR-08 — the supplier's reason when shelf life blocks the submission. */
   exceptionReason: string;
 }
@@ -157,7 +163,51 @@ const EMPTY_FORM: AsnForm = {
   lines: {},
   overShipReason: '',
   callOffId: '',
+  callOffFinal: false,
   exceptionReason: '',
+};
+
+/**
+ * MR-6 BR-10 / BR-11 — the ASN as the call-off check reads it, from what the
+ * form holds. Both submit paths build it this way, so the supplier sees the
+ * warnings the verb will record.
+ */
+const asnForCheck = (
+  base: Pick<AsnForCallOffCheck, 'asnNumber' | 'poReference' | 'callOffId' | 'callOffFinal'>,
+  read: AsnLinesRead,
+  eta: string,
+  shipDate: string,
+): AsnForCallOffCheck => ({
+  ...base,
+  eta,
+  ...(shipDate ? { shipDate } : {}),
+  lineItems: read.lines
+    .filter((l) => Number.isFinite(l.input.shippedQty))
+    .map((l) => ({ materialCode: l.input.materialCode, shippedQty: l.input.shippedQty })),
+});
+
+/** MR-6 BR-10 — the "last ASN for this call-off" tick, on both submit paths. */
+const CallOffFinalToggle: React.FC<{ id: string; checked: boolean; onChange: (v: boolean) => void }> = ({
+  id,
+  checked,
+  onChange,
+}) => {
+  const { t } = useTranslation();
+  return (
+    <div className="mt-2">
+      <label htmlFor={id} className="inline-flex items-start gap-2 text-sm text-text-primary cursor-pointer">
+        <input
+          id={id}
+          type="checkbox"
+          checked={checked}
+          onChange={(e) => onChange(e.target.checked)}
+          className="mt-0.5 accent-teal"
+        />
+        {t('co.asn.final.label')}
+      </label>
+      <p className="mt-1 text-xs text-text-tertiary">{t('co.asn.final.hint')}</p>
+    </div>
+  );
 };
 
 /** A fresh ASN form, its carrier defaulted from the 3PL list in force. */
@@ -247,11 +297,17 @@ const AsnLinesEditor: React.FC<{
   onReasonChange: (v: string) => void;
 }> = ({ open, entries, read, batches, onChange, overShipReason, onReasonChange }) => {
   const { t } = useTranslation();
+  // Material C3 — the one material search over the PO's lines (MR-3 BR-04):
+  // a supplier finds a line by PTI code, PTI description or its own approved
+  // trade name. Hidden lines keep what was typed; the search only narrows.
+  const [query, setQuery] = useState('');
+  const found = useMaterialSearch(query, open, (l) => ({ code: l.materialCode, description: l.description }));
   if (open.length === 0) {
     return <p className="text-sm text-text-tertiary">{t('fc.asn.lines.empty')}</p>;
   }
   return (
     <div className="space-y-3">
+      <MaterialSearch mode="filter" query={query} onQueryChange={setQuery} testId="asn-lines-search" />
       <div className="overflow-x-auto">
         <table className="w-full text-xs">
           <thead>
@@ -264,7 +320,7 @@ const AsnLinesEditor: React.FC<{
             </tr>
           </thead>
           <tbody>
-            {open.map((l) => {
+            {found.map(({ item: l, match }) => {
               const e = entries[l.materialCode] ?? EMPTY_LINE;
               const r = read.lines.find((x) => x.line.materialCode === l.materialCode);
               const bad = !!r && !r.qtyOk;
@@ -276,6 +332,7 @@ const AsnLinesEditor: React.FC<{
                       {l.materialCode}
                     </Data>
                     <div className="text-text-primary">{l.description}</div>
+                    <MaterialMatchReason match={match} testId={`asn-line-match-${l.materialCode}`} />
                   </td>
                   <td className="py-1.5 pr-2 text-right whitespace-nowrap">
                     <Data>{`${l.open.toLocaleString('en-US')} ${l.uom}`}</Data>
@@ -677,6 +734,18 @@ const ShipmentsList: React.FC<ShipmentsListProps> = ({
                                   <dd className="text-text-primary">{asn.overShipReason}</dd>
                                 </>
                               )}
+                              {/* MR-6 BR-12 — the warnings shown at submit, as recorded. */}
+                              {asn.callOffWarnings && asn.callOffWarnings.length > 0 ? (
+                                <>
+                                  <dt className="text-text-tertiary">{t('co.asn.warn.recorded')}</dt>
+                                  <dd
+                                    className="text-warning-hover"
+                                    data-testid={`asn-recorded-warnings-${asn.asnNumber}`}
+                                  >
+                                    {asn.callOffWarnings.map((w) => callOffWarningText(t, w)).join(' · ')}
+                                  </dd>
+                                </>
+                              ) : null}
                             </dl>
                           </div>
                           <div className="bg-bg-surface border border-border-subtle rounded-md p-4">
@@ -897,6 +966,7 @@ const SupplierShipments: React.FC = () => {
     shipDate: '',
     lines: {} as Record<string, LineEntry>,
     overShipReason: '',
+    callOffFinal: false,
     /** MR-6 BR-08 — the supplier's reason when shelf life blocks the submission. */
     exceptionReason: '',
   });
@@ -906,6 +976,8 @@ const SupplierShipments: React.FC = () => {
   const asnsQuery = useASNs();
   // REQ-E09-03 BR-06 — an ASN may ship a confirmed call-off on the chosen PO.
   const callOffsQuery = useCallOffs();
+  // MR-6 BR-10 / BR-11 — the call-off projection the warnings read (which call-offs are open).
+  const { views: callOffViewList } = useCallOffViews();
   // REQ-E07-04 — partial shipments: a PO stays shippable after a first receipt.
   const posQuery = usePurchaseOrders({
     status: [POStatus.CONFIRMED, POStatus.PARTIALLY_DELIVERED],
@@ -1011,6 +1083,7 @@ const SupplierShipments: React.FC = () => {
       shipDate: asn.shipDate ?? '',
       lines: entries,
       overShipReason: asn.overShipReason ?? '',
+      callOffFinal: asn.callOffFinal === true,
       exceptionReason: '',
     });
   };
@@ -1086,7 +1159,7 @@ const SupplierShipments: React.FC = () => {
       return;
     }
     submitAsnMutation.mutate(
-      vars,
+      { ...vars, ...(submitTarget.callOffId ? { callOffFinal: submitForm.callOffFinal } : {}) },
       {
         onSuccess: (res) => {
           if (res.status === 'failed') {
@@ -1215,6 +1288,23 @@ const SupplierShipments: React.FC = () => {
     overShipReason: form.overShipReason,
     batches: declaredBatches,
   });
+  // MR-6 BR-10 / BR-11 — what the confirm step warns about; never a block.
+  const wizardWarnings = selectedPO
+    ? asnCallOffWarnings(
+        asnForCheck(
+          {
+            asnNumber: '',
+            poReference: selectedPO.poNumber,
+            ...(form.callOffId ? { callOffId: form.callOffId, callOffFinal: form.callOffFinal } : {}),
+          },
+          wizardRead,
+          form.eta,
+          form.shipDate,
+        ),
+        callOffViewList,
+        asns,
+      )
+    : [];
   const step1Valid = form.poId !== '';
   // BR-04 required fields; `complete` carries each line's refusal, including
   // BR-02's reason when a line ships above open.
@@ -1250,7 +1340,7 @@ const SupplierShipments: React.FC = () => {
         lines: wizardRead.lines.map((l) => l.input),
         ...(form.packingList ? { packingListFile: form.packingList } : {}),
         ...(form.overShipReason.trim() ? { overShipReason: form.overShipReason.trim() } : {}),
-        ...(form.callOffId ? { callOffId: form.callOffId } : {}),
+        ...(form.callOffId ? { callOffId: form.callOffId, callOffFinal: form.callOffFinal } : {}),
       });
       if (createRes.status === 'failed' || !createRes.entityId) {
         toast({
@@ -1304,6 +1394,28 @@ const SupplierShipments: React.FC = () => {
     }
   };
 
+  // FU-5 — the drawer's lines and warnings, from the same rules as the wizard.
+  const submitRead = submitTarget ? readSubmitLines(submitTarget) : null;
+  const submitWarnings =
+    submitTarget && submitRead
+      ? asnCallOffWarnings(
+          asnForCheck(
+            {
+              asnNumber: submitTarget.asnNumber,
+              poReference: submitTarget.poReference,
+              ...(submitTarget.callOffId
+                ? { callOffId: submitTarget.callOffId, callOffFinal: submitForm.callOffFinal }
+                : {}),
+            },
+            submitRead,
+            submitForm.eta,
+            submitForm.shipDate,
+          ),
+          callOffViewList,
+          asns,
+        )
+      : [];
+
   const wizardSteps: WizardStep[] = [
     {
       id: 'select',
@@ -1331,6 +1443,7 @@ const SupplierShipments: React.FC = () => {
                       lines: seedLines(openLinesFor(po, asns)),
                       overShipReason: '',
                       callOffId: '',
+                      callOffFinal: false,
                     })
                   }
                   aria-pressed={selected}
@@ -1352,7 +1465,7 @@ const SupplierShipments: React.FC = () => {
                     <div className="text-right shrink-0">
                       <div className="text-xs text-text-tertiary">
                         {t('supplierShipments.wizard.select.qty')}{' '}
-                        <Data>{mat ? `${mat.quantity.toLocaleString()} ${mat.uom}` : '—'}</Data>
+                        <Data>{mat ? poLineQuantityText(t, mat) : '—'}</Data>
                       </div>
                       <div className="text-xs text-text-tertiary">
                         {t('supplierShipments.wizard.select.delivery')}{' '}
@@ -1405,7 +1518,7 @@ const SupplierShipments: React.FC = () => {
               <select
                 id="asn-calloff"
                 value={form.callOffId}
-                onChange={(e) => updateForm({ callOffId: e.target.value })}
+                onChange={(e) => updateForm({ callOffId: e.target.value, callOffFinal: false })}
                 className="w-full px-3 py-2 text-sm text-text-primary bg-white border border-border-input rounded-md focus:outline-none focus:border-action"
               >
                 <option value="">{t('co.asn.noCallOff')}</option>
@@ -1418,6 +1531,13 @@ const SupplierShipments: React.FC = () => {
                   ))}
               </select>
               <p className="mt-1 text-xs text-text-tertiary">{t('co.asn.callOffHint')}</p>
+              {form.callOffId ? (
+                <CallOffFinalToggle
+                  id="asn-wizard-calloff-final"
+                  checked={form.callOffFinal}
+                  onChange={(v) => updateForm({ callOffFinal: v })}
+                />
+              ) : null}
             </div>
           )}
         </div>
@@ -1637,26 +1757,12 @@ const SupplierShipments: React.FC = () => {
             </div>
           </FormSection>
 
-          {/* MR-6 BR-03 — a warning, never a block: the stock record can be a cycle old. */}
-          {wizardRead.aboveAvailable.length > 0 ? (
-            <div
-              role="alert"
-              data-testid="asn-batch-above-available"
-              className="bg-warning-soft border-l-2 border-warning rounded px-3 py-2 space-y-1 text-xs text-warning-hover"
-            >
-              {wizardRead.aboveAvailable.map((l) => (
-                <p key={l.line.materialCode}>
-                  {t('fc.asn.batch.aboveAvailable', {
-                    material: l.line.materialCode,
-                    qty: l.input.shippedQty.toLocaleString('en-US'),
-                    batch: l.input.batchNumber,
-                    available: (l.aboveAvailable ?? 0).toLocaleString('en-US'),
-                  })}
-                </p>
-              ))}
-              <p>{t('fc.asn.batch.aboveAvailableHint')}</p>
-            </div>
-          ) : null}
+          {/* MR-6 BR-03, BR-10, BR-11 — warnings, never a block. */}
+          <AsnSubmitWarnings
+            aboveAvailable={wizardRead.aboveAvailable}
+            callOffWarnings={wizardWarnings}
+            testId="asn-wizard-warnings"
+          />
 
           {wizardRead.onlyShelfLife ? (
             <ShelfLifeRequestBox
@@ -1905,7 +2011,7 @@ const SupplierShipments: React.FC = () => {
               <AsnLinesEditor
                 open={submitLinesFor(submitTarget)}
                 entries={submitForm.lines}
-                read={readSubmitLines(submitTarget)}
+                read={submitRead ?? readSubmitLines(submitTarget)}
                 batches={declaredBatches}
                 onChange={(code, patch) =>
                   setSubmitForm((f) => ({
@@ -1929,6 +2035,19 @@ const SupplierShipments: React.FC = () => {
             ) : null}
             {/* A draft Quality sent back: the rejection and its reason (MR-6 BR-08). */}
             <ShelfLifeExceptionDetail asn={submitTarget} />
+            {submitTarget.callOffId ? (
+              <CallOffFinalToggle
+                id="asn-submit-calloff-final"
+                checked={submitForm.callOffFinal}
+                onChange={(v) => setSubmitForm((f) => ({ ...f, callOffFinal: v }))}
+              />
+            ) : null}
+            {/* FU-5 — the Submit drawer is the second submit path: the same warnings. */}
+            <AsnSubmitWarnings
+              aboveAvailable={submitRead?.aboveAvailable ?? []}
+              callOffWarnings={submitWarnings}
+              testId="asn-submit-warnings"
+            />
           </div>
         )}
       </SidePanel>

@@ -27,17 +27,31 @@ import { callOffStore } from './stores/callOffStore';
 import { asnStore } from './stores/asnStore';
 import { goodsReceiptStore } from './stores/goodsReceiptStore';
 import { purchaseOrderStore } from './stores/purchaseOrderStore';
+import { updateCompliance } from './updateComplianceReadModel';
+import type { UpdateCompliance } from '../../transitions/updateCompliance';
 
 /** The window the supplier master's standing figure is measured over. */
 export const MASTER_PERIOD: PerformancePeriod = '90d';
 
-/** Everything the measures read, taken from the mutable stores. */
-export function performanceInput(): PerformanceInput {
+/**
+ * Everything the measures read, taken from the mutable stores. Material B3
+ * (AR-09): update compliance is computed once per supplier, as of `nowIso`,
+ * and `supplierMeasure` blends it — the same rule the pages' path calls.
+ */
+export function performanceInput(nowIso: string = sdcClock.now()): PerformanceInput {
+  const compliance = new Map<string, UpdateCompliance>();
   return {
     callOffs: callOffStore.all(),
     asns: asnStore.all(),
     receipts: goodsReceiptStore.all(),
     purchaseOrders: purchaseOrderStore.all(),
+    updateCompliance: (supplierId) => {
+      const hit = compliance.get(supplierId);
+      if (hit) return hit;
+      const c = updateCompliance(supplierId, nowIso);
+      compliance.set(supplierId, c);
+      return c;
+    },
   };
 }
 
@@ -50,7 +64,7 @@ const GRADE_ENUM: Readonly<Record<'A' | 'B' | 'C' | 'D', ScorecardGrade>> = {
 
 /** One supplier's measures against the master window. */
 export function masterMeasure(supplierId: string, nowIso = sdcClock.now()): SupplierMeasure {
-  return supplierMeasure(supplierId, performanceInput(), MASTER_PERIOD, nowIso);
+  return supplierMeasure(supplierId, performanceInput(nowIso), MASTER_PERIOD, nowIso);
 }
 
 /**

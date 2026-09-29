@@ -33,6 +33,7 @@ import {
   type HubSettingValue,
 } from '../../services/transitions/hubSettings';
 import { hubSettingsStore, settingValue } from '../../services/transitions/hubSettingsStore';
+import { staleApiHours } from '../../services/transitions/inventoryConfig';
 import { stockFreshness } from '../../services/transitions/inventoryRules';
 import { PullFailedNote, inventoryNow } from '../inventory/inventoryDisplay';
 import AdminSectionNav from './AdminSectionNav';
@@ -647,8 +648,17 @@ const StalePeriodsPanel: React.FC<{
                   <TableCell className="whitespace-nowrap">
                     <Data>{p.materialCode}</Data>
                   </TableCell>
-                  <TableCell className="whitespace-nowrap">
-                    <Data>{valueText(daysDef, p.updateSla)}</Data>
+                  {/* Material B2 (carried over from B1) — without an override the
+                      figure follows the supplier's update mode (`staleAt`), not
+                      the stale period in days, so the row says which rule applies. */}
+                  <TableCell className="whitespace-nowrap" data-testid={`admin-set-stale-period-${p.supplierId}-${p.materialCode}`}>
+                    {override !== null ? (
+                      <Data>{valueText(daysDef, p.updateSla)}</Data>
+                    ) : p.apiConnected ? (
+                      <span className="text-sm">{t('adminSet.stale.byMode.api', { hours: staleApiHours() })}</span>
+                    ) : (
+                      <span className="text-sm">{t('adminSet.stale.byMode.manual')}</span>
+                    )}
                   </TableCell>
                   <TableCell className="whitespace-nowrap text-sm">
                     {t(override === null ? 'adminSet.stale.source.default' : 'adminSet.stale.source.override')}

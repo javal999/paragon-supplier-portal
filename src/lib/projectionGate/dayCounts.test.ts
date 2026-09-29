@@ -220,8 +220,11 @@ describe('ACQUITTALS — asserted, because a gate that only convicts is unprobed
     // (REQ-E08-01): days of supply is CR-01, computed at read and never stored.
     // `ForecastCoverageRow.principalLeadTimeDays` joined at REQ-E06-03 BR-07: a
     // principal's lead time is a duration, like a quoted lead time.
+    // `CallOffWarningDetail.days` joined at MR-6 BR-10: an ETA against an agreed
+    // date, both on the documents.
     expect(acquitted.map((r) => r.field).sort()).toEqual([
       'coverDays',
+      'days',
       'leadTimeDays',
       'noticeRequiredDays',
       'principalLeadTimeDays',

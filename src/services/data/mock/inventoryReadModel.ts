@@ -23,7 +23,7 @@ import {
   materialEntry,
   sdcClock,
 } from '../../sdc';
-import { callOffViews } from '../../transitions/callOffRules';
+import { callOffCoverSubjects, callOffViews } from '../../transitions/callOffRules';
 import { buildInventoryPositions } from '../../transitions/inventoryRules';
 import { buildCapacityPlans } from '../../transitions/capacityRules';
 import { commitmentAlertSubjects } from '../../transitions/forecastRules';
@@ -109,8 +109,11 @@ export function assignedMaterialCodesOf(supplierId: string): string[] {
   return [...codes].filter((c) => materialEntry(c)).sort();
 }
 
-/** The inventory rows: every supply assignment, plus any pair a supplier has submitted stock for. */
-function assignments(): { supplierId: string; materialCode: string }[] {
+/**
+ * The inventory rows: every supply assignment, plus any pair a supplier has
+ * submitted stock for. Material E2 — the stock simulation lists the same pairs.
+ */
+export function assignments(): { supplierId: string; materialCode: string }[] {
   const pairs = new Map<string, { supplierId: string; materialCode: string }>();
   for (const a of SUPPLY_ASSIGNMENTS) pairs.set(`${a.supplierId}|${a.materialCode}`, a);
   for (const d of inventoryDeclarationStore.all()) {
@@ -119,6 +122,13 @@ function assignments(): { supplierId: string; materialCode: string }[] {
   }
   return [...pairs.values()];
 }
+
+/**
+ * Material B3 — the supplier × material pairs the weekly update is judged on:
+ * the inventory rows, so the compliance measure counts the materials the stock
+ * page shows (MR-2 BR-02).
+ */
+export const stockUpdateAssignments = (): { supplierId: string; materialCode: string }[] => assignments();
 
 const planningEstimate = (supplierId: string, materialCode: string): number | null =>
   PLANNING_DAILY_DEMAND[`${supplierId}|${materialCode}`] ?? null;
@@ -193,6 +203,8 @@ export function activeAlertConditions(nowIso: string = sdcClock.now()): AlertCon
     nowIso,
     // REQ-E08-05 BR-01 — commitments below forecast beyond tolerance (REQ-E06-03).
     commitmentAlertSubjects(allCommitmentLines()),
+    // MR-6 BR-13 (AR-13) — confirmed call-offs the supplier's stock must cover.
+    callOffCoverSubjects(callOffViews(callOffStore.all(), asnStore.all(), goodsReceiptStore.all(), nowIso)),
   );
 }
 

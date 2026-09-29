@@ -473,34 +473,83 @@ export type StockTemplateField =
   | 'manufacturingDate'
   | 'expiryDate';
 
-/** The fixed template, in column order (BR-06). Headers are matched in EN or ID. */
+/**
+ * Whether a template column must be filled (MR-4, MAT-D4 owner ruling 2026-09-29):
+ * - `required`: always.
+ * - `requiredWhenInProduction`: only when the in-production quantity (E) is above 0.
+ * - `optional`: may be left blank; its header carries " (optional)" / " (opsional)".
+ */
+export type StockFieldPresence = 'required' | 'requiredWhenInProduction' | 'optional';
+
+/**
+ * The fixed template, in column order (BR-06). Headers are matched in EN or ID.
+ * MAT-D4 — E (in-production quantity) is required and 0 is allowed, so "none"
+ * can be told from "not reported"; F is required when E > 0; D stays optional.
+ */
 export const STOCK_TEMPLATE_FIELDS: readonly {
   readonly field: StockTemplateField;
   readonly en: string;
   readonly id: string;
-  readonly required: boolean;
+  readonly presence: StockFieldPresence;
 }[] = [
-  { field: 'materialCode', en: 'Material code', id: 'Kode material', required: true },
-  { field: 'soh', en: 'Stock on hand', id: 'Stok tersedia', required: true },
-  { field: 'unit', en: 'Unit', id: 'Satuan', required: true },
-  { field: 'supplierRop', en: 'Supplier reorder point', id: 'Titik pemesanan ulang pemasok', required: false },
-  { field: 'inProductionQty', en: 'In-production quantity', id: 'Kuantitas dalam produksi', required: false },
+  { field: 'materialCode', en: 'Material code', id: 'Kode material', presence: 'required' },
+  { field: 'soh', en: 'Stock on hand', id: 'Stok tersedia', presence: 'required' },
+  { field: 'unit', en: 'Unit', id: 'Satuan', presence: 'required' },
+  { field: 'supplierRop', en: 'Supplier reorder point', id: 'Titik pemesanan ulang pemasok', presence: 'optional' },
+  { field: 'inProductionQty', en: 'In-production quantity', id: 'Kuantitas dalam produksi', presence: 'required' },
   {
     field: 'productionCompletionDate',
     en: 'Expected production completion date (YYYY-MM-DD)',
     id: 'Perkiraan tanggal selesai produksi (YYYY-MM-DD)',
-    required: false,
+    presence: 'requiredWhenInProduction',
   },
-  { field: 'batchNumber', en: 'Batch number', id: 'Nomor batch', required: false },
-  { field: 'batchQty', en: 'Batch quantity', id: 'Kuantitas batch', required: false },
+  { field: 'batchNumber', en: 'Batch number', id: 'Nomor batch', presence: 'optional' },
+  { field: 'batchQty', en: 'Batch quantity', id: 'Kuantitas batch', presence: 'optional' },
   {
     field: 'manufacturingDate',
     en: 'Manufacturing date (YYYY-MM-DD)',
     id: 'Tanggal produksi (YYYY-MM-DD)',
-    required: false,
+    presence: 'optional',
   },
-  { field: 'expiryDate', en: 'Expiry date (YYYY-MM-DD)', id: 'Tanggal kedaluwarsa (YYYY-MM-DD)', required: false },
+  { field: 'expiryDate', en: 'Expiry date (YYYY-MM-DD)', id: 'Tanggal kedaluwarsa (YYYY-MM-DD)', presence: 'optional' },
 ];
+
+/** MR-4 BR-01 — the suffix every optional header ends with, per language. */
+export const OPTIONAL_HEADER_SUFFIX: Readonly<Record<'en' | 'id', string>> = { en: ' (optional)', id: ' (opsional)' };
+
+/** The header a freshly built template writes for a column (MR-4 BR-01). */
+export function stockTemplateHeader(f: (typeof STOCK_TEMPLATE_FIELDS)[number], language: 'en' | 'id'): string {
+  return f.presence === 'optional' ? `${f[language]}${OPTIONAL_HEADER_SUFFIX[language]}` : f[language];
+}
+
+/**
+ * MAT-D4 — the ONE check of the production pair, read by the template
+ * validator, the manual form and the declare/record verbs
+ * (`INV_DECLARE_DETAIL_VALID`): E must be given (0 allowed); F must be given
+ * when E > 0; F, when given, is a `YYYY-MM-DD` day. Null when the pair is fine.
+ *
+ * Owner ruling 2026-09-29 (C1b): the `api` channel is EXEMPT from the two
+ * "must be given" parts — a supplier ERP that does not send in-production is
+ * accepted and the figure is left unset. A date it does send must still be a day.
+ */
+export function productionProblem(
+  inProductionQty: number | null,
+  productionCompletionDate: string,
+  channel: StockChannel,
+): {
+  readonly reason: 'missingField' | 'productionDateMissing' | 'invalidDate';
+  readonly field: 'inProductionQty' | 'productionCompletionDate';
+} | null {
+  const required = channel !== 'api';
+  if (required && inProductionQty === null) return { reason: 'missingField', field: 'inProductionQty' };
+  if (productionCompletionDate !== '' && !isIsoDay(productionCompletionDate)) {
+    return { reason: 'invalidDate', field: 'productionCompletionDate' };
+  }
+  if (required && inProductionQty !== null && inProductionQty > 0 && productionCompletionDate === '') {
+    return { reason: 'productionDateMissing', field: 'productionCompletionDate' };
+  }
+  return null;
+}
 
 // ── Batch dates (REQ-E08-02 BR-06, BL-60) ────────────────────────────────────
 
@@ -527,9 +576,15 @@ export function batchDatesProblem(
   return null;
 }
 
-const normHeader = (h: string) => h.toLowerCase().replace(/[^a-z0-9]+/g, '');
+/** MR-4 BR-02 — the optional suffix is dropped before matching, so older files still upload. */
+const normHeader = (h: string) =>
+  h
+    .trim()
+    .replace(/\s*\((optional|opsional)\)\s*$/i, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '');
 
-/** The template field a raw header names, or null. */
+/** The template field a raw header names (with or without the optional suffix), or null. */
 export function templateFieldFor(header: string): StockTemplateField | null {
   const n = normHeader(header);
   const hit = STOCK_TEMPLATE_FIELDS.find((f) => normHeader(f.en) === n || normHeader(f.id) === n);
@@ -542,7 +597,7 @@ export function stockTemplateCsv(
   language: 'en' | 'id',
 ): string {
   const quote = (v: string) => (/[",\n;]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v);
-  const header = STOCK_TEMPLATE_FIELDS.map((f) => quote(f[language])).join(',');
+  const header = STOCK_TEMPLATE_FIELDS.map((f) => quote(stockTemplateHeader(f, language))).join(',');
   const rows = materials.map((m) =>
     STOCK_TEMPLATE_FIELDS.map((f) => (f.field === 'materialCode' ? m.materialCode : f.field === 'unit' ? m.uom : '')).join(','),
   );
@@ -603,7 +658,8 @@ export type StockRowRefusal =
   | 'manufacturedAfterExpiry'
   | 'manufacturedInFuture'
   | 'batchTotal'
-  | 'conflictingRows';
+  | 'conflictingRows'
+  | 'productionDateMissing';
 
 export interface RefusedStockRow {
   /** 1-based data row number as the supplier sees it (header is row 1, so data starts at 2). */
@@ -723,8 +779,10 @@ export function validateStockRows(
     }
     if (failed) continue;
     const completion = first.productionCompletionDate ?? '';
-    if (completion !== '' && !isIsoDay(completion)) {
-      refuseAll('invalidDate', 'productionCompletionDate');
+    // MAT-D4 — E required (0 allowed); F required when E > 0.
+    const production = productionProblem(numbers.inProductionQty ?? null, completion, 'template');
+    if (production) {
+      refuseAll(production.reason, production.field);
       continue;
     }
     // Batches: every row that names a batch number or a batch quantity.
@@ -786,6 +844,16 @@ export function validateStockRows(
   }
   refused.sort((a, b) => a.row - b.row);
   return { accepted, refused };
+}
+
+/**
+ * The channel a declare/record submission is stored under (REQ-E08-02 BR-08):
+ * a PTI (buyer) recording is ALWAYS `pti`, whatever the payload says; a
+ * supplier's own submission is `template` when it says so, else `manual`.
+ * Read by the target that stores it and by the hook that checks it.
+ */
+export function submissionChannel(byBuyer: boolean, requested: unknown): StockChannel {
+  return byBuyer ? 'pti' : requested === 'template' ? 'template' : 'manual';
 }
 
 /** The channel label key suffix for a stock figure (REQ-E08-02 BR-08: "Entered by PTI"). */

@@ -61,6 +61,8 @@ import { documentRequestsRefusal } from '../../services/transitions/rfxDocumentR
 import type { DocumentRequest, RfiEvent, RfiQuestion, RfxCustomSection } from '../../services/sourcing/types';
 import DocumentRequestsEditor, { DocumentRequestsSummary } from './DocumentRequestsEditor';
 import RfxInviteeStep from './RfxInviteeStep';
+import { useSourcingTypeMap } from './eligibilityDisplay';
+import { mappedSourcingType } from '../../services/sourcing/sourcingType';
 import RfxQuestionEditor from './RfxQuestionEditor';
 import RfxSaveTemplate from './RfxSaveTemplate';
 import RfxStartFrom, { type StartOption } from './RfxStartFrom';
@@ -154,6 +156,15 @@ const RfiCreateWizard: React.FC<RfiCreateWizardProps> = ({
   const [storeVersion, setStoreVersion] = useState(0);
 
   const family = rfxCategoryFamily(draft.family);
+  // Material G2 (MR-10 BR-06) — the type comes from the category (and the
+  // purchasing group when one is set); the buyer never types it.
+  const sourcingMap = useSourcingTypeMap();
+  const sourcingType = family
+    ? mappedSourcingType(
+        { kind: 'rfi', materialCategory: family.supplierCategory, ...(draft.purchasingGroup ? { purchasingGroup: draft.purchasingGroup } : {}) },
+        sourcingMap,
+      )
+    : undefined;
   const template = family?.templateId ? rfiTemplate(family.templateId) : undefined;
 
   const saved = useMemo(() => rfiTemplateStore.readState(), [storeVersion]);
@@ -446,6 +457,7 @@ const RfiCreateWizard: React.FC<RfiCreateWizardProps> = ({
           selected={draft.invitedSupplierIds}
           onToggle={toggleSupplier}
           testIdPrefix="rfi-new"
+          {...(sourcingType ? { sourcingType } : {})}
         />
       ),
     },

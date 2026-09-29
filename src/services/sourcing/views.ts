@@ -28,8 +28,10 @@ import type {
   RfpResponse,
   RfpTermAnswer,
   RfqAwardRecord,
+  ComplianceAtAward,
 } from './types';
 import type { GateCriterion } from './complianceGate';
+import type { BiddingEligibility } from './sourcingType';
 
 /**
  * CR-23 — one supplier's compliance-gate result on one sourcing event: every
@@ -40,6 +42,11 @@ export interface RfqSupplierGateView {
   readonly supplierId: string;
   readonly passes: boolean;
   readonly failed: readonly GateCriterion[];
+  /**
+   * Material G2 (MR-10 BR-07) — the supplier against the event's sourcing
+   * type on this date. Separate from CR-23: it never makes `passes` false.
+   */
+  readonly eligibility?: BiddingEligibility;
 }
 
 /** What one invitee has done with its invitation. */
@@ -59,6 +66,8 @@ export interface RfxInviteeView {
   readonly confidentialityAcceptedAt: string | null;
   /** When this invitee accepted the RFP's T&C document; null = not (yet). */
   readonly termsAcceptedAt: string | null;
+  /** Material G2 (MR-10 BR-07) — the invitee against the event's sourcing type today. */
+  readonly eligibility?: BiddingEligibility;
 }
 
 export interface RfiResponseView extends RfiResponse {
@@ -239,6 +248,8 @@ export interface RfpAwardView {
   readonly notAwardedSupplierIds: readonly string[];
   /** NR-2 BR-06 — why. The buyer's read only. */
   readonly reason?: string;
+  /** Material B4 (MR-2 BR-06, AC-05) — compliance at award; a supplier reads only its own row. */
+  readonly complianceAtAward?: readonly ComplianceAtAward[];
   /** DERIVED from the appended cancellation and SAP marking (AR-08). */
   readonly status: AwardStatus;
   /** When the award was withdrawn; the date a supplier is shown. */

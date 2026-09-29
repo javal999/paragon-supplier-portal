@@ -147,6 +147,12 @@ const LANE_BUNDLES = Object.freeze({
       // corrects awards without making them is expressible without a new role
       // (D-5).
       'rfq:award-cancel', 'rfq:award-sap',
+      // Material G1 · owner ruling 2026-09-29 — Procurement and Quality set the
+      // qualification lists together (MAT-D15), so both lanes hold the atom.
+      'qualification:manage',
+      // Material G2 · MR-10 BR-06 — Procurement maps each sourcing category
+      // and purchasing group to Direct or Indirect once. No supplier lane.
+      'sourcingtype:manage',
       'quotation:review',
       // RFx spec 2026-09-21 — answering a supplier's clarification question,
       // privately or published to every invitee. The person running the event
@@ -306,6 +312,12 @@ const LANE_BUNDLES = Object.freeze({
       // it sits beside the other governance acts and `admin` derives it.
       // `buyer_all` keeps it on the `setting:set` precedent, pending BL-70.
       'supplier:set-update-mode',
+      // ── Material G1 · THE QUALIFICATION LISTS (MR-10 BR-04, MAT-D15) ──────
+      // Which documents make a vendor Approved or Preferred decides who may bid
+      // on which events. No supplier lane (it would pick the documents it is
+      // judged by). Owner ruling 2026-09-29: Procurement and Quality set the
+      // lists together, so `procurement` holds it too; `admin` derives it.
+      'qualification:manage',
       // ── Material C4 · THE MRP CONTROLLER LIST (MR-5 BR-02, ADM) ────────────
       // Which name a supplier is told to contact for a material, and which hub
       // users stand behind a planner code. No supplier lane (it would choose
@@ -351,6 +363,9 @@ const LANE_BUNDLES = Object.freeze({
       // Material C2 (MR-3 BR-02, BR-06) — Material Planning approves or rejects
       // a supplier's trade name, and loads approved names in bulk.
       'materialname:review',
+      // Material E1 (MR-7 BR-08) — the planner fills a figure the supplier has
+      // not given, for the stock simulation only.
+      'inventory:simulate',
     ]),
     // Raising and revising a requisition — split from approving one, which is
     // the segregation `pr:approve` living in `procurement` expresses.

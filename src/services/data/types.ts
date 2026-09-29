@@ -26,6 +26,7 @@ import type {
 // fulfils it import ONE declaration rather than each holding its own copy.
 import type { InviteeCandidate, InviteeFilter } from '../transitions/rfxRules';
 import type { FsRow } from '../transitions/fixedStockReconcile';
+import type { SimulationRefusal, StockSimulation } from '../transitions/simulateSupplierStock';
 import type { RfqClarificationView, RfqEngagementView } from '../sourcing/rfqResponse';
 import type {
   AwardView,
@@ -66,6 +67,7 @@ import type {
   ReleaseCommandResult,
 } from '../delivery/views';
 import type { SupplierReliability } from '../engine/reliability';
+import type { UpdateCompliance } from '../transitions/updateCompliance';
 import type { MaterialPlan, MaterialRequirementRun } from '../engine/requirement';
 import type { MaterialSafetyStock, SafetyStockChange, SafetyStockRun } from '../engine/safetyStock';
 import type { MaterialOrderPlan, OrderPlanRun, WarehousePlan } from '../engine/orderSizing';
@@ -954,6 +956,62 @@ export interface WarehouseRescheduleView extends WarehouseReschedule {
 }
 
 /**
+ * Material E1 (MR-7 BR-08) — which figure a planner input stands in for:
+ * the supplier's SOH, its in-production quantity (with the completion date in
+ * `date`), or a to-distributor leg (with its ETA in `date`).
+ */
+export type SimulationOverrideField = 'soh' | 'inProduction' | 'toDistributor';
+
+/**
+ * Material E1 (MR-7 BR-06, BR-08; plan AD-1) — a planner's input to the stock
+ * simulation, APPENDED (MAT-R3). It applies to the simulation only, until the
+ * supplier's next stock record, and never changes the stock record or counts
+ * for update compliance (MR-2). The latest input per field is the one in force.
+ */
+export interface SimulationOverride {
+  readonly id: string;
+  readonly supplierId: string;
+  readonly materialCode: string;
+  readonly field: SimulationOverrideField;
+  /** A quantity in the material's canonical unit. */
+  readonly value: number;
+  /** `YYYY-MM-DD`: the completion date (inProduction) or ETA (toDistributor). */
+  readonly date?: string;
+  readonly enteredBy: ActorAttribution;
+  readonly enteredAt: string;
+}
+
+/**
+ * Material E2 (MR-7 section e) — one supplier × material row of the stock
+ * simulation page at a check date: E1's `simulateSupplierStock` result, or its
+ * refusal when the check date is before the latest stock record, with what
+ * the page needs to name, filter and act on the row. Nothing here is stored
+ * (AD-1). PTI only: a supplier scope reads an empty page.
+ */
+export interface StockSimulationRow {
+  readonly supplierId: string;
+  readonly supplierName: string;
+  readonly materialCode: string;
+  readonly materialLabel: string;
+  readonly uom: string;
+  /** The material's planning group (MR-8), null when unknown. */
+  readonly planningGroupId: string | null;
+  /** MR-7 BR-09 — a distributor has a to-distributor term; a manufacturer has none. */
+  readonly distributor: boolean;
+  /** Material C4 — the material's MRP controller, projected at read (never stored). */
+  readonly mrpController?: MrpControllerRef;
+  /**
+   * A labelled sample row (the MR-7 section 9g worked example), computed on
+   * its own sample inputs so a reviewer can see the example on screen.
+   */
+  readonly sample: boolean;
+  /** The check date's simulation; null when refused. */
+  readonly simulation: StockSimulation | null;
+  /** Edge case 6 — why there is no simulation (the check date is before the latest update). */
+  readonly refusal: SimulationRefusal | null;
+}
+
+/**
  * REQ-E14-13 BR-07 / ENG-D16 — the Material Planner's record that a PO-line
  * proposal was taken to SAP (the Hub does not edit a PO). A ledger: the latest
  * mark per line is the one in force.
@@ -1166,7 +1224,9 @@ export type InventoryAlertRule =
   /** REQ-E08-05 BR-01 — committed quantity below forecast beyond tolerance (REQ-E06-03). */
   | 'commitmentBelowForecast'
   /** CR-24 / BR-02 — no supplier lead time on record; the risk class fell back to CR-02. */
-  | 'leadTimeMissing';
+  | 'leadTimeMissing'
+  /** MR-6 BR-13 — a confirmed call-off due within the lead time is larger than declared SOH + production. */
+  | 'callOffNotCovered';
 
 export type RiskClass = 'high' | 'medium' | 'low';
 
@@ -1436,6 +1496,14 @@ export interface SupplierDocument {
    * D-ID-3 — no typed-name attribution until session-resolved identity exists.
    */
   rejectedBy?: ActorAttribution;
+  /**
+   * Material G1 (MR-10, plan AD-2) — when compliance verified the document
+   * (`t_supplierdoc_verify`). Store-assigned from the hub clock, never a payload
+   * field. The qualification history replays from it: a document counts toward
+   * a level from this instant. Absent on every seeded row, which predates the
+   * verb; those count from their `issuedDate`.
+   */
+  verifiedAt?: string;
   /**
    * The certificate details the supplier stated, present only on a DECLARED
    * document. See `CertificateDeclaration` — the whole object is optional and
@@ -1717,12 +1785,54 @@ export interface ASN {
   /** The call-off this ASN ships (REQ-E09-03 BR-06). Absent for a PO-level ASN. */
   callOffId?: string;
   /**
+   * MR-6 BR-10 — the supplier marks this ASN as the last one for its call-off.
+   * Only then is shipping less than the agreed quantity a warning.
+   */
+  callOffFinal?: boolean;
+  /**
+   * MR-6 BR-12 — the call-off warnings shown at submit, kept for the record.
+   * The planner's "Mismatch" marker is recomputed on read (edge case 6); this
+   * copy is never the current comparison.
+   */
+  callOffWarnings?: readonly CallOffWarning[];
+  /**
    * MR-6 BR-08 / BR-09 — the shelf-life exception record, APPENDED (MAT-R3):
    * each request, each decision and each ETA change that reopened it is a new
    * entry; nothing earlier is edited. Whether an exception stands is derived
    * from the entries (`shelfLifeExceptionOf`). Absent until the first request.
    */
   shelfLifeException?: AsnShelfLifeEvent[];
+}
+
+/** MR-6 BR-10 / BR-11 — how an ASN differs from its call-off. */
+export type CallOffWarningKind = 'qtyOver' | 'qtyUnder' | 'early' | 'late' | 'material' | 'unlinked';
+
+/** The figures behind one call-off warning (only the ones its kind needs). */
+export interface CallOffWarningDetail {
+  /** The call-off the ASN ships. */
+  readonly callOffNumber?: string;
+  /** qtyOver / qtyUnder — the call-off's shipped total (earlier ASNs plus this one) and agreed total. */
+  readonly shipped?: number;
+  readonly agreed?: number;
+  /** qtyOver / qtyUnder — the difference as a percentage of the agreed total. */
+  readonly pct?: number;
+  /** qtyOver — `callOff.overPct`; early — `callOff.earlyAllowanceDays`. */
+  readonly limit?: number;
+  /** early / late — the ASN's ETA and the agreed date it was compared with. */
+  readonly eta?: string;
+  readonly agreedDate?: string;
+  readonly days?: number;
+  /** material / unlinked — the ASN line's material. */
+  readonly materialCode?: string;
+  /** material — the call-off's material. */
+  readonly expectedMaterial?: string;
+  /** unlinked — the open confirmed call-offs on the PO line. */
+  readonly callOffNumbers?: readonly string[];
+}
+
+export interface CallOffWarning {
+  readonly kind: CallOffWarningKind;
+  readonly detail: CallOffWarningDetail;
 }
 
 /** MR-6 BR-08 — one line an exception covers, as it stood when it was asked for. */
@@ -1953,8 +2063,14 @@ export interface SupplierScorecard {
    * calculated measures for the period the page is showing
    * (`services/data/performanceRules.ts`). `id` is the SUPPLIER MASTER id, which
    * is what makes that join real rather than by-name.
+   *
+   * Material G1 (MR-10 BR-09) — the free-text relationship status that stood
+   * here ("Preferred Supplier" / "Approved Supplier") is retired. The vendor's
+   * standing is its computed qualification level, PROJECTED AT READ from its
+   * documents (`getSupplierScorecards`) and absent on the fixture row. The
+   * improvement-plan state it also carried is `impPlan`.
    */
-  status: string;
+  qualification?: QualificationLevel;
   kpis: ScorecardKpi[];
   radar: ScorecardRadarAxis[];
   otifTrend: number[];
@@ -2498,6 +2614,15 @@ export interface InventoryFilter {
   materialCode?: string;
 }
 
+/**
+ * Material E2 (MR-7 step 2) — the stock simulation's narrowing in the read.
+ * The material search and the PIC filter run on the page over the rows.
+ */
+export interface StockSimulationFilter {
+  supplierId?: string;
+  planningGroupId?: string;
+}
+
 export interface RFQFilter {
   status?: RFQStatus | RFQStatus[];
   category?: RFQCategory | RFQCategory[];
@@ -2760,6 +2885,93 @@ export interface SupplierStockUpdateMode {
   readonly history: readonly SupplierUpdateModeChange[];
 }
 
+// ─── Vendor qualification — computed from documents (Material G1) ──────────
+
+/**
+ * MR-10 BR-01 — a vendor's qualification level. Exactly one per vendor,
+ * COMPUTED from its valid documents at read (BR-03), never stored and never
+ * set by hand. Separate from the lifecycle `SupplierStatus` (BR-02).
+ */
+export type QualificationLevel = 'registered' | 'approved' | 'preferred';
+
+/** The two levels a rule list is set for; Registered is "below Approved". */
+export type QualificationRuleLevel = 'approved' | 'preferred';
+
+/**
+ * One document a level requires (BR-04). Matched by `category`, and by the
+ * declared `certType` too when the rule names one (plan AR-18). `label` is the
+ * requirement as Procurement and Quality wrote it: data, not UI copy.
+ */
+export interface QualificationRequiredDoc {
+  readonly category: SupplierDocumentCategory;
+  readonly certType?: CertType;
+  readonly label: string;
+}
+
+/** The documents required for one level (BR-04). */
+export interface QualificationRule {
+  readonly level: QualificationRuleLevel;
+  readonly requiredDocs: readonly QualificationRequiredDoc[];
+  /**
+   * `true` on the seeded starting lists (MAT-D15): shown everywhere with
+   * "Placeholder, awaiting Procurement and Quality" until a person sets the
+   * list through `t_qualification_rule_set`, which records `false`.
+   */
+  readonly placeholder: boolean;
+}
+
+/** One change of a level's list, as recorded. Never edited (MAT-R3). */
+export interface QualificationRuleChange extends QualificationRule {
+  /** Store-assigned from the hub clock, never a payload field. */
+  readonly setAt: string;
+  /** From the session (`QueryScope.actor`), never from the form. */
+  readonly setBy: ActorAttribution;
+}
+
+/** A counted document that would drop the level when it expires (AC-06). */
+export interface QualificationExpiringDoc {
+  readonly documentId: string;
+  readonly name: string;
+  readonly category: SupplierDocumentCategory;
+  readonly expiryDate: string;
+}
+
+/** `qualificationFor` — a vendor's level on a date and what it still lacks. */
+export interface VendorQualificationStatus {
+  readonly level: QualificationLevel;
+  /** The required documents with no counting document, per level. */
+  readonly missingFor: {
+    readonly approved: readonly QualificationRequiredDoc[];
+    readonly preferred: readonly QualificationRequiredDoc[];
+  };
+  /** Counted documents inside the expiry window that hold up the level. */
+  readonly expiringSoon: readonly QualificationExpiringDoc[];
+}
+
+/**
+ * One level change, REPLAYED from the documents and the rule lists (plan
+ * AD-2) — never written on read. `causeDocumentId` names the document whose
+ * verification or expiry moved the level; it is null when a change of the rule
+ * list moved it, and `causeRuleLevel` then names the list.
+ */
+export interface QualificationChange {
+  readonly at: string;
+  readonly from: QualificationLevel;
+  readonly to: QualificationLevel;
+  readonly causeDocumentId: string | null;
+  readonly causeRuleLevel?: QualificationRuleLevel;
+}
+
+/** A vendor's qualification as the hub computes it, with its history. */
+export interface VendorQualification extends VendorQualificationStatus {
+  readonly supplierId: string;
+  readonly supplierName: string;
+  /** Oldest first. */
+  readonly history: readonly QualificationChange[];
+  /** True while any list the level is computed from is still a placeholder. */
+  readonly placeholderRules: boolean;
+}
+
 // ─── Planning groups — capacity groups under SAP material groups (Material C5) ─
 
 /**
@@ -2833,6 +3045,18 @@ export interface ISupplierService {
    * history. Buyer: every supplier. Supplier: its own row only.
    */
   getStockUpdateModes(scope: QueryScope): Promise<Page<SupplierStockUpdateMode>>;
+  /**
+   * Material B3 (MR-2 BR-01 to BR-03) — each supplier's weekly update
+   * compliance over the rolling 13 update cycles. Buyer: every supplier.
+   * Supplier: its own row only (MAT-R4).
+   */
+  getUpdateCompliance(scope: QueryScope): Promise<Page<UpdateCompliance>>;
+  /**
+   * Material G1 (MR-10 BR-01 to BR-03) — each vendor's qualification level,
+   * the documents it still needs, the documents about to drop it, and its
+   * replayed history. Buyer: every supplier. Supplier: its own row only.
+   */
+  getVendorQualifications(scope: QueryScope): Promise<Page<VendorQualification>>;
 }
 
 export interface IProcurementService {
@@ -2858,6 +3082,17 @@ export interface IProcurementService {
    * to those materials, with no change history.
    */
   getPlanningGroups(scope: QueryScope): Promise<Page<PlanningGroupView>>;
+  /**
+   * Material E2 (MR-7 BR-01 to BR-09) — the stock simulation per supplier ×
+   * material at a check date (`YYYY-MM-DD`; today when omitted): the latest
+   * stock record plus what happened since, with the planner's inputs. PTI
+   * only: a supplier scope reads an empty page (it is PTI's estimate).
+   */
+  getStockSimulation(
+    scope: QueryScope,
+    checkDate?: string,
+    filter?: StockSimulationFilter,
+  ): Promise<Page<StockSimulationRow>>;
   /** Inventory and capacity alerts. A supplier sees its own supplier-side rules. */
   getInventoryAlerts(scope: QueryScope): Promise<Page<InventoryAlert>>;
 

@@ -261,6 +261,32 @@ export const LOOSE_END_CENSUS: readonly CensusEntry[] = Object.freeze([
       'is statePreserving, so it is neither an entry nor an exit, and the state is correctly declared ' +
       'terminal. The mode in force is derived at read from the latest overlay row and is never a state.',
   },
+  // ── qualificationRule (Material G1) ────────────────────────────────────────
+  {
+    entity: 'qualificationRule',
+    kind: 'initial-integrity',
+    subject: 'Defined',
+    reason: 'substrate-only',
+    note:
+      'THE SAME DEGENERATE SINGLE-STATE LEDGER SHAPE AS THE 3PL LIST: the entity IS one qualification ' +
+      'level (approved or preferred), and both lists exist from the start as placeholder lists — there is ' +
+      'no creation verb to be an entry. The recording verb is statePreserving, so it is neither an entry ' +
+      'nor an exit, and the state is correctly declared terminal. The list in force is derived at read ' +
+      'from the latest change and is never a state; a vendor\'s level is computed and is never a state either.',
+  },
+  // ── sourcingType (Material G2) ─────────────────────────────────────────────
+  {
+    entity: 'sourcingType',
+    kind: 'initial-integrity',
+    subject: 'Defined',
+    reason: 'substrate-only',
+    note:
+      'THE SAME DEGENERATE SINGLE-STATE LEDGER SHAPE AS THE QUALIFICATION LISTS: the entity IS one key of ' +
+      'the sourcing type map (a category or a purchasing group), and every key exists from the start as ' +
+      'Direct — there is no creation verb to be an entry. The recording verb is statePreserving, so it is ' +
+      'neither an entry nor an exit. The type in force is derived at read from the latest change; an ' +
+      'event stores its own type at publish.',
+  },
   // ── workingCalendar (BL-50) ────────────────────────────────────────────────
   {
     entity: 'workingCalendar',

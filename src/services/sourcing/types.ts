@@ -15,6 +15,7 @@
 import type { BidCurrency } from '../../lib/currencyPolicy';
 import type { AttachmentMeta } from '../attachments/sessionAttachments';
 import type { ActorAttribution } from '../../lib/enforcement';
+import type { QualificationWarning, SourcingType } from './sourcingType';
 
 /**
  * The question kinds an RFI (or an RFP's questions section) may ask.
@@ -273,6 +274,18 @@ export interface RfiEvent {
   readonly revisions?: readonly DraftRevision[];
   /** NR-1 BR-02 — the documents the buyer asks every supplier for. */
   readonly documentRequests?: readonly DocumentRequest[];
+  /**
+   * Material G2 (MR-10 BR-06) — Direct or Indirect, from the category's
+   * mapping, STORED AT PUBLISH and fixed after. Absent on a Draft (it reads
+   * the map) and on an event published before G2 (it reads Direct, edge case 4).
+   */
+  readonly sourcingType?: SourcingType;
+  /**
+   * Material G2 — owner ruling 2026-09-29: the invitees published below the
+   * level while the list for that level was a placeholder. Appended at
+   * publish; never edited.
+   */
+  readonly qualificationWarnings?: readonly QualificationWarning[];
 }
 
 export type RfxResponseStatus = 'Draft' | 'Submitted';
@@ -452,6 +465,18 @@ export interface RfpEvent {
   readonly revisions?: readonly DraftRevision[];
   /** NR-1 BR-02 — the documents the buyer asks every supplier for. */
   readonly documentRequests?: readonly DocumentRequest[];
+  /**
+   * Material G2 (MR-10 BR-06) — Direct or Indirect, from the category's
+   * mapping, STORED AT PUBLISH and fixed after. Absent on a Draft (it reads
+   * the map) and on an event published before G2 (it reads Direct, edge case 4).
+   */
+  readonly sourcingType?: SourcingType;
+  /**
+   * Material G2 — owner ruling 2026-09-29: the invitees published below the
+   * level while the list for that level was a placeholder. Appended at
+   * publish; never edited.
+   */
+  readonly qualificationWarnings?: readonly QualificationWarning[];
 }
 
 /** REQ-E03-04 — one supplier's proposal. A Draft is invisible to PTI. */
@@ -657,9 +682,17 @@ export interface RfpAwardRecord {
    * award; the final award names every responder no award of the RFP named.
    */
   readonly notAwardedSupplierIds: readonly string[];
+  /** Material B4 (MR-2 BR-06, AC-05) — see `ComplianceAtAward`. */
+  readonly complianceAtAward?: readonly ComplianceAtAward[];
   /** An RFP award is not judged against a best-scored quote (NR-2 BR-06). */
   readonly bestScoredQuotationId?: never;
   readonly bestScoredByItem?: never;
+  /**
+   * Material G2 — owner ruling 2026-09-29: the vendors awarded below the level
+   * the event's type needs while that level's list was a placeholder. The
+   * award needed a reason for them; the record keeps the warning.
+   */
+  readonly qualificationWarnings?: readonly QualificationWarning[];
 }
 
 /** REQ-E03-05 BR-09 — the hub's record of an award on an RFQ. */
@@ -687,6 +720,24 @@ export interface RfqAwardRecord {
    * named.
    */
   readonly notAwardedSupplierIds: readonly string[];
+  /**
+   * Material G2 — owner ruling 2026-09-29: the vendors awarded below the level
+   * the event's type needs while that level's list was a placeholder. The
+   * award needed a reason for them; the record keeps the warning.
+   */
+  readonly qualificationWarnings?: readonly QualificationWarning[];
+  /** Material B4 (MR-2 BR-06, AC-05) — see `ComplianceAtAward`. */
+  readonly complianceAtAward?: readonly ComplianceAtAward[];
+}
+
+/**
+ * Material B4 (MR-2 BR-06, AC-05) — the update compliance an awarded supplier
+ * had when the award was recorded, kept as shown then (`null` = "No history").
+ * One row per awarded supplier. Absent on awards recorded before B4.
+ */
+export interface ComplianceAtAward {
+  readonly supplierId: string;
+  readonly pct: number | null;
 }
 
 /**

@@ -29,7 +29,6 @@ import { PERSONA_SYSTEM_ROLES, SYSTEM_ROLES, rolesHolding } from '../../transiti
 import { HUB_SETTINGS, SEEDED_STALE_OVERRIDES, staleOverrideKey } from '../../transitions/hubSettings';
 import {
   HUB_SETTINGS_KEY,
-  hubSetting,
   hubSettingsStore,
   settingValue,
   stalePeriodFor,
@@ -40,8 +39,16 @@ import { receiptQtyOutcome, shelfLifeLineView } from '../../transitions/fulfilme
 import { commitmentDueAt, gapColour, toleranceOutcome } from '../../transitions/forecastRules';
 import { otifPassesGate } from '../../sourcing/complianceGate';
 import { coverage, riskFor, stockFreshness, supplyBand } from '../../transitions/inventoryRules';
-import { staleApiHours, updateCycleSettings, updateSlaFor } from '../../transitions/inventoryConfig';
-import { staleAtFor, updateCycleFor } from '../../transitions/updateCycle';
+import {
+  complianceThresholds,
+  staleApiHours,
+  stockSyncIntervalHours,
+  updateCycleSettings,
+  updateSlaFor,
+} from '../../transitions/inventoryConfig';
+import { compliancePill } from '../../transitions/updateCompliance';
+import { assessmentScore } from '../performanceRules';
+import { nextSyncAt, staleAtFor, updateCycleFor } from '../../transitions/updateCycle';
 import { hubWorkingCalendar } from '../../transitions/workingCalendarStore';
 import { coverageBands } from '../../sdc/consolidation';
 import {
@@ -309,9 +316,36 @@ describe('BL32-READ · every reader of a value reads it through its accessor, at
       ],
       updateSlaFor: ['src/services/transitions/inventoryConfig.ts', 'src/services/transitions/inventoryRules.ts'],
       // Material B1 — MR-1 BR-03 and BR-05, read when the positions are built.
-      updateCycleSettings: ['src/services/transitions/inventoryConfig.ts', 'src/services/transitions/inventoryRules.ts'],
-      staleApiHours: ['src/services/transitions/inventoryConfig.ts', 'src/services/transitions/inventoryRules.ts'],
+      // Material B2 and B3 — the weekly-update panel and the compliance read model read the cutoff.
+      updateCycleSettings: [
+        'src/pages-v2/inventory/WeeklyUpdatePanel.tsx',
+        'src/services/data/mock/updateComplianceReadModel.ts',
+        'src/services/transitions/inventoryConfig.ts',
+        'src/services/transitions/inventoryRules.ts',
+      ],
+      // Material B2 — the admin row names the API hours.
+      staleApiHours: [
+        'src/pages-v2/admin/AdminRuleValues.tsx',
+        'src/services/transitions/inventoryConfig.ts',
+        'src/services/transitions/inventoryRules.ts',
+      ],
+      // Material B2 — MR-1 BR-01, the API panel's "Next sync".
+      stockSyncIntervalHours: ['src/pages-v2/inventory/WeeklyUpdatePanel.tsx', 'src/services/transitions/inventoryConfig.ts'],
       staleOverrideDaysFor: ['src/services/transitions/inventoryConfig.ts', 'src/services/transitions/inventoryRules.ts'],
+      // Material B3 — MR-2 BR-05, read by the score at call time; the card states it.
+      complianceScoreWeight: [
+        'src/pages-v2/performance/UpdateComplianceCard.tsx',
+        'src/services/data/performanceRules.ts',
+        'src/services/transitions/inventoryConfig.ts',
+      ],
+      // Material B4 — MR-2 BR-04 and BR-06: the award pill, the reason line and
+      // the verbs' flag read the thresholds at call time.
+      complianceThresholds: [
+        'src/pages-v2/rfx/AwardPanel.tsx',
+        'src/pages-v2/rfx/ComplianceAwardPill.tsx',
+        'src/services/data/mock/updateComplianceReadModel.ts',
+        'src/services/transitions/inventoryConfig.ts',
+      ],
       // ENG-D5 / REQ-E14-04 — read by the service that runs the engine, which
       // takes them as arguments (X-01); the engine never reads the store.
       engineServiceTargets: ['src/services/data/mock/MockProcurementService.ts', 'src/services/transitions/forecastConfig.ts'],
@@ -456,30 +490,28 @@ const freshnessFlips: Record<string, Flip> = Object.fromEntries(
 );
 
 /**
- * SC Hub Material (MAT A3) — the values are in the registry before any rule
- * reads them (B1, B3, D2 and F1 do). Until then the outcome that flips is the
- * value in force, read through the same accessor the rules will call. Each
- * task that adds a reader replaces its key's row here with a rule outcome
- * (B1 did: `stale.apiHours`, `stockUpdate.cutoffDay`, `stockUpdate.cutoffTime`
- * are in `FLIPS` below).
+ * SC Hub Material (MAT A3) — the values were in the registry before any rule
+ * read them. Each task that added a reader replaced its key's placeholder row
+ * with a rule outcome (B1: `stale.apiHours`, `stockUpdate.cutoffDay`,
+ * `stockUpdate.cutoffTime`; B2: `stockSync.intervalHours`; B3:
+ * `compliance.scoreWeight`; B4: `compliance.warnPct`, `compliance.flagPct`).
  */
-const MATERIAL_FLIPS: Record<string, Flip> = Object.fromEntries(
-  (
-    [
-      ['stockSync.intervalHours', 4],
-      ['compliance.warnPct', 90],
-      ['compliance.flagPct', 50],
-      ['compliance.scoreWeight', 0.15],
-    ] as const
-  ).map(([key, to]) => {
-    const atDefault = HUB_SETTINGS.find((d) => d.key === key)!.defaultValue;
-    return [key, { to, read: () => hubSetting(key), atDefault, afterChange: to }];
-  }),
-);
-
 const FLIPS: Record<string, Flip> = {
   ...freshnessFlips,
-  ...MATERIAL_FLIPS,
+  // MR-2 BR-04 (Material B4): 85% is a plain pill at the 80% warning, amber at 90%.
+  'compliance.warnPct': {
+    to: 90,
+    read: () => compliancePill(85, complianceThresholds()),
+    atDefault: 'plain',
+    afterChange: 'amber',
+  },
+  // MR-2 BR-04 / BR-06 (Material B4): 55% is a red pill at the 60% flag, amber at 50%.
+  'compliance.flagPct': {
+    to: 50,
+    read: () => compliancePill(55, complianceThresholds()),
+    atDefault: 'red',
+    afterChange: 'amber',
+  },
   'callOff.overPct': {
     to: 10,
     read: () => checkTolerance(CALL_OFF, [{ quantity: 1070, date: CALL_OFF.needDate }]).within,
@@ -682,8 +714,24 @@ const FLIPS: Record<string, Flip> = {
     atDefault: 'stale',
     afterChange: 'current',
   },
+  // MR-1 BR-01 (Material B2): after an attempt at 10:00 UTC the next pull is
+  // due 2 hours later; at a 4-hour interval, 4 hours later.
+  'stockSync.intervalHours': {
+    to: 4,
+    read: () => nextSyncAt('2026-09-07T10:00:00.000Z', stockSyncIntervalHours()),
+    atDefault: '2026-09-07T12:00:00.000Z',
+    afterChange: '2026-09-07T14:00:00.000Z',
+  },
   // MR-1 BR-03 (MAT-D7): on Wednesday 9 Sep the cycle closes on Thursday 10 Sep;
   // with a Friday cutoff it closes on Friday 11 Sep.
+  // MR-2 BR-05 (MAT-D9, AC-03): a delivery score of 90 with 50% update
+  // compliance is 86 at weight 0.10, and 84 at 0.15.
+  'compliance.scoreWeight': {
+    to: 0.15,
+    read: () => assessmentScore(90, 90, 0, 50),
+    atDefault: 86,
+    afterChange: 84,
+  },
   'stockUpdate.cutoffDay': {
     to: 5,
     read: () => updateCycleFor('2026-09-09T03:00:00.000Z', hubWorkingCalendar(), updateCycleSettings()).cutoff,

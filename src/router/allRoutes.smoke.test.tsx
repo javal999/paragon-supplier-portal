@@ -47,6 +47,7 @@ import BuyerDeliveryAgreements from '../pages-v2/BuyerDeliveryAgreements';
 import BuyerCallOffs from '../pages-v2/BuyerCallOffs';
 import BuyerChase from '../pages-v2/BuyerChase';
 import BuyerInventory from '../pages-v2/BuyerInventory';
+import BuyerStockSimulation from '../pages-v2/BuyerStockSimulation';
 import BuyerCapacity from '../pages-v2/BuyerCapacity';
 import BuyerAlerts from '../pages-v2/BuyerAlerts';
 import BuyerSupplierAccess from '../pages-v2/BuyerSupplierAccess';
@@ -66,6 +67,8 @@ import InterfaceMonitor from '../pages-v2/InterfaceMonitor';
 import AdminWorkingCalendar from '../pages-v2/admin/AdminWorkingCalendar';
 import AdminThreePls from '../pages-v2/admin/AdminThreePls';
 import AdminSuppliers from '../pages-v2/admin/AdminSuppliers';
+import AdminQualification from '../pages-v2/admin/AdminQualification';
+import AdminSourcingTypes from '../pages-v2/admin/AdminSourcingTypes';
 import AdminPlanningGroups from '../pages-v2/admin/AdminPlanningGroups';
 import AdminMrpControllers from '../pages-v2/admin/AdminMrpControllers';
 import BuyerTradeNames from '../pages-v2/materials/BuyerTradeNames';
@@ -164,6 +167,7 @@ const ROUTES: RouteCase[] = [
   { name: 'buyer/call-offs', pattern: '/buyer/call-offs', at: '/buyer/call-offs', element: <BuyerCallOffs />, identity: BUYER },
   { name: 'buyer/chase', pattern: '/buyer/chase', at: '/buyer/chase', element: <BuyerChase />, identity: BUYER },
   { name: 'buyer/inventory', pattern: '/buyer/inventory', at: '/buyer/inventory', element: <BuyerInventory />, identity: BUYER },
+  { name: 'buyer/stock-simulation', pattern: '/buyer/stock-simulation', at: '/buyer/stock-simulation', element: <BuyerStockSimulation />, identity: BUYER },
   { name: 'buyer/capacity', pattern: '/buyer/capacity', at: '/buyer/capacity', element: <BuyerCapacity />, identity: BUYER },
   { name: 'buyer/alerts', pattern: '/buyer/alerts', at: '/buyer/alerts', element: <BuyerAlerts />, identity: BUYER },
   { name: 'buyer/supplier-access', pattern: '/buyer/supplier-access', at: '/buyer/supplier-access', element: <BuyerSupplierAccess />, identity: BUYER },
@@ -183,6 +187,8 @@ const ROUTES: RouteCase[] = [
   { name: 'buyer/admin/working-calendar', pattern: '/buyer/admin/working-calendar', at: '/buyer/admin/working-calendar', element: <AdminWorkingCalendar />, identity: BUYER },
   { name: 'buyer/admin/3pl-tracking', pattern: '/buyer/admin/3pl-tracking', at: '/buyer/admin/3pl-tracking', element: <AdminThreePls />, identity: BUYER },
   { name: 'buyer/admin/suppliers', pattern: '/buyer/admin/suppliers', at: '/buyer/admin/suppliers', element: <AdminSuppliers />, identity: BUYER },
+  { name: 'buyer/admin/qualification', pattern: '/buyer/admin/qualification', at: '/buyer/admin/qualification', element: <AdminQualification />, identity: BUYER },
+  { name: 'buyer/admin/sourcing-types', pattern: '/buyer/admin/sourcing-types', at: '/buyer/admin/sourcing-types', element: <AdminSourcingTypes />, identity: BUYER },
   { name: 'buyer/admin/planning-groups', pattern: '/buyer/admin/planning-groups', at: '/buyer/admin/planning-groups', element: <AdminPlanningGroups />, identity: BUYER },
   { name: 'buyer/admin/mrp-controllers', pattern: '/buyer/admin/mrp-controllers', at: '/buyer/admin/mrp-controllers', element: <AdminMrpControllers />, identity: BUYER },
   { name: 'buyer/materials/trade-names', pattern: '/buyer/materials/trade-names', at: '/buyer/materials/trade-names', element: <BuyerTradeNames />, identity: BUYER },

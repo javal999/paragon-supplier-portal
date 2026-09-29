@@ -10,6 +10,7 @@ import {
 } from './inventoryReadModel';
 import { stockAccessStore } from './stores/inventoryHubStores';
 import { allPlanningGroups } from './planningGroupReadModel';
+import { stockSimulationRows } from './stockSimulationReadModel';
 import { allCommitmentLines, allCoverageRows, allVersionViews, forecastSupplierName } from './forecastReadModel';
 import { allFixedStockRows } from './fixedStockReadModel';
 import { maskForSupplier } from '../../transitions/inventoryRules';
@@ -61,6 +62,7 @@ import { DECLARED_PRESENT } from '../fixturePresent';
 import { PRODUCTION_LINES, SUPPLIER_HEALTH } from './fixtures/buyerDashboard';
 import { supplierDocumentStore } from './stores/supplierDocumentStore';
 import { SUPPLIER_SCORECARDS } from './fixtures/buyerScorecard';
+import { qualificationFor } from './qualificationReadModel';
 import { purchaseRequisitionStore } from './stores/purchaseRequisitionStore';
 import { supplierApplicationStore } from './stores/supplierApplicationStore';
 import {
@@ -86,6 +88,8 @@ import type {
   StockAccessGrant,
   CapacityPlan,
   PlanningGroupView,
+  StockSimulationFilter,
+  StockSimulationRow,
   InventoryAlert,
   ForecastVersionView,
   ForecastCommitmentLine,
@@ -469,6 +473,15 @@ export class MockProcurementService implements IProcurementService {
         .map((g) => ({ ...g, materials: g.materials.filter((m) => mine.has(m)), history: [] }))
         .filter((g) => g.materials.length > 0),
     };
+  }
+
+  async getStockSimulation(
+    scope: QueryScope,
+    checkDate?: string,
+    filter?: StockSimulationFilter,
+  ): Promise<Page<StockSimulationRow>> {
+    // Material E2 (MR-7) — PTI's estimate; a supplier scope reads none.
+    return { items: stockSimulationRows(scope, checkDate, filter) };
   }
 
   async getInventoryAlerts(scope: QueryScope): Promise<Page<InventoryAlert>> {
@@ -1127,7 +1140,11 @@ export class MockProcurementService implements IProcurementService {
     scope: QueryScope,
   ): Promise<Page<SupplierScorecard>> {
     return {
-      items: scope.personaType === 'buyer' ? [...SUPPLIER_SCORECARDS] : [],
+      // Material G1 (MR-10 BR-09) — the standing shown is the computed level.
+      items:
+        scope.personaType === 'buyer'
+          ? SUPPLIER_SCORECARDS.map((s) => ({ ...s, qualification: qualificationFor(s.id).level }))
+          : [],
     };
   }
 

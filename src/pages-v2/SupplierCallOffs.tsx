@@ -51,6 +51,8 @@ import {
   useCallOffViews,
 } from './callOffs/callOffDisplay';
 import { PicCell, PicFilter, PicHeader, usePicFilter } from './materials/picDisplay';
+import MaterialSearch, { MaterialMatchReason, useMaterialMatcher } from '../components/ui-v2/MaterialSearch';
+import { searchMaterials } from '../services/transitions/matchMaterial';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SUPPLIER CALL-OFFS — REQ-E09-03 (confirmation) and REQ-E09-04 (dispatch).
@@ -102,6 +104,10 @@ const SupplierCallOffs: React.FC = () => {
   const drilledPo = drilledPoId(drill);
   // Material C4 — the PIC filter (by name: a supplier never sees the code).
   const pic = usePicFilter();
+  // Material C3 — the one material search (MR-3 BR-04); a supplier's names
+  // are its own (narrowed in the read model, MAT-R4).
+  const [search, setSearch] = useState('');
+  const matchOf = useMaterialMatcher();
 
   if (!identity.supplierId) return <NoSupplierIdentity />;
   if (isPending || drill.kind === 'pending') return <LoadingState breadcrumb={crumb} />;
@@ -123,7 +129,12 @@ const SupplierCallOffs: React.FC = () => {
   const toConfirm = rows.filter((v) => v.callOff.status === 'Awaiting Confirmation').length;
   const dueSoon = rows.filter((v) => isDueWithoutHeadsUp(v, nowIso)).length;
   const selected: CallOffView | null = rows.find((v) => v.callOff.id === selectedId) ?? null;
-  const listed = rows.filter((v) => pic.matches(v.callOff.mrpController));
+  const listed = searchMaterials(
+    search,
+    rows.filter((v) => pic.matches(v.callOff.mrpController)),
+    (v) => ({ code: v.callOff.materialCode, description: v.callOff.description, supplierId: v.callOff.supplierId }),
+    matchOf,
+  );
 
   const open = (id: string) => {
     setSelectedId(id);
@@ -211,7 +222,10 @@ const SupplierCallOffs: React.FC = () => {
         </div>
       )}
 
-      <div className="mb-4">
+      <div className="flex flex-wrap items-center gap-3 mb-4">
+        <div className="flex-1 min-w-[240px]">
+          <MaterialSearch mode="filter" query={search} onQueryChange={setSearch} testId="supplier-calloff-search" />
+        </div>
         <PicFilter
           refs={rows.map((v) => v.callOff.mrpController)}
           persona="supplier"
@@ -224,31 +238,43 @@ const SupplierCallOffs: React.FC = () => {
       <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto">
         <Table>
           <TableHeader>
-            <TableHeaderCell>{t('co.col.callOff')}</TableHeaderCell>
-            <TableHeaderCell>{t('co.col.po')}</TableHeaderCell>
-            <TableHeaderCell>{t('co.col.material')}</TableHeaderCell>
+            {/* BL-38 — 7 columns, not 10: separately, the PO, the type and the
+                confirm-by deadline pushed Confirmation, Delivery and the action
+                off a 1280px screen. Each rides as a second line in the cell it
+                qualifies, and each header names both, as the Order summary does. */}
             <TableHeaderCell>
-              <PicHeader />
+              {t('co.col.callOff')}{' '}
+              <span className="block text-[11px] font-normal normal-case text-text-tertiary">{t('co.col.po')}</span>
+            </TableHeaderCell>
+            {/* The PIC (#90) rides under the material, as the PO rides under the
+                call-off: as its own column it pushed the table 257px past 1280. */}
+            <TableHeaderCell>
+              {t('co.col.material')}{' '}
+              <span className="block text-[11px] font-normal normal-case text-text-tertiary">
+                <PicHeader wrap />
+              </span>
             </TableHeaderCell>
             <TableHeaderCell className="text-right">{t('co.col.quantity')}</TableHeaderCell>
-            <TableHeaderCell>{t('co.col.needDate')}</TableHeaderCell>
-            <TableHeaderCell>{t('co.col.type')}</TableHeaderCell>
-            <TableHeaderCell>{t('co.col.confirmBy')}</TableHeaderCell>
-            <TableHeaderCell>{t('co.col.confirmation')}</TableHeaderCell>
+            <TableHeaderCell>
+              {t('co.col.needDate')}{' '}
+              <span className="block text-[11px] font-normal normal-case text-text-tertiary">{t('co.col.type')}</span>
+            </TableHeaderCell>
+            <TableHeaderCell>
+              {t('co.col.confirmation')}{' '}
+              <span className="block text-[11px] font-normal normal-case text-text-tertiary">{t('co.col.confirmBy')}</span>
+            </TableHeaderCell>
             <TableHeaderCell>{t('co.col.delivery')}</TableHeaderCell>
             <TableHeaderCell className="text-right">{t('co.col.action')}</TableHeaderCell>
           </TableHeader>
           <tbody>
-            {listed.map((v) => {
+            {listed.map(({ item: v, match }) => {
               const c = v.callOff;
               const needsAnswer = c.status === 'Awaiting Confirmation';
               return (
                 <TableRow key={c.id} data-testid={`supplier-calloff-row-${c.id}`}>
                   <TableCell>
-                    <Data className="text-xs font-bold text-text-primary whitespace-nowrap">{c.callOffNumber}</Data>
-                  </TableCell>
-                  <TableCell>
-                    <Data className="text-xs text-text-secondary whitespace-nowrap">{c.poNumber}</Data>
+                    <Data as="div" className="text-xs font-bold text-text-primary whitespace-nowrap">{c.callOffNumber}</Data>
+                    <Data as="div" className="text-[11px] text-text-secondary whitespace-nowrap">{c.poNumber}</Data>
                   </TableCell>
                   <TableCell>
                     <Data as="div" className="text-[11px] text-text-tertiary whitespace-nowrap">
@@ -257,26 +283,25 @@ const SupplierCallOffs: React.FC = () => {
                     <div className="text-xs text-text-primary">
                       {c.description}
                     </div>
-                  </TableCell>
-                  <TableCell>
-                    <PicCell value={c.mrpController} testId={`supplier-calloff-pic-${c.id}`} />
+                    <MaterialMatchReason match={match} testId={`supplier-calloff-match-${c.id}`} />
+                    <div className="mt-1">
+                      <PicCell value={c.mrpController} testId={`supplier-calloff-pic-${c.id}`} />
+                    </div>
                   </TableCell>
                   <TableCell className="text-right whitespace-nowrap">
                     <Data>{`${qty(c.quantity)} ${c.uom}`}</Data>
                   </TableCell>
                   <TableCell className="whitespace-nowrap">
-                    <Data className="text-xs">{formatDate(c.needDate)}</Data>
-                  </TableCell>
-                  <TableCell className="text-xs text-text-secondary whitespace-nowrap">{t(`co.type.${c.type}`)}</TableCell>
-                  <TableCell className="whitespace-nowrap">
-                    {needsAnswer && v.deadline ? (
-                      <Data className="text-xs">{formatDateTime(v.deadline.toISOString())}</Data>
-                    ) : (
-                      <span className="text-xs text-text-tertiary">—</span>
-                    )}
+                    <Data as="div" className="text-xs">{formatDate(c.needDate)}</Data>
+                    <div className="text-[11px] text-text-secondary">{t(`co.type.${c.type}`)}</div>
                   </TableCell>
                   <TableCell>
                     <ConfirmationPill status={v.confirmation} />
+                    {needsAnswer && v.deadline && (
+                      <div className="mt-1 text-[11px] text-text-secondary" data-testid={`supplier-calloff-confirm-by-${c.id}`}>
+                        {t('co.col.confirmBy')} <Data className="whitespace-nowrap">{formatDateTime(v.deadline.toISOString())}</Data>
+                      </div>
+                    )}
                     {/* CR-05 — the rule that decided this confirmation, on the row
                         the supplier is reading, not only inside the panel. */}
                     {v.tolerance && c.confirmation && (

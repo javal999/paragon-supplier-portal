@@ -23,6 +23,7 @@ import type {
   PRFilter,
   TrendRange,
   ReliabilityWindowWeeks,
+  StockSimulationFilter,
 } from '../data/types';
 import type { InviteeFilter } from '../transitions/rfxRules';
 
@@ -45,6 +46,18 @@ export const useCurrentSupplier = () =>
 export const useStockUpdateModes = () =>
   useServiceQuery(['suppliers', 'stockUpdateModes'], (svc, scope) =>
     svc.suppliers.getStockUpdateModes(scope),
+  );
+
+/** Material B3 — each supplier's weekly update compliance (13 cycles). */
+export const useUpdateCompliance = () =>
+  useServiceQuery(['suppliers', 'updateCompliance'], (svc, scope) =>
+    svc.suppliers.getUpdateCompliance(scope),
+  );
+
+/** Material G1 — each vendor's qualification level, missing documents and history. */
+export const useVendorQualifications = () =>
+  useServiceQuery(['suppliers', 'vendorQualifications'], (svc, scope) =>
+    svc.suppliers.getVendorQualifications(scope),
   );
 
 // ─── Procurement ──────────────────────────────────────────────────────────
@@ -79,6 +92,12 @@ export const useCapacityPlans = () =>
 /** Material C5 (MR-8) — the planning groups, their materials and changes. */
 export const usePlanningGroups = () =>
   useServiceQuery(['procurement', 'planningGroups'], (svc, scope) => svc.procurement.getPlanningGroups(scope));
+
+/** Material E2 (MR-7) — the stock simulation per supplier × material at a check date. */
+export const useStockSimulation = (checkDate?: string, filter?: StockSimulationFilter) =>
+  useServiceQuery(['procurement', 'stockSimulation', checkDate, filter], (svc, scope) =>
+    svc.procurement.getStockSimulation(scope, checkDate, filter),
+  );
 
 /** Inventory and capacity alerts (REQ-E08-05). */
 export const useInventoryAlerts = () =>

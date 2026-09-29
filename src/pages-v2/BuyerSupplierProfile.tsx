@@ -39,15 +39,18 @@ import LoadingState from '../components/ui-v2/LoadingState';
 import ErrorState from '../components/ui-v2/ErrorState';
 import {
   useSupplier,
+  useVendorQualifications,
   useStorefrontCatalog,
   useStorefrontCerts,
   usePurchaseOrders,
 } from '../services/query/hooks';
-import { formatIDR, formatNumber, formatDate } from '../lib/format';
+import { formatIDR, formatDate } from '../lib/format';
+import QualificationPanel from './qualification/QualificationPanel';
 import { useCategoryLabel } from '../hooks/useCategoryLabel';
 import { useChannelLabel } from '../hooks/useChannelLabel';
 import { SupplierTier } from '../types/supplier.types';
 import type { ProfileCertStatus, PurchaseOrder } from '../services/data/types';
+import { poLineQuantityText } from './orders/poLineQuantity';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -143,6 +146,9 @@ const BuyerSupplierProfile: React.FC = () => {
 
   const supplierQuery = useSupplier(id ?? '');
   const supp = supplierQuery.data ?? null;
+  // Material G1 (MR-10) — the vendor's computed level and its replayed history.
+  const qualifications = useVendorQualifications();
+  const qualification = qualifications.data?.items.find((q) => q.supplierId === id);
 
   // Catalog + compliance fold onto the storefront reads, scoped to this
   // supplier id (replacing the former inline "Sample data" consts).
@@ -334,6 +340,8 @@ const BuyerSupplierProfile: React.FC = () => {
           icon={Wallet}
         />
       </div>
+
+      {qualification ? <QualificationPanel row={qualification} reader="buyer" /> : null}
 
       <Tabs
         tabs={TABS}
@@ -589,7 +597,7 @@ const BuyerSupplierProfile: React.FC = () => {
                       {line?.description ?? '—'}
                     </TableCell>
                     <TableCell className="text-text-secondary">
-                      <Data>{line ? `${formatNumber(line.quantity)} ${line.uom}` : '—'}</Data>
+                      <Data>{line ? poLineQuantityText(t, line) : '—'}</Data>
                     </TableCell>
                     <TableCell className="text-right font-semibold text-text-primary">
                       <Data>{formatIDR(po.totalValue, { compact: true })}</Data>

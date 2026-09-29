@@ -120,6 +120,7 @@ export const PTI_NAV: readonly NavSection[] = [
     roles: ['MP'],
     items: [
       { labelKey: 'hub.nav.pti.inventory', icon: Boxes, path: '/buyer/inventory' },
+      { labelKey: 'hub.nav.pti.stockSimulation', icon: CalendarClock, path: '/buyer/stock-simulation' },
       { labelKey: 'hub.nav.pti.capacity', icon: Gauge, path: '/buyer/capacity' },
       { labelKey: 'hub.nav.pti.alerts', icon: AlertTriangle, path: '/buyer/alerts' },
       { labelKey: 'hub.nav.pti.supplierAccess', icon: KeyRound, path: '/buyer/supplier-access' },
@@ -238,6 +239,10 @@ export const UTILITY_NAV: Record<Persona, readonly NavItem[]> = {
     { labelKey: 'hub.nav.util.threePls', icon: Link2, path: '/buyer/admin/3pl-tracking' },
     // Material A1 — each supplier's stock update mode (MR-1 BR-02, set by ADM).
     { labelKey: 'hub.nav.util.suppliers', icon: Building2, path: '/buyer/admin/suppliers' },
+    // Material G1 — the documents each qualification level requires (MR-10 BR-04).
+    { labelKey: 'hub.nav.util.qualification', icon: Award, path: '/buyer/admin/qualification' },
+    // Material G2 — each sourcing category and purchasing group's type (MR-10 BR-06).
+    { labelKey: 'hub.nav.util.sourcingTypes', icon: Tags, path: '/buyer/admin/sourcing-types' },
     // Material C5 — the planning groups capacity is kept by (MR-8, Material Planning).
     { labelKey: 'hub.nav.util.planningGroups', icon: Layers, path: '/buyer/admin/planning-groups' },
     // Material C4 — who each SAP MRP controller code is (MR-5 BR-02, set by ADM).
