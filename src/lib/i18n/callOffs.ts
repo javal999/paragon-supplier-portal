@@ -403,7 +403,10 @@ export const callOffsId: Record<string, string> = {
   'co.asn.final.hint': 'Centang bila tidak ada lagi yang akan dikirim untuk call-off ini, agar kekurangan terlihat.',
   'co.asn.warn.qtyOver': 'Kuantitas {{shipped}} vs {{agreed}} yang diminta pada {{callOff}} (+{{pct}}%; toleransi {{limit}}%)',
   'co.asn.warn.qtyUnder': 'Kuantitas {{shipped}} vs {{agreed}} yang diminta pada {{callOff}} (−{{pct}}%) pada ASN terakhir',
+  'co.asn.warn.late_one': 'ETA {{eta}} {{count}} hari setelah tanggal yang disepakati {{date}} pada {{callOff}}',
   'co.asn.warn.late_other': 'ETA {{eta}} {{count}} hari setelah tanggal yang disepakati {{date}} pada {{callOff}}',
+  'co.asn.warn.early_one':
+    'ETA {{eta}} {{count}} hari sebelum tanggal yang disepakati {{date}} pada {{callOff}} (toleransi {{limit}} hari)',
   'co.asn.warn.early_other':
     'ETA {{eta}} {{count}} hari sebelum tanggal yang disepakati {{date}} pada {{callOff}} (toleransi {{limit}} hari)',
   'co.asn.warn.material': 'Material {{material}} bukan material call-off {{expected}} ({{callOff}})',
