@@ -37,6 +37,8 @@ import {
 import { alertPlanningGroup, usePlanningGroupLabel } from './inventory/planningGroupDisplay';
 import { usePlanningGroups } from '../services/query/hooks';
 import { PicCell, PicFilter, PicHeader, usePicFilter } from './materials/picDisplay';
+import MaterialSearch, { MaterialMatchReason, useMaterialMatcher } from '../components/ui-v2/MaterialSearch';
+import { searchMaterials } from '../services/transitions/matchMaterial';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PTI ALERTS — REQ-E08-05.
@@ -122,6 +124,9 @@ const BuyerAlerts: React.FC = () => {
   const [note, setNote] = useState('');
   // Material C4 — the PIC filter, kept in the page address (MR-5 BR-03).
   const pic = usePicFilter();
+  // Material C3 — the one material search (MR-3 BR-04).
+  const [search, setSearch] = useState('');
+  const matchOf = useMaterialMatcher();
   const nowIso = inventoryNow();
   const crumb = [t('hub.nav.section.inventory'), t('inv.alerts.title')];
 
@@ -150,10 +155,19 @@ const BuyerAlerts: React.FC = () => {
     );
   // Material C4 — the PIC filter (`?pic=`) sits beside the reason filter
   // (`?reason=`); Material C5 — and the planning group filter (`?planningGroup=`).
-  const shown = ofTab.filter(
-    (a) => (risk === 'all' || a.riskClass === risk) && byReason(a) && pic.matches(a.mrpController) && byGroup(a),
+  // Material C3 — the search matches the alert's material code, PTI description
+  // and its supplier's approved trade name (a capacity alert, whose subject is
+  // a material group, matches on the group code and label).
+  const found = searchMaterials(
+    search,
+    ofTab.filter(
+      (a) => (risk === 'all' || a.riskClass === risk) && byReason(a) && pic.matches(a.mrpController) && byGroup(a),
+    ),
+    (a) => ({ code: a.subject, description: a.subjectLabel, supplierId: a.supplierId }),
+    matchOf,
   );
-  const groups = groupAlertsBySupplier(shown);
+  const matchByKey = new Map(found.map((f) => [f.item.key, f.match]));
+  const groups = groupAlertsBySupplier(found.map((f) => f.item));
   const openCount = (r: RiskClass) => alerts.filter((a) => a.status === 'open' && a.riskClass === r).length;
   // The filter offers every code offered today plus any retired code a closure
   // still carries (MR-9 AC-03).
@@ -237,7 +251,10 @@ const BuyerAlerts: React.FC = () => {
           ))}
         </select>
       </div>
-      <div className="mb-4">
+      <div className="flex flex-wrap items-center gap-3 mb-4">
+        <div className="flex-1 min-w-[240px]">
+          <MaterialSearch mode="filter" query={search} onQueryChange={setSearch} testId="alert-search" />
+        </div>
         <PicFilter
           refs={alerts.map((a) => a.mrpController)}
           persona="buyer"
@@ -312,6 +329,7 @@ const BuyerAlerts: React.FC = () => {
                               </>
                             )}
                           </div>
+                          <MaterialMatchReason match={matchByKey.get(a.key) ?? null} testId={`alert-match-${a.key}`} />
                           <RiskBasisNote basis={a.riskBasis} testId={`alert-basis-${a.key}`} withCover />
                           {!!a.mrpController && (
                             <div className="text-xs text-text-secondary mt-1 flex flex-wrap items-center gap-2">

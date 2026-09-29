@@ -1,6 +1,7 @@
 // Supplier trade names i18n fragment. Namespace: matName.* — the supplier's
 // "My materials" tab on the stock page, Materials → Trade names for Material
 // Planning, and the approved name beside PTI's description on stock rows.
+// matSearch.* (Material C3) — the one material search and its match reason.
 //
 // Material C2 — MR-3 BR-01 to BR-06. A trade name itself is data, never a key.
 // Business language only (SC-04). Indonesian plurals carry `_other` only.
@@ -9,6 +10,16 @@ export const materialNamesEn: Record<string, string> = {
   'matName.tab.stock': 'Stock',
   'matName.tab.myMaterials': 'My materials',
   'matName.beside': 'Your name: {{name}}',
+  'matName.besideSupplier': "Supplier's name: {{name}}",
+
+  // Material C3 — the one material search (MR-3 BR-04).
+  'matSearch.placeholder': 'Search code, description or trade name',
+  'matSearch.label': 'Search materials by code, description or trade name',
+  'matSearch.reason.code': 'matched code',
+  'matSearch.reason.description': 'matched description',
+  'matSearch.reason.tradeName': "matched trade name '{{name}}' ({{supplier}})",
+  'matSearch.reason.ownTradeName': "matched your trade name '{{name}}'",
+  'matSearch.noMatch': 'No material matches "{{query}}"',
   'matName.loading': 'Loading your materials…',
 
   'matName.state.awaiting': 'Awaiting approval',
@@ -90,6 +101,16 @@ export const materialNamesId: Record<string, string> = {
   'matName.tab.stock': 'Stok',
   'matName.tab.myMaterials': 'Material saya',
   'matName.beside': 'Nama Anda: {{name}}',
+  'matName.besideSupplier': 'Nama pemasok: {{name}}',
+
+  // Material C3 — pencarian material tunggal (MR-3 BR-04).
+  'matSearch.placeholder': 'Cari kode, deskripsi, atau nama dagang',
+  'matSearch.label': 'Cari material berdasarkan kode, deskripsi, atau nama dagang',
+  'matSearch.reason.code': 'cocok dengan kode',
+  'matSearch.reason.description': 'cocok dengan deskripsi',
+  'matSearch.reason.tradeName': "cocok dengan nama dagang '{{name}}' ({{supplier}})",
+  'matSearch.reason.ownTradeName': "cocok dengan nama dagang Anda '{{name}}'",
+  'matSearch.noMatch': 'Tidak ada material yang cocok dengan "{{query}}"',
   'matName.loading': 'Memuat material Anda…',
 
   'matName.state.awaiting': 'Menunggu persetujuan',
