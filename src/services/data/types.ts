@@ -72,6 +72,7 @@ import type { InfoLine, PlanChangeBaseline, Proposal, ProposalType, RescheduleRu
 import type { SupplierCfot } from '../engine/cfot';
 import type { SeriesResult, StabiliseParams, StabiliseRun } from '../engine/stabilise';
 import type { DataHealthReport } from '../engine/dataHealth';
+import type { DemandForecastRun } from '../engine/demandForecast';
 import type { DatasetProvenance } from '../engine/types';
 import type { ReleaseSelection } from '../delivery/release';
 import type { EditPolicyPatch } from '../delivery/policy';
@@ -467,6 +468,21 @@ export interface CallOffNote {
 /** The origin a call-off can carry (see `CallOff.origin`). */
 export type CallOffOrigin = 'engine';
 
+/**
+ * Material C4 (MR-5 BR-01 to BR-04) — a material's MRP controller (PIC) as the
+ * reader may see it, attached at READ by the read model (never stored).
+ * PTI: the SAP code, with the name when the code is mapped; an unmapped code
+ * shows the code only (BR-02). A supplier: the name only, never the code
+ * (BR-04). SAP-copied, so a surface showing it carries the `materialMasterSap`
+ * liveness pill (AR-19).
+ */
+export interface MrpControllerRef {
+  /** The SAP MRP controller code, e.g. `P12`. Absent on a supplier's read. */
+  readonly code?: string;
+  /** Who the code is. Absent when the administrator has not mapped the code. */
+  readonly name?: string;
+}
+
 export interface CallOff {
   readonly id: string;
   readonly callOffNumber: string;
@@ -509,6 +525,8 @@ export interface CallOff {
   readonly origin?: CallOffOrigin;
   readonly dispatches: readonly CallOffDispatch[];
   readonly notes: readonly CallOffNote[];
+  /** Material C4 — the material's MRP controller, projected at read (never stored). */
+  readonly mrpController?: MrpControllerRef;
 }
 
 // ─── Inventory & capacity collaboration (REQ-E08-01 to REQ-E08-05) ─────────
@@ -589,6 +607,8 @@ export interface InventoryPosition {
     readonly manufacturingDate?: string;
     readonly expiryDate?: string;
   }[];
+  /** Material C4 — the material's MRP controller (MR-5 BR-03), narrowed per reader. */
+  readonly mrpController?: MrpControllerRef;
 }
 
 /** One entry in the supplier-access log (REQ-E08-03 BR-06). */
@@ -919,6 +939,21 @@ export interface DataHealthView extends DataHealthReport {
   readonly provenance: DatasetProvenance;
 }
 
+/**
+ * REQ-E14-07 — the finished-goods demand forecast, as served: weekly sell-in
+ * per SKU for the next 26 weeks with the method that made it, SKU, brand and
+ * total reconciled, OEM products left out, and SAP's plan in force beside it.
+ * Computed at read on the engine's (SIMULATED) dataset. PTI only; a supplier
+ * gets null. It does not feed E14-03: SAP's plan stays the input until the
+ * backtest (E14-10) exists (ENG-B66).
+ */
+export interface DemandForecastView extends DemandForecastRun {
+  /** Where the dataset came from (X-03): SIMULATED until the MDM feed is live. */
+  readonly provenance: DatasetProvenance;
+  /** The source E14-03 to E14-06 and E14-13 plan on today. */
+  readonly materialPlanningSource: 'sapPlan';
+}
+
 export interface ForecastCoverageRow {
   readonly stream: ForecastStream;
   readonly supplierId: string;
@@ -994,6 +1029,9 @@ export interface InventoryAlert {
   /** MR-9 BR-04 — the `alertClose` code; absent on a closure recorded before reasons (counts as Other). */
   readonly closeReason?: string;
   readonly actionNote?: string;
+  /** Material C4 — the MRP controller of the material an alert is about. Absent
+   *  on a capacity alert, whose subject is a material group. */
+  readonly mrpController?: MrpControllerRef;
 }
 
 export interface POSummary {
@@ -1451,6 +1489,8 @@ export interface AsnLineItem {
   uom?: string;
   /** Optional expiry date of the batch (`YYYY-MM-DD`). */
   expiryDate?: string;
+  /** Material C4 — the line material's MRP controller, projected at read (never stored). */
+  readonly mrpController?: MrpControllerRef;
   /**
    * MR-6 BR-04 — `declared` when the batch was picked from the supplier's
    * declared stock, `typed` when it was typed ("not in declared stock", shown
@@ -2620,6 +2660,12 @@ export interface IProcurementService {
    * arrival with the failing records. On the engine's (SIMULATED) dataset. PTI only.
    */
   getDataHealth(scope: QueryScope): Promise<DataHealthView | null>;
+  /**
+   * REQ-E14-07 — the finished-goods demand forecast: per SKU × week, the
+   * method that made it, SKU / brand / total reconciled, OEM products left
+   * out (ENG-D20). On the engine's (SIMULATED) dataset. PTI only.
+   */
+  getDemandForecast(scope: QueryScope): Promise<DemandForecastView | null>;
 
   // — Sourcing —
   getRFQs(scope: QueryScope, filter?: RFQFilter): Promise<Page<RFQ>>;

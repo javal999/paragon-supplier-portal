@@ -299,6 +299,13 @@ const LANE_BUNDLES = Object.freeze({
       // it sits beside the other governance acts and `admin` derives it.
       // `buyer_all` keeps it on the `setting:set` precedent, pending BL-70.
       'supplier:set-update-mode',
+      // ── Material C4 · THE MRP CONTROLLER LIST (MR-5 BR-02, ADM) ────────────
+      // Which name a supplier is told to contact for a material, and which hub
+      // users stand behind a planner code. No supplier lane (it would choose
+      // who it answers to), nor `planning` (the planners it names). Beside
+      // `threepl:maintain`; `admin` holds it by derivation. It grants no
+      // authority, so `buyer_all` keeps it on the same precedent, pending BL-70.
+      'mrpcontroller:manage',
       // ── Material D2 · A SHELF-LIFE EXCEPTION ON AN ASN (MR-6 BR-08, AR-02) ─
       // Quality decides whether goods with less than the minimum remaining
       // shelf life may come in (into blocked stock). Not `planning`: a planner

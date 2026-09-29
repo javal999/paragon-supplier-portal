@@ -50,6 +50,7 @@ import InterfaceMonitor from '../pages-v2/InterfaceMonitor';
 import AdminWorkingCalendar from '../pages-v2/admin/AdminWorkingCalendar';
 import AdminThreePls from '../pages-v2/admin/AdminThreePls';
 import AdminSuppliers from '../pages-v2/admin/AdminSuppliers';
+import AdminMrpControllers from '../pages-v2/admin/AdminMrpControllers';
 import { AdminAlertThresholds, AdminTolerances } from '../pages-v2/admin/AdminRuleValues';
 import AdminReasonCodes from '../pages-v2/admin/AdminReasonCodes';
 import RolesCatalogue from '../pages-v2/RolesCatalogue';
@@ -82,6 +83,7 @@ import BuyerOrderPlan from '../pages-v2/BuyerOrderPlan';
 import BuyerReschedule from '../pages-v2/BuyerReschedule';
 import BuyerStabilise from '../pages-v2/BuyerStabilise';
 import BuyerDataHealth from '../pages-v2/BuyerDataHealth';
+import BuyerDemandForecast from '../pages-v2/BuyerDemandForecast';
 import SupplierForecastCommitments from '../pages-v2/SupplierForecastCommitments';
 import SupplierPerformance from '../pages-v2/SupplierPerformance';
 import NotFound from '../pages-v2/NotFound';
@@ -159,6 +161,8 @@ const AppRouter: React.FC = () => {
           <Route path="/buyer/stabilise" element={<BuyerStabilise />} />
           {/* REQ-E14-01 — data health of the engine's inputs (SIMULATED). */}
           <Route path="/buyer/data-health" element={<BuyerDataHealth />} />
+          {/* REQ-E14-07 — the finished-goods demand forecast (SIMULATED; PTI only). */}
+          <Route path="/buyer/demand-forecast" element={<BuyerDemandForecast />} />
           <Route
             path="/buyer/collaboration/responses"
             element={
@@ -204,6 +208,8 @@ const AppRouter: React.FC = () => {
           <Route path="/buyer/admin/3pl-tracking" element={<AdminThreePls />} />
           {/* Material A1 — administration (ADM): each supplier's stock update mode. */}
           <Route path="/buyer/admin/suppliers" element={<AdminSuppliers />} />
+          {/* Material C4 — administration (ADM): who each SAP MRP controller code is. */}
+          <Route path="/buyer/admin/mrp-controllers" element={<AdminMrpControllers />} />
           {/* BL-32 — administration (ADM): the rule values that lived in configuration files. */}
           <Route path="/buyer/admin/tolerances" element={<AdminTolerances />} />
           <Route path="/buyer/admin/alert-thresholds" element={<AdminAlertThresholds />} />

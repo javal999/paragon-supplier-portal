@@ -388,6 +388,14 @@ export const POLICY_HOOKS = {
    */
   SUPPLIER_UPDATE_MODE_VALID: 'supplier_update_mode_valid',
   /**
+   * Material C4 (MR-5 BR-02) — one MRP controller on the administrator's list:
+   * the code is SAP-shaped (MRP_CONTROLLER_CODE_INVALID), it has a name
+   * (MRP_CONTROLLER_NAME_REQUIRED) and at least one hub user label
+   * (MRP_CONTROLLER_USERS_REQUIRED). The rule is `mrpControllerRefusal`, the
+   * one the admin page's pre-check calls.
+   */
+  MRP_CONTROLLER_GOVERNED: 'mrp_controller_governed',
+  /**
    * BL-50 — a ruling on one day of the hub's working calendar: the date is one
    * the SAP load covers, the kind is working or non-working, the reason is
    * SUBSTANCE rather than presence (`requiredFields` admits a space bar), and

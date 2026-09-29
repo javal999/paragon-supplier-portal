@@ -33,7 +33,9 @@ import {
   ShoppingCart,
   SlidersHorizontal,
   Target,
+  TrendingUp,
   Truck,
+  UserCog,
   Users,
   Workflow,
   type LucideIcon,
@@ -96,6 +98,7 @@ export const PTI_NAV: readonly NavSection[] = [
       { labelKey: 'hub.nav.pti.forecasts', icon: CalendarRange, path: '/buyer/forecasts' },
       { labelKey: 'hub.nav.pti.commitments', icon: ChartLine, path: '/buyer/collaboration' },
       { labelKey: 'hub.nav.pti.dataHealth', icon: DatabaseZap, path: '/buyer/data-health' },
+      { labelKey: 'hub.nav.pti.demandForecast', icon: TrendingUp, path: '/buyer/demand-forecast' },
       { labelKey: 'hub.nav.pti.reliability', icon: Target, path: '/buyer/reliability' },
       { labelKey: 'hub.nav.pti.materialRequirement', icon: Layers, path: '/buyer/material-requirement' },
       { labelKey: 'hub.nav.pti.safetyStock', icon: ShieldHalf, path: '/buyer/safety-stock' },
@@ -219,6 +222,8 @@ export const UTILITY_NAV: Record<Persona, readonly NavItem[]> = {
     { labelKey: 'hub.nav.util.threePls', icon: Link2, path: '/buyer/admin/3pl-tracking' },
     // Material A1 — each supplier's stock update mode (MR-1 BR-02, set by ADM).
     { labelKey: 'hub.nav.util.suppliers', icon: Building2, path: '/buyer/admin/suppliers' },
+    // Material C4 — who each SAP MRP controller code is (MR-5 BR-02, set by ADM).
+    { labelKey: 'hub.nav.util.mrpControllers', icon: UserCog, path: '/buyer/admin/mrp-controllers' },
     // BL-32 — the values that lived in configuration files (ADM, REQ-E08-05 BR-03).
     { labelKey: 'hub.nav.util.tolerances', icon: SlidersHorizontal, path: '/buyer/admin/tolerances' },
     { labelKey: 'hub.nav.util.alertThresholds', icon: BellRing, path: '/buyer/admin/alert-thresholds' },

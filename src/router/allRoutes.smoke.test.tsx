@@ -64,6 +64,7 @@ import InterfaceMonitor from '../pages-v2/InterfaceMonitor';
 import AdminWorkingCalendar from '../pages-v2/admin/AdminWorkingCalendar';
 import AdminThreePls from '../pages-v2/admin/AdminThreePls';
 import AdminSuppliers from '../pages-v2/admin/AdminSuppliers';
+import AdminMrpControllers from '../pages-v2/admin/AdminMrpControllers';
 import { AdminAlertThresholds, AdminTolerances } from '../pages-v2/admin/AdminRuleValues';
 import AdminReasonCodes from '../pages-v2/admin/AdminReasonCodes';
 import RolesCatalogue from '../pages-v2/RolesCatalogue';
@@ -88,6 +89,7 @@ import BuyerOrderPlan from '../pages-v2/BuyerOrderPlan';
 import BuyerReschedule from '../pages-v2/BuyerReschedule';
 import BuyerStabilise from '../pages-v2/BuyerStabilise';
 import BuyerDataHealth from '../pages-v2/BuyerDataHealth';
+import BuyerDemandForecast from '../pages-v2/BuyerDemandForecast';
 import SupplierShipments from '../pages-v2/SupplierShipments';
 import SupplierGoodsReceipts from '../pages-v2/SupplierGoodsReceipts';
 import SupplierInvoicesV2 from '../pages-v2/SupplierInvoices';
@@ -144,6 +146,7 @@ const ROUTES: RouteCase[] = [
   { name: 'buyer/reschedule', pattern: '/buyer/reschedule', at: '/buyer/reschedule', element: <BuyerReschedule />, identity: BUYER },
   { name: 'buyer/stabilise', pattern: '/buyer/stabilise', at: '/buyer/stabilise', element: <BuyerStabilise />, identity: BUYER },
   { name: 'buyer/data-health', pattern: '/buyer/data-health', at: '/buyer/data-health', element: <BuyerDataHealth />, identity: BUYER },
+  { name: 'buyer/demand-forecast', pattern: '/buyer/demand-forecast', at: '/buyer/demand-forecast', element: <BuyerDemandForecast />, identity: BUYER },
   { name: 'buyer/collaboration/responses', pattern: '/buyer/collaboration/responses', at: '/buyer/collaboration/responses', element: <BuyerCollaboration />, identity: BUYER },
   { name: 'buyer/contracts', pattern: '/buyer/contracts', at: '/buyer/contracts', element: <BuyerContracts />, identity: BUYER },
   { name: 'buyer/contracts/:id', pattern: '/buyer/contracts/:id', at: '/buyer/contracts/ctr-013', element: <BuyerContractDetail />, identity: BUYER },
@@ -170,6 +173,7 @@ const ROUTES: RouteCase[] = [
   { name: 'buyer/admin/working-calendar', pattern: '/buyer/admin/working-calendar', at: '/buyer/admin/working-calendar', element: <AdminWorkingCalendar />, identity: BUYER },
   { name: 'buyer/admin/3pl-tracking', pattern: '/buyer/admin/3pl-tracking', at: '/buyer/admin/3pl-tracking', element: <AdminThreePls />, identity: BUYER },
   { name: 'buyer/admin/suppliers', pattern: '/buyer/admin/suppliers', at: '/buyer/admin/suppliers', element: <AdminSuppliers />, identity: BUYER },
+  { name: 'buyer/admin/mrp-controllers', pattern: '/buyer/admin/mrp-controllers', at: '/buyer/admin/mrp-controllers', element: <AdminMrpControllers />, identity: BUYER },
   { name: 'buyer/admin/tolerances', pattern: '/buyer/admin/tolerances', at: '/buyer/admin/tolerances', element: <AdminTolerances />, identity: BUYER },
   { name: 'buyer/admin/alert-thresholds', pattern: '/buyer/admin/alert-thresholds', at: '/buyer/admin/alert-thresholds', element: <AdminAlertThresholds />, identity: BUYER },
   { name: 'buyer/admin/reason-codes', pattern: '/buyer/admin/reason-codes', at: '/buyer/admin/reason-codes', element: <AdminReasonCodes />, identity: BUYER },

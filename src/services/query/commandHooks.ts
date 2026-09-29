@@ -1454,6 +1454,38 @@ export function useSupplierSetUpdateMode() {
   });
 }
 
+// ── Material C4 · ONE MRP CONTROLLER ON THE ADMINISTRATOR'S LIST (MR-5 BR-02) ─
+//
+// `entityId` IS the SAP code; there is no code payload field. `setBy` and
+// `setAt` are stamped by the target from the session and the hub clock. Every
+// material surface shows the controller's name, so the whole cache is
+// invalidated rather than a guessed list of keys.
+export interface MrpControllerSetVars {
+  code: string;
+  name: string;
+  userLabels: readonly string[];
+}
+
+/** Map an MRP controller code to a name and hub users (`t_mrpcontroller_set`). */
+export function useMrpControllerSet() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+
+  return useMutation<CommandResult, Error, MrpControllerSetVars>({
+    mutationFn: ({ code, name, userLabels }) =>
+      svc.commands.dispatch(scope, {
+        transitionId: 't_mrpcontroller_set',
+        entity: 'mrpController',
+        entityId: code,
+        payload: { name, userLabels: [...userLabels] },
+      }),
+    onSuccess: (result) => {
+      if (result.status !== 'failed') void qc.invalidateQueries();
+    },
+  });
+}
+
 // ── BL-50 · A RULING ON ONE DAY OF THE HUB'S WORKING CALENDAR ────────────────
 //
 // ⚠️ **`entityId` IS THE DATE, AND THERE IS NO `date` PAYLOAD FIELD** — the
