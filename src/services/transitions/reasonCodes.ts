@@ -13,6 +13,10 @@
 //                           below demand (REQ-E08-04, §3.6);
 //   · commitmentShortfall — `COMMITMENT_REASONS` (forecastConfig.ts): a
 //                           commitment below forecast (REQ-E06-02, §3.6).
+// A fifth list was added new, not replaced (SC Hub Material, MAT A3):
+//   · alertClose          — why a planner closes an alert (MR-9 BR-04, BR-05).
+//                           "Other" needs a note. Read by the alert close
+//                           verb from task F1; nothing reads it yet.
 // ⚠️ Call-off reject / change reasons and goods-receipt dispute reasons are FREE
 // TEXT in this build (`reason`, `comment` fields), not coded lists — there is
 // no list for an administrator to maintain, so none is invented here.
@@ -35,7 +39,7 @@ import { orderCollaborationEn, orderCollaborationId } from '../../lib/i18n/order
 import { inventoryCapacityEn, inventoryCapacityId } from '../../lib/i18n/inventoryCapacity';
 import { forecastCollaborationEn, forecastCollaborationId } from '../../lib/i18n/forecastCollaboration';
 
-export const REASON_LISTS = ['poAdjust', 'poReject', 'capacityShortfall', 'commitmentShortfall'] as const;
+export const REASON_LISTS = ['poAdjust', 'poReject', 'capacityShortfall', 'commitmentShortfall', 'alertClose'] as const;
 export type ReasonListId = (typeof REASON_LISTS)[number];
 
 export const isReasonList = (v: unknown): v is ReasonListId =>
@@ -51,6 +55,16 @@ export const STARTER_REASON_CODES: Readonly<Record<ReasonListId, readonly string
   poReject: Object.freeze(['date', 'quantity', 'quality']),
   capacityShortfall: Object.freeze(['capacity', 'material', 'logistics', 'quality', 'other']),
   commitmentShortfall: Object.freeze(['capacity', 'material', 'logistics', 'quality', 'other']),
+  // MR-9 BR-05 — the starter list for closing an alert.
+  alertClose: Object.freeze([
+    'calloff-raised',
+    'po-raised',
+    'supplier-updated',
+    'supplier-confirmed-other',
+    'data-error',
+    'risk-accepted',
+    'other',
+  ]),
 });
 
 /** The i18n key prefix a built-in code's label lives under, per list. */
@@ -59,6 +73,7 @@ export const BUILT_IN_LABEL_PREFIX: Readonly<Record<ReasonListId, string>> = Obj
   poReject: 'oc.cause.',
   capacityShortfall: 'inv.capacity.reason.',
   commitmentShortfall: 'fc.reason.',
+  alertClose: 'inv.alerts.closeReason.',
 });
 
 /** The code that needs a note with it, on the lists that have one. */

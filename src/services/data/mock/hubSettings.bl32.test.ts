@@ -29,6 +29,7 @@ import { PERSONA_SYSTEM_ROLES, SYSTEM_ROLES, rolesHolding } from '../../transiti
 import { HUB_SETTINGS, SEEDED_STALE_OVERRIDES, staleOverrideKey } from '../../transitions/hubSettings';
 import {
   HUB_SETTINGS_KEY,
+  hubSetting,
   hubSettingsStore,
   settingValue,
   stalePeriodFor,
@@ -419,8 +420,33 @@ const freshnessFlips: Record<string, Flip> = Object.fromEntries(
   }),
 );
 
+/**
+ * SC Hub Material (MAT A3) — the values are in the registry before any rule
+ * reads them (B1, B3, D2 and F1 do). Until then the outcome that flips is the
+ * value in force, read through the same accessor the rules will call. Each
+ * task that adds a reader replaces its key's row here with a rule outcome.
+ */
+const MATERIAL_FLIPS: Record<string, Flip> = Object.fromEntries(
+  (
+    [
+      ['stockSync.intervalHours', 4],
+      ['stale.apiHours', 48],
+      ['stockUpdate.cutoffDay', 5],
+      ['stockUpdate.cutoffTime', 1020],
+      ['compliance.warnPct', 90],
+      ['compliance.flagPct', 50],
+      ['compliance.scoreWeight', 0.15],
+      ['shelfLife.defaultMonths', 12],
+    ] as const
+  ).map(([key, to]) => {
+    const atDefault = HUB_SETTINGS.find((d) => d.key === key)!.defaultValue;
+    return [key, { to, read: () => hubSetting(key), atDefault, afterChange: to }];
+  }),
+);
+
 const FLIPS: Record<string, Flip> = {
   ...freshnessFlips,
+  ...MATERIAL_FLIPS,
   'callOff.overPct': {
     to: 10,
     read: () => checkTolerance(CALL_OFF, [{ quantity: 1070, date: CALL_OFF.needDate }]).within,
