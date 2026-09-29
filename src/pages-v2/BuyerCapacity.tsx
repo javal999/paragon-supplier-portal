@@ -28,6 +28,7 @@ import {
   type CapacityConfirmationStatus,
 } from '../services/transitions/capacityRules';
 import { CapacityStatusPill, LtpCheckPill, inputClass, inventoryNow, labelClass, qty } from './inventory/inventoryDisplay';
+import { ReEntryPill, usePlanningGroupLabel } from './inventory/planningGroupDisplay';
 import {
   anyCapacityFilter,
   planMatches,
@@ -39,8 +40,12 @@ import {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PTI CAPACITY — REQ-E08-04 AC-03: allocated capacity against demand per
-// supplier × material group per week, with gap weeks highlighted and the
+// supplier × planning group per week, with gap weeks highlighted and the
 // supplier's reason beside them. Read-only for the planner.
+//
+// Material C5 (MR-8 BR-04, BR-05, BR-07) — the group is the planning group,
+// named from the planning group store; the filter is by planning group; a week
+// a move asks the supplier to re-enter reads "Needs re-entry".
 //
 // BR-07 / AC-04 (BL-63) — the planner narrows the view by supplier, material
 // group, material and gap weeks only. Those four live in the page ADDRESS
@@ -59,6 +64,7 @@ type StatusFilter = 'all' | CapacityConfirmationStatus;
 const BuyerCapacity: React.FC = () => {
   const { t } = useTranslation();
   const reasonLabel = useReasonLabel();
+  const groupLabel = usePlanningGroupLabel();
   const plansQuery = useCapacityPlans();
   const [filter, setStatusFilter] = useState<StatusFilter>('all');
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
@@ -81,7 +87,7 @@ const BuyerCapacity: React.FC = () => {
     return allPlans.filter(
       (p) =>
         p.supplierId === drill.po.supplierId &&
-        (drill.groups === null || drill.groups.length === 0 || drill.groups.includes(p.materialGroup)),
+        (drill.groups === null || drill.groups.length === 0 || drill.groups.includes(p.planningGroupId)),
     );
   }, [allPlans, drill]);
   /** The PO's delivery weeks, kept only where the horizon actually covers them. */
@@ -99,7 +105,7 @@ const BuyerCapacity: React.FC = () => {
   if (plansQuery.isError)
     return <ErrorState breadcrumb={crumb} error={plansQuery.error} onRetry={() => plansQuery.refetch()} />;
 
-  const keyOf = (p: CapacityPlan) => `${p.supplierId}-${p.materialGroup}`;
+  const keyOf = (p: CapacityPlan) => `${p.supplierId}-${p.planningGroupId}`;
   const withGap = plans.filter((p) => planStatus(p) === 'gap');
   const ltpByPlan = new Map(plans.map((p) => [keyOf(p), ltpCapacityWeeks(p)]));
   const ltpCount = (p: CapacityPlan, level: 'cannotSupply' | 'needsAdditional') =>
@@ -110,11 +116,11 @@ const BuyerCapacity: React.FC = () => {
   const supplierOptions = [...new Map(plans.map((p) => [p.supplierId, p.supplierName])).entries()].sort((a, b) =>
     a[1].localeCompare(b[1]),
   );
-  const groupOptions = [...new Set(plans.map((p) => p.materialGroup))].sort();
+  const groupOptions = [...new Set(plans.map((p) => p.planningGroupId))].sort();
   const materialOptions = [
     ...new Set(
       plans
-        .filter((p) => (filters.supplierId === null || p.supplierId === filters.supplierId) && (filters.materialGroup === null || p.materialGroup === filters.materialGroup))
+        .filter((p) => (filters.supplierId === null || p.supplierId === filters.supplierId) && (filters.planningGroupId === null || p.planningGroupId === filters.planningGroupId))
         .flatMap((p) => p.materials),
     ),
   ].sort();
@@ -199,13 +205,13 @@ const BuyerCapacity: React.FC = () => {
           <select
             id="capacity-filter-group"
             className={inputClass}
-            value={filters.materialGroup ?? ''}
-            onChange={(e) => setFilter('materialGroup', e.target.value || null)}
+            value={filters.planningGroupId ?? ''}
+            onChange={(e) => setFilter('planningGroup', e.target.value || null)}
           >
             <option value="">{t('inv.filter.all')}</option>
             {groupOptions.map((g) => (
               <option key={g} value={g}>
-                {t(`inv.group.${g}`)}
+                {groupLabel(g)}
               </option>
             ))}
           </select>
@@ -277,7 +283,7 @@ const BuyerCapacity: React.FC = () => {
               >
                 {open ? <ChevronDown size={16} aria-hidden="true" /> : <ChevronRight size={16} aria-hidden="true" />}
                 <span className="text-sm font-semibold text-text-primary">{p.supplierName}</span>
-                <span className="text-sm text-text-secondary">{t(`inv.group.${p.materialGroup}`)}</span>
+                <span className="text-sm text-text-secondary">{groupLabel(p.planningGroupId)}</span>
                 <CapacityStatusPill status={planStatus(p)} />
                 {gaps.length > 0 && (
                   <span className="text-xs text-warning-hover">{t('inv.capacity.gapWeeks', { count: gaps.length })}</span>
@@ -336,6 +342,7 @@ const BuyerCapacity: React.FC = () => {
                           >
                             <td className="px-4 py-2">
                               <Data>{formatDate(w.week)}</Data>
+                              {w.needsReEntry ? <ReEntryPill testId={`capacity-reentry-${keyOf(p)}-${w.week}`} /> : null}
                             </td>
                             <td className="px-4 py-2 text-right">
                               <Data>{qty(lw?.ltp ?? 0)}</Data>

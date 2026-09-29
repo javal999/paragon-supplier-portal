@@ -191,11 +191,13 @@ export function deriveAlertConditions(
       .filter((p) => p.supplierId === plan.supplierId && plan.materials.includes(p.materialCode))
       .map(positionRisk);
     const worst = RISK_ORDER.map((c) => risks.find((r) => r.riskClass === c)).find((r) => r !== undefined);
+    // Material C5 (MR-8 BR-04) — the subject is the planning group; its name is
+    // data in the planning group store, resolved where the alert is shown.
     push(
       'capacityBelowDemand',
       plan,
-      plan.materialGroup,
-      plan.materialGroup,
+      plan.planningGroupId,
+      plan.planningGroupId,
       worst ?? byRule('low'),
       capacityDaysToImpact(plan, nowIso),
     );

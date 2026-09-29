@@ -387,15 +387,15 @@ describe('Capacity (REQ-E08-04)', () => {
     expect(screen.queryByTestId('capacity-refusal')).toBeNull();
     fireEvent.click(screen.getByTestId('capacity-submit'));
     await waitFor(() =>
-      expect(capacityStore.all().some((c) => c.supplierId === 'sup-007' && c.materialGroup === 'MG-20' && c.weeks[1].reason === 'capacity')).toBe(true),
+      expect(capacityStore.all().some((c) => c.supplierId === 'sup-007' && c.planningGroupId === 'pg-MG-20' && c.weeks[1].reason === 'capacity')).toBe(true),
     );
   });
 
   it('PTI: capacity against demand with the gap week highlighted (AC-03)', async () => {
     renderWithProviders(<BuyerCapacity />, { identity: PLANNER });
-    const plan = await screen.findByTestId('capacity-plan-sup-007-MG-20');
+    const plan = await screen.findByTestId('capacity-plan-sup-007-pg-MG-20');
     expect(plan).toHaveTextContent('Gap');
-    expect(within(plan).getAllByTestId(/capacity-gap-sup-007-MG-20-/)).toHaveLength(1);
+    expect(within(plan).getAllByTestId(/capacity-gap-sup-007-pg-MG-20-/)).toHaveLength(1);
     expect(plan).toHaveTextContent('Material');
   });
 
@@ -412,9 +412,9 @@ describe('Capacity (REQ-E08-04)', () => {
     expect(screen.queryByRole('columnheader', { name: /PTI demand/ })).toBeNull();
     sup.unmount();
     renderWithProviders(<BuyerCapacity />, { identity: PLANNER });
-    const plan = await screen.findByTestId('capacity-plan-sup-007-MG-20');
+    const plan = await screen.findByTestId('capacity-plan-sup-007-pg-MG-20');
     expect(within(plan).getByRole('columnheader', { name: /^Additional capacity \(/ })).toBeInTheDocument();
-    expect(within(plan).getByTestId('capacity-upside-help-sup-007-MG-20')).toHaveTextContent('above its allocation');
+    expect(within(plan).getByTestId('capacity-upside-help-sup-007-pg-MG-20')).toHaveTextContent('above its allocation');
     expect(within(plan).queryByRole('columnheader', { name: /PTI demand/ })).toBeNull();
     expect(screen.queryByText(/Upside/)).toBeNull();
     expect(screen.queryByText(/Extra capacity if requested/)).toBeNull();
@@ -443,49 +443,49 @@ describe('Planner capacity filters (BL-63, REQ-E08-04 BR-07, AC-04)', () => {
 
   it('supplier, material group and material narrow the view and are written to the address', async () => {
     renderAt();
-    await screen.findByTestId('capacity-plan-sup-007-MG-20');
+    await screen.findByTestId('capacity-plan-sup-007-pg-MG-20');
     // BL-133 — a supplier with an LTP in a group has a capacity plan for it, so
     // sup-012 (MG-20) and sup-005 (MG-02) join from the current forecast.
     expect(planIds()).toHaveLength(15);
-    expect(planIds()).toEqual(expect.arrayContaining(['sup-012-MG-20', 'sup-005-MG-02']));
+    expect(planIds()).toEqual(expect.arrayContaining(['sup-012-pg-MG-20', 'sup-005-pg-MG-02']));
     fireEvent.change(screen.getByLabelText('Supplier'), { target: { value: 'sup-002' } });
-    expect(planIds().sort()).toEqual(['sup-002-MG-02', 'sup-002-MG-03', 'sup-002-MG-10']);
+    expect(planIds().sort()).toEqual(['sup-002-pg-MG-02', 'sup-002-pg-MG-03', 'sup-002-pg-MG-10']);
     expect(new URLSearchParams(search).get('supplier')).toBe('sup-002');
-    fireEvent.change(screen.getByLabelText('Material group'), { target: { value: 'MG-02' } });
-    expect(planIds()).toEqual(['sup-002-MG-02']);
-    expect(new URLSearchParams(search).get('materialGroup')).toBe('MG-02');
+    fireEvent.change(screen.getByLabelText('Planning group'), { target: { value: 'pg-MG-02' } });
+    expect(planIds()).toEqual(['sup-002-pg-MG-02']);
+    expect(new URLSearchParams(search).get('planningGroup')).toBe('pg-MG-02');
     fireEvent.change(screen.getByLabelText('Supplier'), { target: { value: '' } });
-    fireEvent.change(screen.getByLabelText('Material group'), { target: { value: '' } });
+    fireEvent.change(screen.getByLabelText('Planning group'), { target: { value: '' } });
     fireEvent.change(screen.getByLabelText('Material'), { target: { value: 'RM-EMUL-3310' } });
-    expect(planIds().sort()).toEqual(['sup-002-MG-03', 'sup-005-MG-03']);
+    expect(planIds().sort()).toEqual(['sup-002-pg-MG-03', 'sup-005-pg-MG-03']);
     expect(new URLSearchParams(search).get('materialCode')).toBe('RM-EMUL-3310');
     expect(new URLSearchParams(search).has('supplier')).toBe(false);
   });
 
   it('gap weeks only: only plans with a gap, and only their gap weeks', async () => {
     renderAt();
-    await screen.findByTestId('capacity-plan-sup-007-MG-20');
+    await screen.findByTestId('capacity-plan-sup-007-pg-MG-20');
     fireEvent.click(screen.getByTestId('capacity-filter-gaps'));
-    expect(planIds()).toEqual(['sup-007-MG-20']);
+    expect(planIds()).toEqual(['sup-007-pg-MG-20']);
     expect(new URLSearchParams(search).get('gapsOnly')).toBe('1');
-    const rows = within(screen.getByTestId('capacity-plan-sup-007-MG-20')).getAllByRole('row');
+    const rows = within(screen.getByTestId('capacity-plan-sup-007-pg-MG-20')).getAllByRole('row');
     expect(rows).toHaveLength(2); // the header row and the one gap week
-    expect(within(screen.getByTestId('capacity-plan-sup-007-MG-20')).getAllByTestId(/capacity-gap-/)).toHaveLength(1);
+    expect(within(screen.getByTestId('capacity-plan-sup-007-pg-MG-20')).getAllByTestId(/capacity-gap-/)).toHaveLength(1);
   });
 
   it('a filtered address reloads to the same view, and composes with the status chips', async () => {
     renderAt('?supplier=sup-002');
-    await screen.findByTestId('capacity-plan-sup-002-MG-02');
+    await screen.findByTestId('capacity-plan-sup-002-pg-MG-02');
     expect(planIds()).toHaveLength(3);
     expect(screen.getByLabelText('Supplier')).toHaveValue('sup-002');
     fireEvent.click(screen.getByRole('radio', { name: /^Confirmed \(1\)$/ }));
-    expect(planIds()).toEqual(['sup-002-MG-02']);
+    expect(planIds()).toEqual(['sup-002-pg-MG-02']);
   });
 
   it('composes with the Order summary PO filter', async () => {
     renderAt('?po=po-007&from=order-summary&gapsOnly=1');
     await screen.findByTestId('po-filter-banner');
-    expect(planIds()).toEqual(['sup-007-MG-20']);
+    expect(planIds()).toEqual(['sup-007-pg-MG-20']);
   });
 
   it('an empty result says so and offers to clear the filters, which restores every plan', async () => {
@@ -535,7 +535,7 @@ describe('Alerts (REQ-E08-05)', () => {
 describe('Alert close reasons (MR-9 BR-04 to BR-06)', () => {
   const STEAR = 'ptiBelowRop|RM-STEAR-7300|sup-002';
   const STALE = 'staleData|PK-PETB-8810|sup-007';
-  const CAPACITY = 'capacityBelowDemand|MG-20|sup-007';
+  const CAPACITY = 'capacityBelowDemand|pg-MG-20|sup-007';
   let search = '';
   const LocationProbe: React.FC = () => {
     search = useLocation().search;

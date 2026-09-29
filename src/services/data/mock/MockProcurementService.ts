@@ -9,6 +9,7 @@ import {
   suppliersWithAssignments,
 } from './inventoryReadModel';
 import { stockAccessStore } from './stores/inventoryHubStores';
+import { allPlanningGroups } from './planningGroupReadModel';
 import { allCommitmentLines, allCoverageRows, allVersionViews, forecastSupplierName } from './forecastReadModel';
 import { allFixedStockRows } from './fixedStockReadModel';
 import { maskForSupplier } from '../../transitions/inventoryRules';
@@ -84,6 +85,7 @@ import type {
   MaterialNameRow,
   StockAccessGrant,
   CapacityPlan,
+  PlanningGroupView,
   InventoryAlert,
   ForecastVersionView,
   ForecastCommitmentLine,
@@ -442,6 +444,21 @@ export class MockProcurementService implements IProcurementService {
   async getCapacityPlans(scope: QueryScope): Promise<Page<CapacityPlan>> {
     // REQ-E08-04 — capacity against demand per supplier × material group.
     return { items: applySupplierScope(scope, allCapacityPlans()) };
+  }
+
+  async getPlanningGroups(scope: QueryScope): Promise<Page<PlanningGroupView>> {
+    // Material C5 (MR-8) — PTI sees every group with its change log. A supplier
+    // sees only the groups holding materials it has capacity for, narrowed to
+    // those materials, and no log (MAT-R4: it never learns another supplier's
+    // materials or who at PTI changed what).
+    const groups = allPlanningGroups();
+    if (scope.personaType === 'buyer') return { items: groups };
+    const mine = new Set(applySupplierScope(scope, allCapacityPlans()).flatMap((p) => p.materials));
+    return {
+      items: groups
+        .map((g) => ({ ...g, materials: g.materials.filter((m) => mine.has(m)), history: [] }))
+        .filter((g) => g.materials.length > 0),
+    };
   }
 
   async getInventoryAlerts(scope: QueryScope): Promise<Page<InventoryAlert>> {

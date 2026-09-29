@@ -75,16 +75,16 @@ const draft = async (scope: QueryScope, l: ForecastCommitmentLine, qty: number, 
 const promote = (scope: QueryScope, id: string) =>
   svc.dispatch(scope, { transitionId: 't_requirementresponse_promote', entity: 'requirementResponse', entityId: id, payload: {} });
 const plan = async (scope: QueryScope, group: string) =>
-  (await reads.getCapacityPlans(scope)).items.find((p) => p.supplierId === scope.supplierId && p.materialGroup === group)!;
+  (await reads.getCapacityPlans(scope)).items.find((p) => p.supplierId === scope.supplierId && p.planningGroupId === `pg-${group}`)!;
 const confirmCapacity = (scope: QueryScope, group: string, weeks: unknown[]) =>
-  svc.dispatch(scope, { transitionId: 't_capacity_submit', entity: 'capacitySubmission', payload: { supplierId: scope.supplierId, materialGroup: group, weeks } });
+  svc.dispatch(scope, { transitionId: 't_capacity_submit', entity: 'capacitySubmission', payload: { supplierId: scope.supplierId, planningGroupId: `pg-${group}`, weeks } });
 
 /** sup-002 MG-10 capacity where each week's allocation is the week's LTP + `delta`, with `upside`. */
 async function stearCapacity(delta: number, upside: number) {
   const mg10 = await plan(sup002, 'MG-10');
   const lines = (await reads.getForecastCommitments(sup002)).items;
   const weeks = mg10.weeks.map((w) => {
-    const allocated = groupWeekLtp(lines, 'sup-002', 'MG-10', w.week) + delta;
+    const allocated = groupWeekLtp(lines, 'sup-002', mg10.materials, w.week) + delta;
     return { week: w.week, allocated, upside, ...(allocated < w.demand ? { reason: 'capacity' } : {}) };
   });
   const res = await confirmCapacity(sup002, 'MG-10', weeks);
@@ -106,30 +106,31 @@ describe('BL-133 rules — ENG-D18 levels, pinned at the boundaries', () => {
   });
 
   it('group LTP = the sum of the group’s lines; a weekly line lands whole, a monthly line by its days in the week', () => {
+    // Material C5 — a line joins a group by its material (the group's materials: A and B).
     const lines = [
-      { supplierId: 's', materialGroup: 'G', periodStart: '2026-09-07', periodEnd: '2026-09-13', forecastQty: 700 },
-      { supplierId: 's', materialGroup: 'G', periodStart: '2026-09-07', periodEnd: '2026-09-13', forecastQty: 300 },
-      { supplierId: 's', materialGroup: 'OTHER', periodStart: '2026-09-07', periodEnd: '2026-09-13', forecastQty: 9999 },
-      { supplierId: 'x', materialGroup: 'G', periodStart: '2026-09-07', periodEnd: '2026-09-13', forecastQty: 9999 },
+      { supplierId: 's', materialCode: 'A', periodStart: '2026-09-07', periodEnd: '2026-09-13', forecastQty: 700 },
+      { supplierId: 's', materialCode: 'B', periodStart: '2026-09-07', periodEnd: '2026-09-13', forecastQty: 300 },
+      { supplierId: 's', materialCode: 'OTHER', periodStart: '2026-09-07', periodEnd: '2026-09-13', forecastQty: 9999 },
+      { supplierId: 'x', materialCode: 'A', periodStart: '2026-09-07', periodEnd: '2026-09-13', forecastQty: 9999 },
     ];
-    expect(groupWeekLtp(lines, 's', 'G', '2026-09-07')).toBe(1000);
-    const month = [{ supplierId: 's', materialGroup: 'G', periodStart: '2026-09-01', periodEnd: '2026-09-30', forecastQty: 3000 }];
+    expect(groupWeekLtp(lines, 's', ['A', 'B'], '2026-09-07')).toBe(1000);
+    const month = [{ supplierId: 's', materialCode: 'A', periodStart: '2026-09-01', periodEnd: '2026-09-30', forecastQty: 3000 }];
     // Week of 31 Aug holds 6 September days (1–6 Sep): 3000 × 6 / 30.
-    expect(groupWeekLtp(month, 's', 'G', '2026-08-31')).toBe(600);
-    expect(groupWeekLtp(month, 's', 'G', '2026-09-07')).toBe(700);
+    expect(groupWeekLtp(month, 's', ['A'], '2026-08-31')).toBe(600);
+    expect(groupWeekLtp(month, 's', ['A'], '2026-09-07')).toBe(700);
   });
 
   it('the period check: unconfirmed first, then red needs a reason, `other` a note; outside the horizon is not gated', () => {
-    const lines = [{ supplierId: 's', materialGroup: 'G', periodStart: '2026-09-07', periodEnd: '2026-09-13', forecastQty: 150 }];
+    const lines = [{ supplierId: 's', materialCode: 'A', periodStart: '2026-09-07', periodEnd: '2026-09-13', forecastQty: 150 }];
     const horizon = ['2026-08-31', '2026-09-07'];
     const planWith = (entry: { allocated: number; upside?: number } | null) => ({
-      supplierId: 's', supplierName: 'S', materialGroup: 'G', materials: [], uom: 'PCS', latest: null,
+      supplierId: 's', supplierName: 'S', planningGroupId: 'G', materials: ['A'], uom: 'PCS', latest: null,
       weeks: horizon.map((week) => ({ week, demand: 0, entry: entry ? { week, ...entry } : null })),
     });
     const check = (entry: { allocated: number; upside?: number } | null) =>
-      periodCapacityCheck(planWith(entry), lines, 's', 'G', '2026-09-07', '2026-09-13', horizon);
+      periodCapacityCheck(planWith(entry), lines, 's', ['A'], '2026-09-07', '2026-09-13', horizon);
     expect(commitmentCapacityRefusal(check(null), undefined)).toEqual({ refusal: 'capacityNotConfirmed', week: '2026-09-07' });
-    expect(periodCapacityCheck(null, lines, 's', 'G', '2026-09-07', '2026-09-13', horizon).unconfirmedWeek).toBe('2026-09-07');
+    expect(periodCapacityCheck(null, lines, 's', ['A'], '2026-09-07', '2026-09-13', horizon).unconfirmedWeek).toBe('2026-09-07');
     expect(commitmentCapacityRefusal(check({ allocated: 150 }), undefined)).toBeNull();
     expect(commitmentCapacityRefusal(check({ allocated: 100, upside: 50 }), undefined)).toBeNull();
     expect(commitmentCapacityRefusal(check({ allocated: 100, upside: 49 }), undefined)).toEqual({ refusal: 'aboveBeNeedsReason', week: '2026-09-07' });
@@ -137,7 +138,7 @@ describe('BL-133 rules — ENG-D18 levels, pinned at the boundaries', () => {
     expect(commitmentCapacityRefusal(check({ allocated: 100, upside: 49 }), { level1: 'other' })).toEqual({ refusal: 'aboveBeNoteRequired', week: '2026-09-07' });
     expect(commitmentCapacityRefusal(check({ allocated: 100, upside: 49 }), { level1: 'other', note: 'second shift' })).toBeNull();
     expect(commitmentCapacityRefusal(check({ allocated: 100, upside: 49 }), { level1: 'not-a-code' })).toEqual({ refusal: 'aboveBeNeedsReason', week: '2026-09-07' });
-    const beyond = periodCapacityCheck(null, lines, 's', 'G', '2026-12-01', '2026-12-31', horizon);
+    const beyond = periodCapacityCheck(null, lines, 's', ['A'], '2026-12-01', '2026-12-31', horizon);
     expect(beyond.level).toBeNull();
     expect(commitmentCapacityRefusal(beyond, undefined)).toBeNull();
   });
@@ -212,9 +213,9 @@ describe('BL-133 — supplier scoping', () => {
   it('a supplier reads only its own capacity plans and LTP lines; PTI reads every one, including the groups an LTP adds', async () => {
     const mine = (await reads.getCapacityPlans(sup002)).items;
     expect(new Set(mine.map((p) => p.supplierId))).toEqual(new Set(['sup-002']));
-    expect(mine.some((p) => p.materialGroup === 'MG-20')).toBe(false);
-    const all = (await reads.getCapacityPlans(buyer)).items.map((p) => `${p.supplierId}-${p.materialGroup}`);
-    expect(all).toEqual(expect.arrayContaining(['sup-012-MG-20', 'sup-005-MG-02', 'sup-007-MG-20']));
+    expect(mine.some((p) => p.planningGroupId === 'pg-MG-20')).toBe(false);
+    const all = (await reads.getCapacityPlans(buyer)).items.map((p) => `${p.supplierId}-${p.planningGroupId}`);
+    expect(all).toEqual(expect.arrayContaining(['sup-012-pg-MG-20', 'sup-005-pg-MG-02', 'sup-007-pg-MG-20']));
     expect(new Set((await reads.getForecastCommitments(sup002)).items.map((l) => l.supplierId))).toEqual(new Set(['sup-002']));
   });
 
@@ -227,7 +228,7 @@ describe('BL-133 — supplier scoping', () => {
       svc.dispatch(sup007, {
         transitionId: 't_capacity_submit',
         entity: 'capacitySubmission',
-        payload: { supplierId: 'sup-002', materialGroup: 'MG-10', weeks: mg10.weeks.map((w) => ({ week: w.week, allocated: w.demand })) },
+        payload: { supplierId: 'sup-002', planningGroupId: 'pg-MG-10', weeks: mg10.weeks.map((w) => ({ week: w.week, allocated: w.demand })) },
       }),
     ).rejects.toMatchObject({ code: 'SCOPE_DENIED' });
     expect(requirementResponseStore.get(id)!.status).toBe('Draft');

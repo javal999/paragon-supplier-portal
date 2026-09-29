@@ -388,6 +388,16 @@ export const POLICY_HOOKS = {
    */
   SUPPLIER_UPDATE_MODE_VALID: 'supplier_update_mode_valid',
   /**
+   * Material C5 (MR-8 BR-01, BR-03, AC-04) — a planning-group change: a name is
+   * not blank (NAME_REQUIRED), a new group sits under an SAP group with
+   * materials (UNKNOWN_SAP_GROUP), a move names known materials of the group's
+   * own SAP group not already in it (NO_MATERIALS, UNKNOWN_MATERIAL,
+   * MIXED_SAP_GROUP, ALREADY_IN_GROUP), and a retired group is empty
+   * (RETIRE_NOT_EMPTY). The rule is `planningGroupRefusal`, the one the admin
+   * page's pre-check calls.
+   */
+  PLANNING_GROUP_VALID: 'planning_group_valid',
+  /**
    * Material C4 (MR-5 BR-02) — one MRP controller on the administrator's list:
    * the code is SAP-shaped (MRP_CONTROLLER_CODE_INVALID), it has a name
    * (MRP_CONTROLLER_NAME_REQUIRED) and at least one hub user label

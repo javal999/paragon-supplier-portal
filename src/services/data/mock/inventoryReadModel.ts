@@ -53,6 +53,7 @@ import {
   SUPPLY_ASSIGNMENTS,
 } from './fixtures/inventoryHub';
 import { stockUpdateModeOf } from './supplierMaster';
+import { planningGroupMoves } from './planningGroupReadModel';
 
 export const supplierNameOf = (supplierId: string): string =>
   mockSuppliers.find((s) => s.id === supplierId)?.name ?? supplierId;
@@ -164,7 +165,7 @@ function capacityAssignments(): { supplierId: string; materialCode: string }[] {
   return [...pairs.values()];
 }
 
-/** Every supplier × material group with capacity against demand. */
+/** Every supplier × planning group with capacity against demand (MR-8 BR-04). */
 export function allCapacityPlans(nowIso: string = sdcClock.now()): CapacityPlan[] {
   return buildCapacityPlans(
     {
@@ -174,6 +175,8 @@ export function allCapacityPlans(nowIso: string = sdcClock.now()): CapacityPlan[
       submissions: capacityStore.all(),
       // Owner, 2026-09-29 — the LTP is the one capacity demand figure.
       ltpLines: allCommitmentLines(null),
+      // Material C5 (MR-8 BR-05) — the planning-group moves, for "Needs re-entry".
+      moves: planningGroupMoves(),
     },
     nowIso,
   );
