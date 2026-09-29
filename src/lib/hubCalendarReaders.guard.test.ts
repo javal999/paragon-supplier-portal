@@ -207,6 +207,8 @@ describe('BL-50 · the deadline population reads the hub calendar', () => {
       'services/transitions/callOffRules.ts',
       'services/transitions/forecastRules.ts',
       // Material B1 — the weekly stock update cutoff moves off a non-working day (MR-1 BR-03).
+      // Material B3 — an API week is judged on the cycle's working days (MR-2 BR-02).
+      'services/transitions/updateCompliance.ts',
       'services/transitions/updateCycle.ts',
       'services/transitions/workingCalendarStore.ts',
     ]);

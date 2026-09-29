@@ -20,8 +20,6 @@ const WEEK_TONE: Record<ComplianceWeekState, string> = {
   notCounted: 'bg-border-subtle',
 };
 
-const STATES: readonly ComplianceWeekState[] = ['compliant', 'missed', 'notCounted'];
-
 const UpdateComplianceCard: React.FC<{ compliance: UpdateCompliance | null; testId: string }> = ({
   compliance,
   testId,
@@ -29,6 +27,7 @@ const UpdateComplianceCard: React.FC<{ compliance: UpdateCompliance | null; test
   const { t } = useTranslation();
   const pct = compliance?.pct ?? null;
   const weeks = compliance?.weeks ?? [];
+  const states = Object.keys(WEEK_TONE) as ComplianceWeekState[];
   return (
     <section
       className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm p-6 mb-6"
@@ -63,7 +62,7 @@ const UpdateComplianceCard: React.FC<{ compliance: UpdateCompliance | null; test
         })}
       </ol>
       <div className="flex flex-wrap items-center gap-4 text-xs text-text-secondary">
-        {STATES.map((s) => (
+        {states.map((s) => (
           <span key={s} className="inline-flex items-center gap-1.5">
             <span className={`inline-block h-3 w-3 rounded-sm ${WEEK_TONE[s]}`} aria-hidden="true" />
             {t(`perf.compliance.week.${s}`)}
