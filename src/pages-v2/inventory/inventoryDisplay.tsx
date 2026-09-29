@@ -111,8 +111,19 @@ export const LastUpdateCell: React.FC<{ position: InventoryPosition; nowIso: str
         )}
         {position.channel && <ChannelLabel channel={position.channel} />}
       </div>
+      <PullFailedNote position={position} />
     </div>
   );
+};
+
+/** Material B1 (owner ruling 2026-09-29) — a failed API pull after the figure: a warning, not staleness. */
+export const PullFailedNote: React.FC<{ position: Pick<InventoryPosition, 'lastPullFailedAt'> }> = ({ position }) => {
+  const { t } = useTranslation();
+  return position.lastPullFailedAt ? (
+    <div className="text-xs text-warning whitespace-nowrap" data-testid="inv-pull-failed">
+      {t('inv.freshness.pullFailed')} <Data>{formatDateTime(position.lastPullFailedAt)}</Data>
+    </div>
+  ) : null;
 };
 
 export const ChannelLabel: React.FC<{ channel: StockChannel }> = ({ channel }) => {

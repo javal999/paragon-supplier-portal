@@ -158,7 +158,11 @@ describe('API sync (REQ-E08-02 BR-03, AC-02, edge case)', () => {
     expect(stockFreshness(after, now())).toBe('current');
   });
 
-  it('failure records the error and time, keeps the previous figures, and flags them stale', async () => {
+  // PREMISE CHANGED (Material B1, owner ruling 2026-09-29): the failure no
+  // longer flags the figures stale; it is a warning (lastPullFailedAt), and the
+  // figures go stale 24 h after the last successful pull (here the seeded
+  // 1-day override for sup-003 gives the same instant).
+  it('failure records the error and time, keeps the previous figures, and warns without making them stale', async () => {
     const figures = inventoryDeclarationStore.all().length;
     const before = (await positionOf(buyer, 'sup-003', 'FR-WARD-4410'))!;
     const res = await sync('sup-003');
@@ -168,7 +172,8 @@ describe('API sync (REQ-E08-02 BR-03, AC-02, edge case)', () => {
     const after = (await positionOf(buyer, 'sup-003', 'FR-WARD-4410'))!;
     expect(after.supplierSoh).toBe(before.supplierSoh);
     expect(after.lastSync).toMatchObject({ outcome: 'failed' });
-    expect(stockFreshness(after, now())).toBe('stale');
+    expect(after.lastPullFailedAt).toBe(now());
+    expect(stockFreshness(after, now())).toBe('current');
   });
 
   it('known-bad: a supplier that is not API-connected, and a supplier pressing Sync', async () => {
@@ -192,12 +197,15 @@ describe('supplier-triggered sync (BL-59, REQ-E08-02 BR-03, AC-02)', () => {
     });
   });
 
-  it('a failing connection records the error and keeps the previous figures, stale', async () => {
+  // PREMISE CHANGED (Material B1, owner ruling 2026-09-29): kept, not stale.
+  it('a failing connection records the error and keeps the previous figures, current with a warning', async () => {
     const figures = inventoryDeclarationStore.all().length;
     const res = await pull('sup-003');
     expect(stockSyncStore.get(res.entityId!)).toMatchObject({ outcome: 'failed', errorKey: 'timeout' });
     expect(inventoryDeclarationStore.all()).toHaveLength(figures);
-    expect(stockFreshness((await positionOf(supplier('sup-003'), 'sup-003', 'FR-WARD-4410'))!, now())).toBe('stale');
+    const kept = (await positionOf(supplier('sup-003'), 'sup-003', 'FR-WARD-4410'))!;
+    expect(kept.lastPullFailedAt).toBe(now());
+    expect(stockFreshness(kept, now())).toBe('current');
   });
 
   it('known-bad: another supplier’s stock, a non-connected supplier, a seat without fulfilment, and the buyer', async () => {

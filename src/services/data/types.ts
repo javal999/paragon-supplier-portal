@@ -601,6 +601,21 @@ export interface InventoryPosition {
   readonly channel: StockChannel | null;
   /** The data-update SLA for this supplier × material, in days (AC-05). */
   readonly updateSla: number;
+  /**
+   * Material B1 (MR-1 BR-05, AR-07) — the instant the figure turns stale, by
+   * the supplier's update mode: manual at the cutoff of the cycle after the
+   * last update, API `stale.apiHours` after the last successful pull, a BL-32
+   * override that many days after the last update. Null when there is no
+   * figure. Derived at read time, never stored (AD-1).
+   */
+  readonly staleAt: string | null;
+  /**
+   * Material B1 (owner ruling 2026-09-29) — when the latest API pull failed
+   * after the figure on hand; null otherwise. A WARNING only: a failed pull
+   * does not make the figure stale — the figure goes stale `stale.apiHours`
+   * after the last SUCCESSFUL pull (`staleAt`).
+   */
+  readonly lastPullFailedAt: string | null;
   readonly apiConnected: boolean;
   /** The latest API sync attempt for this supplier, if any. */
   readonly lastSync: StockSyncAttempt | null;
