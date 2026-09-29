@@ -32,7 +32,10 @@ import { POLICY_HOOKS } from '../services/transitions/policyHooks';
 import { formatDate, formatDateTime, formatIDR } from '../lib/format';
 import { usePurchaseOrders } from '../services/query/hooks';
 import { useCallOffCommand, type CallOffCommandVars } from '../services/query/commandHooks';
-import { POStatus, type CallOffType, type POLineItem, type PurchaseOrder } from '../services/data/types';
+import { POStatus, type ASN, type CallOffType, type CallOffWarning, type POLineItem, type PurchaseOrder } from '../services/data/types';
+import { callOffWarnings } from '../services/transitions/callOffRules';
+import { isActiveAsn } from '../services/transitions/fulfilmentRules';
+import { AsnPlannerMarkers } from './shipments/CallOffWarnings';
 import {
   CALL_OFF_CADENCES,
   CALL_OFF_TYPES,
@@ -142,7 +145,19 @@ const BuyerCallOffs: React.FC = () => {
   const { toast } = useToast();
   const refusalText = useRefusalText();
   const posQuery = usePurchaseOrders({ status: [POStatus.CONFIRMED, POStatus.PARTIALLY_DELIVERED] });
-  const { views, nowIso, isPending, error, refetch } = useCallOffViews();
+  const { views, nowIso, isPending, error, refetch, asns } = useCallOffViews();
+  // MR-6 BR-12 (edge case 6) — each call-off's ASNs with the CURRENT comparison,
+  // recomputed on read: the planner's "Mismatch" marker.
+  const linkedAsns = useMemo(() => {
+    const out = new Map<string, LinkedAsn[]>();
+    for (const v of views) {
+      const mine = asns
+        .filter((a) => a.callOffId === v.callOff.id && isActiveAsn(a))
+        .map((a) => ({ asn: a, warnings: callOffWarnings(v.callOff, asns, a) }));
+      if (mine.length > 0) out.set(v.callOff.id, mine);
+    }
+    return out;
+  }, [views, asns]);
   const command = useCallOffCommand();
   const planAvailability = useVerbAvailability('calloff:plan');
   const reviewAvailability = useVerbAvailability('calloff:review');
@@ -531,6 +546,11 @@ const BuyerCallOffs: React.FC = () => {
                         </TableCell>
                         <TableCell>
                           <DeliveryPill status={v.delivery} />
+                          {(linkedAsns.get(v.callOff.id) ?? []).some((l) => l.warnings.length > 0) ? (
+                            <div className="mt-1" data-testid={`calloff-mismatch-${v.callOff.id}`}>
+                              <StatusPill variant="warning">{t('co.asn.mismatch')}</StatusPill>
+                            </div>
+                          ) : null}
                         </TableCell>
                         <TableCell className="text-right whitespace-nowrap">
                           <Button
@@ -780,6 +800,7 @@ const BuyerCallOffs: React.FC = () => {
             run={run}
             numberOf={numberOf}
             checkRelease={checkForSelected}
+            linkedAsns={linkedAsns.get(selectedView.callOff.id) ?? []}
           />
         )}
       </SidePanel>
@@ -787,8 +808,16 @@ const BuyerCallOffs: React.FC = () => {
   );
 };
 
+/** A call-off's ASN with its current call-off warnings (MR-6 BR-12). */
+interface LinkedAsn {
+  asn: ASN;
+  warnings: CallOffWarning[];
+}
+
 interface PanelBodyProps {
   view: CallOffView;
+  /** The call-off's ASNs, each with the current comparison (edge case 6). */
+  linkedAsns: readonly LinkedAsn[];
   form: { quantity: string; needDate: string; type: CallOffType; reason: string; comment: string };
   setForm: (f: PanelBodyProps['form']) => void;
   busy: boolean;
@@ -803,6 +832,16 @@ interface PanelBodyProps {
   checkRelease: (quantity: number) => ReleaseCheck | null;
 }
 
+/** MR-6 BR-12 / FU-7 — the planner's markers on one heads-up ASN. */
+const HeadsUpMarkers: React.FC<{ asnNumber: string; linkedAsns: readonly LinkedAsn[] }> = ({ asnNumber, linkedAsns }) => {
+  const linked = linkedAsns.find((l) => l.asn.asnNumber === asnNumber);
+  return linked ? (
+    <div className="mt-1">
+      <AsnPlannerMarkers asn={linked.asn} warnings={linked.warnings} />
+    </div>
+  ) : null;
+};
+
 const CallOffPanelBody: React.FC<PanelBodyProps> = ({
   view,
   form,
@@ -816,6 +855,7 @@ const CallOffPanelBody: React.FC<PanelBodyProps> = ({
   run,
   numberOf,
   checkRelease,
+  linkedAsns,
 }) => {
   const { t } = useTranslation();
   const c = view.callOff;
@@ -933,6 +973,7 @@ const CallOffPanelBody: React.FC<PanelBodyProps> = ({
                     · <Data>{h.ref}</Data>
                   </>
                 )}
+                {h.source === 'asn' ? <HeadsUpMarkers asnNumber={h.ref} linkedAsns={linkedAsns} /> : null}
               </li>
             ))}
           </ul>
