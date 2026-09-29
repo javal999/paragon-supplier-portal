@@ -419,7 +419,8 @@ export interface HeadsUp {
   readonly quantity: number;
 }
 
-/** ASN states that mean goods have left (a draft has not shipped). */
+/** ASN states that mean goods have left (a draft has not shipped, nor has an
+ *  ASN awaiting a shelf-life exception — MR-6 BR-08). */
 const SHIPPED_ASN_STATES = ['Submitted', 'In Transit', 'Delivered', 'Discrepancy'];
 
 /**

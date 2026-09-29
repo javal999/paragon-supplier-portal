@@ -36,7 +36,7 @@ import {
 } from '../../transitions/hubSettingsStore';
 import { checkTolerance, isCallOffEscalated } from '../../transitions/callOffRules';
 import { checkPrice } from '../../transitions/invoiceRollup';
-import { receiptQtyOutcome } from '../../transitions/fulfilmentRules';
+import { receiptQtyOutcome, shelfLifeLineView } from '../../transitions/fulfilmentRules';
 import { commitmentDueAt, gapColour, toleranceOutcome } from '../../transitions/forecastRules';
 import { otifPassesGate } from '../../sourcing/complianceGate';
 import { coverage, riskFor, stockFreshness, supplyBand } from '../../transitions/inventoryRules';
@@ -267,6 +267,9 @@ describe('BL32-READ · every reader of a value reads it through its accessor, at
         'src/services/transitions/fulfilmentConfig.ts',
         'src/services/transitions/fulfilmentRules.ts',
       ],
+      // MR-6 BR-06 (D2) — the ASN line rule reads the minimum through the master.
+      shelfLifeDefaultMonths: ['src/services/transitions/fulfilmentConfig.ts'],
+      shelfLifeRuleFor: ['src/services/transitions/fulfilmentConfig.ts', 'src/services/transitions/fulfilmentRules.ts'],
       commitmentTolerance: ['src/services/transitions/forecastConfig.ts', 'src/services/transitions/forecastRules.ts'],
       commitmentDeadlineWorkingDays: [
         'src/pages-v2/BuyerCommitments.tsx',
@@ -436,7 +439,6 @@ const MATERIAL_FLIPS: Record<string, Flip> = Object.fromEntries(
       ['compliance.warnPct', 90],
       ['compliance.flagPct', 50],
       ['compliance.scoreWeight', 0.15],
-      ['shelfLife.defaultMonths', 12],
     ] as const
   ).map(([key, to]) => {
     const atDefault = HUB_SETTINGS.find((d) => d.key === key)!.defaultValue;
@@ -483,6 +485,15 @@ const FLIPS: Record<string, Flip> = {
     read: () => checkPrice('standard', 30_825_000, 31_425_000).outcome,
     atDefault: 'overCap',
     afterChange: 'withinTolerance',
+  },
+  // MR-6 BR-05 / BR-06 (D2): RM-EMUL-3310 is raw material with no minimum in
+  // the master, so the default applies — expiry 8 months after ETA passes at 6
+  // and fails at 12.
+  'shelfLife.defaultMonths': {
+    to: 12,
+    read: () => shelfLifeLineView({ materialCode: 'RM-EMUL-3310', eta: '2026-10-01', expiryDate: '2027-06-01' })?.ok,
+    atDefault: true,
+    afterChange: false,
   },
   'receipt.overPct': {
     to: 1,

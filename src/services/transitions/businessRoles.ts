@@ -299,6 +299,12 @@ const LANE_BUNDLES = Object.freeze({
       // it sits beside the other governance acts and `admin` derives it.
       // `buyer_all` keeps it on the `setting:set` precedent, pending BL-70.
       'supplier:set-update-mode',
+      // ── Material D2 · A SHELF-LIFE EXCEPTION ON AN ASN (MR-6 BR-08, AR-02) ─
+      // Quality decides whether goods with less than the minimum remaining
+      // shelf life may come in (into blocked stock). Not `planning`: a planner
+      // may not approve their own urgent receipt (MAT-D6), and no supplier lane,
+      // which would approve its own short-dated goods.
+      'asn:approve-shelf-life',
     ]),
     // The SDC / P2 planning lane. `inventorydeclaration:record` is the C4c
     // buyer RECORDING verb — a distinct authority from the supplier's
