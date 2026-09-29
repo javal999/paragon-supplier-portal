@@ -308,11 +308,17 @@ describe('Supplier-triggered sync and PTI refresh (BL-59, REQ-E08-02 BR-03, BR-1
     await waitFor(() => expect(within(erp).getByTestId('sup-sync-status')).toHaveTextContent('Last synced'));
   });
 
-  it('a failed sync shows the error and time, and the previous figures stay, marked out of date', async () => {
+  // PREMISE CHANGED (Material B1, owner ruling 2026-09-29): the previous
+  // figures are no longer marked out of date by the failure; the row warns
+  // "Last pull failed <time>" and stays up to date until 24 h after the last
+  // successful pull.
+  it('a failed sync shows the error and time, and the previous figures stay, with a failed-pull warning', async () => {
     renderWithProviders(<SupplierInventory />, { identity: seat('sup-003', 'PT Sample Fragrance House') });
     expect(await screen.findByTestId('sup-sync-error')).toHaveTextContent('the supplier system did not respond');
-    expect(screen.getByTestId('sup-sync-error')).toHaveTextContent('previous figures kept and marked out of date');
-    expect(screen.getByTestId('sup-stock-row-FR-WARD-4410')).toHaveTextContent('Out of date');
+    expect(screen.getByTestId('sup-sync-error')).toHaveTextContent('previous figures kept');
+    const row = screen.getByTestId('sup-stock-row-FR-WARD-4410');
+    expect(within(row).getByTestId('inv-pull-failed')).toHaveTextContent('Last pull failed');
+    expect(row).not.toHaveTextContent('Out of date');
   });
 
   it('a supplier that is not API-connected has no Sync', async () => {

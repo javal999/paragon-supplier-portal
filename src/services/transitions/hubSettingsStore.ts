@@ -244,6 +244,11 @@ export function settingValue(key: string): HubSettingValue | undefined {
 /** Is this key at its default? */
 export const isAtDefault = (key: string): boolean => settingValue(key) === defaultOfKey(key);
 
+/** BL-32 — the administrator's stale period (days) for one supplier × material, or null when none. */
+export function staleOverrideFor(supplierId: string, materialCode: string): number | null {
+  return hubSettingsStore.state().staleOverrides[staleOverrideKey(supplierId, materialCode)] ?? null;
+}
+
 /** REQ-E08-01 — the stale period (days) for one supplier × material, in force now. */
 export function stalePeriodFor(supplierId: string, materialCode: string): number {
   const s = hubSettingsStore.state();
