@@ -47,6 +47,12 @@ export const useStockUpdateModes = () =>
     svc.suppliers.getStockUpdateModes(scope),
   );
 
+/** Material B3 — each supplier's weekly update compliance (13 cycles). */
+export const useUpdateCompliance = () =>
+  useServiceQuery(['suppliers', 'updateCompliance'], (svc, scope) =>
+    svc.suppliers.getUpdateCompliance(scope),
+  );
+
 // ─── Procurement ──────────────────────────────────────────────────────────
 
 export const usePurchaseOrders = (filter?: POFilter) =>

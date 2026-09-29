@@ -1,8 +1,10 @@
 import { mockSuppliers } from '../../../data/mockSuppliers';
 import type { ISupplierService, Page, QueryScope, Supplier, SupplierStockUpdateMode } from '../types';
+import type { UpdateCompliance } from '../../transitions/updateCompliance';
 import { DataError } from '../types';
 import { allWithMeasures, withMeasures } from './supplierMeasureReadModel';
 import { allStockUpdateModes } from './supplierMaster';
+import { updateComplianceFor } from './updateComplianceReadModel';
 
 // ⚠️ REQ-E10-01 — OTIF AND THE GRADE ARE PROJECTED HERE, NOT READ FROM THE
 // FIXTURE. Every supplier read goes through `withMeasures`, so a list, a
@@ -40,5 +42,11 @@ export class MockSupplierService implements ISupplierService {
     const all = allStockUpdateModes();
     if (scope.personaType === 'supplier') return { items: all.filter((r) => r.supplierId === scope.supplierId) };
     return { items: all };
+  }
+
+  // Material B3 — narrowed in the read model (MAT-R4): a supplier reads only
+  // its own compliance and week strip.
+  async getUpdateCompliance(scope: QueryScope): Promise<Page<UpdateCompliance>> {
+    return { items: updateComplianceFor(scope) };
   }
 }

@@ -44,6 +44,7 @@ import FilterChipsBar from '../components/ui-v2/FilterChipsBar';
 import KpiCard from '../components/ui-v2/KpiCard';
 import { usePerformance } from './performance/performanceDisplay';
 import KpiDefinitions from './performance/KpiDefinitions';
+import UpdateComplianceCard from './performance/UpdateComplianceCard';
 import {
   GRADE_BANDS,
   PERFORMANCE_PERIODS,
@@ -358,6 +359,9 @@ const BuyerScorecard: React.FC = () => {
           }
         />
       </div>
+
+      {/* Material B3 (MR-2, US-MAT-03) — the supplier's weekly update compliance. */}
+      <UpdateComplianceCard compliance={measure.updateCompliance} testId="scorecard-update-compliance" />
 
       {/* BL-53 — the definitions behind OTIF and CFOT, and "Baseline period". */}
       <KpiDefinitions />

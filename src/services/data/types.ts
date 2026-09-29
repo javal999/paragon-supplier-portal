@@ -66,6 +66,7 @@ import type {
   ReleaseCommandResult,
 } from '../delivery/views';
 import type { SupplierReliability } from '../engine/reliability';
+import type { UpdateCompliance } from '../transitions/updateCompliance';
 import type { MaterialPlan, MaterialRequirementRun } from '../engine/requirement';
 import type { MaterialSafetyStock, SafetyStockChange, SafetyStockRun } from '../engine/safetyStock';
 import type { MaterialOrderPlan, OrderPlanRun, WarehousePlan } from '../engine/orderSizing';
@@ -2756,6 +2757,12 @@ export interface ISupplierService {
    * history. Buyer: every supplier. Supplier: its own row only.
    */
   getStockUpdateModes(scope: QueryScope): Promise<Page<SupplierStockUpdateMode>>;
+  /**
+   * Material B3 (MR-2 BR-01 to BR-03) — each supplier's weekly update
+   * compliance over the rolling 13 update cycles. Buyer: every supplier.
+   * Supplier: its own row only (MAT-R4).
+   */
+  getUpdateCompliance(scope: QueryScope): Promise<Page<UpdateCompliance>>;
 }
 
 export interface IProcurementService {
