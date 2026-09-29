@@ -2,7 +2,8 @@
 // RFX-R4 — A SUPPLIER NEVER READS ANOTHER INVITEE'S OTIF.
 //
 // Every supplier-scoped RFx read that carries per-supplier performance figures,
-// read through the REAL MockProcurementService. Each read is probed both ways:
+// read through the REAL MockProcurementService (the RFI and RFP boards are in
+// `inviteeRosterNarrowing.test.ts`). Each read is probed both ways:
 // supplier A's read never holds supplier B's figure (the known-bad), and the
 // buyer's read of the same event still holds B's figure (the known-good), so a
 // read that simply dropped OTIF for everyone would fail the control.
@@ -52,37 +53,8 @@ describe('RFX-R4 — the population the narrowing is probed against', () => {
   });
 });
 
-describe.each([
-  ['RFI board', 'rfi-001', (s: QueryScope) => reads.getRfiEvents(s)],
-  ['RFP board', 'rfp-001', (s: QueryScope) => reads.getRfpEvents(s)],
-] as const)('RFX-R4 — the %s invitee rows', (_label, eventId, read) => {
-  it('control: the buyer reads every invitee, B included, with its OTIF', async () => {
-    const event = (await read(buyer)).items.find((e) => e.id === eventId)!;
-    const b = event.invitedSuppliers.find((i) => i.supplierId === B)!;
-    expect(b.otif).toBe(rfxSupplierOtif(B));
-    const a = event.invitedSuppliers.find((i) => i.supplierId === A)!;
-    expect(a.otif).toBe(rfxSupplierOtif(A));
-  });
-
-  it('supplier A reads its own OTIF and never B\'s', async () => {
-    const event = (await read(supplier(A))).items.find((e) => e.id === eventId)!;
-    const own = event.invitedSuppliers.find((i) => i.supplierId === A)!;
-    expect(own.otif).toBe(rfxSupplierOtif(A));
-    const rival = event.invitedSuppliers.find((i) => i.supplierId === B)!;
-    // Absent, not null: null would say B has no history.
-    expect('otif' in rival).toBe(false);
-    // And no other invitee's figure rides along on any row.
-    for (const row of event.invitedSuppliers.filter((i) => i.supplierId !== A)) {
-      expect(row).not.toHaveProperty('otif');
-    }
-  });
-
-  it('the same rule holds from B\'s seat: B never reads A\'s OTIF', async () => {
-    const event = (await read(supplier(B))).items.find((e) => e.id === eventId)!;
-    expect(event.invitedSuppliers.find((i) => i.supplierId === B)!.otif).toBe(rfxSupplierOtif(B));
-    expect(event.invitedSuppliers.find((i) => i.supplierId === A)).not.toHaveProperty('otif');
-  });
-});
+// The RFI and RFP boards no longer hand a supplier ANY other invitee's row, so
+// no rival OTIF can ride on one: `inviteeRosterNarrowing.test.ts` proves that.
 
 describe('RFX-R4 — the RFQ reads that carry OTIF-derived figures', () => {
   it('the compliance gate (judged on OTIF): the buyer reads B\'s row, supplier A reads nothing', async () => {

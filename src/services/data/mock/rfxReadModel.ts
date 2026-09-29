@@ -213,58 +213,41 @@ const inviteeViews = (
   sourcingType: SourcingType,
   readerSupplierId: string | null,
 ): readonly RfxInviteeView[] =>
-  event.invitees.map((invitee) => {
-    const deadline = effectiveDeadline(event.responseDeadline, event.invitees, invitee.supplierId);
-    const response = responseFor(invitee.supplierId);
-    // A Draft that holds only an acceptance (the confidentiality gate or the
-    // T&C) is not a started answer: reading it as "Draft" would tell the buyer
-    // the supplier had begun answering when it had only agreed to read.
-    const responseState: InviteeResponseState =
-      response?.status === 'Submitted'
-        ? 'submitted'
-        : response && !response.empty
-          ? 'draft'
-          : 'notStarted';
-    return {
-      supplierId: invitee.supplierId,
-      supplierName: rfxSupplierName(invitee.supplierId),
-      deadline,
-      responseState,
-      submittedAt: response?.submittedAt ?? null,
-      otif: rfxSupplierOtif(invitee.supplierId),
-      overdue: responseState !== 'submitted' && isPastDeadline(deadline, nowIso),
-      confidentialityAcceptedAt: response?.confidentialityAcceptedAt ?? null,
-      termsAcceptedAt: response?.termsAcceptedAt ?? null,
-      // Material G2 (MR-10 BR-07) — on the event's sourcing type, today.
-      // BL-147 (MAT-R4) — a supplier reads its own qualification, never
-      // another invitee's.
-      ...(readerSupplierId && readerSupplierId !== invitee.supplierId
-        ? {}
-        : { eligibility: eligibilityFor(invitee.supplierId, sourcingType, nowIso) }),
-    };
-  });
-
-/**
- * RFX-R4 — an event's invitee rows as a scope may read their performance
- * figures: the buyer (`supplierId` null) reads every invitee's OTIF; a supplier
- * only its own. Another invitee's row reaches it WITHOUT `otif` — not `null`,
- * which would state "No history" about a rival that has one. Narrowed here, in
- * the read model, so no page is handed a figure it must remember to hide.
- */
-export function withOwnInviteeFigures<T extends { readonly invitedSuppliers: readonly RfxInviteeView[] }>(
-  view: T,
-  supplierId: string | null,
-): T {
-  if (supplierId === null) return view;
-  return {
-    ...view,
-    invitedSuppliers: view.invitedSuppliers.map((i) => {
-      if (i.supplierId === supplierId) return i;
-      const { otif: _otif, ...rest } = i;
-      return rest;
-    }),
-  };
-}
+  // RFX-R4 — a supplier reads its OWN invitee row and no other: not a rival's
+  // name, answer state, submission time, lateness, acceptances, OTIF or
+  // qualification. It has no business reading the roster it competes against
+  // (as `getInviteeCandidates`). The buyer (`readerSupplierId` null) reads every
+  // row. Narrowed here, in the read model, so no page is handed a row it must
+  // remember to hide.
+  event.invitees
+    .filter((invitee) => readerSupplierId === null || invitee.supplierId === readerSupplierId)
+    .map((invitee) => {
+      const deadline = effectiveDeadline(event.responseDeadline, event.invitees, invitee.supplierId);
+      const response = responseFor(invitee.supplierId);
+      // A Draft that holds only an acceptance (the confidentiality gate or the
+      // T&C) is not a started answer: reading it as "Draft" would tell the buyer
+      // the supplier had begun answering when it had only agreed to read.
+      const responseState: InviteeResponseState =
+        response?.status === 'Submitted'
+          ? 'submitted'
+          : response && !response.empty
+            ? 'draft'
+            : 'notStarted';
+      return {
+        supplierId: invitee.supplierId,
+        supplierName: rfxSupplierName(invitee.supplierId),
+        deadline,
+        responseState,
+        submittedAt: response?.submittedAt ?? null,
+        otif: rfxSupplierOtif(invitee.supplierId),
+        overdue: responseState !== 'submitted' && isPastDeadline(deadline, nowIso),
+        confidentialityAcceptedAt: response?.confidentialityAcceptedAt ?? null,
+        termsAcceptedAt: response?.termsAcceptedAt ?? null,
+        // Material G2 (MR-10 BR-07) — on the event's sourcing type, today. A
+        // supplier reads only its own row, so only its own qualification (MAT-R4).
+        eligibility: eligibilityFor(invitee.supplierId, sourcingType, nowIso),
+      };
+    });
 
 const rfiFacts = (r: RfiResponse | undefined): InviteeResponseFacts | undefined =>
   r && { ...r, empty: r.status !== 'Submitted' && r.answers.length === 0 && (r.documents ?? []).length === 0 };
@@ -328,9 +311,7 @@ export function rfiEventViews(nowIso: string, supplierId: string | null): readon
         })),
         closed: event.status === 'Closed' || event.status === 'Cancelled',
       };
-    })
-    // RFX-R4 — a supplier reads its own OTIF, never another invitee's.
-    .map((view) => withOwnInviteeFigures(view, supplierId));
+    });
 }
 
 /** The RFP board for a scope. Same draft and invitation rules as the RFI one. */
@@ -384,9 +365,7 @@ export function rfpEventViews(nowIso: string, supplierId: string | null): readon
         })),
         closed: event.status === 'Closed' || event.status === 'Cancelled',
       };
-    })
-    // RFX-R4 — a supplier reads its own OTIF, never another invitee's.
-    .map((view) => withOwnInviteeFigures(view, supplierId));
+    });
 }
 
 // ── REQ-E03-05 — comparison, rounds and awards ──────────────────────────────
