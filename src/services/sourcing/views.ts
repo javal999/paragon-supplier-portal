@@ -31,7 +31,7 @@ import type {
   ComplianceAtAward,
 } from './types';
 import type { GateCriterion } from './complianceGate';
-import type { BiddingEligibility } from './sourcingType';
+import type { BiddingEligibility, QualificationWarning } from './sourcingType';
 
 /**
  * CR-23 — one supplier's compliance-gate result on one sourcing event: every
@@ -254,6 +254,8 @@ export interface RfpAwardView {
   readonly reason?: string;
   /** Material B4 (MR-2 BR-06, AC-05) — compliance at award; a supplier reads only its own row. */
   readonly complianceAtAward?: readonly ComplianceAtAward[];
+  /** Material G2 / BL-147 — vendors awarded below the level on placeholder rules; a supplier reads only its own row. */
+  readonly qualificationWarnings?: readonly QualificationWarning[];
   /** DERIVED from the appended cancellation and SAP marking (AR-08). */
   readonly status: AwardStatus;
   /** When the award was withdrawn; the date a supplier is shown. */

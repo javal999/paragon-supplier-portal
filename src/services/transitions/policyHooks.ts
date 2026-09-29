@@ -167,6 +167,15 @@ export const POLICY_HOOKS = {
    * name: ENGINE_DATA_SIMULATED.
    */
   SAP_CHANGE_ENGINE_DATA_LIVE: 'sapchange_engine_data_live',
+  /**
+   * Forecast override (REQ-E14-11 X-06 / BR-03): the SKU is in the demand
+   * forecast and not discontinued or OEM, the week is one of the run's forecast
+   * weeks, the new value is a whole number that changes the value in force, a
+   * reason code (when given) is offered on the `forecastOverride` list, an
+   * override that raises the forecast above the engine's carries one
+   * (REASON_REQUIRED), and "other" carries a note.
+   */
+  FORECAST_OVERRIDE_VALID: 'forecastoverride_valid',
   /** Dispatch heads-up (REQ-E09-04): the confirmation is accepted, the dates are
    *  dates with arrival on or after shipping, and the quantity is positive. */
   CALLOFF_DISPATCH_VALID: 'calloff_dispatch_valid',
@@ -420,6 +429,13 @@ export const POLICY_HOOKS = {
    * one the admin page's pre-check calls.
    */
   MRP_CONTROLLER_GOVERNED: 'mrp_controller_governed',
+  /**
+   * BL-157 — unmapping an MRP controller code: the code is SAP-shaped
+   * (MRP_CONTROLLER_CODE_INVALID) and has a mapping in force to remove
+   * (MRP_CONTROLLER_NOT_MAPPED). The rule is `mrpControllerUnmapRefusal`, the
+   * one the admin page's pre-check calls.
+   */
+  MRP_CONTROLLER_UNMAPPABLE: 'mrp_controller_unmappable',
   /**
    * Material C2 (MR-3 BR-05, AC-01, AC-05) — a supplier trade name: the
    * material is assigned to the supplier (NOT_ASSIGNED), the name is 2 to 80

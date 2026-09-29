@@ -1613,6 +1613,26 @@ export function useMrpControllerSet() {
   });
 }
 
+/** BL-157 — remove an MRP controller code's mapping (`t_mrpcontroller_unmap`). */
+export function useMrpControllerUnmap() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+
+  return useMutation<CommandResult, Error, { code: string }>({
+    mutationFn: ({ code }) =>
+      svc.commands.dispatch(scope, {
+        transitionId: 't_mrpcontroller_unmap',
+        entity: 'mrpController',
+        entityId: code,
+        payload: {},
+      }),
+    onSuccess: (result) => {
+      if (result.status !== 'failed') void qc.invalidateQueries();
+    },
+  });
+}
+
 // ── Material C2 · SUPPLIER TRADE NAMES (MR-3 BR-01 to BR-06) ─────────────────
 //
 // The supplier submits; Material Planning approves, rejects or loads in bulk.
@@ -2461,6 +2481,48 @@ export function useSimulationOverrideSet() {
       }),
     onSuccess: (result) => {
       if (result.status !== 'failed') void qc.invalidateQueries();
+    },
+  });
+}
+
+// ─── Forecast overrides (REQ-E14-11 X-06 / BR-03) ───────────────────────────
+//
+// A Material Planning team member overrides one SKU × week of the demand
+// forecast. The target reads the engine's value and the old value itself; the
+// form sends the new value, the reason code and the note. A success changes the
+// forecast shown on both forecast pages.
+
+export interface ForecastOverrideVars {
+  readonly skuCode: string;
+  readonly weekStart: string;
+  readonly newValue: number;
+  readonly reasonCode: string | null;
+  readonly note: string | null;
+}
+
+export function useForecastOverrideCommand() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+
+  return useMutation<CommandResult, Error, ForecastOverrideVars>({
+    mutationFn: (vars) =>
+      svc.commands.dispatch(scope, {
+        transitionId: 't_forecastoverride_record',
+        entity: 'forecastOverride',
+        payload: {
+          skuCode: vars.skuCode,
+          weekStart: vars.weekStart,
+          newValue: vars.newValue,
+          ...(vars.reasonCode ? { reasonCode: vars.reasonCode } : {}),
+          ...(vars.note ? { note: vars.note } : {}),
+        },
+      }),
+    onSuccess: (result) => {
+      if (result.status === 'failed') return;
+      qc.invalidateQueries({
+        predicate: (q) => q.queryKey[0] === 'procurement' && (q.queryKey[1] === 'forecastBias' || q.queryKey[1] === 'demandForecast'),
+      });
     },
   });
 }

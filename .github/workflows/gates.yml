@@ -44,8 +44,12 @@ on:
   # A wasted run is loud and cheap; a skipped one is neither.
   pull_request:
     types: [opened, synchronize, reopened, edited]
-  push:
-    branches: [main]
+  # NO `push: branches: [main]`, deliberately (removed 2026-09-29). Every merge
+  # re-ran the full suite (~10 min) after its PR had already been gated: 83 runs and
+  # 766 of 2,554 billed minutes (30%) from 2026-09-15 to 09-29, on a private
+  # repo that pays for them. The daily run below re-tests main and files the
+  # `gates-failure` issue. THE TRADE, ACCEPTED: a merge that breaks main is
+  # caught within 24 hours, not within ~10 minutes.
   schedule:
     # 00:17 UTC daily. Just after the UTC date rolls over, so a clock-decay
     # break is caught within the hour rather than at the weekend; off the hour
@@ -58,7 +62,7 @@ permissions:
 
 concurrency:
   # Supersede an in-flight PR run when the branch is pushed again; never cancel
-  # a scheduled or post-merge run of main — those are the record.
+  # a scheduled or manually dispatched run of main — those are the record.
   group: gates-${{ github.event_name == 'pull_request' && github.head_ref || github.sha }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 

@@ -97,7 +97,27 @@ export interface WeekTag {
 }
 
 /** The events a week contains, with `lead` pre-Ramadan weeks. */
+// A week's tags depend only on the week, the lead and the table, and every run
+// asks for the same weeks many times (history, horizon, per level). Memoised per
+// table so the bias replay (E14-11, ENG-B100) can re-run the forecast at past
+// origins cheaply. The tag is frozen; callers only read it.
+const tagMemo = new WeakMap<readonly RamadanDates[], Map<string, WeekTag>>();
+
 export function tagWeek(weekStart: IsoDate, lead: number, table: readonly RamadanDates[] = RAMADAN_TABLE): WeekTag {
+  let byKey = tagMemo.get(table);
+  if (!byKey) {
+    byKey = new Map();
+    tagMemo.set(table, byKey);
+  }
+  const key = `${weekStart}|${lead}`;
+  const hit = byKey.get(key);
+  if (hit) return hit;
+  const tag = computeTag(weekStart, lead, table);
+  byKey.set(key, tag);
+  return tag;
+}
+
+function computeTag(weekStart: IsoDate, lead: number, table: readonly RamadanDates[]): WeekTag {
   const ds = days(weekStart);
   const occurrence: Partial<Record<DemandEvent, string>> = {};
   const payday = ds.find((d) => dayOfMonth(d) >= 25);
@@ -111,7 +131,7 @@ export function tagWeek(weekStart: IsoDate, lead: number, table: readonly Ramada
     const k = daysBetween(weekStart, weekOf(r.start)) / 7;
     if (k >= 1 && k <= lead) occurrence.preRamadan = `H${r.hijriYear}`;
   }
-  return { events: DEMAND_EVENTS.filter((e) => occurrence[e] !== undefined), occurrence };
+  return Object.freeze({ events: Object.freeze(DEMAND_EVENTS.filter((e) => occurrence[e] !== undefined)), occurrence: Object.freeze(occurrence) });
 }
 
 /** Weeks inside the pre-Ramadan window (kept out of the baseline). */

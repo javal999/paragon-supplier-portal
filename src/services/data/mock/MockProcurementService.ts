@@ -137,6 +137,8 @@ import type {
   StabilisedPlanView,
   DataHealthView,
   DemandForecastView,
+  ForecastBiasView,
+  ModelBacktestView,
 } from '../types';
 import { PR_INTAKE_LINES } from './fixtures/prIntake';
 import { engineDataset } from './fixtures/engineDataset';
@@ -153,6 +155,7 @@ import {
 import { plannedReceiptsOf, sizedRequirement } from '../../engine/orderSizing';
 import {
   STREAM_MATERIAL_TYPE,
+  backtestMascLimit,
   engineServiceTargets,
   feedFreshnessLimitsDays,
   orderSizingCosts,
@@ -176,15 +179,19 @@ import { withMrpController } from './mrpControllerReadModel';
 // Material C2 — supplier trade names, narrowed per reader (MR-3 BR-03).
 import { materialNameRowsFor, withTradeName } from './materialNameReadModel';
 import { FEEDS, dataHealth } from '../../engine/dataHealth';
-import { demandForecast, type DemandForecastRun } from '../../engine/demandForecast';
+import { currentDemandForecast, currentForecastBias, withOverrides } from './demandForecastRun';
+import { forecastOverrideStore } from './stores/forecastOverrideStore';
+import { overrideValue } from '../../engine/forecastOverrides';
+import { modelBacktest, prepareBacktest, type PreparedBacktest } from '../../engine/modelBacktest';
 import { DEFAULT_DEMAND_RANGE_OPTIONS, demandRange, rangeLevels, replayForecasts, type DemandRangeRun, type Replay } from '../../engine/demandRange';
 import { DEFAULT_STOCK_ACCURACY_TOLERANCE } from '../../engine/stock';
 import { agreedCfot, supplierCfot } from '../../engine/cfot';
 import { lineHistories } from '../../engine/lines';
 import { sdcClock } from '../../sdc/clock';
+import { withOwnQualificationWarnings } from '../../sourcing/sourcingType';
 
-/** REQ-E14-07 — the demand forecast per engine dataset (see getDemandForecast). */
-const demandForecastMemo = new WeakMap<EngineDataset, DemandForecastRun>();
+/** REQ-E14-10 — the backtest's heavy half per engine dataset, keyed by hub date and the values it reads. */
+const backtestMemo = new WeakMap<EngineDataset, { key: string; prep: PreparedBacktest; ms: number }>();
 /** REQ-E14-09 — the replay and the range per engine dataset (see getDemandForecast). */
 const demandRangeMemo = new WeakMap<EngineDataset, { asOf: string; replay: Replay; levels: string; range: DemandRangeRun }>();
 
@@ -722,16 +729,14 @@ export class MockProcurementService implements IProcurementService {
     // REQ-E14-07, computed at read on the hub's date (X-01). PTI only: engine
     // output on synthetic data is never shown to a supplier (X-03). The run is
     // memoised per dataset (the dataset is itself memoised per present).
+    // The forecast shown carries the planner overrides in force (REQ-E14-11
+    // X-06, ENG-B103); the engine's own values stay beside it.
     if (scope.personaType === 'supplier') return null;
     const data = engineDataset();
-    const asOf = dayOf(sdcClock.now());
-    let run = demandForecastMemo.get(data);
-    if (!run || run.asOf !== asOf) {
-      run = demandForecast({ finishedGoods: data.finishedGoods, sales: data.sales, fgPlan: data.fgPlan, asOf });
-      demandForecastMemo.set(data, run);
-    }
-    // REQ-E14-09 — the range around it, with the administrator's levels in force
-    // (X-05). The replay depends on the date only; the range also on the levels.
+    const run = currentDemandForecast();
+    const asOf = run.asOf;
+    // REQ-E14-09 — the range around the engine's forecast, with the administrator's
+    // levels in force (X-05). The replay depends on the date only; the range also on the levels.
     const levels = rangeLevels(demandRangeExtraQuantilePct());
     let memo = demandRangeMemo.get(data);
     if (!memo || memo.asOf !== asOf || memo.levels !== levels.join()) {
@@ -740,7 +745,66 @@ export class MockProcurementService implements IProcurementService {
       memo = { asOf, replay, levels: levels.join(), range };
       demandRangeMemo.set(data, memo);
     }
-    return { ...run, range: memo.range, provenance: data.provenance, materialPlanningSource: 'sapPlan' };
+    return {
+      ...run,
+      ...withOverrides(run, forecastOverrideStore.all()),
+      range: memo.range,
+      provenance: data.provenance,
+      materialPlanningSource: 'sapPlan',
+    };
+  }
+
+  async getForecastBias(scope: QueryScope): Promise<ForecastBiasView | null> {
+    // REQ-E14-11, computed at read on the hub's date (X-01). PTI only (X-03).
+    // BR-01 replays the engine at past origins (memoised with the run); the
+    // override ledger starts empty — no override history is invented.
+    if (scope.personaType === 'supplier') return null;
+    const data = engineDataset();
+    const run = currentDemandForecast();
+    const bias = currentForecastBias();
+    const records = forecastOverrideStore.all();
+    const shown = withOverrides(run, records);
+    const sales = new Map(data.sales.map((x) => [`${x.skuCode}|${x.weekStart}`, x] as const));
+    const actualOf = (sku: string, week: string) => {
+      const row = sales.get(`${sku}|${week}`);
+      return row && !row.stockout ? row.quantity : null;
+    };
+    return {
+      ...bias,
+      provenance: data.provenance,
+      current: { weeks: run.weeks, skus: shown.skus, total: shown.total },
+      overrides: [...records].reverse(),
+      value: overrideValue(records, actualOf, run.asOf),
+      serviceJudgement: 'awaitsBacktest',
+      materialPlanningSource: 'sapPlan',
+    };
+  }
+
+  async getModelBacktest(scope: QueryScope): Promise<ModelBacktestView | null> {
+    // REQ-E14-10, computed at read on the hub's date (X-01) with the
+    // administrator's values in force (X-05). PTI only (X-03). The replay is
+    // the heavy half and runs once per dataset, date, targets and cost rates;
+    // selection under the MASC limit (ENG-D13) is cheap and runs every read.
+    if (scope.personaType === 'supplier') return null;
+    const data = engineDataset();
+    const asOf = dayOf(sdcClock.now());
+    const targets = engineServiceTargets();
+    const rates = orderSizingCosts();
+    const costs = { orderCostIdr: rates.orderCostIdr, holdingRatePerYear: rates.holdingRatePerYear };
+    const key = JSON.stringify([asOf, targets, costs]);
+    let hit = backtestMemo.get(data);
+    if (!hit || hit.key !== key) {
+      const t0 = performance.now();
+      const prep = prepareBacktest({ data, asOf, targets, costs });
+      hit = { key, prep, ms: performance.now() - t0 };
+      backtestMemo.set(data, hit);
+    }
+    return {
+      ...modelBacktest(hit.prep, backtestMascLimit()),
+      provenance: data.provenance,
+      materialPlanningSource: 'sapPlan',
+      computedInMs: Math.round(hit.ms),
+    };
   }
 
   async getSafetyStock(scope: QueryScope): Promise<SafetyStockView | null> {
@@ -797,6 +861,9 @@ export class MockProcurementService implements IProcurementService {
       // only hid them would still hold them in the payload it was handed.
       const sid = scope.supplierId;
       rows = rows.map((r) => (r.confidential && !acceptanceOf(r.id, sid) ? maskConfidential(r) : r));
+      // BL-147 (MAT-R4) — the publish warning names other invitees' level and
+      // missing documents; a supplier reads only its own row.
+      rows = rows.map((r) => withOwnQualificationWarnings(r, sid));
     }
     if (filter?.status) rows = rows.filter((r) => matchesList(r.status, filter.status));
     if (filter?.category)

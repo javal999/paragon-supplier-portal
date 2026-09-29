@@ -177,4 +177,24 @@ describe('Administration → MRP controllers (MR-5 BR-02)', () => {
       userLabels: ['Material Planner, fragrance'],
     });
   });
+
+  it('BL-157 — "Remove mapping" unmaps P12 after a confirm; the row then says unmapped and the change is on record', async () => {
+    renderWithProviders(<AdminMrpControllers />, { identity: BUYER });
+    // An unmapped code offers no removal.
+    await screen.findByTestId('mrpc-row-P13');
+    expect(screen.queryByTestId('mrpc-unmap-P13')).toBeNull();
+    fireEvent.click(screen.getByTestId('mrpc-unmap-P12'));
+    expect(screen.getByTestId('mrpc-unmap-confirm-P12').textContent).toMatch(/show the code only/);
+    fireEvent.click(screen.getByTestId('mrpc-unmap-confirm-button-P12'));
+    const change = await screen.findByTestId('mrpc-change-P12');
+    expect(within(change).getByText('Mapping removed (code only)')).toBeTruthy();
+    expect(within(screen.getByTestId('mrpc-row-P12')).getByText('Not mapped (code only)')).toBeTruthy();
+    expect(mrpControllerStore.get('P12')).toBeUndefined();
+  });
+
+  it('BL-157 — a planner is offered no removal', async () => {
+    renderWithProviders(<AdminMrpControllers />, { identity: PLANNER });
+    await screen.findByTestId('mrpc-row-P12');
+    expect(screen.queryByTestId('mrpc-unmap-P12')).toBeNull();
+  });
 });

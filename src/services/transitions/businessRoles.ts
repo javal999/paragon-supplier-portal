@@ -353,6 +353,10 @@ const LANE_BUNDLES = Object.freeze({
       // REQ-E14-13 BR-07 / ENG-D16 — the Material Planner agrees a PO-line
       // change with the supplier in SAP and records here that it was taken there.
       'sapchange:mark',
+      // REQ-E14-11 X-06 / ENG-D11 — the Material Planning team reviews the
+      // demand forecast before it drives material plans, so the team that
+      // reviews it is the one that overrides it, with a reason.
+      'forecastoverride:record',
       // Material C5 (MR-8 BR-03) — Material Planning maintains the planning
       // groups capacity is kept by: create, rename, move materials, retire.
       'planninggroup:manage',

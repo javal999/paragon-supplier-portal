@@ -288,6 +288,7 @@ export const TRANSITION_PURPOSE: FlowAnnotations = Object.freeze({
   t_planninggroup_move_materials: { purposeKey: 'processFlows.purpose.t_planninggroup_move_materials' },
   t_planninggroup_retire: { purposeKey: 'processFlows.purpose.t_planninggroup_retire' },
   t_mrpcontroller_set: { purposeKey: 'processFlows.purpose.t_mrpcontroller_set' },
+  t_mrpcontroller_unmap: { purposeKey: 'processFlows.purpose.t_mrpcontroller_unmap' },
   t_materialname_submit: { purposeKey: 'processFlows.purpose.t_materialname_submit' },
   t_materialname_approve: { purposeKey: 'processFlows.purpose.t_materialname_approve' },
   t_materialname_reject: { purposeKey: 'processFlows.purpose.t_materialname_reject' },
@@ -335,6 +336,7 @@ export const TRANSITION_PURPOSE: FlowAnnotations = Object.freeze({
   t_forecastversion_reassign: { purposeKey: 'processFlows.purpose.t_forecastversion_reassign' },
   t_forecastview_record: { purposeKey: 'processFlows.purpose.t_forecastview_record' },
   t_sapchange_mark: { purposeKey: 'processFlows.purpose.t_sapchange_mark' },
+  t_forecastoverride_record: { purposeKey: 'processFlows.purpose.t_forecastoverride_record' },
   // REQ-E03-02 / REQ-E03-04 / REQ-E03-05 — RFx management.
   t_rfi_create: { purposeKey: 'processFlows.purpose.t_rfi_create' },
   t_rfi_revise_draft: { purposeKey: 'processFlows.purpose.t_rfi_revise_draft' },
@@ -423,6 +425,7 @@ export const ENTITY_PURPOSE: FlowAnnotations = Object.freeze({
   forecastVersion: { purposeKey: 'processFlows.purpose.entity.forecastVersion' },
   forecastView: { purposeKey: 'processFlows.purpose.entity.forecastView' },
   sapChangeMark: { purposeKey: 'processFlows.purpose.entity.sapChangeMark' },
+  forecastOverride: { purposeKey: 'processFlows.purpose.entity.forecastOverride' },
   rfiEvent: { purposeKey: 'processFlows.purpose.entity.rfiEvent' },
   rfiResponse: { purposeKey: 'processFlows.purpose.entity.rfiResponse' },
   rfpEvent: { purposeKey: 'processFlows.purpose.entity.rfpEvent' },

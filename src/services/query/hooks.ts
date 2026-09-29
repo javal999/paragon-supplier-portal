@@ -164,6 +164,13 @@ export const useDataHealth = () =>
 export const useDemandForecast = () =>
   useServiceQuery(['procurement', 'demandForecast'], (svc, scope) => svc.procurement.getDemandForecast(scope));
 
+/** REQ-E14-11 — forecast bias, the planner override ledger and override value (PTI only). */
+export const useForecastBias = () =>
+  useServiceQuery(['procurement', 'forecastBias'], (svc, scope) => svc.procurement.getForecastBias(scope));
+/** REQ-E14-10 — the model backtest (PTI only). */
+export const useModelBacktest = () =>
+  useServiceQuery(['procurement', 'modelBacktest'], (svc, scope) => svc.procurement.getModelBacktest(scope));
+
 // ── RFx management (REQ-E03-01 to REQ-E03-05) ──────────────────────────────
 
 /**
