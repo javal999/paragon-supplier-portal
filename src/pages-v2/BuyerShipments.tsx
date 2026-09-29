@@ -631,6 +631,21 @@ const BuyerShipments: React.FC = () => {
                         <li key={li.materialCode} className="text-text-secondary">
                           <Data>{li.materialCode}</Data> — {li.description} ·{' '}
                           <Data>{li.shippedQty}</Data> {li.uom ?? ''}
+                          {li.lotNumber ? (
+                            <>
+                              {' · '}
+                              {t('fc.asn.col.batch')} <Data>{li.lotNumber}</Data>
+                            </>
+                          ) : null}
+                          {/* MR-6 BR-04 — PTI sees a batch the supplier typed rather than picked. */}
+                          {li.batchSource === 'typed' ? (
+                            <span
+                              data-testid={`asn-batch-not-declared-${a.asnNumber}-${li.materialCode}`}
+                              className="ml-2 inline-block px-1.5 py-0.5 rounded border border-warning bg-warning-soft text-[11px] text-warning-hover"
+                            >
+                              {t('fc.asn.batch.notDeclared')}
+                            </span>
+                          ) : null}
                         </li>
                       ))}
                     </ul>

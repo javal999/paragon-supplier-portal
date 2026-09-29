@@ -42,6 +42,17 @@ export const fulfilmentCollaborationEn: Record<string, string> = {
   'fc.asn.cancel.success': '{{asnNumber}} cancelled',
   'fc.asn.cancel.failed': '{{asnNumber}} was not cancelled',
   'fc.asn.kpi.cancelled': 'Cancelled',
+  // MR-6 BR-01 to BR-04 — the batch from declared stock.
+  'fc.asn.batch.choose': 'Choose a batch',
+  'fc.asn.batch.option': '{{batch}} · {{available}} available · expires {{expiry}}',
+  'fc.asn.batch.optionNoExpiry': '{{batch}} · {{available}} available',
+  'fc.asn.batch.typeOther': 'Type a batch not in the list',
+  'fc.asn.batch.typedFor': 'Batch number not in the list for {{material}}',
+  'fc.asn.batch.notDeclaredNote': 'This batch is not in your declared stock',
+  'fc.asn.batch.notDeclared': 'Not in declared stock',
+  'fc.asn.batch.aboveAvailable':
+    '{{material}}: ships {{qty}} from batch {{batch}}, above the {{available}} available in your declared stock.',
+  'fc.asn.batch.aboveAvailableHint': 'Your stock record may be out of date. You can still submit this ASN.',
 
   // ── Goods receipts, supplier side (REQ-E07-06) ────────────────────────────
   'fc.gr.title': 'Goods receipts',
@@ -235,6 +246,18 @@ export const fulfilmentCollaborationId: Record<string, string> = {
   'fc.asn.cancel.success': '{{asnNumber}} dibatalkan',
   'fc.asn.cancel.failed': '{{asnNumber}} tidak dibatalkan',
   'fc.asn.kpi.cancelled': 'Dibatalkan',
+  // MR-6 BR-01 sampai BR-04 — batch dari stok yang dilaporkan.
+  'fc.asn.batch.choose': 'Pilih batch',
+  'fc.asn.batch.option': '{{batch}} · {{available}} tersedia · kedaluwarsa {{expiry}}',
+  'fc.asn.batch.optionNoExpiry': '{{batch}} · {{available}} tersedia',
+  'fc.asn.batch.typeOther': 'Ketik batch yang tidak ada di daftar',
+  'fc.asn.batch.typedFor': 'Nomor batch di luar daftar untuk {{material}}',
+  'fc.asn.batch.notDeclaredNote': 'Batch ini tidak ada di stok yang Anda laporkan',
+  'fc.asn.batch.notDeclared': 'Tidak ada di stok yang dilaporkan',
+  'fc.asn.batch.aboveAvailable':
+    '{{material}}: mengirim {{qty}} dari batch {{batch}}, melebihi {{available}} yang tersedia di stok yang Anda laporkan.',
+  'fc.asn.batch.aboveAvailableHint':
+    'Catatan stok Anda mungkin belum diperbarui. Anda tetap dapat mengirim ASN ini.',
 
   // ── Goods receipts, supplier side (REQ-E07-06) ────────────────────────────
   'fc.gr.title': 'Penerimaan barang',

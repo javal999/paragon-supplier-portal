@@ -83,6 +83,7 @@ import {
   INVOICE_AWAITING_MATCH,
   ASN_PO_STATES,
   INVOICEABLE_PO_STATES,
+  asnLineCheckOf,
   asnLineRefusal,
   asnSubmitRefusal,
   deriveInvoiceVerdict,
@@ -134,6 +135,8 @@ import {
   responseWindowRefusal,
   responseAlreadySubmittedRefusal,
   type QuoteLineInput,
+  type AsnBatchSource,
+  type AsnLineCheck,
   type AsnLineInput,
   type CommandTarget,
   type CascadeCommand,
@@ -182,6 +185,8 @@ import {
 import { forecastVersionStore, forecastViewStore } from './stores/forecastHubStores';
 // Material A1 — the supplier overlay (its own module, plan AD-5).
 import { supplierOverlayTarget } from './targets/supplierOverlay';
+// Material C4 — the MRP controller list (its own module, plan AD-5).
+import { mrpControllerTarget } from './targets/mrpController';
 // ── REQ-E14-13 — reschedule proposals taken to SAP ─────────────────────────
 import { sapChangeMarkStore } from './stores/sapChangeMarkStore';
 import { engineDataset } from './fixtures/engineDataset';
@@ -470,6 +475,23 @@ const payloadAsnLines = (payload: Record<string, unknown>): AsnLineInput[] | nul
   Array.isArray(payload.lines) ? (payload.lines as AsnLineInput[]) : null;
 
 /**
+ * MR-6 BR-04 — the batch source stored on a line. A line is `declared` only
+ * when the supplier says it picked the batch AND the batch is in its latest
+ * stock record for the material; anything else is `typed`, so a payload cannot
+ * hide the "not in declared stock" marker from PTI.
+ */
+const batchSourceOf = (
+  supplierId: string | undefined,
+  materialCode: string,
+  lot: string,
+  claimed: unknown,
+): AsnBatchSource => {
+  if (claimed !== 'declared' || !supplierId) return 'typed';
+  const record = inventoryDeclarationStore.latestFor(supplierId, materialCode);
+  return record?.batches?.some((b) => b.batchNumber === lot) ? 'declared' : 'typed';
+};
+
+/**
  * Merge entered lines onto an ASN's stored lines by material. A material the
  * draft does not carry yet is added from its PO line. Stored lines the payload
  * does not mention are kept as they are.
@@ -494,11 +516,13 @@ const mergeAsnLines = (
             lotNumber: '',
             ...(poLine?.uom ? { uom: poLine.uom } : {}),
           };
+    const lot = nonBlank(e.batchNumber);
     const next: AsnLineItem = {
       ...base,
       shippedQty: typeof e.shippedQty === 'number' ? e.shippedQty : base.shippedQty,
-      lotNumber: nonBlank(e.batchNumber) ?? base.lotNumber,
+      lotNumber: lot ?? base.lotNumber,
       ...(nonBlank(e.expiryDate) ? { expiryDate: nonBlank(e.expiryDate) } : {}),
+      ...(lot ? { batchSource: batchSourceOf(po?.supplierId, e.materialCode, lot, e.batchSource) } : {}),
     };
     if (i >= 0) out[i] = next;
     else out.push(next);
@@ -641,12 +665,17 @@ bindPolicyHook(POLICY_HOOKS.ASN_LINES_WITHIN_OPEN, ({ entityId, payload }) => {
   if (!asn && entered && entered.length === 0) {
     return { ok: false, reason: 'an ASN needs at least one line' };
   }
-  const lines: AsnLineInput[] = asn
-    ? mergeAsnLines(asn.lineItems, entered ?? [], po).map((l) => ({
-        materialCode: l.materialCode,
-        shippedQty: l.shippedQty,
-      }))
-    : entered!;
+  // AR-11 — the full line (batch, expiry) with the ETA the ASN will carry.
+  const eta = nonBlank(payload.eta) ?? asn?.eta;
+  const lines: AsnLineCheck[] = asn
+    ? mergeAsnLines(asn.lineItems, entered ?? [], po).map((l) => asnLineCheckOf(l, eta))
+    : entered!.map((e) => ({
+        materialCode: e?.materialCode,
+        shippedQty: e?.shippedQty,
+        ...(e?.batchNumber !== undefined ? { lotNumber: e.batchNumber } : {}),
+        ...(e?.expiryDate !== undefined ? { expiryDate: e.expiryDate } : {}),
+        ...(eta !== undefined ? { eta } : {}),
+      }));
   const seen = new Set<string>();
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
@@ -684,10 +713,24 @@ bindPolicyHook(POLICY_HOOKS.ASN_SUBMIT_COMPLETE, ({ entityId, payload }) => {
     eta: nonBlank(payload.eta) ?? asn.eta,
   });
   if (refusal) return { ok: false, reason: `INCOMPLETE_ASN: ${refusal}` };
-  const noBatch = lines.findIndex((l) => !nonBlank(l.lotNumber));
-  if (noBatch >= 0) return { ok: false, reason: `INCOMPLETE_ASN: batch number missing on line ${noBatch + 1}` };
-  const badQty = lines.findIndex((l) => !(Number.isFinite(l.shippedQty) && l.shippedQty > 0));
-  if (badQty >= 0) return { ok: false, reason: `INCOMPLETE_ASN: shipped quantity missing on line ${badQty + 1}` };
+  // AR-11 — each line through the one line rule, batch required. What the line
+  // itself lacks is reported here; the PO checks (material on the PO, open
+  // quantity) are ASN_LINES_WITHIN_OPEN's, which runs next on the same rule.
+  const po = findPoByNumber(asn.poReference);
+  const eta = nonBlank(payload.eta) ?? asn.eta;
+  for (let i = 0; i < lines.length; i++) {
+    const lineRefusal = asnLineRefusal(asnLineCheckOf(lines[i], eta), po ?? { poNumber: asn.poReference, lineItems: [] }, asnStore.all(), {
+      excludeAsn: asn.asnNumber,
+      overShipReason: payload.overShipReason ?? asn.overShipReason,
+      requireBatch: true,
+    });
+    if (lineRefusal === 'batch') {
+      return { ok: false, reason: `INCOMPLETE_ASN: batch number missing on line ${i + 1}` };
+    }
+    if (lineRefusal === 'quantity') {
+      return { ok: false, reason: `INCOMPLETE_ASN: shipped quantity missing on line ${i + 1}` };
+    }
+  }
   return { ok: true };
 });
 
@@ -4975,6 +5018,8 @@ const TARGETS: Record<string, CommandTarget> = {
   threePl: threePlTarget,
   // Material A1 — a supplier's stock update mode (MR-1 BR-02, AC-06).
   supplierOverlay: supplierOverlayTarget,
+  // Material C4 — who each SAP MRP controller code is (MR-5 BR-02).
+  mrpController: mrpControllerTarget,
   // BL-32 — the rule values. Wired so every change to a tolerance, deadline,
   // threshold or stale period — and every reset — lands in the DR-10 trail.
   hubSetting: hubSettingTarget,
