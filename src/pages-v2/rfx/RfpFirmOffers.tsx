@@ -4,6 +4,7 @@ import Button from '../../components/ui-v2/Button';
 import Data from '../../components/ui-v2/Data';
 import StatusPill from '../../components/ui-v2/StatusPill';
 import { HandoffNotice } from '../../components/ui-v2/HandoffNotice';
+import SessionAttachments from '../../components/ui-v2/SessionAttachments';
 import { useVerbAvailability } from '../../hooks/useVerbAvailability';
 import type { GateResult } from '../../services/sourcing/complianceGate';
 import type { RfpEventView, RfpOfferRoundView } from '../../services/sourcing/views';
@@ -178,6 +179,18 @@ const RoundCard: React.FC<{
           );
         })}
       </ul>
+      {/* BL-129 — the files each supplier sent with its firm offer in force, read-only. */}
+      {round.offers
+        .filter((o) => (o.documents ?? []).length > 0)
+        .map((o) => (
+          <SessionAttachments
+            key={o.id}
+            value={o.documents ?? []}
+            readOnly
+            label={t('rfx.firm.documentsOf', { supplier: nameOf(o.supplierId) })}
+            testId={`rfp-round-docs-${round.id}-${o.supplierId}`}
+          />
+        ))}
     </li>
   );
 };
