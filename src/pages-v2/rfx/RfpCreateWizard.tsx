@@ -72,6 +72,8 @@ import type {
 } from '../../services/sourcing/types';
 import DocumentRequestsEditor, { DocumentRequestsSummary } from './DocumentRequestsEditor';
 import RfxInviteeStep from './RfxInviteeStep';
+import { useSourcingTypeMap } from './eligibilityDisplay';
+import { mappedSourcingType } from '../../services/sourcing/sourcingType';
 import RfxQuestionEditor from './RfxQuestionEditor';
 import RfxSaveTemplate from './RfxSaveTemplate';
 import RfxStartFrom, { type StartOption } from './RfxStartFrom';
@@ -212,6 +214,15 @@ const RfpCreateWizard: React.FC<RfpCreateWizardProps> = ({
   const [storeVersion, setStoreVersion] = useState(0);
 
   const family = rfxCategoryFamily(draft.family);
+  // Material G2 (MR-10 BR-06) — the type comes from the category (and the
+  // purchasing group when one is set); the buyer never types it.
+  const sourcingMap = useSourcingTypeMap();
+  const sourcingType = family
+    ? mappedSourcingType(
+        { kind: 'rfp', materialCategory: family.supplierCategory, ...(draft.purchasingGroup ? { purchasingGroup: draft.purchasingGroup } : {}) },
+        sourcingMap,
+      )
+    : undefined;
   const saved = useMemo(() => rfpTemplateStore.readState(), [storeVersion]);
 
   const startOptions: StartOption[] = [
@@ -669,6 +680,7 @@ const RfpCreateWizard: React.FC<RfpCreateWizardProps> = ({
           selected={draft.invitedSupplierIds}
           onToggle={toggleSupplier}
           testIdPrefix="rfp-new"
+          {...(sourcingType ? { sourcingType } : {})}
         />
       ),
     },

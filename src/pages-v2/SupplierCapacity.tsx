@@ -27,15 +27,21 @@ import { formatDate, formatDateTime } from '../lib/format';
 import { useCapacityPlans } from '../services/query/hooks';
 import type { CapacityPlan, CapacityReason } from '../services/data/types';
 import { useActiveReasonCodes, useReasonLabel } from './admin/reasonCodeDisplay';
-import { capacitySubmissionRefusal, planStatus } from '../services/transitions/capacityRules';
+import {
+  capacitySubmissionRefusal,
+  ltpCapacityLevel,
+  planStatus,
+} from '../services/transitions/capacityRules';
 import { readStockNumber } from '../services/transitions/inventoryRules';
 import {
   CapacityStatusPill,
+  LtpCheckPill,
   inputClass,
   inventoryNow,
   qty,
   useInventoryRunner,
 } from './inventory/inventoryDisplay';
+import { ReEntryPill, usePlanningGroupLabel } from './inventory/planningGroupDisplay';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SUPPLIER CAPACITY CONFIRMATION — REQ-E08-04.
@@ -44,6 +50,17 @@ import {
 // supplier allocates, with optional upside (BR-05). A week below demand needs a
 // starter reason, and "Other" needs a note (BR-04, AC-02). The form mirrors the
 // rule so the supplier sees why Submit is not ready; the verb's policy decides.
+//
+// BL-133 (ENG-D18) — the week's demand IS the group's LTP (the current
+// forecast for the group's materials, summed; owner, 2026-09-29), so the
+// reason rule and the LTP flag read one number. Beside it, BE (capacity +
+// additional capacity, derived from what is typed): amber above the
+// capacity, red above BE. Capacity is confirmed here BEFORE the LTP is submitted on
+// Forecast & commitments (ENG-D19).
+//
+// Material C5 (MR-8 BR-04, BR-05) — the tabs are PLANNING groups, named from
+// the planning group store. A week a planning-group move touched reads "Needs
+// re-entry": the supplier confirms it again by submitting the group.
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface WeekDraft {
@@ -63,6 +80,7 @@ const draftFrom = (plan: CapacityPlan): WeekDraft[] =>
 
 const SupplierCapacity: React.FC = () => {
   const { t } = useTranslation();
+  const groupLabel = usePlanningGroupLabel();
   // BL-32 — the administrator's list in force: only active codes are offered.
   const capacityReasons = useActiveReasonCodes('capacityShortfall');
   const reasonLabel = useReasonLabel();
@@ -87,12 +105,12 @@ const SupplierCapacity: React.FC = () => {
     drill.kind === 'filtered' && drill.groups !== null && drill.groups.length > 0 ? drill.groups[0] : null;
   const drillWeeks = drill.kind === 'filtered' ? drill.weeks : null;
   const plan =
-    plans.find((p) => p.materialGroup === (group ?? drillGroup)) ?? plans[0] ?? null;
+    plans.find((p) => p.planningGroupId === (group ?? drillGroup)) ?? plans[0] ?? null;
 
   useEffect(() => {
     if (plan) setDraft(draftFrom(plan));
     // Reset the form when the group or its latest submission changes.
-  }, [plan?.materialGroup, plan?.latest?.id, plansQuery.dataUpdatedAt]);
+  }, [plan?.planningGroupId, plan?.latest?.id, plansQuery.dataUpdatedAt]);
 
   if (!identity.supplierId) return <NoSupplierIdentity />;
   if (plansQuery.isPending || drill.kind === 'pending') return <LoadingState breadcrumb={crumb} />;
@@ -114,7 +132,12 @@ const SupplierCapacity: React.FC = () => {
     const d = draft[i] ?? { allocated: '', upside: '', reason: '', note: '' };
     const allocated = readStockNumber(d.allocated);
     const upside = readStockNumber(d.upside);
-    return { w, d, allocated, upside };
+    const ltp = w.demand;
+    const stated =
+      allocated.ok && allocated.value !== null
+        ? { allocated: allocated.value, upside: upside.ok && upside.value !== null ? upside.value : undefined }
+        : null;
+    return { w, d, allocated, upside, ltp, stated, level: ltpCapacityLevel(ltp, stated) };
   });
   const payloadWeeks = rows.map(({ w, d, allocated, upside }) => ({
     week: w.week,
@@ -135,7 +158,7 @@ const SupplierCapacity: React.FC = () => {
 
   const submit = () =>
     void run(
-      { verb: 'submitCapacity', supplierId: plan.supplierId, materialGroup: plan.materialGroup, weeks: payloadWeeks },
+      { verb: 'submitCapacity', supplierId: plan.supplierId, planningGroupId: plan.planningGroupId, weeks: payloadWeeks },
       t('inv.capacity.toast.submitted'),
     );
 
@@ -168,8 +191,8 @@ const SupplierCapacity: React.FC = () => {
       )}
 
       <SubTabs<string>
-        options={plans.map((p) => ({ id: p.materialGroup, label: t(`inv.group.${p.materialGroup}`) }))}
-        value={plan.materialGroup}
+        options={plans.map((p) => ({ id: p.planningGroupId, label: groupLabel(p.planningGroupId) }))}
+        value={plan.planningGroupId}
         onChange={setGroup}
         className="mb-4"
       />
@@ -194,17 +217,22 @@ const SupplierCapacity: React.FC = () => {
       <p className="text-xs text-text-tertiary mb-2" data-testid="capacity-upside-help">
         {t('inv.capacity.upsideHelp')}
       </p>
+      <p className="text-xs text-text-tertiary mb-2" data-testid="capacity-ltp-help">
+        {t('inv.capacity.ltpHelp')}
+      </p>
       <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto mb-4">
         <Table>
           <TableHeader>
             <TableHeaderCell>{t('inv.capacity.col.week')}</TableHeaderCell>
-            <TableHeaderCell className="text-right">{t('inv.capacity.col.demand', { uom: plan.uom })}</TableHeaderCell>
+            <TableHeaderCell className="text-right">{t('inv.capacity.col.ltp', { uom: plan.uom })}</TableHeaderCell>
             <TableHeaderCell>{t('inv.capacity.col.allocated', { uom: plan.uom })}</TableHeaderCell>
             <TableHeaderCell>{t('inv.capacity.col.upside', { uom: plan.uom })}</TableHeaderCell>
+            <TableHeaderCell className="text-right">{t('inv.capacity.col.be', { uom: plan.uom })}</TableHeaderCell>
+            <TableHeaderCell>{t('inv.capacity.col.ltpCheck')}</TableHeaderCell>
             <TableHeaderCell>{t('inv.capacity.col.reason')}</TableHeaderCell>
           </TableHeader>
           <tbody>
-            {rows.map(({ w, d, allocated }, i) => {
+            {rows.map(({ w, d, allocated, ltp, stated, level }, i) => {
               const below = allocated.ok && allocated.value !== null && allocated.value < w.demand;
               return (
                 <TableRow
@@ -217,9 +245,10 @@ const SupplierCapacity: React.FC = () => {
                 >
                   <TableCell className="whitespace-nowrap">
                     <Data>{formatDate(w.week)}</Data>
+                    {w.needsReEntry ? <ReEntryPill testId={`capacity-reentry-${w.week}`} /> : null}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Data>{qty(w.demand)}</Data>
+                    <Data>{qty(ltp)}</Data>
                   </TableCell>
                   <TableCell>
                     <input
@@ -240,6 +269,16 @@ const SupplierCapacity: React.FC = () => {
                       value={d.upside}
                       onChange={(e) => update(i, { upside: e.target.value })}
                     />
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {stated ? (
+                      <Data>{qty(stated.allocated + (stated.upside ?? 0))}</Data>
+                    ) : (
+                      <span className="text-text-tertiary">—</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <LtpCheckPill level={level} testId={`capacity-ltp-${w.week}`} />
                   </TableCell>
                   <TableCell>
                     {below ? (

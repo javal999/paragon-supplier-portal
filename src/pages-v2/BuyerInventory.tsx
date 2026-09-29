@@ -8,7 +8,7 @@ import PageMetaLine from '../components/ui-v2/PageMetaLine';
 import SampleDataBadge from '../components/ui-v2/SampleDataBadge';
 import SubTabs from '../components/ui-v2/SubTabs';
 import FilterChipsBar from '../components/ui-v2/FilterChipsBar';
-import SearchBar from '../components/ui-v2/SearchBar';
+import MaterialSearch, { MaterialMatchReason, useMaterialSearch } from '../components/ui-v2/MaterialSearch';
 import Table from '../components/ui-v2/Table';
 import TableHeader, { TableHeaderCell } from '../components/ui-v2/TableHeader';
 import TableRow from '../components/ui-v2/TableRow';
@@ -36,6 +36,9 @@ import {
   useInventoryRunner,
 } from './inventory/inventoryDisplay';
 import StockEntryPanel from './inventory/StockEntryPanel';
+import { weeklyUpdateView } from './inventory/WeeklyUpdatePanel';
+import { PicCell, PicFilter, PicHeader, usePicFilter } from './materials/picDisplay';
+import { TradeNameBeside } from './materials/tradeNameDisplay';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PTI INVENTORY — REQ-E08-01 (visibility), REQ-E08-02 (API sync, recording a
@@ -53,6 +56,20 @@ import StockEntryPanel from './inventory/StockEntryPanel';
 
 type BandFilter = 'all' | RiskClass | 'stale';
 
+/** Material B2 — the supplier's weekly update this cycle, or "API". */
+const CycleCell: React.FC<{ value: { api: true } | { api: false; updated: number; total: number } | undefined }> = ({
+  value,
+}) => {
+  const { t } = useTranslation();
+  if (!value) return null;
+  if (value.api) return <span className="text-xs text-text-secondary">{t('inv.thisCycle.api')}</span>;
+  return (
+    <Data className={`text-xs ${value.updated < value.total ? 'text-warning-hover' : ''}`}>
+      {t('inv.thisCycle.count', { updated: value.updated, total: value.total })}
+    </Data>
+  );
+};
+
 const BuyerInventory: React.FC = () => {
   const { t } = useTranslation();
   const inventory = useInventory();
@@ -63,6 +80,8 @@ const BuyerInventory: React.FC = () => {
   const [band, setBand] = useState<BandFilter>('all');
   const [search, setSearch] = useState('');
   const [incoming, setIncoming] = useState<InventoryPosition | null>(null);
+  // Material C4 — the PIC filter, kept in the page address (MR-5 BR-03).
+  const pic = usePicFilter();
   const [recordOpen, setRecordOpen] = useState(false);
   const nowIso = inventoryNow();
   const crumb = [t('hub.nav.section.inventory'), t('inv.pti.title')];
@@ -75,23 +94,47 @@ const BuyerInventory: React.FC = () => {
       : b === 'stale'
         ? ofType.filter((r) => stockFreshness(r, nowIso) !== 'current').length
         : ofType.filter((r) => positionRisk(r).riskClass === b).length;
-  const shown = ofType.filter((r) => {
+  const filtered = ofType.filter((r) => {
+    if (!pic.matches(r.mrpController)) return false;
     if (band === 'stale' && stockFreshness(r, nowIso) === 'current') return false;
     if (band !== 'all' && band !== 'stale' && positionRisk(r).riskClass !== band) return false;
-    const q = search.trim().toLowerCase();
-    return (
-      q === '' ||
-      r.materialCode.toLowerCase().includes(q) ||
-      r.materialLabel.toLowerCase().includes(q) ||
-      r.supplierName.toLowerCase().includes(q)
-    );
+    return true;
   });
+  // Material C3 — the one material search (MR-3 BR-04): code, PTI description
+  // and this row's supplier's approved trade name, best match first. A row
+  // whose supplier name holds the query still shows (the search always did).
+  const found = useMaterialSearch(search, filtered, (r) => ({
+    code: r.materialCode,
+    description: r.materialLabel,
+    supplierId: r.supplierId,
+  }));
+  const q = search.trim().toLowerCase();
+  const bySupplier =
+    q === '' ? [] : filtered.filter((r) => r.supplierName.toLowerCase().includes(q) && !found.some((f) => f.item === r));
+  const shown = [...found, ...bySupplier.map((item) => ({ item, match: null }))];
 
   const connected = useMemo(() => {
     const bySupplier = new Map<string, InventoryPosition>();
     for (const r of rows) if (r.apiConnected && !bySupplier.has(r.supplierId)) bySupplier.set(r.supplierId, r);
     return [...bySupplier.values()];
   }, [rows]);
+
+  // Material B2 — per supplier, this cycle's weekly update: "12 of 15", or
+  // "API" for a supplier on the scheduled pull (MR-1 d). Over ALL its rows,
+  // not the filtered ones, so the figure does not move with a filter.
+  const thisCycle = useMemo(() => {
+    const out = new Map<string, { api: true } | { api: false; updated: number; total: number }>();
+    for (const supplierId of new Set(rows.map((r) => r.supplierId))) {
+      const own = rows.filter((r) => r.supplierId === supplierId);
+      if (own.some((r) => r.apiConnected)) {
+        out.set(supplierId, { api: true });
+        continue;
+      }
+      const { status } = weeklyUpdateView(supplierId, own, nowIso);
+      out.set(supplierId, { api: false, updated: status.updated.length, total: status.total });
+    }
+    return out;
+  }, [rows, nowIso]);
 
   if (inventory.isPending) return <LoadingState breadcrumb={crumb} />;
   if (inventory.isError)
@@ -203,7 +246,7 @@ const BuyerInventory: React.FC = () => {
 
       <div className="flex flex-wrap items-center gap-3 mb-4">
         <div className="flex-1 min-w-[240px]">
-          <SearchBar value={search} onChange={setSearch} placeholder={t('inv.search')} />
+          <MaterialSearch mode="filter" query={search} onQueryChange={setSearch} placeholder={t('inv.search')} testId="pti-stock-search" />
         </div>
         <FilterChipsBar<BandFilter>
           options={(['all', 'high', 'medium', 'low', 'stale'] as BandFilter[]).map((b) => ({
@@ -213,6 +256,13 @@ const BuyerInventory: React.FC = () => {
           value={band}
           onChange={setBand}
         />
+        <PicFilter
+          refs={ofType.map((r) => r.mrpController)}
+          persona="buyer"
+          filter={pic.filter}
+          setFilter={pic.setFilter}
+          myCode={pic.myCode}
+        />
       </div>
 
       <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto">
@@ -220,6 +270,10 @@ const BuyerInventory: React.FC = () => {
           <TableHeader>
             <TableHeaderCell>{t('inv.col.material')}</TableHeaderCell>
             <TableHeaderCell>{t('inv.col.supplier')}</TableHeaderCell>
+            <TableHeaderCell>{t('inv.col.thisCycle')}</TableHeaderCell>
+            <TableHeaderCell>
+              <PicHeader />
+            </TableHeaderCell>
             <TableHeaderCell className="text-right">{t('inv.col.supplierSoh')}</TableHeaderCell>
             <TableHeaderCell className="text-right">{t('inv.col.ptiSoh')}</TableHeaderCell>
             <TableHeaderCell className="text-right">{t('inv.col.ptiRop')}</TableHeaderCell>
@@ -229,13 +283,16 @@ const BuyerInventory: React.FC = () => {
             <TableHeaderCell>{t('inv.col.lastUpdate')}</TableHeaderCell>
           </TableHeader>
           <tbody>
-            {shown.map((p) => (
+            {shown.map(({ item: p, match }) => (
               <TableRow key={`${p.supplierId}-${p.materialCode}`} data-testid={`pti-stock-row-${p.supplierId}-${p.materialCode}`}>
                 <TableCell>
                   <Data className="text-xs font-bold text-text-primary">{p.materialCode}</Data>
                   <div className="text-sm text-text-primary">
                     {p.materialLabel}
                   </div>
+                  {/* Material C2 — the supplier's approved trade name (MR-3 d, planner step 3). */}
+                  <TradeNameBeside name={p.tradeName} viewer="pti" testId={`pti-stock-trade-name-${p.supplierId}-${p.materialCode}`} />
+                  <MaterialMatchReason match={match} testId={`pti-stock-match-${p.supplierId}-${p.materialCode}`} />
                   {p.consignment && (
                     <StatusPill variant="info" className="mt-1">
                       {t('inv.consignment')}
@@ -246,6 +303,12 @@ const BuyerInventory: React.FC = () => {
                   <div className="text-sm text-text-primary">
                     {p.supplierName}
                   </div>
+                </TableCell>
+                <TableCell className="whitespace-nowrap" data-testid={`pti-stock-cycle-${p.supplierId}-${p.materialCode}`}>
+                  <CycleCell value={thisCycle.get(p.supplierId)} />
+                </TableCell>
+                <TableCell>
+                  <PicCell value={p.mrpController} testId={`pti-stock-pic-${p.supplierId}-${p.materialCode}`} />
                 </TableCell>
                 <TableCell className="text-right whitespace-nowrap">
                   <Figure value={p.supplierSoh} uom={p.uom} absentKey="inv.figure.noSubmission" />
@@ -272,7 +335,7 @@ const BuyerInventory: React.FC = () => {
             ))}
             {shown.length === 0 && (
               <tr>
-                <td colSpan={9} className="py-10 text-center text-sm text-text-tertiary">
+                <td colSpan={11} className="py-10 text-center text-sm text-text-tertiary">
                   {t('inv.table.empty')}
                 </td>
               </tr>

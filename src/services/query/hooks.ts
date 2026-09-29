@@ -23,6 +23,7 @@ import type {
   PRFilter,
   TrendRange,
   ReliabilityWindowWeeks,
+  StockSimulationFilter,
 } from '../data/types';
 import type { InviteeFilter } from '../transitions/rfxRules';
 
@@ -39,6 +40,24 @@ export const useSupplier = (id: string) =>
 export const useCurrentSupplier = () =>
   useServiceQuery(['suppliers', 'current'], (svc, scope) =>
     svc.suppliers.getCurrent(scope),
+  );
+
+/** Material A1 — each supplier's stock update mode and its change history. */
+export const useStockUpdateModes = () =>
+  useServiceQuery(['suppliers', 'stockUpdateModes'], (svc, scope) =>
+    svc.suppliers.getStockUpdateModes(scope),
+  );
+
+/** Material B3 — each supplier's weekly update compliance (13 cycles). */
+export const useUpdateCompliance = () =>
+  useServiceQuery(['suppliers', 'updateCompliance'], (svc, scope) =>
+    svc.suppliers.getUpdateCompliance(scope),
+  );
+
+/** Material G1 — each vendor's qualification level, missing documents and history. */
+export const useVendorQualifications = () =>
+  useServiceQuery(['suppliers', 'vendorQualifications'], (svc, scope) =>
+    svc.suppliers.getVendorQualifications(scope),
   );
 
 // ─── Procurement ──────────────────────────────────────────────────────────
@@ -62,9 +81,23 @@ export const useInventory = (filter?: InventoryFilter) =>
 export const useStockAccess = () =>
   useServiceQuery(['procurement', 'stockAccess'], (svc, scope) => svc.procurement.getStockAccess(scope));
 
-/** Capacity against demand per supplier × material group (REQ-E08-04). */
+/** Material C2 — supplier trade names per assigned material (MR-3). A supplier reads its own. */
+export const useMaterialNames = () =>
+  useServiceQuery(['procurement', 'materialNames'], (svc, scope) => svc.procurement.getMaterialNames(scope));
+
+/** Capacity against demand per supplier × planning group (REQ-E08-04, MR-8 BR-04). */
 export const useCapacityPlans = () =>
   useServiceQuery(['procurement', 'capacityPlans'], (svc, scope) => svc.procurement.getCapacityPlans(scope));
+
+/** Material C5 (MR-8) — the planning groups, their materials and changes. */
+export const usePlanningGroups = () =>
+  useServiceQuery(['procurement', 'planningGroups'], (svc, scope) => svc.procurement.getPlanningGroups(scope));
+
+/** Material E2 (MR-7) — the stock simulation per supplier × material at a check date. */
+export const useStockSimulation = (checkDate?: string, filter?: StockSimulationFilter) =>
+  useServiceQuery(['procurement', 'stockSimulation', checkDate, filter], (svc, scope) =>
+    svc.procurement.getStockSimulation(scope, checkDate, filter),
+  );
 
 /** Inventory and capacity alerts (REQ-E08-05). */
 export const useInventoryAlerts = () =>
@@ -81,6 +114,13 @@ export const useForecastCommitments = () =>
 /** Supplier coverage per material against Firm demand (REQ-E06-03 BR-07). */
 export const useForecastCoverage = () =>
   useServiceQuery(['procurement', 'forecastCoverage'], (svc, scope) => svc.procurement.getForecastCoverage(scope));
+
+/**
+ * REQ-E06-04 — the fixed stock reconcile per supplier × material × cycle. The
+ * planner reads every supplier; a supplier reads only its own rows (scoped in the service).
+ */
+export const useFixedStockReconcile = () =>
+  useServiceQuery(['procurement', 'fixedStockReconcile'], (svc, scope) => svc.procurement.getFixedStockReconcile(scope));
 
 /**
  * REQ-E14-02 — supplier reliability and PTI's plan-change measures. The planner
@@ -119,6 +159,10 @@ export const useStabilisedPlan = () =>
 /** REQ-E14-01 — data health of the forecast engine's inputs (PTI only). */
 export const useDataHealth = () =>
   useServiceQuery(['procurement', 'dataHealth'], (svc, scope) => svc.procurement.getDataHealth(scope));
+
+/** REQ-E14-07 — the finished-goods demand forecast (PTI only). */
+export const useDemandForecast = () =>
+  useServiceQuery(['procurement', 'demandForecast'], (svc, scope) => svc.procurement.getDemandForecast(scope));
 
 // ── RFx management (REQ-E03-01 to REQ-E03-05) ──────────────────────────────
 

@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 0.27 draft, 2026-09-28 |
+| Version | 0.28 draft, 2026-09-29 |
 | Sources | `SUPPLIER-HUB-BASELINE.md` (kick-off deck, Aug 2026); `KICKOFF-MEETING-NOTES.md` (business user feedback, reviewed 2026-09-17); owner review of the prototype gap review (2026-09-17); owner RFx decisions RFX-D1 to RFX-D5 (2026-09-21); owner RFx decisions RFX-D6 to RFX-D14 (2026-09-25), from `RFX-IMPROVEMENT-REQUIREMENTS-2026-09.md`; owner RFx decision RFX-D15 (2026-09-28); RFx best-practice research, `research/RFX-BEST-PRACTICE-2026-09.md` (2026-09-21); owner decision ENG-1 (2026-09-23) with the forecast research `research/FORECAST-BEST-PRACTICE-2026-09.md` and `research/FORECAST-METHOD-SPEC.md` |
 | Scope of this version | Detailed: Order Collaboration, Inventory & Capacity Collaboration, RFx (validated); Forecast Collaboration, Call-off Management, and the undiscussed parts of Order and Inventory Collaboration (proposed). Hub navigation and screen conventions (validated). Foundation is reserved for the Foundation team. The remaining epics are stubs |
 | Not in scope | The codebase. This file states what the Supplier Hub must do, not what is built. What the prototype does today, and where, is tracked only in `BUILD-GAP.md` |
@@ -196,7 +196,7 @@ How an RFI, RFQ or RFP comes into being, before it reaches suppliers [Owner, A-0
 - CE-11e. File limits: at most 25 MB per file and 30 files per response. Allowed types: PDF, DOC/DOCX, XLS/XLSX, PPT/PPTX, JPG, PNG, DWG, DXF, STEP, STP. No ZIP and no executables. A file over a limit is refused when it is picked, and the verb refuses it again on save and submit (NR-1 BR-05) [Owner, 2026-09-25, RFX-D8; PR #55, #56, #63].
 - CE-11f. A supplier's files are visible only to that supplier and to PTI, never to another supplier. Files on a Draft response are invisible to PTI. On a confidential event the document requests are withheld until the supplier accepts the terms (NR-1 BR-06, BR-07) [Owner, 2026-09-25; PR #56, #62].
 - CE-11g. A submitted response can be revised until the supplier's deadline, extensions included. Each revision is a new version, every version is kept with its files, and the buyer reads the latest. A save on a submitted response is refused and the supplier is told to revise. After the deadline, save, submit and revise are all refused by the verb, not only hidden (NR-1 BR-08, AC-07). This amends the RFI and RFP response lifecycles: a submitted response is no longer final before the deadline (REQ-E03-02 BR-18, REQ-E03-04 BR-14) [Owner, 2026-09-25, RFX-D11; PR #59, #63].
-- CE-11h. A revised quote in a negotiation round can carry files and passes the same document rules (NR-1 BR-09) [Owner, 2026-09-25; PR #63]. A firm offer in an RFP firm-offer round (REQ-E03-04 BR-15) can also carry files [Proposed; not yet on the screen, BACKLOG BL-129].
+- CE-11h. A revised quote in a negotiation round can carry files and passes the same document rules (NR-1 BR-09) [Owner, 2026-09-25; PR #63]. A firm offer in an RFP firm-offer round (REQ-E03-04 BR-15) can also carry files; each version keeps the files it was sent with, and the buyer sees them on the round [Proposed; built as BACKLOG BL-129].
 - CE-11i. The record keeps when each file was uploaded, the version that first holds it, and every time PTI opens or downloads it, with who and when (NR-1 BR-10) [Owner, 2026-09-25; PR #56, #59, #62]. Who uploaded each file is also recorded: the person in the session when the file first arrives, never a name the upload itself supplies, kept unchanged while the file is carried into a later save or version. Until sign-in names a person the buyer sees the unnamed-user wording with the supplier the file belongs to, and a file stored before the uploader was recorded reads "Not recorded" [Proposed; built in PR #73, BACKLOG BL-123 closed]. The access log lasts as long as the session until file storage exists (BL-27).
 - CE-11j. Supplier files are never copied into a follow-on event; the new event shows "Created from …" (CE-09). Document requests do carry over through templates, copies and pre-fills (NR-1 BR-11) [Owner, 2026-09-25; PR #56].
 - CE-11k. The buyer opens and downloads each supplier file from the event page, grouped by supplier, with its request, type, size, upload time, certificate fields and version (NR-1 buyer step 5) [Owner, 2026-09-25; PR #62]. "Download all" as 1 ZIP waits on file storage (NR-1 AC-04) [Proposed; BACKLOG BL-122].
@@ -215,7 +215,7 @@ The menu follows the hub's own sections, not procurement stages, and each PTI us
 |---|---|---|---|
 | Home | My tasks | All | Section 3.8 |
 | Order collaboration | Order summary; Purchase orders; Shipments & ASN; Goods receipts | MP | REQ-E07-01 to REQ-E07-06 |
-| Forecast | Forecasts; Commitments & gaps | MP | REQ-E06-01 to REQ-E06-03 |
+| Forecast | Forecasts; Commitments & gaps; Fixed stock reconcile | MP | REQ-E06-01 to REQ-E06-04 |
 | Inventory & capacity | Inventory; Capacity; Alerts; Supplier access | MP | REQ-E08-01 to REQ-E08-05 |
 | Call-offs | Recommendations; Call-offs | MP | REQ-E09-01 to REQ-E09-04 |
 | Sourcing | RFI; RFQ (quotation requests); RFP; Suppliers | BUY | REQ-E03-01 to REQ-E03-05; Foundation |
@@ -228,7 +228,7 @@ The menu follows the hub's own sections, not procurement stages, and each PTI us
 |---|---|---|
 | Home | To do | Section 3.8 |
 | Orders | Purchase orders; Call-offs; Shipments & ASN; Goods receipts | REQ-E07-01 to REQ-E07-06, REQ-E09-03, REQ-E09-04 |
-| Planning | Forecast & commitments; Stock; Capacity | REQ-E06-01, REQ-E06-02, REQ-E08-02, REQ-E08-04 |
+| Planning | Forecast & commitments; Fixed stock reconcile; Stock; Capacity | REQ-E06-01, REQ-E06-02, REQ-E06-04, REQ-E08-02, REQ-E08-04 |
 | Sourcing | RFI invitations; RFQ invitations (with negotiation rounds); RFP invitations | REQ-E03-02 to REQ-E03-05 |
 | Invoices | Invoices | REQ-E07-07 |
 | Performance | My performance | REQ-E10-01 |
@@ -268,6 +268,7 @@ The menu follows the hub's own sections, not procurement stages, and each PTI us
 | REQ-E06-01 | Forecast publication | E06 | MVP | Validated (owner, E06-R) |
 | REQ-E06-02 | Foresight / fixed-stock confirmation | E06 | MVP | Validated (owner, E06-R) |
 | REQ-E06-03 | Forecast-commit gap monitoring | E06 | MVP | Validated (owner, E06-R) |
+| REQ-E06-04 | Fixed stock (FS) reconcile | E06 | MVP | Validated (team 2026-09-28, ENG-D21; owner 2026-09-29) |
 | REQ-E07-01 | PO visibility with quantity and timing breakdown | E07 | MVP | Validated |
 | REQ-E07-02 | PO response: approve, adjust, reject, escalate | E07 | MVP | Validated |
 | REQ-E07-03 | Order Collaboration Summary | E07 | MVP | Validated (drill-through and lifecycle columns, 2026-09-19) |
@@ -566,7 +567,7 @@ Template rules:
   - BR-16c. Every RFP award needs a reason, and a supplier failing the compliance gate at award is refused [Owner, 2026-09-25; CR-23 Owner, 2026-09-21; PR #66].
   - BR-16d. An option awarded in the RFP cannot go into an RFQ created from it, and an option that such an RFQ already covers cannot be awarded in the RFP. Options not placed either way can still go to an RFQ [Owner, 2026-09-25; PR #66, #67].
   - BR-16e. The award can be cancelled with a reason, or marked "Raised in SAP" with the SAP document number, as on an RFQ (REQ-E03-05 BR-13, BR-14) [Owner, 2026-09-25, RFX-D12; PR #66, #67].
-  - BR-16f. The buyer can mark the options left open "Will not award", and the RFP becomes Awarded for the options awarded (NR-3 BR-06) [Proposed; built for the RFQ only (PR #64), the RFP is BACKLOG BL-130].
+  - BR-16f. The buyer can mark the options left open "Will not award", and the RFP becomes Awarded for the options awarded (NR-3 BR-06) Because every RFP award needs a reason (BR-16c), the close-out needs one too [Proposed; built for the RFQ (PR #64) and for the RFP (BACKLOG BL-130)].
   - BR-16g. Each responder sees only its own outcome per option: Awarded with share and quantity point, Not awarded, Pending, or Award withdrawn. It never sees another supplier's share, the reason, the cancellation or the SAP number [Owner, 2026-09-25; PR #66, #67]. A message outside the hub waits on email [Proposed; BACKLOG BL-120].
   - BR-16h. The PO or contract is created in SAP (REQ-E03-05 BR-09) [Proposed; BACKLOG BL-121].
 
@@ -657,7 +658,7 @@ Template rules:
 - BR-08. On award, awarded suppliers are notified with their share, and every other quote is marked Not awarded and its supplier notified [Code; Proposed notification]. On a split award every quote an award line names is marked Awarded [Proposed]. A partial award marks the quotes it names Awarded and rejects none; the final award rejects every quote that no award in force named [Owner, 2026-09-25; PR #58, #64]. In the hub the notice is the supplier's own outcome per item (BR-15); a message outside the hub waits on email [Proposed; BACKLOG BL-120].
 - BR-09. The hub records the award. The PO or contract is created in SAP, per the charter's system-of-record rule (PRD section 2.3) [Proposed].
 - BR-10. The comparison can be downloaded as a spreadsheet file: items × suppliers × breaks [Proposed].
-- BR-11. An event with items still open after an award is **Partly awarded**. It becomes Awarded when the last item is awarded, or when the buyer marks every open item "Will not award" (NR-3 BR-06) [Owner, 2026-09-25, RFX-D9; PR #58, #64]. On an RFP the "Will not award" close-out is not built yet (REQ-E03-04 BR-16f).
+- BR-11. An event with items still open after an award is **Partly awarded**. It becomes Awarded when the last item is awarded, or when the buyer marks every open item "Will not award" (NR-3 BR-06) [Owner, 2026-09-25, RFX-D9; PR #58, #64]. On an RFP the "Will not award" close-out also needs a reason (REQ-E03-04 BR-16c, BR-16f).
 - BR-12. Legacy RFQs are awarded per line on the same award panel as tiered RFQs, and the RFQ list links to it for every RFQ that can still be awarded. There is no single-winner award (NR-3 BR-07) [Owner, 2026-09-25; PR #58, #64].
 - BR-13. An award can be cancelled with a reason until it is marked "Raised in SAP". The cancelled record is kept, and a correction is a cancel followed by a new award. Cancelling the only award in force returns the event to Closed; cancelling one of several leaves it Partly awarded. On an RFQ, the quotes the cancelled award named (unless another award in force names them) and every Rejected quote of the event return to Under Review, so a new award can use them (NR-3 BR-09) [Owner, 2026-09-25, RFX-D12; PR #61, #64, #66].
 - BR-14. "Raised in SAP" takes the SAP document number, typed by the buyer until the SAP interface sends it back. After it, the award cannot be cancelled in the hub, and changes are made in SAP (NR-3 BR-10) [Owner, 2026-09-25, RFX-D12; PR #61, #64, #66].
@@ -1278,10 +1279,15 @@ Added on 2026-09-28 from the RFx improvement analysis of 2026-09-25:
 - BR-01. The capacity confirmation answers whether the supplier can allocate production [MN-ORD-10].
 - BR-02. The page lives in Inventory & Capacity Collaboration, and the summary links to it [MN-ORD-13; Q-16].
 - BR-03. Capacity is stated per material group and weekly period, for a horizon set by ADM [Proposed; Market].
-- BR-04. Allocation below demand requires a predefined constraint reason. The starter list is in section 3.6 [Proposed; Code].
-- BR-05. Suppliers may state extra capacity they could give PTI on request, above their allocation. The field is labelled "Extra capacity if requested" and explained where it is entered [Proposed; Market; label Owner, 2026-09-21].
+- BR-04. Allocation below demand (the LTP, BR-12) requires a predefined constraint reason. The starter list is in section 3.6 [Proposed; Code].
+- BR-05. Suppliers may state extra capacity they could give PTI on request, above their allocation. The field is labelled "Additional capacity" ("Kapasitas tambahan" in Indonesian) and explained where it is entered, with BE = capacity + additional capacity [Proposed; Market; label Owner, 2026-09-21; renamed from "Extra capacity if requested", Owner, 2026-09-29].
 - BR-06. Capacity is kept per material group, not per SKU, because one supplier line usually makes several PTI materials [Owner, 2026-09-21].
 - BR-07. The planner can filter the capacity view by supplier, material group, material, and gap weeks only, and the filter is kept in the page address [Owner, 2026-09-21].
+- BR-08. The LTP (the current forecast version the supplier commits against) is compared with capacity per material group and week: the group's LTP for a week is the sum of the supplier's LTP for every material of the group, each period spread evenly over its days [Owner, 2026-09-28; ENG-D18]. Accepted by the owner, 2026-09-29.
+- BR-09. BE, the supplier's total for a week, is the capacity plus the additional capacity (BR-05). It is derived, never entered or stored separately [Owner, 2026-09-28; ENG-D18]. Accepted by the owner, 2026-09-29.
+- BR-10. A week whose LTP is above capacity, up to and including BE, shows amber, "needs the additional capacity". A week whose LTP is above BE shows red, "cannot be supplied", and the planner acts (bring demand forward, split to another source, or cut) [Owner, 2026-09-28; ENG-D18]. Exactly at capacity is not flagged; exactly at BE is amber. An amber week still needs the BR-04 reason. Accepted by the owner, 2026-09-29.
+- BR-11. The supplier confirms a week's capacity before it can submit the LTP for that week (REQ-E06-02 BR-11). A week counts as confirmed when the group's latest capacity submission states it, a gap week with its reason included. A supplier with an LTP in a material group always has a capacity confirmation for that group. How capacity is entered (one number with overrides, or per week) stays open (BL-65); it is per week today [Owner, 2026-09-28; ENG-D19]. Accepted by the owner, 2026-09-29.
+- BR-12. The LTP is the only demand figure for capacity: the capacity pages, the gap weeks, "short by", the reason rule (BR-04), the planner's filters and banner, the Order Collaboration Summary capacity status and the capacity alert all read it. A material with no LTP line has no capacity demand [Owner, 2026-09-29].
 
 **Edge cases.**
 - Supplier shares one line across several PTI materials: capacity is entered per material group, not per material [Proposed].
@@ -1292,6 +1298,8 @@ Added on 2026-09-28 from the RFx improvement analysis of 2026-09-25:
 - AC-02. A week with allocation below demand cannot be submitted without a reason.
 - AC-03. The planner sees capacity against demand with gap weeks highlighted.
 - AC-04. The planner can narrow the capacity view by supplier, material group, material, and gaps only.
+- AC-05. Exactly at capacity is not flagged; above capacity and exactly at BE is amber; above BE is red [Owner, 2026-09-28].
+- AC-06. The supplier and the planner see each week's LTP, capacity and BE with its amber or red flag [Owner, 2026-09-28].
 
 **Data and integration.** Capacity record: supplier, material group, week, allocated quantity, upside quantity, reason. Demand from REQ-E06-01.
 
@@ -1428,6 +1436,9 @@ The owner confirmed the recommendations for this section on 2026-09-17 (E06-R). 
 - BR-08. A supplier may commit an optional upside quantity above forecast [Market; Owner].
 - BR-09. The commitment starts pre-filled with the forecast quantity. The supplier still submits it [Owner].
 - BR-10. A commitment is kept as a draft until submitted, and the planner does not see drafts [Owner; Code].
+- BR-11. A commitment for a period cannot be submitted until the supplier has confirmed capacity (REQ-E08-04) for every week the period touches, for the material's group. Weeks beyond the capacity horizon are not asked. Saving a draft and acknowledging a Forecast period are not gated. The rule is enforced by the system, not only by the page [Owner, 2026-09-28; ENG-D19]. Accepted by the owner, 2026-09-29.
+- BR-12. A period whose group LTP is above BE (REQ-E08-04 BR-10) in one of its weeks needs a predefined reason before it can be submitted; "Other" needs a note. The reason is kept with each commitment of the period [Owner, 2026-09-28; ENG-D19]. Accepted by the owner, 2026-09-29.
+- BR-13. The supplier submits one period at a time with one "Submit all", which sends every material of that period. It is the only way to submit on screen [Owner, 2026-09-28; ENG-D19]. Accepted by the owner, 2026-09-29.
 
 **Edge cases.**
 - Forecast re-published after commitment: periods whose quantity did not change keep their commitment; changed periods return to "awaiting commitment" [Owner; Code].
@@ -1438,6 +1449,9 @@ The owner confirmed the recommendations for this section on 2026-09-17 (E06-R). 
 - AC-02. A commit below forecast cannot be submitted without a reason.
 - AC-03. A commit within tolerance needs no planner action. A commit outside tolerance appears as an exception.
 - AC-04. Missing commitments at the deadline are escalated.
+- AC-05. Submitting a period without confirmed capacity for its weeks is refused, and names the week; with capacity confirmed it is accepted [Owner, 2026-09-28].
+- AC-06. Submitting a period above BE without a reason is refused; with a reason it is accepted [Owner, 2026-09-28].
+- AC-07. "Submit all" for a period submits every material of that period at once [Owner, 2026-09-28].
 
 **Data and integration.** Commitment record: version, material, period, committed quantity, date, upside quantity, reason, submitted by.
 
@@ -1487,6 +1501,80 @@ The owner confirmed the recommendations for this section on 2026-09-17 (E06-R). 
 **Metrics.** Leading: open exceptions older than 2 working days [Proposed]. Lagging: KPI-04; KPI-05.
 
 **Open items.** PQ-08 (confirm CR-21 and CR-22 values).
+
+#### REQ-E06-04  Fixed stock (FS) reconcile
+
+| Maps to | Phase | Priority | Business owner | Users | Status |
+|---|---|---|---|---|---|
+| E06.02; ENG-D21; BL-134 | MVP | P1 [Proposed] | Material Planner | MP, SUP, BUY | Validated (reconcile decided by the team 2026-09-28, ENG-D21; rules decided by the owner 2026-09-29) |
+
+**Business value.** The foresight / fixed-stock commitment (REQ-E06-02) asks the supplier to make and hold stock for PTI. Nothing today checks, at the end of a cycle, whether PTI then called that stock off, and whether the supplier really holds what was not called off. The reconcile closes that loop: it shows where PTI under-called a commitment (a settlement question for PTI), where the supplier does not hold what it committed, where PTI called off stock nobody committed, and where stock sits above the maximum [Owner/Team, 2026-09-28].
+
+**Experience.**
+- MP: sees, per supplier, material and cycle, what the supplier committed, what it accepted of PTI's call-offs, what it holds, the maximum stock, and the outcome, with a count per outcome. Under-called rows carry the quantity flagged "liability — not priced". A cycle still running is marked provisional [Owner/Team, 2026-09-28; accepted 2026-09-29].
+- BUY (Procurement): sets, changes or clears the maximum stock of a supplier and material from the row; every change is kept [Owner, 2026-09-29].
+- SUP: sees the same rows for its own materials only, read-only, so both sides read the same figures before the settlement conversation [accepted 2026-09-29].
+
+**Step-by-step (Planner, end of W3).**
+1. The planner opens Forecast → Fixed stock reconcile.
+2. Material X from supplier A reads: committed 99,600; called off 88,000; not called off 11,600; held 85,000; maximum 90,000; outcome "PTI under-called"; liability — not priced 11,600.
+3. The planner takes the flagged quantity to the settlement conversation with the supplier, outside the Hub (ENG-D17).
+
+**Business rules.**
+- BR-01. **Cycle.** Packaging is reconciled at the end of each cycle of 3 weeks, W1 to W3 [Owner/Team, 2026-09-28: "FS Reconcile end W3"]. The cycle length is an administrator setting (Administration → Tolerances and rule values, default 3 weeks) [Owner, 2026-09-29]. Cycles run back to back from a fixed Monday, the first week of the Hub's first published packaging forecast (2026-08-31) [accepted 2026-09-29]. Raw material is committed per month (REQ-E06-01 BR-03), so it is reconciled at the end of each month [accepted 2026-09-29].
+- BR-02. **Rows.** One row per supplier, material and cycle that has started, where something was committed or called off. A pair with nothing committed and nothing called off has no row [accepted 2026-09-29].
+- BR-03. **Committed** is the sum of the supplier's submitted Firm and Trade-off commitments for the cycle's periods (REQ-E06-02). A period still awaiting a commitment counts as zero and is shown as awaiting. Forecast-zone periods carry only an acknowledgement and are not counted. A packaging month beyond the weekly horizon is not read: it is re-cut into weeks before its cycle starts. For each period the commitment standing in the latest version that covers the period is used, so a period that has left the current version keeps the commitment it ended with; if that version moved the period's demand away from the supplier, the supplier has nothing committed for it [accepted 2026-09-29].
+- BR-04. **Called off** is what the supplier **accepted** of PTI's call-offs (REQ-E09-03): the deliveries of a confirmation once it is accepted, automatically or by the planner; where the planner has changed an accepted call-off and the change is not yet confirmed, the deliveries both sides last agreed. Each delivery counts in the cycle of its agreed date [Owner, 2026-09-29].
+  - A call-off still awaiting the supplier's confirmation, and a counter-offer (new date, changes, partial) still awaiting the planner, are **not counted** until accepted. The row shows them as a note: "n call-offs awaiting the supplier — not counted" and "n counter-offers awaiting PTI — not counted", placed in the cycle of the call-off's need date [Owner, 2026-09-29; the split into two notes Proposed].
+  - A rejected call-off, a draft and a dismissed draft count nothing [Owner, 2026-09-29].
+- BR-05. **Held** is the supplier's stock on hand (REQ-E08-02): while the cycle runs, the current figure the Stock page shows; once it has ended, the latest figure submitted by the cycle end. With no such figure, held is "not reported" — never assumed to be zero [accepted 2026-09-29].
+- BR-06. **Maximum stock** is the most the supplier may hold for PTI of the material, a supplier × material value **maintained by Procurement** [Owner, 2026-09-29]. It is set, changed or cleared with one governed act (`t_maxstock_set`, the `maxstock:set` permission held by the Procurement role only); every change is kept with the value before it, who made it and when. The planner reads it and does not set it; a supplier reads its own and cannot set it. Where none is set the row reads "No max stock agreed", and nothing is capped or above the maximum.
+- BR-07. **Not called off** = committed − called off, never below zero. Where PTI called off more than was committed, the row shows 0 and the note "called off beyond commitment" with the difference [Owner, 2026-09-29].
+- BR-08. **Outcome**, the first that applies:
+  1. Not called off above zero and held not reported → **Stock not reported**.
+  2. Not called off above zero and held below it → **Supplier short** (short = not called off − held).
+  3. Not called off above zero and held at least that → **PTI under-called**.
+  4. Nothing committed and something called off → **Not committed**; no liability is flagged [Owner, 2026-09-29].
+  5. Held above the maximum stock → **Above max stock**.
+  6. Otherwise → **Balanced**.
+  [Order and outcomes 1–3, 5, 6 accepted 2026-09-29.]
+- BR-09. **Settlement.** For "PTI under-called" and "Supplier short", the quantity flagged is min(not called off, held, maximum stock where set), shown as "liability — not priced". It is flagged, not priced, and agreed outside the Hub [Owner/Team, 2026-09-28, following ENG-D17; accepted 2026-09-29]. Stock above the maximum is the supplier's own and is never flagged. "Stock not reported" and "Not committed" flag nothing.
+- BR-10. **Provisional and final.** A cycle is read from its first day. Until it ends the row is provisional, because PTI can still call off; after its end it is final [accepted 2026-09-29].
+- BR-11. The list is sorted most urgent first: Supplier short, PTI under-called, Stock not reported, Not committed, Above max stock, Balanced; then the latest cycle first. Each outcome has a count tile that filters the list [accepted 2026-09-29; Not committed placed by the owner, 2026-09-29].
+- BR-12. **Who sees what.** The planner sees every supplier. A supplier sees only its own rows, scoped by the service, never by the page, including the liability flag [accepted 2026-09-29].
+
+**Worked example.** Supplier A, PET bottle 200 ml, cycle W1 to W3 (31 Aug to 20 Sep 2026). Commitments: W1 34,300, W2 31,000, W3 34,300 → committed 99,600. The deliveries the supplier accepted on PTI's call-offs, dated in the cycle, total 88,000. Held at the end of W3: 85,000. Maximum stock set by Procurement: 90,000.
+- Not called off = 99,600 − 88,000 = 11,600. Held 85,000 ≥ 11,600 → **PTI under-called**; liability — not priced = min(11,600; 85,000; 90,000) = **11,600**.
+- If held were 7,000: **Supplier short** by 11,600 − 7,000 = 4,600; liability — not priced 7,000.
+- If no stock figure were submitted: **Stock not reported**; nothing flagged.
+- If PTI had called off 101,000: **Balanced**; not called off reads 0, with 1,400 called off beyond the commitment. With 95,000 held: **Above max stock**, 5,000 the supplier's own.
+- If the maximum stock were 10,000: liability capped at **10,000**; 75,000 above the maximum.
+- If nothing had been committed and 12,000 called off: **Not committed**; nothing flagged.
+- A further call-off of 15,000 awaiting the supplier's confirmation adds nothing to called off; the row notes "1 call-off awaiting the supplier — not counted".
+
+**Edge cases.**
+- No stock figure: held "not reported"; an uncalled commitment reads "Stock not reported" (BR-05, BR-08).
+- No maximum stock set: "No max stock agreed"; nothing capped, nothing above the maximum (BR-06).
+- A confirmation accepted with a changed quantity or date counts the accepted quantity on the accepted date, which may fall in another cycle.
+- A stock figure submitted after an ended cycle's end is not used for that cycle.
+- Units: committed, called off, held and maximum stock are in the material's unit; no conversion is made.
+- A maximum stock for a supplier and material the Hub does not assign is refused.
+
+**Acceptance criteria.**
+- AC-01. For each supplier, material and started cycle, the page shows committed, called off, not called off (never negative), held (or "Not reported"), maximum stock (or "No max stock agreed"), the outcome, and whether the row is provisional or final.
+- AC-02. The outcome follows BR-08, and the flagged quantity follows BR-09, labelled "liability — not priced" and never priced.
+- AC-03. Only accepted call-off deliveries count as called off; call-offs awaiting the supplier and counter-offers awaiting PTI are noted, not counted; Forecast-zone periods are not counted as committed.
+- AC-04. A supplier sees only its own rows, read-only.
+- AC-05. A Procurement seat can set, change and clear the maximum stock; a planner-only seat is refused and sees that it is Procurement's act; a supplier is refused. Every change is kept.
+- AC-06. The packaging cycle length is changed on the administrator's Tolerances page and the reconcile uses the value in force.
+- AC-07. At 1280 px and wider, the Result and Status columns are visible without scrolling sideways.
+- AC-08. The worked example above reproduces exactly (`src/services/transitions/fixedStockReconcile.test.ts`).
+
+**Data and integration.** Reads REQ-E06-02 (commitments, per forecast version), REQ-E09-03 (call-offs and their confirmations), REQ-E08-02 (stock submissions), and the maximum stock per supplier and material (Procurement's ledger, BR-06). Computed at read; the only record it adds is the maximum-stock ledger.
+
+**Metrics.** Leading: rows "Stock not reported" at cycle end (should be zero); rows with call-offs still awaiting the supplier at cycle end. Lagging: quantity flagged "liability — not priced" per cycle; share of committed quantity called off per cycle.
+
+**Open items.** Whether the reconcile should raise a Home task or alert at cycle end. Whether a maximum stock should also be entered through the supplier-material master data feed once one exists.
 
 ### 5.6 Planning & Fulfillment: Call-off Management (E09)
 
@@ -1923,3 +2011,4 @@ Research date: 2026-09-21. The full note, with every source link, is `research/R
 | 0.25 | 2026-09-28 | Owner decision RFX-D15 recorded (section 9): a firm-offer round may open on a Partly awarded RFP for its open options. REQ-E03-04 BR-15e amended. Open item FU-7 closed and removed from section 7. Built in PR #71 |
 | 0.26 | 2026-09-28 | CE-11i: who uploaded each supplier file is recorded and shown in the buyer's "Supplier documents" panel (FU-1, BL-123). Built in PR #73 |
 | 0.27 | 2026-09-28 | Forecast engine decisions ENG-D8a, D10, D11, D12, D14 decided and ENG-D18 to D21 added from the team's LTP / DA / capacity review (`FORECAST-ENGINE-REQUIREMENTS.md` 0.13). REQ-E08-04 and REQ-E06-02 gain capacity-before-LTP and Submit all per week when BL-133 is built |
+| 0.28 | 2026-09-29 | REQ-E08-04 BR-08 to BR-12 and REQ-E06-02 BR-11 to BR-13: capacity before the LTP, two-level check against capacity and BE, one Submit all per week, the LTP as the only capacity demand figure, "Additional capacity" (BL-133, PR #80). New REQ-E06-04 Fixed stock reconcile, Validated (BL-134, PR #79) |

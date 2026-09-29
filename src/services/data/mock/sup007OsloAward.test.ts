@@ -84,7 +84,11 @@ describe('BL-94 — sup-007 passes the compliance gate on Oslo at the declared p
   });
 
   it('sup-007 passes every criterion on rfq-021; sup-008 still fails on OTIF', () => {
-    expect(gateOf('sup-007')).toEqual({ supplierId: 'sup-007', passes: true, failed: [] });
+    // Material G2 — the view also carries the vendor's eligibility beside the
+    // gate (never inside it); sup-007 is Preferred, so it is qualified too.
+    const { eligibility, ...gate } = gateOf('sup-007')!;
+    expect(gate).toEqual({ supplierId: 'sup-007', passes: true, failed: [] });
+    expect(eligibility?.state).toBe('qualified');
     // BILATERAL CONTROL — the same read still refuses a supplier below the minimum.
     expect(masterMeasure('sup-008').otif.pct).toBe(0);
     expect(gateOf('sup-008')?.passes).toBe(false);

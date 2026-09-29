@@ -43,15 +43,35 @@ import { useToast } from '../hooks/useToast';
 import { useCurrentIdentity } from '../context/CurrentIdentityContext';
 import {
   useAdvanceShipNoticeCancel,
+  useAdvanceShipNoticeChangeEta,
   useAdvanceShipNoticeCreate,
+  useAdvanceShipNoticeRequestException,
   useAdvanceShipNoticeSubmit,
 } from '../services/query/commandHooks';
-import { normalizeQty } from '../lib/localeNumber';
 import {
   ASN_CANCELLABLE_STATES,
-  openQtyForLine,
-  type AsnLineInput,
+  etaNeedsReapproval,
+  shelfLifeExceptionOf,
+  type AvailableBatch,
 } from '../services/transitions/fulfilmentRules';
+import {
+  BlockedStockMarker,
+  ShelfLifeExceptionDetail,
+  ShelfLifeLineNote,
+  ShelfLifeRequestBox,
+  approvedIntoBlockedStock,
+} from './shipments/ShelfLifeParts';
+import {
+  EMPTY_LINE,
+  batchModeOf,
+  batchesByMaterial,
+  openLinesFor,
+  readLines,
+  seedLines,
+  type AsnLinesRead,
+  type LineEntry,
+  type OpenLine,
+} from './shipments/asnLines';
 import { POStatus } from '../services/data/types';
 import NoSupplierIdentity from '../components/ui-v2/NoSupplierIdentity';
 import LoadingState from '../components/ui-v2/LoadingState';
@@ -62,13 +82,19 @@ import {
   usePurchaseOrders,
   useASNs,
   useCallOffs,
+  useInventory,
 } from '../services/query/hooks';
-import { isConfirmedAndAccepted } from '../services/transitions/callOffRules';
+import { asnCallOffWarnings, isConfirmedAndAccepted, type AsnForCallOffCheck } from '../services/transitions/callOffRules';
+import { AsnSubmitWarnings, callOffWarningText } from './shipments/CallOffWarnings';
+import { useCallOffViews } from './callOffs/callOffDisplay';
 import type { AsnStatus, ASN, PurchaseOrder } from '../services/data/types';
 import { useRefusalText } from '../hooks/useRefusalText';
 import { refusalDetailOf } from '../services/transitions/refusalMessage';
 import TrackingNumber from '../components/ui-v2/TrackingNumber';
 import CarrierPicker, { carrierFor, defaultCarrier } from './shipments/CarrierPicker';
+import { poLineQuantityText } from './orders/poLineQuantity';
+import { PicCell, PicFilter, PicHeader, usePicFilter } from './materials/picDisplay';
+import MaterialSearch, { MaterialMatchReason, useMaterialSearch } from '../components/ui-v2/MaterialSearch';
 
 type TabKey = 'shipments' | 'create';
 type StatusFilter = AsnStatus | 'All';
@@ -80,6 +106,8 @@ const STATUS_VARIANT: Record<AsnStatus, 'success' | 'warning' | 'danger' | 'neut
   Delivered: 'success',
   Discrepancy: 'danger',
   Cancelled: 'neutral',
+  // MR-6 BR-08 — waiting on Quality, not on the supplier's next act.
+  'Awaiting exception': 'warning',
 };
 
 const fmtDate = (s: string): string => {
@@ -94,13 +122,6 @@ const fmtDate = (s: string): string => {
 const inputClass =
   'w-full px-3 py-2 text-sm text-text-primary bg-white border border-border-input rounded-md focus:outline-none focus:border-action placeholder:text-text-tertiary';
 const labelClass = 'block text-label text-text-tertiary uppercase mb-1';
-
-/** One line as the supplier types it (REQ-E07-04 BR-04): text, parsed once. */
-interface LineEntry {
-  qty: string;
-  batch: string;
-  expiry: string;
-}
 
 interface AsnForm {
   poId: string;
@@ -120,6 +141,10 @@ interface AsnForm {
   overShipReason: string;
   /** REQ-E09-03 BR-06 — the confirmed call-off this ASN ships, or '' for a PO-level ASN. */
   callOffId: string;
+  /** MR-6 BR-10 — the last ASN for the call-off (a shortfall then warns). */
+  callOffFinal: boolean;
+  /** MR-6 BR-08 — the supplier's reason when shelf life blocks the submission. */
+  exceptionReason: string;
 }
 
 const EMPTY_FORM: AsnForm = {
@@ -138,81 +163,151 @@ const EMPTY_FORM: AsnForm = {
   lines: {},
   overShipReason: '',
   callOffId: '',
+  callOffFinal: false,
+  exceptionReason: '',
+};
+
+/**
+ * MR-6 BR-10 / BR-11 — the ASN as the call-off check reads it, from what the
+ * form holds. Both submit paths build it this way, so the supplier sees the
+ * warnings the verb will record.
+ */
+const asnForCheck = (
+  base: Pick<AsnForCallOffCheck, 'asnNumber' | 'poReference' | 'callOffId' | 'callOffFinal'>,
+  read: AsnLinesRead,
+  eta: string,
+  shipDate: string,
+): AsnForCallOffCheck => ({
+  ...base,
+  eta,
+  ...(shipDate ? { shipDate } : {}),
+  lineItems: read.lines
+    .filter((l) => Number.isFinite(l.input.shippedQty))
+    .map((l) => ({ materialCode: l.input.materialCode, shippedQty: l.input.shippedQty })),
+});
+
+/** MR-6 BR-10 — the "last ASN for this call-off" tick, on both submit paths. */
+const CallOffFinalToggle: React.FC<{ id: string; checked: boolean; onChange: (v: boolean) => void }> = ({
+  id,
+  checked,
+  onChange,
+}) => {
+  const { t } = useTranslation();
+  return (
+    <div className="mt-2">
+      <label htmlFor={id} className="inline-flex items-start gap-2 text-sm text-text-primary cursor-pointer">
+        <input
+          id={id}
+          type="checkbox"
+          checked={checked}
+          onChange={(e) => onChange(e.target.checked)}
+          className="mt-0.5 accent-teal"
+        />
+        {t('co.asn.final.label')}
+      </label>
+      <p className="mt-1 text-xs text-text-tertiary">{t('co.asn.final.hint')}</p>
+    </div>
+  );
 };
 
 /** A fresh ASN form, its carrier defaulted from the 3PL list in force. */
 const newAsnForm = (): AsnForm => ({ ...EMPTY_FORM, ...defaultCarrier() });
 
-/** A typed quantity, read by the one legal parser; NaN when unreadable. */
-const readQty = (raw: string): number => {
-  const r = normalizeQty(raw);
-  return r.ok ? r.value : Number.NaN;
-};
+/** Value of the batch picker's "type a batch" choice (edge case 4). */
+const TYPE_BATCH = '__typed__';
 
-interface OpenLine {
+/**
+ * MR-6 BR-01 to BR-04 — the batch field. With declared batches on offer it is
+ * a picker showing batch, available quantity and expiry, and picking one fills
+ * the expiry; the supplier may still type a batch instead (edge case 4).
+ * Without any, it is free text, marked as not in declared stock.
+ */
+const BatchCell: React.FC<{
   materialCode: string;
-  description: string;
-  uom: string;
-  open: number;
-}
-
-/** The PO's lines with their open quantity (BR-02), leaving one ASN out. */
-const openLinesFor = (po: PurchaseOrder, asns: readonly ASN[], excludeAsn?: string): OpenLine[] =>
-  po.lineItems.map((li) => ({
-    materialCode: li.materialCode,
-    description: li.description,
-    uom: li.uom,
-    open: openQtyForLine(po, li, asns, excludeAsn),
-  }));
-
-/** Seed the line entries: each open line proposes its open quantity. */
-const seedLines = (lines: readonly OpenLine[]): Record<string, LineEntry> =>
-  Object.fromEntries(
-    lines.map((l) => [l.materialCode, { qty: l.open > 0 ? String(l.open) : '', batch: '', expiry: '' }]),
+  entry: LineEntry;
+  options: readonly AvailableBatch[];
+  onChange: (patch: Partial<LineEntry>) => void;
+}> = ({ materialCode, entry, options, onChange }) => {
+  const { t } = useTranslation();
+  const mode = batchModeOf(entry, options);
+  const typed = (
+    <>
+      <input
+        type="text"
+        aria-label={
+          options.length > 0
+            ? t('fc.asn.batch.typedFor', { material: materialCode })
+            : t('fc.asn.batchFor', { material: materialCode })
+        }
+        value={entry.batch}
+        onChange={(ev) => onChange({ batch: ev.target.value, batchSource: 'typed' })}
+        placeholder={t('supplierShipments.placeholder.batch')}
+        className={`${inputClass} min-w-[110px] ${options.length > 0 ? 'mt-1' : ''}`}
+      />
+      <div className="mt-1 text-[11px] text-text-tertiary">{t('fc.asn.batch.notDeclaredNote')}</div>
+    </>
   );
-
-/** The entered lines as the verb reads them, with what the form can see about them. */
-const readLines = (entries: Record<string, LineEntry>, open: readonly OpenLine[]) => {
-  const lines = open
-    .filter((l) => entries[l.materialCode] && entries[l.materialCode].qty.trim() !== '')
-    .map((l) => {
-      const e = entries[l.materialCode];
-      const shippedQty = readQty(e.qty);
-      return {
-        line: l,
-        input: {
-          materialCode: l.materialCode,
-          shippedQty,
-          batchNumber: e.batch.trim(),
-          ...(e.expiry ? { expiryDate: e.expiry } : {}),
-        } as AsnLineInput,
-        qtyOk: Number.isFinite(shippedQty) && shippedQty > 0,
-        over: Number.isFinite(shippedQty) && shippedQty > l.open,
-        batchOk: e.batch.trim() !== '',
-      };
-    });
-  return {
-    lines,
-    overCount: lines.filter((l) => l.over).length,
-    complete: lines.length > 0 && lines.every((l) => l.qtyOk && l.batchOk),
+  if (options.length === 0) return typed;
+  const pick = (value: string) => {
+    if (value === TYPE_BATCH) {
+      onChange({ batch: '', batchSource: 'typed' });
+      return;
+    }
+    const o = options.find((x) => x.batchNumber === value);
+    onChange({ batch: value, batchSource: 'declared', expiry: o?.expiryDate ?? '' });
   };
+  return (
+    <>
+      <select
+        aria-label={t('fc.asn.batchFor', { material: materialCode })}
+        value={mode === 'declared' ? entry.batch.trim() : TYPE_BATCH}
+        onChange={(ev) => pick(ev.target.value)}
+        className={`${inputClass} min-w-[160px]`}
+      >
+        <option value="">{t('fc.asn.batch.choose')}</option>
+        {options.map((o) => (
+          <option key={o.batchNumber} value={o.batchNumber}>
+            {o.expiryDate
+              ? t('fc.asn.batch.option', {
+                  batch: o.batchNumber,
+                  available: o.available.toLocaleString('en-US'),
+                  expiry: fmtDate(o.expiryDate),
+                })
+              : t('fc.asn.batch.optionNoExpiry', {
+                  batch: o.batchNumber,
+                  available: o.available.toLocaleString('en-US'),
+                })}
+          </option>
+        ))}
+        <option value={TYPE_BATCH}>{t('fc.asn.batch.typeOther')}</option>
+      </select>
+      {mode === 'typed' ? typed : null}
+    </>
+  );
 };
 
 /** The shared line editor: shipped quantity, batch and expiry per PO line. */
 const AsnLinesEditor: React.FC<{
   open: readonly OpenLine[];
   entries: Record<string, LineEntry>;
+  read: AsnLinesRead;
+  batches: Readonly<Record<string, readonly AvailableBatch[]>>;
   onChange: (materialCode: string, patch: Partial<LineEntry>) => void;
   overShipReason: string;
   onReasonChange: (v: string) => void;
-}> = ({ open, entries, onChange, overShipReason, onReasonChange }) => {
+}> = ({ open, entries, read, batches, onChange, overShipReason, onReasonChange }) => {
   const { t } = useTranslation();
-  const read = readLines(entries, open);
+  // Material C3 — the one material search over the PO's lines (MR-3 BR-04):
+  // a supplier finds a line by PTI code, PTI description or its own approved
+  // trade name. Hidden lines keep what was typed; the search only narrows.
+  const [query, setQuery] = useState('');
+  const found = useMaterialSearch(query, open, (l) => ({ code: l.materialCode, description: l.description }));
   if (open.length === 0) {
     return <p className="text-sm text-text-tertiary">{t('fc.asn.lines.empty')}</p>;
   }
   return (
     <div className="space-y-3">
+      <MaterialSearch mode="filter" query={query} onQueryChange={setQuery} testId="asn-lines-search" />
       <div className="overflow-x-auto">
         <table className="w-full text-xs">
           <thead>
@@ -225,11 +320,11 @@ const AsnLinesEditor: React.FC<{
             </tr>
           </thead>
           <tbody>
-            {open.map((l) => {
-              const e = entries[l.materialCode] ?? { qty: '', batch: '', expiry: '' };
-              const q = readQty(e.qty);
-              const bad = e.qty.trim() !== '' && !(Number.isFinite(q) && q > 0);
-              const over = Number.isFinite(q) && q > l.open;
+            {found.map(({ item: l, match }) => {
+              const e = entries[l.materialCode] ?? EMPTY_LINE;
+              const r = read.lines.find((x) => x.line.materialCode === l.materialCode);
+              const bad = !!r && !r.qtyOk;
+              const over = !!r && r.over;
               return (
                 <tr key={l.materialCode} className="border-t border-border-subtle align-top">
                   <td className="py-1.5 pr-2">
@@ -237,6 +332,7 @@ const AsnLinesEditor: React.FC<{
                       {l.materialCode}
                     </Data>
                     <div className="text-text-primary">{l.description}</div>
+                    <MaterialMatchReason match={match} testId={`asn-line-match-${l.materialCode}`} />
                   </td>
                   <td className="py-1.5 pr-2 text-right whitespace-nowrap">
                     <Data>{`${l.open.toLocaleString('en-US')} ${l.uom}`}</Data>
@@ -254,13 +350,11 @@ const AsnLinesEditor: React.FC<{
                     {bad && <div className="mt-1 text-[11px] text-danger">{t('fc.asn.qty.invalid')}</div>}
                   </td>
                   <td className="py-1.5 pr-2">
-                    <input
-                      type="text"
-                      aria-label={t('fc.asn.batchFor', { material: l.materialCode })}
-                      value={e.batch}
-                      onChange={(ev) => onChange(l.materialCode, { batch: ev.target.value })}
-                      placeholder={t('supplierShipments.placeholder.batch')}
-                      className={`${inputClass} min-w-[110px]`}
+                    <BatchCell
+                      materialCode={l.materialCode}
+                      entry={e}
+                      options={batches[l.materialCode] ?? []}
+                      onChange={(patch) => onChange(l.materialCode, patch)}
                     />
                   </td>
                   <td className="py-1.5">
@@ -270,6 +364,13 @@ const AsnLinesEditor: React.FC<{
                       value={e.expiry}
                       onChange={(ev) => onChange(l.materialCode, { expiry: ev.target.value })}
                       className={inputClass}
+                    />
+                    {/* MR-6 d step 4 — "Expiry <date> · <n> months left at ETA". */}
+                    <ShelfLifeLineNote
+                      view={r?.shelfLife ?? null}
+                      expiry={e.expiry}
+                      refusal={r?.refusal ?? null}
+                      materialCode={l.materialCode}
                     />
                   </td>
                 </tr>
@@ -330,6 +431,9 @@ const ShipmentsList: React.FC<ShipmentsListProps> = ({
   confirmedPOs,
 }) => {
   const { t } = useTranslation();
+  // Material C4 — the PIC filter (by name: a supplier never sees the code). An
+  // ASN is kept when any of its lines is that controller's material.
+  const pic = usePicFilter();
   // ⚠️ TWO VERBS, TWO SLOTS — never one notice speaking for both (§76). They
   // are co-reachable on this page: a supplier with a confirmed PO and a draft
   // ASN sees the create row and the submit cell at the same time, so a single
@@ -350,10 +454,10 @@ const ShipmentsList: React.FC<ShipmentsListProps> = ({
   } as const);
   const filtered = useMemo(
     () =>
-      statusFilter === 'All'
-        ? asns
-        : asns.filter((a) => a.status === statusFilter),
-    [statusFilter, asns],
+      (statusFilter === 'All' ? asns : asns.filter((a) => a.status === statusFilter)).filter(
+        (a) => pic.filter === '' || a.lineItems.some((li) => pic.matches(li.mrpController)),
+      ),
+    [statusFilter, asns, pic.filter, pic.matches],
   );
 
   const pendingPOs = useMemo(() => {
@@ -427,6 +531,13 @@ const ShipmentsList: React.FC<ShipmentsListProps> = ({
               </span>
             )}
           </h3>
+          <PicFilter
+            refs={asns.flatMap((a) => a.lineItems.map((li) => li.mrpController))}
+            persona="supplier"
+            filter={pic.filter}
+            setFilter={pic.setFilter}
+            myCode={pic.myCode}
+          />
         </div>
         <Table>
           <TableHeader>
@@ -623,6 +734,18 @@ const ShipmentsList: React.FC<ShipmentsListProps> = ({
                                   <dd className="text-text-primary">{asn.overShipReason}</dd>
                                 </>
                               )}
+                              {/* MR-6 BR-12 — the warnings shown at submit, as recorded. */}
+                              {asn.callOffWarnings && asn.callOffWarnings.length > 0 ? (
+                                <>
+                                  <dt className="text-text-tertiary">{t('co.asn.warn.recorded')}</dt>
+                                  <dd
+                                    className="text-warning-hover"
+                                    data-testid={`asn-recorded-warnings-${asn.asnNumber}`}
+                                  >
+                                    {asn.callOffWarnings.map((w) => callOffWarningText(t, w)).join(' · ')}
+                                  </dd>
+                                </>
+                              ) : null}
                             </dl>
                           </div>
                           <div className="bg-bg-surface border border-border-subtle rounded-md p-4">
@@ -641,6 +764,9 @@ const ShipmentsList: React.FC<ShipmentsListProps> = ({
                                   <tr className="text-text-tertiary uppercase">
                                     <th className="text-left py-1">
                                       {t('supplierShipments.lineItems.col.material')}
+                                    </th>
+                                    <th className="text-left py-1">
+                                      <PicHeader />
                                     </th>
                                     <th className="text-right py-1">
                                       {t('supplierShipments.lineItems.col.ordered')}
@@ -673,6 +799,12 @@ const ShipmentsList: React.FC<ShipmentsListProps> = ({
                                             {li.description}
                                           </div>
                                         </td>
+                                        <td className="py-1.5">
+                                          <PicCell
+                                            value={li.mrpController}
+                                            testId={`asn-line-pic-${asn.asnNumber}-${li.materialCode}`}
+                                          />
+                                        </td>
                                         <td className="py-1.5 text-right text-text-secondary">
                                           <Data>{li.orderedQty.toLocaleString()}</Data>
                                         </td>
@@ -686,6 +818,13 @@ const ShipmentsList: React.FC<ShipmentsListProps> = ({
                                         </td>
                                         <td className="py-1.5 text-right text-text-tertiary">
                                           <Data>{li.expiryDate ? fmtDate(li.expiryDate) : '—'}</Data>
+                                          {approvedIntoBlockedStock(asn, li) ? (
+                                            <div className="mt-1">
+                                              <BlockedStockMarker
+                                                testId={`asn-line-blocked-${asn.asnNumber}-${li.materialCode}`}
+                                              />
+                                            </div>
+                                          ) : null}
                                         </td>
                                       </tr>
                                     );
@@ -694,6 +833,12 @@ const ShipmentsList: React.FC<ShipmentsListProps> = ({
                               </table>
                             )}
                           </div>
+                        </div>
+                        {/* MR-6 BR-09 — the exception record, and edge case 1's ETA change. */}
+                        <div className="mt-4">
+                          <ShelfLifeExceptionDetail asn={asn}>
+                            {asnVerbs.submit.kind === 'held' ? <AsnEtaChange asn={asn} /> : null}
+                          </ShelfLifeExceptionDetail>
                         </div>
                       </td>
                     </tr>
@@ -718,6 +863,63 @@ const ShipmentsList: React.FC<ShipmentsListProps> = ({
   );
 };
 
+/**
+ * MR-6 edge case 1 — on a submitted ASN whose shelf-life exception was
+ * approved, the supplier may move the ETA later; when a line then fails the
+ * rule, Quality decides again (`t_asn_change_eta`). The control is offered only
+ * where the verb would accept it (`etaNeedsReapproval`, the hook's rule).
+ */
+const AsnEtaChange: React.FC<{ asn: ASN }> = ({ asn }) => {
+  const { t } = useTranslation();
+  const { toast } = useToast();
+  const refusalText = useRefusalText();
+  const changeEta = useAdvanceShipNoticeChangeEta();
+  const [eta, setEta] = useState('');
+  const view = shelfLifeExceptionOf(asn);
+  if (asn.status !== 'Submitted' || view?.state !== 'approved') return null;
+  const legal = etaNeedsReapproval(asn, eta);
+  const run = () =>
+    changeEta.mutate(
+      { asnNumber: asn.asnNumber, eta },
+      {
+        onSuccess: (res) => {
+          if (res.status === 'failed') {
+            toast({
+              variant: 'warning',
+              title: t('fc.asn.shelfLife.changeEta.failed', { asnNumber: asn.asnNumber }),
+              description: refusalText(res.reason) ?? res.reason ?? '',
+            });
+            return;
+          }
+          setEta('');
+          toast({ variant: 'success', title: t('fc.asn.shelfLife.changeEta.success', { asnNumber: asn.asnNumber }) });
+        },
+        onError: () =>
+          toast({ variant: 'error', title: t('asn.denied.title'), description: t('asn.denied.desc') }),
+      },
+    );
+  return (
+    <div className="flex flex-wrap items-end gap-2 border-t border-border-subtle pt-2">
+      <label className="block">
+        <span className={labelClass}>{t('fc.asn.shelfLife.changeEta.label')}</span>
+        <input
+          type="date"
+          value={eta}
+          min={view.request.eta}
+          onChange={(ev) => setEta(ev.target.value)}
+          className={inputClass}
+        />
+      </label>
+      <Button variant="outline" onClick={run} disabled={!legal || changeEta.isPending}>
+        {t('fc.asn.shelfLife.changeEta.action')}
+      </Button>
+      <p className="w-full text-[11px] text-text-tertiary">
+        {t('fc.asn.shelfLife.changeEta.hint', { eta: fmtDate(view.request.eta) })}
+      </p>
+    </div>
+  );
+};
+
 const SupplierShipments: React.FC = () => {
   const { t } = useTranslation();
   const refusalText = useRefusalText();
@@ -730,6 +932,7 @@ const SupplierShipments: React.FC = () => {
   const { supplierId } = identity;
   const createAsnMutation = useAdvanceShipNoticeCreate();
   const submitAsnMutation = useAdvanceShipNoticeSubmit();
+  const requestExceptionMutation = useAdvanceShipNoticeRequestException();
   const cancelAsnMutation = useAdvanceShipNoticeCancel();
   // ⚠️ **THE WIZARD TAB IS A SECOND ENTRY TO THE SAME VERBS, AND THE FIRST PASS
   // OF THIS BATCH MISSED IT** — `IMPORTER-PRESENCE-IS-NOT-VERB-COVERAGE-01` for
@@ -763,6 +966,9 @@ const SupplierShipments: React.FC = () => {
     shipDate: '',
     lines: {} as Record<string, LineEntry>,
     overShipReason: '',
+    callOffFinal: false,
+    /** MR-6 BR-08 — the supplier's reason when shelf life blocks the submission. */
+    exceptionReason: '',
   });
   const [cancelTarget, setCancelTarget] = useState<string | null>(null);
 
@@ -770,13 +976,23 @@ const SupplierShipments: React.FC = () => {
   const asnsQuery = useASNs();
   // REQ-E09-03 BR-06 — an ASN may ship a confirmed call-off on the chosen PO.
   const callOffsQuery = useCallOffs();
+  // MR-6 BR-10 / BR-11 — the call-off projection the warnings read (which call-offs are open).
+  const { views: callOffViewList } = useCallOffViews();
   // REQ-E07-04 — partial shipments: a PO stays shippable after a first receipt.
   const posQuery = usePurchaseOrders({
     status: [POStatus.CONFIRMED, POStatus.PARTIALLY_DELIVERED],
   });
 
+  // MR-6 BR-01 — the supplier's own stock positions, for the batch picker. Not
+  // a gate on the page: without them the batch is typed, as BR-04 allows.
+  const inventoryQuery = useInventory();
+
   const mySupplier = supplierQuery.data ?? null;
   const asns = useMemo(() => asnsQuery.data?.items ?? [], [asnsQuery.data]);
+  const declaredBatches = useMemo(
+    () => (supplierId ? batchesByMaterial(supplierId, inventoryQuery.data?.items ?? [], asns) : {}),
+    [supplierId, inventoryQuery.data, asns],
+  );
   // REQ-E07-03 — the drill-through filter. A supplier addressing another
   // supplier's PO gets `notFound`: its own PO read never returned it (BR-06).
   const drill = usePoDrillFilter();
@@ -806,6 +1022,7 @@ const SupplierShipments: React.FC = () => {
       Delivered: 0,
       Discrepancy: 0,
       Cancelled: 0,
+      'Awaiting exception': 0,
     };
     for (const a of asns) base[a.status]++;
     return base;
@@ -852,6 +1069,9 @@ const SupplierShipments: React.FC = () => {
             qty: stored ? String(stored.shippedQty) : l.open > 0 ? String(l.open) : '',
             batch: stored ? real(stored.lotNumber) : '',
             expiry: stored?.expiryDate ?? '',
+            // MR-6 BR-04 — a stored batch keeps how it was entered; a line stored
+            // before the rule existed, with a batch, reads as typed.
+            batchSource: stored?.batchSource ?? (stored && real(stored.lotNumber) ? 'typed' : 'declared'),
           },
         ];
       }),
@@ -863,6 +1083,8 @@ const SupplierShipments: React.FC = () => {
       shipDate: asn.shipDate ?? '',
       lines: entries,
       overShipReason: asn.overShipReason ?? '',
+      callOffFinal: asn.callOffFinal === true,
+      exceptionReason: '',
     });
   };
 
@@ -882,25 +1104,62 @@ const SupplierShipments: React.FC = () => {
     return [...fromPo, ...extra];
   };
 
+  // The drawer's lines read by the one line rule (AR-11), leaving the draft
+  // out of its own open quantity.
+  const readSubmitLines = (asn: ASN) =>
+    readLines(submitForm.lines, submitLinesFor(asn), {
+      po: SHIPPABLE_POS.find((p) => p.poNumber === asn.poReference),
+      asns,
+      excludeAsn: asn.asnNumber,
+      eta: submitForm.eta,
+      overShipReason: submitForm.overShipReason,
+      batches: declaredBatches,
+    });
+
   // t_asn_submit (Draft → Submitted) with the collected fields. The dispatcher
   // is the source of truth: an incomplete form is honestly rejected (the
   // requiredFields enforcement), surfaced as a human-readable message.
   const doSubmitAsn = () => {
     if (!submitTarget) return;
     const asnNumber = submitTarget.asnNumber;
-    const read = readLines(submitForm.lines, submitLinesFor(submitTarget));
+    const read = readSubmitLines(submitTarget);
+    const vars = {
+      asnNumber,
+      carrier: submitForm.carrier,
+      // BL-51 — '' clears a 3PL the draft named (a carrier typed by name).
+      threePlId: submitForm.threePlId,
+      trackingNumber: submitForm.trackingNumber,
+      eta: submitForm.eta,
+      ...(submitForm.shipDate ? { shipDate: submitForm.shipDate } : {}),
+      ...(read.lines.length > 0 ? { lines: read.lines.map((l) => l.input) } : {}),
+      ...(submitForm.overShipReason.trim() ? { overShipReason: submitForm.overShipReason.trim() } : {}),
+    };
+    // MR-6 BR-08 — the second submit path: when shelf life is the one thing
+    // wrong, the drawer asks Quality instead of submitting.
+    if (read.onlyShelfLife) {
+      requestExceptionMutation.mutate(
+        { ...vars, reason: submitForm.exceptionReason.trim() },
+        {
+          onSuccess: (res) => {
+            if (res.status === 'failed') {
+              toast({
+                variant: 'warning',
+                title: t('fc.asn.shelfLife.request.failed', { asnNumber }),
+                description: refusalText(res.reason) ?? res.reason ?? '',
+              });
+              return;
+            }
+            setSubmitTarget(null);
+            toast({ variant: 'success', title: t('fc.asn.shelfLife.request.success', { asnNumber }) });
+          },
+          onError: () =>
+            toast({ variant: 'error', title: t('asn.denied.title'), description: t('asn.denied.desc') }),
+        },
+      );
+      return;
+    }
     submitAsnMutation.mutate(
-      {
-        asnNumber,
-        carrier: submitForm.carrier,
-        // BL-51 — '' clears a 3PL the draft named (a carrier typed by name).
-        threePlId: submitForm.threePlId,
-        trackingNumber: submitForm.trackingNumber,
-        eta: submitForm.eta,
-        ...(submitForm.shipDate ? { shipDate: submitForm.shipDate } : {}),
-        ...(read.lines.length > 0 ? { lines: read.lines.map((l) => l.input) } : {}),
-        ...(submitForm.overShipReason.trim() ? { overShipReason: submitForm.overShipReason.trim() } : {}),
-      },
+      { ...vars, ...(submitTarget.callOffId ? { callOffFinal: submitForm.callOffFinal } : {}) },
       {
         onSuccess: (res) => {
           if (res.status === 'failed') {
@@ -1021,18 +1280,44 @@ const SupplierShipments: React.FC = () => {
 
   const selectedPO = SHIPPABLE_POS.find((p) => p.id === form.poId);
   const wizardOpenLines = selectedPO ? openLinesFor(selectedPO, asns) : [];
-  const wizardRead = readLines(form.lines, wizardOpenLines);
+  // AR-11 — every line through the one line rule the verbs call.
+  const wizardRead = readLines(form.lines, wizardOpenLines, {
+    po: selectedPO,
+    asns,
+    eta: form.eta,
+    overShipReason: form.overShipReason,
+    batches: declaredBatches,
+  });
+  // MR-6 BR-10 / BR-11 — what the confirm step warns about; never a block.
+  const wizardWarnings = selectedPO
+    ? asnCallOffWarnings(
+        asnForCheck(
+          {
+            asnNumber: '',
+            poReference: selectedPO.poNumber,
+            ...(form.callOffId ? { callOffId: form.callOffId, callOffFinal: form.callOffFinal } : {}),
+          },
+          wizardRead,
+          form.eta,
+          form.shipDate,
+        ),
+        callOffViewList,
+        asns,
+      )
+    : [];
   const step1Valid = form.poId !== '';
-  // BR-04 required fields, and BR-02's reason when a line ships above open.
+  // BR-04 required fields; `complete` carries each line's refusal, including
+  // BR-02's reason when a line ships above open.
   const step2Valid =
     form.carrier !== '' &&
     form.trackingNumber !== '' &&
     form.shipDate !== '' &&
     form.eta !== '' &&
     form.eta >= form.shipDate &&
-    wizardRead.complete &&
-    (wizardRead.overCount === 0 || form.overShipReason.trim() !== '');
-  const step3Valid = form.confirmed;
+    // MR-6 BR-08 — a line short on shelf life does not stop the wizard: step 3
+    // asks Quality for an exception instead of submitting.
+    (wizardRead.complete || wizardRead.onlyShelfLife);
+  const step3Valid = form.confirmed && (!wizardRead.onlyShelfLife || form.exceptionReason.trim() !== '');
   const isStepValid = (s: number): boolean =>
     s === 0 ? step1Valid : s === 1 ? step2Valid : step3Valid;
 
@@ -1055,7 +1340,7 @@ const SupplierShipments: React.FC = () => {
         lines: wizardRead.lines.map((l) => l.input),
         ...(form.packingList ? { packingListFile: form.packingList } : {}),
         ...(form.overShipReason.trim() ? { overShipReason: form.overShipReason.trim() } : {}),
-        ...(form.callOffId ? { callOffId: form.callOffId } : {}),
+        ...(form.callOffId ? { callOffId: form.callOffId, callOffFinal: form.callOffFinal } : {}),
       });
       if (createRes.status === 'failed' || !createRes.entityId) {
         toast({
@@ -1063,6 +1348,24 @@ const SupplierShipments: React.FC = () => {
           title: t('asn.create.failed.title'),
           description: refusalText(createRes.reason) ?? t('asn.create.failed.desc', { reason: createRes.reason ?? '' }),
         });
+        return;
+      }
+      // MR-6 BR-08 — shelf life is the one thing wrong: ask Quality instead.
+      if (wizardRead.onlyShelfLife) {
+        const requestRes = await requestExceptionMutation.mutateAsync({
+          asnNumber: createRes.entityId,
+          ...detail,
+          reason: form.exceptionReason.trim(),
+        });
+        toast(
+          requestRes.status === 'failed'
+            ? {
+                variant: 'warning',
+                title: t('fc.asn.shelfLife.request.failed', { asnNumber: createRes.entityId }),
+                description: refusalText(requestRes.reason) ?? requestRes.reason ?? '',
+              }
+            : { variant: 'success', title: t('fc.asn.shelfLife.request.success', { asnNumber: createRes.entityId }) },
+        );
         return;
       }
       const submitRes = await submitAsnMutation.mutateAsync({
@@ -1091,6 +1394,28 @@ const SupplierShipments: React.FC = () => {
     }
   };
 
+  // FU-5 — the drawer's lines and warnings, from the same rules as the wizard.
+  const submitRead = submitTarget ? readSubmitLines(submitTarget) : null;
+  const submitWarnings =
+    submitTarget && submitRead
+      ? asnCallOffWarnings(
+          asnForCheck(
+            {
+              asnNumber: submitTarget.asnNumber,
+              poReference: submitTarget.poReference,
+              ...(submitTarget.callOffId
+                ? { callOffId: submitTarget.callOffId, callOffFinal: submitForm.callOffFinal }
+                : {}),
+            },
+            submitRead,
+            submitForm.eta,
+            submitForm.shipDate,
+          ),
+          callOffViewList,
+          asns,
+        )
+      : [];
+
   const wizardSteps: WizardStep[] = [
     {
       id: 'select',
@@ -1118,6 +1443,7 @@ const SupplierShipments: React.FC = () => {
                       lines: seedLines(openLinesFor(po, asns)),
                       overShipReason: '',
                       callOffId: '',
+                      callOffFinal: false,
                     })
                   }
                   aria-pressed={selected}
@@ -1139,7 +1465,7 @@ const SupplierShipments: React.FC = () => {
                     <div className="text-right shrink-0">
                       <div className="text-xs text-text-tertiary">
                         {t('supplierShipments.wizard.select.qty')}{' '}
-                        <Data>{mat ? `${mat.quantity.toLocaleString()} ${mat.uom}` : '—'}</Data>
+                        <Data>{mat ? poLineQuantityText(t, mat) : '—'}</Data>
                       </div>
                       <div className="text-xs text-text-tertiary">
                         {t('supplierShipments.wizard.select.delivery')}{' '}
@@ -1192,7 +1518,7 @@ const SupplierShipments: React.FC = () => {
               <select
                 id="asn-calloff"
                 value={form.callOffId}
-                onChange={(e) => updateForm({ callOffId: e.target.value })}
+                onChange={(e) => updateForm({ callOffId: e.target.value, callOffFinal: false })}
                 className="w-full px-3 py-2 text-sm text-text-primary bg-white border border-border-input rounded-md focus:outline-none focus:border-action"
               >
                 <option value="">{t('co.asn.noCallOff')}</option>
@@ -1205,6 +1531,13 @@ const SupplierShipments: React.FC = () => {
                   ))}
               </select>
               <p className="mt-1 text-xs text-text-tertiary">{t('co.asn.callOffHint')}</p>
+              {form.callOffId ? (
+                <CallOffFinalToggle
+                  id="asn-wizard-calloff-final"
+                  checked={form.callOffFinal}
+                  onChange={(v) => updateForm({ callOffFinal: v })}
+                />
+              ) : null}
             </div>
           )}
         </div>
@@ -1280,12 +1613,14 @@ const SupplierShipments: React.FC = () => {
             <AsnLinesEditor
               open={wizardOpenLines}
               entries={form.lines}
+              read={wizardRead}
+              batches={declaredBatches}
               onChange={(code, patch) =>
                 setForm((f) => ({
                   ...f,
                   lines: {
                     ...f.lines,
-                    [code]: { ...(f.lines[code] ?? { qty: '', batch: '', expiry: '' }), ...patch },
+                    [code]: { ...(f.lines[code] ?? EMPTY_LINE), ...patch },
                   },
                 }))
               }
@@ -1395,6 +1730,8 @@ const SupplierShipments: React.FC = () => {
                   `${l.line.description} · ${
                     Number.isFinite(l.input.shippedQty) ? l.input.shippedQty.toLocaleString() : '—'
                   } ${l.line.uom} · ${t('fc.asn.col.batch')} ${l.input.batchNumber || '—'}${
+                    l.input.batchSource === 'typed' ? ` (${t('fc.asn.batch.notDeclared')})` : ''
+                  }${
                     l.input.expiryDate ? ` · ${t('fc.asn.col.expiryShort')} ${fmtDate(l.input.expiryDate)}` : ''
                   }`,
                 ]),
@@ -1419,6 +1756,20 @@ const SupplierShipments: React.FC = () => {
               ))}
             </div>
           </FormSection>
+
+          {/* MR-6 BR-03, BR-10, BR-11 — warnings, never a block. */}
+          <AsnSubmitWarnings
+            aboveAvailable={wizardRead.aboveAvailable}
+            callOffWarnings={wizardWarnings}
+            testId="asn-wizard-warnings"
+          />
+
+          {wizardRead.onlyShelfLife ? (
+            <ShelfLifeRequestBox
+              reason={form.exceptionReason}
+              onReasonChange={(v) => updateForm({ exceptionReason: v })}
+            />
+          ) : null}
 
           <label className="flex items-start gap-3 px-4 py-3 bg-teal-soft border border-teal/30 rounded-md cursor-pointer text-sm text-text-primary">
             <input
@@ -1567,7 +1918,9 @@ const SupplierShipments: React.FC = () => {
           }}
           onComplete={completeWizard}
           isStepValid={isStepValid}
-          completeLabel={t('asn.submit.confirm')}
+          completeLabel={
+            wizardRead.onlyShelfLife ? t('fc.asn.shelfLife.request.action') : t('asn.submit.confirm')
+          }
         />
       )}
 
@@ -1588,14 +1941,25 @@ const SupplierShipments: React.FC = () => {
               <Button variant="secondary" onClick={() => setSubmitTarget(null)}>
                 {t('supplierShipments.action.cancel')}
               </Button>
-              <Button
-                variant="outline"
-                icon={Send}
-                onClick={doSubmitAsn}
-                disabled={submitAsnMutation.isPending}
-              >
-                {t('asn.submit.confirm')}
-              </Button>
+              {readSubmitLines(submitTarget).onlyShelfLife ? (
+                <Button
+                  variant="outline"
+                  icon={Send}
+                  onClick={doSubmitAsn}
+                  disabled={requestExceptionMutation.isPending || submitForm.exceptionReason.trim() === ''}
+                >
+                  {t('fc.asn.shelfLife.request.action')}
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  icon={Send}
+                  onClick={doSubmitAsn}
+                  disabled={submitAsnMutation.isPending}
+                >
+                  {t('asn.submit.confirm')}
+                </Button>
+              )}
             </>
           )
         }
@@ -1647,12 +2011,14 @@ const SupplierShipments: React.FC = () => {
               <AsnLinesEditor
                 open={submitLinesFor(submitTarget)}
                 entries={submitForm.lines}
+                read={submitRead ?? readSubmitLines(submitTarget)}
+                batches={declaredBatches}
                 onChange={(code, patch) =>
                   setSubmitForm((f) => ({
                     ...f,
                     lines: {
                       ...f.lines,
-                      [code]: { ...(f.lines[code] ?? { qty: '', batch: '', expiry: '' }), ...patch },
+                      [code]: { ...(f.lines[code] ?? EMPTY_LINE), ...patch },
                     },
                   }))
                 }
@@ -1661,6 +2027,27 @@ const SupplierShipments: React.FC = () => {
               />
               <p className="mt-2 text-xs text-text-tertiary">{t('fc.asn.submit.required')}</p>
             </div>
+            {readSubmitLines(submitTarget).onlyShelfLife ? (
+              <ShelfLifeRequestBox
+                reason={submitForm.exceptionReason}
+                onReasonChange={(v) => setSubmitForm((f) => ({ ...f, exceptionReason: v }))}
+              />
+            ) : null}
+            {/* A draft Quality sent back: the rejection and its reason (MR-6 BR-08). */}
+            <ShelfLifeExceptionDetail asn={submitTarget} />
+            {submitTarget.callOffId ? (
+              <CallOffFinalToggle
+                id="asn-submit-calloff-final"
+                checked={submitForm.callOffFinal}
+                onChange={(v) => setSubmitForm((f) => ({ ...f, callOffFinal: v }))}
+              />
+            ) : null}
+            {/* FU-5 — the Submit drawer is the second submit path: the same warnings. */}
+            <AsnSubmitWarnings
+              aboveAvailable={submitRead?.aboveAvailable ?? []}
+              callOffWarnings={submitWarnings}
+              testId="asn-submit-warnings"
+            />
           </div>
         )}
       </SidePanel>

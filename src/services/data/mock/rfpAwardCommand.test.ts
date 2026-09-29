@@ -14,7 +14,7 @@
 // awarded), closes the RFP by verb, runs a firm-offer round and closes it.
 // ────────────────────────────────────────────────────────────────────────────
 
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { MockCommandService } from './MockCommandService';
 import { MockProcurementService } from './MockProcurementService';
 import {
@@ -30,7 +30,9 @@ import { rfqStore } from './stores/rfqStore';
 import { quotationStore } from './stores/quotationStore';
 import type { QueryScope } from '../types';
 import { PERSONA_SYSTEM_ROLES } from '../../transitions/businessRoles';
-import { rfpRoundOptions, rfxNow } from './rfxReadModel';
+import { rfpRoundOptions, rfpSupplierGate, rfxNow } from './rfxReadModel';
+import { mockSuppliers } from '../../../data/mockSuppliers';
+import { SupplierStatus } from '../../../types/supplier.types';
 import { sdcClock } from '../../sdc';
 import { NO_PERSON } from '../../../context/noPerson';
 import { awardItemsOfRfp, isRfpAward, rfpAwardedOptionRefs } from '../../sourcing/rfpAward';
@@ -577,5 +579,133 @@ describe('D2 — roles', () => {
       payload: { awardLines: split6040(offers), awardReason: REASON },
     });
     expect(ok.status, ok.reason).toBe('done');
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BL-130 (REQ-E03-04 BR-16f) — "Will not award the rest" on an RFP: the final
+// award with NO lines, legal only on a Partly awarded RFP and only when it
+// marks every open option. Probed both ways: each known-bad differs from the
+// known-good in the one thing its rule is about.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Both options asked: sup-007 prices both, sup-015 only the full set, at 50K. */
+const twoOptionOffers = () =>
+  roundWithOffers([FULL_SET, PUMP_CAP], {
+    'sup-007': [
+      { optionRef: FULL_SET, qty: 50_000, unitPrice: 4_100 },
+      { optionRef: PUMP_CAP, qty: 50_000, unitPrice: 2_250 },
+    ],
+    'sup-015': [{ optionRef: FULL_SET, qty: 50_000, unitPrice: 4_180 }],
+  });
+
+describe('BL-130 — a Partly awarded RFP is closed out with "Will not award the rest"', () => {
+  /** The full set awarded 60/40 as a PARTIAL award, leaving the pump and cap open. */
+  async function partlyAwarded(): Promise<void> {
+    const offers = await twoOptionOffers();
+    const partial = await awardPartial(split6040(offers));
+    expect(partial.status, partial.reason).toBe('done');
+    expect(rfpEventStore.get('rfp-002')!.status).toBe('Partly awarded');
+  }
+
+  it('no lines, every open option "Will not award", a reason → Awarded, recorded with no lines and the responders not named', async () => {
+    await partlyAwarded();
+    const [first] = rfpAwards();
+    const res = await award([], { notAwardedItems: [PUMP_CAP] });
+    expect(res.status, res.reason).toBe('done');
+    expect(rfpEventStore.get('rfp-002')!.status).toBe('Awarded');
+    const closeOut = rfpAwards().find((a) => a.id !== first!.id)!;
+    expect(closeOut.lines).toEqual([]);
+    expect(closeOut.reason).toBe(REASON);
+    // NR-2 BR-09 — the final award names every responder no award of the RFP named.
+    expect(closeOut.notAwardedSupplierIds).toEqual(['sup-008']);
+    // The partial award before it is untouched and still in force.
+    expect(awardStore.get(first!.id)).toEqual(first);
+    const views = (await reads.getRfpAwards(buyer)).items.filter((a) => a.eventId === 'rfp-002');
+    expect(views.map((v) => v.status)).not.toContain('Cancelled');
+  });
+
+  it('the same empty award on a Closed RFP (nothing awarded yet) is AWARD_EMPTY', async () => {
+    await fullSetOffers();
+    expect(rfpEventStore.get('rfp-002')!.status).toBe('Closed');
+    const res = await award([], { notAwardedItems: [FULL_SET] });
+    expect(res.status).toBe('failed');
+    expect(codeOf(res.reason)).toBe('AWARD_EMPTY');
+    // `awardLines` is no longer a required field of the final award, so an
+    // absent one reaches the policy and is refused by name there.
+    const absent = await dispatch(buyer, 't_rfp_award', { awardReason: REASON });
+    expect(codeOf(absent.reason)).toBe('AWARD_EMPTY');
+    expect(rfpEventStore.get('rfp-002')!.status).toBe('Closed');
+  });
+
+  it('an empty award that leaves an open option unmarked is AWARD_EMPTY', async () => {
+    await partlyAwarded();
+    const res = await award([]);
+    expect(codeOf(res.reason)).toBe('AWARD_EMPTY');
+    expect(rfpEventStore.get('rfp-002')!.status).toBe('Partly awarded');
+  });
+
+  it('the close-out needs a reason, as every RFP award does (NR-2 BR-06)', async () => {
+    await partlyAwarded();
+    const blank = await dispatch(buyer, 't_rfp_award', { awardLines: [], awardReason: ' ', notAwardedItems: [PUMP_CAP] });
+    expect(codeOf(blank.reason)).toBe('AWARD_REASON_REQUIRED');
+    expect(rfpEventStore.get('rfp-002')!.status).toBe('Partly awarded');
+  });
+
+  it('"Will not award" never rides on a partial award: an empty partial award is refused', async () => {
+    await partlyAwarded();
+    const res = await awardPartial([], { notAwardedItems: [PUMP_CAP] });
+    expect(res.status).toBe('failed');
+    expect(rfpEventStore.get('rfp-002')!.status).toBe('Partly awarded');
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BL-131 (REQ-E03-04 BR-16c) — CR-23 is judged AT AWARD, not only when the
+// round opens. A supplier that passed when it was asked for a firm offer and
+// fails by the time of the award is refused, naming the supplier and the
+// criterion; the same award without it goes through.
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('BL-131 — a supplier that fails the compliance gate between the round and the award is refused', () => {
+  const row = mockSuppliers.find((s) => s.id === 'sup-015');
+  let was: SupplierStatus | undefined;
+
+  beforeEach(() => {
+    was = row?.status;
+  });
+  afterEach(() => {
+    if (row && was !== undefined) row.status = was;
+  });
+
+  it('sup-015 passes when the round runs, is suspended before the award, and the award naming it is refused', async () => {
+    // Population control: the supplier is in the master and passes today, so
+    // the refusal below is caused by the change, not by a gate it always failed.
+    expect(row).toBeDefined();
+    expect(rfpSupplierGate('sup-015', rfxNow()).passes).toBe(true);
+
+    // The round opens and closes while sup-015 passes (the round policy checks CR-23 too).
+    const offers = await twoOptionOffers();
+    row!.status = SupplierStatus.SUSPENDED;
+    expect(rfpSupplierGate('sup-015', rfxNow())).toEqual({ passes: false, failed: ['status'] });
+
+    // The final award, every other rule satisfied (the pump and cap marked "Will not award").
+    const refused = await award(split6040(offers), { notAwardedItems: [PUMP_CAP] });
+    expect(refused.status).toBe('failed');
+    expect(codeOf(refused.reason)).toBe('COMPLIANCE_GATE_FAILED');
+    expect(refused.reason).toMatch(/COMPLIANCE_GATE_FAILED: sup-015 .*\(status\)/);
+    // The partial award is the same policy and refuses it too.
+    const partial = await awardPartial(split6040(offers));
+    expect(codeOf(partial.reason)).toBe('COMPLIANCE_GATE_FAILED');
+    expect(rfpEventStore.get('rfp-002')!.status).toBe('Closed');
+    expect(rfpAwards()).toEqual([]);
+
+    // KNOWN-GOOD twin: the same option, all to sup-007, which still passes.
+    const alone = await award(
+      [{ supplierId: 'sup-007', optionRef: FULL_SET, firmOfferId: offers['sup-007']!, sharePct: 100, quantity: 50_000, awardTierQty: 50_000 }],
+      { notAwardedItems: [PUMP_CAP] },
+    );
+    expect(alone.status, alone.reason).toBe('done');
+    expect(rfpEventStore.get('rfp-002')!.status).toBe('Awarded');
   });
 });

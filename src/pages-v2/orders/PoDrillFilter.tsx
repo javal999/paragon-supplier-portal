@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { usePlanningGroupLabel } from '../inventory/planningGroupDisplay';
 import { Link, useSearchParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import AppShellV2 from '../../components/layout-v2/AppShellV2';
@@ -161,6 +162,7 @@ export const PoFilterBanner: React.FC<{
   testId = 'po-filter-banner',
 }) => {
   const { t } = useTranslation();
+  const groupLabel = usePlanningGroupLabel();
   if (drill.kind === 'none' || drill.kind === 'pending') return null;
 
   if (drill.kind === 'malformed') {
@@ -224,7 +226,7 @@ export const PoFilterBanner: React.FC<{
       {reason === 'capacity' && drill.groups && drill.groups.length > 0 && (
         <div className="mt-1 text-text-tertiary">
           {t('oc.drill.groups')}:{' '}
-          {drill.groups.map((g) => t(`inv.group.${g}`)).join(', ')}
+          {drill.groups.map(groupLabel).join(', ')}
           {drill.weeks && drill.weeks.length > 0 && (
             <>
               {' · '}

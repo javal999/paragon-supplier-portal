@@ -1,4 +1,4 @@
-import { BellRing, CalendarDays, Link2, ListChecks, SlidersHorizontal, type LucideIcon } from 'lucide-react';
+import { Award, BellRing, Tags, Building2, CalendarDays, Layers, Link2, ListChecks, SlidersHorizontal, UserCog, type LucideIcon } from 'lucide-react';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // THE ADMINISTRATION AREA — its sections, one definition (BL-50, BL-51, BL-32).
@@ -32,6 +32,41 @@ export const ADMIN_SECTIONS: readonly AdminSection[] = [
     labelKey: 'hub.nav.util.threePls',
     icon: Link2,
     path: `${ADMIN_BASE_PATH}/3pl-tracking`,
+  },
+  {
+    // Material A1 — each supplier's stock update mode (MR-1 BR-02, AC-06).
+    id: 'suppliers',
+    labelKey: 'hub.nav.util.suppliers',
+    icon: Building2,
+    path: `${ADMIN_BASE_PATH}/suppliers`,
+  },
+  {
+    // Material G1 — the documents each qualification level requires (MR-10 BR-04).
+    id: 'qualification',
+    labelKey: 'hub.nav.util.qualification',
+    icon: Award,
+    path: `${ADMIN_BASE_PATH}/qualification`,
+  },
+  {
+    // Material G2 — each sourcing category and purchasing group, Direct or Indirect (MR-10 BR-06).
+    id: 'sourcing-types',
+    labelKey: 'hub.nav.util.sourcingTypes',
+    icon: Tags,
+    path: `${ADMIN_BASE_PATH}/sourcing-types`,
+  },
+  {
+    // Material C5 — planning groups for capacity (MR-8 BR-03).
+    id: 'planning-groups',
+    labelKey: 'hub.nav.util.planningGroups',
+    icon: Layers,
+    path: `${ADMIN_BASE_PATH}/planning-groups`,
+  },
+  {
+    // Material C4 — who each SAP MRP controller code is (MR-5 BR-02).
+    id: 'mrp-controllers',
+    labelKey: 'hub.nav.util.mrpControllers',
+    icon: UserCog,
+    path: `${ADMIN_BASE_PATH}/mrp-controllers`,
   },
   {
     id: 'tolerances',

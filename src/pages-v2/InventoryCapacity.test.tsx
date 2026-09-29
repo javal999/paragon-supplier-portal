@@ -22,6 +22,7 @@ import {
   stockSyncStore,
 } from '../services/data/mock/stores/inventoryHubStores';
 import { sdcClock } from '../services/sdc';
+import { reasonCodeStore } from '../services/transitions/reasonCodes';
 import { STOCK_TEMPLATE_FIELDS, type StockTemplateField } from '../services/transitions/inventoryRules';
 import BuyerInventory from './BuyerInventory';
 import SupplierInventory from './SupplierInventory';
@@ -29,6 +30,8 @@ import BuyerSupplierAccess from './BuyerSupplierAccess';
 import SupplierCapacity from './SupplierCapacity';
 import BuyerCapacity from './BuyerCapacity';
 import BuyerAlerts from './BuyerAlerts';
+import { allCapacityPlans } from '../services/data/mock/inventoryReadModel';
+import { ltpCapacityLevel, planStatus } from '../services/transitions/capacityRules';
 import BuyerHome from './BuyerHome';
 import SupplierHome from './SupplierHome';
 
@@ -52,11 +55,11 @@ const SUP_002: CurrentIdentity = {
 const panel = () => within(document.querySelector('aside[role="dialog"]') as HTMLElement);
 
 describe('menu and copy (section 3.7)', () => {
-  it('PTI Inventory & capacity: Inventory, Capacity, Alerts, Supplier access; supplier Planning adds Capacity', () => {
+  it('PTI Inventory & capacity: Inventory, Stock simulation (Material E2), Capacity, Alerts, Supplier access; supplier Planning adds Capacity', () => {
     const inventory = PTI_NAV.find((s) => s.id === 'inventory')!;
-    expect(inventory.items.map((i) => i.path)).toEqual(['/buyer/inventory', '/buyer/capacity', '/buyer/alerts', '/buyer/supplier-access']);
+    expect(inventory.items.map((i) => i.path)).toEqual(['/buyer/inventory', '/buyer/stock-simulation', '/buyer/capacity', '/buyer/alerts', '/buyer/supplier-access']);
     const planning = SUPPLIER_NAV.find((s) => s.id === 'planning')!;
-    expect(planning.items.map((i) => i.path)).toEqual(['/supplier/forecasts', '/supplier/inventory', '/supplier/capacity']);
+    expect(planning.items.map((i) => i.path)).toEqual(['/supplier/forecasts', '/supplier/fs-reconcile', '/supplier/inventory', '/supplier/capacity']);
   });
 
   it('every new string exists in EN and ID', () => {
@@ -130,6 +133,7 @@ describe('PTI Inventory (REQ-E08-01)', () => {
     fireEvent.change(panel().getByLabelText('Supplier'), { target: { value: 'sup-007' } });
     fireEvent.change(panel().getByLabelText('Material'), { target: { value: 'PK-CAPF-8820' } });
     fireEvent.change(panel().getByLabelText('Stock on hand (PCS)'), { target: { value: '42000' } });
+    fireEvent.change(panel().getByLabelText('In production (PCS)'), { target: { value: '0' } }); // MAT-D4 — required, 0 allowed
     fireEvent.click(panel().getByTestId('stock-entry-submit'));
     await waitFor(() => expect(inventoryDeclarationStore.latestFor('sup-007', 'PK-CAPF-8820')).toMatchObject({ totalQty: 42000, channel: 'pti' }));
   });
@@ -159,7 +163,7 @@ describe('Supplier Stock (REQ-E08-01 SUP, REQ-E08-02, REQ-E08-03)', () => {
     await screen.findByTestId('stock-upload');
     const csv = [
       'Material code,Stock on hand,Unit,Supplier reorder point,In-production quantity,Expected production completion date (YYYY-MM-DD),Batch number,Batch quantity,Expiry date (YYYY-MM-DD)',
-      'PK-CAPF-8820,50000,PCS,20000,,,,,',
+      'PK-CAPF-8820,50000,PCS,20000,0,,,,',
       'RM-STEAR-7300,10,KG,,,,,,',
       'PK-PETB-8802,1.500,PCS,,,,,,',
     ].join('\n');
@@ -178,6 +182,7 @@ describe('Supplier Stock (REQ-E08-01 SUP, REQ-E08-02, REQ-E08-03)', () => {
     fireEvent.click(await screen.findByTestId('stock-entry-open'));
     fireEvent.change(panel().getByLabelText('Material'), { target: { value: 'PK-PETB-8810' } });
     fireEvent.change(panel().getByLabelText('Stock on hand (PCS)'), { target: { value: '1000' } });
+    fireEvent.change(panel().getByLabelText('In production (PCS)'), { target: { value: '0' } }); // MAT-D4 — required, 0 allowed
     fireEvent.click(panel().getByRole('button', { name: 'Add batch' }));
     fireEvent.change(panel().getByLabelText('Batch number'), { target: { value: 'B-1' } });
     fireEvent.change(panel().getByLabelText('Quantity'), { target: { value: '900' } });
@@ -219,14 +224,21 @@ describe('One stock entry (BL-60, REQ-E08-02 BR-06, BR-09, BR-10, AC-04, AC-05)'
       const label = MANUAL_LABEL[f.field];
       if (label) expect(panel().getByLabelText(label), f.field).toBeInTheDocument();
     }
-    // Every typeable control in the panel maps to a template field.
-    const controls = [...document.querySelectorAll('aside[role="dialog"] input, aside[role="dialog"] select')];
+    // Every typeable control in the panel maps to a template field. The material
+    // picker's search box (Material C3, MR-3 BR-04) only narrows the Material
+    // list — it records nothing — so it is part of the materialCode field.
+    const search = panel().getByTestId('stock-entry-material-search');
+    const controls = [...document.querySelectorAll('aside[role="dialog"] input, aside[role="dialog"] select')].filter(
+      (c) => !search.contains(c),
+    );
+    expect(search.querySelectorAll('input')).toHaveLength(1);
     expect(controls).toHaveLength(STOCK_TEMPLATE_FIELDS.filter((f) => MANUAL_LABEL[f.field] !== null).length);
   });
 
   it('manufacturing date: after expiry or in the future blocks Save; a valid one is saved', async () => {
     await openManual();
     fireEvent.change(panel().getByLabelText('Stock on hand (PCS)'), { target: { value: '500' } });
+    fireEvent.change(panel().getByLabelText('In production (PCS)'), { target: { value: '0' } }); // MAT-D4 — required, 0 allowed
     fireEvent.click(panel().getByRole('button', { name: 'Add batch' }));
     fireEvent.change(panel().getByLabelText('Batch number'), { target: { value: 'MD-1' } });
     fireEvent.change(panel().getByLabelText('Quantity'), { target: { value: '500' } });
@@ -249,6 +261,75 @@ describe('One stock entry (BL-60, REQ-E08-02 BR-06, BR-09, BR-10, AC-04, AC-05)'
     );
   });
 
+  it('MAT-D4: the manual form refuses the row the template refuses — blank E, and E = 50 without F', async () => {
+    await openManual();
+    fireEvent.change(panel().getByLabelText('Stock on hand (PCS)'), { target: { value: '100' } });
+    // Blank E: not saveable (in production is required, 0 allowed).
+    expect(panel().getByTestId('stock-entry-submit')).toBeDisabled();
+    fireEvent.change(panel().getByLabelText('In production (PCS)'), { target: { value: '50' } });
+    expect(panel().getByTestId('stock-entry-production-date-missing')).toHaveTextContent(
+      'Enter the expected completion date for the quantity in production.',
+    );
+    expect(panel().getByTestId('stock-entry-submit')).toBeDisabled();
+    // Known-good twins: E = 0 without F, and E = 50 with F.
+    fireEvent.change(panel().getByLabelText('In production (PCS)'), { target: { value: '0' } });
+    expect(panel().queryByTestId('stock-entry-production-date-missing')).toBeNull();
+    expect(panel().getByTestId('stock-entry-submit')).not.toBeDisabled();
+    fireEvent.change(panel().getByLabelText('In production (PCS)'), { target: { value: '50' } });
+    fireEvent.change(panel().getByLabelText('Expected production completion'), { target: { value: '2026-10-15' } });
+    fireEvent.click(panel().getByTestId('stock-entry-submit'));
+    await waitFor(() =>
+      expect(inventoryDeclarationStore.latestFor('sup-007', 'PK-PETB-8801')).toMatchObject({
+        totalQty: 100,
+        inProductionQty: 50,
+        productionCompletionDate: '2026-10-15',
+      }),
+    );
+  });
+
+  it('MR-4 AC-03: the upload panel lists every column A to J as Required or Optional, with the batch note', async () => {
+    renderWithProviders(<SupplierInventory />, { identity: SUPPLIER });
+    const table = await screen.findByTestId('stock-template-columns');
+    const expected: Record<StockTemplateField, string> = {
+      materialCode: 'Required',
+      soh: 'Required',
+      unit: 'Required',
+      supplierRop: 'Optional',
+      inProductionQty: 'Required',
+      productionCompletionDate: 'Required when E is above 0',
+      batchNumber: 'Optional',
+      batchQty: 'Optional',
+      manufacturingDate: 'Optional',
+      expiryDate: 'Optional',
+    };
+    STOCK_TEMPLATE_FIELDS.forEach((f, i) => {
+      const row = within(table).getByTestId(`stock-template-column-${f.field}`);
+      expect(row).toHaveTextContent(String.fromCharCode(65 + i));
+      expect(within(row).getByTestId(`stock-template-presence-${f.field}`)).toHaveTextContent(new RegExp(`^${expected[f.field]}$`));
+    });
+    expect(table.querySelectorAll('tbody tr')).toHaveLength(STOCK_TEMPLATE_FIELDS.length);
+    expect(within(table).getByTestId('stock-template-batch-note')).toHaveTextContent(
+      'Fill G to J only when your batches expire at different times. For each batch row, batch number and quantity are required; add the expiry date so your ASN can fill it in.',
+    );
+  });
+
+  it('MAT-D4: an uploaded row with in production above 0 and no completion date is refused by name', async () => {
+    renderWithProviders(<SupplierInventory />, { identity: SUPPLIER });
+    await screen.findByTestId('stock-upload');
+    const csv = [
+      'Material code,Stock on hand,Unit,In-production quantity,Expected production completion date (YYYY-MM-DD)',
+      'PK-CAPF-8820,300,PCS,50,',
+      'PK-PETB-8802,300,PCS,0,',
+    ].join('\n');
+    fireEvent.change(screen.getByTestId('stock-upload-file'), { target: { files: [new File([csv], 's.csv', { type: 'text/csv' })] } });
+    const result = await screen.findByTestId('stock-upload-result');
+    expect(within(result).getByTestId('stock-upload-saved')).toHaveTextContent('Materials saved: 1');
+    expect(within(result).getByTestId('stock-upload-refused-row-2')).toHaveTextContent(
+      'The in-production quantity is above 0, so the expected production completion date is required',
+    );
+    expect(inventoryDeclarationStore.latestFor('sup-007', 'PK-PETB-8802')).toMatchObject({ totalQty: 300, inProductionQty: 0 });
+  });
+
   it('AC-05: in transit sits beside in production, read-only, naming its call-offs', async () => {
     await openManual();
     const transit = panel().getByTestId('stock-entry-in-transit');
@@ -267,9 +348,9 @@ describe('One stock entry (BL-60, REQ-E08-02 BR-06, BR-09, BR-10, AC-04, AC-05)'
     expect(incoming.querySelector('input, select, textarea')).toBeNull();
     const made = sdcClock.now().slice(0, 10);
     const csv = [
-      'Material code,Stock on hand,Unit,Batch number,Batch quantity,Manufacturing date (YYYY-MM-DD),Expiry date (YYYY-MM-DD)',
-      `PK-CAPF-8820,300,PCS,T-1,300,${made},2028-01-01`,
-      'PK-PETB-8802,300,PCS,T-2,300,2099-01-01,',
+      'Material code,Stock on hand,Unit,In-production quantity,Batch number,Batch quantity,Manufacturing date (YYYY-MM-DD),Expiry date (YYYY-MM-DD)',
+      `PK-CAPF-8820,300,PCS,0,T-1,300,${made},2028-01-01`,
+      'PK-PETB-8802,300,PCS,0,T-2,300,2099-01-01,',
     ].join('\n');
     fireEvent.change(screen.getByTestId('stock-upload-file'), { target: { files: [new File([csv], 's.csv', { type: 'text/csv' })] } });
     const result = await screen.findByTestId('stock-upload-result');
@@ -301,11 +382,17 @@ describe('Supplier-triggered sync and PTI refresh (BL-59, REQ-E08-02 BR-03, BR-1
     await waitFor(() => expect(within(erp).getByTestId('sup-sync-status')).toHaveTextContent('Last synced'));
   });
 
-  it('a failed sync shows the error and time, and the previous figures stay, marked out of date', async () => {
+  // PREMISE CHANGED (Material B1, owner ruling 2026-09-29): the previous
+  // figures are no longer marked out of date by the failure; the row warns
+  // "Last pull failed <time>" and stays up to date until 24 h after the last
+  // successful pull.
+  it('a failed sync shows the error and time, and the previous figures stay, with a failed-pull warning', async () => {
     renderWithProviders(<SupplierInventory />, { identity: seat('sup-003', 'PT Sample Fragrance House') });
     expect(await screen.findByTestId('sup-sync-error')).toHaveTextContent('the supplier system did not respond');
-    expect(screen.getByTestId('sup-sync-error')).toHaveTextContent('previous figures kept and marked out of date');
-    expect(screen.getByTestId('sup-stock-row-FR-WARD-4410')).toHaveTextContent('Out of date');
+    expect(screen.getByTestId('sup-sync-error')).toHaveTextContent('previous figures kept');
+    const row = screen.getByTestId('sup-stock-row-FR-WARD-4410');
+    expect(within(row).getByTestId('inv-pull-failed')).toHaveTextContent('Last pull failed');
+    expect(row).not.toHaveTextContent('Out of date');
   });
 
   it('a supplier that is not API-connected has no Sync', async () => {
@@ -371,46 +458,56 @@ describe('Supplier access (REQ-E08-03)', () => {
 });
 
 describe('Capacity (REQ-E08-04)', () => {
-  it('supplier: a week below demand cannot be submitted without a reason; with one it is saved', async () => {
+  it('supplier: a week below the LTP cannot be submitted without a reason; with one it is saved', async () => {
     renderWithProviders(<SupplierCapacity />, { identity: SUPPLIER });
-    fireEvent.click(await screen.findByRole('tab', { name: 'Closures' }));
+    fireEvent.click(await screen.findByRole('tab', { name: 'Rigid plastic packaging' }));
     const inputs = await screen.findAllByLabelText(/Allocated capacity for the week of/);
     expect(inputs).toHaveLength(13);
-    inputs.forEach((input) => fireEvent.change(input, { target: { value: '14000' } }));
+    // 80,000 covers every week's LTP for rigid plastics (the highest is 77,900).
+    inputs.forEach((input) => fireEvent.change(input, { target: { value: '80000' } }));
+    expect(screen.queryByTestId('capacity-refusal')).toBeNull();
     fireEvent.change(inputs[1], { target: { value: '10000' } });
-    expect(screen.getByTestId('capacity-refusal')).toHaveTextContent('below PTI demand');
+    expect(screen.getByTestId('capacity-refusal')).toHaveTextContent('below the LTP');
     expect(screen.getByTestId('capacity-submit')).toBeDisabled();
     fireEvent.change(screen.getByLabelText(/Reason for the week of/), { target: { value: 'capacity' } });
     expect(screen.queryByTestId('capacity-refusal')).toBeNull();
     fireEvent.click(screen.getByTestId('capacity-submit'));
     await waitFor(() =>
-      expect(capacityStore.all().some((c) => c.supplierId === 'sup-007' && c.materialGroup === 'MG-21' && c.weeks[1].reason === 'capacity')).toBe(true),
+      expect(capacityStore.all().some((c) => c.supplierId === 'sup-007' && c.planningGroupId === 'pg-MG-20' && c.weeks[1].reason === 'capacity')).toBe(true),
     );
   });
 
   it('PTI: capacity against demand with the gap week highlighted (AC-03)', async () => {
     renderWithProviders(<BuyerCapacity />, { identity: PLANNER });
-    const plan = await screen.findByTestId('capacity-plan-sup-007-MG-20');
+    const plan = await screen.findByTestId('capacity-plan-sup-007-pg-MG-20');
     expect(plan).toHaveTextContent('Gap');
-    expect(within(plan).getAllByTestId(/capacity-gap-sup-007-MG-20-/)).toHaveLength(1);
+    expect(within(plan).getAllByTestId(/capacity-gap-sup-007-pg-MG-20-/)).toHaveLength(1);
     expect(plan).toHaveTextContent('Material');
   });
 
-  it('BL-62: "Extra capacity if requested", explained on both sides; the word "Upside" is gone', async () => {
+  it('BL-62 / owner 2026-09-29: "Additional capacity", explained on both sides with BE; the old labels are gone', async () => {
     const sup = renderWithProviders(<SupplierCapacity />, { identity: SUPPLIER });
-    expect(await screen.findByRole('columnheader', { name: /^Extra capacity if requested \(/ })).toBeInTheDocument();
+    expect(await screen.findByRole('columnheader', { name: /^Additional capacity \(/ })).toBeInTheDocument();
     expect(screen.getByTestId('capacity-upside-help')).toHaveTextContent('above the capacity you allocate');
-    expect(screen.getAllByLabelText(/Extra capacity if requested for the week of/).length).toBeGreaterThan(0);
+    expect(screen.getByTestId('capacity-upside-help')).toHaveTextContent('BE = capacity + additional capacity');
+    expect(screen.getAllByLabelText(/^Additional capacity for the week of/).length).toBeGreaterThan(0);
     expect(screen.queryByText(/Upside/)).toBeNull();
+    expect(screen.queryByText(/Extra capacity if requested/)).toBeNull();
+    // One demand figure: the LTP column, and no "PTI demand" column beside it.
+    expect(screen.getByRole('columnheader', { name: /^LTP, current forecast \(/ })).toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /PTI demand/ })).toBeNull();
     sup.unmount();
     renderWithProviders(<BuyerCapacity />, { identity: PLANNER });
-    const plan = await screen.findByTestId('capacity-plan-sup-007-MG-20');
-    expect(within(plan).getByRole('columnheader', { name: /^Extra capacity if requested \(/ })).toBeInTheDocument();
-    expect(within(plan).getByTestId('capacity-upside-help-sup-007-MG-20')).toHaveTextContent('above its allocation');
+    const plan = await screen.findByTestId('capacity-plan-sup-007-pg-MG-20');
+    expect(within(plan).getByRole('columnheader', { name: /^Additional capacity \(/ })).toBeInTheDocument();
+    expect(within(plan).getByTestId('capacity-upside-help-sup-007-pg-MG-20')).toHaveTextContent('above its allocation');
+    expect(within(plan).queryByRole('columnheader', { name: /PTI demand/ })).toBeNull();
     expect(screen.queryByText(/Upside/)).toBeNull();
+    expect(screen.queryByText(/Extra capacity if requested/)).toBeNull();
     // ID wording as ruled.
-    expect(inventoryCapacityId['inv.capacity.col.upside']).toBe('Kapasitas tambahan jika diminta ({{uom}})');
+    expect(inventoryCapacityId['inv.capacity.col.upside']).toBe('Kapasitas tambahan ({{uom}})');
   });
+
 });
 
 describe('Planner capacity filters (BL-63, REQ-E08-04 BR-07, AC-04)', () => {
@@ -432,46 +529,82 @@ describe('Planner capacity filters (BL-63, REQ-E08-04 BR-07, AC-04)', () => {
 
   it('supplier, material group and material narrow the view and are written to the address', async () => {
     renderAt();
-    await screen.findByTestId('capacity-plan-sup-007-MG-20');
-    expect(planIds()).toHaveLength(13);
+    await screen.findByTestId('capacity-plan-sup-007-pg-MG-20');
+    // BL-133 — a supplier with an LTP in a group has a capacity plan for it, so
+    // sup-012 (MG-20) and sup-005 (MG-02) join from the current forecast.
+    expect(planIds()).toHaveLength(15);
+    expect(planIds()).toEqual(expect.arrayContaining(['sup-012-pg-MG-20', 'sup-005-pg-MG-02']));
     fireEvent.change(screen.getByLabelText('Supplier'), { target: { value: 'sup-002' } });
-    expect(planIds().sort()).toEqual(['sup-002-MG-02', 'sup-002-MG-03', 'sup-002-MG-10']);
+    expect(planIds().sort()).toEqual(['sup-002-pg-MG-02', 'sup-002-pg-MG-03', 'sup-002-pg-MG-10']);
     expect(new URLSearchParams(search).get('supplier')).toBe('sup-002');
-    fireEvent.change(screen.getByLabelText('Material group'), { target: { value: 'MG-02' } });
-    expect(planIds()).toEqual(['sup-002-MG-02']);
-    expect(new URLSearchParams(search).get('materialGroup')).toBe('MG-02');
+    fireEvent.change(screen.getByLabelText('Planning group'), { target: { value: 'pg-MG-02' } });
+    expect(planIds()).toEqual(['sup-002-pg-MG-02']);
+    expect(new URLSearchParams(search).get('planningGroup')).toBe('pg-MG-02');
     fireEvent.change(screen.getByLabelText('Supplier'), { target: { value: '' } });
-    fireEvent.change(screen.getByLabelText('Material group'), { target: { value: '' } });
+    fireEvent.change(screen.getByLabelText('Planning group'), { target: { value: '' } });
     fireEvent.change(screen.getByLabelText('Material'), { target: { value: 'RM-EMUL-3310' } });
-    expect(planIds().sort()).toEqual(['sup-002-MG-03', 'sup-005-MG-03']);
+    expect(planIds().sort()).toEqual(['sup-002-pg-MG-03', 'sup-005-pg-MG-03']);
     expect(new URLSearchParams(search).get('materialCode')).toBe('RM-EMUL-3310');
     expect(new URLSearchParams(search).has('supplier')).toBe(false);
   });
 
   it('gap weeks only: only plans with a gap, and only their gap weeks', async () => {
     renderAt();
-    await screen.findByTestId('capacity-plan-sup-007-MG-20');
+    await screen.findByTestId('capacity-plan-sup-007-pg-MG-20');
     fireEvent.click(screen.getByTestId('capacity-filter-gaps'));
-    expect(planIds()).toEqual(['sup-007-MG-20']);
+    // BL-77 — two suppliers' gaps, not one: sup-005's MG-02 (weeks 7 and 8)
+    // beside sup-007's MG-20.
+    expect(planIds().sort()).toEqual(['sup-005-pg-MG-02', 'sup-007-pg-MG-20']);
     expect(new URLSearchParams(search).get('gapsOnly')).toBe('1');
-    const rows = within(screen.getByTestId('capacity-plan-sup-007-MG-20')).getAllByRole('row');
+    const rows = within(screen.getByTestId('capacity-plan-sup-007-pg-MG-20')).getAllByRole('row');
     expect(rows).toHaveLength(2); // the header row and the one gap week
-    expect(within(screen.getByTestId('capacity-plan-sup-007-MG-20')).getAllByTestId(/capacity-gap-/)).toHaveLength(1);
+    expect(within(screen.getByTestId('capacity-plan-sup-007-pg-MG-20')).getAllByTestId(/capacity-gap-/)).toHaveLength(1);
+    expect(within(screen.getByTestId('capacity-plan-sup-005-pg-MG-02')).getAllByTestId(/capacity-gap-/)).toHaveLength(2);
+  });
+
+  it('BL-77 — the MG-02 filter shows a gap, a confirmed plan and one not submitted yet, from three suppliers', async () => {
+    renderAt('?planningGroup=pg-MG-02');
+    await screen.findByTestId('capacity-plan-sup-005-pg-MG-02');
+    expect(planIds().sort()).toEqual(['sup-002-pg-MG-02', 'sup-005-pg-MG-02', 'sup-010-pg-MG-02']);
+    const byId = new Map<string, ReturnType<typeof allCapacityPlans>[number]>(
+      allCapacityPlans().map((p) => [`${p.supplierId}-${p.planningGroupId}`, p]),
+    );
+    expect(['sup-002-pg-MG-02', 'sup-005-pg-MG-02', 'sup-010-pg-MG-02'].map((id) => planStatus(byId.get(id)!))).toEqual([
+      'confirmed',
+      'gap',
+      'notStarted',
+    ]);
+    expect(screen.getByTestId('capacity-plan-sup-010-pg-MG-02')).toHaveTextContent('Not submitted yet');
+    // sup-005's short weeks are covered by its additional capacity: amber, so
+    // sup-007 MG-20 stays the one red group the planner's banner counts.
+    const levels = byId.get('sup-005-pg-MG-02')!.weeks.map((w) => ltpCapacityLevel(w.demand, w.entry));
+    expect(levels.filter((l) => l !== 'within')).toEqual(['needsAdditional', 'needsAdditional']);
+  });
+
+  it('BL-77 — the MG-20 filter shows two suppliers: sup-007 with a gap, sup-012 covering every week', async () => {
+    renderAt('?planningGroup=pg-MG-20');
+    await screen.findByTestId('capacity-plan-sup-012-pg-MG-20');
+    expect(planIds().sort()).toEqual(['sup-007-pg-MG-20', 'sup-012-pg-MG-20']);
+    const byId = new Map<string, ReturnType<typeof allCapacityPlans>[number]>(
+      allCapacityPlans().map((p) => [`${p.supplierId}-${p.planningGroupId}`, p]),
+    );
+    expect(planStatus(byId.get('sup-007-pg-MG-20')!)).toBe('gap');
+    expect(planStatus(byId.get('sup-012-pg-MG-20')!)).toBe('confirmed');
   });
 
   it('a filtered address reloads to the same view, and composes with the status chips', async () => {
     renderAt('?supplier=sup-002');
-    await screen.findByTestId('capacity-plan-sup-002-MG-02');
+    await screen.findByTestId('capacity-plan-sup-002-pg-MG-02');
     expect(planIds()).toHaveLength(3);
     expect(screen.getByLabelText('Supplier')).toHaveValue('sup-002');
     fireEvent.click(screen.getByRole('radio', { name: /^Confirmed \(1\)$/ }));
-    expect(planIds()).toEqual(['sup-002-MG-02']);
+    expect(planIds()).toEqual(['sup-002-pg-MG-02']);
   });
 
   it('composes with the Order summary PO filter', async () => {
     renderAt('?po=po-007&from=order-summary&gapsOnly=1');
     await screen.findByTestId('po-filter-banner');
-    expect(planIds()).toEqual(['sup-007-MG-20']);
+    expect(planIds()).toEqual(['sup-007-pg-MG-20']);
   });
 
   it('an empty result says so and offers to clear the filters, which restores every plan', async () => {
@@ -480,13 +613,13 @@ describe('Planner capacity filters (BL-63, REQ-E08-04 BR-07, AC-04)', () => {
     expect(empty).toHaveTextContent('No supplier material group matches these filters.');
     expect(planIds()).toEqual([]);
     fireEvent.click(within(empty).getByTestId('capacity-filters-empty-clear'));
-    await waitFor(() => expect(planIds()).toHaveLength(13));
+    await waitFor(() => expect(planIds()).toHaveLength(15));
     expect(search).toBe('');
   });
 });
 
 describe('Alerts (REQ-E08-05)', () => {
-  it('grouped by supplier, High first; closing needs an action note and moves it to Closed', async () => {
+  it('grouped by supplier, High first; closing needs a reason, "Other" needs a note, and it moves to Closed', async () => {
     renderWithProviders(<BuyerAlerts />, { identity: PLANNER });
     expect(await screen.findByTestId('pti-alerts-banner')).toBeInTheDocument();
     const group = screen.getByTestId('alert-group-sup-002');
@@ -494,10 +627,17 @@ describe('Alerts (REQ-E08-05)', () => {
     expect(alert).toHaveTextContent('PTI stock is below the PTI reorder point');
     expect(within(alert).getByText('High')).toBeInTheDocument();
     fireEvent.click(within(alert).getByRole('button', { name: /Close alert/ }));
+    // MR-9 BR-04 — no reason: the page's pre-check (the verb's rule) holds the button.
     expect(panel().getByTestId('alert-close-submit')).toBeDisabled();
+    fireEvent.change(panel().getByLabelText('Reason'), { target: { value: 'other' } });
+    expect(panel().getByTestId('alert-close-submit')).toBeDisabled(); // "Other" without a note (AC-02)
     fireEvent.change(panel().getByLabelText('What was done'), { target: { value: 'Earlier call-off requested' } });
     fireEvent.click(panel().getByTestId('alert-close-submit'));
-    await waitFor(() => expect(inventoryAlertLedger.all()).toEqual([expect.objectContaining({ key: 'ptiBelowRop|RM-STEAR-7300|sup-002', kind: 'closed' })]));
+    await waitFor(() =>
+      expect(inventoryAlertLedger.all()).toEqual([
+        expect.objectContaining({ key: 'ptiBelowRop|RM-STEAR-7300|sup-002', kind: 'closed', closeReason: 'other' }),
+      ]),
+    );
     // BL-46 — the class says why: cover against the lead time.
     expect(within(alert).getByTestId('alert-basis-ptiBelowRop|RM-STEAR-7300|sup-002')).toHaveTextContent(
       'Cover 10 days · Lead time 21 days',
@@ -508,6 +648,80 @@ describe('Alerts (REQ-E08-05)', () => {
     expect(missing).toHaveTextContent('Cover 6 days · No lead time · day bands: Critical');
     // The hand-written geopolitical banners are not part of the alert experience.
     expect(screen.queryByText(/geopolitic/i)).toBeNull();
+  });
+});
+
+describe('Alert close reasons (MR-9 BR-04 to BR-06)', () => {
+  const STEAR = 'ptiBelowRop|RM-STEAR-7300|sup-002';
+  const STALE = 'staleData|PK-PETB-8810|sup-007';
+  const CAPACITY = 'capacityBelowDemand|pg-MG-20|sup-007';
+  let search = '';
+  const LocationProbe: React.FC = () => {
+    search = useLocation().search;
+    return null;
+  };
+  const renderAt = (query = '') =>
+    renderWithProviders(
+      <>
+        <BuyerAlerts />
+        <LocationProbe />
+      </>,
+      { identity: PLANNER, route: `/buyer/alerts${query}` },
+    );
+
+  beforeEach(() => {
+    reasonCodeStore.reset();
+    const at = sdcClock.now();
+    inventoryAlertLedger.append([
+      { key: STEAR, kind: 'closed', at, closeReason: 'risk-accepted', actor: NO_PERSON },
+      { key: STALE, kind: 'closed', at, closeReason: 'supplier-updated', actor: NO_PERSON },
+      // Recorded before reasons existed: a note only. It reads, and counts, as Other.
+      { key: CAPACITY, kind: 'closed', at, note: 'Second shift agreed', actor: NO_PERSON },
+    ]);
+  });
+
+  it('a retired reason is no longer offered, and a closure that used it still shows it (AC-03)', async () => {
+    reasonCodeStore.append({
+      list: 'alertClose',
+      code: 'risk-accepted',
+      labelEn: 'Risk accepted',
+      labelId: 'Risiko diterima',
+      active: false,
+      setBy: NO_PERSON,
+      setAt: sdcClock.now(),
+    });
+    renderAt('?reason=risk-accepted');
+    // The address opens the Closed tab, filtered to that reason.
+    expect(await screen.findByTestId(`alert-closure-${STEAR}`)).toHaveTextContent('Risk accepted (retired)');
+    expect(screen.queryByTestId(`alert-${STALE}`)).toBeNull();
+    // Closing an open alert: the retired code is not in the picker.
+    fireEvent.click(screen.getByRole('tab', { name: /^Open/ }));
+    const open = screen.getAllByRole('button', { name: /Close alert/ })[0];
+    fireEvent.click(open);
+    const offered = within(panel().getByLabelText('Reason')).getAllByRole('option').map((o) => o.getAttribute('value'));
+    expect(offered).not.toContain('risk-accepted');
+    expect(offered).toContain('po-raised');
+  });
+
+  it('the Closed tab counts per rule per reason, and the reason filter is kept in the address (AC-04, BR-06)', async () => {
+    renderAt();
+    await screen.findByTestId('pti-alerts-banner');
+    fireEvent.click(screen.getByRole('tab', { name: /^Closed/ }));
+    const counts = screen.getByTestId('alert-reason-counts');
+    expect(within(counts).getByTestId('alert-reason-count-ptiBelowRop-risk-accepted')).toHaveTextContent(
+      'PTI stock is below the PTI reorder pointRisk accepted1',
+    );
+    expect(within(counts).getByTestId('alert-reason-count-staleData-supplier-updated')).toHaveTextContent('Supplier updated its data1');
+    // The note-only closure counts as Other, and keeps its note.
+    expect(within(counts).getByTestId('alert-reason-count-capacityBelowDemand-other')).toHaveTextContent('Other (note required)1');
+    expect(screen.getByTestId(`alert-closure-${CAPACITY}`)).toHaveTextContent('Other (note required): Second shift agreed');
+    fireEvent.change(screen.getByLabelText('Close reason'), { target: { value: 'other' } });
+    expect(new URLSearchParams(search).get('reason')).toBe('other');
+    expect(screen.getByTestId(`alert-${CAPACITY}`)).toBeInTheDocument();
+    expect(screen.queryByTestId(`alert-${STEAR}`)).toBeNull();
+    fireEvent.change(screen.getByLabelText('Close reason'), { target: { value: '' } });
+    expect(new URLSearchParams(search).has('reason')).toBe(false);
+    expect(screen.getByTestId(`alert-${STEAR}`)).toBeInTheDocument();
   });
 });
 

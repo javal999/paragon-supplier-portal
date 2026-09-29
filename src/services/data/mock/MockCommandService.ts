@@ -21,6 +21,7 @@ import type {
   CommandStatus,
   ASN,
   AsnLineItem,
+  AsnShelfLifeEvent,
   AsnStatus,
   Invoice,
   InvoiceLine,
@@ -83,8 +84,13 @@ import {
   INVOICE_AWAITING_MATCH,
   ASN_PO_STATES,
   INVOICEABLE_PO_STATES,
+  asnLineCheckOf,
   asnLineRefusal,
   asnSubmitRefusal,
+  etaNeedsReapproval,
+  onlyShelfLifeRefused,
+  shelfLifeFailingLines,
+  shelfLifeWaivedFor,
   deriveInvoiceVerdict,
   hasReceiptDiscrepancy,
   invoiceLineRefusal,
@@ -99,6 +105,8 @@ import {
   isAwaitingApproval,
   isCallOffDate,
   isConfirmedAndAccepted,
+  asnCallOffWarnings,
+  callOffViews,
   isPositiveQty,
   proposedDeliveries,
   umbrellaRefusal,
@@ -108,6 +116,9 @@ import {
   dayOf,
   isIsoDay,
   batchDatesProblem,
+  productionProblem,
+  submissionChannel,
+  alertCloseRefusal,
   parseAlertKey,
   standingClosure,
   // REQ-E03-01 to REQ-E03-05 — the RFx rules. The verb and the screen read the
@@ -133,6 +144,9 @@ import {
   responseWindowRefusal,
   responseAlreadySubmittedRefusal,
   type QuoteLineInput,
+  type AsnBatchSource,
+  type AsnLineCheck,
+  type AsnLineRefusal,
   type AsnLineInput,
   type CommandTarget,
   type CascadeCommand,
@@ -155,6 +169,7 @@ import { calendarCovers, workingCalendarStore } from '../../transitions/workingC
 import { isHubSettingKey, parseStaleOverrideKey } from '../../transitions/hubSettings';
 import { hubSettingsStore, settingValue } from '../../transitions/hubSettingsStore';
 import { isActiveReasonCode, parseReasonCodeEntityId, reasonCodeStore } from '../../transitions/reasonCodes';
+import { maxStockChangeFrom, maxStockStore, parseMaxStockEntityId } from '../../transitions/maxStock';
 import {
   THREE_PL_ID,
   asnThreePlRefusal,
@@ -174,11 +189,36 @@ import {
   isApiConnected,
   isAssignedMaterial,
   observeAlertConditions,
+  simulatedPullOf,
   supplierNameOf,
   suppliersWithAssignments,
 } from './inventoryReadModel';
-import { API_CONNECTIONS } from './fixtures/inventoryHub';
 import { forecastVersionStore, forecastViewStore } from './stores/forecastHubStores';
+// Material A1 — the supplier overlay (its own module, plan AD-5).
+import { supplierOverlayTarget } from './targets/supplierOverlay';
+// Material G1 — the qualification lists (its own module, MAT-R13).
+import { qualificationRuleTarget } from './targets/qualificationRule';
+// Material G2 — the sourcing type map (its own module, MAT-R13) and bidding
+// eligibility (MR-10 BR-05 to BR-07).
+import { sourcingTypeTarget } from './targets/sourcingType';
+import {
+  eventSourcingType,
+  inviteeIdsOf,
+  namedEligibility,
+  type AnySourcingEvent,
+} from './eligibilityReadModel';
+import {
+  inviteesQualificationRefusal,
+  qualificationWarningsOf,
+  type QualificationWarning,
+} from '../../sourcing/sourcingType';
+// Material C5 — planning groups (their own module, plan AD-5).
+import { planningGroupTarget } from './targets/planningGroup';
+// Material C4 — the MRP controller list (its own module, plan AD-5).
+import { mrpControllerTarget } from './targets/mrpController';
+// Material C2 — supplier trade names (its own module, plan AD-5).
+import { materialNameCascades, materialNameTarget } from './targets/materialName';
+import { simulationOverrideTarget } from './targets/simulationOverride';
 // ── REQ-E14-13 — reschedule proposals taken to SAP ─────────────────────────
 import { sapChangeMarkStore } from './stores/sapChangeMarkStore';
 import { engineDataset } from './fixtures/engineDataset';
@@ -218,8 +258,10 @@ import {
 import { isTieredRfq } from '../../sourcing/rfqComparison';
 import {
   awardedItemBreaks,
-  awardItemsDepartingBest,
   awardItemsOf,
+  awardQualificationRefusal,
+  awardReasonOwed,
+  awardReasonRefusal,
   awardRefusalText,
   awardShapeRefusal,
   basisOf,
@@ -291,6 +333,13 @@ import {
 // `RFX_QUESTION_TYPES` (`sourcing/rfxConfig`), and the create hook reaches them
 // through `rfiQuestionsRefusal` — the same predicate the template store reads.
 import {
+  commitmentCapacityRefusal,
+  horizonWeeks,
+  periodCapacityCheck,
+  capacityGroupOfMaterial,
+} from '../../transitions/capacityRules';
+import {
+  allCommitmentLines,
   currentVersion,
   isForecastVersion,
   forecastPublicationById,
@@ -461,6 +510,23 @@ const payloadAsnLines = (payload: Record<string, unknown>): AsnLineInput[] | nul
   Array.isArray(payload.lines) ? (payload.lines as AsnLineInput[]) : null;
 
 /**
+ * MR-6 BR-04 — the batch source stored on a line. A line is `declared` only
+ * when the supplier says it picked the batch AND the batch is in its latest
+ * stock record for the material; anything else is `typed`, so a payload cannot
+ * hide the "not in declared stock" marker from PTI.
+ */
+const batchSourceOf = (
+  supplierId: string | undefined,
+  materialCode: string,
+  lot: string,
+  claimed: unknown,
+): AsnBatchSource => {
+  if (claimed !== 'declared' || !supplierId) return 'typed';
+  const record = inventoryDeclarationStore.latestFor(supplierId, materialCode);
+  return record?.batches?.some((b) => b.batchNumber === lot) ? 'declared' : 'typed';
+};
+
+/**
  * Merge entered lines onto an ASN's stored lines by material. A material the
  * draft does not carry yet is added from its PO line. Stored lines the payload
  * does not mention are kept as they are.
@@ -485,16 +551,53 @@ const mergeAsnLines = (
             lotNumber: '',
             ...(poLine?.uom ? { uom: poLine.uom } : {}),
           };
+    const lot = nonBlank(e.batchNumber);
     const next: AsnLineItem = {
       ...base,
       shippedQty: typeof e.shippedQty === 'number' ? e.shippedQty : base.shippedQty,
-      lotNumber: nonBlank(e.batchNumber) ?? base.lotNumber,
+      lotNumber: lot ?? base.lotNumber,
       ...(nonBlank(e.expiryDate) ? { expiryDate: nonBlank(e.expiryDate) } : {}),
+      ...(lot ? { batchSource: batchSourceOf(po?.supplierId, e.materialCode, lot, e.batchSource) } : {}),
     };
     if (i >= 0) out[i] = next;
     else out.push(next);
   }
   return out;
+};
+
+/** MR-6 BR-10 — "last ASN for this call-off", when the payload says; else as stored. */
+const callOffFinalFrom = (payload: Record<string, unknown>, stored: boolean | undefined): { callOffFinal?: boolean } => {
+  const v = typeof payload.callOffFinal === 'boolean' ? payload.callOffFinal : stored;
+  return v === true ? { callOffFinal: true } : {};
+};
+
+/**
+ * MR-6 BR-09 — the shelf-life exception entry a verb appends, or null for a verb
+ * that records none. `by` is the session's actor; `at` the hub clock.
+ */
+const shelfLifeEventFor = (
+  transitionId: string | undefined,
+  current: ASN,
+  lines: readonly AsnLineItem[],
+  eta: string,
+  payload: Record<string, unknown>,
+  scope: QueryScope,
+): AsnShelfLifeEvent | null => {
+  const at = sdcClock.now();
+  const by = scope.actor ?? NO_PERSON;
+  const reason = nonBlank(payload.reason);
+  switch (transitionId) {
+    case 't_asn_request_exception':
+      return { kind: 'requested', at, by, reason: reason ?? '', eta, lines: shelfLifeFailingLines(lines, eta) };
+    case 't_asn_change_eta':
+      return { kind: 'etaChanged', at, by, previousEta: current.eta, eta, lines: shelfLifeFailingLines(lines, eta) };
+    case 't_asn_approve_exception':
+      return { kind: 'approved', at, by, ...(reason ? { reason } : {}) };
+    case 't_asn_reject_exception':
+      return { kind: 'rejected', at, by, reason: reason ?? '' };
+    default:
+      return null;
+  }
 };
 
 /** BL-51 — the 3PL an ASN update leaves in place: named, cleared, or kept. */
@@ -505,18 +608,29 @@ const advanceShipNoticeTarget: CommandTarget = {
   readState: (id) => asnStore.get(id)?.status ?? null,
   readScopeOwner: (id) => asnStore.get(id)?.supplierId ?? null,
   readEntity: (id) => asnStore.get(id) ?? null,
-  applyTransition: (id, toState, payload) => {
+  applyTransition: (id, toState, payload, scope, transitionId) => {
     const current = asnStore.get(id);
     const shipDate = nonBlank(payload.shipDate) ?? current?.shipDate;
     if (toState === 'Submitted' && current) {
       recordShipmentStarted(current.asnNumber, current.poReference, shipDate);
     }
     const entered = payloadAsnLines(payload);
+    // MR-6 BR-09 — appended, never edited (MAT-R3).
+    const event = current
+      ? shelfLifeEventFor(
+          transitionId,
+          current,
+          entered ? mergeAsnLines(current.lineItems, entered, findPoByNumber(current.poReference)) : current.lineItems,
+          typeof payload.eta === 'string' && payload.eta ? payload.eta : current.eta,
+          payload,
+          scope,
+        )
+      : null;
     // BL-51 — a submission that names the 3PL replaces it; one that sends an
     // empty value (the carrier typed by name instead) clears it; one that says
     // nothing keeps the draft's.
     const threePlId = threePlFromPayload(payload, current?.threePlId);
-    asnStore.update(id, ({ threePlId: _stored, ...a }) => ({
+    asnStore.update(id, ({ threePlId: _stored, callOffFinal: storedFinal, ...a }) => ({
       ...a,
       ...(threePlId ? { threePlId } : {}),
       status: toState as AsnStatus,
@@ -529,8 +643,20 @@ const advanceShipNoticeTarget: CommandTarget = {
       ...(shipDate ? { shipDate } : {}),
       ...(nonBlank(payload.packingListFile) ? { packingListFile: nonBlank(payload.packingListFile) } : {}),
       ...(nonBlank(payload.overShipReason) ? { overShipReason: nonBlank(payload.overShipReason) } : {}),
+      ...callOffFinalFrom(payload, storedFinal),
       lineItems: entered ? mergeAsnLines(a.lineItems, entered, findPoByNumber(a.poReference)) : a.lineItems,
+      ...(event ? { shelfLifeException: [...(a.shelfLifeException ?? []), event] } : {}),
     }));
+    // MR-6 BR-12 — the call-off warnings the supplier was shown, kept on the
+    // submitted ASN for the record. Computed here from the merged record by the
+    // same rule the form shows (so a payload cannot choose them); never a block.
+    if (toState === 'Submitted') {
+      asnStore.update(id, ({ callOffWarnings: _prev, ...a }) => {
+        const views = callOffViews(callOffStore.all(), asnStore.all(), goodsReceiptStore.all(), sdcClock.now());
+        const warnings = asnCallOffWarnings(a, views, asnStore.all());
+        return warnings.length > 0 ? { ...a, callOffWarnings: warnings } : a;
+      });
+    }
   },
   // Creation scope: a supplier may draft an ASN only against its OWN PO.
   creationOwner: (payload) => findPoByNumber(String(payload.poReference))?.supplierId ?? null,
@@ -580,6 +706,7 @@ const advanceShipNoticeTarget: CommandTarget = {
       ...(nonBlank(payload.packingListFile) ? { packingListFile: nonBlank(payload.packingListFile) } : {}),
       ...(nonBlank(payload.overShipReason) ? { overShipReason: nonBlank(payload.overShipReason) } : {}),
       ...(callOff ? { callOffId: callOff.id } : {}),
+      ...(callOff ? callOffFinalFrom(payload, undefined) : {}),
     };
     asnStore.add(asn);
     return { entityId: asnNumber };
@@ -632,12 +759,17 @@ bindPolicyHook(POLICY_HOOKS.ASN_LINES_WITHIN_OPEN, ({ entityId, payload }) => {
   if (!asn && entered && entered.length === 0) {
     return { ok: false, reason: 'an ASN needs at least one line' };
   }
-  const lines: AsnLineInput[] = asn
-    ? mergeAsnLines(asn.lineItems, entered ?? [], po).map((l) => ({
-        materialCode: l.materialCode,
-        shippedQty: l.shippedQty,
-      }))
-    : entered!;
+  // AR-11 — the full line (batch, expiry) with the ETA the ASN will carry.
+  const eta = nonBlank(payload.eta) ?? asn?.eta;
+  const lines: AsnLineCheck[] = asn
+    ? mergeAsnLines(asn.lineItems, entered ?? [], po).map((l) => asnLineCheckOf(l, eta))
+    : entered!.map((e) => ({
+        materialCode: e?.materialCode,
+        shippedQty: e?.shippedQty,
+        ...(e?.batchNumber !== undefined ? { lotNumber: e.batchNumber } : {}),
+        ...(e?.expiryDate !== undefined ? { expiryDate: e.expiryDate } : {}),
+        ...(eta !== undefined ? { eta } : {}),
+      }));
   const seen = new Set<string>();
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
@@ -663,23 +795,97 @@ bindPolicyHook(POLICY_HOOKS.ASN_LINES_WITHIN_OPEN, ({ entityId, payload }) => {
   return { ok: true };
 });
 
-// REQ-E07-04 BR-04 — what a submitted ASN must carry, read on the draft merged
-// with what the submission adds.
-bindPolicyHook(POLICY_HOOKS.ASN_SUBMIT_COMPLETE, ({ entityId, payload }) => {
-  const asn = asnStore.get(entityId);
-  if (!asn) return { ok: false, reason: 'entity missing' };
+/**
+ * AR-11 / MR-6 — every line of an ASN, merged with what a submission adds,
+ * through the one line rule at submission (batch and expiry required). The
+ * shelf-life refusal is waived only on the approver's verb, for the lines the
+ * pending request named (`shelfLifeWaivedFor`).
+ */
+const asnSubmissionRead = (asn: ASN, payload: Record<string, unknown>, waive: boolean) => {
   const lines = mergeAsnLines(asn.lineItems, payloadAsnLines(payload) ?? [], findPoByNumber(asn.poReference));
-  const refusal = asnSubmitRefusal({
+  const eta = nonBlank(payload.eta) ?? asn.eta;
+  const incomplete = asnSubmitRefusal({
     lineCount: lines.length,
     shipDate: nonBlank(payload.shipDate) ?? asn.shipDate,
-    eta: nonBlank(payload.eta) ?? asn.eta,
+    eta,
   });
-  if (refusal) return { ok: false, reason: `INCOMPLETE_ASN: ${refusal}` };
-  const noBatch = lines.findIndex((l) => !nonBlank(l.lotNumber));
-  if (noBatch >= 0) return { ok: false, reason: `INCOMPLETE_ASN: batch number missing on line ${noBatch + 1}` };
-  const badQty = lines.findIndex((l) => !(Number.isFinite(l.shippedQty) && l.shippedQty > 0));
-  if (badQty >= 0) return { ok: false, reason: `INCOMPLETE_ASN: shipped quantity missing on line ${badQty + 1}` };
+  const po = findPoByNumber(asn.poReference) ?? { poNumber: asn.poReference, lineItems: [] };
+  const refusals: (AsnLineRefusal | null)[] = lines.map((l) => {
+    const check = asnLineCheckOf(l, eta);
+    return asnLineRefusal(check, po, asnStore.all(), {
+      excludeAsn: asn.asnNumber,
+      overShipReason: payload.overShipReason ?? asn.overShipReason,
+      requireBatch: true,
+      waiveShelfLife: waive && shelfLifeWaivedFor(asn, check),
+    });
+  });
+  return { lines, eta, incomplete, refusals };
+};
+
+// REQ-E07-04 BR-04 — what a submitted ASN must carry, read on the draft merged
+// with what the submission adds. MR-6 BR-05 to BR-08 — and each shelf-life
+// line meets its minimum at the ETA, unless Quality is approving an exception.
+bindPolicyHook(POLICY_HOOKS.ASN_SUBMIT_COMPLETE, ({ entityId, currentState, payload }) => {
+  const asn = asnStore.get(entityId);
+  if (!asn) return { ok: false, reason: 'entity missing' };
+  const read = asnSubmissionRead(asn, payload, currentState === 'Awaiting exception');
+  if (read.incomplete) return { ok: false, reason: `INCOMPLETE_ASN: ${read.incomplete}` };
+  // AR-11 — what the line itself lacks is reported here; the PO checks
+  // (material on the PO, open quantity) are ASN_LINES_WITHIN_OPEN's, which runs
+  // next on the same rule.
+  for (let i = 0; i < read.lines.length; i++) {
+    const lineRefusal = read.refusals[i];
+    if (lineRefusal === 'batch') {
+      return { ok: false, reason: `INCOMPLETE_ASN: batch number missing on line ${i + 1}` };
+    }
+    if (lineRefusal === 'quantity') {
+      return { ok: false, reason: `INCOMPLETE_ASN: shipped quantity missing on line ${i + 1}` };
+    }
+    if (lineRefusal === 'expiryRequired') {
+      return { ok: false, reason: `INCOMPLETE_ASN: expiry date missing on line ${i + 1}` };
+    }
+    if (lineRefusal === 'shelfLife') {
+      return {
+        ok: false,
+        reason: `SHELF_LIFE: line ${i + 1} (${read.lines[i].materialCode}) expires before the minimum remaining shelf life at ETA ${read.eta} — request a shelf-life exception`,
+      };
+    }
+  }
   return { ok: true };
+});
+
+// MR-6 BR-08 — an exception may be asked for only when shelf life is the one
+// thing wrong with the submission, and the supplier says why.
+bindPolicyHook(POLICY_HOOKS.ASN_SHELF_LIFE_EXCEPTION_ONLY, ({ entityId, payload }) => {
+  const asn = asnStore.get(entityId);
+  if (!asn) return { ok: false, reason: 'entity missing' };
+  if (!nonBlank(payload.reason)) return { ok: false, reason: 'REASON_REQUIRED: say why the goods should come in' };
+  const read = asnSubmissionRead(asn, payload, false);
+  if (read.incomplete) return { ok: false, reason: `INCOMPLETE_ASN: ${read.incomplete}` };
+  if (onlyShelfLifeRefused(read.refusals)) return { ok: true };
+  const other = read.refusals.findIndex((r) => r !== null && r !== 'shelfLife');
+  return other >= 0
+    ? { ok: false, reason: `SHELF_LIFE_NOT_ONLY_REFUSAL: line ${other + 1}: ${read.refusals[other]}` }
+    : { ok: false, reason: 'SHELF_LIFE_MET: every line meets its minimum remaining shelf life — submit instead' };
+});
+
+// MR-6 BR-08 — Quality's rejection says why; the supplier reads it.
+bindPolicyHook(POLICY_HOOKS.ASN_SHELF_LIFE_REASON_GIVEN, ({ payload }) =>
+  nonBlank(payload.reason) ? { ok: true } : { ok: false, reason: 'REASON_REQUIRED: say why the exception is refused' },
+);
+
+// MR-6 edge case 1 — a later ETA reopens an approved exception when a line
+// still fails at it. An ETA change that needs no new decision is refused by
+// name: this verb exists only for the reopening.
+bindPolicyHook(POLICY_HOOKS.ASN_ETA_NEEDS_REAPPROVAL, ({ entityId, payload }) => {
+  const asn = asnStore.get(entityId);
+  if (!asn) return { ok: false, reason: 'entity missing' };
+  const eta = nonBlank(payload.eta);
+  if (!eta || !isCalendarDate(eta)) return { ok: false, reason: 'INCOMPLETE_ASN: eta' };
+  if (asn.shipDate && eta < asn.shipDate) return { ok: false, reason: 'INCOMPLETE_ASN: etaBeforeShip' };
+  return etaNeedsReapproval(asn, eta)
+    ? { ok: true }
+    : { ok: false, reason: `ETA_NEEDS_NO_REAPPROVAL: ${eta} is covered by the approved exception, or none was approved` };
 });
 
 // REQ-E07-04 — an ASN can be withdrawn only while nothing was received on it.
@@ -1546,6 +1752,7 @@ const rfqTarget: CommandTarget = {
           ...(best ? { bestScoredQuotationId: best } : {}),
           ...(bestByItem ? { bestScoredByItem: bestByItem } : {}),
           notAwardedSupplierIds: final ? rfq.invitedSupplierIds.filter((sid) => !named.has(sid)) : [],
+          ...withWarnings(awardWarnings(rfq, lines.map((l) => l.supplierId))),
         });
         break;
       }
@@ -1592,6 +1799,9 @@ const rfqTarget: CommandTarget = {
     rfqStore.update(id, (r) => ({
       ...r,
       status: toState as RFQStatus,
+      // Material G2 (BR-06) — the sourcing type is fixed at publish, with any
+      // placeholder-rule warnings (owner ruling 2026-09-29).
+      ...(transitionId === 't_rfq_publish' ? publishStamp(r) : {}),
       // Award records the chosen quote + supplier ONLY. Nothing downstream is
       // fabricated here — PO issuance is a separate buyer verb (future batch).
       awardedQuotationId:
@@ -2273,6 +2483,53 @@ bindPolicyHook(POLICY_HOOKS.RR_SUBMIT_COMMITMENT_DETAIL, ({ payload }) => {
   return { ok: true };
 });
 
+// BL-133 (ENG-D19) — capacity before the LTP, on the SUBMISSION (the
+// promotion). The response names its line; the line names its period and
+// material group; the group's latest capacity submission says whether every
+// horizon week the period touches is confirmed, and whether the group's LTP is
+// above BE in one of them. SDC-0 publications predate the rule (the BR-08 date
+// rule's precedent) and keep their shape; a line of a version no longer
+// current is found by supplier × material × period on the current version.
+bindPolicyHook(POLICY_HOOKS.RR_PROMOTE_CAPACITY_CONFIRMED, ({ entityId, target }) => {
+  const r = target.readEntity(entityId) as
+    | { publicationId?: string; supplierId?: string; materialCode?: string; periodBucket?: string; rootCause?: { level1?: unknown; note?: unknown } }
+    | null
+    | undefined;
+  if (!r || !isForecastVersion(String(r.publicationId))) return { ok: true };
+  const lines = allCommitmentLines(null);
+  const line = lines.find(
+    (l) => l.supplierId === r.supplierId && l.materialCode === r.materialCode && l.periodBucket === r.periodBucket,
+  );
+  if (!line) return { ok: true };
+  // Material C5 (MR-8 BR-04) — the capacity group is the material's planning group.
+  const cap = capacityGroupOfMaterial(allCapacityPlans(), line.supplierId, line.materialCode, materialEntry);
+  const group = cap.planningGroupId ?? line.materialCode;
+  const check = periodCapacityCheck(
+    cap.plan,
+    lines,
+    line.supplierId,
+    cap.materials,
+    line.periodStart,
+    line.periodEnd,
+    horizonWeeks(sdcClock.now()),
+  );
+  const refusal = commitmentCapacityRefusal(check, r.rootCause);
+  if (!refusal) return { ok: true };
+  if (refusal.refusal === 'capacityNotConfirmed') {
+    return {
+      ok: false,
+      reason: `CAPACITY_NOT_CONFIRMED: confirm the capacity for ${group} in the week of ${refusal.week} before submitting its LTP`,
+    };
+  }
+  if (refusal.refusal === 'aboveBeNoteRequired') {
+    return { ok: false, reason: 'OTHER_REASON_NEEDS_NOTE: the reason "other" needs a note' };
+  }
+  return {
+    ok: false,
+    reason: `ABOVE_BE_NEEDS_REASON: the LTP for ${group} in the week of ${refusal.week} is above capacity plus additional capacity; choose a reason`,
+  };
+});
+
 // RR dispute / resolve — the authored text must be SUBSTANCE, not presence.
 //
 // ⚠️ WHICH FIELD IS ASKED FOR IS DERIVED FROM THE MACHINE, NEVER FROM THE
@@ -2461,7 +2718,7 @@ const inventoryDeclarationTarget: CommandTarget = {
       ...(isIsoDay(payload.productionCompletionDate) ? { productionCompletionDate: payload.productionCompletionDate } : {}),
       // BR-08 — a PTI recording is ALWAYS "Entered by PTI", whatever the payload
       // says; a supplier's own submission is the template or manual entry.
-      channel: scope.personaType === 'buyer' ? 'pti' : payload.channel === 'template' ? 'template' : 'manual',
+      channel: submissionChannel(scope.personaType === 'buyer', payload.channel),
       provenance: PROV_SUPPLIER_SUBMIT,
     };
     inventoryDeclarationStore.add(declaration);
@@ -2492,7 +2749,7 @@ bindPolicyHook(POLICY_HOOKS.INV_DECLARE_BATCH_TOTAL, ({ payload }) => {
 const isNonNegative = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v) && v >= 0;
 
 // REQ-E08-02 BR-06 — the optional detail of a stock submission is well formed.
-bindPolicyHook(POLICY_HOOKS.INV_DECLARE_DETAIL_VALID, ({ payload }) => {
+bindPolicyHook(POLICY_HOOKS.INV_DECLARE_DETAIL_VALID, ({ payload, scope }) => {
   for (const f of ['supplierRop', 'inProductionQty'] as const) {
     if (payload[f] !== undefined && !isNonNegative(payload[f])) {
       return { ok: false, reason: `${f} must be a number of zero or more` };
@@ -2528,6 +2785,28 @@ bindPolicyHook(POLICY_HOOKS.INV_DECLARE_DETAIL_VALID, ({ payload }) => {
       }
     }
   }
+  // MAT-D4 / C1b (owner ruling 2026-09-29) — in production is required (0
+  // allowed) and its completion date is required when it is above 0: the SAME
+  // `productionProblem` the form and the template validator run, on the channel
+  // the target will store (manual, template or pti; the `api` exemption lives
+  // in the rule, and API pulls do not pass through this verb).
+  const production = productionProblem(
+    isNonNegative(payload.inProductionQty) ? payload.inProductionQty : null,
+    typeof payload.productionCompletionDate === 'string' ? payload.productionCompletionDate : '',
+    submissionChannel(scope.personaType === 'buyer', payload.channel),
+  );
+  if (production) {
+    return {
+      ok: false,
+      reason: `${production.reason}: ${
+        production.reason === 'missingField'
+          ? 'in-production quantity is required (0 allowed)'
+          : production.reason === 'productionDateMissing'
+            ? 'a production completion date is required when in-production quantity is above 0'
+            : 'production completion date must be a date (YYYY-MM-DD)'
+      }`,
+    };
+  }
   return { ok: true };
 });
 
@@ -2552,9 +2831,12 @@ const stockSyncTarget: CommandTarget = {
   create: (payload) => {
     const supplierId = String(payload.supplierId);
     const now = sdcClock.now();
-    const connection = API_CONNECTIONS[supplierId];
+    // Material A1 (AR-06) — the policy hook has already asked the ONE resolver
+    // whether this supplier is API-connected; this reads only what the
+    // simulated pull returns (`NO_ENDPOINT` when the sample list has no entry).
+    const connection = simulatedPullOf(supplierId);
     const id = stockSyncStore.nextId();
-    if (connection && connection.outcome === 'success') {
+    if (connection.outcome === 'success') {
       // The supplier's system answered: its figures land as API submissions.
       for (const f of connection.figures) {
         inventoryDeclarationStore.add({
@@ -2580,7 +2862,7 @@ const stockSyncTarget: CommandTarget = {
         supplierId,
         at: now,
         outcome: 'failed',
-        errorKey: connection && connection.outcome === 'failed' ? connection.errorKey : 'timeout',
+        errorKey: connection.errorKey,
       });
     }
     return { entityId: id };
@@ -2643,7 +2925,7 @@ bindPolicyHook(POLICY_HOOKS.STOCK_ACCESS_SCOPE_VALID, ({ entityId, payload }) =>
   return { ok: true };
 });
 
-/** REQ-E08-04 — capacity per supplier × material group per week. */
+/** REQ-E08-04 — capacity per supplier × planning group per week (Material C5, MR-8 BR-04). */
 const capacityTarget: CommandTarget = {
   readState: (id) => (capacityStore.get(id) ? 'Submitted' : null),
   readScopeOwner: (id) => capacityStore.get(id)?.supplierId ?? null,
@@ -2654,7 +2936,7 @@ const capacityTarget: CommandTarget = {
   requireCreationOwner: true,
   creationOwner: (payload) => {
     const sid = String(payload.supplierId);
-    return allCapacityPlans().some((p) => p.supplierId === sid && p.materialGroup === String(payload.materialGroup))
+    return allCapacityPlans().some((p) => p.supplierId === sid && p.planningGroupId === String(payload.planningGroupId))
       ? sid
       : null;
   },
@@ -2669,7 +2951,7 @@ const capacityTarget: CommandTarget = {
     const row: CapacitySubmission = {
       id: capacityStore.nextId(),
       supplierId: String(payload.supplierId),
-      materialGroup: String(payload.materialGroup),
+      planningGroupId: String(payload.planningGroupId),
       submittedAt: sdcClock.now(),
       weeks: weeks.sort((a, b) => a.week.localeCompare(b.week)),
     };
@@ -2681,7 +2963,7 @@ const capacityTarget: CommandTarget = {
 // REQ-E08-04 AC-01 / AC-02 — every horizon week, and a reason below demand.
 bindPolicyHook(POLICY_HOOKS.CAPACITY_SUBMISSION_VALID, ({ payload }) => {
   const plan = allCapacityPlans().find(
-    (p) => p.supplierId === String(payload.supplierId) && p.materialGroup === String(payload.materialGroup),
+    (p) => p.supplierId === String(payload.supplierId) && p.planningGroupId === String(payload.planningGroupId),
   );
   if (!plan) return { ok: false, reason: 'no materials of this group are assigned to the supplier' };
   if (!Array.isArray(payload.weeks)) return { ok: false, reason: 'weeks must be a list' };
@@ -2710,16 +2992,30 @@ const inventoryAlertTarget: CommandTarget = {
   readEntity: (key) => allAlerts().find((a) => a.key === key) ?? null,
   applyTransition: (key, _toState, payload, scope) => {
     inventoryAlertLedger.append([
-      { key, kind: 'closed', at: sdcClock.now(), note: nonBlank(payload.actionNote) ?? '', actor: scope.actor ?? NO_PERSON },
+      {
+        key,
+        kind: 'closed',
+        at: sdcClock.now(),
+        closeReason: String(payload.closeReason),
+        ...(nonBlank(payload.actionNote) ? { note: nonBlank(payload.actionNote) } : {}),
+        actor: scope.actor ?? NO_PERSON,
+      },
     ]);
   },
 };
 
-bindPolicyHook(POLICY_HOOKS.ALERT_ACTION_NOTE_AUTHORED, ({ payload }) =>
-  nonBlank(payload.actionNote)
-    ? { ok: true }
-    : { ok: false, reason: 'closing an alert needs an action note' },
-);
+// MR-9 BR-04 — an active close reason; "Other" needs a note (AR-14).
+bindPolicyHook(POLICY_HOOKS.ALERT_CLOSE_REASON_GIVEN, ({ payload }) => {
+  const refusal = alertCloseRefusal(payload.closeReason, payload.actionNote);
+  if (refusal === null) return { ok: true };
+  return {
+    ok: false,
+    reason:
+      refusal === 'NOTE_REQUIRED'
+        ? 'NOTE_REQUIRED: the reason "other" needs a note'
+        : `REASON_UNKNOWN: ${JSON.stringify(payload.closeReason)} is not an active alert close reason`,
+  };
+});
 
 // — Forecast collaboration (REQ-E06-01, REQ-E06-03) ————————————————————————
 //   A version is a snapshot of one stream and is never edited; publish and
@@ -3021,7 +3317,12 @@ const rfiEventTarget: CommandTarget = {
       default:
         break;
     }
-    rfiEventStore.update(id, (e) => ({ ...e, status: toState as RfxEventStatus }));
+    rfiEventStore.update(id, (e) => ({
+      ...e,
+      status: toState as RfxEventStatus,
+      // Material G2 (BR-06) — the sourcing type is fixed at publish.
+      ...(transitionId === 't_rfi_publish' ? publishStamp(e) : {}),
+    }));
   },
   creationOwner: () => null,
   create: (payload, toState) => {
@@ -3208,6 +3509,7 @@ const rfpEventTarget: CommandTarget = {
           lines,
           reason: typeof payload.awardReason === 'string' ? payload.awardReason.trim() : '',
           notAwardedSupplierIds: final ? rfpRespondedSupplierIds(id).filter((sid) => !named.has(sid)) : [],
+          ...withWarnings(awardWarnings(rfp, lines.map((l) => l.supplierId))),
         });
         break;
       }
@@ -3238,7 +3540,12 @@ const rfpEventTarget: CommandTarget = {
       default:
         break;
     }
-    rfpEventStore.update(id, (e) => ({ ...e, status: toState as RfpEventStatus }));
+    rfpEventStore.update(id, (e) => ({
+      ...e,
+      status: toState as RfpEventStatus,
+      // Material G2 (BR-06) — the sourcing type is fixed at publish.
+      ...(transitionId === 't_rfp_publish' ? publishStamp(e) : {}),
+    }));
   },
   creationOwner: () => null,
   create: (payload, toState) => {
@@ -3549,6 +3856,43 @@ bindPolicyHook(POLICY_HOOKS.RFX_PUBLISH_HAS_INVITEES, ({ target, entityId }) => 
   }
   return { ok: true };
 });
+
+// Material G2 (MR-10 BR-05, BR-07; plan AR-16) — publication re-checks every
+// invitee against the level the event's sourcing type needs. The invitee list
+// is read by event type (`inviteeIdsOf`: `invitedSupplierIds` on an RFQ,
+// `invitees` otherwise). Refused only against a real list; while the list is
+// the placeholder (owner ruling 2026-09-29) the publish passes and the target
+// records the warnings (`publishStamp`).
+bindPolicyHook(POLICY_HOOKS.RFX_INVITEES_QUALIFIED, ({ target, entityId }) => {
+  const event = target.readEntity(entityId) as AnySourcingEvent | null;
+  if (!event) return { ok: true };
+  const type = eventSourcingType(event);
+  const refusal = inviteesQualificationRefusal(inviteeIdsOf(event).map((sid) => namedEligibility(sid, type)));
+  return refusal ? { ok: false, reason: refusal } : { ok: true };
+});
+
+/**
+ * Material G2 — what a publish stores on the event: its sourcing type, fixed
+ * from here on (BR-06), and the invitees let through on a placeholder list.
+ */
+function publishStamp(event: AnySourcingEvent): {
+  sourcingType: ReturnType<typeof eventSourcingType>;
+  qualificationWarnings?: QualificationWarning[];
+} {
+  const sourcingType = eventSourcingType(event);
+  const warnings = qualificationWarningsOf(inviteeIdsOf(event).map((sid) => namedEligibility(sid, sourcingType)));
+  return { sourcingType, ...(warnings.length > 0 ? { qualificationWarnings: warnings } : {}) };
+}
+
+/** A record's warnings field, present only when there is one. */
+const withWarnings = (w: QualificationWarning[]): { qualificationWarnings?: QualificationWarning[] } =>
+  w.length > 0 ? { qualificationWarnings: w } : {};
+
+/** Material G2 — the awarded vendors let through on a placeholder list, for the award record. */
+const awardWarnings = (event: AnySourcingEvent, supplierIds: readonly string[]): QualificationWarning[] => {
+  const type = eventSourcingType(event);
+  return qualificationWarningsOf([...new Set(supplierIds)].map((sid) => namedEligibility(sid, type)));
+};
 
 // REQ-E03-02 / -03 edge cases — an extension moves the deadline LATER. A date
 // that moves earlier would retroactively close a window suppliers are answering
@@ -4025,19 +4369,32 @@ bindPolicyHook(POLICY_HOOKS.RFQ_AWARD_GOVERNED, ({ payload, entityId, currentSta
     const gate = rfqSupplierGate(rfq, supplierId, rfxNow());
     if (!gate.passes) return { ok: false, reason: gateRefusal(supplierId, gate.failed) };
   }
+  // Material G2 (MR-10 BR-07, AC-05) — after CR-23: no awarded supplier below
+  // the level the event's sourcing type needs on the award date, against a
+  // real list. On a placeholder list it owes a reason instead (below).
+  const type = eventSourcingType(rfq);
+  const eligibilityOf = (sid: string) => namedEligibility(sid, type);
+  const unqualified = awardQualificationRefusal(lines, eligibilityOf);
+  if (unqualified) return { ok: false, reason: awardRefusalText(unqualified) };
   // BR-07 / NR-3 BR-08, PER AWARDED ITEM — the reason is owed when an item's
   // lines leave out that item's best-scored quote at the item's own break. A
   // legacy quote prices the whole event, so its items share the event's best.
+  // Material G2 — or when a vendor is below the level on a placeholder list.
   const reason = typeof payload.awardReason === 'string' ? payload.awardReason.trim() : '';
   let eventBest: string | null | undefined;
-  const departing = awardItemsDepartingBest(items, lines, (item, breakQty) => {
-    if (item.tiered) return bestScoredByItem(rfq, rfxNow(), breakQty).get(item.lineNo!) ?? null;
-    if (eventBest === undefined) eventBest = bestScoredQuotationId(rfq, rfxNow());
-    return eventBest;
+  const owed = awardReasonOwed({
+    items,
+    lines,
+    always: false,
+    bestOf: (item, breakQty) => {
+      if (item.tiered) return bestScoredByItem(rfq, rfxNow(), breakQty).get(item.lineNo!) ?? null;
+      if (eventBest === undefined) eventBest = bestScoredQuotationId(rfq, rfxNow());
+      return eventBest;
+    },
+    eligibilityOf,
   });
-  if (departing.length > 0 && reason.length === 0) {
-    return { ok: false, reason: awardRefusalText({ code: 'AWARD_REASON_REQUIRED', item: departing[0]!.name }) };
-  }
+  const missingReason = awardReasonRefusal(owed, reason);
+  if (missingReason) return { ok: false, reason: awardRefusalText(missingReason) };
   return { ok: true };
 });
 
@@ -4111,15 +4468,29 @@ function recordedRfpAwardLine(items: readonly AwardItem[], line: RfpAwardLine): 
 // option already sourced by an RFQ created from this RFP (NR-2 BR-08) · the
 // options left open · CR-23 for every awarded supplier (BR-07) · a reason
 // (BR-06). `awardRefusalText(…, 'rfp')` words the codes for an RFP.
-bindPolicyHook(POLICY_HOOKS.RFP_AWARD_GOVERNED, ({ payload, entityId, toState }) => {
+bindPolicyHook(POLICY_HOOKS.RFP_AWARD_GOVERNED, ({ payload, entityId, currentState, toState }) => {
   const rfp = rfpEventStore.get(entityId);
   if (!rfp) return { ok: false, reason: 'RFP_NOT_FOUND: the award names no RFP this hub holds' };
   const lines = rfpAwardLinesOf(payload);
   const options = rfpRoundOptions(rfp);
   const items = rfpAwardItems(rfp);
-  const shape = awardShapeRefusal(items, lines, []);
-  if (shape) return { ok: false, reason: awardRefusalText(shape, 'rfp') };
   const sourced = rfqSourcedOptionRefs(rfqStore.all(), rfp.id);
+  // NR-3 BR-06 — "Will not award" rides on the final award only.
+  const final = toState === 'Awarded';
+  const willNotAward = final ? notAwardedItemsOf(payload) : [];
+  // BL-130 (REQ-E03-04 BR-16f) — a final award may carry NO lines when it only
+  // marks the rest of a Partly awarded RFP "Will not award", by the rule the
+  // RFQ uses (`settlesRestWithoutLines`). An option an RFQ created from this
+  // RFP sources is settled there, so it counts as settled here too.
+  const shape = awardShapeRefusal(
+    items,
+    lines,
+    [],
+    final
+      ? { partlyAwarded: currentState === 'Partly awarded', notAwardedKeys: [...willNotAward, ...sourced.keys()] }
+      : undefined,
+  );
+  if (shape) return { ok: false, reason: awardRefusalText(shape, 'rfp') };
   const elsewhere = rfpOptionSourcedRefusal(
     lines.map((l) => l.optionRef),
     sourced,
@@ -4128,9 +4499,7 @@ bindPolicyHook(POLICY_HOOKS.RFP_AWARD_GOVERNED, ({ payload, entityId, toState })
   );
   if (elsewhere) return { ok: false, reason: awardRefusalText(elsewhere, 'rfp') };
   // NR-3 BR-06 — an option an RFQ sources is settled there, so it does not
-  // hold the RFP open; "Will not award" rides on the final award only.
-  const final = toState === 'Awarded';
-  const willNotAward = final ? notAwardedItemsOf(payload) : [];
+  // hold the RFP open.
   const unknown = willNotAward.find((key) => !items.some((i) => i.key === key));
   if (unknown !== undefined) {
     return { ok: false, reason: awardRefusalText({ code: 'AWARD_ITEM_UNKNOWN', detail: `"${unknown}"` }, 'rfp') };
@@ -4151,9 +4520,15 @@ bindPolicyHook(POLICY_HOOKS.RFP_AWARD_GOVERNED, ({ payload, entityId, toState })
     const gate = rfpSupplierGate(supplierId, now);
     if (!gate.passes) return { ok: false, reason: gateRefusal(supplierId, gate.failed) };
   }
-  // NR-2 BR-06 — every RFP award needs a reason.
+  // Material G2 (MR-10 BR-07) — after CR-23, as on an RFQ.
+  const type = eventSourcingType(rfp);
+  const eligibilityOf = (sid: string) => namedEligibility(sid, type);
+  const unqualified = awardQualificationRefusal(lines, eligibilityOf);
+  if (unqualified) return { ok: false, reason: awardRefusalText(unqualified, 'rfp') };
+  // NR-2 BR-06 — every RFP award needs a reason (the one reason rule).
   const reason = typeof payload.awardReason === 'string' ? payload.awardReason.trim() : '';
-  if (reason.length === 0) return { ok: false, reason: awardRefusalText({ code: 'AWARD_REASON_REQUIRED' }, 'rfp') };
+  const missingReason = awardReasonRefusal(awardReasonOwed({ items, lines, always: true, eligibilityOf }), reason);
+  if (missingReason) return { ok: false, reason: awardRefusalText(missingReason, 'rfp') };
   return { ok: true };
 });
 
@@ -4459,6 +4834,30 @@ const reasonCodeTarget: CommandTarget = {
   },
 };
 
+// ── REQ-E06-04 BR-06 · PROCUREMENT'S MAXIMUM STOCK PER SUPPLIER × MATERIAL ────
+// `entityId` IS `<supplierId>|<materialCode>`. `readState` answers `Maintained`
+// only for a pair the hub actually assigns — a pair nobody supplies is
+// NOT_FOUND rather than a silently created value. Owner-less: the value is a
+// term PTI keeps, and every supplier is denied at SCOPE (§86). APPENDS only;
+// `previous` and `setAt` are stamped here, never read from the payload.
+const maxStockPairExists = (id: string): boolean => {
+  const pair = parseMaxStockEntityId(id);
+  return pair !== null && isAssignedMaterial(pair.supplierId, pair.materialCode);
+};
+const maxStockTarget: CommandTarget = {
+  readState: (id) => (maxStockPairExists(id) ? 'Maintained' : null),
+  readScopeOwner: () => null,
+  readEntity: (id) => {
+    const pair = maxStockPairExists(id) ? parseMaxStockEntityId(id) : null;
+    return pair ? maxStockStore.get(pair.supplierId, pair.materialCode) ?? null : null;
+  },
+  applyTransition: (id, _toState, payload) => {
+    const change = maxStockChangeFrom(id, payload, sdcClock.now());
+    // The policy hook has already refused every payload this could reject.
+    if (change) maxStockStore.append(change);
+  },
+};
+
 const hubSettingTarget: CommandTarget = {
   readState: (id) => (settingKeyExists(id) ? 'Maintained' : null),
   readScopeOwner: () => null,
@@ -4588,6 +4987,9 @@ const supplierDocumentTarget: CommandTarget = {
             rejectedBy: scope.actor ?? NO_PERSON,
           }
         : {}),
+      // Material G1 (plan AD-2) — when the document became valid, from the hub
+      // clock. The qualification history replays from it.
+      ...(toState === 'Valid' ? { verifiedAt: sdcClock.now() } : {}),
     }));
   },
   // ⚠️ **`requireCreationOwner` IS THE HALF THE DECLARE PATH NEVER NEEDED, AND
@@ -4889,12 +5291,28 @@ const TARGETS: Record<string, CommandTarget> = {
   // BL-51 — the 3PL list. Wired so every change to where a tracking link points
   // lands in the DR-10 trail with who made it and when.
   threePl: threePlTarget,
+  // Material A1 — a supplier's stock update mode (MR-1 BR-02, AC-06).
+  supplierOverlay: supplierOverlayTarget,
+  // Material G1 — the documents each qualification level requires (MR-10 BR-04).
+  qualificationRule: qualificationRuleTarget,
+  // Material G2 — each sourcing category and purchasing group's type (MR-10 BR-06).
+  sourcingType: sourcingTypeTarget,
+  // Material C5 — planning groups for capacity (MR-8 BR-01 to BR-05).
+  planningGroup: planningGroupTarget,
+  // Material C4 — who each SAP MRP controller code is (MR-5 BR-02).
+  mrpController: mrpControllerTarget,
+  // Material C2 — a supplier's trade name for a PTI material (MR-3).
+  materialName: materialNameTarget,
+  simulationOverride: simulationOverrideTarget, // Material E1 — stock simulation planner input (MR-7 BR-08)
   // BL-32 — the rule values. Wired so every change to a tolerance, deadline,
   // threshold or stale period — and every reset — lands in the DR-10 trail.
   hubSetting: hubSettingTarget,
   // BL-32 — the reason lists. Wired so every add, rename and retirement lands in
   // the DR-10 trail.
   reasonCode: reasonCodeTarget,
+  // REQ-E06-04 BR-06 — Procurement's maximum stock per supplier × material.
+  // Wired so every set, change and clear lands in the DR-10 trail.
+  maxStock: maxStockTarget,
   // §82 — the document lane's first write path: the supplier's declaration and
   // compliance's review of it.
   supplierDocument: supplierDocumentTarget,
@@ -4971,6 +5389,8 @@ export const commandTargetFor = (entity: string): CommandTarget | undefined =>
 // declares WHICH verb; the mock resolves WHICH ASN id (the GR's own asnNumber).
 // Best-effort — a GR whose ASN is absent or not in a cascadable state no-ops.
 const resolveCascades = (ctx: CascadeContext): CascadeCommand[] => {
+  // Material C2 — a newer trade name replaces the earlier one (resolver in its own module).
+  if (ctx.entity === 'materialName') return materialNameCascades(ctx);
   if (ctx.entity === 'goodsReceipt') {
     const gr = goodsReceiptStore.get(ctx.entityId);
     if (!gr) return [];

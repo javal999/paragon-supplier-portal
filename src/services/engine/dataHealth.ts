@@ -44,8 +44,11 @@ import { lineKey, type EngineDataset, type IsoDate, type IsoInstant } from './ty
 /** A feed is one entity of the input contract — its field on `EngineDataset`. */
 export type FeedId = Exclude<keyof EngineDataset, 'provenance' | 'materials'>;
 
-/** The engine steps a feed can affect. E14-07 is not built yet. */
-export type EngineStep = 'E14-02' | 'E14-03' | 'E14-04' | 'E14-05' | 'E14-07' | 'E14-13';
+/**
+ * The engine steps a feed can affect. E14-07 feeds only E14-09's range (BL-111):
+ * SAP's plan stays E14-03's input (ENG-B66), and nothing reads the range yet.
+ */
+export type EngineStep = 'E14-02' | 'E14-03' | 'E14-04' | 'E14-05' | 'E14-07' | 'E14-09' | 'E14-13';
 
 /** Who delivers a feed: the Master Data Management team from SAP (ENG-D1), or the Hub itself. */
 export type FeedSource = 'mdm' | 'hub';
@@ -68,7 +71,9 @@ interface FeedDef {
 /**
  * Every feed, in the feed spec's order (§2.1–§2.4). `readBy` is what each
  * engine module reads today (E14-02 `reliability.ts`, E14-03 `requirement.ts`,
- * E14-04 `safetyStock.ts`, E14-05 `orderSizing.ts`, E14-13 `reschedule.ts`).
+ * E14-04 `safetyStock.ts`, E14-05 `orderSizing.ts`, E14-07 `demandForecast.ts`,
+ * E14-09 `demandRange.ts` (the BOM and SAP's past plans; its sales come through
+ * E14-07), E14-13 `reschedule.ts`).
  */
 export const FEEDS: readonly FeedDef[] = Object.freeze([
   { feed: 'poLines', entity: 'PoLine', source: 'mdm', refresh: 'daily', limited: true, readBy: ['E14-02', 'E14-03', 'E14-04', 'E14-13'] },
@@ -77,7 +82,7 @@ export const FEEDS: readonly FeedDef[] = Object.freeze([
   { feed: 'receipts', entity: 'Receipt', source: 'mdm', refresh: 'daily', limited: true, readBy: ['E14-02', 'E14-03', 'E14-04', 'E14-13'] },
   { feed: 'planVersions', entity: 'PlanVersion', source: 'hub', refresh: 'hubRecord', limited: false, readBy: ['E14-02'] },
   { feed: 'sources', entity: 'MaterialSource', source: 'mdm', refresh: 'weekly', limited: true, readBy: ['E14-02', 'E14-03', 'E14-04', 'E14-13'] },
-  { feed: 'bom', entity: 'BomLine', source: 'mdm', refresh: 'weekly', limited: true, readBy: ['E14-02', 'E14-03', 'E14-04'] },
+  { feed: 'bom', entity: 'BomLine', source: 'mdm', refresh: 'weekly', limited: true, readBy: ['E14-02', 'E14-03', 'E14-04', 'E14-09'] },
   { feed: 'stock', entity: 'StockSnapshot', source: 'mdm', refresh: 'daily', limited: true, readBy: ['E14-03'] },
   { feed: 'cycleCounts', entity: 'CycleCount', source: 'mdm', refresh: 'asCounted', limited: false, readBy: ['E14-03'] },
   { feed: 'warehouses', entity: 'Warehouse', source: 'mdm', refresh: 'onChange', limited: false, readBy: ['E14-05'] },
@@ -85,7 +90,7 @@ export const FEEDS: readonly FeedDef[] = Object.freeze([
   { feed: 'materialValues', entity: 'MaterialValue', source: 'mdm', refresh: 'monthly', limited: true, readBy: ['E14-05'] },
   { feed: 'finishedGoods', entity: 'FinishedGood', source: 'mdm', refresh: 'weekly', limited: true, readBy: ['E14-07'] },
   { feed: 'sales', entity: 'SalesWeek', source: 'mdm', refresh: 'weekly', limited: true, readBy: ['E14-02', 'E14-04', 'E14-07'] },
-  { feed: 'fgPlan', entity: 'FgPlanSnapshot', source: 'mdm', refresh: 'weekly', limited: true, readBy: ['E14-03', 'E14-04'] },
+  { feed: 'fgPlan', entity: 'FgPlanSnapshot', source: 'mdm', refresh: 'weekly', limited: true, readBy: ['E14-03', 'E14-04', 'E14-09'] },
   { feed: 'salesOrders', entity: 'SalesOrderWeek', source: 'mdm', refresh: 'daily', limited: true, readBy: ['E14-03'] },
   { feed: 'sapSafetyStock', entity: 'SapSafetyStock', source: 'mdm', refresh: 'weekly', limited: true, readBy: ['E14-04'] },
 ] satisfies readonly FeedDef[]);
@@ -94,18 +99,19 @@ export const FEEDS: readonly FeedDef[] = Object.freeze([
  * Which step feeds which (the Hub's chain, `MockProcurementService.engineSizing`
  * and `getReschedule`): E14-04's safety stock goes into E14-03's netting,
  * E14-03 into E14-05's sizing, E14-05's plan and E14-02's plan-change share
- * into E14-13.
+ * into E14-13; E14-07's forecast into E14-09's range.
  */
 const FEEDS_INTO: Readonly<Record<EngineStep, readonly EngineStep[]>> = {
   'E14-02': ['E14-13'],
   'E14-03': ['E14-05'],
   'E14-04': ['E14-03'],
   'E14-05': ['E14-13'],
-  'E14-07': [],
+  'E14-07': ['E14-09'],
+  'E14-09': [],
   'E14-13': [],
 };
 
-const STEP_ORDER: readonly EngineStep[] = ['E14-02', 'E14-03', 'E14-04', 'E14-05', 'E14-07', 'E14-13'];
+const STEP_ORDER: readonly EngineStep[] = ['E14-02', 'E14-03', 'E14-04', 'E14-05', 'E14-07', 'E14-09', 'E14-13'];
 
 /** Every step a failure in `readBy` reaches: the direct readers and everything downstream. */
 export function affectedSteps(readBy: readonly EngineStep[]): EngineStep[] {

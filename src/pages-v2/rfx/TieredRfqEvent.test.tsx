@@ -11,6 +11,7 @@
 import { Routes, Route } from 'react-router-dom';
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { everyVendorQualified } from '../../test/everyVendorQualified';
 import type { TFunction } from 'i18next';
 import { renderWithProviders, BUYER } from '../../test/test-utils';
 import { SEEDED_SEAT_ROLES } from '../../services/transitions/businessRoles';
@@ -36,6 +37,9 @@ beforeEach(() => {
   rfqStore.reset();
   quotationStore.reset();
   sdcClock.reset();
+  // Material G2 — this spec is about the award's shape and the best-score
+  // reason, not qualification: every vendor qualifies here.
+  everyVendorQualified();
 });
 
 const renderEvent = (rfqId: string) =>

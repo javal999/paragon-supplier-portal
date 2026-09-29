@@ -40,6 +40,7 @@ import FilterChipsBar from '../components/ui-v2/FilterChipsBar';
 import KpiCard from '../components/ui-v2/KpiCard';
 import { usePerformance } from './performance/performanceDisplay';
 import KpiDefinitions from './performance/KpiDefinitions';
+import UpdateComplianceCard from './performance/UpdateComplianceCard';
 import {
   GRADE_BANDS,
   PERFORMANCE_PERIODS,
@@ -360,6 +361,10 @@ const SupplierPerformance: React.FC = () => {
           subtitle={<span className="text-text-tertiary">{t('perf.calculated')}</span>}
         />
       </div>
+
+      {/* Material B3 (MR-2, US-MAT-04) — its own weekly update compliance only
+          (the read is narrowed to this supplier, MAT-R4). */}
+      <UpdateComplianceCard compliance={measure.updateCompliance} testId="my-update-compliance" />
 
       {/* BL-53 — the same definitions PTI reads, and "Baseline period". */}
       <KpiDefinitions />

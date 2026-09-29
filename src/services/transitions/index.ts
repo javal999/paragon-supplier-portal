@@ -54,8 +54,16 @@ export { enforcementFlow } from './flows/enforcement.flow';
 export { roleFlow } from './flows/role.flow';
 export { workingCalendarFlow } from './flows/workingCalendar.flow';
 export { threePlFlow } from './flows/threePl.flow';
+export { supplierOverlayFlow } from './flows/supplierOverlay.flow';
+export { qualificationRuleFlow } from './flows/qualificationRule.flow';
+export { sourcingTypeFlow } from './flows/sourcingType.flow';
+export { planningGroupFlow } from './flows/planningGroup.flow';
+export { mrpControllerFlow } from './flows/mrpController.flow';
+export { materialNameFlow } from './flows/materialName.flow';
+export { simulationOverrideFlow } from './flows/simulationOverride.flow';
 export { hubSettingFlow } from './flows/hubSetting.flow';
 export { reasonCodeFlow } from './flows/reasonCode.flow';
+export { maxStockFlow } from './flows/maxStock.flow';
 export { supplierApplicationFlow } from './flows/supplierApplication.flow';
 export { receiptDiscrepancyFlow } from './flows/receiptDiscrepancy.flow';
 export { callOffFlow } from './flows/callOff.flow';
@@ -103,8 +111,16 @@ import { enforcementFlow } from './flows/enforcement.flow';
 import { roleFlow } from './flows/role.flow';
 import { workingCalendarFlow } from './flows/workingCalendar.flow';
 import { threePlFlow } from './flows/threePl.flow';
+import { supplierOverlayFlow } from './flows/supplierOverlay.flow';
+import { qualificationRuleFlow } from './flows/qualificationRule.flow';
+import { sourcingTypeFlow } from './flows/sourcingType.flow';
+import { planningGroupFlow } from './flows/planningGroup.flow';
+import { mrpControllerFlow } from './flows/mrpController.flow';
+import { materialNameFlow } from './flows/materialName.flow';
+import { simulationOverrideFlow } from './flows/simulationOverride.flow';
 import { hubSettingFlow } from './flows/hubSetting.flow';
 import { reasonCodeFlow } from './flows/reasonCode.flow';
+import { maxStockFlow } from './flows/maxStock.flow';
 import { supplierApplicationFlow } from './flows/supplierApplication.flow';
 import { receiptDiscrepancyFlow } from './flows/receiptDiscrepancy.flow';
 import { callOffFlow } from './flows/callOff.flow';
@@ -178,12 +194,40 @@ flowRegistry.register(workingCalendarFlow); // BL-50 — Working calendar
 // shape: a 3PL on the list has no lifecycle, it has a ledger of changes. WIRED,
 // so every change to where a tracking link points lands in the audit trail.
 flowRegistry.register(threePlFlow); // BL-51 — 3PL list
+// Material A1 — a supplier's hub-mastered fields (its stock update mode). The
+// same degenerate single-state ledger shape; WIRED, so every change of a
+// supplier's mode lands in the audit trail with who and when (MR-1 AC-06).
+flowRegistry.register(supplierOverlayFlow); // Material A1 — supplier overlay
+// Material G1 — the documents each qualification level requires. The same
+// degenerate single-state ledger shape; WIRED, so every change of a list lands
+// in the audit trail with who and when (MR-10 BR-04).
+flowRegistry.register(qualificationRuleFlow); // Material G1 — qualification lists
+// Material G2 — the sourcing type map (MR-10 BR-06). The same ledger shape;
+// WIRED, so every change of a category's type lands in the audit trail.
+flowRegistry.register(sourcingTypeFlow); // Material G2 — sourcing type map
+// Material C5 — planning groups under SAP material groups (MR-8). WIRED, so
+// every create, rename, move and retirement lands in the audit trail.
+flowRegistry.register(planningGroupFlow); // Material C5 — planning groups
+// Material C4 — the MRP controller list (who a material's SAP planner code is).
+// The same degenerate single-state ledger shape; WIRED, so every mapping change
+// lands in the audit trail with who and when (MR-5 BR-02).
+flowRegistry.register(mrpControllerFlow); // Material C4 — MRP controller list
+// Material C2 — supplier trade names: the supplier submits, Material Planning
+// approves or rejects, PTI may load approved names in bulk (MR-3).
+flowRegistry.register(materialNameFlow); // Material C2 — supplier trade names
+// Material E1 — a planner's input to the stock simulation (MR-7 BR-08):
+// creation-only, the `sapChangeMark` shape. Nothing else about the simulation
+// is stored (AD-1).
+flowRegistry.register(simulationOverrideFlow); // Material E1 — stock simulation planner input
 // BL-32 — the administrator's rule values: one verb with typed keys, the same
 // degenerate single-state ledger shape. Every rule reads the value in force at
 // evaluation, so nothing cascades from a change.
 flowRegistry.register(hubSettingFlow); // BL-32 — rule values
 // BL-32 — the administrator's reason lists: the 3PL list's single-state shape.
 flowRegistry.register(reasonCodeFlow); // BL-32 — reason codes
+// REQ-E06-04 BR-06 — Procurement's maximum stock per supplier × material: the
+// same single-state ledger shape. The reconcile reads the value in force at read.
+flowRegistry.register(maxStockFlow); // REQ-E06-04 — maximum stock
 flowRegistry.register(supplierApplicationFlow); // B1 — Supplier onboarding
 flowRegistry.register(receiptDiscrepancyFlow); // REQ-E07-06 — receipt discrepancy response
 flowRegistry.register(callOffFlow); // REQ-E09-01 / 03 / 04 — call-offs under an umbrella PO

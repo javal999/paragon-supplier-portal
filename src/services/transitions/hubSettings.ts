@@ -37,6 +37,11 @@ export type HubSettingUnit =
   | 'idr' // whole rupiah
   | 'multiple' // × a lead time
   | 'weeks' // whole weeks
+  | 'months' // whole calendar months
+  | 'hours' // whole hours
+  | 'weekday' // a day of the week, 1 to 7, Monday = 1 (ISO 8601)
+  | 'time' // a time of day in WIB, as minutes after midnight, 0 to 1439
+  | 'weight' // a share written as a fraction, 0 to 1
   | 'boolean';
 
 /** Who decides a value that is still a placeholder (the owner i18n key suffix). */
@@ -170,6 +175,13 @@ const DEFS = [
     key: 'engine.maxRentedSpacePct', section: 'tolerances', rule: 'REQ-E14-05', unit: 'pct',
     min: 0, max: 500, defaultValue: 25, placeholder: { owner: 'warehousePlanner', backlogId: 'REQ-E14-05' },
   },
+  // REQ-E06-04 BR-01 (owner, 2026-09-29) — the fixed stock reconcile cycle for
+  // packaging, in weeks. 3 by default ("FS Reconcile end W3", ENG-D21); the
+  // Monday it is counted from stays fixed (FS_RECONCILE_CYCLE_ANCHOR).
+  {
+    key: 'forecast.fsReconcileCycleWeeks', section: 'tolerances', rule: 'REQ-E06-04', unit: 'weeks', integer: true,
+    min: 1, max: 13, defaultValue: 3,
+  },
   {
     key: 'engine.rescheduleOutWeeks', section: 'tolerances', rule: 'ENG-D15', unit: 'weeks', integer: true,
     min: 1, max: 26, defaultValue: 1,
@@ -180,6 +192,10 @@ const DEFS = [
   // at 100% a Trade-off period could never move. The Forecast zone's weight
   // stays 0 (ENG-D9, ENG-B34).
   { key: 'engine.dampingWeightPct', section: 'tolerances', rule: 'ENG-D9', unit: 'pct', min: 0, max: 90, defaultValue: 50 },
+  // REQ-E14-09 BR-01 (BL-111) — a quantile the administrator adds to the demand
+  // range beside P50 and P90 (for example 95 for P95, which METHOD-SPEC D5 lists).
+  // 0 = none; 50 and 90 are always produced (ENG-B98).
+  { key: 'engine.rangeExtraQuantilePct', section: 'tolerances', rule: 'REQ-E14-09', unit: 'pct', integer: true, min: 0, max: 99, defaultValue: 0 },
   // REQ-E14-01 BR-01, BR-05 — the freshness limit per engine feed, in days:
   // a feed whose last arrival is older than this is stale on the Data health
   // page and names the engine steps it affects. The defaults are the feed
@@ -199,6 +215,23 @@ const DEFS = [
   { key: 'engine.freshnessDays.fgPlan', section: 'tolerances', rule: 'REQ-E14-01', unit: 'days', integer: true, min: 1, max: 365, defaultValue: 7 },
   { key: 'engine.freshnessDays.salesOrders', section: 'tolerances', rule: 'REQ-E14-01', unit: 'days', integer: true, min: 1, max: 365, defaultValue: 1 },
   { key: 'engine.freshnessDays.sapSafetyStock', section: 'tolerances', rule: 'REQ-E14-01', unit: 'days', integer: true, min: 1, max: 365, defaultValue: 7 },
+
+  // ── SC Hub Material (MAT A3, AR-08). Set here so the later tasks only read.
+  // MR-1 BR-01 — how often a system-connected supplier's stock is pulled.
+  { key: 'stockSync.intervalHours', section: 'alerts', rule: 'MR-1', unit: 'hours', integer: true, min: 1, max: 24, defaultValue: 2 },
+  // MR-1 BR-05 (MAT-D8) — an API supplier is stale when its last good pull is older than this.
+  { key: 'stale.apiHours', section: 'alerts', rule: 'MR-1', unit: 'hours', integer: true, min: 1, max: 168, defaultValue: 24 },
+  // MR-1 BR-03 (MAT-D7) — the weekly update cutoff for a manual supplier:
+  // Thursday 23:59 WIB. The day is ISO (Monday = 1); the time is minutes after midnight.
+  { key: 'stockUpdate.cutoffDay', section: 'alerts', rule: 'MR-1', unit: 'weekday', integer: true, min: 1, max: 7, defaultValue: 4 },
+  { key: 'stockUpdate.cutoffTime', section: 'alerts', rule: 'MR-1', unit: 'time', integer: true, min: 0, max: 1439, defaultValue: 1439 },
+  // MR-2 BR-04 — update compliance below warn is amber, below flag is red.
+  { key: 'compliance.warnPct', section: 'tolerances', rule: 'MR-2', unit: 'pct', min: 0, max: 100, defaultValue: 80 },
+  { key: 'compliance.flagPct', section: 'tolerances', rule: 'MR-2', unit: 'pct', min: 0, max: 100, defaultValue: 60 },
+  // MR-2 BR-05 (MAT-D9) — the weight of update compliance in the performance score.
+  { key: 'compliance.scoreWeight', section: 'tolerances', rule: 'MR-2', unit: 'weight', min: 0, max: 0.5, defaultValue: 0.1 },
+  // MR-6 BR-06 — the minimum remaining shelf life where the material master has none.
+  { key: 'shelfLife.defaultMonths', section: 'tolerances', rule: 'MR-6', unit: 'months', integer: true, min: 0, max: 60, defaultValue: 6 },
 ] as const satisfies readonly HubSettingDef[];
 
 /** A fixed setting key. Stale-period overrides are keyed separately (below). */
@@ -253,6 +286,24 @@ export const SEEDED_STALE_OVERRIDES: Readonly<Record<string, number>> = Object.f
   [staleOverrideKey('sup-007', 'PK-PETB-8801')]: 3,
   [staleOverrideKey('sup-007', 'PK-PETB-8802')]: 3,
 });
+
+// ── Times of day (unit `time`) ───────────────────────────────────────────────
+
+/** Minutes after midnight as `HH:MM` (1439 → `23:59`). */
+export function formatMinutesOfDay(minutes: number): string {
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+}
+
+/** `HH:MM` (or `H:MM`) as minutes after midnight, or null when it is not a time of day. */
+export function parseTimeOfDay(text: string): number | null {
+  const m = /^(\d{1,2}):(\d{2})$/.exec(text.trim());
+  if (!m) return null;
+  const h = Number(m[1]);
+  const min = Number(m[2]);
+  return h <= 23 && min <= 59 ? h * 60 + min : null;
+}
 
 // ── Values ────────────────────────────────────────────────────────────────────
 
@@ -366,6 +417,12 @@ const ORDER_RULES: readonly {
     holds: (s) => num(s, 'engine.fillRateStandardPct') <= num(s, 'engine.fillRateHighPct'),
     says: (s) =>
       `other materials may not be held to a higher fill rate than high-volume ones (other ${num(s, 'engine.fillRateStandardPct')}% > high-volume ${num(s, 'engine.fillRateHighPct')}%)`,
+  },
+  {
+    keys: ['compliance.flagPct', 'compliance.warnPct'],
+    holds: (s) => num(s, 'compliance.flagPct') < num(s, 'compliance.warnPct'),
+    says: (s) =>
+      `the red flag must start below the amber warning (flag below ${num(s, 'compliance.flagPct')}%, warning below ${num(s, 'compliance.warnPct')}%)`,
   },
   {
     keys: ['coverage.atRiskFromPct', 'coverage.coveredFromPct'],

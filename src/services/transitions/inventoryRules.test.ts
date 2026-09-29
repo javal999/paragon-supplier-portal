@@ -23,9 +23,13 @@ import {
   mondayOf,
   parseCsv,
   positionBand,
+  productionProblem,
+  submissionChannel,
+  STOCK_TEMPLATE_FIELDS,
   stockFreshness,
   stockTemplateCsv,
   supplyBand,
+  templateFieldFor,
   validateStockRows,
 } from './inventoryRules';
 import { supplyBands, updateSlaFor } from './inventoryConfig';
@@ -54,6 +58,8 @@ const position = (over: Partial<InventoryPosition> = {}): InventoryPosition => (
   lastUpdatedAt: '2026-08-30T02:00:00.000Z',
   channel: 'template',
   updateSla: 7,
+  staleAt: null,
+  lastPullFailedAt: null,
   apiConnected: false,
   lastSync: null,
   batches: [],
@@ -136,10 +142,12 @@ describe('freshness against the data-update SLA (AC-05, edge case)', () => {
     expect(stockFreshness(position({ lastUpdatedAt: null }), NOW)).toBe('missing');
   });
 
-  it('a failed API sync after the last figures flags them stale even within the SLA', () => {
+  // PREMISE CHANGED (Material B1, owner ruling 2026-09-29): a failed API sync
+  // after the figures used to flag them stale at once (REQ-E08-02 edge case,
+  // BL-59). It is now a warning only; the figure is judged by its staleAt.
+  it('a failed API sync after the last figures does NOT make them stale', () => {
     const failed = { id: 's', supplierId: 'sup-003', at: '2026-08-31T06:00:00.000Z', outcome: 'failed' as const, errorKey: 'timeout' };
-    expect(stockFreshness(position({ lastUpdatedAt: '2026-08-31T02:00:00.000Z', lastSync: failed }), NOW)).toBe('stale');
-    // A failure BEFORE a newer submission does not taint it.
+    expect(stockFreshness(position({ lastUpdatedAt: '2026-08-31T02:00:00.000Z', lastSync: failed }), NOW)).toBe('current');
     expect(stockFreshness(position({ lastUpdatedAt: '2026-08-31T08:00:00.000Z', lastSync: failed }), NOW)).toBe('current');
   });
 });
@@ -253,11 +261,12 @@ describe('the stock template and row-by-row validation (REQ-E08-02 BR-05 to BR-0
     expect(headers[0]).toBe('Material code');
     // BL-60 — ten columns: the manufacturing date joined the batch fields.
     expect(headers).toHaveLength(10);
+    // MR-4 BR-01 — the batch columns are optional and say so.
     expect(headers.slice(6)).toEqual([
-      'Batch number',
-      'Batch quantity',
-      'Manufacturing date (YYYY-MM-DD)',
-      'Expiry date (YYYY-MM-DD)',
+      'Batch number (optional)',
+      'Batch quantity (optional)',
+      'Manufacturing date (YYYY-MM-DD) (optional)',
+      'Expiry date (YYYY-MM-DD) (optional)',
     ]);
     expect(rows.map((r) => r['Material code'])).toEqual(['PK-PETB-8801', 'PK-PETB-8802', 'PK-CAPF-8820']);
     expect(rows[0].Unit).toBe('PCS');
@@ -269,7 +278,7 @@ describe('the stock template and row-by-row validation (REQ-E08-02 BR-05 to BR-0
       'Material code,Stock on hand,Unit,Supplier reorder point,In-production quantity,Expected production completion date (YYYY-MM-DD),Batch number,Batch quantity,Expiry date (YYYY-MM-DD)',
       'PK-PETB-8801,1500,PCS,1000,2000,2026-09-10,B1,1000,2027-01-31',
       'PK-PETB-8801,,,,,,B2,500,',
-      'PK-PETB-8802,700,pcs,,,,,,',
+      'PK-PETB-8802,700,pcs,,0,,,,',
     ].join('\n');
     const { accepted, refused } = validateStockRows(parseCsv(csv).rows, ctx);
     expect(refused).toEqual([]);
@@ -286,7 +295,7 @@ describe('the stock template and row-by-row validation (REQ-E08-02 BR-05 to BR-0
         ],
         rows: [2, 3],
       },
-      { materialCode: 'PK-PETB-8802', totalQty: 700, rows: [4] },
+      { materialCode: 'PK-PETB-8802', totalQty: 700, inProductionQty: 0, rows: [4] },
     ]);
   });
 
@@ -295,7 +304,7 @@ describe('the stock template and row-by-row validation (REQ-E08-02 BR-05 to BR-0
       'Material code,Stock on hand,Unit,Supplier reorder point,In-production quantity,Expected production completion date (YYYY-MM-DD),Batch number,Batch quantity,Expiry date (YYYY-MM-DD)',
       'RM-EMUL-3310,100,KG,,,,,,', // row 2 — not assigned to this supplier
       'PK-PETB-8802,1.500,PCS,,,,,,', // row 3 — CR-18 ambiguous
-      'PK-CAPF-8820,900,PCS,,,,C1,400,', // row 4 — CR-19 batch total ≠ SOH
+      'PK-CAPF-8820,900,PCS,,0,,C1,400,', // row 4 — CR-19 batch total ≠ SOH
       'PK-CAPF-8820,,,,,,C2,400,', // row 5 — same material, refused with it
       ',50,PCS,,,,,,', // row 6 — material code missing
       'PK-PETB-8801,abc,PCS,,,,,,', // row 7 — not a number
@@ -316,7 +325,7 @@ describe('the stock template and row-by-row validation (REQ-E08-02 BR-05 to BR-0
     const mixed = validateStockRows(
       [
         { 'Material code': 'RM-EMUL-3310', 'Stock on hand': '1', Unit: 'KG' },
-        { 'Material code': 'PK-PETB-8801', 'Stock on hand': '1500', Unit: 'PCS' },
+        { 'Material code': 'PK-PETB-8801', 'Stock on hand': '1500', Unit: 'PCS', 'In-production quantity': '0' },
       ],
       ctx,
     );
@@ -328,7 +337,13 @@ describe('the stock template and row-by-row validation (REQ-E08-02 BR-05 to BR-0
     const rows: Record<string, string>[] = [
       { 'Material code': 'PK-PETB-8801', 'Stock on hand': '', Unit: 'PCS' },
       { 'Material code': 'PK-PETB-8802', 'Stock on hand': '5', Unit: 'KG' },
-      { 'Kode material': 'PK-CAPF-8820', 'Stok tersedia': '5', Satuan: 'PCS', 'Perkiraan tanggal selesai produksi (YYYY-MM-DD)': '10/09/2026' },
+      {
+        'Kode material': 'PK-CAPF-8820',
+        'Stok tersedia': '5',
+        Satuan: 'PCS',
+        'Kuantitas dalam produksi': '10',
+        'Perkiraan tanggal selesai produksi (YYYY-MM-DD)': '10/09/2026',
+      },
     ];
     expect(validateStockRows(rows, ctx).refused).toEqual([
       { row: 2, materialCode: 'PK-PETB-8801', reason: 'missingField', field: 'soh' },
@@ -338,13 +353,113 @@ describe('the stock template and row-by-row validation (REQ-E08-02 BR-05 to BR-0
   });
 });
 
+describe('MR-4 — the template marks optional columns; MAT-D4 — in production is required', () => {
+  const assigned = [{ materialCode: 'PK-PETB-8801', uom: 'PCS' }];
+  const ctx = { assigned, today: '2026-09-15' };
+
+  it('AC-01: a freshly built template marks D and G to J optional, in EN and ID, and nothing else', () => {
+    const en = parseCsv(stockTemplateCsv(assigned, 'en')).headers;
+    const id = parseCsv(stockTemplateCsv(assigned, 'id')).headers;
+    const marked = (hs: string[], suffix: string) => hs.flatMap((h, i) => (h.endsWith(suffix) ? [String.fromCharCode(65 + i)] : []));
+    expect(marked(en, ' (optional)')).toEqual(['D', 'G', 'H', 'I', 'J']);
+    expect(marked(id, ' (opsional)')).toEqual(['D', 'G', 'H', 'I', 'J']);
+    expect(en[6]).toBe('Batch number (optional)');
+    expect(id[6]).toBe('Nomor batch (opsional)');
+    // E is required; F is required when E > 0 — neither carries the suffix.
+    expect(en[4]).toBe('In-production quantity');
+    expect(en[5]).toBe('Expected production completion date (YYYY-MM-DD)');
+    expect(STOCK_TEMPLATE_FIELDS.map((f) => f.presence)).toEqual([
+      'required',
+      'required',
+      'required',
+      'optional',
+      'required',
+      'requiredWhenInProduction',
+      'optional',
+      'optional',
+      'optional',
+      'optional',
+    ]);
+  });
+
+  it('AC-02: a header with or without the suffix matches the same field (older files still upload)', () => {
+    for (const f of STOCK_TEMPLATE_FIELDS) {
+      expect(templateFieldFor(f.en)).toBe(f.field);
+      expect(templateFieldFor(f.id)).toBe(f.field);
+      expect(templateFieldFor(`${f.en} (optional)`)).toBe(f.field);
+      expect(templateFieldFor(`${f.id} (opsional)`)).toBe(f.field);
+    }
+    expect(templateFieldFor('Not a column (optional)')).toBeNull();
+    // A pre-change file (no suffixes) and a fresh file (suffixes) validate the same.
+    const old = 'Material code,Stock on hand,Unit,Supplier reorder point,In-production quantity,Expected production completion date (YYYY-MM-DD),Batch number,Batch quantity,Manufacturing date (YYYY-MM-DD),Expiry date (YYYY-MM-DD)';
+    const fresh = parseCsv(stockTemplateCsv(assigned, 'en')).headers.join(',');
+    const body = 'PK-PETB-8801,100,PCS,50,0,,B1,100,2026-09-01,2027-09-01';
+    const a = validateStockRows(parseCsv([old, body].join('\n')).rows, ctx);
+    const b = validateStockRows(parseCsv([fresh, body].join('\n')).rows, ctx);
+    expect(a.refused).toEqual([]);
+    expect(b).toEqual(a);
+    expect(a.accepted[0]).toMatchObject({ supplierRop: 50, inProductionQty: 0, batches: [{ batchNumber: 'B1', qty: 100 }] });
+  });
+
+  const HEAD = parseCsv(stockTemplateCsv(assigned, 'en')).headers.join(',');
+  const row = (e: string, f: string) => validateStockRows(parseCsv([HEAD, `PK-PETB-8801,100,PCS,,${e},${f},,,,`].join('\n')).rows, ctx);
+
+  it('blank E is refused as a missing field', () => {
+    expect(row('', '').refused).toEqual([{ row: 2, materialCode: 'PK-PETB-8801', reason: 'missingField', field: 'inProductionQty' }]);
+    expect(row('', '').accepted).toEqual([]);
+  });
+
+  it('E = 0 with blank F passes', () => {
+    const r = row('0', '');
+    expect(r.refused).toEqual([]);
+    expect(r.accepted).toEqual([{ materialCode: 'PK-PETB-8801', totalQty: 100, inProductionQty: 0, rows: [2] }]);
+  });
+
+  it('E = 50 with blank F is refused productionDateMissing; with F it passes', () => {
+    expect(row('50', '').refused).toEqual([
+      { row: 2, materialCode: 'PK-PETB-8801', reason: 'productionDateMissing', field: 'productionCompletionDate' },
+    ]);
+    expect(row('50', '2026-10-01').accepted).toEqual([
+      { materialCode: 'PK-PETB-8801', totalQty: 100, inProductionQty: 50, productionCompletionDate: '2026-10-01', rows: [2] },
+    ]);
+  });
+
+  it('productionProblem is the one check (both directions)', () => {
+    expect(productionProblem(null, '', 'template')).toEqual({ reason: 'missingField', field: 'inProductionQty' });
+    expect(productionProblem(0, '', 'template')).toBeNull();
+    expect(productionProblem(50, '', 'template')).toEqual({ reason: 'productionDateMissing', field: 'productionCompletionDate' });
+    expect(productionProblem(50, '2026-10-01', 'template')).toBeNull();
+    expect(productionProblem(0, '01/10/2026', 'template')).toEqual({ reason: 'invalidDate', field: 'productionCompletionDate' });
+  });
+
+  it('C1b — manual and pti enforce the pair like template; api is exempt (owner ruling 2026-09-29)', () => {
+    for (const ch of ['manual', 'pti'] as const) {
+      expect(productionProblem(null, '', ch)).toEqual({ reason: 'missingField', field: 'inProductionQty' });
+      expect(productionProblem(50, '', ch)).toEqual({ reason: 'productionDateMissing', field: 'productionCompletionDate' });
+      expect(productionProblem(0, '', ch)).toBeNull();
+    }
+    // An ERP that does not send in-production is accepted; nor is a date demanded.
+    expect(productionProblem(null, '', 'api')).toBeNull();
+    expect(productionProblem(50, '', 'api')).toBeNull();
+    // A date it does send must still be a day.
+    expect(productionProblem(null, '01/10/2026', 'api')).toEqual({ reason: 'invalidDate', field: 'productionCompletionDate' });
+  });
+
+  it('submissionChannel — a buyer recording is always pti; a supplier is template or manual', () => {
+    expect(submissionChannel(true, 'template')).toBe('pti');
+    expect(submissionChannel(false, 'template')).toBe('template');
+    expect(submissionChannel(false, 'manual')).toBe('manual');
+    expect(submissionChannel(false, undefined)).toBe('manual');
+  });
+});
+
 describe('batch manufacturing date (REQ-E08-02 BR-06, BL-60)', () => {
   const assigned = [{ materialCode: 'PK-PETB-8801', uom: 'PCS' }];
   const ctx = { assigned, today: '2026-09-15' };
   const HEAD =
     'Material code,Stock on hand,Unit,Supplier reorder point,In-production quantity,Expected production completion date (YYYY-MM-DD),Batch number,Batch quantity,Manufacturing date (YYYY-MM-DD),Expiry date (YYYY-MM-DD)';
   const one = (mfg: string, exp: string) =>
-    validateStockRows(parseCsv([HEAD, `PK-PETB-8801,100,PCS,,,,B1,100,${mfg},${exp}`].join('\n')).rows, ctx);
+    validateStockRows(parseCsv([HEAD, `PK-PETB-8801,100,PCS,,0,,B1,100,${mfg},${exp}`].join('\n')).rows, ctx);
 
   it('known-good: an optional manufacturing date is carried into the submission', () => {
     expect(one('2026-09-01', '2027-09-01').accepted[0].batches).toEqual([

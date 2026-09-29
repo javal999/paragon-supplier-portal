@@ -24,6 +24,12 @@ import {
 } from './orders/PoDrillFilter';
 import { asnsForPo } from './orders/orderSummaryModel';
 import { useASNs } from '../services/query/hooks';
+import { useCallOffViews } from './callOffs/callOffDisplay';
+import { asnCallOffWarnings } from '../services/transitions/callOffRules';
+import { isActiveAsn } from '../services/transitions/fulfilmentRules';
+import { AsnPlannerMarkers } from './shipments/CallOffWarnings';
+import AsnShelfLifeExceptions from './shipments/AsnShelfLifeExceptions';
+import { BlockedStockMarker, approvedIntoBlockedStock } from './shipments/ShelfLifeParts';
 import PageMetaLine from '../components/ui-v2/PageMetaLine';
 import ProvenanceMarker from '../components/ui-v2/ProvenanceMarker';
 import KpiCard from '../components/ui-v2/KpiCard';
@@ -169,6 +175,15 @@ const BuyerShipments: React.FC = () => {
   // it was always named for, filtered by the SAME predicate the summary counted
   // with (`asnsForPo`). Both halves are then filtered to the PO.
   const asnsQuery = useASNs();
+  // MR-6 BR-12 (edge case 6) — the planner's "Mismatch" marker is the CURRENT
+  // comparison with the call-off, recomputed on read, never the stored copy.
+  const { views: callOffViewList } = useCallOffViews();
+  const asnByNumber = useMemo(() => {
+    const all = asnsQuery.data?.items ?? [];
+    return new Map(
+      all.map((a) => [a.asnNumber, { asn: a, warnings: isActiveAsn(a) ? asnCallOffWarnings(a, callOffViewList, all) : [] }]),
+    );
+  }, [asnsQuery.data, callOffViewList]);
   const drill = usePoDrillFilter();
   const shipments = shipmentsQuery.data?.items ?? [];
   const supplierById = useMemo(
@@ -589,6 +604,11 @@ const BuyerShipments: React.FC = () => {
         />
       </div>
 
+      {/* MR-6 d "Approver" — ASNs awaiting Quality's shelf-life decision. */}
+      <div className="mb-6">
+        <AsnShelfLifeExceptions asns={asnsQuery.data?.items ?? []} />
+      </div>
+
       {/* BR-04 / AC-02 — the filter is visible, and the way back is offered. */}
       <PoFilterBanner drill={drill} persona="buyer" count={drilledAsns.length} />
 
@@ -625,12 +645,41 @@ const BuyerShipments: React.FC = () => {
                     testId={`asn-tracking-drill-${a.asnNumber}`}
                   />
                   <Data className="text-text-secondary">{a.eta}</Data>
+                  {/* MR-6 BR-12 / FU-7 — Mismatch and "not in declared stock" on every row;
+                      the one open record shows the batch marker on its lines instead. */}
+                  <div className="w-full">
+                    <AsnPlannerMarkers
+                      asn={drilledAsns.length === 1 ? { ...a, lineItems: [] } : a}
+                      warnings={asnByNumber.get(a.asnNumber)?.warnings ?? []}
+                    />
+                  </div>
                   {drilledAsns.length === 1 && (
                     <ul className="w-full mt-2 space-y-1">
                       {a.lineItems.map((li) => (
                         <li key={li.materialCode} className="text-text-secondary">
                           <Data>{li.materialCode}</Data> — {li.description} ·{' '}
                           <Data>{li.shippedQty}</Data> {li.uom ?? ''}
+                          {li.lotNumber ? (
+                            <>
+                              {' · '}
+                              {t('fc.asn.col.batch')} <Data>{li.lotNumber}</Data>
+                            </>
+                          ) : null}
+                          {/* MR-6 BR-04 — PTI sees a batch the supplier typed rather than picked. */}
+                          {li.batchSource === 'typed' ? (
+                            <span
+                              data-testid={`asn-batch-not-declared-${a.asnNumber}-${li.materialCode}`}
+                              className="ml-2 inline-block px-1.5 py-0.5 rounded border border-warning bg-warning-soft text-[11px] text-warning-hover"
+                            >
+                              {t('fc.asn.batch.notDeclared')}
+                            </span>
+                          ) : null}
+                          {/* MR-6 BR-09 — an approved shelf-life exception is received into blocked stock. */}
+                          {approvedIntoBlockedStock(a, li) ? (
+                            <span className="ml-2">
+                              <BlockedStockMarker testId={`asn-line-blocked-${a.asnNumber}-${li.materialCode}`} />
+                            </span>
+                          ) : null}
                         </li>
                       ))}
                     </ul>
@@ -704,6 +753,7 @@ const BuyerShipments: React.FC = () => {
               // was acquitted by `?? 0` rather than by a measurement.
               const late = displayOf(s) === 'Delayed';
               const lateBy = daysLate(s, TODAY);
+              const asnEntry = asnByNumber.get(s.asnNumber);
               return (
                 <TableRow
                   key={s.id}
@@ -717,6 +767,11 @@ const BuyerShipments: React.FC = () => {
                     <Data as="div" className="text-xs text-text-tertiary">
                       {s.poNumber}
                     </Data>
+                    {asnEntry ? (
+                      <div className="mt-1">
+                        <AsnPlannerMarkers asn={asnEntry.asn} warnings={asnEntry.warnings} />
+                      </div>
+                    ) : null}
                   </TableCell>
                   <TableCell>
                     {/* i18n-defer: mock/sample data — supplier proper nouns */}

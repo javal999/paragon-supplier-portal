@@ -63,6 +63,15 @@ export const POLICY_HOOKS = {
   /** ASN submit (BR-04): ship date, expected arrival (not before the ship
    *  date) and a batch number on every line. */
   ASN_SUBMIT_COMPLETE: 'asn_submit_complete',
+  /** MR-6 BR-08 — a shelf-life exception request: the ASN would pass every
+   *  submission check but the shelf-life rule, at least one line fails that
+   *  rule, and the reason is substance (`asnLineRefusal`, `onlyShelfLifeRefused`). */
+  ASN_SHELF_LIFE_EXCEPTION_ONLY: 'asn_shelf_life_exception_only',
+  /** MR-6 BR-08 — a shelf-life exception rejected with a reason of substance. */
+  ASN_SHELF_LIFE_REASON_GIVEN: 'asn_shelf_life_reason_given',
+  /** MR-6 edge case 1 — an ETA change on a submitted ASN is legal only when its
+   *  approved exception no longer covers the new ETA (`etaNeedsReapproval`). */
+  ASN_ETA_NEEDS_REAPPROVAL: 'asn_eta_needs_reapproval',
   /** ASN cancel: nothing has been received against the ASN yet. */
   ASN_CANCEL_NOT_RECEIVED: 'asn_cancel_not_received',
   /** ASN create / submit (BL-51, BR-05): a 3PL the ASN names is on the 3PL list
@@ -176,8 +185,9 @@ export const POLICY_HOOKS = {
   /** Capacity submission (REQ-E08-04): weeks inside the 13-week horizon, valid
    *  quantities, and a starter reason for every week below demand. */
   CAPACITY_SUBMISSION_VALID: 'capacity_submission_valid',
-  /** Closing an alert (REQ-E08-05): the action note is substance. */
-  ALERT_ACTION_NOTE_AUTHORED: 'alert_action_note_authored',
+  /** Closing an alert (REQ-E08-05, MR-9 BR-04): an active `alertClose` reason,
+   *  and a note when it is "Other". Refusals REASON_UNKNOWN, NOTE_REQUIRED. */
+  ALERT_CLOSE_REASON_GIVEN: 'alert_close_reason_given',
   /** Invoice match: the match sub-flow must have rolled up to a clean Matched
    *  before the header can advance Submitted → Matched (census G2). */
   INVOICE_ROLLUP_MATCHED: 'invoice_rollup_matched',
@@ -273,6 +283,16 @@ export const POLICY_HOOKS = {
    * date, and an upside quantity when given is a number of zero or more.
    */
   RR_SUBMIT_COMMITMENT_DETAIL: 'rr_submit_commitment_detail',
+  /**
+   * BL-133 (ENG-D19, REQ-E06-02 BR-11 / BR-12) — the pokayoke. A commitment to
+   * a forecast version is SUBMITTED only when the supplier has confirmed
+   * capacity for every horizon week its period touches (refused by name
+   * CAPACITY_NOT_CONFIRMED), and a period whose group LTP is above BE
+   * (capacity + additional capacity) in one of those weeks carries a starter
+   * reason (ABOVE_BE_NEEDS_REASON; `other` needs a note). Runs on the
+   * promotion, which is the submission — a draft is not gated.
+   */
+  RR_PROMOTE_CAPACITY_CONFIRMED: 'rr_promote_capacity_confirmed',
   /** REQ-E06-01 BR-02 — publish names a forecast stream (packaging or raw material). */
   FORECAST_PUBLISH_VALID: 'forecast_publish_valid',
   /**
@@ -361,6 +381,63 @@ export const POLICY_HOOKS = {
    */
   THREE_PL_GOVERNED: 'three_pl_governed',
   /**
+   * Material A1 (MR-1 BR-02) — a supplier's stock update mode: the supplier is
+   * on the master (UNKNOWN_SUPPLIER) and the value is `api` or `manual`
+   * (UPDATE_MODE_INVALID). The rule is `supplierUpdateModeRefusal`, the one the
+   * admin page's pre-check calls.
+   */
+  SUPPLIER_UPDATE_MODE_VALID: 'supplier_update_mode_valid',
+  /**
+   * Material G1 (MR-10 BR-04) — the documents one qualification level requires:
+   * a known level (QUALIFICATION_LEVEL_UNKNOWN), a well-formed, non-repeating
+   * list (QUALIFICATION_RULE_INVALID), and a Preferred list that includes every
+   * Approved document (PREFERRED_MISSING_APPROVED). The rule is
+   * `qualificationRuleRefusal`, the one the admin page's pre-check calls.
+   */
+  QUALIFICATION_RULE_VALID: 'qualification_rule_valid',
+  /**
+   * Material G2 (MR-10 BR-06) — one key of the sourcing type map: a known
+   * category or purchasing group (SOURCING_TYPE_KEY_UNKNOWN) set to direct or
+   * indirect (SOURCING_TYPE_INVALID). The rule is `sourcingTypeRefusal`, the
+   * one the admin page's pre-check calls.
+   */
+  SOURCING_TYPE_GOVERNED: 'sourcing_type_governed',
+  /**
+   * Material C5 (MR-8 BR-01, BR-03, AC-04) — a planning-group change: a name is
+   * not blank (NAME_REQUIRED), a new group sits under an SAP group with
+   * materials (UNKNOWN_SAP_GROUP), a move names known materials of the group's
+   * own SAP group not already in it (NO_MATERIALS, UNKNOWN_MATERIAL,
+   * MIXED_SAP_GROUP, ALREADY_IN_GROUP), and a retired group is empty
+   * (RETIRE_NOT_EMPTY). The rule is `planningGroupRefusal`, the one the admin
+   * page's pre-check calls.
+   */
+  PLANNING_GROUP_VALID: 'planning_group_valid',
+  /**
+   * Material C4 (MR-5 BR-02) — one MRP controller on the administrator's list:
+   * the code is SAP-shaped (MRP_CONTROLLER_CODE_INVALID), it has a name
+   * (MRP_CONTROLLER_NAME_REQUIRED) and at least one hub user label
+   * (MRP_CONTROLLER_USERS_REQUIRED). The rule is `mrpControllerRefusal`, the
+   * one the admin page's pre-check calls.
+   */
+  MRP_CONTROLLER_GOVERNED: 'mrp_controller_governed',
+  /**
+   * Material C2 (MR-3 BR-05, AC-01, AC-05) — a supplier trade name: the
+   * material is assigned to the supplier (NOT_ASSIGNED), the name is 2 to 80
+   * characters (NAME_LENGTH), the supplier material number is at most 40
+   * (SUPPLIER_NO_LENGTH), and a rejection carries a reason (REASON_REQUIRED).
+   * The rules are in `materialNameRules.ts`, the ones the pages' pre-checks call.
+   */
+  MATERIAL_NAME_VALID: 'material_name_valid',
+  /**
+   * Material E1 (MR-7 BR-06, BR-08) — a planner input to the stock simulation:
+   * a known supplier (UNKNOWN_SUPPLIER) and material (UNKNOWN_MATERIAL), one of
+   * soh / inProduction / toDistributor (UNKNOWN_FIELD), a quantity of 0 or more
+   * (INVALID_QUANTITY), and a date for inProduction and toDistributor only
+   * (DATE_REQUIRED, INVALID_DATE, DATE_NOT_ALLOWED). The rule is
+   * `simulationOverrideRefusal`, the one the simulation page's pre-check calls.
+   */
+  SIMULATION_OVERRIDE_VALID: 'simulation_override_valid',
+  /**
    * BL-50 — a ruling on one day of the hub's working calendar: the date is one
    * the SAP load covers, the kind is working or non-working, the reason is
    * SUBSTANCE rather than presence (`requiredFields` admits a space bar), and
@@ -384,6 +461,12 @@ export const POLICY_HOOKS = {
    * attribution. The same predicate re-checks a stored change on read.
    */
   REASON_CODE_GOVERNED: 'reason_code_governed',
+  /**
+   * REQ-E06-04 BR-06 — a maximum stock for one supplier × material: the entity
+   * is `<supplierId>|<materialCode>`, the quantity a whole number above zero or
+   * null to clear it, and a well-formed attribution.
+   */
+  MAX_STOCK_GOVERNED: 'max_stock_governed',
 
   /**
    * PR reject (§67): the rejection reason must be SUBSTANCE, not presence.
@@ -495,6 +578,17 @@ export const POLICY_HOOKS = {
    * invitation actually goes out.
    */
   RFX_PUBLISH_HAS_INVITEES: 'rfx_publish_has_invitees',
+  /**
+   * Material G2 (MR-10 BR-05, BR-07; plan AR-16) — on RFI, RFP and RFQ
+   * publish, every invitee holds the level the event's sourcing type needs
+   * (Direct: Preferred; Indirect: Approved or Preferred). Reads `invitees` on
+   * an RFI / RFP and `invitedSupplierIds` on an RFQ. Refused
+   * SUPPLIER_NOT_QUALIFIED naming the vendor — but only against a real list:
+   * while the list for the needed level is the placeholder (owner ruling
+   * 2026-09-29) publish passes and the event records `qualificationWarnings`.
+   * The rule is `inviteesQualificationRefusal`.
+   */
+  RFX_INVITEES_QUALIFIED: 'rfx_invitees_qualified',
   /**
    * RFI / RFP / RFQ extend (REQ-E03-02 / -03 edge cases): the new date is a
    * readable date and is LATER than the deadline in force. A date that moves

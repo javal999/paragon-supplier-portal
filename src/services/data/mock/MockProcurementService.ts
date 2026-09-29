@@ -9,7 +9,10 @@ import {
   suppliersWithAssignments,
 } from './inventoryReadModel';
 import { stockAccessStore } from './stores/inventoryHubStores';
+import { allPlanningGroups } from './planningGroupReadModel';
+import { stockSimulationRows } from './stockSimulationReadModel';
 import { allCommitmentLines, allCoverageRows, allVersionViews, forecastSupplierName } from './forecastReadModel';
+import { allFixedStockRows } from './fixedStockReadModel';
 import { maskForSupplier } from '../../transitions/inventoryRules';
 import { PTI_ONLY_RULES } from '../../transitions/inventoryAlertRules';
 import { mockShipments } from '../../../data/mockShipments';
@@ -59,6 +62,7 @@ import { DECLARED_PRESENT } from '../fixturePresent';
 import { PRODUCTION_LINES, SUPPLIER_HEALTH } from './fixtures/buyerDashboard';
 import { supplierDocumentStore } from './stores/supplierDocumentStore';
 import { SUPPLIER_SCORECARDS } from './fixtures/buyerScorecard';
+import { qualificationFor } from './qualificationReadModel';
 import { purchaseRequisitionStore } from './stores/purchaseRequisitionStore';
 import { supplierApplicationStore } from './stores/supplierApplicationStore';
 import {
@@ -80,12 +84,17 @@ import type {
   PurchaseOrder,
   POFilter,
   InventoryPosition,
+  MaterialNameRow,
   StockAccessGrant,
   CapacityPlan,
+  PlanningGroupView,
+  StockSimulationFilter,
+  StockSimulationRow,
   InventoryAlert,
   ForecastVersionView,
   ForecastCommitmentLine,
   ForecastCoverageRow,
+  FixedStockReconcileRow,
   InventoryFilter,
   Shipment,
   ShipmentFilter,
@@ -127,6 +136,7 @@ import type {
   StabiliseRunView,
   StabilisedPlanView,
   DataHealthView,
+  DemandForecastView,
 } from '../types';
 import { PR_INTAKE_LINES } from './fixtures/prIntake';
 import { engineDataset } from './fixtures/engineDataset';
@@ -149,6 +159,7 @@ import {
   rescheduleOutThresholdWeeks,
   safetyLeadTimePercentile,
   stabiliseDampingWeight,
+  demandRangeExtraQuantilePct,
   zoneLengthsFor,
 } from '../../transitions/forecastConfig';
 import { DEFAULT_STABILISE_PARAMS, stabilisePlan, type StabiliseRun } from '../../engine/stabilise';
@@ -160,11 +171,22 @@ import { sapChangeMarkStore } from './stores/sapChangeMarkStore';
 import { addDays, dayOf } from '../../engine/dates';
 import type { EngineDataset } from '../../engine/types';
 import { labelOf, materialEntry } from '../../sdc/materialMaster';
+// Material C4 — each material's MRP controller, narrowed per reader (MR-5 BR-04).
+import { withMrpController } from './mrpControllerReadModel';
+// Material C2 — supplier trade names, narrowed per reader (MR-3 BR-03).
+import { materialNameRowsFor, withTradeName } from './materialNameReadModel';
 import { FEEDS, dataHealth } from '../../engine/dataHealth';
+import { demandForecast, type DemandForecastRun } from '../../engine/demandForecast';
+import { DEFAULT_DEMAND_RANGE_OPTIONS, demandRange, rangeLevels, replayForecasts, type DemandRangeRun, type Replay } from '../../engine/demandRange';
 import { DEFAULT_STOCK_ACCURACY_TOLERANCE } from '../../engine/stock';
 import { agreedCfot, supplierCfot } from '../../engine/cfot';
 import { lineHistories } from '../../engine/lines';
 import { sdcClock } from '../../sdc/clock';
+
+/** REQ-E14-07 — the demand forecast per engine dataset (see getDemandForecast). */
+const demandForecastMemo = new WeakMap<EngineDataset, DemandForecastRun>();
+/** REQ-E14-09 — the replay and the range per engine dataset (see getDemandForecast). */
+const demandRangeMemo = new WeakMap<EngineDataset, { asOf: string; replay: Replay; levels: string; range: DemandRangeRun }>();
 
 const matchesList = <T>(value: T, filter: T | T[] | undefined): boolean => {
   if (filter === undefined) return true;
@@ -401,7 +423,14 @@ export class MockProcurementService implements IProcurementService {
     }
     if (filter?.supplierId) rows = rows.filter((r) => r.supplierId === filter.supplierId);
     if (filter?.materialCode) rows = rows.filter((r) => r.materialCode === filter.materialCode);
-    return { items: rows };
+    // Material C2 — the supplier's approved trade name beside PTI's description.
+    return { items: rows.map((r) => withTradeName(withMrpController(r, r.materialCode, scope))) };
+  }
+
+  // Material C2 (MR-3 BR-03) — narrowed in the read model: a supplier reads its
+  // own assigned materials and names only.
+  async getMaterialNames(scope: QueryScope): Promise<Page<MaterialNameRow>> {
+    return { items: materialNameRowsFor(scope) };
   }
 
   async getStockAccess(scope: QueryScope): Promise<Page<StockAccessGrant>> {
@@ -425,13 +454,38 @@ export class MockProcurementService implements IProcurementService {
     return { items: applySupplierScope(scope, allCapacityPlans()) };
   }
 
+  async getPlanningGroups(scope: QueryScope): Promise<Page<PlanningGroupView>> {
+    // Material C5 (MR-8) — PTI sees every group with its change log. A supplier
+    // sees only the groups holding materials it has capacity for, narrowed to
+    // those materials, and no log (MAT-R4: it never learns another supplier's
+    // materials or who at PTI changed what).
+    const groups = allPlanningGroups();
+    if (scope.personaType === 'buyer') return { items: groups };
+    const mine = new Set(applySupplierScope(scope, allCapacityPlans()).flatMap((p) => p.materials));
+    return {
+      items: groups
+        .map((g) => ({ ...g, materials: g.materials.filter((m) => mine.has(m)), history: [] }))
+        .filter((g) => g.materials.length > 0),
+    };
+  }
+
+  async getStockSimulation(
+    scope: QueryScope,
+    checkDate?: string,
+    filter?: StockSimulationFilter,
+  ): Promise<Page<StockSimulationRow>> {
+    // Material E2 (MR-7) — PTI's estimate; a supplier scope reads none.
+    return { items: stockSimulationRows(scope, checkDate, filter) };
+  }
+
   async getInventoryAlerts(scope: QueryScope): Promise<Page<InventoryAlert>> {
     // REQ-E08-05 — a supplier sees alerts about its own materials, never the
     // rules that read PTI stock.
     const rows = applySupplierScope(scope, allAlerts());
-    return {
-      items: scope.personaType === 'supplier' ? rows.filter((a) => !PTI_ONLY_RULES.includes(a.rule)) : rows,
-    };
+    const visible = scope.personaType === 'supplier' ? rows.filter((a) => !PTI_ONLY_RULES.includes(a.rule)) : rows;
+    // Material C4 — a material alert names its MRP controller; a capacity
+    // alert's subject is a material group, which carries none.
+    return { items: visible.map((a) => withMrpController(a, a.subject, scope)) };
   }
 
   // ─── Forecast collaboration (REQ-E06-01 to REQ-E06-03) ─────────────────────
@@ -459,6 +513,12 @@ export class MockProcurementService implements IProcurementService {
     // REQ-E06-03 BR-07 — the planner's view; a supplier reads nothing here.
     if (scope.personaType !== 'buyer') return { items: [] };
     return { items: allCoverageRows() };
+  }
+
+  async getFixedStockReconcile(scope: QueryScope): Promise<Page<FixedStockReconcileRow>> {
+    // REQ-E06-04 BR-12 — the planner reads every supplier; a supplier reads only
+    // its own rows, scoped HERE so another supplier's figures never reach the page.
+    return { items: applySupplierScope(scope, allFixedStockRows()) };
   }
 
   async getSupplierReliability(
@@ -633,7 +693,8 @@ export class MockProcurementService implements IProcurementService {
       versions: { packaging: versionDays(asOf, 'packaging'), rawMaterial: versionDays(asOf, 'rawMaterial') },
       engine: named(stabilisePlan(inputs, params)),
       sapHistory: named(stabilisePlan(planHistoryInputs(data, now, inputs), params)),
-      rangeAvailable: false,
+      rangeBuilt: true,
+      rangePublished: false,
     };
   }
 
@@ -655,6 +716,31 @@ export class MockProcurementService implements IProcurementService {
       context: { masterUom: (code) => materialEntry(code)?.canonicalUom ?? null },
     });
     return { ...report, provenance: data.provenance };
+  }
+
+  async getDemandForecast(scope: QueryScope): Promise<DemandForecastView | null> {
+    // REQ-E14-07, computed at read on the hub's date (X-01). PTI only: engine
+    // output on synthetic data is never shown to a supplier (X-03). The run is
+    // memoised per dataset (the dataset is itself memoised per present).
+    if (scope.personaType === 'supplier') return null;
+    const data = engineDataset();
+    const asOf = dayOf(sdcClock.now());
+    let run = demandForecastMemo.get(data);
+    if (!run || run.asOf !== asOf) {
+      run = demandForecast({ finishedGoods: data.finishedGoods, sales: data.sales, fgPlan: data.fgPlan, asOf });
+      demandForecastMemo.set(data, run);
+    }
+    // REQ-E14-09 — the range around it, with the administrator's levels in force
+    // (X-05). The replay depends on the date only; the range also on the levels.
+    const levels = rangeLevels(demandRangeExtraQuantilePct());
+    let memo = demandRangeMemo.get(data);
+    if (!memo || memo.asOf !== asOf || memo.levels !== levels.join()) {
+      const replay = memo && memo.asOf === asOf ? memo.replay : replayForecasts({ ...data, asOf });
+      const range = demandRange({ ...data, asOf }, run, { ...DEFAULT_DEMAND_RANGE_OPTIONS, levels }, replay);
+      memo = { asOf, replay, levels: levels.join(), range };
+      demandRangeMemo.set(data, memo);
+    }
+    return { ...run, range: memo.range, provenance: data.provenance, materialPlanningSource: 'sapPlan' };
   }
 
   async getSafetyStock(scope: QueryScope): Promise<SafetyStockView | null> {
@@ -819,19 +905,23 @@ export class MockProcurementService implements IProcurementService {
     // submitted ASN is reflected after the command mutates it.
     let rows = applySupplierScope(scope, asnStore.all());
     if (filter?.status) rows = rows.filter((a) => matchesList(a.status, filter.status));
-    return { items: rows };
+    // Material C4 — each line names its material's MRP controller (MR-5 BR-03).
+    return {
+      items: rows.map((a) => ({
+        ...a,
+        lineItems: a.lineItems.map((li) => withMrpController(li, li.materialCode, scope)),
+      })),
+    };
   }
 
   async getCallOffs(scope: QueryScope): Promise<Page<CallOff>> {
     // REQ-E09-03 — call-offs resolve from the mutable store. A supplier sees its
     // own released call-offs only: a draft or a dismissed draft is the planner's.
     const rows = applySupplierScope(scope, callOffStore.all());
-    return {
-      items:
-        scope.personaType === 'supplier'
-          ? rows.filter((c) => c.status !== 'Draft' && c.status !== 'Dismissed')
-          : rows,
-    };
+    const visible =
+      scope.personaType === 'supplier' ? rows.filter((c) => c.status !== 'Draft' && c.status !== 'Dismissed') : rows;
+    // Material C4 — each call-off names its material's MRP controller (MR-5 BR-03).
+    return { items: visible.map((c) => withMrpController(c, c.materialCode, scope)) };
   }
 
   async getGoodsReceipts(
@@ -987,7 +1077,11 @@ export class MockProcurementService implements IProcurementService {
     scope: QueryScope,
   ): Promise<Page<SupplierScorecard>> {
     return {
-      items: scope.personaType === 'buyer' ? [...SUPPLIER_SCORECARDS] : [],
+      // Material G1 (MR-10 BR-09) — the standing shown is the computed level.
+      items:
+        scope.personaType === 'buyer'
+          ? SUPPLIER_SCORECARDS.map((s) => ({ ...s, qualification: qualificationFor(s.id).level }))
+          : [],
     };
   }
 

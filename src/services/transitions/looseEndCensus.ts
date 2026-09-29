@@ -235,6 +235,58 @@ export const LOOSE_END_CENSUS: readonly CensusEntry[] = Object.freeze([
       'correctly declared terminal. The tracking links built from the list are derived at read and are ' +
       'never states of any machine.',
   },
+  // ── mrpController (Material C4) ────────────────────────────────────────────
+  {
+    entity: 'mrpController',
+    kind: 'initial-integrity',
+    subject: 'Maintained',
+    reason: 'substrate-only',
+    note:
+      'THE SAME DEGENERATE SINGLE-STATE LEDGER SHAPE AS THE 3PL LIST: the entity IS an SAP MRP ' +
+      'controller code, addressed by the code, and setting a code the list does not hold yet adds it — ' +
+      'there is no separate creation verb to be an entry. The recording verb is statePreserving, so it is ' +
+      'neither an entry nor an exit, and the state is correctly declared terminal. What a material shows ' +
+      'is derived at read from the latest change per code and is never a state.',
+  },
+  // ── supplierOverlay (Material A1) ──────────────────────────────────────────
+  {
+    entity: 'supplierOverlay',
+    kind: 'initial-integrity',
+    subject: 'Defined',
+    reason: 'substrate-only',
+    note:
+      'THE SAME DEGENERATE SINGLE-STATE LEDGER SHAPE AS THE 3PL LIST: the entity IS a supplier on the ' +
+      'supplier master, addressed by its id, and the master (the SAP stand-in) is where suppliers come ' +
+      'from — the hub never creates one, so there is no creation verb to be an entry. The recording verb ' +
+      'is statePreserving, so it is neither an entry nor an exit, and the state is correctly declared ' +
+      'terminal. The mode in force is derived at read from the latest overlay row and is never a state.',
+  },
+  // ── qualificationRule (Material G1) ────────────────────────────────────────
+  {
+    entity: 'qualificationRule',
+    kind: 'initial-integrity',
+    subject: 'Defined',
+    reason: 'substrate-only',
+    note:
+      'THE SAME DEGENERATE SINGLE-STATE LEDGER SHAPE AS THE 3PL LIST: the entity IS one qualification ' +
+      'level (approved or preferred), and both lists exist from the start as placeholder lists — there is ' +
+      'no creation verb to be an entry. The recording verb is statePreserving, so it is neither an entry ' +
+      'nor an exit, and the state is correctly declared terminal. The list in force is derived at read ' +
+      'from the latest change and is never a state; a vendor\'s level is computed and is never a state either.',
+  },
+  // ── sourcingType (Material G2) ─────────────────────────────────────────────
+  {
+    entity: 'sourcingType',
+    kind: 'initial-integrity',
+    subject: 'Defined',
+    reason: 'substrate-only',
+    note:
+      'THE SAME DEGENERATE SINGLE-STATE LEDGER SHAPE AS THE QUALIFICATION LISTS: the entity IS one key of ' +
+      'the sourcing type map (a category or a purchasing group), and every key exists from the start as ' +
+      'Direct — there is no creation verb to be an entry. The recording verb is statePreserving, so it is ' +
+      'neither an entry nor an exit. The type in force is derived at read from the latest change; an ' +
+      'event stores its own type at publish.',
+  },
   // ── workingCalendar (BL-50) ────────────────────────────────────────────────
   {
     entity: 'workingCalendar',
@@ -259,6 +311,19 @@ export const LOOSE_END_CENSUS: readonly CensusEntry[] = Object.freeze([
       'reason list, addressed by <list>:<code>, and setting a code the list does not yet hold adds it — ' +
       'so there is no separate creation verb to be an entry. There is no delete: a retired code stays ' +
       'so the records that carry it keep their label. The verb is statePreserving, so the state is ' +
+      'correctly declared terminal.',
+  },
+  // ── maxStock (REQ-E06-04) ──────────────────────────────────────────────────
+  {
+    entity: 'maxStock',
+    kind: 'initial-integrity',
+    subject: 'Maintained',
+    reason: 'substrate-only',
+    note:
+      'THE SAME DEGENERATE SINGLE-STATE LEDGER SHAPE AS THE 3PL LIST AND THE REASON LISTS: the entity ' +
+      'IS one supplier × material the hub assigns, addressed by <supplierId>|<materialCode>, and setting ' +
+      'a pair with no value yet adds one — so there is no separate creation verb to be an entry. Clearing ' +
+      'is a change with no quantity, never a delete. The verb is statePreserving, so the state is ' +
       'correctly declared terminal.',
   },
   // ── hubSetting (BL-32) ─────────────────────────────────────────────────────

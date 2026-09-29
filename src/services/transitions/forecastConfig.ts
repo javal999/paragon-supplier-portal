@@ -19,7 +19,8 @@
 //     and the safety-lead-time percentile (the administrator's, BL-32).
 //   · ENG-D6 / REQ-E14-05 — the order-sizing cost rates and (BL-117) the cap
 //     on rented space; ENG-D15 / REQ-E14-13 — the reschedule-out threshold
-//     in weeks; ENG-D9 / REQ-E14-06 — the damping weight.
+//     in weeks; ENG-D9 / REQ-E14-06 — the damping weight; REQ-E14-09 BR-01 —
+//     the quantile added to the demand range.
 //   · REQ-E14-01 — the freshness limit per engine feed, in days.
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -87,6 +88,17 @@ export function zoneLengthsFor(supplierId: string, materialGroup: string, materi
     tradeOffDays: override.tradeOffDays ?? DEFAULT_TRADE_OFF_DAYS[materialType],
   };
 }
+
+// ── Fixed stock (FS) reconcile — REQ-E06-04 (ENG-D21) ────────────────────────
+// The cycle LENGTH is the administrator's (owner, 2026-09-29; accessor below);
+// the Monday it is counted from stays fixed here.
+
+/**
+ * REQ-E06-04 BR-01 [Proposed] — the Monday packaging cycles are counted from:
+ * the first week of the Hub's first published packaging forecast. Cycles run
+ * W1 to W3 from it, back to back.
+ */
+export const FS_RECONCILE_CYCLE_ANCHOR = '2026-08-31';
 
 // ── The administrator's values (BL-32) ───────────────────────────────────────
 // CR-21, CR-22 and CR-26 have their defaults in `hubSettings.ts` and are changed
@@ -175,12 +187,30 @@ export function rescheduleOutThresholdWeeks(): number {
 }
 
 /**
+ * REQ-E06-04 BR-01 — whole weeks in a packaging fixed stock reconcile cycle
+ * (3 by default: "FS Reconcile end W3"). Raw material reconciles per month
+ * regardless. In force now; the pure rule takes it as an argument.
+ */
+export function fsReconcileCycleWeeks(): number {
+  return hubSetting('forecast.fsReconcileCycleWeeks');
+}
+
+/**
  * ENG-D9 / REQ-E14-06 BR-04 — the weight on the previously published value
  * when a Trade-off period is damped before publication, as a fraction (0.5).
  * In force now; the engine takes it as an argument (X-01).
  */
 export function stabiliseDampingWeight(): number {
   return hubSetting('engine.dampingWeightPct') / 100;
+}
+
+/**
+ * REQ-E14-09 BR-01 — the quantile the administrator adds to the demand range
+ * beside P50 and P90, in percent (0 = none). In force now; the engine takes the
+ * levels as an argument (X-01, X-05).
+ */
+export function demandRangeExtraQuantilePct(): number {
+  return hubSetting('engine.rangeExtraQuantilePct');
 }
 
 /**

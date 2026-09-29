@@ -4,6 +4,9 @@ import { mockDataService } from '../services/data/mock/mockDataService';
 import { withChaos } from '../services/data/mock/withChaos';
 import BuyerScorecard from './BuyerScorecard';
 import { REJECTION_PENALTY_POINTS } from '../services/data/performanceRules';
+import { masterMeasure, performanceInput } from '../services/data/mock/supplierMeasureReadModel';
+import { supplierMeasure } from '../services/data/performanceRules';
+import { sdcClock } from '../services/sdc';
 
 const alwaysFails = withChaos(mockDataService, { minMs: 0, maxMs: 0, failureRate: 1 });
 const alwaysPending = withChaos(mockDataService, { minMs: 1e7, maxMs: 1e7, failureRate: 0 });
@@ -70,11 +73,14 @@ describe('BuyerScorecard — calculated performance (REQ-E10-01)', () => {
     expect(await screen.findByTestId('scorecard-rejections')).toHaveTextContent(
       'Orders rejected: 1',
     );
-    // ⚠️ THE SCORE IS CHECKED AGAINST THE PAGE'S OWN THREE NUMBERS, not restated.
+    // ⚠️ THE SCORE IS CHECKED AGAINST THE PAGE'S OWN NUMBERS, not restated.
     // `assessmentScore` is the mean of what was measured less
-    // REJECTION_PENALTY_POINTS per rejection — so the letter beside them cannot
-    // disagree with them without this line failing.
-    const expected = Math.round((83 + 40) / 2) - 1 * REJECTION_PENALTY_POINTS;
+    // REJECTION_PENALTY_POINTS per rejection, blended with the update
+    // compliance the page shows (Material B3, weight 0.10) — so the letter
+    // beside them cannot disagree with them without this line failing.
+    expect(await screen.findByTestId('scorecard-update-compliance-value')).toHaveTextContent('Update compliance 0%');
+    const delivery = Math.round((83 + 40) / 2) - 1 * REJECTION_PENALTY_POINTS;
+    const expected = Math.round(0.9 * delivery + 0.1 * 0);
     expect(await screen.findByTestId('scorecard-grade')).toHaveTextContent(`${expected}/100`);
   });
 
@@ -126,5 +132,45 @@ describe('BuyerScorecard — calculated performance (REQ-E10-01)', () => {
       ),
     );
     expect(screen.getByText('0%')).toBeInTheDocument();
+  });
+});
+
+// ────────────────────────────────────────────────────────────────────────────
+// Material B3 (AR-09, MR-2) — update compliance on the scorecard, and ONE score
+// on both calculation paths: the mock read model (`masterMeasure`, which the
+// supplier master, CR-15 and the invitee list read) and the page's
+// `usePerformance`, which reads `getUpdateCompliance` and calls the same
+// `supplierMeasure`.
+// ────────────────────────────────────────────────────────────────────────────
+describe('BuyerScorecard — update compliance (Material B3)', () => {
+  it('both calculation paths give the same score for one supplier, and the compliance moved it', async () => {
+    renderWithProviders(<BuyerScorecard />);
+    // The default supplier (sup-007) over the default period, which is the master window.
+    expect(await screen.findByTestId('scorecard-update-compliance-value')).toHaveTextContent('Update compliance 0%');
+    const mock = masterMeasure('sup-007');
+    expect(mock.updateCompliance?.pct).toBe(0);
+    expect(await screen.findByTestId('scorecard-grade')).toHaveTextContent(`${mock.score}/100`);
+    // Control: without compliance the same inputs score higher, so equality is not vacuous.
+    const now = sdcClock.now();
+    const deliveryOnly = supplierMeasure('sup-007', { ...performanceInput(now), updateCompliance: undefined }, '90d', now);
+    expect(deliveryOnly.score).not.toBe(mock.score);
+  });
+
+  it('shows the 13-week strip with a state per week and the one-line definition', async () => {
+    renderWithProviders(<BuyerScorecard />);
+    const strip = await screen.findByTestId('scorecard-update-compliance-strip');
+    await waitFor(() => expect(strip.querySelectorAll('li')).toHaveLength(13));
+    const states = [...strip.querySelectorAll('li')].map((li) => li.getAttribute('data-state'));
+    expect(states).toEqual(masterMeasure('sup-007').updateCompliance?.weeks.map((w) => w.state));
+    expect(screen.getByText(/Share of the last 13 weekly stock updates made on time/)).toBeInTheDocument();
+  });
+
+  it('MAT-R4 · the read is narrowed in the service: a supplier gets only its own row', async () => {
+    const own = await mockDataService.suppliers.getUpdateCompliance({ personaType: 'supplier', supplierId: 'sup-007' });
+    expect(own.items.map((c) => c.supplierId)).toEqual(['sup-007']);
+    const all = await mockDataService.suppliers.getUpdateCompliance({ personaType: 'buyer', supplierId: null });
+    expect(all.items.map((c) => c.supplierId)).toEqual(expect.arrayContaining(['sup-007', 'sup-002', 'sup-009']));
+    // Edge case 1 — a supplier with no material assigned reads "No history".
+    expect(all.items.find((c) => c.supplierId === 'sup-004')?.pct).toBeNull();
   });
 });
