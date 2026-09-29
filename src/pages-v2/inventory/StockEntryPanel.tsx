@@ -100,7 +100,9 @@ const StockEntryPanel: React.FC<StockEntryPanelProps> = ({
   const batchMismatch = batches.length > 0 && soh.ok && soh.value !== null && batchTotal !== soh.value;
   // MAT-D4 — the SAME check the template validator runs: in production is
   // required (0 allowed), and its completion date is required when it is above 0.
-  const production = inProduction.ok ? productionProblem(inProduction.value, form.completion) : null;
+  const production = inProduction.ok
+    ? productionProblem(inProduction.value, form.completion, mode === 'supplier' ? 'manual' : 'pti')
+    : null;
   const batchIncomplete = batches.some((b, i) => b.batchNumber.trim() === '' || !batchReads[i].ok || batchReads[i].value === null);
   const today = dayOf(inventoryNow());
   const batchDates = batches.map((b) => batchDatesProblem(b, today));
