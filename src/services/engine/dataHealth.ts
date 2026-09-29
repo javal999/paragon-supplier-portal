@@ -44,7 +44,7 @@ import { lineKey, type EngineDataset, type IsoDate, type IsoInstant } from './ty
 /** A feed is one entity of the input contract — its field on `EngineDataset`. */
 export type FeedId = Exclude<keyof EngineDataset, 'provenance' | 'materials'>;
 
-/** The engine steps a feed can affect. E14-07 is not built yet. */
+/** The engine steps a feed can affect. E14-07 feeds no later step yet: SAP's plan stays E14-03's input (ENG-B66). */
 export type EngineStep = 'E14-02' | 'E14-03' | 'E14-04' | 'E14-05' | 'E14-07' | 'E14-13';
 
 /** Who delivers a feed: the Master Data Management team from SAP (ENG-D1), or the Hub itself. */

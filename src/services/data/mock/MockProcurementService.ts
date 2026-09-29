@@ -127,6 +127,7 @@ import type {
   StabiliseRunView,
   StabilisedPlanView,
   DataHealthView,
+  DemandForecastView,
 } from '../types';
 import { PR_INTAKE_LINES } from './fixtures/prIntake';
 import { engineDataset } from './fixtures/engineDataset';
@@ -163,10 +164,14 @@ import { labelOf, materialEntry } from '../../sdc/materialMaster';
 // Material C4 — each material's MRP controller, narrowed per reader (MR-5 BR-04).
 import { withMrpController } from './mrpControllerReadModel';
 import { FEEDS, dataHealth } from '../../engine/dataHealth';
+import { demandForecast, type DemandForecastRun } from '../../engine/demandForecast';
 import { DEFAULT_STOCK_ACCURACY_TOLERANCE } from '../../engine/stock';
 import { agreedCfot, supplierCfot } from '../../engine/cfot';
 import { lineHistories } from '../../engine/lines';
 import { sdcClock } from '../../sdc/clock';
+
+/** REQ-E14-07 — the demand forecast per engine dataset (see getDemandForecast). */
+const demandForecastMemo = new WeakMap<EngineDataset, DemandForecastRun>();
 
 const matchesList = <T>(value: T, filter: T | T[] | undefined): boolean => {
   if (filter === undefined) return true;
@@ -658,6 +663,21 @@ export class MockProcurementService implements IProcurementService {
       context: { masterUom: (code) => materialEntry(code)?.canonicalUom ?? null },
     });
     return { ...report, provenance: data.provenance };
+  }
+
+  async getDemandForecast(scope: QueryScope): Promise<DemandForecastView | null> {
+    // REQ-E14-07, computed at read on the hub's date (X-01). PTI only: engine
+    // output on synthetic data is never shown to a supplier (X-03). The run is
+    // memoised per dataset (the dataset is itself memoised per present).
+    if (scope.personaType === 'supplier') return null;
+    const data = engineDataset();
+    const asOf = dayOf(sdcClock.now());
+    let run = demandForecastMemo.get(data);
+    if (!run || run.asOf !== asOf) {
+      run = demandForecast({ finishedGoods: data.finishedGoods, sales: data.sales, fgPlan: data.fgPlan, asOf });
+      demandForecastMemo.set(data, run);
+    }
+    return { ...run, provenance: data.provenance, materialPlanningSource: 'sapPlan' };
   }
 
   async getSafetyStock(scope: QueryScope): Promise<SafetyStockView | null> {
