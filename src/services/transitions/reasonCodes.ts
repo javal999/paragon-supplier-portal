@@ -16,7 +16,7 @@
 // A fifth list was added new, not replaced (SC Hub Material, MAT A3):
 //   · alertClose          — why a planner closes an alert (MR-9 BR-04, BR-05).
 //                           "Other" needs a note. Read by the alert close
-//                           verb from task F1; nothing reads it yet.
+//                           verb (`alertCloseRefusal`, MAT F1).
 // ⚠️ Call-off reject / change reasons and goods-receipt dispute reasons are FREE
 // TEXT in this build (`reason`, `comment` fields), not coded lists — there is
 // no list for an administrator to maintain, so none is invented here.

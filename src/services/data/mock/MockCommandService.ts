@@ -108,6 +108,7 @@ import {
   dayOf,
   isIsoDay,
   batchDatesProblem,
+  alertCloseRefusal,
   parseAlertKey,
   standingClosure,
   // REQ-E03-01 to REQ-E03-05 — the RFx rules. The verb and the screen read the
@@ -2715,16 +2716,30 @@ const inventoryAlertTarget: CommandTarget = {
   readEntity: (key) => allAlerts().find((a) => a.key === key) ?? null,
   applyTransition: (key, _toState, payload, scope) => {
     inventoryAlertLedger.append([
-      { key, kind: 'closed', at: sdcClock.now(), note: nonBlank(payload.actionNote) ?? '', actor: scope.actor ?? NO_PERSON },
+      {
+        key,
+        kind: 'closed',
+        at: sdcClock.now(),
+        closeReason: String(payload.closeReason),
+        ...(nonBlank(payload.actionNote) ? { note: nonBlank(payload.actionNote) } : {}),
+        actor: scope.actor ?? NO_PERSON,
+      },
     ]);
   },
 };
 
-bindPolicyHook(POLICY_HOOKS.ALERT_ACTION_NOTE_AUTHORED, ({ payload }) =>
-  nonBlank(payload.actionNote)
-    ? { ok: true }
-    : { ok: false, reason: 'closing an alert needs an action note' },
-);
+// MR-9 BR-04 — an active close reason; "Other" needs a note (AR-14).
+bindPolicyHook(POLICY_HOOKS.ALERT_CLOSE_REASON_GIVEN, ({ payload }) => {
+  const refusal = alertCloseRefusal(payload.closeReason, payload.actionNote);
+  if (refusal === null) return { ok: true };
+  return {
+    ok: false,
+    reason:
+      refusal === 'NOTE_REQUIRED'
+        ? 'NOTE_REQUIRED: the reason "other" needs a note'
+        : `REASON_UNKNOWN: ${JSON.stringify(payload.closeReason)} is not an active alert close reason`,
+  };
+});
 
 // — Forecast collaboration (REQ-E06-01, REQ-E06-03) ————————————————————————
 //   A version is a snapshot of one stream and is never edited; publish and

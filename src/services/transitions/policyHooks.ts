@@ -176,8 +176,9 @@ export const POLICY_HOOKS = {
   /** Capacity submission (REQ-E08-04): weeks inside the 13-week horizon, valid
    *  quantities, and a starter reason for every week below demand. */
   CAPACITY_SUBMISSION_VALID: 'capacity_submission_valid',
-  /** Closing an alert (REQ-E08-05): the action note is substance. */
-  ALERT_ACTION_NOTE_AUTHORED: 'alert_action_note_authored',
+  /** Closing an alert (REQ-E08-05, MR-9 BR-04): an active `alertClose` reason,
+   *  and a note when it is "Other". Refusals REASON_UNKNOWN, NOTE_REQUIRED. */
+  ALERT_CLOSE_REASON_GIVEN: 'alert_close_reason_given',
   /** Invoice match: the match sub-flow must have rolled up to a clean Matched
    *  before the header can advance Submitted → Matched (census G2). */
   INVOICE_ROLLUP_MATCHED: 'invoice_rollup_matched',
