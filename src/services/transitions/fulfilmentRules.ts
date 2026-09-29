@@ -11,6 +11,7 @@
 import { POStatus } from '../data/types';
 import type {
   ASN,
+  AsnLineItem,
   AsnStatus,
   Invoice,
   InvoiceLine,
@@ -68,39 +69,148 @@ export function openQtyForLine(
   return Math.max(0, committedQty(line) - shipped);
 }
 
-/** One ASN line as the supplier enters it. */
+/**
+ * MR-6 BR-04 — how a line's batch was entered: picked from the supplier's
+ * declared stock, or typed (shown to PTI as "not in declared stock").
+ */
+export type AsnBatchSource = NonNullable<AsnLineItem['batchSource']>;
+
+/** One ASN line as the supplier enters it (the command payload). */
 export interface AsnLineInput {
   materialCode: string;
   shippedQty: number;
   batchNumber?: string;
   expiryDate?: string;
+  /** MR-6 BR-04 — picked from declared stock, or typed. */
+  batchSource?: AsnBatchSource;
+}
+
+/**
+ * AR-11 — one ASN line as the rule reads it: the line with its batch and
+ * expiry, and the ASN's expected arrival. The form and both ASN policy hooks
+ * build this same shape, so a rule that needs the batch, the expiry or the ETA
+ * sees them on every path.
+ */
+export interface AsnLineCheck {
+  materialCode: string;
+  shippedQty: number;
+  lotNumber?: string;
+  expiryDate?: string;
+  eta?: string;
 }
 
 export type AsnLineRefusal = 'unknownMaterial' | 'quantity' | 'overOpen' | 'batch' | 'expiry';
 
+/** A stored ASN line as the rule reads it, carrying the ASN's ETA. */
+export const asnLineCheckOf = (
+  line: Pick<AsnLineItem, 'materialCode' | 'shippedQty' | 'lotNumber' | 'expiryDate'>,
+  eta: string | undefined,
+): AsnLineCheck => ({
+  materialCode: line.materialCode,
+  shippedQty: line.shippedQty,
+  lotNumber: line.lotNumber,
+  ...(line.expiryDate !== undefined ? { expiryDate: line.expiryDate } : {}),
+  ...(eta !== undefined ? { eta } : {}),
+});
+
 /**
  * Why one ASN line would be refused, or null. `requireBatch` is off at draft
- * time (a draft may be incomplete) and on at submission (BR-04).
+ * time (a draft may be incomplete) and on at submission (BR-04). The ASN form
+ * and both ASN policy hooks call this one function (AR-11).
+ *
+ * The line's own completeness (quantity, then batch) is read before the PO
+ * checks, so a submission names a missing batch first, as it always has, and
+ * the batch is required on every line the ASN carries.
  */
 export function asnLineRefusal(
-  line: Partial<AsnLineInput> | null | undefined,
+  line: Partial<AsnLineCheck> | null | undefined,
   po: Pick<PurchaseOrder, 'poNumber' | 'lineItems'>,
   asns: readonly ASN[],
   opts: { excludeAsn?: string; overShipReason?: unknown; requireBatch: boolean },
 ): AsnLineRefusal | null {
-  const item = po.lineItems.find((li) => li.materialCode === line?.materialCode);
-  if (!line || !item) return 'unknownMaterial';
+  if (!line) return 'unknownMaterial';
   const q = line.shippedQty;
   if (typeof q !== 'number' || !Number.isFinite(q) || q <= 0) return 'quantity';
+  if (opts.requireBatch && !isNonBlank(line.lotNumber)) return 'batch';
+  const item = po.lineItems.find((li) => li.materialCode === line.materialCode);
+  if (!item) return 'unknownMaterial';
   if (q > openQtyForLine(po, item, asns, opts.excludeAsn) && !isNonBlank(opts.overShipReason)) {
     return 'overOpen';
   }
-  if (opts.requireBatch && !isNonBlank(line.batchNumber)) return 'batch';
   if (line.expiryDate !== undefined && line.expiryDate !== '' && !isCalendarDate(line.expiryDate)) {
     return 'expiry';
   }
   return null;
 }
+
+// ── Batch from declared stock (MR-6 BR-01 to BR-03) ─────────────────────────
+
+/**
+ * MR-6 BR-02 — the ASN states whose quantity is taken out of a declared batch.
+ * D2 adds 'Awaiting exception'.
+ */
+export const BATCH_CONSUMING_ASN_STATES: readonly AsnStatus[] = ['Submitted', 'In Transit', 'Delivered'];
+
+/** One declared batch the supplier can still ship from. */
+export interface AvailableBatch {
+  batchNumber: string;
+  available: number;
+  expiryDate?: string;
+}
+
+/** The part of a stock record the batch rule reads. */
+export interface DeclaredBatches {
+  /** The stock record's as-of (ISO). */
+  declaredAt: string;
+  batches?: readonly { batchNumber: string; qty: number; expiryDate?: string }[];
+}
+
+/**
+ * MR-6 BR-01 / BR-02 — the batches of the supplier's latest stock record for a
+ * material, each with its available quantity: the declared quantity minus the
+ * quantity on this supplier's ASNs for that batch that are Submitted, In
+ * Transit or Delivered, with a ship date on or after the record's `declaredAt`
+ * (compared by calendar day). Batches with nothing left are left out. An ASN
+ * with no ship date has no date to compare, so it is not counted.
+ */
+export function availableBatches(
+  supplierId: string,
+  materialCode: string,
+  asns: readonly ASN[],
+  declaration: DeclaredBatches | null | undefined,
+): AvailableBatch[] {
+  if (!declaration?.batches?.length) return [];
+  const since = declaration.declaredAt.slice(0, 10);
+  const taken = new Map<string, number>();
+  for (const a of asns) {
+    if (a.supplierId !== supplierId || !BATCH_CONSUMING_ASN_STATES.includes(a.status)) continue;
+    if (!a.shipDate || a.shipDate < since) continue;
+    for (const l of a.lineItems) {
+      if (l.materialCode !== materialCode || !Number.isFinite(l.shippedQty)) continue;
+      const lot = l.lotNumber.trim();
+      taken.set(lot, (taken.get(lot) ?? 0) + l.shippedQty);
+    }
+  }
+  return declaration.batches
+    .map((b) => ({
+      batchNumber: b.batchNumber,
+      available: b.qty - (taken.get(b.batchNumber.trim()) ?? 0),
+      ...(b.expiryDate ? { expiryDate: b.expiryDate } : {}),
+    }))
+    .filter((b) => b.available > 0);
+}
+
+/**
+ * MR-6 BR-03 — a line ships more of a declared batch than is available. A
+ * warning, never a refusal: the stock record can be up to a cycle old.
+ */
+export const batchAboveAvailable = (
+  line: Pick<AsnLineCheck, 'shippedQty' | 'lotNumber'>,
+  batches: readonly AvailableBatch[],
+): boolean => {
+  const b = batches.find((x) => x.batchNumber === line.lotNumber);
+  return !!b && Number.isFinite(line.shippedQty) && line.shippedQty > b.available;
+};
 
 /** Why an ASN cannot be submitted (BR-04), or null when it is complete. */
 export type AsnSubmitRefusal = 'noLines' | 'shipDate' | 'eta' | 'etaBeforeShip';

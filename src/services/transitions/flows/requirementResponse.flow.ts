@@ -176,7 +176,9 @@ export const requirementResponseFlow: FlowDefinition = {
       trigger: 'user',
       requiredRole: 'requirementresponse:submit',
       requiredFields: [],
-      policyHooks: [],
+      // BL-133 (ENG-D19) — capacity before the LTP: the submission is refused
+      // until the week's capacity is confirmed, and above BE without a reason.
+      policyHooks: [POLICY_HOOKS.RR_PROMOTE_CAPACITY_CONFIRMED],
       surfaceable: { surfaced: true },
       version: 1,
     },

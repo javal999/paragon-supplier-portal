@@ -50,6 +50,7 @@ import {
   qty,
   useCallOffViews,
 } from './callOffs/callOffDisplay';
+import { PicCell, PicFilter, PicHeader, usePicFilter } from './materials/picDisplay';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SUPPLIER CALL-OFFS — REQ-E09-03 (confirmation) and REQ-E09-04 (dispatch).
@@ -99,6 +100,8 @@ const SupplierCallOffs: React.FC = () => {
   // excludes drafts and dismissed drafts, so the predicate only narrows by PO.
   const drill = usePoDrillFilter();
   const drilledPo = drilledPoId(drill);
+  // Material C4 — the PIC filter (by name: a supplier never sees the code).
+  const pic = usePicFilter();
 
   if (!identity.supplierId) return <NoSupplierIdentity />;
   if (isPending || drill.kind === 'pending') return <LoadingState breadcrumb={crumb} />;
@@ -120,6 +123,7 @@ const SupplierCallOffs: React.FC = () => {
   const toConfirm = rows.filter((v) => v.callOff.status === 'Awaiting Confirmation').length;
   const dueSoon = rows.filter((v) => isDueWithoutHeadsUp(v, nowIso)).length;
   const selected: CallOffView | null = rows.find((v) => v.callOff.id === selectedId) ?? null;
+  const listed = rows.filter((v) => pic.matches(v.callOff.mrpController));
 
   const open = (id: string) => {
     setSelectedId(id);
@@ -207,6 +211,16 @@ const SupplierCallOffs: React.FC = () => {
         </div>
       )}
 
+      <div className="mb-4">
+        <PicFilter
+          refs={rows.map((v) => v.callOff.mrpController)}
+          persona="supplier"
+          filter={pic.filter}
+          setFilter={pic.setFilter}
+          myCode={pic.myCode}
+        />
+      </div>
+
       <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto">
         <Table>
           <TableHeader>
@@ -218,7 +232,14 @@ const SupplierCallOffs: React.FC = () => {
               {t('co.col.callOff')}{' '}
               <span className="block text-[11px] font-normal normal-case text-text-tertiary">{t('co.col.po')}</span>
             </TableHeaderCell>
-            <TableHeaderCell>{t('co.col.material')}</TableHeaderCell>
+            {/* The PIC (#90) rides under the material, as the PO rides under the
+                call-off: as its own column it pushed the table 257px past 1280. */}
+            <TableHeaderCell>
+              {t('co.col.material')}{' '}
+              <span className="block text-[11px] font-normal normal-case text-text-tertiary">
+                <PicHeader wrap />
+              </span>
+            </TableHeaderCell>
             <TableHeaderCell className="text-right">{t('co.col.quantity')}</TableHeaderCell>
             <TableHeaderCell>
               {t('co.col.needDate')}{' '}
@@ -232,7 +253,7 @@ const SupplierCallOffs: React.FC = () => {
             <TableHeaderCell className="text-right">{t('co.col.action')}</TableHeaderCell>
           </TableHeader>
           <tbody>
-            {rows.map((v) => {
+            {listed.map((v) => {
               const c = v.callOff;
               const needsAnswer = c.status === 'Awaiting Confirmation';
               return (
@@ -247,6 +268,9 @@ const SupplierCallOffs: React.FC = () => {
                     </Data>
                     <div className="text-xs text-text-primary">
                       {c.description}
+                    </div>
+                    <div className="mt-1">
+                      <PicCell value={c.mrpController} testId={`supplier-calloff-pic-${c.id}`} />
                     </div>
                   </TableCell>
                   <TableCell className="text-right whitespace-nowrap">

@@ -176,8 +176,9 @@ export const POLICY_HOOKS = {
   /** Capacity submission (REQ-E08-04): weeks inside the 13-week horizon, valid
    *  quantities, and a starter reason for every week below demand. */
   CAPACITY_SUBMISSION_VALID: 'capacity_submission_valid',
-  /** Closing an alert (REQ-E08-05): the action note is substance. */
-  ALERT_ACTION_NOTE_AUTHORED: 'alert_action_note_authored',
+  /** Closing an alert (REQ-E08-05, MR-9 BR-04): an active `alertClose` reason,
+   *  and a note when it is "Other". Refusals REASON_UNKNOWN, NOTE_REQUIRED. */
+  ALERT_CLOSE_REASON_GIVEN: 'alert_close_reason_given',
   /** Invoice match: the match sub-flow must have rolled up to a clean Matched
    *  before the header can advance Submitted → Matched (census G2). */
   INVOICE_ROLLUP_MATCHED: 'invoice_rollup_matched',
@@ -273,6 +274,16 @@ export const POLICY_HOOKS = {
    * date, and an upside quantity when given is a number of zero or more.
    */
   RR_SUBMIT_COMMITMENT_DETAIL: 'rr_submit_commitment_detail',
+  /**
+   * BL-133 (ENG-D19, REQ-E06-02 BR-11 / BR-12) — the pokayoke. A commitment to
+   * a forecast version is SUBMITTED only when the supplier has confirmed
+   * capacity for every horizon week its period touches (refused by name
+   * CAPACITY_NOT_CONFIRMED), and a period whose group LTP is above BE
+   * (capacity + additional capacity) in one of those weeks carries a starter
+   * reason (ABOVE_BE_NEEDS_REASON; `other` needs a note). Runs on the
+   * promotion, which is the submission — a draft is not gated.
+   */
+  RR_PROMOTE_CAPACITY_CONFIRMED: 'rr_promote_capacity_confirmed',
   /** REQ-E06-01 BR-02 — publish names a forecast stream (packaging or raw material). */
   FORECAST_PUBLISH_VALID: 'forecast_publish_valid',
   /**
@@ -361,6 +372,21 @@ export const POLICY_HOOKS = {
    */
   THREE_PL_GOVERNED: 'three_pl_governed',
   /**
+   * Material A1 (MR-1 BR-02) — a supplier's stock update mode: the supplier is
+   * on the master (UNKNOWN_SUPPLIER) and the value is `api` or `manual`
+   * (UPDATE_MODE_INVALID). The rule is `supplierUpdateModeRefusal`, the one the
+   * admin page's pre-check calls.
+   */
+  SUPPLIER_UPDATE_MODE_VALID: 'supplier_update_mode_valid',
+  /**
+   * Material C4 (MR-5 BR-02) — one MRP controller on the administrator's list:
+   * the code is SAP-shaped (MRP_CONTROLLER_CODE_INVALID), it has a name
+   * (MRP_CONTROLLER_NAME_REQUIRED) and at least one hub user label
+   * (MRP_CONTROLLER_USERS_REQUIRED). The rule is `mrpControllerRefusal`, the
+   * one the admin page's pre-check calls.
+   */
+  MRP_CONTROLLER_GOVERNED: 'mrp_controller_governed',
+  /**
    * BL-50 — a ruling on one day of the hub's working calendar: the date is one
    * the SAP load covers, the kind is working or non-working, the reason is
    * SUBSTANCE rather than presence (`requiredFields` admits a space bar), and
@@ -384,6 +410,12 @@ export const POLICY_HOOKS = {
    * attribution. The same predicate re-checks a stored change on read.
    */
   REASON_CODE_GOVERNED: 'reason_code_governed',
+  /**
+   * REQ-E06-04 BR-06 — a maximum stock for one supplier × material: the entity
+   * is `<supplierId>|<materialCode>`, the quantity a whole number above zero or
+   * null to clear it, and a well-formed attribution.
+   */
+  MAX_STOCK_GOVERNED: 'max_stock_governed',
 
   /**
    * PR reject (§67): the rejection reason must be SUBSTANCE, not presence.

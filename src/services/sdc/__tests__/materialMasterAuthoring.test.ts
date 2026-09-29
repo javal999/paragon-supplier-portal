@@ -404,6 +404,8 @@ describe('2B-3 — PK-PETB-8825 is its OWN item (operator ruling), not an alias'
     // eleven the halal seed leaves `'UNDETERMINED'`** — packaging, which BPOM
     // excludes and halal may not (`D-COMP-HALAL-1`, Seat 3) — so the field's
     // arrival on THIS entry is the split it is about, not an incidental one.
+    // Material A2 added `mrpController` (an SAP copy, filled on every row) on
+    // purpose; the hub-mastered fields are resolved, not stored here.
     expect(Object.keys(MATERIAL_MASTER['PK-PETB-8825']).sort()).toEqual([
       'bpomApplicable',
       'canonicalUom',
@@ -412,6 +414,7 @@ describe('2B-3 — PK-PETB-8825 is its OWN item (operator ruling), not an alias'
       'materialCode',
       'materialGroup',
       'materialType',
+      'mrpController',
     ]);
   });
 });

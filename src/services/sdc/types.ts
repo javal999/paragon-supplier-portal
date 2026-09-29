@@ -231,6 +231,32 @@ export interface MaterialMasterEntry {
    * an inspector is asked to check the moment H2 lands.
    */
   readonly halalApplicable: HalalApplicability;
+  // ── Material A2 (MR-5, MR-6, MR-8) · optional, so no existing entry changes ──
+  // SAP-copied fields are fixture data labelled simulated (`materialMasterSap`
+  // capability) until the MDM feed runs. Hub-mastered fields are resolved
+  // through `materialEntry` from `materialOverlayStore` (plan AD-4).
+  /** SAP MRP controller code (MARC-DISPO), one per material until plants are
+   *  modelled. SAP-copied (MR-5 BR-01, BR-05). */
+  readonly mrpController?: string;
+  /** SAP minimum remaining shelf life, in months. Unset means the hub setting
+   *  `shelfLife.defaultMonths` applies. SAP-copied (MR-6 BR-06). */
+  readonly minRemainingShelfLifeMonths?: number;
+  /** Whether ASN expiry and the shelf-life rule apply. Hub-mastered; the
+   *  resolver fills the default (MR-6 BR-07, MAT-D6). */
+  readonly shelfLifeRelevant?: boolean;
+  /** The planning group the material belongs to. Hub-mastered; the resolver
+   *  fills the default group of its `materialGroup` (MR-8 BR-01, BR-02). */
+  readonly planningGroupId?: string;
+}
+
+/** A hub-mastered overlay row for one material (plan AD-4). Append-only: a
+ *  change is a new row, and the latest row that sets a field wins. */
+export interface MaterialOverlayRow {
+  readonly materialCode: string;
+  readonly shelfLifeRelevant?: boolean;
+  readonly planningGroupId?: string;
+  readonly setAt: string;
+  readonly setBy: string;
 }
 
 /** The material master, keyed by S/4 material code. */

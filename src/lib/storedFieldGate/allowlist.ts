@@ -305,6 +305,10 @@ export const STORED_FIELD_ALLOWLIST: readonly Exemption[] = Object.freeze([
   // (§41). **The gate went red BEFORE this row was removed** — `AN EXEMPTION
   // OUTLIVED ITS SUBJECT · DataError.cause — the field no longer exists` — which
   // is the whole point of the bilateral half and its first exercise.
+  // `MaterialMasterEntry.mrpController` STOOD HERE (data-in-waiting, filed by
+  // Material A2 naming C4 as its consumer). C4 gave it its reader —
+  // `mrpControllerOf` in `services/data/mock/mrpControllerReadModel.ts` — so
+  // the exemption died with its subject, as the bilateral gate requires.
 ]);
 
 /** Rows still awaiting a ruling. Published by the gate so the debt is a number

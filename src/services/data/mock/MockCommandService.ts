@@ -83,6 +83,7 @@ import {
   INVOICE_AWAITING_MATCH,
   ASN_PO_STATES,
   INVOICEABLE_PO_STATES,
+  asnLineCheckOf,
   asnLineRefusal,
   asnSubmitRefusal,
   deriveInvoiceVerdict,
@@ -108,6 +109,7 @@ import {
   dayOf,
   isIsoDay,
   batchDatesProblem,
+  alertCloseRefusal,
   parseAlertKey,
   standingClosure,
   // REQ-E03-01 to REQ-E03-05 — the RFx rules. The verb and the screen read the
@@ -133,6 +135,8 @@ import {
   responseWindowRefusal,
   responseAlreadySubmittedRefusal,
   type QuoteLineInput,
+  type AsnBatchSource,
+  type AsnLineCheck,
   type AsnLineInput,
   type CommandTarget,
   type CascadeCommand,
@@ -155,6 +159,7 @@ import { calendarCovers, workingCalendarStore } from '../../transitions/workingC
 import { isHubSettingKey, parseStaleOverrideKey } from '../../transitions/hubSettings';
 import { hubSettingsStore, settingValue } from '../../transitions/hubSettingsStore';
 import { isActiveReasonCode, parseReasonCodeEntityId, reasonCodeStore } from '../../transitions/reasonCodes';
+import { maxStockChangeFrom, maxStockStore, parseMaxStockEntityId } from '../../transitions/maxStock';
 import {
   THREE_PL_ID,
   asnThreePlRefusal,
@@ -174,11 +179,15 @@ import {
   isApiConnected,
   isAssignedMaterial,
   observeAlertConditions,
+  simulatedPullOf,
   supplierNameOf,
   suppliersWithAssignments,
 } from './inventoryReadModel';
-import { API_CONNECTIONS } from './fixtures/inventoryHub';
 import { forecastVersionStore, forecastViewStore } from './stores/forecastHubStores';
+// Material A1 — the supplier overlay (its own module, plan AD-5).
+import { supplierOverlayTarget } from './targets/supplierOverlay';
+// Material C4 — the MRP controller list (its own module, plan AD-5).
+import { mrpControllerTarget } from './targets/mrpController';
 // ── REQ-E14-13 — reschedule proposals taken to SAP ─────────────────────────
 import { sapChangeMarkStore } from './stores/sapChangeMarkStore';
 import { engineDataset } from './fixtures/engineDataset';
@@ -291,6 +300,12 @@ import {
 // `RFX_QUESTION_TYPES` (`sourcing/rfxConfig`), and the create hook reaches them
 // through `rfiQuestionsRefusal` — the same predicate the template store reads.
 import {
+  commitmentCapacityRefusal,
+  horizonWeeks,
+  periodCapacityCheck,
+} from '../../transitions/capacityRules';
+import {
+  allCommitmentLines,
   currentVersion,
   isForecastVersion,
   forecastPublicationById,
@@ -461,6 +476,23 @@ const payloadAsnLines = (payload: Record<string, unknown>): AsnLineInput[] | nul
   Array.isArray(payload.lines) ? (payload.lines as AsnLineInput[]) : null;
 
 /**
+ * MR-6 BR-04 — the batch source stored on a line. A line is `declared` only
+ * when the supplier says it picked the batch AND the batch is in its latest
+ * stock record for the material; anything else is `typed`, so a payload cannot
+ * hide the "not in declared stock" marker from PTI.
+ */
+const batchSourceOf = (
+  supplierId: string | undefined,
+  materialCode: string,
+  lot: string,
+  claimed: unknown,
+): AsnBatchSource => {
+  if (claimed !== 'declared' || !supplierId) return 'typed';
+  const record = inventoryDeclarationStore.latestFor(supplierId, materialCode);
+  return record?.batches?.some((b) => b.batchNumber === lot) ? 'declared' : 'typed';
+};
+
+/**
  * Merge entered lines onto an ASN's stored lines by material. A material the
  * draft does not carry yet is added from its PO line. Stored lines the payload
  * does not mention are kept as they are.
@@ -485,11 +517,13 @@ const mergeAsnLines = (
             lotNumber: '',
             ...(poLine?.uom ? { uom: poLine.uom } : {}),
           };
+    const lot = nonBlank(e.batchNumber);
     const next: AsnLineItem = {
       ...base,
       shippedQty: typeof e.shippedQty === 'number' ? e.shippedQty : base.shippedQty,
-      lotNumber: nonBlank(e.batchNumber) ?? base.lotNumber,
+      lotNumber: lot ?? base.lotNumber,
       ...(nonBlank(e.expiryDate) ? { expiryDate: nonBlank(e.expiryDate) } : {}),
+      ...(lot ? { batchSource: batchSourceOf(po?.supplierId, e.materialCode, lot, e.batchSource) } : {}),
     };
     if (i >= 0) out[i] = next;
     else out.push(next);
@@ -632,12 +666,17 @@ bindPolicyHook(POLICY_HOOKS.ASN_LINES_WITHIN_OPEN, ({ entityId, payload }) => {
   if (!asn && entered && entered.length === 0) {
     return { ok: false, reason: 'an ASN needs at least one line' };
   }
-  const lines: AsnLineInput[] = asn
-    ? mergeAsnLines(asn.lineItems, entered ?? [], po).map((l) => ({
-        materialCode: l.materialCode,
-        shippedQty: l.shippedQty,
-      }))
-    : entered!;
+  // AR-11 — the full line (batch, expiry) with the ETA the ASN will carry.
+  const eta = nonBlank(payload.eta) ?? asn?.eta;
+  const lines: AsnLineCheck[] = asn
+    ? mergeAsnLines(asn.lineItems, entered ?? [], po).map((l) => asnLineCheckOf(l, eta))
+    : entered!.map((e) => ({
+        materialCode: e?.materialCode,
+        shippedQty: e?.shippedQty,
+        ...(e?.batchNumber !== undefined ? { lotNumber: e.batchNumber } : {}),
+        ...(e?.expiryDate !== undefined ? { expiryDate: e.expiryDate } : {}),
+        ...(eta !== undefined ? { eta } : {}),
+      }));
   const seen = new Set<string>();
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
@@ -675,10 +714,24 @@ bindPolicyHook(POLICY_HOOKS.ASN_SUBMIT_COMPLETE, ({ entityId, payload }) => {
     eta: nonBlank(payload.eta) ?? asn.eta,
   });
   if (refusal) return { ok: false, reason: `INCOMPLETE_ASN: ${refusal}` };
-  const noBatch = lines.findIndex((l) => !nonBlank(l.lotNumber));
-  if (noBatch >= 0) return { ok: false, reason: `INCOMPLETE_ASN: batch number missing on line ${noBatch + 1}` };
-  const badQty = lines.findIndex((l) => !(Number.isFinite(l.shippedQty) && l.shippedQty > 0));
-  if (badQty >= 0) return { ok: false, reason: `INCOMPLETE_ASN: shipped quantity missing on line ${badQty + 1}` };
+  // AR-11 — each line through the one line rule, batch required. What the line
+  // itself lacks is reported here; the PO checks (material on the PO, open
+  // quantity) are ASN_LINES_WITHIN_OPEN's, which runs next on the same rule.
+  const po = findPoByNumber(asn.poReference);
+  const eta = nonBlank(payload.eta) ?? asn.eta;
+  for (let i = 0; i < lines.length; i++) {
+    const lineRefusal = asnLineRefusal(asnLineCheckOf(lines[i], eta), po ?? { poNumber: asn.poReference, lineItems: [] }, asnStore.all(), {
+      excludeAsn: asn.asnNumber,
+      overShipReason: payload.overShipReason ?? asn.overShipReason,
+      requireBatch: true,
+    });
+    if (lineRefusal === 'batch') {
+      return { ok: false, reason: `INCOMPLETE_ASN: batch number missing on line ${i + 1}` };
+    }
+    if (lineRefusal === 'quantity') {
+      return { ok: false, reason: `INCOMPLETE_ASN: shipped quantity missing on line ${i + 1}` };
+    }
+  }
   return { ok: true };
 });
 
@@ -2273,6 +2326,52 @@ bindPolicyHook(POLICY_HOOKS.RR_SUBMIT_COMMITMENT_DETAIL, ({ payload }) => {
   return { ok: true };
 });
 
+// BL-133 (ENG-D19) — capacity before the LTP, on the SUBMISSION (the
+// promotion). The response names its line; the line names its period and
+// material group; the group's latest capacity submission says whether every
+// horizon week the period touches is confirmed, and whether the group's LTP is
+// above BE in one of them. SDC-0 publications predate the rule (the BR-08 date
+// rule's precedent) and keep their shape; a line of a version no longer
+// current is found by supplier × material × period on the current version.
+bindPolicyHook(POLICY_HOOKS.RR_PROMOTE_CAPACITY_CONFIRMED, ({ entityId, target }) => {
+  const r = target.readEntity(entityId) as
+    | { publicationId?: string; supplierId?: string; materialCode?: string; periodBucket?: string; rootCause?: { level1?: unknown; note?: unknown } }
+    | null
+    | undefined;
+  if (!r || !isForecastVersion(String(r.publicationId))) return { ok: true };
+  const lines = allCommitmentLines(null);
+  const line = lines.find(
+    (l) => l.supplierId === r.supplierId && l.materialCode === r.materialCode && l.periodBucket === r.periodBucket,
+  );
+  if (!line) return { ok: true };
+  const plan =
+    allCapacityPlans().find((p) => p.supplierId === line.supplierId && p.materialGroup === line.materialGroup) ?? null;
+  const check = periodCapacityCheck(
+    plan,
+    lines,
+    line.supplierId,
+    line.materialGroup,
+    line.periodStart,
+    line.periodEnd,
+    horizonWeeks(sdcClock.now()),
+  );
+  const refusal = commitmentCapacityRefusal(check, r.rootCause);
+  if (!refusal) return { ok: true };
+  if (refusal.refusal === 'capacityNotConfirmed') {
+    return {
+      ok: false,
+      reason: `CAPACITY_NOT_CONFIRMED: confirm the capacity for ${line.materialGroup} in the week of ${refusal.week} before submitting its LTP`,
+    };
+  }
+  if (refusal.refusal === 'aboveBeNoteRequired') {
+    return { ok: false, reason: 'OTHER_REASON_NEEDS_NOTE: the reason "other" needs a note' };
+  }
+  return {
+    ok: false,
+    reason: `ABOVE_BE_NEEDS_REASON: the LTP for ${line.materialGroup} in the week of ${refusal.week} is above capacity plus additional capacity; choose a reason`,
+  };
+});
+
 // RR dispute / resolve — the authored text must be SUBSTANCE, not presence.
 //
 // ⚠️ WHICH FIELD IS ASKED FOR IS DERIVED FROM THE MACHINE, NEVER FROM THE
@@ -2552,9 +2651,12 @@ const stockSyncTarget: CommandTarget = {
   create: (payload) => {
     const supplierId = String(payload.supplierId);
     const now = sdcClock.now();
-    const connection = API_CONNECTIONS[supplierId];
+    // Material A1 (AR-06) — the policy hook has already asked the ONE resolver
+    // whether this supplier is API-connected; this reads only what the
+    // simulated pull returns (`NO_ENDPOINT` when the sample list has no entry).
+    const connection = simulatedPullOf(supplierId);
     const id = stockSyncStore.nextId();
-    if (connection && connection.outcome === 'success') {
+    if (connection.outcome === 'success') {
       // The supplier's system answered: its figures land as API submissions.
       for (const f of connection.figures) {
         inventoryDeclarationStore.add({
@@ -2580,7 +2682,7 @@ const stockSyncTarget: CommandTarget = {
         supplierId,
         at: now,
         outcome: 'failed',
-        errorKey: connection && connection.outcome === 'failed' ? connection.errorKey : 'timeout',
+        errorKey: connection.errorKey,
       });
     }
     return { entityId: id };
@@ -2710,16 +2812,30 @@ const inventoryAlertTarget: CommandTarget = {
   readEntity: (key) => allAlerts().find((a) => a.key === key) ?? null,
   applyTransition: (key, _toState, payload, scope) => {
     inventoryAlertLedger.append([
-      { key, kind: 'closed', at: sdcClock.now(), note: nonBlank(payload.actionNote) ?? '', actor: scope.actor ?? NO_PERSON },
+      {
+        key,
+        kind: 'closed',
+        at: sdcClock.now(),
+        closeReason: String(payload.closeReason),
+        ...(nonBlank(payload.actionNote) ? { note: nonBlank(payload.actionNote) } : {}),
+        actor: scope.actor ?? NO_PERSON,
+      },
     ]);
   },
 };
 
-bindPolicyHook(POLICY_HOOKS.ALERT_ACTION_NOTE_AUTHORED, ({ payload }) =>
-  nonBlank(payload.actionNote)
-    ? { ok: true }
-    : { ok: false, reason: 'closing an alert needs an action note' },
-);
+// MR-9 BR-04 — an active close reason; "Other" needs a note (AR-14).
+bindPolicyHook(POLICY_HOOKS.ALERT_CLOSE_REASON_GIVEN, ({ payload }) => {
+  const refusal = alertCloseRefusal(payload.closeReason, payload.actionNote);
+  if (refusal === null) return { ok: true };
+  return {
+    ok: false,
+    reason:
+      refusal === 'NOTE_REQUIRED'
+        ? 'NOTE_REQUIRED: the reason "other" needs a note'
+        : `REASON_UNKNOWN: ${JSON.stringify(payload.closeReason)} is not an active alert close reason`,
+  };
+});
 
 // — Forecast collaboration (REQ-E06-01, REQ-E06-03) ————————————————————————
 //   A version is a snapshot of one stream and is never edited; publish and
@@ -4471,6 +4587,30 @@ const reasonCodeTarget: CommandTarget = {
   },
 };
 
+// ── REQ-E06-04 BR-06 · PROCUREMENT'S MAXIMUM STOCK PER SUPPLIER × MATERIAL ────
+// `entityId` IS `<supplierId>|<materialCode>`. `readState` answers `Maintained`
+// only for a pair the hub actually assigns — a pair nobody supplies is
+// NOT_FOUND rather than a silently created value. Owner-less: the value is a
+// term PTI keeps, and every supplier is denied at SCOPE (§86). APPENDS only;
+// `previous` and `setAt` are stamped here, never read from the payload.
+const maxStockPairExists = (id: string): boolean => {
+  const pair = parseMaxStockEntityId(id);
+  return pair !== null && isAssignedMaterial(pair.supplierId, pair.materialCode);
+};
+const maxStockTarget: CommandTarget = {
+  readState: (id) => (maxStockPairExists(id) ? 'Maintained' : null),
+  readScopeOwner: () => null,
+  readEntity: (id) => {
+    const pair = maxStockPairExists(id) ? parseMaxStockEntityId(id) : null;
+    return pair ? maxStockStore.get(pair.supplierId, pair.materialCode) ?? null : null;
+  },
+  applyTransition: (id, _toState, payload) => {
+    const change = maxStockChangeFrom(id, payload, sdcClock.now());
+    // The policy hook has already refused every payload this could reject.
+    if (change) maxStockStore.append(change);
+  },
+};
+
 const hubSettingTarget: CommandTarget = {
   readState: (id) => (settingKeyExists(id) ? 'Maintained' : null),
   readScopeOwner: () => null,
@@ -4901,12 +5041,19 @@ const TARGETS: Record<string, CommandTarget> = {
   // BL-51 — the 3PL list. Wired so every change to where a tracking link points
   // lands in the DR-10 trail with who made it and when.
   threePl: threePlTarget,
+  // Material A1 — a supplier's stock update mode (MR-1 BR-02, AC-06).
+  supplierOverlay: supplierOverlayTarget,
+  // Material C4 — who each SAP MRP controller code is (MR-5 BR-02).
+  mrpController: mrpControllerTarget,
   // BL-32 — the rule values. Wired so every change to a tolerance, deadline,
   // threshold or stale period — and every reset — lands in the DR-10 trail.
   hubSetting: hubSettingTarget,
   // BL-32 — the reason lists. Wired so every add, rename and retirement lands in
   // the DR-10 trail.
   reasonCode: reasonCodeTarget,
+  // REQ-E06-04 BR-06 — Procurement's maximum stock per supplier × material.
+  // Wired so every set, change and clear lands in the DR-10 trail.
+  maxStock: maxStockTarget,
   // §82 — the document lane's first write path: the supplier's declaration and
   // compliance's review of it.
   supplierDocument: supplierDocumentTarget,

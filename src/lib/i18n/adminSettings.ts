@@ -122,6 +122,7 @@ export const adminSettingsEn: Record<string, string> = {
   'adminSet.rule.ENG-D6': 'ENG-D6 · Forecast engine order-sizing cost rates',
   'adminSet.rule.REQ-E14-05': 'REQ-E14-05 · Forecast engine change penalty',
   'adminSet.rule.ENG-D15': 'ENG-D15 · Rescheduling open orders out',
+  'adminSet.rule.REQ-E06-04': 'REQ-E06-04 · Fixed stock reconcile',
   'adminSet.rule.ENG-D9': 'ENG-D9 · Damping the plan before publication',
   'adminSet.rule.REQ-E14-01': 'REQ-E14-01 · Forecast engine data freshness',
   'adminSet.rule.MR-1': 'MR-1 · Stock sync schedule and the weekly stock update',
@@ -210,6 +211,8 @@ export const adminSettingsEn: Record<string, string> = {
   'adminSet.key.engine.maxRentedSpacePct.label': 'Most rented space, as a share of owned capacity',
   'adminSet.key.engine.maxRentedSpacePct.hint':
     'The most space above the owned warehouse that order sizing may plan to rent. A week that does not fit even with it is shown on the order plan with its shortfall, for the planner to choose between renting more and a later delivery.',
+  'adminSet.key.forecast.fsReconcileCycleWeeks.label': 'Fixed stock reconcile cycle, packaging',
+  'adminSet.key.forecast.fsReconcileCycleWeeks.hint': 'Packaging commitments are reconciled at the end of every cycle of this many weeks, counted from Monday 31 Aug 2026. Raw material is reconciled per month.',
   'adminSet.key.engine.rescheduleOutWeeks.label': 'Weeks early before a later date is proposed',
   'adminSet.key.engine.rescheduleOutWeeks.hint': 'An open order line that arrives at least this many weeks before the week it is needed is proposed to come later, to free warehouse space. The change is priced with the rented-space rate and the change penalty above.',
   'adminSet.key.engine.dampingWeightPct.label': 'Damping weight in the Trade-off zone',
@@ -378,6 +381,7 @@ export const adminSettingsId: Record<string, string> = {
   'adminSet.rule.ENG-D6': 'ENG-D6 · Tarif biaya penentuan ukuran pesanan mesin prakiraan',
   'adminSet.rule.REQ-E14-05': 'REQ-E14-05 · Penalti perubahan mesin prakiraan',
   'adminSet.rule.ENG-D15': 'ENG-D15 · Menjadwalkan ulang pesanan terbuka ke belakang',
+  'adminSet.rule.REQ-E06-04': 'REQ-E06-04 · Rekonsiliasi stok tetap',
   'adminSet.rule.ENG-D9': 'ENG-D9 · Peredaman rencana sebelum dipublikasikan',
   'adminSet.rule.REQ-E14-01': 'REQ-E14-01 · Kesegaran data mesin prakiraan',
   'adminSet.rule.MR-1': 'MR-1 · Jadwal sinkronisasi stok dan pembaruan stok mingguan',
@@ -465,6 +469,8 @@ export const adminSettingsId: Record<string, string> = {
   'adminSet.key.engine.maxRentedSpacePct.label': 'Ruang sewa terbanyak, sebagai bagian dari kapasitas sendiri',
   'adminSet.key.engine.maxRentedSpacePct.hint':
     'Ruang terbanyak di atas gudang sendiri yang boleh direncanakan untuk disewa oleh penentuan ukuran pesanan. Minggu yang tetap tidak muat meski dengan ruang itu ditampilkan di rencana pesanan beserta kekurangannya, agar perencana memilih antara menyewa lebih banyak atau pengiriman yang lebih lambat.',
+  'adminSet.key.forecast.fsReconcileCycleWeeks.label': 'Siklus rekonsiliasi stok tetap, kemasan',
+  'adminSet.key.forecast.fsReconcileCycleWeeks.hint': 'Komitmen kemasan direkonsiliasi di akhir setiap siklus sebanyak minggu ini, dihitung dari Senin 31 Agu 2026. Bahan baku direkonsiliasi per bulan.',
   'adminSet.key.engine.rescheduleOutWeeks.label': 'Minggu lebih awal sebelum tanggal yang lebih lambat diusulkan',
   'adminSet.key.engine.rescheduleOutWeeks.hint': 'Baris pesanan terbuka yang tiba sedikitnya sekian minggu sebelum minggu dibutuhkan diusulkan untuk datang lebih lambat, agar ruang gudang lega. Perubahan dihitung dengan tarif ruang sewa dan penalti perubahan di atas.',
   'adminSet.key.engine.dampingWeightPct.label': 'Bobot peredaman di zona Trade-off',

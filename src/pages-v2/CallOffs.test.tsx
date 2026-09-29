@@ -160,13 +160,15 @@ describe('Supplier Call-offs page (REQ-E09-03, REQ-E09-04)', () => {
   // in English and Indonesian). jsdom has no layout, so this holds the SHAPE:
   // the PO rides under the call-off, the type under the need date, and the
   // confirm-by deadline under the confirmation, with each header naming both.
+  // The PIC (#90) rides under the material rather than as an eighth column,
+  // which put 257px (EN) / 286px (ID) of overflow back at 1280px.
   it('BL-38 — seven columns, with the PO, type and confirm-by as second lines', async () => {
     renderWithProviders(<SupplierCallOffs />, { identity: SUPPLIER });
     const row = await screen.findByTestId('supplier-calloff-row-co-0003');
     const headers = screen.getAllByRole('columnheader').map((h) => h.textContent);
     expect(headers).toEqual([
       'Call-off Purchase order',
-      'Material',
+      'Material PICSynthetic data · awaiting the MDM SAP feed',
       'Quantity',
       'Need date Type',
       'Confirmation Confirm by',
@@ -176,6 +178,7 @@ describe('Supplier Call-offs page (REQ-E09-03, REQ-E09-04)', () => {
     const cells = within(row).getAllByRole('cell');
     expect(cells).toHaveLength(7);
     expect(cells[0]).toHaveTextContent(/^CO-2026-0003PO-2025-00107$/);
+    expect(within(cells[1]!).getByTestId('supplier-calloff-pic-co-0003')).toBeInTheDocument();
     // Awaiting confirmation: the deadline sits under the confirmation, labelled.
     expect(within(cells[4]!).getByTestId('supplier-calloff-confirm-by-co-0003')).toHaveTextContent(/^Confirm by \d{2} /);
     // A confirmed call-off has no deadline line.

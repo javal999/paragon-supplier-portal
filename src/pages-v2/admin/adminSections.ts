@@ -1,4 +1,4 @@
-import { BellRing, CalendarDays, Link2, ListChecks, SlidersHorizontal, type LucideIcon } from 'lucide-react';
+import { BellRing, Building2, CalendarDays, Link2, ListChecks, SlidersHorizontal, UserCog, type LucideIcon } from 'lucide-react';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // THE ADMINISTRATION AREA — its sections, one definition (BL-50, BL-51, BL-32).
@@ -32,6 +32,20 @@ export const ADMIN_SECTIONS: readonly AdminSection[] = [
     labelKey: 'hub.nav.util.threePls',
     icon: Link2,
     path: `${ADMIN_BASE_PATH}/3pl-tracking`,
+  },
+  {
+    // Material A1 — each supplier's stock update mode (MR-1 BR-02, AC-06).
+    id: 'suppliers',
+    labelKey: 'hub.nav.util.suppliers',
+    icon: Building2,
+    path: `${ADMIN_BASE_PATH}/suppliers`,
+  },
+  {
+    // Material C4 — who each SAP MRP controller code is (MR-5 BR-02).
+    id: 'mrp-controllers',
+    labelKey: 'hub.nav.util.mrpControllers',
+    icon: UserCog,
+    path: `${ADMIN_BASE_PATH}/mrp-controllers`,
   },
   {
     id: 'tolerances',

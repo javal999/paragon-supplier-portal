@@ -163,7 +163,14 @@ export interface ApiStockFigure {
   readonly completionInDays?: number;
 }
 
-/** API-connected suppliers and what a sync returns (deterministic for tests). */
+/**
+ * SIMULATED pull outcomes: what a sync of each listed supplier's system returns
+ * (deterministic for tests). Material A1 (AR-06): this list no longer decides
+ * WHETHER a supplier is API-connected — its governed stock update mode does
+ * (`stockUpdateModeOf`). Membership here is only the default for a supplier the
+ * administrator has never set, and an API supplier with no entry pulls
+ * `NO_ENDPOINT`.
+ */
 export const API_CONNECTIONS: Readonly<
   Record<string, { readonly outcome: 'success'; readonly figures: readonly ApiStockFigure[] } | { readonly outcome: 'failed'; readonly errorKey: string }>
 > = {
@@ -226,27 +233,30 @@ export const CAPACITY_SEED: readonly CapacitySubmission[] = [
     submittedAt: at(-1, 3),
     weeks: weeks(() => 1200),
   },
-  // BL-77 — MG-04 (actives) is the one group three suppliers share, so its
-  // filter shows the three states side by side: sup-005 short in weeks 7 and 8
-  // for a capacity reason, sup-009 covering every week, and sup-006 with no
-  // submission. It also gives "Gaps only" a second supplier's gap beside
-  // sup-007's. Demand is PTI's (1,484 KG and 413 KG a week, from the forecast).
+  // BL-77 — a second supplier in each group that carries demand, so the
+  // filters have something to separate. Since BL-133 the LTP is the one
+  // capacity demand, so only MG-02, MG-10 and MG-20 have any. MG-02: sup-005
+  // short in weeks 7 and 8 for a capacity reason (400 KG against ~497), with
+  // 150 KG of additional capacity, so those weeks are amber ("needs the
+  // additional capacity") rather than a second red group, beside sup-002
+  // confirmed and sup-010 not submitted yet. MG-20: sup-012 covering
+  // every week, beside sup-007's gap. "Gaps only" then shows two suppliers.
   {
     id: 'cap-0003',
     supplierId: 'sup-005',
-    materialGroup: 'MG-04',
+    materialGroup: 'MG-02',
     submittedAt: at(-3, 2),
     weeks: weeks(
-      (i) => (i === 6 || i === 7 ? 1100 : 1500),
-      (i) => (i === 6 || i === 7 ? { reason: 'capacity' as const } : {}),
+      (i) => (i === 6 || i === 7 ? 400 : 520),
+      (i) => (i === 6 || i === 7 ? { reason: 'capacity' as const, upside: 150 } : {}),
     ),
   },
   {
     id: 'cap-0004',
-    supplierId: 'sup-009',
-    materialGroup: 'MG-04',
+    supplierId: 'sup-012',
+    materialGroup: 'MG-20',
     submittedAt: at(-1, 5),
-    weeks: weeks(() => 450),
+    weeks: weeks(() => 17000),
   },
 ];
 
