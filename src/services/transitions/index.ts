@@ -59,6 +59,7 @@ export { qualificationRuleFlow } from './flows/qualificationRule.flow';
 export { planningGroupFlow } from './flows/planningGroup.flow';
 export { mrpControllerFlow } from './flows/mrpController.flow';
 export { materialNameFlow } from './flows/materialName.flow';
+export { simulationOverrideFlow } from './flows/simulationOverride.flow';
 export { hubSettingFlow } from './flows/hubSetting.flow';
 export { reasonCodeFlow } from './flows/reasonCode.flow';
 export { maxStockFlow } from './flows/maxStock.flow';
@@ -114,6 +115,7 @@ import { qualificationRuleFlow } from './flows/qualificationRule.flow';
 import { planningGroupFlow } from './flows/planningGroup.flow';
 import { mrpControllerFlow } from './flows/mrpController.flow';
 import { materialNameFlow } from './flows/materialName.flow';
+import { simulationOverrideFlow } from './flows/simulationOverride.flow';
 import { hubSettingFlow } from './flows/hubSetting.flow';
 import { reasonCodeFlow } from './flows/reasonCode.flow';
 import { maxStockFlow } from './flows/maxStock.flow';
@@ -208,6 +210,10 @@ flowRegistry.register(mrpControllerFlow); // Material C4 — MRP controller list
 // Material C2 — supplier trade names: the supplier submits, Material Planning
 // approves or rejects, PTI may load approved names in bulk (MR-3).
 flowRegistry.register(materialNameFlow); // Material C2 — supplier trade names
+// Material E1 — a planner's input to the stock simulation (MR-7 BR-08):
+// creation-only, the `sapChangeMark` shape. Nothing else about the simulation
+// is stored (AD-1).
+flowRegistry.register(simulationOverrideFlow); // Material E1 — stock simulation planner input
 // BL-32 — the administrator's rule values: one verb with typed keys, the same
 // degenerate single-state ledger shape. Every rule reads the value in force at
 // evaluation, so nothing cascades from a change.
