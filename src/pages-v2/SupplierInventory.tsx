@@ -36,6 +36,7 @@ import {
 import StockEntryPanel from './inventory/StockEntryPanel';
 import StockUploadPanel from './inventory/StockUploadPanel';
 import SupplierSyncPanel from './inventory/SupplierSyncPanel';
+import { PicCell, PicFilter, PicHeader, usePicFilter } from './materials/picDisplay';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SUPPLIER STOCK — REQ-E08-01 (SUP view), REQ-E08-02 (template upload, manual
@@ -63,6 +64,8 @@ const SupplierInventory: React.FC = () => {
   const [typeChosen, setTypeChosen] = useState(false);
   const [entryOpen, setEntryOpen] = useState(false);
   const [incoming, setIncoming] = useState<InventoryPosition | null>(null);
+  // Material C4 — the PIC filter (by name: a supplier never sees the code).
+  const pic = usePicFilter();
   const nowIso = inventoryNow();
   const crumb = [t('hub.nav.section.planning'), t('inv.sup.title')];
 
@@ -79,7 +82,8 @@ const SupplierInventory: React.FC = () => {
   // normally supplies one material type, so the raw material / packaging split
   // appears only for a supplier that supplies both. The PTI view keeps it.
   const splitByType = counts.ROH > 0 && counts.VERP > 0;
-  const shown = splitByType ? rows.filter((r) => r.materialType === activeType) : rows;
+  const ofType = splitByType ? rows.filter((r) => r.materialType === activeType) : rows;
+  const shown = ofType.filter((r) => pic.matches(r.mrpController));
   const needUpdate = rows.filter((r) => stockFreshness(r, nowIso) !== 'current').length;
   const sharesPti = rows.some((r) => r.ptiStockShared);
   const grant = (access.data?.items ?? []).find((g) => g.supplierId === supplierId);
@@ -162,10 +166,23 @@ const SupplierInventory: React.FC = () => {
         />
       )}
 
+      <div className="mb-4">
+        <PicFilter
+          refs={ofType.map((r) => r.mrpController)}
+          persona="supplier"
+          filter={pic.filter}
+          setFilter={pic.setFilter}
+          myCode={pic.myCode}
+        />
+      </div>
+
       <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto">
         <Table>
           <TableHeader>
             <TableHeaderCell>{t('inv.col.material')}</TableHeaderCell>
+            <TableHeaderCell>
+              <PicHeader />
+            </TableHeaderCell>
             <TableHeaderCell className="text-right">{t('inv.col.supplierSoh')}</TableHeaderCell>
             <TableHeaderCell className="text-right">{t('inv.col.yourRop')}</TableHeaderCell>
             {sharesPti && <TableHeaderCell className="text-right">{t('inv.col.ptiSoh')}</TableHeaderCell>}
@@ -182,6 +199,9 @@ const SupplierInventory: React.FC = () => {
                   <div className="text-sm text-text-primary">
                     {p.materialLabel}
                   </div>
+                </TableCell>
+                <TableCell>
+                  <PicCell value={p.mrpController} testId={`sup-stock-pic-${p.materialCode}`} />
                 </TableCell>
                 <TableCell className="text-right whitespace-nowrap">
                   <Figure value={p.supplierSoh} uom={p.uom} absentKey="inv.figure.noSubmission" />
@@ -220,7 +240,7 @@ const SupplierInventory: React.FC = () => {
             ))}
             {shown.length === 0 && (
               <tr>
-                <td colSpan={8} className="py-10 text-center text-sm text-text-tertiary">
+                <td colSpan={9} className="py-10 text-center text-sm text-text-tertiary">
                   {t('inv.table.empty')}
                 </td>
               </tr>
