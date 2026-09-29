@@ -17,6 +17,7 @@ import {
 import type { QueryScope } from '../types';
 import { PERSONA_SYSTEM_ROLES, rolesHolding } from '../../transitions/businessRoles';
 import { stockFreshness } from '../../transitions/inventoryRules';
+import { reasonCodeStore } from '../../transitions/reasonCodes';
 import { planStatus } from '../../transitions/capacityRules';
 import { sdcClock } from '../../sdc';
 import { NO_PERSON } from '../../../context/noPerson';
@@ -41,6 +42,7 @@ beforeEach(() => {
   capacityStore.reset();
   stockSyncStore.reset();
   inventoryAlertLedger.reset();
+  reasonCodeStore.reset();
   sdcClock.reset();
 });
 
@@ -305,8 +307,10 @@ describe('capacity confirmation (REQ-E08-04)', () => {
 });
 
 describe('alerts (REQ-E08-05)', () => {
+  const closeWith = (key: string, payload: Record<string, unknown>, scope: QueryScope = buyer) =>
+    svc.dispatch(scope, { transitionId: 't_inventoryalert_close', entity: 'inventoryAlert', entityId: key, payload });
   const close = (key: string, actionNote: string, scope: QueryScope = buyer) =>
-    svc.dispatch(scope, { transitionId: 't_inventoryalert_close', entity: 'inventoryAlert', entityId: key, payload: { actionNote } });
+    closeWith(key, { closeReason: 'other', actionNote }, scope);
 
   it('the sample data shows High alerts first, and a supplier never sees PTI-stock rules', async () => {
     const all = (await reads.getInventoryAlerts(buyer)).items;
@@ -320,14 +324,14 @@ describe('alerts (REQ-E08-05)', () => {
     expect(new Set(all.map((a) => a.key)).size).toBe(all.length);
   });
 
-  it('closing needs an action note; a closed alert stays one closed alert while the condition persists', async () => {
+  it('closing with "Other" needs a note; a closed alert stays one closed alert while the condition persists', async () => {
     const key = 'ptiBelowRop|RM-STEAR-7300|sup-002';
-    expect((await close(key, '  ')).status).toBe('failed');
+    expect((await close(key, '  ')).reason).toMatch(/NOTE_REQUIRED/);
     expect((await close(key, 'Earlier call-off requested')).status).toBe('done');
     // Another command lands; the condition still holds → no new open alert.
     await svc.dispatch(sup007, { transitionId: 't_inventorydeclaration_declare', entity: 'inventoryDeclaration', payload: { supplierId: 'sup-007', materialCode: 'PK-PETB-8801', totalQty: 1 } });
     const matching = (await reads.getInventoryAlerts(buyer)).items.filter((a) => a.key === key);
-    expect(matching).toEqual([expect.objectContaining({ status: 'closed', actionNote: 'Earlier call-off requested' })]);
+    expect(matching).toEqual([expect.objectContaining({ status: 'closed', closeReason: 'other', actionNote: 'Earlier call-off requested' })]);
     expect((await close(key, 'again')).reason).toMatch(/ILLEGAL_TRANSITION/);
   });
 
@@ -340,6 +344,43 @@ describe('alerts (REQ-E08-05)', () => {
     expect((await reads.getInventoryAlerts(buyer)).items.some((a) => a.key === key)).toBe(false);
     await declare(10000); // below ROP again → recurs
     expect((await reads.getInventoryAlerts(buyer)).items.find((a) => a.key === key)).toMatchObject({ status: 'open' });
+  });
+
+  // MR-9 BR-04, AC-02 (AR-14) — the reason is required; the note only for "Other".
+  it('closing without a reason is refused by the verb', async () => {
+    const key = 'ptiBelowRop|RM-STEAR-7300|sup-002';
+    expect((await closeWith(key, { actionNote: 'Earlier call-off requested' })).reason).toMatch(/MISSING_FIELDS.*closeReason/);
+    expect(inventoryAlertLedger.all()).toEqual([]);
+  });
+
+  it('REASON_UNKNOWN: an unknown or retired reason is refused; an active one closes without a note', async () => {
+    const key = 'ptiBelowRop|RM-STEAR-7300|sup-002';
+    expect((await closeWith(key, { closeReason: 'made-up' })).reason).toMatch(/REASON_UNKNOWN/);
+    const retired = reasonCodeStore.append({
+      list: 'alertClose',
+      code: 'risk-accepted',
+      labelEn: 'Risk accepted',
+      labelId: 'Risiko diterima',
+      active: false,
+      setBy: NO_PERSON,
+      setAt: now(),
+    });
+    expect(retired).toBe(true);
+    expect((await closeWith(key, { closeReason: 'risk-accepted' })).reason).toMatch(/REASON_UNKNOWN/);
+    expect((await closeWith(key, { closeReason: 'po-raised' })).status).toBe('done');
+    expect(inventoryAlertLedger.all()).toEqual([expect.objectContaining({ key, kind: 'closed', closeReason: 'po-raised' })]);
+    expect(inventoryAlertLedger.all()[0].note).toBeUndefined();
+  });
+
+  it('NOTE_REQUIRED: "Other" without a note is refused, with a note it closes', async () => {
+    const key = 'ptiBelowRop|RM-STEAR-7300|sup-002';
+    expect((await closeWith(key, { closeReason: 'other' })).reason).toMatch(/NOTE_REQUIRED/);
+    expect((await closeWith(key, { closeReason: 'other', actionNote: 'Buyer phoned the supplier' })).status).toBe('done');
+    expect((await reads.getInventoryAlerts(buyer)).items.find((a) => a.key === key)).toMatchObject({
+      status: 'closed',
+      closeReason: 'other',
+      actionNote: 'Buyer phoned the supplier',
+    });
   });
 
   it('a supplier cannot close an alert', async () => {

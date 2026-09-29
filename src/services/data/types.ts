@@ -983,8 +983,16 @@ export interface InventoryAlert {
   readonly riskClass: RiskClass;
   /** CR-24 — what the class was decided on (derived with the alert, never stored). */
   readonly riskBasis: RiskBasis;
+  /**
+   * MR-9 BR-03 — days until the risk bites, the order within a class (derived
+   * with the alert, never stored): days of cover or to the projected stock-out,
+   * days to the first capacity gap week, minus the days stale, else 0.
+   */
+  readonly daysToImpact: number;
   readonly status: 'open' | 'closed';
   readonly closedAt?: string;
+  /** MR-9 BR-04 — the `alertClose` code; absent on a closure recorded before reasons (counts as Other). */
+  readonly closeReason?: string;
   readonly actionNote?: string;
 }
 

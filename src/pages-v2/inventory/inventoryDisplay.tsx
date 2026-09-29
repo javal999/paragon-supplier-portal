@@ -244,7 +244,9 @@ function refusalKey(reason: string | undefined): string | null {
     ['NOT_SUPPLIED', 'inv.refusal.notSupplied'],
     ['batch total', 'inv.refusal.batchTotal'],
     ['UNKNOWN_MATERIAL', 'inv.refusal.unknownMaterial'],
-    ['action note', 'inv.refusal.actionNote'],
+    ['REASON_UNKNOWN', 'inv.refusal.closeReason'],
+    ['closeReason', 'inv.refusal.closeReason'],
+    ['NOTE_REQUIRED', 'inv.refusal.noteRequired'],
   ];
   return table.find(([needle]) => reason.includes(needle))?.[1] ?? null;
 }

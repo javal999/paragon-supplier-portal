@@ -2042,7 +2042,7 @@ export type InventoryCommandVars =
       materialGroup: string;
       weeks: readonly { week: string; allocated: number; upside?: number; reason?: string; note?: string }[];
     }
-  | { verb: 'closeAlert'; key: string; actionNote: string };
+  | { verb: 'closeAlert'; key: string; closeReason: string; actionNote?: string };
 
 const INVENTORY_READS = new Set(['inventory', 'stockAccess', 'capacityPlans', 'inventoryAlerts']);
 
@@ -2105,7 +2105,7 @@ export function useInventoryCommand() {
             transitionId: 't_inventoryalert_close',
             entity: 'inventoryAlert',
             entityId: vars.key,
-            payload: { actionNote: vars.actionNote },
+            payload: { closeReason: vars.closeReason, ...(vars.actionNote ? { actionNote: vars.actionNote } : {}) },
           });
       }
     },
