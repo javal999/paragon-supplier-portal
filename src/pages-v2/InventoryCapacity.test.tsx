@@ -301,7 +301,7 @@ describe('One stock entry (BL-60, REQ-E08-02 BR-06, BR-09, BR-10, AC-04, AC-05)'
     });
     expect(table.querySelectorAll('tbody tr')).toHaveLength(STOCK_TEMPLATE_FIELDS.length);
     expect(within(table).getByTestId('stock-template-batch-note')).toHaveTextContent(
-      'Fill G to J only when your batches expire at different times; if you fill one, fill all 4 for that row.',
+      'Fill G to J only when your batches expire at different times. For each batch row, batch number and quantity are required; add the expiry date so your ASN can fill it in.',
     );
   });
 
