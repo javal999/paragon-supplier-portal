@@ -387,6 +387,14 @@ export const POLICY_HOOKS = {
    */
   MRP_CONTROLLER_GOVERNED: 'mrp_controller_governed',
   /**
+   * Material C2 (MR-3 BR-05, AC-01, AC-05) — a supplier trade name: the
+   * material is assigned to the supplier (NOT_ASSIGNED), the name is 2 to 80
+   * characters (NAME_LENGTH), the supplier material number is at most 40
+   * (SUPPLIER_NO_LENGTH), and a rejection carries a reason (REASON_REQUIRED).
+   * The rules are in `materialNameRules.ts`, the ones the pages' pre-checks call.
+   */
+  MATERIAL_NAME_VALID: 'material_name_valid',
+  /**
    * BL-50 — a ruling on one day of the hub's working calendar: the date is one
    * the SAP load covers, the kind is working or non-working, the reason is
    * SUBSTANCE rather than presence (`requiredFields` admits a space bar), and

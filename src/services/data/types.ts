@@ -609,6 +609,62 @@ export interface InventoryPosition {
   }[];
   /** Material C4 — the material's MRP controller (MR-5 BR-03), narrowed per reader. */
   readonly mrpController?: MrpControllerRef;
+  /**
+   * Material C2 — this supplier's APPROVED trade name for the material (MR-3
+   * BR-02), shown beside PTI's description. Projected at read, never stored;
+   * absent while no name is approved or the material is no longer assigned.
+   */
+  readonly tradeName?: string;
+}
+
+// ─── Supplier trade names (Material C2 · MR-3 BR-01 to BR-06) ───────────────
+
+/** Where one supplier trade name stands. `Replaced` = a later name took its place. */
+export type MaterialNameState = 'Awaiting approval' | 'Approved' | 'Rejected' | 'Replaced';
+
+/**
+ * One supplier's trade name for one PTI material, as recorded (MR-3 f). A
+ * changed name is a NEW record; the earlier one moves to `Replaced` only when
+ * the new one is approved (BR-02), so the approved name stays in use meanwhile.
+ */
+export interface SupplierMaterialName {
+  readonly id: string;
+  readonly supplierId: string;
+  readonly materialCode: string;
+  readonly tradeName: string;
+  /** The supplier's own material number, when it gave one (at most 40 characters). */
+  readonly supplierMaterialNo?: string;
+  readonly state: MaterialNameState;
+  /** From the session, never the form. */
+  readonly submittedBy: ActorAttribution;
+  /** Store-assigned from the hub clock. */
+  readonly submittedAt: string;
+  readonly decidedBy?: ActorAttribution;
+  readonly decidedAt?: string;
+  /** Why Material Planning rejected it; the supplier sees this text. */
+  readonly rejectionReason?: string;
+  /** True when PTI loaded it in bulk, approved on load (BR-06). */
+  readonly loadedByPti?: boolean;
+}
+
+/**
+ * One supplier × assigned material with its trade names, as the reader may see
+ * it. A supplier reads its own assigned materials only (BR-03); PTI reads every
+ * pair that carries a name. A material no longer assigned is left out, and so
+ * are its names (edge case 2).
+ */
+export interface MaterialNameRow {
+  readonly supplierId: string;
+  readonly supplierName: string;
+  readonly materialCode: string;
+  /** PTI's description, through the material master resolver. */
+  readonly materialLabel: string;
+  /** The approved name in force, if any. */
+  readonly approved?: SupplierMaterialName;
+  /** The newest record for the pair (awaiting, rejected or approved), if any. */
+  readonly latest?: SupplierMaterialName;
+  /** Every record for the pair, oldest first. */
+  readonly history: readonly SupplierMaterialName[];
 }
 
 /** One entry in the supplier-access log (REQ-E08-03 BR-06). */
@@ -2549,6 +2605,11 @@ export interface IProcurementService {
   // — Inventory & capacity (REQ-E08-01 to REQ-E08-05) —
   /** Supplier × material positions. A supplier sees its own; PTI stock only where granted. */
   getInventory(scope: QueryScope, filter?: InventoryFilter): Promise<Page<InventoryPosition>>;
+  /**
+   * Material C2 (MR-3) — supplier trade names per assigned material. Supplier:
+   * its own assigned materials only. PTI: every supplier × material with a name.
+   */
+  getMaterialNames(scope: QueryScope): Promise<Page<MaterialNameRow>>;
   /** Supplier access to PTI stock. PTI: every supplier with its log. Supplier: its own. */
   getStockAccess(scope: QueryScope): Promise<Page<StockAccessGrant>>;
   /** Capacity against demand per supplier × material group, 13 weeks. */

@@ -328,6 +328,9 @@ const LANE_BUNDLES = Object.freeze({
       // REQ-E14-13 BR-07 / ENG-D16 — the Material Planner agrees a PO-line
       // change with the supplier in SAP and records here that it was taken there.
       'sapchange:mark',
+      // Material C2 (MR-3 BR-02, BR-06) — Material Planning approves or rejects
+      // a supplier's trade name, and loads approved names in bulk.
+      'materialname:review',
     ]),
     // Raising and revising a requisition — split from approving one, which is
     // the segregation `pr:approve` living in `procurement` expresses.
@@ -421,6 +424,9 @@ const LANE_BUNDLES = Object.freeze({
       // REQ-E08-04 — confirming allocated production capacity: the people who
       // plan the supplier's production, beside the stock it declares.
       'capacity:confirm',
+      // Material C2 (MR-3 BR-02) — the supplier's own name for a material it
+      // supplies: the same people who declare its stock.
+      'materialname:submit',
     ]),
     // ── BACK OFFICE — the paperwork ─────────────────────────────────────────
     // *"The admin people are the ones who upload the certificates"* (operator).
@@ -597,6 +603,9 @@ export const AUTOMATION_ATOMS: readonly TransitionRole[] = Object.freeze([
   // RFx C2 (AR-06) — the award-cancel cascade reinstates the quotes the
   // cancelled award decided. A machine act only: no bundle holds it.
   'quotation:reinstate',
+  // Material C2 — a newer trade name for the same supplier × material replaces
+  // the earlier one. A machine act only: no bundle holds it.
+  'materialname:replace',
   'pr:source', 'pr:convert',
   'shipment:create', 'shipment:advance',
   // ⚠️ **`supplierdoc:verify` / `:reject` LEFT THIS LIST AT §82, BECAUSE THEIR

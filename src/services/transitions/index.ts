@@ -56,6 +56,7 @@ export { workingCalendarFlow } from './flows/workingCalendar.flow';
 export { threePlFlow } from './flows/threePl.flow';
 export { supplierOverlayFlow } from './flows/supplierOverlay.flow';
 export { mrpControllerFlow } from './flows/mrpController.flow';
+export { materialNameFlow } from './flows/materialName.flow';
 export { hubSettingFlow } from './flows/hubSetting.flow';
 export { reasonCodeFlow } from './flows/reasonCode.flow';
 export { supplierApplicationFlow } from './flows/supplierApplication.flow';
@@ -107,6 +108,7 @@ import { workingCalendarFlow } from './flows/workingCalendar.flow';
 import { threePlFlow } from './flows/threePl.flow';
 import { supplierOverlayFlow } from './flows/supplierOverlay.flow';
 import { mrpControllerFlow } from './flows/mrpController.flow';
+import { materialNameFlow } from './flows/materialName.flow';
 import { hubSettingFlow } from './flows/hubSetting.flow';
 import { reasonCodeFlow } from './flows/reasonCode.flow';
 import { supplierApplicationFlow } from './flows/supplierApplication.flow';
@@ -190,6 +192,9 @@ flowRegistry.register(supplierOverlayFlow); // Material A1 — supplier overlay
 // The same degenerate single-state ledger shape; WIRED, so every mapping change
 // lands in the audit trail with who and when (MR-5 BR-02).
 flowRegistry.register(mrpControllerFlow); // Material C4 — MRP controller list
+// Material C2 — supplier trade names: the supplier submits, Material Planning
+// approves or rejects, PTI may load approved names in bulk (MR-3).
+flowRegistry.register(materialNameFlow); // Material C2 — supplier trade names
 // BL-32 — the administrator's rule values: one verb with typed keys, the same
 // degenerate single-state ledger shape. Every rule reads the value in force at
 // evaluation, so nothing cascades from a change.

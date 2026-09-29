@@ -65,6 +65,7 @@ import AdminWorkingCalendar from '../pages-v2/admin/AdminWorkingCalendar';
 import AdminThreePls from '../pages-v2/admin/AdminThreePls';
 import AdminSuppliers from '../pages-v2/admin/AdminSuppliers';
 import AdminMrpControllers from '../pages-v2/admin/AdminMrpControllers';
+import BuyerTradeNames from '../pages-v2/materials/BuyerTradeNames';
 import { AdminAlertThresholds, AdminTolerances } from '../pages-v2/admin/AdminRuleValues';
 import AdminReasonCodes from '../pages-v2/admin/AdminReasonCodes';
 import RolesCatalogue from '../pages-v2/RolesCatalogue';
@@ -174,6 +175,7 @@ const ROUTES: RouteCase[] = [
   { name: 'buyer/admin/3pl-tracking', pattern: '/buyer/admin/3pl-tracking', at: '/buyer/admin/3pl-tracking', element: <AdminThreePls />, identity: BUYER },
   { name: 'buyer/admin/suppliers', pattern: '/buyer/admin/suppliers', at: '/buyer/admin/suppliers', element: <AdminSuppliers />, identity: BUYER },
   { name: 'buyer/admin/mrp-controllers', pattern: '/buyer/admin/mrp-controllers', at: '/buyer/admin/mrp-controllers', element: <AdminMrpControllers />, identity: BUYER },
+  { name: 'buyer/materials/trade-names', pattern: '/buyer/materials/trade-names', at: '/buyer/materials/trade-names', element: <BuyerTradeNames />, identity: BUYER },
   { name: 'buyer/admin/tolerances', pattern: '/buyer/admin/tolerances', at: '/buyer/admin/tolerances', element: <AdminTolerances />, identity: BUYER },
   { name: 'buyer/admin/alert-thresholds', pattern: '/buyer/admin/alert-thresholds', at: '/buyer/admin/alert-thresholds', element: <AdminAlertThresholds />, identity: BUYER },
   { name: 'buyer/admin/reason-codes', pattern: '/buyer/admin/reason-codes', at: '/buyer/admin/reason-codes', element: <AdminReasonCodes />, identity: BUYER },
