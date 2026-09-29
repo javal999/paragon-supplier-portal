@@ -597,7 +597,12 @@ const BuyerSupplierApplications: React.FC = () => {
                       <Data>{formatDate(a.submittedAt)}</Data>
                     </TableCell>
                     <TableCell>
-                      <StatusPill variant={STATUS_VARIANT[a.status]}>{a.status}</StatusPill>
+                      {/* Material G1 (MR-10 BR-10) — an accepted application is
+                          not an Approved vendor, so the state reads as its own
+                          label; the state name `Approved` is unchanged. */}
+                      <StatusPill variant={STATUS_VARIANT[a.status]}>
+                        {a.status === 'Approved' ? t('applications.status.accepted') : a.status}
+                      </StatusPill>
                     </TableCell>
                   </TableRow>
                 ))}

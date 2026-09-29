@@ -51,6 +51,7 @@ import {
   type PerformancePeriod,
 } from '../services/data/performanceRules';
 import StatusPill from '../components/ui-v2/StatusPill';
+import { LEVEL_VARIANT } from './qualification/QualificationPanel';
 import Button from '../components/ui-v2/Button';
 import LoadingState from '../components/ui-v2/LoadingState';
 import ErrorState from '../components/ui-v2/ErrorState';
@@ -245,7 +246,6 @@ const BuyerScorecard: React.FC = () => {
   // from the calculated measures for the chosen period. "No history" is a real
   // answer here and is never rendered as 0%.
   const measure = perf.forSupplier(supp.id);
-  const tone = measure.grade ? GRADE_TONE[measure.grade] : GRADE_TONE.D;
 
   const trendData = supp.otifTrend.map((v, i) => ({
     month: OTIF_MONTHS[i],
@@ -442,19 +442,17 @@ const BuyerScorecard: React.FC = () => {
                 bands: GRADE_BANDS.map((b) => `${b.grade} ${b.min}+`).join(' · '),
               })}
             </div>
-            <span
-              className="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold"
-              style={{
-                backgroundColor: `${tone.soft}`,
-                color: tone.stroke,
-                border: `1px solid ${tone.stroke}55`,
-              }}
-            >
-              {/* i18n-defer: supp.status is a fixture relationship-status string
-                  (Preferred/Approved/Conditional…) with no central map — the
-                  string is the data; kept canonical EN. */}
-              {supp.status}
-            </span>
+            {/* Material G1 (MR-10 BR-09) — the free-text relationship status is
+                retired; the standing shown is the vendor's computed level. */}
+            {supp.qualification ? (
+              <span data-testid="scorecard-qualification">
+                <StatusPill variant={LEVEL_VARIANT[supp.qualification]}>
+                  {t('qualification.scorecard.label', {
+                    level: t(`qualification.level.${supp.qualification}`),
+                  })}
+                </StatusPill>
+              </span>
+            ) : null}
           </div>
         </div>
       </section>
