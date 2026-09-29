@@ -120,6 +120,10 @@ export const TRANSITION_PURPOSE: FlowAnnotations = Object.freeze({
   t_asn_resolve_discrepancy: {
     purposeKey: 'processFlows.purpose.t_asn_resolve_discrepancy',
   },
+  t_asn_request_exception: { purposeKey: 'processFlows.purpose.t_asn_request_exception' },
+  t_asn_approve_exception: { purposeKey: 'processFlows.purpose.t_asn_approve_exception' },
+  t_asn_reject_exception: { purposeKey: 'processFlows.purpose.t_asn_reject_exception' },
+  t_asn_change_eta: { purposeKey: 'processFlows.purpose.t_asn_change_eta' },
 
   // ── goodsReceipt ───────────────────────────────────────────────────────────
   t_gr_create: { purposeKey: 'processFlows.purpose.t_gr_create' },

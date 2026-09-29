@@ -21,6 +21,7 @@ import type {
   CommandStatus,
   ASN,
   AsnLineItem,
+  AsnShelfLifeEvent,
   AsnStatus,
   Invoice,
   InvoiceLine,
@@ -86,6 +87,10 @@ import {
   asnLineCheckOf,
   asnLineRefusal,
   asnSubmitRefusal,
+  etaNeedsReapproval,
+  onlyShelfLifeRefused,
+  shelfLifeFailingLines,
+  shelfLifeWaivedFor,
   deriveInvoiceVerdict,
   hasReceiptDiscrepancy,
   invoiceLineRefusal,
@@ -137,6 +142,7 @@ import {
   type QuoteLineInput,
   type AsnBatchSource,
   type AsnLineCheck,
+  type AsnLineRefusal,
   type AsnLineInput,
   type CommandTarget,
   type CascadeCommand,
@@ -533,6 +539,35 @@ const mergeAsnLines = (
   return out;
 };
 
+/**
+ * MR-6 BR-09 — the shelf-life exception entry a verb appends, or null for a verb
+ * that records none. `by` is the session's actor; `at` the hub clock.
+ */
+const shelfLifeEventFor = (
+  transitionId: string | undefined,
+  current: ASN,
+  lines: readonly AsnLineItem[],
+  eta: string,
+  payload: Record<string, unknown>,
+  scope: QueryScope,
+): AsnShelfLifeEvent | null => {
+  const at = sdcClock.now();
+  const by = scope.actor ?? NO_PERSON;
+  const reason = nonBlank(payload.reason);
+  switch (transitionId) {
+    case 't_asn_request_exception':
+      return { kind: 'requested', at, by, reason: reason ?? '', eta, lines: shelfLifeFailingLines(lines, eta) };
+    case 't_asn_change_eta':
+      return { kind: 'etaChanged', at, by, previousEta: current.eta, eta, lines: shelfLifeFailingLines(lines, eta) };
+    case 't_asn_approve_exception':
+      return { kind: 'approved', at, by, ...(reason ? { reason } : {}) };
+    case 't_asn_reject_exception':
+      return { kind: 'rejected', at, by, reason: reason ?? '' };
+    default:
+      return null;
+  }
+};
+
 /** BL-51 — the 3PL an ASN update leaves in place: named, cleared, or kept. */
 const threePlFromPayload = (payload: Record<string, unknown>, stored: string | undefined): string | undefined =>
   Object.prototype.hasOwnProperty.call(payload, 'threePlId') ? nonBlank(payload.threePlId) : stored;
@@ -541,13 +576,24 @@ const advanceShipNoticeTarget: CommandTarget = {
   readState: (id) => asnStore.get(id)?.status ?? null,
   readScopeOwner: (id) => asnStore.get(id)?.supplierId ?? null,
   readEntity: (id) => asnStore.get(id) ?? null,
-  applyTransition: (id, toState, payload) => {
+  applyTransition: (id, toState, payload, scope, transitionId) => {
     const current = asnStore.get(id);
     const shipDate = nonBlank(payload.shipDate) ?? current?.shipDate;
     if (toState === 'Submitted' && current) {
       recordShipmentStarted(current.asnNumber, current.poReference, shipDate);
     }
     const entered = payloadAsnLines(payload);
+    // MR-6 BR-09 — appended, never edited (MAT-R3).
+    const event = current
+      ? shelfLifeEventFor(
+          transitionId,
+          current,
+          entered ? mergeAsnLines(current.lineItems, entered, findPoByNumber(current.poReference)) : current.lineItems,
+          typeof payload.eta === 'string' && payload.eta ? payload.eta : current.eta,
+          payload,
+          scope,
+        )
+      : null;
     // BL-51 — a submission that names the 3PL replaces it; one that sends an
     // empty value (the carrier typed by name instead) clears it; one that says
     // nothing keeps the draft's.
@@ -566,6 +612,7 @@ const advanceShipNoticeTarget: CommandTarget = {
       ...(nonBlank(payload.packingListFile) ? { packingListFile: nonBlank(payload.packingListFile) } : {}),
       ...(nonBlank(payload.overShipReason) ? { overShipReason: nonBlank(payload.overShipReason) } : {}),
       lineItems: entered ? mergeAsnLines(a.lineItems, entered, findPoByNumber(a.poReference)) : a.lineItems,
+      ...(event ? { shelfLifeException: [...(a.shelfLifeException ?? []), event] } : {}),
     }));
   },
   // Creation scope: a supplier may draft an ASN only against its OWN PO.
@@ -704,37 +751,97 @@ bindPolicyHook(POLICY_HOOKS.ASN_LINES_WITHIN_OPEN, ({ entityId, payload }) => {
   return { ok: true };
 });
 
-// REQ-E07-04 BR-04 — what a submitted ASN must carry, read on the draft merged
-// with what the submission adds.
-bindPolicyHook(POLICY_HOOKS.ASN_SUBMIT_COMPLETE, ({ entityId, payload }) => {
-  const asn = asnStore.get(entityId);
-  if (!asn) return { ok: false, reason: 'entity missing' };
+/**
+ * AR-11 / MR-6 — every line of an ASN, merged with what a submission adds,
+ * through the one line rule at submission (batch and expiry required). The
+ * shelf-life refusal is waived only on the approver's verb, for the lines the
+ * pending request named (`shelfLifeWaivedFor`).
+ */
+const asnSubmissionRead = (asn: ASN, payload: Record<string, unknown>, waive: boolean) => {
   const lines = mergeAsnLines(asn.lineItems, payloadAsnLines(payload) ?? [], findPoByNumber(asn.poReference));
-  const refusal = asnSubmitRefusal({
+  const eta = nonBlank(payload.eta) ?? asn.eta;
+  const incomplete = asnSubmitRefusal({
     lineCount: lines.length,
     shipDate: nonBlank(payload.shipDate) ?? asn.shipDate,
-    eta: nonBlank(payload.eta) ?? asn.eta,
+    eta,
   });
-  if (refusal) return { ok: false, reason: `INCOMPLETE_ASN: ${refusal}` };
-  // AR-11 — each line through the one line rule, batch required. What the line
-  // itself lacks is reported here; the PO checks (material on the PO, open
-  // quantity) are ASN_LINES_WITHIN_OPEN's, which runs next on the same rule.
-  const po = findPoByNumber(asn.poReference);
-  const eta = nonBlank(payload.eta) ?? asn.eta;
-  for (let i = 0; i < lines.length; i++) {
-    const lineRefusal = asnLineRefusal(asnLineCheckOf(lines[i], eta), po ?? { poNumber: asn.poReference, lineItems: [] }, asnStore.all(), {
+  const po = findPoByNumber(asn.poReference) ?? { poNumber: asn.poReference, lineItems: [] };
+  const refusals: (AsnLineRefusal | null)[] = lines.map((l) => {
+    const check = asnLineCheckOf(l, eta);
+    return asnLineRefusal(check, po, asnStore.all(), {
       excludeAsn: asn.asnNumber,
       overShipReason: payload.overShipReason ?? asn.overShipReason,
       requireBatch: true,
+      waiveShelfLife: waive && shelfLifeWaivedFor(asn, check),
     });
+  });
+  return { lines, eta, incomplete, refusals };
+};
+
+// REQ-E07-04 BR-04 — what a submitted ASN must carry, read on the draft merged
+// with what the submission adds. MR-6 BR-05 to BR-08 — and each shelf-life
+// line meets its minimum at the ETA, unless Quality is approving an exception.
+bindPolicyHook(POLICY_HOOKS.ASN_SUBMIT_COMPLETE, ({ entityId, currentState, payload }) => {
+  const asn = asnStore.get(entityId);
+  if (!asn) return { ok: false, reason: 'entity missing' };
+  const read = asnSubmissionRead(asn, payload, currentState === 'Awaiting exception');
+  if (read.incomplete) return { ok: false, reason: `INCOMPLETE_ASN: ${read.incomplete}` };
+  // AR-11 — what the line itself lacks is reported here; the PO checks
+  // (material on the PO, open quantity) are ASN_LINES_WITHIN_OPEN's, which runs
+  // next on the same rule.
+  for (let i = 0; i < read.lines.length; i++) {
+    const lineRefusal = read.refusals[i];
     if (lineRefusal === 'batch') {
       return { ok: false, reason: `INCOMPLETE_ASN: batch number missing on line ${i + 1}` };
     }
     if (lineRefusal === 'quantity') {
       return { ok: false, reason: `INCOMPLETE_ASN: shipped quantity missing on line ${i + 1}` };
     }
+    if (lineRefusal === 'expiryRequired') {
+      return { ok: false, reason: `INCOMPLETE_ASN: expiry date missing on line ${i + 1}` };
+    }
+    if (lineRefusal === 'shelfLife') {
+      return {
+        ok: false,
+        reason: `SHELF_LIFE: line ${i + 1} (${read.lines[i].materialCode}) expires before the minimum remaining shelf life at ETA ${read.eta} — request a shelf-life exception`,
+      };
+    }
   }
   return { ok: true };
+});
+
+// MR-6 BR-08 — an exception may be asked for only when shelf life is the one
+// thing wrong with the submission, and the supplier says why.
+bindPolicyHook(POLICY_HOOKS.ASN_SHELF_LIFE_EXCEPTION_ONLY, ({ entityId, payload }) => {
+  const asn = asnStore.get(entityId);
+  if (!asn) return { ok: false, reason: 'entity missing' };
+  if (!nonBlank(payload.reason)) return { ok: false, reason: 'REASON_REQUIRED: say why the goods should come in' };
+  const read = asnSubmissionRead(asn, payload, false);
+  if (read.incomplete) return { ok: false, reason: `INCOMPLETE_ASN: ${read.incomplete}` };
+  if (onlyShelfLifeRefused(read.refusals)) return { ok: true };
+  const other = read.refusals.findIndex((r) => r !== null && r !== 'shelfLife');
+  return other >= 0
+    ? { ok: false, reason: `SHELF_LIFE_NOT_ONLY_REFUSAL: line ${other + 1}: ${read.refusals[other]}` }
+    : { ok: false, reason: 'SHELF_LIFE_MET: every line meets its minimum remaining shelf life — submit instead' };
+});
+
+// MR-6 BR-08 — Quality's rejection says why; the supplier reads it.
+bindPolicyHook(POLICY_HOOKS.ASN_SHELF_LIFE_REASON_GIVEN, ({ payload }) =>
+  nonBlank(payload.reason) ? { ok: true } : { ok: false, reason: 'REASON_REQUIRED: say why the exception is refused' },
+);
+
+// MR-6 edge case 1 — a later ETA reopens an approved exception when a line
+// still fails at it. An ETA change that needs no new decision is refused by
+// name: this verb exists only for the reopening.
+bindPolicyHook(POLICY_HOOKS.ASN_ETA_NEEDS_REAPPROVAL, ({ entityId, payload }) => {
+  const asn = asnStore.get(entityId);
+  if (!asn) return { ok: false, reason: 'entity missing' };
+  const eta = nonBlank(payload.eta);
+  if (!eta || !isCalendarDate(eta)) return { ok: false, reason: 'INCOMPLETE_ASN: eta' };
+  if (asn.shipDate && eta < asn.shipDate) return { ok: false, reason: 'INCOMPLETE_ASN: etaBeforeShip' };
+  return etaNeedsReapproval(asn, eta)
+    ? { ok: true }
+    : { ok: false, reason: `ETA_NEEDS_NO_REAPPROVAL: ${eta} is covered by the approved exception, or none was approved` };
 });
 
 // REQ-E07-04 — an ASN can be withdrawn only while nothing was received on it.

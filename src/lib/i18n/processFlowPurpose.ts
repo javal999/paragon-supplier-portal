@@ -79,6 +79,14 @@ export const processFlowPurposeEn: Record<string, string> = {
     'What turned up did not match what was announced. It follows from the receiving team’s finding, and it is the supplier’s cue that something needs explaining.',
   'processFlows.purpose.t_asn_resolve_discrepancy':
     'The mismatch has been talked through and settled, so the notice stops sitting in an unresolved pile.',
+  'processFlows.purpose.t_asn_request_exception':
+    'The goods would arrive with less shelf life left than Paragon accepts. The supplier says why they should come anyway and asks Quality to decide before anything ships.',
+  'processFlows.purpose.t_asn_approve_exception':
+    'Quality accepts the short-dated goods. The notice goes to the warehouse, and the goods are received into blocked stock.',
+  'processFlows.purpose.t_asn_reject_exception':
+    'Quality refuses the short-dated goods and says why. The notice goes back to the supplier to rework.',
+  'processFlows.purpose.t_asn_change_eta':
+    'The supplier moves the arrival later than the date Quality approved, so the shelf life left at arrival is shorter and Quality decides again.',
 
   // ── goodsReceipt ───────────────────────────────────────────────────────────
   'processFlows.purpose.entity.goodsReceipt':
@@ -614,6 +622,14 @@ export const processFlowPurposeId: Record<string, string> = {
     'Yang datang tidak sesuai dengan yang diberitahukan. Ini mengikuti temuan tim penerimaan, dan menjadi tanda bagi pemasok bahwa ada yang harus dijelaskan.',
   'processFlows.purpose.t_asn_resolve_discrepancy':
     'Ketidaksesuaiannya sudah dibicarakan dan dituntaskan, sehingga pemberitahuan ini tidak lagi menumpuk sebagai perkara terbuka.',
+  'processFlows.purpose.t_asn_request_exception':
+    'Barang akan tiba dengan sisa umur simpan lebih pendek dari yang diterima Paragon. Pemasok menjelaskan mengapa barang tetap perlu dikirim dan meminta Mutu memutuskan sebelum apa pun dikirim.',
+  'processFlows.purpose.t_asn_approve_exception':
+    'Mutu menerima barang yang umur simpannya pendek. Pemberitahuan diteruskan ke gudang, dan barang diterima ke stok terblokir.',
+  'processFlows.purpose.t_asn_reject_exception':
+    'Mutu menolak barang yang umur simpannya pendek dan menyebutkan alasannya. Pemberitahuan kembali ke pemasok untuk diperbaiki.',
+  'processFlows.purpose.t_asn_change_eta':
+    'Pemasok memundurkan tanggal tiba melewati tanggal yang disetujui Mutu, sehingga sisa umur simpan saat tiba lebih pendek dan Mutu memutuskan lagi.',
 
   // ── goodsReceipt ───────────────────────────────────────────────────────────
   'processFlows.purpose.entity.goodsReceipt':

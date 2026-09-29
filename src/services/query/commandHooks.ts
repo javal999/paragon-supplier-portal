@@ -437,6 +437,98 @@ export function useAdvanceShipNoticeCancel() {
   });
 }
 
+// ─── Shelf-life exception (MR-6 BR-08, edge case 1) ─────────────────────────
+
+/** A submission's fields plus the supplier's reason (`t_asn_request_exception`). */
+export interface AsnRequestExceptionVars extends AsnSubmitVars {
+  reason: string;
+}
+
+/**
+ * The supplier asks Quality for a shelf-life exception instead of submitting
+ * (Draft → Awaiting exception). Carries what a submission carries.
+ */
+export function useAdvanceShipNoticeRequestException() {
+  const svc = useDataService();
+  const scope = useScope();
+  const invalidate = useInvalidateProcurement();
+
+  return useMutation<CommandResult, Error, AsnRequestExceptionVars>({
+    mutationFn: ({ asnNumber, carrier, threePlId, trackingNumber, eta, shipDate, lines, overShipReason, reason }) =>
+      svc.commands.dispatch(scope, {
+        transitionId: 't_asn_request_exception',
+        entity: 'advanceShipNotice',
+        entityId: asnNumber,
+        payload: {
+          carrier,
+          ...(threePlId !== undefined ? { threePlId } : {}),
+          trackingNumber,
+          eta,
+          ...(shipDate ? { shipDate } : {}),
+          ...(lines ? { lines } : {}),
+          ...(overShipReason ? { overShipReason } : {}),
+          reason,
+        },
+      }),
+    onSuccess: (result) => {
+      if (result.status !== 'failed') invalidate(scope);
+    },
+  });
+}
+
+/** Quality's decision on a shelf-life exception (a reason is required to reject). */
+export interface AsnExceptionDecisionVars {
+  asnNumber: string;
+  decision: 'approve' | 'reject';
+  reason?: string;
+}
+
+/**
+ * Quality approves (Awaiting exception → Submitted) or rejects (→ Draft) a
+ * shelf-life exception.
+ */
+export function useAdvanceShipNoticeExceptionDecision() {
+  const svc = useDataService();
+  const scope = useScope();
+  const invalidate = useInvalidateProcurement();
+
+  return useMutation<CommandResult, Error, AsnExceptionDecisionVars>({
+    mutationFn: ({ asnNumber, decision, reason }) =>
+      svc.commands.dispatch(scope, {
+        transitionId: decision === 'approve' ? 't_asn_approve_exception' : 't_asn_reject_exception',
+        entity: 'advanceShipNotice',
+        entityId: asnNumber,
+        payload: reason?.trim() ? { reason: reason.trim() } : {},
+      }),
+    onSuccess: (result) => {
+      if (result.status !== 'failed') invalidate(scope);
+    },
+  });
+}
+
+/**
+ * MR-6 edge case 1 — the supplier moves an approved ASN's ETA later; a line
+ * still fails there, so Quality decides again (Submitted → Awaiting exception).
+ */
+export function useAdvanceShipNoticeChangeEta() {
+  const svc = useDataService();
+  const scope = useScope();
+  const invalidate = useInvalidateProcurement();
+
+  return useMutation<CommandResult, Error, { asnNumber: string; eta: string }>({
+    mutationFn: ({ asnNumber, eta }) =>
+      svc.commands.dispatch(scope, {
+        transitionId: 't_asn_change_eta',
+        entity: 'advanceShipNotice',
+        entityId: asnNumber,
+        payload: { eta },
+      }),
+    onSuccess: (result) => {
+      if (result.status !== 'failed') invalidate(scope);
+    },
+  });
+}
+
 // ─── Receipt discrepancy (REQ-E07-06) ───────────────────────────────────────
 
 export interface ReceiptDiscrepancyAnswerVars {
