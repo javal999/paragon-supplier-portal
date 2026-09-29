@@ -235,6 +235,19 @@ export const LOOSE_END_CENSUS: readonly CensusEntry[] = Object.freeze([
       'correctly declared terminal. The tracking links built from the list are derived at read and are ' +
       'never states of any machine.',
   },
+  // ── mrpController (Material C4) ────────────────────────────────────────────
+  {
+    entity: 'mrpController',
+    kind: 'initial-integrity',
+    subject: 'Maintained',
+    reason: 'substrate-only',
+    note:
+      'THE SAME DEGENERATE SINGLE-STATE LEDGER SHAPE AS THE 3PL LIST: the entity IS an SAP MRP ' +
+      'controller code, addressed by the code, and setting a code the list does not hold yet adds it — ' +
+      'there is no separate creation verb to be an entry. The recording verb is statePreserving, so it is ' +
+      'neither an entry nor an exit, and the state is correctly declared terminal. What a material shows ' +
+      'is derived at read from the latest change per code and is never a state.',
+  },
   // ── supplierOverlay (Material A1) ──────────────────────────────────────────
   {
     entity: 'supplierOverlay',
