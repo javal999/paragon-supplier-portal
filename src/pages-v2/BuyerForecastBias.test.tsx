@@ -1,4 +1,4 @@
-import { describe, it, expect, afterEach, beforeEach } from 'vitest';
+import { describe, it, expect, afterEach, beforeAll, beforeEach } from 'vitest';
 import { screen, fireEvent, waitFor } from '@testing-library/react';
 import { renderWithProviders, BUYER } from '../test/test-utils';
 import BuyerForecastBias from './BuyerForecastBias';
@@ -22,6 +22,11 @@ const buyerScope: QueryScope = { personaType: 'buyer', supplierId: null, busines
 const supplierScope: QueryScope = { personaType: 'supplier', supplierId: 'sup-007', businessRoles: PERSONA_SYSTEM_ROLES.supplier };
 const view = async () => (await mockDataService.procurement.getForecastBias(buyerScope))!;
 
+// The bias replay re-runs the forecast at 52 past origins; run it once, outside
+// the per-test clock (it is memoised for the rest of the file).
+beforeAll(async () => {
+  await view();
+}, 60_000);
 beforeEach(() => forecastOverrideStore.reset());
 afterEach(() => {
   forecastOverrideStore.reset();

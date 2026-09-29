@@ -8,11 +8,11 @@
 // then carries it, and material planning does not.
 // ────────────────────────────────────────────────────────────────────────────
 
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { MockCommandService } from './MockCommandService';
 import { MockProcurementService } from './MockProcurementService';
 import { forecastOverrideStore } from './stores/forecastOverrideStore';
-import { currentDemandForecast } from './demandForecastRun';
+import { currentDemandForecast, currentForecastBias } from './demandForecastRun';
 import { DataError, type QueryScope } from '../types';
 import { PERSONA_SYSTEM_ROLES, SYSTEM_ROLES } from '../../transitions/businessRoles';
 import { POLICY_HOOKS } from '../../transitions/policyHooks';
@@ -37,6 +37,10 @@ const engine = sku.forecast[2];
 const override = (scope: QueryScope, payload: Record<string, unknown>) =>
   cmd.dispatch(scope, { transitionId: 't_forecastoverride_record', entity: 'forecastOverride', payload: { skuCode: sku.skuCode, weekStart: W, ...payload } });
 
+// The bias replay (52 origins) runs once, outside the per-test clock; memoised after.
+beforeAll(() => {
+  currentForecastBias();
+}, 60_000);
 beforeEach(() => {
   forecastOverrideStore.reset();
   reasonCodeStore.reset();

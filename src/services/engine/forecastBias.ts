@@ -48,7 +48,7 @@ export const TS_LIMIT = 0.51;
 /** Errors needed before the signal may alarm (ENG-B101): a quarter of weekly errors. */
 export const TS_MIN_ERRORS = 13;
 /** Past weekly origins replayed (ENG-B100). */
-export const BIAS_ORIGINS = 26;
+export const BIAS_ORIGINS = 52;
 
 export type BiasDirection = 'under' | 'over';
 

@@ -88,18 +88,19 @@ describe('BR-01 on the synthetic dataset — engine against SAP’s plan (seed 2
   const asOf = sdcClock.now().slice(0, 10);
   const run = forecastBias({ finishedGoods: data.finishedGoods, sales: data.sales, fgPlan: data.fgPlan, bom: data.bom, materials: data.materials, asOf });
 
-  it('26 weekly origins, the last the Monday before this week', () => {
-    expect(run.origins).toHaveLength(26);
-    expect(run.origins[25]).toBe(addDays(mondayOf(asOf), -7));
-    expect(run.origins[0]).toBe(addDays(mondayOf(asOf), -7 * 26));
+  it('52 weekly origins, the last the Monday before this week', () => {
+    expect(run.origins).toHaveLength(52);
+    expect(run.origins[51]).toBe(addDays(mondayOf(asOf), -7));
+    expect(run.origins[0]).toBe(addDays(mondayOf(asOf), -7 * 52));
   });
 
   it('the engine forecast at an origin is the first week of a run made as if it were that Monday (no look-ahead)', () => {
     const sku = run.skus.find((s) => s.method === 'comb')!;
-    const p = sku.points[10];
-    // A sale in the origin week itself must not change the forecast made that Monday.
+    const p = sku.points[40];
+    // A sale in the origin week itself must not change the forecast made that Monday:
+    // replay that one origin (asOf the week after it) on sales bumped in that week.
     const bumped = data.sales.map((s) => (s.skuCode === sku.skuCode && s.weekStart === p.origin ? { ...s, quantity: s.quantity * 10 } : s));
-    const again = forecastBias({ finishedGoods: data.finishedGoods, sales: bumped, fgPlan: data.fgPlan, bom: data.bom, materials: data.materials, asOf, origins: 26 - 10 });
+    const again = forecastBias({ finishedGoods: data.finishedGoods, sales: bumped, fgPlan: data.fgPlan, bom: data.bom, materials: data.materials, asOf: addDays(p.origin, 7), origins: 1 });
     const q = again.skus.find((s) => s.skuCode === sku.skuCode)!.points[0];
     expect(q.origin).toBe(p.origin);
     expect(q.engine).toBe(p.engine);
@@ -123,24 +124,26 @@ describe('BR-01 on the synthetic dataset — engine against SAP’s plan (seed 2
     // Pinned by name: a replaced dataset changes these members (DATA-POPULATION pin).
     expect(summary).toMatchInlineSnapshot(`
       {
-        "engine": [],
+        "engine": [
+          "SYN-FG-010",
+        ],
         "materialAlarms": {
           "engine": {
             "over": 0,
-            "total": 0,
-            "under": 0,
+            "total": 1,
+            "under": 1,
           },
           "sap": {
-            "over": 6,
-            "total": 19,
-            "under": 13,
+            "over": 5,
+            "total": 20,
+            "under": 15,
           },
         },
         "materials": 42,
         "sap": [
-          "SYN-FG-001",
           "SYN-FG-006",
           "SYN-FG-008",
+          "SYN-FG-010",
           "SYN-FG-011",
           "SYN-FG-012",
           "SYN-FG-013",
@@ -152,13 +155,13 @@ describe('BR-01 on the synthetic dataset — engine against SAP’s plan (seed 2
         "skuAlarms": {
           "engine": {
             "over": 0,
-            "total": 0,
-            "under": 0,
+            "total": 1,
+            "under": 1,
           },
           "sap": {
-            "over": 4,
+            "over": 3,
             "total": 10,
-            "under": 6,
+            "under": 7,
           },
         },
         "skus": 20,
