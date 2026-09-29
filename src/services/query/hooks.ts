@@ -78,9 +78,13 @@ export const useStockAccess = () =>
 export const useMaterialNames = () =>
   useServiceQuery(['procurement', 'materialNames'], (svc, scope) => svc.procurement.getMaterialNames(scope));
 
-/** Capacity against demand per supplier × material group (REQ-E08-04). */
+/** Capacity against demand per supplier × planning group (REQ-E08-04, MR-8 BR-04). */
 export const useCapacityPlans = () =>
   useServiceQuery(['procurement', 'capacityPlans'], (svc, scope) => svc.procurement.getCapacityPlans(scope));
+
+/** Material C5 (MR-8) — the planning groups, their materials and changes. */
+export const usePlanningGroups = () =>
+  useServiceQuery(['procurement', 'planningGroups'], (svc, scope) => svc.procurement.getPlanningGroups(scope));
 
 /** Inventory and capacity alerts (REQ-E08-05). */
 export const useInventoryAlerts = () =>

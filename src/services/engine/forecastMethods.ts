@@ -119,12 +119,6 @@ export function seasonalIndices(y: readonly number[], m: number = SEASON_WEEKS):
 
 // ── Exponential smoothing (D2) ───────────────────────────────────────────────
 
-const sse = (y: readonly number[], fitted: readonly number[]): number => {
-  let s = 0;
-  for (let t = 1; t < y.length; t += 1) if (!Number.isNaN(fitted[t])) s += (y[t] - fitted[t]) ** 2;
-  return s;
-};
-
 /** α grid (and β grid, bounded by α): 0.05, 0.10, …, 0.95. */
 export const ALPHA_GRID: readonly number[] = Array.from({ length: 19 }, (_, i) => Math.round((i + 1) * 5) / 100);
 /** φ grid for the damped trend. */
@@ -171,43 +165,71 @@ export function holtWith(y: readonly number[], horizon: number, p: HoltParams): 
   return { forecast, fitted };
 }
 
+/**
+ * The one-step in-sample squared error of SES (φ = 0 trend-free) or Holt / damped
+ * with given parameters, without building the fit — the same arithmetic, in the
+ * same order, as summing (y[t] − fitted[t])² over `holtWith`'s (or `sesWith`'s) fit, so the grid
+ * search picks exactly the parameters it picked before (E14-09 replay speed).
+ */
+function sesSse(y: readonly number[], alpha: number): number {
+  let level = y[0];
+  let s = 0;
+  for (let t = 1; t < y.length; t += 1) {
+    s += (y[t] - level) ** 2;
+    level = alpha * y[t] + (1 - alpha) * level;
+  }
+  return s;
+}
+
+function holtSse(y: readonly number[], p: HoltParams): number {
+  let level = y[0];
+  let trend = y.length > 1 ? y[1] - y[0] : 0;
+  let s = 0;
+  for (let t = 1; t < y.length; t += 1) {
+    s += (y[t] - (level + p.phi * trend)) ** 2;
+    const prev = level;
+    level = p.alpha * y[t] + (1 - p.alpha) * (level + p.phi * trend);
+    trend = p.beta * (level - prev) + (1 - p.beta) * p.phi * trend;
+  }
+  return s;
+}
+
 export interface FittedMethod<P> extends MethodFit {
   readonly params: P;
 }
 
 /** SES with α chosen on the grid. */
 export function ses(y: readonly number[], horizon: number): FittedMethod<SesParams> {
-  let best: FittedMethod<SesParams> | null = null;
+  let best: SesParams | null = null;
   let bestErr = Infinity;
   for (const alpha of ALPHA_GRID) {
-    const fit = sesWith(y, horizon, { alpha });
-    const err = sse(y, fit.fitted);
+    const err = sesSse(y, alpha);
     if (err < bestErr) {
       bestErr = err;
-      best = { ...fit, params: { alpha } };
+      best = { alpha };
     }
   }
-  return best!;
+  return { ...sesWith(y, horizon, best!), params: best! };
 }
 
 /** Holt (damped = false) or damped trend, parameters chosen on the grid. */
 export function holt(y: readonly number[], horizon: number, damped: boolean): FittedMethod<HoltParams> {
-  let best: FittedMethod<HoltParams> | null = null;
+  let best: HoltParams | null = null;
   let bestErr = Infinity;
   for (const phi of damped ? PHI_GRID : [1]) {
     for (const alpha of ALPHA_GRID) {
       for (const beta of ALPHA_GRID) {
         if (beta > alpha) break;
-        const fit = holtWith(y, horizon, { alpha, beta, phi });
-        const err = sse(y, fit.fitted);
+        const params = { alpha, beta, phi };
+        const err = holtSse(y, params);
         if (err < bestErr) {
           bestErr = err;
-          best = { ...fit, params: { alpha, beta, phi } };
+          best = params;
         }
       }
     }
   }
-  return best!;
+  return { ...holtWith(y, horizon, best!), params: best! };
 }
 
 export interface CombFit extends MethodFit {
@@ -233,6 +255,8 @@ function withSeasonality<T extends MethodFit>(
   run: (x: readonly number[]) => T,
   allowSeasonal: boolean,
   index: CalendarIndex | undefined,
+  /** Replay (E14-09): the seasonality decided at the last retraining, not re-tested. */
+  seasonalDecided?: boolean,
 ): { fit: T; seasonal: boolean; forecast: number[]; fitted: number[] } {
   // The calendar index first (PTI's known events), then the M4 test on what is left.
   const ev = (t: number) => {
@@ -240,7 +264,8 @@ function withSeasonality<T extends MethodFit>(
     return v > 0 ? v : 1;
   };
   const z = y.map((v, t) => v / ev(t));
-  const seasonal = allowSeasonal && isSeasonal(z);
+  const seasonal =
+    seasonalDecided !== undefined ? seasonalDecided && z.length >= 2 * SEASON_WEEKS : allowSeasonal && isSeasonal(z);
   const si = seasonal ? seasonalIndices(z) : null;
   // A position whose index is 0 (no sale there in any season) is left as is.
   const at = (t: number) => (si && si[t % SEASON_WEEKS] > 0 ? si[t % SEASON_WEEKS] : 1) * ev(t);
@@ -281,6 +306,43 @@ export function comb(y: readonly number[], horizon: number, allowSeasonal = true
   );
   const p = parts!;
   return { forecast: r.forecast, fitted: r.fitted, seasonal: r.seasonal, ses: p.s.params, holt: p.h.params, damped: p.d.params };
+}
+
+/** The Comb's parameters and seasonality as chosen at a (re)training. */
+export interface CombParams {
+  readonly ses: SesParams;
+  readonly holt: HoltParams;
+  readonly damped: HoltParams;
+  readonly seasonal: boolean;
+}
+
+/**
+ * The Comb with its parameters and seasonality held as they were chosen at the
+ * last retraining (E14-09 replay, ENG-B90): the three methods' states roll
+ * forward over `y` with no grid search. Held at the parameters `comb` chose on
+ * the same `y`, it returns exactly `comb`'s forecast (tested).
+ */
+export function combWith(y: readonly number[], horizon: number, params: CombParams, index?: CalendarIndex): MethodFit {
+  if (y.length < 2) {
+    const v = y.length === 1 ? y[0] : 0;
+    return { forecast: new Array<number>(horizon).fill(v), fitted: y.map(() => NaN) };
+  }
+  const r = withSeasonality(
+    y,
+    (x) => {
+      const s = sesWith(x, horizon, params.ses);
+      const h = holtWith(x, horizon, params.holt);
+      const d = holtWith(x, horizon, params.damped);
+      return {
+        forecast: s.forecast.map((v, i) => (v + h.forecast[i] + d.forecast[i]) / 3),
+        fitted: s.fitted.map((v, t) => (v + h.fitted[t] + d.fitted[t]) / 3),
+      };
+    },
+    params.seasonal,
+    index,
+    params.seasonal,
+  );
+  return { forecast: r.forecast, fitted: r.fitted };
 }
 
 /** Least-squares line a + b·t over t = 0…n−1. */

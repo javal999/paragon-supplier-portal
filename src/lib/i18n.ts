@@ -117,6 +117,8 @@ import { threePlEn, threePlId } from './i18n/threePl';
 import { adminSuppliersEn, adminSuppliersId } from './i18n/adminSuppliers';
 // — Material G1 vendor qualification (MR-10) —
 import { qualificationEn, qualificationId } from './i18n/qualification';
+// — Material C5 administration · planning groups (MR-8) —
+import { adminPlanningGroupsEn, adminPlanningGroupsId } from './i18n/adminPlanningGroups';
 // — Material C4 the MRP controller (PIC) on material surfaces (MR-5) —
 import { mrpControllerEn, mrpControllerId } from './i18n/mrpController';
 import { materialNamesEn, materialNamesId } from './i18n/materialNames';
@@ -227,6 +229,7 @@ export const resources = {
       ...threePlEn,
       ...adminSuppliersEn,
       ...qualificationEn,
+      ...adminPlanningGroupsEn,
       ...mrpControllerEn,
       ...materialNamesEn,
       ...adminSettingsEn,
@@ -708,6 +711,7 @@ export const resources = {
       ...threePlId,
       ...adminSuppliersId,
       ...qualificationId,
+      ...adminPlanningGroupsId,
       ...mrpControllerId,
       ...materialNamesId,
       ...adminSettingsId,

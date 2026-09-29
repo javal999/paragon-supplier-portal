@@ -373,6 +373,17 @@ export const processFlowPurposeEn: Record<string, string> = {
     'The documents a vendor must hold, valid and in date, to be Approved or Preferred. The hub works out every vendor’s level from these lists and its documents; nobody sets a level by hand.',
   'processFlows.purpose.t_qualification_rule_set':
     'Procurement and Quality set the documents one level requires. The Preferred list always includes every Approved document. A change moves vendors up or down at once, so each change is on record with who made it and when.',
+  // ── planning groups (Material C5) ────────────────────────────────────
+  'processFlows.purpose.entity.planningGroup':
+    'A set of materials that share capacity at a supplier, under one SAP material group. Until Material Planning splits an SAP group it has one default planning group with the same materials, so capacity reads as it always did.',
+  'processFlows.purpose.t_planninggroup_create':
+    'Material Planning creates a new, empty planning group under one SAP material group, to split materials that run on different lines at the supplier. The change is on record with who made it and when.',
+  'processFlows.purpose.t_planninggroup_rename':
+    'Material Planning renames a planning group. Suppliers and planners see what it is called on capacity and alerts, so each change is on record.',
+  'processFlows.purpose.t_planninggroup_move_materials':
+    'Material Planning moves materials into a planning group of the same SAP material group. A material is in exactly one group, and the capacity already entered for the weeks ahead on both groups is marked for the supplier to enter again.',
+  'processFlows.purpose.t_planninggroup_retire':
+    'Material Planning retires a planning group once no material is left in it. A group is never deleted, so the capacity entered against it stays readable.',
   // ── the MRP controller list (Material C4) ───────────────────────────
   'processFlows.purpose.entity.mrpController':
     'Who handles a material in planning. SAP gives each material an MRP controller code; the hub keeps who that code is: the planner or desk a supplier can ask for, and the hub users behind it.',
@@ -913,6 +924,16 @@ export const processFlowPurposeId: Record<string, string> = {
     'Dokumen yang harus dimiliki vendor, sah dan belum kedaluwarsa, agar berstatus Approved atau Preferred. Hub menghitung level setiap vendor dari daftar ini dan dokumennya; tidak ada yang menetapkan level secara manual.',
   'processFlows.purpose.t_qualification_rule_set':
     'Procurement dan Quality menetapkan dokumen yang diwajibkan untuk satu level. Daftar Preferred selalu memuat setiap dokumen Approved. Perubahan langsung menaikkan atau menurunkan level vendor, sehingga setiap perubahan tercatat beserta siapa dan kapan.',
+  'processFlows.purpose.entity.planningGroup':
+    'Sekumpulan material yang berbagi kapasitas di satu pemasok, di bawah satu grup material SAP. Sebelum Material Planning memecah sebuah grup SAP, grup itu memiliki satu grup perencanaan bawaan dengan material yang sama, sehingga kapasitas terbaca seperti sebelumnya.',
+  'processFlows.purpose.t_planninggroup_create':
+    'Material Planning membuat grup perencanaan baru yang kosong di bawah satu grup material SAP, untuk memisahkan material yang diproduksi di lini berbeda di pemasok. Perubahan tercatat beserta siapa dan kapan.',
+  'processFlows.purpose.t_planninggroup_rename':
+    'Material Planning mengganti nama grup perencanaan. Nama inilah yang dilihat pemasok dan perencana pada kapasitas dan peringatan, sehingga setiap perubahan tercatat.',
+  'processFlows.purpose.t_planninggroup_move_materials':
+    'Material Planning memindahkan material ke grup perencanaan dari grup material SAP yang sama. Satu material hanya berada di satu grup, dan kapasitas yang sudah diisi untuk minggu-minggu mendatang pada kedua grup ditandai agar pemasok mengisinya kembali.',
+  'processFlows.purpose.t_planninggroup_retire':
+    'Material Planning menonaktifkan grup perencanaan setelah tidak ada material tersisa di dalamnya. Grup tidak pernah dihapus, sehingga kapasitas yang pernah diisi tetap dapat dibaca.',
   'processFlows.purpose.entity.mrpController':
     'Siapa yang menangani suatu material di perencanaan. SAP memberi setiap material kode MRP controller; hub menyimpan siapa pemilik kode itu: nama yang dapat dihubungi pemasok, dan pengguna hub di baliknya.',
   'processFlows.purpose.t_mrpcontroller_set':

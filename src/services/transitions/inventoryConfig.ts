@@ -21,7 +21,8 @@
 //     capacity grid; changing it changes the grid, not a threshold.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { hubSetting, stalePeriodFor } from './hubSettingsStore';
+import { hubSetting, staleOverrideFor, stalePeriodFor } from './hubSettingsStore';
+import type { UpdateCycleSettings } from './updateCycle';
 
 /** CR-01 — average daily demand = forecast quantity for the next 30 days ÷ 30. */
 export const DEMAND_WINDOW = 30;
@@ -69,6 +70,25 @@ export function coverageThresholds(): { readonly coveredFrom: number; readonly a
  */
 export function updateSlaFor(supplierId: string, materialCode: string): number {
   return stalePeriodFor(supplierId, materialCode);
+}
+
+/**
+ * MR-1 BR-05 (Material B1) — the administrator's stale period for one supplier
+ * × material, in days, or null when the pair has none. When set it wins over
+ * the staleness by update mode.
+ */
+export function staleOverrideDaysFor(supplierId: string, materialCode: string): number | null {
+  return staleOverrideFor(supplierId, materialCode);
+}
+
+/** MR-1 BR-03 (MAT-D7) — the weekly cutoff in force: weekday and time (minutes after midnight WIB). */
+export function updateCycleSettings(): UpdateCycleSettings {
+  return { cutoffDay: hubSetting('stockUpdate.cutoffDay'), cutoffTime: hubSetting('stockUpdate.cutoffTime') };
+}
+
+/** MR-1 BR-05 (MAT-D8) — hours after the last successful pull that an API supplier's figure turns stale. */
+export function staleApiHours(): number {
+  return hubSetting('stale.apiHours');
 }
 
 /** REQ-E08-04 BR-03 / PQ-02 — weekly buckets for 13 weeks. */

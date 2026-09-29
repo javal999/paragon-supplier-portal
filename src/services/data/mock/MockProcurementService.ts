@@ -9,6 +9,7 @@ import {
   suppliersWithAssignments,
 } from './inventoryReadModel';
 import { stockAccessStore } from './stores/inventoryHubStores';
+import { allPlanningGroups } from './planningGroupReadModel';
 import { allCommitmentLines, allCoverageRows, allVersionViews, forecastSupplierName } from './forecastReadModel';
 import { allFixedStockRows } from './fixedStockReadModel';
 import { maskForSupplier } from '../../transitions/inventoryRules';
@@ -85,6 +86,7 @@ import type {
   MaterialNameRow,
   StockAccessGrant,
   CapacityPlan,
+  PlanningGroupView,
   InventoryAlert,
   ForecastVersionView,
   ForecastCommitmentLine,
@@ -154,6 +156,7 @@ import {
   rescheduleOutThresholdWeeks,
   safetyLeadTimePercentile,
   stabiliseDampingWeight,
+  demandRangeExtraQuantilePct,
   zoneLengthsFor,
 } from '../../transitions/forecastConfig';
 import { DEFAULT_STABILISE_PARAMS, stabilisePlan, type StabiliseRun } from '../../engine/stabilise';
@@ -171,6 +174,7 @@ import { withMrpController } from './mrpControllerReadModel';
 import { materialNameRowsFor, withTradeName } from './materialNameReadModel';
 import { FEEDS, dataHealth } from '../../engine/dataHealth';
 import { demandForecast, type DemandForecastRun } from '../../engine/demandForecast';
+import { DEFAULT_DEMAND_RANGE_OPTIONS, demandRange, rangeLevels, replayForecasts, type DemandRangeRun, type Replay } from '../../engine/demandRange';
 import { DEFAULT_STOCK_ACCURACY_TOLERANCE } from '../../engine/stock';
 import { agreedCfot, supplierCfot } from '../../engine/cfot';
 import { lineHistories } from '../../engine/lines';
@@ -178,6 +182,8 @@ import { sdcClock } from '../../sdc/clock';
 
 /** REQ-E14-07 — the demand forecast per engine dataset (see getDemandForecast). */
 const demandForecastMemo = new WeakMap<EngineDataset, DemandForecastRun>();
+/** REQ-E14-09 — the replay and the range per engine dataset (see getDemandForecast). */
+const demandRangeMemo = new WeakMap<EngineDataset, { asOf: string; replay: Replay; levels: string; range: DemandRangeRun }>();
 
 const matchesList = <T>(value: T, filter: T | T[] | undefined): boolean => {
   if (filter === undefined) return true;
@@ -445,6 +451,21 @@ export class MockProcurementService implements IProcurementService {
     return { items: applySupplierScope(scope, allCapacityPlans()) };
   }
 
+  async getPlanningGroups(scope: QueryScope): Promise<Page<PlanningGroupView>> {
+    // Material C5 (MR-8) — PTI sees every group with its change log. A supplier
+    // sees only the groups holding materials it has capacity for, narrowed to
+    // those materials, and no log (MAT-R4: it never learns another supplier's
+    // materials or who at PTI changed what).
+    const groups = allPlanningGroups();
+    if (scope.personaType === 'buyer') return { items: groups };
+    const mine = new Set(applySupplierScope(scope, allCapacityPlans()).flatMap((p) => p.materials));
+    return {
+      items: groups
+        .map((g) => ({ ...g, materials: g.materials.filter((m) => mine.has(m)), history: [] }))
+        .filter((g) => g.materials.length > 0),
+    };
+  }
+
   async getInventoryAlerts(scope: QueryScope): Promise<Page<InventoryAlert>> {
     // REQ-E08-05 — a supplier sees alerts about its own materials, never the
     // rules that read PTI stock.
@@ -660,7 +681,8 @@ export class MockProcurementService implements IProcurementService {
       versions: { packaging: versionDays(asOf, 'packaging'), rawMaterial: versionDays(asOf, 'rawMaterial') },
       engine: named(stabilisePlan(inputs, params)),
       sapHistory: named(stabilisePlan(planHistoryInputs(data, now, inputs), params)),
-      rangeAvailable: false,
+      rangeBuilt: true,
+      rangePublished: false,
     };
   }
 
@@ -696,7 +718,17 @@ export class MockProcurementService implements IProcurementService {
       run = demandForecast({ finishedGoods: data.finishedGoods, sales: data.sales, fgPlan: data.fgPlan, asOf });
       demandForecastMemo.set(data, run);
     }
-    return { ...run, provenance: data.provenance, materialPlanningSource: 'sapPlan' };
+    // REQ-E14-09 — the range around it, with the administrator's levels in force
+    // (X-05). The replay depends on the date only; the range also on the levels.
+    const levels = rangeLevels(demandRangeExtraQuantilePct());
+    let memo = demandRangeMemo.get(data);
+    if (!memo || memo.asOf !== asOf || memo.levels !== levels.join()) {
+      const replay = memo && memo.asOf === asOf ? memo.replay : replayForecasts({ ...data, asOf });
+      const range = demandRange({ ...data, asOf }, run, { ...DEFAULT_DEMAND_RANGE_OPTIONS, levels }, replay);
+      memo = { asOf, replay, levels: levels.join(), range };
+      demandRangeMemo.set(data, memo);
+    }
+    return { ...run, range: memo.range, provenance: data.provenance, materialPlanningSource: 'sapPlan' };
   }
 
   async getSafetyStock(scope: QueryScope): Promise<SafetyStockView | null> {

@@ -158,7 +158,11 @@ describe('API sync (REQ-E08-02 BR-03, AC-02, edge case)', () => {
     expect(stockFreshness(after, now())).toBe('current');
   });
 
-  it('failure records the error and time, keeps the previous figures, and flags them stale', async () => {
+  // PREMISE CHANGED (Material B1, owner ruling 2026-09-29): the failure no
+  // longer flags the figures stale; it is a warning (lastPullFailedAt), and the
+  // figures go stale 24 h after the last successful pull (here the seeded
+  // 1-day override for sup-003 gives the same instant).
+  it('failure records the error and time, keeps the previous figures, and warns without making them stale', async () => {
     const figures = inventoryDeclarationStore.all().length;
     const before = (await positionOf(buyer, 'sup-003', 'FR-WARD-4410'))!;
     const res = await sync('sup-003');
@@ -168,7 +172,8 @@ describe('API sync (REQ-E08-02 BR-03, AC-02, edge case)', () => {
     const after = (await positionOf(buyer, 'sup-003', 'FR-WARD-4410'))!;
     expect(after.supplierSoh).toBe(before.supplierSoh);
     expect(after.lastSync).toMatchObject({ outcome: 'failed' });
-    expect(stockFreshness(after, now())).toBe('stale');
+    expect(after.lastPullFailedAt).toBe(now());
+    expect(stockFreshness(after, now())).toBe('current');
   });
 
   it('known-bad: a supplier that is not API-connected, and a supplier pressing Sync', async () => {
@@ -192,12 +197,15 @@ describe('supplier-triggered sync (BL-59, REQ-E08-02 BR-03, AC-02)', () => {
     });
   });
 
-  it('a failing connection records the error and keeps the previous figures, stale', async () => {
+  // PREMISE CHANGED (Material B1, owner ruling 2026-09-29): kept, not stale.
+  it('a failing connection records the error and keeps the previous figures, current with a warning', async () => {
     const figures = inventoryDeclarationStore.all().length;
     const res = await pull('sup-003');
     expect(stockSyncStore.get(res.entityId!)).toMatchObject({ outcome: 'failed', errorKey: 'timeout' });
     expect(inventoryDeclarationStore.all()).toHaveLength(figures);
-    expect(stockFreshness((await positionOf(supplier('sup-003'), 'sup-003', 'FR-WARD-4410'))!, now())).toBe('stale');
+    const kept = (await positionOf(supplier('sup-003'), 'sup-003', 'FR-WARD-4410'))!;
+    expect(kept.lastPullFailedAt).toBe(now());
+    expect(stockFreshness(kept, now())).toBe('current');
   });
 
   it('known-bad: another supplier’s stock, a non-connected supplier, a seat without fulfilment, and the buyer', async () => {
@@ -254,9 +262,9 @@ describe('supplier access to PTI stock (REQ-E08-03)', () => {
 
 describe('capacity confirmation (REQ-E08-04)', () => {
   const plan = async (scope: QueryScope, group: string) =>
-    (await reads.getCapacityPlans(scope)).items.find((p) => p.supplierId === scope.supplierId && p.materialGroup === group)!;
+    (await reads.getCapacityPlans(scope)).items.find((p) => p.supplierId === scope.supplierId && p.planningGroupId === `pg-${group}`)!;
   const submit = (weeks: unknown[], group = 'MG-21', scope: QueryScope = sup007) =>
-    svc.dispatch(scope, { transitionId: 't_capacity_submit', entity: 'capacitySubmission', payload: { supplierId: scope.supplierId, materialGroup: group, weeks } });
+    svc.dispatch(scope, { transitionId: 't_capacity_submit', entity: 'capacitySubmission', payload: { supplierId: scope.supplierId, planningGroupId: `pg-${group}`, weeks } });
 
   it('the seed shows a gap week for sup-007 rigid plastics and a confirmed raw-material group for sup-002', async () => {
     const pet = await plan(sup007, 'MG-20');
@@ -293,7 +301,7 @@ describe('capacity confirmation (REQ-E08-04)', () => {
     }));
     const res = await submit(weeks, 'MG-10', sup002);
     expect(res.status).toBe('done');
-    const after = (await reads.getCapacityPlans(buyer)).items.find((p) => p.supplierId === 'sup-002' && p.materialGroup === 'MG-10')!;
+    const after = (await reads.getCapacityPlans(buyer)).items.find((p) => p.supplierId === 'sup-002' && p.planningGroupId === 'pg-MG-10')!;
     expect(planStatus(after)).toBe('gap');
     expect(after.weeks[4].entry).toMatchObject({ reason: 'logistics' });
     expect(after.weeks[0].entry).toMatchObject({ upside: 500 });
@@ -306,7 +314,7 @@ describe('capacity confirmation (REQ-E08-04)', () => {
       svc.dispatch(sup002, {
         transitionId: 't_capacity_submit',
         entity: 'capacitySubmission',
-        payload: { supplierId: 'sup-007', materialGroup: 'MG-21', weeks },
+        payload: { supplierId: 'sup-007', planningGroupId: 'pg-MG-21', weeks },
       }),
     ).rejects.toMatchObject({ code: 'SCOPE_DENIED' });
     await expect(submit(weeks, 'MG-04')).rejects.toMatchObject({ code: 'SCOPE_DENIED' });
@@ -323,7 +331,7 @@ describe('alerts (REQ-E08-05)', () => {
     const all = (await reads.getInventoryAlerts(buyer)).items;
     expect(all[0].riskClass).toBe('high');
     expect(all.map((a) => a.key)).toEqual(
-      expect.arrayContaining(['capacityBelowDemand|MG-20|sup-007', 'staleData|PK-PETB-8810|sup-007', 'ptiBelowRop|RM-STEAR-7300|sup-002']),
+      expect.arrayContaining(['capacityBelowDemand|pg-MG-20|sup-007', 'staleData|PK-PETB-8810|sup-007', 'ptiBelowRop|RM-STEAR-7300|sup-002']),
     );
     const mine = (await reads.getInventoryAlerts(sup007)).items;
     expect(mine.every((a) => a.supplierId === 'sup-007')).toBe(true);

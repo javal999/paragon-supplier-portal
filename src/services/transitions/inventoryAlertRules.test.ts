@@ -44,6 +44,8 @@ const position = (over: Partial<InventoryPosition> = {}): InventoryPosition => (
   lastUpdatedAt: '2026-08-31T02:00:00.000Z',
   channel: 'manual',
   updateSla: 7,
+  staleAt: null,
+  lastPullFailedAt: null,
   apiConnected: false,
   lastSync: null,
   batches: [],
@@ -53,7 +55,7 @@ const position = (over: Partial<InventoryPosition> = {}): InventoryPosition => (
 const plan = (over: Partial<CapacityPlan> = {}): CapacityPlan => ({
   supplierId: 'sup-007',
   supplierName: 'PT Sample Packaging Indonesia',
-  materialGroup: 'MG-20',
+  planningGroupId: 'pg-MG-20',
   materials: [],
   uom: 'PCS',
   weeks: HORIZON.map((week, i) => ({

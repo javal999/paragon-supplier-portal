@@ -208,7 +208,7 @@ export interface DemandForecastRun {
 
 // ── History ─────────────────────────────────────────────────────────────────
 
-interface History {
+export interface History {
   /** Monday of the first week. */
   readonly start: IsoDate;
   readonly qty: readonly number[];
@@ -216,7 +216,7 @@ interface History {
 }
 
 /** A SKU's weekly history before `before`, contiguous from its first row (a missing week is 0). */
-function historyOf(rows: readonly SalesWeek[], before: IsoDate): History | null {
+export function historyOf(rows: readonly SalesWeek[], before: IsoDate): History | null {
   const past = rows.filter((r) => r.weekStart < before).sort((a, b) => a.weekStart.localeCompare(b.weekStart));
   if (past.length === 0) return null;
   const byWeek = new Map(past.map((r) => [r.weekStart, r] as const));

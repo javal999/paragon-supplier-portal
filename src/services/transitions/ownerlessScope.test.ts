@@ -118,6 +118,8 @@ import { workingCalendarStore } from './workingCalendarStore';
 import { threePlStore } from './threePlStore';
 import { supplierOverlayStore } from '../data/mock/stores/supplierOverlayStore';
 import { qualificationRuleStore } from './qualificationRuleStore';
+import { planningGroupStore } from '../data/mock/stores/planningGroupStore';
+import { materialOverlayStore } from '../data/mock/stores/materialOverlayStore';
 import { mrpControllerStore } from './mrpControllerStore';
 import { materialNameStore } from '../data/mock/stores/materialNameStore';
 import { hubSettingsStore, settingValue } from './hubSettingsStore';
@@ -233,6 +235,9 @@ async function realIds(): Promise<Record<string, string | null>> {
     supplierOverlay: 'sup-001',
     // Material G1 — `entityId` IS the level; both lists exist from the start.
     qualificationRule: 'approved',
+    // Material C5 — `entityId` IS the planning group id; every SAP material
+    // group's default group exists from the start. PTI master data: owner-less.
+    planningGroup: 'pg-MG-20',
     // Material C4 — `entityId` IS the SAP code; a sample-list row exists from the start.
     mrpController: 'P12',
     // Material C2 — the trade-name store is seeded; a name names its supplier,
@@ -392,6 +397,8 @@ const resetAll = () => {
   threePlStore.reset();
   supplierOverlayStore.reset();
   qualificationRuleStore.reset();
+  planningGroupStore.reset();
+  materialOverlayStore.reset();
   mrpControllerStore.reset();
   materialNameStore.reset();
   hubSettingsStore.reset();
@@ -455,6 +462,8 @@ describe('POPULATION — nothing below means anything without this', () => {
     expect(ownerful).toContain('supplierOverlay');
     // Material G1 — the qualification lists belong to no supplier.
     expect(ownerless).toContain('qualificationRule');
+    // Material C5 — planning groups are PTI master data: no supplier acts on one.
+    expect(ownerless).toContain('planningGroup');
     // Material C2 — a trade name names the supplier it belongs to.
     expect(ownerful).toContain('materialName');
     expect(ownerless).not.toContain('purchaseOrder');
@@ -574,6 +583,8 @@ describe('THE LEGITIMATE PATHS — the half a "refuse everyone" fix would break'
         // REQ-E03-05 — a negotiation round is PTI's window; a supplier answers
         // it through its own quotation, never by addressing the round.
         'negotiationRound',
+        // Material C5 — planning groups are PTI master data (MR-8, MAT-D12).
+        'planningGroup',
         'purchaseRequisition',
         // Material G1 — the qualification lists are PTI's; no supplier is their owner.
         'qualificationRule',
@@ -727,5 +738,13 @@ describe('THE LEGITIMATE PATHS — the half a "refuse everyone" fix would break'
     });
     expect(offerRoundRes.status, offerRoundRes.reason).toBe('done');
     expect(rfpOfferRoundStore.get(openOfferRound.id)!.closedAt).toBeDefined();
+
+    // Material C5 — Material Planning (planning) can still rename a planning group.
+    const pgRes = await svc.dispatch(buyerSeat('planning'), {
+      transitionId: 't_planninggroup_rename', entity: 'planningGroup', entityId: 'pg-MG-20',
+      payload: { name: 'Owner-less gate probe' },
+    });
+    expect(pgRes.status, pgRes.reason).toBe('done');
+    expect(planningGroupStore.all().map((e) => e.kind)).toContain('renamed');
   });
 });
