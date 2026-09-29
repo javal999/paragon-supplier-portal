@@ -98,6 +98,7 @@ import { orderPlanEn, orderPlanId } from './i18n/orderPlan';
 import { rescheduleEn, rescheduleId } from './i18n/reschedule';
 import { stabiliseEn, stabiliseId } from './i18n/stabilise';
 import { dataHealthEn, dataHealthId } from './i18n/dataHealth';
+import { demandForecastEn, demandForecastId } from './i18n/demandForecast';
 // — Phase 6a RFx management (REQ-E03-01 to REQ-E03-05) —
 import { rfxEn, rfxId } from './i18n/rfx';
 // — RFx authoring (RFI/RFP batch, 2026-09-21) and session-held attachments —
@@ -208,6 +209,7 @@ export const resources = {
       ...rescheduleEn,
       ...stabiliseEn,
       ...dataHealthEn,
+      ...demandForecastEn,
       ...rfxEn,
       ...rfxAuthoringEn,
       ...rfqAuthoringEn,
@@ -684,6 +686,7 @@ export const resources = {
       ...rescheduleId,
       ...stabiliseId,
       ...dataHealthId,
+      ...demandForecastId,
       ...rfxId,
       ...rfxAuthoringId,
       ...rfqAuthoringId,
