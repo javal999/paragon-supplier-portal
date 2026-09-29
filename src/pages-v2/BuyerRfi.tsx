@@ -8,6 +8,7 @@ import SampleDataBadge from '../components/ui-v2/SampleDataBadge';
 import Button from '../components/ui-v2/Button';
 import Data from '../components/ui-v2/Data';
 import StatusPill from '../components/ui-v2/StatusPill';
+import { EventSourcingType } from './rfx/eligibilityDisplay';
 import Table from '../components/ui-v2/Table';
 import TableHeader, { TableHeaderCell } from '../components/ui-v2/TableHeader';
 import TableRow from '../components/ui-v2/TableRow';
@@ -292,6 +293,19 @@ const RfiDetail: React.FC<DetailProps> = ({
             <StatusPill variant={event.closed ? 'neutral' : 'info'} className="mt-1">
               {t(`rfx.status.${event.status}`)}
             </StatusPill>
+            {/* Material G2 (MR-10 BR-06) — the type, fixed at publish. */}
+            <div className="mt-1">
+              <EventSourcingType
+                event={{
+                  kind: 'rfi',
+                  status: event.status,
+                  materialCategory: event.materialCategory,
+                  ...(event.purchasingGroup ? { purchasingGroup: event.purchasingGroup } : {}),
+                  ...(event.sourcingType ? { sourcingType: event.sourcingType } : {}),
+                }}
+                testId={`rfi-sourcing-type-${event.id}`}
+              />
+            </div>
             <DraftRevisionNote revisions={event.revisions} testId={`rfi-last-edited-${event.id}`} />
           </div>
           <div className="flex flex-wrap items-center gap-3">

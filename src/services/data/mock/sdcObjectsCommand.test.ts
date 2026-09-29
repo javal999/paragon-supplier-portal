@@ -101,6 +101,8 @@ const declare = (overrides: Record<string, unknown> = {}) => ({
     materialCode: 'RM-EMUL-3310',
     supplierId: 'sup-002',
     totalQty: 4000,
+    // MAT-D4 / C1b — the verb requires in production (0 allowed).
+    inProductionQty: 0,
     ...overrides,
   },
 });

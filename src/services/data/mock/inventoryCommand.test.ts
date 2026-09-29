@@ -78,7 +78,7 @@ describe('ONE inventory model (REQ-E08-01)', () => {
 
 describe('stock submission (REQ-E08-02)', () => {
   const declare = (payload: Record<string, unknown>, scope: QueryScope = sup007) =>
-    svc.dispatch(scope, { transitionId: 't_inventorydeclaration_declare', entity: 'inventoryDeclaration', payload: { supplierId: scope.supplierId, ...payload } });
+    svc.dispatch(scope, { transitionId: 't_inventorydeclaration_declare', entity: 'inventoryDeclaration', payload: { supplierId: scope.supplierId, inProductionQty: 0, ...payload } });
 
   it('known-good: SOH, ROP, in-production and completion date land on the template channel and become current', async () => {
     const res = await declare({ materialCode: 'PK-CAPF-8820', totalQty: 50000, supplierRop: 20000, inProductionQty: 10000, productionCompletionDate: '2026-09-12', channel: 'template' });
@@ -134,12 +134,79 @@ describe('stock submission (REQ-E08-02)', () => {
     const res = await svc.dispatch(buyer, {
       transitionId: 't_inventorydeclaration_record',
       entity: 'inventoryDeclaration',
-      payload: { supplierId: 'sup-007', materialCode: 'PK-PETB-8802', totalQty: 33000, channel: 'template' },
+      payload: { supplierId: 'sup-007', materialCode: 'PK-PETB-8802', totalQty: 33000, inProductionQty: 0, channel: 'template' },
     });
     expect(res.status).toBe('done');
     const seen = (await positionOf(sup007, 'sup-007', 'PK-PETB-8802'))!;
     // The payload's "template" is ignored: a PTI recording is always channel pti.
     expect(seen).toMatchObject({ supplierSoh: 33000, channel: 'pti' });
+  });
+});
+
+// MR-4 · MAT-D4 · owner ruling 2026-09-29 (C1b) — the verb enforces the
+// in-production pair the template and the form enforce, through the SAME
+// `productionProblem`, on the manual, template and pti channels. An API pull
+// is exempt: an ERP that does not send in production is accepted, figure unset.
+describe('C1b — in production is enforced by the verb (not by API pulls)', () => {
+  const MAT = 'PK-PETB-8801';
+  const dispatchStock = (transitionId: 't_inventorydeclaration_declare' | 't_inventorydeclaration_record', scope: QueryScope, extra: Record<string, unknown>) =>
+    svc.dispatch(scope, {
+      transitionId,
+      entity: 'inventoryDeclaration',
+      payload: { supplierId: 'sup-007', materialCode: MAT, totalQty: 100, ...extra },
+    });
+  const manual = (extra: Record<string, unknown>) => dispatchStock('t_inventorydeclaration_declare', sup007, { channel: 'manual', ...extra });
+  const template = (extra: Record<string, unknown>) => dispatchStock('t_inventorydeclaration_declare', sup007, { channel: 'template', ...extra });
+  const pti = (extra: Record<string, unknown>) => dispatchStock('t_inventorydeclaration_record', buyer, extra);
+
+  it.each([
+    ['manual (declare)', manual],
+    ['template (declare)', template],
+    ['pti (record)', pti],
+  ] as const)('known-bad: a blank in-production quantity is refused on %s, nothing stored', async (_label, send) => {
+    const before = inventoryDeclarationStore.all().length;
+    const res = await send({});
+    expect(res.status).toBe('failed');
+    expect(res.reason).toMatch(/inv_declare_detail_valid.*missingField: in-production quantity is required/);
+    expect(inventoryDeclarationStore.all()).toHaveLength(before);
+  });
+
+  it.each([
+    ['manual (declare)', manual],
+    ['template (declare)', template],
+    ['pti (record)', pti],
+  ] as const)('known-bad: in production 50 without a completion date is refused on %s (productionDateMissing)', async (_label, send) => {
+    const before = inventoryDeclarationStore.all().length;
+    const res = await send({ inProductionQty: 50 });
+    expect(res.status).toBe('failed');
+    expect(res.reason).toMatch(/inv_declare_detail_valid.*productionDateMissing/);
+    expect(inventoryDeclarationStore.all()).toHaveLength(before);
+  });
+
+  it.each([
+    ['manual (declare)', manual, 'manual'],
+    ['template (declare)', template, 'template'],
+    ['pti (record)', pti, 'pti'],
+  ] as const)('known-good: in production 0 (no date) passes on %s', async (_label, send, channel) => {
+    const res = await send({ inProductionQty: 0 });
+    expect(res.status).toBe('done');
+    expect(inventoryDeclarationStore.get(res.entityId!)).toMatchObject({ inProductionQty: 0, channel });
+  });
+
+  it('known-good: in production 50 with a completion date passes', async () => {
+    const res = await manual({ inProductionQty: 50, productionCompletionDate: '2026-10-01' });
+    expect(res.status).toBe('done');
+    expect(inventoryDeclarationStore.get(res.entityId!)).toMatchObject({ inProductionQty: 50, productionCompletionDate: '2026-10-01' });
+  });
+
+  it('API exemption: a pull whose ERP sends no in-production figure is accepted and leaves it unset', async () => {
+    // sup-001's simulated ERP answers RM-LAURIC-7200 with SOH and ROP only.
+    const res = await svc.dispatch(supplier('sup-001'), { transitionId: 't_stocksync_pull', entity: 'stockSync', payload: { supplierId: 'sup-001' } });
+    expect(res.status).toBe('done');
+    const pulled = inventoryDeclarationStore.latestFor('sup-001', 'RM-LAURIC-7200')!;
+    expect(pulled).toMatchObject({ channel: 'api', totalQty: 9000 });
+    expect(pulled.inProductionQty).toBeUndefined();
+    expect(pulled.productionCompletionDate).toBeUndefined();
   });
 });
 
@@ -344,7 +411,7 @@ describe('alerts (REQ-E08-05)', () => {
     expect((await close(key, '  ')).reason).toMatch(/NOTE_REQUIRED/);
     expect((await close(key, 'Earlier call-off requested')).status).toBe('done');
     // Another command lands; the condition still holds → no new open alert.
-    await svc.dispatch(sup007, { transitionId: 't_inventorydeclaration_declare', entity: 'inventoryDeclaration', payload: { supplierId: 'sup-007', materialCode: 'PK-PETB-8801', totalQty: 1 } });
+    await svc.dispatch(sup007, { transitionId: 't_inventorydeclaration_declare', entity: 'inventoryDeclaration', payload: { supplierId: 'sup-007', materialCode: 'PK-PETB-8801', totalQty: 1, inProductionQty: 0 } });
     const matching = (await reads.getInventoryAlerts(buyer)).items.filter((a) => a.key === key);
     expect(matching).toEqual([expect.objectContaining({ status: 'closed', closeReason: 'other', actionNote: 'Earlier call-off requested' })]);
     expect((await close(key, 'again')).reason).toMatch(/ILLEGAL_TRANSITION/);
@@ -354,7 +421,7 @@ describe('alerts (REQ-E08-05)', () => {
     const key = 'supplierBelowRop|PK-PETB-8802|sup-007';
     expect((await close(key, 'Supplier producing')).status).toBe('done');
     const declare = (totalQty: number) =>
-      svc.dispatch(sup007, { transitionId: 't_inventorydeclaration_declare', entity: 'inventoryDeclaration', payload: { supplierId: 'sup-007', materialCode: 'PK-PETB-8802', totalQty, supplierRop: 30000 } });
+      svc.dispatch(sup007, { transitionId: 't_inventorydeclaration_declare', entity: 'inventoryDeclaration', payload: { supplierId: 'sup-007', materialCode: 'PK-PETB-8802', totalQty, supplierRop: 30000, inProductionQty: 0 } });
     await declare(40000); // above ROP → condition clears
     expect((await reads.getInventoryAlerts(buyer)).items.some((a) => a.key === key)).toBe(false);
     await declare(10000); // below ROP again → recurs

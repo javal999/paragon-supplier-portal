@@ -35,6 +35,7 @@ import {
   effectiveDeadline,
   filterInvitees,
   isPastDeadline,
+  notQualifiedInvitees,
   reliabilityScoreFor,
   rfiResponseScore,
   type InviteeCandidate,
@@ -65,6 +66,8 @@ import type {
 import { isRfpAward } from '../../sourcing/rfpAward';
 import { firmPricesInForce, parseRfpOptionRef, rfpOptionRef } from '../../sourcing/rfpFirmOffer';
 import { awardItemsOf, itemOfAwardLine } from '../../sourcing/awardShape';
+import type { SourcingType } from '../../sourcing/sourcingType';
+import { eligibilityFor, eventSourcingType } from './eligibilityReadModel';
 import { rfqStore } from './stores/rfqStore';
 import { quotationStore } from './stores/quotationStore';
 import {
@@ -106,7 +109,10 @@ export const rfxSupplierOtif = (supplierId: string): number | null =>
 // ── REQ-E03-01 — the invitee search ─────────────────────────────────────────
 
 /** Every supplier master row as an invitee candidate, before any filter. */
-export function inviteeCandidates(materialCodes: readonly string[] = []): readonly InviteeCandidate[] {
+export function inviteeCandidates(
+  materialCodes: readonly string[] = [],
+  sourcingType?: SourcingType,
+): readonly InviteeCandidate[] {
   const now = rfxNow();
   return mockSuppliers.map((s) => {
     const measure = masterMeasure(s.id);
@@ -126,13 +132,23 @@ export function inviteeCandidates(materialCodes: readonly string[] = []): readon
       // is still a candidate (it can be invited and can quote), and the list
       // says it cannot be awarded and why.
       gate: supplierGate(s.id, materialCodes, now),
+      // Material G2 (MR-10 BR-05) — against the event's sourcing type, when known.
+      ...(sourcingType ? { eligibility: eligibilityFor(s.id, sourcingType, now) } : {}),
     };
   });
 }
 
-/** The candidates matching the buyer's active filters (BR-01, BR-04). */
-export const matchingInvitees = (filter: InviteeFilter): readonly InviteeCandidate[] =>
-  filterInvitees(inviteeCandidates(filter.materialCodes ?? []), filter);
+/**
+ * The candidates matching the buyer's active filters (BR-01, BR-04): the ones
+ * offered (`filterInvitees`), then — Material G2 — the Active ones not
+ * qualified for the event's sourcing type, marked `refused`, which the invitee
+ * step lists greyed out with their missing documents and never lets a buyer
+ * select.
+ */
+export const matchingInvitees = (filter: InviteeFilter): readonly InviteeCandidate[] => {
+  const all = inviteeCandidates(filter.materialCodes ?? [], filter.sourcingType);
+  return [...filterInvitees(all, filter), ...notQualifiedInvitees(all, filter)];
+};
 
 // ── CR-23 — the compliance gate ─────────────────────────────────────────────
 
@@ -155,7 +171,14 @@ export function supplierGate(supplierId: string, materialCodes: readonly string[
 /** CR-23 — the gate for every invitee and every bidder of one RFQ. */
 export function rfqGateViews(rfq: RFQ, nowIso: string): readonly RfqSupplierGateView[] {
   const ids = [...new Set([...rfq.invitedSupplierIds, ...currentQuotesFor(rfq.id).map((q) => q.supplierId)])];
-  return ids.map((supplierId) => ({ supplierId, ...rfqSupplierGate(rfq, supplierId, nowIso) }));
+  // Material G2 (MR-10 BR-07, edge case 1) — beside CR-23, not inside it: each
+  // supplier's qualification for the event's sourcing type on this date.
+  const type = eventSourcingType(rfq);
+  return ids.map((supplierId) => ({
+    supplierId,
+    ...rfqSupplierGate(rfq, supplierId, nowIso),
+    eligibility: eligibilityFor(supplierId, type, nowIso),
+  }));
 }
 
 /** CR-23 — one supplier against one sourcing event. */
@@ -187,6 +210,7 @@ const inviteeViews = (
   event: { responseDeadline: string; invitees: readonly { supplierId: string; deadline?: string }[] },
   responseFor: (supplierId: string) => InviteeResponseFacts | undefined,
   nowIso: string,
+  sourcingType: SourcingType,
 ): readonly RfxInviteeView[] =>
   event.invitees.map((invitee) => {
     const deadline = effectiveDeadline(event.responseDeadline, event.invitees, invitee.supplierId);
@@ -210,6 +234,8 @@ const inviteeViews = (
       overdue: responseState !== 'submitted' && isPastDeadline(deadline, nowIso),
       confidentialityAcceptedAt: response?.confidentialityAcceptedAt ?? null,
       termsAcceptedAt: response?.termsAcceptedAt ?? null,
+      // Material G2 (MR-10 BR-07) — on the event's sourcing type, today.
+      eligibility: eligibilityFor(invitee.supplierId, sourcingType, nowIso),
     };
   });
 
@@ -260,6 +286,7 @@ export function rfiEventViews(nowIso: string, supplierId: string | null): readon
           event,
           (sid) => rfiFacts(mine.find((r) => r.supplierId === sid)),
           nowIso,
+          eventSourcingType(event),
         ),
         // NR-1 BR-08 — the response is its latest version; every version rides
         // along. `visible` is already narrowed, so a supplier reads only its
@@ -311,6 +338,7 @@ export function rfpEventViews(nowIso: string, supplierId: string | null): readon
           event,
           (sid) => rfpFacts(mine.find((r) => r.supplierId === sid)),
           nowIso,
+          eventSourcingType(event),
         ),
 
         responses: visible.map((r) => ({

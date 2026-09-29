@@ -75,12 +75,13 @@ import {
   ordersNow,
   ShippingNoticeDetails,
 } from './orders/PoCollaboration';
-import { formatIDR, formatNumber, formatDate } from '../lib/format';
+import { formatIDR, formatDate } from '../lib/format';
 // POStatus / ChannelType are runtime enums (used as values) — they stay sourced
 // from the enum module; the canonical drift-resolved PurchaseOrder type comes
 // from the data layer.
 import { ChannelType, POStatus } from '../services/data/types';
 import type { PurchaseOrder } from '../services/data/types';
+import { poLineQuantityText, poLineValue } from './orders/poLineQuantity';
 
 type GroupTab =
   | 'all'
@@ -265,8 +266,8 @@ const buildComms = (po: PurchaseOrder) => [
   },
 ];
 
-const lineTotal = (li: PurchaseOrder['lineItems'][number]): number =>
-  li.quantity * li.unitPrice;
+// BL-80 — a value-limit line is worth its limit, not quantity × unit price.
+const lineTotal = (li: PurchaseOrder['lineItems'][number]): number => poLineValue(li);
 
 const BuyerOrders: React.FC = () => {
   const { t } = useTranslation();
@@ -887,7 +888,7 @@ const BuyerOrders: React.FC = () => {
                           </div>
                         </td>
                         <td className="px-3 py-2 text-right text-text-secondary whitespace-nowrap">
-                          <Data>{formatNumber(li.quantity)} {li.uom}</Data>
+                          <Data>{poLineQuantityText(t, li)}</Data>
                         </td>
                         <td className="px-3 py-2 text-right text-text-secondary whitespace-nowrap">
                           <Data>{formatIDR(li.unitPrice)}</Data>

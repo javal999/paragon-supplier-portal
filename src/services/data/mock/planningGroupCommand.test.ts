@@ -5,8 +5,10 @@
 //
 // AC-01 is pinned against the capacity plans `main` produced BEFORE this task
 // (`__fixtures__/capacityPlansBeforeC5.json`, captured at e8db74a with the
-// same clock and seed): with no split, the plans are today's, the SAP group
-// key renamed to its default planning group and nothing else.
+// same clock and seed; re-captured at 2e42fe4, pre-C5 code carrying BL-77's
+// two capacity samples, which changed only sup-005 MG-02 and sup-012 MG-20):
+// with no split, the plans are today's, the SAP group key renamed to its
+// default planning group and nothing else.
 // ────────────────────────────────────────────────────────────────────────────
 
 import { beforeEach, describe, expect, it } from 'vitest';

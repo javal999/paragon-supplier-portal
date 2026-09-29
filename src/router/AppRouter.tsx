@@ -30,6 +30,7 @@ import BuyerDeliveryAgreements from '../pages-v2/BuyerDeliveryAgreements';
 import BuyerCallOffs from '../pages-v2/BuyerCallOffs';
 import BuyerChase from '../pages-v2/BuyerChase';
 import BuyerInventory from '../pages-v2/BuyerInventory';
+import BuyerStockSimulation from '../pages-v2/BuyerStockSimulation';
 import BuyerCapacity from '../pages-v2/BuyerCapacity';
 import BuyerAlerts from '../pages-v2/BuyerAlerts';
 import BuyerSupplierAccess from '../pages-v2/BuyerSupplierAccess';
@@ -51,6 +52,7 @@ import AdminWorkingCalendar from '../pages-v2/admin/AdminWorkingCalendar';
 import AdminThreePls from '../pages-v2/admin/AdminThreePls';
 import AdminSuppliers from '../pages-v2/admin/AdminSuppliers';
 import AdminQualification from '../pages-v2/admin/AdminQualification';
+import AdminSourcingTypes from '../pages-v2/admin/AdminSourcingTypes';
 import AdminPlanningGroups from '../pages-v2/admin/AdminPlanningGroups';
 import AdminMrpControllers from '../pages-v2/admin/AdminMrpControllers';
 import BuyerTradeNames from '../pages-v2/materials/BuyerTradeNames';
@@ -185,6 +187,8 @@ const AppRouter: React.FC = () => {
           <Route path="/buyer/call-offs" element={<BuyerCallOffs />} />
           <Route path="/buyer/chase" element={<BuyerChase />} />
           <Route path="/buyer/inventory" element={<BuyerInventory />} />
+          {/* Material E2 — the stock simulation (MR-7; PTI only). */}
+          <Route path="/buyer/stock-simulation" element={<BuyerStockSimulation />} />
           <Route path="/buyer/capacity" element={<BuyerCapacity />} />
           <Route path="/buyer/alerts" element={<BuyerAlerts />} />
           <Route path="/buyer/supplier-access" element={<BuyerSupplierAccess />} />
@@ -216,6 +220,8 @@ const AppRouter: React.FC = () => {
           <Route path="/buyer/admin/suppliers" element={<AdminSuppliers />} />
           {/* Material G1 — administration: the documents each qualification level requires. */}
           <Route path="/buyer/admin/qualification" element={<AdminQualification />} />
+          {/* Material G2 — administration: each sourcing category and purchasing group, Direct or Indirect. */}
+          <Route path="/buyer/admin/sourcing-types" element={<AdminSourcingTypes />} />
           {/* Material C5 — administration: the planning groups capacity is kept by (MR-8). */}
           <Route path="/buyer/admin/planning-groups" element={<AdminPlanningGroups />} />
           {/* Material C4 — administration (ADM): who each SAP MRP controller code is. */}

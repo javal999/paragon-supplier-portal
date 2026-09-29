@@ -46,6 +46,8 @@ const record = (overrides: Record<string, unknown> = {}) => ({
     materialCode: 'RM-EMUL-3310',
     supplierId: 'sup-002', // the SUBJECT supplier (message-bound upstream)
     totalQty: 4000,
+    // MAT-D4 / C1b — the verb requires in production (0 allowed).
+    inProductionQty: 0,
     ...overrides,
   },
 });
@@ -57,6 +59,7 @@ const declare = (overrides: Record<string, unknown> = {}) => ({
     materialCode: 'RM-EMUL-3310',
     supplierId: 'sup-002',
     totalQty: 4000,
+    inProductionQty: 0,
     ...overrides,
   },
 });

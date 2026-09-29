@@ -31,6 +31,7 @@ import type {
   ComplianceAtAward,
 } from './types';
 import type { GateCriterion } from './complianceGate';
+import type { BiddingEligibility } from './sourcingType';
 
 /**
  * CR-23 — one supplier's compliance-gate result on one sourcing event: every
@@ -41,6 +42,11 @@ export interface RfqSupplierGateView {
   readonly supplierId: string;
   readonly passes: boolean;
   readonly failed: readonly GateCriterion[];
+  /**
+   * Material G2 (MR-10 BR-07) — the supplier against the event's sourcing
+   * type on this date. Separate from CR-23: it never makes `passes` false.
+   */
+  readonly eligibility?: BiddingEligibility;
 }
 
 /** What one invitee has done with its invitation. */
@@ -60,6 +66,8 @@ export interface RfxInviteeView {
   readonly confidentialityAcceptedAt: string | null;
   /** When this invitee accepted the RFP's T&C document; null = not (yet). */
   readonly termsAcceptedAt: string | null;
+  /** Material G2 (MR-10 BR-07) — the invitee against the event's sourcing type today. */
+  readonly eligibility?: BiddingEligibility;
 }
 
 export interface RfiResponseView extends RfiResponse {

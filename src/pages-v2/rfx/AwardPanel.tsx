@@ -36,6 +36,8 @@ import {
 import { awardItemsOfRfp } from '../../services/sourcing/rfpAward';
 import { firmPricesInForce, type FirmPriceInForce } from '../../services/sourcing/rfpFirmOffer';
 import { EmptyRow, GateMarker, money, qty } from './rfxDisplay';
+import { EligibilityMarker, vendorNames } from './eligibilityDisplay';
+import type { BiddingEligibility, NamedEligibility } from '../../services/sourcing/sourcingType';
 import { FirmPill } from './rfxAuthoringDisplay';
 import LivenessPill from '../../components/ui-v2/LivenessPill';
 import { complianceThresholds } from '../../services/transitions/inventoryConfig';
@@ -99,7 +101,11 @@ export type PanelAward = ItemPanelAward<AwardLine>;
 
 /** A shape refusal in the reader's language. */
 export const awardRefusalMessage = (t: TFunction, r: AwardRefusal, supplierName: (id: string) => string): string =>
-  r.code === 'AWARD_SPLIT_INCOMPLETE' && r.total !== undefined
+  r.unqualified
+    ? t(r.code === 'AWARD_SUPPLIER_NOT_QUALIFIED' ? 'rfqCompare.refusal.AWARD_SUPPLIER_NOT_QUALIFIED' : 'elig.refusal.reasonRequired', {
+        vendors: vendorNames(r.unqualified),
+      })
+    : r.code === 'AWARD_SPLIT_INCOMPLETE' && r.total !== undefined
     ? t('rfqCompare.refusal.AWARD_SPLIT_INCOMPLETE_QTY', {
         item: r.item ?? '',
         total: qty(r.total),
@@ -173,6 +179,12 @@ interface ItemModel<L extends AnyAwardLine> {
 interface PanelCommon<L extends AnyAwardLine> {
   qualifies: (supplierId: string) => boolean;
   gateOf: (supplierId: string) => GateResult | undefined;
+  /**
+   * Material G2 (MR-10 BR-07, edge case 1) — each bidder against the event's
+   * sourcing type on the award date. `refused` gets no input and shows why;
+   * `warn` (placeholder lists) can be awarded with a reason. Absent = not known.
+   */
+  eligibilityOf?: (supplierId: string) => BiddingEligibility | undefined;
   supplierName: (supplierId: string) => string;
   /** BL-64 — no bidding supplier passes CR-23: rows show why, and nothing is sent. */
   noneAwardable: boolean;
@@ -398,13 +410,20 @@ interface ItemAwardFormProps<L extends AnyAwardLine> extends PanelCommon<L> {
 }
 
 function ItemAwardForm<L extends AnyAwardLine>(props: ItemAwardFormProps<L>): React.ReactElement {
-  const { model, qualifies, supplierName, noneAwardable, pending, onAward } = props;
+  const { model, qualifies, supplierName, noneAwardable, pending, onAward, eligibilityOf } = props;
   const { t } = useTranslation();
   const [drafts, setDrafts] = useState<Record<string, ItemDraft>>({});
   const [reason, setReason] = useState('');
   const compliance = useAwardCompliance();
   const { items, defaultBreak, partlyAwarded } = model;
-  const qualifiedBids = (item: AwardItem) => model.bidsFor(item).filter((b) => qualifies(b.supplierId));
+  // CR-23, then Material G2 — a bidder below the level against a real list is
+  // not awardable (the verb refuses AWARD_SUPPLIER_NOT_QUALIFIED too).
+  const awardable = (sid: string) => qualifies(sid) && eligibilityOf?.(sid)?.state !== 'refused';
+  const qualifiedBids = (item: AwardItem) => model.bidsFor(item).filter((b) => awardable(b.supplierId));
+  const namedEligibility = (sid: string): NamedEligibility | undefined => {
+    const eligibility = eligibilityOf?.(sid);
+    return eligibility ? { supplierId: sid, supplierName: supplierName(sid), eligibility } : undefined;
+  };
   const openItems = items.filter((i) => !i.awardedIn);
   const draftOf = (key: string): ItemDraft => drafts[key] ?? EMPTY_DRAFT;
   const setDraft = (key: string, next: ItemDraft) => setDrafts((prev) => ({ ...prev, [key]: next }));
@@ -434,15 +453,23 @@ function ItemAwardForm<L extends AnyAwardLine>(props: ItemAwardFormProps<L>): Re
       : !final && open.length === 0
         ? { code: 'AWARD_NOTHING_OPEN' }
         : null);
-  // AR-10 — THE ONE REASON RULE the verbs call: an RFP, a departed best
-  // score, or (Material B4, MR-2 BR-06) a share to a red-flagged supplier.
-  const due = awardReasonOwed(items, refusal ? [] : lines, model.bestOf, {
-    always: model.reasonAlways,
-    flagged: compliance.flagged,
-  });
-  const departing = due.items.filter((o) => o.why.includes('departsBest')).map((o) => o.item);
-  const flaggedItems = due.items.filter((o) => o.why.includes('complianceFlag'));
-  const needsReason = due.owed;
+  // THE ONE REASON RULE the verbs call (MAT-R2): best score departed, an RFP,
+  // or — Material G2 — a vendor below the level on a placeholder list, or —
+  // Material B4 (MR-2 BR-06) — a share to a red-flagged supplier.
+  const owed = refusal
+    ? null
+    : awardReasonOwed({
+        items,
+        lines,
+        always: model.reasonAlways,
+        ...(model.reasonAlways ? {} : { bestOf: model.bestOf }),
+        eligibilityOf: namedEligibility,
+        flagged: compliance.flagged,
+      });
+  const departing = owed?.departing ?? [];
+  const unqualified = owed?.unqualified ?? [];
+  const flaggedItems = owed?.flagged ?? [];
+  const needsReason = model.reasonAlways || (owed?.owed ?? false);
 
   // "Will not award the rest" — the final award with NO lines, legal only on a
   // Partly awarded RFQ and only when it marks every open item (C3's rule).
@@ -497,10 +524,15 @@ function ItemAwardForm<L extends AnyAwardLine>(props: ItemAwardFormProps<L>): Re
                 : t('rfqCompare.award.reasonItems', { items: departing.map((i) => i.name).join(', ') })}
             </p>
           )}
+          {unqualified.length > 0 && (
+            <p className="text-xs text-warning-hover mb-1" data-testid="award-reason-unqualified">
+              {t('elig.award.warnReason', { vendors: vendorNames(unqualified) })}
+            </p>
+          )}
           {flaggedItems.length > 0 && (
             <p className="text-xs text-danger mb-1" data-testid="award-reason-compliance">
               {t('rfqCompare.award.reasonFlagged', {
-                suppliers: [...new Set(flaggedItems.flatMap((o) => o.flaggedSupplierIds))].map(supplierName).join(', '),
+                suppliers: [...new Set(flaggedItems.flatMap((o) => o.supplierIds))].map(supplierName).join(', '),
                 items: flaggedItems.map((o) => model.label(o.item)).join(', '),
                 flagPct: complianceThresholds().flagPct,
               })}
@@ -730,6 +762,7 @@ function AwardBidRow<L extends AnyAwardLine>({
   lines,
   qualifies,
   gateOf,
+  eligibilityOf,
   supplierName,
   showBestMarker,
   onChange,
@@ -739,6 +772,7 @@ function AwardBidRow<L extends AnyAwardLine>({
   const line = lines.find((l) => model.bidKeyOf(l) === bid.key);
   const uom = model.uomOf(item);
   const side = draft.basis === 'pct' ? t('rfx.award.col.share') : t('rfqCompare.award.qty');
+  const eligibility = eligibilityOf?.(bid.supplierId);
   const compliance = useAwardCompliance();
   return (
     <TableRow data-testid={`award-input-${key}-${bid.supplierId}`}>
@@ -754,6 +788,10 @@ function AwardBidRow<L extends AnyAwardLine>({
             {t('rfqCompare.cmp.bestScored')}
           </StatusPill>
         )}
+        {/* Material G2 (edge case 1) — why this bidder is below the level. */}
+        <div className="mt-1">
+          <EligibilityMarker eligibility={eligibility} testId={`award-elig-${key}-${bid.supplierId}`} />
+        </div>
       </TableCell>
       <TableCell>{model.priceCell(item, bid, brk)}</TableCell>
       <TableCell>
@@ -761,6 +799,10 @@ function AwardBidRow<L extends AnyAwardLine>({
             instead. The verb refuses it too: this is the message, not the lock. */}
         {!qualifies(bid.supplierId) ? (
           <GateMarker gate={gateOf(bid.supplierId)} testId={`award-gate-${key}-${bid.supplierId}`} />
+        ) : eligibility?.state === 'refused' ? (
+          <span className="text-xs text-danger" data-testid={`award-not-qualified-${key}-${bid.supplierId}`}>
+            {t('elig.refused')}
+          </span>
         ) : (
           <input
             type="number"

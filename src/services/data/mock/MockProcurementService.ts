@@ -10,6 +10,7 @@ import {
 } from './inventoryReadModel';
 import { stockAccessStore } from './stores/inventoryHubStores';
 import { allPlanningGroups } from './planningGroupReadModel';
+import { stockSimulationRows } from './stockSimulationReadModel';
 import { allCommitmentLines, allCoverageRows, allVersionViews, forecastSupplierName } from './forecastReadModel';
 import { allFixedStockRows } from './fixedStockReadModel';
 import { maskForSupplier } from '../../transitions/inventoryRules';
@@ -87,6 +88,8 @@ import type {
   StockAccessGrant,
   CapacityPlan,
   PlanningGroupView,
+  StockSimulationFilter,
+  StockSimulationRow,
   InventoryAlert,
   ForecastVersionView,
   ForecastCommitmentLine,
@@ -464,6 +467,15 @@ export class MockProcurementService implements IProcurementService {
         .map((g) => ({ ...g, materials: g.materials.filter((m) => mine.has(m)), history: [] }))
         .filter((g) => g.materials.length > 0),
     };
+  }
+
+  async getStockSimulation(
+    scope: QueryScope,
+    checkDate?: string,
+    filter?: StockSimulationFilter,
+  ): Promise<Page<StockSimulationRow>> {
+    // Material E2 (MR-7) — PTI's estimate; a supplier scope reads none.
+    return { items: stockSimulationRows(scope, checkDate, filter) };
   }
 
   async getInventoryAlerts(scope: QueryScope): Promise<Page<InventoryAlert>> {
