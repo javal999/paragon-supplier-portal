@@ -102,7 +102,8 @@ describe('Supplier — Forecast & commitments (REQ-E06-01 SUP, REQ-E06-02)', () 
     const qty = within(row).getByLabelText(`Commitment quantity for ${week(W[6])}`) as HTMLInputElement;
     expect(qty.value).toBe('38500');
     fireEvent.change(qty, { target: { value: '30000' } });
-    const submit = within(row).getByRole('button', { name: `Submit commitment for ${week(W[6])}` });
+    // BL-133 (ENG-D19) — the period is submitted with its one Submit all.
+    const submit = screen.getByTestId(`fc-week-submit-${W[6]}`);
     expect(submit).toBeDisabled();
     expect(row).toHaveTextContent('Below forecast: choose a reason.');
     fireEvent.change(within(row).getByLabelText(`Reason below forecast for ${week(W[6])}`), { target: { value: 'material' } });

@@ -123,6 +123,24 @@ describe('AC-02 — "My materials" for P12 shows only P12\'s materials', () => {
   });
 });
 
+describe('the PIC filter and the close-reason filter share the address (C4 × F1)', () => {
+  it('both are read from the address, and changing one keeps the other', async () => {
+    renderWithProviders(<BuyerAlerts />, { identity: BUYER, route: '/buyer/alerts?reason=data-error&pic=P10' });
+    const pic = (await screen.findByTestId('pic-filter-select')) as HTMLSelectElement;
+    const reason = document.getElementById('alert-reason-filter') as HTMLSelectElement;
+    expect(reason).not.toBeNull(); // a reason in the address opens the Closed tab
+    expect(reason.value).toBe('data-error');
+    expect(pic.value).toBe('P10');
+    fireEvent.change(pic, { target: { value: '' } });
+    expect((screen.getByTestId('pic-filter-select') as HTMLSelectElement).value).toBe('');
+    expect((document.getElementById('alert-reason-filter') as HTMLSelectElement).value).toBe('data-error');
+    fireEvent.change(document.getElementById('alert-reason-filter') as HTMLSelectElement, { target: { value: '' } });
+    fireEvent.change(screen.getByTestId('pic-filter-select'), { target: { value: 'P12' } });
+    expect((screen.getByTestId('pic-filter-select') as HTMLSelectElement).value).toBe('P12');
+    expect((document.getElementById('alert-reason-filter') as HTMLSelectElement).value).toBe('');
+  });
+});
+
 describe('Administration → MRP controllers (MR-5 BR-02)', () => {
   it('lists every code; an unmapped code says so', async () => {
     renderWithProviders(<AdminMrpControllers />, { identity: BUYER });

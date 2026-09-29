@@ -108,6 +108,9 @@ export const PicFilter: React.FC<{
     const key = picKeyOf(r);
     if (key && !options.has(key)) options.set(key, picText(r) ?? key);
   }
+  // A PIC from the address that no row on this view carries stays selectable,
+  // so the control never silently reads "All" while the list is filtered.
+  if (filter !== '' && filter !== PIC_FILTER_MINE && !options.has(filter)) options.set(filter, filter);
   const sorted = [...options.entries()].sort((a, b) => a[0].localeCompare(b[0]));
   return (
     <div className="inline-flex items-center gap-2 flex-wrap" data-testid="pic-filter">
