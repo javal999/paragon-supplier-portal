@@ -27,6 +27,7 @@
 // ────────────────────────────────────────────────────────────────────────────
 
 import type { AnyAwardLine, AwardEventType, AwardRecord, AwardSplitBasis } from './types';
+import { notQualifiedText, type NamedEligibility } from './sourcingType';
 import { tierPieces, type RfqItem } from './rfqModel';
 import {
   evaluationBreaks,
@@ -187,7 +188,10 @@ export type AwardRefusalCode =
   | 'AWARD_NOTHING_OPEN'
   | 'AWARD_REASON_REQUIRED'
   // RFx D2 (NR-2 BR-08) — the option is already placed through the other route.
-  | 'AWARD_OPTION_SOURCED_ELSEWHERE';
+  | 'AWARD_OPTION_SOURCED_ELSEWHERE'
+  // Material G2 (MR-10 BR-07, AC-05) — a supplier below the level the event's
+  // sourcing type needs, against a real qualification list.
+  | 'AWARD_SUPPLIER_NOT_QUALIFIED';
 
 /** A refusal, structured so the verb can state it and the page can translate it. */
 export interface AwardRefusal {
@@ -202,6 +206,12 @@ export interface AwardRefusal {
   readonly breakQty?: number;
   /** The offending line, supplier, break or award, as text. */
   readonly detail?: string;
+  /**
+   * Material G2 — AWARD_SUPPLIER_NOT_QUALIFIED, and AWARD_REASON_REQUIRED when
+   * the reason is owed for a vendor below the level on a placeholder list: the
+   * vendors concerned and why.
+   */
+  readonly unqualified?: readonly NamedEligibility[];
 }
 
 const units = (n: number): string => n.toLocaleString('en-US');
@@ -221,7 +231,7 @@ export function awardRefusalText(r: AwardRefusal, eventType: AwardEventType = 'r
       case 'AWARD_ITEM_NOT_QUOTED':
         return `AWARD_ITEM_NOT_QUOTED: ${r.detail} has no firm offer in force on ${r.item} at this quantity point`;
       case 'AWARD_REASON_REQUIRED':
-        return 'AWARD_REASON_REQUIRED: every RFP award needs a reason';
+        return r.unqualified ? qualificationReasonText(r.unqualified) : 'AWARD_REASON_REQUIRED: every RFP award needs a reason';
       default:
         break;
     }
@@ -256,13 +266,20 @@ export function awardRefusalText(r: AwardRefusal, eventType: AwardEventType = 'r
     case 'AWARD_NOTHING_OPEN':
       return 'AWARD_NOTHING_OPEN: this award settles every item, so it is the final award, not a partial one';
     case 'AWARD_REASON_REQUIRED':
-      return `AWARD_REASON_REQUIRED: the award for ${r.item} does not follow the best score, so it needs a reason`;
+      return r.unqualified
+        ? qualificationReasonText(r.unqualified)
+        : `AWARD_REASON_REQUIRED: the award for ${r.item} does not follow the best score, so it needs a reason`;
     case 'AWARD_OFFER_EXPIRED':
       return `AWARD_OFFER_EXPIRED: the firm offer ${r.detail} on ${r.item} is no longer valid; open a new firm-offer round`;
     case 'AWARD_OPTION_SOURCED_ELSEWHERE':
       return `AWARD_OPTION_SOURCED_ELSEWHERE: ${r.item} is already ${r.detail}`;
+    case 'AWARD_SUPPLIER_NOT_QUALIFIED':
+      return `AWARD_SUPPLIER_NOT_QUALIFIED: ${(r.unqualified ?? []).map(notQualifiedText).join('; ')}`;
   }
 }
+
+const qualificationReasonText = (vendors: readonly NamedEligibility[]): string =>
+  `AWARD_REASON_REQUIRED: ${vendors.map(notQualifiedText).join('; ')} (placeholder qualification rules), so the award needs a reason`;
 
 /** The share tolerance, in percentage points (NR-3 BR-03, edge case 2). */
 export const AWARD_SHARE_TOLERANCE = 0.01;
@@ -447,4 +464,83 @@ export function awardedItemBreaks(
     const breakQty = lineBreakOf(item, its[0]!);
     return breakQty === undefined ? [] : [{ item, breakQty }];
   });
+}
+
+// ── Material G2 · QUALIFICATION AT AWARD, AND THE ONE REASON RULE ───────────
+//
+// MR-10 BR-07 / MAT-D14 — a vendor that dropped below the level the event's
+// sourcing type needs may still respond, but may not be awarded. Checked AFTER
+// CR-23 by both award hooks, and by the panel with the same functions (MAT-R2).
+// `eligibilityOf` answers per supplier on the award date; the caller computes
+// it (the rule stays pure).
+
+/** Every supplier an award names, with its eligibility, once each. */
+const awardedVendors = (
+  lines: readonly AnyAwardLine[],
+  eligibilityOf: (supplierId: string) => NamedEligibility | undefined,
+): NamedEligibility[] =>
+  [...new Set(lines.map((l) => l.supplierId))].flatMap((sid) => {
+    const v = eligibilityOf(sid);
+    return v ? [v] : [];
+  });
+
+/**
+ * AWARD_SUPPLIER_NOT_QUALIFIED for any awarded supplier below the level
+ * against a REAL list (fail-closed, plan AD-8); null otherwise. A vendor below
+ * the level on a placeholder list is not refused here: it owes a reason
+ * (`awardReasonOwed`).
+ */
+export function awardQualificationRefusal(
+  lines: readonly AnyAwardLine[],
+  eligibilityOf: (supplierId: string) => NamedEligibility | undefined,
+): AwardRefusal | null {
+  const refused = awardedVendors(lines, eligibilityOf).filter((v) => v.eligibility.state === 'refused');
+  return refused.length > 0 ? { code: 'AWARD_SUPPLIER_NOT_QUALIFIED', unqualified: refused } : null;
+}
+
+/** Why an award owes a reason. */
+export interface AwardReasonOwed {
+  /** An RFP award always owes one (NR-2 BR-06). */
+  readonly always: boolean;
+  /** RFQ items whose lines leave out the item's best-scored quote (NR-3 BR-08). */
+  readonly departing: readonly AwardItem[];
+  /**
+   * Material G2 — owner ruling 2026-09-29: vendors awarded below the level
+   * while the list for it is a placeholder. The award record keeps them as
+   * `qualificationWarnings`.
+   */
+  readonly unqualified: readonly NamedEligibility[];
+  readonly owed: boolean;
+}
+
+/**
+ * THE ONE REASON RULE, called by the award panel and by both award hooks
+ * (MAT-R2). B4 extends it with its own causes; each cause is a field here.
+ */
+export function awardReasonOwed(input: {
+  readonly items: readonly AwardItem[];
+  readonly lines: readonly AnyAwardLine[];
+  readonly always: boolean;
+  /** Absent on an RFP: it is never judged against a best score. */
+  readonly bestOf?: (item: AwardItem, breakQty: number) => string | null;
+  readonly eligibilityOf?: (supplierId: string) => NamedEligibility | undefined;
+}): AwardReasonOwed {
+  const departing = input.always || !input.bestOf ? [] : awardItemsDepartingBest(input.items, input.lines, input.bestOf);
+  const unqualified = input.eligibilityOf
+    ? awardedVendors(input.lines, input.eligibilityOf).filter((v) => v.eligibility.state === 'warn')
+    : [];
+  return {
+    always: input.always,
+    departing,
+    unqualified,
+    owed: input.always || departing.length > 0 || unqualified.length > 0,
+  };
+}
+
+/** AWARD_REASON_REQUIRED when a reason is owed and none was given; null otherwise. */
+export function awardReasonRefusal(owed: AwardReasonOwed, reason: string): AwardRefusal | null {
+  if (!owed.owed || reason.trim().length > 0) return null;
+  if (owed.departing.length > 0) return { code: 'AWARD_REASON_REQUIRED', item: owed.departing[0]!.name };
+  if (owed.unqualified.length > 0) return { code: 'AWARD_REASON_REQUIRED', unqualified: owed.unqualified };
+  return { code: 'AWARD_REASON_REQUIRED' };
 }

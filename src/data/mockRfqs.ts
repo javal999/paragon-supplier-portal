@@ -3,6 +3,7 @@ import type { DeadlineExtension, DraftRevision, RfxInvitee } from '../services/s
 import { DECLARED_PRESENT } from '../services/data/fixturePresent';
 import type { BidCurrency } from '../lib/currencyPolicy';
 import type { RfqAuthoringFields } from '../services/sourcing/rfqModel';
+import type { QualificationWarning, SourcingType } from '../services/sourcing/sourcingType';
 
 /**
  * REQ-E03-03 — ONE PRICED LINE OF A SOURCING EVENT.
@@ -111,6 +112,18 @@ export interface RFQ extends RfqAuthoringFields {
   extensions?: readonly DeadlineExtension[];
   /** BL-93 — every edit made while it was a Draft (CE-08). */
   revisions?: readonly DraftRevision[];
+  /**
+   * Material G2 (MR-10 BR-06) — Direct or Indirect, from the category's
+   * mapping, STORED AT PUBLISH and fixed after. Absent on a Draft (it reads
+   * the map) and on an event published before G2 (it reads Direct, edge case 4).
+   */
+  sourcingType?: SourcingType;
+  /**
+   * Material G2 — owner ruling 2026-09-29: the invitees published below the
+   * level while the list for that level was a placeholder. Appended at
+   * publish; never edited.
+   */
+  qualificationWarnings?: readonly QualificationWarning[];
 }
 
 // ────────────────────────────────────────────────────────────────────────────

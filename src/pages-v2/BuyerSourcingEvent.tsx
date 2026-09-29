@@ -47,6 +47,8 @@ import {
 import { DeadlinePill, EmptyRow, GateMarker, OtifOrNoHistory, money, qty, rfxNow } from './rfx/rfxDisplay';
 import { EvaluationBreakSelect, RfqContentSection, TieredComparison } from './rfx/TieredRfq';
 import { AwardPanel, type PanelAward } from './rfx/AwardPanel';
+import { EligibilityMarker, SourcingTypePill, useSourcingTypeMap } from './rfx/eligibilityDisplay';
+import { sourcingTypeOf } from '../services/sourcing/sourcingType';
 import { AwardRecords } from './rfx/AwardRecords';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -92,6 +94,8 @@ const BuyerSourcingEvent: React.FC = () => {
   // CR-23 — who passes the compliance gate on THIS event. Read from the same
   // model the award verb refuses on, so the page and the verb cannot disagree.
   const gates = useRfqComplianceGate(rfqId);
+  // Material G2 — a Draft reads its sourcing type from the map in force.
+  const sourcingMap = useSourcingTypeMap();
   const negotiate = useVerbAvailability('rfq:negotiate');
   const awardVerb = useVerbAvailability('rfq:award');
   // RFx C3 (NR-3 BR-09, BR-10) — cancelling an award and marking it raised in
@@ -132,6 +136,8 @@ const BuyerSourcingEvent: React.FC = () => {
   }, [allQuotes]);
 
   const gateOf = (supplierId: string) => gates.data?.items.find((g) => g.supplierId === supplierId);
+  /** Material G2 (MR-10 BR-07) — the supplier against the event's sourcing type, today. */
+  const eligibilityOf = (supplierId: string) => gateOf(supplierId)?.eligibility;
   /** REQ-E03-05 BR-01a — only a supplier that PASSES the gate is scored or awardable.
    *  No gate read yet = not qualified: a pass is never assumed. */
   const qualifies = (supplierId: string) => gateOf(supplierId)?.passes === true;
@@ -283,6 +289,19 @@ const BuyerSourcingEvent: React.FC = () => {
           {t('rfx.event.back')}
         </Link>
         <StatusPill variant={rfq.status === 'Awarded' ? 'success' : 'info'}>{rfq.status}</StatusPill>
+        {/* Material G2 (MR-10 BR-06) — the type, fixed at publish. */}
+        <SourcingTypePill
+          type={sourcingTypeOf(
+            {
+              kind: 'rfq',
+              status: rfq.status,
+              materialCategory: rfq.materialCategory,
+              ...(rfq.sourcingType ? { sourcingType: rfq.sourcingType } : {}),
+            },
+            sourcingMap,
+          )}
+          testId="event-sourcing-type"
+        />
         <RfqSourceLinks rfq={rfq} rfqs={rfqs.data?.items ?? []} />
       </div>
 
@@ -311,6 +330,10 @@ const BuyerSourcingEvent: React.FC = () => {
                     {/* BR-06 — still invited and still able to quote; it cannot be awarded. */}
                     <div className="mt-1">
                       <GateMarker gate={gateOf(supplierId)} testId={`event-gate-${supplierId}`} />
+                    </div>
+                    {/* Material G2 — invited and still able to quote (MAT-D14); flagged when below the level. */}
+                    <div className="mt-1">
+                      <EligibilityMarker eligibility={eligibilityOf(supplierId)} testId={`event-elig-${supplierId}`} />
                     </div>
                   </TableCell>
                   <TableCell>
@@ -886,6 +909,7 @@ const BuyerSourcingEvent: React.FC = () => {
               bestOf={bestOf}
               qualifies={qualifies}
               gateOf={gateOf}
+              eligibilityOf={eligibilityOf}
               supplierName={supplierName}
               noneAwardable={noneAwardable}
               pending={command.isPending}

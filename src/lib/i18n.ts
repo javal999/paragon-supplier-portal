@@ -117,6 +117,8 @@ import { threePlEn, threePlId } from './i18n/threePl';
 import { adminSuppliersEn, adminSuppliersId } from './i18n/adminSuppliers';
 // — Material G1 vendor qualification (MR-10) —
 import { qualificationEn, qualificationId } from './i18n/qualification';
+// — Material G2 sourcing type and bidding eligibility (MR-10 BR-05 to BR-07) —
+import { biddingEligibilityEn, biddingEligibilityId } from './i18n/biddingEligibility';
 // — Material C5 administration · planning groups (MR-8) —
 import { adminPlanningGroupsEn, adminPlanningGroupsId } from './i18n/adminPlanningGroups';
 // — Material C4 the MRP controller (PIC) on material surfaces (MR-5) —
@@ -231,6 +233,7 @@ export const resources = {
       ...threePlEn,
       ...adminSuppliersEn,
       ...qualificationEn,
+      ...biddingEligibilityEn,
       ...adminPlanningGroupsEn,
       ...mrpControllerEn,
       ...materialNamesEn,
@@ -714,6 +717,7 @@ export const resources = {
       ...threePlId,
       ...adminSuppliersId,
       ...qualificationId,
+      ...biddingEligibilityId,
       ...adminPlanningGroupsId,
       ...mrpControllerId,
       ...materialNamesId,

@@ -1,4 +1,4 @@
-import { Award, BellRing, Building2, CalendarDays, Layers, Link2, ListChecks, SlidersHorizontal, UserCog, type LucideIcon } from 'lucide-react';
+import { Award, BellRing, Tags, Building2, CalendarDays, Layers, Link2, ListChecks, SlidersHorizontal, UserCog, type LucideIcon } from 'lucide-react';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // THE ADMINISTRATION AREA — its sections, one definition (BL-50, BL-51, BL-32).
@@ -46,6 +46,13 @@ export const ADMIN_SECTIONS: readonly AdminSection[] = [
     labelKey: 'hub.nav.util.qualification',
     icon: Award,
     path: `${ADMIN_BASE_PATH}/qualification`,
+  },
+  {
+    // Material G2 — each sourcing category and purchasing group, Direct or Indirect (MR-10 BR-06).
+    id: 'sourcing-types',
+    labelKey: 'hub.nav.util.sourcingTypes',
+    icon: Tags,
+    path: `${ADMIN_BASE_PATH}/sourcing-types`,
   },
   {
     // Material C5 — planning groups for capacity (MR-8 BR-03).

@@ -150,6 +150,9 @@ const LANE_BUNDLES = Object.freeze({
       // Material G1 · owner ruling 2026-09-29 — Procurement and Quality set the
       // qualification lists together (MAT-D15), so both lanes hold the atom.
       'qualification:manage',
+      // Material G2 · MR-10 BR-06 — Procurement maps each sourcing category
+      // and purchasing group to Direct or Indirect once. No supplier lane.
+      'sourcingtype:manage',
       'quotation:review',
       // RFx spec 2026-09-21 — answering a supplier's clarification question,
       // privately or published to every invitee. The person running the event

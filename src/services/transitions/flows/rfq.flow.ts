@@ -121,7 +121,10 @@ export const rfqFlow: FlowDefinition = {
       trigger: 'user',
       requiredRole: 'rfq:publish',
       requiredFields: [],
-      policyHooks: [],
+      // Material G2 (AR-16) — the first hook on RFQ publish. NOT
+      // RFX_PUBLISH_HAS_INVITEES: that reads `invitees`, and an RFQ keeps
+      // `invitedSupplierIds`, so it would refuse every RFQ.
+      policyHooks: [POLICY_HOOKS.RFX_INVITEES_QUALIFIED],
       surfaceable: { surfaced: true },
       version: 1,
     },

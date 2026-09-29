@@ -373,6 +373,11 @@ export const processFlowPurposeEn: Record<string, string> = {
     'The documents a vendor must hold, valid and in date, to be Approved or Preferred. The hub works out every vendor’s level from these lists and its documents; nobody sets a level by hand.',
   'processFlows.purpose.t_qualification_rule_set':
     'Procurement and Quality set the documents one level requires. The Preferred list always includes every Approved document. A change moves vendors up or down at once, so each change is on record with who made it and when.',
+  // ── the sourcing type map (Material G2) ─────────────────────────────
+  'processFlows.purpose.entity.sourcingType':
+    'Whether a sourcing category or purchasing group is Direct or Indirect. An RFI, RFQ or RFP takes its type from its category, and the type decides which vendors may be invited and awarded: Direct needs Preferred, Indirect needs Approved or Preferred.',
+  'processFlows.purpose.t_sourcingtype_set':
+    'Procurement sets a category or purchasing group to Direct or Indirect. Events published earlier keep the type they were published with, so each change is on record with who made it and when.',
   // ── planning groups (Material C5) ────────────────────────────────────
   'processFlows.purpose.entity.planningGroup':
     'A set of materials that share capacity at a supplier, under one SAP material group. Until Material Planning splits an SAP group it has one default planning group with the same materials, so capacity reads as it always did.',
@@ -929,6 +934,10 @@ export const processFlowPurposeId: Record<string, string> = {
     'Dokumen yang harus dimiliki vendor, sah dan belum kedaluwarsa, agar berstatus Approved atau Preferred. Hub menghitung level setiap vendor dari daftar ini dan dokumennya; tidak ada yang menetapkan level secara manual.',
   'processFlows.purpose.t_qualification_rule_set':
     'Procurement dan Quality menetapkan dokumen yang diwajibkan untuk satu level. Daftar Preferred selalu memuat setiap dokumen Approved. Perubahan langsung menaikkan atau menurunkan level vendor, sehingga setiap perubahan tercatat beserta siapa dan kapan.',
+  'processFlows.purpose.entity.sourcingType':
+    'Apakah sebuah kategori sourcing atau purchasing group termasuk Direct atau Indirect. RFI, RFQ, atau RFP mengambil jenisnya dari kategorinya, dan jenis itu menentukan vendor mana yang boleh diundang dan dimenangkan: Direct memerlukan Preferred, Indirect memerlukan Approved atau Preferred.',
+  'processFlows.purpose.t_sourcingtype_set':
+    'Procurement menetapkan kategori atau purchasing group sebagai Direct atau Indirect. Event yang sudah dipublikasikan tetap memakai jenis saat dipublikasikan, sehingga setiap perubahan tercatat beserta siapa dan kapan.',
   'processFlows.purpose.entity.planningGroup':
     'Sekumpulan material yang berbagi kapasitas di satu pemasok, di bawah satu grup material SAP. Sebelum Material Planning memecah sebuah grup SAP, grup itu memiliki satu grup perencanaan bawaan dengan material yang sama, sehingga kapasitas terbaca seperti sebelumnya.',
   'processFlows.purpose.t_planninggroup_create':

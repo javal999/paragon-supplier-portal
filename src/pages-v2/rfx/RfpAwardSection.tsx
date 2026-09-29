@@ -152,6 +152,8 @@ export const RfpAwardSection: React.FC<RfpAwardSectionProps> = ({
                 nowIso={rfxNow()}
                 qualifies={qualifies}
                 gateOf={gateOf}
+                // Material G2 (MR-10 BR-07, edge case 1) — each invitee on the RFP's type, today.
+                eligibilityOf={(sid) => event.invitedSuppliers.find((i) => i.supplierId === sid)?.eligibility}
                 supplierName={supplierName}
                 noneAwardable={noneAwardable}
                 pending={pending}

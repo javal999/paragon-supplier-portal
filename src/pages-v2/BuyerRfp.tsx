@@ -8,6 +8,7 @@ import SampleDataBadge from '../components/ui-v2/SampleDataBadge';
 import Button from '../components/ui-v2/Button';
 import Data from '../components/ui-v2/Data';
 import StatusPill from '../components/ui-v2/StatusPill';
+import { EventSourcingType } from './rfx/eligibilityDisplay';
 import Table from '../components/ui-v2/Table';
 import TableHeader, { TableHeaderCell } from '../components/ui-v2/TableHeader';
 import TableRow from '../components/ui-v2/TableRow';
@@ -273,6 +274,19 @@ const BuyerRfp: React.FC = () => {
                 <StatusPill variant={open.closed ? 'neutral' : 'info'} className="mt-1">
                   {t(`rfx.status.${open.status}`)}
                 </StatusPill>
+                {/* Material G2 (MR-10 BR-06) — the type, fixed at publish. */}
+                <div className="mt-1">
+                  <EventSourcingType
+                    event={{
+                      kind: 'rfp',
+                      status: open.status,
+                      materialCategory: open.materialCategory,
+                      ...(open.purchasingGroup ? { purchasingGroup: open.purchasingGroup } : {}),
+                      ...(open.sourcingType ? { sourcingType: open.sourcingType } : {}),
+                    }}
+                    testId={`rfp-sourcing-type-${open.id}`}
+                  />
+                </div>
                 {open.sourceRfiNumber && (
                   <p className="text-xs text-text-tertiary mt-1" data-testid={`rfp-from-rfi-${open.id}`}>
                     {t('rfx.event.fromRfi', { event: open.sourceRfiNumber })}

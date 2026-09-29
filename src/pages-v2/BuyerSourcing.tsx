@@ -110,6 +110,8 @@ import {
 import { prefillRfqFromRfi, prefillRfqItemsFromRfp } from '../services/sourcing/rfxPrefill';
 import type { RfqTemplateContent } from '../services/sourcing/rfqTemplates';
 import { GateMarker } from './rfx/rfxDisplay';
+import { EligibilityMarker, SourcingTypePill, useSourcingTypeMap } from './rfx/eligibilityDisplay';
+import { CATEGORY_TO_SUPPLIER_CATEGORY, mappedSourcingType } from '../services/sourcing/sourcingType';
 import { RfqPrefillBanner } from './rfx/rfqSources';
 import { DraftRevisionNote, draftEditRefusal } from './rfx/draftEdit';
 import { matchesSupplierFilters } from '../services/sourcing/supplierFilters';
@@ -233,14 +235,9 @@ const categoryLabel = (t: TFunction, c: RFQCategory): string =>
 // a category the wizard happily offers.
 const CATEGORY_OPTIONS: readonly RFQCategory[] = RFQ_CATEGORY_OPTIONS;
 
-const CATEGORY_TO_SUPPLIER_CATEGORY: Record<RFQCategory, string[]> = {
-  Fragrance: ['Fragrance'],
-  'Active Ingredients': ['Active Ingredient'],
-  Packaging: ['Packaging'],
-  Emulsifiers: ['Raw Material'],
-  Botanical: ['Raw Material'],
-  Other: ['Raw Material', 'Active Ingredient', 'Packaging', 'Fragrance'],
-};
+// Material G2 (AR-17) — `CATEGORY_TO_SUPPLIER_CATEGORY` moved to
+// `services/sourcing/sourcingType.ts`: the invitee pool and the sourcing type
+// read the one list.
 
 const MATERIAL_CATALOG: Record<RFQCategory, string[]> = {
   Fragrance: [
@@ -1854,13 +1851,21 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
   // a row this page has to remember to filter. The category filter still maps
   // the RFQ category onto the master's own category vocabulary here, because
   // that mapping is this wizard's and not the master's.
-  const cats = draft.category ? CATEGORY_TO_SUPPLIER_CATEGORY[draft.category] : [];
+  const cats: readonly string[] = draft.category ? CATEGORY_TO_SUPPLIER_CATEGORY[draft.category] : [];
+  // Material G2 (MR-10 BR-06) — the event's type comes from its category; the
+  // buyer never types it. It travels with the search so each candidate carries
+  // its eligibility (BR-05).
+  const sourcingMap = useSourcingTypeMap();
+  const draftSourcingType = draft.category
+    ? mappedSourcingType({ kind: 'rfq', materialCategory: draft.category }, sourcingMap)
+    : undefined;
   // CR-23 / BR-06 — the chosen materials travel with the search so each
   // candidate carries its compliance gate: a failing supplier stays selectable
   // (it can be invited and can quote) and is marked as not awardable.
   const inviteeCandidatesQuery = useInviteeCandidates({
     ...(inviteeGroup ? { purchasingGroup: inviteeGroup } : {}),
     materialCodes: draft.materials,
+    ...(draftSourcingType ? { sourcingType: draftSourcingType } : {}),
   });
   const inviteePool = useMemo(
     () =>
@@ -1876,7 +1881,9 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
     // `-1` is outside the 0..100 axis, so it can never be confused with a
     // measured zero, and the list never recommends a supplier on a number that
     // does not exist.
-    return [...inviteePool]
+    // Material G2 — never recommend a vendor the event cannot invite.
+    return inviteePool
+      .filter((c) => c.eligibility?.state !== 'refused')
       .sort((a, b) => (b.otif ?? -1) - (a.otif ?? -1))
       .slice(0, 4);
   }, [draft.category, inviteePool]);
@@ -2334,6 +2341,13 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
           />
           <p className="text-xs text-text-tertiary -mt-3">{t('rfx.invite.onlyActive')}</p>
           <p className="text-xs text-text-tertiary -mt-3">{t('rfx.gate.inviteNote')}</p>
+          {/* Material G2 — the event's type, and who it lets through. */}
+          {!!draftSourcingType && (
+            <div className="-mt-2 space-y-1">
+              <SourcingTypePill type={draftSourcingType} testId="rfq-sourcing-type" />
+              <p className="text-xs text-text-tertiary">{t('elig.invite.note')}</p>
+            </div>
+          )}
 
           <div className="relative min-w-0 border border-border-subtle rounded-md max-h-64 overflow-auto">
             <table className="w-full text-sm">
@@ -2363,18 +2377,23 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
               <tbody>
                 {supplierTableFiltered.map((s) => {
                   const selected = draft.invitedSupplierIds.includes(s.supplierId);
+                  // Material G2 — below the level against a real list: listed
+                  // greyed with its missing documents, never selectable.
+                  const offered = s.eligibility?.state !== 'refused';
                   return (
                     <tr
                       key={s.supplierId}
                       data-testid={`invitee-row-${s.supplierId}`}
-                      className="border-t border-border-subtle hover:bg-bg-hover cursor-pointer"
-                      onClick={() => toggleSupplier(s.supplierId)}
+                      data-offered={offered}
+                      className={`border-t border-border-subtle ${offered ? 'hover:bg-bg-hover cursor-pointer' : 'opacity-60'}`}
+                      onClick={offered ? () => toggleSupplier(s.supplierId) : undefined}
                     >
                       <td className="px-3 py-2">
                         <input
                           type="checkbox"
-                          aria-label={s.supplierName}
-                          checked={selected}
+                          aria-label={offered ? s.supplierName : `${s.supplierName} — ${t('elig.invite.notOffered')}`}
+                          checked={selected && offered}
+                          disabled={!offered}
                           onChange={() => toggleSupplier(s.supplierId)}
                           onClick={(e) => e.stopPropagation()}
                           className="accent-teal"
@@ -2384,6 +2403,9 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
                         {s.supplierName}
                         <div className="mt-1">
                           <GateMarker gate={s.gate} testId={`invitee-gate-${s.supplierId}`} />
+                        </div>
+                        <div className="mt-1">
+                          <EligibilityMarker eligibility={s.eligibility} testId={`invitee-elig-${s.supplierId}`} />
                         </div>
                       </td>
                       <td className="px-3 py-2 text-text-secondary">
