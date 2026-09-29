@@ -287,6 +287,19 @@ export const LOOSE_END_CENSUS: readonly CensusEntry[] = Object.freeze([
       'so the records that carry it keep their label. The verb is statePreserving, so the state is ' +
       'correctly declared terminal.',
   },
+  // ── maxStock (REQ-E06-04) ──────────────────────────────────────────────────
+  {
+    entity: 'maxStock',
+    kind: 'initial-integrity',
+    subject: 'Maintained',
+    reason: 'substrate-only',
+    note:
+      'THE SAME DEGENERATE SINGLE-STATE LEDGER SHAPE AS THE 3PL LIST AND THE REASON LISTS: the entity ' +
+      'IS one supplier × material the hub assigns, addressed by <supplierId>|<materialCode>, and setting ' +
+      'a pair with no value yet adds one — so there is no separate creation verb to be an entry. Clearing ' +
+      'is a change with no quantity, never a delete. The verb is statePreserving, so the state is ' +
+      'correctly declared terminal.',
+  },
   // ── hubSetting (BL-32) ─────────────────────────────────────────────────────
   {
     entity: 'hubSetting',

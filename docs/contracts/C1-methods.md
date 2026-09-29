@@ -1,6 +1,6 @@
 # C1 — Method Surface
 
-Three distinct axes. **95** (service surface) · **182** (transition catalog) · **39** (wired
+Three distinct axes. **96** (service surface) · **187** (transition catalog) · **40** (wired
 targets). They measure different things; this file keeps them separate.
 
 > ⚠️ **THIS DOCUMENT IS PINNED TO THE TREE, AND THE PIN IS WHY THE NUMBERS ABOVE ARE ALLOWED TO
@@ -32,7 +32,7 @@ Source of truth: `src/services/data/types.ts` (service + command types),
 
 ---
 
-## Axis 1 — the 95-method service surface (`IDataService`)
+## Axis 1 — the 96-method service surface (`IDataService`)
 
 The single interface the Phase-F1 real adapter implements; pages call it through
 `useDataService()` and do not change when the mock is swapped for `httpDataService`. Every method
@@ -76,7 +76,7 @@ interface IDataService {
 | Sub-service | Count | Methods |
 |---|---|---|
 | `ISupplierService` | 4 | `list`, `getById`, `getCurrent`, `getStockUpdateModes` |
-| `IProcurementService` | 49 | `getPurchaseOrders`, `getPurchaseOrder`, `getInventory`, `getStockAccess`, `getCapacityPlans`, `getInventoryAlerts`, `getForecastVersions`, `getForecastCommitments`, `getForecastCoverage`, `getSupplierReliability`, `getMaterialRequirement`, `getSafetyStock`, `getOrderPlan`, `getReschedule`, `getDataHealth`, `getDemandForecast`, `getStabilisedPlan`, `getRFQs`, `getQuotations`, `getInviteeCandidates`, `getRfiEvents`, `getRfpEvents`, `getNegotiationRounds`, `getRfpOfferRounds`, `getAwards`, `getRfpAwards`, `getRfqEngagement`, `getRfqClarifications`, `getRfqComplianceGate`, `getShipments`, `getASNs`, `getGoodsReceipts`, `getCallOffs`, `getBuyerInvoices`, `getSupplierInvoices`, `getContracts`, `getObligations`, `getDocuments`, `getStorefrontCatalog`, `getStorefrontCerts`, `getStorefrontProducts`, `getKpis`, `getPerformanceTrend`, `getSupplierScorecards`, `getRequisitions`, `getPrIntake`, `getSupplierApplications`, `getProductionLines`, `getSupplierHealth` |
+| `IProcurementService` | 50 | `getPurchaseOrders`, `getPurchaseOrder`, `getInventory`, `getStockAccess`, `getCapacityPlans`, `getInventoryAlerts`, `getForecastVersions`, `getForecastCommitments`, `getForecastCoverage`, `getFixedStockReconcile`, `getSupplierReliability`, `getMaterialRequirement`, `getSafetyStock`, `getOrderPlan`, `getReschedule`, `getDataHealth`, `getStabilisedPlan`, `getRFQs`, `getQuotations`, `getInviteeCandidates`, `getRfiEvents`, `getRfpEvents`, `getNegotiationRounds`, `getRfpOfferRounds`, `getAwards`, `getRfpAwards`, `getRfqEngagement`, `getRfqClarifications`, `getRfqComplianceGate`, `getShipments`, `getASNs`, `getGoodsReceipts`, `getCallOffs`, `getBuyerInvoices`, `getSupplierInvoices`, `getContracts`, `getObligations`, `getDocuments`, `getStorefrontCatalog`, `getStorefrontCerts`, `getStorefrontProducts`, `getKpis`, `getPerformanceTrend`, `getSupplierScorecards`, `getRequisitions`, `getPrIntake`, `getSupplierApplications`, `getProductionLines`, `getSupplierHealth`, `getDemandForecast` |
 | `IRiskService` | 7 | `getRiskAlerts`, `getGeoRisks`, `getExposure`, `getScenarios`, `getCompliance`, `getComplianceRegistry`, `getCommodities` |
 | `IDiscoveryService` | 4 | `getRecommended`, `getQualifications`, `getMarketIntel`, `getSingleSourceItems` |
 | `IAnalyticsService` | 7 | `getSummary`, `getSpendByCategory`, `getTopSuppliers`, `getOtifTrend`, `getPoVolumeTrend`, `getChannelMix`, `getSupplierPerformance` |
@@ -85,10 +85,10 @@ interface IDataService {
 | `IChaseService` | 1 | `getUnifiedChase` |
 | `IEnforcementService` | 1 | `getEnforcementSettings` |
 | `IFileService` | 6 | `put`, `urlFor`, `release`, `isHeld`, `recordAccess`, `accessLog` |
-| **read subtotal** | **91** | |
+| **read subtotal** | **92** | |
 | `ICommandService` | 3 | `dispatch`, `getCommandStatus`, `settle` |
 | top-level | 1 | `getCapabilities` |
-| **TOTAL** | **95** | |
+| **TOTAL** | **96** | |
 
 **Return contract:** list reads return `Page<T>` (DR-5 — see C2); single reads return `T | null`;
 `getSummary` returns a summary object or `null` (buyer-populated, supplier-null). Failure is
@@ -104,7 +104,7 @@ the string, because those are different claims and only the first is the contrac
 
 ---
 
-## Axis 2 — the 182-transition catalog (45 flows)
+## Axis 2 — the 187-transition catalog (46 flows)
 
 Every authored state-machine edge across the registered flows (`id: 't_<entity>_<verb>'`). Derived
 from `getKnownFlows()` — the seeded registry — never from a grep over the flow files, because a
@@ -114,7 +114,7 @@ transition id can be assembled at a call site rather than written as a literal (
 | Flow file | Entity | Transitions | Transition ids | Wiring |
 |---|---|---|---|---|
 | `purchaseOrder.flow.ts` | `purchaseOrder` | 12 | `t_po_issue`, `t_po_view`, `t_po_acknowledge`, `t_po_confirm`, `t_po_adjust`, `t_po_reject`, `t_po_accept_counter`, `t_po_reject_counter`, `t_po_shipping_notice`, `t_po_partial_deliver`, `t_po_deliver`, `t_po_close` | **wired** |
-| `advanceShipNotice.flow.ts` | `advanceShipNotice` | 7 | `t_asn_create`, `t_asn_submit`, `t_asn_cancel`, `t_asn_in_transit`, `t_asn_deliver`, `t_asn_discrepancy`, `t_asn_resolve_discrepancy` | **wired** |
+| `advanceShipNotice.flow.ts` | `advanceShipNotice` | 11 | `t_asn_create`, `t_asn_submit`, `t_asn_cancel`, `t_asn_request_exception`, `t_asn_approve_exception`, `t_asn_reject_exception`, `t_asn_change_eta`, `t_asn_in_transit`, `t_asn_deliver`, `t_asn_discrepancy`, `t_asn_resolve_discrepancy` | **wired** |
 | `goodsReceipt.flow.ts` | `goodsReceipt` | 8 | `t_gr_create`, `t_gr_start_inspection`, `t_gr_hold`, `t_gr_request_retest`, `t_gr_approve`, `t_gr_partial_approve`, `t_gr_reject`, `t_gr_post` | **wired** |
 | `goodsReceiptLine.flow.ts` | `goodsReceiptLine` | 6 | `t_grline_inspect`, `t_grline_accept`, `t_grline_reject`, `t_grline_quarantine`, `t_grline_release`, `t_grline_return` | sub-flow (rollup) |
 | `invoice.flow.ts` | `invoice` | 9 | `t_invoice_create`, `t_invoice_submit`, `t_invoice_match`, `t_invoice_approve`, `t_invoice_release_payment`, `t_invoice_remit`, `t_invoice_dispute`, `t_invoice_resubmit`, `t_invoice_resolve` | **wired** |
@@ -141,6 +141,7 @@ transition id can be assembled at a call site rather than written as a literal (
 | `mrpController.flow.ts` | `mrpController` | 1 | `t_mrpcontroller_set` | **wired** |
 | `hubSetting.flow.ts` | `hubSetting` | 1 | `t_setting_set` | **wired** |
 | `reasonCode.flow.ts` | `reasonCode` | 1 | `t_reasoncode_set` | **wired** |
+| `maxStock.flow.ts` | `maxStock` | 1 | `t_maxstock_set` | **wired** |
 | `supplierApplication.flow.ts` | `supplierApplication` | 4 | `t_application_submit`, `t_application_start_review`, `t_application_approve`, `t_application_reject` | **wired** |
 | `receiptDiscrepancy.flow.ts` | `receiptDiscrepancy` | 3 | `t_receiptdiscrepancy_acknowledge`, `t_receiptdiscrepancy_dispute`, `t_receiptdiscrepancy_resolve` | **wired** |
 | `callOff.flow.ts` | `callOff` | 14 | `t_calloff_release`, `t_calloff_draft`, `t_calloff_edit_draft`, `t_calloff_release_draft`, `t_calloff_dismiss`, `t_calloff_change`, `t_calloff_confirm`, `t_calloff_confirm_new_date`, `t_calloff_confirm_changes`, `t_calloff_confirm_partial`, `t_calloff_reject`, `t_calloff_approve`, `t_calloff_reject_confirmation`, `t_calloff_dispatch` | **wired** |
@@ -158,7 +159,7 @@ transition id can be assembled at a call site rather than written as a literal (
 | `negotiationRound.flow.ts` | `negotiationRound` | 2 | `t_negotiationround_open`, `t_negotiationround_close` | **wired** |
 | `rfpOfferRound.flow.ts` | `rfpOfferRound` | 2 | `t_rfp_round_open`, `t_rfp_round_close` | **wired** |
 | `rfpFirmOffer.flow.ts` | `rfpFirmOffer` | 2 | `t_rfpfirmoffer_submit`, `t_rfpfirmoffer_revise` | **wired** |
-| **TOTAL** | | **182** | | |
+| **TOTAL** | | **187** | | |
 
 **Flow shape** (`schema.ts`, `FlowDefinition` / `TransitionDef`): each transition declares
 `from[]` / `to` / `trigger` / `requiredRole` / `requiredFields[]` / `policyHooks[]` /
@@ -174,12 +175,12 @@ system reference is minted only on `settle` (see C5, SAP boundary).
 
 ---
 
-## Axis 3 — the 39 wired CommandTargets
+## Axis 3 — the 40 wired CommandTargets
 
-A `CommandTarget` is the per-entity adapter the dispatcher reads/writes through. **39 exist**, the
+A `CommandTarget` is the per-entity adapter the dispatcher reads/writes through. **40 exist**, the
 runtime export `WIRED_COMMAND_TARGETS` (`MockCommandService.ts` `TARGETS`):
 
-- **wired:** `purchaseOrder`, `advanceShipNotice`, `goodsReceipt`, `invoice`, `rfq`, `quotation`, `rfqIntent`, `rfqConfidentiality`, `rfqClarification`, `purchaseRequisition`, `supplierDocument`, `requirementResponse`, `inventoryDeclaration`, `incomingShipment`, `enforcement`, `role`, `workingCalendar`, `threePl`, `supplierOverlay`, `mrpController`, `supplierApplication`, `receiptDiscrepancy`, `callOff`, `stockSync`, `stockAccess`, `capacitySubmission`, `inventoryAlert`, `forecastVersion`, `forecastView`, `sapChangeMark`, `rfiEvent`, `rfiResponse`, `rfpEvent`, `rfpResponse`, `negotiationRound`, `rfpOfferRound`, `rfpFirmOffer`, `hubSetting`, `reasonCode`
+- **wired:** `purchaseOrder`, `advanceShipNotice`, `goodsReceipt`, `invoice`, `rfq`, `quotation`, `rfqIntent`, `rfqConfidentiality`, `rfqClarification`, `purchaseRequisition`, `supplierDocument`, `requirementResponse`, `inventoryDeclaration`, `incomingShipment`, `enforcement`, `role`, `workingCalendar`, `threePl`, `supplierOverlay`, `supplierApplication`, `receiptDiscrepancy`, `callOff`, `stockSync`, `stockAccess`, `capacitySubmission`, `inventoryAlert`, `forecastVersion`, `forecastView`, `sapChangeMark`, `rfiEvent`, `rfiResponse`, `rfpEvent`, `rfpResponse`, `negotiationRound`, `rfpOfferRound`, `rfpFirmOffer`, `hubSetting`, `reasonCode`, `maxStock`, `mrpController`
 
 The interface is **7 members** (`dispatcher.ts`, `CommandTarget`):
 
@@ -204,9 +205,9 @@ transitions — scope is derived from the payload's **parent** (`creationOwner`,
 compare"** (§86). The dispatcher's supplier arm compares `owner !== scope.supplierId`
 unconditionally; a target that wants a supplier to reach a verb must NAME that supplier.
 
-### Wiring census (45 flows → 3 states)
+### Wiring census (46 flows → 3 states)
 
-- **39 behavior-wired** — have a `CommandTarget`, dispatch runs against in-memory stores. Named
+- **40 behavior-wired** — have a `CommandTarget`, dispatch runs against in-memory stores. Named
   above.
 - **2 rolled-up sub-flows** — authored, participate via terminal rollup (`grRollup.ts` /
   `invoiceRollup.ts`), **no standalone target**: `goodsReceiptLine`, `invoiceMatch`.
