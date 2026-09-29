@@ -2,8 +2,8 @@
 
 | | |
 |---|---|
-| Version | 0.28 draft, 2026-09-29 |
-| Sources | `SUPPLIER-HUB-BASELINE.md` (kick-off deck, Aug 2026); `KICKOFF-MEETING-NOTES.md` (business user feedback, reviewed 2026-09-17); owner review of the prototype gap review (2026-09-17); owner RFx decisions RFX-D1 to RFX-D5 (2026-09-21); owner RFx decisions RFX-D6 to RFX-D14 (2026-09-25), from `RFX-IMPROVEMENT-REQUIREMENTS-2026-09.md`; owner RFx decision RFX-D15 (2026-09-28); RFx best-practice research, `research/RFX-BEST-PRACTICE-2026-09.md` (2026-09-21); owner decision ENG-1 (2026-09-23) with the forecast research `research/FORECAST-BEST-PRACTICE-2026-09.md` and `research/FORECAST-METHOD-SPEC.md` |
+| Version | 0.29 draft, 2026-09-29 |
+| Sources | `SUPPLIER-HUB-BASELINE.md` (kick-off deck, Aug 2026); `KICKOFF-MEETING-NOTES.md` (business user feedback, reviewed 2026-09-17); owner review of the prototype gap review (2026-09-17); owner RFx decisions RFX-D1 to RFX-D5 (2026-09-21); owner RFx decisions RFX-D6 to RFX-D14 (2026-09-25), from `RFX-IMPROVEMENT-REQUIREMENTS-2026-09.md`; owner RFx decision RFX-D15 (2026-09-28); RFx best-practice research, `research/RFX-BEST-PRACTICE-2026-09.md` (2026-09-21); owner decision ENG-1 (2026-09-23) with the forecast research `research/FORECAST-BEST-PRACTICE-2026-09.md` and `research/FORECAST-METHOD-SPEC.md`; owner material decisions MAT-D1 to MAT-D15 (2026-09-29), from `SC-HUB-MATERIAL-REQUIREMENTS-2026-09.md`, and the owner's rulings during the material build MAT-D16 to MAT-D21 (2026-09-29), from section 4.1 of `SC-HUB-MATERIAL-BUILD-PLAN-2026-09.md` |
 | Scope of this version | Detailed: Order Collaboration, Inventory & Capacity Collaboration, RFx (validated); Forecast Collaboration, Call-off Management, and the undiscussed parts of Order and Inventory Collaboration (proposed). Hub navigation and screen conventions (validated). Foundation is reserved for the Foundation team. The remaining epics are stubs |
 | Not in scope | The codebase. This file states what the Supplier Hub must do, not what is built. What the prototype does today, and where, is tracked only in `BUILD-GAP.md` |
 
@@ -203,6 +203,18 @@ How an RFI, RFQ or RFP comes into being, before it reaches suppliers [Owner, A-0
 - CE-11l. The comparison shows a "Documents" row per supplier: Complete, or Missing with the names of the required requests left empty (NR-1 buyer step 6) [Owner, 2026-09-25; PR #62].
 - CE-11m. Starting targets, reviewed after 3 months [Owner, 2026-09-25, RFX-D13]: supplier files retrievable at award ÷ supplier files uploaded, 100% (needs BL-27); responses with every required request filled at submit ÷ submitted responses, 95%; buyer clarifications asking for a missing document, down 80% within 3 months.
 
+**Vendor qualification and sourcing type** (MR-10 in `SC-HUB-MATERIAL-REQUIREMENTS-2026-09.md`). These rules apply to the RFI, the RFQ and the RFP alike, and each of REQ-E03-02 to REQ-E03-05 refers to them.
+- CE-12a. Every vendor has exactly 1 qualification level: Registered (below Approved), Approved or Preferred (MR-10 BR-01) [Owner, 2026-09-29; PR #91].
+- CE-12b. Qualification is separate from lifecycle status. Only an Active vendor can be invited, whatever its level, so a Suspended Preferred vendor cannot be invited (MR-10 BR-02) [Owner, 2026-09-29; PR #109].
+- CE-12c. The level is computed from documents only, at read time: a document counts when its status is Valid and it is not expired on the day. There is no manual override up; Procurement suspends a vendor through its lifecycle status. The history of level changes, each with the document or list change that caused it, is replayed from the document and list records, never written during a read (MR-10 BR-03) [Owner, 2026-09-29; PR #91]. A document within its expiring window (180 days, the supplier-document window) is listed to the vendor as expiring [Owner, 2026-09-29; PR #91; corrected from "90 days", plan AR-18].
+- CE-12d. The documents required per level are set in the admin screen, each by document category with an optional certificate type. The Preferred list always includes every Approved document. The lists are edited by Procurement and by Quality (the `compliance` lane), who define them together (MR-10 BR-04) [Owner, 2026-09-29, MAT-D15, MAT-D18; PR #91]. Until they save real lists, placeholder lists are in force and labelled "Placeholder, awaiting Procurement and Quality" [Owner, 2026-09-29, MAT-D15; BACKLOG BL-146].
+- CE-12e. Eligibility: a Direct event accepts Preferred vendors; an Indirect event accepts Approved and Preferred (MR-10 BR-05) [Owner, 2026-09-29; PR #109].
+- CE-12f. Procurement maps each sourcing category and purchasing group to Direct or Indirect once, in the admin screen; every mapping starts as Direct. An event takes its sourcing type from its category or purchasing group and shows it; the buyer does not type it. The type is stored at publish and cannot change after. An event published before this rule reads Direct (MR-10 BR-06, edge case 4) [Owner, 2026-09-29, MAT-D13; PR #109].
+- CE-12g. Eligibility is checked at invite (a vendor below the level is listed greyed out, with its missing documents, and cannot be picked), at publish (refused, naming the vendor) and at award (refused, with the reason). A vendor that drops a level mid-event can still respond, but cannot be awarded until it is back at the level (MR-10 BR-07) [Owner, 2026-09-29, MAT-D14; PR #109]. **While a list for the needed level is a placeholder, the 3 checks warn instead of refusing:** the vendor shows "Not qualified: <missing documents>", can be invited and published, and an award to it needs a reason; the warnings are stored on the event and the award. Enforcement switches on by itself once Procurement and Quality save a real list [Owner, 2026-09-29, MAT-D19; PR #109].
+- CE-12h. The hub is the source of the qualification, because the documents live in the hub. When a SAP vendor master interface exists, the level is sent to SAP (MR-10 BR-08) [Owner, 2026-09-29; the send waits on BACKLOG BL-155].
+- CE-12i. The free-text scorecard statuses "Preferred Supplier" and "Approved Supplier" are replaced by the computed level (MR-10 BR-09) [Owner, 2026-09-29; PR #91].
+- CE-12j. A supplier application approved in onboarding does not make the vendor "Approved"; the application state is shown as "Application accepted" (MR-10 BR-10) [Owner, 2026-09-29; PR #91].
+
 **Why it is worth revisiting later.** CE-01 leaves the ask in email, and CE-05 means a new question or spec field waits on an IT change. Both are acceptable while the pilot runs a handful of events; neither scales to routine sourcing. The candidates are the sourcing request (E03.01) and an admin screen for the library.
 
 ### 3.7 Hub navigation
@@ -272,7 +284,7 @@ The menu follows the hub's own sections, not procurement stages, and each PTI us
 | REQ-E07-01 | PO visibility with quantity and timing breakdown | E07 | MVP | Validated |
 | REQ-E07-02 | PO response: approve, adjust, reject, escalate | E07 | MVP | Validated |
 | REQ-E07-03 | Order Collaboration Summary | E07 | MVP | Validated (drill-through and lifecycle columns, 2026-09-19) |
-| REQ-E07-04 | Advanced shipping notice | E07 | MVP | Validated (shipping notice); Proposed (ASN detail) |
+| REQ-E07-04 | Advanced shipping notice | E07 | MVP | Validated (shipping notice; batch, shelf-life and call-off checks, owner 2026-09-29); Proposed (ASN detail) |
 | REQ-E07-05 | Shipping notice confirmation | E07 | MVP | Validated |
 | REQ-E07-06 | Goods receipt confirmation | E07 | MVP | Proposed |
 | REQ-E07-07 | Invoice collaboration | E07 | MVP | Proposed |
@@ -280,8 +292,11 @@ The menu follows the hub's own sections, not procurement stages, and each PTI us
 | REQ-E08-01 | Inventory visibility | E08 | MVP | Validated |
 | REQ-E08-02 | Supplier stock submission | E08 | MVP | Validated |
 | REQ-E08-03 | Supplier access to PTI stock | E08 | MVP | Validated |
-| REQ-E08-04 | Capacity confirmation | E08 | MVP | Proposed (confirmation concept validated) |
-| REQ-E08-05 | Inventory and capacity alerts | E08 | MVP | Proposed |
+| REQ-E08-04 | Capacity confirmation | E08 | MVP | Proposed (confirmation concept validated); planning groups Validated (owner, 2026-09-29) |
+| REQ-E08-05 | Inventory and capacity alerts | E08 | MVP | Proposed; order and close reasons Validated (owner, 2026-09-29) |
+| REQ-E08-06 | Supplier trade names and one material search | E08 | MVP | Validated (owner, 2026-09-29) |
+| REQ-E08-07 | MRP controller (PIC) per material | E08 | MVP | Validated (owner, 2026-09-29) |
+| REQ-E08-08 | Supplier stock simulation | E08 | MVP | Validated (owner, 2026-09-29) |
 | REQ-E09-01 | Replenishment recommendation from the forecast engine | E09 | MVP | Proposed (source decided, ENG-1) |
 | REQ-E09-02 | Event-based strategy analysis | E09 | MVP | Proposed |
 | REQ-E09-03 | Call-off release and supplier confirmation | E09 | MVP | Proposed |
@@ -394,6 +409,7 @@ Reserved for the Foundation team: E01 Supplier Registration & Onboarding and E02
 - BR-16. The buyer can edit a draft RFI before sending it [Proposed].
 - BR-17. The RFI can carry document requests, and the response carries the supplier's documents, under CE-11a to CE-11l [Owner, 2026-09-25, RFX-D8; PR #56, #60, #62, #63].
 - BR-18. A submitted RFI response can be revised until the supplier's deadline, and every version is kept with its files (CE-11g) [Owner, 2026-09-25, RFX-D11; PR #59, #63].
+- BR-19. The RFI shows its sourcing type (CE-12f), and its invitees are checked for qualification at invite and at publish (CE-12e, CE-12g) [Owner, 2026-09-29, MAT-D13, MAT-D14; PR #109].
 
 **Edge cases.**
 - The supplier saves a partial response: keep it as a draft, not visible to the buyer until submitted [Proposed].
@@ -489,6 +505,7 @@ Template rules:
 - BR-23. The buyer can save the RFQ as a template and start from a template, or copy a past RFQ (CE-04) [Owner, 2026-09-21, RFX-D2].
 - BR-24. The buyer can edit a draft RFQ before sending it [Proposed].
 - BR-25. The buyer can add document requests to the RFQ, each for the whole response or for one item (CE-11b). When an item is removed from a draft, a request on a later item moves with its item, and a request on the removed item applies to the whole response and is named to the buyer [Owner, 2026-09-25; PR #56, #60].
+- BR-26. The RFQ shows its sourcing type (CE-12f), and its invitees are checked for qualification at invite and at publish (CE-12e, CE-12g) [Owner, 2026-09-29, MAT-D13, MAT-D14; PR #109].
 
 **Edge cases.**
 - The RFI had suppliers that should not be invited to the RFQ: the buyer removes them before sending [Proposed].
@@ -570,6 +587,7 @@ Template rules:
   - BR-16f. The buyer can mark the options left open "Will not award", and the RFP becomes Awarded for the options awarded (NR-3 BR-06) Because every RFP award needs a reason (BR-16c), the close-out needs one too [Proposed; built for the RFQ (PR #64) and for the RFP (BACKLOG BL-130)].
   - BR-16g. Each responder sees only its own outcome per option: Awarded with share and quantity point, Not awarded, Pending, or Award withdrawn. It never sees another supplier's share, the reason, the cancellation or the SAP number [Owner, 2026-09-25; PR #66, #67]. A message outside the hub waits on email [Proposed; BACKLOG BL-120].
   - BR-16h. The PO or contract is created in SAP (REQ-E03-05 BR-09) [Proposed; BACKLOG BL-121].
+- BR-17. The RFP shows its sourcing type (CE-12f), and its invitees are checked for qualification at invite and at publish (CE-12e, CE-12g). An RFP award follows REQ-E03-05 BR-18 to BR-20 [Owner, 2026-09-29, MAT-D13, MAT-D14; PR #109, #110].
 
 **Edge cases.**
 - A supplier proposes a term outside the listed ones: allow a free-text "other terms" field [Proposed].
@@ -665,12 +683,17 @@ Template rules:
 - BR-15. Each supplier sees only its own outcome per item: Awarded with share, quantity and break; Not awarded; Pending; or "Award withdrawn" with the date. It never sees another supplier's share, the cancel reason or the SAP number (NR-3 BR-12) [Owner, 2026-09-25; PR #61, #64].
 - BR-16. Every award, cancellation and SAP marking keeps when and why, and an actor field that names the person once sign-in exists (NR-3 BR-11) [Owner, 2026-09-25; PR #61].
 - BR-17. No approval step before award in the MVP. Award, cancel and SAP marking are separate permissions, so Procurement can give them to different people (NR-3 BR-13) [Owner, 2026-09-25, RFX-D10; PR #61, #66].
+- BR-18. Each bid row on the RFQ and RFP award panels shows the supplier's update compliance (REQ-E08-02 BR-23) as a pill: plain at `compliance.warnPct` (80%) or more, amber below it, red below `compliance.flagPct` (60%), grey for "No history". An award that gives any share to a supplier shown red needs a reason, per item, on the RFQ and the RFP, and the verb refuses it without one. The award record keeps the compliance % each supplier had at the time of award (MR-2 BR-06) [Owner, 2026-09-29; PR #110].
+- BR-19. A compliance flag never blocks invitation, scoring or award by itself; it only asks for a reason. Only CR-23 blocks (MR-2 BR-07) [Owner, 2026-09-29; PR #110].
+- BR-20. At award, a vendor below the qualification level the event's sourcing type needs is refused with the reason, after the CR-23 check (CE-12g). While the level's list is a placeholder, the award needs a reason instead [Owner, 2026-09-29, MAT-D14, MAT-D19; PR #109]. Whether a reason is owed, for any of the causes in BR-07, BR-18 and this rule, is decided by one rule shared by the award panel and the verbs [Code, PR #109, #110].
 
 **Edge cases.**
 - Only 1 quote received: the buyer can still negotiate and award, and the comparison view shows "Single quote" [Proposed].
 - A supplier does not respond in a negotiation round: its last valid quote stands [Proposed].
 - The buyer cancels an award before it is raised in SAP: BR-13 applies [Owner, 2026-09-25, RFX-D12].
 - The buyer tries to cancel an award already raised in SAP: refused, naming the SAP document [Owner, 2026-09-25; PR #61].
+- A supplier with "No history" of update compliance (REQ-E08-02 BR-25) shows a grey pill and never owes a reason for compliance [Owner, 2026-09-29; PR #110].
+- A Preferred vendor's Preferred-only document expires mid-event on a direct RFQ: it can still submit, but cannot be awarded, and the award panel shows why (MR-10 edge case 1) [Owner, 2026-09-29, MAT-D14; PR #109].
 - A split of 60,000 and 45,000 on a 100,000 break: refused, naming the item and the 105,000 total. A split of 33.33% three ways: accepted, with the remaining unit on the first line [Owner, 2026-09-25; PR #58].
 - Every quoting supplier fails the compliance gate: the page says no award is possible [Owner, 2026-09-21].
 - A supplier that declined (REQ-E03-03 BR-15) holds no quote, so it appears in neither the comparison nor the award [Proposed].
@@ -689,6 +712,8 @@ Template rules:
 - AC-11. A legacy RFQ with 2 lines can be split per line, and the RFQ list offers no single-winner award.
 - AC-12. Cancelling an award with a reason returns the RFQ to Closed, keeps the cancelled record, and returns the affected quotes to Under Review; cancel is refused after "Raised in SAP".
 - AC-13. Each supplier sees its own outcome per item, and "Award withdrawn" after a cancel, and never another supplier's share.
+- AC-14. Awarding any share to a supplier at 59% update compliance without a reason is refused by the verb, not only by the form; with a reason it passes, and the award record shows the compliance % each awarded supplier had (MR-2 AC-04, AC-05).
+- AC-15. A direct RFQ's invitee list does not offer an Approved-only vendor, publishing with one is refused, and awarding a vendor that dropped below the level is refused with the reason, once the level's list is not a placeholder (MR-10 AC-03, AC-05). An indirect RFP offers both Approved and Preferred vendors (MR-10 AC-04).
 
 **Data and integration.** Quote versions per round; negotiation round (invitees, deadline, message, best-and-final flag); award records for an RFQ or an RFP, with lines (supplier, item or option, split basis, share, quantity, break, reason); cancellations and SAP markings appended beside the award, never written over it; the best-scored quote per item at the award. Award to SAP for PO or contract creation [Proposed; interface per PQ-06].
 
@@ -946,16 +971,36 @@ Added on 2026-09-28 from the RFx improvement analysis of 2026-09-25:
 - BR-02. ASN quantity cannot exceed the open quantity on the call-off without a reason [Proposed].
 - BR-03. Per-date incoming detail is shown in Order Collaboration; inventory shows the aggregate [MN-INV-04].
 - BR-05. The ASN names its 3PL or carrier and a tracking or vehicle number. Where the 3PL has a public tracking page, the hub shows the tracking number as a link to that page. The hub does not read status from the 3PL's site. The list of 3PLs and their tracking addresses is maintained by ADM [Owner, 2026-09-21; replaces TMS access, D-03].
-- BR-04. Required ASN fields: material, shipped quantity and unit, batch number, ship date, expected arrival, carrier, and tracking or vehicle number. Optional: expiry date per batch and a packing list attachment [Proposed; carrier, tracking number, and expected arrival are required in the prototype, Code].
+- BR-04. Required ASN fields: material, shipped quantity and unit, batch number, ship date, expected arrival, carrier, and tracking or vehicle number. Optional: expiry date per batch and a packing list attachment [Proposed; carrier, tracking number, and expected arrival are required in the prototype, Code]. **Amended 2026-09-29:** expiry is required on a line whose material is shelf-life relevant (BR-12) [Owner, 2026-09-29, MAT-D6; PR #93].
+- BR-06. **Batch from declared stock.** The batch field lists the batches in the supplier's latest stock record for that material with an available quantity above 0, each with its batch number, available quantity and expiry; picking one fills the expiry (MR-6 BR-01) [Owner, 2026-09-29; PR #89].
+- BR-07. A batch's available quantity = its declared quantity minus the quantity on the supplier's ASNs for that batch that are Submitted, In Transit, Delivered or Awaiting exception, shipped on or after the stock record's date (MR-6 BR-02) [Owner, 2026-09-29; PR #89, #93].
+- BR-08. A line quantity above the batch's available quantity is a warning, not a block, shown before submit on every submit path (MR-6 BR-03) [Owner, 2026-09-29; PR #89, #101].
+- BR-09. When the supplier declared no batches for the material, or picks "a batch not in the list", the batch is typed and stored as "not in declared stock", which the planner sees (MR-6 BR-04) [Owner, 2026-09-29, MAT-D5; PR #89, #101].
+- BR-10. **Shelf life.** Remaining shelf life is measured from the ASN's expected arrival (ETA): expiry must be on or after ETA + the material's minimum remaining shelf life, in calendar months; a date equal to the minimum passes (MR-6 BR-05) [Owner, 2026-09-29; PR #93].
+- BR-11. The minimum is the material master's minimum remaining shelf life, copied from SAP where maintained, and otherwise the hub setting `shelfLife.defaultMonths` (6) (MR-6 BR-06) [Owner, 2026-09-29; PR #84, #93]. Until the SAP material feed runs, the SAP values are sample data labelled as such (BACKLOG BL-152).
+- BR-12. The rule applies to every material that is shelf-life relevant. A material is shelf-life relevant by default when it is a raw material (ROH) or has a minimum remaining shelf life in master data; packaging without one is not. An administrator can switch any material on or off (MR-6 BR-07) [Owner, 2026-09-29, MAT-D6 as amended by MAT-D16; PR #84, #93].
+- BR-13. A line that fails BR-10 blocks submit. The only way forward is a shelf-life exception request with a reason, which moves the ASN to Awaiting exception. The request is approved or rejected, with a reason on reject, by the holder of `asn:approve-shelf-life`, an atom of the `compliance` lane (Quality) only, not planning. Approved: the ASN moves to Submitted and counts as in transit. Rejected: it returns to Draft and the supplier sees the reason. While Awaiting exception it does not count as in transit. Approved goods are received into blocked stock (MR-6 BR-08) [Owner, 2026-09-29, MAT-D6; PR #93; atom name corrected from `asn:approveShelfLife`, plan AR-02].
+- BR-14. Every request, approval, rejection and later ETA change is appended to the ASN's exception record with who, when and why, and an approved exception shows on the ASN and at goods receipt as "receive to blocked stock" (MR-6 BR-09) [Owner, 2026-09-29; PR #93].
+- BR-15. **Call-off check.** For an ASN linked to a call-off, the hub compares the call-off's agreed deliveries with this ASN plus the call-off's earlier non-cancelled ASNs, and warns when: the total shipped is above the agreed quantity by more than `callOff.overPct`, or below it once the ASN is marked the last one for the call-off, per material; the ETA is earlier than the agreed date minus `callOff.earlyAllowanceDays`, or later than the agreed date; or the ASN's material is not the call-off's (MR-6 BR-10) [Owner, 2026-09-29; PR #101].
+- BR-16. When the PO line has an open confirmed call-off and the ASN names none, the hub warns "This PO line has an open call-off; link it?" (MR-6 BR-11) [Owner, 2026-09-29; PR #101].
+- BR-17. Call-off warnings never block. They are shown to the supplier before submit on every submit path, stored on the ASN at submit, and shown to the planner as a "Mismatch" marker with the current figures, recomputed on read, on the ASN list and the call-off page (MR-6 BR-12) [Owner, 2026-09-29; PR #101].
+- BR-18. Alert rule `callOffNotCovered`, PTI only: raised when a confirmed call-off due within the supplier's lead time is larger than the supplier's declared SOH plus in production due before the need date (REQ-E08-05 BR-01) (MR-6 BR-13) [Owner, 2026-09-29; PR #101].
 
 **Edge cases.**
 - Partial shipment: multiple ASNs per call-off are allowed [Proposed; Market].
 - ASN cancelled after submission: cancelled ASNs leave the in-transit figure [Proposed].
+- The supplier changes the ETA to a later date after an exception was approved: the rule is re-checked; the approval stands only when the new ETA is not later than the approved one, otherwise the ASN returns to Awaiting exception (MR-6 edge case 1) [Owner, 2026-09-29; PR #93].
+- One ASN line carries 2 batches: each batch is its own line and is checked separately (MR-6 edge case 2) [Owner, 2026-09-29; PR #89].
+- A batch's available quantity is 0 because another ASN took it: it drops out of the list, and the supplier can still type it as not in declared stock (MR-6 edge case 4) [Owner, 2026-09-29; PR #89].
+- The call-off is changed after the ASN: the planner's warnings are recomputed on read (MR-6 edge case 6) [Owner, 2026-09-29; PR #101].
 
 **Acceptance criteria.**
 - AC-01. A supplier can create an ASN only for an approved PO and, for a call-off delivery, only for a confirmed call-off (REQ-E09-03 BR-06).
 - AC-02. A submitted ASN increases the in-transit quantity in REQ-E08-01.
 - AC-03. Multiple ASNs can be created against one call-off.
+- AC-04. A supplier with declared batches sees only those with available quantity, and picking one fills the expiry; a supplier without declared batches can type a batch, and the planner sees "not in declared stock" (MR-6 AC-01, AC-02).
+- AC-05. A raw-material line with expiry 5 months after ETA is refused at submit by the verb, not only by the form; the same ASN with an approved exception moves to Submitted and counts as in transit, and does not count while Awaiting exception (MR-6 AC-03, AC-04).
+- AC-06. An ASN 10% over the call-off with a 5% tolerance can be submitted and shows "Mismatch" to the planner with the figures; an ASN with no call-off on a PO line with an open confirmed call-off shows the link warning (MR-6 AC-05, AC-06).
 
 **Data and integration.** ASN header and lines. Sent to SAP as inbound delivery [Deck p.7 E07.05; see REQ-E07-08].
 
@@ -1150,7 +1195,7 @@ Added on 2026-09-28 from the RFx improvement analysis of 2026-09-25:
 - BR-08. Each material shows its days of supply (CR-01) and its risk class against the supplier lead time (CR-24), with the basis shown. The CR-02 day bands are used only where the lead time is missing [Code; Owner, 2026-09-21].
 
 **Edge cases.**
-- Supplier stock has not been updated within its data-update SLA: show the last update time and flag it as stale. The SLA varies by material and supplier, because each moves differently, so it is configured per supplier and material [owner, 2026-09-17; configuration Proposed].
+- Supplier stock has not been updated within its data-update SLA: show the last update time and flag it as stale. The SLA varies by material and supplier, because each moves differently, so it is configured per supplier and material [owner, 2026-09-17; configuration Proposed]. When a figure is stale is set by the supplier's update mode (REQ-E08-02 BR-16) [Owner, 2026-09-29].
 - Supplier has no ROP: show "Not provided" [Proposed].
 
 **Acceptance criteria.**
@@ -1165,7 +1210,7 @@ Added on 2026-09-28 from the RFx improvement analysis of 2026-09-25:
 
 **Metrics.** Leading: share of materials with supplier stock updated within the agreed period. Lagging: KPI-04.
 
-**Open items.** Data-update SLA values per supplier and material, to be agreed with suppliers (risk register rows 11 and 12). Until agreed, a supplier figure is stale after 7 days [Proposed].
+**Open items.** Data-update SLA values per supplier and material, to be agreed with suppliers (risk register rows 11 and 12). Since 2026-09-29 staleness follows the update mode (REQ-E08-02 BR-16); the 7-day default applies only where no mode-based limit exists [Owner, 2026-09-29, MAT-D7, MAT-D8].
 
 #### REQ-E08-02  Supplier stock submission
 
@@ -1191,16 +1236,34 @@ Added on 2026-09-28 from the RFx improvement analysis of 2026-09-25:
 - BR-03. API sync is triggered by the supplier with a Sync button, in addition to the scheduled sync; a PTI user can also trigger it for an API-connected supplier [MN-INV-07, amended by the owner 2026-09-21]. A scheduled sync needs the backend (Stage F).
 - BR-04. Manual entry is done directly in the hub [MN-INV-07].
 - BR-05. A file with invalid rows is rejected row by row, not as a whole, and valid rows are accepted [Proposed].
-- BR-06. Template fields, 1 row per material, or 1 row per batch when batches are given: material code; SOH; unit; supplier ROP; in-production quantity; expected production completion date; batch number, batch quantity, manufacturing date, and expiry date (optional) [Proposed; batch fields Code; manufacturing date Owner, 2026-09-21]. Batch detail stays optional because it matters only where batches expire at different times.
+- BR-06. Template fields, 1 row per material, or 1 row per batch when batches are given: material code; SOH; unit; supplier ROP; in-production quantity; expected production completion date; batch number, batch quantity, manufacturing date, and expiry date (optional) [Proposed; batch fields Code; manufacturing date Owner, 2026-09-21]. Batch detail stays optional because it matters only where batches expire at different times. **Amended 2026-09-29:** in-production quantity is required, 0 allowed; the completion date is required when in production is above 0; supplier ROP and the 4 batch columns stay optional. The verb enforces both on manual, template and PTI records; an API pull is exempt, because a supplier ERP may not send them [Owner, 2026-09-29, MAT-D4, MAT-D21; PR #104, #107].
 - BR-07. Rows are checked with CR-18 (numbers) and CR-19 (batch total) [Code].
 - BR-08. A PTI user can record stock that a supplier sent by WhatsApp or email, on the supplier's behalf. The record shows it was entered by PTI, and the supplier sees it [Owner; detail Proposed].
 - BR-09. Manual entry and template upload carry exactly the same fields and rules, on one page. There is no second stock entry point [Owner, 2026-09-21].
 - BR-10. In-transit quantity is never entered by the supplier. It comes from submitted ASNs and dispatched call-offs (REQ-E07-04, REQ-E09-03), and both input methods show it read-only next to the in-production figure, so the two parts of incoming stock appear together [Owner, 2026-09-21].
 - BR-11. A supplier's sync retrieves PTI stock only for materials it has been granted (REQ-E08-03). A supplier without a grant retrieves no PTI stock, and the option is not offered [Owner, 2026-09-21].
+- BR-12. **Update mode.** Each supplier has a stock update mode, API or manual, kept on the supplier master; it alone decides whether the supplier is API-connected. It is changed by a governed verb held by the `compliance` lane, and each change is logged with who, when and an optional reason (MR-1 BR-02) [Owner, 2026-09-29; PR #86; "Hub administrator only" corrected to a `compliance` atom, plan AR-04; BACKLOG BL-144].
+- BR-13. **Sync schedule.** An API supplier is pulled every `stockSync.intervalHours` (default 2, from 1 to 24). The schedule needs Stage F; until then the Sync button is the only trigger, and the supplier sees "Last sync", "Next sync" and "Scheduled sync: not active in the prototype" (MR-1 BR-01) [Owner, 2026-09-29; PR #85, #106; schedule BACKLOG BL-151].
+- BR-14. **Weekly cycle.** A manual supplier's update cycle runs from the previous cutoff (exclusive) to the cutoff, Thursday 23:59 WIB (inclusive). The day and time are hub settings. When Thursday is not a working day on the hub calendar, the cutoff is 23:59 on the last working day before it (MR-1 BR-03) [Owner, 2026-09-29, MAT-D7; PR #85, #88].
+- BR-15. A material counts as updated for a cycle when a stock record for it is accepted inside the cycle from any channel, including one entered by PTI, which stays labelled "Entered by PTI". A material assigned mid-cycle is not counted in that cycle (MR-1 BR-04, edge case 2) [Owner, 2026-09-29, MAT-D7; PR #88].
+- BR-16. **Staleness by mode.** Manual: a figure goes stale at the cutoff after the cycle it was updated in. API: a figure is stale when the last successful pull is older than `stale.apiHours` (24). A failed pull keeps the previous figures and shows "Last pull failed <time>", and does not make the figure stale by itself. A per supplier × material stale period (BL-32) wins over both. A mode change mid-cycle applies from the next cycle (MR-1 BR-05, edge case 1) [Owner, 2026-09-29, MAT-D8, MAT-D17; PR #88].
+- BR-17. The weekly update is part of the supplier SOP, written by Material Planning with the validation rules suppliers follow. The stock page names the SOP (MR-1 BR-06) [Owner, 2026-09-29; PR #106]. A link to the current SOP document waits on the document (BACKLOG BL-149).
+- BR-18. A manual supplier sees, on its home page and the stock page, the next cutoff, how many materials are updated this cycle ("12 of 15 updated"), the materials still missing, each linking to the entry form, and the materials missed in the last cycle. An in-hub reminder listing the missing materials appears at 09:00 WIB on the working day before the cutoff and on the cutoff day (MR-1 step-by-step, AC-01) [Owner, 2026-09-29; PR #106]. Email reminders wait on the email service (BACKLOG BL-153). Showing the weekly supplier confirmation beside it waits on which confirmation that is (MR-1 BR-07; BACKLOG BL-149).
+- BR-19. **Template columns.** Every optional column header of the template ends with " (optional)" in English and " (opsional)" in Indonesian (MR-4 BR-01) [Owner, 2026-09-29; PR #104].
+- BR-20. The header check ignores the suffix, so a template downloaded before the change still uploads (MR-4 BR-02) [Owner, 2026-09-29; PR #104].
+- BR-21. The upload panel lists every column as Required, Optional or "Required when in production is above 0", with a one-line meaning, and says the batch columns are filled only when batches expire at different times, and then all 4 for that row (MR-4 BR-03) [Owner, 2026-09-29; PR #104].
+- BR-22. Which of columns D to F are required is set in BR-06 as amended (MR-4 BR-04) [Owner, 2026-09-29, MAT-D4; PR #104, #107].
+- BR-23. **Update compliance.** Update compliance % = weeks compliant ÷ weeks counted, over a rolling 13 weeks ending with the last completed cycle (MR-2 BR-01) [Owner, 2026-09-29; PR #105].
+- BR-24. A week is compliant for a manual supplier when every material assigned to it for the whole cycle was updated in that cycle; 1 missing material makes the week non-compliant. For an API supplier, when at least 1 successful pull happened on every working day of the cycle; a failed pull is not an update. Each week is judged by the mode the supplier had at that week's cutoff (MR-2 BR-02, edge case 2) [Owner, 2026-09-29, MAT-D7; PR #105].
+- BR-25. The first 4 weeks after the supplier's first material assignment are not counted. With fewer than 4 weeks counted, compliance reads "No history" and raises no flag (MR-2 BR-03) [Owner, 2026-09-29; PR #105].
+- BR-26. Below `compliance.warnPct` (80%) is a warning (amber); below `compliance.flagPct` (60%) is a flag (red). The warning threshold must stay above the flag threshold (MR-2 BR-04) [Owner, 2026-09-29; PR #85, #110].
+- BR-27. Performance score = (1 − w) × the delivery score (CFOT, OTIF and rejections, as today) + w × update compliance %, with w = `compliance.scoreWeight`, 0.10, fixed at release; with "No history", w is 0. The grade bands do not change. The weight moves the score, grade and band only: the compliance gate (CR-23) and the quote score's reliability axis (CR-15) read OTIF and are not affected (MR-2 BR-05) [Owner, 2026-09-29, MAT-D9; PR #105; scope corrected from source, plan AR-09]. The supplier sees its own compliance and a week-by-week strip on its performance page, and Procurement sees it on the scorecard [Owner, 2026-09-29; PR #105].
 
 **Edge cases.**
 - Uploaded material is not assigned to the supplier: reject that row [Proposed].
-- API sync fails: show the error and time, keep the previous figures, flag them as stale [Proposed].
+- API sync fails: show the error and time and keep the previous figures. **Superseded 2026-09-29:** the figures are not flagged stale by the failure; they go stale only when the last successful pull is older than 24 hours (BR-16) [Owner, 2026-09-29, MAT-D17; PR #88].
+- A stock upload accepted at Thursday 23:59:30 counts in the next cycle: the accepted time decides (MR-1 edge case 4) [Owner, 2026-09-29; PR #88].
+- A supplier with no materials assigned reads "No history" and raises no flag (MR-2 edge case 1) [Owner, 2026-09-29; PR #105].
 
 **Acceptance criteria.**
 - AC-01. A supplier can submit stock by template upload and by manual entry.
@@ -1209,6 +1272,12 @@ Added on 2026-09-28 from the RFx improvement analysis of 2026-09-25:
 - AC-05. In-transit quantity is shown read-only from ASNs and dispatched call-offs, and cannot be typed.
 - AC-06. A supplier without PTI stock access is not offered a PTI stock refresh, and a supplier with access retrieves only the granted materials.
 - AC-03. Invalid template rows are listed with a reason, and valid rows are saved.
+- AC-07. A manual supplier sees its next cutoff and the materials still missing this cycle (MR-1 AC-01).
+- AC-08. A material not updated by the cutoff is shown stale the moment the cutoff passes and raises `staleData`; an API supplier with no successful pull in 24 hours is shown stale (MR-1 AC-02, AC-03).
+- AC-09. A record entered by PTI counts as updated and still reads "Entered by PTI"; with Thursday marked non-working, the cutoff falls on Wednesday (MR-1 AC-04, AC-05).
+- AC-10. Only a holder of the update-mode atom can change a supplier's update mode, and the change is logged with who and when (MR-1 AC-06, as corrected by plan AR-04).
+- AC-11. A freshly downloaded template marks every optional column in its header, a template downloaded before the change uploads, and the upload panel lists every column as Required or Optional (MR-4 AC-01 to AC-03).
+- AC-12. A manual supplier that misses 1 material in a cycle shows that week red; a supplier onboarded 3 weeks ago shows "No history"; with weight 0.10, a delivery score of 90 and compliance 50%, the performance score is 86 (MR-2 AC-01 to AC-03).
 
 **Data and integration.** Stock record per supplier, material, date: SOH, ROP, in-production quantity, channel, submitted by. API contract per supplier [RSK-02].
 
@@ -1288,6 +1357,13 @@ Added on 2026-09-28 from the RFx improvement analysis of 2026-09-25:
 - BR-10. A week whose LTP is above capacity, up to and including BE, shows amber, "needs the additional capacity". A week whose LTP is above BE shows red, "cannot be supplied", and the planner acts (bring demand forward, split to another source, or cut) [Owner, 2026-09-28; ENG-D18]. Exactly at capacity is not flagged; exactly at BE is amber. An amber week still needs the BR-04 reason. Accepted by the owner, 2026-09-29.
 - BR-11. The supplier confirms a week's capacity before it can submit the LTP for that week (REQ-E06-02 BR-11). A week counts as confirmed when the group's latest capacity submission states it, a gap week with its reason included. A supplier with an LTP in a material group always has a capacity confirmation for that group. How capacity is entered (one number with overrides, or per week) stays open (BL-65); it is per week today [Owner, 2026-09-28; ENG-D19]. Accepted by the owner, 2026-09-29.
 - BR-12. The LTP is the only demand figure for capacity: the capacity pages, the gap weeks, "short by", the reason rule (BR-04), the planner's filters and banner, the Order Collaboration Summary capacity status and the capacity alert all read it. A material with no LTP line has no capacity demand [Owner, 2026-09-29].
+- BR-13. **Planning groups.** A planning group is a set of materials that share capacity at a supplier. Each belongs to exactly 1 SAP material group, and each material belongs to exactly 1 planning group (MR-8 BR-01) [Owner, 2026-09-29; PR #92].
+- BR-14. Until Material Planning splits an SAP group, it has 1 default planning group with the same name and materials, so capacity figures are unchanged on day 1 (MR-8 BR-02) [Owner, 2026-09-29; PR #92].
+- BR-15. Material Planning creates, renames, moves materials between and retires planning groups through governed verbs; each change is logged. A group with materials cannot be retired (MR-8 BR-03) [Owner, 2026-09-29; PR #92].
+- BR-16. Capacity is entered and shown per supplier × planning group, and replaces the material group in BR-03, BR-06 and BR-07. A group's demand is the sum of its materials' LTP (BR-08), so the BL-133 LTP-to-capacity join follows planning groups (MR-8 BR-04) [Owner, 2026-09-29, MAT-D20; PR #92].
+- BR-17. When materials move between groups, capacity entered for future weeks of the affected groups reads "Needs re-entry" for those weeks, and the week is not confirmed until the supplier submits again. Past weeks keep the group they had (MR-8 BR-05) [Owner, 2026-09-29; PR #92].
+- BR-18. Planning groups are hub master data for now; whether they move into SAP is agreed with MDM (MR-8 BR-06) [Owner, 2026-09-29, MAT-D12].
+- BR-19. Planning group is a filter on capacity, the stock simulation and alerts (MR-8 BR-07) [Owner, 2026-09-29; PR #92, #108]. Group names come from the planning group record, not from a fixed label list [Code, PR #92].
 
 **Edge cases.**
 - Supplier shares one line across several PTI materials: capacity is entered per material group, not per material [Proposed].
@@ -1300,8 +1376,10 @@ Added on 2026-09-28 from the RFx improvement analysis of 2026-09-25:
 - AC-04. The planner can narrow the capacity view by supplier, material group, material, and gaps only.
 - AC-05. Exactly at capacity is not flagged; above capacity and exactly at BE is amber; above BE is red [Owner, 2026-09-28].
 - AC-06. The supplier and the planner see each week's LTP, capacity and BE with its amber or red flag [Owner, 2026-09-28].
+- AC-07. With no split made, the capacity page shows the same groups and figures as before planning groups; after a split of MG-03 into 2 planning groups, the supplier enters capacity for each and demand is summed per group (MR-8 AC-01, AC-02).
+- AC-08. Moving a material marks future capacity weeks of both groups "Needs re-entry"; a material cannot be in 2 planning groups, and a group cannot mix 2 SAP groups (MR-8 AC-03, AC-04).
 
-**Data and integration.** Capacity record: supplier, material group, week, allocated quantity, upside quantity, reason. Demand from REQ-E06-01.
+**Data and integration.** Capacity record: supplier, planning group (was material group until 2026-09-29, BR-16), week, allocated quantity, upside quantity, reason. Planning group: id, name, SAP material group, state, with an append-only change log. Demand from REQ-E06-01.
 
 **Metrics.** Leading: share of pilot suppliers with current capacity confirmation. Lagging: confirmation reliability (deck p.5 baseline below 50%).
 
@@ -1334,10 +1412,18 @@ Added on 2026-09-28 from the RFx improvement analysis of 2026-09-25:
   - Allocated capacity below demand (REQ-E08-04).
   - Supplier data older than the stale period.
   - Supplier coverage At risk or Uncovered (CR-03) [Code].
+  - A confirmed call-off due within the lead time not covered by SOH plus production (`callOffNotCovered`, PTI only, REQ-E07-04 BR-18) [Owner, 2026-09-29; PR #101].
 - BR-02. Each alert has a risk class: High, Medium, Low, set by CR-24 (days of cover against the supplier's lead time). CR-02 applies only where the lead time is missing, and a missing lead time raises its own alert [Owner, 2026-09-21].
 - BR-03. Alert thresholds and the stale period are configurable by ADM, per material group [Proposed; Market].
 - BR-04. Alerts are delivered in the hub and by email [Proposed; Market].
 - BR-05. The same condition does not raise a new alert until the open one is closed [Proposed].
+- BR-06. Risk classes stay as CR-24 sets them (BR-02): High, Medium, Low, with stale data Low. There is no fourth level (MR-9 BR-01) [Owner, 2026-09-29, MAT-D1].
+- BR-07. Order: risk class High to Low; within a class, fewest days to impact first; then supplier name. A group of alerts under one supplier sits at the place of its most urgent alert (MR-9 BR-02) [Owner, 2026-09-29, MAT-D1; PR #87].
+- BR-08. Days to impact per rule: stock rules, days of cover; projected stock-out, days until PTI stock runs out; `callOffNotCovered`, days to the call-off's need date; `staleData`, minus the days since the figure went stale, so the oldest comes first; `capacityBelowDemand`, days to the first gap week; other rules, 0 (MR-9 BR-03) [Owner, 2026-09-29; PR #87, #101].
+- BR-09. Closing an alert needs a reason from the list. The note is optional, except for "Other", where it is required. The verb refuses a close without a reason, with a retired or unknown reason, or with "Other" and no note (MR-9 BR-04) [Owner, 2026-09-29; PR #87].
+- BR-10. The reason list is the admin list `alertClose` (BL-32: add, rename, retire, never delete), starting with: Call-off raised or brought forward; PO raised; Supplier updated its data; Supplier confirmed the stock by other means; Data error, no real risk; Risk accepted; Other (note required) (MR-9 BR-05) [Owner, 2026-09-29; PR #85, #87].
+- BR-11. The closed tab can be filtered by reason and shows a count per reason per rule. A closure made before reasons existed reads and counts as Other (MR-9 BR-06) [Owner, 2026-09-29; PR #87].
+- BR-12. The alert list shared in the 2026-09-23 meeting (MOM 6.3) is checked against the rules in BR-01; any rule on it and not in BR-01 becomes a new rule here (MR-9 BR-07) [Owner, 2026-09-29; waiting on the list, BACKLOG BL-150].
 
 **Edge cases.**
 - Many alerts from one root cause (1 supplier late on many materials): group them under 1 parent alert [Proposed; Market].
@@ -1346,12 +1432,142 @@ Added on 2026-09-28 from the RFx improvement analysis of 2026-09-25:
 - AC-01. Each rule in BR-01 raises an alert when its condition is met in test data.
 - AC-02. Every alert shows a risk class.
 - AC-03. A repeating condition does not create duplicate open alerts.
+- AC-04. 2 High alerts with 3 and 10 days of cover are listed 3 first, also after grouping (MR-9 AC-01).
+- AC-05. Closing without a reason is refused by the verb, and so is closing with "Other" and no note; a retired reason is no longer offered, and closed alerts that used it still show it; the closed tab shows the count per reason (MR-9 AC-02 to AC-04).
+- AC-06. `callOffNotCovered` fires where a call-off of 1,000 is due inside the lead time and SOH plus in production is 600 (MR-6 AC-07).
 
-**Data and integration.** Reads REQ-E08-01, REQ-E06-03, REQ-E08-04. Alert record: rule, material, supplier, class, status, action note.
+**Data and integration.** Reads REQ-E08-01, REQ-E06-03, REQ-E08-04, REQ-E09-03. Alert record: rule, material, supplier, class, days to impact (derived), status, close reason, action note.
 
 **Metrics.** Leading: alerts closed within 1 working day. Lagging: stock-outs (KPI-04).
 
 **Open items.** PQ-03 (confirm the starting thresholds in BR-02).
+
+#### REQ-E08-06  Supplier trade names and one material search
+
+| Maps to | Phase | Priority | Business owner | Users | Status |
+|---|---|---|---|---|---|
+| MR-3 (`SC-HUB-MATERIAL-REQUIREMENTS-2026-09.md`); SC Hub Material meeting 2026-09-23, item 1.2 | MVP | P1 | Material Planner | SUP, MP | Validated (owner, 2026-09-29) |
+
+**Business value.** Suppliers name materials by their own trade name, while the hub shows only PTI's code and description. A supplier cannot find its own product, and a planner cannot match a supplier's document or message to a PTI material. One trade name per supplier and one search that finds it close that gap.
+
+**Experience.**
+- SUP: records its trade name, and optionally its own material number, for each PTI material it supplies, on a "My materials" tab of the stock page; sees the state of each name and the reason for a rejection.
+- MP: approves or rejects trade names, loads approved names in bulk, and finds a PTI material by any supplier's approved trade name.
+
+**Step-by-step (Supplier, then Planner).**
+1. The supplier opens "My materials", enters "Emulsense 200" for its PTI emulsifier base and submits. The name reads "Awaiting approval".
+2. The planner opens Materials → Trade names, filtered to "Awaiting approval", and approves it.
+3. On the inventory list the planner types "emulsens 200" and finds the PTI material, with "matched trade name 'Emulsense 200' (the supplier)".
+
+**Business rules.**
+- BR-01. One PTI material can have many trade names, at most 1 approved per supplier (MR-3 BR-01) [Owner, 2026-09-29; PR #97].
+- BR-02. The supplier enters the trade name; Material Planning approves or rejects it, and a rejection needs a reason the supplier sees. A changed name goes through approval again, and the previous approved name stays in use until then (MR-3 BR-02) [Owner, 2026-09-29; PR #97].
+- BR-03. A supplier sees only its own trade names, never another supplier's. PTI sees all. On PTI screens the name reads "Supplier's name"; the supplier reads "Your name" (MR-3 BR-03) [Owner, 2026-09-29; PR #97, #102].
+- BR-04. One shared search replaces the page-by-page filters on the inventory lists, stock entry, the ASN line editor, call-offs, alerts and the stock simulation. It matches PTI code, PTI description and approved trade names; ignores case, accents, punctuation and extra spaces; matches every word typed, in any order; allows 1 typo in a word of 5 or more characters; ranks exact code first, then full-word matches, then part-word matches, then typo matches; and shows which field matched (MR-3 BR-04) [Owner, 2026-09-29; PR #102, #108]. Part-word matches, which the old filters allowed, are kept [Code, PR #102].
+- BR-05. A trade name is 2 to 80 characters; the optional supplier material number is up to 40 (MR-3 BR-05) [Owner, 2026-09-29; PR #97].
+- BR-06. Approved trade names can be loaded by PTI in bulk from a CSV with PTI code, supplier ID, trade name and supplier material number. They are approved on load, the record shows "Loaded by PTI", and loading the same file twice changes nothing (MR-3 BR-06) [Owner, 2026-09-29; PR #97].
+
+**Edge cases.**
+- Two suppliers use the same trade name for different PTI materials: allowed; the search shows both, each with its supplier (MR-3 edge case 1) [Owner, 2026-09-29].
+- A supplier is unassigned from a material: its trade name stays on the record but is hidden from search (MR-3 edge case 2) [Owner, 2026-09-29; PR #97].
+- The name is identical to the PTI description: accepted; the planner may reject it as redundant (MR-3 edge case 3) [Owner, 2026-09-29].
+
+**Acceptance criteria.**
+- AC-01. A supplier can submit a trade name only for a material assigned to it.
+- AC-02. An approved name is found by the search on every page in BR-04; an unapproved name is not.
+- AC-03. Supplier A never sees supplier B's trade name on any screen or read.
+- AC-04. "emulsens 200" finds "Emulsense 200" (1 typo in a 9-character word).
+- AC-05. A rejection without a reason is refused.
+
+**Data and integration.** Supplier material name: supplier, PTI material code, trade name, supplier material number, state (Awaiting approval, Approved, Rejected, Replaced), submitted by and at, decided by and at, rejection reason. Mastered in the hub; nothing goes to SAP.
+
+**Metrics.** Leading: share of supplier × material pairs with an approved trade name.
+
+**Open items.** None.
+
+#### REQ-E08-07  MRP controller (PIC) per material
+
+| Maps to | Phase | Priority | Business owner | Users | Status |
+|---|---|---|---|---|---|
+| MR-5 (`SC-HUB-MATERIAL-REQUIREMENTS-2026-09.md`); SC Hub Material meeting 2026-09-23, item 1.4 | MVP | P1 | Material Planner | SUP, MP, ADM | Validated (owner, 2026-09-29) |
+
+**Business value.** A supplier or buyer who sees a problem on a material does not know which planner handles it. SAP already holds that person as the MRP controller; showing it on every material surface routes the question to the right planner.
+
+**Experience.**
+- MP: sees the MRP controller on inventory, alerts, call-offs, the ASN line and the stock simulation, and filters to "My materials".
+- SUP: sees the name of the planner for each of its materials, not the code.
+- ADM: maps each MRP controller code to a name and the hub users it stands for.
+
+**Step-by-step (Planner).**
+1. The planner mapped to "P12" opens the alert list and picks "My materials".
+2. Only P12's materials remain, each showing "P12 · <name>".
+
+**Business rules.**
+- BR-01. Each material carries its MRP controller code. SAP holds it per plant; the hub keeps 1 value per material until plants are modelled (MR-5 BR-01) [Owner, 2026-09-29; PR #84].
+- BR-02. An administrator maps each code to a name and 1 or more hub users, through a governed verb held by the `compliance` lane. An unmapped code shows the code only (MR-5 BR-02) [Owner, 2026-09-29; PR #90]. A mapping cannot yet be removed (BACKLOG BL-157).
+- BR-03. The MRP controller appears on the inventory list and detail, alerts, call-offs and the ASN line, and can be filtered on each of those lists and on the stock simulation, including "My materials" for the code picked for the seat in the identity panel (MR-5 BR-03) [Owner, 2026-09-29; PR #90, #108].
+- BR-04. Suppliers see the name and never the code (MR-5 BR-04) [Owner, 2026-09-29; PR #90].
+- BR-05. The code comes from the SAP material feed, owned by Master Data Management (BL-103). Until the feed runs, it is sample data and labelled as such wherever it is shown (MR-5 BR-05) [Owner, 2026-09-29; PR #84, #90; feed BACKLOG BL-152].
+
+**Edge cases.**
+- A material with no MRP controller: the field is empty and the material is absent from every "My materials" filter [Proposed].
+
+**Acceptance criteria.**
+- AC-01. Every material with an MRP controller shows it on the surfaces in BR-03.
+- AC-02. A planner mapped to "P12" sees only P12's materials under "My materials".
+- AC-03. A supplier sees the controller's name, never the code.
+
+**Data and integration.** Material master: MRP controller code (copy of SAP MARC-DISPO). MRP controller map: code, name, users, changed by a governed verb.
+
+**Metrics.** None.
+
+**Open items.** Whether PTI has more than 1 plant per material (MR-5 section 16 of the material requirements).
+
+#### REQ-E08-08  Supplier stock simulation
+
+| Maps to | Phase | Priority | Business owner | Users | Status |
+|---|---|---|---|---|---|
+| MR-7 (`SC-HUB-MATERIAL-REQUIREMENTS-2026-09.md`); SC Hub Material meeting 2026-09-23, item 4 | MVP | P1 | Material Planner | MP | Validated (owner, 2026-09-29) |
+
+**Business value.** Suppliers update weekly, on Thursday, but the planner decides on new POs or call-offs on other days. On a Tuesday the planner needs an estimate of the supplier's stock built from the last update plus what happened since, shown as 2 numbers that are never added together.
+
+**Experience.**
+- MP: opens Inventory → Stock simulation, picks a check date and filters, reads per supplier × material the supplier's available stock, what is already called off and not shipped, what is free to call off, and PTI inbound; expands a row for 13 weekly buckets; enters a missing figure as planner input; and opens "Create call-off" or "Create PO request" pre-filled.
+
+**Step-by-step (Planner, on a Tuesday).** The worked example in MR-7 section g of the material requirements: supplier updated Thursday 2026-10-01 with SOH 5,000; an ASN of 1,200 shipped on 2026-10-03; 2,000 reached the distributor on 2026-10-05; 3,000 finished production on 2026-10-05, capped at 2,500 by the group's allocated capacity. On Tuesday 2026-10-06 the page reads Supplier available stock 8,300, already called off 3,000, Free to call off 5,300, and PTI inbound 1,200.
+
+**Business rules.**
+- BR-01. For supplier s, material m and check date d, with t0 the date of the latest stock record: Supplier available stock(d) = SOH(t0) − the shipped quantity of s's ASNs for m shipped after t0 and on or before d (Submitted, In Transit, Delivered or Awaiting exception) + the to-distributor quantity for m with ETA after t0 and on or before d (Booked or Shipped) + the in-production quantity for m completing after t0 and on or before d, capped by capacity (BR-04). PTI inbound(d) = the in-transit quantity for m from s (ASNs Submitted or In Transit, and dispatched call-offs) with ETA on or after d (MR-7 BR-01) [Owner, 2026-09-29; PR #103]. A Discrepancy ASN counts as shipped, and an Arrived to-distributor leg counts as arrived [Code, PR #103].
+- BR-02. The 2 figures are never added together on screen, because in transit has already left the supplier (MR-7 BR-02) [Owner, 2026-09-29; PR #103, #108].
+- BR-03. An ASN shipped after t0 is subtracted; once a newer stock record exists it becomes t0, and only ASNs after it count (MR-7 BR-03) [Owner, 2026-09-29; PR #103].
+- BR-04. **Capacity cap.** For supplier s, planning group g (REQ-E08-04 BR-13) and week w, the in-production quantity finishing in w across the materials of g is capped at s's allocated capacity for g in w, scaled down pro rata per material, and the row says "Capped by capacity". Allocated capacity only; additional capacity is not used (MR-7 BR-04) [Owner, 2026-09-29, MAT-D11; PR #103].
+- BR-05. **ETA to distributor.** The shipment's ETA; if missing, its ETD + the principal lead time for that distributor; if that is missing too, the planner enters it. The administrator maintains the principal lead times (MR-7 BR-05) [Owner, 2026-09-29; PR #103]. The shipment record does not carry its principal, so the fallback uses the distributor's shortest principal lead time (BACKLOG BL-158).
+- BR-06. A supplier with no stock record reads "Cannot simulate: no stock update", and the planner may enter SOH (MR-7 BR-06) [Owner, 2026-09-29; PR #103, #108].
+- BR-07. "Already called off, not shipped" (confirmed call-offs not yet covered by an ASN) and **Free to call off** = Supplier available stock − that quantity are shown beside Supplier available stock (MR-7 BR-07) [Owner, 2026-09-29, MAT-D10; PR #103, #108].
+- BR-08. Planner input is kept on the simulation only, labelled "Planner input" with who and when, until the supplier's next stock record, after which it is no longer used. It never changes the supplier's stock record and never counts toward update compliance. The input is set through a governed verb held by `planning` (MR-7 BR-08) [Owner, 2026-09-29; PR #103, #108].
+- BR-09. A distributor is simulated on its own stock plus to-distributor; a manufacturer has no to-distributor term (MR-7 BR-09) [Owner, 2026-09-29; PR #103].
+- BR-10. The simulation is its own page (Inventory → Stock simulation), PTI only. The stock visibility page keeps no "available" figure (REQ-E08-01 BR-01) [Owner, 2026-09-29, MAT-D2; PR #108]. The manufacturer → distributor leg is named "To distributor" [Owner, 2026-09-29, MAT-D3].
+
+**Edge cases.**
+- The ASN's ship date is missing: the ASN's submitted date is used (MR-7 edge case 1) [Owner, 2026-09-29; PR #103].
+- An in-production completion date in the past but after t0 counts as finished; one before t0 is ignored, and the row says "Production date before last update" (MR-7 edge cases 2, 3) [Owner, 2026-09-29; PR #103].
+- A Cancelled to-distributor shipment is not counted (MR-7 edge case 4) [Owner, 2026-09-29; PR #103].
+- No capacity confirmed for the week: no cap, and the row says so (MR-7 edge case 5) [Owner, 2026-09-29; PR #103].
+- A check date before t0 is refused; a simulation looks forward only (MR-7 edge case 6) [Owner, 2026-09-29; PR #103, #108].
+
+**Acceptance criteria.**
+- AC-01. The worked example reproduces exactly in a test.
+- AC-02. Supplier available stock and PTI inbound are shown separately and never summed.
+- AC-03. A planner input shows as "Planner input" with who and when, and disappears after the supplier's next stock record.
+- AC-04. In-production quantities above allocated capacity are scaled pro rata, and the row says so.
+- AC-05. A missing ETA falls back to ETD + principal lead time, and the basis says so.
+- AC-06. The stock visibility page shows no "available" figure.
+
+**Data and integration.** Read-only calculation over the stock records, ASNs, to-distributor shipments, call-offs, capacity and planning groups. Planner input: supplier, material, field, value, date, entered by and at. Nothing goes to SAP.
+
+**Metrics.** Leading: planner checks on non-Thursday days that use the simulation.
+
+**Open items.** The acceptable load time at real volume (build plan section 1.1, input 2). The labelled sample row that reproduces the worked example on the page (BACKLOG BL-148).
 
 ### 5.5 Planning & Fulfillment: Forecast Collaboration (E06)
 
@@ -1847,6 +2063,9 @@ Detailed in `FORECAST-ENGINE-REQUIREMENTS.md`, which uses this file's template p
 | DL-1 | Late at the deadline (forecast commitments, built) or after it (PO and call-off responses, built): one convention | REQ-E06-02, REQ-E07-02, REQ-E09-03 |
 | ADM-1 | Whether the combined buyer "All" role may change the working calendar and the 3PL list, or the Hub administrator only | Section 3.4, REQ-E07-04 |
 | GR-1 | Over-delivery measured against the order (CR-25) or the ASN (REQ-E07-06 BR-03); whether a receipt kept open reopens the missing quantity | REQ-E07-06 |
+| MAT-D15 | The documents required for Approved and Preferred, from Procurement and Quality. Until then placeholder lists are in force and the qualification checks warn instead of refusing (MAT-D19) | CE-12d, CE-12g |
+| MR-1 BR-07 | Which weekly supplier confirmation the stock update is scheduled with, and the SOP document to link | REQ-E08-02 BR-17, BR-18 |
+| MR-9 BR-07 | The alert list shared in the 2026-09-23 meeting, to check against REQ-E08-05 BR-01 | REQ-E08-05 BR-12 |
 
 ---
 
@@ -1978,6 +2197,27 @@ Research date: 2026-09-21. The full note, with every source link, is `research/R
 | RFX-D13 | Response targets in the metrics tables (owner, 2026-09-25, D-8) | The proposed targets of the RFx improvement analysis (sections 4j, 5j and 6j) are starting targets, reviewed after 3 months. CE-11m and the metrics of REQ-E03-04 and REQ-E03-05. No build |
 | RFX-D14 | Certificate expired at the deadline (owner, 2026-09-25, D-9) | Accept the submission and flag the certificate to the buyer. CE-11d. Built in PR #56 and #62 |
 | RFX-D15 | Firm-offer round on a Partly awarded RFP (owner, 2026-09-28, FU-7) | Allow it, for the options still open (not awarded on the RFP and not sourced by an RFQ created from it). The remaining options are awarded on the new round's firm prices. Amends REQ-E03-04 BR-15e; closes FU-7 and BL-128. Built in PR #71 |
+| MAT-D1 | Alert severity scale (owner, 2026-09-29) | Keep CR-24 High / Medium / Low and sort by days to impact within each class. Replaces the Critical / High / Medium scale of the MOM review. REQ-E08-05 BR-06 to BR-08. Built in PR #87 |
+| MAT-D2 | Where the stock simulation lives (owner, 2026-09-29) | A separate Stock simulation page for the first release, revisited after 3 months of use; REQ-E08-01 BR-01 stands. REQ-E08-08 BR-10. Built in PR #108 |
+| MAT-D3 | Name for the manufacturer → distributor leg (owner, 2026-09-29) | "To distributor". REQ-E08-08 BR-10 |
+| MAT-D4 | Template columns D to F (owner, 2026-09-29) | In-production quantity (E) required, 0 allowed; completion date (F) required when E > 0; supplier ROP (D) optional. Amends REQ-E08-02 BR-06; BR-22. Built in PR #104; enforced by the verb per MAT-D21 |
+| MAT-D5 | ASN batch when no batches are declared (owner, 2026-09-29) | Free text, marked "not in declared stock"; a list when batches are declared. REQ-E07-04 BR-09. Built in PR #89 and #101 |
+| MAT-D6 | Shelf-life rule: which materials, who approves (owner, 2026-09-29) | Every shelf-life relevant material, raw material and packaging alike; exception approved by Quality (`compliance`) only; approved goods received into blocked stock. Replaces "QA or Material Planning" in the MOM review. **Amended by MAT-D16.** REQ-E07-04 BR-12, BR-13. Built in PR #93 |
+| MAT-D7 | Weekly cycle details (owner, 2026-09-29) | Thursday 23:59 WIB, the last working day before it on a holiday; PTI-entered records count and stay labelled; a week is compliant only if every material was updated. REQ-E08-02 BR-14, BR-15, BR-24. Built in PR #88 and #105 |
+| MAT-D8 | API stale threshold (owner, 2026-09-29) | 24 hours. **Amended by MAT-D17.** REQ-E08-02 BR-16. Built in PR #88 |
+| MAT-D9 | How update compliance enters the score (owner, 2026-09-29) | A weighted blend, w = 0.10, fixed at release. REQ-E08-02 BR-27. Built in PR #105 |
+| MAT-D10 | Open call-offs in the simulation (owner, 2026-09-29) | Subtract confirmed call-offs not yet shipped and show the result as "Free to call off" beside Supplier available stock; never merged. REQ-E08-08 BR-07. Built in PR #103 and #108 |
+| MAT-D11 | Capacity used for the simulation's cap (owner, 2026-09-29) | Allocated capacity only; additional capacity is not used. REQ-E08-08 BR-04. Built in PR #103 |
+| MAT-D12 | Where planning groups are mastered (owner, 2026-09-29) | In the hub now; moved to SAP master data with MDM when the SAP feed runs. REQ-E08-04 BR-18. Built in PR #92 |
+| MAT-D13 | Direct vs indirect on an event (owner, 2026-09-29) | Derived from the category or purchasing group, mapped once by Procurement; not typed per event. CE-12f. Built in PR #109 |
+| MAT-D14 | Vendor drops a level mid-event (owner, 2026-09-29) | It can still respond, and cannot be awarded until it is back at the level. CE-12g. Built in PR #109; warn-only while lists are placeholders (MAT-D19) |
+| MAT-D15 | Documents required per qualification level (owner, 2026-09-29) | Procurement and Quality define the lists together; blocking for MR-10 go-live; placeholder lists, labelled, until then. CE-12d. Lists still open (section 7) |
+| MAT-D16 | Raw materials default to the shelf-life check (owner, 2026-09-29, during the build, A2) | A material is shelf-life relevant by default when it is ROH or has a minimum remaining shelf life in master data; packaging without one is not; an administrator can switch any material. Amends MAT-D6's "by master data, never by material type". REQ-E07-04 BR-12. Built in PR #84 |
+| MAT-D17 | API staleness and a failed pull (owner, 2026-09-29, during the build, B1) | An API figure is stale only when its last successful pull is older than 24 hours; a failed pull shows "Last pull failed" and does not make the figure stale. Amends MAT-D8 and supersedes the REQ-E08-02 edge case "flag them as stale". REQ-E08-02 BR-16. Built in PR #88 |
+| MAT-D18 | Who edits the qualification lists (owner, 2026-09-29, during the build, G1) | Procurement and Quality: the atom sits in both the `procurement` and `compliance` lanes. Replaces "procurement and the Hub administrator" in MR-10. CE-12d. Built in PR #91 |
+| MAT-D19 | Qualification checks while a list is a placeholder (owner, 2026-09-29, during the build, G1/G2) | Warn and require a reason instead of refusing, at invite, publish and award, while a list for the needed level is a placeholder; enforcement switches on by itself when a real list is saved. Amends the fail-closed row of the build plan's AD-8 until MAT-D15 is answered. CE-12g. Built in PR #109 |
+| MAT-D20 | BL-133's LTP-to-capacity join (owner, 2026-09-29, during the build, C5) | Follows planning groups: the LTP of a planning group is the sum of its materials' LTP. REQ-E08-04 BR-16. Built in PR #92 |
+| MAT-D21 | In-production enforced by the verb (owner, 2026-09-29, during the build, C1) | The declare and record verb refuses a blank in-production quantity, and one above 0 without a completion date, on manual, template and PTI records; an API pull is exempt. Extends MAT-D4 from the form and template to the verb. REQ-E08-02 BR-06. Built in PR #107 (C1b) |
 | E06-R | Forecast Collaboration recommendations | Confirmed as recommended: periods and cadence by material type, zones, split deadline, pre-filled commitment, tolerance CR-21, gap colours CR-22, re-publication, ranking, planner actions, reminders, spreadsheet round-trip, supplier coverage, upside |
 
 ## 10. Change log
@@ -2011,4 +2251,5 @@ Research date: 2026-09-21. The full note, with every source link, is `research/R
 | 0.25 | 2026-09-28 | Owner decision RFX-D15 recorded (section 9): a firm-offer round may open on a Partly awarded RFP for its open options. REQ-E03-04 BR-15e amended. Open item FU-7 closed and removed from section 7. Built in PR #71 |
 | 0.26 | 2026-09-28 | CE-11i: who uploaded each supplier file is recorded and shown in the buyer's "Supplier documents" panel (FU-1, BL-123). Built in PR #73 |
 | 0.27 | 2026-09-28 | Forecast engine decisions ENG-D8a, D10, D11, D12, D14 decided and ENG-D18 to D21 added from the team's LTP / DA / capacity review (`FORECAST-ENGINE-REQUIREMENTS.md` 0.13). REQ-E08-04 and REQ-E06-02 gain capacity-before-LTP and Submit all per week when BL-133 is built |
+| 0.29 | 2026-09-29 | SC Hub Material build folded in as built (PRs #84 to #93, #97, #101 to #110). Owner decisions MAT-D1 to MAT-D15 and the build rulings MAT-D16 to MAT-D21 recorded (section 9). MR-1, MR-4 and MR-2 BR-01 to BR-05 are REQ-E08-02 BR-12 to BR-27 (BR-06 amended, edge case on a failed sync superseded); MR-2 BR-06, BR-07 are REQ-E03-05 BR-18, BR-19; MR-6 is REQ-E07-04 BR-06 to BR-18 (BR-04 amended); MR-8 is REQ-E08-04 BR-13 to BR-19; MR-9 is REQ-E08-05 BR-06 to BR-12; MR-10 is CE-12a to CE-12j, cited by REQ-E03-02 BR-19, REQ-E03-03 BR-26, REQ-E03-04 BR-17 and REQ-E03-05 BR-20. New REQ-E08-06 (MR-3), REQ-E08-07 (MR-5) and REQ-E08-08 (MR-7). Corrected against the requirements file: the atom `asn:approve-shelf-life` (plan AR-02), the update-mode verb held by `compliance` rather than the Hub administrator only (AR-04), the 180-day document window (AR-18), and the score weight moving grade and band only (AR-09). Open items MAT-D15, MR-1 BR-07 and MR-9 BR-07. Map in `SC-HUB-MATERIAL-REQUIREMENTS-2026-09.md` |
 | 0.28 | 2026-09-29 | REQ-E08-04 BR-08 to BR-12 and REQ-E06-02 BR-11 to BR-13: capacity before the LTP, two-level check against capacity and BE, one Submit all per week, the LTP as the only capacity demand figure, "Additional capacity" (BL-133, PR #80). New REQ-E06-04 Fixed stock reconcile, Validated (BL-134, PR #79) |

@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 2.15, 2026-09-29 |
+| Version | 2.16, 2026-09-29 |
 | What this is | Everything known to be outstanding for the Supplier Hub, in one list: decisions waiting on people, work waiting on those decisions, work waiting on the backend, and work that can start today |
 | What this is not | A plan or a commitment. Nothing here has a date. Sequencing belongs to the project owner |
 | Sources | Open items (section 7 of `SUPPLIER-HUB-REQUIREMENTS.md`), open decisions (section 9.3 of `SUPPLIER-HUB-PRD.md`), what is not built (section 5 of `BUILD-GAP.md`), stubs (section 6 of the requirements), and defects or debts found while building |
@@ -40,6 +40,12 @@ Still open. Items decided on 2026-09-21 are in section 6.
 | BL-101 | **C8 §8** — SOMO ratifies the in-house forecast engine amendment (the hub computes the material × period totals until the engine moves to SOMO) | SOMO, with the operator | The engine publishing its own totals on the C8 seam | `docs/contracts/C8-forecast-publication.md` §8 |
 | BL-119 | **Forecast engine decisions still open**: ENG-D12a how far ahead the promotion calendar is fixed; ENG-D13 plan-stability limit in model selection (set after the first backtest); ENG-D22 the team's Demand Anticipation formula (recommended: net to safety stock and count open orders, ROP only as the order trigger). ENG-D8a, D10, D11, D12 and D14 decided 2026-09-28 | Marketing, Material Planner, Material Planning team | BL-113 (D12a), BL-112 (D13); D22 changes the team's DA process, not the engine | `FORECAST-ENGINE-REQUIREMENTS.md` section 4.2 |
 | BL-140 | **How is an ASN raised against a value-limit PO line?** A value-limit line (BL-49) has no quantity, so the ASN wizard's open quantity for it is 0 and nothing can be shipped against it. Options: ship by call-off only (the line's releases carry the quantities), or let the ASN state a quantity and check its value against the remaining limit | Material Planner, Procurement | Whether the ASN wizard offers such a line at all, and what it checks | CR-04; found building BL-80 (2026-09-29) |
+| BL-144 | **FU-3 of the material build: who may change a supplier's stock update mode?** MR-1 AC-06 says the Hub administrator only; no role can express that, so `supplier:set-update-mode` sits in the `compliance` lane and in the combined buyer "All" role (PR #86), on the `setting:set` precedent. The atom of the MRP controller map, `mrpcontroller:manage`, also sits in the `compliance` lane (PR #90). Decide with BL-70 | Procurement, IT | The atom placement for the update mode and the MRP controller map | REQ-E08-02 BR-12, REQ-E08-07 BR-02; plan AR-04 |
+| BL-145 | **FU-9: how does a supplier file a "Tax & Legal" document?** No verb lets a supplier declare one (PR #91), so under lists that need it almost no vendor can reach Approved | Owner, with Procurement | A supplier path for that document category, or its removal from the lists | CE-12c, CE-12d |
+| BL-146 | **MAT-D15: the documents required for Approved and Preferred.** Procurement and Quality define the lists together. Until they save real lists, placeholder lists are in force and the qualification checks only warn (MAT-D19): under them almost every vendor is Registered and almost every award asks for a reason (FU-14, PR #109) | Procurement, Quality | MR-10 go-live: the checks start refusing on their own | CE-12d, CE-12g |
+| BL-148 | **Stock simulation sample row: keep or remove?** No seed pair reproduces the MR-7 worked example, so the page shows 1 labelled sample row (sup-004 × FR-WARD-4410) that reproduces it (PR #108). The reviewer asked for a ruling | Owner | Whether the labelled sample row stays on the live page | REQ-E08-08 |
+| BL-149 | **Which weekly supplier confirmation goes beside the stock update, and the SOP document.** MR-1 BR-07 schedules the update with "the weekly supplier confirmation", which does not exist in the hub; the panel has room for a second deadline (PR #106). The stock page names the SOP but cannot link it until Material Planning publishes it (MR-1 BR-06) | Material Planner | The second deadline on the weekly-update panel and the SOP link | REQ-E08-02 BR-17, BR-18 |
+| BL-150 | **MR-9 BR-07: the alert list from the 2026-09-23 meeting (MOM 6.3).** Not yet shared; each rule on it and not in REQ-E08-05 BR-01 becomes a new rule | Levi (owner) | New alert rules, if any | REQ-E08-05 BR-12 |
 
 ---
 
@@ -49,7 +55,7 @@ Decided on 2026-09-21 and ready to build. Priority: first what protects money an
 
 | Priority | ID | Item | Rule | Size | Placeholder until decided |
 |---|---|---|---|---|---|
-| 1 | BL-39, BL-75, BL-76, BL-78, BL-79, BL-84, BL-93, BL-96 to BL-98, BL-124, BL-127, BL-138, BL-139, BL-141 to BL-143 | The remaining "can start today" items in section 4, in the order listed there | — | — | — |
+| 1 | BL-39, BL-75, BL-76, BL-78, BL-79, BL-84, BL-93, BL-96 to BL-98, BL-124, BL-127, BL-138, BL-139, BL-141 to BL-143, BL-147, BL-156, BL-157, BL-159 | The remaining "can start today" items in section 4, in the order listed there | — | — | — |
 
 ### Forecast engine build order
 
@@ -92,6 +98,12 @@ The prototype holds everything in the browser. These need a real backend, which 
 | BL-30 | Durable storage, so what a user enters survives a reload | L | PRD section 4 |
 | BL-95 | Share saved RFx templates across the team. Templates are stored in each buyer's browser (`paragon.rfqTemplates`, `paragon.rfiTemplates`, `paragon.rfpTemplates`), so a colleague never sees them and clearing the browser loses them. Needs a store behind the backend (BL-30). CE-04 says a saved template is for every buyer | M | Requirements 3.6a CE-04 |
 | BL-100 | Forecast engine input data in the hub, from SAP through the Master Data Management team (ENG-D1): finished-goods sales history (2 to 3 years, weekly), price and promotion calendar, launch plan, bills of materials with scrap and yield, MOQs and multiples, warehouse volume per item and owned capacity | L | PRD I14; `research/FORECAST-METHOD-SPEC.md` section 5 |
+| BL-151 | Epic H of the material build: the scheduled pull of each API-connected supplier every `stockSync.intervalHours` (2 hours). The setting, "Last sync" and "Next sync" are built (PR #85, #106); the pull is still the Sync button. Needs a supplier API contract per supplier (RSK-02). Same family as BL-25 and BL-29 | M | REQ-E08-02 BR-13; with BL-25 |
+| BL-152 | Epic H: the SAP material feed for MRP controller, minimum remaining shelf life and material group. Until it runs these are sample values with a liveness label (PR #84, #90). Owned by Master Data Management (BL-103) | M | REQ-E07-04 BR-11, REQ-E08-07 BR-05; with BL-100, BL-103 |
+| BL-153 | Epic H: email reminders for the Thursday stock-update cutoff. The in-hub reminders are built (PR #106). Same family as BL-26 and BL-120 | S | REQ-E08-02 BR-18; with BL-26 |
+| BL-154 | FU-2: `services/sdc/materialMaster.ts` imports the mock material overlay store directly (PR #84), so the SDC module depends on the mock layer. It needs a seam when `httpDataService` lands | S | Stage F1 |
+| BL-155 | Send each vendor's qualification level to the SAP vendor master once that interface exists; there is no vendor object in the SAP interface today | M | CE-12h; with BL-24 |
+| BL-158 | FU-11: a to-distributor shipment carries no principal, so the stock simulation's ETA fallback uses the distributor's shortest principal lead time rather than the leg's own (PR #103), which can read early for a distributor with several principals. A data model change when the feed carries the principal | S | REQ-E08-08 BR-05 |
 
 ---
 
@@ -114,6 +126,10 @@ Nothing blocks these.
 | BL-141 | The SAP interface monitor would show the real wall-clock time for a failed SAP post: `sapInterfaceRules.ts:145` copies the audit event's `ts` (wall clock, pinned by contract C3) and `InterfaceMonitor.tsx:67` renders it, while the message's age reads the hub clock. No demo action produces a failed settle today, so nothing shows it yet. Fix: stamp the monitor row from the hub clock and leave `ts` alone | A second "now" on one page, the class BL-34 closed | S | Found checking BL-34 (2026-09-29) |
 | BL-142 | Removing a file from a revised record frees the file for the session, though an earlier version still lists it: `SessionAttachments` calls `files.release` on remove (`SessionAttachments.tsx:73, 82`), and firm offers (BL-129) and response documents keep every version's file list. The earlier version then shows the file as not available | A version's own record points at a file it can no longer open | S | With BL-27 if real storage keeps files per version |
 | BL-143 | `CLAUDE.md:1395` says CI runs "on every push to `main`". Once PR #94 (no post-merge gates run) merges, that is no longer true: `main` is re-tested daily at 00:17 UTC | A stale sentence in the file every session reads. The operator edits `CLAUDE.md`; task PRs do not (as BL-124) | S | PR #94 |
+| BL-147 | FU-14 display gaps: the qualification warnings stored on an event and an award in warn-only mode (MAT-D19) are not shown on the event or the award record, and the RFI and RFP invitee tables have no "Not qualified" marker (PR #109) | A buyer cannot see later why an award asked for a reason | S | CE-12g |
+| BL-156 | FU-6: a closed alert shows its reason as "Other (note required)", repeating the form label (PR #87) | Cosmetic | S | REQ-E08-05 BR-10 |
+| BL-157 | FU-8: a mapped MRP controller code cannot be unmapped (PR #90) | The administrator cannot undo a mapping | S | REQ-E08-07 BR-02 |
+| BL-159 | FU-13: two i18n tests disagree on plural keys (the inventory and call-off page tests want identical EN and ID key sets; `fragments.test` wants ID without `_other`), so the material pages avoid plurals and read, for example, "Missed: 1 materials were not updated" (PR #106) | Grammar slips on screen until one plural rule is agreed | S | Test infrastructure |
 
 ---
 
@@ -143,6 +159,13 @@ Nothing blocks these.
 
 | ID | Item | Closed | By |
 |---|---|---|---|
+| BL-166 | SC Hub Material build, MR-1 to MR-10 | 2026-09-29 | Built: tasks A1 #86, A2 #84, A3 #85, B1 #88, B2 #106, B3 #105, B4 #110, C1 #104, C1b #107, C2 #97, C3 #102, C4 #90, C5 #92, D1 #89, D2 #93, D3 #101, E1 #103, E2 #108, F1 #87, G1 #91, G2 #109; requirements #83. Folded into the documents in task I1. What is not built is BL-144 to BL-159 |
+| BL-165 | FU-12: a realistic weekly update history, so the demo shows green, amber and red compliance | 2026-09-29 | Built in PR #110: a labelled sample history feeds the compliance read only (sup-007 92%, sup-008 69%, sup-003 54%) |
+| BL-164 | FU-10: the approved trade name read "Your name" on PTI screens | 2026-09-29 | Fixed in PR #102: PTI screens read "Supplier's name"; the supplier keeps "Your name" |
+| BL-163 | FU-7: the planner's "Not in declared stock" marker showed only on one drill-through | 2026-09-29 | Fixed in PR #101: it shows beside the "Mismatch" marker on the ASN list and the call-off page |
+| BL-162 | FU-5: the Submit drawer on a draft ASN showed no batch-above-available warning | 2026-09-29 | Fixed in PR #101: both submit paths show the batch and call-off warnings |
+| BL-161 | FU-4: the material brief's invariant list did not name `docs/contracts/C5-seams.md` | 2026-09-29 | Fixed in task I1: MAT-R5 in `prompts/mat-build-00-brief.md` names it |
+| BL-160 | FU-1: the 8 material settings' rule-flip rows checked only the value in force | 2026-09-29 | Fixed: each row now checks a rule outcome, in PR #88 (3 keys), #93, #105, #106 and #110 (2 keys) |
 | BL-129 | Files on an RFP firm offer | 2026-09-28 | Built: a Documents section on the supplier's firm-offer form, sent with the offer on submit and revise and checked by the offer's own rule; a revision keeps the files in force unless the supplier removes them, and each version keeps the files it was sent with. The buyer's round lists each supplier's files read-only. Files are session-held until BL-27 |
 | BL-130 | "Will not award the rest" on an RFP | 2026-09-28 | Built: `t_rfp_award` takes a final award with no lines on a Partly awarded RFP when it marks every open option "Will not award" (an option an RFQ created from the RFP sources counts as settled), by the RFQ's rule; anything else with no lines is `AWARD_EMPTY`. Every RFP award needs a reason, so the close-out does too: the award panel offers "Will not award the rest" and holds it until the reason is typed. The record has no lines and names the responders no award named |
 | BL-131 | A test that fails the compliance gate at RFP award time | 2026-09-28 | Built: `rfpAwardCommand.test.ts` suspends sup-015 after it passed the gate and sent a firm offer, and both the final and the partial award naming it are refused `COMPLIANCE_GATE_FAILED` (status); the same award to sup-007 alone goes through. Mutation-probed: with the award-time gate removed the test fails |

@@ -42,6 +42,7 @@ This file is source material for the task prompts `mat-build-A1` to `mat-build-I
   - Hook name in `POLICY_HOOKS` (`transitions.test.ts:131`).
   - Purpose row in `annotations.ts`, with EN and ID text in `src/lib/i18n/processFlowPurpose.ts` (`annotations.test.ts:40-142`).
   - The flow row, the `- **wired:**` list and the header counts in `docs/contracts/C1-methods.md` (`c1MethodSurface.contract.test.ts`).
+  - The method count in `docs/contracts/C5-seams.md`, which borrows the C1 figure, when a new read method is added (same contract test).
   - A real id and a store reset in `ownerlessScope.test.ts`. Creation-only targets go in its `unprobeable` list.
   - A reader or an `allowlist.ts` row for each new stored field (`storedFieldGate.test.ts`).
   - A `FLIPS` entry for each new setting key (`hubSettings.bl32.test.ts:592`).

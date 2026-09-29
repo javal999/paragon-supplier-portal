@@ -8,7 +8,7 @@
 | Code read | `main` at `6b26e09` |
 | Delivery | 1 PR per task. Tasks in one lane run in order. Lanes run in parallel and merge one at a time, each re-checked against `main` before its merge |
 | Prompts | `docs/supplier-hub/prompts/mat-build-*.md`. Every task prompt reads `mat-build-00-brief.md` first |
-| Status | **Built, 2026-09-29.** Tasks A1–A3, B1–B3, C1–C5, C1b, D1–D3, E1–E2, F1, G1–G2 merged (section 4.2); B4 and I1 in progress at the time of this commit. Owner rulings during the build are in section 4.1 |
+| Status | **Folded in on 2026-09-29** (task I1). Tasks A1 to G2 and C1b were built in PRs #86 (A1), #84 (A2), #85 (A3), #88 (B1), #106 (B2), #105 (B3), #110 (B4), #104 (C1), #107 (C1b), #97 (C2), #102 (C3), #90 (C4), #92 (C5), #89 (D1), #93 (D2), #101 (D3), #103 (E1), #108 (E2), #87 (F1), #91 (G1) and #109 (G2), all merged 2026-09-29 (section 4.2). The owner rulings of section 4.1 are MAT-D16 to MAT-D21 in section 9 of `SUPPLIER-HUB-REQUIREMENTS.md` and in `DECISION-GUIDE.md`. The open follow-ups of section 4.3 are `BACKLOG.md` rows: FU-2 BL-154, FU-3 BL-144, FU-6 BL-156, FU-8 BL-157, FU-9 BL-145, FU-11 BL-158, FU-13 BL-159, FU-14 BL-146 and BL-147. The built ones are closed there: FU-1 BL-160, FU-4 BL-161 (this task), FU-5 BL-162, FU-7 BL-163, FU-10 BL-164, FU-12 BL-165. Epic H is BL-151 to BL-153. This file stays as the record of the plan |
 
 ---
 
@@ -349,6 +349,8 @@ Last    I1 (after every task in A to G)
 
 | Task | PR | Merge commit |
 |---|---|---|
+| B4 | #110 | `d7ac421` (gate record in the PR body) |
+| G2 | #109 | `cf3ad6c` (gate record in the PR body) |
 | A3 | #85 | `4cfb5ba` |
 | A1 | #86 | `bdf60ae` |
 | D1 | #89 | `122aa2c` |
@@ -386,4 +388,6 @@ Last    I1 (after every task in A to G)
 | FU-12 | B3 (#105): every fixture supplier with materials reads 0% update compliance (the seed has ~1 stock record per material and no successful pulls), so the demo shows all red | Demo cannot show green/amber/red | B4 (added to its prompt): seed a realistic weekly history for 3 suppliers |
 | FU-13 | Plural wording: two i18n tests disagree on plural keys (`InventoryCapacity`/`CallOffs` tests want identical EN/ID key sets; `fragments.test` wants ID without `_other`), so B2 and D3 avoided plurals and B2 reads "Missed: 1 materials were not updated" | Grammar slip on screen; the two tests need one agreed plural rule | A small test-infrastructure task |
 | FU-14 | G2 (#109): under the placeholder lists 21 of 22 vendors are Registered, so almost every award in the demo asks for a reason (consequence of the warn-only ruling). Stored `qualificationWarnings` are not yet displayed on the event or award record; RFI/RFP invitee tables have no marker | Ends when Procurement and Quality save real lists (MAT-D15) | Owner (lists); a small UI task for the display gaps |
-| FU-4 | A1 edited `docs/contracts/C5-seams.md` (method count) — not in MAT-R5's list | Brief should name it | I1 adds it to MAT-R5 |
+| FU-4 | A1 edited `docs/contracts/C5-seams.md` (method count) — not in MAT-R5's list | Brief should name it | I1 adds it to MAT-R5 (done in I1) |
+
+Folded into `BACKLOG.md` on 2026-09-29 (task I1): the mapping to BL rows is in the status row at the top of this file.

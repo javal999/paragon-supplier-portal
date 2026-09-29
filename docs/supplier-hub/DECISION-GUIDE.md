@@ -2,8 +2,8 @@
 
 | | |
 |---|---|
-| Version | 1.6, 2026-09-28 |
-| Covers | BL-01 to BL-19b in `BACKLOG.md` — the 21 decisions that block or confirm work; the RFx decisions RFX-D1 to RFX-D5 (2026-09-21) and RFX-D6 to RFX-D14 (2026-09-25) and RFX-D15 (2026-09-28); and the 15 forecast engine decisions ENG-D1 to ENG-D14 with ENG-D8a (2026-09-23) |
+| Version | 1.7, 2026-09-29 (SC Hub Material decisions MAT-D1 to MAT-D21 added) |
+| Covers | BL-01 to BL-19b in `BACKLOG.md` — the 21 decisions that block or confirm work; the RFx decisions RFX-D1 to RFX-D5 (2026-09-21) and RFX-D6 to RFX-D14 (2026-09-25) and RFX-D15 (2026-09-28); the SC Hub Material decisions MAT-D1 to MAT-D15 and the build rulings MAT-D16 to MAT-D21 (2026-09-29); and the 15 forecast engine decisions ENG-D1 to ENG-D14 with ENG-D8a (2026-09-23) |
 | Purpose | Give the project owner a defensible recommendation to take to each owner: what the market does, what we suggest for PTI, and what would change our mind |
 | Status | **18 of the 21 were decided on 2026-09-21**, mostly as recommended; the outcomes are in section 9 of the requirements and in the Closed section of `BACKLOG.md`. Still open: BL-01 REPL, BL-11 interface technology, BL-12 call-off record, and three values (BL-54 invoice cap, BL-55 gate OTIF minimum, BL-56 early allowance). Where the owner decided differently from this guide — the hub keeps its own calendar (BL-14), capacity stays at 13 weekly buckets (BL-08), Web Tukar Faktur stays separate (BL-17), and TMS access becomes a 3PL tracking link (BL-03) — the decision stands and this guide is kept as the reasoning behind the others. All decided items are built and in production as of 2026-09-21 (BL-43 to BL-53). The builds raised six new questions, BL-66 to BL-71 in the backlog, which this guide does not yet cover |
 | Evidence | Market practice is cited at the end. Where a claim is a judgement rather than a published practice, it says so |
@@ -299,6 +299,159 @@ The owner accepted every recommendation in section 7 of `RFX-IMPROVEMENT-REQUIRE
 **Decision.** Allow it. A firm-offer round opens on a Closed or a Partly awarded RFP, for the options still open: an option named by an award in force, or sourced by an RFQ created from the RFP, is refused by name. The newer round's firm prices replace the older ones for the same supplier and option, and the final award on the remaining options moves the RFP to Awarded. RFP → RFQ stays available for any open option. **Amends** REQ-E03-04 BR-15e; closes FU-7 and BL-128. Built in PR #71.
 
 **What would change this.** If buyers keep sending the open options to an RFQ anyway, the second round adds a path nobody uses and could be withdrawn. If suppliers reprice options already awarded through a later round, the settled check already refuses that; a need to reopen an awarded option would instead mean cancelling its award first.
+
+---
+
+## SC Hub Material decisions (decided 2026-09-29)
+
+The owner accepted every recommendation in section 13.2 of `SC-HUB-MATERIAL-REQUIREMENTS-2026-09.md` (MAT-D1 to MAT-D15) on 2026-09-29, and ruled on 6 more points while the material build ran (section 4.1 of `SC-HUB-MATERIAL-BUILD-PLAN-2026-09.md`), recorded here as MAT-D16 to MAT-D21. They sit in section 9 of the requirements. The build is PRs #84 to #93, #97 and #101 to #110, all merged 2026-09-29. Market sources and their grades (A vendor documentation, B standard or regulator, C practitioner guide, D vendor marketing) are in section 17 of the material requirements.
+
+### MAT-D1 · Alert severity scale
+**Market practice.** SAP IBP custom alerts use 3 severities, High, Medium and Low, set by thresholds (A); SAP SCC ranks inventory alerts in a fixed 3-step order (A); Oracle ASCP orders exceptions by importance and sorts late ones by days late (A). No 4-level scale and no "stale data" severity was found.
+
+**Decision.** Keep CR-24's High, Medium and Low, and sort each class by days to impact, then supplier name. Replaces the Critical / High / Medium scale proposed in the MOM review. REQ-E08-05 BR-06 to BR-08. Built in PR #87.
+
+**What would change this.** Planners reporting that a High class still buries the alert they must act on first, which would argue for a sub-order other than days to impact.
+
+### MAT-D2 · Where the stock simulation lives
+**Market practice.** The market shows projected stock on the main screen: SAP SCC in the collaboration grid (A), Pfizer's supplier guide in the same grid (C). No tool was found that keeps it only in a separate view.
+
+**Decision.** A separate Stock simulation page for the first release, revisited after 3 months of use, so REQ-E08-01 BR-01 ("no separate available figure", from the business users) stands. REQ-E08-08 BR-10. Built in PR #108.
+
+**What would change this.** Planners opening both pages side by side for every decision, or asking for the simulated figure on the stock page, after 3 months.
+
+### MAT-D3 · Name for the manufacturer → distributor leg
+**Market practice.** "In transit" means ASNs without goods receipt in SAP SCC and stock that left the issuing plant in S/4 (A); Oracle lists in-transits as a supply type (A). No standard term for the manufacturer → distributor leg was found.
+
+**Decision.** "To distributor". "Incoming" keeps its hub meaning (in production plus in transit, REQ-E08-01 BR-06). REQ-E08-08 BR-10.
+
+**What would change this.** Users reading "To distributor" as stock at the distributor rather than on its way there.
+
+### MAT-D4 · Template columns D to F
+**Market practice.** SAP SCC keeps supplier manufacturing orders and firm receipts as their own key figures, apart from stock on hand (A). Which quantity columns are required in SAP's or Oracle's upload templates was not found.
+
+**Decision.** In-production quantity (E) required, 0 allowed; completion date (F) required when E is above 0; supplier ROP (D) optional. Amends REQ-E08-02 BR-06. Built in PR #104; the verb enforces it too since MAT-D21.
+
+**What would change this.** Suppliers leaving the upload because they cannot state production, which would show as template rows refused for E or F.
+
+### MAT-D5 · ASN batch when no batches are declared
+**Market practice.** SAP SCC ship notices take the batch as a typed field (A); GS1 DESADV carries batch and expiry as optional free text (B). A portal that forces a pick from declared stock was not found.
+
+**Decision.** Free text, marked "not in declared stock", when the supplier declared no batches; a list of declared batches with available quantity when it did. REQ-E07-04 BR-06 to BR-09. Built in PR #89 and #101.
+
+**What would change this.** Typed batches that turn out wrong at goods receipt often enough to justify requiring declared batches for some materials.
+
+### MAT-D6 · Shelf-life rule: which materials, who approves
+**Market practice.** BPOM CPKB treats raw and packaging materials together as starting materials with an expiry limit, and has deviations approved by the Head of QC (B). SAP S/4 checks minimum remaining shelf life at goods receipt and can post to blocked stock on error (A).
+
+**Decision.** The rule applies to every shelf-life relevant material, raw material and packaging alike. The exception is approved by Quality (the `compliance` lane, atom `asn:approve-shelf-life`) only, not planning; approved goods are received into blocked stock. Replaces "QA or Material Planning" in the MOM review. **Amended by MAT-D16** on which materials are relevant by default. REQ-E07-04 BR-10 to BR-14. Built in PR #93.
+
+**What would change this.** Exceptions waiting on Quality long enough to delay urgent receipts, which would argue for a named deputy rather than for planners approving their own.
+
+### MAT-D7 · Weekly cycle details
+**Market practice.** Oracle lets buyers upload supplier on-hand on the supplier's behalf (A); SAP SCC shows the last customer and supplier updates separately (A). A specific cutoff, holiday rule or all-or-nothing week was not found.
+
+**Decision.** Cutoff Thursday 23:59 WIB, the last working day before it when Thursday is a holiday; a PTI-entered record counts and stays labelled; a week is compliant only when every material was updated. REQ-E08-02 BR-14, BR-15, BR-24. Built in PR #88 and #105.
+
+**What would change this.** Suppliers with many slow-moving materials missing weeks only on those, which would argue for a per-material cadence.
+
+### MAT-D8 · API stale threshold
+**Market practice.** EDI 846 practice is daily at minimum (C); SAP SCC alerts on transmission failure, not on data age (A). A published threshold for supplier inventory integrations was not found.
+
+**Decision.** 24 hours (`stale.apiHours`). **Amended by MAT-D17** on what a failed pull does. REQ-E08-02 BR-16. Built in PR #88.
+
+**What would change this.** The 2-hour scheduled pull running (BACKLOG BL-151), after which a shorter limit becomes possible.
+
+### MAT-D9 · How update compliance enters the score
+**Market practice.** SAP Ariba SPM and S/4 supplier evaluation let the customer set weights with no defaults (A); changing weights later breaks comparison over time (A, snippet).
+
+**Decision.** A weighted blend: score = (1 − w) × delivery score + w × compliance, w = 0.10, fixed at release; with "No history", w = 0. The weight moves score, grade and band, not the compliance gate (CR-23) or CR-15, which read OTIF. REQ-E08-02 BR-27. Built in PR #105; no fixture supplier changed grade.
+
+**What would change this.** Procurement wanting update discipline to count at award beyond the reason rule (REQ-E03-05 BR-18), which would mean a gate criterion, not a heavier weight.
+
+### MAT-D10 · Open call-offs in the simulation
+**Market practice.** Every availability formula found subtracts committed demand: JD Edwards ATP, Oracle projected available balance, SAP SCC projected stock (A).
+
+**Decision.** Show "Already called off, not shipped" and "Free to call off" = Supplier available stock − that quantity, beside Supplier available stock; never merged. REQ-E08-08 BR-07. Built in PR #103 and #108.
+
+**What would change this.** Planners reading only one of the two figures, which would argue for showing one by default.
+
+### MAT-D11 · Capacity used for the simulation's cap
+**Market practice.** SAP SCC records upside apart from the commit (A); Oracle ASCP plans on base capacity plus tolerance fences (A).
+
+**Decision.** Allocated capacity only; additional capacity is not counted. REQ-E08-08 BR-04. Built in PR #103.
+
+**What would change this.** Suppliers routinely producing into their additional capacity without being asked.
+
+### MAT-D12 · Where planning groups are mastered
+**Market practice.** Oracle masters supplier capacity in the ERP approved supplier list (A); SAP IBP defines aggregated constraints across product groups inside IBP (A).
+
+**Decision.** In the hub now; moved to SAP master data with MDM when the SAP feed runs. REQ-E08-04 BR-18. Built in PR #92.
+
+**What would change this.** MDM agreeing a SAP characteristic for the planning group, after which the hub becomes a copy and its planning-group verbs are turned off.
+
+### MAT-D13 · Direct vs indirect on an event
+**Market practice.** SAP Ariba filters eligibility by commodity, and material groups map to commodities (A). An event-level direct / indirect flag was not found.
+
+**Decision.** Derived from the category or purchasing group, mapped once by Procurement; the event shows it and fixes it at publish. Every mapping starts Direct, because all of today's purchasing groups are production materials. CE-12f. Built in PR #109.
+
+**What would change this.** A category that holds both direct and indirect purchases, which a per-category map cannot express.
+
+### MAT-D14 · Vendor drops a level mid-event
+**Market practice.** SAP Ariba sets a minimum status for award eligibility (A, snippet); Oracle blocks publish for a not-eligible supplier and lets one eligible with a warning take part (A).
+
+**Decision.** The vendor can still respond, and cannot be awarded until it is back at the level. CE-12g. Built in PR #109; warn-only while the lists are placeholders (MAT-D19).
+
+**What would change this.** A supplier renewing a certificate that misses an award for it, repeatedly, which would argue for a grace period at award.
+
+### MAT-D15 · Documents required per qualification level
+**Market practice.** SAP Ariba qualifies before preferring, per commodity and region, with certificates that carry expiry (A); ISO 22716 §6.2 ties purchasing to supplier evaluation, which points to Quality co-owning the requirements (B); halal is mandatory for cosmetics and their raw materials from 17 Oct 2026 (C).
+
+**Decision.** Procurement and Quality define the lists together; blocking for the MR-10 go-live. Recommended starting point: Approved = business licence (NIB), tax ID (NPWP), halal for materials in scope; Preferred = Approved + GMP / ISO 22716 or ISO 9001, and BPOM where applicable. Labelled placeholder lists are in force until then. CE-12d. **Still open** (BACKLOG BL-146).
+
+**What would change this.** A vendor that supplies certified and uncertified categories, which one level per vendor (A-12) cannot express.
+
+### MAT-D16 · Raw materials default to the shelf-life check (build ruling, A2)
+**Market practice.** As MAT-D6: CPKB puts an expiry limit on raw materials (B).
+
+**Decision.** A material is shelf-life relevant by default when it is a raw material (ROH) or has a minimum remaining shelf life in master data; packaging without one is not. An administrator can switch any material. Amends MAT-D6's "by master data, never by material type". REQ-E07-04 BR-12. Built in PR #84.
+
+**What would change this.** The SAP material feed showing the minimum maintained for every relevant material, after which master data alone can decide.
+
+### MAT-D17 · API staleness and a failed pull (build ruling, B1)
+**Market practice.** As MAT-D8: SAP SCC alerts on transmission failure, not on data age (A).
+
+**Decision.** An API figure is stale only when its last successful pull is older than 24 hours. A failed pull shows "Last pull failed <time>" on the row and does not make the figure stale by itself. Supersedes the REQ-E08-02 edge case "flag them as stale". REQ-E08-02 BR-16. Built in PR #88.
+
+**What would change this.** A failed pull followed by a planner acting on the old figure inside the 24 hours.
+
+### MAT-D18 · Who edits the qualification lists (build ruling, G1)
+**Market practice.** As MAT-D15: ISO 22716 points to Quality co-owning supplier requirements (B).
+
+**Decision.** Procurement and Quality: `qualification:manage` sits in both the `procurement` and the `compliance` lanes. Replaces "procurement and the Hub administrator" in MR-10. CE-12d. Built in PR #91.
+
+**What would change this.** One of the two owners changing a list the other disagrees with, which would argue for a second approval on list changes.
+
+### MAT-D19 · Qualification checks while a list is a placeholder (build ruling, G1 and G2)
+**Market practice.** Oracle lets a supplier eligible with a warning take part (A).
+
+**Decision.** While a list for the needed level is a placeholder, the invite filter, the publish check and the award check warn ("Not qualified: <missing documents>") and ask for a reason instead of refusing; the warnings are stored. Enforcement switches on by itself when Procurement and Quality save a real list. Holds the build plan's fail-closed rule (AD-8) until MAT-D15 is answered. CE-12g. Built in PR #109.
+
+**What would change this.** MAT-D15 answered, which ends this ruling on its own.
+
+### MAT-D20 · BL-133's LTP-to-capacity join follows planning groups (build ruling, C5)
+**Market practice.** None needed; it keeps one grouping for capacity.
+
+**Decision.** The LTP of a planning group is the sum of its materials' LTP; the BL-133 tests changed keys only, and no expected figure, level or refusal changed. REQ-E08-04 BR-16. Built in PR #92.
+
+**What would change this.** Nothing expected; a second capacity grouping would.
+
+### MAT-D21 · In-production enforced by the verb (build ruling, C1)
+**Market practice.** As MAT-D4.
+
+**Decision.** The declare and record verb refuses a blank in-production quantity, and one above 0 without a completion date, on manual, template and PTI records; an API pull is exempt, because a supplier ERP may not send it, and the simulation shows it as Missing. Extends MAT-D4 from the form and template to the verb. REQ-E08-02 BR-06. Built in PR #107 (C1b).
+
+**What would change this.** Connected suppliers whose ERP does send production, after which the API exemption could be narrowed per supplier.
 
 ---
 
