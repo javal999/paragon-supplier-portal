@@ -139,7 +139,7 @@ describe('collaboration — reads reflect a live write through the shared store'
     const res = await svc.commands.dispatch(bScope, {
       transitionId: 't_inventorydeclaration_declare',
       entity: 'inventoryDeclaration',
-      payload: { supplierId: B, materialCode: 'RM-EMUL-3310', totalQty: 99999 },
+      payload: { supplierId: B, materialCode: 'RM-EMUL-3310', totalQty: 99999, inProductionQty: 0 },
     });
     expect(res.status).not.toBe('failed');
     const own = await col.getOwnInventoryDeclarations(bScope);

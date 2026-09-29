@@ -116,6 +116,8 @@ import {
   dayOf,
   isIsoDay,
   batchDatesProblem,
+  productionProblem,
+  submissionChannel,
   alertCloseRefusal,
   parseAlertKey,
   standingClosure,
@@ -2716,7 +2718,7 @@ const inventoryDeclarationTarget: CommandTarget = {
       ...(isIsoDay(payload.productionCompletionDate) ? { productionCompletionDate: payload.productionCompletionDate } : {}),
       // BR-08 — a PTI recording is ALWAYS "Entered by PTI", whatever the payload
       // says; a supplier's own submission is the template or manual entry.
-      channel: scope.personaType === 'buyer' ? 'pti' : payload.channel === 'template' ? 'template' : 'manual',
+      channel: submissionChannel(scope.personaType === 'buyer', payload.channel),
       provenance: PROV_SUPPLIER_SUBMIT,
     };
     inventoryDeclarationStore.add(declaration);
@@ -2747,7 +2749,7 @@ bindPolicyHook(POLICY_HOOKS.INV_DECLARE_BATCH_TOTAL, ({ payload }) => {
 const isNonNegative = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v) && v >= 0;
 
 // REQ-E08-02 BR-06 — the optional detail of a stock submission is well formed.
-bindPolicyHook(POLICY_HOOKS.INV_DECLARE_DETAIL_VALID, ({ payload }) => {
+bindPolicyHook(POLICY_HOOKS.INV_DECLARE_DETAIL_VALID, ({ payload, scope }) => {
   for (const f of ['supplierRop', 'inProductionQty'] as const) {
     if (payload[f] !== undefined && !isNonNegative(payload[f])) {
       return { ok: false, reason: `${f} must be a number of zero or more` };
@@ -2782,6 +2784,28 @@ bindPolicyHook(POLICY_HOOKS.INV_DECLARE_DETAIL_VALID, ({ payload }) => {
         };
       }
     }
+  }
+  // MAT-D4 / C1b (owner ruling 2026-09-29) — in production is required (0
+  // allowed) and its completion date is required when it is above 0: the SAME
+  // `productionProblem` the form and the template validator run, on the channel
+  // the target will store (manual, template or pti; the `api` exemption lives
+  // in the rule, and API pulls do not pass through this verb).
+  const production = productionProblem(
+    isNonNegative(payload.inProductionQty) ? payload.inProductionQty : null,
+    typeof payload.productionCompletionDate === 'string' ? payload.productionCompletionDate : '',
+    submissionChannel(scope.personaType === 'buyer', payload.channel),
+  );
+  if (production) {
+    return {
+      ok: false,
+      reason: `${production.reason}: ${
+        production.reason === 'missingField'
+          ? 'in-production quantity is required (0 allowed)'
+          : production.reason === 'productionDateMissing'
+            ? 'a production completion date is required when in-production quantity is above 0'
+            : 'production completion date must be a date (YYYY-MM-DD)'
+      }`,
+    };
   }
   return { ok: true };
 });

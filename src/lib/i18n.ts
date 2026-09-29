@@ -124,6 +124,8 @@ import { adminPlanningGroupsEn, adminPlanningGroupsId } from './i18n/adminPlanni
 // — Material C4 the MRP controller (PIC) on material surfaces (MR-5) —
 import { mrpControllerEn, mrpControllerId } from './i18n/mrpController';
 import { materialNamesEn, materialNamesId } from './i18n/materialNames';
+// — Material E2 the stock simulation page (MR-7) —
+import { stockSimulationEn, stockSimulationId } from './i18n/stockSimulation';
 // — BL-32 the administrator's rule values (REQ-E08-05 BR-03, §3.6) —
 import { adminSettingsEn, adminSettingsId } from './i18n/adminSettings';
 import { adminReasonsEn, adminReasonsId } from './i18n/adminReasons';
@@ -235,6 +237,7 @@ export const resources = {
       ...adminPlanningGroupsEn,
       ...mrpControllerEn,
       ...materialNamesEn,
+      ...stockSimulationEn,
       ...adminSettingsEn,
       ...adminReasonsEn,
       ...supplierFiltersEn,
@@ -718,6 +721,7 @@ export const resources = {
       ...adminPlanningGroupsId,
       ...mrpControllerId,
       ...materialNamesId,
+      ...stockSimulationId,
       ...adminSettingsId,
       ...adminReasonsId,
       ...supplierFiltersId,

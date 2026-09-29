@@ -90,7 +90,8 @@ export const inventoryDeclarationFlow: FlowDefinition = {
         POLICY_HOOKS.INV_DECLARE_BATCH_TOTAL,
         // REQ-E08-02 BR-06 — supplier ROP, in-production quantity and its
         // completion date, the channel, and each batch's manufacturing and
-        // expiry dates (BL-60), when given, are well formed.
+        // expiry dates (BL-60), when given, are well formed; and (MAT-D4, C1b)
+        // in production is given (0 allowed), with its date when above 0.
         POLICY_HOOKS.INV_DECLARE_DETAIL_VALID,
       ],
       surfaceable: { surfaced: true },
@@ -116,7 +117,8 @@ export const inventoryDeclarationFlow: FlowDefinition = {
         POLICY_HOOKS.INV_DECLARE_BATCH_TOTAL,
         // REQ-E08-02 BR-06 — supplier ROP, in-production quantity and its
         // completion date, the channel, and each batch's manufacturing and
-        // expiry dates (BL-60), when given, are well formed.
+        // expiry dates (BL-60), when given, are well formed; and (MAT-D4, C1b)
+        // in production is given (0 allowed), with its date when above 0.
         POLICY_HOOKS.INV_DECLARE_DETAIL_VALID,
       ],
       surfaceable: { surfaced: true },
