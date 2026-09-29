@@ -94,6 +94,7 @@ import TrackingNumber from '../components/ui-v2/TrackingNumber';
 import CarrierPicker, { carrierFor, defaultCarrier } from './shipments/CarrierPicker';
 import { poLineQuantityText } from './orders/poLineQuantity';
 import { PicCell, PicFilter, PicHeader, usePicFilter } from './materials/picDisplay';
+import MaterialSearch, { MaterialMatchReason, useMaterialSearch } from '../components/ui-v2/MaterialSearch';
 
 type TabKey = 'shipments' | 'create';
 type StatusFilter = AsnStatus | 'All';
@@ -296,11 +297,17 @@ const AsnLinesEditor: React.FC<{
   onReasonChange: (v: string) => void;
 }> = ({ open, entries, read, batches, onChange, overShipReason, onReasonChange }) => {
   const { t } = useTranslation();
+  // Material C3 — the one material search over the PO's lines (MR-3 BR-04):
+  // a supplier finds a line by PTI code, PTI description or its own approved
+  // trade name. Hidden lines keep what was typed; the search only narrows.
+  const [query, setQuery] = useState('');
+  const found = useMaterialSearch(query, open, (l) => ({ code: l.materialCode, description: l.description }));
   if (open.length === 0) {
     return <p className="text-sm text-text-tertiary">{t('fc.asn.lines.empty')}</p>;
   }
   return (
     <div className="space-y-3">
+      <MaterialSearch mode="filter" query={query} onQueryChange={setQuery} testId="asn-lines-search" />
       <div className="overflow-x-auto">
         <table className="w-full text-xs">
           <thead>
@@ -313,7 +320,7 @@ const AsnLinesEditor: React.FC<{
             </tr>
           </thead>
           <tbody>
-            {open.map((l) => {
+            {found.map(({ item: l, match }) => {
               const e = entries[l.materialCode] ?? EMPTY_LINE;
               const r = read.lines.find((x) => x.line.materialCode === l.materialCode);
               const bad = !!r && !r.qtyOk;
@@ -325,6 +332,7 @@ const AsnLinesEditor: React.FC<{
                       {l.materialCode}
                     </Data>
                     <div className="text-text-primary">{l.description}</div>
+                    <MaterialMatchReason match={match} testId={`asn-line-match-${l.materialCode}`} />
                   </td>
                   <td className="py-1.5 pr-2 text-right whitespace-nowrap">
                     <Data>{`${l.open.toLocaleString('en-US')} ${l.uom}`}</Data>

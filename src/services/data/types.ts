@@ -1362,6 +1362,14 @@ export interface SupplierDocument {
    */
   rejectedBy?: ActorAttribution;
   /**
+   * Material G1 (MR-10, plan AD-2) — when compliance verified the document
+   * (`t_supplierdoc_verify`). Store-assigned from the hub clock, never a payload
+   * field. The qualification history replays from it: a document counts toward
+   * a level from this instant. Absent on every seeded row, which predates the
+   * verb; those count from their `issuedDate`.
+   */
+  verifiedAt?: string;
+  /**
    * The certificate details the supplier stated, present only on a DECLARED
    * document. See `CertificateDeclaration` — the whole object is optional and
    * its fields are not, so half a declaration cannot exist.
@@ -1920,8 +1928,14 @@ export interface SupplierScorecard {
    * calculated measures for the period the page is showing
    * (`services/data/performanceRules.ts`). `id` is the SUPPLIER MASTER id, which
    * is what makes that join real rather than by-name.
+   *
+   * Material G1 (MR-10 BR-09) — the free-text relationship status that stood
+   * here ("Preferred Supplier" / "Approved Supplier") is retired. The vendor's
+   * standing is its computed qualification level, PROJECTED AT READ from its
+   * documents (`getSupplierScorecards`) and absent on the fixture row. The
+   * improvement-plan state it also carried is `impPlan`.
    */
-  status: string;
+  qualification?: QualificationLevel;
   kpis: ScorecardKpi[];
   radar: ScorecardRadarAxis[];
   otifTrend: number[];
@@ -2727,6 +2741,93 @@ export interface SupplierStockUpdateMode {
   readonly history: readonly SupplierUpdateModeChange[];
 }
 
+// ─── Vendor qualification — computed from documents (Material G1) ──────────
+
+/**
+ * MR-10 BR-01 — a vendor's qualification level. Exactly one per vendor,
+ * COMPUTED from its valid documents at read (BR-03), never stored and never
+ * set by hand. Separate from the lifecycle `SupplierStatus` (BR-02).
+ */
+export type QualificationLevel = 'registered' | 'approved' | 'preferred';
+
+/** The two levels a rule list is set for; Registered is "below Approved". */
+export type QualificationRuleLevel = 'approved' | 'preferred';
+
+/**
+ * One document a level requires (BR-04). Matched by `category`, and by the
+ * declared `certType` too when the rule names one (plan AR-18). `label` is the
+ * requirement as Procurement and Quality wrote it: data, not UI copy.
+ */
+export interface QualificationRequiredDoc {
+  readonly category: SupplierDocumentCategory;
+  readonly certType?: CertType;
+  readonly label: string;
+}
+
+/** The documents required for one level (BR-04). */
+export interface QualificationRule {
+  readonly level: QualificationRuleLevel;
+  readonly requiredDocs: readonly QualificationRequiredDoc[];
+  /**
+   * `true` on the seeded starting lists (MAT-D15): shown everywhere with
+   * "Placeholder, awaiting Procurement and Quality" until a person sets the
+   * list through `t_qualification_rule_set`, which records `false`.
+   */
+  readonly placeholder: boolean;
+}
+
+/** One change of a level's list, as recorded. Never edited (MAT-R3). */
+export interface QualificationRuleChange extends QualificationRule {
+  /** Store-assigned from the hub clock, never a payload field. */
+  readonly setAt: string;
+  /** From the session (`QueryScope.actor`), never from the form. */
+  readonly setBy: ActorAttribution;
+}
+
+/** A counted document that would drop the level when it expires (AC-06). */
+export interface QualificationExpiringDoc {
+  readonly documentId: string;
+  readonly name: string;
+  readonly category: SupplierDocumentCategory;
+  readonly expiryDate: string;
+}
+
+/** `qualificationFor` — a vendor's level on a date and what it still lacks. */
+export interface VendorQualificationStatus {
+  readonly level: QualificationLevel;
+  /** The required documents with no counting document, per level. */
+  readonly missingFor: {
+    readonly approved: readonly QualificationRequiredDoc[];
+    readonly preferred: readonly QualificationRequiredDoc[];
+  };
+  /** Counted documents inside the expiry window that hold up the level. */
+  readonly expiringSoon: readonly QualificationExpiringDoc[];
+}
+
+/**
+ * One level change, REPLAYED from the documents and the rule lists (plan
+ * AD-2) — never written on read. `causeDocumentId` names the document whose
+ * verification or expiry moved the level; it is null when a change of the rule
+ * list moved it, and `causeRuleLevel` then names the list.
+ */
+export interface QualificationChange {
+  readonly at: string;
+  readonly from: QualificationLevel;
+  readonly to: QualificationLevel;
+  readonly causeDocumentId: string | null;
+  readonly causeRuleLevel?: QualificationRuleLevel;
+}
+
+/** A vendor's qualification as the hub computes it, with its history. */
+export interface VendorQualification extends VendorQualificationStatus {
+  readonly supplierId: string;
+  readonly supplierName: string;
+  /** Oldest first. */
+  readonly history: readonly QualificationChange[];
+  /** True while any list the level is computed from is still a placeholder. */
+  readonly placeholderRules: boolean;
+}
+
 // ─── Planning groups — capacity groups under SAP material groups (Material C5) ─
 
 /**
@@ -2800,6 +2901,12 @@ export interface ISupplierService {
    * history. Buyer: every supplier. Supplier: its own row only.
    */
   getStockUpdateModes(scope: QueryScope): Promise<Page<SupplierStockUpdateMode>>;
+  /**
+   * Material G1 (MR-10 BR-01 to BR-03) — each vendor's qualification level,
+   * the documents it still needs, the documents about to drop it, and its
+   * replayed history. Buyer: every supplier. Supplier: its own row only.
+   */
+  getVendorQualifications(scope: QueryScope): Promise<Page<VendorQualification>>;
 }
 
 export interface IProcurementService {

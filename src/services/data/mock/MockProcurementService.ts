@@ -61,6 +61,7 @@ import { DECLARED_PRESENT } from '../fixturePresent';
 import { PRODUCTION_LINES, SUPPLIER_HEALTH } from './fixtures/buyerDashboard';
 import { supplierDocumentStore } from './stores/supplierDocumentStore';
 import { SUPPLIER_SCORECARDS } from './fixtures/buyerScorecard';
+import { qualificationFor } from './qualificationReadModel';
 import { purchaseRequisitionStore } from './stores/purchaseRequisitionStore';
 import { supplierApplicationStore } from './stores/supplierApplicationStore';
 import {
@@ -1064,7 +1065,11 @@ export class MockProcurementService implements IProcurementService {
     scope: QueryScope,
   ): Promise<Page<SupplierScorecard>> {
     return {
-      items: scope.personaType === 'buyer' ? [...SUPPLIER_SCORECARDS] : [],
+      // Material G1 (MR-10 BR-09) — the standing shown is the computed level.
+      items:
+        scope.personaType === 'buyer'
+          ? SUPPLIER_SCORECARDS.map((s) => ({ ...s, qualification: qualificationFor(s.id).level }))
+          : [],
     };
   }
 

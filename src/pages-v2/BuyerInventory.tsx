@@ -8,7 +8,7 @@ import PageMetaLine from '../components/ui-v2/PageMetaLine';
 import SampleDataBadge from '../components/ui-v2/SampleDataBadge';
 import SubTabs from '../components/ui-v2/SubTabs';
 import FilterChipsBar from '../components/ui-v2/FilterChipsBar';
-import SearchBar from '../components/ui-v2/SearchBar';
+import MaterialSearch, { MaterialMatchReason, useMaterialSearch } from '../components/ui-v2/MaterialSearch';
 import Table from '../components/ui-v2/Table';
 import TableHeader, { TableHeaderCell } from '../components/ui-v2/TableHeader';
 import TableRow from '../components/ui-v2/TableRow';
@@ -79,18 +79,24 @@ const BuyerInventory: React.FC = () => {
       : b === 'stale'
         ? ofType.filter((r) => stockFreshness(r, nowIso) !== 'current').length
         : ofType.filter((r) => positionRisk(r).riskClass === b).length;
-  const shown = ofType.filter((r) => {
+  const filtered = ofType.filter((r) => {
     if (!pic.matches(r.mrpController)) return false;
     if (band === 'stale' && stockFreshness(r, nowIso) === 'current') return false;
     if (band !== 'all' && band !== 'stale' && positionRisk(r).riskClass !== band) return false;
-    const q = search.trim().toLowerCase();
-    return (
-      q === '' ||
-      r.materialCode.toLowerCase().includes(q) ||
-      r.materialLabel.toLowerCase().includes(q) ||
-      r.supplierName.toLowerCase().includes(q)
-    );
+    return true;
   });
+  // Material C3 — the one material search (MR-3 BR-04): code, PTI description
+  // and this row's supplier's approved trade name, best match first. A row
+  // whose supplier name holds the query still shows (the search always did).
+  const found = useMaterialSearch(search, filtered, (r) => ({
+    code: r.materialCode,
+    description: r.materialLabel,
+    supplierId: r.supplierId,
+  }));
+  const q = search.trim().toLowerCase();
+  const bySupplier =
+    q === '' ? [] : filtered.filter((r) => r.supplierName.toLowerCase().includes(q) && !found.some((f) => f.item === r));
+  const shown = [...found, ...bySupplier.map((item) => ({ item, match: null }))];
 
   const connected = useMemo(() => {
     const bySupplier = new Map<string, InventoryPosition>();
@@ -208,7 +214,7 @@ const BuyerInventory: React.FC = () => {
 
       <div className="flex flex-wrap items-center gap-3 mb-4">
         <div className="flex-1 min-w-[240px]">
-          <SearchBar value={search} onChange={setSearch} placeholder={t('inv.search')} />
+          <MaterialSearch mode="filter" query={search} onQueryChange={setSearch} placeholder={t('inv.search')} testId="pti-stock-search" />
         </div>
         <FilterChipsBar<BandFilter>
           options={(['all', 'high', 'medium', 'low', 'stale'] as BandFilter[]).map((b) => ({
@@ -244,7 +250,7 @@ const BuyerInventory: React.FC = () => {
             <TableHeaderCell>{t('inv.col.lastUpdate')}</TableHeaderCell>
           </TableHeader>
           <tbody>
-            {shown.map((p) => (
+            {shown.map(({ item: p, match }) => (
               <TableRow key={`${p.supplierId}-${p.materialCode}`} data-testid={`pti-stock-row-${p.supplierId}-${p.materialCode}`}>
                 <TableCell>
                   <Data className="text-xs font-bold text-text-primary">{p.materialCode}</Data>
@@ -252,7 +258,8 @@ const BuyerInventory: React.FC = () => {
                     {p.materialLabel}
                   </div>
                   {/* Material C2 — the supplier's approved trade name (MR-3 d, planner step 3). */}
-                  <TradeNameBeside name={p.tradeName} testId={`pti-stock-trade-name-${p.supplierId}-${p.materialCode}`} />
+                  <TradeNameBeside name={p.tradeName} viewer="pti" testId={`pti-stock-trade-name-${p.supplierId}-${p.materialCode}`} />
+                  <MaterialMatchReason match={match} testId={`pti-stock-match-${p.supplierId}-${p.materialCode}`} />
                   {p.consignment && (
                     <StatusPill variant="info" className="mt-1">
                       {t('inv.consignment')}

@@ -194,6 +194,8 @@ import {
 import { forecastVersionStore, forecastViewStore } from './stores/forecastHubStores';
 // Material A1 — the supplier overlay (its own module, plan AD-5).
 import { supplierOverlayTarget } from './targets/supplierOverlay';
+// Material G1 — the qualification lists (its own module, MAT-R13).
+import { qualificationRuleTarget } from './targets/qualificationRule';
 // Material C5 — planning groups (their own module, plan AD-5).
 import { planningGroupTarget } from './targets/planningGroup';
 // Material C4 — the MRP controller list (its own module, plan AD-5).
@@ -4873,6 +4875,9 @@ const supplierDocumentTarget: CommandTarget = {
             rejectedBy: scope.actor ?? NO_PERSON,
           }
         : {}),
+      // Material G1 (plan AD-2) — when the document became valid, from the hub
+      // clock. The qualification history replays from it.
+      ...(toState === 'Valid' ? { verifiedAt: sdcClock.now() } : {}),
     }));
   },
   // ⚠️ **`requireCreationOwner` IS THE HALF THE DECLARE PATH NEVER NEEDED, AND
@@ -5176,6 +5181,8 @@ const TARGETS: Record<string, CommandTarget> = {
   threePl: threePlTarget,
   // Material A1 — a supplier's stock update mode (MR-1 BR-02, AC-06).
   supplierOverlay: supplierOverlayTarget,
+  // Material G1 — the documents each qualification level requires (MR-10 BR-04).
+  qualificationRule: qualificationRuleTarget,
   // Material C5 — planning groups for capacity (MR-8 BR-01 to BR-05).
   planningGroup: planningGroupTarget,
   // Material C4 — who each SAP MRP controller code is (MR-5 BR-02).
