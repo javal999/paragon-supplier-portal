@@ -36,6 +36,8 @@ import {
   useInventoryRunner,
 } from './inventory/inventoryDisplay';
 import StockEntryPanel from './inventory/StockEntryPanel';
+import { PicCell, PicFilter, PicHeader, usePicFilter } from './materials/picDisplay';
+import { TradeNameBeside } from './materials/tradeNameDisplay';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PTI INVENTORY — REQ-E08-01 (visibility), REQ-E08-02 (API sync, recording a
@@ -63,6 +65,8 @@ const BuyerInventory: React.FC = () => {
   const [band, setBand] = useState<BandFilter>('all');
   const [search, setSearch] = useState('');
   const [incoming, setIncoming] = useState<InventoryPosition | null>(null);
+  // Material C4 — the PIC filter, kept in the page address (MR-5 BR-03).
+  const pic = usePicFilter();
   const [recordOpen, setRecordOpen] = useState(false);
   const nowIso = inventoryNow();
   const crumb = [t('hub.nav.section.inventory'), t('inv.pti.title')];
@@ -76,6 +80,7 @@ const BuyerInventory: React.FC = () => {
         ? ofType.filter((r) => stockFreshness(r, nowIso) !== 'current').length
         : ofType.filter((r) => positionRisk(r).riskClass === b).length;
   const shown = ofType.filter((r) => {
+    if (!pic.matches(r.mrpController)) return false;
     if (band === 'stale' && stockFreshness(r, nowIso) === 'current') return false;
     if (band !== 'all' && band !== 'stale' && positionRisk(r).riskClass !== band) return false;
     const q = search.trim().toLowerCase();
@@ -213,6 +218,13 @@ const BuyerInventory: React.FC = () => {
           value={band}
           onChange={setBand}
         />
+        <PicFilter
+          refs={ofType.map((r) => r.mrpController)}
+          persona="buyer"
+          filter={pic.filter}
+          setFilter={pic.setFilter}
+          myCode={pic.myCode}
+        />
       </div>
 
       <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto">
@@ -220,6 +232,9 @@ const BuyerInventory: React.FC = () => {
           <TableHeader>
             <TableHeaderCell>{t('inv.col.material')}</TableHeaderCell>
             <TableHeaderCell>{t('inv.col.supplier')}</TableHeaderCell>
+            <TableHeaderCell>
+              <PicHeader />
+            </TableHeaderCell>
             <TableHeaderCell className="text-right">{t('inv.col.supplierSoh')}</TableHeaderCell>
             <TableHeaderCell className="text-right">{t('inv.col.ptiSoh')}</TableHeaderCell>
             <TableHeaderCell className="text-right">{t('inv.col.ptiRop')}</TableHeaderCell>
@@ -236,6 +251,8 @@ const BuyerInventory: React.FC = () => {
                   <div className="text-sm text-text-primary">
                     {p.materialLabel}
                   </div>
+                  {/* Material C2 — the supplier's approved trade name (MR-3 d, planner step 3). */}
+                  <TradeNameBeside name={p.tradeName} testId={`pti-stock-trade-name-${p.supplierId}-${p.materialCode}`} />
                   {p.consignment && (
                     <StatusPill variant="info" className="mt-1">
                       {t('inv.consignment')}
@@ -246,6 +263,9 @@ const BuyerInventory: React.FC = () => {
                   <div className="text-sm text-text-primary">
                     {p.supplierName}
                   </div>
+                </TableCell>
+                <TableCell>
+                  <PicCell value={p.mrpController} testId={`pti-stock-pic-${p.supplierId}-${p.materialCode}`} />
                 </TableCell>
                 <TableCell className="text-right whitespace-nowrap">
                   <Figure value={p.supplierSoh} uom={p.uom} absentKey="inv.figure.noSubmission" />
@@ -272,7 +292,7 @@ const BuyerInventory: React.FC = () => {
             ))}
             {shown.length === 0 && (
               <tr>
-                <td colSpan={9} className="py-10 text-center text-sm text-text-tertiary">
+                <td colSpan={10} className="py-10 text-center text-sm text-text-tertiary">
                   {t('inv.table.empty')}
                 </td>
               </tr>

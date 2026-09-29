@@ -1,5 +1,6 @@
 import {
   Anchor,
+  Scale,
   AlertTriangle,
   Award,
   BellRing,
@@ -32,8 +33,11 @@ import {
   ShieldHalf,
   ShoppingCart,
   SlidersHorizontal,
+  Tags,
   Target,
+  TrendingUp,
   Truck,
+  UserCog,
   Users,
   Workflow,
   type LucideIcon,
@@ -95,7 +99,9 @@ export const PTI_NAV: readonly NavSection[] = [
     items: [
       { labelKey: 'hub.nav.pti.forecasts', icon: CalendarRange, path: '/buyer/forecasts' },
       { labelKey: 'hub.nav.pti.commitments', icon: ChartLine, path: '/buyer/collaboration' },
+      { labelKey: 'hub.nav.pti.fsReconcile', icon: Scale, path: '/buyer/fs-reconcile' },
       { labelKey: 'hub.nav.pti.dataHealth', icon: DatabaseZap, path: '/buyer/data-health' },
+      { labelKey: 'hub.nav.pti.demandForecast', icon: TrendingUp, path: '/buyer/demand-forecast' },
       { labelKey: 'hub.nav.pti.reliability', icon: Target, path: '/buyer/reliability' },
       { labelKey: 'hub.nav.pti.materialRequirement', icon: Layers, path: '/buyer/material-requirement' },
       { labelKey: 'hub.nav.pti.safetyStock', icon: ShieldHalf, path: '/buyer/safety-stock' },
@@ -114,6 +120,14 @@ export const PTI_NAV: readonly NavSection[] = [
       { labelKey: 'hub.nav.pti.alerts', icon: AlertTriangle, path: '/buyer/alerts' },
       { labelKey: 'hub.nav.pti.supplierAccess', icon: KeyRound, path: '/buyer/supplier-access' },
     ],
+  },
+  {
+    // Material C2 — Materials → Trade names (MR-3 d): Material Planning approves
+    // the names suppliers give PTI materials.
+    id: 'materials',
+    labelKey: 'hub.nav.section.materials',
+    roles: ['MP'],
+    items: [{ labelKey: 'hub.nav.pti.tradeNames', icon: Tags, path: '/buyer/materials/trade-names' }],
   },
   {
     id: 'calloffs',
@@ -172,6 +186,7 @@ export const SUPPLIER_NAV: readonly NavSection[] = [
     labelKey: 'hub.nav.section.planning',
     items: [
       { labelKey: 'hub.nav.sup.forecast', icon: ChartLine, path: '/supplier/forecasts' },
+      { labelKey: 'hub.nav.sup.fsReconcile', icon: Scale, path: '/supplier/fs-reconcile' },
       { labelKey: 'hub.nav.sup.stock', icon: Boxes, path: '/supplier/inventory' },
       { labelKey: 'hub.nav.sup.capacity', icon: Factory, path: '/supplier/capacity' },
     ],
@@ -221,6 +236,8 @@ export const UTILITY_NAV: Record<Persona, readonly NavItem[]> = {
     { labelKey: 'hub.nav.util.suppliers', icon: Building2, path: '/buyer/admin/suppliers' },
     // Material G1 — the documents each qualification level requires (MR-10 BR-04).
     { labelKey: 'hub.nav.util.qualification', icon: Award, path: '/buyer/admin/qualification' },
+    // Material C4 — who each SAP MRP controller code is (MR-5 BR-02, set by ADM).
+    { labelKey: 'hub.nav.util.mrpControllers', icon: UserCog, path: '/buyer/admin/mrp-controllers' },
     // BL-32 — the values that lived in configuration files (ADM, REQ-E08-05 BR-03).
     { labelKey: 'hub.nav.util.tolerances', icon: SlidersHorizontal, path: '/buyer/admin/tolerances' },
     { labelKey: 'hub.nav.util.alertThresholds', icon: BellRing, path: '/buyer/admin/alert-thresholds' },

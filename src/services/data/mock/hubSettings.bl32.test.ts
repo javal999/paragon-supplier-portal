@@ -36,7 +36,7 @@ import {
 } from '../../transitions/hubSettingsStore';
 import { checkTolerance, isCallOffEscalated } from '../../transitions/callOffRules';
 import { checkPrice } from '../../transitions/invoiceRollup';
-import { receiptQtyOutcome } from '../../transitions/fulfilmentRules';
+import { receiptQtyOutcome, shelfLifeLineView } from '../../transitions/fulfilmentRules';
 import { commitmentDueAt, gapColour, toleranceOutcome } from '../../transitions/forecastRules';
 import { otifPassesGate } from '../../sourcing/complianceGate';
 import { coverage, riskFor, stockFreshness, supplyBand } from '../../transitions/inventoryRules';
@@ -47,6 +47,8 @@ import {
   feedFreshnessLimitsDays,
   orderSizingCosts,
   rescheduleOutThresholdWeeks,
+  fsReconcileCycleWeeks,
+  FS_RECONCILE_CYCLE_ANCHOR,
   safetyLeadTimePercentile,
   stabiliseDampingWeight,
 } from '../../transitions/forecastConfig';
@@ -56,6 +58,7 @@ import { empiricalQuantile, fillRateSafetyStock } from '../../engine/safetyStock
 import { singleItemSolver, type SizingItem } from '../../engine/orderSizing';
 import { reschedule, termsKey } from '../../engine/reschedule';
 import { addDays } from '../../engine/dates';
+import { cycleOfDay } from '../../transitions/fixedStockReconcile';
 import { getKnownFlows } from '../../transitions';
 import { sdcClock } from '../../sdc';
 
@@ -267,6 +270,9 @@ describe('BL32-READ · every reader of a value reads it through its accessor, at
         'src/services/transitions/fulfilmentConfig.ts',
         'src/services/transitions/fulfilmentRules.ts',
       ],
+      // MR-6 BR-06 (D2) — the ASN line rule reads the minimum through the master.
+      shelfLifeDefaultMonths: ['src/services/transitions/fulfilmentConfig.ts'],
+      shelfLifeRuleFor: ['src/services/transitions/fulfilmentConfig.ts', 'src/services/transitions/fulfilmentRules.ts'],
       commitmentTolerance: ['src/services/transitions/forecastConfig.ts', 'src/services/transitions/forecastRules.ts'],
       commitmentDeadlineWorkingDays: [
         'src/pages-v2/BuyerCommitments.tsx',
@@ -302,6 +308,12 @@ describe('BL32-READ · every reader of a value reads it through its accessor, at
       orderSizingCosts: ['src/services/data/mock/MockProcurementService.ts', 'src/services/transitions/forecastConfig.ts'],
       // ENG-D15 / REQ-E14-13 — the same shape: the service passes it to the engine.
       rescheduleOutThresholdWeeks: ['src/services/data/mock/MockProcurementService.ts', 'src/services/transitions/forecastConfig.ts'],
+      // REQ-E06-04 BR-01 — the read model passes it to the pure reconcile; the page states it.
+      fsReconcileCycleWeeks: [
+        'src/pages-v2/FixedStockReconcile.tsx',
+        'src/services/data/mock/fixedStockReadModel.ts',
+        'src/services/transitions/forecastConfig.ts',
+      ],
       // ENG-D9 / REQ-E14-06 — the same shape: the service passes it to the engine.
       stabiliseDampingWeight: ['src/services/data/mock/MockProcurementService.ts', 'src/services/transitions/forecastConfig.ts'],
       // REQ-E14-01 — the same shape: the service passes the limits to the data-health check.
@@ -436,7 +448,6 @@ const MATERIAL_FLIPS: Record<string, Flip> = Object.fromEntries(
       ['compliance.warnPct', 90],
       ['compliance.flagPct', 50],
       ['compliance.scoreWeight', 0.15],
-      ['shelfLife.defaultMonths', 12],
     ] as const
   ).map(([key, to]) => {
     const atDefault = HUB_SETTINGS.find((d) => d.key === key)!.defaultValue;
@@ -483,6 +494,15 @@ const FLIPS: Record<string, Flip> = {
     read: () => checkPrice('standard', 30_825_000, 31_425_000).outcome,
     atDefault: 'overCap',
     afterChange: 'withinTolerance',
+  },
+  // MR-6 BR-05 / BR-06 (D2): RM-EMUL-3310 is raw material with no minimum in
+  // the master, so the default applies — expiry 8 months after ETA passes at 6
+  // and fails at 12.
+  'shelfLife.defaultMonths': {
+    to: 12,
+    read: () => shelfLifeLineView({ materialCode: 'RM-EMUL-3310', eta: '2026-10-01', expiryDate: '2027-06-01' })?.ok,
+    atDefault: true,
+    afterChange: false,
   },
   'receipt.overPct': {
     to: 1,
@@ -597,6 +617,13 @@ const FLIPS: Record<string, Flip> = {
     afterChange: 1230,
   },
   // ENG-D15: two weeks early is proposed at the default of 1; at 3 it is not.
+  // REQ-E06-04 BR-01: 14 Sep 2026 is W3 of the cycle from 31 Aug at 3 weeks, and opens one at 2.
+  'forecast.fsReconcileCycleWeeks': {
+    to: 2,
+    read: () => cycleOfDay('packaging', '2026-09-14', { anchor: FS_RECONCILE_CYCLE_ANCHOR, cycleWeeks: fsReconcileCycleWeeks() }).start,
+    atDefault: '2026-08-31',
+    afterChange: '2026-09-14',
+  },
   'engine.rescheduleOutWeeks': { to: 3, read: () => rescheduleFor(), atDefault: 'rescheduleOut', afterChange: 'none' },
   'engine.safetyLeadTimePercentile': {
     to: 90,

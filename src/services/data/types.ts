@@ -25,6 +25,7 @@ import type {
 // the entities (`services/sourcing/views`) so the contract and the adapter that
 // fulfils it import ONE declaration rather than each holding its own copy.
 import type { InviteeCandidate, InviteeFilter } from '../transitions/rfxRules';
+import type { FsRow } from '../transitions/fixedStockReconcile';
 import type { RfqClarificationView, RfqEngagementView } from '../sourcing/rfqResponse';
 import type {
   AwardView,
@@ -72,6 +73,7 @@ import type { InfoLine, PlanChangeBaseline, Proposal, ProposalType, RescheduleRu
 import type { SupplierCfot } from '../engine/cfot';
 import type { SeriesResult, StabiliseParams, StabiliseRun } from '../engine/stabilise';
 import type { DataHealthReport } from '../engine/dataHealth';
+import type { DemandForecastRun } from '../engine/demandForecast';
 import type { DatasetProvenance } from '../engine/types';
 import type { ReleaseSelection } from '../delivery/release';
 import type { EditPolicyPatch } from '../delivery/policy';
@@ -467,6 +469,21 @@ export interface CallOffNote {
 /** The origin a call-off can carry (see `CallOff.origin`). */
 export type CallOffOrigin = 'engine';
 
+/**
+ * Material C4 (MR-5 BR-01 to BR-04) — a material's MRP controller (PIC) as the
+ * reader may see it, attached at READ by the read model (never stored).
+ * PTI: the SAP code, with the name when the code is mapped; an unmapped code
+ * shows the code only (BR-02). A supplier: the name only, never the code
+ * (BR-04). SAP-copied, so a surface showing it carries the `materialMasterSap`
+ * liveness pill (AR-19).
+ */
+export interface MrpControllerRef {
+  /** The SAP MRP controller code, e.g. `P12`. Absent on a supplier's read. */
+  readonly code?: string;
+  /** Who the code is. Absent when the administrator has not mapped the code. */
+  readonly name?: string;
+}
+
 export interface CallOff {
   readonly id: string;
   readonly callOffNumber: string;
@@ -509,6 +526,8 @@ export interface CallOff {
   readonly origin?: CallOffOrigin;
   readonly dispatches: readonly CallOffDispatch[];
   readonly notes: readonly CallOffNote[];
+  /** Material C4 — the material's MRP controller, projected at read (never stored). */
+  readonly mrpController?: MrpControllerRef;
 }
 
 // ─── Inventory & capacity collaboration (REQ-E08-01 to REQ-E08-05) ─────────
@@ -589,6 +608,64 @@ export interface InventoryPosition {
     readonly manufacturingDate?: string;
     readonly expiryDate?: string;
   }[];
+  /** Material C4 — the material's MRP controller (MR-5 BR-03), narrowed per reader. */
+  readonly mrpController?: MrpControllerRef;
+  /**
+   * Material C2 — this supplier's APPROVED trade name for the material (MR-3
+   * BR-02), shown beside PTI's description. Projected at read, never stored;
+   * absent while no name is approved or the material is no longer assigned.
+   */
+  readonly tradeName?: string;
+}
+
+// ─── Supplier trade names (Material C2 · MR-3 BR-01 to BR-06) ───────────────
+
+/** Where one supplier trade name stands. `Replaced` = a later name took its place. */
+export type MaterialNameState = 'Awaiting approval' | 'Approved' | 'Rejected' | 'Replaced';
+
+/**
+ * One supplier's trade name for one PTI material, as recorded (MR-3 f). A
+ * changed name is a NEW record; the earlier one moves to `Replaced` only when
+ * the new one is approved (BR-02), so the approved name stays in use meanwhile.
+ */
+export interface SupplierMaterialName {
+  readonly id: string;
+  readonly supplierId: string;
+  readonly materialCode: string;
+  readonly tradeName: string;
+  /** The supplier's own material number, when it gave one (at most 40 characters). */
+  readonly supplierMaterialNo?: string;
+  readonly state: MaterialNameState;
+  /** From the session, never the form. */
+  readonly submittedBy: ActorAttribution;
+  /** Store-assigned from the hub clock. */
+  readonly submittedAt: string;
+  readonly decidedBy?: ActorAttribution;
+  readonly decidedAt?: string;
+  /** Why Material Planning rejected it; the supplier sees this text. */
+  readonly rejectionReason?: string;
+  /** True when PTI loaded it in bulk, approved on load (BR-06). */
+  readonly loadedByPti?: boolean;
+}
+
+/**
+ * One supplier × assigned material with its trade names, as the reader may see
+ * it. A supplier reads its own assigned materials only (BR-03); PTI reads every
+ * pair that carries a name. A material no longer assigned is left out, and so
+ * are its names (edge case 2).
+ */
+export interface MaterialNameRow {
+  readonly supplierId: string;
+  readonly supplierName: string;
+  readonly materialCode: string;
+  /** PTI's description, through the material master resolver. */
+  readonly materialLabel: string;
+  /** The approved name in force, if any. */
+  readonly approved?: SupplierMaterialName;
+  /** The newest record for the pair (awaiting, rejected or approved), if any. */
+  readonly latest?: SupplierMaterialName;
+  /** Every record for the pair, oldest first. */
+  readonly history: readonly SupplierMaterialName[];
 }
 
 /** One entry in the supplier-access log (REQ-E08-03 BR-06). */
@@ -749,6 +826,13 @@ export interface ForecastCommitmentLine {
   /** REQ-E06-03 BR-05 — the other suppliers qualified for the material (where demand can move). */
   readonly otherQualifiedSuppliers: readonly { readonly supplierId: string; readonly supplierName: string }[];
 }
+
+/**
+ * REQ-E06-04 — one supplier × material × cycle of the fixed stock (FS)
+ * reconcile: committed against called off against held, with the agreed
+ * maximum stock and the outcome. Computed at read, never stored.
+ */
+export type FixedStockReconcileRow = FsRow;
 
 /** REQ-E06-03 BR-07 — supplier coverage per material, with distributor lead times (an estimate). */
 /** REQ-E14-02 — the trailing windows the reliability read offers. */
@@ -919,6 +1003,21 @@ export interface DataHealthView extends DataHealthReport {
   readonly provenance: DatasetProvenance;
 }
 
+/**
+ * REQ-E14-07 — the finished-goods demand forecast, as served: weekly sell-in
+ * per SKU for the next 26 weeks with the method that made it, SKU, brand and
+ * total reconciled, OEM products left out, and SAP's plan in force beside it.
+ * Computed at read on the engine's (SIMULATED) dataset. PTI only; a supplier
+ * gets null. It does not feed E14-03: SAP's plan stays the input until the
+ * backtest (E14-10) exists (ENG-B66).
+ */
+export interface DemandForecastView extends DemandForecastRun {
+  /** Where the dataset came from (X-03): SIMULATED until the MDM feed is live. */
+  readonly provenance: DatasetProvenance;
+  /** The source E14-03 to E14-06 and E14-13 plan on today. */
+  readonly materialPlanningSource: 'sapPlan';
+}
+
 export interface ForecastCoverageRow {
   readonly stream: ForecastStream;
   readonly supplierId: string;
@@ -983,9 +1082,20 @@ export interface InventoryAlert {
   readonly riskClass: RiskClass;
   /** CR-24 — what the class was decided on (derived with the alert, never stored). */
   readonly riskBasis: RiskBasis;
+  /**
+   * MR-9 BR-03 — days until the risk bites, the order within a class (derived
+   * with the alert, never stored): days of cover or to the projected stock-out,
+   * days to the first capacity gap week, minus the days stale, else 0.
+   */
+  readonly daysToImpact: number;
   readonly status: 'open' | 'closed';
   readonly closedAt?: string;
+  /** MR-9 BR-04 — the `alertClose` code; absent on a closure recorded before reasons (counts as Other). */
+  readonly closeReason?: string;
   readonly actionNote?: string;
+  /** Material C4 — the MRP controller of the material an alert is about. Absent
+   *  on a capacity alert, whose subject is a material group. */
+  readonly mrpController?: MrpControllerRef;
 }
 
 export interface POSummary {
@@ -1431,7 +1541,14 @@ export type AsnStatus =
   | 'Discrepancy'
   /** REQ-E07-04 — withdrawn by the supplier before receipt. A cancelled ASN no
    *  longer counts toward the PO line's open quantity or the in-transit figure. */
-  | 'Cancelled';
+  | 'Cancelled'
+  /**
+   * MR-6 BR-08 — a line arrives with less than the minimum remaining shelf
+   * life, and the supplier asked Quality for an exception. Not in transit, not
+   * receivable, still cancellable. Approval moves it to Submitted; rejection
+   * returns it to Draft.
+   */
+  | 'Awaiting exception';
 
 export interface AsnLineItem {
   materialCode: string;
@@ -1444,6 +1561,15 @@ export interface AsnLineItem {
   uom?: string;
   /** Optional expiry date of the batch (`YYYY-MM-DD`). */
   expiryDate?: string;
+  /** Material C4 — the line material's MRP controller, projected at read (never stored). */
+  readonly mrpController?: MrpControllerRef;
+  /**
+   * MR-6 BR-04 — `declared` when the batch was picked from the supplier's
+   * declared stock, `typed` when it was typed ("not in declared stock", shown
+   * to PTI). Absent on a line with no batch yet, and on lines stored before
+   * the rule existed.
+   */
+  batchSource?: 'declared' | 'typed';
 }
 
 export interface AsnShipmentDetails {
@@ -1479,7 +1605,52 @@ export interface ASN {
   overShipReason?: string;
   /** The call-off this ASN ships (REQ-E09-03 BR-06). Absent for a PO-level ASN. */
   callOffId?: string;
+  /**
+   * MR-6 BR-08 / BR-09 — the shelf-life exception record, APPENDED (MAT-R3):
+   * each request, each decision and each ETA change that reopened it is a new
+   * entry; nothing earlier is edited. Whether an exception stands is derived
+   * from the entries (`shelfLifeExceptionOf`). Absent until the first request.
+   */
+  shelfLifeException?: AsnShelfLifeEvent[];
 }
+
+/** MR-6 BR-08 — one line an exception covers, as it stood when it was asked for. */
+export interface AsnShelfLifeLine {
+  materialCode: string;
+  lotNumber: string;
+  expiryDate: string;
+  /** The minimum remaining shelf life in force for the material, in months. */
+  minMonths: number;
+}
+
+/**
+ * MR-6 BR-09 — one entry of an ASN's shelf-life exception record. `by` is the
+ * session's actor, never a payload field.
+ *   requested   — the supplier asked, with a reason, at an ETA, for these lines
+ *   etaChanged  — the supplier moved the ETA past the approved one (edge case 1);
+ *                 the earlier approval stays in the record, and a new decision is owed
+ *   approved    — Quality approved; the goods are received into blocked stock
+ *   rejected    — Quality refused, with a reason; the ASN is back in Draft
+ */
+export type AsnShelfLifeEvent =
+  | {
+      kind: 'requested';
+      at: string;
+      by: ActorAttribution;
+      reason: string;
+      eta: string;
+      lines: AsnShelfLifeLine[];
+    }
+  | {
+      kind: 'etaChanged';
+      at: string;
+      by: ActorAttribution;
+      previousEta: string;
+      eta: string;
+      lines: AsnShelfLifeLine[];
+    }
+  | { kind: 'approved'; at: string; by: ActorAttribution; reason?: string }
+  | { kind: 'rejected'; at: string; by: ActorAttribution; reason: string };
 
 export interface CatalogItem {
   id: string;
@@ -2601,6 +2772,11 @@ export interface IProcurementService {
   // — Inventory & capacity (REQ-E08-01 to REQ-E08-05) —
   /** Supplier × material positions. A supplier sees its own; PTI stock only where granted. */
   getInventory(scope: QueryScope, filter?: InventoryFilter): Promise<Page<InventoryPosition>>;
+  /**
+   * Material C2 (MR-3) — supplier trade names per assigned material. Supplier:
+   * its own assigned materials only. PTI: every supplier × material with a name.
+   */
+  getMaterialNames(scope: QueryScope): Promise<Page<MaterialNameRow>>;
   /** Supplier access to PTI stock. PTI: every supplier with its log. Supplier: its own. */
   getStockAccess(scope: QueryScope): Promise<Page<StockAccessGrant>>;
   /** Capacity against demand per supplier × material group, 13 weeks. */
@@ -2615,6 +2791,12 @@ export interface IProcurementService {
   getForecastCommitments(scope: QueryScope): Promise<Page<ForecastCommitmentLine>>;
   /** Supplier coverage per material against Firm demand (CR-03), PTI only. */
   getForecastCoverage(scope: QueryScope): Promise<Page<ForecastCoverageRow>>;
+  /**
+   * REQ-E06-04 — the fixed stock reconcile per supplier × material × cycle
+   * (ENG-D21). The planner reads every supplier; a supplier reads only its own
+   * rows (scoped in the service).
+   */
+  getFixedStockReconcile(scope: QueryScope): Promise<Page<FixedStockReconcileRow>>;
   /**
    * REQ-E14-02 — supplier reliability and PTI's plan-change measures over a
    * trailing window, computed by the forecast engine on its (SIMULATED)
@@ -2660,6 +2842,12 @@ export interface IProcurementService {
    * arrival with the failing records. On the engine's (SIMULATED) dataset. PTI only.
    */
   getDataHealth(scope: QueryScope): Promise<DataHealthView | null>;
+  /**
+   * REQ-E14-07 — the finished-goods demand forecast: per SKU × week, the
+   * method that made it, SKU / brand / total reconciled, OEM products left
+   * out (ENG-D20). On the engine's (SIMULATED) dataset. PTI only.
+   */
+  getDemandForecast(scope: QueryScope): Promise<DemandForecastView | null>;
 
   // — Sourcing —
   getRFQs(scope: QueryScope, filter?: RFQFilter): Promise<Page<RFQ>>;

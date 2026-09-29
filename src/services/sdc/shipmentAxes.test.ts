@@ -33,6 +33,8 @@ const ALL_ASN_STATUSES: readonly AsnStatus[] = [
   'In Transit',
   'Delivered',
   'Discrepancy',
+  // MR-6 BR-08 — Material D2.
+  'Awaiting exception',
 ];
 
 const ALL_LIFECYCLES: readonly ShipmentLifecycle[] = [
@@ -145,7 +147,7 @@ describe('the two vocabularies do not overlap enough to be confused', () => {
 
     // Paired membership so the empty result above is not vacuous — both unions
     // are populated and this test really compared them.
-    expect(ALL_ASN_STATUSES.length).toBe(5);
+    expect(ALL_ASN_STATUSES.length).toBe(6);
     expect(ALL_LIFECYCLES.length).toBe(4);
     // …and `Cancelled` is the asymmetry that proves these are two FACTS rather
     // than two spellings of one: only the supplier can call a leg off, and no

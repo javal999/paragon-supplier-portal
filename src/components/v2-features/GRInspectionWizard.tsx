@@ -50,6 +50,8 @@ import { useRefusalText } from '../../hooks/useRefusalText';
 import { refusedByPolicy } from '../../services/transitions/refusalMessage';
 import { POLICY_HOOKS } from '../../services/transitions/policyHooks';
 import { sdcClock } from '../../services/sdc/clock';
+import { approvedShelfLifeLines } from '../../services/transitions/fulfilmentRules';
+import { BlockedStockMarker } from '../../pages-v2/shipments/ShelfLifeParts';
 
 /**
  * §91e — what the wizard hands up when a settle it AWAITED came back a fault.
@@ -228,7 +230,9 @@ const LOCATIONS = ['NDC J6 Jakarta', 'RM Warehouse', 'PM Warehouse'];
 const ELIGIBLE_STATUSES = ['At Dock', 'Unloading'] as const;
 
 // ASN states in which a submitted ASN is receivable (mirrors the cascadable set
-// the dispatcher enforces on t_gr_create's manual-ref path).
+// the dispatcher enforces on t_gr_create's manual-ref path). MR-6 BR-08 —
+// 'Awaiting exception' is deliberately NOT here: until Quality approves, the
+// goods have not been announced to the dock at all.
 const RECEIVABLE_ASN_STATUSES: readonly AsnStatus[] = ['Submitted', 'In Transit', 'Delivered'];
 
 // A normalized GR source — a shipment at dock OR a live submitted ASN. The dock
@@ -705,6 +709,13 @@ const GRInspectionWizard: React.FC<GRInspectionWizardProps> = ({
   // Index-aligned with `lines`. The field messages, the receipt guard, the
   // derived qtyRejected, the header rollup and the dispatched payload all read
   // THIS, so none of them can disagree about what arrived.
+  // MR-6 BR-08 / BR-09 — the materials Quality approved into blocked stock on
+  // this source's ASN (a dock shipment or the ASN itself; one line per material).
+  const blockedCodes = useMemo(() => {
+    const asn = activeSource ? asns.find((a) => a.asnNumber === activeSource.asnNumber) : undefined;
+    return new Set(asn ? approvedShelfLifeLines(asn).map((l) => l.materialCode) : []);
+  }, [asns, activeSource]);
+
   const lineQtys = useMemo<GrLineQtyOutcome[]>(
     () => lines.map((l) => readGrLineQuantities(l.qtyReceivedRaw, l.qtyAcceptedRaw)),
     [lines],
@@ -1130,6 +1141,11 @@ const GRInspectionWizard: React.FC<GRInspectionWizardProps> = ({
                       <div className="text-xs text-text-tertiary">
                         {l.description}
                       </div>
+                      {blockedCodes.has(l.materialCode) ? (
+                        <div className="mt-1">
+                          <BlockedStockMarker testId={`gr-blocked-stock-${l.materialCode}`} />
+                        </div>
+                      ) : null}
                     </div>
                     <div className="text-xs text-text-tertiary text-right">
                       {t('goodsReceipt.wizard.field.expected')}

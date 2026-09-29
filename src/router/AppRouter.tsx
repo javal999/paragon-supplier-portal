@@ -51,6 +51,8 @@ import AdminWorkingCalendar from '../pages-v2/admin/AdminWorkingCalendar';
 import AdminThreePls from '../pages-v2/admin/AdminThreePls';
 import AdminSuppliers from '../pages-v2/admin/AdminSuppliers';
 import AdminQualification from '../pages-v2/admin/AdminQualification';
+import AdminMrpControllers from '../pages-v2/admin/AdminMrpControllers';
+import BuyerTradeNames from '../pages-v2/materials/BuyerTradeNames';
 import { AdminAlertThresholds, AdminTolerances } from '../pages-v2/admin/AdminRuleValues';
 import AdminReasonCodes from '../pages-v2/admin/AdminReasonCodes';
 import RolesCatalogue from '../pages-v2/RolesCatalogue';
@@ -77,12 +79,14 @@ import SupplierCapacity from '../pages-v2/SupplierCapacity';
 import BuyerForecasts from '../pages-v2/BuyerForecasts';
 import BuyerCommitments from '../pages-v2/BuyerCommitments';
 import BuyerReliability from '../pages-v2/BuyerReliability';
+import { BuyerFixedStockReconcile, SupplierFixedStockReconcile } from '../pages-v2/FixedStockReconcile';
 import BuyerMaterialRequirement from '../pages-v2/BuyerMaterialRequirement';
 import BuyerSafetyStock from '../pages-v2/BuyerSafetyStock';
 import BuyerOrderPlan from '../pages-v2/BuyerOrderPlan';
 import BuyerReschedule from '../pages-v2/BuyerReschedule';
 import BuyerStabilise from '../pages-v2/BuyerStabilise';
 import BuyerDataHealth from '../pages-v2/BuyerDataHealth';
+import BuyerDemandForecast from '../pages-v2/BuyerDemandForecast';
 import SupplierForecastCommitments from '../pages-v2/SupplierForecastCommitments';
 import SupplierPerformance from '../pages-v2/SupplierPerformance';
 import NotFound from '../pages-v2/NotFound';
@@ -147,6 +151,8 @@ const AppRouter: React.FC = () => {
               The earlier response review stays reachable under the same menu item. */}
           <Route path="/buyer/forecasts" element={<BuyerForecasts />} />
           <Route path="/buyer/collaboration" element={<BuyerCommitments />} />
+          {/* REQ-E06-04 — fixed stock reconcile per supplier × material × cycle (ENG-D21). */}
+          <Route path="/buyer/fs-reconcile" element={<BuyerFixedStockReconcile />} />
           {/* REQ-E14-02 — supplier reliability and PTI's plan-change measures (BL-99). */}
           <Route path="/buyer/reliability" element={<BuyerReliability />} />
           {/* REQ-E14-03 — material requirement (forecast engine, SIMULATED). */}
@@ -160,6 +166,8 @@ const AppRouter: React.FC = () => {
           <Route path="/buyer/stabilise" element={<BuyerStabilise />} />
           {/* REQ-E14-01 — data health of the engine's inputs (SIMULATED). */}
           <Route path="/buyer/data-health" element={<BuyerDataHealth />} />
+          {/* REQ-E14-07 — the finished-goods demand forecast (SIMULATED; PTI only). */}
+          <Route path="/buyer/demand-forecast" element={<BuyerDemandForecast />} />
           <Route
             path="/buyer/collaboration/responses"
             element={
@@ -207,6 +215,9 @@ const AppRouter: React.FC = () => {
           <Route path="/buyer/admin/suppliers" element={<AdminSuppliers />} />
           {/* Material G1 — administration: the documents each qualification level requires. */}
           <Route path="/buyer/admin/qualification" element={<AdminQualification />} />
+          {/* Material C4 — administration (ADM): who each SAP MRP controller code is. */}
+          <Route path="/buyer/admin/mrp-controllers" element={<AdminMrpControllers />} />
+          <Route path="/buyer/materials/trade-names" element={<BuyerTradeNames />} />
           {/* BL-32 — administration (ADM): the rule values that lived in configuration files. */}
           <Route path="/buyer/admin/tolerances" element={<AdminTolerances />} />
           <Route path="/buyer/admin/alert-thresholds" element={<AdminAlertThresholds />} />
@@ -238,6 +249,8 @@ const AppRouter: React.FC = () => {
               The earlier responses and shipment reports stay reachable beneath it;
               its Stock tab only points to the Stock page (BL-60, one stock entry). */}
           <Route path="/supplier/forecasts" element={<SupplierForecastCommitments />} />
+          {/* REQ-E06-04 — the supplier's own fixed stock reconcile rows. */}
+          <Route path="/supplier/fs-reconcile" element={<SupplierFixedStockReconcile />} />
           <Route
             path="/supplier/forecasts/responses"
             element={

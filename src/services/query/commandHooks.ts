@@ -7,6 +7,7 @@
 // NO local seeded copy.
 // ────────────────────────────────────────────────────────────────────────────
 
+import { maxStockEntityId } from '../transitions/maxStock';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useDataService } from '../data/DataServiceContext';
@@ -431,6 +432,98 @@ export function useAdvanceShipNoticeCancel() {
         transitionId: 't_asn_cancel',
         entity: 'advanceShipNotice',
         entityId: asnNumber,
+      }),
+    onSuccess: (result) => {
+      if (result.status !== 'failed') invalidate(scope);
+    },
+  });
+}
+
+// ─── Shelf-life exception (MR-6 BR-08, edge case 1) ─────────────────────────
+
+/** A submission's fields plus the supplier's reason (`t_asn_request_exception`). */
+export interface AsnRequestExceptionVars extends AsnSubmitVars {
+  reason: string;
+}
+
+/**
+ * The supplier asks Quality for a shelf-life exception instead of submitting
+ * (Draft → Awaiting exception). Carries what a submission carries.
+ */
+export function useAdvanceShipNoticeRequestException() {
+  const svc = useDataService();
+  const scope = useScope();
+  const invalidate = useInvalidateProcurement();
+
+  return useMutation<CommandResult, Error, AsnRequestExceptionVars>({
+    mutationFn: ({ asnNumber, carrier, threePlId, trackingNumber, eta, shipDate, lines, overShipReason, reason }) =>
+      svc.commands.dispatch(scope, {
+        transitionId: 't_asn_request_exception',
+        entity: 'advanceShipNotice',
+        entityId: asnNumber,
+        payload: {
+          carrier,
+          ...(threePlId !== undefined ? { threePlId } : {}),
+          trackingNumber,
+          eta,
+          ...(shipDate ? { shipDate } : {}),
+          ...(lines ? { lines } : {}),
+          ...(overShipReason ? { overShipReason } : {}),
+          reason,
+        },
+      }),
+    onSuccess: (result) => {
+      if (result.status !== 'failed') invalidate(scope);
+    },
+  });
+}
+
+/** Quality's decision on a shelf-life exception (a reason is required to reject). */
+export interface AsnExceptionDecisionVars {
+  asnNumber: string;
+  decision: 'approve' | 'reject';
+  reason?: string;
+}
+
+/**
+ * Quality approves (Awaiting exception → Submitted) or rejects (→ Draft) a
+ * shelf-life exception.
+ */
+export function useAdvanceShipNoticeExceptionDecision() {
+  const svc = useDataService();
+  const scope = useScope();
+  const invalidate = useInvalidateProcurement();
+
+  return useMutation<CommandResult, Error, AsnExceptionDecisionVars>({
+    mutationFn: ({ asnNumber, decision, reason }) =>
+      svc.commands.dispatch(scope, {
+        transitionId: decision === 'approve' ? 't_asn_approve_exception' : 't_asn_reject_exception',
+        entity: 'advanceShipNotice',
+        entityId: asnNumber,
+        payload: reason?.trim() ? { reason: reason.trim() } : {},
+      }),
+    onSuccess: (result) => {
+      if (result.status !== 'failed') invalidate(scope);
+    },
+  });
+}
+
+/**
+ * MR-6 edge case 1 — the supplier moves an approved ASN's ETA later; a line
+ * still fails there, so Quality decides again (Submitted → Awaiting exception).
+ */
+export function useAdvanceShipNoticeChangeEta() {
+  const svc = useDataService();
+  const scope = useScope();
+  const invalidate = useInvalidateProcurement();
+
+  return useMutation<CommandResult, Error, { asnNumber: string; eta: string }>({
+    mutationFn: ({ asnNumber, eta }) =>
+      svc.commands.dispatch(scope, {
+        transitionId: 't_asn_change_eta',
+        entity: 'advanceShipNotice',
+        entityId: asnNumber,
+        payload: { eta },
       }),
     onSuccess: (result) => {
       if (result.status !== 'failed') invalidate(scope);
@@ -1395,6 +1488,148 @@ export function useQualificationRuleSet() {
   });
 }
 
+// ── Material C4 · ONE MRP CONTROLLER ON THE ADMINISTRATOR'S LIST (MR-5 BR-02) ─
+//
+// `entityId` IS the SAP code; there is no code payload field. `setBy` and
+// `setAt` are stamped by the target from the session and the hub clock. Every
+// material surface shows the controller's name, so the whole cache is
+// invalidated rather than a guessed list of keys.
+export interface MrpControllerSetVars {
+  code: string;
+  name: string;
+  userLabels: readonly string[];
+}
+
+/** Map an MRP controller code to a name and hub users (`t_mrpcontroller_set`). */
+export function useMrpControllerSet() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+
+  return useMutation<CommandResult, Error, MrpControllerSetVars>({
+    mutationFn: ({ code, name, userLabels }) =>
+      svc.commands.dispatch(scope, {
+        transitionId: 't_mrpcontroller_set',
+        entity: 'mrpController',
+        entityId: code,
+        payload: { name, userLabels: [...userLabels] },
+      }),
+    onSuccess: (result) => {
+      if (result.status !== 'failed') void qc.invalidateQueries();
+    },
+  });
+}
+
+// ── Material C2 · SUPPLIER TRADE NAMES (MR-3 BR-01 to BR-06) ─────────────────
+//
+// The supplier submits; Material Planning approves, rejects or loads in bulk.
+// `submittedBy` / `decidedBy` and the times are stamped by the target from the
+// session and the hub clock. An approved name shows on the stock pages, so the
+// whole cache is invalidated rather than a guessed list of keys.
+export interface MaterialNameSubmitVars {
+  supplierId: string;
+  materialCode: string;
+  tradeName: string;
+  supplierMaterialNo?: string;
+}
+
+/** A supplier submits its trade name for an assigned material (`t_materialname_submit`). */
+export function useMaterialNameSubmit() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+
+  return useMutation<CommandResult, Error, MaterialNameSubmitVars>({
+    mutationFn: ({ supplierId, materialCode, tradeName, supplierMaterialNo }) =>
+      svc.commands.dispatch(scope, {
+        transitionId: 't_materialname_submit',
+        entity: 'materialName',
+        payload: {
+          supplierId,
+          materialCode,
+          tradeName,
+          ...(supplierMaterialNo && supplierMaterialNo.trim() !== '' ? { supplierMaterialNo } : {}),
+        },
+      }),
+    onSuccess: (result) => {
+      if (result.status !== 'failed') void qc.invalidateQueries();
+    },
+  });
+}
+
+export interface MaterialNameDecideVars {
+  id: string;
+  decision: 'approve' | 'reject';
+  rejectionReason?: string;
+}
+
+/** Material Planning approves or rejects a trade name (`t_materialname_approve` / `_reject`). */
+export function useMaterialNameDecide() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+
+  return useMutation<CommandResult, Error, MaterialNameDecideVars>({
+    mutationFn: ({ id, decision, rejectionReason }) =>
+      svc.commands.dispatch(scope, {
+        transitionId: decision === 'approve' ? 't_materialname_approve' : 't_materialname_reject',
+        entity: 'materialName',
+        entityId: id,
+        expectedState: 'Awaiting approval',
+        payload: decision === 'reject' ? { rejectionReason: rejectionReason ?? '' } : {},
+      }),
+    onSuccess: (result) => {
+      if (result.status !== 'failed') void qc.invalidateQueries();
+    },
+  });
+}
+
+/** One row of a bulk load, with its line in the file. */
+export interface MaterialNameLoadRow extends MaterialNameSubmitVars {
+  line: number;
+}
+
+/** The outcome of one bulk-load row. A thrown refusal is reported as its code. */
+export interface MaterialNameLoadOutcome {
+  line: number;
+  status: 'done' | 'failed';
+  reason?: string;
+}
+
+/** PTI loads approved trade names, one `t_materialname_load` per row (BR-06). */
+export function useMaterialNameLoad() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+
+  return useMutation<MaterialNameLoadOutcome[], Error, readonly MaterialNameLoadRow[]>({
+    mutationFn: async (rows) => {
+      const out: MaterialNameLoadOutcome[] = [];
+      for (const r of rows) {
+        try {
+          const result = await svc.commands.dispatch(scope, {
+            transitionId: 't_materialname_load',
+            entity: 'materialName',
+            payload: {
+              supplierId: r.supplierId,
+              materialCode: r.materialCode,
+              tradeName: r.tradeName,
+              ...(r.supplierMaterialNo ? { supplierMaterialNo: r.supplierMaterialNo } : {}),
+            },
+          });
+          out.push({ line: r.line, status: result.status === 'failed' ? 'failed' : 'done', reason: result.reason });
+        } catch (e) {
+          out.push({ line: r.line, status: 'failed', reason: e instanceof DataError ? e.code : (e as Error).message });
+        }
+      }
+      return out;
+    },
+    onSuccess: (outcomes) => {
+      if (outcomes.some((o) => o.status === 'done')) void qc.invalidateQueries();
+    },
+  });
+}
+
 // ── BL-50 · A RULING ON ONE DAY OF THE HUB'S WORKING CALENDAR ────────────────
 //
 // ⚠️ **`entityId` IS THE DATE, AND THERE IS NO `date` PAYLOAD FIELD** — the
@@ -1494,6 +1729,36 @@ export function useReasonCodeSet() {
         entity: 'reasonCode',
         entityId: reasonCodeEntityId(list, code),
         payload: { labelEn, labelId, active, setBy: identity.actor },
+      }),
+    onSuccess: (result) => {
+      if (result.status !== 'failed') void qc.invalidateQueries();
+    },
+  });
+}
+
+// ── REQ-E06-04 BR-06 · ONE SUPPLIER × MATERIAL'S MAXIMUM STOCK ───────────────
+// `quantity: null` clears it back to "no max stock agreed". `setBy` comes from
+// the session, never the form.
+export interface MaxStockSetVars {
+  supplierId: string;
+  materialCode: string;
+  quantity: number | null;
+}
+
+/** Set, change or clear the maximum stock of one supplier × material (`t_maxstock_set`). */
+export function useMaxStockSet() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+  const { identity } = useCurrentIdentity();
+
+  return useMutation<CommandResult, Error, MaxStockSetVars>({
+    mutationFn: ({ supplierId, materialCode, quantity }) =>
+      svc.commands.dispatch(scope, {
+        transitionId: 't_maxstock_set',
+        entity: 'maxStock',
+        entityId: maxStockEntityId(supplierId, materialCode),
+        payload: { quantity, setBy: identity.actor },
       }),
     onSuccess: (result) => {
       if (result.status !== 'failed') void qc.invalidateQueries();
@@ -2113,7 +2378,7 @@ export type InventoryCommandVars =
       materialGroup: string;
       weeks: readonly { week: string; allocated: number; upside?: number; reason?: string; note?: string }[];
     }
-  | { verb: 'closeAlert'; key: string; actionNote: string };
+  | { verb: 'closeAlert'; key: string; closeReason: string; actionNote?: string };
 
 const INVENTORY_READS = new Set(['inventory', 'stockAccess', 'capacityPlans', 'inventoryAlerts']);
 
@@ -2176,7 +2441,7 @@ export function useInventoryCommand() {
             transitionId: 't_inventoryalert_close',
             entity: 'inventoryAlert',
             entityId: vars.key,
-            payload: { actionNote: vars.actionNote },
+            payload: { closeReason: vars.closeReason, ...(vars.actionNote ? { actionNote: vars.actionNote } : {}) },
           });
       }
     },

@@ -11,6 +11,9 @@
 import { POStatus } from '../data/types';
 import type {
   ASN,
+  AsnLineItem,
+  AsnShelfLifeEvent,
+  AsnShelfLifeLine,
   AsnStatus,
   Invoice,
   InvoiceLine,
@@ -21,7 +24,7 @@ import type {
 } from '../data/types';
 import type { GoodsReceipt, GRStatus } from '../../data/mockGoodsReceipts';
 import { checkPrice, type MatchVerdict, type PriceCheck, type PriceRule } from './invoiceRollup';
-import { receiptQtyToleranceFor } from './fulfilmentConfig';
+import { receiptQtyToleranceFor, shelfLifeRuleFor } from './fulfilmentConfig';
 
 const isNonBlank = (v: unknown): v is string => typeof v === 'string' && v.trim().length > 0;
 
@@ -40,8 +43,12 @@ export const ASN_PO_STATES: readonly POStatus[] = [POStatus.CONFIRMED, POStatus.
 /** ASN states that no longer carry goods toward PTI. */
 export const ASN_INACTIVE_STATES: readonly AsnStatus[] = ['Cancelled'];
 
-/** ASN states the supplier may still cancel — before anything was received. */
-export const ASN_CANCELLABLE_STATES: readonly AsnStatus[] = ['Draft', 'Submitted'];
+/**
+ * ASN states the supplier may still cancel — before anything was received.
+ * MR-6 BR-08 — an ASN awaiting a shelf-life exception has not shipped, so the
+ * supplier may withdraw it instead of waiting for Quality.
+ */
+export const ASN_CANCELLABLE_STATES: readonly AsnStatus[] = ['Draft', 'Submitted', 'Awaiting exception'];
 
 export const isActiveAsn = (a: Pick<ASN, 'status'>): boolean => !ASN_INACTIVE_STATES.includes(a.status);
 
@@ -68,39 +75,360 @@ export function openQtyForLine(
   return Math.max(0, committedQty(line) - shipped);
 }
 
-/** One ASN line as the supplier enters it. */
+/**
+ * MR-6 BR-04 — how a line's batch was entered: picked from the supplier's
+ * declared stock, or typed (shown to PTI as "not in declared stock").
+ */
+export type AsnBatchSource = NonNullable<AsnLineItem['batchSource']>;
+
+/** One ASN line as the supplier enters it (the command payload). */
 export interface AsnLineInput {
   materialCode: string;
   shippedQty: number;
   batchNumber?: string;
   expiryDate?: string;
+  /** MR-6 BR-04 — picked from declared stock, or typed. */
+  batchSource?: AsnBatchSource;
 }
 
-export type AsnLineRefusal = 'unknownMaterial' | 'quantity' | 'overOpen' | 'batch' | 'expiry';
+/**
+ * AR-11 — one ASN line as the rule reads it: the line with its batch and
+ * expiry, and the ASN's expected arrival. The form and both ASN policy hooks
+ * build this same shape, so a rule that needs the batch, the expiry or the ETA
+ * sees them on every path.
+ */
+export interface AsnLineCheck {
+  materialCode: string;
+  shippedQty: number;
+  lotNumber?: string;
+  expiryDate?: string;
+  eta?: string;
+}
+
+/**
+ * Why a line is refused. MR-6 BR-05 to BR-07 add two, both read at submission
+ * only (`requireBatch`), for a material with `shelfLifeRelevant`:
+ *   expiryRequired — the line carries no expiry
+ *   shelfLife      — expiry is before ETA + the material's minimum remaining
+ *                    shelf life. Checked LAST, so a line that returns it has
+ *                    nothing else wrong — which is what lets the supplier ask
+ *                    for an exception instead (BR-08).
+ */
+export type AsnLineRefusal =
+  | 'unknownMaterial'
+  | 'quantity'
+  | 'overOpen'
+  | 'batch'
+  | 'expiry'
+  | 'expiryRequired'
+  | 'shelfLife';
+
+/** A stored ASN line as the rule reads it, carrying the ASN's ETA. */
+export const asnLineCheckOf = (
+  line: Pick<AsnLineItem, 'materialCode' | 'shippedQty' | 'lotNumber' | 'expiryDate'>,
+  eta: string | undefined,
+): AsnLineCheck => ({
+  materialCode: line.materialCode,
+  shippedQty: line.shippedQty,
+  lotNumber: line.lotNumber,
+  ...(line.expiryDate !== undefined ? { expiryDate: line.expiryDate } : {}),
+  ...(eta !== undefined ? { eta } : {}),
+});
 
 /**
  * Why one ASN line would be refused, or null. `requireBatch` is off at draft
- * time (a draft may be incomplete) and on at submission (BR-04).
+ * time (a draft may be incomplete) and on at submission (BR-04). The ASN form
+ * and both ASN policy hooks call this one function (AR-11).
+ *
+ * The line's own completeness (quantity, then batch) is read before the PO
+ * checks, so a submission names a missing batch first, as it always has, and
+ * the batch is required on every line the ASN carries.
  */
 export function asnLineRefusal(
-  line: Partial<AsnLineInput> | null | undefined,
+  line: Partial<AsnLineCheck> | null | undefined,
   po: Pick<PurchaseOrder, 'poNumber' | 'lineItems'>,
   asns: readonly ASN[],
-  opts: { excludeAsn?: string; overShipReason?: unknown; requireBatch: boolean },
+  opts: {
+    excludeAsn?: string;
+    overShipReason?: unknown;
+    requireBatch: boolean;
+    /** MR-6 BR-08 — Quality approved an exception covering this line. */
+    waiveShelfLife?: boolean;
+  },
 ): AsnLineRefusal | null {
-  const item = po.lineItems.find((li) => li.materialCode === line?.materialCode);
-  if (!line || !item) return 'unknownMaterial';
+  if (!line) return 'unknownMaterial';
   const q = line.shippedQty;
   if (typeof q !== 'number' || !Number.isFinite(q) || q <= 0) return 'quantity';
+  if (opts.requireBatch && !isNonBlank(line.lotNumber)) return 'batch';
+  // MR-6 BR-07 — expiry is part of a complete line for a shelf-life material.
+  const rule = opts.requireBatch && typeof line.materialCode === 'string' ? shelfLifeRuleFor(line.materialCode) : null;
+  if (rule?.relevant && !isNonBlank(line.expiryDate)) return 'expiryRequired';
+  const item = po.lineItems.find((li) => li.materialCode === line.materialCode);
+  if (!item) return 'unknownMaterial';
   if (q > openQtyForLine(po, item, asns, opts.excludeAsn) && !isNonBlank(opts.overShipReason)) {
     return 'overOpen';
   }
-  if (opts.requireBatch && !isNonBlank(line.batchNumber)) return 'batch';
   if (line.expiryDate !== undefined && line.expiryDate !== '' && !isCalendarDate(line.expiryDate)) {
     return 'expiry';
   }
+  // MR-6 BR-05 / BR-06 — last, so it is the only thing wrong when it fires.
+  if (
+    rule?.relevant &&
+    !opts.waiveShelfLife &&
+    isCalendarDate(line.expiryDate) &&
+    isCalendarDate(line.eta) &&
+    !shelfLifeMet(line.expiryDate, line.eta, rule.minMonths)
+  ) {
+    return 'shelfLife';
+  }
   return null;
 }
+
+// ── Shelf life (MR-6 BR-05 to BR-09) ────────────────────────────────────────
+
+/**
+ * A `YYYY-MM-DD` date moved by whole calendar months. A day the target month
+ * does not have is its last day (2026-08-31 + 6 → 2027-02-28).
+ */
+export function addCalendarMonths(date: string, months: number): string {
+  const [y, m, d] = date.split('-').map(Number);
+  const total = y * 12 + (m - 1) + months;
+  const ty = Math.floor(total / 12);
+  const tm = total - ty * 12;
+  const last = new Date(Date.UTC(ty, tm + 1, 0)).getUTCDate();
+  return `${String(ty).padStart(4, '0')}-${String(tm + 1).padStart(2, '0')}-${String(Math.min(d, last)).padStart(2, '0')}`;
+}
+
+/** MR-6 BR-05 — expiry ≥ ETA + the minimum, in calendar months (edge case 3: equal passes). */
+export const shelfLifeMet = (expiryDate: string, eta: string, minMonths: number): boolean =>
+  expiryDate >= addCalendarMonths(eta, minMonths);
+
+const dayNumber = (date: string): number => Date.parse(`${date}T00:00:00.000Z`) / 86_400_000;
+
+/**
+ * Remaining shelf life at ETA in calendar months, with the part month as a
+ * fraction of that month's days ("7.4 months left at ETA"). Negative when the
+ * batch expires before it arrives.
+ */
+export function monthsLeftAt(eta: string, expiryDate: string): number {
+  let whole = 0;
+  if (expiryDate >= eta) {
+    while (addCalendarMonths(eta, whole + 1) <= expiryDate) whole++;
+  } else {
+    while (addCalendarMonths(eta, whole) > expiryDate) whole--;
+  }
+  const from = addCalendarMonths(eta, whole);
+  const to = addCalendarMonths(eta, whole + 1);
+  return whole + (dayNumber(expiryDate) - dayNumber(from)) / (dayNumber(to) - dayNumber(from));
+}
+
+/** What the form shows under a line's expiry (MR-6 d step 4). */
+export interface ShelfLifeLineView {
+  minMonths: number;
+  /** Null until both expiry and ETA are real dates. */
+  monthsLeft: number | null;
+  /** False when the line fails BR-05. */
+  ok: boolean;
+}
+
+/** The shelf-life view of a line, or null when the material is not shelf-life relevant. */
+export function shelfLifeLineView(
+  line: Pick<AsnLineCheck, 'materialCode' | 'expiryDate' | 'eta'>,
+): ShelfLifeLineView | null {
+  const rule = shelfLifeRuleFor(line.materialCode);
+  if (!rule?.relevant) return null;
+  if (!isCalendarDate(line.expiryDate) || !isCalendarDate(line.eta)) {
+    return { minMonths: rule.minMonths, monthsLeft: null, ok: true };
+  }
+  return {
+    minMonths: rule.minMonths,
+    monthsLeft: monthsLeftAt(line.eta, line.expiryDate),
+    ok: shelfLifeMet(line.expiryDate, line.eta, rule.minMonths),
+  };
+}
+
+/**
+ * MR-6 BR-08 — a supplier may ask for an exception only when shelf life is the
+ * ONE thing wrong: at least one line refused for it, and every other line clean.
+ */
+export const onlyShelfLifeRefused = (refusals: readonly (AsnLineRefusal | null)[]): boolean =>
+  refusals.some((r) => r === 'shelfLife') && refusals.every((r) => r === null || r === 'shelfLife');
+
+/** The request an exception decision is about: the latest request or reopening. */
+type ShelfLifeRequest = Extract<AsnShelfLifeEvent, { kind: 'requested' | 'etaChanged' }>;
+type ShelfLifeDecision = Extract<AsnShelfLifeEvent, { kind: 'approved' | 'rejected' }>;
+
+/** MR-6 BR-09 — where an ASN's exception stands, derived from its record. */
+export interface ShelfLifeExceptionView {
+  state: 'pending' | 'approved' | 'rejected';
+  /** The latest request (or the ETA change that reopened it). */
+  request: ShelfLifeRequest;
+  /** The latest request's reason — the supplier's own words. */
+  reason: string;
+  /** The decision on `request`, when there is one. */
+  decision: ShelfLifeDecision | null;
+  history: readonly AsnShelfLifeEvent[];
+}
+
+export function shelfLifeExceptionOf(asn: Pick<ASN, 'shelfLifeException'>): ShelfLifeExceptionView | null {
+  const history = asn.shelfLifeException ?? [];
+  let request: ShelfLifeRequest | null = null;
+  let reason = '';
+  let decision: ShelfLifeDecision | null = null;
+  for (const e of history) {
+    if (e.kind === 'requested' || e.kind === 'etaChanged') {
+      request = e;
+      decision = null;
+      if (e.kind === 'requested') reason = e.reason;
+    } else {
+      decision = e;
+    }
+  }
+  if (!request) return null;
+  const state = decision === null ? 'pending' : decision.kind === 'approved' ? 'approved' : 'rejected';
+  return { state, request, reason, decision, history };
+}
+
+const coveredBy = (
+  lines: readonly AsnShelfLifeLine[],
+  line: Pick<AsnLineCheck, 'materialCode' | 'lotNumber' | 'expiryDate'>,
+) =>
+  lines.some(
+    (l) =>
+      l.materialCode === line.materialCode &&
+      l.lotNumber === (line.lotNumber ?? '').trim() &&
+      l.expiryDate === line.expiryDate,
+  );
+
+/**
+ * MR-6 BR-08 — a pending or approved exception waives the shelf-life refusal
+ * for the lines the request named (same material, batch and expiry), at an ETA
+ * no later than the one asked about (edge case 1).
+ */
+export function shelfLifeWaivedFor(
+  asn: Pick<ASN, 'shelfLifeException'>,
+  line: Pick<AsnLineCheck, 'materialCode' | 'lotNumber' | 'expiryDate' | 'eta'>,
+): boolean {
+  const view = shelfLifeExceptionOf(asn);
+  if (!view || view.state === 'rejected') return false;
+  return isCalendarDate(line.eta) && line.eta <= view.request.eta && coveredBy(view.request.lines, line);
+}
+
+/**
+ * MR-6 BR-08 / BR-09 — the lines approved to be received into blocked stock.
+ * Empty unless the exception stands and the ASN is on its way (a draft, a
+ * cancelled ASN and one awaiting a decision carry no approval to receipt).
+ */
+export function approvedShelfLifeLines(asn: Pick<ASN, 'status' | 'shelfLifeException'>): AsnShelfLifeLine[] {
+  if (asn.status === 'Draft' || asn.status === 'Cancelled' || asn.status === 'Awaiting exception') return [];
+  const view = shelfLifeExceptionOf(asn);
+  return view?.state === 'approved' ? [...view.request.lines] : [];
+}
+
+/**
+ * Edge case 1 — an ETA change on an ASN whose exception was approved needs a
+ * new decision when the new ETA is later than the approved one and a line still
+ * fails the rule there.
+ */
+export function etaNeedsReapproval(
+  asn: Pick<ASN, 'shelfLifeException' | 'lineItems'>,
+  newEta: string,
+): boolean {
+  const view = shelfLifeExceptionOf(asn);
+  if (!view || view.state !== 'approved' || !isCalendarDate(newEta) || newEta <= view.request.eta) return false;
+  return shelfLifeFailingLines(asn.lineItems, newEta).length > 0;
+}
+
+/** The lines of an ASN that fail the rule at an ETA, as an exception records them. */
+export function shelfLifeFailingLines(
+  lines: readonly Pick<AsnLineItem, 'materialCode' | 'lotNumber' | 'expiryDate'>[],
+  eta: string,
+): AsnShelfLifeLine[] {
+  const out: AsnShelfLifeLine[] = [];
+  for (const l of lines) {
+    const rule = shelfLifeRuleFor(l.materialCode);
+    if (!rule?.relevant || !isCalendarDate(l.expiryDate) || !isCalendarDate(eta)) continue;
+    if (shelfLifeMet(l.expiryDate, eta, rule.minMonths)) continue;
+    out.push({
+      materialCode: l.materialCode,
+      lotNumber: l.lotNumber.trim(),
+      expiryDate: l.expiryDate,
+      minMonths: rule.minMonths,
+    });
+  }
+  return out;
+}
+
+// ── Batch from declared stock (MR-6 BR-01 to BR-03) ─────────────────────────
+
+/** MR-6 BR-02 — the ASN states whose quantity is taken out of a declared batch. */
+export const BATCH_CONSUMING_ASN_STATES: readonly AsnStatus[] = [
+  'Submitted',
+  'In Transit',
+  'Delivered',
+  'Awaiting exception',
+];
+
+/** One declared batch the supplier can still ship from. */
+export interface AvailableBatch {
+  batchNumber: string;
+  available: number;
+  expiryDate?: string;
+}
+
+/** The part of a stock record the batch rule reads. */
+export interface DeclaredBatches {
+  /** The stock record's as-of (ISO). */
+  declaredAt: string;
+  batches?: readonly { batchNumber: string; qty: number; expiryDate?: string }[];
+}
+
+/**
+ * MR-6 BR-01 / BR-02 — the batches of the supplier's latest stock record for a
+ * material, each with its available quantity: the declared quantity minus the
+ * quantity on this supplier's ASNs for that batch that are Submitted, In
+ * Transit, Delivered or Awaiting exception, with a ship date on or after the record's `declaredAt`
+ * (compared by calendar day). Batches with nothing left are left out. An ASN
+ * with no ship date has no date to compare, so it is not counted.
+ */
+export function availableBatches(
+  supplierId: string,
+  materialCode: string,
+  asns: readonly ASN[],
+  declaration: DeclaredBatches | null | undefined,
+): AvailableBatch[] {
+  if (!declaration?.batches?.length) return [];
+  const since = declaration.declaredAt.slice(0, 10);
+  const taken = new Map<string, number>();
+  for (const a of asns) {
+    if (a.supplierId !== supplierId || !BATCH_CONSUMING_ASN_STATES.includes(a.status)) continue;
+    if (!a.shipDate || a.shipDate < since) continue;
+    for (const l of a.lineItems) {
+      if (l.materialCode !== materialCode || !Number.isFinite(l.shippedQty)) continue;
+      const lot = l.lotNumber.trim();
+      taken.set(lot, (taken.get(lot) ?? 0) + l.shippedQty);
+    }
+  }
+  return declaration.batches
+    .map((b) => ({
+      batchNumber: b.batchNumber,
+      available: b.qty - (taken.get(b.batchNumber.trim()) ?? 0),
+      ...(b.expiryDate ? { expiryDate: b.expiryDate } : {}),
+    }))
+    .filter((b) => b.available > 0);
+}
+
+/**
+ * MR-6 BR-03 — a line ships more of a declared batch than is available. A
+ * warning, never a refusal: the stock record can be up to a cycle old.
+ */
+export const batchAboveAvailable = (
+  line: Pick<AsnLineCheck, 'shippedQty' | 'lotNumber'>,
+  batches: readonly AvailableBatch[],
+): boolean => {
+  const b = batches.find((x) => x.batchNumber === line.lotNumber);
+  return !!b && Number.isFinite(line.shippedQty) && line.shippedQty > b.available;
+};
 
 /** Why an ASN cannot be submitted (BR-04), or null when it is complete. */
 export type AsnSubmitRefusal = 'noLines' | 'shipDate' | 'eta' | 'etaBeforeShip';

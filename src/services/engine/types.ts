@@ -48,6 +48,13 @@ export interface FinishedGood {
   readonly category: string;
   readonly launchDate: IsoDate;
   readonly discontinueDate?: IsoDate;
+  /**
+   * PTI makes this product for another brand (OEM). Its demand is that brand's
+   * POs, exploded as firm orders; the demand forecast (E14-07) does not forecast
+   * it (ENG-D20). Absent = one of PTI's own brands. The synthetic dataset
+   * carries no OEM product (ENG-B65).
+   */
+  readonly oem?: boolean;
 }
 
 /** Weekly sell-in per SKU (E14-01 BR-02). `weekStart` is a Monday. */

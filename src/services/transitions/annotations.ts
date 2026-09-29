@@ -120,6 +120,10 @@ export const TRANSITION_PURPOSE: FlowAnnotations = Object.freeze({
   t_asn_resolve_discrepancy: {
     purposeKey: 'processFlows.purpose.t_asn_resolve_discrepancy',
   },
+  t_asn_request_exception: { purposeKey: 'processFlows.purpose.t_asn_request_exception' },
+  t_asn_approve_exception: { purposeKey: 'processFlows.purpose.t_asn_approve_exception' },
+  t_asn_reject_exception: { purposeKey: 'processFlows.purpose.t_asn_reject_exception' },
+  t_asn_change_eta: { purposeKey: 'processFlows.purpose.t_asn_change_eta' },
 
   // ── goodsReceipt ───────────────────────────────────────────────────────────
   t_gr_create: { purposeKey: 'processFlows.purpose.t_gr_create' },
@@ -278,8 +282,15 @@ export const TRANSITION_PURPOSE: FlowAnnotations = Object.freeze({
   t_threepl_set: { purposeKey: 'processFlows.purpose.t_threepl_set' },
   t_supplier_set_update_mode: { purposeKey: 'processFlows.purpose.t_supplier_set_update_mode' },
   t_qualification_rule_set: { purposeKey: 'processFlows.purpose.t_qualification_rule_set' },
+  t_mrpcontroller_set: { purposeKey: 'processFlows.purpose.t_mrpcontroller_set' },
+  t_materialname_submit: { purposeKey: 'processFlows.purpose.t_materialname_submit' },
+  t_materialname_approve: { purposeKey: 'processFlows.purpose.t_materialname_approve' },
+  t_materialname_reject: { purposeKey: 'processFlows.purpose.t_materialname_reject' },
+  t_materialname_load: { purposeKey: 'processFlows.purpose.t_materialname_load' },
+  t_materialname_replace: { purposeKey: 'processFlows.purpose.t_materialname_replace' },
   t_setting_set: { purposeKey: 'processFlows.purpose.t_setting_set' },
   t_reasoncode_set: { purposeKey: 'processFlows.purpose.t_reasoncode_set' },
+  t_maxstock_set: { purposeKey: 'processFlows.purpose.t_maxstock_set' },
 
   // ── supplierApplication ────────────────────────────────────────────────────
   t_application_submit: { purposeKey: 'processFlows.purpose.t_application_submit' },
@@ -388,8 +399,11 @@ export const ENTITY_PURPOSE: FlowAnnotations = Object.freeze({
   threePl: { purposeKey: 'processFlows.purpose.entity.threePl' },
   supplierOverlay: { purposeKey: 'processFlows.purpose.entity.supplierOverlay' },
   qualificationRule: { purposeKey: 'processFlows.purpose.entity.qualificationRule' },
+  mrpController: { purposeKey: 'processFlows.purpose.entity.mrpController' },
+  materialName: { purposeKey: 'processFlows.purpose.entity.materialName' },
   hubSetting: { purposeKey: 'processFlows.purpose.entity.hubSetting' },
   reasonCode: { purposeKey: 'processFlows.purpose.entity.reasonCode' },
+  maxStock: { purposeKey: 'processFlows.purpose.entity.maxStock' },
   supplierApplication: { purposeKey: 'processFlows.purpose.entity.supplierApplication' },
   receiptDiscrepancy: { purposeKey: 'processFlows.purpose.entity.receiptDiscrepancy' },
   callOff: { purposeKey: 'processFlows.purpose.entity.callOff' },
