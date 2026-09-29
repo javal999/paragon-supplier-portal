@@ -384,6 +384,12 @@ export const POLICY_HOOKS = {
    * attribution. The same predicate re-checks a stored change on read.
    */
   REASON_CODE_GOVERNED: 'reason_code_governed',
+  /**
+   * REQ-E06-04 BR-06 — a maximum stock for one supplier × material: the entity
+   * is `<supplierId>|<materialCode>`, the quantity a whole number above zero or
+   * null to clear it, and a well-formed attribution.
+   */
+  MAX_STOCK_GOVERNED: 'max_stock_governed',
 
   /**
    * PR reject (§67): the rejection reason must be SUBSTANCE, not presence.

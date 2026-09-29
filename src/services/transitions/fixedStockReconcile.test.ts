@@ -15,8 +15,8 @@ import {
 const CFG = { anchor: '2026-08-31', cycleWeeks: 3 };
 
 describe('REQ-E06-04 worked example (verbatim)', () => {
-  // Committed W1 34,300 + W2 31,000 + W3 34,300 = 99,600; called off 88,000;
-  // held 85,000 at the end of W3; max stock 90,000 agreed.
+  // Committed W1 34,300 + W2 31,000 + W3 34,300 = 99,600; the supplier accepted
+  // 88,000 of PTI's call-offs; held 85,000 at the end of W3; max stock 90,000.
   it('(a) PTI under-called: 11,600 not called off, held covers it, 11,600 flagged liability — not priced', () => {
     expect(reconcileFigures({ committed: 99_600, calledOff: 88_000, held: 85_000, maxStock: 90_000 })).toEqual({
       outcome: 'underCalled',
@@ -46,10 +46,10 @@ describe('REQ-E06-04 worked example (verbatim)', () => {
     });
   });
 
-  it('(d) balanced: PTI called off 101,000 — 1,400 beyond the commitment, nothing flagged', () => {
+  it('(d) balanced: PTI called off 101,000 — not called off reads 0, 1,400 beyond the commitment, nothing flagged', () => {
     expect(reconcileFigures({ committed: 99_600, calledOff: 101_000, held: 85_000, maxStock: 90_000 })).toMatchObject({
       outcome: 'balanced',
-      uncalled: -1_400,
+      uncalled: 0,
       calledBeyond: 1_400,
       liabilityQty: 0,
     });
@@ -60,6 +60,17 @@ describe('REQ-E06-04 worked example (verbatim)', () => {
       outcome: 'overHeld',
       liabilityQty: 0,
       aboveMaxQty: 5_000,
+    });
+  });
+
+  it('(g) not committed: nothing committed, 12,000 called off — no liability flagged', () => {
+    expect(reconcileFigures({ committed: 0, calledOff: 12_000, held: 85_000, maxStock: 90_000 })).toEqual({
+      outcome: 'notCommitted',
+      uncalled: 0,
+      calledBeyond: 12_000,
+      liabilityQty: 0,
+      shortQty: 0,
+      aboveMaxQty: 0,
     });
   });
 
@@ -121,15 +132,19 @@ const line = (over: Partial<FsCommitmentInput>): FsCommitmentInput => ({
 });
 const week = (monday: string, qty: number | null, zone: FsCommitmentInput['zone'] = 'firm', over: Partial<FsCommitmentInput> = {}) =>
   line({ periodBucket: monday, periodStart: monday, committedQty: qty, zone, ...over });
+/** An accepted call-off: one agreed delivery on its need date. */
 const callOff = (n: number, quantity: number, needDate: string, over: Partial<FsCallOffInput> = {}): FsCallOffInput => ({
   supplierId: 'sup-A',
   materialCode: 'PK-1',
   callOffNumber: `CO-${n}`,
-  quantity,
+  agreed: [{ quantity, date: needDate }],
+  pending: null,
   needDate,
-  status: 'Confirmed',
   ...over,
 });
+/** A released call-off with nothing agreed yet. */
+const pendingCallOff = (n: number, needDate: string, pending: 'supplier' | 'pti' | null): FsCallOffInput =>
+  callOff(n, 0, needDate, { agreed: [], pending });
 const stock = (declaredAt: string, totalQty: number, over: Partial<FsStockInput> = {}): FsStockInput => ({
   supplierId: 'sup-A',
   materialCode: 'PK-1',
@@ -158,10 +173,12 @@ describe('buildFixedStockReconcile (BR-02 to BR-11)', () => {
   ];
   const workedCallOffs = [
     callOff(1, 40_000, '2026-09-01'),
-    callOff(2, 30_000, '2026-09-08', { status: 'Rejected' }),
+    // Accepted as two deliveries: 30,000 in the cycle, 5,000 moved into the next one.
+    callOff(2, 0, '2026-09-08', { agreed: [{ quantity: 30_000, date: '2026-09-08' }, { quantity: 5_000, date: '2026-09-23' }] }),
     callOff(3, 18_000, '2026-09-20'),
-    callOff(4, 50_000, '2026-09-10', { status: 'Draft' }),
-    callOff(5, 50_000, '2026-09-11', { status: 'Dismissed' }),
+    pendingCallOff(4, '2026-09-10', 'supplier'), // awaiting the supplier — not counted
+    pendingCallOff(5, '2026-09-11', 'pti'), // a counter-offer awaiting PTI — not counted
+    pendingCallOff(8, '2026-09-12', null), // rejected, a draft or dismissed — nothing
     callOff(6, 9_999, '2026-09-22'), // next cycle
     callOff(7, 9_999, '2026-09-10', { supplierId: 'sup-B' }), // another supplier
   ];
@@ -184,6 +201,8 @@ describe('buildFixedStockReconcile (BR-02 to BR-11)', () => {
       periodsAwaiting: 0,
       calledOff: 88_000,
       callOffNumbers: ['CO-1', 'CO-2', 'CO-3'],
+      awaitingSupplier: 1,
+      awaitingPti: 1,
       held: 85_000,
       heldAt: '2026-09-18T02:00:00Z',
       maxStock: 90_000,
@@ -193,7 +212,7 @@ describe('buildFixedStockReconcile (BR-02 to BR-11)', () => {
     });
     // The cycle that started on the as-of day is read too, provisional.
     const next = rows.find((r) => r.cycleStart === '2026-09-21')!;
-    expect(next).toMatchObject({ final: false, committed: 30_000, calledOff: 9_999, held: 1 });
+    expect(next).toMatchObject({ final: false, committed: 30_000, calledOff: 14_999, callOffNumbers: ['CO-2', 'CO-6'], held: 1 });
     // No row reads the Forecast period or the packaging month.
     expect(rows.map((r) => r.cycleStart).sort()).toEqual(['2026-08-31', '2026-09-21']);
   });
@@ -243,10 +262,24 @@ describe('buildFixedStockReconcile (BR-02 to BR-11)', () => {
     expect(rows.find((r) => r.materialCode === 'PK-2')).toMatchObject({ maxStock: 20_000, outcome: 'overHeld', aboveMaxQty: 10_000 });
   });
 
-  it('nothing committed and nothing called off gives no row; called off with nothing committed is balanced', () => {
+  it('nothing committed and nothing accepted gives no row; accepted with nothing committed is not committed', () => {
     expect(buildFixedStockReconcile(inputs({ commitments: [week('2026-08-31', null)] }))).toEqual([]);
+    expect(
+      buildFixedStockReconcile(inputs({ commitments: [week('2026-08-31', null)], callOffs: [pendingCallOff(1, '2026-09-01', 'supplier')] })),
+    ).toEqual([]);
     const [r] = buildFixedStockReconcile(inputs({ commitments: [week('2026-08-31', null)], callOffs: [callOff(1, 500, '2026-09-01')] }));
-    expect(r).toMatchObject({ committed: 0, calledOff: 500, outcome: 'balanced', calledBeyond: 500 });
+    expect(r).toMatchObject({ committed: 0, calledOff: 500, outcome: 'notCommitted', calledBeyond: 500, uncalled: 0, liabilityQty: 0 });
+  });
+
+  it('only accepted deliveries count: a call-off awaiting the supplier leaves the whole commitment not called off', () => {
+    const [r] = buildFixedStockReconcile(
+      inputs({
+        commitments: [week('2026-08-31', 10_000)],
+        callOffs: [pendingCallOff(1, '2026-09-01', 'supplier'), pendingCallOff(2, '2026-09-02', 'supplier')],
+        stock: [stock('2026-09-01', 10_000)],
+      }),
+    );
+    expect(r).toMatchObject({ calledOff: 0, callOffNumbers: [], awaitingSupplier: 2, awaitingPti: 0, uncalled: 10_000, outcome: 'underCalled' });
   });
 
   it('raw material reconciles per month', () => {
@@ -254,7 +287,7 @@ describe('buildFixedStockReconcile (BR-02 to BR-11)', () => {
       inputs({
         asOf: '2026-10-01',
         commitments: [line({ stream: 'rawMaterial', periodBucket: '2026-09', periodStart: '2026-09-01', committedQty: 10_000 })],
-        callOffs: [callOff(1, 3_000, '2026-09-30'), callOff(2, 3_000, '2026-10-01')],
+        callOffs: [callOff(1, 3_000, '2026-09-30'), callOff(2, 3_000, '2026-10-01', { supplierId: 'sup-A' })],
         stock: [stock('2026-09-29', 4_200)],
       }),
     );
@@ -268,16 +301,25 @@ describe('buildFixedStockReconcile (BR-02 to BR-11)', () => {
           week('2026-08-31', 100),
           week('2026-08-31', 100, 'firm', { supplierId: 'sup-B', supplierName: 'Supplier B' }),
           week('2026-08-31', 100, 'firm', { supplierId: 'sup-C', supplierName: 'Supplier C' }),
+          week('2026-08-31', null, 'firm', { supplierId: 'sup-D', supplierName: 'Supplier D' }),
         ],
-        callOffs: [callOff(1, 100, '2026-09-01')],
+        callOffs: [callOff(1, 100, '2026-09-01'), callOff(2, 50, '2026-09-01', { supplierId: 'sup-D' })],
         stock: [stock('2026-09-01', 10, { supplierId: 'sup-B' }), stock('2026-09-01', 500, { supplierId: 'sup-C' })],
       }),
     );
     expect(rows.map((r) => [r.supplierId, r.outcome])).toEqual([
       ['sup-B', 'supplierShort'],
       ['sup-C', 'underCalled'],
+      ['sup-D', 'notCommitted'],
       ['sup-A', 'balanced'],
     ]);
-    expect(countByOutcome(rows)).toEqual({ supplierShort: 1, underCalled: 1, stockNotReported: 0, overHeld: 0, balanced: 1 });
+    expect(countByOutcome(rows)).toEqual({
+      supplierShort: 1,
+      underCalled: 1,
+      stockNotReported: 0,
+      notCommitted: 1,
+      overHeld: 0,
+      balanced: 1,
+    });
   });
 });

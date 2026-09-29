@@ -1,41 +1,52 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// FIXED STOCK (FS) RECONCILE — REQ-E06-04 (ENG-D21, team review 2026-09-28).
+// FIXED STOCK (FS) RECONCILE — REQ-E06-04 (ENG-D21, team review 2026-09-28;
+// owner decisions 2026-09-29).
 //
 // PURE. No store, no clock: the read model hands in the standing commitments,
-// the call-offs, the supplier stock submissions, the agreed maximum stock and
-// the day to reconcile on, and gets rows back. Nothing here is stored.
+// the call-offs (already classified by the call-off rules), the supplier stock
+// submissions, the maximum stock Procurement maintains, and the day to
+// reconcile on, and gets rows back. Nothing here is stored.
 //
 // Per supplier × material × cycle:
 //   · committed  — the supplier's Firm and Trade-off commitments (REQ-E06-02)
 //                  for the periods in the cycle (BR-03);
-//   · called off — the quantity PTI released on call-offs whose need date
-//                  falls in the cycle (REQ-E09-03), drafts and dismissed
-//                  drafts excluded (BR-04);
+//   · called off — the deliveries the supplier ACCEPTED on PTI's call-offs
+//                  (REQ-E09-03), dated in the cycle; a call-off still awaiting
+//                  the supplier, or a counter-offer awaiting PTI, is not
+//                  counted and is shown as a note (BR-04, owner 2026-09-29);
 //   · held       — the supplier's stock figure (REQ-E08-02): the current one
 //                  while the cycle runs, the latest submitted by its end once
 //                  it has ended; or "not reported" (BR-05);
-//   · max stock  — the agreed maximum, or "no max stock agreed" (BR-06).
+//   · max stock  — the value Procurement maintains, or "no max stock agreed" (BR-06).
 //
-// uncalled = committed − called off. Outcome (BR-08), first match wins:
-//   1. uncalled > 0, held not reported → stockNotReported
-//   2. uncalled > 0, held < uncalled   → supplierShort
-//   3. uncalled > 0, held ≥ uncalled   → underCalled
-//   4. held above the agreed max       → overHeld
-//   5. otherwise                       → balanced
-// Liability (BR-09, ENG-D17): min(uncalled, held, max stock) for outcomes 2
-// and 3, flagged "liability — not priced", never priced.
+// not called off = max(0, committed − called off). Outcome (BR-08), first match wins:
+//   1. not called off > 0, held not reported → stockNotReported
+//   2. not called off > 0, held < it          → supplierShort
+//   3. not called off > 0, held ≥ it          → underCalled
+//   4. nothing committed, something called off → notCommitted
+//   5. held above the max stock               → overHeld
+//   6. otherwise                               → balanced
+// Liability (BR-09, ENG-D17): min(not called off, held, max stock) for outcomes
+// 2 and 3, flagged "liability — not priced", never priced.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { addDays, daysBetween } from '../engine/dates';
 import type { ForecastStream } from '../sdc/types';
 
-export type FsOutcome = 'supplierShort' | 'underCalled' | 'stockNotReported' | 'overHeld' | 'balanced';
+export type FsOutcome =
+  | 'supplierShort'
+  | 'underCalled'
+  | 'stockNotReported'
+  | 'notCommitted'
+  | 'overHeld'
+  | 'balanced';
 
 /** Most urgent first — the order the planner's list is sorted in (BR-11). */
 export const FS_OUTCOME_ORDER: readonly FsOutcome[] = [
   'supplierShort',
   'underCalled',
   'stockNotReported',
+  'notCommitted',
   'overHeld',
   'balanced',
 ];
@@ -51,7 +62,7 @@ export interface FsFigures {
 
 export interface FsResult {
   readonly outcome: FsOutcome;
-  /** committed − called off; negative when PTI called off beyond the commitment. */
+  /** max(0, committed − called off) — never negative (owner, 2026-09-29). */
   readonly uncalled: number;
   /** What PTI called off beyond the commitment (0 when it did not). */
   readonly calledBeyond: number;
@@ -65,8 +76,9 @@ export interface FsResult {
 
 /** BR-07 to BR-09 — compare the three figures for one supplier × material × cycle. */
 export function reconcileFigures(f: FsFigures): FsResult {
-  const uncalled = f.committed - f.calledOff;
-  const calledBeyond = Math.max(0, -uncalled);
+  const diff = f.committed - f.calledOff;
+  const uncalled = Math.max(0, diff);
+  const calledBeyond = Math.max(0, -diff);
   const aboveMaxQty = f.held !== null && f.maxStock !== null && f.held > f.maxStock ? f.held - f.maxStock : 0;
   const base = { uncalled, calledBeyond, aboveMaxQty };
   if (uncalled > 0) {
@@ -75,6 +87,7 @@ export function reconcileFigures(f: FsFigures): FsResult {
     if (f.held < uncalled) return { ...base, outcome: 'supplierShort', liabilityQty, shortQty: uncalled - f.held };
     return { ...base, outcome: 'underCalled', liabilityQty, shortQty: 0 };
   }
+  if (f.committed === 0 && f.calledOff > 0) return { ...base, outcome: 'notCommitted', liabilityQty: 0, shortQty: 0 };
   return { ...base, outcome: aboveMaxQty > 0 ? 'overHeld' : 'balanced', liabilityQty: 0, shortQty: 0 };
 }
 
@@ -127,13 +140,28 @@ export interface FsCommitmentInput {
   readonly committedQty: number | null;
 }
 
+/**
+ * A call-off as the reconcile reads it, classified by the call-off rules
+ * (`callOffRules.ts`) before it arrives here.
+ */
 export interface FsCallOffInput {
   readonly supplierId: string;
   readonly materialCode: string;
   readonly callOffNumber: string;
-  readonly quantity: number;
+  /**
+   * The deliveries both sides agreed: the supplier's confirmation once
+   * accepted (automatically or by the planner), else what both last agreed.
+   * Empty when nothing is agreed yet — such a call-off is not counted.
+   */
+  readonly agreed: readonly { readonly quantity: number; readonly date: string }[];
+  /**
+   * Why a released call-off is not (or not yet fully) counted: `supplier` —
+   * awaiting the supplier's confirmation; `pti` — a counter-offer awaiting the
+   * planner. Null otherwise (agreed, rejected, a draft, dismissed).
+   */
+  readonly pending: 'supplier' | 'pti' | null;
+  /** PTI's requested date — places a pending call-off in its cycle. */
   readonly needDate: string;
-  readonly status: string;
 }
 
 /** A stock submission; the list is oldest first, so the last matching one is the latest. */
@@ -171,16 +199,19 @@ export interface FsRow extends FsResult {
   readonly periodsCommitted: number;
   /** Firm and Trade-off periods in the cycle still awaiting a commitment (counted as 0). */
   readonly periodsAwaiting: number;
+  /** Accepted deliveries dated in the cycle (BR-04). */
   readonly calledOff: number;
+  /** The call-offs those deliveries belong to. */
   readonly callOffNumbers: readonly string[];
+  /** Call-offs needed in the cycle still awaiting the supplier's confirmation — not counted. */
+  readonly awaitingSupplier: number;
+  /** Counter-offers needed in the cycle still awaiting PTI's decision — not counted. */
+  readonly awaitingPti: number;
   readonly held: number | null;
   /** When the held figure was submitted; null when not reported. */
   readonly heldAt: string | null;
   readonly maxStock: number | null;
 }
-
-/** Call-off states that are not a release: the planner's own draft and a dismissed draft. */
-const NOT_RELEASED = new Set(['Draft', 'Dismissed']);
 
 const pairKey = (supplierId: string, materialCode: string) => `${supplierId}|${materialCode}`;
 
@@ -214,15 +245,18 @@ export function buildFixedStockReconcile(input: FsInputs): FsRow[] {
   const rows: FsRow[] = [];
   for (const [key, g] of groups) {
     const { cycle, head } = g;
-    const calls = input.callOffs.filter(
-      (o) =>
-        o.supplierId === head.supplierId &&
-        o.materialCode === head.materialCode &&
-        !NOT_RELEASED.has(o.status) &&
-        o.needDate >= cycle.start &&
-        o.needDate <= cycle.end,
-    );
-    const calledOff = calls.reduce((s, o) => s + o.quantity, 0);
+    const inCycle = (d: string) => d >= cycle.start && d <= cycle.end;
+    const mine = input.callOffs.filter((o) => o.supplierId === head.supplierId && o.materialCode === head.materialCode);
+    let calledOff = 0;
+    const numbers = new Set<string>();
+    for (const o of mine) {
+      for (const d of o.agreed) {
+        if (!inCycle(d.date)) continue;
+        calledOff += d.quantity;
+        numbers.add(o.callOffNumber);
+      }
+    }
+    const pendingIn = (who: 'supplier' | 'pti') => mine.filter((o) => o.pending === who && inCycle(o.needDate)).length;
     // BR-02 — nothing to reconcile when nothing was committed and nothing called off.
     if (g.committed === 0 && calledOff === 0) continue;
     // BR-05 — an ended cycle reads the latest figure submitted by its end; a
@@ -252,7 +286,9 @@ export function buildFixedStockReconcile(input: FsInputs): FsRow[] {
       periodsCommitted: g.periodsCommitted,
       periodsAwaiting: g.periodsAwaiting,
       calledOff,
-      callOffNumbers: calls.map((o) => o.callOffNumber).sort(),
+      callOffNumbers: [...numbers].sort(),
+      awaitingSupplier: pendingIn('supplier'),
+      awaitingPti: pendingIn('pti'),
       held,
       heldAt: decl ? decl.declaredAt : null,
       maxStock,

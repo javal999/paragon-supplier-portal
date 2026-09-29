@@ -9,23 +9,24 @@
 //     left the current version (it has passed) keeps the commitment it ended
 //     with. A version that covers the period but no longer carries a supplier's
 //     line (demand moved) leaves that supplier nothing committed.
-//   · Called off: the call-off store (REQ-E09-03).
+//   · Called off: the call-off store (REQ-E09-03), classified by the call-off
+//     rules: the deliveries both sides agreed count (the accepted confirmation,
+//     else what both last agreed); a call-off awaiting the supplier, or a
+//     counter-offer awaiting the planner, is pending (owner, 2026-09-29).
 //   · Held: the stock submissions (REQ-E08-02), oldest first by the store's own
 //     recency, so the last matching one is the figure the Stock page shows.
 // ────────────────────────────────────────────────────────────────────────────
 
-import type { ForecastCommitmentLine } from '../types';
+import type { CallOff, ForecastCommitmentLine } from '../types';
 import { declarationRecency } from '../../sdc';
 import { materialEntry } from '../../sdc/materialMaster';
 import { sdcClock } from '../../sdc/clock';
 import { dayOf } from '../../engine/dates';
 import { buildCommitmentLines, streamVersions } from '../../transitions/forecastRules';
-import { buildFixedStockReconcile, type FsRow } from '../../transitions/fixedStockReconcile';
-import {
-  FS_RECONCILE_CYCLE_ANCHOR,
-  FS_RECONCILE_CYCLE_WEEKS,
-  agreedMaxStock,
-} from '../../transitions/forecastConfig';
+import { buildFixedStockReconcile, type FsCallOffInput, type FsRow } from '../../transitions/fixedStockReconcile';
+import { FS_RECONCILE_CYCLE_ANCHOR, fsReconcileCycleWeeks } from '../../transitions/forecastConfig';
+import { isAwaitingApproval, isConfirmedAndAccepted } from '../../transitions/callOffRules';
+import { maxStockFor } from '../../transitions/maxStock';
 import { requirementResponseStore } from './stores/requirementResponseStore';
 import { forecastVersionStore } from './stores/forecastHubStores';
 import { callOffStore } from './stores/callOffStore';
@@ -56,16 +57,49 @@ export function standingCommitmentLines(): ForecastCommitmentLine[] {
   return out;
 }
 
+/**
+ * REQ-E06-04 BR-04 — a call-off as the reconcile reads it. Agreed deliveries:
+ * the supplier's confirmation once accepted, else the deliveries both sides
+ * last agreed (a planner's change to an accepted call-off keeps them until the
+ * change is confirmed). Pending: awaiting the supplier's confirmation, or a
+ * counter-offer awaiting the planner. Drafts, dismissed drafts and rejected
+ * call-offs carry nothing.
+ */
+export function reconcileCallOff(c: CallOff): FsCallOffInput {
+  const agreed =
+    c.confirmation && isConfirmedAndAccepted(c)
+      ? c.confirmation.deliveries
+      : c.agreedDeliveries && c.agreedDeliveries.length > 0 && c.status === 'Awaiting Confirmation'
+        ? c.agreedDeliveries
+        : [];
+  const pending: FsCallOffInput['pending'] =
+    agreed.length > 0
+      ? null
+      : c.status === 'Awaiting Confirmation'
+        ? 'supplier'
+        : isAwaitingApproval(c)
+          ? 'pti'
+          : null;
+  return {
+    supplierId: c.supplierId,
+    materialCode: c.materialCode,
+    callOffNumber: c.callOffNumber,
+    agreed,
+    pending,
+    needDate: c.needDate,
+  };
+}
+
 /** REQ-E06-04 — every supplier × material × cycle row, on the hub clock. */
 export function allFixedStockRows(nowIso: string = sdcClock.now()): FsRow[] {
   const stock = [...inventoryDeclarationStore.all()].sort((a, b) => declarationRecency(a) - declarationRecency(b));
   return buildFixedStockReconcile({
     commitments: standingCommitmentLines(),
-    callOffs: callOffStore.all(),
+    callOffs: callOffStore.all().map(reconcileCallOff),
     stock,
-    maxStock: agreedMaxStock,
+    maxStock: maxStockFor,
     asOf: dayOf(nowIso),
     anchor: FS_RECONCILE_CYCLE_ANCHOR,
-    cycleWeeks: FS_RECONCILE_CYCLE_WEEKS,
+    cycleWeeks: fsReconcileCycleWeeks(),
   });
 }

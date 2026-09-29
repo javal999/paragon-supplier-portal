@@ -1,6 +1,6 @@
 # C1 — Method Surface
 
-Three distinct axes. **94** (service surface) · **180** (transition catalog) · **37** (wired
+Three distinct axes. **94** (service surface) · **181** (transition catalog) · **38** (wired
 targets). They measure different things; this file keeps them separate.
 
 > ⚠️ **THIS DOCUMENT IS PINNED TO THE TREE, AND THE PIN IS WHY THE NUMBERS ABOVE ARE ALLOWED TO
@@ -104,7 +104,7 @@ the string, because those are different claims and only the first is the contrac
 
 ---
 
-## Axis 2 — the 180-transition catalog (43 flows)
+## Axis 2 — the 181-transition catalog (44 flows)
 
 Every authored state-machine edge across the registered flows (`id: 't_<entity>_<verb>'`). Derived
 from `getKnownFlows()` — the seeded registry — never from a grep over the flow files, because a
@@ -139,6 +139,7 @@ transition id can be assembled at a call site rather than written as a literal (
 | `threePl.flow.ts` | `threePl` | 1 | `t_threepl_set` | **wired** |
 | `hubSetting.flow.ts` | `hubSetting` | 1 | `t_setting_set` | **wired** |
 | `reasonCode.flow.ts` | `reasonCode` | 1 | `t_reasoncode_set` | **wired** |
+| `maxStock.flow.ts` | `maxStock` | 1 | `t_maxstock_set` | **wired** |
 | `supplierApplication.flow.ts` | `supplierApplication` | 4 | `t_application_submit`, `t_application_start_review`, `t_application_approve`, `t_application_reject` | **wired** |
 | `receiptDiscrepancy.flow.ts` | `receiptDiscrepancy` | 3 | `t_receiptdiscrepancy_acknowledge`, `t_receiptdiscrepancy_dispute`, `t_receiptdiscrepancy_resolve` | **wired** |
 | `callOff.flow.ts` | `callOff` | 14 | `t_calloff_release`, `t_calloff_draft`, `t_calloff_edit_draft`, `t_calloff_release_draft`, `t_calloff_dismiss`, `t_calloff_change`, `t_calloff_confirm`, `t_calloff_confirm_new_date`, `t_calloff_confirm_changes`, `t_calloff_confirm_partial`, `t_calloff_reject`, `t_calloff_approve`, `t_calloff_reject_confirmation`, `t_calloff_dispatch` | **wired** |
@@ -156,7 +157,7 @@ transition id can be assembled at a call site rather than written as a literal (
 | `negotiationRound.flow.ts` | `negotiationRound` | 2 | `t_negotiationround_open`, `t_negotiationround_close` | **wired** |
 | `rfpOfferRound.flow.ts` | `rfpOfferRound` | 2 | `t_rfp_round_open`, `t_rfp_round_close` | **wired** |
 | `rfpFirmOffer.flow.ts` | `rfpFirmOffer` | 2 | `t_rfpfirmoffer_submit`, `t_rfpfirmoffer_revise` | **wired** |
-| **TOTAL** | | **180** | | |
+| **TOTAL** | | **181** | | |
 
 **Flow shape** (`schema.ts`, `FlowDefinition` / `TransitionDef`): each transition declares
 `from[]` / `to` / `trigger` / `requiredRole` / `requiredFields[]` / `policyHooks[]` /
@@ -172,12 +173,12 @@ system reference is minted only on `settle` (see C5, SAP boundary).
 
 ---
 
-## Axis 3 — the 37 wired CommandTargets
+## Axis 3 — the 38 wired CommandTargets
 
-A `CommandTarget` is the per-entity adapter the dispatcher reads/writes through. **37 exist**, the
+A `CommandTarget` is the per-entity adapter the dispatcher reads/writes through. **38 exist**, the
 runtime export `WIRED_COMMAND_TARGETS` (`MockCommandService.ts` `TARGETS`):
 
-- **wired:** `purchaseOrder`, `advanceShipNotice`, `goodsReceipt`, `invoice`, `rfq`, `quotation`, `rfqIntent`, `rfqConfidentiality`, `rfqClarification`, `purchaseRequisition`, `supplierDocument`, `requirementResponse`, `inventoryDeclaration`, `incomingShipment`, `enforcement`, `role`, `workingCalendar`, `threePl`, `supplierApplication`, `receiptDiscrepancy`, `callOff`, `stockSync`, `stockAccess`, `capacitySubmission`, `inventoryAlert`, `forecastVersion`, `forecastView`, `sapChangeMark`, `rfiEvent`, `rfiResponse`, `rfpEvent`, `rfpResponse`, `negotiationRound`, `rfpOfferRound`, `rfpFirmOffer`, `hubSetting`, `reasonCode`
+- **wired:** `purchaseOrder`, `advanceShipNotice`, `goodsReceipt`, `invoice`, `rfq`, `quotation`, `rfqIntent`, `rfqConfidentiality`, `rfqClarification`, `purchaseRequisition`, `supplierDocument`, `requirementResponse`, `inventoryDeclaration`, `incomingShipment`, `enforcement`, `role`, `workingCalendar`, `threePl`, `supplierApplication`, `receiptDiscrepancy`, `callOff`, `stockSync`, `stockAccess`, `capacitySubmission`, `inventoryAlert`, `forecastVersion`, `forecastView`, `sapChangeMark`, `rfiEvent`, `rfiResponse`, `rfpEvent`, `rfpResponse`, `negotiationRound`, `rfpOfferRound`, `rfpFirmOffer`, `hubSetting`, `reasonCode`, `maxStock`
 
 The interface is **7 members** (`dispatcher.ts`, `CommandTarget`):
 
@@ -202,9 +203,9 @@ transitions — scope is derived from the payload's **parent** (`creationOwner`,
 compare"** (§86). The dispatcher's supplier arm compares `owner !== scope.supplierId`
 unconditionally; a target that wants a supplier to reach a verb must NAME that supplier.
 
-### Wiring census (43 flows → 3 states)
+### Wiring census (44 flows → 3 states)
 
-- **37 behavior-wired** — have a `CommandTarget`, dispatch runs against in-memory stores. Named
+- **38 behavior-wired** — have a `CommandTarget`, dispatch runs against in-memory stores. Named
   above.
 - **2 rolled-up sub-flows** — authored, participate via terminal rollup (`grRollup.ts` /
   `invoiceRollup.ts`), **no standalone target**: `goodsReceiptLine`, `invoiceMatch`.

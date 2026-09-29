@@ -9,45 +9,71 @@ import Table from '../components/ui-v2/Table';
 import TableHeader, { TableHeaderCell } from '../components/ui-v2/TableHeader';
 import TableRow from '../components/ui-v2/TableRow';
 import TableCell from '../components/ui-v2/TableCell';
+import Button from '../components/ui-v2/Button';
 import Data from '../components/ui-v2/Data';
 import StatusPill from '../components/ui-v2/StatusPill';
+import SidePanel from '../components/ui-v2/SidePanel';
 import LoadingState from '../components/ui-v2/LoadingState';
 import ErrorState from '../components/ui-v2/ErrorState';
+import { HandoffNotice } from '../components/ui-v2/HandoffNotice';
+import { useVerbAvailability } from '../hooks/useVerbAvailability';
+import { useRefusalText } from '../hooks/useRefusalText';
+import { useToast } from '../hooks/useToast';
 import { formatDate, formatNumber } from '../lib/format';
 import { useFixedStockReconcile } from '../services/query/hooks';
+import { useMaxStockSet } from '../services/query/commandHooks';
 import type { FixedStockReconcileRow } from '../services/data/types';
 import { FS_OUTCOME_ORDER, countByOutcome, type FsOutcome } from '../services/transitions/fixedStockReconcile';
-import { FS_RECONCILE_CYCLE_WEEKS } from '../services/transitions/forecastConfig';
+import { fsReconcileCycleWeeks } from '../services/transitions/forecastConfig';
+import { maxStockRefusal } from '../services/transitions/maxStock';
+import { daysBetween } from '../services/engine/dates';
 import { forecastNow } from './forecasts/forecastDisplay';
+import { inputClass, labelClass } from './inventory/inventoryDisplay';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// FIXED STOCK (FS) RECONCILE — REQ-E06-04 (ENG-D21, BL-134).
+// FIXED STOCK (FS) RECONCILE — REQ-E06-04 (ENG-D21, BL-134; owner 2026-09-29).
 //
-// Read-only. Per supplier × material × cycle: what the supplier committed
-// (REQ-E06-02), what PTI called off (REQ-E09-03), what the supplier holds
-// (REQ-E08-02), against the agreed maximum stock, and the outcome. A shortfall
+// Per supplier × material × cycle: what the supplier committed (REQ-E06-02),
+// what it accepted of PTI's call-offs (REQ-E09-03), what it holds (REQ-E08-02),
+// against the maximum stock Procurement maintains, and the outcome. A shortfall
 // in call-offs is flagged "liability — not priced" (ENG-D17), never priced.
 // The planner sees every supplier; the supplier sees its own rows (the service
-// scopes them). Computed at read by `transitions/fixedStockReconcile`.
+// scopes them). Procurement sets the maximum stock from the row (`maxstock:set`);
+// any other PTI seat sees whose act it is; a supplier reads it only.
+//
+// Layout (owner, 2026-09-29): Result and Status stay visible at 1280 px without
+// horizontal scroll — "not called off" folds under Called off, the stock
+// figure's date and the maximum under Held, and the material label wraps under
+// its code.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const OUTCOME_VARIANT: Record<FsOutcome, 'success' | 'warning' | 'danger' | 'neutral'> = {
   supplierShort: 'danger',
   underCalled: 'warning',
   stockNotReported: 'neutral',
+  notCommitted: 'neutral',
   overHeld: 'warning',
   balanced: 'success',
 };
 
 const Qty: React.FC<{ value: number; uom: string; testId?: string }> = ({ value, uom, testId }) => (
-  <Data data-testid={testId}>{`${formatNumber(value)} ${uom}`}</Data>
+  <Data className="whitespace-nowrap" data-testid={testId}>{`${formatNumber(value)} ${uom}`}</Data>
 );
+
+const note = 'block text-xs text-text-tertiary';
 
 const FixedStockReconcile: React.FC<{ persona: 'buyer' | 'supplier' }> = ({ persona }) => {
   const { t } = useTranslation();
   const query = useFixedStockReconcile();
   const [outcome, setOutcome] = useState<FsOutcome | null>(null);
+  const [editing, setEditing] = useState<FixedStockReconcileRow | null>(null);
+  const [draft, setDraft] = useState('');
+  const setMax = useMaxStockSet();
+  const refusalText = useRefusalText();
+  const { toast } = useToast();
+  const maxAvailability = useVerbAvailability('maxstock:set');
   const isPti = persona === 'buyer';
+  const canSetMax = isPti && maxAvailability.kind === 'held';
   const crumb = [t(isPti ? 'hub.nav.section.forecast' : 'hub.nav.section.planning'), t('fsr.title')];
 
   const rows = useMemo(() => query.data?.items ?? [], [query.data]);
@@ -57,7 +83,36 @@ const FixedStockReconcile: React.FC<{ persona: 'buyer' | 'supplier' }> = ({ pers
   if (query.isPending) return <LoadingState breadcrumb={crumb} />;
   if (query.isError) return <ErrorState breadcrumb={crumb} error={query.error} onRetry={() => query.refetch()} />;
 
-  const cols = isPti ? 10 : 9;
+  const cols = isPti ? 8 : 7;
+  const draftQty = draft.trim() === '' ? null : Number(draft.trim());
+  const draftInvalid = draft.trim() !== '' && (Number.isNaN(draftQty) || maxStockRefusal(draftQty) !== null);
+
+  const openEditor = (r: FixedStockReconcileRow) => {
+    setDraft(r.maxStock === null ? '' : String(r.maxStock));
+    setEditing(r);
+  };
+
+  const save = async (quantity: number | null) => {
+    if (!editing) return;
+    const result = await setMax.mutateAsync({ supplierId: editing.supplierId, materialCode: editing.materialCode, quantity });
+    if (result.status === 'failed') {
+      toast({ variant: 'error', title: refusalText(result.reason) ?? t('fsr.max.refused', { reason: result.reason ?? '' }) });
+      return;
+    }
+    toast({
+      variant: 'success',
+      title:
+        quantity === null
+          ? t('fsr.max.cleared', { material: editing.materialCode })
+          : t('fsr.max.saved', { material: editing.materialCode, qty: formatNumber(quantity), uom: editing.uom }),
+    });
+    setEditing(null);
+  };
+
+  const cycleKind = (r: FixedStockReconcileRow) =>
+    r.stream === 'packaging'
+      ? t('fsr.cycleKind.packaging', { weeks: Math.round((daysBetween(r.cycleStart, r.cycleEnd) + 1) / 7) })
+      : t('fsr.cycleKind.rawMaterial');
 
   const resultCell = (r: FixedStockReconcileRow) => (
     <div className="space-y-1">
@@ -65,24 +120,19 @@ const FixedStockReconcile: React.FC<{ persona: 'buyer' | 'supplier' }> = ({ pers
         <span data-testid={`fsr-outcome-${r.key}`}>{t(`fsr.outcome.${r.outcome}`)}</span>
       </StatusPill>
       {r.liabilityQty > 0 && (
-        <div className="text-xs text-text-secondary" data-testid={`fsr-liability-${r.key}`}>
+        <span className="block text-xs text-text-secondary" data-testid={`fsr-liability-${r.key}`}>
           {t('fsr.liability')} <Qty value={r.liabilityQty} uom={r.uom} />
-        </div>
+        </span>
       )}
       {r.shortQty > 0 && (
-        <div className="text-xs text-text-secondary">
+        <span className="block text-xs text-text-secondary">
           {t('fsr.short')} <Qty value={r.shortQty} uom={r.uom} />
-        </div>
+        </span>
       )}
       {r.aboveMaxQty > 0 && (
-        <div className="text-xs text-text-secondary">
+        <span className="block text-xs text-text-secondary">
           {t('fsr.aboveMax')} <Qty value={r.aboveMaxQty} uom={r.uom} />
-        </div>
-      )}
-      {r.calledBeyond > 0 && (
-        <div className="text-xs text-text-secondary">
-          {t('fsr.calledBeyond')} <Qty value={r.calledBeyond} uom={r.uom} />
-        </div>
+        </span>
       )}
     </div>
   );
@@ -95,7 +145,7 @@ const FixedStockReconcile: React.FC<{ persona: 'buyer' | 'supplier' }> = ({ pers
         <SampleDataBadge className="ml-3 align-middle" />
       </PageMetaLine>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-5 mb-6" data-testid="fsr-summary">
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 mb-6" data-testid="fsr-summary">
         {FS_OUTCOME_ORDER.map((o) => (
           <KpiCard
             key={o}
@@ -108,7 +158,7 @@ const FixedStockReconcile: React.FC<{ persona: 'buyer' | 'supplier' }> = ({ pers
         ))}
       </div>
 
-      <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto mb-6">
+      <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto mb-6" data-testid="fsr-table">
         <Table>
           <TableHeader>
             {isPti && <TableHeaderCell>{t('fsr.col.supplier')}</TableHeaderCell>}
@@ -116,9 +166,7 @@ const FixedStockReconcile: React.FC<{ persona: 'buyer' | 'supplier' }> = ({ pers
             <TableHeaderCell>{t('fsr.col.cycle')}</TableHeaderCell>
             <TableHeaderCell>{t('fsr.col.committed')}</TableHeaderCell>
             <TableHeaderCell>{t('fsr.col.calledOff')}</TableHeaderCell>
-            <TableHeaderCell>{t('fsr.col.uncalled')}</TableHeaderCell>
             <TableHeaderCell>{t('fsr.col.held')}</TableHeaderCell>
-            <TableHeaderCell>{t('fsr.col.maxStock')}</TableHeaderCell>
             <TableHeaderCell>{t('fsr.col.result')}</TableHeaderCell>
             <TableHeaderCell>{t('fsr.col.status')}</TableHeaderCell>
           </TableHeader>
@@ -126,59 +174,89 @@ const FixedStockReconcile: React.FC<{ persona: 'buyer' | 'supplier' }> = ({ pers
             {shown.map((r) => (
               <TableRow key={r.key} data-testid={`fsr-row-${r.key}`}>
                 {isPti && (
-                  <TableCell className="align-top">
-                    <div className="text-sm text-text-primary">{r.supplierName}</div>
+                  <TableCell className="align-top max-w-[11rem]">
+                    <span className="block text-sm text-text-primary">{r.supplierName}</span>
                     <Data className="text-xs text-text-tertiary">{r.supplierId}</Data>
                   </TableCell>
                 )}
+                <TableCell className="align-top max-w-[10rem]">
+                  <Data className="whitespace-nowrap">{r.materialCode}</Data>
+                  <span className={note}>{r.materialLabel}</span>
+                </TableCell>
                 <TableCell className="align-top">
-                  <Data>{r.materialCode}</Data>
-                  <div className="text-xs text-text-tertiary">{r.materialLabel}</div>
+                  <Data className="whitespace-nowrap">{formatDate(r.cycleStart)}</Data>
+                  <span className="block">
+                    – <Data className="whitespace-nowrap">{formatDate(r.cycleEnd)}</Data>
+                  </span>
+                  <span className={note}>{cycleKind(r)}</span>
                 </TableCell>
-                <TableCell className="align-top whitespace-nowrap">
-                  <Data>{formatDate(r.cycleStart)}</Data> – <Data>{formatDate(r.cycleEnd)}</Data>
-                  <div className="text-xs text-text-tertiary">{t(`fsr.cycleKind.${r.stream}`, { weeks: FS_RECONCILE_CYCLE_WEEKS })}</div>
-                </TableCell>
-                <TableCell className="align-top whitespace-nowrap">
+                <TableCell className="align-top">
                   <Qty value={r.committed} uom={r.uom} testId={`fsr-committed-${r.key}`} />
-                  <div className="text-xs text-text-tertiary">
-                    {t('fsr.periods', { committed: r.periodsCommitted, awaiting: r.periodsAwaiting })}
-                  </div>
+                  <span className={note}>{t('fsr.periods', { committed: r.periodsCommitted, awaiting: r.periodsAwaiting })}</span>
                 </TableCell>
-                <TableCell className="align-top whitespace-nowrap">
+                <TableCell className="align-top">
                   <Qty value={r.calledOff} uom={r.uom} testId={`fsr-called-${r.key}`} />
-                  <div className="text-xs text-text-tertiary">{t('fsr.callOffCount', { count: r.callOffNumbers.length })}</div>
+                  <span className={note}>{t('fsr.callOffCount', { count: r.callOffNumbers.length })}</span>
+                  <span className="block text-xs text-text-secondary">
+                    {t('fsr.notCalledOff')} <Qty value={r.uncalled} uom={r.uom} testId={`fsr-uncalled-${r.key}`} />
+                  </span>
+                  {r.calledBeyond > 0 && (
+                    <span className={note} data-testid={`fsr-beyond-${r.key}`}>
+                      {t('fsr.calledBeyond')} <Qty value={r.calledBeyond} uom={r.uom} />
+                    </span>
+                  )}
+                  {r.awaitingSupplier > 0 && (
+                    <span className={note} data-testid={`fsr-awaiting-supplier-${r.key}`}>
+                      {t('fsr.awaitingSupplier', { count: r.awaitingSupplier })}
+                    </span>
+                  )}
+                  {r.awaitingPti > 0 && (
+                    <span className={note} data-testid={`fsr-awaiting-pti-${r.key}`}>
+                      {t('fsr.awaitingPti', { count: r.awaitingPti })}
+                    </span>
+                  )}
                 </TableCell>
-                <TableCell className="align-top whitespace-nowrap">
-                  <Qty value={r.uncalled} uom={r.uom} testId={`fsr-uncalled-${r.key}`} />
-                </TableCell>
-                <TableCell className="align-top whitespace-nowrap">
+                <TableCell className="align-top">
                   {r.held === null ? (
-                    <span className="text-sm text-text-tertiary" data-testid={`fsr-held-${r.key}`}>
+                    <span className="block text-sm text-text-tertiary" data-testid={`fsr-held-${r.key}`}>
                       {t('fsr.notReported')}
                     </span>
                   ) : (
                     <>
                       <Qty value={r.held} uom={r.uom} testId={`fsr-held-${r.key}`} />
                       {r.heldAt && (
-                        <div className="text-xs text-text-tertiary">
+                        <span className={note}>
                           {t('fsr.heldAt')} <Data>{formatDate(r.heldAt)}</Data>
-                        </div>
+                        </span>
                       )}
                     </>
                   )}
-                </TableCell>
-                <TableCell className="align-top">
-                  {r.maxStock === null ? (
-                    <span className="text-sm text-text-tertiary" data-testid={`fsr-max-${r.key}`}>
-                      {t('fsr.noMax')}
-                    </span>
-                  ) : (
-                    <Qty value={r.maxStock} uom={r.uom} testId={`fsr-max-${r.key}`} />
-                  )}
+                  <span className="block text-xs text-text-secondary mt-1" data-testid={`fsr-max-${r.key}`}>
+                    {r.maxStock === null ? (
+                      t('fsr.noMax')
+                    ) : (
+                      <>
+                        {t('fsr.max')} <Qty value={r.maxStock} uom={r.uom} />
+                      </>
+                    )}
+                  </span>
+                  {isPti &&
+                    (canSetMax ? (
+                      <button
+                        type="button"
+                        className="text-xs text-action-hover hover:underline"
+                        onClick={() => openEditor(r)}
+                        data-testid={`fsr-max-edit-${r.key}`}
+                        aria-label={t('fsr.max.editFor', { material: r.materialCode, supplier: r.supplierName })}
+                      >
+                        {t(r.maxStock === null ? 'fsr.max.set' : 'fsr.max.change')}
+                      </button>
+                    ) : (
+                      <HandoffNotice availability={maxAvailability} testId={`handoff-maxstock-${r.key}`} />
+                    ))}
                 </TableCell>
                 <TableCell className="align-top">{resultCell(r)}</TableCell>
-                <TableCell className="align-top whitespace-nowrap">
+                <TableCell className="align-top">
                   <StatusPill variant="neutral">
                     <span data-testid={`fsr-state-${r.key}`}>{t(r.final ? 'fsr.final' : 'fsr.provisional')}</span>
                   </StatusPill>
@@ -198,12 +276,62 @@ const FixedStockReconcile: React.FC<{ persona: 'buyer' | 'supplier' }> = ({ pers
 
       <section className="bg-bg-surface border border-border-subtle rounded-lg p-4 text-sm text-text-secondary space-y-2" data-testid="fsr-rules">
         <h2 className="text-section text-text-primary">{t('fsr.rules.title')}</h2>
-        <p>{t('fsr.rules.cycle', { weeks: FS_RECONCILE_CYCLE_WEEKS })}</p>
+        <p>{t('fsr.rules.cycle', { weeks: fsReconcileCycleWeeks() })}</p>
         <p>{t('fsr.rules.figures')}</p>
         <p>{t('fsr.rules.outcomes')}</p>
         <p>{t('fsr.rules.liability')}</p>
         <p>{t('fsr.rules.provisional')}</p>
       </section>
+
+      <SidePanel
+        open={editing !== null && canSetMax}
+        onClose={() => setEditing(null)}
+        title={editing ? t('fsr.max.panelTitle', { material: editing.materialCode }) : ''}
+        footerActions={
+          editing && canSetMax ? (
+            <>
+              {editing.maxStock !== null && (
+                <Button variant="secondary" disabled={setMax.isPending} onClick={() => void save(null)} data-testid="fsr-max-clear">
+                  {t('fsr.max.clear')}
+                </Button>
+              )}
+              <Button
+                variant="outline"
+                disabled={setMax.isPending || draftQty === null || draftInvalid}
+                onClick={() => void save(draftQty)}
+                data-testid="fsr-max-save"
+              >
+                {t('fsr.max.save')}
+              </Button>
+            </>
+          ) : undefined
+        }
+      >
+        {editing && (
+          <div className="space-y-4">
+            <p className="text-sm text-text-secondary">
+              {editing.supplierName} · <Data>{editing.materialCode}</Data> {editing.materialLabel}
+            </p>
+            <p className="text-sm text-text-secondary">{t('fsr.max.panelHint')}</p>
+            <label className="block">
+              <span className={labelClass}>{t('fsr.max.input', { uom: editing.uom })}</span>
+              <input
+                className={inputClass}
+                inputMode="numeric"
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                data-testid="fsr-max-input"
+                aria-invalid={draftInvalid}
+              />
+            </label>
+            {draftInvalid && (
+              <p className="text-sm text-danger" role="alert" data-testid="fsr-max-invalid">
+                {t('fsr.max.invalid')}
+              </p>
+            )}
+          </div>
+        )}
+      </SidePanel>
     </AppShellV2>
   );
 };
