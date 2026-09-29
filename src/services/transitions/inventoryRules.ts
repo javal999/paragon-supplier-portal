@@ -218,7 +218,8 @@ export function incomingTotals(items: readonly IncomingItem[]): IncomingTotals {
   return { inProduction, inTransit, total: inProduction + inTransit, nextDate: dates[0] ?? null };
 }
 
-/** ASN states that are on the way to PTI: submitted or in transit, not cancelled or received. */
+/** ASN states that are on the way to PTI: submitted or in transit, not cancelled or received.
+ *  MR-6 AC-04 — 'Awaiting exception' does not count until Quality approves. */
 const IN_TRANSIT_ASN_STATES: readonly ASN['status'][] = ['Submitted', 'In Transit'];
 
 /**

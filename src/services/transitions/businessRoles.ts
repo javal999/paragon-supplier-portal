@@ -207,6 +207,13 @@ const LANE_BUNDLES = Object.freeze({
       // enforcement lane unreachable with no consumer to catch it. Sequencing:
       // retire the grant first, move the atom once a caller exists.
       'enforcement:set',
+      // ── REQ-E06-04 BR-06 · MAXIMUM STOCK PER SUPPLIER × MATERIAL (owner, 2026-09-29)
+      // The most a supplier may hold for PTI is a commercial term agreed with
+      // the supplier — this lane's subject matter. NOT `planning`: the planner
+      // raises the reconcile's liability flag, and the flag is capped by this
+      // value, so the party that raises the claim does not also set its cap.
+      // No supplier lane: a supplier may not set the cap on what PTI owes it.
+      'maxstock:set',
     ]),
     // The dock. 13 of the 41 human-owned buyer verbs — the largest single lane,
     // and a dock clerk is not a category manager. `asn:flag` is shared with the
@@ -299,6 +306,19 @@ const LANE_BUNDLES = Object.freeze({
       // it sits beside the other governance acts and `admin` derives it.
       // `buyer_all` keeps it on the `setting:set` precedent, pending BL-70.
       'supplier:set-update-mode',
+      // ── Material C4 · THE MRP CONTROLLER LIST (MR-5 BR-02, ADM) ────────────
+      // Which name a supplier is told to contact for a material, and which hub
+      // users stand behind a planner code. No supplier lane (it would choose
+      // who it answers to), nor `planning` (the planners it names). Beside
+      // `threepl:maintain`; `admin` holds it by derivation. It grants no
+      // authority, so `buyer_all` keeps it on the same precedent, pending BL-70.
+      'mrpcontroller:manage',
+      // ── Material D2 · A SHELF-LIFE EXCEPTION ON AN ASN (MR-6 BR-08, AR-02) ─
+      // Quality decides whether goods with less than the minimum remaining
+      // shelf life may come in (into blocked stock). Not `planning`: a planner
+      // may not approve their own urgent receipt (MAT-D6), and no supplier lane,
+      // which would approve its own short-dated goods.
+      'asn:approve-shelf-life',
     ]),
     // The SDC / P2 planning lane. `inventorydeclaration:record` is the C4c
     // buyer RECORDING verb — a distinct authority from the supplier's

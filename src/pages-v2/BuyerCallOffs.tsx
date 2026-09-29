@@ -48,6 +48,7 @@ import {
 import type { ReleaseCadence } from '../services/delivery/types';
 import { callOffConfirmWorkingDays, callOffTolerance } from '../services/transitions/callOffTolerance';
 import { numberOf } from './callOffs/callOffDisplay';
+import { PicCell, PicFilter, PicHeader, ptiPicOf, usePicFilter } from './materials/picDisplay';
 import {
   ConfirmationPill,
   DeliveryPill,
@@ -151,6 +152,8 @@ const BuyerCallOffs: React.FC = () => {
   const today = nowIso.slice(0, 10);
   // REQ-E07-03 — the drill-through filter from the order summary.
   const drill = usePoDrillFilter();
+  // Material C4 — the PIC filter, kept in the page address (MR-5 BR-03).
+  const pic = usePicFilter();
   const drilledPo = drilledPoId(drill);
   /**
    * ⚠️ **WHEN A PO FILTER IS IN PLAY THE PAGE LISTS WHAT THE SUMMARY COUNTED,
@@ -203,6 +206,8 @@ const BuyerCallOffs: React.FC = () => {
   const escalated = views.filter((v) => v.confirmation === 'Escalated').length;
   const atRisk = views.filter((v) => v.delivery === 'atRisk').length;
   const drift = deliveryDrift(views);
+  // Filtered at render only: `panelLine` below still finds a line the filter hides.
+  const shownSections = sections.filter((s) => pic.matches(ptiPicOf(s.line.materialCode)));
 
   const selectedView: CallOffView | null =
     panel?.kind === 'callOff' ? (views.find((v) => v.callOff.id === panel.id) ?? null) : null;
@@ -362,8 +367,23 @@ const BuyerCallOffs: React.FC = () => {
         </div>
       )}
 
+      <div className="mb-4">
+        <PicFilter
+          refs={sections.map((s) => ptiPicOf(s.line.materialCode))}
+          persona="buyer"
+          filter={pic.filter}
+          setFilter={pic.setFilter}
+          myCode={pic.myCode}
+        />
+      </div>
+
       <div className="space-y-6">
-        {sections.map(({ po, line, remaining, rows }) => (
+        {shownSections.length === 0 && (
+          <p className="text-sm text-text-tertiary py-8 text-center" data-testid="calloff-pic-empty">
+            {t('pic.filter.empty')}
+          </p>
+        )}
+        {shownSections.map(({ po, line, remaining, rows }) => (
           <section
             key={`${po.id}-${line.id}`}
             data-testid={`calloff-umbrella-${po.id}-${line.id}`}
@@ -377,6 +397,10 @@ const BuyerCallOffs: React.FC = () => {
                 </div>
                 <div className="text-xs text-text-secondary mt-0.5">
                   <Data className="text-text-tertiary">{line.materialCode}</Data> · {line.description}
+                </div>
+                <div className="text-xs text-text-secondary mt-1 flex flex-wrap items-center gap-2">
+                  <PicHeader />
+                  <PicCell value={ptiPicOf(line.materialCode)} testId={`calloff-pic-${line.id}`} />
                 </div>
                 {/* CR-04 / BL-49 — a line's own basis: quantity by default, value
                     only where the line carries no quantity. */}

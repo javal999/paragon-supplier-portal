@@ -21,6 +21,7 @@ import type {
   CommandStatus,
   ASN,
   AsnLineItem,
+  AsnShelfLifeEvent,
   AsnStatus,
   Invoice,
   InvoiceLine,
@@ -83,8 +84,13 @@ import {
   INVOICE_AWAITING_MATCH,
   ASN_PO_STATES,
   INVOICEABLE_PO_STATES,
+  asnLineCheckOf,
   asnLineRefusal,
   asnSubmitRefusal,
+  etaNeedsReapproval,
+  onlyShelfLifeRefused,
+  shelfLifeFailingLines,
+  shelfLifeWaivedFor,
   deriveInvoiceVerdict,
   hasReceiptDiscrepancy,
   invoiceLineRefusal,
@@ -108,6 +114,7 @@ import {
   dayOf,
   isIsoDay,
   batchDatesProblem,
+  alertCloseRefusal,
   parseAlertKey,
   standingClosure,
   // REQ-E03-01 to REQ-E03-05 — the RFx rules. The verb and the screen read the
@@ -133,6 +140,9 @@ import {
   responseWindowRefusal,
   responseAlreadySubmittedRefusal,
   type QuoteLineInput,
+  type AsnBatchSource,
+  type AsnLineCheck,
+  type AsnLineRefusal,
   type AsnLineInput,
   type CommandTarget,
   type CascadeCommand,
@@ -155,6 +165,7 @@ import { calendarCovers, workingCalendarStore } from '../../transitions/workingC
 import { isHubSettingKey, parseStaleOverrideKey } from '../../transitions/hubSettings';
 import { hubSettingsStore, settingValue } from '../../transitions/hubSettingsStore';
 import { isActiveReasonCode, parseReasonCodeEntityId, reasonCodeStore } from '../../transitions/reasonCodes';
+import { maxStockChangeFrom, maxStockStore, parseMaxStockEntityId } from '../../transitions/maxStock';
 import {
   THREE_PL_ID,
   asnThreePlRefusal,
@@ -181,6 +192,8 @@ import {
 import { forecastVersionStore, forecastViewStore } from './stores/forecastHubStores';
 // Material A1 — the supplier overlay (its own module, plan AD-5).
 import { supplierOverlayTarget } from './targets/supplierOverlay';
+// Material C4 — the MRP controller list (its own module, plan AD-5).
+import { mrpControllerTarget } from './targets/mrpController';
 // ── REQ-E14-13 — reschedule proposals taken to SAP ─────────────────────────
 import { sapChangeMarkStore } from './stores/sapChangeMarkStore';
 import { engineDataset } from './fixtures/engineDataset';
@@ -293,6 +306,12 @@ import {
 // `RFX_QUESTION_TYPES` (`sourcing/rfxConfig`), and the create hook reaches them
 // through `rfiQuestionsRefusal` — the same predicate the template store reads.
 import {
+  commitmentCapacityRefusal,
+  horizonWeeks,
+  periodCapacityCheck,
+} from '../../transitions/capacityRules';
+import {
+  allCommitmentLines,
   currentVersion,
   isForecastVersion,
   forecastPublicationById,
@@ -463,6 +482,23 @@ const payloadAsnLines = (payload: Record<string, unknown>): AsnLineInput[] | nul
   Array.isArray(payload.lines) ? (payload.lines as AsnLineInput[]) : null;
 
 /**
+ * MR-6 BR-04 — the batch source stored on a line. A line is `declared` only
+ * when the supplier says it picked the batch AND the batch is in its latest
+ * stock record for the material; anything else is `typed`, so a payload cannot
+ * hide the "not in declared stock" marker from PTI.
+ */
+const batchSourceOf = (
+  supplierId: string | undefined,
+  materialCode: string,
+  lot: string,
+  claimed: unknown,
+): AsnBatchSource => {
+  if (claimed !== 'declared' || !supplierId) return 'typed';
+  const record = inventoryDeclarationStore.latestFor(supplierId, materialCode);
+  return record?.batches?.some((b) => b.batchNumber === lot) ? 'declared' : 'typed';
+};
+
+/**
  * Merge entered lines onto an ASN's stored lines by material. A material the
  * draft does not carry yet is added from its PO line. Stored lines the payload
  * does not mention are kept as they are.
@@ -487,16 +523,47 @@ const mergeAsnLines = (
             lotNumber: '',
             ...(poLine?.uom ? { uom: poLine.uom } : {}),
           };
+    const lot = nonBlank(e.batchNumber);
     const next: AsnLineItem = {
       ...base,
       shippedQty: typeof e.shippedQty === 'number' ? e.shippedQty : base.shippedQty,
-      lotNumber: nonBlank(e.batchNumber) ?? base.lotNumber,
+      lotNumber: lot ?? base.lotNumber,
       ...(nonBlank(e.expiryDate) ? { expiryDate: nonBlank(e.expiryDate) } : {}),
+      ...(lot ? { batchSource: batchSourceOf(po?.supplierId, e.materialCode, lot, e.batchSource) } : {}),
     };
     if (i >= 0) out[i] = next;
     else out.push(next);
   }
   return out;
+};
+
+/**
+ * MR-6 BR-09 — the shelf-life exception entry a verb appends, or null for a verb
+ * that records none. `by` is the session's actor; `at` the hub clock.
+ */
+const shelfLifeEventFor = (
+  transitionId: string | undefined,
+  current: ASN,
+  lines: readonly AsnLineItem[],
+  eta: string,
+  payload: Record<string, unknown>,
+  scope: QueryScope,
+): AsnShelfLifeEvent | null => {
+  const at = sdcClock.now();
+  const by = scope.actor ?? NO_PERSON;
+  const reason = nonBlank(payload.reason);
+  switch (transitionId) {
+    case 't_asn_request_exception':
+      return { kind: 'requested', at, by, reason: reason ?? '', eta, lines: shelfLifeFailingLines(lines, eta) };
+    case 't_asn_change_eta':
+      return { kind: 'etaChanged', at, by, previousEta: current.eta, eta, lines: shelfLifeFailingLines(lines, eta) };
+    case 't_asn_approve_exception':
+      return { kind: 'approved', at, by, ...(reason ? { reason } : {}) };
+    case 't_asn_reject_exception':
+      return { kind: 'rejected', at, by, reason: reason ?? '' };
+    default:
+      return null;
+  }
 };
 
 /** BL-51 — the 3PL an ASN update leaves in place: named, cleared, or kept. */
@@ -507,13 +574,24 @@ const advanceShipNoticeTarget: CommandTarget = {
   readState: (id) => asnStore.get(id)?.status ?? null,
   readScopeOwner: (id) => asnStore.get(id)?.supplierId ?? null,
   readEntity: (id) => asnStore.get(id) ?? null,
-  applyTransition: (id, toState, payload) => {
+  applyTransition: (id, toState, payload, scope, transitionId) => {
     const current = asnStore.get(id);
     const shipDate = nonBlank(payload.shipDate) ?? current?.shipDate;
     if (toState === 'Submitted' && current) {
       recordShipmentStarted(current.asnNumber, current.poReference, shipDate);
     }
     const entered = payloadAsnLines(payload);
+    // MR-6 BR-09 — appended, never edited (MAT-R3).
+    const event = current
+      ? shelfLifeEventFor(
+          transitionId,
+          current,
+          entered ? mergeAsnLines(current.lineItems, entered, findPoByNumber(current.poReference)) : current.lineItems,
+          typeof payload.eta === 'string' && payload.eta ? payload.eta : current.eta,
+          payload,
+          scope,
+        )
+      : null;
     // BL-51 — a submission that names the 3PL replaces it; one that sends an
     // empty value (the carrier typed by name instead) clears it; one that says
     // nothing keeps the draft's.
@@ -532,6 +610,7 @@ const advanceShipNoticeTarget: CommandTarget = {
       ...(nonBlank(payload.packingListFile) ? { packingListFile: nonBlank(payload.packingListFile) } : {}),
       ...(nonBlank(payload.overShipReason) ? { overShipReason: nonBlank(payload.overShipReason) } : {}),
       lineItems: entered ? mergeAsnLines(a.lineItems, entered, findPoByNumber(a.poReference)) : a.lineItems,
+      ...(event ? { shelfLifeException: [...(a.shelfLifeException ?? []), event] } : {}),
     }));
   },
   // Creation scope: a supplier may draft an ASN only against its OWN PO.
@@ -634,12 +713,17 @@ bindPolicyHook(POLICY_HOOKS.ASN_LINES_WITHIN_OPEN, ({ entityId, payload }) => {
   if (!asn && entered && entered.length === 0) {
     return { ok: false, reason: 'an ASN needs at least one line' };
   }
-  const lines: AsnLineInput[] = asn
-    ? mergeAsnLines(asn.lineItems, entered ?? [], po).map((l) => ({
-        materialCode: l.materialCode,
-        shippedQty: l.shippedQty,
-      }))
-    : entered!;
+  // AR-11 — the full line (batch, expiry) with the ETA the ASN will carry.
+  const eta = nonBlank(payload.eta) ?? asn?.eta;
+  const lines: AsnLineCheck[] = asn
+    ? mergeAsnLines(asn.lineItems, entered ?? [], po).map((l) => asnLineCheckOf(l, eta))
+    : entered!.map((e) => ({
+        materialCode: e?.materialCode,
+        shippedQty: e?.shippedQty,
+        ...(e?.batchNumber !== undefined ? { lotNumber: e.batchNumber } : {}),
+        ...(e?.expiryDate !== undefined ? { expiryDate: e.expiryDate } : {}),
+        ...(eta !== undefined ? { eta } : {}),
+      }));
   const seen = new Set<string>();
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
@@ -665,23 +749,97 @@ bindPolicyHook(POLICY_HOOKS.ASN_LINES_WITHIN_OPEN, ({ entityId, payload }) => {
   return { ok: true };
 });
 
-// REQ-E07-04 BR-04 — what a submitted ASN must carry, read on the draft merged
-// with what the submission adds.
-bindPolicyHook(POLICY_HOOKS.ASN_SUBMIT_COMPLETE, ({ entityId, payload }) => {
-  const asn = asnStore.get(entityId);
-  if (!asn) return { ok: false, reason: 'entity missing' };
+/**
+ * AR-11 / MR-6 — every line of an ASN, merged with what a submission adds,
+ * through the one line rule at submission (batch and expiry required). The
+ * shelf-life refusal is waived only on the approver's verb, for the lines the
+ * pending request named (`shelfLifeWaivedFor`).
+ */
+const asnSubmissionRead = (asn: ASN, payload: Record<string, unknown>, waive: boolean) => {
   const lines = mergeAsnLines(asn.lineItems, payloadAsnLines(payload) ?? [], findPoByNumber(asn.poReference));
-  const refusal = asnSubmitRefusal({
+  const eta = nonBlank(payload.eta) ?? asn.eta;
+  const incomplete = asnSubmitRefusal({
     lineCount: lines.length,
     shipDate: nonBlank(payload.shipDate) ?? asn.shipDate,
-    eta: nonBlank(payload.eta) ?? asn.eta,
+    eta,
   });
-  if (refusal) return { ok: false, reason: `INCOMPLETE_ASN: ${refusal}` };
-  const noBatch = lines.findIndex((l) => !nonBlank(l.lotNumber));
-  if (noBatch >= 0) return { ok: false, reason: `INCOMPLETE_ASN: batch number missing on line ${noBatch + 1}` };
-  const badQty = lines.findIndex((l) => !(Number.isFinite(l.shippedQty) && l.shippedQty > 0));
-  if (badQty >= 0) return { ok: false, reason: `INCOMPLETE_ASN: shipped quantity missing on line ${badQty + 1}` };
+  const po = findPoByNumber(asn.poReference) ?? { poNumber: asn.poReference, lineItems: [] };
+  const refusals: (AsnLineRefusal | null)[] = lines.map((l) => {
+    const check = asnLineCheckOf(l, eta);
+    return asnLineRefusal(check, po, asnStore.all(), {
+      excludeAsn: asn.asnNumber,
+      overShipReason: payload.overShipReason ?? asn.overShipReason,
+      requireBatch: true,
+      waiveShelfLife: waive && shelfLifeWaivedFor(asn, check),
+    });
+  });
+  return { lines, eta, incomplete, refusals };
+};
+
+// REQ-E07-04 BR-04 — what a submitted ASN must carry, read on the draft merged
+// with what the submission adds. MR-6 BR-05 to BR-08 — and each shelf-life
+// line meets its minimum at the ETA, unless Quality is approving an exception.
+bindPolicyHook(POLICY_HOOKS.ASN_SUBMIT_COMPLETE, ({ entityId, currentState, payload }) => {
+  const asn = asnStore.get(entityId);
+  if (!asn) return { ok: false, reason: 'entity missing' };
+  const read = asnSubmissionRead(asn, payload, currentState === 'Awaiting exception');
+  if (read.incomplete) return { ok: false, reason: `INCOMPLETE_ASN: ${read.incomplete}` };
+  // AR-11 — what the line itself lacks is reported here; the PO checks
+  // (material on the PO, open quantity) are ASN_LINES_WITHIN_OPEN's, which runs
+  // next on the same rule.
+  for (let i = 0; i < read.lines.length; i++) {
+    const lineRefusal = read.refusals[i];
+    if (lineRefusal === 'batch') {
+      return { ok: false, reason: `INCOMPLETE_ASN: batch number missing on line ${i + 1}` };
+    }
+    if (lineRefusal === 'quantity') {
+      return { ok: false, reason: `INCOMPLETE_ASN: shipped quantity missing on line ${i + 1}` };
+    }
+    if (lineRefusal === 'expiryRequired') {
+      return { ok: false, reason: `INCOMPLETE_ASN: expiry date missing on line ${i + 1}` };
+    }
+    if (lineRefusal === 'shelfLife') {
+      return {
+        ok: false,
+        reason: `SHELF_LIFE: line ${i + 1} (${read.lines[i].materialCode}) expires before the minimum remaining shelf life at ETA ${read.eta} — request a shelf-life exception`,
+      };
+    }
+  }
   return { ok: true };
+});
+
+// MR-6 BR-08 — an exception may be asked for only when shelf life is the one
+// thing wrong with the submission, and the supplier says why.
+bindPolicyHook(POLICY_HOOKS.ASN_SHELF_LIFE_EXCEPTION_ONLY, ({ entityId, payload }) => {
+  const asn = asnStore.get(entityId);
+  if (!asn) return { ok: false, reason: 'entity missing' };
+  if (!nonBlank(payload.reason)) return { ok: false, reason: 'REASON_REQUIRED: say why the goods should come in' };
+  const read = asnSubmissionRead(asn, payload, false);
+  if (read.incomplete) return { ok: false, reason: `INCOMPLETE_ASN: ${read.incomplete}` };
+  if (onlyShelfLifeRefused(read.refusals)) return { ok: true };
+  const other = read.refusals.findIndex((r) => r !== null && r !== 'shelfLife');
+  return other >= 0
+    ? { ok: false, reason: `SHELF_LIFE_NOT_ONLY_REFUSAL: line ${other + 1}: ${read.refusals[other]}` }
+    : { ok: false, reason: 'SHELF_LIFE_MET: every line meets its minimum remaining shelf life — submit instead' };
+});
+
+// MR-6 BR-08 — Quality's rejection says why; the supplier reads it.
+bindPolicyHook(POLICY_HOOKS.ASN_SHELF_LIFE_REASON_GIVEN, ({ payload }) =>
+  nonBlank(payload.reason) ? { ok: true } : { ok: false, reason: 'REASON_REQUIRED: say why the exception is refused' },
+);
+
+// MR-6 edge case 1 — a later ETA reopens an approved exception when a line
+// still fails at it. An ETA change that needs no new decision is refused by
+// name: this verb exists only for the reopening.
+bindPolicyHook(POLICY_HOOKS.ASN_ETA_NEEDS_REAPPROVAL, ({ entityId, payload }) => {
+  const asn = asnStore.get(entityId);
+  if (!asn) return { ok: false, reason: 'entity missing' };
+  const eta = nonBlank(payload.eta);
+  if (!eta || !isCalendarDate(eta)) return { ok: false, reason: 'INCOMPLETE_ASN: eta' };
+  if (asn.shipDate && eta < asn.shipDate) return { ok: false, reason: 'INCOMPLETE_ASN: etaBeforeShip' };
+  return etaNeedsReapproval(asn, eta)
+    ? { ok: true }
+    : { ok: false, reason: `ETA_NEEDS_NO_REAPPROVAL: ${eta} is covered by the approved exception, or none was approved` };
 });
 
 // REQ-E07-04 — an ASN can be withdrawn only while nothing was received on it.
@@ -2275,6 +2433,52 @@ bindPolicyHook(POLICY_HOOKS.RR_SUBMIT_COMMITMENT_DETAIL, ({ payload }) => {
   return { ok: true };
 });
 
+// BL-133 (ENG-D19) — capacity before the LTP, on the SUBMISSION (the
+// promotion). The response names its line; the line names its period and
+// material group; the group's latest capacity submission says whether every
+// horizon week the period touches is confirmed, and whether the group's LTP is
+// above BE in one of them. SDC-0 publications predate the rule (the BR-08 date
+// rule's precedent) and keep their shape; a line of a version no longer
+// current is found by supplier × material × period on the current version.
+bindPolicyHook(POLICY_HOOKS.RR_PROMOTE_CAPACITY_CONFIRMED, ({ entityId, target }) => {
+  const r = target.readEntity(entityId) as
+    | { publicationId?: string; supplierId?: string; materialCode?: string; periodBucket?: string; rootCause?: { level1?: unknown; note?: unknown } }
+    | null
+    | undefined;
+  if (!r || !isForecastVersion(String(r.publicationId))) return { ok: true };
+  const lines = allCommitmentLines(null);
+  const line = lines.find(
+    (l) => l.supplierId === r.supplierId && l.materialCode === r.materialCode && l.periodBucket === r.periodBucket,
+  );
+  if (!line) return { ok: true };
+  const plan =
+    allCapacityPlans().find((p) => p.supplierId === line.supplierId && p.materialGroup === line.materialGroup) ?? null;
+  const check = periodCapacityCheck(
+    plan,
+    lines,
+    line.supplierId,
+    line.materialGroup,
+    line.periodStart,
+    line.periodEnd,
+    horizonWeeks(sdcClock.now()),
+  );
+  const refusal = commitmentCapacityRefusal(check, r.rootCause);
+  if (!refusal) return { ok: true };
+  if (refusal.refusal === 'capacityNotConfirmed') {
+    return {
+      ok: false,
+      reason: `CAPACITY_NOT_CONFIRMED: confirm the capacity for ${line.materialGroup} in the week of ${refusal.week} before submitting its LTP`,
+    };
+  }
+  if (refusal.refusal === 'aboveBeNoteRequired') {
+    return { ok: false, reason: 'OTHER_REASON_NEEDS_NOTE: the reason "other" needs a note' };
+  }
+  return {
+    ok: false,
+    reason: `ABOVE_BE_NEEDS_REASON: the LTP for ${line.materialGroup} in the week of ${refusal.week} is above capacity plus additional capacity; choose a reason`,
+  };
+});
+
 // RR dispute / resolve — the authored text must be SUBSTANCE, not presence.
 //
 // ⚠️ WHICH FIELD IS ASKED FOR IS DERIVED FROM THE MACHINE, NEVER FROM THE
@@ -2715,16 +2919,30 @@ const inventoryAlertTarget: CommandTarget = {
   readEntity: (key) => allAlerts().find((a) => a.key === key) ?? null,
   applyTransition: (key, _toState, payload, scope) => {
     inventoryAlertLedger.append([
-      { key, kind: 'closed', at: sdcClock.now(), note: nonBlank(payload.actionNote) ?? '', actor: scope.actor ?? NO_PERSON },
+      {
+        key,
+        kind: 'closed',
+        at: sdcClock.now(),
+        closeReason: String(payload.closeReason),
+        ...(nonBlank(payload.actionNote) ? { note: nonBlank(payload.actionNote) } : {}),
+        actor: scope.actor ?? NO_PERSON,
+      },
     ]);
   },
 };
 
-bindPolicyHook(POLICY_HOOKS.ALERT_ACTION_NOTE_AUTHORED, ({ payload }) =>
-  nonBlank(payload.actionNote)
-    ? { ok: true }
-    : { ok: false, reason: 'closing an alert needs an action note' },
-);
+// MR-9 BR-04 — an active close reason; "Other" needs a note (AR-14).
+bindPolicyHook(POLICY_HOOKS.ALERT_CLOSE_REASON_GIVEN, ({ payload }) => {
+  const refusal = alertCloseRefusal(payload.closeReason, payload.actionNote);
+  if (refusal === null) return { ok: true };
+  return {
+    ok: false,
+    reason:
+      refusal === 'NOTE_REQUIRED'
+        ? 'NOTE_REQUIRED: the reason "other" needs a note'
+        : `REASON_UNKNOWN: ${JSON.stringify(payload.closeReason)} is not an active alert close reason`,
+  };
+});
 
 // — Forecast collaboration (REQ-E06-01, REQ-E06-03) ————————————————————————
 //   A version is a snapshot of one stream and is never edited; publish and
@@ -4476,6 +4694,30 @@ const reasonCodeTarget: CommandTarget = {
   },
 };
 
+// ── REQ-E06-04 BR-06 · PROCUREMENT'S MAXIMUM STOCK PER SUPPLIER × MATERIAL ────
+// `entityId` IS `<supplierId>|<materialCode>`. `readState` answers `Maintained`
+// only for a pair the hub actually assigns — a pair nobody supplies is
+// NOT_FOUND rather than a silently created value. Owner-less: the value is a
+// term PTI keeps, and every supplier is denied at SCOPE (§86). APPENDS only;
+// `previous` and `setAt` are stamped here, never read from the payload.
+const maxStockPairExists = (id: string): boolean => {
+  const pair = parseMaxStockEntityId(id);
+  return pair !== null && isAssignedMaterial(pair.supplierId, pair.materialCode);
+};
+const maxStockTarget: CommandTarget = {
+  readState: (id) => (maxStockPairExists(id) ? 'Maintained' : null),
+  readScopeOwner: () => null,
+  readEntity: (id) => {
+    const pair = maxStockPairExists(id) ? parseMaxStockEntityId(id) : null;
+    return pair ? maxStockStore.get(pair.supplierId, pair.materialCode) ?? null : null;
+  },
+  applyTransition: (id, _toState, payload) => {
+    const change = maxStockChangeFrom(id, payload, sdcClock.now());
+    // The policy hook has already refused every payload this could reject.
+    if (change) maxStockStore.append(change);
+  },
+};
+
 const hubSettingTarget: CommandTarget = {
   readState: (id) => (settingKeyExists(id) ? 'Maintained' : null),
   readScopeOwner: () => null,
@@ -4908,12 +5150,17 @@ const TARGETS: Record<string, CommandTarget> = {
   threePl: threePlTarget,
   // Material A1 — a supplier's stock update mode (MR-1 BR-02, AC-06).
   supplierOverlay: supplierOverlayTarget,
+  // Material C4 — who each SAP MRP controller code is (MR-5 BR-02).
+  mrpController: mrpControllerTarget,
   // BL-32 — the rule values. Wired so every change to a tolerance, deadline,
   // threshold or stale period — and every reset — lands in the DR-10 trail.
   hubSetting: hubSettingTarget,
   // BL-32 — the reason lists. Wired so every add, rename and retirement lands in
   // the DR-10 trail.
   reasonCode: reasonCodeTarget,
+  // REQ-E06-04 BR-06 — Procurement's maximum stock per supplier × material.
+  // Wired so every set, change and clear lands in the DR-10 trail.
+  maxStock: maxStockTarget,
   // §82 — the document lane's first write path: the supplier's declaration and
   // compliance's review of it.
   supplierDocument: supplierDocumentTarget,

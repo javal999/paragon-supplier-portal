@@ -64,6 +64,7 @@
 // when someone does it.
 // ────────────────────────────────────────────────────────────────────────────
 
+import { maxStockStore } from './maxStock';
 import { describe, it, expect, beforeEach } from 'vitest';
 
 import {
@@ -116,6 +117,7 @@ import { customRoleStore } from './customRoles';
 import { workingCalendarStore } from './workingCalendarStore';
 import { threePlStore } from './threePlStore';
 import { supplierOverlayStore } from '../data/mock/stores/supplierOverlayStore';
+import { mrpControllerStore } from './mrpControllerStore';
 import { hubSettingsStore, settingValue } from './hubSettingsStore';
 import { reasonCodeStore } from './reasonCodes';
 
@@ -227,10 +229,14 @@ async function realIds(): Promise<Record<string, string | null>> {
     // Material A1 — `entityId` IS the supplier id; every master supplier exists,
     // and the overlay names that supplier, so it lands in `ownerful`.
     supplierOverlay: 'sup-001',
+    // Material C4 — `entityId` IS the SAP code; a sample-list row exists from the start.
+    mrpController: 'P12',
     // BL-32 — `entityId` IS the setting key; every registry key exists from the start.
     hubSetting: 'callOff.overPct',
     // BL-32 — `entityId` IS `<list>:<code>`; every starter code exists from the start.
     reasonCode: 'poAdjust:capacity',
+    // REQ-E06-04 — `entityId` IS `<supplier>|<material>`; any assigned pair exists.
+    maxStock: 'sup-007|PK-PETB-8801',
     supplierDocument: supplierDocumentStore.all()[0]?.id ?? null,
     supplierApplication: raised.entityId ?? null,
     receiptDiscrepancy: receiptDiscrepancyStore.all()[0]?.receiptId ?? null,
@@ -332,6 +338,7 @@ async function walk(entity: string, t: TransitionDef): Promise<Walk | null> {
   if (entity === 'threePl') return at('tpl-sample-express', 'Maintained');
   if (entity === 'hubSetting') return at('callOff.overPct', 'Maintained');
   if (entity === 'reasonCode') return at('poAdjust:capacity', 'Maintained');
+  if (entity === 'maxStock') return at('sup-007|PK-PETB-8801', 'Maintained');
   if (entity === 'supplierApplication') {
     const raised = await svc.dispatch(buyerSeat('procurement'), {
       transitionId: 't_application_submit', entity,
@@ -373,8 +380,10 @@ const resetAll = () => {
   callOffStore.reset();
   customRoleStore.reset();
   workingCalendarStore.reset();
+  maxStockStore.reset();
   threePlStore.reset();
   supplierOverlayStore.reset();
+  mrpControllerStore.reset();
   hubSettingsStore.reset();
   reasonCodeStore.reset();
   // NR-2 — the id supply closes rfp-002 and opens a firm-offer round.
@@ -544,6 +553,10 @@ describe('THE LEGITIMATE PATHS — the half a "refuse everyone" fix would break'
         'enforcement',
         // BL-32 — the rule values are PTI's; no supplier is their owner.
         'hubSetting',
+        // REQ-E06-04 — the maximum stock is a term PTI keeps; no supplier is its owner.
+        'maxStock',
+        // Material C4 — the MRP controller list is PTI's; no supplier is its owner.
+        'mrpController',
         // REQ-E03-05 — a negotiation round is PTI's window; a supplier answers
         // it through its own quotation, never by addressing the round.
         'negotiationRound',
@@ -633,6 +646,20 @@ describe('THE LEGITIMATE PATHS — the half a "refuse everyone" fix would break'
     });
     expect(rsnRes.status, rsnRes.reason).toBe('done');
     expect(reasonCodeStore.get('poAdjust', 'tooling')?.active).toBe(true);
+    // REQ-E06-04 — Procurement can still set a maximum stock.
+    const maxRes = await svc.dispatch(buyerSeat('procurement'), {
+      transitionId: 't_maxstock_set', entity: 'maxStock', entityId: 'sup-007|PK-PETB-8801',
+      payload: { quantity: 90_000, setBy: NO_PERSON },
+    });
+    expect(maxRes.status, maxRes.reason).toBe('done');
+    expect(maxStockStore.get('sup-007', 'PK-PETB-8801')?.quantity).toBe(90_000);
+    // Material C4 — the Hub administrator's lane (compliance) can still map a code.
+    const mrpRes = await svc.dispatch(buyerSeat('compliance'), {
+      transitionId: 't_mrpcontroller_set', entity: 'mrpController', entityId: 'P13',
+      payload: { name: 'Fragrance planning desk (sample)', userLabels: ['Material Planner, fragrance (sample)'] },
+    });
+    expect(mrpRes.status, mrpRes.reason).toBe('done');
+    expect(mrpControllerStore.get('P13')?.name).toBe('Fragrance planning desk (sample)');
 
     const raised = await svc.dispatch(buyerSeat('procurement'), {
       transitionId: 't_application_submit', entity: 'supplierApplication',

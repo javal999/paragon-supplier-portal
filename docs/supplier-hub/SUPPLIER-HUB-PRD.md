@@ -169,7 +169,7 @@ Acceptance criteria: TBD by the Foundation team. The hub **replaces PROCIO** for
   - Capacity is entered per material group per week.
   - A week below demand requires a reason.
   - The planner sees gap weeks highlighted, and can filter by supplier, material group, material and gaps only.
-  - Extra capacity the supplier could give on request is optional and labelled as such.
+  - Additional capacity the supplier could give on request is optional and labelled as such.
 - US-24 [P]:
   - Each alert rule fires on test data.
   - Every alert has a High, Medium, or Low class, judged against the supplier lead time (CR-24); day bands only where the lead time is missing, which raises its own alert.

@@ -63,6 +63,15 @@ export const POLICY_HOOKS = {
   /** ASN submit (BR-04): ship date, expected arrival (not before the ship
    *  date) and a batch number on every line. */
   ASN_SUBMIT_COMPLETE: 'asn_submit_complete',
+  /** MR-6 BR-08 — a shelf-life exception request: the ASN would pass every
+   *  submission check but the shelf-life rule, at least one line fails that
+   *  rule, and the reason is substance (`asnLineRefusal`, `onlyShelfLifeRefused`). */
+  ASN_SHELF_LIFE_EXCEPTION_ONLY: 'asn_shelf_life_exception_only',
+  /** MR-6 BR-08 — a shelf-life exception rejected with a reason of substance. */
+  ASN_SHELF_LIFE_REASON_GIVEN: 'asn_shelf_life_reason_given',
+  /** MR-6 edge case 1 — an ETA change on a submitted ASN is legal only when its
+   *  approved exception no longer covers the new ETA (`etaNeedsReapproval`). */
+  ASN_ETA_NEEDS_REAPPROVAL: 'asn_eta_needs_reapproval',
   /** ASN cancel: nothing has been received against the ASN yet. */
   ASN_CANCEL_NOT_RECEIVED: 'asn_cancel_not_received',
   /** ASN create / submit (BL-51, BR-05): a 3PL the ASN names is on the 3PL list
@@ -176,8 +185,9 @@ export const POLICY_HOOKS = {
   /** Capacity submission (REQ-E08-04): weeks inside the 13-week horizon, valid
    *  quantities, and a starter reason for every week below demand. */
   CAPACITY_SUBMISSION_VALID: 'capacity_submission_valid',
-  /** Closing an alert (REQ-E08-05): the action note is substance. */
-  ALERT_ACTION_NOTE_AUTHORED: 'alert_action_note_authored',
+  /** Closing an alert (REQ-E08-05, MR-9 BR-04): an active `alertClose` reason,
+   *  and a note when it is "Other". Refusals REASON_UNKNOWN, NOTE_REQUIRED. */
+  ALERT_CLOSE_REASON_GIVEN: 'alert_close_reason_given',
   /** Invoice match: the match sub-flow must have rolled up to a clean Matched
    *  before the header can advance Submitted → Matched (census G2). */
   INVOICE_ROLLUP_MATCHED: 'invoice_rollup_matched',
@@ -273,6 +283,16 @@ export const POLICY_HOOKS = {
    * date, and an upside quantity when given is a number of zero or more.
    */
   RR_SUBMIT_COMMITMENT_DETAIL: 'rr_submit_commitment_detail',
+  /**
+   * BL-133 (ENG-D19, REQ-E06-02 BR-11 / BR-12) — the pokayoke. A commitment to
+   * a forecast version is SUBMITTED only when the supplier has confirmed
+   * capacity for every horizon week its period touches (refused by name
+   * CAPACITY_NOT_CONFIRMED), and a period whose group LTP is above BE
+   * (capacity + additional capacity) in one of those weeks carries a starter
+   * reason (ABOVE_BE_NEEDS_REASON; `other` needs a note). Runs on the
+   * promotion, which is the submission — a draft is not gated.
+   */
+  RR_PROMOTE_CAPACITY_CONFIRMED: 'rr_promote_capacity_confirmed',
   /** REQ-E06-01 BR-02 — publish names a forecast stream (packaging or raw material). */
   FORECAST_PUBLISH_VALID: 'forecast_publish_valid',
   /**
@@ -368,6 +388,14 @@ export const POLICY_HOOKS = {
    */
   SUPPLIER_UPDATE_MODE_VALID: 'supplier_update_mode_valid',
   /**
+   * Material C4 (MR-5 BR-02) — one MRP controller on the administrator's list:
+   * the code is SAP-shaped (MRP_CONTROLLER_CODE_INVALID), it has a name
+   * (MRP_CONTROLLER_NAME_REQUIRED) and at least one hub user label
+   * (MRP_CONTROLLER_USERS_REQUIRED). The rule is `mrpControllerRefusal`, the
+   * one the admin page's pre-check calls.
+   */
+  MRP_CONTROLLER_GOVERNED: 'mrp_controller_governed',
+  /**
    * BL-50 — a ruling on one day of the hub's working calendar: the date is one
    * the SAP load covers, the kind is working or non-working, the reason is
    * SUBSTANCE rather than presence (`requiredFields` admits a space bar), and
@@ -391,6 +419,12 @@ export const POLICY_HOOKS = {
    * attribution. The same predicate re-checks a stored change on read.
    */
   REASON_CODE_GOVERNED: 'reason_code_governed',
+  /**
+   * REQ-E06-04 BR-06 — a maximum stock for one supplier × material: the entity
+   * is `<supplierId>|<materialCode>`, the quantity a whole number above zero or
+   * null to clear it, and a well-formed attribution.
+   */
+  MAX_STOCK_GOVERNED: 'max_stock_governed',
 
   /**
    * PR reject (§67): the rejection reason must be SUBSTANCE, not presence.

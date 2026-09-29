@@ -64,6 +64,7 @@ import InterfaceMonitor from '../pages-v2/InterfaceMonitor';
 import AdminWorkingCalendar from '../pages-v2/admin/AdminWorkingCalendar';
 import AdminThreePls from '../pages-v2/admin/AdminThreePls';
 import AdminSuppliers from '../pages-v2/admin/AdminSuppliers';
+import AdminMrpControllers from '../pages-v2/admin/AdminMrpControllers';
 import { AdminAlertThresholds, AdminTolerances } from '../pages-v2/admin/AdminRuleValues';
 import AdminReasonCodes from '../pages-v2/admin/AdminReasonCodes';
 import RolesCatalogue from '../pages-v2/RolesCatalogue';
@@ -82,12 +83,14 @@ import SupplierForecastCommitments from '../pages-v2/SupplierForecastCommitments
 import BuyerForecasts from '../pages-v2/BuyerForecasts';
 import BuyerCommitments from '../pages-v2/BuyerCommitments';
 import BuyerReliability from '../pages-v2/BuyerReliability';
+import { BuyerFixedStockReconcile, SupplierFixedStockReconcile } from '../pages-v2/FixedStockReconcile';
 import BuyerMaterialRequirement from '../pages-v2/BuyerMaterialRequirement';
 import BuyerSafetyStock from '../pages-v2/BuyerSafetyStock';
 import BuyerOrderPlan from '../pages-v2/BuyerOrderPlan';
 import BuyerReschedule from '../pages-v2/BuyerReschedule';
 import BuyerStabilise from '../pages-v2/BuyerStabilise';
 import BuyerDataHealth from '../pages-v2/BuyerDataHealth';
+import BuyerDemandForecast from '../pages-v2/BuyerDemandForecast';
 import SupplierShipments from '../pages-v2/SupplierShipments';
 import SupplierGoodsReceipts from '../pages-v2/SupplierGoodsReceipts';
 import SupplierInvoicesV2 from '../pages-v2/SupplierInvoices';
@@ -137,6 +140,7 @@ const ROUTES: RouteCase[] = [
   { name: 'buyer/plan-grid', pattern: '/buyer/plan-grid', at: '/buyer/plan-grid', element: <PlanGrid />, identity: BUYER },
   { name: 'buyer/forecasts', pattern: '/buyer/forecasts', at: '/buyer/forecasts', element: <BuyerForecasts />, identity: BUYER },
   { name: 'buyer/collaboration', pattern: '/buyer/collaboration', at: '/buyer/collaboration', element: <BuyerCommitments />, identity: BUYER },
+  { name: 'buyer/fs-reconcile', pattern: '/buyer/fs-reconcile', at: '/buyer/fs-reconcile', element: <BuyerFixedStockReconcile />, identity: BUYER },
   { name: 'buyer/reliability', pattern: '/buyer/reliability', at: '/buyer/reliability', element: <BuyerReliability />, identity: BUYER },
   { name: 'buyer/material-requirement', pattern: '/buyer/material-requirement', at: '/buyer/material-requirement', element: <BuyerMaterialRequirement />, identity: BUYER },
   { name: 'buyer/safety-stock', pattern: '/buyer/safety-stock', at: '/buyer/safety-stock', element: <BuyerSafetyStock />, identity: BUYER },
@@ -144,6 +148,7 @@ const ROUTES: RouteCase[] = [
   { name: 'buyer/reschedule', pattern: '/buyer/reschedule', at: '/buyer/reschedule', element: <BuyerReschedule />, identity: BUYER },
   { name: 'buyer/stabilise', pattern: '/buyer/stabilise', at: '/buyer/stabilise', element: <BuyerStabilise />, identity: BUYER },
   { name: 'buyer/data-health', pattern: '/buyer/data-health', at: '/buyer/data-health', element: <BuyerDataHealth />, identity: BUYER },
+  { name: 'buyer/demand-forecast', pattern: '/buyer/demand-forecast', at: '/buyer/demand-forecast', element: <BuyerDemandForecast />, identity: BUYER },
   { name: 'buyer/collaboration/responses', pattern: '/buyer/collaboration/responses', at: '/buyer/collaboration/responses', element: <BuyerCollaboration />, identity: BUYER },
   { name: 'buyer/contracts', pattern: '/buyer/contracts', at: '/buyer/contracts', element: <BuyerContracts />, identity: BUYER },
   { name: 'buyer/contracts/:id', pattern: '/buyer/contracts/:id', at: '/buyer/contracts/ctr-013', element: <BuyerContractDetail />, identity: BUYER },
@@ -170,6 +175,7 @@ const ROUTES: RouteCase[] = [
   { name: 'buyer/admin/working-calendar', pattern: '/buyer/admin/working-calendar', at: '/buyer/admin/working-calendar', element: <AdminWorkingCalendar />, identity: BUYER },
   { name: 'buyer/admin/3pl-tracking', pattern: '/buyer/admin/3pl-tracking', at: '/buyer/admin/3pl-tracking', element: <AdminThreePls />, identity: BUYER },
   { name: 'buyer/admin/suppliers', pattern: '/buyer/admin/suppliers', at: '/buyer/admin/suppliers', element: <AdminSuppliers />, identity: BUYER },
+  { name: 'buyer/admin/mrp-controllers', pattern: '/buyer/admin/mrp-controllers', at: '/buyer/admin/mrp-controllers', element: <AdminMrpControllers />, identity: BUYER },
   { name: 'buyer/admin/tolerances', pattern: '/buyer/admin/tolerances', at: '/buyer/admin/tolerances', element: <AdminTolerances />, identity: BUYER },
   { name: 'buyer/admin/alert-thresholds', pattern: '/buyer/admin/alert-thresholds', at: '/buyer/admin/alert-thresholds', element: <AdminAlertThresholds />, identity: BUYER },
   { name: 'buyer/admin/reason-codes', pattern: '/buyer/admin/reason-codes', at: '/buyer/admin/reason-codes', element: <AdminReasonCodes />, identity: BUYER },
@@ -194,6 +200,7 @@ const ROUTES: RouteCase[] = [
   { name: 'supplier/rfp', pattern: '/supplier/rfp', at: '/supplier/rfp', element: <SupplierRfp />, identity: SUPPLIER },
   { name: 'supplier/rfq/rounds', pattern: '/supplier/rfq/rounds', at: '/supplier/rfq/rounds', element: <SupplierNegotiations />, identity: SUPPLIER },
   { name: 'supplier/forecasts', pattern: '/supplier/forecasts', at: '/supplier/forecasts', element: <SupplierForecastCommitments />, identity: SUPPLIER },
+  { name: 'supplier/fs-reconcile', pattern: '/supplier/fs-reconcile', at: '/supplier/fs-reconcile', element: <SupplierFixedStockReconcile />, identity: SUPPLIER },
   { name: 'supplier/forecasts/responses', pattern: '/supplier/forecasts/responses', at: '/supplier/forecasts/responses', element: <SupplierForecasts />, identity: SUPPLIER },
   { name: 'supplier/shipments', pattern: '/supplier/shipments', at: '/supplier/shipments', element: <SupplierShipments />, identity: SUPPLIER },
   { name: 'supplier/goods-receipts', pattern: '/supplier/goods-receipts', at: '/supplier/goods-receipts', element: <SupplierGoodsReceipts />, identity: SUPPLIER },

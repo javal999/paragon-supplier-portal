@@ -140,6 +140,7 @@ describe('BL32-RSN-READ · every reader reads the list in force', () => {
       'src/services/data/mock/MockCommandService.ts',
       'src/services/transitions/capacityRules.ts',
       'src/services/transitions/forecastRules.ts',
+      'src/services/transitions/inventoryAlertRules.ts',
       'src/services/transitions/policies.ts',
       'src/services/transitions/reasonCodes.ts',
     ]);
@@ -147,6 +148,7 @@ describe('BL32-RSN-READ · every reader reads the list in force', () => {
 
   it('BL32-RSN-READ-02 · the pickers offer the active list; the records read through one label helper', () => {
     expect(callersOf(/\buseActiveReasonCodes\s*\(/)).toEqual([
+      'src/pages-v2/BuyerAlerts.tsx',
       'src/pages-v2/SupplierCapacity.tsx',
       'src/pages-v2/SupplierForecastCommitments.tsx',
       'src/pages-v2/SupplierForecasts.tsx',
@@ -154,6 +156,7 @@ describe('BL32-RSN-READ · every reader reads the list in force', () => {
       'src/pages-v2/admin/reasonCodeDisplay.ts',
     ]);
     expect(callersOf(/\buseReasonLabel\s*\(/)).toEqual([
+      'src/pages-v2/BuyerAlerts.tsx',
       'src/pages-v2/BuyerCapacity.tsx',
       'src/pages-v2/BuyerCommitments.tsx',
       'src/pages-v2/SupplierCapacity.tsx',

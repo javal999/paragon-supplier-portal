@@ -108,6 +108,17 @@ export const DAY_COUNTS: readonly DayCountRow[] = [
     against: 'dueDate',
     producer: 'src/services/data/invoiceProjection.ts',
   },
+  // MR-9 BR-03 — the alert order within a class. Derived with the alert from an
+  // injected `nowIso`, never stored. Mixed by rule: a capacity alert counts to
+  // its first gap `week` (named here), stale data from `lastUpdatedAt` + SLA,
+  // and the stock rules are stock ÷ burn (no clock endpoint).
+  {
+    owner: 'InventoryAlert',
+    field: 'daysToImpact',
+    group: 'computed-at-read',
+    against: 'week',
+    producer: 'src/services/transitions/inventoryAlertRules.ts',
+  },
 
   // ── ⚠️ TWO ROWS LEFT THIS TABLE BY BEING RETIRED, NOT BY BEING EXCUSED ────
   //   `Contract.daysUntilExpiry` and `ComplianceRow.daysLeft` were both here as
