@@ -313,6 +313,12 @@ const LANE_BUNDLES = Object.freeze({
       // `threepl:maintain`; `admin` holds it by derivation. It grants no
       // authority, so `buyer_all` keeps it on the same precedent, pending BL-70.
       'mrpcontroller:manage',
+      // ── Material D2 · A SHELF-LIFE EXCEPTION ON AN ASN (MR-6 BR-08, AR-02) ─
+      // Quality decides whether goods with less than the minimum remaining
+      // shelf life may come in (into blocked stock). Not `planning`: a planner
+      // may not approve their own urgent receipt (MAT-D6), and no supplier lane,
+      // which would approve its own short-dated goods.
+      'asn:approve-shelf-life',
     ]),
     // The SDC / P2 planning lane. `inventorydeclaration:record` is the C4c
     // buyer RECORDING verb — a distinct authority from the supplier's

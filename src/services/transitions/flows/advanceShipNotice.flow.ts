@@ -26,7 +26,7 @@ import { POLICY_HOOKS } from '../policyHooks';
 export const advanceShipNoticeFlow: FlowDefinition = {
   entity: 'advanceShipNotice',
   version: 1,
-  states: ['Draft', 'Submitted', 'In Transit', 'Delivered', 'Discrepancy', 'Cancelled'],
+  states: ['Draft', 'Submitted', 'In Transit', 'Delivered', 'Discrepancy', 'Cancelled', 'Awaiting exception'],
   initial: 'Draft',
   /** PF-0 · D-2 — ⚠️ THIS MACHINE DECLARES NO ENDING, and that is still the
    *  truthful answer rather than an omission — but the REASON changed and the
@@ -92,12 +92,77 @@ export const advanceShipNoticeFlow: FlowDefinition = {
       // REQ-E07-04 — the supplier withdraws a notice before anything arrived.
       // A cancelled notice stops counting toward open and in-transit quantity.
       id: 't_asn_cancel',
-      from: ['Draft', 'Submitted'],
+      // MR-6 BR-08 — an ASN awaiting a shelf-life exception has not shipped
+      // either (`ASN_CANCELLABLE_STATES`, the list the page reads).
+      from: ['Draft', 'Submitted', 'Awaiting exception'],
       to: 'Cancelled',
       trigger: 'user',
       requiredRole: 'asn:cancel',
       requiredFields: [],
       policyHooks: [POLICY_HOOKS.ASN_CANCEL_NOT_RECEIVED],
+      surfaceable: { surfaced: true },
+      version: 1,
+    },
+    {
+      // MR-6 BR-08 — the supplier asks Quality for a shelf-life exception
+      // instead of submitting. It carries what a submission carries, plus the
+      // reason, and is legal only when shelf life is the one thing wrong
+      // (`ASN_SHELF_LIFE_EXCEPTION_ONLY`). The request is appended to the ASN.
+      id: 't_asn_request_exception',
+      from: ['Draft'],
+      to: 'Awaiting exception',
+      trigger: 'user',
+      requiredRole: 'asn:submit',
+      requiredFields: ['carrier', 'trackingNumber', 'eta', 'reason'],
+      policyHooks: [
+        POLICY_HOOKS.ASN_SHELF_LIFE_EXCEPTION_ONLY,
+        POLICY_HOOKS.ASN_LINES_WITHIN_OPEN,
+        POLICY_HOOKS.ASN_THREE_PL_LISTED,
+      ],
+      surfaceable: { surfaced: true },
+      version: 1,
+    },
+    {
+      // MR-6 BR-08 — Quality (`compliance`, never `planning`: a planner may not
+      // approve their own urgent receipt) approves. The ASN then passes the same
+      // submission checks, with the shelf-life refusal waived for the lines the
+      // request named; the goods are received into blocked stock.
+      id: 't_asn_approve_exception',
+      from: ['Awaiting exception'],
+      to: 'Submitted',
+      trigger: 'user',
+      requiredRole: 'asn:approve-shelf-life',
+      requiredFields: [],
+      policyHooks: [POLICY_HOOKS.ASN_SUBMIT_COMPLETE, POLICY_HOOKS.ASN_LINES_WITHIN_OPEN],
+      surfaceable: { surfaced: true },
+      version: 1,
+    },
+    {
+      // MR-6 BR-08 — Quality refuses, with a reason the supplier sees; the ASN
+      // goes back to Draft.
+      id: 't_asn_reject_exception',
+      from: ['Awaiting exception'],
+      to: 'Draft',
+      trigger: 'user',
+      requiredRole: 'asn:approve-shelf-life',
+      requiredFields: ['reason'],
+      policyHooks: [POLICY_HOOKS.ASN_SHELF_LIFE_REASON_GIVEN],
+      surfaceable: { surfaced: true },
+      version: 1,
+    },
+    {
+      // MR-6 edge case 1 — the supplier moves the ETA of an ASN whose exception
+      // was approved to a later date at which a line still fails the rule. The
+      // approval stays in the record and a new decision is owed. Any other ETA
+      // change is refused by name (`ASN_ETA_NEEDS_REAPPROVAL`): no other ETA
+      // change on a submitted ASN exists in this portal.
+      id: 't_asn_change_eta',
+      from: ['Submitted'],
+      to: 'Awaiting exception',
+      trigger: 'user',
+      requiredRole: 'asn:submit',
+      requiredFields: ['eta'],
+      policyHooks: [POLICY_HOOKS.ASN_ETA_NEEDS_REAPPROVAL],
       surfaceable: { surfaced: true },
       version: 1,
     },

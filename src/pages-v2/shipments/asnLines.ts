@@ -12,7 +12,9 @@ import {
   asnLineRefusal,
   availableBatches,
   batchAboveAvailable,
+  onlyShelfLifeRefused,
   openQtyForLine,
+  shelfLifeLineView,
   type AsnBatchSource,
   type AsnLineCheck,
   type AsnLineInput,
@@ -151,6 +153,8 @@ export const readLines = (
         batchSource,
         // MR-6 BR-03 — a warning only; it never blocks.
         aboveAvailable: picked && batchAboveAvailable(check, options) ? picked.available : null,
+        // MR-6 d step 4 — "Expiry <date> · <n> months left at ETA".
+        shelfLife: shelfLifeLineView(check),
       };
     });
   return {
@@ -158,6 +162,9 @@ export const readLines = (
     overCount: lines.filter((l) => l.over).length,
     aboveAvailable: lines.filter((l) => l.aboveAvailable !== null),
     complete: lines.length > 0 && lines.every((l) => l.refusal === null),
+    // MR-6 BR-08 — shelf life is the one thing wrong: the supplier may ask for
+    // an exception instead of submitting (the verb's own test).
+    onlyShelfLife: onlyShelfLifeRefused(lines.map((l) => l.refusal)),
   };
 };
 

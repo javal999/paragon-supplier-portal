@@ -19,6 +19,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { hubSetting } from './hubSettingsStore';
+import { materialEntry } from '../sdc/materialMaster';
 
 /** CR-12 — the invoice price tolerance. */
 export interface InvoicePriceTolerance {
@@ -64,4 +65,34 @@ export const RECEIPT_QTY_TOLERANCE_BY_MATERIAL: Readonly<Record<string, ReceiptQ
 /** The receipt quantity tolerance for one material, in force now. */
 export function receiptQtyToleranceFor(materialCode: string): ReceiptQtyTolerance {
   return RECEIPT_QTY_TOLERANCE_BY_MATERIAL[materialCode] ?? receiptQtyToleranceDefault();
+}
+
+/**
+ * MR-6 BR-06 — the hub's default minimum remaining shelf life, in calendar
+ * months, IN FORCE: used where the material master holds no minimum.
+ */
+export function shelfLifeDefaultMonths(): number {
+  return hubSetting('shelfLife.defaultMonths');
+}
+
+/** MR-6 BR-05 to BR-07 — whether a material's expiry is checked, and against what. */
+export interface ShelfLifeRule {
+  /** `shelfLifeRelevant` as the material master resolves it (A2; owner ruling 2026-09-29). */
+  readonly relevant: boolean;
+  /** `minRemainingShelfLifeMonths`, else `shelfLife.defaultMonths`. */
+  readonly minMonths: number;
+}
+
+/**
+ * The shelf-life rule for one material, read through `materialEntry` (MAT-R15)
+ * at the moment of the call. Null when the master does not know the code: an
+ * unknown material is refused elsewhere, never guessed here.
+ */
+export function shelfLifeRuleFor(materialCode: string): ShelfLifeRule | null {
+  const entry = materialEntry(materialCode);
+  if (!entry) return null;
+  return {
+    relevant: entry.shelfLifeRelevant === true,
+    minMonths: entry.minRemainingShelfLifeMonths ?? shelfLifeDefaultMonths(),
+  };
 }

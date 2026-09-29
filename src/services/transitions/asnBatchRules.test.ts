@@ -121,6 +121,6 @@ describe('asnLineRefusal carries batch, expiry and ETA (AR-11)', () => {
     expect(asnLineRefusal({ ...line, lotNumber: 'B', expiryDate: '2027-02-30' }, po, [], { requireBatch: true })).toBe(
       'expiry',
     );
-    expect(asnLineRefusal({ ...line, lotNumber: 'B', expiryDate: '2027-02-28' }, po, [], { requireBatch: true })).toBeNull();
+    expect(asnLineRefusal({ ...line, lotNumber: 'B', expiryDate: '2027-02-28', eta: '2026-08-01' }, po, [], { requireBatch: true })).toBeNull();
   });
 });

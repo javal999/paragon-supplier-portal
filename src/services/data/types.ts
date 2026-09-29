@@ -1496,7 +1496,14 @@ export type AsnStatus =
   | 'Discrepancy'
   /** REQ-E07-04 — withdrawn by the supplier before receipt. A cancelled ASN no
    *  longer counts toward the PO line's open quantity or the in-transit figure. */
-  | 'Cancelled';
+  | 'Cancelled'
+  /**
+   * MR-6 BR-08 — a line arrives with less than the minimum remaining shelf
+   * life, and the supplier asked Quality for an exception. Not in transit, not
+   * receivable, still cancellable. Approval moves it to Submitted; rejection
+   * returns it to Draft.
+   */
+  | 'Awaiting exception';
 
 export interface AsnLineItem {
   materialCode: string;
@@ -1553,7 +1560,52 @@ export interface ASN {
   overShipReason?: string;
   /** The call-off this ASN ships (REQ-E09-03 BR-06). Absent for a PO-level ASN. */
   callOffId?: string;
+  /**
+   * MR-6 BR-08 / BR-09 — the shelf-life exception record, APPENDED (MAT-R3):
+   * each request, each decision and each ETA change that reopened it is a new
+   * entry; nothing earlier is edited. Whether an exception stands is derived
+   * from the entries (`shelfLifeExceptionOf`). Absent until the first request.
+   */
+  shelfLifeException?: AsnShelfLifeEvent[];
 }
+
+/** MR-6 BR-08 — one line an exception covers, as it stood when it was asked for. */
+export interface AsnShelfLifeLine {
+  materialCode: string;
+  lotNumber: string;
+  expiryDate: string;
+  /** The minimum remaining shelf life in force for the material, in months. */
+  minMonths: number;
+}
+
+/**
+ * MR-6 BR-09 — one entry of an ASN's shelf-life exception record. `by` is the
+ * session's actor, never a payload field.
+ *   requested   — the supplier asked, with a reason, at an ETA, for these lines
+ *   etaChanged  — the supplier moved the ETA past the approved one (edge case 1);
+ *                 the earlier approval stays in the record, and a new decision is owed
+ *   approved    — Quality approved; the goods are received into blocked stock
+ *   rejected    — Quality refused, with a reason; the ASN is back in Draft
+ */
+export type AsnShelfLifeEvent =
+  | {
+      kind: 'requested';
+      at: string;
+      by: ActorAttribution;
+      reason: string;
+      eta: string;
+      lines: AsnShelfLifeLine[];
+    }
+  | {
+      kind: 'etaChanged';
+      at: string;
+      by: ActorAttribution;
+      previousEta: string;
+      eta: string;
+      lines: AsnShelfLifeLine[];
+    }
+  | { kind: 'approved'; at: string; by: ActorAttribution; reason?: string }
+  | { kind: 'rejected'; at: string; by: ActorAttribution; reason: string };
 
 export interface CatalogItem {
   id: string;
