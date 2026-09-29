@@ -47,6 +47,12 @@ export const useStockUpdateModes = () =>
     svc.suppliers.getStockUpdateModes(scope),
   );
 
+/** Material G1 — each vendor's qualification level, missing documents and history. */
+export const useVendorQualifications = () =>
+  useServiceQuery(['suppliers', 'vendorQualifications'], (svc, scope) =>
+    svc.suppliers.getVendorQualifications(scope),
+  );
+
 // ─── Procurement ──────────────────────────────────────────────────────────
 
 export const usePurchaseOrders = (filter?: POFilter) =>

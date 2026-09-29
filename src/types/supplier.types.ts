@@ -93,6 +93,13 @@ export interface Supplier {
    * a supplier with no measurable history has no score, not a zero.
    */
   performanceScore?: number;
+  /**
+   * Material G1 (MR-10 BR-01 to BR-03) — the vendor's qualification level,
+   * PROJECTED AT READ from its valid documents like `scorecardGrade`, never
+   * stored and never set by hand. Separate from `status` (BR-02). Absent only
+   * on the raw fixture row, which no read returns.
+   */
+  qualification?: import('../services/data/types').QualificationLevel;
   // Optional profile attributes (surfaced on storefront/profile views).
   legalName?: string;
   taxId?: string;

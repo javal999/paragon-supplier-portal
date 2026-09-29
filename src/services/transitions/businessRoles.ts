@@ -299,6 +299,14 @@ const LANE_BUNDLES = Object.freeze({
       // it sits beside the other governance acts and `admin` derives it.
       // `buyer_all` keeps it on the `setting:set` precedent, pending BL-70.
       'supplier:set-update-mode',
+      // ── Material G1 · THE QUALIFICATION LISTS (MR-10 BR-04, MAT-D15) ──────
+      // Which documents make a vendor Approved or Preferred decides who may bid
+      // on which events. No supplier lane (it would pick the documents it is
+      // judged by), nor `procurement` (which sources from the vendors the lists
+      // admit). Quality — this lane — verifies the documents the lists name;
+      // `admin` derives it. `buyer_all` keeps it on the `setting:set`
+      // precedent, pending BL-70.
+      'qualification:manage',
     ]),
     // The SDC / P2 planning lane. `inventorydeclaration:record` is the C4c
     // buyer RECORDING verb — a distinct authority from the supplier's

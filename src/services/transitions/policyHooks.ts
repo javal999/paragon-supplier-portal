@@ -368,6 +368,14 @@ export const POLICY_HOOKS = {
    */
   SUPPLIER_UPDATE_MODE_VALID: 'supplier_update_mode_valid',
   /**
+   * Material G1 (MR-10 BR-04) — the documents one qualification level requires:
+   * a known level (QUALIFICATION_LEVEL_UNKNOWN), a well-formed, non-repeating
+   * list (QUALIFICATION_RULE_INVALID), and a Preferred list that includes every
+   * Approved document (PREFERRED_MISSING_APPROVED). The rule is
+   * `qualificationRuleRefusal`, the one the admin page's pre-check calls.
+   */
+  QUALIFICATION_RULE_VALID: 'qualification_rule_valid',
+  /**
    * BL-50 — a ruling on one day of the hub's working calendar: the date is one
    * the SAP load covers, the kind is working or non-working, the reason is
    * SUBSTANCE rather than presence (`requiredFields` admits a space bar), and

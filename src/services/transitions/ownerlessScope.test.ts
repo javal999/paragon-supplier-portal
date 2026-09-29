@@ -116,6 +116,7 @@ import { customRoleStore } from './customRoles';
 import { workingCalendarStore } from './workingCalendarStore';
 import { threePlStore } from './threePlStore';
 import { supplierOverlayStore } from '../data/mock/stores/supplierOverlayStore';
+import { qualificationRuleStore } from './qualificationRuleStore';
 import { hubSettingsStore, settingValue } from './hubSettingsStore';
 import { reasonCodeStore } from './reasonCodes';
 
@@ -227,6 +228,8 @@ async function realIds(): Promise<Record<string, string | null>> {
     // Material A1 — `entityId` IS the supplier id; every master supplier exists,
     // and the overlay names that supplier, so it lands in `ownerful`.
     supplierOverlay: 'sup-001',
+    // Material G1 — `entityId` IS the level; both lists exist from the start.
+    qualificationRule: 'approved',
     // BL-32 — `entityId` IS the setting key; every registry key exists from the start.
     hubSetting: 'callOff.overPct',
     // BL-32 — `entityId` IS `<list>:<code>`; every starter code exists from the start.
@@ -375,6 +378,7 @@ const resetAll = () => {
   workingCalendarStore.reset();
   threePlStore.reset();
   supplierOverlayStore.reset();
+  qualificationRuleStore.reset();
   hubSettingsStore.reset();
   reasonCodeStore.reset();
   // NR-2 — the id supply closes rfp-002 and opens a firm-offer round.
@@ -434,6 +438,8 @@ describe('POPULATION — nothing below means anything without this', () => {
     // Material A1 — a supplier's overlay names that supplier: a supplier seat is
     // refused at SCOPE on any other supplier and at ROLE on its own.
     expect(ownerful).toContain('supplierOverlay');
+    // Material G1 — the qualification lists belong to no supplier.
+    expect(ownerless).toContain('qualificationRule');
     expect(ownerless).not.toContain('purchaseOrder');
     expect(ownerless).not.toContain('invoice');
     expect(ownerful).toContain('purchaseOrder');
@@ -548,6 +554,8 @@ describe('THE LEGITIMATE PATHS — the half a "refuse everyone" fix would break'
         // it through its own quotation, never by addressing the round.
         'negotiationRound',
         'purchaseRequisition',
+        // Material G1 — the qualification lists are PTI's; no supplier is their owner.
+        'qualificationRule',
         // BL-32 — the reason lists are PTI's; no supplier is their owner.
         'reasonCode',
         // REQ-E03-02 / REQ-E03-04 — an RFI and an RFP EVENT name no supplier.
@@ -633,6 +641,13 @@ describe('THE LEGITIMATE PATHS — the half a "refuse everyone" fix would break'
     });
     expect(rsnRes.status, rsnRes.reason).toBe('done');
     expect(reasonCodeStore.get('poAdjust', 'tooling')?.active).toBe(true);
+
+    const qualRes = await svc.dispatch(buyerSeat('compliance'), {
+      transitionId: 't_qualification_rule_set', entity: 'qualificationRule', entityId: 'approved',
+      payload: { requiredDocs: [{ category: 'Tax & Legal', label: 'Business licence and tax ID' }] },
+    });
+    expect(qualRes.status, qualRes.reason).toBe('done');
+    expect(qualificationRuleStore.get('approved').placeholder).toBe(false);
 
     const raised = await svc.dispatch(buyerSeat('procurement'), {
       transitionId: 't_application_submit', entity: 'supplierApplication',

@@ -32,6 +32,8 @@ import type {
   CallOffType,
   CallOffOrigin,
   StockUpdateMode,
+  QualificationRequiredDoc,
+  QualificationRuleLevel,
 } from '../data/types';
 import type { AsnLineInput } from '../transitions/fulfilmentRules';
 import type { ProposalType } from '../engine/reschedule';
@@ -1362,6 +1364,37 @@ export function useSupplierSetUpdateMode() {
   });
 }
 
+// ── Material G1 · THE DOCUMENTS A QUALIFICATION LEVEL REQUIRES (MR-10 BR-04) ──
+//
+// `entityId` IS the level (`approved` | `preferred`); the list replaces the one
+// in force. `setBy` and `setAt` are stamped by the target from the session and
+// the hub clock. Every vendor's level is read from the lists, so the whole
+// cache is invalidated rather than a guessed list of keys.
+export interface QualificationRuleSetVars {
+  level: QualificationRuleLevel;
+  requiredDocs: readonly QualificationRequiredDoc[];
+}
+
+/** Set the documents one qualification level requires (`t_qualification_rule_set`). */
+export function useQualificationRuleSet() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+
+  return useMutation<CommandResult, Error, QualificationRuleSetVars>({
+    mutationFn: ({ level, requiredDocs }) =>
+      svc.commands.dispatch(scope, {
+        transitionId: 't_qualification_rule_set',
+        entity: 'qualificationRule',
+        entityId: level,
+        payload: { requiredDocs: requiredDocs.map((r) => ({ ...r })) },
+      }),
+    onSuccess: (result) => {
+      if (result.status !== 'failed') void qc.invalidateQueries();
+    },
+  });
+}
+
 // ── BL-50 · A RULING ON ONE DAY OF THE HUB'S WORKING CALENDAR ────────────────
 //
 // ⚠️ **`entityId` IS THE DATE, AND THERE IS NO `date` PAYLOAD FIELD** — the
@@ -1725,6 +1758,7 @@ export function useSupplierDocumentSubmit() {
 export function useSupplierDocumentVerify() {
   const svc = useDataService();
   const scope = useScope();
+  const qc = useQueryClient();
   const invalidate = useInvalidateProcurement();
 
   return useMutation<CommandResult, Error, { docId: string }>({
@@ -1736,7 +1770,11 @@ export function useSupplierDocumentVerify() {
         payload: {},
       }),
     onSuccess: (result) => {
-      if (result.status !== 'failed') invalidate(scope);
+      if (result.status === 'failed') return;
+      invalidate(scope);
+      // Material G1 — a verified document can move the vendor's qualification
+      // level, which is projected on the supplier reads (MR-10 AC-01).
+      void qc.invalidateQueries({ predicate: (q) => q.queryKey[0] === 'suppliers' });
     },
   });
 }

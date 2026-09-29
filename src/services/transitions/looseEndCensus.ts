@@ -248,6 +248,19 @@ export const LOOSE_END_CENSUS: readonly CensusEntry[] = Object.freeze([
       'is statePreserving, so it is neither an entry nor an exit, and the state is correctly declared ' +
       'terminal. The mode in force is derived at read from the latest overlay row and is never a state.',
   },
+  // ── qualificationRule (Material G1) ────────────────────────────────────────
+  {
+    entity: 'qualificationRule',
+    kind: 'initial-integrity',
+    subject: 'Defined',
+    reason: 'substrate-only',
+    note:
+      'THE SAME DEGENERATE SINGLE-STATE LEDGER SHAPE AS THE 3PL LIST: the entity IS one qualification ' +
+      'level (approved or preferred), and both lists exist from the start as placeholder lists — there is ' +
+      'no creation verb to be an entry. The recording verb is statePreserving, so it is neither an entry ' +
+      'nor an exit, and the state is correctly declared terminal. The list in force is derived at read ' +
+      'from the latest change and is never a state; a vendor\'s level is computed and is never a state either.',
+  },
   // ── workingCalendar (BL-50) ────────────────────────────────────────────────
   {
     entity: 'workingCalendar',
