@@ -59,7 +59,11 @@ export const DeadlinePill: React.FC<{ deadline: string; done?: boolean; testId?:
     return (
       <span data-testid={testId}>
         <StatusPill variant="danger">
-          {t('rfx.overdue')} <Data>{formatDate(deadline)}</Data>
+          {/* BL-83 — one inline span: the pill is inline-flex, which drops a
+              space standing alone between two flex items. */}
+          <span>
+            {t('rfx.overdue')} <Data>{formatDate(deadline)}</Data>
+          </span>
         </StatusPill>
       </span>
     );
@@ -68,7 +72,9 @@ export const DeadlinePill: React.FC<{ deadline: string; done?: boolean; testId?:
     return (
       <span data-testid={testId}>
         <StatusPill variant="warning">
-          {t('rfx.dueSoon')} <Data>{formatDate(deadline)}</Data>
+          <span>
+            {t('rfx.dueSoon')} <Data>{formatDate(deadline)}</Data>
+          </span>
         </StatusPill>
       </span>
     );

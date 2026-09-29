@@ -576,7 +576,8 @@ const BuyerOrderPlan: React.FC = () => {
                               ) : (
                                 <>
                                   {t('op.saved', {
-                                    value: formatNumber(Math.round(r.savedIdr)),
+                                    // BL-83 — a rupiah amount is formatIDR's, not a plain number's.
+                                    value: formatIDR(Math.round(r.savedIdr)),
                                     quantity: `${qtyOf(r.alternativeQuantity, m.uom)} ${m.uom}`,
                                   })}
                                 </>

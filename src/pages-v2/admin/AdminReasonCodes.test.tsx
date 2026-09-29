@@ -42,6 +42,21 @@ describe('BL-32 · Reason codes', () => {
     expect(screen.getByTestId('admin-rsn-attribution').textContent).toMatch(/cannot name yet/);
   });
 
+  it('MAT-A3-RSN-PAGE · the alert close list (MR-9 BR-05) is shown with its starter codes in EN and ID', () => {
+    renderWithProviders(<AdminReasonCodes />, { identity: BUYER });
+    const list = screen.getByTestId('admin-rsn-list-alertClose');
+    expect(within(list).getByText('Alert — close')).toBeTruthy();
+    for (const code of ['calloff-raised', 'po-raised', 'supplier-updated', 'supplier-confirmed-other', 'data-error', 'risk-accepted', 'other']) {
+      expect(screen.getByTestId(`admin-rsn-row-alertClose-${code}`)).toBeTruthy();
+    }
+    const other = screen.getByTestId('admin-rsn-row-alertClose-other');
+    expect(within(other).getByText('Other (note required)')).toBeTruthy();
+    expect(within(other).getByText('Lainnya (catatan wajib)')).toBeTruthy();
+    const po = screen.getByTestId('admin-rsn-row-alertClose-po-raised');
+    expect(within(po).getByText('PO raised')).toBeTruthy();
+    expect(within(po).getByText('PO dibuat')).toBeTruthy();
+  });
+
   it('BL32-RSN-PAGE-02 · a planner reads the lists and gets the wait, not the form', () => {
     renderWithProviders(<AdminReasonCodes />, { identity: PLANNER });
     expect(screen.queryByTestId('admin-rsn-form')).toBeNull();

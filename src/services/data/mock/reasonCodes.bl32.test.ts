@@ -22,10 +22,12 @@ import { purchaseOrderStore } from './stores/purchaseOrderStore';
 import { DataError, POStatus, type QueryScope } from '../types';
 import { PERSONA_SYSTEM_ROLES, SEEDED_SEAT_ROLES, SYSTEM_ROLES, rolesHolding } from '../../transitions/businessRoles';
 import {
+  NOTE_REQUIRED_CODE,
   REASON_CODES_KEY,
   REASON_LISTS,
   STARTER_REASON_CODES,
   activeReasonCodes,
+  builtInReasonLabels,
   isActiveReasonCode,
   reasonCodeStore,
   type ReasonListId,
@@ -91,12 +93,25 @@ const SHIPPED = shipped(join(process.cwd(), 'src')).map((f) => ({
 const callersOf = (re: RegExp) => SHIPPED.filter((f) => re.test(f.code)).map((f) => f.path).sort();
 
 describe('BL32-RSN-POP · the coded reason lists, derived', () => {
-  it('BL32-RSN-POP-01 · four lists, each the §3.6 / BR-06 starter list', () => {
-    expect([...REASON_LISTS]).toEqual(['poAdjust', 'poReject', 'capacityShortfall', 'commitmentShortfall']);
+  it('BL32-RSN-POP-01 · the lists, each the §3.6 / BR-06 / MR-9 BR-05 starter list', () => {
+    expect([...REASON_LISTS]).toEqual(['poAdjust', 'poReject', 'capacityShortfall', 'commitmentShortfall', 'alertClose']);
     expect(STARTER_REASON_CODES.poReject).toEqual(['date', 'quantity', 'quality']);
     for (const l of ['poAdjust', 'capacityShortfall', 'commitmentShortfall'] as const) {
       expect(STARTER_REASON_CODES[l]).toEqual(['capacity', 'material', 'logistics', 'quality', 'other']);
     }
+    // MR-9 BR-05 — the alert close reasons; "Other" is the one that needs a note.
+    expect(STARTER_REASON_CODES.alertClose).toEqual([
+      'calloff-raised', 'po-raised', 'supplier-updated', 'supplier-confirmed-other', 'data-error', 'risk-accepted', 'other',
+    ]);
+    expect(STARTER_REASON_CODES.alertClose).toContain(NOTE_REQUIRED_CODE);
+    expect(NOTE_REQUIRED_CODE).toBe('other');
+    // Every starter code of every list has its shipped label in EN and ID.
+    for (const l of REASON_LISTS) {
+      for (const c of STARTER_REASON_CODES[l]) expect(builtInReasonLabels(l, c), `${l}:${c}`).not.toBeNull();
+    }
+    expect(builtInReasonLabels('alertClose', 'other')).toEqual({ en: 'Other (note required)', id: 'Lainnya (catatan wajib)' });
+    // Known-false: a code that is not on the list has no shipped label.
+    expect(builtInReasonLabels('alertClose', 'capacity')).toBeNull();
   });
 
   it('BL32-RSN-POP-02 · the constants the lists replaced are gone from shipped code', () => {
