@@ -117,10 +117,12 @@ import { customRoleStore } from './customRoles';
 import { workingCalendarStore } from './workingCalendarStore';
 import { threePlStore } from './threePlStore';
 import { supplierOverlayStore } from '../data/mock/stores/supplierOverlayStore';
+import { qualificationRuleStore } from './qualificationRuleStore';
 import { planningGroupStore } from '../data/mock/stores/planningGroupStore';
 import { materialOverlayStore } from '../data/mock/stores/materialOverlayStore';
 import { mrpControllerStore } from './mrpControllerStore';
 import { materialNameStore } from '../data/mock/stores/materialNameStore';
+import { simulationOverrideStore } from '../data/mock/stores/simulationOverrideStore';
 import { hubSettingsStore, settingValue } from './hubSettingsStore';
 import { reasonCodeStore } from './reasonCodes';
 
@@ -232,6 +234,8 @@ async function realIds(): Promise<Record<string, string | null>> {
     // Material A1 — `entityId` IS the supplier id; every master supplier exists,
     // and the overlay names that supplier, so it lands in `ownerful`.
     supplierOverlay: 'sup-001',
+    // Material G1 — `entityId` IS the level; both lists exist from the start.
+    qualificationRule: 'approved',
     // Material C5 — `entityId` IS the planning group id; every SAP material
     // group's default group exists from the start. PTI master data: owner-less.
     planningGroup: 'pg-MG-20',
@@ -266,6 +270,9 @@ async function realIds(): Promise<Record<string, string | null>> {
     // store starts empty (nothing is marked while the engine data is simulated);
     // the id is a well-formed one so the coverage control can see the target.
     sapChangeMark: 'sap-0001',
+    // Material E1 — a stock simulation planner input is creation-only
+    // (unprobeable, AR-20) and its store starts empty; a well-formed id.
+    simulationOverride: 'sim-0001',
     // REQ-E03-02 / REQ-E03-04 / REQ-E03-05 — every RFx store is seeded, so each
     // first row is a real id. The two RESPONSE targets are supplier-owned and
     // therefore land in `ownerful`; the three buyer-owned ones land in
@@ -393,10 +400,12 @@ const resetAll = () => {
   maxStockStore.reset();
   threePlStore.reset();
   supplierOverlayStore.reset();
+  qualificationRuleStore.reset();
   planningGroupStore.reset();
   materialOverlayStore.reset();
   mrpControllerStore.reset();
   materialNameStore.reset();
+  simulationOverrideStore.reset();
   hubSettingsStore.reset();
   reasonCodeStore.reset();
   // NR-2 — the id supply closes rfp-002 and opens a firm-offer round.
@@ -456,6 +465,8 @@ describe('POPULATION — nothing below means anything without this', () => {
     // Material A1 — a supplier's overlay names that supplier: a supplier seat is
     // refused at SCOPE on any other supplier and at ROLE on its own.
     expect(ownerful).toContain('supplierOverlay');
+    // Material G1 — the qualification lists belong to no supplier.
+    expect(ownerless).toContain('qualificationRule');
     // Material C5 — planning groups are PTI master data: no supplier acts on one.
     expect(ownerless).toContain('planningGroup');
     // Material C2 — a trade name names the supplier it belongs to.
@@ -478,7 +489,8 @@ describe('POPULATION — nothing below means anything without this', () => {
     // and lands in `ownerless` with the other buyer-owned targets.
     // A confidentiality acceptance is the same creation-only shape.
     // A "taken to SAP" mark (REQ-E14-13) is the same creation-only record shape.
-    expect(unprobeable).toEqual(['rfqConfidentiality', 'inventoryDeclaration', 'stockSync', 'capacitySubmission', 'forecastVersion', 'forecastView', 'sapChangeMark']);
+    // So is a stock simulation planner input (Material E1, AR-20).
+    expect(unprobeable).toEqual(['rfqConfidentiality', 'inventoryDeclaration', 'simulationOverride', 'stockSync', 'capacitySubmission', 'forecastVersion', 'forecastView', 'sapChangeMark']);
   });
 
   it('CONTROL — the walk lands every probe in one of its verb\'s from-states', async () => {
@@ -580,6 +592,8 @@ describe('THE LEGITIMATE PATHS — the half a "refuse everyone" fix would break'
         // Material C5 — planning groups are PTI master data (MR-8, MAT-D12).
         'planningGroup',
         'purchaseRequisition',
+        // Material G1 — the qualification lists are PTI's; no supplier is their owner.
+        'qualificationRule',
         // BL-32 — the reason lists are PTI's; no supplier is their owner.
         'reasonCode',
         // REQ-E03-02 / REQ-E03-04 — an RFI and an RFP EVENT name no supplier.
@@ -679,6 +693,13 @@ describe('THE LEGITIMATE PATHS — the half a "refuse everyone" fix would break'
     });
     expect(mrpRes.status, mrpRes.reason).toBe('done');
     expect(mrpControllerStore.get('P13')?.name).toBe('Fragrance planning desk (sample)');
+
+    const qualRes = await svc.dispatch(buyerSeat('compliance'), {
+      transitionId: 't_qualification_rule_set', entity: 'qualificationRule', entityId: 'approved',
+      payload: { requiredDocs: [{ category: 'Tax & Legal', label: 'Business licence and tax ID' }] },
+    });
+    expect(qualRes.status, qualRes.reason).toBe('done');
+    expect(qualificationRuleStore.get('approved').placeholder).toBe(false);
 
     const raised = await svc.dispatch(buyerSeat('procurement'), {
       transitionId: 't_application_submit', entity: 'supplierApplication',

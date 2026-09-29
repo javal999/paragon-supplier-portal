@@ -194,12 +194,15 @@ import {
 import { forecastVersionStore, forecastViewStore } from './stores/forecastHubStores';
 // Material A1 — the supplier overlay (its own module, plan AD-5).
 import { supplierOverlayTarget } from './targets/supplierOverlay';
+// Material G1 — the qualification lists (its own module, MAT-R13).
+import { qualificationRuleTarget } from './targets/qualificationRule';
 // Material C5 — planning groups (their own module, plan AD-5).
 import { planningGroupTarget } from './targets/planningGroup';
 // Material C4 — the MRP controller list (its own module, plan AD-5).
 import { mrpControllerTarget } from './targets/mrpController';
 // Material C2 — supplier trade names (its own module, plan AD-5).
 import { materialNameCascades, materialNameTarget } from './targets/materialName';
+import { simulationOverrideTarget } from './targets/simulationOverride';
 // ── REQ-E14-13 — reschedule proposals taken to SAP ─────────────────────────
 import { sapChangeMarkStore } from './stores/sapChangeMarkStore';
 import { engineDataset } from './fixtures/engineDataset';
@@ -4873,6 +4876,9 @@ const supplierDocumentTarget: CommandTarget = {
             rejectedBy: scope.actor ?? NO_PERSON,
           }
         : {}),
+      // Material G1 (plan AD-2) — when the document became valid, from the hub
+      // clock. The qualification history replays from it.
+      ...(toState === 'Valid' ? { verifiedAt: sdcClock.now() } : {}),
     }));
   },
   // ⚠️ **`requireCreationOwner` IS THE HALF THE DECLARE PATH NEVER NEEDED, AND
@@ -5176,12 +5182,15 @@ const TARGETS: Record<string, CommandTarget> = {
   threePl: threePlTarget,
   // Material A1 — a supplier's stock update mode (MR-1 BR-02, AC-06).
   supplierOverlay: supplierOverlayTarget,
+  // Material G1 — the documents each qualification level requires (MR-10 BR-04).
+  qualificationRule: qualificationRuleTarget,
   // Material C5 — planning groups for capacity (MR-8 BR-01 to BR-05).
   planningGroup: planningGroupTarget,
   // Material C4 — who each SAP MRP controller code is (MR-5 BR-02).
   mrpController: mrpControllerTarget,
   // Material C2 — a supplier's trade name for a PTI material (MR-3).
   materialName: materialNameTarget,
+  simulationOverride: simulationOverrideTarget, // Material E1 — stock simulation planner input (MR-7 BR-08)
   // BL-32 — the rule values. Wired so every change to a tolerance, deadline,
   // threshold or stale period — and every reset — lands in the DR-10 trail.
   hubSetting: hubSettingTarget,

@@ -115,6 +115,8 @@ import { rfxFilesEn, rfxFilesId } from './i18n/rfxFiles';
 import { threePlEn, threePlId } from './i18n/threePl';
 // — Material A1 administration · suppliers (MR-1 BR-02) —
 import { adminSuppliersEn, adminSuppliersId } from './i18n/adminSuppliers';
+// — Material G1 vendor qualification (MR-10) —
+import { qualificationEn, qualificationId } from './i18n/qualification';
 // — Material C5 administration · planning groups (MR-8) —
 import { adminPlanningGroupsEn, adminPlanningGroupsId } from './i18n/adminPlanningGroups';
 // — Material C4 the MRP controller (PIC) on material surfaces (MR-5) —
@@ -226,6 +228,7 @@ export const resources = {
       ...rfxFilesEn,
       ...threePlEn,
       ...adminSuppliersEn,
+      ...qualificationEn,
       ...adminPlanningGroupsEn,
       ...mrpControllerEn,
       ...materialNamesEn,
@@ -707,6 +710,7 @@ export const resources = {
       ...rfxFilesId,
       ...threePlId,
       ...adminSuppliersId,
+      ...qualificationId,
       ...adminPlanningGroupsId,
       ...mrpControllerId,
       ...materialNamesId,

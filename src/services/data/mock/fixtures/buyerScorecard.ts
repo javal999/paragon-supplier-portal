@@ -46,7 +46,6 @@ const CORE_SCORECARDS: SupplierScorecard[] = [
     tier: 'Tier 3 — API',
     sapBp: 'BP-20045',
     channel: 'API',
-    status: 'Preferred Supplier',
     kpis: [
       { name: 'OTDR', value: '96%', target: '95%', pct: 96, targetPct: 95, trend: '↑' },
       { name: 'PO Ack Rate', value: '100%', target: '95%', pct: 100, targetPct: 95, trend: '→' },
@@ -86,7 +85,6 @@ const CORE_SCORECARDS: SupplierScorecard[] = [
     tier: 'Tier 1 — WhatsApp',
     sapBp: 'BP-10007',
     channel: 'WhatsApp',
-    status: 'Approved Supplier',
     complianceIssue: { level: 'missing', label: 'BPJPH Halal cert not certified' },
     kpis: [
       { name: 'OTDR', value: '91%', target: '95%', pct: 91, targetPct: 95, trend: '↑' },
@@ -127,7 +125,6 @@ const CORE_SCORECARDS: SupplierScorecard[] = [
     tier: 'Tier 3 — API',
     sapBp: 'BP-20012',
     channel: 'API',
-    status: 'Conditional — Improvement Plan Active',
     impPlan: true,
     complianceIssue: { level: 'expiring', label: 'ISO 9001 expiring in 83d' },
     improvementActions: SAMPLE_PC_IMPROVEMENT_ACTIONS,
@@ -182,7 +179,6 @@ const EXTRA_SCORECARDS: SupplierScorecard[] = (
   tier: (['Tier 2 — Web', 'Tier 1 — WhatsApp', 'Tier 3 — API', 'Tier 2 — Web', 'Tier 2 — Web'] as const)[i],
   sapBp: `BP-2000${10 + i}`,
   channel: (['Web', 'WhatsApp', 'API', 'Web', 'Web'] as const)[i],
-  status: 'Approved Supplier',
   kpis: CORE_SCORECARDS[0].kpis as ScorecardKpi[],
   radar: CORE_SCORECARDS[0].radar as ScorecardRadarAxis[],
   otifTrend: [82, 84, 85, 87, 88, 89, 90, 91, 91, 92, 92, 91],
