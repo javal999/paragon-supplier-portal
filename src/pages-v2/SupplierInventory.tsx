@@ -37,6 +37,7 @@ import {
 import StockEntryPanel from './inventory/StockEntryPanel';
 import StockUploadPanel from './inventory/StockUploadPanel';
 import SupplierSyncPanel from './inventory/SupplierSyncPanel';
+import WeeklyUpdatePanel from './inventory/WeeklyUpdatePanel';
 import { PicCell, PicFilter, PicHeader, usePicFilter } from './materials/picDisplay';
 import SupplierMaterialNames from './materials/SupplierMaterialNames';
 import { TradeNameBeside } from './materials/tradeNameDisplay';
@@ -77,6 +78,20 @@ const SupplierInventory: React.FC = () => {
     if (v === 'materials') next.set('tab', 'materials');
     else next.delete('tab');
     setParams(next, { replace: true });
+  };
+  // Material B2 — a missing material's link opens the entry form on it (`?enter=`).
+  const enterCode = params.get('enter');
+  const entryInitial = useMemo(
+    () => (enterCode && supplierId ? { supplierId, materialCode: enterCode } : null),
+    [enterCode, supplierId],
+  );
+  const closeEntry = () => {
+    setEntryOpen(false);
+    if (enterCode !== null) {
+      const next = new URLSearchParams(params);
+      next.delete('enter');
+      setParams(next, { replace: true });
+    }
   };
   const nowIso = inventoryNow();
   const crumb = [t('hub.nav.section.planning'), t('inv.sup.title')];
@@ -160,6 +175,9 @@ const SupplierInventory: React.FC = () => {
 
       {/* REQ-E07-08 AC-03 — this page reads SAP data; say how old it is. */}
       <SapDataAgeBanner page="inventory" className="mb-4" />
+
+      {/* Material B2 — the weekly update (manual) or the sync schedule (API). */}
+      <WeeklyUpdatePanel supplierId={supplierId} positions={rows} nowIso={nowIso} />
 
       {needUpdate > 0 && (
         <div
@@ -284,7 +302,15 @@ const SupplierInventory: React.FC = () => {
       </div>
 
       <IncomingPanel position={incoming} base="/supplier" onClose={() => setIncoming(null)} />
-      {held && <StockEntryPanel open={entryOpen} onClose={() => setEntryOpen(false)} mode="supplier" positions={rows} />}
+      {held && (
+        <StockEntryPanel
+          open={entryOpen || entryInitial !== null}
+          onClose={closeEntry}
+          mode="supplier"
+          positions={rows}
+          initial={entryInitial}
+        />
+      )}
     </AppShellV2>
   );
 };

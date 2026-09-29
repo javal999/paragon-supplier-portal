@@ -36,6 +36,7 @@ import {
   useInventoryRunner,
 } from './inventory/inventoryDisplay';
 import StockEntryPanel from './inventory/StockEntryPanel';
+import { weeklyUpdateView } from './inventory/WeeklyUpdatePanel';
 import { PicCell, PicFilter, PicHeader, usePicFilter } from './materials/picDisplay';
 import { TradeNameBeside } from './materials/tradeNameDisplay';
 
@@ -54,6 +55,20 @@ import { TradeNameBeside } from './materials/tradeNameDisplay';
 // ─────────────────────────────────────────────────────────────────────────────
 
 type BandFilter = 'all' | RiskClass | 'stale';
+
+/** Material B2 — the supplier's weekly update this cycle, or "API". */
+const CycleCell: React.FC<{ value: { api: true } | { api: false; updated: number; total: number } | undefined }> = ({
+  value,
+}) => {
+  const { t } = useTranslation();
+  if (!value) return null;
+  if (value.api) return <span className="text-xs text-text-secondary">{t('inv.thisCycle.api')}</span>;
+  return (
+    <Data className={`text-xs ${value.updated < value.total ? 'text-warning-hover' : ''}`}>
+      {t('inv.thisCycle.count', { updated: value.updated, total: value.total })}
+    </Data>
+  );
+};
 
 const BuyerInventory: React.FC = () => {
   const { t } = useTranslation();
@@ -97,6 +112,23 @@ const BuyerInventory: React.FC = () => {
     for (const r of rows) if (r.apiConnected && !bySupplier.has(r.supplierId)) bySupplier.set(r.supplierId, r);
     return [...bySupplier.values()];
   }, [rows]);
+
+  // Material B2 — per supplier, this cycle's weekly update: "12 of 15", or
+  // "API" for a supplier on the scheduled pull (MR-1 d). Over ALL its rows,
+  // not the filtered ones, so the figure does not move with a filter.
+  const thisCycle = useMemo(() => {
+    const out = new Map<string, { api: true } | { api: false; updated: number; total: number }>();
+    for (const supplierId of new Set(rows.map((r) => r.supplierId))) {
+      const own = rows.filter((r) => r.supplierId === supplierId);
+      if (own.some((r) => r.apiConnected)) {
+        out.set(supplierId, { api: true });
+        continue;
+      }
+      const { status } = weeklyUpdateView(supplierId, own, nowIso);
+      out.set(supplierId, { api: false, updated: status.updated.length, total: status.total });
+    }
+    return out;
+  }, [rows, nowIso]);
 
   if (inventory.isPending) return <LoadingState breadcrumb={crumb} />;
   if (inventory.isError)
@@ -232,6 +264,7 @@ const BuyerInventory: React.FC = () => {
           <TableHeader>
             <TableHeaderCell>{t('inv.col.material')}</TableHeaderCell>
             <TableHeaderCell>{t('inv.col.supplier')}</TableHeaderCell>
+            <TableHeaderCell>{t('inv.col.thisCycle')}</TableHeaderCell>
             <TableHeaderCell>
               <PicHeader />
             </TableHeaderCell>
@@ -264,6 +297,9 @@ const BuyerInventory: React.FC = () => {
                     {p.supplierName}
                   </div>
                 </TableCell>
+                <TableCell className="whitespace-nowrap" data-testid={`pti-stock-cycle-${p.supplierId}-${p.materialCode}`}>
+                  <CycleCell value={thisCycle.get(p.supplierId)} />
+                </TableCell>
                 <TableCell>
                   <PicCell value={p.mrpController} testId={`pti-stock-pic-${p.supplierId}-${p.materialCode}`} />
                 </TableCell>
@@ -292,7 +328,7 @@ const BuyerInventory: React.FC = () => {
             ))}
             {shown.length === 0 && (
               <tr>
-                <td colSpan={10} className="py-10 text-center text-sm text-text-tertiary">
+                <td colSpan={11} className="py-10 text-center text-sm text-text-tertiary">
                   {t('inv.table.empty')}
                 </td>
               </tr>

@@ -40,8 +40,8 @@ import { receiptQtyOutcome, shelfLifeLineView } from '../../transitions/fulfilme
 import { commitmentDueAt, gapColour, toleranceOutcome } from '../../transitions/forecastRules';
 import { otifPassesGate } from '../../sourcing/complianceGate';
 import { coverage, riskFor, stockFreshness, supplyBand } from '../../transitions/inventoryRules';
-import { staleApiHours, updateCycleSettings, updateSlaFor } from '../../transitions/inventoryConfig';
-import { staleAtFor, updateCycleFor } from '../../transitions/updateCycle';
+import { staleApiHours, stockSyncIntervalHours, updateCycleSettings, updateSlaFor } from '../../transitions/inventoryConfig';
+import { nextSyncAt, staleAtFor, updateCycleFor } from '../../transitions/updateCycle';
 import { hubWorkingCalendar } from '../../transitions/workingCalendarStore';
 import { coverageBands } from '../../sdc/consolidation';
 import {
@@ -305,8 +305,19 @@ describe('BL32-READ · every reader of a value reads it through its accessor, at
       ],
       updateSlaFor: ['src/services/transitions/inventoryConfig.ts', 'src/services/transitions/inventoryRules.ts'],
       // Material B1 — MR-1 BR-03 and BR-05, read when the positions are built.
-      updateCycleSettings: ['src/services/transitions/inventoryConfig.ts', 'src/services/transitions/inventoryRules.ts'],
-      staleApiHours: ['src/services/transitions/inventoryConfig.ts', 'src/services/transitions/inventoryRules.ts'],
+      // Material B2 — the weekly-update panel reads the cutoff; the admin row names the API hours.
+      updateCycleSettings: [
+        'src/pages-v2/inventory/WeeklyUpdatePanel.tsx',
+        'src/services/transitions/inventoryConfig.ts',
+        'src/services/transitions/inventoryRules.ts',
+      ],
+      staleApiHours: [
+        'src/pages-v2/admin/AdminRuleValues.tsx',
+        'src/services/transitions/inventoryConfig.ts',
+        'src/services/transitions/inventoryRules.ts',
+      ],
+      // Material B2 — MR-1 BR-01, the API panel's "Next sync".
+      stockSyncIntervalHours: ['src/pages-v2/inventory/WeeklyUpdatePanel.tsx', 'src/services/transitions/inventoryConfig.ts'],
       staleOverrideDaysFor: ['src/services/transitions/inventoryConfig.ts', 'src/services/transitions/inventoryRules.ts'],
       // ENG-D5 / REQ-E14-04 — read by the service that runs the engine, which
       // takes them as arguments (X-01); the engine never reads the store.
@@ -449,12 +460,11 @@ const freshnessFlips: Record<string, Flip> = Object.fromEntries(
  * value in force, read through the same accessor the rules will call. Each
  * task that adds a reader replaces its key's row here with a rule outcome
  * (B1 did: `stale.apiHours`, `stockUpdate.cutoffDay`, `stockUpdate.cutoffTime`
- * are in `FLIPS` below).
+ * are in `FLIPS` below; B2 did `stockSync.intervalHours`).
  */
 const MATERIAL_FLIPS: Record<string, Flip> = Object.fromEntries(
   (
     [
-      ['stockSync.intervalHours', 4],
       ['compliance.warnPct', 90],
       ['compliance.flagPct', 50],
       ['compliance.scoreWeight', 0.15],
@@ -666,6 +676,14 @@ const FLIPS: Record<string, Flip> = {
       ),
     atDefault: 'stale',
     afterChange: 'current',
+  },
+  // MR-1 BR-01 (Material B2): after an attempt at 10:00 UTC the next pull is
+  // due 2 hours later; at a 4-hour interval, 4 hours later.
+  'stockSync.intervalHours': {
+    to: 4,
+    read: () => nextSyncAt('2026-09-07T10:00:00.000Z', stockSyncIntervalHours()),
+    atDefault: '2026-09-07T12:00:00.000Z',
+    afterChange: '2026-09-07T14:00:00.000Z',
   },
   // MR-1 BR-03 (MAT-D7): on Wednesday 9 Sep the cycle closes on Thursday 10 Sep;
   // with a Friday cutoff it closes on Friday 11 Sep.

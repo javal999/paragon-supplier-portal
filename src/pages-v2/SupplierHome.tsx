@@ -36,6 +36,7 @@ import { forecastNow } from './forecasts/forecastDisplay';
 import Data from '../components/ui-v2/Data';
 import { RiskPill, inventoryNow } from './inventory/inventoryDisplay';
 import { sdcClock } from '../services/sdc/clock';
+import WeeklyUpdatePanel, { weeklyUpdateView } from './inventory/WeeklyUpdatePanel';
 
 // Supplier Home — "To do" (REQUIREMENTS §3.8 SC-01): what Paragon is waiting for
 // from this supplier. Filters match the supplier dashboard widgets they replace.
@@ -120,6 +121,21 @@ const SupplierHome: React.FC = () => {
         id: 'stale-stock',
         label: t('hub.home.task.sup.staleStock'),
         count: (stock.data?.items ?? []).filter((p) => stockFreshness(p, inventoryNow()) !== 'current').length,
+        severity: 'warning',
+        to: '/supplier/inventory',
+      },
+      {
+        // Material B2 (MR-1 d step 2) — the in-hub reminder: from 09:00 WIB on
+        // the working day before the cutoff, a manual supplier's materials
+        // still missing this cycle. Derived, never stored.
+        id: 'weekly-update',
+        label: t('hub.home.task.sup.weeklyUpdate'),
+        count: (() => {
+          const items = stock.data?.items ?? [];
+          if (!supplierId || items.length === 0 || items.some((p) => p.apiConnected)) return 0;
+          const view = weeklyUpdateView(supplierId, items, inventoryNow());
+          return view.reminder === null ? 0 : view.status.missing.length;
+        })(),
         severity: 'warning',
         to: '/supplier/inventory',
       },
@@ -265,6 +281,8 @@ const SupplierHome: React.FC = () => {
       <div className="mb-4">
         <SampleDataBadge />
       </div>
+      {/* Material B2 — the weekly update (manual) or the sync schedule (API). */}
+      <WeeklyUpdatePanel supplierId={supplierId} positions={stock.data?.items ?? []} nowIso={inventoryNow()} />
       <TaskList tasks={tasks} />
       {openAlerts.length > 0 && (
         <section className="mt-6" data-testid="supplier-home-alerts">

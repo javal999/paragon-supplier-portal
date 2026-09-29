@@ -91,6 +91,11 @@ export function staleApiHours(): number {
   return hubSetting('stale.apiHours');
 }
 
+/** MR-1 BR-01 (Material B2) — hours between scheduled pulls of an API supplier's stock. */
+export function stockSyncIntervalHours(): number {
+  return hubSetting('stockSync.intervalHours');
+}
+
 /** REQ-E08-04 BR-03 / PQ-02 — weekly buckets for 13 weeks. */
 export const CAPACITY_HORIZON_WEEKS = 13;
 
