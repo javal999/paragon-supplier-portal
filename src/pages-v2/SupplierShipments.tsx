@@ -43,10 +43,24 @@ import { useToast } from '../hooks/useToast';
 import { useCurrentIdentity } from '../context/CurrentIdentityContext';
 import {
   useAdvanceShipNoticeCancel,
+  useAdvanceShipNoticeChangeEta,
   useAdvanceShipNoticeCreate,
+  useAdvanceShipNoticeRequestException,
   useAdvanceShipNoticeSubmit,
 } from '../services/query/commandHooks';
-import { ASN_CANCELLABLE_STATES, type AvailableBatch } from '../services/transitions/fulfilmentRules';
+import {
+  ASN_CANCELLABLE_STATES,
+  etaNeedsReapproval,
+  shelfLifeExceptionOf,
+  type AvailableBatch,
+} from '../services/transitions/fulfilmentRules';
+import {
+  BlockedStockMarker,
+  ShelfLifeExceptionDetail,
+  ShelfLifeLineNote,
+  ShelfLifeRequestBox,
+  approvedIntoBlockedStock,
+} from './shipments/ShelfLifeParts';
 import {
   EMPTY_LINE,
   batchModeOf,
@@ -89,6 +103,8 @@ const STATUS_VARIANT: Record<AsnStatus, 'success' | 'warning' | 'danger' | 'neut
   Delivered: 'success',
   Discrepancy: 'danger',
   Cancelled: 'neutral',
+  // MR-6 BR-08 — waiting on Quality, not on the supplier's next act.
+  'Awaiting exception': 'warning',
 };
 
 const fmtDate = (s: string): string => {
@@ -122,6 +138,8 @@ interface AsnForm {
   overShipReason: string;
   /** REQ-E09-03 BR-06 — the confirmed call-off this ASN ships, or '' for a PO-level ASN. */
   callOffId: string;
+  /** MR-6 BR-08 — the supplier's reason when shelf life blocks the submission. */
+  exceptionReason: string;
 }
 
 const EMPTY_FORM: AsnForm = {
@@ -140,6 +158,7 @@ const EMPTY_FORM: AsnForm = {
   lines: {},
   overShipReason: '',
   callOffId: '',
+  exceptionReason: '',
 };
 
 /** A fresh ASN form, its carrier defaulted from the 3PL list in force. */
@@ -289,6 +308,13 @@ const AsnLinesEditor: React.FC<{
                       value={e.expiry}
                       onChange={(ev) => onChange(l.materialCode, { expiry: ev.target.value })}
                       className={inputClass}
+                    />
+                    {/* MR-6 d step 4 — "Expiry <date> · <n> months left at ETA". */}
+                    <ShelfLifeLineNote
+                      view={r?.shelfLife ?? null}
+                      expiry={e.expiry}
+                      refusal={r?.refusal ?? null}
+                      materialCode={l.materialCode}
                     />
                   </td>
                 </tr>
@@ -724,6 +750,13 @@ const ShipmentsList: React.FC<ShipmentsListProps> = ({
                                         </td>
                                         <td className="py-1.5 text-right text-text-tertiary">
                                           <Data>{li.expiryDate ? fmtDate(li.expiryDate) : '—'}</Data>
+                                          {approvedIntoBlockedStock(asn, li) ? (
+                                            <div className="mt-1">
+                                              <BlockedStockMarker
+                                                testId={`asn-line-blocked-${asn.asnNumber}-${li.materialCode}`}
+                                              />
+                                            </div>
+                                          ) : null}
                                         </td>
                                       </tr>
                                     );
@@ -732,6 +765,12 @@ const ShipmentsList: React.FC<ShipmentsListProps> = ({
                               </table>
                             )}
                           </div>
+                        </div>
+                        {/* MR-6 BR-09 — the exception record, and edge case 1's ETA change. */}
+                        <div className="mt-4">
+                          <ShelfLifeExceptionDetail asn={asn}>
+                            {asnVerbs.submit.kind === 'held' ? <AsnEtaChange asn={asn} /> : null}
+                          </ShelfLifeExceptionDetail>
                         </div>
                       </td>
                     </tr>
@@ -756,6 +795,63 @@ const ShipmentsList: React.FC<ShipmentsListProps> = ({
   );
 };
 
+/**
+ * MR-6 edge case 1 — on a submitted ASN whose shelf-life exception was
+ * approved, the supplier may move the ETA later; when a line then fails the
+ * rule, Quality decides again (`t_asn_change_eta`). The control is offered only
+ * where the verb would accept it (`etaNeedsReapproval`, the hook's rule).
+ */
+const AsnEtaChange: React.FC<{ asn: ASN }> = ({ asn }) => {
+  const { t } = useTranslation();
+  const { toast } = useToast();
+  const refusalText = useRefusalText();
+  const changeEta = useAdvanceShipNoticeChangeEta();
+  const [eta, setEta] = useState('');
+  const view = shelfLifeExceptionOf(asn);
+  if (asn.status !== 'Submitted' || view?.state !== 'approved') return null;
+  const legal = etaNeedsReapproval(asn, eta);
+  const run = () =>
+    changeEta.mutate(
+      { asnNumber: asn.asnNumber, eta },
+      {
+        onSuccess: (res) => {
+          if (res.status === 'failed') {
+            toast({
+              variant: 'warning',
+              title: t('fc.asn.shelfLife.changeEta.failed', { asnNumber: asn.asnNumber }),
+              description: refusalText(res.reason) ?? res.reason ?? '',
+            });
+            return;
+          }
+          setEta('');
+          toast({ variant: 'success', title: t('fc.asn.shelfLife.changeEta.success', { asnNumber: asn.asnNumber }) });
+        },
+        onError: () =>
+          toast({ variant: 'error', title: t('asn.denied.title'), description: t('asn.denied.desc') }),
+      },
+    );
+  return (
+    <div className="flex flex-wrap items-end gap-2 border-t border-border-subtle pt-2">
+      <label className="block">
+        <span className={labelClass}>{t('fc.asn.shelfLife.changeEta.label')}</span>
+        <input
+          type="date"
+          value={eta}
+          min={view.request.eta}
+          onChange={(ev) => setEta(ev.target.value)}
+          className={inputClass}
+        />
+      </label>
+      <Button variant="outline" onClick={run} disabled={!legal || changeEta.isPending}>
+        {t('fc.asn.shelfLife.changeEta.action')}
+      </Button>
+      <p className="w-full text-[11px] text-text-tertiary">
+        {t('fc.asn.shelfLife.changeEta.hint', { eta: fmtDate(view.request.eta) })}
+      </p>
+    </div>
+  );
+};
+
 const SupplierShipments: React.FC = () => {
   const { t } = useTranslation();
   const refusalText = useRefusalText();
@@ -768,6 +864,7 @@ const SupplierShipments: React.FC = () => {
   const { supplierId } = identity;
   const createAsnMutation = useAdvanceShipNoticeCreate();
   const submitAsnMutation = useAdvanceShipNoticeSubmit();
+  const requestExceptionMutation = useAdvanceShipNoticeRequestException();
   const cancelAsnMutation = useAdvanceShipNoticeCancel();
   // ⚠️ **THE WIZARD TAB IS A SECOND ENTRY TO THE SAME VERBS, AND THE FIRST PASS
   // OF THIS BATCH MISSED IT** — `IMPORTER-PRESENCE-IS-NOT-VERB-COVERAGE-01` for
@@ -801,6 +898,8 @@ const SupplierShipments: React.FC = () => {
     shipDate: '',
     lines: {} as Record<string, LineEntry>,
     overShipReason: '',
+    /** MR-6 BR-08 — the supplier's reason when shelf life blocks the submission. */
+    exceptionReason: '',
   });
   const [cancelTarget, setCancelTarget] = useState<string | null>(null);
 
@@ -852,6 +951,7 @@ const SupplierShipments: React.FC = () => {
       Delivered: 0,
       Discrepancy: 0,
       Cancelled: 0,
+      'Awaiting exception': 0,
     };
     for (const a of asns) base[a.status]++;
     return base;
@@ -912,6 +1012,7 @@ const SupplierShipments: React.FC = () => {
       shipDate: asn.shipDate ?? '',
       lines: entries,
       overShipReason: asn.overShipReason ?? '',
+      exceptionReason: '',
     });
   };
 
@@ -950,18 +1051,43 @@ const SupplierShipments: React.FC = () => {
     if (!submitTarget) return;
     const asnNumber = submitTarget.asnNumber;
     const read = readSubmitLines(submitTarget);
+    const vars = {
+      asnNumber,
+      carrier: submitForm.carrier,
+      // BL-51 — '' clears a 3PL the draft named (a carrier typed by name).
+      threePlId: submitForm.threePlId,
+      trackingNumber: submitForm.trackingNumber,
+      eta: submitForm.eta,
+      ...(submitForm.shipDate ? { shipDate: submitForm.shipDate } : {}),
+      ...(read.lines.length > 0 ? { lines: read.lines.map((l) => l.input) } : {}),
+      ...(submitForm.overShipReason.trim() ? { overShipReason: submitForm.overShipReason.trim() } : {}),
+    };
+    // MR-6 BR-08 — the second submit path: when shelf life is the one thing
+    // wrong, the drawer asks Quality instead of submitting.
+    if (read.onlyShelfLife) {
+      requestExceptionMutation.mutate(
+        { ...vars, reason: submitForm.exceptionReason.trim() },
+        {
+          onSuccess: (res) => {
+            if (res.status === 'failed') {
+              toast({
+                variant: 'warning',
+                title: t('fc.asn.shelfLife.request.failed', { asnNumber }),
+                description: refusalText(res.reason) ?? res.reason ?? '',
+              });
+              return;
+            }
+            setSubmitTarget(null);
+            toast({ variant: 'success', title: t('fc.asn.shelfLife.request.success', { asnNumber }) });
+          },
+          onError: () =>
+            toast({ variant: 'error', title: t('asn.denied.title'), description: t('asn.denied.desc') }),
+        },
+      );
+      return;
+    }
     submitAsnMutation.mutate(
-      {
-        asnNumber,
-        carrier: submitForm.carrier,
-        // BL-51 — '' clears a 3PL the draft named (a carrier typed by name).
-        threePlId: submitForm.threePlId,
-        trackingNumber: submitForm.trackingNumber,
-        eta: submitForm.eta,
-        ...(submitForm.shipDate ? { shipDate: submitForm.shipDate } : {}),
-        ...(read.lines.length > 0 ? { lines: read.lines.map((l) => l.input) } : {}),
-        ...(submitForm.overShipReason.trim() ? { overShipReason: submitForm.overShipReason.trim() } : {}),
-      },
+      vars,
       {
         onSuccess: (res) => {
           if (res.status === 'failed') {
@@ -1099,8 +1225,10 @@ const SupplierShipments: React.FC = () => {
     form.shipDate !== '' &&
     form.eta !== '' &&
     form.eta >= form.shipDate &&
-    wizardRead.complete;
-  const step3Valid = form.confirmed;
+    // MR-6 BR-08 — a line short on shelf life does not stop the wizard: step 3
+    // asks Quality for an exception instead of submitting.
+    (wizardRead.complete || wizardRead.onlyShelfLife);
+  const step3Valid = form.confirmed && (!wizardRead.onlyShelfLife || form.exceptionReason.trim() !== '');
   const isStepValid = (s: number): boolean =>
     s === 0 ? step1Valid : s === 1 ? step2Valid : step3Valid;
 
@@ -1131,6 +1259,24 @@ const SupplierShipments: React.FC = () => {
           title: t('asn.create.failed.title'),
           description: refusalText(createRes.reason) ?? t('asn.create.failed.desc', { reason: createRes.reason ?? '' }),
         });
+        return;
+      }
+      // MR-6 BR-08 — shelf life is the one thing wrong: ask Quality instead.
+      if (wizardRead.onlyShelfLife) {
+        const requestRes = await requestExceptionMutation.mutateAsync({
+          asnNumber: createRes.entityId,
+          ...detail,
+          reason: form.exceptionReason.trim(),
+        });
+        toast(
+          requestRes.status === 'failed'
+            ? {
+                variant: 'warning',
+                title: t('fc.asn.shelfLife.request.failed', { asnNumber: createRes.entityId }),
+                description: refusalText(requestRes.reason) ?? requestRes.reason ?? '',
+              }
+            : { variant: 'success', title: t('fc.asn.shelfLife.request.success', { asnNumber: createRes.entityId }) },
+        );
         return;
       }
       const submitRes = await submitAsnMutation.mutateAsync({
@@ -1513,6 +1659,13 @@ const SupplierShipments: React.FC = () => {
             </div>
           ) : null}
 
+          {wizardRead.onlyShelfLife ? (
+            <ShelfLifeRequestBox
+              reason={form.exceptionReason}
+              onReasonChange={(v) => updateForm({ exceptionReason: v })}
+            />
+          ) : null}
+
           <label className="flex items-start gap-3 px-4 py-3 bg-teal-soft border border-teal/30 rounded-md cursor-pointer text-sm text-text-primary">
             <input
               type="checkbox"
@@ -1660,7 +1813,9 @@ const SupplierShipments: React.FC = () => {
           }}
           onComplete={completeWizard}
           isStepValid={isStepValid}
-          completeLabel={t('asn.submit.confirm')}
+          completeLabel={
+            wizardRead.onlyShelfLife ? t('fc.asn.shelfLife.request.action') : t('asn.submit.confirm')
+          }
         />
       )}
 
@@ -1681,14 +1836,25 @@ const SupplierShipments: React.FC = () => {
               <Button variant="secondary" onClick={() => setSubmitTarget(null)}>
                 {t('supplierShipments.action.cancel')}
               </Button>
-              <Button
-                variant="outline"
-                icon={Send}
-                onClick={doSubmitAsn}
-                disabled={submitAsnMutation.isPending}
-              >
-                {t('asn.submit.confirm')}
-              </Button>
+              {readSubmitLines(submitTarget).onlyShelfLife ? (
+                <Button
+                  variant="outline"
+                  icon={Send}
+                  onClick={doSubmitAsn}
+                  disabled={requestExceptionMutation.isPending || submitForm.exceptionReason.trim() === ''}
+                >
+                  {t('fc.asn.shelfLife.request.action')}
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  icon={Send}
+                  onClick={doSubmitAsn}
+                  disabled={submitAsnMutation.isPending}
+                >
+                  {t('asn.submit.confirm')}
+                </Button>
+              )}
             </>
           )
         }
@@ -1756,6 +1922,14 @@ const SupplierShipments: React.FC = () => {
               />
               <p className="mt-2 text-xs text-text-tertiary">{t('fc.asn.submit.required')}</p>
             </div>
+            {readSubmitLines(submitTarget).onlyShelfLife ? (
+              <ShelfLifeRequestBox
+                reason={submitForm.exceptionReason}
+                onReasonChange={(v) => setSubmitForm((f) => ({ ...f, exceptionReason: v }))}
+              />
+            ) : null}
+            {/* A draft Quality sent back: the rejection and its reason (MR-6 BR-08). */}
+            <ShelfLifeExceptionDetail asn={submitTarget} />
           </div>
         )}
       </SidePanel>

@@ -80,6 +80,8 @@ export const grVariance = (rows: GoodsReceipt[]): GoodsReceipt[] =>
   rows.filter((g) => GR_VARIANCE.has(g.status));
 
 // ── ASNs (inbound) ───────────────────────────────────────────────────────────
+// MR-6 BR-08 — 'Awaiting exception' is not inbound: Quality has not let the
+// goods ship yet, so it counts in neither list below.
 export const pendingAsns = (rows: ASN[]): ASN[] =>
   rows.filter((a) => a.status === 'Submitted' || a.status === 'In Transit');
 
