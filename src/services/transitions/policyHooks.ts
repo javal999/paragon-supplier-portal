@@ -421,6 +421,13 @@ export const POLICY_HOOKS = {
    */
   MRP_CONTROLLER_GOVERNED: 'mrp_controller_governed',
   /**
+   * BL-157 — unmapping an MRP controller code: the code is SAP-shaped
+   * (MRP_CONTROLLER_CODE_INVALID) and has a mapping in force to remove
+   * (MRP_CONTROLLER_NOT_MAPPED). The rule is `mrpControllerUnmapRefusal`, the
+   * one the admin page's pre-check calls.
+   */
+  MRP_CONTROLLER_UNMAPPABLE: 'mrp_controller_unmappable',
+  /**
    * Material C2 (MR-3 BR-05, AC-01, AC-05) — a supplier trade name: the
    * material is assigned to the supplier (NOT_ASSIGNED), the name is 2 to 80
    * characters (NAME_LENGTH), the supplier material number is at most 40

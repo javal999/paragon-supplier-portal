@@ -394,6 +394,8 @@ export const processFlowPurposeEn: Record<string, string> = {
     'Who handles a material in planning. SAP gives each material an MRP controller code; the hub keeps who that code is: the planner or desk a supplier can ask for, and the hub users behind it.',
   'processFlows.purpose.t_mrpcontroller_set':
     'The hub administrator maps an MRP controller code to the planner or desk behind it and one or more hub users, or changes that mapping. Suppliers see who to contact on their stock, call-offs and shipping notices, so each change is on record with who made it and when.',
+  'processFlows.purpose.t_mrpcontroller_unmap':
+    'The hub administrator removes the mapping of an MRP controller code. Materials with that code then show the code only, and suppliers no longer see who handles them. The removal is on record with who made it and when.',
   // ── supplier trade names (Material C2) ───────────────────────────────
   'processFlows.purpose.entity.materialName':
     'A supplier’s own name for a PTI material it supplies, with its own material number if it has one. Once Material Planning approves it, the name shows beside PTI’s description, so the supplier recognises its products and a planner can match what the supplier writes.',
@@ -952,6 +954,8 @@ export const processFlowPurposeId: Record<string, string> = {
     'Siapa yang menangani suatu material di perencanaan. SAP memberi setiap material kode MRP controller; hub menyimpan siapa pemilik kode itu: nama yang dapat dihubungi pemasok, dan pengguna hub di baliknya.',
   'processFlows.purpose.t_mrpcontroller_set':
     'Administrator hub memetakan kode MRP controller ke sebuah nama dan satu atau lebih pengguna hub, atau mengubah pemetaan itu. Pemasok melihat nama itu pada stok, call-off, dan pemberitahuan pengirimannya, sehingga setiap perubahan tercatat beserta siapa dan kapan.',
+  'processFlows.purpose.t_mrpcontroller_unmap':
+    'Administrator hub menghapus pemetaan sebuah kode MRP controller. Material dengan kode itu kemudian hanya menampilkan kodenya, dan pemasok tidak melihat nama untuknya. Penghapusan itu tercatat beserta siapa dan kapan.',
   'processFlows.purpose.entity.materialName':
     'Nama dagang pemasok untuk material PTI yang dipasoknya, beserta nomor materialnya sendiri bila ada. Setelah disetujui Material Planning, nama itu tampil di samping deskripsi PTI, sehingga pemasok mengenali produknya dan perencana dapat mencocokkan tulisan pemasok.',
   'processFlows.purpose.t_materialname_submit':

@@ -1,6 +1,6 @@
 # C1 — Method Surface
 
-Three distinct axes. **101** (service surface) · **199** (transition catalog) · **45** (wired
+Three distinct axes. **101** (service surface) · **200** (transition catalog) · **45** (wired
 targets). They measure different things; this file keeps them separate.
 
 > ⚠️ **THIS DOCUMENT IS PINNED TO THE TREE, AND THE PIN IS WHY THE NUMBERS ABOVE ARE ALLOWED TO
@@ -104,7 +104,7 @@ the string, because those are different claims and only the first is the contrac
 
 ---
 
-## Axis 2 — the 199-transition catalog (51 flows)
+## Axis 2 — the 200-transition catalog (51 flows)
 
 Every authored state-machine edge across the registered flows (`id: 't_<entity>_<verb>'`). Derived
 from `getKnownFlows()` — the seeded registry — never from a grep over the flow files, because a
@@ -140,7 +140,7 @@ transition id can be assembled at a call site rather than written as a literal (
 | `supplierOverlay.flow.ts` | `supplierOverlay` | 1 | `t_supplier_set_update_mode` | **wired** |
 | `qualificationRule.flow.ts` | `qualificationRule` | 1 | `t_qualification_rule_set` | **wired** |
 | `sourcingType.flow.ts` | `sourcingType` | 1 | `t_sourcingtype_set` | **wired** |
-| `mrpController.flow.ts` | `mrpController` | 1 | `t_mrpcontroller_set` | **wired** |
+| `mrpController.flow.ts` | `mrpController` | 2 | `t_mrpcontroller_set`, `t_mrpcontroller_unmap` | **wired** |
 | `materialName.flow.ts` | `materialName` | 5 | `t_materialname_submit`, `t_materialname_approve`, `t_materialname_reject`, `t_materialname_load`, `t_materialname_replace` | **wired** |
 | `planningGroup.flow.ts` | `planningGroup` | 4 | `t_planninggroup_create`, `t_planninggroup_rename`, `t_planninggroup_move_materials`, `t_planninggroup_retire` | **wired** |
 | `hubSetting.flow.ts` | `hubSetting` | 1 | `t_setting_set` | **wired** |
@@ -164,7 +164,7 @@ transition id can be assembled at a call site rather than written as a literal (
 | `negotiationRound.flow.ts` | `negotiationRound` | 2 | `t_negotiationround_open`, `t_negotiationround_close` | **wired** |
 | `rfpOfferRound.flow.ts` | `rfpOfferRound` | 2 | `t_rfp_round_open`, `t_rfp_round_close` | **wired** |
 | `rfpFirmOffer.flow.ts` | `rfpFirmOffer` | 2 | `t_rfpfirmoffer_submit`, `t_rfpfirmoffer_revise` | **wired** |
-| **TOTAL** | | **199** | | |
+| **TOTAL** | | **200** | | |
 
 **Flow shape** (`schema.ts`, `FlowDefinition` / `TransitionDef`): each transition declares
 `from[]` / `to` / `trigger` / `requiredRole` / `requiredFields[]` / `policyHooks[]` /

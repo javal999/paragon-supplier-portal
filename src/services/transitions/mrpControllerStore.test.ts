@@ -11,6 +11,7 @@ import {
   mrpControllerRef,
   mrpControllerRefusal,
   mrpControllerStore,
+  mrpControllerUnmapRefusal,
   picFilterMatches,
   userLabelsOf,
 } from './mrpControllerStore';
@@ -91,5 +92,19 @@ describe('picFilterMatches — the PIC filter and "My materials" (AC-02)', () =>
     expect(picFilterMatches(p10, 'P10', null)).toBe(true);
     expect(picFilterMatches(p12, 'P10', null)).toBe(false);
     expect(picFilterMatches({ name: p12.name }, p12.name, null)).toBe(true);
+  });
+});
+
+describe('BL-157 — mrpControllerUnmapRefusal, the rule the unmap verb and the admin page share', () => {
+  it('MRP_CONTROLLER_CODE_INVALID fires on a malformed code; a mapped SAP code passes', () => {
+    expect(mrpControllerUnmapRefusal('p12')).toMatch(/^MRP_CONTROLLER_CODE_INVALID/);
+    expect(mrpControllerUnmapRefusal('P12')).toBeNull();
+  });
+
+  it('MRP_CONTROLLER_NOT_MAPPED fires on a code with no mapping in force; after an unmapping it fires again', () => {
+    expect(mrpControllerUnmapRefusal('P13')).toMatch(/^MRP_CONTROLLER_NOT_MAPPED/);
+    mrpControllerStore.append({ code: 'P12', name: '', userLabels: [], unmapped: true, setBy: NO_PERSON, setAt: '2026-09-30T00:00:00.000Z' });
+    expect(mrpControllerStore.get('P12')).toBeUndefined();
+    expect(mrpControllerUnmapRefusal('P12')).toMatch(/^MRP_CONTROLLER_NOT_MAPPED/);
   });
 });

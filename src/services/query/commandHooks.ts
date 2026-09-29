@@ -1613,6 +1613,26 @@ export function useMrpControllerSet() {
   });
 }
 
+/** BL-157 — remove an MRP controller code's mapping (`t_mrpcontroller_unmap`). */
+export function useMrpControllerUnmap() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+
+  return useMutation<CommandResult, Error, { code: string }>({
+    mutationFn: ({ code }) =>
+      svc.commands.dispatch(scope, {
+        transitionId: 't_mrpcontroller_unmap',
+        entity: 'mrpController',
+        entityId: code,
+        payload: {},
+      }),
+    onSuccess: (result) => {
+      if (result.status !== 'failed') void qc.invalidateQueries();
+    },
+  });
+}
+
 // ── Material C2 · SUPPLIER TRADE NAMES (MR-3 BR-01 to BR-06) ─────────────────
 //
 // The supplier submits; Material Planning approves, rejects or loads in bulk.
