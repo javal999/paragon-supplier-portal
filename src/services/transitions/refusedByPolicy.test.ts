@@ -176,6 +176,9 @@ describe('the POLICY_REJECTED wire format has exactly one producer', () => {
     // Known-good control first: the file was really read.
     expect(src.length).toBeGreaterThan(1000);
     expect(sites).toHaveLength(1);
+// The `${...}` below is literal source text this spec asserts on, not a template
+    // to interpolate (ESLint no-template-curly-in-string).
+    // eslint-disable-next-line no-template-curly-in-string
     expect(sites[0]).toContain('${name}:${decision.reason');
   });
 });

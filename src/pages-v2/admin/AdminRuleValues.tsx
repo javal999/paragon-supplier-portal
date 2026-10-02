@@ -171,7 +171,14 @@ const RuleValuesPage: React.FC<{ section: HubSettingSection }> = ({ section }) =
     }
     return out;
   }, [defs]);
-  const changes = useMemo(() => [...hubSettingsStore.changesIn(section)].reverse(), [section, version]);
+  // `seq` is a change's position in the section's log, oldest first. The log is
+  // append-only, so seq never shifts and is the row's React key; key + setAt
+  // alone can repeat (two changes to one key in the same instant), and the
+  // index of the newest-first list shifts on every new change.
+  const changes = useMemo(
+    () => hubSettingsStore.changesIn(section).map((c, seq) => ({ ...c, seq })).reverse(),
+    [section, version],
+  );
   const readState = useMemo(() => hubSettingsStore.readState(), [version]);
   const changedCount = defs.filter((d) => settingValue(d.key) !== d.defaultValue).length;
 
@@ -487,10 +494,10 @@ const RuleValuesPage: React.FC<{ section: HubSettingSection }> = ({ section }) =
                 <TableHeaderCell>{t('adminSet.history.col.at')}</TableHeaderCell>
               </TableHeader>
               <tbody>
-                {changes.map((c, i) => {
+                {changes.map((c) => {
                   const def = hubSettingDef(c.key) ?? null;
                   return (
-                    <TableRow key={`${c.key}-${c.setAt}-${i}`} data-testid={`admin-set-change-row-${c.key}`}>
+                    <TableRow key={c.seq} data-testid={`admin-set-change-row-${c.key}`}>
                       <TableCell className="text-sm">{keyLabel(c.key)}</TableCell>
                       <TableCell className="whitespace-nowrap text-sm">
                         <Data>{valueText(def, c.previous)}</Data> → <Data>{valueText(def, c.value)}</Data>

@@ -184,7 +184,9 @@ describe('§75 · BuyerGoodsReceipt — the ROW-LEVEL verbs the entry guard did 
   // than green.
   const openRow = async (grNumber: string) => {
     fireEvent.click(await screen.findByText(grNumber));
-    await new Promise((r) => setTimeout(r, 0));
+    await new Promise((r) => {
+      setTimeout(r, 0);
+    });
   };
   const PENDING_INSPECTION = 'GR-2026-002'; // -> Start inspection (the chain)
   const APPROVED = 'GR-2026-003'; // -> Post to SAP (gr:post)

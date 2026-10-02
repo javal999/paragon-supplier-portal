@@ -31,13 +31,26 @@ import { InTransitReadOnly, inputClass, inventoryNow, labelClass, useInventoryRu
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface BatchRow {
+  /**
+   * The row's React key, given once when the row is added. Batch rows are
+   * added and removed and hold inputs, and every field is editable or blank,
+   * so no field can identify a row. Never sent: the payload names its fields.
+   */
+  id: number;
   batchNumber: string;
   qty: string;
   manufacturingDate: string;
   expiryDate: string;
 }
 
-const EMPTY_BATCH: BatchRow = { batchNumber: '', qty: '', manufacturingDate: '', expiryDate: '' };
+let nextBatchRowId = 0;
+const emptyBatch = (): BatchRow => ({
+  id: nextBatchRowId++,
+  batchNumber: '',
+  qty: '',
+  manufacturingDate: '',
+  expiryDate: '',
+});
 
 export interface StockEntryPanelProps {
   open: boolean;
@@ -254,7 +267,7 @@ const StockEntryPanel: React.FC<StockEntryPanelProps> = ({
         <section>
           <div className="flex items-center justify-between mb-2">
             <span className={labelClass}>{t('inv.entry.batches')}</span>
-            <Button variant="secondary" icon={Plus} onClick={() => setBatches([...batches, { ...EMPTY_BATCH }])}>
+            <Button variant="secondary" icon={Plus} onClick={() => setBatches([...batches, emptyBatch()])}>
               {t('inv.entry.addBatch')}
             </Button>
           </div>
@@ -263,7 +276,7 @@ const StockEntryPanel: React.FC<StockEntryPanelProps> = ({
           ) : (
             <div className="space-y-2">
               {batches.map((b, i) => (
-                <div key={i} className="relative border border-border-subtle rounded-md p-3 pr-10">
+                <div key={b.id} className="relative border border-border-subtle rounded-md p-3 pr-10">
                 <div className="grid grid-cols-2 gap-2 items-end">
                   <div>
                     <label htmlFor={`batch-number-${i}`} className={labelClass}>

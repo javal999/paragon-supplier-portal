@@ -73,7 +73,12 @@ const PegsPanel: React.FC<{
           <TableHeaderCell>{t('mrq.pegs.part')}</TableHeaderCell>
         </TableHeader>
         <tbody>
+          {/* Peg has no id: the same SKU + FG week appears twice when the
+              material reaches it through two BOM paths. The list is engine
+              output, replaced whole per week and never edited, so the index
+              suffix only separates those repeats. */}
           {week.pegs.map((p, i) => (
+            // eslint-disable-next-line react/no-array-index-key -- read-only engine output; SKU + week can repeat across BOM paths
             <TableRow key={`${p.skuCode}-${p.fgWeek}-${i}`} data-testid={`mrq-peg-${p.skuCode}`}>
               <TableCell>
                 <div className="text-sm text-text-primary">{names[p.skuCode] ?? p.skuCode}</div>

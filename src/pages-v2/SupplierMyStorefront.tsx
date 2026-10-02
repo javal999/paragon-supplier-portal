@@ -779,7 +779,7 @@ const StorefrontEditor: React.FC<StorefrontEditorProps> = ({
                 variant: 'neutral' as const,
                 accent: false,
               },
-            ].map(({ cfg, labelKey, variant, accent }, i) =>
+            ].map(({ cfg, labelKey, variant, accent }) =>
               cfg ? (
                 <div
                   key={labelKey}
@@ -803,7 +803,9 @@ const StorefrontEditor: React.FC<StorefrontEditorProps> = ({
                   <StatusPill variant={variant}>{t(labelKey)}</StatusPill>
                 </div>
               ) : (
-                <div key={i} />
+                // labelKey (primary / fallback) is unique per slot and is also the key of the
+                // filled branch above, so the slot keeps its identity either way.
+                <div key={labelKey} />
               ),
             )}
           </div>

@@ -280,6 +280,12 @@ const OBLIGATION_SUGGESTIONS: Record<
 };
 
 interface DraftObligation {
+  /**
+   * Row identity, used as the React key. Minted once when the row is added
+   * (`newObligationId`), never derived from content: a custom obligation can
+   * repeat a title, and rows are removed from the middle of the list.
+   */
+  id: string;
   title: string;
   owner: 'Buyer' | 'Supplier' | 'Both';
   dueDate: string;
@@ -305,6 +311,10 @@ interface DraftContract {
  *  `seedContractNumber` — see that function's note on why a display formatter
  *  must never seed a parsed field. */
 const DEFAULT_NOTICE_DAYS = 90;
+
+let obligationSeq = 0;
+/** A unique id for a new draft obligation row (see `DraftObligation.id`). */
+const newObligationId = (): string => `obl-${++obligationSeq}`;
 
 const EMPTY_DRAFT: DraftContract = {
   title: '',
@@ -511,7 +521,7 @@ const ContractsWorkspace: React.FC<ContractsWorkspaceProps> = ({
       }
       return {
         ...d,
-        obligations: [...d.obligations, { title, owner, dueDate: '' }],
+        obligations: [...d.obligations, { id: newObligationId(), title, owner, dueDate: '' }],
       };
     });
 
@@ -521,7 +531,7 @@ const ContractsWorkspace: React.FC<ContractsWorkspaceProps> = ({
       ...d,
       obligations: [
         ...d.obligations,
-        { title: customObligationTitle.trim(), owner: 'Both', dueDate: '' },
+        { id: newObligationId(), title: customObligationTitle.trim(), owner: 'Both', dueDate: '' },
       ],
     }));
     setCustomObligationTitle('');
@@ -1134,7 +1144,7 @@ const ContractsWorkspace: React.FC<ContractsWorkspaceProps> = ({
                   </thead>
                   <tbody>
                     {draft.obligations.map((o, i) => (
-                      <tr key={i} className="border-t border-border-subtle">
+                      <tr key={o.id} className="border-t border-border-subtle">
                         <td className="px-3 py-2 text-text-primary">
                           {o.title}
                         </td>

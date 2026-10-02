@@ -153,6 +153,15 @@ const GR_HALAL_REFUSAL_KEY: Record<HalalRefusalReason, string> = {
 type SourceMode = 'shipment' | 'manual';
 
 interface LineDraft {
+  /**
+   * The row's React key: the source's id plus the line's position in that
+   * shipment / ASN, given once by the draft builders. Source lines carry no id
+   * and one material can appear on two lines (two lots), so materialCode is not
+   * unique; the receipt never adds, removes or reorders a line, so the position
+   * is fixed, and the source id makes a source switch remount the rows instead
+   * of reusing the previous source's. Never sent: the result names its fields.
+   */
+  lineKey: string;
   materialCode: string;
   description: string;
   qtyExpected: number;
@@ -548,7 +557,8 @@ const seedHalal = (materialCode: string): Pick<LineDraft, 'halal' | 'halalSealCh
 });
 
 const buildDraftFromShipment = (s: Shipment): LineDraft[] =>
-  s.lineItems.map((li) => ({
+  s.lineItems.map((li, n) => ({
+    lineKey: `${s.id}#${n + 1}`,
     materialCode: li.materialCode,
     description: li.description,
     qtyExpected: li.qty,
@@ -566,7 +576,8 @@ const buildDraftFromShipment = (s: Shipment): LineDraft[] =>
   }));
 
 const buildDraftFromAsn = (a: ASN): LineDraft[] =>
-  a.lineItems.map((li) => ({
+  a.lineItems.map((li, n) => ({
+    lineKey: `asn:${a.asnNumber}#${n + 1}`,
     materialCode: li.materialCode,
     description: li.description,
     qtyExpected: li.orderedQty,
@@ -1130,7 +1141,7 @@ const GRInspectionWizard: React.FC<GRInspectionWizardProps> = ({
               const rejected = qty.ok ? Math.max(0, qty.received - qty.accepted) : null;
               return (
                 <div
-                  key={i}
+                  key={l.lineKey}
                   className="border border-border-subtle rounded-md p-4"
                 >
                   <div className="flex items-start justify-between gap-3 mb-3">
@@ -1262,7 +1273,7 @@ const GRInspectionWizard: React.FC<GRInspectionWizardProps> = ({
       <div className="flex flex-col gap-4">
         {lines.map((l, i) => (
           <div
-            key={i}
+            key={l.lineKey}
             className="border border-border-subtle rounded-md p-4 flex flex-col gap-3"
           >
             <div className="flex justify-between items-start">

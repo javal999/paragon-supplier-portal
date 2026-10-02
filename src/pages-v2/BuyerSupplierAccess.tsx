@@ -52,7 +52,12 @@ const BuyerSupplierAccess: React.FC = () => {
   const log = useMemo(
     () =>
       grants
-        .flatMap((g) => g.log.map((e) => ({ ...e, supplierName: g.supplierName })))
+        // `rowKey` = supplier id + the entry's position in that supplier's own
+        // log. Each grant's log is append-only, so the position never changes;
+        // `at` cannot serve, as the simulated clock stamps many entries alike.
+        .flatMap((g) =>
+          g.log.map((e, seq) => ({ ...e, supplierName: g.supplierName, rowKey: `${g.supplierId}#${seq}` })),
+        )
         .sort((a, b) => b.at.localeCompare(a.at)),
     [grants],
   );
@@ -178,8 +183,8 @@ const BuyerSupplierAccess: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {log.map((e, i) => (
-                <tr key={`${e.at}-${i}`} className="border-t border-border-subtle" data-testid="access-log-entry">
+              {log.map((e) => (
+                <tr key={e.rowKey} className="border-t border-border-subtle" data-testid="access-log-entry">
                   <td className="py-1.5">
                     <Data>{formatDateTime(e.at)}</Data>
                   </td>

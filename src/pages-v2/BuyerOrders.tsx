@@ -946,11 +946,13 @@ const BuyerOrders: React.FC = () => {
               </button>
               {commsOpen && (
                 <ul className="mt-3 space-y-3">
-                  {buildComms(selectedPO).map((m, i) => {
+                  {/* Key: the timestamp. buildComms emits a fixed three
+                      messages at 09:00, 10:18 and 14:32, so `ts` never repeats. */}
+                  {buildComms(selectedPO).map((m) => {
                     const Icon = CHANNEL_ICON[m.channel];
                     return (
                       <li
-                        key={i}
+                        key={m.ts}
                         className="flex gap-3 p-3 border border-border-subtle rounded-md"
                       >
                         <Icon

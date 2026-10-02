@@ -400,10 +400,12 @@ const SupplierStorefront: React.FC = () => {
             <StatusPill variant="neutral">{t('supplierStorefront.sampleData')}</StatusPill>
           </div>
           <ol className="relative space-y-5">
-            {TRACK_RECORD.map((e, i) => {
+            {TRACK_RECORD.map((e) => {
               const Icon = e.icon;
+              // ts + label: each event is one dated record and no two share both a date and
+              // a label, so the pair is unique; it does not shift if events are reordered.
               return (
-                <li key={i} className="flex items-start gap-4">
+                <li key={`${e.ts}-${e.label}`} className="flex items-start gap-4">
                   <div
                     className={`w-9 h-9 shrink-0 rounded-full flex items-center justify-center ${TONE_CLASS[e.tone]}`}
                   >

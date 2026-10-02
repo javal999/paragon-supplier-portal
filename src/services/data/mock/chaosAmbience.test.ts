@@ -131,7 +131,10 @@ describe('CHAOS-AMBIENCE-01 — injection is never ambient', () => {
     // is unstable through it; a raw service hands back the same prototype method
     // every time. That difference is DETERMINISTIC — no rate, no clock, no
     // randomness — which is what makes this a gate rather than a flake.
+    // Comparing a property read with ITSELF is the probe, not a typo: through
+    // the Proxy the two reads return different closures (ESLint no-self-compare).
     const sameMethodTwice = (svc: typeof mockDataService): boolean =>
+      // eslint-disable-next-line no-self-compare
       svc.suppliers.list === svc.suppliers.list;
 
     // KNOWN-BAD FIRST, so a probe that can no longer detect wrapping cannot pass

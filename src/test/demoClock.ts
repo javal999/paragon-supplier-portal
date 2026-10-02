@@ -74,6 +74,10 @@ export const DEMO_NOW = `${DECLARED_PRESENT}T00:00:00.000Z`;
  * TanStack Query's internals, and React Testing Library's `waitFor` keep
  * advancing on real time — only the calendar day the code reads moves. Timers
  * are never faked. Call at the top level of a spec file or inside a `describe`.
+ *
+ * NOT A REACT HOOK despite the `use` prefix (kept because specs and
+ * `docs/findings.md` cite the name). ESLint's react-hooks/rules-of-hooks flags a
+ * module-scope call; those call sites carry a disable comment pointing here.
  */
 export function usePinnedDemoClock(now: string = DEMO_NOW): void {
   let real: DateConstructor;

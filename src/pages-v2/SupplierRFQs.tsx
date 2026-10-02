@@ -200,6 +200,12 @@ const buildSubmittedQuotes = (
 };
 
 interface AwardRow {
+  /**
+   * The quotation this outcome belongs to — the row's identity and React key.
+   * rfqNumber is not a safe key: nothing guarantees one decided quotation per
+   * RFQ for a supplier, and it falls back to rfqId when the RFQ is missing.
+   */
+  quotationId: string;
   rfqNumber: string;
   material: string;
   result: 'Awarded' | 'Not Awarded';
@@ -222,6 +228,7 @@ const buildAwardRows = (
       const rfq = rfqById.get(q.rfqId);
       const won = q.status === 'Awarded';
       return {
+        quotationId: q.id,
         rfqNumber: rfq?.rfqNumber ?? q.rfqId,
         material: rfq?.title ?? '—',
         result: won ? 'Awarded' : 'Not Awarded',
@@ -739,8 +746,8 @@ const AwardsTab: React.FC<{ rows: AwardRow[] }> = ({ rows }) => {
             <TableHeaderCell>{t('rfqs.awards.col.notes')}</TableHeaderCell>
           </TableHeader>
           <tbody>
-            {rows.map((row, i) => (
-              <TableRow key={i}>
+            {rows.map((row) => (
+              <TableRow key={row.quotationId}>
                 <TableCell>
                   <Data className="text-xs font-bold text-text-primary">
                     {row.rfqNumber}

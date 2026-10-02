@@ -637,11 +637,13 @@ const BuyerScorecard: React.FC = () => {
           </div>
         ) : (
           <div className="flex flex-col gap-2">
-            {supp.commLog.map((log, i) => {
+            {supp.commLog.map((log) => {
               const Icon = channelIcon(log.channel);
               return (
                 <div
-                  key={i}
+                  // CommLogEntry has no id. Date + type + message names one
+                  // event: the message quotes the document number it concerns.
+                  key={`${log.date}|${log.type}|${log.message}`}
                   className="flex items-start gap-4 px-4 py-3 bg-bg-hover border border-border-subtle rounded-md"
                 >
                   <div className="shrink-0 text-center min-w-[88px]">

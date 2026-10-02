@@ -111,7 +111,12 @@ const CheckDetail: React.FC<{ feed: FeedHealth; tolerance: string }> = ({ feed, 
                 <TableHeaderCell>{t('dh.records.detail')}</TableHeaderCell>
               </TableHeader>
               <tbody>
+                {/* A failure's key is the failing record's key, which repeats
+                    when the feed itself holds duplicates (what this page
+                    reports). The list is read-only and replaced whole per
+                    check, so the index suffix only separates those repeats. */}
                 {current.failures.slice(0, RECORD_LIMIT).map((f, i) => (
+                  // eslint-disable-next-line react/no-array-index-key -- read-only check output; record keys can repeat
                   <TableRow key={`${f.key}#${i}`} data-testid={`dh-record-${f.key}`}>
                     <TableCell>
                       <Data>{f.key}</Data>

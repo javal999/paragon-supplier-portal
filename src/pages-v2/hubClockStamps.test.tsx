@@ -35,6 +35,9 @@ import { computeStatus, daysRemaining } from '../services/data/complianceProject
 
 /** The machine's calendar during every test: nowhere near the hub's present. */
 const MACHINE = '2027-03-15T03:07:00.000Z';
+// `usePinnedDemoClock` is a Vitest setup helper, not a React hook: it registers
+// beforeEach/afterEach and must run at module scope (see src/test/demoClock.ts).
+// eslint-disable-next-line react-hooks/rules-of-hooks
 usePinnedDemoClock(MACHINE);
 
 const HHMM = { hour: '2-digit', minute: '2-digit' } as const;

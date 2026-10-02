@@ -167,16 +167,16 @@ const asWarnings = (rules) =>
 
 // ── Rules that still have violations in the codebase (plan Phase 2 fixes them)
 // Each runs as 'warn' instead of its target severity until its count is zero.
-// Grouped by how urgent the fix is, so Phase 2 can work top-down.
+// Grouped by how urgent the fix is, so the cleanup can work top-down.
 const RULES_WITH_OPEN_VIOLATIONS = [
-  // Likely real bugs — fix first.
-  'react-hooks/rules-of-hooks', // a hook called conditionally or in a loop
-  'react/jsx-key', // list items rendered without a key
-  'no-self-compare', // `x === x`, always true or a typo
-  'no-promise-executor-return', // value returned from `new Promise(...)` is lost
-  'no-template-curly-in-string', // "${x}" in plain quotes is never interpolated
+  // Promoted to 'error' in Phase 2 (2026-10-02), so no longer listed:
+  // rules-of-hooks, jsx-key, no-self-compare, no-promise-executor-return,
+  // no-template-curly-in-string. All 20 hits were intentional test patterns
+  // or a harmless `sleep` helper, now annotated at the site.
   'react/jsx-no-leaked-render', // `{n && <X/>}` renders "0" when n is 0
-  'react/no-array-index-key',
+  // react/no-array-index-key: promoted in Phase 2 (2026-10-02). Every index key
+  // outside forecast now uses a stable id, or keeps the index with a disable
+  // comment explaining why the list is static. Forecast keeps it as a warning.
   // React Compiler readiness (eslint-plugin-react-hooks v7 recommended set).
   'react-hooks/exhaustive-deps',
   'react-hooks/set-state-in-effect',

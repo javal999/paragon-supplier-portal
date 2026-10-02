@@ -57,6 +57,9 @@ describe('the menu — one item per event type', () => {
 });
 
 describe('each page carries its own title and count, and no type switch', () => {
+  // `it.each` rows are table DATA: each element is rendered alone by its own
+  // test, never as a React list — so they need no `key` (ESLint react/jsx-key).
+  /* eslint-disable react/jsx-key */
   it.each([
     ['buyer RFI', '/buyer/rfi', <BuyerRfi />, BUYER, 'Information requests'],
     ['buyer RFP', '/buyer/rfp', <BuyerRfp />, BUYER, 'Proposal requests'],
@@ -64,6 +67,7 @@ describe('each page carries its own title and count, and no type switch', () => 
     ['supplier RFI', '/supplier/rfi', <SupplierRfi />, SUPPLIER, 'Information requests'],
     ['supplier RFP', '/supplier/rfp', <SupplierRfp />, SUPPLIER, 'Proposal requests'],
     ['supplier RFQ', '/supplier/rfq', <SupplierRFQs />, SUPPLIER, 'Quotation requests'],
+    /* eslint-enable react/jsx-key */
   ])('%s', async (_name, at, element, identity, title) => {
     await i18n.changeLanguage('en');
     renderWithProviders(

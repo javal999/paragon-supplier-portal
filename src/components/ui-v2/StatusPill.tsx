@@ -64,6 +64,10 @@ const StatusPill: React.FC<StatusPillProps> = ({
     if (typeof node === 'string') return translateLeaf(node);
     if (Array.isArray(node))
       return node.map((n, i) => (
+        // These are a pill's JSX children (icon + label), not a data list: their
+        // order is fixed by the markup, and position is how React itself keys
+        // unkeyed children.
+        // eslint-disable-next-line react/no-array-index-key -- fixed JSX child positions, never added/removed/reordered by data
         <React.Fragment key={i}>{localize(n)}</React.Fragment>
       ));
     if (React.isValidElement(node) && node.props.children != null)

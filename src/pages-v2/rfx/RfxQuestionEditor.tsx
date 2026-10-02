@@ -53,12 +53,26 @@ interface NewQuestion {
   prompt: string;
   help: string;
   required: boolean;
-  options: string[];
+  options: OptionRow[];
   unit: string;
   min: string;
   max: string;
   currency: BidCurrency;
 }
+
+/**
+ * One row of the option editor. `id` is the row's React key, given once when
+ * the row is created: options are added and removed and hold an input, and two
+ * labels can be equal (or both blank), so neither the label nor the position
+ * identifies a row. The id never leaves the editor.
+ */
+interface OptionRow {
+  id: number;
+  label: string;
+}
+
+let nextOptionRowId = 0;
+const optionRow = (): OptionRow => ({ id: nextOptionRowId++, label: '' });
 
 const blank = (currency: BidCurrency): NewQuestion => ({
   sectionId: 'event',
@@ -66,7 +80,7 @@ const blank = (currency: BidCurrency): NewQuestion => ({
   prompt: '',
   help: '',
   required: false,
-  options: ['', ''],
+  options: [optionRow(), optionRow()],
   unit: '',
   min: '',
   max: '',
@@ -115,7 +129,7 @@ const RfxQuestionEditor: React.FC<RfxQuestionEditorProps> = ({
 
   /** The draft as the question it would add — what the refusal is judged on. */
   const candidate = (): RfiQuestion => {
-    const options = draft.options.map((o) => o.trim());
+    const options = draft.options.map((o) => o.label.trim());
     const choice = isChoiceType(draft.type);
     const num = (s: string) => (s.trim() === '' ? undefined : Number(s));
     return {
@@ -384,14 +398,14 @@ const RfxQuestionEditor: React.FC<RfxQuestionEditorProps> = ({
         {isChoiceType(draft.type) && (
           <fieldset className="space-y-2" data-testid={`${p}-options`}>
             <legend className={labelClass}>{t('rfxa.q.options')}</legend>
-            {draft.options.map((label, i) => (
-              <div key={i} className="flex items-center gap-2">
+            {draft.options.map(({ id, label }, i) => (
+              <div key={id} className="flex items-center gap-2">
                 <input
                   value={label}
                   aria-label={t('rfxa.q.option', { n: i + 1 })}
                   data-testid={`${p}-option-${i}`}
                   onChange={(e) =>
-                    setDraft((d) => ({ ...d, options: d.options.map((o, j) => (j === i ? e.target.value : o)) }))
+                    setDraft((d) => ({ ...d, options: d.options.map((o, j) => (j === i ? { ...o, label: e.target.value } : o)) }))
                   }
                   className={inputClass}
                 />
@@ -408,7 +422,7 @@ const RfxQuestionEditor: React.FC<RfxQuestionEditorProps> = ({
             ))}
             <Button
               variant="secondary"
-              onClick={() => setDraft((d) => ({ ...d, options: [...d.options, ''] }))}
+              onClick={() => setDraft((d) => ({ ...d, options: [...d.options, optionRow()] }))}
               data-testid={`${p}-option-add`}
             >
               {t('rfxa.q.option.add')}

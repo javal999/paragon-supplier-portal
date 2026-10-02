@@ -35,9 +35,28 @@ import type { DocumentDraft } from '../rfx/ResponseDocumentsSection';
 
 /** A cost the supplier added beyond the ones the buyer asked for. */
 export interface ExtraCostDraft {
+  /**
+   * Client-only row identity, used as the React `key` in the quote grid. The
+   * rows can be added and removed and hold inputs, while `name` and `amount`
+   * are editable and may be blank or equal, so neither can identify a row.
+   * Never shown and never submitted (`toQuote` copies only name and amount).
+   */
+  readonly id: string;
   readonly name: string;
   readonly amount: string;
 }
+
+let extraCostSeq = 0;
+
+/**
+ * A new extra-cost row with a fresh id. Every row must be created here (the
+ * "add cost" button and loading a saved quote) so each one gets its own key.
+ */
+export const newExtraCost = (name = '', amount = ''): ExtraCostDraft => ({
+  id: `extra-cost-${++extraCostSeq}`,
+  name,
+  amount,
+});
 
 /** What the supplier typed for one item. */
 export interface ItemDraft {
@@ -135,7 +154,7 @@ export function draftFromQuote(rfq: RFQ, quote: Quotation): TieredDraft {
         requestedCosts: Object.fromEntries(
           costs.filter((c) => c.costId).map((c) => [c.costId!, String(c.amount)]),
         ),
-        extraCosts: costs.filter((c) => !c.costId).map((c) => ({ name: c.name, amount: String(c.amount) })),
+        extraCosts: costs.filter((c) => !c.costId).map((c) => newExtraCost(c.name, String(c.amount))),
         alternative: alt
           ? { enabled: true, description: alt.description, prices: priceMap(alt.tierPrices) }
           : d.alternative,

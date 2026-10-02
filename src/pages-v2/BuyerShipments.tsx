@@ -1006,8 +1006,10 @@ const BuyerShipments: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {selected.lineItems.map((li, i) => (
-                    <tr key={i} className="border-t border-border-subtle">
+                  {/* Key: materialCode — a shipment carries one line per
+                      material (same key as the ASN line list above). */}
+                  {selected.lineItems.map((li) => (
+                    <tr key={li.materialCode} className="border-t border-border-subtle">
                       <td className="py-2 text-text-primary">
                         <Data>{li.materialCode}</Data>
                       </td>

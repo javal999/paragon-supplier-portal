@@ -578,7 +578,11 @@ const BuyerCommitments: React.FC = () => {
             </p>
             {action.line.log.length > 0 && (
               <ul className="text-xs text-text-secondary space-y-1">
+                {/* DisputeEntry has no id and `at` repeats (fixed simulated SDC
+                    clock); text can repeat too. Rows are stateless text, so a
+                    positional key cannot carry state to the wrong entry. */}
                 {action.line.log.map((e, i) => (
+                  // eslint-disable-next-line react/no-array-index-key -- no identity field; read-only, stateless rows
                   <li key={i}>
                     <Data>{formatDateTime(e.at)}</Data> — {e.text}
                   </li>

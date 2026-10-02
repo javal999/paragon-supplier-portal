@@ -179,6 +179,7 @@ const BuyerCommHub: React.FC = () => {
                   {entry.dataReasons.length > 0 && (
                     <div className="flex flex-wrap gap-2">
                       {entry.dataReasons.map((reason, i) => (
+                        // eslint-disable-next-line react/no-array-index-key -- reason codes can repeat and have no id; read-only, stateless pills recomputed whole from the chase view
                         <StatusPill key={`${reason}-${i}`} variant="warning">
                           {t(`buyerCommHub.reason.${reason}`)}
                         </StatusPill>
@@ -235,9 +236,11 @@ const BuyerCommHub: React.FC = () => {
           </div>
         ) : (
           <ul className="space-y-2">
-            {provenance.map((ref, i) => (
+            {provenance.map((ref) => (
               <li
-                key={`${ref.channelMessageId}-${i}`}
+                // Key: channelMessageId. Both writers append at most one ref per
+                // message (they check forMessage() first), so it is unique.
+                key={ref.channelMessageId}
                 className="border border-border-subtle rounded-lg bg-white px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm"
                 data-testid="commhub-provenance-row"
               >

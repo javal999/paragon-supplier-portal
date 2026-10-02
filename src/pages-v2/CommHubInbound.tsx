@@ -94,6 +94,13 @@ const labelClass = 'block text-label text-text-tertiary uppercase mb-1';
 
 /** One row read from a parsed reply — a SUGGESTION for the Stock page's entry. */
 interface ReadRow {
+  /**
+   * Row identity, used as the React key: `<message id>-row-<n>`, minted once in
+   * runParse. Unique because message ids are unique per parse, and stable because
+   * rows are only ever replaced wholesale. Content cannot serve: a supplier can
+   * write the same line twice.
+   */
+  readonly id: string;
   /** The raw material token the supplier wrote (reference — never dispatched as-is). */
   readonly rawMaterial: string;
   /** The supplier's own material it names EXACTLY, or '' (never a guess). */
@@ -104,6 +111,8 @@ interface ReadRow {
 
 /** A row saved through the entry form. */
 interface Recorded {
+  /** Row identity / React key, minted on append (the same material can be saved twice). */
+  readonly id: string;
   readonly material: string;
   readonly qty: number;
 }
@@ -149,6 +158,7 @@ const CommHubInbound: React.FC = () => {
   // dispatch anchors the audit correlation; later dispatches chain via causationId.
   const sessionRef = useRef<SubmissionSessionRecorder | null>(null);
   const msgSeq = useRef(0);
+  const recordedSeq = useRef(0);
 
   if (!supplierId) return <NoSupplierIdentity />;
 
@@ -173,10 +183,11 @@ const CommHubInbound: React.FC = () => {
     // Pre-select a material only on an EXACT match with one of the supplier's own
     // stock rows (a suggestion, never silent resolution).
     setRows(
-      result.proposedRows.map((r) => {
+      result.proposedRows.map((r, n) => {
         const rawMaterial = r[IMPORT_DECLARE_COLUMN.materialCode] ?? '';
         const exact = positions.some((p) => p.materialCode === rawMaterial);
         return {
+          id: `${cm.id}-row-${n}`,
           rawMaterial,
           materialCode: exact ? rawMaterial : '',
           totalQty: r[IMPORT_DECLARE_COLUMN.totalQty] ?? '',
@@ -215,7 +226,9 @@ const CommHubInbound: React.FC = () => {
     if (message && channelProvenanceStore.forMessage(message.id).length === 0) {
       channelProvenanceStore.append(makeProvenanceRef(message.id, sessionRef.current.envelope()));
     }
-    setRecorded((prev) => [...prev, { material: saved.materialCode, qty: saved.totalQty }]);
+    recordedSeq.current += 1;
+    const recordedId = `rec-${recordedSeq.current}`;
+    setRecorded((prev) => [...prev, { id: recordedId, material: saved.materialCode, qty: saved.totalQty }]);
   };
 
   const crumb = [t('commHub.crumb.intelligence'), t('commHub.crumb.inbound')];
@@ -447,6 +460,7 @@ const CommHubInbound: React.FC = () => {
                   </span>
                   <span className="inline-flex flex-wrap gap-1">
                     {parsed.diagnostics.matchedTokens.map((tok, i) => (
+                      // eslint-disable-next-line react/no-array-index-key -- immutable parser output (max 4 tokens), replaced wholesale per parse; tokens can repeat
                       <Data key={i} className="rounded bg-teal-soft px-1.5 py-0.5 text-teal-hover">
                         {tok}
                       </Data>
@@ -499,7 +513,7 @@ const CommHubInbound: React.FC = () => {
                   <div className="text-label text-text-tertiary uppercase">{t('commHub.row.title')}</div>
                   {rows.map((row, i) => (
                     <div
-                      key={i}
+                      key={row.id}
                       className="rounded-md border border-border-subtle bg-bg-hover p-3 flex flex-wrap items-center justify-between gap-2"
                       data-testid={`commhub-row-${i}`}
                     >
@@ -545,8 +559,8 @@ const CommHubInbound: React.FC = () => {
               {recorded.length > 0 && (
                 <div className="flex flex-col gap-1.5" data-testid="commhub-result">
                   <div className="text-label text-text-tertiary uppercase">{t('commHub.result.title')}</div>
-                  {recorded.map((o, i) => (
-                    <div key={i} className="flex items-start gap-2 text-xs text-success">
+                  {recorded.map((o) => (
+                    <div key={o.id} className="flex items-start gap-2 text-xs text-success">
                       <CheckCircle2 size={14} className="mt-0.5 shrink-0" />
                       <span>
                         {t('commHub.result.landed', {

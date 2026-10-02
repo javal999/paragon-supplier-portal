@@ -329,8 +329,14 @@ const ItemComparison: React.FC<ComparisonProps & { item: RfqItem }> = ({
   // The best price per break is marked among the RANKED suppliers only: a
   // supplier that cannot be awarded does not set the bar a buyer compares to.
   const bestPrice = bestPriceByBreak(rfq, item, ranked);
+  // `key` is the quote id plus the alternative's position in that quote's
+  // stored `alternatives` list: a submitted quote is a fixed record, so the
+  // position never shifts, and the rule does not refuse two alternatives on one
+  // item, so the quote id alone could repeat.
   const alternatives = quoting.flatMap((q) =>
-    (q.alternatives ?? []).filter((a) => a.itemLineNo === item.lineNo).map((a) => ({ q, a })),
+    (q.alternatives ?? [])
+      .map((a, n) => ({ q, a, key: `${q.id}-alt-${n}` }))
+      .filter(({ a }) => a.itemLineNo === item.lineNo),
   );
   const specOf = (q: Quotation) => {
     const iq = (q.itemQuotes ?? []).find((x) => x.itemLineNo === item.lineNo);
@@ -505,8 +511,8 @@ const ItemComparison: React.FC<ComparisonProps & { item: RfqItem }> = ({
                 ))}
               </TableHeader>
               <tbody>
-                {alternatives.map(({ q, a }, i) => (
-                  <TableRow key={`${q.id}-${i}`} data-testid={`item-alt-${item.lineNo}-${q.supplierId}`}>
+                {alternatives.map(({ q, a, key }) => (
+                  <TableRow key={key} data-testid={`item-alt-${item.lineNo}-${q.supplierId}`}>
                     <TableCell>
                       <div className="text-sm text-text-primary">{supplierName(q.supplierId)}</div>
                       <div className="text-xs text-text-tertiary">{a.description}</div>

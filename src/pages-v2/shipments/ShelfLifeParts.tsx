@@ -168,6 +168,9 @@ export const ShelfLifeExceptionDetail: React.FC<{
       </ul>
       <ol className="space-y-1 border-t border-border-subtle pt-2">
         {view.history.map((e, i) => (
+          // The record is append-only and shown oldest first, so an entry's
+          // position never shifts; kind + at alone can repeat (same instant).
+          // eslint-disable-next-line react/no-array-index-key -- append-only record in stored order: index i is the entry's fixed position
           <EventLine key={`${e.kind}-${e.at}-${i}`} e={e} />
         ))}
       </ol>

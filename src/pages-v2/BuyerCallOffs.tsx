@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { AlertTriangle } from 'lucide-react';
@@ -91,6 +91,12 @@ const actionKey = (v: CallOffView) =>
       : 'co.action.open';
 
 interface SeriesRow {
+  /**
+   * Row identity, used as the React key: `<preview number>-<n>`, minted in
+   * previewSeries. A new preview mints new ids, so its inputs start fresh
+   * instead of reusing the previous preview's DOM rows.
+   */
+  id: string;
   quantity: string;
   date: string;
 }
@@ -166,6 +172,8 @@ const BuyerCallOffs: React.FC = () => {
   const [form, setForm] = useState({ quantity: '', needDate: '', type: 'forecast' as CallOffType, reason: '', comment: '' });
   const [series, setSeries] = useState({ total: '', perCallOff: '', cadence: 'weekly' as ReleaseCadence, firstDate: '' });
   const [seriesRows, setSeriesRows] = useState<SeriesRow[]>([]);
+  // Counts previews, so each preview's rows get fresh ids (SeriesRow.id).
+  const seriesPreview = useRef(0);
   const crumb = [t('hub.nav.section.calloffs'), t('co.pti.title')];
   const today = nowIso.slice(0, 10);
   // REQ-E07-03 — the drill-through filter from the order summary.
@@ -332,13 +340,14 @@ const BuyerCallOffs: React.FC = () => {
   };
 
   const previewSeries = () => {
+    seriesPreview.current += 1;
     setSeriesRows(
       generateCallOffSeries({
         totalQty: numberOf(series.total),
         qtyPerCallOff: numberOf(series.perCallOff),
         cadence: series.cadence,
         firstNeedDate: series.firstDate,
-      }).map((d) => ({ quantity: String(d.quantity), date: d.date })),
+      }).map((d, n) => ({ id: `${seriesPreview.current}-${n}`, quantity: String(d.quantity), date: d.date })),
     );
   };
 
@@ -780,7 +789,7 @@ const BuyerCallOffs: React.FC = () => {
                     </thead>
                     <tbody>
                       {seriesRows.map((row, i) => (
-                        <tr key={i} className="border-t border-border-subtle">
+                        <tr key={row.id} className="border-t border-border-subtle">
                           <td className="py-1.5 pr-2">
                             <Data>{i + 1}</Data>
                           </td>
@@ -966,8 +975,10 @@ const CallOffPanelBody: React.FC<PanelBodyProps> = ({
         <section>
           <h3 className="text-label text-text-tertiary uppercase mb-2">{t('co.panel.confirmation')}</h3>
           <ul className="text-sm space-y-1">
-            {c.confirmation.deliveries.map((d, i) => (
-              <li key={i}>
+            {/* Key: the date — a split confirmation is refused when both
+                deliveries share a date (proposedDeliveries, 'splitDates'). */}
+            {c.confirmation.deliveries.map((d) => (
+              <li key={d.date}>
                 <Data>{`${qty(d.quantity)} ${c.uom}`}</Data> · <Data>{formatDate(d.date)}</Data>
               </li>
             ))}
@@ -1020,7 +1031,10 @@ const CallOffPanelBody: React.FC<PanelBodyProps> = ({
         <section>
           <h3 className="text-label text-text-tertiary uppercase mb-2">{t('co.panel.notes')}</h3>
           <ul className="text-sm space-y-1">
+            {/* CallOffNote has no id and `at` can repeat. Notes are append-only,
+                oldest first, so the index is the note's sequence number. */}
             {c.notes.map((n, i) => (
+              // eslint-disable-next-line react/no-array-index-key -- append-only notes: index is the note's sequence number
               <li key={i}>
                 <span className="text-text-tertiary">{t(`co.note.${n.action}`)}:</span> {n.text}
               </li>

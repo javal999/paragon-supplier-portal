@@ -1210,8 +1210,11 @@ const GoodsReceiptWorkspace: React.FC<GoodsReceiptWorkspaceProps> = ({
                     <TableHeaderCell>{t('goodsReceipt.panel.col.checks')}</TableHeaderCell>
                   </TableHeader>
                   <tbody>
-                    {selected.inspectionResults.map((r, i) => (
-                      <TableRow key={i}>
+                    {/* Key: materialCode — a receipt inspects one line per
+                        material of its ASN (SupplierGoodsReceipts keys the
+                        same lines the same way). */}
+                    {selected.inspectionResults.map((r) => (
+                      <TableRow key={r.materialCode}>
                         <TableCell>
                           <Data as="div" className="text-xs text-text-primary">
                             {r.materialCode}

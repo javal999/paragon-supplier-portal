@@ -84,6 +84,9 @@ describe('⚠️ §69 · THE MATCHERS, BEFORE ANY CLAIM ABOUT THE TREE', () => {
     expect(isLiteral('bandFor(x)')).toBe(false);
     expect(isLiteral('v > 1e8 ? A : B')).toBe(false);
     expect(isLiteral('BAND')).toBe(false);
+// The `${...}` below is literal source text this spec asserts on, not a template
+    // to interpolate (ESLint no-template-curly-in-string).
+    // eslint-disable-next-line no-template-curly-in-string
     expect(isLiteral('`${band}`')).toBe(false);
   });
 

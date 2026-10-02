@@ -654,8 +654,10 @@ const BuyerSupplierProfile: React.FC = () => {
               <TableHeaderCell>{t('buyerSupplierProfile.msglog.col.status')}</TableHeaderCell>
             </TableHeader>
             <tbody>
-              {MSG_LOG.map((m, i) => (
-                <TableRow key={i}>
+              {/* Key: the message timestamp. MSG_LOG is a fixed sample log
+                  with one message per minute-stamped `ts`, so it is unique. */}
+              {MSG_LOG.map((m) => (
+                <TableRow key={m.ts}>
                   <TableCell className="text-xs text-text-tertiary whitespace-nowrap">
                     <Data>{m.ts}</Data>
                   </TableCell>

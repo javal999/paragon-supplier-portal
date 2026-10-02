@@ -373,6 +373,7 @@ const SupplierCallOffs: React.FC = () => {
                 <h3 className="text-label text-text-tertiary uppercase mb-2">{t('co.panel.confirmation')}</h3>
                 <ul className="text-sm space-y-1">
                   {selected.callOff.confirmation.deliveries.map((d, i) => (
+                    // eslint-disable-next-line react/no-array-index-key -- read-only snapshot of a confirmed schedule, rendered in stored order; deliveries carry no id and may share qty+date
                     <li key={i}>
                       <Data>{`${qty(d.quantity)} ${selected.callOff.uom}`}</Data> · <Data>{formatDate(d.date)}</Data>
                     </li>
@@ -393,8 +394,9 @@ const SupplierCallOffs: React.FC = () => {
               </section>
             )}
 
-            {selected.callOff.notes.filter((n) => n.action === 'returned' || n.action === 'change').slice(-1).map((n, i) => (
-              <section key={i}>
+            {/* slice(-1) leaves at most one note; its timestamp `at` is its identity. */}
+            {selected.callOff.notes.filter((n) => n.action === 'returned' || n.action === 'change').slice(-1).map((n) => (
+              <section key={n.at}>
                 <h3 className="text-label text-text-tertiary uppercase mb-2">{t('co.sup.fromPti')}</h3>
                 <p className="text-sm text-text-primary">{n.text}</p>
               </section>

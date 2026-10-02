@@ -187,6 +187,13 @@ const channelLabelKey = (value: string): string =>
   CHANNELS.find((c) => c.value === value)?.labelKey ?? '';
 
 interface Contact {
+  /**
+   * Client-only row identity, used as the React key. Contacts can be added and
+   * removed in any position, so the array index is not stable: removing contact 1
+   * would hand contact 1's DOM nodes (focus, any uncontrolled state) to contact 2.
+   * Never shown or submitted.
+   */
+  id: string;
   name: string;
   role: string;
   email: string;
@@ -200,7 +207,11 @@ interface DocState {
   expiry: string;
 }
 
+// Monotonic counter: unique for the page's lifetime, so a removed contact's id is
+// never reused by a later one (crypto.randomUUID needs a secure context).
+let contactSeq = 0;
 const emptyContact = (): Contact => ({
+  id: `contact-${++contactSeq}`,
   name: '',
   role: 'Primary Contact',
   email: '',
@@ -600,7 +611,7 @@ const ContactsStep: React.FC<StepProps> = ({ form, setForm, errors }) => {
       <div className="flex flex-col gap-4">
         {form.contacts.map((c, i) => (
           <div
-            key={i}
+            key={c.id}
             className="bg-bg-hover border border-border-subtle rounded-md p-4"
           >
             <div className="flex items-center justify-between mb-3">
@@ -1105,7 +1116,7 @@ const ReviewStep: React.FC<ReviewStepProps> = ({ form, setForm, errors, requestT
             title={t('registration.step.contacts.title')}
           >
             {form.contacts.map((c, i) => (
-              <div key={i} className="mb-3 last:mb-0">
+              <div key={c.id} className="mb-3 last:mb-0">
                 <div className="text-xs font-bold text-teal-hover mb-1">
                   {t('registration.contacts.label', { index: i + 1 })}
                 </div>
@@ -1174,7 +1185,7 @@ const ReviewStep: React.FC<ReviewStepProps> = ({ form, setForm, errors, requestT
             title={t('registration.title.additionalContacts')}
           >
             {form.contacts.map((c, i) => (
-              <div key={i} className="mb-3 last:mb-0">
+              <div key={c.id} className="mb-3 last:mb-0">
                 <div className="text-xs font-bold text-teal-hover mb-1">
                   {t('registration.contacts.label', { index: i + 1 })}
                 </div>

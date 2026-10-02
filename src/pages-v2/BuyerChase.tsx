@@ -123,6 +123,7 @@ const BuyerChase: React.FC = () => {
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {view.dataReasons.map((reason, i) => (
+                      // eslint-disable-next-line react/no-array-index-key -- reason codes can repeat and have no id; read-only, stateless pills recomputed whole from the chase view
                       <StatusPill key={`${reason}-${i}`} variant="warning">
                         {t(`chase.data.${reason}`)}
                       </StatusPill>

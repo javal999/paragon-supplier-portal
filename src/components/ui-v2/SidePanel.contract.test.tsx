@@ -164,7 +164,9 @@ describe('the consumers that leaked — nothing survives in a closed panel', () 
   for (const [name, Page, identity, wasLeaking] of CASES) {
     it(`${name} — was ${wasLeaking} focusable controls in closed panels, now zero`, async () => {
       renderWithProviders(<Page />, { identity });
-      await new Promise((r) => setTimeout(r, 400));
+      await new Promise((r) => {
+        setTimeout(r, 400);
+      });
 
       // No closed dialog exists at all…
       const closed = [...document.querySelectorAll('aside[role="dialog"]')].filter(
@@ -193,12 +195,16 @@ describe('the consumers that leaked — nothing survives in a closed panel', () 
     // exist and are reachable — so the zeros above are about the contract
     // rather than about an empty render.
     renderWithProviders(<SupplierInvoices />, { identity: SUPPLIER });
-    await new Promise((r) => setTimeout(r, 400));
+    await new Promise((r) => {
+      setTimeout(r, 400);
+    });
     expect(document.querySelectorAll('aside[role="dialog"]')).toHaveLength(0);
 
     const newBtn = await screen.findByRole('button', { name: /New invoice|Faktur baru/i });
     newBtn.click();
-    await new Promise((r) => setTimeout(r, 400));
+    await new Promise((r) => {
+      setTimeout(r, 400);
+    });
     expect(document.querySelector('aside[role="dialog"]')).not.toBeNull();
   }, 30000);
 });

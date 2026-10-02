@@ -218,8 +218,11 @@ const StockUploadPanel: React.FC<{ supplierId: string; positions: readonly Inven
                   </tr>
                 </thead>
                 <tbody>
-                  {result.refused.map((r, i) => (
-                    <tr key={`${r.row}-${i}`} className="border-t border-border-subtle" data-testid={`stock-upload-refused-row-${r.row}`}>
+                  {/* A file row is refused at most once (validateStockRows refuses each
+                      row once; the declare refusals cover only rows it accepted), so
+                      the file row number is unique here. */}
+                  {result.refused.map((r) => (
+                    <tr key={r.row} className="border-t border-border-subtle" data-testid={`stock-upload-refused-row-${r.row}`}>
                       <td className="py-1.5">
                         <Data>{r.row}</Data>
                       </td>

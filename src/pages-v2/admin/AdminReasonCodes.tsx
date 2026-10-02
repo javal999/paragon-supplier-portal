@@ -73,7 +73,11 @@ const AdminReasonCodes: React.FC = () => {
   const [refusal, setRefusal] = useState<string | null>(null);
 
   const lists = useMemo(() => REASON_LISTS.map((list) => ({ list, rows: reasonCodeStore.list(list) })), [version]);
-  const changes = useMemo(() => [...reasonCodeStore.changes()].reverse(), [version]);
+  // `seq` is a change's position in the log, oldest first. The log is
+  // append-only, so seq never shifts and is the row's React key; list + code +
+  // setAt alone can repeat (two changes in the same instant), and the index of
+  // the newest-first list shifts on every new change.
+  const changes = useMemo(() => reasonCodeStore.changes().map((c, seq) => ({ ...c, seq })).reverse(), [version]);
   const readState = useMemo(() => reasonCodeStore.readState(), [version]);
   const offered = lists.reduce((n, l) => n + l.rows.filter((r) => r.active).length, 0);
   const retired = lists.reduce((n, l) => n + l.rows.filter((r) => !r.active).length, 0);
@@ -351,7 +355,7 @@ const AdminReasonCodes: React.FC = () => {
                 <TableHeaderCell>{t('adminRsn.history.col.at')}</TableHeaderCell>
               </TableHeader>
               <tbody>
-                {changes.map((c, i) => {
+                {changes.map((c) => {
                   const before = c.previous
                     ? `${label(
                         c.previous.labelEn !== undefined
@@ -363,7 +367,7 @@ const AdminReasonCodes: React.FC = () => {
                     c.active ? 'adminRsn.status.offered' : 'adminRsn.status.retired',
                   )}`;
                   return (
-                    <TableRow key={`${c.list}-${c.code}-${c.setAt}-${i}`} data-testid={`admin-rsn-change-${c.list}-${c.code}`}>
+                    <TableRow key={c.seq} data-testid={`admin-rsn-change-${c.list}-${c.code}`}>
                       <TableCell className="whitespace-nowrap text-sm">
                         {t(`adminRsn.list.${c.list}`)} · <Data>{c.code}</Data>
                       </TableCell>

@@ -12,7 +12,7 @@ import { tiersForItem, type RfqItem, type RfqSpecField } from '../../services/so
 import RfqQuestionField from './RfqQuestionField';
 import { FirmPill } from '../rfx/rfxAuthoringDisplay';
 import ResponseDocumentsSection from '../rfx/ResponseDocumentsSection';
-import type { ItemDraft, TieredDraft } from './tieredQuoteModel';
+import { newExtraCost, type ItemDraft, type TieredDraft } from './tieredQuoteModel';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // THE QUOTE GRID (RFx working spec, 2026-09-21, "Supplier response · Quote
@@ -242,7 +242,7 @@ const ItemBlock: React.FC<{
             </label>
           ))}
           {draft.extraCosts.map((c, i) => (
-            <div key={i} className="flex items-center gap-2">
+            <div key={c.id} className="flex items-center gap-2">
               <input
                 type="text"
                 aria-label={t('rfqResponse.grid.extraCostName', { n: i + 1 })}
@@ -283,7 +283,7 @@ const ItemBlock: React.FC<{
             variant="secondary"
             icon={Plus}
             data-testid={`${tid}-add-cost`}
-            onClick={() => onChange({ ...draft, extraCosts: [...draft.extraCosts, { name: '', amount: '' }] })}
+            onClick={() => onChange({ ...draft, extraCosts: [...draft.extraCosts, newExtraCost()] })}
           >
             {t('rfqResponse.grid.addCost')}
           </Button>

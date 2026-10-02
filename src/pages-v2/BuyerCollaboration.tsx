@@ -190,6 +190,10 @@ const DisputeExchange: React.FC<{ entries: readonly DisputeEntry[] }> = ({ entri
     <div className="flex flex-col gap-2" data-testid="sdc-resolve-exchange">
       {entries.map((e, i) => (
         <div
+          // DisputeEntry has no id, and `at` repeats (the SDC clock is a fixed
+          // simulated now). One response's ledger is append-only, oldest first,
+          // so the index is the entry's sequence number and never shifts.
+          // eslint-disable-next-line react/no-array-index-key -- append-only ledger: index is the entry's sequence number
           key={`${e.at}-${i}`}
           className={`border-l-2 py-1 pl-3 ${
             e.kind === 'raised' ? 'border-l-warning' : 'border-l-success'
