@@ -43,9 +43,9 @@ interface Ref {
   readonly module: string;
 }
 
-const IS_TEST_MODULE = /\.test\.tsx?$|__tests__|^\/src\/test\//;
+const IS_TEST_MODULE = /\.test\.[jt]sx?$|__tests__|^\/src\/test\//;
 
-const sourceModules = import.meta.glob('/src/**/*.ts') as Record<
+const sourceModules = import.meta.glob('/src/**/*.{ts,js}') as Record<
   string,
   () => Promise<Record<string, unknown>>
 >;

@@ -147,9 +147,10 @@ interface Cell {
 }
 
 /** Named, argued in the header. Everything else is in scope. */
-const IS_TEST_MODULE = /\.test\.tsx?$|__tests__|^\/src\/test\//;
+const IS_TEST_MODULE = /\.test\.[jt]sx?$|__tests__|^\/src\/test\//;
 
-const sourceModules = import.meta.glob('/src/**/*.ts') as Record<
+// `.js` is the converted form of `.ts`; the walk skips JSX modules in both languages.
+const sourceModules = import.meta.glob('/src/**/*.{ts,js}') as Record<
   string,
   () => Promise<Record<string, unknown>>
 >;
@@ -158,7 +159,7 @@ const sourceModules = import.meta.glob('/src/**/*.ts') as Record<
  *  on the module walk reaching anything. `.tsx` included deliberately: "material
  *  data lives in .ts files" is exactly the kind of assumption this batch exists
  *  to stop making, and a raw read costs nothing to check it. */
-const sourceText = import.meta.glob('/src/**/*.{ts,tsx}', {
+const sourceText = import.meta.glob('/src/**/*.{ts,tsx,js,jsx}', {
   query: '?raw',
   import: 'default',
   eager: true,
@@ -503,7 +504,7 @@ const inModules = (re: RegExp) =>
   [...new Set(REFS.filter((r) => re.test(r.module)).map((r) => r.code))].sort();
 
 /** The declared document lane (`C8-MASTER-DECL`). */
-const DOCUMENT_LANE = inModules(/^\/src\/data\/mock[^/]*\.ts$/);
+const DOCUMENT_LANE = inModules(/^\/src\/data\/mock[^/]*\.[jt]s$/);
 /** The master-governed lane — the master itself and the delivery fixtures that
  *  derive every unit from it via `requireUom`. */
 const MASTER_GOVERNED = inModules(/^\/src\/services\/(sdc\/fixtures|delivery\/)/);
@@ -1123,14 +1124,14 @@ describe('MAT-SPACE-UNDECLARED-01 — the third space, and the real 2B input', (
     // meaning (2B-3's population). The transacting lanes are clean.
     const unresolvedIn = (re: RegExp) =>
       inModules(re).filter((c) => !(c in MATERIAL_MASTER));
-    expect(unresolvedIn(/^\/src\/data\/mockPurchaseOrders\.ts$/)).toEqual([]);
-    expect(unresolvedIn(/^\/src\/data\/mockGoodsReceipts\.ts$/)).toEqual([]);
-    expect(unresolvedIn(/^\/src\/data\/mockInventory\.ts$/)).toEqual([]);
-    expect(unresolvedIn(/^\/src\/data\/mockShipments\.ts$/)).toEqual([]);
+    expect(unresolvedIn(/^\/src\/data\/mockPurchaseOrders\.[jt]s$/)).toEqual([]);
+    expect(unresolvedIn(/^\/src\/data\/mockGoodsReceipts\.[jt]s$/)).toEqual([]);
+    expect(unresolvedIn(/^\/src\/data\/mockInventory\.[jt]s$/)).toEqual([]);
+    expect(unresolvedIn(/^\/src\/data\/mockShipments\.[jt]s$/)).toEqual([]);
     // ⚠️ AND THE FIFTH, at 2B-3. The RFQ lane was the last holdout and it was
     // the hardest one, because a `materialIds: string[]` states no meaning to
     // ratify — its five codes had to be AUTHORED rather than adopted.
-    expect(unresolvedIn(/^\/src\/data\/mockRfqs\.ts$/)).toEqual([]);
+    expect(unresolvedIn(/^\/src\/data\/mockRfqs\.[jt]s$/)).toEqual([]);
   });
 
   it('⚠️ THE 2B-4 GATE OPENS — the GR runtime input is now 100% master-resolvable', () => {
@@ -1546,7 +1547,7 @@ describe('INSTANCE-DATA-IN-A-TYPE-LABEL-01 — TRIMMED at 2B-2, completely', () 
     //   `MAT-SPACE-UNDECLARED-01` taught: undeclared is not the same as worse.
     const lotFieldSites = Object.entries(sourceText).filter(
       ([file, text]) =>
-        /^\/src\/data\/mock(GoodsReceipts|Inventory|Shipments|PurchaseOrders)\.ts$/.test(file) &&
+        /^\/src\/data\/mock(GoodsReceipts|Inventory|Shipments|PurchaseOrders)\.[jt]s$/.test(file) &&
         /\b(batchNumber|lotNumber)\b/.test(text),
     );
     expect(lotFieldSites.map(([f]) => f)).toEqual([]);

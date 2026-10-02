@@ -61,6 +61,7 @@ import type {
 import { bpomOf } from '@services/sdc/bpom';
 import { halalOf } from '@services/sdc/halal';
 import { MATERIAL_MASTER } from '@services/sdc/fixtures';
+import { isTestFile } from '@test/sourceFiles';
 
 // ─── Fixtures local to the suite. E1 SEEDS NONE IN THE TREE ──────────────────
 
@@ -99,7 +100,7 @@ const TEN_YEARS_ON = '2036-10-01T00:00:00.000Z';
 // ─── Source access, for the census assertions ────────────────────────────────
 
 const sources = () =>
-  import.meta.glob('/src/**/*.{ts,tsx}', {
+  import.meta.glob('/src/**/*.{ts,tsx,js,jsx}', {
     query: '?raw',
     import: 'default',
     eager: true,
@@ -656,7 +657,7 @@ describe('E1 — ⚠️ HEADLESS. NO STORE, NO CONSUMER, NO CLOCK', () => {
     // Suites are split out and named separately rather than swept in: a test
     // file is not a wire, and folding the two together would let a real consumer
     // hide behind a new spec file.
-    const suites = referencing.filter((p) => /\.test\.tsx?$/.test(p));
+    const suites = referencing.filter((p) => isTestFile(p));
     expect(suites).toEqual([
       '/src/components/v2-features/GRInspectionWizard.test.tsx',
       // ⚠️ §91 — the wizard's COMPLETION path, which had no spec at all until

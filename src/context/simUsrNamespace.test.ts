@@ -4,6 +4,7 @@ import path from 'node:path';
 import { NO_PERSON, FIXTURE_PERSON_PREFIX } from './noPerson';
 import { asActorAttribution, isAttributed } from '@lib/enforcement';
 import { enforcementSettingStore } from '@services/data/mock/stores/enforcementSettingStore';
+import { isTestFile } from '@test/sourceFiles';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // C10 §6.3 — THE `sim-usr-*` PIN.
@@ -29,7 +30,7 @@ function sourceFiles(dir: string, acc: string[] = []): string[] {
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
     const full = path.join(dir, e.name);
     if (e.isDirectory()) sourceFiles(full, acc);
-    else if (/\.(ts|tsx)$/.test(e.name)) acc.push(full);
+    else if (/\.(ts|tsx|js|jsx)$/.test(e.name)) acc.push(full);
   }
   return acc;
 }
@@ -134,7 +135,7 @@ describe('⚠️ THE PIN — no fixture person reaches a RESOLVED attribution', 
     // half of §6.2 is NOT built, and it becomes unfixable only at the FIRST
     // RESOLVED record. This test is the tripwire on that claim.
     const shipped = sourceFiles(SRC).filter(
-      (f) => !/\.test\.tsx?$/.test(f) && !f.endsWith('enforcement.ts'),
+      (f) => !isTestFile(f) && !f.endsWith('enforcement.ts'),
     );
     const constructors = shipped
       .filter((f) => constructsResolvedActor(fs.readFileSync(f, 'utf8')))

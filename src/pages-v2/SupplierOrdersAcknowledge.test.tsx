@@ -59,7 +59,7 @@ const openPanelOn = async (poNumber: string, identity = SUPPLIER) => {
  * renders its `<aside>` unconditionally, so a page-level query "cannot
  * distinguish the open panel from the always-mounted subtree of a closed one".
  * That was true when it was written and is now FALSE: a closed panel renders
- * nothing (`SidePanel.contract.test.tsx`), so `aside[role="dialog"]` exists
+ * nothing (`SidePanel.contract.test.jsx`), so `aside[role="dialog"]` exists
  * only while one is open. **A comment asserting a property the code no longer
  * has is the defect this session has now corrected three times** — and leaving
  * a retired workaround in place is how the next reader concludes the underlying

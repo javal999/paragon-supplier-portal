@@ -4,6 +4,7 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join, relative } from 'node:path';
 import { buildRepoProgram } from '@lib/storedFieldGate/derive';
+import { isJsxFile, isTestFile, scriptKindOf } from '@test/sourceFiles';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DP2-PALETTE-01 — chart colour comes from the centralized palette
@@ -90,7 +91,7 @@ const allSourceFiles = (): string[] => {
     for (const entry of readdirSync(dir)) {
       const p = join(dir, entry);
       if (statSync(p).isDirectory()) walk(p);
-      else if (/\.tsx?$/.test(p) && !/\.test\.tsx?$/.test(p)) {
+      else if (/\.(ts|tsx|js|jsx)$/.test(p) && !isTestFile(p)) {
         out.push(relative(SRC, p).replace(/\\/g, '/'));
       }
     }
@@ -148,7 +149,7 @@ const PAINT_CONSUMES = /\b(?:fill|stroke|stopColor)\s*=\s*\{\s*([A-Za-z_$][\w$]*
  *     const TONE = { stroke: '#0097A7' };      // hex inside an object
  *     <circle stroke={t.stroke} />             // reached by member access
  *
- * That is exactly what `ScoreBadge.tsx` held. It was found by the BROAD `:`
+ * That is exactly what `ScoreBadge.jsx` held. It was found by the BROAD `:`
  * matcher this batch narrowed — the same matcher that produced eight false
  * rows — so narrowing bought precision and gave up this class. **The trade is
  * deliberate and it is not free**, and saying so here is the point: a gate whose
@@ -215,7 +216,7 @@ const indirectViolations = (): string[] =>
 //
 //   #304 narrowed the `:` alternative and named what that cost: a hex sitting in
 //   an OBJECT LITERAL and reached through a MEMBER EXPRESSION into a paint
-//   position is invisible to both regex halves. `ScoreBadge.tsx` was exactly
+//   position is invisible to both regex halves. `ScoreBadge.jsx` was exactly
 //   that shape, and it was found by the BROAD matcher #304 retired.
 //
 // ⚠️ **AND THE OBVIOUS CHECKER MOVE DOES NOT WORK — MEASURED, NOT ASSUMED.**
@@ -353,7 +354,7 @@ const synthProgram = (files: Readonly<Record<string, string>>): ts.Program => {
   };
   const sources = new Map<string, ts.SourceFile>();
   for (const [name, text] of Object.entries(files)) {
-    sources.set(name, ts.createSourceFile(name, text, ts.ScriptTarget.ES2020, true));
+    sources.set(name, ts.createSourceFile(name, text, ts.ScriptTarget.ES2020, true, scriptKindOf(name)));
   }
   const host: ts.CompilerHost = {
     getSourceFile: (name) => sources.get(name),
@@ -454,7 +455,7 @@ describe('⚠️ DP2-PALETTE-01 · THE INSTRUMENT ITSELF', () => {
     // known-present, three directories deep and across the pages/components split
     expect(files).toContain('lib/chartPalette.ts');
     expect(files).toContain('pages-v2/BuyerRisk.tsx');
-    expect(files).toContain('components/ui-v2/ScoreBadge.tsx');
+    expect(files).toContain('components/ui-v2/ScoreBadge.jsx');
     expect(files).toContain('pages-v2/process-flows/FlowDiagram.tsx');
     // known-ABSENT: specs are excluded, and a fabrication is not present
     expect(files).not.toContain('pages-v2/chartPalette.guard.test.tsx');
@@ -483,7 +484,7 @@ describe('⚠️ DP2-PALETTE-01 · THE INSTRUMENT ITSELF', () => {
     const painting = paintingFiles();
     expect(painting.length).toBeGreaterThan(3);
     expect(painting).toContain('pages-v2/BuyerRisk.tsx');
-    expect(painting).toContain('components/ui-v2/ScoreBadge.tsx');
+    expect(painting).toContain('components/ui-v2/ScoreBadge.jsx');
     // a page with no paint of any kind must NOT be in it
     expect(painting).not.toContain('lib/chartPalette.ts');
   });
@@ -583,7 +584,7 @@ describe('⚠️ DP2-PALETTE-01 · A HEX REACHED THROUGH A MEMBER EXPRESSION (M5
     const checker = program.getTypeChecker();
     const badge = program
       .getSourceFiles()
-      .find((f) => f.fileName.endsWith('/components/ui-v2/ScoreBadge.tsx'));
+      .find((f) => f.fileName.endsWith('/components/ui-v2/ScoreBadge.jsx'));
     expect(badge, 'ScoreBadge is gone — this anchor is vacuous').toBeTruthy();
 
     let reached: ts.ObjectLiteralExpression | null = null;
@@ -739,7 +740,7 @@ describe('⚠️ DP2-PALETTE-01 · A HEX REACHED THROUGH A MEMBER EXPRESSION (M5
 // (COMPLIANCE-CARVEOUT-01, docs/findings.md) landing at R2.2.
 // ─────────────────────────────────────────────────────────────────────────────
 const pageFiles = (): string[] =>
-  readdirSync(here).filter((f) => f.endsWith('.tsx') && !f.endsWith('.test.tsx'));
+  readdirSync(here).filter((f) => isJsxFile(f) && !isTestFile(f));
 
 const readPage = (file: string): string => readFileSync(join(here, file), 'utf8');
 

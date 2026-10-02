@@ -89,7 +89,7 @@ function sourceModules(): Map<string, string> {
     for (const e of readdirSync(dir, { withFileTypes: true })) {
       const p = join(dir, e.name);
       if (e.isDirectory()) walk(p);
-      else if (/\.tsx?$/.test(e.name)) m.set(p.replace(/\\/g, '/'), readFileSync(p, 'utf8'));
+      else if (/\.[jt]sx?$/.test(e.name)) m.set(p.replace(/\\/g, '/'), readFileSync(p, 'utf8'));
     }
   };
   walk(join(ROOT, 'src'));

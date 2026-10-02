@@ -97,7 +97,7 @@ export function renderWithProviders(
   );
 }
 
-// Picks an option on a `SelectField` (src/components/ui-v2/SelectField.tsx)
+// Picks an option on a `SelectField` (src/components/ui-v2/SelectField.jsx)
 // by its VALUE, whichever mode it's currently rendering in — a plain
 // <select> (≤10 options) or a searchable combobox (>10). A test that only
 // knows the id (not the label) can't target a combobox row by visible text,

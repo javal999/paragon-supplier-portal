@@ -1303,6 +1303,15 @@ over everything else combined, and it grew that way in six weeks.
   if the recalibrated path above produces another six weeks of prose, this
   paragraph is evidence for the diagnosis and not a remedy for it.
 
+## Language — TypeScript → JavaScript, folder by folder (from 2026-10-02)
+The owner ruled the portal moves to JavaScript + JSDoc to match the company React
+boilerplate. Converted so far: `src/components/ui-v2` (pilot). Before converting a
+folder, follow `docs/frontend-standard/JS-CONVERSION-PLAYBOOK.md`: the draft tool
+deletes comments and loosens types, and `scripts/codemods/check-comments-kept.mjs`
+must report 0 lost. Any spec or gate that scans files uses `src/test/sourceFiles.ts`
+(or a pattern naming all of `.ts/.tsx/.js/.jsx`); `languageNeutralScanners.guard`
+fails on a TypeScript-only filter. Forecast stays TypeScript until the last phase.
+
 ## Gates — LINT ADDED 2026-10-02 (the "no lint script" rule is lifted)
 Until 2026-10-02 this section said the project has no lint script. The owner
 lifted that rule to align the portal with the company React boilerplate

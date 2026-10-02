@@ -222,7 +222,7 @@ function spineFiles(): string[] {
     for (const e of readdirSync(d, { withFileTypes: true })) {
       const p = join(d, e.name);
       if (e.isDirectory()) walk(p);
-      else if (/\.ts$/.test(e.name) && !/\.test\.ts$/.test(e.name)) found.push(p);
+      else if (/\.[jt]s$/.test(e.name) && !/\.test\.[jt]s$/.test(e.name)) found.push(p);
     }
   };
   walk(SPINE_DIR);

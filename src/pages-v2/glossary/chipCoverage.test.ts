@@ -28,6 +28,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 import { GLOSSARY_REGISTRIES } from '@lib/glossary';
+import { isTestFile } from '@test/sourceFiles';
 
 const ROOT = join(__dirname, '..', '..', '..');
 const SRC = join(ROOT, 'src');
@@ -37,7 +38,7 @@ function sourceFiles(dir: string, out: string[] = []): string[] {
   for (const name of readdirSync(dir)) {
     const full = join(dir, name);
     if (statSync(full).isDirectory()) sourceFiles(full, out);
-    else if (/\.tsx?$/.test(name) && !/\.(test|guard\.test)\.tsx?$/.test(name)) out.push(full);
+    else if (/\.(ts|tsx|js|jsx)$/.test(name) && !isTestFile(name)) out.push(full);
   }
   return out;
 }

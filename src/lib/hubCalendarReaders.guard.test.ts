@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 import ts from 'typescript';
+import { isSourceFile, isTestFile, scriptKindOf } from '@test/sourceFiles';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // BL-50 · EVERY DEADLINE IN THE HUB READS THE HUB'S CALENDAR (§3.4, Q-18).
@@ -57,7 +58,7 @@ const DEADLINE_WORDS = new Set([
 ]);
 
 const parse = (rel: string, text: string): ts.SourceFile =>
-  ts.createSourceFile(rel, text, ts.ScriptTarget.ES2020, true, rel.endsWith('x') ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
+  ts.createSourceFile(rel, text, ts.ScriptTarget.ES2020, true, scriptKindOf(rel));
 
 function sources(): ReadonlyMap<string, ts.SourceFile> {
   const out = new Map<string, ts.SourceFile>();
@@ -68,7 +69,7 @@ function sources(): ReadonlyMap<string, ts.SourceFile> {
         if (e.name !== 'test' && e.name !== '__tests__') walk(p);
         continue;
       }
-      if (!/\.tsx?$/.test(e.name) || /\.test\.tsx?$/.test(e.name) || /\.d\.ts$/.test(e.name)) continue;
+      if (!isSourceFile(e.name) || isTestFile(e.name)) continue;
       const rel = path.relative(SRC, p).split(path.sep).join('/');
       out.set(rel, parse(rel, fs.readFileSync(p, 'utf8')));
     }

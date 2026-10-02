@@ -39,7 +39,7 @@ const AWAITING: SapSyncState = 'AWAITING_SYNC';
 const productSources = (): Record<string, string> =>
   Object.fromEntries(
     Object.entries(
-      import.meta.glob('/src/**/*.{ts,tsx}', {
+      import.meta.glob('/src/**/*.{ts,tsx,js,jsx}', {
         query: '?raw',
         import: 'default',
         eager: true,

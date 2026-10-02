@@ -280,7 +280,7 @@ describe('BL-102 — the engine never reads the machine clock', () => {
       for (const name of readdirSync(dir)) {
         const p = join(dir, name);
         if (statSync(p).isDirectory()) walk(p);
-        else if (/\.ts$/.test(name) && !/\.test\.ts$/.test(name)) files.push(p);
+        else if (/\.[jt]s$/.test(name) && !/\.test\.[jt]s$/.test(name)) files.push(p);
       }
     };
     walk(join(process.cwd(), ENGINE));

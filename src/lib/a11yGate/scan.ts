@@ -27,6 +27,7 @@
 // ────────────────────────────────────────────────────────────────────────────
 
 import ts from 'typescript';
+import { scriptKindOf } from '@test/sourceFiles';
 
 export interface Finding {
   file: string;
@@ -69,7 +70,7 @@ function carriesText(c: ts.JsxChild): boolean {
  * contains a known member before it believes an empty finding list.
  */
 export function scanSource(fileName: string, text: string, seen?: Finding[]): Finding[] {
-  const sf = ts.createSourceFile(fileName, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  const sf = ts.createSourceFile(fileName, text, ts.ScriptTarget.Latest, true, scriptKindOf(fileName));
   const out: Finding[] = [];
   const at = (n: ts.Node) => sf.getLineAndCharacterOfPosition(n.getStart()).line + 1;
   const visit = (n: ts.Node) => {

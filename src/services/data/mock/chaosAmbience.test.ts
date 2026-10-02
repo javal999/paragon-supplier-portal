@@ -39,7 +39,7 @@ import { withChaos } from './withChaos';
  * check that cannot see itself has to say so, or the next reader mistakes its
  * silence for coverage.
  */
-const SRC = import.meta.glob('/src/**/*.{ts,tsx}', {
+const SRC = import.meta.glob('/src/**/*.{ts,tsx,js,jsx}', {
   query: '?raw',
   import: 'default',
   eager: true,
@@ -47,7 +47,7 @@ const SRC = import.meta.glob('/src/**/*.{ts,tsx}', {
 
 const SELF = '/src/services/data/mock/chaosAmbience.test.ts';
 
-const isSpec = (path: string): boolean => /\.test\.tsx?$/.test(path);
+const isSpec = (path: string): boolean => /\.test\.[jt]sx?$/.test(path);
 
 /**
  * Source with comments removed.

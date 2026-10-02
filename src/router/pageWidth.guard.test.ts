@@ -122,7 +122,7 @@ describe('§70 · no page inside AppShellV2 sets its own width', () => {
     // Bilateral: if `max-w-prose` vanishes from PageHeader, the rule above stops
     // having a legitimate alternative to point at, and "put it on the text"
     // becomes advice with no example in the tree.
-    const header = readFileSync(join(process.cwd(), 'src/components/ui-v2/PageHeader.tsx'), 'utf-8');
+    const header = readFileSync(join(process.cwd(), 'src/components/ui-v2/PageHeader.jsx'), 'utf-8');
     expect(header).toMatch(/max-w-prose/);
     expect(setsOwnWidth(header)).toBe(false);
   });
