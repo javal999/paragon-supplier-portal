@@ -9,7 +9,7 @@
 // isolation (the store is a process singleton).
 // ────────────────────────────────────────────────────────────────────────────
 
-import { mockPurchaseOrders } from '../../../../data/mockPurchaseOrders';
+import { mockPurchaseOrders } from '@data/mockPurchaseOrders';
 import type { PurchaseOrder } from '../../types';
 // BL-64 — the umbrella orders behind the compliance gate's OTIF boundary.
 import { GATE_DEMO_PURCHASE_ORDERS } from '../fixtures/gateDemo';

@@ -16,10 +16,10 @@ import React, { useState } from 'react';
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import { render, screen, fireEvent, cleanup, within, act } from '@testing-library/react';
 import { I18nextProvider } from 'react-i18next';
-import i18n from '../../lib/i18n';
+import i18n from '@lib/i18n';
 import SelectField, { type SelectOption } from './SelectField';
 import SidePanel from './SidePanel';
-import { pickSelectFieldOption } from '../../test/test-utils';
+import { pickSelectFieldOption } from '@test/test-utils';
 
 function renderField(node: React.ReactNode) {
   return render(<I18nextProvider i18n={i18n}>{node}</I18nextProvider>);

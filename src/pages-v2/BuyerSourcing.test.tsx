@@ -1,18 +1,18 @@
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
-import { renderWithProviders } from '../test/test-utils';
-import { mockDataService } from '../services/data/mock/mockDataService';
-import { withChaos } from '../services/data/mock/withChaos';
-import type { IDataService } from '../services/data/types';
-import { MockCommandService } from '../services/data/mock/MockCommandService';
-import { quotationStore } from '../services/data/mock/stores/quotationStore';
-import { rfqStore } from '../services/data/mock/stores/rfqStore';
-import i18n from '../lib/i18n';
+import { renderWithProviders } from '@test/test-utils';
+import { mockDataService } from '@services/data/mock/mockDataService';
+import { withChaos } from '@services/data/mock/withChaos';
+import type { IDataService } from '@services/data/types';
+import { MockCommandService } from '@services/data/mock/MockCommandService';
+import { quotationStore } from '@services/data/mock/stores/quotationStore';
+import { rfqStore } from '@services/data/mock/stores/rfqStore';
+import i18n from '@lib/i18n';
 import BuyerSourcing from './BuyerSourcing';
-import { mockRfqs } from '../data/mockRfqs';
-import { PERSONA_SYSTEM_ROLES } from '../services/transitions/businessRoles';
-import { mockSuppliers } from '../data/mockSuppliers';
+import { mockRfqs } from '@data/mockRfqs';
+import { PERSONA_SYSTEM_ROLES } from '@services/transitions/businessRoles';
+import { mockSuppliers } from '@data/mockSuppliers';
 // The hub's present — the day a rate recorded in the demo is 'today'.
-import { sdcClock } from '../services/sdc/clock';
+import { sdcClock } from '@services/sdc/clock';
 
 /**
  * ⚠️ PREMISE CHANGE (BL-43). The FX specs probe RFQ-2026-009 because its two

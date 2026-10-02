@@ -1,11 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Plus, X } from 'lucide-react';
-import SidePanel from '../../components/ui-v2/SidePanel';
-import Button from '../../components/ui-v2/Button';
-import MaterialSearch from '../../components/ui-v2/MaterialSearch';
-import type { CommandResult, InventoryPosition } from '../../services/data/types';
-import { batchDatesProblem, dayOf, productionProblem, readStockNumber } from '../../services/transitions/inventoryRules';
+import SidePanel from '@components/ui-v2/SidePanel';
+import Button from '@components/ui-v2/Button';
+import MaterialSearch from '@components/ui-v2/MaterialSearch';
+import type { CommandResult, InventoryPosition } from '@services/data/types';
+import { batchDatesProblem, dayOf, productionProblem, readStockNumber } from '@services/transitions/inventoryRules';
 import { InTransitReadOnly, inputClass, inventoryNow, labelClass, useInventoryRunner } from './inventoryDisplay';
 
 // ─────────────────────────────────────────────────────────────────────────────

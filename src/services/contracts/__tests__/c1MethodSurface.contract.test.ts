@@ -74,7 +74,7 @@ import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { buildRepoProgram } from '../../../lib/storedFieldGate/derive';
+import { buildRepoProgram } from '@lib/storedFieldGate/derive';
 import {
   NUMBER_WORDS,
   backticked,

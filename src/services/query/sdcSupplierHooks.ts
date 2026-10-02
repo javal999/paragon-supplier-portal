@@ -28,7 +28,7 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDataService } from '../data/DataServiceContext';
-import { useCurrentIdentity } from '../../context/CurrentIdentityContext';
+import { useCurrentIdentity } from '@context/CurrentIdentityContext';
 import { useServiceQuery, scopeKey } from './useServiceQuery';
 import {
   FORECAST_PUBLICATIONS,

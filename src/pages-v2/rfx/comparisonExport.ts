@@ -7,10 +7,10 @@
 // ────────────────────────────────────────────────────────────────────────────
 
 import type { TFunction } from 'i18next';
-import type { RFQ } from '../../data/mockRfqs';
-import type { Quotation } from '../../data/mockQuotations';
-import { COMPARISON_CSV_HEADER_KEYS } from '../../lib/i18n/rfqCompare';
-import { comparisonCsv, comparisonRows, currentVersions } from '../../services/sourcing/rfqComparison';
+import type { RFQ } from '@data/mockRfqs';
+import type { Quotation } from '@data/mockQuotations';
+import { COMPARISON_CSV_HEADER_KEYS } from '@lib/i18n/rfqCompare';
+import { comparisonCsv, comparisonRows, currentVersions } from '@services/sourcing/rfqComparison';
 import { downloadText } from '../forecasts/forecastDisplay';
 
 /** The CSV text for these RFQs' comparisons, and how many rows it holds. */

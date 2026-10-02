@@ -1,10 +1,10 @@
 import React, { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Download, Upload } from 'lucide-react';
-import Button from '../../components/ui-v2/Button';
-import Data from '../../components/ui-v2/Data';
-import { parseWorkbook } from '../../services/sdc';
-import type { InventoryPosition } from '../../services/data/types';
+import Button from '@components/ui-v2/Button';
+import Data from '@components/ui-v2/Data';
+import { parseWorkbook } from '@services/sdc';
+import type { InventoryPosition } from '@services/data/types';
 import {
   dayOf,
   parseCsv,
@@ -12,7 +12,7 @@ import {
   stockTemplateCsv,
   validateStockRows,
   type RefusedStockRow,
-} from '../../services/transitions/inventoryRules';
+} from '@services/transitions/inventoryRules';
 import { InTransitReadOnly, inventoryNow, readFileText, useInventoryRunner } from './inventoryDisplay';
 
 // ─────────────────────────────────────────────────────────────────────────────

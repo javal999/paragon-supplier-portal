@@ -3,7 +3,7 @@ import { User } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import AppShellV2 from '../layout-v2/AppShellV2';
 import PageHeader from './PageHeader';
-import { useCurrentIdentity } from '../../context/CurrentIdentityContext';
+import { useCurrentIdentity } from '@context/CurrentIdentityContext';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ⚠️ **THE REMEDY IS DERIVED FROM THE PERSONA, BECAUSE ONE STRING WAS BEING

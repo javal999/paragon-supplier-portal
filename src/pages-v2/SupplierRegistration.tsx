@@ -17,11 +17,11 @@ import {
 } from 'lucide-react';
 import { useTranslation, Trans } from 'react-i18next';
 import type { TFunction } from 'i18next';
-import Wizard, { WizardStep } from '../components/ui-v2/Wizard';
-import FormSection from '../components/ui-v2/FormSection';
-import StatusPill from '../components/ui-v2/StatusPill';
-import Button from '../components/ui-v2/Button';
-import ProvenanceMarker from '../components/ui-v2/ProvenanceMarker';
+import Wizard, { WizardStep } from '@components/ui-v2/Wizard';
+import FormSection from '@components/ui-v2/FormSection';
+import StatusPill from '@components/ui-v2/StatusPill';
+import Button from '@components/ui-v2/Button';
+import ProvenanceMarker from '@components/ui-v2/ProvenanceMarker';
 
 type RequestType = 'External SR' | 'Internal SR' | 'KOL';
 

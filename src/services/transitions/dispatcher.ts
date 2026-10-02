@@ -30,7 +30,7 @@ import type {
   CommandOutcome,
 } from '../data/types';
 import type { CommandDecision } from '../data/types';
-import type { ActorAttribution } from '../../lib/enforcement';
+import type { ActorAttribution } from '@lib/enforcement';
 import type { AuditSink } from './events';
 import { actorKey } from './events';
 import { AUTOMATION_ROLE } from './businessRoles';

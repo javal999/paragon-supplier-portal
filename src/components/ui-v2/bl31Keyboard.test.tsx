@@ -9,8 +9,8 @@
 import React, { useState } from 'react';
 import { describe, it, expect, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup, within } from '@testing-library/react';
-import i18n from '../../lib/i18n';
-import { renderWithProviders } from '../../test/test-utils';
+import i18n from '@lib/i18n';
+import { renderWithProviders } from '@test/test-utils';
 import SidePanel from './SidePanel';
 import ModalOverlay from './ModalOverlay';
 import Wizard from './Wizard';

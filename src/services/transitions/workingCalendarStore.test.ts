@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { addWorkingDays, isWorkingDay, withDayRulings, DEFAULT_WORKING_CALENDAR } from '../../lib/workingCalendar';
+import { addWorkingDays, isWorkingDay, withDayRulings, DEFAULT_WORKING_CALENDAR } from '@lib/workingCalendar';
 import {
   SAP_BASE_CALENDAR,
   SAP_FACTORY_CALENDAR,

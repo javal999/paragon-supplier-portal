@@ -9,8 +9,8 @@ import {
   Plus,
   FlaskConical,
 } from 'lucide-react';
-import AppShellV2 from '../components/layout-v2/AppShellV2';
-import PageHeader from '../components/ui-v2/PageHeader';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import PageHeader from '@components/ui-v2/PageHeader';
 import {
   OrderNotFound,
   PoFilterBanner,
@@ -18,48 +18,48 @@ import {
   usePoDrillFilter,
 } from './orders/PoDrillFilter';
 import { receiptsForPo } from './orders/orderSummaryModel';
-import SapDataAgeBanner from '../components/ui-v2/SapDataAgeBanner';
-import PageMetaLine from '../components/ui-v2/PageMetaLine';
-import ProvenanceMarker from '../components/ui-v2/ProvenanceMarker';
-import KpiCard from '../components/ui-v2/KpiCard';
-import BulkActionsBar from '../components/ui-v2/BulkActionsBar';
-import SubTabs from '../components/ui-v2/SubTabs';
+import SapDataAgeBanner from '@components/ui-v2/SapDataAgeBanner';
+import PageMetaLine from '@components/ui-v2/PageMetaLine';
+import ProvenanceMarker from '@components/ui-v2/ProvenanceMarker';
+import KpiCard from '@components/ui-v2/KpiCard';
+import BulkActionsBar from '@components/ui-v2/BulkActionsBar';
+import SubTabs from '@components/ui-v2/SubTabs';
 import ReceiptDisputesSection from './receipts/ReceiptDisputesSection';
 import ReceiptToleranceNote from './receipts/ReceiptToleranceNote';
-import { compareReceipt } from '../services/transitions/fulfilmentRules';
-import FilterChipsBar from '../components/ui-v2/FilterChipsBar';
-import SearchBar from '../components/ui-v2/SearchBar';
-import StatusPill from '../components/ui-v2/StatusPill';
-import Table from '../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../components/ui-v2/TableHeader';
-import TableRow from '../components/ui-v2/TableRow';
-import TableCell from '../components/ui-v2/TableCell';
-import SidePanel from '../components/ui-v2/SidePanel';
-import Data from '../components/ui-v2/Data';
-import TrackingNumber from '../components/ui-v2/TrackingNumber';
-import Timeline, { TimelineEvent } from '../components/ui-v2/Timeline';
-import Button from '../components/ui-v2/Button';
-import GRInspectionWizard, { type FailedSettle } from '../components/v2-features/GRInspectionWizard';
-import { useToast } from '../hooks/useToast';
+import { compareReceipt } from '@services/transitions/fulfilmentRules';
+import FilterChipsBar from '@components/ui-v2/FilterChipsBar';
+import SearchBar from '@components/ui-v2/SearchBar';
+import StatusPill from '@components/ui-v2/StatusPill';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
+import SidePanel from '@components/ui-v2/SidePanel';
+import Data from '@components/ui-v2/Data';
+import TrackingNumber from '@components/ui-v2/TrackingNumber';
+import Timeline, { TimelineEvent } from '@components/ui-v2/Timeline';
+import Button from '@components/ui-v2/Button';
+import GRInspectionWizard, { type FailedSettle } from '@components/v2-features/GRInspectionWizard';
+import { useToast } from '@hooks/useToast';
 import { useTranslation } from 'react-i18next';
-import { useEnumLabel } from '../hooks/useEnumLabel';
+import { useEnumLabel } from '@hooks/useEnumLabel';
 import {
   useGoodsReceiptPost,
   useGoodsReceiptRequestRetest,
   useGoodsReceiptSettle,
   useAdvanceShipNoticeResolveDiscrepancy,
-} from '../services/query/commandHooks';
-import LoadingState from '../components/ui-v2/LoadingState';
-import ErrorState from '../components/ui-v2/ErrorState';
-import EmptyState from '../components/ui-v2/EmptyState';
-import { HandoffNotice } from '../components/ui-v2/HandoffNotice';
+} from '@services/query/commandHooks';
+import LoadingState from '@components/ui-v2/LoadingState';
+import ErrorState from '@components/ui-v2/ErrorState';
+import EmptyState from '@components/ui-v2/EmptyState';
+import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
 import {
   classifySettleFault,
   SETTLE_FAULT_RETRYABLE,
   type SettleFault,
-} from '../services/transitions/settleFaults';
-import { useVerbAvailabilities, useVerbAvailability, useNextAct } from '../hooks/useVerbAvailability';
-import NextActLine from '../components/ui-v2/NextActLine';
+} from '@services/transitions/settleFaults';
+import { useVerbAvailabilities, useVerbAvailability, useNextAct } from '@hooks/useVerbAvailability';
+import NextActLine from '@components/ui-v2/NextActLine';
 import {
   useGoodsReceipts,
   useSuppliers,
@@ -67,8 +67,8 @@ import {
   useASNs,
   useEnforcementSettings,
   useComplianceRegistry,
-} from '../services/query/hooks';
-import type { EnforcementSetting } from '../lib/enforcement';
+} from '@services/query/hooks';
+import type { EnforcementSetting } from '@lib/enforcement';
 import type {
   GoodsReceipt,
   GRStatus,
@@ -77,10 +77,10 @@ import type {
   Shipment,
   ASN,
   ComplianceRegistryEntry,
-} from '../services/data/types';
-import { useRefusalText } from '../hooks/useRefusalText';
-import { statusTone } from '../lib/statusTone';
-import { DECLARED_PRESENT } from '../services/data/fixturePresent';
+} from '@services/data/types';
+import { useRefusalText } from '@hooks/useRefusalText';
+import { statusTone } from '@lib/statusTone';
+import { DECLARED_PRESENT } from '@services/data/fixturePresent';
 
 // ⚠️ **THE THIRD PIN, RETIRED — AND THE CANON LISTED ONLY TWO.**
 // `REFERENCE_TODAY` (2026-05-18) and `RFQ_TODAY_MS` (2026-04-25) went at #317.

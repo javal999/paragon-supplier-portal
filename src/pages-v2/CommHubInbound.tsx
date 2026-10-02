@@ -13,36 +13,36 @@ import {
   Clock,
   ArrowRight,
 } from 'lucide-react';
-import AppShellV2 from '../components/layout-v2/AppShellV2';
-import PageHeader from '../components/ui-v2/PageHeader';
-import PageMetaLine from '../components/ui-v2/PageMetaLine';
-import Button from '../components/ui-v2/Button';
-import Data from '../components/ui-v2/Data';
-import StatusPill from '../components/ui-v2/StatusPill';
-import LivenessPill from '../components/ui-v2/LivenessPill';
-import NoSupplierIdentity from '../components/ui-v2/NoSupplierIdentity';
-import { useCurrentIdentity } from '../context/CurrentIdentityContext';
-import { useVerbAvailability } from '../hooks/useVerbAvailability';
-import { HandoffNotice } from '../components/ui-v2/HandoffNotice';
-import { useInventory } from '../services/query/hooks';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import PageHeader from '@components/ui-v2/PageHeader';
+import PageMetaLine from '@components/ui-v2/PageMetaLine';
+import Button from '@components/ui-v2/Button';
+import Data from '@components/ui-v2/Data';
+import StatusPill from '@components/ui-v2/StatusPill';
+import LivenessPill from '@components/ui-v2/LivenessPill';
+import NoSupplierIdentity from '@components/ui-v2/NoSupplierIdentity';
+import { useCurrentIdentity } from '@context/CurrentIdentityContext';
+import { useVerbAvailability } from '@hooks/useVerbAvailability';
+import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
+import { useInventory } from '@services/query/hooks';
 import StockEntryPanel from './inventory/StockEntryPanel';
-import { useDeliveryAgreements } from '../services/query/deliveryHooks';
-import { shapeObligations } from '../services/chase';
-import { parseChannelReply, type ChannelParseResult, type QtyRefusalReason } from '../services/channel/replyParser';
-import { makeProvenanceRef, type Channel, type ChannelMessage } from '../services/channel/types';
-import { channelProvenanceStore } from '../services/channel/provenanceStore';
+import { useDeliveryAgreements } from '@services/query/deliveryHooks';
+import { shapeObligations } from '@services/chase';
+import { parseChannelReply, type ChannelParseResult, type QtyRefusalReason } from '@services/channel/replyParser';
+import { makeProvenanceRef, type Channel, type ChannelMessage } from '@services/channel/types';
+import { channelProvenanceStore } from '@services/channel/provenanceStore';
 import {
   openSubmissionSession,
   sdcClock,
   SDC_SIMULATED_NOW,
   IMPORT_DECLARE_COLUMN,
   type SubmissionSessionRecorder,
-} from '../services/sdc';
-import type { CommandResult } from '../services/data/types';
-import { formatDate } from '../lib/format';
+} from '@services/sdc';
+import type { CommandResult } from '@services/data/types';
+import { formatDate } from '@lib/format';
 import { qty } from './inventory/inventoryDisplay';
 // GL-1 - the glossary destination for this surface's refusals.
-import GlossaryTermChip from '../components/ui-v2/GlossaryTermChip';
+import GlossaryTermChip from '@components/ui-v2/GlossaryTermChip';
 
 // ────────────────────────────────────────────────────────────────────────────
 // Comm Hub C2 — the INBOUND CONFIRM-BEFORE-COMMIT surface (DEC-COMMS-PRIMARY).

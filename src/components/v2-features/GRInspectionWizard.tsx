@@ -3,55 +3,55 @@ import Wizard, { WizardStep } from '../ui-v2/Wizard';
 import ModalOverlay from '../ui-v2/ModalOverlay';
 import FormSection from '../ui-v2/FormSection';
 import Data from '../ui-v2/Data';
-import { useToast } from '../../hooks/useToast';
+import { useToast } from '@hooks/useToast';
 import { useTranslation } from 'react-i18next';
-import { useEnumLabel } from '../../hooks/useEnumLabel';
-import { statusLabelKey } from '../../lib/statusLabel';
-import { enumLabelKey } from '../../lib/priorityLabel';
-import type { Shipment, ASN, AsnStatus } from '../../services/data/types';
-import type { InspectionResult } from '../../data/mockGoodsReceipts';
+import { useEnumLabel } from '@hooks/useEnumLabel';
+import { statusLabelKey } from '@lib/statusLabel';
+import { enumLabelKey } from '@lib/priorityLabel';
+import type { Shipment, ASN, AsnStatus } from '@services/data/types';
+import type { InspectionResult } from '@data/mockGoodsReceipts';
 import {
   readGrLineQuantities,
   seedQty,
   type GrLineQtyOutcome,
 } from './grLineQuantities';
-import type { QtyRefusalReason } from '../../lib/localeNumber';
+import type { QtyRefusalReason } from '@lib/localeNumber';
 import {
   useGoodsReceiptCreate,
   useGoodsReceiptFinalize,
   useGoodsReceiptPost,
   useGoodsReceiptSettle,
-} from '../../services/query/commandHooks';
+} from '@services/query/commandHooks';
 import {
   deriveHeaderDisposition,
   headerVerbFor,
   type GrHeaderDisposition,
-} from '../../services/transitions';
+} from '@services/transitions';
 import {
   classifySettleFault,
   type SettleFault,
-} from '../../services/transitions/settleFaults';
-import { bpomOf } from '../../services/sdc/bpom';
-import type { BpomOutcome, BpomRefusalReason } from '../../services/sdc/bpom';
-import { halalOf } from '../../services/sdc/halal';
-import type { HalalOutcome, HalalRefusalReason } from '../../services/sdc/halal';
-import { blocks, effectiveEnforcement } from '../../lib/enforcement';
-import type { EnforcementSetting } from '../../lib/enforcement';
-import { verifyHalalAtReceipt } from '../../services/data/halalVerification';
+} from '@services/transitions/settleFaults';
+import { bpomOf } from '@services/sdc/bpom';
+import type { BpomOutcome, BpomRefusalReason } from '@services/sdc/bpom';
+import { halalOf } from '@services/sdc/halal';
+import type { HalalOutcome, HalalRefusalReason } from '@services/sdc/halal';
+import { blocks, effectiveEnforcement } from '@lib/enforcement';
+import type { EnforcementSetting } from '@lib/enforcement';
+import { verifyHalalAtReceipt } from '@services/data/halalVerification';
 import type {
   HalalVerification,
   HalalNotSatisfiedReason,
-} from '../../services/data/halalVerification';
-import type { ComplianceRegistryEntry } from '../../services/data/types';
+} from '@services/data/halalVerification';
+import type { ComplianceRegistryEntry } from '@services/data/types';
 // GL-1 - the glossary destination for this surface's refusals.
 import GlossaryTermChip from '../ui-v2/GlossaryTermChip';
-import { formatDate } from '../../lib/format';
-import { useRefusalText } from '../../hooks/useRefusalText';
-import { refusedByPolicy } from '../../services/transitions/refusalMessage';
-import { POLICY_HOOKS } from '../../services/transitions/policyHooks';
-import { sdcClock } from '../../services/sdc/clock';
-import { approvedShelfLifeLines } from '../../services/transitions/fulfilmentRules';
-import { BlockedStockMarker } from '../../pages-v2/shipments/ShelfLifeParts';
+import { formatDate } from '@lib/format';
+import { useRefusalText } from '@hooks/useRefusalText';
+import { refusedByPolicy } from '@services/transitions/refusalMessage';
+import { POLICY_HOOKS } from '@services/transitions/policyHooks';
+import { sdcClock } from '@services/sdc/clock';
+import { approvedShelfLifeLines } from '@services/transitions/fulfilmentRules';
+import { BlockedStockMarker } from '@pages-v2/shipments/ShelfLifeParts';
 
 /**
  * §91e — what the wizard hands up when a settle it AWAITED came back a fault.

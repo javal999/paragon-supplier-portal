@@ -25,13 +25,13 @@ import type {
   POLineItem,
 } from '../data/types';
 import { POStatus } from '../data/types';
-import type { GoodsReceipt } from '../../data/mockGoodsReceipts';
+import type { GoodsReceipt } from '@data/mockGoodsReceipts';
 import { generateSchedule } from '../delivery/generator';
 import type { ReleaseCadence } from '../delivery/types';
 import { DELIVERY_GRACE_DAYS, MATCH_WINDOW_DAYS } from '../delivery/fulfillment';
 import { EARLY_DELIVERY_WINDOW_DAYS } from '../data/kpiWindow';
 import { ANTICIPATION_DAYS, DRIFT_COUNT } from '../chase/deliveryChase';
-import { addWorkingDays, documentInstant, type WorkingCalendar } from '../../lib/workingCalendar';
+import { addWorkingDays, documentInstant, type WorkingCalendar } from '@lib/workingCalendar';
 import { hubWorkingCalendar } from './workingCalendarStore';
 import {
   callOffConfirmWorkingDays,

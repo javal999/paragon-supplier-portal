@@ -30,7 +30,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { mockRfqs } from '../../../data/mockRfqs';
+import { mockRfqs } from '@data/mockRfqs';
 import { MATERIAL_GROUPS, groupLabel } from '../materialGroups';
 import { MATERIAL_MASTER } from '../fixtures';
 

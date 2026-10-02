@@ -35,7 +35,7 @@
 
 import { beforeEach, afterEach } from 'vitest';
 
-import { DECLARED_PRESENT } from '../services/data/fixturePresent';
+import { DECLARED_PRESENT } from '@services/data/fixturePresent';
 
 /**
  * The instant the fixture set is coherent at.

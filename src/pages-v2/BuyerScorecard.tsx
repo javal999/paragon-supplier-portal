@@ -26,7 +26,7 @@ import {
   Send,
   LucideIcon,
 } from 'lucide-react';
-import AppShellV2 from '../components/layout-v2/AppShellV2';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
 import {
   CHART_SERIES,
   CHART_SEMANTIC,
@@ -34,14 +34,14 @@ import {
   CHART_GRID,
   targetStatus,
   TARGET_STATUS,
-} from '../lib/chartPalette';
-import PageHeader from '../components/ui-v2/PageHeader';
-import Data from '../components/ui-v2/Data';
-import TargetBar from '../components/ui-v2/TargetBar';
-import PageMetaLine from '../components/ui-v2/PageMetaLine';
-import ProvenanceMarker from '../components/ui-v2/ProvenanceMarker';
-import FilterChipsBar from '../components/ui-v2/FilterChipsBar';
-import KpiCard from '../components/ui-v2/KpiCard';
+} from '@lib/chartPalette';
+import PageHeader from '@components/ui-v2/PageHeader';
+import Data from '@components/ui-v2/Data';
+import TargetBar from '@components/ui-v2/TargetBar';
+import PageMetaLine from '@components/ui-v2/PageMetaLine';
+import ProvenanceMarker from '@components/ui-v2/ProvenanceMarker';
+import FilterChipsBar from '@components/ui-v2/FilterChipsBar';
+import KpiCard from '@components/ui-v2/KpiCard';
 import { usePerformance } from './performance/performanceDisplay';
 import KpiDefinitions from './performance/KpiDefinitions';
 import UpdateComplianceCard from './performance/UpdateComplianceCard';
@@ -49,24 +49,24 @@ import {
   GRADE_BANDS,
   PERFORMANCE_PERIODS,
   type PerformancePeriod,
-} from '../services/data/performanceRules';
-import StatusPill from '../components/ui-v2/StatusPill';
+} from '@services/data/performanceRules';
+import StatusPill from '@components/ui-v2/StatusPill';
 import { LEVEL_VARIANT } from './qualification/QualificationPanel';
-import Button from '../components/ui-v2/Button';
-import LoadingState from '../components/ui-v2/LoadingState';
-import ErrorState from '../components/ui-v2/ErrorState';
-import EmptyState from '../components/ui-v2/EmptyState';
-import { useToast } from '../hooks/useToast';
-import { useCategoryLabel } from '../hooks/useCategoryLabel';
-import { useChannelLabel } from '../hooks/useChannelLabel';
-import { useSupplierScorecards } from '../services/query/hooks';
+import Button from '@components/ui-v2/Button';
+import LoadingState from '@components/ui-v2/LoadingState';
+import ErrorState from '@components/ui-v2/ErrorState';
+import EmptyState from '@components/ui-v2/EmptyState';
+import { useToast } from '@hooks/useToast';
+import { useCategoryLabel } from '@hooks/useCategoryLabel';
+import { useChannelLabel } from '@hooks/useChannelLabel';
+import { useSupplierScorecards } from '@services/query/hooks';
 import type {
   ScorecardKpi,
   ScorecardRadarAxis,
   ScorecardGradeLetter,
   CommLogEntry,
   KpiTrend,
-} from '../services/data/types';
+} from '@services/data/types';
 
 type Grade = ScorecardGradeLetter;
 type Trend = KpiTrend;

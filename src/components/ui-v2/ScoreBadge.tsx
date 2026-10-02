@@ -1,5 +1,5 @@
 import React from 'react';
-import { CHART_GRID, CHART_SERIES } from '../../lib/chartPalette';
+import { CHART_GRID, CHART_SERIES } from '@lib/chartPalette';
 
 type Size = 'sm' | 'md' | 'lg';
 type Variant = 'circular' | 'bar';

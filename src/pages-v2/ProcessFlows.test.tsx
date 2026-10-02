@@ -17,10 +17,10 @@ import { join } from 'node:path';
 
 import { describe, it, expect, afterAll } from 'vitest';
 import { screen, within, fireEvent, act } from '@testing-library/react';
-import { renderWithProviders } from '../test/test-utils';
-import i18n from '../lib/i18n';
-import { getKnownFlows } from '../services/transitions';
-import { buildCatalogView } from '../services/transitions/catalogView';
+import { renderWithProviders } from '@test/test-utils';
+import i18n from '@lib/i18n';
+import { getKnownFlows } from '@services/transitions';
+import { buildCatalogView } from '@services/transitions/catalogView';
 import ProcessFlows from './ProcessFlows';
 
 const catalog = buildCatalogView(getKnownFlows());

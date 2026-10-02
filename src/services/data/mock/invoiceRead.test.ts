@@ -13,7 +13,7 @@ import { MockProcurementService } from './MockProcurementService';
 import { MockCommandService } from './MockCommandService';
 import { invoiceStore } from './stores/invoiceStore';
 import { INVOICES } from './fixtures/invoices';
-import { usePinnedDemoClock } from '../../../test/demoClock';
+import { usePinnedDemoClock } from '@test/demoClock';
 import type { QueryScope } from '../types';
 import { PERSONA_SYSTEM_ROLES } from '../../../services/transitions/businessRoles';
 

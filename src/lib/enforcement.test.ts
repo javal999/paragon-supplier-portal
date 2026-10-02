@@ -58,9 +58,9 @@ import type {
   EnforcementSetting,
   GovernedCheckStamp,
 } from './enforcement';
-import { bpomOf } from '../services/sdc/bpom';
-import { halalOf } from '../services/sdc/halal';
-import { MATERIAL_MASTER } from '../services/sdc/fixtures';
+import { bpomOf } from '@services/sdc/bpom';
+import { halalOf } from '@services/sdc/halal';
+import { MATERIAL_MASTER } from '@services/sdc/fixtures';
 
 // ─── Fixtures local to the suite. E1 SEEDS NONE IN THE TREE ──────────────────
 
@@ -798,8 +798,8 @@ describe('E1 — ⚠️ HEADLESS. NO STORE, NO CONSUMER, NO CLOCK', () => {
     }
     const imports = code.match(/^import .*$/gm) ?? [];
     expect(imports).toEqual([
-      "import type { BpomRefusalReason } from '../services/sdc/bpom';",
-      "import type { HalalRefusalReason } from '../services/sdc/halal';",
+      "import type { BpomRefusalReason } from '@services/sdc/bpom';",
+      "import type { HalalRefusalReason } from '@services/sdc/halal';",
     ]);
     // ⚠️ Both are TYPE-ONLY and erase at build. Naming another module's refusal
     // vocabulary in a compile-time census is not acquiring a consumer: nothing

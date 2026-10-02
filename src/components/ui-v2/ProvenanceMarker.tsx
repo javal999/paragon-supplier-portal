@@ -5,7 +5,7 @@ import {
   dispatchesCommands,
   readinessNote,
   type Capability,
-} from '../../services/liveness';
+} from '@services/liveness';
 
 // ────────────────────────────────────────────────────────────────────────────
 // ProvenanceMarker (D-CENSUS-8) — the TWO-AXIS honest-render marker.

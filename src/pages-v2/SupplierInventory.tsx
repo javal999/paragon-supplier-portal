@@ -2,30 +2,30 @@ import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { AlertTriangle, PencilLine } from 'lucide-react';
-import AppShellV2 from '../components/layout-v2/AppShellV2';
-import PageHeader from '../components/ui-v2/PageHeader';
-import SapDataAgeBanner from '../components/ui-v2/SapDataAgeBanner';
-import PageMetaLine from '../components/ui-v2/PageMetaLine';
-import SampleDataBadge from '../components/ui-v2/SampleDataBadge';
-import SubTabs from '../components/ui-v2/SubTabs';
-import Table from '../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../components/ui-v2/TableHeader';
-import TableRow from '../components/ui-v2/TableRow';
-import TableCell from '../components/ui-v2/TableCell';
-import Button from '../components/ui-v2/Button';
-import Data from '../components/ui-v2/Data';
-import LoadingState from '../components/ui-v2/LoadingState';
-import ErrorState from '../components/ui-v2/ErrorState';
-import EmptyState from '../components/ui-v2/EmptyState';
-import NoSupplierIdentity from '../components/ui-v2/NoSupplierIdentity';
-import { HandoffNotice } from '../components/ui-v2/HandoffNotice';
-import { useVerbAvailability } from '../hooks/useVerbAvailability';
-import { useCurrentIdentity } from '../context/CurrentIdentityContext';
-import { formatDate } from '../lib/format';
-import { useInventory, useStockAccess } from '../services/query/hooks';
-import type { InventoryPosition } from '../services/data/types';
-import type { MaterialType } from '../services/sdc/types';
-import { stockFreshness } from '../services/transitions/inventoryRules';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import PageHeader from '@components/ui-v2/PageHeader';
+import SapDataAgeBanner from '@components/ui-v2/SapDataAgeBanner';
+import PageMetaLine from '@components/ui-v2/PageMetaLine';
+import SampleDataBadge from '@components/ui-v2/SampleDataBadge';
+import SubTabs from '@components/ui-v2/SubTabs';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
+import Button from '@components/ui-v2/Button';
+import Data from '@components/ui-v2/Data';
+import LoadingState from '@components/ui-v2/LoadingState';
+import ErrorState from '@components/ui-v2/ErrorState';
+import EmptyState from '@components/ui-v2/EmptyState';
+import NoSupplierIdentity from '@components/ui-v2/NoSupplierIdentity';
+import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
+import { useVerbAvailability } from '@hooks/useVerbAvailability';
+import { useCurrentIdentity } from '@context/CurrentIdentityContext';
+import { formatDate } from '@lib/format';
+import { useInventory, useStockAccess } from '@services/query/hooks';
+import type { InventoryPosition } from '@services/data/types';
+import type { MaterialType } from '@services/sdc/types';
+import { stockFreshness } from '@services/transitions/inventoryRules';
 import {
   Figure,
   IncomingButton,
@@ -41,7 +41,7 @@ import WeeklyUpdatePanel from './inventory/WeeklyUpdatePanel';
 import { PicCell, PicFilter, PicHeader, usePicFilter } from './materials/picDisplay';
 import SupplierMaterialNames from './materials/SupplierMaterialNames';
 import { TradeNameBeside } from './materials/tradeNameDisplay';
-import MaterialSearch, { MaterialMatchReason, useMaterialSearch } from '../components/ui-v2/MaterialSearch';
+import MaterialSearch, { MaterialMatchReason, useMaterialSearch } from '@components/ui-v2/MaterialSearch';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SUPPLIER STOCK — REQ-E08-01 (SUP view), REQ-E08-02 (template upload, manual

@@ -12,8 +12,8 @@
 // is the honest replacement for the old client-side fabrication (GR-FABRICATION-01).
 // ────────────────────────────────────────────────────────────────────────────
 
-import { mockGoodsReceipts } from '../../../../data/mockGoodsReceipts';
-import type { GoodsReceipt } from '../../../../data/mockGoodsReceipts';
+import { mockGoodsReceipts } from '@data/mockGoodsReceipts';
+import type { GoodsReceipt } from '@data/mockGoodsReceipts';
 // BL-64 — the delivery history behind the compliance gate's OTIF boundary.
 import { GATE_DEMO_GOODS_RECEIPTS } from '../fixtures/gateDemo';
 

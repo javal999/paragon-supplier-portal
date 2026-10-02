@@ -5,7 +5,7 @@
 // their own — the caller injects `now` so counts are deterministic in tests.
 // ────────────────────────────────────────────────────────────────────────────
 
-import { POStatus } from '../../services/data/types';
+import { POStatus } from '@services/data/types';
 import type {
   BuyerInvoice,
   PurchaseOrder,
@@ -13,8 +13,8 @@ import type {
   ASN,
   RFQ,
   Quotation,
-} from '../../services/data/types';
-import type { FlagSeverity } from '../../components/ui-v2/ExpandableWidget';
+} from '@services/data/types';
+import type { FlagSeverity } from '@components/ui-v2/ExpandableWidget';
 
 const HOUR_MS = 3_600_000;
 

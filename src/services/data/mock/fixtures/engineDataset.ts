@@ -19,7 +19,7 @@
 
 import { MATERIAL_MASTER, SUPPLIER_MATERIAL_RELATIONSHIPS } from '../../../sdc/fixtures';
 import { sdcClock } from '../../../sdc/clock';
-import { mockSuppliers } from '../../../../data/mockSuppliers';
+import { mockSuppliers } from '@data/mockSuppliers';
 import { zoneLengthsFor } from '../../../transitions/forecastConfig';
 import { hubWorkingCalendar } from '../../../transitions/workingCalendarStore';
 import { responseDeadline } from '../../poResponseProjection';

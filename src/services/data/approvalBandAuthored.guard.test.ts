@@ -28,7 +28,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { REQUISITIONS } from './mock/fixtures/buyerRequisitions';
-import { requisitionsEn, requisitionsId } from '../../lib/i18n/requisitions';
+import { requisitionsEn, requisitionsId } from '@lib/i18n/requisitions';
 
 const SRC = join(process.cwd(), 'src');
 

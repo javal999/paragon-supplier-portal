@@ -1,18 +1,18 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { screen, within, fireEvent } from '@testing-library/react';
-import { renderWithProviders, BUYER, SUPPLIER } from '../test/test-utils';
+import { renderWithProviders, BUYER, SUPPLIER } from '@test/test-utils';
 import BuyerReliability from './BuyerReliability';
 import SupplierReliabilityPanel from './reliability/SupplierReliabilityPanel';
 import SupplierForecastCommitments from './SupplierForecastCommitments';
-import { mockDataService } from '../services/data/mock/mockDataService';
-import { isLive } from '../services/liveness';
-import { PERSONA_SYSTEM_ROLES } from '../services/transitions/businessRoles';
-import { NO_PERSON } from '../context/noPerson';
-import i18n from '../lib/i18n';
-import type { CurrentIdentity } from '../context/CurrentIdentityContext';
-import type { QueryScope } from '../services/data/types';
-import { portfolioCfot } from '../services/engine/cfot';
-import { EARLY_DELIVERY_WINDOW_DAYS } from '../services/data/kpiWindow';
+import { mockDataService } from '@services/data/mock/mockDataService';
+import { isLive } from '@services/liveness';
+import { PERSONA_SYSTEM_ROLES } from '@services/transitions/businessRoles';
+import { NO_PERSON } from '@context/noPerson';
+import i18n from '@lib/i18n';
+import type { CurrentIdentity } from '@context/CurrentIdentityContext';
+import type { QueryScope } from '@services/data/types';
+import { portfolioCfot } from '@services/engine/cfot';
+import { EARLY_DELIVERY_WINDOW_DAYS } from '@services/data/kpiWindow';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // REQ-E14-02 (BL-99) — the planner's Supplier reliability page and the

@@ -2,22 +2,22 @@ import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { ShoppingCart } from 'lucide-react';
-import ExpandableWidget from '../../components/ui-v2/ExpandableWidget';
-import Table from '../../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../../components/ui-v2/TableHeader';
-import TableRow from '../../components/ui-v2/TableRow';
-import TableCell from '../../components/ui-v2/TableCell';
-import Data from '../../components/ui-v2/Data';
-import StatusPill from '../../components/ui-v2/StatusPill';
-import { statusTone } from '../../lib/statusTone';
-import { formatDate } from '../../lib/format';
-import { usePurchaseOrders } from '../../services/query/hooks';
+import ExpandableWidget from '@components/ui-v2/ExpandableWidget';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
+import Data from '@components/ui-v2/Data';
+import StatusPill from '@components/ui-v2/StatusPill';
+import { statusTone } from '@lib/statusTone';
+import { formatDate } from '@lib/format';
+import { usePurchaseOrders } from '@services/query/hooks';
 import {
   openPurchaseOrders,
   unacknowledgedOver48h,
   poTier,
 } from './buyerDerivations';
-import { sdcClock } from '../../services/sdc/clock';
+import { sdcClock } from '@services/sdc/clock';
 
 // Buyer PO board — LIVE from the PO store. Count is open POs; the urgency flag is
 // the honest exception: orders still unacknowledged more than 48h after placing.

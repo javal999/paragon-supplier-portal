@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 import {
   describeRefusal,
   describeDataError,
-} from '../services/transitions/refusalMessage';
+} from '@services/transitions/refusalMessage';
 
 /**
  * Localize a dispatcher refusal for DISPLAY — the `useModeLabel` shape, with the

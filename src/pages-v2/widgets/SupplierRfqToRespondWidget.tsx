@@ -4,19 +4,19 @@ import { useNavigate } from 'react-router-dom';
 import { ClipboardList } from 'lucide-react';
 import ExpandableWidget, {
   type FlagSeverity,
-} from '../../components/ui-v2/ExpandableWidget';
-import Table from '../../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../../components/ui-v2/TableHeader';
-import TableRow from '../../components/ui-v2/TableRow';
-import TableCell from '../../components/ui-v2/TableCell';
-import Data from '../../components/ui-v2/Data';
-import StatusPill from '../../components/ui-v2/StatusPill';
-import { statusTone } from '../../lib/statusTone';
-import { formatDate } from '../../lib/format';
-import { useCurrentIdentity } from '../../context/CurrentIdentityContext';
-import { useRFQs } from '../../services/query/hooks';
-import type { RFQ } from '../../services/data/types';
-import { sdcClock } from '../../services/sdc/clock';
+} from '@components/ui-v2/ExpandableWidget';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
+import Data from '@components/ui-v2/Data';
+import StatusPill from '@components/ui-v2/StatusPill';
+import { statusTone } from '@lib/statusTone';
+import { formatDate } from '@lib/format';
+import { useCurrentIdentity } from '@context/CurrentIdentityContext';
+import { useRFQs } from '@services/query/hooks';
+import type { RFQ } from '@services/data/types';
+import { sdcClock } from '@services/sdc/clock';
 
 // Supplier RFQ-to-respond — LIVE from the RFQ store (PR #41). The service already
 // scopes the read to RFQs this supplier was invited to; we surface the Open ones

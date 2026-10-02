@@ -28,7 +28,7 @@ import {
   periodCapacityCheck,
 } from '../../transitions/capacityRules';
 import { sdcClock } from '../../sdc';
-import { NO_PERSON } from '../../../context/noPerson';
+import { NO_PERSON } from '@context/noPerson';
 
 const svc = new MockCommandService();
 const reads = new MockProcurementService();

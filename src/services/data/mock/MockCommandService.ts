@@ -47,27 +47,27 @@ import type {
   Disposition,
   InspectionResult,
   ReceiptDiscrepancyStatus,
-} from '../../../data/mockGoodsReceipts';
+} from '@data/mockGoodsReceipts';
 import { receiptDiscrepancyStore } from './stores/receiptDiscrepancyStore';
 import { callOffStore } from './stores/callOffStore';
 import { supplierDocumentStore } from './stores/supplierDocumentStore';
 import { supplierApplicationStore } from './stores/supplierApplicationStore';
 import { VENDOR_BEARING_REQUEST_TYPE } from '../../transitions/flows/supplierApplication.flow';
-import { NO_PERSON } from '../../../context/noPerson';
-import type { RFQ, RFQStatus, RFQCategory } from '../../../data/mockRfqs';
-import type { Quotation, QuotationStatus } from '../../../data/mockQuotations';
-import { BASE_CURRENCY, type BidCurrency } from '../../../lib/currencyPolicy';
-import type { FxPinSource } from '../../../lib/fxPin';
+import { NO_PERSON } from '@context/noPerson';
+import type { RFQ, RFQStatus, RFQCategory } from '@data/mockRfqs';
+import type { Quotation, QuotationStatus } from '@data/mockQuotations';
+import { BASE_CURRENCY, type BidCurrency } from '@lib/currencyPolicy';
+import type { FxPinSource } from '@lib/fxPin';
 // THE ONE LEGAL PARSER (CP-0 · W1). The transition re-runs the SAME function
 // the surface ran — not a second implementation that could drift from it.
-import { normalizeQty, type NumberConvention } from '../../../lib/localeNumber';
+import { normalizeQty, type NumberConvention } from '@lib/localeNumber';
 import {
   asActorAttribution,
   isGovernedCheckId,
   isReviewDay,
   type EnforcementMode,
   type GovernedCheckId,
-} from '../../../lib/enforcement';
+} from '@lib/enforcement';
 import {
   createDispatcher,
   InMemoryAuditSink,
@@ -307,7 +307,7 @@ import type {
   RfxInvitee,
   RfxResponseStatus,
 } from '../../sourcing/types';
-import { BID_CURRENCIES } from '../../../lib/currencyPolicy';
+import { BID_CURRENCIES } from '@lib/currencyPolicy';
 import { deriveQuoteHeader, readRfqAuthoringFields } from '../../sourcing/rfqModel';
 // RFx spec 2026-09-21 — the supplier's side of a tiered RFQ (intent,
 // confidentiality, clarifications) and the tiered quotation rule.
@@ -356,8 +356,8 @@ import {
   shortfallRefusal,
 } from '../../transitions/forecastRules';
 import type { CapacitySubmission, CapacityWeekEntry, StockAccessGrant } from '../types';
-import { mockShipments } from '../../../data/mockShipments';
-import { mockSuppliers } from '../../../data/mockSuppliers';
+import { mockShipments } from '@data/mockShipments';
+import { mockSuppliers } from '@data/mockSuppliers';
 import {
   FORECAST_PUBLICATIONS,
   SUPPLIER_MATERIAL_RELATIONSHIPS,

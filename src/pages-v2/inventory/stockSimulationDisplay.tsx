@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import Button from '../../components/ui-v2/Button';
-import Data from '../../components/ui-v2/Data';
-import StatusPill from '../../components/ui-v2/StatusPill';
-import { HandoffNotice } from '../../components/ui-v2/HandoffNotice';
-import { useToast } from '../../hooks/useToast';
-import { useVerbAvailability } from '../../hooks/useVerbAvailability';
-import { formatDate, formatDateTime } from '../../lib/format';
-import { useSimulationOverrideSet } from '../../services/query/commandHooks';
-import type { SimulationOverrideField, StockSimulationRow } from '../../services/data/types';
+import Button from '@components/ui-v2/Button';
+import Data from '@components/ui-v2/Data';
+import StatusPill from '@components/ui-v2/StatusPill';
+import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
+import { useToast } from '@hooks/useToast';
+import { useVerbAvailability } from '@hooks/useVerbAvailability';
+import { formatDate, formatDateTime } from '@lib/format';
+import { useSimulationOverrideSet } from '@services/query/commandHooks';
+import type { SimulationOverrideField, StockSimulationRow } from '@services/data/types';
 import {
   SIMULATION_OVERRIDE_FIELDS,
   simulationOverrideRefusal,
@@ -17,7 +17,7 @@ import {
   type SimulationFlag,
   type SimulationOverrideRefusal,
   type StockSimulation,
-} from '../../services/transitions/simulateSupplierStock';
+} from '@services/transitions/simulateSupplierStock';
 import { inputClass, labelClass, qty } from './inventoryDisplay';
 
 // ─────────────────────────────────────────────────────────────────────────────

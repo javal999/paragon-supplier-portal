@@ -55,7 +55,7 @@
 import React, { useId, useRef } from 'react';
 import { X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useDialogFocus } from '../../hooks/useDialogFocus';
+import { useDialogFocus } from '@hooks/useDialogFocus';
 
 interface SidePanelProps {
   open: boolean;

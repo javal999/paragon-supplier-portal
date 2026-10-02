@@ -1,9 +1,9 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import type { NextAct } from '../../services/transitions/nextAct';
-import { ROLE_LABEL_KEY } from '../../services/transitions/handoff';
-import { EXTERNAL_FACT_OWNER_KEY } from '../../lib/i18n/externalFactOwner';
-import { NEXT_ACT_KEY } from '../../lib/i18n/nextAct';
+import type { NextAct } from '@services/transitions/nextAct';
+import { ROLE_LABEL_KEY } from '@services/transitions/handoff';
+import { EXTERNAL_FACT_OWNER_KEY } from '@lib/i18n/externalFactOwner';
+import { NEXT_ACT_KEY } from '@lib/i18n/nextAct';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // WHO ACTS NEXT, RENDERED. One line, on a document, derived end to end.

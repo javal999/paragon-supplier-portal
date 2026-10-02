@@ -1,8 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import { I18nextProvider } from 'react-i18next';
-import i18n from '../../lib/i18n';
+import i18n from '@lib/i18n';
 import LivenessPill from './LivenessPill';
-import { isLive, type Capability } from '../../services/liveness';
+import { isLive, type Capability } from '@services/liveness';
 
 // LivenessPill is the page-level honest-render marker. Same load-bearing lock as
 // ExpandableWidget's private HonestyDot: it takes a `capability`, NOT a boolean,

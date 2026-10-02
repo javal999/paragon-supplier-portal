@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useModeLabel } from '../hooks/useModeLabel';
+import { useModeLabel } from '@hooks/useModeLabel';
 import {
   Truck,
   Ship,
@@ -14,8 +14,8 @@ import {
   Plus,
   LucideIcon,
 } from 'lucide-react';
-import AppShellV2 from '../components/layout-v2/AppShellV2';
-import PageHeader from '../components/ui-v2/PageHeader';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import PageHeader from '@components/ui-v2/PageHeader';
 import {
   OrderNotFound,
   PoFilterBanner,
@@ -23,49 +23,49 @@ import {
   usePoDrillFilter,
 } from './orders/PoDrillFilter';
 import { asnsForPo } from './orders/orderSummaryModel';
-import { useASNs } from '../services/query/hooks';
+import { useASNs } from '@services/query/hooks';
 import { useCallOffViews } from './callOffs/callOffDisplay';
-import { asnCallOffWarnings } from '../services/transitions/callOffRules';
-import { isActiveAsn } from '../services/transitions/fulfilmentRules';
+import { asnCallOffWarnings } from '@services/transitions/callOffRules';
+import { isActiveAsn } from '@services/transitions/fulfilmentRules';
 import { AsnPlannerMarkers } from './shipments/CallOffWarnings';
 import AsnShelfLifeExceptions from './shipments/AsnShelfLifeExceptions';
 import { BlockedStockMarker, approvedIntoBlockedStock } from './shipments/ShelfLifeParts';
-import PageMetaLine from '../components/ui-v2/PageMetaLine';
-import ProvenanceMarker from '../components/ui-v2/ProvenanceMarker';
-import KpiCard from '../components/ui-v2/KpiCard';
-import BulkActionsBar from '../components/ui-v2/BulkActionsBar';
-import SubTabs from '../components/ui-v2/SubTabs';
-import FilterChipsBar from '../components/ui-v2/FilterChipsBar';
-import SearchBar from '../components/ui-v2/SearchBar';
-import StatusPill from '../components/ui-v2/StatusPill';
-import NextActLine from '../components/ui-v2/NextActLine';
-import { useNextAct } from '../hooks/useVerbAvailability';
-import Table from '../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../components/ui-v2/TableHeader';
-import TableRow from '../components/ui-v2/TableRow';
-import TableCell from '../components/ui-v2/TableCell';
-import SidePanel from '../components/ui-v2/SidePanel';
-import Data from '../components/ui-v2/Data';
-import TrackingNumber from '../components/ui-v2/TrackingNumber';
-import Timeline, { TimelineEvent } from '../components/ui-v2/Timeline';
-import Button from '../components/ui-v2/Button';
-import { useToast } from '../hooks/useToast';
+import PageMetaLine from '@components/ui-v2/PageMetaLine';
+import ProvenanceMarker from '@components/ui-v2/ProvenanceMarker';
+import KpiCard from '@components/ui-v2/KpiCard';
+import BulkActionsBar from '@components/ui-v2/BulkActionsBar';
+import SubTabs from '@components/ui-v2/SubTabs';
+import FilterChipsBar from '@components/ui-v2/FilterChipsBar';
+import SearchBar from '@components/ui-v2/SearchBar';
+import StatusPill from '@components/ui-v2/StatusPill';
+import NextActLine from '@components/ui-v2/NextActLine';
+import { useNextAct } from '@hooks/useVerbAvailability';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
+import SidePanel from '@components/ui-v2/SidePanel';
+import Data from '@components/ui-v2/Data';
+import TrackingNumber from '@components/ui-v2/TrackingNumber';
+import Timeline, { TimelineEvent } from '@components/ui-v2/Timeline';
+import Button from '@components/ui-v2/Button';
+import { useToast } from '@hooks/useToast';
 import type {
   Shipment,
   ShipmentStatus,
   ShipmentMode,
-} from '../data/mockShipments';
-import LoadingState from '../components/ui-v2/LoadingState';
-import ErrorState from '../components/ui-v2/ErrorState';
-import EmptyState from '../components/ui-v2/EmptyState';
-import { useShipments, useSuppliers } from '../services/query/hooks';
-import { DECLARED_PRESENT } from '../services/data/fixturePresent';
+} from '@data/mockShipments';
+import LoadingState from '@components/ui-v2/LoadingState';
+import ErrorState from '@components/ui-v2/ErrorState';
+import EmptyState from '@components/ui-v2/EmptyState';
+import { useShipments, useSuppliers } from '@services/query/hooks';
+import { DECLARED_PRESENT } from '@services/data/fixturePresent';
 import {
   shipmentDisplayState,
   daysLate,
   daysInTransit,
   type ShipmentDisplayState,
-} from '../services/data/shipmentDisplayState';
+} from '@services/data/shipmentDisplayState';
 
 // ⚠️ THE FOURTH PIN, RETIRED — see BuyerGoodsReceipt for the full note. All
 // three surviving pins read 2026-05-20, which is what evidences the `shipment`

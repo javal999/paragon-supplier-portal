@@ -1,29 +1,29 @@
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Info, Send, Radio } from 'lucide-react';
-import AppShellV2 from '../components/layout-v2/AppShellV2';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
 import BuyerChannelTriage from './BuyerChannelTriage';
-import PageHeader from '../components/ui-v2/PageHeader';
-import PageMetaLine from '../components/ui-v2/PageMetaLine';
-import LivenessPill from '../components/ui-v2/LivenessPill';
-import LoadingState from '../components/ui-v2/LoadingState';
-import ErrorState from '../components/ui-v2/ErrorState';
-import StatusPill from '../components/ui-v2/StatusPill';
-import Data from '../components/ui-v2/Data';
-import { useUnifiedChase } from '../services/query/chaseHooks';
-import { useConsolidationRows } from '../services/query/sdcBuyerHooks';
-import { useSuppliers } from '../services/query/hooks';
+import PageHeader from '@components/ui-v2/PageHeader';
+import PageMetaLine from '@components/ui-v2/PageMetaLine';
+import LivenessPill from '@components/ui-v2/LivenessPill';
+import LoadingState from '@components/ui-v2/LoadingState';
+import ErrorState from '@components/ui-v2/ErrorState';
+import StatusPill from '@components/ui-v2/StatusPill';
+import Data from '@components/ui-v2/Data';
+import { useUnifiedChase } from '@services/query/chaseHooks';
+import { useConsolidationRows } from '@services/query/sdcBuyerHooks';
+import { useSuppliers } from '@services/query/hooks';
 import {
   deriveOutboundQueue,
   outboundRequestStore,
   channelProvenanceStore,
   type OutboundStatus,
   type SupplierReplyFact,
-} from '../services/channel';
-import type { ChaseSeverityLevel } from '../services/chase';
-import type { ConsolidationRow } from '../services/sdc';
-import { sdcClock } from '../services/sdc';
-import { formatDate } from '../lib/format';
+} from '@services/channel';
+import type { ChaseSeverityLevel } from '@services/chase';
+import type { ConsolidationRow } from '@services/sdc';
+import { sdcClock } from '@services/sdc';
+import { formatDate } from '@lib/format';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Comm Hub C4a — the buyer/planner COMMUNICATION HUB (DEC-COMMS-PRIMARY front door).

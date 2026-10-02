@@ -12,10 +12,10 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
-import Data from '../../components/ui-v2/Data';
-import { formatDate } from '../../lib/format';
-import type { ActorAttribution, UnattributedReason } from '../../lib/enforcement';
-import type { DraftRevision } from '../../services/sourcing/types';
+import Data from '@components/ui-v2/Data';
+import { formatDate } from '@lib/format';
+import type { ActorAttribution, UnattributedReason } from '@lib/enforcement';
+import type { DraftRevision } from '@services/sourcing/types';
 
 const UNATTRIBUTED_KEY: Record<UnattributedReason, string> = {
   NO_PERSON_IN_SESSION: 'rfxEdit.who.noPerson',

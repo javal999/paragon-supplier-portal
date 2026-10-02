@@ -15,7 +15,7 @@ import type {
   InventoryPosition,
   StockAccessGrant,
 } from '../types';
-import { mockSuppliers } from '../../../data/mockSuppliers';
+import { mockSuppliers } from '@data/mockSuppliers';
 import {
   FORECAST_PUBLICATIONS,
   SUPPLIER_MATERIAL_RELATIONSHIPS,

@@ -35,7 +35,7 @@ import { SCHEDULING_AGREEMENTS } from '../fixtures';
 import { SCHEDULING_AGREEMENT_DEMO } from '../demoFixtures';
 import { SCALE_DEMO_AGREEMENTS } from '../demoFixturesScale';
 import type { SchedulingAgreement } from '../types';
-import { mockContracts } from '../../../data/mockContracts';
+import { mockContracts } from '@data/mockContracts';
 
 /** Every agreement this tree exports, joined to the contract it names. */
 const ALL: readonly SchedulingAgreement[] = [

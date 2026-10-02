@@ -5,9 +5,9 @@
 // "Awaiting Approval" beside "accepted" with no explanation.
 import { describe, expect, it } from 'vitest';
 import { screen } from '@testing-library/react';
-import { renderWithProviders, BUYER } from '../../test/test-utils';
+import { renderWithProviders, BUYER } from '@test/test-utils';
 import { ToleranceTags, toleranceDrift } from './callOffDisplay';
-import type { ToleranceCheck } from '../../services/transitions/callOffRules';
+import type { ToleranceCheck } from '@services/transitions/callOffRules';
 
 const overWithin = { findings: [{ kind: 'overWithin', needsApproval: false, qty: 408, pct: 5.1 }] } as unknown as ToleranceCheck;
 const overBeyond = { findings: [{ kind: 'overBeyond', needsApproval: true, qty: 408, pct: 5.1 }] } as unknown as ToleranceCheck;

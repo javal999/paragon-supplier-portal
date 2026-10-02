@@ -4,17 +4,17 @@ import { useNavigate } from 'react-router-dom';
 import { FileWarning } from 'lucide-react';
 import ExpandableWidget, {
   type FlagSeverity,
-} from '../../components/ui-v2/ExpandableWidget';
-import Table from '../../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../../components/ui-v2/TableHeader';
-import TableRow from '../../components/ui-v2/TableRow';
-import TableCell from '../../components/ui-v2/TableCell';
-import Data from '../../components/ui-v2/Data';
-import StatusPill from '../../components/ui-v2/StatusPill';
-import { formatDate } from '../../lib/format';
-import { useDocuments } from '../../services/query/hooks';
-import { documentDisplayState } from '../../services/data/documentDisplayState';
-import { DECLARED_PRESENT } from '../../services/data/fixturePresent';
+} from '@components/ui-v2/ExpandableWidget';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
+import Data from '@components/ui-v2/Data';
+import StatusPill from '@components/ui-v2/StatusPill';
+import { formatDate } from '@lib/format';
+import { useDocuments } from '@services/query/hooks';
+import { documentDisplayState } from '@services/data/documentDisplayState';
+import { DECLARED_PRESENT } from '@services/data/fixturePresent';
 
 // ⚠️ ANCHORED — this surface rendered values derived from anchored
 // fixture data against the WALL CLOCK, so what a reader saw moved every day

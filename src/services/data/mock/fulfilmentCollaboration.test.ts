@@ -17,7 +17,7 @@ import { receiptDiscrepancyStore } from './stores/receiptDiscrepancyStore';
 import { toSupplierInvoice } from '../invoiceProjection';
 import { POStatus } from '../types';
 import type { ASN, InvoiceLine, QueryScope } from '../types';
-import type { GoodsReceipt } from '../../../data/mockGoodsReceipts';
+import type { GoodsReceipt } from '@data/mockGoodsReceipts';
 import { PERSONA_SYSTEM_ROLES, rolesHolding } from '../../transitions/businessRoles';
 import {
   compareReceipt,
@@ -27,7 +27,7 @@ import {
   supplierInvoiceStage,
 } from '../../transitions/fulfilmentRules';
 import { invoicePriceTolerance } from '../../transitions/fulfilmentConfig';
-import { NO_PERSON } from '../../../context/noPerson';
+import { NO_PERSON } from '@context/noPerson';
 
 const svc = new MockCommandService();
 const reads = new MockProcurementService();

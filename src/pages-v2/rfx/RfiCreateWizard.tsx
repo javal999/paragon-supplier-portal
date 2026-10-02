@@ -38,15 +38,15 @@
 
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import Button from '../../components/ui-v2/Button';
-import Data from '../../components/ui-v2/Data';
-import SessionAttachments from '../../components/ui-v2/SessionAttachments';
-import Wizard, { WizardStep } from '../../components/ui-v2/Wizard';
-import ModalOverlay from '../../components/ui-v2/ModalOverlay';
-import { useToast } from '../../hooks/useToast';
-import { BASE_CURRENCY } from '../../lib/currencyPolicy';
-import type { AttachmentMeta } from '../../services/attachments/sessionAttachments';
-import { useRfxCommand } from '../../services/query/commandHooks';
+import Button from '@components/ui-v2/Button';
+import Data from '@components/ui-v2/Data';
+import SessionAttachments from '@components/ui-v2/SessionAttachments';
+import Wizard, { WizardStep } from '@components/ui-v2/Wizard';
+import ModalOverlay from '@components/ui-v2/ModalOverlay';
+import { useToast } from '@hooks/useToast';
+import { BASE_CURRENCY } from '@lib/currencyPolicy';
+import type { AttachmentMeta } from '@services/attachments/sessionAttachments';
+import { useRfxCommand } from '@services/query/commandHooks';
 import {
   RFI_QUESTION_LIBRARY,
   RFI_TEMPLATES,
@@ -54,15 +54,15 @@ import {
   rfiTemplate,
   rfxCategoryFamily,
   rfxFamilyForCategory,
-} from '../../services/sourcing/rfxConfig';
-import { rfiTemplateStore, type RfiTemplateContent } from '../../services/sourcing/rfxTemplates';
-import { isPastDeadline } from '../../services/transitions/rfxRules';
-import { documentRequestsRefusal } from '../../services/transitions/rfxDocumentRules';
-import type { DocumentRequest, RfiEvent, RfiQuestion, RfxCustomSection } from '../../services/sourcing/types';
+} from '@services/sourcing/rfxConfig';
+import { rfiTemplateStore, type RfiTemplateContent } from '@services/sourcing/rfxTemplates';
+import { isPastDeadline } from '@services/transitions/rfxRules';
+import { documentRequestsRefusal } from '@services/transitions/rfxDocumentRules';
+import type { DocumentRequest, RfiEvent, RfiQuestion, RfxCustomSection } from '@services/sourcing/types';
 import DocumentRequestsEditor, { DocumentRequestsSummary } from './DocumentRequestsEditor';
 import RfxInviteeStep from './RfxInviteeStep';
 import { useSourcingTypeMap } from './eligibilityDisplay';
-import { mappedSourcingType } from '../../services/sourcing/sourcingType';
+import { mappedSourcingType } from '@services/sourcing/sourcingType';
 import RfxQuestionEditor from './RfxQuestionEditor';
 import RfxSaveTemplate from './RfxSaveTemplate';
 import RfxStartFrom, { type StartOption } from './RfxStartFrom';

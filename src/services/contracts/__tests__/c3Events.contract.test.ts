@@ -34,7 +34,7 @@ import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { buildRepoProgram } from '../../../lib/storedFieldGate/derive';
+import { buildRepoProgram } from '@lib/storedFieldGate/derive';
 import { deriveInterfaceMembers } from './deriveC1Surface';
 import { getKnownFlows } from '../../transitions';
 

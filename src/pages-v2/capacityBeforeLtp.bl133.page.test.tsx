@@ -7,16 +7,16 @@
 
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { renderWithProviders, BUYER, SUPPLIER } from '../test/test-utils';
-import type { CurrentIdentity } from '../context/CurrentIdentityContext';
-import { SEEDED_SEAT_ROLES } from '../services/transitions/businessRoles';
-import { NO_PERSON } from '../context/noPerson';
-import { requirementResponseStore } from '../services/data/mock/stores/requirementResponseStore';
-import { forecastVersionStore, forecastViewStore } from '../services/data/mock/stores/forecastHubStores';
-import { capacityStore, inventoryAlertLedger } from '../services/data/mock/stores/inventoryHubStores';
-import { SEEDED_PACKAGING_WEEKS as W, SEEDED_RAW_MATERIAL_MONTHS as M } from '../services/data/mock/fixtures/forecastHub';
-import { inventoryCapacityEn, inventoryCapacityId } from '../lib/i18n/inventoryCapacity';
-import { sdcClock } from '../services/sdc';
+import { renderWithProviders, BUYER, SUPPLIER } from '@test/test-utils';
+import type { CurrentIdentity } from '@context/CurrentIdentityContext';
+import { SEEDED_SEAT_ROLES } from '@services/transitions/businessRoles';
+import { NO_PERSON } from '@context/noPerson';
+import { requirementResponseStore } from '@services/data/mock/stores/requirementResponseStore';
+import { forecastVersionStore, forecastViewStore } from '@services/data/mock/stores/forecastHubStores';
+import { capacityStore, inventoryAlertLedger } from '@services/data/mock/stores/inventoryHubStores';
+import { SEEDED_PACKAGING_WEEKS as W, SEEDED_RAW_MATERIAL_MONTHS as M } from '@services/data/mock/fixtures/forecastHub';
+import { inventoryCapacityEn, inventoryCapacityId } from '@lib/i18n/inventoryCapacity';
+import { sdcClock } from '@services/sdc';
 import SupplierForecastCommitments from './SupplierForecastCommitments';
 import SupplierCapacity from './SupplierCapacity';
 import BuyerCapacity from './BuyerCapacity';

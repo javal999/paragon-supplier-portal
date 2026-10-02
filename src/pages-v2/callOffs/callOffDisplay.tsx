@@ -1,19 +1,19 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import StatusPill from '../../components/ui-v2/StatusPill';
-import type { StatusTone } from '../../lib/statusTone';
+import StatusPill from '@components/ui-v2/StatusPill';
+import type { StatusTone } from '@lib/statusTone';
 import type {
   CallOffDeliveryStatus,
   CallOffView,
   ToleranceCheck,
   ToleranceFinding,
-} from '../../services/transitions/callOffRules';
-import { useCallOffs, useASNs, useGoodsReceipts } from '../../services/query/hooks';
-import { callOffViews } from '../../services/transitions/callOffRules';
-import { formatDate } from '../../lib/format';
-import type { CallOffConfirmation } from '../../services/data/types';
-import { sdcClock } from '../../services/sdc';
-import { normalizeQty } from '../../lib/localeNumber';
+} from '@services/transitions/callOffRules';
+import { useCallOffs, useASNs, useGoodsReceipts } from '@services/query/hooks';
+import { callOffViews } from '@services/transitions/callOffRules';
+import { formatDate } from '@lib/format';
+import type { CallOffConfirmation } from '@services/data/types';
+import { sdcClock } from '@services/sdc';
+import { normalizeQty } from '@lib/localeNumber';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Call-off status pills and the shared read (REQ-E09-03, REQ-E09-04). Both the

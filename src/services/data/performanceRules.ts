@@ -20,12 +20,12 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { ASN, CallOff, PurchaseOrder } from './types';
-import type { GoodsReceipt } from '../../data/mockGoodsReceipts';
+import type { GoodsReceipt } from '@data/mockGoodsReceipts';
 import {
   callOffViews,
   type CallOffView,
 } from '../transitions/callOffRules';
-import { targetStatus, type TargetStatus } from '../../lib/chartPalette';
+import { targetStatus, type TargetStatus } from '@lib/chartPalette';
 import { receivedOnTimeFor } from './kpiWindow';
 import { complianceScoreWeight } from '../transitions/inventoryConfig';
 import type { UpdateCompliance } from '../transitions/updateCompliance';

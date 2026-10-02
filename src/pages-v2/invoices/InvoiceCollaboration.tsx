@@ -1,17 +1,17 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import Data from '../../components/ui-v2/Data';
-import StatusPill from '../../components/ui-v2/StatusPill';
-import { formatDate } from '../../lib/format';
-import type { StatusTone } from '../../lib/statusTone';
-import type { Invoice, InvoiceLine, InvoiceMatchStatus } from '../../services/data/types';
-import { normalizeQty } from '../../lib/localeNumber';
+import Data from '@components/ui-v2/Data';
+import StatusPill from '@components/ui-v2/StatusPill';
+import { formatDate } from '@lib/format';
+import type { StatusTone } from '@lib/statusTone';
+import type { Invoice, InvoiceLine, InvoiceMatchStatus } from '@services/data/types';
+import { normalizeQty } from '@lib/localeNumber';
 import {
   invoicePriceTolerance,
   checkInvoicePrices,
   type InvoiceLinePriceCheck,
   type PriceCheck,
-} from '../../services/transitions';
+} from '@services/transitions';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Invoice collaboration pieces shared by the supplier and Finance screens

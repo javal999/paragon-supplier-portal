@@ -1,7 +1,7 @@
 import React from 'react';
 import { Menu, Search, Bell } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { resolveEnvBadge } from '../../lib/envBadge';
+import { resolveEnvBadge } from '@lib/envBadge';
 import LanguageMenu from './LanguageMenu';
 import IdentityPanel from './IdentityPanel';
 

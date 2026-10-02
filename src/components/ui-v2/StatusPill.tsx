@@ -1,9 +1,9 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { statusLabelKey } from '../../lib/statusLabel';
-import { enumLabelKey } from '../../lib/priorityLabel';
-import { categoryLabelKey } from '../../lib/categoryLabel';
-import { channelLabelKey } from '../../lib/channelLabel';
+import { statusLabelKey } from '@lib/statusLabel';
+import { enumLabelKey } from '@lib/priorityLabel';
+import { categoryLabelKey } from '@lib/categoryLabel';
+import { channelLabelKey } from '@lib/channelLabel';
 
 type Variant = 'success' | 'warning' | 'danger' | 'info' | 'neutral';
 

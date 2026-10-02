@@ -8,20 +8,20 @@
 
 import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { renderWithProviders, BUYER } from '../../test/test-utils';
-import type { CurrentIdentity } from '../../context/CurrentIdentityContext';
-import { SEEDED_SEAT_ROLES } from '../../services/transitions/businessRoles';
-import { NO_PERSON } from '../../context/noPerson';
+import { renderWithProviders, BUYER } from '@test/test-utils';
+import type { CurrentIdentity } from '@context/CurrentIdentityContext';
+import { SEEDED_SEAT_ROLES } from '@services/transitions/businessRoles';
+import { NO_PERSON } from '@context/noPerson';
 import {
   resetRfxStores,
   rfiEventStore,
   rfpEventStore,
   rfpResponseStore,
-} from '../../services/data/mock/stores/rfxStores';
-import { rfqStore } from '../../services/data/mock/stores/rfqStore';
-import { quotationStore } from '../../services/data/mock/stores/quotationStore';
-import { sdcClock } from '../../services/sdc';
-import { resetRfxTemplatesForTest } from '../../services/sourcing/rfxTemplates';
+} from '@services/data/mock/stores/rfxStores';
+import { rfqStore } from '@services/data/mock/stores/rfqStore';
+import { quotationStore } from '@services/data/mock/stores/quotationStore';
+import { sdcClock } from '@services/sdc';
+import { resetRfxTemplatesForTest } from '@services/sourcing/rfxTemplates';
 import BuyerRfi from '../BuyerRfi';
 import BuyerRfp from '../BuyerRfp';
 import SupplierRfi from '../SupplierRfi';

@@ -4,8 +4,8 @@
 
 import { screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { renderWithProviders } from '../../test/test-utils';
-import type { InventoryPosition } from '../../services/data/types';
+import { renderWithProviders } from '@test/test-utils';
+import type { InventoryPosition } from '@services/data/types';
 import { InTransitReadOnly } from './inventoryDisplay';
 
 const position = (incoming: InventoryPosition['incoming']): InventoryPosition =>

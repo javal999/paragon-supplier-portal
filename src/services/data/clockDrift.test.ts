@@ -21,7 +21,7 @@ import {
   waitingFooter,
 } from './clockDrift';
 import { DECLARED_PRESENT, FAMILY_ANCHORS, type FixtureFamily } from './fixturePresent';
-import { DISPLAY_STATES } from '../../lib/projectionGate/displayStates';
+import { DISPLAY_STATES } from '@lib/projectionGate/displayStates';
 
 const MS = 86_400_000;
 const dayMs = (v: string) => Date.parse(`${v}T00:00:00.000Z`);

@@ -2,23 +2,23 @@ import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Gavel } from 'lucide-react';
-import ExpandableWidget from '../../components/ui-v2/ExpandableWidget';
-import Table from '../../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../../components/ui-v2/TableHeader';
-import TableRow from '../../components/ui-v2/TableRow';
-import TableCell from '../../components/ui-v2/TableCell';
-import Data from '../../components/ui-v2/Data';
-import StatusPill from '../../components/ui-v2/StatusPill';
-import { statusTone } from '../../lib/statusTone';
-import { formatDate } from '../../lib/format';
-import { useRFQs, useQuotations } from '../../services/query/hooks';
+import ExpandableWidget from '@components/ui-v2/ExpandableWidget';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
+import Data from '@components/ui-v2/Data';
+import StatusPill from '@components/ui-v2/StatusPill';
+import { statusTone } from '@lib/statusTone';
+import { formatDate } from '@lib/format';
+import { useRFQs, useQuotations } from '@services/query/hooks';
 import {
   pendingAwardRfqs,
   awardOverdue,
   quoteCountByRfq,
   rfqAwardTier,
 } from './buyerDerivations';
-import { sdcClock } from '../../services/sdc/clock';
+import { sdcClock } from '@services/sdc/clock';
 
 // Buyer sourcing — LIVE: RFQs with quotations in but not yet Awarded, read from
 // the RFQ + quotation stores (award verb, PR #41). The award is a decision, so

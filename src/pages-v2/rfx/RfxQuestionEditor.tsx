@@ -15,21 +15,21 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
-import Button from '../../components/ui-v2/Button';
-import StatusPill from '../../components/ui-v2/StatusPill';
-import { BID_CURRENCIES, type BidCurrency } from '../../lib/currencyPolicy';
+import Button from '@components/ui-v2/Button';
+import StatusPill from '@components/ui-v2/StatusPill';
+import { BID_CURRENCIES, type BidCurrency } from '@lib/currencyPolicy';
 import {
   RFX_QUESTION_TYPES,
   isBoundedType,
   isChoiceType,
   rfxSectionsOf,
-} from '../../services/sourcing/rfxConfig';
-import { rfiQuestionRefusal } from '../../services/transitions/rfxRules';
+} from '@services/sourcing/rfxConfig';
+import { rfiQuestionRefusal } from '@services/transitions/rfxRules';
 import type {
   RfiQuestion,
   RfiQuestionType,
   RfxCustomSection,
-} from '../../services/sourcing/types';
+} from '@services/sourcing/types';
 import { authored, optionLabel, sectionTitle, IndicativePill } from './rfxAuthoringDisplay';
 
 export interface QuestionSet {

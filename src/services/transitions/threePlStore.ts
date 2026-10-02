@@ -33,7 +33,7 @@
 // carrier typed as free text is a claim, the id is a reference.
 // ────────────────────────────────────────────────────────────────────────────
 
-import { asActorAttribution, type ActorAttribution } from '../../lib/enforcement';
+import { asActorAttribution, type ActorAttribution } from '@lib/enforcement';
 
 /** One 3PL on the list. */
 export interface ThreePl {

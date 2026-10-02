@@ -43,8 +43,8 @@ import { AlertTriangle } from 'lucide-react';
 import AppShellV2 from '../layout-v2/AppShellV2';
 import PageHeader from './PageHeader';
 import Button from './Button';
-import { DataError } from '../../services/data/types';
-import { describeDataError } from '../../services/transitions/refusalMessage';
+import { DataError } from '@services/data/types';
+import { describeDataError } from '@services/transitions/refusalMessage';
 
 interface ErrorStateProps {
   error?: unknown;

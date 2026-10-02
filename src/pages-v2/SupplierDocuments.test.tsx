@@ -1,13 +1,13 @@
 import { screen, fireEvent, within } from '@testing-library/react';
-import { renderWithProviders, SUPPLIER } from '../test/test-utils';
-import type { CurrentIdentity } from '../context/CurrentIdentityContext';
-import { mockDataService } from '../services/data/mock/mockDataService';
-import { withChaos } from '../services/data/mock/withChaos';
+import { renderWithProviders, SUPPLIER } from '@test/test-utils';
+import type { CurrentIdentity } from '@context/CurrentIdentityContext';
+import { mockDataService } from '@services/data/mock/mockDataService';
+import { withChaos } from '@services/data/mock/withChaos';
 import SupplierDocuments from './SupplierDocuments';
-import { PERSONA_SYSTEM_ROLES } from '../services/transitions/businessRoles';
-import { NO_PERSON } from '../context/noPerson';
-import { DOCUMENTS } from '../services/data/mock/fixtures/supplierDocuments';
-import { formatDate } from '../lib/format';
+import { PERSONA_SYSTEM_ROLES } from '@services/transitions/businessRoles';
+import { NO_PERSON } from '@context/noPerson';
+import { DOCUMENTS } from '@services/data/mock/fixtures/supplierDocuments';
+import { formatDate } from '@lib/format';
 
 const alwaysFails = withChaos(mockDataService, { minMs: 0, maxMs: 0, failureRate: 1 });
 const alwaysPending = withChaos(mockDataService, { minMs: 1e7, maxMs: 1e7, failureRate: 0 });

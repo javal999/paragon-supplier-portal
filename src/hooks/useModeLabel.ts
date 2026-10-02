@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { modeLabelKey } from '../lib/modeLabel';
+import { modeLabelKey } from '@lib/modeLabel';
 
 /**
  * Localize a shipment-mode token (Sea / Air / Road) for DISPLAY, from the

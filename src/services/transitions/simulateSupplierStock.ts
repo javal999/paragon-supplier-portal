@@ -30,7 +30,7 @@ import type {
   SimulationOverride,
   SimulationOverrideField,
 } from '../data/types';
-import type { ActorAttribution } from '../../lib/enforcement';
+import type { ActorAttribution } from '@lib/enforcement';
 import type { IncomingShipment, InventoryDeclaration, SupplierMaterialRelationship } from '../sdc/types';
 import { declarationRecency } from '../sdc/inventory';
 import { addDays, dayOf, inTransitItems, isIsoDay, mondayOf } from './inventoryRules';

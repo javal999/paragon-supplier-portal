@@ -18,15 +18,15 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
-import Button from '../../components/ui-v2/Button';
-import StatusPill from '../../components/ui-v2/StatusPill';
+import Button from '@components/ui-v2/Button';
+import StatusPill from '@components/ui-v2/StatusPill';
 import {
   RFP_TERM_GROUP_ORDER,
   RFP_TERM_VALUE_KINDS,
   rfpTermKindOf,
-} from '../../services/sourcing/rfxConfig';
-import { rfpTermsRefusal } from '../../services/transitions/rfxRules';
-import type { RfpTermGroup, RfpTermRow, RfpTermValueKind } from '../../services/sourcing/types';
+} from '@services/sourcing/rfxConfig';
+import { rfpTermsRefusal } from '@services/transitions/rfxRules';
+import type { RfpTermGroup, RfpTermRow, RfpTermValueKind } from '@services/sourcing/types';
 import { refusalCode } from './RfxQuestionEditor';
 import { termUnit } from './rfxAuthoringDisplay';
 

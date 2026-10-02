@@ -1,26 +1,26 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
-import Data from '../../components/ui-v2/Data';
-import StatusPill from '../../components/ui-v2/StatusPill';
-import Table from '../../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../../components/ui-v2/TableHeader';
-import TableRow from '../../components/ui-v2/TableRow';
-import TableCell from '../../components/ui-v2/TableCell';
-import SessionAttachments from '../../components/ui-v2/SessionAttachments';
-import { formatDate } from '../../lib/format';
-import { compositeText, scoreStanding, type ScoringOptions, type QuoteScore } from '../../lib/quoteScore';
-import type { RFQ } from '../../data/mockRfqs';
-import type { Quotation } from '../../data/mockQuotations';
-import type { GateResult } from '../../services/sourcing/complianceGate';
-import { rfqItemType } from '../../services/sourcing/rfqItemTypes';
+import Data from '@components/ui-v2/Data';
+import StatusPill from '@components/ui-v2/StatusPill';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
+import SessionAttachments from '@components/ui-v2/SessionAttachments';
+import { formatDate } from '@lib/format';
+import { compositeText, scoreStanding, type ScoringOptions, type QuoteScore } from '@lib/quoteScore';
+import type { RFQ } from '@data/mockRfqs';
+import type { Quotation } from '@data/mockQuotations';
+import type { GateResult } from '@services/sourcing/complianceGate';
+import { rfqItemType } from '@services/sourcing/rfqItemTypes';
 import {
   tierPieces,
   tiersForItem,
   type RfqItem,
   type RfqQuantityTier,
   type RfqSpecField,
-} from '../../services/sourcing/rfqModel';
+} from '@services/sourcing/rfqModel';
 import {
   bestPriceByBreak,
   defaultEvaluationTierQty,
@@ -28,11 +28,11 @@ import {
   itemCostAt,
   itemTierAt,
   scoreItemAt,
-} from '../../services/sourcing/rfqComparison';
+} from '@services/sourcing/rfqComparison';
 import { EmptyRow, GateMarker, money, qty } from './rfxDisplay';
 import { FirmPill } from './rfxAuthoringDisplay';
 import { DocumentsStatus } from './SupplierDocumentsPanel';
-import { documentsOf } from '../../services/transitions/rfxDocumentRules';
+import { documentsOf } from '@services/transitions/rfxDocumentRules';
 
 // ────────────────────────────────────────────────────────────────────────────
 // THE TIERED RFQ ON ITS EVENT PAGE (RFx spec 2026-09-21, "Evaluation and

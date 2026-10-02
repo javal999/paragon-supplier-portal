@@ -26,9 +26,9 @@
 
 import { describe, it, expect, afterAll } from 'vitest';
 import { screen, within } from '@testing-library/react';
-import { renderWithProviders, BUYER, SUPPLIER } from '../test/test-utils';
-import i18n from '../lib/i18n';
-import { COMPLIANCE_REGISTRY } from '../services/data/mock/fixtures/complianceRegistry';
+import { renderWithProviders, BUYER, SUPPLIER } from '@test/test-utils';
+import i18n from '@lib/i18n';
+import { COMPLIANCE_REGISTRY } from '@services/data/mock/fixtures/complianceRegistry';
 import BuyerCompliance from './BuyerCompliance';
 
 const ROUTE = '/buyer/compliance';

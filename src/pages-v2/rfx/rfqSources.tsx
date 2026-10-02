@@ -12,10 +12,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import Data from '../../components/ui-v2/Data';
-import type { RFQ } from '../../data/mockRfqs';
-import { useRequisitions, useRfiEvents, useRfpEvents } from '../../services/query/hooks';
-import { rfqTemplateStore } from '../../services/sourcing/rfqTemplates';
+import Data from '@components/ui-v2/Data';
+import type { RFQ } from '@data/mockRfqs';
+import { useRequisitions, useRfiEvents, useRfpEvents } from '@services/query/hooks';
+import { rfqTemplateStore } from '@services/sourcing/rfqTemplates';
 
 /** The provenance fields an RFQ (or a draft of one) carries. */
 export type RfqSourceRefs = Pick<RFQ, 'sourceRfiId' | 'sourceRfpId' | 'copiedFromRfqId' | 'templateId'> & {

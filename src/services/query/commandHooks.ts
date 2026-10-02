@@ -11,13 +11,13 @@ import { maxStockEntityId } from '../transitions/maxStock';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useDataService } from '../data/DataServiceContext';
-import { useToast } from '../../hooks/useToast';
+import { useToast } from '@hooks/useToast';
 import { classifySettleFault } from '../transitions/settleFaults';
 import { DataError } from '../data/types';
-import { useCurrentIdentity } from '../../context/CurrentIdentityContext';
+import { useCurrentIdentity } from '@context/CurrentIdentityContext';
 import { scopeKey } from './useServiceQuery';
-import type { BidCurrency } from '../../lib/currencyPolicy';
-import type { FxPinSource } from '../../lib/fxPin';
+import type { BidCurrency } from '@lib/currencyPolicy';
+import type { FxPinSource } from '@lib/fxPin';
 import type {
   CommandResult,
   CommandStatus,

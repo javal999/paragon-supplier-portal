@@ -1,11 +1,11 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { describeRefusal, refusalDetailOf } from './refusalMessage';
 import { COMMAND_REFUSALS, refusal } from './refusals';
-import { COMMAND_REFUSAL_GLOSSARY } from '../../lib/glossary';
+import { COMMAND_REFUSAL_GLOSSARY } from '@lib/glossary';
 import { MockCommandService } from '../data/mock/MockCommandService';
 import { purchaseOrderStore } from '../data/mock/stores/purchaseOrderStore';
 import { PERSONA_SYSTEM_ROLES } from './businessRoles';
-import { NO_PERSON } from '../../context/noPerson';
+import { NO_PERSON } from '@context/noPerson';
 import type { QueryScope } from '../data/types';
 
 // ─────────────────────────────────────────────────────────────────────────────

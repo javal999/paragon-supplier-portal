@@ -26,7 +26,7 @@ import Data from '../ui-v2/Data';
 import Button from '../ui-v2/Button';
 import ReleaseCalendar from './ReleaseCalendar';
 import PolicyEditor from './PolicyEditor';
-import { formatNumber, formatDate } from '../../lib/format';
+import { formatNumber, formatDate } from '@lib/format';
 import type { TFunction } from 'i18next';
 import type {
   DeliveryAgreementView,
@@ -34,7 +34,7 @@ import type {
   EditPolicyPatch,
   ReleaseSelection,
   TolerancePolicy,
-} from '../../services/delivery';
+} from '@services/delivery';
 
 /** The release write, threaded from the page (BuyerContractDetail) when the
  *  viewer is a buyer. Absent ⇒ the card is read-only (the roll-up, and any

@@ -8,9 +8,9 @@
 
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import Data from '../../components/ui-v2/Data';
-import { formatNumber } from '../../lib/format';
-import type { MissSplit } from '../../services/engine/reliability';
+import Data from '@components/ui-v2/Data';
+import { formatNumber } from '@lib/format';
+import type { MissSplit } from '@services/engine/reliability';
 
 /** A 0–1 rate as a whole percentage, or null. */
 export const pctOf = (rate: number | null): string | null => (rate === null ? null : `${Math.round(rate * 100)}%`);

@@ -2,7 +2,7 @@ import React from 'react';
 import { describe, it, expect, afterEach } from 'vitest';
 import { render, screen, act } from '@testing-library/react';
 import { I18nextProvider } from 'react-i18next';
-import i18n from '../../lib/i18n';
+import i18n from '@lib/i18n';
 import StatusPill from './StatusPill';
 
 function renderPill(node: React.ReactNode) {

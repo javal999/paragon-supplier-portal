@@ -1,12 +1,12 @@
 import { render, screen } from '@testing-library/react';
 import { I18nextProvider } from 'react-i18next';
-import i18n from '../../lib/i18n';
+import i18n from '@lib/i18n';
 import ProvenanceMarker from './ProvenanceMarker';
 import {
   dispatchesCommands,
   feedProvenance,
   isLive,
-} from '../../services/liveness';
+} from '@services/liveness';
 
 // ProvenanceMarker is the TWO-AXIS marker for the partly-real routes (D-CENSUS-8).
 // Same structural lock as LivenessPill — the only input is `capability`, so

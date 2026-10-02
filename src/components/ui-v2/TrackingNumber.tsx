@@ -2,7 +2,7 @@ import React, { useSyncExternalStore } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ExternalLink } from 'lucide-react';
 import Data from './Data';
-import { threePlStore, trackingUrlFor } from '../../services/transitions/threePlStore';
+import { threePlStore, trackingUrlFor } from '@services/transitions/threePlStore';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // AN ASN'S TRACKING NUMBER — BL-51, REQ-E07-04 BR-05.

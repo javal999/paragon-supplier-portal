@@ -1,11 +1,11 @@
 import { screen, fireEvent, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { renderWithProviders } from '../test/test-utils';
+import { renderWithProviders } from '@test/test-utils';
 import InterfaceMonitor from './InterfaceMonitor';
 import BuyerOrders from './BuyerOrders';
 import BuyerHome from './BuyerHome';
-import { UTILITY_NAV } from '../components/layout-v2/navConfig';
-import { sapMessageStore } from '../services/data/mock/stores/sapMessageStore';
+import { UTILITY_NAV } from '@components/layout-v2/navConfig';
+import { sapMessageStore } from '@services/data/mock/stores/sapMessageStore';
 
 // ────────────────────────────────────────────────────────────────────────────
 // REQ-E07-08 — the monitor and the data-age banner, rendered.

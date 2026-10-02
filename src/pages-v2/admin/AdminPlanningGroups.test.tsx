@@ -1,10 +1,10 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { screen, fireEvent, within, waitFor } from '@testing-library/react';
-import { renderWithProviders, BUYER } from '../../test/test-utils';
-import { planningGroupStore } from '../../services/data/mock/stores/planningGroupStore';
-import { materialOverlayStore } from '../../services/data/mock/stores/materialOverlayStore';
-import { capacityStore } from '../../services/data/mock/stores/inventoryHubStores';
-import { materialEntry } from '../../services/sdc';
+import { renderWithProviders, BUYER } from '@test/test-utils';
+import { planningGroupStore } from '@services/data/mock/stores/planningGroupStore';
+import { materialOverlayStore } from '@services/data/mock/stores/materialOverlayStore';
+import { capacityStore } from '@services/data/mock/stores/inventoryHubStores';
+import { materialEntry } from '@services/sdc';
 import AdminPlanningGroups from './AdminPlanningGroups';
 
 // ─────────────────────────────────────────────────────────────────────────────

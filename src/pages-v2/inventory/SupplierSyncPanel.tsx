@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { RefreshCw } from 'lucide-react';
-import Button from '../../components/ui-v2/Button';
-import Data from '../../components/ui-v2/Data';
-import SampleDataBadge from '../../components/ui-v2/SampleDataBadge';
-import { HandoffNotice } from '../../components/ui-v2/HandoffNotice';
-import { useVerbAvailability } from '../../hooks/useVerbAvailability';
-import { formatDateTime } from '../../lib/format';
-import type { InventoryPosition, StockAccessGrant } from '../../services/data/types';
+import Button from '@components/ui-v2/Button';
+import Data from '@components/ui-v2/Data';
+import SampleDataBadge from '@components/ui-v2/SampleDataBadge';
+import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
+import { useVerbAvailability } from '@hooks/useVerbAvailability';
+import { formatDateTime } from '@lib/format';
+import type { InventoryPosition, StockAccessGrant } from '@services/data/types';
 import { inventoryNow, qty, useInventoryRunner } from './inventoryDisplay';
 
 // ─────────────────────────────────────────────────────────────────────────────

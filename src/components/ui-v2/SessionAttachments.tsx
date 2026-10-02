@@ -3,8 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { Paperclip, X } from 'lucide-react';
 import Button from './Button';
 import Data from './Data';
-import { formatBytes, type AttachmentMeta } from '../../services/attachments/sessionAttachments';
-import { useDataService } from '../../services/data/DataServiceContext';
+import { formatBytes, type AttachmentMeta } from '@services/attachments/sessionAttachments';
+import { useDataService } from '@services/data/DataServiceContext';
 
 // ────────────────────────────────────────────────────────────────────────────
 // The shared attachment control (BL-27: no file store). It puts files through

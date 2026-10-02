@@ -8,7 +8,7 @@ import {
   LucideIcon,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { ToastVariant } from '../../hooks/useToast';
+import { ToastVariant } from '@hooks/useToast';
 
 interface ToastProps {
   id: string;

@@ -1,5 +1,5 @@
 import React from 'react';
-import { targetStatus, TARGET_STATUS, TargetStatus } from '../../lib/chartPalette';
+import { targetStatus, TARGET_STATUS, TargetStatus } from '@lib/chartPalette';
 
 // DP2-TARGET-01 — the ONE target/KPI bar. Fill length = attainment (pct); a navy
 // target-tick marks the target position. Colour comes from the central

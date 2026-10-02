@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, screen, within } from '@testing-library/react';
-import { renderWithProviders } from '../../test/test-utils';
-import { mockDataService } from '../../services/data/mock/mockDataService';
-import type { IDataService, IFileService } from '../../services/data/types';
-import type { AttachmentMeta } from '../../services/attachments/sessionAttachments';
+import { renderWithProviders } from '@test/test-utils';
+import { mockDataService } from '@services/data/mock/mockDataService';
+import type { IDataService, IFileService } from '@services/data/types';
+import type { AttachmentMeta } from '@services/attachments/sessionAttachments';
 import SessionAttachments from './SessionAttachments';
 
 // A stub file seam: `put` hands back fixed metadata and marks the file held;

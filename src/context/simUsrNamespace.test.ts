@@ -2,8 +2,8 @@ import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 import { NO_PERSON, FIXTURE_PERSON_PREFIX } from './noPerson';
-import { asActorAttribution, isAttributed } from '../lib/enforcement';
-import { enforcementSettingStore } from '../services/data/mock/stores/enforcementSettingStore';
+import { asActorAttribution, isAttributed } from '@lib/enforcement';
+import { enforcementSettingStore } from '@services/data/mock/stores/enforcementSettingStore';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // C10 §6.3 — THE `sim-usr-*` PIN.

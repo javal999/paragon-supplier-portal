@@ -1,25 +1,25 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import Button from '../../components/ui-v2/Button';
-import Data from '../../components/ui-v2/Data';
-import StatusPill from '../../components/ui-v2/StatusPill';
-import Table from '../../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../../components/ui-v2/TableHeader';
-import TableRow from '../../components/ui-v2/TableRow';
-import TableCell from '../../components/ui-v2/TableCell';
-import { HandoffNotice } from '../../components/ui-v2/HandoffNotice';
-import { formatDate } from '../../lib/format';
-import type { RFQ } from '../../data/mockRfqs';
-import type { AwardView, RfpAwardView } from '../../services/sourcing/views';
-import type { AwardEventType, AwardStatus } from '../../services/sourcing/types';
-import type { VerbAvailability } from '../../services/transitions/handoff';
-import { awardItemsOf, itemOfAwardLine } from '../../services/sourcing/awardShape';
+import Button from '@components/ui-v2/Button';
+import Data from '@components/ui-v2/Data';
+import StatusPill from '@components/ui-v2/StatusPill';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
+import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
+import { formatDate } from '@lib/format';
+import type { RFQ } from '@data/mockRfqs';
+import type { AwardView, RfpAwardView } from '@services/sourcing/views';
+import type { AwardEventType, AwardStatus } from '@services/sourcing/types';
+import type { VerbAvailability } from '@services/transitions/handoff';
+import { awardItemsOf, itemOfAwardLine } from '@services/sourcing/awardShape';
 import {
   awardCancelRefusal,
   awardSapMarkRefusal,
   othersInForceAfterCancel,
   trailOfViews,
-} from '../../services/sourcing/awardStatus';
+} from '@services/sourcing/awardStatus';
 import { qty } from './rfxDisplay';
 import { itemLabel } from './AwardPanel';
 import { QualificationWarningsNote } from './eligibilityDisplay';

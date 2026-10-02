@@ -26,15 +26,15 @@
 
 import { describe, it, expect, beforeEach, afterAll } from 'vitest';
 import { screen } from '@testing-library/react';
-import { renderWithProviders, SUPPLIER } from '../../test/test-utils';
-import { mockDataService } from '../../services/data/mock/mockDataService';
-import { withChaos } from '../../services/data/mock/withChaos';
-import { DataError, type DataErrorCode } from '../../services/data/types';
-import { DATA_ERROR_GLOSSARY } from '../../lib/glossary';
-import i18n from '../../lib/i18n';
+import { renderWithProviders, SUPPLIER } from '@test/test-utils';
+import { mockDataService } from '@services/data/mock/mockDataService';
+import { withChaos } from '@services/data/mock/withChaos';
+import { DataError, type DataErrorCode } from '@services/data/types';
+import { DATA_ERROR_GLOSSARY } from '@lib/glossary';
+import i18n from '@lib/i18n';
 import ErrorState from './ErrorState';
-import BuyerOrders from '../../pages-v2/BuyerOrders';
-import SupplierOrders from '../../pages-v2/SupplierOrders';
+import BuyerOrders from '@pages-v2/BuyerOrders';
+import SupplierOrders from '@pages-v2/SupplierOrders';
 
 const alwaysFails = withChaos(mockDataService, { minMs: 0, maxMs: 0, failureRate: 1 });
 

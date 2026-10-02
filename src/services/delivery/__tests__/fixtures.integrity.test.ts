@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { SCHEDULING_AGREEMENT_CTR003, SCHEDULING_AGREEMENTS } from '../fixtures';
 import { MATERIAL_MASTER } from '../../sdc/fixtures';
-import { mockContracts } from '../../../data/mockContracts';
+import { mockContracts } from '@data/mockContracts';
 
 // Batch-1 fixture integrity: the ctr-003 SIMULATED anchor is honest by
 // construction. These assert the invariants the fixture must never violate —

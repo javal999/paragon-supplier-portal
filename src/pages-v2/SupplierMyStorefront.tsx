@@ -12,38 +12,38 @@ import {
   Upload,
   Edit3,
 } from 'lucide-react';
-import AppShellV2 from '../components/layout-v2/AppShellV2';
-import PageHeader from '../components/ui-v2/PageHeader';
-import PageMetaLine from '../components/ui-v2/PageMetaLine';
-import ProvenanceMarker from '../components/ui-v2/ProvenanceMarker';
-import FormSection from '../components/ui-v2/FormSection';
-import StatusPill from '../components/ui-v2/StatusPill';
-import Button from '../components/ui-v2/Button';
-import Table from '../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../components/ui-v2/TableHeader';
-import TableRow from '../components/ui-v2/TableRow';
-import TableCell from '../components/ui-v2/TableCell';
-import Switch from '../components/ui-v2/Switch';
-import { useToast } from '../hooks/useToast';
-import { useCategoryLabel } from '../hooks/useCategoryLabel';
-import { useCurrentIdentity } from '../context/CurrentIdentityContext';
-import { useAdaptive } from '../context/AdaptiveContext';
-import { CHANNEL_CONFIG } from '../data/communicationProfiles';
-import NoSupplierIdentity from '../components/ui-v2/NoSupplierIdentity';
-import LoadingState from '../components/ui-v2/LoadingState';
-import ErrorState from '../components/ui-v2/ErrorState';
-import Data from '../components/ui-v2/Data';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import PageHeader from '@components/ui-v2/PageHeader';
+import PageMetaLine from '@components/ui-v2/PageMetaLine';
+import ProvenanceMarker from '@components/ui-v2/ProvenanceMarker';
+import FormSection from '@components/ui-v2/FormSection';
+import StatusPill from '@components/ui-v2/StatusPill';
+import Button from '@components/ui-v2/Button';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
+import Switch from '@components/ui-v2/Switch';
+import { useToast } from '@hooks/useToast';
+import { useCategoryLabel } from '@hooks/useCategoryLabel';
+import { useCurrentIdentity } from '@context/CurrentIdentityContext';
+import { useAdaptive } from '@context/AdaptiveContext';
+import { CHANNEL_CONFIG } from '@data/communicationProfiles';
+import NoSupplierIdentity from '@components/ui-v2/NoSupplierIdentity';
+import LoadingState from '@components/ui-v2/LoadingState';
+import ErrorState from '@components/ui-v2/ErrorState';
+import Data from '@components/ui-v2/Data';
 import {
   useCurrentSupplier,
   useStorefrontCatalog,
   useStorefrontCerts,
-} from '../services/query/hooks';
+} from '@services/query/hooks';
 import type {
   CatalogItem,
   ProfileCert,
   ProfileCertStatus,
   Supplier,
-} from '../services/data/types';
+} from '@services/data/types';
 
 interface CompletenessItem {
   // `labelKey` is an i18n key (namespace supplierMyStorefront.completeness.*),

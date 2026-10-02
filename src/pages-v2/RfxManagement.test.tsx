@@ -12,10 +12,10 @@
 import { Routes, Route } from 'react-router-dom';
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { renderWithProviders, BUYER } from '../test/test-utils';
-import type { CurrentIdentity } from '../context/CurrentIdentityContext';
-import { SEEDED_SEAT_ROLES } from '../services/transitions/businessRoles';
-import { NO_PERSON } from '../context/noPerson';
+import { renderWithProviders, BUYER } from '@test/test-utils';
+import type { CurrentIdentity } from '@context/CurrentIdentityContext';
+import { SEEDED_SEAT_ROLES } from '@services/transitions/businessRoles';
+import { NO_PERSON } from '@context/noPerson';
 import {
   awardCancellationStore,
   awardStore,
@@ -24,18 +24,18 @@ import {
   rfpFirmOfferStore,
   rfpOfferRoundStore,
   rfpResponseStore,
-} from '../services/data/mock/stores/rfxStores';
-import { mockDataService } from '../services/data/mock/mockDataService';
+} from '@services/data/mock/stores/rfxStores';
+import { mockDataService } from '@services/data/mock/mockDataService';
 import { rfxNow } from './rfx/rfxDisplay';
-import { MockCommandService } from '../services/data/mock/MockCommandService';
-import { PERSONA_SYSTEM_ROLES } from '../services/transitions/businessRoles';
-import type { QueryScope } from '../services/data/types';
-import type { DocumentRequest } from '../services/sourcing/types';
-import { formatDate } from '../lib/format';
-import { rfqStore } from '../services/data/mock/stores/rfqStore';
-import { quotationStore } from '../services/data/mock/stores/quotationStore';
-import { sdcClock } from '../services/sdc';
-import { rfxEn, rfxId } from '../lib/i18n/rfx';
+import { MockCommandService } from '@services/data/mock/MockCommandService';
+import { PERSONA_SYSTEM_ROLES } from '@services/transitions/businessRoles';
+import type { QueryScope } from '@services/data/types';
+import type { DocumentRequest } from '@services/sourcing/types';
+import { formatDate } from '@lib/format';
+import { rfqStore } from '@services/data/mock/stores/rfqStore';
+import { quotationStore } from '@services/data/mock/stores/quotationStore';
+import { sdcClock } from '@services/sdc';
+import { rfxEn, rfxId } from '@lib/i18n/rfx';
 import BuyerRfi from './BuyerRfi';
 import BuyerRfp from './BuyerRfp';
 import BuyerSourcingEvent from './BuyerSourcingEvent';

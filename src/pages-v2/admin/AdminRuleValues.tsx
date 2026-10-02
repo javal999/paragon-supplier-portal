@@ -1,23 +1,23 @@
 import React, { useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AlertTriangle, ShieldCheck } from 'lucide-react';
-import AppShellV2 from '../../components/layout-v2/AppShellV2';
-import PageHeader from '../../components/ui-v2/PageHeader';
-import PageMetaLine from '../../components/ui-v2/PageMetaLine';
-import Table from '../../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../../components/ui-v2/TableHeader';
-import TableRow from '../../components/ui-v2/TableRow';
-import TableCell from '../../components/ui-v2/TableCell';
-import Button from '../../components/ui-v2/Button';
-import Data from '../../components/ui-v2/Data';
-import StatusPill from '../../components/ui-v2/StatusPill';
-import { HandoffNotice } from '../../components/ui-v2/HandoffNotice';
-import { useVerbAvailability } from '../../hooks/useVerbAvailability';
-import { useRefusalText } from '../../hooks/useRefusalText';
-import { useToast } from '../../hooks/useToast';
-import { formatDateTime } from '../../lib/format';
-import { useSettingSet } from '../../services/query/commandHooks';
-import { useInventory } from '../../services/query/hooks';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import PageHeader from '@components/ui-v2/PageHeader';
+import PageMetaLine from '@components/ui-v2/PageMetaLine';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
+import Button from '@components/ui-v2/Button';
+import Data from '@components/ui-v2/Data';
+import StatusPill from '@components/ui-v2/StatusPill';
+import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
+import { useVerbAvailability } from '@hooks/useVerbAvailability';
+import { useRefusalText } from '@hooks/useRefusalText';
+import { useToast } from '@hooks/useToast';
+import { formatDateTime } from '@lib/format';
+import { useSettingSet } from '@services/query/commandHooks';
+import { useInventory } from '@services/query/hooks';
 import {
   HUB_SETTINGS,
   SEEDED_STALE_OVERRIDES,
@@ -31,10 +31,10 @@ import {
   type HubSettingDef,
   type HubSettingSection,
   type HubSettingValue,
-} from '../../services/transitions/hubSettings';
-import { hubSettingsStore, settingValue } from '../../services/transitions/hubSettingsStore';
-import { staleApiHours } from '../../services/transitions/inventoryConfig';
-import { stockFreshness } from '../../services/transitions/inventoryRules';
+} from '@services/transitions/hubSettings';
+import { hubSettingsStore, settingValue } from '@services/transitions/hubSettingsStore';
+import { staleApiHours } from '@services/transitions/inventoryConfig';
+import { stockFreshness } from '@services/transitions/inventoryRules';
 import { PullFailedNote, inventoryNow } from '../inventory/inventoryDisplay';
 import AdminSectionNav from './AdminSectionNav';
 

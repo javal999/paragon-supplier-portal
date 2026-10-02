@@ -1,4 +1,4 @@
-import type { ActorAttribution } from '../lib/enforcement';
+import type { ActorAttribution } from '@lib/enforcement';
 import React, {
   createContext,
   useCallback,
@@ -17,7 +17,7 @@ export type PersonaType = 'buyer' | 'supplier';
 export type SeatRoles = readonly string[];
 
 /** Re-exported so a consumer needs one import for the whole seat. */
-export type { ActorAttribution } from '../lib/enforcement';
+export type { ActorAttribution } from '@lib/enforcement';
 
 export interface CurrentIdentity {
   personaType: PersonaType;

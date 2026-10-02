@@ -31,13 +31,13 @@ import ts from 'typescript';
 import { Routes, Route } from 'react-router-dom';
 import { screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import i18n, { resources } from '../lib/i18n';
-import { renderWithProviders, BUYER } from '../test/test-utils';
-import { SEEDED_SEAT_ROLES } from '../services/transitions/businessRoles';
-import { resetRfxStores } from '../services/data/mock/stores/rfxStores';
-import { rfqStore } from '../services/data/mock/stores/rfqStore';
-import { quotationStore } from '../services/data/mock/stores/quotationStore';
-import { sdcClock } from '../services/sdc';
+import i18n, { resources } from '@lib/i18n';
+import { renderWithProviders, BUYER } from '@test/test-utils';
+import { SEEDED_SEAT_ROLES } from '@services/transitions/businessRoles';
+import { resetRfxStores } from '@services/data/mock/stores/rfxStores';
+import { rfqStore } from '@services/data/mock/stores/rfqStore';
+import { quotationStore } from '@services/data/mock/stores/quotationStore';
+import { sdcClock } from '@services/sdc';
 import BuyerSourcingEvent from './BuyerSourcingEvent';
 
 // ── 1 · RENDERED ─────────────────────────────────────────────────────────────

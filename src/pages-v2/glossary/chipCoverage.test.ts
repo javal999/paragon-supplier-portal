@@ -27,7 +27,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
-import { GLOSSARY_REGISTRIES } from '../../lib/glossary';
+import { GLOSSARY_REGISTRIES } from '@lib/glossary';
 
 const ROOT = join(__dirname, '..', '..', '..');
 const SRC = join(ROOT, 'src');

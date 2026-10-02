@@ -2,9 +2,9 @@
 // English; Indonesian has no plural forms and reads "hari" for every count.
 
 import { describe, expect, it } from 'vitest';
-import i18n from '../../lib/i18n';
+import i18n from '@lib/i18n';
 import { callOffWarningText } from './CallOffWarnings';
-import type { CallOffWarning } from '../../services/data/types';
+import type { CallOffWarning } from '@services/data/types';
 
 const late = (days: number): CallOffWarning => ({
   kind: 'late',

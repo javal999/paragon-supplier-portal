@@ -17,7 +17,7 @@
 // ────────────────────────────────────────────────────────────────────────────
 
 import React, { useRef } from 'react';
-import { useDialogFocus } from '../../hooks/useDialogFocus';
+import { useDialogFocus } from '@hooks/useDialogFocus';
 
 interface ModalOverlayProps {
   /** Escape (and nothing else) calls this. The scrim is not click-to-close. */

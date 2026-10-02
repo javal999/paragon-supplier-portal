@@ -23,8 +23,8 @@
 
 import { describe, it, expect, beforeEach, afterAll, vi } from 'vitest';
 import { screen } from '@testing-library/react';
-import { renderWithProviders } from '../../test/test-utils';
-import i18n from '../../lib/i18n';
+import { renderWithProviders } from '@test/test-utils';
+import i18n from '@lib/i18n';
 import Wizard, { type WizardStep } from './Wizard';
 
 const KEYS = ['wizard.cancel', 'wizard.back', 'wizard.next'] as const;

@@ -1,28 +1,28 @@
 import React, { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Inbox, Info, MessageSquare, PenLine, RotateCcw, CheckCircle2, AlertTriangle } from 'lucide-react';
-import Button from '../components/ui-v2/Button';
-import Data from '../components/ui-v2/Data';
-import StatusPill from '../components/ui-v2/StatusPill';
-import SelectField from '../components/ui-v2/SelectField';
-import { useInventory, useSuppliers } from '../services/query/hooks';
+import Button from '@components/ui-v2/Button';
+import Data from '@components/ui-v2/Data';
+import StatusPill from '@components/ui-v2/StatusPill';
+import SelectField from '@components/ui-v2/SelectField';
+import { useInventory, useSuppliers } from '@services/query/hooks';
 import StockEntryPanel from './inventory/StockEntryPanel';
-import { HandoffNotice } from '../components/ui-v2/HandoffNotice';
-import { useVerbAvailability } from '../hooks/useVerbAvailability';
-import { parseChannelReply, type ChannelParseResult, type QtyRefusalReason } from '../services/channel/replyParser';
-import { makeProvenanceRef, type Channel, type ChannelMessage } from '../services/channel/types';
-import { channelProvenanceStore } from '../services/channel/provenanceStore';
+import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
+import { useVerbAvailability } from '@hooks/useVerbAvailability';
+import { parseChannelReply, type ChannelParseResult, type QtyRefusalReason } from '@services/channel/replyParser';
+import { makeProvenanceRef, type Channel, type ChannelMessage } from '@services/channel/types';
+import { channelProvenanceStore } from '@services/channel/provenanceStore';
 import {
   openSubmissionSession,
   sdcClock,
   knownMaterialCodes,
   IMPORT_DECLARE_COLUMN,
   type SubmissionSessionRecorder,
-} from '../services/sdc';
-import type { CommandResult } from '../services/data/types';
+} from '@services/sdc';
+import type { CommandResult } from '@services/data/types';
 import { qty } from './inventory/inventoryDisplay';
 // GL-1 - the glossary destination for this surface's refusals.
-import GlossaryTermChip from '../components/ui-v2/GlossaryTermChip';
+import GlossaryTermChip from '@components/ui-v2/GlossaryTermChip';
 
 // ────────────────────────────────────────────────────────────────────────────
 // Comm Hub C4d — the buyer IN-PLACE TRIAGE CONFIRM (DEC-COMMS-PRIMARY).

@@ -19,9 +19,9 @@ import { describe, it, expect, beforeEach } from 'vitest';
 
 import { MockCommandService } from './MockCommandService';
 import { quotationStore } from './stores/quotationStore';
-import { BASE_CURRENCY, BID_CURRENCIES } from '../../../lib/currencyPolicy';
+import { BASE_CURRENCY, BID_CURRENCIES } from '@lib/currencyPolicy';
 import { rfqStore } from './stores/rfqStore';
-import { scoreQuotations } from '../../../lib/quoteScore';
+import { scoreQuotations } from '@lib/quoteScore';
 import { DataError } from '../types';
 import type { QueryScope } from '../types';
 import { PERSONA_SYSTEM_ROLES } from '../../../services/transitions/businessRoles';

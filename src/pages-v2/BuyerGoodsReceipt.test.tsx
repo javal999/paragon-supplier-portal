@@ -1,15 +1,15 @@
 import { screen, fireEvent, waitFor } from '@testing-library/react';
-import { renderWithProviders } from '../test/test-utils';
-import { mockDataService } from '../services/data/mock/mockDataService';
-import { withChaos } from '../services/data/mock/withChaos';
-import { asnStore } from '../services/data/mock/stores/asnStore';
-import { goodsReceiptStore } from '../services/data/mock/stores/goodsReceiptStore';
-import type { IDataService, ASN } from '../services/data/types';
-import { MockCommandService } from '../services/data/mock/MockCommandService';
-import { enforcementSettingStore } from '../services/data/mock/stores/enforcementSettingStore';
-import { seedEnforcementLedger, SEEDED_CHECKS } from '../services/data/mock/enforcementSeed';
+import { renderWithProviders } from '@test/test-utils';
+import { mockDataService } from '@services/data/mock/mockDataService';
+import { withChaos } from '@services/data/mock/withChaos';
+import { asnStore } from '@services/data/mock/stores/asnStore';
+import { goodsReceiptStore } from '@services/data/mock/stores/goodsReceiptStore';
+import type { IDataService, ASN } from '@services/data/types';
+import { MockCommandService } from '@services/data/mock/MockCommandService';
+import { enforcementSettingStore } from '@services/data/mock/stores/enforcementSettingStore';
+import { seedEnforcementLedger, SEEDED_CHECKS } from '@services/data/mock/enforcementSeed';
 import BuyerGoodsReceipt from './BuyerGoodsReceipt';
-import { PERSONA_SYSTEM_ROLES } from '../services/transitions/businessRoles';
+import { PERSONA_SYSTEM_ROLES } from '@services/transitions/businessRoles';
 
 const alwaysFails = withChaos(mockDataService, { minMs: 0, maxMs: 0, failureRate: 1 });
 const alwaysPending = withChaos(mockDataService, { minMs: 1e7, maxMs: 1e7, failureRate: 0 });

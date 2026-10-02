@@ -1,30 +1,30 @@
 import { screen, within, fireEvent, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { renderWithProviders, pickSelectFieldOption } from '../test/test-utils';
+import { renderWithProviders, pickSelectFieldOption } from '@test/test-utils';
 import BuyerCommHub from './BuyerCommHub';
-import { useUnifiedChase } from '../services/query/chaseHooks';
-import { useConsolidationRows } from '../services/query/sdcBuyerHooks';
-import { useSuppliers } from '../services/query/hooks';
-import { outboundRequestStore, channelProvenanceStore } from '../services/channel';
-import { makeProvenanceRef } from '../services/channel/types';
-import { openSubmissionSession } from '../services/sdc';
-import type { SupplierChaseView } from '../services/chase';
+import { useUnifiedChase } from '@services/query/chaseHooks';
+import { useConsolidationRows } from '@services/query/sdcBuyerHooks';
+import { useSuppliers } from '@services/query/hooks';
+import { outboundRequestStore, channelProvenanceStore } from '@services/channel';
+import { makeProvenanceRef } from '@services/channel/types';
+import { openSubmissionSession } from '@services/sdc';
+import type { SupplierChaseView } from '@services/chase';
 
 // The three data hooks are mocked so the outbound-queue derivation runs over
 // crafted inputs (deterministic status + worst-first ordering). The real-fixture
 // mount is covered by allRoutes.smoke. outboundRequestStore keeps its SIMULATED
 // seed (sup-005 whatsapp @ 08-18, sup-007 email @ 08-19).
-vi.mock('../services/query/chaseHooks', () => ({ useUnifiedChase: vi.fn() }));
+vi.mock('@services/query/chaseHooks', () => ({ useUnifiedChase: vi.fn() }));
 // useConsolidationRows drives the outbound fold. The C4d triage panel no longer
 // has a write hook of its own (BL-73): it pre-fills the Inventory page's entry
 // form, whose dispatch runs REAL here against the mock service, and whose stock
 // rows come from the real `useInventory` read — so only `useSuppliers` is stubbed
 // in the hooks module.
-vi.mock('../services/query/sdcBuyerHooks', () => ({
+vi.mock('@services/query/sdcBuyerHooks', () => ({
   useConsolidationRows: vi.fn(),
 }));
-vi.mock('../services/query/hooks', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('../services/query/hooks')>()),
+vi.mock('@services/query/hooks', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@services/query/hooks')>()),
   useSuppliers: vi.fn(),
 }));
 

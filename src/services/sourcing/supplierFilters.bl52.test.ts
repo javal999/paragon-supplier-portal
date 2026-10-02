@@ -6,7 +6,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { describe, it, expect } from 'vitest';
-import { mockSuppliers } from '../../data/mockSuppliers';
+import { mockSuppliers } from '@data/mockSuppliers';
 import { COMPLIANCE_REGISTRY } from '../data/mock/fixtures/complianceRegistry';
 import { EXPIRING_WINDOW_DAYS } from '../data/complianceProjection';
 import { sdcClock } from '../sdc/clock';

@@ -1,14 +1,14 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { HandoffNotice } from '../../components/ui-v2/HandoffNotice';
-import { useVerbAvailability } from '../../hooks/useVerbAvailability';
-import type { GateResult } from '../../services/sourcing/complianceGate';
-import type { RfpAwardView, RfpEventView, RfpOfferRoundView } from '../../services/sourcing/views';
-import type { RfxCommandVars } from '../../services/query/commandHooks';
+import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
+import { useVerbAvailability } from '@hooks/useVerbAvailability';
+import type { GateResult } from '@services/sourcing/complianceGate';
+import type { RfpAwardView, RfpEventView, RfpOfferRoundView } from '@services/sourcing/views';
+import type { RfxCommandVars } from '@services/query/commandHooks';
 import { RfpAwardPanel, awardableFirmPrices, type ItemPanelAward } from './AwardPanel';
 import { RfpAwardRecords } from './AwardRecords';
-import type { RfpAwardLine } from '../../services/sourcing/types';
-import { rfpAwardedOptionRefs } from '../../services/sourcing/rfpAward';
+import type { RfpAwardLine } from '@services/sourcing/types';
+import { rfpAwardedOptionRefs } from '@services/sourcing/rfpAward';
 import { rfxNow } from './rfxDisplay';
 
 // ────────────────────────────────────────────────────────────────────────────

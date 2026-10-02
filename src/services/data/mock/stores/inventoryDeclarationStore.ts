@@ -14,7 +14,7 @@
 
 import { INVENTORY_DECLARATIONS, declarationRecency, requireUom } from '../../../sdc';
 import type { InventoryDeclaration } from '../../../sdc';
-import { mockInventory } from '../../../../data/mockInventory';
+import { mockInventory } from '@data/mockInventory';
 
 function clone(d: InventoryDeclaration): InventoryDeclaration {
   return { ...d, batches: d.batches ? d.batches.map((b) => ({ ...b })) : undefined };

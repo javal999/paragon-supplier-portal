@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { screen, waitFor } from '@testing-library/react';
-import { renderWithProviders, SUPPLIER } from '../test/test-utils';
+import { renderWithProviders, SUPPLIER } from '@test/test-utils';
 import BuyerCollaboration from './BuyerCollaboration';
-import { isLive } from '../services/liveness';
-import i18n from '../lib/i18n';
+import { isLive } from '@services/liveness';
+import i18n from '@lib/i18n';
 
 // ────────────────────────────────────────────────────────────────────────────
 // BuyerCollaboration (SDC-1b) — the P2 consolidation surface, honest-render

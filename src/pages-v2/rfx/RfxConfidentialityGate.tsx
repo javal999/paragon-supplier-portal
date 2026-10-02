@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Lock } from 'lucide-react';
-import Button from '../../components/ui-v2/Button';
+import Button from '@components/ui-v2/Button';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // THE CONFIDENTIALITY GATE, as the supplier meets it. The event's content is

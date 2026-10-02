@@ -12,8 +12,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 
 const flip = vi.hoisted(() => ({ engineDataset: null as boolean | null }));
-vi.mock('../../services/liveness/registry', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../../services/liveness/registry')>();
+vi.mock('@services/liveness/registry', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@services/liveness/registry')>();
   return {
     ...actual,
     isLive: (c: Parameters<typeof actual.isLive>[0]) =>
@@ -21,14 +21,14 @@ vi.mock('../../services/liveness/registry', async (importOriginal) => {
   };
 });
 
-import { renderWithProviders, BUYER } from '../../test/test-utils';
+import { renderWithProviders, BUYER } from '@test/test-utils';
 import BuyerCallOffs from '../BuyerCallOffs';
-import { MockCommandService } from '../../services/data/mock/MockCommandService';
-import { callOffStore } from '../../services/data/mock/stores/callOffStore';
-import { purchaseOrderStore } from '../../services/data/mock/stores/purchaseOrderStore';
-import { PERSONA_SYSTEM_ROLES, SEEDED_SEAT_ROLES } from '../../services/transitions/businessRoles';
-import { NO_PERSON } from '../../context/noPerson';
-import i18n from '../../lib/i18n';
+import { MockCommandService } from '@services/data/mock/MockCommandService';
+import { callOffStore } from '@services/data/mock/stores/callOffStore';
+import { purchaseOrderStore } from '@services/data/mock/stores/purchaseOrderStore';
+import { PERSONA_SYSTEM_ROLES, SEEDED_SEAT_ROLES } from '@services/transitions/businessRoles';
+import { NO_PERSON } from '@context/noPerson';
+import i18n from '@lib/i18n';
 
 const PLANNER = { ...BUYER, businessRoles: SEEDED_SEAT_ROLES.buyer };
 const panel = () => within(document.querySelector('aside[role="dialog"]') as HTMLElement);

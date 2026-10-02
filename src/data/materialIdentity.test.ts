@@ -106,19 +106,19 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { SHOULD_COST_MATERIALS } from '../services/data/mock/fixtures/commodityBaskets';
-import { MATERIAL_MASTER } from '../services/sdc/fixtures';
-import { MATERIAL_SPACES, spaceOfModule } from '../services/sdc/materialSpaces';
+import { SHOULD_COST_MATERIALS } from '@services/data/mock/fixtures/commodityBaskets';
+import { MATERIAL_MASTER } from '@services/sdc/fixtures';
+import { MATERIAL_SPACES, spaceOfModule } from '@services/sdc/materialSpaces';
 // 2B-5b-ii — the GR RUNTIME input, read directly. The census walks the tree and
 // answers "which codes exist"; the 2B-4 gate is about "which codes can reach the
 // wizard", and only `MOCK_ASNS` answers that. Kept as a separate import so the
 // two questions cannot be conflated the way population and exposure were.
-import { MOCK_ASNS } from '../services/data/mock/fixtures/supplierShipments';
+import { MOCK_ASNS } from '@services/data/mock/fixtures/supplierShipments';
 // 2B-4b — the mechanism the GR wizard now runs. Imported (not restated) on
 // purpose, and note the asymmetry with `wouldRequireBpom` below: the RETIRED
 // rule is a local copy so its record survives its deletion; the LIVE rule is an
 // import so this file cannot drift from what the product does.
-import { bpomOf } from '../services/sdc/bpom';
+import { bpomOf } from '@services/sdc/bpom';
 
 // ─── The derived population ──────────────────────────────────────────────────
 

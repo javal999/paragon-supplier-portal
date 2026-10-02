@@ -14,11 +14,11 @@
 import React from 'react';
 import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
-import StatusPill from '../../components/ui-v2/StatusPill';
-import { formatMoney } from '../../lib/format';
-import { BID_CURRENCIES, type BidCurrency } from '../../lib/currencyPolicy';
-import type { RfiAnswer, RfiQuestion, RfpTermRow } from '../../services/sourcing/types';
-import { rfpTerm, rfpTermKindOf, type RfxSectionView } from '../../services/sourcing/rfxConfig';
+import StatusPill from '@components/ui-v2/StatusPill';
+import { formatMoney } from '@lib/format';
+import { BID_CURRENCIES, type BidCurrency } from '@lib/currencyPolicy';
+import type { RfiAnswer, RfiQuestion, RfpTermRow } from '@services/sourcing/types';
+import { rfpTerm, rfpTermKindOf, type RfxSectionView } from '@services/sourcing/rfxConfig';
 import { FileOpenLink } from './SupplierDocumentsPanel';
 
 /** A key when the catalogue has one; otherwise the words exactly as written. */

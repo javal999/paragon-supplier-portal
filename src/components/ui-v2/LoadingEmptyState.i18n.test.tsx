@@ -17,8 +17,8 @@
 
 import { describe, it, expect, beforeEach, afterAll } from 'vitest';
 import { screen } from '@testing-library/react';
-import { renderWithProviders } from '../../test/test-utils';
-import i18n from '../../lib/i18n';
+import { renderWithProviders } from '@test/test-utils';
+import i18n from '@lib/i18n';
 import LoadingState from './LoadingState';
 import EmptyState from './EmptyState';
 

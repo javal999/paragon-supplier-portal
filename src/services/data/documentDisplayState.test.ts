@@ -22,7 +22,7 @@ import {
 } from './documentDisplayState';
 import { DOCUMENTS } from './mock/fixtures/supplierDocuments';
 import { DECLARED_PRESENT } from './fixturePresent';
-import { statusResourcesEn, statusResourcesId } from '../../lib/statusLabel';
+import { statusResourcesEn, statusResourcesId } from '@lib/statusLabel';
 
 const P = `${DECLARED_PRESENT}T00:00:00.000Z`;
 const doc = (status: string, expiryDate: string | null) =>

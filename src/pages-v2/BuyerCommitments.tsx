@@ -8,38 +8,38 @@ import {
   usePoDrillFilter,
 } from './orders/PoDrillFilter';
 import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import AppShellV2 from '../components/layout-v2/AppShellV2';
-import PageHeader from '../components/ui-v2/PageHeader';
-import PageMetaLine from '../components/ui-v2/PageMetaLine';
-import SampleDataBadge from '../components/ui-v2/SampleDataBadge';
-import SubTabs from '../components/ui-v2/SubTabs';
-import Table from '../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../components/ui-v2/TableHeader';
-import TableRow from '../components/ui-v2/TableRow';
-import TableCell from '../components/ui-v2/TableCell';
-import Button from '../components/ui-v2/Button';
-import Data from '../components/ui-v2/Data';
-import StatusPill from '../components/ui-v2/StatusPill';
-import SidePanel from '../components/ui-v2/SidePanel';
-import LoadingState from '../components/ui-v2/LoadingState';
-import ErrorState from '../components/ui-v2/ErrorState';
-import { HandoffNotice } from '../components/ui-v2/HandoffNotice';
-import { useVerbAvailability } from '../hooks/useVerbAvailability';
-import { formatDate, formatDateTime } from '../lib/format';
-import { CHART_SERIES } from '../lib/chartPalette';
-import { useForecastCommitments, useForecastCoverage, useInventory } from '../services/query/hooks';
-import type { ForecastCommitmentLine } from '../services/data/types';
-import type { ForecastStream } from '../services/sdc/types';
-import { positionDays } from '../services/transitions/inventoryRules';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import PageHeader from '@components/ui-v2/PageHeader';
+import PageMetaLine from '@components/ui-v2/PageMetaLine';
+import SampleDataBadge from '@components/ui-v2/SampleDataBadge';
+import SubTabs from '@components/ui-v2/SubTabs';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
+import Button from '@components/ui-v2/Button';
+import Data from '@components/ui-v2/Data';
+import StatusPill from '@components/ui-v2/StatusPill';
+import SidePanel from '@components/ui-v2/SidePanel';
+import LoadingState from '@components/ui-v2/LoadingState';
+import ErrorState from '@components/ui-v2/ErrorState';
+import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
+import { useVerbAvailability } from '@hooks/useVerbAvailability';
+import { formatDate, formatDateTime } from '@lib/format';
+import { CHART_SERIES } from '@lib/chartPalette';
+import { useForecastCommitments, useForecastCoverage, useInventory } from '@services/query/hooks';
+import type { ForecastCommitmentLine } from '@services/data/types';
+import type { ForecastStream } from '@services/sdc/types';
+import { positionDays } from '@services/transitions/inventoryRules';
 import {
   commitmentGap,
   cumulativeCommitment,
   deadlineState,
   rankExceptions,
-} from '../services/transitions/forecastRules';
+} from '@services/transitions/forecastRules';
 import { inputClass, labelClass } from './inventory/inventoryDisplay';
-import { commitmentDeadlineWorkingDays, gapColourThresholds } from '../services/transitions/forecastConfig';
-import { coverageThresholds } from '../services/transitions/inventoryConfig';
+import { commitmentDeadlineWorkingDays, gapColourThresholds } from '@services/transitions/forecastConfig';
+import { coverageThresholds } from '@services/transitions/inventoryConfig';
 import {
   CommitmentDeadline,
   CommitmentStatePill,

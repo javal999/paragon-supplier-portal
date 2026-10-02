@@ -16,11 +16,11 @@
 // `tiersRefusal`), so the step gate and the dispatch cannot disagree.
 // ────────────────────────────────────────────────────────────────────────────
 
-import { BID_CURRENCIES, type BidCurrency } from '../../lib/currencyPolicy';
-import { normalizeQty } from '../../lib/localeNumber';
-import type { RFQ } from '../../data/mockRfqs';
-import type { DocumentRequest, RfiQuestion } from '../../services/sourcing/types';
-import type { RfqPrefill, RfqSeedFromRfp } from '../../services/sourcing/rfxPrefill';
+import { BID_CURRENCIES, type BidCurrency } from '@lib/currencyPolicy';
+import { normalizeQty } from '@lib/localeNumber';
+import type { RFQ } from '@data/mockRfqs';
+import type { DocumentRequest, RfiQuestion } from '@services/sourcing/types';
+import type { RfqPrefill, RfqSeedFromRfp } from '@services/sourcing/rfxPrefill';
 
 const isBidCurrency = (c: string): c is BidCurrency => (BID_CURRENCIES as readonly string[]).includes(c);
 import {
@@ -32,9 +32,9 @@ import {
   type RfqOneTimeCostId,
   type RfqQuantityTier,
   type RfqSpecField,
-} from '../../services/sourcing/rfqModel';
-import { rfqItemType, specSheetFor } from '../../services/sourcing/rfqItemTypes';
-import type { RfqTemplate, RfqTemplateContent } from '../../services/sourcing/rfqTemplates';
+} from '@services/sourcing/rfqModel';
+import { rfqItemType, specSheetFor } from '@services/sourcing/rfqItemTypes';
+import type { RfqTemplate, RfqTemplateContent } from '@services/sourcing/rfqTemplates';
 
 /** One item as the wizard edits it. Numbers stay text until they are read. */
 export interface ItemDraft {

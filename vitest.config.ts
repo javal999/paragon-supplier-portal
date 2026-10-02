@@ -1,5 +1,6 @@
 import { defineConfig, configDefaults } from 'vitest/config';
 import react from '@vitejs/plugin-react';
+import { ALIASES } from './aliases';
 
 // Separate from vite.config.ts on purpose: the app's vite root is 'app/'
 // (index.html there loads ../src/main.tsx), but source and tests live at the
@@ -7,6 +8,8 @@ import react from '@vitejs/plugin-react';
 // so `src/**` resolves for the test run.
 export default defineConfig({
   plugins: [react()],
+  // Same aliases as the app build (aliases.ts); vitest.drift.config.ts inherits them.
+  resolve: { alias: ALIASES },
   // __DEPLOY_ENV__ is injected by vite `define` in the real build; define it here
   // too so components that read it don't hit a ReferenceError under test. Empty
   // string → the badge's hostname fallback path (ENV-BADGE-01).

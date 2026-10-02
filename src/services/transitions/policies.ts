@@ -10,14 +10,14 @@ import type {
   Invoice,
   PoLineResponse,
 } from '../data/types';
-import type { GoodsReceipt } from '../../data/mockGoodsReceipts';
+import type { GoodsReceipt } from '@data/mockGoodsReceipts';
 import type { PolicyHookFn } from './dispatcher';
 import { maxStockRefusal, parseMaxStockEntityId } from './maxStock';
 import { POLICY_HOOKS } from './policyHooks';
 import { deriveHeaderDisposition, type GrHeaderDisposition } from './grRollup';
 import { isMatched } from './invoiceRollup';
-import { BASE_CURRENCY, BID_CURRENCIES, isBidCurrency } from '../../lib/currencyPolicy';
-import { isUsableRate } from '../../lib/fxPin';
+import { BASE_CURRENCY, BID_CURRENCIES, isBidCurrency } from '@lib/currencyPolicy';
+import { isUsableRate } from '@lib/fxPin';
 import { rfqCreateRefusal } from '../sourcing/rfqModel';
 import {
   ENFORCEMENT_MODES,
@@ -32,7 +32,7 @@ import {
   rigour,
   settingInForce,
   type EnforcementSetting,
-} from '../../lib/enforcement';
+} from '@lib/enforcement';
 
 import {
   CUSTOM_ROLE_TEXT,

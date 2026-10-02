@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import SessionAttachments from '../../components/ui-v2/SessionAttachments';
-import type { RfiAnswer, RfiQuestion } from '../../services/sourcing/types';
-import type { AttachmentMeta } from '../../services/sourcing/rfqModel';
+import SessionAttachments from '@components/ui-v2/SessionAttachments';
+import type { RfiAnswer, RfiQuestion } from '@services/sourcing/types';
+import type { AttachmentMeta } from '@services/sourcing/rfqModel';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // One of the buyer's typed questions on an RFQ, drawn by its kind (RFx working

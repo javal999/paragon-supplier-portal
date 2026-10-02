@@ -14,7 +14,7 @@ import { MockCommandService } from './MockCommandService';
 import { enforcementSettingStore } from './stores/enforcementSettingStore';
 import { DataError } from '../types';
 import type { QueryScope } from '../types';
-import { effectiveEnforcement } from '../../../lib/enforcement';
+import { effectiveEnforcement } from '@lib/enforcement';
 import { PERSONA_SYSTEM_ROLES } from '../../../services/transitions/businessRoles';
 
 const buyer: QueryScope = { personaType: 'buyer', supplierId: null, businessRoles: PERSONA_SYSTEM_ROLES.buyer };

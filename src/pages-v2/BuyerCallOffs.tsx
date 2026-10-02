@@ -2,8 +2,8 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { AlertTriangle } from 'lucide-react';
-import AppShellV2 from '../components/layout-v2/AppShellV2';
-import PageHeader from '../components/ui-v2/PageHeader';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import PageHeader from '@components/ui-v2/PageHeader';
 import {
   OrderNotFound,
   PoFilterBanner,
@@ -11,31 +11,31 @@ import {
   usePoDrillFilter,
 } from './orders/PoDrillFilter';
 import { callOffsForPo } from './orders/orderSummaryModel';
-import PageMetaLine from '../components/ui-v2/PageMetaLine';
-import SampleDataBadge from '../components/ui-v2/SampleDataBadge';
-import StatusPill from '../components/ui-v2/StatusPill';
-import Table from '../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../components/ui-v2/TableHeader';
-import TableRow from '../components/ui-v2/TableRow';
-import TableCell from '../components/ui-v2/TableCell';
-import Button from '../components/ui-v2/Button';
-import SidePanel from '../components/ui-v2/SidePanel';
-import Data from '../components/ui-v2/Data';
-import LoadingState from '../components/ui-v2/LoadingState';
-import ErrorState from '../components/ui-v2/ErrorState';
-import { HandoffNotice } from '../components/ui-v2/HandoffNotice';
-import { useToast } from '../hooks/useToast';
-import { useRefusalText } from '../hooks/useRefusalText';
-import { useVerbAvailability } from '../hooks/useVerbAvailability';
-import { isLive } from '../services/liveness';
-import { refusedByPolicy } from '../services/transitions/refusalMessage';
-import { POLICY_HOOKS } from '../services/transitions/policyHooks';
-import { formatDate, formatDateTime, formatIDR } from '../lib/format';
-import { usePurchaseOrders } from '../services/query/hooks';
-import { useCallOffCommand, type CallOffCommandVars } from '../services/query/commandHooks';
-import { POStatus, type ASN, type CallOffType, type CallOffWarning, type POLineItem, type PurchaseOrder } from '../services/data/types';
-import { callOffWarnings } from '../services/transitions/callOffRules';
-import { isActiveAsn } from '../services/transitions/fulfilmentRules';
+import PageMetaLine from '@components/ui-v2/PageMetaLine';
+import SampleDataBadge from '@components/ui-v2/SampleDataBadge';
+import StatusPill from '@components/ui-v2/StatusPill';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
+import Button from '@components/ui-v2/Button';
+import SidePanel from '@components/ui-v2/SidePanel';
+import Data from '@components/ui-v2/Data';
+import LoadingState from '@components/ui-v2/LoadingState';
+import ErrorState from '@components/ui-v2/ErrorState';
+import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
+import { useToast } from '@hooks/useToast';
+import { useRefusalText } from '@hooks/useRefusalText';
+import { useVerbAvailability } from '@hooks/useVerbAvailability';
+import { isLive } from '@services/liveness';
+import { refusedByPolicy } from '@services/transitions/refusalMessage';
+import { POLICY_HOOKS } from '@services/transitions/policyHooks';
+import { formatDate, formatDateTime, formatIDR } from '@lib/format';
+import { usePurchaseOrders } from '@services/query/hooks';
+import { useCallOffCommand, type CallOffCommandVars } from '@services/query/commandHooks';
+import { POStatus, type ASN, type CallOffType, type CallOffWarning, type POLineItem, type PurchaseOrder } from '@services/data/types';
+import { callOffWarnings } from '@services/transitions/callOffRules';
+import { isActiveAsn } from '@services/transitions/fulfilmentRules';
 import { AsnPlannerMarkers } from './shipments/CallOffWarnings';
 import {
   CALL_OFF_CADENCES,
@@ -48,13 +48,13 @@ import {
   umbrellaRemaining,
   type CallOffView,
   type ReleaseCheck,
-} from '../services/transitions/callOffRules';
-import type { ReleaseCadence } from '../services/delivery/types';
-import { callOffConfirmWorkingDays, callOffTolerance } from '../services/transitions/callOffTolerance';
+} from '@services/transitions/callOffRules';
+import type { ReleaseCadence } from '@services/delivery/types';
+import { callOffConfirmWorkingDays, callOffTolerance } from '@services/transitions/callOffTolerance';
 import { numberOf } from './callOffs/callOffDisplay';
 import { PicCell, PicFilter, PicHeader, ptiPicOf, usePicFilter } from './materials/picDisplay';
-import MaterialSearch, { MaterialMatchReason, useMaterialMatcher } from '../components/ui-v2/MaterialSearch';
-import { searchMaterials } from '../services/transitions/matchMaterial';
+import MaterialSearch, { MaterialMatchReason, useMaterialMatcher } from '@components/ui-v2/MaterialSearch';
+import { searchMaterials } from '@services/transitions/matchMaterial';
 import {
   ConfirmationPill,
   DeliveryPill,

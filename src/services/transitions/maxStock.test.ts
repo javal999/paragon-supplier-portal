@@ -5,7 +5,7 @@ import { MockProcurementService } from '../data/mock/MockProcurementService';
 import { DataError, type QueryScope } from '../data/types';
 import { SYSTEM_ROLES, rolesHolding, PERSONA_SYSTEM_ROLES } from './businessRoles';
 import { getKnownFlows } from './index';
-import { NO_PERSON } from '../../context/noPerson';
+import { NO_PERSON } from '@context/noPerson';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // REQ-E06-04 BR-06 (owner, 2026-09-29) — the maximum stock per supplier ×

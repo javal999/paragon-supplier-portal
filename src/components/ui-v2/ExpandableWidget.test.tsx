@@ -1,8 +1,8 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { I18nextProvider } from 'react-i18next';
-import i18n from '../../lib/i18n';
+import i18n from '@lib/i18n';
 import ExpandableWidget from './ExpandableWidget';
-import type { Capability } from '../../services/liveness';
+import type { Capability } from '@services/liveness';
 
 // The reusable dashboard widget shell (Ledger Line). The load-bearing guarantee
 // is the honest-by-construction lock: the green "● Live" dot-label is UNREACHABLE

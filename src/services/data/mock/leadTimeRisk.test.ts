@@ -27,7 +27,7 @@ import { PTI_ONLY_RULES } from '../../transitions/inventoryAlertRules';
 import { leadTimeRisk } from '../../transitions/inventoryConfig';
 import { hasLeadTime, positionDays, positionRisk, riskFor } from '../../transitions/inventoryRules';
 import { sdcClock } from '../../sdc';
-import { NO_PERSON } from '../../../context/noPerson';
+import { NO_PERSON } from '@context/noPerson';
 
 const reads = new MockProcurementService();
 const buyer: QueryScope = { personaType: 'buyer', supplierId: null, businessRoles: PERSONA_SYSTEM_ROLES.buyer, actor: NO_PERSON };

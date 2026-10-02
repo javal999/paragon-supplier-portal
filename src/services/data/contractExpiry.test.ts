@@ -35,8 +35,8 @@ import {
 } from './contractExpiry';
 import { daysUntil, isPast } from './dayProjection';
 import { FAMILY_ANCHORS, SDC_FAMILY_CONTRACT_IDS } from './fixturePresent';
-import { mockContracts, type ContractStatus } from '../../data/mockContracts';
-import { contractsEn, contractsId } from '../../lib/i18n/contracts';
+import { mockContracts, type ContractStatus } from '@data/mockContracts';
+import { contractsEn, contractsId } from '@lib/i18n/contracts';
 
 const MS = 86_400_000;
 const dayMs = (v: string) => Date.parse(`${v.slice(0, 10)}T00:00:00.000Z`);

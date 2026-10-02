@@ -13,24 +13,24 @@ import React, { useMemo, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ChevronLeft, Info } from 'lucide-react';
-import AppShellV2 from '../components/layout-v2/AppShellV2';
-import PageHeader from '../components/ui-v2/PageHeader';
-import SubTabs from '../components/ui-v2/SubTabs';
-import LoadingState from '../components/ui-v2/LoadingState';
-import ErrorState from '../components/ui-v2/ErrorState';
-import LivenessPill from '../components/ui-v2/LivenessPill';
-import PageMetaLine from '../components/ui-v2/PageMetaLine';
-import ProvenanceMarker from '../components/ui-v2/ProvenanceMarker';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import PageHeader from '@components/ui-v2/PageHeader';
+import SubTabs from '@components/ui-v2/SubTabs';
+import LoadingState from '@components/ui-v2/LoadingState';
+import ErrorState from '@components/ui-v2/ErrorState';
+import LivenessPill from '@components/ui-v2/LivenessPill';
+import PageMetaLine from '@components/ui-v2/PageMetaLine';
+import ProvenanceMarker from '@components/ui-v2/ProvenanceMarker';
 import NotFound from './NotFound';
-import { useContracts, useObligations, useSuppliers } from '../services/query/hooks';
+import { useContracts, useObligations, useSuppliers } from '@services/query/hooks';
 import {
   useConfirmMatch,
   useDeliveryAgreements,
   useEditPolicy,
   useReleaseLines,
-} from '../services/query/deliveryHooks';
-import { useCurrentIdentity } from '../context/CurrentIdentityContext';
-import { useToast } from '../hooks/useToast';
+} from '@services/query/deliveryHooks';
+import { useCurrentIdentity } from '@context/CurrentIdentityContext';
+import { useToast } from '@hooks/useToast';
 import {
   ContractDetailBody,
   ContractDocsList,
@@ -41,10 +41,10 @@ import AgreementCard, {
   type OnConfirm,
   type OnEditPolicy,
   type OnRelease,
-} from '../components/delivery/AgreementDrawdown';
-import type { Contract } from '../data/mockContracts';
-import type { ContractObligation } from '../data/mockObligations';
-import type { Supplier } from '../services/data/types';
+} from '@components/delivery/AgreementDrawdown';
+import type { Contract } from '@data/mockContracts';
+import type { ContractObligation } from '@data/mockObligations';
+import type { Supplier } from '@services/data/types';
 
 type DetailTab = 'overview' | 'delivery' | 'docs';
 

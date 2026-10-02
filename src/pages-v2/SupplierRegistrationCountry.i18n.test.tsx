@@ -23,8 +23,8 @@
 
 import { describe, it, expect, beforeEach, afterAll } from 'vitest';
 import { screen, fireEvent } from '@testing-library/react';
-import { renderWithProviders } from '../test/test-utils';
-import i18n from '../lib/i18n';
+import { renderWithProviders } from '@test/test-utils';
+import i18n from '@lib/i18n';
 import SupplierRegistration from './SupplierRegistration';
 
 /** The canonical `<option value>`s. These are LOGIC and must never localize. */
@@ -111,7 +111,7 @@ describe('registration country · CONTROLS — the instrument can see', () => {
   it('CONTROL — the ID arm holds its OWN row for every country, fallback or not', async () => {
     // Four of six are the same word in both languages, so output cannot tell a
     // real ID row from a `fallbackLng` hit. Read the resource maps directly.
-    const { resources } = await import('../lib/i18n');
+    const { resources } = await import('@lib/i18n');
     const en = resources.en.translation as Record<string, string>;
     const id = resources.id.translation as Record<string, string>;
     for (const key of COUNTRY_KEYS) {

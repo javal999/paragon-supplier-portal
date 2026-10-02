@@ -16,11 +16,11 @@
 // to a PO) and ordering (BR-11 attention).
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { ASN, GoodsReceipt, PurchaseOrder } from '../../services/data/types';
-import type { CallOffView } from '../../services/transitions/callOffRules';
-import { hasReceiptDiscrepancy, isActiveAsn } from '../../services/transitions/fulfilmentRules';
-import type { CapacityConfirmationStatus } from '../../services/transitions/capacityRules';
-import type { ForesightStatus, ResponseStatus } from '../../services/data/poResponseProjection';
+import type { ASN, GoodsReceipt, PurchaseOrder } from '@services/data/types';
+import type { CallOffView } from '@services/transitions/callOffRules';
+import { hasReceiptDiscrepancy, isActiveAsn } from '@services/transitions/fulfilmentRules';
+import type { CapacityConfirmationStatus } from '@services/transitions/capacityRules';
+import type { ForesightStatus, ResponseStatus } from '@services/data/poResponseProjection';
 
 // ── Membership (BR-09) ──────────────────────────────────────────────────────
 

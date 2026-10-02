@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { refusedByPolicy } from './refusalMessage';
 import { POLICY_HOOKS } from './policyHooks';
-import { isCurrencyRefusal } from '../../pages-v2/rfqs/quotationSubmitModel';
+import { isCurrencyRefusal } from '@pages-v2/rfqs/quotationSubmitModel';
 import { MockCommandService } from '../data/mock/MockCommandService';
-import { mockShipments } from '../../data/mockShipments';
+import { mockShipments } from '@data/mockShipments';
 import {
   SUPPLIER_MATERIAL_RELATIONSHIPS,
   FORECAST_PUBLICATIONS,
@@ -11,7 +11,7 @@ import {
 } from '../sdc/fixtures';
 import { readFileSync } from 'node:fs';
 import { PERSONA_SYSTEM_ROLES } from './businessRoles';
-import { NO_PERSON } from '../../context/noPerson';
+import { NO_PERSON } from '@context/noPerson';
 import type { QueryScope } from '../data/types';
 
 // ─────────────────────────────────────────────────────────────────────────────

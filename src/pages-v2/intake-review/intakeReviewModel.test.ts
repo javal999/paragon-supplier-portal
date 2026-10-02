@@ -14,7 +14,7 @@
 
 import { describe, it, expect } from 'vitest';
 
-import { PR_INTAKE_LINES } from '../../services/data/mock/fixtures/prIntake';
+import { PR_INTAKE_LINES } from '@services/data/mock/fixtures/prIntake';
 import { applyPushResult, PLANNED_ROW } from '../plan-grid/planGridModel';
 import {
   buildAcceptPush,

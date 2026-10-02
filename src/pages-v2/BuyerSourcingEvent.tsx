@@ -1,26 +1,26 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import AppShellV2 from '../components/layout-v2/AppShellV2';
-import PageHeader from '../components/ui-v2/PageHeader';
-import PageMetaLine from '../components/ui-v2/PageMetaLine';
-import SampleDataBadge from '../components/ui-v2/SampleDataBadge';
-import Button from '../components/ui-v2/Button';
-import Data from '../components/ui-v2/Data';
-import StatusPill from '../components/ui-v2/StatusPill';
-import Table from '../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../components/ui-v2/TableHeader';
-import TableRow from '../components/ui-v2/TableRow';
-import TableCell from '../components/ui-v2/TableCell';
-import LoadingState from '../components/ui-v2/LoadingState';
-import ErrorState from '../components/ui-v2/ErrorState';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import PageHeader from '@components/ui-v2/PageHeader';
+import PageMetaLine from '@components/ui-v2/PageMetaLine';
+import SampleDataBadge from '@components/ui-v2/SampleDataBadge';
+import Button from '@components/ui-v2/Button';
+import Data from '@components/ui-v2/Data';
+import StatusPill from '@components/ui-v2/StatusPill';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
+import LoadingState from '@components/ui-v2/LoadingState';
+import ErrorState from '@components/ui-v2/ErrorState';
 import NotFound from './NotFound';
-import { HandoffNotice } from '../components/ui-v2/HandoffNotice';
-import { useVerbAvailability } from '../hooks/useVerbAvailability';
-import { useToast } from '../hooks/useToast';
-import { formatDate } from '../lib/format';
-import { BASE_CURRENCY } from '../lib/currencyPolicy';
-import { compositeText, scoreQuotations, scoreStanding } from '../lib/quoteScore';
+import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
+import { useVerbAvailability } from '@hooks/useVerbAvailability';
+import { useToast } from '@hooks/useToast';
+import { formatDate } from '@lib/format';
+import { BASE_CURRENCY } from '@lib/currencyPolicy';
+import { compositeText, scoreQuotations, scoreStanding } from '@lib/quoteScore';
 import {
   useAwards,
   useNegotiationRounds,
@@ -28,14 +28,14 @@ import {
   useRFQs,
   useRfqComplianceGate,
   useSuppliers,
-} from '../services/query/hooks';
+} from '@services/query/hooks';
 import { RfqSourceLinks } from './rfx/rfqSources';
 import { DocumentsStatus, SupplierDocumentsPanel } from './rfx/SupplierDocumentsPanel';
-import { documentsOf } from '../services/transitions/rfxDocumentRules';
-import { useRfxCommand } from '../services/query/commandHooks';
-import { effectiveDeadline, reliabilityScoreFor } from '../services/transitions/rfxRules';
-import type { AwardItem } from '../services/sourcing/awardShape';
-import { awardsInForce, trailOfViews } from '../services/sourcing/awardStatus';
+import { documentsOf } from '@services/transitions/rfxDocumentRules';
+import { useRfxCommand } from '@services/query/commandHooks';
+import { effectiveDeadline, reliabilityScoreFor } from '@services/transitions/rfxRules';
+import type { AwardItem } from '@services/sourcing/awardShape';
+import { awardsInForce, trailOfViews } from '@services/sourcing/awardStatus';
 import {
   bestScoredByItemAt,
   defaultEvaluationTierQty,
@@ -43,7 +43,7 @@ import {
   isTieredRfq,
   quoteTotalAt,
   scoreRfqAt,
-} from '../services/sourcing/rfqComparison';
+} from '@services/sourcing/rfqComparison';
 import { DeadlinePill, EmptyRow, GateMarker, OtifOrNoHistory, money, qty, rfxNow } from './rfx/rfxDisplay';
 import { EvaluationBreakSelect, RfqContentSection, TieredComparison } from './rfx/TieredRfq';
 import { AwardPanel, type PanelAward } from './rfx/AwardPanel';
@@ -53,7 +53,7 @@ import {
   SourcingTypePill,
   useSourcingTypeMap,
 } from './rfx/eligibilityDisplay';
-import { sourcingTypeOf } from '../services/sourcing/sourcingType';
+import { sourcingTypeOf } from '@services/sourcing/sourcingType';
 import { AwardRecords } from './rfx/AwardRecords';
 
 // ─────────────────────────────────────────────────────────────────────────────

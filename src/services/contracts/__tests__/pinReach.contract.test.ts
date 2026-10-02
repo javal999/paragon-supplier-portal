@@ -35,9 +35,10 @@
 //   "I caught it" from "I have nothing to look at".
 // -----------------------------------------------------------------------------
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
+import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
+import { specifierBase } from '@test/resolveImport';
 
 const ROOT = process.cwd();
 const CDIR = join(ROOT, 'docs', 'contracts');
@@ -118,8 +119,13 @@ const isSpec = (src: string): boolean => {
 function importsOf(path: string): string[] {
   const src = MODULES.get(path) ?? '';
   const found: string[] = [];
-  for (const m of src.matchAll(/from\s+'(\.[^']+)'/g)) {
-    const base = resolve(dirname(path), m[1]).replace(/\\/g, '/');
+  // Relative ('./x') AND aliased ('@services/x') specifiers: since the import
+  // aliases landed (aliases.ts), most cross-folder imports are aliased, and a
+  // relative-only matcher would quietly follow fewer hops.
+  for (const m of src.matchAll(/from\s+'((?:\.|@[\w-]+\/)[^']+)'/g)) {
+    const resolved = specifierBase(path, m[1]);
+    if (resolved === null) continue; // a package scope such as @testing-library
+    const base = resolved.replace(/\\/g, '/');
     for (const cand of [`${base}.ts`, `${base}.tsx`, `${base}/index.ts`]) {
       if (MODULES.has(cand)) found.push(cand);
     }

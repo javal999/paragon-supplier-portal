@@ -19,8 +19,8 @@
 // PURE and DOM-free, so every refusal branch is confirmable headlessly.
 // ────────────────────────────────────────────────────────────────────────────
 
-import { normalizeQty, type QtyRefusalReason } from '../../lib/localeNumber';
-import { sdcClock } from '../../services/sdc/clock';
+import { normalizeQty, type QtyRefusalReason } from '@lib/localeNumber';
+import { sdcClock } from '@services/sdc/clock';
 
 /**
  * Why a typed rate was refused. Extends the parser's vocabulary with the one

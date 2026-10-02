@@ -8,10 +8,10 @@
 import { Routes, Route } from 'react-router-dom';
 import { screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import i18n from '../../lib/i18n';
-import { renderWithProviders, BUYER, SUPPLIER } from '../../test/test-utils';
-import { PTI_NAV, SUPPLIER_NAV, isItemActive } from '../../components/layout-v2/navConfig';
-import { hubEn, hubId } from '../../lib/i18n/hub';
+import i18n from '@lib/i18n';
+import { renderWithProviders, BUYER, SUPPLIER } from '@test/test-utils';
+import { PTI_NAV, SUPPLIER_NAV, isItemActive } from '@components/layout-v2/navConfig';
+import { hubEn, hubId } from '@lib/i18n/hub';
 import BuyerRfi from '../BuyerRfi';
 import BuyerRfp from '../BuyerRfp';
 import BuyerSourcing from '../BuyerSourcing';

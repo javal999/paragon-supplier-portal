@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { BookOpen } from 'lucide-react';
 import Data from './Data';
-import { glossaryAnchor, type GlossaryRef } from '../../lib/glossary';
+import { glossaryAnchor, type GlossaryRef } from '@lib/glossary';
 
 // ────────────────────────────────────────────────────────────────────────────
 // GL-1 · THE TERM CHIP — the end of a dead end.

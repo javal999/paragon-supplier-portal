@@ -1,8 +1,8 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import StatusPill from '../../components/ui-v2/StatusPill';
-import type { MaterialNameState } from '../../services/data/types';
-import { materialNameRefusalOf, type MaterialNameRefusal } from '../../services/transitions/materialNameRules';
+import StatusPill from '@components/ui-v2/StatusPill';
+import type { MaterialNameState } from '@services/data/types';
+import { materialNameRefusalOf, type MaterialNameRefusal } from '@services/transitions/materialNameRules';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Material C2 · shared display bits for supplier trade names (MR-3).

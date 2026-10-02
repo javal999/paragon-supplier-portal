@@ -9,7 +9,7 @@ import {
   LucideIcon,
 } from 'lucide-react';
 import Data from './Data';
-import { isLive, type Capability } from '../../services/liveness';
+import { isLive, type Capability } from '@services/liveness';
 
 // ────────────────────────────────────────────────────────────────────────────
 // ExpandableWidget — the reusable dashboard module-summary shell (Paragon house

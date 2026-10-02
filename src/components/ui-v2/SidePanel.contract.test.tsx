@@ -25,13 +25,13 @@
 
 import { render, screen } from '@testing-library/react';
 import { I18nextProvider } from 'react-i18next';
-import i18n from '../../lib/i18n';
-import { renderWithProviders, BUYER, SUPPLIER } from '../../test/test-utils';
+import i18n from '@lib/i18n';
+import { renderWithProviders, BUYER, SUPPLIER } from '@test/test-utils';
 import SidePanel from './SidePanel';
-import BuyerRequisitions from '../../pages-v2/BuyerRequisitions';
-import SupplierDocuments from '../../pages-v2/SupplierDocuments';
-import SupplierForecasts from '../../pages-v2/SupplierForecasts';
-import SupplierInvoices from '../../pages-v2/SupplierInvoices';
+import BuyerRequisitions from '@pages-v2/BuyerRequisitions';
+import SupplierDocuments from '@pages-v2/SupplierDocuments';
+import SupplierForecasts from '@pages-v2/SupplierForecasts';
+import SupplierInvoices from '@pages-v2/SupplierInvoices';
 
 /** Everything a keyboard can land on. `[tabindex="-1"]` is excluded because it
  *  is programmatically focusable but NOT in the tab order — the distinction the

@@ -25,7 +25,7 @@
 //   `purchaseOrderStore.reset()` restores its own fixture seed.
 // ────────────────────────────────────────────────────────────────────────────
 
-import type { ReceiptDiscrepancyResponse } from '../../../../data/mockGoodsReceipts';
+import type { ReceiptDiscrepancyResponse } from '@data/mockGoodsReceipts';
 
 /**
  * ⚠️ ONE ROW, AND IT IS A DEMO STARTING POINT RATHER THAN A POPULATION.

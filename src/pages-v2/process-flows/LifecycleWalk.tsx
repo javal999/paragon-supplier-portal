@@ -1,11 +1,11 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { RotateCcw, ChevronRight } from 'lucide-react';
-import Button from '../../components/ui-v2/Button';
-import Data from '../../components/ui-v2/Data';
-import type { FlowEdge, FlowView } from '../../services/transitions/catalogView';
-import { transitionPurposeKey } from '../../services/transitions/annotations';
-import { isPerformable, STEP_KIND_KEY } from '../../lib/i18n/stepKind';
+import Button from '@components/ui-v2/Button';
+import Data from '@components/ui-v2/Data';
+import type { FlowEdge, FlowView } from '@services/transitions/catalogView';
+import { transitionPurposeKey } from '@services/transitions/annotations';
+import { isPerformable, STEP_KIND_KEY } from '@lib/i18n/stepKind';
 import { verbOf } from './flowLayout';
 
 // ────────────────────────────────────────────────────────────────────────────

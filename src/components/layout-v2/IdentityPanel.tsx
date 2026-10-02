@@ -1,14 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Check, ShieldCheck, Info, ChevronDown } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useCurrentIdentity } from '../../context/CurrentIdentityContext';
+import { useCurrentIdentity } from '@context/CurrentIdentityContext';
 import {
   PERSONA_SYSTEM_ROLES,
   SYSTEM_ROLES,
   isSystemRole,
   type SystemRoleId,
-} from '../../services/transitions/businessRoles';
-import { atomsForSeat } from '../../services/transitions/customRoles';
+} from '@services/transitions/businessRoles';
+import { atomsForSeat } from '@services/transitions/customRoles';
 import { useNavigate } from 'react-router-dom';
 import { HUB_ROLES, useHubRole } from './hubRole';
 import { UTILITY_NAV } from './navConfig';

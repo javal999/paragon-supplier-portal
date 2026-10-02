@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import Button from '../../components/ui-v2/Button';
-import { useToast } from '../../hooks/useToast';
-import type { SaveResult } from '../../services/sourcing/rfxTemplates';
+import Button from '@components/ui-v2/Button';
+import { useToast } from '@hooks/useToast';
+import type { SaveResult } from '@services/sourcing/rfxTemplates';
 import { refusalCode } from './RfxQuestionEditor';
 
 // ─────────────────────────────────────────────────────────────────────────────

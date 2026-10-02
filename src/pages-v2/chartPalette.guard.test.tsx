@@ -3,7 +3,7 @@ import ts from 'typescript';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join, relative } from 'node:path';
-import { buildRepoProgram } from '../lib/storedFieldGate/derive';
+import { buildRepoProgram } from '@lib/storedFieldGate/derive';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DP2-PALETTE-01 — chart colour comes from the centralized palette
@@ -436,7 +436,7 @@ describe('⚠️ DP2-PALETTE-01 · THE INSTRUMENT ITSELF', () => {
 
   it('does NOT fire on palette-sourced paint', () => {
     const good = `
-      import { CHART_SERIES, CHART_GRID } from '../lib/chartPalette';
+      import { CHART_SERIES, CHART_GRID } from '@lib/chartPalette';
       <Area fill={CHART_SERIES[0]} stroke={CHART_GRID} />
     `;
     expect(paintHexHits(good)).toEqual([]);

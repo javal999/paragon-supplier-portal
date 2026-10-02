@@ -12,7 +12,7 @@
 // ────────────────────────────────────────────────────────────────────────────
 
 import type { FileAccess, IFileService } from '../types';
-import type { ActorAttribution } from '../../../lib/enforcement';
+import type { ActorAttribution } from '@lib/enforcement';
 import { sdcClock } from '../../sdc/clock';
 import type { AttachmentMeta } from '../../sourcing/rfqModel';
 import { sessionAttachments } from '../../attachments/sessionAttachments';

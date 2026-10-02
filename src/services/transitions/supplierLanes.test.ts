@@ -15,7 +15,7 @@ import {
 import { sideOfSystemRole } from './customRoles';
 import { PERSONA_ROLES, personaCan } from './roles';
 import { ROLE_LABEL_KEY, ROLE_ORDER } from './handoff';
-import i18n from '../../lib/i18n';
+import i18n from '@lib/i18n';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // THE SUPPLIER SIDE, SPLIT INTO THREE LANES AND AN ANCHOR.

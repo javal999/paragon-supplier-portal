@@ -2,15 +2,15 @@ import React, { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import SearchBar from './SearchBar';
 import Data from './Data';
-import { useCurrentIdentity } from '../../context/CurrentIdentityContext';
-import { useMaterialNames } from '../../services/query/hooks';
+import { useCurrentIdentity } from '@context/CurrentIdentityContext';
+import { useMaterialNames } from '@services/query/hooks';
 import {
   matchMaterial,
   searchMaterials,
   type MaterialMatch,
   type MaterialSearchEntry,
   type SearchableName,
-} from '../../services/transitions/matchMaterial';
+} from '@services/transitions/matchMaterial';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Material C3 · THE ONE MATERIAL SEARCH (MR-3 BR-04, d "Anyone searching").

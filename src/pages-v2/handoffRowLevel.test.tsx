@@ -1,8 +1,8 @@
 import { screen, waitFor, within, fireEvent } from '@testing-library/react';
-import { renderWithProviders, BUYER, pickSelectFieldOption } from '../test/test-utils';
-import type { CurrentIdentity } from '../context/CurrentIdentityContext';
-import i18n from '../lib/i18n';
-import { rolesHolding } from '../services/transitions/businessRoles';
+import { renderWithProviders, BUYER, pickSelectFieldOption } from '@test/test-utils';
+import type { CurrentIdentity } from '@context/CurrentIdentityContext';
+import i18n from '@lib/i18n';
+import { rolesHolding } from '@services/transitions/businessRoles';
 import BuyerChannelTriage from './BuyerChannelTriage';
 import BuyerCollaboration from './BuyerCollaboration';
 import BuyerGoodsReceipt from './BuyerGoodsReceipt';

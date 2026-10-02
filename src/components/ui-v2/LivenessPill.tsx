@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { isLive, readinessNote, type Capability } from '../../services/liveness';
+import { isLive, readinessNote, type Capability } from '@services/liveness';
 
 // ────────────────────────────────────────────────────────────────────────────
 // LivenessPill — the shared honest-render marker for FULL PAGES.

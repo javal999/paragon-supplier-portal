@@ -4,14 +4,14 @@ import { useNavigate } from 'react-router-dom';
 import { ShieldAlert } from 'lucide-react';
 import ExpandableWidget, {
   type FlagSeverity,
-} from '../../components/ui-v2/ExpandableWidget';
-import Table from '../../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../../components/ui-v2/TableHeader';
-import TableRow from '../../components/ui-v2/TableRow';
-import TableCell from '../../components/ui-v2/TableCell';
-import StatusPill from '../../components/ui-v2/StatusPill';
-import { useRiskAlerts } from '../../services/query/hooks';
-import type { RiskAlert, RiskAlertLevel } from '../../services/data/types';
+} from '@components/ui-v2/ExpandableWidget';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
+import StatusPill from '@components/ui-v2/StatusPill';
+import { useRiskAlerts } from '@services/query/hooks';
+import type { RiskAlert, RiskAlertLevel } from '@services/data/types';
 
 // Capability "risk": a buyer-side fixture (no risk engine in the spine yet, so no
 // wired CommandTarget) → the LivenessRegistry derives SIMULATED → amber "Sample"

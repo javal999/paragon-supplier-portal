@@ -1,6 +1,6 @@
 import React from 'react';
 import { FlaskConical } from 'lucide-react';
-import { isLive, type Capability } from '../../services/liveness';
+import { isLive, type Capability } from '@services/liveness';
 import LivenessPill from './LivenessPill';
 
 // ────────────────────────────────────────────────────────────────────────────

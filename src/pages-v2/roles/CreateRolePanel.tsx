@@ -1,19 +1,19 @@
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ShieldCheck } from 'lucide-react';
-import Button from '../../components/ui-v2/Button';
-import HandoffNotice from '../../components/ui-v2/HandoffNotice';
-import { useCurrentIdentity } from '../../context/CurrentIdentityContext';
-import { useToast } from '../../hooks/useToast';
-import { useRoleGrant } from '../../services/query/commandHooks';
-import { availabilityOfAtom } from '../../services/transitions/handoff';
+import Button from '@components/ui-v2/Button';
+import HandoffNotice from '@components/ui-v2/HandoffNotice';
+import { useCurrentIdentity } from '@context/CurrentIdentityContext';
+import { useToast } from '@hooks/useToast';
+import { useRoleGrant } from '@services/query/commandHooks';
+import { availabilityOfAtom } from '@services/transitions/handoff';
 import {
   PERSONA_SYSTEM_ROLES,
   SYSTEM_ROLES,
   type SystemRoleId,
-} from '../../services/transitions/businessRoles';
-import { atomsOfSide } from '../../services/transitions/customRoles';
-import { useRefusalText } from '../../hooks/useRefusalText';
+} from '@services/transitions/businessRoles';
+import { atomsOfSide } from '@services/transitions/customRoles';
+import { useRefusalText } from '@hooks/useRefusalText';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DUPLICATE-AND-NARROW — AND THE FIRST ROLE-GATED SURFACE IN THIS PLATFORM.

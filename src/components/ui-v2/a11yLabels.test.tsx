@@ -14,7 +14,7 @@
 
 import { describe, it, expect, afterAll } from 'vitest';
 import { render, screen, cleanup } from '@testing-library/react';
-import i18n from '../../lib/i18n';
+import i18n from '@lib/i18n';
 import SearchBar from './SearchBar';
 import SidePanel from './SidePanel';
 import Toast from './Toast';

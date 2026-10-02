@@ -11,8 +11,8 @@
 
 import { screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { renderWithProviders, SUPPLIER } from '../test/test-utils';
-import { mockGoodsReceipts } from '../data/mockGoodsReceipts';
+import { renderWithProviders, SUPPLIER } from '@test/test-utils';
+import { mockGoodsReceipts } from '@data/mockGoodsReceipts';
 import SupplierGoodsReceipts from './SupplierGoodsReceipts';
 import BuyerGoodsReceipt from './BuyerGoodsReceipt';
 

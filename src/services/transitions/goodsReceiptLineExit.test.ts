@@ -30,7 +30,7 @@ import { createDispatcher, type CommandTarget } from './dispatcher';
 import { getKnownFlows, getFlow } from './registry';
 import './index';
 import type { QueryScope } from '../data/types';
-import { NO_PERSON } from '../../context/noPerson';
+import { NO_PERSON } from '@context/noPerson';
 import { atomsForSeat, customRoleStore } from './customRoles';
 import { resolvePolicyHook } from './policies';
 

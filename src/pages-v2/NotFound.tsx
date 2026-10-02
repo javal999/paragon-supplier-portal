@@ -1,9 +1,9 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Compass } from 'lucide-react';
-import AppShellV2 from '../components/layout-v2/AppShellV2';
-import PageHeader from '../components/ui-v2/PageHeader';
-import Button from '../components/ui-v2/Button';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import PageHeader from '@components/ui-v2/PageHeader';
+import Button from '@components/ui-v2/Button';
 
 // Real 404 (NAV-02). Unknown routes previously fell through to the buyer
 // dashboard, silently masking bad links. This surfaces the miss honestly and

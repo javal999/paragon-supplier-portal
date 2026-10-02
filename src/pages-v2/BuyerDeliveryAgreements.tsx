@@ -2,35 +2,35 @@ import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Info, ChevronRight, ExternalLink } from 'lucide-react';
-import AppShellV2 from '../components/layout-v2/AppShellV2';
-import PageHeader from '../components/ui-v2/PageHeader';
-import PageMetaLine from '../components/ui-v2/PageMetaLine';
-import LivenessPill from '../components/ui-v2/LivenessPill';
-import LoadingState from '../components/ui-v2/LoadingState';
-import EmptyState from '../components/ui-v2/EmptyState';
-import SubTabs from '../components/ui-v2/SubTabs';
-import SearchBar from '../components/ui-v2/SearchBar';
-import FilterChipsBar from '../components/ui-v2/FilterChipsBar';
-import Table from '../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../components/ui-v2/TableHeader';
-import TableRow from '../components/ui-v2/TableRow';
-import TableCell from '../components/ui-v2/TableCell';
-import StatusPill from '../components/ui-v2/StatusPill';
-import TargetBar from '../components/ui-v2/TargetBar';
-import Data from '../components/ui-v2/Data';
-import SidePanel from '../components/ui-v2/SidePanel';
-import ReleaseCalendar from '../components/delivery/ReleaseCalendar';
-import { useDeliveryAgreements } from '../services/query/deliveryHooks';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import PageHeader from '@components/ui-v2/PageHeader';
+import PageMetaLine from '@components/ui-v2/PageMetaLine';
+import LivenessPill from '@components/ui-v2/LivenessPill';
+import LoadingState from '@components/ui-v2/LoadingState';
+import EmptyState from '@components/ui-v2/EmptyState';
+import SubTabs from '@components/ui-v2/SubTabs';
+import SearchBar from '@components/ui-v2/SearchBar';
+import FilterChipsBar from '@components/ui-v2/FilterChipsBar';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
+import StatusPill from '@components/ui-v2/StatusPill';
+import TargetBar from '@components/ui-v2/TargetBar';
+import Data from '@components/ui-v2/Data';
+import SidePanel from '@components/ui-v2/SidePanel';
+import ReleaseCalendar from '@components/delivery/ReleaseCalendar';
+import { useDeliveryAgreements } from '@services/query/deliveryHooks';
 import {
   toAgreementItemRows,
   filterAndRankRows,
   bucketCounts,
   type AgreementItemBucket,
   type AgreementItemCounts,
-} from '../services/delivery';
-import type { ReleaseType } from '../services/delivery';
-import { SDC_SIMULATED_NOW } from '../services/sdc';
-import { formatDate, formatNumber } from '../lib/format';
+} from '@services/delivery';
+import type { ReleaseType } from '@services/delivery';
+import { SDC_SIMULATED_NOW } from '@services/sdc';
+import { formatDate, formatNumber } from '@lib/format';
 
 // The cross-contract ROLL-UP, redesigned for scale: one DENSE row per agreement-
 // ITEM (the grain a buyer scans by — fulfillment/late-ness/policy/material are all

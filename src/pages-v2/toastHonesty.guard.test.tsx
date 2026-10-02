@@ -211,7 +211,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import ts from 'typescript';
-import { resources } from '../lib/i18n';
+import { resources } from '@lib/i18n';
 
 const PAGES_DIR = __dirname;
 

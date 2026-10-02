@@ -3,22 +3,22 @@ import { useTranslation } from 'react-i18next';
 import { ClipboardList } from 'lucide-react';
 import ExpandableWidget, {
   type FlagSeverity,
-} from '../../components/ui-v2/ExpandableWidget';
-import Table from '../../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../../components/ui-v2/TableHeader';
-import TableRow from '../../components/ui-v2/TableRow';
-import TableCell from '../../components/ui-v2/TableCell';
-import Button from '../../components/ui-v2/Button';
-import Data from '../../components/ui-v2/Data';
-import StatusPill from '../../components/ui-v2/StatusPill';
-import { statusTone } from '../../lib/statusTone';
-import { formatIDR, formatDate } from '../../lib/format';
-import { usePurchaseOrders } from '../../services/query/hooks';
-import { usePurchaseOrderConfirm } from '../../services/query/commandHooks';
-import { useVerbAvailability } from '../../hooks/useVerbAvailability';
-import { HandoffNotice } from '../../components/ui-v2/HandoffNotice';
-import { POStatus } from '../../services/data/types';
-import type { PurchaseOrder } from '../../services/data/types';
+} from '@components/ui-v2/ExpandableWidget';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
+import Button from '@components/ui-v2/Button';
+import Data from '@components/ui-v2/Data';
+import StatusPill from '@components/ui-v2/StatusPill';
+import { statusTone } from '@lib/statusTone';
+import { formatIDR, formatDate } from '@lib/format';
+import { usePurchaseOrders } from '@services/query/hooks';
+import { usePurchaseOrderConfirm } from '@services/query/commandHooks';
+import { useVerbAvailability } from '@hooks/useVerbAvailability';
+import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
+import { POStatus } from '@services/data/types';
+import type { PurchaseOrder } from '@services/data/types';
 
 // ────────────────────────────────────────────────────────────────────────────
 // Reference adapter (proving pair) — Supplier "Orders to confirm". The thin

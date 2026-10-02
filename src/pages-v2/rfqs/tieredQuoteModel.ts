@@ -11,11 +11,11 @@
 // both places.
 // ────────────────────────────────────────────────────────────────────────────
 
-import { normalizeQty } from '../../lib/localeNumber';
-import type { BidCurrency } from '../../lib/currencyPolicy';
-import type { RFQ } from '../../data/mockRfqs';
-import type { Quotation } from '../../data/mockQuotations';
-import type { RfiAnswer } from '../../services/sourcing/types';
+import { normalizeQty } from '@lib/localeNumber';
+import type { BidCurrency } from '@lib/currencyPolicy';
+import type { RFQ } from '@data/mockRfqs';
+import type { Quotation } from '@data/mockQuotations';
+import type { RfiAnswer } from '@services/sourcing/types';
 import {
   deriveQuoteHeader,
   tiersForItem,
@@ -25,12 +25,12 @@ import {
   type RfqItem,
   type RfqOneTimeCostId,
   type TierPrice,
-} from '../../services/sourcing/rfqModel';
-import { headerLeadTimeDays, tieredQuoteRefusal } from '../../services/sourcing/rfqResponse';
+} from '@services/sourcing/rfqModel';
+import { headerLeadTimeDays, tieredQuoteRefusal } from '@services/sourcing/rfqResponse';
 import { readBidPrice } from './quotationPrice';
 import { readMoq } from './quotationMoq';
 import { readLeadTimeDays } from './quotationLeadTime';
-import { documentsOf, responseDocumentsRefusal } from '../../services/transitions/rfxDocumentRules';
+import { documentsOf, responseDocumentsRefusal } from '@services/transitions/rfxDocumentRules';
 import type { DocumentDraft } from '../rfx/ResponseDocumentsSection';
 
 /** A cost the supplier added beyond the ones the buyer asked for. */

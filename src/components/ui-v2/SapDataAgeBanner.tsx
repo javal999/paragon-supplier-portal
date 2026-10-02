@@ -1,8 +1,8 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Clock } from 'lucide-react';
-import { useSapDataAge } from '../../pages-v2/interface/sapInterfaceDisplay';
-import { sapAgeParts, type SapPageKey } from '../../services/data/sapInterfaceRules';
+import { useSapDataAge } from '@pages-v2/interface/sapInterfaceDisplay';
+import { sapAgeParts, type SapPageKey } from '@services/data/sapInterfaceRules';
 
 // ────────────────────────────────────────────────────────────────────────────
 // The data-age banner (REQ-E07-08 BR-04, AC-03).

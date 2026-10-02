@@ -1,10 +1,10 @@
 import { afterEach } from 'vitest';
 import { Routes, Route } from 'react-router-dom';
 import { screen, fireEvent, waitFor } from '@testing-library/react';
-import { renderWithProviders, SUPPLIER } from '../test/test-utils';
-import { mockDataService } from '../services/data/mock/mockDataService';
-import { withChaos } from '../services/data/mock/withChaos';
-import { schedulingAgreementStore } from '../services/delivery/stores/schedulingAgreementStore';
+import { renderWithProviders, SUPPLIER } from '@test/test-utils';
+import { mockDataService } from '@services/data/mock/mockDataService';
+import { withChaos } from '@services/data/mock/withChaos';
+import { schedulingAgreementStore } from '@services/delivery/stores/schedulingAgreementStore';
 import BuyerContractDetail from './BuyerContractDetail';
 
 const alwaysFails = withChaos(mockDataService, { minMs: 0, maxMs: 0, failureRate: 1 });

@@ -1,13 +1,13 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { screen, act } from '@testing-library/react';
 import NoSupplierIdentity from './NoSupplierIdentity';
-import { renderWithProviders, BUYER } from '../../test/test-utils';
-import { identityEn, identityId } from '../../lib/i18n/identity';
-import i18n from '../../lib/i18n';
-import { SEEDED_SEAT_ROLES } from '../../services/transitions/businessRoles';
-import { NO_PERSON } from '../../context/noPerson';
-import { mockSuppliers } from '../../data/mockSuppliers';
-import type { CurrentIdentity } from '../../context/CurrentIdentityContext';
+import { renderWithProviders, BUYER } from '@test/test-utils';
+import { identityEn, identityId } from '@lib/i18n/identity';
+import i18n from '@lib/i18n';
+import { SEEDED_SEAT_ROLES } from '@services/transitions/businessRoles';
+import { NO_PERSON } from '@context/noPerson';
+import { mockSuppliers } from '@data/mockSuppliers';
+import type { CurrentIdentity } from '@context/CurrentIdentityContext';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ⚠️ **ONE SCREEN WAS ANSWERING TWO DIFFERENT QUESTIONS, AND WAS RIGHT ABOUT

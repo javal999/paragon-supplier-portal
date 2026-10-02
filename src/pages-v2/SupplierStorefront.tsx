@@ -18,22 +18,22 @@ import {
   AlertTriangle,
   LucideIcon,
 } from 'lucide-react';
-import AppShellV2 from '../components/layout-v2/AppShellV2';
-import PageHeader from '../components/ui-v2/PageHeader';
-import PageMetaLine from '../components/ui-v2/PageMetaLine';
-import ProvenanceMarker from '../components/ui-v2/ProvenanceMarker';
-import KpiCard from '../components/ui-v2/KpiCard';
-import StatusPill from '../components/ui-v2/StatusPill';
-import Tabs from '../components/ui-v2/Tabs';
-import Button from '../components/ui-v2/Button';
-import LoadingState from '../components/ui-v2/LoadingState';
-import ErrorState from '../components/ui-v2/ErrorState';
-import Data from '../components/ui-v2/Data';
-import { PreferredChannel } from '../types/supplier.types';
-import { useSupplier, useStorefrontProducts } from '../services/query/hooks';
-import { useCategoryLabel } from '../hooks/useCategoryLabel';
-import { useChannelLabel } from '../hooks/useChannelLabel';
-import { DECLARED_PRESENT } from '../services/data/fixturePresent';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import PageHeader from '@components/ui-v2/PageHeader';
+import PageMetaLine from '@components/ui-v2/PageMetaLine';
+import ProvenanceMarker from '@components/ui-v2/ProvenanceMarker';
+import KpiCard from '@components/ui-v2/KpiCard';
+import StatusPill from '@components/ui-v2/StatusPill';
+import Tabs from '@components/ui-v2/Tabs';
+import Button from '@components/ui-v2/Button';
+import LoadingState from '@components/ui-v2/LoadingState';
+import ErrorState from '@components/ui-v2/ErrorState';
+import Data from '@components/ui-v2/Data';
+import { PreferredChannel } from '@app-types/supplier.types';
+import { useSupplier, useStorefrontProducts } from '@services/query/hooks';
+import { useCategoryLabel } from '@hooks/useCategoryLabel';
+import { useChannelLabel } from '@hooks/useChannelLabel';
+import { DECLARED_PRESENT } from '@services/data/fixturePresent';
 
 // ⚠️ ANCHORED — this surface rendered values derived from anchored
 // fixture data against the WALL CLOCK, so what a reader saw moved every day

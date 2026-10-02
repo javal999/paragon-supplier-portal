@@ -14,16 +14,16 @@
 // ────────────────────────────────────────────────────────────────────────────
 
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
-import { renderWithProviders, SUPPLIER } from '../test/test-utils';
-import { purchaseOrderStore } from '../services/data/mock/stores/purchaseOrderStore';
-import { MockCommandService } from '../services/data/mock/MockCommandService';
+import { renderWithProviders, SUPPLIER } from '@test/test-utils';
+import { purchaseOrderStore } from '@services/data/mock/stores/purchaseOrderStore';
+import { MockCommandService } from '@services/data/mock/MockCommandService';
 import {
   SEEDED_SEAT_ROLES,
   SYSTEM_ROLES,
   rolesHolding,
-} from '../services/transitions/businessRoles';
-import { getFlow, userVerbsFrom } from '../services/transitions';
-import { POStatus } from '../services/data/types';
+} from '@services/transitions/businessRoles';
+import { getFlow, userVerbsFrom } from '@services/transitions';
+import { POStatus } from '@services/data/types';
 import SupplierOrders from './SupplierOrders';
 
 /** The seeded supplier seat's ONE `Sent` order. Asserted below, never assumed. */

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import type { VerbAvailability } from '../../services/transitions/handoff';
-import { ownerLabelKeys } from '../../services/transitions/handoff';
+import type { VerbAvailability } from '@services/transitions/handoff';
+import { ownerLabelKeys } from '@services/transitions/handoff';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // THE WAIT, RENDERED. The operator's binding constraint, as one component.
