@@ -13,7 +13,11 @@
     "test:run": "vitest run",
     "test:gate": "node --test gate/*.test.js",
     "gates": "node scripts/gates.mjs",
-    "drift": "vitest run --config vitest.drift.config.ts"
+    "drift": "vitest run --config vitest.drift.config.ts",
+    "lint": "eslint .",
+    "format": "prettier --write --no-error-on-unmatched-pattern \"src/**/*.{js,jsx}\"",
+    "format:check": "prettier --check --no-error-on-unmatched-pattern \"src/**/*.{js,jsx}\"",
+    "prepare": "husky"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.101.2",
@@ -29,6 +33,8 @@
     "recharts": "^2.13.3"
   },
   "devDependencies": {
+    "@eslint/css": "^2.0.0",
+    "@eslint/js": "^9.39.5",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.1.0",
@@ -37,10 +43,20 @@
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.5.0",
+    "eslint": "^9.39.5",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-jsdoc": "^65.0.1",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.13.0",
+    "husky": "^9.1.7",
     "jsdom": "^26.0.0",
+    "lint-staged": "^17.6.0",
     "postcss": "^8.5.14",
+    "prettier": "^3.9.9",
     "tailwindcss": "^3.4.19",
     "typescript": "^5.6.3",
+    "typescript-eslint": "^8.71.0",
     "vite": "^6.0.3",
     "vitest": "^3.0.0"
   }

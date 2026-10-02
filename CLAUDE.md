@@ -1303,10 +1303,18 @@ over everything else combined, and it grew that way in six weeks.
   if the recalibrated path above produces another six weeks of prose, this
   paragraph is evidence for the diagnosis and not a remedy for it.
 
-## Gates — THIS PROJECT HAS NO LINT SCRIPT
-There is no `lint` script and no ESLint config. Do not invent one, and do not
-run `npx eslint` — it fails on missing config, which is not a code defect.
-The gates are exactly four (three until `TSC-SKIPS-TESTS-01` closed):
+## Gates — LINT ADDED 2026-10-02 (the "no lint script" rule is lifted)
+Until 2026-10-02 this section said the project has no lint script. The owner
+lifted that rule to align the portal with the company React boilerplate
+(frontend-standard plan, Phase 1). ESLint (`eslint.config.js`), Prettier
+(`.prettierrc.json`) and a Husky pre-commit hook (`lint-staged.config.js`) are
+now part of the repo; each file's header explains its rules and why. Rules that
+still have violations run as warnings (listed in `RULES_WITH_OPEN_VIOLATIONS`
+in `eslint.config.js`) and their total may not rise above the ceiling in
+`scripts/floor.json`. The forecast module is deferred to plan Phase 7: lint
+reports on it but never blocks it.
+The gates are exactly five (three until `TSC-SKIPS-TESTS-01` closed, four until
+lint was added):
 - `npm run build`  → `tsc && vite build` (typecheck + bundle)
 - `tsc -p tsconfig.vitest.json --noEmit` → **typechecks the SPEC surface**, which
   `tsconfig.json` excludes. Added when `TSC-SKIPS-TESTS-01` was closed: for the
@@ -1317,9 +1325,12 @@ The gates are exactly four (three until `TSC-SKIPS-TESTS-01` closed):
   would pass while checking nothing.
 - `npx vitest run` → the test floor, which never regresses
 - `npm run test:gate` → the SEC-GATE-01 session/HMAC suite (`gate/`, outside `src/`)
+- `npm run lint` + `npm run format:check` → ESLint with zero errors and warnings
+  at or below the ceiling in `scripts/floor.json`; Prettier on converted
+  JavaScript in `src/`
 
-### `npm run gates` — the four, run and ASSERTED (CP-3a)
-`npm run gates` (`scripts/gates.mjs`) runs exactly those four, in that order,
+### `npm run gates` — the five, run and ASSERTED (CP-3a)
+`npm run gates` (`scripts/gates.mjs`) runs exactly those five, in that order,
 and then asserts that each one did something: the build emitted a bundle, the
 suite collected at least the recorded number of tests across at least the
 recorded number of files, and the gate suite passed at least its recorded count.
@@ -1390,8 +1401,8 @@ So this is canon enforced by reading, and it is worth knowing which of the two
 kinds it is. What IS gated is unchanged and narrow: the floor's counts, and the
 pointer at the file that holds them.
 
-It is not a fourth gate and adds no new notion of green; it is the same three
-plus the assertion that they ran. **CI runs this exact command** and nothing
+`npm run gates` adds no notion of green beyond the gates listed above; it is
+those gates plus the assertion that they ran. **CI runs this exact command** and nothing
 else (`.github/workflows/gates.yml`) — on every PR to `main`, on every push to
 `main`, and **daily at 00:17 UTC on `main` with no commit involved**, which is
 the half that catches a clock-decay break like 2026-08-01 (see `docs/findings.md`,
