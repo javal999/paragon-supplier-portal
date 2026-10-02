@@ -70,12 +70,10 @@ const StatusPill: React.FC<StatusPillProps> = ({
         // eslint-disable-next-line react/no-array-index-key -- fixed JSX child positions, never added/removed/reordered by data
         <React.Fragment key={i}>{localize(n)}</React.Fragment>
       ));
-    if (React.isValidElement(node) && node.props.children != null)
-      return React.cloneElement(
-        node,
-        node.props,
-        localize(node.props.children),
-      );
+    // React 19 types an element's props as `unknown`; a pill's children are
+    // plain elements that may carry `children`, so narrow to exactly that.
+    if (React.isValidElement<{ children?: React.ReactNode }>(node) && node.props.children != null)
+      return React.cloneElement(node, node.props, localize(node.props.children));
     return node;
   };
   const label = localize(children);

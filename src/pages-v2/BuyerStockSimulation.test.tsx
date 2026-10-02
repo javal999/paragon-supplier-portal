@@ -134,7 +134,10 @@ describe('Stock simulation page (MR-7 section e)', () => {
     expect(po.supplierId).toBe('sup-007');
     expect(po.lineItems.some((l) => l.materialCode === 'PK-PETB-8801')).toBe(true);
     expect(within(dialog).getByTestId('calloff-new-remaining')).toBeInTheDocument();
-    expect(screen.getByTestId('where')).toHaveTextContent(/^\/buyer\/call-offs$/);
+    // The prefill params are consumed (removed from the address) once. React
+    // Router 7 applies `setSearchParams` inside a React transition, so the
+    // cleaned address lands a tick after the dialog opens — wait for it.
+    await waitFor(() => expect(screen.getByTestId('where')).toHaveTextContent(/^\/buyer\/call-offs$/));
     expect(callOffStore.all()).toHaveLength(before);
   });
 

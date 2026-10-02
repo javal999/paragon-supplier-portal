@@ -63,8 +63,11 @@ const FormSection: React.FC<FormSectionProps> = ({
             : 'grid-rows-[0fr] opacity-0 mt-0'
         }`}
       >
-        {/* BL-31: a collapsed body is inert, so its fields leave the tab order. */}
-        <div className="overflow-hidden" {...(showBody ? {} : { inert: '' })}>
+        {/* BL-31: a collapsed body is inert, so its fields leave the tab order.
+            React 19 types `inert` as a boolean and renders `inert=""` for true;
+            React 18 needed the empty string itself (changed in the Phase 2
+            upgrade, 2026-10-02). */}
+        <div className="overflow-hidden" inert={!showBody}>
           <div className="flex flex-col gap-4">{children}</div>
         </div>
       </div>
