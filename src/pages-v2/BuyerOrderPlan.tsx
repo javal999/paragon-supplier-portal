@@ -22,6 +22,7 @@ import CycleSteps from '@components/forecast/CycleSteps';
 import SimulatedDataBanner from '@components/forecast/SimulatedDataBanner';
 import AboutThisPage from '@components/forecast/AboutThisPage';
 import DataAsOf from '@components/forecast/DataAsOf';
+import WhyQuantityPanel from '@components/forecast/WhyQuantityPanel';
 import { forecastCrumb, forecastTitle } from '@components/forecast/forecastPages';
 import { useToast } from '@hooks/useToast';
 import { useRefusalText } from '@hooks/useRefusalText';
@@ -70,6 +71,11 @@ import { draftNeedDate, umbrellaLineFor } from './orderPlan/orderPlanRelease';
 // arrives by that week and whether moving it keeps the safety stock). The
 // choice is the planner's and is NOT stored: the page says where to act on it
 // (the 3PL booking; the Reschedule page or the release week of an order).
+//
+// FUX2 B3 (F-07, F-17): each recommended order opens a "Why this quantity"
+// panel (`components/forecast/WhyQuantityPanel.tsx`) with its material's
+// Material requirement and Safety stock figures and its sizing, so the planner
+// sees why without leaving the page. The 2 full pages stay linked above.
 //
 // Every figure is computed by the forecast engine at read time on its
 // SYNTHETIC dataset (the `engineDataset` pill, X-03).
@@ -330,6 +336,8 @@ const BuyerOrderPlan: React.FC = () => {
   const planAvailability = useVerbAvailability('calloff:plan');
   const [kind, setKind] = useState<WarehouseKind>('packaging');
   const [drafted, setDrafted] = useState<ReadonlySet<string>>(new Set());
+  // FUX2 B3 — the one recommendation whose "Why this quantity" panel is open.
+  const [whyOpen, setWhyOpen] = useState<string | null>(null);
   const crumb = forecastCrumb(t, 'whatToOrder');
   const run = query.data ?? null;
   const today = sdcClock.now().slice(0, 10);
@@ -365,6 +373,12 @@ const BuyerOrderPlan: React.FC = () => {
   }));
   const peak = w ? Math.max(...w.weeks.map((wk) => wk.fill ?? 0)) : 0;
   const keyOf = (r: Recommendation) => `${r.materialCode}|${r.weekStart}`;
+  const whyId = (r: Recommendation) => `op-wq-${r.materialCode}-${r.weekStart}`;
+  const closeWhy = (r: Recommendation) => {
+    setWhyOpen(null);
+    // Focus goes back to the control that opened the panel.
+    requestAnimationFrame(() => document.getElementById(`${whyId(r)}-toggle`)?.focus());
+  };
 
   const createDraft = async (r: Recommendation, line: NonNullable<ReturnType<typeof umbrellaLineFor>>) => {
     try {
@@ -511,8 +525,10 @@ const BuyerOrderPlan: React.FC = () => {
                       const key = keyOf(r);
                       const line = umbrellaLineFor(pos, r.supplierId, r.materialCode);
                       const changed = r.previousQuantity !== null && r.previousQuantity !== r.quantity;
+                      const whyIsOpen = whyOpen === key;
                       return (
-                        <TableRow key={key} data-testid={`op-rec-${r.materialCode}-${r.weekStart}`}>
+                        <React.Fragment key={key}>
+                        <TableRow data-testid={`op-rec-${r.materialCode}-${r.weekStart}`}>
                           <TableCell className="align-top">
                             <div className="text-sm text-text-primary">{m.materialLabel}</div>
                             <Data className="text-xs text-text-tertiary">{m.materialCode}</Data>
@@ -561,6 +577,18 @@ const BuyerOrderPlan: React.FC = () => {
                                 </>
                               )}
                             </div>
+                            <button
+                              type="button"
+                              id={`${whyId(r)}-toggle`}
+                              className="mt-1 text-xs text-action underline"
+                              aria-expanded={whyIsOpen}
+                              aria-controls={whyId(r)}
+                              aria-label={t('op.wq.openAria', { material: m.materialLabel, week: weekLabel(r.weekStart) })}
+                              onClick={() => (whyIsOpen ? closeWhy(r) : setWhyOpen(key))}
+                              data-testid={`op-wq-open-${r.materialCode}-${r.weekStart}`}
+                            >
+                              {t('op.wq.open')}
+                            </button>
                           </TableCell>
                           <TableCell className="align-top">
                             {r.previousQuantity === null ? (
@@ -615,6 +643,14 @@ const BuyerOrderPlan: React.FC = () => {
                             )}
                           </TableCell>
                         </TableRow>
+                        {whyIsOpen ? (
+                          <tr>
+                            <td colSpan={9} className="px-4 pb-4">
+                              <WhyQuantityPanel id={whyId(r)} rec={r} material={m} onClose={() => closeWhy(r)} />
+                            </td>
+                          </tr>
+                        ) : null}
+                        </React.Fragment>
                       );
                     })}
                   </tbody>
