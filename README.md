@@ -93,7 +93,7 @@ src/
 │   ├── mockSuppliers.js       # 8 supplier profiles with scorecards
 │   └── mockInventory.js       # 20 inventory records
 ├── pages/
-│   ├── auth/Login.tsx
+│   ├── auth/Login.jsx
 │   ├── buyer/                 # 5 buyer pages
 │   ├── supplier/              # 6 supplier pages
 │   └── onboarding/            # Supplier registration wizard
@@ -102,7 +102,7 @@ src/
 ├── theme/
 │   └── fioriTheme.ts          # Design tokens (colours, shell constants)
 ├── types/
-│   └── supplier.types.ts      # POStatus, StockStatus, ChannelType enums
+│   └── supplier.types.js      # POStatus, StockStatus, ChannelType enums
 ├── index.css                  # Inter font, portal-card utilities, scrollbar
 └── main.jsx                   # React root, ThemeProvider, CSS import
 ```

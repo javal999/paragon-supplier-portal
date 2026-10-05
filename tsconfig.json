@@ -121,7 +121,7 @@
     //     returns 0 "by construction: the portal links no documents to a contract
     //     today", kept as a function so a real relation has one seat to land in;
     //     `FOOTER_VARIANT(_r: RFQ)` returns `'outline'` because §68 retired the
-    //     solid register, and it is PINNED — `BuyerSourcing.footer.test.ts` holds
+    //     solid register, and it is PINNED — `BuyerSourcing.footer.test.js` holds
     //     nine assertions against it, so the seam cannot quietly rot.
     // The discriminator, for the next one: a hatch is honest when the signature is
     // owed to a caller or the emptiness is stated and pinned. Silence is not.
