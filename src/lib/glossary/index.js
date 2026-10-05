@@ -61,6 +61,9 @@ export {
   BPOM_APPLICABILITY_GLOSSARY
 } from './governance.glossary';
 
+/** @typedef {import('./planning.glossary').PlanningTerm} PlanningTerm */
+export { PLANNING_TERM_GLOSSARY } from './planning.glossary';
+
 import {
   COMMAND_REFUSAL_GLOSSARY,
   DATA_ERROR_GLOSSARY,
@@ -83,16 +86,17 @@ import {
   HALAL_APPLICABILITY_GLOSSARY,
   BPOM_APPLICABILITY_GLOSSARY
 } from './governance.glossary';
+import { PLANNING_TERM_GLOSSARY } from './planning.glossary';
 /** @import { GlossaryEntry } from './types' */
 
 /** The shape of one registry row. Checked by `satisfies`, never widened onto
  *  the exported const — see `GlossaryRef` below for why the literals matter. */
 /**
  * @typedef {{
- *   readonly sourceType: string;
- *   readonly sourceFile: string;
- *   readonly entries: Readonly<Record<string, GlossaryEntry>>;
- * }} GlossaryRegistry
+ *     readonly sourceType: string;
+ *     readonly sourceFile: string;
+ *     readonly entries: Readonly<Record<string, GlossaryEntry>>;
+ *   }} GlossaryRegistry
  */
 
 /**
@@ -195,6 +199,12 @@ const REGISTRIES = /** @satisfies {readonly GlossaryRegistry[]} */ (
       sourceType: 'BpomApplicability',
       sourceFile: 'src/services/sdc/types.js',
       entries: BPOM_APPLICABILITY_GLOSSARY
+    },
+    // Forecast UX A4 (F-09) — the planning terms the forecast pages tip.
+    {
+      sourceType: 'PlanningTerm',
+      sourceFile: 'src/lib/glossary/planning.glossary.js',
+      entries: PLANNING_TERM_GLOSSARY
     }
   ])
 );

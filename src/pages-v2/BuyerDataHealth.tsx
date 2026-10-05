@@ -2,8 +2,6 @@ import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import AppShellV2 from '@components/layout-v2/AppShellV2';
 import PageHeader from '@components/ui-v2/PageHeader';
-import PageMetaLine from '@components/ui-v2/PageMetaLine';
-import LivenessPill from '@components/ui-v2/LivenessPill';
 import KpiCard from '@components/ui-v2/KpiCard';
 import StatusPill from '@components/ui-v2/StatusPill';
 import Button from '@components/ui-v2/Button';
@@ -15,6 +13,11 @@ import Data from '@components/ui-v2/Data';
 import LoadingState from '@components/ui-v2/LoadingState';
 import ErrorState from '@components/ui-v2/ErrorState';
 import { formatDate, formatDateTime, formatNumber } from '@lib/format';
+import PurposeHeader from '@components/forecast/PurposeHeader';
+import SimulatedDataBanner from '@components/forecast/SimulatedDataBanner';
+import AboutThisPage from '@components/forecast/AboutThisPage';
+import DataAsOf from '@components/forecast/DataAsOf';
+import { forecastCrumb, forecastTitle } from '@components/forecast/forecastPages';
 import { useDataHealth } from '@services/query/hooks';
 import type { CheckId, CheckResult, FeedHealth, Freshness, StepStatus } from '@services/engine/dataHealth';
 
@@ -175,7 +178,7 @@ const CheckDetail: React.FC<{ feed: FeedHealth; tolerance: string }> = ({ feed, 
 const BuyerDataHealth: React.FC = () => {
   const { t } = useTranslation();
   const query = useDataHealth();
-  const crumb = [t('hub.nav.section.forecast'), t('dh.title')];
+  const crumb = forecastCrumb(t, 'dataHealth');
   const report = query.data ?? null;
   const feeds = useMemo(() => report?.feeds ?? [], [report]);
   const [selected, setSelected] = useState<string | null>(null);
@@ -194,24 +197,10 @@ const BuyerDataHealth: React.FC = () => {
 
   return (
     <AppShellV2>
-      <PageHeader breadcrumb={crumb} title={t('dh.title')} subtitle={t('dh.subtitle')} actions={<LivenessPill capability="engineDataset" />} />
-      <PageMetaLine className="-mt-6 mb-2">
-        {report && (
-          <>
-            {t('dh.meta.checked')} <Data>{formatDateTime(report.asOf)}</Data>
-          </>
-        )}
-      </PageMetaLine>
-      <p className="text-xs text-text-tertiary mb-1" data-testid="dh-synthetic-note">
-        {t('dh.synthetic')}
-      </p>
-      <p className="text-xs text-text-tertiary mb-1" data-testid="dh-owner-note">
-        {t('dh.owner')}
-      </p>
-      <p className="text-xs text-text-tertiary mb-1" data-testid="dh-not-built">
-        {t('dh.notBuilt')}
-      </p>
-      <p className="text-xs text-text-tertiary mb-4">{t('dh.limitsWhere')}</p>
+      <PageHeader breadcrumb={crumb} title={forecastTitle(t, 'dataHealth')} />
+      <PurposeHeader page="dataHealth" />
+      <SimulatedDataBanner capability="engineDataset" />
+      <DataAsOf date={report?.asOf ?? null} withTime />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-6" data-testid="dh-kpis">
         <KpiCard
@@ -321,7 +310,8 @@ const BuyerDataHealth: React.FC = () => {
                     )}
                   </TableCell>
                   <TableCell className="align-top text-xs text-text-secondary" data-testid={`dh-affects-${f.feed}`}>
-                    <Data>{f.affects.join(' · ')}</Data>
+                    {/* F-18: the steps by their page names, not their requirement codes. */}
+                    {f.affects.map((step) => t(`dh.step.${step}`)).join(' · ')}
                   </TableCell>
                 </TableRow>
               );
@@ -338,6 +328,14 @@ const BuyerDataHealth: React.FC = () => {
         <p>{t('dh.def.refuse')}</p>
         <p>{t('dh.def.flag')}</p>
       </section>
+
+      <AboutThisPage>
+        <p>{t('dh.subtitle')}</p>
+        <p data-testid="dh-synthetic-note">{t('dh.synthetic')}</p>
+        <p data-testid="dh-owner-note">{t('dh.owner')}</p>
+        <p data-testid="dh-not-built">{t('dh.notBuilt')}</p>
+        <p>{t('dh.limitsWhere')}</p>
+      </AboutThisPage>
     </AppShellV2>
   );
 };

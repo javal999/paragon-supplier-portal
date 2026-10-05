@@ -1,10 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import AppShellV2 from '@components/layout-v2/AppShellV2';
 import PageHeader from '@components/ui-v2/PageHeader';
-import PageMetaLine from '@components/ui-v2/PageMetaLine';
-import LivenessPill from '@components/ui-v2/LivenessPill';
 import FilterChipsBar from '@components/ui-v2/FilterChipsBar';
 import KpiCard from '@components/ui-v2/KpiCard';
 import StatusPill from '@components/ui-v2/StatusPill';
@@ -17,6 +15,12 @@ import Button from '@components/ui-v2/Button';
 import LoadingState from '@components/ui-v2/LoadingState';
 import ErrorState from '@components/ui-v2/ErrorState';
 import { formatDate, formatNumber } from '@lib/format';
+import DataHealthChip from '@components/forecast/DataHealthChip';
+import PurposeHeader from '@components/forecast/PurposeHeader';
+import SimulatedDataBanner from '@components/forecast/SimulatedDataBanner';
+import AboutThisPage from '@components/forecast/AboutThisPage';
+import DataAsOf from '@components/forecast/DataAsOf';
+import { forecastCrumb, forecastTitle } from '@components/forecast/forecastPages';
 import { useMaterialRequirement } from '@services/query/hooks';
 import type { MaterialPlanView, MaterialRequirementView } from '@services/data/types';
 import type { MaterialWeek } from '@services/engine/requirement';
@@ -43,6 +47,21 @@ import { qtyOf } from './materialPlan/planDisplay';
 type ReceiptsMode = 'confirmed' | 'include';
 
 const weekLabel = (w: string) => `W${isoWeek(w)}`;
+
+/** The page address parameter that keeps the "Needs order" filter (F-17). */
+const NEEDS_PARAM = 'needs';
+const NEEDS_ORDER = 'order';
+
+/**
+ * F-17 — by need, not by code: late to release first, then the larger net
+ * requirement, then a stock-accuracy review flag; the code breaks ties so the
+ * order is stable. Presentation only: the engine's own order is unchanged.
+ */
+const byNeed = (a: MaterialPlanView, b: MaterialPlanView): number =>
+  b.totals.lateToRelease - a.totals.lateToRelease ||
+  b.totals.net - a.totals.net ||
+  Number(b.reviewRequired) - Number(a.reviewRequired) ||
+  a.materialCode.localeCompare(b.materialCode);
 /** A BOM fraction as a percentage, to 0.1% (2.35% scrap reads 2.4%); — when the part came through no BOM line. */
 const pctOf = (x: number | undefined) => (x === undefined ? '—' : `${formatNumber(Math.round(x * 1000) / 10)}%`);
 
@@ -234,12 +253,28 @@ const BuyerMaterialRequirement: React.FC = () => {
   const { t } = useTranslation();
   const [mode, setMode] = useState<ReceiptsMode>('confirmed');
   const query = useMaterialRequirement(mode === 'include');
-  const crumb = [t('hub.nav.section.forecast'), t('mrq.title')];
+  const crumb = forecastCrumb(t, 'materialRequirement');
   const run = query.data ?? null;
   const materials = useMemo(() => run?.materials ?? [], [run]);
+  const [params, setParams] = useSearchParams();
+  const needsOrder = params.get(NEEDS_PARAM) === NEEDS_ORDER;
+  const rows = useMemo(
+    () => [...materials].sort(byNeed).filter((m) => !needsOrder || m.totals.net > 0),
+    [materials, needsOrder],
+  );
   const [selected, setSelected] = useState<string | null>(null);
   const current =
-    materials.find((m) => m.materialCode === selected) ?? materials.find((m) => m.totals.net > 0) ?? materials[0] ?? null;
+    materials.find((m) => m.materialCode === selected) ?? rows.find((m) => m.totals.net > 0) ?? rows[0] ?? null;
+  const toggleNeedsOrder = (on: boolean) =>
+    setParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        if (on) next.set(NEEDS_PARAM, NEEDS_ORDER);
+        else next.delete(NEEDS_PARAM);
+        return next;
+      },
+      { replace: true },
+    );
 
   if (query.isPending) return <LoadingState breadcrumb={crumb} />;
   if (query.isError) return <ErrorState breadcrumb={crumb} error={query.error} onRetry={() => query.refetch()} />;
@@ -255,38 +290,22 @@ const BuyerMaterialRequirement: React.FC = () => {
 
   return (
     <AppShellV2>
-      <PageHeader
-        breadcrumb={crumb}
-        title={t('mrq.title')}
-        subtitle={t('mrq.subtitle')}
-        actions={<LivenessPill capability="engineDataset" />}
+      <PageHeader breadcrumb={crumb} title={forecastTitle(t, 'materialRequirement')} />
+      <PurposeHeader page="materialRequirement" />
+      <SimulatedDataBanner capability="engineDataset" />
+      <DataAsOf
+        date={run?.planMadeAt ?? null}
+        detail={
+          run?.planMadeAt ? (
+            <>
+              {t('mrq.meta.horizon')} {t('mrq.meta.weeks', { count: run.weeks.length })}
+            </>
+          ) : (
+            t('mrq.meta.noPlan')
+          )
+        }
       />
-      <PageMetaLine className="-mt-6 mb-2">
-        {run?.planMadeAt ? (
-          <>
-            {t('mrq.meta.plan')} <Data>{formatDate(run.planMadeAt)}</Data> · {t('mrq.meta.horizon')}{' '}
-            {t('mrq.meta.weeks', { count: run.weeks.length })}
-          </>
-        ) : (
-          t('mrq.meta.noPlan')
-        )}
-      </PageMetaLine>
-      <p className="text-xs text-text-tertiary mb-1" data-testid="mrq-synthetic-note">
-        {t('mrq.synthetic')}
-      </p>
-      <p className="text-xs text-text-tertiary mb-1">{t('mrq.planSource')}</p>
-      {run?.sizing === 'orderSizing' ? (
-        <p className="text-xs text-text-tertiary mb-4" data-testid="mrq-sized-note">
-          {t('mrq.sized')}{' '}
-          <Link to="/buyer/order-plan" className="text-action underline">
-            {t('mrq.sized.link')}
-          </Link>
-        </p>
-      ) : (
-        <p className="text-xs text-text-tertiary mb-4" data-testid="mrq-interim-note">
-          {t('mrq.interim')}
-        </p>
-      )}
+      <DataHealthChip step="E14-03" className="mb-3" />
 
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <FilterChipsBar<ReceiptsMode> options={modeOptions} value={mode} onChange={setMode} />
@@ -295,6 +314,16 @@ const BuyerMaterialRequirement: React.FC = () => {
             {t('mrq.receipts.includedNote')}
           </span>
         )}
+        <label className="inline-flex items-center gap-2 text-sm text-text-secondary cursor-pointer">
+          <input
+            type="checkbox"
+            className="accent-action"
+            checked={needsOrder}
+            onChange={(e) => toggleNeedsOrder(e.target.checked)}
+            data-testid="mrq-needs-order"
+          />
+          {t('mrq.filter.needsOrder')}
+        </label>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-6" data-testid="mrq-kpis">
@@ -333,7 +362,7 @@ const BuyerMaterialRequirement: React.FC = () => {
             <TableHeaderCell>{t('mrq.col.late')}</TableHeaderCell>
           </TableHeader>
           <tbody>
-            {materials.map((m) => (
+            {rows.map((m) => (
               <TableRow
                 key={m.materialCode}
                 data-testid={`mrq-row-${m.materialCode}`}
@@ -379,10 +408,10 @@ const BuyerMaterialRequirement: React.FC = () => {
                 </TableCell>
               </TableRow>
             ))}
-            {materials.length === 0 && (
+            {rows.length === 0 && (
               <tr>
-                <td colSpan={8} className="text-center text-sm text-text-tertiary py-10">
-                  {t('mrq.empty')}
+                <td colSpan={8} className="text-center text-sm text-text-tertiary py-10" data-testid="mrq-empty">
+                  {materials.length === 0 ? t('mrq.empty') : t('mrq.filter.empty')}
                 </td>
               </tr>
             )}
@@ -403,6 +432,22 @@ const BuyerMaterialRequirement: React.FC = () => {
         <p>{t('mrq.def.planned')}</p>
         <p>{t('mrq.def.end')}</p>
       </section>
+
+      <AboutThisPage>
+        <p>{t('mrq.subtitle')}</p>
+        <p data-testid="mrq-synthetic-note">{t('mrq.synthetic')}</p>
+        <p>{t('mrq.planSource')}</p>
+        {run?.sizing === 'orderSizing' ? (
+          <p data-testid="mrq-sized-note">
+            {t('mrq.sized')}{' '}
+            <Link to="/buyer/order-plan" className="text-action underline">
+              {t('mrq.sized.link')}
+            </Link>
+          </p>
+        ) : (
+          <p data-testid="mrq-interim-note">{t('mrq.interim')}</p>
+        )}
+      </AboutThisPage>
     </AppShellV2>
   );
 };
