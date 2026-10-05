@@ -37,7 +37,16 @@ import AboutThisPage from '@components/forecast/AboutThisPage';
 import DataAsOf from '@components/forecast/DataAsOf';
 import TermTip from '@components/forecast/TermTip';
 import { FORECAST_PAGES, forecastCrumb, forecastTitle } from '@components/forecast/forecastPages';
-import { STEP_HEALTH, currentVersions, failingChecks, recommendedOrders, weeksOverCapacity } from '@components/forecast/cycleCounts';
+import { currentVersions, failingChecks, recommendedOrders, weeksOverCapacity } from '@components/forecast/cycleCounts';
+import type { EngineStep } from '@services/engine/dataHealth';
+
+/**
+ * The engine step this page's Data health chip names. The checklist's input
+ * count reads the SAME step, so the chip and the count cannot disagree. (It was
+ * `STEP_HEALTH.publish` from cycleCounts.ts; #140 removed that table as unread
+ * while #139 had just added this reader — main stopped type-checking.)
+ */
+const PUBLISH_HEALTH_STEP: EngineStep = 'E14-03';
 import PublishedVersions from './BuyerForecasts';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -437,7 +446,7 @@ const PublishChecklist: React.FC<{ run: StabiliseRunView | null }> = ({ run }) =
   const unknown = t('stb.check.unknown');
 
   // The page's own Data health chip count (the checks that reach this step).
-  const failing = health.data ? failingChecks(health.data, STEP_HEALTH.publish) : null;
+  const failing = health.data ? failingChecks(health.data, PUBLISH_HEALTH_STEP) : null;
   const overCapacity = reschedule.data ? weeksOverCapacity(reschedule.data) : null;
   const orders = orderPlan.data ? recommendedOrders(orderPlan.data) : null;
   // Held Trade-off weeks are the weeks beyond the band with no reason
@@ -604,7 +613,7 @@ const BuyerStabilise: React.FC = () => {
           {/* F-02 — the published quantities are the material net requirement, so the
               chip counts the checks that reach Material requirement (and Safety stock,
               which feeds it). */}
-          <DataHealthChip step="E14-03" className="mb-3" />
+          <DataHealthChip step={PUBLISH_HEALTH_STEP} className="mb-3" />
 
           <div className="mb-4">
             <FilterChipsBar<Source>
