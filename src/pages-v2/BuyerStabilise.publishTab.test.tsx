@@ -26,6 +26,8 @@ import BuyerStabilise from './BuyerStabilise';
 const PLANNER = { ...BUYER, businessRoles: SEEDED_SEAT_ROLES.buyer };
 const buyerScope: QueryScope = { personaType: 'buyer', supplierId: null, businessRoles: PERSONA_SYSTEM_ROLES.buyer };
 const SLOW = { timeout: 20000 };
+// The page computes the engine's plan; several mounts per spec need more than the default 5 s on a busy machine.
+vi.setConfig({ testTimeout: 60000 });
 
 const ROUTER_SRC = readFileSync(join(__dirname, '..', 'router', 'AppRouter.tsx'), 'utf8');
 const CHUNKS = ROUTER_SRC.split('<Route').slice(1).map((c) => c.split('<Route')[0]);

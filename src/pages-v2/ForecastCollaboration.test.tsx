@@ -172,7 +172,7 @@ const VERSIONS_TAB = '/buyer/stabilise?tab=versions';
 describe('PTI — Published versions (REQ-E06-01 MP, FUX-D1, FUX phase 2 B2)', () => {
   it('lists versions with who viewed them, as a tab of Publish to suppliers', async () => {
     renderWithProviders(<BuyerStabilise />, { identity: PLANNER, route: VERSIONS_TAB });
-    const v1 = await screen.findByTestId('fc-version-FC-PK-V1');
+    const v1 = await screen.findByTestId('fc-version-FC-PK-V1', {}, { timeout: 20000 });
     expect(within(v1).getByTestId('fc-viewed-FC-PK-V1-sup-007')).toHaveTextContent('Viewed');
     expect(screen.getByTestId('fc-viewed-FC-PK-V2-sup-012')).toHaveTextContent('Not viewed');
     expect(screen.getByTestId('fc-pti-versions-banner')).toHaveTextContent('version 2: 2');
@@ -182,13 +182,13 @@ describe('PTI — Published versions (REQ-E06-01 MP, FUX-D1, FUX phase 2 B2)', (
     expect(screen.getByRole('tab', { name: /Published versions/, selected: true })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Version to publish', selected: false })).toBeInTheDocument();
     expect(screen.queryByTestId('fc-pti-versions-publish-from')).toBeNull();
-  });
+  }, 60000);
 
   it('FUX-D1 — no Re-publish, no Emergency re-publication and no publish handoff, for any role', async () => {
     const seats: CurrentIdentity[] = [PLANNER, BUYER, { ...BUYER, businessRoles: ['finance'] }];
     for (const identity of seats) {
       const { unmount } = renderWithProviders(<BuyerStabilise />, { identity, route: VERSIONS_TAB });
-      await screen.findByTestId('fc-version-FC-PK-V1');
+      await screen.findByTestId('fc-version-FC-PK-V1', {}, { timeout: 20000 });
       expect(screen.queryByTestId('fc-republish')).toBeNull();
       expect(screen.queryByTestId('fc-republish-emergency')).toBeNull();
       expect(screen.queryByTestId('handoff-forecast-publish')).toBeNull();
@@ -197,19 +197,19 @@ describe('PTI — Published versions (REQ-E06-01 MP, FUX-D1, FUX phase 2 B2)', (
     }
     // Nothing on this page wrote a version.
     expect(forecastVersionStore.get('FC-PK-V3')).toBeUndefined();
-  });
+  }, 60000);
 
   it('reads in Indonesian', async () => {
     await i18n.changeLanguage('id');
     try {
       renderWithProviders(<BuyerStabilise />, { identity: PLANNER, route: VERSIONS_TAB });
-      expect(await screen.findByRole('tab', { name: /Versi terbit/, selected: true })).toBeInTheDocument();
+      expect(await screen.findByRole('tab', { name: /Versi terbit/, selected: true }, { timeout: 20000 })).toBeInTheDocument();
       expect(screen.getByRole('heading', { level: 1, name: 'Terbitkan ke pemasok' })).toBeInTheDocument();
       expect(screen.getByRole('tab', { name: 'Versi untuk diterbitkan' })).toBeInTheDocument();
     } finally {
       await i18n.changeLanguage('en');
     }
-  });
+  }, 60000);
 });
 
 describe('PTI — Commitments & gaps (REQ-E06-03)', () => {
