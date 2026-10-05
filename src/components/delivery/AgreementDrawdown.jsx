@@ -153,11 +153,11 @@ const AgreementCard = ({
             </span>
           </div>
         </div>
-        {allDraft ? (
+        {allDraft && (
           <span className="text-xs text-text-tertiary italic shrink-0">
             {t('delivery.agreement.draftNote')}
           </span>
-        ) : null}
+        )}
       </div>
 
       <div className="divide-y divide-border-subtle">
@@ -304,13 +304,13 @@ const ItemBlock = ({
           ) : (
             <StatusPill variant="neutral">{t('delivery.policy.reference')}</StatusPill>
           )}
-          {showPolicyHistory && ledger.policyDeviation ? (
+          {showPolicyHistory && ledger.policyDeviation && (
             <span className="text-[10px] italic text-warning-hover">
               {t('delivery.policy.deviation')}
             </span>
-          ) : null}
+          )}
           {/* Edit tolerance (the THIRD write) — buyer-only, contract DA tab only. */}
-          {canEdit ? (
+          {canEdit && (
             <Button
               variant="outline"
               icon={SlidersHorizontal}
@@ -319,7 +319,7 @@ const ItemBlock = ({
             >
               {t('delivery.policy.edit.action')}
             </Button>
-          ) : null}
+          )}
         </div>
       </div>
 
@@ -327,7 +327,7 @@ const ItemBlock = ({
           when/why stamp (who deferred to the dispatcher). Always attributable.
           Buyer-only: the contract-default, edit date, and reason are buyer-internal
           governance history — the supplier mirror passes showPolicyHistory=false. */}
-      {showPolicyHistory && ledger.policyDeviation ? (
+      {showPolicyHistory && ledger.policyDeviation && (
         <div className="mb-4 text-[11px] text-text-tertiary">
           {t('delivery.policy.deviation.detail', {
             def: formatPolicy(t, policy.contractDefault),
@@ -335,11 +335,11 @@ const ItemBlock = ({
             reason: policy.activeChangeReason ?? '—'
           })}
         </div>
-      ) : null}
+      )}
 
       {/* The inline editor (buyer-only) — presets + custom two-knob + required
           reason + reset-to-default. Portal-only + SIMULATED (the banner says so). */}
-      {canEdit && editing ? (
+      {canEdit && editing && (
         <PolicyEditor
           active={ledger.activePolicy}
           contractDefault={policy.contractDefault}
@@ -349,7 +349,7 @@ const ItemBlock = ({
           onReset={doResetPolicy}
           onCancel={() => setEditing(false)}
         />
-      ) : null}
+      )}
 
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-4">
         <KpiCard
@@ -381,7 +381,7 @@ const ItemBlock = ({
           "release the next N periods" motion. Solid primary = the reserved
           consequential-commit signal (DP2-BUTTON-01): a release transmits to the
           vendor. Portal-only + SIMULATED — the honesty banner above says so. */}
-      {canRelease ? (
+      {canRelease && (
         <div className="flex flex-wrap items-center gap-2 mb-5 rounded-lg border border-border-subtle bg-bg-hover px-4 py-3">
           <span className="text-label text-text-tertiary uppercase">
             {t('delivery.release.section')}
@@ -412,7 +412,7 @@ const ItemBlock = ({
               : t('delivery.release.through', { date: formatDate(effectiveHorizon) })}
           </Button>
         </div>
-      ) : null}
+      )}
 
       {/* The calendar is the shared read-only ReleaseCalendar; the per-line action
           column rides `renderLineAction` (buyer-only): Release on a draft line
