@@ -23,7 +23,6 @@ const FORECAST_ROUTES = [
 const ENGINE = [
   ['hub.nav.pti.engine.materialRequirement', '/buyer/material-requirement'],
   ['hub.nav.pti.engine.safetyStock', '/buyer/safety-stock'],
-  ['hub.nav.pti.engine.forecastBias', '/buyer/forecast-bias'],
   ['hub.nav.pti.engine.dataHealth', '/buyer/data-health'],
   ['hub.nav.pti.engine.modelBacktest', '/buyer/model-backtest'],
   ['hub.nav.pti.engine.reliability', '/buyer/reliability'],
@@ -119,14 +118,30 @@ describe('FUX phase 2 B1 — This week and the Procurement path to the stock che
 });
 
 describe('Planning engine pages in the buyer user menu (F-04)', () => {
-  it('lists all 6, after the existing entries, each with the Planning engine prefix', () => {
+  it('lists every engine page, after the existing entries, each with the Planning engine prefix', () => {
     const buyer = UTILITY_NAV.buyer.map((i) => [i.labelKey, i.path]);
-    expect(buyer.slice(-6)).toEqual(ENGINE);
+    expect(buyer.slice(-ENGINE.length)).toEqual(ENGINE);
     for (const [key] of ENGINE) {
       expect(hubEn[key]).toMatch(new RegExp(`^${hubEn['hub.nav.section.planningEngine']} · `));
       expect(hubId[key]).toMatch(new RegExp(`^${hubId['hub.nav.section.planningEngine']} · `));
     }
     expect(UTILITY_NAV.supplier.map((i) => i.path)).not.toContain('/buyer/data-health');
+  });
+});
+
+describe('FUX phase 2 B5 — Forecast bias is a tab of Forecast quality, not a menu entry', () => {
+  it('the user menu no longer lists Forecast bias, and no menu reaches its old route', () => {
+    const utility = UTILITY_NAV.buyer;
+    // Population control: the user menu is read, and still holds its engine pages.
+    expect(utility.map((i) => i.path)).toContain('/buyer/model-backtest');
+    expect(utility.map((i) => i.path)).not.toContain('/buyer/forecast-bias');
+    expect(utility.map((i) => i.labelKey)).not.toContain('hub.nav.pti.engine.forecastBias');
+    for (const role of ['MP', 'BUY'] as const) {
+      const paths = navFor('buyer', role).flatMap((sct) => sct.items.map((i) => i.path));
+      expect(paths).not.toContain('/buyer/forecast-bias');
+    }
+    // Forecast quality, which now holds the bias tab, stays in the planner's Review section.
+    expect(sectionForPath('/buyer/demand-forecast', 'MP')?.id).toBe('review');
   });
 });
 

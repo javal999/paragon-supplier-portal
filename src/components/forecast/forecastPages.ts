@@ -1,7 +1,7 @@
 import type { TFunction } from 'i18next';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// THE 13 BUYER FORECAST PAGES — where each sits in the cycle (F-05, F-19).
+// THE BUYER FORECAST PAGES — where each sits in the cycle (F-05, F-19).
 //
 // Forecast UX phase 1, task A4. One row per page: its route, the menu section
 // that holds it (task A1's `weeklyPlan`, `review` or `planningEngine`), the key
@@ -32,12 +32,11 @@ export type ForecastPageId =
   | 'stockCheck'
   | 'materialRequirement'
   | 'safetyStock'
-  | 'forecastBias'
   | 'dataHealth'
   | 'modelBacktest'
   | 'reliability';
 
-/** A page a purpose header may link to: one of the 13, or the Supplier scorecard. */
+/** A page a purpose header may link to: one of the forecast pages, or the Supplier scorecard. */
 export type ForecastLinkTarget = ForecastPageId | 'performance';
 
 type SectionKey = 'hub.nav.section.weeklyPlan' | 'hub.nav.section.review' | 'hub.nav.section.planningEngine';
@@ -69,9 +68,9 @@ export const FORECAST_PAGES: Readonly<Record<ForecastPageId, ForecastPage>> = Ob
   stockCheck: { path: '/buyer/fs-reconcile', titleKey: 'hub.nav.pti.stockCheck', sectionKey: REVIEW, uses: 'forecastQuality', next: 'whatToOrder' },
   materialRequirement: { path: '/buyer/material-requirement', titleKey: 'mrq.title', sectionKey: ENGINE, uses: 'safetyStock', next: 'whatToOrder' },
   safetyStock: { path: '/buyer/safety-stock', titleKey: 'sst.title', sectionKey: ENGINE, uses: 'reliability', next: 'whatToOrder' },
-  forecastBias: { path: '/buyer/forecast-bias', titleKey: 'fb.title', sectionKey: ENGINE, uses: 'forecastQuality', next: 'modelBacktest' },
   dataHealth: { path: '/buyer/data-health', titleKey: 'dh.title', sectionKey: ENGINE, uses: 'stockCheck', next: 'whatToOrder' },
-  modelBacktest: { path: '/buyer/model-backtest', titleKey: 'mb.title', sectionKey: ENGINE, uses: 'forecastBias', next: 'forecastQuality' },
+  // FUX phase 2 B5 — Forecast bias is now Forecast quality's bias tab, so the backtest's Uses link goes there.
+  modelBacktest: { path: '/buyer/model-backtest', titleKey: 'mb.title', sectionKey: ENGINE, uses: 'forecastQuality', next: 'forecastQuality' },
   reliability: { path: '/buyer/reliability', titleKey: 'rel.pti.title', sectionKey: ENGINE, uses: 'performance', next: 'makeRoom' },
 });
 
