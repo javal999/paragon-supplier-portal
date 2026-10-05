@@ -12,6 +12,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { MockCommandService } from './MockCommandService';
 import { invoiceStore } from './stores/invoiceStore';
 import { goodsReceiptStore } from './stores/goodsReceiptStore';
+import { sdcClock } from '../../sdc/clock';
 import { isOverdue, daysOutstanding } from '../invoiceProjection';
 import { DataError } from '../types';
 import type { QueryScope } from '../types';
@@ -118,7 +119,12 @@ describe('Invoice command integration — supplier creation-shape', () => {
     await fire(sup007, 't_invoice_submit', id, { amount: 250_000_000 });
 
     const inv = invoiceStore.get(id)!;
-    const now = new Date().toISOString();
+    // ⚠️ JUDGED ON THE HUB CLOCK, NOT THE MACHINE CLOCK. The command stamps
+    // submittedDate from `sdcClock` (pinned to `DECLARED_PRESENT`), so "today"
+    // here must be the same clock. This line read `new Date()` and went red on
+    // 2026-10-01 with no commit involved: the default dueDate is
+    // DECLARED_PRESENT + 30 = 2026-09-30, and the wall clock passed it.
+    const now = sdcClock.now();
     expect(inv.status).toBe('Submitted'); // overdue-eligible — the failing case
     expect(inv.submittedDate).not.toBe('');
     expect(inv.dueDate).not.toBe('');
