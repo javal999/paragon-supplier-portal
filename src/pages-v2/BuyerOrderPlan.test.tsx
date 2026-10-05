@@ -284,6 +284,9 @@ const openWhy = async (code: string, week: string) => {
   return { toggle, panel };
 };
 
+// Each spec renders up to 3 engine pages; under a loaded runner that passes 5 s.
+const PANEL_TIMEOUT = 30000;
+
 describe('BuyerOrderPlan — "Why this quantity" panel (FUX2 B3)', () => {
   it('shows the same net requirement as Material requirement and the same safety stock as Safety stock targets for that material', async () => {
     const { rec, m } = await firstRec();
@@ -314,7 +317,7 @@ describe('BuyerOrderPlan — "Why this quantity" panel (FUX2 B3)', () => {
     // Term tips at the point of use.
     expect(within(panel).getByTestId('term-tip-safety-stock')).toBeInTheDocument();
     expect(within(panel).getByTestId('term-tip-reorder-point')).toBeInTheDocument();
-  });
+  }, PANEL_TIMEOUT);
 
   it('the panel’s links reach the 2 full pages', async () => {
     const { rec } = await firstRec();
@@ -328,7 +331,7 @@ describe('BuyerOrderPlan — "Why this quantity" panel (FUX2 B3)', () => {
     ({ panel } = await openWhy(rec.materialCode, rec.weekStart));
     fireEvent.click(within(panel).getByTestId('op-wq-link-safety'));
     expect(await screen.findByRole('heading', { name: 'Safety stock targets' })).toBeInTheDocument();
-  });
+  }, PANEL_TIMEOUT);
 
   it('opens and closes by keyboard: focus moves into the panel, Escape closes it and returns focus to its control', async () => {
     const { rec } = await firstRec();
@@ -352,7 +355,7 @@ describe('BuyerOrderPlan — "Why this quantity" panel (FUX2 B3)', () => {
     expect(await screen.findByTestId('op-wq-panel')).toBeInTheDocument();
     fireEvent.click(toggle);
     expect(screen.queryByTestId('op-wq-panel')).toBeNull();
-  });
+  }, PANEL_TIMEOUT);
 
   it('renders in Indonesian', async () => {
     const { rec } = await firstRec();
@@ -365,5 +368,5 @@ describe('BuyerOrderPlan — "Why this quantity" panel (FUX2 B3)', () => {
     expect(await within(panel).findByText('Kebutuhan bersih')).toBeInTheDocument();
     expect(within(panel).getByTestId('op-wq-link-safety')).toHaveTextContent('Buka Target stok pengaman');
     expect(screen.getByTestId('op-why')).toHaveTextContent('Halaman lengkap di balik setiap kuantitas:');
-  });
+  }, PANEL_TIMEOUT);
 });
