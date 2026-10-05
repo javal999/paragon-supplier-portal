@@ -1,6 +1,7 @@
 # TypeScript → JavaScript conversion playbook
 
-**Status:** written from the Phase 3 pilot (`src/components/ui-v2`, 62 files), 2026-10-02.
+**Status:** pilot 2026-10-02 (`src/components/ui-v2`, 62 files); converter + dry run on all
+1,182 remaining files 2026-10-05.
 **Applies to:** Phase 4 (the rest of `src/`) and Phase 7 (forecast, deferred while its
 requirements are written). Earlier phases: tooling (#117), lint fixes (#118), import aliases
 (#119), React 19 / Router 7 / Vite 7 (#120).
@@ -9,22 +10,70 @@ The portal moves to JavaScript to match the company React boilerplate. Types are
 checked by `tsc` (`allowJs` + `checkJs` in `tsconfig.json`). Shared contract types stay in
 `.d.ts` files (owner ruling). Comments are kept verbatim (owner requirement).
 
-## The procedure, per folder
+## The procedure, per folder (since 2026-10-05: our own converter)
 
-1. **Draft with the tool, from the repo root** (so imported types resolve; run elsewhere, props
-   collapse to `any`):
-   `npx ts-to-jsdoc@2.4.0 -o <tmp> src/<folder>`
-2. **Rename with history:** `git mv X.tsx X.jsx` / `git mv X.ts X.js`, then copy the tool's
-   output over each file. The tool names every file `.js`; a file with JSX must be `.jsx`.
-3. **Mechanical repairs:** `node scripts/codemods/jsdoc-fixups.mjs <files>` (idempotent).
-4. **Format:** `npx prettier --write <files>`.
-5. **Hand repairs** (see "What the tool loses"), file by file against the original
-   (`git show main:<path>.tsx`).
-6. **Done when all pass:**
-   - `node scripts/codemods/check-comments-kept.mjs <files>` → 0 lost
+The pilot drafted with `ts-to-jsdoc`, which re-prints files and loses comments and types (see
+"What the tool loses" below). `scripts/codemods/ts-to-js.mjs` replaces it: it parses each file
+and applies small text edits to the ORIGINAL, so comments, blank lines and formatting it does
+not touch stay byte-identical. Its header lists every translation it makes.
+
+1. **Convert** (renames with `git mv`, so history follows):
+   `node scripts/codemods/ts-to-js.mjs src/<folder>/**/*.{ts,tsx}`
+   It prints every spot it could not translate; each keeps a `TODO(ts-to-js)` comment.
+2. **Point references at the new names:** `node scripts/codemods/rename-references.mjs`.
+   Specs that read a file by path, guards that list file names, configs
+   (`vitest.config.ts` `setupFiles`, `app/index.html` → `../src/main.jsx`) and comments that
+   name a file. It reports a bare name it cannot place (`'types.ts'` names seven files).
+3. **Format:** `npx prettier --write <files>`.
+4. **Repair by hand** what was flagged, what `tsc` reports, and every guard that reads
+   TypeScript declarations as text (see "Guards that parse TypeScript" below).
+5. **Done when all pass:**
+   - `node scripts/codemods/check-comments-kept.mjs <files>` → 0 lost (it uses the TypeScript
+     parser to find comments; a regex read the `/*` in `'/src/**/*.ts'` as a comment)
    - `npx tsc --noEmit -p tsconfig.json` and `-p tsconfig.vitest.json` → 0 errors
-   - `npx eslint <files>` → 0 errors (JSDoc is required on exported functions)
+   - `npx eslint <files>` → 0 errors
    - `npm run gates` under Node 24 (`npx -y -p node@24 node scripts/gates.mjs`)
+
+## Dry run of the converter on everything (2026-10-05)
+
+All 1,182 non-forecast TypeScript files outside `ui-v2`, converted in a scratch worktree on top
+of the pilot plus `main`. Baseline before converting: 525 spec files, 8,122 tests, 0 failing.
+
+| Step | Result |
+|---|---|
+| `ts-to-js.mjs` | 20 s; 1 spot flagged for a person |
+| Prettier | 0 files it cannot parse |
+| `check-comments-kept.mjs` | 0 files lost comment text |
+| `tsc` (specs surface) | 116 errors (app surface: 40) |
+| `rename-references.mjs` | 1,731 references rewritten in 485 files; 30 ambiguous left |
+| Test suite after both | 26 of 525 spec files failing (48 tests) — **none a behaviour change** |
+
+Every one of the 26 reads source STRUCTURE, not behaviour: a guard matching `nowIso: string`
+or `Record<Grade, …>` in a file's text, a contract test pinning a `.ts` path inside
+`docs/contracts/*.md`, a population derived from `interface` declarations.
+
+## Guards that parse TypeScript, and the ratified contracts
+
+Two kinds of failure in the dry run are not tooling problems:
+
+1. **Guards that read a declaration's TEXT** (`enforcement`, `projectionGate`,
+   `storedFieldGate`, `chartPalette`, `complianceSapSync`, `retiredDayFields` …). After
+   conversion the same fact is written as JSDoc (`@param {string} nowIso`). Each guard needs its
+   matcher taught the JSDoc form, with a known-good and known-bad probe, folder by folder as the
+   files it reads convert.
+2. **The ratified contracts** (`docs/contracts/C1`, `C3`, `C9`, `C11`, `C12`) cite 43 source
+   files by path and describe TypeScript declarations; specs pin those citations. `CLAUDE.md`
+   records that a contract changes only by re-ratification with SOMO. **Recommendation, pending
+   the owner:** treat the contract-cited files like forecast — they stay TypeScript until their
+   contracts are re-ratified — rather than let a tooling change move a governed document.
+   `src/services/data/types.ts` is also one of them, and it holds two runtime enums
+   (`POStatus`, `ChannelType`), which conflicts with the earlier "keep it as `types.d.ts`" ruling
+   (a `.d.ts` file cannot hold runtime values).
+
+## Phase 3 pilot history
+
+The rest of this page records the pilot, drafted with `ts-to-jsdoc` and repaired by hand
+(`scripts/codemods/jsdoc-fixups.mjs`). It explains why the converter exists.
 
 ## What the tool loses, measured on the pilot
 
