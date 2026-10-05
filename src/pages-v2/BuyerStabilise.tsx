@@ -30,6 +30,7 @@ import { refusedByPolicy } from '@services/transitions/refusalMessage';
 import { qtyOf } from './materialPlan/planDisplay';
 import DataHealthChip from '@components/forecast/DataHealthChip';
 import PurposeHeader from '@components/forecast/PurposeHeader';
+import CycleSteps from '@components/forecast/CycleSteps';
 import SimulatedDataBanner from '@components/forecast/SimulatedDataBanner';
 import AboutThisPage from '@components/forecast/AboutThisPage';
 import DataAsOf from '@components/forecast/DataAsOf';
@@ -397,6 +398,7 @@ const BuyerStabilise: React.FC = () => {
     <AppShellV2>
       <PageHeader breadcrumb={crumb} title={forecastTitle(t, 'publish')} />
       <PurposeHeader page="publish" />
+      <CycleSteps current="publish" />
       <SimulatedDataBanner capability="engineDataset" />
       <DataAsOf
         date={plan?.planMadeAt ?? null}
