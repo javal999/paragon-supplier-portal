@@ -5,6 +5,8 @@
 // put in front of a Material Planner without explaining them: the zones of a
 // published plan (Firm, Trade-off), the plan-movement measure (MASC), the bias
 // alarm (tracking signal), the reorder point and the demand range (P50/P90).
+// Phase 2 task B3 adds safety stock, tipped in What to order's
+// "Why this quantity" panel.
 // The pages show each definition at the point of use through `TermTip`
 // (`components/forecast/TermTip.tsx`), which reads it from here, so a
 // correction is still one edit in one place.
@@ -17,7 +19,7 @@
 import type { GlossaryOf } from './types';
 
 /** The planning terms a forecast page shows with a tip. */
-export type PlanningTerm = 'Firm' | 'Trade-off' | 'MASC' | 'Tracking signal' | 'Reorder point' | 'P50/P90';
+export type PlanningTerm = 'Firm' | 'Trade-off' | 'MASC' | 'Tracking signal' | 'Reorder point' | 'P50/P90' | 'Safety stock';
 
 export const PLANNING_TERM_GLOSSARY = {
   Firm: {
@@ -43,5 +45,9 @@ export const PLANNING_TERM_GLOSSARY = {
   'P50/P90': {
     en: 'The demand range. P50 is the middle estimate, with half the outcomes above it; P90 is the level demand stays under nine weeks in ten.',
     id: 'Rentang permintaan. P50 adalah perkiraan tengah, dengan separuh hasil di atasnya; P90 adalah tingkat yang tidak dilampaui permintaan pada sembilan dari sepuluh minggu.',
+  },
+  'Safety stock': {
+    en: 'Stock kept on hand to cover demand above the forecast. The plan orders so that stock does not fall below it.',
+    id: 'Stok yang disimpan untuk menutup permintaan di atas prakiraan. Rencana memesan agar stok tidak turun di bawahnya.',
   },
 } satisfies GlossaryOf<PlanningTerm>;

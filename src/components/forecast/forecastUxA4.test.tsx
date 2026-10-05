@@ -207,8 +207,9 @@ describe('page-specific copy (F-12, F-16, F-21)', () => {
 describe('planning terms (F-09)', () => {
   const TERMS = Object.keys(PLANNING_TERM_GLOSSARY) as PlanningTerm[];
 
-  it('registers the six terms as a glossary vocabulary', () => {
-    expect(TERMS).toEqual(['Firm', 'Trade-off', 'MASC', 'Tracking signal', 'Reorder point', 'P50/P90']);
+  it('registers the seven terms as a glossary vocabulary', () => {
+    // FUX2 B3 adds Safety stock, tipped in the "Why this quantity" panel.
+    expect(TERMS).toEqual(['Firm', 'Trade-off', 'MASC', 'Tracking signal', 'Reorder point', 'P50/P90', 'Safety stock']);
     expect(GLOSSARY_REGISTRIES.map((r) => r.sourceType)).toContain('PlanningTerm');
   });
 
