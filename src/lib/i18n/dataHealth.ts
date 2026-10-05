@@ -15,8 +15,15 @@ export const dataHealthEn: Record<string, string> = {
   'dh.owner':
     'The Master Data Management team owns these feeds and their SAP integration (ENG-D1). Confirmations and plan versions are the Hub’s own records.',
   'dh.notBuilt':
-    'Not built yet: the engine does not yet leave refused records out of its calculations, and its result pages do not yet carry this page’s flag. Until then, this page is where a failed check shows.',
+    'Not built yet: the engine does not yet leave refused records out of its calculations. Material requirement, Order plan and Reschedule open orders show how many checks that reach them are failing, and link here.',
   'dh.limitsWhere': 'Freshness limits are set on Administration → Tolerances and rule values.',
+
+  // F-02 — the chip on the result pages (DataHealthChip).
+  'dh.chip.failing_one': 'Inputs: {{count}} check failing',
+  'dh.chip.failing_other': 'Inputs: {{count}} checks failing',
+  'dh.chip.pass': 'Inputs: all checks pass',
+  'dh.chip.unknown': 'Inputs: not checked',
+  'dh.chip.link': 'See Data health',
 
   'dh.kpi.feeds': 'Feeds checked',
   'dh.kpi.feeds.sub': '{{mdm}} from the Master Data Management team, {{hub}} from the Hub',
@@ -161,8 +168,14 @@ export const dataHealthId: Record<string, string> = {
   'dh.owner':
     'Tim Master Data Management memiliki umpan-umpan ini dan integrasi SAP-nya (ENG-D1). Konfirmasi dan versi rencana adalah catatan Hub sendiri.',
   'dh.notBuilt':
-    'Belum dibangun: mesin belum mengeluarkan catatan yang ditolak dari perhitungannya, dan halaman hasilnya belum membawa tanda dari halaman ini. Sampai saat itu, pemeriksaan yang gagal terlihat di halaman ini.',
+    'Belum dibangun: mesin belum mengeluarkan catatan yang ditolak dari perhitungannya. Kebutuhan material, Rencana pesanan, dan Jadwal ulang pesanan terbuka menunjukkan berapa pemeriksaan yang menjangkaunya gagal, dan menautkan ke halaman ini.',
   'dh.limitsWhere': 'Batas kesegaran diatur di Administrasi → Toleransi dan nilai aturan.',
+
+  // F-02 — chip di halaman hasil (DataHealthChip).
+  'dh.chip.failing_other': 'Masukan: {{count}} pemeriksaan gagal',
+  'dh.chip.pass': 'Masukan: semua pemeriksaan lolos',
+  'dh.chip.unknown': 'Masukan: belum diperiksa',
+  'dh.chip.link': 'Lihat Kesehatan data',
 
   'dh.kpi.feeds': 'Umpan diperiksa',
   'dh.kpi.feeds.sub': '{{mdm}} dari tim Master Data Management, {{hub}} dari Hub',
