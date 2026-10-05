@@ -34,7 +34,9 @@ describe('BuyerDemandForecast — the planner page', () => {
     expect(v.mainModel).toBe('notBuilt');
     expect(v.materialPlanningSource).toBe('sapPlan');
     renderWithProviders(<BuyerDemandForecast />, { identity: BUYER, route: '/buyer/demand-forecast' });
-    expect(await screen.findByRole('heading', { name: 'Demand forecast' })).toBeInTheDocument();
+    // FUX A4: the title is the menu label (task A1), "Forecast quality".
+    expect(await screen.findByRole('heading', { name: 'Forecast quality' })).toBeInTheDocument();
+    expect(screen.getByTestId('simulated-data-banner')).toHaveTextContent('Sample data. Nothing here reaches suppliers or SAP.');
     expect(screen.queryByText('Live')).toBeNull();
     expect(screen.getByTestId('df-main-not-built')).toHaveTextContent('The main model is not built');
     expect(screen.getByTestId('df-source-note')).toHaveTextContent('still run on SAP’s plan');
@@ -128,7 +130,7 @@ describe('BuyerDemandForecast — the planner page', () => {
     expect(Object.keys(demandForecastId).sort()).toEqual(Object.keys(demandForecastEn).sort());
     await i18n.changeLanguage('id');
     renderWithProviders(<BuyerDemandForecast />, { identity: BUYER, route: '/buyer/demand-forecast' });
-    expect(await screen.findByRole('heading', { name: 'Prakiraan permintaan' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Kualitas prakiraan' })).toBeInTheDocument();
     expect(screen.getByTestId('df-main-not-built')).toHaveTextContent('Model utama belum dibangun');
   });
 });

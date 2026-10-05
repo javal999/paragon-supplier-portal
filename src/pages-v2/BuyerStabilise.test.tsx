@@ -32,8 +32,9 @@ describe('BuyerStabilise — the planner page (REQ-E14-06)', () => {
   it('renders inside the app shell with the SIMULATED engine pill — never Live — and says nothing here reaches a supplier', async () => {
     expect(isLive('engineDataset')).toBe(false);
     renderWithProviders(<BuyerStabilise />, { identity: PLANNER, route: '/buyer/stabilise' });
-    expect(await screen.findByRole('heading', { name: 'Stabilise and publish' })).toBeInTheDocument();
-    expect(screen.getByText('Synthetic data · awaiting the MDM SAP feed')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Publish to suppliers' })).toBeInTheDocument();
+    // FUX A4 (F-14): one simulated-data banner in place of the engine pill.
+    expect(screen.getByTestId('simulated-data-banner')).toHaveTextContent('Sample data. Nothing here reaches suppliers or SAP.');
     expect(screen.queryByText('Live')).toBeNull();
     expect(screen.getByTestId('stb-withheld-note')).toHaveTextContent('Nothing on this page is shown to a supplier');
     expect(screen.getAllByRole('navigation').length).toBeGreaterThan(0);
@@ -42,7 +43,7 @@ describe('BuyerStabilise — the planner page (REQ-E14-06)', () => {
   it('BR-06: the page says the demand range now exists but is not published, links to it, and shows the quantity only', async () => {
     renderWithProviders(<BuyerStabilise />, { identity: PLANNER, route: '/buyer/stabilise' });
     const note = await screen.findByTestId('stb-range-note');
-    expect(note).toHaveTextContent('now exists on the Demand forecast page');
+    expect(note).toHaveTextContent('now exists on the Forecast quality page');
     expect(note).toHaveTextContent('It is not published here');
     expect(note).toHaveTextContent('Suppliers see the quantity only');
     expect(screen.getByTestId('stb-range-link')).toHaveAttribute('href', '/buyer/demand-forecast');
@@ -130,7 +131,7 @@ describe('BuyerStabilise — the planner page (REQ-E14-06)', () => {
   it('reads in Indonesian', async () => {
     await i18n.changeLanguage('id');
     renderWithProviders(<BuyerStabilise />, { identity: PLANNER, route: '/buyer/stabilise' });
-    expect(await screen.findByRole('heading', { name: 'Stabilkan dan publikasikan' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Terbitkan ke pemasok' })).toBeInTheDocument();
     expect(screen.getByTestId('stb-publish-withheld')).toHaveTextContent('tidak pernah ditampilkan ke pemasok');
     expect(screen.getByTestId('stb-publish-withheld')).toHaveTextContent('Ini satu-satunya tempat rencana diterbitkan ke pemasok.');
     await screen.findByTestId('stb-run-engine');

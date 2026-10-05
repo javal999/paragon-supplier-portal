@@ -3,8 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import AppShellV2 from '../components/layout-v2/AppShellV2';
 import PageHeader from '../components/ui-v2/PageHeader';
-import PageMetaLine from '../components/ui-v2/PageMetaLine';
-import SampleDataBadge from '../components/ui-v2/SampleDataBadge';
 import SubTabs from '../components/ui-v2/SubTabs';
 import Table from '../components/ui-v2/Table';
 import TableHeader, { TableHeaderCell } from '../components/ui-v2/TableHeader';
@@ -14,7 +12,12 @@ import Data from '../components/ui-v2/Data';
 import StatusPill from '../components/ui-v2/StatusPill';
 import LoadingState from '../components/ui-v2/LoadingState';
 import ErrorState from '../components/ui-v2/ErrorState';
-import { formatDate, formatDateTime } from '../lib/format';
+import { formatDateTime } from '../lib/format';
+import PurposeHeader from '../components/forecast/PurposeHeader';
+import SimulatedDataBanner from '../components/forecast/SimulatedDataBanner';
+import AboutThisPage from '../components/forecast/AboutThisPage';
+import DataAsOf from '../components/forecast/DataAsOf';
+import { forecastCrumb, forecastTitle } from '../components/forecast/forecastPages';
 import { useForecastVersions } from '../services/query/hooks';
 import type { ForecastStream } from '../services/sdc/types';
 import { forecastNow } from './forecasts/forecastDisplay';
@@ -37,7 +40,7 @@ const BuyerForecasts: React.FC = () => {
   const versionsQuery = useForecastVersions();
   const [stream, setStream] = useState<ForecastStream>('packaging');
   const nowIso = forecastNow();
-  const crumb = [t('hub.nav.section.forecast'), t('fc.pti.versions.title')];
+  const crumb = forecastCrumb(t, 'publishedVersions');
 
   const versions = useMemo(() => versionsQuery.data?.items ?? [], [versionsQuery.data]);
 
@@ -51,11 +54,10 @@ const BuyerForecasts: React.FC = () => {
 
   return (
     <AppShellV2>
-      <PageHeader breadcrumb={crumb} title={t('fc.pti.versions.title')} subtitle={t('fc.pti.versions.subtitle')} />
-      <PageMetaLine className="-mt-6 mb-2">
-        {t('fc.asOf')} <Data>{formatDate(nowIso)}</Data>
-        <SampleDataBadge className="ml-3 align-middle" />
-      </PageMetaLine>
+      <PageHeader breadcrumb={crumb} title={forecastTitle(t, 'publishedVersions')} />
+      <PurposeHeader page="publishedVersions" />
+      <SimulatedDataBanner capability="forecastPublications" />
+      <DataAsOf date={nowIso} />
       <p className="text-sm text-text-secondary mb-4" data-testid="fc-pti-versions-publish-from">
         {t('fc.pti.versions.publishFrom')}{' '}
         <Link to="/buyer/stabilise" className="text-action-hover hover:underline" data-testid="fc-pti-versions-publish-link">
@@ -151,6 +153,10 @@ const BuyerForecasts: React.FC = () => {
           </tbody>
         </Table>
       </div>
+
+      <AboutThisPage>
+        <p>{t('fc.pti.versions.subtitle')}</p>
+      </AboutThisPage>
     </AppShellV2>
   );
 };

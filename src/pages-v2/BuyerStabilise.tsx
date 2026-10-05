@@ -3,8 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import AppShellV2 from '@components/layout-v2/AppShellV2';
 import PageHeader from '@components/ui-v2/PageHeader';
-import PageMetaLine from '@components/ui-v2/PageMetaLine';
-import LivenessPill from '@components/ui-v2/LivenessPill';
 import FilterChipsBar from '@components/ui-v2/FilterChipsBar';
 import KpiCard from '@components/ui-v2/KpiCard';
 import StatusPill from '@components/ui-v2/StatusPill';
@@ -30,6 +28,13 @@ import { isLive } from '@services/liveness';
 import { POLICY_HOOKS } from '@services/transitions/policyHooks';
 import { refusedByPolicy } from '@services/transitions/refusalMessage';
 import { qtyOf } from './materialPlan/planDisplay';
+import DataHealthChip from '@components/forecast/DataHealthChip';
+import PurposeHeader from '@components/forecast/PurposeHeader';
+import SimulatedDataBanner from '@components/forecast/SimulatedDataBanner';
+import AboutThisPage from '@components/forecast/AboutThisPage';
+import DataAsOf from '@components/forecast/DataAsOf';
+import TermTip from '@components/forecast/TermTip';
+import { forecastCrumb, forecastTitle } from '@components/forecast/forecastPages';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // STABILISE AND PUBLISH — REQ-E14-06, the Material Planner's view before a plan
@@ -100,7 +105,11 @@ const PeriodTable: React.FC<{ s: StabilisedSeriesView }> = ({ s }) => {
       <Table>
         <TableHeader>
           <TableHeaderCell>{t('stb.detail.col.week')}</TableHeaderCell>
-          <TableHeaderCell>{t('stb.detail.col.zone')}</TableHeaderCell>
+          <TableHeaderCell>
+            <span className="inline-flex items-center gap-1">
+              {t('stb.detail.col.zone')} <TermTip term="Firm" /> <TermTip term="Trade-off" />
+            </span>
+          </TableHeaderCell>
           <TableHeaderCell>{t('stb.detail.col.raw')}</TableHeaderCell>
           <TableHeaderCell>{t('stb.detail.col.previous')}</TableHeaderCell>
           <TableHeaderCell>{t('stb.detail.col.first')}</TableHeaderCell>
@@ -186,7 +195,14 @@ const RunSection: React.FC<{ run: StabiliseRunView; source: Source }> = ({ run, 
               <span data-testid="stb-kpi-masc-stab">{ratio(stabilised.masc)}</span>
             </span>
           }
-          subtitle={<span className="text-text-tertiary">{t('stb.kpi.masc.sub', { count: raw.mascPairs })}</span>}
+          subtitle={
+            <span className="text-text-tertiary">
+              {t('stb.kpi.masc.sub', { count: raw.mascPairs })} <TermTip term="MASC" />
+              <span className="block" data-testid="stb-scale-hint">
+                {t('fux.scale.masc')}
+              </span>
+            </span>
+          }
         />
         <KpiCard
           eyebrow={t('stb.kpi.share')}
@@ -277,7 +293,11 @@ const RunSection: React.FC<{ run: StabiliseRunView; source: Source }> = ({ run, 
               <TableHeader>
                 <TableHeaderCell>{t('stb.series.col.material')}</TableHeaderCell>
                 <TableHeaderCell>{t('stb.series.col.supplier')}</TableHeaderCell>
-                <TableHeaderCell>{t('stb.series.col.zones')}</TableHeaderCell>
+                <TableHeaderCell>
+                  <span className="inline-flex items-center gap-1">
+                    {t('stb.series.col.zones')} <TermTip term="Firm" /> <TermTip term="Trade-off" />
+                  </span>
+                </TableHeaderCell>
                 <TableHeaderCell>{t('stb.series.col.held')}</TableHeaderCell>
                 <TableHeaderCell>{t('stb.series.col.masc')}</TableHeaderCell>
                 <TableHeaderCell>{t('stb.series.col.open')}</TableHeaderCell>
@@ -341,7 +361,7 @@ const BuyerStabilise: React.FC = () => {
   const publishAvailability = useVerbAvailability('forecast:publish');
   const versionsQuery = useForecastVersions();
   const [source, setSource] = useState<Source>('engine');
-  const crumb = [t('hub.nav.section.forecast'), t('stb.title')];
+  const crumb = forecastCrumb(t, 'publish');
   // X-03 — the registry's own answer, read at render; the verb reads it again.
   const withheld = !isLive('engineDataset');
 
@@ -375,37 +395,38 @@ const BuyerStabilise: React.FC = () => {
 
   return (
     <AppShellV2>
-      <PageHeader breadcrumb={crumb} title={t('stb.title')} subtitle={t('stb.subtitle')} actions={<LivenessPill capability="engineDataset" />} />
-      <PageMetaLine className="-mt-6 mb-2">
-        {plan?.planMadeAt ? (
-          <>
-            {t('stb.meta.plan')} <Data>{formatDate(plan.planMadeAt)}</Data>
-          </>
-        ) : (
-          t('stb.meta.noPlan')
-        )}
-        {pv && pv.packaging.length > 0 && (
-          <>
-            {' · '}
-            {t('stb.meta.versions', { packaging: pv.packaging.length, raw: pv.rawMaterial.length, from: formatDate(pv.packaging[0]) })}
-          </>
-        )}
-      </PageMetaLine>
-      <p className="text-xs text-text-tertiary mb-1" data-testid="stb-synthetic-note">
-        {t('stb.synthetic')}
-      </p>
-      {withheld && (
-        <p className="text-xs text-warning-hover mb-1" data-testid="stb-withheld-note">
-          {t('stb.withheld')}
-        </p>
-      )}
-      <p className="text-xs text-text-tertiary mb-1" data-testid="stb-range-note">
-        {t('stb.range')}{' '}
-        <Link to="/buyer/demand-forecast" className="text-action-hover hover:underline" data-testid="stb-range-link">
-          {t('stb.range.link')}
-        </Link>
-      </p>
-      <p className="text-xs text-text-tertiary mb-4">{t('stb.replay')}</p>
+      <PageHeader breadcrumb={crumb} title={forecastTitle(t, 'publish')} />
+      <PurposeHeader page="publish" />
+      <SimulatedDataBanner capability="engineDataset" />
+      <DataAsOf
+        date={plan?.planMadeAt ?? null}
+        detail={
+          plan?.planMadeAt ? (
+            pv && pv.packaging.length > 0 ? (
+              t('stb.meta.versions', { packaging: pv.packaging.length, raw: pv.rawMaterial.length, from: formatDate(pv.packaging[0]) })
+            ) : null
+          ) : (
+            t('stb.meta.noPlan')
+          )
+        }
+      />
+      {/* F-02 — the published quantities are the material net requirement, so the
+          chip counts the checks that reach Material requirement (and Safety stock,
+          which feeds it). */}
+      <DataHealthChip step="E14-03" className="mb-3" />
+
+      <div className="mb-4">
+        <FilterChipsBar<Source>
+          options={[
+            { id: 'engine', label: t('stb.source.engine') },
+            { id: 'sapHistory', label: t('stb.source.sapHistory') },
+          ]}
+          value={source}
+          onChange={setSource}
+        />
+      </div>
+
+      {run && <RunSection key={source} run={run} source={source} />}
 
       {plan && (
         <section className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-5" data-testid="stb-settings">
@@ -441,18 +462,6 @@ const BuyerStabilise: React.FC = () => {
         </section>
       )}
 
-      <div className="mb-4">
-        <FilterChipsBar<Source>
-          options={[
-            { id: 'engine', label: t('stb.source.engine') },
-            { id: 'sapHistory', label: t('stb.source.sapHistory') },
-          ]}
-          value={source}
-          onChange={setSource}
-        />
-      </div>
-
-      {run && <RunSection key={source} run={run} source={source} />}
 
       <section className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-6" data-testid="stb-publish">
         <h2 className="text-section text-text-primary mb-1">{t('stb.publish.title')}</h2>
@@ -496,6 +505,19 @@ const BuyerStabilise: React.FC = () => {
         <p>{t('stb.def.masc')}</p>
         <p>{t('stb.def.share')}</p>
       </section>
+
+      <AboutThisPage>
+        <p>{t('stb.subtitle')}</p>
+        <p data-testid="stb-synthetic-note">{t('stb.synthetic')}</p>
+        {withheld && <p data-testid="stb-withheld-note">{t('stb.withheld')}</p>}
+        <p data-testid="stb-range-note">
+          {t('stb.range')}{' '}
+          <Link to="/buyer/demand-forecast" className="text-action-hover hover:underline" data-testid="stb-range-link">
+            {t('stb.range.link')}
+          </Link>
+        </p>
+        <p>{t('stb.replay')}</p>
+      </AboutThisPage>
     </AppShellV2>
   );
 };

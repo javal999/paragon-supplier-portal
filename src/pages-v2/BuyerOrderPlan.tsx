@@ -4,8 +4,6 @@ import { Link } from 'react-router-dom';
 import { CartesianGrid, Legend, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import AppShellV2 from '@components/layout-v2/AppShellV2';
 import PageHeader from '@components/ui-v2/PageHeader';
-import PageMetaLine from '@components/ui-v2/PageMetaLine';
-import LivenessPill from '@components/ui-v2/LivenessPill';
 import FilterChipsBar from '@components/ui-v2/FilterChipsBar';
 import KpiCard from '@components/ui-v2/KpiCard';
 import StatusPill from '@components/ui-v2/StatusPill';
@@ -19,6 +17,11 @@ import LoadingState from '@components/ui-v2/LoadingState';
 import ErrorState from '@components/ui-v2/ErrorState';
 import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
 import DataHealthChip from '@components/forecast/DataHealthChip';
+import PurposeHeader from '@components/forecast/PurposeHeader';
+import SimulatedDataBanner from '@components/forecast/SimulatedDataBanner';
+import AboutThisPage from '@components/forecast/AboutThisPage';
+import DataAsOf from '@components/forecast/DataAsOf';
+import { forecastCrumb, forecastTitle } from '@components/forecast/forecastPages';
 import { useToast } from '@hooks/useToast';
 import { useRefusalText } from '@hooks/useRefusalText';
 import { useVerbAvailability } from '@hooks/useVerbAvailability';
@@ -326,7 +329,7 @@ const BuyerOrderPlan: React.FC = () => {
   const planAvailability = useVerbAvailability('calloff:plan');
   const [kind, setKind] = useState<WarehouseKind>('packaging');
   const [drafted, setDrafted] = useState<ReadonlySet<string>>(new Set());
-  const crumb = [t('hub.nav.section.forecast'), t('op.title')];
+  const crumb = forecastCrumb(t, 'whatToOrder');
   const run = query.data ?? null;
   const today = sdcClock.now().slice(0, 10);
   // X-03 — the registry's own answer, read at render; the verb reads it again at release.
@@ -392,35 +395,33 @@ const BuyerOrderPlan: React.FC = () => {
 
   return (
     <AppShellV2>
-      <PageHeader
-        breadcrumb={crumb}
-        title={t('op.title')}
-        subtitle={t('op.subtitle')}
-        actions={<LivenessPill capability="engineDataset" />}
+      <PageHeader breadcrumb={crumb} title={forecastTitle(t, 'whatToOrder')} />
+      <PurposeHeader page="whatToOrder" />
+      <SimulatedDataBanner capability="engineDataset" />
+      <DataAsOf
+        date={run?.planMadeAt ?? null}
+        detail={
+          <>
+            {run?.planMadeAt ? (
+              <>
+                <span data-testid="op-plan-source">
+                  {t('op.meta.plan')} <Data>{formatDate(run.planMadeAt)}</Data>
+                </span>{' '}
+                · {t('op.meta.horizon')} {t('op.meta.weeks', { count: run.weeks.length })}
+              </>
+            ) : (
+              t('op.meta.noPlan')
+            )}
+            {run?.previousAsOf && (
+              <>
+                {' '}
+                · {t('op.meta.previous')} <Data>{formatDate(run.previousAsOf)}</Data>
+              </>
+            )}
+          </>
+        }
       />
-      <PageMetaLine className="-mt-6 mb-2">
-        {run?.planMadeAt ? (
-          <>
-            <span data-testid="op-plan-source">
-              {t('op.meta.plan')} <Data>{formatDate(run.planMadeAt)}</Data>
-            </span>{' '}
-            · {t('op.meta.horizon')}{' '}
-            {t('op.meta.weeks', { count: run.weeks.length })}
-          </>
-        ) : (
-          t('op.meta.noPlan')
-        )}
-        {run?.previousAsOf && (
-          <>
-            {' '}
-            · {t('op.meta.previous')} <Data>{formatDate(run.previousAsOf)}</Data>
-          </>
-        )}
-      </PageMetaLine>
-      <DataHealthChip step="E14-05" className="mb-2" />
-      <p className="text-xs text-text-tertiary mb-4" data-testid="op-synthetic-note">
-        {t('op.synthetic')}
-      </p>
+      <DataHealthChip step="E14-05" className="mb-3" />
 
       <div className="mb-4">
         <FilterChipsBar<WarehouseKind> options={kinds} value={w?.kind ?? kind} onChange={setKind} />
@@ -679,6 +680,11 @@ const BuyerOrderPlan: React.FC = () => {
         <p>{t('op.def.fallback')}</p>
         <p>{t('op.def.cap')}</p>
       </details>
+
+      <AboutThisPage>
+        <p>{t('op.subtitle')}</p>
+        <p data-testid="op-synthetic-note">{t('op.synthetic')}</p>
+      </AboutThisPage>
     </AppShellV2>
   );
 };

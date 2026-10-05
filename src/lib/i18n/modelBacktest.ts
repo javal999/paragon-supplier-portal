@@ -17,7 +17,7 @@ export const modelBacktestEn: Record<string, string> = {
   'mb.synthetic':
     'Backtest on synthetic sales history built to reproduce PTI’s current measures. It proves the calculation, not the business answer.',
   'mb.notSwitched':
-    'Material planning still runs on SAP’s plan. This page shows whether the engine’s forecast would serve better; switching Material requirement, Order plan, Stabilise and publish and Reschedule to it is the owner’s decision (ENG-B66).',
+    'Material planning still runs on SAP’s plan. This page shows whether the engine’s forecast would serve better; switching Material requirement, What to order, Publish to suppliers and Make warehouse room to it is the owner’s decision.',
   'mb.mainNotBuilt': 'The main model is not built, so it is not a candidate here; when it is supplied it is judged by the same rule.',
 
   'mb.kpi.skus': 'SKUs compared',
@@ -27,7 +27,7 @@ export const modelBacktestEn: Record<string, string> = {
   'mb.kpi.beats.sub': 'on fill rate and space · higher fill {{fill}} · less space {{space}} · worse on both {{worse}}',
   'mb.kpi.materials': 'Materials, engine vs SAP’s plan',
   'mb.kpi.materials.sub': 'better on fill rate and space, every SKU on its chosen model',
-  'mb.kpi.limit': 'Plan-stability limit (ENG-D13)',
+  'mb.kpi.limit': 'Plan-stability limit',
   'mb.kpi.limit.notSet': 'Not set',
   'mb.kpi.limit.notSet.sub': 'Not enforced until the Material Planner sets it',
   'mb.kpi.limit.set.sub': 'Models above it are not chosen',
@@ -42,7 +42,7 @@ export const modelBacktestEn: Record<string, string> = {
 
   'mb.methods.title': 'Per method',
   'mb.methods.intro':
-    'Pooled over the SKUs each method was replayed for. Accuracy (WAPE) is shown but not used to choose (BR-03).',
+    'Pooled over the SKUs each method was replayed for. Accuracy (WAPE) is shown but not used to choose.',
   'mb.methods.col.method': 'Method',
   'mb.methods.col.skus': 'SKUs',
   'mb.methods.col.fill': 'Fill rate',
@@ -135,7 +135,7 @@ export const modelBacktestEn: Record<string, string> = {
 
   'mb.masc.title': 'Plan stability (MASC) spread, to set the limit',
   'mb.masc.intro':
-    'MASC is the average change between one forecast version and the next, over the weeks both carry, as a share of the SKU’s typical seasonal-naive error. Lower is steadier for suppliers. The limit (ENG-D13) is to be set from this first backtest; until it is, it is not enforced.',
+    'MASC is the average change between one forecast version and the next, over the weeks both carry, as a share of the SKU’s typical seasonal-naive error. Lower is steadier for suppliers. The limit is to be set from this first backtest; until it is, it is not enforced.',
   'mb.masc.col.candidate': 'Candidate',
   'mb.masc.col.skus': 'SKUs',
   'mb.masc.col.min': 'Lowest',
@@ -143,14 +143,14 @@ export const modelBacktestEn: Record<string, string> = {
   'mb.masc.col.median': 'Median',
   'mb.masc.col.p75': '75%',
   'mb.masc.col.max': 'Highest',
-  'mb.masc.limitNotSet': 'Limit: not set. Set it on Administration → Tolerances (ENG-D13).',
+  'mb.masc.limitNotSet': 'Limit: not set. Set it on Administration → Tolerances.',
   'mb.masc.limitSet': 'Limit in force: {{limit}}. {{excluded}} SKUs kept the fallback because a better model was over it.',
 
   'mb.decisions.title': 'Decisions for the owner',
   'mb.decisions.switch':
-    'Switch material planning to the engine forecast? Today Material requirement, Order plan, Stabilise and publish and Reschedule run on SAP’s plan (ENG-B66). The evidence is above; the switch itself is yours to decide.',
+    'Switch material planning to the engine forecast? Today Material requirement, What to order, Publish to suppliers and Make warehouse room run on SAP’s plan. The evidence is above; the switch itself is yours to decide.',
   'mb.decisions.limit':
-    'The plan-stability limit (ENG-D13): choose it from the spread above and set it on Administration → Tolerances; until then it is not enforced.',
+    'The plan-stability limit: choose it from the spread above and set it on Administration → Tolerances; until then it is not enforced.',
 
   'mb.def.title': 'How the backtest works',
   'mb.def.replay':
@@ -175,7 +175,7 @@ export const modelBacktestId: Record<string, string> = {
   'mb.synthetic':
     'Backtest pada riwayat penjualan sintetis yang dibuat untuk meniru ukuran PTI saat ini. Ini membuktikan perhitungannya, bukan jawaban bisnisnya.',
   'mb.notSwitched':
-    'Perencanaan material masih berjalan dengan rencana SAP. Halaman ini menunjukkan apakah prakiraan mesin akan melayani lebih baik; memindahkan Kebutuhan material, Rencana pesanan, Stabilkan dan publikasikan serta Jadwal ulang ke prakiraan mesin adalah keputusan pemilik (ENG-B66).',
+    'Perencanaan material masih berjalan dengan rencana SAP. Halaman ini menunjukkan apakah prakiraan mesin akan melayani lebih baik; memindahkan Kebutuhan material, Apa yang dipesan, Terbitkan ke pemasok, serta Kosongkan ruang gudang ke prakiraan mesin adalah keputusan pemilik.',
   'mb.mainNotBuilt': 'Model utama belum dibangun, sehingga tidak menjadi kandidat di sini; bila tersedia, model itu dinilai dengan aturan yang sama.',
 
   'mb.kpi.skus': 'SKU dibandingkan',
@@ -185,7 +185,7 @@ export const modelBacktestId: Record<string, string> = {
   'mb.kpi.beats.sub': 'pada tingkat pemenuhan dan ruang · pemenuhan lebih tinggi {{fill}} · ruang lebih kecil {{space}} · lebih buruk pada keduanya {{worse}}',
   'mb.kpi.materials': 'Material, mesin vs rencana SAP',
   'mb.kpi.materials.sub': 'lebih baik pada tingkat pemenuhan dan ruang, setiap SKU pada model terpilihnya',
-  'mb.kpi.limit': 'Batas stabilitas rencana (ENG-D13)',
+  'mb.kpi.limit': 'Batas stabilitas rencana',
   'mb.kpi.limit.notSet': 'Belum ditetapkan',
   'mb.kpi.limit.notSet.sub': 'Tidak diterapkan sampai Material Planner menetapkannya',
   'mb.kpi.limit.set.sub': 'Model di atasnya tidak dipilih',
@@ -200,7 +200,7 @@ export const modelBacktestId: Record<string, string> = {
 
   'mb.methods.title': 'Per metode',
   'mb.methods.intro':
-    'Digabungkan atas SKU yang diputar ulang untuk setiap metode. Akurasi (WAPE) ditampilkan tetapi tidak dipakai untuk memilih (BR-03).',
+    'Digabungkan atas SKU yang diputar ulang untuk setiap metode. Akurasi (WAPE) ditampilkan tetapi tidak dipakai untuk memilih.',
   'mb.methods.col.method': 'Metode',
   'mb.methods.col.skus': 'SKU',
   'mb.methods.col.fill': 'Tingkat pemenuhan',
@@ -293,7 +293,7 @@ export const modelBacktestId: Record<string, string> = {
 
   'mb.masc.title': 'Sebaran stabilitas rencana (MASC), untuk menetapkan batas',
   'mb.masc.intro':
-    'MASC adalah rata-rata perubahan dari satu versi prakiraan ke versi berikutnya, pada minggu yang dimuat keduanya, sebagai bagian dari galat musiman-naif khas SKU. Makin rendah makin stabil bagi pemasok. Batasnya (ENG-D13) ditetapkan dari backtest pertama ini; sampai ditetapkan, batas tidak diterapkan.',
+    'MASC adalah rata-rata perubahan dari satu versi prakiraan ke versi berikutnya, pada minggu yang dimuat keduanya, sebagai bagian dari galat musiman-naif khas SKU. Makin rendah makin stabil bagi pemasok. Batasnya ditetapkan dari uji model pertama ini; sampai ditetapkan, batas tidak diterapkan.',
   'mb.masc.col.candidate': 'Kandidat',
   'mb.masc.col.skus': 'SKU',
   'mb.masc.col.min': 'Terendah',
@@ -301,14 +301,14 @@ export const modelBacktestId: Record<string, string> = {
   'mb.masc.col.median': 'Median',
   'mb.masc.col.p75': '75%',
   'mb.masc.col.max': 'Tertinggi',
-  'mb.masc.limitNotSet': 'Batas: belum ditetapkan. Tetapkan di Administrasi → Toleransi (ENG-D13).',
+  'mb.masc.limitNotSet': 'Batas: belum ditetapkan. Tetapkan di Administrasi → Toleransi.',
   'mb.masc.limitSet': 'Batas yang berlaku: {{limit}}. {{excluded}} SKU tetap pada fallback karena model yang lebih baik melewatinya.',
 
   'mb.decisions.title': 'Keputusan untuk pemilik',
   'mb.decisions.switch':
-    'Pindahkan perencanaan material ke prakiraan mesin? Saat ini Kebutuhan material, Rencana pesanan, Stabilkan dan publikasikan serta Jadwal ulang berjalan dengan rencana SAP (ENG-B66). Buktinya ada di atas; keputusan pemindahannya ada pada Anda.',
+    'Pindahkan perencanaan material ke prakiraan mesin? Saat ini Kebutuhan material, Apa yang dipesan, Terbitkan ke pemasok, serta Kosongkan ruang gudang berjalan dengan rencana SAP. Buktinya ada di atas; keputusan pemindahannya ada pada Anda.',
   'mb.decisions.limit':
-    'Batas stabilitas rencana (ENG-D13): pilih dari sebaran di atas dan tetapkan di Administrasi → Toleransi; sampai saat itu batas tidak diterapkan.',
+    'Batas stabilitas rencana: pilih dari sebaran di atas dan tetapkan di Administrasi → Toleransi; sampai saat itu batas tidak diterapkan.',
 
   'mb.def.title': 'Cara kerja backtest',
   'mb.def.replay':

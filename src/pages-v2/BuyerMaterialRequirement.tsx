@@ -3,8 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { Link, useSearchParams } from 'react-router-dom';
 import AppShellV2 from '@components/layout-v2/AppShellV2';
 import PageHeader from '@components/ui-v2/PageHeader';
-import PageMetaLine from '@components/ui-v2/PageMetaLine';
-import LivenessPill from '@components/ui-v2/LivenessPill';
 import FilterChipsBar from '@components/ui-v2/FilterChipsBar';
 import KpiCard from '@components/ui-v2/KpiCard';
 import StatusPill from '@components/ui-v2/StatusPill';
@@ -18,6 +16,11 @@ import LoadingState from '@components/ui-v2/LoadingState';
 import ErrorState from '@components/ui-v2/ErrorState';
 import { formatDate, formatNumber } from '@lib/format';
 import DataHealthChip from '@components/forecast/DataHealthChip';
+import PurposeHeader from '@components/forecast/PurposeHeader';
+import SimulatedDataBanner from '@components/forecast/SimulatedDataBanner';
+import AboutThisPage from '@components/forecast/AboutThisPage';
+import DataAsOf from '@components/forecast/DataAsOf';
+import { forecastCrumb, forecastTitle } from '@components/forecast/forecastPages';
 import { useMaterialRequirement } from '@services/query/hooks';
 import type { MaterialPlanView, MaterialRequirementView } from '@services/data/types';
 import type { MaterialWeek } from '@services/engine/requirement';
@@ -250,7 +253,7 @@ const BuyerMaterialRequirement: React.FC = () => {
   const { t } = useTranslation();
   const [mode, setMode] = useState<ReceiptsMode>('confirmed');
   const query = useMaterialRequirement(mode === 'include');
-  const crumb = [t('hub.nav.section.forecast'), t('mrq.title')];
+  const crumb = forecastCrumb(t, 'materialRequirement');
   const run = query.data ?? null;
   const materials = useMemo(() => run?.materials ?? [], [run]);
   const [params, setParams] = useSearchParams();
@@ -287,39 +290,22 @@ const BuyerMaterialRequirement: React.FC = () => {
 
   return (
     <AppShellV2>
-      <PageHeader
-        breadcrumb={crumb}
-        title={t('mrq.title')}
-        subtitle={t('mrq.subtitle')}
-        actions={<LivenessPill capability="engineDataset" />}
+      <PageHeader breadcrumb={crumb} title={forecastTitle(t, 'materialRequirement')} />
+      <PurposeHeader page="materialRequirement" />
+      <SimulatedDataBanner capability="engineDataset" />
+      <DataAsOf
+        date={run?.planMadeAt ?? null}
+        detail={
+          run?.planMadeAt ? (
+            <>
+              {t('mrq.meta.horizon')} {t('mrq.meta.weeks', { count: run.weeks.length })}
+            </>
+          ) : (
+            t('mrq.meta.noPlan')
+          )
+        }
       />
-      <PageMetaLine className="-mt-6 mb-2">
-        {run?.planMadeAt ? (
-          <>
-            {t('mrq.meta.plan')} <Data>{formatDate(run.planMadeAt)}</Data> · {t('mrq.meta.horizon')}{' '}
-            {t('mrq.meta.weeks', { count: run.weeks.length })}
-          </>
-        ) : (
-          t('mrq.meta.noPlan')
-        )}
-      </PageMetaLine>
-      <DataHealthChip step="E14-03" className="mb-2" />
-      <p className="text-xs text-text-tertiary mb-1" data-testid="mrq-synthetic-note">
-        {t('mrq.synthetic')}
-      </p>
-      <p className="text-xs text-text-tertiary mb-1">{t('mrq.planSource')}</p>
-      {run?.sizing === 'orderSizing' ? (
-        <p className="text-xs text-text-tertiary mb-4" data-testid="mrq-sized-note">
-          {t('mrq.sized')}{' '}
-          <Link to="/buyer/order-plan" className="text-action underline">
-            {t('mrq.sized.link')}
-          </Link>
-        </p>
-      ) : (
-        <p className="text-xs text-text-tertiary mb-4" data-testid="mrq-interim-note">
-          {t('mrq.interim')}
-        </p>
-      )}
+      <DataHealthChip step="E14-03" className="mb-3" />
 
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <FilterChipsBar<ReceiptsMode> options={modeOptions} value={mode} onChange={setMode} />
@@ -446,6 +432,22 @@ const BuyerMaterialRequirement: React.FC = () => {
         <p>{t('mrq.def.planned')}</p>
         <p>{t('mrq.def.end')}</p>
       </section>
+
+      <AboutThisPage>
+        <p>{t('mrq.subtitle')}</p>
+        <p data-testid="mrq-synthetic-note">{t('mrq.synthetic')}</p>
+        <p>{t('mrq.planSource')}</p>
+        {run?.sizing === 'orderSizing' ? (
+          <p data-testid="mrq-sized-note">
+            {t('mrq.sized')}{' '}
+            <Link to="/buyer/order-plan" className="text-action underline">
+              {t('mrq.sized.link')}
+            </Link>
+          </p>
+        ) : (
+          <p data-testid="mrq-interim-note">{t('mrq.interim')}</p>
+        )}
+      </AboutThisPage>
     </AppShellV2>
   );
 };

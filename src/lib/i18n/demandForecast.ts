@@ -13,11 +13,11 @@ export const demandForecastEn: Record<string, string> = {
   'df.synthetic':
     'Forecast on synthetic sales history built to reproduce PTI’s current measures. It proves the calculation, not the business answer.',
   'df.grain':
-    'Sell-in: PTI’s shipments to its DCs and distributors, for PTI’s own brands (ENG-D10). OEM products are not forecast: their demand is the brand’s purchase orders (ENG-D20). The Material Planning team reviews this forecast before it drives material plans (ENG-D11).',
+    'Sell-in: PTI’s shipments to its DCs and distributors, for PTI’s own brands. OEM products are not forecast: their demand is the brand’s purchase orders. The Material Planning team reviews this forecast before it drives material plans.',
   'df.mainNotBuilt':
-    'The main model is not built. The requirement’s main model is gradient-boosted trees (LightGBM) trained across SKUs on price, promotion and calendar effects; there is no price or promotion history to train it on yet, and it may only be used where it beats the fallback in the backtest (E14-10), which is not built either. Every forecast on this page comes from a statistical method, named in its row.',
+    'The main model is not built. The requirement’s main model is gradient-boosted trees (LightGBM) trained across SKUs on price, promotion and calendar effects; there is no price or promotion history to train it on yet, and it may only be used where it beats the fallback on the Model backtest page, which replays PTI’s ordering to choose each product’s method. Every forecast on this page comes from a statistical method, named in its row.',
   'df.source':
-    'Not yet feeding material plans: Material requirement, Order plan, Stabilise and publish and Reschedule still run on SAP’s plan (shown here for comparison) until the backtest chooses this forecast by service.',
+    'Not yet feeding material plans: Material requirement, What to order, Publish to suppliers and Make warehouse room still run on SAP’s plan (shown here for comparison) until the owner decides to switch them, on the evidence of the Model backtest page.',
 
   'df.kpi.skus': 'SKUs forecast',
   'df.kpi.skus.sub': '{{ended}} discontinued at zero · {{oem}} OEM left out',
@@ -78,7 +78,7 @@ export const demandForecastEn: Record<string, string> = {
   'df.detail.seasonal': 'Seasonality found and applied.',
   'df.detail.notSeasonal': 'No seasonality found by the test on this history.',
   'df.detail.newSkuSap':
-    'Less than 52 weeks of history, so the launch method (E14-08) applies. It is not built; until it is, this SKU keeps SAP’s plan, and the reconciliation holds it at that value.',
+    'Less than 52 weeks of history, so the launch method applies. It is not built; until it is, this SKU keeps SAP’s plan, and the reconciliation holds it at that value.',
   'df.detail.slow': 'Sold in fewer than 3 of every 4 in-stock weeks: mean interval between sales {{p}}, variation of sale sizes {{v}}.',
   'df.detail.sba': 'SBA: the typical sale size ÷ the typical gap × 0.95. Chosen by the Kostenko–Hyndman rule.',
   'df.detail.croston': 'Croston: the typical sale size ÷ the typical gap. Chosen by the Kostenko–Hyndman rule.',
@@ -131,7 +131,7 @@ export const demandForecastEn: Record<string, string> = {
     'P50 is the figure sales are as likely to fall below as above; P90 is a figure sales exceed in about 1 week in 10. Each range is calibrated on the forecasts the engine would have made over the past year, replayed week by week with the model retrained every {{retrain}} weeks: at each horizon, P90 sits where 9 in 10 of those forecasts’ weeks sold at or below it. After each week’s sales come in, P90 moves up a little if sales went above it and down a little if they did not.',
   'df.range.replay': '{{count}} weekly forecasts replayed, from the week of {{first}} to the week of {{last}}.',
   'df.range.notPublished':
-    'Shown to the planner only. It is not published to suppliers: Stabilise and publish still shows quantities only, and publishing from the engine is refused while its data is simulated. Safety stock does not use it either: material planning stays on SAP’s plan until the switch is decided (ENG-B66).',
+    'Shown to the planner only. It is not published to suppliers: Publish to suppliers still shows quantities only, and publishing from the engine is refused while its data is simulated. Safety stock does not use it either: material planning stays on SAP’s plan until the switch is decided.',
   'df.range.kpi.aboveP90': 'Sold above P90',
   'df.range.kpi.aboveP90.sub': 'target 10% · {{checked}} past weekly forecasts checked, all SKUs',
   'df.range.kpi.aboveP50': 'Sold above P50',
@@ -183,11 +183,11 @@ export const demandForecastId: Record<string, string> = {
   'df.synthetic':
     'Diprakirakan dari riwayat penjualan sintetis yang dibuat untuk meniru ukuran PTI saat ini. Ini membuktikan perhitungannya, bukan jawaban bisnisnya.',
   'df.grain':
-    'Sell-in: pengiriman PTI ke DC dan distributornya, untuk merek milik PTI sendiri (ENG-D10). Produk OEM tidak diprakirakan: permintaannya adalah pesanan pembelian dari merek tersebut (ENG-D20). Tim Material Planning meninjau prakiraan ini sebelum dipakai untuk rencana material (ENG-D11).',
+    'Sell-in: pengiriman PTI ke DC dan distributornya, untuk merek milik PTI sendiri. Produk OEM tidak diprakirakan: permintaannya adalah pesanan pembelian dari merek tersebut. Tim Material Planning meninjau prakiraan ini sebelum dipakai untuk rencana material.',
   'df.mainNotBuilt':
-    'Model utama belum dibangun. Model utama dalam persyaratan adalah gradient-boosted trees (LightGBM) yang dilatih lintas SKU dengan efek harga, promosi, dan kalender; belum ada riwayat harga atau promosi untuk melatihnya, dan model itu hanya boleh dipakai jika mengalahkan metode cadangan dalam backtest (E14-10), yang juga belum dibangun. Setiap prakiraan di halaman ini berasal dari metode statistik yang disebutkan di barisnya.',
+    'Model utama belum dibangun. Model utama dalam persyaratan adalah gradient-boosted trees (LightGBM) yang dilatih lintas SKU dengan efek harga, promosi, dan kalender; belum ada riwayat harga atau promosi untuk melatihnya, dan model itu hanya boleh dipakai jika mengalahkan metode cadangan di halaman Uji model, yang memutar ulang pemesanan PTI untuk memilih metode setiap produk. Setiap prakiraan di halaman ini berasal dari metode statistik yang disebutkan di barisnya.',
   'df.source':
-    'Belum dipakai untuk rencana material: Kebutuhan material, Rencana pesanan, Stabilkan dan publikasikan, serta Jadwal ulang masih memakai rencana SAP (ditampilkan di sini sebagai pembanding) sampai backtest memilih prakiraan ini berdasarkan tingkat layanan.',
+    'Belum dipakai untuk rencana material: Kebutuhan material, Apa yang dipesan, Terbitkan ke pemasok, serta Kosongkan ruang gudang masih memakai rencana SAP (ditampilkan di sini sebagai pembanding) sampai pemilik memutuskan untuk beralih, berdasarkan bukti di halaman Uji model.',
 
   'df.kpi.skus': 'SKU yang diprakirakan',
   'df.kpi.skus.sub': '{{ended}} dihentikan (nol) · {{oem}} OEM dikecualikan',
@@ -248,7 +248,7 @@ export const demandForecastId: Record<string, string> = {
   'df.detail.seasonal': 'Musiman ditemukan dan diterapkan.',
   'df.detail.notSeasonal': 'Uji tidak menemukan pola musiman pada riwayat ini.',
   'df.detail.newSkuSap':
-    'Riwayat kurang dari 52 minggu, jadi metode peluncuran (E14-08) yang berlaku. Metode itu belum dibangun; sampai ada, SKU ini memakai rencana SAP, dan rekonsiliasi menahannya pada nilai itu.',
+    'Riwayat kurang dari 52 minggu, jadi metode peluncuran yang berlaku. Metode itu belum dibangun; sampai ada, SKU ini memakai rencana SAP, dan rekonsiliasi menahannya pada nilai itu.',
   'df.detail.slow': 'Terjual di kurang dari 3 dari setiap 4 minggu yang ada stok: rata-rata jarak antarpenjualan {{p}}, variasi ukuran penjualan {{v}}.',
   'df.detail.sba': 'SBA: ukuran penjualan biasa ÷ jarak biasa × 0,95. Dipilih dengan aturan Kostenko–Hyndman.',
   'df.detail.croston': 'Croston: ukuran penjualan biasa ÷ jarak biasa. Dipilih dengan aturan Kostenko–Hyndman.',
@@ -301,7 +301,7 @@ export const demandForecastId: Record<string, string> = {
     'P50 adalah angka yang sama mungkinnya dilampaui atau tidak oleh penjualan; P90 adalah angka yang dilampaui penjualan sekitar 1 dari 10 minggu. Setiap rentang dikalibrasi pada prakiraan yang akan dibuat mesin selama setahun terakhir, diputar ulang minggu demi minggu dengan model dilatih ulang setiap {{retrain}} minggu: pada setiap horizon, P90 berada di titik 9 dari 10 minggu prakiraan tersebut terjual sama dengan atau di bawahnya. Setelah penjualan setiap minggu masuk, P90 naik sedikit bila penjualan melampauinya dan turun sedikit bila tidak.',
   'df.range.replay': '{{count}} prakiraan mingguan diputar ulang, dari minggu {{first}} sampai minggu {{last}}.',
   'df.range.notPublished':
-    'Hanya ditampilkan ke perencana. Rentang ini tidak dipublikasikan ke pemasok: Stabilkan dan publikasikan masih hanya menampilkan kuantitas, dan publikasi dari mesin ditolak selama datanya simulasi. Stok pengaman juga belum memakainya: perencanaan material tetap memakai rencana SAP sampai peralihannya diputuskan (ENG-B66).',
+    'Hanya ditampilkan ke perencana. Rentang ini tidak diterbitkan ke pemasok: Terbitkan ke pemasok masih hanya menampilkan kuantitas, dan penerbitan dari mesin ditolak selama datanya simulasi. Stok pengaman juga belum memakainya: perencanaan material tetap memakai rencana SAP sampai peralihannya diputuskan.',
   'df.range.kpi.aboveP90': 'Terjual di atas P90',
   'df.range.kpi.aboveP90.sub': 'target 10% · {{checked}} prakiraan mingguan lalu diperiksa, semua SKU',
   'df.range.kpi.aboveP50': 'Terjual di atas P50',
