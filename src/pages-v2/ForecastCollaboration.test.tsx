@@ -50,9 +50,10 @@ const responsesFor = (supplierId: string, material: string, period: string) =>
   requirementResponseStore.all().filter((r) => r.supplierId === supplierId && r.materialCode === material && r.periodBucket === period);
 
 describe('menu and copy (section 3.7)', () => {
-  it('PTI Weekly plan: What to order, Make warehouse room, Publish, then Supplier responses (FUX phase 1, F-03)', () => {
+  it('PTI Weekly plan: This week, What to order, Make warehouse room, Publish, then Supplier responses (FUX phase 1 and phase 2 B1, F-03)', () => {
     const weekly = PTI_NAV.find((s) => s.id === 'weeklyPlan')!;
     expect(weekly.items.map((i) => [i.labelKey, i.path])).toEqual([
+      ['hub.nav.pti.thisWeek', '/buyer/this-week'],
       ['hub.nav.pti.whatToOrder', '/buyer/order-plan'],
       ['hub.nav.pti.makeRoom', '/buyer/reschedule'],
       ['hub.nav.pti.publishToSuppliers', '/buyer/stabilise'],
