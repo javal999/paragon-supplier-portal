@@ -25,6 +25,8 @@ export const forecastUxEn: Record<string, string> = {
   'fux.purpose.dataHealth': 'Whether the input feeds are fresh and clean enough to plan on this week.',
   'fux.purpose.modelBacktest': 'Which forecast method each product should use, and whether planning should switch to the engine.',
   'fux.purpose.reliability': 'How reliably each supplier confirms and delivers, and how much PTI’s own plan changes.',
+  // B6 (F-11) — the Supplier scorecard, read by Material Planners (Review) and Procurement (Performance).
+  'fux.purpose.performance': 'Which suppliers to follow up this month.',
 
   // One banner (F-14)
   'fux.banner': 'Sample data. Nothing here reaches suppliers or SAP.',
@@ -98,6 +100,7 @@ export const forecastUxId: Record<string, string> = {
   'fux.purpose.dataHealth': 'Apakah umpan data masukan cukup baru dan bersih untuk dipakai merencanakan minggu ini.',
   'fux.purpose.modelBacktest': 'Metode prakiraan mana yang dipakai setiap produk, dan apakah perencanaan perlu beralih ke mesin.',
   'fux.purpose.reliability': 'Seberapa andal setiap pemasok mengonfirmasi dan mengirim, dan seberapa sering rencana PTI sendiri berubah.',
+  'fux.purpose.performance': 'Pemasok mana yang perlu ditindaklanjuti bulan ini.',
 
   'fux.banner': 'Data contoh. Tidak ada yang sampai ke pemasok atau SAP.',
 
