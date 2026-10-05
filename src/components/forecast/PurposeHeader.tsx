@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { FORECAST_PAGES, linkTarget, type ForecastLinkTarget, type ForecastPageId } from './forecastPages';
+import { FORECAST_PAGES, PERFORMANCE_PLACE, linkTarget, type ForecastPageId } from './forecastPages';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PURPOSE HEADER — F-05 (Forecast UX phase 1, task A4).
@@ -14,16 +14,6 @@ import { FORECAST_PAGES, linkTarget, type ForecastLinkTarget, type ForecastPageI
 //
 // Presentation only (FUX-R1): it reads no data and gates nothing.
 // ─────────────────────────────────────────────────────────────────────────────
-
-// Forecast UX phase 2, B6 (F-11) — the Supplier scorecard is not one of the 13
-// forecast pages, but it is the "performance" step every Uses/Next link already
-// points to, so it states its place the same way. Its own Uses and Next sit
-// here because `forecastPages.ts` was held by task B1 while B6 was built; move
-// this row into that file once both are merged.
-const PERFORMANCE_PLACE: { readonly uses: ForecastLinkTarget; readonly next: ForecastLinkTarget } = {
-  uses: 'responses',
-  next: 'forecastQuality',
-};
 
 interface PurposeHeaderProps {
   readonly page: ForecastPageId | 'performance';
