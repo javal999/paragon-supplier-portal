@@ -84,8 +84,11 @@
 
 /** One authored annotation. A KEY, never a sentence — see the header. */
 /**
- * @typedef {object} PurposeAnnotation
- * @property {string} purposeKey -  The i18n key whose EN and ID values carry the purpose. Written out.
+ * `purposeKey`:  The i18n key whose EN and ID values carry the purpose. Written out.
+ *
+ * @typedef {{
+ *   readonly purposeKey: string;
+ * }} PurposeAnnotation
  */
 
 /** Purpose annotations, keyed by an identity the registry already owns. */

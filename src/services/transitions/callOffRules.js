@@ -124,14 +124,17 @@ const daysBetween = (from, to) => Math.round((dayMs(to) - dayMs(from)) / DAY_MS)
 export const releaseBasis = (line) => (line.valueLimit === undefined ? 'quantity' : 'value');
 
 /**
- * @typedef {object} UmbrellaRemaining
- * @property {ReleaseBasis} basis
- * @property {number | null} orderedQty -  Ordered and remaining quantity — null on a line that has no quantity.
- * @property {number} releasedQty
- * @property {number | null} remainingQty
- * @property {number} orderedValue
- * @property {number} releasedValue
- * @property {number} remainingValue
+ * `orderedQty`:  Ordered and remaining quantity — null on a line that has no quantity.
+ *
+ * @typedef {{
+ *   readonly basis: ReleaseBasis;
+ *   readonly orderedQty: number | null;
+ *   readonly releasedQty: number;
+ *   readonly remainingQty: number | null;
+ *   readonly orderedValue: number;
+ *   readonly releasedValue: number;
+ *   readonly remainingValue: number;
+ * }} UmbrellaRemaining
  */
 
 /**
@@ -164,12 +167,13 @@ export function umbrellaRemaining(line, callOffs, excludeId) {
 
 /** A release measured against what remains, in the line's own basis. */
 /**
- * @typedef {object} ReleaseCheck
- * @property {ReleaseBasis} basis
- * @property {boolean} exceeds
- * @property {number} requestedQty
- * @property {number} requestedValue
- * @property {UmbrellaRemaining} remaining
+ * @typedef {{
+ *   readonly basis: ReleaseBasis;
+ *   readonly exceeds: boolean;
+ *   readonly requestedQty: number;
+ *   readonly requestedValue: number;
+ *   readonly remaining: UmbrellaRemaining;
+ * }} ReleaseCheck
  */
 
 /**
@@ -221,11 +225,14 @@ export function umbrellaRefusal(po, lineId) {
 // ── CR-04 BR-05 · series generator (reuses the delivery generator) ──────────
 
 /**
- * @typedef {object} SeriesInput
- * @property {number} totalQty
- * @property {number} qtyPerCallOff
- * @property {ReleaseCadence} cadence
- * @property {string} firstNeedDate -  The first need date, `YYYY-MM-DD`.
+ * `firstNeedDate`:  The first need date, `YYYY-MM-DD`.
+ *
+ * @typedef {{
+ *   readonly totalQty: number;
+ *   readonly qtyPerCallOff: number;
+ *   readonly cadence: ReleaseCadence;
+ *   readonly firstNeedDate: string;
+ * }} SeriesInput
  */
 
 /**
@@ -260,10 +267,11 @@ export function generateCallOffSeries(input) {
  */
 
 /**
- * @typedef {object} ConfirmationInput
- * @property {unknown} [confirmedDate]
- * @property {unknown} [confirmedQty]
- * @property {unknown} [deliveries]
+ * @typedef {{
+ *   readonly confirmedDate?: unknown;
+ *   readonly confirmedQty?: unknown;
+ *   readonly deliveries?: unknown;
+ * }} ConfirmationInput
  */
 
 /**
@@ -325,25 +333,36 @@ export function proposedDeliveries(callOff, kind, input) {
 /** @typedef {'asRequested' | 'overWithin' | 'overBeyond' | 'short' | 'late' | 'early'} ToleranceFindingKind */
 
 /**
- * @typedef {object} ToleranceFinding
- * @property {ToleranceFindingKind} kind
- * @property {boolean} needsApproval
- * @property {number} [qty] -  Quantity over or short of the released quantity.
- * @property {number} [pct] -  That quantity as a percentage of the released quantity (display only; the decision is exact).
- * @property {number} [days] -  For `late` / `early`: the largest number of days off the need date.
- * @property {string} [date] -  For `late` / `early`: the delivery date furthest from the need date.
- * @property {number} [limit] -  The limit the finding was measured against (percent, or days for `early`).
+ * `qty`:  Quantity over or short of the released quantity.
+ * `pct`:  That quantity as a percentage of the released quantity (display only; the decision is exact).
+ * `days`:  For `late` / `early`: the largest number of days off the need date.
+ * `date`:  For `late` / `early`: the delivery date furthest from the need date.
+ * `limit`:  The limit the finding was measured against (percent, or days for `early`).
+ *
+ * @typedef {{
+ *   readonly kind: ToleranceFindingKind;
+ *   readonly needsApproval: boolean;
+ *   readonly qty?: number;
+ *   readonly pct?: number;
+ *   readonly days?: number;
+ *   readonly date?: string;
+ *   readonly limit?: number;
+ * }} ToleranceFinding
  */
 
 /** Where a confirmation falls against the tolerances (BR-03). */
 /**
- * @typedef {object} ToleranceCheck
- * @property {boolean} within -  Accepted automatically — nothing needs the planner.
- * @property {boolean} overQty
- * @property {boolean} short -  A shortfall: a visible partial delivery, which does NOT make `within` false.
- * @property {boolean} early
- * @property {boolean} late
- * @property {readonly ToleranceFinding[]} findings
+ * `within`:  Accepted automatically — nothing needs the planner.
+ * `short`:  A shortfall: a visible partial delivery, which does NOT make `within` false.
+ *
+ * @typedef {{
+ *   readonly within: boolean;
+ *   readonly overQty: boolean;
+ *   readonly short: boolean;
+ *   readonly early: boolean;
+ *   readonly late: boolean;
+ *   readonly findings: readonly ToleranceFinding[];
+ * }} ToleranceCheck
  */
 
 /**
@@ -494,12 +513,13 @@ export function isCallOffEscalated(c, nowIso) {
 // ── REQ-E09-04 · dispatch heads-ups (a linked ASN counts as one) ────────────
 
 /**
- * @typedef {object} HeadsUp
- * @property {'notice' | 'asn'} source
- * @property {string} ref
- * @property {string} shippedDate
- * @property {string} expectedArrival
- * @property {number} quantity
+ * @typedef {{
+ *   readonly source: 'notice' | 'asn';
+ *   readonly ref: string;
+ *   readonly shippedDate: string;
+ *   readonly expectedArrival: string;
+ *   readonly quantity: number;
+ * }} HeadsUp
  */
 
 /** ASN states that mean goods have left (a draft has not shipped, nor has an
@@ -767,11 +787,12 @@ export function asnCallOffWarnings(asn, views, asns, tol = callOffTolerance()) {
 
 /** A supplier × material's confirmed call-off deliveries still to ship, in date order. */
 /**
- * @typedef {object} CallOffCoverSubject
- * @property {string} supplierId
- * @property {string} supplierName
- * @property {string} materialCode
- * @property {readonly CallOffDelivery[]} deliveries
+ * @typedef {{
+ *   readonly supplierId: string;
+ *   readonly supplierName: string;
+ *   readonly materialCode: string;
+ *   readonly deliveries: readonly CallOffDelivery[];
+ * }} CallOffCoverSubject
  */
 
 /**
@@ -821,12 +842,13 @@ export function callOffCoverSubjects(views) {
 
 /** A goods receipt line, reduced to what the match needs. */
 /**
- * @typedef {object} ReceiptEvent
- * @property {string} ref
- * @property {string} supplierId
- * @property {string} materialCode
- * @property {string} date
- * @property {number} quantity
+ * @typedef {{
+ *   readonly ref: string;
+ *   readonly supplierId: string;
+ *   readonly materialCode: string;
+ *   readonly date: string;
+ *   readonly quantity: number;
+ * }} ReceiptEvent
  */
 
 /**
@@ -848,17 +870,25 @@ export function receiptEvents(receipts) {
 /** @typedef {'onTime' | 'late' | 'missed' | 'pending'} DeliveryTiming */
 
 /**
- * @typedef {object} DeliveryResult
- * @property {string} callOffId
- * @property {number} seq -  Index of the approved delivery (a partially confirmed call-off has 2).
- * @property {string} approvedDate
- * @property {number} approvedQty
- * @property {DeliveryTiming} timing
- * @property {boolean | null} inFull -  CR-08: received (or dispatched) quantity ≥ approved quantity; null while pending or missed.
- * @property {'receipt' | 'dispatch' | 'none'} basis -  What the result rests on: goods receipts, the supplier's heads-up, or nothing yet.
- * @property {string} [ref] -  The first receipt matched (or the heads-up).
- * @property {readonly string[]} [refs] -  Every receipt counted toward this delivery, first match first (BL-66 (3)).
- * @property {number} [quantity] -  The quantity counted: the SUM of the matched receipts (or the heads-up's).
+ * `seq`:  Index of the approved delivery (a partially confirmed call-off has 2).
+ * `inFull`:  CR-08: received (or dispatched) quantity ≥ approved quantity; null while pending or missed.
+ * `basis`:  What the result rests on: goods receipts, the supplier's heads-up, or nothing yet.
+ * `ref`:  The first receipt matched (or the heads-up).
+ * `refs`:  Every receipt counted toward this delivery, first match first (BL-66 (3)).
+ * `quantity`:  The quantity counted: the SUM of the matched receipts (or the heads-up's).
+ *
+ * @typedef {{
+ *   readonly callOffId: string;
+ *   readonly seq: number;
+ *   readonly approvedDate: string;
+ *   readonly approvedQty: number;
+ *   readonly timing: DeliveryTiming;
+ *   readonly inFull: boolean | null;
+ *   readonly basis: 'receipt' | 'dispatch' | 'none';
+ *   readonly ref?: string;
+ *   readonly refs?: readonly string[];
+ *   readonly quantity?: number;
+ * }} DeliveryResult
  */
 
 /**
@@ -1040,17 +1070,23 @@ export function callOffOtif(callOffId, results) {
  */
 
 /**
- * @typedef {object} CallOffView
- * @property {CallOff} callOff
- * @property {CallOffStatus | 'Awaiting Approval' | 'Escalated'} confirmation -  Confirmation status: the stored state, Awaiting Approval, or Escalated.
- * @property {CallOffDeliveryStatus | null} delivery
- * @property {Date | null} deadline
- * @property {readonly HeadsUp[]} headsUps
- * @property {readonly DeliveryResult[]} results
- * @property {1 | 0 | null} otif
- * @property {string} dueDate -  The earliest approved date — "must come".
- * @property {ToleranceCheck | null} tolerance -  The tolerance rule applied to the supplier's confirmation, read now (CR-05); null before an answer.
- * @property {number} shortfall -  The confirmed shortfall against the released quantity — the visible partial (CR-05).
+ * `confirmation`:  Confirmation status: the stored state, Awaiting Approval, or Escalated.
+ * `dueDate`:  The earliest approved date — "must come".
+ * `tolerance`:  The tolerance rule applied to the supplier's confirmation, read now (CR-05); null before an answer.
+ * `shortfall`:  The confirmed shortfall against the released quantity — the visible partial (CR-05).
+ *
+ * @typedef {{
+ *   readonly callOff: CallOff;
+ *   readonly confirmation: CallOffStatus | 'Awaiting Approval' | 'Escalated';
+ *   readonly delivery: CallOffDeliveryStatus | null;
+ *   readonly deadline: Date | null;
+ *   readonly headsUps: readonly HeadsUp[];
+ *   readonly results: readonly DeliveryResult[];
+ *   readonly otif: 1 | 0 | null;
+ *   readonly dueDate: string;
+ *   readonly tolerance: ToleranceCheck | null;
+ *   readonly shortfall: number;
+ * }} CallOffView
  */
 
 /**
@@ -1115,11 +1151,12 @@ export function isDueWithoutHeadsUp(v, nowIso) {
 
 /** CR-09 drift: 2 or more late or missed deliveries for one supplier and material. */
 /**
- * @typedef {object} DeliveryDrift
- * @property {string} supplierId
- * @property {string} supplierName
- * @property {string} materialCode
- * @property {number} count
+ * @typedef {{
+ *   readonly supplierId: string;
+ *   readonly supplierName: string;
+ *   readonly materialCode: string;
+ *   readonly count: number;
+ * }} DeliveryDrift
  */
 
 /**

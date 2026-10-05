@@ -28,9 +28,13 @@
 import { hubSetting } from './hubSettingsStore';
 
 /**
- * @typedef {object} CallOffTolerance
- * @property {number} overPct -  Percent over the released quantity accepted automatically, for every call-off type (CR-05).
- * @property {number} earlyDays -  Days earlier than the need date accepted automatically (PQ-08 / BL-56).
+ * `overPct`:  Percent over the released quantity accepted automatically, for every call-off type (CR-05).
+ * `earlyDays`:  Days earlier than the need date accepted automatically (PQ-08 / BL-56).
+ *
+ * @typedef {{
+ *   readonly overPct: number;
+ *   readonly earlyDays: number;
+ * }} CallOffTolerance
  */
 
 /**

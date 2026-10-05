@@ -189,16 +189,18 @@ export function deriveMatchVerdict(expectedValue, invoicedAmount, grHasRejects, 
 
 /** The minimum an invoice must expose to be paired. Real `Invoice` satisfies it. */
 /**
- * @typedef {object} PairableInvoice
- * @property {string} poNumber
- * @property {InvoiceStatus} status
+ * @typedef {{
+ *   readonly poNumber: string;
+ *   readonly status: InvoiceStatus;
+ * }} PairableInvoice
  */
 
 /** The minimum a receipt must expose to be paired. Real `GoodsReceipt` satisfies it. */
 /**
- * @typedef {object} PairableReceipt
- * @property {string} poNumber
- * @property {GRStatus} status
+ * @typedef {{
+ *   readonly poNumber: string;
+ *   readonly status: GRStatus;
+ * }} PairableReceipt
  */
 
 /**

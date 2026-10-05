@@ -64,12 +64,15 @@
 
 /** One exempted loose end. `entity`/`kind`/`subject` must match a DERIVED key. */
 /**
- * @typedef {object} CensusEntry
- * @property {string} entity
- * @property {LooseEndKind} kind
- * @property {string} subject
- * @property {LooseEndReason} reason
- * @property {string} note -  For a human. NEVER compared — see the header.
+ * `note`:  For a human. NEVER compared — see the header.
+ *
+ * @typedef {{
+ *   readonly entity: string;
+ *   readonly kind: LooseEndKind;
+ *   readonly subject: string;
+ *   readonly reason: LooseEndReason;
+ *   readonly note: string;
+ * }} CensusEntry
  */
 
 /**

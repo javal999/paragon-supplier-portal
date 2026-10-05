@@ -22,10 +22,11 @@ import { addDays, dayOf } from './inventoryRules';
 
 /** A material as the resolver needs it: its SAP group and its planning group now. */
 /**
- * @typedef {object} PlanningGroupMaterial
- * @property {string} materialCode
- * @property {string} sapMaterialGroup
- * @property {string} planningGroupId
+ * @typedef {{
+ *   readonly materialCode: string;
+ *   readonly sapMaterialGroup: string;
+ *   readonly planningGroupId: string;
+ * }} PlanningGroupMaterial
  */
 
 /**
@@ -127,9 +128,10 @@ export function resolvePlanningGroups(events, materials, defaultIdOf) {
 
 /** What the rule reads about the world, injected so page and hook share it. */
 /**
- * @typedef {object} PlanningGroupWorld
- * @property {readonly string[]} sapGroups
- * @property {(materialCode: string) => PlanningGroupMaterial | null} material
+ * @typedef {{
+ *   readonly sapGroups: readonly string[];
+ *   readonly material: (materialCode: string) => PlanningGroupMaterial | null;
+ * }} PlanningGroupWorld
  */
 
 /**

@@ -242,20 +242,25 @@ export function qualificationFromDocuments(docs, rules, onDate) {
 
 /** The lists in force from `at` on. The first entry is the seed (`at: null`). */
 /**
- * @typedef {object} RuleEpoch
- * @property {string | null} at
- * @property {readonly QualificationRule[]} rules
- * @property {QualificationRuleLevel} [changed] -  The list whose change opened this epoch; absent on the seed.
+ * `changed`:  The list whose change opened this epoch; absent on the seed.
+ *
+ * @typedef {{
+ *   readonly at: string | null;
+ *   readonly rules: readonly QualificationRule[];
+ *   readonly changed?: QualificationRuleLevel;
+ * }} RuleEpoch
  */
 
 /**
- * @typedef {object} ReplayEvent
- * @property {string} at
- * @property {0 | 1 | 2} rank -  Order among events at the same instant: list changes, then documents
- *    becoming valid, then documents lapsing.
- * @property {number} seq
- * @property {SupplierDocument} [doc]
- * @property {RuleEpoch} [epoch]
+ * `rank`:  Order among events at the same instant: list changes, then documents  becoming valid, then documents lapsing.
+ *
+ * @typedef {{
+ *   readonly at: string;
+ *   readonly rank: 0 | 1 | 2;
+ *   readonly seq: number;
+ *   readonly doc?: SupplierDocument;
+ *   readonly epoch?: RuleEpoch;
+ * }} ReplayEvent
  */
 
 /**

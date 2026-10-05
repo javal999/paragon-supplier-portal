@@ -35,38 +35,48 @@ export const COMPLIANCE_MIN_COUNTED_WEEKS = 4;
 /** @typedef {'compliant' | 'missed' | 'notCounted'} ComplianceWeekState */
 
 /**
- * @typedef {object} ComplianceWeek
- * @property {UpdateCycle} cycle
- * @property {ComplianceWeekState} state
- * @property {StockUpdateMode} mode -  The supplier's update mode at the cycle's cutoff — the rule the week was judged by.
+ * `mode`:  The supplier's update mode at the cycle's cutoff — the rule the week was judged by.
+ *
+ * @typedef {{
+ *   readonly cycle: UpdateCycle;
+ *   readonly state: ComplianceWeekState;
+ *   readonly mode: StockUpdateMode;
+ * }} ComplianceWeek
  */
 
 /**
- * @typedef {object} UpdateCompliance
- * @property {string} supplierId
- * @property {number | null} pct -  Weeks compliant ÷ weeks counted, 0–100 (whole number); null reads "No history".
- * @property {readonly ComplianceWeek[]} weeks -  Oldest first, ending with the last completed cycle.
+ * `pct`:  Weeks compliant ÷ weeks counted, 0–100 (whole number); null reads "No history".
+ * `weeks`:  Oldest first, ending with the last completed cycle.
+ *
+ * @typedef {{
+ *   readonly supplierId: string;
+ *   readonly pct: number | null;
+ *   readonly weeks: readonly ComplianceWeek[];
+ * }} UpdateCompliance
  */
 
 /** A pull of a supplier's system, as the measure reads it. */
 /**
- * @typedef {object} ComplianceSyncAttempt
- * @property {string} supplierId
- * @property {string} at
- * @property {'success' | 'failed'} outcome
+ * @typedef {{
+ *   readonly supplierId: string;
+ *   readonly at: string;
+ *   readonly outcome: 'success' | 'failed';
+ * }} ComplianceSyncAttempt
  */
 
 /**
- * @typedef {object} ComplianceSources
- * @property {readonly CycleStockRecord[]} records
- * @property {readonly ComplianceSyncAttempt[]} syncAttempts
- * @property {readonly CycleAssignment[]} assignments
- * @property {(supplierId: string) => string | null} onboardedAt When the supplier was onboarded (supplier master). Stands in for the first
- *   material assignment when no assignment carries its own date: a supplier is
- *   not assigned materials before it is onboarded.
- * @property {(supplierId: string, atIso: string) => StockUpdateMode} modeAt -  The supplier's stock update mode at an instant (`stockUpdateModeOf`).
- * @property {WorkingCalendar} calendar
- * @property {UpdateCycleSettings} cycle
+ * `onboardedAt`: When the supplier was onboarded (supplier master). Stands in for the first material assignment when no assignment carries its own date: a supplier is not assigned materials before it is onboarded.
+ * `modeAt`:  The supplier's stock update mode at an instant (`stockUpdateModeOf`).
+ *
+ * @typedef {{
+ *   readonly records: readonly CycleStockRecord[];
+ *   readonly syncAttempts: readonly ComplianceSyncAttempt[];
+ *   readonly assignments: readonly CycleAssignment[];
+ *   readonly onboardedAt: (supplierId: string) => string | null;
+ *   readonly modeAt: (supplierId: string, atIso: string) => StockUpdateMode;
+ *   readonly calendar: WorkingCalendar;
+ *   readonly cycle: UpdateCycleSettings;
+ * }} ComplianceSources
  */
 
 const DAY_MS = 86_400_000;

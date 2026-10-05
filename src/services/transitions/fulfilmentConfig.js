@@ -23,10 +23,15 @@ import { materialEntry } from '../sdc/materialMaster';
 
 /** CR-12 — the invoice price tolerance. */
 /**
- * @typedef {object} InvoicePriceTolerance
- * @property {number} contractPricePct -  A line whose PO price comes from a contract may differ by up to this percentage (decided: 0).
- * @property {number} standardPct -  A line without a contract price may differ by up to this percentage…
- * @property {number} standardCapIdr -  …and by at most this many rupiah (placeholder until BL-54).
+ * `contractPricePct`:  A line whose PO price comes from a contract may differ by up to this percentage (decided: 0).
+ * `standardPct`:  A line without a contract price may differ by up to this percentage…
+ * `standardCapIdr`:  …and by at most this many rupiah (placeholder until BL-54).
+ *
+ * @typedef {{
+ *   readonly contractPricePct: number;
+ *   readonly standardPct: number;
+ *   readonly standardCapIdr: number;
+ * }} InvoicePriceTolerance
  */
 
 /**
@@ -43,9 +48,13 @@ export function invoicePriceTolerance() {
 
 /** CR-25 — the receipt quantity tolerance for one material, in percent of what was shipped. */
 /**
- * @typedef {object} ReceiptQtyTolerance
- * @property {number} overPct -  Over-delivery allowed without a flag. 0 = any quantity above is flagged.
- * @property {number} shortPct -  Shortfall allowed without a flag; above it the receipt stays open.
+ * `overPct`:  Over-delivery allowed without a flag. 0 = any quantity above is flagged.
+ * `shortPct`:  Shortfall allowed without a flag; above it the receipt stays open.
+ *
+ * @typedef {{
+ *   readonly overPct: number;
+ *   readonly shortPct: number;
+ * }} ReceiptQtyTolerance
  */
 
 /**
@@ -86,9 +95,13 @@ export function shelfLifeDefaultMonths() {
 
 /** MR-6 BR-05 to BR-07 — whether a material's expiry is checked, and against what. */
 /**
- * @typedef {object} ShelfLifeRule
- * @property {boolean} relevant -  `shelfLifeRelevant` as the material master resolves it (A2; owner ruling 2026-09-29).
- * @property {number} minMonths -  `minRemainingShelfLifeMonths`, else `shelfLife.defaultMonths`.
+ * `relevant`:  `shelfLifeRelevant` as the material master resolves it (A2; owner ruling 2026-09-29).
+ * `minMonths`:  `minRemainingShelfLifeMonths`, else `shelfLife.defaultMonths`.
+ *
+ * @typedef {{
+ *   readonly relevant: boolean;
+ *   readonly minMonths: number;
+ * }} ShelfLifeRule
  */
 
 /**

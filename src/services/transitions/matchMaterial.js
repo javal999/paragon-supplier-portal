@@ -38,20 +38,22 @@ export const MATCH_RANK = /** @type {const} */ ({
 
 /** The material as a search sees it. `supplierId` binds the entry to one supplier's names. */
 /**
- * @typedef {object} MaterialSearchEntry
- * @property {string} code
- * @property {string} description
- * @property {string} [supplierId]
+ * @typedef {{
+ *   readonly code: string;
+ *   readonly description: string;
+ *   readonly supplierId?: string;
+ * }} MaterialSearchEntry
  */
 
 /** @typedef {Pick<SupplierMaterialName, 'supplierId' | 'materialCode' | 'tradeName' | 'state'>} SearchableName */
 
 /**
- * @typedef {object} MaterialMatch
- * @property {MatchRank} rank
- * @property {MaterialMatchOn} matchedOn
- * @property {string} [tradeName]
- * @property {string} [supplierId]
+ * @typedef {{
+ *   readonly rank: MatchRank;
+ *   readonly matchedOn: MaterialMatchOn;
+ *   readonly tradeName?: string;
+ *   readonly supplierId?: string;
+ * }} MaterialMatch
  */
 
 /**

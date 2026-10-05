@@ -45,19 +45,28 @@ import {
 
 /** One change to one value, as recorded. */
 /**
- * @typedef {object} HubSettingChange
- * @property {string} key
- * @property {HubSettingValue} value
- * @property {HubSettingValue} previous -  The value in force just before — store-assigned.
- * @property {ActorAttribution} setBy
- * @property {string} setAt -  Store-assigned, never a payload field.
+ * `previous`:  The value in force just before — store-assigned.
+ * `setAt`:  Store-assigned, never a payload field.
+ *
+ * @typedef {{
+ *   readonly key: string;
+ *   readonly value: HubSettingValue;
+ *   readonly previous: HubSettingValue;
+ *   readonly setBy: ActorAttribution;
+ *   readonly setAt: string;
+ * }} HubSettingChange
  */
 
 /**
- * @typedef {object} HubSettingReadState
- * @property {readonly HubSettingChange[]} changes -  The changes in force, oldest first.
- * @property {readonly { readonly row: string; readonly reason: string }[]} rejected -  Stored rows refused on read, each with the reason.
- * @property {boolean} unreadable -  The store exists but could not be parsed — DISTINCT from "no changes".
+ * `changes`:  The changes in force, oldest first.
+ * `rejected`:  Stored rows refused on read, each with the reason.
+ * `unreadable`:  The store exists but could not be parsed — DISTINCT from "no changes".
+ *
+ * @typedef {{
+ *   readonly changes: readonly HubSettingChange[];
+ *   readonly rejected: readonly { readonly row: string; readonly reason: string }[];
+ *   readonly unreadable: boolean;
+ * }} HubSettingReadState
  */
 
 /** The one key. Beside `paragon.workingCalendar`, same envelope discipline. */
