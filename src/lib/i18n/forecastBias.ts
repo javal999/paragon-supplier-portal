@@ -124,7 +124,7 @@ export const forecastBiasEn: Record<string, string> = {
     'Overrides: the latest override of a week is the one in force. Old value is what was in force before; the engine’s value is kept beside it, and direction is judged against the engine’s.',
   'fb.def.fva':
     'Override value: per SKU, mean error after the override ÷ mean error of the engine; the geometric mean across SKUs is subtracted from 1. −15% means the overrides made the error 15% larger.',
-  'fb.def.link': 'Open Forecast quality',
+  'fb.def.link': 'Open the Forecast vs plan tab',
 
   // Override reason codes (starter list, ENG-B104)
   'fb.reason.promotion': 'Promotion or activity not in the history',
@@ -262,7 +262,7 @@ export const forecastBiasId: Record<string, string> = {
     'Penyesuaian: penyesuaian terakhir pada suatu minggu adalah yang berlaku. Nilai lama adalah yang berlaku sebelumnya; nilai mesin disimpan di sampingnya, dan arah dinilai terhadap nilai mesin.',
   'fb.def.fva':
     'Nilai penyesuaian: per SKU, rata-rata galat setelah penyesuaian ÷ rata-rata galat mesin; rata-rata geometris antar-SKU dikurangkan dari 1. −15% berarti penyesuaian membuat galat 15% lebih besar.',
-  'fb.def.link': 'Buka Kualitas prakiraan',
+  'fb.def.link': 'Buka tab Prakiraan vs rencana',
 
   'fb.reason.promotion': 'Promosi atau aktivitas yang tidak ada di riwayat',
   'fb.reason.customer-order': 'Pesanan distributor atau pelanggan yang sudah diketahui',
