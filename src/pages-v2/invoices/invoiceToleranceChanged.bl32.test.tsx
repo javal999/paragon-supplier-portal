@@ -5,10 +5,10 @@
 // 1.95%, held only by the Rp 500.000 cap).
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { screen } from '@testing-library/react';
-import { renderWithProviders, BUYER } from '../../test/test-utils';
+import { renderWithProviders, BUYER } from '@test/test-utils';
 import { InvoiceLinesSection } from './InvoiceCollaboration';
-import { INVOICES } from '../../services/data/mock/fixtures/invoices';
-import { hubSettingsStore } from '../../services/transitions/hubSettingsStore';
+import { INVOICES } from '@services/data/mock/fixtures/invoices';
+import { hubSettingsStore } from '@services/transitions/hubSettingsStore';
 
 const NO_PERSON = { kind: 'UNATTRIBUTED', reason: 'NO_PERSON_IN_SESSION' } as const;
 const inv = INVOICES.find((i) => i.invoiceNumber === 'INV-2026-BRL-0064')!;

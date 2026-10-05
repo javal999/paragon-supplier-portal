@@ -21,7 +21,7 @@ import {
 } from './obligationProjection';
 import { isPast, daysUntil } from './dayProjection';
 import { FAMILY_ANCHORS } from './fixturePresent';
-import { mockObligations } from '../../data/mockObligations';
+import { mockObligations } from '@data/mockObligations';
 
 const MS = 86_400_000;
 const dayMs = (v: string) => Date.parse(`${v.slice(0, 10)}T00:00:00.000Z`);

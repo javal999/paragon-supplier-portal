@@ -7,7 +7,7 @@ import {
   type ScorableQuote,
   type CriteriaWeights,
 } from './quoteScore';
-import { mockQuotations } from '../data/mockQuotations';
+import { mockQuotations } from '@data/mockQuotations';
 import { BASE_CURRENCY } from './currencyPolicy';
 import type { FxPin } from './fxPin';
 

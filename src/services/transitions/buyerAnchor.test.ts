@@ -22,7 +22,7 @@ import {
 } from './customRoles';
 import { PERSONA_ROLES, personaCan } from './roles';
 import { ROLE_LABEL_KEY, ROLE_ORDER } from './handoff';
-import i18n from '../../lib/i18n';
+import i18n from '@lib/i18n';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // THE BUYER TENANCY ANCHOR — the ⊥ of the buyer half of the role lattice.

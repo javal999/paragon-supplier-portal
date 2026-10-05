@@ -27,7 +27,7 @@ import {
   effectiveEnforcement,
   settingHistory,
   settingInForce,
-} from '../../../lib/enforcement';
+} from '@lib/enforcement';
 import { PERSONA_SYSTEM_ROLES } from '../../../services/transitions/businessRoles';
 
 const buyer: QueryScope = { personaType: 'buyer', supplierId: null, businessRoles: PERSONA_SYSTEM_ROLES.buyer };

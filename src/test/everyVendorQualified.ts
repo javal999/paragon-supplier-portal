@@ -8,8 +8,8 @@
 // they set the lists they need, or run on the placeholder seed.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { NO_PERSON } from '../context/noPerson';
-import { qualificationRuleStore } from '../services/transitions/qualificationRuleStore';
+import { NO_PERSON } from '@context/noPerson';
+import { qualificationRuleStore } from '@services/transitions/qualificationRuleStore';
 
 export function everyVendorQualified(): void {
   qualificationRuleStore.reset();

@@ -183,7 +183,7 @@ function walk(dir: string, out: string[] = []): string[] {
   for (const e of readdirSync(dir)) {
     const p = join(dir, e);
     if (statSync(p).isDirectory()) walk(p, out);
-    else if (/\.tsx?$/.test(p)) out.push(p);
+    else if (/\.[jt]sx?$/.test(p)) out.push(p);
   }
   return out;
 }
@@ -198,7 +198,7 @@ describe('⚠️ THE BOUNDARY — an ingress key, never a user-action dedupe', (
 
   it('no page, component or hook supplies an idempotencyKey', async () => {
     const offenders = files
-      .filter((f) => !/[\\/]__tests__[\\/]|\.test\.tsx?$/.test(f))
+      .filter((f) => !/[\\/]__tests__[\\/]|\.test\.[jt]sx?$/.test(f))
       .filter((f) => /[\\/](pages-v2|components|hooks)[\\/]/.test(f))
       .filter((f) => /idempotencyKey\s*:/.test(readFileSync(f, 'utf8')))
       .map((f) => f.slice(ROOT.length + 1));

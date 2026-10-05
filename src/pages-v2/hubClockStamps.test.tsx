@@ -17,24 +17,27 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import { describe, it, expect, beforeEach } from 'vitest';
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
-import { renderWithProviders, SUPPLIER } from '../test/test-utils';
-import { usePinnedDemoClock } from '../test/demoClock';
-import { DECLARED_PRESENT } from '../services/data/fixturePresent';
-import { sdcClock } from '../services/sdc/clock';
-import GRInspectionWizard from '../components/v2-features/GRInspectionWizard';
-import { asnStore } from '../services/data/mock/stores/asnStore';
-import { goodsReceiptStore } from '../services/data/mock/stores/goodsReceiptStore';
-import { mockShipments } from '../data/mockShipments';
-import { COMPLIANCE_REGISTRY } from '../services/data/mock/fixtures/complianceRegistry';
-import { halalOf } from '../services/sdc/halal';
-import { bpomOf } from '../services/sdc/bpom';
-import type { EnforcementSetting } from '../lib/enforcement';
+import { renderWithProviders, SUPPLIER } from '@test/test-utils';
+import { usePinnedDemoClock } from '@test/demoClock';
+import { DECLARED_PRESENT } from '@services/data/fixturePresent';
+import { sdcClock } from '@services/sdc/clock';
+import GRInspectionWizard from '@components/v2-features/GRInspectionWizard';
+import { asnStore } from '@services/data/mock/stores/asnStore';
+import { goodsReceiptStore } from '@services/data/mock/stores/goodsReceiptStore';
+import { mockShipments } from '@data/mockShipments';
+import { COMPLIANCE_REGISTRY } from '@services/data/mock/fixtures/complianceRegistry';
+import { halalOf } from '@services/sdc/halal';
+import { bpomOf } from '@services/sdc/bpom';
+import type { EnforcementSetting } from '@lib/enforcement';
 import SupplierWhatsApp from './SupplierWhatsApp';
 import BuyerComplianceWidget from './widgets/BuyerComplianceWidget';
-import { computeStatus, daysRemaining } from '../services/data/complianceProjection';
+import { computeStatus, daysRemaining } from '@services/data/complianceProjection';
 
 /** The machine's calendar during every test: nowhere near the hub's present. */
 const MACHINE = '2027-03-15T03:07:00.000Z';
+// `usePinnedDemoClock` is a Vitest setup helper, not a React hook: it registers
+// beforeEach/afterEach and must run at module scope (see src/test/demoClock.ts).
+// eslint-disable-next-line react-hooks/rules-of-hooks
 usePinnedDemoClock(MACHINE);
 
 const HHMM = { hour: '2-digit', minute: '2-digit' } as const;

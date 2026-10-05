@@ -49,7 +49,7 @@ import type {
   ModelableMaterial,
   MaterialClass,
   BasketComponent,
-} from '../../../../lib/shouldCost';
+} from '@lib/shouldCost';
 
 export type MonthKey = string; // 'YYYY-MM'
 export type Provenance = 'FETCHED' | 'ANCHOR';

@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { screen, fireEvent, act, waitFor } from '@testing-library/react';
-import { renderWithProviders } from '../../test/test-utils';
-import i18n, { LANG_STORAGE_KEY } from '../../lib/i18n';
+import { renderWithProviders } from '@test/test-utils';
+import i18n, { LANG_STORAGE_KEY } from '@lib/i18n';
 import TopBarV2 from './TopBarV2';
 
 afterEach(async () => {

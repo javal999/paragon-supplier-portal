@@ -1,11 +1,11 @@
 import { screen, fireEvent } from '@testing-library/react';
-import { renderWithProviders } from '../test/test-utils';
-import type { CurrentIdentity } from '../context/CurrentIdentityContext';
-import { invoiceStore } from '../services/data/mock/stores/invoiceStore';
-import { PERSONA_SYSTEM_ROLES } from '../services/transitions/businessRoles';
-import i18n from '../lib/i18n';
+import { renderWithProviders } from '@test/test-utils';
+import type { CurrentIdentity } from '@context/CurrentIdentityContext';
+import { invoiceStore } from '@services/data/mock/stores/invoiceStore';
+import { PERSONA_SYSTEM_ROLES } from '@services/transitions/businessRoles';
+import i18n from '@lib/i18n';
 import BuyerInvoices from './BuyerInvoices';
-import { NO_PERSON } from '../context/noPerson';
+import { NO_PERSON } from '@context/noPerson';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ⚠️ THE BINDING CONSTRAINT, ON THE SCREEN.

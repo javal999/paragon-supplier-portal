@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { mockIdentitySource } from './identitySources';
-import { mockSuppliers } from '../data/mockSuppliers';
+import { mockSuppliers } from '@data/mockSuppliers';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ⚠️ THE TENANT SURVIVES A RELOAD — AND THE NAME IS RESOLVED, NEVER TRUSTED.

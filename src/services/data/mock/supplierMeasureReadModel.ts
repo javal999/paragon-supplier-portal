@@ -15,7 +15,7 @@
 // is a different question from "what is this supplier's standing".
 // ────────────────────────────────────────────────────────────────────────────
 
-import { ScorecardGrade, type Supplier } from '../../../types/supplier.types';
+import { ScorecardGrade, type Supplier } from '@app-types/supplier.types';
 import { sdcClock } from '../../sdc/clock';
 import {
   supplierMeasure,

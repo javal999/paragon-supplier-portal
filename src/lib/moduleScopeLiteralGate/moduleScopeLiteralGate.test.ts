@@ -37,6 +37,7 @@ import {
   type Census,
 } from './derive';
 import { S2_GRANDFATHERED, grandfatheredKeys } from './grandfathered';
+import { isTestFile } from '@test/sourceFiles';
 
 const ROOT = join(__dirname, '..', '..', '..');
 
@@ -221,9 +222,9 @@ describe('module-scope literal gate · the tree', () => {
     // population guard on something the batch is not editing.** `Button`'s
     // `variant` default is held in place by DP2-BUTTON-01 and by the `Variant`
     // type, so it is as stable as this tree has.
-    expect(census.candidates.some((c) => c.file.endsWith('ui-v2/Button.tsx'))).toBe(true);
+    expect(census.candidates.some((c) => c.file.endsWith('ui-v2/Button.jsx'))).toBe(true);
     // And a known-FALSE member: specs are out of scope, so none may appear.
-    expect(census.candidates.some((c) => /\.test\.tsx?$/.test(c.file))).toBe(false);
+    expect(census.candidates.some((c) => isTestFile(c.file))).toBe(false);
   });
 
   it('no reader-visible literal sits where t() cannot reach it', () => {

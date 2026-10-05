@@ -31,13 +31,14 @@ import ts from 'typescript';
 import { Routes, Route } from 'react-router-dom';
 import { screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import i18n, { resources } from '../lib/i18n';
-import { renderWithProviders, BUYER } from '../test/test-utils';
-import { SEEDED_SEAT_ROLES } from '../services/transitions/businessRoles';
-import { resetRfxStores } from '../services/data/mock/stores/rfxStores';
-import { rfqStore } from '../services/data/mock/stores/rfqStore';
-import { quotationStore } from '../services/data/mock/stores/quotationStore';
-import { sdcClock } from '../services/sdc';
+import i18n, { resources } from '@lib/i18n';
+import { renderWithProviders, BUYER } from '@test/test-utils';
+import { isSourceFile, isTestFile, scriptKindOf } from '@test/sourceFiles';
+import { SEEDED_SEAT_ROLES } from '@services/transitions/businessRoles';
+import { resetRfxStores } from '@services/data/mock/stores/rfxStores';
+import { rfqStore } from '@services/data/mock/stores/rfqStore';
+import { quotationStore } from '@services/data/mock/stores/quotationStore';
+import { sdcClock } from '@services/sdc';
 import BuyerSourcingEvent from './BuyerSourcingEvent';
 
 // ── 1 · RENDERED ─────────────────────────────────────────────────────────────
@@ -123,7 +124,7 @@ interface Finding {
 
 /** Literal-key `t()` calls that leave an interpolated variable unset. */
 function scan(file: string, text: string): { findings: Finding[]; examined: string[] } {
-  const src = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  const src = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, scriptKindOf(file));
   const findings: Finding[] = [];
   const examined: string[] = [];
   const visit = (n: ts.Node): void => {
@@ -170,7 +171,7 @@ function sourceFiles(dir: string): string[] {
   return fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
     const p = path.join(dir, e.name);
     if (e.isDirectory()) return sourceFiles(p);
-    return /\.tsx?$/.test(e.name) && !/\.test\.tsx?$/.test(e.name) && !e.name.endsWith('.d.ts') ? [p] : [];
+    return isSourceFile(e.name) && !isTestFile(e.name) ? [p] : [];
   });
 }
 

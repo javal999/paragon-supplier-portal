@@ -1,9 +1,9 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import LivenessPill from '../../components/ui-v2/LivenessPill';
-import Data from '../../components/ui-v2/Data';
-import { formatDate } from '../../lib/format';
-import { useSupplierReliability } from '../../services/query/hooks';
+import LivenessPill from '@components/ui-v2/LivenessPill';
+import Data from '@components/ui-v2/Data';
+import { formatDate } from '@lib/format';
+import { useSupplierReliability } from '@services/query/hooks';
 import { MissSplitLine, Rate, mascOf, pctOf } from './reliabilityDisplay';
 
 // ─────────────────────────────────────────────────────────────────────────────

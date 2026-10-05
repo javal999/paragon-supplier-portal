@@ -53,7 +53,7 @@
 // `type="number"` field hides by eating the token.
 // ────────────────────────────────────────────────────────────────────────────
 
-import { normalizeQty, type QtyRefusalReason } from '../../lib/localeNumber';
+import { normalizeQty, type QtyRefusalReason } from '@lib/localeNumber';
 
 /** Which half of the pair refused, so a surface can mark the offending input. */
 export type GrQtyField = 'received' | 'accepted';

@@ -6,18 +6,18 @@ import {
   CheckCircle2,
   Info,
 } from 'lucide-react';
-import AppShellV2 from '../components/layout-v2/AppShellV2';
-import PageHeader from '../components/ui-v2/PageHeader';
-import PageMetaLine from '../components/ui-v2/PageMetaLine';
-import ProvenanceMarker from '../components/ui-v2/ProvenanceMarker';
-import SubTabs from '../components/ui-v2/SubTabs';
-import FilterChipsBar from '../components/ui-v2/FilterChipsBar';
-import Button from '../components/ui-v2/Button';
-import NoSupplierIdentity from '../components/ui-v2/NoSupplierIdentity';
-import Data from '../components/ui-v2/Data';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import PageHeader from '@components/ui-v2/PageHeader';
+import PageMetaLine from '@components/ui-v2/PageMetaLine';
+import ProvenanceMarker from '@components/ui-v2/ProvenanceMarker';
+import SubTabs from '@components/ui-v2/SubTabs';
+import FilterChipsBar from '@components/ui-v2/FilterChipsBar';
+import Button from '@components/ui-v2/Button';
+import NoSupplierIdentity from '@components/ui-v2/NoSupplierIdentity';
+import Data from '@components/ui-v2/Data';
 import { useTranslation } from 'react-i18next';
-import { useCurrentIdentity } from '../context/CurrentIdentityContext';
-import { sdcClock } from '../services/sdc/clock';
+import { useCurrentIdentity } from '@context/CurrentIdentityContext';
+import { sdcClock } from '@services/sdc/clock';
 
 const WHATSAPP_GREEN_HEADER = '#075E54';
 const WHATSAPP_BG = '#ECE5DD';
@@ -192,12 +192,19 @@ const FormatMsg: React.FC<{ text: string }> = ({ text }) => {
     <>
       {lines.map((line, li) => {
         const parts = line.split(/(\*[^*]+\*)/g);
+        // Keys are positions on purpose: `lines` and `parts` are re-derived from the
+        // immutable `text` prop on every render (never edited, reordered or filtered
+        // independently), they hold no state, and their content can repeat (blank
+        // lines, the same word twice), so position is the only unique identity.
         return (
+          // eslint-disable-next-line react/no-array-index-key -- line position within an immutable message text; lines can repeat
           <React.Fragment key={li}>
             {parts.map((p, pi) =>
               p.startsWith('*') && p.endsWith('*') ? (
+                // eslint-disable-next-line react/no-array-index-key -- segment position within an immutable line; segments can repeat
                 <strong key={pi}>{p.slice(1, -1)}</strong>
               ) : (
+                // eslint-disable-next-line react/no-array-index-key -- segment position within an immutable line; segments can repeat
                 <span key={pi}>{p}</span>
               ),
             )}

@@ -1,4 +1,4 @@
-import { shiftFields, SDC_FAMILY_CONTRACT_IDS } from '../services/data/fixturePresent';
+import { shiftFields, SDC_FAMILY_CONTRACT_IDS } from '@services/data/fixturePresent';
 
 export type ContractType =
   | 'Supply'

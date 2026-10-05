@@ -49,7 +49,7 @@ import {
   CI15_MATERIALS,
   type MonthKey,
   type HistoricalSeries,
-} from '../services/data/mock/fixtures/commodityHistory';
+} from '@services/data/mock/fixtures/commodityHistory';
 
 export {
   COMMODITY_HISTORY,
@@ -58,7 +58,7 @@ export {
   type MonthKey,
   type HistoricalSeries,
   type Provenance,
-} from '../services/data/mock/fixtures/commodityHistory';
+} from '@services/data/mock/fixtures/commodityHistory';
 
 export type BasisMode = 'spot' | 'contract';
 

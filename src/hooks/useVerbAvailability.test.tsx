@@ -1,8 +1,8 @@
 import { screen } from '@testing-library/react';
-import { renderWithProviders, BUYER, SUPPLIER } from '../test/test-utils';
-import type { CurrentIdentity } from '../context/CurrentIdentityContext';
+import { renderWithProviders, BUYER, SUPPLIER } from '@test/test-utils';
+import type { CurrentIdentity } from '@context/CurrentIdentityContext';
 import { useVerbAvailability, useVerbAvailabilities } from './useVerbAvailability';
-import type { TransitionRole } from '../services/transitions/schema';
+import type { TransitionRole } from '@services/transitions/schema';
 
 // ────────────────────────────────────────────────────────────────────────────
 // The hook answers the SAME question `availabilityOfAtom` answers, from the

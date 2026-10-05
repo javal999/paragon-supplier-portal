@@ -10,16 +10,16 @@
 
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import Button from '../../components/ui-v2/Button';
-import Data from '../../components/ui-v2/Data';
-import { HandoffNotice } from '../../components/ui-v2/HandoffNotice';
-import { useVerbAvailabilities } from '../../hooks/useVerbAvailability';
-import { useRefusalText } from '../../hooks/useRefusalText';
-import { useToast } from '../../hooks/useToast';
-import { formatDate } from '../../lib/format';
-import { useAdvanceShipNoticeExceptionDecision } from '../../services/query/commandHooks';
-import { monthsLeftAt, shelfLifeExceptionOf } from '../../services/transitions/fulfilmentRules';
-import type { ASN } from '../../services/data/types';
+import Button from '@components/ui-v2/Button';
+import Data from '@components/ui-v2/Data';
+import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
+import { useVerbAvailabilities } from '@hooks/useVerbAvailability';
+import { useRefusalText } from '@hooks/useRefusalText';
+import { useToast } from '@hooks/useToast';
+import { formatDate } from '@lib/format';
+import { useAdvanceShipNoticeExceptionDecision } from '@services/query/commandHooks';
+import { monthsLeftAt, shelfLifeExceptionOf } from '@services/transitions/fulfilmentRules';
+import type { ASN } from '@services/data/types';
 import { monthsText } from './ShelfLifeParts';
 
 const inputClass =

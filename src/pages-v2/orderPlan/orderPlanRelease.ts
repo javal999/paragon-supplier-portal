@@ -11,8 +11,8 @@
 // live (X-03, `CALLOFF_ENGINE_DATA_LIVE`, owner decision 2026-09-23).
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { CALL_OFF_PO_STATES } from '../../services/transitions/callOffRules';
-import type { POLineItem, PurchaseOrder } from '../../services/data/types';
+import { CALL_OFF_PO_STATES } from '@services/transitions/callOffRules';
+import type { POLineItem, PurchaseOrder } from '@services/data/types';
 
 /**
  * The open umbrella PO line a recommendation can be drafted on: the same

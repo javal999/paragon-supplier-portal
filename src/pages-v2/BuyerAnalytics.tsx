@@ -28,29 +28,29 @@ import {
   Minus,
   LucideIcon,
 } from 'lucide-react';
-import AppShellV2 from '../components/layout-v2/AppShellV2';
-import PageHeader from '../components/ui-v2/PageHeader';
-import PageMetaLine from '../components/ui-v2/PageMetaLine';
-import ProvenanceMarker from '../components/ui-v2/ProvenanceMarker';
-import KpiCard from '../components/ui-v2/KpiCard';
-import BulkActionsBar from '../components/ui-v2/BulkActionsBar';
-import FilterChipsBar from '../components/ui-v2/FilterChipsBar';
-import StatusPill from '../components/ui-v2/StatusPill';
-import Table from '../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../components/ui-v2/TableHeader';
-import TableRow from '../components/ui-v2/TableRow';
-import TableCell from '../components/ui-v2/TableCell';
-import LoadingState from '../components/ui-v2/LoadingState';
-import ErrorState from '../components/ui-v2/ErrorState';
-import EmptyState from '../components/ui-v2/EmptyState';
-import { useToast } from '../hooks/useToast';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import PageHeader from '@components/ui-v2/PageHeader';
+import PageMetaLine from '@components/ui-v2/PageMetaLine';
+import ProvenanceMarker from '@components/ui-v2/ProvenanceMarker';
+import KpiCard from '@components/ui-v2/KpiCard';
+import BulkActionsBar from '@components/ui-v2/BulkActionsBar';
+import FilterChipsBar from '@components/ui-v2/FilterChipsBar';
+import StatusPill from '@components/ui-v2/StatusPill';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
+import LoadingState from '@components/ui-v2/LoadingState';
+import ErrorState from '@components/ui-v2/ErrorState';
+import EmptyState from '@components/ui-v2/EmptyState';
+import { useToast } from '@hooks/useToast';
 import {
   CHART_SERIES,
   CHART_SEMANTIC,
   CHART_MID,
   CHART_GRID,
   targetStatus,
-} from '../lib/chartPalette';
+} from '@lib/chartPalette';
 import {
   useSuppliers,
   useAnalyticsSummary,
@@ -60,20 +60,20 @@ import {
   usePoVolumeTrend,
   useChannelMix,
   useSupplierPerformance,
-} from '../services/query/hooks';
+} from '@services/query/hooks';
 import type {
   KpiTrend as Trend,
   KpiTone,
   AnalyticsGrade as Grade,
   AnalyticsSummary,
-} from '../services/data/types';
+} from '@services/data/types';
 import { usePerformance } from './performance/performanceDisplay';
 import {
   GRADE_BANDS,
   OTIF_TARGET_PCT,
   type PerformancePeriod,
-} from '../services/data/performanceRules';
-import { useCategoryLabel } from '../hooks/useCategoryLabel';
+} from '@services/data/performanceRules';
+import { useCategoryLabel } from '@hooks/useCategoryLabel';
 
 // ⚠️ REQ-E10-01 BR-08 — THE PERIOD IS AN INPUT TO THE COMPUTATION, NOT A LABEL.
 // The chips used to change a caption over figures that never moved. The ids now

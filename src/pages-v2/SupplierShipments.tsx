@@ -11,8 +11,8 @@ import {
   ChevronDown,
   Upload,
 } from 'lucide-react';
-import AppShellV2 from '../components/layout-v2/AppShellV2';
-import PageHeader from '../components/ui-v2/PageHeader';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import PageHeader from '@components/ui-v2/PageHeader';
 import {
   OrderNotFound,
   PoFilterBanner,
@@ -20,40 +20,40 @@ import {
   usePoDrillFilter,
 } from './orders/PoDrillFilter';
 import { asnsForPo } from './orders/orderSummaryModel';
-import PageMetaLine from '../components/ui-v2/PageMetaLine';
-import ProvenanceMarker from '../components/ui-v2/ProvenanceMarker';
-import KpiCard from '../components/ui-v2/KpiCard';
-import BulkActionsBar from '../components/ui-v2/BulkActionsBar';
-import SubTabs from '../components/ui-v2/SubTabs';
-import StatusPill from '../components/ui-v2/StatusPill';
-import Table from '../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../components/ui-v2/TableHeader';
-import TableRow from '../components/ui-v2/TableRow';
-import TableCell from '../components/ui-v2/TableCell';
-import Button from '../components/ui-v2/Button';
-import SidePanel from '../components/ui-v2/SidePanel';
-import Wizard, { WizardStep } from '../components/ui-v2/Wizard';
-import FormSection from '../components/ui-v2/FormSection';
-import Data from '../components/ui-v2/Data';
-import { useVerbAvailabilities } from '../hooks/useVerbAvailability';
-import { HandoffNotice } from '../components/ui-v2/HandoffNotice';
+import PageMetaLine from '@components/ui-v2/PageMetaLine';
+import ProvenanceMarker from '@components/ui-v2/ProvenanceMarker';
+import KpiCard from '@components/ui-v2/KpiCard';
+import BulkActionsBar from '@components/ui-v2/BulkActionsBar';
+import SubTabs from '@components/ui-v2/SubTabs';
+import StatusPill from '@components/ui-v2/StatusPill';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
+import Button from '@components/ui-v2/Button';
+import SidePanel from '@components/ui-v2/SidePanel';
+import Wizard, { WizardStep } from '@components/ui-v2/Wizard';
+import FormSection from '@components/ui-v2/FormSection';
+import Data from '@components/ui-v2/Data';
+import { useVerbAvailabilities } from '@hooks/useVerbAvailability';
+import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
 import { useTranslation } from 'react-i18next';
-import { statusLabelKey } from '../lib/statusLabel';
-import { useToast } from '../hooks/useToast';
-import { useCurrentIdentity } from '../context/CurrentIdentityContext';
+import { statusLabelKey } from '@lib/statusLabel';
+import { useToast } from '@hooks/useToast';
+import { useCurrentIdentity } from '@context/CurrentIdentityContext';
 import {
   useAdvanceShipNoticeCancel,
   useAdvanceShipNoticeChangeEta,
   useAdvanceShipNoticeCreate,
   useAdvanceShipNoticeRequestException,
   useAdvanceShipNoticeSubmit,
-} from '../services/query/commandHooks';
+} from '@services/query/commandHooks';
 import {
   ASN_CANCELLABLE_STATES,
   etaNeedsReapproval,
   shelfLifeExceptionOf,
   type AvailableBatch,
-} from '../services/transitions/fulfilmentRules';
+} from '@services/transitions/fulfilmentRules';
 import {
   BlockedStockMarker,
   ShelfLifeExceptionDetail,
@@ -72,29 +72,29 @@ import {
   type LineEntry,
   type OpenLine,
 } from './shipments/asnLines';
-import { POStatus } from '../services/data/types';
-import NoSupplierIdentity from '../components/ui-v2/NoSupplierIdentity';
-import LoadingState from '../components/ui-v2/LoadingState';
-import ErrorState from '../components/ui-v2/ErrorState';
-import EmptyState from '../components/ui-v2/EmptyState';
+import { POStatus } from '@services/data/types';
+import NoSupplierIdentity from '@components/ui-v2/NoSupplierIdentity';
+import LoadingState from '@components/ui-v2/LoadingState';
+import ErrorState from '@components/ui-v2/ErrorState';
+import EmptyState from '@components/ui-v2/EmptyState';
 import {
   useCurrentSupplier,
   usePurchaseOrders,
   useASNs,
   useCallOffs,
   useInventory,
-} from '../services/query/hooks';
-import { asnCallOffWarnings, isConfirmedAndAccepted, type AsnForCallOffCheck } from '../services/transitions/callOffRules';
+} from '@services/query/hooks';
+import { asnCallOffWarnings, isConfirmedAndAccepted, type AsnForCallOffCheck } from '@services/transitions/callOffRules';
 import { AsnSubmitWarnings, callOffWarningText } from './shipments/CallOffWarnings';
 import { useCallOffViews } from './callOffs/callOffDisplay';
-import type { AsnStatus, ASN, PurchaseOrder } from '../services/data/types';
-import { useRefusalText } from '../hooks/useRefusalText';
-import { refusalDetailOf } from '../services/transitions/refusalMessage';
-import TrackingNumber from '../components/ui-v2/TrackingNumber';
+import type { AsnStatus, ASN, PurchaseOrder } from '@services/data/types';
+import { useRefusalText } from '@hooks/useRefusalText';
+import { refusalDetailOf } from '@services/transitions/refusalMessage';
+import TrackingNumber from '@components/ui-v2/TrackingNumber';
 import CarrierPicker, { carrierFor, defaultCarrier } from './shipments/CarrierPicker';
 import { poLineQuantityText } from './orders/poLineQuantity';
 import { PicCell, PicFilter, PicHeader, usePicFilter } from './materials/picDisplay';
-import MaterialSearch, { MaterialMatchReason, useMaterialSearch } from '../components/ui-v2/MaterialSearch';
+import MaterialSearch, { MaterialMatchReason, useMaterialSearch } from '@components/ui-v2/MaterialSearch';
 
 type TabKey = 'shipments' | 'create';
 type StatusFilter = AsnStatus | 'All';

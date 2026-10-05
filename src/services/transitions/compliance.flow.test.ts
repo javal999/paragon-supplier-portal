@@ -22,7 +22,7 @@ import {
 import { MockCommandService } from '../data/mock/MockCommandService';
 import type { QueryScope } from '../data/types';
 import { PERSONA_SYSTEM_ROLES } from '../../services/transitions/businessRoles';
-import { displayStatesOf } from '../../lib/projectionGate/displayStates';
+import { displayStatesOf } from '@lib/projectionGate/displayStates';
 
 // ⚠️ **THE SECOND COPY OF `PROJECTIONS_EXCLUDED`, AND THE ONLY ONE WHOSE LABEL
 // WAS TRUE.** Compliance's two display states really ARE computed —

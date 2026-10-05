@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { screen, waitFor, within } from '@testing-library/react';
-import { renderWithProviders, SUPPLIER } from '../test/test-utils';
+import { renderWithProviders, SUPPLIER } from '@test/test-utils';
 import BuyerChase from './BuyerChase';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -9,8 +9,8 @@ import BuyerChase from './BuyerChase';
 // SIMULATED marker + push framing, and the buyer gate (a supplier sees nothing).
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { PERSONA_SYSTEM_ROLES } from '../services/transitions/businessRoles';
-import { NO_PERSON } from '../context/noPerson';
+import { PERSONA_SYSTEM_ROLES } from '@services/transitions/businessRoles';
+import { NO_PERSON } from '@context/noPerson';
 
 const BUYER = {
   personaType: 'buyer',

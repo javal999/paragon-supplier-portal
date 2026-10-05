@@ -1,38 +1,38 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import AppShellV2 from '../components/layout-v2/AppShellV2';
-import PageHeader from '../components/ui-v2/PageHeader';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import PageHeader from '@components/ui-v2/PageHeader';
 import {
   OrderNotFound,
   PoFilterBanner,
   usePoDrillFilter,
 } from './orders/PoDrillFilter';
-import PageMetaLine from '../components/ui-v2/PageMetaLine';
-import SampleDataBadge from '../components/ui-v2/SampleDataBadge';
-import SubTabs from '../components/ui-v2/SubTabs';
-import Table from '../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../components/ui-v2/TableHeader';
-import TableRow from '../components/ui-v2/TableRow';
-import TableCell from '../components/ui-v2/TableCell';
-import Button from '../components/ui-v2/Button';
-import Data from '../components/ui-v2/Data';
-import LoadingState from '../components/ui-v2/LoadingState';
-import ErrorState from '../components/ui-v2/ErrorState';
-import EmptyState from '../components/ui-v2/EmptyState';
-import NoSupplierIdentity from '../components/ui-v2/NoSupplierIdentity';
-import { HandoffNotice } from '../components/ui-v2/HandoffNotice';
-import { useVerbAvailability } from '../hooks/useVerbAvailability';
-import { useCurrentIdentity } from '../context/CurrentIdentityContext';
-import { formatDate, formatDateTime } from '../lib/format';
-import { useCapacityPlans } from '../services/query/hooks';
-import type { CapacityPlan, CapacityReason } from '../services/data/types';
+import PageMetaLine from '@components/ui-v2/PageMetaLine';
+import SampleDataBadge from '@components/ui-v2/SampleDataBadge';
+import SubTabs from '@components/ui-v2/SubTabs';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
+import Button from '@components/ui-v2/Button';
+import Data from '@components/ui-v2/Data';
+import LoadingState from '@components/ui-v2/LoadingState';
+import ErrorState from '@components/ui-v2/ErrorState';
+import EmptyState from '@components/ui-v2/EmptyState';
+import NoSupplierIdentity from '@components/ui-v2/NoSupplierIdentity';
+import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
+import { useVerbAvailability } from '@hooks/useVerbAvailability';
+import { useCurrentIdentity } from '@context/CurrentIdentityContext';
+import { formatDate, formatDateTime } from '@lib/format';
+import { useCapacityPlans } from '@services/query/hooks';
+import type { CapacityPlan, CapacityReason } from '@services/data/types';
 import { useActiveReasonCodes, useReasonLabel } from './admin/reasonCodeDisplay';
 import {
   capacitySubmissionRefusal,
   ltpCapacityLevel,
   planStatus,
-} from '../services/transitions/capacityRules';
-import { readStockNumber } from '../services/transitions/inventoryRules';
+} from '@services/transitions/capacityRules';
+import { readStockNumber } from '@services/transitions/inventoryRules';
 import {
   CapacityStatusPill,
   LtpCheckPill,

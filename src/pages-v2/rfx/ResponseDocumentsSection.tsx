@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
-import StatusPill from '../../components/ui-v2/StatusPill';
-import Data from '../../components/ui-v2/Data';
-import SessionAttachments from '../../components/ui-v2/SessionAttachments';
-import { formatDate } from '../../lib/format';
-import { fileLimitRefusal, MAX_FILE_BYTES, MAX_FILES_PER_RESPONSE } from '../../services/attachments/fileRules';
-import type { AttachmentMeta } from '../../services/attachments/sessionAttachments';
-import { responseDocumentsRefusal } from '../../services/transitions/rfxDocumentRules';
-import type { CertificateFields, DocumentRequest, ResponseDocument } from '../../services/sourcing/types';
+import StatusPill from '@components/ui-v2/StatusPill';
+import Data from '@components/ui-v2/Data';
+import SessionAttachments from '@components/ui-v2/SessionAttachments';
+import { formatDate } from '@lib/format';
+import { fileLimitRefusal, MAX_FILE_BYTES, MAX_FILES_PER_RESPONSE } from '@services/attachments/fileRules';
+import type { AttachmentMeta } from '@services/attachments/sessionAttachments';
+import { responseDocumentsRefusal } from '@services/transitions/rfxDocumentRules';
+import type { CertificateFields, DocumentRequest, ResponseDocument } from '@services/sourcing/types';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // NR-1 · THE SUPPLIER'S "DOCUMENTS" SECTION — one component for the RFI form,

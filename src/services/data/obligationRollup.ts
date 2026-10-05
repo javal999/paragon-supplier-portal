@@ -85,7 +85,7 @@
 //   built here.
 // ────────────────────────────────────────────────────────────────────────────
 
-import type { ContractObligation } from '../../data/mockObligations';
+import type { ContractObligation } from '@data/mockObligations';
 import { isObligationComplete } from './obligationProjection';
 
 /** A contract's obligation counters. Both derived; neither stored. */

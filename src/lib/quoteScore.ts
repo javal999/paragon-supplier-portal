@@ -33,7 +33,7 @@ import {
   type FxPin,
   type FxRefusalReason,
 } from './fxPin';
-import { sdcClock } from '../services/sdc/clock';
+import { sdcClock } from '@services/sdc/clock';
 
 export type Liveness = 'live' | 'simulated';
 

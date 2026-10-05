@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Lock, MessageSquare } from 'lucide-react';
-import Button from '../../components/ui-v2/Button';
-import Data from '../../components/ui-v2/Data';
-import StatusPill from '../../components/ui-v2/StatusPill';
-import { HandoffNotice } from '../../components/ui-v2/HandoffNotice';
-import { useVerbAvailability } from '../../hooks/useVerbAvailability';
-import { useToast } from '../../hooks/useToast';
-import { formatDate, formatDateTime } from '../../lib/format';
-import { useRfqEngagementCommand, type RfqEngagementVars } from '../../services/query/commandHooks';
-import type { RFQ } from '../../data/mockRfqs';
-import { RFQ_DECLINE_REASONS, type RfqDeclineReason } from '../../services/sourcing/rfqModel';
-import type { RfqClarificationView, RfqEngagementView } from '../../services/sourcing/rfqResponse';
+import Button from '@components/ui-v2/Button';
+import Data from '@components/ui-v2/Data';
+import StatusPill from '@components/ui-v2/StatusPill';
+import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
+import { useVerbAvailability } from '@hooks/useVerbAvailability';
+import { useToast } from '@hooks/useToast';
+import { formatDate, formatDateTime } from '@lib/format';
+import { useRfqEngagementCommand, type RfqEngagementVars } from '@services/query/commandHooks';
+import type { RFQ } from '@data/mockRfqs';
+import { RFQ_DECLINE_REASONS, type RfqDeclineReason } from '@services/sourcing/rfqModel';
+import type { RfqClarificationView, RfqEngagementView } from '@services/sourcing/rfqResponse';
 import { rfqResponseRefusal } from './rfqResponseText';
 
 // ─────────────────────────────────────────────────────────────────────────────

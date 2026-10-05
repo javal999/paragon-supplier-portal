@@ -1,16 +1,16 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { screen, waitFor, within } from '@testing-library/react';
-import { renderWithProviders, SUPPLIER } from '../test/test-utils';
-import { schedulingAgreementStore } from '../services/delivery/stores/schedulingAgreementStore';
-import { mockDataService } from '../services/data/mock/mockDataService';
-import type { QueryScope } from '../services/data/types';
+import { renderWithProviders, SUPPLIER } from '@test/test-utils';
+import { schedulingAgreementStore } from '@services/delivery/stores/schedulingAgreementStore';
+import { mockDataService } from '@services/data/mock/mockDataService';
+import type { QueryScope } from '@services/data/types';
 import SupplierDeliveryAgreements from './SupplierDeliveryAgreements';
-import { shapeObligations } from '../services/chase';
-import { deriveAgreementView } from '../services/delivery';
-import { SCHEDULING_AGREEMENT_DEMO, DELIVERY_DEMO_SHIPMENTS } from '../services/delivery/demoFixtures';
-import { SCHEDULING_AGREEMENT_CTR003 } from '../services/delivery/fixtures';
-import { SDC_SIMULATED_NOW } from '../services/sdc';
-import { PERSONA_SYSTEM_ROLES } from '../services/transitions/businessRoles';
+import { shapeObligations } from '@services/chase';
+import { deriveAgreementView } from '@services/delivery';
+import { SCHEDULING_AGREEMENT_DEMO, DELIVERY_DEMO_SHIPMENTS } from '@services/delivery/demoFixtures';
+import { SCHEDULING_AGREEMENT_CTR003 } from '@services/delivery/fixtures';
+import { SDC_SIMULATED_NOW } from '@services/sdc';
+import { PERSONA_SYSTEM_ROLES } from '@services/transitions/businessRoles';
 
 // The supplier's own-facts-only delivery mirror. Reads sup-007's OWN agreements
 // (sa-0001 pristine + sa-0002 rich) via the identity-scoped hook — own-only by

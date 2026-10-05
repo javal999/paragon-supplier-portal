@@ -7,7 +7,7 @@
 import { describe, expect, it } from 'vitest';
 import type { ASN, CallOff } from '../data/types';
 import { CALL_OFF_SEED } from '../data/mock/fixtures/callOffs';
-import { mockGoodsReceipts } from '../../data/mockGoodsReceipts';
+import { mockGoodsReceipts } from '@data/mockGoodsReceipts';
 import { MOCK_ASNS } from '../data/mock/fixtures/supplierShipments';
 import { SDC_SIMULATED_NOW } from '../sdc/clock';
 import { DECLARED_PRESENT } from '../data/fixturePresent';

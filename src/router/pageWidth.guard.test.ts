@@ -29,8 +29,9 @@
 // ────────────────────────────────────────────────────────────────────────────
 
 import { describe, it, expect } from 'vitest';
-import { readFileSync, existsSync } from 'node:fs';
-import { join, dirname, normalize } from 'node:path';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { resolveImport } from '@test/resolveImport';
 
 const ROUTER = join(process.cwd(), 'src', 'router', 'AppRouter.tsx');
 const routerSrc = readFileSync(ROUTER, 'utf-8');
@@ -54,9 +55,9 @@ function routes(): { path: string; component: string }[] {
 function sourceOf(component: string): string | null {
   const m = routerSrc.match(new RegExp(`import\\s+${component}\\s+from\\s+'([^']+)'`));
   if (!m) return null;
-  const base = normalize(join(dirname(ROUTER), m[1]));
-  for (const ext of ['.tsx', '.ts']) if (existsSync(base + ext)) return base + ext;
-  return null;
+  // The router imports pages through the `@pages-v2/...` alias (aliases.ts), so
+  // the specifier is resolved alias-aware rather than joined as a relative path.
+  return resolveImport(ROUTER, m[1]);
 }
 
 /** The matcher: a container `<div>` that sets a large max-width. */
@@ -121,7 +122,7 @@ describe('§70 · no page inside AppShellV2 sets its own width', () => {
     // Bilateral: if `max-w-prose` vanishes from PageHeader, the rule above stops
     // having a legitimate alternative to point at, and "put it on the text"
     // becomes advice with no example in the tree.
-    const header = readFileSync(join(process.cwd(), 'src/components/ui-v2/PageHeader.tsx'), 'utf-8');
+    const header = readFileSync(join(process.cwd(), 'src/components/ui-v2/PageHeader.jsx'), 'utf-8');
     expect(header).toMatch(/max-w-prose/);
     expect(setsOwnWidth(header)).toBe(false);
   });

@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { screen, fireEvent, within } from '@testing-library/react';
-import { renderWithProviders, BUYER } from '../../test/test-utils';
-import { qualificationRuleStore } from '../../services/transitions/qualificationRuleStore';
-import { supplierDocumentStore } from '../../services/data/mock/stores/supplierDocumentStore';
-import { qualificationFor } from '../../services/data/mock/qualificationReadModel';
+import { renderWithProviders, BUYER } from '@test/test-utils';
+import { qualificationRuleStore } from '@services/transitions/qualificationRuleStore';
+import { supplierDocumentStore } from '@services/data/mock/stores/supplierDocumentStore';
+import { qualificationFor } from '@services/data/mock/qualificationReadModel';
 import AdminQualification from './AdminQualification';
 
 // ─────────────────────────────────────────────────────────────────────────────

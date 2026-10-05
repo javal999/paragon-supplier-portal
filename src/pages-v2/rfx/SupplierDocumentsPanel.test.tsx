@@ -5,20 +5,20 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, screen, within } from '@testing-library/react';
-import { renderWithProviders, BUYER } from '../../test/test-utils';
-import { SEEDED_SEAT_ROLES } from '../../services/transitions/businessRoles';
-import { mockDataService } from '../../services/data/mock/mockDataService';
-import { SessionFileService } from '../../services/data/mock/SessionFileService';
-import type { IDataService } from '../../services/data/types';
-import { resetRfxStores, rfpEventStore, rfpResponseStore } from '../../services/data/mock/stores/rfxStores';
-import { rfqStore } from '../../services/data/mock/stores/rfqStore';
-import { quotationStore } from '../../services/data/mock/stores/quotationStore';
-import { sdcClock } from '../../services/sdc';
-import { sessionAttachments } from '../../services/attachments/sessionAttachments';
-import type { AttachmentMeta } from '../../services/attachments/sessionAttachments';
-import type { DocumentRequest, ResponseDocument } from '../../services/sourcing/types';
+import { renderWithProviders, BUYER } from '@test/test-utils';
+import { SEEDED_SEAT_ROLES } from '@services/transitions/businessRoles';
+import { mockDataService } from '@services/data/mock/mockDataService';
+import { SessionFileService } from '@services/data/mock/SessionFileService';
+import type { IDataService } from '@services/data/types';
+import { resetRfxStores, rfpEventStore, rfpResponseStore } from '@services/data/mock/stores/rfxStores';
+import { rfqStore } from '@services/data/mock/stores/rfqStore';
+import { quotationStore } from '@services/data/mock/stores/quotationStore';
+import { sdcClock } from '@services/sdc';
+import { sessionAttachments } from '@services/attachments/sessionAttachments';
+import type { AttachmentMeta } from '@services/attachments/sessionAttachments';
+import type { DocumentRequest, ResponseDocument } from '@services/sourcing/types';
 import BuyerRfp from '../BuyerRfp';
-import { NO_PERSON } from '../../context/noPerson';
+import { NO_PERSON } from '@context/noPerson';
 import { SupplierDocumentsPanel } from './SupplierDocumentsPanel';
 
 const BUYER_SEAT = { ...BUYER, businessRoles: SEEDED_SEAT_ROLES.buyer };

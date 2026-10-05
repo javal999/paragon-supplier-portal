@@ -52,7 +52,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { IMPORT_DECLARE_COLUMN, type GridParseSpec, type GridRow } from '../sdc';
-import { normalizeQty, type NumberConvention, type QtyRefusalReason } from '../../lib/localeNumber';
+import { normalizeQty, type NumberConvention, type QtyRefusalReason } from '@lib/localeNumber';
 
 // ─── Locale-aware quantity normalisation ──────────────────────────────────────
 // The parser (CP-0 · W1) now lives in `lib/localeNumber` — the ONE legal numeric
@@ -64,7 +64,7 @@ export {
   type NumberConvention,
   type QtyRefusalReason,
   type QtyOutcome,
-} from '../../lib/localeNumber';
+} from '@lib/localeNumber';
 
 // ─── The reply parser ─────────────────────────────────────────────────────────
 

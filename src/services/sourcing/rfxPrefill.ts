@@ -16,7 +16,7 @@
 // source instead (`sourceRfiId`, `sourceRfpId`).
 // ────────────────────────────────────────────────────────────────────────────
 
-import type { RfqLineItem } from '../../data/mockRfqs';
+import type { RfqLineItem } from '@data/mockRfqs';
 import type { DocumentRequest, RfiEvent, RfiResponse, RfpEvent, RfpResponse } from './types';
 import type { AttachmentMeta } from '../attachments/sessionAttachments';
 import { rfxFamilyForCategory, rfxSectionsOf } from './rfxConfig';

@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
-import { BUYER, SUPPLIER, renderWithProviders } from '../../test/test-utils';
-import { materialNameStore } from '../../services/data/mock/stores/materialNameStore';
-import { purchaseOrderStore } from '../../services/data/mock/stores/purchaseOrderStore';
-import { asnStore } from '../../services/data/mock/stores/asnStore';
-import { NO_PERSON } from '../../context/noPerson';
+import { BUYER, SUPPLIER, renderWithProviders } from '@test/test-utils';
+import { materialNameStore } from '@services/data/mock/stores/materialNameStore';
+import { purchaseOrderStore } from '@services/data/mock/stores/purchaseOrderStore';
+import { asnStore } from '@services/data/mock/stores/asnStore';
+import { NO_PERSON } from '@context/noPerson';
 import BuyerInventory from '../BuyerInventory';
 import SupplierInventory from '../SupplierInventory';
 import SupplierShipments from '../SupplierShipments';

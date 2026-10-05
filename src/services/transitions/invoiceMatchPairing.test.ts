@@ -45,7 +45,7 @@ import {
   RECEIPT_LANDED_STATES,
 } from './invoiceRollup';
 import { INVOICES } from '../data/mock/fixtures/invoices';
-import { mockGoodsReceipts } from '../../data/mockGoodsReceipts';
+import { mockGoodsReceipts } from '@data/mockGoodsReceipts';
 
 /** The specimen, named once so every reference below is the same row. */
 const SPECIMEN_INVOICE = 'inv-mus-0214';

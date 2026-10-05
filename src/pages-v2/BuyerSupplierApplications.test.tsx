@@ -23,23 +23,23 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
 
 import BuyerSupplierApplications from './BuyerSupplierApplications';
-import Toaster from '../components/ui-v2/Toaster';
-import { renderWithProviders, SUPPLIER } from '../test/test-utils';
-import { supplierApplicationStore } from '../services/data/mock/stores/supplierApplicationStore';
-import { mockSuppliers } from '../data/mockSuppliers';
-import { seedSupplierApplications } from '../services/data/mock/applicationSeed';
-import { MockCommandService } from '../services/data/mock/MockCommandService';
-import { NO_PERSON } from '../context/noPerson';
+import Toaster from '@components/ui-v2/Toaster';
+import { renderWithProviders, SUPPLIER } from '@test/test-utils';
+import { supplierApplicationStore } from '@services/data/mock/stores/supplierApplicationStore';
+import { mockSuppliers } from '@data/mockSuppliers';
+import { seedSupplierApplications } from '@services/data/mock/applicationSeed';
+import { MockCommandService } from '@services/data/mock/MockCommandService';
+import { NO_PERSON } from '@context/noPerson';
 import {
   useCurrentIdentity,
   type CurrentIdentity,
-} from '../context/CurrentIdentityContext';
+} from '@context/CurrentIdentityContext';
 import {
   customRoleStore,
   atomsForSeat,
   type CustomRoleDefinition,
-} from '../services/transitions/customRoles';
-import type { QueryScope } from '../services/data/types';
+} from '@services/transitions/customRoles';
+import type { QueryScope } from '@services/data/types';
 
 /**
  * B3 · the lane that RAISES and decides nothing.

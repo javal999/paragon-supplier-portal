@@ -1,11 +1,11 @@
 import { describe, it, expect, afterEach, beforeEach } from 'vitest';
 import { screen, within, fireEvent, waitFor } from '@testing-library/react';
-import { renderWithProviders, BUYER, SUPPLIER } from '../test/test-utils';
+import { renderWithProviders, BUYER, SUPPLIER } from '@test/test-utils';
 import { BuyerFixedStockReconcile, SupplierFixedStockReconcile } from './FixedStockReconcile';
-import { fixedStockReconcileEn, fixedStockReconcileId } from '../lib/i18n/fixedStockReconcile';
-import i18n from '../lib/i18n';
-import { formatNumber } from '../lib/format';
-import { maxStockStore } from '../services/transitions/maxStock';
+import { fixedStockReconcileEn, fixedStockReconcileId } from '@lib/i18n/fixedStockReconcile';
+import i18n from '@lib/i18n';
+import { formatNumber } from '@lib/format';
+import { maxStockStore } from '@services/transitions/maxStock';
 
 const pcs = (n: number) => `${formatNumber(n)} PCS`;
 

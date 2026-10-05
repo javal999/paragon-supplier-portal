@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
-import { useBuyerInvoices, useForecastCommitments } from '../services/query/hooks';
-import type { ForesightAnswer } from '../services/data/poResponseProjection';
-import { foresightAnswerOf } from '../services/transitions/forecastRules';
+import { useBuyerInvoices, useForecastCommitments } from '@services/query/hooks';
+import type { ForesightAnswer } from '@services/data/poResponseProjection';
+import { foresightAnswerOf } from '@services/transitions/forecastRules';
 import OrderSummaryView, { type SummaryInvoice } from './orders/OrderSummaryView';
 
 // PTI Order summary (REQ-E07-03). Foresight answers come from the forecast

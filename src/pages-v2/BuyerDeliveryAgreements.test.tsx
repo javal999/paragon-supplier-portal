@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
-import { renderWithProviders } from '../test/test-utils';
-import { schedulingAgreementStore } from '../services/delivery/stores/schedulingAgreementStore';
+import { renderWithProviders } from '@test/test-utils';
+import { schedulingAgreementStore } from '@services/delivery/stores/schedulingAgreementStore';
 import BuyerDeliveryAgreements from './BuyerDeliveryAgreements';
 
 // The dense, exception-first roll-up. Reads the buyer superset (default identity),

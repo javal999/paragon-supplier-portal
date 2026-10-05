@@ -5,7 +5,7 @@
 
 import { screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
-import { renderWithProviders, BUYER } from '../test/test-utils';
+import { renderWithProviders, BUYER } from '@test/test-utils';
 import BuyerSuppliers from './BuyerSuppliers';
 import RfxInviteeStep from './rfx/RfxInviteeStep';
 

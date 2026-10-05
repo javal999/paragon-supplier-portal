@@ -27,7 +27,7 @@ import { PTI_ONLY_RULES } from '../../transitions/inventoryAlertRules';
 import { leadTimeRisk } from '../../transitions/inventoryConfig';
 import { hasLeadTime, positionDays, positionRisk, riskFor } from '../../transitions/inventoryRules';
 import { sdcClock } from '../../sdc';
-import { NO_PERSON } from '../../../context/noPerson';
+import { NO_PERSON } from '@context/noPerson';
 
 const reads = new MockProcurementService();
 const buyer: QueryScope = { personaType: 'buyer', supplierId: null, businessRoles: PERSONA_SYSTEM_ROLES.buyer, actor: NO_PERSON };
@@ -195,7 +195,7 @@ function shipped(dir: string, out: string[] = []): string[] {
   for (const name of readdirSync(dir)) {
     const full = join(dir, name);
     if (statSync(full).isDirectory()) shipped(full, out);
-    else if (/\.tsx?$/.test(name) && !name.includes('.test.')) out.push(full);
+    else if (/\.[jt]sx?$/.test(name) && !name.includes('.test.')) out.push(full);
   }
   return out;
 }

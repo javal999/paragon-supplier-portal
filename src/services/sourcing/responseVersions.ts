@@ -13,7 +13,7 @@
 // ────────────────────────────────────────────────────────────────────────────
 
 import { stampDocuments } from '../transitions/rfxDocumentRules';
-import type { ActorAttribution } from '../../lib/enforcement';
+import type { ActorAttribution } from '@lib/enforcement';
 import type {
   ResponseVersion,
   RfiAnswer,

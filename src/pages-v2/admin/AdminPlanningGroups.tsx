@@ -1,32 +1,32 @@
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ShieldCheck } from 'lucide-react';
-import AppShellV2 from '../../components/layout-v2/AppShellV2';
-import PageHeader from '../../components/ui-v2/PageHeader';
-import PageMetaLine from '../../components/ui-v2/PageMetaLine';
-import SampleDataBadge from '../../components/ui-v2/SampleDataBadge';
-import Table from '../../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../../components/ui-v2/TableHeader';
-import TableRow from '../../components/ui-v2/TableRow';
-import TableCell from '../../components/ui-v2/TableCell';
-import Button from '../../components/ui-v2/Button';
-import Data from '../../components/ui-v2/Data';
-import StatusPill from '../../components/ui-v2/StatusPill';
-import LoadingState from '../../components/ui-v2/LoadingState';
-import ErrorState from '../../components/ui-v2/ErrorState';
-import { HandoffNotice } from '../../components/ui-v2/HandoffNotice';
-import { useVerbAvailability } from '../../hooks/useVerbAvailability';
-import { useToast } from '../../hooks/useToast';
-import { formatDateTime } from '../../lib/format';
-import { usePlanningGroups } from '../../services/query/hooks';
-import { usePlanningGroupCommand, type PlanningGroupCommandVars } from '../../services/query/commandHooks';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import PageHeader from '@components/ui-v2/PageHeader';
+import PageMetaLine from '@components/ui-v2/PageMetaLine';
+import SampleDataBadge from '@components/ui-v2/SampleDataBadge';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
+import Button from '@components/ui-v2/Button';
+import Data from '@components/ui-v2/Data';
+import StatusPill from '@components/ui-v2/StatusPill';
+import LoadingState from '@components/ui-v2/LoadingState';
+import ErrorState from '@components/ui-v2/ErrorState';
+import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
+import { useVerbAvailability } from '@hooks/useVerbAvailability';
+import { useToast } from '@hooks/useToast';
+import { formatDateTime } from '@lib/format';
+import { usePlanningGroups } from '@services/query/hooks';
+import { usePlanningGroupCommand, type PlanningGroupCommandVars } from '@services/query/commandHooks';
 import {
   planningGroupRefusal,
   type PlanningGroupRefusalCode,
   type PlanningGroupWorld,
-} from '../../services/transitions/planningGroupRules';
-import type { PlanningGroupEvent, PlanningGroupView } from '../../services/data/types';
-import type { ActorAttribution } from '../../lib/enforcement';
+} from '@services/transitions/planningGroupRules';
+import type { PlanningGroupEvent, PlanningGroupView } from '@services/data/types';
+import type { ActorAttribution } from '@lib/enforcement';
 import { planningGroupLabel } from '../inventory/planningGroupDisplay';
 import AdminSectionNav from './AdminSectionNav';
 

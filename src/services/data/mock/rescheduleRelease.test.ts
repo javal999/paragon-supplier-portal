@@ -37,8 +37,8 @@ import { refusedByPolicy } from '../../transitions/refusalMessage';
 import { callOffFlow } from '../../transitions/flows/callOff.flow';
 import { sapChangeMarkFlow } from '../../transitions/flows/sapChangeMark.flow';
 import { isLive } from '../../liveness/registry';
-import { rescheduleEn, rescheduleId } from '../../../lib/i18n/reschedule';
-import { NO_PERSON } from '../../../context/noPerson';
+import { rescheduleEn, rescheduleId } from '@lib/i18n/reschedule';
+import { NO_PERSON } from '@context/noPerson';
 
 const cmd = new MockCommandService();
 const svc = new MockProcurementService();

@@ -1,15 +1,15 @@
 import { describe, it, expect, afterEach, beforeEach } from 'vitest';
 import { screen, within, fireEvent, waitFor } from '@testing-library/react';
-import { renderWithProviders, BUYER } from '../test/test-utils';
+import { renderWithProviders, BUYER } from '@test/test-utils';
 import BuyerReschedule from './BuyerReschedule';
-import { mockDataService } from '../services/data/mock/mockDataService';
-import { callOffStore } from '../services/data/mock/stores/callOffStore';
-import { sapChangeMarkStore } from '../services/data/mock/stores/sapChangeMarkStore';
-import { isLive } from '../services/liveness';
-import { PERSONA_SYSTEM_ROLES, SEEDED_SEAT_ROLES } from '../services/transitions/businessRoles';
-import { planChangeAfter, selectionEffect } from '../services/engine/reschedule';
-import i18n from '../lib/i18n';
-import type { QueryScope } from '../services/data/types';
+import { mockDataService } from '@services/data/mock/mockDataService';
+import { callOffStore } from '@services/data/mock/stores/callOffStore';
+import { sapChangeMarkStore } from '@services/data/mock/stores/sapChangeMarkStore';
+import { isLive } from '@services/liveness';
+import { PERSONA_SYSTEM_ROLES, SEEDED_SEAT_ROLES } from '@services/transitions/businessRoles';
+import { planChangeAfter, selectionEffect } from '@services/engine/reschedule';
+import i18n from '@lib/i18n';
+import type { QueryScope } from '@services/data/types';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // REQ-E14-13 — the planner's Reschedule open orders page. Every figure is read

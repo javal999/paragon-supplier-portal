@@ -26,11 +26,11 @@
 // was missing, not the button.
 // ────────────────────────────────────────────────────────────────────────────
 
-import type { InvoiceStatus } from '../../services/data/types';
-import { userVerbsFrom, getTransition } from '../../services/transitions';
-import type { BusinessRoleId } from '../../services/transitions/businessRoles';
-import type { VerbAvailability } from '../../services/transitions/handoff';
-import { availabilityOfAtom } from '../../services/transitions/handoff';
+import type { InvoiceStatus } from '@services/data/types';
+import { userVerbsFrom, getTransition } from '@services/transitions';
+import type { BusinessRoleId } from '@services/transitions/businessRoles';
+import type { VerbAvailability } from '@services/transitions/handoff';
+import { availabilityOfAtom } from '@services/transitions/handoff';
 
 /** How the buyer surface presents one derived verb. */
 export interface InvoiceVerbSurface {

@@ -8,34 +8,34 @@ import {
   UserPlus,
   ChevronRight,
 } from 'lucide-react';
-import AppShellV2 from '../components/layout-v2/AppShellV2';
-import PageHeader from '../components/ui-v2/PageHeader';
-import PageMetaLine from '../components/ui-v2/PageMetaLine';
-import ProvenanceMarker from '../components/ui-v2/ProvenanceMarker';
-import BulkActionsBar from '../components/ui-v2/BulkActionsBar';
-import SubTabs from '../components/ui-v2/SubTabs';
-import FilterChipsBar from '../components/ui-v2/FilterChipsBar';
-import SearchBar from '../components/ui-v2/SearchBar';
-import StatusPill from '../components/ui-v2/StatusPill';
-import { statusTone } from '../lib/statusTone';
-import Table from '../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../components/ui-v2/TableHeader';
-import TableRow from '../components/ui-v2/TableRow';
-import TableCell from '../components/ui-v2/TableCell';
-import Data from '../components/ui-v2/Data';
-import LoadingState from '../components/ui-v2/LoadingState';
-import ErrorState from '../components/ui-v2/ErrorState';
-import EmptyState from '../components/ui-v2/EmptyState';
-import { useComplianceRegistry, useSuppliers } from '../services/query/hooks';
-import { useCategoryLabel } from '../hooks/useCategoryLabel';
-import { sdcClock } from '../services/sdc/clock';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import PageHeader from '@components/ui-v2/PageHeader';
+import PageMetaLine from '@components/ui-v2/PageMetaLine';
+import ProvenanceMarker from '@components/ui-v2/ProvenanceMarker';
+import BulkActionsBar from '@components/ui-v2/BulkActionsBar';
+import SubTabs from '@components/ui-v2/SubTabs';
+import FilterChipsBar from '@components/ui-v2/FilterChipsBar';
+import SearchBar from '@components/ui-v2/SearchBar';
+import StatusPill from '@components/ui-v2/StatusPill';
+import { statusTone } from '@lib/statusTone';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
+import Data from '@components/ui-v2/Data';
+import LoadingState from '@components/ui-v2/LoadingState';
+import ErrorState from '@components/ui-v2/ErrorState';
+import EmptyState from '@components/ui-v2/EmptyState';
+import { useComplianceRegistry, useSuppliers } from '@services/query/hooks';
+import { useCategoryLabel } from '@hooks/useCategoryLabel';
+import { sdcClock } from '@services/sdc/clock';
 import {
   bandOfLetter,
   certificateValidity,
   matchesSupplierFilters,
   type CertValidity,
   type PerformanceBand,
-} from '../services/sourcing/supplierFilters';
+} from '@services/sourcing/supplierFilters';
 import SupplierFilterBar, {
   bandLabel,
   certLabel,
@@ -45,7 +45,7 @@ import SupplierFilterBar, {
 import {
   SupplierStatus,
   SupplierTier,
-} from '../types/supplier.types';
+} from '@app-types/supplier.types';
 
 const COUNTRY_FLAG: Record<string, string> = {
   ID: 'ID', MY: 'MY', DE: 'DE', FR: 'FR', CN: 'CN', SG: 'SG', IN: 'IN',

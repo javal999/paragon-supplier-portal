@@ -1,0 +1,2 @@
+# Runs lint-staged on the files staged for this commit. See lint-staged.config.js.
+npx lint-staged

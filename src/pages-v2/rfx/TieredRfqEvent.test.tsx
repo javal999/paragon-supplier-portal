@@ -11,24 +11,24 @@
 import { Routes, Route } from 'react-router-dom';
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { everyVendorQualified } from '../../test/everyVendorQualified';
+import { everyVendorQualified } from '@test/everyVendorQualified';
 import type { TFunction } from 'i18next';
-import { renderWithProviders, BUYER } from '../../test/test-utils';
-import { SEEDED_SEAT_ROLES } from '../../services/transitions/businessRoles';
-import { resetRfxStores, awardStore } from '../../services/data/mock/stores/rfxStores';
-import { rfqStore } from '../../services/data/mock/stores/rfqStore';
-import { quotationStore } from '../../services/data/mock/stores/quotationStore';
-import { sdcClock } from '../../services/sdc';
-import { rfqCompareEn, rfqCompareId } from '../../lib/i18n/rfqCompare';
-import Toaster from '../../components/ui-v2/Toaster';
+import { renderWithProviders, BUYER } from '@test/test-utils';
+import { SEEDED_SEAT_ROLES } from '@services/transitions/businessRoles';
+import { resetRfxStores, awardStore } from '@services/data/mock/stores/rfxStores';
+import { rfqStore } from '@services/data/mock/stores/rfqStore';
+import { quotationStore } from '@services/data/mock/stores/quotationStore';
+import { sdcClock } from '@services/sdc';
+import { rfqCompareEn, rfqCompareId } from '@lib/i18n/rfqCompare';
+import Toaster from '@components/ui-v2/Toaster';
 import BuyerSourcingEvent from '../BuyerSourcingEvent';
 import BuyerSourcingPage from '../BuyerSourcing';
 import { buildComparisonCsv } from './comparisonExport';
-import { MockCommandService } from '../../services/data/mock/MockCommandService';
-import { PERSONA_SYSTEM_ROLES } from '../../services/transitions/businessRoles';
-import { NO_PERSON } from '../../context/noPerson';
-import type { QueryScope } from '../../services/data/types';
-import type { AwardLine } from '../../services/sourcing/types';
+import { MockCommandService } from '@services/data/mock/MockCommandService';
+import { PERSONA_SYSTEM_ROLES } from '@services/transitions/businessRoles';
+import { NO_PERSON } from '@context/noPerson';
+import type { QueryScope } from '@services/data/types';
+import type { AwardLine } from '@services/sourcing/types';
 
 const BUYER_SEAT = { ...BUYER, businessRoles: SEEDED_SEAT_ROLES.buyer };
 
@@ -539,8 +539,8 @@ describe('the RFQ panel defers a tiered award to the event page', () => {
   });
 
   it('the panel ranks Oslo at the default break, and agrees with the event page', async () => {
-    const { bestScoredQuotationId, rfxNow } = await import('../../services/data/mock/rfxReadModel');
-    const { defaultEvaluationTierQty } = await import('../../services/sourcing/rfqComparison');
+    const { bestScoredQuotationId, rfxNow } = await import('@services/data/mock/rfxReadModel');
+    const { defaultEvaluationTierQty } = await import('@services/sourcing/rfqComparison');
     const oslo = rfqStore.get('rfq-021')!;
     const best = bestScoredQuotationId(oslo, rfxNow(), defaultEvaluationTierQty(oslo)!);
     expect(best).toBe('qt-021b'); // population control: the event page's best at 3K
@@ -560,7 +560,7 @@ describe('the RFQ panel defers a tiered award to the event page', () => {
     // 400,000 pieces = 25K per variant × 8 × 2, so the default break is 25K,
     // where sup-015 ranks first — while the first-break header would rank sup-013.
     rfqStore.update('rfq-021', (r) => ({ ...r, totalQty: 400_000 }));
-    const { bestScoredQuotationId, rfxNow } = await import('../../services/data/mock/rfxReadModel');
+    const { bestScoredQuotationId, rfxNow } = await import('@services/data/mock/rfxReadModel');
     expect(bestScoredQuotationId(rfqStore.get('rfq-021')!, rfxNow(), 25_000)).toBe('qt-021a');
     renderWithProviders(<BuyerSourcing />, { identity: BUYER_SEAT });
     fireEvent.click(await screen.findByText('RFQ-2026-021'));

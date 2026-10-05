@@ -15,23 +15,23 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
-import Button from '../../components/ui-v2/Button';
-import Data from '../../components/ui-v2/Data';
-import Table from '../../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../../components/ui-v2/TableHeader';
-import TableRow from '../../components/ui-v2/TableRow';
-import TableCell from '../../components/ui-v2/TableCell';
-import { formatDate } from '../../lib/format';
-import { MAX_QUANTITY_POINTS, rfpPricingRequestRefusal } from '../../services/transitions/rfxRules';
+import Button from '@components/ui-v2/Button';
+import Data from '@components/ui-v2/Data';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
+import { formatDate } from '@lib/format';
+import { MAX_QUANTITY_POINTS, rfpPricingRequestRefusal } from '@services/transitions/rfxRules';
 import type {
   RfpIndicativePrice,
   RfpPricingAnswer,
   RfpPricingOption,
   RfpPricingRequest,
-} from '../../services/sourcing/types';
-import type { RfpFirmPriceView, RfpResponseView } from '../../services/sourcing/views';
-import { rfpOptionRef } from '../../services/sourcing/rfpFirmOffer';
-import StatusPill from '../../components/ui-v2/StatusPill';
+} from '@services/sourcing/types';
+import type { RfpFirmPriceView, RfpResponseView } from '@services/sourcing/views';
+import { rfpOptionRef } from '@services/sourcing/rfpFirmOffer';
+import StatusPill from '@components/ui-v2/StatusPill';
 import { FirmPill, IndicativePill, moneyIn } from './rfxAuthoringDisplay';
 import { refusalCode } from './RfxQuestionEditor';
 

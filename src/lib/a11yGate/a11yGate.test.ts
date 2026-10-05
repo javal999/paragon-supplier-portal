@@ -10,6 +10,7 @@
 import { describe, it, expect } from 'vitest';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
+import { isJsxFile } from '@test/sourceFiles';
 import { scanSource, type Finding } from './scan';
 
 const SRC = join(__dirname, '..', '..');
@@ -19,7 +20,7 @@ function tsxFiles(dir: string): string[] {
   for (const f of readdirSync(dir)) {
     const p = join(dir, f);
     if (statSync(p).isDirectory()) out.push(...tsxFiles(p));
-    else if (p.endsWith('.tsx') && !/\.(test|spec)\.tsx$/.test(p)) out.push(p);
+    else if (isJsxFile(p) && !/\.(test|spec)\.[jt]sx$/.test(p)) out.push(p);
   }
   return out;
 }
@@ -35,9 +36,9 @@ describe('BL-31 a11y gate · POPULATION — nothing below means anything without
     const where = (s: Finding) => `${s.file} ${s.what}`;
     const sites = seen.map(where);
     // A known icon-only button that IS named: SidePanel's close (aria-label).
-    expect(sites).toContain('components/ui-v2/SidePanel.tsx <button>');
+    expect(sites).toContain('components/ui-v2/SidePanel.jsx <button>');
     // A known text button: the Wizard's Cancel.
-    expect(sites).toContain('components/ui-v2/Wizard.tsx <button>');
+    expect(sites).toContain('components/ui-v2/Wizard.jsx <button>');
     // The known clickable raw row, repaired by BL-31.
     expect(sites).toContain('pages-v2/RolesCatalogue.tsx <tr onClick>');
     // A known selection row acquitted by its own checkbox.

@@ -1,9 +1,9 @@
 import { screen, fireEvent } from '@testing-library/react';
-import { renderWithProviders } from '../../test/test-utils';
+import { renderWithProviders } from '@test/test-utils';
 import {
   DRAWDOWN_PRESET_CASE_B,
   DRAWDOWN_PRESET_CASE_C,
-} from '../../services/delivery';
+} from '@services/delivery';
 import PolicyEditor from './PolicyEditor';
 
 // ────────────────────────────────────────────────────────────────────────────

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { certCategory, certTypeLabelKey, actionLabelKey } from './complianceView';
 import { complianceEn, complianceId } from './i18n/compliance';
-import type { CertType, ComplianceDisplayStatus } from '../services/data/types';
+import type { CertType, ComplianceDisplayStatus } from '@services/data/types';
 
 const ALL_CERT_TYPES: CertType[] = [
   'HALAL_BPJPH',

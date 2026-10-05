@@ -1,10 +1,10 @@
 import { screen, within, fireEvent } from '@testing-library/react';
-import { renderWithProviders, BUYER } from '../test/test-utils';
-import { NO_PERSON } from '../context/noPerson';
-import type { CurrentIdentity } from '../context/CurrentIdentityContext';
-import { SYSTEM_ROLES, type SystemRoleId } from '../services/transitions/businessRoles';
+import { renderWithProviders, BUYER } from '@test/test-utils';
+import { NO_PERSON } from '@context/noPerson';
+import type { CurrentIdentity } from '@context/CurrentIdentityContext';
+import { SYSTEM_ROLES, type SystemRoleId } from '@services/transitions/businessRoles';
 import { deriveRoleViews, roleTotals } from './roles/roleModel';
-import i18n from '../lib/i18n';
+import i18n from '@lib/i18n';
 import RolesCatalogue from './RolesCatalogue';
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -29,7 +29,7 @@
 // unparseable store is distinguished from "no changes".
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { asActorAttribution, type ActorAttribution } from '../../lib/enforcement';
+import { asActorAttribution, type ActorAttribution } from '@lib/enforcement';
 import {
   DEFAULT_SETTING_STATE,
   defaultOfKey,

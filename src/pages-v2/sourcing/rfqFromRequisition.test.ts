@@ -11,12 +11,12 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 
-import { MockCommandService, commandAuditSink } from '../../services/data/mock/MockCommandService';
-import { purchaseRequisitionStore } from '../../services/data/mock/stores/purchaseRequisitionStore';
-import { PERSONA_SYSTEM_ROLES } from '../../services/transitions/businessRoles';
+import { MockCommandService, commandAuditSink } from '@services/data/mock/MockCommandService';
+import { purchaseRequisitionStore } from '@services/data/mock/stores/purchaseRequisitionStore';
+import { PERSONA_SYSTEM_ROLES } from '@services/transitions/businessRoles';
 import { buildRfqCreatePayload, normalizeRfqCreateDraft, type RfqCreateDraft } from './rfqCreateModel';
 import { prefillFromRequisition } from './requisitionPrefill';
-import type { QueryScope } from '../../services/data/types';
+import type { QueryScope } from '@services/data/types';
 
 const buyer: QueryScope = {
   personaType: 'buyer',

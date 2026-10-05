@@ -10,7 +10,7 @@
 // ────────────────────────────────────────────────────────────────────────────
 
 import type { MaterialNameState, SupplierMaterialName } from '../../types';
-import { NO_PERSON } from '../../../../context/noPerson';
+import { NO_PERSON } from '@context/noPerson';
 
 const SEED: readonly SupplierMaterialName[] = Object.freeze([
   // sup-007 (the seeded supplier seat): one approved name, one rejected with its reason.

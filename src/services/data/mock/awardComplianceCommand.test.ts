@@ -12,7 +12,7 @@
 // ────────────────────────────────────────────────────────────────────────────
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { everyVendorQualified } from '../../../test/everyVendorQualified';
+import { everyVendorQualified } from '@test/everyVendorQualified';
 import { MockCommandService } from './MockCommandService';
 import { awardStore, resetRfxStores, rfpEventStore, rfpResponseStore } from './stores/rfxStores';
 import { rfqStore } from './stores/rfqStore';
@@ -22,7 +22,7 @@ import { updateCompliance } from './updateComplianceReadModel';
 import { sdcClock } from '../../sdc';
 import { PERSONA_SYSTEM_ROLES } from '../../transitions/businessRoles';
 import { hubSettingsStore } from '../../transitions/hubSettingsStore';
-import { NO_PERSON } from '../../../context/noPerson';
+import { NO_PERSON } from '@context/noPerson';
 import { awardQuantity } from '../../sourcing/rfqComparison';
 import { isRfpAward } from '../../sourcing/rfpAward';
 import type { QueryScope } from '../types';

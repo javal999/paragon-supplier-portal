@@ -19,7 +19,7 @@ import {
   ROOT_BENCHMARKS,
   SHOULD_COST_MATERIALS,
   SIMULATED_SPOT_FX,
-} from '../services/data/mock/fixtures/commodityBaskets';
+} from '@services/data/mock/fixtures/commodityBaskets';
 
 // ─── Hand-verifiable inline scaffold (mirrors quoteScore.test.ts's A/B) ────────
 // A 2-root oleochemical material on the international basis. Every number below

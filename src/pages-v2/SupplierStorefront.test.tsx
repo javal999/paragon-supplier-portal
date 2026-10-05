@@ -1,8 +1,8 @@
 import { screen } from '@testing-library/react';
 import { Routes, Route } from 'react-router-dom';
-import { renderWithProviders } from '../test/test-utils';
-import { mockDataService } from '../services/data/mock/mockDataService';
-import { withChaos } from '../services/data/mock/withChaos';
+import { renderWithProviders } from '@test/test-utils';
+import { mockDataService } from '@services/data/mock/mockDataService';
+import { withChaos } from '@services/data/mock/withChaos';
 import SupplierStorefront from './SupplierStorefront';
 
 const alwaysFails = withChaos(mockDataService, { minMs: 0, maxMs: 0, failureRate: 1 });

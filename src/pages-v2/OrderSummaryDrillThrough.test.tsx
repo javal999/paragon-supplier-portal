@@ -16,10 +16,10 @@
 import { screen, within, waitFor, fireEvent } from '@testing-library/react';
 import { Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { mockPurchaseOrders } from '../data/mockPurchaseOrders';
-import { renderWithProviders, BUYER, SUPPLIER } from '../test/test-utils';
-import type { CurrentIdentity } from '../context/CurrentIdentityContext';
-import { purchaseOrderStore } from '../services/data/mock/stores/purchaseOrderStore';
+import { mockPurchaseOrders } from '@data/mockPurchaseOrders';
+import { renderWithProviders, BUYER, SUPPLIER } from '@test/test-utils';
+import type { CurrentIdentity } from '@context/CurrentIdentityContext';
+import { purchaseOrderStore } from '@services/data/mock/stores/purchaseOrderStore';
 import BuyerOrderSummary from './BuyerOrderSummary';
 import SupplierOrderSummary from './SupplierOrderSummary';
 import BuyerOrders from './BuyerOrders';

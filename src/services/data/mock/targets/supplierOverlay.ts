@@ -23,7 +23,7 @@ import {
   isStockUpdateMode,
 } from '../../../transitions/supplierOverlayRules';
 import { sdcClock } from '../../../sdc';
-import { NO_PERSON } from '../../../../context/noPerson';
+import { NO_PERSON } from '@context/noPerson';
 import { supplierOverlayStore } from '../stores/supplierOverlayStore';
 import { isKnownSupplier, supplierEntry } from '../supplierMaster';
 

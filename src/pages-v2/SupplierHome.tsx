@@ -1,11 +1,11 @@
 import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { usePlanningGroupLabel } from './inventory/planningGroupDisplay';
-import AppShellV2 from '../components/layout-v2/AppShellV2';
-import PageHeader from '../components/ui-v2/PageHeader';
-import SampleDataBadge from '../components/ui-v2/SampleDataBadge';
-import NoSupplierIdentity from '../components/ui-v2/NoSupplierIdentity';
-import { useCurrentIdentity } from '../context/CurrentIdentityContext';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import PageHeader from '@components/ui-v2/PageHeader';
+import SampleDataBadge from '@components/ui-v2/SampleDataBadge';
+import NoSupplierIdentity from '@components/ui-v2/NoSupplierIdentity';
+import { useCurrentIdentity } from '@context/CurrentIdentityContext';
 import {
   useASNs,
   useCapacityPlans,
@@ -21,21 +21,21 @@ import {
   useRfpEvents,
   useNegotiationRounds,
   useSupplierInvoices,
-} from '../services/query/hooks';
-import { POStatus } from '../services/data/types';
-import { documentDisplayState } from '../services/data/documentDisplayState';
-import { DECLARED_PRESENT } from '../services/data/fixturePresent';
+} from '@services/query/hooks';
+import { POStatus } from '@services/data/types';
+import { documentDisplayState } from '@services/data/documentDisplayState';
+import { DECLARED_PRESENT } from '@services/data/fixturePresent';
 import TaskList, { type HomeTask } from './home/TaskList';
-import { awaitsSupplierAnswer } from '../services/transitions/fulfilmentRules';
-import { isDueWithoutHeadsUp } from '../services/transitions/callOffRules';
+import { awaitsSupplierAnswer } from '@services/transitions/fulfilmentRules';
+import { isDueWithoutHeadsUp } from '@services/transitions/callOffRules';
 import { useCallOffViews } from './callOffs/callOffDisplay';
-import { planStatus } from '../services/transitions/capacityRules';
-import { stockFreshness } from '../services/transitions/inventoryRules';
-import { deadlineState } from '../services/transitions/forecastRules';
+import { planStatus } from '@services/transitions/capacityRules';
+import { stockFreshness } from '@services/transitions/inventoryRules';
+import { deadlineState } from '@services/transitions/forecastRules';
 import { forecastNow } from './forecasts/forecastDisplay';
-import Data from '../components/ui-v2/Data';
+import Data from '@components/ui-v2/Data';
 import { RiskPill, inventoryNow } from './inventory/inventoryDisplay';
-import { sdcClock } from '../services/sdc/clock';
+import { sdcClock } from '@services/sdc/clock';
 import WeeklyUpdatePanel, { weeklyUpdateView } from './inventory/WeeklyUpdatePanel';
 
 // Supplier Home — "To do" (REQUIREMENTS §3.8 SC-01): what Paragon is waiting for

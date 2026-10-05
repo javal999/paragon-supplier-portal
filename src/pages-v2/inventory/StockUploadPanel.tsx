@@ -1,10 +1,10 @@
 import React, { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Download, Upload } from 'lucide-react';
-import Button from '../../components/ui-v2/Button';
-import Data from '../../components/ui-v2/Data';
-import { parseWorkbook } from '../../services/sdc';
-import type { InventoryPosition } from '../../services/data/types';
+import Button from '@components/ui-v2/Button';
+import Data from '@components/ui-v2/Data';
+import { parseWorkbook } from '@services/sdc';
+import type { InventoryPosition } from '@services/data/types';
 import {
   dayOf,
   parseCsv,
@@ -12,7 +12,7 @@ import {
   stockTemplateCsv,
   validateStockRows,
   type RefusedStockRow,
-} from '../../services/transitions/inventoryRules';
+} from '@services/transitions/inventoryRules';
 import { InTransitReadOnly, inventoryNow, readFileText, useInventoryRunner } from './inventoryDisplay';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -218,8 +218,11 @@ const StockUploadPanel: React.FC<{ supplierId: string; positions: readonly Inven
                   </tr>
                 </thead>
                 <tbody>
-                  {result.refused.map((r, i) => (
-                    <tr key={`${r.row}-${i}`} className="border-t border-border-subtle" data-testid={`stock-upload-refused-row-${r.row}`}>
+                  {/* A file row is refused at most once (validateStockRows refuses each
+                      row once; the declare refusals cover only rows it accepted), so
+                      the file row number is unique here. */}
+                  {result.refused.map((r) => (
+                    <tr key={r.row} className="border-t border-border-subtle" data-testid={`stock-upload-refused-row-${r.row}`}>
                       <td className="py-1.5">
                         <Data>{r.row}</Data>
                       </td>

@@ -1,15 +1,15 @@
 import { screen, fireEvent, within, waitFor } from '@testing-library/react';
 import { beforeEach } from 'vitest';
-import { renderWithProviders, SUPPLIER } from '../test/test-utils';
-import type { CurrentIdentity } from '../context/CurrentIdentityContext';
-import { purchaseOrderStore } from '../services/data/mock/stores/purchaseOrderStore';
-import { commandAuditSink } from '../services/data/mock/MockCommandService';
-import { SEEDED_SEAT_ROLES } from '../services/transitions/businessRoles';
-import IdentityPanel from '../components/layout-v2/IdentityPanel';
+import { renderWithProviders, SUPPLIER } from '@test/test-utils';
+import type { CurrentIdentity } from '@context/CurrentIdentityContext';
+import { purchaseOrderStore } from '@services/data/mock/stores/purchaseOrderStore';
+import { commandAuditSink } from '@services/data/mock/MockCommandService';
+import { SEEDED_SEAT_ROLES } from '@services/transitions/businessRoles';
+import IdentityPanel from '@components/layout-v2/IdentityPanel';
 import SupplierOrders from './SupplierOrders';
 import SupplierRFQs from './SupplierRFQs';
 import SupplierInvoices from './SupplierInvoices';
-import i18n from '../lib/i18n';
+import i18n from '@lib/i18n';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // THE SPLIT, ON THE SCREENS.

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { SupplierStatus } from '../../types/supplier.types';
+import { SupplierStatus } from '@app-types/supplier.types';
 import type { ComplianceRegistryEntry } from '../data/types';
 import type { MaterialMaster, MaterialMasterEntry } from '../sdc/types';
 import {

@@ -29,9 +29,9 @@
 //   services import into `lib/` would give the glossary contract a consumer it
 //   was written not to have, so the derivation sits with its surface instead.
 // ─────────────────────────────────────────────────────────────────────────────
-import { getKnownFlows } from '../../services/transitions';
-import { GLOSSARY_REGISTRIES, glossaryAnchor, type GlossaryEntry } from '../../lib/glossary';
-import { REFUSALS_OUTSIDE_ENFORCEMENT } from '../../lib/enforcement';
+import { getKnownFlows } from '@services/transitions';
+import { GLOSSARY_REGISTRIES, glossaryAnchor, type GlossaryEntry } from '@lib/glossary';
+import { REFUSALS_OUTSIDE_ENFORCEMENT } from '@lib/enforcement';
 
 /** How a term's spelling occurs in one machine. All four are registry facts. */
 export type AppearanceKind = 'state' | 'transition' | 'field' | 'hook';

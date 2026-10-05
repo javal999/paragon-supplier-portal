@@ -8,8 +8,8 @@
 // publish hook and both award hooks all ask here, so they cannot disagree.
 // ────────────────────────────────────────────────────────────────────────────
 
-import { mockSuppliers } from '../../../data/mockSuppliers';
-import type { RFQ } from '../../../data/mockRfqs';
+import { mockSuppliers } from '@data/mockSuppliers';
+import type { RFQ } from '@data/mockRfqs';
 import type { RfiEvent, RfpEvent } from '../../sourcing/types';
 import {
   REQUIRED_LEVEL,

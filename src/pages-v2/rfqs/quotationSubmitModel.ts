@@ -15,9 +15,9 @@
 // `buildRfqCreatePayload` (sourcing) in spirit.
 // ────────────────────────────────────────────────────────────────────────────
 
-import type { BidCurrency } from '../../lib/currencyPolicy';
-import { POLICY_HOOKS } from '../../services/transitions/policyHooks';
-import { refusedByPolicy } from '../../services/transitions/refusalMessage';
+import type { BidCurrency } from '@lib/currencyPolicy';
+import { POLICY_HOOKS } from '@services/transitions/policyHooks';
+import { refusedByPolicy } from '@services/transitions/refusalMessage';
 
 /**
  * Did this dispatch fail because the bid currency is not permitted?

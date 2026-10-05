@@ -23,6 +23,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
+import { isJsxFile } from '@test/sourceFiles';
 
 const SRC = join(process.cwd(), 'src');
 
@@ -30,7 +31,7 @@ function shippedTsx(dir: string, out: string[] = []): string[] {
   for (const name of readdirSync(dir)) {
     const full = join(dir, name);
     if (statSync(full).isDirectory()) shippedTsx(full, out);
-    else if (name.endsWith('.tsx') && !name.includes('.test.')) out.push(full);
+    else if (isJsxFile(name) && !name.includes('.test.')) out.push(full);
   }
   return out;
 }

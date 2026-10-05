@@ -15,14 +15,14 @@
 import React from 'react';
 import { describe, it, expect, afterEach } from 'vitest';
 import { screen, fireEvent } from '@testing-library/react';
-import { renderWithProviders } from '../../test/test-utils';
+import { renderWithProviders } from '@test/test-utils';
 import { mockDataService } from '../data/mock/mockDataService';
 import { DataError } from '../data/types';
 import type { IDataService } from '../data/types';
-import i18n from '../../lib/i18n';
-import Toaster from '../../components/ui-v2/Toaster';
+import i18n from '@lib/i18n';
+import Toaster from '@components/ui-v2/Toaster';
 import { useGoodsReceiptSettle, useInvoiceSettlePayment } from './commandHooks';
-import { useToast } from '../../hooks/useToast';
+import { useToast } from '@hooks/useToast';
 
 const CORRELATION = 'cmd_000x';
 

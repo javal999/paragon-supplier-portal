@@ -1,9 +1,9 @@
 import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { STEP_KIND_KEY } from '../../lib/i18n/stepKind';
-import type { FlowView, StepKind } from '../../services/transitions/catalogView';
+import { STEP_KIND_KEY } from '@lib/i18n/stepKind';
+import type { FlowView, StepKind } from '@services/transitions/catalogView';
 import { layoutFlow, verbOf, NODE_W, NODE_H, type LaidOutEdge } from './flowLayout';
-import { EDGE_INK } from '../../lib/chartPalette';
+import { EDGE_INK } from '@lib/chartPalette';
 
 // ────────────────────────────────────────────────────────────────────────────
 // PF-1 · THE FLOW DIAGRAM. Every mark on it is a fact the schema declares.

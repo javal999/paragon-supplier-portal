@@ -20,7 +20,12 @@ export interface ChaosConfig {
   failureRate: number; // 0..1
 }
 
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+// Braces, not an expression body: an executor's return value is discarded, so
+// returning the timer id would only look meaningful (ESLint no-promise-executor-return).
+const sleep = (ms: number) =>
+  new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
 
 const jitter = (min: number, max: number) =>
   min + Math.random() * Math.max(0, max - min);

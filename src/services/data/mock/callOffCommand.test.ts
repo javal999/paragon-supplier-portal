@@ -14,7 +14,7 @@ import { purchaseOrderStore } from './stores/purchaseOrderStore';
 import type { QueryScope } from '../types';
 import { PERSONA_SYSTEM_ROLES, rolesHolding } from '../../transitions/businessRoles';
 import { headsUpsFor, umbrellaRemaining } from '../../transitions/callOffRules';
-import { NO_PERSON } from '../../../context/noPerson';
+import { NO_PERSON } from '@context/noPerson';
 
 const svc = new MockCommandService();
 const reads = new MockProcurementService();

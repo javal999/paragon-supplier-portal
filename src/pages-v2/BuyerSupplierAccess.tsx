@@ -1,25 +1,25 @@
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import AppShellV2 from '../components/layout-v2/AppShellV2';
-import PageHeader from '../components/ui-v2/PageHeader';
-import PageMetaLine from '../components/ui-v2/PageMetaLine';
-import SampleDataBadge from '../components/ui-v2/SampleDataBadge';
-import Table from '../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../components/ui-v2/TableHeader';
-import TableRow from '../components/ui-v2/TableRow';
-import TableCell from '../components/ui-v2/TableCell';
-import Button from '../components/ui-v2/Button';
-import StatusPill from '../components/ui-v2/StatusPill';
-import SidePanel from '../components/ui-v2/SidePanel';
-import Data from '../components/ui-v2/Data';
-import LoadingState from '../components/ui-v2/LoadingState';
-import ErrorState from '../components/ui-v2/ErrorState';
-import { HandoffNotice } from '../components/ui-v2/HandoffNotice';
-import { useVerbAvailability } from '../hooks/useVerbAvailability';
-import { formatDate, formatDateTime } from '../lib/format';
-import { useInventory, useStockAccess } from '../services/query/hooks';
-import type { StockAccessGrant } from '../services/data/types';
-import type { ActorAttribution } from '../lib/enforcement';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import PageHeader from '@components/ui-v2/PageHeader';
+import PageMetaLine from '@components/ui-v2/PageMetaLine';
+import SampleDataBadge from '@components/ui-v2/SampleDataBadge';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
+import Button from '@components/ui-v2/Button';
+import StatusPill from '@components/ui-v2/StatusPill';
+import SidePanel from '@components/ui-v2/SidePanel';
+import Data from '@components/ui-v2/Data';
+import LoadingState from '@components/ui-v2/LoadingState';
+import ErrorState from '@components/ui-v2/ErrorState';
+import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
+import { useVerbAvailability } from '@hooks/useVerbAvailability';
+import { formatDate, formatDateTime } from '@lib/format';
+import { useInventory, useStockAccess } from '@services/query/hooks';
+import type { StockAccessGrant } from '@services/data/types';
+import type { ActorAttribution } from '@lib/enforcement';
 import { inventoryNow, labelClass, useInventoryRunner } from './inventory/inventoryDisplay';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -52,7 +52,12 @@ const BuyerSupplierAccess: React.FC = () => {
   const log = useMemo(
     () =>
       grants
-        .flatMap((g) => g.log.map((e) => ({ ...e, supplierName: g.supplierName })))
+        // `rowKey` = supplier id + the entry's position in that supplier's own
+        // log. Each grant's log is append-only, so the position never changes;
+        // `at` cannot serve, as the simulated clock stamps many entries alike.
+        .flatMap((g) =>
+          g.log.map((e, seq) => ({ ...e, supplierName: g.supplierName, rowKey: `${g.supplierId}#${seq}` })),
+        )
         .sort((a, b) => b.at.localeCompare(a.at)),
     [grants],
   );
@@ -178,8 +183,8 @@ const BuyerSupplierAccess: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {log.map((e, i) => (
-                <tr key={`${e.at}-${i}`} className="border-t border-border-subtle" data-testid="access-log-entry">
+              {log.map((e) => (
+                <tr key={e.rowKey} className="border-t border-border-subtle" data-testid="access-log-entry">
                   <td className="py-1.5">
                     <Data>{formatDateTime(e.at)}</Data>
                   </td>

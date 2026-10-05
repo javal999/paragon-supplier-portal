@@ -16,18 +16,18 @@
 // ────────────────────────────────────────────────────────────────────────────
 
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
-import { renderWithProviders, BUYER } from '../test/test-utils';
-import { asnStore } from '../services/data/mock/stores/asnStore';
-import { goodsReceiptStore } from '../services/data/mock/stores/goodsReceiptStore';
-import { MockCommandService } from '../services/data/mock/MockCommandService';
+import { renderWithProviders, BUYER } from '@test/test-utils';
+import { asnStore } from '@services/data/mock/stores/asnStore';
+import { goodsReceiptStore } from '@services/data/mock/stores/goodsReceiptStore';
+import { MockCommandService } from '@services/data/mock/MockCommandService';
 import {
   SEEDED_SEAT_ROLES,
   SYSTEM_ROLES,
   AUTOMATION_ATOMS,
   rolesHolding,
-} from '../services/transitions/businessRoles';
-import { CASCADES } from '../services/transitions/cascades';
-import { getKnownFlows } from '../services/transitions';
+} from '@services/transitions/businessRoles';
+import { CASCADES } from '@services/transitions/cascades';
+import { getKnownFlows } from '@services/transitions';
 import BuyerGoodsReceipt from './BuyerGoodsReceipt';
 
 /** The one fixture ASN in the problem state. Asserted below, never assumed. */

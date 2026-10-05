@@ -14,16 +14,16 @@
 
 import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { renderWithProviders, BUYER } from '../../test/test-utils';
-import type { CurrentIdentity } from '../../context/CurrentIdentityContext';
-import { SEEDED_SEAT_ROLES } from '../../services/transitions/businessRoles';
-import { NO_PERSON } from '../../context/noPerson';
-import { resetRfxStores, rfpEventStore } from '../../services/data/mock/stores/rfxStores';
-import { rfqStore } from '../../services/data/mock/stores/rfqStore';
-import { quotationStore } from '../../services/data/mock/stores/quotationStore';
-import { sdcClock } from '../../services/sdc';
-import { rfpEventViews } from '../../services/data/mock/rfxReadModel';
-import { mockDataService } from '../../services/data/mock/mockDataService';
+import { renderWithProviders, BUYER } from '@test/test-utils';
+import type { CurrentIdentity } from '@context/CurrentIdentityContext';
+import { SEEDED_SEAT_ROLES } from '@services/transitions/businessRoles';
+import { NO_PERSON } from '@context/noPerson';
+import { resetRfxStores, rfpEventStore } from '@services/data/mock/stores/rfxStores';
+import { rfqStore } from '@services/data/mock/stores/rfqStore';
+import { quotationStore } from '@services/data/mock/stores/quotationStore';
+import { sdcClock } from '@services/sdc';
+import { rfpEventViews } from '@services/data/mock/rfxReadModel';
+import { mockDataService } from '@services/data/mock/mockDataService';
 import BuyerRfp from '../BuyerRfp';
 import SupplierRfp from '../SupplierRfp';
 import { rfxNow } from './rfxDisplay';

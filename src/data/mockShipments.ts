@@ -1,4 +1,4 @@
-import { shiftFields } from '../services/data/fixturePresent';
+import { shiftFields } from '@services/data/fixturePresent';
 
 export interface ShipmentLineItem {
   materialCode: string;

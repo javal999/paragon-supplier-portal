@@ -10,18 +10,18 @@ import {
 import 'react-datasheet-grid/dist/style.css';
 import './plan-grid/planGrid.css';
 import { useTranslation } from 'react-i18next';
-import AppShellV2 from '../components/layout-v2/AppShellV2';
-import PageHeader from '../components/ui-v2/PageHeader';
-import PageMetaLine from '../components/ui-v2/PageMetaLine';
-import Data from '../components/ui-v2/Data';
-import LivenessPill from '../components/ui-v2/LivenessPill';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import PageHeader from '@components/ui-v2/PageHeader';
+import PageMetaLine from '@components/ui-v2/PageMetaLine';
+import Data from '@components/ui-v2/Data';
+import LivenessPill from '@components/ui-v2/LivenessPill';
 import PlanCellMarker from './plan-grid/PlanCellMarker';
 import { dataCell, textCell } from './plan-grid/cells';
 import IntakeAdjustDrawer from './plan-grid/IntakeAdjustDrawer';
 import FullScreenSection from './plan-grid/FullScreenSection';
-import { useQuotations } from '../services/query/hooks';
-import { formatIDR, formatNumber } from '../lib/format';
-import { mockSuppliers } from '../data/mockSuppliers';
+import { useQuotations } from '@services/query/hooks';
+import { formatIDR, formatNumber } from '@lib/format';
+import { mockSuppliers } from '@data/mockSuppliers';
 import {
   AWARD_CRITERIA,
   DEFAULT_WEIGHTS,

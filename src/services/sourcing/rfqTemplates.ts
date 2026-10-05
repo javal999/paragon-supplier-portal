@@ -24,8 +24,8 @@
 // carrying `templateId` so its origin is on the record.
 // ────────────────────────────────────────────────────────────────────────────
 
-import type { BidCurrency } from '../../lib/currencyPolicy';
-import { BID_CURRENCIES } from '../../lib/currencyPolicy';
+import type { BidCurrency } from '@lib/currencyPolicy';
+import { BID_CURRENCIES } from '@lib/currencyPolicy';
 import type { DocumentRequest, RfiQuestion } from './types';
 import {
   itemRefusal,

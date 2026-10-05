@@ -1,6 +1,6 @@
 import { screen, fireEvent } from '@testing-library/react';
 import { useLocation } from 'react-router-dom';
-import { renderWithProviders } from '../test/test-utils';
+import { renderWithProviders } from '@test/test-utils';
 import NotFound from './NotFound';
 
 const LocationProbe = () => {

@@ -2,8 +2,8 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircle2, ChevronRight } from 'lucide-react';
-import Data from '../../components/ui-v2/Data';
-import type { FlagSeverity } from '../../components/ui-v2/ExpandableWidget';
+import Data from '@components/ui-v2/Data';
+import type { FlagSeverity } from '@components/ui-v2/ExpandableWidget';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // The Home task list (SC-01): what needs the user's action, most urgent first.
