@@ -60,6 +60,9 @@ import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
+import { buildProgramFromSources } from '@lib/storedFieldGate/derive';
+import { deriveInterfaceMembers } from './deriveC1Surface';
+
 const ROOT = process.cwd();
 const read = (...p: string[]) => readFileSync(join(ROOT, ...p), 'utf8');
 
@@ -254,14 +257,19 @@ describe('C7-FIND-03 — RESERVED AND NOT RESERVED: shortfall is absent from PrI
     expect(C7).toContain('C7-FIND-03');
     expect(C7).toContain('shortfall');
 
-    const dataTypes = read('src', 'services', 'data', 'types.ts');
-    const line = dataTypes.slice(
-      dataTypes.indexOf('export interface PrIntakeLine'),
-      dataTypes.indexOf('export interface PrIntakeLine') + 900,
-    );
-    expect(line).toContain('readonly suggestedQty');
+    // `data/types.js` since Phase 4 B4, where `PrIntakeLine` is a JSDoc
+    // `@typedef`. Read from the AST, which reads both forms (frontend-standard
+    // Phase 4): a text slice would pass vacuously on a renamed or moved
+    // declaration, because "no `shortfall` in an empty slice" is a clean read
+    // of nothing (`EMPTY-INPUT-REPORTS-CLEAN-01`). `deriveInterfaceMembers`
+    // THROWS when `PrIntakeLine` is undeclared, and `suggestedQty` is the
+    // known-good member that proves the read found the real line.
+    const file = '/src/services/data/types.js';
+    const program = buildProgramFromSources({ [file]: read('src', 'services', 'data', 'types.js') });
+    const { properties } = deriveInterfaceMembers(program, file, 'PrIntakeLine');
+    expect(properties, 'known-good member').toContain('suggestedQty');
     expect(
-      line.includes('shortfall'),
+      properties.includes('shortfall'),
       'shortfall has landed on PrIntakeLine — C7-FIND-03 is CLOSED and C7 §2.2 plus docs/findings.md ' +
         'must say so. A closed defect left OPEN in a contract misreports our position to SOMO.',
     ).toBe(false);

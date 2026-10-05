@@ -3,7 +3,7 @@
 //
 // The invoice is ONE economic document. This is the single canonical lifecycle;
 // the buyer and supplier vocabularies are read-time PROJECTIONS of these states
-// (`invoiceProjection.ts`), and `Overdue` is computed (DR-8, law 0.5) — neither
+// (`invoiceProjection.js`), and `Overdue` is computed (DR-8, law 0.5) — neither
 // is a member of this table. Two-machines-plus-mapping was rejected on the
 // HALAL-XPERSONA-01 drift precedent.
 //

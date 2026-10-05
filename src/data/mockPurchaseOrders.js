@@ -6,7 +6,7 @@ import { shiftFields, shiftIso } from '@services/data/fixturePresent';
 // ⚠️ THESE ARE THE RAW, AUTHORED LITERALS — 2025, exactly as written. Nothing
 // reads them directly: `mockPurchaseOrders` at the foot of this file is the
 // shifted export, re-timed to the declared present by the `purchaseOrder`
-// family anchor (`services/data/fixturePresent.ts`). The raw dates stay here so
+// family anchor (`services/data/fixturePresent.js`). The raw dates stay here so
 // the authoring intent — and the spacing between orders, deliveries and the
 // response windows — is readable rather than encoded away into an offset.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -616,7 +616,7 @@ const mockPurchaseOrdersRaw = [
   //
   // 1. **EXACTLY ONE sup-007 ORDER AT OR PAST CONFIRMATION MAY BE PARTIALLY
   //    CONFIRMED, AND IT MUST BE THE DRAFT ASN'S PARENT.** `ASN-2025-00215` is
-  //    a Draft with no eta, so level 3 of `asnRefIntegrity.test.ts`'s selection
+  //    a Draft with no eta, so level 3 of `asnRefIntegrity.test.js`'s selection
   //    rule (a shipment cannot precede its own order) constrains nothing and
   //    the rule falls through to level 4 — "NOT determinately complete". While
   //    sup-007 owned ONE confirmable order that level was never reached; it is
@@ -964,9 +964,9 @@ const mockPurchaseOrdersRaw = [
   // ── WHY IT EXISTS NOW ─────────────────────────────────────────────────────
   //   Until this batch, THREE INDEPENDENT FIXTURES referenced this PO and no
   //   fixture authored it:
-  //     · `invoices.ts`            — `inv-smpl-1180`, poId `po-131`
-  //     · `supplierDocuments.ts`   — `doc-201`, `linkedTo: 'PO-2025-00131'`
-  //     · `supplierShipments.ts`   — `ASN-2025-00302`, `poReference`
+  //     · `invoices.js`            — `inv-smpl-1180`, poId `po-131`
+  //     · `supplierDocuments.js`   — `doc-201`, `linkedTo: 'PO-2025-00131'`
+  //     · `supplierShipments.js`   — `ASN-2025-00302`, `poReference`
   //   The ruling: REPOINTING THREE REFERENCES TO HIDE A MISSING OBJECT IS
   //   WORSE THAN THE GAP. The object should exist because three lanes already
   //   act as though it does.
@@ -985,7 +985,7 @@ const mockPurchaseOrdersRaw = [
   //   `MAT-40220` — widening a space R-3 declared dead into this, the DECLARED
   //   DOCUMENT LANE — and a master code, which is the retirement R-1 sent to
   //   5b-ii. Both are forbidden here, so the line set is EMPTY AND PINNED
-  //   (`asnRefIntegrity.test.ts`), not silently plausible.
+  //   (`asnRefIntegrity.test.js`), not silently plausible.
   //   `totalValue` is 0 for the same reason: every other PO in this fixture
   //   satisfies `totalValue === Σ(quantity × unitPrice)`, and 0 is that sum
   //   over an empty line set. Picking a value would be picking a side in the

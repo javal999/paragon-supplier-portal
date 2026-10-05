@@ -599,7 +599,7 @@ export function isReviewDay(value) {
  * Has the review date passed at `dispatchInstant`?
  *
  * The comparison is lexicographic over `YYYY-MM-DD`, the house convention
- * (`complianceProjection.ts`), and it is STRICTLY GREATER: a review due BY the
+ * (`complianceProjection.js`), and it is STRICTLY GREATER: a review due BY the
  * 30th is still in force ON the 30th and lapses on the 31st. Both boundaries
  * are pinned in the suite, because "past reviewBy" has two defensible readings
  * and an unstated one is a defect waiting for a timezone.

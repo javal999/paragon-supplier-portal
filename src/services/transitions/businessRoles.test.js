@@ -465,7 +465,7 @@ describe('⚠️ WHO MAY RESOLVE THROUGH THE SYSTEM-ONLY `atomsFor`', () => {
     // Asserting only that nothing unlisted calls the narrow one would pass in a
     // tree where NOTHING resolved a seat at all. These three are the seat paths.
     for (const rel of [
-      'src/services/data/mock/MockCommandService.ts', // the dispatcher
+      'src/services/data/mock/MockCommandService.js', // the dispatcher
       'src/services/transitions/handoff.js', // the cross-role handoff
       'src/components/layout-v2/IdentityPanel.jsx' // the seat's own panel
     ]) {

@@ -21,6 +21,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { sourceFiles, filesForEntity, writeSites, producedBy, isFixture } from './derive';
 import { DISPLAY_STATES, DISPLAY_STATE_ENTITIES, displayStatesOf } from './displayStates';
+import { takesInjectedNow } from './dayCounts';
 import { WIRED_COMMAND_TARGETS } from '@services/data/mock/MockCommandService';
 import '@services/transitions/index';
 import { getFlow } from '@services/transitions/registry';
@@ -30,7 +31,7 @@ const FILES = sourceFiles();
 describe('POPULATION + MATCHER CONTROLS — before any row is believed', () => {
   it('the source walk is populated, and excludes specs', () => {
     expect(FILES.length).toBeGreaterThan(50);
-    expect(FILES.some((f) => f.endsWith('services/data/complianceProjection.ts'))).toBe(true);
+    expect(FILES.some((f) => f.endsWith('services/data/complianceProjection.js'))).toBe(true);
     expect(FILES.some((f) => /\.test\./.test(f))).toBe(false);
   });
 
@@ -82,7 +83,7 @@ describe('POPULATION + MATCHER CONTROLS — before any row is believed', () => {
   // without `m` means END OF STRING — so `.*` stopped one character short and
   // **the strip never fired on any file in this tree.** Every comment was
   // scanned as code. It changed no verdict, because the only comment in the
-  // tree quoting a write pattern (`halalVerification.ts:58`) happens to sit
+  // tree quoting a write pattern (`halalVerification.js:58`) happens to sit
   // outside the scope of the entity whose state it names — LUCK, and the
   // header claimed design.
   //
@@ -174,7 +175,7 @@ describe('POPULATION + MATCHER CONTROLS — before any row is believed', () => {
     // either line ending — which is the property the pair above proves, using
     // files it writes itself precisely so no platform can decide the outcome.
     it('the real tree file that quotes a write in a comment is acquitted', () => {
-      const F = 'src/services/data/halalVerification.ts';
+      const F = 'src/services/data/halalVerification.js';
       const raw = readFileSync(F, 'utf8');
       // KNOWN-GOOD FIRST: the file really does contain the quoted write, or the
       // acquittal below is a report about a string that is not there.
@@ -285,7 +286,14 @@ describe('THE REASON TOKENS CARRY MECHANICAL OBLIGATIONS', () => {
         /** @type {NonNullable<typeof row.producer>} */ (row.producer),
         'utf8'
       );
-      expect(src, `${row.producer} does not take an injected now`).toMatch(/nowIso\s*:\s*string/);
+      // Reads both forms (frontend-standard Phase 4): a converted producer
+      // declares `@param {string} nowIso`, which the old text regex
+      // `/nowIso\s*:\s*string/` cannot see. `takesInjectedNow` is the parser-based
+      // matcher the numeric arm already uses, probed both ways in dayCounts.test.js.
+      expect(
+        takesInjectedNow(/** @type {NonNullable<typeof row.producer>} */ (row.producer)),
+        `${row.producer} does not take an injected now`
+      ).toBe(true);
       expect(
         /Date\.now\(\)/.test(src),
         `${row.producer} reaches for its own clock — that is law 0.5's defect`
@@ -296,7 +304,7 @@ describe('THE REASON TOKENS CARRY MECHANICAL OBLIGATIONS', () => {
   it('`stored-in-fixtures` means a fixture writes it and NOTHING else does', () => {
     // ⚠️ **THE `toBeGreaterThan(0)` IS RETIRED HERE, FOR THE REASON THIS FILE
     // ALREADY RULED ON ONE ARM OVER.** `shipment/Delayed` was the last member,
-    // and it left because `shipmentDisplayState.ts` now computes it — the tree
+    // and it left because `shipmentDisplayState.js` now computes it — the tree
     // getting more honest. Demanding a member would make this red for that, and
     // *"a guard that reddens when its subject improves is anchored on the defect
     // it is watching"* is the sentence twenty lines above, written when
@@ -340,7 +348,7 @@ describe('THE REASON TOKENS CARRY MECHANICAL OBLIGATIONS', () => {
       // It IS a declared member of its DTO union — otherwise this row is about
       // a state that does not exist, which is a different (and worse) finding.
       expect(
-        readFileSync('src/services/data/types.ts', 'utf8'),
+        readFileSync('src/services/data/types.js', 'utf8'),
         `${row.state} is not declared on any DTO union`
       ).toContain(`'${row.state}'`);
     }
@@ -400,11 +408,11 @@ describe('THE ORIGINAL CLAIM SURVIVES — no flow knows any of these states', ()
 describe('isFixture — the classifier the whole partition turns on', () => {
   it('a fixture is a fixture and a store is not', () => {
     expect(isFixture('src/data/mockContracts.js')).toBe(true);
-    expect(isFixture('src/services/data/mock/fixtures/invoices.ts')).toBe(true);
+    expect(isFixture('src/services/data/mock/fixtures/invoices.js')).toBe(true);
     // ⚠️ A STORE IS NOT A FIXTURE. If a store ever writes one of these states
     // that is a real producer, and misclassifying it would launder a write path
     // into a data defect.
-    expect(isFixture('src/services/data/mock/stores/invoiceStore.ts')).toBe(false);
-    expect(isFixture('src/services/data/complianceProjection.ts')).toBe(false);
+    expect(isFixture('src/services/data/mock/stores/invoiceStore.js')).toBe(false);
+    expect(isFixture('src/services/data/complianceProjection.js')).toBe(false);
   });
 });

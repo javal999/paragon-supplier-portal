@@ -82,7 +82,7 @@ export interface Supplier {
   invoiceAccuracy: number;
   /**
    * REQ-E10-01 — PROJECTED AT READ, never stored. The letter is a reading of the
-   * calculated score (the band table lives in `performanceRules.ts`), so a
+   * calculated score (the band table lives in `performanceRules.js`), so a
    * stored grade can never disagree with the figures beside it. Absent for a
    * supplier with no measurable history, exactly as `otif` is.
    */
@@ -127,4 +127,4 @@ export interface SupplierSummary {
 // ─── Inventory ────────────────────────────────────────────────────────────────
 // The static `InventoryRecord` (with its stored days of supply, stock status and
 // available / reserved quantities) is retired: inventory is ONE model projected
-// at read — `InventoryPosition` in `services/data/types.ts` (REQ-E08-01).
+// at read — `InventoryPosition` in `services/data/types.js` (REQ-E08-01).

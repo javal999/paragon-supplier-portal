@@ -23,6 +23,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
+import { declaresField } from '@test/declaredFields';
 
 import { mockDataService } from '../data/mock/mockDataService';
 /** @import { CommandInput, QueryScope } from '../data/types' */
@@ -246,7 +247,18 @@ describe('⚠️ THE BOUNDARY — an ingress key, never a user-action dedupe', (
     // The type declares it and this spec passes it; a matcher finding NOTHING
     // would make the assertion above vacuously green.
     expect(declaring.length).toBeGreaterThan(0);
-    expect(declaring.some((f) => f.includes('types.ts'))).toBe(true);
+    // Reads both forms (frontend-standard Phase 4). The known-bad SHAPE the
+    // offender filter hunts — an object literal supplying `idempotencyKey: …` —
+    // really occurs in this spec (`rfqCreate({ idempotencyKey: key })`), so the
+    // matcher is shown to see it in the real tree. The DECLARATION moved into
+    // JSDoc (`@property {string} [idempotencyKey]` on `CommandInput` in
+    // `types.js`), which no `idempotencyKey:` regex can see, so it is read
+    // through the parser — in either language — rather than by the matcher.
+    expect(declaring.some((f) => f.endsWith('idempotencyKey.test.js'))).toBe(true);
+    const typesPath = join(ROOT, 'src/services/data/types.js');
+    expect(
+      declaresField(readFileSync(typesPath, 'utf8'), typesPath, 'idempotencyKey', 'string')
+    ).toBe(true);
   });
 
   it('the cascade fan-out passes no key — a cascade is not an ingress', async () => {

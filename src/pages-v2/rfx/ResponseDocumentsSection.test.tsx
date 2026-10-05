@@ -1,6 +1,6 @@
 // ────────────────────────────────────────────────────────────────────────────
 // NR-1 · the supplier's Documents section (B4), at the SURFACE. The rules are
-// probed at the verb in `rfxDocumentsCommand.test.ts`; what these add is that
+// probed at the verb in `rfxDocumentsCommand.test.js`; what these add is that
 // the section says them by slot, with the same functions, before anything is
 // sent. The harness disables Submit exactly as the pages do: with
 // `responseDocumentsRefusal` over the section's value.

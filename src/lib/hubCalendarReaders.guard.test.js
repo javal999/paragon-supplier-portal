@@ -260,13 +260,13 @@ const CALENDAR_DAY_ALLOWLIST = {
     'CR-05 — how many calendar days a confirmed delivery date sits before or after the need date: a comparison of two dates, not a deadline anybody answers.',
   'services/transitions/callOffRules.js#isDueWithoutHeadsUp':
     'CR-09 — the reminder 7 calendar days before a need date when no heads-up exists: counted back from a delivery date.',
-  'services/data/invoiceProjection.ts#daysOutstanding':
+  'services/data/invoiceProjection.js#daysOutstanding':
     'CR-14 — days outstanding = today minus the due date: a payment term counted in calendar days.',
-  'services/data/mock/MockCommandService.ts#create':
+  'services/data/mock/MockCommandService.js#create':
     'CR-14 — invoice due date = submission + 30 days, stamped when an invoice is created: a payment term, calendar days.',
-  'services/data/mock/MockCommandService.ts#applyTransition':
+  'services/data/mock/MockCommandService.js#applyTransition':
     'CR-14 — the same 30-day payment term, restamped when a corrected invoice is resubmitted.',
-  'services/data/complianceProjection.ts#daysRemaining':
+  'services/data/complianceProjection.js#daysRemaining':
     'Days until a certificate expires — a validity period, not a response deadline.',
   'services/transitions/rfxRules.js#daysToDeadline':
     'An RFI/RFQ/RFP deadline is a DATE THE BUYER SETS on the event (CE-07); nothing computes it, so no calendar ruling can move it. This is a calendar-day countdown to that chosen date for the "closing soon" band.',
@@ -274,7 +274,7 @@ const CALENDAR_DAY_ALLOWLIST = {
     "The superseded SDC design's interim chase threshold (RESPONSE_DUE_DAYS) on /buyer/chase, a route hidden from the MVP menu (NV-06) and replaced by REQ-E06-03. No Supplier Hub rule defines it, so changing it would invent one. Reported as a follow-up rather than left silently.",
   'services/engine/requirement.ts#openReceipts':
     'REQ-E14-03 — an open PO line whose confirmed delivery date passed more than the grace window (14 calendar days) is treated as closed in netting: a physical delivery window counted in calendar days, like CR-07, not a response deadline anybody answers.',
-  'services/data/mock/rescheduleReadModel.ts#callOffOrderLines':
+  'services/data/mock/rescheduleReadModel.js#callOffOrderLines':
     'REQ-E14-13 — the same E14-03 grace window applied to an open call-off (ENG-B10): a delivery date passed more than 14 calendar days ago is treated as closed. A physical delivery window, not a response deadline.'
 };
 
@@ -283,14 +283,14 @@ describe('BL-50 · the deadline population reads the hub calendar', () => {
     const readers = new Set(D.workingDayCalls.map((c) => c.key.split('#')[0]));
     // Known-true members: the three response deadlines of §3.4.
     expect(readers).toContain('services/transitions/forecastRules.ts');
-    expect(readers).toContain('services/data/poResponseProjection.ts');
+    expect(readers).toContain('services/data/poResponseProjection.js');
     expect(readers).toContain('services/transitions/callOffRules.js');
     // Known-false: the invoice projection counts calendar days (CR-14).
-    expect(readers).not.toContain('services/data/invoiceProjection.ts');
+    expect(readers).not.toContain('services/data/invoiceProjection.js');
     // And the calendar-day side has both a known member and a known non-member.
     expect(D.calendarDaySites).toContain('services/delivery/fulfillment.ts#statusForUnmatched');
     expect(D.calendarDaySites).not.toContain(
-      'services/data/poResponseProjection.ts#responseDeadline'
+      'services/data/poResponseProjection.js#responseDeadline'
     );
     // BL-48 — the commitment deadline no longer counts calendar days.
     expect(D.calendarDaySites).not.toContain(
@@ -329,7 +329,7 @@ describe('BL-50 · the deadline population reads the hub calendar', () => {
   it('the modules doing working-day arithmetic are exactly these (the derived list, pinned)', () => {
     const readers = [...new Set(D.workingDayCalls.map((c) => c.key.split('#')[0]))].sort();
     expect(readers).toEqual([
-      'services/data/poResponseProjection.ts',
+      'services/data/poResponseProjection.js',
       'services/transitions/callOffRules.js',
       'services/transitions/forecastRules.ts',
       // Material B1 — the weekly stock update cutoff moves off a non-working day (MR-1 BR-03).

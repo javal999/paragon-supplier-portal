@@ -207,14 +207,14 @@ const contractRows = [
   // literal, which is exactly what law 0.5 forbids. They now carry `Active`,
   // their real machine state (`contractFlow.states` is
   // `Draft · Active · Renewed · Terminated`; `Expiring` was never one of them),
-  // and the display status is computed by `services/data/contractExpiry.ts`
+  // and the display status is computed by `services/data/contractExpiry.js`
   // from `endDate` against `noticeRequiredDays`.
   //
   // The COMMENT is kept because it is still a true statement about the DATA —
   // both rows sit inside 30 days of their end at the family anchor — and
   // because it is the fixture author's own record of the ladder these sections
   // encode (30 / 90 / 180), which is the evidence the notice rule was ruled
-  // against. `contractExpiry.test.ts` re-derives every row from this file and
+  // against. `contractExpiry.test.js` re-derives every row from this file and
   // requires the classifier to reproduce the ladder with zero misses.
   {
     id: 'ctr-007',

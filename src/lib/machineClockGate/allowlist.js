@@ -111,7 +111,7 @@ export const MACHINE_CLOCK_ALLOWLIST = [
       'An idempotency key unique to one conformance-spec run, so no prior ledger entry can satisfy it.'
   },
   {
-    key: 'src/services/data/mock/MockCommandService.ts::dispatcher.now::new Date()',
+    key: 'src/services/data/mock/MockCommandService.js::dispatcher.now::new Date()',
     count: 1,
     why: 'contract-pinned',
     reason:

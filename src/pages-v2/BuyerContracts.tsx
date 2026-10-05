@@ -1297,7 +1297,7 @@ const ContractsWorkspace: React.FC<ContractsWorkspaceProps> = ({
 
   const renewalPipeline = useMemo(() => {
     // The 180 arm SURVIVES and is now `CONTRACT_RENEWAL_HORIZON_DAYS`, named in
-    // `contractExpiry.ts` beside the reason: this is a PLANNING horizon grouped
+    // `contractExpiry.js` beside the reason: this is a PLANNING horizon grouped
     // by month, and routing it through the classifier would collapse a
     // two-quarter view into a duplicate of the Expiring tab. It is the one
     // window left on this axis, and it is no longer a literal on a page.

@@ -63,7 +63,7 @@ over the spine is believed.
 
 ⚠️ **IT IS THE WALL CLOCK AND NOT THE DECLARED PRESENT, DELIBERATELY — WHICH IS THE
 OPPOSITE OF THE RULE THE FIXTURES FOLLOW, AND THE REASON IS WORTH CARRYING.**
-`services/data/fixturePresent.ts` shifts every dated fixture family onto a frozen
+`services/data/fixturePresent.js` shifts every dated fixture family onto a frozen
 `DECLARED_PRESENT`, so a question asked of seeded data reads as though today were that family's own
 anchor. **An event is not seeded data.** `ts` records when an act HAPPENED, and in a session the act
 happens now; stamping a live act with a frozen past date would make every event in every session
@@ -88,7 +88,7 @@ interface AuditSink {
 
 - **LIVE:** `InMemoryAuditSink` — keeps events in memory for inspection and tests
   (`all()` / `byEvent(id)` / `clear()`). The process-wide instance is `commandAuditSink`
-  (`MockCommandService.ts`), injected into the dispatcher as `deps.sink`.
+  (`MockCommandService.js`), injected into the dispatcher as `deps.sink`.
 - **RESERVED:** the durable persistent sink. The comment in `events.js` names it "CMVE implements
   this in Phase 5′" — because it implements the **same** `AuditSink` interface, landing it is
   additive: the dispatcher, the event shape, and every emit site are unchanged.
@@ -121,7 +121,7 @@ fan-out; the per-child `correlationId` keeps each child's status independent (DR
 
 `t_rfq_award` (source) fans out to the RFQ's quotation siblings: the winner fires
 `t_quotation_award` (→ Awarded), every other sibling fires `t_quotation_reject` (→ Rejected)
-(`MockCommandService.ts` `resolveCascades`, `rfq` branch). Each quotation transition:
+(`MockCommandService.js` `resolveCascades`, `rfq` branch). Each quotation transition:
 
 - gets its **own** `correlationId` (independently settleable),
 - carries `causationId` = the award command's `correlationId` (groups the fan-out).

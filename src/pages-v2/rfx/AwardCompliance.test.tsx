@@ -4,7 +4,7 @@
 // (AR-10, MR-2 BR-06).
 //
 // The seeded pills are read off the SAMPLE weekly history
-// (`fixtures/updateHistorySample.ts`). The agreement specs pin one supplier's
+// (`fixtures/updateHistorySample.js`). The agreement specs pin one supplier's
 // figure at the read model's seam (`complianceOver`), which the page (through
 // the data service) and the verb (through the policy hook) both read.
 // ────────────────────────────────────────────────────────────────────────────

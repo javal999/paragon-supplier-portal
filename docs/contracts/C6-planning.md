@@ -40,7 +40,7 @@ not substitute one for the other.
 A **PlanDraft** is the proposed-values document a user composes over live seam data before
 committing. It is held in a dedicated client-side plan store and is, by contract:
 
-- **NEVER written through `IDataService`** (`src/services/data/types.ts:1205` — the read/write
+- **NEVER written through `IDataService`** (`src/services/data/types.js:1205` — the read/write
   service seam). A plan is not persisted state; it is a pre-commit working set.
 - **NEVER placed in the TanStack Query cache.** The query cache holds seam reads only
   (`useServiceQuery`, `src/services/query/useServiceQuery.ts:22-38`); the plan overlay is a
@@ -120,7 +120,7 @@ successful dispatch + invalidation re-read.
 For each PLANNED row, in order:
 
 1. **Dispatch** through the write seam
-   (`ICommandService.dispatch`, `src/services/data/types.ts:1078-1080`):
+   (`ICommandService.dispatch`, `src/services/data/types.js:1078-1080`):
    ```ts
    await svc.commands.dispatch(scope, { transitionId, entity, entityId, payload })
    ```
@@ -179,7 +179,7 @@ This clause states **intent**, not an existing capability. Harvested truth:
 - `causationId` is set **only inside the dispatcher's private cascade path** — the internal
   `dispatch(scope, input, causationId)` third argument (`dispatcher.js:170`). It is **not**
   on the public seam: `ICommandService.dispatch(scope, input)`
-  (`src/services/data/types.ts:1080`) accepts **no** caller-supplied correlation.
+  (`src/services/data/types.js:1080`) accepts **no** caller-supplied correlation.
 - Therefore N independent `svc.commands.dispatch(...)` calls from a plan push each mint their
   own unrelated `correlationId` (`dispatcher.js:151`) and **cannot be grouped** under one
   causation today.
@@ -318,7 +318,7 @@ mints a Draft that stays simulated, **never a live procurement instruction**.
 reason-gate is headless-provable (`plan-grid/IntakeAdjustDrawer.tsx`); the push is
 `usePurchaseRequisitionCreate` (`services/query/commandHooks.ts`) through the G1.1
 `purchaseRequisition` target; and the opaque carrier is `CommandDecision`
-(`services/data/types.ts`) forwarded by `dispatcher.js:143-166` onto the `TransitionEvent`
+(`services/data/types.js`) forwarded by `dispatcher.js:143-166` onto the `TransitionEvent`
 (`transitions/events.js`).
 
 ---
@@ -327,7 +327,7 @@ reason-gate is headless-provable (`plan-grid/IntakeAdjustDrawer.tsx`); the push 
 
 Generated FORK-3 (machine-harvest from code-truth + thin connecting prose) at `main` #66.
 Every seam cited traces to a `file:line` in the shipped tree:
-`src/services/data/types.ts` (`ICommandService` :1078-1090, `IDataService` :1205),
+`src/services/data/types.js` (`ICommandService` :1078-1090, `IDataService` :1205),
 `src/services/transitions/dispatcher.js` (validation chain :4-14, failure channels + causation
 :151-297), `src/services/transitions/events.js` (`TransitionEvent` / causation :14-46),
 `src/services/query/commandHooks.ts` (dispatch+invalidate pattern :29-156),

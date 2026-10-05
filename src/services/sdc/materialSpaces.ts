@@ -28,7 +28,7 @@
 //       work `FIELD-SET-CLOSURE-OVERRUNS-01` credited it with.
 //
 //   (2) **R-B, APPLIED STRICTLY, WOULD HAVE BLOCKED THE OPERATOR'S OWN 2B-4a
-//       RULING.** Admitting `sapCode` NECESSARILY enters `supplierStorefront.ts`
+//       RULING.** Admitting `sapCode` NECESSARILY enters `supplierStorefront.js`
 //       — a module no declaration named — so the letter of R-B forbids it while
 //       the 2B-4a ruling requires it. The contradiction is real and the
 //       resolution is the point of this file: **the closure may not enter a new
@@ -98,7 +98,7 @@ export const MATERIAL_SPACES: readonly MaterialSpaceEntry[] = Object.freeze([
     declaredBy: 'R-3 (2B-1)',
     note:
       'DECLARED, BOOKED FOR RETIREMENT — 2B-5b. ⚠️ DEAD BY THE CODE, NOT ONLY BY ' +
-      'POLICY: the one ASN creation path (`MockCommandService.ts:147-152`) builds ' +
+      'POLICY: the one ASN creation path (`MockCommandService.js:147-152`) builds ' +
       'line items from the parent PO, and every PO line is master-resolvable since ' +
       '2B-3, so NO DISPATCHED ASN CAN CARRY A CODE FROM THIS SPACE. The seven ASN ' +
       'line codes are a frozen legacy seed. The chase half was corrected at 2B-5a ' +

@@ -81,7 +81,7 @@ Seam tiers at a glance:
 | Surface | Tier | Evidence |
 |---|---|---|
 | The SDC object model + fixtures + invariants | **LIVE (mock)** | `sdc/types.ts`, `sdc/fixtures.ts`, `sdc.integrity.test.ts` |
-| `RequirementResponse` submit / acknowledge | **LIVE (mock)** — a wired `CommandTarget` | `MockCommandService.ts:984` |
+| `RequirementResponse` submit / acknowledge | **LIVE (mock)** — a wired `CommandTarget` | `MockCommandService.js:984` |
 | `forecastPublications` capability render | **SIMULATED** — gate-1 LIVE, **gate-2 shut** | `registry.ts:116` + harvest gate `:159-162` |
 | **SOMO's inbound emission (the C8 producer)** | **SPEC — zero code, and NOT MODELLED** | §1.2 |
 | Supplier-response feedback → Snowflake commons | **SPEC** | C4 is SPEC, zero code |
@@ -250,7 +250,7 @@ against it.**
 Portal-side verification (CP-1, exhaustive): zero occurrences in the working tree, in `docs/`, in
 `src/`, and **in git history** — `git log --all -S "RM-SLS-2050"` returns no commit that ever
 added or removed it. The only near-hits are unrelated: `MAT-20500`
-(`channel/outboundFixtures.ts:29`) and a commodity price `2050.2` (`commodityHistory.ts:102`).
+(`channel/outboundFixtures.ts:29`) and a commodity price `2050.2` (`commodityHistory.js:102`).
 No shared first-wire acceptance test exists on our side in any form.
 
 **DO NOT SEED IT.** Creating the material to make the test runnable would manufacture the

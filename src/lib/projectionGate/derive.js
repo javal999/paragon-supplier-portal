@@ -38,7 +38,7 @@
 //   The paragraph above read, in the version that merged at #315:
 //
 //       "Comment-only lines are dropped before matching: a comment quoting a
-//        state is not a write, and `halalVerification.ts` contains exactly
+//        state is not a write, and `halalVerification.js` contains exactly
 //        that."
 //
 //   **The first clause was false on this repo's line endings and the second
@@ -51,7 +51,7 @@
 //   this paragraph carried the number and it was wrong by 29 on the next run
 //   — `FLOOR-IN-PROSE-01`, inside the correction to a different defect.) The
 //   one comment in the tree that matches a write pattern — the
-//   `status: 'Expiring Soon'` quoted inside `halalVerification.ts`'s
+//   `status: 'Expiring Soon'` quoted inside `halalVerification.js`'s
 //   corpse list — was acquitted only because it sits outside
 //   `supplierDocument`'s file scope. **Luck, in the exact place the header
 //   claimed design.** (The line number that stood here, `:58`, is dropped
@@ -197,7 +197,7 @@ export function filesForEntity(entity, files) {
  * `status: 'X'` · `return 'X'` · `= 'X'` where the preceding character is not
  * one of `= ! < >` (which would make it a comparison). Comment-only lines are
  * dropped before matching: a comment quoting a state is not a write, and
- * `halalVerification.ts` contains exactly that.
+ * `halalVerification.js` contains exactly that.
  *
  * ⚠️ **THE SPLIT IS `/\r?\n/`, AND THAT IS THE FIX, NOT A TIDY-UP.** This
  * function shipped splitting on a bare `'\n'`, which leaves a `\r` on every

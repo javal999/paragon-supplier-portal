@@ -71,7 +71,7 @@ Two kinds of failure in the dry run are not tooling problems:
    `CLAUDE.md` records that a contract changes only by re-ratification with SOMO, so the PR that
    converts a cited file also amends the contract's citations (`.ts` → `.js`, declarations
    described in their JSDoc form) and is flagged **needs SOMO ratification before merge**.
-   `src/services/data/types.ts` converts to `types.js` as well (its two runtime enums,
+   `src/services/data/types.js` converts to `types.js` as well (its two runtime enums,
    `POStatus` and `ChannelType`, become `/** @type {const} */` objects with a typedef of their values); this replaces the
    earlier "keep it as `types.d.ts`" ruling, since a `.d.ts` file cannot hold runtime values.
 
@@ -84,6 +84,19 @@ Two kinds of failure in the dry run are not tooling problems:
 - Helpers that read either form: `src/test/declaredFields.js`; `declaredType`, `declaredAlias`,
   `importsOf` in `src/lib/enforcement.test.js`; `deriveInterfaceMembers` (+ its spec) in
   `src/services/contracts/__tests__/deriveC1Surface.ts` for interface-or-typedef members.
+- B4: `dayCounts.js` JSDoc type-literal members count only at line start (parity with the TS
+  regex); `storedFieldGate/derive.js` skips a JS constructor assignment to a member a base type
+  already declares (`this.name = …` on an `Error` subclass); `unionMembers()` in
+  `complianceSapSync.test.js`; `deriveMethodParams` / `deriveUnionLiterals` in `deriveC1Surface.ts`.
+- **Known loss, by design for now — `readonly`.** JSDoc `@property` cannot express `readonly`, so
+  an interface converted to `@typedef {object}` + `@property` loses its `readonly` markers (code
+  that writes such a field is no longer flagged). No behaviour changes; the types are looser. A
+  `@typedef {{ readonly a: T }}` type-literal keeps it but moves each field's comment into prose.
+  Decide before B6/B7 whether the converter should prefer the type-literal form when any member is
+  `readonly` (`ledgerTruth.test` dropped its `readonly suggestedQty` text anchor for this reason).
+- Interfaces that REDECLARE a base member convert to `Omit<Base, 'k'> & {…}` (B4); B1–B3's few
+  heritage typedefs used a plain intersection, which is equivalent unless the member is an array or
+  function type (tsc found no difference there).
 - Still text-only, passing today: `dayCounts.js` "named endpoint EXISTS" (`\bfield\??:`), which
   in converted data files is satisfied by fixture assignments rather than declarations.
 

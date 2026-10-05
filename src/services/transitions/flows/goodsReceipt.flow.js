@@ -179,7 +179,7 @@ export const goodsReceiptFlow = {
       sapBoundary: true,
       // PF-0 · D-2 — WHERE SETTLEMENT LANDS IT, in data rather than in the
       // comment above. `settleFinalize` writes this exact string in the mock
-      // adapter (`MockCommandService.ts`), outside the declared machine; until
+      // adapter (`MockCommandService.js`), outside the declared machine; until
       // that half reads the declaration, the two are pinned to agree on the
       // floor (`flowGraph.test.js`).
       settlesTo: 'Posted to SAP',

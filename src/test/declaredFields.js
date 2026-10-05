@@ -3,7 +3,7 @@
 //
 // WHY THIS EXISTS (frontend-standard plan, Phase 4, 2026-10-05)
 //   Several specs read a fixture's SOURCE to prove a retired field is not
-//   declared (`retiredDayFields.test.ts`, `obligationRollup.test.ts`). They
+//   declared (`retiredDayFields.test.js`, `obligationRollup.test.js`). They
 //   matched `^\s*daysUntilExpiry\s*:\s*number\s*;` — the TypeScript interface
 //   form. After conversion the same declaration is JSDoc
 //   (`@property {number} daysUntilExpiry`), the regex matched nothing, and the

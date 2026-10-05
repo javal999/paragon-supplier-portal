@@ -88,7 +88,7 @@ export const STORED_FIELD_ALLOWLIST = Object.freeze([
       'so anything computing a legacy expiry must derive it from issueDate and must never trust ' +
       'expiryDate. That computation does not exist yet; the input it will need is stored and documented.',
     consumer:
-      'the legacy-term expiry derivation in services/data/complianceProjection.ts, whose header ' +
+      'the legacy-term expiry derivation in services/data/complianceProjection.js, whose header ' +
       'already names issueDate as its input (added by D-A, PR #219)',
     since: D_F
   },
@@ -106,7 +106,7 @@ export const STORED_FIELD_ALLOWLIST = Object.freeze([
   //   quotes a certificate number, never a registry row id. Re-listing it would
   //   have meant inventing a second future consumer for a field whose first one
   //   had just declined it, which is the `certBasis` shape this gate exists to
-  //   catch. See `halalVerification.ts`.
+  //   catch. See `halalVerification.js`.
   //
   //   THE LIST SHRANK BY FIVE. That is the only direction this list is supposed
   //   to move, and it had never moved in it before.
@@ -296,13 +296,13 @@ export const STORED_FIELD_ALLOWLIST = Object.freeze([
   // at all, so nothing was captured and nothing was discarded — the row's prose
   // asserted a capture that does not happen. The real defect was that the field
   // was ENUMERABLE where the platform's `Error.cause` is not. Field deleted, and
-  // the requirement preserved in `services/data/types.ts` beside `DataErrorCode`
+  // the requirement preserved in `services/data/types.js` beside `DataErrorCode`
   // (§41). **The gate went red BEFORE this row was removed** — `AN EXEMPTION
   // OUTLIVED ITS SUBJECT · DataError.cause — the field no longer exists` — which
   // is the whole point of the bilateral half and its first exercise.
   // `MaterialMasterEntry.mrpController` STOOD HERE (data-in-waiting, filed by
   // Material A2 naming C4 as its consumer). C4 gave it its reader —
-  // `mrpControllerOf` in `services/data/mock/mrpControllerReadModel.ts` — so
+  // `mrpControllerOf` in `services/data/mock/mrpControllerReadModel.js` — so
   // the exemption died with its subject, as the bilateral gate requires.
 ]);
 

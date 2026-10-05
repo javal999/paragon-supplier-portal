@@ -1,7 +1,7 @@
 // ────────────────────────────────────────────────────────────────────────────
 // §81 — THE SYNC STATE, AS A READER ACTUALLY MEETS IT.
 //
-// The contract half lives in `services/data/complianceSapSync.test.ts` (the
+// The contract half lives in `services/data/complianceSapSync.test.js` (the
 // value set, the reachability derivation, the gate's non-reach). This file
 // asserts the only thing that half cannot: **that a person sees it**, in their
 // own language, on both sides of the tenancy boundary.

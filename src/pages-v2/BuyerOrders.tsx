@@ -840,7 +840,9 @@ const BuyerOrders: React.FC = () => {
               </section>
             )}
 
-            {[POStatus.CONFIRMED, POStatus.PARTIALLY_DELIVERED, POStatus.DELIVERED, POStatus.CLOSED].includes(
+            {/* `as POStatus[]`: POStatus is a const object now, not an enum, so a literal array of
+                its members narrows to those four and `includes` would refuse a wider status. */}
+            {([POStatus.CONFIRMED, POStatus.PARTIALLY_DELIVERED, POStatus.DELIVERED, POStatus.CLOSED] as POStatus[]).includes(
               (livePO ?? selectedPO).status,
             ) && (
               <section>

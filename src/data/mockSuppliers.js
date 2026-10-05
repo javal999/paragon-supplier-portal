@@ -17,7 +17,7 @@ const day = (offset) =>
 //   Both used to be authored here, and a typed-in percentage beside a real
 //   delivery history is the shape this phase exists to remove. They are
 //   PROJECTED AT READ from the call-offs, heads-ups, receipts and orders the hub
-//   holds (`mock/supplierMeasureReadModel.ts`), so a supplier with nothing
+//   holds (`mock/supplierMeasureReadModel.js`), so a supplier with nothing
 //   measured carries neither field and every surface reads "No history".
 // ────────────────────────────────────────────────────────────────────────────
 // ⚠️ EVERY SUPPLIER BELOW IS FICTIONAL — `DISCOVERY-REAL-SUBJECTS-01`, batch A.
@@ -25,7 +25,7 @@ const day = (offset) =>
 //   them, fabricated STATUTORY IDENTIFIERS (NPWP-format tax IDs, NIB-format
 //   business registrations), real corporate email domains and websites,
 //   performance grades, ratings, a SUSPENDED status, and a supply-relationship
-//   claim. Names follow the `complianceRegistry.ts` house style — plainly
+//   claim. Names follow the `complianceRegistry.js` house style — plainly
 //   fictional, unmistakable at a glance. NOT plausible-sounding invented names:
 //   a plausible name reproduces the problem with better luck, because the next
 //   census cannot tell it from a real one and neither can a reader.
@@ -475,9 +475,9 @@ export const mockSuppliers = [
   },
   // ── BL-64 — COMPLIANCE GATE DEMO SUPPLIERS (CR-23), ILLUSTRATIVE ──────────
   //   Each exists to show ONE gate scenario on the sample RFQs in
-  //   `services/data/mock/fixtures/gateDemo.ts` (rfq-016 to rfq-020), so a buyer
+  //   `services/data/mock/fixtures/gateDemo.js` (rfq-016 to rfq-020), so a buyer
   //   can see every pass/fail case in the app. The scenario each one carries is
-  //   pinned by name in `gateDemo.test.ts`. None of them holds a compliance-
+  //   pinned by name in `gateDemo.test.js`. None of them holds a compliance-
   //   registry row: the master decides for them, by design (a registry row for a
   //   new supplier would be a new HALAL-XPERSONA-01 disagreement).
   //
@@ -568,7 +568,7 @@ export const mockSuppliers = [
   },
   {
     // OTIF EXACTLY AT the gate minimum (4 of 5 call-offs on time and in full =
-    // 80%) — passes. The deliveries are in `gateDemo.ts`, not typed in here.
+    // 80%) — passes. The deliveries are in `gateDemo.js`, not typed in here.
     id: 'sup-019',
     purchasingGroup: '101',
     sapBpNumber: 'BP-10001252',

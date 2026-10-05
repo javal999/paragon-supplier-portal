@@ -61,11 +61,29 @@ const interfaceIn = (sf: ts.SourceFile, name: string): ts.InterfaceDeclaration |
 const nodeMethods = (decl: ts.InterfaceDeclaration, sf: ts.SourceFile): string[] =>
   decl.members.filter(ts.isMethodSignature).map((m) => m.name.getText(sf));
 
-/** Method names as the CHECKER resolves them — sees `extends`. */
-const checkerMethods = (decl: ts.InterfaceDeclaration, checker: ts.TypeChecker): string[] =>
+/**
+ * Method names as the CHECKER resolves them — sees `extends`.
+ *
+ * Reads both forms (frontend-standard Phase 4): `decl` is an interface or a
+ * JSDoc `@typedef`. For a typedef the checker follows an intersection
+ * (`Base & { … }`, `Omit<Base,'k'> & { … }`) the way it follows `extends`, and a
+ * member is method-shaped when it is declared as a method signature OR as a
+ * `@property` whose type is a function type — the same split the NODE half
+ * (`typedefMembers`) uses, so the two halves still answer the same question.
+ */
+const checkerMethods = (
+  decl: ts.InterfaceDeclaration | ts.JSDocTypedefTag,
+  checker: ts.TypeChecker,
+): string[] =>
   checker
     .getPropertiesOfType(checker.getTypeAtLocation(decl))
-    .filter((s) => s.declarations?.some((d) => ts.isMethodSignature(d)))
+    .filter((s) =>
+      s.declarations?.some(
+        (d) =>
+          ts.isMethodSignature(d) ||
+          (ts.isJSDocPropertyTag(d) && isFunctionTypeNode(d.typeExpression?.type)),
+      ),
+    )
     .map((s) => s.getName());
 
 /**
@@ -80,27 +98,51 @@ export function deriveServiceSurface(program: ts.Program, typesPath: string): De
   if (!sf) throw new Error(`C1 derivation: cannot read ${typesPath}`);
   const checker = program.getTypeChecker();
 
-  const root = interfaceIn(sf, 'IDataService');
+  // Reads both forms (frontend-standard Phase 4): `interface IDataService` in a
+  // `.ts` module, or `@typedef {object} IDataService` + `@property` tags in the
+  // converted `types.js`. Still THROWS when neither declares it.
+  const root = interfaceIn(sf, 'IDataService') ?? typedefIn(sf, 'IDataService');
   if (!root) throw new Error('C1 derivation: `IDataService` is not declared in the types module');
 
   const subServices: DerivedSubService[] = [];
   const topLevelMethods: string[] = [];
 
-  for (const member of root.members) {
-    if (ts.isMethodSignature(member)) {
-      topLevelMethods.push(member.name.getText(sf));
+  // One row per root member, either form: a method name, or a property name
+  // with the text of its declared type. Classification is the interface's —
+  // a method signature (or a function-typed `@property`) is a METHOD; any other
+  // typed member is a sub-service PROPERTY.
+  const rootMembers: ({ kind: 'method'; name: string } | { kind: 'property'; name: string; type: string })[] = [];
+  if (ts.isInterfaceDeclaration(root)) {
+    for (const member of root.members) {
+      if (ts.isMethodSignature(member)) rootMembers.push({ kind: 'method', name: member.name.getText(sf) });
+      else if (ts.isPropertySignature(member) && member.type) {
+        rootMembers.push({ kind: 'property', name: member.name.getText(sf), type: member.type.getText(sf) });
+      }
+    }
+  } else {
+    const { methods, properties } = typedefMembers(root, sf);
+    const tags = ts.isJSDocTypeLiteral(root.typeExpression!) ? root.typeExpression.jsDocPropertyTags ?? [] : [];
+    for (const name of methods) rootMembers.push({ kind: 'method', name });
+    for (const name of properties) {
+      const t = tags.find((p) => p.name.getText(sf) === name)?.typeExpression?.type;
+      if (t) rootMembers.push({ kind: 'property', name, type: t.getText(sf) });
+    }
+  }
+
+  for (const member of rootMembers) {
+    if (member.kind === 'method') {
+      topLevelMethods.push(member.name);
       continue;
     }
-    if (!ts.isPropertySignature(member) || !member.type) continue;
 
-    const iface = member.type.getText(sf);
-    const decl = interfaceIn(sf, iface);
+    const iface = member.type;
+    const decl = interfaceIn(sf, iface) ?? typedefIn(sf, iface);
     if (!decl) {
       // A sub-service typed as something the module does not declare. Recorded
       // rather than skipped: silently dropping it is how a surface shrinks
       // without anyone noticing.
       subServices.push({
-        property: member.name.getText(sf),
+        property: member.name,
         iface,
         methods: [],
         halvesAgree: false,
@@ -108,13 +150,13 @@ export function deriveServiceSurface(program: ts.Program, typesPath: string): De
       continue;
     }
 
-    const viaNode = nodeMethods(decl, sf);
+    const viaNode = ts.isInterfaceDeclaration(decl) ? nodeMethods(decl, sf) : typedefMembers(decl, sf).methods;
     const viaChecker = checkerMethods(decl, checker);
     const same =
       viaNode.length === viaChecker.length && [...viaNode].sort().join() === [...viaChecker].sort().join();
 
     subServices.push({
-      property: member.name.getText(sf),
+      property: member.name,
       iface,
       // The checker half is authoritative for MEMBERSHIP (it sees inherited
       // members); the node half supplies declaration ORDER, which reads better
@@ -235,6 +277,74 @@ export function deriveInterfaceMembers(
     methods: decl!.members.filter(ts.isMethodSignature).map((m) => m.name.getText(sf)),
     properties: decl!.members.filter(ts.isPropertySignature).map((m) => m.name.getText(sf)),
   };
+}
+
+/**
+ * The string-literal members of a union type alias, e.g. `CommandOutcome`.
+ *
+ * Reads both forms (frontend-standard Phase 4): `export type X = 'a' | 'b';`
+ * in a `.ts` module, or `/** @typedef {'a' | 'b'} X *\/` in a converted `.js`
+ * one. Read from the AST, never the text, so a member renamed or added in
+ * either spelling moves the answer. THROWS when neither form declares the name
+ * (`EMPTY-INPUT-REPORTS-CLEAN-01`); a non-literal member is reported by its
+ * type text rather than dropped, so a widened union cannot read as unchanged.
+ */
+export function deriveUnionLiterals(program: ts.Program, filePath: string, name: string): string[] {
+  const sf = program.getSourceFile(filePath);
+  if (!sf) throw new Error(`C1 derivation: cannot read ${filePath}`);
+  let type: ts.TypeNode | undefined;
+  ts.forEachChild(sf, (n) => {
+    if (ts.isTypeAliasDeclaration(n) && n.name.text === name) type = n.type;
+  });
+  if (!type) {
+    const te = typedefIn(sf, name)?.typeExpression;
+    // A `@typedef {object} X` + `@property` form is an object, never a union.
+    if (te && !ts.isJSDocTypeLiteral(te)) type = te.type;
+  }
+  if (!type) throw new Error(`C1 derivation: \`${name}\` is not declared in ${filePath}`);
+  while (ts.isParenthesizedTypeNode(type)) type = type.type;
+  const parts = ts.isUnionTypeNode(type) ? type.types : [type];
+  return parts.map((t) =>
+    ts.isLiteralTypeNode(t) && ts.isStringLiteral(t.literal) ? t.literal.text : t.getText(sf),
+  );
+}
+
+/**
+ * The parameters of one METHOD of an interface or typedef, as `name: Type`
+ * strings in declaration order — e.g. `['scope: QueryScope', 'correlationId: string']`.
+ *
+ * Reads both forms (frontend-standard Phase 4): a TS method signature, or a
+ * JSDoc `@property {(…) => R} name`. THROWS when the owner is undeclared or the
+ * member is absent or not method-shaped, so a removed method cannot read as an
+ * empty parameter list.
+ */
+export function deriveMethodParams(
+  program: ts.Program,
+  filePath: string,
+  ownerName: string,
+  method: string,
+): string[] {
+  const sf = program.getSourceFile(filePath);
+  if (!sf) throw new Error(`C1 derivation: cannot read ${filePath}`);
+  let params: ts.NodeArray<ts.ParameterDeclaration> | undefined;
+  const decl = interfaceIn(sf, ownerName);
+  if (decl) {
+    const m = decl.members.find((x) => ts.isMethodSignature(x) && x.name.getText(sf) === method);
+    params = m && ts.isMethodSignature(m) ? m.parameters : undefined;
+  } else {
+    const tag = typedefIn(sf, ownerName);
+    if (!tag) throw new Error(`C1 derivation: \`${ownerName}\` is not declared in ${filePath}`);
+    const te = tag.typeExpression;
+    const prop =
+      te && ts.isJSDocTypeLiteral(te)
+        ? te.jsDocPropertyTags?.find((p) => p.name.getText(sf) === method)
+        : undefined;
+    let t = prop?.typeExpression?.type;
+    while (t && ts.isParenthesizedTypeNode(t)) t = t.type;
+    params = t && (ts.isFunctionTypeNode(t) || ts.isJSDocFunctionType(t)) ? t.parameters : undefined;
+  }
+  if (!params) throw new Error(`C1 derivation: \`${ownerName}.${method}\` is not a method in ${filePath}`);
+  return params.map((p) => `${p.name.getText(sf)}: ${p.type?.getText(sf) ?? '?'}`);
 }
 
 // ─── The DOCUMENT half ───────────────────────────────────────────────────────

@@ -5,7 +5,7 @@
 // the real draft verb, and every act ends in the store.
 //
 // The live half wraps the registry's `isLive` exactly as
-// `callOffEngineOrigin.test.ts` does (the real registry cannot turn
+// `callOffEngineOrigin.test.js` does (the real registry cannot turn
 // `engineDataset` green — asserted there): real answer by default, flipped only
 // where a test says so.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';

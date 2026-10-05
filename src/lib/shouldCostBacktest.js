@@ -16,12 +16,12 @@
 //   **THE RULE, so the next census does not re-derive the wrong answer: UNUSED
 //   IS NOT THE SAME AS USELESS, AND THE FLOOR COMES DOWN FOR A WRONG TEST, NOT
 //   FOR AN UNREAD ONE.** If "no caller" were sufficient grounds, then
-//   `services/data/halalVerification.ts` goes next — 254 lines, headless, and
+//   `services/data/halalVerification.js` goes next — 254 lines, headless, and
 //   its own header forbids acquiring a consumer. Same shape, and retiring it
 //   would be wrong.
 //
 // Drives the UNCHANGED should-cost engine (shouldCost.js) month-by-month over the
-// vendored OBSERVED × SNAPSHOT real history (commodityHistory.ts) and evaluates
+// vendored OBSERVED × SNAPSHOT real history (commodityHistory.js) and evaluates
 // the six named acceptance episodes + the falsification check (build-plan §6).
 //
 // C6-LOCK — the engine is byte-for-byte untouched. CI-1.5 VALIDATES; it never

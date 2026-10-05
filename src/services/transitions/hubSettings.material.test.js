@@ -3,7 +3,7 @@
 // the Hub administrator before any rule reads them.
 //
 // Proved here, pure (no store, no verb — the verb path is in
-// `hubSettings.bl32.test.ts`, whose FLIPS table covers these keys):
+// `hubSettings.bl32.test.js`, whose FLIPS table covers these keys):
 //   1. each key's rule, unit, default and bounds, each bound probed both ways;
 //   2. the ordering rule: the flag starts below the warning, whichever end moves;
 //   3. a time of day is minutes after midnight, and 1439 reads 23:59.

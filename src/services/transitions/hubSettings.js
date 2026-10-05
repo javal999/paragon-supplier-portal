@@ -21,7 +21,7 @@
 // ⚠️ **THE POPULATION IS DERIVED, NOT LISTED FROM MEMORY.** Every value below
 // was a constant exported by a config module (`callOffTolerance.js`,
 // `fulfilmentConfig.js`, `forecastConfig.ts`, `inventoryConfig.js`,
-// `complianceGateConfig.ts`). `hubSettings.bl32.test.ts` scans those modules,
+// `complianceGateConfig.ts`). `hubSettings.bl32.test.js` scans those modules,
 // asserts every former constant is gone, and pins the readers of each value.
 // What stayed a constant, and why, is written beside it in its module.
 // ─────────────────────────────────────────────────────────────────────────────

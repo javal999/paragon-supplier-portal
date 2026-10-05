@@ -244,7 +244,7 @@ describe('DISCOVERY-REAL-SUBJECTS-01 · batch D — identifiers that are not nam
 // was looking at nothing. It was caught by a hand-run mutation probe that nobody
 // was obliged to run. The last probe below is that defect, made standing.
 //
-// SHAPE COPIED FROM §71's RETIRED PROBE (`dayProjection.test.ts` @ `3e0c1d2`,
+// SHAPE COPIED FROM §71's RETIRED PROBE (`dayProjection.test.js` @ `3e0c1d2`,
 // quoted into a comment there rather than deleted): run the SHIPPED matcher over
 // input that reconstructs a real defect, and require it to return NAMED members
 // — never merely "something". A count would pass on the wrong match.

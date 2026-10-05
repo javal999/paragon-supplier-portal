@@ -1334,7 +1334,8 @@ const SupplierOrders: React.FC = () => {
                 {(selectedLive ?? selected).response && (
                   <PoResponseDetails po={selectedLive ?? selected} />
                 )}
-                {[POStatus.CONFIRMED, POStatus.PARTIALLY_DELIVERED].includes(
+                {/* `as POStatus[]`: POStatus is a const object now, not an enum (see BuyerOrders). */}
+                {([POStatus.CONFIRMED, POStatus.PARTIALLY_DELIVERED] as POStatus[]).includes(
                   (selectedLive ?? selected).status,
                 ) && (
                   <section>

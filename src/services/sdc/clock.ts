@@ -51,7 +51,7 @@ import { DECLARED_PRESENT } from '../data/fixturePresent';
  * is 47 so that `DECLARED_PRESENT` lands inside this lane's own coherent window
  * (2026-08-25..2026-09-01, both edges set by `sa-0002` seq 6 against
  * `ANTICIPATION_DAYS`) — so not one SDC fixture had to move and not one
- * assertion had to be re-tuned. `fixturePresent.guard.test.ts` pins the present
+ * assertion had to be re-tuned. `fixturePresent.guard.test.js` pins the present
  * inside `SDC_WINDOW`, so a re-authored `sa-0002` fires the gate by name instead
  * of silently falsifying this lane.
  *

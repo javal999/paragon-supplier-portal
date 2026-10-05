@@ -3,9 +3,9 @@
 Entity type shapes, the list envelope (DR-5), the error contract (DR-4), and the read-projection
 boundary (G1) where clock-derived values are computed — never stored.
 
-Source of truth: `src/services/data/types.ts` (canonical types + re-exports),
-`src/services/data/invoiceProjection.ts` (the live read-projection exemplar), and the entity
-homes in `src/data/mock*.ts` (re-exported through `types.ts`).
+Source of truth: `src/services/data/types.js` (canonical types + re-exports),
+`src/services/data/invoiceProjection.js` (the live read-projection exemplar), and the entity
+homes in `src/data/mock*.ts` (re-exported through `types.js`).
 
 ---
 
@@ -25,7 +25,7 @@ interface Page<T> {
 **PARTIAL truth (do not round to LIVE):** the **shape is frozen** and universally returned; the
 **pagination machinery is deferred**. The mock returns everything in `items`, `cursor` null, no
 `total`. The Phase-F1 real adapter fills `cursor` / `total` — additive, no shape change, no page
-change (`types.ts:149–160`).
+change (`types.js:149–160`).
 
 ---
 
@@ -44,9 +44,9 @@ class DataError extends Error {
 }
 ```
 
-`CHAOS` is emitted only by the dev-only, env-gated chaos mock (`withChaos.ts`). `SCOPE_DENIED` /
+`CHAOS` is emitted only by the dev-only, env-gated chaos mock (`withChaos.js`). `SCOPE_DENIED` /
 `NOT_FOUND` are also thrown by the command dispatcher for hard authorization failures — commands
-share the reads' failure channel (`types.ts:120–147`).
+share the reads' failure channel (`types.js:120–147`).
 
 ---
 
@@ -64,7 +64,7 @@ interface QueryScope {
 Scoping is enforced **client-side today** (greenfield backend). The 3-tenant service scoping
 contract (`scoping.ts`, run against the mock by `scoping.mock.test.ts`) guards
 buyer-superset / per-supplier-isolation /
-`SCOPE_DENIED` in-floor (`types.ts:113–118`).
+`SCOPE_DENIED` in-floor (`types.js:113–118`).
 
 ---
 
@@ -72,7 +72,7 @@ buyer-superset / per-supplier-isolation /
 
 All shapes are harvestable from code; none are invented. Two homes:
 
-**Defined in `types.ts`:**
+**Defined in `types.js`:**
 
 - **Purchase order** — `PurchaseOrder`, `POLineItem`, `POSummary`; enums `POStatus` (7 states),
   `ChannelType`. Drift-resolved canonical names locked (`totalValue`, `status`, `orderDate`;
@@ -93,7 +93,7 @@ All shapes are harvestable from code; none are invented. Two homes:
 - **Filter inputs** — `POFilter`, `InvoiceFilter`, `RFQFilter`, `GRFilter`, `ContractFilter`,
   `ObligationFilter`, `PRFilter`, etc. (lean; expanded as pages migrate).
 
-**Imported from `src/data/mock*.ts` (canonical home) and re-exported through `types.ts:45–111`
+**Imported from `src/data/mock*.ts` (canonical home) and re-exported through `types.js:45–111`
 — reference by home, do not re-declare:**
 
 | Entity | Home |
@@ -113,7 +113,7 @@ All shapes are harvestable from code; none are invented. Two homes:
 (`Expiring` / `Expired` / `Overdue` / `Upcoming` / …) are **computed at read time from dates**.
 They are never stored, never commanded, and never appear in a transition table.
 
-**The canonical LIVE implementation is `invoiceProjection.ts`** — the pattern the DTO-v2 harvest
+**The canonical LIVE implementation is `invoiceProjection.js`** — the pattern the DTO-v2 harvest
 generalizes. The invoice is ONE canonical `Invoice`; each persona surface reads a **projection**:
 
 - `toSupplierLabel(inv, nowIso)` / `toBuyerLabel(inv, nowIso)` map the canonical `InvoiceStatus`
@@ -154,7 +154,7 @@ entity that carries a clock-derived display state. It is the home for:
 - **F0.4-FIND-01** — obligation / contract / supplier-document clock projections.
 - **The ONE canonical compliance machine** (census #11–15 — the 5 fragmented compliance
   vocabularies collapsed) — **LANDED at I3.1** as the 14th flow (`compliance.flow.js`, inert) +
-  the `ComplianceRegistryEntry` type + `getComplianceRegistry` read + `complianceProjection.ts`.
+  the `ComplianceRegistryEntry` type + `getComplianceRegistry` read + `complianceProjection.js`.
   The projection computes `status`/`daysRemaining` (clock, law 0.5), `schemeValid` (issuer axis),
   and `remindEligible` at read time — the generalization of `invoiceProjection`. **Fixture-first +
   SIMULATED** (LivenessRegistry derives `compliance` → SIMULATED; the fixture is honestly

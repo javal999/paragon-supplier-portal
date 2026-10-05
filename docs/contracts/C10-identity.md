@@ -108,7 +108,7 @@ out of the shipped tree.
 |---|---|---|
 | `PersonaType` | `src/context/CurrentIdentityContext.jsx:8` | **`'buyer' \| 'supplier'`. Two values.** A SEAT, not a human |
 | `CurrentIdentity` | `src/context/CurrentIdentityContext.jsx:10-14` | `{ personaType, supplierId, supplierName }`. **A persona, a tenant and a company. No human** |
-| The DR-10 audit actor | `actorKey(scope)`, C3 | **`'buyer:all'`** — pinned in `enforcementSetCommand.test.ts:354` beside `not.toContain('usr-014')` |
+| The DR-10 audit actor | `actorKey(scope)`, C3 | **`'buyer:all'`** — pinned in `enforcementSetCommand.test.js:354` beside `not.toContain('usr-014')` |
 | `PERSONA_ROLES` | `src/services/transitions/roles.js:18-89` | **The persona IS the authorisation object.** A seat holds 60+ transition-roles because it is a seat |
 | `ActingPerson` | `src/lib/enforcement.js:339-345` | **The one shape in the tree that names a person** — and nothing can fill it |
 | `ActorAttribution` | `src/lib/enforcement.js:382-384` | `RESOLVED` \| `UNATTRIBUTED` + reason. The honest discriminated absence |
@@ -138,7 +138,7 @@ where the record says **"this person accepted this risk"**.
 
 - The enforcement setting ledger **ships empty by ruling** — `lib/enforcement.js:83-87`.
 - The E4 seed records its acts with `SEED_ACTOR = { kind: 'UNATTRIBUTED', reason:
-  'NO_PERSON_IN_SESSION' }` — `enforcementSeed.ts:93-96`.
+  'NO_PERSON_IN_SESSION' }` — `enforcementSeed.js:93-96`.
 - `overrideCompletes` returns `false` for every override this tree can construct —
   `lib/enforcement.js:778-780`.
 - The only `personId` values in the repository (`usr-014` and siblings) live **in specs**, never
@@ -570,7 +570,7 @@ The portal is fixture-first by design and will therefore acquire demo people. **
 a real person are the same shape**, and a governed record — an override, an approval, an
 enforcement setting — that names a demo person is **manufactured provenance**: the exact thing
 E2 refused when it declined to seed an invented `personId`, and E4 refused again when it seeded
-`UNATTRIBUTED` instead (`enforcementSeed.ts:33-38, 93-96`).
+`UNATTRIBUTED` instead (`enforcementSeed.js:33-38, 93-96`).
 
 **The mechanism, not the convention:** a reserved prefix (`sim-usr-*`), and **a pin that fails the
 floor** when a value carrying it reaches a `RESOLVED` attribution on a governed record. The

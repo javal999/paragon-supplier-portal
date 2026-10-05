@@ -254,9 +254,9 @@ describe('F0.4 remaining flows — inert (author-unwired, no CommandTarget)', ()
   // because no CommandTarget is registered for the entity (nothing is wired).
   // NOTE: purchaseRequisition GRADUATED out of this inert set at G1.1 — its PR
   // intake CommandTarget is now wired (C7-FIND-01), covered by
-  // purchaseRequisitionCommand.test.ts. **supplierDocument GRADUATED at §82**
+  // purchaseRequisitionCommand.test.js. **supplierDocument GRADUATED at §82**
   // for the same reason — its target is wired and its verbs fire, covered by
-  // `supplierDocumentCommand.test.ts`. Three stay author-unwired.
+  // `supplierDocumentCommand.test.js`. Three stay author-unwired.
   /** @type {{ entity: string; transitionId: string }[]} */
   const probes = [
     { entity: 'contract', transitionId: 't_contract_activate' },

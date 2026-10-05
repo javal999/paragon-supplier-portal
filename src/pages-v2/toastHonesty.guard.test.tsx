@@ -258,7 +258,7 @@ const PAGES_DIR = __dirname;
  * parsed over the RAW source address offsets found in the stripped source.
  *
  * ⚠️ **THIRD INSTRUMENT IN THIS TREE TO NEED THIS, FIFTH TO WRITE ITS OWN
- * STRIPPER.** `chaosAmbience.test.ts` states the class exactly — *"a mutant that
+ * STRIPPER.** `chaosAmbience.test.js` states the class exactly — *"a mutant that
  * had DELETED the gate and kept the comment: the assertion was satisfied by prose
  * describing the mechanism rather than by the mechanism"* — and `fixturePresent`,
  * `registrationHonesty`, `contractRaisedElsewhere` and

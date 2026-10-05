@@ -65,7 +65,7 @@ const TODAY = DECLARED_PRESENT;
 //   count of three still reproduce EXACTLY — off `DOCUMENTS_RAW`, the authored
 //   literals, which no consumer reads. Against `DOCUMENTS`, the shifted export
 //   this widget imports, **no row disagrees with the projection**. Derive it,
-//   do not read it here: `fixturePresent.guard.test.ts` runs that comparison
+//   do not read it here: `fixturePresent.guard.test.js` runs that comparison
 //   every suite. No count is restated in this comment on purpose.
 //
 //   ⚠️ **AND THE FIX WAS STILL RIGHT — ITS REASON IS JUST WEAKER NOW.** Two

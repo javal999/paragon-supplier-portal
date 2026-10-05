@@ -49,7 +49,7 @@ describe('SDC-CLOCK-RESTORE-01 — every simulated-clock setter restores', () =>
 
     // A known-true caller. If the scan stops seeing this, the derivation below
     // is reporting on its own matcher rather than on the tree.
-    expect(SRC['/src/services/data/mock/sdcObjectsCommand.test.ts']).toMatch(/sdcClock\.set\(/);
+    expect(SRC['/src/services/data/mock/sdcObjectsCommand.test.js']).toMatch(/sdcClock\.set\(/);
 
     // `import.meta.glob` excludes the module it is written in — asserted, not
     // assumed, because THIS file calls `sdcClock.set` in its last test and would
@@ -64,7 +64,7 @@ describe('SDC-CLOCK-RESTORE-01 — every simulated-clock setter restores', () =>
     // `setters` would make the filter below vacuously empty, which is
     // `EMPTY-INPUT-REPORTS-CLEAN-01` in one line.
     expect(setters.length).toBeGreaterThan(0);
-    expect(setters).toContain('/src/services/data/mock/sdcObjectsCommand.test.ts');
+    expect(setters).toContain('/src/services/data/mock/sdcObjectsCommand.test.js');
 
     const unrestored = setters.filter((p) => !RESTORING_HOOK.test(SRC[p] ?? ''));
 

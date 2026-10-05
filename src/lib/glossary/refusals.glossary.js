@@ -194,7 +194,7 @@ export const BPOM_REFUSAL_GLOSSARY = /** @satisfies {GlossaryOf<BpomRefusalReaso
 
 /**
  * ⚠️ **THE FIRST USER-FACING PROSE THESE FOUR HAVE EVER HAD.** They are
- * precedence-ordered in `halalVerification.ts` — the first that applies is the
+ * precedence-ordered in `halalVerification.js` — the first that applies is the
  * one reported — and that ordering is a fact about the check, so the definitions
  * below say where each sits rather than describing four independent states.
  */

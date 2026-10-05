@@ -36,7 +36,7 @@ export default defineConfig({
     // suite would start collecting other people's tests.
     //
     // The glob would silently swallow any FUTURE live spec, which is a suite
-    // that shrinks without the floor noticing. `clockDrift.live.test.ts` pins
+    // that shrinks without the floor noticing. `clockDrift.live.test.js` pins
     // the excluded set bilaterally, derived from disk, so a second one is red.
     exclude: [...configDefaults.exclude, 'src/**/*.live.test.{js,jsx,ts,tsx}'],
     css: false,

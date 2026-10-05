@@ -1013,7 +1013,7 @@ describe('CP-3 · E4 — ⚠️ THE PER-CHECK DELTA, AND IT IS ZERO', () => {
     // `BLOCK_OVERRIDABLE` are refused by the SAME clause, so **every mode below
     // `BLOCK` is out of reach until identity exists** — see `docs/findings.md`
     // §63 (`HALAL-ENFORCEMENT-CEILING-IS-IDENTITY-01`). Probed both ways in
-    // `enforcementSetCommand.test.ts`, including the tightening that IS accepted.
+    // `enforcementSetCommand.test.js`, including the tightening that IS accepted.
     expect(differences.map((d) => d.code).sort()).toEqual([
       'AI-NIAC-6612',
       'FR-ROUD-4470',

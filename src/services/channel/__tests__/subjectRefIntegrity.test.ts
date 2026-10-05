@@ -184,7 +184,7 @@ describe('2B-5a — every outbound subject reference RESOLVES to the object it n
   it('2B-5b-i — both open axes re-run through the SHARED harness, and agree', () => {
     // ⚠️ THE GENERALISATION, verified rather than declared. The same two axes
     // that passed vacuously in 2B-5a now run through the module the ASN lane
-    // uses (`asnRefIntegrity.test.ts`), and `resolved` comes from inside the
+    // uses (`asnRefIntegrity.test.js`), and `resolved` comes from inside the
     // resolution rather than from a second traversal the caller wrote — which
     // is precisely where the hand-written version drifted.
     const material = axis(

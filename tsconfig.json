@@ -27,7 +27,7 @@
     // The SPEC surface adds 11 more (`tsconfig.vitest.json` inherits this flag —
     // it is set ONCE, here, and a second copy there would be a figure that can
     // drift). 39 in total, and a fixpoint: removing them cascaded once, onto
-    // `fixturePresent.guard.test.ts` · `docStateAt`, whose only reader was one of
+    // `fixturePresent.guard.test.js` · `docStateAt`, whose only reader was one of
     // the 39.
     //
     // ⚠️ **NOT ONE OF THE 39 WAS A LIVE DEFECT, AND THAT WAS CHECKED RATHER THAN

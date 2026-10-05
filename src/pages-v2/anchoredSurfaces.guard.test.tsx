@@ -201,7 +201,7 @@ describe('anchored surfaces — clock-independent by construction', () => {
   //    The module-scope miss is not a hole to patch, it is a property of every
   //    render-diff instrument: a module-scope const resolves at IMPORT, once,
   //    BEFORE any `beforeEach` installs the proxy — the same mechanism
-  //    `fixturePresent.ts` cites when it rules out a clock read inside seed
+  //    `fixturePresent.js` cites when it rules out a clock read inside seed
   //    data ("it fails WHERE NOTHING COULD SEE IT"). A surface whose clock read
   //    is at module scope is invisible here and needs a source-level check.
   //
@@ -380,7 +380,7 @@ describe('anchored surfaces — clock-independent by construction', () => {
 // installs and still moves what `new Date()` returns. What changes is that the
 // anchored surfaces no longer CONSULT it, which is the intended behaviour and
 // not a regression of the harness. Every spec that pins the clock to assert a
-// clock-derived label on an UNANCHORED read (e.g. `invoiceRead.test.ts`) is
+// clock-derived label on an UNANCHORED read (e.g. `invoiceRead.test.js`) is
 // untouched — 4577 tests were green on this branch before this file was added.
 // ─────────────────────────────────────────────────────────────────────────────
 describe('usePinnedDemoClock is unaffected by anchoring', () => {

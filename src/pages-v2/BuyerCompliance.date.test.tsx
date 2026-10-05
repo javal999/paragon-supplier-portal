@@ -28,7 +28,7 @@ import i18n from '@lib/i18n';
 import { formatDate } from '@lib/format';
 import BuyerCompliance from './BuyerCompliance';
 
-// A STORED fixture expiry (complianceRegistry.ts), not a projected or clock-
+// A STORED fixture expiry (complianceRegistry.js), not a projected or clock-
 // derived value: the assertion cannot decay with the calendar.
 const PINNED_EXPIRY = '2026-08-20';
 

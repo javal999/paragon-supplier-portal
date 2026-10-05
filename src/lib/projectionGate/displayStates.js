@@ -82,7 +82,7 @@ export const DISPLAY_STATES = [
     entity: 'compliance',
     state: 'Expiring',
     group: 'computed-at-read',
-    producer: 'src/services/data/complianceProjection.ts',
+    producer: 'src/services/data/complianceProjection.js',
     // Computed at read AND unwritable: `compliance` has no CommandTarget
     // either. The two facts are orthogonal — the flag is about the ENTITY's
     // write path, the group is about where the VALUE comes from.
@@ -92,7 +92,7 @@ export const DISPLAY_STATES = [
     entity: 'compliance',
     state: 'Expired',
     group: 'computed-at-read',
-    producer: 'src/services/data/complianceProjection.ts',
+    producer: 'src/services/data/complianceProjection.js',
     // Computed at read AND unwritable: `compliance` has no CommandTarget
     // either. The two facts are orthogonal — the flag is about the ENTITY's
     // write path, the group is about where the VALUE comes from.
@@ -102,18 +102,18 @@ export const DISPLAY_STATES = [
     entity: 'invoice',
     state: 'Overdue',
     group: 'computed-at-read',
-    producer: 'src/services/data/invoiceProjection.ts'
+    producer: 'src/services/data/invoiceProjection.js'
   },
   {
     // REQ-E07-02 BR-09 — no supplier response past the 1-working-day deadline.
     entity: 'purchaseOrder',
     state: 'Escalated',
     group: 'computed-at-read',
-    producer: 'src/services/data/poResponseProjection.ts'
+    producer: 'src/services/data/poResponseProjection.js'
   },
   // ⚠️ THESE TWO MOVED OUT OF `stored-in-fixtures` — the group did not change
   // its mind, the TREE changed, and the gate re-derived it. They were fixture
-  // literals with zero non-fixture writes until `obligationProjection.ts`
+  // literals with zero non-fixture writes until `obligationProjection.js`
   // landed; the row below is what the derivation now returns, and reverting the
   // producer reddens it without anyone editing this file.
   //
@@ -126,14 +126,14 @@ export const DISPLAY_STATES = [
     entity: 'obligation',
     state: 'Upcoming',
     group: 'computed-at-read',
-    producer: 'src/services/data/obligationProjection.ts',
+    producer: 'src/services/data/obligationProjection.js',
     noCommandTarget: true
   },
   {
     entity: 'obligation',
     state: 'Overdue',
     group: 'computed-at-read',
-    producer: 'src/services/data/obligationProjection.ts',
+    producer: 'src/services/data/obligationProjection.js',
     noCommandTarget: true
   },
 
@@ -152,14 +152,14 @@ export const DISPLAY_STATES = [
     entity: 'contract',
     state: 'Expiring',
     group: 'computed-at-read',
-    producer: 'src/services/data/contractExpiry.ts',
+    producer: 'src/services/data/contractExpiry.js',
     noCommandTarget: true
   },
   {
     entity: 'contract',
     state: 'Expired',
     group: 'computed-at-read',
-    producer: 'src/services/data/contractExpiry.ts',
+    producer: 'src/services/data/contractExpiry.js',
     noCommandTarget: true
   },
 
@@ -204,7 +204,7 @@ export const DISPLAY_STATES = [
   //               sources and happened to agree.
   //
   //               It is TRUE NOW: the classifier is
-  //               `services/data/documentDisplayState.ts` and all three
+  //               `services/data/documentDisplayState.js` and all three
   //               surfaces read it, asserted BY SITE in its spec. So the
   //               deletion really is what remains — **but it was a build
   //               first**, and a member of this group reading that sentence
@@ -218,7 +218,7 @@ export const DISPLAY_STATES = [
   // ⚠️ **THIS ROW LEFT `stored-in-fixtures`, AND IT WAS THE LAST ONE.** The
   // group is now EMPTY. It did not change its mind — the tree changed and the
   // derivation re-read it, exactly as the two obligation rows above did when
-  // `obligationProjection.ts` landed. `shipmentDisplayState.ts` computes it from
+  // `obligationProjection.js` landed. `shipmentDisplayState.js` computes it from
   // `estimatedArrival` + `actualArrival` against an injected `now`, and
   // `mockShipments` no longer declares `'Delayed'` in `ShipmentStatus` at all.
   //
@@ -231,7 +231,7 @@ export const DISPLAY_STATES = [
     entity: 'shipment',
     state: 'Delayed',
     group: 'computed-at-read',
-    producer: 'src/services/data/shipmentDisplayState.ts',
+    producer: 'src/services/data/shipmentDisplayState.js',
     // Orthogonal to the group, and still true: `shipment` has no CommandTarget,
     // so nothing could write this state even if anything wanted to.
     noCommandTarget: true
@@ -278,7 +278,7 @@ export const DISPLAY_STATES = [
   // record states that lost one.
   //
   // ⚠️ **THE ROW IS WHAT MAKES A PARTIAL LANDING RED BY CONSTRUCTION**, in
-  // both directions, and `fixturePresent.guard.test.ts` probes both: retire
+  // both directions, and `fixturePresent.guard.test.js` probes both: retire
   // the fixture literals without moving this row and the derived group
   // (`produced-by-nothing`) contradicts the declared one; move this row
   // without retiring the literals and it contradicts the other way. Neither

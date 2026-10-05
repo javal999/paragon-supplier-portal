@@ -1,7 +1,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // THE DIVERGENCE, ASSERTED AT THE SURFACE A PERSON ACTUALLY LOOKS AT.
 //
-// `dayProjection.test.ts` proves the FIXTURE contradicts its own stored status.
+// `dayProjection.test.js` proves the FIXTURE contradicts its own stored status.
 // This proves the WIDGET no longer repeats it — a different claim, and the one
 // that matters to a supplier, because the projection could be perfectly correct
 // while the widget kept reading `status`. That was the shipped state.

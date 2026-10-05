@@ -304,6 +304,16 @@ export function deriveCensus(program, opts) {
     .filter((f) => !f.isDeclarationFile && rel(f.fileName).startsWith('src/'));
 
   /**
+   * Does a base class/interface of `t` already declare `name`?
+   * @param {ts.Type} t
+   * @param {string} name
+   * @returns {boolean}
+   */
+  const inheritedFromBase = (t, name) =>
+    t.isClassOrInterface() &&
+    (checker.getBaseTypes(t) ?? []).some((b) => !!checker.getPropertyOfType(b, name));
+
+  /**
    * @param {ts.Type} t
    * @returns {boolean}
    */
@@ -385,6 +395,14 @@ export function deriveCensus(program, opts) {
         // hundred DOM attributes into the population.
         if (!file.startsWith('src/') || decl.getSourceFile().isDeclarationFile) continue;
         if (ts.isMethodSignature(decl) || ts.isMethodDeclaration(decl)) continue;
+        // ⚠️ Reads both forms (frontend-standard Phase 4). In a `.js` class the
+        // checker binds `this.name = 'DataError'` in a constructor as a
+        // DECLARATION of `name` on the class. In TypeScript the same line is an
+        // assignment to the member `Error` already declares (in lib, so out of
+        // scope above) and never entered the census. An assignment declaration
+        // whose name a BASE type already has is that write, not a new field; one
+        // the bases lack (`this.extra = 1`) is still a JS field and is kept.
+        if (ts.isBinaryExpression(decl) && inheritedFromBase(declared, p.name)) continue;
         const propType = checker.getTypeOfSymbolAtLocation(p, decl);
         if (isMethodLike(propType)) continue;
         const typeNode = typeNodeOf(decl);

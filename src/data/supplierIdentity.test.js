@@ -29,7 +29,7 @@
 //
 // ── SCOPE, STATED ────────────────────────────────────────────────────────────
 //   The supplier master and the buyer-dashboard health rows — A's population.
-//   It does NOT sweep `buyerDiscovery.ts`, which has its own guard, nor the
+//   It does NOT sweep `buyerDiscovery.js`, which has its own guard, nor the
 //   material master. Both were cleaned by batches C and B respectively and are
 //   asserted there. Real CERTIFIERS and REGULATORS (BPJPH/MUI/BPOM/TÜV/ECHA) and
 //   real BANKS stay real BY RULING and are not in this population at all —

@@ -11,7 +11,7 @@ import {
 //
 // One component so the two sides read the same sentence: a measure a supplier
 // cannot reproduce gets argued rather than acted on (BL-19). Every answer comes
-// from `kpiDefinitions.ts`, whose numbers are the calculation's own constants,
+// from `kpiDefinitions.js`, whose numbers are the calculation's own constants,
 // and the target column says "Baseline period" because none is set yet.
 // ─────────────────────────────────────────────────────────────────────────────
 

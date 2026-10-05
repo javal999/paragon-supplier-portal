@@ -94,7 +94,9 @@ import { WIRED_COMMAND_TARGETS } from '../../data/mock/MockCommandService';
 const ROOT = process.cwd();
 const CONTRACT = readFileSync(join(ROOT, 'docs', 'contracts', 'C1-methods.md'), 'utf8');
 
-const TYPES_PATH = join(ROOT, 'src', 'services', 'data', 'types.ts');
+// `types.js` since Phase 4 B4: the derivation reads both forms (frontend-standard
+// Phase 4) — the TS interface or the JSDoc `@typedef` the conversion wrote.
+const TYPES_PATH = join(ROOT, 'src', 'services', 'data', 'types.js');
 const DISPATCHER_PATH = join(ROOT, 'src', 'services', 'transitions', 'dispatcher.js');
 
 // One program for the file. `buildRepoProgram` is the helper the stored-field

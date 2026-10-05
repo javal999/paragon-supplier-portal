@@ -48,7 +48,7 @@ describe('R1b — the draft builders are PURE ASSEMBLY (the words given are the 
     // A builder that trimmed here would put the real guard in the ONE layer a
     // hand-crafted dispatch skips. `rr_dispute_text_authored` is the law; this
     // is assembly. The blank survives the builder and dies at the machine — and
-    // the machine's half is asserted in requirementResponseDisputeLedger.test.ts.
+    // the machine's half is asserted in requirementResponseDisputeLedger.test.js.
     expect(buildRequirementDisputePayload({ disputeReason: '   ' })).toEqual({
       disputeReason: '   ',
     });

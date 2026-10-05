@@ -1,7 +1,7 @@
 // ────────────────────────────────────────────────────────────────────────────
 // §82 — THE WALK, END TO END: A SUPPLIER DECLARES, COMPLIANCE DECIDES.
 //
-// The contract half is `services/data/mock/supplierDocumentCommand.test.ts`
+// The contract half is `services/data/mock/supplierDocumentCommand.test.js`
 // (the store moved, the dispatcher refused, the session-minted fields cannot be
 // forged). This file asserts the half that only a rendered surface can: that the
 // declaration a person makes on ONE page becomes the item a DIFFERENT person

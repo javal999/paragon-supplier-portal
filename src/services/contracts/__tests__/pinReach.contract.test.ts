@@ -194,7 +194,7 @@ describe('POPULATION CONTROLS — before any block is believed', () => {
 
   it('⚠️ KNOWN-BAD — a contract nothing reads is OUT, and a COMMENT is not a pin', () => {
     // `C4-snowflake.md` is named by nothing. `C2-schemas.md` is named only by a
-    // comment in `dayProjection.ts`, which cites it BY LINE NUMBER — a pointer,
+    // comment in `dayProjection.js`, which cites it BY LINE NUMBER — a pointer,
     // not an instrument. An earlier matcher counted it and was wrong.
     expect([...PINNED.keys()]).not.toContain('C4-snowflake.md');
     expect([...PINNED.keys()]).not.toContain('C2-schemas.md');

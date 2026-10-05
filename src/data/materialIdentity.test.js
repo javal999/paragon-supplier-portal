@@ -41,7 +41,7 @@
 //   module scope derived, the FIELD-NAME scope was a literal pair, and no type
 //   declared anything — `materialCode`, `sapCode` and `linkedTo` are all
 //   `string`. 2B-3 found the code the pair hid (`CatalogItem.sapCode`, five
-//   values in `supplierStorefront.ts`, three of them nowhere else in the tree)
+//   values in `supplierStorefront.js`, three of them nowhere else in the tree)
 //   and pinned it WITHOUT widening, because deciding whether a supplier
 //   catalogue's `sapCode` is Paragon identity is a SPACE DECLARATION and 2B-1's
 //   R-3 put declarations with the operator.
@@ -302,7 +302,7 @@ for (const c of CELLS) {
 //     silently admitted, and never silently dropped either.
 //
 // ⚠️ AND THE SECOND GATE INDICTS 2B-4a. Admitting `sapCode` necessarily enters
-// `supplierStorefront.ts`, which no declaration named at the time. THE CLOSURE
+// `supplierStorefront.js`, which no declaration named at the time. THE CLOSURE
 // SHOULD HAVE HALTED AND ASKED. It widened on its own authority instead, and the
 // operator's ruling happened to sanction it afterwards — luck, not governance.
 // The declaration now exists (`materialSpaces.ts`, R-D), so the same widening is
@@ -411,7 +411,7 @@ const DISQUALIFIED_FIELDS = CODE_DERIVATION.impureFields;
 //
 // ⚠️ AND IT RUNS OVER A NARROWER UNIVERSE THAN THE CODE CLOSURE, FOR A REASON
 // THE FIRST BUILD DID NOT HAVE. Run over the whole tree, R-B correctly DECLINES
-// `material`: the same key appears in `buyerRequisitions.ts`, a module no
+// `material`: the same key appears in `buyerRequisitions.js`, a module no
 // declaration names. That refusal is right and the fix is not to declare the PR
 // lane — a purchase requisition carries a material NAME and no material CODE, so
 // it is a meaning source with nothing to be a meaning OF. A MEANING FIELD IS A
@@ -594,12 +594,12 @@ describe('2B-0 — the lane set DERIVES (DERIVED-OVER-A-CHOSEN-SCOPE-01)', () =>
         '/src/data/mockShipments.js',
         // ── not in the B2a import list ──
         '/src/data/mockRfqs.js',
-        '/src/services/data/mock/fixtures/supplierShipments.ts',
+        '/src/services/data/mock/fixtures/supplierShipments.js',
         '/src/services/delivery/demoFixtures.ts',
         '/src/services/delivery/demoFixturesScale.ts',
         '/src/services/sdc/fixtures.ts',
         // ── and the one the FIELD SET bought, at 2B-4a ──
-        '/src/services/data/mock/fixtures/supplierStorefront.ts'
+        '/src/services/data/mock/fixtures/supplierStorefront.js'
       ])
     );
   });
@@ -725,7 +725,7 @@ describe('CP-2 · B2a — the document lane no longer CONTRADICTS the master', (
     // a measured result rather than an edited literal.
     //
     // ⚠️ **34 AT H4, AND THE COMPLEMENT IS WHAT MATTERS.** `AI-NIAC-6612` was
-    // already a master row, reached only through `supplierShipments.ts` — which
+    // already a master row, reached only through `supplierShipments.js` — which
     // is NOT in the declared lane. H4 put it on `mockShipments.js`, which is, so
     // the LANE grew by one and the MASTER did not grow at all. The lane growing
     // while the complement stays empty is the good direction: a document code
@@ -898,7 +898,7 @@ describe('MAT-SPACE-UNDECLARED-01 — the third space, and the real 2B input', (
     // THE SPACE QUESTION 2B-4a LEFT OPEN, ANSWERED AT 2B-5a (R-D): the storefront
     // is NOT a space. `sapCode` is a POINTER — a supplier's claim about which
     // Paragon master code its catalogue item is. The three buckets are pinned in
-    // full by `storefrontPointer.test.ts`; only the census consequence is here.
+    // full by `storefrontPointer.test.js`; only the census consequence is here.
     expect(sapCodes.filter((c) => c in MATERIAL_MASTER)).toEqual([
       'PK-PETB-8803',
       'RM-EMUL-9440',
@@ -1130,7 +1130,7 @@ describe('MAT-SPACE-UNDECLARED-01 — the third space, and the real 2B input', (
     // scoped to a DECLARED lane.
     //
     // ⚠️ AND IT WENT **UP** AT 2B-4a WITHOUT A SINGLE CODE BEING ADDED TO THE
-    // TREE. The three arrivals were in `supplierStorefront.ts` the whole time;
+    // TREE. The three arrivals were in `supplierStorefront.js` the whole time;
     // what changed is that the census can now see the field they sit in. THAT IS
     // THE POINT OF THE WHOLE DERIVATION LADDER: a figure that improves every
     // batch while the scope stays narrower than the tree is a figure improving
@@ -1584,7 +1584,7 @@ describe('INSTANCE-DATA-IN-A-TYPE-LABEL-01 — TRIMMED at 2B-2, completely', () 
     // record type in the declared document lane carries a lot field: not
     // `InspectionResult` (it has `bpomLotCheck`, which is a CHECK RESULT, not a
     // lot identity), not `InventoryRecord`, not the shipment or PO line. But
-    // `ASNLineItem` DOES (`services/data/types.ts`), it is rendered
+    // `ASNLineItem` DOES (`services/data/types.js`), it is rendered
     // (`SupplierShipments.tsx`), the ASN wizard captures it — and the space that
     // uses it correctly is the UNDECLARED one:
     //

@@ -23,11 +23,11 @@ targets). They measure different things; this file keeps them separate.
 > `getSupplierApplications`, and `CommandInput` gained `expectedState` (1c) and `decision`. It
 > **lost** `IEngagementService` — a seven-method sub-service this page described and the tree has
 > never contained since — and `IDiscoveryService.getGlobalSuppliers`, which was removed
-> deliberately (`types.ts` records the removal). The transition catalog went 72 → **97** across
+> deliberately (`types.js` records the removal). The transition catalog went 72 → **97** across
 > 14 → **20** flows, and the wired-target axis 6 → **14**. Every figure on this page is now
 > re-derived on every test run, which is the point of the batch that corrected it.
 
-Source of truth: `src/services/data/types.ts` (service + command types),
+Source of truth: `src/services/data/types.js` (service + command types),
 `src/services/transitions/` (schema, dispatcher, flows).
 
 ---
@@ -96,7 +96,7 @@ signalled by **throwing** `DataError` (DR-4 — see C2), matching TanStack Query
 model. Command methods report outcome as a status, not a throw, except hard authorization
 failures (`NOT_FOUND` / `SCOPE_DENIED`) which throw `DataError` on the same channel as reads.
 
-**Status:** **LIVE** (mock-backed: `mockDataService.ts` wires the mock read services +
+**Status:** **LIVE** (mock-backed: `mockDataService.js` wires the mock read services +
 `MockCommandService` + `capabilitiesFor`). The real adapter is **RESERVED** — **no module in
 `src/` implements `httpDataService`** (C5). Several files under `src/` name it, every one of them as a reserved
 future seam or a comment; the pin asserts the ABSENCE OF AN IMPLEMENTATION, never the absence of
@@ -184,7 +184,7 @@ system reference is minted only on `settle` (see C5, SAP boundary).
 ## Axis 3 — the 46 wired CommandTargets
 
 A `CommandTarget` is the per-entity adapter the dispatcher reads/writes through. **45 exist**, the
-runtime export `WIRED_COMMAND_TARGETS` (`MockCommandService.ts` `TARGETS`):
+runtime export `WIRED_COMMAND_TARGETS` (`MockCommandService.js` `TARGETS`):
 
 - **wired:** `purchaseOrder`, `advanceShipNotice`, `goodsReceipt`, `invoice`, `rfq`, `quotation`, `rfqIntent`, `rfqConfidentiality`, `rfqClarification`, `purchaseRequisition`, `supplierDocument`, `requirementResponse`, `inventoryDeclaration`, `incomingShipment`, `enforcement`, `role`, `workingCalendar`, `threePl`, `supplierOverlay`, `qualificationRule`, `sourcingType`, `planningGroup`, `supplierApplication`, `receiptDiscrepancy`, `callOff`, `stockSync`, `stockAccess`, `capacitySubmission`, `inventoryAlert`, `forecastVersion`, `forecastView`, `sapChangeMark`, `rfiEvent`, `rfiResponse`, `rfpEvent`, `rfpResponse`, `negotiationRound`, `rfpOfferRound`, `rfpFirmOffer`, `hubSetting`, `reasonCode`, `maxStock`, `mrpController`, `materialName`, `simulationOverride`, `forecastOverride`
 
@@ -268,7 +268,7 @@ reason and a `failed` event — every outcome is auditable. The module is framew
 roles, targets, hooks, sink, id/clock are **injected**, so the mock and the Phase-F1 real adapter
 share it unchanged.
 
-**Command types** (`types.ts`): `CommandInput` (`transitionId` / `entity` / `entityId?` /
+**Command types** (`types.js`): `CommandInput` (`transitionId` / `entity` / `entityId?` /
 `payload?` / `expectedState?` / `idempotencyKey?` / `decision?`), `CommandResult` (`correlationId` / `transitionId` /
 `status` / `reason?` / `entityId?`), `CommandStatus` (`correlationId` / `transitionId` / `status`
 / `ts`), `CommandOutcome = 'done' | 'submitted' | 'failed'`.

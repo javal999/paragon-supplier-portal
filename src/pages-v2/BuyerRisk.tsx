@@ -98,7 +98,7 @@ const TODAY = DECLARED_PRESENT;
 // IllustrativeRegion frames below come off on their own — no edit here.
 //
 // Breadcrumb for the CP-2 harvest: treat this file's fixture shape
-// (services/data/mock/fixtures/buyerRisk.ts) as the I3 read-model sketch. This
+// (services/data/mock/fixtures/buyerRisk.js) as the I3 read-model sketch. This
 // note is a source-of-record marker only — the contract package is CP-2, gated.
 // ────────────────────────────────────────────────────────────────────────────
 

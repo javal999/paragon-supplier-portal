@@ -79,7 +79,7 @@ export const CASCADES = {
   // Material C2 (MR-3 BR-01, BR-02) — at most one approved trade name per
   // supplier × material: approving or loading a name replaces the earlier
   // approved one; a new submission replaces a name still awaiting approval
-  // (the approved one stays in use). The resolver in `targets/materialName.ts`
+  // (the approved one stays in use). The resolver in `targets/materialName.js`
   // picks the ids from the store.
   t_materialname_submit: [
     { targetEntity: 'materialName', targetTransitionId: 't_materialname_replace' }

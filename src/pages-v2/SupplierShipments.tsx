@@ -403,7 +403,7 @@ const AsnLinesEditor: React.FC<{
 
 // BL-51 — the hard-coded carrier list that stood here is RETIRED. Its choices
 // now come from the administrator's 3PL list (`threePlStore`, sample names
-// held fictional by `carrierIdentity.test.ts`), and its "Other" option — which
+// held fictional by `carrierIdentity.test.js`), and its "Other" option — which
 // stored the word "Other" as the carrier — is replaced by a typed carrier name
 // (`CarrierPicker`). Batch E's note still applies to the new list: option text
 // is absent from `innerText`, so a render census does not see the names.

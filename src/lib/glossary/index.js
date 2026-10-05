@@ -116,7 +116,7 @@ const REGISTRIES = /** @satisfies {readonly GlossaryRegistry[]} */ (
     },
     {
       sourceType: 'DataErrorCode',
-      sourceFile: 'src/services/data/types.ts',
+      sourceFile: 'src/services/data/types.js',
       entries: DATA_ERROR_GLOSSARY
     },
     {
@@ -142,7 +142,7 @@ const REGISTRIES = /** @satisfies {readonly GlossaryRegistry[]} */ (
     },
     {
       sourceType: 'HalalNotSatisfiedReason',
-      sourceFile: 'src/services/data/halalVerification.ts',
+      sourceFile: 'src/services/data/halalVerification.js',
       entries: HALAL_NOT_SATISFIED_GLOSSARY
     },
     {
@@ -177,12 +177,12 @@ const REGISTRIES = /** @satisfies {readonly GlossaryRegistry[]} */ (
     },
     {
       sourceType: 'ComplianceDisplayStatus',
-      sourceFile: 'src/services/data/types.ts',
+      sourceFile: 'src/services/data/types.js',
       entries: COMPLIANCE_DISPLAY_GLOSSARY
     },
     {
       sourceType: 'CertType',
-      sourceFile: 'src/services/data/types.ts',
+      sourceFile: 'src/services/data/types.js',
       entries: CERT_TYPE_GLOSSARY
     },
     {

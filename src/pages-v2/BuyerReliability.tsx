@@ -34,7 +34,7 @@ import { MissSplitLine, Rate, mascOf, pctOf } from './reliability/reliabilityDis
 //
 // CFOT ("Delivered on the confirmed date") is shown since BL-82: the engine's
 // `agreedCfot`, per PO on the same synthetic rows, with the ONE early window
-// OTIF uses (`data/kpiWindow.ts`). The portfolio figure counts every PO once.
+// OTIF uses (`data/kpiWindow.js`). The portfolio figure counts every PO once.
 // ─────────────────────────────────────────────────────────────────────────────
 
 type SortDir = 'ascending' | 'descending';

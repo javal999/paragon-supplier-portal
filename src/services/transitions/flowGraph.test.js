@@ -514,7 +514,7 @@ describe('D-2 — settlesTo', () => {
     // `settlesTo`, this pin is what tells whoever does it that it was already
     // agreed. Precedent: `ledgerTruth.test.ts` reads source to check a claim.
     const adapter = readFileSync(
-      join(process.cwd(), 'src', 'services', 'data', 'mock', 'MockCommandService.ts'),
+      join(process.cwd(), 'src', 'services', 'data', 'mock', 'MockCommandService.js'),
       'utf8'
     );
     const boundaries = getKnownFlows()

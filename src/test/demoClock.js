@@ -13,7 +13,7 @@
 // the row whose own comment says "Intended OVERDUE demo row". The defect is that
 // two tests asserted a clock-derived label while reading the REAL wall clock.
 // Every other clock-aware spec in this repo already pins its `now`:
-// `invoiceProjection.test.ts` and `complianceProjection.test.ts` pass a literal,
+// `invoiceProjection.test.js` and `complianceProjection.test.js` pass a literal,
 // the dispatcher specs inject `now: () => '2026-07-06T00:00:00.000Z'`, and the
 // SDC loop reads `sdcClock` (`SDC_SIMULATED_NOW`). These two forgot to, and were
 // the only two in the suite that did — verified empirically by running the whole
@@ -51,7 +51,7 @@ import { DECLARED_PRESENT } from '@services/data/fixturePresent';
  * and three of the five buyer labels had no reachable member. **The suite stayed
  * green throughout, because the suite was the one thing pinned.**
  *
- * `invoice` is now a real anchored family (`fixturePresent.ts`), so the corpus is
+ * `invoice` is now a real anchored family (`fixturePresent.js`), so the corpus is
  * shifted to `DECLARED_PRESENT` at module load and is coherent THERE. Two
  * declared presents would now disagree by 56 days, and the tree has already
  * ruled on that shape: `SDC_SIMULATED_NOW` and the three page-local `TODAY` pins

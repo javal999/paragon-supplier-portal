@@ -85,7 +85,7 @@ export const contractsEn = {
   'contracts.pipeline.title': 'Renewal Pipeline',
   // ⚠️ THIS ONE KEEPS ITS HORIZON, because the horizon survived as a named
   // constant (`CONTRACT_RENEWAL_HORIZON_DAYS`, 180) rather than as a literal on
-  // a page — and the coupling is ASSERTED: `contractExpiry.test.ts` pins the
+  // a page — and the coupling is ASSERTED: `contractExpiry.test.js` pins the
   // constant inside the range a reader would call six months, naming this key,
   // so moving it goes red here instead of quietly making this sentence false.
   'contracts.pipeline.subtitle': 'Contracts expiring in the next 6 months, grouped by month.',
@@ -120,7 +120,7 @@ export const contractsEn = {
   'contracts.panel.obligations': 'Obligations ({{count}})',
   // The COMPUTED counters, beside the table they are folded from. `met` is
   // `completedDate` present; `total` is the contract's obligations. Neither is
-  // stored any more — see `services/data/obligationRollup.ts`.
+  // stored any more — see `services/data/obligationRollup.js`.
   'contracts.panel.obligationsMet': '{{met}} of {{total}} met',
   'contracts.panel.noObligations': 'No obligations defined for this contract.',
   'contracts.panel.obl.col.title': 'Title',

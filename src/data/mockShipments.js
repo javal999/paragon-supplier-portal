@@ -19,11 +19,11 @@ import { shiftFields } from '@services/data/fixturePresent';
  *   | 'Delivered'} ShipmentStatus
  */
 // ⚠️ `'Delayed'` LEFT THIS UNION — it is COMPUTED
-// (`services/data/shipmentDisplayState.ts`). It was the ninth member of a
+// (`services/data/shipmentDisplayState.js`). It was the ninth member of a
 // union whose flow declares eight states, and `shipment.flow.js` has said so
 // since F0.4: a read-time PROJECTION, deliberately absent from `states`. The
 // union now equals `getFlow('shipment').states` exactly, which
-// `shipmentDisplayState.test.ts` asserts bilaterally.
+// `shipmentDisplayState.test.js` asserts bilaterally.
 
 /** @typedef {'Sea' | 'Air' | 'Road'} ShipmentMode */
 
@@ -34,10 +34,10 @@ import { shiftFields } from '@services/data/fixturePresent';
 // computing them would have published fixture age as lateness; #319/#320's
 // anchoring ended that, and the computed values reproduce all 16 authored
 // literals exactly at `DECLARED_PRESENT`. The producers are `daysLate` and
-// `daysInTransit` in `services/data/shipmentDisplayState.ts`, beside the
+// `daysInTransit` in `services/data/shipmentDisplayState.js`, beside the
 // classifier so a state and its number cannot disagree.
 //
-// ⚠️ **DO NOT RE-ADD EITHER AS A FIELD.** `retiredDayFields.test.ts` asserts
+// ⚠️ **DO NOT RE-ADD EITHER AS A FIELD.** `retiredDayFields.test.js` asserts
 // their absence at the type AND in these bytes, and `dayCounts.js`'s bilateral
 // gate goes red if a `…: number;` declaration comes back unclassified.
 /**
@@ -457,7 +457,7 @@ const mockShipmentsRaw = [
       // choice is not cosmetic: that ASN is the tree's ONLY `Discrepancy`
       // exemplar (`buyerDerivations.ts` KPI, `SupplierShipments.tsx`, the
       // `t_asn_*` repair verb's `from: ['Discrepancy']`, and
-      // `looseEndRepairCommands.test.ts`'s HELD fixture), and its status is
+      // `looseEndRepairCommands.test.js`'s HELD fixture), and its status is
       // entailed by its own quantities. Re-statusing it would have deleted an
       // exemplar and contradicted the row to demonstrate a notice.
       //

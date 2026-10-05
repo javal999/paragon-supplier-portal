@@ -25,7 +25,7 @@
 //
 // C6-LOCK: the coefficient set below is governed platform truth — a fixed policy,
 // NOT a user-editable formula. SIMULATED root/FX VALUES are fixture-owned
-// (commodityBaskets.ts), corrected against Paragon's real master later; the engine
+// (commodityBaskets.js), corrected against Paragon's real master later; the engine
 // and its logic do not change when real data lands — only the data it reads.
 // ────────────────────────────────────────────────────────────────────────────
 
@@ -129,7 +129,7 @@ export const FREIGHT = {
  *  calibration from quote history is deferred to CI-5. */
 export const FX_PASSTHROUGH = 1.0;
 
-// ─── Fixture-owned input shapes (SIMULATED values live in commodityBaskets.ts) ─
+// ─── Fixture-owned input shapes (SIMULATED values live in commodityBaskets.js) ─
 
 /** A public commodity root benchmark. In CI-1 every value is SIMULATED. */
 /**

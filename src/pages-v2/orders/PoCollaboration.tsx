@@ -29,7 +29,7 @@ import { poLineQuantityText } from './poLineQuantity';
  * ⚠️ **THE ORDER LANE'S CLOCK — the declared present, not the wall clock.**
  *
  * `Escalated` is computed at read from the response deadline and an injected
- * `now` (`poResponseProjection.ts`, law 0.5), and every order in
+ * `now` (`poResponseProjection.js`, law 0.5), and every order in
  * `mockPurchaseOrders.js` is now dated relative to `DECLARED_PRESENT` by the
  * `purchaseOrder` family anchor. The three surfaces that render a PO status
  * used to pass `new Date().toISOString()`, which was defensible only while the

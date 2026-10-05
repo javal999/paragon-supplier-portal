@@ -2,7 +2,7 @@
 // The supplier's response to a tiered RFQ, at the SURFACE (RFx spec
 // 2026-09-21): intent, the confidentiality gate, the quote grid, clarification
 // Q&A — and the buyer's read-only view on the side panel. The rules themselves
-// are probed at the verb in `rfqEngagementCommand.test.ts`; what these add is
+// are probed at the verb in `rfqEngagementCommand.test.js`; what these add is
 // that the supplier is TOLD, and that the grid sends what the verb accepts.
 // ────────────────────────────────────────────────────────────────────────────
 

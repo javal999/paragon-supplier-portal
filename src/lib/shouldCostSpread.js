@@ -184,7 +184,7 @@ export const KG_PER_MT = 1000;
  *  inline scaffolds in tests — mirrors the quoteScore/shouldCost purity contract). */
 /**
  * @typedef {object} SpreadDeps
- * @property {Readonly<Record<string, string>>} join -  materialId → `sc-*` basket id (the SIMULATED join, commodityMaterialMap.ts).
+ * @property {Readonly<Record<string, string>>} join -  materialId → `sc-*` basket id (the SIMULATED join, commodityMaterialMap.js).
  * @property {Readonly<Record<string, Material>>} materials -  The should-cost materials, keyed for lookup by their `sc-*` id.
  * @property {Readonly<Record<string, RootBenchmark>>} roots
  * @property {FxRate} fx

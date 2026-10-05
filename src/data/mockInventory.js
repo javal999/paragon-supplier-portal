@@ -15,7 +15,7 @@ import { shiftFields } from '@services/data/fixturePresent';
 //   · `daysOfSupply` / `avgDailyDemand` / `stockStatus` — days of supply is
 //     CR-01 (SOH ÷ forecast demand), derived at read; the stored number and its
 //     <7/7–13/14–30 status contradicted CR-02. The planning estimate that stood
-//     in for demand moved to the PTI planning fixture (`inventoryHub.ts`).
+//     in for demand moved to the PTI planning fixture (`inventoryHub.js`).
 //   · `qtyInTransit` — in transit is the submitted ASNs and call-off dispatch
 //     notices (BR-06), not a supplier-typed number.
 //   · `supplierName` / `materialDescription` / `location` — names come from the

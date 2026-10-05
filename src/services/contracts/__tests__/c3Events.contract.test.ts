@@ -35,13 +35,15 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import { buildRepoProgram } from '@lib/storedFieldGate/derive';
-import { deriveInterfaceMembers } from './deriveC1Surface';
+import { deriveInterfaceMembers, deriveMethodParams, deriveUnionLiterals } from './deriveC1Surface';
 import { getKnownFlows } from '../../transitions';
 
 const ROOT = process.cwd();
 const CONTRACT = readFileSync(join(ROOT, 'docs', 'contracts', 'C3-events.md'), 'utf8');
 const EVENTS_PATH = join(ROOT, 'src', 'services', 'transitions', 'events.js');
-const TYPES_PATH = join(ROOT, 'src', 'services', 'data', 'types.ts');
+// `types.js` since Phase 4 B4; both checks below read the AST, which reads both
+// forms (frontend-standard Phase 4) — TS declarations or JSDoc `@typedef`s.
+const TYPES_PATH = join(ROOT, 'src', 'services', 'data', 'types.js');
 
 const program = buildRepoProgram(ROOT);
 
@@ -122,19 +124,22 @@ describe('⚠️ THE #307 CLASS — a signature restated in prose', () => {
   // C3 says `getCommandStatus(scope, correlationId)` and `settle(scope, correlationId)`
   // are 1:1 with the correlation id. That arity went stale once already, by hand.
   it('both methods take (scope, correlationId) — the arity C3 states', () => {
-    const src = readFileSync(TYPES_PATH, 'utf8');
+    // Read from the AST, not the text: the TS spelling `settle(scope: …)` and
+    // the JSDoc spelling `{(scope: …) => …} settle` differ, and a text regex
+    // written for one reads the other as absent.
     for (const m of ['getCommandStatus', 'settle']) {
-      expect(src, `${m}'s arity`).toMatch(
-        new RegExp(`${m}\\(scope: QueryScope, correlationId: string\\)`),
-      );
+      expect(deriveMethodParams(program, TYPES_PATH, 'ICommandService', m), `${m}'s arity`).toEqual([
+        'scope: QueryScope',
+        'correlationId: string',
+      ]);
       expect(CONTRACT, `C3 states ${m}'s arity`).toContain(`${m}(scope, correlationId)`);
     }
   });
 
   it('`CommandOutcome`’s members are exactly the three C3 prints', () => {
-    const src = readFileSync(TYPES_PATH, 'utf8');
-    const decl = /export type CommandOutcome = ([^;]+);/.exec(src)?.[1] ?? '';
-    const members = [...decl.matchAll(/'([a-z]+)'/g)].map((m) => m[1]).sort();
+    // `CommandOutcome` is a JSDoc union `@typedef` since Phase 4 B4; the AST
+    // read takes either form and throws if neither declares it.
+    const members = deriveUnionLiterals(program, TYPES_PATH, 'CommandOutcome').slice().sort();
     expect(members).toEqual(['done', 'failed', 'submitted']);
     expect(CONTRACT).toContain("'done' | 'submitted' | 'failed'");
   });
@@ -203,7 +208,7 @@ describe('the artefacts and transitions C3 names all exist', () => {
 // before its silence over the spine means anything.
 // -----------------------------------------------------------------------------
 const SPINE_DIR = join(ROOT, 'src', 'services', 'transitions');
-const MOCK_COMMAND = join(ROOT, 'src', 'services', 'data', 'mock', 'MockCommandService.ts');
+const MOCK_COMMAND = join(ROOT, 'src', 'services', 'data', 'mock', 'MockCommandService.js');
 
 /**
  * Comments blanked LENGTH-PRESERVINGLY, so a clock read QUOTED in a comment

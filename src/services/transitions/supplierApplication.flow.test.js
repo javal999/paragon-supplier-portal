@@ -2,7 +2,7 @@
 // B1 · THE supplierApplication MACHINE — structure, atoms, and the two things
 // it deliberately does NOT have.
 //
-// This file is about the SHAPE. `supplierApplicationCommand.test.ts` is about
+// This file is about the SHAPE. `supplierApplicationCommand.test.js` is about
 // what happens when the verbs fire; keeping them apart means a red here names a
 // machine defect and a red there names a behaviour defect, rather than both
 // failing as one unreadable assertion.

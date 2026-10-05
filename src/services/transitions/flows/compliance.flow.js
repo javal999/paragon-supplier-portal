@@ -19,7 +19,7 @@
 //
 // `Valid` clock-projects to Expiring → Expired (expiry < clock, law 0.5, census
 // G1) — read-time PROJECTIONS, NOT transition-states, so deliberately absent from
-// `states`. The projection lives in `complianceProjection.ts` (the DTO-v2 read
+// `states`. The projection lives in `complianceProjection.js` (the DTO-v2 read
 // layer), consumed via `ComplianceRegistryEntry`.
 //
 // INERT (I3.1): NO CommandTarget, no cascade — dispatching any verb fails at

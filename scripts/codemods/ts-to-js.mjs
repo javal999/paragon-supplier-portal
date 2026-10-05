@@ -481,7 +481,18 @@ function convert(sf) {
       return true;
     }
     if (ts.isInterfaceDeclaration(node)) {
-      const heritage = (node.heritageClauses ?? []).flatMap((h) => h.types.map((t) => typeText(t, sf).text));
+      // `interface X extends Base { a: T }` OVERRIDES Base's `a`; an intersection
+      // would AND the two types instead. So a base whose members X redeclares
+      // is written `Omit<Base, 'a'>` — the same type TypeScript gave X.
+      const own = new Set(node.members.map((m) => m.name?.getText(sf)).filter(Boolean).map((n) => n.replace(/^['"]|['"]$/g, '')));
+      const heritage = (node.heritageClauses ?? []).flatMap((h) =>
+        h.types.map((t) => {
+          const text = typeText(t, sf).text;
+          const baseProps = checker.getTypeAtLocation(t).getProperties().map((p) => p.getName());
+          const overridden = baseProps.filter((n) => own.has(n));
+          return overridden.length ? `Omit<${text}, ${overridden.map((n) => `'${n}'`).join(' | ')}>` : text;
+        })
+      );
       const simple = node.members.every((m) => ts.isPropertySignature(m) || ts.isMethodSignature(m));
       const props = [];
       const prose = [];
@@ -599,7 +610,10 @@ function convert(sf) {
         // Comments inside an inline type (e.g. a field's doc in `{ /** … */ a: T }`)
         // cannot live inside the JSDoc type, so they become prose above the tag.
         tags.unshift(...typeProse(tt));
-        if (p.dotDotDotToken) t = /\[\]$/.test(t) ? `...${t.slice(0, -2).replace(/^\((.*)\)$/, '$1')}` : /^(?:readonly )?Array<(.+)>$/.test(t) ? `...${RegExp.$1}` : `...${t}`;
+        // A rest parameter: `...X[]` → JSDoc `...X` (each argument is X). A
+        // tuple or other non-array type (`Parameters<typeof f>`) is written as is —
+        // `...T` would mean "each argument is the whole tuple".
+        if (p.dotDotDotToken) t = /\[\]$/.test(t) ? `...${t.slice(0, -2).replace(/^\((.*)\)$/, '$1')}` : /^(?:readonly )?Array<(.+)>$/.test(t) ? `...${RegExp.$1}` : t;
         const opt = p.questionToken || p.initializer;
         tags.push(`@param {${t}} ${opt ? `[${name}]` : name}`);
       } else if (p.questionToken) {
@@ -776,7 +790,10 @@ function convert(sf) {
         ins(init.end, ')');
       } else if (callee === 'querySelector' || callee === 'closest') castResult(`${args[0]} | null`);
       else if (callee === 'querySelectorAll') castResult(`NodeListOf<${args[0]}>`);
-      else if (['toEqual', 'toBe', 'freeze', 'fn', 'mocked'].includes(callee)) {
+      // `Object.freeze<T>(v)` is overloaded (`T extends Function` first), so an
+      // instantiation cast picks the wrong overload: cast the argument instead.
+      else if (callee === 'freeze') castArg(args[0]);
+      else if (['toEqual', 'toBe', 'fn', 'mocked'].includes(callee)) {
         /* type arguments that only narrow a test helper: dropping them is safe */
       } else if (isEntityChain(node.expression)) {
         // Any other generic call: cast the CALLEE to its instantiation,

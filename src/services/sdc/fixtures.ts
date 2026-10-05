@@ -684,7 +684,7 @@ export const MATERIAL_MASTER: MaterialMaster = Object.freeze({
   //
   // The seven codes of `paragon.asn_chase_lane` (R-3, declared and retired at
   // 2B-1), authored here as canonical rows and retired off `MAT-*` in
-  // `supplierShipments.ts`. **THE THIRD SPACE IS EMPTY WHEN THIS LANDS.**
+  // `supplierShipments.js`. **THE THIRD SPACE IS EMPTY WHEN THIS LANDS.**
   //
   // ── WHAT 5b-i DID AND DID NOT MAKE READABLE ────────────────────────────────
   //   5b-i repaired the TENANT axis: every ASN now names a PO its own addressee

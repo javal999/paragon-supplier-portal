@@ -4,7 +4,7 @@ The swap-points where the mock becomes the real system. Each is tiered **LIVE** 
 **SPEC** (README legend). The design rule throughout: the seam is an **interface**, so landing the
 real implementation is **additive** — pages and the contract do not change.
 
-Source of truth: `DataServiceContext.tsx`, `types.ts`, `MockCommandService.ts`, `roles.js`,
+Source of truth: `DataServiceContext.jsx`, `types.js`, `MockCommandService.js`, `roles.js`,
 `events.js`, `docs/findings.md`.
 
 ---
@@ -13,7 +13,7 @@ Source of truth: `DataServiceContext.tsx`, `types.ts`, `MockCommandService.ts`, 
 
 | Seam | Tier | Swap-point |
 |---|---|---|
-| `IDataService` / `useDataService` | **LIVE** (mock) | `DataServiceContext.tsx` — replace the `service` prop |
+| `IDataService` / `useDataService` | **LIVE** (mock) | `DataServiceContext.jsx` — replace the `service` prop |
 | `ICommandService` (dispatch / status / settle) | **LIVE** (in-memory) | `MockCommandService` → real adapter |
 | `getCapabilities` / DNA-SEED-01 | **LIVE-PARTIAL** | capability surface LIVE; `guidance?` slot RESERVED |
 | SAP boundary (Option B) | **LIVE** (2 verbs) | `settleFinalize` → real SAP settlement webhook |
@@ -37,14 +37,14 @@ One Provider, one hook. Pages read exclusively through `useDataService()` (TanSt
 scoped query hooks — per-supplier cache isolation via `scopeKey`). The implementation is the
 `service` prop on `DataServiceProvider` (mounted in `main.jsx` above the router). Swapping the mock
 for the real adapter is a **one-line prop change**; pages do not change
-(`DataServiceContext.tsx:1–10`, 22–38).
+(`DataServiceContext.jsx:1–10`, 22–38).
 
 **Carve-out — CLOSED (I3.2).** `BuyerCompliance` (+ `BuyerComplianceWidget`) formerly imported the
 `COMPLIANCE_ITEMS` fixture directly (`COMPLIANCE-CARVEOUT-01`). I3.1 landed the target read
 (`risk.getComplianceRegistry` → `ComplianceRegistryEntry`, fixture-first/SIMULATED); **I3.2
 re-pointed both surfaces to `useComplianceRegistry()`** — status/daysRemaining computed-at-read,
 scheme-aware BPJPH KPI, SIMULATED rendered via `<LivenessPill capability="compliance">`. Every
-portal page is now on `useDataService()`. (The `halalXpersona.invariant.test.ts` retains its own
+portal page is now on `useDataService()`. (The `halalXpersona.invariant.test.js` retains its own
 independent `COMPLIANCE_ITEMS` read as a deliberate name-vs-id guard — not a page carve-out.)
 
 ---
@@ -54,7 +54,7 @@ independent `COMPLIANCE_ITEMS` read as a deliberate name-vs-id guard — not a p
 The designed real adapter. **No file exists** (glob-confirmed). It implements the **same**
 `IDataService` (all 103 methods, C1) against the real backend core (NestJS/SAP per the Stage-F1
 plan: `httpDataService`, OIDC, durable audit). Named as the intended swap in
-`DataServiceContext.tsx:5`. Because the interface is frozen, landing it is additive.
+`DataServiceContext.jsx:5`. Because the interface is frozen, landing it is additive.
 
 ---
 
@@ -62,7 +62,7 @@ plan: `httpDataService`, OIDC, durable audit). Named as the intended swap in
 
 The single write seam (C1): `dispatch` / `getCommandStatus` / `settle`. The mock wires the
 framework-agnostic dispatcher to the mock stores, the persona→role map, the bound policy hooks,
-and the in-memory `AuditSink` (`MockCommandService.ts`).
+and the in-memory `AuditSink` (`MockCommandService.js`).
 
 **Option B — SAP settlement.** A `sapBoundary: true` transition does not claim completion
 synchronously. Exactly **two** carry it today:
@@ -76,7 +76,7 @@ synchronously. Exactly **two** carry it today:
 
 The `settleFinalize` seam **is** the SAP settlement callback. In the mock it is called directly;
 the Phase-F2 real system implements it as the integration webhook (S/4HANA Event Mesh + OData),
-under the **same** `correlationId`. Swap-point: `MockCommandService.ts` `settleFinalize`.
+under the **same** `correlationId`. Swap-point: `MockCommandService.js` `settleFinalize`.
 
 ---
 

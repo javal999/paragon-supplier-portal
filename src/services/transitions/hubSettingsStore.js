@@ -14,7 +14,7 @@
 // ⚠️ **EVERY RULE READS THE VALUE HERE, AT EVALUATION TIME.** `hubSetting()` is
 // called by the config modules' accessors each time a rule runs; nothing copies
 // a value into a module constant, so a change takes effect on the next read —
-// no reload, no recompute, nothing to fall out of step. `hubSettings.bl32.test.ts`
+// no reload, no recompute, nothing to fall out of step. `hubSettings.bl32.test.js`
 // flips each value and watches a rule outcome flip with it.
 //
 // ⚠️ **`previous` AND `setAt` ARE STORE-ASSIGNED, NEVER PAYLOAD FIELDS** — the

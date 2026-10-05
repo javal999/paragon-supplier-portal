@@ -66,6 +66,29 @@ const SYNTH = {
       c.writtenNeverRead = 'set';
       return c.certType + c.readByAccess + readByDestructure + (c.readByOptionalChain ?? '') + u.collidingName;
     }`,
+  // Reads both forms (frontend-standard Phase 4). A `.js` class binds every
+  // `this.x = …` in its constructor as a declaration. `name` is Error's own
+  // member — a write to it, as TypeScript reads the same line — so it must stay
+  // OUT of the population (as `DataError.name` did at HEAD); `jsOnlyUnread` is a
+  // field only the assignment declares, so it must stay IN and be flagged.
+  // The harness runs `noLib`, so `Error` is declared here the way lib.d.ts
+  // declares it — in a declaration file, which the census never enters.
+  '/src/errorLib.d.ts': `declare class Error { name: string; message: string; constructor(m?: string); }`,
+  '/src/jsError.js': `
+    /** @typedef {import('./vocab').CertType} CertType */
+    export class JsError extends Error {
+      /** @type {CertType} */
+      certType;
+      /** @param {CertType} certType */
+      constructor(certType) {
+        super('x');
+        this.name = 'JsError';
+        this.certType = certType;
+        this.jsOnlyUnread = 1;
+      }
+    }
+    /** @param {JsError} e */
+    export const show = (e) => e.certType + e.name;`,
   '/src/consumer.test.ts': `
     import type { Covered } from './dto';
     export const t = (c: Covered): string => c.testOnly;`
@@ -127,6 +150,13 @@ describe('D-F self-probe — the instrument, both ways (heuristic rule 4)', () =
 
   it('counts a write as a write and not as a read', () => {
     expect(census.fields.find((f) => f.key === 'Covered.writtenNeverRead')?.writes).toBe(1);
+  });
+
+  it('a JS constructor write to an INHERITED member is not a field; a JS-only field still is', () => {
+    expect(population.has('JsError.certType'), 'the JS class was never covered').toBe(true);
+    expect(population.has('JsError.name')).toBe(false);
+    expect(population.has('JsError.jsOnlyUnread')).toBe(true);
+    expect(flagged.has('JsError.jsOnlyUnread')).toBe(true);
   });
 
   it('does not flag everything — a derivation that flags all is as useless as one that flags none', () => {

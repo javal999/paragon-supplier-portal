@@ -9,7 +9,7 @@
 //     calibrated. The synthetic dataset's own tests pin it that way.
 //   · `agreedCfot` — the figure the planner reliability page and the supplier
 //     "Your reliability" panel SHOW. It is `cfotByDefinition` with the early
-//     edge set to the ONE shared early window (`data/kpiWindow.ts`), so the
+//     edge set to the ONE shared early window (`data/kpiWindow.js`), so the
 //     engine CFOT, the Hub CFOT and OTIF all apply the same early rule.
 //
 // THE DEFINITION IMPLEMENTED (REQ-E10-01 CFOT, E14-02 BR-06, METHOD-SPEC G3):
@@ -18,7 +18,7 @@
 //   Aggregated per PO (Σ lines on time ÷ Σ lines ordered), and over a window
 //   as the MEAN of the per-PO rates — each PO counts once. A quantity sum
 //   across POs would add PCS to KG and let the largest packaging orders decide
-//   the figure; the Hub calculation (`data/performanceRules.ts`) does sum
+//   the figure; the Hub calculation (`data/performanceRules.js`) does sum
 //   across POs on its own data.
 //   · ordered   = what PTI asks for after its changes (the line's current qty)
 //   · committed = the latest confirmation's date (SCOR: a re-confirmation is

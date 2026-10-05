@@ -21,7 +21,7 @@
 //       (`transitions/forecastRules.ts`: supplierId · materialCode · share) —
 //       same triple, plus the purchasing-info-record fields the engine needs.
 //     · `PoLine` is the SAP schedule-line grain. The Hub's `PurchaseOrder`
-//       (`data/types.ts`) is a header with `orderDate` / `requestedDeliveryDate`
+//       (`data/types.js`) is a header with `orderDate` / `requestedDeliveryDate`
 //       / `confirmedDeliveryDate`; the engine keeps one row per line with
 //       `createdAt` / `requestedDate` because a PTI change moves ONE line's date,
 //       not the header's.

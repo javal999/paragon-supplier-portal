@@ -21,7 +21,7 @@
 //   BPOM rules packaging `NOT_APPLICABLE` by registry axis (`bpom.ts`), on a
 //   regulation that excludes packaging. Halal may not:
 //     · `doc-001` is an **MUI halal certificate** whose `linkedTo` is a PET
-//       bottle material (`supplierDocuments.ts`);
+//       bottle material (`supplierDocuments.js`);
 //     · `AdaptiveContext.jsx:89` puts `packaging` INSIDE its `isHalal` selector.
 //   So the tree already says, in two places, that somebody treats packaging as
 //   halal-relevant. **WE DO NOT KNOW WHETHER THEY ARE RIGHT.** The seed

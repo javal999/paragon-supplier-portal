@@ -930,9 +930,9 @@ describe('E1 — ⚠️ HEADLESS. NO STORE, NO CONSUMER, NO CLOCK', () => {
       // consumes `EnforcementSetting` as a TYPE for the empty ledger prop, the
       // §91 shape exactly. Authorised by the hub-clock batch.
       '/src/pages-v2/hubClockStamps.test.tsx',
-      '/src/services/data/mock/enforcementSeam.test.ts',
-      '/src/services/data/mock/enforcementSeed.test.ts',
-      '/src/services/data/mock/enforcementSetCommand.test.ts',
+      '/src/services/data/mock/enforcementSeam.test.js',
+      '/src/services/data/mock/enforcementSeed.test.js',
+      '/src/services/data/mock/enforcementSetCommand.test.js',
       // ⚠️ THE OWNER-LESS SCOPE GATE, and it is here for a reason worth stating:
       // it consumes `GOVERNED_CHECK_IDS` as a VALUE because `enforcement` turned
       // out to be one of the five OWNER-LESS command targets, and probing its
@@ -989,11 +989,11 @@ describe('E1 — ⚠️ HEADLESS. NO STORE, NO CONSUMER, NO CLOCK', () => {
       // UNANSWERED rather than ADVERSE. Reading it here means the two can never
       // disagree; a third refusal shape appears on the page with no edit.
       '/src/pages-v2/glossary/appearances.ts',
-      '/src/services/data/mock/MockCommandService.ts', // the CommandTarget
-      '/src/services/data/mock/MockEnforcementService.ts', // the read seam
-      '/src/services/data/mock/enforcementSeed.ts', //    E4 — the opening act
-      '/src/services/data/mock/stores/enforcementSettingStore.ts', // the ledger
-      '/src/services/data/types.ts', //                   the seam's row type (TYPE-ONLY)
+      '/src/services/data/mock/MockCommandService.js', // the CommandTarget
+      '/src/services/data/mock/MockEnforcementService.js', // the read seam
+      '/src/services/data/mock/enforcementSeed.js', //    E4 — the opening act
+      '/src/services/data/mock/stores/enforcementSettingStore.js', // the ledger
+      '/src/services/data/types.js', //                   the seam's row type (TYPE-ONLY)
       '/src/services/query/hooks.ts', //                  E4 — the scoped read hook
       '/src/services/transitions/policies.js' //         the recording policy
     ]);

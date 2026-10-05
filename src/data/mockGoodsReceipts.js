@@ -493,7 +493,7 @@ const mockGoodsReceiptsRaw = [
   //           acknowledge or DISPUTE it (`awaitsSupplierAnswer`)
   //   gr-016  a discrepancy the supplier HAS disputed → waiting on PTI
   //           (`isOpenDispute`; the answer itself is seeded in
-  //           `stores/receiptDiscrepancyStore.ts`, never here — a response is
+  //           `stores/receiptDiscrepancyStore.js`, never here — a response is
   //           something a supplier gives)
   //   gr-017  Approved, fully accepted, short by exactly 2% (within CR-25, so
   //           no discrepancy) → the receipt a sup-007 user can still raise an
@@ -504,7 +504,7 @@ const mockGoodsReceiptsRaw = [
   // ⚠️ CR-25 (BL-45) CASES, ONE RECEIPT EACH, ALL sup-007 SO BOTH PERSONAS SEE
   // THEM: exact — gr-002 (120,000 of 120,000); over by one — gr-003; short by
   // exactly 2% — gr-017 (closes); short just over 2% — gr-015 (2.1%, flagged,
-  // kept open). Pinned by id in `receiptToleranceDemo.test.ts`.
+  // kept open). Pinned by id in `receiptToleranceDemo.test.js`.
   //
   // ⚠️ AND THE QUANTITIES ARE NOT FREE: CFOT reads gr-015/016/017 (their
   // orders fall in the period) and OTIF reads gr-002/gr-003 through their
@@ -619,7 +619,7 @@ const mockGoodsReceiptsRaw = [
   },
 
   // ⚠️ BL-94 — sup-007's DELIVERY HISTORY: one receipt per past call-off
-  // CO-2026-0043..0046 (`callOffs.ts`), each received ON the approved date and
+  // CO-2026-0043..0046 (`callOffs.js`), each received ON the approved date and
   // IN FULL (12,000 of 12,000), so four more call-offs read on time in full and
   // sup-007's 90-day OTIF is 83% (5 of 6). Authored dates, shifted +103 days
   // like every row here: 2026-03-01 / 03-21 / 04-10 / 04-25 land 80, 60, 40 and

@@ -37,7 +37,7 @@ const declaredFields = [...new Set(DAY_COUNTS.map((r) => r.field))].sort();
 describe('POPULATION + MATCHER CONTROLS — before any row is believed', () => {
   it('the storage scope resolves to real files, and includes the three known homes', () => {
     expect(SCOPE_FILES.length).toBeGreaterThan(3);
-    expect(SCOPE_FILES).toContain('src/services/data/types.ts');
+    expect(SCOPE_FILES).toContain('src/services/data/types.js');
     expect(SCOPE_FILES).toContain('src/data/mockContracts.js');
     expect(SCOPE_FILES).toContain('src/types/supplier.types.ts');
   });
@@ -82,6 +82,30 @@ describe('POPULATION + MATCHER CONTROLS — before any row is believed', () => {
       declaredDayCountFields(() => lf, ['x.ts'])
     );
     expect(declaredDayCountFields(() => crlf, ['x.ts'])).toHaveLength(2);
+  });
+
+  // Reads both forms (frontend-standard Phase 4). The JSDoc arm must count
+  // what the line regex counts in TypeScript — a member that STARTS its line —
+  // and nothing more: `RiskBasis.daysOfCover`, inline in a one-line union
+  // member, was outside the TypeScript population and must stay outside it.
+  it('the JSDoc arm matches a member on its own line, and NOT one inline in a one-line literal', () => {
+    const ownLine =
+      '/**\n * @typedef {{\n *   readonly daysLate: number;\n * }} X\n */\nexport {};';
+    expect(declaredDayCountFields(() => ownLine, ['x.js'])).toEqual([
+      { file: 'x.js', field: 'daysLate' }
+    ]);
+    const prop =
+      '/**\n * @typedef {object} X\n * @property {number | null} daysLate\n */\nexport {};';
+    expect(declaredDayCountFields(() => prop, ['x.js'])).toEqual([
+      { file: 'x.js', field: 'daysLate' }
+    ]);
+    const inline =
+      "/**\n * @typedef {| { readonly kind: 'a'; readonly daysLate: number }\n *   | { readonly kind: 'b' }} X\n */\nexport {};";
+    expect(declaredDayCountFields(() => inline, ['x.js'])).toEqual([]);
+    // The TypeScript twin of the inline shape, through the line regex: also absent.
+    const inlineTs =
+      "type X = | { readonly kind: 'a'; readonly daysLate: number }\n  | { readonly kind: 'b' };";
+    expect(declaredDayCountFields(() => inlineTs, ['x.ts'])).toEqual([]);
   });
 
   // `takesInjectedNow` reads both languages. Each known-good input has a

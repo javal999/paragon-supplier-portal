@@ -20,7 +20,7 @@
 //   independent variable. **Another STORED COLLECTION is another, and it fails
 //   the same way** — two sources, nothing making them meet.
 //   `Contract.obligationCount` / `obligationsMet` were exactly that shape and
-//   were retired at §102 onto `services/data/obligationRollup.ts`; this gate
+//   were retired at §102 onto `services/data/obligationRollup.js`; this gate
 //   could never have seen them, and not only because of the `days` matcher —
 //   **the discriminator below would have ACQUITTED them**, since neither reads
 //   a clock.
@@ -29,7 +29,7 @@
 //   no instrument lane on a two-field batch). Its open members are listed at
 //   §102d — `PurchaseOrder.totalValue` is the consequential one, 7 of 21
 //   disagreeing with its own lines and READ at 26 sites, pinned as an exact set
-//   in `asnRefIntegrity.test.ts`. **Do not widen the matcher here to reach
+//   in `asnRefIntegrity.test.js`. **Do not widen the matcher here to reach
 //   them**; widening creates false accusations as readily as narrowing creates
 //   blind spots, and this file already carries four scars from one widening.
 //
@@ -100,7 +100,7 @@ export const DAY_COUNTS = [
     field: 'daysOutstanding',
     group: 'computed-at-read',
     against: 'dueDate',
-    producer: 'src/services/data/invoiceProjection.ts'
+    producer: 'src/services/data/invoiceProjection.js'
   },
   // MR-9 BR-03 — the alert order within a class. Derived with the alert from an
   // injected `nowIso`, never stored. Mixed by rule: a capacity alert counts to
@@ -154,7 +154,7 @@ export const DAY_COUNTS = [
   //        the other way round."
   //
   //   **THE PRECONDITION IS NOW MET.** The demo-data batch anchored
-  //   `purchaseOrder` (`services/data/fixturePresent.ts`), so "496 days late"
+  //   `purchaseOrder` (`services/data/fixturePresent.js`), so "496 days late"
   //   is no longer reachable for a PO either, exactly as it stopped being
   //   reachable for a shipment at #319/#320.
   //
@@ -234,7 +234,7 @@ export const DAY_COUNTS = [
  * correct pattern alongside the defect.
  * @type {readonly string[]}
  */
-export const STORAGE_SCOPE = ['src/data', 'src/services/data/types.ts', 'src/types'];
+export const STORAGE_SCOPE = ['src/data', 'src/services/data/types.js', 'src/types'];
 
 /**
  * Day-count field DECLARATIONS in the storage scope.
@@ -314,6 +314,23 @@ function jsDocDayCountFields(file, text) {
    * @returns {boolean}
    */
   const isDayName = (n) => /[Dd]ays/.test(n);
+  // ⚠️ PARITY WITH THE LINE REGEX (frontend-standard Phase 4). The TypeScript
+  // arm is anchored on `^\s*<name>`, so a member written INSIDE a one-line type
+  // literal — `| { kind: 'leadTime'; leadTimeDays: number; daysOfCover: number }`
+  // on `RiskBasis` — was never in its population. Without this
+  // check the JSDoc arm saw that same line and derived `daysOfCover`, a field
+  // the TypeScript form of the gate never classified: the matcher widened by
+  // conversion alone. A member counts only when it starts its line (after the
+  // JSDoc ` * ` prefix), which is exactly where the line regex looks.
+  /**
+   * @param {ts.Node} node
+   * @returns {boolean}
+   */
+  const startsItsLine = (node) => {
+    const start = node.getStart(sf);
+    const lineStart = text.lastIndexOf('\n', start - 1) + 1;
+    return /^\s*\*?\s*$/.test(text.slice(lineStart, start));
+  };
   /**
    * @param {ts.Node} doc
    * @returns {void}
@@ -322,7 +339,12 @@ function jsDocDayCountFields(file, text) {
     if (ts.isJSDocPropertyTag(doc) && ts.isIdentifier(doc.name) && isDayName(doc.name.text)) {
       if (isDayCountType(doc.typeExpression?.type)) found.add(doc.name.text);
     }
-    if (ts.isPropertySignature(doc) && ts.isIdentifier(doc.name) && isDayName(doc.name.text)) {
+    if (
+      ts.isPropertySignature(doc) &&
+      ts.isIdentifier(doc.name) &&
+      isDayName(doc.name.text) &&
+      startsItsLine(doc)
+    ) {
       if (isDayCountType(doc.type)) found.add(doc.name.text);
     }
     ts.forEachChild(doc, inJsDoc);
@@ -422,7 +444,7 @@ export function takesInjectedNow(file, read = (f) => readFileSync(f, 'utf8')) {
  *   · **Shorthand.** `BuyerContracts` mints `daysUntilExpiry` with ES6
  *     shorthand, so a `field:`-only matcher reports the sole `mintedAtWrite`
  *     site in the tree as ABSENT — a clean-looking gate over a real defect.
- *   · **Mid-line.** `buyerRisk.ts` writes whole rows on ONE line
+ *   · **Mid-line.** `buyerRisk.js` writes whole rows on ONE line
  *     (`{ supplier: '…', expires: '…', daysLeft: -24, … }`), so a `^\s*`-anchored
  *     matcher finds no writer for `ComplianceRow.daysLeft` and the row reads as
  *     `produced-by-nothing`. Anchoring on `{` / `,` instead is what sees it.

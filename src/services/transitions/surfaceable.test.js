@@ -109,7 +109,7 @@ describe('THE INVARIANT THE VERB-LEVEL FORM RESTS ON', () => {
 // ── THE DERIVATION: WHICH ACTS CAN A PERSON ACTUALLY FIRE?
 //    Both halves are required, and the gate's first run proved why. Naming a
 //    transition id is NOT firing it: `cascades.js` registers fan-out targets,
-//    `enforcementSeed.ts` seeds governance, the mock adapter names cascade ids
+//    `enforcementSeed.js` seeds governance, the mock adapter names cascade ids
 //    in its own plumbing, and `useInvoiceApprove` exists with no consumer. Every
 //    one of those named an id, none of them is an operator.
 //      HALF 1 — a non-documentation module hands the id to the dispatcher.

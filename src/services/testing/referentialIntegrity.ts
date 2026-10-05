@@ -26,7 +26,7 @@
 //   It does not assert. Call sites own their expectations, because the two
 //   lanes have different populations and different open axes: the chase lane
 //   is fully repaired, the ASN lane's MATERIAL axis is deliberately open until
-//   5b-ii (see `asnRefIntegrity.test.ts`). A harness that asserted for them
+//   5b-ii (see `asnRefIntegrity.test.js`). A harness that asserted for them
 //   would have to be told which failures are expected, and a check that knows
 //   which failures to allow is a whitelist.
 // ─────────────────────────────────────────────────────────────────────────────

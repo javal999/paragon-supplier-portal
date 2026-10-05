@@ -131,7 +131,7 @@ const laneUnits = (code: string) => [
 
 // ── ⚠️ 26 / 6, NOT 25 / 7 — H4 MOVED ONE CODE BETWEEN ROUTES ────────────────
 //   `AI-NIAC-6612` was `AUTHORED_ASN`: its defining property is being sourced by
-//   `supplierShipments.ts` AND NOTHING ELSE. H4 added it to `mockShipments.js`
+//   `supplierShipments.js` AND NOTHING ELSE. H4 added it to `mockShipments.js`
 //   so the BPJPH mandate flip would be reachable from a dock, and a code with a
 //   second lane is BY DEFINITION no longer in that set — it is ADOPTED, because
 //   a declared document lane now states a meaning for it.
@@ -159,7 +159,7 @@ const AUTHORED = Object.keys(MATERIAL_MASTER)
  *
  * ⚠️ THEY ARE NOT ADOPTIONS, AND `ADOPTED` CORRECTLY EXCLUDES THEM WITHOUT ANY
  * EDIT — `laneRefs` is scoped to `/src/data/mock*.ts`, the DECLARED document
- * lane, and `supplierShipments.ts` is not in it. That is the 2B-2 scope doing
+ * lane, and `supplierShipments.js` is not in it. That is the 2B-2 scope doing
  * its job three batches later: a batch that authored rows from an UNDECLARED
  * lane could not accidentally be counted as ratifying the declared one.
  */
@@ -167,7 +167,7 @@ const AUTHORED_ASN = Object.keys(MATERIAL_MASTER)
   .filter((c) => {
     const src = [...new Set(REFS.filter((r) => r.code === c).map((r) => r.module))];
     return (
-      src.length === 1 && src[0] === '/src/services/data/mock/fixtures/supplierShipments.ts'
+      src.length === 1 && src[0] === '/src/services/data/mock/fixtures/supplierShipments.js'
     );
   })
   .sort();

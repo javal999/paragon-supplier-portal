@@ -24,7 +24,7 @@
 //     · **THIS PROVES SCOPING, AND NOTHING ELSE.** Not that any returned VALUE
 //       is correct, not ordering, not pagination, not a write path's effect,
 //       not `DataError`'s shape (that is a class contract — see
-//       `dataError.contract.test.ts`, which is deliberately NOT a factory), and
+//       `dataError.contract.test.js`, which is deliberately NOT a factory), and
 //       not `ICommandService` beyond three scope refusals.
 //     · **IT IS A FLOOR, NOT A CEILING.** An implementation that passes every
 //       assertion here can still leak a tenant's data through a method this

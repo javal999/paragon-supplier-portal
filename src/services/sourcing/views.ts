@@ -2,7 +2,7 @@
 // RFx READ-MODEL VIEWS — the shapes `IProcurementService` returns for
 // REQ-E03-01 to REQ-E03-05.
 //
-// They live BESIDE the entities rather than in `data/types.ts` so the service
+// They live BESIDE the entities rather than in `data/types.js` so the service
 // contract and the mock read model import one declaration instead of each
 // holding its own: a view the adapter builds and a view the interface promises
 // are the same thing, and two copies of a shape are two shapes.

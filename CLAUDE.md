@@ -327,7 +327,7 @@ mechanisms whose success signals said nothing about the damage they did.
 > tracks `estimatedValue` closely enough to read as computed and **nothing computes
 > it**: zero relational or arithmetic reads of `estimatedValue` exist in the tree and
 > no threshold number exists in `src/` or `docs/`. The surface now SAYS it is
-> authored; `approvalBandAuthored.guard.test.ts` re-derives it every run (write-site
+> authored; `approvalBandAuthored.guard.test.js` re-derives it every run (write-site
 > assertion primary, read-site secondary and labelled weaker).
 > **Both readings of what a band decides fail independently:** WHO MAY APPROVE needs
 > seniority roles that do not exist and C10 §3.4 forbids minting (*"a new role per
@@ -389,7 +389,7 @@ and the Stage G planning canon + World-Class Build Plan are now on main.
   (Shipment/Contract/Obligation/SupplierDocument): no CommandTarget, no cascade
   link, roles mapped for catalog-coverage only (DNA-SEED-01 contract surface, no
   UI consumer). **PR is NO LONGER among them** — corrected 2026-08-03: it was
-  wired at G1.1 and dispatches (`MockCommandService.ts:547-593`, registered
+  wired at G1.1 and dispatches (`MockCommandService.js:547-593`, registered
   `:983`).
 
   ⚠️ **THE TARGET-LESS FLOWS ARE A SET DIFFERENCE, NOT A LIST — RUN
@@ -410,7 +410,7 @@ and the Stage G planning canon + World-Class Build Plan are now on main.
 
   ⚠️ **THE WIRED-COMMANDTARGET COUNT IS DELIBERATELY NOT WRITTEN HERE.** Derive
   it from `WIRED_COMMAND_TARGETS` — the runtime export of `TARGETS` in
-  `MockCommandService.ts`, which is the one place it can be true. The sentence
+  `MockCommandService.js`, which is the one place it can be true. The sentence
   that stood in this spot carried a figure, and it was restated and re-corrected
   repeatedly (*"6"*, then *"10"*, then *"11"*), each right on the day it was
   typed and stale within weeks; the line references shipped beside it had
@@ -424,7 +424,7 @@ and the Stage G planning canon + World-Class Build Plan are now on main.
 - **Backend is greenfield.** Zero server code / datastore clients; data is
   in-memory fixtures behind `mockDataService` (`src/main.jsx`); tenant scoping is
   enforced client-side. `httpDataService` is the designed Phase-F1 swap
-  (`DataServiceContext.tsx`) — pages do not change when it lands.
+  (`DataServiceContext.jsx`) — pages do not change when it lands.
 - **I3 compliance phase COMPLETE** (PRs #61–#64): I3.1 canonical compliance
   machine + DTO-v2 read (fixture-first, SIMULATED); I3.2 re-pointed BuyerCompliance
   + widget onto the seam and **closed COMPLIANCE-CARVEOUT-01**; I3.3 simulation
@@ -500,7 +500,7 @@ and the Stage G planning canon + World-Class Build Plan are now on main.
   42/2024, BPJPH — carried at `docs/Paragon_Platform_Strategic_Spine_v1.md:102`,
   `docs/Halal_Compliance_Control_Design_v1.md:9`, and as the `BPJPH_MANDATE_DATE`
   constant behind `complianceProjection.schemeValid`
-  (`src/services/data/complianceProjection.ts`). ⚠️ **THE DAYS REMAINING ARE NOT
+  (`src/services/data/complianceProjection.js`). ⚠️ **THE DAYS REMAINING ARE NOT
   WRITTEN HERE.** A countdown in prose is wrong every day after it is typed —
   `FLOOR-IN-PROSE-01` with a clock attached, and the one variant that decays
   with nobody touching the file. The line read *"58 days from 2026-08-20"* and
@@ -515,7 +515,7 @@ Three arcs, in order. Nothing else is queued.
 - **ARC 1 · TRACK R — the halal lane made operable.** Three deliverables, and
   every one of them is a SURFACE or a WRITE PATH, never a register entry:
   1. **An operator-editable certificate registry.** Today `COMPLIANCE_REGISTRY`
-     (`src/services/data/mock/fixtures/complianceRegistry.ts`) is **16 frozen
+     (`src/services/data/mock/fixtures/complianceRegistry.js`) is **16 frozen
      rows** — `readonly … = [ … ]`, every supplier `"Sample … (illustrative)"`,
      every cert number a `SAMPLE-…` token, every material `RM-SAMPLE-…`. Derived:
      `compliance` is one of the **seven flows with no `CommandTarget`**
@@ -523,12 +523,12 @@ Three arcs, in order. Nothing else is queued.
      `_verify` / `_reject` **cannot fire**. There is no write path of any kind:
      nobody — operator, buyer or supplier — can add, edit or expire a
      certificate. **That is arc 1's first deliverable.**
-  2. **The expiry projection on real dates.** `complianceProjection.ts` already
+  2. **The expiry projection on real dates.** `complianceProjection.js` already
      computes display status and scheme validity from `expiryDate` + issuer
      (clock-states never stored, law 0.5). It has never once run against a date a
      person entered.
   3. **The receipt gate reading it.** `verifyHalalAtReceipt`
-     (`src/services/data/halalVerification.ts`) is authored, tested, and
+     (`src/services/data/halalVerification.js`) is authored, tested, and
      **HEADLESS BY RULING** — its own header forbids acquiring a consumer there,
      because `COMPLIANCE_REGISTRY`'s codes are `RM-SAMPLE-…` and
      `MATERIAL_MASTER`'s are not, so **the intersection is empty by construction**
@@ -539,7 +539,7 @@ Three arcs, in order. Nothing else is queued.
 - **ARC 2 · THE REQUISITION LANE.** ⚠️ **The dispatched premise inverted twice,
   and the lane is in WORSE shape than "unreachable", not better.** Derived:
   `purchaseRequisition` **IS** a wired `CommandTarget`
-  (`MockCommandService.ts:1292`), so `t_pr_submit` / `t_pr_approve` /
+  (`MockCommandService.js:1292`), so `t_pr_submit` / `t_pr_approve` /
   `t_pr_reject` are dispatch**able**; and procurement's entry point **DOES** have
   a page — `/buyer/purchase-requisition` → `BuyerRequisitions`
   (`AppRouter.jsx:111`), alongside `IntakeReview` and
@@ -1134,7 +1134,7 @@ weak"*, which is the reading that gets believed and the one that staffs a lane.
 
 ⚠️ **AND THE RULE THAT ORDERS EVERY PROBE IN THIS SECTION, PROMOTED OUT OF ONE
 MODULE'S COMMENT BECAUSE IT GOVERNS ALL OF THEM — `PROBE-MUST-FIRE-AT-A-REAL-
-DEFECT-01`.** It was written at #326 inside `src/services/data/clockDrift.ts`,
+DEFECT-01`.** It was written at #326 inside `src/services/data/clockDrift.js`,
 where it reads as local to that instrument. It is not:
 
 > **WHAT IS MISSING IS NOT A FAMILY — IT IS A PROBE THAT FIRES THE INSTRUMENT AT
@@ -1147,7 +1147,7 @@ does not — but it can never tell you the matcher is aimed at the right thing,
 because the seat that aimed it also built the target. **Only a defect the tree
 really carried was aimed by something other than the seat.**
 
-**The specimen is `dayProjection.test.ts` @ `3e0c1d2`, quoted into a comment
+**The specimen is `dayProjection.test.js` @ `3e0c1d2`, quoted into a comment
 there rather than deleted, and it is the model to copy rather than to redesign:**
 run the SHIPPED matcher over the LIVE population at an input that reconstructs a
 geometry the tree really occupied, and require it to return **NAMED members**.
@@ -1204,7 +1204,7 @@ stayed green while the header stayed wrong. **A weaker assertion was being held
 on a premise measurement had already falsified.**
 
 **THE SPECIMEN IS ALREADY IN THE TREE AND IS §71's SHAPE APPLIED TO DATA** —
-`supplierDocumentRefusal.test.ts`:
+`supplierDocumentRefusal.test.js`:
 
 ```ts
 const refused = DOCUMENTS.filter((d) => d.status === 'Rejected');
@@ -1307,7 +1307,8 @@ over everything else combined, and it grew that way in six weeks.
 The owner ruled the portal moves to JavaScript + JSDoc to match the company React
 boilerplate. Converted so far: `src/components/ui-v2` (pilot) and the app shell
 (`src/` root files, `hooks`, `context`, `router`, `test`, `data`, `components/*`;
-Phase 4 B1), `src/lib` (B2) and `src/services/transitions` (B3; forecast flows excluded).
+Phase 4 B1), `src/lib` (B2) and `src/services/transitions` (B3; forecast flows excluded) and `src/services/data` (B4,
+including `types.js`).
 Before converting a
 folder, follow `docs/frontend-standard/JS-CONVERSION-PLAYBOOK.md`: the draft tool
 deletes comments and loosens types, and `scripts/codemods/check-comments-kept.mjs`

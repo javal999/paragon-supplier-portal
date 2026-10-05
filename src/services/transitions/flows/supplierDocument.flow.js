@@ -56,7 +56,7 @@ import { POLICY_HOOKS } from '../policyHooks';
  *
  * ⚠️ **`materialCodes` IS NOT HERE, AND ITS ABSENCE IS THE FINDING §82 IS BUILT
  * AROUND.** The gate joins on `supplierId · materialCodes · certType ·
- * lifecycleState · expiryDate` (`halalVerification.ts:303` + `schemeValid`), and
+ * lifecycleState · expiryDate` (`halalVerification.js:303` + `schemeValid`), and
  * `materialCodes` holds PARAGON'S SAP material codes at raw-material grain —
  * a vocabulary the supplier does not hold. Measured, the two sides of this tree
  * do not even agree about the same supplier: sup-007's registry rows cover

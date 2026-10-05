@@ -176,7 +176,7 @@ describe('glossary coverage (GL-0)', () => {
 // intact — it is the filter that is dead. Nothing in this file could previously
 // have detected that, and nothing outside it can.
 //
-// SHAPE COPIED FROM §71's RETIRED PROBE (`dayProjection.test.ts` @ `3e0c1d2`,
+// SHAPE COPIED FROM §71's RETIRED PROBE (`dayProjection.test.js` @ `3e0c1d2`,
 // quoted into a comment there rather than deleted): fire the SHIPPED predicate at
 // input that reconstructs the defect it exists to catch, and require it to return
 // a NAMED verdict. Both directions, per rule 4 — a known-GOOD row must be

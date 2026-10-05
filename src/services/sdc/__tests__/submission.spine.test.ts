@@ -65,7 +65,7 @@ describe('SubmissionSession envelope helper (addendum §5)', () => {
     // correlationId mechanic): `causationAnchor()` hands the page that id, and
     // commands 2..n pass it as their dispatch causationId — the envelope's
     // anchor and the event grouping are the SAME id by construction. The live
-    // 3-command grouping is proven in sdcObjectsCommand.test.ts.
+    // 3-command grouping is proven in sdcObjectsCommand.test.js.
     expect(env.auditCorrelationId).toBe('cmd_0002');
     expect(session.causationAnchor()).toBe('cmd_0002');
   });

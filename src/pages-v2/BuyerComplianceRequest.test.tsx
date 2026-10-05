@@ -13,7 +13,7 @@
 // evidence would be `CLEAN-AFTER-THE-FIX-REPORTS-THE-FIX-01` with an extra step
 // — a clean reading from an instrument that never examined the subject. The
 // direct dispatch-site assertion below is the whole of the coverage claim, and
-// the population controls in `services/data/mock/supplierDocumentRequest.test.ts`
+// the population controls in `services/data/mock/supplierDocumentRequest.test.js`
 // are what stop THIS file passing over nothing.
 //
 // `t_gr_hold` and `t_po_view` stay flagged in the census, untouched.
