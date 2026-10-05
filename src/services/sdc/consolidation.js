@@ -181,10 +181,13 @@ export function currentPublication(publications) {
 
 /** One consolidation row: a current published line + its collaboration state. */
 /**
- * @typedef {object} ConsolidationRow
- * @property {string} id -  Stable row key (DSG rowKey): supplier|material|period.
- * @property {ForecastLine} line
- * @property {LineResponseState} state
+ * `id`:  Stable row key (DSG rowKey): supplier|material|period.
+ *
+ * @typedef {{
+ *   readonly id: string;
+ *   readonly line: ForecastLine;
+ *   readonly state: LineResponseState;
+ * }} ConsolidationRow
  */
 
 /**
@@ -293,14 +296,15 @@ export function consolidationRows(publications, responses) {
 /** @typedef {'responded' | 'partial' | 'silent'} SupplierRollupKind */
 
 /**
- * @typedef {object} SupplierRollup
- * @property {string} supplierId
- * @property {number} totalLines
- * @property {number} answeredLines -  Lines with a submitted response — fresh, carried, or stale (a stale line
- *    WAS answered; calling that supplier silent would be false — the re-confirm
- *    request is a P3 trigger, not a chase-list fact).
- * @property {number} awaitingLines
- * @property {SupplierRollupKind} rollup
+ * `answeredLines`:  Lines with a submitted response — fresh, carried, or stale (a stale line  WAS answered; calling that supplier silent would be false — the re-confirm  request is a P3 trigger, not a chase-list fact).
+ *
+ * @typedef {{
+ *   readonly supplierId: string;
+ *   readonly totalLines: number;
+ *   readonly answeredLines: number;
+ *   readonly awaitingLines: number;
+ *   readonly rollup: SupplierRollupKind;
+ * }} SupplierRollup
  */
 
 /**
@@ -344,11 +348,14 @@ export function supplierRollups(rows) {
 /** @typedef {'overdue' | 'partial-response'} ChaseReason */
 
 /**
- * @typedef {object} ChaseEntry
- * @property {string} supplierId
- * @property {ChaseReason} reason
- * @property {number} awaitingLines
- * @property {string} dueAt -  The interim policy deadline: publishedAt + RESPONSE_DUE_DAYS.
+ * `dueAt`:  The interim policy deadline: publishedAt + RESPONSE_DUE_DAYS.
+ *
+ * @typedef {{
+ *   readonly supplierId: string;
+ *   readonly reason: ChaseReason;
+ *   readonly awaitingLines: number;
+ *   readonly dueAt: string;
+ * }} ChaseEntry
  */
 
 /**
@@ -440,12 +447,15 @@ export function chaseList(publication, rows, now) {
  */
 
 /**
- * @typedef {object} SupplierCoverageEntry
- * @property {string} supplierId
- * @property {string} materialCode
- * @property {number} committedDemandQty -  Σ firm + semi-firm demand for the pair in the current publication.
- * @property {Uom} uom
- * @property {CoverageStatus} status
+ * `committedDemandQty`:  Σ firm + semi-firm demand for the pair in the current publication.
+ *
+ * @typedef {{
+ *   readonly supplierId: string;
+ *   readonly materialCode: string;
+ *   readonly committedDemandQty: number;
+ *   readonly uom: Uom;
+ *   readonly status: CoverageStatus;
+ * }} SupplierCoverageEntry
  */
 
 /**

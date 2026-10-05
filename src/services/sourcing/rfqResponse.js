@@ -59,13 +59,16 @@ export const clarificationState = (c) =>
  * buyer reads every invitee's, including the decline reason and text.
  */
 /**
- * @typedef {object} RfqEngagementView
- * @property {string} rfqId
- * @property {string} supplierId
- * @property {string} supplierName
- * @property {RfqIntent} [intent]
- * @property {string} [intentId] -  The intent record's key — what a withdraw names.
- * @property {string} [confidentialityAcceptedAt]
+ * `intentId`:  The intent record's key — what a withdraw names.
+ *
+ * @typedef {{
+ *   readonly rfqId: string;
+ *   readonly supplierId: string;
+ *   readonly supplierName: string;
+ *   readonly intent?: RfqIntent;
+ *   readonly intentId?: string;
+ *   readonly confidentialityAcceptedAt?: string;
+ * }} RfqEngagementView
  */
 
 /**
@@ -74,18 +77,22 @@ export const clarificationState = (c) =>
  * asker's identity removed, which is the rule, not a display choice.
  */
 /**
- * @typedef {object} RfqClarificationView
- * @property {string} id
- * @property {string} rfqId
- * @property {string} question
- * @property {string} askedAt
- * @property {string} [answer]
- * @property {string} [answeredAt]
- * @property {'private' | 'published'} visibility
- * @property {'Asked' | 'Answered'} state
- * @property {string} [askedBy] -  The asking supplier. Absent when the reader may not know who asked.
- * @property {string} [askedByName]
- * @property {boolean} mine -  True when the reader is the supplier that asked.
+ * `askedBy`:  The asking supplier. Absent when the reader may not know who asked.
+ * `mine`:  True when the reader is the supplier that asked.
+ *
+ * @typedef {{
+ *   readonly id: string;
+ *   readonly rfqId: string;
+ *   readonly question: string;
+ *   readonly askedAt: string;
+ *   readonly answer?: string;
+ *   readonly answeredAt?: string;
+ *   readonly visibility: 'private' | 'published';
+ *   readonly state: 'Asked' | 'Answered';
+ *   readonly askedBy?: string;
+ *   readonly askedByName?: string;
+ *   readonly mine: boolean;
+ * }} RfqClarificationView
  */
 
 /**
@@ -212,15 +219,20 @@ function openInvitationRefusal(rfq, supplierId, nowIso) {
 // ── Intent ──────────────────────────────────────────────────────────────────
 
 /**
- * @typedef {object} IntentInput
- * @property {RFQ | undefined} rfq
- * @property {string} supplierId
- * @property {'respond' | 'decline' | 'withdraw'} act -  Which act: respond, decline, or withdraw (a decline after "I will respond").
- * @property {unknown} [reason]
- * @property {unknown} [text]
- * @property {RfqIntent} [existing] -  The intent this supplier already stated on this RFQ, if any.
- * @property {boolean} hasQuote -  True when this supplier has a live quotation on this RFQ.
- * @property {string} nowIso
+ * `act`:  Which act: respond, decline, or withdraw (a decline after "I will respond").
+ * `existing`:  The intent this supplier already stated on this RFQ, if any.
+ * `hasQuote`:  True when this supplier has a live quotation on this RFQ.
+ *
+ * @typedef {{
+ *   readonly rfq: RFQ | undefined;
+ *   readonly supplierId: string;
+ *   readonly act: 'respond' | 'decline' | 'withdraw';
+ *   readonly reason?: unknown;
+ *   readonly text?: unknown;
+ *   readonly existing?: RfqIntent;
+ *   readonly hasQuote: boolean;
+ *   readonly nowIso: string;
+ * }} IntentInput
  */
 
 /**

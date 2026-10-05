@@ -48,17 +48,24 @@ export const RFQ_ITEM_TYPE_IDS = ['sticker', 'unitBox', 'bottleClosure', 'moldCo
 
 /** One row of an item's spec sheet. */
 /**
- * @typedef {object} RfqSpecField
- * @property {string} key -  Stable within the item. Library fields use the library key; a custom field
- *    gets `custom-<n>`.
- * @property {string} [labelKey] -  i18n key for a library field.
- * @property {string} [label] -  The buyer's own words for a custom field. Not translated: it is user text.
- * @property {RfqSpecFieldKind} kind
- * @property {string} [unitKey] -  i18n key for the unit of a `number` field.
- * @property {readonly string[]} [options] -  Option ids of a `choice` field; i18n key `rfqAuthoring.opt.<id>`.
- * @property {RfqSpecFilledBy} filledBy
- * @property {boolean} required
- * @property {string} [value] -  The buyer's value. Only meaningful when `filledBy === 'buyer'`.
+ * `key`:  Stable within the item. Library fields use the library key; a custom field  gets `custom-<n>`.
+ * `labelKey`:  i18n key for a library field.
+ * `label`:  The buyer's own words for a custom field. Not translated: it is user text.
+ * `unitKey`:  i18n key for the unit of a `number` field.
+ * `options`:  Option ids of a `choice` field; i18n key `rfqAuthoring.opt.<id>`.
+ * `value`:  The buyer's value. Only meaningful when `filledBy === 'buyer'`.
+ *
+ * @typedef {{
+ *   readonly key: string;
+ *   readonly labelKey?: string;
+ *   readonly label?: string;
+ *   readonly kind: RfqSpecFieldKind;
+ *   readonly unitKey?: string;
+ *   readonly options?: readonly string[];
+ *   readonly filledBy: RfqSpecFilledBy;
+ *   readonly required: boolean;
+ *   readonly value?: string;
+ * }} RfqSpecField
  */
 
 /**
@@ -67,12 +74,16 @@ export const RFQ_ITEM_TYPE_IDS = ['sticker', 'unitBox', 'bottleClosure', 'moldCo
  * `sessionAttachmentStore`, and a record keeps nothing but this.
  */
 /**
- * @typedef {object} AttachmentMeta
- * @property {string} id
- * @property {string} name
- * @property {number} size -  Bytes.
- * @property {string} type -  The MIME type the browser reported; `''` when it reported none.
- * @property {string} addedAt
+ * `size`:  Bytes.
+ * `type`:  The MIME type the browser reported; `''` when it reported none.
+ *
+ * @typedef {{
+ *   readonly id: string;
+ *   readonly name: string;
+ *   readonly size: number;
+ *   readonly type: string;
+ *   readonly addedAt: string;
+ * }} AttachmentMeta
  */
 
 /** The one-time costs a buyer can ask to be quoted. The supplier may add others. */
@@ -86,9 +97,10 @@ export const RFQ_ONE_TIME_COST_IDS = ['mold', 'dieCutPlate', 'printingPlate', 'd
 
 /** One quantity break the supplier prices at. */
 /**
- * @typedef {object} RfqQuantityTier
- * @property {number} qty
- * @property {RfqTierBasis} basis
+ * @typedef {{
+ *   readonly qty: number;
+ *   readonly basis: RfqTierBasis;
+ * }} RfqQuantityTier
  */
 
 /** The most breaks one RFQ (or one item override) may carry. */
@@ -96,24 +108,31 @@ export const MAX_QUANTITY_TIERS = 8;
 
 /** One item being sourced. */
 /**
- * @typedef {object} RfqItem
- * @property {number} lineNo
- * @property {RfqItemTypeId} itemType
- * @property {string} description
- * @property {number} variantCount -  Number of variants or SKUs the item comes in (8 Oslo sticker designs).
- * @property {string} uom
- * @property {readonly RfqSpecField[]} specFields
- * @property {string} [note] -  e.g. "Spec is the same as the existing Amplify variant sticker".
- * @property {readonly AttachmentMeta[]} [attachments]
- * @property {readonly RfqOneTimeCostId[]} [oneTimeCosts] -  The one-time costs the buyer wants quoted for this item.
- * @property {readonly RfqQuantityTier[]} [tiers] -  This item's own breaks. Absent = the RFQ's breaks apply.
+ * `variantCount`:  Number of variants or SKUs the item comes in (8 Oslo sticker designs).
+ * `note`:  e.g. "Spec is the same as the existing Amplify variant sticker".
+ * `oneTimeCosts`:  The one-time costs the buyer wants quoted for this item.
+ * `tiers`:  This item's own breaks. Absent = the RFQ's breaks apply.
+ *
+ * @typedef {{
+ *   readonly lineNo: number;
+ *   readonly itemType: RfqItemTypeId;
+ *   readonly description: string;
+ *   readonly variantCount: number;
+ *   readonly uom: string;
+ *   readonly specFields: readonly RfqSpecField[];
+ *   readonly note?: string;
+ *   readonly attachments?: readonly AttachmentMeta[];
+ *   readonly oneTimeCosts?: readonly RfqOneTimeCostId[];
+ *   readonly tiers?: readonly RfqQuantityTier[];
+ * }} RfqItem
  */
 
 /** "Samples requested": how many, and by when. */
 /**
- * @typedef {object} RfqSamplesRequest
- * @property {number} qty
- * @property {string} neededBy
+ * @typedef {{
+ *   readonly qty: number;
+ *   readonly neededBy: string;
+ * }} RfqSamplesRequest
  */
 
 /**
@@ -144,50 +163,58 @@ export const MAX_QUANTITY_TIERS = 8;
 
 /** A unit price at one quantity break. */
 /**
- * @typedef {object} TierPrice
- * @property {number} tierQty
- * @property {number} unitPrice
+ * @typedef {{
+ *   readonly tierQty: number;
+ *   readonly unitPrice: number;
+ * }} TierPrice
  */
 
 /** A one-time cost as the supplier quotes it. */
 /**
- * @typedef {object} OneTimeCostQuote
- * @property {string} name
- * @property {number} amount
- * @property {RfqOneTimeCostId} [costId] -  The requested cost this answers. Absent on a cost the supplier added.
+ * `costId`:  The requested cost this answers. Absent on a cost the supplier added.
+ *
+ * @typedef {{
+ *   readonly name: string;
+ *   readonly amount: number;
+ *   readonly costId?: RfqOneTimeCostId;
+ * }} OneTimeCostQuote
  */
 
 /** A supplier-filled spec value. */
 /**
- * @typedef {object} SpecValue
- * @property {string} key
- * @property {string} value
+ * @typedef {{
+ *   readonly key: string;
+ *   readonly value: string;
+ * }} SpecValue
  */
 
 /** The supplier's answer for ONE item of a tiered RFQ. */
 /**
- * @typedef {object} QuotationItemQuote
- * @property {number} itemLineNo
- * @property {readonly SpecValue[]} [specValues]
- * @property {readonly TierPrice[]} tierPrices
- * @property {number} [moq]
- * @property {number} [leadTimeDays]
- * @property {readonly OneTimeCostQuote[]} [oneTimeCosts]
+ * @typedef {{
+ *   readonly itemLineNo: number;
+ *   readonly specValues?: readonly SpecValue[];
+ *   readonly tierPrices: readonly TierPrice[];
+ *   readonly moq?: number;
+ *   readonly leadTimeDays?: number;
+ *   readonly oneTimeCosts?: readonly OneTimeCostQuote[];
+ * }} QuotationItemQuote
  */
 
 /** An alternative offer — shown apart from the main quote, never ranked by default. */
 /**
- * @typedef {object} QuotationAlternative
- * @property {number} itemLineNo
- * @property {string} description
- * @property {readonly TierPrice[]} tierPrices
+ * @typedef {{
+ *   readonly itemLineNo: number;
+ *   readonly description: string;
+ *   readonly tierPrices: readonly TierPrice[];
+ * }} QuotationAlternative
  */
 
 /** "Can sample, ready date" — which must actually be saved. */
 /**
- * @typedef {object} SampleOffer
- * @property {boolean} canSample
- * @property {string} [readyDate]
+ * @typedef {{
+ *   readonly canSample: boolean;
+ *   readonly readyDate?: string;
+ * }} SampleOffer
  */
 
 /**
@@ -250,10 +277,11 @@ export const RFQ_DECLINE_REASONS = [
 
 /** A confidential RFQ's terms, accepted once, with the time recorded. */
 /**
- * @typedef {object} ConfidentialityAcceptance
- * @property {string} rfqId
- * @property {string} supplierId
- * @property {string} acceptedAt
+ * @typedef {{
+ *   readonly rfqId: string;
+ *   readonly supplierId: string;
+ *   readonly acceptedAt: string;
+ * }} ConfidentialityAcceptance
  */
 
 /**
@@ -261,15 +289,16 @@ export const RFQ_DECLINE_REASONS = [
  * asker's identity hidden; a PRIVATE one reaches the asker only.
  */
 /**
- * @typedef {object} RfqClarification
- * @property {string} id
- * @property {string} rfqId
- * @property {string} askedBy
- * @property {string} askedAt
- * @property {string} question
- * @property {string} [answer]
- * @property {string} [answeredAt]
- * @property {'private' | 'published'} visibility
+ * @typedef {{
+ *   readonly id: string;
+ *   readonly rfqId: string;
+ *   readonly askedBy: string;
+ *   readonly askedAt: string;
+ *   readonly question: string;
+ *   readonly answer?: string;
+ *   readonly answeredAt?: string;
+ *   readonly visibility: 'private' | 'published';
+ * }} RfqClarification
  */
 
 // ── Pure helpers ────────────────────────────────────────────────────────────

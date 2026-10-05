@@ -15,13 +15,16 @@
 /** @import { CycleCount, IsoDate, MaterialVolume, StockSnapshot, Warehouse, WarehouseKind } from './types' */
 
 /**
- * @typedef {object} UtilisationPoint
- * @property {string} warehouseId
- * @property {WarehouseKind} kind
- * @property {IsoDate} date
- * @property {number} pallets
- * @property {number} capacityPallets
- * @property {number} utilisation -  pallets ÷ capacity (1.21 = 121%).
+ * `utilisation`:  pallets ÷ capacity (1.21 = 121%).
+ *
+ * @typedef {{
+ *   readonly warehouseId: string;
+ *   readonly kind: WarehouseKind;
+ *   readonly date: IsoDate;
+ *   readonly pallets: number;
+ *   readonly capacityPallets: number;
+ *   readonly utilisation: number;
+ * }} UtilisationPoint
  */
 
 /**
@@ -68,12 +71,16 @@ export function warehouseUtilisation(stock, volumes, warehouses) {
 export const DEFAULT_STOCK_ACCURACY_TOLERANCE = 0.02;
 
 /**
- * @typedef {object} StockAccuracy
- * @property {string} materialCode
- * @property {string} warehouseId
- * @property {IsoDate} countDate
- * @property {number | null} gap -  |counted − system| ÷ system; null when system stock is zero.
- * @property {boolean} flagged -  Low-confidence: recommendations wait for the planner (BR-03).
+ * `gap`:  |counted − system| ÷ system; null when system stock is zero.
+ * `flagged`:  Low-confidence: recommendations wait for the planner (BR-03).
+ *
+ * @typedef {{
+ *   readonly materialCode: string;
+ *   readonly warehouseId: string;
+ *   readonly countDate: IsoDate;
+ *   readonly gap: number | null;
+ *   readonly flagged: boolean;
+ * }} StockAccuracy
  */
 
 /**

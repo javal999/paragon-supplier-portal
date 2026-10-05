@@ -58,10 +58,11 @@
  * (SIMULATED for all seed data); `planState` is the SEPARATE C6 axis.
  */
 /**
- * @typedef {object} Provenance
- * @property {ProvenanceSource} source
- * @property {Tier} liveness
- * @property {PlanState} planState
+ * @typedef {{
+ *   readonly source: ProvenanceSource;
+ *   readonly liveness: Tier;
+ *   readonly planState: PlanState;
+ * }} Provenance
  */
 
 /**
@@ -163,88 +164,41 @@
 /** @typedef {'REQUIRED' | 'NOT_REQUIRED' | 'UNDETERMINED'} HalalApplicability */
 
 /**
- * @typedef {object} MaterialMasterEntry
- * @property {string} materialCode The S/4 material code.
+ * `materialCode`: The S/4 material code.  ⚠️ CORRECTED (CP-2 · B1, SEAT3-FIND). This comment previously read "the shared join key (C7 GG-4)". Ratified C8 §4.1 says materialCode is NOT YET a join key between the platforms — the two sides do not provably agree on a code space (MASTER-STRADDLE-01: this master names five codes; the document lane names ~30). That made this SEAM-DOC-DRIFT-01 running in REVERSE — CODE-TRUTH OVERSTATING the contract — on the exact field CP-2 freezes. Corrected here BEFORE the harvest script runs, so the harvest cannot propagate the overstatement into the contract.  What it IS today: the master's own primary key, and the identity CP-2 keys on (Seat 3: identity on SPECIFICATION, S/4 MATNR semantics). It is OPAQUE — no prefix stability is promised, and prefix-derived semantics are retired as a class. Becoming a cross-platform join key is a C8 deliverable, not a fact.
+ * `materialGroup`:  The RM/PM-taxonomy material group (MG-xx).
+ * `canonicalUom`:  The one canonical unit; every qty field for this material must match it.
+ * `bpomApplicable`: BPOM lot-check applicability. **REQUIRED on every row** — an entry that can omit it is an entry whose silence has to be interpreted, and the whole point of `'UNDETERMINED'` is that an absence of determination is WRITTEN DOWN rather than inferred from a missing key.  ⚠️ **ALL 35 SEEDED VALUES ARE PROVISIONAL** — strategist-ruled on best practice at 2B-4a, PENDING TEAM RATIFICATION, and derived from the material's declared GROUP, never from its code. `D-COMP-BPOM` remains the open escalation; this field is the shape its answer lands in, not the answer. See `sdc/bpom.js`.  ⚠️ **WIRED AT 2B-4b, AND THIS FIELD IS NOW A REGULATORY GATE.** It used to read AUTHORED, NOT WIRED: `inferBpom` was what the receiving surface ran, and it could not be retired until every code the GR wizard can be fed was master-resolvable. It is, and it was. The GR wizard reads this field through `bpomOf` and REFUSES a line it cannot answer for.  ⚠️ So editing a row here now moves what an inspector is asked to check. `'UNDETERMINED' → 'NOT_APPLICABLE'` is not a tidy-up: it turns a refusal into a silent pass, which is the precise defect this field replaced.
+ * `halalApplicable`: Halal-check applicability. **REQUIRED on every row**, for the reason `bpomApplicable` states: an entry that can omit it is an entry whose silence has to be interpreted, and the whole point of `'UNDETERMINED'` is that an absence of determination is WRITTEN DOWN rather than inferred from a missing key.  ⚠️ **ALL 42 SEEDED VALUES ARE PROVISIONAL** — strategist-ruled on best practice at H1, **PENDING COMPLIANCE RATIFICATION**, and derived from the material's declared GROUP, never from its label and never from its code. `D-COMP-HALAL-1` is the open decision; this field is the shape its answer lands in, not the answer. See `sdc/halal.js` for the rule and its disposal condition.  ⚠️ **AUTHORED, NOT WIRED (H1).** Nothing reads this field. The receiving surface still decides the halal question by parsing prose (`inferHalal`, `GRInspectionWizard.jsx`), which is untouched — retiring it is H2, and the certificate-verification leg is H4, gated on `D-COMP-HALAL-4`. Editing a row here moves NOTHING today; it will move what an inspector is asked to check the moment H2 lands.
+ * `mrpController`: ── Material A2 (MR-5, MR-6, MR-8) · optional, so no existing entry changes ── SAP-copied fields are fixture data labelled simulated (`materialMasterSap` capability) until the MDM feed runs. Hub-mastered fields are resolved through `materialEntry` from `materialOverlayStore` (plan AD-4).  SAP MRP controller code (MARC-DISPO), one per material until plants are  modelled. SAP-copied (MR-5 BR-01, BR-05).
+ * `minRemainingShelfLifeMonths`:  SAP minimum remaining shelf life, in months. Unset means the hub setting  `shelfLife.defaultMonths` applies. SAP-copied (MR-6 BR-06).
+ * `shelfLifeRelevant`:  Whether ASN expiry and the shelf-life rule apply. Hub-mastered; the  resolver fills the default (MR-6 BR-07, MAT-D6).
+ * `planningGroupId`:  The planning group the material belongs to. Hub-mastered; the resolver  fills the default group of its `materialGroup` (MR-8 BR-01, BR-02).
  *
- *   ⚠️ CORRECTED (CP-2 · B1, SEAT3-FIND). This comment previously read "the
- *   shared join key (C7 GG-4)". Ratified C8 §4.1 says materialCode is NOT YET a
- *   join key between the platforms — the two sides do not provably agree on a
- *   code space (MASTER-STRADDLE-01: this master names five codes; the document
- *   lane names ~30). That made this SEAM-DOC-DRIFT-01 running in REVERSE —
- *   CODE-TRUTH OVERSTATING the contract — on the exact field CP-2 freezes.
- *   Corrected here BEFORE the harvest script runs, so the harvest cannot
- *   propagate the overstatement into the contract.
- *
- *   What it IS today: the master's own primary key, and the identity CP-2 keys
- *   on (Seat 3: identity on SPECIFICATION, S/4 MATNR semantics). It is OPAQUE —
- *   no prefix stability is promised, and prefix-derived semantics are retired as
- *   a class. Becoming a cross-platform join key is a C8 deliverable, not a fact.
- * @property {string} label
- * @property {MaterialType} materialType
- * @property {string} materialGroup -  The RM/PM-taxonomy material group (MG-xx).
- * @property {Uom} canonicalUom -  The one canonical unit; every qty field for this material must match it.
- * @property {BpomApplicability} bpomApplicable BPOM lot-check applicability. **REQUIRED on every row** — an entry that can
- *   omit it is an entry whose silence has to be interpreted, and the whole
- *   point of `'UNDETERMINED'` is that an absence of determination is WRITTEN
- *   DOWN rather than inferred from a missing key.
- *
- *   ⚠️ **ALL 35 SEEDED VALUES ARE PROVISIONAL** — strategist-ruled on best
- *   practice at 2B-4a, PENDING TEAM RATIFICATION, and derived from the
- *   material's declared GROUP, never from its code. `D-COMP-BPOM` remains the
- *   open escalation; this field is the shape its answer lands in, not the
- *   answer. See `sdc/bpom.js`.
- *
- *   ⚠️ **WIRED AT 2B-4b, AND THIS FIELD IS NOW A REGULATORY GATE.** It used to
- *   read AUTHORED, NOT WIRED: `inferBpom` was what the receiving surface ran,
- *   and it could not be retired until every code the GR wizard can be fed was
- *   master-resolvable. It is, and it was. The GR wizard reads this field
- *   through `bpomOf` and REFUSES a line it cannot answer for.
- *
- *   ⚠️ So editing a row here now moves what an inspector is asked to check.
- *   `'UNDETERMINED' → 'NOT_APPLICABLE'` is not a tidy-up: it turns a refusal
- *   into a silent pass, which is the precise defect this field replaced.
- * @property {HalalApplicability} halalApplicable Halal-check applicability. **REQUIRED on every row**, for the reason
- *   `bpomApplicable` states: an entry that can omit it is an entry whose
- *   silence has to be interpreted, and the whole point of `'UNDETERMINED'` is
- *   that an absence of determination is WRITTEN DOWN rather than inferred from
- *   a missing key.
- *
- *   ⚠️ **ALL 42 SEEDED VALUES ARE PROVISIONAL** — strategist-ruled on best
- *   practice at H1, **PENDING COMPLIANCE RATIFICATION**, and derived from the
- *   material's declared GROUP, never from its label and never from its code.
- *   `D-COMP-HALAL-1` is the open decision; this field is the shape its answer
- *   lands in, not the answer. See `sdc/halal.js` for the rule and its disposal
- *   condition.
- *
- *   ⚠️ **AUTHORED, NOT WIRED (H1).** Nothing reads this field. The receiving
- *   surface still decides the halal question by parsing prose
- *   (`inferHalal`, `GRInspectionWizard.jsx`), which is untouched — retiring it
- *   is H2, and the certificate-verification leg is H4, gated on
- *   `D-COMP-HALAL-4`. Editing a row here moves NOTHING today; it will move what
- *   an inspector is asked to check the moment H2 lands.
- * @property {string} [mrpController] - ── Material A2 (MR-5, MR-6, MR-8) · optional, so no existing entry changes ──
- *   SAP-copied fields are fixture data labelled simulated (`materialMasterSap`
- *   capability) until the MDM feed runs. Hub-mastered fields are resolved
- *   through `materialEntry` from `materialOverlayStore` (plan AD-4).
- *    SAP MRP controller code (MARC-DISPO), one per material until plants are
- *    modelled. SAP-copied (MR-5 BR-01, BR-05).
- * @property {number} [minRemainingShelfLifeMonths] -  SAP minimum remaining shelf life, in months. Unset means the hub setting
- *    `shelfLife.defaultMonths` applies. SAP-copied (MR-6 BR-06).
- * @property {boolean} [shelfLifeRelevant] -  Whether ASN expiry and the shelf-life rule apply. Hub-mastered; the
- *    resolver fills the default (MR-6 BR-07, MAT-D6).
- * @property {string} [planningGroupId] -  The planning group the material belongs to. Hub-mastered; the resolver
- *    fills the default group of its `materialGroup` (MR-8 BR-01, BR-02).
+ * @typedef {{
+ *   readonly materialCode: string;
+ *   readonly label: string;
+ *   readonly materialType: MaterialType;
+ *   readonly materialGroup: string;
+ *   readonly canonicalUom: Uom;
+ *   readonly bpomApplicable: BpomApplicability;
+ *   readonly halalApplicable: HalalApplicability;
+ *   readonly mrpController?: string;
+ *   readonly minRemainingShelfLifeMonths?: number;
+ *   readonly shelfLifeRelevant?: boolean;
+ *   readonly planningGroupId?: string;
+ * }} MaterialMasterEntry
  */
 
 /** A hub-mastered overlay row for one material (plan AD-4). Append-only: a
  *  change is a new row, and the latest row that sets a field wins. */
 /**
- * @typedef {object} MaterialOverlayRow
- * @property {string} materialCode
- * @property {boolean} [shelfLifeRelevant]
- * @property {string} [planningGroupId]
- * @property {string} setAt
- * @property {string} setBy
+ * @typedef {{
+ *   readonly materialCode: string;
+ *   readonly shelfLifeRelevant?: boolean;
+ *   readonly planningGroupId?: string;
+ *   readonly setAt: string;
+ *   readonly setBy: string;
+ * }} MaterialOverlayRow
  */
 
 /** The material master, keyed by S/4 material code. */
@@ -267,11 +221,15 @@
  * it. `approvedBy`/`approvedAt` are REQUIRED for firm-period lines (invariant #3).
  */
 /**
- * @typedef {object} Allocation
- * @property {number} materialPeriodTotal -  The SOMO-committed total this line was split from.
- * @property {AllocationBasis} basis
- * @property {string} [approvedBy] -  Firm-period splits require the human (role) who approved the fan-out.
- * @property {string} [approvedAt]
+ * `materialPeriodTotal`:  The SOMO-committed total this line was split from.
+ * `approvedBy`:  Firm-period splits require the human (role) who approved the fan-out.
+ *
+ * @typedef {{
+ *   readonly materialPeriodTotal: number;
+ *   readonly basis: AllocationBasis;
+ *   readonly approvedBy?: string;
+ *   readonly approvedAt?: string;
+ * }} Allocation
  */
 
 /**
@@ -280,17 +238,22 @@
  * '2026-08'), NOT a resolved date (C8 GG-3′: bucket-native on this seam).
  */
 /**
- * @typedef {object} ForecastLine
- * @property {string} materialCode
- * @property {string} supplierId
- * @property {string} periodBucket
- * @property {number} forecastQty
- * @property {Uom} uom -  Keys off MaterialMaster.canonicalUom (invariant #2).
- * @property {CommitmentClass} commitmentClass
- * @property {Allocation} allocation
- * @property {string} [segment] -  SOMO read-only planning annotations (C7 GG-1/GG-2 vocabulary).
- * @property {string} [suggestedSource]
- * @property {Provenance} provenance -  source = SOMO; SIMULATED × PLANNED for seed publications.
+ * `uom`:  Keys off MaterialMaster.canonicalUom (invariant #2).
+ * `segment`:  SOMO read-only planning annotations (C7 GG-1/GG-2 vocabulary).
+ * `provenance`:  source = SOMO; SIMULATED × PLANNED for seed publications.
+ *
+ * @typedef {{
+ *   readonly materialCode: string;
+ *   readonly supplierId: string;
+ *   readonly periodBucket: string;
+ *   readonly forecastQty: number;
+ *   readonly uom: Uom;
+ *   readonly commitmentClass: CommitmentClass;
+ *   readonly allocation: Allocation;
+ *   readonly segment?: string;
+ *   readonly suggestedSource?: string;
+ *   readonly provenance: Provenance;
+ * }} ForecastLine
  */
 
 /**
@@ -305,19 +268,24 @@
 /** @typedef {'packaging' | 'rawMaterial'} ForecastStream */
 
 /**
- * @typedef {object} ForecastPublication
- * @property {string} publicationId
- * @property {string} planVersion -  SOMO's plan version this snapshot came from (bound onto the response).
- * @property {string} publishedAt
- * @property {readonly string[]} horizon -  The rolling horizon of period buckets (C8 GG-8: 6-bucket window; trimmable).
- *    A bucket is a month (`YYYY-MM`) or a week named by its Monday (`YYYY-MM-DD`).
- * @property {readonly ForecastLine[]} lines
- * @property {Provenance} provenance
- * @property {ForecastStream} [stream] REQ-E06-01 — the hub's forecast stream and its version number. Absent on
- *   the SDC-0 seed publications, which predate the streams.
- * @property {number} [version]
- * @property {boolean} [emergency] -  BR-02 edge case — an emergency re-publication outside the cadence.
- * @property {string} [changeNote] -  REQ-E06-03 BR-05 — the planner's note when the version moved demand between suppliers.
+ * `planVersion`:  SOMO's plan version this snapshot came from (bound onto the response).
+ * `horizon`:  The rolling horizon of period buckets (C8 GG-8: 6-bucket window; trimmable).  A bucket is a month (`YYYY-MM`) or a week named by its Monday (`YYYY-MM-DD`).
+ * `stream`: REQ-E06-01 — the hub's forecast stream and its version number. Absent on the SDC-0 seed publications, which predate the streams.
+ * `emergency`:  BR-02 edge case — an emergency re-publication outside the cadence.
+ * `changeNote`:  REQ-E06-03 BR-05 — the planner's note when the version moved demand between suppliers.
+ *
+ * @typedef {{
+ *   readonly publicationId: string;
+ *   readonly planVersion: string;
+ *   readonly publishedAt: string;
+ *   readonly horizon: readonly string[];
+ *   readonly lines: readonly ForecastLine[];
+ *   readonly provenance: Provenance;
+ *   readonly stream?: ForecastStream;
+ *   readonly version?: number;
+ *   readonly emergency?: boolean;
+ *   readonly changeNote?: string;
+ * }} ForecastPublication
  */
 
 // ─── Object 1 — RequirementResponse (the spine, design §2.1) ──────────────────
@@ -332,12 +300,16 @@
 
 /** The confirmation against a published forecast line. */
 /**
- * @typedef {object} ForecastConfirmation
- * @property {number} confirmedQty
- * @property {Uom} uom -  Keys off MaterialMaster.canonicalUom (invariant #2).
- * @property {string} [committedDate]
- * @property {string} [capacityConstraint]
- * @property {number} [upsideQty] -  REQ-E06-02 BR-08 — an optional upside quantity the supplier could add above forecast.
+ * `uom`:  Keys off MaterialMaster.canonicalUom (invariant #2).
+ * `upsideQty`:  REQ-E06-02 BR-08 — an optional upside quantity the supplier could add above forecast.
+ *
+ * @typedef {{
+ *   readonly confirmedQty: number;
+ *   readonly uom: Uom;
+ *   readonly committedDate?: string;
+ *   readonly capacityConstraint?: string;
+ *   readonly upsideQty?: number;
+ * }} ForecastConfirmation
  */
 
 /**
@@ -350,16 +322,18 @@
  * `InventoryDeclaration` (SDC-3).
  */
 /**
- * @typedef {object} Acknowledgment
- * @property {string} [note]
+ * @typedef {{
+ *   readonly note?: string;
+ * }} Acknowledgment
  */
 
 /** Child of the confirmation — explains a deviation from the forecast. */
 /**
- * @typedef {object} RootCause
- * @property {string} level1
- * @property {string} [level2]
- * @property {string} [note]
+ * @typedef {{
+ *   readonly level1: string;
+ *   readonly level2?: string;
+ *   readonly note?: string;
+ * }} RootCause
  */
 
 /**
@@ -400,13 +374,15 @@
  * back. Booked: `RR-DISPUTE-HAS-NO-HUMAN-01`, closes with F1 OIDC.
  */
 /**
- * @typedef {object} DisputeEntry
- * @property {'raised' | 'resolved'} kind -  `raised` opens the dispute; `resolved` closes it. Both are buyer acts.
- * @property {string} text -  The authored text. Required by the transition and proven non-blank by
- *    `rr_dispute_text_authored` — `requiredFields` proves PRESENCE only.
- * @property {string} at -  Store-minted from the shared SDC clock at the moment of the act (the
- *    `pinnedAt` discipline) — never payload-supplied, or a caller could backdate
- *    its own dispute against a response deadline.
+ * `kind`:  `raised` opens the dispute; `resolved` closes it. Both are buyer acts.
+ * `text`:  The authored text. Required by the transition and proven non-blank by  `rr_dispute_text_authored` — `requiredFields` proves PRESENCE only.
+ * `at`:  Store-minted from the shared SDC clock at the moment of the act (the  `pinnedAt` discipline) — never payload-supplied, or a caller could backdate  its own dispute against a response deadline.
+ *
+ * @typedef {{
+ *   readonly kind: 'raised' | 'resolved';
+ *   readonly text: string;
+ *   readonly at: string;
+ * }} DisputeEntry
  */
 
 /**
@@ -425,33 +401,29 @@
  * acknowledgment for a commitment because it carries no confirmedQty at all.
  */
 /**
- * @typedef {object} RequirementResponse
- * @property {string} id
- * @property {string} supplierId
- * @property {string} materialCode
- * @property {string} periodBucket
- * @property {string} publicationId -  Binds to the exact C8 publication + plan version answered.
- * @property {string} planVersion
- * @property {string} [submittedAt] -  Absent while Draft; set on submit.
- * @property {number} submissionVersion
- * @property {RequirementResponseStatus} status
- * @property {ForecastConfirmation} [forecastConfirmation] -  The commitment (firm/semi-firm lines). XOR with `acknowledgment`.
- * @property {Acknowledgment} [acknowledgment] -  The visibility response (visibility-only lines). XOR with `forecastConfirmation`.
- * @property {RootCause} [rootCause]
- * @property {readonly DisputeEntry[]} [disputeResponse] THE BUYER'S ANSWER — append-only, absent until the first dispute is raised.
- *   The LAST entry is the current standing; the whole array is its history.
+ * `publicationId`:  Binds to the exact C8 publication + plan version answered.
+ * `submittedAt`:  Absent while Draft; set on submit.
+ * `forecastConfirmation`:  The commitment (firm/semi-firm lines). XOR with `acknowledgment`.
+ * `acknowledgment`:  The visibility response (visibility-only lines). XOR with `forecastConfirmation`.
+ * `disputeResponse`: THE BUYER'S ANSWER — append-only, absent until the first dispute is raised. The LAST entry is the current standing; the whole array is its history.  ⚠️ **THIS IS THE ANSWER, NOT WHAT THE ACTOR TYPED TO PRODUCE IT** (operator ruling, and it is why the field is named for the RESPONSE rather than for the input). The draft field a planner fills lives in `submitModel.js` (`DisputeRaiseDraft` / `DisputeResolutionDraft`) and is transient, per-act, and theirs; this is the stored record and belongs to the store. The lane already keeps the same separation one row up — `rootCause` is what the SUPPLIER wrote, `forecastConfirmation` is what got stored from it.  Collapsing the two is how a stored record starts being edited like a form field. Read it, never rewrite it.
+ * `provenance`:  source = SUPPLIER; LIVE × committed once submitted (SIMULATED in seed).
  *
- *   ⚠️ **THIS IS THE ANSWER, NOT WHAT THE ACTOR TYPED TO PRODUCE IT** (operator
- *   ruling, and it is why the field is named for the RESPONSE rather than for
- *   the input). The draft field a planner fills lives in `submitModel.js`
- *   (`DisputeRaiseDraft` / `DisputeResolutionDraft`) and is transient, per-act,
- *   and theirs; this is the stored record and belongs to the store. The lane
- *   already keeps the same separation one row up — `rootCause` is what the
- *   SUPPLIER wrote, `forecastConfirmation` is what got stored from it.
- *
- *   Collapsing the two is how a stored record starts being edited like a form
- *   field. Read it, never rewrite it.
- * @property {Provenance} provenance -  source = SUPPLIER; LIVE × committed once submitted (SIMULATED in seed).
+ * @typedef {{
+ *   readonly id: string;
+ *   readonly supplierId: string;
+ *   readonly materialCode: string;
+ *   readonly periodBucket: string;
+ *   readonly publicationId: string;
+ *   readonly planVersion: string;
+ *   readonly submittedAt?: string;
+ *   readonly submissionVersion: number;
+ *   readonly status: RequirementResponseStatus;
+ *   readonly forecastConfirmation?: ForecastConfirmation;
+ *   readonly acknowledgment?: Acknowledgment;
+ *   readonly rootCause?: RootCause;
+ *   readonly disputeResponse?: readonly DisputeEntry[];
+ *   readonly provenance: Provenance;
+ * }} RequirementResponse
  */
 
 // ─── Object 2 — InventoryDeclaration (SOH state, design §2.2) ──────────────────
@@ -466,12 +438,16 @@
 
 /** A single stock batch. `batches` is PLURAL (v1's singular was a spec bug). */
 /**
- * @typedef {object} InventoryBatch
- * @property {string} batchNumber
- * @property {number} qty
- * @property {Uom} uom -  Keys off MaterialMaster.canonicalUom (invariant #2).
- * @property {string} [manufacturingDate] -  Optional (REQ-E08-02 BR-06, BL-60): not after `expiryDate`, not in the future.
- * @property {string} [expiryDate]
+ * `uom`:  Keys off MaterialMaster.canonicalUom (invariant #2).
+ * `manufacturingDate`:  Optional (REQ-E08-02 BR-06, BL-60): not after `expiryDate`, not in the future.
+ *
+ * @typedef {{
+ *   readonly batchNumber: string;
+ *   readonly qty: number;
+ *   readonly uom: Uom;
+ *   readonly manufacturingDate?: string;
+ *   readonly expiryDate?: string;
+ * }} InventoryBatch
  */
 
 /**
@@ -486,23 +462,28 @@
  * bridgeability — never assume no-expiry-risk.
  */
 /**
- * @typedef {object} InventoryDeclaration
- * @property {string} id
- * @property {string} supplierId
- * @property {string} materialCode
- * @property {string} declaredAt
- * @property {number} totalQty -  The SOH floor. Keys off MaterialMaster.canonicalUom (invariant #2).
- * @property {Uom} uom
- * @property {readonly InventoryBatch[]} [batches] -  OPTIONAL batch-grain detail (portal / magic-link grid; never required by
- *    the chat channel). When present, Σ qty must equal `totalQty`.
- * @property {number} [supplierRop] -  REQ-E08-02 BR-06 — the supplier's own reorder point, when it gave one.
- * @property {number} [inProductionQty] -  REQ-E08-01 BR-06 — quantity in production at the supplier for PTI.
- * @property {string} [productionCompletionDate] -  Expected production completion date (`YYYY-MM-DD`) for `inProductionQty`.
- * @property {StockChannel} [channel] REQ-E08-02 BR-01 / BR-08 — how the figures reached the hub. Set by the
- *   target from the verb's scope, never trusted from a PTI caller: a PTI
- *   recording is always `pti` ("Entered by PTI"), an API pull is `api`. Absent
- *   on the SDC-0 seed rows, which predate the channel.
- * @property {Provenance} provenance -  source = SUPPLIER.
+ * `totalQty`:  The SOH floor. Keys off MaterialMaster.canonicalUom (invariant #2).
+ * `batches`:  OPTIONAL batch-grain detail (portal / magic-link grid; never required by  the chat channel). When present, Σ qty must equal `totalQty`.
+ * `supplierRop`:  REQ-E08-02 BR-06 — the supplier's own reorder point, when it gave one.
+ * `inProductionQty`:  REQ-E08-01 BR-06 — quantity in production at the supplier for PTI.
+ * `productionCompletionDate`:  Expected production completion date (`YYYY-MM-DD`) for `inProductionQty`.
+ * `channel`: REQ-E08-02 BR-01 / BR-08 — how the figures reached the hub. Set by the target from the verb's scope, never trusted from a PTI caller: a PTI recording is always `pti` ("Entered by PTI"), an API pull is `api`. Absent on the SDC-0 seed rows, which predate the channel.
+ * `provenance`:  source = SUPPLIER.
+ *
+ * @typedef {{
+ *   readonly id: string;
+ *   readonly supplierId: string;
+ *   readonly materialCode: string;
+ *   readonly declaredAt: string;
+ *   readonly totalQty: number;
+ *   readonly uom: Uom;
+ *   readonly batches?: readonly InventoryBatch[];
+ *   readonly supplierRop?: number;
+ *   readonly inProductionQty?: number;
+ *   readonly productionCompletionDate?: string;
+ *   readonly channel?: StockChannel;
+ *   readonly provenance: Provenance;
+ * }} InventoryDeclaration
  */
 
 /** REQ-E08-02 — the submission channels: spreadsheet template (the business
@@ -530,19 +511,26 @@
 /** @typedef {'Booked' | 'Shipped' | 'Arrived' | 'Cancelled'} ShipmentLifecycle */
 
 /**
- * @typedef {object} IncomingShipment
- * @property {string} id
- * @property {string} supplierId
- * @property {string} materialCode
- * @property {ShipmentDirection} direction
- * @property {ShipmentLifecycle} lifecycle
- * @property {number} qty
- * @property {Uom} uom -  Keys off MaterialMaster.canonicalUom (invariant #2).
- * @property {string} [etd]
- * @property {string} [eta] -  A FIELD, not a state — revisions are audited field updates (addendum §2).
- * @property {string} [awb] -  AWB is a TMS reference — link, don't track.
- * @property {string} [asnRef] -  For direction='to-paragon': the ASN this leg converges on (asnNumber).
- * @property {Provenance} provenance -  source = SUPPLIER.
+ * `uom`:  Keys off MaterialMaster.canonicalUom (invariant #2).
+ * `eta`:  A FIELD, not a state — revisions are audited field updates (addendum §2).
+ * `awb`:  AWB is a TMS reference — link, don't track.
+ * `asnRef`:  For direction='to-paragon': the ASN this leg converges on (asnNumber).
+ * `provenance`:  source = SUPPLIER.
+ *
+ * @typedef {{
+ *   readonly id: string;
+ *   readonly supplierId: string;
+ *   readonly materialCode: string;
+ *   readonly direction: ShipmentDirection;
+ *   readonly lifecycle: ShipmentLifecycle;
+ *   readonly qty: number;
+ *   readonly uom: Uom;
+ *   readonly etd?: string;
+ *   readonly eta?: string;
+ *   readonly awb?: string;
+ *   readonly asnRef?: string;
+ *   readonly provenance: Provenance;
+ * }} IncomingShipment
  */
 
 // ─── The submission session — the ENVELOPE (design §2.4, addendum §5) ──────────
@@ -555,9 +543,10 @@
  */
 
 /**
- * @typedef {object} SubmissionObjectRef
- * @property {SdcObjectKind} kind
- * @property {string} objectId
+ * @typedef {{
+ *   readonly kind: SdcObjectKind;
+ *   readonly objectId: string;
+ * }} SubmissionObjectRef
  */
 
 /**
@@ -571,12 +560,15 @@
  * re-coupling the objects the three-way split decoupled.
  */
 /**
- * @typedef {object} SubmissionSession
- * @property {string} sessionId
- * @property {string} supplierId
- * @property {string} openedAt
- * @property {string} auditCorrelationId -  DR-10 correlation shared across the per-object commands (audit only).
- * @property {readonly SubmissionObjectRef[]} attempted
+ * `auditCorrelationId`:  DR-10 correlation shared across the per-object commands (audit only).
+ *
+ * @typedef {{
+ *   readonly sessionId: string;
+ *   readonly supplierId: string;
+ *   readonly openedAt: string;
+ *   readonly auditCorrelationId: string;
+ *   readonly attempted: readonly SubmissionObjectRef[];
+ * }} SubmissionSession
  */
 
 // ─── The distributor-principal model (design §7) ──────────────────────────────
@@ -585,9 +577,10 @@
 
 /** For a distributor: who backs them, and the principal's lead time. */
 /**
- * @typedef {object} Principal
- * @property {string} principalId
- * @property {number} principalLeadTimeDays
+ * @typedef {{
+ *   readonly principalId: string;
+ *   readonly principalLeadTimeDays: number;
+ * }} Principal
  */
 
 /**
@@ -597,11 +590,12 @@
  * manufacturer carries none (integrity: distributor-principal check).
  */
 /**
- * @typedef {object} SupplierMaterialRelationship
- * @property {string} supplierId
- * @property {string} materialCode
- * @property {SupplierType} supplierType
- * @property {readonly Principal[]} [principals]
+ * @typedef {{
+ *   readonly supplierId: string;
+ *   readonly materialCode: string;
+ *   readonly supplierType: SupplierType;
+ *   readonly principals?: readonly Principal[];
+ * }} SupplierMaterialRelationship
  */
 
 // ─── CapacityProfile — DECLARED, BUILD-DEFERRED (addendum §4, lean (a)) ────────
@@ -610,22 +604,24 @@
 // same SubmissionSession. The type exists now; the build defers.
 
 /**
- * @typedef {object} CapacityCalendarEntry
- * @property {string} periodBucket
- * @property {number} availableQty
- * @property {Uom} uom
+ * @typedef {{
+ *   readonly periodBucket: string;
+ *   readonly availableQty: number;
+ *   readonly uom: Uom;
+ * }} CapacityCalendarEntry
  */
 
 /**
- * @typedef {object} CapacityProfile
- * @property {string} supplierId
- * @property {string} materialCode
- * @property {number} moq
- * @property {Uom} uom
- * @property {number} leadTimeDays
- * @property {readonly CapacityCalendarEntry[]} capacityCalendar
- * @property {number} [wip]
- * @property {readonly string[]} [constraints]
+ * @typedef {{
+ *   readonly supplierId: string;
+ *   readonly materialCode: string;
+ *   readonly moq: number;
+ *   readonly uom: Uom;
+ *   readonly leadTimeDays: number;
+ *   readonly capacityCalendar: readonly CapacityCalendarEntry[];
+ *   readonly wip?: number;
+ *   readonly constraints?: readonly string[];
+ * }} CapacityProfile
  */
 
 // Types only: `export {}` keeps this a module so its typedefs can be imported.

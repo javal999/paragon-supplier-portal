@@ -75,19 +75,21 @@ export const DELIVERY_GRACE_DAYS = 3;
  * short or over delivery is never hidden.
  */
 /**
- * @typedef {object} ReleaseFulfillmentView
- * @property {number} releaseSeq
- * @property {ReleaseFulfillment} fulfillment
- * @property {string} [matchedRef] -  The drawing-down shipment's SAP identity (`asnRef`) if present, else its
- *    portal id (honesty guard 6 — carry SAP's number, never mint one). Absent ⇒
- *    no match.
- * @property {boolean} inferred -  true = proximity-inferred (a flagged proposal); false = explicit binding or
- *    no match. Never silently authoritative when true.
- * @property {number} [actualQty] -  The matched shipment's qty (the observed drawdown amount). Absent ⇒ no match.
- * @property {number} [qtyVariance] -  shipQty − plannedQty. ALWAYS present on a match — the delivery variance is
- *    visible even when it doesn't gate the match.
- * @property {boolean} [ambiguous] -  true when >1 candidate sat in the window: the pick was deterministic, but the
- *    ambiguity is surfaced rather than silently resolved.
+ * `matchedRef`:  The drawing-down shipment's SAP identity (`asnRef`) if present, else its  portal id (honesty guard 6 — carry SAP's number, never mint one). Absent ⇒  no match.
+ * `inferred`:  true = proximity-inferred (a flagged proposal); false = explicit binding or  no match. Never silently authoritative when true.
+ * `actualQty`:  The matched shipment's qty (the observed drawdown amount). Absent ⇒ no match.
+ * `qtyVariance`:  shipQty − plannedQty. ALWAYS present on a match — the delivery variance is  visible even when it doesn't gate the match.
+ * `ambiguous`:  true when >1 candidate sat in the window: the pick was deterministic, but the  ambiguity is surfaced rather than silently resolved.
+ *
+ * @typedef {{
+ *   readonly releaseSeq: number;
+ *   readonly fulfillment: ReleaseFulfillment;
+ *   readonly matchedRef?: string;
+ *   readonly inferred: boolean;
+ *   readonly actualQty?: number;
+ *   readonly qtyVariance?: number;
+ *   readonly ambiguous?: boolean;
+ * }} ReleaseFulfillmentView
  */
 
 // ─── Pure helpers ─────────────────────────────────────────────────────────────

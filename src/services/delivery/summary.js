@@ -32,37 +32,44 @@
 /** The tally of a row's line states — delivery exceptions (from the derived
  *  fulfillment of RELEASED lines) plus the count of still-draft lines. */
 /**
- * @typedef {object} AgreementItemCounts
- * @property {number} fulfilled
- * @property {number} late
- * @property {number} missed
- * @property {number} pending
- * @property {number} draft
+ * @typedef {{
+ *   readonly fulfilled: number;
+ *   readonly late: number;
+ *   readonly missed: number;
+ *   readonly pending: number;
+ *   readonly draft: number;
+ * }} AgreementItemCounts
  */
 
 /** The next unmet obligation, labelled by kind: a still-draft line is a RELEASE
  *  due; a released-but-undelivered ('pending') line is a DELIVERY due. */
 /**
- * @typedef {object} NextDue
- * @property {string} date
- * @property {'release' | 'deliver'} kind
+ * @typedef {{
+ *   readonly date: string;
+ *   readonly kind: 'release' | 'deliver';
+ * }} NextDue
  */
 
 /** One dense roll-up row = one agreement-item, summarised for the scan surface. */
 /**
- * @typedef {object} AgreementItemSummary
- * @property {string} agreementId
- * @property {number} itemSeq
- * @property {string} supplierId
- * @property {string | null} supplierName
- * @property {string} contractId
- * @property {string} materialCode
- * @property {ReleaseType} releaseType
- * @property {number} releasedPct -  Released ÷ agreed, 0–100 (the mini drawdown bar).
- * @property {NextDue | null} nextDue -  The soonest UPCOMING obligation (≥ now), or null when nothing is upcoming.
- * @property {AgreementItemCounts} counts
- * @property {AgreementItemBucket} bucket
- * @property {number} severity -  Worst-first sort key (higher = more urgent). Derived, never stored.
+ * `releasedPct`:  Released ÷ agreed, 0–100 (the mini drawdown bar).
+ * `nextDue`:  The soonest UPCOMING obligation (≥ now), or null when nothing is upcoming.
+ * `severity`:  Worst-first sort key (higher = more urgent). Derived, never stored.
+ *
+ * @typedef {{
+ *   readonly agreementId: string;
+ *   readonly itemSeq: number;
+ *   readonly supplierId: string;
+ *   readonly supplierName: string | null;
+ *   readonly contractId: string;
+ *   readonly materialCode: string;
+ *   readonly releaseType: ReleaseType;
+ *   readonly releasedPct: number;
+ *   readonly nextDue: NextDue | null;
+ *   readonly counts: AgreementItemCounts;
+ *   readonly bucket: AgreementItemBucket;
+ *   readonly severity: number;
+ * }} AgreementItemSummary
  */
 
 /**
@@ -192,11 +199,12 @@ export function toAgreementItemRows(views, now) {
 
 /** The active roll-up filter state (the page owns it; this module is pure). */
 /**
- * @typedef {object} RowFilter
- * @property {AgreementItemBucket | 'all'} tab
- * @property {string} search
- * @property {readonly string[]} supplierIds
- * @property {readonly ReleaseType[]} releaseTypes
+ * @typedef {{
+ *   readonly tab: AgreementItemBucket | 'all';
+ *   readonly search: string;
+ *   readonly supplierIds: readonly string[];
+ *   readonly releaseTypes: readonly ReleaseType[];
+ * }} RowFilter
  */
 
 /**

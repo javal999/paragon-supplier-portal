@@ -13,9 +13,10 @@
 
 /** The appended records an award's status is derived from. */
 /**
- * @typedef {object} AwardTrail
- * @property {readonly AwardCancellation[]} cancellations
- * @property {readonly AwardSapMark[]} sapMarks
+ * @typedef {{
+ *   readonly cancellations: readonly AwardCancellation[];
+ *   readonly sapMarks: readonly AwardSapMark[];
+ * }} AwardTrail
  */
 
 /**
@@ -70,9 +71,12 @@ export const awardsInForce = (awards, trail) =>
  */
 
 /**
- * @typedef {object} AwardCancelRefusal
- * @property {AwardCancelRefusalCode} code
- * @property {string} [detail] -  The award the refusal is about, or the SAP document that blocks it.
+ * `detail`:  The award the refusal is about, or the SAP document that blocks it.
+ *
+ * @typedef {{
+ *   readonly code: AwardCancelRefusalCode;
+ *   readonly detail?: string;
+ * }} AwardCancelRefusal
  */
 
 /**

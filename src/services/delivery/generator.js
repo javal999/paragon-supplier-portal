@@ -63,15 +63,18 @@ function releaseDateAt(startMs, cadence, k) {
 }
 
 /**
- * @typedef {object} GenerateScheduleInput
- * @property {string} contractId
- * @property {string} agreementId
- * @property {number} lineSeq
- * @property {string} startDate -  ISO date/timestamp — the first release date.
- * @property {ReleaseCadence} cadence
- * @property {number} qtyPerRelease
- * @property {number} agreedTotalQty
- * @property {ReleaseType} releaseType
+ * `startDate`:  ISO date/timestamp — the first release date.
+ *
+ * @typedef {{
+ *   readonly contractId: string;
+ *   readonly agreementId: string;
+ *   readonly lineSeq: number;
+ *   readonly startDate: string;
+ *   readonly cadence: ReleaseCadence;
+ *   readonly qtyPerRelease: number;
+ *   readonly agreedTotalQty: number;
+ *   readonly releaseType: ReleaseType;
+ * }} GenerateScheduleInput
  */
 
 /**

@@ -147,63 +147,84 @@ export const BACKTEST_CANDIDATES = ['main', 'comb', 'theta', 'sba', 'croston', '
 /** @typedef {'regular' | 'slow'} SkuClass */
 
 /**
- * @typedef {object} BacktestCosts
- * @property {number} orderCostIdr -  K — rupiah per order (ENG-D6).
- * @property {number} holdingRatePerYear -  Holding cost as a fraction of value per year (ENG-D6).
+ * `orderCostIdr`:  K — rupiah per order (ENG-D6).
+ * `holdingRatePerYear`:  Holding cost as a fraction of value per year (ENG-D6).
+ *
+ * @typedef {{
+ *   readonly orderCostIdr: number;
+ *   readonly holdingRatePerYear: number;
+ * }} BacktestCosts
  */
 
 /**
- * @typedef {object} BacktestInput
- * @property {Pick< EngineDataset, 'finishedGoods' | 'sales' | 'fgPlan' | 'bom' | 'sources' | 'volumes' | 'materials' | 'materialValues' | 'sapSafetyStock' | 'warehouses' >} data
- * @property {IsoDate} asOf -  The hub's date. Only sales weeks before its Monday have happened.
- * @property {ServiceTargets} targets
- * @property {BacktestCosts} costs
- * @property {MainModel} [mainModel]
- * @property {readonly RamadanDates[]} [ramadanTable]
+ * `asOf`:  The hub's date. Only sales weeks before its Monday have happened.
+ *
+ * @typedef {{
+ *   readonly data: Pick< EngineDataset, 'finishedGoods' | 'sales' | 'fgPlan' | 'bom' | 'sources' | 'volumes' | 'materials' | 'materialValues' | 'sapSafetyStock' | 'warehouses' >;
+ *   readonly asOf: IsoDate;
+ *   readonly targets: ServiceTargets;
+ *   readonly costs: BacktestCosts;
+ *   readonly mainModel?: MainModel;
+ *   readonly ramadanTable?: readonly RamadanDates[];
+ * }} BacktestInput
  */
 
 // ── The replay of one item ──────────────────────────────────────────────────
 
 /** One replayed flow: a material, or one SKU's part of it. */
 /**
- * @typedef {object} ReplayItem
- * @property {string} materialCode
- * @property {WarehouseKind} kind
- * @property {readonly IsoDate[]} weeks -  The replay weeks (Mondays).
- * @property {readonly number[]} actual -  The actual requirement per replay week.
- * @property {number} leadTimeDays
- * @property {number} moq
- * @property {number} orderMultiple
- * @property {number} palletsPerUnit
- * @property {number} holdingPerUnitWeek
- * @property {number} target -  The ENG-D5 fill-rate target of the material's tier.
- * @property {number} fallbackSafetyStock -  SAP's safety stock (BR-05), and the stock the replay starts at.
+ * `weeks`:  The replay weeks (Mondays).
+ * `actual`:  The actual requirement per replay week.
+ * `target`:  The ENG-D5 fill-rate target of the material's tier.
+ * `fallbackSafetyStock`:  SAP's safety stock (BR-05), and the stock the replay starts at.
+ *
+ * @typedef {{
+ *   readonly materialCode: string;
+ *   readonly kind: WarehouseKind;
+ *   readonly weeks: readonly IsoDate[];
+ *   readonly actual: readonly number[];
+ *   readonly leadTimeDays: number;
+ *   readonly moq: number;
+ *   readonly orderMultiple: number;
+ *   readonly palletsPerUnit: number;
+ *   readonly holdingPerUnitWeek: number;
+ *   readonly target: number;
+ *   readonly fallbackSafetyStock: number;
+ * }} ReplayItem
  */
 
 /**
- * @typedef {object} ReplayWeek
- * @property {IsoDate} weekStart
- * @property {number} safetyStock
- * @property {'errors' | 'sap'} safetyStockSource
- * @property {number} released -  The lot released this week (arrives after the lead time).
- * @property {number} received
- * @property {number} demand
- * @property {number} served
- * @property {number} endStock
- * @property {boolean} measured -  A week a replayed order could reach (t ≥ lead).
+ * `released`:  The lot released this week (arrives after the lead time).
+ * `measured`:  A week a replayed order could reach (t ≥ lead).
+ *
+ * @typedef {{
+ *   readonly weekStart: IsoDate;
+ *   readonly safetyStock: number;
+ *   readonly safetyStockSource: 'errors' | 'sap';
+ *   readonly released: number;
+ *   readonly received: number;
+ *   readonly demand: number;
+ *   readonly served: number;
+ *   readonly endStock: number;
+ *   readonly measured: boolean;
+ * }} ReplayWeek
  */
 
 /**
- * @typedef {object} ReplayResult
- * @property {number} leadWeeks
- * @property {number} weeksWithDemand
- * @property {number} weeksFullyServed
- * @property {number} unitsNeeded
- * @property {number} unitsServed
- * @property {number} palletWeeks
- * @property {readonly number[]} pallets -  End-of-week pallets per replay week (0 before measuring starts).
- * @property {readonly (boolean | null)[]} full -  Per week: null (not measured or no demand), true (fully served), false.
- * @property {readonly ReplayWeek[]} trace
+ * `pallets`:  End-of-week pallets per replay week (0 before measuring starts).
+ * `full`:  Per week: null (not measured or no demand), true (fully served), false.
+ *
+ * @typedef {{
+ *   readonly leadWeeks: number;
+ *   readonly weeksWithDemand: number;
+ *   readonly weeksFullyServed: number;
+ *   readonly unitsNeeded: number;
+ *   readonly unitsServed: number;
+ *   readonly palletWeeks: number;
+ *   readonly pallets: readonly number[];
+ *   readonly full: readonly (boolean | null)[];
+ *   readonly trace: readonly ReplayWeek[];
+ * }} ReplayResult
  */
 
 /**
@@ -345,12 +366,18 @@ export function replayItem(item, versions, origins, orderCostIdr) {
 // ── Measures ────────────────────────────────────────────────────────────────
 
 /**
- * @typedef {object} ServiceMeasures
- * @property {number | null} fillRate -  Weeks fully served ÷ weeks with demand; null with no demand.
- * @property {number | null} orderCompleteRate -  Weeks with every material fully served ÷ weeks with any demand; null with none.
- * @property {number | null} unitFillRate -  Units served ÷ units needed; null with none needed.
- * @property {number} palletWeeks
- * @property {{ readonly lines: number; readonly fullLines: number; readonly orderWeeks: number; readonly completeWeeks: number }} counts -  The counts behind the rates, so they can be pooled.
+ * `fillRate`:  Weeks fully served ÷ weeks with demand; null with no demand.
+ * `orderCompleteRate`:  Weeks with every material fully served ÷ weeks with any demand; null with none.
+ * `unitFillRate`:  Units served ÷ units needed; null with none needed.
+ * `counts`:  The counts behind the rates, so they can be pooled.
+ *
+ * @typedef {{
+ *   readonly fillRate: number | null;
+ *   readonly orderCompleteRate: number | null;
+ *   readonly unitFillRate: number | null;
+ *   readonly palletWeeks: number;
+ *   readonly counts: { readonly lines: number; readonly fullLines: number; readonly orderWeeks: number; readonly completeWeeks: number };
+ * }} ServiceMeasures
  */
 
 /**
@@ -438,11 +465,15 @@ export function versionMasc(versions, scale) {
 /** @typedef {'floor' | 'beatsFloor' | 'mascLimit'} SelectionReason */
 
 /**
- * @typedef {object} Selection
- * @property {BacktestCandidate} chosen
- * @property {SelectionReason} reason
- * @property {readonly BacktestCandidate[]} beatsFloor -  Candidates that beat the floor (before the MASC limit).
- * @property {readonly BacktestCandidate[]} overMascLimit -  Candidates the MASC limit excluded.
+ * `beatsFloor`:  Candidates that beat the floor (before the MASC limit).
+ * `overMascLimit`:  Candidates the MASC limit excluded.
+ *
+ * @typedef {{
+ *   readonly chosen: BacktestCandidate;
+ *   readonly reason: SelectionReason;
+ *   readonly beatsFloor: readonly BacktestCandidate[];
+ *   readonly overMascLimit: readonly BacktestCandidate[];
+ * }} Selection
  */
 
 /** @param {ServiceMeasures} s */
@@ -524,34 +555,44 @@ export function versusSap(c, sap) {
 // ── The run ─────────────────────────────────────────────────────────────────
 
 /**
- * @typedef {object} BacktestOrigin
- * @property {IsoDate} weekStart
- * @property {readonly DemandEvent[]} events -  The demand events in the weeks this version was the plan in force.
- * @property {string | null} ramadan -  The Ramadan year when the version's weeks hold Ramadan.
- * @property {number} weeksInForce -  Weeks this version was in force.
+ * `events`:  The demand events in the weeks this version was the plan in force.
+ * `ramadan`:  The Ramadan year when the version's weeks hold Ramadan.
+ * `weeksInForce`:  Weeks this version was in force.
+ *
+ * @typedef {{
+ *   readonly weekStart: IsoDate;
+ *   readonly events: readonly DemandEvent[];
+ *   readonly ramadan: string | null;
+ *   readonly weeksInForce: number;
+ * }} BacktestOrigin
  */
 
 /**
- * @typedef {object} SkuBacktest
- * @property {string} skuCode
- * @property {string} name
- * @property {Brand} brand
- * @property {SkuClass} skuClass
- * @property {BacktestCandidate} floor
- * @property {readonly CandidateScore[]} scores -  Every candidate's result, the benchmark (SAP's plan) last.
- * @property {Selection} selection
- * @property {VersusSap} chosenVersusSap
- * @property {VersusSap} floorVersusSap
- * @property {readonly string[]} materials -  The materials the SKU's parts were replayed on.
+ * `scores`:  Every candidate's result, the benchmark (SAP's plan) last.
+ * `materials`:  The materials the SKU's parts were replayed on.
+ *
+ * @typedef {{
+ *   readonly skuCode: string;
+ *   readonly name: string;
+ *   readonly brand: Brand;
+ *   readonly skuClass: SkuClass;
+ *   readonly floor: BacktestCandidate;
+ *   readonly scores: readonly CandidateScore[];
+ *   readonly selection: Selection;
+ *   readonly chosenVersusSap: VersusSap;
+ *   readonly floorVersusSap: VersusSap;
+ *   readonly materials: readonly string[];
+ * }} SkuBacktest
  */
 
 /** @typedef {'oem' | 'newSku' | 'discontinued' | 'noHistory'} ExclusionReason */
 
 /**
- * @typedef {object} ExcludedFromBacktest
- * @property {string} skuCode
- * @property {string} name
- * @property {ExclusionReason} reason
+ * @typedef {{
+ *   readonly skuCode: string;
+ *   readonly name: string;
+ *   readonly reason: ExclusionReason;
+ * }} ExcludedFromBacktest
  */
 
 /** The material-level replays: every SKU on SAP's plan, on its floor, or on its chosen model. */
@@ -566,21 +607,26 @@ export const PORTFOLIO_SCENARIOS = ['sapPlan', 'floor', 'chosen'];
  */
 
 /**
- * @typedef {object} MaterialBacktest
- * @property {string} materialCode
- * @property {WarehouseKind} kind
- * @property {number} leadWeeks
- * @property {readonly MaterialScenario[]} scenarios
- * @property {VersusSap} floorVersusSap
- * @property {VersusSap} chosenVersusSap
+ * @typedef {{
+ *   readonly materialCode: string;
+ *   readonly kind: WarehouseKind;
+ *   readonly leadWeeks: number;
+ *   readonly scenarios: readonly MaterialScenario[];
+ *   readonly floorVersusSap: VersusSap;
+ *   readonly chosenVersusSap: VersusSap;
+ * }} MaterialBacktest
  */
 
 /**
- * @typedef {object} WarehouseScenario
- * @property {WarehouseKind} kind
- * @property {number | null} capacityPallets
- * @property {number} peakPallets -  The highest week's pallets of the replayed flows.
- * @property {number} overCapacityPalletWeeks -  Σ pallets above capacity over the measured weeks.
+ * `peakPallets`:  The highest week's pallets of the replayed flows.
+ * `overCapacityPalletWeeks`:  Σ pallets above capacity over the measured weeks.
+ *
+ * @typedef {{
+ *   readonly kind: WarehouseKind;
+ *   readonly capacityPallets: number | null;
+ *   readonly peakPallets: number;
+ *   readonly overCapacityPalletWeeks: number;
+ * }} WarehouseScenario
  */
 
 /**
@@ -594,53 +640,64 @@ export const PORTFOLIO_SCENARIOS = ['sapPlan', 'floor', 'chosen'];
  */
 
 /**
- * @typedef {object} MethodSummary
- * @property {BacktestCandidate} candidate
- * @property {number} skus
- * @property {number | null} fillRate -  Pooled over the SKUs' lines.
- * @property {number | null} orderCompleteRate
- * @property {number} palletWeeks
- * @property {number | null} medianMasc
- * @property {number | null} medianWape
- * @property {number} chosenFor -  SKUs this candidate was chosen for (never for SAP's plan).
+ * `fillRate`:  Pooled over the SKUs' lines.
+ * `chosenFor`:  SKUs this candidate was chosen for (never for SAP's plan).
+ *
+ * @typedef {{
+ *   readonly candidate: BacktestCandidate;
+ *   readonly skus: number;
+ *   readonly fillRate: number | null;
+ *   readonly orderCompleteRate: number | null;
+ *   readonly palletWeeks: number;
+ *   readonly medianMasc: number | null;
+ *   readonly medianWape: number | null;
+ *   readonly chosenFor: number;
+ * }} MethodSummary
  */
 
 /**
- * @typedef {object} MascSpread
- * @property {BacktestCandidate} candidate
- * @property {number} values
- * @property {number | null} min
- * @property {number | null} p25
- * @property {number | null} median
- * @property {number | null} p75
- * @property {number | null} max
+ * @typedef {{
+ *   readonly candidate: BacktestCandidate;
+ *   readonly values: number;
+ *   readonly min: number | null;
+ *   readonly p25: number | null;
+ *   readonly median: number | null;
+ *   readonly p75: number | null;
+ *   readonly max: number | null;
+ * }} MascSpread
  */
 
 /**
- * @typedef {object} ModelBacktestResult
- * @property {IsoDate} asOf
- * @property {readonly BacktestOrigin[]} origins
- * @property {{ readonly from: IsoDate; readonly to: IsoDate; readonly weeks: number; readonly historyFrom: IsoDate | null }} replay -  The replay: first and last week, and the weeks of sales history before the first origin.
- * @property {readonly SkuBacktest[]} skus
- * @property {readonly ExcludedFromBacktest[]} excluded
- * @property {readonly MaterialBacktest[]} materials
- * @property {readonly string[]} unreplayedMaterials -  Materials with no source (cannot be ordered) — not replayed.
- * @property {readonly PortfolioResult[]} portfolio
- * @property {readonly MethodSummary[]} methods
- * @property {readonly MascSpread[]} mascSpread
- * @property {number | null} mascLimit -  ENG-D13 — the limit applied; null = not set, not enforced.
- * @property {{ readonly skusCompared: number; readonly chosenBeatsSap: number; readonly chosenWorseThanSap: number; readonly chosenHigherFillThanSap: number; readonly chosenLessSpaceThanSap: number; readonly floorBeatsSap: number; readonly materialsCompared: number; readonly materialsChosenBeatsSap: number; readonly materialsFloorBeatsSap: number; readonly chosenCounts: Readonly<Record<BacktestCandidate, number>>; }} summary -  Chosen model with a higher fill rate than SAP's plan (space aside).
- *    Chosen model with fewer pallet-weeks than SAP's plan (fill aside).
- * @property {'notBuilt' | 'supplied'} mainModel
+ * `replay`:  The replay: first and last week, and the weeks of sales history before the first origin.
+ * `unreplayedMaterials`:  Materials with no source (cannot be ordered) — not replayed.
+ * `mascLimit`:  ENG-D13 — the limit applied; null = not set, not enforced.
+ * `summary`:  Chosen model with a higher fill rate than SAP's plan (space aside).  Chosen model with fewer pallet-weeks than SAP's plan (fill aside).
+ *
+ * @typedef {{
+ *   readonly asOf: IsoDate;
+ *   readonly origins: readonly BacktestOrigin[];
+ *   readonly replay: { readonly from: IsoDate; readonly to: IsoDate; readonly weeks: number; readonly historyFrom: IsoDate | null };
+ *   readonly skus: readonly SkuBacktest[];
+ *   readonly excluded: readonly ExcludedFromBacktest[];
+ *   readonly materials: readonly MaterialBacktest[];
+ *   readonly unreplayedMaterials: readonly string[];
+ *   readonly portfolio: readonly PortfolioResult[];
+ *   readonly methods: readonly MethodSummary[];
+ *   readonly mascSpread: readonly MascSpread[];
+ *   readonly mascLimit: number | null;
+ *   readonly summary: { readonly skusCompared: number; readonly chosenBeatsSap: number; readonly chosenWorseThanSap: number; readonly chosenHigherFillThanSap: number; readonly chosenLessSpaceThanSap: number; readonly floorBeatsSap: number; readonly materialsCompared: number; readonly materialsChosenBeatsSap: number; readonly materialsFloorBeatsSap: number; readonly chosenCounts: Readonly<Record<BacktestCandidate, number>>; };
+ *   readonly mainModel: 'notBuilt' | 'supplied';
+ * }} ModelBacktestResult
  */
 
 // ── Preparation (the heavy part, done once per hub date) ────────────────────
 
 /**
- * @typedef {object} Hist
- * @property {IsoDate} start
- * @property {number[]} qty
- * @property {boolean[]} stockout
+ * @typedef {{
+ *   readonly start: IsoDate;
+ *   readonly qty: number[];
+ *   readonly stockout: boolean[];
+ * }} Hist
  */
 
 /**
@@ -780,41 +837,49 @@ function forecastsAt(fgs, rowsBySku, origin, fgPlan, table, candidatesOf, mainMo
 }
 
 /**
- * @typedef {object} MaterialTerms
- * @property {string} materialCode
- * @property {WarehouseKind} kind
- * @property {number} leadTimeDays
- * @property {number} moq
- * @property {number} orderMultiple
- * @property {number} palletsPerUnit
- * @property {number} holdingPerUnitWeek
- * @property {number} target
- * @property {number} sapSafetyStock
+ * @typedef {{
+ *   readonly materialCode: string;
+ *   readonly kind: WarehouseKind;
+ *   readonly leadTimeDays: number;
+ *   readonly moq: number;
+ *   readonly orderMultiple: number;
+ *   readonly palletsPerUnit: number;
+ *   readonly holdingPerUnitWeek: number;
+ *   readonly target: number;
+ *   readonly sapSafetyStock: number;
+ * }} MaterialTerms
  */
 
 /** Everything the selection needs; computed once per hub date and cost rates. */
 /**
- * @typedef {object} PreparedBacktest
- * @property {BacktestInput} input
- * @property {readonly IsoDate[]} originWeeks
- * @property {readonly IsoDate[]} replayWeeks
- * @property {readonly number[]} originIdx
- * @property {IsoDate | null} historyFrom
- * @property {readonly { readonly fg: FinishedGood; readonly skuClass: SkuClass; readonly floor: BacktestCandidate; readonly candidates: readonly BacktestCandidate[] }[]} eligible
- * @property {readonly ExcludedFromBacktest[]} excluded
- * @property {ReadonlyMap<string, MaterialTerms>} terms
- * @property {readonly string[]} unreplayedMaterials
- * @property {ReadonlyMap<string, readonly CandidateScore[]>} scores -  Per SKU, per candidate: the scores before selection.
- * @property {ReadonlyMap<string, readonly string[]>} skuMaterials
- * @property {ReadonlyMap<string, ReadonlyMap<BacktestCandidate, readonly (readonly number[])[]>>} skuVersions -  Per SKU, per candidate: the SKU forecast per origin (26 weeks from it).
- * @property {ReadonlyMap<string, readonly (readonly number[])[]>} fixedVersions -  Per SKU not eligible but sold: SAP's plan per origin (new SKUs, ENG-B63) or the actual (OEM, firm orders).
- * @property {readonly SalesWeek[]} actualRows -  Cleaned actual sales per SKU per replay week (and the origin-relative forecast weeks).
- * @property {ReadonlyMap<PortfolioScenario, PortfolioRun>} portfolioFixed
+ * `scores`:  Per SKU, per candidate: the scores before selection.
+ * `skuVersions`:  Per SKU, per candidate: the SKU forecast per origin (26 weeks from it).
+ * `fixedVersions`:  Per SKU not eligible but sold: SAP's plan per origin (new SKUs, ENG-B63) or the actual (OEM, firm orders).
+ * `actualRows`:  Cleaned actual sales per SKU per replay week (and the origin-relative forecast weeks).
+ *
+ * @typedef {{
+ *   readonly input: BacktestInput;
+ *   readonly originWeeks: readonly IsoDate[];
+ *   readonly replayWeeks: readonly IsoDate[];
+ *   readonly originIdx: readonly number[];
+ *   readonly historyFrom: IsoDate | null;
+ *   readonly eligible: readonly { readonly fg: FinishedGood; readonly skuClass: SkuClass; readonly floor: BacktestCandidate; readonly candidates: readonly BacktestCandidate[] }[];
+ *   readonly excluded: readonly ExcludedFromBacktest[];
+ *   readonly terms: ReadonlyMap<string, MaterialTerms>;
+ *   readonly unreplayedMaterials: readonly string[];
+ *   readonly scores: ReadonlyMap<string, readonly CandidateScore[]>;
+ *   readonly skuMaterials: ReadonlyMap<string, readonly string[]>;
+ *   readonly skuVersions: ReadonlyMap<string, ReadonlyMap<BacktestCandidate, readonly (readonly number[])[]>>;
+ *   readonly fixedVersions: ReadonlyMap<string, readonly (readonly number[])[]>;
+ *   readonly actualRows: readonly SalesWeek[];
+ *   readonly portfolioFixed: ReadonlyMap<PortfolioScenario, PortfolioRun>;
+ * }} PreparedBacktest
  */
 
 /**
- * @typedef {object} PortfolioRun
- * @property {ReadonlyMap<string, ReplayResult>} results
+ * @typedef {{
+ *   readonly results: ReadonlyMap<string, ReplayResult>;
+ * }} PortfolioRun
  */
 
 /**

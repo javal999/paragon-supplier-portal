@@ -28,12 +28,17 @@
  * emit a supplierId (un-falsifiability by construction — skeleton §2c).
  */
 /**
- * @typedef {object} ChannelMessage
- * @property {string} id
- * @property {Channel} channel
- * @property {string} supplierId -  The conversation binding — app-resolved, NOT parsed from `rawText`.
- * @property {string} receivedAt -  ISO timestamp the message was received (injected — no ambient clock).
- * @property {string} rawText -  The verbatim reply text the parser consumes.
+ * `supplierId`:  The conversation binding — app-resolved, NOT parsed from `rawText`.
+ * `receivedAt`:  ISO timestamp the message was received (injected — no ambient clock).
+ * `rawText`:  The verbatim reply text the parser consumes.
+ *
+ * @typedef {{
+ *   readonly id: string;
+ *   readonly channel: Channel;
+ *   readonly supplierId: string;
+ *   readonly receivedAt: string;
+ *   readonly rawText: string;
+ * }} ChannelMessage
  */
 
 /**
@@ -45,10 +50,15 @@
  * to one source (skeleton §2c / C1 §5).
  */
 /**
- * @typedef {object} ChannelProvenanceRef
- * @property {string} channelMessageId -  → `ChannelMessage.id`.
- * @property {string} sessionId -  → `SubmissionSession.sessionId` (sdc).
- * @property {string | null} causationAnchor -  → `SubmissionSession.auditCorrelationId` (sdc), or null before any attempt.
+ * `channelMessageId`:  → `ChannelMessage.id`.
+ * `sessionId`:  → `SubmissionSession.sessionId` (sdc).
+ * `causationAnchor`:  → `SubmissionSession.auditCorrelationId` (sdc), or null before any attempt.
+ *
+ * @typedef {{
+ *   readonly channelMessageId: string;
+ *   readonly sessionId: string;
+ *   readonly causationAnchor: string | null;
+ * }} ChannelProvenanceRef
  */
 
 /**

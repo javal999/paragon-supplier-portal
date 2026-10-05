@@ -46,32 +46,37 @@ export const GATE_CRITERIA = /** @type {const} */ (['halal', 'bpom', 'gmp', 'sta
 
 /** The gate's answer. `failed` is empty exactly when `passes` is true. */
 /**
- * @typedef {object} GateResult
- * @property {boolean} passes
- * @property {readonly GateCriterion[]} failed
- * @property {true} [otifNoHistory] Present (true) only when `otif` failed because the supplier has NO history
- *   and the administrator has ruled that "No history" does not pass (BL-55,
- *   BL-32) — so the reason can say so, rather than "OTIF below N%" about a
- *   supplier with no OTIF at all.
+ * `otifNoHistory`: Present (true) only when `otif` failed because the supplier has NO history and the administrator has ruled that "No history" does not pass (BL-55, BL-32) — so the reason can say so, rather than "OTIF below N%" about a supplier with no OTIF at all.
+ *
+ * @typedef {{
+ *   readonly passes: boolean;
+ *   readonly failed: readonly GateCriterion[];
+ *   readonly otifNoHistory?: true;
+ * }} GateResult
  */
 
 /** What the gate reads about a supplier — a supplier master row, narrowed. */
 /**
- * @typedef {object} GateSupplier
- * @property {string} id
- * @property {SupplierStatus} status
- * @property {boolean} halalCertified
- * @property {string} certExpiryDate -  The halal certificate's expiry on the master (`YYYY-MM-DD`).
- * @property {boolean} bpomRegistered
- * @property {boolean} [gmpIso22716] -  GMP / ISO 22716 held. Absent = no evidence, which does not pass.
+ * `certExpiryDate`:  The halal certificate's expiry on the master (`YYYY-MM-DD`).
+ * `gmpIso22716`:  GMP / ISO 22716 held. Absent = no evidence, which does not pass.
+ *
+ * @typedef {{
+ *   readonly id: string;
+ *   readonly status: SupplierStatus;
+ *   readonly halalCertified: boolean;
+ *   readonly certExpiryDate: string;
+ *   readonly bpomRegistered: boolean;
+ *   readonly gmpIso22716?: boolean;
+ * }} GateSupplier
  */
 
 /** What a set of materials asks of a supplier. */
 /**
- * @typedef {object} GateRequirement
- * @property {boolean} halal
- * @property {boolean} bpom
- * @property {boolean} gmp
+ * @typedef {{
+ *   readonly halal: boolean;
+ *   readonly bpom: boolean;
+ *   readonly gmp: boolean;
+ * }} GateRequirement
  */
 
 /**

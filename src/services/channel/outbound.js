@@ -69,12 +69,16 @@ import { sdcClock } from '../sdc';
  * and re-derivable for a composed entry. NEVER a frozen chase-view snapshot.
  */
 /**
- * @typedef {object} OutboundSubjectRef
- * @property {string} agreementId
- * @property {number} itemSeq
- * @property {number} [releaseSeq] -  Line grain (nudge/alert); absent for an item-level drift subject.
- * @property {string} dueAt -  The obligation date being chased (the line's release date / drift anchor).
- * @property {string} materialCode
+ * `releaseSeq`:  Line grain (nudge/alert); absent for an item-level drift subject.
+ * `dueAt`:  The obligation date being chased (the line's release date / drift anchor).
+ *
+ * @typedef {{
+ *   readonly agreementId: string;
+ *   readonly itemSeq: number;
+ *   readonly releaseSeq?: number;
+ *   readonly dueAt: string;
+ *   readonly materialCode: string;
+ * }} OutboundSubjectRef
  */
 
 /**
@@ -84,13 +88,17 @@ import { sdcClock } from '../sdc';
  * confirmed on (C2) — null until then (LAW 5, honest absent value).
  */
 /**
- * @typedef {object} OutboundRequestRecord
- * @property {string} id
- * @property {string} supplierId
- * @property {readonly OutboundSubjectRef[]} subjectRefs
- * @property {Channel} channel
- * @property {string} sentAt -  ISO-UTC, stamped by `sdcClock` — never a wall-clock (LAW 3).
- * @property {string | null} correlationAnchor -  → an SDC `SubmissionSession.auditCorrelationId` once a reply is confirmed.
+ * `sentAt`:  ISO-UTC, stamped by `sdcClock` — never a wall-clock (LAW 3).
+ * `correlationAnchor`:  → an SDC `SubmissionSession.auditCorrelationId` once a reply is confirmed.
+ *
+ * @typedef {{
+ *   readonly id: string;
+ *   readonly supplierId: string;
+ *   readonly subjectRefs: readonly OutboundSubjectRef[];
+ *   readonly channel: Channel;
+ *   readonly sentAt: string;
+ *   readonly correlationAnchor: string | null;
+ * }} OutboundRequestRecord
  */
 
 /**
@@ -99,9 +107,10 @@ import { sdcClock } from '../sdc';
  * Supplier-grain, matching the "any reply freshens" semantic.
  */
 /**
- * @typedef {object} SupplierReplyFact
- * @property {string} supplierId
- * @property {string} latestSubmittedAt
+ * @typedef {{
+ *   readonly supplierId: string;
+ *   readonly latestSubmittedAt: string;
+ * }} SupplierReplyFact
  */
 
 // ─── Derived vocabulary (never stored — LAW 2) ────────────────────────────────
@@ -116,14 +125,18 @@ import { sdcClock } from '../sdc';
 
 /** One derived queue entry (supplier-grain — asks are supplier-grain, LAW 4). */
 /**
- * @typedef {object} OutboundQueueEntry
- * @property {string} supplierId
- * @property {OutboundStatus} status -  DERIVED (LAW 2) — never read from a stored field.
- * @property {ChaseSeverityLevel} severity
- * @property {readonly ChaseReason[]} dataReasons
- * @property {readonly OutboundSubjectRef[]} subjectRefs -  From the record when asked; re-derived from the view when composed.
- * @property {string | null} lastSentAt
- * @property {Channel | null} lastChannel
+ * `status`:  DERIVED (LAW 2) — never read from a stored field.
+ * `subjectRefs`:  From the record when asked; re-derived from the view when composed.
+ *
+ * @typedef {{
+ *   readonly supplierId: string;
+ *   readonly status: OutboundStatus;
+ *   readonly severity: ChaseSeverityLevel;
+ *   readonly dataReasons: readonly ChaseReason[];
+ *   readonly subjectRefs: readonly OutboundSubjectRef[];
+ *   readonly lastSentAt: string | null;
+ *   readonly lastChannel: Channel | null;
+ * }} OutboundQueueEntry
  */
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

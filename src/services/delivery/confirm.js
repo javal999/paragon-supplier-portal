@@ -58,10 +58,11 @@
 /** What the caller commits onto the line: the shipment ref that fulfilled it, the
  *  ACCEPTED (observed, v1) delivered qty, and the injected confirm stamp. */
 /**
- * @typedef {object} ConfirmInput
- * @property {string} fulfilledBy
- * @property {number} actualQty
- * @property {string} now
+ * @typedef {{
+ *   readonly fulfilledBy: string;
+ *   readonly actualQty: number;
+ *   readonly now: string;
+ * }} ConfirmInput
  */
 
 /**

@@ -55,27 +55,33 @@ import { isCancelled, latestConfirmation, requirementAt } from './lines';
 /** @typedef {'committed' | 'requested'} CfotBasis */
 
 /**
- * @typedef {object} CfotWindow
- * @property {IsoDate} from
- * @property {IsoDate} to
+ * @typedef {{
+ *   readonly from: IsoDate;
+ *   readonly to: IsoDate;
+ * }} CfotWindow
  */
 
 /**
- * @typedef {object} PoCfotByDefinition
- * @property {string} poNumber
- * @property {string} supplierId
- * @property {number} orderedQty
- * @property {number} onTimeQty
+ * @typedef {{
+ *   readonly poNumber: string;
+ *   readonly supplierId: string;
+ *   readonly orderedQty: number;
+ *   readonly onTimeQty: number;
+ * }} PoCfotByDefinition
  */
 
 /**
- * @typedef {object} CfotResult
- * @property {number | null} rate -  Mean of the per-PO rates, 0–1, or null when nothing was measured.
- * @property {number | null} quantityRate -  Σ on time ÷ Σ ordered across every PO (mixes units; shown for comparison).
- * @property {number} orderedQty
- * @property {number} onTimeQty
- * @property {number} lines
- * @property {readonly PoCfotByDefinition[]} perPo
+ * `rate`:  Mean of the per-PO rates, 0–1, or null when nothing was measured.
+ * `quantityRate`:  Σ on time ÷ Σ ordered across every PO (mixes units; shown for comparison).
+ *
+ * @typedef {{
+ *   readonly rate: number | null;
+ *   readonly quantityRate: number | null;
+ *   readonly orderedQty: number;
+ *   readonly onTimeQty: number;
+ *   readonly lines: number;
+ *   readonly perPo: readonly PoCfotByDefinition[];
+ * }} CfotResult
  */
 
 /**
@@ -172,9 +178,12 @@ export function agreedCfot(histories, window) {
 
 /** One supplier's CFOT, read off a result: the mean of its per-PO rates, and how many POs. */
 /**
- * @typedef {object} SupplierCfot
- * @property {number | null} rate -  0–1, null when the supplier has no measured PO in the window.
- * @property {number} pos
+ * `rate`:  0–1, null when the supplier has no measured PO in the window.
+ *
+ * @typedef {{
+ *   readonly rate: number | null;
+ *   readonly pos: number;
+ * }} SupplierCfot
  */
 
 /**

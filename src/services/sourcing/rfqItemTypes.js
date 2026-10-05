@@ -25,12 +25,16 @@
 /** @import { RfqItemTypeId, RfqOneTimeCostId, RfqSpecField } from './rfqModel' */
 
 /**
- * @typedef {object} RfqItemTypeDefinition
- * @property {RfqItemTypeId} id
- * @property {string} labelKey
- * @property {string} defaultUom -  The unit an item of this type is usually counted in.
- * @property {readonly RfqSpecField[]} fields
- * @property {readonly RfqOneTimeCostId[]} oneTimeCosts -  The one-time costs requested by default for this type.
+ * `defaultUom`:  The unit an item of this type is usually counted in.
+ * `oneTimeCosts`:  The one-time costs requested by default for this type.
+ *
+ * @typedef {{
+ *   readonly id: RfqItemTypeId;
+ *   readonly labelKey: string;
+ *   readonly defaultUom: string;
+ *   readonly fields: readonly RfqSpecField[];
+ *   readonly oneTimeCosts: readonly RfqOneTimeCostId[];
+ * }} RfqItemTypeDefinition
  */
 
 /**

@@ -1307,8 +1307,9 @@ over everything else combined, and it grew that way in six weeks.
 The owner ruled the portal moves to JavaScript + JSDoc to match the company React
 boilerplate. Converted so far: `src/components/ui-v2` (pilot) and the app shell
 (`src/` root files, `hooks`, `context`, `router`, `test`, `data`, `components/*`;
-Phase 4 B1), `src/lib` (B2) and `src/services/transitions` (B3; forecast flows excluded) and `src/services/data` (B4,
-including `types.js`).
+Phase 4 B1), `src/lib` (B2), `src/services/transitions` (B3; forecast flows excluded), `src/services/data` (B4,
+including `types.js`) and the rest of `src/services` (B5; forecast engine, flows and mock
+files excluded). Interfaces with `readonly` members are type-literal typedefs, so readonly is kept.
 Before converting a
 folder, follow `docs/frontend-standard/JS-CONVERSION-PLAYBOOK.md`: the draft tool
 deletes comments and loosens types, and `scripts/codemods/check-comments-kept.mjs`

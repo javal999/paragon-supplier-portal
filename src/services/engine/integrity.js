@@ -11,16 +11,21 @@
 import { lineKey } from './types';
 
 /**
- * @typedef {object} IntegrityViolation
- * @property {| 'UNKNOWN_MATERIAL' | 'UNKNOWN_SUPPLIER' | 'NO_SOURCE' | 'ORPHAN_EVENT' | 'BOM_PARENT_NOT_FG' | 'BOM_YIELD_OUT_OF_RANGE' | 'FG_IS_A_MATERIAL' | 'UNKNOWN_FG'} rule
- * @property {string} where
- * @property {string} detail
+ * @typedef {{
+ *   readonly rule: | 'UNKNOWN_MATERIAL' | 'UNKNOWN_SUPPLIER' | 'NO_SOURCE' | 'ORPHAN_EVENT' | 'BOM_PARENT_NOT_FG' | 'BOM_YIELD_OUT_OF_RANGE' | 'FG_IS_A_MATERIAL' | 'UNKNOWN_FG';
+ *   readonly where: string;
+ *   readonly detail: string;
+ * }} IntegrityViolation
  */
 
 /**
- * @typedef {object} IntegrityContext
- * @property {(materialCode: string) => boolean} isKnownMaterial -  Does the one material master name this code?
- * @property {(supplierId: string) => boolean} isKnownSupplier -  Does the supplier master name this id?
+ * `isKnownMaterial`:  Does the one material master name this code?
+ * `isKnownSupplier`:  Does the supplier master name this id?
+ *
+ * @typedef {{
+ *   readonly isKnownMaterial: (materialCode: string) => boolean;
+ *   readonly isKnownSupplier: (supplierId: string) => boolean;
+ * }} IntegrityContext
  */
 
 /**

@@ -45,12 +45,13 @@ export const NOT_ENFORCED_DISCLAIMER = 'THIS IS NOT ENFORCED';
 const ABSENT = '—';
 
 /**
- * @typedef {object} InvariantRow
- * @property {number} n
- * @property {string} text
- * @property {string} cls
- * @property {string} file
- * @property {string} assertion
+ * @typedef {{
+ *   readonly n: number;
+ *   readonly text: string;
+ *   readonly cls: string;
+ *   readonly file: string;
+ *   readonly assertion: string;
+ * }} InvariantRow
  */
 
 /**

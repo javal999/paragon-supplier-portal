@@ -75,10 +75,15 @@ import { zoneOf } from './reschedule';
 // ── Parameters ──────────────────────────────────────────────────────────────
 
 /**
- * @typedef {object} StabiliseParams
- * @property {number} tradeOffWeight -  BR-04 / ENG-D9 — weight on the previous value in the Trade-off zone (0.5). The administrator's (X-05).
- * @property {number} forecastWeight -  ENG-D9 — the Forecast zone's weight (0: no damping).
- * @property {ToleranceBand} band -  BR-05 / ENG-D8 — ±10% per version, ±20% cumulative (ENG-D8a still open: runs on ±20%).
+ * `tradeOffWeight`:  BR-04 / ENG-D9 — weight on the previous value in the Trade-off zone (0.5). The administrator's (X-05).
+ * `forecastWeight`:  ENG-D9 — the Forecast zone's weight (0: no damping).
+ * `band`:  BR-05 / ENG-D8 — ±10% per version, ±20% cumulative (ENG-D8a still open: runs on ±20%).
+ *
+ * @typedef {{
+ *   readonly tradeOffWeight: number;
+ *   readonly forecastWeight: number;
+ *   readonly band: ToleranceBand;
+ * }} StabiliseParams
  */
 
 /** @type {StabiliseParams} */
@@ -90,10 +95,15 @@ export const DEFAULT_STABILISE_PARAMS = Object.freeze({
 
 /** The zones and lead time one supplier × material is judged by (REQ-E06-01 BR-05). */
 /**
- * @typedef {object} SeriesTerms
- * @property {number} firmDays -  Firm zone length in days (BR-01: at least the lead time).
- * @property {number} tradeOffDays -  Trade-off zone length after Firm (BR-02).
- * @property {number} leadTimeDays -  The supplier's lead time, for the plan-change share.
+ * `firmDays`:  Firm zone length in days (BR-01: at least the lead time).
+ * `tradeOffDays`:  Trade-off zone length after Firm (BR-02).
+ * `leadTimeDays`:  The supplier's lead time, for the plan-change share.
+ *
+ * @typedef {{
+ *   readonly firmDays: number;
+ *   readonly tradeOffDays: number;
+ *   readonly leadTimeDays: number;
+ * }} SeriesTerms
  */
 
 /** Two quantities closer than this (relative) are the same quantity. */
@@ -157,11 +167,14 @@ export const STABILISE_RULES = [
 export const damp = (previous, next, weight) => weight * previous + (1 - weight) * next;
 
 /**
- * @typedef {object} AllowedRange
- * @property {number} low
- * @property {number} high
- * @property {'perVersion' | 'cumulative'} lowBy -  Which band sets each edge.
- * @property {'perVersion' | 'cumulative'} highBy
+ * `lowBy`:  Which band sets each edge.
+ *
+ * @typedef {{
+ *   readonly low: number;
+ *   readonly high: number;
+ *   readonly lowBy: 'perVersion' | 'cumulative';
+ *   readonly highBy: 'perVersion' | 'cumulative';
+ * }} AllowedRange
  */
 
 /**
@@ -193,29 +206,42 @@ export function allowedRange(previous, first, band = DEFAULT_TOLERANCE_BAND) {
 }
 
 /**
- * @typedef {object} PeriodInput
- * @property {IsoDate} period
- * @property {Zone} zone
- * @property {number} raw -  The engine's value this version.
- * @property {number | null} previous -  What the supplier saw last version; null for a new period.
- * @property {number | null} first -  The value the cumulative cap is measured from (ENG-B31); null for a new period.
- * @property {string | null} [overrideReason] -  The planner's reason to publish beyond the band (BR-05).
+ * `raw`:  The engine's value this version.
+ * `previous`:  What the supplier saw last version; null for a new period.
+ * `first`:  The value the cumulative cap is measured from (ENG-B31); null for a new period.
+ * `overrideReason`:  The planner's reason to publish beyond the band (BR-05).
+ *
+ * @typedef {{
+ *   readonly period: IsoDate;
+ *   readonly zone: Zone;
+ *   readonly raw: number;
+ *   readonly previous: number | null;
+ *   readonly first: number | null;
+ *   readonly overrideReason?: string | null;
+ * }} PeriodInput
  */
 
 /**
- * @typedef {object} PeriodResult
- * @property {IsoDate} period
- * @property {Zone} zone
- * @property {number} raw
- * @property {number | null} previous
- * @property {number | null} first
- * @property {number | null} damped -  The damped value (Trade-off and Forecast); null where no damping applies.
- * @property {AllowedRange | null} range -  The allowed range (Trade-off with a previous value); null elsewhere.
- * @property {boolean} beyondBand -  The damped value lies beyond the band — publishing it needs a reason (AC-02).
- * @property {number} published
- * @property {StabiliseRule} rule
- * @property {string | null} reason -  The planner's reason, published with the value (override only).
- * @property {boolean} awaitingCommitment -  The period asks the supplier for a new commitment: new, or its quantity moved (REQ-E06-02 edge case).
+ * `damped`:  The damped value (Trade-off and Forecast); null where no damping applies.
+ * `range`:  The allowed range (Trade-off with a previous value); null elsewhere.
+ * `beyondBand`:  The damped value lies beyond the band — publishing it needs a reason (AC-02).
+ * `reason`:  The planner's reason, published with the value (override only).
+ * `awaitingCommitment`:  The period asks the supplier for a new commitment: new, or its quantity moved (REQ-E06-02 edge case).
+ *
+ * @typedef {{
+ *   readonly period: IsoDate;
+ *   readonly zone: Zone;
+ *   readonly raw: number;
+ *   readonly previous: number | null;
+ *   readonly first: number | null;
+ *   readonly damped: number | null;
+ *   readonly range: AllowedRange | null;
+ *   readonly beyondBand: boolean;
+ *   readonly published: number;
+ *   readonly rule: StabiliseRule;
+ *   readonly reason: string | null;
+ *   readonly awaitingCommitment: boolean;
+ * }} PeriodResult
  */
 
 /**
@@ -271,16 +297,21 @@ export function stabilisePeriod(p, params = DEFAULT_STABILISE_PARAMS) {
 // ── One supplier × material over its versions ───────────────────────────────
 
 /**
- * @typedef {object} VersionInput
- * @property {IsoDate} asOf -  The day the version is made (and would be published).
- * @property {ReadonlyMap<IsoDate, number>} raw -  Week → the engine's quantity.
+ * `asOf`:  The day the version is made (and would be published).
+ * `raw`:  Week → the engine's quantity.
+ *
+ * @typedef {{
+ *   readonly asOf: IsoDate;
+ *   readonly raw: ReadonlyMap<IsoDate, number>;
+ * }} VersionInput
  */
 
 /**
- * @typedef {object} StabilisedVersion
- * @property {IsoDate} asOf
- * @property {readonly PeriodResult[]} periods
- * @property {ReadonlyMap<IsoDate, number>} published
+ * @typedef {{
+ *   readonly asOf: IsoDate;
+ *   readonly periods: readonly PeriodResult[];
+ *   readonly published: ReadonlyMap<IsoDate, number>;
+ * }} StabilisedVersion
  */
 
 /**
@@ -364,10 +395,15 @@ export function stabiliseSeries(
 // ── The effect on plan change ───────────────────────────────────────────────
 
 /**
- * @typedef {object} PlanChangeEffect
- * @property {readonly number[]} masc -  MASC per consecutive version pair (null pairs dropped).
- * @property {{ readonly schedules: number; readonly changed: number }} insideLeadTime -  Weeks that sat inside the lead time in a later version, and those that changed there.
- * @property {{ readonly revisions: number; readonly withinBand: number }} tradeOff -  Trade-off revisions (a quantity that moved) and those inside the band.
+ * `masc`:  MASC per consecutive version pair (null pairs dropped).
+ * `insideLeadTime`:  Weeks that sat inside the lead time in a later version, and those that changed there.
+ * `tradeOff`:  Trade-off revisions (a quantity that moved) and those inside the band.
+ *
+ * @typedef {{
+ *   readonly masc: readonly number[];
+ *   readonly insideLeadTime: { readonly schedules: number; readonly changed: number };
+ *   readonly tradeOff: { readonly revisions: number; readonly withinBand: number };
+ * }} PlanChangeEffect
  */
 
 /**
@@ -424,44 +460,59 @@ export function planChangeOf(versions, terms, scale, band = DEFAULT_TOLERANCE_BA
 // ── The whole plan ──────────────────────────────────────────────────────────
 
 /**
- * @typedef {object} SeriesInput
- * @property {string} supplierId
- * @property {string} materialCode
- * @property {WarehouseKind} kind
- * @property {SeriesTerms} terms
- * @property {number | null} scale -  The MASC scale (seasonal-naive MAE of the supplier's share of the requirement); null when it cannot scale.
- * @property {readonly VersionInput[]} versions -  The engine's versions at the stream's cadence, oldest first; the last is the one to publish now.
+ * `scale`:  The MASC scale (seasonal-naive MAE of the supplier's share of the requirement); null when it cannot scale.
+ * `versions`:  The engine's versions at the stream's cadence, oldest first; the last is the one to publish now.
+ *
+ * @typedef {{
+ *   readonly supplierId: string;
+ *   readonly materialCode: string;
+ *   readonly kind: WarehouseKind;
+ *   readonly terms: SeriesTerms;
+ *   readonly scale: number | null;
+ *   readonly versions: readonly VersionInput[];
+ * }} SeriesInput
  */
 
 /** @typedef {Readonly<Record<StabiliseRule, number>>} RuleCounts */
 
 /**
- * @typedef {object} SeriesResult
- * @property {string} supplierId
- * @property {string} materialCode
- * @property {WarehouseKind} kind
- * @property {SeriesTerms} terms
- * @property {readonly IsoDate[]} versionDates
- * @property {readonly PeriodResult[]} latest -  The version to publish now, period by period (AC-03).
- * @property {RuleCounts} counts -  Rules on the latest version.
- * @property {RuleCounts} replayCounts -  Rules over every version after the first (the first has no previous).
- * @property {PlanChangeEffect} raw
- * @property {PlanChangeEffect} stabilised
+ * `latest`:  The version to publish now, period by period (AC-03).
+ * `counts`:  Rules on the latest version.
+ * `replayCounts`:  Rules over every version after the first (the first has no previous).
+ *
+ * @typedef {{
+ *   readonly supplierId: string;
+ *   readonly materialCode: string;
+ *   readonly kind: WarehouseKind;
+ *   readonly terms: SeriesTerms;
+ *   readonly versionDates: readonly IsoDate[];
+ *   readonly latest: readonly PeriodResult[];
+ *   readonly counts: RuleCounts;
+ *   readonly replayCounts: RuleCounts;
+ *   readonly raw: PlanChangeEffect;
+ *   readonly stabilised: PlanChangeEffect;
+ * }} SeriesResult
  */
 
 /**
- * @typedef {object} EffectTotals
- * @property {number | null} masc -  Mean MASC over every supplier × material × version pair; null with none measurable.
- * @property {number} mascPairs
- * @property {{ readonly schedules: number; readonly changed: number; readonly share: number | null }} insideLeadTime
- * @property {{ readonly revisions: number; readonly withinBand: number; readonly share: number | null }} tradeOff
+ * `masc`:  Mean MASC over every supplier × material × version pair; null with none measurable.
+ *
+ * @typedef {{
+ *   readonly masc: number | null;
+ *   readonly mascPairs: number;
+ *   readonly insideLeadTime: { readonly schedules: number; readonly changed: number; readonly share: number | null };
+ *   readonly tradeOff: { readonly revisions: number; readonly withinBand: number; readonly share: number | null };
+ * }} EffectTotals
  */
 
 /**
- * @typedef {object} StabiliseRun
- * @property {StabiliseParams} params
- * @property {readonly SeriesResult[]} series
- * @property {{ readonly raw: EffectTotals; readonly stabilised: EffectTotals; readonly counts: RuleCounts; readonly replayCounts: RuleCounts; readonly beyondBand: number; }} totals -  Latest-version periods whose damped value is beyond the band (each needs a reason to publish it).
+ * `totals`:  Latest-version periods whose damped value is beyond the band (each needs a reason to publish it).
+ *
+ * @typedef {{
+ *   readonly params: StabiliseParams;
+ *   readonly series: readonly SeriesResult[];
+ *   readonly totals: { readonly raw: EffectTotals; readonly stabilised: EffectTotals; readonly counts: RuleCounts; readonly replayCounts: RuleCounts; readonly beyondBand: number; };
+ * }} StabiliseRun
  */
 
 /** @returns {Record<StabiliseRule, number>} */

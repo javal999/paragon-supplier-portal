@@ -96,9 +96,10 @@
  * a fraction (0.10 = 10%) is Case B. Mirrors SAP over/under-delivery tolerance.
  */
 /**
- * @typedef {object} TolerancePolicy
- * @property {number | null} tolerancePct
- * @property {DrawdownEnforcement} enforcement
+ * @typedef {{
+ *   readonly tolerancePct: number | null;
+ *   readonly enforcement: DrawdownEnforcement;
+ * }} TolerancePolicy
  */
 
 /**
@@ -108,12 +109,13 @@
  * who/when/why (honesty guard 4 — a deviation is visible and attributable).
  */
 /**
- * @typedef {object} DrawdownPolicy
- * @property {TolerancePolicy} contractDefault
- * @property {TolerancePolicy} active
- * @property {string} [activeChangedBy]
- * @property {string} [activeChangedAt]
- * @property {string} [activeChangeReason]
+ * @typedef {{
+ *   readonly contractDefault: TolerancePolicy;
+ *   readonly active: TolerancePolicy;
+ *   readonly activeChangedBy?: string;
+ *   readonly activeChangedAt?: string;
+ *   readonly activeChangeReason?: string;
+ * }} DrawdownPolicy
  */
 
 // ─── Schedule line (dated release row = SAP schedule line / releaseSeq) ────────
@@ -127,41 +129,34 @@
  * by the ASN/GR hybrid match in a later batch.
  */
 /**
- * @typedef {object} ScheduleLine
- * @property {string} releaseRef -  Portal join-chain (contract→agreement→item→release); distinct from the SAP
- *    number so the portal never mints a competing identity (honesty guard 6).
- * @property {number} releaseSeq -  1..n within the item.
- * @property {ReleaseType} releaseType -  Stored SAP release character; commitmentClass is derived from it.
- * @property {string} releaseDate -  ISO (UTC), cadence-stepped from the Item startDate.
- * @property {number} plannedQty
- * @property {ReleaseLifecycle} state -  The generator always emits 'draft'.
- * @property {string} [releasedAt] - ── Release record (Batch 2) — the minimal honest "what was transmitted when" ──
- *   ISO stamp of the explicit release (Batch-2 `releaseScheduleLines`), INJECTED
- *   by the caller — never a clock read inside pure code. INVARIANT:
- *   `releasedAt` present ⟺ `state === 'released'`. Absent on every generated and
- *   seeded line, because the generator only ever emits 'draft'.
- * @property {string} [adjustedAt] ISO stamp of the last draft-side adjustment (Batch-2 `adjustDraftLine`).
- *   Only ever set on a 'draft' line — a released line is frozen, so it can never
- *   acquire one after release.
- * @property {string} [confirmedAt] ISO stamp of the confirm-match write (`confirmFulfillment`) — the PORTAL audit
- *   stamp for "when the buyer accepted this delivery", INJECTED by the caller.
- *   Only ever set on a 'released' line (confirm is legal only there). Distinct from
- *   `fulfilledDate` (the SAP GR posting date, never portal-written): a confirm is a
- *   portal record, not a goods-receipt.
- * @property {string} [sapReleaseNumber] The SAP-assigned release-document number (Decision C). DECLARED, NEVER SEEDED
- *   and never written by this module — SAP assigns it on transmission (Pattern B),
- *   exactly like `sapAgreementNumber`. The portal must never mint a competing
- *   identity (honesty guard 6). Absent ⇒ not yet bound by SAP.
- * @property {number} [actualQty] - ── Fulfillment fields — never SEEDED (honesty guard 1); `actualQty` +
- *      `fulfilledBy` are written by the confirm-match write (`confirmFulfillment`),
- *      which flips the derived match from inferred→authoritative and feeds
- *      `deliveredQty`. `fulfilledDate` (the SAP GR posting date) is NEVER
- *      portal-written — it rides the F2 feed (Pattern B). ───────────────────────
- *    The ACCEPTED delivered qty (v1: the observed shipment qty). Absent ⇒ not yet
- *    confirmed — the ledger counts 0 for this line (the honesty lock).
- * @property {string} [fulfilledDate] -  The SAP GR posting date — never written by the portal (reserved for F2).
- * @property {string} [fulfilledBy] -  The ASN/GR ref this release drew down. Written by `confirmFulfillment`; read
- *    by deriveFulfillment Pass 1 as an authoritative (inferred:false) binding.
+ * `releaseRef`:  Portal join-chain (contract→agreement→item→release); distinct from the SAP  number so the portal never mints a competing identity (honesty guard 6).
+ * `releaseSeq`:  1..n within the item.
+ * `releaseType`:  Stored SAP release character; commitmentClass is derived from it.
+ * `releaseDate`:  ISO (UTC), cadence-stepped from the Item startDate.
+ * `state`:  The generator always emits 'draft'.
+ * `releasedAt`: ── Release record (Batch 2) — the minimal honest "what was transmitted when" ── ISO stamp of the explicit release (Batch-2 `releaseScheduleLines`), INJECTED by the caller — never a clock read inside pure code. INVARIANT: `releasedAt` present ⟺ `state === 'released'`. Absent on every generated and seeded line, because the generator only ever emits 'draft'.
+ * `adjustedAt`: ISO stamp of the last draft-side adjustment (Batch-2 `adjustDraftLine`). Only ever set on a 'draft' line — a released line is frozen, so it can never acquire one after release.
+ * `confirmedAt`: ISO stamp of the confirm-match write (`confirmFulfillment`) — the PORTAL audit stamp for "when the buyer accepted this delivery", INJECTED by the caller. Only ever set on a 'released' line (confirm is legal only there). Distinct from `fulfilledDate` (the SAP GR posting date, never portal-written): a confirm is a portal record, not a goods-receipt.
+ * `sapReleaseNumber`: The SAP-assigned release-document number (Decision C). DECLARED, NEVER SEEDED and never written by this module — SAP assigns it on transmission (Pattern B), exactly like `sapAgreementNumber`. The portal must never mint a competing identity (honesty guard 6). Absent ⇒ not yet bound by SAP.
+ * `actualQty`: ── Fulfillment fields — never SEEDED (honesty guard 1); `actualQty` +    `fulfilledBy` are written by the confirm-match write (`confirmFulfillment`),    which flips the derived match from inferred→authoritative and feeds    `deliveredQty`. `fulfilledDate` (the SAP GR posting date) is NEVER    portal-written — it rides the F2 feed (Pattern B). ───────────────────────  The ACCEPTED delivered qty (v1: the observed shipment qty). Absent ⇒ not yet  confirmed — the ledger counts 0 for this line (the honesty lock).
+ * `fulfilledDate`:  The SAP GR posting date — never written by the portal (reserved for F2).
+ * `fulfilledBy`:  The ASN/GR ref this release drew down. Written by `confirmFulfillment`; read  by deriveFulfillment Pass 1 as an authoritative (inferred:false) binding.
+ *
+ * @typedef {{
+ *   readonly releaseRef: string;
+ *   readonly releaseSeq: number;
+ *   readonly releaseType: ReleaseType;
+ *   readonly releaseDate: string;
+ *   readonly plannedQty: number;
+ *   readonly state: ReleaseLifecycle;
+ *   readonly releasedAt?: string;
+ *   readonly adjustedAt?: string;
+ *   readonly confirmedAt?: string;
+ *   readonly sapReleaseNumber?: string;
+ *   readonly actualQty?: number;
+ *   readonly fulfilledDate?: string;
+ *   readonly fulfilledBy?: string;
+ * }} ScheduleLine
  */
 
 // ─── Item (= SAP item 10/20/30 = lineSeq, one per material) ───────────────────
@@ -175,17 +170,20 @@
  * mirroring SDC invariant #2). `sapItemNumber` is absent until SAP binds.
  */
 /**
- * @typedef {object} SchedulingAgreementItem
- * @property {number} lineSeq -  SAP item number 10/20/30 (SIMULATED here).
- * @property {string} [sapItemNumber]
- * @property {string} materialCode
- * @property {Uom} uom
- * @property {number} agreedTotalQty
- * @property {ReleaseCadence} cadence
- * @property {number} qtyPerRelease
- * @property {ReleaseType} releaseType
- * @property {DrawdownPolicy} drawdownPolicy
- * @property {readonly ScheduleLine[]} scheduleLines
+ * `lineSeq`:  SAP item number 10/20/30 (SIMULATED here).
+ *
+ * @typedef {{
+ *   readonly lineSeq: number;
+ *   readonly sapItemNumber?: string;
+ *   readonly materialCode: string;
+ *   readonly uom: Uom;
+ *   readonly agreedTotalQty: number;
+ *   readonly cadence: ReleaseCadence;
+ *   readonly qtyPerRelease: number;
+ *   readonly releaseType: ReleaseType;
+ *   readonly drawdownPolicy: DrawdownPolicy;
+ *   readonly scheduleLines: readonly ScheduleLine[];
+ * }} SchedulingAgreementItem
  */
 
 // ─── Scheduling agreement (SAP LPA header, child of Contract) ─────────────────
@@ -198,24 +196,30 @@
  * bound). `liveness` is the honesty marker — SIMULATED for every Batch-1 fixture.
  */
 /**
- * @typedef {object} SchedulingAgreement
- * @property {string} id
- * @property {string} contractId
- * @property {string} supplierId
- * @property {string} [sapAgreementNumber] -  Absent until posted to + bound by SAP (Pattern B). Present ⇒ bound.
- * @property {'LPA'} docType -  LPA — with release documentation (spec-locked).
- * @property {readonly SchedulingAgreementItem[]} items
- * @property {Tier} liveness -  SIMULATED for all Batch-1 fixtures (Decision F).
+ * `sapAgreementNumber`:  Absent until posted to + bound by SAP (Pattern B). Present ⇒ bound.
+ * `docType`:  LPA — with release documentation (spec-locked).
+ * `liveness`:  SIMULATED for all Batch-1 fixtures (Decision F).
+ *
+ * @typedef {{
+ *   readonly id: string;
+ *   readonly contractId: string;
+ *   readonly supplierId: string;
+ *   readonly sapAgreementNumber?: string;
+ *   readonly docType: 'LPA';
+ *   readonly items: readonly SchedulingAgreementItem[];
+ *   readonly liveness: Tier;
+ * }} SchedulingAgreement
  */
 
 // ─── Drawdown ledger (DERIVED — never stored) ─────────────────────────────────
 
 /** A single derived drawdown exception (empty over the all-draft seed). */
 /**
- * @typedef {object} DrawdownException
- * @property {'over-envelope' | 'over-release-tolerance'} kind
- * @property {number} overageQty
- * @property {string} detail
+ * @typedef {{
+ *   readonly kind: 'over-envelope' | 'over-release-tolerance';
+ *   readonly overageQty: number;
+ *   readonly detail: string;
+ * }} DrawdownException
  */
 
 /**
@@ -227,16 +231,17 @@
  * `policyDeviation` marks active ≠ contractDefault (honesty guard 4).
  */
 /**
- * @typedef {object} DrawdownLedger
- * @property {number} agreedTotalQty
- * @property {number} releasedQty
- * @property {number} deliveredQty
- * @property {number} remainingQty
- * @property {Uom} uom
- * @property {TolerancePolicy} activePolicy
- * @property {boolean} policyDeviation
- * @property {boolean} enforced
- * @property {readonly DrawdownException[]} exceptions
+ * @typedef {{
+ *   readonly agreedTotalQty: number;
+ *   readonly releasedQty: number;
+ *   readonly deliveredQty: number;
+ *   readonly remainingQty: number;
+ *   readonly uom: Uom;
+ *   readonly activePolicy: TolerancePolicy;
+ *   readonly policyDeviation: boolean;
+ *   readonly enforced: boolean;
+ *   readonly exceptions: readonly DrawdownException[];
+ * }} DrawdownLedger
  */
 
 // Types only: `export {}` keeps this a module so its typedefs can be imported.

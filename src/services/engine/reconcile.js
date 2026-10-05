@@ -118,10 +118,11 @@ const transpose = (a) => a[0].map((_, j) => a.map((row) => row[j]));
  * into node i. A SKU's own node lists just itself.
  */
 /**
- * @typedef {object} Hierarchy
- * @property {number} nodes
- * @property {number} skus
- * @property {readonly (readonly number[])[]} members
+ * @typedef {{
+ *   readonly nodes: number;
+ *   readonly skus: number;
+ *   readonly members: readonly (readonly number[])[];
+ * }} Hierarchy
  */
 
 /**
@@ -136,9 +137,10 @@ export function summingMatrix(h) {
 }
 
 /**
- * @typedef {object} ShrunkCovariance
- * @property {Matrix} w
- * @property {number} lambda
+ * @typedef {{
+ *   readonly w: Matrix;
+ *   readonly lambda: number;
+ * }} ShrunkCovariance
  */
 
 /**
@@ -236,11 +238,15 @@ export function structuralCovariance(h) {
 /** @typedef {'mintShrink' | 'wlsStruct'} ReconciliationMethod */
 
 /**
- * @typedef {object} Reconciler
- * @property {ReconciliationMethod} method
- * @property {number | null} lambda -  λ of MinT-shrink; null on WLS_struct.
- * @property {'noResidualVariance' | 'notPositiveDefinite' | null} fallback -  Why MinT-shrink could not be used; null when it was.
- * @property {Matrix} projection
+ * `lambda`:  λ of MinT-shrink; null on WLS_struct.
+ * `fallback`:  Why MinT-shrink could not be used; null when it was.
+ *
+ * @typedef {{
+ *   readonly method: ReconciliationMethod;
+ *   readonly lambda: number | null;
+ *   readonly fallback: 'noResidualVariance' | 'notPositiveDefinite' | null;
+ *   readonly projection: Matrix;
+ * }} Reconciler
  */
 
 /**
@@ -265,10 +271,15 @@ export function buildReconciler(h, residuals) {
 }
 
 /**
- * @typedef {object} ReconciledWeek
- * @property {readonly number[]} skus -  One value per SKU, never negative.
- * @property {readonly number[]} nodes -  One value per node: the sum of the SKUs beneath it.
- * @property {number} clipped -  SKUs whose MinT value was negative and set to 0.
+ * `skus`:  One value per SKU, never negative.
+ * `nodes`:  One value per node: the sum of the SKUs beneath it.
+ * `clipped`:  SKUs whose MinT value was negative and set to 0.
+ *
+ * @typedef {{
+ *   readonly skus: readonly number[];
+ *   readonly nodes: readonly number[];
+ *   readonly clipped: number;
+ * }} ReconciledWeek
  */
 
 /**

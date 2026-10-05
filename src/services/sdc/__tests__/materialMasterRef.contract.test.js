@@ -201,10 +201,11 @@ describe('C9 — AMENDMENT 2 (A-2): an unresolved row carries its ROUTE TO RESOL
     // of the interface rather than restating them here, so a field added to the
     // shape without reaching the document fails this test by construction. A
     // hand-written list would have agreed with whoever wrote it.
-    const block = TYPES_SRC.slice(
-      TYPES_SRC.indexOf('export interface AdjudicationProvenance')
-    ).split('}')[0];
-    const fields = [...block.matchAll(/readonly (\w+)\??:/g)].map((m) => m[1]);
+    // Read through `deriveInterfaces`, which reads the module in either written
+    // form (TS interface or JS type-literal typedef).
+    const fields = (
+      deriveInterfaces(TYPES_SRC).find((i) => i.name === 'AdjudicationProvenance')?.fields ?? []
+    ).map((f) => f.name);
 
     expect(fields).toContain('routeToResolution');
     expect(fields.length).toBeGreaterThanOrEqual(6);

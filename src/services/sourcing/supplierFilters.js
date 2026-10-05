@@ -41,11 +41,14 @@ export const CERT_EXPIRING_WITHIN_DAYS = EXPIRING_WINDOW_DAYS;
 
 /** What the validity reads about a supplier — a supplier master row, narrowed. */
 /**
- * @typedef {object} CertSupplier
- * @property {string} id
- * @property {boolean} halalCertified
- * @property {string} certExpiryDate -  The halal certificate's expiry on the master (`YYYY-MM-DD`).
- * @property {boolean} bpomRegistered
+ * `certExpiryDate`:  The halal certificate's expiry on the master (`YYYY-MM-DD`).
+ *
+ * @typedef {{
+ *   readonly id: string;
+ *   readonly halalCertified: boolean;
+ *   readonly certExpiryDate: string;
+ *   readonly bpomRegistered: boolean;
+ * }} CertSupplier
  */
 
 /** @param {ComplianceRegistryEntry} c */
@@ -138,18 +141,22 @@ export function bandOfLetter(letter) {
 
 /** The filters a buyer may set. Absent = that filter is off. */
 /**
- * @typedef {object} SupplierFilters
- * @property {CertValidity} [cert]
- * @property {PerformanceBand} [band]
- * @property {string} [country] -  Supplier master country code.
+ * `country`:  Supplier master country code.
+ *
+ * @typedef {{
+ *   readonly cert?: CertValidity;
+ *   readonly band?: PerformanceBand;
+ *   readonly country?: string;
+ * }} SupplierFilters
  */
 
 /** What a row must say about itself for the filters to read it. */
 /**
- * @typedef {object} FilterableSupplier
- * @property {CertValidity} certificates
- * @property {PerformanceBand} band
- * @property {string} country
+ * @typedef {{
+ *   readonly certificates: CertValidity;
+ *   readonly band: PerformanceBand;
+ *   readonly country: string;
+ * }} FilterableSupplier
  */
 
 /**

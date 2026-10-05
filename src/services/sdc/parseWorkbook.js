@@ -56,28 +56,31 @@
  * parsed (the first by default). `ok:true` is the union discriminant.
  */
 /**
- * @typedef {object} ParsedWorkbook
- * @property {true} ok
- * @property {readonly string[]} sheets
- * @property {string} activeSheet
- * @property {readonly string[]} headers
- * @property {readonly Record<string, string>[]} rows
+ * @typedef {{
+ *   readonly ok: true;
+ *   readonly sheets: readonly string[];
+ *   readonly activeSheet: string;
+ *   readonly headers: readonly string[];
+ *   readonly rows: readonly Record<string, string>[];
+ * }} ParsedWorkbook
  */
 
 /** A file-tier failure — an honest reason and NO rows. */
 /**
- * @typedef {object} FileParseFailure
- * @property {false} ok
- * @property {FileParseReason} reason
+ * @typedef {{
+ *   readonly ok: false;
+ *   readonly reason: FileParseReason;
+ * }} FileParseFailure
  */
 
 /** @typedef {ParsedWorkbook | FileParseFailure} ParseWorkbookResult */
 
 /**
- * @typedef {object} ParseWorkbookOptions
- * @property {string} [sheet] Which sheet to parse as active, by name. Default: the first sheet. The
- *   picker (3c-c-b) re-invokes with a chosen name once the supplier selects one;
- *   an unknown name falls back to the first sheet (never a silent empty parse).
+ * `sheet`: Which sheet to parse as active, by name. Default: the first sheet. The picker (3c-c-b) re-invokes with a chosen name once the supplier selects one; an unknown name falls back to the first sheet (never a silent empty parse).
+ *
+ * @typedef {{
+ *   readonly sheet?: string;
+ * }} ParseWorkbookOptions
  */
 
 // ─── Neutral input shape (lib-agnostic, so the classifier is pure + testable) ──
@@ -87,9 +90,10 @@
 
 /** One raw sheet: its name and its rows of raw cells. */
 /**
- * @typedef {object} RawSheet
- * @property {string} name
- * @property {readonly RawCell[][]} rows
+ * @typedef {{
+ *   readonly name: string;
+ *   readonly rows: readonly RawCell[][];
+ * }} RawSheet
  */
 
 // ─── Normalisation + blankness (pure) ─────────────────────────────────────────

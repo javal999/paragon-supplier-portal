@@ -19,9 +19,12 @@
 /** @import { ForecastPublication, SupplierMaterialRelationship, SupplierType } from './types' */
 
 /**
- * @typedef {object} CollaboratedMaterial
- * @property {string} materialCode
- * @property {SupplierType | null} supplierType -  The relationship type for the pair; null when collaborated by fan-out only.
+ * `supplierType`:  The relationship type for the pair; null when collaborated by fan-out only.
+ *
+ * @typedef {{
+ *   readonly materialCode: string;
+ *   readonly supplierType: SupplierType | null;
+ * }} CollaboratedMaterial
  */
 
 /**

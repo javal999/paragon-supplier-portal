@@ -37,11 +37,12 @@ import { MATERIAL_MASTER } from '../fixtures';
 // ─── The derived population (the identity pin's walk, same shape) ────────────
 
 /**
- * @typedef {object} Ref
- * @property {string} code
- * @property {string | null} meaning
- * @property {string | null} unit
- * @property {string} module
+ * @typedef {{
+ *   readonly code: string;
+ *   readonly meaning: string | null;
+ *   readonly unit: string | null;
+ *   readonly module: string;
+ * }} Ref
  */
 
 const IS_TEST_MODULE = /\.test\.[jt]sx?$|__tests__|^\/src\/test\//;

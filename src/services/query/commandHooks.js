@@ -2541,12 +2541,13 @@ export function useCallOffCommand() {
 // proposal was taken to SAP. Refused while the engine data is simulated (X-03).
 
 /**
- * @typedef {object} SapChangeMarkVars
- * @property {string} poNumber
- * @property {number} line
- * @property {ProposalType} proposalType
- * @property {string | null} proposedDate
- * @property {number} proposedQuantity
+ * @typedef {{
+ *   readonly poNumber: string;
+ *   readonly line: number;
+ *   readonly proposalType: ProposalType;
+ *   readonly proposedDate: string | null;
+ *   readonly proposedQuantity: number;
+ * }} SapChangeMarkVars
  */
 
 /** Record that a PO-line reschedule proposal was taken to SAP (fires `t_sapchange_mark`). */
@@ -2582,12 +2583,15 @@ export function useSapChangeMarkCommand() {
 // Creation-only; `enteredBy` / `enteredAt` are stamped by the target from the
 // session and the hub clock. The supplier's stock record is never touched.
 /**
- * @typedef {object} SimulationOverrideVars
- * @property {string} supplierId
- * @property {string} materialCode
- * @property {SimulationOverrideField} field
- * @property {number} value
- * @property {string} [date] -  `YYYY-MM-DD`, for inProduction and toDistributor.
+ * `date`:  `YYYY-MM-DD`, for inProduction and toDistributor.
+ *
+ * @typedef {{
+ *   readonly supplierId: string;
+ *   readonly materialCode: string;
+ *   readonly field: SimulationOverrideField;
+ *   readonly value: number;
+ *   readonly date?: string;
+ * }} SimulationOverrideVars
  */
 
 /** Enter a missing figure for the stock simulation (`t_simulation_override_set`). */
@@ -2625,12 +2629,13 @@ export function useSimulationOverrideSet() {
 // forecast shown on both forecast pages.
 
 /**
- * @typedef {object} ForecastOverrideVars
- * @property {string} skuCode
- * @property {string} weekStart
- * @property {number} newValue
- * @property {string | null} reasonCode
- * @property {string | null} note
+ * @typedef {{
+ *   readonly skuCode: string;
+ *   readonly weekStart: string;
+ *   readonly newValue: number;
+ *   readonly reasonCode: string | null;
+ *   readonly note: string | null;
+ * }} ForecastOverrideVars
  */
 
 /** Override one SKU × week of the demand forecast (fires `t_forecastoverride_record`). */
@@ -2815,12 +2820,13 @@ export function useInventoryCommand() {
 // successful one invalidates every scope's forecast and alert reads.
 
 /**
- * @typedef {object} ForecastLineRef
- * @property {string} publicationId
- * @property {string} planVersion
- * @property {string} supplierId
- * @property {string} materialCode
- * @property {string} periodBucket
+ * @typedef {{
+ *   readonly publicationId: string;
+ *   readonly planVersion: string;
+ *   readonly supplierId: string;
+ *   readonly materialCode: string;
+ *   readonly periodBucket: string;
+ * }} ForecastLineRef
  */
 
 /**

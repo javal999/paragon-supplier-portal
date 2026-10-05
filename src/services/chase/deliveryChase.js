@@ -78,16 +78,19 @@ export const DRIFT_COUNT = 2;
  * line's date — "behind since").
  */
 /**
- * @typedef {object} DeliveryChaseEntry
- * @property {string} supplierId
- * @property {string} agreementId
- * @property {number} itemSeq
- * @property {number} [releaseSeq] -  Line grain for nudge/alert; absent for the item-level drift entry.
- * @property {ChaseMode} mode
- * @property {CommitmentClass} type
- * @property {ChaseSeverity} severity
- * @property {string} dueDate
- * @property {string} materialCode
+ * `releaseSeq`:  Line grain for nudge/alert; absent for the item-level drift entry.
+ *
+ * @typedef {{
+ *   readonly supplierId: string;
+ *   readonly agreementId: string;
+ *   readonly itemSeq: number;
+ *   readonly releaseSeq?: number;
+ *   readonly mode: ChaseMode;
+ *   readonly type: CommitmentClass;
+ *   readonly severity: ChaseSeverity;
+ *   readonly dueDate: string;
+ *   readonly materialCode: string;
+ * }} DeliveryChaseEntry
  */
 
 // ─── Pure helpers ─────────────────────────────────────────────────────────────

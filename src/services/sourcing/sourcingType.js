@@ -124,12 +124,16 @@ export function sourcingTypeRefusal(key, value) {
 
 /** The event facts the type is read from, whichever event type it is. */
 /**
- * @typedef {object} SourcingEventFacts
- * @property {'rfq' | 'rfi' | 'rfp'} kind -  `rfq` reads an `RFQCategory`; `rfi` / `rfp` a supplier-master category.
- * @property {string} status
- * @property {string} materialCategory
- * @property {string} [purchasingGroup]
- * @property {SourcingType} [sourcingType] -  Stored at publish (BR-06).
+ * `kind`:  `rfq` reads an `RFQCategory`; `rfi` / `rfp` a supplier-master category.
+ * `sourcingType`:  Stored at publish (BR-06).
+ *
+ * @typedef {{
+ *   readonly kind: 'rfq' | 'rfi' | 'rfp';
+ *   readonly status: string;
+ *   readonly materialCategory: string;
+ *   readonly purchasingGroup?: string;
+ *   readonly sourcingType?: SourcingType;
+ * }} SourcingEventFacts
  */
 
 /**
@@ -202,13 +206,17 @@ export const qualifiedFor = (level, sourcingType) =>
 
 /** One vendor against one event's type, on a date. */
 /**
- * @typedef {object} BiddingEligibility
- * @property {EligibilityState} state
- * @property {SourcingType} sourcingType
- * @property {QualificationLevel} level
- * @property {QualificationRuleLevel} requiredLevel
- * @property {readonly QualificationRequiredDoc[]} missing -  The documents the vendor lacks for the required level (G1's list).
- * @property {boolean} placeholder -  The list for the required level is still the placeholder.
+ * `missing`:  The documents the vendor lacks for the required level (G1's list).
+ * `placeholder`:  The list for the required level is still the placeholder.
+ *
+ * @typedef {{
+ *   readonly state: EligibilityState;
+ *   readonly sourcingType: SourcingType;
+ *   readonly level: QualificationLevel;
+ *   readonly requiredLevel: QualificationRuleLevel;
+ *   readonly missing: readonly QualificationRequiredDoc[];
+ *   readonly placeholder: boolean;
+ * }} BiddingEligibility
  */
 
 /**
@@ -243,12 +251,13 @@ export const missingText = (e) => e.missing.map((d) => d.label).join(', ');
  * while the list was a placeholder (owner ruling 2026-09-29).
  */
 /**
- * @typedef {object} QualificationWarning
- * @property {string} supplierId
- * @property {SourcingType} sourcingType
- * @property {QualificationLevel} level
- * @property {QualificationRuleLevel} requiredLevel
- * @property {readonly string[]} missing
+ * @typedef {{
+ *   readonly supplierId: string;
+ *   readonly sourcingType: SourcingType;
+ *   readonly level: QualificationLevel;
+ *   readonly requiredLevel: QualificationRuleLevel;
+ *   readonly missing: readonly string[];
+ * }} QualificationWarning
  */
 
 /**
@@ -266,10 +275,11 @@ export const warningOf = (supplierId, e) => ({
 
 /** One vendor's eligibility, named. */
 /**
- * @typedef {object} NamedEligibility
- * @property {string} supplierId
- * @property {string} supplierName
- * @property {BiddingEligibility} eligibility
+ * @typedef {{
+ *   readonly supplierId: string;
+ *   readonly supplierName: string;
+ *   readonly eligibility: BiddingEligibility;
+ * }} NamedEligibility
  */
 
 /**

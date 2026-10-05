@@ -43,9 +43,13 @@ import {
 
 /** One break an item can be awarded at: its quantity and the pieces it means. */
 /**
- * @typedef {object} AwardItemBreak
- * @property {number} qty -  The break as the RFQ states it (per variant on a per-variant break).
- * @property {number} pieces -  The pieces awarded at that break — what the item's quantities total.
+ * `qty`:  The break as the RFQ states it (per variant on a per-variant break).
+ * `pieces`:  The pieces awarded at that break — what the item's quantities total.
+ *
+ * @typedef {{
+ *   readonly qty: number;
+ *   readonly pieces: number;
+ * }} AwardItemBreak
  */
 
 /** A quote as the award rule reads it. */
@@ -53,20 +57,27 @@ import {
 
 /** One item of an RFQ, as the award rule sees it. Both RFQ kinds produce these. */
 /**
- * @typedef {object} AwardItem
- * @property {string} key -  Stable per RFQ: a tiered item's line, a legacy line's material code, or `event`.
- * @property {string} name -  How every refusal names it: "item 1 (Oslo front sticker)".
- * @property {number} [lineNo] -  Tiered: the item's line. An award line names it by `itemLineNo`.
- * @property {string} itemCode -  Legacy: the material code an award line names it by (`''` for the whole event).
- * @property {boolean} tiered
- * @property {readonly AwardItemBreak[]} breaks
- * @property {(quote: AwardQuoteShape, breakQty: number) => boolean} priced -  Did this quote price this item at this break?
- * @property {string} [awardedIn] -  The id of an earlier award of the event that already awarded this item.
- * @property {string} [optionRef] RFx D2 — an RFP option: the ref its award lines name (`RfpAwardLine.optionRef`).
- *   Absent on every RFQ item.
- * @property {(line: AnyAwardLine, breakQty: number) => AwardRefusal | null} [lineRefusal] RFx D2 — an item that judges its own lines' offers (an RFP option: the
- *   line's firm offer must be the supplier's price in force at the break, and
- *   still valid). When present it replaces the quote lookup for this item.
+ * `key`:  Stable per RFQ: a tiered item's line, a legacy line's material code, or `event`.
+ * `name`:  How every refusal names it: "item 1 (Oslo front sticker)".
+ * `lineNo`:  Tiered: the item's line. An award line names it by `itemLineNo`.
+ * `itemCode`:  Legacy: the material code an award line names it by (`''` for the whole event).
+ * `priced`:  Did this quote price this item at this break?
+ * `awardedIn`:  The id of an earlier award of the event that already awarded this item.
+ * `optionRef`: RFx D2 — an RFP option: the ref its award lines name (`RfpAwardLine.optionRef`). Absent on every RFQ item.
+ * `lineRefusal`: RFx D2 — an item that judges its own lines' offers (an RFP option: the line's firm offer must be the supplier's price in force at the break, and still valid). When present it replaces the quote lookup for this item.
+ *
+ * @typedef {{
+ *   readonly key: string;
+ *   readonly name: string;
+ *   readonly lineNo?: number;
+ *   readonly itemCode: string;
+ *   readonly tiered: boolean;
+ *   readonly breaks: readonly AwardItemBreak[];
+ *   readonly priced: (quote: AwardQuoteShape, breakQty: number) => boolean;
+ *   readonly awardedIn?: string;
+ *   readonly optionRef?: string;
+ *   readonly lineRefusal?: (line: AnyAwardLine, breakQty: number) => AwardRefusal | null;
+ * }} AwardItem
  */
 
 /** The RFQ fields `awardItemsOf` reads. */
@@ -210,16 +221,22 @@ export const basisOf = (line) => line.splitBasis ?? 'pct';
 
 /** A refusal, structured so the verb can state it and the page can translate it. */
 /**
- * @typedef {object} AwardRefusal
- * @property {AwardRefusalCode} code
- * @property {string} [item] -  The item(s) concerned, by name.
- * @property {number} [pct] -  AWARD_SPLIT_INCOMPLETE on a share split: the item's share total.
- * @property {number} [total] -  AWARD_SPLIT_INCOMPLETE on a quantity split: the item's quantity total.
- * @property {number} [breakQty] -  AWARD_SPLIT_INCOMPLETE on a quantity split: the break quantity it must total.
- * @property {string} [detail] -  The offending line, supplier, break or award, as text.
- * @property {readonly NamedEligibility[]} [unqualified] Material G2 — AWARD_SUPPLIER_NOT_QUALIFIED, and AWARD_REASON_REQUIRED when
- *   the reason is owed for a vendor below the level on a placeholder list: the
- *   vendors concerned and why.
+ * `item`:  The item(s) concerned, by name.
+ * `pct`:  AWARD_SPLIT_INCOMPLETE on a share split: the item's share total.
+ * `total`:  AWARD_SPLIT_INCOMPLETE on a quantity split: the item's quantity total.
+ * `breakQty`:  AWARD_SPLIT_INCOMPLETE on a quantity split: the break quantity it must total.
+ * `detail`:  The offending line, supplier, break or award, as text.
+ * `unqualified`: Material G2 — AWARD_SUPPLIER_NOT_QUALIFIED, and AWARD_REASON_REQUIRED when the reason is owed for a vendor below the level on a placeholder list: the vendors concerned and why.
+ *
+ * @typedef {{
+ *   readonly code: AwardRefusalCode;
+ *   readonly item?: string;
+ *   readonly pct?: number;
+ *   readonly total?: number;
+ *   readonly breakQty?: number;
+ *   readonly detail?: string;
+ *   readonly unqualified?: readonly NamedEligibility[];
+ * }} AwardRefusal
  */
 
 /**
@@ -351,9 +368,13 @@ export function derivedQuantities(pieces, lines) {
  * AWARD_EMPTY.
  */
 /**
- * @typedef {object} AwardSettleRest
- * @property {boolean} partlyAwarded -  The event is `Partly awarded`: an earlier award of it is in force.
- * @property {readonly string[]} notAwardedKeys -  The award's "Will not award" items, by `AwardItem.key`.
+ * `partlyAwarded`:  The event is `Partly awarded`: an earlier award of it is in force.
+ * `notAwardedKeys`:  The award's "Will not award" items, by `AwardItem.key`.
+ *
+ * @typedef {{
+ *   readonly partlyAwarded: boolean;
+ *   readonly notAwardedKeys: readonly string[];
+ * }} AwardSettleRest
  */
 
 /**
@@ -555,16 +576,18 @@ export function awardQualificationRefusal(lines, eligibilityOf) {
 
 /** Why an award owes a reason. */
 /**
- * @typedef {object} AwardReasonOwed
- * @property {boolean} always -  An RFP award always owes one (NR-2 BR-06).
- * @property {readonly AwardItem[]} departing -  RFQ items whose lines leave out the item's best-scored quote (NR-3 BR-08).
- * @property {readonly NamedEligibility[]} unqualified Material G2 — owner ruling 2026-09-29: vendors awarded below the level
- *   while the list for it is a placeholder. The award record keeps them as
- *   `qualificationWarnings`.
- * @property {readonly { readonly item: AwardItem; readonly supplierIds: readonly string[] }[]} flagged Material B4 (MR-2 BR-06, per item) — the awarded items that give a share to
- *   a supplier red-flagged on weekly update compliance, with those suppliers.
- *   A flag only asks for a reason; it never refuses by itself (MR-2 BR-07).
- * @property {boolean} owed
+ * `always`:  An RFP award always owes one (NR-2 BR-06).
+ * `departing`:  RFQ items whose lines leave out the item's best-scored quote (NR-3 BR-08).
+ * `unqualified`: Material G2 — owner ruling 2026-09-29: vendors awarded below the level while the list for it is a placeholder. The award record keeps them as `qualificationWarnings`.
+ * `flagged`: Material B4 (MR-2 BR-06, per item) — the awarded items that give a share to a supplier red-flagged on weekly update compliance, with those suppliers. A flag only asks for a reason; it never refuses by itself (MR-2 BR-07).
+ *
+ * @typedef {{
+ *   readonly always: boolean;
+ *   readonly departing: readonly AwardItem[];
+ *   readonly unqualified: readonly NamedEligibility[];
+ *   readonly flagged: readonly { readonly item: AwardItem; readonly supplierIds: readonly string[] }[];
+ *   readonly owed: boolean;
+ * }} AwardReasonOwed
  */
 
 /**

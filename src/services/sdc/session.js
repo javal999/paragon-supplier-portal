@@ -28,14 +28,16 @@
 /** @import { SdcObjectKind, SubmissionObjectRef, SubmissionSession } from './types' */
 
 /**
- * @typedef {object} SubmissionSessionRecorder
- * @property {string} sessionId
- * @property {(kind: SdcObjectKind, objectId: string, correlationId: string) => void} attempt -  Record one attempted object dispatch (kind + minted id + correlationId).
- * @property {() => string | null} causationAnchor The session's audit anchor — the FIRST attempted command's correlationId,
- *   or null before any attempt. Commands 2..n pass this as their `causationId`
- *   so the whole visit shares one DR-10 event group. Equals the envelope's
- *   `auditCorrelationId` by construction.
- * @property {() => SubmissionSession} envelope -  The immutable SDC-0 envelope for what was attempted together.
+ * `attempt`:  Record one attempted object dispatch (kind + minted id + correlationId).
+ * `causationAnchor`: The session's audit anchor — the FIRST attempted command's correlationId, or null before any attempt. Commands 2..n pass this as their `causationId` so the whole visit shares one DR-10 event group. Equals the envelope's `auditCorrelationId` by construction.
+ * `envelope`:  The immutable SDC-0 envelope for what was attempted together.
+ *
+ * @typedef {{
+ *   readonly sessionId: string;
+ *   attempt: (kind: SdcObjectKind, objectId: string, correlationId: string) => void;
+ *   causationAnchor: () => string | null;
+ *   envelope: () => SubmissionSession;
+ * }} SubmissionSessionRecorder
  */
 
 /**

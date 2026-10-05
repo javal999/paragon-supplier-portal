@@ -31,19 +31,28 @@ import ts from 'typescript';
 // ─── The TREE half ───────────────────────────────────────────────────────────
 
 /**
- * @typedef {object} DerivedSubService
- * @property {string} property -  The property name on `IDataService`, e.g. `procurement`.
- * @property {string} iface -  The interface it is typed as, e.g. `IProcurementService`.
- * @property {readonly string[]} methods -  Method names, in declaration order.
- * @property {boolean} halvesAgree -  False when the NODE and CHECKER halves disagree — see the header.
+ * `property`:  The property name on `IDataService`, e.g. `procurement`.
+ * `iface`:  The interface it is typed as, e.g. `IProcurementService`.
+ * `methods`:  Method names, in declaration order.
+ * `halvesAgree`:  False when the NODE and CHECKER halves disagree — see the header.
+ *
+ * @typedef {{
+ *   readonly property: string;
+ *   readonly iface: string;
+ *   readonly methods: readonly string[];
+ *   readonly halvesAgree: boolean;
+ * }} DerivedSubService
  */
 
 /**
- * @typedef {object} DerivedSurface
- * @property {readonly DerivedSubService[]} subServices
- * @property {readonly string[]} topLevelMethods -  Methods declared directly on `IDataService`, e.g. `getCapabilities`.
- * @property {number} subMethodTotal
- * @property {number} grandTotal
+ * `topLevelMethods`:  Methods declared directly on `IDataService`, e.g. `getCapabilities`.
+ *
+ * @typedef {{
+ *   readonly subServices: readonly DerivedSubService[];
+ *   readonly topLevelMethods: readonly string[];
+ *   readonly subMethodTotal: number;
+ *   readonly grandTotal: number;
+ * }} DerivedSurface
  */
 
 /**
@@ -462,10 +471,11 @@ export const backticked = (s) => [
 ];
 
 /**
- * @typedef {object} DocIfaceRow
- * @property {string} iface
- * @property {number} count
- * @property {readonly string[]} methods
+ * @typedef {{
+ *   readonly iface: string;
+ *   readonly count: number;
+ *   readonly methods: readonly string[];
+ * }} DocIfaceRow
  */
 
 /**
@@ -499,13 +509,16 @@ export function parseComposition(sectionText) {
 }
 
 /**
- * @typedef {object} DocFlowRow
- * @property {string} file
- * @property {string} entity
- * @property {number} count
- * @property {readonly string[]} transitionIds
- * @property {string} wiring -  The wiring cell verbatim, and the boolean the contract actually claims.
- * @property {boolean} claimsWired
+ * `wiring`:  The wiring cell verbatim, and the boolean the contract actually claims.
+ *
+ * @typedef {{
+ *   readonly file: string;
+ *   readonly entity: string;
+ *   readonly count: number;
+ *   readonly transitionIds: readonly string[];
+ *   readonly wiring: string;
+ *   readonly claimsWired: boolean;
+ * }} DocFlowRow
  */
 
 /**

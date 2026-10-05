@@ -88,12 +88,15 @@ Two kinds of failure in the dry run are not tooling problems:
   regex); `storedFieldGate/derive.js` skips a JS constructor assignment to a member a base type
   already declares (`this.name = …` on an `Error` subclass); `unionMembers()` in
   `complianceSapSync.test.js`; `deriveMethodParams` / `deriveUnionLiterals` in `deriveC1Surface.js`.
-- **Known loss, by design for now — `readonly`.** JSDoc `@property` cannot express `readonly`, so
-  an interface converted to `@typedef {object}` + `@property` loses its `readonly` markers (code
-  that writes such a field is no longer flagged). No behaviour changes; the types are looser. A
-  `@typedef {{ readonly a: T }}` type-literal keeps it but moves each field's comment into prose.
-  Decide before B6/B7 whether the converter should prefer the type-literal form when any member is
-  `readonly` (`ledgerTruth.test` dropped its `readonly suggestedQty` text anchor for this reason).
+- **`readonly` is KEPT (owner ruling 2026-10-05).** JSDoc `@property` cannot express `readonly`,
+  so `ts-to-js.mjs` writes an interface with ANY readonly member as a type-literal typedef
+  (`@typedef {{ readonly a: T }} X`); each member's comment becomes a labelled line of prose above
+  it (`` `a`: … ``). Interfaces with no readonly member keep the `@typedef {object}` + `@property`
+  form. Batches converted before the ruling (B1–B4, and B5's first pass) were migrated with
+  `scripts/codemods/readonly-typedefs.mjs`, which rebuilds those blocks from the TS originals at
+  `--base`. That script regenerates prose from the TS text, so run `rename-references.mjs` again
+  after it (it restores `.ts` names in comments). Text matchers that read shapes must read the
+  type-literal form too (`deriveC9FieldList.js` reads both).
 - Interfaces that REDECLARE a base member convert to `Omit<Base, 'k'> & {…}` (B4); B1–B3's few
   heritage typedefs used a plain intersection, which is equivalent unless the member is an array or
   function type (tsc found no difference there).

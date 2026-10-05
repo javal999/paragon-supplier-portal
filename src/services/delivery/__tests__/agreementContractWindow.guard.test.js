@@ -64,14 +64,15 @@ const EXPECTED_AGREEMENT_IDS = [
 const day = (iso) => iso.slice(0, 10);
 
 /**
- * @typedef {object} Row
- * @property {string} agreementId
- * @property {string} contractId
- * @property {number} lineSeq
- * @property {number} releaseSeq
- * @property {string} releaseDate
- * @property {string} start
- * @property {string} end
+ * @typedef {{
+ *   readonly agreementId: string;
+ *   readonly contractId: string;
+ *   readonly lineSeq: number;
+ *   readonly releaseSeq: number;
+ *   readonly releaseDate: string;
+ *   readonly start: string;
+ *   readonly end: string;
+ * }} Row
  */
 
 /**

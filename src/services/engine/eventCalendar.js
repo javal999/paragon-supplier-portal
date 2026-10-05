@@ -47,10 +47,14 @@ import { addDays, daysBetween, mondayOf } from './dates';
 export const DEMAND_EVENTS = ['payday', 'doubleDate', 'christmas', 'ramadan', 'preRamadan'];
 
 /**
- * @typedef {object} RamadanDates
- * @property {number} hijriYear
- * @property {IsoDate} start -  First day of Ramadan.
- * @property {IsoDate} eid -  Eid al-Fitr (Lebaran), the day after Ramadan ends.
+ * `start`:  First day of Ramadan.
+ * `eid`:  Eid al-Fitr (Lebaran), the day after Ramadan ends.
+ *
+ * @typedef {{
+ *   readonly hijriYear: number;
+ *   readonly start: IsoDate;
+ *   readonly eid: IsoDate;
+ * }} RamadanDates
  */
 
 /**
@@ -106,9 +110,12 @@ export const ramadanTableCoversUntil = (table = RAMADAN_TABLE) =>
   addDays(table[table.length - 1].eid, -1);
 
 /**
- * @typedef {object} WeekTag
- * @property {readonly DemandEvent[]} events
- * @property {Readonly<Partial<Record<DemandEvent, string>>>} occurrence -  Per event, the occurrence it belongs to ('2026-09', '2026', 'H1447').
+ * `occurrence`:  Per event, the occurrence it belongs to ('2026-09', '2026', 'H1447').
+ *
+ * @typedef {{
+ *   readonly events: readonly DemandEvent[];
+ *   readonly occurrence: Readonly<Partial<Record<DemandEvent, string>>>;
+ * }} WeekTag
  */
 
 /** The events a week contains, with `lead` pre-Ramadan weeks. */
@@ -234,14 +241,20 @@ export function estimateLead(y, weeks, table = RAMADAN_TABLE) {
 }
 
 /**
- * @typedef {object} EventFactor
- * @property {DemandEvent} event
- * @property {number} factor -  The factor applied: shrunk and capped; 1 when not estimable.
- * @property {number | null} raw -  The unshrunk mean ratio; null when not estimable.
- * @property {number} occurrences -  Distinct occurrences in the history (months, or years).
- * @property {number} weeks -  History weeks that carried the event and had a baseline.
- * @property {'effect' | 'noClearEffect' | 'notEstimable'} status
- * @property {boolean} capped
+ * `factor`:  The factor applied: shrunk and capped; 1 when not estimable.
+ * `raw`:  The unshrunk mean ratio; null when not estimable.
+ * `occurrences`:  Distinct occurrences in the history (months, or years).
+ * `weeks`:  History weeks that carried the event and had a baseline.
+ *
+ * @typedef {{
+ *   readonly event: DemandEvent;
+ *   readonly factor: number;
+ *   readonly raw: number | null;
+ *   readonly occurrences: number;
+ *   readonly weeks: number;
+ *   readonly status: 'effect' | 'noClearEffect' | 'notEstimable';
+ *   readonly capped: boolean;
+ * }} EventFactor
  */
 
 /**

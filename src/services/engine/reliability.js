@@ -78,9 +78,10 @@ import {
 
 /** ENG-D8 — ±10% per version, ±20% cumulative from first publication. */
 /**
- * @typedef {object} ToleranceBand
- * @property {number} perVersion
- * @property {number} cumulative
+ * @typedef {{
+ *   readonly perVersion: number;
+ *   readonly cumulative: number;
+ * }} ToleranceBand
  */
 /** @type {ToleranceBand} */
 export const DEFAULT_TOLERANCE_BAND = Object.freeze({ perVersion: 0.1, cumulative: 0.2 });
@@ -89,10 +90,15 @@ export const DEFAULT_TOLERANCE_BAND = Object.freeze({ perVersion: 0.1, cumulativ
 export const SEASON_WEEKS = 52;
 
 /**
- * @typedef {object} MeasureWindow
- * @property {IsoDate} from -  First day, inclusive.
- * @property {IsoDate} to -  Last day, inclusive.
- * @property {IsoInstant} asOf -  Nothing after this instant counts as having happened.
+ * `from`:  First day, inclusive.
+ * `to`:  Last day, inclusive.
+ * `asOf`:  Nothing after this instant counts as having happened.
+ *
+ * @typedef {{
+ *   readonly from: IsoDate;
+ *   readonly to: IsoDate;
+ *   readonly asOf: IsoInstant;
+ * }} MeasureWindow
  */
 
 /**
@@ -138,19 +144,25 @@ export function breachesToleranceBand(from, to, first, band = DEFAULT_TOLERANCE_
 export const MISS_CLASSES = ['neverConfirmed', 'ptiCaused', 'supplierCaused'];
 
 /**
- * @typedef {object} LineAssessment
- * @property {string} poNumber
- * @property {number} line
- * @property {string} supplierId
- * @property {string} materialCode
- * @property {boolean} confirmedByDeadline
- * @property {boolean} changedInsideLeadTime -  At least one PTI change was made inside the supplier lead time (RL.3.27).
- * @property {boolean} cancelledInsideLeadTime -  PTI cancelled the line (quantity to 0) inside the lead time.
- * @property {boolean} cancelled -  A cancelled line, whenever it was cancelled.
- * @property {MissClass} branch -  The class the line WOULD take if it missed — decided with its basis.
- * @property {number} basisQty
- * @property {IsoDate} basisDate
- * @property {number} onTimeQty
+ * `changedInsideLeadTime`:  At least one PTI change was made inside the supplier lead time (RL.3.27).
+ * `cancelledInsideLeadTime`:  PTI cancelled the line (quantity to 0) inside the lead time.
+ * `cancelled`:  A cancelled line, whenever it was cancelled.
+ * `branch`:  The class the line WOULD take if it missed — decided with its basis.
+ *
+ * @typedef {{
+ *   readonly poNumber: string;
+ *   readonly line: number;
+ *   readonly supplierId: string;
+ *   readonly materialCode: string;
+ *   readonly confirmedByDeadline: boolean;
+ *   readonly changedInsideLeadTime: boolean;
+ *   readonly cancelledInsideLeadTime: boolean;
+ *   readonly cancelled: boolean;
+ *   readonly branch: MissClass;
+ *   readonly basisQty: number;
+ *   readonly basisDate: IsoDate;
+ *   readonly onTimeQty: number;
+ * }} LineAssessment
  */
 
 /**
@@ -272,44 +284,57 @@ export function isMissed(a, asOf) {
 // ── Aggregates ──────────────────────────────────────────────────────────────
 
 /**
- * @typedef {object} ConfirmationMeasure
- * @property {number} due
- * @property {number} confirmed
- * @property {number | null} rate -  0–1, null when nothing was due.
+ * `rate`:  0–1, null when nothing was due.
+ *
+ * @typedef {{
+ *   readonly due: number;
+ *   readonly confirmed: number;
+ *   readonly rate: number | null;
+ * }} ConfirmationMeasure
  */
 
 /**
- * @typedef {object} CommitmentMeasure
- * @property {number} lines
- * @property {number} committedQty
- * @property {number} onTimeQty
- * @property {number | null} rate
+ * @typedef {{
+ *   readonly lines: number;
+ *   readonly committedQty: number;
+ *   readonly onTimeQty: number;
+ *   readonly rate: number | null;
+ * }} CommitmentMeasure
  */
 
 /**
- * @typedef {object} MissSplit
- * @property {number} total
- * @property {number} neverConfirmed
- * @property {number} ptiCaused
- * @property {number} supplierCaused
+ * @typedef {{
+ *   readonly total: number;
+ *   readonly neverConfirmed: number;
+ *   readonly ptiCaused: number;
+ *   readonly supplierCaused: number;
+ * }} MissSplit
  */
 
 /**
- * @typedef {object} PlanChangeMeasure
- * @property {number} schedules
- * @property {number} changedInsideLeadTime
- * @property {number | null} share -  RL.3.27, 0–1; null with no schedules.
- * @property {number | null} masc -  Mean MASC over material × consecutive-version pairs; null with none measurable.
- * @property {number | null} mascI -  Mean MASC-I over materials; null with none measurable.
+ * `share`:  RL.3.27, 0–1; null with no schedules.
+ * `masc`:  Mean MASC over material × consecutive-version pairs; null with none measurable.
+ * `mascI`:  Mean MASC-I over materials; null with none measurable.
+ *
+ * @typedef {{
+ *   readonly schedules: number;
+ *   readonly changedInsideLeadTime: number;
+ *   readonly share: number | null;
+ *   readonly masc: number | null;
+ *   readonly mascI: number | null;
+ * }} PlanChangeMeasure
  */
 
 /**
- * @typedef {object} SupplierReliability
- * @property {string} supplierId
- * @property {ConfirmationMeasure} confirmation
- * @property {CommitmentMeasure} commitment
- * @property {MissSplit} misses
- * @property {PlanChangeMeasure} planChange -  PTI's own plan changes on this supplier's materials (BR-05, BR-07).
+ * `planChange`:  PTI's own plan changes on this supplier's materials (BR-05, BR-07).
+ *
+ * @typedef {{
+ *   readonly supplierId: string;
+ *   readonly confirmation: ConfirmationMeasure;
+ *   readonly commitment: CommitmentMeasure;
+ *   readonly misses: MissSplit;
+ *   readonly planChange: PlanChangeMeasure;
+ * }} SupplierReliability
  */
 
 /**
@@ -509,8 +534,9 @@ export function planChangeForMaterial(versions, scale, w) {
 // ── The per-supplier read ───────────────────────────────────────────────────
 
 /**
- * @typedef {object} ReliabilityOptions
- * @property {ToleranceBand} [band]
+ * @typedef {{
+ *   readonly band?: ToleranceBand;
+ * }} ReliabilityOptions
  */
 
 /**

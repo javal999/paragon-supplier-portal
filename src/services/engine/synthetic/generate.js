@@ -70,37 +70,54 @@ import { createRng } from './prng';
 // ── Inputs ──────────────────────────────────────────────────────────────────
 
 /**
- * @typedef {object} GeneratorMaterial
- * @property {string} materialCode
- * @property {MaterialType} materialType
- * @property {string} materialGroup
- * @property {Uom} canonicalUom
+ * @typedef {{
+ *   readonly materialCode: string;
+ *   readonly materialType: MaterialType;
+ *   readonly materialGroup: string;
+ *   readonly canonicalUom: Uom;
+ * }} GeneratorMaterial
  */
 
 /**
- * @typedef {object} GeneratorSupplier
- * @property {string} supplierId
- * @property {string} category -  The supplier master's category ('Packaging', 'Raw Material', …).
+ * `category`:  The supplier master's category ('Packaging', 'Raw Material', …).
+ *
+ * @typedef {{
+ *   readonly supplierId: string;
+ *   readonly category: string;
+ * }} GeneratorSupplier
  */
 
 /**
- * @typedef {object} GeneratorRelationship
- * @property {string} supplierId
- * @property {string} materialCode
- * @property {number} [share] -  The share the Hub already allocates, when it states one.
+ * `share`:  The share the Hub already allocates, when it states one.
+ *
+ * @typedef {{
+ *   readonly supplierId: string;
+ *   readonly materialCode: string;
+ *   readonly share?: number;
+ * }} GeneratorRelationship
  */
 
 /**
- * @typedef {object} GeneratorSizes
- * @property {number} finishedGoods
- * @property {number} salesWeeks -  Weeks of sell-in history (E14-01 BR-02: 2 to 3 years).
- * @property {number} poWeeks -  Weeks of PO history ending at the present.
- * @property {number} openWeeks -  Weeks of open (future) PO lines past the present.
- * @property {number} planVersions -  Weekly plan versions published, ending at the present.
- * @property {number} planHorizonWeeks -  Weeks each plan version covers.
- * @property {number} stockWeeks -  Weekly stock snapshots ending at the present.
- * @property {number} fgPlanOrigins -  Past weekly origins of SAP's finished-goods plan (plus this week's).
- * @property {number} fgPlanHorizonWeeks -  Weeks each finished-goods plan snapshot covers.
+ * `salesWeeks`:  Weeks of sell-in history (E14-01 BR-02: 2 to 3 years).
+ * `poWeeks`:  Weeks of PO history ending at the present.
+ * `openWeeks`:  Weeks of open (future) PO lines past the present.
+ * `planVersions`:  Weekly plan versions published, ending at the present.
+ * `planHorizonWeeks`:  Weeks each plan version covers.
+ * `stockWeeks`:  Weekly stock snapshots ending at the present.
+ * `fgPlanOrigins`:  Past weekly origins of SAP's finished-goods plan (plus this week's).
+ * `fgPlanHorizonWeeks`:  Weeks each finished-goods plan snapshot covers.
+ *
+ * @typedef {{
+ *   readonly finishedGoods: number;
+ *   readonly salesWeeks: number;
+ *   readonly poWeeks: number;
+ *   readonly openWeeks: number;
+ *   readonly planVersions: number;
+ *   readonly planHorizonWeeks: number;
+ *   readonly stockWeeks: number;
+ *   readonly fgPlanOrigins: number;
+ *   readonly fgPlanHorizonWeeks: number;
+ * }} GeneratorSizes
  */
 
 /** @type {GeneratorSizes} */
@@ -133,17 +150,22 @@ export const WAREHOUSE_TARGETS = Object.freeze({
 export const FLAGGED_COUNT_SHARE = 0.15;
 
 /**
- * @typedef {object} GeneratorInput
- * @property {number} seed
- * @property {IsoInstant} now -  The hub's present (an instant). Everything is dated relative to it; nothing after it happens.
- * @property {readonly GeneratorMaterial[]} materials
- * @property {readonly GeneratorSupplier[]} suppliers
- * @property {readonly GeneratorRelationship[]} relationships
- * @property {(supplierId: string, material: GeneratorMaterial) => number} leadTimeDays -  The Hub's lead-time rule for a supplier × material (reused, not restated).
- * @property {(createdAt: IsoInstant) => IsoInstant} confirmDeadline -  The Hub's PO response-deadline rule (reused, not restated).
- * @property {Readonly<Record<string, SupplierProfile>>} profiles
- * @property {SupplierProfile} defaultProfile
- * @property {Partial<GeneratorSizes>} [sizes]
+ * `now`:  The hub's present (an instant). Everything is dated relative to it; nothing after it happens.
+ * `leadTimeDays`:  The Hub's lead-time rule for a supplier × material (reused, not restated).
+ * `confirmDeadline`:  The Hub's PO response-deadline rule (reused, not restated).
+ *
+ * @typedef {{
+ *   readonly seed: number;
+ *   readonly now: IsoInstant;
+ *   readonly materials: readonly GeneratorMaterial[];
+ *   readonly suppliers: readonly GeneratorSupplier[];
+ *   readonly relationships: readonly GeneratorRelationship[];
+ *   readonly leadTimeDays: (supplierId: string, material: GeneratorMaterial) => number;
+ *   readonly confirmDeadline: (createdAt: IsoInstant) => IsoInstant;
+ *   readonly profiles: Readonly<Record<string, SupplierProfile>>;
+ *   readonly defaultProfile: SupplierProfile;
+ *   readonly sizes?: Partial<GeneratorSizes>;
+ * }} GeneratorInput
  */
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
@@ -675,11 +697,12 @@ function buildPlanVersions(sources, requirement, baseline, thisMonday, sizes, rn
 // ── PO lines and what happened to them ──────────────────────────────────────
 
 /**
- * @typedef {object} LineOutcome
- * @property {PoLine} line
- * @property {ScheduleChange[]} changes
- * @property {Confirmation[]} confirmations
- * @property {Omit<Receipt, 'grNumber'>[]} receipts
+ * @typedef {{
+ *   readonly line: PoLine;
+ *   readonly changes: ScheduleChange[];
+ *   readonly confirmations: Confirmation[];
+ *   readonly receipts: Omit<Receipt, 'grNumber'>[];
+ * }} LineOutcome
  */
 
 /**

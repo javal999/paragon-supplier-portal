@@ -95,10 +95,11 @@ import { interimOrderSize, offsetWeeks, planInForce, primarySource, slKey } from
 
 /** ENG-D5 fill-rate targets, as fractions. The administrator owns them (X-05). */
 /**
- * @typedef {object} ServiceTargets
- * @property {number} high
- * @property {number} standard
- * @property {number} slow
+ * @typedef {{
+ *   readonly high: number;
+ *   readonly standard: number;
+ *   readonly slow: number;
+ * }} ServiceTargets
  */
 
 /** @type {ServiceTargets} */
@@ -107,16 +108,26 @@ export const DEFAULT_SERVICE_TARGETS = Object.freeze({ high: 0.95, standard: 0.9
 /** @typedef {keyof ServiceTargets} ServiceTier */
 
 /**
- * @typedef {object} SafetyStockOptions
- * @property {IsoDate} asOf -  The present, as a day.
- * @property {ServiceTargets} targets
- * @property {number} safetyLeadTimePercentile -  BR-03 — the safety-lead-time percentile, as a fraction (0.8).
- * @property {number} reviewWeeks -  The review period, in weeks.
- * @property {number} minOrigins -  BR-05 — fewer usable origins than this: SAP's value.
- * @property {number} minReceipts -  BR-03 edge case — fewer receipts than this: the group default.
- * @property {number} receiptWindowWeeks -  Receipts counted for the safety lead time, trailing weeks.
- * @property {number} highVolumeShare -  BR-02 default tiering: the top share of materials by volume.
- * @property {number} slowMoverAdi -  BR-02 default tiering: slow mover at or above this average demand interval.
+ * `asOf`:  The present, as a day.
+ * `safetyLeadTimePercentile`:  BR-03 — the safety-lead-time percentile, as a fraction (0.8).
+ * `reviewWeeks`:  The review period, in weeks.
+ * `minOrigins`:  BR-05 — fewer usable origins than this: SAP's value.
+ * `minReceipts`:  BR-03 edge case — fewer receipts than this: the group default.
+ * `receiptWindowWeeks`:  Receipts counted for the safety lead time, trailing weeks.
+ * `highVolumeShare`:  BR-02 default tiering: the top share of materials by volume.
+ * `slowMoverAdi`:  BR-02 default tiering: slow mover at or above this average demand interval.
+ *
+ * @typedef {{
+ *   readonly asOf: IsoDate;
+ *   readonly targets: ServiceTargets;
+ *   readonly safetyLeadTimePercentile: number;
+ *   readonly reviewWeeks: number;
+ *   readonly minOrigins: number;
+ *   readonly minReceipts: number;
+ *   readonly receiptWindowWeeks: number;
+ *   readonly highVolumeShare: number;
+ *   readonly slowMoverAdi: number;
+ * }} SafetyStockOptions
  */
 
 /** @type {Omit<SafetyStockOptions, 'asOf'>} */
@@ -211,11 +222,15 @@ export const reorderPoint = (expectedDemandOverRisk, safetyStock) =>
 // ── The errors of the plan in use (M3 step 1) ───────────────────────────────
 
 /**
- * @typedef {object} OriginError
- * @property {IsoDate} origin -  The Monday the plan snapshot was made.
- * @property {number} planned
- * @property {number} actual
- * @property {number} error -  actual − planned: positive is a shortfall.
+ * `origin`:  The Monday the plan snapshot was made.
+ * `error`:  actual − planned: positive is a shortfall.
+ *
+ * @typedef {{
+ *   readonly origin: IsoDate;
+ *   readonly planned: number;
+ *   readonly actual: number;
+ *   readonly error: number;
+ * }} OriginError
  */
 
 /**
@@ -290,11 +305,16 @@ export function planErrors(data, asOf, riskWeeks) {
 // ── Tiers (BR-02 default) ───────────────────────────────────────────────────
 
 /**
- * @typedef {object} TierAssignment
- * @property {ServiceTier} tier
- * @property {number} volumePallets -  Pallets of actual requirement over the last 52 weeks.
- * @property {number} averageDemandInterval -  52 ÷ weeks with any requirement (Infinity when none).
- * @property {'defaultByVolume'} source -  Always the default until the Material Planner lists tiers (ENG-D14).
+ * `volumePallets`:  Pallets of actual requirement over the last 52 weeks.
+ * `averageDemandInterval`:  52 ÷ weeks with any requirement (Infinity when none).
+ * `source`:  Always the default until the Material Planner lists tiers (ENG-D14).
+ *
+ * @typedef {{
+ *   readonly tier: ServiceTier;
+ *   readonly volumePallets: number;
+ *   readonly averageDemandInterval: number;
+ *   readonly source: 'defaultByVolume';
+ * }} TierAssignment
  */
 
 /**
@@ -352,13 +372,17 @@ export function defaultTiers(data, asOf, options) {
 // ── Safety lead time (M7, BR-03) ────────────────────────────────────────────
 
 /**
- * @typedef {object} SafetyLeadTime
- * @property {string} supplierId
- * @property {string} materialGroup
- * @property {number} days
- * @property {'supplier' | 'groupDefault'} source
- * @property {number} receipts -  The supplier's own receipts in the window (what the quantile would read).
- * @property {readonly number[]} delays -  The delays it was read from, in days, oldest receipt first.
+ * `receipts`:  The supplier's own receipts in the window (what the quantile would read).
+ * `delays`:  The delays it was read from, in days, oldest receipt first.
+ *
+ * @typedef {{
+ *   readonly supplierId: string;
+ *   readonly materialGroup: string;
+ *   readonly days: number;
+ *   readonly source: 'supplier' | 'groupDefault';
+ *   readonly receipts: number;
+ *   readonly delays: readonly number[];
+ * }} SafetyLeadTime
  */
 
 /**
@@ -440,54 +464,64 @@ export function safetyLeadTimes(delays, pairs, percentile, minReceipts) {
 // ── The run over a dataset ──────────────────────────────────────────────────
 
 /**
- * @typedef {object} MaterialSafetyStock
- * @property {string} materialCode
- * @property {WarehouseKind} kind
- * @property {Uom} uom
- * @property {string} materialGroup
- * @property {string | null} supplierId
- * @property {number} leadTimeDays
- * @property {number} riskWeeks -  W = ⌈lead time ÷ 7⌉ + review weeks.
- * @property {ServiceTier} tier
- * @property {TierAssignment['source']} tierSource
- * @property {number} target
- * @property {number} volumePallets
- * @property {number} averageDemandInterval
- * @property {readonly OriginError[]} errors -  The errors behind the figure (AC-03: recalculable from these).
- * @property {IsoDate | null} firstOrigin
- * @property {IsoDate | null} lastOrigin
- * @property {number} orderQtyPerCycle
- * @property {number} engineSafetyStock -  The fill-rate result on the history — computed even where the fallback is used.
- * @property {number | null} quantileSafetyStock -  The β-quantile reading of the same errors, for comparison.
- * @property {number | null} historicalFillRate -  The fill rate the history would have had at the safety stock used.
- * @property {number} safetyStock -  The figure in force.
- * @property {'empiricalFillRate' | 'sapFallback'} method
- * @property {'engine' | 'sap'} source
- * @property {number} sapSafetyStock
- * @property {number} freedUnits -  SAP's safety stock − the figure in force (positive frees space).
- * @property {number | null} sapPallets -  The same three in pallets (null when the material has no volume record).
- * @property {number | null} safetyStockPallets
- * @property {number | null} freedPallets
- * @property {number} safetyLeadTimeDays
- * @property {'supplier' | 'groupDefault' | 'none'} safetyLeadTimeSource
- * @property {number} safetyLeadTimeReceipts
- * @property {number} expectedDemandOverRisk
- * @property {number} reorderPoint
- * @property {boolean} oneSidedErrors -  Every error the same sign: E14-11 raises a bias alarm (edge case).
- * @property {boolean} reliesOnOrderLot The engine's safety stock is zero while an order is expected: the fill-rate
- *   target is met by the MOQ-sized order lot alone. Flagged for the planner to
- *   review rather than floored (owner, 2026-09-23 — a floor of demand over the
- *   safety lead time would double-count the earlier release E14-03 applies).
+ * `riskWeeks`:  W = ⌈lead time ÷ 7⌉ + review weeks.
+ * `errors`:  The errors behind the figure (AC-03: recalculable from these).
+ * `engineSafetyStock`:  The fill-rate result on the history — computed even where the fallback is used.
+ * `quantileSafetyStock`:  The β-quantile reading of the same errors, for comparison.
+ * `historicalFillRate`:  The fill rate the history would have had at the safety stock used.
+ * `safetyStock`:  The figure in force.
+ * `freedUnits`:  SAP's safety stock − the figure in force (positive frees space).
+ * `sapPallets`:  The same three in pallets (null when the material has no volume record).
+ * `oneSidedErrors`:  Every error the same sign: E14-11 raises a bias alarm (edge case).
+ * `reliesOnOrderLot`: The engine's safety stock is zero while an order is expected: the fill-rate target is met by the MOQ-sized order lot alone. Flagged for the planner to review rather than floored (owner, 2026-09-23 — a floor of demand over the safety lead time would double-count the earlier release E14-03 applies).
+ *
+ * @typedef {{
+ *   readonly materialCode: string;
+ *   readonly kind: WarehouseKind;
+ *   readonly uom: Uom;
+ *   readonly materialGroup: string;
+ *   readonly supplierId: string | null;
+ *   readonly leadTimeDays: number;
+ *   readonly riskWeeks: number;
+ *   readonly tier: ServiceTier;
+ *   readonly tierSource: TierAssignment['source'];
+ *   readonly target: number;
+ *   readonly volumePallets: number;
+ *   readonly averageDemandInterval: number;
+ *   readonly errors: readonly OriginError[];
+ *   readonly firstOrigin: IsoDate | null;
+ *   readonly lastOrigin: IsoDate | null;
+ *   readonly orderQtyPerCycle: number;
+ *   readonly engineSafetyStock: number;
+ *   readonly quantileSafetyStock: number | null;
+ *   readonly historicalFillRate: number | null;
+ *   readonly safetyStock: number;
+ *   readonly method: 'empiricalFillRate' | 'sapFallback';
+ *   readonly source: 'engine' | 'sap';
+ *   readonly sapSafetyStock: number;
+ *   readonly freedUnits: number;
+ *   readonly sapPallets: number | null;
+ *   readonly safetyStockPallets: number | null;
+ *   readonly freedPallets: number | null;
+ *   readonly safetyLeadTimeDays: number;
+ *   readonly safetyLeadTimeSource: 'supplier' | 'groupDefault' | 'none';
+ *   readonly safetyLeadTimeReceipts: number;
+ *   readonly expectedDemandOverRisk: number;
+ *   readonly reorderPoint: number;
+ *   readonly oneSidedErrors: boolean;
+ *   readonly reliesOnOrderLot: boolean;
+ * }} MaterialSafetyStock
  */
 
 /**
- * @typedef {object} SafetyStockRun
- * @property {IsoDate} asOf
- * @property {IsoDate | null} planMadeAt
- * @property {{ readonly name: 'empirical fill-rate safety stock'; readonly spec: 'METHOD-SPEC M3, M7'; readonly version: 1 }} method
- * @property {Omit<SafetyStockOptions, 'asOf'>} parameters
- * @property {readonly MaterialSafetyStock[]} materials
- * @property {readonly SafetyLeadTime[]} safetyLeadTimes
+ * @typedef {{
+ *   readonly asOf: IsoDate;
+ *   readonly planMadeAt: IsoDate | null;
+ *   readonly method: { readonly name: 'empirical fill-rate safety stock'; readonly spec: 'METHOD-SPEC M3, M7'; readonly version: 1 };
+ *   readonly parameters: Omit<SafetyStockOptions, 'asOf'>;
+ *   readonly materials: readonly MaterialSafetyStock[];
+ *   readonly safetyLeadTimes: readonly SafetyLeadTime[];
+ * }} SafetyStockRun
  */
 
 /**
@@ -697,14 +731,20 @@ export const RUN_INTERVAL_DAYS = Object.freeze({ packaging: 7, rawMaterial: 28 }
 export const previousRunDate = (kind, asOf) => addDays(asOf, -RUN_INTERVAL_DAYS[kind]);
 
 /**
- * @typedef {object} SafetyStockChange
- * @property {IsoDate} previousAsOf
- * @property {Pick< MaterialSafetyStock, 'safetyStock' | 'reorderPoint' | 'tier' | 'target' | 'orderQtyPerCycle' | 'riskWeeks' | 'source' | 'expectedDemandOverRisk' > | null} previous -  The last run's figures (null: the material was not in it).
- * @property {number} safetyStockDelta -  Now − last run, in whole units (0 when unchanged).
- * @property {number} reorderPointDelta
- * @property {number} originsAdded -  Past plans that entered, and left, the error history since the last run.
- * @property {number} originsDropped
- * @property {readonly SafetyStockChangeCause[]} causes -  Why, in the order above; empty when neither figure moved.
+ * `previous`:  The last run's figures (null: the material was not in it).
+ * `safetyStockDelta`:  Now − last run, in whole units (0 when unchanged).
+ * `originsAdded`:  Past plans that entered, and left, the error history since the last run.
+ * `causes`:  Why, in the order above; empty when neither figure moved.
+ *
+ * @typedef {{
+ *   readonly previousAsOf: IsoDate;
+ *   readonly previous: Pick< MaterialSafetyStock, 'safetyStock' | 'reorderPoint' | 'tier' | 'target' | 'orderQtyPerCycle' | 'riskWeeks' | 'source' | 'expectedDemandOverRisk' > | null;
+ *   readonly safetyStockDelta: number;
+ *   readonly reorderPointDelta: number;
+ *   readonly originsAdded: number;
+ *   readonly originsDropped: number;
+ *   readonly causes: readonly SafetyStockChangeCause[];
+ * }} SafetyStockChange
  */
 
 /**

@@ -208,9 +208,13 @@ const CAPABILITY_BACKING = {
 // operator then removes this entry (gate-2 opens) AND wires the CommandTarget
 // (gate-1) — BOTH required for green. Proven in flipHarness.test.js.
 /**
- * @typedef {object} HarvestGate
- * @property {string} readinessNoteKey -  i18n key for the capability-scoped "awaiting <source> harvest" marker.
- * @property {string} source -  The harvest that lands this capability's real data source (display token).
+ * `readinessNoteKey`:  i18n key for the capability-scoped "awaiting <source> harvest" marker.
+ * `source`:  The harvest that lands this capability's real data source (display token).
+ *
+ * @typedef {{
+ *   readonly readinessNoteKey: string;
+ *   readonly source: string;
+ * }} HarvestGate
  */
 
 /** @type {Partial<Record<Capability, HarvestGate>>} */

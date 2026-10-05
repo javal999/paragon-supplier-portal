@@ -50,15 +50,16 @@
  */
 
 /**
- * @typedef {object} MaterialSpaceEntry
- * @property {string} spaceId
- * @property {MaterialSpaceKind} kind
- * @property {RegExp} modules -  Modules whose material-bearing cells belong to this space. Membership is by
- *    OWNERSHIP (which file declares the code), NEVER by code shape — `materialCode`
- *    is contractually opaque (C9 §3).
- * @property {string} declaredBy -  The ruling that authorised the declaration. A space with no ruling is a
- *    space somebody assumed.
- * @property {string} [note]
+ * `modules`:  Modules whose material-bearing cells belong to this space. Membership is by  OWNERSHIP (which file declares the code), NEVER by code shape — `materialCode`  is contractually opaque (C9 §3).
+ * `declaredBy`:  The ruling that authorised the declaration. A space with no ruling is a  space somebody assumed.
+ *
+ * @typedef {{
+ *   readonly spaceId: string;
+ *   readonly kind: MaterialSpaceKind;
+ *   readonly modules: RegExp;
+ *   readonly declaredBy: string;
+ *   readonly note?: string;
+ * }} MaterialSpaceEntry
  */
 
 /**

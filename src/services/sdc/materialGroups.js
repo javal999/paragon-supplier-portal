@@ -63,11 +63,15 @@
  */
 
 /**
- * @typedef {object} MaterialGroupEntry
- * @property {string} group
- * @property {string} label -  The ONE meaning. A second one is a red test, not a discovery.
- * @property {MaterialGroupAxis} axis
- * @property {string} [note] -  Why the number is what it is, where that is not self-evident.
+ * `label`:  The ONE meaning. A second one is a red test, not a discovery.
+ * `note`:  Why the number is what it is, where that is not self-evident.
+ *
+ * @typedef {{
+ *   readonly group: string;
+ *   readonly label: string;
+ *   readonly axis: MaterialGroupAxis;
+ *   readonly note?: string;
+ * }} MaterialGroupEntry
  */
 
 /**

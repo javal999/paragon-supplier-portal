@@ -35,21 +35,23 @@ import { tierPieces, tiersForItem } from './rfqModel';
 
 /** The RFQ fields the comparison reads. */
 /**
- * @typedef {object} TieredRfqShape
- * @property {string} [rfqNumber]
- * @property {number} totalQty
- * @property {readonly RfqItem[]} [items]
- * @property {readonly RfqQuantityTier[]} [tiers]
+ * @typedef {{
+ *   readonly rfqNumber?: string;
+ *   readonly totalQty: number;
+ *   readonly items?: readonly RfqItem[];
+ *   readonly tiers?: readonly RfqQuantityTier[];
+ * }} TieredRfqShape
  */
 
 /** The quotation fields the comparison reads. */
 /**
- * @typedef {object} TieredQuoteShape
- * @property {string} id
- * @property {string} supplierId
- * @property {BidCurrency} [currency]
- * @property {number} leadTimeDays
- * @property {readonly QuotationItemQuote[]} [itemQuotes]
+ * @typedef {{
+ *   readonly id: string;
+ *   readonly supplierId: string;
+ *   readonly currency?: BidCurrency;
+ *   readonly leadTimeDays: number;
+ *   readonly itemQuotes?: readonly QuotationItemQuote[];
+ * }} TieredQuoteShape
  */
 
 /**
@@ -155,12 +157,17 @@ export function defaultEvaluationTierQty(rfq) {
 
 /** One item's cost, for one quote, at the evaluation break. */
 /**
- * @typedef {object} ItemCost
- * @property {number} tierQty -  The item's break actually priced (see `itemTierAt`).
- * @property {number} unitPrice
- * @property {number} pieces
- * @property {number} oneTime -  Σ of the one-time costs the supplier quoted for this item.
- * @property {number} total -  unit price × pieces + one-time costs.
+ * `tierQty`:  The item's break actually priced (see `itemTierAt`).
+ * `oneTime`:  Σ of the one-time costs the supplier quoted for this item.
+ * `total`:  unit price × pieces + one-time costs.
+ *
+ * @typedef {{
+ *   readonly tierQty: number;
+ *   readonly unitPrice: number;
+ *   readonly pieces: number;
+ *   readonly oneTime: number;
+ *   readonly total: number;
+ * }} ItemCost
  */
 
 /**
@@ -445,16 +452,17 @@ const csvCell = (v) => {
 
 /** One CSV row of the comparison. */
 /**
- * @typedef {object} ComparisonCsvRow
- * @property {string} rfqNumber
- * @property {string} item
- * @property {string} supplier
- * @property {number} breakQty
- * @property {string} basis
- * @property {number} unitPrice
- * @property {string} currency
- * @property {number} oneTimeCosts
- * @property {number} leadTimeDays
+ * @typedef {{
+ *   readonly rfqNumber: string;
+ *   readonly item: string;
+ *   readonly supplier: string;
+ *   readonly breakQty: number;
+ *   readonly basis: string;
+ *   readonly unitPrice: number;
+ *   readonly currency: string;
+ *   readonly oneTimeCosts: number;
+ *   readonly leadTimeDays: number;
+ * }} ComparisonCsvRow
  */
 
 /**

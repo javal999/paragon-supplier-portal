@@ -32,13 +32,16 @@ const copyRequests = (requests) => (requests ?? []).map((r) => ({ ...r }));
 
 /** The editable draft an RFQ opens on when it is created from an RFI. */
 /**
- * @typedef {object} RfqPrefill
- * @property {string} title
- * @property {string} materialCategory
- * @property {string} sourceRfiId
- * @property {readonly string[]} invitedSupplierIds
- * @property {readonly RfqLineItem[]} lineItems
- * @property {readonly DocumentRequest[]} documentRequests -  NR-1 BR-11 — the RFI's document requests.
+ * `documentRequests`:  NR-1 BR-11 — the RFI's document requests.
+ *
+ * @typedef {{
+ *   readonly title: string;
+ *   readonly materialCategory: string;
+ *   readonly sourceRfiId: string;
+ *   readonly invitedSupplierIds: readonly string[];
+ *   readonly lineItems: readonly RfqLineItem[];
+ *   readonly documentRequests: readonly DocumentRequest[];
+ * }} RfqPrefill
  */
 
 /**
@@ -123,19 +126,23 @@ export function prefillRfqFromRfi(rfi, responses, supplierIds) {
 
 /** The editable draft an RFP opens on when it is created from an RFI. */
 /**
- * @typedef {object} RfpPrefill
- * @property {string} title
- * @property {string} familyId -  The category family the RFI was raised under; `''` when none matches.
- * @property {string} scope -  The RFI's description, as the RFP's scope. `''` when the RFI had none.
- * @property {readonly string[]} scopeNoteKeys The RFI's questions as scope notes: their prompt KEYS (or, for a question
- *   the buyer wrote, its words), in the order the RFI renders them. The wizard
- *   resolves them through `t()`; a pure function cannot translate.
- * @property {readonly string[]} invitedSupplierIds
- * @property {readonly AttachmentMeta[]} attachments
- * @property {boolean} confidential
- * @property {string} [confidentialityTerms]
- * @property {string} sourceRfiId
- * @property {readonly DocumentRequest[]} documentRequests -  NR-1 BR-11 — the RFI's document requests.
+ * `familyId`:  The category family the RFI was raised under; `''` when none matches.
+ * `scope`:  The RFI's description, as the RFP's scope. `''` when the RFI had none.
+ * `scopeNoteKeys`: The RFI's questions as scope notes: their prompt KEYS (or, for a question the buyer wrote, its words), in the order the RFI renders them. The wizard resolves them through `t()`; a pure function cannot translate.
+ * `documentRequests`:  NR-1 BR-11 — the RFI's document requests.
+ *
+ * @typedef {{
+ *   readonly title: string;
+ *   readonly familyId: string;
+ *   readonly scope: string;
+ *   readonly scopeNoteKeys: readonly string[];
+ *   readonly invitedSupplierIds: readonly string[];
+ *   readonly attachments: readonly AttachmentMeta[];
+ *   readonly confidential: boolean;
+ *   readonly confidentialityTerms?: string;
+ *   readonly sourceRfiId: string;
+ *   readonly documentRequests: readonly DocumentRequest[];
+ * }} RfpPrefill
  */
 
 /**
@@ -176,28 +183,35 @@ export function prefillRfpFromRfi(rfi, responses, supplierIds) {
 
 /** One RFQ item seed, from one RFP option (PTI's or a supplier's own). */
 /**
- * @typedef {object} RfqItemSeedFromRfp
- * @property {string} sourceOptionId
- * @property {string} sourceOptionRef RFx D2 — the option's ref (`rfpOptionRef`): the buyer option's id, or
- *   `${proposer}:${sup-opt-N}`, so two suppliers' `sup-opt-1` stay apart.
- * @property {string} description
- * @property {string} [note]
- * @property {string} [proposedBySupplierId] -  Set when the option was proposed by a supplier rather than by PTI.
- * @property {readonly number[]} quantityPoints
- * @property {'perVariant' | 'total'} quantityBasis
+ * `sourceOptionRef`: RFx D2 — the option's ref (`rfpOptionRef`): the buyer option's id, or `${proposer}:${sup-opt-N}`, so two suppliers' `sup-opt-1` stay apart.
+ * `proposedBySupplierId`:  Set when the option was proposed by a supplier rather than by PTI.
+ *
+ * @typedef {{
+ *   readonly sourceOptionId: string;
+ *   readonly sourceOptionRef: string;
+ *   readonly description: string;
+ *   readonly note?: string;
+ *   readonly proposedBySupplierId?: string;
+ *   readonly quantityPoints: readonly number[];
+ *   readonly quantityBasis: 'perVariant' | 'total';
+ * }} RfqItemSeedFromRfp
  */
 
 /**
- * @typedef {object} RfqSeedFromRfp
- * @property {string} title
- * @property {string} materialCategory
- * @property {string} currency
- * @property {string} sourceRfpId
- * @property {readonly string[]} invitedSupplierIds -  Submitted responders that priced at least one chosen option.
- * @property {readonly RfqItemSeedFromRfp[]} items
- * @property {readonly DocumentRequest[]} documentRequests -  NR-1 BR-11 — the RFP's document requests.
- * @property {readonly string[]} sourceRfpOptionRefs RFx D2 (NR-2 BR-08) — the option refs this RFQ will source; the RFQ create
- *   payload carries them, so the RFP cannot award them as well.
+ * `invitedSupplierIds`:  Submitted responders that priced at least one chosen option.
+ * `documentRequests`:  NR-1 BR-11 — the RFP's document requests.
+ * `sourceRfpOptionRefs`: RFx D2 (NR-2 BR-08) — the option refs this RFQ will source; the RFQ create payload carries them, so the RFP cannot award them as well.
+ *
+ * @typedef {{
+ *   readonly title: string;
+ *   readonly materialCategory: string;
+ *   readonly currency: string;
+ *   readonly sourceRfpId: string;
+ *   readonly invitedSupplierIds: readonly string[];
+ *   readonly items: readonly RfqItemSeedFromRfp[];
+ *   readonly documentRequests: readonly DocumentRequest[];
+ *   readonly sourceRfpOptionRefs: readonly string[];
+ * }} RfqSeedFromRfp
  */
 
 /**

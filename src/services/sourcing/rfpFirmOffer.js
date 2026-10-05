@@ -62,22 +62,29 @@ const strings = (v) =>
 
 /** What the buyer asks for when opening a round (the verb payload, unchecked). */
 /**
- * @typedef {object} RfpRoundRequest
- * @property {unknown} optionRefs
- * @property {unknown} quantityPoints
- * @property {unknown} invitedSupplierIds
- * @property {unknown} deadline
+ * @typedef {{
+ *   readonly optionRefs: unknown;
+ *   readonly quantityPoints: unknown;
+ *   readonly invitedSupplierIds: unknown;
+ *   readonly deadline: unknown;
+ * }} RfpRoundRequest
  */
 
 /** What the RFP says about who and what may enter a round. */
 /**
- * @typedef {object} RfpRoundFacts
- * @property {string | null} rfpStatus -  The RFP's stored status; null when there is no such RFP.
- * @property {readonly string[]} knownOptionRefs -  Refs of the RFP's own options plus those suppliers proposed in a SUBMITTED response.
- * @property {readonly string[]} settledOptionRefs RFX-D15 — refs no longer OPEN on this RFP: named by an RFP award in force
- *   or sourced by a live RFQ created from the RFP (`rfpSettledOptionRefs`).
- * @property {readonly string[]} respondedSupplierIds -  Suppliers with a SUBMITTED response to this RFP.
- * @property {(supplierId: string) => GateResult} gate -  CR-23 for one supplier on this RFP.
+ * `rfpStatus`:  The RFP's stored status; null when there is no such RFP.
+ * `knownOptionRefs`:  Refs of the RFP's own options plus those suppliers proposed in a SUBMITTED response.
+ * `settledOptionRefs`: RFX-D15 — refs no longer OPEN on this RFP: named by an RFP award in force or sourced by a live RFQ created from the RFP (`rfpSettledOptionRefs`).
+ * `respondedSupplierIds`:  Suppliers with a SUBMITTED response to this RFP.
+ * `gate`:  CR-23 for one supplier on this RFP.
+ *
+ * @typedef {{
+ *   readonly rfpStatus: string | null;
+ *   readonly knownOptionRefs: readonly string[];
+ *   readonly settledOptionRefs: readonly string[];
+ *   readonly respondedSupplierIds: readonly string[];
+ *   readonly gate: (supplierId: string) => GateResult;
+ * }} RfpRoundFacts
  */
 
 /**
@@ -138,20 +145,22 @@ export function rfpOfferRoundRefusal(req, facts) {
 
 /** What a firm offer is checked against: the round as stored. */
 /**
- * @typedef {object} FirmOfferRoundFacts
- * @property {readonly string[]} optionRefs
- * @property {readonly number[]} quantityPoints
- * @property {readonly string[]} invitedSupplierIds
- * @property {string} deadline
- * @property {boolean} closed
+ * @typedef {{
+ *   readonly optionRefs: readonly string[];
+ *   readonly quantityPoints: readonly number[];
+ *   readonly invitedSupplierIds: readonly string[];
+ *   readonly deadline: string;
+ *   readonly closed: boolean;
+ * }} FirmOfferRoundFacts
  */
 
 /** A firm offer as sent (the verb payload, unchecked). */
 /**
- * @typedef {object} FirmOfferInput
- * @property {unknown} prices
- * @property {unknown} validUntil
- * @property {unknown} [documents]
+ * @typedef {{
+ *   readonly prices: unknown;
+ *   readonly validUntil: unknown;
+ *   readonly documents?: unknown;
+ * }} FirmOfferInput
  */
 
 /**
@@ -224,15 +233,16 @@ export function firmOfferRefusal(round, supplierId, offer, nowIso) {
 
 /** One firm price in force, with where it came from. */
 /**
- * @typedef {object} FirmPriceInForce
- * @property {string} supplierId
- * @property {string} roundId
- * @property {number} roundNumber
- * @property {string} optionRef
- * @property {number} qty
- * @property {number} unitPrice
- * @property {string} validUntil
- * @property {string} submittedAt
+ * @typedef {{
+ *   readonly supplierId: string;
+ *   readonly roundId: string;
+ *   readonly roundNumber: number;
+ *   readonly optionRef: string;
+ *   readonly qty: number;
+ *   readonly unitPrice: number;
+ *   readonly validUntil: string;
+ *   readonly submittedAt: string;
+ * }} FirmPriceInForce
  */
 
 /**

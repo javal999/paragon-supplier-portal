@@ -60,25 +60,16 @@ import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
  * WHAT AN IMPLEMENTATION MUST SUPPLY. **This set IS the contract.**
  */
 /**
- * @typedef {object} DispatchConformanceTarget
- * @property {IDataService} service
- * @property {{ readonly procurement: readonly string[]; readonly finance: readonly string[]; readonly full: readonly string[]; }} roles Three buyer seats. `procurement` and `finance` must be NARROW (a single
- *   lane each); `full` holds every buyer role.
+ * `roles`: Three buyer seats. `procurement` and `finance` must be NARROW (a single lane each); `full` holds every buyer role.  ⚠️ The segregation assertions are vacuous if `procurement` and `finance` hold the same atoms, so the factory asserts they differ before using them.
+ * `reset`: Restore the implementation to its seeded state. Called before every test.  ⚠️ **REQUIRED, AND IT IS THE ONE REAL COST THIS FACTORY IMPOSES.** Two of the assertions below are known-GOOD controls that SUCCEED, and a success mutates. Without isolation they consume the very entities the later refusal assertions need, and the suite becomes order-dependent — which is a suite that passes for the wrong reason. A mock resets its stores; an HTTP harness re-seeds its test database. **It is deliberately NOT a method on `ICommandService`**: a production command interface must not carry a test-only backdoor that mints or rewinds state.
+ * `entities`: OPTIONAL override for entity acquisition, for an implementation whose reads cannot reach a required state. Omitted, the factory discovers by reading.
  *
- *   ⚠️ The segregation assertions are vacuous if `procurement` and `finance`
- *   hold the same atoms, so the factory asserts they differ before using them.
- * @property {() => void | Promise<void>} reset Restore the implementation to its seeded state. Called before every test.
- *
- *   ⚠️ **REQUIRED, AND IT IS THE ONE REAL COST THIS FACTORY IMPOSES.** Two of
- *   the assertions below are known-GOOD controls that SUCCEED, and a success
- *   mutates. Without isolation they consume the very entities the later
- *   refusal assertions need, and the suite becomes order-dependent — which is
- *   a suite that passes for the wrong reason. A mock resets its stores; an HTTP
- *   harness re-seeds its test database. **It is deliberately NOT a method on
- *   `ICommandService`**: a production command interface must not carry a
- *   test-only backdoor that mints or rewinds state.
- * @property {{ readonly releasableInvoiceId?: string; readonly anyRfqId?: string; }} [entities] OPTIONAL override for entity acquisition, for an implementation whose reads
- *   cannot reach a required state. Omitted, the factory discovers by reading.
+ * @typedef {{
+ *   readonly service: IDataService;
+ *   readonly roles: { readonly procurement: readonly string[]; readonly finance: readonly string[]; readonly full: readonly string[]; };
+ *   readonly reset: () => void | Promise<void>;
+ *   readonly entities?: { readonly releasableInvoiceId?: string; readonly anyRfqId?: string; };
+ * }} DispatchConformanceTarget
  */
 
 /**

@@ -41,10 +41,11 @@
  * `wrong` — human-readable disagreements, one line each, for the resolved set.
  */
 /**
- * @typedef {object} AxisResult
- * @property {number} total
- * @property {number} resolved
- * @property {readonly string[]} wrong
+ * @typedef {{
+ *   readonly total: number;
+ *   readonly resolved: number;
+ *   readonly wrong: readonly string[];
+ * }} AxisResult
  */
 
 /**

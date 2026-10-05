@@ -35,27 +35,35 @@ import { sdcClock } from '../sdc/clock';
 
 /** What a template carries. No invitees, no dates. */
 /**
- * @typedef {object} RfqTemplateContent
- * @property {string} [category]
- * @property {string} [uom]
- * @property {BidCurrency} [currency]
- * @property {readonly RfqItem[]} items
- * @property {readonly RfqQuantityTier[]} tiers
- * @property {readonly RfiQuestion[]} [questions]
- * @property {boolean} [allowAlternatives]
- * @property {number} [samplesQty] -  The sample quantity only — the date it is needed is a date, and dates are not kept.
- * @property {boolean} [confidential]
- * @property {readonly DocumentRequest[]} [documentRequests] -  NR-1 BR-11 — the buyer's document requests. Never a supplier's documents.
+ * `samplesQty`:  The sample quantity only — the date it is needed is a date, and dates are not kept.
+ * `documentRequests`:  NR-1 BR-11 — the buyer's document requests. Never a supplier's documents.
+ *
+ * @typedef {{
+ *   readonly category?: string;
+ *   readonly uom?: string;
+ *   readonly currency?: BidCurrency;
+ *   readonly items: readonly RfqItem[];
+ *   readonly tiers: readonly RfqQuantityTier[];
+ *   readonly questions?: readonly RfiQuestion[];
+ *   readonly allowAlternatives?: boolean;
+ *   readonly samplesQty?: number;
+ *   readonly confidential?: boolean;
+ *   readonly documentRequests?: readonly DocumentRequest[];
+ * }} RfqTemplateContent
  */
 
 /**
- * @typedef {object} RfqTemplate
- * @property {string} id
- * @property {string} [nameKey] -  i18n key — the system templates only.
- * @property {string} [name] -  The buyer's own name for a saved template. User text, not translated.
- * @property {boolean} system
- * @property {string} [createdAt]
- * @property {RfqTemplateContent} content
+ * `nameKey`:  i18n key — the system templates only.
+ * `name`:  The buyer's own name for a saved template. User text, not translated.
+ *
+ * @typedef {{
+ *   readonly id: string;
+ *   readonly nameKey?: string;
+ *   readonly name?: string;
+ *   readonly system: boolean;
+ *   readonly createdAt?: string;
+ *   readonly content: RfqTemplateContent;
+ * }} RfqTemplate
  */
 
 export const RFQ_TEMPLATES_KEY = 'paragon.rfqTemplates';
@@ -134,11 +142,16 @@ export const SYSTEM_RFQ_TEMPLATES = [
 
 /** What the last read found. A surface renders `rejected` and `unreadable`. */
 /**
- * @typedef {object} RfqTemplateReadState
- * @property {readonly RfqTemplate[]} saved -  The saved templates that validated. The system ones are NOT in here.
- * @property {readonly { readonly id: string; readonly reason: string }[]} rejected
- * @property {boolean} unreadable -  Storage exists but could not be parsed — DISTINCT from "nothing saved".
- * @property {boolean} absent -  Nothing has ever been saved in this browser.
+ * `saved`:  The saved templates that validated. The system ones are NOT in here.
+ * `unreadable`:  Storage exists but could not be parsed — DISTINCT from "nothing saved".
+ * `absent`:  Nothing has ever been saved in this browser.
+ *
+ * @typedef {{
+ *   readonly saved: readonly RfqTemplate[];
+ *   readonly rejected: readonly { readonly id: string; readonly reason: string }[];
+ *   readonly unreadable: boolean;
+ *   readonly absent: boolean;
+ * }} RfqTemplateReadState
  */
 
 /** @type {RfqTemplateReadState} */

@@ -21,22 +21,25 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * @typedef {object} DerivedField
- * @property {string} name
- * @property {boolean} required
- * @property {string} type
+ * @typedef {{
+ *   readonly name: string;
+ *   readonly required: boolean;
+ *   readonly type: string;
+ * }} DerivedField
  */
 
 /**
- * @typedef {object} DerivedInterface
- * @property {string} name
- * @property {readonly DerivedField[]} fields
+ * @typedef {{
+ *   readonly name: string;
+ *   readonly fields: readonly DerivedField[];
+ * }} DerivedInterface
  */
 
 /**
- * @typedef {object} DerivedVocabulary
- * @property {string} name
- * @property {readonly string[]} members
+ * @typedef {{
+ *   readonly name: string;
+ *   readonly members: readonly string[];
+ * }} DerivedVocabulary
  */
 
 /** Comments are prose. Everything below reads SHAPE, so prose is removed first —
@@ -46,6 +49,26 @@
 const stripComments = (src) => src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
 
 /**
+ * The fields of one object shape's body, in declaration order.
+ * @param {string} body
+ * @returns {DerivedField[]}
+ */
+const fieldsOf = (body) =>
+  [...body.matchAll(/readonly (\w+)(\??): ([^;]+);/g)].map((f) => ({
+    name: f[1],
+    required: f[2] !== '?',
+    type: f[3].trim()
+  }));
+
+/**
+ * Every object shape the module declares, in source order. The module is read in
+ * EITHER of its two written forms, so the list survives the TS → JS conversion
+ * (frontend-standard Phase 4) without a second derivation:
+ *   · TypeScript — `export interface Name { readonly a: T; }`, read from the
+ *     comment-stripped source;
+ *   · JavaScript — a type-literal typedef `@typedef {{ readonly a: T; }} Name`.
+ *     The shape IS the comment there, so it is read from the raw source; only
+ *     the text between `{{` and `}}` is read, never the prose above it.
  * @param {string} typesSrc
  * @returns {readonly DerivedInterface[]}
  */
@@ -57,23 +80,27 @@ export const deriveInterfaces = (typesSrc) => {
     const bodyStart =
       /** @type {NonNullable<typeof match.index>} */ (match.index) + match[0].length;
     const bodyEnd = src.indexOf('\n}', bodyStart);
-    const body = src.slice(bodyStart, bodyEnd);
-    const fields = [...body.matchAll(/readonly (\w+)(\??): ([^;]+);/g)].map((f) => ({
-      name: f[1],
-      required: f[2] !== '?',
-      type: f[3].trim()
-    }));
-    out.push({ name: match[1], fields });
+    out.push({ name: match[1], fields: fieldsOf(src.slice(bodyStart, bodyEnd)) });
+  }
+  for (const match of typesSrc.matchAll(/@typedef \{\{\n([\s\S]*?)\n\s*\*\s*\}\} (\w+)/g)) {
+    const body = match[1].replace(/^\s*\*/gm, '');
+    out.push({ name: match[2], fields: fieldsOf(body) });
   }
   return out;
 };
 
 /**
+ * Every closed vocabulary, in source order — in EITHER written form:
+ * `export const X = [...] as const;` (TypeScript) or
+ * `export const X = /** &#64;type {const} *\/ ([...]);` (JavaScript). The const
+ * assertion is part of the match in both: an array WITHOUT it is not closed.
  * @param {string} typesSrc
  * @returns {readonly DerivedVocabulary[]}
  */
 export const deriveVocabularies = (typesSrc) => {
-  const src = stripComments(typesSrc);
+  const src = stripComments(
+    typesSrc.replace(/\/\*\* @type \{const\} \*\/ \(\[([\s\S]*?)\]\);/g, '[$1] as const;')
+  );
   /** @type {DerivedVocabulary[]} */
   const out = [];
   for (const match of src.matchAll(/export const (\w+) = \[([\s\S]*?)\] as const;/g)) {

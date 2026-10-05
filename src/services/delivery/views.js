@@ -25,18 +25,20 @@ import { deriveFulfillment } from './fulfillment';
  *  lines. The full calendar lives on `item.scheduleLines`; `fulfillment` covers
  *  only the released lines (a draft has no fulfillment). */
 /**
- * @typedef {object} DeliveryItemView
- * @property {SchedulingAgreementItem} item
- * @property {DrawdownLedger} ledger
- * @property {readonly ReleaseFulfillmentView[]} fulfillment
+ * @typedef {{
+ *   readonly item: SchedulingAgreementItem;
+ *   readonly ledger: DrawdownLedger;
+ *   readonly fulfillment: readonly ReleaseFulfillmentView[];
+ * }} DeliveryItemView
  */
 
 /** An agreement joined with its display supplier name + per-item drawdown views. */
 /**
- * @typedef {object} DeliveryAgreementView
- * @property {SchedulingAgreement} agreement
- * @property {string | null} supplierName
- * @property {readonly DeliveryItemView[]} items
+ * @typedef {{
+ *   readonly agreement: SchedulingAgreement;
+ *   readonly supplierName: string | null;
+ *   readonly items: readonly DeliveryItemView[];
+ * }} DeliveryAgreementView
  */
 
 /** Why a release was refused at the SERVICE seam: Batch-2's pure domain reasons

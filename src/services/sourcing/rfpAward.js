@@ -27,17 +27,23 @@ import { firmPricesInForce } from './rfpFirmOffer';
 
 /** An option's ref and the words it is shown in (`RfpRoundOptionView`). */
 /**
- * @typedef {object} RfpAwardOptionName
- * @property {string} ref
- * @property {string} title
+ * @typedef {{
+ *   readonly ref: string;
+ *   readonly title: string;
+ * }} RfpAwardOptionName
  */
 
 /** What `awardItemsOfRfp` reads besides the rounds and offers. */
 /**
- * @typedef {object} RfpAwardContext
- * @property {string} nowIso -  The clock the offers' validity is judged at.
- * @property {readonly RfpAwardOptionName[]} [options] -  The options' titles, so a refusal names an option in its own words.
- * @property {readonly AwardRecord[]} [priorAwards] -  The awards IN FORCE on this RFP (cancelled ones left out by the caller).
+ * `nowIso`:  The clock the offers' validity is judged at.
+ * `options`:  The options' titles, so a refusal names an option in its own words.
+ * `priorAwards`:  The awards IN FORCE on this RFP (cancelled ones left out by the caller).
+ *
+ * @typedef {{
+ *   readonly nowIso: string;
+ *   readonly options?: readonly RfpAwardOptionName[];
+ *   readonly priorAwards?: readonly AwardRecord[];
+ * }} RfpAwardContext
  */
 
 /**
@@ -142,11 +148,12 @@ export function rfpAwardedOptionRefs(awardsInForce) {
 
 /** The fields of an RFQ the double-award guard reads. */
 /**
- * @typedef {object} RfqSourcingShape
- * @property {string} rfqNumber
- * @property {string} status
- * @property {string} [sourceRfpId]
- * @property {readonly string[]} [sourceRfpOptionRefs]
+ * @typedef {{
+ *   readonly rfqNumber: string;
+ *   readonly status: string;
+ *   readonly sourceRfpId?: string;
+ *   readonly sourceRfpOptionRefs?: readonly string[];
+ * }} RfqSourcingShape
  */
 
 /**

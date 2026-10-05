@@ -74,12 +74,18 @@ export const DATA_CHASE_SEVERITY = 'soft';
  * built through the constructor is always internally consistent.
  */
 /**
- * @typedef {object} SupplierChaseView
- * @property {string} supplierId
- * @property {readonly ChaseReason[]} dataReasons -  From the sdc data chase (supplier-keyed). May be empty.
- * @property {readonly DeliveryChaseEntry[]} commitmentEntries -  From the 5a delivery commitment chase (per-release grain). May be empty.
- * @property {ChaseSeverityLevel} overallSeverity -  Worst severity across BOTH families (see `severityOf`).
- * @property {number} chaseCount -  Total live reasons: data reasons + commitment entries.
+ * `dataReasons`:  From the sdc data chase (supplier-keyed). May be empty.
+ * `commitmentEntries`:  From the 5a delivery commitment chase (per-release grain). May be empty.
+ * `overallSeverity`:  Worst severity across BOTH families (see `severityOf`).
+ * `chaseCount`:  Total live reasons: data reasons + commitment entries.
+ *
+ * @typedef {{
+ *   readonly supplierId: string;
+ *   readonly dataReasons: readonly ChaseReason[];
+ *   readonly commitmentEntries: readonly DeliveryChaseEntry[];
+ *   readonly overallSeverity: ChaseSeverityLevel;
+ *   readonly chaseCount: number;
+ * }} SupplierChaseView
  */
 
 /**

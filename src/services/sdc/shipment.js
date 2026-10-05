@@ -67,10 +67,13 @@
  * whole reason it is a separate axis from `IncomingShipment.lifecycle`.
  */
 /**
- * @typedef {object} AsnTracking
- * @property {string} asnRef -  The linked ASN's number (`IncomingShipment.asnRef`), carried so the
- *    surface can name what it is reporting on.
- * @property {AsnStatus} asnStatus -  The ASN's own status, exactly as the ASN store holds it.
+ * `asnRef`:  The linked ASN's number (`IncomingShipment.asnRef`), carried so the  surface can name what it is reporting on.
+ * `asnStatus`:  The ASN's own status, exactly as the ASN store holds it.
+ *
+ * @typedef {{
+ *   readonly asnRef: string;
+ *   readonly asnStatus: AsnStatus;
+ * }} AsnTracking
  */
 
 /**
@@ -85,9 +88,10 @@
  * is reachable by asking for the other.
  */
 /**
- * @typedef {object} IncomingShipmentView
- * @property {IncomingShipment} shipment
- * @property {AsnTracking | null} asnTracking
+ * @typedef {{
+ *   readonly shipment: IncomingShipment;
+ *   readonly asnTracking: AsnTracking | null;
+ * }} IncomingShipmentView
  */
 
 /**

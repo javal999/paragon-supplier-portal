@@ -97,17 +97,21 @@ const isUomLike = (t) => /^[A-Za-z]{1,5}$/.test(t);
 const isMixedAlnum = (t) => /[A-Za-z]/.test(t) && /\d/.test(t) && /^[A-Za-z0-9-]+$/.test(t);
 
 /**
- * @typedef {object} ChannelReplyDiagnostics
- * @property {readonly string[]} matchedTokens -  The tokens the parser recognised (command, material, qty, uom) — for display.
- * @property {string} unparsedRemainder -  The leftover text the parser did not consume — for the C2 review pane.
- * @property {number} confidence -  A soft 0–1 display signal, NOT a gate. Confirm (C2) is always required.
- * @property {QtyRefusalReason} [qtyReason] -  Present when a qty token was seen but honestly refused (no row emitted).
- * @property {string} [uom] -  A parsed unit-of-measure — DIAGNOSTIC ONLY, never a payload field.
- * @property {'membership' | 'shape'} [materialMatch] HOW the material token was chosen (CP-2 · B1) — display/provenance only.
- *   'membership' = the token IS a known material code, so shape was irrelevant.
- *   'shape'      = no membership hit; a mixed-alphanumeric token was guessed.
- *   C2 shows a shape-guessed token as exactly that: a suggestion to confirm.
- *   Absent when no material token was found at all.
+ * `matchedTokens`:  The tokens the parser recognised (command, material, qty, uom) — for display.
+ * `unparsedRemainder`:  The leftover text the parser did not consume — for the C2 review pane.
+ * `confidence`:  A soft 0–1 display signal, NOT a gate. Confirm (C2) is always required.
+ * `qtyReason`:  Present when a qty token was seen but honestly refused (no row emitted).
+ * `uom`:  A parsed unit-of-measure — DIAGNOSTIC ONLY, never a payload field.
+ * `materialMatch`: HOW the material token was chosen (CP-2 · B1) — display/provenance only. 'membership' = the token IS a known material code, so shape was irrelevant. 'shape'      = no membership hit; a mixed-alphanumeric token was guessed. C2 shows a shape-guessed token as exactly that: a suggestion to confirm. Absent when no material token was found at all.
+ *
+ * @typedef {{
+ *   readonly matchedTokens: readonly string[];
+ *   readonly unparsedRemainder: string;
+ *   readonly confidence: number;
+ *   readonly qtyReason?: QtyRefusalReason;
+ *   readonly uom?: string;
+ *   readonly materialMatch?: 'membership' | 'shape';
+ * }} ChannelReplyDiagnostics
  */
 
 /**
@@ -116,37 +120,21 @@ const isMixedAlnum = (t) => /[A-Za-z]/.test(t) && /\d/.test(t) && /^[A-Za-z0-9-]
  * was recognised). `diagnostics` is display/provenance only.
  */
 /**
- * @typedef {object} ChannelParseResult
- * @property {readonly GridRow[]} proposedRows
- * @property {GridParseSpec | null} specHint
- * @property {ChannelReplyDiagnostics} diagnostics
+ * @typedef {{
+ *   readonly proposedRows: readonly GridRow[];
+ *   readonly specHint: GridParseSpec | null;
+ *   readonly diagnostics: ChannelReplyDiagnostics;
+ * }} ChannelParseResult
  */
 
 /**
- * @typedef {object} ParseChannelReplyOptions
- * @property {NumberConvention} [numberFormatHint] -  The supplier/channel numeric convention, disambiguating both-valid qtys.
- *    Bahasa is the default channel language, so 'id' is the typical hint.
- * @property {Iterable<string>} [knownMaterials] - ⭐ CP-2 · B1 — THE MEMBERSHIP SET, and the fix for a FABRICATION defect.
+ * `numberFormatHint`:  The supplier/channel numeric convention, disambiguating both-valid qtys.  Bahasa is the default channel language, so 'id' is the typical hint.
+ * `knownMaterials`: ⭐ CP-2 · B1 — THE MEMBERSHIP SET, and the fix for a FABRICATION defect.  The material codes this reply could legitimately name — the material master, or (better) the SUBJECT SUPPLIER'S collaborated set, which the confirm surface already computes. Injected rather than imported: this parser is PURE and does not resolve materials (see the header), and the caller alone knows whose reply this is.  WHY IT MATTERS. Before this, two independent first-match scans ran with NO PRECEDENCE, and the material classifier required at least one LETTER. So in "STOK 10234 500 KG" — with 10234 a perfectly canonical numeric MATNR — the code failed the shape test, fell through, and was captured as the QUANTITY. Add any other mixed-alphanumeric token and THAT became the material while 10234 stayed the quantity: a PLAUSIBLE WRONG ROW proposed into the hub, gated only by a human confirm. Not silence — FABRICATION.  THE RULE: a token in this set is a material candidate REGARDLESS OF SHAPE, and can NEVER be consumed by `isQtyLike`. Shape drops to a fallback hint. This handles numeric MATNR with no policy decision at all.  Omitted ⇒ shape-only, i.e. exactly the previous behaviour.
  *
- *   The material codes this reply could legitimately name — the material master,
- *   or (better) the SUBJECT SUPPLIER'S collaborated set, which the confirm
- *   surface already computes. Injected rather than imported: this parser is PURE
- *   and does not resolve materials (see the header), and the caller alone knows
- *   whose reply this is.
- *
- *   WHY IT MATTERS. Before this, two independent first-match scans ran with NO
- *   PRECEDENCE, and the material classifier required at least one LETTER. So in
- *   "STOK 10234 500 KG" — with 10234 a perfectly canonical numeric MATNR — the
- *   code failed the shape test, fell through, and was captured as the QUANTITY.
- *   Add any other mixed-alphanumeric token and THAT became the material while
- *   10234 stayed the quantity: a PLAUSIBLE WRONG ROW proposed into the hub,
- *   gated only by a human confirm. Not silence — FABRICATION.
- *
- *   THE RULE: a token in this set is a material candidate REGARDLESS OF SHAPE,
- *   and can NEVER be consumed by `isQtyLike`. Shape drops to a fallback hint.
- *   This handles numeric MATNR with no policy decision at all.
- *
- *   Omitted ⇒ shape-only, i.e. exactly the previous behaviour.
+ * @typedef {{
+ *   readonly numberFormatHint?: NumberConvention;
+ *   readonly knownMaterials?: Iterable<string>;
+ * }} ParseChannelReplyOptions
  */
 
 /**

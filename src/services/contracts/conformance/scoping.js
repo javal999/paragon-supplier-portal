@@ -59,30 +59,23 @@ import { DataError } from '../../data/types';
  * other one's rows by coincidence of ordering".
  */
 /**
- * @typedef {object} ScopingConformanceTarget
- * @property {IDataService} service -  The implementation under test.
- * @property {{ readonly a: string; readonly b: string; readonly c: string }} tenants Three distinct supplier ids that exist in this implementation.
+ * `service`:  The implementation under test.
+ * `tenants`: Three distinct supplier ids that exist in this implementation.  ⚠️ **DATA PRECONDITIONS — an implementation whose fixture does not meet these will fail assertions that are about ITS DATA, not about its scoping.** They are stated here rather than discovered at run time so that a red suite can be read correctly:   · `a` and `b` each have at least one document;   · `b` has at least one purchase order and at least one ASN;   · the buyer scope sees at least one supplier, one risk scenario, one     spend-by-category row, one supplier-performance row, one scorecard, and     at least one requisition — with BOTH a `Draft` one and a non-`Draft`     one, since the filter assertion requires a strict subset.
+ * `roles`: The business roles each persona holds. Supplied by the caller rather than imported here so this factory depends only on `data/types` — the SE team gets one import, not a transitive walk into the transition registry.
  *
- *   ⚠️ **DATA PRECONDITIONS — an implementation whose fixture does not meet
- *   these will fail assertions that are about ITS DATA, not about its scoping.**
- *   They are stated here rather than discovered at run time so that a red suite
- *   can be read correctly:
- *     · `a` and `b` each have at least one document;
- *     · `b` has at least one purchase order and at least one ASN;
- *     · the buyer scope sees at least one supplier, one risk scenario, one
- *       spend-by-category row, one supplier-performance row, one scorecard, and
- *       at least one requisition — with BOTH a `Draft` one and a non-`Draft`
- *       one, since the filter assertion requires a strict subset.
- * @property {{ readonly buyer: readonly string[]; readonly supplier: readonly string[]; }} roles The business roles each persona holds. Supplied by the caller rather than
- *   imported here so this factory depends only on `data/types` — the SE team
- *   gets one import, not a transitive walk into the transition registry.
+ * @typedef {{
+ *   readonly service: IDataService;
+ *   readonly tenants: { readonly a: string; readonly b: string; readonly c: string };
+ *   readonly roles: { readonly buyer: readonly string[]; readonly supplier: readonly string[]; };
+ * }} ScopingConformanceTarget
  */
 
 /** A `supplierId`-scoped list read: rows carry `supplierId` and are filtered. */
 /**
- * @typedef {object} ScopedRead
- * @property {string} name
- * @property {(svc: IDataService, s: QueryScope) => Promise<{ items: { supplierId: string }[] }>} run
+ * @typedef {{
+ *   readonly name: string;
+ *   readonly run: (svc: IDataService, s: QueryScope) => Promise<{ items: { supplierId: string }[] }>;
+ * }} ScopedRead
  */
 
 // The read list is STATIC — names and accessors, no service captured — so

@@ -11,14 +11,23 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * @typedef {object} SupplierProfile
- * @property {number} confirmOnTime -  Share of lines confirmed by the deadline.
- * @property {number} confirmLate -  Share confirmed after the deadline (the rest are never confirmed).
- * @property {number} partial -  Of confirmations, the share for less than the ordered quantity.
- * @property {number} laterDate -  Of confirmations, the share for a later date than requested.
- * @property {number} supplierMiss -  Confirmed and unchanged: the chance the receipt is short or late.
- * @property {number} reconfirm -  After a PTI change, the chance the supplier re-confirms.
- * @property {number} ptiChange -  PTI's chance of changing a line inside this supplier's lead time.
+ * `confirmOnTime`:  Share of lines confirmed by the deadline.
+ * `confirmLate`:  Share confirmed after the deadline (the rest are never confirmed).
+ * `partial`:  Of confirmations, the share for less than the ordered quantity.
+ * `laterDate`:  Of confirmations, the share for a later date than requested.
+ * `supplierMiss`:  Confirmed and unchanged: the chance the receipt is short or late.
+ * `reconfirm`:  After a PTI change, the chance the supplier re-confirms.
+ * `ptiChange`:  PTI's chance of changing a line inside this supplier's lead time.
+ *
+ * @typedef {{
+ *   readonly confirmOnTime: number;
+ *   readonly confirmLate: number;
+ *   readonly partial: number;
+ *   readonly laterDate: number;
+ *   readonly supplierMiss: number;
+ *   readonly reconfirm: number;
+ *   readonly ptiChange: number;
+ * }} SupplierProfile
  */
 
 /** @type {SupplierProfile} */

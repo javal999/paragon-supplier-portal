@@ -87,9 +87,10 @@
 
 /** The patch a DRAFT line accepts. A released line accepts none (Decision B). */
 /**
- * @typedef {object} ScheduleLinePatch
- * @property {number} [plannedQty]
- * @property {string} [releaseDate]
+ * @typedef {{
+ *   readonly plannedQty?: number;
+ *   readonly releaseDate?: string;
+ * }} ScheduleLinePatch
  */
 
 // ─── Results ──────────────────────────────────────────────────────────────────

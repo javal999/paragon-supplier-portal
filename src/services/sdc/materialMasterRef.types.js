@@ -102,11 +102,14 @@ export const MATERIAL_REF_PARTIES = /** @type {const} */ (['PARAGON', 'SOMO']);
  * parties.
  */
 /**
- * @typedef {object} MaterialCodeSpace
- * @property {string} spaceId
- * @property {MaterialRefParty} party
- * @property {Tier} liveness -  Liveness of the SPACE ITSELF. Both spaces are `SIMULATED` today (C9 §4).
- * @property {string} description
+ * `liveness`:  Liveness of the SPACE ITSELF. Both spaces are `SIMULATED` today (C9 §4).
+ *
+ * @typedef {{
+ *   readonly spaceId: string;
+ *   readonly party: MaterialRefParty;
+ *   readonly liveness: Tier;
+ *   readonly description: string;
+ * }} MaterialCodeSpace
  */
 
 /**
@@ -128,9 +131,10 @@ export const MATERIAL_REF_PARTIES = /** @type {const} */ (['PARAGON', 'SOMO']);
  * CURRENTLY IN BREACH OF A CLAUSE WE PROPOSED. Nothing may parse this string.
  */
 /**
- * @typedef {object} MaterialRef
- * @property {string} spaceId
- * @property {string} materialCode
+ * @typedef {{
+ *   readonly spaceId: string;
+ *   readonly materialCode: string;
+ * }} MaterialRef
  */
 
 // ─── Grain — the axis D-1 rules on ───────────────────────────────────────────
@@ -246,42 +250,21 @@ export const ADJUDICATION_METHODS = /** @type {const} */ ([
  * the history — which is precisely what nobody could do for `mock*.ts`.
  */
 /**
- * @typedef {object} AdjudicationProvenance
- * @property {AdjudicationMethod} method
- * @property {Tier} evidenceLiveness -  Liveness of the EVIDENCE, not of the row. `SIMULATED` ⇒ not `'CERTAIN'`.
- * @property {string} decidedBy -  A ROLE token, never a person's name (identity-clean, `fixtures.js:19`).
- * @property {string} decidedOn -  ISO date. Absolute — never "today" or a relative expression (law 0.5).
- * @property {string} sourceOfTruth The artifact that backed the decision. REQUIRED, and a truthful value may be
- *   an admission — e.g. `'NONE — both masters SIMULATED'`. A row that cannot
- *   name its source of truth is not thereby exempt from stating that it has none.
- * @property {string} routeToResolution WHAT WOULD SETTLE THIS ROW. REQUIRED (C9 §4.2 — AMENDED, A-2).
+ * `evidenceLiveness`:  Liveness of the EVIDENCE, not of the row. `SIMULATED` ⇒ not `'CERTAIN'`.
+ * `decidedBy`:  A ROLE token, never a person's name (identity-clean, `fixtures.js:19`).
+ * `decidedOn`:  ISO date. Absolute — never "today" or a relative expression (law 0.5).
+ * `sourceOfTruth`: The artifact that backed the decision. REQUIRED, and a truthful value may be an admission — e.g. `'NONE — both masters SIMULATED'`. A row that cannot name its source of truth is not thereby exempt from stating that it has none.
+ * `routeToResolution`: WHAT WOULD SETTLE THIS ROW. REQUIRED (C9 §4.2 — AMENDED, A-2).  SOMO's refinement of "absence is unknown", accepted in their words: AN UNRESOLVED ROW BEATS A CONFIDENT WRONG ANSWER ONLY IF IT CARRIES ITS CANDIDATE, ITS EVIDENCE, AND ITS ROUTE TO RESOLUTION — OTHERWISE IT IS A SHRUG WITH BETTER MANNERS. The first issue carried two of the three: the candidate IS the row, the evidence is `sourceOfTruth` + `evidenceLiveness`, and NOTHING said what was still needed. `sourceOfTruth` is RETROSPECTIVE — it names what was consulted, never what would settle it.  This field is what converts an unresolved row into an ANSWERABLE QUESTION.  It names the ARTIFACT, RULING OR WIRE that would settle the row — a resolution MECHANISM, not a description of the doubt:   'D-1 ruling from Paragon procurement' · 'a LIVE Paragon master extract' ·   'SOMO BOM→canonical-S/4 crosswalk, at a declared grain' · 'D-COMP-BPOM'  ⚠️ NOT A NOTES COLUMN. `note` below is the notes column and is optional; this is required and has exactly one job. Anything that is not a route to resolution belongs in `note`.  ⚠️ INVARIANT (C9 §4.2): a row whose `confidence` is not `'CERTAIN'` MUST name a real route. `'NONE'` belongs only to a row with nothing left to settle — which, by the `evidenceLiveness` invariant above, means a row with LIVE evidence. COMPOSED, the consequence today is total: no row this schema could currently carry may be CERTAIN, so EVERY row writable today must name its route. The field cannot be dead on arrival.
  *
- *   SOMO's refinement of "absence is unknown", accepted in their words: AN
- *   UNRESOLVED ROW BEATS A CONFIDENT WRONG ANSWER ONLY IF IT CARRIES ITS
- *   CANDIDATE, ITS EVIDENCE, AND ITS ROUTE TO RESOLUTION — OTHERWISE IT IS A
- *   SHRUG WITH BETTER MANNERS. The first issue carried two of the three: the
- *   candidate IS the row, the evidence is `sourceOfTruth` + `evidenceLiveness`,
- *   and NOTHING said what was still needed. `sourceOfTruth` is RETROSPECTIVE —
- *   it names what was consulted, never what would settle it.
- *
- *   This field is what converts an unresolved row into an ANSWERABLE QUESTION.
- *
- *   It names the ARTIFACT, RULING OR WIRE that would settle the row — a
- *   resolution MECHANISM, not a description of the doubt:
- *     'D-1 ruling from Paragon procurement' · 'a LIVE Paragon master extract' ·
- *     'SOMO BOM→canonical-S/4 crosswalk, at a declared grain' · 'D-COMP-BPOM'
- *
- *   ⚠️ NOT A NOTES COLUMN. `note` below is the notes column and is optional;
- *   this is required and has exactly one job. Anything that is not a route to
- *   resolution belongs in `note`.
- *
- *   ⚠️ INVARIANT (C9 §4.2): a row whose `confidence` is not `'CERTAIN'` MUST
- *   name a real route. `'NONE'` belongs only to a row with nothing left to
- *   settle — which, by the `evidenceLiveness` invariant above, means a row with
- *   LIVE evidence. COMPOSED, the consequence today is total: no row this schema
- *   could currently carry may be CERTAIN, so EVERY row writable today must name
- *   its route. The field cannot be dead on arrival.
- * @property {string} [note]
+ * @typedef {{
+ *   readonly method: AdjudicationMethod;
+ *   readonly evidenceLiveness: Tier;
+ *   readonly decidedBy: string;
+ *   readonly decidedOn: string;
+ *   readonly sourceOfTruth: string;
+ *   readonly routeToResolution: string;
+ *   readonly note?: string;
+ * }} AdjudicationProvenance
  */
 
 // ─── The row ─────────────────────────────────────────────────────────────────
@@ -311,13 +294,14 @@ export const ADJUDICATION_METHODS = /** @type {const} */ ([
  * resolution, never accompanied by it.
  */
 /**
- * @typedef {object} MaterialMasterRefRow
- * @property {MaterialRef} paragon
- * @property {MaterialRef} somo
- * @property {MaterialGrain} grain
- * @property {MaterialRefVerdict} verdict
- * @property {MaterialRefConfidence} confidence
- * @property {AdjudicationProvenance} provenance
+ * @typedef {{
+ *   readonly paragon: MaterialRef;
+ *   readonly somo: MaterialRef;
+ *   readonly grain: MaterialGrain;
+ *   readonly verdict: MaterialRefVerdict;
+ *   readonly confidence: MaterialRefConfidence;
+ *   readonly provenance: AdjudicationProvenance;
+ * }} MaterialMasterRefRow
  */
 
 /** The crosswalk. **EMPTY AT FREEZE, BY RULING** — populating it is CP-2 · B2b,
@@ -348,14 +332,14 @@ export const ADJUDICATION_METHODS = /** @type {const} */ ([
  * thing worked on.
  */
 /**
- * @typedef {object} MaterialRefJoinPolicy
- * @property {readonly MaterialGrain[]} joinableGrains
- * @property {MaterialRefConfidence} minimumConfidence -  Rows below this confidence are not joinable. Note this is NOT what excludes
- *    `'ADJUDICATED_UNRESOLVED'` — that exclusion is unconditional and is not a
- *    confidence threshold, because raising confidence must never reach it.
- * @property {boolean} allowSimulatedEvidence Whether rows backed by SIMULATED evidence may be joined at all.
- *   MUST be `false` for any commercial consumer. Exists as a field rather than
- *   an assumption so that a demo enabling it has to SAY SO (C9 §4.1).
+ * `minimumConfidence`:  Rows below this confidence are not joinable. Note this is NOT what excludes  `'ADJUDICATED_UNRESOLVED'` — that exclusion is unconditional and is not a  confidence threshold, because raising confidence must never reach it.
+ * `allowSimulatedEvidence`: Whether rows backed by SIMULATED evidence may be joined at all. MUST be `false` for any commercial consumer. Exists as a field rather than an assumption so that a demo enabling it has to SAY SO (C9 §4.1).
+ *
+ * @typedef {{
+ *   readonly joinableGrains: readonly MaterialGrain[];
+ *   readonly minimumConfidence: MaterialRefConfidence;
+ *   readonly allowSimulatedEvidence: boolean;
+ * }} MaterialRefJoinPolicy
  */
 
 // ─── The substance axis — RESERVED, additive, NOT BUILT ──────────────────────

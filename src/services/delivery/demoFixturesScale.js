@@ -46,19 +46,22 @@ import { DRAWDOWN_PRESET_CASE_B, DRAWDOWN_PRESET_CASE_C } from './ledger';
 const RELEASE_STAMP = '2026-03-15T00:00:00.000Z';
 
 /**
- * @typedef {object} AgreementSpec
- * @property {string} agreementId
- * @property {string} contractId
- * @property {string} supplierId
- * @property {string} sapAgreementNumber
- * @property {string} materialCode
- * @property {ReleaseType} releaseType
- * @property {TolerancePolicy} policy
- * @property {string} startDate
- * @property {'monthly'} cadence
- * @property {number} qtyPerRelease
- * @property {number} agreedTotalQty
- * @property {readonly number[]} releaseSeqs -  Which generated seqs to transmit (draft→released) — the rest stay draft.
+ * `releaseSeqs`:  Which generated seqs to transmit (draft→released) — the rest stay draft.
+ *
+ * @typedef {{
+ *   readonly agreementId: string;
+ *   readonly contractId: string;
+ *   readonly supplierId: string;
+ *   readonly sapAgreementNumber: string;
+ *   readonly materialCode: string;
+ *   readonly releaseType: ReleaseType;
+ *   readonly policy: TolerancePolicy;
+ *   readonly startDate: string;
+ *   readonly cadence: 'monthly';
+ *   readonly qtyPerRelease: number;
+ *   readonly agreedTotalQty: number;
+ *   readonly releaseSeqs: readonly number[];
+ * }} AgreementSpec
  */
 
 /** Build ONE single-item SIMULATED agreement, releasing the named seqs through the

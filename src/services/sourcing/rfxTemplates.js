@@ -54,50 +54,64 @@ const STORE_VERSION = 1;
 
 /** What an RFI template carries: the content of an event, nothing about who or when. */
 /**
- * @typedef {object} RfiTemplateContent
- * @property {string} familyId
- * @property {string} [description]
- * @property {readonly RfiQuestion[]} questions
- * @property {readonly RfxCustomSection[]} customSections
- * @property {boolean} confidential
- * @property {string} [confidentialityTerms]
- * @property {readonly DocumentRequest[]} [documentRequests] -  NR-1 BR-11 — the buyer's document requests. Never a supplier's documents.
+ * `documentRequests`:  NR-1 BR-11 — the buyer's document requests. Never a supplier's documents.
+ *
+ * @typedef {{
+ *   readonly familyId: string;
+ *   readonly description?: string;
+ *   readonly questions: readonly RfiQuestion[];
+ *   readonly customSections: readonly RfxCustomSection[];
+ *   readonly confidential: boolean;
+ *   readonly confidentialityTerms?: string;
+ *   readonly documentRequests?: readonly DocumentRequest[];
+ * }} RfiTemplateContent
  */
 
 /** What an RFP template carries. */
 /**
- * @typedef {object} RfpTemplateContent
- * @property {string} familyId
- * @property {string} scope
- * @property {string} currency
- * @property {readonly RfpTermRow[]} terms
- * @property {readonly RfiQuestion[]} questions
- * @property {readonly RfxCustomSection[]} customSections
- * @property {RfpPricingRequest} [pricing]
- * @property {boolean} confidential
- * @property {string} [confidentialityTerms]
- * @property {string} [termsText] -  The T&C text. A T&C FILE is session-held and is not kept in a template.
- * @property {readonly DocumentRequest[]} [documentRequests] -  NR-1 BR-11 — the buyer's document requests. Never a supplier's documents.
+ * `termsText`:  The T&C text. A T&C FILE is session-held and is not kept in a template.
+ * `documentRequests`:  NR-1 BR-11 — the buyer's document requests. Never a supplier's documents.
+ *
+ * @typedef {{
+ *   readonly familyId: string;
+ *   readonly scope: string;
+ *   readonly currency: string;
+ *   readonly terms: readonly RfpTermRow[];
+ *   readonly questions: readonly RfiQuestion[];
+ *   readonly customSections: readonly RfxCustomSection[];
+ *   readonly pricing?: RfpPricingRequest;
+ *   readonly confidential: boolean;
+ *   readonly confidentialityTerms?: string;
+ *   readonly termsText?: string;
+ *   readonly documentRequests?: readonly DocumentRequest[];
+ * }} RfpTemplateContent
  */
 
 /**
+ * `name`:  The buyer's own name for it. Not an i18n key.
+ *
  * @template C
- * @typedef {object} SavedTemplate
- * @property {string} id
- * @property {string} name -  The buyer's own name for it. Not an i18n key.
- * @property {string} savedAt
- * @property {C} content
+ * @typedef {{
+ *   readonly id: string;
+ *   readonly name: string;
+ *   readonly savedAt: string;
+ *   readonly content: C;
+ * }} SavedTemplate
  */
 
 /** @typedef {SavedTemplate<RfiTemplateContent>} RfiSavedTemplate */
 /** @typedef {SavedTemplate<RfpTemplateContent>} RfpSavedTemplate */
 
 /**
+ * `rejected`:  Rows refused on read, each with the refusal's own words.
+ * `unreadable`:  The store exists and could not be read — DISTINCT from "no templates".
+ *
  * @template C
- * @typedef {object} TemplateReadState
- * @property {readonly SavedTemplate<C>[]} templates
- * @property {readonly { readonly id: string; readonly reason: string }[]} rejected -  Rows refused on read, each with the refusal's own words.
- * @property {boolean} unreadable -  The store exists and could not be read — DISTINCT from "no templates".
+ * @typedef {{
+ *   readonly templates: readonly SavedTemplate<C>[];
+ *   readonly rejected: readonly { readonly id: string; readonly reason: string }[];
+ *   readonly unreadable: boolean;
+ * }} TemplateReadState
  */
 
 /** @typedef {{ readonly ok: true; readonly id: string } | { readonly ok: false; readonly reason: string }} SaveResult */

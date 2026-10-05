@@ -64,11 +64,12 @@
 /** What the caller commits onto `active`: the two knobs + the required reason +
  *  the injected stamp. `tolerancePct` null = unlimited (Case C). */
 /**
- * @typedef {object} EditPolicyInput
- * @property {number | null} tolerancePct
- * @property {DrawdownEnforcement} enforcement
- * @property {string} reason
- * @property {string} now
+ * @typedef {{
+ *   readonly tolerancePct: number | null;
+ *   readonly enforcement: DrawdownEnforcement;
+ *   readonly reason: string;
+ *   readonly now: string;
+ * }} EditPolicyInput
  */
 
 /** The service-facing patch — the input WITHOUT the injected clock (`now` is added

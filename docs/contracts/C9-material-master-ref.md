@@ -19,7 +19,7 @@ alongside this document, never instead of it.**
 > | Artifact | Path |
 > |---|---|
 > | **The contract — the authority** | `docs/contracts/C9-material-master-ref.md` |
-> | **The types module — the shape** | `src/services/sdc/materialMasterRef.types.ts` |
+> | **The types module — the shape** | `src/services/sdc/materialMasterRef.types.js` |
 > | **The derived field list** | `docs/contracts/C9-required-fields.md` |
 >
 > **ANY LATER AMENDMENT IS A NEW SHA AND A NEW RATIFICATION.** That is a **feature, not friction**:
@@ -48,7 +48,7 @@ alongside this document, never instead of it.**
 > **ADDENDUM (third issue) — CANON, A WORKED EXAMPLE, AND ONE ADVANCE SIGNAL. NO SCHEMA CHANGE.**
 > **SOMO has accepted all three amendments.** Written ratification follows their check 1, which is
 > running. **The shape is not in question.** Four additions, none of which reaches
-> `materialMasterRef.types.ts`:
+> `materialMasterRef.types.js`:
 >
 > | # | Clause | What it adds |
 > |---|---|---|
@@ -120,9 +120,9 @@ alongside this document, never instead of it.**
 > corrections to statements we made about our own tree. Recorded as such, because §7.9's lesson was
 > that a ledger kept by one party about itself finds the kinds of thing that party looks for.
 
-**This document is the AUTHORITY.** `src/services/sdc/materialMasterRef.types.ts` expresses the
+**This document is the AUTHORITY.** `src/services/sdc/materialMasterRef.types.js` expresses the
 same shape in a form a build can check; where the two disagree, **this document wins and the
-types are the defect.** `materialMasterRef.contract.test.ts` makes that disagreement fail the
+types are the defect.** `materialMasterRef.contract.test.js` makes that disagreement fail the
 floor rather than accumulate silently (§8).
 
 **Why it exists now.** C8 §4.1 recorded the scheduling fact both platforms need:
@@ -250,7 +250,7 @@ precise claim this lets us make to procurement.
 The optional substance axis is a single optional field on the shipped master entry:
 
 ```ts
-MaterialMasterEntry.substanceRef?: SubstanceRef      // swap-point: src/services/sdc/types.ts:83-110
+MaterialMasterEntry.substanceRef?: SubstanceRef      // swap-point: src/services/sdc/types.js:83-110
 ```
 
 **Optional**, so every existing entry stays valid and no fixture changes. That is the "additive
@@ -262,8 +262,8 @@ whether it carries commercial meaning at all.
 
 **AMENDED (A-18) — STILL NOT BUILT, AND NOW SAID PLAINLY RATHER THAN LEFT AS AN ALIAS.**
 `SubstanceRef` is a **bare type alias** — `export type SubstanceRef = string`
-(`src/services/sdc/materialMasterRef.types.ts`) — and `MaterialMasterEntry`
-(`src/services/sdc/types.ts`) carries **six** fields: `materialCode`, `label`, `materialType`,
+(`src/services/sdc/materialMasterRef.types.js`) — and `MaterialMasterEntry`
+(`src/services/sdc/types.js`) carries **six** fields: `materialCode`, `label`, `materialType`,
 `materialGroup`, `canonicalUom`, `bpomApplicable`. **`substanceRef` is not one of them.** Five
 master-authoring batches have run since the reservation was written and **not one of them
 approached it**, which is the honest signal that it is not merely unscheduled.
@@ -1113,11 +1113,11 @@ ledger by rule, not by luck.
 | **7.9** | **AMENDED (A-3).** The first issue's §3.1 stated as fact that SOMO's explosion engine parses `RM-`/`PM-` prefixes | **IT DID NOT.** We carried a hazard they had undertaken to *look for* (C8 §4.6) as a hazard they *had*, and published it in a contract document. **This is the first C9 divergence and it ran the opposite direction to the eleven C7/C8 ones** — not understating our own implementation, but **overstating a defect in the counterparty's.** Corrected in §3.1; recorded here because a ledger that only catches the familiar direction is not a ledger. |
 
 | **7.10** | **AMENDED (A-4).** The first three issues stated that absence was the ONLY way to express *not settled*, while §4.2 required a route on every writable row | **THE TWO CLAUSES COLLIDED AND A ROW COULD SATISFY BOTH ONLY BY NOT EXISTING.** A row that is absent cannot carry a route, so `routeToResolution` — added at SOMO's own request one issue earlier — **had nowhere to live.** **This is §7's SECOND counterparty-found item**, and the second running the direction the preamble now says to look in. Resolved in the shape (§5.3), not merely in the prose: the verdict vocabulary changed and **the pin moved with it.** |
-| **7.11** | **AMENDED (A-9).** *"SOMO builds against this"* (§8) — the reason a types module exists at all | **C9 IS NOT IN SOMO'S REPOSITORY. THEY HAVE BEEN RATIFYING A DESCRIPTION OF THE ARTIFACT, NOT THE ARTIFACT** — their field list came from **our prose summary** of `materialMasterRef.types.ts`. **This is `COMMENT-AS-CONTRACT-01` aimed at ourselves, one boundary out:** §8 claims the module inverts that class by making the document the authority and pinning the code to it, and **the inversion holds inside our repository and stops at its edge.** Two things follow, and only one of them is fixed here. **FIXED:** [`C9-required-fields.md`](./C9-required-fields.md) — the complete required-field list, **DERIVED from the module and pinned to it**, to be sent alongside this document. **NOT FIXED:** every ratification given before it existed was given against prose, and **A-12 is the measurement of what that cost.** |
+| **7.11** | **AMENDED (A-9).** *"SOMO builds against this"* (§8) — the reason a types module exists at all | **C9 IS NOT IN SOMO'S REPOSITORY. THEY HAVE BEEN RATIFYING A DESCRIPTION OF THE ARTIFACT, NOT THE ARTIFACT** — their field list came from **our prose summary** of `materialMasterRef.types.js`. **This is `COMMENT-AS-CONTRACT-01` aimed at ourselves, one boundary out:** §8 claims the module inverts that class by making the document the authority and pinning the code to it, and **the inversion holds inside our repository and stops at its edge.** Two things follow, and only one of them is fixed here. **FIXED:** [`C9-required-fields.md`](./C9-required-fields.md) — the complete required-field list, **DERIVED from the module and pinned to it**, to be sent alongside this document. **NOT FIXED:** every ratification given before it existed was given against prose, and **A-12 is the measurement of what that cost.** |
 
 | **7.12** | **AMENDED (A-13/A-14).** This document has been described to SOMO across four issues as a contract they may ratify | **IT WAS NEVER DELIVERED AND NEVER PINNED.** C9 has only ever lived in our repository; our messages said *"enclosed"* and carried nothing, and the contract, the types module and the field-list generator were **modified in the working tree between their readings** — so they were reading **a document mid-edit, past the version our prose described.** **Two exchanges passed with neither side noticing.** This is the only entry in this ledger that made ratification **impossible rather than merely uninformed**, and it is fixed by the citation block at the head of this document: **all three paths, one SHA, and any later amendment is a new SHA and a new ratification.** |
 
-| **7.13** | **AMENDED (A-16).** This ledger records where our implementation falls short of this document | ⚠️ **IT DID NOT RECORD THE OPPOSITE, AND THE OPPOSITE HAPPENED.** `C9-STALE-BY-FIX-01`. Between the fourth issue and this one **we fixed §7.3** — and this document went on declaring the defect, citing a line range in a file that no longer holds one. **THREE OTHER CONTRACT DOCUMENTS DID THE SAME** (C7 §6.1, C8 §4.6, the package README), each giving the deleted function as a live reason for a design position. **A CONTRACT CAN GO STALE BY BEING FIXED.** This is ADD-3 with the polarity reversed: their observation was that a one-directional log is under-read, and we took it as a lesson about **understating our own implementation**. The direction still unread is the one where **a divergence CLOSES and the ledger keeps declaring it** — because a document that overstates our conformance is caught by anyone who reads the code, and **one that understates it is caught by nobody, since the discrepancy is in our favour and reads as caution.** ⚠️ **ASYMMETRY, NAMED AND NOT CLOSED — BUT NOT PERMANENT EITHER, AND THE DIFFERENCE MATTERS.** Only C9's §7 is pinned to the floor; the other three were corrected by hand and **nothing will fail if they go stale again.** **A pin that would close it is buildable and is BOOKED** — see `CITATION-CONVENTION-BLOCKS-THE-PIN-01` in our register. It is blocked on a documentation chore, not on a design problem: C7 and C8 cite **bare basenames** (`types.ts`, of which our tree holds four) where C9 cites **full repo-relative paths**, so a mechanical resolver measures the citation convention instead of conformance — probed at a **47% false-positive rate, with every false positive a path ambiguity and none a document error.** ⚠️ **DO NOT READ THIS ROW AS CLOSED. It holds until that chore runs, and the chore is not booked to a batch.** |
+| **7.13** | **AMENDED (A-16).** This ledger records where our implementation falls short of this document | ⚠️ **IT DID NOT RECORD THE OPPOSITE, AND THE OPPOSITE HAPPENED.** `C9-STALE-BY-FIX-01`. Between the fourth issue and this one **we fixed §7.3** — and this document went on declaring the defect, citing a line range in a file that no longer holds one. **THREE OTHER CONTRACT DOCUMENTS DID THE SAME** (C7 §6.1, C8 §4.6, the package README), each giving the deleted function as a live reason for a design position. **A CONTRACT CAN GO STALE BY BEING FIXED.** This is ADD-3 with the polarity reversed: their observation was that a one-directional log is under-read, and we took it as a lesson about **understating our own implementation**. The direction still unread is the one where **a divergence CLOSES and the ledger keeps declaring it** — because a document that overstates our conformance is caught by anyone who reads the code, and **one that understates it is caught by nobody, since the discrepancy is in our favour and reads as caution.** ⚠️ **ASYMMETRY, NAMED AND NOT CLOSED — BUT NOT PERMANENT EITHER, AND THE DIFFERENCE MATTERS.** Only C9's §7 is pinned to the floor; the other three were corrected by hand and **nothing will fail if they go stale again.** **A pin that would close it is buildable and is BOOKED** — see `CITATION-CONVENTION-BLOCKS-THE-PIN-01` in our register. It is blocked on a documentation chore, not on a design problem: C7 and C8 cite **bare basenames** (`types.js`, of which our tree holds four) where C9 cites **full repo-relative paths**, so a mechanical resolver measures the citation convention instead of conformance — probed at a **47% false-positive rate, with every false positive a path ambiguity and none a document error.** ⚠️ **DO NOT READ THIS ROW AS CLOSED. It holds until that chore runs, and the chore is not booked to a batch.** |
 
 **None of the above blocks ratification of the SHAPE**, which is what R-1…R-6 ask for. All of it
 blocks any claim that the crosswalk is *operational*, and no such claim is made. **§7.12 is the one
@@ -1204,10 +1204,10 @@ is the kind we had not been searching for. Every
 claim about our own tree carries a `file:line`; **every claim about SOMO's tree is now marked with
 how it was obtained** (§3.3) **and, as of ADD-1, with its STATUS — disclosed or reported-measured**
 (§3.4) — the one that carried neither is §7.9. Companion
-types: `src/services/sdc/materialMasterRef.types.ts` (inert, zero rows). Pinned by
-`src/services/sdc/__tests__/materialMasterRef.contract.test.ts`. Companion artifact:
+types: `src/services/sdc/materialMasterRef.types.js` (inert, zero rows). Pinned by
+`src/services/sdc/__tests__/materialMasterRef.contract.test.js`. Companion artifact:
 [`C9-required-fields.md`](./C9-required-fields.md), **generated** by
-`src/services/sdc/__tests__/deriveC9FieldList.ts` and pinned to the module in the same suite. Predecessors and their rulings:
+`src/services/sdc/__tests__/deriveC9FieldList.js` and pinned to the module in the same suite. Predecessors and their rulings:
 [C7](./C7-pr-intake.md) (PR intake), [C8](./C8-forecast-publication.md) (forecast publication —
 §4.0 master declaration, §4.1 the external clock, §4.3 adoption-not-discovery, §4.4 D-1, §4.6 the
 reciprocal prefix hazard). Batch record: `docs/findings.md`, CP-2 · Batch 2 census and Batch 2a.
@@ -1216,7 +1216,7 @@ reciprocal prefix hazard). Batch record: `docs/findings.md`, CP-2 · Batch 2 cen
 
 ## Pin reach
 
-**Pinned by** `src/services/contracts/__tests__/ledgerTruth.test.ts` and `src/services/sdc/__tests__/materialMasterRef.contract.test.ts`.
+**Pinned by** `src/services/contracts/__tests__/ledgerTruth.test.js` and `src/services/sdc/__tests__/materialMasterRef.contract.test.js`.
 
 **GUARDED — these assertions, and nothing else on this page:**
 
@@ -1258,7 +1258,7 @@ a backlog: a clause describing a system outside this repository has nothing here
 against, and a clause stating WHY a boundary exists has no truth-value to decay. See C12
 for the statement of that property.
 
-⚠️ **THIS BLOCK IS SELF-PINNED** (`src/services/contracts/__tests__/pinReach.contract.test.ts`).
+⚠️ **THIS BLOCK IS SELF-PINNED** (`src/services/contracts/__tests__/pinReach.contract.test.js`).
 The GUARDED list is asserted EQUAL to the pin’s own `describe` titles, **both directions**:
 widen the pin without listing the new assertion and it reddens; drop a line here without
 narrowing the pin and it reddens too. A reach statement that can drift is the overclaim one
