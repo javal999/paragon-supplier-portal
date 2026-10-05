@@ -416,36 +416,6 @@ const BuyerReschedule: React.FC = () => {
             />
           </div>
 
-          {onHandWeeks.length > 0 && (
-            <p className="text-sm text-text-secondary mb-4" data-testid="rs-onhand-note">
-              {t('rs.onHand.note', { count: onHandWeeks.length, first: weekLabel(onHandWeeks[0].weekStart), last: weekLabel(onHandWeeks[onHandWeeks.length - 1].weekStart) })}
-            </p>
-          )}
-
-          <section className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-6" data-testid="rs-relief">
-            <h2 className="text-section text-text-primary mb-1">{t('rs.relief.title')}</h2>
-            <p className="text-xs text-text-tertiary mb-3">{t('rs.relief.intro')}</p>
-            {relief.length === 0 ? (
-              <p className="text-sm text-text-tertiary py-6 text-center" data-testid="rs-relief-empty">
-                {t('rs.relief.empty')}
-              </p>
-            ) : (
-              <>
-                <div className="flex flex-wrap gap-2 mb-3">
-                  <Button variant="outline" onClick={selectFree} data-testid="rs-select-free">
-                    {t('rs.relief.selectFree', { count: freeCount })}
-                  </Button>
-                  <Button variant="secondary" onClick={clearSelection} data-testid="rs-select-clear">
-                    {t('rs.relief.clear')}
-                  </Button>
-                </div>
-                {proposalRows(relief, true, 'rs-relief')}
-              </>
-            )}
-          </section>
-
-          {/* FUX A4: the selection's effect sits under the list it summarises, so the
-              proposals are on the first screen. */}
           <section className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-6" data-testid="rs-guard">
             <h2 className="text-section text-text-primary mb-1">{t('rs.guard.title')}</h2>
             <p className="text-xs text-text-tertiary mb-3">{t('rs.guard.intro', { weeks: run!.planChangeWindowWeeks })}</p>
@@ -477,6 +447,35 @@ const BuyerReschedule: React.FC = () => {
             </dl>
             <p className="text-xs text-text-tertiary mt-2">{t('rs.guard.callOffs')}</p>
           </section>
+
+          <section className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-6" data-testid="rs-relief">
+            <h2 className="text-section text-text-primary mb-1">{t('rs.relief.title')}</h2>
+            <p className="text-xs text-text-tertiary mb-3">{t('rs.relief.intro')}</p>
+            {relief.length === 0 ? (
+              <p className="text-sm text-text-tertiary py-6 text-center" data-testid="rs-relief-empty">
+                {t('rs.relief.empty')}
+              </p>
+            ) : (
+              <>
+                <div className="flex flex-wrap gap-2 mb-3">
+                  <Button variant="outline" onClick={selectFree} data-testid="rs-select-free">
+                    {t('rs.relief.selectFree', { count: freeCount })}
+                  </Button>
+                  <Button variant="secondary" onClick={clearSelection} data-testid="rs-select-clear">
+                    {t('rs.relief.clear')}
+                  </Button>
+                </div>
+                {proposalRows(relief, true, 'rs-relief')}
+              </>
+            )}
+          </section>
+
+          {/* FUX A4 (F-08): the on-hand caveat sits under the proposals, not above them. */}
+          {onHandWeeks.length > 0 && (
+            <p className="text-sm text-text-secondary mb-4" data-testid="rs-onhand-note">
+              {t('rs.onHand.note', { count: onHandWeeks.length, first: weekLabel(onHandWeeks[0].weekStart), last: weekLabel(onHandWeeks[onHandWeeks.length - 1].weekStart) })}
+            </p>
+          )}
 
           {shortage.length > 0 && (
             <section className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-6" data-testid="rs-shortage">
