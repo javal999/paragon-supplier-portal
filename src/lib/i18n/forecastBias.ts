@@ -13,7 +13,7 @@ export const forecastBiasEn: Record<string, string> = {
   'fb.synthetic':
     'Measured on synthetic sales history and SAP plan snapshots built to reproduce PTI’s current measures. It proves the calculation, not the business answer.',
   'fb.source':
-    'Overrides change the demand forecast shown here and on Demand forecast. They do not drive material planning: Material requirement, Order plan, Stabilise and publish and Reschedule still run on SAP’s plan.',
+    'Overrides change the demand forecast shown here and on Forecast quality. They do not drive material planning: Material requirement, What to order, Publish to suppliers and Make warehouse room still run on SAP’s plan.',
 
   'fb.alarm.under': 'Bias alarm · runs low',
   'fb.alarm.over': 'Bias alarm · runs high',
@@ -89,7 +89,7 @@ export const forecastBiasEn: Record<string, string> = {
   'fb.fva.intro':
     'For weeks that have sold: the engine’s error against the error after the override, per SKU, combined as a geometric mean (FVA). Positive means the overrides made the forecast better. By direction, reason and size.',
   'fb.fva.service':
-    'Judging overrides by service, not accuracy alone (BR-04), needs the backtest’s replay of PTI’s ordering, which is built separately. It is added here when that lands.',
+    'Judging overrides by service, not accuracy alone, needs the backtest’s replay of PTI’s ordering, which is built separately. It is added here when that lands.',
   'fb.fva.empty':
     'Nothing measured yet. The synthetic data carries no override history and none is invented: this report fills as overrides are entered and their weeks sell. Waiting for their week: {{waiting}}. Past weeks with no usable sales figure: {{unmeasurable}}.',
   'fb.fva.all': 'All overrides',
@@ -124,7 +124,7 @@ export const forecastBiasEn: Record<string, string> = {
     'Overrides: the latest override of a week is the one in force. Old value is what was in force before; the engine’s value is kept beside it, and direction is judged against the engine’s.',
   'fb.def.fva':
     'Override value: per SKU, mean error after the override ÷ mean error of the engine; the geometric mean across SKUs is subtracted from 1. −15% means the overrides made the error 15% larger.',
-  'fb.def.link': 'Open the demand forecast',
+  'fb.def.link': 'Open Forecast quality',
 
   // Override reason codes (starter list, ENG-B104)
   'fb.reason.promotion': 'Promotion or activity not in the history',
@@ -151,7 +151,7 @@ export const forecastBiasId: Record<string, string> = {
   'fb.synthetic':
     'Diukur pada riwayat penjualan dan cuplikan rencana SAP sintetis yang dibuat untuk meniru ukuran PTI saat ini. Ini membuktikan perhitungannya, bukan jawaban bisnisnya.',
   'fb.source':
-    'Penyesuaian mengubah prakiraan permintaan yang ditampilkan di sini dan di Prakiraan permintaan. Penyesuaian tidak menggerakkan perencanaan material: Kebutuhan material, Rencana pesanan, Stabilkan dan publikasikan, serta Jadwal ulang tetap memakai rencana SAP.',
+    'Penyesuaian mengubah prakiraan permintaan yang ditampilkan di sini dan di Kualitas prakiraan. Penyesuaian tidak menggerakkan perencanaan material: Kebutuhan material, Apa yang dipesan, Terbitkan ke pemasok, serta Kosongkan ruang gudang tetap memakai rencana SAP.',
 
   'fb.alarm.under': 'Alarm bias · terlalu rendah',
   'fb.alarm.over': 'Alarm bias · terlalu tinggi',
@@ -227,7 +227,7 @@ export const forecastBiasId: Record<string, string> = {
   'fb.fva.intro':
     'Untuk minggu yang sudah terjual: galat mesin dibandingkan galat setelah penyesuaian, per SKU, digabung sebagai rata-rata geometris (FVA). Positif berarti penyesuaian membuat prakiraan lebih baik. Menurut arah, alasan, dan besarnya.',
   'fb.fva.service':
-    'Menilai penyesuaian berdasarkan layanan, bukan hanya akurasi (BR-04), memerlukan simulasi ulang pemesanan PTI dari backtest, yang dibangun terpisah. Penilaian itu ditambahkan di sini begitu tersedia.',
+    'Menilai penyesuaian berdasarkan layanan, bukan hanya akurasi, memerlukan simulasi ulang pemesanan PTI dari backtest, yang dibangun terpisah. Penilaian itu ditambahkan di sini begitu tersedia.',
   'fb.fva.empty':
     'Belum ada yang diukur. Data sintetis tidak membawa riwayat penyesuaian dan tidak ada yang dikarang: laporan ini terisi saat penyesuaian dimasukkan dan minggunya terjual. Menunggu minggunya: {{waiting}}. Minggu lalu tanpa angka penjualan yang dapat dipakai: {{unmeasurable}}.',
   'fb.fva.all': 'Semua penyesuaian',
@@ -262,7 +262,7 @@ export const forecastBiasId: Record<string, string> = {
     'Penyesuaian: penyesuaian terakhir pada suatu minggu adalah yang berlaku. Nilai lama adalah yang berlaku sebelumnya; nilai mesin disimpan di sampingnya, dan arah dinilai terhadap nilai mesin.',
   'fb.def.fva':
     'Nilai penyesuaian: per SKU, rata-rata galat setelah penyesuaian ÷ rata-rata galat mesin; rata-rata geometris antar-SKU dikurangkan dari 1. −15% berarti penyesuaian membuat galat 15% lebih besar.',
-  'fb.def.link': 'Buka prakiraan permintaan',
+  'fb.def.link': 'Buka Kualitas prakiraan',
 
   'fb.reason.promotion': 'Promosi atau aktivitas yang tidak ada di riwayat',
   'fb.reason.customer-order': 'Pesanan distributor atau pelanggan yang sudah diketahui',

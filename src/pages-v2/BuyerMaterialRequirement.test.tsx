@@ -26,7 +26,8 @@ describe('BuyerMaterialRequirement — the planner page', () => {
     expect(isLive('engineDataset')).toBe(false);
     renderWithProviders(<BuyerMaterialRequirement />, { identity: BUYER, route: '/buyer/material-requirement' });
     expect(await screen.findByRole('heading', { name: 'Material requirement' })).toBeInTheDocument();
-    expect(screen.getByText('Synthetic data · awaiting the MDM SAP feed')).toBeInTheDocument();
+    // FUX A4 (F-14): one simulated-data banner in place of the engine pill.
+    expect(screen.getByTestId('simulated-data-banner')).toHaveTextContent('Sample data. Nothing here reaches suppliers or SAP.');
     expect(screen.queryByText('Live')).toBeNull();
     // E14-05 now sizes the planned orders (the interim note is the fallback's).
     expect(screen.getByTestId('mrq-sized-note')).toBeInTheDocument();

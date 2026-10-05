@@ -40,8 +40,9 @@ describe('BuyerOrderPlan — the planner page (REQ-E14-05)', () => {
   it('renders inside the app shell with the SIMULATED engine pill — never Live — and every cost rate labelled a placeholder', async () => {
     expect(isLive('engineDataset')).toBe(false);
     renderWithProviders(<BuyerOrderPlan />, { identity: PLANNER, route: '/buyer/order-plan' });
-    expect(await screen.findByRole('heading', { name: 'Order plan' })).toBeInTheDocument();
-    expect(screen.getByText('Synthetic data · awaiting the MDM SAP feed')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'What to order' })).toBeInTheDocument();
+    // FUX A4 (F-14): one simulated-data banner in place of the engine pill.
+    expect(screen.getByTestId('simulated-data-banner')).toHaveTextContent('Sample data. Nothing here reaches suppliers or SAP.');
     expect(screen.queryByText('Live')).toBeNull();
     for (const k of ['holding', 'order', 'rent']) {
       expect(screen.getByTestId(`op-cost-placeholder-${k}`)).toHaveTextContent('Placeholder — Finance to confirm');
@@ -100,7 +101,7 @@ describe('BuyerOrderPlan — the planner page (REQ-E14-05)', () => {
     for (const d of sw.later.deliveries) {
       expect(within(next).getByTestId(`op-short-delivery-${d.materialCode}-${d.source}-${d.weekStart}`)).toBeInTheDocument();
     }
-    expect(within(next).getByRole('link', { name: 'Open Reschedule open orders' })).toHaveAttribute('href', expect.stringContaining('/buyer/reschedule'));
+    expect(within(next).getByRole('link', { name: 'Open Make warehouse room' })).toHaveAttribute('href', expect.stringContaining('/buyer/reschedule'));
   });
 
   it('BR-04: every recommendation shows the constraint that bound it and its saving', async () => {
@@ -239,7 +240,7 @@ describe('BuyerOrderPlan — the planner page (REQ-E14-05)', () => {
   it('renders in Indonesian', async () => {
     await i18n.changeLanguage('id');
     renderWithProviders(<BuyerOrderPlan />, { identity: PLANNER, route: '/buyer/order-plan' });
-    expect(await screen.findByRole('heading', { name: 'Rencana pesanan' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Apa yang dipesan' })).toBeInTheDocument();
     expect(screen.getByTestId('op-cost-placeholder-rent')).toHaveTextContent('Sementara — menunggu konfirmasi Keuangan');
   });
 });

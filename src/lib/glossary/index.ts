@@ -57,6 +57,8 @@ export {
   BPOM_APPLICABILITY_GLOSSARY,
 } from './governance.glossary';
 
+export { PLANNING_TERM_GLOSSARY, type PlanningTerm } from './planning.glossary';
+
 import {
   COMMAND_REFUSAL_GLOSSARY,
   DATA_ERROR_GLOSSARY,
@@ -79,6 +81,7 @@ import {
   HALAL_APPLICABILITY_GLOSSARY,
   BPOM_APPLICABILITY_GLOSSARY,
 } from './governance.glossary';
+import { PLANNING_TERM_GLOSSARY } from './planning.glossary';
 import type { GlossaryEntry } from './types';
 
 /** The shape of one registry row. Checked by `satisfies`, never widened onto
@@ -121,6 +124,8 @@ const REGISTRIES = [
   { sourceType: 'CertType', sourceFile: 'src/services/data/types.ts', entries: CERT_TYPE_GLOSSARY },
   { sourceType: 'HalalApplicability', sourceFile: 'src/services/sdc/types.ts', entries: HALAL_APPLICABILITY_GLOSSARY },
   { sourceType: 'BpomApplicability', sourceFile: 'src/services/sdc/types.ts', entries: BPOM_APPLICABILITY_GLOSSARY },
+  // Forecast UX A4 (F-09) — the planning terms the forecast pages tip.
+  { sourceType: 'PlanningTerm', sourceFile: 'src/lib/glossary/planning.glossary.ts', entries: PLANNING_TERM_GLOSSARY },
 ] as const satisfies readonly GlossaryRegistry[];
 
 export const GLOSSARY_REGISTRIES: typeof REGISTRIES = Object.freeze(REGISTRIES);

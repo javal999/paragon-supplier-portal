@@ -10,8 +10,6 @@ import {
 import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import AppShellV2 from '@components/layout-v2/AppShellV2';
 import PageHeader from '@components/ui-v2/PageHeader';
-import PageMetaLine from '@components/ui-v2/PageMetaLine';
-import SampleDataBadge from '@components/ui-v2/SampleDataBadge';
 import SubTabs from '@components/ui-v2/SubTabs';
 import Table from '@components/ui-v2/Table';
 import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
@@ -24,8 +22,14 @@ import SidePanel from '@components/ui-v2/SidePanel';
 import LoadingState from '@components/ui-v2/LoadingState';
 import ErrorState from '@components/ui-v2/ErrorState';
 import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
+import PurposeHeader from '@components/forecast/PurposeHeader';
+import SimulatedDataBanner from '@components/forecast/SimulatedDataBanner';
+import AboutThisPage from '@components/forecast/AboutThisPage';
+import DataAsOf from '@components/forecast/DataAsOf';
+import TermTip from '@components/forecast/TermTip';
+import { forecastCrumb, forecastTitle } from '@components/forecast/forecastPages';
 import { useVerbAvailability } from '@hooks/useVerbAvailability';
-import { formatDate, formatDateTime } from '@lib/format';
+import { formatDateTime } from '@lib/format';
 import { CHART_SERIES } from '@lib/chartPalette';
 import { useForecastCommitments, useForecastCoverage, useInventory } from '@services/query/hooks';
 import type { ForecastCommitmentLine } from '@services/data/types';
@@ -92,7 +96,7 @@ const BuyerCommitments: React.FC = () => {
   const { run, pending } = useForecastRunner();
   const periodLabel = usePeriodLabel();
   const nowIso = forecastNow();
-  const crumb = [t('hub.nav.section.forecast'), t('fc.pti.gaps.title')];
+  const crumb = forecastCrumb(t, 'responses');
 
   // ── REQ-E07-03 BR-05 / AC-04 ──────────────────────────────────────────────
   // Foresight is agreed per material and period, not per order, so a PO's
@@ -181,11 +185,10 @@ const BuyerCommitments: React.FC = () => {
 
   return (
     <AppShellV2>
-      <PageHeader breadcrumb={crumb} title={t('fc.pti.gaps.title')} subtitle={t('fc.pti.gaps.subtitle')} />
-      <PageMetaLine className="-mt-6 mb-4">
-        {t('fc.asOf')} <Data>{formatDate(nowIso)}</Data>
-        <SampleDataBadge className="ml-3 align-middle" />
-      </PageMetaLine>
+      <PageHeader breadcrumb={crumb} title={forecastTitle(t, 'responses')} />
+      <PurposeHeader page="responses" />
+      <SimulatedDataBanner capability="forecastPublications" />
+      <DataAsOf date={nowIso} />
 
       {(missing > 0 || outside > 0) && (
         <div role="status" data-testid="fc-pti-gaps-banner" className="bg-danger-soft border-l-2 border-danger rounded px-4 py-3 mb-4 text-sm text-danger">
@@ -249,7 +252,11 @@ const BuyerCommitments: React.FC = () => {
               <TableHeaderCell>{t('fc.col.supplier')}</TableHeaderCell>
               <TableHeaderCell>{t('fc.col.material')}</TableHeaderCell>
               <TableHeaderCell>{t('fc.col.period')}</TableHeaderCell>
-              <TableHeaderCell>{t('fc.col.zone')}</TableHeaderCell>
+              <TableHeaderCell>
+                <span className="inline-flex items-center gap-1">
+                  {t('fc.col.zone')} <TermTip term="Firm" /> <TermTip term="Trade-off" />
+                </span>
+              </TableHeaderCell>
               <TableHeaderCell className="text-right">{t('fc.col.forecastShort')}</TableHeaderCell>
               <TableHeaderCell className="text-right">{t('fc.col.commitmentShort')}</TableHeaderCell>
               <TableHeaderCell>{t('fc.col.gap')}</TableHeaderCell>
@@ -549,6 +556,10 @@ const BuyerCommitments: React.FC = () => {
           </Table>
         </div>
       </section>
+
+      <AboutThisPage>
+        <p>{t('fc.pti.gaps.subtitle')}</p>
+      </AboutThisPage>
 
       <SidePanel
         open={action !== null}

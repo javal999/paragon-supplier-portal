@@ -2,8 +2,6 @@ import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import AppShellV2 from '@components/layout-v2/AppShellV2';
 import PageHeader from '@components/ui-v2/PageHeader';
-import PageMetaLine from '@components/ui-v2/PageMetaLine';
-import LivenessPill from '@components/ui-v2/LivenessPill';
 import KpiCard from '@components/ui-v2/KpiCard';
 import StatusPill from '@components/ui-v2/StatusPill';
 import Table from '@components/ui-v2/Table';
@@ -17,6 +15,12 @@ import { formatDate, formatNumber } from '@lib/format';
 import { useSafetyStock } from '@services/query/hooks';
 import type { MaterialSafetyStockView } from '@services/data/types';
 import { qtyOf } from './materialPlan/planDisplay';
+import PurposeHeader from '@components/forecast/PurposeHeader';
+import SimulatedDataBanner from '@components/forecast/SimulatedDataBanner';
+import AboutThisPage from '@components/forecast/AboutThisPage';
+import DataAsOf from '@components/forecast/DataAsOf';
+import TermTip from '@components/forecast/TermTip';
+import { forecastCrumb, forecastTitle } from '@components/forecast/forecastPages';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SAFETY STOCK AND REORDER POINT — REQ-E14-04, the Material Planner's view.
@@ -37,6 +41,8 @@ import { qtyOf } from './materialPlan/planDisplay';
 
 const pct = (x: number | null) => (x === null ? '—' : `${Math.round(x * 1000) / 10}%`);
 const pallets = (x: number) => formatNumber(Math.round(x));
+/** F-21 — a quantity rounded to its unit, with the unit named. */
+const qtyIn = (x: number, uom: MaterialSafetyStockView['uom']) => `${qtyOf(x, uom)} ${uom}`;
 /** A change with its sign: +417, −295, 0. */
 const signed = (x: number, uom: MaterialSafetyStockView['uom']) => (x > 0 ? `+${qtyOf(x, uom)}` : x < 0 ? `−${qtyOf(-x, uom)}` : qtyOf(0, uom));
 
@@ -162,7 +168,7 @@ const HistoryPanel: React.FC<{ m: MaterialSafetyStockView }> = ({ m }) => {
 const BuyerSafetyStock: React.FC = () => {
   const { t } = useTranslation();
   const query = useSafetyStock();
-  const crumb = [t('hub.nav.section.forecast'), t('sst.title')];
+  const crumb = forecastCrumb(t, 'safetyStock');
   const run = query.data ?? null;
   const materials = useMemo(() => run?.materials ?? [], [run]);
   const [selected, setSelected] = useState<string | null>(null);
@@ -181,38 +187,21 @@ const BuyerSafetyStock: React.FC = () => {
 
   return (
     <AppShellV2>
-      <PageHeader
-        breadcrumb={crumb}
-        title={t('sst.title')}
-        subtitle={t('sst.subtitle')}
-        actions={<LivenessPill capability="engineDataset" />}
+      <PageHeader breadcrumb={crumb} title={forecastTitle(t, 'safetyStock')} />
+      <PurposeHeader page="safetyStock" />
+      <SimulatedDataBanner capability="engineDataset" />
+      <DataAsOf
+        date={run?.planMadeAt ?? null}
+        detail={
+          run?.previousAsOf ? (
+            <span data-testid="sst-last-run">
+              {t('sst.change.lastRun', { count: changedSs })} {t('sst.change.lastRunPackaging')}{' '}
+              <Data>{formatDate(run.previousAsOf.packaging)}</Data> · {t('sst.change.lastRunRaw')}{' '}
+              <Data>{formatDate(run.previousAsOf.rawMaterial)}</Data>
+            </span>
+          ) : null
+        }
       />
-      <PageMetaLine className="-mt-6 mb-2">
-        {run?.planMadeAt && (
-          <>
-            {t('sst.meta.plan')} <Data>{formatDate(run.planMadeAt)}</Data> · {t('sst.meta.method')}
-          </>
-        )}
-      </PageMetaLine>
-      <p className="text-xs text-text-tertiary mb-1" data-testid="sst-synthetic-note">
-        {t('sst.synthetic')}
-      </p>
-      <p className="text-xs text-text-tertiary mb-1" data-testid="sst-tier-default-note">
-        {t('sst.tierDefault')}
-      </p>
-      {params && (
-        <p className="text-xs text-text-tertiary mb-4" data-testid="sst-targets">
-          {t('sst.targets', { high: pct(params.targets.high), standard: pct(params.targets.standard), slow: pct(params.targets.slow) })}
-        </p>
-      )}
-
-      {run?.previousAsOf && (
-        <p className="text-xs text-text-tertiary -mt-3 mb-4" data-testid="sst-last-run">
-          {t('sst.change.lastRun', { count: changedSs })} {t('sst.change.lastRunPackaging')}{' '}
-          <Data>{formatDate(run.previousAsOf.packaging)}</Data> · {t('sst.change.lastRunRaw')}{' '}
-          <Data>{formatDate(run.previousAsOf.rawMaterial)}</Data>. {t('sst.change.recomputed')}
-        </p>
-      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-6" data-testid="sst-kpis">
         <KpiCard
@@ -254,7 +243,9 @@ const BuyerSafetyStock: React.FC = () => {
             <TableHeaderCell>{t('sst.col.sap')}</TableHeaderCell>
             <TableHeaderCell>{t('sst.col.freed')}</TableHeaderCell>
             <TableHeaderCell>{t('sst.col.slt')}</TableHeaderCell>
-            <TableHeaderCell>{t('sst.col.rop')}</TableHeaderCell>
+            <TableHeaderCell>
+              <TermTip term="Reorder point">{t('sst.col.rop')}</TermTip>
+            </TableHeaderCell>
             <TableHeaderCell>{t('sst.col.change')}</TableHeaderCell>
             <TableHeaderCell>{t('sst.col.history')}</TableHeaderCell>
           </TableHeader>
@@ -283,7 +274,7 @@ const BuyerSafetyStock: React.FC = () => {
                   )}
                 </TableCell>
                 <TableCell className="align-top">
-                  <Data data-testid={`sst-ss-${m.materialCode}`}>{qtyOf(m.safetyStock, m.uom)}</Data>
+                  <Data data-testid={`sst-ss-${m.materialCode}`}>{qtyIn(m.safetyStock, m.uom)}</Data>
                   <div className="text-xs" data-testid={`sst-source-${m.materialCode}`}>
                     {m.source === 'sap' ? (
                       <StatusPill variant="warning">{t('sst.source.sap')}</StatusPill>
@@ -303,10 +294,10 @@ const BuyerSafetyStock: React.FC = () => {
                   )}
                 </TableCell>
                 <TableCell className="align-top">
-                  <Data data-testid={`sst-sap-${m.materialCode}`}>{qtyOf(m.sapSafetyStock, m.uom)}</Data>
+                  <Data data-testid={`sst-sap-${m.materialCode}`}>{qtyIn(m.sapSafetyStock, m.uom)}</Data>
                 </TableCell>
                 <TableCell className="align-top">
-                  <Data data-testid={`sst-freed-${m.materialCode}`}>{qtyOf(m.freedUnits, m.uom)}</Data>
+                  <Data data-testid={`sst-freed-${m.materialCode}`}>{qtyIn(m.freedUnits, m.uom)}</Data>
                   {m.freedPallets !== null && (
                     <div className="text-xs text-text-tertiary">{t('sst.pallets', { value: pallets(m.freedPallets) })}</div>
                   )}
@@ -322,7 +313,7 @@ const BuyerSafetyStock: React.FC = () => {
                   </div>
                 </TableCell>
                 <TableCell className="align-top">
-                  <Data data-testid={`sst-rop-${m.materialCode}`}>{qtyOf(m.reorderPoint, m.uom)}</Data>
+                  <Data data-testid={`sst-rop-${m.materialCode}`}>{qtyIn(m.reorderPoint, m.uom)}</Data>
                 </TableCell>
                 <TableCell className="align-top min-w-[12rem]">
                   <ChangeCell m={m} />
@@ -357,6 +348,19 @@ const BuyerSafetyStock: React.FC = () => {
         <p>{t('sst.def.rop')}</p>
         <p>{t('sst.def.change')}</p>
       </section>
+
+      <AboutThisPage>
+        <p>{t('sst.subtitle')}</p>
+        <p>{t('sst.meta.method')}</p>
+        <p data-testid="sst-synthetic-note">{t('sst.synthetic')}</p>
+        <p data-testid="sst-tier-default-note">{t('sst.tierDefault')}</p>
+        {params && (
+          <p data-testid="sst-targets">
+            {t('sst.targets', { high: pct(params.targets.high), standard: pct(params.targets.standard), slow: pct(params.targets.slow) })}
+          </p>
+        )}
+        {run?.previousAsOf && <p>{t('sst.change.recomputed')}</p>}
+      </AboutThisPage>
     </AppShellV2>
   );
 };

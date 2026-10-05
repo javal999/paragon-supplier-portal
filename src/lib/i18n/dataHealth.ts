@@ -13,9 +13,9 @@ export const dataHealthEn: Record<string, string> = {
   'dh.synthetic':
     'Checked on synthetic data built to reproduce PTI’s current measures. It is generated at the hub’s present on every read, so every feed shows as arriving at that moment; a real feed will carry its own arrival time.',
   'dh.owner':
-    'The Master Data Management team owns these feeds and their SAP integration (ENG-D1). Confirmations and plan versions are the Hub’s own records.',
+    'The Master Data Management team owns these feeds and their SAP integration. Confirmations and plan versions are the Hub’s own records.',
   'dh.notBuilt':
-    'Not built yet: the engine does not yet leave refused records out of its calculations. Material requirement, Order plan and Reschedule open orders show how many checks that reach them are failing, and link here.',
+    'Not built yet: the engine does not yet leave refused records out of its calculations. Material requirement, What to order, Make warehouse room and Publish to suppliers show how many checks that reach them are failing, and link here.',
   'dh.limitsWhere': 'Freshness limits are set on Administration → Tolerances and rule values.',
 
   // F-02 — the chip on the result pages (DataHealthChip).
@@ -40,13 +40,13 @@ export const dataHealthEn: Record<string, string> = {
   'dh.steps.flagged': 'Flagged',
   'dh.steps.affected': 'Affected',
   'dh.steps.by': 'By: {{feeds}}',
-  'dh.step.E14-02': 'E14-02 Supplier reliability',
-  'dh.step.E14-03': 'E14-03 Material requirement',
-  'dh.step.E14-04': 'E14-04 Safety stock',
-  'dh.step.E14-05': 'E14-05 Order plan',
-  'dh.step.E14-07': 'E14-07 Demand forecast',
-  'dh.step.E14-09': 'E14-09 Demand range',
-  'dh.step.E14-13': 'E14-13 Reschedule open orders',
+  'dh.step.E14-02': 'Supplier reliability',
+  'dh.step.E14-03': 'Material requirement',
+  'dh.step.E14-04': 'Safety stock targets',
+  'dh.step.E14-05': 'What to order',
+  'dh.step.E14-07': 'Forecast quality',
+  'dh.step.E14-09': 'Demand range',
+  'dh.step.E14-13': 'Make warehouse room',
 
   'dh.col.feed': 'Feed',
   'dh.col.owner': 'Owner',
@@ -166,9 +166,9 @@ export const dataHealthId: Record<string, string> = {
   'dh.synthetic':
     'Diperiksa pada data sintetis yang dibuat untuk meniru ukuran PTI saat ini. Data dibuat pada waktu kini hub di setiap pembacaan, jadi setiap umpan tampak tiba pada saat itu; umpan nyata akan membawa waktu tibanya sendiri.',
   'dh.owner':
-    'Tim Master Data Management memiliki umpan-umpan ini dan integrasi SAP-nya (ENG-D1). Konfirmasi dan versi rencana adalah catatan Hub sendiri.',
+    'Tim Master Data Management memiliki umpan-umpan ini dan integrasi SAP-nya. Konfirmasi dan versi rencana adalah catatan Hub sendiri.',
   'dh.notBuilt':
-    'Belum dibangun: mesin belum mengeluarkan catatan yang ditolak dari perhitungannya. Kebutuhan material, Rencana pesanan, dan Jadwal ulang pesanan terbuka menunjukkan berapa pemeriksaan yang menjangkaunya gagal, dan menautkan ke halaman ini.',
+    'Belum dibangun: mesin belum mengeluarkan catatan yang ditolak dari perhitungannya. Kebutuhan material, Apa yang dipesan, Kosongkan ruang gudang, dan Terbitkan ke pemasok menunjukkan berapa pemeriksaan yang menjangkaunya gagal, dan menautkan ke halaman ini.',
   'dh.limitsWhere': 'Batas kesegaran diatur di Administrasi → Toleransi dan nilai aturan.',
 
   // F-02 — chip di halaman hasil (DataHealthChip).
@@ -192,13 +192,13 @@ export const dataHealthId: Record<string, string> = {
   'dh.steps.flagged': 'Ditandai',
   'dh.steps.affected': 'Terdampak',
   'dh.steps.by': 'Oleh: {{feeds}}',
-  'dh.step.E14-02': 'E14-02 Keandalan pemasok',
-  'dh.step.E14-03': 'E14-03 Kebutuhan material',
-  'dh.step.E14-04': 'E14-04 Stok pengaman',
-  'dh.step.E14-05': 'E14-05 Rencana pesanan',
-  'dh.step.E14-07': 'E14-07 Prakiraan permintaan',
-  'dh.step.E14-09': 'E14-09 Rentang permintaan',
-  'dh.step.E14-13': 'E14-13 Jadwal ulang pesanan terbuka',
+  'dh.step.E14-02': 'Keandalan pemasok',
+  'dh.step.E14-03': 'Kebutuhan material',
+  'dh.step.E14-04': 'Target stok pengaman',
+  'dh.step.E14-05': 'Apa yang dipesan',
+  'dh.step.E14-07': 'Kualitas prakiraan',
+  'dh.step.E14-09': 'Rentang permintaan',
+  'dh.step.E14-13': 'Kosongkan ruang gudang',
 
   'dh.col.feed': 'Umpan',
   'dh.col.owner': 'Pemilik',
@@ -254,7 +254,7 @@ export const dataHealthId: Record<string, string> = {
   'dh.feed.scheduleChanges': 'Perubahan jadwal',
   'dh.feed.confirmations': 'Konfirmasi pemasok',
   'dh.feed.receipts': 'Penerimaan barang',
-  'dh.feed.planVersions': 'Versi rencana yang dipublikasikan',
+  'dh.feed.planVersions': 'Versi rencana yang diterbitkan',
   'dh.feed.sources': 'Sumber (waktu tunggu, MOQ, porsi)',
   'dh.feed.bom': 'Daftar bahan (BOM)',
   'dh.feed.stock': 'Stok tersedia',

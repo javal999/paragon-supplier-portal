@@ -3,8 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { CartesianGrid, Legend, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import AppShellV2 from '@components/layout-v2/AppShellV2';
 import PageHeader from '@components/ui-v2/PageHeader';
-import PageMetaLine from '@components/ui-v2/PageMetaLine';
-import LivenessPill from '@components/ui-v2/LivenessPill';
 import FilterChipsBar from '@components/ui-v2/FilterChipsBar';
 import KpiCard from '@components/ui-v2/KpiCard';
 import StatusPill from '@components/ui-v2/StatusPill';
@@ -18,6 +16,11 @@ import LoadingState from '@components/ui-v2/LoadingState';
 import ErrorState from '@components/ui-v2/ErrorState';
 import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
 import DataHealthChip from '@components/forecast/DataHealthChip';
+import PurposeHeader from '@components/forecast/PurposeHeader';
+import SimulatedDataBanner from '@components/forecast/SimulatedDataBanner';
+import AboutThisPage from '@components/forecast/AboutThisPage';
+import DataAsOf from '@components/forecast/DataAsOf';
+import { forecastCrumb, forecastTitle } from '@components/forecast/forecastPages';
 import { useToast } from '@hooks/useToast';
 import { useRefusalText } from '@hooks/useRefusalText';
 import { useVerbAvailability } from '@hooks/useVerbAvailability';
@@ -112,7 +115,7 @@ const BuyerReschedule: React.FC = () => {
   const [kind, setKind] = useState<WarehouseKind>('packaging');
   const [selected, setSelected] = useState<ReadonlySet<string>>(new Set());
   const [sent, setSent] = useState<ReadonlySet<string>>(new Set());
-  const crumb = [t('hub.nav.section.forecast'), t('rs.title')];
+  const crumb = forecastCrumb(t, 'makeRoom');
   const run: RescheduleView | null = query.data ?? null;
   // X-03 — the registry's own answer, read at render; each verb reads it again.
   const withheld = !isLive('engineDataset');
@@ -350,28 +353,24 @@ const BuyerReschedule: React.FC = () => {
 
   return (
     <AppShellV2>
-      <PageHeader breadcrumb={crumb} title={t('rs.title')} subtitle={t('rs.subtitle')} actions={<LivenessPill capability="engineDataset" />} />
-      <PageMetaLine className="-mt-6 mb-2">
-        {run?.planMadeAt ? (
-          <>
-            {t('rs.meta.plan')} <Data>{formatDate(run.planMadeAt)}</Data> · {t('rs.meta.horizon')}{' '}
-            {t('rs.meta.weeks', { count: run.weeks.length })}
-          </>
-        ) : (
-          t('rs.meta.noPlan')
-        )}
-      </PageMetaLine>
-      <DataHealthChip step="E14-13" className="mb-2" />
-      <p className="text-xs text-text-tertiary mb-1" data-testid="rs-synthetic-note">
-        {t('rs.synthetic')}
-      </p>
-      {withheld && (
-        <p className="text-xs text-warning-hover mb-1" data-testid="rs-withheld-note">
-          {t('rs.withheld')}
-        </p>
-      )}
+      <PageHeader breadcrumb={crumb} title={forecastTitle(t, 'makeRoom')} />
+      <PurposeHeader page="makeRoom" />
+      <SimulatedDataBanner capability="engineDataset" />
+      <DataAsOf
+        date={run?.planMadeAt ?? null}
+        detail={
+          run?.planMadeAt ? (
+            <>
+              {t('rs.meta.horizon')} {t('rs.meta.weeks', { count: run.weeks.length })}
+            </>
+          ) : (
+            t('rs.meta.noPlan')
+          )
+        }
+      />
+      <DataHealthChip step="E14-13" className="mb-3" />
 
-      <div className="mt-3 mb-4">
+      <div className="mb-4">
         <FilterChipsBar<WarehouseKind> options={kinds} value={w?.kind ?? kind} onChange={setKind} />
       </div>
 
@@ -416,12 +415,6 @@ const BuyerReschedule: React.FC = () => {
               }
             />
           </div>
-
-          {onHandWeeks.length > 0 && (
-            <p className="text-sm text-text-secondary mb-4" data-testid="rs-onhand-note">
-              {t('rs.onHand.note', { count: onHandWeeks.length, first: weekLabel(onHandWeeks[0].weekStart), last: weekLabel(onHandWeeks[onHandWeeks.length - 1].weekStart) })}
-            </p>
-          )}
 
           <section className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-6" data-testid="rs-guard">
             <h2 className="text-section text-text-primary mb-1">{t('rs.guard.title')}</h2>
@@ -476,6 +469,13 @@ const BuyerReschedule: React.FC = () => {
               </>
             )}
           </section>
+
+          {/* FUX A4 (F-08): the on-hand caveat sits under the proposals, not above them. */}
+          {onHandWeeks.length > 0 && (
+            <p className="text-sm text-text-secondary mb-4" data-testid="rs-onhand-note">
+              {t('rs.onHand.note', { count: onHandWeeks.length, first: weekLabel(onHandWeeks[0].weekStart), last: weekLabel(onHandWeeks[onHandWeeks.length - 1].weekStart) })}
+            </p>
+          )}
 
           {shortage.length > 0 && (
             <section className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-6" data-testid="rs-shortage">
@@ -616,6 +616,12 @@ const BuyerReschedule: React.FC = () => {
         <p>{t('rs.def.onHand')}</p>
         {run && run.unconfirmedPoLines > 0 && <p data-testid="rs-unconfirmed">{t('rs.def.unconfirmed', { count: run.unconfirmedPoLines })}</p>}
       </details>
+
+      <AboutThisPage>
+        <p>{t('rs.subtitle')}</p>
+        <p data-testid="rs-synthetic-note">{t('rs.synthetic')}</p>
+        {withheld && <p data-testid="rs-withheld-note">{t('rs.withheld')}</p>}
+      </AboutThisPage>
     </AppShellV2>
   );
 };
