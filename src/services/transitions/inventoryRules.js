@@ -268,11 +268,12 @@ export const positionRisk = (p) => riskFor(positionDays(p), p.leadTimeDays);
 // ── Incoming (REQ-E08-01 BR-05, BR-06) ───────────────────────────────────────
 
 /**
- * @typedef {object} IncomingTotals
- * @property {number} inProduction
- * @property {number} inTransit
- * @property {number} total
- * @property {string | null} nextDate
+ * @typedef {{
+ *   readonly inProduction: number;
+ *   readonly inTransit: number;
+ *   readonly total: number;
+ *   readonly nextDate: string | null;
+ * }} IncomingTotals
  */
 
 /**
@@ -452,33 +453,38 @@ export function materialDailyDemand(positions, materialCode) {
 // ── Building the positions (the ONE inventory model) ─────────────────────────
 
 /**
- * @typedef {object} PtiStockRecord
- * @property {string} materialCode
- * @property {number} ptiSoh
- * @property {number} ptiRop
- * @property {boolean} consignment
+ * @typedef {{
+ *   readonly materialCode: string;
+ *   readonly ptiSoh: number;
+ *   readonly ptiRop: number;
+ *   readonly consignment: boolean;
+ * }} PtiStockRecord
  */
 
 /**
- * @typedef {object} PositionInputs
- * @property {readonly { readonly supplierId: string; readonly materialCode: string }[]} assignments -  Every supplier × material the hub knows as assigned.
- * @property {readonly InventoryDeclaration[]} declarations
- * @property {(supplierId: string, materialCode: string) => InventoryDeclaration | undefined} currentDeclaration -  Picks the current declaration for a pair (store insertion order).
- * @property {(materialCode: string) => MaterialMasterEntry | null} master
- * @property {(supplierId: string) => string} supplierName
- * @property {readonly PtiStockRecord[]} ptiStock
- * @property {readonly ForecastLine[]} forecastLines
- * @property {(supplierId: string, materialCode: string) => number | null} planningEstimate
- * @property {(supplierId: string, materialCode: string) => number | null} leadTime -  CR-24 — the supplier lead time in days (master data); null when none is on record.
- * @property {readonly ASN[]} asns
- * @property {readonly Pick<CallOffView, 'callOff' | 'delivery'>[]} callOffViews
- * @property {(supplierId: string) => boolean} apiConnected
- * @property {readonly StockSyncAttempt[]} syncAttempts
- * @property {(supplierId: string, atIso: string) => StockUpdateMode} updateModeAt Material B1 — the supplier's stock update mode as it stood at an instant
- *   (the resolver, `stockUpdateModeOf`). Read at the start of the current
- *   update cycle, so a mode changed mid-cycle takes effect next cycle (MR-1
- *   edge case 1).
- * @property {WorkingCalendar} calendar -  The hub working calendar in force (BL-50) — it moves a holiday cutoff.
+ * `assignments`:  Every supplier × material the hub knows as assigned.
+ * `currentDeclaration`:  Picks the current declaration for a pair (store insertion order).
+ * `leadTime`:  CR-24 — the supplier lead time in days (master data); null when none is on record.
+ * `updateModeAt`: Material B1 — the supplier's stock update mode as it stood at an instant (the resolver, `stockUpdateModeOf`). Read at the start of the current update cycle, so a mode changed mid-cycle takes effect next cycle (MR-1 edge case 1).
+ * `calendar`:  The hub working calendar in force (BL-50) — it moves a holiday cutoff.
+ *
+ * @typedef {{
+ *   readonly assignments: readonly { readonly supplierId: string; readonly materialCode: string }[];
+ *   readonly declarations: readonly InventoryDeclaration[];
+ *   readonly currentDeclaration: (supplierId: string, materialCode: string) => InventoryDeclaration | undefined;
+ *   readonly master: (materialCode: string) => MaterialMasterEntry | null;
+ *   readonly supplierName: (supplierId: string) => string;
+ *   readonly ptiStock: readonly PtiStockRecord[];
+ *   readonly forecastLines: readonly ForecastLine[];
+ *   readonly planningEstimate: (supplierId: string, materialCode: string) => number | null;
+ *   readonly leadTime: (supplierId: string, materialCode: string) => number | null;
+ *   readonly asns: readonly ASN[];
+ *   readonly callOffViews: readonly Pick<CallOffView, 'callOff' | 'delivery'>[];
+ *   readonly apiConnected: (supplierId: string) => boolean;
+ *   readonly syncAttempts: readonly StockSyncAttempt[];
+ *   readonly updateModeAt: (supplierId: string, atIso: string) => StockUpdateMode;
+ *   readonly calendar: WorkingCalendar;
+ * }} PositionInputs
  */
 
 /**
@@ -851,29 +857,40 @@ export function parseCsv(text) {
  */
 
 /**
- * @typedef {object} RefusedStockRow
- * @property {number} row -  1-based data row number as the supplier sees it (header is row 1, so data starts at 2).
- * @property {string} materialCode
- * @property {StockRowRefusal} reason
- * @property {StockTemplateField} [field] -  The field the refusal is about, when there is one.
+ * `row`:  1-based data row number as the supplier sees it (header is row 1, so data starts at 2).
+ * `field`:  The field the refusal is about, when there is one.
+ *
+ * @typedef {{
+ *   readonly row: number;
+ *   readonly materialCode: string;
+ *   readonly reason: StockRowRefusal;
+ *   readonly field?: StockTemplateField;
+ * }} RefusedStockRow
  */
 
 /** One validated material submission, ready for the declare verb. */
 /**
- * @typedef {object} StockSubmissionDraft
- * @property {string} materialCode
- * @property {number} totalQty
- * @property {number} [supplierRop]
- * @property {number} [inProductionQty]
- * @property {string} [productionCompletionDate]
- * @property {readonly { readonly batchNumber: string; readonly qty: number; readonly manufacturingDate?: string; readonly expiryDate?: string; }[]} [batches]
- * @property {readonly number[]} rows -  The file rows this submission came from.
+ * `rows`:  The file rows this submission came from.
+ *
+ * @typedef {{
+ *   readonly materialCode: string;
+ *   readonly totalQty: number;
+ *   readonly supplierRop?: number;
+ *   readonly inProductionQty?: number;
+ *   readonly productionCompletionDate?: string;
+ *   readonly batches?: readonly { readonly batchNumber: string; readonly qty: number; readonly manufacturingDate?: string; readonly expiryDate?: string; }[];
+ *   readonly rows: readonly number[];
+ * }} StockSubmissionDraft
  */
 
 /**
- * @typedef {object} StockRowContext
- * @property {readonly { readonly materialCode: string; readonly uom: string }[]} assigned -  The supplier's assigned materials with their canonical unit.
- * @property {string} today -  Today on the app's clock (`YYYY-MM-DD`) — a manufacturing date may not be after it.
+ * `assigned`:  The supplier's assigned materials with their canonical unit.
+ * `today`:  Today on the app's clock (`YYYY-MM-DD`) — a manufacturing date may not be after it.
+ *
+ * @typedef {{
+ *   readonly assigned: readonly { readonly materialCode: string; readonly uom: string }[];
+ *   readonly today: string;
+ * }} StockRowContext
  */
 
 /** @typedef {{ ok: true; value: number | null } | { ok: false; reason: 'notANumber' | 'ambiguousNumber' }} NumberRead */

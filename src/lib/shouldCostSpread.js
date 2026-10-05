@@ -130,52 +130,51 @@ export const KG_PER_MT = 1000;
  *  low ≤ mid ≤ high: low measures the quote against the priciest should-cost (the
  *  smallest premium), high against the cheapest (the largest premium). */
 /**
- * @typedef {object} SpreadBand
- * @property {number} lowPct
- * @property {number} midPct
- * @property {number} highPct
+ * @typedef {{
+ *   readonly lowPct: number;
+ *   readonly midPct: number;
+ *   readonly highPct: number;
+ * }} SpreadBand
  */
 
 /** The modeled should-cost band the spread is measured against, in the quote's
  *  currency (IDR/kg for a domestic quote, USD/kg for a foreign one). */
 /**
- * @typedef {object} ModeledBand
- * @property {number} lowPerKg
- * @property {number} midPerKg
- * @property {number} highPerKg
+ * @typedef {{
+ *   readonly lowPerKg: number;
+ *   readonly midPerKg: number;
+ *   readonly highPerKg: number;
+ * }} ModeledBand
  */
 
 /**
- * @typedef {object} SpreadResult
- * @property {'spread'} kind
- * @property {PriceableCurrency} currency -  The currency the spread + modeled band are expressed in (the quote's own).
- * @property {SpreadBand} spread -  The spread range vs the modeled should-cost band.
- * @property {ModeledBand} shouldCost -  The modeled should-cost band (per kg, in `currency`).
- * @property {number} quotePerKg -  The quote's unit price normalized to per-kg, in `currency` (÷1000 for MT).
- * @property {FeedLiveness} liveness -  Feed liveness of THIS branch: IDR = basket ⊕ FX; USD = basket-only. SIMULATED
- *    in CI-1/CI-2 either way.
- * @property {'MODELED'} epistemic -  Permanent — a spread off a model is still a model.
- * @property {SpreadBasis} basis WHICH BRANCH produced this spread (2e-c-5). Replaces `fxApplied: boolean`.
+ * `currency`:  The currency the spread + modeled band are expressed in (the quote's own).
+ * `spread`:  The spread range vs the modeled should-cost band.
+ * `shouldCost`:  The modeled should-cost band (per kg, in `currency`).
+ * `quotePerKg`:  The quote's unit price normalized to per-kg, in `currency` (÷1000 for MT).
+ * `liveness`:  Feed liveness of THIS branch: IDR = basket ⊕ FX; USD = basket-only. SIMULATED  in CI-1/CI-2 either way.
+ * `epistemic`:  Permanent — a spread off a model is still a model.
+ * `basis`: WHICH BRANCH produced this spread (2e-c-5). Replaces `fxApplied: boolean`.  The boolean was computed `currency !== 'USD'` — which is "not the engine-native branch", not "FX was applied". The two coincided only while the engine had exactly one non-FX currency, and they came apart the moment a third currency existed: a EUR quote would have reported `fxApplied: true`, asserting a conversion that never happened, through a pair that does not exist.  Naming the BRANCH rather than renaming the boolean is deliberate. A boolean whose meaning is "the other branch" is the same defect with a better label; the surface wants to know what the engine did, and now it is told. `basis === 'FX_CONVERTED'` drives the FX-converted marker.
  *
- *   The boolean was computed `currency !== 'USD'` — which is "not the
- *   engine-native branch", not "FX was applied". The two coincided only while
- *   the engine had exactly one non-FX currency, and they came apart the moment a
- *   third currency existed: a EUR quote would have reported `fxApplied: true`,
- *   asserting a conversion that never happened, through a pair that does not
- *   exist.
- *
- *   Naming the BRANCH rather than renaming the boolean is deliberate. A boolean
- *   whose meaning is "the other branch" is the same defect with a better label;
- *   the surface wants to know what the engine did, and now it is told.
- *   `basis === 'FX_CONVERTED'` drives the FX-converted marker.
- * @property {string} vintage
- * @property {string} coeffVersion
+ * @typedef {{
+ *   readonly kind: 'spread';
+ *   readonly currency: PriceableCurrency;
+ *   readonly spread: SpreadBand;
+ *   readonly shouldCost: ModeledBand;
+ *   readonly quotePerKg: number;
+ *   readonly liveness: FeedLiveness;
+ *   readonly epistemic: 'MODELED';
+ *   readonly basis: SpreadBasis;
+ *   readonly vintage: string;
+ *   readonly coeffVersion: string;
+ * }} SpreadResult
  */
 
 /**
- * @typedef {object} SilentResult
- * @property {'silent'} kind
- * @property {SilentReason} reason
+ * @typedef {{
+ *   readonly kind: 'silent';
+ *   readonly reason: SilentReason;
+ * }} SilentResult
  */
 
 /** @typedef {SpreadResult | SilentResult} QuoteSpread */
@@ -183,11 +182,15 @@ export const KG_PER_MT = 1000;
 /** The pure inputs the resolver binds against (real fixtures in the app, tiny
  *  inline scaffolds in tests — mirrors the quoteScore/shouldCost purity contract). */
 /**
- * @typedef {object} SpreadDeps
- * @property {Readonly<Record<string, string>>} join -  materialId → `sc-*` basket id (the SIMULATED join, commodityMaterialMap.js).
- * @property {Readonly<Record<string, Material>>} materials -  The should-cost materials, keyed for lookup by their `sc-*` id.
- * @property {Readonly<Record<string, RootBenchmark>>} roots
- * @property {FxRate} fx
+ * `join`:  materialId → `sc-*` basket id (the SIMULATED join, commodityMaterialMap.js).
+ * `materials`:  The should-cost materials, keyed for lookup by their `sc-*` id.
+ *
+ * @typedef {{
+ *   readonly join: Readonly<Record<string, string>>;
+ *   readonly materials: Readonly<Record<string, Material>>;
+ *   readonly roots: Readonly<Record<string, RootBenchmark>>;
+ *   readonly fx: FxRate;
+ * }} SpreadDeps
  */
 
 /** @type {ReadonlySet<QuoteUom>} */

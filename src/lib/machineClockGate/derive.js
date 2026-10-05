@@ -38,18 +38,23 @@ import { isSourceFile, scriptKindOf } from '@test/sourceFiles';
 
 /** One machine-clock read. */
 /**
- * @typedef {object} ClockSite
- * @property {string} file
- * @property {number} line
- * @property {SiteKind} kind
- * @property {string} owner -  The chain of named declarations enclosing the site — the allowlist's
- *    stable key (a line number moves on every edit above it; an owner does not).
+ * `owner`:  The chain of named declarations enclosing the site — the allowlist's  stable key (a line number moves on every edit above it; an owner does not).
+ *
+ * @typedef {{
+ *   readonly file: string;
+ *   readonly line: number;
+ *   readonly kind: SiteKind;
+ *   readonly owner: string;
+ * }} ClockSite
  */
 
 /**
- * @typedef {object} Census
- * @property {readonly ClockSite[]} sites
- * @property {number} filesWalked -  Files the census walked. Zero is EMPTY-INPUT-REPORTS-CLEAN-01.
+ * `filesWalked`:  Files the census walked. Zero is EMPTY-INPUT-REPORTS-CLEAN-01.
+ *
+ * @typedef {{
+ *   readonly sites: readonly ClockSite[];
+ *   readonly filesWalked: number;
+ * }} Census
  */
 
 /**
@@ -189,20 +194,29 @@ export const siteKey = (s) => `${s.file}::${s.owner}::${s.kind}`;
 
 /** One allowlisted machine-clock read, with the reason it is honest. */
 /**
- * @typedef {object} AllowRow
- * @property {string} key -  `siteKey()` — `file::owner::kind`.
- * @property {number} count -  How many sites share this key. Exact, so a SECOND read added beside an
- *    allowlisted one is not silently covered by the first one's reason.
- * @property {'unique-id' | 'time-of-day' | 'test-harness' | 'contract-pinned'} why
- * @property {string} reason
+ * `key`:  `siteKey()` — `file::owner::kind`.
+ * `count`:  How many sites share this key. Exact, so a SECOND read added beside an  allowlisted one is not silently covered by the first one's reason.
+ *
+ * @typedef {{
+ *   readonly key: string;
+ *   readonly count: number;
+ *   readonly why: 'unique-id' | 'time-of-day' | 'test-harness' | 'contract-pinned';
+ *   readonly reason: string;
+ * }} AllowRow
  */
 
 /**
- * @typedef {object} Verdict
- * @property {readonly ClockSite[]} unlisted -  Live sites whose key has no row. The gate's subject.
- * @property {readonly AllowRow[]} stale -  Rows naming no live site — the list must shrink truthfully.
- * @property {readonly { readonly row: AllowRow; readonly live: number }[]} miscounted -  Rows whose count no longer matches the live count.
- * @property {readonly AllowRow[]} unreasoned -  Rows with no stated reason.
+ * `unlisted`:  Live sites whose key has no row. The gate's subject.
+ * `stale`:  Rows naming no live site — the list must shrink truthfully.
+ * `miscounted`:  Rows whose count no longer matches the live count.
+ * `unreasoned`:  Rows with no stated reason.
+ *
+ * @typedef {{
+ *   readonly unlisted: readonly ClockSite[];
+ *   readonly stale: readonly AllowRow[];
+ *   readonly miscounted: readonly { readonly row: AllowRow; readonly live: number }[];
+ *   readonly unreasoned: readonly AllowRow[];
+ * }} Verdict
  */
 
 /**

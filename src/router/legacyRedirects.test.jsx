@@ -19,9 +19,10 @@ const SRC_DIR = path.resolve(__dirname, '..');
 const ROUTER_SRC = fs.readFileSync(path.resolve(__dirname, 'AppRouter.jsx'), 'utf8');
 
 /**
- * @typedef {object} RedirectRow
- * @property {string} from
- * @property {string} to
+ * @typedef {{
+ *   readonly from: string;
+ *   readonly to: string;
+ * }} RedirectRow
  */
 
 const chunks = ROUTER_SRC.split('<Route')

@@ -88,11 +88,15 @@ import { CASCADES } from './cascades';
  * moves is a census that gets regenerated instead of read.
  */
 /**
- * @typedef {object} LooseEnd
- * @property {string} entity
- * @property {LooseEndKind} kind
- * @property {string} subject -  The state name, transition id, or initial state the finding is about.
- * @property {string} detail -  Why it is a finding, for a human. Never keyed on.
+ * `subject`:  The state name, transition id, or initial state the finding is about.
+ * `detail`:  Why it is a finding, for a human. Never keyed on.
+ *
+ * @typedef {{
+ *   readonly entity: string;
+ *   readonly kind: LooseEndKind;
+ *   readonly subject: string;
+ *   readonly detail: string;
+ * }} LooseEnd
  */
 
 /**
@@ -106,16 +110,21 @@ export function looseEndKey(end) {
 
 /** The derived graph of one flow — the intermediate every check reads. */
 /**
- * @typedef {object} FlowGraph
- * @property {string} entity
- * @property {readonly string[]} states
- * @property {readonly string[]} birthStates -  The states a creation edge births an instance into. May be EMPTY.
- * @property {readonly string[]} seededFrom -  What reachability was actually seeded from — `birthStates`, or `[initial]`
- *    when the flow has no creation edge at all (ruling 3 in the header).
- * @property {ReadonlySet<string>} reachable -  Every state reachable from `seededFrom` by a movement or settlement edge.
- * @property {ReadonlyMap<string, readonly string[]>} exits -  State → the transition ids that MOVE an entity out of it. Settlement
- *    counts; a `statePreserving` verb does not (ruling 1).
- * @property {readonly string[]} terminals -  The states the flow DECLARES as endings.
+ * `birthStates`:  The states a creation edge births an instance into. May be EMPTY.
+ * `seededFrom`:  What reachability was actually seeded from — `birthStates`, or `[initial]`  when the flow has no creation edge at all (ruling 3 in the header).
+ * `reachable`:  Every state reachable from `seededFrom` by a movement or settlement edge.
+ * `exits`:  State → the transition ids that MOVE an entity out of it. Settlement  counts; a `statePreserving` verb does not (ruling 1).
+ * `terminals`:  The states the flow DECLARES as endings.
+ *
+ * @typedef {{
+ *   readonly entity: string;
+ *   readonly states: readonly string[];
+ *   readonly birthStates: readonly string[];
+ *   readonly seededFrom: readonly string[];
+ *   readonly reachable: ReadonlySet<string>;
+ *   readonly exits: ReadonlyMap<string, readonly string[]>;
+ *   readonly terminals: readonly string[];
+ * }} FlowGraph
  */
 
 /**

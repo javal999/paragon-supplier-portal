@@ -96,11 +96,12 @@ import { join } from 'node:path';
 /** @typedef {'computed-at-read' | 'stored-in-fixtures' | 'produced-by-nothing'} ProducedBy */
 
 /**
- * @typedef {object} WriteSite
- * @property {string} file
- * @property {number} line
- * @property {string} text
- * @property {boolean} fixture
+ * @typedef {{
+ *   readonly file: string;
+ *   readonly line: number;
+ *   readonly text: string;
+ *   readonly fixture: boolean;
+ * }} WriteSite
  */
 
 /**

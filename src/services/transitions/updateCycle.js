@@ -23,16 +23,18 @@ import { isWorkingDay } from '@lib/workingCalendar';
 
 /** MR-1 BR-03 — the weekly cutoff: ISO weekday (Monday = 1) and minutes after midnight. */
 /**
- * @typedef {object} UpdateCycleSettings
- * @property {number} cutoffDay
- * @property {number} cutoffTime
+ * @typedef {{
+ *   readonly cutoffDay: number;
+ *   readonly cutoffTime: number;
+ * }} UpdateCycleSettings
  */
 
 /** One update cycle: `start` exclusive, `cutoff` inclusive (ISO instants). */
 /**
- * @typedef {object} UpdateCycle
- * @property {string} start
- * @property {string} cutoff
+ * @typedef {{
+ *   readonly start: string;
+ *   readonly cutoff: string;
+ * }} UpdateCycle
  */
 
 const HOUR_MS = 3_600_000;
@@ -113,19 +115,21 @@ export const inCycle = (iso, cycle) => {
 
 /** A stock record as the cycle reads it: who, what, when it was accepted, how. */
 /**
- * @typedef {object} CycleStockRecord
- * @property {string} supplierId
- * @property {string} materialCode
- * @property {string} declaredAt
- * @property {StockChannel} [channel]
+ * @typedef {{
+ *   readonly supplierId: string;
+ *   readonly materialCode: string;
+ *   readonly declaredAt: string;
+ *   readonly channel?: StockChannel;
+ * }} CycleStockRecord
  */
 
 /** A supplier × material assignment. No `assignedAt`: assigned before any cycle. */
 /**
- * @typedef {object} CycleAssignment
- * @property {string} supplierId
- * @property {string} materialCode
- * @property {string} [assignedAt]
+ * @typedef {{
+ *   readonly supplierId: string;
+ *   readonly materialCode: string;
+ *   readonly assignedAt?: string;
+ * }} CycleAssignment
  */
 
 /**
@@ -169,14 +173,21 @@ export function cycleStatus(supplierId, cycle, records, assignments) {
 // ── Staleness by mode (MR-1 BR-05, edge cases 1 and 3; AR-07) ───────────────
 
 /**
- * @typedef {object} StaleAtInputs
- * @property {string | null} lastUpdatedAt -  When the figure on hand was accepted; null when there is none.
- * @property {StockUpdateMode} mode -  The supplier's update mode at the START of the current cycle (edge case 1).
- * @property {string | null} lastSuccessfulPullAt -  The latest successful API pull for the supplier; null when none is on record.
- * @property {number | null} overrideDays -  The administrator's per supplier × material stale period (BL-32), in days; null when none.
- * @property {WorkingCalendar} calendar
- * @property {UpdateCycleSettings} cycle
- * @property {number} apiHours -  `stale.apiHours` in force.
+ * `lastUpdatedAt`:  When the figure on hand was accepted; null when there is none.
+ * `mode`:  The supplier's update mode at the START of the current cycle (edge case 1).
+ * `lastSuccessfulPullAt`:  The latest successful API pull for the supplier; null when none is on record.
+ * `overrideDays`:  The administrator's per supplier × material stale period (BL-32), in days; null when none.
+ * `apiHours`:  `stale.apiHours` in force.
+ *
+ * @typedef {{
+ *   readonly lastUpdatedAt: string | null;
+ *   readonly mode: StockUpdateMode;
+ *   readonly lastSuccessfulPullAt: string | null;
+ *   readonly overrideDays: number | null;
+ *   readonly calendar: WorkingCalendar;
+ *   readonly cycle: UpdateCycleSettings;
+ *   readonly apiHours: number;
+ * }} StaleAtInputs
  */
 
 /**
@@ -211,20 +222,26 @@ export function staleAtFor(i) {
 
 /** A position as the panel reads it: which material, when its figure was last accepted. */
 /**
- * @typedef {object} WeeklyUpdateRow
- * @property {string} supplierId
- * @property {string} materialCode
- * @property {string | null} lastUpdatedAt
+ * @typedef {{
+ *   readonly supplierId: string;
+ *   readonly materialCode: string;
+ *   readonly lastUpdatedAt: string | null;
+ * }} WeeklyUpdateRow
  */
 
 /**
- * @typedef {object} WeeklyUpdateStatus
- * @property {UpdateCycle} cycle -  The open cycle: `now` is inside it.
- * @property {number} total -  Materials counted this cycle (edge case 2 leaves some out).
- * @property {readonly string[]} updated
- * @property {readonly string[]} missing -  Still missing this cycle — the list the panel and the reminder show.
- * @property {readonly string[]} missed Missing in the cycle that just closed AND still not updated since: the
- *   panel reads "Missed" for these until the supplier sends each one.
+ * `cycle`:  The open cycle: `now` is inside it.
+ * `total`:  Materials counted this cycle (edge case 2 leaves some out).
+ * `missing`:  Still missing this cycle — the list the panel and the reminder show.
+ * `missed`: Missing in the cycle that just closed AND still not updated since: the panel reads "Missed" for these until the supplier sends each one.
+ *
+ * @typedef {{
+ *   readonly cycle: UpdateCycle;
+ *   readonly total: number;
+ *   readonly updated: readonly string[];
+ *   readonly missing: readonly string[];
+ *   readonly missed: readonly string[];
+ * }} WeeklyUpdateStatus
  */
 
 /**

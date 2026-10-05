@@ -128,26 +128,33 @@ export const REASON_CODE = /^[a-z][a-z0-9-]{1,39}$/;
 
 /** One code as the lists show it. */
 /**
- * @typedef {object} ReasonCodeEntry
- * @property {ReasonListId} list
- * @property {string} code
- * @property {boolean} builtIn
- * @property {string} [labelEn] -  The administrator's labels; absent on a built-in code nobody renamed.
- * @property {string} [labelId]
- * @property {boolean} active
+ * `labelEn`:  The administrator's labels; absent on a built-in code nobody renamed.
+ *
+ * @typedef {{
+ *   readonly list: ReasonListId;
+ *   readonly code: string;
+ *   readonly builtIn: boolean;
+ *   readonly labelEn?: string;
+ *   readonly labelId?: string;
+ *   readonly active: boolean;
+ * }} ReasonCodeEntry
  */
 
 /** One change, as recorded. */
 /**
- * @typedef {object} ReasonCodeChange
- * @property {ReasonListId} list
- * @property {string} code
- * @property {string} labelEn
- * @property {string} labelId
- * @property {boolean} active
- * @property {{ readonly labelEn?: string; readonly labelId?: string; readonly active: boolean } | null} previous -  What the code was before — store-assigned; null when this change added it.
- * @property {ActorAttribution} setBy
- * @property {string} setAt -  Store-assigned, never a payload field.
+ * `previous`:  What the code was before — store-assigned; null when this change added it.
+ * `setAt`:  Store-assigned, never a payload field.
+ *
+ * @typedef {{
+ *   readonly list: ReasonListId;
+ *   readonly code: string;
+ *   readonly labelEn: string;
+ *   readonly labelId: string;
+ *   readonly active: boolean;
+ *   readonly previous: { readonly labelEn?: string; readonly labelId?: string; readonly active: boolean } | null;
+ *   readonly setBy: ActorAttribution;
+ *   readonly setAt: string;
+ * }} ReasonCodeChange
  */
 
 // ── The state: starter lists with the changes applied ────────────────────────
@@ -248,10 +255,11 @@ export const REASON_CODES_KEY = 'paragon.reasonCodes';
 const STORE_VERSION = 1;
 
 /**
- * @typedef {object} ReasonCodeReadState
- * @property {readonly ReasonCodeChange[]} changes
- * @property {readonly { readonly row: string; readonly reason: string }[]} rejected
- * @property {boolean} unreadable
+ * @typedef {{
+ *   readonly changes: readonly ReasonCodeChange[];
+ *   readonly rejected: readonly { readonly row: string; readonly reason: string }[];
+ *   readonly unreadable: boolean;
+ * }} ReasonCodeReadState
  */
 
 /** @type {ReasonCodeChange[]} */

@@ -162,11 +162,14 @@ function enclosingStatement(node) {
 }
 
 /**
- * @typedef {object} Derived
- * @property {{ key: string; fn: string; args: number }[]} workingDayCalls -  `file#function` → the calls that carry (or omit) the calendar.
- * @property {{ key: string; initializer: string }[]} calendarDefaults
- * @property {{ file: string; name: string }[]} frozenRefs
- * @property {Set<string>} calendarDaySites
+ * `workingDayCalls`:  `file#function` → the calls that carry (or omit) the calendar.
+ *
+ * @typedef {{
+ *   readonly workingDayCalls: { key: string; fn: string; args: number }[];
+ *   readonly calendarDefaults: { key: string; initializer: string }[];
+ *   readonly frozenRefs: { file: string; name: string }[];
+ *   readonly calendarDaySites: Set<string>;
+ * }} Derived
  */
 
 // ⚠️ Membership is an OWN-key check, never `in`: `in` walks the prototype chain,

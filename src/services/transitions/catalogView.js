@@ -89,89 +89,115 @@ import { PERSONA_ROLES } from './roles';
 
 /** One drawable edge. A multi-`from` transition yields ONE EDGE PER SOURCE. */
 /**
- * @typedef {object} FlowEdge
- * @property {string} id -  Unique within the flow: transition id + its source (+ settlement suffix).
- * @property {string} transitionId
- * @property {string | null} from -  The source state, or `null` for a creation edge (an entity is born here).
- * @property {string} to
- * @property {StepKind} kind
- * @property {boolean} settlement -  True for the `settlesTo` advance a `sapBoundary` verb contracts (D-2).
- * @property {boolean} cascade -  True when the transition's own trigger is `cascade` (fired from elsewhere).
- */
-
-/**
- * @typedef {object} TransitionView
- * @property {TransitionDef} def
- * @property {StepKind} kind
- * @property {readonly PersonaType[]} personas -  Personas whose role set contains `requiredRole`. May be empty (unmapped).
- * @property {boolean} recordsFact -  Records a fact and leaves the entity where it is (`statePreserving`).
- * @property {boolean} sapBoundary -  Crosses the SAP boundary — settles asynchronously (Option B).
- * @property {string | null} settlesTo -  Where settlement lands the entity; non-null exactly when `sapBoundary`.
- * @property {readonly CascadeLink[]} fansOutTo -  Cross-entity cascades this transition FIRES, as a source (`cascades.js`).
- * @property {readonly string[]} firedBy -  Source transition ids that fire THIS one. Empty ⇒ nothing fires it.
- * @property {readonly AnnotatedLooseEnd[]} looseEnds
- */
-
-/**
- * @typedef {object} StateView
- * @property {string} name
- * @property {boolean} isInitial
- * @property {boolean} isBirth -  A creation verb births instances here.
- * @property {boolean} isTerminal -  The flow DECLARES this an ending (`terminals`, D-2).
- * @property {boolean} reachable
- * @property {readonly string[]} inbound -  Transition ids that land an entity here (settlement included).
- * @property {readonly string[]} outbound -  Transition ids that MOVE an entity out of here (settlement included).
- * @property {readonly string[]} branchTargets -  Distinct target states leaving here.
- * @property {boolean} isFork -  A DECISION FORK: two or more different verbs leave this state.
- * @property {readonly string[]} facts -  `statePreserving` verbs legal here — facts recorded, not moves.
- * @property {readonly AnnotatedLooseEnd[]} looseEnds
- */
-
-/**
- * @typedef {object} FlowView
- * @property {string} entity
- * @property {number} version
- * @property {string} initial
- * @property {readonly string[]} terminals
- * @property {readonly string[]} seededFrom -  What reachability was seeded from — births, or `[initial]` (PF-0 ruling 3).
- * @property {readonly StateView[]} states
- * @property {readonly TransitionView[]} transitions
- * @property {readonly FlowEdge[]} edges
- * @property {readonly AnnotatedLooseEnd[]} looseEnds
- * @property {number} stateCount -  Header counts. Derived — never a number anybody typed.
- * @property {number} transitionCount
- * @property {number} forkCount
- * @property {Capability | null} capability -  The capability that READS this entity, or null when nothing does.
- * @property {boolean} dispatches VERB AXIS — acting on this machine really dispatches through a wired
- *   CommandTarget and writes the DR-10 trail.
+ * `id`:  Unique within the flow: transition id + its source (+ settlement suffix).
+ * `from`:  The source state, or `null` for a creation edge (an entity is born here).
+ * `settlement`:  True for the `settlesTo` advance a `sapBoundary` verb contracts (D-2).
+ * `cascade`:  True when the transition's own trigger is `cascade` (fired from elsewhere).
  *
- *   ⚠️ For a capability-backed entity this is EXACTLY `dispatchesCommands(cap)`
- *   and it is computed that way. For the eight flows no capability reads, the
- *   same question still has an answer, and it is the SAME SET one layer down —
- *   `dispatchesCommands` is `liveness()==='LIVE'` is `WIRED.has(backing)`. So
- *   the fallback cannot disagree with the marker regime; it just reaches a
- *   machine the capability list never named.
- * @property {FeedProvenance | null} feed -  FEED AXIS — where the read surface's data comes from. Null ⇒ no reader.
+ * @typedef {{
+ *   readonly id: string;
+ *   readonly transitionId: string;
+ *   readonly from: string | null;
+ *   readonly to: string;
+ *   readonly kind: StepKind;
+ *   readonly settlement: boolean;
+ *   readonly cascade: boolean;
+ * }} FlowEdge
  */
 
 /**
- * @typedef {object} CatalogView
- * @property {readonly FlowView[]} flows
- * @property {number} flowCount
- * @property {number} stateCount
- * @property {number} transitionCount
- * @property {number} forkCount
- * @property {number} looseEndCount
- * @property {number} wiredCount -  Flows whose verbs really dispatch (the wired-target census, per flow).
+ * `personas`:  Personas whose role set contains `requiredRole`. May be empty (unmapped).
+ * `recordsFact`:  Records a fact and leaves the entity where it is (`statePreserving`).
+ * `sapBoundary`:  Crosses the SAP boundary — settles asynchronously (Option B).
+ * `settlesTo`:  Where settlement lands the entity; non-null exactly when `sapBoundary`.
+ * `fansOutTo`:  Cross-entity cascades this transition FIRES, as a source (`cascades.ts`).
+ * `firedBy`:  Source transition ids that fire THIS one. Empty ⇒ nothing fires it.
+ *
+ * @typedef {{
+ *   readonly def: TransitionDef;
+ *   readonly kind: StepKind;
+ *   readonly personas: readonly PersonaType[];
+ *   readonly recordsFact: boolean;
+ *   readonly sapBoundary: boolean;
+ *   readonly settlesTo: string | null;
+ *   readonly fansOutTo: readonly CascadeLink[];
+ *   readonly firedBy: readonly string[];
+ *   readonly looseEnds: readonly AnnotatedLooseEnd[];
+ * }} TransitionView
+ */
+
+/**
+ * `isBirth`:  A creation verb births instances here.
+ * `isTerminal`:  The flow DECLARES this an ending (`terminals`, D-2).
+ * `inbound`:  Transition ids that land an entity here (settlement included).
+ * `outbound`:  Transition ids that MOVE an entity out of here (settlement included).
+ * `branchTargets`:  Distinct target states leaving here.
+ * `isFork`:  A DECISION FORK: two or more different verbs leave this state.
+ * `facts`:  `statePreserving` verbs legal here — facts recorded, not moves.
+ *
+ * @typedef {{
+ *   readonly name: string;
+ *   readonly isInitial: boolean;
+ *   readonly isBirth: boolean;
+ *   readonly isTerminal: boolean;
+ *   readonly reachable: boolean;
+ *   readonly inbound: readonly string[];
+ *   readonly outbound: readonly string[];
+ *   readonly branchTargets: readonly string[];
+ *   readonly isFork: boolean;
+ *   readonly facts: readonly string[];
+ *   readonly looseEnds: readonly AnnotatedLooseEnd[];
+ * }} StateView
+ */
+
+/**
+ * `seededFrom`:  What reachability was seeded from — births, or `[initial]` (PF-0 ruling 3).
+ * `stateCount`:  Header counts. Derived — never a number anybody typed.
+ * `capability`:  The capability that READS this entity, or null when nothing does.
+ * `dispatches`: VERB AXIS — acting on this machine really dispatches through a wired CommandTarget and writes the DR-10 trail.  ⚠️ For a capability-backed entity this is EXACTLY `dispatchesCommands(cap)` and it is computed that way. For the eight flows no capability reads, the same question still has an answer, and it is the SAME SET one layer down — `dispatchesCommands` is `liveness()==='LIVE'` is `WIRED.has(backing)`. So the fallback cannot disagree with the marker regime; it just reaches a machine the capability list never named.
+ * `feed`:  FEED AXIS — where the read surface's data comes from. Null ⇒ no reader.
+ *
+ * @typedef {{
+ *   readonly entity: string;
+ *   readonly version: number;
+ *   readonly initial: string;
+ *   readonly terminals: readonly string[];
+ *   readonly seededFrom: readonly string[];
+ *   readonly states: readonly StateView[];
+ *   readonly transitions: readonly TransitionView[];
+ *   readonly edges: readonly FlowEdge[];
+ *   readonly looseEnds: readonly AnnotatedLooseEnd[];
+ *   readonly stateCount: number;
+ *   readonly transitionCount: number;
+ *   readonly forkCount: number;
+ *   readonly capability: Capability | null;
+ *   readonly dispatches: boolean;
+ *   readonly feed: FeedProvenance | null;
+ * }} FlowView
+ */
+
+/**
+ * `wiredCount`:  Flows whose verbs really dispatch (the wired-target census, per flow).
+ *
+ * @typedef {{
+ *   readonly flows: readonly FlowView[];
+ *   readonly flowCount: number;
+ *   readonly stateCount: number;
+ *   readonly transitionCount: number;
+ *   readonly forkCount: number;
+ *   readonly looseEndCount: number;
+ *   readonly wiredCount: number;
+ * }} CatalogView
  */
 
 /** The four collaborators, injectable so the derivation stays a pure function. */
 /**
- * @typedef {object} CatalogSources
- * @property {Record<string, readonly CascadeLink[]>} cascades
- * @property {readonly CensusEntry[]} census
- * @property {Record<PersonaType, readonly string[]>} personaRoles
- * @property {readonly string[]} wiredTargets
+ * @typedef {{
+ *   readonly cascades: Record<string, readonly CascadeLink[]>;
+ *   readonly census: readonly CensusEntry[];
+ *   readonly personaRoles: Record<PersonaType, readonly string[]>;
+ *   readonly wiredTargets: readonly string[];
+ * }} CatalogSources
  */
 
 /** @type {CatalogSources} */

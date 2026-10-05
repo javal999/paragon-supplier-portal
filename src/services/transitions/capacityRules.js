@@ -40,13 +40,17 @@ export function horizonWeeks(nowIso) {
 }
 
 /**
- * @typedef {object} CapacityInputs
- * @property {readonly { readonly supplierId: string; readonly materialCode: string }[]} assignments
- * @property {(materialCode: string) => MaterialMasterEntry | null} master
- * @property {(supplierId: string) => string} supplierName
- * @property {readonly CapacitySubmission[]} submissions
- * @property {readonly LtpLine[]} ltpLines -  The current forecast versions' lines — the LTP.
- * @property {readonly Extract<PlanningGroupEvent, { kind: 'moved' }>[]} [moves] -  Material C5 (MR-8 BR-05) — the planning-group moves, oldest first. None: no split made.
+ * `ltpLines`:  The current forecast versions' lines — the LTP.
+ * `moves`:  Material C5 (MR-8 BR-05) — the planning-group moves, oldest first. None: no split made.
+ *
+ * @typedef {{
+ *   readonly assignments: readonly { readonly supplierId: string; readonly materialCode: string }[];
+ *   readonly master: (materialCode: string) => MaterialMasterEntry | null;
+ *   readonly supplierName: (supplierId: string) => string;
+ *   readonly submissions: readonly CapacitySubmission[];
+ *   readonly ltpLines: readonly LtpLine[];
+ *   readonly moves?: readonly Extract<PlanningGroupEvent, { kind: 'moved' }>[];
+ * }} CapacityInputs
  */
 
 /**
@@ -362,12 +366,16 @@ export function groupWeekLtp(lines, supplierId, materials, week) {
 }
 
 /**
- * @typedef {object} LtpCapacityWeek
- * @property {string} week
- * @property {number} ltp
- * @property {number | null} capacity -  The stated capacity, or null when the week has none.
- * @property {number | null} be -  Capacity + additional capacity (derived), or null.
- * @property {LtpCapacityLevel} level
+ * `capacity`:  The stated capacity, or null when the week has none.
+ * `be`:  Capacity + additional capacity (derived), or null.
+ *
+ * @typedef {{
+ *   readonly week: string;
+ *   readonly ltp: number;
+ *   readonly capacity: number | null;
+ *   readonly be: number | null;
+ *   readonly level: LtpCapacityLevel;
+ * }} LtpCapacityWeek
  */
 
 /**
@@ -422,11 +430,17 @@ export function periodHorizonWeeks(periodStart, periodEnd, horizon) {
 const LEVEL_RANK = { unconfirmed: 0, cannotSupply: 1, needsAdditional: 2, within: 3 };
 
 /**
- * @typedef {object} PeriodCapacityCheck
- * @property {LtpCapacityLevel | null} level -  Worst level over the horizon weeks the period touches; null when it touches none.
- * @property {readonly LtpCapacityWeek[]} weeks -  The weeks checked, with their figures.
- * @property {string | null} unconfirmedWeek -  The first week with no stated capacity, if any.
- * @property {string | null} redWeek -  The first week above BE, if any.
+ * `level`:  Worst level over the horizon weeks the period touches; null when it touches none.
+ * `weeks`:  The weeks checked, with their figures.
+ * `unconfirmedWeek`:  The first week with no stated capacity, if any.
+ * `redWeek`:  The first week above BE, if any.
+ *
+ * @typedef {{
+ *   readonly level: LtpCapacityLevel | null;
+ *   readonly weeks: readonly LtpCapacityWeek[];
+ *   readonly unconfirmedWeek: string | null;
+ *   readonly redWeek: string | null;
+ * }} PeriodCapacityCheck
  */
 
 /**

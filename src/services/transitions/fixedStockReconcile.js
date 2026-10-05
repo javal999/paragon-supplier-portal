@@ -56,21 +56,32 @@ export const FS_OUTCOME_ORDER = [
 ];
 
 /**
- * @typedef {object} FsFigures
- * @property {number} committed
- * @property {number} calledOff
- * @property {number | null} held -  Null when the supplier has no stock figure on or before the cycle end.
- * @property {number | null} maxStock -  Null when no maximum stock is agreed.
+ * `held`:  Null when the supplier has no stock figure on or before the cycle end.
+ * `maxStock`:  Null when no maximum stock is agreed.
+ *
+ * @typedef {{
+ *   readonly committed: number;
+ *   readonly calledOff: number;
+ *   readonly held: number | null;
+ *   readonly maxStock: number | null;
+ * }} FsFigures
  */
 
 /**
- * @typedef {object} FsResult
- * @property {FsOutcome} outcome
- * @property {number} uncalled -  max(0, committed − called off) — never negative (owner, 2026-09-29).
- * @property {number} calledBeyond -  What PTI called off beyond the commitment (0 when it did not).
- * @property {number} liabilityQty -  Quantity flagged "liability — not priced" (ENG-D17); 0 when none.
- * @property {number} shortQty -  Uncalled commitment the supplier does not hold (supplierShort only).
- * @property {number} aboveMaxQty -  Held above the agreed maximum; the supplier's own stock, outside the settlement.
+ * `uncalled`:  max(0, committed − called off) — never negative (owner, 2026-09-29).
+ * `calledBeyond`:  What PTI called off beyond the commitment (0 when it did not).
+ * `liabilityQty`:  Quantity flagged "liability — not priced" (ENG-D17); 0 when none.
+ * `shortQty`:  Uncalled commitment the supplier does not hold (supplierShort only).
+ * `aboveMaxQty`:  Held above the agreed maximum; the supplier's own stock, outside the settlement.
+ *
+ * @typedef {{
+ *   readonly outcome: FsOutcome;
+ *   readonly uncalled: number;
+ *   readonly calledBeyond: number;
+ *   readonly liabilityQty: number;
+ *   readonly shortQty: number;
+ *   readonly aboveMaxQty: number;
+ * }} FsResult
  */
 
 /**
@@ -109,16 +120,20 @@ export function reconcileFigures(f) {
 // ─── Cycles (BR-01, BR-02) ───────────────────────────────────────────────────
 
 /**
- * @typedef {object} FsCycleConfig
- * @property {string} anchor -  A Monday; packaging cycles run in blocks of `cycleWeeks` from it.
- * @property {number} cycleWeeks
+ * `anchor`:  A Monday; packaging cycles run in blocks of `cycleWeeks` from it.
+ *
+ * @typedef {{
+ *   readonly anchor: string;
+ *   readonly cycleWeeks: number;
+ * }} FsCycleConfig
  */
 
 /**
- * @typedef {object} FsCycle
- * @property {ForecastStream} stream
- * @property {string} start
- * @property {string} end
+ * @typedef {{
+ *   readonly stream: ForecastStream;
+ *   readonly start: string;
+ *   readonly end: string;
+ * }} FsCycle
  */
 
 /**
@@ -146,17 +161,21 @@ export function cycleOfDay(stream, day, cfg) {
 // ─── The reconcile (BR-03 to BR-11) ──────────────────────────────────────────
 
 /**
- * @typedef {object} FsCommitmentInput
- * @property {ForecastStream} stream
- * @property {string} supplierId
- * @property {string} supplierName
- * @property {string} materialCode
- * @property {string} materialLabel
- * @property {string} uom
- * @property {string} periodBucket -  A week (`YYYY-MM-DD`, its Monday) or a month (`YYYY-MM`).
- * @property {string} periodStart
- * @property {'firm' | 'tradeOff' | 'forecast'} zone
- * @property {number | null} committedQty -  The submitted commitment standing for the period; null while awaiting.
+ * `periodBucket`:  A week (`YYYY-MM-DD`, its Monday) or a month (`YYYY-MM`).
+ * `committedQty`:  The submitted commitment standing for the period; null while awaiting.
+ *
+ * @typedef {{
+ *   readonly stream: ForecastStream;
+ *   readonly supplierId: string;
+ *   readonly supplierName: string;
+ *   readonly materialCode: string;
+ *   readonly materialLabel: string;
+ *   readonly uom: string;
+ *   readonly periodBucket: string;
+ *   readonly periodStart: string;
+ *   readonly zone: 'firm' | 'tradeOff' | 'forecast';
+ *   readonly committedQty: number | null;
+ * }} FsCommitmentInput
  */
 
 /**
@@ -164,26 +183,28 @@ export function cycleOfDay(stream, day, cfg) {
  * (`callOffRules.js`) before it arrives here.
  */
 /**
- * @typedef {object} FsCallOffInput
- * @property {string} supplierId
- * @property {string} materialCode
- * @property {string} callOffNumber
- * @property {readonly { readonly quantity: number; readonly date: string }[]} agreed The deliveries both sides agreed: the supplier's confirmation once
- *   accepted (automatically or by the planner), else what both last agreed.
- *   Empty when nothing is agreed yet — such a call-off is not counted.
- * @property {'supplier' | 'pti' | null} pending Why a released call-off is not (or not yet fully) counted: `supplier` —
- *   awaiting the supplier's confirmation; `pti` — a counter-offer awaiting the
- *   planner. Null otherwise (agreed, rejected, a draft, dismissed).
- * @property {string} needDate -  PTI's requested date — places a pending call-off in its cycle.
+ * `agreed`: The deliveries both sides agreed: the supplier's confirmation once accepted (automatically or by the planner), else what both last agreed. Empty when nothing is agreed yet — such a call-off is not counted.
+ * `pending`: Why a released call-off is not (or not yet fully) counted: `supplier` — awaiting the supplier's confirmation; `pti` — a counter-offer awaiting the planner. Null otherwise (agreed, rejected, a draft, dismissed).
+ * `needDate`:  PTI's requested date — places a pending call-off in its cycle.
+ *
+ * @typedef {{
+ *   readonly supplierId: string;
+ *   readonly materialCode: string;
+ *   readonly callOffNumber: string;
+ *   readonly agreed: readonly { readonly quantity: number; readonly date: string }[];
+ *   readonly pending: 'supplier' | 'pti' | null;
+ *   readonly needDate: string;
+ * }} FsCallOffInput
  */
 
 /** A stock submission; the list is oldest first, so the last matching one is the latest. */
 /**
- * @typedef {object} FsStockInput
- * @property {string} supplierId
- * @property {string} materialCode
- * @property {string} declaredAt
- * @property {number} totalQty
+ * @typedef {{
+ *   readonly supplierId: string;
+ *   readonly materialCode: string;
+ *   readonly declaredAt: string;
+ *   readonly totalQty: number;
+ * }} FsStockInput
  */
 
 /**

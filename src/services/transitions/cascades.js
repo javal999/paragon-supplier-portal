@@ -13,9 +13,10 @@
 
 /** A source→target cascade link (which transition to fire on which entity). */
 /**
- * @typedef {object} CascadeLink
- * @property {string} targetEntity
- * @property {string} targetTransitionId
+ * @typedef {{
+ *   readonly targetEntity: string;
+ *   readonly targetTransitionId: string;
+ * }} CascadeLink
  */
 
 /**

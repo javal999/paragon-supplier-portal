@@ -61,17 +61,23 @@
 /** @typedef {'finance' | 'procurement' | 'warehousePlanner' | 'materialPlanner'} PlaceholderOwner */
 
 /**
- * @typedef {object} HubSettingDef
- * @property {string} key
- * @property {HubSettingSection} section
- * @property {string} rule -  The requirement rule the value belongs to.
- * @property {HubSettingUnit} unit
- * @property {boolean} [integer] -  A whole number only.
- * @property {number} [min]
- * @property {number} [max]
- * @property {number} [above] -  A strict lower bound (the value must be ABOVE it).
- * @property {number | boolean} defaultValue
- * @property {{ readonly owner: PlaceholderOwner; readonly backlogId: string }} [placeholder] -  Set while the owner has not decided: the page says so, with the backlog id.
+ * `rule`:  The requirement rule the value belongs to.
+ * `integer`:  A whole number only.
+ * `above`:  A strict lower bound (the value must be ABOVE it).
+ * `placeholder`:  Set while the owner has not decided: the page says so, with the backlog id.
+ *
+ * @typedef {{
+ *   readonly key: string;
+ *   readonly section: HubSettingSection;
+ *   readonly rule: string;
+ *   readonly unit: HubSettingUnit;
+ *   readonly integer?: boolean;
+ *   readonly min?: number;
+ *   readonly max?: number;
+ *   readonly above?: number;
+ *   readonly defaultValue: number | boolean;
+ *   readonly placeholder?: { readonly owner: PlaceholderOwner; readonly backlogId: string };
+ * }} HubSettingDef
  */
 
 // ── The values ────────────────────────────────────────────────────────────────
@@ -839,9 +845,10 @@ export function defaultOfKey(key) {
 
 /** The value of every fixed key, and the override map, as one state. */
 /**
- * @typedef {object} HubSettingState
- * @property {Readonly<Record<string, number | boolean>>} values
- * @property {Readonly<Record<string, number>>} staleOverrides
+ * @typedef {{
+ *   readonly values: Readonly<Record<string, number | boolean>>;
+ *   readonly staleOverrides: Readonly<Record<string, number>>;
+ * }} HubSettingState
  */
 
 /** @type {HubSettingState} */

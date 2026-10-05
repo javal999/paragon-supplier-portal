@@ -38,12 +38,16 @@ import { asActorAttribution } from '@lib/enforcement';
 
 /** One 3PL on the list. */
 /**
- * @typedef {object} ThreePl
- * @property {string} id -  Stable id, `tpl-…`. What an ASN stores; never shown as a name.
- * @property {string} name
- * @property {string} trackingUrlPattern The 3PL's public tracking address, with `{tracking}` where the tracking
- *   number goes — e.g. `https://track.sample.example/parcel/{tracking}`.
- * @property {boolean} active -  Offered on new ASNs. An inactive 3PL still resolves on ASNs that name it.
+ * `id`:  Stable id, `tpl-…`. What an ASN stores; never shown as a name.
+ * `trackingUrlPattern`: The 3PL's public tracking address, with `{tracking}` where the tracking number goes — e.g. `https://track.sample.example/parcel/{tracking}`.
+ * `active`:  Offered on new ASNs. An inactive 3PL still resolves on ASNs that name it.
+ *
+ * @typedef {{
+ *   readonly id: string;
+ *   readonly name: string;
+ *   readonly trackingUrlPattern: string;
+ *   readonly active: boolean;
+ * }} ThreePl
  */
 
 /** An administrator's change to one 3PL, as recorded. */

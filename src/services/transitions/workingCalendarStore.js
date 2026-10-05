@@ -114,12 +114,13 @@ export const SAP_BASE_CALENDAR = Object.freeze({
  * audit entry.
  */
 /**
- * @typedef {object} CalendarDayRuling
- * @property {string} date
- * @property {CalendarDayKind} kind
- * @property {string} reason
- * @property {ActorAttribution} setBy
- * @property {string} setAt
+ * @typedef {{
+ *   readonly date: string;
+ *   readonly kind: CalendarDayKind;
+ *   readonly reason: string;
+ *   readonly setBy: ActorAttribution;
+ *   readonly setAt: string;
+ * }} CalendarDayRuling
  */
 
 /**
@@ -154,10 +155,15 @@ export const WORKING_CALENDAR_KEY = 'paragon.workingCalendar';
 const STORE_VERSION = 1;
 
 /**
- * @typedef {object} CalendarReadState
- * @property {readonly CalendarDayRuling[]} rulings -  The rulings in force, oldest first (seed + stored).
- * @property {readonly { readonly row: string; readonly reason: string }[]} rejected -  Stored rows refused on read, each with the reason.
- * @property {boolean} unreadable -  The store exists but could not be parsed — DISTINCT from "no rulings".
+ * `rulings`:  The rulings in force, oldest first (seed + stored).
+ * `rejected`:  Stored rows refused on read, each with the reason.
+ * `unreadable`:  The store exists but could not be parsed — DISTINCT from "no rulings".
+ *
+ * @typedef {{
+ *   readonly rulings: readonly CalendarDayRuling[];
+ *   readonly rejected: readonly { readonly row: string; readonly reason: string }[];
+ *   readonly unreadable: boolean;
+ * }} CalendarReadState
  */
 
 /** Why a ruling is not one the verb would have accepted, or null. The SAME
@@ -366,13 +372,18 @@ export function hubWorkingCalendar() {
 /** @typedef {'sap' | 'administrator'} CalendarDaySource */
 
 /**
- * @typedef {object} CalendarDayView
- * @property {string} date
- * @property {number} weekday -  ISO weekday, 1 = Monday … 7 = Sunday.
- * @property {boolean} working
- * @property {CalendarDaySource} source
- * @property {boolean} sapWorking -  What SAP said, so an override is visible as one.
- * @property {CalendarDayRuling | null} ruling -  The ruling that decides it, when the administrator ruled.
+ * `weekday`:  ISO weekday, 1 = Monday … 7 = Sunday.
+ * `sapWorking`:  What SAP said, so an override is visible as one.
+ * `ruling`:  The ruling that decides it, when the administrator ruled.
+ *
+ * @typedef {{
+ *   readonly date: string;
+ *   readonly weekday: number;
+ *   readonly working: boolean;
+ *   readonly source: CalendarDaySource;
+ *   readonly sapWorking: boolean;
+ *   readonly ruling: CalendarDayRuling | null;
+ * }} CalendarDayView
  */
 
 /**

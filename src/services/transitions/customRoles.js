@@ -88,15 +88,20 @@ import {
  * baseline exists to prevent.
  */
 /**
- * @typedef {object} CustomRoleDefinition
- * @property {BusinessRoleId} id
- * @property {SystemRoleId} parent
- * @property {string} displayName -  User text. NOT an i18n key and NOT translated — see `roleModel.ts`.
- * @property {string} description
- * @property {readonly TransitionRole[]} adds -  Atoms added on top of the parent. Always a widening (additive-only).
- * @property {readonly TransitionRole[]} parentAtomsAtGrant -  The parent's atoms at the moment of the grant. The DRIFT BASELINE ONLY.
- * @property {ActorAttribution} grantedBy
- * @property {string} grantedAt
+ * `displayName`:  User text. NOT an i18n key and NOT translated — see `roleModel.ts`.
+ * `adds`:  Atoms added on top of the parent. Always a widening (additive-only).
+ * `parentAtomsAtGrant`:  The parent's atoms at the moment of the grant. The DRIFT BASELINE ONLY.
+ *
+ * @typedef {{
+ *   readonly id: BusinessRoleId;
+ *   readonly parent: SystemRoleId;
+ *   readonly displayName: string;
+ *   readonly description: string;
+ *   readonly adds: readonly TransitionRole[];
+ *   readonly parentAtomsAtGrant: readonly TransitionRole[];
+ *   readonly grantedBy: ActorAttribution;
+ *   readonly grantedAt: string;
+ * }} CustomRoleDefinition
  */
 
 // ── THE STORE — PERSISTED, AND VALIDATED ON THE WAY BACK IN ─────────────────
@@ -159,11 +164,17 @@ const STORE_VERSION = 1;
  * A surface renders these; nothing swallows them.
  */
 /**
- * @typedef {object} CustomRoleReadState
- * @property {readonly CustomRoleDefinition[]} roles -  The rows that validated and are in force.
- * @property {readonly { readonly id: string; readonly reason: string }[]} rejected -  Rows refused on read, each with the refusal's own words.
- * @property {boolean} unreadable -  The store exists but could not be parsed — DISTINCT from "no store".
- * @property {boolean} suspended -  The catalog was empty, so validation was suspended (reason 4 above).
+ * `roles`:  The rows that validated and are in force.
+ * `rejected`:  Rows refused on read, each with the refusal's own words.
+ * `unreadable`:  The store exists but could not be parsed — DISTINCT from "no store".
+ * `suspended`:  The catalog was empty, so validation was suspended (reason 4 above).
+ *
+ * @typedef {{
+ *   readonly roles: readonly CustomRoleDefinition[];
+ *   readonly rejected: readonly { readonly id: string; readonly reason: string }[];
+ *   readonly unreadable: boolean;
+ *   readonly suspended: boolean;
+ * }} CustomRoleReadState
  */
 
 /** @type {CustomRoleReadState} */

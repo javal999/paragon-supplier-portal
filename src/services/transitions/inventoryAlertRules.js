@@ -162,29 +162,40 @@ function capacityDaysToImpact(plan, nowIso) {
 
 /** A supplier × material with a commitment below forecast beyond tolerance (REQ-E06-03). */
 /**
- * @typedef {object} CommitmentShortfallSubject
- * @property {string} supplierId
- * @property {string} supplierName
- * @property {string} materialCode
- * @property {string} materialLabel
- * @property {boolean} firm -  True when any of its short periods is in the Firm zone.
+ * `firm`:  True when any of its short periods is in the Firm zone.
+ *
+ * @typedef {{
+ *   readonly supplierId: string;
+ *   readonly supplierName: string;
+ *   readonly materialCode: string;
+ *   readonly materialLabel: string;
+ *   readonly firm: boolean;
+ * }} CommitmentShortfallSubject
  */
 
 /** Confirmed call-off deliveries a supplier × material still has to ship (MR-6 BR-13). */
 /**
- * @typedef {object} CallOffCoverInput
- * @property {string} supplierId
- * @property {string} materialCode
- * @property {readonly { readonly quantity: number; readonly date: string }[]} deliveries -  Outstanding deliveries, in date order.
+ * `deliveries`:  Outstanding deliveries, in date order.
+ *
+ * @typedef {{
+ *   readonly supplierId: string;
+ *   readonly materialCode: string;
+ *   readonly deliveries: readonly { readonly quantity: number; readonly date: string }[];
+ * }} CallOffCoverInput
  */
 
 /** Where a supplier's declared stock falls short of a confirmed call-off (MR-6 BR-13). */
 /**
- * @typedef {object} CallOffCoverGap
- * @property {string} needDate -  The need date of the first delivery the stock cannot cover.
- * @property {number} required -  Every outstanding delivery up to and including that one.
- * @property {number} available -  Declared SOH plus in production due before the need date.
- * @property {number} daysToNeed
+ * `needDate`:  The need date of the first delivery the stock cannot cover.
+ * `required`:  Every outstanding delivery up to and including that one.
+ * `available`:  Declared SOH plus in production due before the need date.
+ *
+ * @typedef {{
+ *   readonly needDate: string;
+ *   readonly required: number;
+ *   readonly available: number;
+ *   readonly daysToNeed: number;
+ * }} CallOffCoverGap
  */
 
 /**
@@ -354,13 +365,16 @@ export function deriveAlertConditions(
 
 /** One ledger entry: a planner's closure, or the moment its condition cleared. */
 /**
- * @typedef {object} AlertLedgerEntry
- * @property {string} key
- * @property {'closed' | 'cleared'} kind
- * @property {string} at
- * @property {string} [note]
- * @property {string} [closeReason] -  MR-9 BR-04 — the `alertClose` code. Absent on a closure recorded before reasons existed.
- * @property {ActorAttribution} [actor]
+ * `closeReason`:  MR-9 BR-04 — the `alertClose` code. Absent on a closure recorded before reasons existed.
+ *
+ * @typedef {{
+ *   readonly key: string;
+ *   readonly kind: 'closed' | 'cleared';
+ *   readonly at: string;
+ *   readonly note?: string;
+ *   readonly closeReason?: string;
+ *   readonly actor?: ActorAttribution;
+ * }} AlertLedgerEntry
  */
 
 /**

@@ -31,23 +31,15 @@
  * member itself, so a term and its identity cannot disagree.
  */
 /**
- * @typedef {object} GlossaryEntry
- * @property {string} en -  EN definition. Plain sentence, no jargon it does not itself define.
- * @property {string} id -  ID definition. **Authored from birth, not back-filled** — a term that
- *    exists in one locale only is a term the ID-speaking half of the review
- *    cannot correct, which is the audience this batch is for.
- * @property {string} [remedyRoute] Where a reader goes to act on this term.
+ * `en`:  EN definition. Plain sentence, no jargon it does not itself define.
+ * `id`:  ID definition. **Authored from birth, not back-filled** — a term that  exists in one locale only is a term the ID-speaking half of the review  cannot correct, which is the audience this batch is for.
+ * `remedyRoute`: Where a reader goes to act on this term.  ⚠️ **OPTIONAL, AND STILL ABSENT ON EVERY ENTRY. ABSENT RENDERS NOTHING** — and GL-1, which built the page and the chips, did not populate one. The glossary closes the DEFINITIONAL half of `HALAL-REFUSAL-DEAD-ENDS-01` — a refusal that told you only that you were stuck can now at least be looked up, from the refusal itself. **THE ROUTING HALF STAYS OPEN**, because the destination does not exist: who rules on a halal determination, where they do it, and what the clerk does meanwhile are unanswered (D-COMP-HALAL-4). The field is declared so the shape is agreed; it is empty so nothing reads as closed that is not. **Do not populate it to make a row look finished.**
  *
- *   ⚠️ **OPTIONAL, AND STILL ABSENT ON EVERY ENTRY. ABSENT RENDERS NOTHING** —
- *   and GL-1, which built the page and the chips, did not populate one. The
- *   glossary closes the DEFINITIONAL half of `HALAL-REFUSAL-DEAD-ENDS-01` — a
- *   refusal that told you only that you were stuck can now at least be looked
- *   up, from the refusal itself. **THE ROUTING HALF STAYS OPEN**,
- *   because the destination does not exist: who rules on a halal
- *   determination, where they do it, and what the clerk does meanwhile are
- *   unanswered (D-COMP-HALAL-4). The field is declared so the shape is agreed;
- *   it is empty so nothing reads as closed that is not. **Do not populate it
- *   to make a row look finished.**
+ * @typedef {{
+ *   readonly en: string;
+ *   readonly id: string;
+ *   readonly remedyRoute?: string;
+ * }} GlossaryEntry
  */
 
 /** A registry of definitions keyed by the members of one source union. */

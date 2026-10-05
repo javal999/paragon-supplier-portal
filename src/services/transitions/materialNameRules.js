@@ -89,18 +89,24 @@ export function materialNameRefusalOf(reason) {
 
 /** One row of the bulk load: PTI code, supplier ID, trade name, supplier material number. */
 /**
- * @typedef {object} TradeNameCsvRow
- * @property {number} line -  1-based line number in the file, for the planner.
- * @property {string} materialCode
- * @property {string} supplierId
- * @property {string} tradeName
- * @property {string} [supplierMaterialNo]
+ * `line`:  1-based line number in the file, for the planner.
+ *
+ * @typedef {{
+ *   readonly line: number;
+ *   readonly materialCode: string;
+ *   readonly supplierId: string;
+ *   readonly tradeName: string;
+ *   readonly supplierMaterialNo?: string;
+ * }} TradeNameCsvRow
  */
 
 /**
- * @typedef {object} TradeNameCsvParse
- * @property {readonly TradeNameCsvRow[]} rows
- * @property {readonly number[]} badLines -  Lines that do not have 3 or 4 columns.
+ * `badLines`:  Lines that do not have 3 or 4 columns.
+ *
+ * @typedef {{
+ *   readonly rows: readonly TradeNameCsvRow[];
+ *   readonly badLines: readonly number[];
+ * }} TradeNameCsvParse
  */
 
 /**

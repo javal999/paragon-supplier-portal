@@ -16,11 +16,15 @@ import { DEFAULT_SOURCING_TYPE_MAP } from '../sourcing/sourcingType';
 
 /** One change of one key, as recorded. Never edited. */
 /**
- * @typedef {object} SourcingTypeChange
- * @property {SourcingTypeKey} key
- * @property {SourcingType} sourcingType
- * @property {string} setAt -  Store-assigned from the hub clock, never a payload field.
- * @property {ActorAttribution} setBy -  From the session, never from the form.
+ * `setAt`:  Store-assigned from the hub clock, never a payload field.
+ * `setBy`:  From the session, never from the form.
+ *
+ * @typedef {{
+ *   readonly key: SourcingTypeKey;
+ *   readonly sourcingType: SourcingType;
+ *   readonly setAt: string;
+ *   readonly setBy: ActorAttribution;
+ * }} SourcingTypeChange
  */
 
 /** @type {SourcingTypeChange[]} */

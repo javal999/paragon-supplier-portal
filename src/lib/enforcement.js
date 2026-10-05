@@ -371,10 +371,13 @@ export const REFUSALS_OUTSIDE_ENFORCEMENT = Object.freeze(Object.keys(REFUSAL_CE
  * that the session has no person in it today.
  */
 /**
- * @typedef {object} ActingPerson
- * @property {string} personId -  The identity that acted. Stable; never a role code.
- * @property {string} displayName -  The name as it stood when the act was recorded. Captured, never resolved
- *    at read — a person who leaves must not erase who decided.
+ * `personId`:  The identity that acted. Stable; never a role code.
+ * `displayName`:  The name as it stood when the act was recorded. Captured, never resolved  at read — a person who leaves must not erase who decided.
+ *
+ * @typedef {{
+ *   readonly personId: string;
+ *   readonly displayName: string;
+ * }} ActingPerson
  */
 
 /**
@@ -566,9 +569,10 @@ export const ENFORCEMENT_MODE_SOURCES = Object.freeze(
 
 /** The mode actually in force at an instant, and where it came from. */
 /**
- * @typedef {object} EffectiveEnforcement
- * @property {EnforcementMode} mode
- * @property {EnforcementModeSource} source
+ * @typedef {{
+ *   readonly mode: EnforcementMode;
+ *   readonly source: EnforcementModeSource;
+ * }} EffectiveEnforcement
  */
 
 /** An ISO calendar day. `reviewBy` is a DAY, not an instant: a review is due by
@@ -804,18 +808,17 @@ export const OVERRIDE_REASONS = Object.freeze(
  * module.
  */
 /**
+ * `overriddenBy`: WHO — a discriminated attribution (the operator's ruling on `ENF-NO-PERSON-IN-IDENTITY-01`). An `UNATTRIBUTED` override is RECORDABLE and does not COMPLETE: `overrideCompletes` is false and `effectiveWithOverride` falls the mode through to the ceiling. Recordable on purpose — the attempt happened, and erasing it would relax honesty to spare a blush.
+ * `overriddenVerdict`:  THE EXACT VERDICT OVERRIDDEN. Bound to the stamp's own verdict by type.
+ * `overriddenAt`:  WHEN the override was recorded (ISO instant) — D4. Store-assigned at the  act, never payload-supplied.
+ *
  * @template {OverridableVerdict} [V=OverridableVerdict]
- * @typedef {object} EnforcementOverride
- * @property {ActorAttribution} overriddenBy WHO — a discriminated attribution (the operator's ruling on
- *   `ENF-NO-PERSON-IN-IDENTITY-01`). An `UNATTRIBUTED` override is RECORDABLE
- *   and does not COMPLETE: `overrideCompletes` is false and
- *   `effectiveWithOverride` falls the mode through to the ceiling. Recordable on
- *   purpose — the attempt happened, and erasing it would relax honesty to spare
- *   a blush.
- * @property {OverrideReason} reason
- * @property {V} overriddenVerdict -  THE EXACT VERDICT OVERRIDDEN. Bound to the stamp's own verdict by type.
- * @property {string} overriddenAt -  WHEN the override was recorded (ISO instant) — D4. Store-assigned at the
- *    act, never payload-supplied.
+ * @typedef {{
+ *   readonly overriddenBy: ActorAttribution;
+ *   readonly reason: OverrideReason;
+ *   readonly overriddenVerdict: V;
+ *   readonly overriddenAt: string;
+ * }} EnforcementOverride
  */
 
 /**
@@ -858,12 +861,14 @@ export function effectiveWithOverride(effective, override) {
 
 /** The fields every stamp carries, whatever it answered. */
 /**
- * @typedef {object} GovernedCheckStampBase
- * @property {GovernedCheckId} checkId
- * @property {EnforcementMode} mode -  The mode IN FORCE when the check ran — the `effectiveMode` result, not the
- *    recorded setting. A stamp that carried the setting would be unable to
- *    explain a block the ratchet caused.
- * @property {EnforcementModeSource} modeSource -  Whether that mode was as-set or tightened by a lapsed review.
+ * `mode`:  The mode IN FORCE when the check ran — the `effectiveMode` result, not the  recorded setting. A stamp that carried the setting would be unable to  explain a block the ratchet caused.
+ * `modeSource`:  Whether that mode was as-set or tightened by a lapsed review.
+ *
+ * @typedef {{
+ *   readonly checkId: GovernedCheckId;
+ *   readonly mode: EnforcementMode;
+ *   readonly modeSource: EnforcementModeSource;
+ * }} GovernedCheckStampBase
  */
 
 /**

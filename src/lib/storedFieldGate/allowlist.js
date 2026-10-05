@@ -46,17 +46,24 @@
 /** @typedef {'data-in-waiting' | 'contract-surface' | 'substrate' | 'unadjudicated'} ExemptionReason */
 
 /**
- * @typedef {object} Exemption
- * @property {string} key -  `Owner.field`, the derivation's key.
- * @property {ExemptionReason} reason
- * @property {string} why -  The stated reason. Prose, and the gate requires it be substantial — the
- *    dispatch's requirement is "an allowlisted reason WITH THAT REASON STATED",
- *    and a one-word row states nothing.
- * @property {string} [consumer] -  Required by `data-in-waiting`: who will read it.
- * @property {string} [contract] -  Required by `contract-surface`: the contract the shape serves.
- * @property {string} [surface] -  Required by `substrate`: the surface that will call it.
- * @property {string} [pinnedBy] -  A spec that separately pins this absence. Must exist on disk.
- * @property {string} since -  The batch that filed the row.
+ * `key`:  `Owner.field`, the derivation's key.
+ * `why`:  The stated reason. Prose, and the gate requires it be substantial — the  dispatch's requirement is "an allowlisted reason WITH THAT REASON STATED",  and a one-word row states nothing.
+ * `consumer`:  Required by `data-in-waiting`: who will read it.
+ * `contract`:  Required by `contract-surface`: the contract the shape serves.
+ * `surface`:  Required by `substrate`: the surface that will call it.
+ * `pinnedBy`:  A spec that separately pins this absence. Must exist on disk.
+ * `since`:  The batch that filed the row.
+ *
+ * @typedef {{
+ *   readonly key: string;
+ *   readonly reason: ExemptionReason;
+ *   readonly why: string;
+ *   readonly consumer?: string;
+ *   readonly contract?: string;
+ *   readonly surface?: string;
+ *   readonly pinnedBy?: string;
+ *   readonly since: string;
+ * }} Exemption
  */
 
 const D_F = 'D-F (2026-08-12)';

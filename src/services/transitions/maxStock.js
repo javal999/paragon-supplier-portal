@@ -23,13 +23,18 @@ import { asActorAttribution } from '@lib/enforcement';
 
 /** One change as recorded. */
 /**
- * @typedef {object} MaxStockChange
- * @property {string} supplierId
- * @property {string} materialCode
- * @property {number | null} quantity -  Whole units of the material; null clears the value ("no max stock agreed").
- * @property {number | null} previous -  The value before this change — store-assigned; null when none was set.
- * @property {ActorAttribution} setBy
- * @property {string} setAt -  Store-assigned, never a payload field.
+ * `quantity`:  Whole units of the material; null clears the value ("no max stock agreed").
+ * `previous`:  The value before this change — store-assigned; null when none was set.
+ * `setAt`:  Store-assigned, never a payload field.
+ *
+ * @typedef {{
+ *   readonly supplierId: string;
+ *   readonly materialCode: string;
+ *   readonly quantity: number | null;
+ *   readonly previous: number | null;
+ *   readonly setBy: ActorAttribution;
+ *   readonly setAt: string;
+ * }} MaxStockChange
  */
 
 const ENTITY_ID = /^([^|\s]+)\|([^|\s]+)$/;
