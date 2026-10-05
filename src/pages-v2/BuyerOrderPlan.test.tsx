@@ -294,6 +294,8 @@ describe('BuyerOrderPlan — "Why this quantity" panel (FUX2 B3)', () => {
 
     const mrq = renderWithProviders(<BuyerMaterialRequirement />, { identity: PLANNER, route: '/buyer/material-requirement' });
     const mrqNet = (await screen.findByTestId(`mrq-total-net-${code}`)).textContent!;
+    fireEvent.click(screen.getByTestId(`mrq-row-${code}`));
+    const mrqWeekNet = (await screen.findByTestId(`mrq-net-${rec.weekStart}`)).textContent!;
     const mrqSs = screen.getByTestId(`mrq-ss-${code}`).textContent!;
     mrq.unmount();
     const sst = renderWithProviders(<BuyerSafetyStock />, { identity: PLANNER, route: '/buyer/safety-stock' });
@@ -304,7 +306,8 @@ describe('BuyerOrderPlan — "Why this quantity" panel (FUX2 B3)', () => {
     renderWithProviders(<BuyerOrderPlan />, { identity: PLANNER, route: '/buyer/order-plan' });
     const { panel } = await openWhy(code, rec.weekStart);
     expect(within(panel).getByText(code)).toBeInTheDocument();
-    expect(await within(panel).findByTestId('op-wq-net')).toHaveTextContent(`${mrqNet} ${m.uom}`);
+    expect(await within(panel).findByTestId('op-wq-net')).toHaveTextContent(`${mrqWeekNet} ${m.uom}`);
+    expect(within(panel).getByTestId('op-wq-net-total')).toHaveTextContent(`${mrqNet} ${m.uom}`);
     expect(await within(panel).findByTestId('op-wq-ss')).toHaveTextContent(sstSs);
     expect(within(panel).getByTestId('op-wq-rop')).toHaveTextContent(sstRop);
     // The Material requirement page's safety stock column agrees with the Safety stock page for this material.
@@ -317,6 +320,25 @@ describe('BuyerOrderPlan — "Why this quantity" panel (FUX2 B3)', () => {
     // Term tips at the point of use.
     expect(within(panel).getByTestId('term-tip-safety-stock')).toBeInTheDocument();
     expect(within(panel).getByTestId('term-tip-reorder-point')).toBeInTheDocument();
+  }, PANEL_TIMEOUT);
+
+  it('the requirement block shows the order’s week as the engine nets it, so the figures reconcile, and says the rule', async () => {
+    const { rec, m } = await firstRec();
+    const run = (await mockDataService.procurement.getMaterialRequirement(buyerScope, false))!;
+    const wk = run.materials.find((x) => x.materialCode === rec.materialCode)!.weeks.find((w) => w.weekStart === rec.weekStart)!;
+    // The engine's rule (requirement.ts netMaterial): net = max(0, gross + SS − (stock at start + receipts)).
+    expect(wk.net).toBeCloseTo(Math.max(0, wk.gross + wk.safetyStock - (wk.projectedStart + wk.receipts)), 6);
+    renderWithProviders(<BuyerOrderPlan />, { identity: PLANNER, route: '/buyer/order-plan' });
+    const { panel } = await openWhy(rec.materialCode, rec.weekStart);
+    const q = (x: number) => `${formatNumber(m.uom === 'PCS' ? Math.round(x) : Math.round(x * 10) / 10)} ${m.uom}`;
+    expect(await within(panel).findByTestId('op-wq-gross')).toHaveTextContent(q(wk.gross));
+    expect(within(panel).getByTestId('op-wq-req-safety')).toHaveTextContent(q(wk.safetyStock));
+    expect(within(panel).getByTestId('op-wq-stock')).toHaveTextContent(q(wk.projectedStart));
+    expect(within(panel).getByTestId('op-wq-confirmed')).toHaveTextContent(q(wk.receipts));
+    expect(within(panel).getByTestId('op-wq-net')).toHaveTextContent(q(wk.net));
+    expect(within(panel).getByTestId('op-wq-rule')).toHaveTextContent(
+      'Worked out week by week, and never below zero. Stock at start of week already includes the orders planned for earlier weeks',
+    );
   }, PANEL_TIMEOUT);
 
   it('the panel’s links reach the 2 full pages', async () => {
@@ -365,7 +387,7 @@ describe('BuyerOrderPlan — "Why this quantity" panel (FUX2 B3)', () => {
     expect(toggle).toHaveTextContent('Mengapa kuantitas ini');
     fireEvent.click(toggle);
     const panel = await screen.findByTestId('op-wq-panel');
-    expect(await within(panel).findByText('Kebutuhan bersih')).toBeInTheDocument();
+    expect(await within(panel).findByTestId('op-wq-rule')).toHaveTextContent('Dihitung minggu per minggu, dan tidak pernah di bawah nol.');
     expect(within(panel).getByTestId('op-wq-link-safety')).toHaveTextContent('Buka Target stok pengaman');
     expect(screen.getByTestId('op-why')).toHaveTextContent('Halaman lengkap di balik setiap kuantitas:');
   }, PANEL_TIMEOUT);

@@ -15,8 +15,9 @@ import { qtyOf } from '@pages-v2/materialPlan/planDisplay';
 // WHY THIS QUANTITY — Forecast UX phase 2, task B3 (F-07, F-17).
 //
 // One recommended order, explained without leaving What to order: the
-// Material requirement numbers for its material (gross, stock on hand,
-// confirmed deliveries, net), the Safety stock numbers (safety stock, safety
+// Material requirement numbers for its material in the order's week (gross,
+// safety stock, stock at start, confirmed deliveries, net — the engine's
+// weekly netting, so they reconcile), the Safety stock numbers (safety stock, safety
 // lead time, reorder point) and the order sizing that turned the net
 // requirement into the quantity (MOQ, order multiple, space). Read-only: every
 // figure comes from the same hooks the 2 full pages read, keyed by
@@ -83,7 +84,6 @@ const WhyQuantityPanel: React.FC<WhyQuantityPanelProps> = ({ id, rec, material, 
   const plan = requirement.data?.materials.find((m) => m.materialCode === rec.materialCode) ?? null;
   const week = plan?.weeks.find((w) => w.weekStart === rec.weekStart) ?? null;
   const ss = safety.data?.materials.find((m) => m.materialCode === rec.materialCode) ?? null;
-  const confirmed = plan ? plan.weeks.reduce((s, w) => s + w.receipts, 0) : 0;
   const wk = `W${isoWeek(rec.weekStart)}`;
 
   const loading = <p className="text-xs text-text-tertiary">{t('op.wq.loading')}</p>;
@@ -128,31 +128,35 @@ const WhyQuantityPanel: React.FC<WhyQuantityPanelProps> = ({ id, rec, material, 
         >
           {requirement.isPending ? (
             loading
-          ) : !plan ? (
+          ) : !plan || !week ? (
             missing
           ) : (
             <>
+              {/* The order's own week, as netted by the engine (requirement.ts
+                  netMaterial): net = max(0, gross + safety stock − (stock at
+                  start + confirmed receipts in the week)), and the stock at
+                  start carries the orders planned for earlier weeks. So these
+                  5 figures reconcile; the horizon total does not, being a sum
+                  of weekly nets. */}
               <dl>
-                <Row
-                  label={t('op.wq.req.gross')}
-                  value={q(plan.totals.gross)}
-                  testId="op-wq-gross"
-                />
-                <Row label={t('op.wq.req.stock')} value={q(plan.startStock)} testId="op-wq-stock" />
-                <Row
-                  label={t('op.wq.req.confirmed')}
-                  value={q(confirmed)}
-                  testId="op-wq-confirmed"
-                />
-                <Row label={t('op.wq.req.net')} value={q(plan.totals.net)} testId="op-wq-net" />
+                <Row label={t('op.wq.req.gross', { week: wk })} value={q(week.gross)} testId="op-wq-gross" />
+                <Row label={t('op.wq.req.safety')} value={q(week.safetyStock)} testId="op-wq-req-safety" />
+                <Row label={t('op.wq.req.stock')} value={q(week.projectedStart)} testId="op-wq-stock" />
+                <Row label={t('op.wq.req.confirmed')} value={q(week.receipts)} testId="op-wq-confirmed" />
+                <Row label={t('op.wq.req.net', { week: wk })} value={q(week.net)} testId="op-wq-net" />
               </dl>
+              <p className="text-xs text-text-secondary mt-1" data-testid="op-wq-rule">
+                {t('op.wq.req.rule')}
+              </p>
               <p className="text-xs text-text-tertiary mt-1">
+                {t('op.wq.req.total', { count: requirement.data?.weeks.length ?? 0 })}{' '}
+                <Data data-testid="op-wq-net-total">{q(plan.totals.net)}</Data>
                 {plan.stockDate ? (
                   <>
-                    {t('op.wq.req.stockDate')} <Data>{formatDate(plan.stockDate)}</Data> ·{' '}
+                    {' '}
+                    · {t('op.wq.req.stockDate')} <Data>{formatDate(plan.stockDate)}</Data>
                   </>
                 ) : null}
-                {t('op.wq.req.horizon', { count: requirement.data?.weeks.length ?? 0 })}
               </p>
             </>
           )}
