@@ -1,6 +1,6 @@
 # Prompt: Forecast UX A4 · Purpose headers, one banner, plain copy
 
-**How to use:** Paste into Claude Code opened at the root of `paragon-supplier-portal`, on an up-to-date `main` with A1, A2 and A3 merged. Wave 2. No slots to fill.
+**How to use:** Paste into Claude Code opened at the root of `paragon-supplier-portal`, on an up-to-date `main` (A1, A2 and A3 are merged: #125, #126, #127). Wave 2. No slots to fill.
 **Target:** paragon-supplier-portal · React 18 + TypeScript strict + Tailwind 3, mock data layer · rules from `portal-fit.md` and `fux-build-00-brief.md`
 **Assumptions made:**
 - The Uses and Next links follow the phase 1 menu order in the brief. Engine pages point back to the Weekly plan or Review page that links to them.
@@ -28,7 +28,8 @@ Purpose header (F-05)
 - Place it on all 13 pages. Each page's existing descriptive paragraphs move into a collapsed "About this page" section below the main content (F-08).
 - Place `DataHealthChip` on Publish to suppliers.
 
-Breadcrumbs
+Breadcrumbs and titles
+- Each page's title matches its menu label from task A1 (for example "What to order" on `/buyer/order-plan`, "Publish to suppliers" on `/buyer/stabilise`, "Supplier responses" on `/buyer/collaboration`), in EN and ID. Engine pages keep their own names.
 - Each page's crumb uses its new section key from task A1 (`weeklyPlan`, `review` or `planningEngine`) and its new item label, instead of `hub.nav.section.forecast`. The "Prakiraan · Prakiraan" repetition must be gone (F-19).
 
 One banner (F-14)

@@ -72,9 +72,16 @@ The "Start here" page ("This week") is phase 2. Until it exists, the Weekly plan
 | 1 | A1 menu and labels · A2 publish and responses side · A3 ordering side | Each owns different files, so they run in parallel |
 | 2 | A4 purpose headers, banner and copy | Touches every forecast page, so it waits until wave 1 is merged |
 
+## Wave 1 status (2026-10-05)
+
+Merged: A1 menu and labels (#125), A3 ordering side (#126), A2 publish path (#127); main `d2d8eed`. Findings from building it:
+- F-22: both warehouse-fill projections already include recommended orders. The real difference is released call-offs not yet received, which Reschedule counts and Order plan does not (ENG-B19). The labels say that.
+- F-13: the version record has no SAP-plan vs engine field and no next-due date, so the Source column and the "Next due" line were not built. Moved to phase 2.
+- Page titles still use the old names ("Order plan" under the menu item "What to order"). A4 renames them.
+
 ## Phase 2 (not briefed yet)
 
-"This week" start page with cycle stepper and input check · merge Published versions into Publish as a tab · Material requirement and Safety stock as a per-material panel in What to order · move the overflow card into Make warehouse room and save the choice · Forecast quality as 2 tabs · align the scorecard and reliability data · End-of-cycle stock check for Procurement (open question 3 in the evaluation).
+Source field and next-due date on forecast versions (read model) · "This week" start page with cycle stepper and input check · merge Published versions into Publish as a tab · Material requirement and Safety stock as a per-material panel in What to order · move the overflow card into Make warehouse room and save the choice · Forecast quality as 2 tabs · align the scorecard and reliability data · End-of-cycle stock check for Procurement (open question 3 in the evaluation).
 
 ## Report format for every task
 
