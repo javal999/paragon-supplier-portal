@@ -11,7 +11,7 @@
 // ────────────────────────────────────────────────────────────────────────────
 
 import { describe, expect, it } from 'vitest';
-import { SupplierStatus } from '../../types/supplier.types';
+import { SupplierStatus } from '@app-types/supplier.types';
 import {
   NO_HISTORY_RELIABILITY,
   awardFollowsBestScore,

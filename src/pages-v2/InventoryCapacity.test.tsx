@@ -8,30 +8,30 @@ import React from 'react';
 import { useLocation } from 'react-router-dom';
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { renderWithProviders, BUYER, SUPPLIER } from '../test/test-utils';
-import type { CurrentIdentity } from '../context/CurrentIdentityContext';
-import { SEEDED_SEAT_ROLES } from '../services/transitions/businessRoles';
-import { NO_PERSON } from '../context/noPerson';
-import { PTI_NAV, SUPPLIER_NAV } from '../components/layout-v2/navConfig';
-import { inventoryCapacityEn, inventoryCapacityId } from '../lib/i18n/inventoryCapacity';
-import { inventoryDeclarationStore } from '../services/data/mock/stores/inventoryDeclarationStore';
+import { renderWithProviders, BUYER, SUPPLIER } from '@test/test-utils';
+import type { CurrentIdentity } from '@context/CurrentIdentityContext';
+import { SEEDED_SEAT_ROLES } from '@services/transitions/businessRoles';
+import { NO_PERSON } from '@context/noPerson';
+import { PTI_NAV, SUPPLIER_NAV } from '@components/layout-v2/navConfig';
+import { inventoryCapacityEn, inventoryCapacityId } from '@lib/i18n/inventoryCapacity';
+import { inventoryDeclarationStore } from '@services/data/mock/stores/inventoryDeclarationStore';
 import {
   capacityStore,
   inventoryAlertLedger,
   stockAccessStore,
   stockSyncStore,
-} from '../services/data/mock/stores/inventoryHubStores';
-import { sdcClock } from '../services/sdc';
-import { reasonCodeStore } from '../services/transitions/reasonCodes';
-import { STOCK_TEMPLATE_FIELDS, type StockTemplateField } from '../services/transitions/inventoryRules';
+} from '@services/data/mock/stores/inventoryHubStores';
+import { sdcClock } from '@services/sdc';
+import { reasonCodeStore } from '@services/transitions/reasonCodes';
+import { STOCK_TEMPLATE_FIELDS, type StockTemplateField } from '@services/transitions/inventoryRules';
 import BuyerInventory from './BuyerInventory';
 import SupplierInventory from './SupplierInventory';
 import BuyerSupplierAccess from './BuyerSupplierAccess';
 import SupplierCapacity from './SupplierCapacity';
 import BuyerCapacity from './BuyerCapacity';
 import BuyerAlerts from './BuyerAlerts';
-import { allCapacityPlans } from '../services/data/mock/inventoryReadModel';
-import { ltpCapacityLevel, planStatus } from '../services/transitions/capacityRules';
+import { allCapacityPlans } from '@services/data/mock/inventoryReadModel';
+import { ltpCapacityLevel, planStatus } from '@services/transitions/capacityRules';
 import BuyerHome from './BuyerHome';
 import SupplierHome from './SupplierHome';
 

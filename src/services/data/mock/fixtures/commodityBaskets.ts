@@ -25,7 +25,7 @@ import type {
   Material,
   RootBenchmark,
   FxRate,
-} from '../../../../lib/shouldCost';
+} from '@lib/shouldCost';
 
 // ─── Root benchmarks (SIMULATED USD/kg) ───────────────────────────────────────
 // The public commodities that drive RM/PM cost. Values + as-of dates are SIMULATED

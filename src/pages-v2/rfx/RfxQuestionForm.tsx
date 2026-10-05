@@ -10,10 +10,10 @@
 
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import SessionAttachments from '../../components/ui-v2/SessionAttachments';
-import { rfxSectionsOf } from '../../services/sourcing/rfxConfig';
-import { answerRefusal } from '../../services/transitions/rfxRules';
-import type { RfiAnswer, RfiQuestion, RfxCustomSection } from '../../services/sourcing/types';
+import SessionAttachments from '@components/ui-v2/SessionAttachments';
+import { rfxSectionsOf } from '@services/sourcing/rfxConfig';
+import { answerRefusal } from '@services/transitions/rfxRules';
+import type { RfiAnswer, RfiQuestion, RfxCustomSection } from '@services/sourcing/types';
 import { IndicativePill, authored, optionLabel, sectionTitle } from './rfxAuthoringDisplay';
 
 interface RfxQuestionFormProps {

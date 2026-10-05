@@ -11,7 +11,7 @@
 import { describe, expect, it } from 'vitest';
 import type { ASN, CallOff, PurchaseOrder } from './types';
 import { ChannelType, POStatus } from './types';
-import type { GoodsReceipt } from '../../data/mockGoodsReceipts';
+import type { GoodsReceipt } from '@data/mockGoodsReceipts';
 import { callOffViews } from '../transitions/callOffRules';
 import {
   GRADE_BANDS,

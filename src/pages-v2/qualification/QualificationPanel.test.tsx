@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { screen, fireEvent, within } from '@testing-library/react';
 import { Routes, Route } from 'react-router-dom';
-import { renderWithProviders, SUPPLIER } from '../../test/test-utils';
-import type { CurrentIdentity } from '../../context/CurrentIdentityContext';
-import { PERSONA_SYSTEM_ROLES } from '../../services/transitions/businessRoles';
-import { NO_PERSON } from '../../context/noPerson';
-import { qualificationRuleStore } from '../../services/transitions/qualificationRuleStore';
-import { supplierDocumentStore } from '../../services/data/mock/stores/supplierDocumentStore';
+import { renderWithProviders, SUPPLIER } from '@test/test-utils';
+import type { CurrentIdentity } from '@context/CurrentIdentityContext';
+import { PERSONA_SYSTEM_ROLES } from '@services/transitions/businessRoles';
+import { NO_PERSON } from '@context/noPerson';
+import { qualificationRuleStore } from '@services/transitions/qualificationRuleStore';
+import { supplierDocumentStore } from '@services/data/mock/stores/supplierDocumentStore';
 import SupplierDocuments from '../SupplierDocuments';
 import BuyerSupplierProfile from '../BuyerSupplierProfile';
 

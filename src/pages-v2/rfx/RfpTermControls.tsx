@@ -18,15 +18,15 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
-import Button from '../../components/ui-v2/Button';
-import StatusPill from '../../components/ui-v2/StatusPill';
+import Button from '@components/ui-v2/Button';
+import StatusPill from '@components/ui-v2/StatusPill';
 import {
   RFP_TERM_GROUP_ORDER,
   RFP_TERM_VALUE_KINDS,
   rfpTermKindOf,
-} from '../../services/sourcing/rfxConfig';
-import { rfpTermsRefusal } from '../../services/transitions/rfxRules';
-import type { RfpTermGroup, RfpTermRow, RfpTermValueKind } from '../../services/sourcing/types';
+} from '@services/sourcing/rfxConfig';
+import { rfpTermsRefusal } from '@services/transitions/rfxRules';
+import type { RfpTermGroup, RfpTermRow, RfpTermValueKind } from '@services/sourcing/types';
 import { refusalCode } from './RfxQuestionEditor';
 import { termUnit } from './rfxAuthoringDisplay';
 
@@ -88,18 +88,33 @@ interface NewTerm {
   group: RfpTermGroup;
   valueKind: RfpTermValueKind;
   unit: string;
-  options: string[];
+  options: OptionRow[];
   requestedValue: string;
 }
 
-const BLANK: NewTerm = {
+/**
+ * One row of the option editor. `id` is the row's React key, given once when
+ * the row is created: options are added and removed and hold an input, and two
+ * labels can be equal (or both blank), so neither the label nor the position
+ * identifies a row. The id never leaves the editor.
+ */
+interface OptionRow {
+  id: number;
+  label: string;
+}
+
+let nextOptionRowId = 0;
+const optionRow = (): OptionRow => ({ id: nextOptionRowId++, label: '' });
+
+// A function, not a constant, so every fresh draft gets fresh option ids.
+const blankTerm = (): NewTerm => ({
   label: '',
   group: 'other',
   valueKind: 'text',
   unit: '',
-  options: ['', ''],
+  options: [optionRow(), optionRow()],
   requestedValue: '',
-};
+});
 
 /** The custom-term editor: the terms the buyer writes for this RFP alone. */
 export const CustomTermEditor: React.FC<{
@@ -107,7 +122,7 @@ export const CustomTermEditor: React.FC<{
   onChange: (next: readonly RfpTermRow[]) => void;
 }> = ({ terms, onChange }) => {
   const { t } = useTranslation();
-  const [draft, setDraft] = useState<NewTerm>(BLANK);
+  const [draft, setDraft] = useState<NewTerm>(blankTerm);
 
   const freshId = (): string => {
     let n = terms.length + 1;
@@ -122,7 +137,7 @@ export const CustomTermEditor: React.FC<{
     valueKind: draft.valueKind,
     requestedValue: draft.requestedValue.trim(),
     ...(draft.valueKind === 'numberWithUnit' && draft.unit.trim() ? { unit: draft.unit.trim() } : {}),
-    ...(draft.valueKind === 'choice' ? { options: draft.options.map((o) => o.trim()) } : {}),
+    ...(draft.valueKind === 'choice' ? { options: draft.options.map((o) => o.label.trim()) } : {}),
   });
 
   const started = draft.label.trim().length > 0;
@@ -131,7 +146,7 @@ export const CustomTermEditor: React.FC<{
   const add = () => {
     if (!started || refusal) return;
     onChange([...terms, candidate()]);
-    setDraft(BLANK);
+    setDraft(blankTerm());
   };
 
   const inputClass =
@@ -247,8 +262,8 @@ export const CustomTermEditor: React.FC<{
       {draft.valueKind === 'choice' && (
         <fieldset className="space-y-2" data-testid="rfp-new-custom-options">
           <legend className={labelClass}>{t('rfxa.q.options')}</legend>
-          {draft.options.map((label, i) => (
-            <div key={i} className="flex items-center gap-2">
+          {draft.options.map(({ id, label }, i) => (
+            <div key={id} className="flex items-center gap-2">
               <input
                 value={label}
                 aria-label={t('rfxa.q.option', { n: i + 1 })}
@@ -256,8 +271,8 @@ export const CustomTermEditor: React.FC<{
                 onChange={(e) =>
                   setDraft((d) => ({
                     ...d,
-                    options: d.options.map((o, j) => (j === i ? e.target.value : o)),
-                    requestedValue: d.requestedValue === d.options[i] ? '' : d.requestedValue,
+                    options: d.options.map((o, j) => (j === i ? { ...o, label: e.target.value } : o)),
+                    requestedValue: d.requestedValue === d.options[i].label ? '' : d.requestedValue,
                   }))
                 }
                 className={inputClass}
@@ -274,7 +289,7 @@ export const CustomTermEditor: React.FC<{
           ))}
           <Button
             variant="secondary"
-            onClick={() => setDraft((d) => ({ ...d, options: [...d.options, ''] }))}
+            onClick={() => setDraft((d) => ({ ...d, options: [...d.options, optionRow()] }))}
             data-testid="rfp-new-custom-option-add"
           >
             {t('rfxa.q.option.add')}
@@ -290,7 +305,7 @@ export const CustomTermEditor: React.FC<{
             requestedValue: '',
             valueKind: draft.valueKind,
             unit: draft.unit,
-            options: draft.options.map((o) => o.trim()).filter((o) => o.length > 0),
+            options: draft.options.map((o) => o.label.trim()).filter((o) => o.length > 0),
           }}
           value={draft.requestedValue}
           onChange={(v) => setDraft((d) => ({ ...d, requestedValue: v }))}

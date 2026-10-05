@@ -1,8 +1,8 @@
 import { screen, fireEvent, waitFor } from '@testing-library/react';
-import { renderWithProviders, SUPPLIER } from '../test/test-utils';
-import { mockDataService } from '../services/data/mock/mockDataService';
-import { withChaos } from '../services/data/mock/withChaos';
-import { purchaseRequisitionStore } from '../services/data/mock/stores/purchaseRequisitionStore';
+import { renderWithProviders, SUPPLIER } from '@test/test-utils';
+import { mockDataService } from '@services/data/mock/mockDataService';
+import { withChaos } from '@services/data/mock/withChaos';
+import { purchaseRequisitionStore } from '@services/data/mock/stores/purchaseRequisitionStore';
 import BuyerRequisitions from './BuyerRequisitions';
 
 // ⚠️ §67 — THE NEW-PR COMMIT IS NOW 'Create requisition', NOT 'Submit for

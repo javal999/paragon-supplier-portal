@@ -1,7 +1,7 @@
 import React from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { screen, fireEvent, waitFor } from '@testing-library/react';
-import { renderWithProviders, SUPPLIER } from '../../test/test-utils';
+import { renderWithProviders, SUPPLIER } from '@test/test-utils';
 import { schedulingAgreementStore } from '../delivery/stores/schedulingAgreementStore';
 import { useDeliveryAgreements, useReleaseLines } from './deliveryHooks';
 

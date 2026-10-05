@@ -1,12 +1,12 @@
 import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
-import Data from '../../components/ui-v2/Data';
-import LivenessPill from '../../components/ui-v2/LivenessPill';
-import { useMyMrpController } from '../../components/layout-v2/mrpControllerSeat';
-import type { MrpControllerRef } from '../../services/data/types';
-import { PIC_FILTER_MINE, mrpControllerRef, picFilterMatches, picKeyOf } from '../../services/transitions/mrpControllerStore';
-import { materialEntry } from '../../services/sdc/materialMaster';
+import Data from '@components/ui-v2/Data';
+import LivenessPill from '@components/ui-v2/LivenessPill';
+import { useMyMrpController } from '@components/layout-v2/mrpControllerSeat';
+import type { MrpControllerRef } from '@services/data/types';
+import { PIC_FILTER_MINE, mrpControllerRef, picFilterMatches, picKeyOf } from '@services/transitions/mrpControllerStore';
+import { materialEntry } from '@services/sdc/materialMaster';
 
 /**
  * The PIC of a material for a PTI page that lists something other than a

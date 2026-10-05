@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import Data from '../../components/ui-v2/Data';
-import Button from '../../components/ui-v2/Button';
+import Data from '@components/ui-v2/Data';
+import Button from '@components/ui-v2/Button';
 import PlanCellMarker from './PlanCellMarker';
-import { usePurchaseRequisitionCreate } from '../../services/query/commandHooks';
-import { HandoffNotice } from '../../components/ui-v2/HandoffNotice';
-import { useVerbAvailability } from '../../hooks/useVerbAvailability';
-import { DataError } from '../../services/data/types';
-import { formatNumber } from '../../lib/format';
-import { normalizeQty, type QtyRefusalReason } from '../../lib/localeNumber';
+import { usePurchaseRequisitionCreate } from '@services/query/commandHooks';
+import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
+import { useVerbAvailability } from '@hooks/useVerbAvailability';
+import { DataError } from '@services/data/types';
+import { formatNumber } from '@lib/format';
+import { normalizeQty, type QtyRefusalReason } from '@lib/localeNumber';
 import {
   isQtyAdjusted,
   overrideBlocked,
@@ -20,8 +20,8 @@ import {
   type PushRowState,
 } from './planGridModel';
 // GL-1 - the glossary destination for this surface's refusals.
-import GlossaryTermChip from '../../components/ui-v2/GlossaryTermChip';
-import { useRefusalText } from '../../hooks/useRefusalText';
+import GlossaryTermChip from '@components/ui-v2/GlossaryTermChip';
+import { useRefusalText } from '@hooks/useRefusalText';
 
 // ────────────────────────────────────────────────────────────────────────────
 // IntakeAdjustDrawer (Stage G · G1.3.2) — the working-set override surface, in

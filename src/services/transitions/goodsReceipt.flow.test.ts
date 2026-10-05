@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 
 import { getFlow, getTransition } from './index';
 import { deriveLineState, deriveHeaderDisposition, headerVerbFor } from './grRollup';
-import type { InspectionResult } from '../../data/mockGoodsReceipts';
+import type { InspectionResult } from '@data/mockGoodsReceipts';
 
 // A minimal inspection line: qtyAccepted / qtyRejected + optional check overrides.
 const line = (

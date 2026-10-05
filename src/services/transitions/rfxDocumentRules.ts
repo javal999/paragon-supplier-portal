@@ -18,8 +18,8 @@ import type { AttachmentMeta } from '../attachments/sessionAttachments';
 import { isAttachmentMeta } from '../attachments/sessionAttachments';
 import { fileLimitRefusal } from '../attachments/fileRules';
 import { DOCUMENT_TYPES, type DocumentRequest, type ResponseDocument } from '../sourcing/types';
-import { isCalendarDate } from '../../lib/workingCalendar';
-import type { ActorAttribution } from '../../lib/enforcement';
+import { isCalendarDate } from '@lib/workingCalendar';
+import type { ActorAttribution } from '@lib/enforcement';
 
 // ── Authoring ───────────────────────────────────────────────────────────────
 

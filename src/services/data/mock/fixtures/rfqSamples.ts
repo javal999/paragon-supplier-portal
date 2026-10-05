@@ -22,8 +22,8 @@
 // ────────────────────────────────────────────────────────────────────────────
 
 import { DECLARED_PRESENT } from '../../fixturePresent';
-import type { RFQ } from '../../../../data/mockRfqs';
-import type { Quotation } from '../../../../data/mockQuotations';
+import type { RFQ } from '@data/mockRfqs';
+import type { Quotation } from '@data/mockQuotations';
 import type { AwardLine, AwardRecord, RfiQuestion } from '../../../sourcing/types';
 import {
   deriveQuoteHeader,

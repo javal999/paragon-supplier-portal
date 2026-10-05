@@ -14,7 +14,7 @@
 import { bindPolicyHook, POLICY_HOOKS, type CommandTarget } from '../../../transitions';
 import { simulationOverrideRefusal } from '../../../transitions/simulateSupplierStock';
 import { materialEntry, sdcClock } from '../../../sdc';
-import { NO_PERSON } from '../../../../context/noPerson';
+import { NO_PERSON } from '@context/noPerson';
 import type { SimulationOverrideField } from '../../types';
 import { simulationOverrideStore } from '../stores/simulationOverrideStore';
 import { supplierEntry } from '../supplierMaster';

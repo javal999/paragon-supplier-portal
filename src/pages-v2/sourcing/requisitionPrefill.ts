@@ -21,9 +21,9 @@
 // wizard advance until they do.
 // ────────────────────────────────────────────────────────────────────────────
 
-import type { PurchaseRequisition, PRStatus } from '../../services/data/types';
-import type { RFQCategory } from '../../data/mockRfqs';
-import { getKnownFlows } from '../../services/transitions';
+import type { PurchaseRequisition, PRStatus } from '@services/data/types';
+import type { RFQCategory } from '@data/mockRfqs';
+import { getKnownFlows } from '@services/transitions';
 
 /** The requisition state a raised sourcing event lands the document in. */
 export const SOURCING_EVENT_STATE = 'Sourcing Event';

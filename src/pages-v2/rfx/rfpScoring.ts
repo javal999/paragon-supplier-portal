@@ -13,10 +13,10 @@
 // engine was rebuilt to remove.
 // ────────────────────────────────────────────────────────────────────────────
 
-import { scoreQuotations, type ScoringOutcome } from '../../lib/quoteScore';
-import { rfpTerm } from '../../services/sourcing/rfxConfig';
-import { reliabilityScoreFor } from '../../services/transitions/rfxRules';
-import type { RfpEventView } from '../../services/sourcing/views';
+import { scoreQuotations, type ScoringOutcome } from '@lib/quoteScore';
+import { rfpTerm } from '@services/sourcing/rfxConfig';
+import { reliabilityScoreFor } from '@services/transitions/rfxRules';
+import type { RfpEventView } from '@services/sourcing/views';
 
 export function rfpScoringOf(event: RfpEventView): ScoringOutcome | null {
   const priceTerm = event.terms.find((row) => rfpTerm(row.termId)?.scorable === 'price');

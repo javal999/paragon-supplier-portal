@@ -1,6 +1,6 @@
 import { screen, fireEvent, within } from '@testing-library/react';
 import { Route, Routes, useLocation } from 'react-router-dom';
-import { renderWithProviders, SUPPLIER } from '../../test/test-utils';
+import { renderWithProviders, SUPPLIER } from '@test/test-utils';
 import SidebarV2 from './SidebarV2';
 import AppShellV2 from './AppShellV2';
 import { setHubRole } from './hubRole';

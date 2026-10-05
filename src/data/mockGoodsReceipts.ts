@@ -1,4 +1,4 @@
-import { shiftFields } from '../services/data/fixturePresent';
+import { shiftFields } from '@services/data/fixturePresent';
 
 export type GRStatus =
   | 'Pending Inspection'

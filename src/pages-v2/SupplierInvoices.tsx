@@ -14,8 +14,8 @@ import {
   Globe,
   LucideIcon,
 } from 'lucide-react';
-import AppShellV2 from '../components/layout-v2/AppShellV2';
-import PageHeader from '../components/ui-v2/PageHeader';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import PageHeader from '@components/ui-v2/PageHeader';
 import {
   OrderNotFound,
   PoFilterBanner,
@@ -23,45 +23,45 @@ import {
   usePoDrillFilter,
 } from './orders/PoDrillFilter';
 import { invoicePoNumbers, invoicesForPo } from './orders/orderSummaryModel';
-import SapDataAgeBanner from '../components/ui-v2/SapDataAgeBanner';
-import PageMetaLine from '../components/ui-v2/PageMetaLine';
-import ProvenanceMarker from '../components/ui-v2/ProvenanceMarker';
-import KpiCard from '../components/ui-v2/KpiCard';
-import BulkActionsBar from '../components/ui-v2/BulkActionsBar';
-import StatusPill from '../components/ui-v2/StatusPill';
-import Table from '../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../components/ui-v2/TableHeader';
-import TableRow from '../components/ui-v2/TableRow';
-import TableCell from '../components/ui-v2/TableCell';
-import Button from '../components/ui-v2/Button';
-import SidePanel from '../components/ui-v2/SidePanel';
-import Timeline, { TimelineEvent } from '../components/ui-v2/Timeline';
-import Data from '../components/ui-v2/Data';
-import { useToast } from '../hooks/useToast';
-import { useCurrentIdentity } from '../context/CurrentIdentityContext';
-import NoSupplierIdentity from '../components/ui-v2/NoSupplierIdentity';
-import LoadingState from '../components/ui-v2/LoadingState';
-import ErrorState from '../components/ui-v2/ErrorState';
-import EmptyState from '../components/ui-v2/EmptyState';
+import SapDataAgeBanner from '@components/ui-v2/SapDataAgeBanner';
+import PageMetaLine from '@components/ui-v2/PageMetaLine';
+import ProvenanceMarker from '@components/ui-v2/ProvenanceMarker';
+import KpiCard from '@components/ui-v2/KpiCard';
+import BulkActionsBar from '@components/ui-v2/BulkActionsBar';
+import StatusPill from '@components/ui-v2/StatusPill';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
+import Button from '@components/ui-v2/Button';
+import SidePanel from '@components/ui-v2/SidePanel';
+import Timeline, { TimelineEvent } from '@components/ui-v2/Timeline';
+import Data from '@components/ui-v2/Data';
+import { useToast } from '@hooks/useToast';
+import { useCurrentIdentity } from '@context/CurrentIdentityContext';
+import NoSupplierIdentity from '@components/ui-v2/NoSupplierIdentity';
+import LoadingState from '@components/ui-v2/LoadingState';
+import ErrorState from '@components/ui-v2/ErrorState';
+import EmptyState from '@components/ui-v2/EmptyState';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import type {
   InvoiceLine,
   SupplierInvoice,
   SupplierInvoiceStage,
-} from '../services/data/types';
+} from '@services/data/types';
 import {
   useSupplierInvoices,
   useCurrentSupplier,
   useGoodsReceipts,
   usePurchaseOrders,
-} from '../services/query/hooks';
+} from '@services/query/hooks';
 import {
   useInvoiceCreate,
   useInvoiceResubmit,
   useInvoiceSubmit,
-} from '../services/query/commandHooks';
-import { invoicePriceTolerance } from '../services/transitions/fulfilmentConfig';
+} from '@services/query/commandHooks';
+import { invoicePriceTolerance } from '@services/transitions/fulfilmentConfig';
 import {
   INVOICEABLE_PO_STATES,
   INVOICEABLE_RECEIPT_STATES,
@@ -69,9 +69,9 @@ import {
   isDuplicateInvoiceNumber,
   prefillInvoiceLines,
   remainingInvoiceableQty,
-} from '../services/transitions/fulfilmentRules';
-import { statusLabelKey } from '../lib/statusLabel';
-import { statusTone } from '../lib/statusTone';
+} from '@services/transitions/fulfilmentRules';
+import { statusLabelKey } from '@lib/statusLabel';
+import { statusTone } from '@lib/statusTone';
 import {
   InvoiceLinesSection,
   MatchPill,
@@ -79,14 +79,14 @@ import {
   fmtIdr,
   readQty,
 } from './invoices/InvoiceCollaboration';
-import { useVerbAvailability, useNextAct } from '../hooks/useVerbAvailability';
-import NextActLine from '../components/ui-v2/NextActLine';
-import { HandoffNotice } from '../components/ui-v2/HandoffNotice';
-import type { QtyRefusalReason } from '../lib/localeNumber';
+import { useVerbAvailability, useNextAct } from '@hooks/useVerbAvailability';
+import NextActLine from '@components/ui-v2/NextActLine';
+import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
+import type { QtyRefusalReason } from '@lib/localeNumber';
 import { readInvoiceAmount } from './invoices/invoiceAmountModel';
 // GL-1 - the glossary destination for this surface's refusals.
-import GlossaryTermChip from '../components/ui-v2/GlossaryTermChip';
-import { useRefusalText } from '../hooks/useRefusalText';
+import GlossaryTermChip from '@components/ui-v2/GlossaryTermChip';
+import { useRefusalText } from '@hooks/useRefusalText';
 
 // CP-0 · W1 · 2f-d — each refusal names what to type instead. Replaces a
 // hard-coded English literal ('PO and a positive amount are required') that

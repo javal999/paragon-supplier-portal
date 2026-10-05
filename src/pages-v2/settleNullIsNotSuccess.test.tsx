@@ -25,18 +25,18 @@ import fs from 'node:fs';
 import path from 'node:path';
 import React from 'react';
 import { screen, fireEvent, waitFor } from '@testing-library/react';
-import { renderWithProviders } from '../test/test-utils';
-import { useToast } from '../hooks/useToast';
-import { mockDataService } from '../services/data/mock/mockDataService';
-import { invoiceStore } from '../services/data/mock/stores/invoiceStore';
-import { goodsReceiptStore } from '../services/data/mock/stores/goodsReceiptStore';
-import { usePinnedDemoClock } from '../test/demoClock';
-import { DataError, type IDataService } from '../services/data/types';
+import { renderWithProviders } from '@test/test-utils';
+import { useToast } from '@hooks/useToast';
+import { mockDataService } from '@services/data/mock/mockDataService';
+import { invoiceStore } from '@services/data/mock/stores/invoiceStore';
+import { goodsReceiptStore } from '@services/data/mock/stores/goodsReceiptStore';
+import { usePinnedDemoClock } from '@test/demoClock';
+import { DataError, type IDataService } from '@services/data/types';
 import BuyerInvoices from './BuyerInvoices';
 import BuyerGoodsReceipt from './BuyerGoodsReceipt';
-import { useGoodsReceiptSettle } from '../services/query/commandHooks';
-import { BUYER } from '../test/test-utils';
-import type { QueryScope } from '../services/data/types';
+import { useGoodsReceiptSettle } from '@services/query/commandHooks';
+import { BUYER } from '@test/test-utils';
+import type { QueryScope } from '@services/data/types';
 
 /** The seat `renderWithProviders` renders under, as a command scope — the
  *  driver must settle under the SAME tenancy that issued, or the known-good

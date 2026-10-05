@@ -36,7 +36,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { MOCK_ASNS } from './supplierShipments';
-import { mockPurchaseOrders } from '../../../../data/mockPurchaseOrders';
+import { mockPurchaseOrders } from '@data/mockPurchaseOrders';
 import { POStatus } from '../../types';
 import { MATERIAL_MASTER } from '../../../sdc';
 import { axis, unresolved } from '../../../testing/referentialIntegrity';

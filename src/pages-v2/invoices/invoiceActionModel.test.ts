@@ -14,14 +14,14 @@
 // CLEAN-01`). The population guard is the FIRST test and asserts MEMBERSHIP.
 // ─────────────────────────────────────────────────────────────────────────────
 import { describe, it, expect } from 'vitest';
-import { getFlow, userVerbsFrom } from '../../services/transitions';
+import { getFlow, userVerbsFrom } from '@services/transitions';
 import {
   INVOICE_VERB_SURFACE,
   INVOICE_VERB_DEFERRED,
   invoiceActionsFor,
   invoiceCommitAction,
 } from './invoiceActionModel';
-import type { InvoiceStatus } from '../../services/data/types';
+import type { InvoiceStatus } from '@services/data/types';
 
 /** Every user verb the invoice machine declares — DERIVED, never listed. */
 const declaredUserVerbs = (): readonly string[] =>

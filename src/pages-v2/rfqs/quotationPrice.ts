@@ -30,7 +30,7 @@
 // have hidden from a jsdom test.
 // ────────────────────────────────────────────────────────────────────────────
 
-import { normalizeQty, type QtyRefusalReason } from '../../lib/localeNumber';
+import { normalizeQty, type QtyRefusalReason } from '@lib/localeNumber';
 
 /**
  * Why a bid price was refused. Extends the parser's own vocabulary with the one

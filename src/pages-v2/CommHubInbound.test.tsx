@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { screen, waitFor, within, fireEvent } from '@testing-library/react';
-import { renderWithProviders, SUPPLIER } from '../test/test-utils';
+import { renderWithProviders, SUPPLIER } from '@test/test-utils';
 import CommHubInbound from './CommHubInbound';
-import { inventoryDeclarationStore } from '../services/data/mock/stores/inventoryDeclarationStore';
-import { commandAuditSink } from '../services/data/mock/MockCommandService';
-import { channelProvenanceStore } from '../services/channel/provenanceStore';
-import { outboundRequestStore } from '../services/channel';
-import i18n from '../lib/i18n';
+import { inventoryDeclarationStore } from '@services/data/mock/stores/inventoryDeclarationStore';
+import { commandAuditSink } from '@services/data/mock/MockCommandService';
+import { channelProvenanceStore } from '@services/channel/provenanceStore';
+import { outboundRequestStore } from '@services/channel';
+import i18n from '@lib/i18n';
 
 // ────────────────────────────────────────────────────────────────────────────
 // Comm Hub C2 — the inbound triage surface. The honesty crux: a parsed reply is

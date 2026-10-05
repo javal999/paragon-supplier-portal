@@ -10,7 +10,7 @@
 // ────────────────────────────────────────────────────────────────────────────
 
 import { beforeEach, describe, expect, it } from 'vitest';
-import { everyVendorQualified } from '../../../test/everyVendorQualified';
+import { everyVendorQualified } from '@test/everyVendorQualified';
 import { MockCommandService } from './MockCommandService';
 import { awardStore, resetRfxStores } from './stores/rfxStores';
 import { rfqStore } from './stores/rfqStore';
@@ -19,10 +19,10 @@ import { bestScoredByItem, bestScoredQuotationId, rfqScoring, rfxNow, scorableQu
 import { RFQ_SAMPLE_AWARD_SEED } from './fixtures/rfqSamples';
 import { sdcClock } from '../../sdc';
 import { PERSONA_SYSTEM_ROLES } from '../../transitions/businessRoles';
-import { NO_PERSON } from '../../../context/noPerson';
+import { NO_PERSON } from '@context/noPerson';
 import type { QueryScope } from '../types';
 import type { AwardLine } from '../../sourcing/types';
-import { scoreQuotations } from '../../../lib/quoteScore';
+import { scoreQuotations } from '@lib/quoteScore';
 import {
   awardQuantity,
   bestPriceByBreak,

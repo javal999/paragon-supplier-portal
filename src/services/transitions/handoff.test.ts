@@ -8,7 +8,7 @@ import {
 } from './handoff';
 import { SYSTEM_ROLES, AUTOMATION_ROLE, type SystemRoleId } from './businessRoles';
 import { getTransition } from './registry';
-import { rolesEn, rolesId } from '../../lib/i18n/roles';
+import { rolesEn, rolesId } from '@lib/i18n/roles';
 
 describe('POPULATION GUARD', () => {
   it('the catalog is loaded and the verbs under test exist', () => {

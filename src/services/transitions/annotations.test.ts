@@ -7,8 +7,8 @@ import {
   entityPurposeKey,
   transitionPurposeKey,
 } from './annotations';
-import { processFlowPurposeEn, processFlowPurposeId } from '../../lib/i18n/processFlowPurpose';
-import { resources } from '../../lib/i18n';
+import { processFlowPurposeEn, processFlowPurposeId } from '@lib/i18n/processFlowPurpose';
+import { resources } from '@lib/i18n';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PF-2 · THE BILATERAL PIN — the point of the batch, not the prose.

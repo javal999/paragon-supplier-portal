@@ -18,7 +18,7 @@
 //   · Held in memory like every other record in the prototype: lost on reload.
 // ────────────────────────────────────────────────────────────────────────────
 
-import { asActorAttribution, type ActorAttribution } from '../../lib/enforcement';
+import { asActorAttribution, type ActorAttribution } from '@lib/enforcement';
 
 /** One change as recorded. */
 export interface MaxStockChange {

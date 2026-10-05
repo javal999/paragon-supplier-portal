@@ -17,7 +17,7 @@ import { quotationStore } from './stores/quotationStore';
 import { awardViews } from './rfxReadModel';
 import { sdcClock } from '../../sdc';
 import { PERSONA_SYSTEM_ROLES } from '../../transitions/businessRoles';
-import { NO_PERSON } from '../../../context/noPerson';
+import { NO_PERSON } from '@context/noPerson';
 import type { QueryScope } from '../types';
 import type { AwardLine } from '../../sourcing/types';
 

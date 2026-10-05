@@ -1,34 +1,34 @@
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import AppShellV2 from '../components/layout-v2/AppShellV2';
-import PageHeader from '../components/ui-v2/PageHeader';
-import PageMetaLine from '../components/ui-v2/PageMetaLine';
-import LivenessPill from '../components/ui-v2/LivenessPill';
-import FilterChipsBar from '../components/ui-v2/FilterChipsBar';
-import KpiCard from '../components/ui-v2/KpiCard';
-import StatusPill from '../components/ui-v2/StatusPill';
-import Table from '../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../components/ui-v2/TableHeader';
-import TableRow from '../components/ui-v2/TableRow';
-import TableCell from '../components/ui-v2/TableCell';
-import Data from '../components/ui-v2/Data';
-import Button from '../components/ui-v2/Button';
-import LoadingState from '../components/ui-v2/LoadingState';
-import ErrorState from '../components/ui-v2/ErrorState';
-import { HandoffNotice } from '../components/ui-v2/HandoffNotice';
-import { useToast } from '../hooks/useToast';
-import { useRefusalText } from '../hooks/useRefusalText';
-import { useVerbAvailability } from '../hooks/useVerbAvailability';
-import { formatDate, formatNumber } from '../lib/format';
-import { useStabilisedPlan } from '../services/query/hooks';
-import { useForecastCommand } from '../services/query/commandHooks';
-import type { StabiliseRunView, StabilisedSeriesView } from '../services/data/types';
-import { STABILISE_RULES, type PeriodResult, type StabiliseRule } from '../services/engine/stabilise';
-import { isoWeek } from '../services/engine/dates';
-import { isLive } from '../services/liveness';
-import { POLICY_HOOKS } from '../services/transitions/policyHooks';
-import { refusedByPolicy } from '../services/transitions/refusalMessage';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import PageHeader from '@components/ui-v2/PageHeader';
+import PageMetaLine from '@components/ui-v2/PageMetaLine';
+import LivenessPill from '@components/ui-v2/LivenessPill';
+import FilterChipsBar from '@components/ui-v2/FilterChipsBar';
+import KpiCard from '@components/ui-v2/KpiCard';
+import StatusPill from '@components/ui-v2/StatusPill';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
+import Data from '@components/ui-v2/Data';
+import Button from '@components/ui-v2/Button';
+import LoadingState from '@components/ui-v2/LoadingState';
+import ErrorState from '@components/ui-v2/ErrorState';
+import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
+import { useToast } from '@hooks/useToast';
+import { useRefusalText } from '@hooks/useRefusalText';
+import { useVerbAvailability } from '@hooks/useVerbAvailability';
+import { formatDate, formatNumber } from '@lib/format';
+import { useForecastVersions, useStabilisedPlan } from '@services/query/hooks';
+import { useForecastCommand } from '@services/query/commandHooks';
+import type { ForecastVersionView, StabiliseRunView, StabilisedSeriesView } from '@services/data/types';
+import { STABILISE_RULES, type PeriodResult, type StabiliseRule } from '@services/engine/stabilise';
+import { isoWeek } from '@services/engine/dates';
+import { isLive } from '@services/liveness';
+import { POLICY_HOOKS } from '@services/transitions/policyHooks';
+import { refusedByPolicy } from '@services/transitions/refusalMessage';
 import { qtyOf } from './materialPlan/planDisplay';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -52,6 +52,12 @@ import { qtyOf } from './materialPlan/planDisplay';
 // (X-03) — the page says so in place of the act — and, once live, until SOMO
 // ratifies C8 §8 (ENG-B35). Every figure is computed by the engine at read
 // time on its SYNTHETIC dataset (the `engineDataset` pill).
+//
+// FUX-D1 (2026-10-05): this is the only publish point — the SAP-plan
+// re-publish on Forecasts is removed. Above the act the page shows the last
+// published version per stream, read from the published versions. The version
+// record carries no source (SAP plan or engine) and no next-due date, so the
+// line shows neither rather than infer them.
 // ─────────────────────────────────────────────────────────────────────────────
 
 type Source = 'engine' | 'sapHistory';
@@ -195,19 +201,13 @@ const RunSection: React.FC<{ run: StabiliseRunView; source: Source }> = ({ run, 
         <KpiCard
           eyebrow={t('stb.kpi.band')}
           value={
-            <span>
-              <span data-testid="stb-kpi-band-raw">{pctShare(raw.tradeOff.share)}</span> →{' '}
-              <span data-testid="stb-kpi-band-stab">{pctShare(stabilised.tradeOff.share)}</span>
+            <span data-testid="stb-kpi-band-stab">
+              {t('stb.kpi.band.value', { n: stabilised.tradeOff.withinBand, m: stabilised.tradeOff.revisions })}
             </span>
           }
           subtitle={
-            <span className="text-text-tertiary">
-              {t('stb.kpi.band.sub', {
-                raw: raw.tradeOff.withinBand,
-                rawCount: raw.tradeOff.revisions,
-                stab: stabilised.tradeOff.withinBand,
-                stabCount: stabilised.tradeOff.revisions,
-              })}
+            <span className="text-text-tertiary" data-testid="stb-kpi-band-raw">
+              {t('stb.kpi.band.sub', { n: raw.tradeOff.withinBand, m: raw.tradeOff.revisions })}
             </span>
           }
         />
@@ -339,6 +339,7 @@ const BuyerStabilise: React.FC = () => {
   const query = useStabilisedPlan();
   const forecastCommand = useForecastCommand();
   const publishAvailability = useVerbAvailability('forecast:publish');
+  const versionsQuery = useForecastVersions();
   const [source, setSource] = useState<Source>('engine');
   const crumb = [t('hub.nav.section.forecast'), t('stb.title')];
   // X-03 — the registry's own answer, read at render; the verb reads it again.
@@ -366,6 +367,10 @@ const BuyerStabilise: React.FC = () => {
   };
 
   const run = plan ? plan[source] : null;
+  // FUX-D1 · F-13 — the current published version of each stream.
+  const lastPublished = (['packaging', 'rawMaterial'] as const)
+    .map((stream) => (versionsQuery.data?.items ?? []).find((v) => v.stream === stream && v.isCurrent))
+    .filter((v): v is ForecastVersionView => v !== undefined);
   const pv = plan?.versions;
 
   return (
@@ -452,6 +457,20 @@ const BuyerStabilise: React.FC = () => {
       <section className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-6" data-testid="stb-publish">
         <h2 className="text-section text-text-primary mb-1">{t('stb.publish.title')}</h2>
         <p className="text-xs text-text-tertiary mb-3">{t('stb.publish.intro')}</p>
+        <ul className="text-sm text-text-secondary mb-2 space-y-1" data-testid="stb-last-published">
+          {lastPublished.map((v) => (
+            <li key={v.publicationId} data-testid={`stb-last-published-${v.stream}`}>
+              {t('stb.publish.last', { stream: t(`fc.stream.${v.stream}`) })}{' '}
+              <Data>{t('fc.version', { version: v.version })}</Data>, <Data>{formatDate(v.publishedAt)}</Data>
+            </li>
+          ))}
+          {versionsQuery.isSuccess && lastPublished.length === 0 && <li>{t('stb.publish.lastNone')}</li>}
+        </ul>
+        <p className="text-sm mb-3">
+          <Link to="/buyer/forecasts" className="text-action-hover hover:underline" data-testid="stb-versions-link">
+            {t('stb.publish.versionsLink')}
+          </Link>
+        </p>
         {publishAvailability.kind !== 'held' ? (
           <HandoffNotice availability={publishAvailability} testId="handoff-stabilise-publish" />
         ) : withheld ? (

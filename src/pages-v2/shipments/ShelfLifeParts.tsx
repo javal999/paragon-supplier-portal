@@ -9,15 +9,15 @@
 
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import Data from '../../components/ui-v2/Data';
-import { formatDate, formatDateTime, formatNumber } from '../../lib/format';
+import Data from '@components/ui-v2/Data';
+import { formatDate, formatDateTime, formatNumber } from '@lib/format';
 import {
   approvedShelfLifeLines,
   shelfLifeExceptionOf,
   type AsnLineRefusal,
   type ShelfLifeLineView,
-} from '../../services/transitions/fulfilmentRules';
-import type { ASN, AsnShelfLifeEvent } from '../../services/data/types';
+} from '@services/transitions/fulfilmentRules';
+import type { ASN, AsnShelfLifeEvent } from '@services/data/types';
 
 const textareaClass =
   'w-full px-3 py-2 text-sm text-text-primary bg-white border border-border-input rounded-md focus:outline-none focus:border-action resize-y';
@@ -168,6 +168,9 @@ export const ShelfLifeExceptionDetail: React.FC<{
       </ul>
       <ol className="space-y-1 border-t border-border-subtle pt-2">
         {view.history.map((e, i) => (
+          // The record is append-only and shown oldest first, so an entry's
+          // position never shifts; kind + at alone can repeat (same instant).
+          // eslint-disable-next-line react/no-array-index-key -- append-only record in stored order: index i is the entry's fixed position
           <EventLine key={`${e.kind}-${e.at}-${i}`} e={e} />
         ))}
       </ol>

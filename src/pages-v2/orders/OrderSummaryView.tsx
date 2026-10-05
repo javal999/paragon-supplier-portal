@@ -1,22 +1,22 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import AppShellV2 from '../../components/layout-v2/AppShellV2';
-import PageHeader from '../../components/ui-v2/PageHeader';
-import PageMetaLine from '../../components/ui-v2/PageMetaLine';
-import SampleDataBadge from '../../components/ui-v2/SampleDataBadge';
-import StatusPill from '../../components/ui-v2/StatusPill';
-import Table from '../../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../../components/ui-v2/TableHeader';
-import TableRow from '../../components/ui-v2/TableRow';
-import TableCell from '../../components/ui-v2/TableCell';
-import Data from '../../components/ui-v2/Data';
-import LoadingState from '../../components/ui-v2/LoadingState';
-import ErrorState from '../../components/ui-v2/ErrorState';
-import type { StatusTone } from '../../lib/statusTone';
-import { formatDate } from '../../lib/format';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import PageHeader from '@components/ui-v2/PageHeader';
+import PageMetaLine from '@components/ui-v2/PageMetaLine';
+import SampleDataBadge from '@components/ui-v2/SampleDataBadge';
+import StatusPill from '@components/ui-v2/StatusPill';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
+import Data from '@components/ui-v2/Data';
+import LoadingState from '@components/ui-v2/LoadingState';
+import ErrorState from '@components/ui-v2/ErrorState';
+import type { StatusTone } from '@lib/statusTone';
+import { formatDate } from '@lib/format';
 import { ordersNow } from './PoCollaboration';
-import { useASNs, useCapacityPlans, useGoodsReceipts, usePurchaseOrders } from '../../services/query/hooks';
-import type { PurchaseOrder } from '../../services/data/types';
+import { useASNs, useCapacityPlans, useGoodsReceipts, usePurchaseOrders } from '@services/query/hooks';
+import type { PurchaseOrder } from '@services/data/types';
 import {
   foresightStatus,
   responseStatus,
@@ -25,13 +25,13 @@ import {
   type ForesightStatus,
   type ResponseStatus,
   type ShippingNoticeStatus,
-} from '../../services/data/poResponseProjection';
-import type { Persona } from '../../components/layout-v2/navConfig';
-import type { CallOffView } from '../../services/transitions/callOffRules';
+} from '@services/data/poResponseProjection';
+import type { Persona } from '@components/layout-v2/navConfig';
+import type { CallOffView } from '@services/transitions/callOffRules';
 import { useCallOffViews } from '../callOffs/callOffDisplay';
-import { capacityStatusForPo, type CapacityConfirmationStatus } from '../../services/transitions/capacityRules';
-import { materialEntry } from '../../services/sdc';
-import { dayOf, mondayOf } from '../../services/transitions/inventoryRules';
+import { capacityStatusForPo, type CapacityConfirmationStatus } from '@services/transitions/capacityRules';
+import { materialEntry } from '@services/sdc';
+import { dayOf, mondayOf } from '@services/transitions/inventoryRules';
 import {
   asnsForPo,
   callOffsForPo,

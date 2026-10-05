@@ -22,7 +22,7 @@ import { inventoryDeclarationStore } from './stores/inventoryDeclarationStore';
 import { stockSyncStore } from './stores/inventoryHubStores';
 import { stockUpdateAssignments } from './inventoryReadModel';
 import { stockUpdateModeOf, supplierEntry } from './supplierMaster';
-import { mockSuppliers } from '../../../data/mockSuppliers';
+import { mockSuppliers } from '@data/mockSuppliers';
 import { DECLARED_PRESENT } from '../fixturePresent';
 import { sampleUpdateHistory } from './fixtures/updateHistorySample';
 

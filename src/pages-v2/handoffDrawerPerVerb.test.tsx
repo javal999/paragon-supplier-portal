@@ -1,8 +1,8 @@
 import { screen, fireEvent } from '@testing-library/react';
-import { renderWithProviders, BUYER } from '../test/test-utils';
-import type { CurrentIdentity } from '../context/CurrentIdentityContext';
-import i18n from '../lib/i18n';
-import { rolesHolding, SYSTEM_ROLES, SUPERSET_ROLES } from '../services/transitions/businessRoles';
+import { renderWithProviders, BUYER } from '@test/test-utils';
+import type { CurrentIdentity } from '@context/CurrentIdentityContext';
+import i18n from '@lib/i18n';
+import { rolesHolding, SYSTEM_ROLES, SUPERSET_ROLES } from '@services/transitions/businessRoles';
 import BuyerSourcing from './BuyerSourcing';
 
 // ────────────────────────────────────────────────────────────────────────────

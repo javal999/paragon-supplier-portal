@@ -21,35 +21,35 @@ import {
   XCircle,
   LucideIcon,
 } from 'lucide-react';
-import AppShellV2 from '../components/layout-v2/AppShellV2';
-import PageHeader from '../components/ui-v2/PageHeader';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import PageHeader from '@components/ui-v2/PageHeader';
 import { BackToOrderSummary, usePoDrillFilter } from './orders/PoDrillFilter';
-import ProvenanceMarker from '../components/ui-v2/ProvenanceMarker';
-import KpiCard from '../components/ui-v2/KpiCard';
-import StatusPill from '../components/ui-v2/StatusPill';
-import { statusTone } from '../lib/statusTone';
-import Tabs from '../components/ui-v2/Tabs';
-import Table from '../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../components/ui-v2/TableHeader';
-import TableRow from '../components/ui-v2/TableRow';
-import TableCell from '../components/ui-v2/TableCell';
-import Button from '../components/ui-v2/Button';
-import Data from '../components/ui-v2/Data';
-import LoadingState from '../components/ui-v2/LoadingState';
-import ErrorState from '../components/ui-v2/ErrorState';
+import ProvenanceMarker from '@components/ui-v2/ProvenanceMarker';
+import KpiCard from '@components/ui-v2/KpiCard';
+import StatusPill from '@components/ui-v2/StatusPill';
+import { statusTone } from '@lib/statusTone';
+import Tabs from '@components/ui-v2/Tabs';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
+import Button from '@components/ui-v2/Button';
+import Data from '@components/ui-v2/Data';
+import LoadingState from '@components/ui-v2/LoadingState';
+import ErrorState from '@components/ui-v2/ErrorState';
 import {
   useSupplier,
   useVendorQualifications,
   useStorefrontCatalog,
   useStorefrontCerts,
   usePurchaseOrders,
-} from '../services/query/hooks';
-import { formatIDR, formatDate } from '../lib/format';
+} from '@services/query/hooks';
+import { formatIDR, formatDate } from '@lib/format';
 import QualificationPanel from './qualification/QualificationPanel';
-import { useCategoryLabel } from '../hooks/useCategoryLabel';
-import { useChannelLabel } from '../hooks/useChannelLabel';
-import { SupplierTier } from '../types/supplier.types';
-import type { ProfileCertStatus, PurchaseOrder } from '../services/data/types';
+import { useCategoryLabel } from '@hooks/useCategoryLabel';
+import { useChannelLabel } from '@hooks/useChannelLabel';
+import { SupplierTier } from '@app-types/supplier.types';
+import type { ProfileCertStatus, PurchaseOrder } from '@services/data/types';
 import { poLineQuantityText } from './orders/poLineQuantity';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -654,8 +654,10 @@ const BuyerSupplierProfile: React.FC = () => {
               <TableHeaderCell>{t('buyerSupplierProfile.msglog.col.status')}</TableHeaderCell>
             </TableHeader>
             <tbody>
-              {MSG_LOG.map((m, i) => (
-                <TableRow key={i}>
+              {/* Key: the message timestamp. MSG_LOG is a fixed sample log
+                  with one message per minute-stamped `ts`, so it is unique. */}
+              {MSG_LOG.map((m) => (
+                <TableRow key={m.ts}>
                   <TableCell className="text-xs text-text-tertiary whitespace-nowrap">
                     <Data>{m.ts}</Data>
                   </TableCell>

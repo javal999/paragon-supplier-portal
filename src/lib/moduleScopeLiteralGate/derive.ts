@@ -87,6 +87,7 @@
 //      nothing in the tree has adjudicated it.
 // ─────────────────────────────────────────────────────────────────────────────
 import ts from 'typescript';
+import { isJsxFile, scriptKindOf } from '@test/sourceFiles';
 
 /** Where an unreachable-by-`t()` literal was found. */
 export type Shape = 'param-default' | 'array-default' | 'mapped-const';
@@ -147,8 +148,8 @@ const isFnLike = (n: ts.Node): boolean =>
 /** Files whose literals are not shipped copy: specs, harnesses, this gate. */
 export function isOutOfScopePath(path: string): boolean {
   return (
-    /\.test\.tsx?$/.test(path) ||
-    /\.smoke\.tsx?$/.test(path) ||
+    /\.test\.[jt]sx?$/.test(path) ||
+    /\.smoke\.[jt]sx?$/.test(path) ||
     /\.guard\./.test(path) ||
     /(^|\/)__tests__\//.test(path) ||
     /(^|\/)src\/test\//.test(path) ||
@@ -314,7 +315,7 @@ export function deriveCensus(
     .filter((sf) => !sf.isDeclarationFile && !/node_modules/.test(sf.fileName));
   const inScope = all.filter((sf) => {
     const r = rel(root, sf.fileName);
-    return r.startsWith('src/') && /\.tsx$/.test(r) && !isOutOfScopePath(r);
+    return r.startsWith('src/') && isJsxFile(r) && !isOutOfScopePath(r);
   });
   const { sites, passed, aliasImportCount } = censusCallSites(all, root);
 
@@ -465,7 +466,7 @@ export function buildProgramFromSources(files: Readonly<Record<string, string>>)
   for (const [name, text] of Object.entries(files)) {
     sourceFiles.set(
       name,
-      ts.createSourceFile(name, text, ts.ScriptTarget.ES2020, true, ts.ScriptKind.TSX),
+      ts.createSourceFile(name, text, ts.ScriptTarget.ES2020, true, scriptKindOf(name)),
     );
   }
   const host: ts.CompilerHost = {

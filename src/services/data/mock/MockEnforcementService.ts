@@ -18,7 +18,7 @@
 
 import { DataError } from '../types';
 import type { IEnforcementService, Page, QueryScope } from '../types';
-import type { EnforcementSetting } from '../../../lib/enforcement';
+import type { EnforcementSetting } from '@lib/enforcement';
 import { enforcementSettingStore } from './stores/enforcementSettingStore';
 
 export class MockEnforcementService implements IEnforcementService {

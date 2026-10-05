@@ -40,7 +40,7 @@
 // including the ones a `type="number"` field hides by eating the token.
 // ────────────────────────────────────────────────────────────────────────────
 
-import { normalizeQty, type QtyRefusalReason } from '../../lib/localeNumber';
+import { normalizeQty, type QtyRefusalReason } from '@lib/localeNumber';
 
 /** The form's two lead-time units. The entity stores days. */
 export type LeadTimeUnit = 'days' | 'weeks';

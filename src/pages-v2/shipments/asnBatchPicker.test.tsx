@@ -4,11 +4,11 @@
 
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { renderWithProviders, SUPPLIER, BUYER } from '../../test/test-utils';
-import { purchaseOrderStore } from '../../services/data/mock/stores/purchaseOrderStore';
-import { asnStore } from '../../services/data/mock/stores/asnStore';
-import { inventoryDeclarationStore } from '../../services/data/mock/stores/inventoryDeclarationStore';
-import { commandAuditSink } from '../../services/data/mock/MockCommandService';
+import { renderWithProviders, SUPPLIER, BUYER } from '@test/test-utils';
+import { purchaseOrderStore } from '@services/data/mock/stores/purchaseOrderStore';
+import { asnStore } from '@services/data/mock/stores/asnStore';
+import { inventoryDeclarationStore } from '@services/data/mock/stores/inventoryDeclarationStore';
+import { commandAuditSink } from '@services/data/mock/MockCommandService';
 import SupplierShipments from '../SupplierShipments';
 import BuyerShipments from '../BuyerShipments';
 

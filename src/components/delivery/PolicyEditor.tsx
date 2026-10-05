@@ -14,9 +14,9 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Button from '../ui-v2/Button';
-import type { DrawdownEnforcement, TolerancePolicy } from '../../services/delivery';
-import type { EditPolicyPatch } from '../../services/delivery';
-import type { QtyRefusalReason } from '../../lib/localeNumber';
+import type { DrawdownEnforcement, TolerancePolicy } from '@services/delivery';
+import type { EditPolicyPatch } from '@services/delivery';
+import type { QtyRefusalReason } from '@lib/localeNumber';
 import { readTolerancePct, seedTolerancePct } from './tolerancePctModel';
 // GL-1 - the glossary destination for this surface's refusals.
 import GlossaryTermChip from '../ui-v2/GlossaryTermChip';

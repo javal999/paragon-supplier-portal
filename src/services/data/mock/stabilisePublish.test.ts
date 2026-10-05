@@ -34,9 +34,9 @@ import { POLICY_HOOKS } from '../../transitions/policyHooks';
 import { refusedByPolicy } from '../../transitions/refusalMessage';
 import { forecastVersionFlow } from '../../transitions/flows/forecastVersion.flow';
 import { isLive } from '../../liveness/registry';
-import { stabiliseEn, stabiliseId } from '../../../lib/i18n/stabilise';
+import { stabiliseEn, stabiliseId } from '@lib/i18n/stabilise';
 import { sdcClock } from '../../sdc';
-import { NO_PERSON } from '../../../context/noPerson';
+import { NO_PERSON } from '@context/noPerson';
 
 const cmd = new MockCommandService();
 const reads = new MockProcurementService();

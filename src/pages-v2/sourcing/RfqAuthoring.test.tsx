@@ -7,16 +7,16 @@
 // ────────────────────────────────────────────────────────────────────────────
 
 import { screen, fireEvent, within, waitFor } from '@testing-library/react';
-import { renderWithProviders, BUYER } from '../../test/test-utils';
-import type { CurrentIdentity } from '../../context/CurrentIdentityContext';
+import { renderWithProviders, BUYER } from '@test/test-utils';
+import type { CurrentIdentity } from '@context/CurrentIdentityContext';
 import BuyerSourcingPage from '../BuyerSourcing';
-import Toaster from '../../components/ui-v2/Toaster';
-import { rfqStore } from '../../services/data/mock/stores/rfqStore';
-import { quotationStore } from '../../services/data/mock/stores/quotationStore';
-import { rfqTemplateStore } from '../../services/sourcing/rfqTemplates';
-import { mockDataService } from '../../services/data/mock/mockDataService';
-import { awardStore, resetRfxStores } from '../../services/data/mock/stores/rfxStores';
-import { sdcClock } from '../../services/sdc';
+import Toaster from '@components/ui-v2/Toaster';
+import { rfqStore } from '@services/data/mock/stores/rfqStore';
+import { quotationStore } from '@services/data/mock/stores/quotationStore';
+import { rfqTemplateStore } from '@services/sourcing/rfqTemplates';
+import { mockDataService } from '@services/data/mock/mockDataService';
+import { awardStore, resetRfxStores } from '@services/data/mock/stores/rfxStores';
+import { sdcClock } from '@services/sdc';
 
 // `<Toaster />` lives in AppRouter, not in the page, so it is mounted here for
 // the toasts these specs read (the BuyerComplianceRequest precedent).

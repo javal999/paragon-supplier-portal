@@ -1,14 +1,14 @@
 import React from 'react';
 import { describe, it, expect } from 'vitest';
 import { screen, fireEvent, waitFor } from '@testing-library/react';
-import { renderWithProviders, SUPPLIER } from '../test/test-utils';
+import { renderWithProviders, SUPPLIER } from '@test/test-utils';
 import SupplierOrders from './SupplierOrders';
 import SupplierRFQs from './SupplierRFQs';
-import { supplierOrdersEn } from '../lib/i18n/supplierOrders';
-import { rfqsEn } from '../lib/i18n/rfqs';
-import { availabilityOfAtom } from '../services/transitions/handoff';
-import { useCurrentIdentity } from '../context/CurrentIdentityContext';
-import type { CurrentIdentity } from '../context/CurrentIdentityContext';
+import { supplierOrdersEn } from '@lib/i18n/supplierOrders';
+import { rfqsEn } from '@lib/i18n/rfqs';
+import { availabilityOfAtom } from '@services/transitions/handoff';
+import { useCurrentIdentity } from '@context/CurrentIdentityContext';
+import type { CurrentIdentity } from '@context/CurrentIdentityContext';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TWO SURFACE RESIDUALS §84's ARC LEFT BEHIND — THE SAME MISTAKE ON EITHER SIDE

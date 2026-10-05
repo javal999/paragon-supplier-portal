@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ChevronLeft, Lock, Info } from 'lucide-react';
-import AppShellV2 from '../components/layout-v2/AppShellV2';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
 import NotFound from './NotFound';
 import { findRoleView, deriveRoleViews } from './roles/roleModel';
 

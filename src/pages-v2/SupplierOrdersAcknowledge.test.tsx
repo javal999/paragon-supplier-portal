@@ -14,16 +14,16 @@
 // ────────────────────────────────────────────────────────────────────────────
 
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
-import { renderWithProviders, SUPPLIER } from '../test/test-utils';
-import { purchaseOrderStore } from '../services/data/mock/stores/purchaseOrderStore';
-import { MockCommandService } from '../services/data/mock/MockCommandService';
+import { renderWithProviders, SUPPLIER } from '@test/test-utils';
+import { purchaseOrderStore } from '@services/data/mock/stores/purchaseOrderStore';
+import { MockCommandService } from '@services/data/mock/MockCommandService';
 import {
   SEEDED_SEAT_ROLES,
   SYSTEM_ROLES,
   rolesHolding,
-} from '../services/transitions/businessRoles';
-import { getFlow, userVerbsFrom } from '../services/transitions';
-import { POStatus } from '../services/data/types';
+} from '@services/transitions/businessRoles';
+import { getFlow, userVerbsFrom } from '@services/transitions';
+import { POStatus } from '@services/data/types';
 import SupplierOrders from './SupplierOrders';
 
 /** The seeded supplier seat's ONE `Sent` order. Asserted below, never assumed. */
@@ -59,7 +59,7 @@ const openPanelOn = async (poNumber: string, identity = SUPPLIER) => {
  * renders its `<aside>` unconditionally, so a page-level query "cannot
  * distinguish the open panel from the always-mounted subtree of a closed one".
  * That was true when it was written and is now FALSE: a closed panel renders
- * nothing (`SidePanel.contract.test.tsx`), so `aside[role="dialog"]` exists
+ * nothing (`SidePanel.contract.test.jsx`), so `aside[role="dialog"]` exists
  * only while one is open. **A comment asserting a property the code no longer
  * has is the defect this session has now corrected three times** — and leaving
  * a retired workaround in place is how the next reader concludes the underlying

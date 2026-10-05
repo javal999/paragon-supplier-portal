@@ -8,7 +8,7 @@
 import { describe, expect, it } from 'vitest';
 import type { ASN, CallOff, CapacitySubmission, SimulationOverride } from '../data/types';
 import type { IncomingShipment, InventoryDeclaration, SupplierMaterialRelationship } from '../sdc/types';
-import { NO_PERSON } from '../../context/noPerson';
+import { NO_PERSON } from '@context/noPerson';
 import {
   isSimulationRefusal,
   simulateSupplierStock,

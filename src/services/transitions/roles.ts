@@ -21,7 +21,7 @@
 // a next-actor line legitimately need.
 // ────────────────────────────────────────────────────────────────────────────
 
-import type { PersonaType } from '../../context/CurrentIdentityContext';
+import type { PersonaType } from '@context/CurrentIdentityContext';
 import type { QueryScope, CapabilitySet } from '../data/types';
 import { getKnownFlows } from './registry';
 import { PERSONA_SYSTEM_ROLES, atomsFor } from './businessRoles';

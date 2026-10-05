@@ -40,7 +40,7 @@
 // ────────────────────────────────────────────────────────────────────────────
 
 import { FX_PIN_MAX_AGE_DAYS, type BidCurrency } from './currencyPolicy';
-import { sdcClock } from '../services/sdc/clock';
+import { sdcClock } from '@services/sdc/clock';
 
 /** Where a pinned rate came from. Provenance is part of the fact, not metadata
  *  about it: "a buyer typed this" and "S/4HANA said this" are different claims,

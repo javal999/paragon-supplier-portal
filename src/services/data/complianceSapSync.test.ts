@@ -39,7 +39,7 @@ const AWAITING: SapSyncState = 'AWAITING_SYNC';
 const productSources = (): Record<string, string> =>
   Object.fromEntries(
     Object.entries(
-      import.meta.glob('/src/**/*.{ts,tsx}', {
+      import.meta.glob('/src/**/*.{ts,tsx,js,jsx}', {
         query: '?raw',
         import: 'default',
         eager: true,
@@ -161,6 +161,9 @@ describe('§81 — the marker is READ, which is what makes it a marker', () => {
   it('CONTROL — the matcher rejects every KEY shape and still accepts a real read', () => {
     // Rejects — the three shapes that fooled v1 and v2.
     expect(READS_FIELD.test("t('compliance.table.sapSync')")).toBe(false);
+// The `${...}` below is literal source text this spec asserts on, not a template
+    // to interpolate (ESLint no-template-curly-in-string).
+    // eslint-disable-next-line no-template-curly-in-string
     expect(READS_FIELD.test('t(`compliance.sapSync.${entry.certType}`)')).toBe(false);
     expect(READS_FIELD.test('data-testid={`sap-sync-note`}')).toBe(false);
     // Accepts — so the rejections above are not merely a matcher that never

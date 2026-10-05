@@ -19,7 +19,7 @@
 //     history" (null) (BR-03).
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { isWorkingDay, type WorkingCalendar } from '../../lib/workingCalendar';
+import { isWorkingDay, type WorkingCalendar } from '@lib/workingCalendar';
 import type { StockUpdateMode } from '../data/types';
 import {
   cycleStatus,

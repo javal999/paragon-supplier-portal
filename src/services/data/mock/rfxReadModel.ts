@@ -13,13 +13,13 @@
 // module, so there is no second path that could show one.
 // ────────────────────────────────────────────────────────────────────────────
 
-import { mockSuppliers } from '../../../data/mockSuppliers';
+import { mockSuppliers } from '@data/mockSuppliers';
 import { masterMeasure } from './supplierMeasureReadModel';
 import { sdcClock } from '../../sdc/clock';
-import type { Quotation } from '../../../data/mockQuotations';
-import type { RFQ } from '../../../data/mockRfqs';
-import { BASE_CURRENCY } from '../../../lib/currencyPolicy';
-import { scoreQuotations, type ScoringOutcome } from '../../../lib/quoteScore';
+import type { Quotation } from '@data/mockQuotations';
+import type { RFQ } from '@data/mockRfqs';
+import { BASE_CURRENCY } from '@lib/currencyPolicy';
+import { scoreQuotations, type ScoringOutcome } from '@lib/quoteScore';
 import { complianceGate, type GateResult } from '../../sourcing/complianceGate';
 import { COMPLIANCE_REGISTRY } from './fixtures/complianceRegistry';
 import {

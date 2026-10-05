@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import Button from '../../components/ui-v2/Button';
+import Button from '@components/ui-v2/Button';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // "START FROM" — owner decision D2, reversing CE-04. The buyer starts a new RFI

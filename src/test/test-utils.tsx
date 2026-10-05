@@ -3,19 +3,19 @@ import { render, screen, fireEvent, waitFor, within } from '@testing-library/rea
 import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { I18nextProvider } from 'react-i18next';
-import i18n from '../lib/i18n';
-import { DataServiceProvider } from '../services/data/DataServiceContext';
-import { mockDataService } from '../services/data/mock/mockDataService';
-import type { IDataService } from '../services/data/types';
-import { AdaptiveProvider } from '../context/AdaptiveContext';
-import { ToastProvider } from '../hooks/useToast';
-import { CurrentIdentityProvider } from '../context/CurrentIdentityContext';
+import i18n from '@lib/i18n';
+import { DataServiceProvider } from '@services/data/DataServiceContext';
+import { mockDataService } from '@services/data/mock/mockDataService';
+import type { IDataService } from '@services/data/types';
+import { AdaptiveProvider } from '@context/AdaptiveContext';
+import { ToastProvider } from '@hooks/useToast';
+import { CurrentIdentityProvider } from '@context/CurrentIdentityContext';
 import type {
   CurrentIdentity,
   IdentitySource,
-} from '../context/CurrentIdentityContext';
-import { SEEDED_SEAT_ROLES } from '../services/transitions/businessRoles';
-import { NO_PERSON } from '../context/noPerson';
+} from '@context/CurrentIdentityContext';
+import { SEEDED_SEAT_ROLES } from '@services/transitions/businessRoles';
+import { NO_PERSON } from '@context/noPerson';
 
 // Default persona for page tests that don't care about identity.
 //
@@ -97,7 +97,7 @@ export function renderWithProviders(
   );
 }
 
-// Picks an option on a `SelectField` (src/components/ui-v2/SelectField.tsx)
+// Picks an option on a `SelectField` (src/components/ui-v2/SelectField.jsx)
 // by its VALUE, whichever mode it's currently rendering in — a plain
 // <select> (≤10 options) or a searchable combobox (>10). A test that only
 // knows the id (not the label) can't target a combobox row by visible text,

@@ -136,7 +136,7 @@ function sources(): ReadonlyMap<string, string> {
         if (e.name !== 'test' && e.name !== '__tests__') walk(p);
         continue;
       }
-      if (!/\.tsx?$/.test(e.name) || /\.test\.tsx?$/.test(e.name)) continue;
+      if (!/\.[jt]sx?$/.test(e.name) || /\.test\.[jt]sx?$/.test(e.name)) continue;
       const rel = path.relative(SRC, p).split(path.sep).join('/');
       if (DOC_HOMES.some((d) => rel.startsWith(d))) continue;
       out.set(rel, fs.readFileSync(p, 'utf8'));

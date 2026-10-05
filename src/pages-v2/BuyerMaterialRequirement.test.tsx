@@ -1,12 +1,12 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { screen, within, fireEvent } from '@testing-library/react';
-import { renderWithProviders, BUYER } from '../test/test-utils';
+import { renderWithProviders, BUYER } from '@test/test-utils';
 import BuyerMaterialRequirement from './BuyerMaterialRequirement';
-import { mockDataService } from '../services/data/mock/mockDataService';
-import { isLive } from '../services/liveness';
-import { PERSONA_SYSTEM_ROLES } from '../services/transitions/businessRoles';
-import i18n from '../lib/i18n';
-import type { QueryScope } from '../services/data/types';
+import { mockDataService } from '@services/data/mock/mockDataService';
+import { isLive } from '@services/liveness';
+import { PERSONA_SYSTEM_ROLES } from '@services/transitions/businessRoles';
+import i18n from '@lib/i18n';
+import type { QueryScope } from '@services/data/types';
 import { qtyOf } from './materialPlan/planDisplay';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -86,6 +86,45 @@ describe('BuyerMaterialRequirement — the planner page', () => {
   it('a supplier scope gets nothing — simulated engine output is never shown to a supplier (X-03)', async () => {
     expect(await mockDataService.procurement.getMaterialRequirement(supplierScope)).toBeNull();
     expect(await mockDataService.procurement.getMaterialRequirement(buyerScope)).not.toBeNull();
+  });
+
+  it('F-17: rows are sorted by need — a material with a net requirement lists above one with none', async () => {
+    const run = (await mockDataService.procurement.getMaterialRequirement(buyerScope))!;
+    const need = run.materials.find((m) => m.totals.net > 0 && m.totals.lateToRelease === 0)!;
+    const none = run.materials.find((m) => m.totals.net === 0)!;
+    renderWithProviders(<BuyerMaterialRequirement />, { identity: BUYER, route: '/buyer/material-requirement' });
+    const needRow = await screen.findByTestId(`mrq-row-${need.materialCode}`);
+    const noneRow = screen.getByTestId(`mrq-row-${none.materialCode}`);
+    expect(needRow.compareDocumentPosition(noneRow) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    // The first rows are the late ones, then the rest by net requirement.
+    const late = run.materials.filter((m) => m.totals.lateToRelease > 0);
+    const rows = screen.getAllByTestId(/^mrq-row-/);
+    expect(rows.slice(0, late.length).map((r) => r.dataset.testid).sort()).toEqual(late.map((m) => `mrq-row-${m.materialCode}`).sort());
+    expect(await screen.findByTestId('data-health-chip-failing')).toHaveTextContent('failing');
+  });
+
+  it('F-17: "Needs order" is off by default, hides the rows with no net requirement, and is kept in the page address', async () => {
+    const run = (await mockDataService.procurement.getMaterialRequirement(buyerScope))!;
+    const need = run.materials.find((m) => m.totals.net > 0)!;
+    const none = run.materials.find((m) => m.totals.net === 0)!;
+    renderWithProviders(<BuyerMaterialRequirement />, { identity: BUYER, route: '/buyer/material-requirement' });
+    const box = await screen.findByTestId('mrq-needs-order');
+    expect(box).not.toBeChecked();
+    expect(screen.getByTestId(`mrq-row-${none.materialCode}`)).toBeInTheDocument();
+    fireEvent.click(box);
+    expect(screen.queryByTestId(`mrq-row-${none.materialCode}`)).toBeNull();
+    expect(screen.getByTestId(`mrq-row-${need.materialCode}`)).toBeInTheDocument();
+    expect(screen.getAllByTestId(/^mrq-row-/)).toHaveLength(run.materials.filter((m) => m.totals.net > 0).length);
+  });
+
+  it('F-17: opened at ?needs=order, the filter is on and the zero rows are hidden', async () => {
+    const run = (await mockDataService.procurement.getMaterialRequirement(buyerScope))!;
+    const none = run.materials.find((m) => m.totals.net === 0)!;
+    const need = run.materials.find((m) => m.totals.net > 0)!;
+    renderWithProviders(<BuyerMaterialRequirement />, { identity: BUYER, route: '/buyer/material-requirement?needs=order' });
+    expect(await screen.findByTestId(`mrq-row-${need.materialCode}`)).toBeInTheDocument();
+    expect(screen.getByTestId('mrq-needs-order')).toBeChecked();
+    expect(screen.queryByTestId(`mrq-row-${none.materialCode}`)).toBeNull();
   });
 
   it('renders in Bahasa Indonesia from the ID fragment', async () => {

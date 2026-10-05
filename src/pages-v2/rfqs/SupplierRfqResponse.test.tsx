@@ -8,18 +8,18 @@
 
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { renderWithProviders, BUYER, SUPPLIER } from '../../test/test-utils';
+import { renderWithProviders, BUYER, SUPPLIER } from '@test/test-utils';
 import SupplierRFQs from '../SupplierRFQs';
 import RfqEngagementSection from '../sourcing/RfqEngagementSection';
-import { rfqStore } from '../../services/data/mock/stores/rfqStore';
-import { quotationStore } from '../../services/data/mock/stores/quotationStore';
+import { rfqStore } from '@services/data/mock/stores/rfqStore';
+import { quotationStore } from '@services/data/mock/stores/quotationStore';
 import {
   rfqClarificationStore,
   rfqIntentStore,
   resetRfqEngagementStores,
-} from '../../services/data/mock/stores/rfqEngagementStores';
-import { rfxNow } from '../../services/data/mock/rfxReadModel';
-import { sdcClock } from '../../services/sdc';
+} from '@services/data/mock/stores/rfqEngagementStores';
+import { rfxNow } from '@services/data/mock/rfxReadModel';
+import { sdcClock } from '@services/sdc';
 
 beforeEach(() => {
   rfqStore.reset();

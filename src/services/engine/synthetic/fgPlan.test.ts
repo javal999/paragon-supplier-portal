@@ -15,7 +15,7 @@ import { generateEngineDataset, DEFAULT_SIZES } from './generate';
 import { addDays, mondayOf } from '../dates';
 import { integrityViolations } from '../integrity';
 import { isKnownMaterial } from '../../sdc/materialMaster';
-import { mockSuppliers } from '../../../data/mockSuppliers';
+import { mockSuppliers } from '@data/mockSuppliers';
 import { SDC_SIMULATED_NOW } from '../../sdc/clock';
 import type { EngineDataset } from '../types';
 

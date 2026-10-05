@@ -15,7 +15,7 @@ import {
   type WhatIfWeights,
   type PrIntakeLine,
 } from './planGridModel';
-import { mockQuotations } from '../../data/mockQuotations';
+import { mockQuotations } from '@data/mockQuotations';
 
 // ────────────────────────────────────────────────────────────────────────────
 // planGridModel — the PURE what-if overlay math + the C7 intake sample.

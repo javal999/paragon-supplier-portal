@@ -10,7 +10,7 @@
 // the event at publish, so a later change here never moves a published event.
 // ────────────────────────────────────────────────────────────────────────────
 
-import type { ActorAttribution } from '../../lib/enforcement';
+import type { ActorAttribution } from '@lib/enforcement';
 import {
   DEFAULT_SOURCING_TYPE_MAP,
   type SourcingType,

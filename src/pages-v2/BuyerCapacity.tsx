@@ -3,30 +3,30 @@ import { useTranslation } from 'react-i18next';
 import { useReasonLabel } from './admin/reasonCodeDisplay';
 import { useSearchParams } from 'react-router-dom';
 import { AlertTriangle, ChevronDown, ChevronRight } from 'lucide-react';
-import AppShellV2 from '../components/layout-v2/AppShellV2';
-import PageHeader from '../components/ui-v2/PageHeader';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import PageHeader from '@components/ui-v2/PageHeader';
 import {
   OrderNotFound,
   PoFilterBanner,
   usePoDrillFilter,
 } from './orders/PoDrillFilter';
-import PageMetaLine from '../components/ui-v2/PageMetaLine';
-import SampleDataBadge from '../components/ui-v2/SampleDataBadge';
-import FilterChipsBar from '../components/ui-v2/FilterChipsBar';
-import Data from '../components/ui-v2/Data';
-import Button from '../components/ui-v2/Button';
-import LoadingState from '../components/ui-v2/LoadingState';
-import ErrorState from '../components/ui-v2/ErrorState';
-import { formatDate, formatDateTime } from '../lib/format';
-import { useCapacityPlans } from '../services/query/hooks';
-import type { CapacityPlan } from '../services/data/types';
+import PageMetaLine from '@components/ui-v2/PageMetaLine';
+import SampleDataBadge from '@components/ui-v2/SampleDataBadge';
+import FilterChipsBar from '@components/ui-v2/FilterChipsBar';
+import Data from '@components/ui-v2/Data';
+import Button from '@components/ui-v2/Button';
+import LoadingState from '@components/ui-v2/LoadingState';
+import ErrorState from '@components/ui-v2/ErrorState';
+import { formatDate, formatDateTime } from '@lib/format';
+import { useCapacityPlans } from '@services/query/hooks';
+import type { CapacityPlan } from '@services/data/types';
 import {
   gapWeeks,
   isGapWeek,
   ltpCapacityWeeks,
   planStatus,
   type CapacityConfirmationStatus,
-} from '../services/transitions/capacityRules';
+} from '@services/transitions/capacityRules';
 import { CapacityStatusPill, LtpCheckPill, inputClass, inventoryNow, labelClass, qty } from './inventory/inventoryDisplay';
 import { ReEntryPill, usePlanningGroupLabel } from './inventory/planningGroupDisplay';
 import {

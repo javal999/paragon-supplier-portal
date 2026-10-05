@@ -18,7 +18,7 @@ import { rfqStore } from './stores/rfqStore';
 import { quotationStore } from './stores/quotationStore';
 import { MockProcurementService } from './MockProcurementService';
 import { PERSONA_SYSTEM_ROLES } from '../../transitions/businessRoles';
-import { NO_PERSON } from '../../../context/noPerson';
+import { NO_PERSON } from '@context/noPerson';
 import type { QueryScope } from '../types';
 
 beforeEach(() => {

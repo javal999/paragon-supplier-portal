@@ -28,7 +28,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { REQUISITIONS } from './mock/fixtures/buyerRequisitions';
-import { requisitionsEn, requisitionsId } from '../../lib/i18n/requisitions';
+import { requisitionsEn, requisitionsId } from '@lib/i18n/requisitions';
 
 const SRC = join(process.cwd(), 'src');
 
@@ -37,7 +37,7 @@ function shipped(dir: string, out: string[] = []): string[] {
   for (const name of readdirSync(dir)) {
     const full = join(dir, name);
     if (statSync(full).isDirectory()) shipped(full, out);
-    else if (/\.tsx?$/.test(name) && !name.includes('.test.')) out.push(full);
+    else if (/\.[jt]sx?$/.test(name) && !name.includes('.test.')) out.push(full);
   }
   return out;
 }
@@ -84,6 +84,9 @@ describe('⚠️ §69 · THE MATCHERS, BEFORE ANY CLAIM ABOUT THE TREE', () => {
     expect(isLiteral('bandFor(x)')).toBe(false);
     expect(isLiteral('v > 1e8 ? A : B')).toBe(false);
     expect(isLiteral('BAND')).toBe(false);
+// The `${...}` below is literal source text this spec asserts on, not a template
+    // to interpolate (ESLint no-template-curly-in-string).
+    // eslint-disable-next-line no-template-curly-in-string
     expect(isLiteral('`${band}`')).toBe(false);
   });
 

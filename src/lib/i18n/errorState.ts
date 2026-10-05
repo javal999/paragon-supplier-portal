@@ -21,7 +21,7 @@
 // touched**, so this batch changes no spec it does not own. That is a deliberate
 // design choice and it has a cost worth stating: a spec that passes because the
 // EN string is unchanged CANNOT SEE whether the string came from a key or from
-// a hardcode. So it is not evidence for this batch, and `ErrorState.i18n.test.tsx`
+// a hardcode. So it is not evidence for this batch, and `ErrorState.i18n.test.jsx`
 // is — it asserts the ID arm, which is the half no existing spec can reach.
 // ────────────────────────────────────────────────────────────────────────────
 

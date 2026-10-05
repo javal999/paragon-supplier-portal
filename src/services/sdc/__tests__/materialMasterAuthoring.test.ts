@@ -30,7 +30,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { mockRfqs } from '../../../data/mockRfqs';
+import { mockRfqs } from '@data/mockRfqs';
 import { MATERIAL_GROUPS, groupLabel } from '../materialGroups';
 import { MATERIAL_MASTER } from '../fixtures';
 
@@ -43,9 +43,9 @@ interface Ref {
   readonly module: string;
 }
 
-const IS_TEST_MODULE = /\.test\.tsx?$|__tests__|^\/src\/test\//;
+const IS_TEST_MODULE = /\.test\.[jt]sx?$|__tests__|^\/src\/test\//;
 
-const sourceModules = import.meta.glob('/src/**/*.ts') as Record<
+const sourceModules = import.meta.glob('/src/**/*.{ts,js}') as Record<
   string,
   () => Promise<Record<string, unknown>>
 >;

@@ -8,10 +8,10 @@
 import { Routes, Route } from 'react-router-dom';
 import { screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import i18n from '../../lib/i18n';
-import { renderWithProviders, BUYER, SUPPLIER } from '../../test/test-utils';
-import { PTI_NAV, SUPPLIER_NAV, isItemActive } from '../../components/layout-v2/navConfig';
-import { hubEn, hubId } from '../../lib/i18n/hub';
+import i18n from '@lib/i18n';
+import { renderWithProviders, BUYER, SUPPLIER } from '@test/test-utils';
+import { PTI_NAV, SUPPLIER_NAV, isItemActive } from '@components/layout-v2/navConfig';
+import { hubEn, hubId } from '@lib/i18n/hub';
 import BuyerRfi from '../BuyerRfi';
 import BuyerRfp from '../BuyerRfp';
 import BuyerSourcing from '../BuyerSourcing';
@@ -57,6 +57,9 @@ describe('the menu — one item per event type', () => {
 });
 
 describe('each page carries its own title and count, and no type switch', () => {
+  // `it.each` rows are table DATA: each element is rendered alone by its own
+  // test, never as a React list — so they need no `key` (ESLint react/jsx-key).
+  /* eslint-disable react/jsx-key */
   it.each([
     ['buyer RFI', '/buyer/rfi', <BuyerRfi />, BUYER, 'Information requests'],
     ['buyer RFP', '/buyer/rfp', <BuyerRfp />, BUYER, 'Proposal requests'],
@@ -64,6 +67,7 @@ describe('each page carries its own title and count, and no type switch', () => 
     ['supplier RFI', '/supplier/rfi', <SupplierRfi />, SUPPLIER, 'Information requests'],
     ['supplier RFP', '/supplier/rfp', <SupplierRfp />, SUPPLIER, 'Proposal requests'],
     ['supplier RFQ', '/supplier/rfq', <SupplierRFQs />, SUPPLIER, 'Quotation requests'],
+    /* eslint-enable react/jsx-key */
   ])('%s', async (_name, at, element, identity, title) => {
     await i18n.changeLanguage('en');
     renderWithProviders(

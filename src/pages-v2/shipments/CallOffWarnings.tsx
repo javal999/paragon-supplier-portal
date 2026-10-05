@@ -9,9 +9,9 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
-import StatusPill from '../../components/ui-v2/StatusPill';
-import { formatDate } from '../../lib/format';
-import type { ASN, CallOffWarning } from '../../services/data/types';
+import StatusPill from '@components/ui-v2/StatusPill';
+import { formatDate } from '@lib/format';
+import type { ASN, CallOffWarning } from '@services/data/types';
 import type { AsnLinesRead } from './asnLines';
 
 const n = (v: number | undefined): string => (v ?? 0).toLocaleString('en-US');

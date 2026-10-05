@@ -1,22 +1,22 @@
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import AppShellV2 from '../components/layout-v2/AppShellV2';
-import PageHeader from '../components/ui-v2/PageHeader';
-import PageMetaLine from '../components/ui-v2/PageMetaLine';
-import LivenessPill from '../components/ui-v2/LivenessPill';
-import KpiCard from '../components/ui-v2/KpiCard';
-import StatusPill from '../components/ui-v2/StatusPill';
-import Button from '../components/ui-v2/Button';
-import Table from '../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../components/ui-v2/TableHeader';
-import TableRow from '../components/ui-v2/TableRow';
-import TableCell from '../components/ui-v2/TableCell';
-import Data from '../components/ui-v2/Data';
-import LoadingState from '../components/ui-v2/LoadingState';
-import ErrorState from '../components/ui-v2/ErrorState';
-import { formatDate, formatDateTime, formatNumber } from '../lib/format';
-import { useDataHealth } from '../services/query/hooks';
-import type { CheckId, CheckResult, FeedHealth, Freshness, StepStatus } from '../services/engine/dataHealth';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import PageHeader from '@components/ui-v2/PageHeader';
+import PageMetaLine from '@components/ui-v2/PageMetaLine';
+import LivenessPill from '@components/ui-v2/LivenessPill';
+import KpiCard from '@components/ui-v2/KpiCard';
+import StatusPill from '@components/ui-v2/StatusPill';
+import Button from '@components/ui-v2/Button';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
+import Data from '@components/ui-v2/Data';
+import LoadingState from '@components/ui-v2/LoadingState';
+import ErrorState from '@components/ui-v2/ErrorState';
+import { formatDate, formatDateTime, formatNumber } from '@lib/format';
+import { useDataHealth } from '@services/query/hooks';
+import type { CheckId, CheckResult, FeedHealth, Freshness, StepStatus } from '@services/engine/dataHealth';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DATA HEALTH — REQ-E14-01, the Material Planner's view (AC-01).
@@ -111,7 +111,12 @@ const CheckDetail: React.FC<{ feed: FeedHealth; tolerance: string }> = ({ feed, 
                 <TableHeaderCell>{t('dh.records.detail')}</TableHeaderCell>
               </TableHeader>
               <tbody>
+                {/* A failure's key is the failing record's key, which repeats
+                    when the feed itself holds duplicates (what this page
+                    reports). The list is read-only and replaced whole per
+                    check, so the index suffix only separates those repeats. */}
                 {current.failures.slice(0, RECORD_LIMIT).map((f, i) => (
+                  // eslint-disable-next-line react/no-array-index-key -- read-only check output; record keys can repeat
                   <TableRow key={`${f.key}#${i}`} data-testid={`dh-record-${f.key}`}>
                     <TableCell>
                       <Data>{f.key}</Data>

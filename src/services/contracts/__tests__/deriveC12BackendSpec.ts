@@ -243,14 +243,14 @@ let srcCache: string | null = null;
 export function srcText(): string {
   if (srcCache !== null) return srcCache;
   const parts: string[] = [];
-  const isSpec = (name: string): boolean => /\.test\.tsx?$/.test(name);
+  const isSpec = (name: string): boolean => /\.test\.[jt]sx?$/.test(name);
   const walk = (dir: string): void => {
     for (const e of readdirSync(dir, { withFileTypes: true })) {
       const p = join(dir, e.name);
       if (e.isDirectory()) {
         if (e.name === '__tests__') continue;
         walk(p);
-      } else if (/\.tsx?$/.test(e.name) && !isSpec(e.name)) {
+      } else if (/\.[jt]sx?$/.test(e.name) && !isSpec(e.name)) {
         parts.push(readFileSync(p, 'utf8'));
       }
     }

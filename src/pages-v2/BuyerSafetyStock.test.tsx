@@ -1,13 +1,13 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { screen, within, fireEvent } from '@testing-library/react';
-import { renderWithProviders, BUYER } from '../test/test-utils';
+import { renderWithProviders, BUYER } from '@test/test-utils';
 import BuyerSafetyStock from './BuyerSafetyStock';
-import { mockDataService } from '../services/data/mock/mockDataService';
-import { isLive } from '../services/liveness';
-import { PERSONA_SYSTEM_ROLES } from '../services/transitions/businessRoles';
-import { DEFAULT_SETTING_STATE, settingRefusal } from '../services/transitions/hubSettings';
-import i18n from '../lib/i18n';
-import type { QueryScope } from '../services/data/types';
+import { mockDataService } from '@services/data/mock/mockDataService';
+import { isLive } from '@services/liveness';
+import { PERSONA_SYSTEM_ROLES } from '@services/transitions/businessRoles';
+import { DEFAULT_SETTING_STATE, settingRefusal } from '@services/transitions/hubSettings';
+import i18n from '@lib/i18n';
+import type { QueryScope } from '@services/data/types';
 import { qtyOf } from './materialPlan/planDisplay';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -26,7 +26,7 @@ describe('BuyerSafetyStock — the planner page', () => {
   it('renders inside the app shell with the SIMULATED engine pill and the tier-default note — never Live', async () => {
     expect(isLive('engineDataset')).toBe(false);
     renderWithProviders(<BuyerSafetyStock />, { identity: BUYER, route: '/buyer/safety-stock' });
-    expect(await screen.findByRole('heading', { name: 'Safety stock and reorder point' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Safety stock targets' })).toBeInTheDocument();
     expect(screen.getByText('Synthetic data · awaiting the MDM SAP feed')).toBeInTheDocument();
     expect(screen.queryByText('Live')).toBeNull();
     expect(screen.getByTestId('sst-tier-default-note')).toBeInTheDocument();
@@ -90,7 +90,7 @@ describe('BuyerSafetyStock — the planner page', () => {
   it('renders in Bahasa Indonesia from the ID fragment', async () => {
     await i18n.changeLanguage('id');
     renderWithProviders(<BuyerSafetyStock />, { identity: BUYER, route: '/buyer/safety-stock' });
-    expect(await screen.findByRole('heading', { name: 'Stok pengaman dan titik pesan ulang' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Target stok pengaman' })).toBeInTheDocument();
     expect(screen.getByText('Cara menghitungnya')).toBeInTheDocument();
   });
 });

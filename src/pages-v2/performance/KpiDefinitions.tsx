@@ -4,7 +4,7 @@ import {
   BASELINE_MONTHS,
   KPI_DEFINITIONS,
   KPI_QUESTIONS,
-} from '../../services/data/kpiDefinitions';
+} from '@services/data/kpiDefinitions';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // BL-53 — THE KPI DEFINITIONS, on both performance pages (supplier and PTI).

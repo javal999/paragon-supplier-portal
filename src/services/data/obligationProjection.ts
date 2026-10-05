@@ -132,7 +132,7 @@
 //   of what the fixtures MEANT, and the assertion with it.
 // ────────────────────────────────────────────────────────────────────────────
 
-import type { ContractObligation } from '../../data/mockObligations';
+import type { ContractObligation } from '@data/mockObligations';
 import { daysUntil, isPast } from './dayProjection';
 
 /**

@@ -14,19 +14,19 @@
 // (that is G1.2b).
 // ────────────────────────────────────────────────────────────────────────────
 
-import type { Quotation } from '../../data/mockQuotations';
+import type { Quotation } from '@data/mockQuotations';
 import type {
   CommandDecision,
   PrIntakeLine,
   IntakePlanState,
-} from '../../services/data/types';
-import { PR_INTAKE_LINES } from '../../services/data/mock/fixtures/prIntake';
+} from '@services/data/types';
+import { PR_INTAKE_LINES } from '@services/data/mock/fixtures/prIntake';
 
 // C7 §2 — the intake line + plan-state axis are PROMOTED to the service seam
 // (types.ts) at Phase A/1 and re-exported here so plan-grid consumers keep their
 // existing imports unchanged. The intake SAMPLE data lives in the seam fixture
 // (fixtures/prIntake.ts); SAMPLE_INTAKE_LINES aliases it — one source of truth.
-export type { PrIntakeLine, IntakePlanState } from '../../services/data/types';
+export type { PrIntakeLine, IntakePlanState } from '@services/data/types';
 
 // ── Award what-if ───────────────────────────────────────────────────────────
 

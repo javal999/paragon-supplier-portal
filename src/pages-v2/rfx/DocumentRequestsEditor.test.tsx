@@ -11,10 +11,10 @@
 import React, { useState } from 'react';
 import { fireEvent, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { renderWithProviders } from '../../test/test-utils';
-import Wizard from '../../components/ui-v2/Wizard';
-import { documentRequestsRefusal } from '../../services/transitions/rfxDocumentRules';
-import type { DocumentRequest } from '../../services/sourcing/types';
+import { renderWithProviders } from '@test/test-utils';
+import Wizard from '@components/ui-v2/Wizard';
+import { documentRequestsRefusal } from '@services/transitions/rfxDocumentRules';
+import type { DocumentRequest } from '@services/sourcing/types';
 import DocumentRequestsEditor, {
   DocumentRequestsSummary,
   remapRequestsOnItemRemoved,

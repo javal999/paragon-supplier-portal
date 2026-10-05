@@ -22,7 +22,7 @@ import type {
   POLineItem,
   SupplierInvoiceStage,
 } from '../data/types';
-import type { GoodsReceipt, GRStatus } from '../../data/mockGoodsReceipts';
+import type { GoodsReceipt, GRStatus } from '@data/mockGoodsReceipts';
 import { checkPrice, type MatchVerdict, type PriceCheck, type PriceRule } from './invoiceRollup';
 import { receiptQtyToleranceFor, shelfLifeRuleFor } from './fulfilmentConfig';
 

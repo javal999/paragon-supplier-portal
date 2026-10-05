@@ -1,8 +1,8 @@
 import React from 'react';
 import { describe, it, expect, beforeEach } from 'vitest';
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
-import { renderWithProviders, BUYER } from '../../test/test-utils';
-import { reasonCodeStore } from '../../services/transitions/reasonCodes';
+import { renderWithProviders, BUYER } from '@test/test-utils';
+import { reasonCodeStore } from '@services/transitions/reasonCodes';
 import AdminReasonCodes from './AdminReasonCodes';
 import { useActiveReasonCodes, useReasonLabel } from './reasonCodeDisplay';
 

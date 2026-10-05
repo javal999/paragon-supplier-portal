@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import Button from '../../components/ui-v2/Button';
-import Data from '../../components/ui-v2/Data';
-import StatusPill from '../../components/ui-v2/StatusPill';
-import { HandoffNotice } from '../../components/ui-v2/HandoffNotice';
-import { useVerbAvailability } from '../../hooks/useVerbAvailability';
-import { useToast } from '../../hooks/useToast';
-import { formatDateTime } from '../../lib/format';
-import { useRfqClarifications, useRfqEngagement } from '../../services/query/hooks';
-import { useRfqEngagementCommand } from '../../services/query/commandHooks';
-import type { RFQ } from '../../data/mockRfqs';
-import type { RfqClarificationView } from '../../services/sourcing/rfqResponse';
+import Button from '@components/ui-v2/Button';
+import Data from '@components/ui-v2/Data';
+import StatusPill from '@components/ui-v2/StatusPill';
+import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
+import { useVerbAvailability } from '@hooks/useVerbAvailability';
+import { useToast } from '@hooks/useToast';
+import { formatDateTime } from '@lib/format';
+import { useRfqClarifications, useRfqEngagement } from '@services/query/hooks';
+import { useRfqEngagementCommand } from '@services/query/commandHooks';
+import type { RFQ } from '@data/mockRfqs';
+import type { RfqClarificationView } from '@services/sourcing/rfqResponse';
 import { rfqResponseRefusal } from '../rfqs/rfqResponseText';
 
 // ─────────────────────────────────────────────────────────────────────────────

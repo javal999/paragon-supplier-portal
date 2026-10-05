@@ -24,13 +24,13 @@ import { DELIVERY_GRACE_DAYS, MATCH_WINDOW_DAYS } from '../delivery/fulfillment'
 import { agreedCfot, cfotByDefinition } from '../engine/cfot';
 import type { LineHistory } from '../engine/lines';
 import type { CallOff, CallOffConfirmation, PurchaseOrder } from './types';
-import type { GoodsReceipt } from '../../data/mockGoodsReceipts';
+import type { GoodsReceipt } from '@data/mockGoodsReceipts';
 import { MockCommandService } from './mock/MockCommandService';
 import { callOffStore } from './mock/stores/callOffStore';
 import { asnStore } from './mock/stores/asnStore';
 import { purchaseOrderStore } from './mock/stores/purchaseOrderStore';
 import { PERSONA_SYSTEM_ROLES } from '../transitions/businessRoles';
-import { NO_PERSON } from '../../context/noPerson';
+import { NO_PERSON } from '@context/noPerson';
 import type { QueryScope } from './types';
 
 const DAY = 86_400_000;

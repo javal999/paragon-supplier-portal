@@ -1,23 +1,23 @@
 import React, { useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AlertTriangle, ShieldCheck } from 'lucide-react';
-import AppShellV2 from '../../components/layout-v2/AppShellV2';
-import PageHeader from '../../components/ui-v2/PageHeader';
-import PageMetaLine from '../../components/ui-v2/PageMetaLine';
-import Table from '../../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../../components/ui-v2/TableHeader';
-import TableRow from '../../components/ui-v2/TableRow';
-import TableCell from '../../components/ui-v2/TableCell';
-import Button from '../../components/ui-v2/Button';
-import Data from '../../components/ui-v2/Data';
-import StatusPill from '../../components/ui-v2/StatusPill';
-import { HandoffNotice } from '../../components/ui-v2/HandoffNotice';
-import { useVerbAvailability } from '../../hooks/useVerbAvailability';
-import { useRefusalText } from '../../hooks/useRefusalText';
-import { useToast } from '../../hooks/useToast';
-import { formatDateTime } from '../../lib/format';
-import { useSettingSet } from '../../services/query/commandHooks';
-import { useInventory } from '../../services/query/hooks';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import PageHeader from '@components/ui-v2/PageHeader';
+import PageMetaLine from '@components/ui-v2/PageMetaLine';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
+import Button from '@components/ui-v2/Button';
+import Data from '@components/ui-v2/Data';
+import StatusPill from '@components/ui-v2/StatusPill';
+import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
+import { useVerbAvailability } from '@hooks/useVerbAvailability';
+import { useRefusalText } from '@hooks/useRefusalText';
+import { useToast } from '@hooks/useToast';
+import { formatDateTime } from '@lib/format';
+import { useSettingSet } from '@services/query/commandHooks';
+import { useInventory } from '@services/query/hooks';
 import {
   HUB_SETTINGS,
   SEEDED_STALE_OVERRIDES,
@@ -31,10 +31,10 @@ import {
   type HubSettingDef,
   type HubSettingSection,
   type HubSettingValue,
-} from '../../services/transitions/hubSettings';
-import { hubSettingsStore, settingValue } from '../../services/transitions/hubSettingsStore';
-import { staleApiHours } from '../../services/transitions/inventoryConfig';
-import { stockFreshness } from '../../services/transitions/inventoryRules';
+} from '@services/transitions/hubSettings';
+import { hubSettingsStore, settingValue } from '@services/transitions/hubSettingsStore';
+import { staleApiHours } from '@services/transitions/inventoryConfig';
+import { stockFreshness } from '@services/transitions/inventoryRules';
 import { PullFailedNote, inventoryNow } from '../inventory/inventoryDisplay';
 import AdminSectionNav from './AdminSectionNav';
 
@@ -171,7 +171,14 @@ const RuleValuesPage: React.FC<{ section: HubSettingSection }> = ({ section }) =
     }
     return out;
   }, [defs]);
-  const changes = useMemo(() => [...hubSettingsStore.changesIn(section)].reverse(), [section, version]);
+  // `seq` is a change's position in the section's log, oldest first. The log is
+  // append-only, so seq never shifts and is the row's React key; key + setAt
+  // alone can repeat (two changes to one key in the same instant), and the
+  // index of the newest-first list shifts on every new change.
+  const changes = useMemo(
+    () => hubSettingsStore.changesIn(section).map((c, seq) => ({ ...c, seq })).reverse(),
+    [section, version],
+  );
   const readState = useMemo(() => hubSettingsStore.readState(), [version]);
   const changedCount = defs.filter((d) => settingValue(d.key) !== d.defaultValue).length;
 
@@ -487,10 +494,10 @@ const RuleValuesPage: React.FC<{ section: HubSettingSection }> = ({ section }) =
                 <TableHeaderCell>{t('adminSet.history.col.at')}</TableHeaderCell>
               </TableHeader>
               <tbody>
-                {changes.map((c, i) => {
+                {changes.map((c) => {
                   const def = hubSettingDef(c.key) ?? null;
                   return (
-                    <TableRow key={`${c.key}-${c.setAt}-${i}`} data-testid={`admin-set-change-row-${c.key}`}>
+                    <TableRow key={c.seq} data-testid={`admin-set-change-row-${c.key}`}>
                       <TableCell className="text-sm">{keyLabel(c.key)}</TableCell>
                       <TableCell className="whitespace-nowrap text-sm">
                         <Data>{valueText(def, c.previous)}</Data> → <Data>{valueText(def, c.value)}</Data>

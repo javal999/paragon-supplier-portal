@@ -6,7 +6,7 @@ import {
   activeReasonCodes,
   reasonCodeStore,
   type ReasonListId,
-} from '../../services/transitions/reasonCodes';
+} from '@services/transitions/reasonCodes';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // REASON CODES ON SCREEN — BL-32. The ONE way a page names a reason code and

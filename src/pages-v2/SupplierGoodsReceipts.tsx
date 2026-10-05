@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AlertTriangle } from 'lucide-react';
-import AppShellV2 from '../components/layout-v2/AppShellV2';
-import PageHeader from '../components/ui-v2/PageHeader';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import PageHeader from '@components/ui-v2/PageHeader';
 import {
   OrderNotFound,
   PoFilterBanner,
@@ -10,39 +10,39 @@ import {
   usePoDrillFilter,
 } from './orders/PoDrillFilter';
 import { receiptsForPo } from './orders/orderSummaryModel';
-import SapDataAgeBanner from '../components/ui-v2/SapDataAgeBanner';
-import PageMetaLine from '../components/ui-v2/PageMetaLine';
-import SampleDataBadge from '../components/ui-v2/SampleDataBadge';
-import StatusPill from '../components/ui-v2/StatusPill';
-import Table from '../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../components/ui-v2/TableHeader';
-import TableRow from '../components/ui-v2/TableRow';
-import TableCell from '../components/ui-v2/TableCell';
-import Button from '../components/ui-v2/Button';
-import SidePanel from '../components/ui-v2/SidePanel';
-import Data from '../components/ui-v2/Data';
-import LoadingState from '../components/ui-v2/LoadingState';
-import ErrorState from '../components/ui-v2/ErrorState';
-import EmptyState from '../components/ui-v2/EmptyState';
-import NoSupplierIdentity from '../components/ui-v2/NoSupplierIdentity';
-import { HandoffNotice } from '../components/ui-v2/HandoffNotice';
-import { useCurrentIdentity } from '../context/CurrentIdentityContext';
-import { useToast } from '../hooks/useToast';
-import { useRefusalText } from '../hooks/useRefusalText';
-import { useVerbAvailability } from '../hooks/useVerbAvailability';
-import { formatDate, formatDateTime } from '../lib/format';
-import { statusTone } from '../lib/statusTone';
-import { DECLARED_PRESENT } from '../services/data/fixturePresent';
-import { useASNs, useGoodsReceipts } from '../services/query/hooks';
-import { useReceiptDiscrepancyAnswer } from '../services/query/commandHooks';
-import type { ASN, GoodsReceipt } from '../services/data/types';
+import SapDataAgeBanner from '@components/ui-v2/SapDataAgeBanner';
+import PageMetaLine from '@components/ui-v2/PageMetaLine';
+import SampleDataBadge from '@components/ui-v2/SampleDataBadge';
+import StatusPill from '@components/ui-v2/StatusPill';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
+import Button from '@components/ui-v2/Button';
+import SidePanel from '@components/ui-v2/SidePanel';
+import Data from '@components/ui-v2/Data';
+import LoadingState from '@components/ui-v2/LoadingState';
+import ErrorState from '@components/ui-v2/ErrorState';
+import EmptyState from '@components/ui-v2/EmptyState';
+import NoSupplierIdentity from '@components/ui-v2/NoSupplierIdentity';
+import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
+import { useCurrentIdentity } from '@context/CurrentIdentityContext';
+import { useToast } from '@hooks/useToast';
+import { useRefusalText } from '@hooks/useRefusalText';
+import { useVerbAvailability } from '@hooks/useVerbAvailability';
+import { formatDate, formatDateTime } from '@lib/format';
+import { statusTone } from '@lib/statusTone';
+import { DECLARED_PRESENT } from '@services/data/fixturePresent';
+import { useASNs, useGoodsReceipts } from '@services/query/hooks';
+import { useReceiptDiscrepancyAnswer } from '@services/query/commandHooks';
+import type { ASN, GoodsReceipt } from '@services/data/types';
 import {
   RECEIPT_INSPECTED_STATES,
   awaitsSupplierAnswer,
   compareReceipt,
   deriveHeaderDisposition,
   type ReceiptLineComparison,
-} from '../services/transitions';
+} from '@services/transitions';
 import ReceiptToleranceNote from './receipts/ReceiptToleranceNote';
 
 // ─────────────────────────────────────────────────────────────────────────────

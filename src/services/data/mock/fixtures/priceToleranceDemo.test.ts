@@ -11,9 +11,9 @@
 
 import { describe, expect, it } from 'vitest';
 import { INVOICES } from './invoices';
-import { mockPurchaseOrders } from '../../../../data/mockPurchaseOrders';
-import { mockGoodsReceipts } from '../../../../data/mockGoodsReceipts';
-import { mockContracts } from '../../../../data/mockContracts';
+import { mockPurchaseOrders } from '@data/mockPurchaseOrders';
+import { mockGoodsReceipts } from '@data/mockGoodsReceipts';
+import { mockContracts } from '@data/mockContracts';
 import {
   checkInvoicePrices,
   deriveInvoiceVerdict,

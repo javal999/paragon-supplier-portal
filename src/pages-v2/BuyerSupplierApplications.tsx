@@ -62,52 +62,52 @@ import React, { useMemo, useState } from 'react';
 import { Clock, Eye, CheckCircle2, FilePlus2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-import AppShellV2 from '../components/layout-v2/AppShellV2';
-import PageHeader from '../components/ui-v2/PageHeader';
-import PageMetaLine from '../components/ui-v2/PageMetaLine';
-import ProvenanceMarker from '../components/ui-v2/ProvenanceMarker';
-import KpiCard from '../components/ui-v2/KpiCard';
-import Data from '../components/ui-v2/Data';
-import SubTabs from '../components/ui-v2/SubTabs';
-import SearchBar from '../components/ui-v2/SearchBar';
-import StatusPill from '../components/ui-v2/StatusPill';
-import Table from '../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../components/ui-v2/TableHeader';
-import TableRow from '../components/ui-v2/TableRow';
-import TableCell from '../components/ui-v2/TableCell';
-import Button from '../components/ui-v2/Button';
-import SidePanel from '../components/ui-v2/SidePanel';
-import FormSection from '../components/ui-v2/FormSection';
-import LoadingState from '../components/ui-v2/LoadingState';
-import ErrorState from '../components/ui-v2/ErrorState';
-import EmptyState from '../components/ui-v2/EmptyState';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import PageHeader from '@components/ui-v2/PageHeader';
+import PageMetaLine from '@components/ui-v2/PageMetaLine';
+import ProvenanceMarker from '@components/ui-v2/ProvenanceMarker';
+import KpiCard from '@components/ui-v2/KpiCard';
+import Data from '@components/ui-v2/Data';
+import SubTabs from '@components/ui-v2/SubTabs';
+import SearchBar from '@components/ui-v2/SearchBar';
+import StatusPill from '@components/ui-v2/StatusPill';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
+import Button from '@components/ui-v2/Button';
+import SidePanel from '@components/ui-v2/SidePanel';
+import FormSection from '@components/ui-v2/FormSection';
+import LoadingState from '@components/ui-v2/LoadingState';
+import ErrorState from '@components/ui-v2/ErrorState';
+import EmptyState from '@components/ui-v2/EmptyState';
 
-import { useToast } from '../hooks/useToast';
-import { useSupplierApplications, useSuppliers } from '../services/query/hooks';
+import { useToast } from '@hooks/useToast';
+import { useSupplierApplications, useSuppliers } from '@services/query/hooks';
 import {
   useApplicationSubmit,
   useApplicationStartReview,
   useApplicationApprove,
   useApplicationReject,
-} from '../services/query/commandHooks';
-import { useVerbAvailabilities, useNextAct } from '../hooks/useVerbAvailability';
-import NextActLine from '../components/ui-v2/NextActLine';
-import { HandoffNotice } from '../components/ui-v2/HandoffNotice';
-import { useRefusalText, useDataErrorText } from '../hooks/useRefusalText';
-import { formatDate } from '../lib/format';
-import { DataError } from '../services/data/types';
+} from '@services/query/commandHooks';
+import { useVerbAvailabilities, useNextAct } from '@hooks/useVerbAvailability';
+import NextActLine from '@components/ui-v2/NextActLine';
+import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
+import { useRefusalText, useDataErrorText } from '@hooks/useRefusalText';
+import { formatDate } from '@lib/format';
+import { DataError } from '@services/data/types';
 import type {
   SupplierApplication,
   SupplierApplicationStatus,
-} from '../services/data/types';
-import type { ActorAttribution, UnattributedReason } from '../lib/enforcement';
+} from '@services/data/types';
+import type { ActorAttribution, UnattributedReason } from '@lib/enforcement';
 import {
   APPLICATION_REQUEST_TYPES,
   APPLICATION_DECLARATION_KINDS,
   VENDOR_BEARING_REQUEST_TYPE,
   type ApplicationRequestType,
   type ApplicationDeclarationKind,
-} from '../services/transitions/flows/supplierApplication.flow';
+} from '@services/transitions/flows/supplierApplication.flow';
 
 /**
  * The empty declaration draft: every permitted subject, no reference yet.

@@ -19,7 +19,7 @@ import type { QueryScope } from '../types';
 import { PERSONA_SYSTEM_ROLES, SYSTEM_ROLES, rolesHolding } from '../../transitions/businessRoles';
 import { supplierUpdateModeRefusal } from '../../transitions/supplierOverlayRules';
 import { sdcClock } from '../../sdc';
-import { NO_PERSON } from '../../../context/noPerson';
+import { NO_PERSON } from '@context/noPerson';
 
 const svc = new MockCommandService();
 const suppliers = new MockSupplierService();

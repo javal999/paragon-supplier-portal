@@ -1,8 +1,8 @@
 import { screen, within, fireEvent } from '@testing-library/react';
-import { renderWithProviders, SUPPLIER } from '../test/test-utils';
-import { mockDataService } from '../services/data/mock/mockDataService';
-import { withChaos } from '../services/data/mock/withChaos';
-import { isLive } from '../services/liveness';
+import { renderWithProviders, SUPPLIER } from '@test/test-utils';
+import { mockDataService } from '@services/data/mock/mockDataService';
+import { withChaos } from '@services/data/mock/withChaos';
+import { isLive } from '@services/liveness';
 import BuyerRisk from './BuyerRisk';
 
 const alwaysFails = withChaos(mockDataService, { minMs: 0, maxMs: 0, failureRate: 1 });

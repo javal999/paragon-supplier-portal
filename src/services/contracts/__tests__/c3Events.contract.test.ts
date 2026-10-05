@@ -34,7 +34,7 @@ import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { buildRepoProgram } from '../../../lib/storedFieldGate/derive';
+import { buildRepoProgram } from '@lib/storedFieldGate/derive';
 import { deriveInterfaceMembers } from './deriveC1Surface';
 import { getKnownFlows } from '../../transitions';
 
@@ -222,7 +222,7 @@ function spineFiles(): string[] {
     for (const e of readdirSync(d, { withFileTypes: true })) {
       const p = join(d, e.name);
       if (e.isDirectory()) walk(p);
-      else if (/\.ts$/.test(e.name) && !/\.test\.ts$/.test(e.name)) found.push(p);
+      else if (/\.[jt]s$/.test(e.name) && !/\.test\.[jt]s$/.test(e.name)) found.push(p);
     }
   };
   walk(SPINE_DIR);

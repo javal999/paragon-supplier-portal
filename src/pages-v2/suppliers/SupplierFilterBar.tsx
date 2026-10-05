@@ -11,7 +11,7 @@ import {
   type CertValidity,
   type PerformanceBand,
   type SupplierFilters,
-} from '../../services/sourcing/supplierFilters';
+} from '@services/sourcing/supplierFilters';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // THE BR-05 FILTERS — BL-52, REQ-E03-01 BR-05.

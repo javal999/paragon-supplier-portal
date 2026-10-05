@@ -1,15 +1,15 @@
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { beforeEach } from 'vitest';
-import { renderWithProviders, SUPPLIER } from '../test/test-utils';
-import { mockDataService } from '../services/data/mock/mockDataService';
-import { withChaos } from '../services/data/mock/withChaos';
-import { purchaseOrderStore } from '../services/data/mock/stores/purchaseOrderStore';
-import { asnStore } from '../services/data/mock/stores/asnStore';
-import { commandAuditSink } from '../services/data/mock/MockCommandService';
-import type { IDataService, QueryScope } from '../services/data/types';
-import i18n from '../lib/i18n';
+import { renderWithProviders, SUPPLIER } from '@test/test-utils';
+import { mockDataService } from '@services/data/mock/mockDataService';
+import { withChaos } from '@services/data/mock/withChaos';
+import { purchaseOrderStore } from '@services/data/mock/stores/purchaseOrderStore';
+import { asnStore } from '@services/data/mock/stores/asnStore';
+import { commandAuditSink } from '@services/data/mock/MockCommandService';
+import type { IDataService, QueryScope } from '@services/data/types';
+import i18n from '@lib/i18n';
 import SupplierShipments from './SupplierShipments';
-import { PERSONA_SYSTEM_ROLES } from '../services/transitions/businessRoles';
+import { PERSONA_SYSTEM_ROLES } from '@services/transitions/businessRoles';
 
 beforeEach(() => {
   purchaseOrderStore.reset();

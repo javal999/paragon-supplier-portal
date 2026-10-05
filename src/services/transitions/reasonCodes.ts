@@ -39,11 +39,11 @@
 // in order, refusals named, unparseable distinguished from empty.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { asActorAttribution, type ActorAttribution } from '../../lib/enforcement';
-import { orderCollaborationEn, orderCollaborationId } from '../../lib/i18n/orderCollaboration';
-import { inventoryCapacityEn, inventoryCapacityId } from '../../lib/i18n/inventoryCapacity';
-import { forecastCollaborationEn, forecastCollaborationId } from '../../lib/i18n/forecastCollaboration';
-import { forecastBiasEn, forecastBiasId } from '../../lib/i18n/forecastBias';
+import { asActorAttribution, type ActorAttribution } from '@lib/enforcement';
+import { orderCollaborationEn, orderCollaborationId } from '@lib/i18n/orderCollaboration';
+import { inventoryCapacityEn, inventoryCapacityId } from '@lib/i18n/inventoryCapacity';
+import { forecastCollaborationEn, forecastCollaborationId } from '@lib/i18n/forecastCollaboration';
+import { forecastBiasEn, forecastBiasId } from '@lib/i18n/forecastBias';
 
 export const REASON_LISTS = ['poAdjust', 'poReject', 'capacityShortfall', 'commitmentShortfall', 'alertClose', 'forecastOverride'] as const;
 export type ReasonListId = (typeof REASON_LISTS)[number];

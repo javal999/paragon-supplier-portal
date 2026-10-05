@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { screen } from '@testing-library/react';
-import { renderWithProviders } from '../../test/test-utils';
+import { renderWithProviders } from '@test/test-utils';
 import PlanCellMarker from './PlanCellMarker';
-import { isLive } from '../../services/liveness';
+import { isLive } from '@services/liveness';
 
 // ────────────────────────────────────────────────────────────────────────────
 // PlanCellMarker — the per-row honest-render chip (C6 §5 conjunction).

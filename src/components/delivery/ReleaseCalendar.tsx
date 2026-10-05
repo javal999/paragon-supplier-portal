@@ -20,13 +20,13 @@ import Table from '../ui-v2/Table';
 import TableHeader, { TableHeaderCell } from '../ui-v2/TableHeader';
 import TableRow from '../ui-v2/TableRow';
 import TableCell from '../ui-v2/TableCell';
-import { formatNumber, formatDate } from '../../lib/format';
+import { formatNumber, formatDate } from '@lib/format';
 import type {
   DeliveryItemView,
   ReleaseFulfillment,
   ReleaseFulfillmentView,
   ScheduleLine,
-} from '../../services/delivery';
+} from '@services/delivery';
 
 // Fulfillment → the quiet outlined StatusPill tone (DP-2 semantic, soft variants):
 // fulfilled = delivered on time, late = delivered but after, missed = a real gap,

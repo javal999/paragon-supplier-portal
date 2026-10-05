@@ -1,11 +1,11 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { RotateCcw, ChevronRight } from 'lucide-react';
-import Button from '../../components/ui-v2/Button';
-import Data from '../../components/ui-v2/Data';
-import type { FlowEdge, FlowView } from '../../services/transitions/catalogView';
-import { transitionPurposeKey } from '../../services/transitions/annotations';
-import { isPerformable, STEP_KIND_KEY } from '../../lib/i18n/stepKind';
+import Button from '@components/ui-v2/Button';
+import Data from '@components/ui-v2/Data';
+import type { FlowEdge, FlowView } from '@services/transitions/catalogView';
+import { transitionPurposeKey } from '@services/transitions/annotations';
+import { isPerformable, STEP_KIND_KEY } from '@lib/i18n/stepKind';
 import { verbOf } from './flowLayout';
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -91,6 +91,9 @@ const LifecycleWalk: React.FC<LifecycleWalkProps> = ({
           <span className="text-meta text-text-tertiary">{t('processFlows.walk.notStarted')}</span>
         ) : (
           path.map((state, i) => (
+            // `path` only grows (or resets to empty), so i is the step number and
+            // never shifts; the state name alone repeats when the walk loops back.
+            // eslint-disable-next-line react/no-array-index-key -- append-only path: index i is the step number, stable for the row's life
             <span key={`${state}-${i}`} className="inline-flex items-center gap-1.5">
               {i > 0 && <ChevronRight size={12} className="text-text-tertiary" />}
               <Data

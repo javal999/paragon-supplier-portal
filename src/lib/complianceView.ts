@@ -9,7 +9,7 @@
 // (e.g. ISO 9001 vs 14001), the derivation stays coarse rather than invent one.
 // ────────────────────────────────────────────────────────────────────────────
 
-import type { CertType, ComplianceDisplayStatus } from '../services/data/types';
+import type { CertType, ComplianceDisplayStatus } from '@services/data/types';
 
 /** Coarse cert category for the page's category facet. */
 export type CertCategory = 'Halal' | 'Quality' | 'Regulatory' | 'Other';

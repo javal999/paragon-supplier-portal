@@ -7,9 +7,9 @@
 
 import { screen, fireEvent, within } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
-import i18n from '../../lib/i18n';
-import { renderWithProviders } from '../../test/test-utils';
-import { mockPurchaseOrders } from '../../data/mockPurchaseOrders';
+import i18n from '@lib/i18n';
+import { renderWithProviders } from '@test/test-utils';
+import { mockPurchaseOrders } from '@data/mockPurchaseOrders';
 import { poLineQuantityText, poLineValue, isValueOnlyLine } from './poLineQuantity';
 import BuyerOrders from '../BuyerOrders';
 

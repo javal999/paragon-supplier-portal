@@ -35,7 +35,7 @@
 //   material) touches the selector's predicate and comparator and NOTHING HERE.
 // ────────────────────────────────────────────────────────────────────────────
 
-import type { EnforcementSetting } from '../../../../lib/enforcement';
+import type { EnforcementSetting } from '@lib/enforcement';
 
 /** THE SEED: none. See the header — this is D-ENF-4, and it is unruled. */
 const SEED: readonly EnforcementSetting[] = Object.freeze([]);

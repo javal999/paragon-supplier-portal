@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, screen, within } from '@testing-library/react';
-import { renderWithProviders, BUYER } from '../../test/test-utils';
-import { NO_PERSON } from '../../context/noPerson';
-import { qualificationRuleStore } from '../../services/transitions/qualificationRuleStore';
-import { sourcingTypeStore } from '../../services/transitions/sourcingTypeStore';
+import { renderWithProviders, BUYER } from '@test/test-utils';
+import { NO_PERSON } from '@context/noPerson';
+import { qualificationRuleStore } from '@services/transitions/qualificationRuleStore';
+import { sourcingTypeStore } from '@services/transitions/sourcingTypeStore';
 import RfxInviteeStep from './RfxInviteeStep';
 import AdminSourcingTypes from '../admin/AdminSourcingTypes';
 

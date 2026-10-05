@@ -13,7 +13,7 @@
 
 import { useQuery, type UseQueryOptions } from '@tanstack/react-query';
 import { useDataService } from '../data/DataServiceContext';
-import { useCurrentIdentity } from '../../context/CurrentIdentityContext';
+import { useCurrentIdentity } from '@context/CurrentIdentityContext';
 import type { IDataService, QueryScope } from '../data/types';
 
 export const scopeKey = (scope: QueryScope): string =>

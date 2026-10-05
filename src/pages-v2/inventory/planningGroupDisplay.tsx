@@ -1,9 +1,9 @@
 import React, { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
-import StatusPill from '../../components/ui-v2/StatusPill';
-import { usePlanningGroups } from '../../services/query/hooks';
-import type { PlanningGroupView } from '../../services/data/types';
+import StatusPill from '@components/ui-v2/StatusPill';
+import { usePlanningGroups } from '@services/query/hooks';
+import type { PlanningGroupView } from '@services/data/types';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Material C5 · how a planning group is named on screen (MR-8; AR-15, MAT-R6).

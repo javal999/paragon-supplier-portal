@@ -57,6 +57,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import ts from 'typescript';
 import { relative } from 'node:path';
+import { scriptKindOf } from '@test/sourceFiles';
 
 /** One site where a field was read. */
 export interface ReadSite {
@@ -128,11 +129,11 @@ export interface DeriveOptions {
  */
 export function isFixturePath(path: string): boolean {
   return (
-    /\.test\.tsx?$/.test(path) ||
+    /\.test\.[jt]sx?$/.test(path) ||
     /(^|\/)__tests__\//.test(path) ||
     /(^|\/)fixtures?(\/|\.)/i.test(path) ||
-    /Fixtures?\.ts$/.test(path) ||
-    /Seed\.ts$/.test(path) ||
+    /Fixtures?\.[jt]s$/.test(path) ||
+    /Seed\.[jt]s$/.test(path) ||
     /^src\/test\//.test(path) ||
     /^src\/services\/testing\//.test(path) ||
     /^src\/data\/mock[A-Z]/.test(path)
@@ -412,7 +413,7 @@ export function buildProgramFromSources(files: Readonly<Record<string, string>>)
   const options: ts.CompilerOptions = { noLib: true, strict: true, noEmit: true, target: ts.ScriptTarget.ES2020 };
   const sourceFiles = new Map<string, ts.SourceFile>();
   for (const [name, text] of Object.entries(files)) {
-    sourceFiles.set(name, ts.createSourceFile(name, text, ts.ScriptTarget.ES2020, true));
+    sourceFiles.set(name, ts.createSourceFile(name, text, ts.ScriptTarget.ES2020, true, scriptKindOf(name)));
   }
   const host: ts.CompilerHost = {
     getSourceFile: (name) => sourceFiles.get(name),

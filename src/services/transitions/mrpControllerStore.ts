@@ -29,7 +29,7 @@
 // "My materials" works from the code a seat chooses, not from a login.
 // ────────────────────────────────────────────────────────────────────────────
 
-import type { ActorAttribution } from '../../lib/enforcement';
+import type { ActorAttribution } from '@lib/enforcement';
 
 /** One MRP controller on the administrator's list (MR-5 BR-02). */
 export interface MrpController {

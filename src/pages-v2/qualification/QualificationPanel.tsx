@@ -1,22 +1,22 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Award, Clock } from 'lucide-react';
-import StatusPill from '../../components/ui-v2/StatusPill';
-import Button from '../../components/ui-v2/Button';
-import Data from '../../components/ui-v2/Data';
-import Table from '../../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../../components/ui-v2/TableHeader';
-import TableRow from '../../components/ui-v2/TableRow';
-import TableCell from '../../components/ui-v2/TableCell';
-import { useCategoryLabel } from '../../hooks/useCategoryLabel';
-import { certTypeLabelKey } from '../../lib/complianceView';
-import { formatDate } from '../../lib/format';
+import StatusPill from '@components/ui-v2/StatusPill';
+import Button from '@components/ui-v2/Button';
+import Data from '@components/ui-v2/Data';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
+import { useCategoryLabel } from '@hooks/useCategoryLabel';
+import { certTypeLabelKey } from '@lib/complianceView';
+import { formatDate } from '@lib/format';
 import type {
   QualificationLevel,
   QualificationRequiredDoc,
   SupplierDocumentCategory,
   VendorQualification,
-} from '../../services/data/types';
+} from '@services/data/types';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // A VENDOR'S QUALIFICATION — Material G1 (MR-10 BR-01 to BR-03, AC-01, AC-06).

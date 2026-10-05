@@ -1,5 +1,5 @@
 import { screen } from '@testing-library/react';
-import { renderWithProviders, BUYER } from '../../test/test-utils';
+import { renderWithProviders, BUYER } from '@test/test-utils';
 import BuyerInvoiceAgingWidget from './BuyerInvoiceAgingWidget';
 import BuyerRfqAwaitingAwardWidget from './BuyerRfqAwaitingAwardWidget';
 import BuyerOpenPoWidget from './BuyerOpenPoWidget';

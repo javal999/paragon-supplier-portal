@@ -12,7 +12,7 @@
 // with its code.
 // ────────────────────────────────────────────────────────────────────────────
 
-import { isCalendarDate } from '../../lib/workingCalendar';
+import { isCalendarDate } from '@lib/workingCalendar';
 import { isAttachmentMeta } from '../attachments/sessionAttachments';
 import { isPastDeadline } from '../transitions/rfxRules';
 import { gateRefusal, type GateResult } from './complianceGate';

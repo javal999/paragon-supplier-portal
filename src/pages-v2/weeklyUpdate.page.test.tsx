@@ -1,10 +1,10 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
-import type { IDataService, InventoryPosition } from '../services/data/types';
-import { BUYER, renderWithProviders, SUPPLIER } from '../test/test-utils';
-import type { CurrentIdentity } from '../context/CurrentIdentityContext';
-import { mockDataService } from '../services/data/mock/mockDataService';
-import { sdcClock } from '../services/sdc';
+import type { IDataService, InventoryPosition } from '@services/data/types';
+import { BUYER, renderWithProviders, SUPPLIER } from '@test/test-utils';
+import type { CurrentIdentity } from '@context/CurrentIdentityContext';
+import { mockDataService } from '@services/data/mock/mockDataService';
+import { sdcClock } from '@services/sdc';
 import SupplierInventory from './SupplierInventory';
 import SupplierHome from './SupplierHome';
 import BuyerInventory from './BuyerInventory';

@@ -19,6 +19,7 @@ import { inventoryAlertLedger } from '../services/data/mock/stores/inventoryHubS
 import { SEEDED_PACKAGING_WEEKS as W } from '../services/data/mock/fixtures/forecastHub';
 import { sdcClock } from '../services/sdc';
 import { formatDate } from '../lib/format';
+import i18n from '../lib/i18n';
 import SupplierForecastCommitments from './SupplierForecastCommitments';
 import BuyerForecasts from './BuyerForecasts';
 import BuyerCommitments from './BuyerCommitments';
@@ -49,23 +50,15 @@ const responsesFor = (supplierId: string, material: string, period: string) =>
   requirementResponseStore.all().filter((r) => r.supplierId === supplierId && r.materialCode === material && r.periodBucket === period);
 
 describe('menu and copy (section 3.7)', () => {
-  it('PTI Forecast: Forecasts first, then Commitments & gaps, then Supplier reliability (REQ-E14-02), then the engine pages (REQ-E14-03, REQ-E14-04)', () => {
-    const forecast = PTI_NAV.find((s) => s.id === 'forecast')!;
-    expect(forecast.items.map((i) => [i.labelKey, i.path])).toEqual([
-      ['hub.nav.pti.forecasts', '/buyer/forecasts'],
-      ['hub.nav.pti.commitments', '/buyer/collaboration'],
-      ['hub.nav.pti.fsReconcile', '/buyer/fs-reconcile'],
-      ['hub.nav.pti.dataHealth', '/buyer/data-health'],
-      ['hub.nav.pti.demandForecast', '/buyer/demand-forecast'],
-      ['hub.nav.pti.forecastBias', '/buyer/forecast-bias'],
-      ['hub.nav.pti.modelBacktest', '/buyer/model-backtest'],
-      ['hub.nav.pti.reliability', '/buyer/reliability'],
-      ['hub.nav.pti.materialRequirement', '/buyer/material-requirement'],
-      ['hub.nav.pti.safetyStock', '/buyer/safety-stock'],
-      ['hub.nav.pti.orderPlan', '/buyer/order-plan'],
-      ['hub.nav.pti.reschedule', '/buyer/reschedule'],
-      ['hub.nav.pti.stabilise', '/buyer/stabilise'],
+  it('PTI Weekly plan: What to order, Make warehouse room, Publish, then Supplier responses (FUX phase 1, F-03)', () => {
+    const weekly = PTI_NAV.find((s) => s.id === 'weeklyPlan')!;
+    expect(weekly.items.map((i) => [i.labelKey, i.path])).toEqual([
+      ['hub.nav.pti.whatToOrder', '/buyer/order-plan'],
+      ['hub.nav.pti.makeRoom', '/buyer/reschedule'],
+      ['hub.nav.pti.publishToSuppliers', '/buyer/stabilise'],
+      ['hub.nav.pti.supplierResponses', '/buyer/collaboration'],
     ]);
+    expect(PTI_NAV.find((s) => s.id === 'forecast')).toBeUndefined();
   });
 
   it('every new string exists in EN and ID', () => {
@@ -172,22 +165,42 @@ describe('Supplier — Forecast & commitments (REQ-E06-01 SUP, REQ-E06-02)', () 
   });
 });
 
-describe('PTI — Forecasts (REQ-E06-01 MP)', () => {
-  it('lists versions with who viewed them; Re-publish adds a version', async () => {
+describe('PTI — Published versions (REQ-E06-01 MP, FUX-D1)', () => {
+  it('lists versions with who viewed them, and links to Publish to suppliers', async () => {
     renderWithProviders(<BuyerForecasts />, { identity: PLANNER });
     const v1 = await screen.findByTestId('fc-version-FC-PK-V1');
     expect(within(v1).getByTestId('fc-viewed-FC-PK-V1-sup-007')).toHaveTextContent('Viewed');
     expect(screen.getByTestId('fc-viewed-FC-PK-V2-sup-012')).toHaveTextContent('Not viewed');
     expect(screen.getByTestId('fc-pti-versions-banner')).toHaveTextContent('version 2: 2');
-    fireEvent.click(screen.getByTestId('fc-republish'));
-    await waitFor(() => expect(forecastVersionStore.get('FC-PK-V3')).toBeDefined());
-    expect(await screen.findByTestId('fc-version-FC-PK-V3')).toHaveTextContent('Current');
+    expect(screen.getByRole('heading', { name: 'Published versions' })).toBeInTheDocument();
+    expect(screen.getByTestId('fc-pti-versions-publish-from')).toHaveTextContent('Plans are published from Publish to suppliers.');
+    expect(screen.getByTestId('fc-pti-versions-publish-link')).toHaveAttribute('href', '/buyer/stabilise');
   });
 
-  it('a seat without the planning lane sees the handoff, not Re-publish', async () => {
-    renderWithProviders(<BuyerForecasts />, { identity: { ...BUYER, businessRoles: ['finance'] } });
-    expect(await screen.findByTestId('handoff-forecast-publish')).toBeInTheDocument();
-    expect(screen.queryByTestId('fc-republish')).toBeNull();
+  it('FUX-D1 — no Re-publish, no Emergency re-publication and no publish handoff, for any role', async () => {
+    const seats: CurrentIdentity[] = [PLANNER, BUYER, { ...BUYER, businessRoles: ['finance'] }];
+    for (const identity of seats) {
+      const { unmount } = renderWithProviders(<BuyerForecasts />, { identity });
+      await screen.findByTestId('fc-version-FC-PK-V1');
+      expect(screen.queryByTestId('fc-republish')).toBeNull();
+      expect(screen.queryByTestId('fc-republish-emergency')).toBeNull();
+      expect(screen.queryByTestId('handoff-forecast-publish')).toBeNull();
+      expect(screen.queryByRole('button', { name: /re-publish|emergency/i })).toBeNull();
+      unmount();
+    }
+    // Nothing on this page wrote a version.
+    expect(forecastVersionStore.get('FC-PK-V3')).toBeUndefined();
+  });
+
+  it('reads in Indonesian', async () => {
+    await i18n.changeLanguage('id');
+    try {
+      renderWithProviders(<BuyerForecasts />, { identity: PLANNER });
+      expect(await screen.findByRole('heading', { name: 'Versi terbit' })).toBeInTheDocument();
+      expect(screen.getByTestId('fc-pti-versions-publish-link')).toHaveTextContent('Terbitkan ke pemasok');
+    } finally {
+      await i18n.changeLanguage('en');
+    }
   });
 });
 
@@ -202,6 +215,19 @@ describe('PTI — Commitments & gaps (REQ-E06-03)', () => {
       [`sup-007-PK-PETB-8802-${W[0]}`, `sup-012-PK-PETB-8801-${W[0]}`, `sup-012-PK-PETB-8801-${W[1]}`, `sup-012-PK-PETB-8801-${W[2]}`].sort(),
     );
     expect(ids.slice(4)).toEqual([`sup-007-PK-PETB-8801-${W[1]}`, `sup-007-PK-PETB-8802-${W[3]}`]);
+  });
+
+  it('F-23 — the exceptions table comes first; the grid and the cumulative chart sit in a collapsed Coverage section below it', async () => {
+    renderWithProviders(<BuyerCommitments />, { identity: PLANNER });
+    const exceptions = await screen.findByTestId('fc-exceptions');
+    const details = screen.getByTestId('fc-coverage-details');
+    expect(details.tagName).toBe('DETAILS');
+    expect(details).not.toHaveAttribute('open');
+    expect(details.querySelector('summary')).toHaveTextContent('Coverage');
+    expect(exceptions.compareDocumentPosition(details) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(within(details).getByTestId('fc-grid')).toBeInTheDocument();
+    expect(within(details).getByTestId('fc-cumulative')).toBeInTheDocument();
+    expect(exceptions.compareDocumentPosition(screen.getByTestId('fc-coverage')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it('the grid colours each period per CR-22, and over-commit reads as information', async () => {

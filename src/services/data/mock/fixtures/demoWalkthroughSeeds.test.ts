@@ -17,11 +17,11 @@
 // ────────────────────────────────────────────────────────────────────────────
 
 import { describe, expect, it } from 'vitest';
-import { mockGoodsReceipts } from '../../../../data/mockGoodsReceipts';
+import { mockGoodsReceipts } from '@data/mockGoodsReceipts';
 import { deriveHeaderDisposition } from '../../../transitions';
 import { MockProcurementService } from '../MockProcurementService';
 import { PERSONA_SYSTEM_ROLES } from '../../../transitions/businessRoles';
-import { NO_PERSON } from '../../../../context/noPerson';
+import { NO_PERSON } from '@context/noPerson';
 import type { QueryScope } from '../../types';
 import type { RfxInviteeView } from '../../../sourcing/views';
 

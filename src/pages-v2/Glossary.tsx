@@ -2,13 +2,13 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useSearchParams } from 'react-router-dom';
 import { BookOpen, GitBranch, Link2, HelpCircle } from 'lucide-react';
-import AppShellV2 from '../components/layout-v2/AppShellV2';
-import PageHeader from '../components/ui-v2/PageHeader';
-import PageMetaLine from '../components/ui-v2/PageMetaLine';
-import SearchBar from '../components/ui-v2/SearchBar';
-import StatusPill from '../components/ui-v2/StatusPill';
-import Data from '../components/ui-v2/Data';
-import { GLOSSARY_REGISTRIES } from '../lib/glossary';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import PageHeader from '@components/ui-v2/PageHeader';
+import PageMetaLine from '@components/ui-v2/PageMetaLine';
+import SearchBar from '@components/ui-v2/SearchBar';
+import StatusPill from '@components/ui-v2/StatusPill';
+import Data from '@components/ui-v2/Data';
+import { GLOSSARY_REGISTRIES } from '@lib/glossary';
 import {
   buildGlossaryView,
   type FlowAppearance,

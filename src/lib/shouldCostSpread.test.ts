@@ -18,8 +18,8 @@ import {
   ROOT_BENCHMARKS,
   SHOULD_COST_MATERIALS,
   SIMULATED_SPOT_FX,
-} from '../services/data/mock/fixtures/commodityBaskets';
-import { MATERIAL_BASKET_CLASSIFICATION } from '../services/data/mock/fixtures/commodityMaterialMap';
+} from '@services/data/mock/fixtures/commodityBaskets';
+import { MATERIAL_BASKET_CLASSIFICATION } from '@services/data/mock/fixtures/commodityMaterialMap';
 
 // ─── Hand-verifiable inline scaffold (mirrors shouldCost.test.ts) ──────────────
 // Numbers chosen so the §5 formula lands on round figures and the spread math is
