@@ -2,20 +2,20 @@ import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Info, MessageCircle } from 'lucide-react';
-import AppShellV2 from '../components/layout-v2/AppShellV2';
-import PageHeader from '../components/ui-v2/PageHeader';
-import PageMetaLine from '../components/ui-v2/PageMetaLine';
-import LivenessPill from '../components/ui-v2/LivenessPill';
-import LoadingState from '../components/ui-v2/LoadingState';
-import EmptyState from '../components/ui-v2/EmptyState';
-import ErrorState from '../components/ui-v2/ErrorState';
-import StatusPill from '../components/ui-v2/StatusPill';
-import Data from '../components/ui-v2/Data';
-import { useUnifiedChase } from '../services/query/chaseHooks';
-import { useSuppliers } from '../services/query/hooks';
-import type { ChaseSeverityLevel } from '../services/chase';
-import { SDC_SIMULATED_NOW } from '../services/sdc';
-import { formatDate } from '../lib/format';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import PageHeader from '@components/ui-v2/PageHeader';
+import PageMetaLine from '@components/ui-v2/PageMetaLine';
+import LivenessPill from '@components/ui-v2/LivenessPill';
+import LoadingState from '@components/ui-v2/LoadingState';
+import EmptyState from '@components/ui-v2/EmptyState';
+import ErrorState from '@components/ui-v2/ErrorState';
+import StatusPill from '@components/ui-v2/StatusPill';
+import Data from '@components/ui-v2/Data';
+import { useUnifiedChase } from '@services/query/chaseHooks';
+import { useSuppliers } from '@services/query/hooks';
+import type { ChaseSeverityLevel } from '@services/chase';
+import { SDC_SIMULATED_NOW } from '@services/sdc';
+import { formatDate } from '@lib/format';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // BuyerChase (SDC-5d) — the buyer/planner UNIFIED chase surface.
@@ -123,6 +123,7 @@ const BuyerChase: React.FC = () => {
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {view.dataReasons.map((reason, i) => (
+                      // eslint-disable-next-line react/no-array-index-key -- reason codes can repeat and have no id; read-only, stateless pills recomputed whole from the chase view
                       <StatusPill key={`${reason}-${i}`} variant="warning">
                         {t(`chase.data.${reason}`)}
                       </StatusPill>

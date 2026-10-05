@@ -57,7 +57,7 @@
 // parsing one, and is registered as 4a-FIND-02 rather than decided here.
 // ────────────────────────────────────────────────────────────────────────────
 
-import { normalizeQty, type QtyRefusalReason } from '../../lib/localeNumber';
+import { normalizeQty, type QtyRefusalReason } from '@lib/localeNumber';
 
 /** The wizard draft fields the create payload is derived from (a structural
  * subset of BuyerSourcing's `DraftRfq`; extra draft fields are ignored). */

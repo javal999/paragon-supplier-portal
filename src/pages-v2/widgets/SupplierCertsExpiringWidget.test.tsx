@@ -67,13 +67,13 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import { describe, it, expect } from 'vitest';
 import { screen, within, fireEvent } from '@testing-library/react';
-import { renderWithProviders, SUPPLIER } from '../../test/test-utils';
+import { renderWithProviders, SUPPLIER } from '@test/test-utils';
 import SupplierCertsExpiringWidget from './SupplierCertsExpiringWidget';
-import { DOCUMENTS } from '../../services/data/mock/fixtures/supplierDocuments';
+import { DOCUMENTS } from '@services/data/mock/fixtures/supplierDocuments';
 import { readFileSync } from 'node:fs';
-import { documentExpiry } from '../../services/data/dayProjection';
-import { documentDisplayState } from '../../services/data/documentDisplayState';
-import { DECLARED_PRESENT } from '../../services/data/fixturePresent';
+import { documentExpiry } from '@services/data/dayProjection';
+import { documentDisplayState } from '@services/data/documentDisplayState';
+import { DECLARED_PRESENT } from '@services/data/fixturePresent';
 
 const HALAL = 'Halal Certificate — MUI No. 01011234561020';
 

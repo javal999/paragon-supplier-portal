@@ -1,14 +1,14 @@
 import { describe, it, expect, afterEach, beforeAll } from 'vitest';
 import { screen, within, fireEvent } from '@testing-library/react';
-import { renderWithProviders, BUYER } from '../test/test-utils';
+import { renderWithProviders, BUYER } from '@test/test-utils';
 import BuyerModelBacktest from './BuyerModelBacktest';
 import BuyerDemandForecast from './BuyerDemandForecast';
-import { mockDataService } from '../services/data/mock/mockDataService';
-import { isLive } from '../services/liveness';
-import { PERSONA_SYSTEM_ROLES } from '../services/transitions/businessRoles';
-import i18n from '../lib/i18n';
-import { modelBacktestEn, modelBacktestId } from '../lib/i18n/modelBacktest';
-import type { QueryScope } from '../services/data/types';
+import { mockDataService } from '@services/data/mock/mockDataService';
+import { isLive } from '@services/liveness';
+import { PERSONA_SYSTEM_ROLES } from '@services/transitions/businessRoles';
+import i18n from '@lib/i18n';
+import { modelBacktestEn, modelBacktestId } from '@lib/i18n/modelBacktest';
+import type { QueryScope } from '@services/data/types';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // REQ-E14-10 — the planner's Model backtest page. Figures are read back from

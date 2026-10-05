@@ -13,8 +13,8 @@ import { inventoryDeclarationStore } from './stores/inventoryDeclarationStore';
 import type { QueryScope } from '../types';
 import { PERSONA_SYSTEM_ROLES } from '../../transitions/businessRoles';
 import { availableBatches } from '../../transitions/fulfilmentRules';
-import { NO_PERSON } from '../../../context/noPerson';
-import { openLinesFor, readLines, type LineEntry } from '../../../pages-v2/shipments/asnLines';
+import { NO_PERSON } from '@context/noPerson';
+import { openLinesFor, readLines, type LineEntry } from '@pages-v2/shipments/asnLines';
 
 const svc = new MockCommandService();
 

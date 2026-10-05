@@ -12,7 +12,7 @@ import {
 import { sideOfSystemRole, atomsOfSide, copyableParentRefusal } from './customRoles';
 import { ROLE_LABEL_KEY, ROLE_ORDER } from './handoff';
 import { personaCan } from './roles';
-import i18n from '../../lib/i18n';
+import i18n from '@lib/i18n';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // `buyer_all` — THE MANAGER'S SEAT.

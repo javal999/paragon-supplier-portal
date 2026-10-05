@@ -62,8 +62,8 @@
 // ────────────────────────────────────────────────────────────────────────────
 
 import type { TransitionRole } from './schema';
-import type { ActorAttribution } from '../../lib/enforcement';
-import { asActorAttribution } from '../../lib/enforcement';
+import type { ActorAttribution } from '@lib/enforcement';
+import { asActorAttribution } from '@lib/enforcement';
 import { getKnownFlows } from './registry';
 import {
   SYSTEM_ROLES,

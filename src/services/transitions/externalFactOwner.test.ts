@@ -25,8 +25,8 @@ import { describe, it, expect } from 'vitest';
 import { getKnownFlows } from './index';
 import { validateFlow } from './validate';
 import type { ExternalFactOwner, FlowDefinition, Surfaceability } from './schema';
-import { EXTERNAL_FACT_OWNER_KEY } from '../../lib/i18n/externalFactOwner';
-import { processFlowsEn, processFlowsId } from '../../lib/i18n/processFlows';
+import { EXTERNAL_FACT_OWNER_KEY } from '@lib/i18n/externalFactOwner';
+import { processFlowsEn, processFlowsId } from '@lib/i18n/processFlows';
 
 /**
  * The union's members AS DATA, exhaustive BY TYPE. A `Record<ExternalFactOwner,

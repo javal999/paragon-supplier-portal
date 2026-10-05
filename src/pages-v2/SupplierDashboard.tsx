@@ -11,34 +11,34 @@ import {
   FileText,
   ChevronRight,
 } from 'lucide-react';
-import AppShellV2 from '../components/layout-v2/AppShellV2';
-import PageHeader from '../components/ui-v2/PageHeader';
-import PageMetaLine from '../components/ui-v2/PageMetaLine';
-import ProvenanceMarker from '../components/ui-v2/ProvenanceMarker';
-import KpiCard from '../components/ui-v2/KpiCard';
-import StatusPill from '../components/ui-v2/StatusPill';
-import { statusTone } from '../lib/statusTone';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import PageHeader from '@components/ui-v2/PageHeader';
+import PageMetaLine from '@components/ui-v2/PageMetaLine';
+import ProvenanceMarker from '@components/ui-v2/ProvenanceMarker';
+import KpiCard from '@components/ui-v2/KpiCard';
+import StatusPill from '@components/ui-v2/StatusPill';
+import { statusTone } from '@lib/statusTone';
 import {
   targetStatus,
   TARGET_STATUS,
   TargetStatus,
-} from '../lib/chartPalette';
-import TargetBar from '../components/ui-v2/TargetBar';
-import Table from '../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../components/ui-v2/TableHeader';
-import TableRow from '../components/ui-v2/TableRow';
-import TableCell from '../components/ui-v2/TableCell';
-import Button from '../components/ui-v2/Button';
-import Data from '../components/ui-v2/Data';
+} from '@lib/chartPalette';
+import TargetBar from '@components/ui-v2/TargetBar';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
+import Button from '@components/ui-v2/Button';
+import Data from '@components/ui-v2/Data';
 import { useTranslation } from 'react-i18next';
-import { useToast } from '../hooks/useToast';
-import { useCurrentIdentity } from '../context/CurrentIdentityContext';
-import { PreferredChannel } from '../types/supplier.types';
-import { POStatus } from '../services/data/types';
-import NoSupplierIdentity from '../components/ui-v2/NoSupplierIdentity';
-import LoadingState from '../components/ui-v2/LoadingState';
-import ErrorState from '../components/ui-v2/ErrorState';
-import EmptyState from '../components/ui-v2/EmptyState';
+import { useToast } from '@hooks/useToast';
+import { useCurrentIdentity } from '@context/CurrentIdentityContext';
+import { PreferredChannel } from '@app-types/supplier.types';
+import { POStatus } from '@services/data/types';
+import NoSupplierIdentity from '@components/ui-v2/NoSupplierIdentity';
+import LoadingState from '@components/ui-v2/LoadingState';
+import ErrorState from '@components/ui-v2/ErrorState';
+import EmptyState from '@components/ui-v2/EmptyState';
 import OrdersToConfirmWidget from './widgets/OrdersToConfirmWidget';
 import SupplierInvoicePaymentWidget from './widgets/SupplierInvoicePaymentWidget';
 import SupplierRfqToRespondWidget from './widgets/SupplierRfqToRespondWidget';
@@ -48,16 +48,16 @@ import {
   usePurchaseOrders,
   useSupplierInvoices,
   useDocuments,
-} from '../services/query/hooks';
+} from '@services/query/hooks';
 import {
   documentDisplayState,
   DISPLAY_STATE_LABEL_KEY,
   DISPLAY_STATE_TONE,
   DISPLAY_STATE_ACTION_KEY,
-} from '../services/data/documentDisplayState';
-import { daysUntil } from '../services/data/dayProjection';
-import { DECLARED_PRESENT } from '../services/data/fixturePresent';
-import { sdcClock } from '../services/sdc/clock';
+} from '@services/data/documentDisplayState';
+import { daysUntil } from '@services/data/dayProjection';
+import { DECLARED_PRESENT } from '@services/data/fixturePresent';
+import { sdcClock } from '@services/sdc/clock';
 
 // ⚠️ ANCHORED — this surface rendered values derived from anchored
 // fixture data against the WALL CLOCK, so what a reader saw moved every day

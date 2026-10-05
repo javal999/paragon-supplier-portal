@@ -1,37 +1,37 @@
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CartesianGrid, Legend, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import AppShellV2 from '../components/layout-v2/AppShellV2';
-import PageHeader from '../components/ui-v2/PageHeader';
-import PageMetaLine from '../components/ui-v2/PageMetaLine';
-import LivenessPill from '../components/ui-v2/LivenessPill';
-import FilterChipsBar from '../components/ui-v2/FilterChipsBar';
-import KpiCard from '../components/ui-v2/KpiCard';
-import StatusPill from '../components/ui-v2/StatusPill';
-import Table from '../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../components/ui-v2/TableHeader';
-import TableRow from '../components/ui-v2/TableRow';
-import TableCell from '../components/ui-v2/TableCell';
-import Data from '../components/ui-v2/Data';
-import Button from '../components/ui-v2/Button';
-import LoadingState from '../components/ui-v2/LoadingState';
-import ErrorState from '../components/ui-v2/ErrorState';
-import { HandoffNotice } from '../components/ui-v2/HandoffNotice';
-import DataHealthChip from '../components/forecast/DataHealthChip';
-import { useToast } from '../hooks/useToast';
-import { useRefusalText } from '../hooks/useRefusalText';
-import { useVerbAvailability } from '../hooks/useVerbAvailability';
-import { formatDate, formatIDR, formatNumber } from '../lib/format';
-import { CHART_AXIS, CHART_GRID, CHART_SEMANTIC, CHART_SERIES } from '../lib/chartPalette';
-import { useReschedule } from '../services/query/hooks';
-import { useCallOffCommand, useSapChangeMarkCommand } from '../services/query/commandHooks';
-import type { RescheduleProposalView, RescheduleView, SapChangeMark, WarehouseRescheduleView } from '../services/data/types';
-import { planChangeAfter, selectionEffect } from '../services/engine/reschedule';
-import type { WarehouseKind } from '../services/engine/types';
-import { isoWeek } from '../services/engine/dates';
-import { isLive } from '../services/liveness';
-import { POLICY_HOOKS } from '../services/transitions/policyHooks';
-import { refusedByPolicy } from '../services/transitions/refusalMessage';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import PageHeader from '@components/ui-v2/PageHeader';
+import PageMetaLine from '@components/ui-v2/PageMetaLine';
+import LivenessPill from '@components/ui-v2/LivenessPill';
+import FilterChipsBar from '@components/ui-v2/FilterChipsBar';
+import KpiCard from '@components/ui-v2/KpiCard';
+import StatusPill from '@components/ui-v2/StatusPill';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
+import Data from '@components/ui-v2/Data';
+import Button from '@components/ui-v2/Button';
+import LoadingState from '@components/ui-v2/LoadingState';
+import ErrorState from '@components/ui-v2/ErrorState';
+import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
+import DataHealthChip from '@components/forecast/DataHealthChip';
+import { useToast } from '@hooks/useToast';
+import { useRefusalText } from '@hooks/useRefusalText';
+import { useVerbAvailability } from '@hooks/useVerbAvailability';
+import { formatDate, formatIDR, formatNumber } from '@lib/format';
+import { CHART_AXIS, CHART_GRID, CHART_SEMANTIC, CHART_SERIES } from '@lib/chartPalette';
+import { useReschedule } from '@services/query/hooks';
+import { useCallOffCommand, useSapChangeMarkCommand } from '@services/query/commandHooks';
+import type { RescheduleProposalView, RescheduleView, SapChangeMark, WarehouseRescheduleView } from '@services/data/types';
+import { planChangeAfter, selectionEffect } from '@services/engine/reschedule';
+import type { WarehouseKind } from '@services/engine/types';
+import { isoWeek } from '@services/engine/dates';
+import { isLive } from '@services/liveness';
+import { POLICY_HOOKS } from '@services/transitions/policyHooks';
+import { refusedByPolicy } from '@services/transitions/refusalMessage';
 import { qtyOf } from './materialPlan/planDisplay';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -423,36 +423,6 @@ const BuyerReschedule: React.FC = () => {
             </p>
           )}
 
-          <section className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-6" data-testid="rs-relief">
-            <h2 className="text-section text-text-primary mb-1">{t('rs.relief.title')}</h2>
-            <p className="text-xs text-text-tertiary mb-3">{t('rs.relief.intro')}</p>
-            {relief.length === 0 ? (
-              <p className="text-sm text-text-tertiary py-6 text-center" data-testid="rs-relief-empty">
-                {t('rs.relief.empty')}
-              </p>
-            ) : (
-              <>
-                <div className="flex flex-wrap gap-2 mb-3">
-                  <Button variant="outline" onClick={selectFree} data-testid="rs-select-free">
-                    {t('rs.relief.selectFree', { count: freeCount })}
-                  </Button>
-                  <Button variant="secondary" onClick={clearSelection} data-testid="rs-select-clear">
-                    {t('rs.relief.clear')}
-                  </Button>
-                </div>
-                {proposalRows(relief, true, 'rs-relief')}
-              </>
-            )}
-          </section>
-
-          {shortage.length > 0 && (
-            <section className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-6" data-testid="rs-shortage">
-              <h2 className="text-section text-text-primary mb-1">{t('rs.shortage.title')}</h2>
-              <p className="text-xs text-text-tertiary mb-3">{t('rs.shortage.intro')}</p>
-              {proposalRows(shortage, true, 'rs-shortage')}
-            </section>
-          )}
-
           <section className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-6" data-testid="rs-guard">
             <h2 className="text-section text-text-primary mb-1">{t('rs.guard.title')}</h2>
             <p className="text-xs text-text-tertiary mb-3">{t('rs.guard.intro', { weeks: run!.planChangeWindowWeeks })}</p>
@@ -484,6 +454,36 @@ const BuyerReschedule: React.FC = () => {
             </dl>
             <p className="text-xs text-text-tertiary mt-2">{t('rs.guard.callOffs')}</p>
           </section>
+
+          <section className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-6" data-testid="rs-relief">
+            <h2 className="text-section text-text-primary mb-1">{t('rs.relief.title')}</h2>
+            <p className="text-xs text-text-tertiary mb-3">{t('rs.relief.intro')}</p>
+            {relief.length === 0 ? (
+              <p className="text-sm text-text-tertiary py-6 text-center" data-testid="rs-relief-empty">
+                {t('rs.relief.empty')}
+              </p>
+            ) : (
+              <>
+                <div className="flex flex-wrap gap-2 mb-3">
+                  <Button variant="outline" onClick={selectFree} data-testid="rs-select-free">
+                    {t('rs.relief.selectFree', { count: freeCount })}
+                  </Button>
+                  <Button variant="secondary" onClick={clearSelection} data-testid="rs-select-clear">
+                    {t('rs.relief.clear')}
+                  </Button>
+                </div>
+                {proposalRows(relief, true, 'rs-relief')}
+              </>
+            )}
+          </section>
+
+          {shortage.length > 0 && (
+            <section className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-6" data-testid="rs-shortage">
+              <h2 className="text-section text-text-primary mb-1">{t('rs.shortage.title')}</h2>
+              <p className="text-xs text-text-tertiary mb-3">{t('rs.shortage.intro')}</p>
+              {proposalRows(shortage, true, 'rs-shortage')}
+            </section>
+          )}
 
           {noSaving.length > 0 && (
             <details className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-6" data-testid="rs-nosaving">

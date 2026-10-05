@@ -20,8 +20,8 @@
 // audit trail keeps the English detail.
 // ────────────────────────────────────────────────────────────────────────────
 
-import { normalizeQty } from '../../lib/localeNumber';
-import type { RFQ } from '../../data/mockRfqs';
+import { normalizeQty } from '@lib/localeNumber';
+import type { RFQ } from '@data/mockRfqs';
 import type { RfiAnswer, RfiQuestion } from './types';
 import { effectiveDeadline, isPastDeadline } from '../transitions/rfxRules';
 import {

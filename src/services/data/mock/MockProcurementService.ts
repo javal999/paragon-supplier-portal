@@ -15,9 +15,9 @@ import { allCommitmentLines, allCoverageRows, allVersionViews, forecastSupplierN
 import { allFixedStockRows } from './fixedStockReadModel';
 import { maskForSupplier } from '../../transitions/inventoryRules';
 import { PTI_ONLY_RULES } from '../../transitions/inventoryAlertRules';
-import { mockShipments } from '../../../data/mockShipments';
-import { mockContracts } from '../../../data/mockContracts';
-import { mockObligations } from '../../../data/mockObligations';
+import { mockShipments } from '@data/mockShipments';
+import { mockContracts } from '@data/mockContracts';
+import { mockObligations } from '@data/mockObligations';
 import { applySupplierScope } from '../scoping';
 import { rfqStore } from './stores/rfqStore';
 // RFx spec 2026-09-21 — the supplier's side of a tiered RFQ.

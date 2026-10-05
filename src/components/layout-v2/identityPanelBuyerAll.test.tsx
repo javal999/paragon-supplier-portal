@@ -1,13 +1,13 @@
 import { screen, fireEvent, within } from '@testing-library/react';
-import { renderWithProviders } from '../../test/test-utils';
-import type { CurrentIdentity } from '../../context/CurrentIdentityContext';
-import { NO_PERSON } from '../../context/noPerson';
+import { renderWithProviders } from '@test/test-utils';
+import type { CurrentIdentity } from '@context/CurrentIdentityContext';
+import { NO_PERSON } from '@context/noPerson';
 import {
   SYSTEM_ROLES,
   SEEDED_SEAT_ROLES,
   PERSONA_SYSTEM_ROLES,
-} from '../../services/transitions/businessRoles';
-import i18n from '../../lib/i18n';
+} from '@services/transitions/businessRoles';
+import i18n from '@lib/i18n';
 import IdentityPanel from './IdentityPanel';
 
 // ─────────────────────────────────────────────────────────────────────────────

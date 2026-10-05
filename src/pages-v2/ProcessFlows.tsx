@@ -1,30 +1,30 @@
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { GitBranch, AlertTriangle } from 'lucide-react';
-import AppShellV2 from '../components/layout-v2/AppShellV2';
-import PageHeader from '../components/ui-v2/PageHeader';
-import PageMetaLine from '../components/ui-v2/PageMetaLine';
-import Data from '../components/ui-v2/Data';
-import StatusPill from '../components/ui-v2/StatusPill';
-import Table from '../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../components/ui-v2/TableHeader';
-import TableRow from '../components/ui-v2/TableRow';
-import TableCell from '../components/ui-v2/TableCell';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import PageHeader from '@components/ui-v2/PageHeader';
+import PageMetaLine from '@components/ui-v2/PageMetaLine';
+import Data from '@components/ui-v2/Data';
+import StatusPill from '@components/ui-v2/StatusPill';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
 import FlowDiagram from './process-flows/FlowDiagram';
 import LifecycleWalk from './process-flows/LifecycleWalk';
 import { looseEndKindKey, reasonKey, ALL_REASONS } from './process-flows/labels';
 import { verbOf, entityVerbOf } from './process-flows/flowLayout';
-import { STEP_KIND_KEY } from '../lib/i18n/stepKind';
-import { EXTERNAL_FACT_OWNER_KEY } from '../lib/i18n/externalFactOwner';
-import { getKnownFlows } from '../services/transitions';
-import { entityPurposeKey, transitionPurposeKey } from '../services/transitions/annotations';
+import { STEP_KIND_KEY } from '@lib/i18n/stepKind';
+import { EXTERNAL_FACT_OWNER_KEY } from '@lib/i18n/externalFactOwner';
+import { getKnownFlows } from '@services/transitions';
+import { entityPurposeKey, transitionPurposeKey } from '@services/transitions/annotations';
 import {
   buildCatalogView,
   type AnnotatedLooseEnd,
   type FlowEdge,
   type FlowView,
   type TransitionView,
-} from '../services/transitions/catalogView';
+} from '@services/transitions/catalogView';
 
 // ────────────────────────────────────────────────────────────────────────────
 // PF-1 · PROCESS FLOWS — the surface for the analyzer PF-0 built.

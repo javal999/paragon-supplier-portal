@@ -17,7 +17,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { seedSupplierApplications } from './applicationSeed';
 import { supplierApplicationStore } from './stores/supplierApplicationStore';
 import { MockCommandService } from './MockCommandService';
-import { NO_PERSON } from '../../../context/noPerson';
+import { NO_PERSON } from '@context/noPerson';
 import { APPLICATION_REQUEST_TYPES } from '../../transitions/flows/supplierApplication.flow';
 
 const commands = new MockCommandService();

@@ -1,28 +1,28 @@
 import React, { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Inbox, Info, MessageSquare, PenLine, RotateCcw, CheckCircle2, AlertTriangle } from 'lucide-react';
-import Button from '../components/ui-v2/Button';
-import Data from '../components/ui-v2/Data';
-import StatusPill from '../components/ui-v2/StatusPill';
-import SelectField from '../components/ui-v2/SelectField';
-import { useInventory, useSuppliers } from '../services/query/hooks';
+import Button from '@components/ui-v2/Button';
+import Data from '@components/ui-v2/Data';
+import StatusPill from '@components/ui-v2/StatusPill';
+import SelectField from '@components/ui-v2/SelectField';
+import { useInventory, useSuppliers } from '@services/query/hooks';
 import StockEntryPanel from './inventory/StockEntryPanel';
-import { HandoffNotice } from '../components/ui-v2/HandoffNotice';
-import { useVerbAvailability } from '../hooks/useVerbAvailability';
-import { parseChannelReply, type ChannelParseResult, type QtyRefusalReason } from '../services/channel/replyParser';
-import { makeProvenanceRef, type Channel, type ChannelMessage } from '../services/channel/types';
-import { channelProvenanceStore } from '../services/channel/provenanceStore';
+import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
+import { useVerbAvailability } from '@hooks/useVerbAvailability';
+import { parseChannelReply, type ChannelParseResult, type QtyRefusalReason } from '@services/channel/replyParser';
+import { makeProvenanceRef, type Channel, type ChannelMessage } from '@services/channel/types';
+import { channelProvenanceStore } from '@services/channel/provenanceStore';
 import {
   openSubmissionSession,
   sdcClock,
   knownMaterialCodes,
   IMPORT_DECLARE_COLUMN,
   type SubmissionSessionRecorder,
-} from '../services/sdc';
-import type { CommandResult } from '../services/data/types';
+} from '@services/sdc';
+import type { CommandResult } from '@services/data/types';
 import { qty } from './inventory/inventoryDisplay';
 // GL-1 - the glossary destination for this surface's refusals.
-import GlossaryTermChip from '../components/ui-v2/GlossaryTermChip';
+import GlossaryTermChip from '@components/ui-v2/GlossaryTermChip';
 
 // ────────────────────────────────────────────────────────────────────────────
 // Comm Hub C4d — the buyer IN-PLACE TRIAGE CONFIRM (DEC-COMMS-PRIMARY).
@@ -78,6 +78,13 @@ const labelClass = 'block text-label text-text-tertiary uppercase mb-1';
 
 /** One row read from a parsed reply — a SUGGESTION for the entry form. */
 interface ReadRow {
+  /**
+   * Row identity, used as the React key: `<message id>-row-<n>`, minted once in
+   * the parse. Unique because message ids are unique per parse, and stable
+   * because rows are only ever replaced wholesale. Content cannot serve: a
+   * supplier can write the same line twice.
+   */
+  readonly id: string;
   readonly rawMaterial: string;
   /** The subject's own stock row it names EXACTLY, or '' (never a guess). */
   readonly materialCode: string;
@@ -86,6 +93,8 @@ interface ReadRow {
 
 /** A row recorded through the entry form. */
 interface Recorded {
+  /** Row identity / React key, minted on append (the same material can be saved twice). */
+  readonly id: string;
   readonly material: string;
   readonly qty: number;
 }
@@ -122,6 +131,7 @@ const BuyerChannelTriage: React.FC<BuyerChannelTriageProps> = ({ onRecorded }) =
 
   const sessionRef = useRef<SubmissionSessionRecorder | null>(null);
   const msgSeq = useRef(0);
+  const recordedSeq = useRef(0);
 
   // The subject's stock rows — EXACTLY the supplier × material pairs the entry
   // form offers and the record verb accepts (its assignments).
@@ -164,10 +174,11 @@ const BuyerChannelTriage: React.FC<BuyerChannelTriageProps> = ({ onRecorded }) =
     setParsed(result);
     setRecorded([]);
     setRows(
-      result.proposedRows.map((r) => {
+      result.proposedRows.map((r, n) => {
         const rawMaterial = r[IMPORT_DECLARE_COLUMN.materialCode] ?? '';
         const exact = subjectPositions.some((p) => p.materialCode === rawMaterial);
         return {
+          id: `${cm.id}-row-${n}`,
           rawMaterial,
           materialCode: exact ? rawMaterial : '',
           totalQty: r[IMPORT_DECLARE_COLUMN.totalQty] ?? '',
@@ -220,7 +231,9 @@ const BuyerChannelTriage: React.FC<BuyerChannelTriageProps> = ({ onRecorded }) =
     if (channelProvenanceStore.forMessage(message.id).length === 0) {
       channelProvenanceStore.append(makeProvenanceRef(message.id, sessionRef.current.envelope()));
     }
-    setRecorded((prev) => [...prev, { material: saved.materialCode, qty: saved.totalQty }]);
+    recordedSeq.current += 1;
+    const recordedId = `rec-${recordedSeq.current}`;
+    setRecorded((prev) => [...prev, { id: recordedId, material: saved.materialCode, qty: saved.totalQty }]);
     onRecorded?.(); // let the parent refresh its channel-sourced audit trail
   };
 
@@ -360,6 +373,7 @@ const BuyerChannelTriage: React.FC<BuyerChannelTriageProps> = ({ onRecorded }) =
                     <span className="text-label text-text-tertiary uppercase mr-2">{t('commHub.infer.matched')}</span>
                     <span className="inline-flex flex-wrap gap-1">
                       {parsed.diagnostics.matchedTokens.map((tok, i) => (
+                        // eslint-disable-next-line react/no-array-index-key -- immutable parser output (max 4 tokens), replaced wholesale per parse; tokens can repeat
                         <Data key={i} className="rounded bg-teal-soft px-1.5 py-0.5 text-teal-hover">
                           {tok}
                         </Data>
@@ -405,7 +419,7 @@ const BuyerChannelTriage: React.FC<BuyerChannelTriageProps> = ({ onRecorded }) =
                     <div className="text-label text-text-tertiary uppercase">{t('buyerCommHub.triage.rowTitle')}</div>
                     {rows.map((row, i) => (
                       <div
-                        key={i}
+                        key={row.id}
                         className="rounded-md border border-border-subtle bg-bg-hover p-3 flex flex-wrap items-center justify-between gap-2"
                         data-testid={`triage-row-${i}`}
                       >
@@ -452,8 +466,8 @@ const BuyerChannelTriage: React.FC<BuyerChannelTriageProps> = ({ onRecorded }) =
                 {recorded.length > 0 && (
                   <div className="flex flex-col gap-1.5 border-t border-border-subtle pt-3" data-testid="triage-result">
                     <div className="text-label text-text-tertiary uppercase">{t('buyerCommHub.triage.resultTitle')}</div>
-                    {recorded.map((o, i) => (
-                      <div key={i} className="flex items-start gap-2 text-xs text-success">
+                    {recorded.map((o) => (
+                      <div key={o.id} className="flex items-start gap-2 text-xs text-success">
                         <CheckCircle2 size={14} className="mt-0.5 shrink-0" aria-hidden="true" />
                         <span>
                           {t('buyerCommHub.triage.result.landed', {

@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Languages, ChevronDown, Check } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { LANG_STORAGE_KEY, type AppLang } from '../../lib/i18n';
+import { LANG_STORAGE_KEY, type AppLang } from '@lib/i18n';
 
 // Language options as AUTONYMS — each language named IN ITS OWN language, never
 // translated by the active locale (an autonym is identity data, not UI copy).

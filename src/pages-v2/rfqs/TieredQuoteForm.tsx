@@ -1,18 +1,18 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Plus, X } from 'lucide-react';
-import Button from '../../components/ui-v2/Button';
-import Data from '../../components/ui-v2/Data';
-import FormSection from '../../components/ui-v2/FormSection';
-import StatusPill from '../../components/ui-v2/StatusPill';
-import { BID_CURRENCIES, isBidCurrency } from '../../lib/currencyPolicy';
-import { formatDate, formatNumber } from '../../lib/format';
-import type { RFQ } from '../../data/mockRfqs';
-import { tiersForItem, type RfqItem, type RfqSpecField } from '../../services/sourcing/rfqModel';
+import Button from '@components/ui-v2/Button';
+import Data from '@components/ui-v2/Data';
+import FormSection from '@components/ui-v2/FormSection';
+import StatusPill from '@components/ui-v2/StatusPill';
+import { BID_CURRENCIES, isBidCurrency } from '@lib/currencyPolicy';
+import { formatDate, formatNumber } from '@lib/format';
+import type { RFQ } from '@data/mockRfqs';
+import { tiersForItem, type RfqItem, type RfqSpecField } from '@services/sourcing/rfqModel';
 import RfqQuestionField from './RfqQuestionField';
 import { FirmPill } from '../rfx/rfxAuthoringDisplay';
 import ResponseDocumentsSection from '../rfx/ResponseDocumentsSection';
-import type { ItemDraft, TieredDraft } from './tieredQuoteModel';
+import { newExtraCost, type ItemDraft, type TieredDraft } from './tieredQuoteModel';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // THE QUOTE GRID (RFx working spec, 2026-09-21, "Supplier response · Quote
@@ -242,7 +242,7 @@ const ItemBlock: React.FC<{
             </label>
           ))}
           {draft.extraCosts.map((c, i) => (
-            <div key={i} className="flex items-center gap-2">
+            <div key={c.id} className="flex items-center gap-2">
               <input
                 type="text"
                 aria-label={t('rfqResponse.grid.extraCostName', { n: i + 1 })}
@@ -283,7 +283,7 @@ const ItemBlock: React.FC<{
             variant="secondary"
             icon={Plus}
             data-testid={`${tid}-add-cost`}
-            onClick={() => onChange({ ...draft, extraCosts: [...draft.extraCosts, { name: '', amount: '' }] })}
+            onClick={() => onChange({ ...draft, extraCosts: [...draft.extraCosts, newExtraCost()] })}
           >
             {t('rfqResponse.grid.addCost')}
           </Button>

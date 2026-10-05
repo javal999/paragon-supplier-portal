@@ -24,7 +24,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { describe, it, expect } from 'vitest';
-import { mockShipments } from '../../../../data/mockShipments';
+import { mockShipments } from '@data/mockShipments';
 import { MOCK_ASNS } from './supplierShipments';
 
 /** Values that are explicitly "no carrier yet", not an organisation name. */

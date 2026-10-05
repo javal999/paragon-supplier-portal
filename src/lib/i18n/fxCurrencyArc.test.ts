@@ -26,7 +26,7 @@ import {
   FX_VINTAGE_REFUSAL_KEY,
   FX_PIN_SOURCE_KEY,
   SPREAD_SILENT_KEY,
-} from '../../pages-v2/BuyerSourcing';
+} from '@pages-v2/BuyerSourcing';
 import { rfqsEn, rfqsId } from './rfqs';
 
 const en = resources.en.translation as Record<string, string>;

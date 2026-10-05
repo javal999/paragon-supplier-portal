@@ -67,7 +67,7 @@
 //   question. Windows differing by ruling is what this tree does.
 // ────────────────────────────────────────────────────────────────────────────
 
-import type { Contract, ContractStatus } from '../../data/mockContracts';
+import type { Contract, ContractStatus } from '@data/mockContracts';
 import { daysUntil, isPast } from './dayProjection';
 
 /**

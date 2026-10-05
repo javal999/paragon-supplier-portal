@@ -1,5 +1,5 @@
 import { screen } from '@testing-library/react';
-import { renderWithProviders } from '../test/test-utils';
+import { renderWithProviders } from '@test/test-utils';
 import SupplierRegistration from './SupplierRegistration';
 
 describe('SupplierRegistration', () => {

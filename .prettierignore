@@ -1,0 +1,33 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Prettier ignore list (frontend-standard plan, Phase 1, 2026-10-02).
+#
+# Prettier only formats CONVERTED JavaScript under src/ (see the `format` and
+# `format:check` scripts in package.json and `lint-staged.config.js`). The
+# TypeScript files are reformatted when each folder is converted (Phase 4), not
+# before, so unrelated PRs do not carry whole-file formatting churn. This file
+# covers editors and ad-hoc `npx prettier` runs.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Build output and dependencies (boilerplate parity)
+dist/
+coverage/
+node_modules/
+
+# Lock files & generated (boilerplate parity)
+package-lock.json
+*.min.js
+*.min.css
+*.tsbuildinfo
+
+# Agent worktrees: full copies of this repo, never formatted from here
+.claude/
+
+# Canon documents: tables and quoted figures are hand-aligned and cited by
+# line; reformatting them would break those citations.
+*.md
+docs/
+
+# Secrets (boilerplate parity)
+.env
+.env.*
+!.env.example

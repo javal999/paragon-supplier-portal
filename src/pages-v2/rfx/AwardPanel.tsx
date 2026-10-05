@@ -1,26 +1,26 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
-import Button from '../../components/ui-v2/Button';
-import Data from '../../components/ui-v2/Data';
-import StatusPill from '../../components/ui-v2/StatusPill';
-import Table from '../../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../../components/ui-v2/TableHeader';
-import TableRow from '../../components/ui-v2/TableRow';
-import TableCell from '../../components/ui-v2/TableCell';
-import { formatDate } from '../../lib/format';
-import type { RFQ } from '../../data/mockRfqs';
-import type { Quotation } from '../../data/mockQuotations';
-import type { GateResult } from '../../services/sourcing/complianceGate';
+import Button from '@components/ui-v2/Button';
+import Data from '@components/ui-v2/Data';
+import StatusPill from '@components/ui-v2/StatusPill';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
+import { formatDate } from '@lib/format';
+import type { RFQ } from '@data/mockRfqs';
+import type { Quotation } from '@data/mockQuotations';
+import type { GateResult } from '@services/sourcing/complianceGate';
 import type {
   AnyAwardLine,
   AwardLine,
   AwardRecord,
   AwardSplitBasis,
   RfpAwardLine,
-} from '../../services/sourcing/types';
-import type { RfpAwardView, RfpOfferRoundView, RfpRoundOptionView } from '../../services/sourcing/views';
-import { itemCostAt, itemOfLine, splitQuantities } from '../../services/sourcing/rfqComparison';
+} from '@services/sourcing/types';
+import type { RfpAwardView, RfpOfferRoundView, RfpRoundOptionView } from '@services/sourcing/views';
+import { itemCostAt, itemOfLine, splitQuantities } from '@services/sourcing/rfqComparison';
 import {
   awardItemsOf,
   awardReasonOwed,
@@ -32,15 +32,15 @@ import {
   type AwardItemBreak,
   type AwardQuoteShape,
   type AwardRefusal,
-} from '../../services/sourcing/awardShape';
-import { awardItemsOfRfp } from '../../services/sourcing/rfpAward';
-import { firmPricesInForce, type FirmPriceInForce } from '../../services/sourcing/rfpFirmOffer';
+} from '@services/sourcing/awardShape';
+import { awardItemsOfRfp } from '@services/sourcing/rfpAward';
+import { firmPricesInForce, type FirmPriceInForce } from '@services/sourcing/rfpFirmOffer';
 import { EmptyRow, GateMarker, money, qty } from './rfxDisplay';
 import { EligibilityMarker, vendorNames } from './eligibilityDisplay';
-import type { BiddingEligibility, NamedEligibility } from '../../services/sourcing/sourcingType';
+import type { BiddingEligibility, NamedEligibility } from '@services/sourcing/sourcingType';
 import { FirmPill } from './rfxAuthoringDisplay';
-import LivenessPill from '../../components/ui-v2/LivenessPill';
-import { complianceThresholds } from '../../services/transitions/inventoryConfig';
+import LivenessPill from '@components/ui-v2/LivenessPill';
+import { complianceThresholds } from '@services/transitions/inventoryConfig';
 import { ComplianceAwardPill, useAwardCompliance } from './ComplianceAwardPill';
 
 // ────────────────────────────────────────────────────────────────────────────

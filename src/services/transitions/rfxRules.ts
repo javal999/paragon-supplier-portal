@@ -8,7 +8,7 @@
 // soon) is computed HERE from an injected `now` and never stored (law 0.5).
 // ────────────────────────────────────────────────────────────────────────────
 
-import { SupplierStatus } from '../../types/supplier.types';
+import { SupplierStatus } from '@app-types/supplier.types';
 import type {
   AwardLine,
   RfiAnswer,
@@ -31,8 +31,8 @@ import {
   rfpTerm,
   rfpTermKindOf,
 } from '../sourcing/rfxConfig';
-import { BID_CURRENCIES } from '../../lib/currencyPolicy';
-import { isCalendarDate } from '../../lib/workingCalendar';
+import { BID_CURRENCIES } from '@lib/currencyPolicy';
+import { isCalendarDate } from '@lib/workingCalendar';
 import { isAttachmentMeta } from '../attachments/sessionAttachments';
 import type { GateResult } from '../sourcing/complianceGate';
 import type { BiddingEligibility, SourcingType } from '../sourcing/sourcingType';

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_WORKING_CALENDAR } from '../../lib/workingCalendar';
+import { DEFAULT_WORKING_CALENDAR } from '@lib/workingCalendar';
 import type { StockUpdateMode } from '../data/types';
 import {
   COMPLIANCE_WINDOW_WEEKS,

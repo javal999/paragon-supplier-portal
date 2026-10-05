@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { isLive, type Capability } from '../../services/liveness';
+import { isLive, type Capability } from '@services/liveness';
 import type { IntakePlanState } from './planGridModel';
 
 // ────────────────────────────────────────────────────────────────────────────

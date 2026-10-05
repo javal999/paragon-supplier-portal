@@ -1,15 +1,15 @@
 import { describe, it, expect, afterEach, beforeEach } from 'vitest';
 import { screen, within, fireEvent, waitFor } from '@testing-library/react';
-import { renderWithProviders, BUYER } from '../test/test-utils';
+import { renderWithProviders, BUYER } from '@test/test-utils';
 import BuyerReschedule from './BuyerReschedule';
-import { mockDataService } from '../services/data/mock/mockDataService';
-import { callOffStore } from '../services/data/mock/stores/callOffStore';
-import { sapChangeMarkStore } from '../services/data/mock/stores/sapChangeMarkStore';
-import { isLive } from '../services/liveness';
-import { PERSONA_SYSTEM_ROLES, SEEDED_SEAT_ROLES } from '../services/transitions/businessRoles';
-import { planChangeAfter, selectionEffect } from '../services/engine/reschedule';
-import i18n from '../lib/i18n';
-import type { QueryScope } from '../services/data/types';
+import { mockDataService } from '@services/data/mock/mockDataService';
+import { callOffStore } from '@services/data/mock/stores/callOffStore';
+import { sapChangeMarkStore } from '@services/data/mock/stores/sapChangeMarkStore';
+import { isLive } from '@services/liveness';
+import { PERSONA_SYSTEM_ROLES, SEEDED_SEAT_ROLES } from '@services/transitions/businessRoles';
+import { planChangeAfter, selectionEffect } from '@services/engine/reschedule';
+import i18n from '@lib/i18n';
+import type { QueryScope } from '@services/data/types';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // REQ-E14-13 — the planner's Reschedule open orders page. Every figure is read
@@ -162,6 +162,11 @@ describe('BuyerReschedule — the planner page (REQ-E14-13)', () => {
     renderWithProviders(<BuyerReschedule />, { identity: PLANNER, route: '/buyer/reschedule' });
     const relief = await screen.findByTestId('rs-relief');
     expect(screen.getByTestId('rs-kpis').compareDocumentPosition(relief) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    // The supplier stability guard sits between the summary and the proposals, so its effect is visible while selecting.
+    const guard = screen.getByTestId('rs-guard');
+    expect(guard.tagName).toBe('SECTION');
+    expect(screen.getByTestId('rs-kpis').compareDocumentPosition(guard) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(guard.compareDocumentPosition(relief) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect((await screen.findByTestId('data-health-chip')).compareDocumentPosition(screen.getByTestId('rs-kpis')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     for (const id of ['rs-fill', 'rs-info', 'rs-settings', 'rs-definitions']) {
       const el = screen.getByTestId(id);

@@ -2,16 +2,16 @@ import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { PackageCheck } from 'lucide-react';
-import ExpandableWidget from '../../components/ui-v2/ExpandableWidget';
-import Table from '../../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../../components/ui-v2/TableHeader';
-import TableRow from '../../components/ui-v2/TableRow';
-import TableCell from '../../components/ui-v2/TableCell';
-import Data from '../../components/ui-v2/Data';
-import StatusPill from '../../components/ui-v2/StatusPill';
-import { statusTone } from '../../lib/statusTone';
-import { formatDate } from '../../lib/format';
-import { useGoodsReceipts } from '../../services/query/hooks';
+import ExpandableWidget from '@components/ui-v2/ExpandableWidget';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
+import Data from '@components/ui-v2/Data';
+import StatusPill from '@components/ui-v2/StatusPill';
+import { statusTone } from '@lib/statusTone';
+import { formatDate } from '@lib/format';
+import { useGoodsReceipts } from '@services/query/hooks';
 import { grNeedingAction, grVariance, grTier } from './buyerDerivations';
 
 // Buyer 3-way match — LIVE from the GR store. Count is receipts needing action

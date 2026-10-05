@@ -34,8 +34,8 @@ import { MATERIAL_GROUPS } from '../materialGroups';
 import { MOCK_ASNS } from '../../data/mock/fixtures/supplierShipments';
 import { INITIAL_CATALOG } from '../../data/mock/fixtures/supplierStorefront';
 import { DOCUMENTS as SUPPLIER_DOCUMENTS } from '../../data/mock/fixtures/supplierDocuments';
-import { mockPurchaseOrders } from '../../../data/mockPurchaseOrders';
-import { mockRfqs } from '../../../data/mockRfqs';
+import { mockPurchaseOrders } from '@data/mockPurchaseOrders';
+import { mockRfqs } from '@data/mockRfqs';
 
 /** The seven, with what they were before the retirement. Written out because
  *  the pre-retirement strings are otherwise only in git history, and half the

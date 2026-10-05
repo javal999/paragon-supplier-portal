@@ -20,9 +20,9 @@ import { describe, it, expect, beforeEach } from 'vitest';
 
 import { MockCommandService, WIRED_COMMAND_TARGETS } from './MockCommandService';
 import { supplierApplicationStore } from './stores/supplierApplicationStore';
-import { mockSuppliers } from '../../../data/mockSuppliers';
+import { mockSuppliers } from '@data/mockSuppliers';
 import { getTransition } from '../../transitions';
-import { NO_PERSON } from '../../../context/noPerson';
+import { NO_PERSON } from '@context/noPerson';
 import type { QueryScope } from '../types';
 
 const svc = new MockCommandService();

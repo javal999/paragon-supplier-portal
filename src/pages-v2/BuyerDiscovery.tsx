@@ -13,36 +13,36 @@ import {
   Minus,
   ChevronRight,
 } from 'lucide-react';
-import AppShellV2 from '../components/layout-v2/AppShellV2';
-import PageHeader from '../components/ui-v2/PageHeader';
-import PageMetaLine from '../components/ui-v2/PageMetaLine';
-import ProvenanceMarker from '../components/ui-v2/ProvenanceMarker';
-import KpiCard from '../components/ui-v2/KpiCard';
-import SubTabs from '../components/ui-v2/SubTabs';
-import StatusPill from '../components/ui-v2/StatusPill';
-import LivenessPill from '../components/ui-v2/LivenessPill';
-import Table from '../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../components/ui-v2/TableHeader';
-import TableRow from '../components/ui-v2/TableRow';
-import TableCell from '../components/ui-v2/TableCell';
-import Button from '../components/ui-v2/Button';
-import { useToast } from '../hooks/useToast';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import PageHeader from '@components/ui-v2/PageHeader';
+import PageMetaLine from '@components/ui-v2/PageMetaLine';
+import ProvenanceMarker from '@components/ui-v2/ProvenanceMarker';
+import KpiCard from '@components/ui-v2/KpiCard';
+import SubTabs from '@components/ui-v2/SubTabs';
+import StatusPill from '@components/ui-v2/StatusPill';
+import LivenessPill from '@components/ui-v2/LivenessPill';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
+import Button from '@components/ui-v2/Button';
+import { useToast } from '@hooks/useToast';
 import type {
   SingleSourceItem,
   RecommendedSupplier,
   QualificationItem,
   MarketIntelCard,
-} from '../services/data/types';
-import LoadingState from '../components/ui-v2/LoadingState';
-import ErrorState from '../components/ui-v2/ErrorState';
-import EmptyState from '../components/ui-v2/EmptyState';
-import { readinessNote } from '../services/liveness';
+} from '@services/data/types';
+import LoadingState from '@components/ui-v2/LoadingState';
+import ErrorState from '@components/ui-v2/ErrorState';
+import EmptyState from '@components/ui-v2/EmptyState';
+import { readinessNote } from '@services/liveness';
 import {
   useRecommended,
   useQualifications,
   useMarketIntel,
   useSingleSourceItems,
-} from '../services/query/hooks';
+} from '@services/query/hooks';
 
 // Breadcrumb is built from t() inside the component (see `crumb`).
 const STAGE_LABEL_KEYS = [

@@ -23,11 +23,11 @@ import {
   useBuyerInvoices,
   useGoodsReceipts,
   usePurchaseOrders,
-} from '../../services/query/hooks';
-import { sdcClock } from '../../services/sdc';
-import { commandAuditSink } from '../../services/data/mock/MockCommandService';
-import { sapMessageStore } from '../../services/data/mock/stores/sapMessageStore';
-import { getKnownFlows } from '../../services/transitions';
+} from '@services/query/hooks';
+import { sdcClock } from '@services/sdc';
+import { commandAuditSink } from '@services/data/mock/MockCommandService';
+import { sapMessageStore } from '@services/data/mock/stores/sapMessageStore';
+import { getKnownFlows } from '@services/transitions';
 import {
   SAP_PAGE_OBJECT,
   failuresFromEvents,
@@ -39,7 +39,7 @@ import {
   type SapObjectId,
   type SapObjectStatus,
   type SapPageKey,
-} from '../../services/data/sapInterfaceRules';
+} from '@services/data/sapInterfaceRules';
 
 /** A date-only fixture field, read as 09:00 WIB — the same hour the seeds use. */
 const asInstant = (day: string | null | undefined): string | null =>

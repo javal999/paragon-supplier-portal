@@ -133,7 +133,7 @@
 //   reach, never from the thing under test.
 // ────────────────────────────────────────────────────────────────────────────
 
-import { DISPLAY_STATES } from '../../lib/projectionGate/displayStates';
+import { DISPLAY_STATES } from '@lib/projectionGate/displayStates';
 import {
   DECLARED_PRESENT,
   FAMILY_ANCHORS,

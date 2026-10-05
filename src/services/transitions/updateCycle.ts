@@ -16,7 +16,7 @@
 //     supplier's update mode. `stockFreshness` compares `now` with it.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { isWorkingDay, type WorkingCalendar } from '../../lib/workingCalendar';
+import { isWorkingDay, type WorkingCalendar } from '@lib/workingCalendar';
 import type { StockUpdateMode } from '../data/types';
 import type { StockChannel } from '../sdc/types';
 

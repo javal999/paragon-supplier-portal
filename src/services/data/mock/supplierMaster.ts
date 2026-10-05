@@ -12,7 +12,7 @@
 // for a supplier the administrator has never set.
 // ────────────────────────────────────────────────────────────────────────────
 
-import { mockSuppliers, type SupplierExtended } from '../../../data/mockSuppliers';
+import { mockSuppliers, type SupplierExtended } from '@data/mockSuppliers';
 import type { StockUpdateMode, SupplierStockUpdateMode } from '../types';
 import { defaultStockUpdateMode } from '../../transitions/supplierOverlayRules';
 import { supplierOverlayStore } from './stores/supplierOverlayStore';

@@ -1,6 +1,6 @@
-import type { BidCurrency } from '../lib/currencyPolicy';
+import type { BidCurrency } from '@lib/currencyPolicy';
 import { shiftRfqDay } from './mockRfqs';
-import type { QuotationTieredFields } from '../services/sourcing/rfqModel';
+import type { QuotationTieredFields } from '@services/sourcing/rfqModel';
 
 /**
  * REQ-E03-03 — one priced line of a quotation: the supplier's answer to one

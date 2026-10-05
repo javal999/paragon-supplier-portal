@@ -12,9 +12,9 @@
 // deadline itself, the per-invitee extension the buyer granted, and the answers.
 // ────────────────────────────────────────────────────────────────────────────
 
-import type { BidCurrency } from '../../lib/currencyPolicy';
+import type { BidCurrency } from '@lib/currencyPolicy';
 import type { AttachmentMeta } from '../attachments/sessionAttachments';
-import type { ActorAttribution } from '../../lib/enforcement';
+import type { ActorAttribution } from '@lib/enforcement';
 import type { QualificationWarning, SourcingType } from './sourcingType';
 
 /**

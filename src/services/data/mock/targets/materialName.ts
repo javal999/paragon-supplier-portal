@@ -34,7 +34,7 @@ import {
   materialNameRejectRefusal,
 } from '../../../transitions/materialNameRules';
 import { sdcClock } from '../../../sdc';
-import { NO_PERSON } from '../../../../context/noPerson';
+import { NO_PERSON } from '@context/noPerson';
 import { materialNameStore } from '../stores/materialNameStore';
 import { isAssignedMaterial } from '../inventoryReadModel';
 import { isKnownSupplier } from '../supplierMaster';

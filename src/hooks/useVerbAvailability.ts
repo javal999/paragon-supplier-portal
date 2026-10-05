@@ -23,10 +23,10 @@
 // ────────────────────────────────────────────────────────────────────────────
 
 import { useMemo } from 'react';
-import { useCurrentIdentity } from '../context/CurrentIdentityContext';
-import { availabilityOfAtom, type VerbAvailability } from '../services/transitions/handoff';
-import { nextActFor, type NextAct } from '../services/transitions/nextAct';
-import type { TransitionRole } from '../services/transitions/schema';
+import { useCurrentIdentity } from '@context/CurrentIdentityContext';
+import { availabilityOfAtom, type VerbAvailability } from '@services/transitions/handoff';
+import { nextActFor, type NextAct } from '@services/transitions/nextAct';
+import type { TransitionRole } from '@services/transitions/schema';
 
 /**
  * Does this seat hold `atom`, and if not, whose act is it?

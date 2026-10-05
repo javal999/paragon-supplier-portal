@@ -33,7 +33,7 @@
 // decides who can be SCORED (CR-15) and who can be AWARDED.
 // ────────────────────────────────────────────────────────────────────────────
 
-import { SupplierStatus } from '../../types/supplier.types';
+import { SupplierStatus } from '@app-types/supplier.types';
 import { schemeValid } from '../data/complianceProjection';
 import type { ComplianceRegistryEntry } from '../data/types';
 import { MATERIAL_MASTER } from '../sdc/fixtures';

@@ -12,11 +12,11 @@
 // ────────────────────────────────────────────────────────────────────────────
 
 import { beforeEach, describe, expect, it } from 'vitest';
-import { mockSuppliers } from '../../../data/mockSuppliers';
+import { mockSuppliers } from '@data/mockSuppliers';
 import { DECLARED_PRESENT } from '../fixturePresent';
 import type { QueryScope } from '../types';
 import { PERSONA_SYSTEM_ROLES } from '../../transitions/businessRoles';
-import { NO_PERSON } from '../../../context/noPerson';
+import { NO_PERSON } from '@context/noPerson';
 import { sdcClock } from '../../sdc';
 import { complianceGate, gateRequirementFor, type GateCriterion } from '../../sourcing/complianceGate';
 import { gateMinOtifPct } from '../../sourcing/complianceGateConfig';

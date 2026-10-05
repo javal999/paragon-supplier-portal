@@ -24,10 +24,10 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { Plus, X } from 'lucide-react';
-import Button from '../../components/ui-v2/Button';
-import StatusPill from '../../components/ui-v2/StatusPill';
-import { documentRequestsRefusal } from '../../services/transitions/rfxDocumentRules';
-import { DOCUMENT_TYPES, type DocumentRequest, type DocumentType } from '../../services/sourcing/types';
+import Button from '@components/ui-v2/Button';
+import StatusPill from '@components/ui-v2/StatusPill';
+import { documentRequestsRefusal } from '@services/transitions/rfxDocumentRules';
+import { DOCUMENT_TYPES, type DocumentRequest, type DocumentType } from '@services/sourcing/types';
 
 /** One RFQ item a request can be for. */
 export interface DocumentRequestItem {

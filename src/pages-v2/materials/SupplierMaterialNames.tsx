@@ -1,22 +1,22 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import Table from '../../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../../components/ui-v2/TableHeader';
-import TableRow from '../../components/ui-v2/TableRow';
-import TableCell from '../../components/ui-v2/TableCell';
-import Button from '../../components/ui-v2/Button';
-import Data from '../../components/ui-v2/Data';
-import { HandoffNotice } from '../../components/ui-v2/HandoffNotice';
-import { useVerbAvailability } from '../../hooks/useVerbAvailability';
-import { useToast } from '../../hooks/useToast';
-import { useMaterialNames } from '../../services/query/hooks';
-import { useMaterialNameSubmit } from '../../services/query/commandHooks';
-import type { MaterialNameRow } from '../../services/data/types';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
+import Button from '@components/ui-v2/Button';
+import Data from '@components/ui-v2/Data';
+import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
+import { useVerbAvailability } from '@hooks/useVerbAvailability';
+import { useToast } from '@hooks/useToast';
+import { useMaterialNames } from '@services/query/hooks';
+import { useMaterialNameSubmit } from '@services/query/commandHooks';
+import type { MaterialNameRow } from '@services/data/types';
 import {
   SUPPLIER_MATERIAL_NO_MAX,
   TRADE_NAME_MAX,
   materialNameEntryRefusal,
-} from '../../services/transitions/materialNameRules';
+} from '@services/transitions/materialNameRules';
 import { MaterialNameStatePill, refusalKeyOf } from './tradeNameDisplay';
 
 // ─────────────────────────────────────────────────────────────────────────────

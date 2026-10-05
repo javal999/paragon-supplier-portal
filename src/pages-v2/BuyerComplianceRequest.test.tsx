@@ -34,14 +34,14 @@ import { describe, it, expect, beforeEach, afterAll } from 'vitest';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { screen, fireEvent, waitFor } from '@testing-library/react';
-import { renderWithProviders } from '../test/test-utils';
-import type { CurrentIdentity } from '../context/CurrentIdentityContext';
-import { NO_PERSON } from '../context/noPerson';
-import { supplierDocumentStore } from '../services/data/mock/stores/supplierDocumentStore';
-import i18n from '../lib/i18n';
+import { renderWithProviders } from '@test/test-utils';
+import type { CurrentIdentity } from '@context/CurrentIdentityContext';
+import { NO_PERSON } from '@context/noPerson';
+import { supplierDocumentStore } from '@services/data/mock/stores/supplierDocumentStore';
+import i18n from '@lib/i18n';
 import BuyerCompliance from './BuyerCompliance';
 import SupplierDocuments from './SupplierDocuments';
-import Toaster from '../components/ui-v2/Toaster';
+import Toaster from '@components/ui-v2/Toaster';
 
 /** The buyer's compliance officer — the lane that holds `supplierdoc:request`. */
 const COMPLIANCE: CurrentIdentity = {

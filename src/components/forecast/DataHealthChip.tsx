@@ -1,9 +1,9 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import StatusPill from '../ui-v2/StatusPill';
-import { useDataHealth } from '../../services/query/hooks';
-import type { EngineStep } from '../../services/engine/dataHealth';
+import StatusPill from '@components/ui-v2/StatusPill';
+import { useDataHealth } from '@services/query/hooks';
+import type { EngineStep } from '@services/engine/dataHealth';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DATA HEALTH CHIP — F-02 (Forecast UX phase 1, task A3).

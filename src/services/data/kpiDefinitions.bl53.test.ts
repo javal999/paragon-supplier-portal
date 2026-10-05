@@ -8,12 +8,12 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { describe, it, expect } from 'vitest';
-import i18n from '../../lib/i18n';
+import i18n from '@lib/i18n';
 import { BASELINE_MONTHS, KPI_DEFINITIONS, KPI_QUESTIONS } from './kpiDefinitions';
 import { callOffOtif, deliveryResults, type ReceiptEvent } from '../transitions/callOffRules';
 import { poCfot } from './performanceRules';
 import type { CallOff, CallOffConfirmation, PurchaseOrder } from './types';
-import type { GoodsReceipt } from '../../data/mockGoodsReceipts';
+import type { GoodsReceipt } from '@data/mockGoodsReceipts';
 
 const otif = KPI_DEFINITIONS.find((d) => d.id === 'otif')!;
 const MATCH = otif.answers.window.values!.match;

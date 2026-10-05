@@ -28,19 +28,19 @@
 import React, { useReducer } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
-import Data from '../../components/ui-v2/Data';
-import StatusPill from '../../components/ui-v2/StatusPill';
-import Table from '../../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../../components/ui-v2/TableHeader';
-import TableRow from '../../components/ui-v2/TableRow';
-import TableCell from '../../components/ui-v2/TableCell';
-import { useDataService } from '../../services/data/DataServiceContext';
-import { useCurrentIdentity } from '../../context/CurrentIdentityContext';
-import { formatDate, formatDateTime } from '../../lib/format';
-import type { ActorAttribution, UnattributedReason } from '../../lib/enforcement';
-import { formatBytes, type AttachmentMeta } from '../../services/attachments/sessionAttachments';
-import type { DocumentRequest, ResponseDocument } from '../../services/sourcing/types';
-import { certificateExpired, missingRequiredDocuments } from '../../services/transitions/rfxDocumentRules';
+import Data from '@components/ui-v2/Data';
+import StatusPill from '@components/ui-v2/StatusPill';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
+import { useDataService } from '@services/data/DataServiceContext';
+import { useCurrentIdentity } from '@context/CurrentIdentityContext';
+import { formatDate, formatDateTime } from '@lib/format';
+import type { ActorAttribution, UnattributedReason } from '@lib/enforcement';
+import { formatBytes, type AttachmentMeta } from '@services/attachments/sessionAttachments';
+import type { DocumentRequest, ResponseDocument } from '@services/sourcing/types';
+import { certificateExpired, missingRequiredDocuments } from '@services/transitions/rfxDocumentRules';
 import { rfxActorName } from './draftEdit';
 
 // ── The open action (shared with the RFI/RFP answer cells) ──────────────────

@@ -29,7 +29,7 @@
 // without anybody editing here.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { PersonaType } from '../../context/CurrentIdentityContext';
+import type { PersonaType } from '@context/CurrentIdentityContext';
 import {
   capabilityForEntity,
   dispatchesCommands,

@@ -3,8 +3,8 @@
 // one way to show a quantity in its unit.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { formatNumber } from '../../lib/format';
-import type { Uom } from '../../services/sdc/types';
+import { formatNumber } from '@lib/format';
+import type { Uom } from '@services/sdc/types';
 
 /** A quantity in its unit: whole pieces, kilograms to one decimal. */
 export const qtyOf = (value: number, uom: Uom): string =>

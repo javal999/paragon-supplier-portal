@@ -27,12 +27,12 @@ No credentials required — use Demo Mode on the login screen.
 
 | Technology | Version | Purpose |
 |------------|---------|---------|
-| React | 18.3 | UI framework |
+| React | 19.3 | UI framework |
 | TypeScript | 5.6 | Type safety |
-| Vite | 6 | Build tooling & dev server |
+| Vite | 7 | Build tooling & dev server |
 | Tailwind CSS | 3.4 | Styling |
 | TanStack Query | 5 | Server-state & caching |
-| React Router | 6.28 | Client-side routing (HashRouter) |
+| React Router | 7.18 | Client-side routing (HashRouter) |
 | Recharts | 2.13 | Charts & data visualisation |
 | lucide-react | 1 | Icons |
 | i18next / react-i18next | 26 / 17 | Internationalisation |

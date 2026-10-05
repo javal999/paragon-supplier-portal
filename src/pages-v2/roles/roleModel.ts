@@ -4,15 +4,15 @@ import {
   isSystemRole,
   type BusinessRoleId,
   type SystemRoleId,
-} from '../../services/transitions/businessRoles';
+} from '@services/transitions/businessRoles';
 import {
   atomsOfCustomRole,
   customRoleStore,
   retainedFromParent,
   sideOfSystemRole,
-} from '../../services/transitions/customRoles';
-import { getKnownFlows } from '../../services/transitions';
-import { WIRED_COMMAND_TARGETS } from '../../services/data/mock/MockCommandService';
+} from '@services/transitions/customRoles';
+import { getKnownFlows } from '@services/transitions';
+import { WIRED_COMMAND_TARGETS } from '@services/data/mock/MockCommandService';
 
 // ────────────────────────────────────────────────────────────────────────────
 // THE ROLE VIEW MODEL — one derivation, read by both the list and the detail.

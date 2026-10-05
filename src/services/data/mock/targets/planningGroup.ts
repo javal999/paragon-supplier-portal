@@ -17,8 +17,8 @@
 import { bindPolicyHook, POLICY_HOOKS, type CommandTarget } from '../../../transitions';
 import { planningGroupRefusal } from '../../../transitions/planningGroupRules';
 import { sdcClock } from '../../../sdc';
-import { NO_PERSON } from '../../../../context/noPerson';
-import type { ActorAttribution } from '../../../../lib/enforcement';
+import { NO_PERSON } from '@context/noPerson';
+import type { ActorAttribution } from '@lib/enforcement';
 import { planningGroupStore } from '../stores/planningGroupStore';
 import { materialOverlayStore } from '../stores/materialOverlayStore';
 import {

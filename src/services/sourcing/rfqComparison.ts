@@ -25,9 +25,9 @@
 // RFQ has items; a legacy single-price RFQ never reaches it.
 // ────────────────────────────────────────────────────────────────────────────
 
-import type { BidCurrency } from '../../lib/currencyPolicy';
-import { BASE_CURRENCY } from '../../lib/currencyPolicy';
-import { scoreQuotations, scoreStanding, type ScoringOptions, type ScoringOutcome } from '../../lib/quoteScore';
+import type { BidCurrency } from '@lib/currencyPolicy';
+import { BASE_CURRENCY } from '@lib/currencyPolicy';
+import { scoreQuotations, scoreStanding, type ScoringOptions, type ScoringOutcome } from '@lib/quoteScore';
 import type { AwardLine } from './types';
 import {
   tierPieces,

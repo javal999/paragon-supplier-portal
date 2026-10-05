@@ -24,7 +24,7 @@ import {
   mrpControllerUnmapRefusal,
 } from '../../../transitions/mrpControllerStore';
 import { sdcClock } from '../../../sdc';
-import { NO_PERSON } from '../../../../context/noPerson';
+import { NO_PERSON } from '@context/noPerson';
 
 export const mrpControllerTarget: CommandTarget = {
   readState: (id) => (MRP_CONTROLLER_CODE.test(id) ? 'Maintained' : null),

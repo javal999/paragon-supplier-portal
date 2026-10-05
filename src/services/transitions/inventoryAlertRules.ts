@@ -40,7 +40,7 @@ import type {
   RiskBasis,
   RiskClass,
 } from '../data/types';
-import type { ActorAttribution } from '../../lib/enforcement';
+import type { ActorAttribution } from '@lib/enforcement';
 import { gapWeeks } from './capacityRules';
 import { NOTE_REQUIRED_CODE, isActiveReasonCode } from './reasonCodes';
 import {

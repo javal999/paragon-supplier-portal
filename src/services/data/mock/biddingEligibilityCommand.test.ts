@@ -25,7 +25,7 @@ import { sourcingTypeStore } from '../../transitions/sourcingTypeStore';
 import { resolvePolicyHook } from '../../transitions/policies';
 import { POLICY_HOOKS } from '../../transitions/policyHooks';
 import { PERSONA_SYSTEM_ROLES } from '../../transitions/businessRoles';
-import { NO_PERSON } from '../../../context/noPerson';
+import { NO_PERSON } from '@context/noPerson';
 import { sdcClock } from '../../sdc';
 import { qualificationFor } from './qualificationReadModel';
 import { eventSourcingType } from './eligibilityReadModel';

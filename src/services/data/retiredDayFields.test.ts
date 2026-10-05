@@ -24,8 +24,8 @@
 
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { mockContracts } from '../../data/mockContracts';
-import { mockShipments } from '../../data/mockShipments';
+import { mockContracts } from '@data/mockContracts';
+import { mockShipments } from '@data/mockShipments';
 import { COMPLIANCE_DATA } from './mock/fixtures/buyerRisk';
 import { daysUntil } from './dayProjection';
 

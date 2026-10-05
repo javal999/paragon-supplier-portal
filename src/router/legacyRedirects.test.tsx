@@ -13,6 +13,7 @@ import { MemoryRouter, Routes, Route, useLocation, generatePath } from 'react-ro
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import LegacyRedirect from './LegacyRedirect';
+import { isTestFile } from '@test/sourceFiles';
 
 const SRC_DIR = path.resolve(__dirname, '..');
 const ROUTER_SRC = fs.readFileSync(path.resolve(__dirname, 'AppRouter.tsx'), 'utf8');
@@ -89,7 +90,7 @@ describe('the retired RFx paths redirect to their modules', () => {
       for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
         const full = path.join(dir, entry.name);
         if (entry.isDirectory()) walk(full);
-        else if (/\.(ts|tsx)$/.test(entry.name) && !/\.test\.tsx?$/.test(entry.name)) {
+        else if (/\.(ts|tsx|js|jsx)$/.test(entry.name) && !isTestFile(entry.name)) {
           if (full === path.resolve(__dirname, 'AppRouter.tsx')) continue;
           const text = fs.readFileSync(full, 'utf8');
           for (const { from } of REDIRECTS) {

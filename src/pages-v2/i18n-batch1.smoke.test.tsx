@@ -1,7 +1,7 @@
 import { describe, it, expect, afterAll } from 'vitest';
 import { screen, act } from '@testing-library/react';
-import { renderWithProviders } from '../test/test-utils';
-import i18n from '../lib/i18n';
+import { renderWithProviders } from '@test/test-utils';
+import i18n from '@lib/i18n';
 import SupplierRegistration from './SupplierRegistration';
 import BuyerContracts from './BuyerContracts';
 

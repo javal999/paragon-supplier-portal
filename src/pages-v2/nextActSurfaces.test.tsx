@@ -26,7 +26,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { Routes, Route } from 'react-router-dom';
 import { screen, fireEvent } from '@testing-library/react';
 
-import { renderWithProviders, SUPPLIER } from '../test/test-utils';
+import { renderWithProviders, SUPPLIER } from '@test/test-utils';
 import SupplierInvoices from './SupplierInvoices';
 import BuyerRequisitions from './BuyerRequisitions';
 import BuyerInvoices from './BuyerInvoices';
@@ -35,9 +35,9 @@ import BuyerSourcing from './BuyerSourcing';
 import BuyerShipments from './BuyerShipments';
 import BuyerSupplierApplications from './BuyerSupplierApplications';
 import BuyerContractDetail from './BuyerContractDetail';
-import { supplierApplicationStore } from '../services/data/mock/stores/supplierApplicationStore';
-import { seedSupplierApplications } from '../services/data/mock/applicationSeed';
-import { MockCommandService } from '../services/data/mock/MockCommandService';
+import { supplierApplicationStore } from '@services/data/mock/stores/supplierApplicationStore';
+import { seedSupplierApplications } from '@services/data/mock/applicationSeed';
+import { MockCommandService } from '@services/data/mock/MockCommandService';
 
 /** Assert the line is present, on the expected arm, saying the expected thing. */
 const expectLine = async (testId: string, arm: string, text: RegExp) => {

@@ -39,7 +39,7 @@
 // a `type="number"` field hides by eating the token before React sees it.
 // ────────────────────────────────────────────────────────────────────────────
 
-import { normalizeQty, type QtyRefusalReason } from '../../lib/localeNumber';
+import { normalizeQty, type QtyRefusalReason } from '@lib/localeNumber';
 
 /** One line's read. Exported so each cell reports ITSELF — the per-field
  *  lesson carried from 2e-b-4b, per line instead of per field. */

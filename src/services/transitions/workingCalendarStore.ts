@@ -47,8 +47,8 @@ import {
   withDayRulings,
   type CalendarDayKind,
   type WorkingCalendar,
-} from '../../lib/workingCalendar';
-import { asActorAttribution, type ActorAttribution } from '../../lib/enforcement';
+} from '@lib/workingCalendar';
+import { asActorAttribution, type ActorAttribution } from '@lib/enforcement';
 
 // ── 1 · THE SAP LOAD (simulated) ─────────────────────────────────────────────
 

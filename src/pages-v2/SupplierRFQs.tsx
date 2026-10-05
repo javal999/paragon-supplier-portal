@@ -15,34 +15,34 @@ import {
   Lock,
   LucideIcon,
 } from 'lucide-react';
-import AppShellV2 from '../components/layout-v2/AppShellV2';
-import PageHeader from '../components/ui-v2/PageHeader';
-import PageMetaLine from '../components/ui-v2/PageMetaLine';
-import ProvenanceMarker from '../components/ui-v2/ProvenanceMarker';
-import KpiCard from '../components/ui-v2/KpiCard';
-import SubTabs from '../components/ui-v2/SubTabs';
-import StatusPill from '../components/ui-v2/StatusPill';
-import Table from '../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../components/ui-v2/TableHeader';
-import TableRow from '../components/ui-v2/TableRow';
-import TableCell from '../components/ui-v2/TableCell';
-import Button from '../components/ui-v2/Button';
-import SidePanel from '../components/ui-v2/SidePanel';
-import FormSection from '../components/ui-v2/FormSection';
-import Data from '../components/ui-v2/Data';
-import { useToast } from '../hooks/useToast';
-import { useCurrentIdentity } from '../context/CurrentIdentityContext';
-import NoSupplierIdentity from '../components/ui-v2/NoSupplierIdentity';
-import LoadingState from '../components/ui-v2/LoadingState';
-import ErrorState from '../components/ui-v2/ErrorState';
-import EmptyState from '../components/ui-v2/EmptyState';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import PageHeader from '@components/ui-v2/PageHeader';
+import PageMetaLine from '@components/ui-v2/PageMetaLine';
+import ProvenanceMarker from '@components/ui-v2/ProvenanceMarker';
+import KpiCard from '@components/ui-v2/KpiCard';
+import SubTabs from '@components/ui-v2/SubTabs';
+import StatusPill from '@components/ui-v2/StatusPill';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
+import Button from '@components/ui-v2/Button';
+import SidePanel from '@components/ui-v2/SidePanel';
+import FormSection from '@components/ui-v2/FormSection';
+import Data from '@components/ui-v2/Data';
+import { useToast } from '@hooks/useToast';
+import { useCurrentIdentity } from '@context/CurrentIdentityContext';
+import NoSupplierIdentity from '@components/ui-v2/NoSupplierIdentity';
+import LoadingState from '@components/ui-v2/LoadingState';
+import ErrorState from '@components/ui-v2/ErrorState';
+import EmptyState from '@components/ui-v2/EmptyState';
 import {
   useCurrentSupplier,
   useRFQs,
   useQuotations,
   useRfqClarifications,
   useRfqEngagement,
-} from '../services/query/hooks';
+} from '@services/query/hooks';
 import ResponseDocumentsSection, { type DocumentDraft } from './rfx/ResponseDocumentsSection';
 import TieredQuoteForm, { SampleOfferFields } from './rfqs/TieredQuoteForm';
 import {
@@ -58,12 +58,12 @@ import {
   type TieredDraft,
 } from './rfqs/tieredQuoteModel';
 import { rfqResponseRefusal } from './rfqs/rfqResponseText';
-import { tiersForItem } from '../services/sourcing/rfqModel';
-import { documentsOf, responseDocumentsRefusal } from '../services/transitions/rfxDocumentRules';
-import type { RfqClarificationView, RfqEngagementView } from '../services/sourcing/rfqResponse';
-import { useQuotationSubmit } from '../services/query/commandHooks';
-import { useVerbAvailability } from '../hooks/useVerbAvailability';
-import { HandoffNotice } from '../components/ui-v2/HandoffNotice';
+import { tiersForItem } from '@services/sourcing/rfqModel';
+import { documentsOf, responseDocumentsRefusal } from '@services/transitions/rfxDocumentRules';
+import type { RfqClarificationView, RfqEngagementView } from '@services/sourcing/rfqResponse';
+import { useQuotationSubmit } from '@services/query/commandHooks';
+import { useVerbAvailability } from '@hooks/useVerbAvailability';
+import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
 import {
   buildQuotationSubmitPayload,
   isCurrencyRefusal,
@@ -74,20 +74,20 @@ import {
   BID_CURRENCIES,
   isBidCurrency,
   type BidCurrency,
-} from '../lib/currencyPolicy';
+} from '@lib/currencyPolicy';
 import {
   readLeadTimeDays,
   type LeadTimeRefusalReason,
   type LeadTimeUnit,
 } from './rfqs/quotationLeadTime';
 import { readMoq, type MoqRefusalReason } from './rfqs/quotationMoq';
-import { daysUntil } from '../services/data/dayProjection';
-import type { RFQ, Quotation, Supplier } from '../services/data/types';
-import { CHART_SERIES } from '../lib/chartPalette';
-import { CRITERIA_WEIGHTS } from '../lib/quoteScore';
+import { daysUntil } from '@services/data/dayProjection';
+import type { RFQ, Quotation, Supplier } from '@services/data/types';
+import { CHART_SERIES } from '@lib/chartPalette';
+import { CRITERIA_WEIGHTS } from '@lib/quoteScore';
 import { rfxNow } from './rfx/rfxDisplay';
-import { formatDate, formatMoney, formatNumber } from '../lib/format';
-import { useRefusalText } from '../hooks/useRefusalText';
+import { formatDate, formatMoney, formatNumber } from '@lib/format';
+import { useRefusalText } from '@hooks/useRefusalText';
 
 interface OpenRFQ {
   id: string;
@@ -200,6 +200,12 @@ const buildSubmittedQuotes = (
 };
 
 interface AwardRow {
+  /**
+   * The quotation this outcome belongs to — the row's identity and React key.
+   * rfqNumber is not a safe key: nothing guarantees one decided quotation per
+   * RFQ for a supplier, and it falls back to rfqId when the RFQ is missing.
+   */
+  quotationId: string;
   rfqNumber: string;
   material: string;
   result: 'Awarded' | 'Not Awarded';
@@ -222,6 +228,7 @@ const buildAwardRows = (
       const rfq = rfqById.get(q.rfqId);
       const won = q.status === 'Awarded';
       return {
+        quotationId: q.id,
         rfqNumber: rfq?.rfqNumber ?? q.rfqId,
         material: rfq?.title ?? '—',
         result: won ? 'Awarded' : 'Not Awarded',
@@ -739,8 +746,8 @@ const AwardsTab: React.FC<{ rows: AwardRow[] }> = ({ rows }) => {
             <TableHeaderCell>{t('rfqs.awards.col.notes')}</TableHeaderCell>
           </TableHeader>
           <tbody>
-            {rows.map((row, i) => (
-              <TableRow key={i}>
+            {rows.map((row) => (
+              <TableRow key={row.quotationId}>
                 <TableCell>
                   <Data className="text-xs font-bold text-text-primary">
                     {row.rfqNumber}

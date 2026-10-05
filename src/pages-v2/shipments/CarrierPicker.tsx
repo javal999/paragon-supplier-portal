@@ -1,6 +1,6 @@
 import React, { useSyncExternalStore } from 'react';
 import { useTranslation } from 'react-i18next';
-import { threePlStore, type ThreePl } from '../../services/transitions/threePlStore';
+import { threePlStore, type ThreePl } from '@services/transitions/threePlStore';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // THE CARRIER ON AN ASN — BL-51, REQ-E07-04 BR-05.

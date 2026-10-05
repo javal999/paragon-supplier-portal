@@ -3,18 +3,18 @@ import ReactDOM from 'react-dom/client';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { I18nextProvider } from 'react-i18next';
 import App from './App';
-import i18n from './lib/i18n';
-import { AdaptiveProvider } from './context/AdaptiveContext';
-import { DataServiceProvider } from './services/data/DataServiceContext';
-import { mockDataService } from './services/data/mock/mockDataService';
-import { seedEnforcementLedger } from './services/data/mock/enforcementSeed';
-import { seedSourceableRequisition } from './services/data/mock/requisitionSeed';
-import { seedSupplierApplications } from './services/data/mock/applicationSeed';
-import { withChaos, chaosConfigFromEnv } from './services/data/mock/withChaos';
-import { queryClient } from './services/query/queryClient';
-import type { IDataService } from './services/data/types';
+import i18n from '@lib/i18n';
+import { AdaptiveProvider } from '@context/AdaptiveContext';
+import { DataServiceProvider } from '@services/data/DataServiceContext';
+import { mockDataService } from '@services/data/mock/mockDataService';
+import { seedEnforcementLedger } from '@services/data/mock/enforcementSeed';
+import { seedSourceableRequisition } from '@services/data/mock/requisitionSeed';
+import { seedSupplierApplications } from '@services/data/mock/applicationSeed';
+import { withChaos, chaosConfigFromEnv } from '@services/data/mock/withChaos';
+import { queryClient } from '@services/query/queryClient';
+import type { IDataService } from '@services/data/types';
 import './index.css';
-import './styles/tailwind.css';
+import '@styles/tailwind.css';
 
 // Chaos is dev-only and opt-in (VITE_CHAOS=on). import.meta.env.DEV is false
 // in the production build, so withChaos is tree-shaken out of the Vercel bundle.

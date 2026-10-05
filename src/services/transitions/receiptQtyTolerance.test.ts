@@ -22,7 +22,7 @@ import {
   receiptQtyToleranceDefault,
   receiptQtyToleranceFor,
 } from './fulfilmentConfig';
-import type { GoodsReceipt } from '../../data/mockGoodsReceipts';
+import type { GoodsReceipt } from '@data/mockGoodsReceipts';
 
 const MAT = 'PK-PETB-8801';
 

@@ -1,8 +1,8 @@
 import { screen, fireEvent } from '@testing-library/react';
-import { renderWithProviders } from '../test/test-utils';
-import { mockDataService } from '../services/data/mock/mockDataService';
-import { withChaos } from '../services/data/mock/withChaos';
-import type { IDataService } from '../services/data/types';
+import { renderWithProviders } from '@test/test-utils';
+import { mockDataService } from '@services/data/mock/mockDataService';
+import { withChaos } from '@services/data/mock/withChaos';
+import type { IDataService } from '@services/data/types';
 import BuyerContracts from './BuyerContracts';
 
 const alwaysFails = withChaos(mockDataService, { minMs: 0, maxMs: 0, failureRate: 1 });

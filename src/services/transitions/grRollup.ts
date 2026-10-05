@@ -9,7 +9,7 @@
 // never asserted (law 0.6, honest-by-construction).
 // ────────────────────────────────────────────────────────────────────────────
 
-import type { InspectionResult } from '../../data/mockGoodsReceipts';
+import type { InspectionResult } from '@data/mockGoodsReceipts';
 
 /** A single line's rolled-up disposition state (the sub-flow's terminal). */
 export type GrLineState = 'Pending' | 'Accepted' | 'Rejected' | 'Partial';

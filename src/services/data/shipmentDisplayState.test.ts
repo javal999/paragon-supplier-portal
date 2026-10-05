@@ -24,7 +24,7 @@
 // serves 2026-08-23/24. The specs below read `mockShipments`, never the raw array.
 
 import { describe, it, expect } from 'vitest';
-import { mockShipments, type ShipmentStatus } from '../../data/mockShipments';
+import { mockShipments, type ShipmentStatus } from '@data/mockShipments';
 import {
   shipmentDisplayState,
   isDelayed,

@@ -24,7 +24,7 @@ import {
   Info,
   CheckCircle2,
 } from 'lucide-react';
-import AppShellV2 from '../components/layout-v2/AppShellV2';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
 import {
   CHART_SERIES,
   CHART_SEMANTIC,
@@ -32,12 +32,12 @@ import {
   CHART_GRID,
   targetStatus,
   TARGET_STATUS,
-} from '../lib/chartPalette';
-import PageHeader from '../components/ui-v2/PageHeader';
-import PageMetaLine from '../components/ui-v2/PageMetaLine';
-import ProvenanceMarker from '../components/ui-v2/ProvenanceMarker';
-import FilterChipsBar from '../components/ui-v2/FilterChipsBar';
-import KpiCard from '../components/ui-v2/KpiCard';
+} from '@lib/chartPalette';
+import PageHeader from '@components/ui-v2/PageHeader';
+import PageMetaLine from '@components/ui-v2/PageMetaLine';
+import ProvenanceMarker from '@components/ui-v2/ProvenanceMarker';
+import FilterChipsBar from '@components/ui-v2/FilterChipsBar';
+import KpiCard from '@components/ui-v2/KpiCard';
 import { usePerformance } from './performance/performanceDisplay';
 import KpiDefinitions from './performance/KpiDefinitions';
 import UpdateComplianceCard from './performance/UpdateComplianceCard';
@@ -45,28 +45,28 @@ import {
   GRADE_BANDS,
   PERFORMANCE_PERIODS,
   type PerformancePeriod,
-} from '../services/data/performanceRules';
-import Data from '../components/ui-v2/Data';
-import TargetBar from '../components/ui-v2/TargetBar';
-import Tabs from '../components/ui-v2/Tabs';
-import StatusPill from '../components/ui-v2/StatusPill';
-import Button from '../components/ui-v2/Button';
+} from '@services/data/performanceRules';
+import Data from '@components/ui-v2/Data';
+import TargetBar from '@components/ui-v2/TargetBar';
+import Tabs from '@components/ui-v2/Tabs';
+import StatusPill from '@components/ui-v2/StatusPill';
+import Button from '@components/ui-v2/Button';
 import { useTranslation, Trans } from 'react-i18next';
-import { useEnumLabel } from '../hooks/useEnumLabel';
-import { useCategoryLabel } from '../hooks/useCategoryLabel';
-import { useChannelLabel } from '../hooks/useChannelLabel';
-import { useToast } from '../hooks/useToast';
-import { useCurrentIdentity } from '../context/CurrentIdentityContext';
-import NoSupplierIdentity from '../components/ui-v2/NoSupplierIdentity';
-import LoadingState from '../components/ui-v2/LoadingState';
-import ErrorState from '../components/ui-v2/ErrorState';
-import EmptyState from '../components/ui-v2/EmptyState';
+import { useEnumLabel } from '@hooks/useEnumLabel';
+import { useCategoryLabel } from '@hooks/useCategoryLabel';
+import { useChannelLabel } from '@hooks/useChannelLabel';
+import { useToast } from '@hooks/useToast';
+import { useCurrentIdentity } from '@context/CurrentIdentityContext';
+import NoSupplierIdentity from '@components/ui-v2/NoSupplierIdentity';
+import LoadingState from '@components/ui-v2/LoadingState';
+import ErrorState from '@components/ui-v2/ErrorState';
+import EmptyState from '@components/ui-v2/EmptyState';
 import {
   useCurrentSupplier,
   useKpis,
   usePurchaseOrders,
-} from '../services/query/hooks';
-import type { KpiPoint as Kpi, KpiTrend as Trend } from '../services/data/types';
+} from '@services/query/hooks';
+import type { KpiPoint as Kpi, KpiTrend as Trend } from '@services/data/types';
 
 type Grade = 'A' | 'B' | 'C' | 'D';
 

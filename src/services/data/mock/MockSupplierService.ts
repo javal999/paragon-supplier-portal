@@ -1,4 +1,4 @@
-import { mockSuppliers } from '../../../data/mockSuppliers';
+import { mockSuppliers } from '@data/mockSuppliers';
 import type {
   ISupplierService,
   Page,

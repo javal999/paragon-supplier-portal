@@ -40,7 +40,7 @@
 // `flowLayout.test.ts`.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { FlowEdge, FlowView } from '../../services/transitions/catalogView';
+import type { FlowEdge, FlowView } from '@services/transitions/catalogView';
 
 export const NODE_W = 176;
 export const NODE_H = 72;

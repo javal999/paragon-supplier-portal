@@ -2,10 +2,10 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useReasonLabel } from '../admin/reasonCodeDisplay';
 import { Check, Circle, CircleDot, XCircle } from 'lucide-react';
-import Data from '../../components/ui-v2/Data';
-import StatusPill from '../../components/ui-v2/StatusPill';
-import { formatDate, formatDateTime, formatNumber } from '../../lib/format';
-import type { PurchaseOrder } from '../../services/data/types';
+import Data from '@components/ui-v2/Data';
+import StatusPill from '@components/ui-v2/StatusPill';
+import { formatDate, formatDateTime, formatNumber } from '@lib/format';
+import type { PurchaseOrder } from '@services/data/types';
 import {
   completionMovedLater,
   isAwaitingResponse,
@@ -14,8 +14,8 @@ import {
   respondedLate,
   responseDeadline,
   type StepState,
-} from '../../services/data/poResponseProjection';
-import { sdcClock } from '../../services/sdc/clock';
+} from '@services/data/poResponseProjection';
+import { sdcClock } from '@services/sdc/clock';
 import { poLineQuantityText } from './poLineQuantity';
 
 // ─────────────────────────────────────────────────────────────────────────────

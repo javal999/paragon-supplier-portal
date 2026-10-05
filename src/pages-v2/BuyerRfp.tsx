@@ -1,25 +1,25 @@
 import React, { useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import AppShellV2 from '../components/layout-v2/AppShellV2';
-import PageHeader from '../components/ui-v2/PageHeader';
-import PageMetaLine from '../components/ui-v2/PageMetaLine';
-import SampleDataBadge from '../components/ui-v2/SampleDataBadge';
-import Button from '../components/ui-v2/Button';
-import Data from '../components/ui-v2/Data';
-import StatusPill from '../components/ui-v2/StatusPill';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import PageHeader from '@components/ui-v2/PageHeader';
+import PageMetaLine from '@components/ui-v2/PageMetaLine';
+import SampleDataBadge from '@components/ui-v2/SampleDataBadge';
+import Button from '@components/ui-v2/Button';
+import Data from '@components/ui-v2/Data';
+import StatusPill from '@components/ui-v2/StatusPill';
 import { EligibilityMarker, EventSourcingType, QualificationWarningsNote } from './rfx/eligibilityDisplay';
-import Table from '../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../components/ui-v2/TableHeader';
-import TableRow from '../components/ui-v2/TableRow';
-import TableCell from '../components/ui-v2/TableCell';
-import LoadingState from '../components/ui-v2/LoadingState';
-import ErrorState from '../components/ui-v2/ErrorState';
-import SessionAttachments from '../components/ui-v2/SessionAttachments';
-import { HandoffNotice } from '../components/ui-v2/HandoffNotice';
-import { useVerbAvailability } from '../hooks/useVerbAvailability';
-import { useToast } from '../hooks/useToast';
-import { formatDate } from '../lib/format';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
+import LoadingState from '@components/ui-v2/LoadingState';
+import ErrorState from '@components/ui-v2/ErrorState';
+import SessionAttachments from '@components/ui-v2/SessionAttachments';
+import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
+import { useVerbAvailability } from '@hooks/useVerbAvailability';
+import { useToast } from '@hooks/useToast';
+import { formatDate } from '@lib/format';
 import {
   useInviteeCandidates,
   useRfiEvents,
@@ -27,18 +27,18 @@ import {
   useRfpEvents,
   useRfpOfferRounds,
   useRFQs,
-} from '../services/query/hooks';
-import { useRfxCommand } from '../services/query/commandHooks';
-import type { GateResult } from '../services/sourcing/complianceGate';
-import { rfpOptionRef } from '../services/sourcing/rfpFirmOffer';
+} from '@services/query/hooks';
+import { useRfxCommand } from '@services/query/commandHooks';
+import type { GateResult } from '@services/sourcing/complianceGate';
+import { rfpOptionRef } from '@services/sourcing/rfpFirmOffer';
 import { RfpFirmOfferRounds } from './rfx/RfpFirmOffers';
 import { RfpAwardSection, awardRecordsInForce, awardedRefsOf } from './rfx/RfpAwardSection';
-import { rfpSettledOptionRefs, type RfpOptionSettlement } from '../services/sourcing/rfpAward';
-import { RFP_TERM_GROUP_ORDER, rfpTermGroupOf, rfxFamilyForCategory, rfxSectionsOf } from '../services/sourcing/rfxConfig';
-import { prefillRfpFromRfi } from '../services/sourcing/rfxPrefill';
-import { rfpTemplateStore } from '../services/sourcing/rfxTemplates';
+import { rfpSettledOptionRefs, type RfpOptionSettlement } from '@services/sourcing/rfpAward';
+import { RFP_TERM_GROUP_ORDER, rfpTermGroupOf, rfxFamilyForCategory, rfxSectionsOf } from '@services/sourcing/rfxConfig';
+import { prefillRfpFromRfi } from '@services/sourcing/rfxPrefill';
+import { rfpTemplateStore } from '@services/sourcing/rfxTemplates';
 import { rfpScoringOf } from './rfx/rfpScoring';
-import type { RfpEventView } from '../services/sourcing/views';
+import type { RfpEventView } from '@services/sourcing/views';
 import RfpCreateWizard from './rfx/RfpCreateWizard';
 import RfxSaveTemplate from './rfx/RfxSaveTemplate';
 import { RfpPricingComparison } from './rfx/RfpPricing';

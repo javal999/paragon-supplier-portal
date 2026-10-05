@@ -7,7 +7,7 @@
 // the verb. Nothing here re-derives a rule.
 // ────────────────────────────────────────────────────────────────────────────
 
-import { normalizeQty } from '../../lib/localeNumber';
+import { normalizeQty } from '@lib/localeNumber';
 import {
   asnLineRefusal,
   availableBatches,
@@ -19,8 +19,8 @@ import {
   type AsnLineCheck,
   type AsnLineInput,
   type AvailableBatch,
-} from '../../services/transitions/fulfilmentRules';
-import type { ASN, InventoryPosition, PurchaseOrder } from '../../services/data/types';
+} from '@services/transitions/fulfilmentRules';
+import type { ASN, InventoryPosition, PurchaseOrder } from '@services/data/types';
 
 /** One line as the supplier types it (REQ-E07-04 BR-04): text, parsed once. */
 export interface LineEntry {

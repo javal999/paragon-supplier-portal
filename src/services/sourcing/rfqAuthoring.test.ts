@@ -4,7 +4,7 @@
 // ────────────────────────────────────────────────────────────────────────────
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { resources } from '../../lib/i18n';
+import { resources } from '@lib/i18n';
 
 const enResources = resources.en.translation as Record<string, string>;
 const idResources = resources.id.translation as Record<string, string>;

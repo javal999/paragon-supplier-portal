@@ -67,7 +67,7 @@ import {
 import { getKnownFlows, getFlow } from './registry';
 import './index';
 import { COMMAND_REFUSALS } from './refusals';
-import { NO_PERSON } from '../../context/noPerson';
+import { NO_PERSON } from '@context/noPerson';
 import type { QueryScope } from '../data/types';
 import { purchaseOrderStore } from '../data/mock/stores/purchaseOrderStore';
 import { asnStore } from '../data/mock/stores/asnStore';
@@ -81,7 +81,7 @@ import { supplierDocumentStore } from '../data/mock/stores/supplierDocumentStore
 import { rfqStore } from '../data/mock/stores/rfqStore';
 import { purchaseRequisitionStore } from '../data/mock/stores/purchaseRequisitionStore';
 import { enforcementSettingStore } from '../data/mock/stores/enforcementSettingStore';
-import { GOVERNED_CHECK_IDS } from '../../lib/enforcement';
+import { GOVERNED_CHECK_IDS } from '@lib/enforcement';
 
 const svc = new MockCommandService();
 

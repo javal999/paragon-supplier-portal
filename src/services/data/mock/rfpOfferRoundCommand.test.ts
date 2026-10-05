@@ -30,7 +30,7 @@ import { DataError } from '../types';
 import { PERSONA_SYSTEM_ROLES } from '../../transitions/businessRoles';
 import { rfpSupplierGate, rfxNow } from './rfxReadModel';
 import { sdcClock } from '../../sdc';
-import { NO_PERSON } from '../../../context/noPerson';
+import { NO_PERSON } from '@context/noPerson';
 import {
   firmOfferRefusal,
   firmPricesInForce,

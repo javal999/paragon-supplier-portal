@@ -1,12 +1,12 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import { screen } from '@testing-library/react';
-import { renderWithProviders, BUYER } from '../../test/test-utils';
+import { renderWithProviders, BUYER } from '@test/test-utils';
 import DataHealthChip from './DataHealthChip';
-import { mockDataService } from '../../services/data/mock/mockDataService';
-import { PERSONA_SYSTEM_ROLES } from '../../services/transitions/businessRoles';
-import i18n from '../../lib/i18n';
-import type { QueryScope } from '../../services/data/types';
-import type { EngineStep } from '../../services/engine/dataHealth';
+import { mockDataService } from '@services/data/mock/mockDataService';
+import { PERSONA_SYSTEM_ROLES } from '@services/transitions/businessRoles';
+import i18n from '@lib/i18n';
+import type { QueryScope } from '@services/data/types';
+import type { EngineStep } from '@services/engine/dataHealth';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // F-02 — the Data health chip on the result pages. The count is read back from

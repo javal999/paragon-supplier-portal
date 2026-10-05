@@ -84,7 +84,9 @@ export const MATERIAL_SPACES: readonly MaterialSpaceEntry[] = Object.freeze([
   Object.freeze({
     spaceId: 'paragon.document_lane',
     kind: 'identity' as const,
-    modules: /^\/src\/data\/mock[^/]*\.ts$/,
+    // `.[jt]s`: these lanes name fixture modules by path, and a module converted
+    // to JavaScript must stay in its lane (frontend-standard plan, Phase 4).
+    modules: /^\/src\/data\/mock[^/]*\.[jt]s$/,
     declaredBy: 'C8-MASTER-DECL',
     note: '100% master-resolvable since 2B-3. Booked for retirement by MOCK-RETIREMENT-01.',
   }),
@@ -92,7 +94,7 @@ export const MATERIAL_SPACES: readonly MaterialSpaceEntry[] = Object.freeze([
     spaceId: 'paragon.asn_chase_lane',
     kind: 'identity' as const,
     modules:
-      /^\/src\/services\/(data\/mock\/fixtures\/supplierShipments|channel\/outboundFixtures)\.ts$/,
+      /^\/src\/services\/(data\/mock\/fixtures\/supplierShipments|channel\/outboundFixtures)\.[jt]s$/,
     declaredBy: 'R-3 (2B-1)',
     note:
       'DECLARED, BOOKED FOR RETIREMENT — 2B-5b. ⚠️ DEAD BY THE CODE, NOT ONLY BY ' +
@@ -106,7 +108,7 @@ export const MATERIAL_SPACES: readonly MaterialSpaceEntry[] = Object.freeze([
   Object.freeze({
     spaceId: 'paragon.supplier_catalogue_pointer',
     kind: 'pointer' as const,
-    modules: /^\/src\/services\/data\/mock\/fixtures\/supplierStorefront\.ts$/,
+    modules: /^\/src\/services\/data\/mock\/fixtures\/supplierStorefront\.[jt]s$/,
     declaredBy: 'R-D (2B-5a)',
     note:
       '⚠️ NOT AN IDENTITY SPACE. `CatalogItem.sapCode` is the SUPPLIER\'S ASSERTION ' +

@@ -1,5 +1,5 @@
-import type { StockChannel } from '../services/sdc/types';
-import { shiftFields } from '../services/data/fixturePresent';
+import type { StockChannel } from '@services/sdc/types';
+import { shiftFields } from '@services/data/fixturePresent';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SUPPLIER STOCK SUBMISSIONS — the seed of the ONE inventory model (REQ-E08-01,

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_WORKING_CALENDAR, withDayRulings } from '../../lib/workingCalendar';
+import { DEFAULT_WORKING_CALENDAR, withDayRulings } from '@lib/workingCalendar';
 import {
   activeUpdateReminder,
   cycleStatus,

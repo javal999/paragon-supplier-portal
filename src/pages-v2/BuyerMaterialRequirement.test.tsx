@@ -1,12 +1,12 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { screen, within, fireEvent } from '@testing-library/react';
-import { renderWithProviders, BUYER } from '../test/test-utils';
+import { renderWithProviders, BUYER } from '@test/test-utils';
 import BuyerMaterialRequirement from './BuyerMaterialRequirement';
-import { mockDataService } from '../services/data/mock/mockDataService';
-import { isLive } from '../services/liveness';
-import { PERSONA_SYSTEM_ROLES } from '../services/transitions/businessRoles';
-import i18n from '../lib/i18n';
-import type { QueryScope } from '../services/data/types';
+import { mockDataService } from '@services/data/mock/mockDataService';
+import { isLive } from '@services/liveness';
+import { PERSONA_SYSTEM_ROLES } from '@services/transitions/businessRoles';
+import i18n from '@lib/i18n';
+import type { QueryScope } from '@services/data/types';
 import { qtyOf } from './materialPlan/planDisplay';
 
 // ─────────────────────────────────────────────────────────────────────────────

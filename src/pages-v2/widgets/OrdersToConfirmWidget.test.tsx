@@ -1,5 +1,5 @@
 import { screen } from '@testing-library/react';
-import { renderWithProviders, SUPPLIER } from '../../test/test-utils';
+import { renderWithProviders, SUPPLIER } from '@test/test-utils';
 import OrdersToConfirmWidget from './OrdersToConfirmWidget';
 
 // The reference adapter for the proving pair. It is LIVE by construction — the

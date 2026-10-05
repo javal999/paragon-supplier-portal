@@ -17,7 +17,7 @@
 // direction: it is a common noun, not a product, so it translates.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { ExternalFactOwner } from '../../services/transitions/schema';
+import type { ExternalFactOwner } from '@services/transitions/schema';
 
 /**
  * ⚠️ **DO NOT WIDEN THIS TO `Partial<Record<…>>` AND DO NOT ADD A DEFAULT.**

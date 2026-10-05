@@ -13,15 +13,15 @@ import React, { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { Plus, Trash2, X } from 'lucide-react';
-import Button from '../../components/ui-v2/Button';
-import Data from '../../components/ui-v2/Data';
-import SubTabs from '../../components/ui-v2/SubTabs';
-import SessionAttachments from '../../components/ui-v2/SessionAttachments';
-import { useToast } from '../../hooks/useToast';
-import { useDialogFocus } from '../../hooks/useDialogFocus';
-import { formatDate, formatNumber } from '../../lib/format';
-import type { RFQ } from '../../data/mockRfqs';
-import type { RfiQuestion, RfiQuestionType } from '../../services/sourcing/types';
+import Button from '@components/ui-v2/Button';
+import Data from '@components/ui-v2/Data';
+import SubTabs from '@components/ui-v2/SubTabs';
+import SessionAttachments from '@components/ui-v2/SessionAttachments';
+import { useToast } from '@hooks/useToast';
+import { useDialogFocus } from '@hooks/useDialogFocus';
+import { formatDate, formatNumber } from '@lib/format';
+import type { RFQ } from '@data/mockRfqs';
+import type { RfiQuestion, RfiQuestionType } from '@services/sourcing/types';
 import {
   RFQ_ONE_TIME_COST_IDS,
   addTier,
@@ -31,13 +31,13 @@ import {
   type RfqQuantityTier,
   type RfqSpecField,
   type RfqTierBasis,
-} from '../../services/sourcing/rfqModel';
-import { RFQ_ITEM_TYPES, rfqItemType } from '../../services/sourcing/rfqItemTypes';
+} from '@services/sourcing/rfqModel';
+import { RFQ_ITEM_TYPES, rfqItemType } from '@services/sourcing/rfqItemTypes';
 import {
   rfqTemplateStore,
   type RfqTemplate,
   type RfqTemplateContent,
-} from '../../services/sourcing/rfqTemplates';
+} from '@services/sourcing/rfqTemplates';
 import { RFQ_UOM_OPTIONS } from './requisitionPrefill';
 import {
   addCustomField,

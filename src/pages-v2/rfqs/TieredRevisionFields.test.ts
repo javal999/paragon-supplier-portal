@@ -3,7 +3,7 @@
 // carries everything else forward; a blank or unreadable break yields nothing.
 
 import { describe, expect, it } from 'vitest';
-import { RFQ_SAMPLE_QUOTATION_SEED, RFQ_SAMPLE_SEED } from '../../services/data/mock/fixtures/rfqSamples';
+import { RFQ_SAMPLE_QUOTATION_SEED, RFQ_SAMPLE_SEED } from '@services/data/mock/fixtures/rfqSamples';
 import { readRevision, revisionPricesFrom } from './TieredRevisionFields';
 
 const oslo = RFQ_SAMPLE_SEED[0]!;

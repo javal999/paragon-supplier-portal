@@ -23,7 +23,7 @@ import { purchaseRequisitionStore } from './stores/purchaseRequisitionStore';
 import type { QueryScope } from '../types';
 import { PERSONA_SYSTEM_ROLES, SYSTEM_ROLES } from '../../transitions/businessRoles';
 import { getTransition } from '../../transitions';
-import { NO_PERSON } from '../../../context/noPerson';
+import { NO_PERSON } from '@context/noPerson';
 import { MockCommandService, commandAuditSink } from './MockCommandService';
 
 const svc = new MockCommandService();

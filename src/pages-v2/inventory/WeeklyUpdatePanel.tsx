@@ -2,18 +2,18 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { AlertTriangle, BellRing } from 'lucide-react';
-import Data from '../../components/ui-v2/Data';
-import LivenessPill from '../../components/ui-v2/LivenessPill';
-import { formatDateTime } from '../../lib/format';
-import type { InventoryPosition } from '../../services/data/types';
-import { stockSyncIntervalHours, updateCycleSettings } from '../../services/transitions/inventoryConfig';
+import Data from '@components/ui-v2/Data';
+import LivenessPill from '@components/ui-v2/LivenessPill';
+import { formatDateTime } from '@lib/format';
+import type { InventoryPosition } from '@services/data/types';
+import { stockSyncIntervalHours, updateCycleSettings } from '@services/transitions/inventoryConfig';
 import {
   activeUpdateReminder,
   nextSyncAt,
   weeklyUpdateStatus,
   type WeeklyUpdateStatus,
-} from '../../services/transitions/updateCycle';
-import { hubWorkingCalendar } from '../../services/transitions/workingCalendarStore';
+} from '@services/transitions/updateCycle';
+import { hubWorkingCalendar } from '@services/transitions/workingCalendarStore';
 import { useDurationText } from '../forecasts/forecastDisplay';
 
 // ─────────────────────────────────────────────────────────────────────────────

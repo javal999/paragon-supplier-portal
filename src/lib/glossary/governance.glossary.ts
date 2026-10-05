@@ -14,8 +14,8 @@ import type {
   OverrideReason,
   UnattributedReason,
 } from '../enforcement';
-import type { CertType, ComplianceDisplayStatus } from '../../services/data/types';
-import type { HalalApplicability, BpomApplicability } from '../../services/sdc/types';
+import type { CertType, ComplianceDisplayStatus } from '@services/data/types';
+import type { HalalApplicability, BpomApplicability } from '@services/sdc/types';
 
 /** How hard a governed check bites when it comes back adverse. */
 export const ENFORCEMENT_MODE_GLOSSARY = {

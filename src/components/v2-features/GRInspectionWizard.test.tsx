@@ -1,23 +1,23 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { screen, fireEvent, cleanup } from '@testing-library/react';
-import { renderWithProviders } from '../../test/test-utils';
-import { mockShipments } from '../../data/mockShipments';
-import { asnStore } from '../../services/data/mock/stores/asnStore';
-import { bpomOf } from '../../services/sdc/bpom';
-import { halalOf } from '../../services/sdc/halal';
-import { MATERIAL_MASTER } from '../../services/sdc/fixtures';
-import { COMPLIANCE_REGISTRY } from '../../services/data/mock/fixtures/complianceRegistry';
-import { verifyHalalAtReceipt } from '../../services/data/halalVerification';
+import { renderWithProviders } from '@test/test-utils';
+import { mockShipments } from '@data/mockShipments';
+import { asnStore } from '@services/data/mock/stores/asnStore';
+import { bpomOf } from '@services/sdc/bpom';
+import { halalOf } from '@services/sdc/halal';
+import { MATERIAL_MASTER } from '@services/sdc/fixtures';
+import { COMPLIANCE_REGISTRY } from '@services/data/mock/fixtures/complianceRegistry';
+import { verifyHalalAtReceipt } from '@services/data/halalVerification';
 import GRInspectionWizard from './GRInspectionWizard';
-import { sdcClock } from '../../services/sdc/clock';
-import { enforcementSettingStore } from '../../services/data/mock/stores/enforcementSettingStore';
-import { seedEnforcementLedger, SEEDED_CHECKS } from '../../services/data/mock/enforcementSeed';
+import { sdcClock } from '@services/sdc/clock';
+import { enforcementSettingStore } from '@services/data/mock/stores/enforcementSettingStore';
+import { seedEnforcementLedger, SEEDED_CHECKS } from '@services/data/mock/enforcementSeed';
 import {
   GOVERNED_CHECK_IDS,
   blocks,
   effectiveEnforcement,
   type EnforcementSetting,
-} from '../../lib/enforcement';
+} from '@lib/enforcement';
 
 // ────────────────────────────────────────────────────────────────────────────
 // GRInspectionWizard (CP-0 · W1 · 2f-a) — the FIRST spec this wizard has ever

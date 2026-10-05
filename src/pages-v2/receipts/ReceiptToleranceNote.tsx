@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import {
   receiptQtyToleranceFor,
   type ReceiptLineComparison,
-} from '../../services/transitions';
+} from '@services/transitions';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CR-25 (BL-45) — what one received quantity means, said in business words on

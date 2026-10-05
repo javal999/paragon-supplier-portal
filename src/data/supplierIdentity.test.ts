@@ -39,7 +39,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { mockSuppliers } from './mockSuppliers';
-import { SUPPLIER_HEALTH } from '../services/data/mock/fixtures/buyerDashboard';
+import { SUPPLIER_HEALTH } from '@services/data/mock/fixtures/buyerDashboard';
 
 /** Tokens a fictional supplier identity may be built from: the `Sample` marker,
  *  jurisdiction/legal forms, industry words, and geography. Anything else that

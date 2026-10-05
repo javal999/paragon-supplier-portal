@@ -32,7 +32,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { resources } from '../lib/i18n';
+import { resources } from '@lib/i18n';
 
 const SRC = join(process.cwd(), 'src', 'pages-v2', 'BuyerInvoices.tsx');
 

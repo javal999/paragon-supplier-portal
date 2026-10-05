@@ -16,10 +16,10 @@ import { quotationStore } from './stores/quotationStore';
 import type { QueryScope } from '../types';
 import { PERSONA_SYSTEM_ROLES } from '../../transitions/businessRoles';
 import { customRoleStore } from '../../transitions/customRoles';
-import { NO_PERSON } from '../../../context/noPerson';
+import { NO_PERSON } from '@context/noPerson';
 import { getKnownFlows } from '../../transitions';
 import { rfiTemplate } from '../../sourcing/rfxConfig';
-import type { RFQ } from '../../../data/mockRfqs';
+import type { RFQ } from '@data/mockRfqs';
 
 const buyer: QueryScope = {
   personaType: 'buyer',

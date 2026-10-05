@@ -1,5 +1,5 @@
 import React, { createContext, useContext, ReactNode } from 'react';
-import { COUNTRY_PROFILES, CHANNEL_CONFIG, MESSAGE_TEMPLATES, CountryCode } from '../data/communicationProfiles';
+import { COUNTRY_PROFILES, CHANNEL_CONFIG, MESSAGE_TEMPLATES, CountryCode } from '@data/communicationProfiles';
 
 type CountryProfile = typeof COUNTRY_PROFILES[CountryCode];
 type ChannelConfig  = typeof CHANNEL_CONFIG[keyof typeof CHANNEL_CONFIG];

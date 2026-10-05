@@ -30,7 +30,7 @@ import { requireUom } from '../sdc/materialMaster';
 import { generateSchedule } from './generator';
 import { DRAWDOWN_PRESET_CASE_B, DRAWDOWN_PRESET_CASE_C } from './ledger';
 import type { SchedulingAgreement, SchedulingAgreementItem } from './types';
-import { mockContracts } from '../../data/mockContracts';
+import { mockContracts } from '@data/mockContracts';
 
 const CONTRACT_ID = 'ctr-003';
 const AGREEMENT_ID = 'sa-0001';

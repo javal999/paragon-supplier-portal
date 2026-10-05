@@ -81,7 +81,7 @@ function shipped(dir: string, out: string[] = []): string[] {
   for (const name of readdirSync(dir)) {
     const full = join(dir, name);
     if (statSync(full).isDirectory()) shipped(full, out);
-    else if (/\.tsx?$/.test(name) && !name.includes('.test.')) out.push(full);
+    else if (/\.[jt]sx?$/.test(name) && !name.includes('.test.')) out.push(full);
   }
   return out;
 }

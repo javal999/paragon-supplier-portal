@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { ALIASES } from './aliases';
 
 export default defineConfig(() => ({
   root: 'app',
@@ -17,6 +18,8 @@ export default defineConfig(() => ({
     __DEPLOY_ENV__: JSON.stringify(process.env.VERCEL_ENV ?? ''),
   },
   plugins: [react()],
+  // `@components/...`, `@services/...` etc. — the list and the rule live in aliases.ts.
+  resolve: { alias: ALIASES },
   build: {
     outDir: '../dist',
     emptyOutDir: true,

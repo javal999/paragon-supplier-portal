@@ -11,11 +11,11 @@
 import { describe, expect, it } from 'vitest';
 import { join } from 'node:path';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
-import { deriveCensus, sitesIn } from '../../../lib/machineClockGate/derive';
+import { deriveCensus, sitesIn } from '@lib/machineClockGate/derive';
 import { MATERIAL_MASTER } from '../../sdc/fixtures';
 import { isKnownMaterial, materialEntry } from '../../sdc/materialMaster';
 import { SDC_SIMULATED_NOW } from '../../sdc/clock';
-import { mockSuppliers } from '../../../data/mockSuppliers';
+import { mockSuppliers } from '@data/mockSuppliers';
 import { SUPPLIER_MATERIAL_RELATIONSHIPS } from '../../sdc/fixtures';
 import { FORECAST_RELATIONSHIPS } from '../../data/mock/fixtures/forecastHub';
 import {
@@ -33,7 +33,7 @@ import { integrityViolations } from '../integrity';
 import type { EngineDataset } from '../types';
 import { poCfot } from '../../data/performanceRules';
 import type { PurchaseOrder } from '../../data/types';
-import type { GoodsReceipt } from '../../../data/mockGoodsReceipts';
+import type { GoodsReceipt } from '@data/mockGoodsReceipts';
 import { latestConfirmation, requirementAt, type LineHistory } from '../lines';
 import type { CfotWindow } from '../cfot';
 
@@ -280,7 +280,7 @@ describe('BL-102 — the engine never reads the machine clock', () => {
       for (const name of readdirSync(dir)) {
         const p = join(dir, name);
         if (statSync(p).isDirectory()) walk(p);
-        else if (/\.ts$/.test(name) && !/\.test\.ts$/.test(name)) files.push(p);
+        else if (/\.[jt]s$/.test(name) && !/\.test\.[jt]s$/.test(name)) files.push(p);
       }
     };
     walk(join(process.cwd(), ENGINE));

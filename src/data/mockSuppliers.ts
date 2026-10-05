@@ -3,8 +3,8 @@ import {
   SupplierStatus,
   SupplierTier,
   PreferredChannel,
-} from '../types/supplier.types';
-import { DECLARED_PRESENT } from '../services/data/fixturePresent';
+} from '@app-types/supplier.types';
+import { DECLARED_PRESENT } from '@services/data/fixturePresent';
 
 /** `YYYY-MM-DD`, `offset` days from the declared present (the BL-64 demo rows only). */
 const day = (offset: number): string =>

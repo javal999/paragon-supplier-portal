@@ -1,26 +1,26 @@
 import React, { useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Plus, ShieldCheck, Trash2 } from 'lucide-react';
-import AppShellV2 from '../../components/layout-v2/AppShellV2';
-import PageHeader from '../../components/ui-v2/PageHeader';
-import PageMetaLine from '../../components/ui-v2/PageMetaLine';
-import Table from '../../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../../components/ui-v2/TableHeader';
-import TableRow from '../../components/ui-v2/TableRow';
-import TableCell from '../../components/ui-v2/TableCell';
-import Button from '../../components/ui-v2/Button';
-import Data from '../../components/ui-v2/Data';
-import LoadingState from '../../components/ui-v2/LoadingState';
-import ErrorState from '../../components/ui-v2/ErrorState';
-import { HandoffNotice } from '../../components/ui-v2/HandoffNotice';
-import { useVerbAvailability } from '../../hooks/useVerbAvailability';
-import { useRefusalText } from '../../hooks/useRefusalText';
-import { useToast } from '../../hooks/useToast';
-import { useCategoryLabel } from '../../hooks/useCategoryLabel';
-import { certTypeLabelKey } from '../../lib/complianceView';
-import { formatDateTime } from '../../lib/format';
-import { useDocuments, useVendorQualifications } from '../../services/query/hooks';
-import { useQualificationRuleSet } from '../../services/query/commandHooks';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import PageHeader from '@components/ui-v2/PageHeader';
+import PageMetaLine from '@components/ui-v2/PageMetaLine';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
+import Button from '@components/ui-v2/Button';
+import Data from '@components/ui-v2/Data';
+import LoadingState from '@components/ui-v2/LoadingState';
+import ErrorState from '@components/ui-v2/ErrorState';
+import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
+import { useVerbAvailability } from '@hooks/useVerbAvailability';
+import { useRefusalText } from '@hooks/useRefusalText';
+import { useToast } from '@hooks/useToast';
+import { useCategoryLabel } from '@hooks/useCategoryLabel';
+import { certTypeLabelKey } from '@lib/complianceView';
+import { formatDateTime } from '@lib/format';
+import { useDocuments, useVendorQualifications } from '@services/query/hooks';
+import { useQualificationRuleSet } from '@services/query/commandHooks';
 import {
   CERT_TYPES,
   DOCUMENT_CATEGORIES,
@@ -29,17 +29,17 @@ import {
   levelChanges,
   qualificationRuleRefusal,
   withRule,
-} from '../../services/transitions/qualificationRules';
-import { qualificationRuleStore } from '../../services/transitions/qualificationRuleStore';
-import { sdcClock } from '../../services/sdc/clock';
+} from '@services/transitions/qualificationRules';
+import { qualificationRuleStore } from '@services/transitions/qualificationRuleStore';
+import { sdcClock } from '@services/sdc/clock';
 import type {
   CertType,
   QualificationRequiredDoc,
   QualificationRuleLevel,
   SupplierDocument,
   SupplierDocumentCategory,
-} from '../../services/data/types';
-import type { ActorAttribution } from '../../lib/enforcement';
+} from '@services/data/types';
+import type { ActorAttribution } from '@lib/enforcement';
 import { PlaceholderRulesLabel, QualificationLevelPill, RequirementText } from '../qualification/QualificationPanel';
 import AdminSectionNav from './AdminSectionNav';
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { isActiveAsn } from '../services/transitions/fulfilmentRules';
+import { isActiveAsn } from '@services/transitions/fulfilmentRules';
 import { useSearchParams } from 'react-router-dom';
 import {
   OrderNotFound,
@@ -14,49 +14,49 @@ import {
   ChevronRight,
   AlertCircle,
 } from 'lucide-react';
-import AppShellV2 from '../components/layout-v2/AppShellV2';
-import PageHeader from '../components/ui-v2/PageHeader';
-import SapDataAgeBanner from '../components/ui-v2/SapDataAgeBanner';
-import PageMetaLine from '../components/ui-v2/PageMetaLine';
-import ProvenanceMarker from '../components/ui-v2/ProvenanceMarker';
-import KpiCard from '../components/ui-v2/KpiCard';
-import SubTabs from '../components/ui-v2/SubTabs';
-import StatusPill from '../components/ui-v2/StatusPill';
-import NextActLine from '../components/ui-v2/NextActLine';
-import { statusTone } from '../lib/statusTone';
-import Table from '../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../components/ui-v2/TableHeader';
-import TableRow from '../components/ui-v2/TableRow';
-import TableCell from '../components/ui-v2/TableCell';
-import Button from '../components/ui-v2/Button';
-import SidePanel from '../components/ui-v2/SidePanel';
-import Data from '../components/ui-v2/Data';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import PageHeader from '@components/ui-v2/PageHeader';
+import SapDataAgeBanner from '@components/ui-v2/SapDataAgeBanner';
+import PageMetaLine from '@components/ui-v2/PageMetaLine';
+import ProvenanceMarker from '@components/ui-v2/ProvenanceMarker';
+import KpiCard from '@components/ui-v2/KpiCard';
+import SubTabs from '@components/ui-v2/SubTabs';
+import StatusPill from '@components/ui-v2/StatusPill';
+import NextActLine from '@components/ui-v2/NextActLine';
+import { statusTone } from '@lib/statusTone';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
+import Button from '@components/ui-v2/Button';
+import SidePanel from '@components/ui-v2/SidePanel';
+import Data from '@components/ui-v2/Data';
 import { useTranslation } from 'react-i18next';
-import { useToast } from '../hooks/useToast';
-import { useCurrentIdentity } from '../context/CurrentIdentityContext';
+import { useToast } from '@hooks/useToast';
+import { useCurrentIdentity } from '@context/CurrentIdentityContext';
 import {
   usePurchaseOrderConfirm,
   usePurchaseOrderAcknowledge,
   usePurchaseOrderAdjust,
   usePurchaseOrderReject,
   usePurchaseOrderShippingNotice,
-} from '../services/query/commandHooks';
-import { userVerbsFrom } from '../services/transitions';
-import { useVerbAvailability, useNextAct } from '../hooks/useVerbAvailability';
-import { HandoffNotice } from '../components/ui-v2/HandoffNotice';
-import { POStatus } from '../services/data/types';
-import NoSupplierIdentity from '../components/ui-v2/NoSupplierIdentity';
-import LoadingState from '../components/ui-v2/LoadingState';
-import ErrorState from '../components/ui-v2/ErrorState';
-import EmptyState from '../components/ui-v2/EmptyState';
-import { useASNs, useCurrentSupplier, usePurchaseOrders } from '../services/query/hooks';
+} from '@services/query/commandHooks';
+import { userVerbsFrom } from '@services/transitions';
+import { useVerbAvailability, useNextAct } from '@hooks/useVerbAvailability';
+import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
+import { POStatus } from '@services/data/types';
+import NoSupplierIdentity from '@components/ui-v2/NoSupplierIdentity';
+import LoadingState from '@components/ui-v2/LoadingState';
+import ErrorState from '@components/ui-v2/ErrorState';
+import EmptyState from '@components/ui-v2/EmptyState';
+import { useASNs, useCurrentSupplier, usePurchaseOrders } from '@services/query/hooks';
 import type {
   PoLineResponse,
   PoReasonCode,
   PoRejectionCause,
   PurchaseOrder,
-} from '../services/data/types';
-import { poDisplayStatus } from '../services/data/poResponseProjection';
+} from '@services/data/types';
+import { poDisplayStatus } from '@services/data/poResponseProjection';
 import {
   PoLifecycleSteps,
   PoResponseDetails,
@@ -64,13 +64,13 @@ import {
   ordersNow,
   ShippingNoticeDetails,
 } from './orders/PoCollaboration';
-import type { QtyRefusalReason } from '../lib/localeNumber';
+import type { QtyRefusalReason } from '@lib/localeNumber';
 import {
   confirmedQtyWithinBounds,
   counterOfferRefusal,
   isIsoDate,
   type CounterOfferRefusal,
-} from '../services/transitions/policies';
+} from '@services/transitions/policies';
 import { useActiveReasonCodes, useReasonLabel } from './admin/reasonCodeDisplay';
 import {
   readConfirmedQty,
@@ -78,8 +78,8 @@ import {
   seedConfirmQty,
 } from './orders/poConfirmModel';
 // GL-1 - the glossary destination for this surface's refusals.
-import GlossaryTermChip from '../components/ui-v2/GlossaryTermChip';
-import { useRefusalText } from '../hooks/useRefusalText';
+import GlossaryTermChip from '@components/ui-v2/GlossaryTermChip';
+import { useRefusalText } from '@hooks/useRefusalText';
 import { poLineQuantityText } from './orders/poLineQuantity';
 
 type TabKey = 'all' | 'action' | 'progress' | 'completed';

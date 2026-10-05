@@ -3,12 +3,12 @@ import { useTranslation } from 'react-i18next';
 import { usePlanningGroupLabel } from '../inventory/planningGroupDisplay';
 import { Link, useSearchParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
-import AppShellV2 from '../../components/layout-v2/AppShellV2';
-import PageHeader from '../../components/ui-v2/PageHeader';
-import Data from '../../components/ui-v2/Data';
-import { usePurchaseOrders } from '../../services/query/hooks';
-import type { PurchaseOrder } from '../../services/data/types';
-import type { Persona } from '../../components/layout-v2/navConfig';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import PageHeader from '@components/ui-v2/PageHeader';
+import Data from '@components/ui-v2/Data';
+import { usePurchaseOrders } from '@services/query/hooks';
+import type { PurchaseOrder } from '@services/data/types';
+import type { Persona } from '@components/layout-v2/navConfig';
 import {
   FROM_ORDER_SUMMARY,
   FROM_PARAM,

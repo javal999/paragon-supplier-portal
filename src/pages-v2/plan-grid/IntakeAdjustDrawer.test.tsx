@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { describe, it, expect, beforeEach } from 'vitest';
 import { screen, fireEvent, waitFor } from '@testing-library/react';
-import { renderWithProviders } from '../../test/test-utils';
+import { renderWithProviders } from '@test/test-utils';
 import IntakeAdjustDrawer from './IntakeAdjustDrawer';
 import { SAMPLE_INTAKE_LINES, type PrIntakeLine } from './planGridModel';
-import { purchaseRequisitionStore } from '../../services/data/mock/stores/purchaseRequisitionStore';
+import { purchaseRequisitionStore } from '@services/data/mock/stores/purchaseRequisitionStore';
 
 // ────────────────────────────────────────────────────────────────────────────
 // IntakeAdjustDrawer (Stage G · G1.3.2) — the working-set override surface, in

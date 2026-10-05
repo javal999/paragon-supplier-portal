@@ -22,7 +22,7 @@
 // Every other supplier with materials updated every week (100%, plain).
 // ────────────────────────────────────────────────────────────────────────────
 
-import type { WorkingCalendar } from '../../../../lib/workingCalendar';
+import type { WorkingCalendar } from '@lib/workingCalendar';
 import type { StockUpdateMode } from '../../types';
 import type { CycleAssignment, CycleStockRecord, UpdateCycle } from '../../../transitions/updateCycle';
 import { cycleWorkingDays, type ComplianceSyncAttempt } from '../../../transitions/updateCompliance';
