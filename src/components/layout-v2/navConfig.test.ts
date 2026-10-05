@@ -23,7 +23,6 @@ const FORECAST_ROUTES = [
 const ENGINE = [
   ['hub.nav.pti.engine.materialRequirement', '/buyer/material-requirement'],
   ['hub.nav.pti.engine.safetyStock', '/buyer/safety-stock'],
-  ['hub.nav.pti.engine.publishedVersions', '/buyer/forecasts'],
   ['hub.nav.pti.engine.dataHealth', '/buyer/data-health'],
   ['hub.nav.pti.engine.modelBacktest', '/buyer/model-backtest'],
   ['hub.nav.pti.engine.reliability', '/buyer/reliability'],

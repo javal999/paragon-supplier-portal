@@ -185,8 +185,6 @@ export const forecastCollaborationEn: Record<string, string> = {
   // PTI — Forecasts
   'fc.pti.versions.title': 'Published versions',
   'fc.pti.versions.subtitle': 'Published forecast versions for packaging and raw material, and which suppliers have opened them',
-  'fc.pti.versions.publishFrom': 'Plans are published from',
-  'fc.pti.versions.publishFromLink': 'Publish to suppliers',
   'fc.pti.versions.banner': 'Suppliers that have not opened version {{version}}: {{count}}',
   'fc.pti.versions.col.version': 'Version',
   'fc.pti.versions.col.published': 'Published',
@@ -432,8 +430,6 @@ export const forecastCollaborationId: Record<string, string> = {
 
   'fc.pti.versions.title': 'Versi terbit',
   'fc.pti.versions.subtitle': 'Versi prakiraan yang diterbitkan per jenis dan pemasok yang sudah membukanya',
-  'fc.pti.versions.publishFrom': 'Rencana diterbitkan dari',
-  'fc.pti.versions.publishFromLink': 'Terbitkan ke pemasok',
   'fc.pti.versions.banner': 'Pemasok yang belum membuka versi {{version}}: {{count}}',
   'fc.pti.versions.col.version': 'Versi',
   'fc.pti.versions.col.published': 'Diterbitkan',

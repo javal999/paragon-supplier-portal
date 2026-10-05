@@ -9,7 +9,6 @@ import { SEEDED_SEAT_ROLES } from '@services/transitions/businessRoles';
 import { PLANNING_TERM_GLOSSARY, GLOSSARY_REGISTRIES, type PlanningTerm } from '@lib/glossary';
 import { FORECAST_PAGES, linkTarget, type ForecastPageId } from './forecastPages';
 import TermTip from './TermTip';
-import BuyerForecasts from '@pages-v2/BuyerForecasts';
 import BuyerCommitments from '@pages-v2/BuyerCommitments';
 import BuyerDataHealth from '@pages-v2/BuyerDataHealth';
 import BuyerDemandForecast from '@pages-v2/BuyerDemandForecast';
@@ -27,7 +26,8 @@ import Glossary from '@pages-v2/Glossary';
 // ─────────────────────────────────────────────────────────────────────────────
 // FORECAST UX PHASE 1 · TASK A4 — purpose headers, one banner, plain copy.
 //
-// Every buyer forecast page (phase 1's, plus phase 2's This week, less Forecast bias, which B5 made a tab of Forecast quality), rendered as a Material Planner:
+// Every buyer forecast page (phase 1's, plus phase 2's This week, less Forecast bias and Published versions,
+// which B5 and B2 made tabs of Forecast quality and Publish to suppliers), rendered as a Material Planner:
 //   · a purpose header whose Uses and Next links go to routes the router has;
 //   · the one simulated-data banner, and neither of the two old labels;
 //   · its menu label as the title and its new section in the crumb (F-19);
@@ -48,7 +48,6 @@ const PAGES: Record<ForecastPageId, React.FC> = {
   stockCheck: BuyerFixedStockReconcile,
   materialRequirement: BuyerMaterialRequirement,
   safetyStock: BuyerSafetyStock,
-  publishedVersions: BuyerForecasts,
   dataHealth: BuyerDataHealth,
   modelBacktest: BuyerModelBacktest,
   reliability: BuyerReliability,
@@ -99,10 +98,11 @@ describe('the requirement-code matcher (probed before it is trusted)', () => {
 });
 
 describe('the purpose-header map', () => {
-  it('covers every forecast page (This week added by B1, Forecast bias folded into Forecast quality by B5), and every Uses and Next target is a route the router has', () => {
+  it('covers every forecast page (This week added by B1, Forecast bias and Published versions folded into tabs by B5 and B2), and every Uses and Next target is a route the router has', () => {
     expect(IDS).toContain('thisWeek');
     expect(IDS).toContain('forecastQuality');
     expect(IDS).not.toContain('forecastBias');
+    expect(IDS).not.toContain('publishedVersions');
     expect(Object.keys(FORECAST_PAGES).sort()).toEqual([...IDS].sort());
     expect(ROUTES.has('/buyer/order-plan')).toBe(true);
     expect(ROUTES.has('/buyer/no-such-page')).toBe(false);

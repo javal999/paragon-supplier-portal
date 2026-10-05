@@ -14,6 +14,10 @@ import type { TFunction } from 'i18next';
 // cycle. An engine page links to the page whose input it is, or that reaches
 // it (`fux-build-00-brief.md`, "Reached from").
 //
+// FUX phase 2 B2 (F-01): Published versions is no longer a page. It is the
+// `?tab=versions` tab of Publish to suppliers, so it has no row here; its old
+// route redirects to the tab (FUX2-R1).
+//
 // A weekly or review page is named by its menu label (`hub.nav.pti.*`), so the
 // title and the menu cannot drift. An engine page keeps its own title.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -28,7 +32,6 @@ export type ForecastPageId =
   | 'stockCheck'
   | 'materialRequirement'
   | 'safetyStock'
-  | 'publishedVersions'
   | 'dataHealth'
   | 'modelBacktest'
   | 'reliability';
@@ -65,7 +68,6 @@ export const FORECAST_PAGES: Readonly<Record<ForecastPageId, ForecastPage>> = Ob
   stockCheck: { path: '/buyer/fs-reconcile', titleKey: 'hub.nav.pti.stockCheck', sectionKey: REVIEW, uses: 'forecastQuality', next: 'whatToOrder' },
   materialRequirement: { path: '/buyer/material-requirement', titleKey: 'mrq.title', sectionKey: ENGINE, uses: 'safetyStock', next: 'whatToOrder' },
   safetyStock: { path: '/buyer/safety-stock', titleKey: 'sst.title', sectionKey: ENGINE, uses: 'reliability', next: 'whatToOrder' },
-  publishedVersions: { path: '/buyer/forecasts', titleKey: 'fc.pti.versions.title', sectionKey: ENGINE, uses: 'publish', next: 'responses' },
   dataHealth: { path: '/buyer/data-health', titleKey: 'dh.title', sectionKey: ENGINE, uses: 'stockCheck', next: 'whatToOrder' },
   // FUX phase 2 B5 — Forecast bias is now Forecast quality's bias tab, so the backtest's Uses link goes there.
   modelBacktest: { path: '/buyer/model-backtest', titleKey: 'mb.title', sectionKey: ENGINE, uses: 'forecastQuality', next: 'forecastQuality' },
