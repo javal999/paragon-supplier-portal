@@ -65,6 +65,8 @@ export const rescheduleEn: Record<string, string> = {
   'rs.fill.title': 'Projected warehouse fill by week',
   'rs.fill.intro':
     'Stock at the end of each week, in pallets, as a share of owned capacity: now, with the selected proposals, and with every proposal on the list. The last line is stock already on hand — no change to an open order moves it.',
+  'rs.fill.basis':
+    '“Now” is the Order plan’s projection, recommended orders included, plus released call-offs not yet received. The Order plan does not count those call-offs yet, so “Now” can read higher than its fill for the same week.',
   'rs.fill.series.now': 'Now',
   'rs.fill.series.selected': 'With the selection',
   'rs.fill.series.onHand': 'Stock on hand',
@@ -232,6 +234,8 @@ export const rescheduleId: Record<string, string> = {
   'rs.fill.title': 'Proyeksi isi gudang per minggu',
   'rs.fill.intro':
     'Stok di akhir setiap minggu, dalam palet, sebagai porsi kapasitas milik sendiri: sekarang, dengan usulan terpilih, dan dengan semua usulan di daftar. Garis terakhir adalah stok yang sudah ada di gudang — tidak ada perubahan pesanan terbuka yang memindahkannya.',
+  'rs.fill.basis':
+    '“Sekarang” adalah proyeksi Rencana pesanan, termasuk pesanan yang disarankan, ditambah call-off yang sudah dirilis tetapi belum diterima. Rencana pesanan belum menghitung call-off itu, jadi “Sekarang” bisa lebih tinggi daripada isinya untuk minggu yang sama.',
   'rs.fill.series.now': 'Sekarang',
   'rs.fill.series.selected': 'Dengan pilihan',
   'rs.fill.series.onHand': 'Stok di tangan',

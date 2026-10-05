@@ -8,7 +8,7 @@ export const orderPlanEn: Record<string, string> = {
   'op.title': 'Order plan',
   'op.subtitle':
     'When and how much to order, sized for all materials sharing a warehouse together: demand met every week, MOQ and order multiple kept, and warehouse space weighed against the cost of another order.',
-  'op.meta.plan': 'Finished-goods plan made',
+  'op.meta.plan': 'Plan source: SAP finished-goods plan,',
   'op.meta.horizon': 'Horizon',
   'op.meta.weeks': '{{count}} weeks',
   'op.meta.noPlan': 'No finished-goods plan',
@@ -45,6 +45,8 @@ export const orderPlanEn: Record<string, string> = {
   'op.kpi.rentCost.sub': 'At the placeholder rate',
 
   'op.fill.title': 'Projected warehouse fill by week',
+  'op.fill.basis':
+    'Includes the recommended orders on this page. Released call-offs not yet received are not counted yet; Reschedule open orders adds them, so its “Now” fill can read higher for the same week.',
   'op.fill.intro':
     'Stock at the end of each week, in pallets, as a share of owned capacity. Above 100% the overflow goes to rented space and is costed. The lowest line is the least any plan could hold: each week’s need exactly, with no MOQ or multiple.',
   'op.fill.series.plan': 'Order plan',
@@ -64,6 +66,9 @@ export const orderPlanEn: Record<string, string> = {
   'op.fill.status.within': 'Within 80%',
 
   'op.recs.title': 'Recommended orders',
+  'op.why': 'Why these quantities:',
+  'op.why.requirement': 'Material requirement',
+  'op.why.safety': 'Safety stock targets',
   'op.recs.intro':
     'Each order with the constraint that bound it and the cost it saved. A recommendation becomes a call-off only when a planner acts: it is created here as a draft on the supplier’s open agreement, and released on the Call-offs page, where what remains on the agreement is checked.',
   'op.recs.empty': 'No order is needed in this warehouse over the horizon.',
@@ -163,7 +168,7 @@ export const orderPlanId: Record<string, string> = {
   'op.title': 'Rencana pesanan',
   'op.subtitle':
     'Kapan dan berapa banyak memesan, ditentukan bersama untuk semua material dalam satu gudang: kebutuhan setiap minggu terpenuhi, MOQ dan kelipatan pesanan dijaga, dan ruang gudang ditimbang terhadap biaya satu pesanan lagi.',
-  'op.meta.plan': 'Rencana barang jadi dibuat',
+  'op.meta.plan': 'Sumber rencana: rencana barang jadi SAP,',
   'op.meta.horizon': 'Cakupan',
   'op.meta.weeks': '{{count}} minggu',
   'op.meta.noPlan': 'Tidak ada rencana barang jadi',
@@ -200,6 +205,8 @@ export const orderPlanId: Record<string, string> = {
   'op.kpi.rentCost.sub': 'Dengan tarif sementara',
 
   'op.fill.title': 'Proyeksi isi gudang per minggu',
+  'op.fill.basis':
+    'Termasuk pesanan yang disarankan di halaman ini. Call-off yang sudah dirilis tetapi belum diterima belum dihitung; Jadwal ulang pesanan terbuka menambahkannya, jadi isi “Sekarang” di sana bisa lebih tinggi untuk minggu yang sama.',
   'op.fill.intro':
     'Stok di akhir setiap minggu, dalam palet, sebagai porsi kapasitas sendiri. Di atas 100% kelebihannya masuk ruang sewa dan dihitung biayanya. Garis terendah adalah stok paling sedikit yang mungkin: kebutuhan setiap minggu tepat, tanpa MOQ atau kelipatan.',
   'op.fill.series.plan': 'Rencana pesanan',
@@ -219,6 +226,9 @@ export const orderPlanId: Record<string, string> = {
   'op.fill.status.within': 'Dalam 80%',
 
   'op.recs.title': 'Pesanan yang disarankan',
+  'op.why': 'Mengapa kuantitas ini:',
+  'op.why.requirement': 'Kebutuhan material',
+  'op.why.safety': 'Target stok pengaman',
   'op.recs.intro':
     'Setiap pesanan dengan batasan yang menentukannya dan biaya yang dihematnya. Saran menjadi call-off hanya bila perencana bertindak: dibuat di sini sebagai draf pada perjanjian terbuka pemasok, lalu dirilis di halaman Call-off, tempat sisa perjanjian diperiksa.',
   'op.recs.empty': 'Tidak ada pesanan yang dibutuhkan di gudang ini sepanjang cakupan.',
