@@ -85,7 +85,7 @@ const ReleaseCalendar = ({
             <TableHeaderCell>{t('delivery.calendar.state')}</TableHeaderCell>
             <TableHeaderCell>{t('delivery.calendar.fulfillment')}</TableHeaderCell>
             <TableHeaderCell>{t('delivery.calendar.drawdownCol')}</TableHeaderCell>
-            {withActions ? <TableHeaderCell>{actionsHeader}</TableHeaderCell> : null}
+            {withActions && <TableHeaderCell>{actionsHeader}</TableHeaderCell>}
           </TableHeader>
           <tbody>
             {item.scheduleLines.map((line) => {
@@ -122,19 +122,19 @@ const ReleaseCalendar = ({
                         <StatusPill variant={FULFILLMENT_VARIANT[fv.fulfillment]}>
                           {t(`delivery.fulfillment.${fv.fulfillment}`)}
                         </StatusPill>
-                        {fv.matchedRef ? (
+                        {fv.matchedRef && (
                           <Data as="div" className="text-[10px] text-text-tertiary mt-0.5">
                             {fv.matchedRef}
                           </Data>
-                        ) : null}
+                        )}
                         {/* The inferred flag MUST be visible — a proposal, never
                             authoritative (mirrors derivedFromAsn). Confirmed
                             (explicit-binding) matches carry no such caption. */}
-                        {fv.inferred ? (
+                        {fv.inferred && (
                           <div className="text-[10px] italic text-text-tertiary">
                             {t(proposedCaptionKey)}
                           </div>
-                        ) : null}
+                        )}
                       </div>
                     ) : (
                       <span className="text-text-tertiary">—</span>
@@ -161,7 +161,7 @@ const ReleaseCalendar = ({
                       <span className="text-text-tertiary">—</span>
                     )}
                   </TableCell>
-                  {withActions ? (
+                  {withActions && (
                     <TableCell>
                       {
                         /** @type {NonNullable<typeof renderLineAction>} */ (renderLineAction)(
@@ -170,7 +170,7 @@ const ReleaseCalendar = ({
                         )
                       }
                     </TableCell>
-                  ) : null}
+                  )}
                 </TableRow>
               );
             })}

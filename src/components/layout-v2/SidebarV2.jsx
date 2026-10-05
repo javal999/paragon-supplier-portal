@@ -167,9 +167,9 @@ const SidebarV2 = () => {
                           : 'text-text-secondary hover:bg-bg-hover'
                       }`}
                     >
-                      {isActive ? (
+                      {isActive && (
                         <span className="absolute left-0 top-1.5 bottom-1.5 w-[3px] bg-action rounded-r" />
-                      ) : null}
+                      )}
                       <Icon size={18} className="shrink-0" />
                       <span>{t(item.labelKey)}</span>
                     </button>
