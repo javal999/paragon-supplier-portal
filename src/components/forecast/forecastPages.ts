@@ -1,14 +1,14 @@
 import type { TFunction } from 'i18next';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// THE 13 BUYER FORECAST PAGES — where each sits in the cycle (F-05, F-19).
+// THE 14 BUYER FORECAST PAGES — where each sits in the cycle (F-05, F-19).
 //
 // Forecast UX phase 1, task A4. One row per page: its route, the menu section
 // that holds it (task A1's `weeklyPlan`, `review` or `planningEngine`), the key
 // of its name, and the pages its purpose header links to as "Uses" (the step
 // before) and "Next" (the step after).
 //
-// The links follow the phase 1 menu order: What to order → Make warehouse room
+// The links follow the menu order: This week (phase 2, B1) → What to order → Make warehouse room
 // → Publish to suppliers → Supplier responses → Supplier performance → Forecast
 // quality → End-of-cycle stock check, and back to What to order for the next
 // cycle. An engine page links to the page whose input it is, or that reaches
@@ -19,6 +19,7 @@ import type { TFunction } from 'i18next';
 // ─────────────────────────────────────────────────────────────────────────────
 
 export type ForecastPageId =
+  | 'thisWeek'
   | 'whatToOrder'
   | 'makeRoom'
   | 'publish'
@@ -33,7 +34,7 @@ export type ForecastPageId =
   | 'modelBacktest'
   | 'reliability';
 
-/** A page a purpose header may link to: one of the 13, or the Supplier scorecard. */
+/** A page a purpose header may link to: one of the 14, or the Supplier scorecard. */
 export type ForecastLinkTarget = ForecastPageId | 'performance';
 
 type SectionKey = 'hub.nav.section.weeklyPlan' | 'hub.nav.section.review' | 'hub.nav.section.planningEngine';
@@ -54,7 +55,10 @@ const REVIEW: SectionKey = 'hub.nav.section.review';
 const ENGINE: SectionKey = 'hub.nav.section.planningEngine';
 
 export const FORECAST_PAGES: Readonly<Record<ForecastPageId, ForecastPage>> = Object.freeze({
-  whatToOrder: { path: '/buyer/order-plan', titleKey: 'hub.nav.pti.whatToOrder', sectionKey: WEEKLY, uses: 'materialRequirement', next: 'makeRoom' },
+  // FUX phase 2 B1 (F-03) — the cycle's starting point: it checks the inputs
+  // (Data health) and hands over to What to order.
+  thisWeek: { path: '/buyer/this-week', titleKey: 'hub.nav.pti.thisWeek', sectionKey: WEEKLY, uses: 'dataHealth', next: 'whatToOrder' },
+  whatToOrder: { path: '/buyer/order-plan', titleKey: 'hub.nav.pti.whatToOrder', sectionKey: WEEKLY, uses: 'thisWeek', next: 'makeRoom' },
   makeRoom: { path: '/buyer/reschedule', titleKey: 'hub.nav.pti.makeRoom', sectionKey: WEEKLY, uses: 'whatToOrder', next: 'publish' },
   publish: { path: '/buyer/stabilise', titleKey: 'hub.nav.pti.publishToSuppliers', sectionKey: WEEKLY, uses: 'makeRoom', next: 'responses' },
   responses: { path: '/buyer/collaboration', titleKey: 'hub.nav.pti.supplierResponses', sectionKey: WEEKLY, uses: 'publish', next: 'performance' },

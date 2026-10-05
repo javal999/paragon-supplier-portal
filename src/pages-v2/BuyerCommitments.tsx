@@ -23,6 +23,7 @@ import LoadingState from '@components/ui-v2/LoadingState';
 import ErrorState from '@components/ui-v2/ErrorState';
 import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
 import PurposeHeader from '@components/forecast/PurposeHeader';
+import CycleSteps from '@components/forecast/CycleSteps';
 import SimulatedDataBanner from '@components/forecast/SimulatedDataBanner';
 import AboutThisPage from '@components/forecast/AboutThisPage';
 import DataAsOf from '@components/forecast/DataAsOf';
@@ -187,6 +188,7 @@ const BuyerCommitments: React.FC = () => {
     <AppShellV2>
       <PageHeader breadcrumb={crumb} title={forecastTitle(t, 'responses')} />
       <PurposeHeader page="responses" />
+      <CycleSteps current="responses" />
       <SimulatedDataBanner capability="forecastPublications" />
       <DataAsOf date={nowIso} />
 
