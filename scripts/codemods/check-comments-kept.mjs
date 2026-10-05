@@ -27,6 +27,7 @@
 //   Exit 0 when nothing is lost; exit 1 with the lost words per file otherwise.
 // ════════════════════════════════════════════════════════════════════════════
 
+import ts from 'typescript';
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 
@@ -39,15 +40,35 @@ if (files.length === 0) {
   process.exit(1);
 }
 
-const COMMENT = /\/\/[^\n]*|\/\*[\s\S]*?\*\//g;
+/**
+ * Every comment in a source text, found by the TypeScript PARSER (a regex
+ * would read the `/*` in a glob string like `'/src/**\/*.ts'` as a comment and
+ * swallow code). Walks every node and token, collecting leading and trailing
+ * comment ranges, so comments before a closing `}` are found too.
+ */
+function commentsOf(text, fileName) {
+  const kind = /\.tsx$/.test(fileName) ? ts.ScriptKind.TSX : /\.jsx$/.test(fileName) ? ts.ScriptKind.JSX : /\.js$/.test(fileName) ? ts.ScriptKind.JS : ts.ScriptKind.TS;
+  const sf = ts.createSourceFile(fileName, text, ts.ScriptTarget.Latest, true, kind);
+  const seen = new Map();
+  const take = (ranges) => {
+    for (const r of ranges ?? []) if (!seen.has(r.pos)) seen.set(r.pos, text.slice(r.pos, r.end));
+  };
+  const visit = (node) => {
+    take(ts.getLeadingCommentRanges(text, node.pos));
+    take(ts.getTrailingCommentRanges(text, node.end));
+    for (const child of node.getChildren(sf)) visit(child);
+  };
+  visit(sf);
+  return [...seen.values()];
+}
 // A JSDoc tag and its `{type}` are new in the JS file and not counted; the
 // DESCRIPTION after them (`@property {string} id The select's id`) is counted,
 // because that is where a converted field comment now lives.
 const JSDOC_TAG = /@(param|returns?|typedef|property|prop|template|import|type|satisfies|callback)\b(\s*\{[^}\n]*\})?/g;
 
 /** Multiset of comment words (4+ letters, case kept) in a source text. */
-const commentWords = (src) => {
-  const text = (src.match(COMMENT) ?? []).join('\n').replace(JSDOC_TAG, ' ');
+const commentWords = (src, fileName) => {
+  const text = commentsOf(src, fileName).join('\n').replace(JSDOC_TAG, ' ');
   const counts = new Map();
   for (const w of text.match(/[A-Za-z]{4,}/g) ?? []) counts.set(w, (counts.get(w) ?? 0) + 1);
   return counts;
@@ -72,8 +93,8 @@ for (const file of files) {
   const before = original(file);
   if (before === null) continue; // a new file, nothing to keep
   checked += 1;
-  const was = commentWords(before);
-  const now = commentWords(readFileSync(file, 'utf8'));
+  const was = commentWords(before, file.replace(/\.jsx$/, '.tsx').replace(/\.js$/, '.ts'));
+  const now = commentWords(readFileSync(file, 'utf8'), file);
   const lost = [];
   for (const [word, n] of was) {
     const missing = n - (now.get(word) ?? 0);
