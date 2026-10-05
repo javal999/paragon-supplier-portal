@@ -767,7 +767,7 @@ prose, in the section that forbids restating cardinalities in prose. §27 /
 
    ⚠️ **GL-1 · SECOND INSTANCE, SAME BATCH.** The first refusal-site matcher
    keyed **only on the union** (`Record<QtyRefusalReason, …>`) and produced
-   **three false accusations** against `services/sdc/ingest.ts` — a
+   **three false accusations** against `services/sdc/ingest.js` — a
    union-to-union translation table (`Record<QtyRefusalReason, ParseReason>`) in
    a service, with no message and no surface to attach anything to. The fix was
    to test **both halves of the generic**: the VALUE must be `string`, which is

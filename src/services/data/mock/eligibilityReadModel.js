@@ -4,7 +4,7 @@
 // The one place the mock layer joins a vendor's computed qualification (G1,
 // `qualificationFor`), the per-level placeholder flag (G1,
 // `qualificationRulesPlaceholder`) and an event's sourcing type. The rules
-// themselves are pure (`sourcing/sourcingType.ts`); the invitee read, the
+// themselves are pure (`sourcing/sourcingType.js`); the invitee read, the
 // publish hook and both award hooks all ask here, so they cannot disagree.
 // ────────────────────────────────────────────────────────────────────────────
 

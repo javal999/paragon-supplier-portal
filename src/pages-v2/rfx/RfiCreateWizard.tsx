@@ -21,7 +21,7 @@
 // ⚠️ **CE-04 IS REVERSED (D2).** The buyer may start from a system template,
 // from a template of their own, or from a copy of a past RFI, and may save this
 // one as a template. A copy carries content and invitees; its dates are blank.
-// Templates live in this browser (`rfxTemplates.ts`) and the page says so.
+// Templates live in this browser (`rfxTemplates.js`) and the page says so.
 //
 // ⚠️ **A ONE-OFF QUESTION'S PROMPT IS THE BUYER'S OWN WORDS, NOT AN i18n KEY.**
 // Every library prompt is a key resolved through `t()`; a question typed here

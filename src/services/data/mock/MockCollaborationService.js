@@ -90,7 +90,7 @@ export class MockCollaborationService {
       .map((shipment) => {
         // THE TWO AXES. `shipment` carries the supplier's DECLARED lifecycle
         // untouched; `asnTracking` carries Paragon's inbound observation. The
-        // second never overwrites the first — see `sdc/shipment.ts`.
+        // second never overwrites the first — see `sdc/shipment.js`.
         const asnStatus =
           shipment.direction === 'to-paragon' && shipment.asnRef
             ? (asnStore.get(shipment.asnRef)?.status ?? null)

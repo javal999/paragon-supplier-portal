@@ -70,7 +70,7 @@
 // ⚠️ `sdcClock` — DISPOSITION: **RETIRED ONTO THIS PRESENT.** There is now ONE
 // declared present in shipped code.
 //
-// `SDC_SIMULATED_NOW` (`services/sdc/clock.ts`) was a second frozen present at
+// `SDC_SIMULATED_NOW` (`services/sdc/clock.js`) was a second frozen present at
 // 2026-08-25 — the precedent this module generalises. It now READS
 // `DECLARED_PRESENT`, exactly as the five `TODAY` pins were retired here.
 //
@@ -95,8 +95,8 @@
 //
 //   **OPTION 1 IS FILED, NOT DISMISSED — and here is how to stop being hostage.**
 //   Make `sdc` a real anchored family: give it `anchor: '2026-08-25'`, route
-//   `sdc/fixtures.ts` · `delivery/demoFixtures.ts` · `delivery/demoFixturesScale.ts`
-//   · `channel/outboundFixtures.ts` through `shiftFields`, and **`P` cancels out
+//   `sdc/fixtures.js` · `delivery/demoFixtures.js` · `delivery/demoFixturesScale.js`
+//   · `channel/outboundFixtures.js` through `shiftFields`, and **`P` cancels out
 //   entirely** (`daysUntil(date + (P − A), P) = date − A`), after which
 //   `MANDATE_LEAD_DAYS` is free again and `SDC_WINDOW` stops constraining it.
 //   It is hygiene, not a blocker, and it rides a later surface batch in that
@@ -113,11 +113,11 @@
 //
 //   **MEASURED FALSE.** `services/delivery` imports nothing from `mockContracts`
 //   and no clock at all. Shifting contract + obligation + `START_DATE` with the
-//   clock standing still broke 2 files / 11 tests, and `fixtures.integrity.test.ts`
+//   clock standing still broke 2 files / 11 tests, and `fixtures.integrity.test.js`
 //   stayed GREEN — not one failure was a clock-vs-schedule collision. The real
 //   coupling was `START_DATE` being a hand-maintained DUPLICATE of
 //   `ctr-003.startDate`, plus ten hardcoded `eta` literals inside
-//   `fulfillment.test.ts`. The two families were then shifted together and the
+//   `fulfillment.test.js`. The two families were then shifted together and the
 //   damage was exactly additive (19 = 11 + 8, 6 files = 2 + 4): **zero
 //   interaction.** The deferral was real; its stated reason was not.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -194,7 +194,7 @@ export const MANDATE_LEAD_DAYS = 47;
  * was swept day by day over the lane's own 52 spec files and the green band was
  * 2026-08-25..2026-09-01. Both edges are `sa-0002` item A seq 6 (release
  * 2026-09-01) against `ANTICIPATION_DAYS` — 7 days before it, and the day
- * itself. `chase/deliveryChase.ts` is where that rule lives.
+ * itself. `chase/deliveryChase.js` is where that rule lives.
  * @type {readonly [string, string]}
  */
 export const SDC_WINDOW = ['2026-08-25', '2026-09-01'];
@@ -495,11 +495,11 @@ export const FAMILY_ANCHORS = {
  * MEMBERSHIP RULING, NOT AN EXCEPTION.** It exists solely to host `sa-0002`
  * (its own comment says so), whose calendar is authored against the SDC clock.
  * So for date purposes `ctr-013` belongs to the SDC family, exactly as
- * `delivery/fixtures.ts`'s `START_DATE` belongs to the CONTRACT family despite
+ * `delivery/fixtures.js`'s `START_DATE` belongs to the CONTRACT family despite
  * its directory: **membership follows the coupling, not the file it sits in.**
  * Shifting it with its neighbours moves its start to 2026-06-08 and strands
  * `sa-0002`'s first two releases outside their own contract —
- * `agreementContractWindow.guard.test.ts` is what holds that closed.
+ * `agreementContractWindow.guard.test.js` is what holds that closed.
  * @type {readonly string[]}
  */
 export const SDC_FAMILY_CONTRACT_IDS = ['ctr-013'];

@@ -761,7 +761,7 @@ export function effectiveEnforcement(ledger, checkId, dispatchInstant) {
  *
  * ⚠️ **ALL FOUR ARE PROVISIONAL — strategist-ruled, pending operator
  * ratification** (`ENF-OVERRIDE-VOCAB-PROVISIONAL-01`, `docs/findings.md`), on
- * the `sdc/halal.ts` precedent: recorded as a decision TAKEN so that
+ * the `sdc/halal.js` precedent: recorded as a decision TAKEN so that
  * ratification is an act of agreeing with something written down, rather than
  * discovering what the code quietly assumed. They are chosen to be four
  * DIFFERENT OPERATOR BEHAVIOURS, not four shades of "allowed anyway".

@@ -15,7 +15,7 @@
 //
 // **What changed is who reads it for a permission decision: nobody.** The
 // dispatcher's `resolveRoles` now resolves through the SESSION's business roles
-// (`session.ts`), not through a persona. A persona spanning 48 atoms was the
+// (`session.js`), not through a persona. A persona spanning 48 atoms was the
 // wildcard this arc retired; it survives here only as the question "could
 // anybody on this side ever fire this verb?", which is what a persona badge and
 // a next-actor line legitimately need.

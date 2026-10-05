@@ -779,7 +779,7 @@ export const isInvitedToRound = (invitedSupplierIds, supplierId) =>
 // REQ-E03-05 BR-06 — the split rule moved (RFx C1, AR-04). `awardSplitRefusal`
 // and `itemsNotTotalling100` judged a legacy award per `itemCode` beside a
 // second rule for tiered RFQs; both RFQ kinds are now judged by ONE item-based
-// rule, `awardShapeRefusal` in `src/services/sourcing/awardShape.ts`.
+// rule, `awardShapeRefusal` in `src/services/sourcing/awardShape.js`.
 
 /**
  * REQ-E03-05 BR-07 — does this award follow the best-scored quote?

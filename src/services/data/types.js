@@ -2171,7 +2171,7 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  *   exactly the day a sync exists, which is F1's seam and not this batch's.
  *
  * ── ⚠️ AND IT IS NOT THE HARVEST GATE, WHICH POINTS THE OTHER WAY ──────────
- *   `HARVEST_GATED.compliance` (`services/liveness/registry.ts`) says *the
+ *   `HARVEST_GATED.compliance` (`services/liveness/registry.js`) says *the
  *   portal has no real data yet* — INBOUND, per CAPABILITY. This says *the
  *   portal holds this row and SAP does not* — OUTBOUND, per ROW. The two are
  *   independent, and the harvest gate goes quiet on the day the first real

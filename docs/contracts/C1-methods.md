@@ -4,7 +4,7 @@ Three distinct axes. **103** (service surface) · **201** (transition catalog) �
 targets). They measure different things; this file keeps them separate.
 
 > ⚠️ **THIS DOCUMENT IS PINNED TO THE TREE, AND THE PIN IS WHY THE NUMBERS ABOVE ARE ALLOWED TO
-> BE NUMBERS.** `src/services/contracts/__tests__/c1MethodSurface.contract.test.ts` derives every
+> BE NUMBERS.** `src/services/contracts/__tests__/c1MethodSurface.contract.test.js` derives every
 > figure and every name below from the AST and the flow registry, and fails when the tree drifts
 > **or when this document goes stale**. A count written in prose is normally forbidden here
 > (`FLOOR-IN-PROSE-01`); a contract sent to a counterparty must nevertheless carry concrete
@@ -286,7 +286,7 @@ source command via `causationId`.
 
 ## What the pin cannot see
 
-`c1MethodSurface.contract.test.ts` compares **names, counts and membership**, derived from the AST
+`c1MethodSurface.contract.test.js` compares **names, counts and membership**, derived from the AST
 and the flow registry against this document's tables. Stated plainly, in the same form 1c's
 header states its blindness, so that no reader mistakes a green floor for a correct contract:
 
@@ -310,7 +310,7 @@ not yet checked the behaviour.**
 
 ## Pin reach
 
-**Pinned by** `src/services/contracts/__tests__/c1MethodSurface.contract.test.ts`.
+**Pinned by** `src/services/contracts/__tests__/c1MethodSurface.contract.test.js`.
 
 **GUARDED — these assertions, and nothing else on this page:**
 
@@ -343,7 +343,7 @@ a backlog: a clause describing a system outside this repository has nothing here
 against, and a clause stating WHY a boundary exists has no truth-value to decay. See C12
 for the statement of that property.
 
-⚠️ **THIS BLOCK IS SELF-PINNED** (`src/services/contracts/__tests__/pinReach.contract.test.ts`).
+⚠️ **THIS BLOCK IS SELF-PINNED** (`src/services/contracts/__tests__/pinReach.contract.test.js`).
 The GUARDED list is asserted EQUAL to the pin’s own `describe` titles, **both directions**:
 widen the pin without listing the new assertion and it reddens; drop a line here without
 narrowing the pin and it reddens too. A reach statement that can drift is the overclaim one

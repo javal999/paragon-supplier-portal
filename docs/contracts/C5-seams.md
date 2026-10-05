@@ -149,7 +149,7 @@ scoping contract guards buyer-superset / per-supplier-isolation / `SCOPE_DENIED`
 
 ## Pin reach
 
-**Pinned by** `src/services/contracts/__tests__/c12BackendSpec.contract.test.ts` and `src/services/contracts/__tests__/c1MethodSurface.contract.test.ts`.
+**Pinned by** `src/services/contracts/__tests__/c12BackendSpec.contract.test.js` and `src/services/contracts/__tests__/c1MethodSurface.contract.test.js`.
 
 **GUARDED — these assertions, and nothing else on this page:**
 
@@ -191,7 +191,7 @@ a backlog: a clause describing a system outside this repository has nothing here
 against, and a clause stating WHY a boundary exists has no truth-value to decay. See C12
 for the statement of that property.
 
-⚠️ **THIS BLOCK IS SELF-PINNED** (`src/services/contracts/__tests__/pinReach.contract.test.ts`).
+⚠️ **THIS BLOCK IS SELF-PINNED** (`src/services/contracts/__tests__/pinReach.contract.test.js`).
 The GUARDED list is asserted EQUAL to the pin’s own `describe` titles, **both directions**:
 widen the pin without listing the new assertion and it reddens; drop a line here without
 narrowing the pin and it reddens too. A reach statement that can drift is the overclaim one

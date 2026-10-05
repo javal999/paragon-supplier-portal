@@ -113,7 +113,7 @@ function deriveUses(): MapUse[] {
   const uses: MapUse[] = [];
   // The generic body is captured WHOLE (`Record< … > = {`) rather than matched
   // key-first, so both halves can be tested. Matching only the key type swept in
-  // `ingest.ts`'s `Record<QtyRefusalReason, ParseReason>` — a union-to-union
+  // `ingest.js`'s `Record<QtyRefusalReason, ParseReason>` — a union-to-union
   // translation table in a service, with no message and no surface to chip.
   for (const full of sourceFiles(SRC)) {
     const src = readFileSync(full, 'utf8');

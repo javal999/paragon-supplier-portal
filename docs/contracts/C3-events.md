@@ -52,7 +52,7 @@ mirrors the query-layer `scopeKey` format.
 read-projection clock injection (C2). In the mock it is `() => new Date().toISOString()`; the real
 adapter supplies its own clock.
 
-⚠️ **AND THAT CLAUSE IS NOW PINNED** (`c3Events.contract.test.ts`). It was prose, and
+⚠️ **AND THAT CLAUSE IS NOW PINNED** (`c3Events.contract.test.js`). It was prose, and
 prose is how a contract clause gets contradicted by shipped code with every gate green. This one is
 **decidable** — a clock read is a call shape, not a meaning — so the guard asserts what the sentence
 claims: **no file under `src/services/transitions/` reads a clock at all**, the dispatcher declares
@@ -158,7 +158,7 @@ true and they are not the same claim:
 before durability closes the window. **Read a field added after this page as intentional, not as
 drift** — but the moment the sink is durable, this list is final.
 
-⚠️ **AND THIS PAGE IS NOW PINNED** (`c3Events.contract.test.ts`): the interfaces above are asserted
+⚠️ **AND THIS PAGE IS NOW PINNED** (`c3Events.contract.test.js`): the interfaces above are asserted
 field-for-field against `events.js`, so a field added to the tree and not to this page fails the
 build. That is how the three above were found.
 
@@ -166,7 +166,7 @@ build. That is how the three above were found.
 
 ## Pin reach
 
-**Pinned by** `src/services/contracts/__tests__/c3Events.contract.test.ts`.
+**Pinned by** `src/services/contracts/__tests__/c3Events.contract.test.js`.
 
 **GUARDED — these assertions, and nothing else on this page:**
 
@@ -189,7 +189,7 @@ a backlog: a clause describing a system outside this repository has nothing here
 against, and a clause stating WHY a boundary exists has no truth-value to decay. See C12
 for the statement of that property.
 
-⚠️ **THIS BLOCK IS SELF-PINNED** (`src/services/contracts/__tests__/pinReach.contract.test.ts`).
+⚠️ **THIS BLOCK IS SELF-PINNED** (`src/services/contracts/__tests__/pinReach.contract.test.js`).
 The GUARDED list is asserted EQUAL to the pin’s own `describe` titles, **both directions**:
 widen the pin without listing the new assertion and it reddens; drop a line here without
 narrowing the pin and it reddens too. A reach statement that can drift is the overclaim one

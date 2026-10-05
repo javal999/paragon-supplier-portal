@@ -994,7 +994,7 @@ describe('E1 — ⚠️ HEADLESS. NO STORE, NO CONSUMER, NO CLOCK', () => {
       '/src/services/data/mock/enforcementSeed.js', //    E4 — the opening act
       '/src/services/data/mock/stores/enforcementSettingStore.js', // the ledger
       '/src/services/data/types.js', //                   the seam's row type (TYPE-ONLY)
-      '/src/services/query/hooks.ts', //                  E4 — the scoped read hook
+      '/src/services/query/hooks.js', //                  E4 — the scoped read hook
       '/src/services/transitions/policies.js' //         the recording policy
     ]);
     // ⚠️ `main.jsx` IS A CONSUMER OF THE SEED AND IS NOT ON THIS LIST, because it

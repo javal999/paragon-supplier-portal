@@ -5,7 +5,7 @@
 //
 // Kept out of `BuyerSourcing.tsx` so the page owns the flow (draft, step gate,
 // dispatch) and this file owns the controls. Every rule a control enforces is
-// the model's (`rfqDraft.ts` → `rfqModel.ts`), so a step that lets the buyer
+// the model's (`rfqDraft.ts` → `rfqModel.js`), so a step that lets the buyer
 // through is a step the create verb will accept.
 // ────────────────────────────────────────────────────────────────────────────
 

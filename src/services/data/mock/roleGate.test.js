@@ -16,7 +16,7 @@ import { PERSONA_SYSTEM_ROLES, AUTOMATION_ROLE } from '../../transitions/busines
 // ── ⚠️ SEVEN OF THIS FILE'S NINE TESTS MOVED AT 1b, AND TWO DID NOT ─────────
 //   The segregation-of-duties assertions, the no-persona-fallback pair and the
 //   full-seat controls are now
-//   `services/contracts/conformance/dispatch.ts`, stated once and runnable
+//   `services/contracts/conformance/dispatch.js`, stated once and runnable
 //   against any `IDataService`. They moved because every one of them is a claim
 //   about an IMPLEMENTATION's wiring, observable entirely through
 //   `commands.dispatch` — which is what a conformance factory can reach.

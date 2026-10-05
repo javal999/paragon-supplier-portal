@@ -636,7 +636,7 @@ const mockPurchaseOrdersRaw = [
   // be master-governed and absent from it — putting either on a PO or a receipt
   // moves a census that three assertions are about. The receipts below are then
   // dated to stay OUTSIDE the call-off delivery matcher's ±7-day window
-  // (`fulfillment.ts`), which matches on supplier + material and would otherwise
+  // (`fulfillment.js`), which matches on supplier + material and would otherwise
   // silently re-decide `co-0001` / `co-0013` and move OTIF.
   {
     id: 'po-021',

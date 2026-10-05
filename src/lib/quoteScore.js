@@ -14,7 +14,7 @@
 //  • COMPLIANCE IS A GATE, NOT A WEIGHT (CR-23 / CR-15, owner 2026-09-21,
 //    BL-43). The compliance axis is gone: a supplier that fails the compliance
 //    gate is not scored at all, and the caller filters it out BEFORE calling
-//    this engine (`services/sourcing/complianceGate.ts`). Every quote this
+//    this engine (`services/sourcing/complianceGate.js`). Every quote this
 //    engine sees is from a qualified supplier.
 //
 //  • WEAKEST-LINK LIVENESS. The composite (and the topRanked flag it drives) is

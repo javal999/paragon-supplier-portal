@@ -15,7 +15,7 @@
 // ── THE SECOND LANE OF THE SAME DEFECT ──────────────────────────────────────
 //   2B-5a repaired this shape in the outbound chase lane (chase → scheduling
 //   agreement). This is the ASN lane (ASN → purchase order), and both now run
-//   through the SAME harness (`services/testing/referentialIntegrity.ts`) —
+//   through the SAME harness (`services/testing/referentialIntegrity.js`) —
 //   which exists because 2B-5a's hand-written vacuity guard was a guard you
 //   had to remember to write. `AxisResult` cannot report disagreements without
 //   also reporting how many references it resolved.

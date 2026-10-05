@@ -1,7 +1,7 @@
 // ────────────────────────────────────────────────────────────────────────────
 // BL-64 — THE COMPLIANCE GATE DEMO, PINNED BY NAME.
 //
-// Every scenario the gate can produce (CR-23, `sourcing/complianceGate.ts`) is
+// Every scenario the gate can produce (CR-23, `sourcing/complianceGate.js`) is
 // carried by a NAMED supplier on a NAMED sample RFQ (`fixtures/gateDemo.js`),
 // and each is asserted here through the SAME read the pages use
 // (`rfqGateViews`), as the exact list of failed criteria — never a count.

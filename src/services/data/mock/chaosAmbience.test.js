@@ -168,7 +168,7 @@ describe('CHAOS-AMBIENCE-01 — injection is never ambient', () => {
     // Membership, never a count — the figure moves every time a spec is added,
     // and a count here would be a number in prose wearing a test.
     expect(injectionReachable).toContain(
-      '/src/services/contracts/conformance/scoping.mock.test.ts'
+      '/src/services/contracts/conformance/scoping.mock.test.js'
     );
 
     // THE POINT: the spec that most thoroughly drives the settle path builds its

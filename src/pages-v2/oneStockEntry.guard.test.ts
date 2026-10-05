@@ -104,7 +104,7 @@ describe('BL-73 · the stock transitions are dispatched from ONE site', () => {
   const sites = FILES.filter((f) => dispatchesStock(f.text, f.file)).map((f) => f.file);
 
   it('POPULATION — the one real dispatch site is found by name', () => {
-    expect(sites).toContain('services/query/commandHooks.ts');
+    expect(sites).toContain('services/query/commandHooks.js');
   });
 
   it('PROBE — fires at the shape the triage hooks shipped, and not at a mention', () => {
@@ -122,7 +122,7 @@ describe('BL-73 · the stock transitions are dispatched from ONE site', () => {
   });
 
   it('THE TREE — no other file dispatches a stock declaration', () => {
-    expect(sites).toEqual(['services/query/commandHooks.ts']);
+    expect(sites).toEqual(['services/query/commandHooks.js']);
   });
 });
 

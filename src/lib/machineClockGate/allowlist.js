@@ -98,13 +98,13 @@ export const MACHINE_CLOCK_ALLOWLIST = [
     reason: 'Id for a buyer-authored RFQ question; never rendered.'
   },
   {
-    key: 'src/services/attachments/sessionAttachments.ts::sessionAttachments.add.id::Date.now()',
+    key: 'src/services/attachments/sessionAttachments.js::sessionAttachments.add.id::Date.now()',
     count: 1,
     why: 'unique-id',
     reason: 'Attachment id; addedAt beside it reads the hub clock.'
   },
   {
-    key: 'src/services/contracts/conformance/dispatch.ts::describeDispatchConformance.freshKey::Date.now()',
+    key: 'src/services/contracts/conformance/dispatch.js::describeDispatchConformance.freshKey::Date.now()',
     count: 1,
     why: 'test-harness',
     reason:
@@ -115,17 +115,17 @@ export const MACHINE_CLOCK_ALLOWLIST = [
     count: 1,
     why: 'contract-pinned',
     reason:
-      'The audit event `ts`. C3 (docs/contracts/C3-events.md) rules it the wall clock on purpose: the hub clock is a constant, so every event in a session would carry one instant and the ledger would lose its time order. c3Events.contract.test.ts pins the exact value.'
+      'The audit event `ts`. C3 (docs/contracts/C3-events.md) rules it the wall clock on purpose: the hub clock is a constant, so every event in a session would carry one instant and the ledger would lose its time order. c3Events.contract.test.js pins the exact value.'
   },
   {
-    key: 'src/services/sourcing/rfqTemplates.ts::rfqTemplateStore.save.template.id::Date.now()',
+    key: 'src/services/sourcing/rfqTemplates.js::rfqTemplateStore.save.template.id::Date.now()',
     count: 1,
     why: 'unique-id',
     reason:
       'Saved-template id persisted to localStorage; must not collide across reloads. createdAt reads the hub clock.'
   },
   {
-    key: 'src/services/sourcing/rfxTemplates.ts::makeStore.save.id::Date.now()',
+    key: 'src/services/sourcing/rfxTemplates.js::makeStore.save.id::Date.now()',
     count: 1,
     why: 'unique-id',
     reason:

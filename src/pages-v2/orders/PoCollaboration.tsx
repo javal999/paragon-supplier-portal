@@ -45,7 +45,7 @@ import { poLineQuantityText } from './poLineQuantity';
  * reason on the negotiation task in almost these words.
  *
  * ⚠️ It is `sdcClock.now()` rather than `DECLARED_PRESENT` because the SDC
- * clock IS the declared present plus a time of day (`services/sdc/clock.ts`),
+ * clock IS the declared present plus a time of day (`services/sdc/clock.js`),
  * and a deadline is an INSTANT: a bare date would read 00:00 UTC, an hour
  * before the Jakarta working day this lane's deadlines are computed in.
  */

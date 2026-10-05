@@ -5,7 +5,7 @@ fixture-first build (all seed data is SIMULATED). They **do** gate real-supplier
 visibility — the platform's standard two-gate pattern: a capability built and
 demoable on SIMULATED data, with a named ratification step before it goes live.
 
-Carried here (and as typed comments in `types.ts`/`fixtures.ts`) so they are not
+Carried here (and as typed comments in `types.js`/`fixtures.js`) so they are not
 lost when SDC-1/SDC-2 build the surfaces.
 
 ## FLAG-1 — ~~commitmentClass mapping is a policy default~~ **VOID (2026-08-03)**
@@ -29,7 +29,7 @@ standing to assert a commercial commitment: SOMO can say what its plan locked; i
 cannot say what Paragon will buy.
 
 **Code/contract divergence, knowingly held.** The void mapping and its FLAG-1
-comment (`types.ts:23`) are **still present in code** — neutralising them is a
+comment (`types.js:23`) are **still present in code** — neutralising them is a
 separate, booked code batch, deliberately not bundled with the contract
 correction. **Until that batch lands, this file and C8 are the authority and the
 code is stale.** Registered as C8-FIND-03 in `docs/findings.md`.

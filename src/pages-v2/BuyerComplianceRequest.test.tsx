@@ -319,7 +319,7 @@ describe('WAVE E · the roster refusal, in the reader’s language', () => {
       // ⚠️ `<Toaster />` IS MOUNTED EXPLICITLY. It lives in `AppRouter`, not in
       // `AppShellV2`, so a page rendered on its own has NO TOAST VIEWPORT and a
       // toast assertion would fail for a reason that has nothing to do with the
-      // toast. `settleFailureSurface.test.tsx` is the precedent.
+      // toast. `settleFailureSurface.test.jsx` is the precedent.
       renderWithProviders(
         <>
           <BuyerCompliance />

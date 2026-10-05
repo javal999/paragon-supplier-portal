@@ -223,7 +223,7 @@ const collect = (root, module, out) => {
     for (const k of Object.keys(o)) {
       const v = o[k];
       // A value identical to its own field name is a COLUMN-KEY MAP, not a code
-      // (`sdc/ingest.ts:134` `IMPORT_DECLARE_COLUMN`). Stated as a general rule
+      // (`sdc/ingest.js:134` `IMPORT_DECLARE_COLUMN`). Stated as a general rule
       // rather than an exclusion of one literal, so it also covers the next one.
       if (typeof v === 'string' && v !== '' && v !== k) {
         out.push({ field: k, value: v, meaning, siblings, module });
@@ -305,7 +305,7 @@ for (const c of CELLS) {
 // `supplierStorefront.js`, which no declaration named at the time. THE CLOSURE
 // SHOULD HAVE HALTED AND ASKED. It widened on its own authority instead, and the
 // operator's ruling happened to sanction it afterwards — luck, not governance.
-// The declaration now exists (`materialSpaces.ts`, R-D), so the same widening is
+// The declaration now exists (`materialSpaces.js`, R-D), so the same widening is
 // authorised rather than assumed.
 /** @param {string} module */
 const spaceIdOf = (module) => spaceOfModule(module)?.spaceId ?? null;
@@ -323,7 +323,7 @@ for (const c of CELLS) {
  *
  * ⚠️ THE GATE IS ON THE VALUE, NOT ON THE FIELD, AND THE FIRST BUILD GOT THAT
  * WRONG. Applied to every module a field touches, R-B rejects `materialCode`
- * ITSELF — that field is re-exported through barrel modules (`channel/index.ts`)
+ * ITSELF — that field is re-exported through barrel modules (`channel/index.js`)
  * which declare nothing and own nothing. A barrel is not a space. What R-B
  * actually says is that a closure may widen a space it is ALREADY IN, so the
  * question is whether each NEW value LIVES in a declared space — reachable
@@ -555,7 +555,7 @@ const DOCUMENT_LANE = inModules(/^\/src\/data\/mock[^/]*\.[jt]s$/);
 const MASTER_GOVERNED = inModules(/^\/src\/services\/(sdc\/fixtures|delivery\/)/);
 /** The ASN + chase lane, DECLARED at 2B-1 (R-3) as `paragon.asn_chase_lane` and
  *  booked for retirement at 2B-5b. Read from the REGISTRY rather than from a
- *  regex in this file — `materialSpaces.ts` is the declaration site now. */
+ *  regex in this file — `materialSpaces.js` is the declaration site now. */
 const ASN_CHASE_MODULES = /** @type {NonNullable<ReturnType<typeof MATERIAL_SPACES.find>>} */ (
   MATERIAL_SPACES.find((s) => s.spaceId === 'paragon.asn_chase_lane')
 ).modules;
@@ -595,9 +595,9 @@ describe('2B-0 — the lane set DERIVES (DERIVED-OVER-A-CHOSEN-SCOPE-01)', () =>
         // ── not in the B2a import list ──
         '/src/data/mockRfqs.js',
         '/src/services/data/mock/fixtures/supplierShipments.js',
-        '/src/services/delivery/demoFixtures.ts',
-        '/src/services/delivery/demoFixturesScale.ts',
-        '/src/services/sdc/fixtures.ts',
+        '/src/services/delivery/demoFixtures.js',
+        '/src/services/delivery/demoFixturesScale.js',
+        '/src/services/sdc/fixtures.js',
         // ── and the one the FIELD SET bought, at 2B-4a ──
         '/src/services/data/mock/fixtures/supplierStorefront.js'
       ])
@@ -1433,7 +1433,7 @@ describe('BPOM-OFF-BY-SPACE-01 — CLOSED at 2B-4b, and the record of the fail-o
     //   · The three new codes are `MAT-*`, so the PREFIX predicate does not fire
     //     on them — measured, not assumed from what they look like.
     //   · `bpomApplicable` is a MASTER FIELD and `inferBpom` reads a STRING.
-    //     Disjoint mechanisms; see `bpomApplicability.test.ts` for the pin that
+    //     Disjoint mechanisms; see `bpomApplicability.test.js` for the pin that
     //     the wizard still runs the prefix rule.
     //
     // ⚠️ AND THE STANDING ASSERTION FINALLY BREAKS AT 2B-5b-ii — DELIBERATELY,
@@ -1504,7 +1504,7 @@ describe('MG-COLLISION-21-01 — CLOSED at 2B-1 (R-1: declared ownership decides
     // glass — so the vocabulary could not be changed by accident, only on
     // purpose. R-1 is the purpose: the master owns material identity, material
     // group is part of identity, so the TAXONOMY moved and the master stood.
-    // The deeper fix is `sdc/materialGroups.ts` — the registry the vocabulary
+    // The deeper fix is `sdc/materialGroups.js` — the registry the vocabulary
     // never had — pinned in its own suite.
     expect(MATERIAL_MASTER['PK-CAPF-8820'].label).toBe('Flip-Top Cap 24mm');
     expect(MATERIAL_MASTER['PK-CAPF-8820'].materialGroup).toBe('MG-21');

@@ -80,7 +80,7 @@ const src = (rel: string) => fs.readFileSync(path.resolve(__dirname, rel), 'utf8
 // ─── POPULATION ──────────────────────────────────────────────────────────────
 //
 // ⚠️ **DERIVED UPSTREAM OF THE CODE UNDER TEST (§86).** The fix lives in
-// `commandHooks.ts`; deriving "which surfaces settle?" by asking that file's
+// `commandHooks.js`; deriving "which surfaces settle?" by asking that file's
 // behaviour would let a mutation collapse the population AND the assertions
 // together, and a suite that goes red on its own population control cannot tell
 // "I caught it" from "I have nothing to look at". So the population is read from

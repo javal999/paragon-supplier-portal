@@ -246,6 +246,13 @@ function sameSymbolName(type, node) {
   const text = checker.typeToString(type, node, ts.TypeFormatFlags.NoTruncation | ts.TypeFormatFlags.UseAliasDefinedOutsideCurrentScope);
   const m = /^([A-Za-z_$][\w$]*)(<.*>)?$/.exec(text);
   if (!m || m[1] !== sym.getName() || text.length > 160) return null;
+  // Every name inside the type arguments must resolve here too
+  // (`Map<string, GrossCell>` with no GrossCell in scope is not usable).
+  if (m[2]) {
+    for (const n of new Set(m[2].replace(/"[^"]*"|'[^']*'/g, '').match(/\b[A-Z][A-Za-z0-9_]*\b/g) ?? [])) {
+      if (!checker.resolveName(n, node, ts.SymbolFlags.Type | ts.SymbolFlags.Namespace, false)) return null;
+    }
+  }
   let found = checker.resolveName(m[1], node, ts.SymbolFlags.Type, false);
   if (found && found.flags & ts.SymbolFlags.Alias) found = checker.getAliasedSymbol(found);
   if (found === sym) return text;
@@ -291,6 +298,29 @@ function convert(sf) {
     flags.push(`${line + 1}: ${what}`);
   };
   const del = (start, end) => edits.push({ start, end, text: '' });
+
+  /**
+   * A JSDoc cast that would be the FIRST token inside an existing parenthesised
+   * expression — `(x!.a ?? 0)` → `(/** @type *\/ (x).a ?? 0)` — is moved OUT of
+   * the parentheses by Prettier, which then casts the whole expression. No
+   * written form survives repeated Prettier runs, so the spot is flagged for a
+   * person to rewrite as a local variable (frontend-standard Phase 4 playbook).
+   */
+  const flagIfOpensParens = (target, castNode) => {
+    const start = target.getStart(sf);
+    // Climb the nodes that START where the target starts; the first enclosing
+    // parenthesised expression among them is the one Prettier would rewrite.
+    for (let p = target.parent; p && p.getStart(sf) >= start - 1; p = p.parent) {
+      // Safe when the parentheses hold ONLY the cast (`(foo as Bar).baz`):
+      // risky when the cast is merely the start of a longer expression.
+      if (ts.isParenthesizedExpression(p) && p.expression.getStart(sf) === start && p.expression !== castNode) {
+        flag(target, 'JSDoc cast would open a parenthesised expression — Prettier moves it outside; rewrite as a local variable');
+        return;
+      }
+      if (p.getStart(sf) !== start) return;
+    }
+  };
+
   const ins = (pos, text) => edits.push({ start: pos, end: pos, text });
   const rep = (start, end, text) => edits.push({ start, end, text });
   const src = sf.text;
@@ -493,7 +523,12 @@ function convert(sf) {
           return overridden.length ? `Omit<${text}, ${overridden.map((n) => `'${n}'`).join(' | ')}>` : text;
         })
       );
-      const simple = node.members.every((m) => ts.isPropertySignature(m) || ts.isMethodSignature(m));
+      // `@typedef {object}` + `@property` cannot say `readonly` (owner ruling
+      // 2026-10-05: keep readonly everywhere), so an interface with any readonly
+      // member is written as a type-literal typedef instead; each member's comment
+      // becomes a labelled line of prose above it.
+      const anyReadonly = node.members.some((m) => m.modifiers?.some((x) => x.kind === ts.SyntaxKind.ReadonlyKeyword));
+      const simple = !anyReadonly && node.members.every((m) => ts.isPropertySignature(m) || ts.isMethodSignature(m));
       const props = [];
       const prose = [];
       const literal = [];
@@ -724,6 +759,7 @@ function convert(sf) {
         rep(node.getStart(sf), node.expression.getStart(sf), `/** ${tag} */ (`);
         ins(node.expression.end, ')');
       } else {
+        flagIfOpensParens(node.expression, node);
         ins(node.expression.getStart(sf), `/** ${tag} */ (`);
         rep(node.expression.end, node.end, ')');
       }
@@ -744,6 +780,7 @@ function convert(sf) {
       const exact = sameSymbolName(checker.getNonNullableType(checker.getTypeAtLocation(e)), node);
       cast = exact ?? (shaped ? `NonNullable<${shaped}>` : named);
       if (cast) {
+        flagIfOpensParens(e, node);
         ins(e.getStart(sf), `/** @type {${cast}} */ (`);
         rep(e.end, node.end, ')');
       } else {

@@ -3,7 +3,7 @@
 //
 // Five sample RFQs, labelled as such in their titles, that between them put
 // every outcome of `complianceGate` in front of a buyer on the sourcing pages.
-// The scenario set was derived from the gate itself (`sourcing/complianceGate.ts`):
+// The scenario set was derived from the gate itself (`sourcing/complianceGate.js`):
 // five criteria (halal, BPOM, GMP / ISO 22716, status, OTIF), the material
 // master's applicability deciding which apply, the registry-over-master rule,
 // the "on or after today" expiry comparison and the `>=` OTIF minimum.
@@ -126,7 +126,7 @@ const PANTHENOL = {
 // ⚠️ Only codes the document lane ALREADY states a meaning for (PO lines in
 // `mockPurchaseOrders.js` / `callOffs.js`). The RFQ-header-only codes
 // (PK-PETB-8825, PK-ALCP-2441 …) are deliberately NOT used: a PO line naming
-// one would rewrite the provenance census `materialMasterAuthoring.test.ts`
+// one would rewrite the provenance census `materialMasterAuthoring.test.js`
 // pins — which lane first stated each master code's meaning.
 
 /**

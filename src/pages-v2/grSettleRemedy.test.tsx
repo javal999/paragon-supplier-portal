@@ -200,7 +200,7 @@ describe('§91e — the GR interim state offers the remedy its copy names', () =
   });
 
   it('an UNGOVERNED fault also offers NO retry — the third class, not the second', async () => {
-    // A bare `Error`, the shape `registry.ts` raises. It classifies UNGOVERNED,
+    // A bare `Error`, the shape `registry.js` raises. It classifies UNGOVERNED,
     // which `SETTLE_FAULT_RETRYABLE` defaults to NOT retryable — so this is a
     // distinct branch from the REFUSED spec above, not a restatement of it.
     renderWithProviders(

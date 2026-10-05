@@ -545,7 +545,7 @@ describe('GRInspectionWizard — a required check opens UNANSWERED, and blocks',
 //
 // The prose predicate is KEPT below as the BEFORE-half of the swap. A retired
 // rule has to be restated somewhere to prove it is retired
-// (`bpomApplicability.test.ts`'s precedent); deleting the restatement would
+// (`bpomApplicability.test.js`'s precedent); deleting the restatement would
 // delete the evidence along with the defect.
 // ────────────────────────────────────────────────────────────────────────────
 
@@ -830,7 +830,7 @@ const seededLedger = async () => {
  * ⚠️ THE RETIRED FORM, RESTATED — `qualityValid`'s two governed clauses EXACTLY
  * as they read before E4, with the consequence hard-coded. Kept because a rule
  * that has been replaced must be restated somewhere to prove it was replaced
- * (`bpomApplicability.test.ts`'s precedent): delete the before-half and the
+ * (`bpomApplicability.test.js`'s precedent): delete the before-half and the
  * delta becomes unmeasurable, which is the same as unmeasured.
  * @param {string} code
  * @param {boolean} sealAnswered

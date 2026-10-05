@@ -1,0 +1,295 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// C1 — the CHANNEL-REPLY PARSER (headless, pure).
+//
+// Turns a free-text supplier reply into an INFERENCE the confirm surface (C2)
+// shows before anything dispatches. It NEVER dispatches and NEVER fabricates.
+//
+// ── SHAPE ────────────────────────────────────────────────────────────────────
+//   The parser emits `GridRow[]` (material + total). BL-73 (REQ-E08-02 BR-09):
+//   those cells only PRE-FILL the Stock page's entry form (`StockEntryPanel`) on
+//   the two triage surfaces; the form's own checks (CR-18 / CR-19) and its
+//   governed dispatch decide. The SDC adapter `parseGrid` that used to receive
+//   these rows is retired — it was a second stock-entry rule set.
+//
+// ── OUTPUT = an INFERENCE WRAPPER, not bare rows ─────────────────────────────
+//   `{ proposedRows, specHint, diagnostics }`. LAW: the wrapper is DISPLAY /
+//   PROVENANCE ONLY. NOTHING from it (specHint, confidence, matchedTokens, uom)
+//   reaches the form; only the two row cells do, as values the user can change.
+//
+// ── LOCALE-AWARE QUANTITY (the binding constraint; Seat 3 caught a real bug) ──
+//   The old `parseQty` (ingest.js, retired) did `raw.replace(/,/g, '')` — WRONG for Bahasa free
+//   text, where '.' groups thousands and ',' is the decimal. "2.400" (=2400) would
+//   read 2.4; "2,4" (=2.4) would read 24 — PLAUSIBLE WRONG NUMBERS, not failures.
+//   The controlled grid never hit this; a WhatsApp message hits it immediately —
+//   it is the DEFAULT case here. So C1 does its OWN grouping-validated,
+//   convention-aware normalisation and emits an ALREADY-CANONICAL numeric string
+//   (no separators, '.' decimal) that the entry form's CR-18 read accepts as is.
+//   Honest silence (AMBIGUOUS_QTY) over a plausible wrong number, always.
+//
+// ── UN-FALSIFIABILITY ────────────────────────────────────────────────────────
+//   · supplierId — the row shape has NO slot for it (only the import columns). The
+//     app binds it (identity, or the PTI triage's chosen subject); a message
+//     claiming "I am sup-005" is inert by construction.
+//   · snapshot keys — ride the GridParseSpec arm, bound from the RENDERED object in
+//     C2. A reply can never name a plan version.
+//   · uom — a parsed "KG" is DIAGNOSTIC only (a C2 warn-on-mismatch hint); it is
+//     NEVER a payload field (master-assigned, invariant #2).
+//
+// Alias / material resolution is NOT here — the material token is carried verbatim;
+// C2 shows it as a confirmable suggestion, never a silent resolution.
+//
+// ── MEMBERSHIP IS A CLASSIFIER INPUT, NOT A RESOLVER (CP-2 · B1) ─────────────
+//   `knownMaterials` does NOT resolve or rewrite anything: the token is still
+//   carried verbatim and C2 still confirms it. It only decides WHICH TOKEN is
+//   the material — which is a classification question, not a resolution one.
+//   The distinction matters because the previous classifier answered it by SHAPE
+//   ("has a letter and a digit"), and canonical S/4 MATNR is frequently NUMERIC,
+//   so it handed real material codes to the QUANTITY slot. That is a FABRICATION
+//   defect, not silence: it proposes a plausible wrong row. Membership-first
+//   fixes it with no policy decision about what a code may look like — and per
+//   Seat 3's ratified ruling, prefix-derived semantics are retired as a class:
+//   materialCode is OPAQUE, membership replaces shape.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** @import { GridParseSpec, GridRow } from '../sdc' */
+import { IMPORT_DECLARE_COLUMN } from '../sdc';
+/** @import { NumberConvention, QtyRefusalReason } from '@lib/localeNumber' */
+import { normalizeQty } from '@lib/localeNumber';
+
+// ─── Locale-aware quantity normalisation ──────────────────────────────────────
+// The parser (CP-0 · W1) now lives in `lib/localeNumber` — the ONE legal numeric
+// entry point, shared by every entry path (channel reply, XLSX, form, bulk grid).
+// Re-exported here for back-compat: this file was its first home and consumers
+// import `normalizeQty` / the qty types from `./replyParser`.
+/** @typedef {import('@lib/localeNumber').NumberConvention} NumberConvention */
+/** @typedef {import('@lib/localeNumber').QtyRefusalReason} QtyRefusalReason */
+/** @typedef {import('@lib/localeNumber').QtyOutcome} QtyOutcome */
+export { normalizeQty } from '@lib/localeNumber';
+
+// ─── The reply parser ─────────────────────────────────────────────────────────
+
+/** Inventory-declaration command keywords (ID + EN). Extended as more intents
+ *  gain a spine-wired verb; today only InventoryDeclaration is recognised. */
+const INVENTORY_COMMANDS = new Set(['STOK', 'STOCK', 'SOH']);
+
+/**
+ * A token that is only digits + separators AND carries at least one digit.
+ * @param {string} t
+ * @returns {boolean}
+ */
+const isQtyLike = (t) => /^[\d.,]+$/.test(t) && /\d/.test(t);
+/**
+ * A short pure-letter token — a unit-of-measure candidate (diagnostic only).
+ * @param {string} t
+ * @returns {boolean}
+ */
+const isUomLike = (t) => /^[A-Za-z]{1,5}$/.test(t);
+/**
+ * A MIXED-ALPHANUMERIC token (e.g. "MAT-10234") — renamed from `isCodeLike`
+ * (CP-2 · B1), because that name promised "code-like" and delivered
+ * "mixed-alphanumeric", EXCLUDING exactly the codes most likely to be canonical.
+ * Canonical S/4 MATNR is frequently PURE NUMERIC, and the old name hid that:
+ * a numeric code failed this test, fell through to `isQtyLike`, and was captured
+ * as the QUANTITY. This is now a FALLBACK HINT only — membership decides first.
+ * @param {string} t
+ * @returns {boolean}
+ */
+const isMixedAlnum = (t) => /[A-Za-z]/.test(t) && /\d/.test(t) && /^[A-Za-z0-9-]+$/.test(t);
+
+/**
+ * @typedef {object} ChannelReplyDiagnostics
+ * @property {readonly string[]} matchedTokens -  The tokens the parser recognised (command, material, qty, uom) — for display.
+ * @property {string} unparsedRemainder -  The leftover text the parser did not consume — for the C2 review pane.
+ * @property {number} confidence -  A soft 0–1 display signal, NOT a gate. Confirm (C2) is always required.
+ * @property {QtyRefusalReason} [qtyReason] -  Present when a qty token was seen but honestly refused (no row emitted).
+ * @property {string} [uom] -  A parsed unit-of-measure — DIAGNOSTIC ONLY, never a payload field.
+ * @property {'membership' | 'shape'} [materialMatch] HOW the material token was chosen (CP-2 · B1) — display/provenance only.
+ *   'membership' = the token IS a known material code, so shape was irrelevant.
+ *   'shape'      = no membership hit; a mixed-alphanumeric token was guessed.
+ *   C2 shows a shape-guessed token as exactly that: a suggestion to confirm.
+ *   Absent when no material token was found at all.
+ */
+
+/**
+ * The inference wrapper. `proposedRows` are plain `GridRow`s (a pre-fill for the
+ * stock entry form); `specHint` names what the rows would be (null when no intent
+ * was recognised). `diagnostics` is display/provenance only.
+ */
+/**
+ * @typedef {object} ChannelParseResult
+ * @property {readonly GridRow[]} proposedRows
+ * @property {GridParseSpec | null} specHint
+ * @property {ChannelReplyDiagnostics} diagnostics
+ */
+
+/**
+ * @typedef {object} ParseChannelReplyOptions
+ * @property {NumberConvention} [numberFormatHint] -  The supplier/channel numeric convention, disambiguating both-valid qtys.
+ *    Bahasa is the default channel language, so 'id' is the typical hint.
+ * @property {Iterable<string>} [knownMaterials] - ⭐ CP-2 · B1 — THE MEMBERSHIP SET, and the fix for a FABRICATION defect.
+ *
+ *   The material codes this reply could legitimately name — the material master,
+ *   or (better) the SUBJECT SUPPLIER'S collaborated set, which the confirm
+ *   surface already computes. Injected rather than imported: this parser is PURE
+ *   and does not resolve materials (see the header), and the caller alone knows
+ *   whose reply this is.
+ *
+ *   WHY IT MATTERS. Before this, two independent first-match scans ran with NO
+ *   PRECEDENCE, and the material classifier required at least one LETTER. So in
+ *   "STOK 10234 500 KG" — with 10234 a perfectly canonical numeric MATNR — the
+ *   code failed the shape test, fell through, and was captured as the QUANTITY.
+ *   Add any other mixed-alphanumeric token and THAT became the material while
+ *   10234 stayed the quantity: a PLAUSIBLE WRONG ROW proposed into the hub,
+ *   gated only by a human confirm. Not silence — FABRICATION.
+ *
+ *   THE RULE: a token in this set is a material candidate REGARDLESS OF SHAPE,
+ *   and can NEVER be consumed by `isQtyLike`. Shape drops to a fallback hint.
+ *   This handles numeric MATNR with no policy decision at all.
+ *
+ *   Omitted ⇒ shape-only, i.e. exactly the previous behaviour.
+ */
+
+/**
+ * Parse a supplier reply into a governed InventoryDeclaration inference. Pure — no
+ * dispatch, no store, no clock. Honest silence throughout: an unrecognised command
+ * yields zero rows + a null specHint; a recognised command with a missing or
+ * refused quantity yields zero rows + the honest reason. A row is emitted ONLY when
+ * a material token AND a normalisable quantity are both present.
+ * @param {string} rawText
+ * @param {ParseChannelReplyOptions} [options]
+ * @returns {ChannelParseResult}
+ */
+export function parseChannelReply(rawText, options = {}) {
+  const hint = options.numberFormatHint;
+  const trimmed = rawText.trim();
+  const tokens = trimmed === '' ? [] : trimmed.split(/\s+/);
+
+  const command = (tokens[0] ?? '').toUpperCase();
+  if (!INVENTORY_COMMANDS.has(command)) {
+    // No recognised intent — honest silence, nothing bound.
+    return {
+      proposedRows: [],
+      specHint: null,
+      diagnostics: { matchedTokens: [], unparsedRemainder: trimmed, confidence: 0 }
+    };
+  }
+
+  // Recognised inventory intent. Scan the remaining tokens for the parts.
+  const rest = tokens.slice(1);
+
+  // ── CP-2 · B1 — EXPLICIT PRECEDENCE (was: two racing first-match scans) ─────
+  //   1. MEMBERSHIP wins. The first token that IS a known material code is the
+  //      material, whatever its shape — this is what makes a numeric MATNR work.
+  //   2. SHAPE is the fallback hint, used only when membership found nothing.
+  //   3. QUANTITY is scanned LAST and skips the material index, so a token
+  //      matching the master can never be consumed by `isQtyLike`.
+  //  The old code ran (1)-less and scanned material and qty INDEPENDENTLY, so a
+  //  numeric code lost the race to the qty classifier and both were wrong.
+  const known = new Set(options.knownMaterials ?? []);
+  /** @type {string | null} */
+  let materialTok = null;
+  let materialIdx = -1;
+  /** @type {'membership' | 'shape' | undefined} */
+  let materialMatch;
+
+  if (known.size > 0) {
+    materialIdx = rest.findIndex((tok) => known.has(tok));
+    if (materialIdx >= 0) {
+      materialTok = rest[materialIdx];
+      materialMatch = 'membership';
+    }
+  }
+  if (materialTok === null) {
+    materialIdx = rest.findIndex(isMixedAlnum);
+    if (materialIdx >= 0) {
+      materialTok = rest[materialIdx];
+      materialMatch = 'shape';
+    }
+  }
+
+  /** @type {string | null} */
+  let qtyTok = null;
+  const qtyIdx = rest.findIndex((tok, i) => i !== materialIdx && isQtyLike(tok));
+  if (qtyIdx >= 0) qtyTok = rest[qtyIdx];
+  // uom: the first pure-letter token AFTER the qty (never the material/qty itself).
+  /** @type {string | null} */
+  let uomTok = null;
+  let uomIdx = -1;
+  rest.forEach((tok, i) => {
+    if (
+      uomTok === null &&
+      i !== materialIdx &&
+      i !== qtyIdx &&
+      qtyIdx !== -1 &&
+      i > qtyIdx &&
+      isUomLike(tok)
+    ) {
+      uomTok = tok;
+      uomIdx = i;
+    }
+  });
+
+  const consumed = new Set([materialIdx, qtyIdx, uomIdx].filter((i) => i >= 0));
+  const unparsedRemainder = rest.filter((_, i) => !consumed.has(i)).join(' ');
+  const matchedTokens = [tokens[0], materialTok, qtyTok, uomTok].filter(
+    /** @returns {t is string} */ (t) => t !== null
+  );
+  /** @type {GridParseSpec} */
+  const spec = { kind: 'InventoryDeclaration', mode: 'import' };
+  const uomDiag = uomTok !== null ? { uom: uomTok } : {};
+  const matDiag = materialMatch !== undefined ? { materialMatch } : {};
+  // A MEMBERSHIP hit is strictly more certain than a shape guess: the token IS a
+  // material we know, not a token that looks like one. Shape-path confidences are
+  // unchanged. Still a DISPLAY signal, never a gate — C2 confirm is always required.
+  const membershipHit = materialMatch === 'membership';
+
+  // Both parts present — try to normalise the quantity.
+  if (materialTok !== null && qtyTok !== null) {
+    const qty = normalizeQty(qtyTok, hint);
+    if (qty.ok) {
+      // The ONLY keys are the import columns — no supplierId slot exists.
+      /** @type {GridRow} */
+      const row = {
+        [IMPORT_DECLARE_COLUMN.materialCode]: materialTok,
+        [IMPORT_DECLARE_COLUMN.totalQty]: qty.canonical
+      };
+      return {
+        proposedRows: [row],
+        specHint: spec,
+        diagnostics: {
+          matchedTokens,
+          unparsedRemainder,
+          confidence: membershipHit
+            ? uomTok !== null
+              ? 0.95
+              : 0.85
+            : uomTok !== null
+              ? 0.9
+              : 0.75,
+          ...uomDiag,
+          ...matDiag
+        }
+      };
+    }
+    // Qty seen but refused — no row, carry the honest reason.
+    return {
+      proposedRows: [],
+      specHint: spec,
+      diagnostics: {
+        matchedTokens,
+        unparsedRemainder,
+        confidence: 0.3,
+        qtyReason: qty.reason,
+        ...uomDiag,
+        ...matDiag
+      }
+    };
+  }
+
+  // Intent recognised but a required part is missing — no row.
+  return {
+    proposedRows: [],
+    specHint: spec,
+    diagnostics: { matchedTokens, unparsedRemainder, confidence: 0.2, ...uomDiag, ...matDiag }
+  };
+}

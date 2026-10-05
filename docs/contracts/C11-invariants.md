@@ -1,7 +1,7 @@
 # C11 — The invariant pointer
 
 **Status:** CONTRACT · **first issue, 2026-09-10**, pinned bilaterally by
-`src/services/contracts/__tests__/c11Invariants.contract.test.ts` against
+`src/services/contracts/__tests__/c11Invariants.contract.test.js` against
 code-truth at `main`.
 
 **Number derived, not chosen.** `C11` is the successor of the occupied set read
@@ -42,7 +42,7 @@ on their own line.**
 
 | Class | Meaning |
 |---|---|
-| `FACTORY` | A **conformance factory** parametrised over an implementation. **You can run this against your backend.** Add a sibling of `*.mock.test.ts` that passes your service; change nothing else. |
+| `FACTORY` | A **conformance factory** parametrised over an implementation. **You can run this against your backend.** Add a sibling of `*.mock.test.js` that passes your service; change nothing else. |
 | `GATE` | A gate over **this tree**. It proves the property holds *here*. It says nothing about your implementation — you must assert it yourself. |
 | `TYPE` | Enforced by the TypeScript type system, so it **travels** to any consumer that compiles against these types. |
 | `NOT ENFORCED` | Prose. No instrument. The row states this in its own words. |
@@ -57,12 +57,12 @@ this document** rather than leaving a promise nobody keeps.
 
 | # | Invariant | Class | Enforcer | Assertion |
 |---|---|---|---|---|
-| **V1** | **Tenancy isolation.** A supplier scope reaches only its own rows; a buyer scope is a superset; a cross-tenant record read fails with `SCOPE_DENIED` rather than returning empty. | `FACTORY` | `src/services/contracts/conformance/scoping.ts` | `supplier requesting another supplier record by id throws DataError(SCOPE_DENIED)` |
-| **V2** | **A refusal is not an existence oracle.** Across a tenancy boundary the refusal for a row that exists and one that does not must be indistinguishable — same kind, same message. A refusal that varies by existence is a read primitive. | `FACTORY` | `src/services/contracts/conformance/scoping.ts` | `a supplier commanding a non-existent entity is denied (no existence leak)` |
-| **V3** | **Authorisation is atom-based and has no fallback.** A scope carrying no `businessRoles` is REFUSED, never widened to a persona; an unknown role grants nothing rather than everything. | `FACTORY` | `src/services/contracts/conformance/dispatch.ts` | `a scope with NO businessRoles is refused, not silently widened` |
-| **V4** | **Segregation of duties is mutual.** Where two lanes are separated, the separation holds in both directions — it is not a single-sided restriction on the weaker lane. | `FACTORY` | `src/services/contracts/conformance/dispatch.ts` | `and the segregation is MUTUAL — finance cannot award an RFQ` |
-| **V5** | **`expectedState` is an OPT-IN compare-and-set.** Supplied, a mismatch refuses `STALE_STATE` naming both states; omitted, nothing changes. Adding the field must never alter an existing caller. | `FACTORY` | `src/services/contracts/conformance/dispatch.ts` | `OMITTING expectedState changes nothing — the precondition is opt-in` |
-| **V6** | **Refusal precedence is ordered, and the order is load-bearing.** Role is checked before state, state before legality. A caller without the atom must not learn the document's state; a stale caller must be told *why*, not merely that the act is illegal. | `GATE` | `src/services/contracts/__tests__/c1MethodSurface.contract.test.ts` | `the pipeline’s step ORDER matches the refusal precedence the tree declares` |
+| **V1** | **Tenancy isolation.** A supplier scope reaches only its own rows; a buyer scope is a superset; a cross-tenant record read fails with `SCOPE_DENIED` rather than returning empty. | `FACTORY` | `src/services/contracts/conformance/scoping.js` | `supplier requesting another supplier record by id throws DataError(SCOPE_DENIED)` |
+| **V2** | **A refusal is not an existence oracle.** Across a tenancy boundary the refusal for a row that exists and one that does not must be indistinguishable — same kind, same message. A refusal that varies by existence is a read primitive. | `FACTORY` | `src/services/contracts/conformance/scoping.js` | `a supplier commanding a non-existent entity is denied (no existence leak)` |
+| **V3** | **Authorisation is atom-based and has no fallback.** A scope carrying no `businessRoles` is REFUSED, never widened to a persona; an unknown role grants nothing rather than everything. | `FACTORY` | `src/services/contracts/conformance/dispatch.js` | `a scope with NO businessRoles is refused, not silently widened` |
+| **V4** | **Segregation of duties is mutual.** Where two lanes are separated, the separation holds in both directions — it is not a single-sided restriction on the weaker lane. | `FACTORY` | `src/services/contracts/conformance/dispatch.js` | `and the segregation is MUTUAL — finance cannot award an RFQ` |
+| **V5** | **`expectedState` is an OPT-IN compare-and-set.** Supplied, a mismatch refuses `STALE_STATE` naming both states; omitted, nothing changes. Adding the field must never alter an existing caller. | `FACTORY` | `src/services/contracts/conformance/dispatch.js` | `OMITTING expectedState changes nothing — the precondition is opt-in` |
+| **V6** | **Refusal precedence is ordered, and the order is load-bearing.** Role is checked before state, state before legality. A caller without the atom must not learn the document's state; a stale caller must be told *why*, not merely that the act is illegal. | `GATE` | `src/services/contracts/__tests__/c1MethodSurface.contract.test.js` | `the pipeline’s step ORDER matches the refusal precedence the tree declares` |
 | **V7** | **Settlement is scope-gated on the write door.** A foreign scope advances no entity, mints no external reference, and records no audit act. All three, not the first alone. | `GATE` | `src/services/transitions/settleScopeGate.test.js` | `a FOREIGN settle does not advance the entity and does not mint a ref` |
 | **V8** | **Creation is owner-gated where the target declares it.** A creation whose owner cannot be resolved is DENIED rather than admitted on the grounds that there is nothing to compare. | `GATE` | `src/services/transitions/creationOwnerGate.test.js` | `DENIES a buyer creation when the owner cannot be resolved (owner null)` |
 | **V9** | **No clock-projected state is ever stored** (law 0.5). A state a clock decides is derived at read and is absent from every transition table, as a state AND as a target. | `GATE` | `src/lib/projectionGate/projectionGate.test.js` | `every display state is absent from its flow, as a state AND as a target` |
@@ -74,8 +74,8 @@ this document** rather than leaving a promise nobody keeps.
 | **V15** | **The portal never mints a document identity — S/4 owns it.** PO, GR, invoice and contract numbers, and the vendor master, are SAP's. We carry identity; we do not assign it. ⚠️ **THIS IS NOT ENFORCED.** No gate reads document-number construction, and the tree currently CONTRADICTS this row in one place — `BuyerContracts.tsx` mints `CTR-${year}-${n}` client-side (`CTR-FABRICATION-01`, filed, unscheduled). **What would enforce it:** a source gate over identifier construction, refusing a client-side mint of any governed document number — buildable today, and the sibling of the gate that already retired solid buttons. It is H2, not this batch. | `NOT ENFORCED` | — | — |
 | **V16** | **Authentication is bought; authorisation is ours.** An identity provider supplies a `SubjectBinding` and nothing else — it never mints a `personId`, and it never becomes a second authorisation path. ⚠️ **THIS IS NOT ENFORCED.** It constrains a system that does not exist yet, so there is nothing to gate. **What would enforce it:** nothing, until an IdP lands; at that point a gate asserting `personId` is portal-minted and never equal to a subject becomes buildable. Stated in C10 §3.2 / §5.1 / §7.1 and deliberately restated here, because a reader of this table must not infer it is checked. | `NOT ENFORCED` | — | — |
 | **V17** | **A refusal is a first-class result, not an exception.** A business refusal is a value the caller can branch on; exceptions are reserved for programmer error and transport failure. ⚠️ **THIS IS NOT ENFORCED** as a principle — the factories above assert individual refusals COME BACK as results, which is the behaviour, but nothing asserts that no business path throws. **What would enforce it:** a gate over the dispatcher's own source refusing a `throw` outside the argument-validation prologue. Cheap, and unbuilt. | `NOT ENFORCED` | — | — |
-| **V18** | **An ingress replay raises no second act.** A command carrying an `idempotencyKey` already seen under the same tenancy returns the FIRST result — same `correlationId`, same `entityId` — rather than raising again. It is a RESULT and not a refusal, because a refusal is `status: 'failed'` and an at-least-once transport's correct response to a failure is to redeliver: refusing a replay would convert one duplicate into an unbounded retry loop. Absent, nothing changes. | `FACTORY` | `src/services/contracts/conformance/dispatch.ts` | `the SAME idempotencyKey twice returns the first result — one act, not two` |
-| **V19** | **A pinned contract states its pin’s reach.** Every AUTHORED document a spec asserts over carries a `## Pin reach` block naming what the pin guards AND stating, explicitly, that everything else on the page is not guarded — and the guarded list is asserted EQUAL to the pin’s own assertions, in both directions. A GENERATED rendering is excluded, derived from its own `DO NOT EDIT BY HAND` marker rather than listed — nobody has a hand to write one. ⚠️ **THE SECOND HALF IS THE INVARIANT.** A list of guarded things reads as completeness; twice in this corpus a reader assumed a pin covered a clause it never reached, and in both cases the gate was working exactly as specified. What was missing was any way to see where the guarding stopped. | `GATE` | `src/services/contracts/__tests__/pinReach.contract.test.ts` | `with both halves stated, and the self-pin named` |
+| **V18** | **An ingress replay raises no second act.** A command carrying an `idempotencyKey` already seen under the same tenancy returns the FIRST result — same `correlationId`, same `entityId` — rather than raising again. It is a RESULT and not a refusal, because a refusal is `status: 'failed'` and an at-least-once transport's correct response to a failure is to redeliver: refusing a replay would convert one duplicate into an unbounded retry loop. Absent, nothing changes. | `FACTORY` | `src/services/contracts/conformance/dispatch.js` | `the SAME idempotencyKey twice returns the first result — one act, not two` |
+| **V19** | **A pinned contract states its pin’s reach.** Every AUTHORED document a spec asserts over carries a `## Pin reach` block naming what the pin guards AND stating, explicitly, that everything else on the page is not guarded — and the guarded list is asserted EQUAL to the pin’s own assertions, in both directions. A GENERATED rendering is excluded, derived from its own `DO NOT EDIT BY HAND` marker rather than listed — nobody has a hand to write one. ⚠️ **THE SECOND HALF IS THE INVARIANT.** A list of guarded things reads as completeness; twice in this corpus a reader assumed a pin covered a clause it never reached, and in both cases the gate was working exactly as specified. What was missing was any way to see where the guarding stopped. | `GATE` | `src/services/contracts/__tests__/pinReach.contract.test.js` | `with both halves stated, and the self-pin named` |
 
 ---
 
@@ -95,7 +95,7 @@ The five `FACTORY` rows do follow it. `describeScopingConformance` and
 driven today by exactly one thin file each:
 
 ```ts
-// scoping.mock.test.ts — the whole of it
+// scoping.mock.test.js — the whole of it
 describeScopingConformance('mockDataService', () => ({
   service: mockDataService,
   tenants: { a: 'sup-007', b: 'sup-002', c: 'sup-005' },
@@ -157,7 +157,7 @@ the pin refuses it.
 
 ## Pin reach
 
-**Pinned by** `src/services/contracts/__tests__/c11Invariants.contract.test.ts` and `src/services/contracts/__tests__/c12BackendSpec.contract.test.ts`.
+**Pinned by** `src/services/contracts/__tests__/c11Invariants.contract.test.js` and `src/services/contracts/__tests__/c12BackendSpec.contract.test.js`.
 
 **GUARDED — these assertions, and nothing else on this page:**
 
@@ -195,7 +195,7 @@ a backlog: a clause describing a system outside this repository has nothing here
 against, and a clause stating WHY a boundary exists has no truth-value to decay. See C12
 for the statement of that property.
 
-⚠️ **THIS BLOCK IS SELF-PINNED** (`src/services/contracts/__tests__/pinReach.contract.test.ts`).
+⚠️ **THIS BLOCK IS SELF-PINNED** (`src/services/contracts/__tests__/pinReach.contract.test.js`).
 The GUARDED list is asserted EQUAL to the pin’s own `describe` titles, **both directions**:
 widen the pin without listing the new assertion and it reddens; drop a line here without
 narrowing the pin and it reddens too. A reach statement that can drift is the overclaim one

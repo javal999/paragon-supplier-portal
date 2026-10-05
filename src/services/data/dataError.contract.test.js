@@ -17,7 +17,7 @@
 //
 // ── ⚠️ **THIS IS NOT A CONFORMANCE FACTORY, AND MUST NOT BECOME ONE** ─────────
 //   1a lifted the SCOPING contract into
-//   `services/contracts/conformance/scoping.ts`, a describe factory an SE team
+//   `services/contracts/conformance/scoping.js`, a describe factory an SE team
 //   runs against `httpDataService`. This file was deliberately LEFT BEHIND
 //   (operator ruling), and the reason is mechanical rather than a matter of
 //   taste:

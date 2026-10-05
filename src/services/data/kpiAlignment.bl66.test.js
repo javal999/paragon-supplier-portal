@@ -388,7 +388,7 @@ describe('BL-66 (4) · ONE early window for OTIF and CFOT (PROPOSED until BL-56)
     expect(src('./performanceRules.js')).toMatch(
       /import \{ receivedOnTimeFor \} from '\.\/kpiWindow'/
     );
-    expect(src('../engine/cfot.ts')).toMatch(
+    expect(src('../engine/cfot.js')).toMatch(
       /import \{ EARLY_DELIVERY_WINDOW_DAYS \} from '\.\.\/data\/kpiWindow'/
     );
   });

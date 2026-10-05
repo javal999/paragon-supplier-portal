@@ -92,7 +92,7 @@ const TODAY = DECLARED_PRESENT;
 // and commodity data once F1/F2/F3 land the sources.
 //
 // Registry status: capability `risk` is registered in the LivenessRegistry with a
-// `null` backing (services/liveness/registry.ts) → derives SIMULATED → every
+// `null` backing (services/liveness/registry.js) → derives SIMULATED → every
 // marker on this page is amber "Sample" and green is structurally unreachable.
 // When the real derivation lands, `risk` flips through the two gates and the
 // IllustrativeRegion frames below come off on their own — no edit here.
@@ -1076,7 +1076,7 @@ const BuyerRisk: React.FC = () => {
       <PageMetaLine className="-mt-6 mb-6 flex items-center gap-3">
         <span>{t('risk.meta.illustrative')}</span>
         {/* Honest-render: capability="risk" derives SIMULATED (null backing,
-            registry.ts) — the amber "Sample" marker. Green is structurally
+            registry.js) — the amber "Sample" marker. Green is structurally
             unreachable (two-gate guard); this replaces the hand-rolled LIVE/
             Real-time chrome that lied over static demo data (CP-0 · W2). */}
         <LivenessPill capability="risk" />

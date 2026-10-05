@@ -298,7 +298,11 @@ export default defineConfig([
   // Tests stay next to the code they test (portal convention, kept on purpose;
   // the boilerplate uses a central `src/__test__/` folder instead).
   {
-    files: ['src/**/*.test.{js,jsx,ts,tsx}', 'src/test/**'],
+    // `src/**/__tests__/**` also covers the spec helpers kept beside contract
+    // specs without a `.test.` suffix (`deriveC11Invariants.js`,
+    // `deriveC12BackendSpec.js`, …): they read files from `process.cwd()` and
+    // only ever run under Vitest in Node.
+    files: ['src/**/*.test.{js,jsx,ts,tsx}', 'src/test/**', 'src/**/__tests__/**'],
     // Specs and test helpers also run in Node: guards read source files with
     // `__dirname` / `process.cwd()` (TypeScript knew these from @types/node;
     // ESLint's JavaScript block needs them listed).

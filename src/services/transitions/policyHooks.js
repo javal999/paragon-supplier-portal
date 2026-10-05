@@ -230,7 +230,7 @@ export const POLICY_HOOKS = /** @type {const} */ ({
    * a purchase-order line confirmed at zero is a line that should not have been
    * confirmed. A forecast response is the opposite case: **a TYPED 0 is the
    * legal "cannot supply at all" short confirmation (F-2)** and is recorded as
-   * the commitment it is (`submitModel.ts`). Copying the neighbour's bound
+   * the commitment it is (`submitModel.js`). Copying the neighbour's bound
    * verbatim would have refused the one answer this verb exists to carry.
    *
    * `Number.isFinite` rather than `typeof === 'number'` — the 2f-c SE-Team spec
@@ -778,7 +778,7 @@ export const POLICY_HOOKS = /** @type {const} */ ({
    * the SAP document), AWARD_REASON_REQUIRED (blank reason) and
    * AWARD_CANCEL_TARGET_WRONG (the other verb of the pair fits: whether another
    * award stays in force). The rule is `awardCancelRefusal` in
-   * `sourcing/awardStatus.ts`.
+   * `sourcing/awardStatus.js`.
    */
   RFQ_AWARD_CANCEL_GOVERNED: 'rfq_award_cancel_governed',
   /**

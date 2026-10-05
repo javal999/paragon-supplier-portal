@@ -4,7 +4,7 @@
 //
 // The sourcing type pill on an event, the "not qualified" marker on an
 // invitee row and an award row, and the map a draft reads its type from. The
-// rules are `services/sourcing/sourcingType.ts`; nothing here decides.
+// rules are `services/sourcing/sourcingType.js`; nothing here decides.
 // ────────────────────────────────────────────────────────────────────────────
 
 import React, { useSyncExternalStore } from 'react';

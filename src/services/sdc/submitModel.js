@@ -1,0 +1,196 @@
+// ────────────────────────────────────────────────────────────────────────────
+// requirementResponse submitModel (SDC-2a) — the PURE draft→payload mapping
+// for the supplier's `t_requirementresponse_submit` dispatch. Mirrors
+// `quotationSubmitModel` (Task 3b).
+//
+// The snapshot binding is STRUCTURAL here: publicationId / planVersion /
+// materialCode / periodBucket are copied from the RENDERED publication + line
+// objects — never from form inputs — so the payload can only ever claim the
+// exact snapshot the supplier was shown (design §4 "binds planVersion").
+// `supplierId` comes from the current identity, never the form. The payload
+// carries ONLY honest raw facts; `uom` is deliberately ABSENT — the target
+// copies it from the material master (invariant #2), never from the caller.
+// ────────────────────────────────────────────────────────────────────────────
+
+/** @import { NumberConvention } from '@lib/localeNumber' */
+/** @import { ForecastLine, ForecastPublication, RootCause } from './types' */
+
+/** Build the `t_requirementresponse_acknowledge` payload (SDC-2b-EXT) from the
+ * rendered publication + visibility-only line + the supplier's optional note.
+ * Same structural snapshot binding as the submit builder; deliberately NO
+ * @param {ForecastPublication} publication
+ * @param {ForecastLine} line
+ * @param {string} supplierId
+ * @param {string} [note]
+ * @returns {Record<string, unknown>}
+ * confirmedQty key — an acknowledgment commits nothing (invariant #11). */
+export function buildRequirementAcknowledgePayload(publication, line, supplierId, note) {
+  return {
+    publicationId: publication.publicationId,
+    planVersion: publication.planVersion,
+    materialCode: line.materialCode,
+    periodBucket: line.periodBucket,
+    supplierId,
+    acknowledgment: note && note.trim() ? { note: note.trim() } : {}
+  };
+}
+
+// ── CP-0 · W1 · PR-2c — the builder does not parse (the §4 pattern) ──────────
+//
+// `confirmedQty` used to arrive here as a STRING and be coerced in place:
+//
+//     confirmedQty: Number(draft.confirmedQty.replace(/,/g, '')) || 0
+//
+// while the SURFACE independently coerced the SAME string with its own copy of
+// that formula to decide `isShort` and to gate the submit. Two parses of one
+// fact — the defect 2a killed on the declaration path, alive here.
+//
+// The doc above this function used to describe the `|| 0` as a feature: "an
+// empty qty resolves to 0 — a LEGAL 'cannot supply' short confirmation (F-2)."
+// That sentence conflated two different things. F-2 is real and survives: a
+// supplier who TYPES 0 is making a binding statement ("I cannot supply any of
+// this"), and that must be recorded. But a supplier who typed NOTHING has made
+// no statement at all, and manufacturing the strongest possible commitment out
+// of an untouched field is the opposite of honest. The prose was the bug
+// notarized, so it is corrected here with the code.
+//
+// The builder now takes a NUMBER. It cannot parse, so it cannot disagree with
+// the gate; callers normalise ONCE (via `normalizeQty`) and gate and ship the
+// same value. Blank and ambiguous never reach here — they refuse upstream.
+//
+// ── THE HOIST — the builder still does not parse, but it now CARRIES the token ─
+//
+// Everything above stands. What was missing is that "callers normalise ONCE and
+// ship the same value" was a PROMISE THE CONTRACT COULD NOT CHECK: the payload
+// held a bare number, so a caller that normalised under one convention and
+// shipped another, or normalised correctly and shipped something else entirely,
+// was indistinguishable at the transition from one that did neither.
+//
+// The draft now carries the TOKEN AS TYPED beside the number, and the convention
+// the caller parsed under. The builder still parses nothing — it copies all
+// three through verbatim — and the transition re-runs `normalizeQty` and refuses
+// `rr_submit_qty_agrees` if the token does not read as the number.
+//
+// ⚠️ **VERBATIM IS THE POINT AND `.trim()` HERE WOULD BE A DEFECT.** Whatever
+// this ships is what the transition re-parses; normalising the token on the way
+// out would put the real guard in the one layer a hand-crafted dispatch skips —
+// the `rr_dispute_text_authored` lesson, on a number. `normalizeQty` trims
+// internally, so a padded token is read identically at both ends anyway.
+
+/** The confirm-form fields the submit payload is derived from. `confirmedQty`
+ *  is ALREADY NORMALISED — the caller ran the one legal parse and refused
+ *  anything unreadable, so no coercion happens here (CP-0 §4). */
+/**
+ * @typedef {object} RequirementResponseDraft
+ * @property {number} confirmedQty
+ * @property {string} confirmedQtyRaw -  The quantity token EXACTLY as the supplier typed it — the evidence for
+ *    `confirmedQty`, not a second copy of it. Never trimmed, never reformatted
+ *    on the way out; the transition re-parses precisely this.
+ * @property {NumberConvention} [numberConvention] -  The convention the caller resolved `confirmedQtyRaw` under, when it had one.
+ *    ABSENT means the caller parsed HINT-FREE, which is the stricter reading —
+ *    a cross-convention ambiguity refuses instead of being decided. Omitting it
+ *    can therefore only tighten the transition's check, never loosen it.
+ * @property {string} [committedDate]
+ * @property {string} [capacityConstraint]
+ * @property {RootCause} [rootCause] -  The deviation explanation — required by UX when short (form-level rule).
+ */
+
+/**
+ * Build the `t_requirementresponse_submit` payload from the rendered
+ * publication + line + the supplier's ALREADY-NORMALISED draft. Pure assembly:
+ * the number it is given is the number it ships.
+ *
+ * Quantity honesty (three distinct states, none collapsed):
+ *  · a TYPED 0 is a legal "cannot supply at all" short confirmation (F-2) and
+ *    is recorded as the commitment it is;
+ *  · a BLANK field is not a zero — it refuses at the surface and never arrives;
+ *  · an AMBIGUOUS token ("2.400" = 2400 or 2.4) refuses too, rather than
+ *    shipping one plausible reading of two — at the surface AND, since the
+ *    hoist, again at the transition, which re-reads the token it is handed.
+ *
+ * No id, version, status, or uom — those are STORE/master-assigned on create.
+ * @param {ForecastPublication} publication
+ * @param {ForecastLine} line
+ * @param {string} supplierId
+ * @param {RequirementResponseDraft} draft
+ * @returns {Record<string, unknown>}
+ */
+export function buildRequirementResponsePayload(publication, line, supplierId, draft) {
+  return {
+    publicationId: publication.publicationId,
+    planVersion: publication.planVersion,
+    materialCode: line.materialCode,
+    periodBucket: line.periodBucket,
+    supplierId,
+    confirmedQty: draft.confirmedQty,
+    // Shipped VERBATIM — see the header. The transition re-parses this exact
+    // string, so anything done to it here would be done behind the guard.
+    confirmedQtyRaw: draft.confirmedQtyRaw,
+    ...(draft.numberConvention ? { numberConvention: draft.numberConvention } : {}),
+    ...(draft.committedDate ? { committedDate: draft.committedDate } : {}),
+    ...(draft.capacityConstraint ? { capacityConstraint: draft.capacityConstraint } : {}),
+    ...(draft.rootCause ? { rootCause: draft.rootCause } : {})
+  };
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// R1b — THE BUYER'S DRAFTS. Two acts on the dispute seam, two drafts.
+//
+// ⚠️ **THE DTO FIELD IS THE ANSWER; THE DRAFT FIELD IS WHAT THE ACTOR WROTE TO
+// PRODUCE IT** (operator ruling). They are not the same thing and collapsing
+// them is how a stored record starts being edited like a form field:
+// `RequirementResponse.disputeResponse` is an APPEND-ONLY ledger the store owns
+// and nothing rewrites; a draft is transient, per-act, and belongs to whoever is
+// typing. The supplier lane already has this shape — `RequirementResponseDraft`
+// above is what the supplier wrote, `forecastConfirmation` is what got stored —
+// so these are the buyer's half of a pattern the lane already keeps.
+//
+// ⚠️ **AND THE SPLIT IS THE POINT: TWO ACTS, TWO DRAFTS, TWO NAMES.** The ruling
+// that produced these rejected reusing ONE field across two jobs, on the ground
+// that a field carrying two jobs cannot be given an honest name and cannot be
+// made required without breaking the job it was not named for. That argument is
+// applied here rather than only cited: `disputeReason` names an objection and
+// `resolutionReason` names its answer, because naming the RAISE a "resolution"
+// would re-collapse at the draft layer exactly what the split just separated.
+//
+// NO SURFACE CONSUMES THESE YET — the action cell is R1b proper and waits. They
+// are the model layer the surface will build against, landing first on purpose
+// so the surface has a typed thing to fill rather than inventing a payload shape.
+// ────────────────────────────────────────────────────────────────────────────
+
+/** What a planner wrote to RAISE a dispute (`t_requirementresponse_dispute`). */
+/**
+ * @typedef {object} DisputeRaiseDraft
+ * @property {string} disputeReason -  The objection. NOT optional: a reply cannot be optional-shaped, and an
+ *    optional field is what makes a required thing silently unwritten.
+ */
+
+/** What a planner wrote to CLOSE one (`t_requirementresponse_resolve`). */
+/**
+ * @typedef {object} DisputeResolutionDraft
+ * @property {string} resolutionReason -  The answer beside the question — it JOINS the raise in the ledger, never
+ *    replaces it. Required for the same reason the raise is.
+ */
+
+/**
+ * Build the `t_requirementresponse_dispute` payload. Pure assembly, exactly as
+ * `buildRequirementResponsePayload`: the words it is given are the words it
+ * ships. Substance is proven at the TRANSITION (`rr_dispute_text_authored`) —
+ * `requiredFields` runs `isEmpty`, and `isEmpty('   ')` is false, so a builder
+ * that trimmed here would put the real guard in the one layer a hand-crafted
+ * dispatch skips.
+ * @param {DisputeRaiseDraft} draft
+ * @returns {Record<string, unknown>}
+ */
+export function buildRequirementDisputePayload(draft) {
+  return { disputeReason: draft.disputeReason };
+}
+
+/**
+ * Build the `t_requirementresponse_resolve` payload. Same discipline.
+ * @param {DisputeResolutionDraft} draft
+ * @returns {Record<string, unknown>}
+ */
+export function buildRequirementResolutionPayload(draft) {
+  return { resolutionReason: draft.resolutionReason };
+}

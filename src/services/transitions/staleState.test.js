@@ -266,7 +266,7 @@ describe('POPULATION — what a STATE precondition can and cannot see, derived',
       //
       // ⚠️ **AND IT IS THE MOST INTERESTING OF THE THREE, BECAUSE THE SECOND
       // PRECONDITION ALREADY HAS A PRECEDENT IN THIS TREE.**
-      // `services/sdc/consolidation.ts` derives *"stale-against-current — the
+      // `services/sdc/consolidation.js` derives *"stale-against-current — the
       // response answered a SUPERSEDED planVersion"*. That is CONTENT staleness,
       // detected, today — on the READ side, as a projection, gating nothing.
       // Whoever builds the revision precondition should start there rather than

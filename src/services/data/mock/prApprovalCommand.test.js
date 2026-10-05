@@ -31,7 +31,7 @@ const svc = new MockCommandService();
 // BOILERPLATE. `t_pr_approve` refuses a scope that cannot say who decided
 // (`PR_APPROVAL_ATTRIBUTED`), so a scope literal without one is not a
 // convenience omission — it is the refused case, asserted on purpose further
-// down. `useScope()` sets it on every real command (`commandHooks.ts:44`).
+// down. `useScope()` sets it on every real command (`commandHooks.js:44`).
 /**
  * The whole buyer seat — today's default (every buyer lane bundle).
  * @type {QueryScope}

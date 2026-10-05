@@ -15,7 +15,7 @@ Frozen as CONTRACT ahead of G1 — so G1 builds the Grid against it, and SOMO co
 product code — the intake dispatch, the Grid, and the SOMO wire are all downstream"*. That was
 true at #67 and is **false now**: a wired `CommandTarget` (`MockCommandService.js:547-593`,
 registered `:983`), a mutable store (`stores/purchaseRequisitionStore.js`), a read seam
-(`types.js:1194`), a liveness capability (`registry.ts:51`) and two consuming surfaces
+(`types.js:1194`), a liveness capability (`registry.js:51`) and two consuming surfaces
 (`IntakeReview.tsx`, `PlanGrid.tsx`) have all landed since. The SOMO wire remains SPEC (§5).
 
 **Grounding (real sources):**
@@ -59,7 +59,7 @@ builds to a seam that has already moved.
 |---|---|---|
 | D-1 | Status line: *"No product code"* → the intake dispatches (`MockCommandService.js:547-593,983`) | Status, above |
 | D-2 | **C7-FIND-01 OPEN** → **CLOSED** in code; the PR `CommandTarget` is wired (`MockCommandService.js:538`, `:983`) | §3, §7 |
-| D-3 | **C7-FIND-01a OPEN** → **CLOSED, and resolved DIFFERENTLY than this doc prescribed**: the doc specified a `null` backing → SIMULATED. Code backs it **structurally** to the wired entity (`registry.ts:78`) and holds it SIMULATED via **gate-2 harvest gating** instead. Stronger honesty: unwire-to-honest is structural. | §3, §4, §7 |
+| D-3 | **C7-FIND-01a OPEN** → **CLOSED, and resolved DIFFERENTLY than this doc prescribed**: the doc specified a `null` backing → SIMULATED. Code backs it **structurally** to the wired entity (`registry.js:78`) and holds it SIMULATED via **gate-2 harvest gating** instead. Stronger honesty: unwire-to-honest is structural. | §3, §4, §7 |
 | D-6 | `wasAdjusted` documented as **stored** (§2.1) → **never read by `create`**; nor is `suggestedQty` (`MockCommandService.js:547-593`) | §2.1 — **DEFECT** |
 | D-7 | Field named `sourceDestinationLane` → code field is **`suggestedSource`** (`types.js:640`) | §2 |
 | D-8 | §2 lists `bomContext?`, `decisionMetadata`, `liveness`, `shortfall` on the intake line → **none exist** on `PrIntakeLine` (`types.js:636-653`). §2.2 promised `shortfall` was *"reserved so the shape does not change"* — it was **not reserved**. | §2, §2.2 — **DEFECT** |
@@ -98,7 +98,7 @@ C7 uses the same two-axis honesty model C6 froze. It **invents no new vocabulary
 | Axis | Values | Authority |
 |---|---|---|
 | **Contract tier** (this package) | LIVE / RESERVED / SPEC | README legend |
-| **Source tier** (per line, runtime) | LIVE / SIMULATED / SPEC | `liveness()` — `src/services/liveness/registry.ts:137` |
+| **Source tier** (per line, runtime) | LIVE / SIMULATED / SPEC | `liveness()` — `src/services/liveness/registry.js:137` |
 | **Plan state** (per line) | committed / PLANNED | C6 §5 (`docs/contracts/C6-planning.md`) |
 
 Seam tiers at a glance: **SOMO producer = SPEC** — Seam §0 is explicit: "every external seam is
@@ -107,7 +107,7 @@ a live emitter". **F2 Event Mesh boundary = RESERVED** (Stage-F). **PR machine =
 `CommandTarget` the dispatcher writes through (`MockCommandService.js:547-593`, registered `:983`);
 `t_pr_create` genuinely mints a Draft PR into a mutable store (§1, §3). **PR capability renders
 SIMULATED** — not because the machine is inert, but because **no live PRODUCER exists**: gate-1
-(wiring) is LIVE, gate-2 (harvest) is shut (`registry.ts:70-78`). Wiring alone must never flip
+(wiring) is LIVE, gate-2 (harvest) is shut (`registry.js:70-78`). Wiring alone must never flip
 green (LIVENESS-DATASOURCE-01).
 
 ---
@@ -188,7 +188,7 @@ field list; the prior version of this table described fields that were never bui
 They are struck from the contract rather than silently carried:
 
 - `liveness` is **correctly absent** — it is derived at runtime from the registry
-  (`registry.ts:137`), never a row field. Carrying it per-line would fork the axis. Not a defect.
+  (`registry.js:137`), never a row field. Carrying it per-line would fork the axis. Not a defect.
 - `decisionMetadata` is **partially served elsewhere**: an override's reason + from/to ride the
   DR-10 `TransitionEvent` via `buildQtyDecision` (`planGridModel.ts:176-189`), not the line.
 - `bomContext?` was never built. It remains a legitimate future field (§0 provenance) but is
@@ -204,7 +204,7 @@ internal Grid producer** — a Grid-pushed line carries `null` (`fixtures/prInta
 > (`fixtures/prIntake.js:21`). The UI labels it "Source lane" (`i18n/intakeReview.js:25`). The
 > type name is the only place it reads as a single source; **the name is wrong, the body is
 > right.** Conform to the NAME `suggestedSource` carrying LANE semantics. C8 reuses the same
-> name for the same thing (`sdc/types.ts:138`), so the two seams are at least consistent.
+> name for the same thing (`sdc/types.js:138`), so the two seams are at least consistent.
 
 ### 2.1 Quantity provenance — three values, not one (Reply §2b)
 
@@ -321,10 +321,10 @@ so PR stays buyer-internal.
 ### C7-FIND-01a — **CLOSED, resolved DIFFERENTLY than this document prescribed** (D-3)
 
 The prior text prescribed: add a `purchaseRequisitions` capability *"backed `null` → derives
-SIMULATED"*. The capability exists (`registry.ts:51`) but is **not** backed `null`. It is backed
+SIMULATED"*. The capability exists (`registry.js:51`) but is **not** backed `null`. It is backed
 **structurally to the wired entity** — `purchaseRequisitions: 'purchaseRequisition'`
-(`registry.ts:78`) — so **gate-1 derives LIVE** (the intake genuinely dispatches), and the honest
-SIMULATED render comes from **gate-2 harvest gating** instead (`registry.ts:70-77`).
+(`registry.js:78`) — so **gate-1 derives LIVE** (the intake genuinely dispatches), and the honest
+SIMULATED render comes from **gate-2 harvest gating** instead (`registry.js:70-77`).
 
 **The shipped resolution is stronger than the one specified, and the difference matters.** A
 `null` backing is a hand-authored claim that stays SIMULATED even after a target is wired — it
@@ -371,7 +371,7 @@ producer that *wants* to populate them could not have known they existed.
 Every intake line carries two provenance markers:
 
 - **`source`** — `INTERNAL_GRID | SOMO | …` (the producer; Reply §1 `source: "SOMO"`).
-- **`liveness`** — the runtime source-tier from the registry (`liveness()`, `registry.ts:137`;
+- **`liveness`** — the runtime source-tier from the registry (`liveness()`, `registry.js:137`;
   `Tier = LIVE | SIMULATED | SPEC`, `:45`). **No `SEED` value is forked** — that would fragment
   C6's frozen liveness axis.
 
@@ -384,7 +384,7 @@ accepted-requirement is honestly rendered as:
 > honesty matrix already defines** (`docs/contracts/C6-planning.md` §5, SIMULATED × PLANNED).
 
 C7 reuses C6's two-axis grid wholesale; a seed SOMO line is **not** a live procurement
-instruction and cannot render as committed seam truth (two-gate, `isLive` `registry.ts:178`).
+instruction and cannot render as committed seam truth (two-gate, `isLive` `registry.js:178`).
 This is the same discipline the IBP seat asks for both-sides (Seam §0; Reply §81: "carrying
 `source` + `liveness` across the seam so a rehearsed plan never renders as a live instruction").
 
@@ -458,15 +458,15 @@ are superseded by this paragraph; they are left in place so the co-design histor
 ### 6.1 GG-4 — the material join, and the recommendation (FINDING ONLY, NOT BUILT HERE)
 
 **The finding.** C7 carries material as a **display string** (`types.js:638`); C8 carries a
-material **code** (`sdc/types.ts:128`, keyed to `MATERIAL_MASTER`, `sdc/fixtures.ts:58-100`).
+material **code** (`sdc/types.js:128`, keyed to `MATERIAL_MASTER`, `sdc/fixtures.js:58-100`).
 **The two seams do not join.** The same substance appears as `'Glycerin USP (Halal)'`
 (`fixtures/prIntake.js:20`) and as `RM-EMUL-3310` labelled `'Glycerin USP 99.5%'`
-(`sdc/fixtures.ts:59-64`) — different key, different label, no crosswalk. There are in fact
+(`sdc/fixtures.js:59-64`) — different key, different label, no crosswalk. There are in fact
 several material-identity spaces in the tree. **Operator ruling (binding) settles which is
-authoritative:** `src/services/sdc/fixtures.ts` (`MATERIAL_MASTER`, `:58-100`) **IS the portal's
+authoritative:** `src/services/sdc/fixtures.js` (`MATERIAL_MASTER`, `:58-100`) **IS the portal's
 authoritative material master**; `src/data/mock*.ts` is a **parallel NON-MASTER dataset, booked
 for retirement rather than reconciliation** (`MOCK-RETIREMENT-01`), as is `MAT-20500` on its own
-convention (`channel/outboundFixtures.ts:29`). See [C8 §4.0](./C8-forecast-publication.md) — the
+convention (`channel/outboundFixtures.js:29`). See [C8 §4.0](./C8-forecast-publication.md) — the
 declaration is load-bearing there, because SOMO cannot ratify a freeze against an undeclared
 master. So this is **not** four co-equal populations: it is **one master, one display-string
 space that should collapse into it, and non-master datasets awaiting retirement.**
@@ -521,7 +521,7 @@ co-design so the two published shapes converge (Reply "Agreed next joint step" �
 | C7-INTAKE | One `PrIntakeLine` → `t_pr_create` serves both producers; conforms to Reply §1; SOMO-authored fields read-only + nullable internal; qty carries suggested/accepted/wasAdjusted | CONTRACT (§2) |
 | C7-PROV | Provenance = `source` × registry `liveness` (LIVE/SIMULATED/SPEC); no SEED fork; IBP `seed` = SIMULATED×PLANNED per C6; crosswalk documented | CONTRACT (§4) |
 | **C7-FIND-01** | PR create is author-inert — no `CommandTarget`. | **CLOSED** — wired at G1.1 (`MockCommandService.js:547-593, :983`; closure recorded `:538`). §3 |
-| **C7-FIND-01a** | Add a `purchaseRequisitions` liveness capability for intake provenance. | **CLOSED — resolved differently than prescribed**: structural backing + gate-2, not `null` (`registry.ts:51, :70-78`). §3 |
+| **C7-FIND-01a** | Add a `purchaseRequisitions` liveness capability for intake provenance. | **CLOSED — resolved differently than prescribed**: structural backing + gate-2, not `null` (`registry.js:51, :70-78`). §3 |
 | **C7-FIND-02** | **DEFECT** — `suggestedQty` + `wasAdjusted` documented as stored; `create` reads neither and `PurchaseRequisition` has no field for either (`MockCommandService.js:547-593`; `types.js:569-587`). Audit signal survives on the DR-10 event only. | **OPEN** — code batch (§2.1) |
 | **C7-FIND-03** | **DEFECT** — `shortfall` promised as RESERVED (§2.2) but never added to `PrIntakeLine` (`types.js:636-653`); landing it is a shape change, not additive. | **OPEN** — code batch (§2.2) |
 | **C7-FIND-04** | Five payload keys read but undocumented (`category`, `requestor`, `costCenter`, `justification`, `priority`) — `priority` silently defaults to `'Medium'` on any unrecognised value (`MockCommandService.js:565-566`). | **DOCUMENTED** here (§3.1); `priority`'s silent default is a **candidate defect** |
@@ -552,7 +552,7 @@ In-repo seams cited `file:line`: `purchaseRequisition.flow.js` (machine :1-92),
 `MockProcurementService.js` (read :349-354), `MockCommandService.js` (TARGETS / wiring census
 :343-360, creation-mechanism examples :96-98/:252-254), `dispatcher.js` (creation +
 validation :4-14/:60-62/:251-254), `roles.js` (`pr:*` :37),
-`registry.ts` (`liveness`/`isLive`/`Tier` :45-184), `C5-seams.md` (INT-TMS-01 precedent :117-126),
+`registry.js` (`liveness`/`isLive`/`Tier` :45-184), `C5-seams.md` (INT-TMS-01 precedent :117-126),
 `C6-planning.md` (honesty matrix, PLANNED axis). External producer grain cited by doc § + field:
 `docs/IBP_SupplyPlan_to_Procurement_Seam_2026-07-14.md` (§0 liveness caveat, §1 grain, §3 RM/PM +
 feedback, §4 shared master, §5 PR landing, §6 co-design) and
@@ -564,7 +564,7 @@ wire — all downstream of C7-FIND-01. This contract binds that work.
 
 ## Pin reach
 
-**Pinned by** `src/services/contracts/__tests__/ledgerTruth.test.ts`.
+**Pinned by** `src/services/contracts/__tests__/ledgerTruth.test.js`.
 
 **GUARDED — these assertions, and nothing else on this page:**
 
@@ -596,7 +596,7 @@ a backlog: a clause describing a system outside this repository has nothing here
 against, and a clause stating WHY a boundary exists has no truth-value to decay. See C12
 for the statement of that property.
 
-⚠️ **THIS BLOCK IS SELF-PINNED** (`src/services/contracts/__tests__/pinReach.contract.test.ts`).
+⚠️ **THIS BLOCK IS SELF-PINNED** (`src/services/contracts/__tests__/pinReach.contract.test.js`).
 The GUARDED list is asserted EQUAL to the pin’s own `describe` titles, **both directions**:
 widen the pin without listing the new assertion and it reddens; drop a line here without
 narrowing the pin and it reddens too. A reach statement that can drift is the overclaim one

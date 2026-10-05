@@ -132,12 +132,12 @@ const REGISTRIES = /** @satisfies {readonly GlossaryRegistry[]} */ (
     },
     {
       sourceType: 'HalalRefusalReason',
-      sourceFile: 'src/services/sdc/halal.ts',
+      sourceFile: 'src/services/sdc/halal.js',
       entries: HALAL_REFUSAL_GLOSSARY
     },
     {
       sourceType: 'BpomRefusalReason',
-      sourceFile: 'src/services/sdc/bpom.ts',
+      sourceFile: 'src/services/sdc/bpom.js',
       entries: BPOM_REFUSAL_GLOSSARY
     },
     {
@@ -187,12 +187,12 @@ const REGISTRIES = /** @satisfies {readonly GlossaryRegistry[]} */ (
     },
     {
       sourceType: 'HalalApplicability',
-      sourceFile: 'src/services/sdc/types.ts',
+      sourceFile: 'src/services/sdc/types.js',
       entries: HALAL_APPLICABILITY_GLOSSARY
     },
     {
       sourceType: 'BpomApplicability',
-      sourceFile: 'src/services/sdc/types.ts',
+      sourceFile: 'src/services/sdc/types.js',
       entries: BPOM_APPLICABILITY_GLOSSARY
     }
   ])

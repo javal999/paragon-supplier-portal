@@ -34,7 +34,7 @@
 //
 // ── WHAT DID MOVE ───────────────────────────────────────────────────────────
 //   The other 30 assertions from that file are now
-//   `services/contracts/conformance/scoping.ts`, stated once and runnable
+//   `services/contracts/conformance/scoping.js`, stated once and runnable
 //   against any `IDataService`. Nothing was rewritten in either direction: each
 //   assertion here asserts exactly what it asserted before, against the same
 //   scopes, in the same order.

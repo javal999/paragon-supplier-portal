@@ -532,7 +532,7 @@ describe('a to-paragon leg — ship and arrive defer to the ASN, cancel does not
     // tests above, and pinned here as a statement of the RULE.
     //
     // The justification, measured: `Cancelled` is not an `AsnStatus`, so the ASN
-    // can never report a cancellation. `sdc/shipmentAxes.test.ts` holds the
+    // can never report a cancellation. `sdc/shipmentAxes.test.js` holds the
     // empty-intersection assertion this rests on.
     const ASN_STATUSES = ['Draft', 'Submitted', 'In Transit', 'Delivered', 'Discrepancy'];
     expect(ASN_STATUSES).not.toContain('Cancelled');

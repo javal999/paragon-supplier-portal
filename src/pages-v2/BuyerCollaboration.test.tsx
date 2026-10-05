@@ -12,7 +12,7 @@ import i18n from '@lib/i18n';
 // The grid BODY is virtualized (react-datasheet-grid) and does not lay out rows
 // under jsdom's zero-height viewport — per-row cell content (state chips,
 // coverage indicator, Σ marker in cells) is covered by BROWSER QA, and the
-// underlying derivations by the SDC-1a selector suite (consolidation.test.ts).
+// underlying derivations by the SDC-1a selector suite (consolidation.test.js).
 // Asserted here is what must hold on the real engine and is jsdom-reliable:
 // the registry-derived Sample pill (green unreachable, SOMO-C8 waiting note),
 // the read-only honesty banner, the PERIOD-level commitmentClass badges (the

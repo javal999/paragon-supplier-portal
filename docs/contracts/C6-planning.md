@@ -26,7 +26,7 @@ must never be read as one.
 | Vocabulary | Values | What it measures | Authority |
 |---|---|---|---|
 | **Contract tier** (this package) | LIVE / RESERVED / SPEC | Does the *seam* exist in code today? | README legend |
-| **Source tier** (the planning grid, per cell) | LIVE / SIMULATED / SPEC | Is the *data under a cell* real? | `liveness()` — `src/services/liveness/registry.ts:137` |
+| **Source tier** (the planning grid, per cell) | LIVE / SIMULATED / SPEC | Is the *data under a cell* real? | `liveness()` — `src/services/liveness/registry.js:137` |
 
 The honesty matrix (§5) is built on the **source tier** (runtime `liveness()`), because a
 grid cell renders a per-cell data marker. Contract-tier RESERVED (a named-but-unbuilt seam)
@@ -43,7 +43,7 @@ committing. It is held in a dedicated client-side plan store and is, by contract
 - **NEVER written through `IDataService`** (`src/services/data/types.js:1205` — the read/write
   service seam). A plan is not persisted state; it is a pre-commit working set.
 - **NEVER placed in the TanStack Query cache.** The query cache holds seam reads only
-  (`useServiceQuery`, `src/services/query/useServiceQuery.ts:22-38`); the plan overlay is a
+  (`useServiceQuery`, `src/services/query/useServiceQuery.js:22-38`); the plan overlay is a
   separate concern the grid renders *on top of* those reads.
 - **NEVER persisted to localStorage.** The codebase deliberately deleted its localStorage
   overlays; that pattern stays dead. A PlanDraft is session-scoped and disappears on reload.
@@ -102,7 +102,7 @@ The grid renders **`seamRow + plannedOverlay`**. A planned value is ALWAYS both:
   from the seam-backed arrays the read hooks return. It is **never merged into** those arrays.
 
 **The structural test (assertable at G1):** the seam list the grid reads
-(`useServiceQuery` output, `useServiceQuery.ts:33-37`) is never mutated to carry planned
+(`useServiceQuery` output, `useServiceQuery.js:33-37`) is never mutated to carry planned
 values; a planned value is only ever reachable by looking up `plannedOverlay[seamRef]`. If a
 planned value can be found *inside* a seam array, the invariant is broken. This is the
 inverse of the retired `extraRfqs` `[...extraRfqs, ...baseRfqs]` merge (BuyerSourcing, PR #77).
@@ -130,9 +130,9 @@ For each PLANNED row, in order:
    legality (`from` includes currentState) → `requiredFields` → `policyHooks` → apply +
    emit one `TransitionEvent` (DR-10 audit). **The grid gets no validation shortcut** — it is
    the same seam `usePurchaseOrderConfirm` / `useRfqAward` already use
-   (`src/services/query/commandHooks.ts:50-67, :139-156`).
+   (`src/services/query/commandHooks.js:50-67, :139-156`).
 2. **On non-failed outcome** → invalidate the current scope's reads
-   (`useInvalidateProcurement`, `commandHooks.ts:29-38`: predicate-invalidation keyed by
+   (`useInvalidateProcurement`, `commandHooks.js:29-38`: predicate-invalidation keyed by
    `scopeKey`) → the seam re-reads → **the overlay clears for that row because the seam now
    agrees.** The planned value is gone precisely because it is no longer *planned* — it is
    committed seam truth.
@@ -151,14 +151,14 @@ The dispatcher reports failure through **two distinct channels**
 **Contract:** a row stays **PLANNED with reason attached regardless of which channel the
 failure arrives through.** The pipeline catches throws AND tests `result.status`; it never
 treats a resolved promise as success without checking status (mirrors the house guard
-`if (result.status !== 'failed') invalidate(scope)`, `commandHooks.ts:64`). Carried as an
+`if (result.status !== 'failed') invalidate(scope)`, `commandHooks.js:64`). Carried as an
 assertable invariant in §6.
 
 ### 3.2 No optimistic writes
 
 **No `onMutate`, no optimistic cache writes.** The overlay clears only *after* the seam
 re-read confirms the commit — never before. This is already the house rule: no mutation hook
-in `commandHooks.ts` uses `onMutate`; every one invalidates in `onSuccess` only. The grid
+in `commandHooks.js` uses `onMutate`; every one invalidates in `onSuccess` only. The grid
 inherits it, it does not introduce it.
 
 ---
@@ -203,21 +203,21 @@ its own not-yet-buildable clause — that is the guard working.
 ## 5. Honesty matrix — source tier × plan state
 
 Two **independent** axes (LIVENESS-DATASOURCE-01). The **source tier** is the runtime
-`liveness()` value for the cell's capability (`registry.ts:137`, `Tier = LIVE|SIMULATED|SPEC`
-at `registry.ts:45`); the **plan state** is committed vs PLANNED. The required cell marker is
+`liveness()` value for the cell's capability (`registry.js:137`, `Tier = LIVE|SIMULATED|SPEC`
+at `registry.js:45`); the **plan state** is committed vs PLANNED. The required cell marker is
 the **conjunction** — neither axis is allowed to mask the other.
 
 | Source tier ↓ / Plan state → | **committed** (seam value) | **PLANNED** (overlay value) |
 |---|---|---|
-| **LIVE** (real wired source; `isLive` two-gate green, `registry.ts:178`) | Live committed value — no marker beyond the normal LIVE affordance. | **PLANNED marker** over a live base — "proposed, not yet committed." |
+| **LIVE** (real wired source; `isLive` two-gate green, `registry.js:178`) | Live committed value — no marker beyond the normal LIVE affordance. | **PLANNED marker** over a live base — "proposed, not yet committed." |
 | **SIMULATED** (real-shaped, unwired/fixture, or harvest-pending) | **SIMULATED marker** (`<LivenessPill>` reads the registry). | **BOTH markers** — SIMULATED (data isn't real) **and** PLANNED (value isn't committed). Neither is dropped. |
-| **SPEC** (zero backend; `registry.ts:43`) | **SPEC marker** — even further from truth than SIMULATED; no seeded capability is SPEC yet, but the cell must render SPEC, not SIMULATED. | **SPEC + PLANNED** — a proposed value over a data domain with no backend at all. The strongest honesty warning. |
+| **SPEC** (zero backend; `registry.js:43`) | **SPEC marker** — even further from truth than SIMULATED; no seeded capability is SPEC yet, but the cell must render SPEC, not SIMULATED. | **SPEC + PLANNED** — a proposed value over a data domain with no backend at all. The strongest honesty warning. |
 
 **Binding cells:**
 
 - **Real command over SIMULATED data still renders SIMULATED.** A grid that dispatches real,
   fully-validated commands (§3) over a SIMULATED-tier capability does **not** flip to LIVE.
-  Liveness is gate-1 (wiring) AND gate-2 (real data landed) — `isLive` (`registry.ts:178`);
+  Liveness is gate-1 (wiring) AND gate-2 (real data landed) — `isLive` (`registry.js:178`);
   executing a command is neither gate. The two-gate discipline holds inside the grid.
 - **SPEC × PLANNED is NOT collapsed into SIMULATED × PLANNED.** SPEC = zero backend is a
   distinct, stronger warning than SIMULATED = real-shaped-but-unwired. The grid renders three
@@ -246,7 +246,7 @@ Each is written so a G1 vitest can bind to it directly.
 4. **no-fabricated-derived-value.** No client-computed score/total/projection is rendered as a
    committed seam value; every such value carries a client-computed marker (§5).
 5. **two-gate-holds.** A cell's source-tier marker is the registry's `liveness()`/`isLive`
-   value (`registry.ts:137, :178`) — never a value derived from the fact that a command
+   value (`registry.js:137, :178`) — never a value derived from the fact that a command
    dispatched. Real command over SIMULATED data still renders SIMULATED.
 6. **reason-gated-override (C6-LOCK §8.3).** An override (accepted ≠ suggested) with an empty
    reason CANNOT dispatch — `overrideBlocked` true ⇒ no push. A test drives an empty-reason
@@ -316,7 +316,7 @@ mints a Draft that stays simulated, **never a live procurement instruction**.
 (`src/pages-v2/plan-grid/planGridModel.ts` — `overrideBlocked` / `buildQtyDecision` /
 `buildPrCreatePayload` / `applyPushResult`); the governed surface is **plain DOM** so the
 reason-gate is headless-provable (`plan-grid/IntakeAdjustDrawer.tsx`); the push is
-`usePurchaseRequisitionCreate` (`services/query/commandHooks.ts`) through the G1.1
+`usePurchaseRequisitionCreate` (`services/query/commandHooks.js`) through the G1.1
 `purchaseRequisition` target; and the opaque carrier is `CommandDecision`
 (`services/data/types.js`) forwarded by `dispatcher.js:143-166` onto the `TransitionEvent`
 (`transitions/events.js`).
@@ -330,9 +330,9 @@ Every seam cited traces to a `file:line` in the shipped tree:
 `src/services/data/types.js` (`ICommandService` :1078-1090, `IDataService` :1205),
 `src/services/transitions/dispatcher.js` (validation chain :4-14, failure channels + causation
 :151-297), `src/services/transitions/events.js` (`TransitionEvent` / causation :14-46),
-`src/services/query/commandHooks.ts` (dispatch+invalidate pattern :29-156),
-`src/services/query/useServiceQuery.ts` (`scopeKey` read pattern :19-38),
-`src/services/liveness/registry.ts` (`liveness`/`isLive`/`Tier` :45-184),
+`src/services/query/commandHooks.js` (dispatch+invalidate pattern :29-156),
+`src/services/query/useServiceQuery.js` (`scopeKey` read pattern :19-38),
+`src/services/liveness/registry.js` (`liveness`/`isLive`/`Tier` :45-184),
 `src/context/CurrentIdentityContext.jsx` (client-state provider pattern :35-65),
 `src/pages-v2/BuyerSourcing.tsx` (the `extraRfqs` anti-pattern — RETIRED in PR #77; RFQ
 creation now rides `t_rfq_create` on the dispatcher). §1-7 were

@@ -605,7 +605,7 @@ export function createDispatcher(deps) {
     //    precondition that there is nothing to start from.
     //
     //    ⚠️ **AND THERE IS SOMETHING TO START FROM.**
-    //    `services/sdc/consolidation.ts` already derives *"stale-against-
+    //    `services/sdc/consolidation.js` already derives *"stale-against-
     //    current — the response answered a SUPERSEDED planVersion"*. Content
     //    staleness is DETECTED today, on the READ side, as a projection,
     //    gating nothing. The audit sink has no per-entity read and cannot

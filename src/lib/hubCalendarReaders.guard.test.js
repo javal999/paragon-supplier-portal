@@ -252,7 +252,7 @@ const D = derive();
 // why that is right. A row may only leave by its site leaving.
 /** @type {Readonly<Record<string, string>>} */
 const CALENDAR_DAY_ALLOWLIST = {
-  'services/delivery/fulfillment.ts#statusForUnmatched':
+  'services/delivery/fulfillment.js#statusForUnmatched':
     'CR-07 — "Missed: nothing received 3 days after the need date": a physical delivery window in calendar days, not a response deadline.',
   'services/transitions/callOffRules.js#deliveryResults':
     'CR-07 again — the call-off side of the same missed-delivery window (calendar days).',
@@ -270,9 +270,9 @@ const CALENDAR_DAY_ALLOWLIST = {
     'Days until a certificate expires — a validity period, not a response deadline.',
   'services/transitions/rfxRules.js#daysToDeadline':
     'An RFI/RFQ/RFP deadline is a DATE THE BUYER SETS on the event (CE-07); nothing computes it, so no calendar ruling can move it. This is a calendar-day countdown to that chosen date for the "closing soon" band.',
-  'services/sdc/consolidation.ts#chaseList':
+  'services/sdc/consolidation.js#chaseList':
     "The superseded SDC design's interim chase threshold (RESPONSE_DUE_DAYS) on /buyer/chase, a route hidden from the MVP menu (NV-06) and replaced by REQ-E06-03. No Supplier Hub rule defines it, so changing it would invent one. Reported as a follow-up rather than left silently.",
-  'services/engine/requirement.ts#openReceipts':
+  'services/engine/requirement.js#openReceipts':
     'REQ-E14-03 — an open PO line whose confirmed delivery date passed more than the grace window (14 calendar days) is treated as closed in netting: a physical delivery window counted in calendar days, like CR-07, not a response deadline anybody answers.',
   'services/data/mock/rescheduleReadModel.js#callOffOrderLines':
     'REQ-E14-13 — the same E14-03 grace window applied to an open call-off (ENG-B10): a delivery date passed more than 14 calendar days ago is treated as closed. A physical delivery window, not a response deadline.'
@@ -288,7 +288,7 @@ describe('BL-50 · the deadline population reads the hub calendar', () => {
     // Known-false: the invoice projection counts calendar days (CR-14).
     expect(readers).not.toContain('services/data/invoiceProjection.js');
     // And the calendar-day side has both a known member and a known non-member.
-    expect(D.calendarDaySites).toContain('services/delivery/fulfillment.ts#statusForUnmatched');
+    expect(D.calendarDaySites).toContain('services/delivery/fulfillment.js#statusForUnmatched');
     expect(D.calendarDaySites).not.toContain(
       'services/data/poResponseProjection.js#responseDeadline'
     );

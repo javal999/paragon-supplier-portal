@@ -150,7 +150,7 @@ function cascadeViolations(cascades, flows, wired) {
 // ⚠️ **THIS IS A GATE AGAINST A LANE THAT WILL EXIST — DO NOT DELETE IT AS A TEST
 // FOR NOTHING.** Neither `t_delivery_release` nor `t_deliveryagreement_release` is
 // in the catalog today: 91 transition ids, none containing `delivery`, because
-// `services/delivery/index.ts` says of itself *"Spine only — no flows, no
+// `services/delivery/index.js` says of itself *"Spine only — no flows, no
 // CommandTargets, no UI, no registry touch."* **TODAY.** That module is a modelled
 // SAP LPA scheduling agreement whose whole trajectory is toward a flow and a
 // CommandTarget, and the day it gets them this tree stops being synthetic. A gate

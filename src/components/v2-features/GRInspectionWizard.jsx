@@ -316,7 +316,7 @@ const RegulatoryCheck = ({ name, label, value, onChange, el, unansweredText, tes
 // What stood here was a 40-line comment explaining why a live regulatory
 // fail-open was being left in place. It is replaced by the fix, and the record
 // of what was removed is kept because a retired rule has to be restated
-// somewhere to prove it is retired (`bpomApplicability.test.ts`'s precedent):
+// somewhere to prove it is retired (`bpomApplicability.test.js`'s precedent):
 //
 //   const inferHalal = (description: string): boolean =>
 //     description.toLowerCase().includes('halal');

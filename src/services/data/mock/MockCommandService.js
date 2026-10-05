@@ -2830,7 +2830,7 @@ const collaboratedMaterial = (supplierId, materialCode) =>
 // on the material — but `collaboratedMaterial` above tests relationships ∪
 // publications, NOT the master. Nothing at RUNTIME forces those two sets to be
 // master-subsets; only the SDC-0 integrity suite does
-// (sdc.integrity.test.ts:81), and a suite is not a boundary. So the moment a
+// (sdc.integrity.test.js:81), and a suite is not a boundary. So the moment a
 // relationship row or a SOMO-fed publication line names a code the master
 // lacks, the old `?? 'KG'` tail fabricated a unit. This proves the unit exists
 // before anything is stamped with one.

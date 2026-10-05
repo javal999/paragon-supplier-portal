@@ -588,7 +588,7 @@ describe('H4 — ⚠️ WIRED TO A NOTICE, AND TO NOTHING THAT CAN REFUSE', () =
       '/src/services/data/halalVerification.js'
     ]);
 
-    // ⚠️ THE LIMIT OF THIS CHECK, STATED — the `halalApplicability.test.ts`
+    // ⚠️ THE LIMIT OF THIS CHECK, STATED — the `halalApplicability.test.js`
     // precedent. Vite's `import.meta.glob` EXCLUDES THE MODULE IT IS WRITTEN
     // IN, so this scan cannot see its own file, which is itself a caller. That
     // is why the expected list has one entry and not two. Recorded rather than

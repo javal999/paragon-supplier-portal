@@ -512,7 +512,7 @@ describe('D-2 — settlesTo', () => {
     // Pinned by reading the adapter source, so the two cannot drift apart while
     // both remain true separately. When the adapter is taught to read
     // `settlesTo`, this pin is what tells whoever does it that it was already
-    // agreed. Precedent: `ledgerTruth.test.ts` reads source to check a claim.
+    // agreed. Precedent: `ledgerTruth.test.js` reads source to check a claim.
     const adapter = readFileSync(
       join(process.cwd(), 'src', 'services', 'data', 'mock', 'MockCommandService.js'),
       'utf8'

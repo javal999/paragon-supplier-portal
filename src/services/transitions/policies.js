@@ -376,7 +376,7 @@ bindPolicyHook(POLICY_HOOKS.RFQ_FX_PIN_WELL_FORMED, rfqFxPinWellFormed);
 // `BID_CURRENCIES`. Each arm refuses BY NAME (`NO_ITEMS`, `TIER_COUNT`,
 // `TIERS_NOT_INCREASING`, `ITEM_SPEC_MISSING`, `CURRENCY_NOT_PERMITTED`, …).
 //
-// The rule itself lives in `rfqModel.ts` so the wizard's step gate and the
+// The rule itself lives in `rfqModel.js` so the wizard's step gate and the
 // template store call the SAME judgement; this is only its binding. Every arm is
 // conditional on its key being present: a legacy single-item dispatch carries
 // none of them and is not refused for that (the versioning rule).

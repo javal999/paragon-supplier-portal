@@ -599,7 +599,7 @@ const DIRECTION_LABEL_KEY: Record<ShipmentDirection, string> = {
 // ⚠️ **ASKED PER VERB, THE ANSWER SPLITS, AND THE MEASUREMENT IS THE EMPTY
 // INTERSECTION.** `AsnStatus` is `Draft | Submitted | In Transit | Delivered |
 // Discrepancy`; `ShipmentLifecycle` is `Booked | Shipped | Arrived | Cancelled`.
-// They share NO member (asserted in `sdc/shipmentAxes.test.ts`), but the ASN
+// They share NO member (asserted in `sdc/shipmentAxes.test.js`), but the ASN
 // vocabulary does report the same PHYSICAL MOVEMENT that `_ship` and `_arrive`
 // record — departure and arrival — and it reports NOTHING that means a leg was
 // called off. So:

@@ -6,7 +6,7 @@
 //
 //   1. APPLICABILITY — does this material need a halal check at all?
 //      Material grain, CLOCK-FREE, a policy determination on the master.
-//      Answered by `sdc/halal.ts:halalOf`. Wired at H2.
+//      Answered by `sdc/halal.js:halalOf`. Wired at H2.
 //   2. SEAL CHECK — did a human look at the physical seal and tick it?
 //      An inspector's attestation. Answered by `halalSealCheck` on the GR
 //      inspection draft. Wired at H2.
@@ -19,7 +19,7 @@
 //   `verifyHalalAtReceipt` is not read by the GR wizard, by any page, by any
 //   hook, or by the dispatcher. Wiring it is **H4, GATED ON `D-COMP-HALAL-4`**
 //   — the same gate that held H1 back from the receiving surface, for the same
-//   reason, stated in `sdc/halal.ts` and worth restating where the enforcement
+//   reason, stated in `sdc/halal.js` and worth restating where the enforcement
 //   would happen: enforcing a certificate check against a certificate corpus
 //   that does not exist yet is the *outage wearing compliance clothes*. R0.1
 //   (the Track-R harvest) is NOT STARTED. `halalVerification.test.js` pins the

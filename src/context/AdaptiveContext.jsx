@@ -162,7 +162,7 @@ function formatDate(date, country) {
 // ⚠️ WHAT THIS FUNCTION MAY AND MAY NOT SAY, stated so it is not re-litigated:
 // it may say a supplier operating in ID/MY faces a halal certification regime.
 // It may NOT say a given MATERIAL needs a halal check — that is `halalOf`
-// (`services/sdc/halal.ts`), it is keyed on a material code, and this function
+// (`services/sdc/halal.js`), it is keyed on a material code, and this function
 // is not given one. Reshaping it to "read the master" would have required
 // inventing a category→material join, which is the fabrication the whole arc
 // refuses. **NO BEHAVIOUR CHANGES TODAY** — the function still has zero

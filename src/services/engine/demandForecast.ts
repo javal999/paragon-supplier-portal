@@ -28,7 +28,7 @@
 //      computed beside it; the choice between the two is E14-10's (BR-05).
 //      Both apply the brand's calendar index of PTI's demand events (payday,
 //      double-date, Christmas, Ramadan and the weeks before it), each event's
-//      factor estimated from history (`eventCalendar.ts`, ENG-B70 to B74).
+//      factor estimated from history (`eventCalendar.js`, ENG-B70 to B74).
 //
 // ── STOCK-OUTS (BR-06) ──────────────────────────────────────────────────────
 //   A week flagged out of stock is not demand. For the smoothing methods its
@@ -40,7 +40,7 @@
 // ── LEVELS (BR-04) ──────────────────────────────────────────────────────────
 //   Each brand and the total are forecast on their own (Comb on the sum of
 //   their SKUs' cleaned history, current SKU → brand map), then MinT-shrink
-//   reconciles (`reconcile.ts`). A SKU discontinued inside the horizon is out
+//   reconciles (`reconcile.js`). A SKU discontinued inside the horizon is out
 //   of the hierarchy from that week, and a new SKU on SAP's plan is held at
 //   it: what the level's base carried for such a SKU (its unconstrained
 //   forecast, or SAP's plan) is taken off its brand's and the total's base

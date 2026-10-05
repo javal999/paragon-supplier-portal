@@ -4,7 +4,7 @@
 // Pure functions over plain number arrays: a series in, a forecast and the
 // one-step in-sample fit out. No clock, no store, no randomness (X-01). The
 // pipeline that picks a method per SKU is `demandForecast.ts`; reconciling
-// SKU, brand and total is `reconcile.ts`.
+// SKU, brand and total is `reconcile.js`.
 //
 // ── D2 · THE FALLBACK: "COMB" AND THETA (M4 benchmark code) ─────────────────
 //   · Seasonality test: seasonal when |r_m| > 1.645 · √((1 + 2·Σ_{k<m} r_k²) / n),
@@ -24,7 +24,7 @@
 //     the first in grid order. A grid rather than a numerical optimiser so the
 //     result is exact, repeatable and portable (ENG-B61).
 //   · Comb = (SES + Holt + Damped) ÷ 3.
-//   · A calendar index of PTI's demand events (`eventCalendar.ts`), when given,
+//   · A calendar index of PTI's demand events (`eventCalendar.js`), when given,
 //     is divided out of the history before the seasonality test and
 //     multiplied back onto the forecast (owner, 2026-09-29; ENG-B61, B73).
 //   · Theta (classic): 0.5·L0 + 0.5·SES(L2), L0 the least-squares line on
@@ -240,7 +240,7 @@ export interface CombFit extends MethodFit {
 }
 
 /**
- * A multiplicative index per week (`eventCalendar.ts`): one per history week
+ * A multiplicative index per week (`eventCalendar.js`): one per history week
  * and one per forecast week. The history is divided by it before fitting and
  * the forecast multiplied by it.
  */

@@ -8,7 +8,7 @@
 // importing this module binds the policies (side effect), exactly as the
 // bindings inside `MockCommandService` itself do.
 //
-// Every judgement is a pure function in `sourcing/rfqResponse.ts`. This module
+// Every judgement is a pure function in `sourcing/rfqResponse.js`. This module
 // only gathers the facts the rule needs from the stores and hands them over,
 // so the quote grid's own gate and the verb cannot disagree.
 // ────────────────────────────────────────────────────────────────────────────

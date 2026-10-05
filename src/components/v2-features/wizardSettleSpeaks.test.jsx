@@ -242,7 +242,7 @@ const src = (rel) => fs.readFileSync(path.resolve(__dirname, rel), 'utf8');
 
 describe('§91 POPULATION — only a site that AWAITS a settle can swallow one', () => {
   // ⚠️ §86: derived from the CALL SITES' own source, never by asking the hook —
-  // a mutation in `commandHooks.ts` must not be able to collapse this population
+  // a mutation in `commandHooks.js` must not be able to collapse this population
   // and the assertions above together.
   const SITES = {
     wizard: src('./GRInspectionWizard.jsx'),

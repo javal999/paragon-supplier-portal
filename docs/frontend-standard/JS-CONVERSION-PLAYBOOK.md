@@ -83,11 +83,11 @@ Two kinds of failure in the dry run are not tooling problems:
   `daysToImpact` before `}`. A write matcher keyed on a trailing comma misses that shape.
 - Helpers that read either form: `src/test/declaredFields.js`; `declaredType`, `declaredAlias`,
   `importsOf` in `src/lib/enforcement.test.js`; `deriveInterfaceMembers` (+ its spec) in
-  `src/services/contracts/__tests__/deriveC1Surface.ts` for interface-or-typedef members.
+  `src/services/contracts/__tests__/deriveC1Surface.js` for interface-or-typedef members.
 - B4: `dayCounts.js` JSDoc type-literal members count only at line start (parity with the TS
   regex); `storedFieldGate/derive.js` skips a JS constructor assignment to a member a base type
   already declares (`this.name = …` on an `Error` subclass); `unionMembers()` in
-  `complianceSapSync.test.js`; `deriveMethodParams` / `deriveUnionLiterals` in `deriveC1Surface.ts`.
+  `complianceSapSync.test.js`; `deriveMethodParams` / `deriveUnionLiterals` in `deriveC1Surface.js`.
 - **Known loss, by design for now — `readonly`.** JSDoc `@property` cannot express `readonly`, so
   an interface converted to `@typedef {object}` + `@property` loses its `readonly` markers (code
   that writes such a field is no longer flagged). No behaviour changes; the types are looser. A

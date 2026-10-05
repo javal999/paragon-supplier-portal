@@ -308,7 +308,7 @@ export const SHOULD_COST_MATERIALS = [
     id: 'sc-pp-cap',
     name: 'PP caps/closures',
     // CP-2 · 2B-1 (R-1) — MOVED MG-20 -> MG-21. `MG-21` means CLOSURES
-    // everywhere now (registry: `sdc/materialGroups.ts`), and leaving the
+    // everywhere now (registry: `sdc/materialGroups.js`), and leaving the
     // taxonomy's own closure basket in the rigid-plastic group would have left
     // `MG-COLLISION-21-01` running in the other direction: a PP cap MG-20 here,
     // a flip-top cap MG-21 in the master. Same functional class, two groups.

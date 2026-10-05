@@ -236,7 +236,7 @@ const categoryLabel = (t: TFunction, c: RFQCategory): string =>
 const CATEGORY_OPTIONS: readonly RFQCategory[] = RFQ_CATEGORY_OPTIONS;
 
 // Material G2 (AR-17) — `CATEGORY_TO_SUPPLIER_CATEGORY` moved to
-// `services/sourcing/sourcingType.ts`: the invitee pool and the sourcing type
+// `services/sourcing/sourcingType.js`: the invitee pool and the sourcing type
 // read the one list.
 
 const MATERIAL_CATALOG: Record<RFQCategory, string[]> = {

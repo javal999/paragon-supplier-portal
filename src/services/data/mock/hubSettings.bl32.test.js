@@ -221,10 +221,10 @@ describe('BL32-POP · the population of rule values is derived from the config m
   it('BL32-POP-01 · the config modules are found — known-true present, known-false absent', () => {
     const paths = CONFIG_MODULES.map((f) => f.path);
     expect(paths).toContain('src/services/transitions/callOffTolerance.js');
-    expect(paths).toContain('src/services/sourcing/complianceGateConfig.ts');
+    expect(paths).toContain('src/services/sourcing/complianceGateConfig.js');
     expect(paths).toEqual([
-      'src/services/sourcing/complianceGateConfig.ts',
-      'src/services/sourcing/rfxConfig.ts',
+      'src/services/sourcing/complianceGateConfig.js',
+      'src/services/sourcing/rfxConfig.js',
       'src/services/transitions/callOffTolerance.js',
       'src/services/transitions/forecastConfig.ts',
       'src/services/transitions/fulfilmentConfig.js',
@@ -254,7 +254,7 @@ describe('BL32-POP · the population of rule values is derived from the config m
     // Rule values: none left. What remains is structure, master data, lists
     // and the RFx library — the reason is written beside each in its module.
     expect(byModule['src/services/transitions/callOffTolerance.js']).toEqual([]);
-    expect(byModule['src/services/sourcing/complianceGateConfig.ts']).toEqual([]);
+    expect(byModule['src/services/sourcing/complianceGateConfig.js']).toEqual([]);
     expect(byModule['src/services/transitions/fulfilmentConfig.js']).toEqual([
       'RECEIPT_QTY_TOLERANCE_BY_MATERIAL'
     ]);
@@ -270,7 +270,7 @@ describe('BL32-POP · the population of rule values is derived from the config m
       ])
     );
     // Known-false: the RFx library is Procurement's (CE-05: changed by IT on request), not a rule value.
-    expect(byModule['src/services/sourcing/rfxConfig.ts']).toContain('PURCHASING_GROUPS');
+    expect(byModule['src/services/sourcing/rfxConfig.js']).toContain('PURCHASING_GROUPS');
     expect(HUB_SETTINGS.map((d) => d.key)).not.toContain('PURCHASING_GROUPS');
   });
 
@@ -347,7 +347,7 @@ describe('BL32-READ · every reader of a value reads it through its accessor, at
         'src/services/transitions/hubSettingsStore.js',
         'src/services/transitions/inventoryConfig.js'
       ]
-        .concat(['src/services/sourcing/complianceGateConfig.ts'])
+        .concat(['src/services/sourcing/complianceGateConfig.js'])
         .sort()
     );
     // Known-false: no page reads the store behind the accessors' back.
@@ -402,12 +402,12 @@ describe('BL32-READ · every reader of a value reads it through its accessor, at
       ],
       gateMinOtifPct: [
         'src/pages-v2/rfx/rfxDisplay.tsx',
-        'src/services/sourcing/complianceGate.ts',
-        'src/services/sourcing/complianceGateConfig.ts'
+        'src/services/sourcing/complianceGate.js',
+        'src/services/sourcing/complianceGateConfig.js'
       ],
       gateNoHistoryPasses: [
-        'src/services/sourcing/complianceGate.ts',
-        'src/services/sourcing/complianceGateConfig.ts'
+        'src/services/sourcing/complianceGate.js',
+        'src/services/sourcing/complianceGateConfig.js'
       ],
       leadTimeRisk: [
         'src/services/transitions/inventoryConfig.js',
@@ -419,7 +419,7 @@ describe('BL32-READ · every reader of a value reads it through its accessor, at
       ],
       coverageThresholds: [
         'src/pages-v2/BuyerCommitments.tsx',
-        'src/services/sdc/consolidation.ts',
+        'src/services/sdc/consolidation.js',
         'src/services/transitions/inventoryConfig.js',
         'src/services/transitions/inventoryRules.js'
       ],
@@ -514,7 +514,7 @@ describe('BL32-READ · every reader of a value reads it through its accessor, at
     for (const [fn, files] of Object.entries(table)) expect(callersOf(fn), fn).toEqual(files);
     // Known-true through a second door: the SDC coverage indicator never
     // imported a config module, and reads CR-03 now.
-    expect(callersOf('coverageThresholds')).toContain('src/services/sdc/consolidation.ts');
+    expect(callersOf('coverageThresholds')).toContain('src/services/sdc/consolidation.js');
     // Known-false: an admin page that shows a value does not decide with it.
     expect(callersOf('invoicePriceTolerance')).not.toContain(
       'src/pages-v2/admin/AdminWorkingCalendar.tsx'

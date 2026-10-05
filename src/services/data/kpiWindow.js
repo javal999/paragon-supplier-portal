@@ -3,7 +3,7 @@
 //
 // How many days BEFORE its date a receipt may arrive and still count as on time.
 // OTIF (CR-06 matching in `transitions/callOffRules.js`), the Hub CFOT
-// (`data/performanceRules.js`) and the engine CFOT (`engine/cfot.ts`) all read
+// (`data/performanceRules.js`) and the engine CFOT (`engine/cfot.js`) all read
 // THIS constant, so the two measures can never apply two different early rules.
 //
 // ⚠️ PROPOSED, NOT DECIDED. The early allowance is BL-56 (PQ-08, the warehouse

@@ -412,7 +412,7 @@ const contractRows = [
 // purposes it belongs to the SDC family, which is coherent WITHOUT being shifted
 // (the declared present was moved to meet it instead). Shifting it with its
 // neighbours would move its start to 2026-06-08 and strand `sa-0002`'s first two
-// releases outside their own contract. `agreementContractWindow.guard.test.ts`
+// releases outside their own contract. `agreementContractWindow.guard.test.js`
 // asserts the containment for EVERY agreement, so this ruling is checked rather
 // than trusted. The exclusion is derived from `SDC_FAMILY_CONTRACT_IDS`, never
 // re-listed here.

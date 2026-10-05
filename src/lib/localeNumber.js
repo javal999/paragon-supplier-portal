@@ -10,7 +10,7 @@
 // This lives in `lib/` (the lowest layer — imports nothing app-specific) so that
 // `services/channel`, `services/sdc`, and the `pages-v2` submit models can all
 // consume it without an import cycle. It was extracted here from the channel reply
-// parser (`services/channel/replyParser.ts`), its first consumer, which now re-
+// parser (`services/channel/replyParser.js`), its first consumer, which now re-
 // exports these symbols for back-compat.
 //
 // ── THE CONTRACT ─────────────────────────────────────────────────────────────
