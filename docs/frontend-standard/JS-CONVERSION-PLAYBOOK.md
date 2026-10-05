@@ -62,13 +62,14 @@ Two kinds of failure in the dry run are not tooling problems:
    matcher taught the JSDoc form, with a known-good and known-bad probe, folder by folder as the
    files it reads convert.
 2. **The ratified contracts** (`docs/contracts/C1`, `C3`, `C9`, `C11`, `C12`) cite 43 source
-   files by path and describe TypeScript declarations; specs pin those citations. `CLAUDE.md`
-   records that a contract changes only by re-ratification with SOMO. **Recommendation, pending
-   the owner:** treat the contract-cited files like forecast — they stay TypeScript until their
-   contracts are re-ratified — rather than let a tooling change move a governed document.
-   `src/services/data/types.ts` is also one of them, and it holds two runtime enums
-   (`POStatus`, `ChannelType`), which conflicts with the earlier "keep it as `types.d.ts`" ruling
-   (a `.d.ts` file cannot hold runtime values).
+   files by path and describe TypeScript declarations; specs pin those citations. **Owner
+   ruling (2026-10-05): follow the boilerplate fully — the contract-cited files convert too.**
+   `CLAUDE.md` records that a contract changes only by re-ratification with SOMO, so the PR that
+   converts a cited file also amends the contract's citations (`.ts` → `.js`, declarations
+   described in their JSDoc form) and is flagged **needs SOMO ratification before merge**.
+   `src/services/data/types.ts` converts to `types.js` as well (its two runtime enums,
+   `POStatus` and `ChannelType`, become frozen objects with a typedef); this replaces the
+   earlier "keep it as `types.d.ts`" ruling, since a `.d.ts` file cannot hold runtime values.
 
 ## Phase 3 pilot history
 
