@@ -140,7 +140,7 @@ const LanguageMenu = () => {
         <ChevronDown size={14} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
 
-      {open ? (
+      {open && (
         <div
           role="menu"
           aria-label={t('topbar.language')}
@@ -165,7 +165,7 @@ const LanguageMenu = () => {
                 }`}
               >
                 <span className="w-4 flex-shrink-0" aria-hidden="true">
-                  {isCurrent ? <Check size={14} className="text-action" /> : null}
+                  {isCurrent && <Check size={14} className="text-action" />}
                 </span>
                 <span className="flex-1">{lang.autonym}</span>
                 <span className="text-text-tertiary text-xs font-medium">{lang.short}</span>
@@ -173,7 +173,7 @@ const LanguageMenu = () => {
             );
           })}
         </div>
-      ) : null}
+      )}
     </div>
   );
 };

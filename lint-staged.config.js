@@ -8,7 +8,15 @@
 // language while the portal moves from TypeScript to JavaScript:
 //
 //   · JavaScript in src/ (converted code): auto-fix with ESLint, then format
-//     with Prettier — exactly the boilerplate's behaviour.
+//     with Prettier — the boilerplate's behaviour, with ONE rule's auto-fix
+//     switched off: `react/jsx-no-leaked-render`. Its fix rewrites `a && b`
+//     inside JSX as `a ? b : null`, which CHANGES BEHAVIOUR — `{0 && <X/>}`
+//     stops rendering "0", and in an attribute `checked={a && b}` becomes
+//     `null` instead of `false`, which turns a controlled checkbox into an
+//     uncontrolled one. It rewrote every flagged site, unseen, during the
+//     Phase 4 conversion (found 2026-10-05; all reverted to `&&`). The rule
+//     still REPORTS — as a warning under the `lint.maxWarnings` ceiling — so
+//     each site is fixed by a person, on purpose, in its own change.
 //   · TypeScript in src/ (not yet converted): ESLint WITHOUT --fix and no
 //     Prettier. Auto-fixing or reformatting a .ts file would bury a small
 //     change under whole-file churn; those files are formatted when their
@@ -24,7 +32,7 @@
 // ════════════════════════════════════════════════════════════════════════════
 
 export default {
-  'src/**/*.{js,jsx}': ['eslint --fix', 'prettier --write'],
+  'src/**/*.{js,jsx}': ['eslint --fix --rule "react/jsx-no-leaked-render: off"', 'prettier --write'],
   'src/**/*.{ts,tsx}': ['eslint'],
   '{gate,scripts}/**/*.{js,mjs}': ['eslint'],
   '*.{js,mjs,cjs}': ['eslint']
