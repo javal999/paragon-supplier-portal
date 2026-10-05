@@ -209,6 +209,32 @@ function typeExprOf(e, sf) {
   return null;
 }
 
+/**
+ * `@template` lines and the `<T, …>` argument list for a re-exported type, read
+ * from its original declaration: `export type { Of } from './types'` where `Of<T>`
+ * is generic must become `@template T @typedef {import('./types').Of<T>} Of`.
+ */
+function reexportTemplate(nameNode) {
+  let sym = checker.getSymbolAtLocation(nameNode);
+  if (sym && sym.flags & ts.SymbolFlags.Alias) sym = checker.getAliasedSymbol(sym);
+  const decl = sym?.declarations?.find((d) => d.typeParameters?.length || ts.isJSDocTypedefTag(d));
+  const tps = decl?.typeParameters ?? (decl && ts.isJSDocTypedefTag(decl) ? ts.getEffectiveTypeParameterDeclarations(decl) : []);
+  if (!tps || tps.length === 0) return { tags: [], args: '' };
+  const dsf = decl.getSourceFile();
+  return {
+    tags: tps.map((tp) => {
+      // In a JSDoc typedef the constraint sits on the `@template {C} T` tag.
+      const c = tp.constraint
+        ? tp.constraint.getText(dsf)
+        : tp.parent && ts.isJSDocTemplateTag(tp.parent) && tp.parent.constraint
+          ? tp.parent.constraint.getText(dsf).replace(/^\{|\}$/g, '')
+          : null;
+      return `@template ${c ? `{${c}} ` : ''}${tp.default ? `[${tp.name.text}=${tp.default.getText(dsf)}]` : tp.name.text}`;
+    }),
+    args: `<${tps.map((tp) => tp.name.text).join(', ')}>`,
+  };
+}
+
 /** A type the checker names, only if every name in it resolves at `node`. */
 function nameableType(type, node) {
   const text = checker.typeToString(type, node, ts.TypeFormatFlags.NoTruncation | ts.TypeFormatFlags.UseAliasDefinedOutsideCurrentScope);
@@ -355,7 +381,10 @@ function convert(sf) {
         const [orig, , local = orig] = spec.split(' ');
         if (reexported.has(local)) {
           typeNames.splice(typeNames.indexOf(spec), 1);
-          tags.push(`/** @typedef {import('${modPath}').${orig}} ${local} */`);
+          const el = ic.namedBindings.elements.find((x) => x.name.text === local);
+          const g = reexportTemplate(el.name);
+          const typedef = `@typedef {import('${modPath}').${orig}${g.args}} ${local}`;
+          tags.push(g.tags.length ? `/**\n${[...g.tags, typedef].map((l) => ` * ${l}`).join('\n')}\n */` : `/** ${typedef} */`);
         }
       }
       if (defaultAsType) tags.push(`/** @import ${defaultAsType} from ${mod} */`);
@@ -381,7 +410,11 @@ function convert(sf) {
       if (typeEls.length === 0) continue;
       const keep = all.filter((e) => !typeEls.includes(e)).map((e) => e.getText(sf));
       const lines = st.moduleSpecifier
-        ? typeEls.map((e) => `/** @typedef {import(${st.moduleSpecifier.getText(sf)}).${(e.propertyName ?? e.name).text}} ${e.name.text} */`)
+        ? typeEls.map((e) => {
+            const g = reexportTemplate(e.propertyName ?? e.name);
+            const typedef = `@typedef {import(${st.moduleSpecifier.getText(sf)}).${(e.propertyName ?? e.name).text}${g.args}} ${e.name.text}`;
+            return g.tags.length ? `/**\n${[...g.tags, typedef].map((l) => ` * ${l}`).join('\n')}\n */` : `/** ${typedef} */`;
+          })
         : []; // a local type is already exported by its @typedef
       if (keep.length) lines.push(`export { ${keep.join(', ')} }${st.moduleSpecifier ? ` from ${st.moduleSpecifier.getText(sf)}` : ''};`);
       rep(st.getStart(sf), st.end, lines.join('\n'));
@@ -705,7 +738,7 @@ function convert(sf) {
         ins(init.end, ')');
       } else if (callee === 'querySelector' || callee === 'closest') castResult(`${args[0]} | null`);
       else if (callee === 'querySelectorAll') castResult(`NodeListOf<${args[0]}>`);
-      else if (['toEqual', 'toBe', 'each', 'freeze', 'fn', 'mocked'].includes(callee)) {
+      else if (['toEqual', 'toBe', 'freeze', 'fn', 'mocked'].includes(callee)) {
         /* type arguments that only narrow a test helper: dropping them is safe */
       } else if (isEntityChain(node.expression)) {
         // Any other generic call: cast the CALLEE to its instantiation,

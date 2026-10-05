@@ -5,7 +5,7 @@
 // FIND-05. Lead time is the portal's second LIVE-scored axis
 // (`CRITERIA_WEIGHTS.leadTime` = 0.2) and, since 2e-b-1, it is scored on an
 // ABSOLUTE scale where fewer days is better and zero is the best possible value
-// (`quoteScore.ts` → `leadTimeScoreFor`). That makes every fabricated zero on
+// (`quoteScore.js` → `leadTimeScoreFor`). That makes every fabricated zero on
 // this path a maximum score handed to a supplier who never promised it — a
 // parse artifact deciding a buyer's recommendation.
 //

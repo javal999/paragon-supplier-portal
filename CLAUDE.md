@@ -596,7 +596,7 @@ never as a standalone batch:
     unions / 580 members** across `src/` and registered 18 of them / 66 terms;
     **125 remain** as GL-0b's worklist. The figure is GL-0's derivation, named
     here rather than restated as if freshly measured (§27).
-  - **The 29 stored-field allowlist rows** (`src/lib/storedFieldGate/allowlist.ts`
+  - **The 29 stored-field allowlist rows** (`src/lib/storedFieldGate/allowlist.js`
     — 29 `key:` entries, derived at read time). Each is a stored field carrying a
     stated reason instead of a reader; the list can only ever shrink truthfully.
   - **R1d.** ⚠️ Parked as named, with a caveat that belongs in the parking
@@ -678,7 +678,7 @@ nav groups under one neutral key, `nav.glossary`.
   The old burnt `#B45309` is retired from the token; `CHART_SEMANTIC.warning`
   (chart strokes / flow-band fills with white text) is a separate concern.
 - TARGET/KPI bars are ONE system (DP2-TARGET-01), centralized in
-  `chartPalette.ts`: `targetStatus(pct, target, nearBand=10)` →
+  `chartPalette.js`: `targetStatus(pct, target, nearBand=10)` →
   meeting | near | missing, and `TARGET_STATUS` gives the fill/text colour
   (meeting = success, near = the DP2-WARN-01 amber split, missing = danger).
   Every target bar renders via the shared `<TargetBar>` primitive — fill +
@@ -688,7 +688,7 @@ nav groups under one neutral key, `nav.glossary`.
   KPI colour consts are gone. Pass-warn-fail cells (Analytics) and the supplier
   dashboard perf bars derive from the same helper (target 90). Grade A–D ramps
   are a separate axis, not yet unified here.
-- Charts consume ONE ordered series ramp from `src/lib/chartPalette.ts`
+- Charts consume ONE ordered series ramp from `src/lib/chartPalette.js`
   (`CHART_SERIES`: teal → navy → teal-tint → navy-tint → neutral grey). No
   rainbow donuts, no per-page ad-hoc hex. Migrate chart colors opportunistically
   per touched page (SupplierPerformance is the first natural migrant).
@@ -1254,7 +1254,7 @@ reachability cannot answer (a mapped const always renders) the reason is stated
 AT THE SITE via the tree's existing `i18n-defer:` convention, which cannot go
 stale because it is the same bytes as the code it acquits — **and which is
 UNVERIFIED, buying a stated reason and a visible diff, never enforcement.**
-`grandfathered.ts` carries the consts that predate the gate as a bilateral set
+`grandfathered.js` carries the consts that predate the gate as a bilateral set
 that can only shrink; it is the S2 worklist, not an exemption.
 
 ### And the rule beside all of them: A REGISTER ENTRY IS NOT A DELIVERABLE
@@ -1307,7 +1307,7 @@ over everything else combined, and it grew that way in six weeks.
 The owner ruled the portal moves to JavaScript + JSDoc to match the company React
 boilerplate. Converted so far: `src/components/ui-v2` (pilot) and the app shell
 (`src/` root files, `hooks`, `context`, `router`, `test`, `data`, `components/*`;
-Phase 4 B1). Before converting a
+Phase 4 B1) and `src/lib` (B2). Before converting a
 folder, follow `docs/frontend-standard/JS-CONVERSION-PLAYBOOK.md`: the draft tool
 deletes comments and loosens types, and `scripts/codemods/check-comments-kept.mjs`
 must report 0 lost. Any spec or gate that scans files uses `src/test/sourceFiles.js`

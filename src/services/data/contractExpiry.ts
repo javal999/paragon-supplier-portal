@@ -6,7 +6,7 @@
 //
 // ── WHAT THIS RETIRES ───────────────────────────────────────────────────────
 //   `contract/Expiring` and `contract/Expired` were `stored-in-fixtures` in
-//   `projectionGate/displayStates.ts`, and the page around them carried FIVE
+//   `projectionGate/displayStates.js`, and the page around them carried FIVE
 //   duplicated clock predicates at THREE different widths plus one predicate
 //   with no clock at all. Measured on the rendered page at 2026-09-08:
 //
@@ -24,7 +24,7 @@
 //   deadline has arrived. `Contract.noticeRequiredDays` is already an authored
 //   per-row term ({30, 60, 90} across the fixture), already collected by the
 //   create wizard behind an honest refusal, already classified in
-//   `projectionGate/dayCounts.ts` as `not-a-clock-difference` — *"A contract
+//   `projectionGate/dayCounts.js` as `not-a-clock-difference` — *"A contract
 //   TERM … No clock endpoint"*, where it serves as one of that gate's acquittal
 //   CONTROLS — and already rendered to a reader: `contractView`'s
 //   renewal-decision timeline step shows `endDate − noticeRequiredDays` as the

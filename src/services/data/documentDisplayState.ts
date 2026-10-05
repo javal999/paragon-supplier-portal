@@ -44,14 +44,14 @@
 //   inventing it.
 //
 // ── ⚠️ AND IT DELIBERATELY PRODUCES NO UNION STRING ─────────────────────────
-//   `projectionGate/derive.ts` classifies a display state by grepping its
+//   `projectionGate/derive.js` classifies a display state by grepping its
 //   OWNING files for a write (`status: 'X'` · `return 'X'` · `= 'X'`).
 //   `supplierDocument`'s ownership is `/supplierDocuments|supplierDocumentStore|
 //   SupplierDocuments/`, so `SupplierDocuments.tsx` and the page's i18n
 //   fragment are both in scope. This module returns TOKENS and the labels are
 //   the platform's existing `status.*` keys, so after this batch the string
 //   `'Expiring Soon'` still comes from exactly two places — the two fixture
-//   rows — and `displayStates.ts`'s `stored-in-fixtures` row stays literally
+//   rows — and `displayStates.js`'s `stored-in-fixtures` row stays literally
 //   true.
 //   **That is a consequence of the vocabulary being separate, not a way around
 //   the gate**: the day the fixture literal is retired, the row becomes
@@ -134,14 +134,14 @@ export function documentDisplayState(
  * `documentState.*` fragment with hand-written ID values and got `Under Review`
  * wrong — *Dalam Peninjauan* against the tree's *Sedang Ditinjau* — which is a
  * silent copy change dressed as a refactor. Derived instead, through
- * `statusLabelKey`: all six labels resolve in `statusLabel.ts`, in BOTH
+ * `statusLabelKey`: all six labels resolve in `statusLabel.js`, in BOTH
  * locales, **including `Expired`** (`status.expired` → EN *Expired* / ID
  * *Kedaluwarsa*) — the one this batch most expected to have to invent, because
  * #316 retired the union MEMBER. It retired a member, not a word: the label
  * outlived it, which is the difference between a vocabulary and a type.
  *
  * Pointing at the canonical keys rather than copying their values is also what
- * stops this map drifting from `statusLabel.ts` the first time a translation is
+ * stops this map drifting from `statusLabel.js` the first time a translation is
  * corrected in one place.
  */
 export const DISPLAY_STATE_LABEL_KEY: Readonly<

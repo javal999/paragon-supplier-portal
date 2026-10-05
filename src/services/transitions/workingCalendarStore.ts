@@ -21,7 +21,7 @@
 // ⚠️ **ONE CALENDAR IN FORCE, AND EVERY DEADLINE READS IT HERE.**
 // `hubWorkingCalendar()` is the calendar the PO response deadline, the call-off
 // confirmation deadline and the forecast commitment deadlines (CR-26) all count
-// working days on. `hubCalendarReaders.guard.test.ts` derives the modules that
+// working days on. `hubCalendarReaders.guard.test.js` derives the modules that
 // do working-day arithmetic from source and refuses any that reaches past this
 // function to the frozen base — a ruling that moved one deadline and not
 // another would be two calendars, which is what Q-18 ruled out.

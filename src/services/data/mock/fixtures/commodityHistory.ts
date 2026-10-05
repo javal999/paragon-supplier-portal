@@ -2,7 +2,7 @@
 // CI-1.5 — Vendored commodity HISTORY for the calibration & backtest gate.
 //
 // ── ⚠️ HEADLESS BY DESIGN. ITS ONLY READER IS THE BACKTEST HARNESS ──────────
-//   No page, hook or service reads this fixture; `lib/shouldCostBacktest.ts` is
+//   No page, hook or service reads this fixture; `lib/shouldCostBacktest.js` is
 //   its sole importer, and that module is itself headless. A retirement census
 //   (R1, 2026-08-12) surfaced the PAIR as dead weight — 587 lines between them —
 //   and the operator RULED THEM KEPT (`UNUSED-IS-NOT-USELESS-01`, findings §25).

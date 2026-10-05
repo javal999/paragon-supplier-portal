@@ -57,7 +57,7 @@ import {
 // does not carry: `trigger: 'user'` says a person does it, never why a person
 // would. So PF-2 authors one sentence per machine and per verb —
 // `services/transitions/annotations.ts` for the keys, `lib/i18n/
-// processFlowPurpose.ts` for the words, bilaterally pinned to `getKnownFlows()`
+// processFlowPurpose.js` for the words, bilaterally pinned to `getKnownFlows()`
 // in both directions.
 //
 // The prose is fenced by the rule it ships under: NO PURPOSE RESTATES A MACHINE

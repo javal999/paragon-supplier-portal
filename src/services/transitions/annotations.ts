@@ -13,7 +13,7 @@
 // ── ⚠️ AUTHORED PROSE, KEYED BY DERIVED IDENTITY ────────────────────────────
 //   The annotation is NOT the sentence. It is an i18n KEY hung on a transition
 //   id (or an entity key) that the registry already owns. The prose itself lives
-//   in `lib/i18n/processFlowPurpose.ts`, in both languages, and nothing here can
+//   in `lib/i18n/processFlowPurpose.js`, in both languages, and nothing here can
 //   be read without going through the translation layer. Consequences:
 //     · a purpose can never be English-only (MARKER-I18N-HOLE-01), and
 //     · the annotation layer stays DATA — inspectable, testable, and pinnable

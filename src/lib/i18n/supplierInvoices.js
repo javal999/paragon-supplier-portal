@@ -1,0 +1,250 @@
+// SupplierInvoices i18n fragment (Batch 5). Namespace: supplierInvoices.*
+// Flat dot-keys, mirrors src/lib/i18n.js. Wired into i18n.js by the operator
+// (import + spread into both en/id translation objects + add to the FRAGMENTS
+// array in fragments.test.js).
+// Count-dependent phrases use explicit `.one` / `.other` sibling keys selected
+// in-component by a `count === 1` ternary (no reliance on the i18next plural
+// resolver, matching the flat-key convention already shipped in i18n.js).
+// Invoice STATUS chips (Draft / Pending Approval / Approved / Payment Released /
+// Remittance Received / Overdue / Disputed) render through <StatusPill>, which
+// localizes centrally via statusLabel.js — they are NOT re-keyed here. Mutation
+// toasts already live under the seeded `invoice.*` namespace in i18n.js and are
+// left untouched; only the inline scaffolding toasts (export / resolve / PDF)
+// are keyed here. Mono DATA (invoice/PO numbers, IDR amounts, dates, SAP refs,
+// channel enum, buyer/bank fixture values) is never translated.
+/** @type {Record<string, string>} */
+export const supplierInvoicesEn = {
+  // — Breadcrumb —
+  'supplierInvoices.crumb.settle': 'SETTLE',
+  'supplierInvoices.crumb.invoices': 'MY INVOICES',
+  // — Page header —
+  'supplierInvoices.header.title': 'My Invoices',
+  'supplierInvoices.header.subtitle':
+    'Submit and track invoices · view payment status and remittance advice — {{supplier}}.',
+  'supplierInvoices.action.export': 'Export',
+  // — Meta line (count sibling; trailing <Data> date rendered after the phrase) —
+  'supplierInvoices.meta.summary.one': '{{count}} invoice · last submitted',
+  'supplierInvoices.meta.summary.other': '{{count}} invoices · last submitted',
+  // — KPI cards —
+  'supplierInvoices.kpi.received.eyebrow': 'Payments Received',
+  'supplierInvoices.kpi.pending.eyebrow': 'Pending Payment',
+  'supplierInvoices.kpi.disputed.eyebrow': 'Returned',
+  'supplierInvoices.kpi.invoiceCount.one': '{{count}} invoice',
+  'supplierInvoices.kpi.invoiceCount.other': '{{count}} invoices',
+  // — Dispute banner (label <strong> · <Data> numbers · body) —
+  'supplierInvoices.banner.dispute.label': 'Returned by Finance: ',
+  'supplierInvoices.banner.dispute.body': '— correct the invoice and resubmit it.',
+  // — Table columns —
+  'supplierInvoices.table.invoiceNo': 'Invoice #',
+  'supplierInvoices.table.poRef': 'PO ref',
+  'supplierInvoices.table.amount': 'Amount',
+  'supplierInvoices.table.status': 'Status',
+  'supplierInvoices.table.dueDate': 'Due date',
+  'supplierInvoices.table.paymentDate': 'Payment date',
+  'supplierInvoices.table.action': 'Action',
+  'supplierInvoices.table.via': 'via {{channel}}',
+  // — Row actions —
+  'supplierInvoices.action.remittance': 'Remittance',
+  'supplierInvoices.action.resolve': 'Resolve',
+  'supplierInvoices.action.view': 'View',
+  // — Inline scaffolding toasts (mutation toasts stay under invoice.*) —
+  'supplierInvoices.toast.export.title':
+    'Invoice report not available yet — no file was downloaded.',
+  'supplierInvoices.toast.resolve.title': 'Dispute resolution not available yet',
+  'supplierInvoices.toast.resolve.desc':
+    'Nothing was changed — contact your Paragon Finance Controller to resolve this dispute.',
+  'supplierInvoices.toast.downloadPdf.title':
+    'Remittance advice not available yet — no PDF was downloaded.',
+  // — Ariba info banner (interleaved <strong>) —
+  'supplierInvoices.ariba.pre': 'Full e-invoicing with ',
+  'supplierInvoices.ariba.strong': 'SAP Ariba integration',
+  'supplierInvoices.ariba.post': ' is planned for Phase 2 of the Paragon Odyssey program.',
+  // — Side panel (detail) —
+  'supplierInvoices.panel.detail.title': 'Invoice {{invoiceNumber}}',
+  'supplierInvoices.panel.close': 'Close',
+  'supplierInvoices.panel.viewRemittance': 'View remittance',
+  'supplierInvoices.panel.downloadPdf': 'Download PDF',
+  // — Section headings —
+  'supplierInvoices.section.keyFacts': 'Key facts',
+  'supplierInvoices.section.lifecycle': 'Payment lifecycle',
+  'supplierInvoices.section.remittance': 'Remittance advice',
+  // — Payment-lifecycle timeline (event titles + step timestamps) —
+  'supplierInvoices.timeline.submitted': 'Invoice submitted',
+  'supplierInvoices.timeline.pending': 'Pending approval',
+  'supplierInvoices.timeline.approved': 'Approved',
+  'supplierInvoices.timeline.released': 'Payment released',
+  'supplierInvoices.timeline.received': 'Remittance received',
+  'supplierInvoices.timeline.cleared': 'Cleared',
+  'supplierInvoices.timeline.disputed': 'Disputed',
+  'supplierInvoices.timeline.confirmed': 'Confirmed',
+  // — Detail field labels (<dt>) —
+  'supplierInvoices.field.poReference': 'PO reference',
+  'supplierInvoices.field.amount': 'Amount',
+  'supplierInvoices.field.submitted': 'Submitted',
+  'supplierInvoices.field.dueDate': 'Due date',
+  'supplierInvoices.field.status': 'Status',
+  'supplierInvoices.field.channel': 'Channel',
+  'supplierInvoices.field.buyerContact': 'Buyer contact',
+  'supplierInvoices.field.bankAccount': 'Bank account',
+  'supplierInvoices.field.sapFiDoc': 'SAP FI doc',
+  'supplierInvoices.field.paymentRef': 'Payment ref',
+  'supplierInvoices.field.pending': '— pending —',
+  // — Detail state notes —
+  'supplierInvoices.note.disputed':
+    'Finance returned this invoice. Correct it and resubmit; the match runs again.',
+  'supplierInvoices.note.overdue': 'Payment is overdue. Paragon Finance has been escalated.',
+  // — Remittance section —
+  'supplierInvoices.remittance.processed':
+    'Payment has been processed and credited to your account.',
+  'supplierInvoices.remittance.invoiceNo': 'Invoice no',
+  'supplierInvoices.remittance.amountPaid': 'Amount paid',
+  'supplierInvoices.remittance.paymentDate': 'Payment date',
+  'supplierInvoices.remittance.bankCredited': 'Bank credited',
+  'supplierInvoices.remittance.reference': 'Reference',
+  'supplierInvoices.remittance.paymentNote': 'Payment note:',
+  // — New-invoice panel —
+  'supplierInvoices.new.title': 'New invoice',
+  'supplierInvoices.new.cancel': 'Cancel',
+  'supplierInvoices.new.createDraft': 'Create draft',
+  'supplierInvoices.new.intro':
+    'Invoice goods PTI has received. Choose the purchase order and its received goods receipts; save a draft or submit straight away.',
+  'supplierInvoices.new.poLabel': 'Purchase order',
+  'supplierInvoices.new.poPlaceholder': 'Select a purchase order…',
+  'supplierInvoices.new.noPos': 'No purchase orders with received goods to invoice.',
+  'supplierInvoices.new.amountLabel': 'Amount (IDR)',
+  'supplierInvoices.new.amountPlaceholder': 'e.g. 250000000',
+  // — New invoice: the amount refusals (CP-0 · W1 · 2f-d). These replace a
+  // hard-coded English literal that covered three causes in one sentence.
+  'supplierInvoices.new.po.required': 'Select the purchase order this invoice is raised against.',
+  'supplierInvoices.new.amount.refused.empty':
+    'Enter the invoice amount — it is the sum being claimed, and a blank is not an amount of zero.',
+  'supplierInvoices.new.amount.refused.notNumeric':
+    'That is not an amount — type digits only, e.g. 250000000.',
+  'supplierInvoices.new.amount.refused.ambiguous':
+    'This can be read two ways — "1.500" means one thousand five hundred in Indonesian and one-point-five in English. Type it without separators: 1500.',
+  'supplierInvoices.new.amount.mustExceedZero': 'An invoice amount must be greater than zero.',
+  // — Empty state (all-empty early return) —
+  'supplierInvoices.empty.title': 'No invoices yet',
+  'supplierInvoices.empty.subtitle': 'No invoices on file for {{supplier}}.',
+  'supplierInvoices.empty.message': 'Submitted invoices and payment status will appear here.',
+  'supplierInvoices.empty.fallbackSupplier': 'this supplier'
+};
+
+/** @type {Record<string, string>} */
+export const supplierInvoicesId = {
+  // — Breadcrumb —
+  'supplierInvoices.crumb.settle': 'PENYELESAIAN',
+  'supplierInvoices.crumb.invoices': 'FAKTUR SAYA',
+  // — Page header —
+  'supplierInvoices.header.title': 'Faktur Saya',
+  'supplierInvoices.header.subtitle':
+    'Ajukan dan lacak faktur · lihat status pembayaran dan bukti pembayaran — {{supplier}}.',
+  'supplierInvoices.action.export': 'Ekspor',
+  // — Meta line —
+  'supplierInvoices.meta.summary.one': '{{count}} faktur · terakhir diajukan',
+  'supplierInvoices.meta.summary.other': '{{count}} faktur · terakhir diajukan',
+  // — KPI cards —
+  'supplierInvoices.kpi.received.eyebrow': 'Pembayaran Diterima',
+  'supplierInvoices.kpi.pending.eyebrow': 'Menunggu Pembayaran',
+  'supplierInvoices.kpi.disputed.eyebrow': 'Dikembalikan',
+  'supplierInvoices.kpi.invoiceCount.one': '{{count}} faktur',
+  'supplierInvoices.kpi.invoiceCount.other': '{{count}} faktur',
+  // — Dispute banner —
+  'supplierInvoices.banner.dispute.label': 'Dikembalikan oleh Finance: ',
+  'supplierInvoices.banner.dispute.body': '— perbaiki faktur lalu ajukan ulang.',
+  // — Table columns —
+  'supplierInvoices.table.invoiceNo': 'No. Faktur',
+  'supplierInvoices.table.poRef': 'Ref PO',
+  'supplierInvoices.table.amount': 'Jumlah',
+  'supplierInvoices.table.status': 'Status',
+  'supplierInvoices.table.dueDate': 'Jatuh Tempo',
+  'supplierInvoices.table.paymentDate': 'Tanggal Pembayaran',
+  'supplierInvoices.table.action': 'Tindakan',
+  'supplierInvoices.table.via': 'via {{channel}}',
+  // — Row actions —
+  'supplierInvoices.action.remittance': 'Bukti Pembayaran',
+  'supplierInvoices.action.resolve': 'Selesaikan',
+  'supplierInvoices.action.view': 'Lihat',
+  // — Inline scaffolding toasts —
+  'supplierInvoices.toast.export.title':
+    'Laporan faktur belum tersedia — tidak ada berkas yang diunduh.',
+  'supplierInvoices.toast.resolve.title': 'Penyelesaian sengketa belum tersedia',
+  'supplierInvoices.toast.resolve.desc':
+    'Tidak ada yang diubah — hubungi Pengawas Keuangan Paragon untuk menyelesaikan sengketa ini.',
+  'supplierInvoices.toast.downloadPdf.title':
+    'Bukti pembayaran belum tersedia — tidak ada PDF yang diunduh.',
+  // — Ariba info banner —
+  'supplierInvoices.ariba.pre': 'E-invoicing penuh dengan ',
+  'supplierInvoices.ariba.strong': 'integrasi SAP Ariba',
+  'supplierInvoices.ariba.post': ' direncanakan untuk Fase 2 program Paragon Odyssey.',
+  // — Side panel (detail) —
+  'supplierInvoices.panel.detail.title': 'Faktur {{invoiceNumber}}',
+  'supplierInvoices.panel.close': 'Tutup',
+  'supplierInvoices.panel.viewRemittance': 'Lihat bukti pembayaran',
+  'supplierInvoices.panel.downloadPdf': 'Unduh PDF',
+  // — Section headings —
+  'supplierInvoices.section.keyFacts': 'Fakta utama',
+  'supplierInvoices.section.lifecycle': 'Siklus hidup pembayaran',
+  'supplierInvoices.section.remittance': 'Bukti pembayaran',
+  // — Payment-lifecycle timeline —
+  'supplierInvoices.timeline.submitted': 'Faktur diajukan',
+  'supplierInvoices.timeline.pending': 'Menunggu persetujuan',
+  'supplierInvoices.timeline.approved': 'Disetujui',
+  'supplierInvoices.timeline.released': 'Pembayaran dirilis',
+  'supplierInvoices.timeline.received': 'Bukti pembayaran diterima',
+  'supplierInvoices.timeline.cleared': 'Selesai',
+  'supplierInvoices.timeline.disputed': 'Disengketakan',
+  'supplierInvoices.timeline.confirmed': 'Dikonfirmasi',
+  // — Detail field labels (<dt>) —
+  'supplierInvoices.field.poReference': 'Referensi PO',
+  'supplierInvoices.field.amount': 'Jumlah',
+  'supplierInvoices.field.submitted': 'Diajukan',
+  'supplierInvoices.field.dueDate': 'Jatuh tempo',
+  'supplierInvoices.field.status': 'Status',
+  'supplierInvoices.field.channel': 'Kanal',
+  'supplierInvoices.field.buyerContact': 'Narahubung pembeli',
+  'supplierInvoices.field.bankAccount': 'Rekening bank',
+  'supplierInvoices.field.sapFiDoc': 'Dokumen SAP FI',
+  'supplierInvoices.field.paymentRef': 'Ref pembayaran',
+  'supplierInvoices.field.pending': '— menunggu —',
+  // — Detail state notes —
+  'supplierInvoices.note.disputed':
+    'Finance mengembalikan faktur ini. Perbaiki lalu ajukan ulang; pencocokan dijalankan lagi.',
+  'supplierInvoices.note.overdue':
+    'Pembayaran telah jatuh tempo. Keuangan Paragon telah dieskalasi.',
+  // — Remittance section —
+  'supplierInvoices.remittance.processed':
+    'Pembayaran telah diproses dan dikreditkan ke rekening Anda.',
+  'supplierInvoices.remittance.invoiceNo': 'No. faktur',
+  'supplierInvoices.remittance.amountPaid': 'Jumlah dibayar',
+  'supplierInvoices.remittance.paymentDate': 'Tanggal pembayaran',
+  'supplierInvoices.remittance.bankCredited': 'Bank dikreditkan',
+  'supplierInvoices.remittance.reference': 'Referensi',
+  'supplierInvoices.remittance.paymentNote': 'Catatan pembayaran:',
+  // — New-invoice panel —
+  'supplierInvoices.new.title': 'Faktur baru',
+  'supplierInvoices.new.cancel': 'Batal',
+  'supplierInvoices.new.createDraft': 'Buat draf',
+  'supplierInvoices.new.intro':
+    'Tagihkan barang yang sudah diterima PTI. Pilih pesanan pembelian dan penerimaan barangnya; simpan sebagai draf atau langsung ajukan.',
+  'supplierInvoices.new.poLabel': 'Pesanan pembelian',
+  'supplierInvoices.new.poPlaceholder': 'Pilih pesanan pembelian…',
+  'supplierInvoices.new.noPos': 'Tidak ada pesanan pembelian dengan barang diterima untuk ditagih.',
+  'supplierInvoices.new.amountLabel': 'Jumlah (IDR)',
+  'supplierInvoices.new.amountPlaceholder': 'mis. 250000000',
+  // — Faktur baru: penolakan jumlah (CP-0 · W1 · 2f-d) —
+  'supplierInvoices.new.po.required': 'Pilih pesanan pembelian yang menjadi dasar faktur ini.',
+  'supplierInvoices.new.amount.refused.empty':
+    'Masukkan jumlah faktur — inilah nilai yang ditagihkan, dan kolom kosong bukan berarti jumlahnya nol.',
+  'supplierInvoices.new.amount.refused.notNumeric':
+    'Itu bukan nominal — ketik angka saja, misalnya 250000000.',
+  'supplierInvoices.new.amount.refused.ambiguous':
+    'Ini bisa dibaca dua cara — "1.500" berarti seribu lima ratus dalam bahasa Indonesia dan satu koma lima dalam bahasa Inggris. Ketik tanpa pemisah: 1500.',
+  'supplierInvoices.new.amount.mustExceedZero': 'Jumlah faktur harus lebih besar dari nol.',
+  // — Empty state (all-empty early return) —
+  'supplierInvoices.empty.title': 'Belum ada faktur',
+  'supplierInvoices.empty.subtitle': 'Tidak ada faktur untuk {{supplier}}.',
+  'supplierInvoices.empty.message':
+    'Faktur yang diajukan dan status pembayaran akan muncul di sini.',
+  'supplierInvoices.empty.fallbackSupplier': 'pemasok ini'
+};

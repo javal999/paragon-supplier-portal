@@ -56,7 +56,7 @@
 //     · `buyerCompliance.ts` c-006/c-008 store `daysRemaining: 873`, a number
 //       LAST TRUE ON 2025-04-11 and 483 days stale as of 2026-08-07;
 //     · ⚠️ **AND A SECOND EXAMPLE STOOD HERE THAT IS ITSELF A CORPSE NOW.**
-//       ⚠️ THE QUOTE BELOW MUST STAY ON ONE LINE. `projectionGate.test.ts`
+//       ⚠️ THE QUOTE BELOW MUST STAY ON ONE LINE. `projectionGate.test.js`
 //       uses this comment as its REAL-TREE witness that a write pattern inside
 //       a comment is acquitted, and it matches the token whole — it even says
 //       *"pick a new witness"* if it goes. Reflowing the quote deletes the
@@ -68,7 +68,7 @@
 //       has not expired; stored and computed agree on every row. Quoted rather
 //       than deleted because **it is a better illustration retired than it was
 //       standing**: a hand-written day-count decayed inside the very paragraph
-//       arguing that hand-written day-counts decay. `enforcement.ts` carries the
+//       arguing that hand-written day-counts decay. `enforcement.js` carries the
 //       same fact as `84 days` too, written a day apart from the widget's `116`.
 //   The `buyerCompliance.ts` corpse above is unaffected and still stands. Both
 //   were true when typed and neither has been true since. Nothing here is

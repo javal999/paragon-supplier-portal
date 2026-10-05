@@ -347,7 +347,7 @@ describe('BuyerSourcing — dates localise (COS-04, the en-GB hardcode)', () => 
 //
 // The batch widened `Quotation.currency` to the three currencies the operator
 // permits, while the should-cost engine still prices two. That gap is deliberate
-// (policy is wider than capability — see currencyPolicy.ts), and this is the
+// (policy is wider than capability — see currencyPolicy.js), and this is the
 // surface where the two meet.
 //
 // The failure being prevented is NOT a missing label. It is the coercion these

@@ -78,7 +78,7 @@ const SUP_015 = supplierSeat('sup-015', 'PT Sample Flexible Packaging');
 describe('RFx — the strings are bilingual, both directions', () => {
   it('every EN key has an ID twin, and vice versa', () => {
     expect(Object.keys(rfxEn).length).toBeGreaterThan(150); // population control
-    // ⚠️ PLURAL-AWARE, for the reason `fragments.test.ts` gives: English has a
+    // ⚠️ PLURAL-AWARE, for the reason `fragments.test.js` gives: English has a
     // `_one` form and Indonesian has only `_other`, so `rfx.rfp.proposals_one`
     // existing in EN alone is correct i18next, not a missing translation. The
     // EN `_one` of a key whose `_other` exists is dropped before comparing.

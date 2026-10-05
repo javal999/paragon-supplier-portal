@@ -7,7 +7,7 @@ import BuyerContracts from './BuyerContracts';
 
 // Batch 1 acceptance: with the UI in Indonesian, the extracted chrome renders in
 // ID and the previous hardcoded English is gone. Proves keys resolve end-to-end
-// (fragment → i18n.ts → page t()) — the programmatic stand-in for the bilingual
+// (fragment → i18n.js → page t()) — the programmatic stand-in for the bilingual
 // walkthrough. Language is restored to EN afterwards so no other suite is affected.
 const setLang = (lng: 'en' | 'id') =>
   act(async () => {

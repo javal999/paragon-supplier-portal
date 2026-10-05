@@ -38,7 +38,7 @@ import { shiftFields } from '@services/data/fixturePresent';
 // classifier so a state and its number cannot disagree.
 //
 // ⚠️ **DO NOT RE-ADD EITHER AS A FIELD.** `retiredDayFields.test.ts` asserts
-// their absence at the type AND in these bytes, and `dayCounts.ts`'s bilateral
+// their absence at the type AND in these bytes, and `dayCounts.js`'s bilateral
 // gate goes red if a `…: number;` declaration comes back unclassified.
 /**
  * @typedef {object} Shipment

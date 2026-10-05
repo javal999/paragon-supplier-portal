@@ -194,11 +194,11 @@ export const LOOSE_END_CENSUS: readonly CensusEntry[] = Object.freeze([
     reason: 'substrate-only',
     note:
       'A DEGENERATE SINGLE-STATE LEDGER MACHINE with no creation verb: the entity IS the governed ' +
-      'check, and the governed checks are a frozen closed vocabulary in `lib/enforcement.ts`, not ' +
+      'check, and the governed checks are a frozen closed vocabulary in `lib/enforcement.js`, not ' +
       'rows anybody creates. The recording verb is statePreserving, so it is neither an entry nor an ' +
       'exit, and the state is correctly declared terminal. ' +
       '⚠️ THIS NOTE DELIBERATELY DOES NOT SPELL THE VOCABULARY\'S IDENTIFIER: the enforcement ' +
-      'consumer census (`lib/enforcement.test.ts`) matches TEXT, so writing the name here would have ' +
+      'consumer census (`lib/enforcement.test.js`) matches TEXT, so writing the name here would have ' +
       'enrolled a document that imports nothing as a CONSUMER of that module. `DESCRIBE-DONT-RENDER-01` ' +
       '— name the mechanism, never render it.',
   },

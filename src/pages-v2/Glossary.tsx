@@ -54,7 +54,7 @@ import {
 //   · NO BENCHMARKS. An authored industry figure with no source is the
 //     fabricated-claims class this tree spent five batches retracting.
 //   · NO FLOW-STATE OR TRANSITION PROSE. `services/transitions/annotations.ts`
-//     + `lib/i18n/processFlowPurpose.ts` ALREADY ARE that glossary, bilaterally
+//     + `lib/i18n/processFlowPurpose.js` ALREADY ARE that glossary, bilaterally
 //     pinned to the registry. This page LINKS to Process Flows and does not
 //     restate one word of it — a second copy is the half that goes wrong
 //     silently, and that file's own header forbids it.

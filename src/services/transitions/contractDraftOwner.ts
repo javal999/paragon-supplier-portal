@@ -16,7 +16,7 @@
 //
 // ⚠️ **AND IT REFUSES TO GUESS.** `null` is returned when the verb is surfaced,
 // missing, or not-surfaced for a reason that names no owner. A fallback owner
-// would be the silent mislabel `externalFactOwner.ts` exists to forbid, one
+// would be the silent mislabel `externalFactOwner.js` exists to forbid, one
 // layer up — and a refusal that names the wrong system is worse than no refusal,
 // because a reader will go looking in it.
 //

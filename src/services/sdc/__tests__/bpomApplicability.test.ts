@@ -354,7 +354,13 @@ describe('2B-4b — the gate: WIRED, and the prefix rule is GONE', () => {
    */
   const importsTypeOnly = (text: string, spec: string): boolean => {
     const lines = text.split('\n').filter((line) => line.includes(spec));
-    return lines.length > 0 && lines.every((line) => /^\s*import type\b/.test(line));
+    // Reads BOTH forms (frontend-standard Phase 4): TypeScript `import type`
+    // and the JSDoc `@import` tag a converted `.js` file uses instead — which is
+    // type-only by construction and erases exactly as `import type` does.
+    return (
+      lines.length > 0 &&
+      lines.every((line) => /^\s*(?:import type\b|(?:\/\*\*|\*)\s*@import\b)/.test(line))
+    );
   };
 
   it('the GR wizard runs the MASTER LOOKUP, and the prefix parse is not in the file', () => {
@@ -427,21 +433,21 @@ describe('2B-4b — the gate: WIRED, and the prefix rule is GONE', () => {
     expect(callers).toEqual(['/src/components/v2-features/GRInspectionWizard.jsx']);
 
     // ⚠️ AND EXACTLY ONE TYPE-ONLY REFERENCE, NAMED (`CENSUS-COUNTS-TYPE-IMPORTS-01`).
-    // `src/lib/enforcement.ts` imports `BpomRefusalReason` to derive — at
+    // `src/lib/enforcement.js` imports `BpomRefusalReason` to derive — at
     // COMPILE TIME — the refusal shapes that sit OUTSIDE the enforcement
     // domain, so a third refusal reason authored here cannot drift in as a
     // governed verdict. It calls nothing. A SECOND type-only reference fails
     // this too: an erased import is not a wire, but it is still a coupling
     // somebody should have to look at.
     // GL-0 adds the SECOND, and this check demanded somebody look at it — so:
-    // `glossary/refusals.glossary.ts` imports `BpomRefusalReason` to pin a
+    // `glossary/refusals.glossary.js` imports `BpomRefusalReason` to pin a
     // `Record<Member, GlossaryEntry>` with `satisfies`. It calls nothing, reads
     // no master, and reaches no surface (the glossary is headless at GL-0). The
     // coupling is the POINT: it is what makes a refusal reason unable to exist
     // without a definition, and a definition unable to outlive its reason.
     expect(typeOnly).toEqual([
-      '/src/lib/enforcement.ts',
-      '/src/lib/glossary/refusals.glossary.ts',
+      '/src/lib/enforcement.js',
+      '/src/lib/glossary/refusals.glossary.js',
     ]);
 
     // ⚠️ THE LIMIT OF THIS CHECK, STATED AND UNCHANGED FROM 2B-4a: Vite's

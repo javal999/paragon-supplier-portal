@@ -37,7 +37,7 @@ import type { MaterialMaster, MaterialMasterEntry, MaterialOverlayRow, Uom } fro
 
 /** Why a material lookup cannot be answered. Never a fallback value — a unit the
  *  master cannot name is refused, in the caller's own words (the FX_UNPINNED
- *  precedent, `lib/fxPin.ts`). One reason today; the type is the extension point. */
+ *  precedent, `lib/fxPin.js`). One reason today; the type is the extension point. */
 export type MaterialRefusalReason = 'UNKNOWN_MATERIAL';
 
 /** The outcome of a canonical-unit lookup. Mirrors `QtyOutcome`

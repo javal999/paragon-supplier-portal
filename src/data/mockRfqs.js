@@ -317,7 +317,7 @@ const RAW_RFQS = [
     // ledger here was tried and re-premised three of those proofs. The cold-boot
     // pin DISPLAY lives on rfq-013 instead, which is additive and disturbs
     // nothing. Its homogeneous all-USD set also means a pin here would rank
-    // nothing anyway (quoteScore.ts:253 exempts a single-currency set).
+    // nothing anyway (quoteScore.js:253 exempts a single-currency set).
     id: 'rfq-009',
     rfqNumber: 'RFQ-2026-009',
     title: 'Propylene Glycol USP — imported, USD-quoted',

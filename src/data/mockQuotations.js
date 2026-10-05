@@ -508,7 +508,7 @@ const RAW_QUOTATIONS = [
   // The honest bid scores ZERO on price when currency is ignored (2e-c-2-FIND-01)
   // — not a small distortion, the worst possible value on the axis — and the
   // recommendation flips. The FX refusal is exactly what stands between those two
-  // rows. `quoteScore.test.ts` pins both halves.
+  // rows. `quoteScore.test.js` pins both halves.
   {
     id: 'qt-012a',
     rfqId: 'rfq-012',

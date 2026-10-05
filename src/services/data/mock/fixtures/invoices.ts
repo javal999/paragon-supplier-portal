@@ -1,7 +1,7 @@
 // ────────────────────────────────────────────────────────────────────────────
 // Canonical invoice fixtures (v2.2 Step 4 batch iii — DR-7).
 //
-// ONE canonical set. The former `supplierInvoices.ts` + `buyerInvoices.ts` were
+// ONE canonical set. The former `supplierInvoices.js` + `buyerInvoices.js` were
 // two hand-maintained projections of the SAME economic documents, and they had
 // already drifted: `INV-2025-BRL-0042` was `Payment Released` on the supplier
 // side yet `Approved` on the buyer side — the exact HALAL-XPERSONA-01 class of

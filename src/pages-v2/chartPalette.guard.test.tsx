@@ -8,7 +8,7 @@ import { isJsxFile, isTestFile, scriptKindOf } from '@test/sourceFiles';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DP2-PALETTE-01 — chart colour comes from the centralized palette
-// (`src/lib/chartPalette.ts`), never a raw hex literal in a paint position.
+// (`src/lib/chartPalette.js`), never a raw hex literal in a paint position.
 //
 // ── ⚠️ WHY THIS FILE WAS REWRITTEN (2026-09-02) ─────────────────────────────
 //   It was the OLDEST honesty instrument in the tree (2026-07-09) and the only
@@ -38,7 +38,7 @@ import { isJsxFile, isTestFile, scriptKindOf } from '@test/sourceFiles';
 //   record**, and three `GRADE_TONE: Record<Grade, …>` ramps are exactly that —
 //   consumed as CSS `border` / `color` / `backgroundColor`, never as SVG paint.
 //   `SupplierDashboard.tsx` contains ZERO SVG paint attributes; so does
-//   `chartPalette.ts`.
+//   `chartPalette.js`.
 //
 //   ⚠️ **EIGHT OF THOSE MATCHES HAD BEEN PINNED AS RATIFIED EXEMPTIONS.** The
 //   `grade-ramp` reason was a REAL DP-2 ruling recruited to excuse a MATCHER
@@ -73,7 +73,7 @@ import { isJsxFile, isTestFile, scriptKindOf } from '@test/sourceFiles';
 //   a file that starts painting is governed, and a const becomes a defect the
 //   day something paints with it — with nobody editing this file.
 //
-//   ⚠️ **`chartPalette.ts` IS NOT EXCLUDED. IT IS SCANNED AND ACQUITTED.** A
+//   ⚠️ **`chartPalette.js` IS NOT EXCLUDED. IT IS SCANNED AND ACQUITTED.** A
 //   definition is not a use: the palette declares `TARGET_STATUS.meeting.fill`
 //   and never paints with it, so a matcher that recognises only USES sees
 //   nothing there. That is a structural acquittal, asserted below — strictly
@@ -242,7 +242,7 @@ const indirectViolations = (): string[] =>
 //     · a FUNCTION RETURN — `const t = f()` is not a literal
 //   Closing any of those is a different instrument, not a wider regex.
 //
-//   REUSED from `storedFieldGate/derive.ts`: `buildRepoProgram` verbatim — the
+//   REUSED from `storedFieldGate/derive.js`: `buildRepoProgram` verbatim — the
 //   same program, the same tsconfig. DECIDED here: the value-flow walk (that
 //   module resolves symbols, which is the half that does not work for this),
 //   and the synthetic builder below, because the precedent's
@@ -453,7 +453,7 @@ describe('⚠️ DP2-PALETTE-01 · THE INSTRUMENT ITSELF', () => {
     const files = allSourceFiles();
     expect(files.length).toBeGreaterThan(200);
     // known-present, three directories deep and across the pages/components split
-    expect(files).toContain('lib/chartPalette.ts');
+    expect(files).toContain('lib/chartPalette.js');
     expect(files).toContain('pages-v2/BuyerRisk.tsx');
     expect(files).toContain('components/ui-v2/ScoreBadge.jsx');
     expect(files).toContain('pages-v2/process-flows/FlowDiagram.tsx');
@@ -486,7 +486,7 @@ describe('⚠️ DP2-PALETTE-01 · THE INSTRUMENT ITSELF', () => {
     expect(painting).toContain('pages-v2/BuyerRisk.tsx');
     expect(painting).toContain('components/ui-v2/ScoreBadge.jsx');
     // a page with no paint of any kind must NOT be in it
-    expect(painting).not.toContain('lib/chartPalette.ts');
+    expect(painting).not.toContain('lib/chartPalette.js');
   });
 });
 
@@ -495,12 +495,12 @@ describe('⚠️ DP2-PALETTE-01 · THE INSTRUMENT ITSELF', () => {
 // assumed. This is what replaces excluding the palette by path.
 // ─────────────────────────────────────────────────────────────────────────────
 describe('⚠️ DP2-PALETTE-01 · THE PALETTE IS SCANNED, NOT EXCLUDED', () => {
-  it('chartPalette.ts is IN the scanned population', () => {
-    expect(allSourceFiles()).toContain('lib/chartPalette.ts');
+  it('chartPalette.js is IN the scanned population', () => {
+    expect(allSourceFiles()).toContain('lib/chartPalette.js');
   });
 
   it('⚠️ AND CONTRIBUTES ZERO — it declares colour, it does not paint with it', () => {
-    const src = readSrc('lib/chartPalette.ts');
+    const src = readSrc('lib/chartPalette.js');
     // the control: it really does hold the shapes the OLD matcher condemned
     expect(src, 'vacuous if TARGET_STATUS has gone').toMatch(/meeting:\s*\{\s*fill:\s*'#/);
     expect(paintHexHits(src)).toEqual([]);

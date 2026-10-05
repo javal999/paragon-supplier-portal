@@ -3,7 +3,7 @@
 // award ranking.
 //
 // This is the sharpest path in the series. A quotation's `unitPrice` is not
-// merely recorded — `scoreQuotations` (lib/quoteScore.ts) anchors `minPrice`
+// merely recorded — `scoreQuotations` (lib/quoteScore.js) anchors `minPrice`
 // across the WHOLE RFQ set, so one misread price does not mis-score itself, it
 // re-scores every rival against a price nobody offered. The false-deficit chain
 // accuses a supplier; this one hands a contract to the wrong one.

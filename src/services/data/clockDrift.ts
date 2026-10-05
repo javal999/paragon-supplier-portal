@@ -124,7 +124,7 @@
 //
 // ── ⚠️ BOUND-NESS IS DERIVED UPSTREAM OF THIS MODULE, NOT DECLARED IN IT ────
 //   A family is drift-bound iff a reader can still SEE one of its stored
-//   clock-states — which is exactly what `projectionGate/displayStates.ts`
+//   clock-states — which is exactly what `projectionGate/displayStates.js`
 //   already declares, bilaterally and mutation-probed, as `stored-in-fixtures`.
 //   Reading it from there rather than restating it here means **obligation left
 //   the bound set the moment its rows became `computed-at-read`, with nobody
@@ -158,7 +158,7 @@ const diffDays = (a: string, b: string): number =>
  * tests `window === null` — it has never tested for stored states, and it is
  * checked BEFORE the stored-state branch. `shipment` declares no window AND
  * carries a reader-visible stored clock state (`Delayed`,
- * `projectionGate/displayStates.ts`), so `npm run drift` printed:
+ * `projectionGate/displayStates.js`), so `npm run drift` printed:
  *
  * ```
  *   shipment   9   —   —   no-stored-clock-state   Delayed
@@ -342,7 +342,7 @@ export function falsifiedFamilies(
  *
  * ⚠️ **AND IT IS NOT EMPTY TODAY, WHICH IS WHY THIS IS WRITTEN NOW
  * RATHER THAN THEN.** `shipment` keeps the population non-empty on its own
- * (`displayStates.ts`), so the footer below is unreachable from the shipped
+ * (`displayStates.js`), so the footer below is unreachable from the shipped
  * data and is probed directly instead — the same reason `driftVerdict` was
  * extracted as a function. **No membership is written here**: `driftReport`
  * derives it every run, and `clockDrift.test.ts` asserts the WAITING line

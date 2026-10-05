@@ -201,7 +201,7 @@ internal Grid producer** — a Grid-pushed line carries `null` (`fixtures/prInta
 > **Name drift (D-7), for SOMO's emitter.** This document previously called the lane field
 > `sourceDestinationLane`. The shipped field is **`suggestedSource`** (`types.ts:640`) and it
 > holds a **source→destination lane**, not a source — e.g. `'Cikarang DC → Karawang Plant'`
-> (`fixtures/prIntake.ts:21`). The UI labels it "Source lane" (`i18n/intakeReview.ts:25`). The
+> (`fixtures/prIntake.ts:21`). The UI labels it "Source lane" (`i18n/intakeReview.js:25`). The
 > type name is the only place it reads as a single source; **the name is wrong, the body is
 > right.** Conform to the NAME `suggestedSource` carrying LANE semantics. C8 reuses the same
 > name for the same thing (`sdc/types.ts:138`), so the two seams are at least consistent.

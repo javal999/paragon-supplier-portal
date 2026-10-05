@@ -40,7 +40,7 @@ const TS_ONLY_SHAPES = [
 /**
  * Lines that pass: the language-neutral forms, and a line carrying an explicit
  * `language-neutral: <reason>` marker — for a filter that really is about one
- * TypeScript file (e.g. `endsWith('enforcement.ts')`), where the reason says so.
+ * TypeScript file (e.g. `endsWith('enforcement.js')`), where the reason says so.
  */
 const NEUTRAL = /\\\.\(ts\|tsx\|js\|jsx\)|\\\.\[jt\]sx\?|\{ts,tsx,js,jsx\}|language-neutral:/;
 
@@ -90,7 +90,7 @@ describe('source scanners are language-neutral (TS → JS conversion)', () => {
   it('no file under src/ filters sources by TypeScript extensions only', () => {
     const files = walk(SRC).map((p) => relative(ROOT, p).split('\\').join('/'));
     // Population, by membership: the scanners this guard exists for are in it.
-    expect(files).toContain('src/lib/a11yGate/a11yGate.test.ts');
+    expect(files).toContain('src/lib/a11yGate/a11yGate.test.js');
     expect(files).toContain('src/test/sourceFiles.js');
     const found = files
       .filter((f) => f !== SELF && f !== HELPER)

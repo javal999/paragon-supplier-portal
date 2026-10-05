@@ -51,7 +51,7 @@
 //   **That rule names its independent variable, and the variable is not the
 //   point of it.** All four retired fields were differences against `now`, so
 //   the rule was written in the only vocabulary those four needed — and
-//   `dayCounts.ts` inherited the narrowness at the matcher (`\w*[Dd]ays\w*`) and
+//   `dayCounts.js` inherited the narrowness at the matcher (`\w*[Dd]ays\w*`) and
 //   in its own discriminator. The general form, stated here because this is the
 //   first field to need it:
 //

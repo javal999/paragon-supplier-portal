@@ -35,7 +35,7 @@
 //
 // A materialId ABSENT here resolves to `silent: 'unmapped'` — never a fabricated
 // spread. A materialId mapped to a TAIL sc-material resolves to `silent: 'tail'`.
-// Both are honest silence, decided by the resolver (shouldCostSpread.ts).
+// Both are honest silence, decided by the resolver (shouldCostSpread.js).
 // ────────────────────────────────────────────────────────────────────────────
 
 /** Material code → the commodityBaskets `sc-*` basket that MODELS it (SIMULATED).

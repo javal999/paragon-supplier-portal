@@ -215,7 +215,7 @@ const TODAY = DECLARED_PRESENT;
 type GroupTab = 'all' | 'open' | 'pending' | 'awarded' | 'closed';
 
 // Category label keys — the RFQCategory enum stays the logic value; only the
-// rendered label is localized (mirrors the type-label precedent in contracts.ts).
+// rendered label is localized (mirrors the type-label precedent in contracts.js).
 const CATEGORY_LABEL_KEY: Record<RFQCategory, string> = {
   Fragrance: 'sourcing.category.fragrance',
   'Active Ingredients': 'sourcing.category.activeIngredients',
@@ -394,7 +394,7 @@ const blankPinDraft = (currency: BidCurrency, superseding?: FxPin): PinDraft => 
 // `RFQ_QTY_REFUSAL_KEY` below: `Record<Reason, string>` makes a reason with no
 // key a COMPILE error rather than a rendering defect. Widening any of these
 // unions now fails the build until the EN and ID strings exist. The parity guard
-// in `fragments.test.ts` then does the other half — that the ID key is really
+// in `fragments.test.js` then does the other half — that the ID key is really
 // there, and interpolates the same variables.
 export const FX_REFUSAL_KEY: Record<FxRefusalReason, string> = {
   FX_UNPINNED: 'sourcing.cmp.fx.refused.FX_UNPINNED',

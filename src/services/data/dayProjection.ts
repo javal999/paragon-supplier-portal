@@ -12,7 +12,7 @@
 //   against `now` is wrong tomorrow and must be computed here. That axis — not
 //   "number vs state" — is what decides membership, which is why this module
 //   returns numbers while law 0.5's sentence names states. See
-//   `C2-schemas.md:111` for the law and `enforcement.ts:118` for the precedent
+//   `C2-schemas.md:111` for the law and `enforcement.js:118` for the precedent
 //   that its storing half reaches numbers (`daysRemaining: 873`, 483 days stale).
 //
 // ── ⚠️ WHAT THIS REPLACED, AND WHY A PIN WAS NOT A FIX ──────────────────────

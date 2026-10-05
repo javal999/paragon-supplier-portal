@@ -24,7 +24,7 @@
 //
 // ── WHY THIS LIVES UNDER `pages-v2/`, NOT `lib/glossary/` ───────────────────
 //   It takes a VALUE dependency on `services/transitions`. `lib/glossary` holds
-//   only type-imports of the unions it defines (the `complianceView.ts`
+//   only type-imports of the unions it defines (the `complianceView.js`
 //   lib → services precedent is TYPE-ONLY, deliberately). Putting a runtime
 //   services import into `lib/` would give the glossary contract a consumer it
 //   was written not to have, so the derivation sits with its surface instead.
@@ -101,7 +101,7 @@ export type RelationKind =
    *  whole reason this exists: separate unions, identical members BY DESIGN, so
    *  a reader who found one should be told the other is not it. */
   | 'shared-word'
-  /** `enforcement.ts` declares, `satisfies`-pinned, that these refusal shapes sit
+  /** `enforcement.js` declares, `satisfies`-pinned, that these refusal shapes sit
    *  OUTSIDE the enforcement domain — they are the reason a check comes back
    *  `UNANSWERED` rather than `ADVERSE`. The relation is read from
    *  `REFUSALS_OUTSIDE_ENFORCEMENT`, so it cannot disagree with the census. */

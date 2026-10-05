@@ -66,7 +66,7 @@ describe('menu and copy (section 3.7)', () => {
     // BL-159 plural rule: compare BASE keys, with the plural suffix stripped.
     // English has `_one` and `_other`; Indonesian has no plural forms, so its
     // plural keys carry `_other` only. Which forms each locale carries is
-    // pinned by `src/lib/i18n/fragments.test.ts`; this test pins that every
+    // pinned by `src/lib/i18n/fragments.test.js`; this test pins that every
     // string exists in both languages.
     const base = (keys: string[]) => [...new Set(keys.map((k) => k.replace(/_(zero|one|two|few|many|other)$/, '')))].sort();
     expect(base(Object.keys(inventoryCapacityId))).toEqual(base(Object.keys(inventoryCapacityEn)));

@@ -10,7 +10,7 @@ import { workingCalendarStore } from './workingCalendarStore';
 // BL-50 · A HOLIDAY ADDED BY THE ADMINISTRATOR MOVES EVERY WORKING-DAY DEADLINE.
 //
 // One test per wired deadline (the derived population in
-// `hubCalendarReaders.guard.test.ts`), each with its own control: the deadline
+// `hubCalendarReaders.guard.test.js`), each with its own control: the deadline
 // before the ruling, then after it. A deadline module that still read the
 // frozen base calendar would pass the "before" and fail the "after".
 // Tuesday 8 September 2026 is an ordinary working day in the SAP load.

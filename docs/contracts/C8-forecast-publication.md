@@ -88,7 +88,7 @@ Seam tiers at a glance:
 
 **The publication a supplier sees today is a frozen fixture, not a SOMO feed.** The UI says so in
 both languages: *"Sample — awaiting SOMO C8 feed"* / *"Sampel — menunggu feed data C8 SOMO"*
-(`i18n/widget.ts:28,111`). Green is structurally unreachable until a live producer lands
+(`i18n/widget.js:28,111`). Green is structurally unreachable until a live producer lands
 (LIVENESS-DATASOURCE-01).
 
 ---

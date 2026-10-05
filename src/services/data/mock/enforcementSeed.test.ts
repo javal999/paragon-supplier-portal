@@ -106,7 +106,7 @@ describe('E4 seed — ⚠️ FULL RIGOUR, TAKEN FROM THE RAMP', () => {
     //
     // Comment lines are exempt — the header DISCUSSES the literal it refuses to
     // use, and a census that could not tell code from record would force
-    // deleting the explanation along with the defect (the `enforcement.test.ts`
+    // deleting the explanation along with the defect (the `enforcement.test.js`
     // precedent).
     const module = (
       import.meta.glob('/src/services/data/mock/enforcementSeed.ts', {

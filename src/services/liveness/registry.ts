@@ -11,7 +11,7 @@
 //
 // This subsumes the per-component `live={true|false}` discipline: every honest-
 // render marker reads ONE authority (`isLive`), so "which surface is live" has a
-// single answer. (Mechanism-1, the deploy-env badge in `envBadge.ts`, is a
+// single answer. (Mechanism-1, the deploy-env badge in `envBadge.js`, is a
 // DIFFERENT concern — which deploy, not data-liveness — and is intentionally out
 // of scope. The ~13 Mechanism-3 static page markers ride a follow-on sweep,
 // F0.6-FIND-01.)

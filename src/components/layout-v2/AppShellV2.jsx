@@ -15,7 +15,7 @@ const AppShellV2 = ({ children }) => {
   // re-renders subscribers like TopBar/Sidebar) would NOT re-run a page body —
   // React bails on the referentially-equal children element. Keying <main> on
   // the active language remounts the page subtree on toggle, so locale-aware
-  // format.ts output (dates, currency) flips app-wide even on pages not yet
+  // format.js output (dates, currency) flips app-wide even on pages not yet
   // migrated to useTranslation. Per-page key extraction refines this later.
   //
   // BL-31 (WCAG 2.4.1): a skip link is the first stop in the tab order, so a

@@ -267,7 +267,7 @@ const contractRows = [
   // `Expired := status ∈ LIVE AND isPast(daysUntil(endDate, now))`. A row
   // stored `Expired` is NOT live, so that rule can never fire on it — the
   // literal would simply pass through, leaving the computed arm with no row in
-  // the fixture exercising it while `displayStates.ts` claimed the state was
+  // the fixture exercising it while `displayStates.js` claimed the state was
   // computed. That claim would be false, and the tab would still be populated
   // by an authored literal. `Expired` was never a machine state either
   // (`contractFlow.states` is `Draft · Active · Renewed · Terminated`), so the

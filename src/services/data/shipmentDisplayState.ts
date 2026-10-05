@@ -56,7 +56,7 @@
 // ── THEM IS QUOTED RATHER THAN DELETED, BECAUSE ITS CLAIM WAS OVERSTATED ───
 //   It read:
 //
-//     > `delayDays` and `daysInTransit` remain STORED (`dayCounts.ts` registers
+//     > `delayDays` and `daysInTransit` remain STORED (`dayCounts.js` registers
 //     > both as `stored-in-fixtures`, 2 of its 4 such rows). `delayDays` is
 //     > rendered at three sites in `BuyerShipments`. Computing the STATE while
 //     > leaving the COUNT stored is a real divergence and it is FILED, not

@@ -287,7 +287,7 @@ describe('ProcessFlows — honesty markers', () => {
     pick('purchaseOrder');
     // `Dimiliki` is the divergent token: it shares no spelling with "Owned by".
     // `S/4HANA` is a product name and is deliberately identical in both locales
-    // (`channelLabel.ts` keys protocol names the same way), so asserting on it
+    // (`channelLabel.js` keys protocol names the same way), so asserting on it
     // alone would be an assertion that cannot fail.
     expect(screen.getAllByText('Dimiliki S/4HANA').length).toBeGreaterThan(0);
     expect(screen.queryByText('Owned by S/4HANA')).toBeNull();

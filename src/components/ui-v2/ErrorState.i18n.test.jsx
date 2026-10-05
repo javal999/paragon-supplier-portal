@@ -60,7 +60,7 @@ describe('ErrorState · CONTROLS — the instrument can see', () => {
   it('CONTROL — the two locales differ on every key this surface renders', async () => {
     // Without this, an ID assertion below could pass because ID fell back to EN
     // (the `fallbackLng` path), which is the invisible-untranslated-string shape
-    // `fragments.test.ts` exists to prevent — asserted here for THIS fragment at
+    // `fragments.test.js` exists to prevent — asserted here for THIS fragment at
     // the point of use, not only in the key-set guard.
     for (const key of [
       'errorState.title',

@@ -3,7 +3,7 @@
 //
 // A quoted unit price is not a display string that happens to look numeric: it
 // is the fact the award engine RANKS SUPPLIERS BY. `scoreQuotations`
-// (`lib/quoteScore.ts`) anchors `minPrice` across the whole RFQ set, so ONE
+// (`lib/quoteScore.js`) anchors `minPrice` across the whole RFQ set, so ONE
 // misread price does not merely record itself wrong — it re-anchors every rival
 // bid to a price nobody offered and hands `topRanked` to the wrong supplier.
 // That is the false-deficit chain one governed level worse: it does not accuse,

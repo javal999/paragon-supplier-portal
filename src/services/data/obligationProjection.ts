@@ -5,7 +5,7 @@
 //
 // ── WHAT THIS RETIRES ───────────────────────────────────────────────────────
 //   `obligation/Upcoming` and `obligation/Overdue` were `stored-in-fixtures` in
-//   `projectionGate/displayStates.ts`: a fixture literal asserting a clock
+//   `projectionGate/displayStates.js`: a fixture literal asserting a clock
 //   state, with ZERO non-fixture writes. Measured on 2026-09-08, they had gone
 //   FALSE against the wall clock — `obl-003a`, `obl-004a` and `obl-010c` resolve
 //   to a due date of 2026-09-08 and store `Upcoming`, while the contract card
@@ -97,8 +97,8 @@
 //   starts. That is a FLOW AMENDMENT with a new transition, a new atom and a
 //   surface to fire it; it is not a wiring batch, and naming it as one is how
 //   this sentence stayed plausible for two batches. The i18n reads as cheap
-//   and is not: `statusLabel.ts` already carries `'In Progress': 'Sedang
-//   Berlangsung'` and `statusTone.ts` maps it to `warning`, so the LABEL is
+//   and is not: `statusLabel.js` already carries `'In Progress': 'Sedang
+//   Berlangsung'` and `statusTone.js` maps it to `warning`, so the LABEL is
 //   free and the MACHINE is the whole cost.
 //
 //   ── ⚠️ THREE MECHANISMS OFFERED FOR THIS STATE AND MEASURED FALSE, ────────
@@ -143,7 +143,7 @@ import { daysUntil, isPast } from './dayProjection';
  */
 export type ObligationDisplayState =
   // ⚠️ Split across lines deliberately, matching `ObligationStatus`'s own shape
-  // in `mockObligations.js`. `projectionGate/derive.ts`'s write-site matcher
+  // in `mockObligations.js`. `projectionGate/derive.js`'s write-site matcher
   // counts `= 'X'` as a write, so a ONE-LINE alias (`… State = 'Upcoming' | …`)
   // would register the TYPE as a producer and the gate would read
   // `computed-at-read` even if this function were deleted. Keeping the union
@@ -217,7 +217,7 @@ export const OBLIGATION_DISPLAY_RANK: Record<ObligationDisplayState, number> = {
  * Display TONE. `Overdue` is `danger` and `Upcoming` is `info`, both unchanged
  * from the map this replaces.
  *
- * ⚠️ `statusTone.ts` independently maps `Upcoming → 'warning'`, and that
+ * ⚠️ `statusTone.js` independently maps `Upcoming → 'warning'`, and that
  * disagreement PREDATES this batch — the obligation table has always used its
  * own map. It is carried forward unchanged rather than silently reconciled: a
  * tone change is a design ruling and this batch is about a clock.

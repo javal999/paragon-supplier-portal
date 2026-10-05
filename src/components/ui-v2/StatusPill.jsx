@@ -14,7 +14,7 @@ import { channelLabelKey } from '@lib/channelLabel';
 // the #0070F2 action-blue family (informational statuses align with the blue
 // system) — action-soft fill + action border, with action-hover text for AA
 // (4.76:1 on soft; #0070F2 itself fails at ~3.6:1). Tone is resolved from the
-// canonical table in src/lib/statusTone.ts — StatusPill never string-matches.
+// canonical table in src/lib/statusTone.js — StatusPill never string-matches.
 /** @type {Record<Variant, string>} */
 const VARIANT_CLASS = {
   success: 'bg-success-soft text-success border-success/30',
