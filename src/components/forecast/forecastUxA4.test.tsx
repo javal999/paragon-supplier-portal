@@ -21,13 +21,14 @@ import BuyerSafetyStock from '@pages-v2/BuyerSafetyStock';
 import BuyerOrderPlan from '@pages-v2/BuyerOrderPlan';
 import BuyerReschedule from '@pages-v2/BuyerReschedule';
 import BuyerStabilise from '@pages-v2/BuyerStabilise';
+import BuyerThisWeek from '@pages-v2/BuyerThisWeek';
 import { BuyerFixedStockReconcile } from '@pages-v2/FixedStockReconcile';
 import Glossary from '@pages-v2/Glossary';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // FORECAST UX PHASE 1 · TASK A4 — purpose headers, one banner, plain copy.
 //
-// Every one of the 13 buyer forecast pages, rendered as a Material Planner:
+// Every one of the 14 buyer forecast pages (13, plus phase 2's This week), rendered as a Material Planner:
 //   · a purpose header whose Uses and Next links go to routes the router has;
 //   · the one simulated-data banner, and neither of the two old labels;
 //   · its menu label as the title and its new section in the crumb (F-19);
@@ -39,6 +40,7 @@ import Glossary from '@pages-v2/Glossary';
 const PLANNER = { ...BUYER, businessRoles: SEEDED_SEAT_ROLES.buyer };
 
 const PAGES: Record<ForecastPageId, React.FC> = {
+  thisWeek: BuyerThisWeek,
   whatToOrder: BuyerOrderPlan,
   makeRoom: BuyerReschedule,
   publish: BuyerStabilise,
@@ -99,8 +101,8 @@ describe('the requirement-code matcher (probed before it is trusted)', () => {
 });
 
 describe('the purpose-header map', () => {
-  it('covers 13 pages, and every Uses and Next target is a route the router has', () => {
-    expect(IDS).toHaveLength(13);
+  it('covers 14 pages (13, plus This week from phase 2 B1), and every Uses and Next target is a route the router has', () => {
+    expect(IDS).toHaveLength(14);
     expect(ROUTES.has('/buyer/order-plan')).toBe(true);
     expect(ROUTES.has('/buyer/no-such-page')).toBe(false);
     for (const id of IDS) {
@@ -113,7 +115,11 @@ describe('the purpose-header map', () => {
     }
   });
 
-  it('follows the phase 1 menu order for the Weekly plan and Review pages', () => {
+  it('follows the menu order for the Weekly plan and Review pages', () => {
+    // FUX phase 2 B1 — This week starts the cycle, after the input check.
+    expect(FORECAST_PAGES.thisWeek.uses).toBe('dataHealth');
+    expect(FORECAST_PAGES.thisWeek.next).toBe('whatToOrder');
+    expect(FORECAST_PAGES.whatToOrder.uses).toBe('thisWeek');
     expect(FORECAST_PAGES.whatToOrder.next).toBe('makeRoom');
     expect(FORECAST_PAGES.makeRoom.next).toBe('publish');
     expect(FORECAST_PAGES.publish.next).toBe('responses');

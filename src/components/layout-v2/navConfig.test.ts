@@ -59,7 +59,8 @@ describe('Material Planner menu — Weekly plan and Review (F-03, F-04)', () => 
       ['review', 'hub.nav.pti.forecastQuality', '/buyer/demand-forecast'],
       ['review', 'hub.nav.pti.stockCheck', '/buyer/fs-reconcile'],
     ]);
-    expect(mp.find((s) => s.id === 'weeklyPlan')!.items).toHaveLength(4);
+    // FUX phase 2 B1 — This week joins Weekly plan as its first item.
+    expect(mp.find((s) => s.id === 'weeklyPlan')!.items).toHaveLength(5);
     expect(mp.find((s) => s.id === 'review')!.items).toHaveLength(3);
     expect(mp.map((s) => s.id)).not.toContain('forecast');
   });
@@ -78,14 +79,43 @@ describe('Material Planner menu — Weekly plan and Review (F-03, F-04)', () => 
 });
 
 describe('Procurement menu keeps Performance → Supplier scorecard (FUX-D2)', () => {
-  it('shows Performance with the scorecard, and no Weekly plan or Review', () => {
+  it('shows Performance with the scorecard and (FUX-D6) the end-of-cycle stock check, and no Weekly plan or Review', () => {
     const buy = navFor('buyer', 'BUY');
     const performance = buy.find((s) => s.id === 'performance')!;
     expect(performance.items.map((i) => [i.labelKey, i.path])).toEqual([
       ['hub.nav.pti.performance', '/buyer/scorecard'],
+      ['hub.nav.pti.stockCheck', '/buyer/fs-reconcile'],
     ]);
     expect(buy.map((s) => s.id)).not.toContain('weeklyPlan');
     expect(buy.map((s) => s.id)).not.toContain('review');
+  });
+});
+
+describe('FUX phase 2 B1 — This week and the Procurement path to the stock check (F-03, F-15, FUX-D6)', () => {
+  it('an MP menu starts the Weekly plan with This week, then the 4 steps in cycle order', () => {
+    const weekly = navFor('buyer', 'MP').find((s) => s.id === 'weeklyPlan')!;
+    expect(weekly.items.map((i) => [i.labelKey, i.path])).toEqual([
+      ['hub.nav.pti.thisWeek', '/buyer/this-week'],
+      ['hub.nav.pti.whatToOrder', '/buyer/order-plan'],
+      ['hub.nav.pti.makeRoom', '/buyer/reschedule'],
+      ['hub.nav.pti.publishToSuppliers', '/buyer/stabilise'],
+      ['hub.nav.pti.supplierResponses', '/buyer/collaboration'],
+    ]);
+    expect(hubEn['hub.nav.pti.thisWeek']).toBe('This week');
+    expect(hubId['hub.nav.pti.thisWeek']).toBe('Minggu ini');
+  });
+
+  it('a BUY menu shows End-of-cycle stock check under Performance; This week stays a planner item', () => {
+    const buy = navFor('buyer', 'BUY');
+    const where = buy.filter((s) => s.items.some((i) => i.path === '/buyer/fs-reconcile')).map((s) => s.id);
+    expect(where).toEqual(['performance']);
+    expect(buy.flatMap((s) => s.items).map((i) => i.path)).not.toContain('/buyer/this-week');
+  });
+
+  it("sectionForPath names the stock check's section from the viewer's own menu", () => {
+    expect(sectionForPath('/buyer/fs-reconcile', 'MP')?.id).toBe('review');
+    expect(sectionForPath('/buyer/fs-reconcile', 'BUY')?.id).toBe('performance');
+    expect(sectionForPath('/buyer/this-week', 'MP')?.id).toBe('weeklyPlan');
   });
 });
 

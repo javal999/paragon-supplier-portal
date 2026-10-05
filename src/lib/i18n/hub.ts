@@ -65,6 +65,7 @@ export const hubEn: Record<string, string> = {
   'hub.nav.pti.performance': 'Supplier performance',
   // FUX phase 1 — Weekly plan and Review items. The old item keys above stay:
   // pages still read them until task A4.
+  'hub.nav.pti.thisWeek': 'This week',
   'hub.nav.pti.whatToOrder': 'What to order',
   'hub.nav.pti.makeRoom': 'Make warehouse room',
   'hub.nav.pti.publishToSuppliers': 'Publish to suppliers',
@@ -127,6 +128,7 @@ export const hubEn: Record<string, string> = {
   'hub.home.crumb': 'Home',
   'hub.home.pti.title': 'My tasks',
   'hub.home.pti.subtitle': 'What needs your action, most urgent first.',
+  'hub.home.pti.thisWeek': 'Start the weekly plan: This week',
   'hub.home.sup.title': 'To do',
   'hub.home.sup.subtitle': 'What Paragon is waiting for from you, most urgent first.',
   'hub.home.empty.title': 'Nothing needs your action',
@@ -240,6 +242,7 @@ export const hubId: Record<string, string> = {
   'hub.nav.pti.suppliers': 'Pemasok',
   'hub.nav.pti.invoices': 'Faktur',
   'hub.nav.pti.performance': 'Kinerja pemasok',
+  'hub.nav.pti.thisWeek': 'Minggu ini',
   'hub.nav.pti.whatToOrder': 'Apa yang dipesan',
   'hub.nav.pti.makeRoom': 'Kosongkan ruang gudang',
   'hub.nav.pti.publishToSuppliers': 'Terbitkan ke pemasok',
@@ -297,6 +300,7 @@ export const hubId: Record<string, string> = {
   'hub.home.crumb': 'Beranda',
   'hub.home.pti.title': 'Tugas saya',
   'hub.home.pti.subtitle': 'Yang menunggu tindakan Anda, paling mendesak di atas.',
+  'hub.home.pti.thisWeek': 'Mulai rencana mingguan: Minggu ini',
   'hub.home.sup.title': 'Yang perlu dikerjakan',
   'hub.home.sup.subtitle': 'Yang ditunggu Paragon dari Anda, paling mendesak di atas.',
   'hub.home.empty.title': 'Tidak ada yang perlu ditindaklanjuti',
