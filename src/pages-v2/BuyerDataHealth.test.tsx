@@ -27,7 +27,8 @@ describe('BuyerDataHealth — the planner page', () => {
     expect(isLive('engineDataset')).toBe(false);
     renderWithProviders(<BuyerDataHealth />, { identity: BUYER, route: '/buyer/data-health' });
     expect(await screen.findByRole('heading', { name: 'Data health' })).toBeInTheDocument();
-    expect(screen.getByText('Synthetic data · awaiting the MDM SAP feed')).toBeInTheDocument();
+    // FUX A4 (F-14): the one simulated-data banner replaces the engine pill.
+    expect(screen.getByTestId('simulated-data-banner')).toHaveTextContent('Sample data. Nothing here reaches suppliers or SAP.');
     expect(screen.queryByText('Live')).toBeNull();
     expect(screen.getByTestId('dh-not-built')).toBeInTheDocument();
     expect(screen.getAllByRole('navigation').length).toBeGreaterThan(0);
@@ -42,7 +43,9 @@ describe('BuyerDataHealth — the planner page', () => {
       expect(screen.getByTestId(`dh-records-${f.feed}`)).toHaveTextContent(formatNumber(f.records));
       expect(screen.getByTestId(`dh-owner-${f.feed}`)).toHaveTextContent(f.source === 'mdm' ? 'Master Data Management team' : 'Supplier Hub');
       expect(screen.getByTestId(`dh-fresh-${f.feed}`)).toHaveTextContent(f.limitDays === null ? 'No limit' : 'Fresh');
-      expect(screen.getByTestId(`dh-affects-${f.feed}`)).toHaveTextContent(f.affects.join(' · '));
+      // F-18: the steps by their page names, never their requirement codes.
+      expect(screen.getByTestId(`dh-affects-${f.feed}`)).toHaveTextContent(f.affects.map((s) => i18n.t(`dh.step.${s}`)).join(' · '));
+      expect(screen.getByTestId(`dh-affects-${f.feed}`).textContent).not.toMatch(/E14-/);
     }
     expect(screen.getByTestId('dh-kpi-feeds')).toHaveTextContent(String(r.feeds.length));
     expect(screen.getByTestId('dh-kpi-stale')).toHaveTextContent('0');

@@ -50,7 +50,12 @@ import {
 //
 // ── FENCES THIS PAGE HOLDS ─────────────────────────────────────────────────
 //   · NO KPI TERMS (GL-2). KPI names are free-text fixture fields; a glossary
-//     over them would summarise fixtures.
+//     over them would summarise fixtures. ONE BOUNDED EXCEPTION (Forecast UX
+//     A4, F-09): the planning terms the forecast pages tip — Firm, Trade-off,
+//     MASC, tracking signal, reorder point, P50/P90 — are not fixture names but
+//     the engine's own measures, so they are registered as `PlanningTerm`
+//     (`lib/glossary/planning.glossary.js`) and this page lists them like any
+//     other vocabulary. The fence still holds for fixture KPI names.
 //   · NO BENCHMARKS. An authored industry figure with no source is the
 //     fabricated-claims class this tree spent five batches retracting.
 //   · NO FLOW-STATE OR TRANSITION PROSE. `services/transitions/annotations.ts`

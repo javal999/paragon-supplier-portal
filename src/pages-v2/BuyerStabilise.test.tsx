@@ -5,7 +5,7 @@ import BuyerStabilise from './BuyerStabilise';
 import { mockDataService } from '@services/data/mock/mockDataService';
 import { isLive } from '@services/liveness';
 import { PERSONA_SYSTEM_ROLES, SEEDED_SEAT_ROLES } from '@services/transitions/businessRoles';
-import { formatNumber } from '@lib/format';
+import { formatDate, formatNumber } from '@lib/format';
 import i18n from '@lib/i18n';
 import type { QueryScope } from '@services/data/types';
 
@@ -32,8 +32,9 @@ describe('BuyerStabilise — the planner page (REQ-E14-06)', () => {
   it('renders inside the app shell with the SIMULATED engine pill — never Live — and says nothing here reaches a supplier', async () => {
     expect(isLive('engineDataset')).toBe(false);
     renderWithProviders(<BuyerStabilise />, { identity: PLANNER, route: '/buyer/stabilise' });
-    expect(await screen.findByRole('heading', { name: 'Stabilise and publish' })).toBeInTheDocument();
-    expect(screen.getByText('Synthetic data · awaiting the MDM SAP feed')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Publish to suppliers' })).toBeInTheDocument();
+    // FUX A4 (F-14): one simulated-data banner in place of the engine pill.
+    expect(screen.getByTestId('simulated-data-banner')).toHaveTextContent('Sample data. Nothing here reaches suppliers or SAP.');
     expect(screen.queryByText('Live')).toBeNull();
     expect(screen.getByTestId('stb-withheld-note')).toHaveTextContent('Nothing on this page is shown to a supplier');
     expect(screen.getAllByRole('navigation').length).toBeGreaterThan(0);
@@ -42,7 +43,7 @@ describe('BuyerStabilise — the planner page (REQ-E14-06)', () => {
   it('BR-06: the page says the demand range now exists but is not published, links to it, and shows the quantity only', async () => {
     renderWithProviders(<BuyerStabilise />, { identity: PLANNER, route: '/buyer/stabilise' });
     const note = await screen.findByTestId('stb-range-note');
-    expect(note).toHaveTextContent('now exists on the Demand forecast page');
+    expect(note).toHaveTextContent('now exists on the Forecast quality page');
     expect(note).toHaveTextContent('It is not published here');
     expect(note).toHaveTextContent('Suppliers see the quantity only');
     expect(screen.getByTestId('stb-range-link')).toHaveAttribute('href', '/buyer/demand-forecast');
@@ -58,6 +59,21 @@ describe('BuyerStabilise — the planner page (REQ-E14-06)', () => {
     expect(await screen.findByTestId('stb-publish-withheld')).toHaveTextContent('never shown to a supplier');
     expect(screen.queryByTestId('stb-publish-packaging')).toBeNull();
     expect(screen.queryByTestId('stb-publish-rawMaterial')).toBeNull();
+  });
+
+  it('FUX-D1 — the only publish point: the withheld text says so, with the last published version per stream and a link to Published versions', async () => {
+    const versions = (await mockDataService.procurement.getForecastVersions(buyerScope)).items;
+    renderWithProviders(<BuyerStabilise />, { identity: PLANNER, route: '/buyer/stabilise' });
+    const withheld = await screen.findByTestId('stb-publish-withheld');
+    expect(withheld).toHaveTextContent('Nothing can be published until real data arrives');
+    expect(withheld).toHaveTextContent('This is the only place a plan is published to suppliers.');
+    for (const stream of ['packaging', 'rawMaterial'] as const) {
+      const current = versions.find((v) => v.stream === stream && v.isCurrent)!;
+      const line = await screen.findByTestId(`stb-last-published-${stream}`);
+      expect(line).toHaveTextContent(`Last published (${stream === 'packaging' ? 'Packaging' : 'Raw material'}): Version ${current.version}, ${formatDate(current.publishedAt)}`);
+    }
+    expect(screen.getByTestId('stb-versions-link')).toHaveAttribute('href', '/buyer/forecasts');
+    expect(screen.getByTestId('stb-versions-link')).toHaveTextContent('Published versions');
   });
 
   it('X-03: a supplier scope gets nothing from the service at all', async () => {
@@ -83,7 +99,13 @@ describe('BuyerStabilise — the planner page (REQ-E14-06)', () => {
     expect(screen.getByTestId('stb-kpi-masc-stab')).toHaveTextContent(ratio(h.stabilised.masc));
     expect(screen.getByTestId('stb-kpi-share-raw')).toHaveTextContent(share(h.raw.insideLeadTime.share));
     expect(screen.getByTestId('stb-kpi-share-stab')).toHaveTextContent('0%');
-    expect(screen.getByTestId('stb-kpi-band-stab')).toHaveTextContent('100%');
+    // F-24 — the Trade-off KPI reads as a count after stabilising, with the raw count beneath.
+    expect(screen.getByTestId('stb-kpi-band-stab')).toHaveTextContent(`${h.stabilised.tradeOff.withinBand} of ${h.stabilised.tradeOff.revisions}`);
+    expect(screen.getByTestId('stb-kpi-band-raw')).toHaveTextContent(
+      `after stabilising (before: ${h.raw.tradeOff.withinBand} of ${h.raw.tradeOff.revisions})`,
+    );
+    expect(screen.getByText('Trade-off weeks within limits')).toBeInTheDocument();
+    expect(screen.queryByText('Trade-off revisions inside the band')).toBeNull();
     // Stabilising the plan suppliers saw lowers the movement.
     expect(h.stabilised.masc!).toBeLessThan(h.raw.masc!);
     for (const r of ['firmFrozen', 'damped', 'bandHeld', 'cumulativeHeld'] as const) {
@@ -109,7 +131,17 @@ describe('BuyerStabilise — the planner page (REQ-E14-06)', () => {
   it('reads in Indonesian', async () => {
     await i18n.changeLanguage('id');
     renderWithProviders(<BuyerStabilise />, { identity: PLANNER, route: '/buyer/stabilise' });
-    expect(await screen.findByRole('heading', { name: 'Stabilkan dan publikasikan' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Terbitkan ke pemasok' })).toBeInTheDocument();
     expect(screen.getByTestId('stb-publish-withheld')).toHaveTextContent('tidak pernah ditampilkan ke pemasok');
+    expect(screen.getByTestId('stb-publish-withheld')).toHaveTextContent('Ini satu-satunya tempat rencana diterbitkan ke pemasok.');
+    await screen.findByTestId('stb-run-engine');
+    const p = (await plan()).engine.totals;
+    expect(screen.getByText('Minggu Trade-off dalam batas')).toBeInTheDocument();
+    expect(screen.getByTestId('stb-kpi-band-stab')).toHaveTextContent(`${p.stabilised.tradeOff.withinBand} dari ${p.stabilised.tradeOff.revisions}`);
+    expect(screen.getByTestId('stb-kpi-band-raw')).toHaveTextContent(
+      `setelah distabilkan (sebelum: ${p.raw.tradeOff.withinBand} dari ${p.raw.tradeOff.revisions})`,
+    );
+    expect(await screen.findByTestId('stb-last-published-packaging')).toHaveTextContent('Terakhir diterbitkan');
+    expect(screen.getByTestId('stb-versions-link')).toHaveTextContent('Versi terbit');
   });
 });

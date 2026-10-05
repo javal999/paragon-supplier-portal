@@ -26,7 +26,8 @@ describe('BuyerMaterialRequirement — the planner page', () => {
     expect(isLive('engineDataset')).toBe(false);
     renderWithProviders(<BuyerMaterialRequirement />, { identity: BUYER, route: '/buyer/material-requirement' });
     expect(await screen.findByRole('heading', { name: 'Material requirement' })).toBeInTheDocument();
-    expect(screen.getByText('Synthetic data · awaiting the MDM SAP feed')).toBeInTheDocument();
+    // FUX A4 (F-14): one simulated-data banner in place of the engine pill.
+    expect(screen.getByTestId('simulated-data-banner')).toHaveTextContent('Sample data. Nothing here reaches suppliers or SAP.');
     expect(screen.queryByText('Live')).toBeNull();
     // E14-05 now sizes the planned orders (the interim note is the fallback's).
     expect(screen.getByTestId('mrq-sized-note')).toBeInTheDocument();
@@ -86,6 +87,45 @@ describe('BuyerMaterialRequirement — the planner page', () => {
   it('a supplier scope gets nothing — simulated engine output is never shown to a supplier (X-03)', async () => {
     expect(await mockDataService.procurement.getMaterialRequirement(supplierScope)).toBeNull();
     expect(await mockDataService.procurement.getMaterialRequirement(buyerScope)).not.toBeNull();
+  });
+
+  it('F-17: rows are sorted by need — a material with a net requirement lists above one with none', async () => {
+    const run = (await mockDataService.procurement.getMaterialRequirement(buyerScope))!;
+    const need = run.materials.find((m) => m.totals.net > 0 && m.totals.lateToRelease === 0)!;
+    const none = run.materials.find((m) => m.totals.net === 0)!;
+    renderWithProviders(<BuyerMaterialRequirement />, { identity: BUYER, route: '/buyer/material-requirement' });
+    const needRow = await screen.findByTestId(`mrq-row-${need.materialCode}`);
+    const noneRow = screen.getByTestId(`mrq-row-${none.materialCode}`);
+    expect(needRow.compareDocumentPosition(noneRow) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    // The first rows are the late ones, then the rest by net requirement.
+    const late = run.materials.filter((m) => m.totals.lateToRelease > 0);
+    const rows = screen.getAllByTestId(/^mrq-row-/);
+    expect(rows.slice(0, late.length).map((r) => r.dataset.testid).sort()).toEqual(late.map((m) => `mrq-row-${m.materialCode}`).sort());
+    expect(await screen.findByTestId('data-health-chip-failing')).toHaveTextContent('failing');
+  });
+
+  it('F-17: "Needs order" is off by default, hides the rows with no net requirement, and is kept in the page address', async () => {
+    const run = (await mockDataService.procurement.getMaterialRequirement(buyerScope))!;
+    const need = run.materials.find((m) => m.totals.net > 0)!;
+    const none = run.materials.find((m) => m.totals.net === 0)!;
+    renderWithProviders(<BuyerMaterialRequirement />, { identity: BUYER, route: '/buyer/material-requirement' });
+    const box = await screen.findByTestId('mrq-needs-order');
+    expect(box).not.toBeChecked();
+    expect(screen.getByTestId(`mrq-row-${none.materialCode}`)).toBeInTheDocument();
+    fireEvent.click(box);
+    expect(screen.queryByTestId(`mrq-row-${none.materialCode}`)).toBeNull();
+    expect(screen.getByTestId(`mrq-row-${need.materialCode}`)).toBeInTheDocument();
+    expect(screen.getAllByTestId(/^mrq-row-/)).toHaveLength(run.materials.filter((m) => m.totals.net > 0).length);
+  });
+
+  it('F-17: opened at ?needs=order, the filter is on and the zero rows are hidden', async () => {
+    const run = (await mockDataService.procurement.getMaterialRequirement(buyerScope))!;
+    const none = run.materials.find((m) => m.totals.net === 0)!;
+    const need = run.materials.find((m) => m.totals.net > 0)!;
+    renderWithProviders(<BuyerMaterialRequirement />, { identity: BUYER, route: '/buyer/material-requirement?needs=order' });
+    expect(await screen.findByTestId(`mrq-row-${need.materialCode}`)).toBeInTheDocument();
+    expect(screen.getByTestId('mrq-needs-order')).toBeChecked();
+    expect(screen.queryByTestId(`mrq-row-${none.materialCode}`)).toBeNull();
   });
 
   it('renders in Bahasa Indonesia from the ID fragment', async () => {

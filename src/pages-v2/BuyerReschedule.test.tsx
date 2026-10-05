@@ -35,8 +35,9 @@ describe('BuyerReschedule — the planner page (REQ-E14-13)', () => {
   it('renders inside the app shell with the SIMULATED engine pill — never Live — and says nothing here reaches a supplier yet', async () => {
     expect(isLive('engineDataset')).toBe(false);
     renderWithProviders(<BuyerReschedule />, { identity: PLANNER, route: '/buyer/reschedule' });
-    expect(await screen.findByRole('heading', { name: 'Reschedule open orders' })).toBeInTheDocument();
-    expect(screen.getByText('Synthetic data · awaiting the MDM SAP feed')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Make warehouse room' })).toBeInTheDocument();
+    // FUX A4 (F-14): one simulated-data banner in place of the engine pill.
+    expect(screen.getByTestId('simulated-data-banner')).toHaveTextContent('Sample data. Nothing here reaches suppliers or SAP.');
     expect(screen.queryByText('Live')).toBeNull();
     expect(screen.getByTestId('rs-withheld-note')).toHaveTextContent('Master Data Management team’s SAP feed is live');
     expect(screen.getAllByRole('navigation').length).toBeGreaterThan(0);
@@ -45,7 +46,7 @@ describe('BuyerReschedule — the planner page (REQ-E14-13)', () => {
   it('ENG-D15 and the cost rates in use: the threshold (1 week, decided) beside the placeholder rent and penalty', async () => {
     renderWithProviders(<BuyerReschedule />, { identity: PLANNER, route: '/buyer/reschedule' });
     expect(await screen.findByTestId('rs-setting-threshold')).toHaveTextContent('1 week');
-    expect(screen.getByTestId('rs-setting-threshold')).toHaveTextContent('Decided by the owner (ENG-D15)');
+    expect(screen.getByTestId('rs-setting-threshold')).toHaveTextContent('Decided by the owner');
     expect(screen.getByTestId('rs-setting-rent')).toHaveTextContent('Rp 35.000');
     expect(screen.getByTestId('rs-setting-rent')).toHaveTextContent('Placeholder — Finance to confirm');
     expect(screen.getByTestId('rs-setting-penalty')).toHaveTextContent('Rp 150.000');
@@ -158,10 +159,31 @@ describe('BuyerReschedule — the planner page (REQ-E14-13)', () => {
     expect(await screen.findByTestId(`rs-info-${dispatched.line.id}`)).toHaveTextContent('already dispatched');
   });
 
+  it('F-07: the proposals come first — the relief table renders before the context sections, which are collapsed', async () => {
+    renderWithProviders(<BuyerReschedule />, { identity: PLANNER, route: '/buyer/reschedule' });
+    const relief = await screen.findByTestId('rs-relief');
+    expect(screen.getByTestId('rs-kpis').compareDocumentPosition(relief) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    // The supplier stability guard sits between the summary and the proposals, so its effect is visible while selecting.
+    const guard = screen.getByTestId('rs-guard');
+    expect(guard.tagName).toBe('SECTION');
+    expect(screen.getByTestId('rs-kpis').compareDocumentPosition(guard) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(guard.compareDocumentPosition(relief) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect((await screen.findByTestId('data-health-chip')).compareDocumentPosition(screen.getByTestId('rs-kpis')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    for (const id of ['rs-fill', 'rs-info', 'rs-settings', 'rs-definitions']) {
+      const el = screen.getByTestId(id);
+      expect(el.tagName).toBe('DETAILS');
+      expect(el).not.toHaveAttribute('open');
+      expect(relief.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    }
+    // F-22 — "Now" says it is the Order plan's fill plus released call-offs.
+    expect(screen.getByTestId('rs-fill-basis')).toHaveTextContent('recommended orders included, plus released call-offs');
+    expect(await screen.findByTestId('data-health-chip-failing')).toHaveTextContent('failing');
+  });
+
   it('renders in Indonesian', async () => {
     await i18n.changeLanguage('id');
     renderWithProviders(<BuyerReschedule />, { identity: PLANNER, route: '/buyer/reschedule' });
-    expect(await screen.findByRole('heading', { name: 'Jadwal ulang pesanan terbuka' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Kosongkan ruang gudang' })).toBeInTheDocument();
     expect(screen.getByTestId('rs-setting-rent')).toHaveTextContent('Sementara — menunggu konfirmasi Keuangan');
   });
 });

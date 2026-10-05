@@ -16,6 +16,11 @@ import SidePanel from '@components/ui-v2/SidePanel';
 import LoadingState from '@components/ui-v2/LoadingState';
 import ErrorState from '@components/ui-v2/ErrorState';
 import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
+import PurposeHeader from '@components/forecast/PurposeHeader';
+import SimulatedDataBanner from '@components/forecast/SimulatedDataBanner';
+import AboutThisPage from '@components/forecast/AboutThisPage';
+import DataAsOf from '@components/forecast/DataAsOf';
+import { forecastCrumb, forecastTitle } from '@components/forecast/forecastPages';
 import { useVerbAvailability } from '@hooks/useVerbAvailability';
 import { useRefusalText } from '@hooks/useRefusalText';
 import { useToast } from '@hooks/useToast';
@@ -74,7 +79,9 @@ const FixedStockReconcile: React.FC<{ persona: 'buyer' | 'supplier' }> = ({ pers
   const maxAvailability = useVerbAvailability('maxstock:set');
   const isPti = persona === 'buyer';
   const canSetMax = isPti && maxAvailability.kind === 'held';
-  const crumb = [t(isPti ? 'hub.nav.section.forecast' : 'hub.nav.section.planning'), t('fsr.title')];
+  // FUX A4: the planner's page is "End-of-cycle stock check" under Review; the
+  // supplier's keeps its own name and section.
+  const crumb = isPti ? forecastCrumb(t, 'stockCheck') : [t('hub.nav.section.planning'), t('fsr.title')];
 
   const rows = useMemo(() => query.data?.items ?? [], [query.data]);
   const counts = useMemo(() => countByOutcome(rows), [rows]);
@@ -139,11 +146,22 @@ const FixedStockReconcile: React.FC<{ persona: 'buyer' | 'supplier' }> = ({ pers
 
   return (
     <AppShellV2>
-      <PageHeader breadcrumb={crumb} title={t('fsr.title')} subtitle={t(isPti ? 'fsr.subtitle.pti' : 'fsr.subtitle.sup')} />
-      <PageMetaLine className="-mt-6 mb-4">
-        {t('fsr.asOf')} <Data>{formatDate(forecastNow())}</Data>
-        <SampleDataBadge className="ml-3 align-middle" />
-      </PageMetaLine>
+      {isPti ? (
+        <>
+          <PageHeader breadcrumb={crumb} title={forecastTitle(t, 'stockCheck')} />
+          <PurposeHeader page="stockCheck" />
+          <SimulatedDataBanner />
+          <DataAsOf date={forecastNow()} />
+        </>
+      ) : (
+        <>
+          <PageHeader breadcrumb={crumb} title={t('fsr.title')} subtitle={t('fsr.subtitle.sup')} />
+          <PageMetaLine className="-mt-6 mb-4">
+            {t('fsr.asOf')} <Data>{formatDate(forecastNow())}</Data>
+            <SampleDataBadge className="ml-3 align-middle" />
+          </PageMetaLine>
+        </>
+      )}
 
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 mb-6" data-testid="fsr-summary">
         {FS_OUTCOME_ORDER.map((o) => (
@@ -282,6 +300,12 @@ const FixedStockReconcile: React.FC<{ persona: 'buyer' | 'supplier' }> = ({ pers
         <p>{t('fsr.rules.liability')}</p>
         <p>{t('fsr.rules.provisional')}</p>
       </section>
+
+      {isPti && (
+        <AboutThisPage>
+          <p>{t('fsr.subtitle.pti')}</p>
+        </AboutThisPage>
+      )}
 
       <SidePanel
         open={editing !== null && canSetMax}
