@@ -97,6 +97,7 @@ import {
 import BuyerMaterialRequirement from '@pages-v2/BuyerMaterialRequirement';
 import BuyerSafetyStock from '@pages-v2/BuyerSafetyStock';
 import BuyerOrderPlan from '@pages-v2/BuyerOrderPlan';
+import BuyerThisWeek from '@pages-v2/BuyerThisWeek';
 import BuyerReschedule from '@pages-v2/BuyerReschedule';
 import BuyerStabilise from '@pages-v2/BuyerStabilise';
 import BuyerDataHealth from '@pages-v2/BuyerDataHealth';
@@ -277,6 +278,13 @@ const ROUTES = [
     pattern: '/buyer/safety-stock',
     at: '/buyer/safety-stock',
     element: <BuyerSafetyStock />,
+    identity: BUYER
+  },
+  {
+    name: 'buyer/this-week',
+    pattern: '/buyer/this-week',
+    at: '/buyer/this-week',
+    element: <BuyerThisWeek />,
     identity: BUYER
   },
   {

@@ -10,6 +10,7 @@ import {
   Building2,
   ClipboardCheck,
   Container,
+  CalendarCheck,
   CalendarClock,
   CalendarSync,
   CalendarDays,
@@ -62,21 +63,21 @@ import {
 
 /**
  * @typedef {{
- *   readonly labelKey: string;
- *   readonly icon: LucideIcon;
- *   readonly path: string;
- * }} NavItem
+ *     readonly labelKey: string;
+ *     readonly icon: LucideIcon;
+ *     readonly path: string;
+ *   }} NavItem
  */
 
 /**
  * `roles`:  PTI roles that see this section. Omitted = every role.
  *
  * @typedef {{
- *   readonly id: string;
- *   readonly labelKey: string;
- *   readonly roles?: readonly Exclude<HubRole, 'ALL'>[];
- *   readonly items: readonly NavItem[];
- * }} NavSection
+ *     readonly id: string;
+ *     readonly labelKey: string;
+ *     readonly roles?: readonly Exclude<HubRole, 'ALL'>[];
+ *     readonly items: readonly NavItem[];
+ *   }} NavSection
  */
 
 /** @type {readonly NavSection[]} */
@@ -109,6 +110,8 @@ export const PTI_NAV = [
     labelKey: 'hub.nav.section.weeklyPlan',
     roles: ['MP'],
     items: [
+      // FUX phase 2 B1 (F-03) — the cycle's starting point comes first.
+      { labelKey: 'hub.nav.pti.thisWeek', icon: CalendarCheck, path: '/buyer/this-week' },
       { labelKey: 'hub.nav.pti.whatToOrder', icon: Container, path: '/buyer/order-plan' },
       { labelKey: 'hub.nav.pti.makeRoom', icon: CalendarSync, path: '/buyer/reschedule' },
       { labelKey: 'hub.nav.pti.publishToSuppliers', icon: Anchor, path: '/buyer/stabilise' },
@@ -181,10 +184,16 @@ export const PTI_NAV = [
   },
   {
     // FUX-D2 — a Material Planner sees the scorecard under Review instead.
+    // FUX-D6 (F-15) — Procurement sets max stock on the end-of-cycle stock
+    // check, so it gets a menu path too; `maxstock:set`'s HandoffNotice still
+    // gates the act on the page.
     id: 'performance',
     labelKey: 'hub.nav.section.performance',
     roles: ['BUY'],
-    items: [{ labelKey: 'hub.nav.pti.performance', icon: Award, path: '/buyer/scorecard' }]
+    items: [
+      { labelKey: 'hub.nav.pti.performance', icon: Award, path: '/buyer/scorecard' },
+      { labelKey: 'hub.nav.pti.stockCheck', icon: Scale, path: '/buyer/fs-reconcile' }
+    ]
   }
 ];
 
