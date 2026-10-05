@@ -64,14 +64,20 @@ export const SAP_PAGE_OBJECT = /** @satisfies {Record<string, SapObjectId>} */ (
 // ── A failed message ────────────────────────────────────────────────────────
 
 /**
- * @typedef {object} SapFailedMessage
- * @property {string} id
- * @property {SapObjectId} object
- * @property {SettleFault} fault -  CR-20's class — the settle boundary's own vocabulary, not a second one.
- * @property {string} errorText -  The business-plain error the interface reported.
- * @property {string} correlationId -  The reference both sides quote when they talk about this message.
- * @property {string} timestamp
- * @property {string} [settleCorrelationId] -  Present when the message came from a real settle the dispatcher can retry.
+ * `fault`:  CR-20's class — the settle boundary's own vocabulary, not a second one.
+ * `errorText`:  The business-plain error the interface reported.
+ * `correlationId`:  The reference both sides quote when they talk about this message.
+ * `settleCorrelationId`:  Present when the message came from a real settle the dispatcher can retry.
+ *
+ * @typedef {{
+ *   readonly id: string;
+ *   readonly object: SapObjectId;
+ *   readonly fault: SettleFault;
+ *   readonly errorText: string;
+ *   readonly correlationId: string;
+ *   readonly timestamp: string;
+ *   readonly settleCorrelationId?: string;
+ * }} SapFailedMessage
  */
 
 /**
@@ -86,13 +92,17 @@ export function isRetryable(message) {
 // ── The per-object status the monitor renders ───────────────────────────────
 
 /**
- * @typedef {object} SapObjectStatus
- * @property {SapObjectId} object
- * @property {SapDirection} direction
- * @property {string | null} lastSuccessAt -  The last time this object moved successfully, or null if it never has.
- * @property {number} failureCount
- * @property {readonly SapFailedMessage[]} failures
- * @property {number} retryableCount -  Of the failures, the ones CR-20 allows a retry on.
+ * `lastSuccessAt`:  The last time this object moved successfully, or null if it never has.
+ * `retryableCount`:  Of the failures, the ones CR-20 allows a retry on.
+ *
+ * @typedef {{
+ *   readonly object: SapObjectId;
+ *   readonly direction: SapDirection;
+ *   readonly lastSuccessAt: string | null;
+ *   readonly failureCount: number;
+ *   readonly failures: readonly SapFailedMessage[];
+ *   readonly retryableCount: number;
+ * }} SapObjectStatus
  */
 
 /**
@@ -157,9 +167,12 @@ export function failuresFromEvents(events, entityOf) {
 }
 
 /**
- * @typedef {object} SapMonitorInput
- * @property {Readonly<Partial<Record<SapObjectId, string | null>>>} lastSeen -  Newest document instant per object — the simulated "last received".
- * @property {readonly SapFailedMessage[]} messages
+ * `lastSeen`:  Newest document instant per object — the simulated "last received".
+ *
+ * @typedef {{
+ *   readonly lastSeen: Readonly<Partial<Record<SapObjectId, string | null>>>;
+ *   readonly messages: readonly SapFailedMessage[];
+ * }} SapMonitorInput
  */
 
 /**
@@ -187,10 +200,14 @@ export function sapMonitor(input) {
 // ── BR-04 / AC-03 · the data age a screen shows ─────────────────────────────
 
 /**
- * @typedef {object} SapDataAge
- * @property {number | null} minutes -  Whole minutes since the object last arrived; null when it never has.
- * @property {boolean} stale -  True when the age exceeds the latency target — the banner's condition.
- * @property {string | null} lastSuccessAt
+ * `minutes`:  Whole minutes since the object last arrived; null when it never has.
+ * `stale`:  True when the age exceeds the latency target — the banner's condition.
+ *
+ * @typedef {{
+ *   readonly minutes: number | null;
+ *   readonly stale: boolean;
+ *   readonly lastSuccessAt: string | null;
+ * }} SapDataAge
  */
 
 /**

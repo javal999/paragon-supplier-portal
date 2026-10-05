@@ -51,23 +51,25 @@
 /** @typedef {'USD/MT' | 'USD/FEU' | 'IDR/USD'} SeriesUnit */
 
 /**
- * @typedef {object} HistoryPoint
- * @property {MonthKey} month
- * @property {number} value
+ * @typedef {{
+ *   readonly month: MonthKey;
+ *   readonly value: number;
+ * }} HistoryPoint
  */
 
 /**
  * citation / URL — the documented origin
  * how the series is dated
  *
- * @typedef {object} HistoricalSeries
- * @property {string} rootId
- * @property {string} label
- * @property {SeriesUnit} unit
- * @property {Provenance} provenance
- * @property {string} source
- * @property {string} asOfNote
- * @property {readonly HistoryPoint[]} points
+ * @typedef {{
+ *   readonly rootId: string;
+ *   readonly label: string;
+ *   readonly unit: SeriesUnit;
+ *   readonly provenance: Provenance;
+ *   readonly source: string;
+ *   readonly asOfNote: string;
+ *   readonly points: readonly HistoryPoint[];
+ * }} HistoricalSeries
  */
 
 /**

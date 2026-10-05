@@ -179,14 +179,18 @@ export function isHalalCertType(certType) {
  * one WITH its consumer**, rather than inheriting one nobody asked for.
  */
 /**
- * @typedef {object} VerifiedCertificateRef
- * @property {CertType} certType
- * @property {string} certNumber -  THE HUMAN-FACING REFERENCE. What a clerk quotes on a call.
- * @property {string} issuer -  WHO ISSUES IT — the body a renewal is chased through.
- * @property {string | null} expiryDate -  `string | null`; `null` is a real answer — a BPJPH certificate has no clock
- *    under GR 42/2024, and that is not the same as an unknown expiry.
- * @property {string} supplierName -  WHOSE certificate. The registry's own roster name, so the notice and the
- *    compliance page name the supplier identically.
+ * `certNumber`:  THE HUMAN-FACING REFERENCE. What a clerk quotes on a call.
+ * `issuer`:  WHO ISSUES IT — the body a renewal is chased through.
+ * `expiryDate`:  `string | null`; `null` is a real answer — a BPJPH certificate has no clock  under GR 42/2024, and that is not the same as an unknown expiry.
+ * `supplierName`:  WHOSE certificate. The registry's own roster name, so the notice and the  compliance page name the supplier identically.
+ *
+ * @typedef {{
+ *   readonly certType: CertType;
+ *   readonly certNumber: string;
+ *   readonly issuer: string;
+ *   readonly expiryDate: string | null;
+ *   readonly supplierName: string;
+ * }} VerifiedCertificateRef
  */
 
 /**

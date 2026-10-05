@@ -90,9 +90,13 @@ import { isObligationComplete } from './obligationProjection';
 
 /** A contract's obligation counters. Both derived; neither stored. */
 /**
- * @typedef {object} ObligationRollup
- * @property {number} total -  Every obligation this contract owns.
- * @property {number} met -  Those of them that are complete — `isObligationComplete`, one source.
+ * `total`:  Every obligation this contract owns.
+ * `met`:  Those of them that are complete — `isObligationComplete`, one source.
+ *
+ * @typedef {{
+ *   readonly total: number;
+ *   readonly met: number;
+ * }} ObligationRollup
  */
 
 /**

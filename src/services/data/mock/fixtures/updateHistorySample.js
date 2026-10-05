@@ -47,11 +47,14 @@ export const SAMPLE_UPDATE_PATTERN = {
 const HOUR_MS = 3_600_000;
 
 /**
- * @typedef {object} SampleHistoryInputs
- * @property {readonly UpdateCycle[]} cycles -  The 13 cycles the pattern covers, oldest first (the window ending at the declared present).
- * @property {WorkingCalendar} calendar
- * @property {readonly CycleAssignment[]} assignments
- * @property {(supplierId: string, atIso: string) => StockUpdateMode} modeAt
+ * `cycles`:  The 13 cycles the pattern covers, oldest first (the window ending at the declared present).
+ *
+ * @typedef {{
+ *   readonly cycles: readonly UpdateCycle[];
+ *   readonly calendar: WorkingCalendar;
+ *   readonly assignments: readonly CycleAssignment[];
+ *   readonly modeAt: (supplierId: string, atIso: string) => StockUpdateMode;
+ * }} SampleHistoryInputs
  */
 
 /**

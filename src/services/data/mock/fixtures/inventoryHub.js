@@ -176,12 +176,15 @@ export const SUPPLIER_LEAD_TIME_DAYS = {
 
 /** One material's figures in a supplier's API response. */
 /**
- * @typedef {object} ApiStockFigure
- * @property {string} materialCode
- * @property {number} soh
- * @property {number} [supplierRop]
- * @property {number} [inProductionQty]
- * @property {number} [completionInDays] -  Days after the sync that production completes.
+ * `completionInDays`:  Days after the sync that production completes.
+ *
+ * @typedef {{
+ *   readonly materialCode: string;
+ *   readonly soh: number;
+ *   readonly supplierRop?: number;
+ *   readonly inProductionQty?: number;
+ *   readonly completionInDays?: number;
+ * }} ApiStockFigure
  */
 
 /**

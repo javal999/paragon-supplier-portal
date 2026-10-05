@@ -111,15 +111,14 @@ const BUYER_SCOPE = {
 
 /** What the seed did to ONE check — reported rather than assumed. */
 /**
- * @typedef {object} EnforcementSeedOutcome
- * @property {GovernedCheckId} checkId
- * @property {'recorded' | 'already-recorded' | 'refused'} status `recorded` — the opening act landed.
- *   `already-recorded` — the ledger already names this check; skipped (see the
- *     header: the seed opens a ledger, it does not close one).
- *   `refused` — the dispatch failed. THE LEDGER STAYS EMPTY FOR THIS CHECK,
- *     which derives `BLOCK / NO_SETTING_RECORDED`. What is lost is PROVENANCE,
- *     never enforcement — the un-governed state is the safe state.
- * @property {string} [reason] -  The dispatcher's own words, when it refused.
+ * `status`: `recorded` — the opening act landed. `already-recorded` — the ledger already names this check; skipped (see the   header: the seed opens a ledger, it does not close one). `refused` — the dispatch failed. THE LEDGER STAYS EMPTY FOR THIS CHECK,   which derives `BLOCK / NO_SETTING_RECORDED`. What is lost is PROVENANCE,   never enforcement — the un-governed state is the safe state.
+ * `reason`:  The dispatcher's own words, when it refused.
+ *
+ * @typedef {{
+ *   readonly checkId: GovernedCheckId;
+ *   readonly status: 'recorded' | 'already-recorded' | 'refused';
+ *   readonly reason?: string;
+ * }} EnforcementSeedOutcome
  */
 
 /**

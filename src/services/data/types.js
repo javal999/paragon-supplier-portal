@@ -296,40 +296,59 @@ export class DataError extends Error {
 
 /** One line's counter-offer on an adjusted PO. */
 /**
- * @typedef {object} PoLineResponse
- * @property {string} lineId
- * @property {PoReasonCode} reasonCode
- * @property {string} [note] -  Required when `reasonCode` is `other`.
- * @property {number} counterQty -  CR-10: 0 < quantity ≤ the line's ordered quantity.
- * @property {string} counterDate -  `YYYY-MM-DD`.
+ * `note`:  Required when `reasonCode` is `other`.
+ * `counterQty`:  CR-10: 0 < quantity ≤ the line's ordered quantity.
+ * `counterDate`:  `YYYY-MM-DD`.
+ *
+ * @typedef {{
+ *   readonly lineId: string;
+ *   readonly reasonCode: PoReasonCode;
+ *   readonly note?: string;
+ *   readonly counterQty: number;
+ *   readonly counterDate: string;
+ * }} PoLineResponse
  */
 
 /** The planner's decision on a counter-offer. */
 /**
- * @typedef {object} PoCounterReview
- * @property {'accepted' | 'rejected'} decision
- * @property {string} [comment]
- * @property {string} reviewedAt
+ * @typedef {{
+ *   readonly decision: 'accepted' | 'rejected';
+ *   readonly comment?: string;
+ *   readonly reviewedAt: string;
+ * }} PoCounterReview
  */
 
 /**
- * @typedef {object} PoResponse
- * @property {PoResponseOption} option
- * @property {string} respondedAt -  ISO timestamp of the supplier's answer.
- * @property {string} [confirmedDeliveryDate] -  Approve: the delivery date the supplier confirmed.
- * @property {readonly PoLineResponse[]} [lines] -  Adjust: one entry per adjusted line; lines not listed are accepted as ordered.
- * @property {readonly PoRejectionCause[]} [rejectionCauses] -  Reject: at least one cause.
- * @property {string} [comment]
- * @property {PoCounterReview} [review] -  The planner's review of an adjustment, once made.
+ * `respondedAt`:  ISO timestamp of the supplier's answer.
+ * `confirmedDeliveryDate`:  Approve: the delivery date the supplier confirmed.
+ * `lines`:  Adjust: one entry per adjusted line; lines not listed are accepted as ordered.
+ * `rejectionCauses`:  Reject: at least one cause.
+ * `review`:  The planner's review of an adjustment, once made.
+ *
+ * @typedef {{
+ *   readonly option: PoResponseOption;
+ *   readonly respondedAt: string;
+ *   readonly confirmedDeliveryDate?: string;
+ *   readonly lines?: readonly PoLineResponse[];
+ *   readonly rejectionCauses?: readonly PoRejectionCause[];
+ *   readonly comment?: string;
+ *   readonly review?: PoCounterReview;
+ * }} PoResponse
  */
 
 /**
- * @typedef {object} PoShippingNotice
- * @property {string} [startedOn] -  Date shipment started — recorded automatically from the first submitted ASN.
- * @property {string} [startedByAsn] -  The ASN that started it.
- * @property {string} [expectedCompletionDate] -  Expected completion date given by the supplier (`YYYY-MM-DD`).
- * @property {string} [previousCompletionDate] -  The previous expected completion date, kept when the supplier changes it.
- * @property {string} [updatedAt]
+ * `startedOn`:  Date shipment started — recorded automatically from the first submitted ASN.
+ * `startedByAsn`:  The ASN that started it.
+ * `expectedCompletionDate`:  Expected completion date given by the supplier (`YYYY-MM-DD`).
+ * `previousCompletionDate`:  The previous expected completion date, kept when the supplier changes it.
+ *
+ * @typedef {{
+ *   readonly startedOn?: string;
+ *   readonly startedByAsn?: string;
+ *   readonly expectedCompletionDate?: string;
+ *   readonly previousCompletionDate?: string;
+ *   readonly updatedAt?: string;
+ * }} PoShippingNotice
  */
 
 // ── Call-offs (REQ-E09-01, REQ-E09-03, REQ-E09-04) ──────────────────────────
@@ -361,9 +380,10 @@ export class DataError extends Error {
 
 /** One confirmed delivery: a quantity on a date (`YYYY-MM-DD`). */
 /**
- * @typedef {object} CallOffDelivery
- * @property {number} quantity
- * @property {string} date
+ * @typedef {{
+ *   readonly quantity: number;
+ *   readonly date: string;
+ * }} CallOffDelivery
  */
 
 /**
@@ -373,32 +393,37 @@ export class DataError extends Error {
  * confirmation and returns the call-off to Awaiting Confirmation.
  */
 /**
- * @typedef {object} CallOffConfirmation
- * @property {CallOffConfirmationKind} kind
- * @property {readonly CallOffDelivery[]} deliveries
- * @property {string} [comment]
- * @property {string} confirmedAt
- * @property {'auto' | 'awaiting' | 'approved'} approval
- * @property {string} [reviewedAt]
+ * @typedef {{
+ *   readonly kind: CallOffConfirmationKind;
+ *   readonly deliveries: readonly CallOffDelivery[];
+ *   readonly comment?: string;
+ *   readonly confirmedAt: string;
+ *   readonly approval: 'auto' | 'awaiting' | 'approved';
+ *   readonly reviewedAt?: string;
+ * }} CallOffConfirmation
  */
 
 /** A dispatch heads-up from the supplier (REQ-E09-04). */
 /**
- * @typedef {object} CallOffDispatch
- * @property {string} id
- * @property {string} shippedDate
- * @property {string} expectedArrival
- * @property {number} quantity
- * @property {string} [asnNumber] -  Optional link to the ASN for this shipment.
- * @property {string} recordedAt
+ * `asnNumber`:  Optional link to the ASN for this shipment.
+ *
+ * @typedef {{
+ *   readonly id: string;
+ *   readonly shippedDate: string;
+ *   readonly expectedArrival: string;
+ *   readonly quantity: number;
+ *   readonly asnNumber?: string;
+ *   readonly recordedAt: string;
+ * }} CallOffDispatch
  */
 
 /** A planner or supplier note kept on the call-off (reasons are required). */
 /**
- * @typedef {object} CallOffNote
- * @property {'edit' | 'dismiss' | 'change' | 'reject' | 'returned'} action
- * @property {string} text
- * @property {string} at
+ * @typedef {{
+ *   readonly action: 'edit' | 'dismiss' | 'change' | 'reject' | 'returned';
+ *   readonly text: string;
+ *   readonly at: string;
+ * }} CallOffNote
  */
 
 /** The origin a call-off can carry (see `CallOff.origin`). */
@@ -413,45 +438,50 @@ export class DataError extends Error {
  * liveness pill (AR-19).
  */
 /**
- * @typedef {object} MrpControllerRef
- * @property {string} [code] -  The SAP MRP controller code, e.g. `P12`. Absent on a supplier's read.
- * @property {string} [name] -  Who the code is. Absent when the administrator has not mapped the code.
+ * `code`:  The SAP MRP controller code, e.g. `P12`. Absent on a supplier's read.
+ * `name`:  Who the code is. Absent when the administrator has not mapped the code.
+ *
+ * @typedef {{
+ *   readonly code?: string;
+ *   readonly name?: string;
+ * }} MrpControllerRef
  */
 
 /**
- * @typedef {object} CallOff
- * @property {string} id
- * @property {string} callOffNumber
- * @property {string} poId -  The umbrella PO and its line (supplier and material come from it).
- * @property {string} poNumber
- * @property {string} poLineId
- * @property {string} supplierId
- * @property {string} supplierName
- * @property {string} materialCode
- * @property {string} description
- * @property {string} uom
- * @property {number} unitPrice
- * @property {string} currency
- * @property {number} quantity -  Released (requested) quantity and need date — "must come" (REQ-E09-04 BR-01).
- * @property {string} needDate
- * @property {CallOffType} type
- * @property {CallOffStatus} status
- * @property {string} [releasedAt] -  When the supplier was last asked to confirm; the 1-working-day deadline counts from here.
- * @property {CallOffConfirmation} [confirmation]
- * @property {readonly CallOffDelivery[]} [agreedDeliveries] The deliveries last agreed by BOTH sides (BL-66 (2); REQ-E10-01 edge case
- *   "measure against the latest date agreed by both sides"). Kept when the
- *   planner changes a call-off the supplier had confirmed and that confirmation
- *   was accepted; OTIF measures against these until the supplier confirms the
- *   change and it is accepted. Absent when nothing was ever agreed.
- * @property {string} [rejectionReason] -  The supplier's reason when it rejected the call-off.
- * @property {CallOffOrigin} [origin] Where the call-off came from, when not typed by the planner. `'engine'`: a
- *   draft the Order plan created from a forecast-engine recommendation
- *   (REQ-E14-05 BR-05). While the engine dataset is not live, such a draft is
- *   refused on release (X-03, owner decision 2026-09-23). Absent for every
- *   call-off created on the Call-offs page.
- * @property {readonly CallOffDispatch[]} dispatches
- * @property {readonly CallOffNote[]} notes
- * @property {MrpControllerRef} [mrpController] -  Material C4 — the material's MRP controller, projected at read (never stored).
+ * `poId`:  The umbrella PO and its line (supplier and material come from it).
+ * `quantity`:  Released (requested) quantity and need date — "must come" (REQ-E09-04 BR-01).
+ * `releasedAt`:  When the supplier was last asked to confirm; the 1-working-day deadline counts from here.
+ * `agreedDeliveries`: The deliveries last agreed by BOTH sides (BL-66 (2); REQ-E10-01 edge case "measure against the latest date agreed by both sides"). Kept when the planner changes a call-off the supplier had confirmed and that confirmation was accepted; OTIF measures against these until the supplier confirms the change and it is accepted. Absent when nothing was ever agreed.
+ * `rejectionReason`:  The supplier's reason when it rejected the call-off.
+ * `origin`: Where the call-off came from, when not typed by the planner. `'engine'`: a draft the Order plan created from a forecast-engine recommendation (REQ-E14-05 BR-05). While the engine dataset is not live, such a draft is refused on release (X-03, owner decision 2026-09-23). Absent for every call-off created on the Call-offs page.
+ * `mrpController`:  Material C4 — the material's MRP controller, projected at read (never stored).
+ *
+ * @typedef {{
+ *   readonly id: string;
+ *   readonly callOffNumber: string;
+ *   readonly poId: string;
+ *   readonly poNumber: string;
+ *   readonly poLineId: string;
+ *   readonly supplierId: string;
+ *   readonly supplierName: string;
+ *   readonly materialCode: string;
+ *   readonly description: string;
+ *   readonly uom: string;
+ *   readonly unitPrice: number;
+ *   readonly currency: string;
+ *   readonly quantity: number;
+ *   readonly needDate: string;
+ *   readonly type: CallOffType;
+ *   readonly status: CallOffStatus;
+ *   readonly releasedAt?: string;
+ *   readonly confirmation?: CallOffConfirmation;
+ *   readonly agreedDeliveries?: readonly CallOffDelivery[];
+ *   readonly rejectionReason?: string;
+ *   readonly origin?: CallOffOrigin;
+ *   readonly dispatches: readonly CallOffDispatch[];
+ *   readonly notes: readonly CallOffNote[];
+ *   readonly mrpController?: MrpControllerRef;
+ * }} CallOff
  */
 
 // ─── Inventory & capacity collaboration (REQ-E08-01 to REQ-E08-05) ─────────
@@ -468,66 +498,78 @@ export class DataError extends Error {
 
 /** One incoming quantity with its date — the per-date detail behind the aggregate. */
 /**
- * @typedef {object} IncomingItem
- * @property {IncomingSource} source
- * @property {string | null} date -  Expected completion or arrival (`YYYY-MM-DD`); null when the supplier gave none.
- * @property {number} quantity
- * @property {string | null} reference -  The ASN number or call-off number the quantity rides on; null for production.
+ * `date`:  Expected completion or arrival (`YYYY-MM-DD`); null when the supplier gave none.
+ * `reference`:  The ASN number or call-off number the quantity rides on; null for production.
+ *
+ * @typedef {{
+ *   readonly source: IncomingSource;
+ *   readonly date: string | null;
+ *   readonly quantity: number;
+ *   readonly reference: string | null;
+ * }} IncomingItem
  */
 
 /** An API sync attempt for a connected supplier (REQ-E08-02 BR-03). */
 /**
- * @typedef {object} StockSyncAttempt
- * @property {string} id
- * @property {string} supplierId
- * @property {string} at
- * @property {'success' | 'failed'} outcome
- * @property {string} [errorKey] -  i18n key suffix of the business-language error, when it failed.
+ * `errorKey`:  i18n key suffix of the business-language error, when it failed.
+ *
+ * @typedef {{
+ *   readonly id: string;
+ *   readonly supplierId: string;
+ *   readonly at: string;
+ *   readonly outcome: 'success' | 'failed';
+ *   readonly errorKey?: string;
+ * }} StockSyncAttempt
  */
 
 /** Where the average daily demand came from (CR-01). */
 /** @typedef {'forecast' | 'planningEstimate' | 'none'} DemandSource */
 
 /**
- * @typedef {object} InventoryPosition
- * @property {string} supplierId
- * @property {string} supplierName
- * @property {string} materialCode
- * @property {string} materialLabel
- * @property {MaterialType} materialType -  ROH = raw material, VERP = packaging (BR-07).
- * @property {string} materialGroup
- * @property {string} uom
- * @property {number | null} supplierSoh -  Latest supplier stock submission; null when the supplier never submitted.
- * @property {number | null} supplierRop -  The supplier's own reorder point; null reads "Not provided".
- * @property {number | null} ptiSoh -  PTI stock and reorder point from SAP. Null for a supplier without access.
- * @property {number | null} ptiRop
- * @property {boolean} ptiStockShared -  Whether PTI stock is shown on this row (always true for PTI users).
- * @property {boolean} consignment -  Consignment material (MN-INV-10).
- * @property {readonly IncomingItem[]} incoming
- * @property {number | null} avgDailyDemand -  CR-01 — forecast for the next 30 days ÷ 30; null when there is no demand.
- * @property {number | null} leadTimeDays CR-24 — the supplier's lead time for this material, in days (master data,
- *   not a clock state). Null when none is on record: the risk class then falls
- *   back to the CR-02 bands and a "lead time missing" alert is raised.
- * @property {DemandSource} demandSource
- * @property {string | null} lastUpdatedAt
- * @property {StockChannel | null} channel
- * @property {number} updateSla -  The data-update SLA for this supplier × material, in days (AC-05).
- * @property {string | null} staleAt Material B1 (MR-1 BR-05, AR-07) — the instant the figure turns stale, by
- *   the supplier's update mode: manual at the cutoff of the cycle after the
- *   last update, API `stale.apiHours` after the last successful pull, a BL-32
- *   override that many days after the last update. Null when there is no
- *   figure. Derived at read time, never stored (AD-1).
- * @property {string | null} lastPullFailedAt Material B1 (owner ruling 2026-09-29) — when the latest API pull failed
- *   after the figure on hand; null otherwise. A WARNING only: a failed pull
- *   does not make the figure stale — the figure goes stale `stale.apiHours`
- *   after the last SUCCESSFUL pull (`staleAt`).
- * @property {boolean} apiConnected
- * @property {StockSyncAttempt | null} lastSync -  The latest API sync attempt for this supplier, if any.
- * @property {readonly { readonly batchNumber: string; readonly qty: number; readonly manufacturingDate?: string; readonly expiryDate?: string; }[]} batches
- * @property {MrpControllerRef} [mrpController] -  Material C4 — the material's MRP controller (MR-5 BR-03), narrowed per reader.
- * @property {string} [tradeName] Material C2 — this supplier's APPROVED trade name for the material (MR-3
- *   BR-02), shown beside PTI's description. Projected at read, never stored;
- *   absent while no name is approved or the material is no longer assigned.
+ * `materialType`:  ROH = raw material, VERP = packaging (BR-07).
+ * `supplierSoh`:  Latest supplier stock submission; null when the supplier never submitted.
+ * `supplierRop`:  The supplier's own reorder point; null reads "Not provided".
+ * `ptiSoh`:  PTI stock and reorder point from SAP. Null for a supplier without access.
+ * `ptiStockShared`:  Whether PTI stock is shown on this row (always true for PTI users).
+ * `consignment`:  Consignment material (MN-INV-10).
+ * `avgDailyDemand`:  CR-01 — forecast for the next 30 days ÷ 30; null when there is no demand.
+ * `leadTimeDays`: CR-24 — the supplier's lead time for this material, in days (master data, not a clock state). Null when none is on record: the risk class then falls back to the CR-02 bands and a "lead time missing" alert is raised.
+ * `updateSla`:  The data-update SLA for this supplier × material, in days (AC-05).
+ * `staleAt`: Material B1 (MR-1 BR-05, AR-07) — the instant the figure turns stale, by the supplier's update mode: manual at the cutoff of the cycle after the last update, API `stale.apiHours` after the last successful pull, a BL-32 override that many days after the last update. Null when there is no figure. Derived at read time, never stored (AD-1).
+ * `lastPullFailedAt`: Material B1 (owner ruling 2026-09-29) — when the latest API pull failed after the figure on hand; null otherwise. A WARNING only: a failed pull does not make the figure stale — the figure goes stale `stale.apiHours` after the last SUCCESSFUL pull (`staleAt`).
+ * `lastSync`:  The latest API sync attempt for this supplier, if any.
+ * `mrpController`:  Material C4 — the material's MRP controller (MR-5 BR-03), narrowed per reader.
+ * `tradeName`: Material C2 — this supplier's APPROVED trade name for the material (MR-3 BR-02), shown beside PTI's description. Projected at read, never stored; absent while no name is approved or the material is no longer assigned.
+ *
+ * @typedef {{
+ *   readonly supplierId: string;
+ *   readonly supplierName: string;
+ *   readonly materialCode: string;
+ *   readonly materialLabel: string;
+ *   readonly materialType: MaterialType;
+ *   readonly materialGroup: string;
+ *   readonly uom: string;
+ *   readonly supplierSoh: number | null;
+ *   readonly supplierRop: number | null;
+ *   readonly ptiSoh: number | null;
+ *   readonly ptiRop: number | null;
+ *   readonly ptiStockShared: boolean;
+ *   readonly consignment: boolean;
+ *   readonly incoming: readonly IncomingItem[];
+ *   readonly avgDailyDemand: number | null;
+ *   readonly leadTimeDays: number | null;
+ *   readonly demandSource: DemandSource;
+ *   readonly lastUpdatedAt: string | null;
+ *   readonly channel: StockChannel | null;
+ *   readonly updateSla: number;
+ *   readonly staleAt: string | null;
+ *   readonly lastPullFailedAt: string | null;
+ *   readonly apiConnected: boolean;
+ *   readonly lastSync: StockSyncAttempt | null;
+ *   readonly batches: readonly { readonly batchNumber: string; readonly qty: number; readonly manufacturingDate?: string; readonly expiryDate?: string; }[];
+ *   readonly mrpController?: MrpControllerRef;
+ *   readonly tradeName?: string;
+ * }} InventoryPosition
  */
 
 // ─── Supplier trade names (Material C2 · MR-3 BR-01 to BR-06) ───────────────
@@ -541,19 +583,26 @@ export class DataError extends Error {
  * the new one is approved (BR-02), so the approved name stays in use meanwhile.
  */
 /**
- * @typedef {object} SupplierMaterialName
- * @property {string} id
- * @property {string} supplierId
- * @property {string} materialCode
- * @property {string} tradeName
- * @property {string} [supplierMaterialNo] -  The supplier's own material number, when it gave one (at most 40 characters).
- * @property {MaterialNameState} state
- * @property {ActorAttribution} submittedBy -  From the session, never the form.
- * @property {string} submittedAt -  Store-assigned from the hub clock.
- * @property {ActorAttribution} [decidedBy]
- * @property {string} [decidedAt]
- * @property {string} [rejectionReason] -  Why Material Planning rejected it; the supplier sees this text.
- * @property {boolean} [loadedByPti] -  True when PTI loaded it in bulk, approved on load (BR-06).
+ * `supplierMaterialNo`:  The supplier's own material number, when it gave one (at most 40 characters).
+ * `submittedBy`:  From the session, never the form.
+ * `submittedAt`:  Store-assigned from the hub clock.
+ * `rejectionReason`:  Why Material Planning rejected it; the supplier sees this text.
+ * `loadedByPti`:  True when PTI loaded it in bulk, approved on load (BR-06).
+ *
+ * @typedef {{
+ *   readonly id: string;
+ *   readonly supplierId: string;
+ *   readonly materialCode: string;
+ *   readonly tradeName: string;
+ *   readonly supplierMaterialNo?: string;
+ *   readonly state: MaterialNameState;
+ *   readonly submittedBy: ActorAttribution;
+ *   readonly submittedAt: string;
+ *   readonly decidedBy?: ActorAttribution;
+ *   readonly decidedAt?: string;
+ *   readonly rejectionReason?: string;
+ *   readonly loadedByPti?: boolean;
+ * }} SupplierMaterialName
  */
 
 /**
@@ -563,33 +612,45 @@ export class DataError extends Error {
  * are its names (edge case 2).
  */
 /**
- * @typedef {object} MaterialNameRow
- * @property {string} supplierId
- * @property {string} supplierName
- * @property {string} materialCode
- * @property {string} materialLabel -  PTI's description, through the material master resolver.
- * @property {SupplierMaterialName} [approved] -  The approved name in force, if any.
- * @property {SupplierMaterialName} [latest] -  The newest record for the pair (awaiting, rejected or approved), if any.
- * @property {readonly SupplierMaterialName[]} history -  Every record for the pair, oldest first.
+ * `materialLabel`:  PTI's description, through the material master resolver.
+ * `approved`:  The approved name in force, if any.
+ * `latest`:  The newest record for the pair (awaiting, rejected or approved), if any.
+ * `history`:  Every record for the pair, oldest first.
+ *
+ * @typedef {{
+ *   readonly supplierId: string;
+ *   readonly supplierName: string;
+ *   readonly materialCode: string;
+ *   readonly materialLabel: string;
+ *   readonly approved?: SupplierMaterialName;
+ *   readonly latest?: SupplierMaterialName;
+ *   readonly history: readonly SupplierMaterialName[];
+ * }} MaterialNameRow
  */
 
 /** One entry in the supplier-access log (REQ-E08-03 BR-06). */
 /**
- * @typedef {object} StockAccessLogEntry
- * @property {'grant' | 'change' | 'remove'} action
- * @property {readonly string[]} materials -  Empty = all materials the supplier supplies.
- * @property {string} at
- * @property {ActorAttribution} actor
+ * `materials`:  Empty = all materials the supplier supplies.
+ *
+ * @typedef {{
+ *   readonly action: 'grant' | 'change' | 'remove';
+ *   readonly materials: readonly string[];
+ *   readonly at: string;
+ *   readonly actor: ActorAttribution;
+ * }} StockAccessLogEntry
  */
 
 /** A supplier's access to PTI stock (REQ-E08-03). */
 /**
- * @typedef {object} StockAccessGrant
- * @property {string} supplierId
- * @property {string} supplierName
- * @property {boolean} active
- * @property {readonly string[]} materials -  Empty = all materials the supplier supplies.
- * @property {readonly StockAccessLogEntry[]} log
+ * `materials`:  Empty = all materials the supplier supplies.
+ *
+ * @typedef {{
+ *   readonly supplierId: string;
+ *   readonly supplierName: string;
+ *   readonly active: boolean;
+ *   readonly materials: readonly string[];
+ *   readonly log: readonly StockAccessLogEntry[];
+ * }} StockAccessGrant
  */
 
 /**
@@ -601,38 +662,43 @@ export class DataError extends Error {
 
 /** One weekly bucket of a capacity submission (REQ-E08-04). */
 /**
- * @typedef {object} CapacityWeekEntry
- * @property {string} week -  Monday of the week (`YYYY-MM-DD`).
- * @property {number} allocated
- * @property {number} [upside]
- * @property {CapacityReason} [reason]
- * @property {string} [note]
+ * `week`:  Monday of the week (`YYYY-MM-DD`).
+ *
+ * @typedef {{
+ *   readonly week: string;
+ *   readonly allocated: number;
+ *   readonly upside?: number;
+ *   readonly reason?: CapacityReason;
+ *   readonly note?: string;
+ * }} CapacityWeekEntry
  */
 
 /**
- * @typedef {object} CapacitySubmission
- * @property {string} id
- * @property {string} supplierId
- * @property {string} planningGroupId Material C5 (MR-8 BR-04) — the planning group the capacity is stated for.
- *   Was the SAP `materialGroup`; every earlier submission migrated to its SAP
- *   group's default planning group (`pg-<materialGroup>`).
- * @property {string} submittedAt
- * @property {readonly CapacityWeekEntry[]} weeks
+ * `planningGroupId`: Material C5 (MR-8 BR-04) — the planning group the capacity is stated for. Was the SAP `materialGroup`; every earlier submission migrated to its SAP group's default planning group (`pg-<materialGroup>`).
+ *
+ * @typedef {{
+ *   readonly id: string;
+ *   readonly supplierId: string;
+ *   readonly planningGroupId: string;
+ *   readonly submittedAt: string;
+ *   readonly weeks: readonly CapacityWeekEntry[];
+ * }} CapacitySubmission
  */
 
 /** Capacity against demand for one supplier × planning group, 13 weekly buckets. */
 /**
- * @typedef {object} CapacityPlan
- * @property {string} supplierId
- * @property {string} supplierName
- * @property {string} planningGroupId -  Material C5 (MR-8 BR-04) — the planning group; its name comes from the store.
- * @property {readonly string[]} materials
- * @property {string} uom
- * @property {readonly { readonly week: string; readonly demand: number; readonly entry: CapacityWeekEntry | null; readonly needsReEntry?: true; }[]} weeks Material C5 (MR-8 BR-05) — materials moved into or out of the group after
- *   the latest submission, so the figure entered for this week no longer
- *   covers the group's materials. Present only when true; derived from the
- *   move time, never stored.
- * @property {CapacitySubmission | null} latest
+ * `planningGroupId`:  Material C5 (MR-8 BR-04) — the planning group; its name comes from the store.
+ * `weeks`: Material C5 (MR-8 BR-05) — materials moved into or out of the group after the latest submission, so the figure entered for this week no longer covers the group's materials. Present only when true; derived from the move time, never stored.
+ *
+ * @typedef {{
+ *   readonly supplierId: string;
+ *   readonly supplierName: string;
+ *   readonly planningGroupId: string;
+ *   readonly materials: readonly string[];
+ *   readonly uom: string;
+ *   readonly weeks: readonly { readonly week: string; readonly demand: number; readonly entry: CapacityWeekEntry | null; readonly needsReEntry?: true; }[];
+ *   readonly latest: CapacitySubmission | null;
+ * }} CapacityPlan
  */
 
 // ─── Forecast collaboration (REQ-E06-01 to REQ-E06-03) ──────────────────────
@@ -667,54 +733,67 @@ export class DataError extends Error {
 
 /** One version of a forecast stream, with who has opened it (REQ-E06-01). */
 /**
- * @typedef {object} ForecastVersionView
- * @property {string} publicationId
- * @property {string} planVersion
- * @property {ForecastStream} stream
- * @property {number} version
- * @property {string} publishedAt
- * @property {boolean} emergency
- * @property {string | null} changeNote -  The planner's note when the version moved demand between suppliers.
- * @property {boolean} isCurrent
- * @property {readonly { readonly supplierId: string; readonly supplierName: string; readonly viewedAt: string | null; readonly changedPeriods: number; }[]} suppliers -  Suppliers with lines in this version; a supplier reads only itself.
- *    When the supplier first opened this version; null when not yet.
- *    BR-06 — this supplier's periods whose quantity moved against the previous version.
+ * `changeNote`:  The planner's note when the version moved demand between suppliers.
+ * `suppliers`:  Suppliers with lines in this version; a supplier reads only itself.  When the supplier first opened this version; null when not yet.  BR-06 — this supplier's periods whose quantity moved against the previous version.
+ *
+ * @typedef {{
+ *   readonly publicationId: string;
+ *   readonly planVersion: string;
+ *   readonly stream: ForecastStream;
+ *   readonly version: number;
+ *   readonly publishedAt: string;
+ *   readonly emergency: boolean;
+ *   readonly changeNote: string | null;
+ *   readonly isCurrent: boolean;
+ *   readonly suppliers: readonly { readonly supplierId: string; readonly supplierName: string; readonly viewedAt: string | null; readonly changedPeriods: number; }[];
+ * }} ForecastVersionView
  */
 
 /** One material × period of a supplier's current forecast, with its commitment. */
 /**
- * @typedef {object} ForecastCommitmentLine
- * @property {string} key -  publicationId | supplier | material | period.
- * @property {ForecastStream} stream
- * @property {string} publicationId
- * @property {string} planVersion
- * @property {number} version
- * @property {string} supplierId
- * @property {string} supplierName
- * @property {string} materialCode
- * @property {string} materialLabel
- * @property {string} materialGroup
- * @property {string} uom
- * @property {string} periodBucket -  A week (its Monday, `YYYY-MM-DD`) or a month (`YYYY-MM`).
- * @property {string} periodStart
- * @property {string} periodEnd
- * @property {ForecastZone} zone
- * @property {number} forecastQty
- * @property {number | null} previousQty -  The quantity in the previous version; null when the period was not in it.
- * @property {string} publishedAt -  When the current version was published (the deadline counts from it).
- * @property {string} dueAt -  CR-26 / REQ-E06-02 BR-07 — Firm: 1 working day; Trade-off and Forecast: 3
- *    working days after publication, on the hub calendar (BL-48, BL-50).
- * @property {string} reminderAt -  REQ-E06-03 BR-06 — the first reminder, at half the deadline.
- * @property {CommitmentState} state
- * @property {RequirementResponse | null} response -  The submitted commitment that stands for the current quantity.
- * @property {string | null} responseDueAt CR-26 — the deadline the standing response ANSWERED (its own version's
- *   publication and zone), so a carried-forward commitment keeps the verdict it
- *   earned. Derived from publications, never from a clock; null with no response.
- * @property {boolean} carriedForward -  True when that commitment answered an earlier version with the same quantity.
- * @property {RequirementResponse | null} draft -  The supplier's own unsubmitted draft (never in PTI's read — BR-10).
- * @property {number | null} committedQty
- * @property {readonly DisputeEntry[]} log -  REQ-E06-03 BR-05 — every revision request and note on this period, oldest first.
- * @property {readonly { readonly supplierId: string; readonly supplierName: string }[]} otherQualifiedSuppliers -  REQ-E06-03 BR-05 — the other suppliers qualified for the material (where demand can move).
+ * `key`:  publicationId | supplier | material | period.
+ * `periodBucket`:  A week (its Monday, `YYYY-MM-DD`) or a month (`YYYY-MM`).
+ * `previousQty`:  The quantity in the previous version; null when the period was not in it.
+ * `publishedAt`:  When the current version was published (the deadline counts from it).
+ * `dueAt`:  CR-26 / REQ-E06-02 BR-07 — Firm: 1 working day; Trade-off and Forecast: 3  working days after publication, on the hub calendar (BL-48, BL-50).
+ * `reminderAt`:  REQ-E06-03 BR-06 — the first reminder, at half the deadline.
+ * `response`:  The submitted commitment that stands for the current quantity.
+ * `responseDueAt`: CR-26 — the deadline the standing response ANSWERED (its own version's publication and zone), so a carried-forward commitment keeps the verdict it earned. Derived from publications, never from a clock; null with no response.
+ * `carriedForward`:  True when that commitment answered an earlier version with the same quantity.
+ * `draft`:  The supplier's own unsubmitted draft (never in PTI's read — BR-10).
+ * `log`:  REQ-E06-03 BR-05 — every revision request and note on this period, oldest first.
+ * `otherQualifiedSuppliers`:  REQ-E06-03 BR-05 — the other suppliers qualified for the material (where demand can move).
+ *
+ * @typedef {{
+ *   readonly key: string;
+ *   readonly stream: ForecastStream;
+ *   readonly publicationId: string;
+ *   readonly planVersion: string;
+ *   readonly version: number;
+ *   readonly supplierId: string;
+ *   readonly supplierName: string;
+ *   readonly materialCode: string;
+ *   readonly materialLabel: string;
+ *   readonly materialGroup: string;
+ *   readonly uom: string;
+ *   readonly periodBucket: string;
+ *   readonly periodStart: string;
+ *   readonly periodEnd: string;
+ *   readonly zone: ForecastZone;
+ *   readonly forecastQty: number;
+ *   readonly previousQty: number | null;
+ *   readonly publishedAt: string;
+ *   readonly dueAt: string;
+ *   readonly reminderAt: string;
+ *   readonly state: CommitmentState;
+ *   readonly response: RequirementResponse | null;
+ *   readonly responseDueAt: string | null;
+ *   readonly carriedForward: boolean;
+ *   readonly draft: RequirementResponse | null;
+ *   readonly committedQty: number | null;
+ *   readonly log: readonly DisputeEntry[];
+ *   readonly otherQualifiedSuppliers: readonly { readonly supplierId: string; readonly supplierName: string }[];
+ * }} ForecastCommitmentLine
  */
 
 /**
@@ -819,10 +898,11 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
 
 /** REQ-E14-13 — display names beside an order line (a proposal or an information line). */
 /**
- * @typedef {object} RescheduleLineNames
- * @property {string} materialLabel
- * @property {string | null} supplierName
- * @property {import('../sdc/types').Uom} uom
+ * @typedef {{
+ *   readonly materialLabel: string;
+ *   readonly supplierName: string | null;
+ *   readonly uom: import('../sdc/types').Uom;
+ * }} RescheduleLineNames
  */
 
 /** @typedef {Proposal & RescheduleLineNames} RescheduleProposalView */
@@ -849,15 +929,19 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  * for update compliance (MR-2). The latest input per field is the one in force.
  */
 /**
- * @typedef {object} SimulationOverride
- * @property {string} id
- * @property {string} supplierId
- * @property {string} materialCode
- * @property {SimulationOverrideField} field
- * @property {number} value -  A quantity in the material's canonical unit.
- * @property {string} [date] -  `YYYY-MM-DD`: the completion date (inProduction) or ETA (toDistributor).
- * @property {ActorAttribution} enteredBy
- * @property {string} enteredAt
+ * `value`:  A quantity in the material's canonical unit.
+ * `date`:  `YYYY-MM-DD`: the completion date (inProduction) or ETA (toDistributor).
+ *
+ * @typedef {{
+ *   readonly id: string;
+ *   readonly supplierId: string;
+ *   readonly materialCode: string;
+ *   readonly field: SimulationOverrideField;
+ *   readonly value: number;
+ *   readonly date?: string;
+ *   readonly enteredBy: ActorAttribution;
+ *   readonly enteredAt: string;
+ * }} SimulationOverride
  */
 
 /**
@@ -868,19 +952,26 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  * (AD-1). PTI only: a supplier scope reads an empty page.
  */
 /**
- * @typedef {object} StockSimulationRow
- * @property {string} supplierId
- * @property {string} supplierName
- * @property {string} materialCode
- * @property {string} materialLabel
- * @property {string} uom
- * @property {string | null} planningGroupId -  The material's planning group (MR-8), null when unknown.
- * @property {boolean} distributor -  MR-7 BR-09 — a distributor has a to-distributor term; a manufacturer has none.
- * @property {MrpControllerRef} [mrpController] -  Material C4 — the material's MRP controller, projected at read (never stored).
- * @property {boolean} sample A labelled sample row (the MR-7 section 9g worked example), computed on
- *   its own sample inputs so a reviewer can see the example on screen.
- * @property {StockSimulation | null} simulation -  The check date's simulation; null when refused.
- * @property {SimulationRefusal | null} refusal -  Edge case 6 — why there is no simulation (the check date is before the latest update).
+ * `planningGroupId`:  The material's planning group (MR-8), null when unknown.
+ * `distributor`:  MR-7 BR-09 — a distributor has a to-distributor term; a manufacturer has none.
+ * `mrpController`:  Material C4 — the material's MRP controller, projected at read (never stored).
+ * `sample`: A labelled sample row (the MR-7 section 9g worked example), computed on its own sample inputs so a reviewer can see the example on screen.
+ * `simulation`:  The check date's simulation; null when refused.
+ * `refusal`:  Edge case 6 — why there is no simulation (the check date is before the latest update).
+ *
+ * @typedef {{
+ *   readonly supplierId: string;
+ *   readonly supplierName: string;
+ *   readonly materialCode: string;
+ *   readonly materialLabel: string;
+ *   readonly uom: string;
+ *   readonly planningGroupId: string | null;
+ *   readonly distributor: boolean;
+ *   readonly mrpController?: MrpControllerRef;
+ *   readonly sample: boolean;
+ *   readonly simulation: StockSimulation | null;
+ *   readonly refusal: SimulationRefusal | null;
+ * }} StockSimulationRow
  */
 
 /**
@@ -889,16 +980,20 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  * mark per line is the one in force.
  */
 /**
- * @typedef {object} SapChangeMark
- * @property {string} id
- * @property {string} lineId -  `po:<poNumber>#<line>` — the proposal's line id.
- * @property {string} poNumber
- * @property {number} line
- * @property {ProposalType} proposalType
- * @property {string | null} proposedDate -  Null for a cancellation.
- * @property {number} proposedQuantity
- * @property {string} markedAt
- * @property {ActorAttribution} markedBy
+ * `lineId`:  `po:<poNumber>#<line>` — the proposal's line id.
+ * `proposedDate`:  Null for a cancellation.
+ *
+ * @typedef {{
+ *   readonly id: string;
+ *   readonly lineId: string;
+ *   readonly poNumber: string;
+ *   readonly line: number;
+ *   readonly proposalType: ProposalType;
+ *   readonly proposedDate: string | null;
+ *   readonly proposedQuantity: number;
+ *   readonly markedAt: string;
+ *   readonly markedBy: ActorAttribution;
+ * }} SapChangeMark
  */
 
 /**
@@ -944,17 +1039,24 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  * PTI only; a supplier gets null (X-03).
  */
 /**
- * @typedef {object} StabilisedPlanView
- * @property {string} asOf -  The day the version to publish is made (the hub's present).
- * @property {string | null} planMadeAt -  The finished-goods plan snapshot today's requirement used.
- * @property {StabiliseParams} params
- * @property {{ readonly packaging: readonly string[]; readonly rawMaterial: readonly string[] }} versions -  The replayed version days per stream, oldest first (ENG-B30).
- * @property {StabiliseRunView} engine -  On the engine's material plan: E14-04 → E14-03, net requirement lot-for-lot (ENG-B29).
- * @property {StabiliseRunView} sapHistory -  On SAP's published plan history, the stand-in E14-02 measures (ENG-B33).
- * @property {true} rangeBuilt -  BR-06 — the demand range (P50 / P90, E14-09) is built: the Demand forecast page (BL-111).
- * @property {false} rangePublished BR-06 — and it is NOT beside the published quantity: the quantities here are
- *   material net requirements from SAP's plan (ENG-B66), and publishing from the
- *   engine is refused while its data is simulated (ENG-B35, ENG-B99).
+ * `asOf`:  The day the version to publish is made (the hub's present).
+ * `planMadeAt`:  The finished-goods plan snapshot today's requirement used.
+ * `versions`:  The replayed version days per stream, oldest first (ENG-B30).
+ * `engine`:  On the engine's material plan: E14-04 → E14-03, net requirement lot-for-lot (ENG-B29).
+ * `sapHistory`:  On SAP's published plan history, the stand-in E14-02 measures (ENG-B33).
+ * `rangeBuilt`:  BR-06 — the demand range (P50 / P90, E14-09) is built: the Demand forecast page (BL-111).
+ * `rangePublished`: BR-06 — and it is NOT beside the published quantity: the quantities here are material net requirements from SAP's plan (ENG-B66), and publishing from the engine is refused while its data is simulated (ENG-B35, ENG-B99).
+ *
+ * @typedef {{
+ *   readonly asOf: string;
+ *   readonly planMadeAt: string | null;
+ *   readonly params: StabiliseParams;
+ *   readonly versions: { readonly packaging: readonly string[]; readonly rawMaterial: readonly string[] };
+ *   readonly engine: StabiliseRunView;
+ *   readonly sapHistory: StabiliseRunView;
+ *   readonly rangeBuilt: true;
+ *   readonly rangePublished: false;
+ * }} StabilisedPlanView
  */
 
 /**
@@ -1073,19 +1175,25 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  */
 
 /**
- * @typedef {object} ForecastCoverageRow
- * @property {ForecastStream} stream
- * @property {string} supplierId
- * @property {string} supplierName
- * @property {string} materialCode
- * @property {string} materialLabel
- * @property {string} uom
- * @property {number} firmDemandQty -  Σ Firm demand in the current version (CR-03 denominator).
- * @property {number | null} ratio -  CR-03 ratio; null when the supplier has no stock figures.
- * @property {'covered' | 'atRisk' | 'uncovered' | 'noFigures'} status
- * @property {'manufacturer' | 'distributor'} supplierType
- * @property {number | null} principalLeadTimeDays -  Shortest principal-to-distributor lead time, for a distributor.
- * @property {boolean} unbridgeable -  A distributor shortfall no principal order placed now can bridge in time.
+ * `firmDemandQty`:  Σ Firm demand in the current version (CR-03 denominator).
+ * `ratio`:  CR-03 ratio; null when the supplier has no stock figures.
+ * `principalLeadTimeDays`:  Shortest principal-to-distributor lead time, for a distributor.
+ * `unbridgeable`:  A distributor shortfall no principal order placed now can bridge in time.
+ *
+ * @typedef {{
+ *   readonly stream: ForecastStream;
+ *   readonly supplierId: string;
+ *   readonly supplierName: string;
+ *   readonly materialCode: string;
+ *   readonly materialLabel: string;
+ *   readonly uom: string;
+ *   readonly firmDemandQty: number;
+ *   readonly ratio: number | null;
+ *   readonly status: 'covered' | 'atRisk' | 'uncovered' | 'noFigures';
+ *   readonly supplierType: 'manufacturer' | 'distributor';
+ *   readonly principalLeadTimeDays: number | null;
+ *   readonly unbridgeable: boolean;
+ * }} ForecastCoverageRow
  */
 
 /**
@@ -1128,24 +1236,28 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
 
 /** A rule-based alert (REQ-E08-05). The key is rule × material (or group) × supplier. */
 /**
- * @typedef {object} InventoryAlert
- * @property {string} key
- * @property {InventoryAlertRule} rule
- * @property {string} supplierId
- * @property {string} supplierName
- * @property {string} subject -  The material, or the material group for a capacity alert.
- * @property {string} subjectLabel
- * @property {RiskClass} riskClass
- * @property {RiskBasis} riskBasis -  CR-24 — what the class was decided on (derived with the alert, never stored).
- * @property {number} daysToImpact MR-9 BR-03 — days until the risk bites, the order within a class (derived
- *   with the alert, never stored): days of cover or to the projected stock-out,
- *   days to the first capacity gap week, minus the days stale, else 0.
- * @property {'open' | 'closed'} status
- * @property {string} [closedAt]
- * @property {string} [closeReason] -  MR-9 BR-04 — the `alertClose` code; absent on a closure recorded before reasons (counts as Other).
- * @property {string} [actionNote]
- * @property {MrpControllerRef} [mrpController] -  Material C4 — the MRP controller of the material an alert is about. Absent
- *    on a capacity alert, whose subject is a material group.
+ * `subject`:  The material, or the material group for a capacity alert.
+ * `riskBasis`:  CR-24 — what the class was decided on (derived with the alert, never stored).
+ * `daysToImpact`: MR-9 BR-03 — days until the risk bites, the order within a class (derived with the alert, never stored): days of cover or to the projected stock-out, days to the first capacity gap week, minus the days stale, else 0.
+ * `closeReason`:  MR-9 BR-04 — the `alertClose` code; absent on a closure recorded before reasons (counts as Other).
+ * `mrpController`:  Material C4 — the MRP controller of the material an alert is about. Absent  on a capacity alert, whose subject is a material group.
+ *
+ * @typedef {{
+ *   readonly key: string;
+ *   readonly rule: InventoryAlertRule;
+ *   readonly supplierId: string;
+ *   readonly supplierName: string;
+ *   readonly subject: string;
+ *   readonly subjectLabel: string;
+ *   readonly riskClass: RiskClass;
+ *   readonly riskBasis: RiskBasis;
+ *   readonly daysToImpact: number;
+ *   readonly status: 'open' | 'closed';
+ *   readonly closedAt?: string;
+ *   readonly closeReason?: string;
+ *   readonly actionNote?: string;
+ *   readonly mrpController?: MrpControllerRef;
+ * }} InventoryAlert
  */
 
 /**
@@ -1564,19 +1676,23 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  */
 
 /**
- * @typedef {object} AsnLineItem
- * @property {string} materialCode
- * @property {string} description
- * @property {number} orderedQty
- * @property {number} shippedQty
- * @property {string} lotNumber -  The batch number (REQ-E07-04 BR-04). Kept under its original field name.
- * @property {string} [uom] -  Unit of the shipped quantity, from the PO line.
- * @property {string} [expiryDate] -  Optional expiry date of the batch (`YYYY-MM-DD`).
- * @property {MrpControllerRef} [mrpController] -  Material C4 — the line material's MRP controller, projected at read (never stored).
- * @property {'declared' | 'typed'} [batchSource] MR-6 BR-04 — `declared` when the batch was picked from the supplier's
- *   declared stock, `typed` when it was typed ("not in declared stock", shown
- *   to PTI). Absent on a line with no batch yet, and on lines stored before
- *   the rule existed.
+ * `lotNumber`:  The batch number (REQ-E07-04 BR-04). Kept under its original field name.
+ * `uom`:  Unit of the shipped quantity, from the PO line.
+ * `expiryDate`:  Optional expiry date of the batch (`YYYY-MM-DD`).
+ * `mrpController`:  Material C4 — the line material's MRP controller, projected at read (never stored).
+ * `batchSource`: MR-6 BR-04 — `declared` when the batch was picked from the supplier's declared stock, `typed` when it was typed ("not in declared stock", shown to PTI). Absent on a line with no batch yet, and on lines stored before the rule existed.
+ *
+ * @typedef {{
+ *   materialCode: string;
+ *   description: string;
+ *   orderedQty: number;
+ *   shippedQty: number;
+ *   lotNumber: string;
+ *   uom?: string;
+ *   expiryDate?: string;
+ *   readonly mrpController?: MrpControllerRef;
+ *   batchSource?: 'declared' | 'typed';
+ * }} AsnLineItem
  */
 
 /**
@@ -1623,24 +1739,35 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
 
 /** The figures behind one call-off warning (only the ones its kind needs). */
 /**
- * @typedef {object} CallOffWarningDetail
- * @property {string} [callOffNumber] -  The call-off the ASN ships.
- * @property {number} [shipped] -  qtyOver / qtyUnder — the call-off's shipped total (earlier ASNs plus this one) and agreed total.
- * @property {number} [agreed]
- * @property {number} [pct] -  qtyOver / qtyUnder — the difference as a percentage of the agreed total.
- * @property {number} [limit] -  qtyOver — `callOff.overPct`; early — `callOff.earlyAllowanceDays`.
- * @property {string} [eta] -  early / late — the ASN's ETA and the agreed date it was compared with.
- * @property {string} [agreedDate]
- * @property {number} [days]
- * @property {string} [materialCode] -  material / unlinked — the ASN line's material.
- * @property {string} [expectedMaterial] -  material — the call-off's material.
- * @property {readonly string[]} [callOffNumbers] -  unlinked — the open confirmed call-offs on the PO line.
+ * `callOffNumber`:  The call-off the ASN ships.
+ * `shipped`:  qtyOver / qtyUnder — the call-off's shipped total (earlier ASNs plus this one) and agreed total.
+ * `pct`:  qtyOver / qtyUnder — the difference as a percentage of the agreed total.
+ * `limit`:  qtyOver — `callOff.overPct`; early — `callOff.earlyAllowanceDays`.
+ * `eta`:  early / late — the ASN's ETA and the agreed date it was compared with.
+ * `materialCode`:  material / unlinked — the ASN line's material.
+ * `expectedMaterial`:  material — the call-off's material.
+ * `callOffNumbers`:  unlinked — the open confirmed call-offs on the PO line.
+ *
+ * @typedef {{
+ *   readonly callOffNumber?: string;
+ *   readonly shipped?: number;
+ *   readonly agreed?: number;
+ *   readonly pct?: number;
+ *   readonly limit?: number;
+ *   readonly eta?: string;
+ *   readonly agreedDate?: string;
+ *   readonly days?: number;
+ *   readonly materialCode?: string;
+ *   readonly expectedMaterial?: string;
+ *   readonly callOffNumbers?: readonly string[];
+ * }} CallOffWarningDetail
  */
 
 /**
- * @typedef {object} CallOffWarning
- * @property {CallOffWarningKind} kind
- * @property {CallOffWarningDetail} detail
+ * @typedef {{
+ *   readonly kind: CallOffWarningKind;
+ *   readonly detail: CallOffWarningDetail;
+ * }} CallOffWarning
  */
 
 /** MR-6 BR-08 — one line an exception covers, as it stood when it was asked for. */
@@ -2031,20 +2158,25 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
 /** @typedef {'PLANNED' | 'committed'} IntakePlanState */
 
 /**
- * @typedef {object} PrIntakeLine
- * @property {string} id
- * @property {string} material
- * @property {string | null} suggestedSource -  SOMO-authored source/destination lane; null for an internal-Grid line.
- * @property {string | null} segment -  SOMO-authored ABC-XYZ policy class; null for an internal-Grid line.
- * @property {number} suggestedQty
- * @property {number} acceptedQty
- * @property {boolean} wasAdjusted
- * @property {string} uom
- * @property {string} period
- * @property {number} estimatedValue
- * @property {PrSource} source
- * @property {IntakePlanState} planState
- * @property {string} [deficit] -  C7 §2 recommend-first rationale — the "why" a review triages on. Nullable.
+ * `suggestedSource`:  SOMO-authored source/destination lane; null for an internal-Grid line.
+ * `segment`:  SOMO-authored ABC-XYZ policy class; null for an internal-Grid line.
+ * `deficit`:  C7 §2 recommend-first rationale — the "why" a review triages on. Nullable.
+ *
+ * @typedef {{
+ *   readonly id: string;
+ *   readonly material: string;
+ *   readonly suggestedSource: string | null;
+ *   readonly segment: string | null;
+ *   readonly suggestedQty: number;
+ *   readonly acceptedQty: number;
+ *   readonly wasAdjusted: boolean;
+ *   readonly uom: string;
+ *   readonly period: string;
+ *   readonly estimatedValue: number;
+ *   readonly source: PrSource;
+ *   readonly planState: IntakePlanState;
+ *   readonly deficit?: string;
+ * }} PrIntakeLine
  */
 
 // ─── Risk / Compliance entities (buyer-side, inline today) ──────────────────
@@ -2653,23 +2785,30 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
 
 /** One change of a supplier's stock update mode, as recorded. Never edited. */
 /**
- * @typedef {object} SupplierUpdateModeChange
- * @property {string} supplierId
- * @property {StockUpdateMode} stockUpdateMode
- * @property {string} setAt -  Store-assigned from the hub clock, never a payload field.
- * @property {ActorAttribution} setBy -  From the session (`QueryScope.actor`), never from the form.
- * @property {string} [reason]
+ * `setAt`:  Store-assigned from the hub clock, never a payload field.
+ * `setBy`:  From the session (`QueryScope.actor`), never from the form.
+ *
+ * @typedef {{
+ *   readonly supplierId: string;
+ *   readonly stockUpdateMode: StockUpdateMode;
+ *   readonly setAt: string;
+ *   readonly setBy: ActorAttribution;
+ *   readonly reason?: string;
+ * }} SupplierUpdateModeChange
  */
 
 /** A supplier's stock update mode as the hub resolves it, with its history. */
 /**
- * @typedef {object} SupplierStockUpdateMode
- * @property {string} supplierId
- * @property {string} supplierName
- * @property {StockUpdateMode} stockUpdateMode
- * @property {'overlay' | 'default'} source `overlay`: the Hub administrator set it. `default`: nobody has, so it
- *   follows the sample connection list (API when the supplier is on it).
- * @property {readonly SupplierUpdateModeChange[]} history -  Every change on record for this supplier, oldest first.
+ * `source`: `overlay`: the Hub administrator set it. `default`: nobody has, so it follows the sample connection list (API when the supplier is on it).
+ * `history`:  Every change on record for this supplier, oldest first.
+ *
+ * @typedef {{
+ *   readonly supplierId: string;
+ *   readonly supplierName: string;
+ *   readonly stockUpdateMode: StockUpdateMode;
+ *   readonly source: 'overlay' | 'default';
+ *   readonly history: readonly SupplierUpdateModeChange[];
+ * }} SupplierStockUpdateMode
  */
 
 // ─── Vendor qualification — computed from documents (Material G1) ──────────
@@ -2690,20 +2829,22 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  * requirement as Procurement and Quality wrote it: data, not UI copy.
  */
 /**
- * @typedef {object} QualificationRequiredDoc
- * @property {SupplierDocumentCategory} category
- * @property {CertType} [certType]
- * @property {string} label
+ * @typedef {{
+ *   readonly category: SupplierDocumentCategory;
+ *   readonly certType?: CertType;
+ *   readonly label: string;
+ * }} QualificationRequiredDoc
  */
 
 /** The documents required for one level (BR-04). */
 /**
- * @typedef {object} QualificationRule
- * @property {QualificationRuleLevel} level
- * @property {readonly QualificationRequiredDoc[]} requiredDocs
- * @property {boolean} placeholder `true` on the seeded starting lists (MAT-D15): shown everywhere with
- *   "Placeholder, awaiting Procurement and Quality" until a person sets the
- *   list through `t_qualification_rule_set`, which records `false`.
+ * `placeholder`: `true` on the seeded starting lists (MAT-D15): shown everywhere with "Placeholder, awaiting Procurement and Quality" until a person sets the list through `t_qualification_rule_set`, which records `false`.
+ *
+ * @typedef {{
+ *   readonly level: QualificationRuleLevel;
+ *   readonly requiredDocs: readonly QualificationRequiredDoc[];
+ *   readonly placeholder: boolean;
+ * }} QualificationRule
  */
 
 /** One change of a level's list, as recorded. Never edited (MAT-R3). */
@@ -2719,19 +2860,24 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
 
 /** A counted document that would drop the level when it expires (AC-06). */
 /**
- * @typedef {object} QualificationExpiringDoc
- * @property {string} documentId
- * @property {string} name
- * @property {SupplierDocumentCategory} category
- * @property {string} expiryDate
+ * @typedef {{
+ *   readonly documentId: string;
+ *   readonly name: string;
+ *   readonly category: SupplierDocumentCategory;
+ *   readonly expiryDate: string;
+ * }} QualificationExpiringDoc
  */
 
 /** `qualificationFor` — a vendor's level on a date and what it still lacks. */
 /**
- * @typedef {object} VendorQualificationStatus
- * @property {QualificationLevel} level
- * @property {{ readonly approved: readonly QualificationRequiredDoc[]; readonly preferred: readonly QualificationRequiredDoc[]; }} missingFor -  The required documents with no counting document, per level.
- * @property {readonly QualificationExpiringDoc[]} expiringSoon -  Counted documents inside the expiry window that hold up the level.
+ * `missingFor`:  The required documents with no counting document, per level.
+ * `expiringSoon`:  Counted documents inside the expiry window that hold up the level.
+ *
+ * @typedef {{
+ *   readonly level: QualificationLevel;
+ *   readonly missingFor: { readonly approved: readonly QualificationRequiredDoc[]; readonly preferred: readonly QualificationRequiredDoc[]; };
+ *   readonly expiringSoon: readonly QualificationExpiringDoc[];
+ * }} VendorQualificationStatus
  */
 
 /**
@@ -2741,12 +2887,13 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  * list moved it, and `causeRuleLevel` then names the list.
  */
 /**
- * @typedef {object} QualificationChange
- * @property {string} at
- * @property {QualificationLevel} from
- * @property {QualificationLevel} to
- * @property {string | null} causeDocumentId
- * @property {QualificationRuleLevel} [causeRuleLevel]
+ * @typedef {{
+ *   readonly at: string;
+ *   readonly from: QualificationLevel;
+ *   readonly to: QualificationLevel;
+ *   readonly causeDocumentId: string | null;
+ *   readonly causeRuleLevel?: QualificationRuleLevel;
+ * }} QualificationChange
  */
 
 /** A vendor's qualification as the hub computes it, with its history. */
@@ -2773,13 +2920,17 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
 /** @typedef {'active' | 'retired'} PlanningGroupState */
 
 /**
- * @typedef {object} PlanningGroup
- * @property {string} id
- * @property {string} name -  Typed by Material Planning; data, not a translation key (MAT-R6).
- * @property {string} sapMaterialGroup
- * @property {PlanningGroupState} state
- * @property {ActorAttribution | null} createdBy -  Null for a default group: derived from its SAP group, never created by anyone.
- * @property {string | null} createdAt
+ * `name`:  Typed by Material Planning; data, not a translation key (MAT-R6).
+ * `createdBy`:  Null for a default group: derived from its SAP group, never created by anyone.
+ *
+ * @typedef {{
+ *   readonly id: string;
+ *   readonly name: string;
+ *   readonly sapMaterialGroup: string;
+ *   readonly state: PlanningGroupState;
+ *   readonly createdBy: ActorAttribution | null;
+ *   readonly createdAt: string | null;
+ * }} PlanningGroup
  */
 
 /** One governed change to the planning groups, as recorded. Never edited (MAT-R3). */
@@ -3124,10 +3275,13 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
 
 /** One recorded open or download of a file (NR-1 BR-10). Append-only. */
 /**
- * @typedef {object} FileAccess
- * @property {string} fileId
- * @property {ActorAttribution} by
- * @property {string} at -  Seam-assigned, never the caller's.
+ * `at`:  Seam-assigned, never the caller's.
+ *
+ * @typedef {{
+ *   readonly fileId: string;
+ *   readonly by: ActorAttribution;
+ *   readonly at: string;
+ * }} FileAccess
  */
 
 /**
@@ -3178,46 +3332,41 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  * to be different. What is recorded is a CLAIM and its reference, nothing more.
  */
 /**
- * @typedef {object} SupplierApplicationDeclaration
- * @property {'npwp' | 'nib' | 'halal' | 'iso'} kind -  Which of the four the applicant is claiming.
- * @property {string} reference -  The number the applicant states. Their words, unverified, never a join key.
+ * `kind`:  Which of the four the applicant is claiming.
+ * `reference`:  The number the applicant states. Their words, unverified, never a join key.
+ *
+ * @typedef {{
+ *   readonly kind: 'npwp' | 'nib' | 'halal' | 'iso';
+ *   readonly reference: string;
+ * }} SupplierApplicationDeclaration
  */
 
 /**
- * @typedef {object} SupplierApplication
- * @property {string} id -  Store-assigned. The store mints identity, never the caller.
- * @property {string} applicationNumber The human-readable reference, store-assigned and sequential.
+ * `id`:  Store-assigned. The store mints identity, never the caller.
+ * `applicationNumber`: The human-readable reference, store-assigned and sequential.  ⚠️ **THIS IS THE HONEST OPPOSITE OF THE THING B1 EXISTS FOR.** `SupplierRegistration.tsx:1289` mints a RANDOM number and renders it at `:1203` beside a next-steps list, with no row anywhere behind it. This one is assigned by the store at the moment a row is written, so the number an applicant is told and the record Paragon holds are the same fact. **The wizard is NOT repointed here** — that is filed as B3.
+ * `supplierId`: ⚠️ **ALWAYS `null`, AND THE LITERAL TYPE IS THE ENFORCEMENT.** See the header: an applicant is not a tenant. `resolvedSupplierId` below is a different question and is NOT this.
+ * `resolvedSupplierId`: The existing vendor an extension request names, resolved against the platform roster at birth — never the payload's word for it.  ⚠️ **NOT A TENANCY FIELD.** It says which supplier the application is ABOUT; `supplierId` above says which tenant owns the row, and the answer to that is nobody. Conflating them is precisely how an application would become visible to the supplier it names, which is not a thing this models. `null` for the two request types that name no existing vendor.
+ * `s4Vendor`:  The vendor number as the caller stated it, kept for the record.
+ * `declarations`:  What the applicant claims to hold. Claims, not verifications — see above.
+ * `submittedBy`: ⚠️ **ALWAYS `UNATTRIBUTED` IN THIS TREE, AND THE TYPE KEEPS IT HONEST.** `CurrentIdentity.actor` is `UNATTRIBUTED: NO_PERSON_IN_SESSION` everywhere, so typing this as `ActorAttribution` rather than `string` means a surface must RENDER the unattributed state instead of printing a name it does not have (C10 §5.2 / D-ID-3).
+ * `reviewStartedAt`:  When somebody picked it up. `null` until they did — never a guessed date.
+ * `rejectionReason`:  Present only on a refusal, proven non-blank by the verb before it is written.
  *
- *   ⚠️ **THIS IS THE HONEST OPPOSITE OF THE THING B1 EXISTS FOR.**
- *   `SupplierRegistration.tsx:1289` mints a RANDOM number and renders it at
- *   `:1203` beside a next-steps list, with no row anywhere behind it. This one
- *   is assigned by the store at the moment a row is written, so the number an
- *   applicant is told and the record Paragon holds are the same fact. **The
- *   wizard is NOT repointed here** — that is filed as B3.
- * @property {string} requestType
- * @property {SupplierApplicationStatus} status
- * @property {string} companyName
- * @property {null} supplierId - ⚠️ **ALWAYS `null`, AND THE LITERAL TYPE IS THE ENFORCEMENT.** See the
- *   header: an applicant is not a tenant. `resolvedSupplierId` below is a
- *   different question and is NOT this.
- * @property {string | null} resolvedSupplierId The existing vendor an extension request names, resolved against the
- *   platform roster at birth — never the payload's word for it.
- *
- *   ⚠️ **NOT A TENANCY FIELD.** It says which supplier the application is
- *   ABOUT; `supplierId` above says which tenant owns the row, and the answer to
- *   that is nobody. Conflating them is precisely how an application would
- *   become visible to the supplier it names, which is not a thing this models.
- *   `null` for the two request types that name no existing vendor.
- * @property {string | null} s4Vendor -  The vendor number as the caller stated it, kept for the record.
- * @property {readonly SupplierApplicationDeclaration[]} declarations -  What the applicant claims to hold. Claims, not verifications — see above.
- * @property {string} submittedAt
- * @property {ActorAttribution} submittedBy - ⚠️ **ALWAYS `UNATTRIBUTED` IN THIS TREE, AND THE TYPE KEEPS IT HONEST.**
- *   `CurrentIdentity.actor` is `UNATTRIBUTED: NO_PERSON_IN_SESSION` everywhere,
- *   so typing this as `ActorAttribution` rather than `string` means a surface
- *   must RENDER the unattributed state instead of printing a name it does not
- *   have (C10 §5.2 / D-ID-3).
- * @property {string | null} reviewStartedAt -  When somebody picked it up. `null` until they did — never a guessed date.
- * @property {string | null} decidedAt
- * @property {ActorAttribution | null} decidedBy
- * @property {string | null} rejectionReason -  Present only on a refusal, proven non-blank by the verb before it is written.
+ * @typedef {{
+ *   readonly id: string;
+ *   readonly applicationNumber: string;
+ *   readonly requestType: string;
+ *   readonly status: SupplierApplicationStatus;
+ *   readonly companyName: string;
+ *   readonly supplierId: null;
+ *   readonly resolvedSupplierId: string | null;
+ *   readonly s4Vendor: string | null;
+ *   readonly declarations: readonly SupplierApplicationDeclaration[];
+ *   readonly submittedAt: string;
+ *   readonly submittedBy: ActorAttribution;
+ *   readonly reviewStartedAt: string | null;
+ *   readonly decidedAt: string | null;
+ *   readonly decidedBy: ActorAttribution | null;
+ *   readonly rejectionReason: string | null;
+ * }} SupplierApplication
  */

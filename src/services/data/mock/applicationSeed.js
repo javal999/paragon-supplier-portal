@@ -99,15 +99,16 @@ const PROCUREMENT_SCOPE = {
 };
 
 /**
- * @typedef {object} ApplicationSeedOutcome
- * @property {'seeded' | 'already-seeded' | 'refused'} status `seeded` — every application was raised and sits at `Submitted`.
- *   `already-seeded` — the store already holds rows; skipped untouched.
- *   `refused` — a dispatch refused. THE STORE IS LEFT WHEREVER THE MACHINE LEFT
- *     IT, never nudged: a half-seeded queue is the truth, and a better artifact
- *     than a full one the machine declined to produce.
- * @property {readonly string[]} [applicationNumbers] -  The application numbers minted, in order.
- * @property {string} [refusedAt] -  Which company refused, and the dispatcher's own words.
- * @property {string} [reason]
+ * `status`: `seeded` — every application was raised and sits at `Submitted`. `already-seeded` — the store already holds rows; skipped untouched. `refused` — a dispatch refused. THE STORE IS LEFT WHEREVER THE MACHINE LEFT   IT, never nudged: a half-seeded queue is the truth, and a better artifact   than a full one the machine declined to produce.
+ * `applicationNumbers`:  The application numbers minted, in order.
+ * `refusedAt`:  Which company refused, and the dispatcher's own words.
+ *
+ * @typedef {{
+ *   readonly status: 'seeded' | 'already-seeded' | 'refused';
+ *   readonly applicationNumbers?: readonly string[];
+ *   readonly refusedAt?: string;
+ *   readonly reason?: string;
+ * }} ApplicationSeedOutcome
  */
 
 /**

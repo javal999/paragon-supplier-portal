@@ -223,12 +223,15 @@ export const rfpSupplierGate = (supplierId, nowIso) => supplierGate(supplierId, 
 
 /** What the invitee read needs from a response, whichever event type it answers. */
 /**
- * @typedef {object} InviteeResponseFacts
- * @property {string} status
- * @property {string} [submittedAt]
- * @property {string} [confidentialityAcceptedAt]
- * @property {string} [termsAcceptedAt]
- * @property {boolean} empty -  True when the row holds nothing but an acceptance (no answer of any kind).
+ * `empty`:  True when the row holds nothing but an acceptance (no answer of any kind).
+ *
+ * @typedef {{
+ *   readonly status: string;
+ *   readonly submittedAt?: string;
+ *   readonly confidentialityAcceptedAt?: string;
+ *   readonly termsAcceptedAt?: string;
+ *   readonly empty: boolean;
+ * }} InviteeResponseFacts
  */
 
 /**

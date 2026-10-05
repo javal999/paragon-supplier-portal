@@ -288,21 +288,17 @@ export const SHARED_ANCHOR_FAMILIES = /** @type {const} */ (['contract', 'obliga
 export const SHARED_ANCHOR_INTERSECTION = ['2026-05-17', '2026-06-01'];
 
 /**
- * @typedef {object} FamilyAnchor
- * @property {string} anchor -  The instant this family's rows were authored for.
- * @property {readonly [string, string] | null} window The family's COHERENT WINDOW — every origin at which all of its stored
- *   clock-derived states are true. `null` where the family stores no such state,
- *   in which case the anchor is derived some other way and `why` says how.
- * @property {number | null} toleranceDays How far the wall clock may drift from `DECLARED_PRESENT` before a stored
- *   state goes false.
+ * `anchor`:  The instant this family's rows were authored for.
+ * `window`: The family's COHERENT WINDOW — every origin at which all of its stored clock-derived states are true. `null` where the family stores no such state, in which case the anchor is derived some other way and `why` says how.
+ * `toleranceDays`: How far the wall clock may drift from `DECLARED_PRESENT` before a stored state goes false.  ⚠️ **THE DISTANCE TO THE NEARER EDGE, NOT HALF THE WINDOW.** An anchor is rarely exactly centred (a window of even width has no integer midpoint), so `round(span / 2)` promises drift the family does not have — `supplierDocument` declared 41 while its early edge sits 40 days away. The edge that breaks FIRST is the only honest number, and for a SHARED anchor it is measured against the INTERSECTION rather than either own window.
+ * `why`:  How the anchor was derived. Re-derived by the guard, never trusted from here.
  *
- *   ⚠️ **THE DISTANCE TO THE NEARER EDGE, NOT HALF THE WINDOW.** An anchor is
- *   rarely exactly centred (a window of even width has no integer midpoint), so
- *   `round(span / 2)` promises drift the family does not have —
- *   `supplierDocument` declared 41 while its early edge sits 40 days away. The
- *   edge that breaks FIRST is the only honest number, and for a SHARED anchor
- *   it is measured against the INTERSECTION rather than either own window.
- * @property {string} why -  How the anchor was derived. Re-derived by the guard, never trusted from here.
+ * @typedef {{
+ *   readonly anchor: string;
+ *   readonly window: readonly [string, string] | null;
+ *   readonly toleranceDays: number | null;
+ *   readonly why: string;
+ * }} FamilyAnchor
  */
 
 /**

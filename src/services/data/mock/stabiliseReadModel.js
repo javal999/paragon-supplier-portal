@@ -55,9 +55,12 @@ export function versionDays(asOf, kind) {
 }
 
 /**
- * @typedef {object} ReplayResult
- * @property {SeriesInput[]} inputs
- * @property {MaterialRequirementRun} current -  Today's E14-03 run (the finished-goods plan it used, the weeks).
+ * `current`:  Today's E14-03 run (the finished-goods plan it used, the weeks).
+ *
+ * @typedef {{
+ *   readonly inputs: SeriesInput[];
+ *   readonly current: MaterialRequirementRun;
+ * }} ReplayResult
  */
 
 /**

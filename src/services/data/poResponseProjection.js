@@ -131,10 +131,11 @@ export function shippingNoticeStatus(po) {
 
 /** One forecast line's answer, reduced to what the summary needs. */
 /**
- * @typedef {object} ForesightAnswer
- * @property {string} supplierId
- * @property {string} materialCode
- * @property {'awaiting' | 'confirmed' | 'gap' | 'notRequired'} answer
+ * @typedef {{
+ *   readonly supplierId: string;
+ *   readonly materialCode: string;
+ *   readonly answer: 'awaiting' | 'confirmed' | 'gap' | 'notRequired';
+ * }} ForesightAnswer
  */
 
 /**

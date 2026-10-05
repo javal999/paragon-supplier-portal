@@ -39,10 +39,14 @@ export const KPI_QUESTIONS = /** @type {const} */ ([
 /** @typedef {(typeof KPI_QUESTIONS)[number]} KpiQuestion */
 
 /**
- * @typedef {object} KpiDefinition
- * @property {'otif' | 'cfot'} id
- * @property {string} nameKey -  The measure's name on the page (the `perf.*` key the KPI card already uses).
- * @property {Readonly<Record<KpiQuestion, { readonly key: string; readonly values?: Readonly<Record<string, number>> }>>} answers -  One answer per BL-19 question — an i18n key and the numbers it states.
+ * `nameKey`:  The measure's name on the page (the `perf.*` key the KPI card already uses).
+ * `answers`:  One answer per BL-19 question — an i18n key and the numbers it states.
+ *
+ * @typedef {{
+ *   readonly id: 'otif' | 'cfot';
+ *   readonly nameKey: string;
+ *   readonly answers: Readonly<Record<KpiQuestion, { readonly key: string; readonly values?: Readonly<Record<string, number>> }>>;
+ * }} KpiDefinition
  */
 
 /** @type {readonly KpiDefinition[]} */
