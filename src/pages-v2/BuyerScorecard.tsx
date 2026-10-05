@@ -214,7 +214,9 @@ const BuyerScorecard: React.FC = () => {
 
   const SCORECARD_CRUMB = [
     t('buyerScorecard.crumb.intelligence'),
-    t('buyerScorecard.crumb.scorecard'),
+    // FUX2-R4 (B6) — named by its menu label, so the title and both menus
+    // (Review for MP, Performance for BUY) cannot drift.
+    t('hub.nav.pti.performance'),
   ];
 
   const scorecardsQuery = useSupplierScorecards();
@@ -271,7 +273,7 @@ const BuyerScorecard: React.FC = () => {
     <AppShellV2>
       <PageHeader
         breadcrumb={SCORECARD_CRUMB}
-        title={t('buyerScorecard.header.title')}
+        title={t('hub.nav.pti.performance')}
         subtitle={t('buyerScorecard.header.subtitle')}
         actions={
           <select

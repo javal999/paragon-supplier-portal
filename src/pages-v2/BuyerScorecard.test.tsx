@@ -14,7 +14,7 @@ const alwaysPending = withChaos(mockDataService, { minMs: 1e7, maxMs: 1e7, failu
 describe('BuyerScorecard — four honest states', () => {
   it('data: renders the scorecard with wired reads', async () => {
     renderWithProviders(<BuyerScorecard />);
-    expect(await screen.findByText('Supplier Scorecard')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Supplier performance' })).toBeInTheDocument();
     // The default-selected supplier appears in both the selector option and the
     // identity hero — proof the scorecard read resolved and drove the page.
     expect(
@@ -25,7 +25,7 @@ describe('BuyerScorecard — four honest states', () => {
   it('loading: shows LoadingState while the read is pending', () => {
     renderWithProviders(<BuyerScorecard />, { service: alwaysPending });
     expect(screen.getByText('Loading…')).toBeInTheDocument();
-    expect(screen.queryByText('Supplier Scorecard')).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Supplier performance' })).not.toBeInTheDocument();
   });
 
   it('error: shows ErrorState when the read throws', async () => {
@@ -59,7 +59,7 @@ describe('BuyerScorecard — four honest states', () => {
 describe('BuyerScorecard — calculated performance (REQ-E10-01)', () => {
   it('renders the calculated OTIF, the rejection count and a grade read from the score', async () => {
     renderWithProviders(<BuyerScorecard />);
-    expect(await screen.findByText('Supplier Scorecard')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Supplier performance' })).toBeInTheDocument();
     expect(await screen.findByTestId('scorecard-otif')).toHaveTextContent(
       'From 6 deliveries due in this period',
     );
@@ -100,7 +100,7 @@ describe('BuyerScorecard — calculated performance (REQ-E10-01)', () => {
 
   it('a supplier with nothing measured reads "No history", never 0%', async () => {
     renderWithProviders(<BuyerScorecard />);
-    await screen.findByText('Supplier Scorecard');
+    await screen.findByRole('heading', { name: 'Supplier performance' });
     // sup-006 has no call-offs at all, and its one order is confirmed for a
     // date still in the future — so NEITHER measure has history.
     fireEvent.change(screen.getByLabelText('Select supplier'), {
@@ -122,7 +122,7 @@ describe('BuyerScorecard — calculated performance (REQ-E10-01)', () => {
     // period and its receipt arrived after that date — nothing was delivered on
     // time, which is 0%, not silence.
     renderWithProviders(<BuyerScorecard />);
-    await screen.findByText('Supplier Scorecard');
+    await screen.findByRole('heading', { name: 'Supplier performance' });
     fireEvent.change(screen.getByLabelText('Select supplier'), {
       target: { value: 'sup-009' },
     });
