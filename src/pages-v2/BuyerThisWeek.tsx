@@ -12,7 +12,6 @@ import DataAsOf from '@components/forecast/DataAsOf';
 import CycleSteps from '@components/forecast/CycleSteps';
 import { FORECAST_PAGES, forecastCrumb, forecastTitle } from '@components/forecast/forecastPages';
 import {
-  STEP_HEALTH,
   currentVersions,
   failingChecks,
   recommendedOrders,
@@ -54,10 +53,9 @@ type StepCardId = Exclude<CycleStepId, 'thisWeek'>;
 interface StepCardProps {
   readonly id: StepCardId;
   readonly children: React.ReactNode;
-  readonly checks: number;
 }
 
-const StepCard: React.FC<StepCardProps> = ({ id, children, checks }) => {
+const StepCard: React.FC<StepCardProps> = ({ id, children }) => {
   const { t } = useTranslation();
   const page = FORECAST_PAGES[id];
   const name = t(page.titleKey);
@@ -71,11 +69,6 @@ const StepCard: React.FC<StepCardProps> = ({ id, children, checks }) => {
       <div className="flex-1 text-sm text-text-primary" data-testid={`tw-figure-${id}`}>
         {children}
       </div>
-      {checks > 0 && (
-        <p className="mt-2 text-xs text-warning-hover" data-testid={`tw-checks-${id}`}>
-          {t('fux.steps.checks', { count: checks })}
-        </p>
-      )}
       <Link
         to={page.path}
         className="mt-3 text-sm text-action-hover hover:underline"
@@ -98,10 +91,6 @@ const BuyerThisWeek: React.FC = () => {
   const report = health.data ?? null;
   const withheld = publishWithheld();
   const failing = report ? failingChecks(report) : null;
-  const checksFor = (id: StepCardId) => {
-    const step = STEP_HEALTH[id];
-    return report && step ? failingChecks(report, step) : 0;
-  };
   const pending = <span className="text-text-tertiary">—</span>;
   const current = versions.data ? currentVersions(versions.data.items) : null;
   // The page's "Release in" column labels a week `W<iso week>` (BuyerOrderPlan's weekLabel).
@@ -149,7 +138,7 @@ const BuyerThisWeek: React.FC = () => {
 
       <h2 className="mb-3 text-section text-text-primary">{t('fux.thisWeek.steps.title')}</h2>
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StepCard id="whatToOrder" checks={checksFor('whatToOrder')}>
+        <StepCard id="whatToOrder">
           {orderPlan.data ? (
             <>
               <Data data-testid="tw-count-whatToOrder">
@@ -170,7 +159,7 @@ const BuyerThisWeek: React.FC = () => {
             pending
           )}
         </StepCard>
-        <StepCard id="makeRoom" checks={checksFor('makeRoom')}>
+        <StepCard id="makeRoom">
           {reschedule.data ? (
             <Data data-testid="tw-count-makeRoom">
               {t('fux.count.overCapacity', { count: weeksOverCapacity(reschedule.data) })}
@@ -179,7 +168,7 @@ const BuyerThisWeek: React.FC = () => {
             pending
           )}
         </StepCard>
-        <StepCard id="publish" checks={checksFor('publish')}>
+        <StepCard id="publish">
           {current === null ? (
             pending
           ) : (
@@ -201,7 +190,7 @@ const BuyerThisWeek: React.FC = () => {
             {t(withheld ? 'fux.thisWeek.publish.withheld' : 'fux.thisWeek.publish.open')}
           </p>
         </StepCard>
-        <StepCard id="responses" checks={0}>
+        <StepCard id="responses">
           {lines.data ? (
             <Data data-testid="tw-count-responses">
               {t('fux.count.exceptions', {
