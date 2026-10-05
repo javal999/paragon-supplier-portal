@@ -73,13 +73,13 @@ Two kinds of failure in the dry run are not tooling problems:
 
 ### Known text-only matchers still to teach (found in B1, passing today)
 
-- `src/lib/projectionGate/dayCounts.ts` `takesInjectedNow` matches the TEXT `nowIso: string`.
+- `src/lib/projectionGate/dayCounts.js` `takesInjectedNow` matches the TEXT `nowIso: string`.
   A `computed-at-read` producer converted to `@param {string} nowIso` will fail it — teach it
   the JSDoc form in the batch that converts the producer (B4, `services/data`).
 - The same file's "named endpoint EXISTS" check matches `\bfield\??:`; in converted data files
   it is satisfied by fixture assignments, not declarations (this looseness predates JS).
 - Helpers for reading either form now exist: `src/test/declaredFields.js` (fields declared by
-  an interface or by JSDoc `@property`), and `declaredType` in `src/lib/enforcement.test.ts`.
+  an interface or by JSDoc `@property`), and `declaredType` in `src/lib/enforcement.test.js`.
 
 ## Phase 3 pilot history
 
