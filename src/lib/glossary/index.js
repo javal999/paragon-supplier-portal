@@ -88,10 +88,11 @@ import {
 /** The shape of one registry row. Checked by `satisfies`, never widened onto
  *  the exported const — see `GlossaryRef` below for why the literals matter. */
 /**
- * @typedef {object} GlossaryRegistry
- * @property {string} sourceType
- * @property {string} sourceFile
- * @property {Readonly<Record<string, GlossaryEntry>>} entries
+ * @typedef {{
+ *   readonly sourceType: string;
+ *   readonly sourceFile: string;
+ *   readonly entries: Readonly<Record<string, GlossaryEntry>>;
+ * }} GlossaryRegistry
  */
 
 /**

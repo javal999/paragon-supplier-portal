@@ -183,20 +183,22 @@ export function basketSumAt(materialId, month, mode) {
 // ─── The six named acceptance episodes ────────────────────────────────────────
 
 /**
- * @typedef {object} EpisodeResult
- * @property {number} id
- * @property {string} name
- * @property {string} criterion
- * @property {boolean} pass
- * @property {string} detail
+ * @typedef {{
+ *   readonly id: number;
+ *   readonly name: string;
+ *   readonly criterion: string;
+ *   readonly pass: boolean;
+ *   readonly detail: string;
+ * }} EpisodeResult
  */
 
 /**
- * @typedef {object} EpisodeSpec
- * @property {number} id
- * @property {string} name
- * @property {string} criterion
- * @property {() => { pass: boolean; detail: string }} evaluate
+ * @typedef {{
+ *   readonly id: number;
+ *   readonly name: string;
+ *   readonly criterion: string;
+ *   readonly evaluate: () => { pass: boolean; detail: string };
+ * }} EpisodeSpec
  */
 
 /**
@@ -338,11 +340,12 @@ export function runAllEpisodes() {
 // ─── The falsification check (the hard gate) ──────────────────────────────────
 
 /**
- * @typedef {object} FalsificationResult
- * @property {boolean} pass
- * @property {number} spotVariance
- * @property {number} contractVariance
- * @property {string} detail
+ * @typedef {{
+ *   readonly pass: boolean;
+ *   readonly spotVariance: number;
+ *   readonly contractVariance: number;
+ *   readonly detail: string;
+ * }} FalsificationResult
  */
 
 /**

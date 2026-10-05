@@ -61,45 +61,55 @@ import { scriptKindOf } from '@test/sourceFiles';
 
 /** One site where a field was read. */
 /**
- * @typedef {object} ReadSite
- * @property {string} file
- * @property {number} line
- * @property {'read' | 'destructure'} kind
+ * @typedef {{
+ *   readonly file: string;
+ *   readonly line: number;
+ *   readonly kind: 'read' | 'destructure';
+ * }} ReadSite
  */
 
 /** One stored field in the derived population. */
 /**
- * @typedef {object} StoredField
- * @property {string} key -  `Owner.field` — the gate's stable key. `owner` is the named declaration
- *    the field is DECLARED in, not every type that exposes it, so a field
- *    reachable through four aliases (`GovernedCheckStampBase.checkId`) is one
- *    row and not four.
- * @property {string} owner
- * @property {string} field
- * @property {string} file
- * @property {readonly string[]} vocab -  Glossary unions this field itself is typed by. Empty is normal — most
- *    fields ride a covered DTO rather than carrying the vocabulary.
- * @property {readonly string[]} exposedBy -  The covered DTOs that expose this field.
- * @property {readonly string[]} sharedNameWith -  Other declarations in `src/` declaring a field of the SAME NAME — the
- *    masking set a name-matching census would have collapsed into this one.
- * @property {readonly ReadSite[]} reads
- * @property {readonly ReadSite[]} nonFixtureReads
- * @property {number} writes
+ * `key`:  `Owner.field` — the gate's stable key. `owner` is the named declaration  the field is DECLARED in, not every type that exposes it, so a field  reachable through four aliases (`GovernedCheckStampBase.checkId`) is one  row and not four.
+ * `vocab`:  Glossary unions this field itself is typed by. Empty is normal — most  fields ride a covered DTO rather than carrying the vocabulary.
+ * `exposedBy`:  The covered DTOs that expose this field.
+ * `sharedNameWith`:  Other declarations in `src/` declaring a field of the SAME NAME — the  masking set a name-matching census would have collapsed into this one.
+ *
+ * @typedef {{
+ *   readonly key: string;
+ *   readonly owner: string;
+ *   readonly field: string;
+ *   readonly file: string;
+ *   readonly vocab: readonly string[];
+ *   readonly exposedBy: readonly string[];
+ *   readonly sharedNameWith: readonly string[];
+ *   readonly reads: readonly ReadSite[];
+ *   readonly nonFixtureReads: readonly ReadSite[];
+ *   readonly writes: number;
+ * }} StoredField
  */
 
 /**
- * @typedef {object} Census
- * @property {readonly { readonly name: string; readonly file: string; readonly via: readonly string[] }[]} coveredTypes -  The DTOs the glossary covers — derived, never listed.
- * @property {readonly StoredField[]} fields
- * @property {readonly StoredField[]} flagged -  Fields with zero non-fixture reads. The gate's subject.
+ * `coveredTypes`:  The DTOs the glossary covers — derived, never listed.
+ * `flagged`:  Fields with zero non-fixture reads. The gate's subject.
+ *
+ * @typedef {{
+ *   readonly coveredTypes: readonly { readonly name: string; readonly file: string; readonly via: readonly string[] }[];
+ *   readonly fields: readonly StoredField[];
+ *   readonly flagged: readonly StoredField[];
+ * }} Census
  */
 
 /**
- * @typedef {object} DeriveOptions
- * @property {ReadonlySet<string>} vocabulary -  The vocabulary. In the repo gate this is `GLOSSARY_REGISTRIES`' source
- *    types — imported, never re-listed.
- * @property {string} root -  Absolute path the reported file paths are relative to.
- * @property {(path: string) => boolean} isFixture -  Which modules are fixtures/tests, whose reads do not count as consumers.
+ * `vocabulary`:  The vocabulary. In the repo gate this is `GLOSSARY_REGISTRIES`' source  types — imported, never re-listed.
+ * `root`:  Absolute path the reported file paths are relative to.
+ * `isFixture`:  Which modules are fixtures/tests, whose reads do not count as consumers.
+ *
+ * @typedef {{
+ *   readonly vocabulary: ReadonlySet<string>;
+ *   readonly root: string;
+ *   readonly isFixture: (path: string) => boolean;
+ * }} DeriveOptions
  */
 
 /**
@@ -327,11 +337,12 @@ export function deriveCensus(program, opts) {
 
   // ── pass 1: covered DTOs and the field declarations they expose ───────────
   /**
-   * @typedef {object} Entry
-   * @property {ts.Declaration} decl
-   * @property {string} file
-   * @property {string[]} vocab
-   * @property {Set<string>} exposedBy
+   * @typedef {{
+   *   readonly decl: ts.Declaration;
+   *   readonly file: string;
+   *   readonly vocab: string[];
+   *   readonly exposedBy: Set<string>;
+   * }} Entry
    */
   const byKey = /** @type {Map<string, Entry>} */ (new Map());
   /** @type {{ name: string; file: string; via: string[] }[]} */

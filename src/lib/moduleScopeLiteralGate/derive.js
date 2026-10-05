@@ -94,41 +94,49 @@ import { isJsxFile, scriptKindOf } from '@test/sourceFiles';
 
 /** Why a candidate is NOT a defect. `null` on a `Candidate` means it is one. */
 /**
- * @typedef {object} Acquittal
- * @property {'empty-string' | 'closed-union' | 'unreachable-default' | 'adjudicated'} kind
- * @property {string} note
+ * @typedef {{
+ *   readonly kind: 'empty-string' | 'closed-union' | 'unreachable-default' | 'adjudicated';
+ *   readonly note: string;
+ * }} Acquittal
  */
 
 /** One string literal at a site `t()` cannot reach. */
 /**
- * @typedef {object} Candidate
- * @property {Shape} shape
- * @property {string} file
- * @property {number} line
- * @property {string} owner -  The component for S1/S1b; the const name for S2.
- * @property {string} prop -  The prop name for S1/S1b; the object property the string sits under for S2.
- * @property {string} text
- * @property {Acquittal | null} acquittal
- */
-
-/**
- * @typedef {object} Census
- * @property {readonly Candidate[]} candidates
- * @property {readonly Candidate[]} flagged -  Defects — every candidate with no acquittal.
- * @property {readonly string[]} mappedConstKeys -  Distinct S2 const keys seen, `file::CONST`. Feeds the bilateral check.
- * @property {number} aliasImportCount -  Limit 1's tripwire: aliased value imports anywhere in scope.
- * @property {number} filesWalked -  Files the census actually walked. Zero is EMPTY-INPUT-REPORTS-CLEAN-01.
- */
-
-/**
- * @typedef {object} DeriveOptions
- * @property {ReadonlySet<string>} grandfathered `file::CONST` keys carried over from before this gate existed — the S2
- *   worklist, and the ONLY thing standing between them and a red build.
+ * `owner`:  The component for S1/S1b; the const name for S2.
+ * `prop`:  The prop name for S1/S1b; the object property the string sits under for S2.
  *
- *   ⚠️ It is a SET, never a count. A ratchet on a number cannot tell
- *   "one adjudicated, one added" from "nothing changed"; a set can, and the
- *   bilateral assertion in the spec makes a row that no longer matches a live
- *   const fail as loudly as a live const with no row. **It can only shrink.**
+ * @typedef {{
+ *   readonly shape: Shape;
+ *   readonly file: string;
+ *   readonly line: number;
+ *   readonly owner: string;
+ *   readonly prop: string;
+ *   readonly text: string;
+ *   readonly acquittal: Acquittal | null;
+ * }} Candidate
+ */
+
+/**
+ * `flagged`:  Defects — every candidate with no acquittal.
+ * `mappedConstKeys`:  Distinct S2 const keys seen, `file::CONST`. Feeds the bilateral check.
+ * `aliasImportCount`:  Limit 1's tripwire: aliased value imports anywhere in scope.
+ * `filesWalked`:  Files the census actually walked. Zero is EMPTY-INPUT-REPORTS-CLEAN-01.
+ *
+ * @typedef {{
+ *   readonly candidates: readonly Candidate[];
+ *   readonly flagged: readonly Candidate[];
+ *   readonly mappedConstKeys: readonly string[];
+ *   readonly aliasImportCount: number;
+ *   readonly filesWalked: number;
+ * }} Census
+ */
+
+/**
+ * `grandfathered`: `file::CONST` keys carried over from before this gate existed — the S2 worklist, and the ONLY thing standing between them and a red build.  ⚠️ It is a SET, never a count. A ratchet on a number cannot tell "one adjudicated, one added" from "nothing changed"; a set can, and the bilateral assertion in the spec makes a row that no longer matches a live const fail as loudly as a live const with no row. **It can only shrink.**
+ *
+ * @typedef {{
+ *   readonly grandfathered: ReadonlySet<string>;
+ * }} DeriveOptions
  */
 
 /**
@@ -283,10 +291,14 @@ function owningComponentName(node, sf) {
 }
 
 /**
- * @typedef {object} CallSiteCensus
- * @property {Map<string, number>} sites -  component → number of JSX sites.
- * @property {Map<string, number>} passed -  `component::prop` → number of sites passing it.
- * @property {number} aliasImportCount
+ * `sites`:  component → number of JSX sites.
+ * `passed`:  `component::prop` → number of sites passing it.
+ *
+ * @typedef {{
+ *   readonly sites: Map<string, number>;
+ *   readonly passed: Map<string, number>;
+ *   readonly aliasImportCount: number;
+ * }} CallSiteCensus
  */
 
 /**
