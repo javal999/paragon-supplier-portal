@@ -79,7 +79,6 @@ import SupplierRegistrationV2 from '@pages-v2/SupplierRegistration';
 import SupplierDeliveryAgreements from '@pages-v2/SupplierDeliveryAgreements';
 import SupplierCallOffs from '@pages-v2/SupplierCallOffs';
 import SupplierCapacity from '@pages-v2/SupplierCapacity';
-import BuyerForecasts from '@pages-v2/BuyerForecasts';
 import BuyerCommitments from '@pages-v2/BuyerCommitments';
 import BuyerReliability from '@pages-v2/BuyerReliability';
 import { BuyerFixedStockReconcile, SupplierFixedStockReconcile } from '@pages-v2/FixedStockReconcile';
@@ -155,7 +154,8 @@ const AppRouter: React.FC = () => {
           />
           {/* REQ-E06-01 / REQ-E06-03 — Forecast: versions, then commitments & gaps.
               The earlier response review stays reachable under the same menu item. */}
-          <Route path="/buyer/forecasts" element={<BuyerForecasts />} />
+          {/* FUX phase 2 B2 (FUX2-R1) — Published versions is a tab of Publish to suppliers. */}
+          <Route path="/buyer/forecasts" element={<Navigate to="/buyer/stabilise?tab=versions" replace />} />
           <Route path="/buyer/collaboration" element={<BuyerCommitments />} />
           {/* REQ-E06-04 — fixed stock reconcile per supplier × material × cycle (ENG-D21). */}
           <Route path="/buyer/fs-reconcile" element={<BuyerFixedStockReconcile />} />

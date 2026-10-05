@@ -87,7 +87,6 @@ import SupplierOrders from '@pages-v2/SupplierOrders';
 import SupplierRFQsV2 from '@pages-v2/SupplierRFQs';
 import SupplierForecasts from '@pages-v2/SupplierForecasts';
 import SupplierForecastCommitments from '@pages-v2/SupplierForecastCommitments';
-import BuyerForecasts from '@pages-v2/BuyerForecasts';
 import BuyerCommitments from '@pages-v2/BuyerCommitments';
 import BuyerReliability from '@pages-v2/BuyerReliability';
 import { BuyerFixedStockReconcile, SupplierFixedStockReconcile } from '@pages-v2/FixedStockReconcile';
@@ -148,7 +147,6 @@ const ROUTES: RouteCase[] = [
   { name: 'buyer/rfp', pattern: '/buyer/rfp', at: '/buyer/rfp', element: <BuyerRfp />, identity: BUYER },
   { name: 'buyer/rfq/:rfqId', pattern: '/buyer/rfq/:rfqId', at: '/buyer/rfq/rfq-014', element: <BuyerSourcingEvent />, identity: BUYER },
   { name: 'buyer/plan-grid', pattern: '/buyer/plan-grid', at: '/buyer/plan-grid', element: <PlanGrid />, identity: BUYER },
-  { name: 'buyer/forecasts', pattern: '/buyer/forecasts', at: '/buyer/forecasts', element: <BuyerForecasts />, identity: BUYER },
   { name: 'buyer/collaboration', pattern: '/buyer/collaboration', at: '/buyer/collaboration', element: <BuyerCommitments />, identity: BUYER },
   { name: 'buyer/fs-reconcile', pattern: '/buyer/fs-reconcile', at: '/buyer/fs-reconcile', element: <BuyerFixedStockReconcile />, identity: BUYER },
   { name: 'buyer/reliability', pattern: '/buyer/reliability', at: '/buyer/reliability', element: <BuyerReliability />, identity: BUYER },

@@ -23,7 +23,6 @@ const FORECAST_ROUTES = [
 const ENGINE = [
   ['hub.nav.pti.engine.materialRequirement', '/buyer/material-requirement'],
   ['hub.nav.pti.engine.safetyStock', '/buyer/safety-stock'],
-  ['hub.nav.pti.engine.publishedVersions', '/buyer/forecasts'],
   ['hub.nav.pti.engine.forecastBias', '/buyer/forecast-bias'],
   ['hub.nav.pti.engine.dataHealth', '/buyer/data-health'],
   ['hub.nav.pti.engine.modelBacktest', '/buyer/model-backtest'],
@@ -120,9 +119,9 @@ describe('FUX phase 2 B1 — This week and the Procurement path to the stock che
 });
 
 describe('Planning engine pages in the buyer user menu (F-04)', () => {
-  it('lists all 7, after the existing entries, each with the Planning engine prefix', () => {
+  it('lists all 6, after the existing entries, each with the Planning engine prefix', () => {
     const buyer = UTILITY_NAV.buyer.map((i) => [i.labelKey, i.path]);
-    expect(buyer.slice(-7)).toEqual(ENGINE);
+    expect(buyer.slice(-6)).toEqual(ENGINE);
     for (const [key] of ENGINE) {
       expect(hubEn[key]).toMatch(new RegExp(`^${hubEn['hub.nav.section.planningEngine']} · `));
       expect(hubId[key]).toMatch(new RegExp(`^${hubId['hub.nav.section.planningEngine']} · `));

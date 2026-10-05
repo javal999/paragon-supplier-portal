@@ -9,7 +9,6 @@ import { SEEDED_SEAT_ROLES } from '@services/transitions/businessRoles';
 import { PLANNING_TERM_GLOSSARY, GLOSSARY_REGISTRIES, type PlanningTerm } from '@lib/glossary';
 import { FORECAST_PAGES, linkTarget, type ForecastPageId } from './forecastPages';
 import TermTip from './TermTip';
-import BuyerForecasts from '@pages-v2/BuyerForecasts';
 import BuyerCommitments from '@pages-v2/BuyerCommitments';
 import BuyerDataHealth from '@pages-v2/BuyerDataHealth';
 import BuyerDemandForecast from '@pages-v2/BuyerDemandForecast';
@@ -28,7 +27,8 @@ import Glossary from '@pages-v2/Glossary';
 // ─────────────────────────────────────────────────────────────────────────────
 // FORECAST UX PHASE 1 · TASK A4 — purpose headers, one banner, plain copy.
 //
-// Every one of the 14 buyer forecast pages (13, plus phase 2's This week), rendered as a Material Planner:
+// Every one of the 13 buyer forecast pages (13, plus phase 2's This week, less Published versions, now
+// a tab of Publish to suppliers — B2), rendered as a Material Planner:
 //   · a purpose header whose Uses and Next links go to routes the router has;
 //   · the one simulated-data banner, and neither of the two old labels;
 //   · its menu label as the title and its new section in the crumb (F-19);
@@ -49,7 +49,6 @@ const PAGES: Record<ForecastPageId, React.FC> = {
   stockCheck: BuyerFixedStockReconcile,
   materialRequirement: BuyerMaterialRequirement,
   safetyStock: BuyerSafetyStock,
-  publishedVersions: BuyerForecasts,
   forecastBias: BuyerForecastBias,
   dataHealth: BuyerDataHealth,
   modelBacktest: BuyerModelBacktest,
@@ -101,8 +100,8 @@ describe('the requirement-code matcher (probed before it is trusted)', () => {
 });
 
 describe('the purpose-header map', () => {
-  it('covers 14 pages (13, plus This week from phase 2 B1), and every Uses and Next target is a route the router has', () => {
-    expect(IDS).toHaveLength(14);
+  it('covers 13 pages (13, plus This week from phase 2 B1, less Published versions from B2), and every Uses and Next target is a route the router has', () => {
+    expect(IDS).toHaveLength(13);
     expect(ROUTES.has('/buyer/order-plan')).toBe(true);
     expect(ROUTES.has('/buyer/no-such-page')).toBe(false);
     for (const id of IDS) {

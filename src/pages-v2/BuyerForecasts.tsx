@@ -1,8 +1,5 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
-import AppShellV2 from '../components/layout-v2/AppShellV2';
-import PageHeader from '../components/ui-v2/PageHeader';
 import SubTabs from '../components/ui-v2/SubTabs';
 import Table from '../components/ui-v2/Table';
 import TableHeader, { TableHeaderCell } from '../components/ui-v2/TableHeader';
@@ -10,61 +7,50 @@ import TableRow from '../components/ui-v2/TableRow';
 import TableCell from '../components/ui-v2/TableCell';
 import Data from '../components/ui-v2/Data';
 import StatusPill from '../components/ui-v2/StatusPill';
-import LoadingState from '../components/ui-v2/LoadingState';
-import ErrorState from '../components/ui-v2/ErrorState';
 import { formatDateTime } from '../lib/format';
-import PurposeHeader from '../components/forecast/PurposeHeader';
-import SimulatedDataBanner from '../components/forecast/SimulatedDataBanner';
-import AboutThisPage from '../components/forecast/AboutThisPage';
 import DataAsOf from '../components/forecast/DataAsOf';
-import { forecastCrumb, forecastTitle } from '../components/forecast/forecastPages';
-import { useForecastVersions } from '../services/query/hooks';
+import type { ForecastVersionView } from '../services/data/types';
 import type { ForecastStream } from '../services/sdc/types';
 import { forecastNow } from './forecasts/forecastDisplay';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// PTI FORECASTS — REQ-E06-01 (MP).
+// PUBLISHED VERSIONS — REQ-E06-01 (MP), the "Published versions" tab of
+// Publish to suppliers.
 //
 // Every published version per stream (packaging weekly, raw material monthly),
 // newest first, with the suppliers it carries, when each supplier first opened
 // it, and how many of their periods moved against the previous version.
 //
-// FUX-D1 (2026-10-05): this page no longer publishes. The Re-publish and
+// FUX-D1 (2026-10-05): this list no longer publishes. The Re-publish and
 // Emergency re-publication buttons (the SAP-plan path) are removed; a plan is
-// published only from Publish to suppliers (`/buyer/stabilise`), which this page
-// links to. The `forecast:publish` verb and its flow are unchanged.
+// published only from Publish to suppliers. The `forecast:publish` verb and its
+// flow are unchanged.
+//
+// FUX phase 2 B2 (F-01, F-13): the list was its own page at `/buyer/forecasts`.
+// It is now a tab of Publish to suppliers (`/buyer/stabilise?tab=versions`), so
+// a planner sees what suppliers hold beside what is about to be published. The
+// old route redirects there (FUX2-R1). The page owns the shell, the purpose
+// header, the banner and the loading and error states; this component renders
+// the versions the page has read. FUX-D4: still no Source column.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const BuyerForecasts: React.FC = () => {
+interface PublishedVersionsProps {
+  /** The published versions, both streams, as `useForecastVersions` returns them. */
+  readonly versions: readonly ForecastVersionView[];
+}
+
+const PublishedVersions: React.FC<PublishedVersionsProps> = ({ versions }) => {
   const { t } = useTranslation();
-  const versionsQuery = useForecastVersions();
   const [stream, setStream] = useState<ForecastStream>('packaging');
   const nowIso = forecastNow();
-  const crumb = forecastCrumb(t, 'publishedVersions');
-
-  const versions = useMemo(() => versionsQuery.data?.items ?? [], [versionsQuery.data]);
-
-  if (versionsQuery.isPending) return <LoadingState breadcrumb={crumb} />;
-  if (versionsQuery.isError)
-    return <ErrorState breadcrumb={crumb} error={versionsQuery.error} onRetry={() => versionsQuery.refetch()} />;
 
   const shown = versions.filter((v) => v.stream === stream);
   const current = shown.find((v) => v.isCurrent);
   const notViewed = current ? current.suppliers.filter((s) => s.viewedAt === null) : [];
 
   return (
-    <AppShellV2>
-      <PageHeader breadcrumb={crumb} title={forecastTitle(t, 'publishedVersions')} />
-      <PurposeHeader page="publishedVersions" />
-      <SimulatedDataBanner capability="forecastPublications" />
+    <div data-testid="fc-pti-versions">
       <DataAsOf date={nowIso} />
-      <p className="text-sm text-text-secondary mb-4" data-testid="fc-pti-versions-publish-from">
-        {t('fc.pti.versions.publishFrom')}{' '}
-        <Link to="/buyer/stabilise" className="text-action-hover hover:underline" data-testid="fc-pti-versions-publish-link">
-          {t('fc.pti.versions.publishFromLink')}
-        </Link>
-        .
-      </p>
 
       {notViewed.length > 0 && (
         <div role="status" data-testid="fc-pti-versions-banner" className="bg-warning-soft border-l-2 border-warning rounded px-4 py-3 mb-4 text-sm text-warning-hover">
@@ -153,12 +139,8 @@ const BuyerForecasts: React.FC = () => {
           </tbody>
         </Table>
       </div>
-
-      <AboutThisPage>
-        <p>{t('fc.pti.versions.subtitle')}</p>
-      </AboutThisPage>
-    </AppShellV2>
+    </div>
   );
 };
 
-export default BuyerForecasts;
+export default PublishedVersions;

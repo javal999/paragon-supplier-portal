@@ -13,7 +13,6 @@ import {
   CalendarClock,
   CalendarSync,
   CalendarDays,
-  CalendarRange,
   ChartLine,
   DatabaseZap,
   Factory,
@@ -273,7 +272,6 @@ export const UTILITY_NAV: Record<Persona, readonly NavItem[]> = {
     // never orphaned. Each label carries the "Planning engine" prefix.
     { labelKey: 'hub.nav.pti.engine.materialRequirement', icon: Layers, path: '/buyer/material-requirement' },
     { labelKey: 'hub.nav.pti.engine.safetyStock', icon: ShieldHalf, path: '/buyer/safety-stock' },
-    { labelKey: 'hub.nav.pti.engine.publishedVersions', icon: CalendarRange, path: '/buyer/forecasts' },
     { labelKey: 'hub.nav.pti.engine.forecastBias', icon: Crosshair, path: '/buyer/forecast-bias' },
     { labelKey: 'hub.nav.pti.engine.dataHealth', icon: DatabaseZap, path: '/buyer/data-health' },
     { labelKey: 'hub.nav.pti.engine.modelBacktest', icon: FlaskConical, path: '/buyer/model-backtest' },

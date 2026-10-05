@@ -21,7 +21,7 @@ import { sdcClock } from '../services/sdc';
 import { formatDate } from '../lib/format';
 import i18n from '../lib/i18n';
 import SupplierForecastCommitments from './SupplierForecastCommitments';
-import BuyerForecasts from './BuyerForecasts';
+import BuyerStabilise from './BuyerStabilise';
 import BuyerCommitments from './BuyerCommitments';
 import BuyerAlerts from './BuyerAlerts';
 import BuyerHome from './BuyerHome';
@@ -166,22 +166,28 @@ describe('Supplier — Forecast & commitments (REQ-E06-01 SUP, REQ-E06-02)', () 
   });
 });
 
-describe('PTI — Published versions (REQ-E06-01 MP, FUX-D1)', () => {
-  it('lists versions with who viewed them, and links to Publish to suppliers', async () => {
-    renderWithProviders(<BuyerForecasts />, { identity: PLANNER });
+// FUX phase 2 B2 — Published versions is the `?tab=versions` tab of Publish to suppliers.
+const VERSIONS_TAB = '/buyer/stabilise?tab=versions';
+
+describe('PTI — Published versions (REQ-E06-01 MP, FUX-D1, FUX phase 2 B2)', () => {
+  it('lists versions with who viewed them, as a tab of Publish to suppliers', async () => {
+    renderWithProviders(<BuyerStabilise />, { identity: PLANNER, route: VERSIONS_TAB });
     const v1 = await screen.findByTestId('fc-version-FC-PK-V1');
     expect(within(v1).getByTestId('fc-viewed-FC-PK-V1-sup-007')).toHaveTextContent('Viewed');
     expect(screen.getByTestId('fc-viewed-FC-PK-V2-sup-012')).toHaveTextContent('Not viewed');
     expect(screen.getByTestId('fc-pti-versions-banner')).toHaveTextContent('version 2: 2');
-    expect(screen.getByRole('heading', { name: 'Published versions' })).toBeInTheDocument();
-    expect(screen.getByTestId('fc-pti-versions-publish-from')).toHaveTextContent('Plans are published from Publish to suppliers.');
-    expect(screen.getByTestId('fc-pti-versions-publish-link')).toHaveAttribute('href', '/buyer/stabilise');
+    // B2 — the list sits on the publishing page, so the "published from" pointer is gone:
+    // the page's heading and its other tab are where a plan is published.
+    expect(screen.getByRole('heading', { level: 1, name: 'Publish to suppliers' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /Published versions/, selected: true })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Version to publish', selected: false })).toBeInTheDocument();
+    expect(screen.queryByTestId('fc-pti-versions-publish-from')).toBeNull();
   });
 
   it('FUX-D1 — no Re-publish, no Emergency re-publication and no publish handoff, for any role', async () => {
     const seats: CurrentIdentity[] = [PLANNER, BUYER, { ...BUYER, businessRoles: ['finance'] }];
     for (const identity of seats) {
-      const { unmount } = renderWithProviders(<BuyerForecasts />, { identity });
+      const { unmount } = renderWithProviders(<BuyerStabilise />, { identity, route: VERSIONS_TAB });
       await screen.findByTestId('fc-version-FC-PK-V1');
       expect(screen.queryByTestId('fc-republish')).toBeNull();
       expect(screen.queryByTestId('fc-republish-emergency')).toBeNull();
@@ -196,9 +202,10 @@ describe('PTI — Published versions (REQ-E06-01 MP, FUX-D1)', () => {
   it('reads in Indonesian', async () => {
     await i18n.changeLanguage('id');
     try {
-      renderWithProviders(<BuyerForecasts />, { identity: PLANNER });
-      expect(await screen.findByRole('heading', { name: 'Versi terbit' })).toBeInTheDocument();
-      expect(screen.getByTestId('fc-pti-versions-publish-link')).toHaveTextContent('Terbitkan ke pemasok');
+      renderWithProviders(<BuyerStabilise />, { identity: PLANNER, route: VERSIONS_TAB });
+      expect(await screen.findByRole('tab', { name: /Versi terbit/, selected: true })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { level: 1, name: 'Terbitkan ke pemasok' })).toBeInTheDocument();
+      expect(screen.getByRole('tab', { name: 'Versi untuk diterbitkan' })).toBeInTheDocument();
     } finally {
       await i18n.changeLanguage('en');
     }
