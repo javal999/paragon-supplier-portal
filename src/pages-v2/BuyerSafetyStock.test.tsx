@@ -26,7 +26,7 @@ describe('BuyerSafetyStock — the planner page', () => {
   it('renders inside the app shell with the SIMULATED engine pill and the tier-default note — never Live', async () => {
     expect(isLive('engineDataset')).toBe(false);
     renderWithProviders(<BuyerSafetyStock />, { identity: BUYER, route: '/buyer/safety-stock' });
-    expect(await screen.findByRole('heading', { name: 'Safety stock and reorder point' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Safety stock targets' })).toBeInTheDocument();
     expect(screen.getByText('Synthetic data · awaiting the MDM SAP feed')).toBeInTheDocument();
     expect(screen.queryByText('Live')).toBeNull();
     expect(screen.getByTestId('sst-tier-default-note')).toBeInTheDocument();
@@ -90,7 +90,7 @@ describe('BuyerSafetyStock — the planner page', () => {
   it('renders in Bahasa Indonesia from the ID fragment', async () => {
     await i18n.changeLanguage('id');
     renderWithProviders(<BuyerSafetyStock />, { identity: BUYER, route: '/buyer/safety-stock' });
-    expect(await screen.findByRole('heading', { name: 'Stok pengaman dan titik pesan ulang' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Target stok pengaman' })).toBeInTheDocument();
     expect(screen.getByText('Cara menghitungnya')).toBeInTheDocument();
   });
 });

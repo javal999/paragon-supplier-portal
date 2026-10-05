@@ -2,6 +2,7 @@ import React from 'react';
 import { useInRouterContext, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { sectionForPath } from '../layout-v2/navConfig';
+import { useHubRole } from '../layout-v2/hubRole';
 
 interface PageHeaderProps {
   breadcrumb: string[];
@@ -18,7 +19,10 @@ interface PageHeaderProps {
 const SectionCrumb: React.FC<{ fallback: string[] }> = ({ fallback }) => {
   const { t } = useTranslation();
   const { pathname } = useLocation();
-  const section = sectionForPath(pathname);
+  // The viewer's role picks the section their own menu shows (a route can sit
+  // in two sections, e.g. the scorecard under Review for MP, Performance for BUY).
+  const [hubRole] = useHubRole();
+  const section = sectionForPath(pathname, hubRole);
   const sectionLabel = section ? t(section.labelKey) : null;
   // A page whose only crumb IS its menu section ("Sourcing") shows it once, not
   // "Sourcing · Sourcing".
