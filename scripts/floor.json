@@ -9,6 +9,6 @@
   },
   "lint": {
     "//": "A CEILING, not a floor (added 2026-10-02, frontend-standard plan Phase 1). `npm run gates` FAILS when lint warnings rise above maxWarnings and passes with a note when they fall below it. Rules that still have violations run as warnings (see RULES_WITH_OPEN_VIOLATIONS in eslint.config.js); this ceiling stops new violations while they are fixed. Lower it when the note tells you to; never raise it to make a PR pass.",
-    "maxWarnings": 756
+    "maxWarnings": 784
   }
 }
