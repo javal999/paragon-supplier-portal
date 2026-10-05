@@ -1,7 +1,10 @@
 import { describe, it, expect, afterEach, beforeEach } from 'vitest';
 import { screen, within, fireEvent, waitFor } from '@testing-library/react';
+import { Route, Routes } from 'react-router-dom';
 import { renderWithProviders, BUYER } from '@test/test-utils';
 import BuyerOrderPlan from './BuyerOrderPlan';
+import BuyerMaterialRequirement from './BuyerMaterialRequirement';
+import BuyerSafetyStock from './BuyerSafetyStock';
 import { mockDataService } from '@services/data/mock/mockDataService';
 import { callOffStore } from '@services/data/mock/stores/callOffStore';
 import { purchaseOrderStore } from '@services/data/mock/stores/purchaseOrderStore';
@@ -186,7 +189,10 @@ describe('BuyerOrderPlan — the planner page (REQ-E14-05)', () => {
     renderWithProviders(<BuyerOrderPlan />, { identity: PLANNER, route: '/buyer/order-plan' });
     const row = await screen.findByTestId(`op-rec-${blocked.materialCode}-${blocked.weekStart}`);
     expect(within(row).getByText('No PO')).toBeInTheDocument();
-    expect(within(row).queryByRole('button')).toBeNull();
+    // No act: the row's only button is the read-only "Why this quantity" control (FUX2 B3).
+    expect(within(row).getAllByRole('button').map((b) => b.getAttribute('data-testid'))).toEqual([
+      `op-wq-open-${blocked.materialCode}-${blocked.weekStart}`,
+    ]);
   });
 
   it('a PTI seat without the planning lane sees who acts, not the draft control', async () => {
@@ -225,13 +231,13 @@ describe('BuyerOrderPlan — the planner page (REQ-E14-05)', () => {
     expect(screen.getByTestId('op-fill-basis')).toHaveTextContent('Includes the recommended orders');
   });
 
-  it('F-06 / F-02: the plan source and its date, the "Why these quantities" links, and the Data health chip', async () => {
+  it('F-06 / F-02: the plan source and its date, the links to the full pages behind each quantity, and the Data health chip', async () => {
     const run = (await mockDataService.procurement.getOrderPlan(buyerScope))!;
     renderWithProviders(<BuyerOrderPlan />, { identity: PLANNER, route: '/buyer/order-plan' });
     const source = await screen.findByTestId('op-plan-source');
     expect(source).toHaveTextContent('Plan source: SAP finished-goods plan,');
     expect(within(source).getByText(formatDate(run.planMadeAt!))).toBeInTheDocument();
-    expect(screen.getByTestId('op-why')).toHaveTextContent('Why these quantities:');
+    expect(screen.getByTestId('op-why')).toHaveTextContent('Full pages behind each quantity:');
     expect(screen.getByTestId('op-why-requirement')).toHaveAttribute('href', '/buyer/material-requirement');
     expect(screen.getByTestId('op-why-safety')).toHaveAttribute('href', '/buyer/safety-stock');
     expect(await screen.findByTestId('data-health-chip-failing')).toHaveTextContent('failing');
@@ -243,4 +249,146 @@ describe('BuyerOrderPlan — the planner page (REQ-E14-05)', () => {
     expect(await screen.findByRole('heading', { name: 'Apa yang dipesan' })).toBeInTheDocument();
     expect(screen.getByTestId('op-cost-placeholder-rent')).toHaveTextContent('Sementara — menunggu konfirmasi Keuangan');
   });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FUX2 B3 (F-07, F-17) — "Why this quantity": one recommended order explained
+// in place, with the Material requirement and Safety stock figures for its
+// material read from the same hooks the full pages read. Each figure is
+// compared with what the FULL PAGE renders for that material, not restated.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const firstRec = async () => {
+  const pk = (await plan()).warehouses.find((w) => w.kind === 'packaging')!;
+  const rows = pk.materials
+    .flatMap((m) => m.recommendations.map((rec) => ({ rec, m })))
+    .sort((a, b) => a.rec.weekStart.localeCompare(b.rec.weekStart) || a.rec.materialCode.localeCompare(b.rec.materialCode));
+  expect(rows.length).toBeGreaterThan(0);
+  return rows[0];
+};
+
+const pages = (
+  <Routes>
+    <Route path="/buyer/order-plan" element={<BuyerOrderPlan />} />
+    <Route path="/buyer/material-requirement" element={<BuyerMaterialRequirement />} />
+    <Route path="/buyer/safety-stock" element={<BuyerSafetyStock />} />
+  </Routes>
+);
+
+const openWhy = async (code: string, week: string) => {
+  const toggle = await screen.findByTestId(`op-wq-open-${code}-${week}`);
+  expect(toggle.tagName).toBe('BUTTON');
+  expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  fireEvent.click(toggle);
+  const panel = await screen.findByTestId('op-wq-panel');
+  return { toggle, panel };
+};
+
+// Each spec renders up to 3 engine pages; under a loaded runner that passes 5 s.
+const PANEL_TIMEOUT = 30000;
+
+describe('BuyerOrderPlan — "Why this quantity" panel (FUX2 B3)', () => {
+  it('shows the same net requirement as Material requirement and the same safety stock as Safety stock targets for that material', async () => {
+    const { rec, m } = await firstRec();
+    const code = rec.materialCode;
+
+    const mrq = renderWithProviders(<BuyerMaterialRequirement />, { identity: PLANNER, route: '/buyer/material-requirement' });
+    const mrqNet = (await screen.findByTestId(`mrq-total-net-${code}`)).textContent!;
+    fireEvent.click(screen.getByTestId(`mrq-row-${code}`));
+    const mrqWeekNet = (await screen.findByTestId(`mrq-net-${rec.weekStart}`)).textContent!;
+    const mrqSs = screen.getByTestId(`mrq-ss-${code}`).textContent!;
+    mrq.unmount();
+    const sst = renderWithProviders(<BuyerSafetyStock />, { identity: PLANNER, route: '/buyer/safety-stock' });
+    const sstSs = (await screen.findByTestId(`sst-ss-${code}`)).textContent!;
+    const sstRop = screen.getByTestId(`sst-rop-${code}`).textContent!;
+    sst.unmount();
+
+    renderWithProviders(<BuyerOrderPlan />, { identity: PLANNER, route: '/buyer/order-plan' });
+    const { panel } = await openWhy(code, rec.weekStart);
+    expect(within(panel).getByText(code)).toBeInTheDocument();
+    expect(await within(panel).findByTestId('op-wq-net')).toHaveTextContent(`${mrqWeekNet} ${m.uom}`);
+    expect(within(panel).getByTestId('op-wq-net-total')).toHaveTextContent(`${mrqNet} ${m.uom}`);
+    expect(await within(panel).findByTestId('op-wq-ss')).toHaveTextContent(sstSs);
+    expect(within(panel).getByTestId('op-wq-rop')).toHaveTextContent(sstRop);
+    // The Material requirement page's safety stock column agrees with the Safety stock page for this material.
+    expect(sstSs).toBe(`${mrqSs} ${m.uom}`);
+
+    // The order sizing: MOQ, multiple, space and the quantity the row shows.
+    expect(within(panel).getByTestId('op-wq-quantity')).toHaveTextContent(screen.getByTestId(`op-qty-${code}-${rec.weekStart}`).textContent!);
+    expect(within(panel).getByTestId('op-wq-moq')).toHaveTextContent(`${formatNumber(m.moq)}`);
+    expect(within(panel).getByTestId('op-wq-binding')).toHaveTextContent(screen.getByTestId(`op-binding-${code}-${rec.weekStart}`).textContent!);
+    // Term tips at the point of use.
+    expect(within(panel).getByTestId('term-tip-safety-stock')).toBeInTheDocument();
+    expect(within(panel).getByTestId('term-tip-reorder-point')).toBeInTheDocument();
+  }, PANEL_TIMEOUT);
+
+  it('the requirement block shows the order’s week as the engine nets it, so the figures reconcile, and says the rule', async () => {
+    const { rec, m } = await firstRec();
+    const run = (await mockDataService.procurement.getMaterialRequirement(buyerScope, false))!;
+    const wk = run.materials.find((x) => x.materialCode === rec.materialCode)!.weeks.find((w) => w.weekStart === rec.weekStart)!;
+    // The engine's rule (requirement.ts netMaterial): net = max(0, gross + SS − (stock at start + receipts)).
+    expect(wk.net).toBeCloseTo(Math.max(0, wk.gross + wk.safetyStock - (wk.projectedStart + wk.receipts)), 6);
+    renderWithProviders(<BuyerOrderPlan />, { identity: PLANNER, route: '/buyer/order-plan' });
+    const { panel } = await openWhy(rec.materialCode, rec.weekStart);
+    const q = (x: number) => `${formatNumber(m.uom === 'PCS' ? Math.round(x) : Math.round(x * 10) / 10)} ${m.uom}`;
+    expect(await within(panel).findByTestId('op-wq-gross')).toHaveTextContent(q(wk.gross));
+    expect(within(panel).getByTestId('op-wq-req-safety')).toHaveTextContent(q(wk.safetyStock));
+    expect(within(panel).getByTestId('op-wq-stock')).toHaveTextContent(q(wk.projectedStart));
+    expect(within(panel).getByTestId('op-wq-confirmed')).toHaveTextContent(q(wk.receipts));
+    expect(within(panel).getByTestId('op-wq-net')).toHaveTextContent(q(wk.net));
+    expect(within(panel).getByTestId('op-wq-rule')).toHaveTextContent(
+      'Worked out week by week, and never below zero. Stock at start of week already includes the orders planned for earlier weeks',
+    );
+  }, PANEL_TIMEOUT);
+
+  it('the panel’s links reach the 2 full pages', async () => {
+    const { rec } = await firstRec();
+    const first = renderWithProviders(pages, { identity: PLANNER, route: '/buyer/order-plan' });
+    let { panel } = await openWhy(rec.materialCode, rec.weekStart);
+    fireEvent.click(await within(panel).findByTestId('op-wq-link-requirement'));
+    expect(await screen.findByRole('heading', { name: 'Material requirement' })).toBeInTheDocument();
+    first.unmount();
+
+    renderWithProviders(pages, { identity: PLANNER, route: '/buyer/order-plan' });
+    ({ panel } = await openWhy(rec.materialCode, rec.weekStart));
+    fireEvent.click(within(panel).getByTestId('op-wq-link-safety'));
+    expect(await screen.findByRole('heading', { name: 'Safety stock targets' })).toBeInTheDocument();
+  }, PANEL_TIMEOUT);
+
+  it('opens and closes by keyboard: focus moves into the panel, Escape closes it and returns focus to its control', async () => {
+    const { rec } = await firstRec();
+    renderWithProviders(<BuyerOrderPlan />, { identity: PLANNER, route: '/buyer/order-plan' });
+    // A native <button>: Enter and Space activate it as a click.
+    const { toggle, panel } = await openWhy(rec.materialCode, rec.weekStart);
+    expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    expect(toggle).toHaveAttribute('aria-controls', panel.id);
+    expect(document.activeElement).toBe(within(panel).getByRole('heading', { level: 3 }));
+
+    fireEvent.keyDown(document.activeElement!, { key: 'Escape' });
+    expect(screen.queryByTestId('op-wq-panel')).toBeNull();
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    await waitFor(() => expect(document.activeElement).toBe(toggle));
+
+    // The Close button closes it too, and the control toggles it shut.
+    fireEvent.click(toggle);
+    fireEvent.click(await screen.findByTestId('op-wq-close'));
+    expect(screen.queryByTestId('op-wq-panel')).toBeNull();
+    fireEvent.click(toggle);
+    expect(await screen.findByTestId('op-wq-panel')).toBeInTheDocument();
+    fireEvent.click(toggle);
+    expect(screen.queryByTestId('op-wq-panel')).toBeNull();
+  }, PANEL_TIMEOUT);
+
+  it('renders in Indonesian', async () => {
+    const { rec } = await firstRec();
+    await i18n.changeLanguage('id');
+    renderWithProviders(<BuyerOrderPlan />, { identity: PLANNER, route: '/buyer/order-plan' });
+    const toggle = await screen.findByTestId(`op-wq-open-${rec.materialCode}-${rec.weekStart}`);
+    expect(toggle).toHaveTextContent('Mengapa kuantitas ini');
+    fireEvent.click(toggle);
+    const panel = await screen.findByTestId('op-wq-panel');
+    expect(await within(panel).findByTestId('op-wq-rule')).toHaveTextContent('Dihitung minggu per minggu, dan tidak pernah di bawah nol.');
+    expect(within(panel).getByTestId('op-wq-link-safety')).toHaveTextContent('Buka Target stok pengaman');
+    expect(screen.getByTestId('op-why')).toHaveTextContent('Halaman lengkap di balik setiap kuantitas:');
+  }, PANEL_TIMEOUT);
 });
