@@ -60,15 +60,16 @@
 /** @import { ProducedBy } from './derive' */
 
 /**
- * @typedef {object} DisplayStateRow
- * @property {string} entity
- * @property {string} state
- * @property {ProducedBy} group
- * @property {string} [producer] `computed-at-read` only: the module that produces it. The gate asserts a
- *   non-fixture write site exists IN THIS FILE and that the producing function
- *   takes an injected `now` — a producer with its own clock would be law 0.5's
- *   defect wearing this group's name.
- * @property {true} [noCommandTarget] -  The entity has no `CommandTarget`: nothing CAN write this, not merely does not.
+ * `producer`: `computed-at-read` only: the module that produces it. The gate asserts a non-fixture write site exists IN THIS FILE and that the producing function takes an injected `now` — a producer with its own clock would be law 0.5's defect wearing this group's name.
+ * `noCommandTarget`:  The entity has no `CommandTarget`: nothing CAN write this, not merely does not.
+ *
+ * @typedef {{
+ *   readonly entity: string;
+ *   readonly state: string;
+ *   readonly group: ProducedBy;
+ *   readonly producer?: string;
+ *   readonly noCommandTarget?: true;
+ * }} DisplayStateRow
  */
 
 /**

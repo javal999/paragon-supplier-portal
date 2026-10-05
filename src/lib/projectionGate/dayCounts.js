@@ -67,24 +67,23 @@ import { scriptKindOf } from '@test/sourceFiles';
  */
 
 /**
- * @typedef {object} DayCountRow
- * @property {string} owner -  The type that declares the field — the storage site, not a view model.
- * @property {string} field
- * @property {DayCountGroup} group
- * @property {string} [against] The date this count is measured against. REQUIRED for the two clock groups
- *   and FORBIDDEN for an acquittal: naming the other endpoint is what makes the
- *   classification checkable rather than asserted.
- * @property {string} [producer] -  `computed-at-read` only: the module that produces it, which must take an
- *    injected `now` — a producer with its own clock would be law 0.5's defect
- *    wearing this group's name.
- * @property {string} [reason] -  `not-a-clock-difference` only: why it is acquitted.
- * @property {string} [mintedAtWrite] - ⚠️ A non-fixture file that COMPUTES this from the clock and STORES it. The
- *   gate asserts the file exists and writes the field; removing the write is the
- *   only way to remove this marker.
- * @property {string} [factWhenPresent] The count is a durable FACT whenever this date is present, and a decaying
- *   projection when it is not — one field with two meanings. Recorded because
- *   that split is more dangerous than a uniformly wrong number: half the rows
- *   are correct, so no row you spot-check reveals the other half.
+ * `owner`:  The type that declares the field — the storage site, not a view model.
+ * `against`: The date this count is measured against. REQUIRED for the two clock groups and FORBIDDEN for an acquittal: naming the other endpoint is what makes the classification checkable rather than asserted.
+ * `producer`:  `computed-at-read` only: the module that produces it, which must take an  injected `now` — a producer with its own clock would be law 0.5's defect  wearing this group's name.
+ * `reason`:  `not-a-clock-difference` only: why it is acquitted.
+ * `mintedAtWrite`: ⚠️ A non-fixture file that COMPUTES this from the clock and STORES it. The gate asserts the file exists and writes the field; removing the write is the only way to remove this marker.
+ * `factWhenPresent`: The count is a durable FACT whenever this date is present, and a decaying projection when it is not — one field with two meanings. Recorded because that split is more dangerous than a uniformly wrong number: half the rows are correct, so no row you spot-check reveals the other half.
+ *
+ * @typedef {{
+ *   readonly owner: string;
+ *   readonly field: string;
+ *   readonly group: DayCountGroup;
+ *   readonly against?: string;
+ *   readonly producer?: string;
+ *   readonly reason?: string;
+ *   readonly mintedAtWrite?: string;
+ *   readonly factWhenPresent?: string;
+ * }} DayCountRow
  */
 
 /**

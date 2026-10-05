@@ -135,39 +135,43 @@ export const FX_PASSTHROUGH = 1.0;
 /**
  * ISO date; the vintage source
  *
- * @typedef {object} RootBenchmark
- * @property {string} id
- * @property {string} label
- * @property {number} valueUsdPerKg
- * @property {FeedLiveness} liveness
- * @property {string} asOf
+ * @typedef {{
+ *   readonly id: string;
+ *   readonly label: string;
+ *   readonly valueUsdPerKg: number;
+ *   readonly liveness: FeedLiveness;
+ *   readonly asOf: string;
+ * }} RootBenchmark
  */
 
 /** The spot FX feed (IDR per USD). SIMULATED in CI-1. */
 /**
- * @typedef {object} FxRate
- * @property {number} idrPerUsd
- * @property {FeedLiveness} liveness
- * @property {string} asOf
+ * @typedef {{
+ *   readonly idrPerUsd: number;
+ *   readonly liveness: FeedLiveness;
+ *   readonly asOf: string;
+ * }} FxRate
  */
 
 /** One weighted root in a material's basket. The weight is a TECHNICAL coefficient
  *  (includes process yield) — NOT a recipe share; weights need not sum to 1. */
 /**
- * @typedef {object} BasketComponent
- * @property {string} rootId
- * @property {number} weight
- * @property {string} [lagNote]
+ * @typedef {{
+ *   readonly rootId: string;
+ *   readonly weight: number;
+ *   readonly lagNote?: string;
+ * }} BasketComponent
  */
 
 /**
  * MG-xx (operator-correctable reporting bucket)
  *
- * @typedef {object} MaterialBase
- * @property {string} id
- * @property {string} name
- * @property {string} group
- * @property {'ROH' | 'VERP'} sapType
+ * @typedef {{
+ *   readonly id: string;
+ *   readonly name: string;
+ *   readonly group: string;
+ *   readonly sapType: 'ROH' | 'VERP';
+ * }} MaterialBase
  */
 
 /** A material the engine can model: a governed class + a non-empty basket + basis. */
@@ -197,11 +201,12 @@ export const FX_PASSTHROUGH = 1.0;
 /**
  * band half-width (fraction)
  *
- * @typedef {object} CostBand
- * @property {number} lowIdrPerKg
- * @property {number} midIdrPerKg
- * @property {number} highIdrPerKg
- * @property {number} pct
+ * @typedef {{
+ *   readonly lowIdrPerKg: number;
+ *   readonly midIdrPerKg: number;
+ *   readonly highIdrPerKg: number;
+ *   readonly pct: number;
+ * }} CostBand
  */
 
 /**
@@ -211,25 +216,27 @@ export const FX_PASSTHROUGH = 1.0;
  * weakest-link across the inputs
  * oldest as-of among the inputs
  *
- * @typedef {object} ShouldCost
- * @property {string} materialId
- * @property {false} tail
- * @property {'MODELED'} epistemic
- * @property {Basis} basis
- * @property {number} basisCostUsdPerKg
- * @property {CostBand} band
- * @property {FeedLiveness} liveness
- * @property {string} vintage
- * @property {string} coeffVersion
+ * @typedef {{
+ *   readonly materialId: string;
+ *   readonly tail: false;
+ *   readonly epistemic: 'MODELED';
+ *   readonly basis: Basis;
+ *   readonly basisCostUsdPerKg: number;
+ *   readonly band: CostBand;
+ *   readonly liveness: FeedLiveness;
+ *   readonly vintage: string;
+ *   readonly coeffVersion: string;
+ * }} ShouldCost
  */
 
 /**
  * "no modelable benchmark" — never a number
  *
- * @typedef {object} TailShouldCost
- * @property {string} materialId
- * @property {true} tail
- * @property {string} reason
+ * @typedef {{
+ *   readonly materialId: string;
+ *   readonly tail: true;
+ *   readonly reason: string;
+ * }} TailShouldCost
  */
 
 /** @typedef {ShouldCost | TailShouldCost} ShouldCostResult */

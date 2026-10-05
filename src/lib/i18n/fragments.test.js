@@ -41,11 +41,12 @@ const MODULES = /** @type {Record< string, Record<string, unknown> >} */ (
 
 /** @typedef {Record<string, string>} Bundle */
 /**
- * @typedef {object} Fragment
- * @property {string} name
- * @property {string} file
- * @property {Bundle} en
- * @property {Bundle} id
+ * @typedef {{
+ *   readonly name: string;
+ *   readonly file: string;
+ *   readonly en: Bundle;
+ *   readonly id: Bundle;
+ * }} Fragment
  */
 
 /** @type {readonly Fragment[]} */
