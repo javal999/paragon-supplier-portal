@@ -1,6 +1,6 @@
 import React from 'react';
 import type { CellComponent } from 'react-datasheet-grid';
-import Data from '../../components/ui-v2/Data';
+import Data from '@components/ui-v2/Data';
 
 // ────────────────────────────────────────────────────────────────────────────
 // Shared read-only DSG cell helpers (SDC-1b extraction — second consumer).

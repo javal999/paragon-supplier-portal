@@ -92,7 +92,7 @@
 //   independent confirmation of the anchor. Stated as one row, not as a set.
 // ────────────────────────────────────────────────────────────────────────────
 
-import type { Shipment, ShipmentStatus } from '../../data/mockShipments';
+import type { Shipment, ShipmentStatus } from '@data/mockShipments';
 import { daysUntil } from './dayProjection';
 
 /**

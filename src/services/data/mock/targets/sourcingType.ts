@@ -16,7 +16,7 @@ import { bindPolicyHook, POLICY_HOOKS, type CommandTarget } from '../../../trans
 import { isSourcingType, isSourcingTypeKey, sourcingTypeRefusal } from '../../../sourcing/sourcingType';
 import { sourcingTypeStore } from '../../../transitions/sourcingTypeStore';
 import { sdcClock } from '../../../sdc';
-import { NO_PERSON } from '../../../../context/noPerson';
+import { NO_PERSON } from '@context/noPerson';
 
 export const sourcingTypeTarget: CommandTarget = {
   readState: (id) => (isSourcingTypeKey(id) ? 'Defined' : null),

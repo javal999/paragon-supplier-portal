@@ -31,8 +31,8 @@
 // ────────────────────────────────────────────────────────────────────────────
 
 import { DECLARED_PRESENT } from '../../fixturePresent';
-import type { RFQ } from '../../../../data/mockRfqs';
-import type { Quotation } from '../../../../data/mockQuotations';
+import type { RFQ } from '@data/mockRfqs';
+import type { Quotation } from '@data/mockQuotations';
 import { rfiTemplate } from '../../../sourcing/rfxConfig';
 import type {
   AwardRecord,

@@ -28,14 +28,14 @@ import { resources } from '../i18n';
 // because it was never declared, only observed.
 //
 // ⚠️ **THE GLOB EXCLUDES SIBLING SUITES AT THE PATTERN, NOT IN THE LOOP.**
-// `import.meta.glob('./*.ts', { eager: true })` EAGERLY IMPORTS the sibling
+// `import.meta.glob('./*.{ts,js}', { eager: true })` EAGERLY IMPORTS the sibling
 // `*.test.ts` files, which REGISTERS THEIR `describe` BLOCKS INSIDE THIS FILE —
 // the prototype ran 193 tests instead of 1 and passed, which is a suite
 // silently running other people's tests under this file's name. Filtering by
 // filename inside the loop does not help: the import has already happened.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const MODULES = import.meta.glob(['./*.ts', '!./*.test.ts'], { eager: true }) as Record<
+const MODULES = import.meta.glob(['./*.{ts,js}', '!./*.test.{ts,js}'], { eager: true }) as Record<
   string,
   Record<string, unknown>
 >;

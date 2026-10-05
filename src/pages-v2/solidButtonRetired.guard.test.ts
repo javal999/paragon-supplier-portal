@@ -33,6 +33,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
+import { isJsxFile } from '@test/sourceFiles';
 
 const SRC = join(process.cwd(), 'src');
 
@@ -42,7 +43,7 @@ function shippedTsx(dir: string, out: string[] = []): string[] {
     const full = join(dir, name);
     if (statSync(full).isDirectory()) {
       shippedTsx(full, out);
-    } else if (name.endsWith('.tsx') && !name.includes('.test.')) {
+    } else if (isJsxFile(name) && !name.includes('.test.')) {
       out.push(full);
     }
   }
@@ -52,7 +53,7 @@ function shippedTsx(dir: string, out: string[] = []): string[] {
 /**
  * Comments stripped before matching — the `simUsrNamespace` precedent, and it
  * earned its place here immediately: the FIRST run of this gate condemned
- * `BulkActionsBar.tsx`, whose only offence was a comment SAYING that the
+ * `BulkActionsBar.jsx`, whose only offence was a comment SAYING that the
  * `variant="primary"` scan had been incomplete. A source matcher cannot tell
  * prose from code, and a rule whose own explanation trips it is a rule people
  * stop explaining.
@@ -91,7 +92,7 @@ describe('⚠️ §68 · THE MATCHER ITSELF, BEFORE ANY CLAIM ABOUT THE TREE', (
     const files = shippedTsx(SRC).map((f) => relative(SRC, f).replace(/\\/g, '/'));
     expect(files).toContain('pages-v2/BuyerRequisitions.tsx');
     expect(files).toContain('pages-v2/SupplierWhatsApp.tsx');
-    expect(files).toContain('components/ui-v2/BulkActionsBar.tsx');
+    expect(files).toContain('components/ui-v2/BulkActionsBar.jsx');
   });
 });
 
@@ -125,7 +126,7 @@ describe('§68 · nothing in the portal renders a solid action-blue button', () 
     // RUNS: the comment that RECORDS the removal names the declaration it
     // removed. Two self-trips in one gate is not a coincidence — a rule stated
     // in the file it governs will always be readable as a violation of itself.
-    const bar = withoutProse(readFileSync(join(SRC, 'components/ui-v2/BulkActionsBar.tsx'), 'utf-8'));
+    const bar = withoutProse(readFileSync(join(SRC, 'components/ui-v2/BulkActionsBar.jsx'), 'utf-8'));
     expect(bar).not.toMatch(/solid\?:\s*boolean/);
     expect(bar).not.toMatch(/primary\.solid/);
 
@@ -136,7 +137,7 @@ describe('§68 · nothing in the portal renders a solid action-blue button', () 
     // The DEFAULT, and the union member behind it: `Variant` no longer has a
     // `'primary'` arm at all, so `tsc` — not this test — is what refuses the
     // next one. Asserted on the source because a removed type has no runtime.
-    const btn = withoutProse(readFileSync(join(SRC, 'components/ui-v2/Button.tsx'), 'utf-8'));
+    const btn = withoutProse(readFileSync(join(SRC, 'components/ui-v2/Button.jsx'), 'utf-8'));
     expect(btn).not.toMatch(/'primary'/);
     expect(btn).toMatch(/variant = 'outline'/);
 

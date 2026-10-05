@@ -12,62 +12,62 @@ import {
   RefreshCw,
   BookOpen,
 } from 'lucide-react';
-import AppShellV2 from '../components/layout-v2/AppShellV2';
-import PageHeader from '../components/ui-v2/PageHeader';
-import PageMetaLine from '../components/ui-v2/PageMetaLine';
-import ProvenanceMarker from '../components/ui-v2/ProvenanceMarker';
-import KpiCard from '../components/ui-v2/KpiCard';
-import BulkActionsBar from '../components/ui-v2/BulkActionsBar';
-import FilterChipsBar from '../components/ui-v2/FilterChipsBar';
-import SearchBar from '../components/ui-v2/SearchBar';
-import StatusPill from '../components/ui-v2/StatusPill';
-import Table from '../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../components/ui-v2/TableHeader';
-import TableRow from '../components/ui-v2/TableRow';
-import TableCell from '../components/ui-v2/TableCell';
-import Button from '../components/ui-v2/Button';
-import SidePanel from '../components/ui-v2/SidePanel';
-import GuidedLesson from '../components/ui-v2/GuidedLesson';
-import Data from '../components/ui-v2/Data';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import PageHeader from '@components/ui-v2/PageHeader';
+import PageMetaLine from '@components/ui-v2/PageMetaLine';
+import ProvenanceMarker from '@components/ui-v2/ProvenanceMarker';
+import KpiCard from '@components/ui-v2/KpiCard';
+import BulkActionsBar from '@components/ui-v2/BulkActionsBar';
+import FilterChipsBar from '@components/ui-v2/FilterChipsBar';
+import SearchBar from '@components/ui-v2/SearchBar';
+import StatusPill from '@components/ui-v2/StatusPill';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
+import Button from '@components/ui-v2/Button';
+import SidePanel from '@components/ui-v2/SidePanel';
+import GuidedLesson from '@components/ui-v2/GuidedLesson';
+import Data from '@components/ui-v2/Data';
 import {
   HALAL_RENEWAL_STEPS,
   HALAL_RENEWAL_SOURCE,
-} from '../lib/learn/halalRenewalWalkthrough';
-import { useToast } from '../hooks/useToast';
-import { useCurrentIdentity } from '../context/CurrentIdentityContext';
-import NoSupplierIdentity from '../components/ui-v2/NoSupplierIdentity';
-import LoadingState from '../components/ui-v2/LoadingState';
-import ErrorState from '../components/ui-v2/ErrorState';
-import EmptyState from '../components/ui-v2/EmptyState';
+} from '@lib/learn/halalRenewalWalkthrough';
+import { useToast } from '@hooks/useToast';
+import { useCurrentIdentity } from '@context/CurrentIdentityContext';
+import NoSupplierIdentity from '@components/ui-v2/NoSupplierIdentity';
+import LoadingState from '@components/ui-v2/LoadingState';
+import ErrorState from '@components/ui-v2/ErrorState';
+import EmptyState from '@components/ui-v2/EmptyState';
 import type {
   CertType,
   QualificationRequiredDoc,
   SupplierDocument,
   SupplierDocumentCategory as DocCategory,
-} from '../services/data/types';
-import { useDocuments, useVendorQualifications } from '../services/query/hooks';
+} from '@services/data/types';
+import { useDocuments, useVendorQualifications } from '@services/query/hooks';
 import QualificationPanel from './qualification/QualificationPanel';
 import {
   daysUntil,
   documentExpiry,
   DOCUMENT_EXPIRING_WINDOW_DAYS,
-} from '../services/data/dayProjection';
+} from '@services/data/dayProjection';
 import {
   documentDisplayState,
   DISPLAY_STATE_LABEL_KEY,
   DISPLAY_STATE_TONE,
-} from '../services/data/documentDisplayState';
+} from '@services/data/documentDisplayState';
 import {
   useSupplierDocumentDeclare,
   useSupplierDocumentSubmit,
-} from '../services/query/commandHooks';
-import { certTypeLabelKey } from '../lib/complianceView';
-import { useVerbAvailability } from '../hooks/useVerbAvailability';
-import { HandoffNotice } from '../components/ui-v2/HandoffNotice';
-import { formatDate } from '../lib/format';
+} from '@services/query/commandHooks';
+import { certTypeLabelKey } from '@lib/complianceView';
+import { useVerbAvailability } from '@hooks/useVerbAvailability';
+import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
+import { formatDate } from '@lib/format';
 import { useTranslation } from 'react-i18next';
-import { useRefusalText } from '../hooks/useRefusalText';
-import { DECLARED_PRESENT } from '../services/data/fixturePresent';
+import { useRefusalText } from '@hooks/useRefusalText';
+import { DECLARED_PRESENT } from '@services/data/fixturePresent';
 
 // ⚠️ ANCHORED — this surface rendered values derived from anchored
 // fixture data against the WALL CLOCK, so what a reader saw moved every day

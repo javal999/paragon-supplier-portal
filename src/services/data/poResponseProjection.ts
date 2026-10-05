@@ -8,7 +8,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { POStatus, type PurchaseOrder } from './types';
-import { addWorkingDays, documentInstant, type WorkingCalendar } from '../../lib/workingCalendar';
+import { addWorkingDays, documentInstant, type WorkingCalendar } from '@lib/workingCalendar';
 import { hubWorkingCalendar } from '../transitions/workingCalendarStore';
 
 /** The supplier's response window (REQ-E07-02 BR-01, MN-ORD-04). */

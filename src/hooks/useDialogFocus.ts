@@ -26,7 +26,7 @@ import { useEffect, useRef, type RefObject } from 'react';
 const FOCUSABLE =
   'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"]), [contenteditable="true"]';
 
-const stack: RefObject<HTMLElement>[] = [];
+const stack: RefObject<HTMLElement | null>[] = [];
 
 export function focusableWithin(root: HTMLElement): HTMLElement[] {
   return Array.from(root.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(
@@ -35,7 +35,8 @@ export function focusableWithin(root: HTMLElement): HTMLElement[] {
 }
 
 export function useDialogFocus(
-  ref: RefObject<HTMLElement>,
+  // `| null`: React 19's `useRef<T>(null)` returns RefObject<T | null>.
+  ref: RefObject<HTMLElement | null>,
   open: boolean,
   onClose?: () => void,
 ): void {

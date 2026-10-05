@@ -9,7 +9,7 @@
 
 import React, { useSyncExternalStore } from 'react';
 import { useTranslation } from 'react-i18next';
-import StatusPill from '../../components/ui-v2/StatusPill';
+import StatusPill from '@components/ui-v2/StatusPill';
 import {
   missingText,
   sourcingTypeOf,
@@ -19,8 +19,8 @@ import {
   type QualificationWarning,
   type SourcingType,
   type SourcingTypeMap,
-} from '../../services/sourcing/sourcingType';
-import { sourcingTypeStore } from '../../services/transitions/sourcingTypeStore';
+} from '@services/sourcing/sourcingType';
+import { sourcingTypeStore } from '@services/transitions/sourcingTypeStore';
 
 /** The sourcing type map in force, re-read when Procurement changes it. */
 export function useSourcingTypeMap(): SourcingTypeMap {

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { screen, fireEvent } from '@testing-library/react';
-import { renderWithProviders } from '../../test/test-utils';
+import { renderWithProviders } from '@test/test-utils';
 import FullScreenSection from './FullScreenSection';
 
 // ────────────────────────────────────────────────────────────────────────────

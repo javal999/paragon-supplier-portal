@@ -20,7 +20,7 @@ import { stockFreshness } from '../../transitions/inventoryRules';
 import { reasonCodeStore } from '../../transitions/reasonCodes';
 import { planStatus } from '../../transitions/capacityRules';
 import { sdcClock } from '../../sdc';
-import { NO_PERSON } from '../../../context/noPerson';
+import { NO_PERSON } from '@context/noPerson';
 import { CAPACITY_FIRST_WEEK } from './fixtures/inventoryHub';
 
 const svc = new MockCommandService();

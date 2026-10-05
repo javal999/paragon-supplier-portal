@@ -382,7 +382,7 @@ describe('⚠️ WHO MAY RESOLVE THROUGH THE SYSTEM-ONLY `atomsFor`', () => {
     for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
       const full = path.join(dir, entry.name);
       if (entry.isDirectory()) sourceFiles(full, out);
-      else if (/\.tsx?$/.test(entry.name) && !/\.test\.tsx?$/.test(entry.name)) out.push(full);
+      else if (/\.[jt]sx?$/.test(entry.name) && !/\.test\.[jt]sx?$/.test(entry.name)) out.push(full);
     }
     return out;
   }

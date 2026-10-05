@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AlertTriangle } from 'lucide-react';
-import AppShellV2 from '../components/layout-v2/AppShellV2';
-import PageHeader from '../components/ui-v2/PageHeader';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import PageHeader from '@components/ui-v2/PageHeader';
 import {
   OrderNotFound,
   PoFilterBanner,
@@ -10,27 +10,27 @@ import {
   usePoDrillFilter,
 } from './orders/PoDrillFilter';
 import { callOffsForPo } from './orders/orderSummaryModel';
-import PageMetaLine from '../components/ui-v2/PageMetaLine';
-import SampleDataBadge from '../components/ui-v2/SampleDataBadge';
-import Table from '../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../components/ui-v2/TableHeader';
-import TableRow from '../components/ui-v2/TableRow';
-import TableCell from '../components/ui-v2/TableCell';
-import Button from '../components/ui-v2/Button';
-import SidePanel from '../components/ui-v2/SidePanel';
-import Data from '../components/ui-v2/Data';
-import LoadingState from '../components/ui-v2/LoadingState';
-import ErrorState from '../components/ui-v2/ErrorState';
-import EmptyState from '../components/ui-v2/EmptyState';
-import NoSupplierIdentity from '../components/ui-v2/NoSupplierIdentity';
-import { HandoffNotice } from '../components/ui-v2/HandoffNotice';
-import { useCurrentIdentity } from '../context/CurrentIdentityContext';
-import { useToast } from '../hooks/useToast';
-import { useRefusalText } from '../hooks/useRefusalText';
-import { useVerbAvailability } from '../hooks/useVerbAvailability';
-import { formatDate, formatDateTime } from '../lib/format';
-import { useCallOffCommand, type CallOffCommandVars } from '../services/query/commandHooks';
-import type { CallOffConfirmationKind } from '../services/data/types';
+import PageMetaLine from '@components/ui-v2/PageMetaLine';
+import SampleDataBadge from '@components/ui-v2/SampleDataBadge';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
+import Button from '@components/ui-v2/Button';
+import SidePanel from '@components/ui-v2/SidePanel';
+import Data from '@components/ui-v2/Data';
+import LoadingState from '@components/ui-v2/LoadingState';
+import ErrorState from '@components/ui-v2/ErrorState';
+import EmptyState from '@components/ui-v2/EmptyState';
+import NoSupplierIdentity from '@components/ui-v2/NoSupplierIdentity';
+import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
+import { useCurrentIdentity } from '@context/CurrentIdentityContext';
+import { useToast } from '@hooks/useToast';
+import { useRefusalText } from '@hooks/useRefusalText';
+import { useVerbAvailability } from '@hooks/useVerbAvailability';
+import { formatDate, formatDateTime } from '@lib/format';
+import { useCallOffCommand, type CallOffCommandVars } from '@services/query/commandHooks';
+import type { CallOffConfirmationKind } from '@services/data/types';
 import {
   checkTolerance,
   isConfirmedAndAccepted,
@@ -38,7 +38,7 @@ import {
   proposedDeliveries,
   type CallOffView,
   type ToleranceCheck,
-} from '../services/transitions/callOffRules';
+} from '@services/transitions/callOffRules';
 import {
   ConfirmationPill,
   DeliveryPill,
@@ -51,8 +51,8 @@ import {
   useCallOffViews,
 } from './callOffs/callOffDisplay';
 import { PicCell, PicFilter, PicHeader, usePicFilter } from './materials/picDisplay';
-import MaterialSearch, { MaterialMatchReason, useMaterialMatcher } from '../components/ui-v2/MaterialSearch';
-import { searchMaterials } from '../services/transitions/matchMaterial';
+import MaterialSearch, { MaterialMatchReason, useMaterialMatcher } from '@components/ui-v2/MaterialSearch';
+import { searchMaterials } from '@services/transitions/matchMaterial';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SUPPLIER CALL-OFFS — REQ-E09-03 (confirmation) and REQ-E09-04 (dispatch).
@@ -373,6 +373,7 @@ const SupplierCallOffs: React.FC = () => {
                 <h3 className="text-label text-text-tertiary uppercase mb-2">{t('co.panel.confirmation')}</h3>
                 <ul className="text-sm space-y-1">
                   {selected.callOff.confirmation.deliveries.map((d, i) => (
+                    // eslint-disable-next-line react/no-array-index-key -- read-only snapshot of a confirmed schedule, rendered in stored order; deliveries carry no id and may share qty+date
                     <li key={i}>
                       <Data>{`${qty(d.quantity)} ${selected.callOff.uom}`}</Data> · <Data>{formatDate(d.date)}</Data>
                     </li>
@@ -393,8 +394,9 @@ const SupplierCallOffs: React.FC = () => {
               </section>
             )}
 
-            {selected.callOff.notes.filter((n) => n.action === 'returned' || n.action === 'change').slice(-1).map((n, i) => (
-              <section key={i}>
+            {/* slice(-1) leaves at most one note; its timestamp `at` is its identity. */}
+            {selected.callOff.notes.filter((n) => n.action === 'returned' || n.action === 'change').slice(-1).map((n) => (
+              <section key={n.at}>
                 <h3 className="text-label text-text-tertiary uppercase mb-2">{t('co.sup.fromPti')}</h3>
                 <p className="text-sm text-text-primary">{n.text}</p>
               </section>

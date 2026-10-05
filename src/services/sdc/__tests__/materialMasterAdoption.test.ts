@@ -50,8 +50,8 @@ interface Ref {
   readonly module: string;
 }
 
-const IS_TEST_MODULE = /\.test\.tsx?$|__tests__|^\/src\/test\//;
-const sourceModules = import.meta.glob('/src/**/*.ts') as Record<
+const IS_TEST_MODULE = /\.test\.[jt]sx?$|__tests__|^\/src\/test\//;
+const sourceModules = import.meta.glob('/src/**/*.{ts,js}') as Record<
   string,
   () => Promise<Record<string, unknown>>
 >;
@@ -110,7 +110,7 @@ for (const [file, load] of Object.entries(sourceModules)) {
 
 /** Refs from the DECLARED document lane only — the space 2B-2 adopted FROM.
  *  Membership by module, never by code shape (C9 §3: codes are opaque). */
-const laneRefs = REFS.filter((r) => /^\/src\/data\/mock[^/]*\.ts$/.test(r.module));
+const laneRefs = REFS.filter((r) => /^\/src\/data\/mock[^/]*\.[jt]s$/.test(r.module));
 const laneMeanings = (code: string) => [
   ...new Set(laneRefs.filter((r) => r.code === code && r.meaning).map((r) => r.meaning!)),
 ];

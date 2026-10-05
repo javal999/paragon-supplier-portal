@@ -2,23 +2,23 @@ import React, { useState } from 'react';
 import { Info } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import AppShellV2 from '../components/layout-v2/AppShellV2';
-import PageHeader from '../components/ui-v2/PageHeader';
-import PageMetaLine from '../components/ui-v2/PageMetaLine';
-import Data from '../components/ui-v2/Data';
-import Button from '../components/ui-v2/Button';
-import LivenessPill from '../components/ui-v2/LivenessPill';
-import Table from '../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../components/ui-v2/TableHeader';
-import TableRow from '../components/ui-v2/TableRow';
-import TableCell from '../components/ui-v2/TableCell';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import PageHeader from '@components/ui-v2/PageHeader';
+import PageMetaLine from '@components/ui-v2/PageMetaLine';
+import Data from '@components/ui-v2/Data';
+import Button from '@components/ui-v2/Button';
+import LivenessPill from '@components/ui-v2/LivenessPill';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
 import PlanCellMarker from './plan-grid/PlanCellMarker';
-import { useIntakeReview } from '../services/query/hooks';
-import { usePurchaseRequisitionCreate } from '../services/query/commandHooks';
-import { HandoffNotice } from '../components/ui-v2/HandoffNotice';
-import { useVerbAvailability } from '../hooks/useVerbAvailability';
-import { DataError, type PrIntakeLine } from '../services/data/types';
-import { formatIDR, formatNumber } from '../lib/format';
+import { useIntakeReview } from '@services/query/hooks';
+import { usePurchaseRequisitionCreate } from '@services/query/commandHooks';
+import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
+import { useVerbAvailability } from '@hooks/useVerbAvailability';
+import { DataError, type PrIntakeLine } from '@services/data/types';
+import { formatIDR, formatNumber } from '@lib/format';
 import { applyPushResult, type PushRowState } from './plan-grid/planGridModel';
 import {
   buildAcceptPush,
@@ -27,7 +27,7 @@ import {
   triageStatus,
   triageCounts,
 } from './intake-review/intakeReviewModel';
-import { useRefusalText } from '../hooks/useRefusalText';
+import { useRefusalText } from '@hooks/useRefusalText';
 
 // ────────────────────────────────────────────────────────────────────────────
 // IntakeReview (Phase A/1 · sourcing spine) — the recommend-first TRIAGE

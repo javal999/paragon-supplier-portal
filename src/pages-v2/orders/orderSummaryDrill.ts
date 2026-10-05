@@ -20,7 +20,7 @@
 // one that does not exist (AC-07).
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { Persona } from '../../components/layout-v2/navConfig';
+import type { Persona } from '@components/layout-v2/navConfig';
 
 /** The columns of the summary, in the order BR-01 lists them. */
 export type DrillColumn =

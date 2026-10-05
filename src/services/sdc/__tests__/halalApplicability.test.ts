@@ -76,7 +76,7 @@ describe('H1 — the seed is a CLASS RULE, and the rule DERIVES FROM THE AXIS', 
     // claimed in a header. `bpom.ts` names `MG-04`/`MG-05`/`MG-06` as quoted
     // literals; this rule reads the `axis` and nothing else, so there is no list
     // for a new group to be missing from.
-    const src = import.meta.glob('/src/services/sdc/*.ts', {
+    const src = import.meta.glob('/src/services/sdc/*.ts', { // language-neutral: reads halal.ts/bpom.ts by exact path below; a rename fails toBeDefined loudly
       query: '?raw',
       import: 'default',
       eager: true,
@@ -335,7 +335,7 @@ describe('H2 — WIRED, and the prose parse is GONE', () => {
   // negation of the one it replaces, so the file records the SWAP rather than
   // merely reflecting whatever is true today.
   const sources = () =>
-    import.meta.glob('/src/**/*.{ts,tsx}', {
+    import.meta.glob('/src/**/*.{ts,tsx,js,jsx}', {
       query: '?raw',
       import: 'default',
       eager: true,
@@ -435,7 +435,7 @@ describe('H2 — WIRED, and the prose parse is GONE', () => {
       /toLowerCase\(\)\s*\.\s*(?:includes|indexOf|startsWith|endsWith|search)\(\s*['"`][^'"`]*halal|match\(\s*\/[^/]*halal/i;
 
     const offenders = Object.entries(src)
-      .filter(([f]) => !/\.test\.tsx?$/.test(f))
+      .filter(([f]) => !/\.test\.[jt]sx?$/.test(f))
       .flatMap(([f, text]) =>
         codeLines(text)
           .filter(({ line }) => PROSE_PARSE.test(line))
@@ -495,7 +495,7 @@ describe('H2 — WIRED, and the prose parse is GONE', () => {
       .filter(([, text]) => text.includes("/halal'"))
       .map(([f]) => f)
       .sort();
-    const production = importers.filter((f) => !/\.test\.tsx?$/.test(f));
+    const production = importers.filter((f) => !/\.test\.[jt]sx?$/.test(f));
     const typeOnly = production.filter((f) => importsTypeOnly(src[f], "/halal'"));
     const callers = production.filter((f) => !typeOnly.includes(f));
 

@@ -24,15 +24,15 @@
 
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import Button from '../../components/ui-v2/Button';
-import Data from '../../components/ui-v2/Data';
-import SearchBar from '../../components/ui-v2/SearchBar';
-import { useInviteeCandidates } from '../../services/query/hooks';
-import { PURCHASING_GROUPS, purchasingGroupNameKey } from '../../services/sourcing/rfxConfig';
+import Button from '@components/ui-v2/Button';
+import Data from '@components/ui-v2/Data';
+import SearchBar from '@components/ui-v2/SearchBar';
+import { useInviteeCandidates } from '@services/query/hooks';
+import { PURCHASING_GROUPS, purchasingGroupNameKey } from '@services/sourcing/rfxConfig';
 import { GateMarker } from './rfxDisplay';
 import { EligibilityMarker, SourcingTypePill } from './eligibilityDisplay';
-import type { SourcingType } from '../../services/sourcing/sourcingType';
-import { matchesSupplierFilters } from '../../services/sourcing/supplierFilters';
+import type { SourcingType } from '@services/sourcing/sourcingType';
+import { matchesSupplierFilters } from '@services/sourcing/supplierFilters';
 import SupplierFilterBar, {
   bandLabel,
   certLabel,

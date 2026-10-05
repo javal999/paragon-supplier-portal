@@ -13,7 +13,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { MockCommandService, commandAuditSink } from './MockCommandService';
 import { seedSourceableRequisition } from './requisitionSeed';
 import { purchaseRequisitionStore } from './stores/purchaseRequisitionStore';
-import { isRfqCategory } from '../../../pages-v2/sourcing/requisitionPrefill';
+import { isRfqCategory } from '@pages-v2/sourcing/requisitionPrefill';
 
 const svc = new MockCommandService();
 

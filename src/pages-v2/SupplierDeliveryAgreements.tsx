@@ -1,21 +1,21 @@
 import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Info, AlertTriangle, Clock, CheckCircle2 } from 'lucide-react';
-import AppShellV2 from '../components/layout-v2/AppShellV2';
-import PageHeader from '../components/ui-v2/PageHeader';
-import PageMetaLine from '../components/ui-v2/PageMetaLine';
-import LivenessPill from '../components/ui-v2/LivenessPill';
-import LoadingState from '../components/ui-v2/LoadingState';
-import EmptyState from '../components/ui-v2/EmptyState';
-import ErrorState from '../components/ui-v2/ErrorState';
-import NoSupplierIdentity from '../components/ui-v2/NoSupplierIdentity';
-import AgreementCard from '../components/delivery/AgreementDrawdown';
-import Data from '../components/ui-v2/Data';
-import { useDeliveryAgreements } from '../services/query/deliveryHooks';
-import { shapeObligations } from '../services/chase';
-import { useCurrentIdentity } from '../context/CurrentIdentityContext';
-import { SDC_SIMULATED_NOW } from '../services/sdc';
-import { formatDate } from '../lib/format';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import PageHeader from '@components/ui-v2/PageHeader';
+import PageMetaLine from '@components/ui-v2/PageMetaLine';
+import LivenessPill from '@components/ui-v2/LivenessPill';
+import LoadingState from '@components/ui-v2/LoadingState';
+import EmptyState from '@components/ui-v2/EmptyState';
+import ErrorState from '@components/ui-v2/ErrorState';
+import NoSupplierIdentity from '@components/ui-v2/NoSupplierIdentity';
+import AgreementCard from '@components/delivery/AgreementDrawdown';
+import Data from '@components/ui-v2/Data';
+import { useDeliveryAgreements } from '@services/query/deliveryHooks';
+import { shapeObligations } from '@services/chase';
+import { useCurrentIdentity } from '@context/CurrentIdentityContext';
+import { SDC_SIMULATED_NOW } from '@services/sdc';
+import { formatDate } from '@lib/format';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SupplierDeliveryAgreements — the supplier's OWN-FACTS-ONLY delivery mirror.

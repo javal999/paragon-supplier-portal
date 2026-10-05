@@ -42,7 +42,7 @@
 // PURE and DOM-free.
 // ────────────────────────────────────────────────────────────────────────────
 
-import { normalizeQty, type QtyRefusalReason } from '../../lib/localeNumber';
+import { normalizeQty, type QtyRefusalReason } from '@lib/localeNumber';
 
 export type TolerancePctOutcome =
   | {

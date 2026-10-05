@@ -95,7 +95,7 @@ export interface TransitionEvent {
    * — §6.2 half one, and the reason `t_pr_approve` has no `approvedBy` in its
    * `requiredFields`.
    */
-  readonly attribution?: import('../../lib/enforcement').ActorAttribution;
+  readonly attribution?: import('@lib/enforcement').ActorAttribution;
 }
 
 /** Stable actor key for an event. Mirrors the query-layer scopeKey format. */

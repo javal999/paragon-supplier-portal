@@ -30,7 +30,7 @@ import type {
 } from '../data/types';
 import type { ForecastLine, InventoryDeclaration, MaterialMasterEntry, StockChannel } from '../sdc/types';
 import type { CallOffView } from './callOffRules';
-import { normalizeQty } from '../../lib/localeNumber';
+import { normalizeQty } from '@lib/localeNumber';
 import {
   coverageThresholds,
   DEMAND_WINDOW,
@@ -42,7 +42,7 @@ import {
   updateSlaFor,
 } from './inventoryConfig';
 import { staleAtFor, updateCycleFor } from './updateCycle';
-import type { WorkingCalendar } from '../../lib/workingCalendar';
+import type { WorkingCalendar } from '@lib/workingCalendar';
 
 // ── Dates (UTC calendar days, `YYYY-MM-DD`) ──────────────────────────────────
 

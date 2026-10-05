@@ -35,7 +35,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 
 import { MockCommandService } from './MockCommandService';
 import { requirementResponseStore } from './stores/requirementResponseStore';
-import { normalizeQty } from '../../../lib/localeNumber';
+import { normalizeQty } from '@lib/localeNumber';
 import { buildRequirementResponsePayload, FORECAST_PUBLICATIONS } from '../../sdc';
 import type { QueryScope } from '../types';
 import { PERSONA_SYSTEM_ROLES } from '../../../services/transitions/businessRoles';

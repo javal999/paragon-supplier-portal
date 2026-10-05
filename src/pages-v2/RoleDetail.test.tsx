@@ -1,10 +1,10 @@
 import { screen, within } from '@testing-library/react';
 import { Routes, Route } from 'react-router-dom';
-import { renderWithProviders, BUYER } from '../test/test-utils';
-import { SYSTEM_ROLES } from '../services/transitions/businessRoles';
-import { getKnownFlows } from '../services/transitions';
+import { renderWithProviders, BUYER } from '@test/test-utils';
+import { SYSTEM_ROLES } from '@services/transitions/businessRoles';
+import { getKnownFlows } from '@services/transitions';
 import { deriveRoleViews } from './roles/roleModel';
-import i18n from '../lib/i18n';
+import i18n from '@lib/i18n';
 import RoleDetail from './RoleDetail';
 
 // The detail answers WHAT THIS ROLE CAN DO. It reads the same derivation the

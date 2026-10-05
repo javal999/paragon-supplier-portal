@@ -19,7 +19,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { contractDisplayStatus } from './contractExpiry';
-import type { ContractStatus } from '../../data/mockContracts';
+import type { ContractStatus } from '@data/mockContracts';
 import {
   DECLARED_PRESENT,
   MANDATE_LEAD_DAYS,
@@ -37,7 +37,7 @@ import {
 import { BPJPH_MANDATE_DATE } from './complianceProjection';
 import { DOCUMENTS } from './mock/fixtures/supplierDocuments';
 import { documentDisplayState } from './documentDisplayState';
-import { mockInventory } from '../../data/mockInventory';
+import { mockInventory } from '@data/mockInventory';
 
 /**
  * Strip comments PROPERLY rather than by line prefix.

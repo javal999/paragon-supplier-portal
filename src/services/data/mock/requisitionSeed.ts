@@ -48,7 +48,7 @@
 
 import { MockCommandService } from './MockCommandService';
 import { purchaseRequisitionStore } from './stores/purchaseRequisitionStore';
-import { NO_PERSON } from '../../../context/noPerson';
+import { NO_PERSON } from '@context/noPerson';
 import type { CommandResult, QueryScope } from '../types';
 
 /**

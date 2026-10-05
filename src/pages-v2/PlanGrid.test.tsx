@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { screen, within } from '@testing-library/react';
-import { renderWithProviders } from '../test/test-utils';
+import { renderWithProviders } from '@test/test-utils';
 import PlanGrid from './PlanGrid';
-import { isLive } from '../services/liveness';
-import i18n from '../lib/i18n';
+import { isLive } from '@services/liveness';
+import i18n from '@lib/i18n';
 
 // ────────────────────────────────────────────────────────────────────────────
 // PlanGrid (G1.2a) — the READ-ONLY plan-grid surface, honest-render contract.

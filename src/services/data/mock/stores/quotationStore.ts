@@ -9,8 +9,8 @@
 // fixture; `reset()` restores it (test isolation).
 // ────────────────────────────────────────────────────────────────────────────
 
-import { mockQuotations } from '../../../../data/mockQuotations';
-import type { Quotation } from '../../../../data/mockQuotations';
+import { mockQuotations } from '@data/mockQuotations';
+import type { Quotation } from '@data/mockQuotations';
 // REQ-E03-03 / REQ-E03-05 — the priced bids on the present-relative events,
 // including the round-1 revision that supersedes one of them.
 import { RFX_QUOTATION_SEED } from '../fixtures/rfxHub';

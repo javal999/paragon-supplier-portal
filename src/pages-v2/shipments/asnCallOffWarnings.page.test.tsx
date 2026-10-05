@@ -5,15 +5,15 @@
 
 import { screen, fireEvent, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { renderWithProviders, SUPPLIER, BUYER } from '../../test/test-utils';
-import { purchaseOrderStore } from '../../services/data/mock/stores/purchaseOrderStore';
-import { asnStore } from '../../services/data/mock/stores/asnStore';
-import { callOffStore } from '../../services/data/mock/stores/callOffStore';
-import { inventoryDeclarationStore } from '../../services/data/mock/stores/inventoryDeclarationStore';
-import { MockCommandService, commandAuditSink } from '../../services/data/mock/MockCommandService';
-import { PERSONA_SYSTEM_ROLES } from '../../services/transitions/businessRoles';
-import { NO_PERSON } from '../../context/noPerson';
-import type { QueryScope } from '../../services/data/types';
+import { renderWithProviders, SUPPLIER, BUYER } from '@test/test-utils';
+import { purchaseOrderStore } from '@services/data/mock/stores/purchaseOrderStore';
+import { asnStore } from '@services/data/mock/stores/asnStore';
+import { callOffStore } from '@services/data/mock/stores/callOffStore';
+import { inventoryDeclarationStore } from '@services/data/mock/stores/inventoryDeclarationStore';
+import { MockCommandService, commandAuditSink } from '@services/data/mock/MockCommandService';
+import { PERSONA_SYSTEM_ROLES } from '@services/transitions/businessRoles';
+import { NO_PERSON } from '@context/noPerson';
+import type { QueryScope } from '@services/data/types';
 import SupplierShipments from '../SupplierShipments';
 import BuyerShipments from '../BuyerShipments';
 import BuyerCallOffs from '../BuyerCallOffs';

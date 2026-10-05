@@ -1,9 +1,9 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import Button from '../../components/ui-v2/Button';
-import Data from '../../components/ui-v2/Data';
-import { formatDateTime } from '../../lib/format';
-import type { ResponseVersion } from '../../services/sourcing/types';
+import Button from '@components/ui-v2/Button';
+import Data from '@components/ui-v2/Data';
+import { formatDateTime } from '@lib/format';
+import type { ResponseVersion } from '@services/sourcing/types';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // NR-1 BR-08 (D-6) — "Revise response" on a SUBMITTED RFI or RFP response, and

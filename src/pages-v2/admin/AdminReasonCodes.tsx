@@ -1,22 +1,22 @@
 import React, { useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AlertTriangle, ShieldCheck } from 'lucide-react';
-import AppShellV2 from '../../components/layout-v2/AppShellV2';
-import PageHeader from '../../components/ui-v2/PageHeader';
-import PageMetaLine from '../../components/ui-v2/PageMetaLine';
-import Table from '../../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../../components/ui-v2/TableHeader';
-import TableRow from '../../components/ui-v2/TableRow';
-import TableCell from '../../components/ui-v2/TableCell';
-import Button from '../../components/ui-v2/Button';
-import Data from '../../components/ui-v2/Data';
-import StatusPill from '../../components/ui-v2/StatusPill';
-import { HandoffNotice } from '../../components/ui-v2/HandoffNotice';
-import { useVerbAvailability } from '../../hooks/useVerbAvailability';
-import { useRefusalText } from '../../hooks/useRefusalText';
-import { useToast } from '../../hooks/useToast';
-import { formatDateTime } from '../../lib/format';
-import { useReasonCodeSet } from '../../services/query/commandHooks';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import PageHeader from '@components/ui-v2/PageHeader';
+import PageMetaLine from '@components/ui-v2/PageMetaLine';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
+import Button from '@components/ui-v2/Button';
+import Data from '@components/ui-v2/Data';
+import StatusPill from '@components/ui-v2/StatusPill';
+import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
+import { useVerbAvailability } from '@hooks/useVerbAvailability';
+import { useRefusalText } from '@hooks/useRefusalText';
+import { useToast } from '@hooks/useToast';
+import { formatDateTime } from '@lib/format';
+import { useReasonCodeSet } from '@services/query/commandHooks';
 import {
   REASON_LISTS,
   builtInReasonLabels,
@@ -24,7 +24,7 @@ import {
   reasonCodeStore,
   type ReasonCodeEntry,
   type ReasonListId,
-} from '../../services/transitions/reasonCodes';
+} from '@services/transitions/reasonCodes';
 import AdminSectionNav from './AdminSectionNav';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -73,7 +73,11 @@ const AdminReasonCodes: React.FC = () => {
   const [refusal, setRefusal] = useState<string | null>(null);
 
   const lists = useMemo(() => REASON_LISTS.map((list) => ({ list, rows: reasonCodeStore.list(list) })), [version]);
-  const changes = useMemo(() => [...reasonCodeStore.changes()].reverse(), [version]);
+  // `seq` is a change's position in the log, oldest first. The log is
+  // append-only, so seq never shifts and is the row's React key; list + code +
+  // setAt alone can repeat (two changes in the same instant), and the index of
+  // the newest-first list shifts on every new change.
+  const changes = useMemo(() => reasonCodeStore.changes().map((c, seq) => ({ ...c, seq })).reverse(), [version]);
   const readState = useMemo(() => reasonCodeStore.readState(), [version]);
   const offered = lists.reduce((n, l) => n + l.rows.filter((r) => r.active).length, 0);
   const retired = lists.reduce((n, l) => n + l.rows.filter((r) => !r.active).length, 0);
@@ -351,7 +355,7 @@ const AdminReasonCodes: React.FC = () => {
                 <TableHeaderCell>{t('adminRsn.history.col.at')}</TableHeaderCell>
               </TableHeader>
               <tbody>
-                {changes.map((c, i) => {
+                {changes.map((c) => {
                   const before = c.previous
                     ? `${label(
                         c.previous.labelEn !== undefined
@@ -363,7 +367,7 @@ const AdminReasonCodes: React.FC = () => {
                     c.active ? 'adminRsn.status.offered' : 'adminRsn.status.retired',
                   )}`;
                   return (
-                    <TableRow key={`${c.list}-${c.code}-${c.setAt}-${i}`} data-testid={`admin-rsn-change-${c.list}-${c.code}`}>
+                    <TableRow key={c.seq} data-testid={`admin-rsn-change-${c.list}-${c.code}`}>
                       <TableCell className="whitespace-nowrap text-sm">
                         {t(`adminRsn.list.${c.list}`)} · <Data>{c.code}</Data>
                       </TableCell>

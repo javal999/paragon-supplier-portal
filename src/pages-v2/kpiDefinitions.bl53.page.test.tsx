@@ -5,12 +5,12 @@
 
 import { screen, within } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
-import { renderWithProviders, BUYER, SUPPLIER } from '../test/test-utils';
+import { renderWithProviders, BUYER, SUPPLIER } from '@test/test-utils';
 import BuyerScorecard from './BuyerScorecard';
 import SupplierPerformance from './SupplierPerformance';
-import { MATCH_WINDOW_DAYS, DELIVERY_GRACE_DAYS } from '../services/delivery/fulfillment';
-import { EARLY_DELIVERY_WINDOW_DAYS } from '../services/data/kpiWindow';
-import i18n from '../lib/i18n';
+import { MATCH_WINDOW_DAYS, DELIVERY_GRACE_DAYS } from '@services/delivery/fulfillment';
+import { EARLY_DELIVERY_WINDOW_DAYS } from '@services/data/kpiWindow';
+import i18n from '@lib/i18n';
 
 const expectDefinitions = async () => {
   const section = await screen.findByTestId('kpi-definitions');

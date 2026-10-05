@@ -1,12 +1,12 @@
 import { screen, fireEvent, waitFor } from '@testing-library/react';
-import { renderWithProviders, SUPPLIER } from '../test/test-utils';
-import { mockDataService } from '../services/data/mock/mockDataService';
-import { withChaos } from '../services/data/mock/withChaos';
+import { renderWithProviders, SUPPLIER } from '@test/test-utils';
+import { mockDataService } from '@services/data/mock/mockDataService';
+import { withChaos } from '@services/data/mock/withChaos';
 import BuyerScorecard from './BuyerScorecard';
-import { REJECTION_PENALTY_POINTS } from '../services/data/performanceRules';
-import { masterMeasure, performanceInput } from '../services/data/mock/supplierMeasureReadModel';
-import { supplierMeasure } from '../services/data/performanceRules';
-import { sdcClock } from '../services/sdc';
+import { REJECTION_PENALTY_POINTS } from '@services/data/performanceRules';
+import { masterMeasure, performanceInput } from '@services/data/mock/supplierMeasureReadModel';
+import { supplierMeasure } from '@services/data/performanceRules';
+import { sdcClock } from '@services/sdc';
 
 const alwaysFails = withChaos(mockDataService, { minMs: 0, maxMs: 0, failureRate: 1 });
 const alwaysPending = withChaos(mockDataService, { minMs: 1e7, maxMs: 1e7, failureRate: 0 });

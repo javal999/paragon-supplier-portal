@@ -24,11 +24,11 @@
 // ════════════════════════════════════════════════════════════════════════════
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { MockCommandService } from '../../services/data/mock/MockCommandService';
-import { quotationStore } from '../../services/data/mock/stores/quotationStore';
-import { rfqStore } from '../../services/data/mock/stores/rfqStore';
-import { scoreQuotations, type ScorableQuote } from '../../lib/quoteScore';
-import { BASE_CURRENCY } from '../../lib/currencyPolicy';
+import { MockCommandService } from '@services/data/mock/MockCommandService';
+import { quotationStore } from '@services/data/mock/stores/quotationStore';
+import { rfqStore } from '@services/data/mock/stores/rfqStore';
+import { scoreQuotations, type ScorableQuote } from '@lib/quoteScore';
+import { BASE_CURRENCY } from '@lib/currencyPolicy';
 
 /** Unwrap a scored outcome (2e-c-3). These specs all concern a single-currency
  *  set, which the engine ranks without any pin — so a refusal here means the
@@ -40,10 +40,10 @@ const scoredSet = (quotes: readonly ScorableQuote[]) => {
   return out.scores;
 };
 
-import type { QueryScope } from '../../services/data/types';
+import type { QueryScope } from '@services/data/types';
 import { readBidPrice } from './quotationPrice';
 import { buildQuotationSubmitPayload } from './quotationSubmitModel';
-import { PERSONA_SYSTEM_ROLES } from '../../services/transitions/businessRoles';
+import { PERSONA_SYSTEM_ROLES } from '@services/transitions/businessRoles';
 
 // rfq-002 — PET bottles. Real fixture bids: sup-007 @ 1,280 and sup-008 @ 1,220.
 // A supplier typing the ordinary Indonesian "1.500" means Rp 1.500 — mid-market,

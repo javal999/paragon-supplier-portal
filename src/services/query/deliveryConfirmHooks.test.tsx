@@ -1,12 +1,12 @@
 import React from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { screen, fireEvent, waitFor } from '@testing-library/react';
-import { renderWithProviders } from '../../test/test-utils';
-import type { CurrentIdentity } from '../../context/CurrentIdentityContext';
+import { renderWithProviders } from '@test/test-utils';
+import type { CurrentIdentity } from '@context/CurrentIdentityContext';
 import { schedulingAgreementStore } from '../delivery/stores/schedulingAgreementStore';
 import { useDeliveryAgreements, useConfirmMatch } from './deliveryHooks';
 import { PERSONA_SYSTEM_ROLES } from '../../services/transitions/businessRoles';
-import { NO_PERSON } from '../../context/noPerson';
+import { NO_PERSON } from '@context/noPerson';
 
 // sup-005 owns sa-1002 (ctr-004) — a supplier who CAN see the agreement but is
 // still refused the buyer-only confirm, so "refusal invalidates nothing" is a

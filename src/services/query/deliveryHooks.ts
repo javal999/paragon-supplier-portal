@@ -11,7 +11,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useServiceQuery, scopeKey } from './useServiceQuery';
 import { useDataService } from '../data/DataServiceContext';
-import { useCurrentIdentity } from '../../context/CurrentIdentityContext';
+import { useCurrentIdentity } from '@context/CurrentIdentityContext';
 import type {
   ConfirmCommandResult,
   DeliveryAgreementView,

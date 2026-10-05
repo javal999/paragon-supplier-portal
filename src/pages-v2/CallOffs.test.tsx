@@ -6,15 +6,15 @@
 
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { renderWithProviders, BUYER, SUPPLIER } from '../test/test-utils';
-import type { CurrentIdentity } from '../context/CurrentIdentityContext';
-import { callOffStore } from '../services/data/mock/stores/callOffStore';
-import { asnStore } from '../services/data/mock/stores/asnStore';
-import { purchaseOrderStore } from '../services/data/mock/stores/purchaseOrderStore';
-import { SEEDED_SEAT_ROLES } from '../services/transitions/businessRoles';
-import { NO_PERSON } from '../context/noPerson';
-import { PTI_NAV, SUPPLIER_NAV } from '../components/layout-v2/navConfig';
-import { callOffsEn, callOffsId } from '../lib/i18n/callOffs';
+import { renderWithProviders, BUYER, SUPPLIER } from '@test/test-utils';
+import type { CurrentIdentity } from '@context/CurrentIdentityContext';
+import { callOffStore } from '@services/data/mock/stores/callOffStore';
+import { asnStore } from '@services/data/mock/stores/asnStore';
+import { purchaseOrderStore } from '@services/data/mock/stores/purchaseOrderStore';
+import { SEEDED_SEAT_ROLES } from '@services/transitions/businessRoles';
+import { NO_PERSON } from '@context/noPerson';
+import { PTI_NAV, SUPPLIER_NAV } from '@components/layout-v2/navConfig';
+import { callOffsEn, callOffsId } from '@lib/i18n/callOffs';
 import BuyerCallOffs from './BuyerCallOffs';
 import SupplierCallOffs from './SupplierCallOffs';
 import BuyerHome from './BuyerHome';

@@ -1,9 +1,9 @@
 import { screen, fireEvent, within } from '@testing-library/react';
 import { Routes, Route } from 'react-router-dom';
-import { renderWithProviders } from '../test/test-utils';
-import { mockPurchaseOrders } from '../data/mockPurchaseOrders';
-import { mockDataService } from '../services/data/mock/mockDataService';
-import { withChaos } from '../services/data/mock/withChaos';
+import { renderWithProviders } from '@test/test-utils';
+import { mockPurchaseOrders } from '@data/mockPurchaseOrders';
+import { mockDataService } from '@services/data/mock/mockDataService';
+import { withChaos } from '@services/data/mock/withChaos';
 import BuyerSupplierProfile from './BuyerSupplierProfile';
 
 const alwaysFails = withChaos(mockDataService, { minMs: 0, maxMs: 0, failureRate: 1 });

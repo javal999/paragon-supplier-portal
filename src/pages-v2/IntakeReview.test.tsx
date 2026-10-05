@@ -1,10 +1,10 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { screen, fireEvent, waitFor } from '@testing-library/react';
-import { renderWithProviders } from '../test/test-utils';
+import { renderWithProviders } from '@test/test-utils';
 import IntakeReview from './IntakeReview';
-import { isLive } from '../services/liveness';
-import { purchaseRequisitionStore } from '../services/data/mock/stores/purchaseRequisitionStore';
-import i18n from '../lib/i18n';
+import { isLive } from '@services/liveness';
+import { purchaseRequisitionStore } from '@services/data/mock/stores/purchaseRequisitionStore';
+import i18n from '@lib/i18n';
 
 // ────────────────────────────────────────────────────────────────────────────
 // IntakeReview (Phase A/1) — the recommend-first TRIAGE surface, plain DOM.

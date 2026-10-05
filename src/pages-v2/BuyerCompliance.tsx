@@ -14,54 +14,54 @@ import {
   XCircle,
   FilePlus2,
 } from 'lucide-react';
-import AppShellV2 from '../components/layout-v2/AppShellV2';
-import PageHeader from '../components/ui-v2/PageHeader';
-import Data from '../components/ui-v2/Data';
-import PageMetaLine from '../components/ui-v2/PageMetaLine';
-import KpiCard from '../components/ui-v2/KpiCard';
-import BulkActionsBar from '../components/ui-v2/BulkActionsBar';
-import SidePanel from '../components/ui-v2/SidePanel';
-import FilterChipsBar from '../components/ui-v2/FilterChipsBar';
-import StatusPill from '../components/ui-v2/StatusPill';
-import LivenessPill from '../components/ui-v2/LivenessPill';
-import { isLive, readinessNote } from '../services/liveness';
-import { formatDate } from '../lib/format';
-import Table from '../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../components/ui-v2/TableHeader';
-import TableRow from '../components/ui-v2/TableRow';
-import TableCell from '../components/ui-v2/TableCell';
-import Button from '../components/ui-v2/Button';
-import { useToast } from '../hooks/useToast';
-import { useComplianceRegistry, useDocuments, useSuppliers } from '../services/query/hooks';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import PageHeader from '@components/ui-v2/PageHeader';
+import Data from '@components/ui-v2/Data';
+import PageMetaLine from '@components/ui-v2/PageMetaLine';
+import KpiCard from '@components/ui-v2/KpiCard';
+import BulkActionsBar from '@components/ui-v2/BulkActionsBar';
+import SidePanel from '@components/ui-v2/SidePanel';
+import FilterChipsBar from '@components/ui-v2/FilterChipsBar';
+import StatusPill from '@components/ui-v2/StatusPill';
+import LivenessPill from '@components/ui-v2/LivenessPill';
+import { isLive, readinessNote } from '@services/liveness';
+import { formatDate } from '@lib/format';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
+import Button from '@components/ui-v2/Button';
+import { useToast } from '@hooks/useToast';
+import { useComplianceRegistry, useDocuments, useSuppliers } from '@services/query/hooks';
 import {
   useSupplierDocumentVerify,
   useSupplierDocumentReject,
   useSupplierDocumentRequest,
-} from '../services/query/commandHooks';
-import { useVerbAvailabilities, useVerbAvailability } from '../hooks/useVerbAvailability';
-import { HandoffNotice } from '../components/ui-v2/HandoffNotice';
+} from '@services/query/commandHooks';
+import { useVerbAvailabilities, useVerbAvailability } from '@hooks/useVerbAvailability';
+import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
 import {
   BPJPH_MANDATE_DATE,
   computeStatus,
   daysRemaining,
   schemeValid,
   remindEligible,
-} from '../services/data/complianceProjection';
+} from '@services/data/complianceProjection';
 import {
   certCategory,
   certTypeLabelKey,
   actionLabelKey,
   type CertCategory,
-} from '../lib/complianceView';
-import { statusTone } from '../lib/statusTone';
+} from '@lib/complianceView';
+import { statusTone } from '@lib/statusTone';
 import type {
   ComplianceRegistryEntry,
   ComplianceDisplayStatus,
   SupplierDocumentCategory,
-} from '../services/data/types';
-import { DataError } from '../services/data/types';
-import { useRefusalText, useDataErrorText } from '../hooks/useRefusalText';
-import { DECLARED_PRESENT } from '../services/data/fixturePresent';
+} from '@services/data/types';
+import { DataError } from '@services/data/types';
+import { useRefusalText, useDataErrorText } from '@hooks/useRefusalText';
+import { DECLARED_PRESENT } from '@services/data/fixturePresent';
 
 // ⚠️ ANCHORED — this surface rendered values derived from anchored
 // fixture data against the WALL CLOCK, so what a reader saw moved every day

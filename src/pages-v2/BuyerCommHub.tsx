@@ -1,29 +1,29 @@
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Info, Send, Radio } from 'lucide-react';
-import AppShellV2 from '../components/layout-v2/AppShellV2';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
 import BuyerChannelTriage from './BuyerChannelTriage';
-import PageHeader from '../components/ui-v2/PageHeader';
-import PageMetaLine from '../components/ui-v2/PageMetaLine';
-import LivenessPill from '../components/ui-v2/LivenessPill';
-import LoadingState from '../components/ui-v2/LoadingState';
-import ErrorState from '../components/ui-v2/ErrorState';
-import StatusPill from '../components/ui-v2/StatusPill';
-import Data from '../components/ui-v2/Data';
-import { useUnifiedChase } from '../services/query/chaseHooks';
-import { useConsolidationRows } from '../services/query/sdcBuyerHooks';
-import { useSuppliers } from '../services/query/hooks';
+import PageHeader from '@components/ui-v2/PageHeader';
+import PageMetaLine from '@components/ui-v2/PageMetaLine';
+import LivenessPill from '@components/ui-v2/LivenessPill';
+import LoadingState from '@components/ui-v2/LoadingState';
+import ErrorState from '@components/ui-v2/ErrorState';
+import StatusPill from '@components/ui-v2/StatusPill';
+import Data from '@components/ui-v2/Data';
+import { useUnifiedChase } from '@services/query/chaseHooks';
+import { useConsolidationRows } from '@services/query/sdcBuyerHooks';
+import { useSuppliers } from '@services/query/hooks';
 import {
   deriveOutboundQueue,
   outboundRequestStore,
   channelProvenanceStore,
   type OutboundStatus,
   type SupplierReplyFact,
-} from '../services/channel';
-import type { ChaseSeverityLevel } from '../services/chase';
-import type { ConsolidationRow } from '../services/sdc';
-import { sdcClock } from '../services/sdc';
-import { formatDate } from '../lib/format';
+} from '@services/channel';
+import type { ChaseSeverityLevel } from '@services/chase';
+import type { ConsolidationRow } from '@services/sdc';
+import { sdcClock } from '@services/sdc';
+import { formatDate } from '@lib/format';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Comm Hub C4a — the buyer/planner COMMUNICATION HUB (DEC-COMMS-PRIMARY front door).
@@ -179,6 +179,7 @@ const BuyerCommHub: React.FC = () => {
                   {entry.dataReasons.length > 0 && (
                     <div className="flex flex-wrap gap-2">
                       {entry.dataReasons.map((reason, i) => (
+                        // eslint-disable-next-line react/no-array-index-key -- reason codes can repeat and have no id; read-only, stateless pills recomputed whole from the chase view
                         <StatusPill key={`${reason}-${i}`} variant="warning">
                           {t(`buyerCommHub.reason.${reason}`)}
                         </StatusPill>
@@ -235,9 +236,11 @@ const BuyerCommHub: React.FC = () => {
           </div>
         ) : (
           <ul className="space-y-2">
-            {provenance.map((ref, i) => (
+            {provenance.map((ref) => (
               <li
-                key={`${ref.channelMessageId}-${i}`}
+                // Key: channelMessageId. Both writers append at most one ref per
+                // message (they check forMessage() first), so it is unique.
+                key={ref.channelMessageId}
                 className="border border-border-subtle rounded-lg bg-white px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm"
                 data-testid="commhub-provenance-row"
               >

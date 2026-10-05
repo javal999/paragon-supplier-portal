@@ -146,8 +146,8 @@
 //   source an `ActingPerson` from anything that exists today.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { BpomRefusalReason } from '../services/sdc/bpom';
-import type { HalalRefusalReason } from '../services/sdc/halal';
+import type { BpomRefusalReason } from '@services/sdc/bpom';
+import type { HalalRefusalReason } from '@services/sdc/halal';
 
 // ─── The ramp ────────────────────────────────────────────────────────────────
 

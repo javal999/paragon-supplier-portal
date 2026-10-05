@@ -4,14 +4,14 @@ import { useNavigate } from 'react-router-dom';
 import { Boxes } from 'lucide-react';
 import ExpandableWidget, {
   type FlagSeverity,
-} from '../../components/ui-v2/ExpandableWidget';
-import Table from '../../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../../components/ui-v2/TableHeader';
-import TableRow from '../../components/ui-v2/TableRow';
-import TableCell from '../../components/ui-v2/TableCell';
-import Data from '../../components/ui-v2/Data';
-import { useInventory } from '../../services/query/hooks';
-import { positionRisk } from '../../services/transitions/inventoryRules';
+} from '@components/ui-v2/ExpandableWidget';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
+import Data from '@components/ui-v2/Data';
+import { useInventory } from '@services/query/hooks';
+import { positionRisk } from '@services/transitions/inventoryRules';
 import { SupplyPill, qty } from '../inventory/inventoryDisplay';
 
 // Capability "inventory": backed by the wired InventoryDeclaration target

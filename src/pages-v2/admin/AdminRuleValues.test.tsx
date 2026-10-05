@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
-import { renderWithProviders, BUYER } from '../../test/test-utils';
-import { hubSettingsStore, settingValue } from '../../services/transitions/hubSettingsStore';
-import { staleOverrideKey } from '../../services/transitions/hubSettings';
-import i18n from '../../lib/i18n';
+import { renderWithProviders, BUYER } from '@test/test-utils';
+import { hubSettingsStore, settingValue } from '@services/transitions/hubSettingsStore';
+import { staleOverrideKey } from '@services/transitions/hubSettings';
+import i18n from '@lib/i18n';
 import { AdminAlertThresholds, AdminTolerances } from './AdminRuleValues';
 
 // ─────────────────────────────────────────────────────────────────────────────

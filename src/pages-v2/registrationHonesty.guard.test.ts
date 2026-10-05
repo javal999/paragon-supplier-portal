@@ -25,7 +25,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-import { registrationEn, registrationId } from '../lib/i18n/registration';
+import { registrationEn, registrationId } from '@lib/i18n/registration';
 
 const RAW = readFileSync(resolve(__dirname, 'SupplierRegistration.tsx'), 'utf-8');
 

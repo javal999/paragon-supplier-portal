@@ -18,8 +18,8 @@
 // ────────────────────────────────────────────────────────────────────────────
 
 import { screen, fireEvent } from '@testing-library/react';
-import { renderWithProviders, BUYER } from '../test/test-utils';
-import { purchaseRequisitionStore } from '../services/data/mock/stores/purchaseRequisitionStore';
+import { renderWithProviders, BUYER } from '@test/test-utils';
+import { purchaseRequisitionStore } from '@services/data/mock/stores/purchaseRequisitionStore';
 import BuyerRequisitions from './BuyerRequisitions';
 
 /** The seeded row in the approval queue — carries an authored band. */

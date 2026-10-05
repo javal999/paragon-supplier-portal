@@ -18,7 +18,7 @@ import { MockCommandService, commandAuditSink } from './MockCommandService';
 import { DataError, type QueryScope } from '../types';
 import { PERSONA_SYSTEM_ROLES, SYSTEM_ROLES, rolesHolding } from '../../transitions/businessRoles';
 import { hubWorkingCalendar, workingCalendarStore } from '../../transitions/workingCalendarStore';
-import { isWorkingDay } from '../../../lib/workingCalendar';
+import { isWorkingDay } from '@lib/workingCalendar';
 import { getKnownFlows } from '../../transitions';
 
 const svc = new MockCommandService();

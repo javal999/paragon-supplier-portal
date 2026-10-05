@@ -15,7 +15,7 @@ import {
   picFilterMatches,
   userLabelsOf,
 } from './mrpControllerStore';
-import { NO_PERSON } from '../../context/noPerson';
+import { NO_PERSON } from '@context/noPerson';
 
 beforeEach(() => mrpControllerStore.reset());
 

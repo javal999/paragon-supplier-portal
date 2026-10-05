@@ -12,7 +12,7 @@
 // live in `transitions/qualificationRules.ts`.
 // ────────────────────────────────────────────────────────────────────────────
 
-import { mockSuppliers } from '../../../data/mockSuppliers';
+import { mockSuppliers } from '@data/mockSuppliers';
 import type {
   QualificationChange,
   QualificationRuleLevel,

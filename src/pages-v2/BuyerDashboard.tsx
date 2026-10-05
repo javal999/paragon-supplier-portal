@@ -11,39 +11,39 @@ import {
   Cell,
 } from 'recharts';
 import { Wallet, Activity, Users, ShoppingCart } from 'lucide-react';
-import AppShellV2 from '../components/layout-v2/AppShellV2';
-import PageHeader from '../components/ui-v2/PageHeader';
-import PageMetaLine from '../components/ui-v2/PageMetaLine';
-import ProvenanceMarker from '../components/ui-v2/ProvenanceMarker';
-import KpiCard from '../components/ui-v2/KpiCard';
-import StatusPill from '../components/ui-v2/StatusPill';
-import Table from '../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../components/ui-v2/TableHeader';
-import TableRow from '../components/ui-v2/TableRow';
-import TableCell from '../components/ui-v2/TableCell';
-import TimeRangeToggle from '../components/ui-v2/TimeRangeToggle';
-import LoadingState from '../components/ui-v2/LoadingState';
-import ErrorState from '../components/ui-v2/ErrorState';
-import EmptyState from '../components/ui-v2/EmptyState';
-import Data from '../components/ui-v2/Data';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import PageHeader from '@components/ui-v2/PageHeader';
+import PageMetaLine from '@components/ui-v2/PageMetaLine';
+import ProvenanceMarker from '@components/ui-v2/ProvenanceMarker';
+import KpiCard from '@components/ui-v2/KpiCard';
+import StatusPill from '@components/ui-v2/StatusPill';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
+import TimeRangeToggle from '@components/ui-v2/TimeRangeToggle';
+import LoadingState from '@components/ui-v2/LoadingState';
+import ErrorState from '@components/ui-v2/ErrorState';
+import EmptyState from '@components/ui-v2/EmptyState';
+import Data from '@components/ui-v2/Data';
 import {
   SEMANTIC_STATE,
   CHART_GRID,
   CHART_AXIS,
   CHART_CURSOR,
-} from '../lib/chartPalette';
+} from '@lib/chartPalette';
 import type {
   ProductionLineRow,
   SupplierHealthRow,
-} from '../services/data/types';
+} from '@services/data/types';
 import {
   useProductionLines,
   useSupplierHealth,
   useSuppliers,
   usePurchaseOrders,
-} from '../services/query/hooks';
-import { SupplierStatus } from '../types/supplier.types';
-import { useCategoryLabel } from '../hooks/useCategoryLabel';
+} from '@services/query/hooks';
+import { SupplierStatus } from '@app-types/supplier.types';
+import { useCategoryLabel } from '@hooks/useCategoryLabel';
 import {
   openPurchaseOrders,
   unacknowledgedOver48h,
@@ -57,7 +57,7 @@ import BuyerAsnInboundWidget from './widgets/BuyerAsnInboundWidget';
 import BuyerInventoryWidget from './widgets/BuyerInventoryWidget';
 import BuyerRiskWidget from './widgets/BuyerRiskWidget';
 import BuyerComplianceWidget from './widgets/BuyerComplianceWidget';
-import { sdcClock } from '../services/sdc/clock';
+import { sdcClock } from '@services/sdc/clock';
 
 type RangeId = 'today' | 'week' | 'month';
 

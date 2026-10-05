@@ -14,8 +14,8 @@
 // found at all: it never type-checked against the union it was reading.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { StepKind } from '../../services/transitions/catalogView';
-import type { TransitionDef } from '../../services/transitions/schema';
+import type { StepKind } from '@services/transitions/catalogView';
+import type { TransitionDef } from '@services/transitions/schema';
 
 /**
  * ⚠️ **EXHAUSTIVE BY TYPE, NOT BY DILIGENCE.** Do not widen this to

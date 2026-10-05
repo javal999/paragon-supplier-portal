@@ -1,5 +1,5 @@
 import type { TFunction } from 'i18next';
-import { refusalCode } from '../../services/sourcing/rfqModel';
+import { refusalCode } from '@services/sourcing/rfqModel';
 import { documentRefusalText } from '../rfx/ResponseDocumentsSection';
 
 /**

@@ -32,7 +32,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
 import { DECLARED_PRESENT, FAMILY_ANCHORS, shiftDays } from './fixturePresent';
-import { mockPurchaseOrders } from '../../data/mockPurchaseOrders';
+import { mockPurchaseOrders } from '@data/mockPurchaseOrders';
 import { MOCK_ASNS } from './mock/fixtures/supplierShipments';
 import { POStatus } from './types';
 

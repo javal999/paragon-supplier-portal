@@ -8,13 +8,13 @@
 
 import { screen, fireEvent, waitFor } from '@testing-library/react';
 import { beforeEach, describe, it, expect } from 'vitest';
-import { renderWithProviders, SUPPLIER, BUYER } from '../test/test-utils';
-import type { CurrentIdentity } from '../context/CurrentIdentityContext';
+import { renderWithProviders, SUPPLIER, BUYER } from '@test/test-utils';
+import type { CurrentIdentity } from '@context/CurrentIdentityContext';
 import SupplierShipments from './SupplierShipments';
 import BuyerGoodsReceipt from './BuyerGoodsReceipt';
 import AdminThreePls from './admin/AdminThreePls';
-import { asnStore } from '../services/data/mock/stores/asnStore';
-import { threePlStore } from '../services/transitions/threePlStore';
+import { asnStore } from '@services/data/mock/stores/asnStore';
+import { threePlStore } from '@services/transitions/threePlStore';
 
 beforeEach(() => {
   asnStore.reset();

@@ -4,19 +4,19 @@ import { useNavigate } from 'react-router-dom';
 import { FileWarning } from 'lucide-react';
 import ExpandableWidget, {
   type FlagSeverity,
-} from '../../components/ui-v2/ExpandableWidget';
-import Table from '../../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../../components/ui-v2/TableHeader';
-import TableRow from '../../components/ui-v2/TableRow';
-import TableCell from '../../components/ui-v2/TableCell';
-import Data from '../../components/ui-v2/Data';
-import StatusPill from '../../components/ui-v2/StatusPill';
-import { formatDate } from '../../lib/format';
-import { useComplianceRegistry } from '../../services/query/hooks';
-import { computeStatus, daysRemaining } from '../../services/data/complianceProjection';
-import { certTypeLabelKey } from '../../lib/complianceView';
-import { statusTone } from '../../lib/statusTone';
-import { sdcClock } from '../../services/sdc/clock';
+} from '@components/ui-v2/ExpandableWidget';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
+import Data from '@components/ui-v2/Data';
+import StatusPill from '@components/ui-v2/StatusPill';
+import { formatDate } from '@lib/format';
+import { useComplianceRegistry } from '@services/query/hooks';
+import { computeStatus, daysRemaining } from '@services/data/complianceProjection';
+import { certTypeLabelKey } from '@lib/complianceView';
+import { statusTone } from '@lib/statusTone';
+import { sdcClock } from '@services/sdc/clock';
 
 // Capability "compliance": the canonical registry is a buyer-side fixture (no
 // wired CommandTarget) → the LivenessRegistry derives SIMULATED → amber "Sample"

@@ -27,7 +27,7 @@
 // refuse (fail-closed, plan AD-8).
 // ────────────────────────────────────────────────────────────────────────────
 
-import type { RFQCategory } from '../../data/mockRfqs';
+import type { RFQCategory } from '@data/mockRfqs';
 import type {
   QualificationLevel,
   QualificationRequiredDoc,

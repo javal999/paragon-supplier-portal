@@ -1,8 +1,8 @@
 import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import AppShellV2 from '../components/layout-v2/AppShellV2';
-import PageHeader from '../components/ui-v2/PageHeader';
-import SampleDataBadge from '../components/ui-v2/SampleDataBadge';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import PageHeader from '@components/ui-v2/PageHeader';
+import SampleDataBadge from '@components/ui-v2/SampleDataBadge';
 import {
   useASNs,
   useBuyerInvoices,
@@ -14,24 +14,24 @@ import {
   useQuotations,
   useRFQs,
   useNegotiationRounds,
-} from '../services/query/hooks';
-import { useUnifiedChase } from '../services/query/chaseHooks';
-import { useHubRole, type HubRole } from '../components/layout-v2/hubRole';
+} from '@services/query/hooks';
+import { useUnifiedChase } from '@services/query/chaseHooks';
+import { useHubRole, type HubRole } from '@components/layout-v2/hubRole';
 import * as d from './widgets/buyerDerivations';
 import TaskList, { type HomeTask } from './home/TaskList';
-import { POStatus } from '../services/data/types';
-import { completionMovedLater, isEscalated } from '../services/data/poResponseProjection';
-import { isOpenDispute } from '../services/transitions/fulfilmentRules';
-import { deliveryDrift } from '../services/transitions/callOffRules';
+import { POStatus } from '@services/data/types';
+import { completionMovedLater, isEscalated } from '@services/data/poResponseProjection';
+import { isOpenDispute } from '@services/transitions/fulfilmentRules';
+import { deliveryDrift } from '@services/transitions/callOffRules';
 import { useCallOffViews } from './callOffs/callOffDisplay';
-import { planStatus } from '../services/transitions/capacityRules';
-import { deadlineState } from '../services/transitions/forecastRules';
-import { isClosingSoon } from '../services/transitions/rfxRules';
+import { planStatus } from '@services/transitions/capacityRules';
+import { deadlineState } from '@services/transitions/forecastRules';
+import { isClosingSoon } from '@services/transitions/rfxRules';
 import { forecastNow } from './forecasts/forecastDisplay';
 import { rfxNow } from './rfx/rfxDisplay';
 import { ordersNow } from './orders/PoCollaboration';
 import { useSapInterface } from './interface/sapInterfaceDisplay';
-import { isRetryable } from '../services/data/sapInterfaceRules';
+import { isRetryable } from '@services/data/sapInterfaceRules';
 
 // PTI Home — "My tasks" (REQUIREMENTS §3.8 SC-01). Tasks are filtered by the
 // PTI role the menu is showing, so a Finance user is not handed a planner's work.

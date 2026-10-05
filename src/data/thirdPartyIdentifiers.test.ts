@@ -24,7 +24,7 @@
 import { describe, it, expect } from 'vitest';
 
 const sources = () =>
-  import.meta.glob('/src/**/*.{ts,tsx}', {
+  import.meta.glob('/src/**/*.{ts,tsx,js,jsx}', {
     query: '?raw',
     import: 'default',
     eager: true,

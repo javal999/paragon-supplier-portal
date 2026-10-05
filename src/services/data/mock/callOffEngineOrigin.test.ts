@@ -36,9 +36,9 @@ import { engineReleaseWithheld } from '../../transitions/callOffRules';
 import { refusedByPolicy } from '../../transitions/refusalMessage';
 import { callOffFlow } from '../../transitions/flows/callOff.flow';
 import { awaitsHarvest, capabilityBacking, isGreenFrom, isLive, readinessNote } from '../../liveness/registry';
-import { callOffsEn, callOffsId } from '../../../lib/i18n/callOffs';
-import { orderPlanEn, orderPlanId } from '../../../lib/i18n/orderPlan';
-import { NO_PERSON } from '../../../context/noPerson';
+import { callOffsEn, callOffsId } from '@lib/i18n/callOffs';
+import { orderPlanEn, orderPlanId } from '@lib/i18n/orderPlan';
+import { NO_PERSON } from '@context/noPerson';
 
 const svc = new MockCommandService();
 const planner: QueryScope = {

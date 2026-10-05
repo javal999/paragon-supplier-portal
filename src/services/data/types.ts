@@ -20,7 +20,7 @@ import type {
   SupplierTier,
   PreferredChannel,
   ScorecardGrade,
-} from '../../types/supplier.types';
+} from '@app-types/supplier.types';
 // REQ-E03-01 to REQ-E03-05 — the RFx read surface. The view shapes live beside
 // the entities (`services/sourcing/views`) so the contract and the adapter that
 // fulfils it import ONE declaration rather than each holding its own copy.
@@ -40,7 +40,7 @@ import type {
 
 // CP-3 · E2 — the enforcement read seam's row type. TYPE-ONLY: naming the
 // vocabulary is not acquiring a consumer, and nothing in this file calls it.
-import type { EnforcementSetting, ActorAttribution } from '../../lib/enforcement';
+import type { EnforcementSetting, ActorAttribution } from '@lib/enforcement';
 
 // SDC-4b — the collaboration read seam's row types (type-only; the SDC layer
 // already imports IntakePlanState from here, so this reverse reference is a
@@ -116,7 +116,7 @@ import type {
   ShipmentLineItem,
   ShipmentStatus,
   ShipmentMode,
-} from '../../data/mockShipments';
+} from '@data/mockShipments';
 
 import type {
   GoodsReceipt,
@@ -127,13 +127,13 @@ import type {
   InspectionResult,
   ReceiptDiscrepancyResponse,
   ReceiptDiscrepancyStatus,
-} from '../../data/mockGoodsReceipts';
+} from '@data/mockGoodsReceipts';
 
 import type {
   Contract,
   ContractType,
   ContractStatus,
-} from '../../data/mockContracts';
+} from '@data/mockContracts';
 
 import type {
   ContractObligation,
@@ -141,10 +141,10 @@ import type {
   ObligationCategory,
   ObligationOwner,
   ObligationRecurrence,
-} from '../../data/mockObligations';
+} from '@data/mockObligations';
 
-import type { RFQ, RFQStatus, RFQCategory } from '../../data/mockRfqs';
-import type { Quotation, QuotationStatus } from '../../data/mockQuotations';
+import type { RFQ, RFQStatus, RFQCategory } from '@data/mockRfqs';
+import type { Quotation, QuotationStatus } from '@data/mockQuotations';
 
 // ─── Re-exports — entities without drift, single source ─────────────────────
 
@@ -218,7 +218,7 @@ export interface QueryScope {
    * none. Stated here so the absence is a fact in the tree rather than a claim
    * in a report.
    */
-  actor?: import('../../lib/enforcement').ActorAttribution;
+  actor?: import('@lib/enforcement').ActorAttribution;
 }
 
 // ─── Error contract (DR-4) — the single failure channel for the data layer ──
@@ -2212,7 +2212,7 @@ export interface PurchaseRequisition {
    * and fix, where the old surface named 'Procurement Head' and nobody could
    * tell it had not happened.
    */
-  approvedBy?: import('../../lib/enforcement').ActorAttribution;
+  approvedBy?: import('@lib/enforcement').ActorAttribution;
 }
 
 // ─── PR-intake line (C7 §2 — one shape, two producers) ──────────────────────

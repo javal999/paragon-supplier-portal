@@ -24,12 +24,12 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { screen } from '@testing-library/react';
 
-import { contractDraftOwner, CONTRACT_DRAFT_TRANSITION } from '../../services/transitions/contractDraftOwner';
-import { getFlow } from '../../services/transitions/registry';
-import { EXTERNAL_FACT_OWNER_KEY } from '../../lib/i18n/externalFactOwner';
-import { contractsEn, contractsId } from '../../lib/i18n/contracts';
+import { contractDraftOwner, CONTRACT_DRAFT_TRANSITION } from '@services/transitions/contractDraftOwner';
+import { getFlow } from '@services/transitions/registry';
+import { EXTERNAL_FACT_OWNER_KEY } from '@lib/i18n/externalFactOwner';
+import { contractsEn, contractsId } from '@lib/i18n/contracts';
 import { RaisedElsewhereNote, RaisedElsewherePanel } from './RaisedElsewhere';
-import { renderWithProviders } from '../../test/test-utils';
+import { renderWithProviders } from '@test/test-utils';
 
 const PAGE = readFileSync(
   resolve(__dirname, '..', 'BuyerContracts.tsx'),

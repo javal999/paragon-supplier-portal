@@ -1,18 +1,18 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { screen, waitFor, within, fireEvent, act } from '@testing-library/react';
 import { QueryClient } from '@tanstack/react-query';
-import { renderWithProviders, SUPPLIER, pickSelectFieldOption } from '../test/test-utils';
+import { renderWithProviders, SUPPLIER, pickSelectFieldOption } from '@test/test-utils';
 import BuyerChannelTriage from './BuyerChannelTriage';
 import SupplierInventory from './SupplierInventory';
-import { commandAuditSink } from '../services/data/mock/MockCommandService';
-import { inventoryDeclarationStore } from '../services/data/mock/stores/inventoryDeclarationStore';
-import { channelProvenanceStore } from '../services/channel/provenanceStore';
-import i18n from '../lib/i18n';
-import { DEFAULT_COMBOBOX_THRESHOLD } from '../components/ui-v2/SelectField';
-import { mockSuppliers } from '../data/mockSuppliers';
-import { mockDataService } from '../services/data/mock/mockDataService';
-import { withChaos } from '../services/data/mock/withChaos';
-import { DataError } from '../services/data/types';
+import { commandAuditSink } from '@services/data/mock/MockCommandService';
+import { inventoryDeclarationStore } from '@services/data/mock/stores/inventoryDeclarationStore';
+import { channelProvenanceStore } from '@services/channel/provenanceStore';
+import i18n from '@lib/i18n';
+import { DEFAULT_COMBOBOX_THRESHOLD } from '@components/ui-v2/SelectField';
+import { mockSuppliers } from '@data/mockSuppliers';
+import { mockDataService } from '@services/data/mock/mockDataService';
+import { withChaos } from '@services/data/mock/withChaos';
+import { DataError } from '@services/data/types';
 
 // ────────────────────────────────────────────────────────────────────────────
 // Comm Hub C4d — the buyer in-place triage. The SUBJECT supplier is bound at

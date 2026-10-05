@@ -1,13 +1,13 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import StatusPill from '../../components/ui-v2/StatusPill';
-import { useUpdateCompliance } from '../../services/query/hooks';
-import { complianceThresholds } from '../../services/transitions/inventoryConfig';
+import StatusPill from '@components/ui-v2/StatusPill';
+import { useUpdateCompliance } from '@services/query/hooks';
+import { complianceThresholds } from '@services/transitions/inventoryConfig';
 import {
   compliancePill,
   isComplianceFlagged,
   type CompliancePill,
-} from '../../services/transitions/updateCompliance';
+} from '@services/transitions/updateCompliance';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Material B4 (MR-2 step 4, BR-04, BR-06) — each bidder's weekly update

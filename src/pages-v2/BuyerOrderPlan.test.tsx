@@ -1,18 +1,18 @@
 import { describe, it, expect, afterEach, beforeEach } from 'vitest';
 import { screen, within, fireEvent, waitFor } from '@testing-library/react';
-import { renderWithProviders, BUYER } from '../test/test-utils';
+import { renderWithProviders, BUYER } from '@test/test-utils';
 import BuyerOrderPlan from './BuyerOrderPlan';
-import { mockDataService } from '../services/data/mock/mockDataService';
-import { callOffStore } from '../services/data/mock/stores/callOffStore';
-import { purchaseOrderStore } from '../services/data/mock/stores/purchaseOrderStore';
-import { isLive } from '../services/liveness';
-import { PERSONA_SYSTEM_ROLES, SEEDED_SEAT_ROLES } from '../services/transitions/businessRoles';
-import { CALL_OFF_PO_STATES } from '../services/transitions/callOffRules';
-import i18n from '../lib/i18n';
-import type { QueryScope } from '../services/data/types';
+import { mockDataService } from '@services/data/mock/mockDataService';
+import { callOffStore } from '@services/data/mock/stores/callOffStore';
+import { purchaseOrderStore } from '@services/data/mock/stores/purchaseOrderStore';
+import { isLive } from '@services/liveness';
+import { PERSONA_SYSTEM_ROLES, SEEDED_SEAT_ROLES } from '@services/transitions/businessRoles';
+import { CALL_OFF_PO_STATES } from '@services/transitions/callOffRules';
+import i18n from '@lib/i18n';
+import type { QueryScope } from '@services/data/types';
 import { draftNeedDate, umbrellaLineFor } from './orderPlan/orderPlanRelease';
-import { sdcClock } from '../services/sdc/clock';
-import { formatNumber } from '../lib/format';
+import { sdcClock } from '@services/sdc/clock';
+import { formatNumber } from '@lib/format';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // REQ-E14-05 — the planner's Order plan page. Every figure is read back from

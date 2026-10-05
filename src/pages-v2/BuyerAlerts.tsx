@@ -2,29 +2,29 @@ import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useSearchParams } from 'react-router-dom';
 import { ChevronDown, ChevronRight } from 'lucide-react';
-import AppShellV2 from '../components/layout-v2/AppShellV2';
-import PageHeader from '../components/ui-v2/PageHeader';
-import PageMetaLine from '../components/ui-v2/PageMetaLine';
-import SampleDataBadge from '../components/ui-v2/SampleDataBadge';
-import SubTabs from '../components/ui-v2/SubTabs';
-import FilterChipsBar from '../components/ui-v2/FilterChipsBar';
-import Button from '../components/ui-v2/Button';
-import SidePanel from '../components/ui-v2/SidePanel';
-import Data from '../components/ui-v2/Data';
-import LoadingState from '../components/ui-v2/LoadingState';
-import ErrorState from '../components/ui-v2/ErrorState';
-import { HandoffNotice } from '../components/ui-v2/HandoffNotice';
-import { useVerbAvailability } from '../hooks/useVerbAvailability';
-import { formatDate, formatDateTime } from '../lib/format';
-import { useInventoryAlerts } from '../services/query/hooks';
-import type { InventoryAlert, RiskClass } from '../services/data/types';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import PageHeader from '@components/ui-v2/PageHeader';
+import PageMetaLine from '@components/ui-v2/PageMetaLine';
+import SampleDataBadge from '@components/ui-v2/SampleDataBadge';
+import SubTabs from '@components/ui-v2/SubTabs';
+import FilterChipsBar from '@components/ui-v2/FilterChipsBar';
+import Button from '@components/ui-v2/Button';
+import SidePanel from '@components/ui-v2/SidePanel';
+import Data from '@components/ui-v2/Data';
+import LoadingState from '@components/ui-v2/LoadingState';
+import ErrorState from '@components/ui-v2/ErrorState';
+import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
+import { useVerbAvailability } from '@hooks/useVerbAvailability';
+import { formatDate, formatDateTime } from '@lib/format';
+import { useInventoryAlerts } from '@services/query/hooks';
+import type { InventoryAlert, RiskClass } from '@services/data/types';
 import {
   alertCloseRefusal,
   closeReasonCounts,
   closeReasonOf,
   groupAlertsBySupplier,
-} from '../services/transitions/inventoryAlertRules';
-import { NOTE_REQUIRED_CODE } from '../services/transitions/reasonCodes';
+} from '@services/transitions/inventoryAlertRules';
+import { NOTE_REQUIRED_CODE } from '@services/transitions/reasonCodes';
 import { useActiveReasonCodes, useReasonLabel } from './admin/reasonCodeDisplay';
 import {
   RiskBasisNote,
@@ -35,10 +35,10 @@ import {
   useInventoryRunner,
 } from './inventory/inventoryDisplay';
 import { alertPlanningGroup, usePlanningGroupLabel } from './inventory/planningGroupDisplay';
-import { usePlanningGroups } from '../services/query/hooks';
+import { usePlanningGroups } from '@services/query/hooks';
 import { PicCell, PicFilter, PicHeader, usePicFilter } from './materials/picDisplay';
-import MaterialSearch, { MaterialMatchReason, useMaterialMatcher } from '../components/ui-v2/MaterialSearch';
-import { searchMaterials } from '../services/transitions/matchMaterial';
+import MaterialSearch, { MaterialMatchReason, useMaterialMatcher } from '@components/ui-v2/MaterialSearch';
+import { searchMaterials } from '@services/transitions/matchMaterial';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PTI ALERTS — REQ-E08-05.

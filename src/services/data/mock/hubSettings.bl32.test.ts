@@ -128,7 +128,7 @@ function shipped(dir: string, out: string[] = []): string[] {
   for (const name of readdirSync(dir)) {
     const full = join(dir, name);
     if (statSync(full).isDirectory()) shipped(full, out);
-    else if (/\.tsx?$/.test(name) && !name.includes('.test.')) out.push(full);
+    else if (/\.[jt]sx?$/.test(name) && !name.includes('.test.')) out.push(full);
   }
   return out;
 }
@@ -139,7 +139,7 @@ const SHIPPED = shipped(SRC).map((f) => ({ path: rel(f), code: code(readFileSync
 
 /** The config modules: every `*Config.ts` under src/services, and the call-off tolerance module. */
 const CONFIG_MODULES = SHIPPED.filter(
-  (f) => f.path.startsWith('src/services/') && (/Config\.ts$/.test(f.path) || f.path.endsWith('/callOffTolerance.ts')),
+  (f) => f.path.startsWith('src/services/') && (/Config\.[jt]s$/.test(f.path) || f.path.endsWith('/callOffTolerance.ts')),
 );
 
 /** Exported `const` names of a module — what a reader could import as a constant. */

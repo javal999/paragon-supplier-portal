@@ -31,7 +31,7 @@ export default defineConfig({
   ...b,
   test: {
     ...b.test,
-    include: ['src/**/*.live.test.{ts,tsx}'],
+    include: ['src/**/*.live.test.{js,jsx,ts,tsx}'],
     exclude: [...configDefaults.exclude],
   },
 });

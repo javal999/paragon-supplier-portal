@@ -1,9 +1,9 @@
-import type { FxPin } from '../lib/fxPin';
-import type { DeadlineExtension, DraftRevision, RfxInvitee } from '../services/sourcing/types';
-import { DECLARED_PRESENT } from '../services/data/fixturePresent';
-import type { BidCurrency } from '../lib/currencyPolicy';
-import type { RfqAuthoringFields } from '../services/sourcing/rfqModel';
-import type { QualificationWarning, SourcingType } from '../services/sourcing/sourcingType';
+import type { FxPin } from '@lib/fxPin';
+import type { DeadlineExtension, DraftRevision, RfxInvitee } from '@services/sourcing/types';
+import { DECLARED_PRESENT } from '@services/data/fixturePresent';
+import type { BidCurrency } from '@lib/currencyPolicy';
+import type { RfqAuthoringFields } from '@services/sourcing/rfqModel';
+import type { QualificationWarning, SourcingType } from '@services/sourcing/sourcingType';
 
 /**
  * REQ-E03-03 — ONE PRICED LINE OF A SOURCING EVENT.

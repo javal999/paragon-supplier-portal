@@ -2,9 +2,9 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Info } from 'lucide-react';
 
-import Button from '../../components/ui-v2/Button';
-import { EXTERNAL_FACT_OWNER_KEY } from '../../lib/i18n/externalFactOwner';
-import { contractDraftOwner } from '../../services/transitions/contractDraftOwner';
+import Button from '@components/ui-v2/Button';
+import { EXTERNAL_FACT_OWNER_KEY } from '@lib/i18n/externalFactOwner';
+import { contractDraftOwner } from '@services/transitions/contractDraftOwner';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // THE TWO SURFACES OF ONE REFUSAL — the pre-act line and the terminal panel.

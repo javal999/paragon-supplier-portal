@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { POStatus, type PurchaseOrder } from './types';
-import { mockPurchaseOrders } from '../../data/mockPurchaseOrders';
+import { mockPurchaseOrders } from '@data/mockPurchaseOrders';
 import { getFlow } from '../transitions';
 import {
   foresightStatus,

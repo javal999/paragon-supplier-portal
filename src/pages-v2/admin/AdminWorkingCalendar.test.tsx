@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
-import { renderWithProviders, BUYER } from '../../test/test-utils';
-import { workingCalendarStore } from '../../services/transitions/workingCalendarStore';
+import { renderWithProviders, BUYER } from '@test/test-utils';
+import { workingCalendarStore } from '@services/transitions/workingCalendarStore';
 import AdminWorkingCalendar from './AdminWorkingCalendar';
 import { ADMIN_SECTIONS } from './adminSections';
 

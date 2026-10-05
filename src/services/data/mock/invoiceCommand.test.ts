@@ -17,7 +17,7 @@ import { isOverdue, daysOutstanding } from '../invoiceProjection';
 import { DataError } from '../types';
 import type { QueryScope } from '../types';
 import { PERSONA_SYSTEM_ROLES, AUTOMATION_ROLE } from '../../../services/transitions/businessRoles';
-import { NO_PERSON } from '../../../context/noPerson';
+import { NO_PERSON } from '@context/noPerson';
 
 const buyer: QueryScope = { personaType: 'buyer', supplierId: null, businessRoles: PERSONA_SYSTEM_ROLES.buyer };
 const sup007: QueryScope = { personaType: 'supplier', supplierId: 'sup-007', businessRoles: PERSONA_SYSTEM_ROLES.supplier };

@@ -1,9 +1,9 @@
 import React, { useMemo } from 'react';
-import { useForecastCommitments, useSupplierInvoices } from '../services/query/hooks';
-import { useCurrentIdentity } from '../context/CurrentIdentityContext';
-import NoSupplierIdentity from '../components/ui-v2/NoSupplierIdentity';
-import type { ForesightAnswer } from '../services/data/poResponseProjection';
-import { foresightAnswerOf } from '../services/transitions/forecastRules';
+import { useForecastCommitments, useSupplierInvoices } from '@services/query/hooks';
+import { useCurrentIdentity } from '@context/CurrentIdentityContext';
+import NoSupplierIdentity from '@components/ui-v2/NoSupplierIdentity';
+import type { ForesightAnswer } from '@services/data/poResponseProjection';
+import { foresightAnswerOf } from '@services/transitions/forecastRules';
 import OrderSummaryView, { type SummaryInvoice } from './orders/OrderSummaryView';
 
 // Supplier Order summary (REQ-E07-03 BR-06): the same summary over the

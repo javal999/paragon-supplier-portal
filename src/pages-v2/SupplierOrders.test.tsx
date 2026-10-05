@@ -1,12 +1,12 @@
 import { screen, fireEvent, within } from '@testing-library/react';
 import { beforeEach } from 'vitest';
-import { renderWithProviders, SUPPLIER } from '../test/test-utils';
-import { mockDataService } from '../services/data/mock/mockDataService';
-import { withChaos } from '../services/data/mock/withChaos';
-import { purchaseOrderStore } from '../services/data/mock/stores/purchaseOrderStore';
-import { commandAuditSink } from '../services/data/mock/MockCommandService';
-import { POStatus, type IDataService } from '../services/data/types';
-import i18n from '../lib/i18n';
+import { renderWithProviders, SUPPLIER } from '@test/test-utils';
+import { mockDataService } from '@services/data/mock/mockDataService';
+import { withChaos } from '@services/data/mock/withChaos';
+import { purchaseOrderStore } from '@services/data/mock/stores/purchaseOrderStore';
+import { commandAuditSink } from '@services/data/mock/MockCommandService';
+import { POStatus, type IDataService } from '@services/data/types';
+import i18n from '@lib/i18n';
 import SupplierOrders from './SupplierOrders';
 
 // The command layer mutates a shared store + audit sink — reset between tests.

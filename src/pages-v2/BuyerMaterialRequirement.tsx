@@ -1,26 +1,26 @@
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import AppShellV2 from '../components/layout-v2/AppShellV2';
-import PageHeader from '../components/ui-v2/PageHeader';
-import PageMetaLine from '../components/ui-v2/PageMetaLine';
-import LivenessPill from '../components/ui-v2/LivenessPill';
-import FilterChipsBar from '../components/ui-v2/FilterChipsBar';
-import KpiCard from '../components/ui-v2/KpiCard';
-import StatusPill from '../components/ui-v2/StatusPill';
-import Table from '../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../components/ui-v2/TableHeader';
-import TableRow from '../components/ui-v2/TableRow';
-import TableCell from '../components/ui-v2/TableCell';
-import Data from '../components/ui-v2/Data';
-import Button from '../components/ui-v2/Button';
-import LoadingState from '../components/ui-v2/LoadingState';
-import ErrorState from '../components/ui-v2/ErrorState';
-import { formatDate, formatNumber } from '../lib/format';
-import { useMaterialRequirement } from '../services/query/hooks';
-import type { MaterialPlanView, MaterialRequirementView } from '../services/data/types';
-import type { MaterialWeek } from '../services/engine/requirement';
-import { isoWeek } from '../services/engine/dates';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import PageHeader from '@components/ui-v2/PageHeader';
+import PageMetaLine from '@components/ui-v2/PageMetaLine';
+import LivenessPill from '@components/ui-v2/LivenessPill';
+import FilterChipsBar from '@components/ui-v2/FilterChipsBar';
+import KpiCard from '@components/ui-v2/KpiCard';
+import StatusPill from '@components/ui-v2/StatusPill';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
+import Data from '@components/ui-v2/Data';
+import Button from '@components/ui-v2/Button';
+import LoadingState from '@components/ui-v2/LoadingState';
+import ErrorState from '@components/ui-v2/ErrorState';
+import { formatDate, formatNumber } from '@lib/format';
+import { useMaterialRequirement } from '@services/query/hooks';
+import type { MaterialPlanView, MaterialRequirementView } from '@services/data/types';
+import type { MaterialWeek } from '@services/engine/requirement';
+import { isoWeek } from '@services/engine/dates';
 import { qtyOf } from './materialPlan/planDisplay';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -73,7 +73,12 @@ const PegsPanel: React.FC<{
           <TableHeaderCell>{t('mrq.pegs.part')}</TableHeaderCell>
         </TableHeader>
         <tbody>
+          {/* Peg has no id: the same SKU + FG week appears twice when the
+              material reaches it through two BOM paths. The list is engine
+              output, replaced whole per week and never edited, so the index
+              suffix only separates those repeats. */}
           {week.pegs.map((p, i) => (
+            // eslint-disable-next-line react/no-array-index-key -- read-only engine output; SKU + week can repeat across BOM paths
             <TableRow key={`${p.skuCode}-${p.fgWeek}-${i}`} data-testid={`mrq-peg-${p.skuCode}`}>
               <TableCell>
                 <div className="text-sm text-text-primary">{names[p.skuCode] ?? p.skuCode}</div>

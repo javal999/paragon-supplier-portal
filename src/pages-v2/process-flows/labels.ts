@@ -14,8 +14,8 @@
 // ruling, one surface along.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { LooseEndKind } from '../../services/transitions/flowGraph';
-import type { LooseEndReason } from '../../services/transitions/looseEndCensus';
+import type { LooseEndKind } from '@services/transitions/flowGraph';
+import type { LooseEndReason } from '@services/transitions/looseEndCensus';
 
 const REASON_KEY: Record<LooseEndReason, string> = {
   'deferred-edge': 'processFlows.reason.deferredEdge',

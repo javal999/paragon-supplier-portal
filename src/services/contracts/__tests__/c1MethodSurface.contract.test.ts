@@ -74,7 +74,7 @@ import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { buildRepoProgram } from '../../../lib/storedFieldGate/derive';
+import { buildRepoProgram } from '@lib/storedFieldGate/derive';
 import {
   NUMBER_WORDS,
   backticked,
@@ -586,7 +586,7 @@ describe('C5 — the figures C5 borrows from C1 agree with C1’s derivation', (
   it('C5’s `httpDataService` claim is about a FILE, and the file is absent', () => {
     expect(flat(C5)).toContain('**No file exists** (glob-confirmed)');
     const files = readdirSync(join(ROOT, 'src', 'services', 'data'));
-    expect(files.filter((f) => /^httpDataService\.tsx?$/.test(f))).toEqual([]);
+    expect(files.filter((f) => /^httpDataService\.[jt]sx?$/.test(f))).toEqual([]);
   });
 });
 
@@ -598,7 +598,7 @@ describe('C1 — `httpDataService` is RESERVED, and that is a claim about an IMP
     // and a batch that wrote it that way would have reported the contract
     // broken. The claim's site is a module that implements the interface.
     const files = readdirSync(join(ROOT, 'src', 'services', 'data'));
-    expect(files.filter((f) => /^httpDataService\.tsx?$/.test(f))).toEqual([]);
+    expect(files.filter((f) => /^httpDataService\.[jt]sx?$/.test(f))).toEqual([]);
     expect(flat(CONTRACT)).toContain('no module in `src/` implements `httpDataService`');
     expect(CONTRACT).toContain('ABSENCE OF AN IMPLEMENTATION');
   });

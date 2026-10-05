@@ -21,8 +21,8 @@
 
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { mockContracts } from '../../data/mockContracts';
-import { mockObligations, type ContractObligation } from '../../data/mockObligations';
+import { mockContracts } from '@data/mockContracts';
+import { mockObligations, type ContractObligation } from '@data/mockObligations';
 import { obligationRollup } from './obligationRollup';
 import { obligationDisplay, isObligationComplete } from './obligationProjection';
 

@@ -53,7 +53,7 @@
 
 import { MockCommandService } from './MockCommandService';
 import { supplierApplicationStore } from './stores/supplierApplicationStore';
-import { NO_PERSON } from '../../../context/noPerson';
+import { NO_PERSON } from '@context/noPerson';
 import type { CommandResult, QueryScope } from '../types';
 
 /**

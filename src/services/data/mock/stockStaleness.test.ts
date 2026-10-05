@@ -11,7 +11,7 @@ import { stockSyncStore } from './stores/inventoryHubStores';
 import { supplierOverlayStore } from './stores/supplierOverlayStore';
 import { stockFreshness } from '../../transitions/inventoryRules';
 import { sdcClock } from '../../sdc';
-import { NO_PERSON } from '../../../context/noPerson';
+import { NO_PERSON } from '@context/noPerson';
 
 beforeEach(() => {
   inventoryDeclarationStore.reset();

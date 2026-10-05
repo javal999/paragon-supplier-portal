@@ -9,12 +9,12 @@
 
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { renderWithProviders, BUYER, SUPPLIER } from '../test/test-utils';
-import { purchaseOrderStore } from '../services/data/mock/stores/purchaseOrderStore';
-import { commandAuditSink } from '../services/data/mock/MockCommandService';
-import { POStatus } from '../services/data/types';
-import { SEEDED_SEAT_ROLES } from '../services/transitions/businessRoles';
-import i18n from '../lib/i18n';
+import { renderWithProviders, BUYER, SUPPLIER } from '@test/test-utils';
+import { purchaseOrderStore } from '@services/data/mock/stores/purchaseOrderStore';
+import { commandAuditSink } from '@services/data/mock/MockCommandService';
+import { POStatus } from '@services/data/types';
+import { SEEDED_SEAT_ROLES } from '@services/transitions/businessRoles';
+import i18n from '@lib/i18n';
 import SupplierOrders from './SupplierOrders';
 import BuyerOrders from './BuyerOrders';
 import BuyerHome from './BuyerHome';

@@ -16,9 +16,9 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import { describe, it, expect, afterAll } from 'vitest';
 import { screen, fireEvent, act, within } from '@testing-library/react';
-import { renderWithProviders } from '../test/test-utils';
-import i18n from '../lib/i18n';
-import { GLOSSARY_REGISTRIES, ALL_GLOSSARY_TERMS } from '../lib/glossary';
+import { renderWithProviders } from '@test/test-utils';
+import i18n from '@lib/i18n';
+import { GLOSSARY_REGISTRIES, ALL_GLOSSARY_TERMS } from '@lib/glossary';
 import { buildGlossaryView } from './glossary/appearances';
 import Glossary from './Glossary';
 

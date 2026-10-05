@@ -12,50 +12,50 @@ import {
   FileSpreadsheet,
   ChevronRight,
 } from 'lucide-react';
-import AppShellV2 from '../components/layout-v2/AppShellV2';
-import PageHeader from '../components/ui-v2/PageHeader';
-import PageMetaLine from '../components/ui-v2/PageMetaLine';
-import ProvenanceMarker from '../components/ui-v2/ProvenanceMarker';
-import KpiCard from '../components/ui-v2/KpiCard';
-import Data from '../components/ui-v2/Data';
-import BulkActionsBar from '../components/ui-v2/BulkActionsBar';
-import SubTabs from '../components/ui-v2/SubTabs';
-import SearchBar from '../components/ui-v2/SearchBar';
-import StatusPill from '../components/ui-v2/StatusPill';
-import Table from '../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../components/ui-v2/TableHeader';
-import TableRow from '../components/ui-v2/TableRow';
-import TableCell from '../components/ui-v2/TableCell';
-import Button from '../components/ui-v2/Button';
-import SidePanel from '../components/ui-v2/SidePanel';
-import FormSection from '../components/ui-v2/FormSection';
-import LoadingState from '../components/ui-v2/LoadingState';
-import ErrorState from '../components/ui-v2/ErrorState';
-import EmptyState from '../components/ui-v2/EmptyState';
-import { useToast } from '../hooks/useToast';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import PageHeader from '@components/ui-v2/PageHeader';
+import PageMetaLine from '@components/ui-v2/PageMetaLine';
+import ProvenanceMarker from '@components/ui-v2/ProvenanceMarker';
+import KpiCard from '@components/ui-v2/KpiCard';
+import Data from '@components/ui-v2/Data';
+import BulkActionsBar from '@components/ui-v2/BulkActionsBar';
+import SubTabs from '@components/ui-v2/SubTabs';
+import SearchBar from '@components/ui-v2/SearchBar';
+import StatusPill from '@components/ui-v2/StatusPill';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
+import Button from '@components/ui-v2/Button';
+import SidePanel from '@components/ui-v2/SidePanel';
+import FormSection from '@components/ui-v2/FormSection';
+import LoadingState from '@components/ui-v2/LoadingState';
+import ErrorState from '@components/ui-v2/ErrorState';
+import EmptyState from '@components/ui-v2/EmptyState';
+import { useToast } from '@hooks/useToast';
 import { useTranslation } from 'react-i18next';
-import { useEnumLabel } from '../hooks/useEnumLabel';
-import { useRequisitions, useSuppliers } from '../services/query/hooks';
-import { materialEntry } from '../services/sdc/materialMaster';
+import { useEnumLabel } from '@hooks/useEnumLabel';
+import { useRequisitions, useSuppliers } from '@services/query/hooks';
+import { materialEntry } from '@services/sdc/materialMaster';
 import {
   usePurchaseRequisitionCreate,
   useRequisitionApprove,
   useRequisitionReject,
   useRequisitionSubmit,
   useRequisitionRevise,
-} from '../services/query/commandHooks';
-import { useVerbAvailabilities, useNextAct } from '../hooks/useVerbAvailability';
-import { HandoffNotice } from '../components/ui-v2/HandoffNotice';
-import NextActLine from '../components/ui-v2/NextActLine';
-import { DataError } from '../services/data/types';
-import { formatNumber, formatIDR, formatDate } from '../lib/format';
-import { normalizeQty, type QtyRefusalReason } from '../lib/localeNumber';
+} from '@services/query/commandHooks';
+import { useVerbAvailabilities, useNextAct } from '@hooks/useVerbAvailability';
+import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
+import NextActLine from '@components/ui-v2/NextActLine';
+import { DataError } from '@services/data/types';
+import { formatNumber, formatIDR, formatDate } from '@lib/format';
+import { normalizeQty, type QtyRefusalReason } from '@lib/localeNumber';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import type { PurchaseRequisition, PRStatus } from '../services/data/types';
-import type { ActorAttribution, UnattributedReason } from '../lib/enforcement';
+import type { PurchaseRequisition, PRStatus } from '@services/data/types';
+import type { ActorAttribution, UnattributedReason } from '@lib/enforcement';
 // GL-1 - the glossary destination for this surface's refusals.
-import GlossaryTermChip from '../components/ui-v2/GlossaryTermChip';
-import { useRefusalText, useDataErrorText } from '../hooks/useRefusalText';
+import GlossaryTermChip from '@components/ui-v2/GlossaryTermChip';
+import { useRefusalText, useDataErrorText } from '@hooks/useRefusalText';
 
 // ── CP-0 · W1 · PR-2b — the New-PR quantity is PARSED, never coerced ─────────
 // `Number(form.qty)` behind a `type="number"` field read "4.500" as 4.5, so a

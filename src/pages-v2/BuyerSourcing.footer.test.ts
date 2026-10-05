@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { TFunction } from 'i18next';
-import type { RFQ, RFQStatus } from '../data/mockRfqs';
+import type { RFQ, RFQStatus } from '@data/mockRfqs';
 import { FOOTER_LABEL, FOOTER_VARIANT } from './BuyerSourcing';
 
 // FOOTER_VARIANT reads only status + the invited/responded rosters. A minimal

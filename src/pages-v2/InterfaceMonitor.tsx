@@ -1,19 +1,19 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { RefreshCw } from 'lucide-react';
-import AppShellV2 from '../components/layout-v2/AppShellV2';
-import PageHeader from '../components/ui-v2/PageHeader';
-import PageMetaLine from '../components/ui-v2/PageMetaLine';
-import Data from '../components/ui-v2/Data';
-import Button from '../components/ui-v2/Button';
-import StatusPill from '../components/ui-v2/StatusPill';
-import SampleDataBadge from '../components/ui-v2/SampleDataBadge';
-import LoadingState from '../components/ui-v2/LoadingState';
-import { useToast } from '../hooks/useToast';
-import { formatDate } from '../lib/format';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import PageHeader from '@components/ui-v2/PageHeader';
+import PageMetaLine from '@components/ui-v2/PageMetaLine';
+import Data from '@components/ui-v2/Data';
+import Button from '@components/ui-v2/Button';
+import StatusPill from '@components/ui-v2/StatusPill';
+import SampleDataBadge from '@components/ui-v2/SampleDataBadge';
+import LoadingState from '@components/ui-v2/LoadingState';
+import { useToast } from '@hooks/useToast';
+import { formatDate } from '@lib/format';
 import { useSapInterface } from './interface/sapInterfaceDisplay';
-import { useGoodsReceiptSettle } from '../services/query/commandHooks';
-import { sapMessageStore } from '../services/data/mock/stores/sapMessageStore';
+import { useGoodsReceiptSettle } from '@services/query/commandHooks';
+import { sapMessageStore } from '@services/data/mock/stores/sapMessageStore';
 import {
   isRetryable,
   sapAgeParts,
@@ -21,7 +21,7 @@ import {
   SAP_LATENCY_TARGET_MINUTES,
   type SapFailedMessage,
   type SapObjectStatus,
-} from '../services/data/sapInterfaceRules';
+} from '@services/data/sapInterfaceRules';
 
 // ────────────────────────────────────────────────────────────────────────────
 // Interface monitor — REQ-E07-08 (ADM). Reached from the user menu, not the

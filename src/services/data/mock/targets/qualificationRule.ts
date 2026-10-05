@@ -21,7 +21,7 @@ import {
 } from '../../../transitions/qualificationRules';
 import { qualificationRuleStore } from '../../../transitions/qualificationRuleStore';
 import { sdcClock } from '../../../sdc';
-import { NO_PERSON } from '../../../../context/noPerson';
+import { NO_PERSON } from '@context/noPerson';
 
 export const qualificationRuleTarget: CommandTarget = {
   readState: (id) => (isQualificationRuleLevel(id) ? 'Defined' : null),

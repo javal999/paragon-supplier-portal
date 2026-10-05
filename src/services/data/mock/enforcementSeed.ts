@@ -67,7 +67,7 @@ import {
   MAXIMUM_RIGOUR,
   settingInForce,
   type GovernedCheckId,
-} from '../../../lib/enforcement';
+} from '@lib/enforcement';
 
 /**
  * THE CHECKS THIS SEED OPENS — the ones that BLOCK TODAY, and only those.

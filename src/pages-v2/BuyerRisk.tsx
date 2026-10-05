@@ -21,28 +21,28 @@ import {
   Send,
   LucideIcon,
 } from 'lucide-react';
-import AppShellV2 from '../components/layout-v2/AppShellV2';
-import PageHeader from '../components/ui-v2/PageHeader';
-import PageMetaLine from '../components/ui-v2/PageMetaLine';
-import LivenessPill from '../components/ui-v2/LivenessPill';
-import IllustrativeRegion from '../components/ui-v2/IllustrativeRegion';
-import KpiCard from '../components/ui-v2/KpiCard';
-import BulkActionsBar from '../components/ui-v2/BulkActionsBar';
-import SubTabs from '../components/ui-v2/SubTabs';
-import FilterChipsBar from '../components/ui-v2/FilterChipsBar';
-import StatusPill from '../components/ui-v2/StatusPill';
-import { CHART_SEMANTIC, CHART_IDENTITY, MAP_BASE } from '../lib/chartPalette';
-import Table from '../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../components/ui-v2/TableHeader';
-import TableRow from '../components/ui-v2/TableRow';
-import TableCell from '../components/ui-v2/TableCell';
-import Button from '../components/ui-v2/Button';
-import LoadingState from '../components/ui-v2/LoadingState';
-import ErrorState from '../components/ui-v2/ErrorState';
-import EmptyState from '../components/ui-v2/EmptyState';
-import Data from '../components/ui-v2/Data';
-import { severityTone } from '../lib/statusTone';
-import { useToast } from '../hooks/useToast';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import PageHeader from '@components/ui-v2/PageHeader';
+import PageMetaLine from '@components/ui-v2/PageMetaLine';
+import LivenessPill from '@components/ui-v2/LivenessPill';
+import IllustrativeRegion from '@components/ui-v2/IllustrativeRegion';
+import KpiCard from '@components/ui-v2/KpiCard';
+import BulkActionsBar from '@components/ui-v2/BulkActionsBar';
+import SubTabs from '@components/ui-v2/SubTabs';
+import FilterChipsBar from '@components/ui-v2/FilterChipsBar';
+import StatusPill from '@components/ui-v2/StatusPill';
+import { CHART_SEMANTIC, CHART_IDENTITY, MAP_BASE } from '@lib/chartPalette';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
+import Button from '@components/ui-v2/Button';
+import LoadingState from '@components/ui-v2/LoadingState';
+import ErrorState from '@components/ui-v2/ErrorState';
+import EmptyState from '@components/ui-v2/EmptyState';
+import Data from '@components/ui-v2/Data';
+import { severityTone } from '@lib/statusTone';
+import { useToast } from '@hooks/useToast';
 import {
   useRiskAlerts,
   useGeoRisks,
@@ -50,7 +50,7 @@ import {
   useScenarios,
   useCompliance,
   useCommodities,
-} from '../services/query/hooks';
+} from '@services/query/hooks';
 import type {
   RiskAlertLevel as AlertLevel,
   RiskAlert,
@@ -61,9 +61,9 @@ import type {
   Commodity,
   Scenario,
   ScenarioFeasibility as Feasibility,
-} from '../services/data/types';
-import { daysUntil } from '../services/data/dayProjection';
-import { DECLARED_PRESENT } from '../services/data/fixturePresent';
+} from '@services/data/types';
+import { daysUntil } from '@services/data/dayProjection';
+import { DECLARED_PRESENT } from '@services/data/fixturePresent';
 
 // ⚠️ ANCHORED — this surface rendered values derived from anchored
 // fixture data against the WALL CLOCK, so what a reader saw moved every day

@@ -2,8 +2,8 @@ import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { AlertTriangle, CheckCircle2, ChevronRight } from 'lucide-react';
-import Data from '../../components/ui-v2/Data';
-import type { FlagSeverity } from '../../components/ui-v2/ExpandableWidget';
+import Data from '@components/ui-v2/Data';
+import type { FlagSeverity } from '@components/ui-v2/ExpandableWidget';
 import {
   useBuyerInvoices,
   usePurchaseOrders,
@@ -11,9 +11,9 @@ import {
   useQuotations,
   useGoodsReceipts,
   useASNs,
-} from '../../services/query/hooks';
+} from '@services/query/hooks';
 import * as d from './buyerDerivations';
-import { sdcClock } from '../../services/sdc/clock';
+import { sdcClock } from '@services/sdc/clock';
 
 // The buyer triage line — the aggregated exception count above the widget grid.
 // It reads the SAME derivations the widgets do, so the bar and the widget flags

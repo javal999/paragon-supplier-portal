@@ -10,9 +10,9 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { getKnownFlows } from '../../services/transitions';
-import { buildCatalogView, buildFlowView } from '../../services/transitions/catalogView';
-import type { FlowDefinition } from '../../services/transitions/schema';
+import { getKnownFlows } from '@services/transitions';
+import { buildCatalogView, buildFlowView } from '@services/transitions/catalogView';
+import type { FlowDefinition } from '@services/transitions/schema';
 import { layoutFlow, rankStates, verbOf, entityVerbOf, NODE_W, NODE_H } from './flowLayout';
 
 const views = () => buildCatalogView(getKnownFlows()).flows;

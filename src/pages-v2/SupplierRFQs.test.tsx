@@ -1,12 +1,12 @@
 import { screen, fireEvent, waitFor } from '@testing-library/react';
-import { renderWithProviders, SUPPLIER } from '../test/test-utils';
-import { mockDataService } from '../services/data/mock/mockDataService';
-import { quotationStore } from '../services/data/mock/stores/quotationStore';
-import { rfqStore } from '../services/data/mock/stores/rfqStore';
-import { withChaos } from '../services/data/mock/withChaos';
-import type { IDataService } from '../services/data/types';
+import { renderWithProviders, SUPPLIER } from '@test/test-utils';
+import { mockDataService } from '@services/data/mock/mockDataService';
+import { quotationStore } from '@services/data/mock/stores/quotationStore';
+import { rfqStore } from '@services/data/mock/stores/rfqStore';
+import { withChaos } from '@services/data/mock/withChaos';
+import type { IDataService } from '@services/data/types';
 import SupplierRFQs from './SupplierRFQs';
-import i18n from '../lib/i18n';
+import i18n from '@lib/i18n';
 
 const alwaysFails = withChaos(mockDataService, { minMs: 0, maxMs: 0, failureRate: 1 });
 const alwaysPending = withChaos(mockDataService, { minMs: 1e7, maxMs: 1e7, failureRate: 0 });

@@ -1,4 +1,4 @@
-import type { ActorAttribution } from '../lib/enforcement';
+import type { ActorAttribution } from '@lib/enforcement';
 
 /**
  * ⚠️ **THE SEAT'S ACTOR TODAY, AND IT IS A MEASURED FACT RATHER THAN A STUB.**

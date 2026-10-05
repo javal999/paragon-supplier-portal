@@ -10,15 +10,15 @@ import React from 'react';
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { Route, Routes, useLocation } from 'react-router-dom';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { renderWithProviders, BUYER, SUPPLIER } from '../test/test-utils';
-import type { CurrentIdentity } from '../context/CurrentIdentityContext';
-import type { ActorAttribution } from '../lib/enforcement';
-import { SEEDED_SEAT_ROLES } from '../services/transitions/businessRoles';
-import { simulationOverrideStore } from '../services/data/mock/stores/simulationOverrideStore';
-import { callOffStore } from '../services/data/mock/stores/callOffStore';
-import { purchaseOrderStore } from '../services/data/mock/stores/purchaseOrderStore';
-import { sdcClock } from '../services/sdc';
-import { stockSimulationEn, stockSimulationId } from '../lib/i18n/stockSimulation';
+import { renderWithProviders, BUYER, SUPPLIER } from '@test/test-utils';
+import type { CurrentIdentity } from '@context/CurrentIdentityContext';
+import type { ActorAttribution } from '@lib/enforcement';
+import { SEEDED_SEAT_ROLES } from '@services/transitions/businessRoles';
+import { simulationOverrideStore } from '@services/data/mock/stores/simulationOverrideStore';
+import { callOffStore } from '@services/data/mock/stores/callOffStore';
+import { purchaseOrderStore } from '@services/data/mock/stores/purchaseOrderStore';
+import { sdcClock } from '@services/sdc';
+import { stockSimulationEn, stockSimulationId } from '@lib/i18n/stockSimulation';
 import BuyerStockSimulation from './BuyerStockSimulation';
 import BuyerCallOffs from './BuyerCallOffs';
 import BuyerRequisitions from './BuyerRequisitions';
@@ -134,7 +134,10 @@ describe('Stock simulation page (MR-7 section e)', () => {
     expect(po.supplierId).toBe('sup-007');
     expect(po.lineItems.some((l) => l.materialCode === 'PK-PETB-8801')).toBe(true);
     expect(within(dialog).getByTestId('calloff-new-remaining')).toBeInTheDocument();
-    expect(screen.getByTestId('where')).toHaveTextContent(/^\/buyer\/call-offs$/);
+    // The prefill params are consumed (removed from the address) once. React
+    // Router 7 applies `setSearchParams` inside a React transition, so the
+    // cleaned address lands a tick after the dialog opens — wait for it.
+    await waitFor(() => expect(screen.getByTestId('where')).toHaveTextContent(/^\/buyer\/call-offs$/));
     expect(callOffStore.all()).toHaveLength(before);
   });
 

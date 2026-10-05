@@ -1,11 +1,11 @@
 import { waitFor } from '@testing-library/react';
 import { QueryClient } from '@tanstack/react-query';
-import { renderWithProviders, SUPPLIER } from '../../test/test-utils';
-import type { CurrentIdentity } from '../../context/CurrentIdentityContext';
+import { renderWithProviders, SUPPLIER } from '@test/test-utils';
+import type { CurrentIdentity } from '@context/CurrentIdentityContext';
 import type { BuyerInvoice, Page } from '../data/types';
 import { useBuyerInvoices } from './hooks';
 import { PERSONA_SYSTEM_ROLES } from '../../services/transitions/businessRoles';
-import { NO_PERSON } from '../../context/noPerson';
+import { NO_PERSON } from '@context/noPerson';
 
 // supplier-A is the seeded sup-007; supplier-B is a different supplier.
 const SUPPLIER_A = SUPPLIER; // sup-007

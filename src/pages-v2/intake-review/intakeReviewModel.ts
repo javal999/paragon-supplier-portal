@@ -11,7 +11,7 @@
 // which is exactly why the UI must label a dismissal "this session only".
 // ────────────────────────────────────────────────────────────────────────────
 
-import type { PrIntakeLine } from '../../services/data/types';
+import type { PrIntakeLine } from '@services/data/types';
 import { buildPrCreatePayload, type PushRowState } from '../plan-grid/planGridModel';
 
 /** The accept-as-suggested push: the existing payload builder at qty=suggested,

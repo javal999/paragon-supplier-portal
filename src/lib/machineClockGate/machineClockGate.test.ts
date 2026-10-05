@@ -18,6 +18,7 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import { join } from 'node:path';
 import { deriveCensus, judge, siteKey, sitesIn, type AllowRow, type Census } from './derive';
 import { MACHINE_CLOCK_ALLOWLIST } from './allowlist';
+import { isTestFile } from '@test/sourceFiles';
 
 const ROOT = join(__dirname, '..', '..', '..');
 
@@ -86,7 +87,7 @@ describe('machine-clock gate · the tree', () => {
     // reason to touch it.
     expect(census.sites.some((s) => s.file === 'src/hooks/useToast.ts')).toBe(true);
     // A known NON-member: specs are out of scope.
-    expect(census.sites.some((s) => /\.test\.tsx?$/.test(s.file))).toBe(false);
+    expect(census.sites.some((s) => isTestFile(s.file))).toBe(false);
   });
 
   it('no machine-clock read outside the allowlist', () => {

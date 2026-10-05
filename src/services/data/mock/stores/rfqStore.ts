@@ -13,8 +13,8 @@
 // Keyed by id. Seeded from the fixture; `reset()` restores it (test isolation).
 // ────────────────────────────────────────────────────────────────────────────
 
-import { mockRfqs } from '../../../../data/mockRfqs';
-import type { RFQ } from '../../../../data/mockRfqs';
+import { mockRfqs } from '@data/mockRfqs';
+import type { RFQ } from '@data/mockRfqs';
 // REQ-E03-03 / REQ-E03-05 — the present-relative sourcing events the RFx demo
 // needs. They join the SAME list rather than a second one: a buyer looking at
 // sourcing events sees one board, and a read that had to union two sources is a

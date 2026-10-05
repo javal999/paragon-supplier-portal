@@ -62,7 +62,7 @@
 // a `type="number"` field hides by eating the token before React sees it.
 // ────────────────────────────────────────────────────────────────────────────
 
-import { normalizeQty, type QtyRefusalReason } from '../../lib/localeNumber';
+import { normalizeQty, type QtyRefusalReason } from '@lib/localeNumber';
 
 /** Which numeric field refused, so a surface can point at the offending input
  *  rather than disable Next anonymously. Flat (not a nested wrapper) so it works

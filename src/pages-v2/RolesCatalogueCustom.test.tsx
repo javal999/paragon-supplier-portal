@@ -23,13 +23,13 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { screen, within } from '@testing-library/react';
 import { Routes, Route } from 'react-router-dom';
 
-import { renderWithProviders, BUYER } from '../test/test-utils';
-import { SYSTEM_ROLES } from '../services/transitions/businessRoles';
-import { customRoleStore } from '../services/transitions/customRoles';
-import { MockCommandService } from '../services/data/mock/MockCommandService';
-import type { QueryScope } from '../services/data/types';
+import { renderWithProviders, BUYER } from '@test/test-utils';
+import { SYSTEM_ROLES } from '@services/transitions/businessRoles';
+import { customRoleStore } from '@services/transitions/customRoles';
+import { MockCommandService } from '@services/data/mock/MockCommandService';
+import type { QueryScope } from '@services/data/types';
 import { deriveRoleViews, roleTotals } from './roles/roleModel';
-import i18n from '../lib/i18n';
+import i18n from '@lib/i18n';
 import RolesCatalogue from './RolesCatalogue';
 import RoleDetail from './RoleDetail';
 

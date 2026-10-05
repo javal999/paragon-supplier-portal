@@ -7,9 +7,9 @@ import {
   PERSONA_SYSTEM_ROLES,
   SEEDED_SEAT_ROLES,
   isSystemRole,
-} from '../services/transitions/businessRoles';
+} from '@services/transitions/businessRoles';
 import { NO_PERSON } from './noPerson';
-import { mockSuppliers } from '../data/mockSuppliers';
+import { mockSuppliers } from '@data/mockSuppliers';
 
 const IDENTITY_KEY = 'paragon.identity';
 const LEGACY_PERSONA_KEY = 'paragon.persona';

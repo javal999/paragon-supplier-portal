@@ -10,7 +10,7 @@
 // matcher that could not see.
 import { describe, it, expect } from 'vitest';
 import { appearancesOf, relatedTo, buildGlossaryView } from './appearances';
-import { REFUSALS_OUTSIDE_ENFORCEMENT } from '../../lib/enforcement';
+import { REFUSALS_OUTSIDE_ENFORCEMENT } from '@lib/enforcement';
 
 describe('appearance derivation — the instrument bites (GL-1)', () => {
   it('finds a STATE, and reports its initial/terminal flags and its edges', () => {

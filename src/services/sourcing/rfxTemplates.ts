@@ -50,7 +50,7 @@ import {
   rfpTermsRefusal,
 } from '../transitions/rfxRules';
 import { documentRequestsRefusal } from '../transitions/rfxDocumentRules';
-import { BID_CURRENCIES } from '../../lib/currencyPolicy';
+import { BID_CURRENCIES } from '@lib/currencyPolicy';
 
 export const RFI_TEMPLATES_KEY = 'paragon.rfiTemplates';
 export const RFP_TEMPLATES_KEY = 'paragon.rfpTemplates';

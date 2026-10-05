@@ -331,7 +331,7 @@ describe('2B-4b — the gate: WIRED, and the prefix rule is GONE', () => {
   // exact negation of the claim it replaces, so the file records the swap rather
   // than merely reflecting whatever is true today.
   const sources = () =>
-    import.meta.glob('/src/**/*.{ts,tsx}', {
+    import.meta.glob('/src/**/*.{ts,tsx,js,jsx}', {
       query: '?raw',
       import: 'default',
       eager: true,
@@ -403,7 +403,7 @@ describe('2B-4b — the gate: WIRED, and the prefix rule is GONE', () => {
     // restatements would delete the evidence along with the defect. What must
     // not survive is a parse on a path a receipt can travel.
     expect(parsers.length).toBeGreaterThan(0); // else the regex is broken, not the tree
-    expect(parsers.filter((f) => !/\.test\.tsx?$/.test(f))).toEqual([]);
+    expect(parsers.filter((f) => !/\.test\.[jt]sx?$/.test(f))).toEqual([]);
   });
 
   it('the module HAS a consumer now, and it is the receiving surface', () => {
@@ -417,7 +417,7 @@ describe('2B-4b — the gate: WIRED, and the prefix rule is GONE', () => {
       .map(([f]) => f)
       .sort();
 
-    const production = importers.filter((f) => !/\.test\.tsx?$/.test(f));
+    const production = importers.filter((f) => !/\.test\.[jt]sx?$/.test(f));
     const typeOnly = production.filter((f) => importsTypeOnly(src[f], "/bpom'"));
     const callers = production.filter((f) => !typeOnly.includes(f));
 

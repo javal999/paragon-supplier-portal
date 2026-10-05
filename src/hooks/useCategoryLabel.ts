@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { categoryLabelKey } from '../lib/categoryLabel';
+import { categoryLabelKey } from '@lib/categoryLabel';
 
 /**
  * Localize a category token (Fragrance / Active Ingredient / Halal Compliance /
