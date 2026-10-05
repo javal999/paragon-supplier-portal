@@ -16,7 +16,7 @@
 // returns it not at all, and it is the only member of the class on that persona.
 //
 // NOT converted, deliberately: `IntakeReview.tsx:87` and
-// `plan-grid/IntakeAdjustDrawer.tsx:146`. Both read `e.code` and feed it to
+// `plan-grid/IntakeAdjustDrawer.jsx:146`. Both read `e.code` and feed it to
 // `applyPushResult({ ok: false, reason })` — the code is a STATE TOKEN driving
 // control flow, never rendered as prose. Translating it would be this batch's
 // own defect pointed backwards. Asserted below rather than left to a comment.
@@ -212,7 +212,7 @@ describe('PR2 · the population — six converted, two deliberately NOT', () => 
     // to remove, pointed backwards — a localized string would be compared
     // against an English constant and the comparison would silently stop
     // matching in Indonesian.
-    for (const rel of ['IntakeReview.tsx', 'plan-grid/IntakeAdjustDrawer.tsx']) {
+    for (const rel of ['IntakeReview.tsx', 'plan-grid/IntakeAdjustDrawer.jsx']) {
       const src = read(rel);
       expect(src, rel).toMatch(/const reasonCode = e instanceof DataError \? e\.code : 'ERROR';/);
       expect(src, rel).not.toContain('useDataErrorText');

@@ -1,0 +1,576 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// Contract detail — shared view pieces for the nested /buyer/contracts/:id route.
+//
+// The detail that used to live inside the list page's SidePanel drawer now renders
+// full-width in the contract-detail route, split across tabs. This module owns the
+// tab bodies (`ContractDetailBody` = Overview, `ContractDocsList` = Docs) plus the
+// small display helpers they need. The list page keeps its own copies of the
+// list/wizard helpers; these are the detail-only render helpers, co-located with
+// the body that uses them so the route is self-contained.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** @import React from 'react' */
+import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
+/** @import { TFunction } from 'i18next' */
+import {
+  PenSquare,
+  Handshake,
+  CheckCircle2,
+  Activity,
+  Bell,
+  Archive,
+  RefreshCw,
+  ShieldCheck
+} from 'lucide-react';
+import StatusPill from '@components/ui-v2/StatusPill';
+import NextActLine from '@components/ui-v2/NextActLine';
+import { useNextAct } from '@hooks/useVerbAvailability';
+import ScoreBadge from '@components/ui-v2/ScoreBadge';
+import { daysUntil } from '@services/data/dayProjection';
+/** @import { ContractDisplayStatus } from '@services/data/contractExpiry' */
+import { contractDisplayStatus, CONTRACT_EXPIRY_TONE } from '@services/data/contractExpiry';
+import Data from '@components/ui-v2/Data';
+/** @import { TimelineEvent } from '@components/ui-v2/Timeline' */
+import Timeline from '@components/ui-v2/Timeline';
+/** @import { Contract, ContractStatus, ContractType } from '@data/mockContracts' */
+/** @import { ContractObligation } from '@data/mockObligations' */
+import { obligationRollup } from '@services/data/obligationRollup';
+import {
+  obligationDisplay,
+  OBLIGATION_DISPLAY_RANK,
+  OBLIGATION_DISPLAY_VARIANT
+} from '@services/data/obligationProjection';
+/** @import { Supplier } from '@services/data/types' */
+import { DECLARED_PRESENT } from '@services/data/fixturePresent';
+
+// ⚠️ ANCHORED — this surface rendered values derived from anchored
+// fixture data against the WALL CLOCK, so what a reader saw moved every day
+// with no commit involved. Module-scope `DECLARED_PRESENT`, the shipped
+// pattern from `BuyerShipments` / `BuyerGoodsReceipt`, and behaviour-
+// preserving for the same reason they are: this surface's families shift by
+// `DECLARED_PRESENT - anchor` and so does this pin, so every rendered
+// day-count is answered at the instant the fixtures were authored for.
+//
+// ⚠️ SESSION-WRITTEN STATE KEEPS THE WALL CLOCK. This constant is for READ
+// projections only. A timestamp stamped onto something the user just did is a
+// fact about this session, not about the fixture set, and anchoring one would
+// tell the reader their own action happened weeks ago.
+const TODAY = DECLARED_PRESENT;
+
+// ─── Display helpers (detail-only) ───────────────────────────────────────────
+
+/** @type {Record< ContractStatus, 'success' | 'warning' | 'danger' | 'info' | 'neutral' >} */
+export const STATUS_VARIANT = {
+  Draft: 'neutral',
+  Active: 'success',
+  Expiring: 'warning',
+  Expired: 'danger',
+  Renewed: 'info',
+  Terminated: 'neutral'
+};
+
+// ⚠️ THE OBLIGATION MAPS MOVED TO `obligationProjection` AND ARE KEYED ON THE
+// DISPLAY STATE. They used to be `Record<ObligationStatus, …>` — keyed on the
+// STORED literal, which is how a clock state authored months ago reached a pill
+// beside a day-count computed from `nowIso`. Both are now decided by the same
+// clock, so the card cannot contradict itself.
+//
+// `sortObligations` takes `nowIso` for the same reason: a sort ordered by a
+// stored rank puts a row that is Overdue TODAY below one that is not.
+/** @param {string} nowIso */
+const sortObligations =
+  (nowIso) => /** @param {ContractObligation} a @param {ContractObligation} b */ (a, b) => {
+    const r =
+      OBLIGATION_DISPLAY_RANK[obligationDisplay(a, nowIso)] -
+      OBLIGATION_DISPLAY_RANK[obligationDisplay(b, nowIso)];
+    if (r !== 0) return r;
+    return a.dueDate.localeCompare(b.dueDate);
+  };
+
+/** @type {Record<ContractType, string>} */
+const TYPE_LABEL_KEY = {
+  Supply: 'contracts.type.supply',
+  Service: 'contracts.type.service',
+  Framework: 'contracts.type.framework',
+  NDA: 'contracts.type.nda',
+  Quality: 'contracts.type.quality',
+  Pricing: 'contracts.type.pricing'
+};
+/**
+ * @param {TFunction} t
+ * @param {ContractType | string} v
+ * @returns {string}
+ */
+export const typeLabel = (t, v) =>
+  TYPE_LABEL_KEY[/** @type {ContractType} */ (v)]
+    ? t(TYPE_LABEL_KEY[/** @type {ContractType} */ (v)])
+    : String(v);
+
+/** @type {Record<string, string>} */
+const OWNER_LABEL_KEY = {
+  Buyer: 'contracts.owner.buyer',
+  Supplier: 'contracts.owner.supplier',
+  Both: 'contracts.owner.both'
+};
+/**
+ * @param {TFunction} t
+ * @param {string} v
+ * @returns {string}
+ */
+const ownerLabel = (t, v) => (OWNER_LABEL_KEY[v] ? t(OWNER_LABEL_KEY[v]) : v);
+
+/** @type {Record<string, string>} */
+const CATEGORY_LABEL_KEY = {
+  'Raw Material': 'contracts.category.rawMaterial',
+  'Active Ingredient': 'contracts.category.activeIngredient',
+  Fragrance: 'contracts.category.fragrance',
+  Packaging: 'contracts.category.packaging',
+  Other: 'contracts.category.other'
+};
+/**
+ * @param {TFunction} t
+ * @param {string} v
+ * @returns {string}
+ */
+const catLabel = (t, v) => (CATEGORY_LABEL_KEY[v] ? t(CATEGORY_LABEL_KEY[v]) : v);
+
+/**
+ * @param {number} value
+ * @returns {string}
+ */
+const formatIDR = (value) =>
+  new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    maximumFractionDigits: 0
+  }).format(value);
+
+/**
+ * @param {string} iso
+ * @returns {string}
+ */
+const formatDate = (iso) => {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric'
+  });
+};
+
+// ⚠️ `expiryTone(days)` IS DELETED HERE TOO — it was exported from this file and
+// copied verbatim into `BuyerContracts.tsx`, which is the shape a page-local
+// width produces. Both are replaced by `CONTRACT_EXPIRY_TONE[displayStatus]`.
+
+/**
+ * @param {string} iso
+ * @param {number} days
+ * @returns {string}
+ */
+const shiftDays = (iso, days) => {
+  if (!iso) return iso;
+  const d = new Date(iso);
+  d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0, 10);
+};
+
+// ⚠️ **THE TIMELINE TAKES THE DISPLAY STATUS, AND THAT IS WHAT MAKES THE PILL
+// AND THE "NOTICE BY" STEP AGREE BY CONSTRUCTION.** It read `c.status` — the
+// stored literal — so the renewal-decision step went `current` exactly when a
+// fixture said `Expiring`, while the step's own timestamp was computed as
+// `endDate − noticeRequiredDays`. The step could therefore show a notice date
+// months in the past and still render `pending`. Passing the computed status
+// makes "the notice deadline has arrived" one fact rather than two.
+/**
+ * @param {Contract} c
+ * @param {TFunction} t
+ * @param {ContractDisplayStatus} display
+ * @returns {TimelineEvent[]}
+ */
+const buildContractTimeline = (c, t, display) => {
+  const isDraft = display === 'Draft';
+  const isActive = display === 'Active';
+  const isExpiring = display === 'Expiring';
+  const isExpired = display === 'Expired';
+  const isRenewed = display === 'Renewed';
+  const isTerminated = display === 'Terminated';
+
+  const finalLabel = isExpired
+    ? t('contracts.timeline.expired')
+    : isRenewed
+      ? t('contracts.timeline.renewed')
+      : isTerminated
+        ? t('contracts.timeline.terminated')
+        : t('contracts.timeline.expiryRenewal');
+  const finalIcon = isTerminated ? Archive : isRenewed ? RefreshCw : Archive;
+
+  return [
+    {
+      id: 'drafted',
+      title: t('contracts.timeline.drafted'),
+      timestamp: c.signedDate ? formatDate(shiftDays(c.signedDate, -14)) : undefined,
+      status: 'completed',
+      icon: PenSquare
+    },
+    {
+      id: 'negotiated',
+      title: t('contracts.timeline.negotiated'),
+      timestamp: c.signedDate ? formatDate(shiftDays(c.signedDate, -7)) : undefined,
+      status: isDraft ? 'current' : 'completed',
+      icon: Handshake
+    },
+    {
+      id: 'signed',
+      title: t('contracts.timeline.signed'),
+      timestamp: c.signedDate ? formatDate(c.signedDate) : undefined,
+      status: isDraft ? 'pending' : 'completed',
+      icon: CheckCircle2
+    },
+    {
+      id: 'active',
+      title: t('contracts.timeline.activePeriod'),
+      timestamp: `${formatDate(c.startDate)} → ${formatDate(c.endDate)}`,
+      status:
+        isActive || isExpiring
+          ? 'current'
+          : isExpired || isRenewed || isTerminated
+            ? 'completed'
+            : 'pending',
+      icon: Activity
+    },
+    {
+      id: 'renewal-decision',
+      title: t('contracts.timeline.renewalDecision'),
+      timestamp:
+        c.endDate && c.noticeRequiredDays
+          ? t('contracts.timeline.noticeBy', {
+              date: formatDate(shiftDays(c.endDate, -c.noticeRequiredDays))
+            })
+          : undefined,
+      status: isExpiring
+        ? 'current'
+        : isExpired || isRenewed || isTerminated
+          ? 'completed'
+          : 'pending',
+      icon: Bell
+    },
+    {
+      id: 'final',
+      title: finalLabel,
+      timestamp: isExpired || isRenewed || isTerminated ? formatDate(c.endDate) : undefined,
+      status: isExpired || isRenewed || isTerminated ? 'completed' : 'pending',
+      icon: finalIcon
+    }
+  ];
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// D-CENSUS-8 — PLACEHOLDER_DOCS is DELETED, not marked.
+//
+// What stood here MANUFACTURED regulatory status. It read a free-text category
+// string and, if it contained "raw" or "fragrance", emitted a row that said
+// "BPJPH Halal Certificate — Valid" under a shield icon in success green. It did
+// the same for "BPOM Registration — Expiring" off the contract TYPE. No such
+// certificate was ever looked up; a contract categorised "Raw Materials" was
+// simply asserted to hold a valid halal certificate.
+//
+// This is why a marker was not the fix. DISCLOSURE-TRAVELS-WITH-THE-VALUE-01: a
+// page-level "Sample data" pill does not travel with a green Valid chip beside a
+// named Indonesian regulator, and a reader deciding whether a supplier may ship
+// reads the chip, not the pill. A disclosed fabrication of compliance status is
+// still a fabrication of compliance status.
+//
+// The honest render for "the portal holds no documents for this contract" is
+// zero rows and an empty state that says so. When real linked documents land
+// (Track-R harvest / F1 document store), they arrive as data, not as a function
+// of a category substring.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * The Docs-tab count badge. Zero by construction: the portal links no documents
+ * to a contract today. Kept as a function (rather than inlining 0) so the day a
+ * real document relation lands there is one place to read it from.
+ * @param {Contract} _c
+ * @returns {number}
+ */
+export const docCount = (_c) => 0;
+
+// ─── Overview tab — key facts + obligations + lifecycle timeline ─────────────
+
+/** @type {React.FC<{ contract: Contract; obligations: ContractObligation[]; suppliers: Supplier[]; }>} */
+export const ContractDetailBody = ({ contract, obligations, suppliers }) => {
+  const { t } = useTranslation();
+  // One clock read for the panel — the same shape the list uses, so a row and
+  // the drawer opened from it cannot disagree about the same contract.
+  const nowIso = TODAY;
+  const daysToExpiry = daysUntil(contract.endDate, nowIso);
+  // ONE evaluation, read by the pill, the expiry figure's tone, the timeline
+  // and `useNextAct` below — the same shape the list page uses.
+  const display = contractDisplayStatus(contract, nowIso);
+  // WHO ACTS NEXT (S2a). ⚠️ **THIS IS THE FIRST SURFACE WHERE #311 REACHES A
+  // READER.** All four contract verbs became `external-fact` owned by S/4HANA
+  // at #311, so every machine state here is stranded and the line is the only
+  // thing on the page that says the wait is SAP's. `Expiring` / `Expired` are
+  // clock projections (law 0.5) and resolve `silent` — see the batch report.
+  const nextAct = useNextAct('contract', display);
+  const supplierById = useMemo(() => new Map(suppliers.map((s) => [s.id, s])), [suppliers]);
+  const obligationsForContract = /** @type {ContractObligation[]} */ (
+    useMemo(
+      () => obligations.filter((o) => o.contractId === contract.id).sort(sortObligations(nowIso)),
+      [obligations, contract.id, nowIso]
+    )
+  );
+  /** ⚠️ COMPUTED, NEVER STORED. Over the SAME filtered set the table
+   *  renders, so the figure and the rows are one derivation. Takes no clock:
+   *  `met` is decided by `completedDate`, which is a machine fact. */
+  const rollup = useMemo(
+    () => obligationRollup(contract.id, obligationsForContract),
+    [contract.id, obligationsForContract]
+  );
+
+  return (
+    <div className="space-y-6">
+      <section>
+        <h3 className="text-label text-text-tertiary uppercase mb-3">
+          {t('contracts.panel.keyFacts')}
+        </h3>
+        <dl className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-3 text-sm">
+          <div>
+            <dt className="text-text-tertiary">{t('contracts.panel.field.supplier')}</dt>
+            <dd className="text-text-primary font-medium">
+              {supplierById.get(contract.supplierId)?.name ?? contract.supplierId}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-text-tertiary">{t('contracts.panel.field.type')}</dt>
+            <dd>
+              <StatusPill variant="neutral">{typeLabel(t, contract.type)}</StatusPill>
+            </dd>
+          </div>
+          <div>
+            <dt className="text-text-tertiary">{t('contracts.panel.field.status')}</dt>
+            <dd>
+              <StatusPill variant={STATUS_VARIANT[display]}>{display}</StatusPill>
+              <span className="mt-1 block">
+                <NextActLine act={nextAct} testId="next-act-buyer-contract" />
+              </span>
+            </dd>
+          </div>
+          <div>
+            <dt className="text-text-tertiary">{t('contracts.panel.field.autoRenewal')}</dt>
+            <dd className="text-text-primary font-medium">
+              {contract.autoRenewal ? t('contracts.common.yes') : t('contracts.common.no')}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-text-tertiary">{t('contracts.panel.field.startDate')}</dt>
+            <Data as="dd" className="text-text-primary font-medium">
+              {formatDate(contract.startDate)}
+            </Data>
+          </div>
+          <div>
+            <dt className="text-text-tertiary">{t('contracts.panel.field.endDate')}</dt>
+            <Data as="dd" className="text-text-primary font-medium">
+              {formatDate(contract.endDate)}
+            </Data>
+          </div>
+          <div>
+            <dt className="text-text-tertiary">{t('contracts.panel.field.noticeRequired')}</dt>
+            <Data as="dd" className="text-text-primary font-medium">
+              {t(
+                contract.noticeRequiredDays === 1
+                  ? 'contracts.panel.noticeDays.one'
+                  : 'contracts.panel.noticeDays.other',
+                { count: contract.noticeRequiredDays }
+              )}
+            </Data>
+          </div>
+          <div>
+            <dt className="text-text-tertiary">{t('contracts.panel.field.daysUntilExpiry')}</dt>
+            <dd
+              className={
+                daysToExpiry === null
+                  ? 'text-text-tertiary'
+                  : `font-semibold ${CONTRACT_EXPIRY_TONE[display]}`
+              }
+            >
+              {daysToExpiry === null
+                ? '—'
+                : daysToExpiry < 0
+                  ? t('contracts.expiry.daysAgo', { count: Math.abs(daysToExpiry) })
+                  : t('contracts.expiry.days', { count: daysToExpiry })}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-text-tertiary">{t('contracts.panel.field.value')}</dt>
+            <Data as="dd" className="text-text-primary font-semibold">
+              {contract.value > 0 ? formatIDR(contract.value) : '—'}
+            </Data>
+          </div>
+          <div>
+            <dt className="text-text-tertiary">{t('contracts.panel.field.currency')}</dt>
+            <dd className="text-text-primary font-medium">{contract.currency}</dd>
+          </div>
+          <div>
+            <dt className="text-text-tertiary">{t('contracts.panel.field.paymentTerms')}</dt>
+            <dd className="text-text-primary font-medium">{contract.paymentTerms}</dd>
+          </div>
+          <div>
+            <dt className="text-text-tertiary">{t('contracts.panel.field.incoterms')}</dt>
+            <dd className="text-text-primary font-medium">{contract.incoterms}</dd>
+          </div>
+          <div>
+            <dt className="text-text-tertiary">{t('contracts.panel.field.signedByBuyer')}</dt>
+            <dd className="text-text-primary font-medium">{contract.signedByBuyer}</dd>
+          </div>
+          <div>
+            <dt className="text-text-tertiary">{t('contracts.panel.field.signedBySupplier')}</dt>
+            <dd className="text-text-primary font-medium">{contract.signedBySupplier}</dd>
+          </div>
+          <div>
+            <dt className="text-text-tertiary">{t('contracts.panel.field.signedDate')}</dt>
+            <Data as="dd" className="text-text-primary font-medium">
+              {contract.signedDate ? formatDate(contract.signedDate) : '—'}
+            </Data>
+          </div>
+          <div>
+            <dt className="text-text-tertiary">{t('contracts.panel.field.category')}</dt>
+            <dd className="text-text-primary font-medium">{catLabel(t, contract.category)}</dd>
+          </div>
+          <div className="col-span-2 md:col-span-3">
+            <dt className="text-text-tertiary">{t('contracts.panel.field.brands')}</dt>
+            <dd className="mt-1 flex flex-wrap gap-1.5">
+              {contract.brands.length === 0 ? (
+                <span className="text-text-tertiary text-sm">—</span>
+              ) : (
+                contract.brands.map((b) => (
+                  <span
+                    key={b}
+                    className="inline-flex items-center rounded-full bg-bg-hover text-text-secondary text-xs px-2 py-0.5"
+                  >
+                    {b}
+                  </span>
+                ))
+              )}
+            </dd>
+          </div>
+          <div className="col-span-2 md:col-span-3 pt-2 flex items-center gap-3">
+            <dt className="text-text-tertiary text-sm">
+              {t('contracts.panel.field.performanceScore')}
+            </dt>
+            <dd>
+              {contract.performanceScore > 0 ? (
+                <ScoreBadge score={contract.performanceScore} size="md" variant="circular" />
+              ) : (
+                <span className="text-text-tertiary text-sm">{t('contracts.panel.notRated')}</span>
+              )}
+            </dd>
+          </div>
+        </dl>
+      </section>
+
+      <section>
+        {/* ⚠️ THE COUNTERS ARE COMPUTED FROM THE ROWS BELOW THEM, WHICH IS THE
+            WHOLE POINT. `Contract.obligationCount` / `obligationsMet` were
+            stored on the contract row and disagreed with this table on 8 of 13
+            contracts — `ctr-008` stored "4 met" above a table listing one
+            `Overdue` and one `In Progress`. A header and the lines under it
+            cannot disagree when the header is a fold over the lines. */}
+        <div className="flex items-baseline justify-between gap-3 mb-3">
+          <h3 className="text-label text-text-tertiary uppercase">
+            {t('contracts.panel.obligations', { count: rollup.total })}
+          </h3>
+          {rollup.total > 0 && (
+            <span className="text-xs text-text-tertiary" data-testid="obligation-rollup">
+              {t('contracts.panel.obligationsMet', {
+                met: rollup.met,
+                total: rollup.total
+              })}
+            </span>
+          )}
+        </div>
+        {obligationsForContract.length === 0 ? (
+          <p className="text-sm text-text-tertiary p-4 border border-border-subtle rounded-md text-center">
+            {t('contracts.panel.noObligations')}
+          </p>
+        ) : (
+          <div className="relative min-w-0 border border-border-subtle rounded-md overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead className="bg-bg-hover text-text-tertiary uppercase tracking-wider">
+                <tr>
+                  <th className="text-left px-3 py-2 font-semibold">
+                    {t('contracts.panel.obl.col.title')}
+                  </th>
+                  <th className="text-left px-3 py-2 font-semibold">
+                    {t('contracts.panel.obl.col.owner')}
+                  </th>
+                  <th className="text-left px-3 py-2 font-semibold whitespace-nowrap">
+                    {t('contracts.panel.obl.col.due')}
+                  </th>
+                  <th className="text-left px-3 py-2 font-semibold">
+                    {t('contracts.panel.obl.col.status')}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {obligationsForContract.map((o) => (
+                  <tr key={o.id} className="border-t border-border-subtle">
+                    <td className="px-3 py-2">
+                      <div className="text-text-primary font-medium">{o.title}</div>
+                      <div className="text-text-tertiary text-[10px] uppercase tracking-wider mt-0.5">
+                        {o.category}
+                        {o.recurrence ? ` · ${o.recurrence}` : ''}
+                      </div>
+                    </td>
+                    <td className="px-3 py-2 text-text-secondary">{ownerLabel(t, o.owner)}</td>
+                    <td className="px-3 py-2 text-text-secondary whitespace-nowrap">
+                      <Data>{formatDate(o.dueDate)}</Data>
+                    </td>
+                    <td className="px-3 py-2">
+                      {/* COMPUTED, from the same `nowIso` as `Days until
+                          expiry` above. StatusPill localizes the canonical
+                          token itself, so all three display states keep their
+                          existing EN/ID labels with no key added. */}
+                      <StatusPill
+                        variant={OBLIGATION_DISPLAY_VARIANT[obligationDisplay(o, nowIso)]}
+                      >
+                        {obligationDisplay(o, nowIso)}
+                      </StatusPill>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
+      <section>
+        <h3 className="text-label text-text-tertiary uppercase mb-3">
+          {t('contracts.panel.lifecycle')}
+        </h3>
+        <Timeline events={buildContractTimeline(contract, t, display)} />
+      </section>
+    </div>
+  );
+};
+
+// ─── Docs tab — no linked documents exist (see the PLACEHOLDER_DOCS note) ────
+
+/** @type {React.FC<{ contract: Contract }>} */
+export const ContractDocsList = () => {
+  const { t } = useTranslation();
+  return (
+    <div className="p-6 border border-border-subtle rounded-md text-center">
+      <ShieldCheck size={20} className="text-text-tertiary mx-auto mb-2" aria-hidden="true" />
+      <div className="text-sm font-semibold text-text-primary mb-1">
+        {t('contracts.docs.empty.title')}
+      </div>
+      <p className="text-meta text-text-tertiary max-w-md mx-auto">
+        {t('contracts.docs.empty.body')}
+      </p>
+    </div>
+  );
+};

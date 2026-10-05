@@ -39,7 +39,7 @@
 // ⚠️ **EVERY ARM IS DERIVED FROM DATA THE SCHEMA ALREADY CARRIES.** No arm is
 // keyed on a projection label, on a status constant, or on an authored map from
 // state to actor — that is the `BuyerInvoices` footer-verb defect
-// (`invoiceActionModel.ts` header) and this file exists downstream of it. Move a
+// (`invoiceActionModel.js` header) and this file exists downstream of it. Move a
 // verb between roles, or between owners, and every sentence here moves with it.
 // ────────────────────────────────────────────────────────────────────────────
 

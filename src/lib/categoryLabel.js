@@ -55,7 +55,7 @@
 // vocabulary, not a surface that never asks.** Do not read the donut as evidence
 // that this alias is broken; it is evidence that the donut is a separate finding.
 //
-// The alias is DISPLAY-ONLY and must stay that way: `requisitionPrefill.ts`
+// The alias is DISPLAY-ONLY and must stay that way: `requisitionPrefill.js`
 // separately relies on `Natural Botanical` ≠ `Botanical` for MATCHING, and does
 // not import this module. Never feed a resolved label back into a filter id, a
 // stored value, or a match.

@@ -351,7 +351,7 @@ describe('BL32-READ · every reader of a value reads it through its accessor, at
         .sort()
     );
     // Known-false: no page reads the store behind the accessors' back.
-    expect(readers).not.toContain('src/pages-v2/invoices/InvoiceCollaboration.tsx');
+    expect(readers).not.toContain('src/pages-v2/invoices/InvoiceCollaboration.jsx');
   });
 
   it('BL32-READ-02 · the readers of each accessor, pinned by name', () => {
@@ -370,12 +370,12 @@ describe('BL32-READ · every reader of a value reads it through its accessor, at
       invoicePriceTolerance: [
         'src/pages-v2/BuyerInvoices.tsx',
         'src/pages-v2/SupplierInvoices.tsx',
-        'src/pages-v2/invoices/InvoiceCollaboration.tsx',
+        'src/pages-v2/invoices/InvoiceCollaboration.jsx',
         'src/services/transitions/fulfilmentConfig.js',
         'src/services/transitions/invoiceRollup.js'
       ],
       receiptQtyToleranceFor: [
-        'src/pages-v2/receipts/ReceiptToleranceNote.tsx',
+        'src/pages-v2/receipts/ReceiptToleranceNote.jsx',
         'src/services/transitions/fulfilmentConfig.js',
         'src/services/transitions/fulfilmentRules.js'
       ],
@@ -401,7 +401,7 @@ describe('BL32-READ · every reader of a value reads it through its accessor, at
         'src/services/transitions/forecastRules.ts'
       ],
       gateMinOtifPct: [
-        'src/pages-v2/rfx/rfxDisplay.tsx',
+        'src/pages-v2/rfx/rfxDisplay.jsx',
         'src/services/sourcing/complianceGate.js',
         'src/services/sourcing/complianceGateConfig.js'
       ],
@@ -430,20 +430,20 @@ describe('BL32-READ · every reader of a value reads it through its accessor, at
       // Material B1 — MR-1 BR-03 and BR-05, read when the positions are built.
       // Material B2 and B3 — the weekly-update panel and the compliance read model read the cutoff.
       updateCycleSettings: [
-        'src/pages-v2/inventory/WeeklyUpdatePanel.tsx',
+        'src/pages-v2/inventory/WeeklyUpdatePanel.jsx',
         'src/services/data/mock/updateComplianceReadModel.js',
         'src/services/transitions/inventoryConfig.js',
         'src/services/transitions/inventoryRules.js'
       ],
       // Material B2 — the admin row names the API hours.
       staleApiHours: [
-        'src/pages-v2/admin/AdminRuleValues.tsx',
+        'src/pages-v2/admin/AdminRuleValues.jsx',
         'src/services/transitions/inventoryConfig.js',
         'src/services/transitions/inventoryRules.js'
       ],
       // Material B2 — MR-1 BR-01, the API panel's "Next sync".
       stockSyncIntervalHours: [
-        'src/pages-v2/inventory/WeeklyUpdatePanel.tsx',
+        'src/pages-v2/inventory/WeeklyUpdatePanel.jsx',
         'src/services/transitions/inventoryConfig.js'
       ],
       staleOverrideDaysFor: [
@@ -452,15 +452,15 @@ describe('BL32-READ · every reader of a value reads it through its accessor, at
       ],
       // Material B3 — MR-2 BR-05, read by the score at call time; the card states it.
       complianceScoreWeight: [
-        'src/pages-v2/performance/UpdateComplianceCard.tsx',
+        'src/pages-v2/performance/UpdateComplianceCard.jsx',
         'src/services/data/performanceRules.js',
         'src/services/transitions/inventoryConfig.js'
       ],
       // Material B4 — MR-2 BR-04 and BR-06: the award pill, the reason line and
       // the verbs' flag read the thresholds at call time.
       complianceThresholds: [
-        'src/pages-v2/rfx/AwardPanel.tsx',
-        'src/pages-v2/rfx/ComplianceAwardPill.tsx',
+        'src/pages-v2/rfx/AwardPanel.jsx',
+        'src/pages-v2/rfx/ComplianceAwardPill.jsx',
         'src/services/data/mock/updateComplianceReadModel.js',
         'src/services/transitions/inventoryConfig.js'
       ],
@@ -517,7 +517,7 @@ describe('BL32-READ · every reader of a value reads it through its accessor, at
     expect(callersOf('coverageThresholds')).toContain('src/services/sdc/consolidation.js');
     // Known-false: an admin page that shows a value does not decide with it.
     expect(callersOf('invoicePriceTolerance')).not.toContain(
-      'src/pages-v2/admin/AdminWorkingCalendar.tsx'
+      'src/pages-v2/admin/AdminWorkingCalendar.jsx'
     );
   });
 });

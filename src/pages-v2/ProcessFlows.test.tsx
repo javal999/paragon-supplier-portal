@@ -2,7 +2,7 @@
 // PF-1 · THE SURFACE GATE.
 //
 // The derivation is held by `catalogView.test.js` and the geometry by
-// `flowLayout.test.ts`. What is left for this suite is the part only a rendered
+// `flowLayout.test.js`. What is left for this suite is the part only a rendered
 // page can be wrong about:
 //
 //   · that the page DRAWS the derivation rather than a copy of it,

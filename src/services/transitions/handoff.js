@@ -19,7 +19,7 @@
 // it:** `requiredRole` is per-verb AND per-state, so the derivation yields an
 // owner without a second vocabulary — and that is what stays true when a verb
 // moves. An authored `Record<Status, Owner>` beside the pill is the
-// `BuyerInvoices` footer-verb defect in a new costume (`invoiceActionModel.ts`
+// `BuyerInvoices` footer-verb defect in a new costume (`invoiceActionModel.js`
 // header): a display concern answering a question only the machine can answer.
 // Move `invoice:pay` from `finance` to `treasury` tomorrow and every authored
 // map silently keeps saying "Awaiting Finance"; this file changes with it,

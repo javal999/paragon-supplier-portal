@@ -149,7 +149,7 @@ const ContractDetailView: React.FC<{
           tab. The Docs tab — one tab over, and unmarked — was MANUFACTURING
           "BPJPH Halal Certificate · Valid" from a category substring. The badge was
           literally on a different tab from the fabrication. The fabrication is now
-          deleted (contractView.tsx) and the marker is page-level. */}
+          deleted (contractView.jsx) and the marker is page-level. */}
       <PageMetaLine className="-mt-6 mb-6">
         <ProvenanceMarker capability="contracts" />
       </PageMetaLine>

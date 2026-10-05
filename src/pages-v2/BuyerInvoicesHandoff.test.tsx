@@ -19,7 +19,7 @@ import { NO_PERSON } from '@context/noPerson';
 // the machine knows finance owns `invoice:pay`, not that a procurement user
 // ever SEES so. The failure mode is a green derivation over a footer that
 // silently lost its button — which is exactly the defect
-// `invoiceActionModel.ts` was written to prevent, arriving through the role
+// `invoiceActionModel.js` was written to prevent, arriving through the role
 // layer instead of the label one.
 //
 // The seat here is `procurement` ALONE — the narrowest seat that still opens

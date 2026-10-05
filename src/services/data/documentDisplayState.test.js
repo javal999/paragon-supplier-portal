@@ -160,7 +160,7 @@ describe('⚠️ THE WIRING, BY SITE — a working classifier proves nothing abo
 
   const DOCS_PAGE = 'src/pages-v2/SupplierDocuments.tsx';
   const DASHBOARD = 'src/pages-v2/SupplierDashboard.tsx';
-  const WIDGET = 'src/pages-v2/widgets/SupplierCertsExpiringWidget.tsx';
+  const WIDGET = 'src/pages-v2/widgets/SupplierCertsExpiringWidget.jsx';
 
   it('CONTROL: the strip left real code behind on all three files', () => {
     // Without this, every `not.toMatch` below could pass over an empty string —

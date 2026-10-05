@@ -1195,7 +1195,7 @@ not move — the read did. A diff hunting for changed values comes back empty on
 corpus that was entirely replaced.
 
 **Then #325 changed `doc-001`'s stored `status` and the mode produced a live
-falsehood.** `SupplierCertsExpiringWidget.test.tsx` had *traded away* a
+falsehood.** `SupplierCertsExpiringWidget.test.jsx` had *traded away* a
 behavioural probe, stating in its header that the projection and the stored
 status *"now agree on every row, so no rendered assertion can separate them any
 more."* #325 made them disagree again. The file was last touched at #324, its
@@ -1308,8 +1308,8 @@ The owner ruled the portal moves to JavaScript + JSDoc to match the company Reac
 boilerplate. Converted so far: `src/components/ui-v2` (pilot) and the app shell
 (`src/` root files, `hooks`, `context`, `router`, `test`, `data`, `components/*`;
 Phase 4 B1), `src/lib` (B2), `src/services/transitions` (B3; forecast flows excluded), `src/services/data` (B4,
-including `types.js`) and the rest of `src/services` (B5; forecast engine, flows and mock
-files excluded). Interfaces with `readonly` members are type-literal typedefs, so readonly is kept.
+including `types.js`) the rest of `src/services` (B5; forecast engine, flows and mock
+files excluded) and the `src/pages-v2` subfolders (B6; forecast-named files excluded). Interfaces with `readonly` members are type-literal typedefs, so readonly is kept.
 Before converting a
 folder, follow `docs/frontend-standard/JS-CONVERSION-PLAYBOOK.md`: the draft tool
 deletes comments and loosens types, and `scripts/codemods/check-comments-kept.mjs`

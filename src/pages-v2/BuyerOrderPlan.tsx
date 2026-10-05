@@ -58,7 +58,7 @@ import { draftNeedDate, umbrellaLineFor } from './orderPlan/orderPlanRelease';
 //
 // BR-05: a recommendation becomes a call-off only by the planner's act. The act
 // here is the EXISTING draft verb on the supplier's open umbrella line
-// (`orderPlanRelease.ts`); release, with the umbrella-balance check, stays on
+// (`orderPlanRelease.js`); release, with the umbrella-balance check, stays on
 // the Call-offs page. A seat without `calloff:plan` sees who acts instead.
 // The draft carries `origin: 'engine'`; while the engine dataset is not live the
 // release verb refuses it (X-03, owner decision 2026-09-23), and this page says

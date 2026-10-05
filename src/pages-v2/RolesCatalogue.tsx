@@ -20,7 +20,7 @@ import { customRoleStore } from '@services/transitions/customRoles';
 // ⚠️ **WHAT DOES NOT TRANSFER: USERS ASSIGNED · LAST MODIFIED · STATUS.** We
 // hold no people, no modification record and no activation state, so those three
 // columns would be three invented facts filling a layout. They are ABSENT, not
-// empty — see `roles/roleModel.ts`.
+// empty — see `roles/roleModel.js`.
 //
 // ⚠️ **THERE IS NOW A CREATE PANEL, AND IT IS GATED — THE FIRST ROLE-GATED
 // SURFACE IN THIS PLATFORM.** The sentence that stood here said a Create button

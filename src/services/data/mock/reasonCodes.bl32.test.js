@@ -253,7 +253,7 @@ describe('BL32-RSN-READ · every reader reads the list in force', () => {
       'src/pages-v2/SupplierForecastCommitments.tsx',
       'src/pages-v2/SupplierForecasts.tsx',
       'src/pages-v2/SupplierOrders.tsx',
-      'src/pages-v2/admin/reasonCodeDisplay.ts'
+      'src/pages-v2/admin/reasonCodeDisplay.js'
     ]);
     expect(callersOf(/\buseReasonLabel\s*\(/)).toEqual([
       'src/pages-v2/BuyerAlerts.tsx',
@@ -264,8 +264,8 @@ describe('BL32-RSN-READ · every reader reads the list in force', () => {
       'src/pages-v2/SupplierForecastCommitments.tsx',
       'src/pages-v2/SupplierForecasts.tsx',
       'src/pages-v2/SupplierOrders.tsx',
-      'src/pages-v2/admin/reasonCodeDisplay.ts',
-      'src/pages-v2/orders/PoCollaboration.tsx'
+      'src/pages-v2/admin/reasonCodeDisplay.js',
+      'src/pages-v2/orders/PoCollaboration.jsx'
     ]);
     // Known-false: no page builds a reason label from its i18n key itself any
     // more — that would label an added code with its raw key.

@@ -313,9 +313,9 @@ PLANNED render (LIVENESS-DATASOURCE-01) — the human adjusted a **sample** requ
 mints a Draft that stays simulated, **never a live procurement instruction**.
 
 **As-built (G1.2b):** the gate + payload + decision are pure functions
-(`src/pages-v2/plan-grid/planGridModel.ts` — `overrideBlocked` / `buildQtyDecision` /
+(`src/pages-v2/plan-grid/planGridModel.js` — `overrideBlocked` / `buildQtyDecision` /
 `buildPrCreatePayload` / `applyPushResult`); the governed surface is **plain DOM** so the
-reason-gate is headless-provable (`plan-grid/IntakeAdjustDrawer.tsx`); the push is
+reason-gate is headless-provable (`plan-grid/IntakeAdjustDrawer.jsx`); the push is
 `usePurchaseRequisitionCreate` (`services/query/commandHooks.js`) through the G1.1
 `purchaseRequisition` target; and the opaque carrier is `CommandDecision`
 (`services/data/types.js`) forwarded by `dispatcher.js:143-166` onto the `TransitionEvent`

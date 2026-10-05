@@ -144,7 +144,7 @@ const STATUS_FILTER_KEY: Record<StatusFilter, string> = {
 // What remains here are the INFORMATIONAL footers — affordances that are not
 // transitions at all (a deferral notice, a remittance advice, an escalation).
 // The verbs come from `invoiceActionsFor(lifecycleState)`, derived from the
-// machine. See `invoices/invoiceActionModel.ts`.
+// machine. See `invoices/invoiceActionModel.js`.
 const FOOTER_ACTION_KEY: Record<InvStatus, string> = {
   'Pending Match': 'buyerInvoices.footer.reviewMatch',
   Approved: 'buyerInvoices.footer.releasePayment',

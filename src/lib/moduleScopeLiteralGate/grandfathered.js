@@ -83,7 +83,7 @@ export const S2_GRANDFATHERED = [
   'src/pages-v2/SupplierStorefront.tsx::TRACK_RECORD',
   'src/pages-v2/SupplierWhatsApp.tsx::CAP_KEYS',
   'src/pages-v2/SupplierWhatsApp.tsx::LANGUAGES',
-  'src/pages-v2/process-flows/FlowDiagram.tsx::MARKERS'
+  'src/pages-v2/process-flows/FlowDiagram.jsx::MARKERS'
 ];
 
 /** @returns {ReadonlySet<string>} */

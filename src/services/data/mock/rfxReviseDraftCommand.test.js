@@ -5,7 +5,7 @@
 // Draft's content with the wizard's whole payload. Every refusal is probed BOTH
 // WAYS: the refused dispatch changes nothing, and the one-field-away sound
 // dispatch passes. The screens that call these are covered in
-// `pages-v2/rfx/RfxEditDraft.test.tsx`.
+// `pages-v2/rfx/RfxEditDraft.test.jsx`.
 // ────────────────────────────────────────────────────────────────────────────
 
 import { beforeEach, describe, expect, it } from 'vitest';

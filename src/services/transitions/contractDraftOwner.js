@@ -31,7 +31,7 @@
 //   tsx:455`: *"the deferral is not a handoff notice. This seat HOLDS all three
 //   atoms — naming an owner would say a role is the obstacle when the obstacle
 //   is another machine."* Same distinction, different fact, and
-//   `pages-v2/contracts/contractRaisedElsewhere.test.tsx` asserts BOTH halves
+//   `pages-v2/contracts/contractRaisedElsewhere.test.jsx` asserts BOTH halves
 //   on one surface: the
 //   `New contract` entry point DOES render a handoff when the seat lacks
 //   `contract:draft` (a role obstacle, correctly named), and the terminal panel

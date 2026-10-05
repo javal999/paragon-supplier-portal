@@ -174,7 +174,7 @@ const TransitionRow: React.FC<{ tv: TransitionView }> = ({ tv }) => {
             get wrong: the owner is read off `surfaceable`, so moving a verb
             between owners moves this text with it. A `Record<Status, Owner>`
             beside the badge would be the `BuyerInvoices` footer-verb defect
-            (`invoiceActionModel.ts` header) one surface along. */}
+            (`invoiceActionModel.js` header) one surface along. */}
         {!def.surfaceable.surfaced && def.surfaceable.because === 'external-fact' ? (
           <span className="mt-0.5 block text-[10px] text-text-tertiary" data-testid="owner-external">
             {t('processFlows.owner.ownedBy', {

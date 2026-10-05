@@ -286,8 +286,8 @@ describe('BL-46 sites — one function computes the risk class, and nothing else
     const risk = callers(/\bpositionRisk\s*\(/);
     expect(risk).toEqual([
       'src/pages-v2/BuyerInventory.tsx',
-      'src/pages-v2/inventory/inventoryDisplay.tsx',
-      'src/pages-v2/widgets/BuyerInventoryWidget.tsx',
+      'src/pages-v2/inventory/inventoryDisplay.jsx',
+      'src/pages-v2/widgets/BuyerInventoryWidget.jsx',
       'src/services/transitions/inventoryAlertRules.js'
     ]);
     // Known-false: the alert list shows the class the alert carries; it does not recompute it.

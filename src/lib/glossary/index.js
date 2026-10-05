@@ -2,7 +2,7 @@
 // GL-0 · THE GLOSSARY, ASSEMBLED. **Rendered since GL-1** by
 // `pages-v2/Glossary.tsx`, which is the only consumer; the appearance and
 // relation derivations that page shows live in `pages-v2/glossary/
-// appearances.ts`, NOT here — this module keeps its type-only dependencies.
+// appearances.js`, NOT here — this module keeps its type-only dependencies.
 //
 // ⚠️ **SCOPE IS AUTHORED, AND SAYING SO IS THE HONEST PART.** The tree holds
 // 143 closed string-literal unions / 580 members (derived — see
@@ -242,7 +242,7 @@ export function glossaryAnchor(ref) {
 }
 
 /** Every defined term, flattened. The coverage test's population; the PAGE
- *  builds its own view (`pages-v2/glossary/appearances.ts`) because it needs the
+ *  builds its own view (`pages-v2/glossary/appearances.js`) because it needs the
  * @type {readonly (GlossaryEntry & { readonly term: string; readonly sourceType: string; })[]}
  *  registry derivations this module deliberately cannot reach. */
 export const ALL_GLOSSARY_TERMS = Object.freeze(

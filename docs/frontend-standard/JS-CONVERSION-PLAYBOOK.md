@@ -75,7 +75,7 @@ Two kinds of failure in the dry run are not tooling problems:
    `POStatus` and `ChannelType`, become `/** @type {const} */` objects with a typedef of their values); this replaces the
    earlier "keep it as `types.d.ts`" ruling, since a `.d.ts` file cannot hold runtime values.
 
-### Text matchers taught the JSDoc form so far (B1–B3)
+### Text matchers taught the JSDoc form so far (B1–B6)
 
 - `projectionGate/dayCounts.js`: `takesInjectedNow` now reads a `nowIso`/`now` parameter typed by
   TS syntax or `@param` (B3); `writesField` also accepts the last shorthand member of an object,
@@ -88,6 +88,13 @@ Two kinds of failure in the dry run are not tooling problems:
   regex); `storedFieldGate/derive.js` skips a JS constructor assignment to a member a base type
   already declares (`this.name = …` on an `Error` subclass); `unionMembers()` in
   `complianceSapSync.test.js`; `deriveMethodParams` / `deriveUnionLiterals` in `deriveC1Surface.js`.
+- B5: `pinReach` `importsOf` follows `.js`/`.jsx` hops and its "cited file exists" gate skips
+  `.claude/` worktree copies; `ledgerTruth` reads shapes through the `deriveC1Surface` helpers;
+  `deriveC9FieldList.js` reads TS interfaces or JS type-literal typedefs.
+- B6: `chipCoverage.test.js` `feedsStringApi()` reads a helper's string return type as
+  `(…): string =>` or `@returns {string}` (one function for the derivation and the ruling test).
+  Converter: `useState<T>(fn)` with a function passed by name is a lazy initializer
+  (`() => T` cast), like an inline arrow.
 - **`readonly` is KEPT (owner ruling 2026-10-05).** JSDoc `@property` cannot express `readonly`,
   so `ts-to-js.mjs` writes an interface with ANY readonly member as a type-literal typedef
   (`@typedef {{ readonly a: T }} X`); each member's comment becomes a labelled line of prose above

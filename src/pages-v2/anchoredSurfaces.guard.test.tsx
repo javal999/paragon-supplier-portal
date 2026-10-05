@@ -51,7 +51,7 @@
 // WHAT WAS DELIBERATELY NOT HERE: `BuyerDashboard` and the two widgets
 // rendered only on it. Their day-counts come from PO and RFQ derivations that
 // take a `now` off the wall clock (`BuyerDashboard.tsx:144`,
-// `widgets/BuyerAlertsBar.tsx:48`). **The invoice half of that exclusion is
+// `widgets/BuyerAlertsBar.jsx:48`). **The invoice half of that exclusion is
 // spent; so, now, is half of what remained**, and collapsing them into one
 // sentence is what let the invoice half sit unexamined through two batches — so
 // the halves are counted separately here:

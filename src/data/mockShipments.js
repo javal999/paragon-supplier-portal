@@ -455,7 +455,7 @@ const mockShipmentsRaw = [
       //
       // ⚠️ ADDED HERE RATHER THAN BY RE-STATUSING `ASN-2025-00201`, and the
       // choice is not cosmetic: that ASN is the tree's ONLY `Discrepancy`
-      // exemplar (`buyerDerivations.ts` KPI, `SupplierShipments.tsx`, the
+      // exemplar (`buyerDerivations.js` KPI, `SupplierShipments.tsx`, the
       // `t_asn_*` repair verb's `from: ['Discrepancy']`, and
       // `looseEndRepairCommands.test.js`'s HELD fixture), and its status is
       // entailed by its own quantities. Re-statusing it would have deleted an

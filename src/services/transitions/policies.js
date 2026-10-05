@@ -502,7 +502,7 @@ const roleGrantGoverned = ({ entityId, payload }) => {
   if (idRefusal) return { ok: false, reason: idRefusal };
 
   // ⚠️ `displayName` AND `description` ARE RENDERED BY PASSING THEM TO `t()`
-  // AS THEIR OWN KEY (`roleModel.ts`), so user text comes back verbatim in both
+  // AS THEIR OWN KEY (`roleModel.js`), so user text comes back verbatim in both
   // locales. The only string that would resolve to something else is one
   // prefixed with this app's loaded namespace — refused by name. Punctuation is
   // NOT refused: it was probed and does not truncate.

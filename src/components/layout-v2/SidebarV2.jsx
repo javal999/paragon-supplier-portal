@@ -14,7 +14,7 @@ const SEED_SUPPLIER_ID = 'sup-007';
 const SEED_SUPPLIER_NAME = mockSuppliers.find((s) => s.id === SEED_SUPPLIER_ID)?.name ?? null;
 
 // Keyed per persona so the PTI menu's offset is never applied to the supplier
-// menu. Every access is guarded, like orderSummaryViewState.ts: a blocked or
+// menu. Every access is guarded, like orderSummaryViewState.js: a blocked or
 // full store must not break the menu.
 /**
  * @param {Persona} persona

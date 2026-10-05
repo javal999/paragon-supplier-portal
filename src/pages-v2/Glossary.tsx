@@ -33,7 +33,7 @@ import {
 //   `satisfies`-pinned at build time — a word cannot appear without the code
 //   having it, and cannot survive the code dropping it.
 //   REAL: the appearance lists and the related-term links. Both derived at read
-//   time (`glossary/appearances.ts`) from `getKnownFlows()` and from
+//   time (`glossary/appearances.js`) from `getKnownFlows()` and from
 //   `REFUSALS_OUTSIDE_ENFORCEMENT`. Neither is authored, and where a derivation
 //   comes back empty NOTHING renders — no placeholder, no plausible guess.
 //   AUTHORED: every definition. Written by hand, both locales, beside its union.

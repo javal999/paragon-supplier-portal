@@ -63,8 +63,8 @@ describe('SupplierRFQs — four honest states + wired reads', () => {
 });
 
 // ── CP-0 · W1 · 2e-a — the bid-price gate, at the surface ────────────────────
-// The pure refusal contract lives in rfqs/quotationPrice.test.ts and the ranking
-// blast radius in rfqs/quotationPriceRanking.test.ts. What these add is the part
+// The pure refusal contract lives in rfqs/quotationPrice.test.js and the ranking
+// blast radius in rfqs/quotationPriceRanking.test.js. What these add is the part
 // only the DOM can answer: that the supplier is actually TOLD, on the field, and
 // that the submit button does not quietly send anyway.
 //
@@ -158,8 +158,8 @@ describe('SupplierRFQs — the bid price is read once, and refused out loud', ()
 });
 
 // ── CP-0 · W1 · 2e-b-1 — the lead time's four states, at the surface ─────────
-// The refusal contract lives in rfqs/quotationLeadTime.test.ts and the award
-// consequence in rfqs/quotationLeadTimeRecommendation.test.ts. What these add is
+// The refusal contract lives in rfqs/quotationLeadTime.test.js and the award
+// consequence in rfqs/quotationLeadTimeRecommendation.test.js. What these add is
 // the DOM-only part: that the supplier is TOLD which state they are in, that the
 // submit control is actually disabled when it should be, and that the same-day
 // acknowledgement is a real gate rather than a decoration.
@@ -336,7 +336,7 @@ describe('SupplierRFQs — the lead time is read once, in four honest states', (
 });
 
 // ── CP-0 · W1 · 2e-b-2 — the minimum order quantity, at the surface ──────────
-// The pure read contract lives in rfqs/quotationMoq.test.ts and the spine
+// The pure read contract lives in rfqs/quotationMoq.test.js and the spine
 // round-trip in services/data/mock/quotationLifecycleCommand.test.js. What
 // these add is the DOM-only part, and it is the part FIND-02 was actually
 // about: that a value the supplier types into this field now LEAVES the page.

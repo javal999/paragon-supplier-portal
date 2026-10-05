@@ -456,7 +456,7 @@ describe('⚠️ DP2-PALETTE-01 · THE INSTRUMENT ITSELF', () => {
     expect(files).toContain('lib/chartPalette.js');
     expect(files).toContain('pages-v2/BuyerRisk.tsx');
     expect(files).toContain('components/ui-v2/ScoreBadge.jsx');
-    expect(files).toContain('pages-v2/process-flows/FlowDiagram.tsx');
+    expect(files).toContain('pages-v2/process-flows/FlowDiagram.jsx');
     // known-ABSENT: specs are excluded, and a fabrication is not present
     expect(files).not.toContain('pages-v2/chartPalette.guard.test.tsx');
     expect(files).not.toContain('pages-v2/BuyerNotAChartPage.tsx');

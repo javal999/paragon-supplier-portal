@@ -336,7 +336,7 @@ describe('⚠️ THE BLOCK EQUALS THE PIN — both directions, per contract', ()
 //   · `README.md` carried the same token.
 //   · `C6-planning.md` said the reason-gate is headless-provable at
 //     `plan-grid/IntakePushPanel.tsx`. **That component has never existed**; the
-//     gate lives in `IntakeAdjustDrawer.tsx`. C6 has no pin of its own, so
+//     gate lives in `IntakeAdjustDrawer.jsx`. C6 has no pin of its own, so
 //     nothing could ever have caught it.
 //
 // ⚠️ `C12`'s pin already asserted this FOR C12 ALONE. Generalising it is the

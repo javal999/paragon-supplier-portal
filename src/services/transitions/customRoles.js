@@ -88,7 +88,7 @@ import {
  * baseline exists to prevent.
  */
 /**
- * `displayName`:  User text. NOT an i18n key and NOT translated — see `roleModel.ts`.
+ * `displayName`:  User text. NOT an i18n key and NOT translated — see `roleModel.js`.
  * `adds`:  Atoms added on top of the parent. Always a widening (additive-only).
  * `parentAtomsAtGrant`:  The parent's atoms at the moment of the grant. The DRIFT BASELINE ONLY.
  *
@@ -475,7 +475,7 @@ export const CUSTOM_ROLE_ID = /^[a-z0-9][a-z0-9-]{1,47}$/;
  * space.
  *
  * ⚠️ **IT DOES NOT FORBID `:` OR `.`, AND THAT IS A MEASUREMENT RATHER THAN
- * AN OVERSIGHT.** `roleModel.ts` passes a custom role's display name through
+ * AN OVERSIGHT.** `roleModel.js` passes a custom role's display name through
  * `t()` as its own key, so i18next's missing-key fallback renders it verbatim —
  * which is the honest answer for user text nobody has translated. The obvious
  * fear is that i18next reads `:` as a namespace separator and `.` as a key

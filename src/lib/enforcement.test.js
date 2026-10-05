@@ -924,7 +924,7 @@ describe('E1 — ⚠️ HEADLESS. NO STORE, NO CONSUMER, NO CLOCK', () => {
       // VALUE. It asserts that the two out-of-domain refusal shapes link to
       // UNANSWERED in both directions, read off that array rather than a second
       // list beside it.
-      '/src/pages-v2/glossary/appearances.test.ts',
+      '/src/pages-v2/glossary/appearances.test.js',
       // ⚠️ THE ONE-CLOCK BATCH (machineClockGate) — drives the wizard to a
       // stored GR to prove the receipt is dated at the declared present. It
       // consumes `EnforcementSetting` as a TYPE for the empty ledger prop, the
@@ -988,7 +988,7 @@ describe('E1 — ⚠️ HEADLESS. NO STORE, NO CONSUMER, NO CLOCK', () => {
       // is one — it says which refusal shapes are the reason a check reads
       // UNANSWERED rather than ADVERSE. Reading it here means the two can never
       // disagree; a third refusal shape appears on the page with no edit.
-      '/src/pages-v2/glossary/appearances.ts',
+      '/src/pages-v2/glossary/appearances.js',
       '/src/services/data/mock/MockCommandService.js', // the CommandTarget
       '/src/services/data/mock/MockEnforcementService.js', // the read seam
       '/src/services/data/mock/enforcementSeed.js', //    E4 — the opening act

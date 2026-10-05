@@ -49,7 +49,7 @@ import {
 //
 // BR-07 / AC-04 (BL-63) — the planner narrows the view by supplier, material
 // group, material and gap weeks only. Those four live in the page ADDRESS
-// (`capacityFilters.ts`), and compose with the status chips and the Order
+// (`capacityFilters.js`), and compose with the status chips and the Order
 // summary's PO drill filter: drill → supplier/group/material/gaps → status.
 //
 // BL-133 (ENG-D18) — the ONE demand figure is the group's LTP (the current

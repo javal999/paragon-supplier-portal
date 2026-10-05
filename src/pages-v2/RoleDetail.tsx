@@ -10,7 +10,7 @@ import { findRoleView, deriveRoleViews } from './roles/roleModel';
 // ONE ROLE — its permissions, the modules it touches, and the acts it can take.
 //
 // The list answers WHICH ROLES EXIST; this answers WHAT THIS ONE CAN DO. Both
-// read the same derivation (`roles/roleModel.ts`), so the detail can never show
+// read the same derivation (`roles/roleModel.js`), so the detail can never show
 // a permission the list did not count.
 //
 // ⚠️ **AN UNKNOWN ROLE IS A 404, NOT AN EMPTY PAGE.** `/buyer/roles/whatever`

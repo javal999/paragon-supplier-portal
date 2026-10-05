@@ -228,7 +228,7 @@ const CATEGORY_LABEL_KEY: Record<RFQCategory, string> = {
 const categoryLabel = (t: TFunction, c: RFQCategory): string =>
   t(CATEGORY_LABEL_KEY[c]);
 
-// C.2 — the vocabulary moved to `sourcing/requisitionPrefill.ts` so the
+// C.2 — the vocabulary moved to `sourcing/requisitionPrefill.js` so the
 // membership check that decides whether a requisition's category can be carried
 // and the `<select>` a buyer picks from are the SAME list. Two copies would
 // drift, and the drift would show up as a field the prefill refuses to fill for
@@ -899,7 +899,7 @@ const applyPrefill = (base: DraftRfq, p: RequisitionPrefill): DraftRfq => ({
   ...(p.uom ? { uom: p.uom } : {}),
   // ⚠️ `materials` IS DELIBERATELY NOT CARRIED. The PR's material is a display
   // string, not an S/4 code (C7 GG-4); `materialIds` are codes the buyer picks
-  // from MATERIAL_CATALOG once a category is chosen. See `requisitionPrefill.ts`.
+  // from MATERIAL_CATALOG once a category is chosen. See `requisitionPrefill.js`.
   materials: [],
   sourceRequisitionId: p.sourceRequisitionId,
 });
@@ -1468,7 +1468,7 @@ const SourcingWorkspace: React.FC<SourcingWorkspaceProps> = ({
   };
 
   // ⚠️ **THE GENERIC ENTRANCE — ONE SEED SHAPE FOR EVERY OTHER SOURCE.** An RFI,
-  // a template and a past RFQ each become an `RfqDraftSeed` (`rfqDraft.ts`) and
+  // a template and a past RFQ each become an `RfqDraftSeed` (`rfqDraft.js`) and
   // open the wizard through here. An RFP source is one more `seedFrom…` feeding
   // this same function; nothing in the wizard changes for it.
   const openWizardFromSeed = (seed: RfqDraftSeed) => {

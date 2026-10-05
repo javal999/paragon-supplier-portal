@@ -54,7 +54,7 @@ import { NO_PERSON } from '@context/noPerson';
 /**
  * The requisition raised by the seed. Its category is an EXACT member of the
  * RFQ category union, which is the whole reason the row exists — see
- * `requisitionPrefill.ts` for why a non-member cannot be mapped into one.
+ * `requisitionPrefill.js` for why a non-member cannot be mapped into one.
  */
 const SEED = Object.freeze({
   material: 'Wardah Floral Accord',

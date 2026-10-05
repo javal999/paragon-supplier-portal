@@ -813,8 +813,13 @@ function convert(sf) {
       };
       if (ts.isNewExpression(node)) castResult(`${callee}<${args.join(', ')}>`);
       else if (callee === 'useState') {
-        // A lazy initializer (`useState<T>(() => …)`) is a function returning T.
-        const lazy = arg0 && (ts.isArrowFunction(arg0) || ts.isFunctionExpression(arg0));
+        // A lazy initializer (`useState<T>(() => …)`, or a function passed by
+        // name: `useState<T>(blankTerm)`) is a function returning T.
+        const lazy =
+          arg0 &&
+          (ts.isArrowFunction(arg0) ||
+            ts.isFunctionExpression(arg0) ||
+            checker.getTypeAtLocation(arg0).getCallSignatures().length > 0);
         castArg(lazy ? `() => ${args[0]}` : args[0]);
       }
       else if (callee === 'useRef' || callee === 'createContext') {

@@ -1,0 +1,203 @@
+import { describe, it, expect } from 'vitest';
+import { buildQuotationSubmitPayload, isCurrencyRefusal } from './quotationSubmitModel';
+import { BID_CURRENCIES } from '@lib/currencyPolicy';
+import { POLICY_HOOKS } from '@services/transitions/policyHooks';
+
+const draft = {
+  rfqId: 'rfq-001',
+  supplierId: 'sup-005',
+  // ALREADY PARSED (CP-0 2e-a). The draft used to carry the raw string '190,000'
+  // and let this builder coerce it; the price now arrives as the number the ONE
+  // upstream parse judged, so there is no second reading to disagree with.
+  unitPrice: 190_000,
+  // ALSO ALREADY PARSED (CP-0 2e-b-1). It carried the raw string '30' and let
+  // the builder coerce it with `Number(...) || 0`; it now arrives as the whole
+  // number of DAYS the ONE upstream parse judged, unit conversion included — or
+  // as `null` when the supplier stated none.
+  leadTimeDays: 30,
+  // ALSO ALREADY PARSED (CP-0 2e-b-2). This argument did not exist: the form
+  // collected a minimum order quantity and the builder was never handed it, so
+  // the value died between the two. `null` is the stated absence — "same as the
+  // RFQ quantity" — which is what this base draft means.
+  moq: null,
+  // REQUIRED since 2e-c-2 — the form has always collected it and this builder
+  // was never given it, so every foreign bid was minted as an unmarked (and
+  // therefore rupiah) number.
+  currency: /** @type {const} */ ('IDR'),
+  validUntil: '2026-08-31',
+  paymentTermsOffered: 'Net 30'
+};
+
+describe('buildQuotationSubmitPayload — raw facts only, engine owns scoring at read', () => {
+  it('maps the honest raw facts + the scope keys (rfqId + supplierId)', () => {
+    const p = buildQuotationSubmitPayload(draft);
+    expect(p.rfqId).toBe('rfq-001');
+    expect(p.supplierId).toBe('sup-005');
+    expect(p.validUntil).toBe('2026-08-31');
+    expect(p.paymentTermsOffered).toBe('Net 30');
+  });
+
+  // ── CP-0 · W1 · 2e-a — the builder no longer parses the price ──────────────
+  // It used to assert `'190,000'` → 190_000, which vouched for the comma-strip
+  // recipe as CORRECT. On a ranking surface that alibi was doubly dangerous: the
+  // same recipe read the Indonesian "1.500" as 1.5, and the number it vouched for
+  // is the number `scoreQuotations` hands a contract to.
+  it('passes the already-parsed price through UNTOUCHED — no second reading', () => {
+    const p = buildQuotationSubmitPayload(draft);
+    expect(p.unitPrice).toBe(190_000);
+    expect(p.leadTimeDays).toBe(30);
+  });
+
+  it('cannot re-derive the price: the draft carries a number, never the raw text', () => {
+    // The type makes the defect unexpressible, but assert the behaviour too — a
+    // value the builder could not have produced by coercion proves it is a
+    // mapping. 1.5 is exactly what the retired recipe turned "1.500" into.
+    expect(buildQuotationSubmitPayload({ ...draft, unitPrice: 1.5 }).unitPrice).toBe(1.5);
+    expect(buildQuotationSubmitPayload({ ...draft, unitPrice: 1_500 }).unitPrice).toBe(1_500);
+  });
+
+  // The retired spec here asserted that an empty price "resolves to 0, not NaN" —
+  // the `|| 0` written down as correct. A Rp 0 is a price no supplier offered,
+  // and on this surface it is a governed fact that enters the award ranking.
+  // Emptiness is now refused upstream (EMPTY_QTY) and never reaches the builder;
+  // see quotationPrice.test.js + quotationPriceRanking.test.js.
+  it('no `|| 0` remains — a real zero could only arrive as a deliberate number', () => {
+    // Not an endorsement of zero (readBidPrice refuses it); a proof that the
+    // builder has no fabrication branch left of its own.
+    expect(buildQuotationSubmitPayload({ ...draft, unitPrice: 0 }).unitPrice).toBe(0);
+  });
+
+  // ── CP-0 · W1 · 2e-b-1 — the lead time stops being coerced here too ────────
+  // The spec above asserted `'30'` → 30, which vouched for `Number(...) || 0` as
+  // CORRECT on the portal's other live-scored axis. On the absolute lead-time
+  // scale the `|| 0` half of that recipe did not merely lose information — it
+  // produced the MAXIMUM score, so anything unreadable outranked every honest
+  // delivery promise in the set.
+  describe('lead time — a mapping, and an absence that stays one', () => {
+    it('passes the already-parsed lead time through UNTOUCHED, in days', () => {
+      expect(buildQuotationSubmitPayload(draft).leadTimeDays).toBe(30);
+      // 3 weeks, converted upstream inside the parse — the builder never sees a
+      // unit, so it can neither apply nor forget the ×7 a second time.
+      expect(buildQuotationSubmitPayload({ ...draft, leadTimeDays: 21 }).leadTimeDays).toBe(21);
+    });
+
+    it('THE LOCK — an absent lead time is OMITTED, never flattened to 0', () => {
+      // A 0 here is the best possible lead-time score. Turning "the supplier
+      // said nothing" into it is the whole defect, stated at its narrowest.
+      expect('leadTimeDays' in buildQuotationSubmitPayload({ ...draft, leadTimeDays: null })).toBe(
+        false
+      );
+    });
+
+    it('a deliberate 0 still passes through — absence and same-day are different facts', () => {
+      const p = buildQuotationSubmitPayload({ ...draft, leadTimeDays: 0 });
+      expect('leadTimeDays' in p).toBe(true);
+      expect(p.leadTimeDays).toBe(0);
+    });
+  });
+
+  // ── CP-0 · W1 · 2e-b-2 — the minimum order quantity STOPS BEING DROPPED ────
+  // There was no spec here to retire: the field was never represented in this
+  // model at all, which is precisely how a value the UI collects can vanish
+  // without a single test going red. The absence of an alibi is the finding.
+  describe('minimum order quantity — a stated constraint that survives (FIND-02)', () => {
+    it('THE LOCK — a stated minimum reaches the payload, exactly as given', () => {
+      const p = buildQuotationSubmitPayload({ ...draft, moq: 100_000 });
+      expect(p.moq).toBe(100_000);
+    });
+
+    it('an absent minimum is OMITTED — the key is not there, and is not a 0', () => {
+      // Absence and "a minimum of nothing" are different claims. Omitting says
+      // the supplier stated none; a 0 would say they stated one. Same discipline
+      // as the lead time above, for the same reason.
+      const p = buildQuotationSubmitPayload({ ...draft, moq: null });
+      expect('moq' in p).toBe(false);
+      expect(p.moq).toBeUndefined();
+    });
+
+    it('a fractional minimum passes through — the RFQ UOM may be KG or L', () => {
+      expect(buildQuotationSubmitPayload({ ...draft, moq: 2.5 }).moq).toBe(2.5);
+    });
+  });
+
+  it('carries NO score axis — the payload is raw facts, never a fabricated score', () => {
+    const p = buildQuotationSubmitPayload(draft);
+    for (const k of [
+      'priceScore',
+      'leadTimeScore',
+      'complianceScore',
+      'reliabilityScore',
+      'aiCompositeScore'
+    ]) {
+      expect(k in p).toBe(false);
+    }
+  });
+
+  it('omits notes when absent, includes it when present', () => {
+    expect('notes' in buildQuotationSubmitPayload(draft)).toBe(false);
+    expect(buildQuotationSubmitPayload({ ...draft, notes: 'BPOM-registered' }).notes).toBe(
+      'BPOM-registered'
+    );
+  });
+});
+
+// ── CP-0 · 2e-c-2 — the currency crosses the boundary ────────────────────────
+describe('the bid currency', () => {
+  it('is ALWAYS emitted — unlike leadTimeDays / moq / notes, it is never omitted', () => {
+    // Those three are facts a supplier may honestly not state, so absence is a
+    // real answer and the builder omits them. A price has no such reading: it is
+    // always denominated in something, so a missing currency is a DROPPED fact
+    // rather than a stated silence. This asymmetry is deliberate.
+    const p = buildQuotationSubmitPayload(draft);
+    expect('currency' in p).toBe(true);
+    expect(p.currency).toBe('IDR');
+  });
+
+  it('passes each permitted currency through UNTOUCHED', () => {
+    for (const currency of BID_CURRENCIES) {
+      expect(buildQuotationSubmitPayload({ ...draft, currency }).currency).toBe(currency);
+    }
+  });
+
+  it('THE REGRESSION — an EUR draft does not arrive as IDR', () => {
+    // In one line: what an EUR 3.00 bid used to become.
+    const p = buildQuotationSubmitPayload({ ...draft, currency: 'EUR', unitPrice: 3 });
+    expect(p.currency).toBe('EUR');
+    expect(p.currency).not.toBe('IDR');
+    expect(p.unitPrice).toBe(3);
+  });
+});
+
+describe('isCurrencyRefusal — the surface can tell WHICH refusal this was', () => {
+  it('recognises the currency policy rejection', () => {
+    expect(
+      isCurrencyRefusal(
+        "POLICY_REJECTED:quotation_submit_currency_permitted:currency 'CNY' is not permitted (IDR, USD, EUR)"
+      )
+    ).toBe(true);
+  });
+
+  it('does NOT claim unrelated failures — a mistranslated refusal is a lie', () => {
+    for (const reason of [
+      'MISSING_FIELDS:currency',
+      'ROLE_NOT_PERMITTED:quotation:submit',
+      'POLICY_REJECTED:po_confirm_qty_within_ordered:line 1: confirmed qty out of bounds',
+      'ILLEGAL_TRANSITION:Submitted->Submitted',
+      undefined,
+      ''
+    ]) {
+      expect(isCurrencyRefusal(reason)).toBe(false);
+    }
+  });
+
+  it('is derived from the hook NAME — a renamed hook cannot silently detach it', () => {
+    // The string it matches must contain the registered hook name verbatim. If
+    // someone renames the hook and this predicate keeps matching a stale
+    // literal, the supplier silently goes back to reading a dispatcher constant.
+    expect(
+      isCurrencyRefusal(
+        `POLICY_REJECTED:${POLICY_HOOKS.QUOTATION_SUBMIT_CURRENCY_PERMITTED}:anything`
+      )
+    ).toBe(true);
+  });
+});

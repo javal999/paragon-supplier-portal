@@ -14,8 +14,8 @@ import i18n from '@lib/i18n';
 // here is the honesty contract that must hold on the real engine and is
 // jsdom-reliable: the page renders the registry-derived SIMULATED pill (green
 // unreachable), the read-only sandbox banner, and localizes EN/ID. The what-if
-// recompute + overlay-never-merged logic is proven in planGridModel.test.ts;
-// the per-row SIMULATED×PLANNED chip in PlanCellMarker.test.tsx.
+// recompute + overlay-never-merged logic is proven in planGridModel.test.js;
+// the per-row SIMULATED×PLANNED chip in PlanCellMarker.test.jsx.
 // ────────────────────────────────────────────────────────────────────────────
 
 describe('PlanGrid — honest render (page-level)', () => {

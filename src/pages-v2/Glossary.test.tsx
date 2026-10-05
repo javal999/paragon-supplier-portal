@@ -1,8 +1,8 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // GL-1 · THE GLOSSARY SURFACE GATE.
 //
-// The derivation is held by `glossary/appearances.test.ts` and the chip
-// attachment by `glossary/chipCoverage.test.ts`. What is left for a rendered
+// The derivation is held by `glossary/appearances.test.js` and the chip
+// attachment by `glossary/chipCoverage.test.js`. What is left for a rendered
 // page to be wrong about:
 //
 //   · that it draws EVERY defined term, in BOTH locales, rather than the ones

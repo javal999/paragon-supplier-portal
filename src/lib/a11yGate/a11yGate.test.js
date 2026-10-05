@@ -49,7 +49,7 @@ describe('BL-31 a11y gate · POPULATION — nothing below means anything without
     // The known clickable raw row, repaired by BL-31.
     expect(sites).toContain('pages-v2/RolesCatalogue.tsx <tr onClick>');
     // A known selection row acquitted by its own checkbox.
-    expect(sites).toContain('pages-v2/rfx/RfxInviteeStep.tsx <tr onClick>');
+    expect(sites).toContain('pages-v2/rfx/RfxInviteeStep.jsx <tr onClick>');
   });
 });
 

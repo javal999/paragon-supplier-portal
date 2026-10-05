@@ -85,7 +85,7 @@ describe('TABLE-WRAPPER-CLIPS-COLUMNS', () => {
     const files = new Set(sites.map((s) => s.file));
     expect(files).toContain('src/pages-v2/BuyerOrders.tsx');
     expect(files).toContain('src/pages-v2/BuyerInvoices.tsx');
-    expect(files).toContain('src/pages-v2/contracts/contractView.tsx');
+    expect(files).toContain('src/pages-v2/contracts/contractView.jsx');
   });
 
   it('no hand-written table sits directly inside an overflow-hidden wrapper', () => {

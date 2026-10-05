@@ -130,7 +130,7 @@ describe('BL-73 · the stock verbs are driven only by the Stock page’s two met
   const drivers = FILES.filter((f) => drivesStockVerb(f.text, f.file)).map((f) => f.file).sort();
 
   it('POPULATION + THE TREE — the entry form and the template upload, and nothing else', () => {
-    expect(drivers).toEqual(['pages-v2/inventory/StockEntryPanel.tsx', 'pages-v2/inventory/StockUploadPanel.tsx']);
+    expect(drivers).toEqual(['pages-v2/inventory/StockEntryPanel.jsx', 'pages-v2/inventory/StockUploadPanel.jsx']);
   });
 
   it('PROBE — a page running its own `declare` is caught; the type declaration is not', () => {

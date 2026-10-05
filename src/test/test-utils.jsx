@@ -16,7 +16,7 @@ import { NO_PERSON } from '@context/noPerson';
 
 // Default persona for page tests that don't care about identity.
 //
-// ⚠️ NOW EXPORTED, AND IT WAS ALREADY BEING IMPORTED. `buyerWidgets.test.tsx`
+// ⚠️ NOW EXPORTED, AND IT WAS ALREADY BEING IMPORTED. `buyerWidgets.test.jsx`
 //   imported `BUYER` from here while it was module-local, so at runtime the
 //   import was `undefined` — and the test worked ONLY because the `identity =
 //   BUYER` DEFAULT PARAMETER below fires on `undefined` and substituted this very

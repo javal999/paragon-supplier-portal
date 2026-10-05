@@ -100,7 +100,7 @@ describe('scoreQuotations — LIVE axes derive from the quote set', () => {
   // for the engine to be honest about. The block is retired rather than fixed;
   // the guarantee it protected now lives at the input gate, where a blank is
   // refused before it can become a quotation at all
-  // (`quotationLeadTime.test.ts` → "BLANK → refused").
+  // (`quotationLeadTime.test.js` → "BLANK → refused").
   it('a nonsense lead time scores the WORST value, never the best', () => {
     // Nothing in the UI can produce one (the parser rejects the sign), but the
     // engine is public and the axis is absolute — an unguarded negative would
@@ -266,7 +266,7 @@ describe('scoreQuotations — computes from data, not the stored fixture literal
 // `Math.min` over `unitPrice` ranked NUMBERS: an EUR 3.00 bid beside IDR 15,000
 // bids became the set minimum and collapsed every honest rupiah quote toward a
 // price score of zero — the same shape as the misparse hijack in
-// quotationPriceRanking.test.ts, reached by a different route.
+// quotationPriceRanking.test.js, reached by a different route.
 //
 // The engine now either scores against an explicit recorded basis, or REFUSES.
 describe('scoreQuotations — a mixed-currency set is refused, never approximated', () => {

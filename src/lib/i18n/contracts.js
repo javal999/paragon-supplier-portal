@@ -172,7 +172,7 @@ export const contractsEn = {
   // `FORWARD-PROMISE-HAS-NO-HANDLER-01`.
   'contracts.wizard.complete': 'Finish',
   // ── The refusal. The OWNER token is interpolated from the flow, never
-  // spelled here — see `contracts/RaisedElsewhere.tsx`.
+  // spelled here — see `contracts/RaisedElsewhere.jsx`.
   'contracts.wizard.raisedElsewhere.note':
     'Nothing here creates a contract — an outline agreement is raised in {{owner}} and arrives in Paragon as a fact.',
   'contracts.wizard.raisedElsewhere.headline': 'No contract was created',
@@ -275,7 +275,7 @@ export const contractsEn = {
   'contracts.detail.tab.overview': 'Overview',
   'contracts.detail.tab.delivery': 'Delivery Agreements',
   'contracts.detail.tab.docs': 'Documents',
-  // D-CENSUS-8 — replaces the manufactured certificate rows (see contractView.tsx).
+  // D-CENSUS-8 — replaces the manufactured certificate rows (see contractView.jsx).
   // Says the true thing plainly: nothing is linked, and the certificates that used
   // to appear here were never looked up.
   'contracts.docs.empty.title': 'No documents linked',
