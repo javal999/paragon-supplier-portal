@@ -5,7 +5,8 @@
 // is rendered through <Data> and never keyed.
 
 export const safetyStockEn: Record<string, string> = {
-  'sst.title': 'Safety stock and reorder point',
+  // F-25 — the title matches the menu label.
+  'sst.title': 'Safety stock targets',
   'sst.subtitle':
     'Safety stock sized from the plan’s own forecast errors against a fill-rate target, a safety lead time from each supplier’s late deliveries, and the reorder point — compared with SAP’s safety stock.',
   'sst.meta.plan': 'Plan in use made',
@@ -97,7 +98,7 @@ export const safetyStockEn: Record<string, string> = {
 };
 
 export const safetyStockId: Record<string, string> = {
-  'sst.title': 'Stok pengaman dan titik pesan ulang',
+  'sst.title': 'Target stok pengaman',
   'sst.subtitle':
     'Stok pengaman yang diukur dari kesalahan prakiraan rencana sendiri terhadap target tingkat pemenuhan, waktu tunggu pengaman dari keterlambatan setiap pemasok, dan titik pesan ulang — dibandingkan dengan stok pengaman SAP.',
   'sst.meta.plan': 'Rencana yang dipakai dibuat',

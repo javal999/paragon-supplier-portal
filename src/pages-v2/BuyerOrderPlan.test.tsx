@@ -12,7 +12,7 @@ import i18n from '@lib/i18n';
 import type { QueryScope } from '@services/data/types';
 import { draftNeedDate, umbrellaLineFor } from './orderPlan/orderPlanRelease';
 import { sdcClock } from '@services/sdc/clock';
-import { formatNumber } from '@lib/format';
+import { formatDate, formatNumber } from '@lib/format';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // REQ-E14-05 — the planner's Order plan page. Every figure is read back from
@@ -205,6 +205,35 @@ describe('BuyerOrderPlan — the planner page (REQ-E14-05)', () => {
     expect(p.previousAsOf).not.toBeNull();
     renderWithProviders(<BuyerOrderPlan />, { identity: PLANNER, route: '/buyer/order-plan' });
     expect(await screen.findByText(/weighed against last week’s plan/)).toBeInTheDocument();
+  });
+
+  it('F-07: the decision comes first — Recommended orders renders before the weekly fill, which is collapsed with the cost rates and How it works', async () => {
+    renderWithProviders(<BuyerOrderPlan />, { identity: PLANNER, route: '/buyer/order-plan' });
+    const recs = await screen.findByTestId('op-recs');
+    const fill = screen.getByTestId('op-fill');
+    expect(recs.compareDocumentPosition(fill) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.getByTestId('op-kpis').compareDocumentPosition(recs) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect((await screen.findByTestId('data-health-chip')).compareDocumentPosition(screen.getByTestId('op-kpis')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    for (const id of ['op-fill', 'op-costs', 'op-definitions']) {
+      const el = screen.getByTestId(id);
+      expect(el.tagName).toBe('DETAILS');
+      expect(el).not.toHaveAttribute('open');
+      expect(recs.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    }
+    // F-22 — the fill says it includes the recommended orders, and why Reschedule can read higher.
+    expect(screen.getByTestId('op-fill-basis')).toHaveTextContent('Includes the recommended orders');
+  });
+
+  it('F-06 / F-02: the plan source and its date, the "Why these quantities" links, and the Data health chip', async () => {
+    const run = (await mockDataService.procurement.getOrderPlan(buyerScope))!;
+    renderWithProviders(<BuyerOrderPlan />, { identity: PLANNER, route: '/buyer/order-plan' });
+    const source = await screen.findByTestId('op-plan-source');
+    expect(source).toHaveTextContent('Plan source: SAP finished-goods plan,');
+    expect(within(source).getByText(formatDate(run.planMadeAt!))).toBeInTheDocument();
+    expect(screen.getByTestId('op-why')).toHaveTextContent('Why these quantities:');
+    expect(screen.getByTestId('op-why-requirement')).toHaveAttribute('href', '/buyer/material-requirement');
+    expect(screen.getByTestId('op-why-safety')).toHaveAttribute('href', '/buyer/safety-stock');
+    expect(await screen.findByTestId('data-health-chip-failing')).toHaveTextContent('failing');
   });
 
   it('renders in Indonesian', async () => {

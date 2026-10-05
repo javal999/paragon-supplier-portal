@@ -158,6 +158,27 @@ describe('BuyerReschedule — the planner page (REQ-E14-13)', () => {
     expect(await screen.findByTestId(`rs-info-${dispatched.line.id}`)).toHaveTextContent('already dispatched');
   });
 
+  it('F-07: the proposals come first — the relief table renders before the context sections, which are collapsed', async () => {
+    renderWithProviders(<BuyerReschedule />, { identity: PLANNER, route: '/buyer/reschedule' });
+    const relief = await screen.findByTestId('rs-relief');
+    expect(screen.getByTestId('rs-kpis').compareDocumentPosition(relief) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    // The supplier stability guard sits between the summary and the proposals, so its effect is visible while selecting.
+    const guard = screen.getByTestId('rs-guard');
+    expect(guard.tagName).toBe('SECTION');
+    expect(screen.getByTestId('rs-kpis').compareDocumentPosition(guard) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(guard.compareDocumentPosition(relief) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect((await screen.findByTestId('data-health-chip')).compareDocumentPosition(screen.getByTestId('rs-kpis')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    for (const id of ['rs-fill', 'rs-info', 'rs-settings', 'rs-definitions']) {
+      const el = screen.getByTestId(id);
+      expect(el.tagName).toBe('DETAILS');
+      expect(el).not.toHaveAttribute('open');
+      expect(relief.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    }
+    // F-22 — "Now" says it is the Order plan's fill plus released call-offs.
+    expect(screen.getByTestId('rs-fill-basis')).toHaveTextContent('recommended orders included, plus released call-offs');
+    expect(await screen.findByTestId('data-health-chip-failing')).toHaveTextContent('failing');
+  });
+
   it('renders in Indonesian', async () => {
     await i18n.changeLanguage('id');
     renderWithProviders(<BuyerReschedule />, { identity: PLANNER, route: '/buyer/reschedule' });
