@@ -307,12 +307,12 @@ const BuyerInventory = () => {
           />
         </div>
         <FilterChipsBar
-          options={/** @type {BandFilter[]} */ (['all', 'high', 'medium', 'low', 'stale']).map(
-            (b) => ({
+          options={
+            /** @type {BandFilter[]} */ (['all', 'high', 'medium', 'low', 'stale']).map((b) => ({
               id: b,
               label: `${b === 'high' || b === 'medium' || b === 'low' ? t(`inv.risk.${b}`) : t(`inv.filter.${b}`)} (${bandCount(b)})`
-            })
-          )}
+            }))
+          }
           value={band}
           onChange={setBand}
         />

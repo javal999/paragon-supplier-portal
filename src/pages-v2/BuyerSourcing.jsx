@@ -1357,9 +1357,9 @@ const SourcingWorkspace = ({
     );
   };
 
-  const closePanel = () => {
+  function closePanel() {
     setSelectedRfqId(null);
-  };
+  }
 
   const quotesForSelected = useMemo(() => {
     if (!selectedRfq) return [];
@@ -1563,8 +1563,9 @@ const SourcingWorkspace = ({
   const navigate = useNavigate();
   const consumedDeepLink = useRef(/** @type {string | null | null} */ (null));
   const deepLinkId =
-    typeof /** @type {{ sourceRequisitionId?: unknown } | null} */ (location.state)
-      ?.sourceRequisitionId === 'string'
+    typeof (
+      /** @type {{ sourceRequisitionId?: unknown } | null} */ (location.state)?.sourceRequisitionId
+    ) === 'string'
       ? /** @type {{ sourceRequisitionId: string }} */ (location.state).sourceRequisitionId
       : null;
 
@@ -2418,7 +2419,7 @@ const SourcingWorkspace = ({
             <table className="w-full text-sm">
               <thead className="bg-bg-hover text-text-tertiary uppercase tracking-wider text-xs sticky top-0">
                 <tr>
-                  <th className="px-3 py-2 text-left font-semibold w-10"></th>
+                  <th className="px-3 py-2 text-left font-semibold w-10" />
                   <th className="px-3 py-2 text-left font-semibold">
                     {t('sourcing.wizard.col.supplier')}
                   </th>

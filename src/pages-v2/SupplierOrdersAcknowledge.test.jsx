@@ -64,8 +64,9 @@ const openPanelOn = async (poNumber, identity = SUPPLIER) => {
  * in the table row behind the panel as well as in the panel heading, so an
  * unscoped matcher finds two nodes. That is disambiguation, not a guard.
  */
-const panel = () =>
-  within(/** @type {HTMLElement} */ (document.querySelector('aside[role="dialog"]')));
+function panel() {
+  return within(/** @type {HTMLElement} */ (document.querySelector('aside[role="dialog"]')));
+}
 const footer = panel;
 
 // ─────────────────────────────────────────────────────────────────────────────

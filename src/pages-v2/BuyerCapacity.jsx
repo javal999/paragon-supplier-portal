@@ -295,16 +295,14 @@ const BuyerCapacity = () => {
       )}
 
       <FilterChipsBar
-        options={/** @type {StatusFilter[]} */ ([
-          'all',
-          'gap',
-          'notStarted',
-          'outdated',
-          'confirmed'
-        ]).map((f) => ({
-          id: f,
-          label: `${f === 'all' ? t('inv.filter.all') : t(`inv.capacity.status.${f}`)} (${count(f)})`
-        }))}
+        options={
+          /** @type {StatusFilter[]} */ (['all', 'gap', 'notStarted', 'outdated', 'confirmed']).map(
+            (f) => ({
+              id: f,
+              label: `${f === 'all' ? t('inv.filter.all') : t(`inv.capacity.status.${f}`)} (${count(f)})`
+            })
+          )
+        }
         value={filter}
         onChange={setStatusFilter}
         className="mb-4"

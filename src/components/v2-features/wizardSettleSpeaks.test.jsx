@@ -246,8 +246,8 @@ describe('§91 POPULATION — only a site that AWAITS a settle can swallow one',
   // and the assertions above together.
   const SITES = {
     wizard: src('./GRInspectionWizard.jsx'),
-    grPage: src('../../pages-v2/BuyerGoodsReceipt.tsx'),
-    invoices: src('../../pages-v2/BuyerInvoices.tsx')
+    grPage: src('../../pages-v2/BuyerGoodsReceipt.jsx'),
+    invoices: src('../../pages-v2/BuyerInvoices.jsx')
   };
 
   it('the wizard is the ONLY settle site that awaits — the other two fire and forget', () => {
@@ -258,7 +258,7 @@ describe('§91 POPULATION — only a site that AWAITS a settle can swallow one',
     expect(SITES.grPage).not.toMatch(/settle\w*\.mutateAsync\(/);
     expect(SITES.invoices).not.toMatch(/settle\w*\.mutateAsync\(/);
     // Known-false control, in the same run: a page with no settle at all.
-    expect(src('../../pages-v2/BuyerRequisitions.tsx')).not.toMatch(
+    expect(src('../../pages-v2/BuyerRequisitions.jsx')).not.toMatch(
       /mutateAsync\(\{\s*correlationId/
     );
   });

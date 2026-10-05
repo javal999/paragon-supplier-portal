@@ -625,7 +625,7 @@ const BuyerInvoicesView = ({ invoices: allInvoices }) => {
     );
   };
 
-  const handleResolve = () => {
+  function handleResolve() {
     if (!selected) return;
     const inv = selected;
     resolveMutation.mutate(
@@ -656,7 +656,7 @@ const BuyerInvoicesView = ({ invoices: allInvoices }) => {
           })
       }
     );
-  };
+  }
 
   const sendRemittance = () => {
     if (!selected) return;

@@ -277,10 +277,12 @@ const BuyerCommitments = () => {
 
       <div className="flex flex-wrap items-end justify-between gap-3 mb-4">
         <SubTabs
-          options={/** @type {ForecastStream[]} */ (['packaging', 'rawMaterial']).map((s) => ({
-            id: s,
-            label: t(`fc.stream.${s}`)
-          }))}
+          options={
+            /** @type {ForecastStream[]} */ (['packaging', 'rawMaterial']).map((s) => ({
+              id: s,
+              label: t(`fc.stream.${s}`)
+            }))
+          }
           value={activeStream}
           onChange={(s) => {
             setStream(s);

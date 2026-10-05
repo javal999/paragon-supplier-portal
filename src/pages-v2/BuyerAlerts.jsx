@@ -280,12 +280,14 @@ const BuyerAlerts = () => {
         className="mb-4"
       />
       <FilterChipsBar
-        options={/** @type {RiskFilter[]} */ (['all', 'high', 'medium', 'low']).map((r) => ({
-          id: r,
-          label: `${r === 'all' ? t('inv.filter.all') : t(`inv.risk.${r}`)} (${
-            r === 'all' ? ofTab.length : ofTab.filter((a) => a.riskClass === r).length
-          })`
-        }))}
+        options={
+          /** @type {RiskFilter[]} */ (['all', 'high', 'medium', 'low']).map((r) => ({
+            id: r,
+            label: `${r === 'all' ? t('inv.filter.all') : t(`inv.risk.${r}`)} (${
+              r === 'all' ? ofTab.length : ofTab.filter((a) => a.riskClass === r).length
+            })`
+          }))
+        }
         value={risk}
         onChange={setRisk}
         className="mb-3"

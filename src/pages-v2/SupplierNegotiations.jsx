@@ -372,6 +372,8 @@ const OutcomePill = ({ outcome }) => {
  * @param {number} n
  * @returns {string}
  */
-const qtyText = (n) => n.toLocaleString('en-US', { maximumFractionDigits: 2 });
+function qtyText(n) {
+  return n.toLocaleString('en-US', { maximumFractionDigits: 2 });
+}
 
 export default SupplierNegotiations;

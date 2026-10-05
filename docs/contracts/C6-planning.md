@@ -75,7 +75,7 @@ convention: **a PlanDraft entry cannot exist without anchoring to a seam row**, 
 never be minted as a standalone fabricated peer and spread into a seam-backed list.
 
 This structurally outlaws the named anti-pattern — the now-**RETIRED** `extraRfqs`
-client-fabrication that once lived in `src/pages-v2/BuyerSourcing.tsx`:
+client-fabrication that once lived in `src/pages-v2/BuyerSourcing.jsx`:
 
 ```ts
 // HISTORICAL — retired in PR #77; kept here only to name the shape the invariant bans.
@@ -334,8 +334,8 @@ Every seam cited traces to a `file:line` in the shipped tree:
 `src/services/query/useServiceQuery.js` (`scopeKey` read pattern :19-38),
 `src/services/liveness/registry.js` (`liveness`/`isLive`/`Tier` :45-184),
 `src/context/CurrentIdentityContext.jsx` (client-state provider pattern :35-65),
-`src/pages-v2/BuyerSourcing.tsx` (the `extraRfqs` anti-pattern — RETIRED in PR #77; RFQ
+`src/pages-v2/BuyerSourcing.jsx` (the `extraRfqs` anti-pattern — RETIRED in PR #77; RFQ
 creation now rides `t_rfq_create` on the dispatcher). §1-7 were
 authored pre-grid (FORK-3 harvest); §8 (C6-LOCK) is recorded at **G1.2b** alongside its first
-implementation — the grid product code now exists (`src/pages-v2/PlanGrid.tsx` +
+implementation — the grid product code now exists (`src/pages-v2/PlanGrid.jsx` +
 `plan-grid/*`, G1.2a/b), and §8's as-built block cites it directly.

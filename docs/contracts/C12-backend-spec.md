@@ -77,7 +77,7 @@ document number; the TMS owns the shipment record. We CARRY identity, we do not
 ASSIGN it. A portal-minted number is a fact about a system we do not own.
 
 ⚠️ **AND THIS REPOSITORY VIOLATES ITS OWN RULE IN ONE PLACE, WHICH YOU WILL READ
-AS PERMISSION IF NOBODY TELLS YOU.** `BuyerContracts.tsx` mints
+AS PERMISSION IF NOBODY TELLS YOU.** `BuyerContracts.jsx` mints
 `CTR-${year}-${n}` client-side (`CTR-FABRICATION-01`, filed, unscheduled). It is
 a defect, not a pattern. C11 V15 records it on the invariant it contradicts.
 
@@ -445,7 +445,7 @@ it as evidence of anything.
   repeating.
 
   ⚠️ **AND UNTIL §6 LANDED THAT SENTENCE WAS TRUE OF FIELDS AND ONLY
-  ACCIDENTALLY TRUE OF FILES.** A backticked `BuyerContracts.tsx` satisfied the
+  ACCIDENTALLY TRUE OF FILES.** A backticked `BuyerContracts.jsx` satisfied the
   FIELD pattern, so the check asked whether `src/` contains the string `tsx` —
   which it always does. **Three citations were passing on their own file
   extension.** A file is now its own kind, resolved on disk, with both controls:

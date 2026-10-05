@@ -862,19 +862,21 @@ const BuyerOrders = () => {
 
             {/* `as POStatus[]`: POStatus is a const object now, not an enum, so a literal array of
                 its members narrows to those four and `includes` would refuse a wider status. */}
-            {/** @type {POStatus[]} */ ([
-              POStatus.CONFIRMED,
-              POStatus.PARTIALLY_DELIVERED,
-              POStatus.DELIVERED,
-              POStatus.CLOSED
-            ]).includes((livePO ?? selectedPO).status) && (
-              <section>
-                <h3 className="text-label text-text-tertiary uppercase mb-3">
-                  {t('oc.shipping.title')}
-                </h3>
-                <ShippingNoticeDetails po={livePO ?? selectedPO} />
-              </section>
-            )}
+            {
+              /** @type {POStatus[]} */ ([
+                POStatus.CONFIRMED,
+                POStatus.PARTIALLY_DELIVERED,
+                POStatus.DELIVERED,
+                POStatus.CLOSED
+              ]).includes((livePO ?? selectedPO).status) && (
+                <section>
+                  <h3 className="text-label text-text-tertiary uppercase mb-3">
+                    {t('oc.shipping.title')}
+                  </h3>
+                  <ShippingNoticeDetails po={livePO ?? selectedPO} />
+                </section>
+              )
+            }
 
             <section>
               <h3 className="text-label text-text-tertiary uppercase mb-3">

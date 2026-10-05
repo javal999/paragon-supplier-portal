@@ -678,7 +678,7 @@ const GoodsReceiptWorkspace = ({
   // ~a moment later → 'Posted to SAP' + the real material document. Both phases
   // are observable because each command invalidates the scoped read.
   /** @param {GoodsReceipt} g */
-  const handlePostToSap = (g) => {
+  function handlePostToSap(g) {
     postMutation.mutate(
       { grId: g.id },
       {
@@ -727,7 +727,7 @@ const GoodsReceiptWorkspace = ({
           toast({ variant: 'error', title: t('gr.denied.title'), description: t('gr.denied.desc') })
       }
     );
-  };
+  }
 
   // §91e — re-attempt a settle THIS session started and saw fail. Honest because
   // the dispatcher leaves a failed settle `submitted` and its `pending` context
@@ -737,7 +737,7 @@ const GoodsReceiptWorkspace = ({
   // a governed answer does not change, and offering the retry anyway would be
   // the `PF-1a` shape: an affordance promising what it cannot do.
   /** @param {string} grId */
-  const retrySettle = (grId) => {
+  function retrySettle(grId) {
     const watch = settleWatch[grId];
     if (!watch) return;
     settleMutation.mutate(
@@ -754,7 +754,7 @@ const GoodsReceiptWorkspace = ({
         onError: (err) => watchSettle(grId, watch.correlationId, classifySettleFault(err))
       }
     );
-  };
+  }
 
   // PF-1a — release a held GR for re-inspection (t_gr_request_retest). Payload-
   // free: the hold already recorded its reason. On success the GR re-derives to
@@ -762,7 +762,7 @@ const GoodsReceiptWorkspace = ({
   // is the whole point of the edge, and the reason the panel is left open rather
   // than closed: the inspector's next action is on this same GR.
   /** @param {GoodsReceipt} g */
-  const handleRequestRetest = (g) => {
+  function handleRequestRetest(g) {
     retestMutation.mutate(
       { grId: g.id },
       {
@@ -786,7 +786,7 @@ const GoodsReceiptWorkspace = ({
           toast({ variant: 'error', title: t('gr.denied.title'), description: t('gr.denied.desc') })
       }
     );
-  };
+  }
 
   // §91e — the wizard sequences create → dispose → post → settle and then
   // CLOSES, so a settle it saw fail would take the correlationId with it and the

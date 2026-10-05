@@ -1369,47 +1369,49 @@ const SupplierOrders = () => {
                   <PoResponseDetails po={selectedLive ?? selected} />
                 )}
                 {/* `as POStatus[]`: POStatus is a const object now, not an enum (see BuyerOrders). */}
-                {/** @type {POStatus[]} */ ([
-                  POStatus.CONFIRMED,
-                  POStatus.PARTIALLY_DELIVERED
-                ]).includes((selectedLive ?? selected).status) && (
-                  <section>
-                    <h3 className="text-label text-text-tertiary uppercase mb-3">
-                      {t('oc.shipping.title')}
-                    </h3>
-                    <ShippingNoticeDetails po={selectedLive ?? selected} />
-                    {shippingAvailability.kind === 'held' ? (
-                      <div className="flex flex-wrap items-end gap-2 mt-3">
-                        <div>
-                          <label className={labelClass} htmlFor="po-completion-date">
-                            {t('oc.shipping.dateLabel')}
-                          </label>
-                          <input
-                            id="po-completion-date"
-                            type="date"
-                            className={inputClass}
-                            value={completionDate}
-                            onChange={(e) => setCompletionDate(e.target.value)}
+                {
+                  /** @type {POStatus[]} */ ([
+                    POStatus.CONFIRMED,
+                    POStatus.PARTIALLY_DELIVERED
+                  ]).includes((selectedLive ?? selected).status) && (
+                    <section>
+                      <h3 className="text-label text-text-tertiary uppercase mb-3">
+                        {t('oc.shipping.title')}
+                      </h3>
+                      <ShippingNoticeDetails po={selectedLive ?? selected} />
+                      {shippingAvailability.kind === 'held' ? (
+                        <div className="flex flex-wrap items-end gap-2 mt-3">
+                          <div>
+                            <label className={labelClass} htmlFor="po-completion-date">
+                              {t('oc.shipping.dateLabel')}
+                            </label>
+                            <input
+                              id="po-completion-date"
+                              type="date"
+                              className={inputClass}
+                              value={completionDate}
+                              onChange={(e) => setCompletionDate(e.target.value)}
+                            />
+                          </div>
+                          <Button
+                            variant="outline"
+                            onClick={saveCompletionDate}
+                            disabled={shippingMutation.isPending || !isIsoDate(completionDate)}
+                          >
+                            {t('oc.shipping.save')}
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="mt-3">
+                          <HandoffNotice
+                            availability={shippingAvailability}
+                            testId="handoff-po-shipping-notice"
                           />
                         </div>
-                        <Button
-                          variant="outline"
-                          onClick={saveCompletionDate}
-                          disabled={shippingMutation.isPending || !isIsoDate(completionDate)}
-                        >
-                          {t('oc.shipping.save')}
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="mt-3">
-                        <HandoffNotice
-                          availability={shippingAvailability}
-                          testId="handoff-po-shipping-notice"
-                        />
-                      </div>
-                    )}
-                  </section>
-                )}
+                      )}
+                    </section>
+                  )
+                }
                 <PoLifecycleSteps
                   po={selectedLive ?? selected}
                   asnCount={

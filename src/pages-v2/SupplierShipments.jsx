@@ -1110,7 +1110,7 @@ const SupplierShipments = () => {
    * @param {ASN} asn
    * @returns {OpenLine[]}
    */
-  const submitLinesFor = (asn) => {
+  function submitLinesFor(asn) {
     const po = SHIPPABLE_POS.find((p) => p.poNumber === asn.poReference);
     const fromPo = po ? openLinesFor(po, asns, asn.asnNumber) : [];
     const extra = asn.lineItems
@@ -1122,7 +1122,7 @@ const SupplierShipments = () => {
         open: li.shippedQty
       }));
     return [...fromPo, ...extra];
-  };
+  }
 
   // The drawer's lines read by the one line rule (AR-11), leaving the draft
   // out of its own open quantity.

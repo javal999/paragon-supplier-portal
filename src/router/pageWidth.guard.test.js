@@ -100,9 +100,9 @@ describe('⚠️ §70 · THE MATCHER, BEFORE ANY CLAIM ABOUT THE TREE', () => {
     expect(paths).not.toContain('/buyer/nonexistent');
     // …and the imports actually resolve, or every per-file assertion below is
     // vacuously true over an empty set of readable sources.
-    expect(sourceOf('RolesCatalogue')).toMatch(/RolesCatalogue\.tsx$/);
+    expect(sourceOf('RolesCatalogue')).toMatch(/RolesCatalogue\.jsx$/);
     // The ALIASED import is the one a name-based lookup gets wrong.
-    expect(sourceOf('SupplierRegistrationV2')).toMatch(/SupplierRegistration\.tsx$/);
+    expect(sourceOf('SupplierRegistrationV2')).toMatch(/SupplierRegistration\.jsx$/);
   });
 });
 

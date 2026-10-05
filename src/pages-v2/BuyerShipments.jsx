@@ -397,7 +397,7 @@ const BuyerShipments = () => {
    * @param {Shipment} s
    * @returns {number}
    */
-  const statusOrderFor = (s) => {
+  function statusOrderFor(s) {
     switch (displayOf(s)) {
       case 'Pending ASN':
         return 1;
@@ -420,7 +420,7 @@ const BuyerShipments = () => {
       default:
         return 0;
     }
-  };
+  }
 
   const handleExport = () =>
     toast({

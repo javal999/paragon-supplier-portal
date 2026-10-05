@@ -131,19 +131,32 @@ function recordDecls(src, full) {
 /**
  * Whether the lines before a use show the message going to a string-typed API:
  * a toast `description:`, or a helper whose return type is `string`. The return
- * type is read in EITHER form: the TS annotation `(…): string =>` or, once
- * converted to JS, the JSDoc `&#64;returns {string}` above it (frontend-standard
- * Phase 4, B6). ONE definition, used by the derivation and by the ruling test,
- * so the two cannot disagree.
- * @param {string} back
+ * type is read in EITHER form: the TS annotation `(…): string =>` on the
+ * declaration line, or, once converted to JS, the JSDoc `&#64;returns {string}`
+ * in the doc block ABOVE the declaration (frontend-standard Phase 4, B6/B7) —
+ * so for the JSDoc form the window is extended upward over the doc block of the
+ * nearest declaration inside it. ONE definition, used by the derivation and by
+ * the ruling test, so the two cannot disagree.
+ * @param {readonly string[]} lines  the file's lines
+ * @param {number} i  0-based index of the use
  * @returns {boolean}
  */
-function feedsStringApi(back) {
-  return (
-    /\bdescription:/.test(back) ||
-    /\)\s*:\s*string\s*=>/.test(back) ||
-    /@returns \{string\}/.test(back)
-  );
+function feedsStringApi(lines, i) {
+  const from = Math.max(0, i - CONTEXT_WINDOW);
+  const back = lines.slice(from, i + 1).join('\n');
+  if (/\bdescription:/.test(back) || /\)\s*:\s*string\s*=>/.test(back)) return true;
+  // The nearest declaration in the window, then the doc block directly above it.
+  let decl = -1;
+  for (let k = i; k >= from; k -= 1) {
+    if (/^\s*(?:export\s+)?(?:const|let|function)\s/.test(lines[k])) {
+      decl = k;
+      break;
+    }
+  }
+  if (decl === -1) return /@returns \{string\}/.test(back);
+  let top = decl;
+  while (top > 0 && /^\s*(?:\/\*\*|\*)/.test(lines[top - 1])) top -= 1;
+  return /@returns \{string\}/.test(lines.slice(top, i + 1).join('\n'));
 }
 
 /** @returns {MapUse[]} */
@@ -178,11 +191,10 @@ function deriveUses() {
         if (!new RegExp(`\\b${mapName}\\s*\\[`).test(lines[i])) continue;
         if (/:\s*Record</.test(lines[i])) continue;
 
-        const back = lines.slice(Math.max(0, i - CONTEXT_WINDOW), i + 1).join('\n');
         // NON-RENDER: the message is being handed to a string-typed API — a
         // toast `description`, or a helper that returns a bare i18n key which a
         // toast then consumes. Neither can hold a React element.
-        const isRender = !feedsStringApi(back);
+        const isRender = !feedsStringApi(lines, i);
         const ahead = lines.slice(i, i + CHIP_WINDOW + 1).join('\n');
         uses.push({
           file,
@@ -281,9 +293,8 @@ describe('GL-1 chip coverage — the conclusion (HALAL-REFUSAL-DEAD-ENDS-01)', (
     expect(cannot.length).toBeGreaterThan(0);
     for (const u of cannot) {
       const src = readFileSync(join(ROOT, u.file), 'utf8').split(/\r?\n/);
-      const back = src.slice(Math.max(0, u.line - 1 - CONTEXT_WINDOW), u.line).join('\n');
       expect(
-        feedsStringApi(back),
+        feedsStringApi(src, u.line - 1),
         `${u.file}:${u.line} was excluded without a visible string-typed consumer`
       ).toBe(true);
     }

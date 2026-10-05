@@ -38,6 +38,18 @@ not touch stay byte-identical. Its header lists every translation it makes.
    - `npx eslint <files>` → 0 errors
    - `npm run gates` under Node 24 (`npx -y -p node@24 node scripts/gates.mjs`)
 
+### ⚠️ The commit hook must not apply `react/jsx-no-leaked-render`'s fix
+
+The pre-commit hook runs `eslint --fix` on staged JS. Until 2026-10-05 that applied
+`react/jsx-no-leaked-render`'s fix, which rewrites `a && b` inside JSX as `a ? b : null` — a
+BEHAVIOUR change (`{0 && <X/>}` stops rendering "0"; `checked={a && b}` becomes `null`, an
+uncontrolled checkbox). It rewrote 190 sites in B1 and B6 unseen; B7's `RfxInviteeStep` type error
+exposed it. All were reverted to `&&` (only ternaries directly in a JSX expression, at sites ESLint
+flagged in an UNFIXED conversion; checked per file by `: null` count, the rule's site count and the
+text of every flagged `&&`), and `lint-staged.config.js` now runs
+`eslint --fix --rule "react/jsx-no-leaked-render: off"`. **Before converting a folder, commit with
+the current hook config, and after converting, check the rule's site count did not drop.**
+
 ## Dry run of the converter on everything (2026-10-05)
 
 All 1,182 non-forecast TypeScript files outside `ui-v2`, converted in a scratch worktree on top
@@ -75,7 +87,7 @@ Two kinds of failure in the dry run are not tooling problems:
    `POStatus` and `ChannelType`, become `/** @type {const} */` objects with a typedef of their values); this replaces the
    earlier "keep it as `types.d.ts`" ruling, since a `.d.ts` file cannot hold runtime values.
 
-### Text matchers taught the JSDoc form so far (B1–B6)
+### Text matchers taught the JSDoc form so far (B1–B7)
 
 - `projectionGate/dayCounts.js`: `takesInjectedNow` now reads a `nowIso`/`now` parameter typed by
   TS syntax or `@param` (B3); `writesField` also accepts the last shorthand member of an object,
@@ -95,6 +107,13 @@ Two kinds of failure in the dry run are not tooling problems:
   `(…): string =>` or `@returns {string}` (one function for the derivation and the ruling test).
   Converter: `useState<T>(fn)` with a function passed by name is a lazy initializer
   (`() => T` cast), like an inline arrow.
+- B7: `chipCoverage` `feedsStringApi(lines, i)` also reads the doc block ABOVE the nearest
+  declaration (a JSDoc `@returns` sits above the line the TS annotation was on);
+  `chartPalette.guard` reads `GRADE_TONE` as `: Record<Grade, …>` or `@type {Record<Grade, …>}`;
+  `pageWidth.guard` and `wizardSettleSpeaks.test` known-good paths name the `.jsx` files.
+- **A default parameter from an enum loses its type.** `s = SupplierStatus.ACTIVE` inferred the
+  enum in TS; with the enum now a const object it infers the literal `'Active'`. Add the
+  `@param {SupplierStatus} [s]` the TS left implicit (`sourcingType.test.js`, B7).
 - **`readonly` is KEPT (owner ruling 2026-10-05).** JSDoc `@property` cannot express `readonly`,
   so `ts-to-js.mjs` writes an interface with ANY readonly member as a type-literal typedef
   (`@typedef {{ readonly a: T }} X`); each member's comment becomes a labelled line of prose above

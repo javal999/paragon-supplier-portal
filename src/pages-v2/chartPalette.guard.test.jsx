@@ -598,8 +598,11 @@ describe('DP2-PALETTE-01 — no raw hex in any paint position, tree-wide', () =>
       'pages-v2/SupplierDashboard.jsx'
     ]) {
       const src = readSrc(f);
+      // The declaration in EITHER form: TS `GRADE_TONE: Record<Grade, …>` or, once
+      // converted, the JSDoc `@type {Record<Grade, …>}` directly above
+      // `const GRADE_TONE` (frontend-standard Phase 4, B7).
       expect(src, `${f} no longer declares a grade ramp — this probe is vacuous`).toMatch(
-        /GRADE_TONE\s*:\s*Record<\s*Grade\s*,/
+        /GRADE_TONE\s*:\s*Record<\s*Grade\s*,|@type \{Record<\s*Grade\s*,[^\n]*\*\/\s*\n\s*(?:export\s+)?const GRADE_TONE\b/
       );
       expect(src, `${f} no longer holds raw hex — this probe is vacuous`).toMatch(/'#[0-9A-F]{6}'/);
       expect(paintHexHits(src), `${f} now paints with a raw hex`).toEqual([]);

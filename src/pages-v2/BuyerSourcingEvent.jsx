@@ -327,8 +327,8 @@ const BuyerSourcingEvent = () => {
    * @param {Parameters<typeof command.mutate>[0]} vars
    * @param {string} successKey
    */
-  const run = (vars, successKey) =>
-    command.mutate(vars, {
+  function run(vars, successKey) {
+    return command.mutate(vars, {
       onSuccess: (res) =>
         toast(
           res.status === 'failed'
@@ -337,6 +337,7 @@ const BuyerSourcingEvent = () => {
         ),
       onError: () => toast({ variant: 'error', title: t('rfx.toast.refused', { reason: '' }) })
     });
+  }
 
   return (
     <AppShellV2>
@@ -600,63 +601,65 @@ const BuyerSourcingEvent = () => {
               ))}
             </TableHeader>
             <tbody>
-              {/** @type {const} */ ([
-                [
-                  'rfx.cmp.row.unitPrice',
-                  /** @param {string} id */ (id) =>
-                    money(
-                      atBreak(id)?.perPiece ?? byId(current, id).unitPrice,
-                      byId(current, id).currency ?? currency
-                    )
-                ],
-                [
-                  'rfx.cmp.row.totalPrice',
-                  /** @param {string} id */ (id) =>
-                    money(
-                      atBreak(id)?.total ?? byId(current, id).totalPrice,
-                      byId(current, id).currency ?? currency
-                    )
-                ],
-                [
-                  'rfx.cmp.row.leadTime',
-                  /** @param {string} id */ (id) =>
-                    `${byId(current, id).leadTimeDays} ${t('rfx.unit.days')}`
-                ],
-                [
-                  'rfx.cmp.row.moq',
-                  /** @param {string} id */ (id) =>
-                    byId(current, id).moq === undefined
-                      ? '—'
-                      : qty(
-                          /** @type {NonNullable<(ReturnType<typeof byId>)['moq']>} */ (
-                            byId(current, id).moq
-                          )
-                        )
-                ],
-                [
-                  'rfx.cmp.row.payment',
-                  /** @param {string} id */ (id) => byId(current, id).paymentTermsOffered
-                ],
-                [
-                  'rfx.cmp.row.priceScore',
-                  /** @param {string} id */ (id) => String(scoreById.get(id)?.priceScore ?? '—')
-                ],
-                [
-                  'rfx.cmp.row.leadTimeScore',
-                  /** @param {string} id */ (id) => String(scoreById.get(id)?.leadTimeScore ?? '—')
-                ]
-              ]).map(([labelKey, render]) => (
-                <TableRow key={labelKey} data-testid={`cmp-row-${labelKey}`}>
-                  <TableCell className="text-sm text-text-secondary">
-                    {rowLabel(labelKey)}
-                  </TableCell>
-                  {current.map((q) => (
-                    <TableCell key={q.id}>
-                      <Data>{render(q.id)}</Data>
+              {
+                /** @type {const} */ ([
+                  [
+                    'rfx.cmp.row.unitPrice',
+                    /** @param {string} id */ (id) =>
+                      money(
+                        atBreak(id)?.perPiece ?? byId(current, id).unitPrice,
+                        byId(current, id).currency ?? currency
+                      )
+                  ],
+                  [
+                    'rfx.cmp.row.totalPrice',
+                    /** @param {string} id */ (id) =>
+                      money(
+                        atBreak(id)?.total ?? byId(current, id).totalPrice,
+                        byId(current, id).currency ?? currency
+                      )
+                  ],
+                  [
+                    'rfx.cmp.row.leadTime',
+                    /** @param {string} id */ (id) =>
+                      `${byId(current, id).leadTimeDays} ${t('rfx.unit.days')}`
+                  ],
+                  [
+                    'rfx.cmp.row.moq',
+                    /** @param {string} id */ (id) => {
+                      // Read once into a local so the `undefined` check narrows it — the
+                      // TS original used `!`; a cast through `ReturnType<typeof byId>`
+                      // loses `byId`'s generic and resolves to `{ id }`.
+                      const moq = byId(current, id).moq;
+                      return moq === undefined ? '—' : qty(moq);
+                    }
+                  ],
+                  [
+                    'rfx.cmp.row.payment',
+                    /** @param {string} id */ (id) => byId(current, id).paymentTermsOffered
+                  ],
+                  [
+                    'rfx.cmp.row.priceScore',
+                    /** @param {string} id */ (id) => String(scoreById.get(id)?.priceScore ?? '—')
+                  ],
+                  [
+                    'rfx.cmp.row.leadTimeScore',
+                    /** @param {string} id */ (id) =>
+                      String(scoreById.get(id)?.leadTimeScore ?? '—')
+                  ]
+                ]).map(([labelKey, render]) => (
+                  <TableRow key={labelKey} data-testid={`cmp-row-${labelKey}`}>
+                    <TableCell className="text-sm text-text-secondary">
+                      {rowLabel(labelKey)}
                     </TableCell>
-                  ))}
-                </TableRow>
-              ))}
+                    {current.map((q) => (
+                      <TableCell key={q.id}>
+                        <Data>{render(q.id)}</Data>
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              }
               {/* CR-23 — compliance is a GATE, not a weighted axis: this row
                   says who is scored and names why a supplier is not. */}
               <TableRow data-testid="cmp-row-gate">

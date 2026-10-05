@@ -264,15 +264,17 @@ const BuyerDashboard = () => {
             {t('buyerDashboard.health.title')}
           </h2>
           <div className="flex items-center gap-4 mt-1 mb-4 text-meta text-text-tertiary">
-            {/** @type {const} */ (['A', 'B', 'C', 'D']).map((g) => (
-              <div key={g} className="flex items-center gap-1.5">
-                <span
-                  className="inline-block w-2.5 h-2.5 rounded-sm"
-                  style={{ backgroundColor: GRADE_COLOR[g] }}
-                />
-                <span className="font-semibold">{g}</span>
-              </div>
-            ))}
+            {
+              /** @type {const} */ (['A', 'B', 'C', 'D']).map((g) => (
+                <div key={g} className="flex items-center gap-1.5">
+                  <span
+                    className="inline-block w-2.5 h-2.5 rounded-sm"
+                    style={{ backgroundColor: GRADE_COLOR[g] }}
+                  />
+                  <span className="font-semibold">{g}</span>
+                </div>
+              ))
+            }
           </div>
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">

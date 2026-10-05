@@ -1309,7 +1309,9 @@ boilerplate. Converted so far: `src/components/ui-v2` (pilot) and the app shell
 (`src/` root files, `hooks`, `context`, `router`, `test`, `data`, `components/*`;
 Phase 4 B1), `src/lib` (B2), `src/services/transitions` (B3; forecast flows excluded), `src/services/data` (B4,
 including `types.js`) the rest of `src/services` (B5; forecast engine, flows and mock
-files excluded) and the `src/pages-v2` subfolders (B6; forecast-named files excluded). Interfaces with `readonly` members are type-literal typedefs, so readonly is kept.
+files excluded) the `src/pages-v2` subfolders (B6) and the `src/pages-v2` root pages plus
+`pages/auth/Login` and `types/supplier.types` (B7) — forecast-named files excluded. Phase 4 is
+complete: only forecast files (Phase 7) and `vite-env.d.ts` remain TypeScript. Interfaces with `readonly` members are type-literal typedefs, so readonly is kept.
 Before converting a
 folder, follow `docs/frontend-standard/JS-CONVERSION-PLAYBOOK.md`: the draft tool
 deletes comments and loosens types, and `scripts/codemods/check-comments-kept.mjs`

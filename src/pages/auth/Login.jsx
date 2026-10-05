@@ -118,34 +118,36 @@ const Login = () => {
 
         {/* Tabs */}
         <div style={{ display: 'flex', borderBottom: '1px solid #E2E8F0', marginBottom: '24px' }}>
-          {/** @type {const} */ ([
-            ['buyer', 'Paragon Team'],
-            ['supplier', 'Supplier Login']
-          ]).map(([tab, label]) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              style={{
-                flex: 1,
-                padding: '10px 0',
-                border: 'none',
-                background: 'transparent',
-                cursor: 'pointer',
-                fontSize: '13px',
-                fontWeight: activeTab === tab ? 700 : 500,
-                color: activeTab === tab ? (tab === 'buyer' ? NAVY : TEAL) : '#94A3B8',
-                borderBottom:
-                  activeTab === tab
-                    ? `2px solid ${tab === 'buyer' ? NAVY : TEAL}`
-                    : '2px solid transparent',
-                marginBottom: '-1px',
-                fontFamily: 'inherit',
-                transition: 'all 0.15s'
-              }}
-            >
-              {label}
-            </button>
-          ))}
+          {
+            /** @type {const} */ ([
+              ['buyer', 'Paragon Team'],
+              ['supplier', 'Supplier Login']
+            ]).map(([tab, label]) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                style={{
+                  flex: 1,
+                  padding: '10px 0',
+                  border: 'none',
+                  background: 'transparent',
+                  cursor: 'pointer',
+                  fontSize: '13px',
+                  fontWeight: activeTab === tab ? 700 : 500,
+                  color: activeTab === tab ? (tab === 'buyer' ? NAVY : TEAL) : '#94A3B8',
+                  borderBottom:
+                    activeTab === tab
+                      ? `2px solid ${tab === 'buyer' ? NAVY : TEAL}`
+                      : '2px solid transparent',
+                  marginBottom: '-1px',
+                  fontFamily: 'inherit',
+                  transition: 'all 0.15s'
+                }}
+              >
+                {label}
+              </button>
+            ))
+          }
         </div>
 
         {/* Form */}

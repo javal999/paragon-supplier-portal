@@ -195,6 +195,8 @@ describe('the invite filter — Active and qualified are offered; the rest are l
    * @param {string} supplierId
    * @param {QualificationLevel} level
    * @param {boolean} placeholder
+   * @param {SupplierStatus} [s] (typed explicitly: an enum default once inferred the
+   *   enum, but `SupplierStatus` is now a const object and would infer `'Active'`)
    * @returns {InviteeCandidate}
    */
   const cand = (supplierId, level, placeholder, s = SupplierStatus.ACTIVE) => ({

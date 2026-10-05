@@ -620,8 +620,9 @@ const BuyerRfp = () => {
  * @param {RfpEventView} event
  * @returns {boolean}
  */
-const rfpToRfqOffered = (event) =>
-  (event.pricing?.options.length ?? 0) > 0 && event.responses.length > 0;
+function rfpToRfqOffered(event) {
+  return (event.pricing?.options.length ?? 0) > 0 && event.responses.length > 0;
+}
 
 /**
  * The buyer picks the options — PTI's own and any a supplier proposed — and the
