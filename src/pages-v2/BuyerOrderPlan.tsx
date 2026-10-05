@@ -4,8 +4,6 @@ import { Link } from 'react-router-dom';
 import { CartesianGrid, Legend, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import AppShellV2 from '@components/layout-v2/AppShellV2';
 import PageHeader from '@components/ui-v2/PageHeader';
-import PageMetaLine from '@components/ui-v2/PageMetaLine';
-import LivenessPill from '@components/ui-v2/LivenessPill';
 import FilterChipsBar from '@components/ui-v2/FilterChipsBar';
 import KpiCard from '@components/ui-v2/KpiCard';
 import StatusPill from '@components/ui-v2/StatusPill';
@@ -18,6 +16,12 @@ import Button from '@components/ui-v2/Button';
 import LoadingState from '@components/ui-v2/LoadingState';
 import ErrorState from '@components/ui-v2/ErrorState';
 import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
+import DataHealthChip from '@components/forecast/DataHealthChip';
+import PurposeHeader from '@components/forecast/PurposeHeader';
+import SimulatedDataBanner from '@components/forecast/SimulatedDataBanner';
+import AboutThisPage from '@components/forecast/AboutThisPage';
+import DataAsOf from '@components/forecast/DataAsOf';
+import { forecastCrumb, forecastTitle } from '@components/forecast/forecastPages';
 import { useToast } from '@hooks/useToast';
 import { useRefusalText } from '@hooks/useRefusalText';
 import { useVerbAvailability } from '@hooks/useVerbAvailability';
@@ -325,7 +329,7 @@ const BuyerOrderPlan: React.FC = () => {
   const planAvailability = useVerbAvailability('calloff:plan');
   const [kind, setKind] = useState<WarehouseKind>('packaging');
   const [drafted, setDrafted] = useState<ReadonlySet<string>>(new Set());
-  const crumb = [t('hub.nav.section.forecast'), t('op.title')];
+  const crumb = forecastCrumb(t, 'whatToOrder');
   const run = query.data ?? null;
   const today = sdcClock.now().slice(0, 10);
   // X-03 — the registry's own answer, read at render; the verb reads it again at release.
@@ -391,62 +395,33 @@ const BuyerOrderPlan: React.FC = () => {
 
   return (
     <AppShellV2>
-      <PageHeader
-        breadcrumb={crumb}
-        title={t('op.title')}
-        subtitle={t('op.subtitle')}
-        actions={<LivenessPill capability="engineDataset" />}
+      <PageHeader breadcrumb={crumb} title={forecastTitle(t, 'whatToOrder')} />
+      <PurposeHeader page="whatToOrder" />
+      <SimulatedDataBanner capability="engineDataset" />
+      <DataAsOf
+        date={run?.planMadeAt ?? null}
+        detail={
+          <>
+            {run?.planMadeAt ? (
+              <>
+                <span data-testid="op-plan-source">
+                  {t('op.meta.plan')} <Data>{formatDate(run.planMadeAt)}</Data>
+                </span>{' '}
+                · {t('op.meta.horizon')} {t('op.meta.weeks', { count: run.weeks.length })}
+              </>
+            ) : (
+              t('op.meta.noPlan')
+            )}
+            {run?.previousAsOf && (
+              <>
+                {' '}
+                · {t('op.meta.previous')} <Data>{formatDate(run.previousAsOf)}</Data>
+              </>
+            )}
+          </>
+        }
       />
-      <PageMetaLine className="-mt-6 mb-2">
-        {run?.planMadeAt ? (
-          <>
-            {t('op.meta.plan')} <Data>{formatDate(run.planMadeAt)}</Data> · {t('op.meta.horizon')}{' '}
-            {t('op.meta.weeks', { count: run.weeks.length })}
-          </>
-        ) : (
-          t('op.meta.noPlan')
-        )}
-        {run?.previousAsOf && (
-          <>
-            {' '}
-            · {t('op.meta.previous')} <Data>{formatDate(run.previousAsOf)}</Data>
-          </>
-        )}
-      </PageMetaLine>
-      <p className="text-xs text-text-tertiary mb-1" data-testid="op-synthetic-note">
-        {t('op.synthetic')}
-      </p>
-      <p className="text-xs text-text-tertiary mb-4">{t('op.method')}</p>
-
-      {costs && (
-        <section className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-5" data-testid="op-costs">
-          <h2 className="text-section text-text-primary mb-2">{t('op.costs.title')}</h2>
-          <dl className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3 text-sm">
-            {(
-              [
-                ['holding', t('op.costs.holdingValue', { value: formatNumber(costs.holdingRatePerYear * 100) }), 'op.costs.placeholder'],
-                ['order', formatIDR(costs.orderCostIdr), 'op.costs.placeholder'],
-                ['rent', formatIDR(costs.rentIdrPerPalletWeek), 'op.costs.placeholder'],
-                ['penalty', formatIDR(costs.changePenaltyIdrPerPallet), 'op.costs.placeholderPenalty'],
-                ...(costs.maxRentedShare !== undefined
-                  ? ([['maxRent', t('op.costs.maxRentValue', { value: formatNumber(Math.round(costs.maxRentedShare * 1000) / 10) }), 'op.costs.placeholderWarehouse']] as const)
-                  : []),
-              ] as const
-            ).map(([k, value, note]) => (
-              <div key={k} data-testid={`op-cost-${k}`}>
-                <dt className="text-text-secondary">{t(`op.costs.${k}`)}</dt>
-                <dd>
-                  <Data>{value}</Data>
-                  <div className="text-xs text-warning-hover" data-testid={`op-cost-placeholder-${k}`}>
-                    {t(note)}
-                  </div>
-                </dd>
-              </div>
-            ))}
-          </dl>
-          <p className="text-xs text-text-tertiary mt-2">{t('op.costs.where')}</p>
-        </section>
-      )}
+      <DataHealthChip step="E14-05" className="mb-3" />
 
       <div className="mb-4">
         <FilterChipsBar<WarehouseKind> options={kinds} value={w?.kind ?? kind} onChange={setKind} />
@@ -498,18 +473,19 @@ const BuyerOrderPlan: React.FC = () => {
             />
           </div>
 
-          {w.shortfallWeeks.length > 0 && costs && <ShortfallPanel key={w.kind} w={w} rate={costs.rentIdrPerPalletWeek} />}
-
-          <section className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-6" data-testid="op-fill">
-            <h2 className="text-section text-text-primary mb-1">{t('op.fill.title')}</h2>
-            <p className="text-xs text-text-tertiary mb-3">{t('op.fill.intro')}</p>
-            <FillChart w={w} />
-            <FillTable w={w} />
-          </section>
-
           <section className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-6" data-testid="op-recs">
             <h2 className="text-section text-text-primary mb-1">{t('op.recs.title')}</h2>
             <p className="text-xs text-text-tertiary mb-3">{t('op.recs.intro')}</p>
+            <p className="text-xs text-text-secondary mb-3" data-testid="op-why">
+              {t('op.why')}{' '}
+              <Link to="/buyer/material-requirement" className="text-action underline" data-testid="op-why-requirement">
+                {t('op.why.requirement')}
+              </Link>{' '}
+              ·{' '}
+              <Link to="/buyer/safety-stock" className="text-action underline" data-testid="op-why-safety">
+                {t('op.why.safety')}
+              </Link>
+            </p>
             {rows.length === 0 ? (
               <p className="text-sm text-text-tertiary py-6 text-center" data-testid="op-recs-empty">
                 {t('op.recs.empty')}
@@ -644,17 +620,71 @@ const BuyerOrderPlan: React.FC = () => {
               </div>
             )}
           </section>
+
+          {w.shortfallWeeks.length > 0 && costs && <ShortfallPanel key={w.kind} w={w} rate={costs.rentIdrPerPalletWeek} />}
+
+          <details className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-6" data-testid="op-fill">
+            <summary className="cursor-pointer">
+              <h2 className="inline text-section text-text-primary">{t('op.fill.title')}</h2>
+            </summary>
+            <p className="text-xs text-text-secondary mt-3 mb-1" data-testid="op-fill-basis">
+              {t('op.fill.basis')}
+            </p>
+            <p className="text-xs text-text-tertiary mb-3">{t('op.fill.intro')}</p>
+            <FillChart w={w} />
+            <FillTable w={w} />
+          </details>
         </>
       )}
 
-      <section className="bg-bg-surface border border-border-subtle rounded-lg p-4 text-sm text-text-secondary space-y-2" data-testid="op-definitions">
-        <h2 className="text-section text-text-primary">{t('op.def.title')}</h2>
+      {costs && (
+        <details className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-5" data-testid="op-costs">
+          <summary className="cursor-pointer">
+            <h2 className="inline text-section text-text-primary">{t('op.costs.title')}</h2>
+          </summary>
+          <dl className="mt-3 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3 text-sm">
+            {(
+              [
+                ['holding', t('op.costs.holdingValue', { value: formatNumber(costs.holdingRatePerYear * 100) }), 'op.costs.placeholder'],
+                ['order', formatIDR(costs.orderCostIdr), 'op.costs.placeholder'],
+                ['rent', formatIDR(costs.rentIdrPerPalletWeek), 'op.costs.placeholder'],
+                ['penalty', formatIDR(costs.changePenaltyIdrPerPallet), 'op.costs.placeholderPenalty'],
+                ...(costs.maxRentedShare !== undefined
+                  ? ([['maxRent', t('op.costs.maxRentValue', { value: formatNumber(Math.round(costs.maxRentedShare * 1000) / 10) }), 'op.costs.placeholderWarehouse']] as const)
+                  : []),
+              ] as const
+            ).map(([k, value, note]) => (
+              <div key={k} data-testid={`op-cost-${k}`}>
+                <dt className="text-text-secondary">{t(`op.costs.${k}`)}</dt>
+                <dd>
+                  <Data>{value}</Data>
+                  <div className="text-xs text-warning-hover" data-testid={`op-cost-placeholder-${k}`}>
+                    {t(note)}
+                  </div>
+                </dd>
+              </div>
+            ))}
+          </dl>
+          <p className="text-xs text-text-tertiary mt-2">{t('op.costs.where')}</p>
+        </details>
+      )}
+
+      <details className="bg-bg-surface border border-border-subtle rounded-lg p-4 text-sm text-text-secondary space-y-2" data-testid="op-definitions">
+        <summary className="cursor-pointer">
+          <h2 className="inline text-section text-text-primary">{t('op.def.title')}</h2>
+        </summary>
+        <p>{t('op.method')}</p>
         <p>{t('op.def.cost')}</p>
         <p>{t('op.def.constraints')}</p>
         <p>{t('op.def.fill')}</p>
         <p>{t('op.def.fallback')}</p>
         <p>{t('op.def.cap')}</p>
-      </section>
+      </details>
+
+      <AboutThisPage>
+        <p>{t('op.subtitle')}</p>
+        <p data-testid="op-synthetic-note">{t('op.synthetic')}</p>
+      </AboutThisPage>
     </AppShellV2>
   );
 };

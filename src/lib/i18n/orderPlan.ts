@@ -8,7 +8,7 @@ export const orderPlanEn: Record<string, string> = {
   'op.title': 'Order plan',
   'op.subtitle':
     'When and how much to order, sized for all materials sharing a warehouse together: demand met every week, MOQ and order multiple kept, and warehouse space weighed against the cost of another order.',
-  'op.meta.plan': 'Finished-goods plan made',
+  'op.meta.plan': 'Plan source: SAP finished-goods plan,',
   'op.meta.horizon': 'Horizon',
   'op.meta.weeks': '{{count}} weeks',
   'op.meta.noPlan': 'No finished-goods plan',
@@ -45,6 +45,8 @@ export const orderPlanEn: Record<string, string> = {
   'op.kpi.rentCost.sub': 'At the placeholder rate',
 
   'op.fill.title': 'Projected warehouse fill by week',
+  'op.fill.basis':
+    'Includes the recommended orders on this page. Released call-offs not yet received are not counted yet; Make warehouse room adds them, so its “Now” fill can read higher for the same week.',
   'op.fill.intro':
     'Stock at the end of each week, in pallets, as a share of owned capacity. Above 100% the overflow goes to rented space and is costed. The lowest line is the least any plan could hold: each week’s need exactly, with no MOQ or multiple.',
   'op.fill.series.plan': 'Order plan',
@@ -64,6 +66,9 @@ export const orderPlanEn: Record<string, string> = {
   'op.fill.status.within': 'Within 80%',
 
   'op.recs.title': 'Recommended orders',
+  'op.why': 'Why these quantities:',
+  'op.why.requirement': 'Material requirement',
+  'op.why.safety': 'Safety stock targets',
   'op.recs.intro':
     'Each order with the constraint that bound it and the cost it saved. A recommendation becomes a call-off only when a planner acts: it is created here as a draft on the supplier’s open agreement, and released on the Call-offs page, where what remains on the agreement is checked.',
   'op.recs.empty': 'No order is needed in this warehouse over the horizon.',
@@ -129,7 +134,7 @@ export const orderPlanEn: Record<string, string> = {
   'op.short.intro':
     'In these weeks the stock is above owned capacity plus the {{max}} rented pallets the plan may use. Choose for each week: rent beyond the limit, or have a delivery come later.',
   'op.short.notStored':
-    'Your choice here is not saved and changes no order: act on it with the 3PL, on the Reschedule open orders page, or by giving a recommended order’s draft call-off a later date on the Call-offs page.',
+    'Your choice here is not saved and changes no order: act on it with the 3PL, on the Make warehouse room page, or by giving a recommended order’s draft call-off a later date on the Call-offs page.',
   'op.short.pallets': '{{value}} pallets short',
   'op.short.against': '{{pallets}} pallets against a limit of {{limit}}',
   'op.short.unavoidable':
@@ -155,15 +160,15 @@ export const orderPlanEn: Record<string, string> = {
   'op.short.breaks': 'Stock falls below safety stock',
   'op.short.next.rent': 'Book {{pallets}} more pallets with the 3PL for this week; the rented space cost above already counts them.',
   'op.short.next.later':
-    'Ask the supplier to deliver after this week: a confirmed order line is proposed on the Reschedule open orders page; a recommended order’s draft call-off is given a later date on the Call-offs page.',
-  'op.short.next.laterLink': 'Open Reschedule open orders',
+    'Ask the supplier to deliver after this week: a confirmed order line is proposed on the Make warehouse room page; a recommended order’s draft call-off is given a later date on the Call-offs page.',
+  'op.short.next.laterLink': 'Open Make warehouse room',
 };
 
 export const orderPlanId: Record<string, string> = {
   'op.title': 'Rencana pesanan',
   'op.subtitle':
     'Kapan dan berapa banyak memesan, ditentukan bersama untuk semua material dalam satu gudang: kebutuhan setiap minggu terpenuhi, MOQ dan kelipatan pesanan dijaga, dan ruang gudang ditimbang terhadap biaya satu pesanan lagi.',
-  'op.meta.plan': 'Rencana barang jadi dibuat',
+  'op.meta.plan': 'Sumber rencana: rencana barang jadi SAP,',
   'op.meta.horizon': 'Cakupan',
   'op.meta.weeks': '{{count}} minggu',
   'op.meta.noPlan': 'Tidak ada rencana barang jadi',
@@ -200,6 +205,8 @@ export const orderPlanId: Record<string, string> = {
   'op.kpi.rentCost.sub': 'Dengan tarif sementara',
 
   'op.fill.title': 'Proyeksi isi gudang per minggu',
+  'op.fill.basis':
+    'Termasuk pesanan yang disarankan di halaman ini. Call-off yang sudah dirilis tetapi belum diterima belum dihitung; Kosongkan ruang gudang menambahkannya, jadi isi “Sekarang” di sana bisa lebih tinggi untuk minggu yang sama.',
   'op.fill.intro':
     'Stok di akhir setiap minggu, dalam palet, sebagai porsi kapasitas sendiri. Di atas 100% kelebihannya masuk ruang sewa dan dihitung biayanya. Garis terendah adalah stok paling sedikit yang mungkin: kebutuhan setiap minggu tepat, tanpa MOQ atau kelipatan.',
   'op.fill.series.plan': 'Rencana pesanan',
@@ -219,6 +226,9 @@ export const orderPlanId: Record<string, string> = {
   'op.fill.status.within': 'Dalam 80%',
 
   'op.recs.title': 'Pesanan yang disarankan',
+  'op.why': 'Mengapa kuantitas ini:',
+  'op.why.requirement': 'Kebutuhan material',
+  'op.why.safety': 'Target stok pengaman',
   'op.recs.intro':
     'Setiap pesanan dengan batasan yang menentukannya dan biaya yang dihematnya. Saran menjadi call-off hanya bila perencana bertindak: dibuat di sini sebagai draf pada perjanjian terbuka pemasok, lalu dirilis di halaman Call-off, tempat sisa perjanjian diperiksa.',
   'op.recs.empty': 'Tidak ada pesanan yang dibutuhkan di gudang ini sepanjang cakupan.',
@@ -283,7 +293,7 @@ export const orderPlanId: Record<string, string> = {
   'op.short.intro':
     'Pada minggu-minggu ini stok melebihi kapasitas sendiri ditambah {{max}} palet sewa yang boleh dipakai rencana. Pilih untuk setiap minggu: menyewa melebihi batas, atau pengiriman datang lebih lambat.',
   'op.short.notStored':
-    'Pilihan di sini tidak disimpan dan tidak mengubah pesanan apa pun: tindak lanjuti dengan 3PL, di halaman Jadwal ulang pesanan terbuka, atau dengan memberi draf call-off dari pesanan yang direkomendasikan tanggal yang lebih lambat di halaman Call-off.',
+    'Pilihan di sini tidak disimpan dan tidak mengubah pesanan apa pun: tindak lanjuti dengan 3PL, di halaman Kosongkan ruang gudang, atau dengan memberi draf call-off dari pesanan yang direkomendasikan tanggal yang lebih lambat di halaman Call-off.',
   'op.short.pallets': 'kurang {{value}} palet',
   'op.short.against': '{{pallets}} palet terhadap batas {{limit}}',
   'op.short.unavoidable':
@@ -305,6 +315,6 @@ export const orderPlanId: Record<string, string> = {
   'op.short.breaks': 'Stok turun di bawah stok pengaman',
   'op.short.next.rent': 'Pesan {{pallets}} palet tambahan ke 3PL untuk minggu ini; biaya ruang sewa di atas sudah menghitungnya.',
   'op.short.next.later':
-    'Minta pemasok mengirim setelah minggu ini: baris pesanan terkonfirmasi diusulkan di halaman Jadwal ulang pesanan terbuka; draf call-off dari pesanan yang direkomendasikan diberi tanggal yang lebih lambat di halaman Call-off.',
-  'op.short.next.laterLink': 'Buka Jadwal ulang pesanan terbuka',
+    'Minta pemasok mengirim setelah minggu ini: baris pesanan terkonfirmasi diusulkan di halaman Kosongkan ruang gudang; draf call-off dari pesanan yang direkomendasikan diberi tanggal yang lebih lambat di halaman Call-off.',
+  'op.short.next.laterLink': 'Buka Kosongkan ruang gudang',
 };

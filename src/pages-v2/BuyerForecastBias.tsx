@@ -3,8 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import AppShellV2 from '../components/layout-v2/AppShellV2';
 import PageHeader from '../components/ui-v2/PageHeader';
-import PageMetaLine from '../components/ui-v2/PageMetaLine';
-import LivenessPill from '../components/ui-v2/LivenessPill';
 import KpiCard from '../components/ui-v2/KpiCard';
 import StatusPill from '../components/ui-v2/StatusPill';
 import FilterChipsBar from '../components/ui-v2/FilterChipsBar';
@@ -29,6 +27,12 @@ import { directionOf, type FvaGroup, type FvaMonth } from '../services/engine/fo
 import { labelOf } from '../services/sdc/materialMaster';
 import { NOTE_REQUIRED_CODE } from '../services/transitions/reasonCodes';
 import { useActiveReasonCodes, useReasonLabel } from './admin/reasonCodeDisplay';
+import PurposeHeader from '../components/forecast/PurposeHeader';
+import SimulatedDataBanner from '../components/forecast/SimulatedDataBanner';
+import AboutThisPage from '../components/forecast/AboutThisPage';
+import DataAsOf from '../components/forecast/DataAsOf';
+import TermTip from '../components/forecast/TermTip';
+import { forecastCrumb, forecastTitle } from '../components/forecast/forecastPages';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // FORECAST BIAS — REQ-E14-11, the Material Planning team's view (Experience:
@@ -311,7 +315,7 @@ const BuyerForecastBias: React.FC = () => {
   const { t } = useTranslation();
   const query = useForecastBias();
   const reasonLabel = useReasonLabel();
-  const crumb = [t('hub.nav.section.forecast'), t('fb.title')];
+  const crumb = forecastCrumb(t, 'forecastBias');
   const view = query.data ?? null;
   const [skuFilter, setSkuFilter] = useState<SkuFilter>('all');
   const [materialFilter, setMaterialFilter] = useState<MaterialFilter>('alarms');
@@ -332,17 +336,18 @@ const BuyerForecastBias: React.FC = () => {
 
   return (
     <AppShellV2>
-      <PageHeader breadcrumb={crumb} title={t('fb.title')} subtitle={t('fb.subtitle')} actions={<LivenessPill capability="engineDataset" />} />
-      <PageMetaLine className="-mt-6 mb-2">
-        {t('fb.meta.origins', { count: view.origins.length })} <Data data-testid="fb-first-origin">{formatDate(view.origins[0])}</Data> {t('fb.meta.to')}{' '}
-        <Data>{formatDate(view.origins[view.origins.length - 1])}</Data>
-      </PageMetaLine>
-      <p className="text-xs text-text-tertiary mb-1" data-testid="fb-synthetic-note">
-        {t('fb.synthetic')}
-      </p>
-      <p className="text-xs text-text-tertiary mb-4" data-testid="fb-source-note">
-        {t('fb.source')}
-      </p>
+      <PageHeader breadcrumb={crumb} title={forecastTitle(t, 'forecastBias')} />
+      <PurposeHeader page="forecastBias" />
+      <SimulatedDataBanner capability="engineDataset" />
+      <DataAsOf
+        date={view.asOf}
+        detail={
+          <>
+            {t('fb.meta.origins', { count: view.origins.length })} <Data data-testid="fb-first-origin">{formatDate(view.origins[0])}</Data>{' '}
+            {t('fb.meta.to')} <Data>{formatDate(view.origins[view.origins.length - 1])}</Data>
+          </>
+        }
+      />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-6" data-testid="fb-kpis">
         <KpiCard
@@ -380,8 +385,14 @@ const BuyerForecastBias: React.FC = () => {
       </div>
 
       <section className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-6" data-testid="fb-skus">
-        <h2 className="text-section text-text-primary mb-1">{t('fb.skus.title')}</h2>
-        <p className="text-xs text-text-tertiary mb-3">{t('fb.skus.intro')}</p>
+        <div className="mb-1 flex items-center gap-2">
+          <h2 className="text-section text-text-primary">{t('fb.skus.title')}</h2>
+          <TermTip term="Tracking signal" />
+        </div>
+        <p className="text-xs text-text-tertiary mb-1">{t('fb.skus.intro')}</p>
+        <p className="text-xs text-text-secondary mb-3" data-testid="fb-scale-hint">
+          {t('fux.scale.trackingSignal', { limit: formatNumber(view.limit) })}
+        </p>
         <div className="mb-3">
           <FilterChipsBar<SkuFilter>
             options={[
@@ -479,7 +490,11 @@ const BuyerForecastBias: React.FC = () => {
 
       <section className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-6" data-testid="fb-override">
         <h2 className="text-section text-text-primary mb-1">{t('fb.override.title')}</h2>
-        <p className="text-xs text-text-tertiary mb-3">{t('fb.override.intro')}</p>
+        <p className="text-xs text-text-tertiary mb-1">{t('fb.override.intro')}</p>
+        {/* F-12 — said beside the form, where a planner decides to override. */}
+        <p className="text-sm text-warning-hover mb-3" data-testid="fb-override-no-effect">
+          {t('fux.override.noEffect')}
+        </p>
         <OverrideForm view={view} />
         <h3 className="text-sm font-semibold text-text-primary mt-6 mb-2">{t('fb.ledger.title')}</h3>
         {view.overrides.length === 0 ? (
@@ -568,6 +583,12 @@ const BuyerForecastBias: React.FC = () => {
           </Link>
         </p>
       </section>
+
+      <AboutThisPage>
+        <p>{t('fb.subtitle')}</p>
+        <p data-testid="fb-synthetic-note">{t('fb.synthetic')}</p>
+        <p data-testid="fb-source-note">{t('fb.source')}</p>
+      </AboutThisPage>
     </AppShellV2>
   );
 };

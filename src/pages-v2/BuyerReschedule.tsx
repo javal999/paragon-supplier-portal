@@ -3,8 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { CartesianGrid, Legend, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import AppShellV2 from '@components/layout-v2/AppShellV2';
 import PageHeader from '@components/ui-v2/PageHeader';
-import PageMetaLine from '@components/ui-v2/PageMetaLine';
-import LivenessPill from '@components/ui-v2/LivenessPill';
 import FilterChipsBar from '@components/ui-v2/FilterChipsBar';
 import KpiCard from '@components/ui-v2/KpiCard';
 import StatusPill from '@components/ui-v2/StatusPill';
@@ -17,6 +15,12 @@ import Button from '@components/ui-v2/Button';
 import LoadingState from '@components/ui-v2/LoadingState';
 import ErrorState from '@components/ui-v2/ErrorState';
 import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
+import DataHealthChip from '@components/forecast/DataHealthChip';
+import PurposeHeader from '@components/forecast/PurposeHeader';
+import SimulatedDataBanner from '@components/forecast/SimulatedDataBanner';
+import AboutThisPage from '@components/forecast/AboutThisPage';
+import DataAsOf from '@components/forecast/DataAsOf';
+import { forecastCrumb, forecastTitle } from '@components/forecast/forecastPages';
 import { useToast } from '@hooks/useToast';
 import { useRefusalText } from '@hooks/useRefusalText';
 import { useVerbAvailability } from '@hooks/useVerbAvailability';
@@ -111,7 +115,7 @@ const BuyerReschedule: React.FC = () => {
   const [kind, setKind] = useState<WarehouseKind>('packaging');
   const [selected, setSelected] = useState<ReadonlySet<string>>(new Set());
   const [sent, setSent] = useState<ReadonlySet<string>>(new Set());
-  const crumb = [t('hub.nav.section.forecast'), t('rs.title')];
+  const crumb = forecastCrumb(t, 'makeRoom');
   const run: RescheduleView | null = query.data ?? null;
   // X-03 — the registry's own answer, read at render; each verb reads it again.
   const withheld = !isLive('engineDataset');
@@ -349,56 +353,22 @@ const BuyerReschedule: React.FC = () => {
 
   return (
     <AppShellV2>
-      <PageHeader breadcrumb={crumb} title={t('rs.title')} subtitle={t('rs.subtitle')} actions={<LivenessPill capability="engineDataset" />} />
-      <PageMetaLine className="-mt-6 mb-2">
-        {run?.planMadeAt ? (
-          <>
-            {t('rs.meta.plan')} <Data>{formatDate(run.planMadeAt)}</Data> · {t('rs.meta.horizon')}{' '}
-            {t('rs.meta.weeks', { count: run.weeks.length })}
-          </>
-        ) : (
-          t('rs.meta.noPlan')
-        )}
-      </PageMetaLine>
-      <p className="text-xs text-text-tertiary mb-1" data-testid="rs-synthetic-note">
-        {t('rs.synthetic')}
-      </p>
-      {withheld && (
-        <p className="text-xs text-warning-hover mb-1" data-testid="rs-withheld-note">
-          {t('rs.withheld')}
-        </p>
-      )}
-      <p className="text-xs text-text-tertiary mb-4">{t('rs.method')}</p>
-
-      {run && (
-        <section className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-5" data-testid="rs-settings">
-          <h2 className="text-section text-text-primary mb-2">{t('rs.settings.title')}</h2>
-          <dl className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
-            <div data-testid="rs-setting-threshold">
-              <dt className="text-text-secondary">{t('rs.settings.threshold')}</dt>
-              <dd>
-                <Data>{t('rs.settings.weeks', { count: run.thresholdWeeks })}</Data>
-                <div className="text-xs text-text-tertiary">{t('rs.settings.thresholdNote')}</div>
-              </dd>
-            </div>
-            <div data-testid="rs-setting-rent">
-              <dt className="text-text-secondary">{t('rs.settings.rent')}</dt>
-              <dd>
-                <Data>{formatIDR(run.costs.rentIdrPerPalletWeek)}</Data>
-                <div className="text-xs text-warning-hover">{t('rs.settings.placeholderFinance')}</div>
-              </dd>
-            </div>
-            <div data-testid="rs-setting-penalty">
-              <dt className="text-text-secondary">{t('rs.settings.penalty')}</dt>
-              <dd>
-                <Data>{formatIDR(run.costs.changePenaltyIdrPerPallet)}</Data>
-                <div className="text-xs text-warning-hover">{t('rs.settings.placeholderPlanner')}</div>
-              </dd>
-            </div>
-          </dl>
-          <p className="text-xs text-text-tertiary mt-2">{t('rs.settings.where')}</p>
-        </section>
-      )}
+      <PageHeader breadcrumb={crumb} title={forecastTitle(t, 'makeRoom')} />
+      <PurposeHeader page="makeRoom" />
+      <SimulatedDataBanner capability="engineDataset" />
+      <DataAsOf
+        date={run?.planMadeAt ?? null}
+        detail={
+          run?.planMadeAt ? (
+            <>
+              {t('rs.meta.horizon')} {t('rs.meta.weeks', { count: run.weeks.length })}
+            </>
+          ) : (
+            t('rs.meta.noPlan')
+          )
+        }
+      />
+      <DataHealthChip step="E14-13" className="mb-3" />
 
       <div className="mb-4">
         <FilterChipsBar<WarehouseKind> options={kinds} value={w?.kind ?? kind} onChange={setKind} />
@@ -446,12 +416,6 @@ const BuyerReschedule: React.FC = () => {
             />
           </div>
 
-          {onHandWeeks.length > 0 && (
-            <p className="text-sm text-text-secondary mb-4" data-testid="rs-onhand-note">
-              {t('rs.onHand.note', { count: onHandWeeks.length, first: weekLabel(onHandWeeks[0].weekStart), last: weekLabel(onHandWeeks[onHandWeeks.length - 1].weekStart) })}
-            </p>
-          )}
-
           <section className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-6" data-testid="rs-guard">
             <h2 className="text-section text-text-primary mb-1">{t('rs.guard.title')}</h2>
             <p className="text-xs text-text-tertiary mb-3">{t('rs.guard.intro', { weeks: run!.planChangeWindowWeeks })}</p>
@@ -484,8 +448,58 @@ const BuyerReschedule: React.FC = () => {
             <p className="text-xs text-text-tertiary mt-2">{t('rs.guard.callOffs')}</p>
           </section>
 
-          <section className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-6" data-testid="rs-fill">
-            <h2 className="text-section text-text-primary mb-1">{t('rs.fill.title')}</h2>
+          <section className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-6" data-testid="rs-relief">
+            <h2 className="text-section text-text-primary mb-1">{t('rs.relief.title')}</h2>
+            <p className="text-xs text-text-tertiary mb-3">{t('rs.relief.intro')}</p>
+            {relief.length === 0 ? (
+              <p className="text-sm text-text-tertiary py-6 text-center" data-testid="rs-relief-empty">
+                {t('rs.relief.empty')}
+              </p>
+            ) : (
+              <>
+                <div className="flex flex-wrap gap-2 mb-3">
+                  <Button variant="outline" onClick={selectFree} data-testid="rs-select-free">
+                    {t('rs.relief.selectFree', { count: freeCount })}
+                  </Button>
+                  <Button variant="secondary" onClick={clearSelection} data-testid="rs-select-clear">
+                    {t('rs.relief.clear')}
+                  </Button>
+                </div>
+                {proposalRows(relief, true, 'rs-relief')}
+              </>
+            )}
+          </section>
+
+          {/* FUX A4 (F-08): the on-hand caveat sits under the proposals, not above them. */}
+          {onHandWeeks.length > 0 && (
+            <p className="text-sm text-text-secondary mb-4" data-testid="rs-onhand-note">
+              {t('rs.onHand.note', { count: onHandWeeks.length, first: weekLabel(onHandWeeks[0].weekStart), last: weekLabel(onHandWeeks[onHandWeeks.length - 1].weekStart) })}
+            </p>
+          )}
+
+          {shortage.length > 0 && (
+            <section className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-6" data-testid="rs-shortage">
+              <h2 className="text-section text-text-primary mb-1">{t('rs.shortage.title')}</h2>
+              <p className="text-xs text-text-tertiary mb-3">{t('rs.shortage.intro')}</p>
+              {proposalRows(shortage, true, 'rs-shortage')}
+            </section>
+          )}
+
+          {noSaving.length > 0 && (
+            <details className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-6" data-testid="rs-nosaving">
+              <summary className="text-section text-text-primary cursor-pointer">{t('rs.noSaving.title', { count: noSaving.length })}</summary>
+              <p className="text-xs text-text-tertiary my-3">{t('rs.noSaving.intro')}</p>
+              {proposalRows(noSaving, false, 'rs-nosaving')}
+            </details>
+          )}
+
+          <details className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-6" data-testid="rs-fill">
+            <summary className="cursor-pointer">
+              <h2 className="inline text-section text-text-primary">{t('rs.fill.title')}</h2>
+            </summary>
+            <p className="text-xs text-text-secondary mt-3 mb-1" data-testid="rs-fill-basis">
+              {t('rs.fill.basis')}
+            </p>
             <p className="text-xs text-text-tertiary mb-3">{t('rs.fill.intro')}</p>
             <FillChart w={w} selected={effect.fill} />
             <div className="overflow-x-auto">
@@ -537,50 +551,14 @@ const BuyerReschedule: React.FC = () => {
                 </tbody>
               </Table>
             </div>
-          </section>
-
-          <section className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-6" data-testid="rs-relief">
-            <h2 className="text-section text-text-primary mb-1">{t('rs.relief.title')}</h2>
-            <p className="text-xs text-text-tertiary mb-3">{t('rs.relief.intro')}</p>
-            {relief.length === 0 ? (
-              <p className="text-sm text-text-tertiary py-6 text-center" data-testid="rs-relief-empty">
-                {t('rs.relief.empty')}
-              </p>
-            ) : (
-              <>
-                <div className="flex flex-wrap gap-2 mb-3">
-                  <Button variant="outline" onClick={selectFree} data-testid="rs-select-free">
-                    {t('rs.relief.selectFree', { count: freeCount })}
-                  </Button>
-                  <Button variant="secondary" onClick={clearSelection} data-testid="rs-select-clear">
-                    {t('rs.relief.clear')}
-                  </Button>
-                </div>
-                {proposalRows(relief, true, 'rs-relief')}
-              </>
-            )}
-          </section>
-
-          {shortage.length > 0 && (
-            <section className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-6" data-testid="rs-shortage">
-              <h2 className="text-section text-text-primary mb-1">{t('rs.shortage.title')}</h2>
-              <p className="text-xs text-text-tertiary mb-3">{t('rs.shortage.intro')}</p>
-              {proposalRows(shortage, true, 'rs-shortage')}
-            </section>
-          )}
-
-          {noSaving.length > 0 && (
-            <details className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-6" data-testid="rs-nosaving">
-              <summary className="text-section text-text-primary cursor-pointer">{t('rs.noSaving.title', { count: noSaving.length })}</summary>
-              <p className="text-xs text-text-tertiary my-3">{t('rs.noSaving.intro')}</p>
-              {proposalRows(noSaving, false, 'rs-nosaving')}
-            </details>
-          )}
+          </details>
 
           {w.info.length > 0 && (
-            <section className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-6" data-testid="rs-info">
-              <h2 className="text-section text-text-primary mb-1">{t('rs.info.title')}</h2>
-              <p className="text-xs text-text-tertiary mb-3">{t('rs.info.intro')}</p>
+            <details className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-6" data-testid="rs-info">
+              <summary className="cursor-pointer">
+                <h2 className="inline text-section text-text-primary">{t('rs.info.title')}</h2>
+              </summary>
+              <p className="text-xs text-text-tertiary my-3">{t('rs.info.intro')}</p>
               <ul className="text-sm space-y-1">
                 {w.info.map((i) => (
                   <li key={i.line.id} data-testid={`rs-info-${i.line.id}`}>
@@ -589,20 +567,61 @@ const BuyerReschedule: React.FC = () => {
                   </li>
                 ))}
               </ul>
-            </section>
+            </details>
           )}
         </>
       )}
 
-      <section className="bg-bg-surface border border-border-subtle rounded-lg p-4 text-sm text-text-secondary space-y-2" data-testid="rs-definitions">
-        <h2 className="text-section text-text-primary">{t('rs.def.title')}</h2>
+      {run && (
+        <details className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-5" data-testid="rs-settings">
+          <summary className="cursor-pointer">
+            <h2 className="inline text-section text-text-primary">{t('rs.settings.title')}</h2>
+          </summary>
+          <dl className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+            <div data-testid="rs-setting-threshold">
+              <dt className="text-text-secondary">{t('rs.settings.threshold')}</dt>
+              <dd>
+                <Data>{t('rs.settings.weeks', { count: run.thresholdWeeks })}</Data>
+                <div className="text-xs text-text-tertiary">{t('rs.settings.thresholdNote')}</div>
+              </dd>
+            </div>
+            <div data-testid="rs-setting-rent">
+              <dt className="text-text-secondary">{t('rs.settings.rent')}</dt>
+              <dd>
+                <Data>{formatIDR(run.costs.rentIdrPerPalletWeek)}</Data>
+                <div className="text-xs text-warning-hover">{t('rs.settings.placeholderFinance')}</div>
+              </dd>
+            </div>
+            <div data-testid="rs-setting-penalty">
+              <dt className="text-text-secondary">{t('rs.settings.penalty')}</dt>
+              <dd>
+                <Data>{formatIDR(run.costs.changePenaltyIdrPerPallet)}</Data>
+                <div className="text-xs text-warning-hover">{t('rs.settings.placeholderPlanner')}</div>
+              </dd>
+            </div>
+          </dl>
+          <p className="text-xs text-text-tertiary mt-2">{t('rs.settings.where')}</p>
+        </details>
+      )}
+
+      <details className="bg-bg-surface border border-border-subtle rounded-lg p-4 text-sm text-text-secondary space-y-2" data-testid="rs-definitions">
+        <summary className="cursor-pointer">
+          <h2 className="inline text-section text-text-primary">{t('rs.def.title')}</h2>
+        </summary>
+        <p>{t('rs.method')}</p>
         <p>{t('rs.def.need')}</p>
         <p>{t('rs.def.types')}</p>
         <p>{t('rs.def.zones')}</p>
         <p>{t('rs.def.value')}</p>
         <p>{t('rs.def.onHand')}</p>
         {run && run.unconfirmedPoLines > 0 && <p data-testid="rs-unconfirmed">{t('rs.def.unconfirmed', { count: run.unconfirmedPoLines })}</p>}
-      </section>
+      </details>
+
+      <AboutThisPage>
+        <p>{t('rs.subtitle')}</p>
+        <p data-testid="rs-synthetic-note">{t('rs.synthetic')}</p>
+        {withheld && <p data-testid="rs-withheld-note">{t('rs.withheld')}</p>}
+      </AboutThisPage>
     </AppShellV2>
   );
 };

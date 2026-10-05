@@ -29,9 +29,11 @@ afterEach(() => {
 describe('Fixed stock reconcile — planner', () => {
   it('renders in the shell, marked sample data, with the outcome counts', async () => {
     renderWithProviders(<BuyerFixedStockReconcile />, { identity: BUYER, route: '/buyer/fs-reconcile' });
-    expect(await screen.findByRole('heading', { name: 'Fixed stock reconcile' })).toBeInTheDocument();
+    // FUX A4: the planner's title is the menu label, and the one banner marks the sample data.
+    expect(await screen.findByRole('heading', { name: 'End-of-cycle stock check' })).toBeInTheDocument();
     expect(screen.getAllByRole('navigation').length).toBeGreaterThan(0);
-    expect(screen.getByTestId('sample-data-badge')).toBeInTheDocument();
+    expect(screen.getByTestId('simulated-data-banner')).toHaveTextContent('Sample data. Nothing here reaches suppliers or SAP.');
+    expect(screen.queryByTestId('sample-data-badge')).toBeNull();
     await screen.findByTestId(`fsr-row-${K8801}`);
     expect(screen.getByTestId('fsr-count-underCalled')).toHaveTextContent('1');
     expect(screen.getByTestId('fsr-count-notCommitted')).toHaveTextContent('1');
@@ -118,6 +120,12 @@ describe('Fixed stock reconcile — supplier', () => {
     // Read-only: no edit and no handoff notice on the supplier's own view.
     expect(screen.queryByTestId(`fsr-max-edit-${K8801}`)).toBeNull();
     expect(screen.queryByTestId(`handoff-maxstock-${K8801}`)).toBeNull();
+    // FUX A4 touches the planner's view only: the supplier keeps its own title
+    // and sample-data marker, and gets no planner purpose header or banner.
+    expect(screen.getByRole('heading', { name: 'Fixed stock reconcile' })).toBeInTheDocument();
+    expect(screen.getByTestId('sample-data-badge')).toBeInTheDocument();
+    expect(screen.queryByTestId('purpose-header')).toBeNull();
+    expect(screen.queryByTestId('simulated-data-banner')).toBeNull();
   });
 
   it('reads in Indonesian', async () => {
