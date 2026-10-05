@@ -33,7 +33,6 @@ import {
   Receipt,
   ShieldCheck,
   ShieldHalf,
-  Crosshair,
   ShoppingCart,
   SlidersHorizontal,
   Tags,
@@ -274,7 +273,7 @@ export const UTILITY_NAV: Record<Persona, readonly NavItem[]> = {
     { labelKey: 'hub.nav.pti.engine.materialRequirement', icon: Layers, path: '/buyer/material-requirement' },
     { labelKey: 'hub.nav.pti.engine.safetyStock', icon: ShieldHalf, path: '/buyer/safety-stock' },
     { labelKey: 'hub.nav.pti.engine.publishedVersions', icon: CalendarRange, path: '/buyer/forecasts' },
-    { labelKey: 'hub.nav.pti.engine.forecastBias', icon: Crosshair, path: '/buyer/forecast-bias' },
+    // FUX phase 2 B5 — Forecast bias left the user menu: it is Forecast quality's bias tab.
     { labelKey: 'hub.nav.pti.engine.dataHealth', icon: DatabaseZap, path: '/buyer/data-health' },
     { labelKey: 'hub.nav.pti.engine.modelBacktest', icon: FlaskConical, path: '/buyer/model-backtest' },
     { labelKey: 'hub.nav.pti.engine.reliability', icon: Target, path: '/buyer/reliability' },
