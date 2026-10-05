@@ -41,6 +41,8 @@ import { forecastCrumb, forecastTitle } from '@components/forecast/forecastPages
 
 const pct = (x: number | null) => (x === null ? '—' : `${Math.round(x * 1000) / 10}%`);
 const pallets = (x: number) => formatNumber(Math.round(x));
+/** F-21 — a quantity rounded to its unit, with the unit named. */
+const qtyIn = (x: number, uom: MaterialSafetyStockView['uom']) => `${qtyOf(x, uom)} ${uom}`;
 /** A change with its sign: +417, −295, 0. */
 const signed = (x: number, uom: MaterialSafetyStockView['uom']) => (x > 0 ? `+${qtyOf(x, uom)}` : x < 0 ? `−${qtyOf(-x, uom)}` : qtyOf(0, uom));
 
@@ -272,7 +274,7 @@ const BuyerSafetyStock: React.FC = () => {
                   )}
                 </TableCell>
                 <TableCell className="align-top">
-                  <Data data-testid={`sst-ss-${m.materialCode}`}>{qtyOf(m.safetyStock, m.uom)}</Data>
+                  <Data data-testid={`sst-ss-${m.materialCode}`}>{qtyIn(m.safetyStock, m.uom)}</Data>
                   <div className="text-xs" data-testid={`sst-source-${m.materialCode}`}>
                     {m.source === 'sap' ? (
                       <StatusPill variant="warning">{t('sst.source.sap')}</StatusPill>
@@ -292,10 +294,10 @@ const BuyerSafetyStock: React.FC = () => {
                   )}
                 </TableCell>
                 <TableCell className="align-top">
-                  <Data data-testid={`sst-sap-${m.materialCode}`}>{qtyOf(m.sapSafetyStock, m.uom)}</Data>
+                  <Data data-testid={`sst-sap-${m.materialCode}`}>{qtyIn(m.sapSafetyStock, m.uom)}</Data>
                 </TableCell>
                 <TableCell className="align-top">
-                  <Data data-testid={`sst-freed-${m.materialCode}`}>{qtyOf(m.freedUnits, m.uom)}</Data>
+                  <Data data-testid={`sst-freed-${m.materialCode}`}>{qtyIn(m.freedUnits, m.uom)}</Data>
                   {m.freedPallets !== null && (
                     <div className="text-xs text-text-tertiary">{t('sst.pallets', { value: pallets(m.freedPallets) })}</div>
                   )}
@@ -311,7 +313,7 @@ const BuyerSafetyStock: React.FC = () => {
                   </div>
                 </TableCell>
                 <TableCell className="align-top">
-                  <Data data-testid={`sst-rop-${m.materialCode}`}>{qtyOf(m.reorderPoint, m.uom)}</Data>
+                  <Data data-testid={`sst-rop-${m.materialCode}`}>{qtyIn(m.reorderPoint, m.uom)}</Data>
                 </TableCell>
                 <TableCell className="align-top min-w-[12rem]">
                   <ChangeCell m={m} />
