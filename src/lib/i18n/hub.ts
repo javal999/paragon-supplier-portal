@@ -25,6 +25,10 @@ export const hubEn: Record<string, string> = {
   'hub.nav.section.performance': 'Performance',
   'hub.nav.section.planning': 'Planning',
   'hub.nav.section.company': 'Company',
+  // FUX phase 1 (F-03, F-04, F-19) — the Forecast group's replacements.
+  'hub.nav.section.weeklyPlan': 'Weekly plan',
+  'hub.nav.section.review': 'Review',
+  'hub.nav.section.planningEngine': 'Planning engine',
 
   // PTI items
   'hub.nav.pti.tasks': 'My tasks',
@@ -59,6 +63,22 @@ export const hubEn: Record<string, string> = {
   'hub.nav.pti.suppliers': 'Suppliers',
   'hub.nav.pti.invoices': 'Invoices',
   'hub.nav.pti.performance': 'Supplier performance',
+  // FUX phase 1 — Weekly plan and Review items. The old item keys above stay:
+  // pages still read them until task A4.
+  'hub.nav.pti.whatToOrder': 'What to order',
+  'hub.nav.pti.makeRoom': 'Make warehouse room',
+  'hub.nav.pti.publishToSuppliers': 'Publish to suppliers',
+  'hub.nav.pti.supplierResponses': 'Supplier responses',
+  'hub.nav.pti.forecastQuality': 'Forecast quality',
+  'hub.nav.pti.stockCheck': 'End-of-cycle stock check',
+  // Planning engine pages, in the user menu (F-04).
+  'hub.nav.pti.engine.materialRequirement': 'Planning engine · Material requirement',
+  'hub.nav.pti.engine.safetyStock': 'Planning engine · Safety stock targets',
+  'hub.nav.pti.engine.publishedVersions': 'Planning engine · Published versions',
+  'hub.nav.pti.engine.forecastBias': 'Planning engine · Forecast bias',
+  'hub.nav.pti.engine.dataHealth': 'Planning engine · Data health',
+  'hub.nav.pti.engine.modelBacktest': 'Planning engine · Model backtest',
+  'hub.nav.pti.engine.reliability': 'Planning engine · Supplier reliability',
 
   // Supplier items
   'hub.nav.sup.todo': 'To do',
@@ -184,6 +204,9 @@ export const hubId: Record<string, string> = {
   'hub.nav.section.performance': 'Kinerja',
   'hub.nav.section.planning': 'Perencanaan',
   'hub.nav.section.company': 'Perusahaan',
+  'hub.nav.section.weeklyPlan': 'Rencana mingguan',
+  'hub.nav.section.review': 'Evaluasi',
+  'hub.nav.section.planningEngine': 'Mesin perencanaan',
 
   'hub.nav.pti.tasks': 'Tugas saya',
   'hub.nav.pti.replies': 'Balasan pemasok',
@@ -217,6 +240,19 @@ export const hubId: Record<string, string> = {
   'hub.nav.pti.suppliers': 'Pemasok',
   'hub.nav.pti.invoices': 'Faktur',
   'hub.nav.pti.performance': 'Kinerja pemasok',
+  'hub.nav.pti.whatToOrder': 'Apa yang dipesan',
+  'hub.nav.pti.makeRoom': 'Kosongkan ruang gudang',
+  'hub.nav.pti.publishToSuppliers': 'Terbitkan ke pemasok',
+  'hub.nav.pti.supplierResponses': 'Tanggapan pemasok',
+  'hub.nav.pti.forecastQuality': 'Kualitas prakiraan',
+  'hub.nav.pti.stockCheck': 'Cek stok akhir siklus',
+  'hub.nav.pti.engine.materialRequirement': 'Mesin perencanaan · Kebutuhan material',
+  'hub.nav.pti.engine.safetyStock': 'Mesin perencanaan · Target stok pengaman',
+  'hub.nav.pti.engine.publishedVersions': 'Mesin perencanaan · Versi terbit',
+  'hub.nav.pti.engine.forecastBias': 'Mesin perencanaan · Bias prakiraan',
+  'hub.nav.pti.engine.dataHealth': 'Mesin perencanaan · Kesehatan data',
+  'hub.nav.pti.engine.modelBacktest': 'Mesin perencanaan · Uji model',
+  'hub.nav.pti.engine.reliability': 'Mesin perencanaan · Keandalan pemasok',
 
   'hub.nav.sup.todo': 'Yang perlu dikerjakan',
   'hub.nav.sup.orderSummary': 'Ringkasan pesanan',

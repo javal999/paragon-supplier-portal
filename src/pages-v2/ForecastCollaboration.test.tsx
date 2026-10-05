@@ -49,23 +49,15 @@ const responsesFor = (supplierId: string, material: string, period: string) =>
   requirementResponseStore.all().filter((r) => r.supplierId === supplierId && r.materialCode === material && r.periodBucket === period);
 
 describe('menu and copy (section 3.7)', () => {
-  it('PTI Forecast: Forecasts first, then Commitments & gaps, then Supplier reliability (REQ-E14-02), then the engine pages (REQ-E14-03, REQ-E14-04)', () => {
-    const forecast = PTI_NAV.find((s) => s.id === 'forecast')!;
-    expect(forecast.items.map((i) => [i.labelKey, i.path])).toEqual([
-      ['hub.nav.pti.forecasts', '/buyer/forecasts'],
-      ['hub.nav.pti.commitments', '/buyer/collaboration'],
-      ['hub.nav.pti.fsReconcile', '/buyer/fs-reconcile'],
-      ['hub.nav.pti.dataHealth', '/buyer/data-health'],
-      ['hub.nav.pti.demandForecast', '/buyer/demand-forecast'],
-      ['hub.nav.pti.forecastBias', '/buyer/forecast-bias'],
-      ['hub.nav.pti.modelBacktest', '/buyer/model-backtest'],
-      ['hub.nav.pti.reliability', '/buyer/reliability'],
-      ['hub.nav.pti.materialRequirement', '/buyer/material-requirement'],
-      ['hub.nav.pti.safetyStock', '/buyer/safety-stock'],
-      ['hub.nav.pti.orderPlan', '/buyer/order-plan'],
-      ['hub.nav.pti.reschedule', '/buyer/reschedule'],
-      ['hub.nav.pti.stabilise', '/buyer/stabilise'],
+  it('PTI Weekly plan: What to order, Make warehouse room, Publish, then Supplier responses (FUX phase 1, F-03)', () => {
+    const weekly = PTI_NAV.find((s) => s.id === 'weeklyPlan')!;
+    expect(weekly.items.map((i) => [i.labelKey, i.path])).toEqual([
+      ['hub.nav.pti.whatToOrder', '/buyer/order-plan'],
+      ['hub.nav.pti.makeRoom', '/buyer/reschedule'],
+      ['hub.nav.pti.publishToSuppliers', '/buyer/stabilise'],
+      ['hub.nav.pti.supplierResponses', '/buyer/collaboration'],
     ]);
+    expect(PTI_NAV.find((s) => s.id === 'forecast')).toBeUndefined();
   });
 
   it('every new string exists in EN and ID', () => {

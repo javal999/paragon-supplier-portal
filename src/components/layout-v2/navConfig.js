@@ -97,27 +97,31 @@ export const PTI_NAV = [
     ]
   },
   {
-    id: 'forecast',
-    labelKey: 'hub.nav.section.forecast',
+    // FUX-D1/D2 (owner, 2026-10-05) and FORECAST-UX-EVALUATION-2026-10 §3
+    // (F-03, F-04, F-19): the 13-item Forecast group became the weekly cycle,
+    // in data order, plus a Review section. The engine pages moved to the user
+    // menu (UTILITY_NAV.buyer, "Planning engine").
+    id: 'weeklyPlan',
+    labelKey: 'hub.nav.section.weeklyPlan',
     roles: ['MP'],
     items: [
-      { labelKey: 'hub.nav.pti.forecasts', icon: CalendarRange, path: '/buyer/forecasts' },
-      { labelKey: 'hub.nav.pti.commitments', icon: ChartLine, path: '/buyer/collaboration' },
-      { labelKey: 'hub.nav.pti.fsReconcile', icon: Scale, path: '/buyer/fs-reconcile' },
-      { labelKey: 'hub.nav.pti.dataHealth', icon: DatabaseZap, path: '/buyer/data-health' },
-      { labelKey: 'hub.nav.pti.demandForecast', icon: TrendingUp, path: '/buyer/demand-forecast' },
-      { labelKey: 'hub.nav.pti.forecastBias', icon: Crosshair, path: '/buyer/forecast-bias' },
-      { labelKey: 'hub.nav.pti.modelBacktest', icon: FlaskConical, path: '/buyer/model-backtest' },
-      { labelKey: 'hub.nav.pti.reliability', icon: Target, path: '/buyer/reliability' },
-      {
-        labelKey: 'hub.nav.pti.materialRequirement',
-        icon: Layers,
-        path: '/buyer/material-requirement'
-      },
-      { labelKey: 'hub.nav.pti.safetyStock', icon: ShieldHalf, path: '/buyer/safety-stock' },
-      { labelKey: 'hub.nav.pti.orderPlan', icon: Container, path: '/buyer/order-plan' },
-      { labelKey: 'hub.nav.pti.reschedule', icon: CalendarSync, path: '/buyer/reschedule' },
-      { labelKey: 'hub.nav.pti.stabilise', icon: Anchor, path: '/buyer/stabilise' }
+      { labelKey: 'hub.nav.pti.whatToOrder', icon: Container, path: '/buyer/order-plan' },
+      { labelKey: 'hub.nav.pti.makeRoom', icon: CalendarSync, path: '/buyer/reschedule' },
+      { labelKey: 'hub.nav.pti.publishToSuppliers', icon: Anchor, path: '/buyer/stabilise' },
+      { labelKey: 'hub.nav.pti.supplierResponses', icon: ChartLine, path: '/buyer/collaboration' }
+    ]
+  },
+  {
+    // FUX-D2 — the Supplier scorecard is the planner's supplier-evaluation page
+    // (F-11). Procurement keeps it under Performance, so sectionForPath picks the
+    // section by role.
+    id: 'review',
+    labelKey: 'hub.nav.section.review',
+    roles: ['MP'],
+    items: [
+      { labelKey: 'hub.nav.pti.performance', icon: Award, path: '/buyer/scorecard' },
+      { labelKey: 'hub.nav.pti.forecastQuality', icon: TrendingUp, path: '/buyer/demand-forecast' },
+      { labelKey: 'hub.nav.pti.stockCheck', icon: Scale, path: '/buyer/fs-reconcile' }
     ]
   },
   {
@@ -172,9 +176,10 @@ export const PTI_NAV = [
     items: [{ labelKey: 'hub.nav.pti.invoices', icon: Receipt, path: '/buyer/invoices' }]
   },
   {
+    // FUX-D2 — a Material Planner sees the scorecard under Review instead.
     id: 'performance',
     labelKey: 'hub.nav.section.performance',
-    roles: ['MP', 'BUY'],
+    roles: ['BUY'],
     items: [{ labelKey: 'hub.nav.pti.performance', icon: Award, path: '/buyer/scorecard' }]
   }
 ];
@@ -288,7 +293,28 @@ export const UTILITY_NAV = {
       icon: BellRing,
       path: '/buyer/admin/alert-thresholds'
     },
-    { labelKey: 'hub.nav.util.reasonCodes', icon: ListChecks, path: '/buyer/admin/reason-codes' }
+    { labelKey: 'hub.nav.util.reasonCodes', icon: ListChecks, path: '/buyer/admin/reason-codes' },
+    // FUX phase 1 (F-04) — the planning engine pages, out of the main menu but
+    // never orphaned. Each label carries the "Planning engine" prefix.
+    {
+      labelKey: 'hub.nav.pti.engine.materialRequirement',
+      icon: Layers,
+      path: '/buyer/material-requirement'
+    },
+    { labelKey: 'hub.nav.pti.engine.safetyStock', icon: ShieldHalf, path: '/buyer/safety-stock' },
+    {
+      labelKey: 'hub.nav.pti.engine.publishedVersions',
+      icon: CalendarRange,
+      path: '/buyer/forecasts'
+    },
+    { labelKey: 'hub.nav.pti.engine.forecastBias', icon: Crosshair, path: '/buyer/forecast-bias' },
+    { labelKey: 'hub.nav.pti.engine.dataHealth', icon: DatabaseZap, path: '/buyer/data-health' },
+    {
+      labelKey: 'hub.nav.pti.engine.modelBacktest',
+      icon: FlaskConical,
+      path: '/buyer/model-backtest'
+    },
+    { labelKey: 'hub.nav.pti.engine.reliability', icon: Target, path: '/buyer/reliability' }
   ],
   supplier: [{ labelKey: 'hub.nav.util.glossary', icon: BookOpen, path: '/glossary' }]
 };
@@ -322,13 +348,18 @@ export function isItemActive(item, pathname) {
 
 /**
  * The menu section that owns a route, for the page header (NV-05).
+ *
+ * A route can sit in more than one section (`/buyer/scorecard` is under Review
+ * for MP and Performance for BUY), so the viewer's own menu is searched first.
+ * A route outside the viewer's menu falls back to any section that holds it;
+ * a route in no section returns null.
  * @param {string} pathname
+ * @param {HubRole} role
  * @returns {NavSection | null}
  */
-export function sectionForPath(pathname) {
-  const all = [...PTI_NAV, ...SUPPLIER_NAV];
-  for (const section of all) {
-    if (section.items.some((item) => isItemActive(item, pathname))) return section;
-  }
-  return null;
+export function sectionForPath(pathname, role) {
+  /** @param {NavSection} section */
+  const owns = (section) => section.items.some((item) => isItemActive(item, pathname));
+  const visible = [...navFor('buyer', role), ...SUPPLIER_NAV];
+  return visible.find(owns) ?? [...PTI_NAV, ...SUPPLIER_NAV].find(owns) ?? null;
 }
