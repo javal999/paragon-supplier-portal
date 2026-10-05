@@ -323,7 +323,7 @@ describe('THE CENSUS — acts a screen is meant to offer that no screen offers',
     // which is the `EMPTY-INPUT-REPORTS-CLEAN-01` shape written into a passing
     // test. Its door is real as of B3 and its coverage lives where coverage of
     // a create verb has to live: on the surface, in
-    // `BuyerSupplierApplications.test.tsx`, gated on `application:submit` and
+    // `BuyerSupplierApplications.test.jsx`, gated on `application:submit` and
     // probed in both directions against the seat that holds only the review
     // atoms.
     for (const id of [

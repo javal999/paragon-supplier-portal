@@ -6,7 +6,7 @@
 //
 // ── ⚠️ WHY THIS MACHINE EXISTS, AND IT IS NOT "THE WIZARD NEEDED A BACKEND" ──
 //
-// `SupplierRegistration.tsx` minted `String(10000 + Math.floor(Math.random() *
+// `SupplierRegistration.jsx` minted `String(10000 + Math.floor(Math.random() *
 // 90000))` and rendered it as `APP-2026-{n}`, beside a next-steps list.
 // **An external party was told a numbered application exists.** Nothing
 // anywhere recorded that it did. A `ProvenanceMarker` cannot un-tell a forged

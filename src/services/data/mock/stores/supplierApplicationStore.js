@@ -12,7 +12,7 @@
 // hand-stamped row describing an event that did not happen, on the one lane
 // whose entire reason for existing is that the platform currently TELLS AN
 // OUTSIDER something happened when nothing did
-// (`SupplierRegistration.tsx:1289` mints a random number; `:1203` renders it).
+// (`SupplierRegistration.jsx:1289` mints a random number; `:1203` renders it).
 // Seeding a plausible application here would be the same lie one layer down,
 // and harder to see.
 //

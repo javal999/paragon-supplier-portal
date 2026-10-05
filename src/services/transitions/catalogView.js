@@ -213,7 +213,7 @@ const DEFAULT_SOURCES = {
  * and after §52 the ONE place in the tree that branches on the SURFACE question
  * at all: every other surviving `trigger` reader keys on `creation` or
  * `cascade` — the two STRUCTURAL members — so `user` vs `system` is now purely
- * descriptive provenance, displayed (`ProcessFlows.tsx`) and never decided on.
+ * descriptive provenance, displayed (`ProcessFlows.jsx`) and never decided on.
  *
  * ⚠️ **ORDER IS LOAD-BEARING.** `creation` short-circuits FIRST because it is a
  * question about the edge's shape (no `from`), not about who performs it — 16

@@ -47,7 +47,7 @@ import { refusalKindOf } from './refusals';
 import { COMMAND_REFUSAL_GLOSSARY, DATA_ERROR_GLOSSARY } from '@lib/glossary';
 
 /**
- * The locale split used by the glossary page (`pages-v2/Glossary.tsx`), copied
+ * The locale split used by the glossary page (`pages-v2/Glossary.jsx`), copied
  * as a predicate rather than as a second convention: an `i18n.language` of
  * `id`, `id-ID` or `ID` all mean Indonesian, and anything else falls to EN.
  * @param {string | undefined} language

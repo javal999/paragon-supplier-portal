@@ -1,7 +1,7 @@
 // ────────────────────────────────────────────────────────────────────────────
 // Buyer purchase-requisition fixtures.
 //
-// Relocated from src/pages-v2/BuyerRequisitions.tsx in Phase 1' Batch 1.1b-iii.
+// Relocated from src/pages-v2/BuyerRequisitions.jsx in Phase 1' Batch 1.1b-iii.
 // Buyer-only ACQUIRE-stage documents — suppliers never see PRs.
 //
 // ⚠️ §69 — `approvalLevel` IS AUTHORED HERE AND NOWHERE ELSE. The values

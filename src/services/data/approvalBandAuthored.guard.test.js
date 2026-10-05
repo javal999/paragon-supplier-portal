@@ -81,7 +81,7 @@ const isLiteral = (rhs) => /^'[^']*'$/.test(rhs) || /^"[^"]*"$/.test(rhs);
 
 // ── MATCHER 2 · the READ site ───────────────────────────────────────────────
 // A relational or arithmetic use of `estimatedValue`. `===` / `!==` are NOT
-// threshold shapes (a presence check is one — `BuyerSourcing.tsx`), and `=>` is
+// threshold shapes (a presence check is one — `BuyerSourcing.jsx`), and `=>` is
 // excluded explicitly: an arrow returning the field is not a comparison, and
 // widening to catch it would accuse every accessor. Rule 2 — a widened matcher
 // manufactures false accusations exactly as readily as a narrow one hides truths.
@@ -140,7 +140,7 @@ describe('⚠️ §69 · THE MATCHERS, BEFORE ANY CLAIM ABOUT THE TREE', () => {
     const files = shipped(SRC).map((f) => relative(SRC, f).replace(/\\/g, '/'));
     expect(files).toContain('services/data/mock/fixtures/buyerRequisitions.js');
     expect(files).toContain('services/data/mock/MockCommandService.js');
-    expect(files).toContain('pages-v2/BuyerRequisitions.tsx');
+    expect(files).toContain('pages-v2/BuyerRequisitions.jsx');
     expect(files).toContain(TYPE_DECL_FILE);
     // …and the field is actually THERE to be found. Without this the zero-offender
     // assertions below could both pass over a tree that had renamed it away.

@@ -39,7 +39,7 @@ describe('POPULATION + MATCHER CONTROLS — before any row is believed', () => {
     expect(SCOPE_FILES.length).toBeGreaterThan(3);
     expect(SCOPE_FILES).toContain('src/services/data/types.js');
     expect(SCOPE_FILES).toContain('src/data/mockContracts.js');
-    expect(SCOPE_FILES).toContain('src/types/supplier.types.ts');
+    expect(SCOPE_FILES).toContain('src/types/supplier.types.js');
   });
 
   it('the derivation is NON-EMPTY, finds a known-true member and NOT a retired one', () => {
@@ -266,7 +266,7 @@ describe('⚠️ mintedAtWrite — the clock value COMPUTED AND THEN STORED', ()
     // reports on the scan rather than on the tree.
     expect(stored.length).toBeGreaterThan(0);
     expect(nonFixture.length).toBeGreaterThan(50);
-    expect(nonFixture).toContain('src/pages-v2/BuyerContracts.tsx');
+    expect(nonFixture).toContain('src/pages-v2/BuyerContracts.jsx');
 
     /** @type {string[]} */
     const found = [];

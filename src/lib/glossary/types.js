@@ -4,7 +4,7 @@
 // ⚠️ **GL-0's "NO PAGE, NO LINK, NO RENDER" HAS BEEN SPENT — GL-1 BUILT BOTH.**
 // The fence was a batch boundary, not a property of this file, and leaving the
 // sentence standing would have made the header lie the moment it was crossed.
-// `pages-v2/Glossary.tsx` renders every registry, and `ui-v2/GlossaryTermChip`
+// `pages-v2/Glossary.jsx` renders every registry, and `ui-v2/GlossaryTermChip`
 // links refusal sites to it. What ships HERE is unchanged: the VOCABULARY —
 // one definition, in one place, for terms that existed only as type members.
 //

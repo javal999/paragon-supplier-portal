@@ -104,10 +104,10 @@ describe('2B-5b-i — the ASN lane resolves', () => {
     //   1. same supplier · 2. PO at or past confirmation · 3. orderDate ≤ eta
     //   · 4. NOT determinately complete.
     //
-    // ⚠️ LEVEL 2 EXISTS BECAUSE `SupplierShipments.test.tsx` WENT RED, and it
+    // ⚠️ LEVEL 2 EXISTS BECAUSE `SupplierShipments.test.jsx` WENT RED, and it
     // was right to. Without it the rule sent the Draft ASN to `PO-2025-00108`
     // on an outstanding-quantity heuristic — a SENT order, against which the
-    // write path cannot create an ASN at all (`SupplierShipments.tsx:533`
+    // write path cannot create an ASN at all (`SupplierShipments.jsx:533`
     // queries `POStatus.CONFIRMED`), and consuming it also emptied the
     // "awaiting ASN" panel the create affordance lives in. A LEGALITY
     // CONSTRAINT READ OFF THE WRITE PATH BEATS A PLAUSIBILITY HEURISTIC.

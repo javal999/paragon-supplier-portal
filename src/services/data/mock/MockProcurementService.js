@@ -224,7 +224,7 @@ const SUP_007_KPI_SNAPSHOT = {
 //   ⚠️ **DO NOT ADD A TEST FOR THIS — IT HAS TWO, AND THEY WERE PROBED.**
 //   Returning the seeded snapshot to every tenant is killed by
 //   `scoping.contract.test.ts` *"getKpis: improvement actions are wired into the
-//   snapshot"* AND by `SupplierPerformance.test.tsx` *"empty: shows EmptyState
+//   snapshot"* AND by `SupplierPerformance.test.jsx` *"empty: shows EmptyState
 //   for a supplier with no published scorecard"*. Leaking ONLY `kpis` — the
 //   shape that slips past the contract test, which asserts `improvementActions`
 //   — is still killed by the surface test, because it renders sup-002 through

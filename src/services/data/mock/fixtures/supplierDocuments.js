@@ -12,7 +12,7 @@
 // them. That is the latent exclusion closing, and it is this batch's
 // deliverable — not a data correction.
 //
-// Relocated from src/pages-v2/SupplierDocuments.tsx in Phase 1B Batch 2.
+// Relocated from src/pages-v2/SupplierDocuments.jsx in Phase 1B Batch 2.
 // Every row carries supplierId so applySupplierScope can enforce identity
 // boundaries structurally.
 //

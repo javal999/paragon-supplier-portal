@@ -103,7 +103,7 @@ export const goodsReceiptFlow = {
       // a gap. `Quality Hold` was REACHABLE (`t_gr_hold`) and INESCAPABLE: goods
       // frozen in the machine with no verb to release them — while the page
       // already shipped a "Request Retest" affordance on that exact state whose
-      // handler was A TOAST (`BuyerGoodsReceipt.tsx`). THE UI PROMISED THE EDGE
+      // handler was A TOAST (`BuyerGoodsReceipt.jsx`). THE UI PROMISED THE EDGE
       // THE SCHEMA DID NOT HAVE. The button is wired to this verb in the same
       // batch; the promise is now kept rather than withdrawn.
       //

@@ -1319,7 +1319,7 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  *
  *   ⚠️ **AND THE PAGE ALREADY COMPUTES EXPIRY WITHOUT THIS MEMBER, WHICH IS
  *   WHY THE RETIREMENT IS BEHAVIOUR-PRESERVING RATHER THAN MERELY HARMLESS.**
- *   `SupplierDocuments.tsx` derives its expired KPI, its alert banner and its
+ *   `SupplierDocuments.jsx` derives its expired KPI, its alert banner and its
  *   per-row "expired N days ago" from `daysUntil(expiryDate)` — never from
  *   `status`. The status member was not the source of the expiry story on the
  *   one surface that tells it. (The parenthetical here read *"`SupplierCerts
@@ -3343,7 +3343,7 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
 
 /**
  * `id`:  Store-assigned. The store mints identity, never the caller.
- * `applicationNumber`: The human-readable reference, store-assigned and sequential.  ⚠️ **THIS IS THE HONEST OPPOSITE OF THE THING B1 EXISTS FOR.** `SupplierRegistration.tsx:1289` mints a RANDOM number and renders it at `:1203` beside a next-steps list, with no row anywhere behind it. This one is assigned by the store at the moment a row is written, so the number an applicant is told and the record Paragon holds are the same fact. **The wizard is NOT repointed here** — that is filed as B3.
+ * `applicationNumber`: The human-readable reference, store-assigned and sequential.  ⚠️ **THIS IS THE HONEST OPPOSITE OF THE THING B1 EXISTS FOR.** `SupplierRegistration.jsx:1289` mints a RANDOM number and renders it at `:1203` beside a next-steps list, with no row anywhere behind it. This one is assigned by the store at the moment a row is written, so the number an applicant is told and the record Paragon holds are the same fact. **The wizard is NOT repointed here** — that is filed as B3.
  * `supplierId`: ⚠️ **ALWAYS `null`, AND THE LITERAL TYPE IS THE ENFORCEMENT.** See the header: an applicant is not a tenant. `resolvedSupplierId` below is a different question and is NOT this.
  * `resolvedSupplierId`: The existing vendor an extension request names, resolved against the platform roster at birth — never the payload's word for it.  ⚠️ **NOT A TENANCY FIELD.** It says which supplier the application is ABOUT; `supplierId` above says which tenant owns the row, and the answer to that is nobody. Conflating them is precisely how an application would become visible to the supplier it names, which is not a thing this models. `null` for the two request types that name no existing vendor.
  * `s4Vendor`:  The vendor number as the caller stated it, kept for the record.

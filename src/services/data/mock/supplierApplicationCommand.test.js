@@ -149,7 +149,7 @@ describe('the birth — a number that names a real row', () => {
     expect(row.companyName).toBe('PT Sample Applicant');
     expect(row.requestType).toBe('External SR');
     // ⚠️ The number is ASSIGNED, not chosen. This is the honest opposite of
-    // `SupplierRegistration.tsx:1289`, which mints a random one for no row.
+    // `SupplierRegistration.jsx:1289`, which mints a random one for no row.
     expect(row.id).toBe('app-0001');
     expect(row.applicationNumber).toBe('APP-2026-0001');
     expect(row.submittedAt).toBeTruthy();

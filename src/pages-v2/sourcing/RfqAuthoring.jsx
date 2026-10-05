@@ -3,7 +3,7 @@
 // options — and the two dialogs around them: the template picker ("Start from
 // template" / "Copy a past RFQ") and "Save as template" (RFx spec 2026-09-21).
 //
-// Kept out of `BuyerSourcing.tsx` so the page owns the flow (draft, step gate,
+// Kept out of `BuyerSourcing.jsx` so the page owns the flow (draft, step gate,
 // dispatch) and this file owns the controls. Every rule a control enforces is
 // the model's (`rfqDraft.js` → `rfqModel.js`), so a step that lets the buyer
 // through is a step the create verb will accept.

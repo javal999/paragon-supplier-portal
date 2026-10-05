@@ -358,18 +358,18 @@ describe('BL32-READ · every reader of a value reads it through its accessor, at
     /** @type {Record<string, string[]>} */
     const table = {
       callOffTolerance: [
-        'src/pages-v2/BuyerCallOffs.tsx',
+        'src/pages-v2/BuyerCallOffs.jsx',
         'src/services/transitions/callOffRules.js',
         'src/services/transitions/callOffTolerance.js'
       ],
       callOffConfirmWorkingDays: [
-        'src/pages-v2/BuyerCallOffs.tsx',
+        'src/pages-v2/BuyerCallOffs.jsx',
         'src/services/transitions/callOffRules.js',
         'src/services/transitions/callOffTolerance.js'
       ],
       invoicePriceTolerance: [
-        'src/pages-v2/BuyerInvoices.tsx',
-        'src/pages-v2/SupplierInvoices.tsx',
+        'src/pages-v2/BuyerInvoices.jsx',
+        'src/pages-v2/SupplierInvoices.jsx',
         'src/pages-v2/invoices/InvoiceCollaboration.jsx',
         'src/services/transitions/fulfilmentConfig.js',
         'src/services/transitions/invoiceRollup.js'
@@ -390,13 +390,13 @@ describe('BL32-READ · every reader of a value reads it through its accessor, at
         'src/services/transitions/forecastRules.ts'
       ],
       commitmentDeadlineWorkingDays: [
-        'src/pages-v2/BuyerCommitments.tsx',
+        'src/pages-v2/BuyerCommitments.jsx',
         'src/pages-v2/SupplierForecastCommitments.tsx',
         'src/services/transitions/forecastConfig.ts',
         'src/services/transitions/forecastRules.ts'
       ],
       gapColourThresholds: [
-        'src/pages-v2/BuyerCommitments.tsx',
+        'src/pages-v2/BuyerCommitments.jsx',
         'src/services/transitions/forecastConfig.ts',
         'src/services/transitions/forecastRules.ts'
       ],
@@ -418,7 +418,7 @@ describe('BL32-READ · every reader of a value reads it through its accessor, at
         'src/services/transitions/inventoryRules.js'
       ],
       coverageThresholds: [
-        'src/pages-v2/BuyerCommitments.tsx',
+        'src/pages-v2/BuyerCommitments.jsx',
         'src/services/sdc/consolidation.js',
         'src/services/transitions/inventoryConfig.js',
         'src/services/transitions/inventoryRules.js'
@@ -486,7 +486,7 @@ describe('BL32-READ · every reader of a value reads it through its accessor, at
       ],
       // REQ-E06-04 BR-01 — the read model passes it to the pure reconcile; the page states it.
       fsReconcileCycleWeeks: [
-        'src/pages-v2/FixedStockReconcile.tsx',
+        'src/pages-v2/FixedStockReconcile.jsx',
         'src/services/data/mock/fixedStockReadModel.js',
         'src/services/transitions/forecastConfig.ts'
       ],

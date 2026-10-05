@@ -440,7 +440,7 @@ describe('⚠️ WHO MAY RESOLVE THROUGH THE SYSTEM-ONLY `atomsFor`', () => {
     // matcher that could not cross this file's own newline would report zero.
     const found = callers();
     expect(found).toContain('src/services/transitions/roles.js');
-    expect(found).not.toContain('src/pages-v2/BuyerOrders.tsx');
+    expect(found).not.toContain('src/pages-v2/BuyerOrders.jsx');
     expect(found.length).toBeGreaterThan(0);
   });
 

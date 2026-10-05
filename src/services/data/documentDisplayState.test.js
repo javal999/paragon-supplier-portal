@@ -158,8 +158,8 @@ describe('⚠️ THE WIRING, BY SITE — a working classifier proves nothing abo
       .replace(/\/\*[\s\S]*?\*\//g, ' ')
       .replace(/\/\/[^\n]*/g, ' ');
 
-  const DOCS_PAGE = 'src/pages-v2/SupplierDocuments.tsx';
-  const DASHBOARD = 'src/pages-v2/SupplierDashboard.tsx';
+  const DOCS_PAGE = 'src/pages-v2/SupplierDocuments.jsx';
+  const DASHBOARD = 'src/pages-v2/SupplierDashboard.jsx';
   const WIDGET = 'src/pages-v2/widgets/SupplierCertsExpiringWidget.jsx';
 
   it('CONTROL: the strip left real code behind on all three files', () => {

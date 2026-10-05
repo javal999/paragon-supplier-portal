@@ -1,0 +1,301 @@
+/** @import React from 'react' */
+import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
+import { Info, Lock, Users, ArrowRight, Search, AlertTriangle } from 'lucide-react';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import { rowActivation, ROW_FOCUS_CLASS } from '@components/ui-v2/TableRow';
+/** @import { RoleView } from './roles/roleModel' */
+import { deriveRoleViews, roleTotals } from './roles/roleModel';
+import CreateRolePanel from './roles/CreateRolePanel';
+import { customRoleStore } from '@services/transitions/customRoles';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// THE ROLES CATALOGUE — A LIST, AND A ROLE OPENS ITS OWN PAGE.
+//
+// The reference (Paragon TMS) lists roles as a table — code, name, description,
+// kind, and a view action — and puts the permissions on the role's own page.
+// **That shape is what transfers.** A stack of fully-expanded cards makes the
+// roster unscannable exactly when it grows, which is the moment a catalogue is
+// for.
+//
+// ⚠️ **WHAT DOES NOT TRANSFER: USERS ASSIGNED · LAST MODIFIED · STATUS.** We
+// hold no people, no modification record and no activation state, so those three
+// columns would be three invented facts filling a layout. They are ABSENT, not
+// empty — see `roles/roleModel.js`.
+//
+// ⚠️ **THERE IS NOW A CREATE PANEL, AND IT IS GATED — THE FIRST ROLE-GATED
+// SURFACE IN THIS PLATFORM.** The sentence that stood here said a Create button
+// would build a role that vanished on reload; a grant is now recorded through
+// the dispatcher and enforced for the session, and the marker states exactly
+// what survives and what does not rather than dropping the claim.
+//
+// ⚠️ **NOTHING BELOW THIS LINE LEARNED THAT CUSTOM ROLES EXIST.** `RoleRow`,
+// the table, the KPI tiles and the reach column are unchanged: they read
+// `deriveRoleViews()`, and the derivation grew. That is the property the
+// catalogue was built for and the reason the tile moves 8 → 9 with no edit here.
+// The two additions are the WRITE path (`CreateRolePanel`) and a version bump
+// that lets the memo re-derive after a grant — neither is a display change.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * `sub`:  Optional derived breakdown — what the total is made of.
+ * @type {React.FC<{ labelKey: string; value: number; testId: string; sub?: string; }>}
+ */
+const KpiTile = ({ labelKey, value, testId, sub }) => {
+  const { t } = useTranslation();
+  return (
+    <div className="bg-white border border-border-subtle rounded-lg p-4" data-testid={testId}>
+      <div className="text-label text-text-tertiary uppercase">{t(labelKey)}</div>
+      <div className="text-2xl font-semibold text-data-navy font-mono mt-1">{value}</div>
+      {sub && <div className="text-xs text-text-tertiary font-mono mt-0.5">{sub}</div>}
+    </div>
+  );
+};
+
+/** @type {React.FC<{ role: RoleView }>} */
+const RoleRow = ({ role }) => {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+
+  const open = () => navigate(`/buyer/roles/${role.id}`);
+  return (
+    // BL-31: the row is the only way into a role's detail, so it is keyboard
+    // operable through the same helper TableRow uses.
+    <tr
+      className={`border-t border-border-subtle hover:bg-bg-hover ${ROW_FOCUS_CLASS}`}
+      data-testid={`role-row-${role.id}`}
+      onClick={open}
+      {...rowActivation(open)}
+    >
+      <td className="py-3 px-4 align-middle">
+        <span className="font-mono text-xs text-data-navy">{role.id}</span>
+      </td>
+      <td className="py-3 px-4 align-middle text-sm font-medium text-text-primary">
+        {t(role.nameKey)}
+      </td>
+      <td className="py-3 px-4 align-middle text-xs text-text-secondary max-w-md">
+        {t(role.descriptionKey)}
+      </td>
+      <td className="py-3 px-4 align-middle">
+        <span
+          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] border border-border-subtle text-text-secondary bg-bg-hover whitespace-nowrap"
+          data-testid={`role-badge-${role.id}`}
+        >
+          <Lock size={10} className="text-teal" />
+          {t(role.isSystem ? 'roles.page.systemBadge' : 'roles.page.customBadge')}
+        </span>
+      </td>
+      <td className="py-3 px-4 align-middle text-xs text-text-tertiary font-mono whitespace-nowrap">
+        {t('roles.page.reach', {
+          count: role.modules.length,
+          modules: role.modules.length,
+          permissions: role.atoms.length
+        })}
+      </td>
+      <td className="py-3 px-4 align-middle text-right">
+        <span className="inline-flex items-center gap-1 text-xs text-action whitespace-nowrap">
+          {t('roles.page.view')}
+          <ArrowRight size={12} />
+        </span>
+      </td>
+    </tr>
+  );
+};
+
+/** @type {React.FC} */
+const RolesCatalogue = () => {
+  const { t } = useTranslation();
+  // The derivation reads a MUTABLE store now, so the memo needs a reason to run
+  // again. `version` is that reason and nothing else: no query caches a role
+  // definition, so there is no `invalidateQueries` that would do this for us.
+  const [version, setVersion] = useState(0);
+  const views = useMemo(deriveRoleViews, [version]);
+  // ⚠️ WHAT THE STORE REFUSED, READ FROM THE STORE ITSELF. A parse failure that
+  // returns an empty list is indistinguishable from an empty store, and the
+  // empty list is the reading that gets believed — `EMPTY-INPUT-REPORTS-CLEAN-01`
+  // in a storage read's exact shape. Both facts are rendered.
+  const store = useMemo(() => customRoleStore.readState(), [version]);
+  const totals = useMemo(() => roleTotals(views), [views]);
+  const [q, setQ] = useState('');
+
+  const needle = q.trim().toLowerCase();
+  const filtered = views.filter(
+    (r) =>
+      !needle || r.id.toLowerCase().includes(needle) || t(r.nameKey).toLowerCase().includes(needle)
+  );
+
+  return (
+    <AppShellV2>
+      {/* ⚠️ §70 — NO WIDTH AND NO PADDING HERE, AND THE ABSENCE IS THE
+          PATTERN RATHER THAN AN OMISSION. Derived from `AppRouter`: of the 42
+          mounted routes, 40 render their content DIRECTLY inside `AppShellV2`
+          with no wrapper — the shell's own `<main class="flex-1 overflow-auto
+          bg-bg-page p-8">` supplies the padding and constrains nothing. The two
+          Roles routes were the only exceptions, they carried `p-6` ON TOP of
+          that `p-8`, and they did not even agree with each other (`max-w-6xl`
+          here, `max-w-4xl` on the detail).
+
+          A `max-w-*` in this tree belongs on PROSE, never on a container —
+          `PageHeader`'s subtitle uses `max-w-prose`, and Glossary / ProcessFlows
+          put `max-w-4xl` on a `<p>`. That is a MEASURE constraint (line length),
+          which is a different thing from a page width. The div survives only to
+          carry its testid. */}
+      <div data-testid="roles-catalogue">
+        <header className="mb-4">
+          <div className="text-label text-text-tertiary uppercase font-mono">SET-RL · ROLES</div>
+          <h1 className="text-xl font-semibold text-text-primary">{t('roles.page.title')}</h1>
+          <p className="text-sm text-text-secondary">{t('roles.page.subtitle')}</p>
+        </header>
+
+        {/* KPI tiles — only the three we can DERIVE. */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
+          <KpiTile
+            labelKey="roles.page.kpi.roles"
+            value={totals.roles}
+            testId="kpi-roles"
+            // ⚠️ THE TILE NAMES WHAT IT COUNTS AND SHOWS THE SPLIT. The false
+            // "six" was the BUYER subset written as the population; putting both
+            // figures beside the total is what stops that reading recurring.
+            sub={t('roles.page.kpi.rolesSplit', {
+              buyer: totals.bySide.buyer,
+              supplier: totals.bySide.supplier,
+              both: totals.bySide.both
+            })}
+          />
+          <KpiTile
+            labelKey="roles.page.kpi.permissions"
+            value={totals.permissions}
+            testId="kpi-permissions"
+          />
+          <KpiTile labelKey="roles.page.kpi.actions" value={totals.actions} testId="kpi-actions" />
+        </div>
+
+        {/* — THE HONEST MARKER (D-CENSUS-8) — */}
+        <div
+          className="mb-5 border border-border-subtle rounded-lg bg-bg-hover p-4 flex gap-3"
+          data-testid="roles-readonly-marker"
+        >
+          <Info size={16} className="text-teal shrink-0 mt-0.5" />
+          <div>
+            <div className="text-sm font-medium text-text-primary">
+              {t('roles.page.readOnlyTitle')}
+            </div>
+            <p className="text-xs text-text-secondary leading-relaxed mt-1">
+              {t('roles.page.readOnlyBody', { count: totals.roles })}
+            </p>
+          </div>
+        </div>
+
+        {(store.unreadable || store.rejected.length > 0) && (
+          <section
+            className="mb-5 border border-warning rounded-lg bg-warning-soft p-4 flex gap-3"
+            data-testid="roles-store-notice"
+          >
+            <AlertTriangle size={16} className="text-warning shrink-0 mt-0.5" />
+            <div>
+              <div className="text-sm font-medium text-warning-hover">
+                {t(
+                  store.unreadable
+                    ? 'roles.page.storeUnreadableTitle'
+                    : 'roles.page.storeRejectedTitle'
+                )}
+              </div>
+              <p className="text-xs text-text-secondary leading-relaxed mt-1">
+                {t(
+                  store.unreadable
+                    ? 'roles.page.storeUnreadableBody'
+                    : 'roles.page.storeRejectedBody'
+                )}
+              </p>
+              {store.rejected.length > 0 && (
+                <ul className="mt-2 flex flex-col gap-0.5" data-testid="roles-store-rejected">
+                  {store.rejected.map((r) => (
+                    <li key={r.id} className="text-xs text-text-secondary">
+                      <span className="font-mono text-data-navy">{r.id}</span>
+                      {' — '}
+                      {r.reason}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </section>
+        )}
+
+        <CreateRolePanel onGranted={() => setVersion((v) => v + 1)} />
+
+        <div
+          className="mb-5 border border-border-subtle rounded-lg p-4 flex gap-3"
+          data-testid="roles-users-deferred"
+        >
+          <Users size={16} className="text-text-tertiary shrink-0 mt-0.5" />
+          <div>
+            <div className="text-sm font-medium text-text-primary">
+              {t('roles.page.usersDeferredTitle')}
+            </div>
+            <p className="text-xs text-text-secondary leading-relaxed mt-1">
+              {t('roles.page.usersDeferredBody')}
+            </p>
+          </div>
+        </div>
+
+        <label className="relative block mb-3">
+          <Search
+            size={14}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary"
+          />
+          <input
+            type="search"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder={t('roles.page.search')}
+            // BL-31: the wrapping <label> holds only an icon, so it named nothing.
+            aria-label={t('roles.page.search')}
+            data-testid="roles-search"
+            className="w-full pl-8 pr-3 py-2 text-sm border border-border-subtle rounded-md bg-white"
+          />
+        </label>
+
+        <div className="bg-white border border-border-subtle rounded-lg overflow-x-auto">
+          <table className="w-full text-left" data-testid="roles-table">
+            <thead>
+              <tr className="bg-bg-hover">
+                <th className="py-2 px-4 text-label text-text-tertiary uppercase">
+                  {t('roles.page.col.code')}
+                </th>
+                <th className="py-2 px-4 text-label text-text-tertiary uppercase">
+                  {t('roles.page.col.name')}
+                </th>
+                <th className="py-2 px-4 text-label text-text-tertiary uppercase">
+                  {t('roles.page.col.description')}
+                </th>
+                <th className="py-2 px-4 text-label text-text-tertiary uppercase">
+                  {t('roles.page.col.kind')}
+                </th>
+                <th className="py-2 px-4 text-label text-text-tertiary uppercase">
+                  {t('roles.page.col.scope')}
+                </th>
+                <th className="py-2 px-4 text-label text-text-tertiary uppercase text-right">
+                  {t('roles.page.col.actions')}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((r) => (
+                <RoleRow key={r.id} role={r} />
+              ))}
+            </tbody>
+          </table>
+          {filtered.length === 0 && (
+            <p className="p-4 text-sm text-text-tertiary" data-testid="roles-no-match">
+              {t('roles.page.noMatch')}
+            </p>
+          )}
+        </div>
+      </div>
+    </AppShellV2>
+  );
+};
+
+export default RolesCatalogue;

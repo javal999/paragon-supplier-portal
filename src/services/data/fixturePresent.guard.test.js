@@ -250,7 +250,7 @@ describe('⚠️ THE ABSOLUTE CLASS — dates that must not move', () => {
   it('⚠️ no surface carries its own copy of a regulatory date any more', () => {
     // BuyerCompliance held `new Date('2026-10-17')` — a duplicate that would not
     // have moved with the constant. It reads the constant now.
-    const src = readFileSync('src/pages-v2/BuyerCompliance.tsx', 'utf8');
+    const src = readFileSync('src/pages-v2/BuyerCompliance.jsx', 'utf8');
     const code = codeOnly(src);
     expect(code).not.toContain("new Date('2026-10-17')");
     expect(code).toContain('new Date(BPJPH_MANDATE_DATE)');

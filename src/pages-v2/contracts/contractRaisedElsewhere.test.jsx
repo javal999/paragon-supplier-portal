@@ -34,7 +34,7 @@ import { contractsEn, contractsId } from '@lib/i18n/contracts';
 import { RaisedElsewhereNote, RaisedElsewherePanel } from './RaisedElsewhere';
 import { renderWithProviders } from '@test/test-utils';
 
-const PAGE = readFileSync(resolve(__dirname, '..', 'BuyerContracts.tsx'), 'utf-8');
+const PAGE = readFileSync(resolve(__dirname, '..', 'BuyerContracts.jsx'), 'utf-8');
 
 /**
  * ⚠️ THE PAGE WITH ITS COMMENTS STRIPPED — and the need for it is the

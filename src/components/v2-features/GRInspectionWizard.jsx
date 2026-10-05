@@ -776,7 +776,7 @@ const GRInspectionWizard = ({
   // ── CP-3 · E4 — THE MODE IN FORCE, READ OFF THE LEDGER ────────────────────
   //
   // ⚠️ **ONE INSTANT, CAPTURED ONCE, AT THE TOP OF THE INSPECTION.** The
-  // `BuyerCompliance.tsx` precedent, and law 0.5's shape at a surface: nothing
+  // `BuyerCompliance.jsx` precedent, and law 0.5's shape at a surface: nothing
   // pure reads a clock, so the clock is read HERE, exactly once, and handed to
   // `effectiveEnforcement` as an argument. A fresh `new Date()` inside the
   // derivation would make the same inspection answer differently across renders

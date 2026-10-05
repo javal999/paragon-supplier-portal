@@ -251,7 +251,7 @@ describe('⚠️ THE PROPERTY THE STORED VERSION COULD NEVER HAVE HAD', () => {
  */
 describe('⚠️ the stored counters are RETIRED — one source or none', () => {
   const CONTRACTS_SRC = 'src/data/mockContracts.js';
-  const WIZARD_SRC = 'src/pages-v2/BuyerContracts.tsx';
+  const WIZARD_SRC = 'src/pages-v2/BuyerContracts.jsx';
   // A DECLARATION is read through the parser in either form — a TS
   // `f: number;` member or a JSDoc `@property {number} f` tag
   // (frontend-standard Phase 4: the fixture is now JavaScript).

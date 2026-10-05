@@ -88,12 +88,12 @@ export const INVOICE_VERB_DEFERRED = Object.freeze({
   t_invoice_submit: {
     why:
       'Supplier-owned. The buyer surface never submits an invoice on a supplier’s behalf — ' +
-      'SupplierInvoices.tsx wires it via useInvoiceSubmit. Not a gap; a different persona.'
+      'SupplierInvoices.jsx wires it via useInvoiceSubmit. Not a gap; a different persona.'
   },
   t_invoice_resubmit: {
     why:
       'Supplier-owned (REQ-E07-07). Finance returns an invoice with a reason; correcting and ' +
-      "resubmitting it is the supplier's act, wired in SupplierInvoices.tsx via useInvoiceResubmit. " +
+      "resubmitting it is the supplier's act, wired in SupplierInvoices.jsx via useInvoiceResubmit. " +
       'Not a gap; a different persona.'
   },
   t_invoice_approve: {

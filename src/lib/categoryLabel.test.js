@@ -116,12 +116,12 @@ function constLiterals(relPath, name) {
 const SURFACES = [
   {
     label: 'Marketplace filter chips',
-    file: 'src/pages-v2/Marketplace.tsx',
+    file: 'src/pages-v2/Marketplace.jsx',
     name: 'CATEGORIES'
   },
   {
     label: 'SupplierMyStorefront add-material categories',
-    file: 'src/pages-v2/SupplierMyStorefront.tsx',
+    file: 'src/pages-v2/SupplierMyStorefront.jsx',
     name: 'CATEGORY_OPTIONS'
   }
 ];

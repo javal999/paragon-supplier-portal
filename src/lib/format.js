@@ -69,7 +69,7 @@ export function formatIDR(value, opts) {
 
 // — Currency-aware money (CP-0 · 2e-c-2) ─────────────────────────────────────
 //
-// Was a local const in `BuyerSourcing.tsx`, where a comment recorded that
+// Was a local const in `BuyerSourcing.jsx`, where a comment recorded that
 // consolidating it "belongs to the currency ruling (FIND-01 / 2e-c), not here".
 // This is that ruling, so it lands here beside `formatIDR` — the rest of the
 // app's money already comes from this file.

@@ -63,7 +63,7 @@ describe('⚠️ Contract.daysUntilExpiry is RETIRED', () => {
   });
 
   it('the wizard no longer MINTS it — the one non-fixture writer is gone', () => {
-    const src = readFileSync('src/pages-v2/BuyerContracts.tsx', 'utf8');
+    const src = readFileSync('src/pages-v2/BuyerContracts.jsx', 'utf8');
     // Neither the computation nor the shorthand write survives.
     expect(/const daysUntilExpiry = Math\.round/.test(src)).toBe(false);
     expect(/^\s*daysUntilExpiry,\s*$/m.test(src)).toBe(false);
@@ -156,7 +156,7 @@ describe('⚠️ Shipment.daysInTransit and Shipment.delayDays are RETIRED', () 
     // `is this late?` on one page, agreeing because a single row of eighteen
     // carried the stored field. This asserts the stored one is gone from the
     // surface, which no type can express.
-    const page = readFileSync('src/pages-v2/BuyerShipments.tsx', 'utf8');
+    const page = readFileSync('src/pages-v2/BuyerShipments.jsx', 'utf8');
     const code = page
       .split('\n')
       .map((l) => l.replace('\r', ''))

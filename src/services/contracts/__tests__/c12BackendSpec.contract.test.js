@@ -219,7 +219,7 @@ describe('⚠️ EVERY ARTEFACT C12 NAMES EXISTS', () => {
 
   it('KNOWN-GOOD CONTROL — both citation forms resolve', () => {
     expect(citedFileExists('vercel.json'), 'a root path').toBe(true);
-    expect(citedFileExists('BuyerContracts.tsx'), 'a bare basename').toBe(true);
+    expect(citedFileExists('BuyerContracts.jsx'), 'a bare basename').toBe(true);
   });
 
   it('a GLOB is not read as a file claim — `*.mock.test.js` names no single file', () => {

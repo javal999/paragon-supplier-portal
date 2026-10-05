@@ -1,7 +1,7 @@
 // ────────────────────────────────────────────────────────────────────────────
 // §82 — THE DOCUMENT LANE'S FIRST WRITE PATH, AS A CONTRACT.
 //
-// The surface half lives in `pages-v2/supplierDocDeclaration.test.tsx` (a
+// The surface half lives in `pages-v2/supplierDocDeclaration.test.jsx` (a
 // supplier declares, compliance reviews, in both locales). This file asserts
 // what a rendered walk cannot: that the STORE actually moved, that the
 // dispatcher refuses what it must, and — the load-bearing one — that the two

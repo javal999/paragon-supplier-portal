@@ -1,7 +1,7 @@
 // ────────────────────────────────────────────────────────────────────────────
 // Supplier shipments / ASN fixtures.
 //
-// Relocated from src/pages-v2/SupplierShipments.tsx in Phase 1B Batch 2.
+// Relocated from src/pages-v2/SupplierShipments.jsx in Phase 1B Batch 2.
 // Every row carries supplierId so applySupplierScope can enforce identity
 // boundaries structurally — a supplier query CANNOT see another supplier's
 // ASNs.
@@ -33,7 +33,7 @@
 //   ASN-2025-00302 · sup-005 → PO-2025-00131, WHICH DID NOT EXIST
 //
 //   ⚠️ FOUR OF THESE WERE CROSS-TENANT, AND THAT IS NOT COSMETIC. `poReference`
-//   renders to the addressee (`SupplierShipments.tsx:331`) and flows into the
+//   renders to the addressee (`SupplierShipments.jsx:331`) and flows into the
 //   GR wizard's draft as `poNumber` (`GRInspectionWizard.jsx:181`), so a
 //   Sample Fragrance House PO number was being shown to PT Sample Packaging. Identity scoping is
 //   enforced on `supplierId` (`applySupplierScope`), which means the ASN was
@@ -47,7 +47,7 @@
 //   uniformly, first level that yields a unique answer:
 //     1. the PO's `supplierId` equals the ASN's  (the enforced axis);
 //     2. the PO IS AT OR PAST CONFIRMATION — the write path offers ASN creation
-//        only on CONFIRMED POs (`SupplierShipments.tsx:533`, `:633`), so an ASN
+//        only on CONFIRMED POs (`SupplierShipments.jsx:533`, `:633`), so an ASN
 //        against an unconfirmed order is a state the product cannot produce;
 //     3. the PO's `orderDate` is on or before the ASN's `eta`  (a shipment
 //        cannot precede its own order);

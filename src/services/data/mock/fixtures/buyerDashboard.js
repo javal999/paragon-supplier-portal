@@ -1,7 +1,7 @@
 // ────────────────────────────────────────────────────────────────────────────
 // Buyer dashboard fixtures.
 //
-// Relocated from src/pages-v2/BuyerDashboard.tsx in Phase 1B Batch 2.
+// Relocated from src/pages-v2/BuyerDashboard.jsx in Phase 1B Batch 2.
 // Both arrays are buyer-side aggregate views (production lines are internal
 // to Paragon; supplier-health rows span multiple suppliers), so they are
 // not tagged with a single supplierId.

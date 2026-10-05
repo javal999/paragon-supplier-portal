@@ -1586,7 +1586,7 @@ describe('INSTANCE-DATA-IN-A-TYPE-LABEL-01 — TRIMMED at 2B-2, completely', () 
     // `InspectionResult` (it has `bpomLotCheck`, which is a CHECK RESULT, not a
     // lot identity), not `InventoryRecord`, not the shipment or PO line. But
     // `ASNLineItem` DOES (`services/data/types.js`), it is rendered
-    // (`SupplierShipments.tsx`), the ASN wizard captures it — and the space that
+    // (`SupplierShipments.jsx`), the ASN wizard captures it — and the space that
     // uses it correctly is the UNDECLARED one:
     //
     //     MAT-88201 · description 'Fragrance concentrate – Rose Oud'

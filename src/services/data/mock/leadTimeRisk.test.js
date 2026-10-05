@@ -278,20 +278,20 @@ describe('BL-46 sites — one function computes the risk class, and nothing else
     // Known-true: the rules module calls it (the fallback in riskFor).
     expect(band).toContain('src/services/transitions/inventoryRules.js');
     // Known-false: the PTI inventory page used to filter by band; it must not now.
-    expect(band).not.toContain('src/pages-v2/BuyerInventory.tsx');
+    expect(band).not.toContain('src/pages-v2/BuyerInventory.jsx');
     expect(band).toEqual(['src/services/transitions/inventoryRules.js']);
   });
 
   it('every surface that shows a material risk reads positionRisk', () => {
     const risk = callers(/\bpositionRisk\s*\(/);
     expect(risk).toEqual([
-      'src/pages-v2/BuyerInventory.tsx',
+      'src/pages-v2/BuyerInventory.jsx',
       'src/pages-v2/inventory/inventoryDisplay.jsx',
       'src/pages-v2/widgets/BuyerInventoryWidget.jsx',
       'src/services/transitions/inventoryAlertRules.js'
     ]);
     // Known-false: the alert list shows the class the alert carries; it does not recompute it.
-    expect(risk).not.toContain('src/pages-v2/BuyerAlerts.tsx');
+    expect(risk).not.toContain('src/pages-v2/BuyerAlerts.jsx');
   });
 
   it('the thresholds are read only by the rules module', () => {

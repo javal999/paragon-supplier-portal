@@ -47,7 +47,7 @@
 //   `projectionGate/derive.js` classifies a display state by grepping its
 //   OWNING files for a write (`status: 'X'` · `return 'X'` · `= 'X'`).
 //   `supplierDocument`'s ownership is `/supplierDocuments|supplierDocumentStore|
-//   SupplierDocuments/`, so `SupplierDocuments.tsx` and the page's i18n
+//   SupplierDocuments/`, so `SupplierDocuments.jsx` and the page's i18n
 //   fragment are both in scope. This module returns TOKENS and the labels are
 //   the platform's existing `status.*` keys, so after this batch the string
 //   `'Expiring Soon'` still comes from exactly two places — the two fixture

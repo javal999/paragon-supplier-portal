@@ -546,7 +546,7 @@ Three arcs, in order. Nothing else is queued.
   `plan-grid/IntakeAdjustDrawer`. What is true is sharper: **only `t_pr_create`
   has a hook and a caller.** The panel ships a `Draft` → **"Submit for approval"**
   button that fires a **`variant: 'success'` toast and closes the drawer** — no
-  dispatch, no state change (`BuyerRequisitions.tsx:520-532`); the `Approved` →
+  dispatch, no state change (`BuyerRequisitions.jsx:520-532`); the `Approved` →
   "Create PO directly" / "Create sourcing event" button does the same
   (`:501-519`); and `Pending Approval` carries **no approve or reject affordance
   at all**. An unreachable verb is silent. **This one tells the buyer it
@@ -555,7 +555,7 @@ Three arcs, in order. Nothing else is queued.
 
 - **ARC 3 · SUPPLIER ONBOARDING.** ⚠️ **AMENDED 2026-09-01 — THE MECHANISM
   SURVIVES MEASUREMENT, THE CONCLUSION DOES NOT.** Re-derived today, and the
-  hard half still holds exactly: `src/pages-v2/SupplierRegistration.tsx` behind
+  hard half still holds exactly: `src/pages-v2/SupplierRegistration.jsx` behind
   `/register` contains **zero** service calls — `grep -c 'useDataService'` and
   `grep -c 'dispatch'` both return 0 — the whole form lives in `useState`, and
   submitting still sets a `const [submitted, setSubmitted] = useState(false)`
@@ -574,7 +574,7 @@ Three arcs, in order. Nothing else is queued.
   it.** What no surface does is let the SUPPLIER raise their own, and `/register`
   no longer pretends otherwise: it stopped minting a fabricated
   `APP-2026-{random}` under the label "Application number", and
-  `registrationHonesty.guard.test.ts` holds that closed bilaterally. **The gap
+  `registrationHonesty.guard.test.js` holds that closed bilaterally. **The gap
   is now one-sided, not total** — which is a materially different arc from the
   one this bullet used to describe, and the difference decides whether arc 3
   builds a machine or only a door onto one that exists.
@@ -611,7 +611,7 @@ never as a standalone batch:
 ## Routing
 Routing is HashRouter (`src/router/AppRouter.jsx`) — not BrowserRouter. The `/`
 home redirect points to `/buyer/dashboard`; unknown routes render a real 404
-(`src/pages-v2/NotFound.tsx`).
+(`src/pages-v2/NotFound.jsx`).
 
 Most routes are persona-prefixed (`/buyer/…`, `/supplier/…`). Two are
 deliberately NOT: `/marketplace` and `/glossary` (GL-1). The glossary is reached
@@ -657,7 +657,7 @@ nav groups under one neutral key, `nav.glossary`.
 
   **THE RULE IS ENFORCED BY A TYPE, NOT BY THIS PARAGRAPH.** `Button`'s
   `Variant` union has no `'primary'` member, so every route back is a `tsc`
-  failure; `src/pages-v2/solidButtonRetired.guard.test.ts` covers what a type
+  failure; `src/pages-v2/solidButtonRetired.guard.test.js` covers what a type
   cannot. **Do not restate the site count here** — the literal scan that opened
   the sweep was incomplete four ways (a `BulkActionsBar` prop, an
   `invoiceActionModel` flag that also drove a confirm step, two typed
@@ -1156,7 +1156,7 @@ correct and is instructive: with one side of its comparison deleted it could no
 longer fail, and *a guard that can no longer fail is worse than none.*
 
 **Where this is already honoured, so it is copied and not reinvented:**
-`chartPalette.guard.test.tsx:578` (the walk must REACH `ScoreBadge`'s `TONE`, the
+`chartPalette.guard.test.jsx:578` (the walk must REACH `ScoreBadge`'s `TONE`, the
 object its class was named for, with an anti-vacuity control saying so), and
 `thirdPartyIdentifiers.test.js`, whose ISO 6346 probe fires at a dead regex this
 file really shipped — `[A-Z]{4}U` where the standard has three letters, which

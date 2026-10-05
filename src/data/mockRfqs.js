@@ -347,7 +347,7 @@ const RAW_RFQS = [
     // itself empty and the quote side-panel could not be opened by hand at all —
     // the bid-price gate was unreachable and therefore unsmokeable. Purely
     // additive: rfq-002 stays pruned, so the honest-read proof in
-    // SupplierRFQs.test.tsx is untouched.
+    // SupplierRFQs.test.jsx is untouched.
     id: 'rfq-010',
     rfqNumber: 'RFQ-2026-010',
     title: 'PET Bottle 250ml Flip-Top — Emina refill line',

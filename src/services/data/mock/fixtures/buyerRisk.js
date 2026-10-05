@@ -1,7 +1,7 @@
 // ────────────────────────────────────────────────────────────────────────────
 // Buyer risk fixtures.
 //
-// Relocated from src/pages-v2/BuyerRisk.tsx in Phase 1B Batch 2. Buyer-side
+// Relocated from src/pages-v2/BuyerRisk.jsx in Phase 1B Batch 2. Buyer-side
 // aggregate risk views — alerts, geopolitical risks, exposure, scenarios,
 // compliance state, commodity prices.
 // ────────────────────────────────────────────────────────────────────────────

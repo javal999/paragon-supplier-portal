@@ -119,7 +119,7 @@
 //   What stays here is the part that IS local: this module has no real-defect
 //   probe available to it, because its subject was retired rather than fixed.
 //   ⚠️ AND THE TREE DOES NOT HOLD NONE — that half of the sentence was
-//   measured false when the rule was promoted. `chartPalette.guard.test.tsx`
+//   measured false when the rule was promoted. `chartPalette.guard.test.jsx`
 //   and `thirdPartyIdentifiers.test.js` both carry one.
 //
 // ── ⚠️ BOUND-NESS IS DERIVED UPSTREAM OF THIS MODULE, NOT DECLARED IN IT ────

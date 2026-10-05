@@ -43,7 +43,7 @@ const TODAY = DECLARED_PRESENT;
 //
 // ── ⚠️ THE DIVERGENCE IS CLOSED, AND THE CLOCK WON ──────────────────────────
 //   This widget used to ask the STATUS field what "expiring" means while
-//   `SupplierDocuments.tsx` asked the CLOCK. Both surfaces now read
+//   `SupplierDocuments.jsx` asked the CLOCK. Both surfaces now read
 //   `documentExpiry(doc, now)`, so they cannot drift apart again — and
 //   `critical` becomes reachable HONESTLY, by a count the projection can
 //   actually produce, rather than by the union member #316 retired.

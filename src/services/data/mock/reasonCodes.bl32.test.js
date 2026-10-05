@@ -247,23 +247,23 @@ describe('BL32-RSN-READ · every reader reads the list in force', () => {
 
   it('BL32-RSN-READ-02 · the pickers offer the active list; the records read through one label helper', () => {
     expect(callersOf(/\buseActiveReasonCodes\s*\(/)).toEqual([
-      'src/pages-v2/BuyerAlerts.tsx',
+      'src/pages-v2/BuyerAlerts.jsx',
       'src/pages-v2/BuyerForecastBias.tsx',
-      'src/pages-v2/SupplierCapacity.tsx',
+      'src/pages-v2/SupplierCapacity.jsx',
       'src/pages-v2/SupplierForecastCommitments.tsx',
       'src/pages-v2/SupplierForecasts.tsx',
-      'src/pages-v2/SupplierOrders.tsx',
+      'src/pages-v2/SupplierOrders.jsx',
       'src/pages-v2/admin/reasonCodeDisplay.js'
     ]);
     expect(callersOf(/\buseReasonLabel\s*\(/)).toEqual([
-      'src/pages-v2/BuyerAlerts.tsx',
-      'src/pages-v2/BuyerCapacity.tsx',
-      'src/pages-v2/BuyerCommitments.tsx',
+      'src/pages-v2/BuyerAlerts.jsx',
+      'src/pages-v2/BuyerCapacity.jsx',
+      'src/pages-v2/BuyerCommitments.jsx',
       'src/pages-v2/BuyerForecastBias.tsx',
-      'src/pages-v2/SupplierCapacity.tsx',
+      'src/pages-v2/SupplierCapacity.jsx',
       'src/pages-v2/SupplierForecastCommitments.tsx',
       'src/pages-v2/SupplierForecasts.tsx',
-      'src/pages-v2/SupplierOrders.tsx',
+      'src/pages-v2/SupplierOrders.jsx',
       'src/pages-v2/admin/reasonCodeDisplay.js',
       'src/pages-v2/orders/PoCollaboration.jsx'
     ]);

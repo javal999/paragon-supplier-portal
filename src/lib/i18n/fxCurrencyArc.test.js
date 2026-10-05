@@ -8,7 +8,7 @@
 //
 // The two halves are deliberately different guards:
 //
-//   · `Record<Reason, string>` in BuyerSourcing.tsx makes a reason with NO KEY a
+//   · `Record<Reason, string>` in BuyerSourcing.jsx makes a reason with NO KEY a
 //     compile error. That is the half a test cannot do, because a reason union
 //     widening is a type event, not a runtime one.
 //   · This file makes a key that RESOLVES TO NOTHING a test failure. That is the

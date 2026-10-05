@@ -918,7 +918,7 @@ describe('E1 — ⚠️ HEADLESS. NO STORE, NO CONSUMER, NO CLOCK', () => {
       // proves the ledger reaches the gate through the real read rather than a
       // prop. That spec exists because the wizard's own suite could not tell a
       // connected registry from a disconnected one at `BLOCK`.
-      '/src/pages-v2/BuyerGoodsReceipt.test.tsx',
+      '/src/pages-v2/BuyerGoodsReceipt.test.jsx',
       // ⚠️ GL-1 — the glossary's appearance/relation derivation, and the first
       // spec outside this module to drive `REFUSALS_OUTSIDE_ENFORCEMENT` as a
       // VALUE. It asserts that the two out-of-domain refusal shapes link to
@@ -929,7 +929,7 @@ describe('E1 — ⚠️ HEADLESS. NO STORE, NO CONSUMER, NO CLOCK', () => {
       // stored GR to prove the receipt is dated at the declared present. It
       // consumes `EnforcementSetting` as a TYPE for the empty ledger prop, the
       // §91 shape exactly. Authorised by the hub-clock batch.
-      '/src/pages-v2/hubClockStamps.test.tsx',
+      '/src/pages-v2/hubClockStamps.test.jsx',
       '/src/services/data/mock/enforcementSeam.test.js',
       '/src/services/data/mock/enforcementSeed.test.js',
       '/src/services/data/mock/enforcementSetCommand.test.js',
@@ -980,7 +980,7 @@ describe('E1 — ⚠️ HEADLESS. NO STORE, NO CONSUMER, NO CLOCK', () => {
       // list as a list of consumers, which is why the distinction is written
       // down instead of left for the next reader to discover.
       '/src/lib/storedFieldGate/allowlist.js',
-      '/src/pages-v2/BuyerGoodsReceipt.tsx', //           E4 — the page that reads the ledger
+      '/src/pages-v2/BuyerGoodsReceipt.jsx', //           E4 — the page that reads the ledger
       // ⚠️ GL-1 — THE FIRST VALUE CONSUMER OUTSIDE THIS MODULE'S OWN LANE, and
       // it consumes exactly one name: `REFUSALS_OUTSIDE_ENFORCEMENT`. The
       // glossary's "related terms" needed a relationship the CODE already

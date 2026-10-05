@@ -1,7 +1,7 @@
 // ────────────────────────────────────────────────────────────────────────────
 // Buyer discovery / marketplace fixtures.
 //
-// Relocated from src/pages-v2/BuyerDiscovery.tsx in Phase 1B Batch 2.
+// Relocated from src/pages-v2/BuyerDiscovery.jsx in Phase 1B Batch 2.
 // External marketplace entities (global suppliers, recommendations,
 // qualification pipeline, market intel, single-source gaps) — not scoped
 // to a single supplier; the IDs are marketplace IDs, not internal sup-* IDs.

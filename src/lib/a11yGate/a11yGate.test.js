@@ -47,7 +47,7 @@ describe('BL-31 a11y gate · POPULATION — nothing below means anything without
     // A known text button: the Wizard's Cancel.
     expect(sites).toContain('components/ui-v2/Wizard.jsx <button>');
     // The known clickable raw row, repaired by BL-31.
-    expect(sites).toContain('pages-v2/RolesCatalogue.tsx <tr onClick>');
+    expect(sites).toContain('pages-v2/RolesCatalogue.jsx <tr onClick>');
     // A known selection row acquitted by its own checkbox.
     expect(sites).toContain('pages-v2/rfx/RfxInviteeStep.jsx <tr onClick>');
   });
@@ -85,7 +85,7 @@ describe('BL-31 a11y gate · PROBE — fires on the defect, accepts the fix', ()
   });
 
   it('✅ FIRES AT THE REAL DEFECT: the roles row exactly as main shipped it before BL-31', () => {
-    // Verbatim from `RolesCatalogue.tsx` @ 9ad276a — a row whose click was the
+    // Verbatim from `RolesCatalogue.jsx` @ 9ad276a — a row whose click was the
     // only way into a role's page, with no tab stop and no key handler.
     const shipped = `
       const RoleRow = ({ role }) => (

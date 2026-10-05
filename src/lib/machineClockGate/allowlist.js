@@ -50,25 +50,25 @@ export const MACHINE_CLOCK_ALLOWLIST = [
     reason: 'Toast id fallback when crypto.randomUUID is unavailable; never rendered.'
   },
   {
-    key: 'src/pages-v2/BuyerChannelTriage.tsx::BuyerChannelTriage.runParse.cm.id::Date.now()',
+    key: 'src/pages-v2/BuyerChannelTriage.jsx::BuyerChannelTriage.runParse.cm.id::Date.now()',
     count: 1,
     why: 'unique-id',
     reason: 'Channel-message id suffix; receivedAt beside it reads the hub clock.'
   },
   {
-    key: 'src/pages-v2/BuyerChannelTriage.tsx::BuyerChannelTriage.onSubmitted::Date.now()',
+    key: 'src/pages-v2/BuyerChannelTriage.jsx::BuyerChannelTriage.onSubmitted::Date.now()',
     count: 1,
     why: 'unique-id',
     reason: 'Submission-session id suffix; its openedAt reads the hub clock.'
   },
   {
-    key: 'src/pages-v2/CommHubInbound.tsx::CommHubInbound.runParse.cm.id::Date.now()',
+    key: 'src/pages-v2/CommHubInbound.jsx::CommHubInbound.runParse.cm.id::Date.now()',
     count: 1,
     why: 'unique-id',
     reason: 'Channel-message id suffix; receivedAt beside it reads the hub clock.'
   },
   {
-    key: 'src/pages-v2/CommHubInbound.tsx::CommHubInbound.onSubmitted::Date.now()',
+    key: 'src/pages-v2/CommHubInbound.jsx::CommHubInbound.onSubmitted::Date.now()',
     count: 1,
     why: 'unique-id',
     reason: 'Submission-session id suffix; its openedAt reads the hub clock.'
@@ -80,13 +80,13 @@ export const MACHINE_CLOCK_ALLOWLIST = [
     reason: 'Submission-session id suffix; its openedAt reads the hub clock.'
   },
   {
-    key: 'src/pages-v2/SupplierMyStorefront.tsx::StorefrontEditor.submitNewMaterial.id::Date.now()',
+    key: 'src/pages-v2/SupplierMyStorefront.jsx::StorefrontEditor.submitNewMaterial.id::Date.now()',
     count: 1,
     why: 'unique-id',
     reason: 'Catalogue-row id for a material added in the session; never rendered.'
   },
   {
-    key: 'src/pages-v2/SupplierWhatsApp.tsx::WhatsAppPanel.addMessage.id::Date.now()',
+    key: 'src/pages-v2/SupplierWhatsApp.jsx::WhatsAppPanel.addMessage.id::Date.now()',
     count: 1,
     why: 'unique-id',
     reason: "Simulator message id (React key); the message's shown time reads the hub clock."

@@ -46,14 +46,14 @@ describe('POPULATION + MATCHER CONTROLS — before any row is believed', () => {
   });
 
   it('⚠️ A COMPARISON IS NOT A WRITE — the control that the first matcher lacked', () => {
-    // `BuyerContracts.tsx` compares `c.status === 'Expired'` several times and
+    // `BuyerContracts.jsx` compares `c.status === 'Expired'` several times and
     // writes it never. The broken matcher returned those as producers, which
     // would have classified a fixture-only state as computed.
-    const cmp = writeSites('Expired', ['src/pages-v2/BuyerContracts.tsx']);
+    const cmp = writeSites('Expired', ['src/pages-v2/BuyerContracts.jsx']);
     expect(cmp, 'a comparison was counted as a write').toHaveLength(0);
     // …and the file really does contain the comparison, so the zero above is a
     // matcher result and not an empty file.
-    expect(readFileSync('src/pages-v2/BuyerContracts.tsx', 'utf8')).toContain("=== 'Expired'");
+    expect(readFileSync('src/pages-v2/BuyerContracts.jsx', 'utf8')).toContain("=== 'Expired'");
   });
 
   it('⚠️ THE SCAN IS ENTITY-SCOPED — a shared literal is not one population', () => {

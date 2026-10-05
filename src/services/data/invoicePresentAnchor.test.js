@@ -20,7 +20,7 @@
 // the CP-0 trap these fixtures fell into is exactly what is being closed, and
 // closing it with a dated assertion would be closing it with its own defect.
 //
-// ⚠️ **AND `anchoredSurfaces.guard.test.tsx` IS NOT THE RIGHT HOME FOR EITHER,
+// ⚠️ **AND `anchoredSurfaces.guard.test.jsx` IS NOT THE RIGHT HOME FOR EITHER,
 // WHICH IS WORTH STATING BECAUSE ITS HEADER NAMES THIS BATCH AS ITS
 // PRECONDITION.** Its property is clock-INDEPENDENCE — the same rendered text at
 // two instants years apart — and `BuyerInvoices` cannot have that while

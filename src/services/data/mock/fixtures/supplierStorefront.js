@@ -1,8 +1,8 @@
 // ────────────────────────────────────────────────────────────────────────────
 // Supplier storefront fixtures.
 //
-// Relocated from src/pages-v2/SupplierMyStorefront.tsx and
-// src/pages-v2/SupplierStorefront.tsx in Phase 1B Batch 2. Every row carries
+// Relocated from src/pages-v2/SupplierMyStorefront.jsx and
+// src/pages-v2/SupplierStorefront.jsx in Phase 1B Batch 2. Every row carries
 // supplierId so applySupplierScope enforces identity boundaries structurally.
 // ────────────────────────────────────────────────────────────────────────────
 

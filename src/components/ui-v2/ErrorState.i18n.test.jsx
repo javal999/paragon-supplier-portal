@@ -241,7 +241,7 @@ describe('ErrorState · the 31 consumers actually reach it — a real page, both
   // ⚠️ **THE WALK.** Everything above mounts the component directly, which is a
   // fair test of the component and NO test of the wiring. These two drive a real
   // page into its error branch through the chaos service — the same route
-  // `BuyerOrders.test.tsx` uses — so the assertion is about what a person sees
+  // `BuyerOrders.test.jsx` uses — so the assertion is about what a person sees
   // after a read fails, not about a component in isolation.
   it('[id] a BUYER page that fails to read explains it in Indonesian', async () => {
     await i18n.changeLanguage('id');

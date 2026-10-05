@@ -45,7 +45,7 @@ export const isSourcingType = (v) => v === 'direct' || v === 'indirect';
 
 /**
  * AR-17 — the RFQ category onto the supplier master's own category vocabulary.
- * Moved from `BuyerSourcing.tsx`: the invitee pool and the sourcing type both
+ * Moved from `BuyerSourcing.jsx`: the invitee pool and the sourcing type both
  * read it, so it is one list.
  * @type {Readonly<Record<RFQCategory, readonly string[]>>}
  */

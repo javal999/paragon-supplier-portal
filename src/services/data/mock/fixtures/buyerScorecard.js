@@ -1,7 +1,7 @@
 // ────────────────────────────────────────────────────────────────────────────
 // Buyer supplier-scorecard fixtures.
 //
-// Relocated from src/pages-v2/BuyerScorecard.tsx in Phase 1' Batch 1.1b-iii.
+// Relocated from src/pages-v2/BuyerScorecard.jsx in Phase 1' Batch 1.1b-iii.
 // Portfolio grading across the active supplier network — a buyer-only aggregate,
 // not per-supplier-scoped.
 //

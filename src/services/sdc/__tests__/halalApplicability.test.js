@@ -440,7 +440,7 @@ describe('H2 — WIRED, and the prose parse is GONE', () => {
     // was there.
     //
     // ⚠️ `toLowerCase()` IS PART OF THE PATTERN, DELIBERATELY. A bare
-    // `toggles.includes('halal')` (`BuyerDiscovery.tsx:416`) is an ARRAY
+    // `toggles.includes('halal')` (`BuyerDiscovery.jsx:416`) is an ARRAY
     // MEMBERSHIP TEST ON A LITERAL UI TOGGLE ID — not a parse of prose, and
     // matching it would make this pin noisy. **A noisy pin trains people to
     // widen the exemption**, which is the one outcome that would retire the

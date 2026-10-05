@@ -178,8 +178,8 @@ describe('⚠️ RULING 2 — a state we cannot name honestly stays UNNAMED', ()
     // NOTHING, because both settling states sit on surfaces that already say
     // it better. Pinned HERE rather than left implicit: the guard that this
     // loses no information is that every settling state has a surface owning
-    // an in-flight account — `grSettleRemedy.test.tsx` and
-    // `BuyerInvoices.test.tsx` assert exactly ONE such sentence each, and
+    // an in-flight account — `grSettleRemedy.test.jsx` and
+    // `BuyerInvoices.test.jsx` assert exactly ONE such sentence each, and
     // would go red the day two of them speak again.
     expect(NEXT_ACT_KEY.settling).toBeNull();
     // …and the settling POPULATION is still exactly the SAP boundaries, so

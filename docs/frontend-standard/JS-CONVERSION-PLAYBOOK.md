@@ -159,7 +159,7 @@ change, or the module leaves its lane when renamed.
 | Files | 62 (15 specs) | 1,182 (495 specs) |
 | Lines | 6,860 | 310,755 |
 
-The pilot's components are small; the remaining pages are not (`BuyerSourcing.tsx` is 4,286
+The pilot's components are small; the remaining pages are not (`BuyerSourcing.jsx` is 4,286
 lines). Plan per folder, largest pages last, one PR per folder, and extend `jsdoc-fixups.mjs`
 first with the remaining mechanical losses (`as T`, `!`, `as const`, generic call arguments,
 const annotations), which were the bulk of the hand edits.

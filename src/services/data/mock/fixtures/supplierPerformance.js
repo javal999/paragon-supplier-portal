@@ -1,7 +1,7 @@
 // ────────────────────────────────────────────────────────────────────────────
 // Supplier performance fixtures.
 //
-// Relocated from src/pages-v2/SupplierPerformance.tsx in Phase 1B Batch 2.
+// Relocated from src/pages-v2/SupplierPerformance.jsx in Phase 1B Batch 2.
 // A KPI snapshot is per-supplier; the supplierId guard in the service layer
 // ensures only the owning supplier (or buyer) can read it.
 // ────────────────────────────────────────────────────────────────────────────

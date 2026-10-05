@@ -283,7 +283,7 @@ describe('RULING 2 · `create` branches on `toState`', () => {
     // one here would send a requested row down the has-a-declaration path and
     // `compliance.queue.noDeclaration` — written for exactly this case — could
     // never fire. The surface half of this assertion is in
-    // `BuyerComplianceRequest.test.tsx`.
+    // `BuyerComplianceRequest.test.jsx`.
     const res = await request(complianceSeat, {
       supplierId: 'sup-007',
       category: 'Tax & Legal',

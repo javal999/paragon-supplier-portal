@@ -185,7 +185,7 @@ const FILE_EXT = /\.(json|jsonc|js|mjs|cjs|ts|tsx|html|css|ico|txt|yml|yaml|md|l
  * ⚠️ **A FILE IS A THIRD KIND, AND ADDING IT CLOSED A VACUITY RATHER THAN
  * A GAP — WHICH IS WHY IT IS WORTH THE COMMENT.**
  *
- * `BuyerContracts.tsx`, `CLAUDE.md` and `findings.md` already satisfied the
+ * `BuyerContracts.jsx`, `CLAUDE.md` and `findings.md` already satisfied the
  * IDENTIFIER pattern (`Word.lowercase`), so each was being checked as a field
  * name: the assertion asked whether `src/` contains the string `tsx` or `md`,
  * which it always does. **Three members were passing on their own file
@@ -218,7 +218,7 @@ export function citedArtefacts() {
  * Does a cited file token name something real? A token is accepted if it
  * resolves from the repository root, or if its BASENAME exists somewhere in the
  * tree — C12 cites both (`src/services/.../c12BackendSpec.contract.test.js` and
- * bare `BuyerContracts.tsx`).
+ * bare `BuyerContracts.jsx`).
  *
  * ⚠️ `node_modules`, `dist` and `.git` are excluded: a dependency's file is
  * not this repository's artefact, and `dist/` is a BUILD OUTPUT that does not

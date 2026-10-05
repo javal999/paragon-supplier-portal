@@ -1,6 +1,6 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // GL-0 · THE GLOSSARY, ASSEMBLED. **Rendered since GL-1** by
-// `pages-v2/Glossary.tsx`, which is the only consumer; the appearance and
+// `pages-v2/Glossary.jsx`, which is the only consumer; the appearance and
 // relation derivations that page shows live in `pages-v2/glossary/
 // appearances.js`, NOT here — this module keeps its type-only dependencies.
 //

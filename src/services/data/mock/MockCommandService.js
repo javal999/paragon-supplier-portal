@@ -5545,7 +5545,7 @@ const hubSettingTarget = {
 // ── §82 · SUPPLIER DOCUMENTS — the declaration and the review ────────────────
 //
 // ⚠️ **THIS IS THE FIRST WRITE PATH INTO THE DOCUMENT LANE, AND ITS ABSENCE WAS
-// NOT A GAP — IT WAS A LIE.** `SupplierDocuments.tsx` shipped three upload
+// NOT A GAP — IT WAS A LIE.** `SupplierDocuments.jsx` shipped three upload
 // affordances (a header primary, a per-row button, a drop zone) that all landed
 // in a `submitUpload` which set a local boolean and fired a **success** toast:
 // no dispatch, no store, no file. The `BuyerRequisitions` shape one lane over,

@@ -161,7 +161,7 @@ const formatDate = (iso) => {
 };
 
 // ⚠️ `expiryTone(days)` IS DELETED HERE TOO — it was exported from this file and
-// copied verbatim into `BuyerContracts.tsx`, which is the shape a page-local
+// copied verbatim into `BuyerContracts.jsx`, which is the shape a page-local
 // width produces. Both are replaced by `CONTRACT_EXPIRY_TONE[displayStatus]`.
 
 /**

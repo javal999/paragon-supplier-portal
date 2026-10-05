@@ -1,7 +1,7 @@
 // ────────────────────────────────────────────────────────────────────────────
 // Buyer analytics fixtures.
 //
-// Relocated from src/pages-v2/BuyerAnalytics.tsx in Phase 1B Batch 2.
+// Relocated from src/pages-v2/BuyerAnalytics.jsx in Phase 1B Batch 2.
 // Aggregate buyer-side reporting data — not per-supplier-scoped.
 // ────────────────────────────────────────────────────────────────────────────
 
