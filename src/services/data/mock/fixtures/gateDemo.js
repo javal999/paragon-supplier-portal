@@ -87,11 +87,14 @@ const SUP_016 = /** @type {const} */ ({
 });
 
 /**
- * @typedef {object} Material
- * @property {string} materialCode
- * @property {string} description
- * @property {number} unitPrice
- * @property {string} [uom] -  Unit of the PO line and call-off. Absent = PCS (the packaging rows).
+ * `uom`:  Unit of the PO line and call-off. Absent = PCS (the packaging rows).
+ *
+ * @typedef {{
+ *   readonly materialCode: string;
+ *   readonly description: string;
+ *   readonly unitPrice: number;
+ *   readonly uom?: string;
+ * }} Material
  */
 
 /** @type {Material} */

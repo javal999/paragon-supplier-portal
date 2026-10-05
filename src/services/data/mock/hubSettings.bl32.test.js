@@ -573,11 +573,16 @@ const NOW = '2026-09-10T12:00:00.000Z';
 const EIGHT_DAYS_AGO = '2026-09-02T11:00:00.000Z';
 
 /**
- * @typedef {object} Flip
- * @property {number | boolean} to -  The new value the verb records.
- * @property {() => unknown} read -  A rule outcome that depends on the value.
- * @property {unknown} atDefault -  The outcome at the default, and after the change.
- * @property {unknown} afterChange
+ * `to`:  The new value the verb records.
+ * `read`:  A rule outcome that depends on the value.
+ * `atDefault`:  The outcome at the default, and after the change.
+ *
+ * @typedef {{
+ *   readonly to: number | boolean;
+ *   readonly read: () => unknown;
+ *   readonly atDefault: unknown;
+ *   readonly afterChange: unknown;
+ * }} Flip
  */
 
 /** REQ-E14-04's worked example: ten plan errors, a 5,000 order per cycle, and ten delivery delays. */

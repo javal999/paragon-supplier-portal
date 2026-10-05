@@ -24,61 +24,29 @@
 
 /** The single audit/telemetry event shape (DR-10). */
 /**
- * @typedef {object} TransitionEvent
- * @property {string} event -  The transition id that fired (e.g. `t_po_confirm`).
- * @property {string} actor -  Who acted — `personaType:supplierId` (or `buyer:all`).
- * @property {QueryScope} scope -  The scope the command ran under.
- * @property {string} correlationId -  Correlates the event with the command result / status.
- * @property {string} [causationId] The correlationId of the SOURCE command that caused this one, present only
- *   when this transition was fired by a cascade fan-out (DR-10). Absent on a
- *   directly-initiated command. Lets a 1→N cascade (RFQ award → the winning +
- *   losing quotations) be reassembled as ONE correlatable group WITHOUT
- *   collapsing the per-transition correlationId — `getCommandStatus` stays 1:1,
- *   so each cascaded transition remains individually queryable / settleable.
- * @property {CommandOutcome} outcome -  How it resolved.
- * @property {string} [reason] WHY it resolved that way, on a `failed` outcome — the same wire value as
- *   `CommandResult.reason`: `PREFIX` or `PREFIX:detail`, decoded back to its
- *   closed kind by `refusalKindOf` (the dispatcher's nine) or
- *   `settleFaultKindOf` (the settle boundary's three).
+ * `event`:  The transition id that fired (e.g. `t_po_confirm`).
+ * `actor`:  Who acted — `personaType:supplierId` (or `buyer:all`).
+ * `scope`:  The scope the command ran under.
+ * `correlationId`:  Correlates the event with the command result / status.
+ * `causationId`: The correlationId of the SOURCE command that caused this one, present only when this transition was fired by a cascade fan-out (DR-10). Absent on a directly-initiated command. Lets a 1→N cascade (RFQ award → the winning + losing quotations) be reassembled as ONE correlatable group WITHOUT collapsing the per-transition correlationId — `getCommandStatus` stays 1:1, so each cascaded transition remains individually queryable / settleable.
+ * `outcome`:  How it resolved.
+ * `reason`: WHY it resolved that way, on a `failed` outcome — the same wire value as `CommandResult.reason`: `PREFIX` or `PREFIX:detail`, decoded back to its closed kind by `refusalKindOf` (the dispatcher's nine) or `settleFaultKindOf` (the settle boundary's three).  ⚠️ **ADDED AT §43, AND ITS ABSENCE WAS LOAD-BEARING.** Until this field existed, `CommandResult` carried the reason and the EVENT did not — so a failure whose result nobody keeps left a record saying only THAT it failed. The cascade fan-out discards every `CommandResult` it produces (`dispatcher.js:329`), which is precisely the population the DR-10 ledger is for. Absent on `done` / `submitted`.
+ * `ts`:  ISO timestamp (supplied by the caller — no clock reads inside pure code).
+ * `decision`: Governed-decision provenance (C6-LOCK — G1.2b). Present only when the command carried a human override; the dispatcher forwards `CommandInput. decision` here VERBATIM (opaque — never interpreted, exactly as `causationId` is). This is how the DR-10 audit records suggestedQty→acceptedQty + reason + wasAdjusted alongside the actor + ts it already carries.
+ * `attribution`: ⚠️ **WHICH HUMAN — C10 §6.4, and it is a SECOND, ORTHOGONAL field beside `actor`, not a replacement for it.** `actor` answers *which seat* (`buyer:all`) and is a true fact about the scope; this answers *which human*. Collapsing them is `ENF-EVENT-ACTOR-IS-A-PERSONA-01` with extra steps.  **OPTIONAL, AND THAT IS A RULING RATHER THAN A HEDGE: ATTRIBUTION ABSENT = A MACHINE ACT, NEVER DRESSED AS UNATTRIBUTED.** The dispatcher sets it only when `transition.trigger === 'user'`; a system, cascade or creation transition has no person to name, and the four triggers already carry that distinction (C1). Recording those as `UNATTRIBUTED` would be a lie of a specific kind — `UNATTRIBUTED` is a CLAIM that a human acted and could not be resolved, and every member of `UNATTRIBUTED_REASONS` names a failure somebody can go and fix. Flooding the vocabulary with machine acts makes the count meaningless, and the count is the only pressure to fix one.  ⚠️ **ADDED WHILE THE SINK IS STILL IN-MEMORY, WHICH IS THE ONLY WINDOW.** DR-10 has no retrofit — *"the sink interface is the contract"* — so once the sink is durable every event ever written has a fixed shape, and a ledger of approvals that cannot name a decider is not repairable by a migration. It is a new ledger and a claim the old one meant something it does not say (C10 §6).  It carries the SESSION's actor (`QueryScope.actor`), never a payload field — §6.2 half one, and the reason `t_pr_approve` has no `approvedBy` in its `requiredFields`.
  *
- *   ⚠️ **ADDED AT §43, AND ITS ABSENCE WAS LOAD-BEARING.** Until this field
- *   existed, `CommandResult` carried the reason and the EVENT did not — so a
- *   failure whose result nobody keeps left a record saying only THAT it failed.
- *   The cascade fan-out discards every `CommandResult` it produces
- *   (`dispatcher.js:329`), which is precisely the population the DR-10 ledger is
- *   for. Absent on `done` / `submitted`.
- * @property {string} ts -  ISO timestamp (supplied by the caller — no clock reads inside pure code).
- * @property {CommandDecision} [decision] Governed-decision provenance (C6-LOCK — G1.2b). Present only when the
- *   command carried a human override; the dispatcher forwards `CommandInput.
- *   decision` here VERBATIM (opaque — never interpreted, exactly as `causationId`
- *   is). This is how the DR-10 audit records suggestedQty→acceptedQty + reason +
- *   wasAdjusted alongside the actor + ts it already carries.
- * @property {import('@lib/enforcement').ActorAttribution} [attribution] - ⚠️ **WHICH HUMAN — C10 §6.4, and it is a SECOND, ORTHOGONAL field beside
- *   `actor`, not a replacement for it.** `actor` answers *which seat*
- *   (`buyer:all`) and is a true fact about the scope; this answers *which
- *   human*. Collapsing them is `ENF-EVENT-ACTOR-IS-A-PERSONA-01` with extra
- *   steps.
- *
- *   **OPTIONAL, AND THAT IS A RULING RATHER THAN A HEDGE: ATTRIBUTION ABSENT =
- *   A MACHINE ACT, NEVER DRESSED AS UNATTRIBUTED.** The dispatcher sets it only
- *   when `transition.trigger === 'user'`; a system, cascade or creation
- *   transition has no person to name, and the four triggers already carry that
- *   distinction (C1). Recording those as `UNATTRIBUTED` would be a lie of a
- *   specific kind — `UNATTRIBUTED` is a CLAIM that a human acted and could not
- *   be resolved, and every member of `UNATTRIBUTED_REASONS` names a failure
- *   somebody can go and fix. Flooding the vocabulary with machine acts makes
- *   the count meaningless, and the count is the only pressure to fix one.
- *
- *   ⚠️ **ADDED WHILE THE SINK IS STILL IN-MEMORY, WHICH IS THE ONLY WINDOW.**
- *   DR-10 has no retrofit — *"the sink interface is the contract"* — so once
- *   the sink is durable every event ever written has a fixed shape, and a
- *   ledger of approvals that cannot name a decider is not repairable by a
- *   migration. It is a new ledger and a claim the old one meant something it
- *   does not say (C10 §6).
- *
- *   It carries the SESSION's actor (`QueryScope.actor`), never a payload field
- *   — §6.2 half one, and the reason `t_pr_approve` has no `approvedBy` in its
- *   `requiredFields`.
+ * @typedef {{
+ *   readonly event: string;
+ *   readonly actor: string;
+ *   readonly scope: QueryScope;
+ *   readonly correlationId: string;
+ *   readonly causationId?: string;
+ *   readonly outcome: CommandOutcome;
+ *   readonly reason?: string;
+ *   readonly ts: string;
+ *   readonly decision?: CommandDecision;
+ *   readonly attribution?: import('@lib/enforcement').ActorAttribution;
+ * }} TransitionEvent
  */
 
 /**

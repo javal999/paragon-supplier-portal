@@ -33,10 +33,15 @@
 
 /** One MRP controller on the administrator's list (MR-5 BR-02). */
 /**
- * @typedef {object} MrpController
- * @property {string} code -  The SAP MRP controller code (MARC-DISPO), e.g. `P12`. What a material carries.
- * @property {string} name -  Who the code is, as a supplier may read it, e.g. "Packaging planning desk".
- * @property {readonly string[]} userLabels -  The hub users behind the code, as labels. One or more (MR-5 BR-02).
+ * `code`:  The SAP MRP controller code (MARC-DISPO), e.g. `P12`. What a material carries.
+ * `name`:  Who the code is, as a supplier may read it, e.g. "Packaging planning desk".
+ * `userLabels`:  The hub users behind the code, as labels. One or more (MR-5 BR-02).
+ *
+ * @typedef {{
+ *   readonly code: string;
+ *   readonly name: string;
+ *   readonly userLabels: readonly string[];
+ * }} MrpController
  */
 
 /**

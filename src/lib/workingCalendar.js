@@ -19,14 +19,21 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * @typedef {object} WorkingCalendar
- * @property {number} utcOffsetHours -  Offset of the calendar's wall clock from UTC, in hours (WIB = 7).
- * @property {number} startHour -  First working hour of a working day (inclusive).
- * @property {number} endHour -  End of the working day (exclusive): 17 means work stops at 17:00.
- * @property {ReadonlySet<number>} workingWeekdays -  ISO weekday numbers that are working days (1 = Monday … 7 = Sunday).
- * @property {ReadonlySet<string>} holidays -  Non-working dates, `YYYY-MM-DD` in the calendar's own wall-clock date.
- * @property {ReadonlySet<string>} [extraWorkingDates] Dates ruled WORKING by ADM regardless of weekday (BL-50) — a make-up
- *   Saturday, say. Absent on a calendar nobody has ruled on.
+ * `utcOffsetHours`:  Offset of the calendar's wall clock from UTC, in hours (WIB = 7).
+ * `startHour`:  First working hour of a working day (inclusive).
+ * `endHour`:  End of the working day (exclusive): 17 means work stops at 17:00.
+ * `workingWeekdays`:  ISO weekday numbers that are working days (1 = Monday … 7 = Sunday).
+ * `holidays`:  Non-working dates, `YYYY-MM-DD` in the calendar's own wall-clock date.
+ * `extraWorkingDates`: Dates ruled WORKING by ADM regardless of weekday (BL-50) — a make-up Saturday, say. Absent on a calendar nobody has ruled on.
+ *
+ * @typedef {{
+ *   readonly utcOffsetHours: number;
+ *   readonly startHour: number;
+ *   readonly endHour: number;
+ *   readonly workingWeekdays: ReadonlySet<number>;
+ *   readonly holidays: ReadonlySet<string>;
+ *   readonly extraWorkingDates?: ReadonlySet<string>;
+ * }} WorkingCalendar
  */
 
 /**

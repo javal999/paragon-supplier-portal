@@ -125,10 +125,11 @@ import { bpomOf } from '@services/sdc/bpom';
 /** One material reference as some module states it. `module` is carried so a
  *  failure names the file that disagrees, not just the pair. */
 /**
- * @typedef {object} MaterialRef
- * @property {string} code
- * @property {string | null} meaning
- * @property {string} module
+ * @typedef {{
+ *   readonly code: string;
+ *   readonly meaning: string | null;
+ *   readonly module: string;
+ * }} MaterialRef
  */
 
 /** ONE STRING CELL IN THE TREE — the key it sat under, its value, the meaning
@@ -136,15 +137,15 @@ import { bpomOf } from '@services/sdc/bpom';
  *  code-bearing FIELD SET is derived from these rather than declared above
  *  them (2B-4a). Nothing here knows the name `materialCode`. */
 /**
- * @typedef {object} Cell
- * @property {string} field
- * @property {string} value
- * @property {string | null} meaning
- * @property {Readonly<Record<string, string>>} siblings -  Every string value on the SAME OBJECT, by key. Carried so the MEANING field
- *    set can be derived after the fact instead of being decided at walk time —
- *    deciding it here is what made it a hand-pick (2B-4a). Shared by reference
- *    across all cells of one object.
- * @property {string} module
+ * `siblings`:  Every string value on the SAME OBJECT, by key. Carried so the MEANING field  set can be derived after the fact instead of being decided at walk time —  deciding it here is what made it a hand-pick (2B-4a). Shared by reference  across all cells of one object.
+ *
+ * @typedef {{
+ *   readonly field: string;
+ *   readonly value: string;
+ *   readonly meaning: string | null;
+ *   readonly siblings: Readonly<Record<string, string>>;
+ *   readonly module: string;
+ * }} Cell
  */
 
 /** Named, argued in the header. Everything else is in scope. */

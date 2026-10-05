@@ -55,33 +55,42 @@ const OPEN_LEG_STATES = ['Booked', 'Shipped', 'Arrived'];
 // ── Shapes ───────────────────────────────────────────────────────────────────
 
 /**
- * @typedef {object} SimulationQuery
- * @property {string} supplierId
- * @property {string} materialCode
- * @property {string} checkDate -  `YYYY-MM-DD`.
- * @property {readonly SimulationOverride[]} overrides -  Planner inputs; those for other suppliers or materials are ignored.
+ * `checkDate`:  `YYYY-MM-DD`.
+ * `overrides`:  Planner inputs; those for other suppliers or materials are ignored.
+ *
+ * @typedef {{
+ *   readonly supplierId: string;
+ *   readonly materialCode: string;
+ *   readonly checkDate: string;
+ *   readonly overrides: readonly SimulationOverride[];
+ * }} SimulationQuery
  */
 
 /** Everything the simulation reads, handed in by the caller (the read model). */
 /**
- * @typedef {object} SimulationWorld
- * @property {string} nowIso
- * @property {readonly InventoryDeclaration[]} declarations
- * @property {readonly ASN[]} asns
- * @property {(asnNumber: string) => string | null} [asnSubmittedOn] -  Edge case 1 — the day an ASN was submitted, for an ASN with no ship date.
- * @property {readonly IncomingShipment[]} shipments
- * @property {readonly Pick<CallOffView, 'callOff' | 'delivery'>[]} callOffViews
- * @property {readonly CapacitySubmission[]} capacitySubmissions
- * @property {(materialCode: string) => string | null} planningGroupOf -  A material's planning group (`materialEntry(code).planningGroupId`), null when unknown.
- * @property {readonly SupplierMaterialRelationship[]} relationships
+ * `asnSubmittedOn`:  Edge case 1 — the day an ASN was submitted, for an ASN with no ship date.
+ * `planningGroupOf`:  A material's planning group (`materialEntry(code).planningGroupId`), null when unknown.
+ *
+ * @typedef {{
+ *   readonly nowIso: string;
+ *   readonly declarations: readonly InventoryDeclaration[];
+ *   readonly asns: readonly ASN[];
+ *   readonly asnSubmittedOn?: (asnNumber: string) => string | null;
+ *   readonly shipments: readonly IncomingShipment[];
+ *   readonly callOffViews: readonly Pick<CallOffView, 'callOff' | 'delivery'>[];
+ *   readonly capacitySubmissions: readonly CapacitySubmission[];
+ *   readonly planningGroupOf: (materialCode: string) => string | null;
+ *   readonly relationships: readonly SupplierMaterialRelationship[];
+ * }} SimulationWorld
  */
 
 /** Who entered a planner input, and when (MR-7 AC-03). */
 /**
- * @typedef {object} PlannerInputRef
- * @property {string} overrideId
- * @property {ActorAttribution} enteredBy
- * @property {string} enteredAt
+ * @typedef {{
+ *   readonly overrideId: string;
+ *   readonly enteredBy: ActorAttribution;
+ *   readonly enteredAt: string;
+ * }} PlannerInputRef
  */
 
 /**
@@ -100,15 +109,22 @@ const OPEN_LEG_STATES = ['Booked', 'Shipped', 'Arrived'];
 /** @typedef {'eta' | 'etdPlusLeadTime' | 'plannerInput'} EtaBasis */
 
 /**
- * @typedef {object} SimulationComponent
- * @property {SimulationComponentKind} kind
- * @property {SimulationFigure} figure
- * @property {number} qty -  The signed quantity this component adds to its figure.
- * @property {string | null} date -  `YYYY-MM-DD`; null for SOH before any date and for undated items.
- * @property {string | null} reference -  ASN number, shipment id, call-off number or declaration id.
- * @property {number} [uncappedQty] -  In production: the quantity before the capacity cap.
- * @property {EtaBasis} [etaBasis]
- * @property {PlannerInputRef} [plannerInput] -  Present when the figure is the planner's, not the supplier's (BR-08).
+ * `qty`:  The signed quantity this component adds to its figure.
+ * `date`:  `YYYY-MM-DD`; null for SOH before any date and for undated items.
+ * `reference`:  ASN number, shipment id, call-off number or declaration id.
+ * `uncappedQty`:  In production: the quantity before the capacity cap.
+ * `plannerInput`:  Present when the figure is the planner's, not the supplier's (BR-08).
+ *
+ * @typedef {{
+ *   readonly kind: SimulationComponentKind;
+ *   readonly figure: SimulationFigure;
+ *   readonly qty: number;
+ *   readonly date: string | null;
+ *   readonly reference: string | null;
+ *   readonly uncappedQty?: number;
+ *   readonly etaBasis?: EtaBasis;
+ *   readonly plannerInput?: PlannerInputRef;
+ * }} SimulationComponent
  */
 
 /**
@@ -134,47 +150,65 @@ const OPEN_LEG_STATES = ['Booked', 'Shipped', 'Arrived'];
  */
 
 /**
- * @typedef {object} SimulationFlag
- * @property {SimulationFlagCode} code
- * @property {string} [reference]
- * @property {string} [week] -  The Monday of the week a capacity flag is about.
- * @property {string} [date] -  The date a flag is about (the fallback ship date, the completion date).
+ * `week`:  The Monday of the week a capacity flag is about.
+ * `date`:  The date a flag is about (the fallback ship date, the completion date).
+ *
+ * @typedef {{
+ *   readonly code: SimulationFlagCode;
+ *   readonly reference?: string;
+ *   readonly week?: string;
+ *   readonly date?: string;
+ * }} SimulationFlag
  */
 
 /**
- * @typedef {object} SimulationWeek
- * @property {string} weekStart -  Monday.
- * @property {string} weekEnd -  Sunday: the figures are as at the end of this day.
- * @property {number | null} available
- * @property {number | null} freeToCallOff
- * @property {number} ptiInbound
- * @property {readonly SimulationComponent[]} events -  Production finishing, to-distributor arrivals and ASNs shipped inside the week.
+ * `weekStart`:  Monday.
+ * `weekEnd`:  Sunday: the figures are as at the end of this day.
+ * `events`:  Production finishing, to-distributor arrivals and ASNs shipped inside the week.
+ *
+ * @typedef {{
+ *   readonly weekStart: string;
+ *   readonly weekEnd: string;
+ *   readonly available: number | null;
+ *   readonly freeToCallOff: number | null;
+ *   readonly ptiInbound: number;
+ *   readonly events: readonly SimulationComponent[];
+ * }} SimulationWeek
  */
 
 /**
- * @typedef {object} StockSimulation
- * @property {string} supplierId
- * @property {string} materialCode
- * @property {string} checkDate
- * @property {string | null} t0 -  The `declaredAt` of the latest stock record (or of the planner's SOH when there is none).
- * @property {number | null} available -  Supplier available stock; null when there is no stock record and no planner SOH (BR-06).
- * @property {number} calledOffNotShipped
- * @property {number | null} freeToCallOff -  available − calledOffNotShipped; null when available is null.
- * @property {number} ptiInbound -  Already left the supplier: never added to `available` (BR-02).
- * @property {readonly SimulationComponent[]} components
- * @property {boolean} cappedByCapacity -  An in-production quantity counted at the check date was scaled down (BR-04).
- * @property {'supplier' | 'plannerInput'} basis -  "Includes planner input" when any planner input was used (MR-7 step 3).
- * @property {readonly SimulationFlag[]} flags
- * @property {readonly SimulationWeek[]} weekly
+ * `t0`:  The `declaredAt` of the latest stock record (or of the planner's SOH when there is none).
+ * `available`:  Supplier available stock; null when there is no stock record and no planner SOH (BR-06).
+ * `freeToCallOff`:  available − calledOffNotShipped; null when available is null.
+ * `ptiInbound`:  Already left the supplier: never added to `available` (BR-02).
+ * `cappedByCapacity`:  An in-production quantity counted at the check date was scaled down (BR-04).
+ * `basis`:  "Includes planner input" when any planner input was used (MR-7 step 3).
+ *
+ * @typedef {{
+ *   readonly supplierId: string;
+ *   readonly materialCode: string;
+ *   readonly checkDate: string;
+ *   readonly t0: string | null;
+ *   readonly available: number | null;
+ *   readonly calledOffNotShipped: number;
+ *   readonly freeToCallOff: number | null;
+ *   readonly ptiInbound: number;
+ *   readonly components: readonly SimulationComponent[];
+ *   readonly cappedByCapacity: boolean;
+ *   readonly basis: 'supplier' | 'plannerInput';
+ *   readonly flags: readonly SimulationFlag[];
+ *   readonly weekly: readonly SimulationWeek[];
+ * }} StockSimulation
  */
 
 /** @typedef {'INVALID_CHECK_DATE' | 'CHECK_DATE_BEFORE_LAST_UPDATE'} SimulationRefusalCode */
 
 /** Edge case 6 — a simulation looks forward only. */
 /**
- * @typedef {object} SimulationRefusal
- * @property {SimulationRefusalCode} refusal
- * @property {string | null} t0
+ * @typedef {{
+ *   readonly refusal: SimulationRefusalCode;
+ *   readonly t0: string | null;
+ * }} SimulationRefusal
  */
 
 /**
@@ -186,22 +220,24 @@ export const isSimulationRefusal = (r) => 'refusal' in r;
 // ── The per-material basis: latest record plus the planner inputs in force ───
 
 /**
- * @typedef {object} Production
- * @property {number} qty
- * @property {string | null} date
- * @property {string | null} reference
- * @property {PlannerInputRef} [plannerInput]
+ * @typedef {{
+ *   readonly qty: number;
+ *   readonly date: string | null;
+ *   readonly reference: string | null;
+ *   readonly plannerInput?: PlannerInputRef;
+ * }} Production
  */
 
 /**
- * @typedef {object} MaterialBasis
- * @property {string | null} t0
- * @property {string | null} t0Day
- * @property {number | null} soh
- * @property {string | null} sohReference
- * @property {PlannerInputRef} [sohInput]
- * @property {Production | null} production
- * @property {{ qty: number; eta: string | null; input: PlannerInputRef } | null} toDistributorInput
+ * @typedef {{
+ *   readonly t0: string | null;
+ *   readonly t0Day: string | null;
+ *   readonly soh: number | null;
+ *   readonly sohReference: string | null;
+ *   readonly sohInput?: PlannerInputRef;
+ *   readonly production: Production | null;
+ *   readonly toDistributorInput: { qty: number; eta: string | null; input: PlannerInputRef } | null;
+ * }} MaterialBasis
  */
 
 /**
@@ -682,9 +718,10 @@ export const SIMULATION_OVERRIDE_FIELDS = ['soh', 'inProduction', 'toDistributor
  */
 
 /**
- * @typedef {object} SimulationOverrideWorld
- * @property {(supplierId: string) => boolean} supplierKnown
- * @property {(materialCode: string) => boolean} materialKnown
+ * @typedef {{
+ *   readonly supplierKnown: (supplierId: string) => boolean;
+ *   readonly materialKnown: (materialCode: string) => boolean;
+ * }} SimulationOverrideWorld
  */
 
 /**

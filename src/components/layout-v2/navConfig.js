@@ -61,18 +61,22 @@ import {
 /** @typedef {'buyer' | 'supplier'} Persona */
 
 /**
- * @typedef {object} NavItem
- * @property {string} labelKey
- * @property {LucideIcon} icon
- * @property {string} path
+ * @typedef {{
+ *   readonly labelKey: string;
+ *   readonly icon: LucideIcon;
+ *   readonly path: string;
+ * }} NavItem
  */
 
 /**
- * @typedef {object} NavSection
- * @property {string} id
- * @property {string} labelKey
- * @property {readonly Exclude<HubRole, 'ALL'>[]} [roles] -  PTI roles that see this section. Omitted = every role.
- * @property {readonly NavItem[]} items
+ * `roles`:  PTI roles that see this section. Omitted = every role.
+ *
+ * @typedef {{
+ *   readonly id: string;
+ *   readonly labelKey: string;
+ *   readonly roles?: readonly Exclude<HubRole, 'ALL'>[];
+ *   readonly items: readonly NavItem[];
+ * }} NavSection
  */
 
 /** @type {readonly NavSection[]} */

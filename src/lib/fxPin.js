@@ -60,22 +60,23 @@ import { sdcClock } from '@services/sdc/clock';
  * a rate, append a superseding pin; there is deliberately no way to mutate one.
  */
 /**
- * @typedef {object} FxPin
- * @property {BidCurrency} quote -  The bid currency this pin converts FROM.
- * @property {BidCurrency} base -  The currency it converts TO — the comparison basis.
- * @property {number} rate Units of `base` per ONE unit of `quote` (e.g. 17_250 IDR per 1 USD). The
- *   direction is stated because an inverted rate is silent: it produces a
- *   plausible number and the wrong winner.
- * @property {string} asOf -  The RATE's own vintage (ISO date) — when the rate was true, not when it
- *    was pinned. This is what staleness measures.
- * @property {string} pinnedAt -  When the buyer recorded this pin (ISO timestamp). Audit, not staleness:
- *    it says when the decision was made, which is a different fact from how old
- *    the rate is. Also orders the ledger when two pins share an `asOf`.
- * @property {FxPinSource} source
- * @property {string} [rateType] -  The SAP rate type (e.g. 'M', 'B', 'G') when the source distinguishes them.
- *    Optional: a MANUAL pin has no rate type, and inventing one would dress a
- *    typed number as an SAP-governed rate.
- * @property {FxPinLiveness} liveness
+ * `quote`:  The bid currency this pin converts FROM.
+ * `base`:  The currency it converts TO — the comparison basis.
+ * `rate`: Units of `base` per ONE unit of `quote` (e.g. 17_250 IDR per 1 USD). The direction is stated because an inverted rate is silent: it produces a plausible number and the wrong winner.
+ * `asOf`:  The RATE's own vintage (ISO date) — when the rate was true, not when it  was pinned. This is what staleness measures.
+ * `pinnedAt`:  When the buyer recorded this pin (ISO timestamp). Audit, not staleness:  it says when the decision was made, which is a different fact from how old  the rate is. Also orders the ledger when two pins share an `asOf`.
+ * `rateType`:  The SAP rate type (e.g. 'M', 'B', 'G') when the source distinguishes them.  Optional: a MANUAL pin has no rate type, and inventing one would dress a  typed number as an SAP-governed rate.
+ *
+ * @typedef {{
+ *   readonly quote: BidCurrency;
+ *   readonly base: BidCurrency;
+ *   readonly rate: number;
+ *   readonly asOf: string;
+ *   readonly pinnedAt: string;
+ *   readonly source: FxPinSource;
+ *   readonly rateType?: string;
+ *   readonly liveness: FxPinLiveness;
+ * }} FxPin
  */
 
 /** Why a set cannot be ranked. Never a fallback number — a comparison the

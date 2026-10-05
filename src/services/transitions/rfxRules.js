@@ -52,23 +52,25 @@ export const isSelectableSupplier = (status) => SELECTABLE_SUPPLIER_STATUSES.inc
 
 /** The shape the invitee filter reads — a supplier master row, narrowed. */
 /**
- * @typedef {object} InviteeCandidate
- * @property {string} supplierId
- * @property {string} supplierName
- * @property {string} category
- * @property {string} [purchasingGroup]
- * @property {SupplierStatus} status
- * @property {number | null} otif -  REQ-E03-01 edge case — `null` is "No history", never 0%.
- * @property {string} country
- * @property {CertValidity} certificates -  BL-52 / BR-05 — halal and BPOM certificate validity, derived at read.
- * @property {PerformanceBand} band -  BL-52 / BR-05 — the performance band: the calculated grade, or "No history".
- * @property {GateResult} [gate] CR-23 / BR-06 — the compliance gate against the event's materials. A
- *   failing supplier stays a candidate (it can be invited and can quote); the
- *   list shows it cannot be awarded and why. Absent = not computed.
- * @property {BiddingEligibility} [eligibility] Material G2 (MR-10 BR-05) — the vendor against the event's sourcing type,
- *   computed when the filter names one. `refused` is not offered (the step
- *   lists it greyed, with its missing documents); `warn` is offered and marked
- *   (placeholder lists, owner ruling 2026-09-29). Absent = not computed.
+ * `otif`:  REQ-E03-01 edge case — `null` is "No history", never 0%.
+ * `certificates`:  BL-52 / BR-05 — halal and BPOM certificate validity, derived at read.
+ * `band`:  BL-52 / BR-05 — the performance band: the calculated grade, or "No history".
+ * `gate`: CR-23 / BR-06 — the compliance gate against the event's materials. A failing supplier stays a candidate (it can be invited and can quote); the list shows it cannot be awarded and why. Absent = not computed.
+ * `eligibility`: Material G2 (MR-10 BR-05) — the vendor against the event's sourcing type, computed when the filter names one. `refused` is not offered (the step lists it greyed, with its missing documents); `warn` is offered and marked (placeholder lists, owner ruling 2026-09-29). Absent = not computed.
+ *
+ * @typedef {{
+ *   readonly supplierId: string;
+ *   readonly supplierName: string;
+ *   readonly category: string;
+ *   readonly purchasingGroup?: string;
+ *   readonly status: SupplierStatus;
+ *   readonly otif: number | null;
+ *   readonly country: string;
+ *   readonly certificates: CertValidity;
+ *   readonly band: PerformanceBand;
+ *   readonly gate?: GateResult;
+ *   readonly eligibility?: BiddingEligibility;
+ * }} InviteeCandidate
  */
 
 /**
@@ -510,9 +512,10 @@ export function questionPoints(question, answer) {
 }
 
 /**
- * @typedef {object} RfiResponseScore
- * @property {number} score
- * @property {number} weightedQuestions
+ * @typedef {{
+ *   readonly score: number;
+ *   readonly weightedQuestions: number;
+ * }} RfiResponseScore
  */
 
 /**
@@ -802,11 +805,12 @@ export function awardFollowsBestScore(lines, bestScoredQuotationId) {
 
 /** One priced line of a quotation (REQ-E03-03: a price per ITEM). */
 /**
- * @typedef {object} QuoteLineInput
- * @property {number} lineNo
- * @property {string} materialCode
- * @property {number} quantity
- * @property {number} unitPrice
+ * @typedef {{
+ *   readonly lineNo: number;
+ *   readonly materialCode: string;
+ *   readonly quantity: number;
+ *   readonly unitPrice: number;
+ * }} QuoteLineInput
  */
 
 /**

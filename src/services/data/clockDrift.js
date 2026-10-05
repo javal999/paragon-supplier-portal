@@ -186,23 +186,19 @@ const diffDays = (a, b) => Math.round((dayMs(a) - dayMs(b)) / MS_PER_DAY);
  */
 
 /**
- * @typedef {object} FamilyDrift
- * @property {FixtureFamily} family
- * @property {number} driftDays -  `today − DECLARED_PRESENT`, in whole days. Negative before `P`.
- * @property {number | null} toleranceDays -  The declared allowance. `null` where the family has no coherent window.
- * @property {number | null} headroomDays Days of drift still available before this family's OWN window is exhausted
- *   — the instant at which a reader actually sees a false state. `null` when
- *   the family is unbound.
+ * `driftDays`:  `today − DECLARED_PRESENT`, in whole days. Negative before `P`.
+ * `toleranceDays`:  The declared allowance. `null` where the family has no coherent window.
+ * `headroomDays`: Days of drift still available before this family's OWN window is exhausted — the instant at which a reader actually sees a false state. `null` when the family is unbound.  ⚠️ Deliberately NOT the same number as `toleranceDays`, and the difference is not a defect in either. `toleranceDays` is measured against the shared INTERSECTION for `contract` and `obligation` (they hold one anchor, so the pair is only as free as the constraint they JOINTLY satisfy) while this is measured against the family's own window. So `contract` declares 7 and has 12, and it warns before it lies — which is the direction a guard should err in.
+ * `readerVisibleStates`:  The display states that make this family bound. Empty when it is not.
  *
- *   ⚠️ Deliberately NOT the same number as `toleranceDays`, and the difference
- *   is not a defect in either. `toleranceDays` is measured against the shared
- *   INTERSECTION for `contract` and `obligation` (they hold one anchor, so the
- *   pair is only as free as the constraint they JOINTLY satisfy) while this is
- *   measured against the family's own window. So `contract` declares 7 and has
- *   12, and it warns before it lies — which is the direction a guard should
- *   err in.
- * @property {DriftVerdict} verdict
- * @property {readonly string[]} readerVisibleStates -  The display states that make this family bound. Empty when it is not.
+ * @typedef {{
+ *   readonly family: FixtureFamily;
+ *   readonly driftDays: number;
+ *   readonly toleranceDays: number | null;
+ *   readonly headroomDays: number | null;
+ *   readonly verdict: DriftVerdict;
+ *   readonly readerVisibleStates: readonly string[];
+ * }} FamilyDrift
  */
 
 /**

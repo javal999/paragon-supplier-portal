@@ -173,10 +173,15 @@ function ratioToBest(value, best) {
  * show WHAT the ranking means, never inferred from the numbers.
  */
 /**
- * @typedef {object} ScoringBasis
- * @property {BidCurrency} currency -  The currency every price was compared in.
- * @property {readonly FxPin[]} pins -  The pins actually used (empty for a homogeneous set, which needs none).
- * @property {boolean} homogeneous -  True when the set was single-currency and no conversion happened at all.
+ * `currency`:  The currency every price was compared in.
+ * `pins`:  The pins actually used (empty for a homogeneous set, which needs none).
+ * `homogeneous`:  True when the set was single-currency and no conversion happened at all.
+ *
+ * @typedef {{
+ *   readonly currency: BidCurrency;
+ *   readonly pins: readonly FxPin[];
+ *   readonly homogeneous: boolean;
+ * }} ScoringBasis
  */
 
 /**
@@ -210,11 +215,14 @@ function ratioToBest(value, best) {
  * unexpressible.
  */
 /**
- * @typedef {object} ScoringOptions
- * @property {readonly FxPin[]} [pins] -  The RFQ's recorded FX bases. Absent ⇒ none recorded, which refuses any
- *    mixed-currency set rather than assuming a rate.
- * @property {CriteriaWeights} [weights]
- * @property {Date} [now] -  The clock for the staleness read, injectable so specs are deterministic.
+ * `pins`:  The RFQ's recorded FX bases. Absent ⇒ none recorded, which refuses any  mixed-currency set rather than assuming a rate.
+ * `now`:  The clock for the staleness read, injectable so specs are deterministic.
+ *
+ * @typedef {{
+ *   readonly pins?: readonly FxPin[];
+ *   readonly weights?: CriteriaWeights;
+ *   readonly now?: Date;
+ * }} ScoringOptions
  */
 
 /**
@@ -376,9 +384,10 @@ export function scoreQuotations(quotes, opts = {}) {
  *   the reader can see it.
  */
 /**
- * @typedef {object} ScoreStanding
- * @property {readonly string[]} tiedIds
- * @property {boolean} oneDecimal
+ * @typedef {{
+ *   readonly tiedIds: readonly string[];
+ *   readonly oneDecimal: boolean;
+ * }} ScoreStanding
  */
 
 /** Equal within float noise: a weighted sum of integers is never closer than 0.001 apart unless equal. */

@@ -25,9 +25,10 @@ const NOT_SURFACED_REASONS = new Set(['external-fact', 'computed', 'ruled-unsurf
 const EXTERNAL_FACT_OWNERS = new Set(['s4hana', 'tms', 'bank']);
 
 /**
- * @typedef {object} FlowValidationResult
- * @property {boolean} ok
- * @property {readonly string[]} errors
+ * @typedef {{
+ *   readonly ok: boolean;
+ *   readonly errors: readonly string[];
+ * }} FlowValidationResult
  */
 
 /**

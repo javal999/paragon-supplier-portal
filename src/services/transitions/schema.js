@@ -185,82 +185,52 @@
 
 /** One transition (edge) in a flow. */
 /**
- * @typedef {object} TransitionDef
- * @property {TransitionId} id -  Stable id, `t_<entity>_<verb>`. Globally unique across all flows.
- * @property {readonly string[]} from -  Source states. EMPTY for `creation`; NON-EMPTY otherwise.
- * @property {string} to -  Target state (∈ the flow's declared states).
- * @property {TransitionTrigger} trigger -  WHAT FIRES IT — provenance only. Not the surface: read `surfaceable`.
- * @property {Surfaceability} surfaceable WHETHER A PARAGON SURFACE IS EVER MEANT TO OFFER THIS ACT. Required on
- *   every transition — a member that cannot exist without a value (E1/GL-0) —
- *   and **authored per verb, never seeded from `trigger`**: the two disagree,
- *   and seeding would have manufactured the disagreements and called them
- *   derived. §50 lists every disagreement explicitly.
- * @property {TransitionRole} requiredRole -  Namespaced transition-role permitted to fire it.
- * @property {readonly string[]} requiredFields -  Command-payload field names that must be present (validated at dispatch).
- * @property {readonly PolicyHookName[]} policyHooks -  Policy hooks by REGISTERED NAME (never closures). Validated vs the registry.
- * @property {boolean} [sapBoundary] True when this transition crosses the SAP integration boundary (e.g. GR
- *   "Posted to SAP"). Such commands settle asynchronously: the dispatcher
- *   returns `submitted` (not `done`) and the real system reference lands on
- *   settlement (Step 3.5). Optional; absent ⇒ synchronous (`done`).
- * @property {string} [settlesTo] WHERE SETTLEMENT LANDS THE ENTITY — **required exactly when `sapBoundary`
- *   is set, and forbidden otherwise** (PF-0 · D-2, operator ruling). Validated
- *   ∈ the flow's states.
+ * `id`:  Stable id, `t_<entity>_<verb>`. Globally unique across all flows.
+ * `from`:  Source states. EMPTY for `creation`; NON-EMPTY otherwise.
+ * `to`:  Target state (∈ the flow's declared states).
+ * `trigger`:  WHAT FIRES IT — provenance only. Not the surface: read `surfaceable`.
+ * `surfaceable`: WHETHER A PARAGON SURFACE IS EVER MEANT TO OFFER THIS ACT. Required on every transition — a member that cannot exist without a value (E1/GL-0) — and **authored per verb, never seeded from `trigger`**: the two disagree, and seeding would have manufactured the disagreements and called them derived. §50 lists every disagreement explicitly.
+ * `requiredRole`:  Namespaced transition-role permitted to fire it.
+ * `requiredFields`:  Command-payload field names that must be present (validated at dispatch).
+ * `policyHooks`:  Policy hooks by REGISTERED NAME (never closures). Validated vs the registry.
+ * `sapBoundary`: True when this transition crosses the SAP integration boundary (e.g. GR "Posted to SAP"). Such commands settle asynchronously: the dispatcher returns `submitted` (not `done`) and the real system reference lands on settlement (Step 3.5). Optional; absent ⇒ synchronous (`done`).
+ * `settlesTo`: WHERE SETTLEMENT LANDS THE ENTITY — **required exactly when `sapBoundary` is set, and forbidden otherwise** (PF-0 · D-2, operator ruling). Validated ∈ the flow's states.  ⚠️ **WHY THIS IS DECLARED DATA AND NOT A COMMENT.** An Option-B verb parks the entity in an INTERIM state (`Posting to SAP`, `Releasing Payment`) and `settle()`'s finalize advances it to the settled one — inside the adapter, **outside the declared machine**. So the declaration was TRUE AND INCOMPLETE: a graph derived from it renders `Posted to SAP` unreachable and `Posting to SAP` exit-less, and **both readings are correct about the declaration** while being wrong about the system. The fix is to make the declaration honest, not to exempt the reader.  It does not change dispatch. The dispatcher still returns `submitted`, the adapter still owns the finalize; this field states, in data a build can check, where that finalize is contracted to land.
+ * `statePreserving`: True when this transition RECORDS A FACT without moving the entity (2e-c-3). The dispatcher applies it with the entity's CURRENT state, so `to` is never written; validation requires `to ∈ from` so the declaration stays truthful about where the entity ends up.  Why the flag rather than `to: <the same state>`: such a verb is legal from SEVERAL resting states (an FX pin may be recorded on an Open or a Closed RFQ) and `to` is a single value, so any concrete choice would move the entity for the other from-states. Declaring `from: ['Open','Closed'], to: 'Open'` would quietly reopen a Closed RFQ every time a buyer pinned a rate.  The alternative — routing metadata around the dispatcher — was rejected: it is the only path to the DR-10 audit trail, and a governed fact recorded outside the trail is exactly what the trail exists to prevent.  Optional; absent ⇒ an ordinary state-moving transition.
+ * `version`:  Schema version of this transition definition. Positive integer.
  *
- *   ⚠️ **WHY THIS IS DECLARED DATA AND NOT A COMMENT.** An Option-B verb parks
- *   the entity in an INTERIM state (`Posting to SAP`, `Releasing Payment`) and
- *   `settle()`'s finalize advances it to the settled one — inside the adapter,
- *   **outside the declared machine**. So the declaration was TRUE AND
- *   INCOMPLETE: a graph derived from it renders `Posted to SAP` unreachable and
- *   `Posting to SAP` exit-less, and **both readings are correct about the
- *   declaration** while being wrong about the system. The fix is to make the
- *   declaration honest, not to exempt the reader.
- *
- *   It does not change dispatch. The dispatcher still returns `submitted`, the
- *   adapter still owns the finalize; this field states, in data a build can
- *   check, where that finalize is contracted to land.
- * @property {boolean} [statePreserving] True when this transition RECORDS A FACT without moving the entity (2e-c-3).
- *   The dispatcher applies it with the entity's CURRENT state, so `to` is never
- *   written; validation requires `to ∈ from` so the declaration stays truthful
- *   about where the entity ends up.
- *
- *   Why the flag rather than `to: <the same state>`: such a verb is legal from
- *   SEVERAL resting states (an FX pin may be recorded on an Open or a Closed
- *   RFQ) and `to` is a single value, so any concrete choice would move the
- *   entity for the other from-states. Declaring `from: ['Open','Closed'], to:
- *   'Open'` would quietly reopen a Closed RFQ every time a buyer pinned a rate.
- *
- *   The alternative — routing metadata around the dispatcher — was rejected: it
- *   is the only path to the DR-10 audit trail, and a governed fact recorded
- *   outside the trail is exactly what the trail exists to prevent.
- *
- *   Optional; absent ⇒ an ordinary state-moving transition.
- * @property {number} version -  Schema version of this transition definition. Positive integer.
+ * @typedef {{
+ *   readonly id: TransitionId;
+ *   readonly from: readonly string[];
+ *   readonly to: string;
+ *   readonly trigger: TransitionTrigger;
+ *   readonly surfaceable: Surfaceability;
+ *   readonly requiredRole: TransitionRole;
+ *   readonly requiredFields: readonly string[];
+ *   readonly policyHooks: readonly PolicyHookName[];
+ *   readonly sapBoundary?: boolean;
+ *   readonly settlesTo?: string;
+ *   readonly statePreserving?: boolean;
+ *   readonly version: number;
+ * }} TransitionDef
  */
 
 /** A complete state machine for one entity. */
 /**
- * @typedef {object} FlowDefinition
- * @property {string} entity -  Machine key, e.g. `purchaseOrder`. Unique across the registry.
- * @property {readonly string[]} states -  Every declared state (the machine's alphabet). Transition-states only —
- *    clock-derived display states (Expiring/Expired/…) are NOT listed here.
- * @property {string} initial -  The state a freshly-created entity lands in (∈ `states`).
- * @property {readonly string[]} terminals THE STATES THIS MACHINE DECLARES AS ENDINGS (⊆ `states`) — **REQUIRED, and
- *   an empty array is a legal, meaningful answer** (PF-0 · D-2, operator).
+ * `entity`:  Machine key, e.g. `purchaseOrder`. Unique across the registry.
+ * `states`:  Every declared state (the machine's alphabet). Transition-states only —  clock-derived display states (Expiring/Expired/…) are NOT listed here.
+ * `initial`:  The state a freshly-created entity lands in (∈ `states`).
+ * `terminals`: THE STATES THIS MACHINE DECLARES AS ENDINGS (⊆ `states`) — **REQUIRED, and an empty array is a legal, meaningful answer** (PF-0 · D-2, operator).  ⚠️ **TERMINAL-NESS IS THE ONE INTENT A GRAPH CANNOT INFER.** "Nothing leaves this state" is the same SHAPE for an ending and for a hole: `Awarded` and `Quality Hold` are indistinguishable in the edge set, and only an author knows which is which. So it is declared, and validated BOTH WAYS — declared-terminal ⇒ no exit (`validate.js`), and no-exit ⇒ declared-terminal or censused (`flowGraph.test.js`). A flow cannot buy silence by declaring a live state terminal, and cannot leave a hole unnamed.  **REQUIRED rather than optional, deliberately:** an optional field is omitted on exactly the flows whose endings nobody thought about, which are the flows this exists for. `[]` says *this machine declares no ending* — which is true of the ASN flow today, and worth being able to read.
+ * `transitions`:  Every transition (edge).
+ * `version`:  Schema version of the flow. Positive integer.
  *
- *   ⚠️ **TERMINAL-NESS IS THE ONE INTENT A GRAPH CANNOT INFER.** "Nothing
- *   leaves this state" is the same SHAPE for an ending and for a hole: `Awarded`
- *   and `Quality Hold` are indistinguishable in the edge set, and only an author
- *   knows which is which. So it is declared, and validated BOTH WAYS —
- *   declared-terminal ⇒ no exit (`validate.js`), and no-exit ⇒ declared-terminal
- *   or censused (`flowGraph.test.js`). A flow cannot buy silence by declaring a
- *   live state terminal, and cannot leave a hole unnamed.
- *
- *   **REQUIRED rather than optional, deliberately:** an optional field is
- *   omitted on exactly the flows whose endings nobody thought about, which are
- *   the flows this exists for. `[]` says *this machine declares no ending* —
- *   which is true of the ASN flow today, and worth being able to read.
- * @property {readonly TransitionDef[]} transitions -  Every transition (edge).
- * @property {number} version -  Schema version of the flow. Positive integer.
+ * @typedef {{
+ *   readonly entity: string;
+ *   readonly states: readonly string[];
+ *   readonly initial: string;
+ *   readonly terminals: readonly string[];
+ *   readonly transitions: readonly TransitionDef[];
+ *   readonly version: number;
+ * }} FlowDefinition
  */
 
 // Types only: `export {}` keeps this a module so its typedefs can be imported.

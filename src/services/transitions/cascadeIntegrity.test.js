@@ -64,9 +64,10 @@ import { WIRED_COMMAND_TARGETS } from '../data/mock/MockCommandService';
  */
 
 /**
- * @typedef {object} Violation
- * @property {ViolationKind} kind
- * @property {string} detail
+ * @typedef {{
+ *   readonly kind: ViolationKind;
+ *   readonly detail: string;
+ * }} Violation
  */
 
 /**

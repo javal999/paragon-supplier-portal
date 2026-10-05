@@ -124,11 +124,17 @@ export const REJECTION_PENALTY_POINTS = 5;
 // ── CR-06 to CR-08 · OTIF per call-off, aggregated (BR-02, BR-06) ───────────
 
 /**
- * @typedef {object} OtifAggregate
- * @property {number | null} pct -  Share of measured call-offs that were on time AND in full, 0–100.
- * @property {number} measured -  Call-offs due in the period whose result is decided (the denominator).
- * @property {number} met -  Of those, the ones that met on time and in full.
- * @property {number} pending -  Due in the period but still open (dispatched or not yet due) — not counted.
+ * `pct`:  Share of measured call-offs that were on time AND in full, 0–100.
+ * `measured`:  Call-offs due in the period whose result is decided (the denominator).
+ * `met`:  Of those, the ones that met on time and in full.
+ * `pending`:  Due in the period but still open (dispatched or not yet due) — not counted.
+ *
+ * @typedef {{
+ *   readonly pct: number | null;
+ *   readonly measured: number;
+ *   readonly met: number;
+ *   readonly pending: number;
+ * }} OtifAggregate
  */
 
 /** @type {OtifAggregate} */
@@ -163,15 +169,21 @@ export function otifAggregate(views, period, nowIso) {
 // ── REQ-E10-01 BR-05 · CFOT per PO ──────────────────────────────────────────
 
 /**
- * @typedef {object} PoCfot
- * @property {string} poId
- * @property {string} poNumber
- * @property {string} supplierId
- * @property {string} confirmedDate -  The date the PO was confirmed for — what "on time" is measured against.
- * @property {number} orderedQty
- * @property {number} confirmedQty -  Quantity the supplier confirmed (a rejected order confirms nothing).
- * @property {number} deliveredOnTimeQty -  Of the confirmed quantity, what arrived on or before the confirmed date.
- * @property {number} pct -  BR-05 — confirmed and delivered by the confirmed date ÷ PO quantity, 0–100.
+ * `confirmedDate`:  The date the PO was confirmed for — what "on time" is measured against.
+ * `confirmedQty`:  Quantity the supplier confirmed (a rejected order confirms nothing).
+ * `deliveredOnTimeQty`:  Of the confirmed quantity, what arrived on or before the confirmed date.
+ * `pct`:  BR-05 — confirmed and delivered by the confirmed date ÷ PO quantity, 0–100.
+ *
+ * @typedef {{
+ *   readonly poId: string;
+ *   readonly poNumber: string;
+ *   readonly supplierId: string;
+ *   readonly confirmedDate: string;
+ *   readonly orderedQty: number;
+ *   readonly confirmedQty: number;
+ *   readonly deliveredOnTimeQty: number;
+ *   readonly pct: number;
+ * }} PoCfot
  */
 
 /**
@@ -243,10 +255,13 @@ export function poCfot(po, receipts) {
 }
 
 /**
- * @typedef {object} CfotAggregate
- * @property {number | null} pct
- * @property {number} measured -  Orders due in the period that CFOT was measured over.
- * @property {readonly PoCfot[]} rows
+ * `measured`:  Orders due in the period that CFOT was measured over.
+ *
+ * @typedef {{
+ *   readonly pct: number | null;
+ *   readonly measured: number;
+ *   readonly rows: readonly PoCfot[];
+ * }} CfotAggregate
  */
 
 /**
@@ -277,10 +292,11 @@ export function cfotAggregate(pos, receipts, period, nowIso) {
 // ── REQ-E10-01 BR-04 · rejections count in the assessment ───────────────────
 
 /**
- * @typedef {object} RejectionCounts
- * @property {number} purchaseOrders
- * @property {number} callOffs
- * @property {number} total
+ * @typedef {{
+ *   readonly purchaseOrders: number;
+ *   readonly callOffs: number;
+ *   readonly total: number;
+ * }} RejectionCounts
  */
 
 /**
@@ -307,20 +323,21 @@ export function rejectionCounts(pos, callOffs, period, nowIso) {
 // ── The per-supplier measure the surfaces read ──────────────────────────────
 
 /**
- * @typedef {object} SupplierMeasure
- * @property {string} supplierId
- * @property {PerformancePeriod} period
- * @property {OtifAggregate} otif
- * @property {CfotAggregate} cfot
- * @property {RejectionCounts} rejections
- * @property {number | null} score The assessment score: the mean of whatever was measured (OTIF, CFOT), less
- *   `REJECTION_PENALTY_POINTS` per rejection (BR-04), clamped to 0–100. Null
- *   when neither measure has any history in the period.
- * @property {PerformanceGrade | null} grade
- * @property {boolean} noHistory -  True when nothing in the period was measurable — the surfaces show "No history".
- * @property {UpdateCompliance | null} updateCompliance Material B3 (MR-2) — the weekly update compliance blended into `score`,
- *   always over the rolling 13 update cycles whatever the period. Null when
- *   the input carries none (the portfolio, or a caller without the measure).
+ * `score`: The assessment score: the mean of whatever was measured (OTIF, CFOT), less `REJECTION_PENALTY_POINTS` per rejection (BR-04), clamped to 0–100. Null when neither measure has any history in the period.
+ * `noHistory`:  True when nothing in the period was measurable — the surfaces show "No history".
+ * `updateCompliance`: Material B3 (MR-2) — the weekly update compliance blended into `score`, always over the rolling 13 update cycles whatever the period. Null when the input carries none (the portfolio, or a caller without the measure).
+ *
+ * @typedef {{
+ *   readonly supplierId: string;
+ *   readonly period: PerformancePeriod;
+ *   readonly otif: OtifAggregate;
+ *   readonly cfot: CfotAggregate;
+ *   readonly rejections: RejectionCounts;
+ *   readonly score: number | null;
+ *   readonly grade: PerformanceGrade | null;
+ *   readonly noHistory: boolean;
+ *   readonly updateCompliance: UpdateCompliance | null;
+ * }} SupplierMeasure
  */
 
 /**
@@ -355,15 +372,15 @@ export function assessmentScore(
 }
 
 /**
- * @typedef {object} PerformanceInput
- * @property {readonly CallOff[]} callOffs
- * @property {readonly ASN[]} asns
- * @property {readonly GoodsReceipt[]} receipts
- * @property {readonly PurchaseOrder[]} purchaseOrders
- * @property {(supplierId: string) => UpdateCompliance | null} [updateCompliance] Material B3 (AR-09) — each supplier's update compliance, computed ONCE per
- *   supplier by the caller's source (the mock read model, or the page's
- *   `getUpdateCompliance` read) and blended in `supplierMeasure` only. Absent:
- *   no compliance, so the score is the delivery score.
+ * `updateCompliance`: Material B3 (AR-09) — each supplier's update compliance, computed ONCE per supplier by the caller's source (the mock read model, or the page's `getUpdateCompliance` read) and blended in `supplierMeasure` only. Absent: no compliance, so the score is the delivery score.
+ *
+ * @typedef {{
+ *   readonly callOffs: readonly CallOff[];
+ *   readonly asns: readonly ASN[];
+ *   readonly receipts: readonly GoodsReceipt[];
+ *   readonly purchaseOrders: readonly PurchaseOrder[];
+ *   readonly updateCompliance?: (supplierId: string) => UpdateCompliance | null;
+ * }} PerformanceInput
  */
 
 /**

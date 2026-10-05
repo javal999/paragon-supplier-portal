@@ -92,16 +92,16 @@ const PROCUREMENT_SCOPE = {
 };
 
 /**
- * @typedef {object} RequisitionSeedOutcome
- * @property {'seeded' | 'already-seeded' | 'refused'} status `seeded` — all three verbs landed and the row is `Approved`.
- *   `already-seeded` — a member-categoried approved row already exists; skipped.
- *   `refused` — a verb refused. THE ROW IS LEFT WHEREVER THE MACHINE LEFT IT,
- *     never nudged the rest of the way: a half-seeded requisition sitting at
- *     `Pending Approval` is the truth, and it is a better artifact than an
- *     `Approved` one the machine declined to produce.
- * @property {string} [prNumber] -  The requisition number, when one was minted.
- * @property {string} [refusedAt] -  Which verb refused, and the dispatcher's own words.
- * @property {string} [reason]
+ * `status`: `seeded` — all three verbs landed and the row is `Approved`. `already-seeded` — a member-categoried approved row already exists; skipped. `refused` — a verb refused. THE ROW IS LEFT WHEREVER THE MACHINE LEFT IT,   never nudged the rest of the way: a half-seeded requisition sitting at   `Pending Approval` is the truth, and it is a better artifact than an   `Approved` one the machine declined to produce.
+ * `prNumber`:  The requisition number, when one was minted.
+ * `refusedAt`:  Which verb refused, and the dispatcher's own words.
+ *
+ * @typedef {{
+ *   readonly status: 'seeded' | 'already-seeded' | 'refused';
+ *   readonly prNumber?: string;
+ *   readonly refusedAt?: string;
+ *   readonly reason?: string;
+ * }} RequisitionSeedOutcome
  */
 
 /**
