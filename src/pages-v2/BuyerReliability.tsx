@@ -3,8 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { ArrowDown, ArrowUp } from 'lucide-react';
 import AppShellV2 from '@components/layout-v2/AppShellV2';
 import PageHeader from '@components/ui-v2/PageHeader';
-import PageMetaLine from '@components/ui-v2/PageMetaLine';
-import LivenessPill from '@components/ui-v2/LivenessPill';
 import FilterChipsBar from '@components/ui-v2/FilterChipsBar';
 import KpiCard from '@components/ui-v2/KpiCard';
 import Table from '@components/ui-v2/Table';
@@ -21,6 +19,12 @@ import { portfolioReliability } from '@services/engine/reliability';
 import { portfolioCfot } from '@services/engine/cfot';
 import { EARLY_DELIVERY_WINDOW_DAYS } from '@services/data/kpiWindow';
 import { MissSplitLine, Rate, mascOf, pctOf } from './reliability/reliabilityDisplay';
+import PurposeHeader from '@components/forecast/PurposeHeader';
+import SimulatedDataBanner from '@components/forecast/SimulatedDataBanner';
+import AboutThisPage from '@components/forecast/AboutThisPage';
+import DataAsOf from '@components/forecast/DataAsOf';
+import TermTip from '@components/forecast/TermTip';
+import { forecastCrumb, forecastTitle } from '@components/forecast/forecastPages';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SUPPLIER RELIABILITY — REQ-E14-02 (BL-99), the Material Planner's view.
@@ -56,7 +60,7 @@ const BuyerReliability: React.FC = () => {
   const [weeks, setWeeks] = useState<ReliabilityWindowWeeks>(26);
   const [dir, setDir] = useState<SortDir>('ascending');
   const query = useSupplierReliability(weeks);
-  const crumb = [t('hub.nav.section.forecast'), t('rel.pti.title')];
+  const crumb = forecastCrumb(t, 'reliability');
 
   const rows = useMemo(() => query.data?.items ?? [], [query.data]);
   const sorted = useMemo(() => sortRows(rows, dir), [rows, dir]);
@@ -71,22 +75,19 @@ const BuyerReliability: React.FC = () => {
 
   return (
     <AppShellV2>
-      <PageHeader
-        breadcrumb={crumb}
-        title={t('rel.pti.title')}
-        subtitle={t('rel.pti.subtitle')}
-        actions={<LivenessPill capability="engineDataset" />}
+      <PageHeader breadcrumb={crumb} title={forecastTitle(t, 'reliability')} />
+      <PurposeHeader page="reliability" />
+      <SimulatedDataBanner capability="engineDataset" />
+      <DataAsOf
+        date={first ? first.windowTo : null}
+        detail={
+          first ? (
+            <>
+              {t('rel.windowLabel')} <Data>{formatDate(first.windowFrom)}</Data> – <Data>{formatDate(first.windowTo)}</Data>
+            </>
+          ) : null
+        }
       />
-      <PageMetaLine className="-mt-6 mb-2">
-        {first && (
-          <>
-            {t('rel.windowLabel')} <Data>{formatDate(first.windowFrom)}</Data> – <Data>{formatDate(first.windowTo)}</Data>
-          </>
-        )}
-      </PageMetaLine>
-      <p className="text-xs text-text-tertiary mb-4" data-testid="rel-synthetic-note">
-        {t('rel.synthetic')}
-      </p>
 
       <div className="mb-4">
         <FilterChipsBar<string>
@@ -143,6 +144,10 @@ const BuyerReliability: React.FC = () => {
         />
       </div>
 
+      {/* F-21 — the two plan-change columns have no unit, so their scale is stated. */}
+      <p className="text-xs text-text-secondary mb-2 flex flex-wrap items-center gap-1" data-testid="rel-scale-hint">
+        {t('rel.col.masc')} · {t('rel.col.mascI')} <TermTip term="MASC" />: {t('fux.scale.masc')}
+      </p>
       <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto mb-6">
         <Table>
           <TableHeader>
@@ -226,6 +231,11 @@ const BuyerReliability: React.FC = () => {
         <p>{t('rel.def.planChange')}</p>
         <p>{t('rel.def.masc')}</p>
       </section>
+
+      <AboutThisPage>
+        <p>{t('rel.pti.subtitle')}</p>
+        <p data-testid="rel-synthetic-note">{t('rel.synthetic')}</p>
+      </AboutThisPage>
     </AppShellV2>
   );
 };

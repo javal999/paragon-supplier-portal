@@ -3,8 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import AppShellV2 from '../components/layout-v2/AppShellV2';
 import PageHeader from '../components/ui-v2/PageHeader';
-import PageMetaLine from '../components/ui-v2/PageMetaLine';
-import LivenessPill from '../components/ui-v2/LivenessPill';
 import KpiCard from '../components/ui-v2/KpiCard';
 import StatusPill from '../components/ui-v2/StatusPill';
 import FilterChipsBar from '../components/ui-v2/FilterChipsBar';
@@ -22,6 +20,11 @@ import type { EventFactor } from '../services/engine/eventCalendar';
 import type { DemandForecastSkuView } from '../services/data/types';
 import type { SeriesRange } from '../services/engine/demandRange';
 import DemandRangeSection from './demandForecast/DemandRangeSection';
+import PurposeHeader from '../components/forecast/PurposeHeader';
+import SimulatedDataBanner from '../components/forecast/SimulatedDataBanner';
+import AboutThisPage from '../components/forecast/AboutThisPage';
+import DataAsOf from '../components/forecast/DataAsOf';
+import { forecastCrumb, forecastTitle } from '../components/forecast/forecastPages';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DEMAND FORECAST — REQ-E14-07, the Material Planner's view (Experience: "the
@@ -209,7 +212,7 @@ const EventsSection: React.FC<{ events: DemandForecastRun['events'] }> = ({ even
 const BuyerDemandForecast: React.FC = () => {
   const { t } = useTranslation();
   const query = useDemandForecast();
-  const crumb = [t('hub.nav.section.forecast'), t('df.title')];
+  const crumb = forecastCrumb(t, 'forecastQuality');
   const run = query.data ?? null;
   const [brand, setBrand] = useState<string>('all');
   const [selected, setSelected] = useState<string | null>(null);
@@ -229,35 +232,30 @@ const BuyerDemandForecast: React.FC = () => {
 
   return (
     <AppShellV2>
-      <PageHeader breadcrumb={crumb} title={t('df.title')} subtitle={t('df.subtitle')} actions={<LivenessPill capability="engineDataset" />} />
-      <PageMetaLine className="-mt-6 mb-2">
-        {t('df.meta.run')} <Data data-testid="df-first-week">{formatDate(run.weeks[0])}</Data> {t('df.meta.to')}{' '}
-        <Data>{formatDate(run.weeks[run.weeks.length - 1])}</Data>
-      </PageMetaLine>
-      <p className="text-xs text-text-tertiary mb-1" data-testid="df-synthetic-note">
-        {t('df.synthetic')}
-      </p>
-      <p className="text-xs text-text-tertiary mb-1" data-testid="df-grain-note">
-        {t('df.grain')}
-      </p>
-      <p className="text-xs text-text-secondary mb-1" data-testid="df-main-not-built">
-        {t('df.mainNotBuilt')}
-      </p>
-      <p className="text-xs text-text-tertiary mb-1" data-testid="df-source-note">
-        {t('df.source')}
-      </p>
-      {/* REQ-E14-11 — the forecast shown carries the Material Planning team's overrides. */}
+      <PageHeader breadcrumb={crumb} title={forecastTitle(t, 'forecastQuality')} />
+      <PurposeHeader page="forecastQuality" />
+      <SimulatedDataBanner capability="engineDataset" />
+      <DataAsOf
+        date={run.asOf}
+        detail={
+          <>
+            {t('df.meta.run')} <Data data-testid="df-first-week">{formatDate(run.weeks[0])}</Data> {t('df.meta.to')}{' '}
+            <Data>{formatDate(run.weeks[run.weeks.length - 1])}</Data>
+          </>
+        }
+      />
+      {/* REQ-E14-11 / REQ-E14-10 — the two engine pages Forecast quality reaches. */}
       <p className="text-xs text-text-secondary mb-4" data-testid="df-overrides">
         {run.overrideCells > 0 && <>{t('fb.df.overrides', { count: run.overrideCells })} </>}
         <Link to="/buyer/forecast-bias" className="text-action hover:underline" data-testid="df-bias-link">
           {t('fb.df.link')}
         </Link>
-      </p>
-      {/* REQ-E14-10 — each SKU's model by service is chosen on the Model backtest page (BL-112). */}
-      <p className="text-xs text-text-tertiary mb-4" data-testid="df-backtest-link">
-        <Link to="/buyer/model-backtest" className="text-action underline">
-          {t('mb.link.fromDemandForecast')}
-        </Link>
+        <span data-testid="df-backtest-link">
+          {' · '}
+          <Link to="/buyer/model-backtest" className="text-action hover:underline">
+            {t('mb.link.fromDemandForecast')}
+          </Link>
+        </span>
       </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-6" data-testid="df-kpis">
@@ -445,6 +443,14 @@ const BuyerDemandForecast: React.FC = () => {
         <p>{t('df.def.recon')}</p>
         <p>{t('df.def.range')}</p>
       </section>
+
+      <AboutThisPage>
+        <p>{t('df.subtitle')}</p>
+        <p data-testid="df-synthetic-note">{t('df.synthetic')}</p>
+        <p data-testid="df-grain-note">{t('df.grain')}</p>
+        <p data-testid="df-main-not-built">{t('df.mainNotBuilt')}</p>
+        <p data-testid="df-source-note">{t('df.source')}</p>
+      </AboutThisPage>
     </AppShellV2>
   );
 };

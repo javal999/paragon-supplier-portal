@@ -9,6 +9,7 @@ import TableCell from '../../components/ui-v2/TableCell';
 import Data from '../../components/ui-v2/Data';
 import { formatDate, formatNumber } from '../../lib/format';
 import type { DemandRangeRun, RangeExperience, SeriesRange } from '../../services/engine/demandRange';
+import TermTip from '../../components/forecast/TermTip';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DEMAND RANGE — REQ-E14-09 on the Demand forecast page (BL-111). Experience:
@@ -70,7 +71,10 @@ const DemandRangeSection: React.FC<{ range: DemandRangeRun }> = ({ range }) => {
 
   return (
     <section className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-6" data-testid="df-range">
-      <h2 className="text-section text-text-primary mb-1">{t('df.range.title')}</h2>
+      <div className="mb-1 flex items-center gap-2">
+        <h2 className="text-section text-text-primary">{t('df.range.title')}</h2>
+        <TermTip term="P50/P90" />
+      </div>
       <p className="text-xs text-text-tertiary mb-1">{t('df.range.intro', { retrain: range.options.retrainWeeks })}</p>
       {range.origins.first && range.origins.last && (
         <p className="text-xs text-text-tertiary mb-1" data-testid="df-range-replay">
