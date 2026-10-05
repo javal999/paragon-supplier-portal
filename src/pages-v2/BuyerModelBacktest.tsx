@@ -2,8 +2,6 @@ import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import AppShellV2 from '@components/layout-v2/AppShellV2';
 import PageHeader from '@components/ui-v2/PageHeader';
-import PageMetaLine from '@components/ui-v2/PageMetaLine';
-import LivenessPill from '@components/ui-v2/LivenessPill';
 import KpiCard from '@components/ui-v2/KpiCard';
 import StatusPill from '@components/ui-v2/StatusPill';
 import FilterChipsBar from '@components/ui-v2/FilterChipsBar';
@@ -16,6 +14,12 @@ import LoadingState from '@components/ui-v2/LoadingState';
 import ErrorState from '@components/ui-v2/ErrorState';
 import { formatDate, formatNumber } from '@lib/format';
 import { useModelBacktest } from '@services/query/hooks';
+import PurposeHeader from '@components/forecast/PurposeHeader';
+import SimulatedDataBanner from '@components/forecast/SimulatedDataBanner';
+import AboutThisPage from '@components/forecast/AboutThisPage';
+import DataAsOf from '@components/forecast/DataAsOf';
+import TermTip from '@components/forecast/TermTip';
+import { forecastCrumb, forecastTitle } from '@components/forecast/forecastPages';
 import type { ModelBacktestView } from '@services/data/types';
 import {
   BACKTEST_CANDIDATES,
@@ -139,7 +143,7 @@ const SkuDetail: React.FC<{ sku: SkuBacktest }> = ({ sku }) => {
 const BuyerModelBacktest: React.FC = () => {
   const { t } = useTranslation();
   const query = useModelBacktest();
-  const crumb = [t('hub.nav.section.forecast'), t('mb.title')];
+  const crumb = forecastCrumb(t, 'modelBacktest');
   const run: ModelBacktestView | null = query.data ?? null;
   const [selected, setSelected] = useState<string | null>(null);
   const [kind, setKind] = useState<'all' | 'packaging' | 'rawMaterial'>('all');
@@ -161,23 +165,19 @@ const BuyerModelBacktest: React.FC = () => {
 
   return (
     <AppShellV2>
-      <PageHeader breadcrumb={crumb} title={t('mb.title')} subtitle={t('mb.subtitle')} actions={<LivenessPill capability="engineDataset" />} />
-      <PageMetaLine className="-mt-6 mb-2">
-        {t('mb.meta.replay')} <Data data-testid="mb-from">{formatDate(run.replay.from)}</Data> {t('mb.meta.to')}{' '}
-        <Data>{formatDate(run.replay.to)}</Data> · {t('mb.meta.origins', { count: run.origins.length })} ·{' '}
-        <span data-testid="mb-computed">{t('mb.meta.computed', { ms: formatNumber(run.computedInMs) })}</span>
-      </PageMetaLine>
-      <p className="text-xs text-text-tertiary mb-1" data-testid="mb-synthetic-note">
-        {t('mb.synthetic')}
-      </p>
-      <p className="text-xs text-text-secondary mb-1" data-testid="mb-not-switched">
-        {t('mb.notSwitched')}
-      </p>
-      {run.mainModel === 'notBuilt' && (
-        <p className="text-xs text-text-tertiary mb-4" data-testid="mb-main-not-built">
-          {t('mb.mainNotBuilt')}
-        </p>
-      )}
+      <PageHeader breadcrumb={crumb} title={forecastTitle(t, 'modelBacktest')} />
+      <PurposeHeader page="modelBacktest" />
+      <SimulatedDataBanner capability="engineDataset" />
+      <DataAsOf
+        date={run.asOf}
+        detail={
+          <>
+            {t('mb.meta.replay')} <Data data-testid="mb-from">{formatDate(run.replay.from)}</Data> {t('mb.meta.to')}{' '}
+            <Data>{formatDate(run.replay.to)}</Data> · {t('mb.meta.origins', { count: run.origins.length })} ·{' '}
+            <span data-testid="mb-computed">{t('mb.meta.computed', { ms: formatNumber(run.computedInMs) })}</span>
+          </>
+        }
+      />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-6" data-testid="mb-kpis">
         <KpiCard
@@ -202,7 +202,11 @@ const BuyerModelBacktest: React.FC = () => {
         <KpiCard
           eyebrow={t('mb.kpi.limit')}
           value={<span data-testid="mb-kpi-limit">{run.mascLimit === null ? t('mb.kpi.limit.notSet') : two(run.mascLimit)}</span>}
-          subtitle={<span className="text-text-tertiary">{t(run.mascLimit === null ? 'mb.kpi.limit.notSet.sub' : 'mb.kpi.limit.set.sub')}</span>}
+          subtitle={
+            <span className="text-text-tertiary">
+              {t(run.mascLimit === null ? 'mb.kpi.limit.notSet.sub' : 'mb.kpi.limit.set.sub')} <TermTip term="MASC" />
+            </span>
+          }
         />
       </div>
 
@@ -484,7 +488,11 @@ const BuyerModelBacktest: React.FC = () => {
             ))}
           </tbody>
         </Table>
-        <p className="text-xs text-text-secondary mt-3" data-testid="mb-masc-limit">
+        <p className="text-xs text-text-secondary mt-3 flex items-center gap-1" data-testid="mb-scale-hint">
+          <TermTip term="MASC" />
+          {t('fux.scale.masc')}
+        </p>
+        <p className="text-xs text-text-secondary mt-1" data-testid="mb-masc-limit">
           {run.mascLimit === null ? t('mb.masc.limitNotSet') : t('mb.masc.limitSet', { limit: two(run.mascLimit), excluded: limited })}
         </p>
       </Section>
@@ -503,6 +511,13 @@ const BuyerModelBacktest: React.FC = () => {
         <p>{t('mb.def.measures')}</p>
         <p>{t('mb.def.select')}</p>
       </section>
+
+      <AboutThisPage>
+        <p>{t('mb.subtitle')}</p>
+        <p data-testid="mb-synthetic-note">{t('mb.synthetic')}</p>
+        <p data-testid="mb-not-switched">{t('mb.notSwitched')}</p>
+        {run.mainModel === 'notBuilt' && <p data-testid="mb-main-not-built">{t('mb.mainNotBuilt')}</p>}
+      </AboutThisPage>
     </AppShellV2>
   );
 };

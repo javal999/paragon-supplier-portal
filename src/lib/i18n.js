@@ -103,6 +103,8 @@ import { dataHealthEn, dataHealthId } from './i18n/dataHealth';
 import { demandForecastEn, demandForecastId } from './i18n/demandForecast';
 import { forecastBiasEn, forecastBiasId } from './i18n/forecastBias';
 import { modelBacktestEn, modelBacktestId } from './i18n/modelBacktest';
+// — Forecast UX phase 1 (A4): purpose header, banner, date line, term tips —
+import { forecastUxEn, forecastUxId } from './i18n/forecastUx';
 // — Phase 6a RFx management (REQ-E03-01 to REQ-E03-05) —
 import { rfxEn, rfxId } from './i18n/rfx';
 // — RFx authoring (RFI/RFP batch, 2026-09-21) and session-held attachments —
@@ -229,6 +231,7 @@ export const resources = {
       ...demandForecastEn,
       ...forecastBiasEn,
       ...modelBacktestEn,
+      ...forecastUxEn,
       ...rfxEn,
       ...rfxAuthoringEn,
       ...rfqAuthoringEn,
@@ -726,6 +729,7 @@ export const resources = {
       ...demandForecastId,
       ...forecastBiasId,
       ...modelBacktestId,
+      ...forecastUxId,
       ...rfxId,
       ...rfxAuthoringId,
       ...rfqAuthoringId,

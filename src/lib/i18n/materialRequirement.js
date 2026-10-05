@@ -19,8 +19,8 @@ export const materialRequirementEn = {
   'mrq.interim':
     'Planned orders are rounded up to the minimum order quantity and the order multiple only, without weighing warehouse space.',
   'mrq.sized':
-    'Planned orders are sized by the order plan: MOQ and order multiple kept, and warehouse space weighed against the cost of another order.',
-  'mrq.sized.link': 'Open the order plan',
+    'Planned orders are sized on What to order: MOQ and order multiple kept, and warehouse space weighed against the cost of another order.',
+  'mrq.sized.link': 'Open What to order',
 
   'mrq.receipts.confirmed': 'Confirmed deliveries only',
   'mrq.receipts.include': 'Also count unconfirmed lines',
@@ -42,6 +42,8 @@ export const materialRequirementEn = {
   'mrq.col.safetyStock': 'Safety stock',
   'mrq.col.stock': 'Stock on hand',
   'mrq.col.net': 'Net requirement',
+  'mrq.filter.needsOrder': 'Needs order',
+  'mrq.filter.empty': 'No material has a net requirement over the horizon.',
   'mrq.col.orders': 'Planned orders',
   'mrq.col.late': 'Late',
   'mrq.days': '{{count}} days',
@@ -89,7 +91,7 @@ export const materialRequirementEn = {
   'mrq.def.net':
     'Net requirement: gross requirement + safety stock − (stock at the start of the week + confirmed receipts in the week), and never below zero. Receipts count at the date and quantity the supplier confirmed.',
   'mrq.def.planned':
-    'Planned order: sized by the order plan — at least the net requirement and the minimum order quantity, a whole number of order multiples, and possibly covering later weeks where one order costs less than several. It is released the lead time (plus any safety lead time) before the week it is needed.',
+    'Planned order: sized on What to order — at least the net requirement and the minimum order quantity, a whole number of order multiples, and possibly covering later weeks where one order costs less than several. It is released the lead time (plus any safety lead time) before the week it is needed.',
   'mrq.def.end': 'Stock at end: stock at start + receipts + planned order − gross requirement.'
 };
 
@@ -109,8 +111,8 @@ export const materialRequirementId = {
   'mrq.interim':
     'Pesanan terencana hanya dibulatkan ke atas ke jumlah pesanan minimum dan kelipatan pesanan, tanpa menimbang ruang gudang.',
   'mrq.sized':
-    'Pesanan terencana ditentukan oleh rencana pesanan: MOQ dan kelipatan pesanan dijaga, dan ruang gudang ditimbang terhadap biaya satu pesanan lagi.',
-  'mrq.sized.link': 'Buka rencana pesanan',
+    'Pesanan terencana ditentukan di Apa yang dipesan: MOQ dan kelipatan pesanan dijaga, dan ruang gudang ditimbang terhadap biaya satu pesanan lagi.',
+  'mrq.sized.link': 'Buka Apa yang dipesan',
 
   'mrq.receipts.confirmed': 'Hanya pengiriman terkonfirmasi',
   'mrq.receipts.include': 'Ikut hitung baris belum dikonfirmasi',
@@ -132,6 +134,8 @@ export const materialRequirementId = {
   'mrq.col.safetyStock': 'Stok pengaman',
   'mrq.col.stock': 'Stok tersedia',
   'mrq.col.net': 'Kebutuhan bersih',
+  'mrq.filter.needsOrder': 'Perlu dipesan',
+  'mrq.filter.empty': 'Tidak ada material dengan kebutuhan bersih dalam cakupan.',
   'mrq.col.orders': 'Pesanan terencana',
   'mrq.col.late': 'Terlambat',
   'mrq.days': '{{count}} hari',
@@ -179,6 +183,6 @@ export const materialRequirementId = {
   'mrq.def.net':
     'Kebutuhan bersih: kebutuhan kotor + stok pengaman − (stok awal minggu + penerimaan terkonfirmasi pada minggu itu), dan tidak pernah di bawah nol. Penerimaan dihitung pada tanggal dan jumlah yang dikonfirmasi pemasok.',
   'mrq.def.planned':
-    'Pesanan terencana: ditentukan oleh rencana pesanan — minimal kebutuhan bersih dan jumlah pesanan minimum, kelipatan pesanan yang utuh, dan dapat mencakup minggu berikutnya bila satu pesanan lebih murah daripada beberapa. Dirilis sebesar waktu tunggu (ditambah waktu tunggu pengaman, bila ada) sebelum minggu kebutuhannya.',
+    'Pesanan terencana: ditentukan di Apa yang dipesan — minimal kebutuhan bersih dan jumlah pesanan minimum, kelipatan pesanan yang utuh, dan dapat mencakup minggu berikutnya bila satu pesanan lebih murah daripada beberapa. Dirilis sebesar waktu tunggu (ditambah waktu tunggu pengaman, bila ada) sebelum minggu kebutuhannya.',
   'mrq.def.end': 'Stok akhir: stok awal + penerimaan + pesanan terencana − kebutuhan kotor.'
 };

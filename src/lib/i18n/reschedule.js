@@ -25,13 +25,13 @@ export const rescheduleEn = {
   'rs.settings.threshold': 'Weeks early before a later date is proposed',
   'rs.settings.weeks_one': '{{count}} week',
   'rs.settings.weeks_other': '{{count}} weeks',
-  'rs.settings.thresholdNote': 'Decided by the owner (ENG-D15)',
+  'rs.settings.thresholdNote': 'Decided by the owner',
   'rs.settings.rent': 'Rented space, per pallet a week',
   'rs.settings.penalty': 'Change penalty inside the lead time, per pallet',
   'rs.settings.placeholderFinance': 'Placeholder — Finance to confirm',
   'rs.settings.placeholderPlanner': 'Placeholder — the Material Planner to confirm',
   'rs.settings.where':
-    'Set on Administration → Tolerances and rule values, beside the order plan’s cost rates.',
+    'Set on Administration → Tolerances and rule values, beside the cost rates of What to order.',
 
   'rs.warehouse.packaging': 'Packaging warehouse',
   'rs.warehouse.rawMaterial': 'Raw material warehouse',
@@ -67,6 +67,8 @@ export const rescheduleEn = {
   'rs.fill.title': 'Projected warehouse fill by week',
   'rs.fill.intro':
     'Stock at the end of each week, in pallets, as a share of owned capacity: now, with the selected proposals, and with every proposal on the list. The last line is stock already on hand — no change to an open order moves it.',
+  'rs.fill.basis':
+    '“Now” is the projection on What to order, recommended orders included, plus released call-offs not yet received. What to order does not count those call-offs yet, so “Now” can read higher than its fill for the same week.',
   'rs.fill.series.now': 'Now',
   'rs.fill.series.selected': 'With the selection',
   'rs.fill.series.onHand': 'Stock on hand',
@@ -202,13 +204,13 @@ export const rescheduleId = {
   'rs.settings.title': 'Nilai yang dipakai',
   'rs.settings.threshold': 'Minggu lebih awal sebelum tanggal yang lebih lambat diusulkan',
   'rs.settings.weeks_other': '{{count}} minggu',
-  'rs.settings.thresholdNote': 'Diputuskan oleh pemilik (ENG-D15)',
+  'rs.settings.thresholdNote': 'Diputuskan oleh pemilik',
   'rs.settings.rent': 'Ruang sewa, per palet per minggu',
   'rs.settings.penalty': 'Penalti perubahan dalam waktu tunggu, per palet',
   'rs.settings.placeholderFinance': 'Sementara — menunggu konfirmasi Keuangan',
   'rs.settings.placeholderPlanner': 'Sementara — menunggu konfirmasi Perencana Material',
   'rs.settings.where':
-    'Diatur di Administrasi → Toleransi dan nilai aturan, di samping tarif biaya rencana pesanan.',
+    'Diatur di Administrasi → Toleransi dan nilai aturan, di samping tarif biaya Apa yang dipesan.',
 
   'rs.warehouse.packaging': 'Gudang kemasan',
   'rs.warehouse.rawMaterial': 'Gudang bahan baku',
@@ -240,6 +242,8 @@ export const rescheduleId = {
   'rs.fill.title': 'Proyeksi isi gudang per minggu',
   'rs.fill.intro':
     'Stok di akhir setiap minggu, dalam palet, sebagai porsi kapasitas milik sendiri: sekarang, dengan usulan terpilih, dan dengan semua usulan di daftar. Garis terakhir adalah stok yang sudah ada di gudang — tidak ada perubahan pesanan terbuka yang memindahkannya.',
+  'rs.fill.basis':
+    '“Sekarang” adalah proyeksi di Apa yang dipesan, termasuk pesanan yang disarankan, ditambah call-off yang sudah dirilis tetapi belum diterima. Apa yang dipesan belum menghitung call-off itu, jadi “Sekarang” bisa lebih tinggi daripada isinya untuk minggu yang sama.',
   'rs.fill.series.now': 'Sekarang',
   'rs.fill.series.selected': 'Dengan pilihan',
   'rs.fill.series.onHand': 'Stok di tangan',
