@@ -29,7 +29,7 @@ import type { FlowDefinition } from './schema';
 import { MockCommandService } from '../data/mock/MockCommandService';
 import type { QueryScope } from '../data/types';
 import { PERSONA_SYSTEM_ROLES } from '../../services/transitions/businessRoles';
-import { displayStatesOf } from '../../lib/projectionGate/displayStates';
+import { displayStatesOf } from '@lib/projectionGate/displayStates';
 
 const FLOWS: {
   flow: FlowDefinition;

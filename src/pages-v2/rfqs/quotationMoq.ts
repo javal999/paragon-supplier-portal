@@ -46,7 +46,7 @@
 // including the ones a `type="number"` field hides by eating the token.
 // ────────────────────────────────────────────────────────────────────────────
 
-import { normalizeQty, type QtyRefusalReason } from '../../lib/localeNumber';
+import { normalizeQty, type QtyRefusalReason } from '@lib/localeNumber';
 
 /**
  * Why a minimum order quantity was refused.

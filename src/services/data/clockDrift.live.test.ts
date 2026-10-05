@@ -68,7 +68,8 @@ describe('clock drift, against the REAL wall clock', () => {
         const p = join(dir, e);
         return statSync(p).isDirectory() ? walk(p) : [p.replace(/\\/g, '/')];
       });
-    const live = walk('src').filter((f) => f.endsWith('.live.test.ts'));
+    // Any language: live specs may be `.js/.jsx` after the JavaScript conversion.
+    const live = walk('src').filter((f) => /\.live\.test\.[jt]sx?$/.test(f));
     expect(live).toEqual(['src/services/data/clockDrift.live.test.ts']);
   });
 });

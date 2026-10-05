@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { InvoiceLinesSection, fmtIdr } from './invoices/InvoiceCollaboration';
-import { invoicePriceTolerance } from '../services/transitions';
+import { invoicePriceTolerance } from '@services/transitions';
 import {
   BarChart,
   Bar,
@@ -25,9 +25,9 @@ import {
   Globe,
   LucideIcon,
 } from 'lucide-react';
-import AppShellV2 from '../components/layout-v2/AppShellV2';
-import { CHART_SERIES, CHART_SEMANTIC, CHART_GRID } from '../lib/chartPalette';
-import PageHeader from '../components/ui-v2/PageHeader';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import { CHART_SERIES, CHART_SEMANTIC, CHART_GRID } from '@lib/chartPalette';
+import PageHeader from '@components/ui-v2/PageHeader';
 import {
   OrderNotFound,
   PoFilterBanner,
@@ -35,53 +35,53 @@ import {
   usePoDrillFilter,
 } from './orders/PoDrillFilter';
 import { invoicePoNumbers, invoicesForPo } from './orders/orderSummaryModel';
-import { useGoodsReceipts } from '../services/query/hooks';
-import SapDataAgeBanner from '../components/ui-v2/SapDataAgeBanner';
-import PageMetaLine from '../components/ui-v2/PageMetaLine';
-import ProvenanceMarker from '../components/ui-v2/ProvenanceMarker';
-import KpiCard from '../components/ui-v2/KpiCard';
-import BulkActionsBar from '../components/ui-v2/BulkActionsBar';
-import SubTabs from '../components/ui-v2/SubTabs';
-import FilterChipsBar from '../components/ui-v2/FilterChipsBar';
-import StatusPill from '../components/ui-v2/StatusPill';
-import Table from '../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../components/ui-v2/TableHeader';
-import TableRow from '../components/ui-v2/TableRow';
-import TableCell from '../components/ui-v2/TableCell';
-import Button from '../components/ui-v2/Button';
-import SidePanel from '../components/ui-v2/SidePanel';
-import { useToast } from '../hooks/useToast';
-import LoadingState from '../components/ui-v2/LoadingState';
-import ErrorState from '../components/ui-v2/ErrorState';
-import EmptyState from '../components/ui-v2/EmptyState';
-import Data from '../components/ui-v2/Data';
+import { useGoodsReceipts } from '@services/query/hooks';
+import SapDataAgeBanner from '@components/ui-v2/SapDataAgeBanner';
+import PageMetaLine from '@components/ui-v2/PageMetaLine';
+import ProvenanceMarker from '@components/ui-v2/ProvenanceMarker';
+import KpiCard from '@components/ui-v2/KpiCard';
+import BulkActionsBar from '@components/ui-v2/BulkActionsBar';
+import SubTabs from '@components/ui-v2/SubTabs';
+import FilterChipsBar from '@components/ui-v2/FilterChipsBar';
+import StatusPill from '@components/ui-v2/StatusPill';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
+import Button from '@components/ui-v2/Button';
+import SidePanel from '@components/ui-v2/SidePanel';
+import { useToast } from '@hooks/useToast';
+import LoadingState from '@components/ui-v2/LoadingState';
+import ErrorState from '@components/ui-v2/ErrorState';
+import EmptyState from '@components/ui-v2/EmptyState';
+import Data from '@components/ui-v2/Data';
 import type {
   BuyerInvoice,
   BuyerInvoiceStatus as InvStatus,
   InvoiceMatchStatus as MatchStatus,
-} from '../services/data/types';
+} from '@services/data/types';
 import { useTranslation } from 'react-i18next';
-import { statusLabelKey } from '../lib/statusLabel';
-import { useBuyerInvoices } from '../services/query/hooks';
+import { statusLabelKey } from '@lib/statusLabel';
+import { useBuyerInvoices } from '@services/query/hooks';
 import {
   useInvoiceReleasePayment,
   useInvoiceSettlePayment,
   useInvoiceDispute,
   useInvoiceResolve,
-} from '../services/query/commandHooks';
-import { formatIDR, formatDate } from '../lib/format';
+} from '@services/query/commandHooks';
+import { formatIDR, formatDate } from '@lib/format';
 import {
   invoiceActionsFor,
   invoiceCommitAction,
   invoiceActionsForSeat,
 } from './invoices/invoiceActionModel';
-import { useCurrentIdentity } from '../context/CurrentIdentityContext';
-import { HandoffNotice } from '../components/ui-v2/HandoffNotice';
-import NextActLine from '../components/ui-v2/NextActLine';
-import { useNextAct } from '../hooks/useVerbAvailability';
-import type { VerbAvailability } from '../services/transitions/handoff';
-import { classifySettleFault, SETTLE_FAULT_RETRYABLE, type SettleFault } from '../services/transitions';
-import { useRefusalText } from '../hooks/useRefusalText';
+import { useCurrentIdentity } from '@context/CurrentIdentityContext';
+import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
+import NextActLine from '@components/ui-v2/NextActLine';
+import { useNextAct } from '@hooks/useVerbAvailability';
+import type { VerbAvailability } from '@services/transitions/handoff';
+import { classifySettleFault, SETTLE_FAULT_RETRYABLE, type SettleFault } from '@services/transitions';
+import { useRefusalText } from '@hooks/useRefusalText';
 
 const STATUS_VARIANT: Record<InvStatus, 'success' | 'warning' | 'danger' | 'info' | 'neutral'> = {
   'Pending Match': 'neutral',

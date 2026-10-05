@@ -40,7 +40,7 @@
 //                `nextActSurfaces.test.ts` is where that would show up.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { NextAct } from '../../services/transitions/nextAct';
+import type { NextAct } from '@services/transitions/nextAct';
 
 /**
  * ⚠️ **DO NOT WIDEN TO `Partial<Record<…>>` AND DO NOT ADD A DEFAULT.** Both

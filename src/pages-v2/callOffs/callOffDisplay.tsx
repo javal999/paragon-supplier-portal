@@ -1,19 +1,19 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import StatusPill from '../../components/ui-v2/StatusPill';
-import type { StatusTone } from '../../lib/statusTone';
+import StatusPill from '@components/ui-v2/StatusPill';
+import type { StatusTone } from '@lib/statusTone';
 import type {
   CallOffDeliveryStatus,
   CallOffView,
   ToleranceCheck,
   ToleranceFinding,
-} from '../../services/transitions/callOffRules';
-import { useCallOffs, useASNs, useGoodsReceipts } from '../../services/query/hooks';
-import { callOffViews } from '../../services/transitions/callOffRules';
-import { formatDate } from '../../lib/format';
-import type { CallOffConfirmation } from '../../services/data/types';
-import { sdcClock } from '../../services/sdc';
-import { normalizeQty } from '../../lib/localeNumber';
+} from '@services/transitions/callOffRules';
+import { useCallOffs, useASNs, useGoodsReceipts } from '@services/query/hooks';
+import { callOffViews } from '@services/transitions/callOffRules';
+import { formatDate } from '@lib/format';
+import type { CallOffConfirmation } from '@services/data/types';
+import { sdcClock } from '@services/sdc';
+import { normalizeQty } from '@lib/localeNumber';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Call-off status pills and the shared read (REQ-E09-03, REQ-E09-04). Both the
@@ -101,8 +101,9 @@ export const ToleranceFindings: React.FC<{
     <div data-testid={testId} className="space-y-1">
       <h4 className="text-label text-text-tertiary uppercase">{t('co.tol.title')}</h4>
       <ul className="text-xs space-y-1">
-        {check.findings.map((f, i) => (
-          <li key={i} className={f.needsApproval ? 'text-warning-hover' : 'text-text-secondary'}>
+        {/* checkTolerance emits each finding kind at most once, so kind is unique. */}
+        {check.findings.map((f) => (
+          <li key={f.kind} className={f.needsApproval ? 'text-warning-hover' : 'text-text-secondary'}>
             {t(findingKey(f), findingParams(f, uom, needDate))}
           </li>
         ))}
@@ -138,9 +139,10 @@ export const ToleranceTags: React.FC<{
   };
   return (
     <div data-testid={testId} className="mt-1 space-y-0.5">
-      {tags.map((f, i) => (
+      {/* checkTolerance emits each finding kind at most once, so kind is unique. */}
+      {tags.map((f) => (
         <div
-          key={i}
+          key={f.kind}
           className={`text-[11px] ${verdictOf(f) === 'needsApproval' ? 'text-warning-hover' : 'text-text-tertiary'}`}
         >
           {t('co.tol.tagLine', {

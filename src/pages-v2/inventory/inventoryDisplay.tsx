@@ -1,26 +1,26 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import StatusPill from '../../components/ui-v2/StatusPill';
-import SidePanel from '../../components/ui-v2/SidePanel';
-import Data from '../../components/ui-v2/Data';
+import StatusPill from '@components/ui-v2/StatusPill';
+import SidePanel from '@components/ui-v2/SidePanel';
+import Data from '@components/ui-v2/Data';
 import { PicCell, PicHeader } from '../materials/picDisplay';
 import { TradeNameBeside } from '../materials/tradeNameDisplay';
-import { useToast } from '../../hooks/useToast';
-import { useRefusalText } from '../../hooks/useRefusalText';
-import { formatDate, formatDateTime } from '../../lib/format';
-import type { StatusTone } from '../../lib/statusTone';
-import { sdcClock } from '../../services/sdc';
-import type { CommandResult, InventoryPosition, RiskBasis, RiskClass } from '../../services/data/types';
-import type { StockChannel } from '../../services/sdc/types';
+import { useToast } from '@hooks/useToast';
+import { useRefusalText } from '@hooks/useRefusalText';
+import { formatDate, formatDateTime } from '@lib/format';
+import type { StatusTone } from '@lib/statusTone';
+import { sdcClock } from '@services/sdc';
+import type { CommandResult, InventoryPosition, RiskBasis, RiskClass } from '@services/data/types';
+import type { StockChannel } from '@services/sdc/types';
 import {
   incomingTotals,
   positionRisk,
   stockFreshness,
   type StockFreshness,
-} from '../../services/transitions/inventoryRules';
-import type { CapacityConfirmationStatus, LtpCapacityLevel } from '../../services/transitions/capacityRules';
-import { useInventoryCommand, type InventoryCommandVars } from '../../services/query/commandHooks';
+} from '@services/transitions/inventoryRules';
+import type { CapacityConfirmationStatus, LtpCapacityLevel } from '@services/transitions/capacityRules';
+import { useInventoryCommand, type InventoryCommandVars } from '@services/query/commandHooks';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Shared inventory & capacity display (REQ-E08-01 to REQ-E08-05). Every figure

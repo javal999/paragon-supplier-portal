@@ -18,8 +18,8 @@
 // Pure: the page reads and writes `URLSearchParams`, everything else is here.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { CapacityPlan } from '../../services/data/types';
-import { isGapWeek } from '../../services/transitions/capacityRules';
+import type { CapacityPlan } from '@services/data/types';
+import { isGapWeek } from '@services/transitions/capacityRules';
 import { parseIdParam } from '../orders/orderSummaryDrill';
 
 export const CAPACITY_FILTER_PARAMS = {

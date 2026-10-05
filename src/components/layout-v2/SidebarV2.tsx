@@ -1,10 +1,10 @@
 import React, { useLayoutEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useCurrentIdentity } from '../../context/CurrentIdentityContext';
-import { mockSuppliers } from '../../data/mockSuppliers';
-import { SEEDED_SEAT_ROLES } from '../../services/transitions/businessRoles';
-import { NO_PERSON } from '../../context/noPerson';
+import { useCurrentIdentity } from '@context/CurrentIdentityContext';
+import { mockSuppliers } from '@data/mockSuppliers';
+import { SEEDED_SEAT_ROLES } from '@services/transitions/businessRoles';
+import { NO_PERSON } from '@context/noPerson';
 import { HOME_PATH, isItemActive, navFor, type Persona } from './navConfig';
 import { useHubRole } from './hubRole';
 

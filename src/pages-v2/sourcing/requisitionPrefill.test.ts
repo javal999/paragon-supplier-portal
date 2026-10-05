@@ -16,7 +16,7 @@ import {
   isRfqUom,
   RFQ_CATEGORY_OPTIONS,
 } from './requisitionPrefill';
-import type { PurchaseRequisition } from '../../services/data/types';
+import type { PurchaseRequisition } from '@services/data/types';
 
 const pr = (over: Partial<PurchaseRequisition>): PurchaseRequisition =>
   ({

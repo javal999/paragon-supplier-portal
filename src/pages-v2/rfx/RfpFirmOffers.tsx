@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import Button from '../../components/ui-v2/Button';
-import Data from '../../components/ui-v2/Data';
-import StatusPill from '../../components/ui-v2/StatusPill';
-import { HandoffNotice } from '../../components/ui-v2/HandoffNotice';
-import SessionAttachments from '../../components/ui-v2/SessionAttachments';
-import { useVerbAvailability } from '../../hooks/useVerbAvailability';
-import type { GateResult } from '../../services/sourcing/complianceGate';
-import type { RfpEventView, RfpOfferRoundView } from '../../services/sourcing/views';
-import type { RfxCommandVars } from '../../services/query/commandHooks';
-import { RFP_ROUND_READY_STATUSES, rfpOfferRoundRefusal, rfpOptionRef } from '../../services/sourcing/rfpFirmOffer';
-import type { RfpOptionSettlement } from '../../services/sourcing/rfpAward';
+import Button from '@components/ui-v2/Button';
+import Data from '@components/ui-v2/Data';
+import StatusPill from '@components/ui-v2/StatusPill';
+import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
+import SessionAttachments from '@components/ui-v2/SessionAttachments';
+import { useVerbAvailability } from '@hooks/useVerbAvailability';
+import type { GateResult } from '@services/sourcing/complianceGate';
+import type { RfpEventView, RfpOfferRoundView } from '@services/sourcing/views';
+import type { RfxCommandVars } from '@services/query/commandHooks';
+import { RFP_ROUND_READY_STATUSES, rfpOfferRoundRefusal, rfpOptionRef } from '@services/sourcing/rfpFirmOffer';
+import type { RfpOptionSettlement } from '@services/sourcing/rfpAward';
 import { DeadlinePill, GateMarker, qty } from './rfxDisplay';
 import { refusalCode } from './RfxQuestionEditor';
 

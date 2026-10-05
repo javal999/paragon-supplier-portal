@@ -18,7 +18,7 @@
 // accessor itself, and a summary that cannot remember a filter must still open.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { Persona } from '../../components/layout-v2/navConfig';
+import type { Persona } from '@components/layout-v2/navConfig';
 
 export interface OrderSummaryViewState {
   /** The search box's text. */

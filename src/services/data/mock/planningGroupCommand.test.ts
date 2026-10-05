@@ -25,7 +25,7 @@ import type { CapacityPlan, QueryScope } from '../types';
 import { PERSONA_SYSTEM_ROLES } from '../../transitions/businessRoles';
 import { planStatus, reEntryWeeks } from '../../transitions/capacityRules';
 import { materialEntry, sdcClock } from '../../sdc';
-import { NO_PERSON } from '../../../context/noPerson';
+import { NO_PERSON } from '@context/noPerson';
 import BEFORE from '../../transitions/__fixtures__/capacityPlansBeforeC5.json';
 
 const svc = new MockCommandService();

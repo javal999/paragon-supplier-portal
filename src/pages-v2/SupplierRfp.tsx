@@ -1,28 +1,28 @@
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import AppShellV2 from '../components/layout-v2/AppShellV2';
-import PageHeader from '../components/ui-v2/PageHeader';
-import PageMetaLine from '../components/ui-v2/PageMetaLine';
-import SampleDataBadge from '../components/ui-v2/SampleDataBadge';
-import Button from '../components/ui-v2/Button';
-import Data from '../components/ui-v2/Data';
-import StatusPill from '../components/ui-v2/StatusPill';
-import Table from '../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../components/ui-v2/TableHeader';
-import TableRow from '../components/ui-v2/TableRow';
-import TableCell from '../components/ui-v2/TableCell';
-import LoadingState from '../components/ui-v2/LoadingState';
-import ErrorState from '../components/ui-v2/ErrorState';
-import SessionAttachments from '../components/ui-v2/SessionAttachments';
-import { HandoffNotice } from '../components/ui-v2/HandoffNotice';
-import { useVerbAvailability } from '../hooks/useVerbAvailability';
-import { useToast } from '../hooks/useToast';
-import { formatDate } from '../lib/format';
-import { useCurrentIdentity } from '../context/CurrentIdentityContext';
-import { useRfpAwards, useRfpEvents, useRfpOfferRounds } from '../services/query/hooks';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import PageHeader from '@components/ui-v2/PageHeader';
+import PageMetaLine from '@components/ui-v2/PageMetaLine';
+import SampleDataBadge from '@components/ui-v2/SampleDataBadge';
+import Button from '@components/ui-v2/Button';
+import Data from '@components/ui-v2/Data';
+import StatusPill from '@components/ui-v2/StatusPill';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
+import LoadingState from '@components/ui-v2/LoadingState';
+import ErrorState from '@components/ui-v2/ErrorState';
+import SessionAttachments from '@components/ui-v2/SessionAttachments';
+import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
+import { useVerbAvailability } from '@hooks/useVerbAvailability';
+import { useToast } from '@hooks/useToast';
+import { formatDate } from '@lib/format';
+import { useCurrentIdentity } from '@context/CurrentIdentityContext';
+import { useRfpAwards, useRfpEvents, useRfpOfferRounds } from '@services/query/hooks';
 import { SupplierFirmOffers } from './rfx/SupplierFirmOffers';
-import { useRfxCommand } from '../services/query/commandHooks';
-import { RFP_TERM_GROUP_ORDER, rfpTermGroupOf } from '../services/sourcing/rfxConfig';
+import { useRfxCommand } from '@services/query/commandHooks';
+import { RFP_TERM_GROUP_ORDER, rfpTermGroupOf } from '@services/sourcing/rfxConfig';
 import {
   deviationsWithoutComment,
   invalidAnswers,
@@ -31,10 +31,10 @@ import {
   responseWindowRefusal,
   rfpPricingAnswerRefusal,
   unansweredTerms,
-} from '../services/transitions/rfxRules';
-import { responseDocumentsRefusal } from '../services/transitions/rfxDocumentRules';
-import type { RfiAnswer, RfpPricingAnswer, RfpTermAnswer } from '../services/sourcing/types';
-import type { RfpEventView } from '../services/sourcing/views';
+} from '@services/transitions/rfxRules';
+import { responseDocumentsRefusal } from '@services/transitions/rfxDocumentRules';
+import type { RfiAnswer, RfpPricingAnswer, RfpTermAnswer } from '@services/sourcing/types';
+import type { RfpEventView } from '@services/sourcing/views';
 import { DeadlinePill, rfxNow } from './rfx/rfxDisplay';
 import RfxQuestionForm from './rfx/RfxQuestionForm';
 import RfxConfidentialityGate from './rfx/RfxConfidentialityGate';

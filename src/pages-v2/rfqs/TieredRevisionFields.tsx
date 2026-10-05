@@ -1,11 +1,11 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import Data from '../../components/ui-v2/Data';
-import { formatNumber } from '../../lib/format';
-import type { RFQ } from '../../data/mockRfqs';
-import type { Quotation } from '../../data/mockQuotations';
-import { deriveQuoteHeader, tiersForItem, type QuotationItemQuote } from '../../services/sourcing/rfqModel';
-import { headerLeadTimeDays } from '../../services/sourcing/rfqResponse';
+import Data from '@components/ui-v2/Data';
+import { formatNumber } from '@lib/format';
+import type { RFQ } from '@data/mockRfqs';
+import type { Quotation } from '@data/mockQuotations';
+import { deriveQuoteHeader, tiersForItem, type QuotationItemQuote } from '@services/sourcing/rfqModel';
+import { headerLeadTimeDays } from '@services/sourcing/rfqResponse';
 import { readBidPrice } from './quotationPrice';
 
 // ─────────────────────────────────────────────────────────────────────────────

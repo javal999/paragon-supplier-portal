@@ -23,9 +23,9 @@
 
 import { describe, it, expect, afterAll } from 'vitest';
 import { screen } from '@testing-library/react';
-import { renderWithProviders } from '../test/test-utils';
-import i18n from '../lib/i18n';
-import { formatDate } from '../lib/format';
+import { renderWithProviders } from '@test/test-utils';
+import i18n from '@lib/i18n';
+import { formatDate } from '@lib/format';
 import BuyerCompliance from './BuyerCompliance';
 
 // A STORED fixture expiry (complianceRegistry.ts), not a projected or clock-

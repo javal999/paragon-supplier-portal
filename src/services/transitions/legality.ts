@@ -24,7 +24,7 @@
 // canonical state they hold.
 // ────────────────────────────────────────────────────────────────────────────
 
-import type { PersonaType } from '../../context/CurrentIdentityContext';
+import type { PersonaType } from '@context/CurrentIdentityContext';
 import type { TransitionDef } from './schema';
 import { getFlow } from './registry';
 import { PERSONA_ROLES, personaCan } from './roles';

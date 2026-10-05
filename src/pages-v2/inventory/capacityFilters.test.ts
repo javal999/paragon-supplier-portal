@@ -1,6 +1,6 @@
 // BL-63 (REQ-E08-04 BR-07, AC-04) — the planner's capacity filters, pure half.
 import { describe, expect, it } from 'vitest';
-import type { CapacityPlan } from '../../services/data/types';
+import type { CapacityPlan } from '@services/data/types';
 import {
   anyCapacityFilter,
   planMatches,

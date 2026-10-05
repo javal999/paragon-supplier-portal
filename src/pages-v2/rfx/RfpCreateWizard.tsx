@@ -36,15 +36,15 @@
 
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import Button from '../../components/ui-v2/Button';
-import Data from '../../components/ui-v2/Data';
-import SessionAttachments from '../../components/ui-v2/SessionAttachments';
-import Wizard, { WizardStep } from '../../components/ui-v2/Wizard';
-import ModalOverlay from '../../components/ui-v2/ModalOverlay';
-import { useToast } from '../../hooks/useToast';
-import { BID_CURRENCIES, BASE_CURRENCY, type BidCurrency } from '../../lib/currencyPolicy';
-import type { AttachmentMeta } from '../../services/attachments/sessionAttachments';
-import { useRfxCommand } from '../../services/query/commandHooks';
+import Button from '@components/ui-v2/Button';
+import Data from '@components/ui-v2/Data';
+import SessionAttachments from '@components/ui-v2/SessionAttachments';
+import Wizard, { WizardStep } from '@components/ui-v2/Wizard';
+import ModalOverlay from '@components/ui-v2/ModalOverlay';
+import { useToast } from '@hooks/useToast';
+import { BID_CURRENCIES, BASE_CURRENCY, type BidCurrency } from '@lib/currencyPolicy';
+import type { AttachmentMeta } from '@services/attachments/sessionAttachments';
+import { useRfxCommand } from '@services/query/commandHooks';
 import {
   RFP_STANDARD_TERMS,
   RFP_TERM_GROUP_ORDER,
@@ -52,16 +52,16 @@ import {
   rfpTerm,
   rfxCategoryFamily,
   rfxFamilyForCategory,
-} from '../../services/sourcing/rfxConfig';
-import { rfpTemplateStore, type RfpTemplateContent } from '../../services/sourcing/rfxTemplates';
-import type { RfpPrefill } from '../../services/sourcing/rfxPrefill';
+} from '@services/sourcing/rfxConfig';
+import { rfpTemplateStore, type RfpTemplateContent } from '@services/sourcing/rfxTemplates';
+import type { RfpPrefill } from '@services/sourcing/rfxPrefill';
 import {
   isPastDeadline,
   rfiQuestionsRefusal,
   rfpPricingRequestRefusal,
   termValueFits,
-} from '../../services/transitions/rfxRules';
-import { documentRequestsRefusal } from '../../services/transitions/rfxDocumentRules';
+} from '@services/transitions/rfxRules';
+import { documentRequestsRefusal } from '@services/transitions/rfxDocumentRules';
 import type {
   DocumentRequest,
   RfiQuestion,
@@ -69,11 +69,11 @@ import type {
   RfpPricingRequest,
   RfpTermRow,
   RfxCustomSection,
-} from '../../services/sourcing/types';
+} from '@services/sourcing/types';
 import DocumentRequestsEditor, { DocumentRequestsSummary } from './DocumentRequestsEditor';
 import RfxInviteeStep from './RfxInviteeStep';
 import { useSourcingTypeMap } from './eligibilityDisplay';
-import { mappedSourcingType } from '../../services/sourcing/sourcingType';
+import { mappedSourcingType } from '@services/sourcing/sourcingType';
 import RfxQuestionEditor from './RfxQuestionEditor';
 import RfxSaveTemplate from './RfxSaveTemplate';
 import RfxStartFrom, { type StartOption } from './RfxStartFrom';

@@ -18,7 +18,7 @@ import {
 } from './sourcingType';
 import { filterInvitees, notQualifiedInvitees, type InviteeCandidate } from '../transitions/rfxRules';
 import { awardQualificationRefusal, awardReasonOwed, awardReasonRefusal, type AwardItem } from './awardShape';
-import { SupplierStatus } from '../../types/supplier.types';
+import { SupplierStatus } from '@app-types/supplier.types';
 import type { QualificationLevel, VendorQualificationStatus } from '../data/types';
 import type { AwardLine } from './types';
 

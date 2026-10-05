@@ -26,7 +26,7 @@ import { rfiEventStore, rfiResponseStore, rfpEventStore, rfpResponseStore } from
 import { rfqStore } from './stores/rfqStore';
 import { revisedRfiResponse, revisedRfpResponse } from '../../sourcing/responseVersions';
 import { sdcClock } from '../../sdc';
-import { NO_PERSON } from '../../../context/noPerson';
+import { NO_PERSON } from '@context/noPerson';
 
 /** Files held on attachment answers: they count toward the 30 per response (D-3). */
 const answerFiles = (answers: readonly RfiAnswer[] | undefined): number =>

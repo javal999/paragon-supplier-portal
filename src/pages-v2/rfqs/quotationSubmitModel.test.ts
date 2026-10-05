@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { buildQuotationSubmitPayload, isCurrencyRefusal } from './quotationSubmitModel';
-import { BID_CURRENCIES } from '../../lib/currencyPolicy';
-import { POLICY_HOOKS } from '../../services/transitions/policyHooks';
+import { BID_CURRENCIES } from '@lib/currencyPolicy';
+import { POLICY_HOOKS } from '@services/transitions/policyHooks';
 
 const draft = {
   rfqId: 'rfq-001',

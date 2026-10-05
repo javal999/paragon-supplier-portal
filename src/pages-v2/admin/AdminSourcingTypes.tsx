@@ -1,27 +1,27 @@
 import React, { useMemo, useState, useSyncExternalStore } from 'react';
 import { useTranslation } from 'react-i18next';
-import AppShellV2 from '../../components/layout-v2/AppShellV2';
-import PageHeader from '../../components/ui-v2/PageHeader';
-import Table from '../../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../../components/ui-v2/TableHeader';
-import TableRow from '../../components/ui-v2/TableRow';
-import TableCell from '../../components/ui-v2/TableCell';
-import Button from '../../components/ui-v2/Button';
-import Data from '../../components/ui-v2/Data';
-import { HandoffNotice } from '../../components/ui-v2/HandoffNotice';
-import { useVerbAvailability } from '../../hooks/useVerbAvailability';
-import { useToast } from '../../hooks/useToast';
-import { formatDateTime } from '../../lib/format';
-import { useSourcingTypeSet } from '../../services/query/commandHooks';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import PageHeader from '@components/ui-v2/PageHeader';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
+import Button from '@components/ui-v2/Button';
+import Data from '@components/ui-v2/Data';
+import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
+import { useVerbAvailability } from '@hooks/useVerbAvailability';
+import { useToast } from '@hooks/useToast';
+import { formatDateTime } from '@lib/format';
+import { useSourcingTypeSet } from '@services/query/commandHooks';
 import {
   SOURCING_TYPES,
   SOURCING_TYPE_KEYS,
   sourcingTypeRefusal,
   type SourcingType,
   type SourcingTypeKey,
-} from '../../services/sourcing/sourcingType';
-import { purchasingGroupNameKey } from '../../services/sourcing/rfxConfig';
-import { sourcingTypeStore } from '../../services/transitions/sourcingTypeStore';
+} from '@services/sourcing/sourcingType';
+import { purchasingGroupNameKey } from '@services/sourcing/rfxConfig';
+import { sourcingTypeStore } from '@services/transitions/sourcingTypeStore';
 import AdminSectionNav from './AdminSectionNav';
 
 // ─────────────────────────────────────────────────────────────────────────────

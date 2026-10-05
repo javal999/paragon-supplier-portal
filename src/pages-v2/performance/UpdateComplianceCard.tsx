@@ -1,10 +1,10 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import Data from '../../components/ui-v2/Data';
-import LivenessPill from '../../components/ui-v2/LivenessPill';
-import { formatDate } from '../../lib/format';
-import { complianceScoreWeight } from '../../services/transitions/inventoryConfig';
-import type { ComplianceWeekState, UpdateCompliance } from '../../services/transitions/updateCompliance';
+import Data from '@components/ui-v2/Data';
+import LivenessPill from '@components/ui-v2/LivenessPill';
+import { formatDate } from '@lib/format';
+import { complianceScoreWeight } from '@services/transitions/inventoryConfig';
+import type { ComplianceWeekState, UpdateCompliance } from '@services/transitions/updateCompliance';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Material B3 (MR-2 step 2, US-MAT-03/04) — "Update compliance" and the

@@ -32,7 +32,7 @@ import type { ASN, QueryScope } from '../types';
 // 2B-5b-ii — the GR RUNTIME input, so the 'it resolves' claim is DERIVED from
 // what the wizard is actually fed rather than from three codes typed by hand.
 import { MOCK_ASNS } from './fixtures/supplierShipments';
-import type { InspectionResult } from '../../../data/mockGoodsReceipts';
+import type { InspectionResult } from '@data/mockGoodsReceipts';
 import { PERSONA_SYSTEM_ROLES } from '../../../services/transitions/businessRoles';
 
 const svc = new MockCommandService();

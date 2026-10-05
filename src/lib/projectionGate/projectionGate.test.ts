@@ -27,9 +27,9 @@ import {
   isFixture,
 } from './derive';
 import { DISPLAY_STATES, DISPLAY_STATE_ENTITIES, displayStatesOf } from './displayStates';
-import { WIRED_COMMAND_TARGETS } from '../../services/data/mock/MockCommandService';
-import '../../services/transitions/index';
-import { getFlow } from '../../services/transitions/registry';
+import { WIRED_COMMAND_TARGETS } from '@services/data/mock/MockCommandService';
+import '@services/transitions/index';
+import { getFlow } from '@services/transitions/registry';
 
 const FILES = sourceFiles();
 

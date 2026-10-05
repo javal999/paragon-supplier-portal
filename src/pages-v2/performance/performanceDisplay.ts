@@ -14,15 +14,15 @@ import {
   useGoodsReceipts,
   usePurchaseOrders,
   useUpdateCompliance,
-} from '../../services/query/hooks';
-import { sdcClock } from '../../services/sdc';
+} from '@services/query/hooks';
+import { sdcClock } from '@services/sdc';
 import {
   portfolioMeasure,
   supplierMeasure,
   type PerformanceInput,
   type PerformancePeriod,
   type SupplierMeasure,
-} from '../../services/data/performanceRules';
+} from '@services/data/performanceRules';
 
 export interface PerformanceRead {
   readonly input: PerformanceInput;

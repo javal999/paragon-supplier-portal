@@ -14,7 +14,7 @@ import { approvedNameFor, materialNamesFor } from './materialNameReadModel';
 import type { QueryScope } from '../types';
 import { PERSONA_SYSTEM_ROLES } from '../../transitions/businessRoles';
 import { sdcClock } from '../../sdc';
-import { NO_PERSON } from '../../../context/noPerson';
+import { NO_PERSON } from '@context/noPerson';
 
 const svc = new MockCommandService();
 const reads = new MockProcurementService();

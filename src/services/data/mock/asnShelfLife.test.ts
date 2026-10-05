@@ -14,8 +14,8 @@ import type { QueryScope } from '../types';
 import { PERSONA_SYSTEM_ROLES } from '../../transitions/businessRoles';
 import { approvedShelfLifeLines, shelfLifeExceptionOf } from '../../transitions/fulfilmentRules';
 import { inTransitItems } from '../../transitions/inventoryRules';
-import { NO_PERSON } from '../../../context/noPerson';
-import { openLinesFor, readLines } from '../../../pages-v2/shipments/asnLines';
+import { NO_PERSON } from '@context/noPerson';
+import { openLinesFor, readLines } from '@pages-v2/shipments/asnLines';
 
 const svc = new MockCommandService();
 

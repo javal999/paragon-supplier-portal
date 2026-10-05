@@ -26,7 +26,7 @@ import { PERSONA_SYSTEM_ROLES } from '../../transitions/businessRoles';
 import { sdcClock } from '../../sdc';
 import { currentQuotesFor, rfxNow } from './rfxReadModel';
 import { comparisonRows } from '../../sourcing/rfqComparison';
-import { NO_PERSON } from '../../../context/noPerson';
+import { NO_PERSON } from '@context/noPerson';
 import { deriveQuoteHeader, type QuotationItemQuote } from '../../sourcing/rfqModel';
 
 const svc = new MockCommandService();

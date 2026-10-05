@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { enumLabelKey } from '../lib/priorityLabel';
+import { enumLabelKey } from '@lib/priorityLabel';
 
 /**
  * Localize a shared enum token (priority / risk severity / GR disposition /

@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { channelLabelKey } from '../lib/channelLabel';
+import { channelLabelKey } from '@lib/channelLabel';
 
 /**
  * Localize a communication-channel token (WhatsApp / Email / Web Portal / API …)

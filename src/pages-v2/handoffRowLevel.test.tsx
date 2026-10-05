@@ -1,8 +1,8 @@
 import { screen, waitFor, within, fireEvent } from '@testing-library/react';
-import { renderWithProviders, BUYER, pickSelectFieldOption } from '../test/test-utils';
-import type { CurrentIdentity } from '../context/CurrentIdentityContext';
-import i18n from '../lib/i18n';
-import { rolesHolding } from '../services/transitions/businessRoles';
+import { renderWithProviders, BUYER, pickSelectFieldOption } from '@test/test-utils';
+import type { CurrentIdentity } from '@context/CurrentIdentityContext';
+import i18n from '@lib/i18n';
+import { rolesHolding } from '@services/transitions/businessRoles';
 import BuyerChannelTriage from './BuyerChannelTriage';
 import BuyerCollaboration from './BuyerCollaboration';
 import BuyerGoodsReceipt from './BuyerGoodsReceipt';
@@ -184,7 +184,9 @@ describe('§75 · BuyerGoodsReceipt — the ROW-LEVEL verbs the entry guard did 
   // than green.
   const openRow = async (grNumber: string) => {
     fireEvent.click(await screen.findByText(grNumber));
-    await new Promise((r) => setTimeout(r, 0));
+    await new Promise((r) => {
+      setTimeout(r, 0);
+    });
   };
   const PENDING_INSPECTION = 'GR-2026-002'; // -> Start inspection (the chain)
   const APPROVED = 'GR-2026-003'; // -> Post to SAP (gr:post)

@@ -1,5 +1,5 @@
 import { screen } from '@testing-library/react';
-import { renderWithProviders, SUPPLIER } from '../test/test-utils';
+import { renderWithProviders, SUPPLIER } from '@test/test-utils';
 import SupplierWhatsApp from './SupplierWhatsApp';
 
 describe('SupplierWhatsApp', () => {

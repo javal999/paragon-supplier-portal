@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { screen, fireEvent, within } from '@testing-library/react';
-import { renderWithProviders, BUYER, SUPPLIER } from '../../test/test-utils';
-import { mrpControllerStore } from '../../services/transitions/mrpControllerStore';
-import { setMyMrpController } from '../../components/layout-v2/mrpControllerSeat';
+import { renderWithProviders, BUYER, SUPPLIER } from '@test/test-utils';
+import { mrpControllerStore } from '@services/transitions/mrpControllerStore';
+import { setMyMrpController } from '@components/layout-v2/mrpControllerSeat';
 import BuyerInventory from '../BuyerInventory';
 import SupplierInventory from '../SupplierInventory';
 import BuyerAlerts from '../BuyerAlerts';

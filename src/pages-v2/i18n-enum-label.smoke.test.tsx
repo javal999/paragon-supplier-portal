@@ -1,9 +1,9 @@
 import React from 'react';
 import { describe, it, expect, afterAll } from 'vitest';
 import { render, screen, act } from '@testing-library/react';
-import i18n from '../lib/i18n';
-import StatusPill from '../components/ui-v2/StatusPill';
-import { useEnumLabel } from '../hooks/useEnumLabel';
+import i18n from '@lib/i18n';
+import StatusPill from '@components/ui-v2/StatusPill';
+import { useEnumLabel } from '@hooks/useEnumLabel';
 
 // SEAT2-I18N-ENUM-01 acceptance: the shared priority/severity/disposition vocab
 // localizes centrally — via the StatusPill fallback (pill-rendered chips) and

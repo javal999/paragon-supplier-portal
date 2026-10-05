@@ -23,7 +23,7 @@
 import { applySupplierScope } from '../scoping';
 import { incomingShipmentStore } from './stores/incomingShipmentStore';
 import { sdcClock } from '../../sdc';
-import { mockSuppliers } from '../../../data/mockSuppliers';
+import { mockSuppliers } from '@data/mockSuppliers';
 import {
   DELIVERY_DEMO_SHIPMENTS,
   SCALE_DEMO_SHIPMENTS,

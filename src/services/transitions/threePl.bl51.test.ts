@@ -21,7 +21,7 @@ import { asnStore } from '../data/mock/stores/asnStore';
 import { purchaseOrderStore } from '../data/mock/stores/purchaseOrderStore';
 import { DataError, type QueryScope } from '../data/types';
 import { SYSTEM_ROLES, rolesHolding, PERSONA_SYSTEM_ROLES } from './businessRoles';
-import { NO_PERSON } from '../../context/noPerson';
+import { NO_PERSON } from '@context/noPerson';
 
 const svc = new MockCommandService();
 const buyerSeat = (...businessRoles: string[]): QueryScope => ({

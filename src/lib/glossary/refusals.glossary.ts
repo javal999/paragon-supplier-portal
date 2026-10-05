@@ -13,14 +13,14 @@
 // vocabulary can be complete, correct, ordered and invisible.
 // ─────────────────────────────────────────────────────────────────────────────
 import type { GlossaryOf } from './types';
-import type { CommandRefusal } from '../../services/transitions/refusals';
-import type { SettleFault } from '../../services/transitions/settleFaults';
+import type { CommandRefusal } from '@services/transitions/refusals';
+import type { SettleFault } from '@services/transitions/settleFaults';
 import type { FxRefusalReason } from '../fxPin';
 import type { QtyRefusalReason } from '../localeNumber';
-import type { HalalNotSatisfiedReason } from '../../services/data/halalVerification';
-import type { HalalRefusalReason } from '../../services/sdc/halal';
-import type { BpomRefusalReason } from '../../services/sdc/bpom';
-import type { DataErrorCode } from '../../services/data/types';
+import type { HalalNotSatisfiedReason } from '@services/data/halalVerification';
+import type { HalalRefusalReason } from '@services/sdc/halal';
+import type { BpomRefusalReason } from '@services/sdc/bpom';
+import type { DataErrorCode } from '@services/data/types';
 
 /**
  * The dispatcher's refusal set. A command was refused before anything changed.

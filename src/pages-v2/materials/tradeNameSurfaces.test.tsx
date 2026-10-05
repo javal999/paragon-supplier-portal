@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { screen, fireEvent, waitFor } from '@testing-library/react';
-import { renderWithProviders, BUYER, SUPPLIER } from '../../test/test-utils';
-import { materialNameStore } from '../../services/data/mock/stores/materialNameStore';
+import { renderWithProviders, BUYER, SUPPLIER } from '@test/test-utils';
+import { materialNameStore } from '@services/data/mock/stores/materialNameStore';
 import SupplierInventory from '../SupplierInventory';
 import BuyerInventory from '../BuyerInventory';
 import BuyerTradeNames from './BuyerTradeNames';

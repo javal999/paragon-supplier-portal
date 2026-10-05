@@ -40,9 +40,9 @@
 // ────────────────────────────────────────────────────────────────────────────
 
 import { DECLARED_PRESENT } from '../../fixturePresent';
-import type { RFQ } from '../../../../data/mockRfqs';
-import type { Quotation } from '../../../../data/mockQuotations';
-import type { GoodsReceipt } from '../../../../data/mockGoodsReceipts';
+import type { RFQ } from '@data/mockRfqs';
+import type { Quotation } from '@data/mockQuotations';
+import type { GoodsReceipt } from '@data/mockGoodsReceipts';
 import { ChannelType, POStatus, type CallOff, type PurchaseOrder } from '../../types';
 
 const DAY_MS = 86_400_000;

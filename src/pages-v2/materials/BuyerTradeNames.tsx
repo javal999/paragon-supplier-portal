@@ -1,37 +1,37 @@
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
-import AppShellV2 from '../../components/layout-v2/AppShellV2';
-import PageHeader from '../../components/ui-v2/PageHeader';
-import PageMetaLine from '../../components/ui-v2/PageMetaLine';
-import SampleDataBadge from '../../components/ui-v2/SampleDataBadge';
-import SubTabs from '../../components/ui-v2/SubTabs';
-import Table from '../../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../../components/ui-v2/TableHeader';
-import TableRow from '../../components/ui-v2/TableRow';
-import TableCell from '../../components/ui-v2/TableCell';
-import Button from '../../components/ui-v2/Button';
-import Data from '../../components/ui-v2/Data';
-import StatusPill from '../../components/ui-v2/StatusPill';
-import LoadingState from '../../components/ui-v2/LoadingState';
-import ErrorState from '../../components/ui-v2/ErrorState';
-import { HandoffNotice } from '../../components/ui-v2/HandoffNotice';
-import { useVerbAvailability } from '../../hooks/useVerbAvailability';
-import { useToast } from '../../hooks/useToast';
-import { formatDateTime } from '../../lib/format';
-import { useMaterialNames } from '../../services/query/hooks';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import PageHeader from '@components/ui-v2/PageHeader';
+import PageMetaLine from '@components/ui-v2/PageMetaLine';
+import SampleDataBadge from '@components/ui-v2/SampleDataBadge';
+import SubTabs from '@components/ui-v2/SubTabs';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
+import Button from '@components/ui-v2/Button';
+import Data from '@components/ui-v2/Data';
+import StatusPill from '@components/ui-v2/StatusPill';
+import LoadingState from '@components/ui-v2/LoadingState';
+import ErrorState from '@components/ui-v2/ErrorState';
+import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
+import { useVerbAvailability } from '@hooks/useVerbAvailability';
+import { useToast } from '@hooks/useToast';
+import { formatDateTime } from '@lib/format';
+import { useMaterialNames } from '@services/query/hooks';
 import {
   useMaterialNameDecide,
   useMaterialNameLoad,
   type MaterialNameLoadOutcome,
-} from '../../services/query/commandHooks';
-import type { MaterialNameRow, MaterialNameState, SupplierMaterialName } from '../../services/data/types';
+} from '@services/query/commandHooks';
+import type { MaterialNameRow, MaterialNameState, SupplierMaterialName } from '@services/data/types';
 import {
   cleanSupplierMaterialNo,
   cleanTradeName,
   materialNameRejectRefusal,
   parseTradeNameCsv,
-} from '../../services/transitions/materialNameRules';
+} from '@services/transitions/materialNameRules';
 import { MaterialNameStatePill, refusalKeyOf } from './tradeNameDisplay';
 
 // ─────────────────────────────────────────────────────────────────────────────

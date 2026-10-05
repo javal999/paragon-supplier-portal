@@ -8,8 +8,8 @@
 
 import { describe, expect, it } from 'vitest';
 import { stampDocuments } from './rfxDocumentRules';
-import { NO_PERSON } from '../../context/noPerson';
-import type { ActorAttribution } from '../../lib/enforcement';
+import { NO_PERSON } from '@context/noPerson';
+import type { ActorAttribution } from '@lib/enforcement';
 import type { ResponseDocument } from '../sourcing/types';
 import type { AttachmentMeta } from '../attachments/sessionAttachments';
 

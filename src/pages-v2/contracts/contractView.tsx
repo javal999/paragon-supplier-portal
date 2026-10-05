@@ -22,32 +22,32 @@ import {
   RefreshCw,
   ShieldCheck,
 } from 'lucide-react';
-import StatusPill from '../../components/ui-v2/StatusPill';
-import NextActLine from '../../components/ui-v2/NextActLine';
-import { useNextAct } from '../../hooks/useVerbAvailability';
-import ScoreBadge from '../../components/ui-v2/ScoreBadge';
-import { daysUntil } from '../../services/data/dayProjection';
+import StatusPill from '@components/ui-v2/StatusPill';
+import NextActLine from '@components/ui-v2/NextActLine';
+import { useNextAct } from '@hooks/useVerbAvailability';
+import ScoreBadge from '@components/ui-v2/ScoreBadge';
+import { daysUntil } from '@services/data/dayProjection';
 import {
   contractDisplayStatus,
   CONTRACT_EXPIRY_TONE,
   type ContractDisplayStatus,
-} from '../../services/data/contractExpiry';
-import Data from '../../components/ui-v2/Data';
-import Timeline, { TimelineEvent } from '../../components/ui-v2/Timeline';
+} from '@services/data/contractExpiry';
+import Data from '@components/ui-v2/Data';
+import Timeline, { TimelineEvent } from '@components/ui-v2/Timeline';
 import type {
   Contract,
   ContractStatus,
   ContractType,
-} from '../../data/mockContracts';
-import type { ContractObligation } from '../../data/mockObligations';
-import { obligationRollup } from '../../services/data/obligationRollup';
+} from '@data/mockContracts';
+import type { ContractObligation } from '@data/mockObligations';
+import { obligationRollup } from '@services/data/obligationRollup';
 import {
   obligationDisplay,
   OBLIGATION_DISPLAY_RANK,
   OBLIGATION_DISPLAY_VARIANT,
-} from '../../services/data/obligationProjection';
-import type { Supplier } from '../../services/data/types';
-import { DECLARED_PRESENT } from '../../services/data/fixturePresent';
+} from '@services/data/obligationProjection';
+import type { Supplier } from '@services/data/types';
+import { DECLARED_PRESENT } from '@services/data/fixturePresent';
 
 // ⚠️ ANCHORED — this surface rendered values derived from anchored
 // fixture data against the WALL CLOCK, so what a reader saw moved every day

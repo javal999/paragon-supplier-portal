@@ -8,14 +8,14 @@
 
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import Data from '../../components/ui-v2/Data';
-import StatusPill from '../../components/ui-v2/StatusPill';
-import { formatDate } from '../../lib/format';
-import { sdcClock } from '../../services/sdc/clock';
-import { isClosingSoon, isPastDeadline } from '../../services/transitions/rfxRules';
-import type { InviteeResponseState } from '../../services/sourcing/views';
-import type { GateResult } from '../../services/sourcing/complianceGate';
-import { gateMinOtifPct } from '../../services/sourcing/complianceGateConfig';
+import Data from '@components/ui-v2/Data';
+import StatusPill from '@components/ui-v2/StatusPill';
+import { formatDate } from '@lib/format';
+import { sdcClock } from '@services/sdc/clock';
+import { isClosingSoon, isPastDeadline } from '@services/transitions/rfxRules';
+import type { InviteeResponseState } from '@services/sourcing/views';
+import type { GateResult } from '@services/sourcing/complianceGate';
+import { gateMinOtifPct } from '@services/sourcing/complianceGateConfig';
 
 /** The RFx lane's "now" — the same simulated clock the read model uses. */
 export const rfxNow = (): string => sdcClock.now();

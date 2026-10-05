@@ -20,18 +20,18 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
 
-import { renderWithProviders, BUYER } from '../test/test-utils';
+import { renderWithProviders, BUYER } from '@test/test-utils';
 import BuyerCollaboration from './BuyerCollaboration';
 import SupplierForecasts from './SupplierForecasts';
-import { requirementResponseStore } from '../services/data/mock/stores/requirementResponseStore';
-import { FORECAST_PUBLICATIONS } from '../services/sdc';
-import { getFlow, userVerbsFrom } from '../services/transitions';
-import { rolesHolding } from '../services/transitions/businessRoles';
-import { mockDataService } from '../services/data/mock/mockDataService';
-import i18n from '../lib/i18n';
-import type { CurrentIdentity } from '../context/CurrentIdentityContext';
-import { PERSONA_SYSTEM_ROLES } from '../services/transitions/businessRoles';
-import { NO_PERSON } from '../context/noPerson';
+import { requirementResponseStore } from '@services/data/mock/stores/requirementResponseStore';
+import { FORECAST_PUBLICATIONS } from '@services/sdc';
+import { getFlow, userVerbsFrom } from '@services/transitions';
+import { rolesHolding } from '@services/transitions/businessRoles';
+import { mockDataService } from '@services/data/mock/mockDataService';
+import i18n from '@lib/i18n';
+import type { CurrentIdentity } from '@context/CurrentIdentityContext';
+import { PERSONA_SYSTEM_ROLES } from '@services/transitions/businessRoles';
+import { NO_PERSON } from '@context/noPerson';
 
 /** A seat holding the planning lane — the lane all three atoms sit in. */
 const PLANNING: CurrentIdentity = { ...BUYER, businessRoles: ['planning'] };

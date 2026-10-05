@@ -88,8 +88,8 @@ jobs:
       # from package.json instead of quietly resolving something else.
       - run: npm ci
 
-      # The same command the operator runs locally. It executes the three gates
-      # CLAUDE.md names and asserts the collected counts against
+      # The same command the operator runs locally. It executes the gates
+      # CLAUDE.md names (build, spec typecheck, vitest, test:gate, lint) and asserts the collected counts against
       # scripts/floor.json, so a suite that silently collects less cannot pass.
       - run: npm run gates
 

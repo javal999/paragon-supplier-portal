@@ -32,6 +32,7 @@
 import ts from 'typescript';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
+import { isSourceFile, scriptKindOf } from '@test/sourceFiles';
 
 export type SiteKind = 'new Date()' | 'Date.now()';
 
@@ -54,7 +55,7 @@ export interface Census {
 /** Specs are out of scope: they may pin any clock they like. */
 export function isOutOfScopePath(path: string): boolean {
   return (
-    /\.(test|spec)\.tsx?$/.test(path) ||
+    /\.(test|spec)\.[jt]sx?$/.test(path) ||
     /(^|\/)__tests__\//.test(path) ||
     /(^|\/)machineClockGate\//.test(path)
   );
@@ -96,8 +97,7 @@ function ownerOf(node: ts.Node): string {
 
 /** Derive the sites in ONE source text. Exported so the probe can feed it synthetic input. */
 export function sitesIn(file: string, text: string): ClockSite[] {
-  const kind = file.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
-  const sf = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, kind);
+  const sf = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, scriptKindOf(file));
   const out: ClockSite[] = [];
   const at = (n: ts.Node): number => sf.getLineAndCharacterOfPosition(n.getStart(sf)).line + 1;
   const visit = (n: ts.Node): void => {
@@ -122,7 +122,7 @@ function walk(dir: string, acc: string[]): string[] {
   for (const name of readdirSync(dir)) {
     const p = join(dir, name);
     if (statSync(p).isDirectory()) walk(p, acc);
-    else if (/\.tsx?$/.test(name) && !/\.d\.ts$/.test(name)) acc.push(p);
+    else if (isSourceFile(name)) acc.push(p);
   }
   return acc;
 }

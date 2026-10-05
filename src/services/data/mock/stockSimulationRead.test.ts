@@ -13,7 +13,7 @@ import { inventoryDeclarationStore } from './stores/inventoryDeclarationStore';
 import type { QueryScope, StockSimulationRow } from '../types';
 import { PERSONA_SYSTEM_ROLES } from '../../transitions/businessRoles';
 import { materialEntry, sdcClock } from '../../sdc';
-import { NO_PERSON } from '../../../context/noPerson';
+import { NO_PERSON } from '@context/noPerson';
 import {
   SIMULATION_SAMPLE_CHECK_DATE,
   SIMULATION_SAMPLE_MATERIAL,

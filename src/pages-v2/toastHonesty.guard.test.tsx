@@ -211,7 +211,8 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import ts from 'typescript';
-import { resources } from '../lib/i18n';
+import { resources } from '@lib/i18n';
+import { isJsxFile, scriptKindOf } from '@test/sourceFiles';
 
 const PAGES_DIR = __dirname;
 
@@ -545,12 +546,12 @@ const EXCLUSIONS: Excluded[] = [];
 function deriveUnbackedSites(): Site[] {
   const out: Site[] = [];
   const files = readdirSync(PAGES_DIR).filter(
-    (f) => f.endsWith('.tsx') && !f.includes('.test.'),
+    (f) => isJsxFile(f) && !f.includes('.test.'),
   );
   for (const file of files) {
     const raw = readFileSync(join(PAGES_DIR, file), 'utf8');
     const src = codeOnly(raw);
-    const sf = ts.createSourceFile(file, raw, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+    const sf = ts.createSourceFile(file, raw, ts.ScriptTarget.Latest, true, scriptKindOf(file));
     for (const m of src.matchAll(/\btoast\s*\(\s*\{/g)) {
       const idx = m.index ?? 0;
       const pre = src.slice(0, idx);

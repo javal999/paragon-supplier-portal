@@ -20,32 +20,32 @@ import {
   Pencil,
   ArrowLeftRight,
 } from 'lucide-react';
-import AppShellV2 from '../components/layout-v2/AppShellV2';
-import PageHeader from '../components/ui-v2/PageHeader';
-import PageMetaLine from '../components/ui-v2/PageMetaLine';
-import ProvenanceMarker from '../components/ui-v2/ProvenanceMarker';
-import KpiCard from '../components/ui-v2/KpiCard';
-import BulkActionsBar from '../components/ui-v2/BulkActionsBar';
-import { HandoffNotice } from '../components/ui-v2/HandoffNotice';
-import { useVerbAvailability, useVerbAvailabilities, useNextAct } from '../hooks/useVerbAvailability';
-import NextActLine from '../components/ui-v2/NextActLine';
-import SubTabs from '../components/ui-v2/SubTabs';
-import FilterChipsBar from '../components/ui-v2/FilterChipsBar';
-import SearchBar from '../components/ui-v2/SearchBar';
-import StatusPill from '../components/ui-v2/StatusPill';
-import Table from '../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../components/ui-v2/TableHeader';
-import TableRow from '../components/ui-v2/TableRow';
-import TableCell from '../components/ui-v2/TableCell';
-import SidePanel from '../components/ui-v2/SidePanel';
-import Timeline, { TimelineEvent } from '../components/ui-v2/Timeline';
-import ScoreBadge from '../components/ui-v2/ScoreBadge';
-import Data from '../components/ui-v2/Data';
-import LivenessPill from '../components/ui-v2/LivenessPill';
-import ModelMarker from '../components/ui-v2/ModelMarker';
-import Button from '../components/ui-v2/Button';
-import Wizard, { WizardStep } from '../components/ui-v2/Wizard';
-import ModalOverlay from '../components/ui-v2/ModalOverlay';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import PageHeader from '@components/ui-v2/PageHeader';
+import PageMetaLine from '@components/ui-v2/PageMetaLine';
+import ProvenanceMarker from '@components/ui-v2/ProvenanceMarker';
+import KpiCard from '@components/ui-v2/KpiCard';
+import BulkActionsBar from '@components/ui-v2/BulkActionsBar';
+import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
+import { useVerbAvailability, useVerbAvailabilities, useNextAct } from '@hooks/useVerbAvailability';
+import NextActLine from '@components/ui-v2/NextActLine';
+import SubTabs from '@components/ui-v2/SubTabs';
+import FilterChipsBar from '@components/ui-v2/FilterChipsBar';
+import SearchBar from '@components/ui-v2/SearchBar';
+import StatusPill from '@components/ui-v2/StatusPill';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
+import SidePanel from '@components/ui-v2/SidePanel';
+import Timeline, { TimelineEvent } from '@components/ui-v2/Timeline';
+import ScoreBadge from '@components/ui-v2/ScoreBadge';
+import Data from '@components/ui-v2/Data';
+import LivenessPill from '@components/ui-v2/LivenessPill';
+import ModelMarker from '@components/ui-v2/ModelMarker';
+import Button from '@components/ui-v2/Button';
+import Wizard, { WizardStep } from '@components/ui-v2/Wizard';
+import ModalOverlay from '@components/ui-v2/ModalOverlay';
 import {
   RFQ_CATEGORY_OPTIONS,
   RFQ_UOM_OPTIONS,
@@ -55,10 +55,10 @@ import {
   requisitionSourcingStates,
   type RequisitionPrefill,
 } from './sourcing/requisitionPrefill';
-import { useToast } from '../hooks/useToast';
-import LoadingState from '../components/ui-v2/LoadingState';
-import ErrorState from '../components/ui-v2/ErrorState';
-import EmptyState from '../components/ui-v2/EmptyState';
+import { useToast } from '@hooks/useToast';
+import LoadingState from '@components/ui-v2/LoadingState';
+import ErrorState from '@components/ui-v2/ErrorState';
+import EmptyState from '@components/ui-v2/EmptyState';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   useRFQs,
@@ -71,7 +71,7 @@ import {
   useRfpEvents,
   useRfpAwards,
   useAwards,
-} from '../services/query/hooks';
+} from '@services/query/hooks';
 import { awardedRefsOf } from './rfx/RfpAwardSection';
 import {
   defaultEvaluationTierQty,
@@ -79,7 +79,7 @@ import {
   isTieredRfq,
   quoteTotalAt,
   scoreRfqAt,
-} from '../services/sourcing/rfqComparison';
+} from '@services/sourcing/rfqComparison';
 import { downloadComparison } from './rfx/comparisonExport';
 // RFx spec 2026-09-21 — the rebuilt authoring: items, breaks, questions and
 // options, templates and copying, and the generic "start from…" seed.
@@ -107,23 +107,23 @@ import {
   type RfqAuthoringDraft,
   type RfqDraftSeed,
 } from './sourcing/rfqDraft';
-import { prefillRfqFromRfi, prefillRfqItemsFromRfp } from '../services/sourcing/rfxPrefill';
-import type { RfqTemplateContent } from '../services/sourcing/rfqTemplates';
+import { prefillRfqFromRfi, prefillRfqItemsFromRfp } from '@services/sourcing/rfxPrefill';
+import type { RfqTemplateContent } from '@services/sourcing/rfqTemplates';
 import { GateMarker } from './rfx/rfxDisplay';
 import { EligibilityMarker, SourcingTypePill, useSourcingTypeMap } from './rfx/eligibilityDisplay';
-import { CATEGORY_TO_SUPPLIER_CATEGORY, mappedSourcingType } from '../services/sourcing/sourcingType';
+import { CATEGORY_TO_SUPPLIER_CATEGORY, mappedSourcingType } from '@services/sourcing/sourcingType';
 import { RfqPrefillBanner } from './rfx/rfqSources';
 import { DraftRevisionNote, draftEditRefusal } from './rfx/draftEdit';
-import { matchesSupplierFilters } from '../services/sourcing/supplierFilters';
+import { matchesSupplierFilters } from '@services/sourcing/supplierFilters';
 import SupplierFilterBar, {
   bandLabel,
   certLabel,
   useSupplierFilterLabels,
   useSupplierFilterParams,
 } from './suppliers/SupplierFilterBar';
-import { PURCHASING_GROUPS, purchasingGroupNameKey } from '../services/sourcing/rfxConfig';
-import { reliabilityScoreFor } from '../services/transitions/rfxRules';
-import { documentRequestsRefusal } from '../services/transitions/rfxDocumentRules';
+import { PURCHASING_GROUPS, purchasingGroupNameKey } from '@services/sourcing/rfxConfig';
+import { reliabilityScoreFor } from '@services/transitions/rfxRules';
+import { documentRequestsRefusal } from '@services/transitions/rfxDocumentRules';
 import DocumentRequestsEditor, {
   DocumentRequestsSummary,
   remapRequestsOnItemsChanged,
@@ -136,7 +136,7 @@ import {
   useRfqPublish,
   useRfqReopen,
   useQuotationReview,
-} from '../services/query/commandHooks';
+} from '@services/query/commandHooks';
 import {
   buildRfqCreatePayload,
   normalizeRfqCreateDraft,
@@ -144,26 +144,26 @@ import {
   readRfqTotalQty,
   type RfqDraftRefusal,
 } from './sourcing/rfqCreateModel';
-import type { QtyRefusalReason } from '../lib/localeNumber';
+import type { QtyRefusalReason } from '@lib/localeNumber';
 // 2e-b-3 (COS-04) — the canonical formatters, replacing this file's own copies.
-import { formatDate, formatIDR, formatMoney, formatNumber } from '../lib/format';
+import { formatDate, formatIDR, formatMoney, formatNumber } from '@lib/format';
 import {
   scoreQuotations,
   AXIS_LIVENESS,
   COMPOSITE_LIVENESS,
-} from '../lib/quoteScore';
+} from '@lib/quoteScore';
 import {
   spreadForQuote,
   type QuoteSpread,
   type SilentReason,
   type SpreadDeps,
-} from '../lib/shouldCostSpread';
+} from '@lib/shouldCostSpread';
 import {
   BASE_CURRENCY,
   BID_CURRENCIES,
   FX_PIN_MAX_AGE_DAYS,
   type BidCurrency,
-} from '../lib/currencyPolicy';
+} from '@lib/currencyPolicy';
 import {
   effectivePin,
   isStalePin,
@@ -171,7 +171,7 @@ import {
   type FxPin,
   type FxPinSource,
   type FxRefusalReason,
-} from '../lib/fxPin';
+} from '@lib/fxPin';
 import {
   readFxRate,
   readFxVintage,
@@ -180,23 +180,23 @@ import {
 } from './sourcing/fxRateInput';
 // RFx spec 2026-09-21 — invitees' intent and the clarification Q&A (B3).
 import RfqEngagementSection from './sourcing/RfqEngagementSection';
-import { MATERIAL_BASKET_CLASSIFICATION } from '../services/data/mock/fixtures/commodityMaterialMap';
+import { MATERIAL_BASKET_CLASSIFICATION } from '@services/data/mock/fixtures/commodityMaterialMap';
 import {
   ROOT_BENCHMARKS,
   SHOULD_COST_MATERIALS,
   SIMULATED_SPOT_FX,
-} from '../services/data/mock/fixtures/commodityBaskets';
+} from '@services/data/mock/fixtures/commodityBaskets';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
-import type { RFQ, RFQCategory, RFQStatus } from '../data/mockRfqs';
-import type { Quotation } from '../data/mockQuotations';
-import { daysUntil } from '../services/data/dayProjection';
-import type { PurchaseRequisition, PRStatus } from '../services/data/types';
-import type { Supplier } from '../services/data/types';
+import type { RFQ, RFQCategory, RFQStatus } from '@data/mockRfqs';
+import type { Quotation } from '@data/mockQuotations';
+import { daysUntil } from '@services/data/dayProjection';
+import type { PurchaseRequisition, PRStatus } from '@services/data/types';
+import type { Supplier } from '@services/data/types';
 // GL-1 - the glossary destination for this surface's refusals.
-import GlossaryTermChip from '../components/ui-v2/GlossaryTermChip';
-import { useRefusalText } from '../hooks/useRefusalText';
-import { DECLARED_PRESENT } from '../services/data/fixturePresent';
+import GlossaryTermChip from '@components/ui-v2/GlossaryTermChip';
+import { useRefusalText } from '@hooks/useRefusalText';
+import { DECLARED_PRESENT } from '@services/data/fixturePresent';
 
 // ⚠️ ANCHORED — this surface rendered values derived from anchored
 // fixture data against the WALL CLOCK, so what a reader saw moved every day

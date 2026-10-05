@@ -44,7 +44,7 @@
 
 import { refusalKindOf } from './refusals';
 import { POLICY_HOOKS } from './policyHooks';
-import { COMMAND_REFUSAL_GLOSSARY, DATA_ERROR_GLOSSARY } from '../../lib/glossary';
+import { COMMAND_REFUSAL_GLOSSARY, DATA_ERROR_GLOSSARY } from '@lib/glossary';
 
 /**
  * The locale split used by the glossary page (`pages-v2/Glossary.tsx`), copied

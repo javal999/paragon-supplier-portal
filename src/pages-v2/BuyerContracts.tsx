@@ -13,50 +13,50 @@ import {
   RefreshCw,
   CalendarDays,
 } from 'lucide-react';
-import AppShellV2 from '../components/layout-v2/AppShellV2';
-import PageHeader from '../components/ui-v2/PageHeader';
-import PageMetaLine from '../components/ui-v2/PageMetaLine';
-import ProvenanceMarker from '../components/ui-v2/ProvenanceMarker';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import PageHeader from '@components/ui-v2/PageHeader';
+import PageMetaLine from '@components/ui-v2/PageMetaLine';
+import ProvenanceMarker from '@components/ui-v2/ProvenanceMarker';
 import { RaisedElsewhereNote, RaisedElsewherePanel } from './contracts/RaisedElsewhere';
-import { HandoffNotice } from '../components/ui-v2/HandoffNotice';
-import { useVerbAvailability } from '../hooks/useVerbAvailability';
-import KpiCard from '../components/ui-v2/KpiCard';
-import BulkActionsBar from '../components/ui-v2/BulkActionsBar';
-import SubTabs from '../components/ui-v2/SubTabs';
-import FilterChipsBar from '../components/ui-v2/FilterChipsBar';
-import SearchBar from '../components/ui-v2/SearchBar';
-import StatusPill from '../components/ui-v2/StatusPill';
-import Table from '../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../components/ui-v2/TableHeader';
-import TableRow from '../components/ui-v2/TableRow';
-import TableCell from '../components/ui-v2/TableCell';
-import ScoreBadge from '../components/ui-v2/ScoreBadge';
-import Data from '../components/ui-v2/Data';
-import Button from '../components/ui-v2/Button';
-import Wizard, { WizardStep } from '../components/ui-v2/Wizard';
-import ModalOverlay from '../components/ui-v2/ModalOverlay';
-import { useToast } from '../hooks/useToast';
-import LoadingState from '../components/ui-v2/LoadingState';
-import ErrorState from '../components/ui-v2/ErrorState';
-import EmptyState from '../components/ui-v2/EmptyState';
-import { useContracts, useObligations, useSuppliers } from '../services/query/hooks';
-import type { ContractObligation } from '../data/mockObligations';
-import { obligationDisplay } from '../services/data/obligationProjection';
+import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
+import { useVerbAvailability } from '@hooks/useVerbAvailability';
+import KpiCard from '@components/ui-v2/KpiCard';
+import BulkActionsBar from '@components/ui-v2/BulkActionsBar';
+import SubTabs from '@components/ui-v2/SubTabs';
+import FilterChipsBar from '@components/ui-v2/FilterChipsBar';
+import SearchBar from '@components/ui-v2/SearchBar';
+import StatusPill from '@components/ui-v2/StatusPill';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
+import ScoreBadge from '@components/ui-v2/ScoreBadge';
+import Data from '@components/ui-v2/Data';
+import Button from '@components/ui-v2/Button';
+import Wizard, { WizardStep } from '@components/ui-v2/Wizard';
+import ModalOverlay from '@components/ui-v2/ModalOverlay';
+import { useToast } from '@hooks/useToast';
+import LoadingState from '@components/ui-v2/LoadingState';
+import ErrorState from '@components/ui-v2/ErrorState';
+import EmptyState from '@components/ui-v2/EmptyState';
+import { useContracts, useObligations, useSuppliers } from '@services/query/hooks';
+import type { ContractObligation } from '@data/mockObligations';
+import { obligationDisplay } from '@services/data/obligationProjection';
 import type {
   Contract,
   ContractStatus,
   ContractType,
-} from '../data/mockContracts';
-import type { Supplier } from '../services/data/types';
-import { daysUntil } from '../services/data/dayProjection';
+} from '@data/mockContracts';
+import type { Supplier } from '@services/data/types';
+import { daysUntil } from '@services/data/dayProjection';
 import {
   contractDisplayStatus,
   inRenewalHorizon,
   CONTRACT_EXPIRY_TONE,
   CONTRACT_EXPIRY_CHIP,
   type ContractDisplayStatus,
-} from '../services/data/contractExpiry';
-import type { QtyRefusalReason } from '../lib/localeNumber';
+} from '@services/data/contractExpiry';
+import type { QtyRefusalReason } from '@lib/localeNumber';
 import {
   normalizeContractNumbers,
   readContractValue,
@@ -65,8 +65,8 @@ import {
   type ContractNumericField,
 } from './contracts/contractCreateModel';
 // GL-1 - the glossary destination for this surface's refusals.
-import GlossaryTermChip from '../components/ui-v2/GlossaryTermChip';
-import { DECLARED_PRESENT } from '../services/data/fixturePresent';
+import GlossaryTermChip from '@components/ui-v2/GlossaryTermChip';
+import { DECLARED_PRESENT } from '@services/data/fixturePresent';
 
 // ⚠️ ANCHORED — this surface rendered values derived from anchored
 // fixture data against the WALL CLOCK, so what a reader saw moved every day
@@ -280,6 +280,12 @@ const OBLIGATION_SUGGESTIONS: Record<
 };
 
 interface DraftObligation {
+  /**
+   * Row identity, used as the React key. Minted once when the row is added
+   * (`newObligationId`), never derived from content: a custom obligation can
+   * repeat a title, and rows are removed from the middle of the list.
+   */
+  id: string;
   title: string;
   owner: 'Buyer' | 'Supplier' | 'Both';
   dueDate: string;
@@ -305,6 +311,10 @@ interface DraftContract {
  *  `seedContractNumber` — see that function's note on why a display formatter
  *  must never seed a parsed field. */
 const DEFAULT_NOTICE_DAYS = 90;
+
+let obligationSeq = 0;
+/** A unique id for a new draft obligation row (see `DraftObligation.id`). */
+const newObligationId = (): string => `obl-${++obligationSeq}`;
 
 const EMPTY_DRAFT: DraftContract = {
   title: '',
@@ -511,7 +521,7 @@ const ContractsWorkspace: React.FC<ContractsWorkspaceProps> = ({
       }
       return {
         ...d,
-        obligations: [...d.obligations, { title, owner, dueDate: '' }],
+        obligations: [...d.obligations, { id: newObligationId(), title, owner, dueDate: '' }],
       };
     });
 
@@ -521,7 +531,7 @@ const ContractsWorkspace: React.FC<ContractsWorkspaceProps> = ({
       ...d,
       obligations: [
         ...d.obligations,
-        { title: customObligationTitle.trim(), owner: 'Both', dueDate: '' },
+        { id: newObligationId(), title: customObligationTitle.trim(), owner: 'Both', dueDate: '' },
       ],
     }));
     setCustomObligationTitle('');
@@ -1134,7 +1144,7 @@ const ContractsWorkspace: React.FC<ContractsWorkspaceProps> = ({
                   </thead>
                   <tbody>
                     {draft.obligations.map((o, i) => (
-                      <tr key={i} className="border-t border-border-subtle">
+                      <tr key={o.id} className="border-t border-border-subtle">
                         <td className="px-3 py-2 text-text-primary">
                           {o.title}
                         </td>

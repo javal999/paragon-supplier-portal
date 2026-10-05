@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { screen, fireEvent, within } from '@testing-library/react';
-import { renderWithProviders, BUYER } from '../../test/test-utils';
-import { supplierOverlayStore } from '../../services/data/mock/stores/supplierOverlayStore';
-import { isApiConnected } from '../../services/data/mock/inventoryReadModel';
+import { renderWithProviders, BUYER } from '@test/test-utils';
+import { supplierOverlayStore } from '@services/data/mock/stores/supplierOverlayStore';
+import { isApiConnected } from '@services/data/mock/inventoryReadModel';
 import AdminSuppliers from './AdminSuppliers';
 
 // ─────────────────────────────────────────────────────────────────────────────

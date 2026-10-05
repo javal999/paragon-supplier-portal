@@ -26,6 +26,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import ts from 'typescript';
 import { describe, expect, it } from 'vitest';
+import { isSourceFile, isTestFile, scriptKindOf } from '@test/sourceFiles';
 
 const STOCK_TRANSITIONS = ['t_inventorydeclaration_declare', 't_inventorydeclaration_record'];
 const SRC = path.join(__dirname, '..');
@@ -34,12 +35,12 @@ function sourceFiles(dir: string): string[] {
   return fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
     const p = path.join(dir, e.name);
     if (e.isDirectory()) return sourceFiles(p);
-    return /\.tsx?$/.test(e.name) && !/\.test\.tsx?$/.test(e.name) && !e.name.endsWith('.d.ts') ? [p] : [];
+    return isSourceFile(e.name) && !isTestFile(e.name) ? [p] : [];
   });
 }
 
 const parse = (file: string, text: string) =>
-  ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, file.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
+  ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, scriptKindOf(file));
 
 function walk(node: ts.Node, visit: (n: ts.Node) => void): void {
   visit(node);

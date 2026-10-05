@@ -1,5 +1,6 @@
 import { defineConfig, configDefaults } from 'vitest/config';
 import react from '@vitejs/plugin-react';
+import { ALIASES } from './aliases';
 
 // Separate from vite.config.ts on purpose: the app's vite root is 'app/'
 // (index.html there loads ../src/main.tsx), but source and tests live at the
@@ -7,6 +8,8 @@ import react from '@vitejs/plugin-react';
 // so `src/**` resolves for the test run.
 export default defineConfig({
   plugins: [react()],
+  // Same aliases as the app build (aliases.ts); vitest.drift.config.ts inherits them.
+  resolve: { alias: ALIASES },
   // __DEPLOY_ENV__ is injected by vite `define` in the real build; define it here
   // too so components that read it don't hit a ReferenceError under test. Empty
   // string → the badge's hostname fallback path (ENV-BADGE-01).
@@ -17,7 +20,10 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./src/test/setup.ts'],
-    include: ['src/**/*.{test,spec}.{ts,tsx}'],
+    // `.js/.jsx` are collected too, so specs keep running as the portal is
+    // converted from TypeScript to JavaScript (frontend-standard plan, Phases
+    // 3–4). Without them a converted spec would silently stop being collected.
+    include: ['src/**/*.{test,spec}.{js,jsx,ts,tsx}'],
     // ⚠️ `*.live.test.ts` READS THE REAL WALL CLOCK AND IS EXCLUDED ON PURPOSE.
     // It is run by `npm run drift` and by CI on the SCHEDULE trigger only. In
     // the default run — gate 3, and therefore every PR — it would go red on a
@@ -32,7 +38,7 @@ export default defineConfig({
     // The glob would silently swallow any FUTURE live spec, which is a suite
     // that shrinks without the floor noticing. `clockDrift.live.test.ts` pins
     // the excluded set bilaterally, derived from disk, so a second one is red.
-    exclude: [...configDefaults.exclude, 'src/**/*.live.test.{ts,tsx}'],
+    exclude: [...configDefaults.exclude, 'src/**/*.live.test.{js,jsx,ts,tsx}'],
     css: false,
   },
 });

@@ -12,7 +12,7 @@
 // copies it from the material master (invariant #2), never from the caller.
 // ────────────────────────────────────────────────────────────────────────────
 
-import type { NumberConvention } from '../../lib/localeNumber';
+import type { NumberConvention } from '@lib/localeNumber';
 import type { ForecastLine, ForecastPublication, RootCause } from './types';
 
 /** Build the `t_requirementresponse_acknowledge` payload (SDC-2b-EXT) from the

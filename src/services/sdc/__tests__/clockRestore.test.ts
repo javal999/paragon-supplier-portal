@@ -24,7 +24,7 @@
 import { describe, it, expect } from 'vitest';
 import { sdcClock, SDC_SIMULATED_NOW } from '../clock';
 
-const SRC = import.meta.glob('/src/**/*.{ts,tsx}', {
+const SRC = import.meta.glob('/src/**/*.{ts,tsx,js,jsx}', {
   query: '?raw',
   import: 'default',
   eager: true,

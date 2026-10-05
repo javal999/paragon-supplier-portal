@@ -1,21 +1,21 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AlertTriangle } from 'lucide-react';
-import Table from '../../components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '../../components/ui-v2/TableHeader';
-import TableRow from '../../components/ui-v2/TableRow';
-import TableCell from '../../components/ui-v2/TableCell';
-import Button from '../../components/ui-v2/Button';
-import SidePanel from '../../components/ui-v2/SidePanel';
-import Data from '../../components/ui-v2/Data';
-import { HandoffNotice } from '../../components/ui-v2/HandoffNotice';
-import { useToast } from '../../hooks/useToast';
-import { useRefusalText } from '../../hooks/useRefusalText';
-import { useVerbAvailability } from '../../hooks/useVerbAvailability';
-import { formatDate } from '../../lib/format';
-import { useReceiptDiscrepancyResolve } from '../../services/query/commandHooks';
-import type { GoodsReceipt } from '../../services/data/types';
-import { isOpenDispute } from '../../services/transitions/fulfilmentRules';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
+import Button from '@components/ui-v2/Button';
+import SidePanel from '@components/ui-v2/SidePanel';
+import Data from '@components/ui-v2/Data';
+import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
+import { useToast } from '@hooks/useToast';
+import { useRefusalText } from '@hooks/useRefusalText';
+import { useVerbAvailability } from '@hooks/useVerbAvailability';
+import { formatDate } from '@lib/format';
+import { useReceiptDiscrepancyResolve } from '@services/query/commandHooks';
+import type { GoodsReceipt } from '@services/data/types';
+import { isOpenDispute } from '@services/transitions/fulfilmentRules';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DISPUTED RECEIPT DISCREPANCIES — REQ-E07-06 (MP side).

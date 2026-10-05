@@ -26,14 +26,14 @@
 import React from 'react';
 import { describe, it, expect, beforeEach } from 'vitest';
 import { screen, fireEvent, waitFor } from '@testing-library/react';
-import { renderWithProviders } from '../test/test-utils';
-import { mockDataService } from '../services/data/mock/mockDataService';
-import { goodsReceiptStore } from '../services/data/mock/stores/goodsReceiptStore';
-import { asnStore } from '../services/data/mock/stores/asnStore';
-import type { ASN } from '../services/data/types';
-import { DataError, type IDataService } from '../services/data/types';
-import { useToast } from '../hooks/useToast';
-import i18n from '../lib/i18n';
+import { renderWithProviders } from '@test/test-utils';
+import { mockDataService } from '@services/data/mock/mockDataService';
+import { goodsReceiptStore } from '@services/data/mock/stores/goodsReceiptStore';
+import { asnStore } from '@services/data/mock/stores/asnStore';
+import type { ASN } from '@services/data/types';
+import { DataError, type IDataService } from '@services/data/types';
+import { useToast } from '@hooks/useToast';
+import i18n from '@lib/i18n';
 import BuyerGoodsReceipt from './BuyerGoodsReceipt';
 
 const ToastSpy: React.FC = () => {

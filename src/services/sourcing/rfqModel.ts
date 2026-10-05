@@ -22,8 +22,8 @@
 // here now so they are not invented twice.
 // ────────────────────────────────────────────────────────────────────────────
 
-import { BID_CURRENCIES, type BidCurrency } from '../../lib/currencyPolicy';
-import { normalizeQty } from '../../lib/localeNumber';
+import { BID_CURRENCIES, type BidCurrency } from '@lib/currencyPolicy';
+import { normalizeQty } from '@lib/localeNumber';
 import type { DocumentRequest, ResponseDocument, RfiAnswer, RfiQuestion, RfiQuestionType } from './types';
 import { documentRequestsRefusal } from '../transitions/rfxDocumentRules';
 

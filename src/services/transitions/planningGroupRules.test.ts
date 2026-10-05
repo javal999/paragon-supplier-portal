@@ -16,7 +16,7 @@ import {
 import { buildCapacityPlans } from './capacityRules';
 import type { PlanningGroupEvent } from '../data/types';
 import type { MaterialMasterEntry } from '../sdc/types';
-import { NO_PERSON } from '../../context/noPerson';
+import { NO_PERSON } from '@context/noPerson';
 
 const defaultId = (sap: string) => `pg-${sap}`;
 const M = (materialCode: string, sapMaterialGroup: string, planningGroupId = defaultId(sapMaterialGroup)): PlanningGroupMaterial => ({

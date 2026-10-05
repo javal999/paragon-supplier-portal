@@ -3,55 +3,55 @@ import Wizard, { WizardStep } from '../ui-v2/Wizard';
 import ModalOverlay from '../ui-v2/ModalOverlay';
 import FormSection from '../ui-v2/FormSection';
 import Data from '../ui-v2/Data';
-import { useToast } from '../../hooks/useToast';
+import { useToast } from '@hooks/useToast';
 import { useTranslation } from 'react-i18next';
-import { useEnumLabel } from '../../hooks/useEnumLabel';
-import { statusLabelKey } from '../../lib/statusLabel';
-import { enumLabelKey } from '../../lib/priorityLabel';
-import type { Shipment, ASN, AsnStatus } from '../../services/data/types';
-import type { InspectionResult } from '../../data/mockGoodsReceipts';
+import { useEnumLabel } from '@hooks/useEnumLabel';
+import { statusLabelKey } from '@lib/statusLabel';
+import { enumLabelKey } from '@lib/priorityLabel';
+import type { Shipment, ASN, AsnStatus } from '@services/data/types';
+import type { InspectionResult } from '@data/mockGoodsReceipts';
 import {
   readGrLineQuantities,
   seedQty,
   type GrLineQtyOutcome,
 } from './grLineQuantities';
-import type { QtyRefusalReason } from '../../lib/localeNumber';
+import type { QtyRefusalReason } from '@lib/localeNumber';
 import {
   useGoodsReceiptCreate,
   useGoodsReceiptFinalize,
   useGoodsReceiptPost,
   useGoodsReceiptSettle,
-} from '../../services/query/commandHooks';
+} from '@services/query/commandHooks';
 import {
   deriveHeaderDisposition,
   headerVerbFor,
   type GrHeaderDisposition,
-} from '../../services/transitions';
+} from '@services/transitions';
 import {
   classifySettleFault,
   type SettleFault,
-} from '../../services/transitions/settleFaults';
-import { bpomOf } from '../../services/sdc/bpom';
-import type { BpomOutcome, BpomRefusalReason } from '../../services/sdc/bpom';
-import { halalOf } from '../../services/sdc/halal';
-import type { HalalOutcome, HalalRefusalReason } from '../../services/sdc/halal';
-import { blocks, effectiveEnforcement } from '../../lib/enforcement';
-import type { EnforcementSetting } from '../../lib/enforcement';
-import { verifyHalalAtReceipt } from '../../services/data/halalVerification';
+} from '@services/transitions/settleFaults';
+import { bpomOf } from '@services/sdc/bpom';
+import type { BpomOutcome, BpomRefusalReason } from '@services/sdc/bpom';
+import { halalOf } from '@services/sdc/halal';
+import type { HalalOutcome, HalalRefusalReason } from '@services/sdc/halal';
+import { blocks, effectiveEnforcement } from '@lib/enforcement';
+import type { EnforcementSetting } from '@lib/enforcement';
+import { verifyHalalAtReceipt } from '@services/data/halalVerification';
 import type {
   HalalVerification,
   HalalNotSatisfiedReason,
-} from '../../services/data/halalVerification';
-import type { ComplianceRegistryEntry } from '../../services/data/types';
+} from '@services/data/halalVerification';
+import type { ComplianceRegistryEntry } from '@services/data/types';
 // GL-1 - the glossary destination for this surface's refusals.
 import GlossaryTermChip from '../ui-v2/GlossaryTermChip';
-import { formatDate } from '../../lib/format';
-import { useRefusalText } from '../../hooks/useRefusalText';
-import { refusedByPolicy } from '../../services/transitions/refusalMessage';
-import { POLICY_HOOKS } from '../../services/transitions/policyHooks';
-import { sdcClock } from '../../services/sdc/clock';
-import { approvedShelfLifeLines } from '../../services/transitions/fulfilmentRules';
-import { BlockedStockMarker } from '../../pages-v2/shipments/ShelfLifeParts';
+import { formatDate } from '@lib/format';
+import { useRefusalText } from '@hooks/useRefusalText';
+import { refusedByPolicy } from '@services/transitions/refusalMessage';
+import { POLICY_HOOKS } from '@services/transitions/policyHooks';
+import { sdcClock } from '@services/sdc/clock';
+import { approvedShelfLifeLines } from '@services/transitions/fulfilmentRules';
+import { BlockedStockMarker } from '@pages-v2/shipments/ShelfLifeParts';
 
 /**
  * §91e — what the wizard hands up when a settle it AWAITED came back a fault.
@@ -153,6 +153,15 @@ const GR_HALAL_REFUSAL_KEY: Record<HalalRefusalReason, string> = {
 type SourceMode = 'shipment' | 'manual';
 
 interface LineDraft {
+  /**
+   * The row's React key: the source's id plus the line's position in that
+   * shipment / ASN, given once by the draft builders. Source lines carry no id
+   * and one material can appear on two lines (two lots), so materialCode is not
+   * unique; the receipt never adds, removes or reorders a line, so the position
+   * is fixed, and the source id makes a source switch remount the rows instead
+   * of reusing the previous source's. Never sent: the result names its fields.
+   */
+  lineKey: string;
   materialCode: string;
   description: string;
   qtyExpected: number;
@@ -548,7 +557,8 @@ const seedHalal = (materialCode: string): Pick<LineDraft, 'halal' | 'halalSealCh
 });
 
 const buildDraftFromShipment = (s: Shipment): LineDraft[] =>
-  s.lineItems.map((li) => ({
+  s.lineItems.map((li, n) => ({
+    lineKey: `${s.id}#${n + 1}`,
     materialCode: li.materialCode,
     description: li.description,
     qtyExpected: li.qty,
@@ -566,7 +576,8 @@ const buildDraftFromShipment = (s: Shipment): LineDraft[] =>
   }));
 
 const buildDraftFromAsn = (a: ASN): LineDraft[] =>
-  a.lineItems.map((li) => ({
+  a.lineItems.map((li, n) => ({
+    lineKey: `asn:${a.asnNumber}#${n + 1}`,
     materialCode: li.materialCode,
     description: li.description,
     qtyExpected: li.orderedQty,
@@ -1130,7 +1141,7 @@ const GRInspectionWizard: React.FC<GRInspectionWizardProps> = ({
               const rejected = qty.ok ? Math.max(0, qty.received - qty.accepted) : null;
               return (
                 <div
-                  key={i}
+                  key={l.lineKey}
                   className="border border-border-subtle rounded-md p-4"
                 >
                   <div className="flex items-start justify-between gap-3 mb-3">
@@ -1262,7 +1273,7 @@ const GRInspectionWizard: React.FC<GRInspectionWizardProps> = ({
       <div className="flex flex-col gap-4">
         {lines.map((l, i) => (
           <div
-            key={i}
+            key={l.lineKey}
             className="border border-border-subtle rounded-md p-4 flex flex-col gap-3"
           >
             <div className="flex justify-between items-start">

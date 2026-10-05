@@ -111,7 +111,7 @@ export function sourceFiles(root = 'src'): string[] {
     for (const e of readdirSync(dir)) {
       const p = join(dir, e);
       if (statSync(p).isDirectory()) walk(p);
-      else if (/\.tsx?$/.test(e) && !/\.test\.|\.smoke\./.test(e)) out.push(p.replace(/\\/g, '/'));
+      else if (/\.(ts|tsx|js|jsx)$/.test(e) && !/\.test\.|\.smoke\./.test(e)) out.push(p.replace(/\\/g, '/'));
     }
   };
   walk(root);

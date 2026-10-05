@@ -513,7 +513,7 @@ export const resources = {
       'ui.expandSection': 'Expand section',
       'ui.collapseSection': 'Collapse section',
       // SelectField (shared standard/combobox select primitive) — see
-      // src/components/ui-v2/SelectField.tsx for the >10-options rule.
+      // src/components/ui-v2/SelectField.jsx for the >10-options rule.
       'ui.select.placeholder': 'Select…',
       'ui.select.searchPlaceholder': 'Search…',
       'ui.select.empty': 'No options available',

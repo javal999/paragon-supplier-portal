@@ -1,7 +1,7 @@
 import React, { useMemo, useSyncExternalStore } from 'react';
 import { useTranslation } from 'react-i18next';
-import { knownMaterialCodes, materialEntry } from '../../services/sdc/materialMaster';
-import { mrpControllerStore } from '../../services/transitions/mrpControllerStore';
+import { knownMaterialCodes, materialEntry } from '@services/sdc/materialMaster';
+import { mrpControllerStore } from '@services/transitions/mrpControllerStore';
 import { useMyMrpController } from './mrpControllerSeat';
 
 // ─────────────────────────────────────────────────────────────────────────────

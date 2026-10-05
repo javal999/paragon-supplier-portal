@@ -128,8 +128,46 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    // ── `allowJs` + `checkJs` — JAVASCRIPT IS TYPE-CHECKED TOO (2026-10-02) ───
+    // The portal is moving from TypeScript to JavaScript to match the company
+    // React boilerplate (frontend-standard plan, Phases 3–4). Types move into
+    // JSDoc comments (`/** @param {Supplier} s */`), and these two flags make
+    // `tsc` read and check them with the same `strict` settings as above. So a
+    // converted `.js` file stays under the same type gate as the `.ts` file it
+    // replaced: gate 1 (`npm run build`) and gate 2 (specs) both cover it.
+    // Shared contract types may stay in `.d.ts` files (owner ruling: keep
+    // `types.d.ts`); a `.js` file imports them with `@typedef {import(...)}`.
+    "allowJs": true,
+    "checkJs": true,
+    // ── `paths` — IMPORT ALIASES (frontend-standard plan, Phase 2) ───────────
+    // Mirrors `ALIAS_FOLDERS` in aliases.ts, which Vite and Vitest read. JSON
+    // cannot import that module, so the list is repeated here and
+    // `src/test/aliases.guard.test.ts` fails if the two disagree. Change both.
+    "paths": {
+      "@assets/*": ["./src/assets/*"],
+      "@components/*": ["./src/components/*"],
+      "@context/*": ["./src/context/*"],
+      "@data/*": ["./src/data/*"],
+      "@hooks/*": ["./src/hooks/*"],
+      "@lib/*": ["./src/lib/*"],
+      "@pages/*": ["./src/pages/*"],
+      "@pages-v2/*": ["./src/pages-v2/*"],
+      "@router/*": ["./src/router/*"],
+      "@services/*": ["./src/services/*"],
+      "@styles/*": ["./src/styles/*"],
+      "@test/*": ["./src/test/*"],
+      "@app-types/*": ["./src/types/*"]
+    }
   },
   "include": ["src"],
-  "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx", "src/test"]
+  // Specs are typechecked by gate 2 (`tsconfig.vitest.json`), not here; JS
+  // specs are listed so the base config keeps excluding them after conversion.
+  "exclude": [
+    "src/**/*.test.ts",
+    "src/**/*.test.tsx",
+    "src/**/*.test.js",
+    "src/**/*.test.jsx",
+    "src/test"
+  ]
 }

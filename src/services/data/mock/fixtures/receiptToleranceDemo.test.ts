@@ -8,7 +8,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { describe, expect, it } from 'vitest';
-import { mockGoodsReceipts } from '../../../../data/mockGoodsReceipts';
+import { mockGoodsReceipts } from '@data/mockGoodsReceipts';
 import { MOCK_ASNS } from './supplierShipments';
 import {
   compareReceipt,

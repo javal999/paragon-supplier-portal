@@ -4,18 +4,18 @@ import { DataSheetGrid, type Column, type CellProps } from 'react-datasheet-grid
 import 'react-datasheet-grid/dist/style.css';
 import './plan-grid/planGrid.css';
 import { useTranslation } from 'react-i18next';
-import AppShellV2 from '../components/layout-v2/AppShellV2';
-import PageHeader from '../components/ui-v2/PageHeader';
-import PageMetaLine from '../components/ui-v2/PageMetaLine';
-import Data from '../components/ui-v2/Data';
-import LivenessPill from '../components/ui-v2/LivenessPill';
-import ModelMarker from '../components/ui-v2/ModelMarker';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import PageHeader from '@components/ui-v2/PageHeader';
+import PageMetaLine from '@components/ui-v2/PageMetaLine';
+import Data from '@components/ui-v2/Data';
+import LivenessPill from '@components/ui-v2/LivenessPill';
+import ModelMarker from '@components/ui-v2/ModelMarker';
 import PlanCellMarker from './plan-grid/PlanCellMarker';
 import FullScreenSection from './plan-grid/FullScreenSection';
 import { dataCell, textCell } from './plan-grid/cells';
-import { formatDate, formatNumber } from '../lib/format';
-import { statusLabelKey } from '../lib/statusLabel';
-import { mockSuppliers } from '../data/mockSuppliers';
+import { formatDate, formatNumber } from '@lib/format';
+import { statusLabelKey } from '@lib/statusLabel';
+import { mockSuppliers } from '@data/mockSuppliers';
 import {
   FORECAST_PUBLICATIONS,
   // CP-2 · B1 — the ONE master lookup; a label miss ECHOES the code.
@@ -25,7 +25,7 @@ import {
   type ConsolidationRow,
   type SupplierCoverageEntry,
   type CommitmentClass,
-} from '../services/sdc';
+} from '@services/sdc';
 import {
   useConsolidationRows,
   useCoverageEntries,
@@ -35,17 +35,17 @@ import {
   useReviewRequirementResponse,
   useAcceptRequirementResponse,
   useDisputeRequirementResponse,
-} from '../services/query/sdcBuyerHooks';
-import { userVerbsFrom } from '../services/transitions';
-import SidePanel from '../components/ui-v2/SidePanel';
-import Button from '../components/ui-v2/Button';
-import { HandoffNotice } from '../components/ui-v2/HandoffNotice';
-import { useVerbAvailability } from '../hooks/useVerbAvailability';
-import type { VerbAvailability } from '../services/transitions/handoff';
-import { useToast } from '../hooks/useToast';
-import type { RequirementResponse, DisputeEntry } from '../services/sdc';
-import { useRefusalText } from '../hooks/useRefusalText';
-import type { CommandResult } from '../services/data/types';
+} from '@services/query/sdcBuyerHooks';
+import { userVerbsFrom } from '@services/transitions';
+import SidePanel from '@components/ui-v2/SidePanel';
+import Button from '@components/ui-v2/Button';
+import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
+import { useVerbAvailability } from '@hooks/useVerbAvailability';
+import type { VerbAvailability } from '@services/transitions/handoff';
+import { useToast } from '@hooks/useToast';
+import type { RequirementResponse, DisputeEntry } from '@services/sdc';
+import { useRefusalText } from '@hooks/useRefusalText';
+import type { CommandResult } from '@services/data/types';
 
 // ────────────────────────────────────────────────────────────────────────────
 // BuyerCollaboration (SDC-1b) — the P2 planner consolidation view: the
@@ -190,6 +190,10 @@ const DisputeExchange: React.FC<{ entries: readonly DisputeEntry[] }> = ({ entri
     <div className="flex flex-col gap-2" data-testid="sdc-resolve-exchange">
       {entries.map((e, i) => (
         <div
+          // DisputeEntry has no id, and `at` repeats (the SDC clock is a fixed
+          // simulated now). One response's ledger is append-only, oldest first,
+          // so the index is the entry's sequence number and never shifts.
+          // eslint-disable-next-line react/no-array-index-key -- append-only ledger: index is the entry's sequence number
           key={`${e.at}-${i}`}
           className={`border-l-2 py-1 pl-3 ${
             e.kind === 'raised' ? 'border-l-warning' : 'border-l-success'

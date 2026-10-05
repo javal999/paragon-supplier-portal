@@ -27,8 +27,8 @@ import { nextActFor, EXTERNAL_OWNER_ORDER, type NextAct } from './nextAct';
 import { isTerminalState, userVerbsFrom } from './legality';
 import type { ExternalFactOwner } from './schema';
 import { PERSONA_SYSTEM_ROLES } from './businessRoles';
-import { NEXT_ACT_KEY } from '../../lib/i18n/nextAct';
-import { rolesEn, rolesId } from '../../lib/i18n/roles';
+import { NEXT_ACT_KEY } from '@lib/i18n/nextAct';
+import { rolesEn, rolesId } from '@lib/i18n/roles';
 
 const BUYER = PERSONA_SYSTEM_ROLES.buyer;
 const SUPPLIER = PERSONA_SYSTEM_ROLES.supplier;

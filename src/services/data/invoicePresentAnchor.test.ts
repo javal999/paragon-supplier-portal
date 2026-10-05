@@ -35,8 +35,8 @@ import { describe, it, expect } from 'vitest';
 import { INVOICES } from './mock/fixtures/invoices';
 import { toBuyerLabel, isOverdue } from './invoiceProjection';
 import { DECLARED_PRESENT, FAMILY_ANCHORS, shiftDays } from './fixturePresent';
-import { mockGoodsReceipts } from '../../data/mockGoodsReceipts';
-import { mockPurchaseOrders } from '../../data/mockPurchaseOrders';
+import { mockGoodsReceipts } from '@data/mockGoodsReceipts';
+import { mockPurchaseOrders } from '@data/mockPurchaseOrders';
 import {
   invoicesForReceipt,
   deriveMatchVerdict,

@@ -17,11 +17,11 @@
 
 import { describe, it, expect, beforeEach, afterAll } from 'vitest';
 import { screen, fireEvent, within, waitFor } from '@testing-library/react';
-import { renderWithProviders } from '../test/test-utils';
-import type { CurrentIdentity } from '../context/CurrentIdentityContext';
-import { NO_PERSON } from '../context/noPerson';
-import { supplierDocumentStore } from '../services/data/mock/stores/supplierDocumentStore';
-import i18n from '../lib/i18n';
+import { renderWithProviders } from '@test/test-utils';
+import type { CurrentIdentity } from '@context/CurrentIdentityContext';
+import { NO_PERSON } from '@context/noPerson';
+import { supplierDocumentStore } from '@services/data/mock/stores/supplierDocumentStore';
+import i18n from '@lib/i18n';
 import SupplierDocuments from './SupplierDocuments';
 import BuyerCompliance from './BuyerCompliance';
 

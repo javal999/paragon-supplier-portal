@@ -32,14 +32,14 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { screen } from '@testing-library/react';
-import { renderWithProviders } from '../test/test-utils';
-import { discoveryEn, discoveryId } from '../lib/i18n/discovery';
-import * as discoveryFixtures from '../services/data/mock/fixtures/buyerDiscovery';
+import { renderWithProviders } from '@test/test-utils';
+import { discoveryEn, discoveryId } from '@lib/i18n/discovery';
+import * as discoveryFixtures from '@services/data/mock/fixtures/buyerDiscovery';
 import {
   SINGLE_SOURCE,
   RECOMMENDED,
   QUALIFICATIONS,
-} from '../services/data/mock/fixtures/buyerDiscovery';
+} from '@services/data/mock/fixtures/buyerDiscovery';
 import BuyerDiscovery from './BuyerDiscovery';
 
 /** The corporations the retracted field named, plus the majors it listed. */

@@ -349,7 +349,7 @@ describe('H3 — ⚠️ `receiptInstant` IS THE AXIS OF THE ANSWER (law 0.5)', (
   });
 
   it('⚠️ NO CLOCK IS READ — asserted over the module source, code lines only', () => {
-    const src = import.meta.glob('/src/services/data/*.ts', {
+    const src = import.meta.glob('/src/services/data/*.ts', { // language-neutral: reads halalVerification.ts by exact path below; a rename fails toBeDefined loudly
       query: '?raw',
       import: 'default',
       eager: true,
@@ -545,7 +545,7 @@ describe('H3 — ⚠️ THE SEAM, MEASURED. The two lanes share ONE vocabulary n
 
 describe('H4 — ⚠️ WIRED TO A NOTICE, AND TO NOTHING THAT CAN REFUSE', () => {
   const sources = () =>
-    import.meta.glob('/src/**/*.{ts,tsx}', {
+    import.meta.glob('/src/**/*.{ts,tsx,js,jsx}', {
       query: '?raw',
       import: 'default',
       eager: true,
@@ -564,7 +564,7 @@ describe('H4 — ⚠️ WIRED TO A NOTICE, AND TO NOTHING THAT CAN REFUSE', () =
     // or with a different scope, is a thing somebody must decide to do.
     //
     // ⚠️ SPEC FILES ARE EXCLUDED BY NAME, not by hoping none appear. The glob
-    // reaches `/src/**/*.{ts,tsx}` and that INCLUDES `*.test.ts(x)` — a fact the
+    // reaches `/src/**/*.{ts,tsx,js,jsx}` and that INCLUDES `*.test.ts(x)` — a fact the
     // sibling assertion below got wrong for the whole of H3 (see its note).
     const src = sources();
     const referencing = Object.entries(src)

@@ -12,24 +12,24 @@
 import { Routes, Route } from 'react-router-dom';
 import { screen, fireEvent, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { everyVendorQualified } from '../../test/everyVendorQualified';
-import { renderWithProviders, BUYER } from '../../test/test-utils';
-import { SEEDED_SEAT_ROLES, PERSONA_SYSTEM_ROLES } from '../../services/transitions/businessRoles';
-import { resetRfxStores } from '../../services/data/mock/stores/rfxStores';
-import { rfqStore } from '../../services/data/mock/stores/rfqStore';
-import { quotationStore } from '../../services/data/mock/stores/quotationStore';
-import { sdcClock } from '../../services/sdc';
-import { MockCommandService } from '../../services/data/mock/MockCommandService';
-import { NO_PERSON } from '../../context/noPerson';
-import { awardQuantity } from '../../services/sourcing/rfqComparison';
-import type { QueryScope } from '../../services/data/types';
-import type { AwardLine } from '../../services/sourcing/types';
+import { everyVendorQualified } from '@test/everyVendorQualified';
+import { renderWithProviders, BUYER } from '@test/test-utils';
+import { SEEDED_SEAT_ROLES, PERSONA_SYSTEM_ROLES } from '@services/transitions/businessRoles';
+import { resetRfxStores } from '@services/data/mock/stores/rfxStores';
+import { rfqStore } from '@services/data/mock/stores/rfqStore';
+import { quotationStore } from '@services/data/mock/stores/quotationStore';
+import { sdcClock } from '@services/sdc';
+import { MockCommandService } from '@services/data/mock/MockCommandService';
+import { NO_PERSON } from '@context/noPerson';
+import { awardQuantity } from '@services/sourcing/rfqComparison';
+import type { QueryScope } from '@services/data/types';
+import type { AwardLine } from '@services/sourcing/types';
 import BuyerSourcingEvent from '../BuyerSourcingEvent';
 
 const PCT = vi.hoisted(() => new Map<string, number | null>());
 
-vi.mock('../../services/transitions/updateCompliance', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../../services/transitions/updateCompliance')>();
+vi.mock('@services/transitions/updateCompliance', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@services/transitions/updateCompliance')>();
   return {
     ...actual,
     complianceOver: (...args: Parameters<typeof actual.complianceOver>) => {

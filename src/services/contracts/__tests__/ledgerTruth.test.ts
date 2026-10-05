@@ -81,7 +81,7 @@ function sourceFiles(): string[] {
     for (const entry of readdirSync(dir)) {
       const full = join(dir, entry);
       if (statSync(full).isDirectory()) walk(full);
-      else if (/\.tsx?$/.test(entry)) out.push(full.slice(ROOT.length + 1).replace(/\\/g, '/'));
+      else if (/\.[jt]sx?$/.test(entry)) out.push(full.slice(ROOT.length + 1).replace(/\\/g, '/'));
     }
   };
   walk(join(ROOT, 'src'));

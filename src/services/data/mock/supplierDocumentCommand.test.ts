@@ -18,7 +18,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { MockCommandService, WIRED_COMMAND_TARGETS } from './MockCommandService';
 import { supplierDocumentStore } from './stores/supplierDocumentStore';
 import { SYSTEM_ROLES } from '../../transitions/businessRoles';
-import { NO_PERSON } from '../../../context/noPerson';
+import { NO_PERSON } from '@context/noPerson';
 import type { QueryScope } from '../types';
 
 const svc = new MockCommandService();

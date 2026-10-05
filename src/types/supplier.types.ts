@@ -99,7 +99,7 @@ export interface Supplier {
    * stored and never set by hand. Separate from `status` (BR-02). Absent only
    * on the raw fixture row, which no read returns.
    */
-  qualification?: import('../services/data/types').QualificationLevel;
+  qualification?: import('@services/data/types').QualificationLevel;
   // Optional profile attributes (surfaced on storefront/profile views).
   legalName?: string;
   taxId?: string;

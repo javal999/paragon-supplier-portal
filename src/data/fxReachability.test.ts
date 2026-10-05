@@ -13,10 +13,10 @@
 import { describe, it, expect } from 'vitest';
 import { mockRfqs } from './mockRfqs';
 import { mockQuotations, type Quotation } from './mockQuotations';
-import { scoreQuotations, type ScorableQuote } from '../lib/quoteScore';
-import { effectivePin, pinHistory, isStalePin } from '../lib/fxPin';
-import { FX_PIN_MAX_AGE_DAYS, BASE_CURRENCY, type BidCurrency } from '../lib/currencyPolicy';
-import type { FxPin } from '../lib/fxPin';
+import { scoreQuotations, type ScorableQuote } from '@lib/quoteScore';
+import { effectivePin, pinHistory, isStalePin } from '@lib/fxPin';
+import { FX_PIN_MAX_AGE_DAYS, BASE_CURRENCY, type BidCurrency } from '@lib/currencyPolicy';
+import type { FxPin } from '@lib/fxPin';
 
 const rfq = (id: string) => {
   const found = mockRfqs.find((r) => r.id === id);

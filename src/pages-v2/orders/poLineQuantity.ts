@@ -1,7 +1,7 @@
 import type { TFunction } from 'i18next';
-import { formatIDR, formatNumber } from '../../lib/format';
-import { releaseBasis } from '../../services/transitions/callOffRules';
-import type { POLineItem } from '../../services/data/types';
+import { formatIDR, formatNumber } from '@lib/format';
+import { releaseBasis } from '@services/transitions/callOffRules';
+import type { POLineItem } from '@services/data/types';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // BL-80 (CR-04) — how a PO line's quantity and value read, on every screen.

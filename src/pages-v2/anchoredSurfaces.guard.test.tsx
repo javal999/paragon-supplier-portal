@@ -68,10 +68,10 @@ import { describe, it, expect, afterEach } from 'vitest';
 import { cleanup, fireEvent, screen } from '@testing-library/react';
 import { act } from 'react';
 import { Routes, Route } from 'react-router-dom';
-import { renderWithProviders, BUYER, SUPPLIER } from '../test/test-utils';
-import { usePinnedDemoClock, DEMO_NOW } from '../test/demoClock';
-import { DECLARED_PRESENT } from '../services/data/fixturePresent';
-import { formatDate } from '../lib/format';
+import { renderWithProviders, BUYER, SUPPLIER } from '@test/test-utils';
+import { usePinnedDemoClock, DEMO_NOW } from '@test/demoClock';
+import { DECLARED_PRESENT } from '@services/data/fixturePresent';
+import { formatDate } from '@lib/format';
 import BuyerShipments from './BuyerShipments';
 import BuyerGoodsReceipt from './BuyerGoodsReceipt';
 import BuyerInvoices from './BuyerInvoices';
@@ -112,7 +112,9 @@ async function settle(get: () => string): Promise<string> {
   let stable = 0;
   for (let i = 0; i < 80; i++) {
     await act(async () => {
-      await new Promise((r) => setTimeout(r, 25));
+      await new Promise((r) => {
+        setTimeout(r, 25);
+      });
     });
     const cur = get();
     if (cur === prev) {
@@ -221,10 +223,14 @@ describe('anchored surfaces — clock-independent by construction', () => {
   //    own diff and this limit gained no new instance there.**
   it('CONTROL — an ALREADY-anchored surface is unmoved, and its anchor is on screen', async () => {
     const anchorText = formatDate(DECLARED_PRESENT);
+    // The elements below are table DATA, rendered one at a time by `textAt`,
+    // never as a React list — so they need no `key` (ESLint react/jsx-key).
+    /* eslint-disable react/jsx-key */
     for (const [el, route] of [
       [<BuyerShipments />, '/buyer/shipments'],
       [<BuyerGoodsReceipt />, '/buyer/goods-receipt'],
     ] as Array<[React.ReactNode, string]>) {
+      /* eslint-enable react/jsx-key */
       const a = await textAt({ el, route }, Date.now() + FAR_A);
       const b = await textAt({ el, route }, Date.now() + FAR_B);
       expect(a).toContain(anchorText); // non-vacuity: the anchor really renders

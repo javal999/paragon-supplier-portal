@@ -13,9 +13,9 @@
 // ────────────────────────────────────────────────────────────────────────────
 
 import { screen, fireEvent, waitFor } from '@testing-library/react';
-import { renderWithProviders, BUYER, SUPPLIER } from '../test/test-utils';
-import { purchaseRequisitionStore } from '../services/data/mock/stores/purchaseRequisitionStore';
-import type { CurrentIdentity } from '../context/CurrentIdentityContext';
+import { renderWithProviders, BUYER, SUPPLIER } from '@test/test-utils';
+import { purchaseRequisitionStore } from '@services/data/mock/stores/purchaseRequisitionStore';
+import type { CurrentIdentity } from '@context/CurrentIdentityContext';
 import BuyerRequisitions from './BuyerRequisitions';
 
 /** A seat that RAISES requisitions and cannot decide them. */

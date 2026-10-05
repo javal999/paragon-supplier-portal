@@ -27,7 +27,7 @@ import type { QueryScope } from '../types';
 import { PERSONA_SYSTEM_ROLES } from '../../transitions/businessRoles';
 import { rfxNow } from './rfxReadModel';
 import { sdcClock } from '../../sdc';
-import { NO_PERSON } from '../../../context/noPerson';
+import { NO_PERSON } from '@context/noPerson';
 import { rfpTermKindOf } from '../../sourcing/rfxConfig';
 
 const svc = new MockCommandService();

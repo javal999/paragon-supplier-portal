@@ -2,11 +2,11 @@ import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Info, Lock, Users, ArrowRight, Search, AlertTriangle } from 'lucide-react';
-import AppShellV2 from '../components/layout-v2/AppShellV2';
-import { rowActivation, ROW_FOCUS_CLASS } from '../components/ui-v2/TableRow';
+import AppShellV2 from '@components/layout-v2/AppShellV2';
+import { rowActivation, ROW_FOCUS_CLASS } from '@components/ui-v2/TableRow';
 import { deriveRoleViews, roleTotals, type RoleView } from './roles/roleModel';
 import CreateRolePanel from './roles/CreateRolePanel';
-import { customRoleStore } from '../services/transitions/customRoles';
+import { customRoleStore } from '@services/transitions/customRoles';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // THE ROLES CATALOGUE — A LIST, AND A ROLE OPENS ITS OWN PAGE.

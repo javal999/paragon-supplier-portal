@@ -13,7 +13,7 @@ import {
 } from './fulfilmentRules';
 import { shelfLifeRuleFor } from './fulfilmentConfig';
 import { materialOverlayStore } from '../data/mock/stores/materialOverlayStore';
-import { NO_PERSON } from '../../context/noPerson';
+import { NO_PERSON } from '@context/noPerson';
 import type { ASN, AsnShelfLifeEvent, PurchaseOrder } from '../data/types';
 
 const poFor = (materialCode: string): Pick<PurchaseOrder, 'poNumber' | 'lineItems'> => ({
