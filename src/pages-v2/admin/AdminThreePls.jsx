@@ -191,11 +191,11 @@ const AdminThreePls = () => {
               />
               {t('tpl.form.offered')}
             </label>
-            {preview ? (
+            {preview && (
               <p className="text-xs text-text-secondary break-all" data-testid="tpl-preview">
                 {t('tpl.form.preview', { url: preview })}
               </p>
-            ) : null}
+            )}
             <p className="text-xs text-text-tertiary" data-testid="tpl-attribution">
               {t('tpl.form.attribution')}
             </p>
@@ -243,7 +243,7 @@ const AdminThreePls = () => {
               <TableHeaderCell>{t('tpl.col.pattern')}</TableHeaderCell>
               <TableHeaderCell>{t('tpl.col.offered')}</TableHeaderCell>
               <TableHeaderCell>{t('tpl.col.try')}</TableHeaderCell>
-              {held ? <TableHeaderCell>{t('tpl.col.action')}</TableHeaderCell> : null}
+              {held && <TableHeaderCell>{t('tpl.col.action')}</TableHeaderCell>}
             </TableHeader>
             <tbody>
               {list.map((r) => (
@@ -270,7 +270,7 @@ const AdminThreePls = () => {
                       testId={`tpl-try-${r.id}`}
                     />
                   </TableCell>
-                  {held ? (
+                  {held && (
                     <TableCell className="whitespace-nowrap">
                       <Button
                         type="button"
@@ -281,7 +281,7 @@ const AdminThreePls = () => {
                         {t('tpl.action.edit')}
                       </Button>
                     </TableCell>
-                  ) : null}
+                  )}
                 </TableRow>
               ))}
             </tbody>

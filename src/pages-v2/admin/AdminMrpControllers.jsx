@@ -251,7 +251,7 @@ const AdminMrpControllers = () => {
               </TableHeaderCell>
               <TableHeaderCell>{t('mrpc.col.name')}</TableHeaderCell>
               <TableHeaderCell>{t('mrpc.col.users')}</TableHeaderCell>
-              {held ? <TableHeaderCell>{t('mrpc.col.action')}</TableHeaderCell> : null}
+              {held && <TableHeaderCell>{t('mrpc.col.action')}</TableHeaderCell>}
             </TableHeader>
             <tbody>
               {codes.map((c) => {
@@ -276,7 +276,7 @@ const AdminMrpControllers = () => {
                         <span className="text-text-tertiary">—</span>
                       )}
                     </TableCell>
-                    {held ? (
+                    {held && (
                       <TableCell className="whitespace-nowrap">
                         {unmapping === c ? (
                           <UnmapConfirm
@@ -308,7 +308,7 @@ const AdminMrpControllers = () => {
                           </div>
                         )}
                       </TableCell>
-                    ) : null}
+                    )}
                   </TableRow>
                 );
               })}

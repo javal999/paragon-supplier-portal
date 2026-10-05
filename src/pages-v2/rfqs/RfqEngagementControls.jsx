@@ -298,13 +298,13 @@ export const RfqClarifications = ({ rfq, supplierId, clarifications, open, onTog
                 </span>
               </div>
               <p className="text-text-primary">{c.question}</p>
-              {c.answer ? <p className="text-text-secondary mt-1">↳ {c.answer}</p> : null}
+              {c.answer && <p className="text-text-secondary mt-1">↳ {c.answer}</p>}
             </li>
           ))}
         </ul>
       )}
-      {open ? (
-        availability.kind === 'held' ? (
+      {open &&
+        (availability.kind === 'held' ? (
           <div className="space-y-2">
             <textarea
               rows={2}
@@ -342,8 +342,7 @@ export const RfqClarifications = ({ rfq, supplierId, clarifications, open, onTog
           </div>
         ) : (
           <HandoffNotice availability={availability} testId="handoff-rfqclarification-ask" />
-        )
-      ) : null}
+        ))}
     </div>
   );
 };

@@ -35,10 +35,10 @@ const RfqQuestionField = ({ question, answer, onChange }) => {
     <div data-testid={`rfq-question-${question.id}`}>
       <label className="block text-sm text-text-primary mb-1" htmlFor={id}>
         {prompt}
-        {question.required ? <span className="text-danger ml-1">*</span> : null}
-        {question.unitKey ? (
+        {question.required && <span className="text-danger ml-1">*</span>}
+        {question.unitKey && (
           <span className="text-text-tertiary ml-1">({t(question.unitKey)})</span>
-        ) : null}
+        )}
       </label>
 
       {(question.type === 'yesNo' || question.type === 'singleChoice') && (

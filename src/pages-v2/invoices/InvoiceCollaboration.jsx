@@ -211,7 +211,7 @@ export const InvoiceLinesSection = ({
                     {/* CR-12 (BL-44) — the price check sits on its own row under
                         the line, full width, so the reason is never scrolled
                         out of a narrow panel. */}
-                    {c ? (
+                    {c && (
                       <tr>
                         <td colSpan={5} className="pb-2">
                           <div className="rounded bg-bg-hover px-2 py-1.5">
@@ -227,7 +227,7 @@ export const InvoiceLinesSection = ({
                           </div>
                         </td>
                       </tr>
-                    ) : null}
+                    )}
                   </React.Fragment>
                 );
               })}
@@ -235,7 +235,7 @@ export const InvoiceLinesSection = ({
           </table>
         </div>
       )}
-      {priced?.unsplit ? (
+      {priced?.unsplit && (
         <div className="mt-2 text-xs" data-testid="invoice-unsplit-check">
           <div className="text-text-secondary">
             {t('fc.inv.price.unsplit.title', { diff: fmtSignedIdr(priced.unsplit.difference) })}
@@ -243,21 +243,21 @@ export const InvoiceLinesSection = ({
           <PriceCheckCell check={priced.unsplit} />
           <div className="text-text-tertiary">{t('fc.inv.price.unsplit.note')}</div>
         </div>
-      ) : null}
+      )}
       {priced &&
-      lines.length > 0 &&
-      matchStatus !== undefined &&
-      ((matchStatus === 'Price Variance' && !priced.held) ||
-        (matchStatus === 'Matched' && priced.held)) ? (
-        <p className="mt-2 text-xs text-warning-hover" data-testid="invoice-tolerance-changed">
-          {t(
-            priced.held
-              ? 'fc.inv.price.changedSince.nowHeld'
-              : 'fc.inv.price.changedSince.nowPasses'
-          )}
-        </p>
-      ) : null}
-      {invoiceDate || taxInvoiceFile ? (
+        lines.length > 0 &&
+        matchStatus !== undefined &&
+        ((matchStatus === 'Price Variance' && !priced.held) ||
+          (matchStatus === 'Matched' && priced.held)) && (
+          <p className="mt-2 text-xs text-warning-hover" data-testid="invoice-tolerance-changed">
+            {t(
+              priced.held
+                ? 'fc.inv.price.changedSince.nowHeld'
+                : 'fc.inv.price.changedSince.nowPasses'
+            )}
+          </p>
+        )}
+      {(invoiceDate || taxInvoiceFile) && (
         <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
           <div>
             <dt className="text-text-tertiary">{t('fc.inv.detail.invoiceDate')}</dt>
@@ -270,7 +270,7 @@ export const InvoiceLinesSection = ({
             <dd className="text-text-primary break-all">{taxInvoiceFile ?? '—'}</dd>
           </div>
         </dl>
-      ) : null}
+      )}
     </section>
   );
 };

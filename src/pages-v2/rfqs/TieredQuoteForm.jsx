@@ -51,7 +51,7 @@ const SpecInput = ({ field, value, onChange, testId }) => {
       <span className={labelClass}>
         {label}
         {field.unitKey ? ` (${t(field.unitKey)})` : ''}
-        {field.required ? <span className="text-danger ml-1">*</span> : null}
+        {field.required && <span className="text-danger ml-1">*</span>}
       </span>
       {field.kind === 'choice' ? (
         <select
@@ -160,7 +160,7 @@ const ItemBlock = ({ rfq, item, draft, onChange, flagged }) => {
           ))}
         </dl>
       )}
-      {item.note ? <p className="text-xs text-text-secondary italic">{item.note}</p> : null}
+      {item.note && <p className="text-xs text-text-secondary italic">{item.note}</p>}
 
       {supplierFields.length > 0 && (
         <div>
@@ -315,7 +315,7 @@ const ItemBlock = ({ rfq, item, draft, onChange, flagged }) => {
         </div>
       </div>
 
-      {rfq.allowAlternatives ? (
+      {rfq.allowAlternatives && (
         <div className="border-t border-border-subtle pt-3">
           <label className="flex items-center gap-2 text-sm text-text-primary">
             <input
@@ -332,7 +332,7 @@ const ItemBlock = ({ rfq, item, draft, onChange, flagged }) => {
             />
             {t('rfqResponse.grid.altToggle')}
           </label>
-          {draft.alternative.enabled ? (
+          {draft.alternative.enabled && (
             <div className="mt-3 space-y-3">
               <p className="text-xs text-text-tertiary">{t('rfqResponse.grid.altHint')}</p>
               <label className="block">
@@ -368,9 +368,9 @@ const ItemBlock = ({ rfq, item, draft, onChange, flagged }) => {
                 }
               />
             </div>
-          ) : null}
+          )}
         </div>
-      ) : null}
+      )}
     </section>
   );
 };
@@ -511,9 +511,9 @@ export const SampleOfferFields = ({ requested, canSample, readyDate, onChange })
     <div data-testid="sample-offer">
       <span className={labelClass}>
         {t('rfqs.panel.canSample')}
-        {requested ? <span className="text-danger ml-1">*</span> : null}
+        {requested && <span className="text-danger ml-1">*</span>}
       </span>
-      {requested ? (
+      {requested && (
         <p className="text-xs text-text-tertiary mb-2">
           {t('rfqResponse.sample.requested', {
             count: requested.qty,
@@ -521,7 +521,7 @@ export const SampleOfferFields = ({ requested, canSample, readyDate, onChange })
             date: formatDate(requested.neededBy)
           })}
         </p>
-      ) : null}
+      )}
       <div className="flex gap-2">
         {
           /** @type {const} */ ([true, false]).map((v) => (

@@ -91,7 +91,7 @@ export const RfqSourceLinks = ({ rfq, rfqs }) => {
   const note = 'text-xs text-text-tertiary';
   return (
     <>
-      {rfq.sourceRfiId && !rfisPending ? (
+      {rfq.sourceRfiId && !rfisPending && (
         <span className={note} data-testid="event-from-rfi">
           {t('rfx.event.createdFrom')}{' '}
           {rfi ? (
@@ -102,8 +102,8 @@ export const RfqSourceLinks = ({ rfq, rfqs }) => {
             <Data>{rfq.sourceRfiId}</Data>
           )}
         </span>
-      ) : null}
-      {rfq.sourceRfpId && !rfpsPending ? (
+      )}
+      {rfq.sourceRfpId && !rfpsPending && (
         <span className={note} data-testid="event-from-rfp">
           {t('rfx.event.createdFrom')}{' '}
           {rfp ? (
@@ -114,8 +114,8 @@ export const RfqSourceLinks = ({ rfq, rfqs }) => {
             <Data>{rfq.sourceRfpId}</Data>
           )}
         </span>
-      ) : null}
-      {pr ? (
+      )}
+      {pr && (
         <span className={note} data-testid="event-from-pr">
           {t('rfx.event.createdFrom')}{' '}
           <Link
@@ -125,8 +125,8 @@ export const RfqSourceLinks = ({ rfq, rfqs }) => {
             <Data>{pr.prNumber}</Data>
           </Link>
         </span>
-      ) : null}
-      {rfq.copiedFromRfqId ? (
+      )}
+      {rfq.copiedFromRfqId && (
         <span className={note} data-testid="event-copied-from">
           {t('rfx.event.copiedFrom')}{' '}
           {copied ? (
@@ -137,12 +137,12 @@ export const RfqSourceLinks = ({ rfq, rfqs }) => {
             <Data>{rfq.copiedFromRfqId}</Data>
           )}
         </span>
-      ) : null}
-      {rfq.templateId ? (
+      )}
+      {rfq.templateId && (
         <span className={note} data-testid="event-from-template">
           {t('rfx.event.fromTemplate', { name: templateName ?? rfq.templateId })}
         </span>
-      ) : null}
+      )}
     </>
   );
 };

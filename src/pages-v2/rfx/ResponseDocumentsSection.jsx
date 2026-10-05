@@ -158,7 +158,7 @@ const DocumentSlot = ({ request, documents, cert, onFiles, onCert, refuse, testI
         label={request.name}
         testId={`${testId}-files`}
       />
-      {isCertificate ? <CertificateInputs value={cert} onChange={onCert} testId={testId} /> : null}
+      {isCertificate && <CertificateInputs value={cert} onChange={onCert} testId={testId} />}
       {!!refusal && (
         <p role="alert" className="text-xs text-danger" data-testid={`${testId}-refusal`}>
           {documentRefusalText(t, refusal) ?? refusal}

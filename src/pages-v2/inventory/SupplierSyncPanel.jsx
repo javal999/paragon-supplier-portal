@@ -69,7 +69,7 @@ const SupplierSyncPanel = ({ supplierId, positions, grant, refetch }) => {
       className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-6 space-y-4"
       data-testid="sup-sync"
     >
-      {apiConnected ? (
+      {apiConnected && (
         <div data-testid="sup-sync-erp">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
@@ -111,9 +111,9 @@ const SupplierSyncPanel = ({ supplierId, positions, grant, refetch }) => {
             )}
           </p>
         </div>
-      ) : null}
+      )}
 
-      {hasGrant ? (
+      {hasGrant && (
         <div
           data-testid="sup-pti-refresh"
           className={apiConnected ? 'pt-4 border-t border-border-subtle' : ''}
@@ -136,7 +136,7 @@ const SupplierSyncPanel = ({ supplierId, positions, grant, refetch }) => {
               {t('inv.supSync.pti.action')}
             </Button>
           </div>
-          {refreshedAt ? (
+          {refreshedAt && (
             <div className="mt-3" data-testid="sup-pti-refresh-result">
               <p className="text-xs text-text-tertiary mb-2">
                 {t('inv.supSync.pti.refreshedAt')} <Data>{formatDateTime(refreshedAt)}</Data> ·{' '}
@@ -158,9 +158,9 @@ const SupplierSyncPanel = ({ supplierId, positions, grant, refetch }) => {
                 ))}
               </ul>
             </div>
-          ) : null}
+          )}
         </div>
-      ) : null}
+      )}
     </section>
   );
 };

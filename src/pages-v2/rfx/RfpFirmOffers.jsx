@@ -86,7 +86,7 @@ export const RfpFirmOfferRounds = ({ event, rounds, gateOf, settled, pending, ru
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h4 className="text-sm font-semibold text-text-primary">{t('rfx.firm.title')}</h4>
-        {canAsk && !asking && negotiate.kind === 'held' ? (
+        {canAsk && !asking && negotiate.kind === 'held' && (
           <Button
             variant="outline"
             onClick={() => setAsking(true)}
@@ -94,15 +94,15 @@ export const RfpFirmOfferRounds = ({ event, rounds, gateOf, settled, pending, ru
           >
             {t('rfx.firm.ask')}
           </Button>
-        ) : null}
-        {canAsk && negotiate.kind !== 'held' ? (
+        )}
+        {canAsk && negotiate.kind !== 'held' && (
           <HandoffNotice availability={negotiate} testId="handoff-rfp-negotiate" />
-        ) : null}
+        )}
       </div>
       {event.status === 'Open' && !!event.pricing && (
         <p className="text-xs text-text-tertiary">{t('rfx.firm.needsClosed')}</p>
       )}
-      {asking && negotiate.kind === 'held' ? (
+      {asking && negotiate.kind === 'held' && (
         <RoundForm
           event={event}
           gateOf={gateOf}
@@ -114,7 +114,7 @@ export const RfpFirmOfferRounds = ({ event, rounds, gateOf, settled, pending, ru
             setAsking(false);
           }}
         />
-      ) : null}
+      )}
       {rounds.length === 0 ? (
         <p className="text-sm text-text-tertiary" data-testid={`rfp-rounds-empty-${event.id}`}>
           {t('rfx.firm.empty')}
@@ -163,7 +163,7 @@ const RoundCard = ({ event, round, canClose, pending, onClose }) => {
           {t(`rfx.firm.status.${status}`)}
         </StatusPill>
         <DeadlinePill deadline={round.deadline} done={round.closed} />
-        {!round.closed && canClose ? (
+        {!round.closed && canClose && (
           <Button
             variant="secondary"
             disabled={pending}
@@ -172,7 +172,7 @@ const RoundCard = ({ event, round, canClose, pending, onClose }) => {
           >
             {t('rfx.firm.closeRound')}
           </Button>
-        ) : null}
+        )}
       </div>
       <p className="text-xs text-text-secondary">
         {t('rfx.firm.options')}: {round.options.map((o) => o.title).join(' · ')}
@@ -288,7 +288,7 @@ const RoundForm = ({ event, gateOf, settled, pending, onCancel, onOpen }) => {
                     ? t('rfx.rfp.toRfq.proposedBy', { supplier: c.proposer })
                     : t('rfx.rfp.toRfq.pti')}
                 </span>
-                {done ? (
+                {done && (
                   <span
                     className="block text-xs text-text-secondary"
                     data-testid={`rfp-round-option-settled-${c.ref}`}
@@ -297,7 +297,7 @@ const RoundForm = ({ event, gateOf, settled, pending, onCancel, onOpen }) => {
                       ? t('rfx.firm.settled.award')
                       : t('rfx.firm.settled.rfq', { rfq: done.rfqNumber })}
                   </span>
-                ) : null}
+                )}
               </span>
             </label>
           );

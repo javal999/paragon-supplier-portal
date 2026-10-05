@@ -690,9 +690,9 @@ const OrderSummaryView = ({ persona, foresightAnswers, invoices }) => {
                         className="inline-flex items-center gap-2"
                       >
                         <Data>{row.receiptCount}</Data>
-                        {row.discrepancy ? (
+                        {row.discrepancy && (
                           <StatusPill variant="warning">{t('oc.summary.discrepancy')}</StatusPill>
-                        ) : null}
+                        )}
                       </DrillLink>
                     ) : (
                       <EmptyCell
@@ -717,9 +717,9 @@ const OrderSummaryView = ({ persona, foresightAnswers, invoices }) => {
                         className="inline-flex items-center gap-2"
                       >
                         <Data>{row.invoiceCount}</Data>
-                        {row.returned ? (
+                        {row.returned && (
                           <StatusPill variant="warning">{t('oc.summary.returned')}</StatusPill>
-                        ) : null}
+                        )}
                       </DrillLink>
                     ) : (
                       <EmptyCell

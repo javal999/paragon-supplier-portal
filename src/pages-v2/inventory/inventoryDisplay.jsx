@@ -126,7 +126,7 @@ export const LastUpdateCell = ({ position, nowIso }) => {
             {t(`inv.freshness.${freshness}`)}
           </StatusPill>
         )}
-        {position.channel ? <ChannelLabel channel={position.channel} /> : null}
+        {position.channel && <ChannelLabel channel={position.channel} />}
       </div>
       <PullFailedNote position={position} />
     </div>
@@ -235,11 +235,11 @@ export const IncomingButton = ({ position, onOpen }) => {
       <div className="whitespace-nowrap">
         {t('inv.incoming.inTransit')} <Data>{qty(totals.inTransit)}</Data>
       </div>
-      {totals.nextDate ? (
+      {totals.nextDate && (
         <div className="whitespace-nowrap text-text-secondary">
           {t('inv.incoming.next')} <Data>{formatDate(totals.nextDate)}</Data>
         </div>
-      ) : null}
+      )}
     </button>
   );
 };
@@ -256,7 +256,7 @@ export const IncomingPanel = ({ position, base, onClose }) => {
       onClose={onClose}
       title={position ? t('inv.incoming.panelTitle', { material: position.materialCode }) : ''}
     >
-      {position ? (
+      {position && (
         <div className="space-y-4" data-testid="incoming-panel">
           <p className="text-sm text-text-secondary">
             {position.materialLabel} · {position.supplierName}
@@ -320,7 +320,7 @@ export const IncomingPanel = ({ position, base, onClose }) => {
             </table>
           </div>
         </div>
-      ) : null}
+      )}
     </SidePanel>
   );
 };

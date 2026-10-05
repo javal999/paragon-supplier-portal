@@ -102,11 +102,11 @@ const RfxStartFrom = ({
         )}
       </div>
       <p className="text-xs text-text-tertiary">{t('rfxa.start.note')}</p>
-      {unreadable ? (
+      {unreadable && (
         <p className="text-xs text-danger" data-testid={`${p}-start-unreadable`}>
           {t('rfxa.tpl.unreadable')}
         </p>
-      ) : null}
+      )}
       {rejected.length > 0 && (
         <p className="text-xs text-warning-hover" data-testid={`${p}-start-rejected`}>
           {t('rfxa.tpl.rejected')} {rejected.map((r) => `${r.id} (${r.reason})`).join('; ')}

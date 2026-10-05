@@ -100,17 +100,17 @@ export const QuestionField = ({
     <div data-testid={`rfi-field-${question.id}`}>
       <label className="block text-sm text-text-primary mb-1" htmlFor={id}>
         {prompt}
-        {question.required ? <span className="text-danger ml-1">*</span> : null}
-        {unit && question.type !== 'priceRange' ? (
+        {question.required && <span className="text-danger ml-1">*</span>}
+        {unit && question.type !== 'priceRange' && (
           <span className="text-text-tertiary ml-1">({unit})</span>
-        ) : null}
+        )}
         {question.type === 'priceRange' && (
           <IndicativePill className="ml-2" testId={`rfi-field-indicative-${question.id}`} />
         )}
       </label>
-      {question.help ? (
+      {question.help && (
         <p className="text-xs text-text-tertiary mb-1">{authored(t, question.help)}</p>
-      ) : null}
+      )}
 
       {(question.type === 'yesNo' || question.type === 'singleChoice') && (
         <select
@@ -159,9 +159,9 @@ export const QuestionField = ({
         question.type === 'money' ||
         question.type === 'percentage') && (
         <div className="flex items-center gap-2">
-          {question.type === 'money' && question.currency ? (
+          {question.type === 'money' && question.currency && (
             <span className="text-sm text-text-tertiary">{question.currency}</span>
-          ) : null}
+          )}
           <input
             id={id}
             type="number"
@@ -216,7 +216,7 @@ export const QuestionField = ({
             }
             className={`${inputClass} max-w-[10rem]`}
           />
-          {unit ? <span className="text-sm text-text-tertiary">{unit}</span> : null}
+          {unit && <span className="text-sm text-text-tertiary">{unit}</span>}
         </div>
       )}
 
@@ -253,15 +253,15 @@ export const QuestionField = ({
         />
       )}
 
-      {bounds ? <p className="text-xs text-text-tertiary mt-1">{bounds}</p> : null}
-      {invalid ? (
+      {bounds && <p className="text-xs text-text-tertiary mt-1">{bounds}</p>}
+      {invalid && (
         <p className="text-xs text-danger mt-1" data-testid={`rfi-field-invalid-${question.id}`}>
           {t(`rfxa.answer.invalid.${invalid}`)}
         </p>
-      ) : null}
+      )}
 
       {/* REQ-E03-02 BR-02 — every structured entry carries a description. */}
-      {withDescription ? (
+      {withDescription && (
         <input
           type="text"
           disabled={disabled}
@@ -271,7 +271,7 @@ export const QuestionField = ({
           onChange={(e) => onChange({ description: e.target.value })}
           className="mt-2 w-full bg-white border border-border-input rounded-md px-3 h-9 text-xs focus:outline-none focus:border-action disabled:bg-bg-hover"
         />
-      ) : null}
+      )}
     </div>
   );
 };

@@ -325,11 +325,11 @@ const StockEntryPanel = ({
               {t('inv.entry.error.invalidDate')}
             </p>
           ) : null}
-          {selected ? (
+          {selected && (
             <div className="col-span-2">
               <InTransitReadOnly position={selected} testId="stock-entry-in-transit" />
             </div>
-          ) : null}
+          )}
         </div>
         <p className="text-xs text-text-tertiary">{t('inv.entry.numberHint')}</p>
         <p className="text-xs text-text-tertiary" data-testid="stock-entry-production-hint">
@@ -435,7 +435,7 @@ const StockEntryPanel = ({
                       <X size={16} />
                     </button>
                   </div>
-                  {batchDates[i] ? (
+                  {batchDates[i] && (
                     <p
                       role="alert"
                       className="mt-1 text-xs text-danger"
@@ -445,12 +445,12 @@ const StockEntryPanel = ({
                         `inv.entry.error.${/** @type {NonNullable<(typeof batchDates)[number]>} */ (batchDates[i]).problem}`
                       )}
                     </p>
-                  ) : null}
+                  )}
                 </div>
               ))}
             </div>
           )}
-          {batchMismatch ? (
+          {batchMismatch && (
             <p
               role="alert"
               className="mt-2 text-xs text-danger"
@@ -458,7 +458,7 @@ const StockEntryPanel = ({
             >
               {t('inv.entry.error.batchTotal')}
             </p>
-          ) : null}
+          )}
         </section>
       </div>
     </SidePanel>
@@ -478,11 +478,11 @@ const NumberField = ({ id, label, value, onChange, error }) => (
       value={value}
       onChange={(e) => onChange(e.target.value)}
     />
-    {error ? (
+    {error && (
       <p role="alert" className="mt-1 text-xs text-danger">
         {error}
       </p>
-    ) : null}
+    )}
   </div>
 );
 

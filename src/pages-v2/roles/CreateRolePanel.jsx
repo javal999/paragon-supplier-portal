@@ -51,9 +51,7 @@ const Field = ({ labelKey, hintKey, children }) => {
     <label className="block">
       <span className="text-label text-text-tertiary uppercase">{t(labelKey)}</span>
       {children}
-      {hintKey ? (
-        <span className="block text-[11px] text-text-tertiary mt-0.5">{t(hintKey)}</span>
-      ) : null}
+      {hintKey && <span className="block text-[11px] text-text-tertiary mt-0.5">{t(hintKey)}</span>}
     </label>
   );
 };

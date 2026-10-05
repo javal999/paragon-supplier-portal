@@ -236,7 +236,7 @@ const AdminWorkingCalendar = () => {
 
       <AdminSectionNav />
 
-      {readState.unreadable ? (
+      {readState.unreadable && (
         <section
           className="mb-5 rounded-lg border border-warning/30 bg-warning-soft p-4 flex gap-3"
           data-testid="admin-cal-store-unreadable"
@@ -249,7 +249,7 @@ const AdminWorkingCalendar = () => {
             <p className="text-xs text-text-secondary mt-1">{t('adminCal.store.unreadableBody')}</p>
           </div>
         </section>
-      ) : null}
+      )}
       {readState.rejected.length > 0 && (
         <section
           className="mb-5 rounded-lg border border-warning/30 bg-warning-soft p-4 flex gap-3"
@@ -388,7 +388,7 @@ const AdminWorkingCalendar = () => {
               <TableHeaderCell>{t('adminCal.col.status')}</TableHeaderCell>
               <TableHeaderCell>{t('adminCal.col.source')}</TableHeaderCell>
               <TableHeaderCell>{t('adminCal.col.reason')}</TableHeaderCell>
-              {held ? <TableHeaderCell>{t('adminCal.col.action')}</TableHeaderCell> : null}
+              {held && <TableHeaderCell>{t('adminCal.col.action')}</TableHeaderCell>}
             </TableHeader>
             <tbody>
               {days.map((d) => (
@@ -417,7 +417,7 @@ const AdminWorkingCalendar = () => {
                   <TableCell className="text-sm text-text-secondary">
                     {d.ruling?.reason ?? ''}
                   </TableCell>
-                  {held ? (
+                  {held && (
                     <TableCell className="whitespace-nowrap">
                       <Button
                         type="button"
@@ -432,7 +432,7 @@ const AdminWorkingCalendar = () => {
                         )}
                       </Button>
                     </TableCell>
-                  ) : null}
+                  )}
                 </TableRow>
               ))}
             </tbody>

@@ -150,7 +150,7 @@ const SupplierMaterialNames = ({ supplierId }) => {
         </div>
       )}
 
-      {held && draft !== null ? (
+      {held && draft !== null && (
         <form
           className="mb-5 rounded-lg border border-border-subtle bg-white p-5 shadow-sm flex flex-col gap-3"
           data-testid="my-materials-form"
@@ -210,7 +210,7 @@ const SupplierMaterialNames = ({ supplierId }) => {
             </Button>
           </div>
         </form>
-      ) : null}
+      )}
 
       <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto">
         <Table>
@@ -219,7 +219,7 @@ const SupplierMaterialNames = ({ supplierId }) => {
             <TableHeaderCell>{t('matName.col.tradeName')}</TableHeaderCell>
             <TableHeaderCell>{t('matName.col.supplierNo')}</TableHeaderCell>
             <TableHeaderCell>{t('matName.col.state')}</TableHeaderCell>
-            {held ? <TableHeaderCell>{t('matName.col.action')}</TableHeaderCell> : null}
+            {held && <TableHeaderCell>{t('matName.col.action')}</TableHeaderCell>}
           </TableHeader>
           <tbody>
             {rows.map((row) => (
@@ -248,7 +248,7 @@ const SupplierMaterialNames = ({ supplierId }) => {
                     <span className="text-xs text-text-tertiary">{t('matName.state.none')}</span>
                   )}
                 </TableCell>
-                {held ? (
+                {held && (
                   <TableCell className="whitespace-nowrap">
                     <Button
                       type="button"
@@ -259,7 +259,7 @@ const SupplierMaterialNames = ({ supplierId }) => {
                       {t(row.latest ? 'matName.action.change' : 'matName.action.enter')}
                     </Button>
                   </TableCell>
-                ) : null}
+                )}
               </TableRow>
             ))}
             {rows.length === 0 && (

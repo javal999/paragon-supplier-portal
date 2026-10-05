@@ -172,11 +172,11 @@ export const TierEditor = ({ tiers, onChange, testId }) => {
           {t('rfqAuthoring.tiers.add')}
         </Button>
       </div>
-      {refusal ? (
+      {refusal && (
         <p role="alert" className="text-xs text-danger" data-testid={`${testId}-refusal`}>
           {t(`rfqAuthoring.tiers.refusal.${refusal}`)}
         </p>
-      ) : null}
+      )}
       {tiers.length === 0 ? (
         <p className="text-sm text-text-tertiary">{t('rfqAuthoring.tiers.empty')}</p>
       ) : (
@@ -297,7 +297,7 @@ const ItemCard = ({ item, index, canRemove, onChange, onRemove }) => {
         <span className="text-label text-text-tertiary uppercase">
           {t('rfqAuthoring.items.heading', { n })}
         </span>
-        {canRemove ? (
+        {canRemove && (
           <button
             type="button"
             onClick={onRemove}
@@ -306,7 +306,7 @@ const ItemCard = ({ item, index, canRemove, onChange, onRemove }) => {
           >
             <Trash2 size={14} />
           </button>
-        ) : null}
+        )}
       </header>
       <div className="p-4 space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-6 gap-3">
@@ -393,12 +393,10 @@ const ItemCard = ({ item, index, canRemove, onChange, onRemove }) => {
                 >
                   <div className="col-span-4 text-sm text-text-primary">
                     {label}
-                    {f.unitKey ? (
-                      <span className="text-text-tertiary"> ({t(f.unitKey)})</span>
-                    ) : null}
-                    {f.filledBy === 'buyer' && f.required ? (
+                    {f.unitKey && <span className="text-text-tertiary"> ({t(f.unitKey)})</span>}
+                    {f.filledBy === 'buyer' && f.required && (
                       <span className="text-danger"> *</span>
-                    ) : null}
+                    )}
                     {!f.required && (
                       <span className="text-xs text-text-tertiary">
                         {' '}
@@ -420,12 +418,12 @@ const ItemCard = ({ item, index, canRemove, onChange, onRemove }) => {
                         title={t('rfqAuthoring.items.supplierAnswers')}
                       >
                         {t('rfqAuthoring.filledBy.supplier')}
-                        {f.required ? <span className="text-text-tertiary"> *</span> : null}
+                        {f.required && <span className="text-text-tertiary"> *</span>}
                       </span>
                     )}
                   </div>
                   <div className="col-span-1 text-right">
-                    {removable ? (
+                    {removable && (
                       <button
                         type="button"
                         aria-label={t('rfqAuthoring.items.removeField', { field: label })}
@@ -434,7 +432,7 @@ const ItemCard = ({ item, index, canRemove, onChange, onRemove }) => {
                       >
                         <X size={14} />
                       </button>
-                    ) : null}
+                    )}
                   </div>
                 </div>
               );
@@ -552,13 +550,13 @@ const ItemCard = ({ item, index, canRemove, onChange, onRemove }) => {
             />
             {t('rfqAuthoring.items.ownTiers')}
           </label>
-          {item.ownTiers ? (
+          {item.ownTiers && (
             <TierEditor
               tiers={item.tiers}
               onChange={(tiers) => onChange({ ...item, tiers })}
               testId={`${tid}-tiers`}
             />
-          ) : null}
+          )}
         </div>
       </div>
     </section>
@@ -647,7 +645,7 @@ export const QuestionsOptionsStep = ({ draft, update, refusal }) => {
                     {' '}
                     · {t(`rfqAuthoring.q.type.${x.type}`)}
                   </span>
-                  {x.required ? <span className="text-danger"> *</span> : null}
+                  {x.required && <span className="text-danger"> *</span>}
                 </span>
                 <button
                   type="button"
@@ -745,7 +743,7 @@ export const QuestionsOptionsStep = ({ draft, update, refusal }) => {
             />
             {t('rfqAuthoring.o.samples')}
           </label>
-          {draft.samplesOn ? (
+          {draft.samplesOn && (
             <div className="mt-2 ml-6 flex flex-wrap gap-3">
               <div>
                 <label className={labelClass} htmlFor="rfq-samples-qty">
@@ -773,7 +771,7 @@ export const QuestionsOptionsStep = ({ draft, update, refusal }) => {
                 />
               </div>
             </div>
-          ) : null}
+          )}
         </div>
         <label className="flex items-start gap-2 text-sm text-text-primary">
           <input
@@ -848,12 +846,12 @@ export function authoringReviewRows(t, d, origin) {
           description: item.description.trim() || '—',
           variants: item.variantCount || '—'
         })}
-        {item.ownTiers ? (
+        {item.ownTiers && (
           <>
             {' · '}
             {tierList(item.tiers)}
           </>
-        ) : null}
+        )}
       </span>
     ]),
     options: [
@@ -1036,11 +1034,11 @@ export const TemplatePicker = ({ rfqs, onClose, onStart }) => {
       />
       {tab === 'templates' ? (
         <div className="space-y-3">
-          {state.unreadable ? (
+          {state.unreadable && (
             <p role="alert" className="text-xs text-danger" data-testid="rfq-templates-unreadable">
               {t('rfqAuthoring.template.picker.unreadable')}
             </p>
-          ) : null}
+          )}
           {state.rejected.map((r) => (
             <p
               key={r.id}
@@ -1117,11 +1115,11 @@ export const TemplatePicker = ({ rfqs, onClose, onStart }) => {
                     <div className="text-sm text-text-primary truncate">
                       <Data>{r.rfqNumber}</Data> · {r.title}
                     </div>
-                    {r.projectName ? (
+                    {r.projectName && (
                       <div className="text-xs text-text-tertiary">
                         {t('rfqAuthoring.projectTag', { name: r.projectName })}
                       </div>
-                    ) : null}
+                    )}
                   </div>
                   <Button
                     variant="outline"

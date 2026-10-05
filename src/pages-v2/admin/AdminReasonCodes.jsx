@@ -167,7 +167,7 @@ const AdminReasonCodes = () => {
         {t('adminRsn.meta.freeText')}
       </p>
 
-      {refusal ? (
+      {refusal && (
         <section
           role="alert"
           className="mb-5 rounded-lg border border-danger/30 bg-danger-soft p-4 flex gap-3"
@@ -176,8 +176,8 @@ const AdminReasonCodes = () => {
           <AlertTriangle size={16} className="text-danger shrink-0 mt-0.5" />
           <p className="text-sm text-text-primary">{refusal}</p>
         </section>
-      ) : null}
-      {readState.unreadable ? (
+      )}
+      {readState.unreadable && (
         <section
           className="mb-5 rounded-lg border border-warning/30 bg-warning-soft p-4 flex gap-3"
           data-testid="admin-rsn-store-unreadable"
@@ -190,7 +190,7 @@ const AdminReasonCodes = () => {
             <p className="text-xs text-text-secondary mt-1">{t('adminRsn.store.unreadableBody')}</p>
           </div>
         </section>
-      ) : null}
+      )}
       {readState.rejected.length > 0 && (
         <section
           className="mb-5 rounded-lg border border-warning/30 bg-warning-soft p-4 flex gap-3"
@@ -347,7 +347,7 @@ const AdminReasonCodes = () => {
                 <TableHeaderCell>{t('adminRsn.col.labelId')}</TableHeaderCell>
                 <TableHeaderCell>{t('adminRsn.col.status')}</TableHeaderCell>
                 <TableHeaderCell>{t('adminRsn.col.source')}</TableHeaderCell>
-                {held ? <TableHeaderCell>{t('adminRsn.col.action')}</TableHeaderCell> : null}
+                {held && <TableHeaderCell>{t('adminRsn.col.action')}</TableHeaderCell>}
               </TableHeader>
               <tbody>
                 {rows.map((e) => {
@@ -370,7 +370,7 @@ const AdminReasonCodes = () => {
                         </StatusPill>
                       </TableCell>
                       <TableCell className="text-sm text-text-secondary">{t(source)}</TableCell>
-                      {held ? (
+                      {held && (
                         <TableCell className="whitespace-nowrap">
                           <div className="flex gap-2">
                             <Button
@@ -391,7 +391,7 @@ const AdminReasonCodes = () => {
                             </Button>
                           </div>
                         </TableCell>
-                      ) : null}
+                      )}
                     </TableRow>
                   );
                 })}

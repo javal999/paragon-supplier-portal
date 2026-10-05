@@ -420,11 +420,11 @@ const RfiCreateWizard = ({ onCancel, onCreated, canPublish, pastEvents = [], edi
                 </option>
               ))}
             </select>
-            {template ? (
+            {template && (
               <p className="text-xs text-text-tertiary mt-1" data-testid="rfi-new-template">
                 {t('rfx.rfi.template')}: {t(template.nameKey)}
               </p>
-            ) : null}
+            )}
           </div>
           <div>
             <label className={labelClass} htmlFor="rfi-new-description">
@@ -660,7 +660,7 @@ export const ConfidentialityFields = ({ confidential, terms, onChange, testIdPre
         {t('rfxa.conf.toggle')}
       </label>
       <p className="text-xs text-text-tertiary">{t('rfxa.conf.toggle.hint')}</p>
-      {confidential ? (
+      {confidential && (
         <div>
           <label
             className="block text-xs font-semibold text-text-secondary mb-1"
@@ -677,7 +677,7 @@ export const ConfidentialityFields = ({ confidential, terms, onChange, testIdPre
             className="w-full bg-white border border-border-input rounded-md px-3 py-2 text-sm focus:outline-none focus:border-action"
           />
         </div>
-      ) : null}
+      )}
     </div>
   );
 };

@@ -234,19 +234,19 @@ const RfqItemContent = ({ item }) => {
                 : (item.oneTimeCosts ?? []).map((c) => t(`rfqAuthoring.cost.${c}`)).join(' · ')}
             </p>
           </div>
-          {item.tiers && item.tiers.length > 0 ? (
+          {item.tiers && item.tiers.length > 0 && (
             <p className="text-sm text-text-secondary">
               {t('rfqCompare.content.itemBreaks', {
                 breaks: item.tiers.map((tier) => breakLabel(t, tier)).join(', ')
               })}
             </p>
-          ) : null}
-          {item.note ? (
+          )}
+          {item.note && (
             <p className="text-sm text-text-secondary">
               <span className="text-text-tertiary">{t('rfqCompare.content.note')}:</span>{' '}
               {item.note}
             </p>
-          ) : null}
+          )}
         </div>
       </div>
       <SessionAttachments
@@ -440,16 +440,16 @@ const ItemComparison = ({
         <TableCell className="min-w-[12rem]">
           <div className="text-sm text-text-primary">
             {supplierName(q.supplierId)}
-            {!tied && score?.topRanked ? (
+            {!tied && score?.topRanked && (
               <span className="ml-2" data-testid={`item-best-${item.lineNo}-${q.supplierId}`}>
                 <StatusPill variant="success">{t('rfqCompare.cmp.bestScored')}</StatusPill>
               </span>
-            ) : null}
-            {tied && standing.tiedIds.includes(q.id) ? (
+            )}
+            {tied && standing.tiedIds.includes(q.id) && (
               <span className="ml-2" data-testid={`item-tied-${item.lineNo}-${q.supplierId}`}>
                 <StatusPill variant="success">{t('rfx.cmp.tied')}</StatusPill>
               </span>
-            ) : null}
+            )}
           </div>
           {specOf(q) && (
             <div
@@ -487,7 +487,7 @@ const ItemComparison = ({
                   table. The short word is hidden from assistive technology and
                   the full phrase is read instead, so a screen reader still
                   hears what "Lowest" means in every cell. */}
-              {best ? (
+              {best && (
                 <>
                   <span
                     aria-hidden="true"
@@ -497,7 +497,7 @@ const ItemComparison = ({
                   </span>
                   <span className="sr-only"> {t('rfqCompare.cmp.bestPrice')}</span>
                 </>
-              ) : null}
+              )}
             </TableCell>
           );
         })}
@@ -548,11 +548,11 @@ const ItemComparison = ({
         <span className="text-sm font-semibold text-text-primary">
           {t('rfqCompare.content.item', { n: item.lineNo })} · {item.description}
         </span>
-        {evalTier ? (
+        {evalTier && (
           <span className="text-xs text-text-tertiary">
             {t('rfqCompare.cmp.pieces', { pieces: qty(tierPieces(evalTier, item)) })}
           </span>
-        ) : null}
+        )}
         <FirmPill testId={`item-cmp-firm-${item.lineNo}`} />
       </div>
       <div className="overflow-x-auto">
@@ -594,14 +594,14 @@ const ItemComparison = ({
           {t('rfqCompare.cmp.lowestLegend')}
         </p>
       )}
-      {standing.oneDecimal || tied ? (
+      {(standing.oneDecimal || tied) && (
         <p
           className="px-4 py-2 text-xs text-text-tertiary border-t border-border-subtle"
           data-testid={`item-score-note-${item.lineNo}`}
         >
           {t(tied ? 'rfx.cmp.tieNote' : 'rfx.cmp.decimalNote')}
         </p>
-      ) : null}
+      )}
       {failing.length > 0 && (
         <p className="px-4 py-2 text-xs text-text-tertiary border-t border-border-subtle">
           {t('rfqCompare.cmp.failing')}

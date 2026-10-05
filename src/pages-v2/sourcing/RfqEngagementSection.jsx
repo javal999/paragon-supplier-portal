@@ -134,7 +134,7 @@ const RfqEngagementSection = ({ rfq, nameOf }) => {
                   {t(`rfqResponse.decline.reasonLabel.${intent.reason}`)} — {intent.text}
                 </span>
               )}
-              {rfq.confidential ? (
+              {rfq.confidential && (
                 <span className="text-xs text-text-tertiary">
                   {row?.confidentialityAcceptedAt ? (
                     <>
@@ -145,7 +145,7 @@ const RfqEngagementSection = ({ rfq, nameOf }) => {
                     t('rfqResponse.buyer.termsNotAccepted')
                   )}
                 </span>
-              ) : null}
+              )}
             </li>
           );
         })}
@@ -178,7 +178,7 @@ const RfqEngagementSection = ({ rfq, nameOf }) => {
                 )}
               </div>
               <p className="text-text-primary">{c.question}</p>
-              {c.answer ? <p className="text-text-secondary mt-1">↳ {c.answer}</p> : null}
+              {c.answer && <p className="text-text-secondary mt-1">↳ {c.answer}</p>}
               {c.state === 'Asked' &&
                 (answerAvailability.kind === 'held' ? (
                   <AnswerForm clarification={c} />

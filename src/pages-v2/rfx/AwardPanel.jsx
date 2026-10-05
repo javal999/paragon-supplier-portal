@@ -599,7 +599,7 @@ const ItemAwardForm = (props) => {
         />
       ))}
 
-      {touched && !!refusal ? (
+      {touched && !!refusal && (
         <p
           className="text-sm text-danger"
           role="alert"
@@ -608,13 +608,13 @@ const ItemAwardForm = (props) => {
         >
           {awardRefusalMessage(t, refusal, supplierName)}
         </p>
-      ) : null}
+      )}
       {!final && !refusal && (
         <p className="text-xs text-text-secondary" data-testid="award-partial-note">
           {t(model.partialNoteKey)}
         </p>
       )}
-      {needsReason ? (
+      {needsReason && (
         <div data-testid="award-reason-required">
           <label
             className="block text-xs font-semibold text-text-secondary mb-1"
@@ -622,7 +622,7 @@ const ItemAwardForm = (props) => {
           >
             {t('rfx.award.reason')}
           </label>
-          {model.reasonAlways || departing.length > 0 ? (
+          {(model.reasonAlways || departing.length > 0) && (
             <p className="text-xs text-warning-hover mb-1">
               {model.reasonAlways
                 ? t('rfx.rfpAward.reasonAlways')
@@ -630,7 +630,7 @@ const ItemAwardForm = (props) => {
                     items: departing.map((i) => i.name).join(', ')
                   })}
             </p>
-          ) : null}
+          )}
           {unqualified.length > 0 && (
             <p className="text-xs text-warning-hover mb-1" data-testid="award-reason-unqualified">
               {t('elig.award.warnReason', { vendors: vendorNames(unqualified) })}
@@ -655,7 +655,7 @@ const ItemAwardForm = (props) => {
             className="w-full bg-white border border-border-input rounded-md px-3 h-10 text-sm focus:outline-none focus:border-action"
           />
         </div>
-      ) : null}
+      )}
       {!noneAwardable && (
         <div className="flex flex-wrap items-center gap-3">
           <Button
@@ -670,7 +670,7 @@ const ItemAwardForm = (props) => {
           </Button>
         </div>
       )}
-      {canSettleRest ? (
+      {canSettleRest && (
         <div
           className="border-t border-border-subtle pt-3 space-y-2"
           data-testid="award-settle-rest"
@@ -694,7 +694,7 @@ const ItemAwardForm = (props) => {
             {t('rfqCompare.award.willNotRest')}
           </Button>
         </div>
-      ) : null}
+      )}
     </div>
   );
 };
@@ -745,7 +745,7 @@ const AwardItemRow = (props) => {
     >
       <div className="px-4 py-2 border-b border-border-subtle flex flex-wrap items-baseline justify-between gap-2">
         <span className="text-sm font-semibold text-text-primary">{props.label}</span>
-        {!item.awardedIn && draft.choice === 'award' && brk ? (
+        {!item.awardedIn && draft.choice === 'award' && brk && (
           <Data
             className={`text-xs ${complete ? 'text-success' : 'text-text-tertiary'}`}
             data-testid={`award-item-total-${key}`}
@@ -757,7 +757,7 @@ const AwardItemRow = (props) => {
                   pieces: qty(brk.pieces)
                 })}
           </Data>
-        ) : null}
+        )}
       </div>
       {item.awardedIn ? (
         <p
@@ -769,7 +769,7 @@ const AwardItemRow = (props) => {
       ) : (
         <>
           <ItemControls {...props} />
-          {draft.choice === 'award' && brk ? <ItemBidTable {...props} brk={brk} /> : null}
+          {draft.choice === 'award' && brk && <ItemBidTable {...props} brk={brk} />}
         </>
       )}
     </div>
@@ -854,11 +854,11 @@ const ItemControls = ({ item, draft, brk, otherOpenNow, otherWillNot, onChange }
           </select>
         </div>
       )}
-      {draft.choice === 'award' && item.breaks.length === 1 && brk ? (
+      {draft.choice === 'award' && item.breaks.length === 1 && brk && (
         <p className="text-xs text-text-secondary" data-testid={`award-break-${key}`}>
           {t('rfqCompare.award.break')}: <Data>{qty(brk.qty)}</Data>
         </p>
-      ) : null}
+      )}
       {draft.choice === 'award' && (
         <div
           role="group"

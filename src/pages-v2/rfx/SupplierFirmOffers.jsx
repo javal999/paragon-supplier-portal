@@ -194,15 +194,15 @@ const FirmOfferRequest = ({ round, offer, supplierId, editable, pending, send })
           onChange={(ref, point, v) => setCells((prev) => ({ ...prev, [cellKey(ref, point)]: v }))}
         />
       </div>
-      {editable || (offer?.documents ?? []).length > 0 ? (
+      {(editable || (offer?.documents ?? []).length > 0) && (
         <SessionAttachments
           value={editable ? documents : (offer?.documents ?? [])}
           onChange={editable ? setDocuments : undefined}
           label={t('rfx.firm.documents')}
           testId={`supplier-round-docs-${round.id}`}
         />
-      ) : null}
-      {editable ? (
+      )}
+      {editable && (
         <div className="flex flex-wrap items-end gap-3">
           <div>
             <label
@@ -229,8 +229,8 @@ const FirmOfferRequest = ({ round, offer, supplierId, editable, pending, send })
             {offer ? t('rfx.firm.supplier.revise') : t('rfx.firm.supplier.submit')}
           </Button>
         </div>
-      ) : null}
-      {editable && !!refusal ? (
+      )}
+      {editable && !!refusal && (
         <p
           className="text-sm text-danger"
           role="alert"
@@ -238,7 +238,7 @@ const FirmOfferRequest = ({ round, offer, supplierId, editable, pending, send })
         >
           {t(`rfx.firm.refusal.${refusalCode(refusal)}`, { defaultValue: refusal })}
         </p>
-      ) : null}
+      )}
     </section>
   );
 };

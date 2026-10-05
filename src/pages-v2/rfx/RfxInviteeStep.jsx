@@ -188,7 +188,7 @@ const RfxInviteeStep = ({ supplierCategory, selected, onToggle, testIdPrefix, so
                           ? s.supplierName
                           : `${s.supplierName} — ${t('elig.invite.notOffered')}`
                       }
-                      checked={chosen ? offered : null}
+                      checked={chosen && offered}
                       disabled={!offered}
                       onChange={() => onToggle(s.supplierId)}
                       onClick={(e) => e.stopPropagation()}
