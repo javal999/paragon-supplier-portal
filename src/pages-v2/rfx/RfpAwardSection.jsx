@@ -127,22 +127,22 @@ export const RfpAwardSection = ({ event, rounds, awards, gateOf, supplierName, p
               />
             </div>
           )}
-          {awardable && !hasClosedRound ? (
+          {awardable && !hasClosedRound && (
             <p
               className="p-4 text-sm text-text-tertiary"
               data-testid={`rfp-award-no-round-${event.id}`}
             >
               {t('rfx.rfpAward.noRound')}
             </p>
-          ) : null}
-          {awardable && hasClosedRound && awardVerb.kind !== 'held' ? (
+          )}
+          {awardable && hasClosedRound && awardVerb.kind !== 'held' && (
             <div className="p-4">
               <HandoffNotice availability={awardVerb} testId="handoff-rfp-award" />
             </div>
-          ) : null}
-          {awardable && hasClosedRound && awardVerb.kind === 'held' ? (
+          )}
+          {awardable && hasClosedRound && awardVerb.kind === 'held' && (
             <div className="p-4 space-y-3">
-              {noneAwardable ? (
+              {noneAwardable && (
                 <p
                   className="text-sm text-warning-hover"
                   role="status"
@@ -150,7 +150,7 @@ export const RfpAwardSection = ({ event, rounds, awards, gateOf, supplierName, p
                 >
                   {t('rfx.gate.noAward')}
                 </p>
-              ) : null}
+              )}
               <RfpAwardPanel
                 // Keyed on the awards in force and the closed rounds, so a
                 // recorded or cancelled award, or a newly closed round, starts
@@ -174,7 +174,7 @@ export const RfpAwardSection = ({ event, rounds, awards, gateOf, supplierName, p
                 onAward={sendAward}
               />
             </div>
-          ) : null}
+          )}
           {awards.length === 0 && (
             <p className="px-4 pb-4 text-xs text-text-tertiary">{t('rfx.award.noPo')}</p>
           )}

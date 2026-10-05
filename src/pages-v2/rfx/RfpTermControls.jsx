@@ -82,7 +82,7 @@ export const TermValueInput = ({
         onChange={(e) => onChange(e.target.value)}
         className={cls}
       />
-      {unit ? <span className="text-xs text-text-tertiary whitespace-nowrap">{unit}</span> : null}
+      {unit && <span className="text-xs text-text-tertiary whitespace-nowrap">{unit}</span>}
     </div>
   );
 };
@@ -339,11 +339,11 @@ export const CustomTermEditor = ({ terms, onChange }) => {
         />
       </div>
 
-      {refusal ? (
+      {refusal && (
         <p className="text-sm text-danger" data-testid="rfp-new-custom-refusal">
           {t(`rfxa.refusal.${refusalCode(refusal)}`, { defaultValue: refusal })}
         </p>
-      ) : null}
+      )}
       <Button
         variant="outline"
         disabled={!started || refusal !== null}

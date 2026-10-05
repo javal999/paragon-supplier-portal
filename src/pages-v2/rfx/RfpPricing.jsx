@@ -96,7 +96,7 @@ export const RfpPricingEditor = ({ value, onChange }) => {
         {t('rfxa.pricing.hint')}
       </p>
 
-      {on ? (
+      {on && (
         <>
           <div>
             <h4 className="text-sm font-semibold text-text-primary mb-2">
@@ -114,9 +114,9 @@ export const RfpPricingEditor = ({ value, onChange }) => {
                 >
                   <div>
                     <div className="text-sm text-text-primary">{o.title}</div>
-                    {o.description ? (
+                    {o.description && (
                       <div className="text-xs text-text-tertiary">{o.description}</div>
-                    ) : null}
+                    )}
                   </div>
                   <button
                     type="button"
@@ -247,13 +247,13 @@ export const RfpPricingEditor = ({ value, onChange }) => {
             {t('rfxa.pricing.samples')}
           </label>
 
-          {refusal ? (
+          {refusal && (
             <p className="text-sm text-danger" data-testid="rfp-new-pricing-refusal">
               {t(`rfxa.refusal.${refusalCode(refusal)}`, { defaultValue: refusal })}
             </p>
-          ) : null}
+          )}
         </>
-      ) : null}
+      )}
     </div>
   );
 };
@@ -354,10 +354,10 @@ export const RfpPricingForm = ({
                 <TableRow key={o.id} data-testid={`${p}-pricing-row-${o.id}`}>
                   <TableCell className="align-top">
                     <div className="text-sm text-text-primary">{o.title}</div>
-                    {o.description ? (
+                    {o.description && (
                       <div className="text-xs text-text-tertiary">{o.description}</div>
-                    ) : null}
-                    {mine ? (
+                    )}
+                    {mine && (
                       <div className="flex items-center gap-2 mt-1">
                         <span className="text-xs text-text-tertiary">
                           {t('rfxa.pricing.yourOption')}
@@ -373,7 +373,7 @@ export const RfpPricingForm = ({
                           </button>
                         )}
                       </div>
-                    ) : null}
+                    )}
                   </TableCell>
                   {request.quantityPoints.map((q) => (
                     <TableCell key={q} className="align-top">
@@ -432,7 +432,7 @@ export const RfpPricingForm = ({
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {request.samplesRequested ? (
+        {request.samplesRequested && (
           <div className="space-y-2">
             <label className="flex items-center gap-2 text-sm text-text-primary">
               <input
@@ -475,7 +475,7 @@ export const RfpPricingForm = ({
               />
             </div>
           </div>
-        ) : null}
+        )}
         <div>
           <label className={labelClass} htmlFor={`${p}-timeline`}>
             {t('rfxa.pricing.timeline')}
@@ -617,14 +617,14 @@ export const RfpPricingComparison = ({ request, currency, responses, testId, fir
                 >
                   <TableCell className="align-top">
                     <div className="text-sm text-text-primary">{option.title}</div>
-                    {option.description ? (
+                    {option.description && (
                       <div className="text-xs text-text-tertiary">{option.description}</div>
-                    ) : null}
-                    {by ? (
+                    )}
+                    {by && (
                       <div className="text-xs text-text-tertiary mt-1">
                         {t('rfxa.pricing.proposedBy', { supplier: by.supplierName })}
                       </div>
-                    ) : null}
+                    )}
                     {firmBy.size === 1 && (
                       <StatusPill variant="neutral" className="mt-1">
                         <span data-testid={`${testId}-single-${ref}`}>{t('rfx.firm.single')}</span>
@@ -674,12 +674,12 @@ export const RfpPricingComparison = ({ request, currency, responses, testId, fir
                   ) : r.pricing.sample.canSample ? (
                     <>
                       {t('rfx.opt.yes')}
-                      {r.pricing.sample.readyDate ? (
+                      {r.pricing.sample.readyDate && (
                         <>
                           {' · '}
                           <Data>{formatDate(r.pricing.sample.readyDate)}</Data>
                         </>
-                      ) : null}
+                      )}
                     </>
                   ) : (
                     t('rfx.opt.no')

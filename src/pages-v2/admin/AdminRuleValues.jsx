@@ -286,7 +286,7 @@ const RuleValuesPage = ({ section }) => {
 
       <AdminSectionNav />
 
-      {refusal ? (
+      {refusal && (
         <section
           role="alert"
           className="mb-5 rounded-lg border border-danger/30 bg-danger-soft p-4 flex gap-3"
@@ -295,9 +295,9 @@ const RuleValuesPage = ({ section }) => {
           <AlertTriangle size={16} className="text-danger shrink-0 mt-0.5" />
           <p className="text-sm text-text-primary">{refusal}</p>
         </section>
-      ) : null}
+      )}
 
-      {readState.unreadable ? (
+      {readState.unreadable && (
         <section
           className="mb-5 rounded-lg border border-warning/30 bg-warning-soft p-4 flex gap-3"
           data-testid="admin-set-store-unreadable"
@@ -310,7 +310,7 @@ const RuleValuesPage = ({ section }) => {
             <p className="text-xs text-text-secondary mt-1">{t('adminSet.store.unreadableBody')}</p>
           </div>
         </section>
-      ) : null}
+      )}
       {readState.rejected.length > 0 && (
         <section
           className="mb-5 rounded-lg border border-warning/30 bg-warning-soft p-4 flex gap-3"
@@ -420,14 +420,14 @@ const RuleValuesPage = ({ section }) => {
                 )}
               </label>
             </div>
-            {draftDef ? (
+            {draftDef && (
               <p className="text-xs text-text-secondary" data-testid="admin-set-form-current">
                 {t('adminSet.form.current', {
                   value: valueText(draftDef, settingValue(draftDef.key)),
                   default: valueText(draftDef, draftDef.defaultValue)
                 })}
               </p>
-            ) : null}
+            )}
             <p className="text-xs text-text-tertiary" data-testid="admin-set-attribution">
               {t('adminSet.form.attribution')}
             </p>
@@ -476,7 +476,7 @@ const RuleValuesPage = ({ section }) => {
                 <TableHeaderCell>{t('adminSet.col.value')}</TableHeaderCell>
                 <TableHeaderCell>{t('adminSet.col.inForce')}</TableHeaderCell>
                 <TableHeaderCell>{t('adminSet.col.default')}</TableHeaderCell>
-                {held ? <TableHeaderCell>{t('adminSet.col.action')}</TableHeaderCell> : null}
+                {held && <TableHeaderCell>{t('adminSet.col.action')}</TableHeaderCell>}
               </TableHeader>
               <tbody>
                 {g.defs.map((d) => {
@@ -489,7 +489,7 @@ const RuleValuesPage = ({ section }) => {
                         <div className="text-xs text-text-tertiary mt-0.5">
                           {t(`adminSet.key.${d.key}.hint`)}
                         </div>
-                        {d.placeholder ? (
+                        {d.placeholder && (
                           <div className="mt-1" data-testid={`admin-set-placeholder-${d.key}`}>
                             <StatusPill variant="warning">
                               {t('adminSet.placeholder', {
@@ -498,7 +498,7 @@ const RuleValuesPage = ({ section }) => {
                               })}
                             </StatusPill>
                           </div>
-                        ) : null}
+                        )}
                       </TableCell>
                       <TableCell className="whitespace-nowrap">
                         <Data>
@@ -513,7 +513,7 @@ const RuleValuesPage = ({ section }) => {
                       <TableCell className="whitespace-nowrap">
                         <Data>{valueText(d, d.defaultValue)}</Data>
                       </TableCell>
-                      {held ? (
+                      {held && (
                         <TableCell className="whitespace-nowrap">
                           <div className="flex gap-2">
                             <Button
@@ -536,7 +536,7 @@ const RuleValuesPage = ({ section }) => {
                             )}
                           </div>
                         </TableCell>
-                      ) : null}
+                      )}
                     </TableRow>
                   );
                 })}
@@ -659,7 +659,7 @@ const StalePeriodsPanel = ({ held, version, record }) => {
       <h2 className="text-section text-text-primary">{t('adminSet.stale.title')}</h2>
       <p className="text-xs text-text-secondary mt-1 mb-3">{t('adminSet.stale.intro')}</p>
 
-      {held ? (
+      {held && (
         <section
           ref={formRef}
           className="mb-3 rounded-lg border border-border-subtle bg-white p-4 shadow-sm"
@@ -727,7 +727,7 @@ const StalePeriodsPanel = ({ held, version, record }) => {
             </Button>
           </form>
         </section>
-      ) : null}
+      )}
 
       <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto">
         <Table>
@@ -738,7 +738,7 @@ const StalePeriodsPanel = ({ held, version, record }) => {
             <TableHeaderCell>{t('adminSet.stale.col.source')}</TableHeaderCell>
             <TableHeaderCell>{t('adminSet.stale.col.lastUpdate')}</TableHeaderCell>
             <TableHeaderCell>{t('adminSet.stale.col.now')}</TableHeaderCell>
-            {held ? <TableHeaderCell>{t('adminSet.col.action')}</TableHeaderCell> : null}
+            {held && <TableHeaderCell>{t('adminSet.col.action')}</TableHeaderCell>}
           </TableHeader>
           <tbody>
             {rows.map(({ p, key, override }) => {
@@ -789,7 +789,7 @@ const StalePeriodsPanel = ({ held, version, record }) => {
                     </StatusPill>
                     <PullFailedNote position={p} />
                   </TableCell>
-                  {held ? (
+                  {held && (
                     <TableCell className="whitespace-nowrap">
                       <div className="flex gap-2">
                         <Button
@@ -843,7 +843,7 @@ const StalePeriodsPanel = ({ held, version, record }) => {
                         )}
                       </div>
                     </TableCell>
-                  ) : null}
+                  )}
                 </TableRow>
               );
             })}

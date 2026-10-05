@@ -72,13 +72,13 @@ export const RaisedElsewherePanel = ({ summary, onRestart, onClose }) => {
         <h2 className="text-lg font-semibold text-text-primary">
           {t('contracts.wizard.raisedElsewhere.headline')}
         </h2>
-        {owner ? (
+        {owner && (
           <p className="text-sm text-text-secondary">
             {t('contracts.wizard.raisedElsewhere.ownedBy', {
               owner: t(EXTERNAL_FACT_OWNER_KEY[owner])
             })}
           </p>
-        ) : null}
+        )}
         <p className="text-sm text-text-secondary">{t('contracts.wizard.raisedElsewhere.body')}</p>
       </div>
 

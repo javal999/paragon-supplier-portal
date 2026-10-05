@@ -187,7 +187,7 @@ const StockUploadPanel = ({ supplierId, positions, canSubmit }) => {
           >
             {t('inv.upload.download')}
           </Button>
-          {canSubmit ? (
+          {canSubmit && (
             <>
               <input
                 ref={fileRef}
@@ -207,7 +207,7 @@ const StockUploadPanel = ({ supplierId, positions, canSubmit }) => {
                 {t('inv.upload.choose')}
               </Button>
             </>
-          ) : null}
+          )}
         </div>
       </div>
       <StockTemplateColumns />
@@ -243,13 +243,13 @@ const StockUploadPanel = ({ supplierId, positions, canSubmit }) => {
           })}
         </div>
       </details>
-      {busy ? <p className="mt-3 text-sm text-text-tertiary">{t('inv.upload.checking')}</p> : null}
-      {fileError ? (
+      {busy && <p className="mt-3 text-sm text-text-tertiary">{t('inv.upload.checking')}</p>}
+      {fileError && (
         <p role="alert" className="mt-3 text-sm text-danger">
           {fileError}
         </p>
-      ) : null}
-      {result ? (
+      )}
+      {result && (
         <div className="mt-4 space-y-3" data-testid="stock-upload-result">
           <p className="text-sm text-text-primary" data-testid="stock-upload-saved">
             {t('inv.upload.saved', { count: result.savedMaterials.length })}
@@ -299,7 +299,7 @@ const StockUploadPanel = ({ supplierId, positions, canSubmit }) => {
             </div>
           )}
         </div>
-      ) : null}
+      )}
     </section>
   );
 };

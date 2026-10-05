@@ -74,12 +74,12 @@ export const RespondByLine = ({ po, nowIso }) => {
       <Data className={escalated ? 'text-danger font-semibold' : 'font-semibold'}>
         {formatDateTime(responseDeadline(po))}
       </Data>
-      {escalated ? (
+      {escalated && (
         <>
           <StatusPill variant="danger">Escalated</StatusPill>
           <span className="text-xs text-text-secondary">{t('oc.escalated.hint')}</span>
         </>
-      ) : null}
+      )}
     </div>
   );
 };
@@ -160,13 +160,13 @@ export const PoResponseDetails = ({ po }) => {
               {t('oc.response.at')} <Data>{formatDateTime(r.respondedAt)}</Data>
             </span>
           </div>
-          {r.confirmedDeliveryDate ? (
+          {r.confirmedDeliveryDate && (
             <div>
               <span className="text-text-tertiary">{t('oc.response.confirmedDate')}: </span>
               <Data>{formatDate(r.confirmedDeliveryDate)}</Data>
             </div>
-          ) : null}
-          {r.lines && r.lines.length > 0 ? (
+          )}
+          {r.lines && r.lines.length > 0 && (
             <div className="border border-border-subtle rounded-md overflow-x-auto">
               <table className="w-full text-xs">
                 <thead className="bg-bg-hover text-text-tertiary uppercase tracking-wider">
@@ -217,26 +217,26 @@ export const PoResponseDetails = ({ po }) => {
                 </tbody>
               </table>
             </div>
-          ) : null}
-          {r.rejectionCauses && r.rejectionCauses.length > 0 ? (
+          )}
+          {r.rejectionCauses && r.rejectionCauses.length > 0 && (
             <div>
               <span className="text-text-tertiary">{t('oc.response.causes')}: </span>
               {r.rejectionCauses.map((c) => reasonLabel('poReject', c)).join(', ')}
             </div>
-          ) : null}
-          {r.comment ? (
+          )}
+          {r.comment && (
             <div>
               <span className="text-text-tertiary">{t('oc.response.comment')}: </span>
               {r.comment}
             </div>
-          ) : null}
-          {r.review ? (
+          )}
+          {r.review && (
             <div className="text-text-secondary" data-testid="po-review-outcome">
               {r.review.decision === 'accepted'
                 ? t('oc.review.accepted')
                 : t('oc.review.rejected', { comment: r.review.comment ?? '' })}
             </div>
-          ) : null}
+          )}
         </div>
       )}
     </section>
@@ -257,12 +257,12 @@ export const ShippingNoticeDetails = ({ po }) => {
         {n?.startedOn ? (
           <>
             <Data>{formatDate(n.startedOn)}</Data>
-            {n.startedByAsn ? (
+            {n.startedByAsn && (
               <span className="text-text-tertiary">
                 {' '}
                 {t('oc.shipping.startedBy')} <Data>{n.startedByAsn}</Data>
               </span>
-            ) : null}
+            )}
           </>
         ) : (
           <span className="text-text-secondary">{t('oc.shipping.notStartedYet')}</span>

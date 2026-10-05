@@ -190,14 +190,14 @@ const FlowDiagram = ({ view, cursor, idPrefix }) => {
                 {node.name}
               </span>
               <span className="flex flex-wrap items-center gap-1">
-                {state.isBirth ? <Badge tone="teal">{t('processFlows.badge.birth')}</Badge> : null}
-                {state.isInitial && !state.isBirth ? (
+                {state.isBirth && <Badge tone="teal">{t('processFlows.badge.birth')}</Badge>}
+                {state.isInitial && !state.isBirth && (
                   <Badge tone="teal">{t('processFlows.badge.initial')}</Badge>
-                ) : null}
-                {state.isTerminal ? (
+                )}
+                {state.isTerminal && (
                   <Badge tone="neutral">{t('processFlows.badge.terminal')}</Badge>
-                ) : null}
-                {state.isFork ? <Badge tone="neutral">{t('processFlows.badge.fork')}</Badge> : null}
+                )}
+                {state.isFork && <Badge tone="neutral">{t('processFlows.badge.fork')}</Badge>}
                 {state.facts.length > 0 && (
                   <Badge tone="neutral">{t('processFlows.badge.fact')}</Badge>
                 )}

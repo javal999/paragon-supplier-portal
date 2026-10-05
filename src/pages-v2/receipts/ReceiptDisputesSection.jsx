@@ -147,7 +147,7 @@ const ReceiptDisputesSection = ({ goodsReceipts }) => {
           </>
         }
       >
-        {selected ? (
+        {selected && (
           <div className="space-y-4">
             <div>
               <div className="text-label text-text-tertiary uppercase mb-1">
@@ -171,7 +171,7 @@ const ReceiptDisputesSection = ({ goodsReceipts }) => {
               />
             </div>
           </div>
-        ) : null}
+        )}
       </SidePanel>
     </section>
   );

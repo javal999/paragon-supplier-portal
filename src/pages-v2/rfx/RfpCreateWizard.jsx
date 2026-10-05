@@ -474,9 +474,9 @@ const RfpCreateWizard = ({
         <div className="space-y-5">
           {/* B6 — the one-line source note, the same banner the RFQ wizard
               shows, naming the RFI by its number (the view's resolver). */}
-          {prefill && !editing ? (
+          {prefill && !editing && (
             <PrefillBanner source={prefill.sourceRfiNumber} testId="rfp-new-from-rfi" />
-          ) : null}
+          )}
           {editing ? (
             <div
               className="text-sm text-text-secondary bg-bg-hover border border-border-subtle rounded-md px-3 py-2"
@@ -658,7 +658,7 @@ const RfpCreateWizard = ({
                           />
                           {t(term.labelKey)}
                         </label>
-                        {chosen ? (
+                        {chosen && (
                           <div className="flex-1 min-w-[12rem]">
                             <TermValueInput
                               row={row}
@@ -671,7 +671,7 @@ const RfpCreateWizard = ({
                               }
                             />
                           </div>
-                        ) : null}
+                        )}
                       </li>
                     );
                   })}

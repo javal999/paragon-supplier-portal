@@ -169,11 +169,11 @@ const LifecycleWalk = ({ view, cursor, path, onStep, onReset }) => {
                       : t(STEP_KIND_KEY[edge.kind])}
                   </span>
                 </span>
-                {purpose ? (
+                {purpose && (
                   <p className="mt-1 max-w-prose text-[11px] leading-relaxed text-text-secondary">
                     {t(purpose)}
                   </p>
-                ) : null}
+                )}
               </span>
               <Button
                 variant={operator ? 'outline' : 'secondary'}
@@ -186,13 +186,13 @@ const LifecycleWalk = ({ view, cursor, path, onStep, onReset }) => {
           );
         })}
 
-        {started && steps.length === 0 ? (
+        {started && steps.length === 0 && (
           <p className="text-meta text-text-secondary">
             {current?.isTerminal
               ? t('processFlows.walk.declaredEnding')
               : t('processFlows.walk.noExit')}
           </p>
-        ) : null}
+        )}
 
         {facts.length > 0 && (
           <div className="rounded-md border border-dashed border-border-subtle px-3 py-2">

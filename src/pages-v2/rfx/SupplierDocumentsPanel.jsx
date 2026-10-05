@@ -88,7 +88,7 @@ export const FileOpenLink = ({ file, testId, withDownload = false, onOpened }) =
       >
         {file.name}
       </a>
-      {withDownload ? (
+      {withDownload && (
         <a
           href={url}
           download={file.name}
@@ -98,7 +98,7 @@ export const FileOpenLink = ({ file, testId, withDownload = false, onOpened }) =
         >
           {t('rfxFiles.download')}
         </a>
-      ) : null}
+      )}
     </span>
   );
 };
@@ -262,7 +262,7 @@ const SupplierFiles = ({ response, requests, deadline, showVersion, testId, onOp
             <TableHeaderCell>{t('rfxFiles.col.size')}</TableHeaderCell>
             <TableHeaderCell>{t('rfxFiles.col.uploaded')}</TableHeaderCell>
             <TableHeaderCell>{t('rfxFiles.col.uploadedBy')}</TableHeaderCell>
-            {showVersion ? <TableHeaderCell>{t('rfxFiles.col.version')}</TableHeaderCell> : null}
+            {showVersion && <TableHeaderCell>{t('rfxFiles.col.version')}</TableHeaderCell>}
             <TableHeaderCell>{t('rfxFiles.col.certificate')}</TableHeaderCell>
             <TableHeaderCell>{t('rfxFiles.col.openedBy')}</TableHeaderCell>
           </TableHeader>
@@ -346,12 +346,12 @@ const CertificateCell = ({ doc, deadline, testId }) => {
   const expired = certificateExpired(doc, deadline);
   return (
     <div>
-      {c.number ? <div>{t('rfxFiles.cert.number', { number: c.number })}</div> : null}
-      {c.issuer ? <div>{t('rfxFiles.cert.issuer', { issuer: c.issuer })}</div> : null}
-      {c.expiresOn ? (
+      {c.number && <div>{t('rfxFiles.cert.number', { number: c.number })}</div>}
+      {c.issuer && <div>{t('rfxFiles.cert.issuer', { issuer: c.issuer })}</div>}
+      {c.expiresOn && (
         <div>
           {t('rfxFiles.cert.expires')} <Data>{formatDate(c.expiresOn)}</Data>
-          {expired ? (
+          {expired && (
             <span
               className="ml-1"
               data-testid={`${testId}-expired`}
@@ -359,9 +359,9 @@ const CertificateCell = ({ doc, deadline, testId }) => {
             >
               <StatusPill variant="danger">{t('rfxFiles.cert.expired')}</StatusPill>
             </span>
-          ) : null}
+          )}
         </div>
-      ) : null}
+      )}
     </div>
   );
 };

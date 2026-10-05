@@ -235,7 +235,7 @@ const IntakeAdjustDrawer = ({ line }) => {
         </div>
 
         {/* Reason — only for an override (C6-LOCK), and only pre-commit */}
-        {adjusted && !committed ? (
+        {adjusted && !committed && (
           <div className="sm:col-span-2">
             <div className="mb-1 text-label uppercase tracking-wider text-text-tertiary">
               {t('planGrid.push.col.reason')}
@@ -248,29 +248,29 @@ const IntakeAdjustDrawer = ({ line }) => {
               value={why}
               onChange={(e) => setReason((r) => ({ ...r, [line.id]: e.target.value }))}
             />
-            {blocked ? (
+            {blocked && (
               <div className="mt-1 text-[11px] text-warning-hover">
                 {t('planGrid.push.reasonRequired')}
               </div>
-            ) : null}
+            )}
           </div>
-        ) : null}
+        )}
       </div>
 
       {/* Push action + committed / failed feedback */}
       <div className="flex items-center justify-between gap-3 border-t border-border-subtle px-4 py-3">
         <div className="text-[11px]">
-          {committed && state.prNumber ? (
+          {committed && state.prNumber && (
             <Data className="text-text-secondary">
               {t('planGrid.push.committed', { pr: state.prNumber })}
             </Data>
-          ) : null}
-          {state.failureReason ? (
+          )}
+          {state.failureReason && (
             <span className="text-danger">
               {refusalText(state.failureReason) ??
                 t('planGrid.push.failed', { reason: state.failureReason })}
             </span>
-          ) : null}
+          )}
         </div>
         {pushAvailability.kind === 'held' ? (
           <Button

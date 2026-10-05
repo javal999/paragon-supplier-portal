@@ -217,7 +217,7 @@ const RfxQuestionEditor = ({ value, onChange, library, defaultCurrency, testIdPr
               <h4 className="text-sm font-semibold text-text-primary">
                 {sectionTitle(t, section)}
               </h4>
-              {isCustom && rows.length === 0 ? (
+              {isCustom && rows.length === 0 && (
                 <button
                   type="button"
                   className="text-xs text-text-tertiary hover:text-danger"
@@ -226,7 +226,7 @@ const RfxQuestionEditor = ({ value, onChange, library, defaultCurrency, testIdPr
                 >
                   {t('rfxa.section.remove')}
                 </button>
-              ) : null}
+              )}
             </div>
             {rows.length === 0 && (
               <p className="text-xs text-text-tertiary">{t('rfxa.section.empty')}</p>
@@ -248,9 +248,9 @@ const RfxQuestionEditor = ({ value, onChange, library, defaultCurrency, testIdPr
                       {/* The required flag is the checkbox on the right — a
                           pill as well would say it twice. */}
                     </span>
-                    {q.help ? (
+                    {q.help && (
                       <p className="text-xs text-text-tertiary mt-0.5">{authored(t, q.help)}</p>
-                    ) : null}
+                    )}
                     {isChoiceType(q.type) && (
                       <p className="text-xs text-text-secondary mt-0.5">
                         {(q.options ?? []).map((o) => optionLabel(t, q, o)).join(' · ')}
@@ -287,7 +287,7 @@ const RfxQuestionEditor = ({ value, onChange, library, defaultCurrency, testIdPr
       })}
 
       {/* — Add from the library (RFI only). The library itself is untouched. — */}
-      {library ? (
+      {library && (
         <div className="border-t border-border-subtle pt-4">
           <label className={labelClass} htmlFor={`${p}-library`}>
             {t('rfx.create.library')}
@@ -323,7 +323,7 @@ const RfxQuestionEditor = ({ value, onChange, library, defaultCurrency, testIdPr
             </div>
           )}
         </div>
-      ) : null}
+      )}
 
       {/* — A section of the buyer's own. — */}
       <div className="border-t border-border-subtle pt-4">
@@ -538,11 +538,11 @@ const RfxQuestionEditor = ({ value, onChange, library, defaultCurrency, testIdPr
           </p>
         )}
 
-        {refusal ? (
+        {refusal && (
           <p className="text-sm text-danger" data-testid={`${p}-oneoff-refusal`}>
             {t(`rfxa.refusal.${refusalCode(refusal)}`, { defaultValue: refusal })}
           </p>
-        ) : null}
+        )}
         <Button
           variant="outline"
           disabled={!hasPrompt || refusal !== null}

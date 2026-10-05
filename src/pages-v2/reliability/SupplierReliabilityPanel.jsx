@@ -48,12 +48,12 @@ const SupplierReliabilityPanel = () => {
         <div>
           <h2 className="text-section text-text-primary">{t('rel.sup.title')}</h2>
           <p className="text-xs text-text-secondary mt-1">{t('rel.sup.subtitle')}</p>
-          {row ? (
+          {row && (
             <p className="text-xs text-text-tertiary mt-1">
               {t('rel.window.26')} · <Data>{formatDate(row.windowFrom)}</Data> –{' '}
               <Data>{formatDate(row.windowTo)}</Data>
             </p>
-          ) : null}
+          )}
         </div>
         <LivenessPill capability="engineDataset" />
       </div>

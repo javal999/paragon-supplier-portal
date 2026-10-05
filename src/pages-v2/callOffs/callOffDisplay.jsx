@@ -169,14 +169,14 @@ export const ToleranceTags = ({ check, uom, approval, testId }) => {
           })}
         </div>
       ))}
-      {drift ? (
+      {drift && (
         <div
           className="text-[11px] text-text-tertiary"
           data-testid={testId ? `${testId}-changed` : undefined}
         >
           {t(`co.tol.changedSince.${drift}`)}
         </div>
-      ) : null}
+      )}
     </div>
   );
 };

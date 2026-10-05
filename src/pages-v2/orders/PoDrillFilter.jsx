@@ -182,11 +182,11 @@ export const PoFilterBanner = ({
         className="bg-bg-hover border-l-2 border-border-subtle rounded px-4 py-3 mb-4 text-sm text-text-secondary"
       >
         <div>{t('oc.drill.malformed')}</div>
-        {drill.fromSummary ? (
+        {drill.fromSummary && (
           <div className="mt-2">
             <BackToOrderSummary persona={persona} />
           </div>
-        ) : null}
+        )}
       </div>
     );
   }
@@ -220,43 +220,43 @@ export const PoFilterBanner = ({
                 : t('oc.drill.count.other', { count })}
           </span>
         )}
-        {drill.fromSummary ? (
+        {drill.fromSummary && (
           <span className="ml-auto">
             <BackToOrderSummary persona={persona} />
           </span>
-        ) : null}
+        )}
       </div>
-      {reason ? (
+      {reason && (
         <div className="mt-1 text-text-tertiary" data-testid="po-filter-reason">
           {t(`oc.drill.reason.${reason}`, { supplier: po.supplierName })}
         </div>
-      ) : null}
-      {reason === 'capacity' && drill.groups && drill.groups.length > 0 ? (
+      )}
+      {reason === 'capacity' && drill.groups && drill.groups.length > 0 && (
         <div className="mt-1 text-text-tertiary">
           {t('oc.drill.groups')}: {drill.groups.map(groupLabel).join(', ')}
-          {drill.weeks && drill.weeks.length > 0 ? (
+          {drill.weeks && drill.weeks.length > 0 && (
             <>
               {' · '}
               {t('oc.drill.weeks')}: <Data>{drill.weeks.join(', ')}</Data>
             </>
-          ) : null}
+          )}
         </div>
-      ) : null}
-      {reason === 'foresight' && drill.materials && drill.materials.length > 0 ? (
+      )}
+      {reason === 'foresight' && drill.materials && drill.materials.length > 0 && (
         <div className="mt-1 text-text-tertiary">
           {t('oc.drill.materials')}: <Data>{drill.materials.join(', ')}</Data>
         </div>
-      ) : null}
-      {drill.focus ? (
+      )}
+      {drill.focus && (
         <div className="mt-1 text-text-tertiary" data-testid="po-filter-focus">
           {t(`oc.drill.focus.${drill.focus}`)}
         </div>
-      ) : null}
-      {drill.partialMalformed ? (
+      )}
+      {drill.partialMalformed && (
         <div className="mt-1 text-text-tertiary" data-testid="po-filter-partial-malformed">
           {t('oc.drill.malformed.partial', { poNumber: po.poNumber })}
         </div>
-      ) : null}
+      )}
     </div>
   );
 };
