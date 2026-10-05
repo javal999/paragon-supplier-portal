@@ -247,6 +247,19 @@ describe('the cycle step bar (F-03, F-05)', () => {
     }
   );
 
+  it('states the failing input check once, on This week, not under every step', async () => {
+    await renderThisWeek();
+    const bar = screen.getByTestId('cycle-steps');
+    // The fixture really carries a failing check, so this proves the count shows somewhere.
+    expect(screen.getByTestId('tw-input-check')).toHaveTextContent(/1 check failing/);
+    expect(await within(bar).findByTestId('cycle-step-thisWeek-checks', {}, SLOW)).toHaveTextContent(
+      /input check failing/
+    );
+    for (const id of CYCLE_STEPS.filter((s) => s !== 'thisWeek')) {
+      expect(within(bar).queryByTestId(`cycle-step-${id}-checks`)).toBeNull();
+    }
+  });
+
   it('shows the same figures as the This week cards', async () => {
     await renderThisWeek();
     const bar = screen.getByTestId('cycle-steps');
