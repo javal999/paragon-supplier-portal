@@ -68,7 +68,7 @@ Two kinds of failure in the dry run are not tooling problems:
    converts a cited file also amends the contract's citations (`.ts` → `.js`, declarations
    described in their JSDoc form) and is flagged **needs SOMO ratification before merge**.
    `src/services/data/types.ts` converts to `types.js` as well (its two runtime enums,
-   `POStatus` and `ChannelType`, become frozen objects with a typedef); this replaces the
+   `POStatus` and `ChannelType`, become `/** @type {const} */` objects with a typedef of their values); this replaces the
    earlier "keep it as `types.d.ts`" ruling, since a `.d.ts` file cannot hold runtime values.
 
 ## Phase 3 pilot history
