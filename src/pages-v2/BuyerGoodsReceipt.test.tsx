@@ -79,7 +79,7 @@ const uiTestAsn = (): ASN => ({
       //     the material master and REFUSING a code it cannot resolve, so an
       //     invented code could no longer reach step 4. The UNKNOWN_MATERIAL
       //     path did not vanish with it: it is exercised deliberately in
-      //     `GRInspectionWizard.test.tsx`, the only place in the tree that can
+      //     `GRInspectionWizard.test.jsx`, the only place in the tree that can
       //     reach it, because no fixture feeds the wizard an unresolvable code.
       //   · `PK-PETB-8804` → `AI-NIAC-6601` (CP-3 · H2). The halal seed leaves
       //     every PACKAGING row `'UNDETERMINED'` (Seat 3, `D-COMP-HALAL-1` —
@@ -232,7 +232,7 @@ describe('BuyerGoodsReceipt — GR from a live store ASN (UI path)', () => {
 // CP-3 · E4 — THE LEDGER REACHES THE GATE, THROUGH THE REAL READ.
 //
 // ⚠️ WHY THIS SUITE EXISTS AND THE WIZARD'S OWN ONE IS NOT ENOUGH. Every spec
-// in `GRInspectionWizard.test.tsx` hands the ledger in as a PROP, so all of
+// in `GRInspectionWizard.test.jsx` hands the ledger in as a PROP, so all of
 // them would still pass if `BuyerGoodsReceipt` passed a hard-coded `[]` and
 // never called `useEnforcementSettings()` at all — the behaviour today would
 // be identical (an empty ledger derives the same `BLOCK`), and the migration

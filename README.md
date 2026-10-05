@@ -89,22 +89,22 @@ src/
 ├── context/
 │   └── PersonaContext.tsx     # Buyer/Supplier persona state (React Context)
 ├── data/
-│   ├── mockPurchaseOrders.ts  # 15 POs across 8 suppliers
-│   ├── mockSuppliers.ts       # 8 supplier profiles with scorecards
-│   └── mockInventory.ts       # 20 inventory records
+│   ├── mockPurchaseOrders.js  # 15 POs across 8 suppliers
+│   ├── mockSuppliers.js       # 8 supplier profiles with scorecards
+│   └── mockInventory.js       # 20 inventory records
 ├── pages/
 │   ├── auth/Login.tsx
 │   ├── buyer/                 # 5 buyer pages
 │   ├── supplier/              # 6 supplier pages
 │   └── onboarding/            # Supplier registration wizard
 ├── router/
-│   └── AppRouter.tsx          # HashRouter with all routes
+│   └── AppRouter.jsx          # HashRouter with all routes
 ├── theme/
 │   └── fioriTheme.ts          # Design tokens (colours, shell constants)
 ├── types/
 │   └── supplier.types.ts      # POStatus, StockStatus, ChannelType enums
 ├── index.css                  # Inter font, portal-card utilities, scrollbar
-└── main.tsx                   # React root, ThemeProvider, CSS import
+└── main.jsx                   # React root, ThemeProvider, CSS import
 ```
 
 ---
@@ -169,7 +169,7 @@ factories in `src/services/contracts/conformance/`.
 >
 > They are quoted rather than deleted because the code had already withdrawn them
 > and only this file still said otherwise: `CHANNEL_CONFIG`
-> (`src/data/communicationProfiles.ts`) marks every non-portal channel
+> (`src/data/communicationProfiles.js`) marks every non-portal channel
 > `Designed: … (not connected)`, EDI explicitly as *"X12 / EDIFACT over AS2/SFTP
 > (no integration provider selected)"*. The portal channel is real; the rest are
 > design intent. No Ariba integration exists or is scheduled here.

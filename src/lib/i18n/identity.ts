@@ -8,7 +8,7 @@
 //     setter writes it that way). The remedy really is the persona toggle.
 //   · **supplier persona, unresolvable tenant** — `tenantFromStorage` maps an
 //     id the supplier master does not hold to `{ supplierId: null }`
-//     (`identitySources.ts`), so a seat that IS in supplier mode lands on the
+//     (`identitySources.js`), so a seat that IS in supplier mode lands on the
 //     SAME `!supplierId` guard and was told to "switch to Supplier mode".
 //
 // The second is the residual this fragment exists for, and the honesty rule is

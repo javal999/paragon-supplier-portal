@@ -30,8 +30,8 @@ import type { BpomApplicability } from '../types';
 const ENTRIES = Object.values(MATERIAL_MASTER);
 const CODES = Object.keys(MATERIAL_MASTER).sort();
 
-/** The predicate `inferBpom` applies (`GRInspectionWizard.tsx:129-131`).
- *  Deliberately a COPY, for the same reason `materialIdentity.test.ts` copies
+/** The predicate `inferBpom` applies (`GRInspectionWizard.jsx:129-131`).
+ *  Deliberately a COPY, for the same reason `materialIdentity.test.js` copies
  *  it: importing it would couple a regulatory pin to a component's export
  *  surface, and the point is to detect the day the two stop agreeing. */
 const prefixRuleSays = (code: string) => code.startsWith('AI-') || code.startsWith('FR-');
@@ -359,7 +359,7 @@ describe('2B-4b — the gate: WIRED, and the prefix rule is GONE', () => {
 
   it('the GR wizard runs the MASTER LOOKUP, and the prefix parse is not in the file', () => {
     const src = sources();
-    const wizard = src['/src/components/v2-features/GRInspectionWizard.tsx'];
+    const wizard = src['/src/components/v2-features/GRInspectionWizard.jsx'];
     expect(wizard).toBeDefined();
 
     // WAS: `toContain("materialCode.startsWith('AI-')")` and `not.toContain('bpomOf')`.
@@ -369,7 +369,7 @@ describe('2B-4b — the gate: WIRED, and the prefix rule is GONE', () => {
 
     // NOT MERELY CALLED — LOAD-BEARING. The outcome is what the step gate reads,
     // so a refusal cannot be reduced to a message beside a check that still
-    // passes. `GRInspectionWizard.test.tsx` proves the behaviour; this proves
+    // passes. `GRInspectionWizard.test.jsx` proves the behaviour; this proves
     // the wiring is the one the behaviour runs through.
     expect(wizard).toContain('if (!l.bpom.ok) return false;');
     // ⚠️ CP-3 · E4 — the applicable-and-unanswered clause now reads its
@@ -424,7 +424,7 @@ describe('2B-4b — the gate: WIRED, and the prefix rule is GONE', () => {
     // Derived rather than listed: exactly one NON-TEST caller, and it is the
     // GR wizard. A second production caller means the lookup has spread to a
     // surface nobody reviewed, which is worth failing over.
-    expect(callers).toEqual(['/src/components/v2-features/GRInspectionWizard.tsx']);
+    expect(callers).toEqual(['/src/components/v2-features/GRInspectionWizard.jsx']);
 
     // ⚠️ AND EXACTLY ONE TYPE-ONLY REFERENCE, NAMED (`CENSUS-COUNTS-TYPE-IMPORTS-01`).
     // `src/lib/enforcement.ts` imports `BpomRefusalReason` to derive — at

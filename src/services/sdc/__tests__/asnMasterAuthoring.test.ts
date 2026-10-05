@@ -418,7 +418,7 @@ describe('2B-5b-ii — the batch changed no BEHAVIOUR, and the firing set moved 
     // Duplicating the assertion would also have been
     // `EVIDENCE-REPLICATION-NOT-CORROBORATION-01`: a second copy of one check is
     // one check, and this one would have cost the original its accuracy.
-    const wizard = import.meta.glob('/src/components/v2-features/GRInspectionWizard.tsx', {
+    const wizard = import.meta.glob('/src/components/v2-features/GRInspectionWizard.jsx', {
       query: '?raw',
       import: 'default',
       eager: true,

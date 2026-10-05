@@ -16,7 +16,7 @@
 //   · `uom` === MATERIAL_MASTER[code].canonicalUom (fixtures-integrity invariant).
 //   · Each agreement's `contractId` maps to a REAL, openable mockContracts entry
 //     whose `supplierId` matches — so the roll-up's contract deep-link works. The
-//     mapping (verified against src/data/mockContracts.ts):
+//     mapping (verified against src/data/mockContracts.js):
 //        sa-1001 → ctr-010 / sup-001 (PT Sample Oleochemicals, Raw Material)
 //        sa-1002 → ctr-004 / sup-005 (Sample Personal Care, Active Ingredient)
 //        sa-1003 → ctr-006 / sup-008 (PT Sample Carton, Packaging)

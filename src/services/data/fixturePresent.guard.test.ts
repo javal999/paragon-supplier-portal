@@ -70,7 +70,7 @@ const rawPairs = (file: string, dateKey: string, idPrefix: string) => {
 
 const rawDocs = rawPairs('src/services/data/mock/fixtures/supplierDocuments.ts', 'expiryDate', 'doc-')
   .filter((r) => r.date && (r.status === 'Valid' || r.status === 'Expiring Soon'));
-const rawObls = rawPairs('src/data/mockObligations.ts', 'dueDate', 'obl-')
+const rawObls = rawPairs('src/data/mockObligations.js', 'dueDate', 'obl-')
   .filter((r) => r.date && (r.status === 'Upcoming' || r.status === 'Overdue'));
 
 /**
@@ -81,7 +81,7 @@ const rawObls = rawPairs('src/data/mockObligations.ts', 'dueDate', 'obl-')
  * creates blind spots.
  */
 const rawCtrs = (() => {
-  const src = readFileSync('src/data/mockContracts.ts', 'utf8');
+  const src = readFileSync('src/data/mockContracts.js', 'utf8');
   // ⚠️ COMMENT LINES ARE STRIPPED FIRST, and that is a measurement rather than
   // tidiness: the fixture's own notes now quote retired literals (`status:
   // 'Expiring'`) while explaining why they were retired, and a chunk-based

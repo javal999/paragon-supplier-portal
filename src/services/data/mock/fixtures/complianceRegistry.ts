@@ -26,7 +26,7 @@
 // ── WHERE THE HONESTY LIVES NOW — THREE LAYERS, STATED ─────────────────────
 //   1. **SUPPLIERS ARE THE PLATFORM'S REAL ROSTER, AND THE ROSTER IS ITSELF
 //      HONESTLY FICTIONAL.** `supplierId` + `supplierName` are now taken from
-//      `mockSuppliers.ts` verbatim — `PT Sample Specialty Fats`, `PT Sample
+//      `mockSuppliers.js` verbatim — `PT Sample Specialty Fats`, `PT Sample
 //      Packaging Indonesia`, `Sample Personal Care Emulsifiers GmbH`. No real
 //      company is ever named. The registry previously invented a SECOND name for
 //      the same supplier id (`sup-007` was `Sample Fragrance House

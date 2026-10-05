@@ -216,7 +216,7 @@ export function htmlEntries(): string[] {
 
 /** Client route paths declared by the router — derived, never counted here. */
 export function declaredRoutePaths(): string[] {
-  const src = readFileSync(join(ROOT, 'src', 'router', 'AppRouter.tsx'), 'utf8');
+  const src = readFileSync(join(ROOT, 'src', 'router', 'AppRouter.jsx'), 'utf8');
   return [...new Set([...src.matchAll(/path="([^"]*)"/g)].map((m) => m[1]))];
 }
 

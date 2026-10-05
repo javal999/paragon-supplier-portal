@@ -85,7 +85,7 @@ describe('machine-clock gate · the tree', () => {
     expect(census.filesWalked).toBeGreaterThan(100);
     // A known member: the toast id fallback. Chosen because no clock batch has
     // reason to touch it.
-    expect(census.sites.some((s) => s.file === 'src/hooks/useToast.ts')).toBe(true);
+    expect(census.sites.some((s) => s.file === 'src/hooks/useToast.js')).toBe(true);
     // A known NON-member: specs are out of scope.
     expect(census.sites.some((s) => isTestFile(s.file))).toBe(false);
   });

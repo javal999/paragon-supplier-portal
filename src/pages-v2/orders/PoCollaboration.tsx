@@ -30,7 +30,7 @@ import { poLineQuantityText } from './poLineQuantity';
  *
  * `Escalated` is computed at read from the response deadline and an injected
  * `now` (`poResponseProjection.ts`, law 0.5), and every order in
- * `mockPurchaseOrders.ts` is now dated relative to `DECLARED_PRESENT` by the
+ * `mockPurchaseOrders.js` is now dated relative to `DECLARED_PRESENT` by the
  * `purchaseOrder` family anchor. The three surfaces that render a PO status
  * used to pass `new Date().toISOString()`, which was defensible only while the
  * fixture carried raw 2025 literals — every unanswered order was escalated, so

@@ -353,7 +353,7 @@ describe('rolesHolding', () => {
 //
 // So which call sites may use the narrow one is a RULE, and this derives it
 // from the tree rather than trusting a comment. **IT PAID FOR ITSELF ON ITS
-// FIRST RUN:** `IdentityPanel.tsx` read `atomsFor(held)` where `held` is the
+// FIRST RUN:** `IdentityPanel.jsx` read `atomsFor(held)` where `held` is the
 // SEAT's roles — the panel whose entire job is stating a seat's reach,
 // under-reporting that reach. Nothing else could have found it; the count was
 // derived, correct-looking, and wrong.
@@ -390,7 +390,7 @@ describe('⚠️ WHO MAY RESOLVE THROUGH THE SYSTEM-ONLY `atomsFor`', () => {
   /**
    * ⚠️ **COMMENTS ARE STRIPPED FIRST, AND THAT IS RULE 2 FIRING ON THIS FILE'S
    * OWN INSTRUMENT.** The first version matched raw source and accused
-   * `IdentityPanel.tsx` — which had just been REPAIRED, and whose repair note
+   * `IdentityPanel.jsx` — which had just been REPAIRED, and whose repair note
    * says the words the defect used while the code says `atomsForSeat`. A matcher
    * that reads prose condemns the fix for describing the defect.
    * `atomsForSeat(` is masked before matching for the same family of reason: it
@@ -443,7 +443,7 @@ describe('⚠️ WHO MAY RESOLVE THROUGH THE SYSTEM-ONLY `atomsFor`', () => {
     for (const rel of [
       'src/services/data/mock/MockCommandService.ts', // the dispatcher
       'src/services/transitions/handoff.ts', // the cross-role handoff
-      'src/components/layout-v2/IdentityPanel.tsx', // the seat's own panel
+      'src/components/layout-v2/IdentityPanel.jsx', // the seat's own panel
     ]) {
       const text = fs.readFileSync(path.resolve(SRC, '..', rel), 'utf8');
       expect(text, `${rel} does not resolve through atomsForSeat`).toMatch(/atomsForSeat\s*\(/);

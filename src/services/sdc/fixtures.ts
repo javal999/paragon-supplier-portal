@@ -111,7 +111,7 @@ const PROV_SUPPLIER_DRAFT: Provenance = Object.freeze({
 //   place for an unanswered escalation to be felt.
 //
 //   ⚠️ `halalApplicable` LANDED AT CP-3 · H1 AND IS **AUTHORED, NOT WIRED.**
-//   Nothing reads it; `inferHalal` (`GRInspectionWizard.tsx`) still decides the
+//   Nothing reads it; `inferHalal` (`GRInspectionWizard.jsx`) still decides the
 //   halal question by parsing a supplier-typed `description`, and this batch
 //   does not touch it (that is H2). So editing a row here moves NOTHING today —
 //   which is exactly the state `bpomApplicable` was in at 2B-4a, and not the
@@ -586,7 +586,7 @@ export const MATERIAL_MASTER: MaterialMaster = Object.freeze({
     materialCode: 'RM-HUMEC-3405',
     // T2 ×3 — and ⚠️ THREE RFQs IS NOT THREE WITNESSES. rfq-013 is a DECLARED
     // CLONE of rfq-012 ("rfq-012 with a recorded FX ledger and NOTHING else
-    // changed", mockRfqs.ts). A copy agrees with its original by construction,
+    // changed", mockRfqs.js). A copy agrees with its original by construction,
     // so what looks like the best-evidenced row of the five is really two
     // sources and one replication. All three agree on KG, which is worth
     // something; it is REPLICATION, not CORROBORATION.

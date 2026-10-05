@@ -21,6 +21,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
+import { declaresField } from '@test/declaredFields';
 import { mockContracts } from '@data/mockContracts';
 import { mockObligations, type ContractObligation } from '@data/mockObligations';
 import { obligationRollup } from './obligationRollup';
@@ -243,9 +244,14 @@ describe('⚠️ THE PROPERTY THE STORED VERSION COULD NEVER HAVE HAD', () => {
  * runtime `delete` satisfies a property check — so the bytes are read too.
  */
 describe('⚠️ the stored counters are RETIRED — one source or none', () => {
-  const CONTRACTS_SRC = 'src/data/mockContracts.ts';
+  const CONTRACTS_SRC = 'src/data/mockContracts.js';
   const WIZARD_SRC = 'src/pages-v2/BuyerContracts.tsx';
-  const decl = (f: string) => new RegExp(`^\\s*${f}\\s*:\\s*number\\s*;`, 'm');
+  // A DECLARATION is read through the parser in either form — a TS
+  // `f: number;` member or a JSDoc `@property {number} f` tag
+  // (frontend-standard Phase 4: the fixture is now JavaScript).
+  const decl = (f: string) => ({
+    test: (src: string) => declaresField(src, CONTRACTS_SRC, f, 'number'),
+  });
   const value = (f: string) => new RegExp(`^\\s*${f}\\s*:\\s*-?[0-9]+,`, 'm');
 
   it('no contract row carries either property', () => {

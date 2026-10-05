@@ -19,7 +19,7 @@
 //   · `vite.config.ts`, `vitest.config.ts`, `vitest.drift.config.ts` import
 //     ALIASES directly.
 //   · `tsconfig.json` cannot import a module, so its `compilerOptions.paths`
-//     repeats the list. `src/test/aliases.guard.test.ts` fails if the two ever
+//     repeats the list. `src/test/aliases.guard.test.js` fails if the two ever
 //     disagree, so add or rename an alias here AND in tsconfig.json together.
 //
 // WHY `@app-types` AND NOT `@types`

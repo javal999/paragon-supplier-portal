@@ -19,7 +19,7 @@ import { useRefusalText } from '@hooks/useRefusalText';
 // DUPLICATE-AND-NARROW — AND THE FIRST ROLE-GATED SURFACE IN THIS PLATFORM.
 //
 // ⚠️ **NO PAGE IN THIS PORTAL HAD EVER GATED ON ROLE.** Derived before building:
-// not one `<Route>` in `AppRouter.tsx` carries a guard element, and the only
+// not one `<Route>` in `AppRouter.jsx` carries a guard element, and the only
 // role-conditional rendering anywhere in `pages-v2` / `components` was the
 // invoice footer. So the shape was TAKEN, not inherited, and the choice is:
 //

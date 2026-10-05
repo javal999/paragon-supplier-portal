@@ -3,7 +3,7 @@
 // trusted from `FAMILY_ANCHORS`.
 //
 // ⚠️ **THE DEFECT THIS CLOSES IS THE ONE THE WHOLE MODULE EXISTS FOR, ONE
-// FAMILY LATE.** Until the demo-data batch, `mockPurchaseOrders.ts` was the last
+// FAMILY LATE.** Until the demo-data batch, `mockPurchaseOrders.js` was the last
 // fixture in the tree still carrying its authored 2025 literals: every order was
 // placed a year before the goods receipts that fulfil it and fourteen months
 // before the invoices that bill it, on three surfaces that render both. Nothing
@@ -45,7 +45,7 @@ const rawDates = (file: string, key: string): string[] =>
     (m) => m[1],
   );
 
-const RAW_ORDER_DATES = rawDates('src/data/mockPurchaseOrders.ts', 'orderDate');
+const RAW_ORDER_DATES = rawDates('src/data/mockPurchaseOrders.js', 'orderDate');
 const RAW_ETAS = rawDates('src/services/data/mock/fixtures/supplierShipments.ts', 'eta');
 
 const A = FAMILY_ANCHORS.purchaseOrder.anchor;

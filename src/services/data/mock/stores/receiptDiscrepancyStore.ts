@@ -12,7 +12,7 @@
 //        fixture."
 //
 //   The second half is still true of the FIXTURE FILE and is why the seed lives
-//   HERE rather than in `mockGoodsReceipts.ts`: a discrepancy response is not a
+//   HERE rather than in `mockGoodsReceipts.js`: a discrepancy response is not a
 //   property of a receipt, it is an act, and `GoodsReceipt.discrepancyResponse`
 //   is joined on read precisely so nothing can author one as a receipt field.
 //

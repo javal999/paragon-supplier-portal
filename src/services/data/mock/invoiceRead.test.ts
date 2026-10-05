@@ -28,7 +28,7 @@ const sup007: QueryScope = { personaType: 'supplier', supplierId: 'sup-007', bus
 // `inv-brl-0051` crossed on 2026-08-02 and broke this spec with no commit
 // involved (2e-c-6-FIND-01). Pinned to the instant the fixtures are coherent at.
 // `usePinnedDemoClock` is a Vitest setup helper, not a React hook: it registers
-// beforeEach/afterEach and must run at module scope (see src/test/demoClock.ts).
+// beforeEach/afterEach and must run at module scope (see src/test/demoClock.js).
 // eslint-disable-next-line react-hooks/rules-of-hooks
 usePinnedDemoClock();
 

@@ -1,5 +1,5 @@
 // ────────────────────────────────────────────────────────────────────────────
-// The single QueryClient for the app. Mounted at the root in main.tsx (and
+// The single QueryClient for the app. Mounted at the root in main.jsx (and
 // mirrored in test-utils). Pages never touch this directly — they go through
 // the wrapper hooks in ./hooks, which go through ./useServiceQuery.
 //

@@ -2,7 +2,7 @@
 // CI-1.5 — Calibration & backtest harness (the GATE before CI-2).
 //
 // ── ⚠️ HEADLESS BY DESIGN. NO PRODUCTION CONSUMER, AND THAT IS NOT A DEFECT ──
-//   Nothing in `src/main.tsx`'s import graph reaches this module: its only
+//   Nothing in `src/main.jsx`'s import graph reaches this module: its only
 //   importer is its own spec (`shouldCostBacktest.test.ts`, 15 tests). A
 //   retirement census (R1, 2026-08-12) surfaced it as dead weight and the
 //   operator RULED IT KEPT (`UNUSED-IS-NOT-USELESS-01`, findings §25).

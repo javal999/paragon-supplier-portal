@@ -31,7 +31,7 @@ const ENUM_ID: Record<string, string> = {
   High: 'Tinggi',
   Medium: 'Sedang',
   Low: 'Rendah',
-  // GR disposition (mockGoodsReceipts.ts `Disposition`)
+  // GR disposition (mockGoodsReceipts.js `Disposition`)
   Accept: 'Terima',
   Reject: 'Tolak',
   Quarantine: 'Karantina',

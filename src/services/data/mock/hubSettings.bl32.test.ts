@@ -176,7 +176,7 @@ describe('BL32-POP · the population of rule values is derived from the config m
       'src/services/transitions/inventoryConfig.ts',
     ]);
     // Known-false: the menu's config is UI, not a rule value, and lives outside services.
-    expect(paths).not.toContain('src/components/layout-v2/navConfig.ts');
+    expect(paths).not.toContain('src/components/layout-v2/navConfig.js');
   });
 
   it('BL32-POP-02 · no retired constant survives anywhere in shipped code', () => {

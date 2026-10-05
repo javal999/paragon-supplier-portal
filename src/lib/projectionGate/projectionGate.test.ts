@@ -357,7 +357,7 @@ describe('THE ORIGINAL CLAIM SURVIVES — no flow knows any of these states', ()
 
 describe('isFixture — the classifier the whole partition turns on', () => {
   it('a fixture is a fixture and a store is not', () => {
-    expect(isFixture('src/data/mockContracts.ts')).toBe(true);
+    expect(isFixture('src/data/mockContracts.js')).toBe(true);
     expect(isFixture('src/services/data/mock/fixtures/invoices.ts')).toBe(true);
     // ⚠️ A STORE IS NOT A FIXTURE. If a store ever writes one of these states
     // that is a real producer, and misclassifying it would launder a write path

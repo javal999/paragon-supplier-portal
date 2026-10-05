@@ -53,7 +53,7 @@ const isSpec = (path: string): boolean => /\.test\.[jt]sx?$/.test(path);
  * Source with comments removed.
  *
  * ⚠️ **THIS IS NOT TIDINESS — A MUTATION PROBE CAUGHT THE GATE WITHOUT IT.**
- * `main.tsx` explains its env gate in a comment that contains the string
+ * `main.jsx` explains its env gate in a comment that contains the string
  * `VITE_CHAOS`. Asserting the gate against RAW text therefore passed on a
  * mutant that had DELETED the gate and kept the comment: the assertion was
  * satisfied by prose describing the mechanism rather than by the mechanism.
@@ -75,10 +75,10 @@ describe('CHAOS-AMBIENCE-01 — injection is never ambient', () => {
     // Without this every derivation below could return an empty set, and every
     // assertion would pass while examining nothing.
     expect(Object.keys(SRC).length).toBeGreaterThan(100);
-    expect(SRC['/src/main.tsx']).toBeTruthy();
+    expect(SRC['/src/main.jsx']).toBeTruthy();
     expect(SRC['/src/services/data/mock/withChaos.ts']).toBeTruthy();
     expect(SRC['/src/services/data/mock/mockDataService.ts']).toBeTruthy();
-    expect(SRC['/src/test/test-utils.tsx']).toBeTruthy();
+    expect(SRC['/src/test/test-utils.jsx']).toBeTruthy();
 
     // The self-exclusion the header claims — asserted, not assumed.
     expect(SRC[SELF]).toBeUndefined();
@@ -91,14 +91,14 @@ describe('CHAOS-AMBIENCE-01 — injection is never ambient', () => {
     // Known-good FIRST: the one legitimate applier must be FOUND before the
     // equality is worth anything. A matcher that found nothing would otherwise
     // satisfy the equality by returning an empty set.
-    expect(appliers).toContain('/src/main.tsx');
-    expect(appliers).toEqual(['/src/main.tsx']);
+    expect(appliers).toContain('/src/main.jsx');
+    expect(appliers).toEqual(['/src/main.jsx']);
 
     // And its use is gated, so the production bundle tree-shakes it out.
     // ⚠️ Asserted on the GUARD EXPRESSION, against comment-stripped source. A
     // token-presence check passed a mutant that deleted the gate and kept the
     // comment explaining it.
-    const mainCode = codeOnly(SRC['/src/main.tsx']);
+    const mainCode = codeOnly(SRC['/src/main.jsx']);
     expect(mainCode).toMatch(
       /import\.meta\.env\.DEV\s*&&\s*import\.meta\.env\.VITE_CHAOS\s*===\s*'on'/,
     );
@@ -116,13 +116,13 @@ describe('CHAOS-AMBIENCE-01 — injection is never ambient', () => {
     // a URL's `//` must not eat the rest of the line
     expect(codeOnly("const u = 'https://a.example'; const d = 3;")).toMatch(/const d = 3/);
     // and the real file still has its code after stripping
-    expect(codeOnly(SRC['/src/main.tsx']).length).toBeGreaterThan(200);
+    expect(codeOnly(SRC['/src/main.jsx']).length).toBeGreaterThan(200);
   });
 
   it('the service does not wrap itself, and the shared harness hands out the plain mock', () => {
     expect(importsWithChaos('/src/services/data/mock/mockDataService.ts')).toBe(false);
-    expect(SRC['/src/test/test-utils.tsx']).toMatch(/service\s*=\s*mockDataService/);
-    expect(importsWithChaos('/src/test/test-utils.tsx')).toBe(false);
+    expect(SRC['/src/test/test-utils.jsx']).toMatch(/service\s*=\s*mockDataService/);
+    expect(importsWithChaos('/src/test/test-utils.jsx')).toBe(false);
   });
 
   // ── 3 · THE BEHAVIOURAL PROBE — BOTH DIRECTIONS, ONE INSTRUMENT ───────────

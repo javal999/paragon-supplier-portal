@@ -541,10 +541,19 @@ function convert(sf) {
       if (p.questionToken) del(p.questionToken.getStart(sf), p.questionToken.end);
       if (p.type) dropAnnotation((p.questionToken ?? p.name).end, p.type);
     });
-    if (fn.type) {
+    // `(a): a is NonNullable<typeof a> => …` — JSDoc cannot name the parameter
+    // in an inline predicate, and TypeScript (5.5+) INFERS this exact predicate
+    // from `a !== undefined` / `a != null`, so the annotation is dropped.
+    const inferablePredicate =
+      fn.type && ts.isTypePredicateNode(fn.type) && fn.type.type &&
+      /^NonNullable<typeof \w+>$/.test(typeText(fn.type.type, sf).text);
+    if (fn.type && !inferablePredicate) {
       anyType = true;
       tags.push(`@returns {${typeText(fn.type, sf).text}}`);
       // `): R =>` / `): R {` — remove from the `)` to the end of the type.
+      const close = src.lastIndexOf(')', fn.type.getStart(sf));
+      del(close + 1, fn.type.end);
+    } else if (inferablePredicate) {
       const close = src.lastIndexOf(')', fn.type.getStart(sf));
       del(close + 1, fn.type.end);
     }
@@ -681,7 +690,11 @@ function convert(sf) {
         ins(node.end, ')');
       };
       if (ts.isNewExpression(node)) castResult(`${callee}<${args.join(', ')}>`);
-      else if (callee === 'useState') castArg(args[0]);
+      else if (callee === 'useState') {
+        // A lazy initializer (`useState<T>(() => …)`) is a function returning T.
+        const lazy = arg0 && (ts.isArrowFunction(arg0) || ts.isFunctionExpression(arg0));
+        castArg(lazy ? `() => ${args[0]}` : args[0]);
+      }
       else if (callee === 'useRef' || callee === 'createContext') {
         const lit = arg0?.kind === ts.SyntaxKind.NullKeyword ? ' | null' : '';
         castArg(`${args[0]}${lit}`);

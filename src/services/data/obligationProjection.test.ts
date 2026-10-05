@@ -32,7 +32,7 @@ const at = (d: string) => `${d}T00:00:00.000Z`;
 const raw = (() => {
   // `core.autocrlf` is on: split on /\r?\n/ nowhere needed here because the
   // parser is chunk-based, but the field regexes must not assume a line end.
-  const src = readFileSync('src/data/mockObligations.ts', 'utf8');
+  const src = readFileSync('src/data/mockObligations.js', 'utf8');
   const parts = src.split(/id:\s*'(?=obl-)/);
   parts.shift();
   return parts.map((p) => ({

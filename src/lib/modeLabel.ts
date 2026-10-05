@@ -2,7 +2,7 @@
 // Central shipment-mode label map (SEAT2-I18N-MODE-01) — a sibling of
 // statusLabel.ts / priorityLabel.ts for the ShipmentMode enum.
 //
-// `ShipmentMode` (`'Sea' | 'Air' | 'Road'`, src/data/mockShipments.ts) is a
+// `ShipmentMode` (`'Sea' | 'Air' | 'Road'`, src/data/mockShipments.js) is a
 // shared, context-independent vocabulary that renders in table cells, filter
 // chips, and side panels on both BuyerShipments and SupplierShipments — but was
 // left canonical EN in Batch 4 because no central label map existed and the chip

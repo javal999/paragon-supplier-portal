@@ -1,7 +1,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // CP-2 · 2B-2 — THE ADOPTION, RE-DERIVED FROM THE TREE ON EVERY RUN.
 //
-// `materialIdentity.test.ts` pins the identity PROPERTY (one code one meaning,
+// `materialIdentity.test.js` pins the identity PROPERTY (one code one meaning,
 // both directions). This file pins the ADOPTION ITSELF, and it is a different
 // question: not "do the lanes agree with each other" but "does the master say
 // what the lane it adopted from says".
@@ -131,7 +131,7 @@ const laneUnits = (code: string) => [
 
 // ── ⚠️ 26 / 6, NOT 25 / 7 — H4 MOVED ONE CODE BETWEEN ROUTES ────────────────
 //   `AI-NIAC-6612` was `AUTHORED_ASN`: its defining property is being sourced by
-//   `supplierShipments.ts` AND NOTHING ELSE. H4 added it to `mockShipments.ts`
+//   `supplierShipments.ts` AND NOTHING ELSE. H4 added it to `mockShipments.js`
 //   so the BPJPH mandate flip would be reachable from a dock, and a code with a
 //   second lane is BY DEFINITION no longer in that set — it is ADOPTED, because
 //   a declared document lane now states a meaning for it.
@@ -149,7 +149,7 @@ const ADOPTED = Object.keys(MATERIAL_MASTER)
 const AUTHORED = Object.keys(MATERIAL_MASTER)
   .filter((c) => {
     const src = [...new Set(REFS.filter((r) => r.code === c).map((r) => r.module))];
-    return src.length === 1 && src[0] === '/src/data/mockRfqs.ts';
+    return src.length === 1 && src[0] === '/src/data/mockRfqs.js';
   })
   .sort();
 
@@ -221,7 +221,7 @@ describe('2B-2 — the adoption is exactly 25 codes, and they are the ones that 
     expect(ADOPTED.filter((c) => AUTHORED.includes(c))).toEqual([]);
     expect(AUTHORED_ASN.filter((c) => ADOPTED.includes(c) || AUTHORED.includes(c))).toEqual([]);
     // ⚠️ `AI-NIAC-6612` LEFT THIS LIST AT H4 — it gained a second lane
-    // (`mockShipments.ts`) so the mandate flip would be reachable from a dock,
+    // (`mockShipments.js`) so the mandate flip would be reachable from a dock,
     // and single-lane is this set's defining property. It is in ADOPTED now.
     expect(AUTHORED_ASN).toEqual([
       'AI-HYALU-6615',
@@ -386,11 +386,11 @@ describe('2B-4 GATE — the mechanism landed at 2B-4a; the BEHAVIOUR still has n
     // wizard started reading the master, which is what an adoption is FOR.
     // Pinned in full by `bpomApplicability.test.ts`; asserted here too because
     // this is the file a reader of the 2B-2 adoption reaches for.
-    const wizard = import.meta.glob('/src/components/v2-features/GRInspectionWizard.tsx', {
+    const wizard = import.meta.glob('/src/components/v2-features/GRInspectionWizard.jsx', {
       query: '?raw',
       import: 'default',
       eager: true,
-    })['/src/components/v2-features/GRInspectionWizard.tsx'] as string;
+    })['/src/components/v2-features/GRInspectionWizard.jsx'] as string;
     expect(wizard).not.toContain("materialCode.startsWith('AI-')");
     expect(wizard).toContain('bpomOf(');
   });

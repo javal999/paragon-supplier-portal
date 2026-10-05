@@ -124,7 +124,7 @@ export interface MaterialCodeSpace {
  * We had carried a hazard they undertook to LOOK FOR as one they HAD.
  * So the clause is PREVENTATIVE on their side and CORRECTIVE on ours — `inferBpom`
  * derives BPOM applicability from `AI-`/`FR-` and FAILS OPEN
- * (`GRInspectionWizard.tsx:129-131`), live and unfixed. WE ARE THE ONLY PARTY
+ * (`GRInspectionWizard.jsx:129-131`), live and unfixed. WE ARE THE ONLY PARTY
  * CURRENTLY IN BREACH OF A CLAUSE WE PROPOSED. Nothing may parse this string.
  */
 export interface MaterialRef {

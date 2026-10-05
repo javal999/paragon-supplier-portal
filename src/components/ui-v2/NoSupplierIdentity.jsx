@@ -14,7 +14,7 @@ import { useCurrentIdentity } from '@context/CurrentIdentityContext';
 //   · a BUYER seat, whose `supplierId` is `null` by construction; and
 //   · a SUPPLIER seat naming a tenant the supplier master does not hold —
 //     `tenantFromStorage` maps an unknown id to `{ supplierId: null }`
-//     (`identitySources.ts`), so it lands on the buyer's guard.
+//     (`identitySources.js`), so it lands on the buyer's guard.
 //
 // It told the second one to *"use the persona toggle to switch to Supplier
 // mode"* while it was ALREADY in supplier mode. That is a remedy naming an act

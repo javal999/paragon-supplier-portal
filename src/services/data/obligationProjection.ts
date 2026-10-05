@@ -143,7 +143,7 @@ import { daysUntil, isPast } from './dayProjection';
  */
 export type ObligationDisplayState =
   // ⚠️ Split across lines deliberately, matching `ObligationStatus`'s own shape
-  // in `mockObligations.ts`. `projectionGate/derive.ts`'s write-site matcher
+  // in `mockObligations.js`. `projectionGate/derive.ts`'s write-site matcher
   // counts `= 'X'` as a write, so a ONE-LINE alias (`… State = 'Upcoming' | …`)
   // would register the TYPE as a producer and the gate would read
   // `computed-at-read` even if this function were deleted. Keeping the union

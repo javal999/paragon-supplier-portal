@@ -481,7 +481,7 @@ So C7's display-string space should be **collapsed into** the coded space, not m
 spaces are ours; a C7↔C8 crosswalk would be ceremony, and a second thing to keep true.
 
 **DO NOT COLLAPSE THE SPACES IN THIS PR — and the reason is specific, not caution.**
-~~`inferBpom` (`components/v2-features/GRInspectionWizard.tsx:129-163`) **parses the material-code
+~~`inferBpom` (`components/v2-features/GRInspectionWizard.jsx:129-163`) **parses the material-code
 prefix** (`AI-` / `FR-`) to derive **BPOM applicability**. A code-format change therefore
 **silently changes regulatory-compliance behaviour**, with no test asserting that linkage as
 intentional.~~

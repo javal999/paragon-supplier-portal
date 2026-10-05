@@ -24,6 +24,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
+import { declaresField } from '@test/declaredFields';
 import { mockContracts } from '@data/mockContracts';
 import { mockShipments } from '@data/mockShipments';
 import { COMPLIANCE_DATA } from './mock/fixtures/buyerRisk';
@@ -50,11 +51,15 @@ describe('⚠️ Contract.daysUntilExpiry is RETIRED', () => {
 
   it('the fixture SOURCE declares no such field — the type is not the only guard', () => {
     // A `delete` at runtime would satisfy the check above. This reads the file.
-    const src = readFileSync('src/data/mockContracts.ts', 'utf8');
-    expect(/^\s*daysUntilExpiry\s*:\s*number\s*;/m.test(src)).toBe(false);
+    // The DECLARATION is read through the parser in either form — a TS
+    // `daysUntilExpiry: number;` member or a JSDoc `@property {number}` tag
+    // (frontend-standard Phase 4: the fixture is now JavaScript).
+    const file = 'src/data/mockContracts.js';
+    const src = readFileSync(file, 'utf8');
+    expect(declaresField(src, file, 'daysUntilExpiry', 'number')).toBe(false);
     expect(/^\s*daysUntilExpiry\s*:\s*-?[0-9]+,/m.test(src)).toBe(false);
     // CONTROL: the field it is derived FROM is still there.
-    expect(/^\s*endDate\s*:\s*string\s*;/m.test(src)).toBe(true);
+    expect(declaresField(src, file, 'endDate', 'string')).toBe(true);
   });
 
   it('the wizard no longer MINTS it — the one non-fixture writer is gone', () => {
@@ -126,14 +131,18 @@ describe('⚠️ Shipment.daysInTransit and Shipment.delayDays are RETIRED', () 
   });
 
   it('the fixture SOURCE declares neither — a runtime delete would not satisfy this', () => {
-    const src = readFileSync('src/data/mockShipments.ts', 'utf8');
+    // Declarations read through the parser in either form, TS member or JSDoc
+    // `@property` (optional or not, as `\??` allowed before) — frontend-standard
+    // Phase 4: the fixture is now JavaScript.
+    const file = 'src/data/mockShipments.js';
+    const src = readFileSync(file, 'utf8');
     for (const f of ['daysInTransit', 'delayDays']) {
-      expect(new RegExp(`^\\s*${f}\\??:\\s*number\\s*;`, 'm').test(src), f).toBe(false);
+      expect(declaresField(src, file, f, 'number'), f).toBe(false);
       expect(new RegExp(`^\\s*${f}\\s*:\\s*-?[0-9]+,`, 'm').test(src), f).toBe(false);
     }
     // CONTROL: the dates they were derived FROM are still declared.
-    expect(/^\s*shipDate\s*:\s*string\s*;/m.test(src)).toBe(true);
-    expect(/^\s*estimatedArrival\s*:\s*string\s*;/m.test(src)).toBe(true);
+    expect(declaresField(src, file, 'shipDate', 'string')).toBe(true);
+    expect(declaresField(src, file, 'estimatedArrival', 'string')).toBe(true);
   });
 
   it('⚠️ the page no longer holds a SECOND late-predicate', () => {

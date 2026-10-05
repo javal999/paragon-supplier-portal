@@ -71,6 +71,16 @@ Two kinds of failure in the dry run are not tooling problems:
    `POStatus` and `ChannelType`, become `/** @type {const} */` objects with a typedef of their values); this replaces the
    earlier "keep it as `types.d.ts`" ruling, since a `.d.ts` file cannot hold runtime values.
 
+### Known text-only matchers still to teach (found in B1, passing today)
+
+- `src/lib/projectionGate/dayCounts.ts` `takesInjectedNow` matches the TEXT `nowIso: string`.
+  A `computed-at-read` producer converted to `@param {string} nowIso` will fail it — teach it
+  the JSDoc form in the batch that converts the producer (B4, `services/data`).
+- The same file's "named endpoint EXISTS" check matches `\bfield\??:`; in converted data files
+  it is satisfied by fixture assignments, not declarations (this looseness predates JS).
+- Helpers for reading either form now exist: `src/test/declaredFields.js` (fields declared by
+  an interface or by JSDoc `@property`), and `declaredType` in `src/lib/enforcement.test.ts`.
+
 ## Phase 3 pilot history
 
 The rest of this page records the pilot, drafted with `ts-to-jsdoc` and repaired by hand
@@ -103,10 +113,10 @@ collected their files with `/\.tsx?$/`, `endsWith('.tsx')` or `*.{ts,tsx}` globs
 to `.jsx` dropped out of every one of them, and the guards **kept passing over a smaller
 population**. The pilot widened all of them and added two things so it cannot recur:
 
-- `src/test/sourceFiles.ts` — `isSourceFile`, `isTestFile`, `isJsxFile`, `scriptKindOf`.
+- `src/test/sourceFiles.js` — `isSourceFile`, `isTestFile`, `isJsxFile`, `scriptKindOf`.
   Note `isSourceFile` excludes `.d.ts`; where an old `/\.tsx?$/` population included
   `src/vite-env.d.ts`, use the inline `/\.[jt]sx?$/` so the population does not narrow.
-- `src/test/languageNeutralScanners.guard.test.ts` — fails on any TS-only filter shape. A filter
+- `src/test/languageNeutralScanners.guard.test.js` — fails on any TS-only filter shape. A filter
   that really names one TypeScript file may carry `// language-neutral: <reason>` on the line.
 
 Before converting a folder, also search it for regexes and globs that name *specific* modules by

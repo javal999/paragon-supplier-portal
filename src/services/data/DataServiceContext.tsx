@@ -5,7 +5,7 @@
 // Phase 3 by replacing the `service` prop with an httpDataService; pages do
 // not change.
 //
-// Mounted in main.tsx above the router. useDataService() is available but
+// Mounted in main.jsx above the router. useDataService() is available but
 // no page consumes it yet — that begins in Batch 1B.2.
 // ────────────────────────────────────────────────────────────────────────────
 

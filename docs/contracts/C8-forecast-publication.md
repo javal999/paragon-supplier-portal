@@ -509,7 +509,7 @@ able to see that it was considered rather than overlooked.
 
 ## 4.6 Shared risk — reciprocal hazard disclosure
 
-We disclosed that **`inferBpom` (`GRInspectionWizard.tsx:129-163`) parses a material code prefix
+We disclosed that **`inferBpom` (`GRInspectionWizard.jsx:129-163`) parses a material code prefix
 to derive BPOM applicability** — a regulatory determination computed from a string prefix
 (C7 §6.1, `MOCK-RETIREMENT-01`).
 

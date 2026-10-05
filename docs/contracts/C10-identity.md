@@ -106,8 +106,8 @@ out of the shipped tree.
 
 | What exists | Where | What it actually holds |
 |---|---|---|
-| `PersonaType` | `src/context/CurrentIdentityContext.tsx:8` | **`'buyer' \| 'supplier'`. Two values.** A SEAT, not a human |
-| `CurrentIdentity` | `src/context/CurrentIdentityContext.tsx:10-14` | `{ personaType, supplierId, supplierName }`. **A persona, a tenant and a company. No human** |
+| `PersonaType` | `src/context/CurrentIdentityContext.jsx:8` | **`'buyer' \| 'supplier'`. Two values.** A SEAT, not a human |
+| `CurrentIdentity` | `src/context/CurrentIdentityContext.jsx:10-14` | `{ personaType, supplierId, supplierName }`. **A persona, a tenant and a company. No human** |
 | The DR-10 audit actor | `actorKey(scope)`, C3 | **`'buyer:all'`** — pinned in `enforcementSetCommand.test.ts:354` beside `not.toContain('usr-014')` |
 | `PERSONA_ROLES` | `src/services/transitions/roles.ts:18-89` | **The persona IS the authorisation object.** A seat holds 60+ transition-roles because it is a seat |
 | `ActingPerson` | `src/lib/enforcement.ts:339-345` | **The one shape in the tree that names a person** — and nothing can fill it |

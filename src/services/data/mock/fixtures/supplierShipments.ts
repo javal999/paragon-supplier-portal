@@ -34,7 +34,7 @@
 //
 //   ⚠️ FOUR OF THESE WERE CROSS-TENANT, AND THAT IS NOT COSMETIC. `poReference`
 //   renders to the addressee (`SupplierShipments.tsx:331`) and flows into the
-//   GR wizard's draft as `poNumber` (`GRInspectionWizard.tsx:181`), so a
+//   GR wizard's draft as `poNumber` (`GRInspectionWizard.jsx:181`), so a
 //   Sample Fragrance House PO number was being shown to PT Sample Packaging. Identity scoping is
 //   enforced on `supplierId` (`applySupplierScope`), which means the ASN was
 //   correctly scoped TO the right tenant while carrying ANOTHER tenant's
@@ -184,7 +184,7 @@ const MOCK_ASNS_RAW: ASN[] = [
     //
     // Every word of that was true while sup-007 owned ONE order at or past
     // confirmation. It owns six now (the walkthrough set in
-    // `mockPurchaseOrders.ts`), so level 2 returns six candidates, the empty
+    // `mockPurchaseOrders.js`), so level 2 returns six candidates, the empty
     // `eta` still makes level 3 vacuous, and LEVEL 4 — "NOT determinately
     // complete" — is reached for the first time. It resolves to `PO-2026-00124`,
     // the only sup-007 order with a line the supplier did not confirm in full.
@@ -241,11 +241,11 @@ const MOCK_ASNS_RAW: ASN[] = [
     asnNumber: 'ASN-2025-00302',
     supplierId: 'sup-005',
     // 2B-5b-i — REFERENCE UNCHANGED; THE OBJECT WAS AUTHORED (operator ruling
-    // R-4). `PO-2025-00131` did not exist in `mockPurchaseOrders.ts` while
+    // R-4). `PO-2025-00131` did not exist in `mockPurchaseOrders.js` while
     // THREE independent fixtures acted as though it did — this ASN, invoice
     // `inv-smpl-1180`, and supplier document `doc-201`. Repointing three
     // references to hide a missing object is worse than the gap, so the object
-    // now exists. See `mockPurchaseOrders.ts` (`po-131`) for what the three
+    // now exists. See `mockPurchaseOrders.js` (`po-131`) for what the three
     // references do and do not determine.
     poReference: 'PO-2025-00131',
     status: 'Delivered',

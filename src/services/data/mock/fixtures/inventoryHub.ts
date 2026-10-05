@@ -4,7 +4,7 @@
 //
 // What lives here, and what does not:
 //   · Supplier stock submissions are NOT here. They are the InventoryDeclaration
-//     store, seeded from `src/data/mockInventory.ts` and the SDC-0 rows.
+//     store, seeded from `src/data/mockInventory.js` and the SDC-0 rows.
 //   · PTI stock on hand and PTI reorder point per material — from SAP (BR-04);
 //     the hub never calculates a ROP.
 //   · Which supplier supplies which material (the assignment a stock row is

@@ -1,7 +1,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // Delivery Agreement — Batch 1: the object model (types).
 //
-// A genuinely NEW child of Contract (verified: mockContracts.ts is a pure header —
+// A genuinely NEW child of Contract (verified: mockContracts.js is a pure header —
 // no material, quantity, cadence, or schedule). Modelled 1:1 on the SAP S/4HANA
 // scheduling agreement (doc type LPA — WITH release documentation: schedule lines
 // have internal character until explicitly released), so the eventual S/4HANA

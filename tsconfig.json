@@ -85,7 +85,7 @@
     //
     // It catches A PARAMETER WHOSE SIGNATURE ASSERTS A USE THE BODY DOES NOT
     // MAKE. On adoption it found exactly one site tree-wide, and the site was a
-    // real defect: `data/communicationProfiles.ts`'s GERMAN `asn_reminder` took
+    // real defect: `data/communicationProfiles.js`'s GERMAN `asn_reminder` took
     // `supplier` and never interpolated it, addressing an unnamed recipient
     // while holding the name. Nine sibling locales used it, and so did the
     // German `po_issued` template TWENTY LINES ABOVE IT — so the fix was the
@@ -143,7 +143,7 @@
     // ── `paths` — IMPORT ALIASES (frontend-standard plan, Phase 2) ───────────
     // Mirrors `ALIAS_FOLDERS` in aliases.ts, which Vite and Vitest read. JSON
     // cannot import that module, so the list is repeated here and
-    // `src/test/aliases.guard.test.ts` fails if the two disagree. Change both.
+    // `src/test/aliases.guard.test.js` fails if the two disagree. Change both.
     "paths": {
       "@assets/*": ["./src/assets/*"],
       "@components/*": ["./src/components/*"],

@@ -90,7 +90,7 @@ const SYNTH: Record<string, string> = {
       return <ul>{ROWS.map((r) => <li>{r.label}</li>)}</ul>;
     }
   `,
-  '/src/App.tsx': `
+  '/src/App.jsx': `
     import { GoodButton, AlwaysPassed } from './Good';
     import { Loader, Crumbs } from './Bad';
     export function App() {

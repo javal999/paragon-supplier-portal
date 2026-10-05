@@ -199,14 +199,14 @@ describe('C9 §7.3 — DISCHARGED IN CODE, STALE IN THE DOCUMENT', () => {
   //
   // ⚠️ AND THE DIVERGENCE IS REAL, NOT PAPERED OVER. The 2B-4b dispatch froze
   // C9's bytes, so §7.3 still says WE PARSE IT and still cites
-  // `GRInspectionWizard.tsx:129-131` — a line range that no longer holds a
+  // `GRInspectionWizard.jsx:129-131` — a line range that no longer holds a
   // prefix parse. The document now UNDERSTATES our conformance. That is
   // `SEAM-DOC-DRIFT-01` running in the direction that flatters us, which is the
   // direction nobody checks, so it is asserted here in both halves rather than
   // left as a note: the code is clean AND the contract is stale, until the C9
   // amendment. See `docs/findings.md` → `C9-STALE-BY-FIX-01`.
   it('the prefix parse is gone from the wizard', () => {
-    const wizard = read('src', 'components', 'v2-features', 'GRInspectionWizard.tsx');
+    const wizard = read('src', 'components', 'v2-features', 'GRInspectionWizard.jsx');
     expect(wizard).not.toMatch(/const inferBpom = /);
     expect(wizard).not.toMatch(/materialCode\.startsWith\(/);
     // The replacement, named — so this cannot go green by the wizard losing the
@@ -219,7 +219,7 @@ describe('C9 §7.3 — DISCHARGED IN CODE, STALE IN THE DOCUMENT', () => {
     // the C9 amendment lands and §7.3 is rewritten, THIS goes red and whoever
     // rewrites it closes `C9-STALE-BY-FIX-01` deliberately.
     expect(c9LedgerSection()).toContain('WE PARSE IT');
-    expect(C9).toContain('GRInspectionWizard.tsx:129-131');
+    expect(C9).toContain('GRInspectionWizard.jsx:129-131');
   });
 });
 

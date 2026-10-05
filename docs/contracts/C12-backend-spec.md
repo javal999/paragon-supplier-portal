@@ -275,7 +275,7 @@ a link written before hash routing landed — returns the shell instead of a hos
 404. **What makes it load-bearing tomorrow: the day routing moves off the hash,
 every declared route becomes a real path and the fallback becomes the difference
 between a working portal and a wall of 404s.** The route paths are declared in
-one place (`src/router/AppRouter.tsx`) and are derived by the pin rather than
+one place (`src/router/AppRouter.jsx`) and are derived by the pin rather than
 counted here.
 
 ### 6.3 · The access gate is an EDGE component, and a static bucket cannot run it

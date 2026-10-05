@@ -248,7 +248,7 @@ mechanisms whose success signals said nothing about the damage they did.
 >
 > The resolved actor is a SEAM, not a person: `CurrentIdentity.actor` is always
 > `UNATTRIBUTED: NO_PERSON_IN_SESSION`. **C10 §6.2's payload-refusal half is NOT
-> built** and is guarded by a tripwire in `simUsrNamespace.test.ts` — the moment
+> built** and is guarded by a tripwire in `simUsrNamespace.test.js` — the moment
 > shipped code constructs a `RESOLVED` actor, the refusal must land first.
 >
 > **AUTHORISATION IS NOW VISIBLE (§65).** The identity panel (`IdentityPanel`,
@@ -422,7 +422,7 @@ and the Stage G planning canon + World-Class Build Plan are now on main.
   hybrid). Clock-projected states stay out of every transition table (law 0.5);
   the fixtures that still store them as literals are F0.4-FIND-01 (read/DTO-v2).
 - **Backend is greenfield.** Zero server code / datastore clients; data is
-  in-memory fixtures behind `mockDataService` (`src/main.tsx`); tenant scoping is
+  in-memory fixtures behind `mockDataService` (`src/main.jsx`); tenant scoping is
   enforced client-side. `httpDataService` is the designed Phase-F1 swap
   (`DataServiceContext.tsx`) — pages do not change when it lands.
 - **I3 compliance phase COMPLETE** (PRs #61–#64): I3.1 canonical compliance
@@ -542,7 +542,7 @@ Three arcs, in order. Nothing else is queued.
   (`MockCommandService.ts:1292`), so `t_pr_submit` / `t_pr_approve` /
   `t_pr_reject` are dispatch**able**; and procurement's entry point **DOES** have
   a page — `/buyer/purchase-requisition` → `BuyerRequisitions`
-  (`AppRouter.tsx:111`), alongside `IntakeReview` and
+  (`AppRouter.jsx:111`), alongside `IntakeReview` and
   `plan-grid/IntakeAdjustDrawer`. What is true is sharper: **only `t_pr_create`
   has a hook and a caller.** The panel ships a `Draft` → **"Submit for approval"**
   button that fires a **`variant: 'success'` toast and closes the drawer** — no
@@ -609,7 +609,7 @@ never as a standalone batch:
   (author all remaining flows; wire opportunistically per Stage-2 surface).
 
 ## Routing
-Routing is HashRouter (`src/router/AppRouter.tsx`) — not BrowserRouter. The `/`
+Routing is HashRouter (`src/router/AppRouter.jsx`) — not BrowserRouter. The `/`
 home redirect points to `/buyer/dashboard`; unknown routes render a real 404
 (`src/pages-v2/NotFound.tsx`).
 
@@ -1158,7 +1158,7 @@ longer fail, and *a guard that can no longer fail is worse than none.*
 **Where this is already honoured, so it is copied and not reinvented:**
 `chartPalette.guard.test.tsx:578` (the walk must REACH `ScoreBadge`'s `TONE`, the
 object its class was named for, with an anti-vacuity control saying so), and
-`thirdPartyIdentifiers.test.ts`, whose ISO 6346 probe fires at a dead regex this
+`thirdPartyIdentifiers.test.js`, whose ISO 6346 probe fires at a dead regex this
 file really shipped — `[A-Z]{4}U` where the standard has three letters, which
 matched nothing while the guard read green.
 
@@ -1305,10 +1305,12 @@ over everything else combined, and it grew that way in six weeks.
 
 ## Language — TypeScript → JavaScript, folder by folder (from 2026-10-02)
 The owner ruled the portal moves to JavaScript + JSDoc to match the company React
-boilerplate. Converted so far: `src/components/ui-v2` (pilot). Before converting a
+boilerplate. Converted so far: `src/components/ui-v2` (pilot) and the app shell
+(`src/` root files, `hooks`, `context`, `router`, `test`, `data`, `components/*`;
+Phase 4 B1). Before converting a
 folder, follow `docs/frontend-standard/JS-CONVERSION-PLAYBOOK.md`: the draft tool
 deletes comments and loosens types, and `scripts/codemods/check-comments-kept.mjs`
-must report 0 lost. Any spec or gate that scans files uses `src/test/sourceFiles.ts`
+must report 0 lost. Any spec or gate that scans files uses `src/test/sourceFiles.js`
 (or a pattern naming all of `.ts/.tsx/.js/.jsx`); `languageNeutralScanners.guard`
 fails on a TypeScript-only filter. Forecast stays TypeScript until the last phase.
 

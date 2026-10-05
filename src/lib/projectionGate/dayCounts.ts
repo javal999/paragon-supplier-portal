@@ -52,6 +52,8 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { readFileSync } from 'node:fs';
+import ts from 'typescript';
+import { scriptKindOf } from '@test/sourceFiles';
 
 /** Where a stored day-count sits on the law-0.5 axis. */
 export type DayCountGroup =
@@ -267,14 +269,68 @@ export function declaredDayCountFields(
   const decl = /^\s*(?:readonly\s+)?(\w*[Dd]ays\w*)\??:\s*number(?:\s*\|\s*null)?\s*;/;
   const out: { file: string; field: string }[] = [];
   for (const f of files) {
+    const text = read(f);
     // Split on /\r?\n/: `core.autocrlf` is on in this repo, so a bare '\n'
     // split leaves a '\r' on every line and the `;` anchor never matches.
-    for (const raw of read(f).split(/\r?\n/)) {
+    for (const raw of text.split(/\r?\n/)) {
       const m = decl.exec(raw);
       if (m) out.push({ file: f, field: m[1] });
     }
+    // ⚠️ AND THE JSDOC FORM (frontend-standard Phase 4). A converted file
+    // declares the same field as `@property {number} noticeRequiredDays`, or as
+    // a member of a `@typedef {{ … }}` type literal behind a ` * ` prefix — and
+    // the line regex above, anchored on `^\s*<name>`, sees neither. Read through
+    // the TypeScript parser rather than widened, because a widened line regex
+    // is how this matcher earned its four false accusations.
+    for (const field of jsDocDayCountFields(f, text)) {
+      if (!out.some((o) => o.file === f && o.field === field)) out.push({ file: f, field });
+    }
   }
   return out;
+}
+
+/** `number` or `number | null` — the same two types the line regex accepts. */
+function isDayCountType(t: ts.TypeNode | undefined): boolean {
+  if (!t) return false;
+  if (ts.isParenthesizedTypeNode(t)) return isDayCountType(t.type);
+  if (t.kind === ts.SyntaxKind.NumberKeyword) return true;
+  return (
+    ts.isUnionTypeNode(t) &&
+    t.types.length === 2 &&
+    t.types.some((m) => m.kind === ts.SyntaxKind.NumberKeyword) &&
+    t.types.some((m) => ts.isLiteralTypeNode(m) && m.literal.kind === ts.SyntaxKind.NullKeyword)
+  );
+}
+
+/**
+ * Day-count fields DECLARED IN JSDOC: `@property {number} xDays` on a typedef,
+ * or `xDays: number;` inside a `@typedef {{ … }}` type literal. Only nodes INSIDE
+ * a JSDoc comment are read — the TypeScript form stays the line regex's, so the
+ * two arms cannot double-count or disagree about it.
+ */
+function jsDocDayCountFields(file: string, text: string): string[] {
+  const sf = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, scriptKindOf(file));
+  const found = new Set<string>();
+  const isDayName = (n: string): boolean => /[Dd]ays/.test(n);
+  const inJsDoc = (doc: ts.Node): void => {
+    if (ts.isJSDocPropertyTag(doc) && ts.isIdentifier(doc.name) && isDayName(doc.name.text)) {
+      if (isDayCountType(doc.typeExpression?.type)) found.add(doc.name.text);
+    }
+    if (ts.isPropertySignature(doc) && ts.isIdentifier(doc.name) && isDayName(doc.name.text)) {
+      if (isDayCountType(doc.type)) found.add(doc.name.text);
+    }
+    ts.forEachChild(doc, inJsDoc);
+  };
+  // ⚠️ `node.jsDoc`, NOT `ts.getJSDocCommentsAndTags(node)`: the public helper
+  // returns only the LAST comment above a statement, and a converted file
+  // stacks several typedefs above one (`mockContracts.js` has four above its
+  // first `const`) — the public call reported `noticeRequiredDays` absent.
+  const visit = (n: ts.Node): void => {
+    for (const doc of (n as { jsDoc?: readonly ts.JSDoc[] }).jsDoc ?? []) inJsDoc(doc);
+    ts.forEachChild(n, visit);
+  };
+  visit(sf);
+  return [...found];
 }
 
 /** Does `file` inject its clock rather than read one? The property that

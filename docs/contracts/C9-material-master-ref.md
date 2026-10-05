@@ -188,7 +188,7 @@ executed:
 
 - **CP-2 · B2a (`main` #162)** broke the collisions by **re-coding, not crosswalking**. Four codes
   had two meanings; four meanings had two codes. Both were resolved so that **one code means one
-  thing across the tree, in both directions** — pinned in `src/data/materialIdentity.test.ts`.
+  thing across the tree, in both directions** — pinned in `src/data/materialIdentity.test.js`.
 - **The second direction was not in the original dispatch and is worth stating here**, because it
   is the failure mode a crosswalk would have HIDDEN: four materials carried one code in
   purchase-orders + inventory and a *different* code in goods-receipts + shipments, so **a goods
@@ -291,7 +291,7 @@ load-bearing sentence under R-3.
 | Platform | Prefix reader in production | Basis | Consequence of a code-space change |
 |---|---|---|---|
 | **SOMO** | **NONE — measured, not assumed.** No material-code prefix is parsed anywhere in their production code. **Measured ACROSS ALL THREE POPULATIONS at check 2 (A-7): the opacity pass is CLEAN WITH EVIDENCE — zero prefix-reading on material, bulk or finished-good codes.** `materialClass` is a **declared ENUM read as a FIELD** at ~20 sites — already the shape this clause requires — and **their prefixes are AUTHORING CONVENTION ONLY**, carrying no read path | **A reciprocal sweep they ran and reported, widened at check 2** | **None.** A Paragon code-format change does not reach their explosion behaviour |
-| **Paragon** | `inferBpom` derives **BPOM regulatory applicability** from `AI-`/`FR-` (`src/components/v2-features/GRInspectionWizard.tsx:129-131`) and **FAILS OPEN** — an unrecognised prefix yields *"no check required"* | Read from our own shipped code | A SOMO code-format change silently switches a **compliance check OFF** |
+| **Paragon** | `inferBpom` derives **BPOM regulatory applicability** from `AI-`/`FR-` (`src/components/v2-features/GRInspectionWizard.jsx:129-131`) and **FAILS OPEN** — an unrecognised prefix yields *"no check required"* | Read from our own shipped code | A SOMO code-format change silently switches a **compliance check OFF** |
 
 **What the first issue got wrong, and how.** C8 §4.6 (`C8-RECIPROCAL-HAZARD`) recorded SOMO
 *booking a check* on their explosion engine after we volunteered `inferBpom`. This document
@@ -1008,7 +1008,7 @@ shipped only once every code the receiving surface can be fed was master-resolva
 
 **Why it blocks 2B specifically.** B2a could guarantee regulatory neutrality because **every
 re-code preserved its first segment** — the firing set is pinned byte-identical in
-`src/data/materialIdentity.test.ts`. **2B cannot make that guarantee**: adopting codes into the
+`src/data/materialIdentity.test.js`. **2B cannot make that guarantee**: adopting codes into the
 master changes which codes exist, and any adoption introducing a new prefix family moves the
 firing set. The pin will **detect** the change; it cannot tell anyone whether the change is
 **correct**. Only compliance can.

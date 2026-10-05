@@ -123,7 +123,7 @@ const sourcesOf = (code: string) =>
 const AUTHORED = Object.keys(MATERIAL_MASTER)
   .filter((c) => {
     const src = sourcesOf(c);
-    return src.length === 1 && src[0] === '/src/data/mockRfqs.ts';
+    return src.length === 1 && src[0] === '/src/data/mockRfqs.js';
   })
   .sort();
 
@@ -198,7 +198,7 @@ describe('2B-3 — AUTHORING, and the difference from adoption is asserted', () 
     // any conclusion drawn from `mockRfqs` alone can go stale.
     for (const code of AUTHORED) {
       expect(sourcesOf(code), `${code} is sourced only by the RFQ lane`).toEqual([
-        '/src/data/mockRfqs.ts',
+        '/src/data/mockRfqs.js',
       ]);
     }
   });
@@ -438,11 +438,11 @@ describe('2B-4 GATE — the mechanism landed at 2B-4a; the BEHAVIOUR still has n
     // never heard of `bpomApplicable` and still runs the prefix rule. Mechanism
     // early, precondition discharged, behaviour late — three separate facts,
     // and 2B-4b changes only the third.
-    const wizard = import.meta.glob('/src/components/v2-features/GRInspectionWizard.tsx', {
+    const wizard = import.meta.glob('/src/components/v2-features/GRInspectionWizard.jsx', {
       query: '?raw',
       import: 'default',
       eager: true,
-    })['/src/components/v2-features/GRInspectionWizard.tsx'] as string;
+    })['/src/components/v2-features/GRInspectionWizard.jsx'] as string;
     // ⚠️ INVERTED AT 2B-4b — the third fact moved, and only the third. The
     // sentence above is left standing because it was true when written and it
     // names what changed: mechanism early (2B-4a), precondition discharged

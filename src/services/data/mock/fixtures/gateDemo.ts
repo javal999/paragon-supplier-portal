@@ -88,7 +88,7 @@ const BOTTLE_200: Material = {
   description: 'PET Bottle 200ml Frosted — Wardah Series',
   unitPrice: 1_600,
 };
-// BL-52 — the A-band supplier's material; stated on `mockPurchaseOrders.ts`'s
+// BL-52 — the A-band supplier's material; stated on `mockPurchaseOrders.js`'s
 // PO line li-013a with this description and unit, so no meaning is new here.
 const PANTHENOL: Material = {
   materialCode: 'AI-PANTO-6640',
@@ -97,7 +97,7 @@ const PANTHENOL: Material = {
   uom: 'KG',
 };
 // ⚠️ Only codes the document lane ALREADY states a meaning for (PO lines in
-// `mockPurchaseOrders.ts` / `callOffs.ts`). The RFQ-header-only codes
+// `mockPurchaseOrders.js` / `callOffs.ts`). The RFQ-header-only codes
 // (PK-PETB-8825, PK-ALCP-2441 …) are deliberately NOT used: a PO line naming
 // one would rewrite the provenance census `materialMasterAuthoring.test.ts`
 // pins — which lane first stated each master code's meaning.

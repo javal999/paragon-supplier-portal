@@ -426,7 +426,7 @@ export const FAMILY_ANCHORS: Readonly<Record<FixtureFamily, FamilyAnchor>> = {
   // row to fall in).
   //
   // ⚠️ **AND THE BAND IS CORROBORATED BY AN INSTRUMENT THAT PREDATES IT.**
-  // `test/demoClock.ts` declared 2026-07-06 as *"the instant the fixture set was
+  // `test/demoClock.js` declared 2026-07-06 as *"the instant the fixture set was
   // authored for"* and four spec families have pinned it since. It lands inside
   // the swept window without having been used to derive it — two instruments,
   // one neighbourhood, exactly how `contract` and `obligation` were corroborated.
@@ -437,7 +437,7 @@ export const FAMILY_ANCHORS: Readonly<Record<FixtureFamily, FamilyAnchor>> = {
   // goes false within a week of the next `P` bump, and the whole reason this
   // family is being anchored is that it had gone false already.
   // ⚠️ **THE LAST FAMILY THAT STILL CARRIED 2025 LITERALS.** Every PO in
-  // `mockPurchaseOrders.ts` was dated March–May 2025 while its own goods
+  // `mockPurchaseOrders.js` was dated March–May 2025 while its own goods
   // receipts sat in 2026 and its invoices in mid-2026 — the order arrived a
   // year before it was placed, on three surfaces that render both. Anchoring
   // is what closes that; the raw literals stay readable in the fixture.
@@ -448,7 +448,7 @@ export const FAMILY_ANCHORS: Readonly<Record<FixtureFamily, FamilyAnchor>> = {
   // an ASN's eta and its parent's order date are the SAME comparison `P` does
   // not cancel for. **Membership follows the coupling, not the file it sits
   // in**, the ruling `SDC_FAMILY_CONTRACT_IDS` already made for `ctr-013`.
-  // `mockShipments.ts` is a different corpus and keeps `shipment`.
+  // `mockShipments.js` is a different corpus and keeps `shipment`.
   //
   // The anchor is EVIDENCED, not solved for — no PO stores a clock word
   // (`Escalated` is computed at read, `poResponseProjection.ts`, and

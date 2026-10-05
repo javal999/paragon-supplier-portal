@@ -450,10 +450,17 @@ export function buildRepoProgram(root: string, tsconfig = 'tsconfig.vitest.json'
 /**
  * Build a program from source strings — the harness the self-probe uses.
  *
- * ⚠️ The synthetic files MUST live under `/src/` and end `.tsx`: the census
- * scopes on exactly that, and D-F learned the hard way (§40e) that a harness
- * writing outside the scoped root derives an EMPTY population and then reports
- * a beautifully clean tree.
+ * ⚠️ The synthetic files MUST live under `/src/` and end `.tsx` or `.jsx`:
+ * the census scopes on exactly that, and D-F learned the hard way (§40e) that a
+ * harness writing outside the scoped root derives an EMPTY population and then
+ * reports a beautifully clean tree.
+ *
+ * ⚠️ `allowJs` + `checkJs` (frontend-standard Phase 4): the harness reads both
+ * the TypeScript and the JSDoc form, as `tsconfig.json` does for the real tree.
+ * Without them `ts.createProgram` silently DROPS every `.js/.jsx` root — a JSX
+ * call site in a converted file stops being counted, and a default passed at
+ * every site is reported reachable. That is how B1 found it: the synthetic
+ * `App.jsx` vanished and `AlwaysPassed.label` was flagged.
  */
 export function buildProgramFromSources(files: Readonly<Record<string, string>>): ts.Program {
   const options: ts.CompilerOptions = {
@@ -461,6 +468,8 @@ export function buildProgramFromSources(files: Readonly<Record<string, string>>)
     noEmit: true,
     target: ts.ScriptTarget.ES2020,
     jsx: ts.JsxEmit.React,
+    allowJs: true,
+    checkJs: true,
   };
   const sourceFiles = new Map<string, ts.SourceFile>();
   for (const [name, text] of Object.entries(files)) {

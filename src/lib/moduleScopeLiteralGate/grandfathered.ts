@@ -30,8 +30,8 @@
 
 /** `file::CONST` — see the header. Sorted; append is not expected, ever. */
 export const S2_GRANDFATHERED: readonly string[] = [
-  'src/components/delivery/PolicyEditor.tsx::ENFORCEMENTS',
-  'src/components/layout-v2/LanguageMenu.tsx::LANGUAGES',
+  'src/components/delivery/PolicyEditor.jsx::ENFORCEMENTS',
+  'src/components/layout-v2/LanguageMenu.jsx::LANGUAGES',
   'src/pages-v2/BuyerAnalytics.tsx::PERIOD_IDS',
   'src/pages-v2/BuyerAnalytics.tsx::SUMMARY_CARDS',
   'src/pages-v2/BuyerChannelTriage.tsx::CHANNELS',

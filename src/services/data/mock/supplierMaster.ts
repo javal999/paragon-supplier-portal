@@ -1,7 +1,7 @@
 // ────────────────────────────────────────────────────────────────────────────
 // THE SUPPLIER MASTER RESOLVER — Material A1 (plan AD-4, AR-03, AR-06; MAT-R15).
 //
-// The fixture (`data/mockSuppliers.ts`) is the stand-in for SAP's vendor master
+// The fixture (`data/mockSuppliers.js`) is the stand-in for SAP's vendor master
 // and is never edited. Hub-mastered fields live in `supplierOverlayStore`, and
 // every reader asks THIS module, so "the supplier as the hub sees it" has one
 // answer — the `materialEntry` shape, for suppliers.

@@ -10,7 +10,7 @@
 //
 //   That rule needs somewhere to read "which spaces are declared" FROM. Before
 //   this file there was nowhere: spaces lived as three hand-written regexes
-//   inside `materialIdentity.test.ts`, which is exactly the shape
+//   inside `materialIdentity.test.js`, which is exactly the shape
 //   `MG-COLLISION-21-01` found for material groups — A VOCABULARY WITH NO
 //   DECLARATION SITE CANNOT DISAGREE WITH ITSELF OUT LOUD. The regexes are now
 //   here, with the ruling that authorised each one attached to it.
@@ -21,7 +21,7 @@
 //   things the story got wrong, and both matter:
 //
 //   (1) **R-B DOES NOT CATCH `linkedTo`.** The PO numbers that field leaks live
-//       in `mockPurchaseOrders.ts`, which IS a declared space (the document
+//       in `mockPurchaseOrders.js`, which IS a declared space (the document
 //       lane). A space-based boundary waves them straight through. What actually
 //       stops them is the CONTAINMENT DISQUALIFIER — a property of CELLS, not of
 //       spaces. So R-B is a SECOND, INDEPENDENT gate, not the one that did the

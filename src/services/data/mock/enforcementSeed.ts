@@ -17,7 +17,7 @@
 //   The dispatch listed three rows: `bpom.lot`, `halal.seal`, and "the
 //   unanswered-required clause". The third IS NOT A THIRD CHECK. It is the
 //   SHARED SHAPE of the other two — the two clauses at
-//   `GRInspectionWizard.tsx` `qualityValid` that block a required-and-unanswered
+//   `GRInspectionWizard.jsx` `qualityValid` that block a required-and-unanswered
 //   check. The count came from reading `GOVERNED_CHECK_IDS` (three members) as
 //   the seed list; the tree says otherwise.
 //

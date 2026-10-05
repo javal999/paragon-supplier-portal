@@ -35,7 +35,7 @@ export const useDataService = (): IDataService => { … }   // throws outside a 
 
 One Provider, one hook. Pages read exclusively through `useDataService()` (TanStack Query v5 over
 scoped query hooks — per-supplier cache isolation via `scopeKey`). The implementation is the
-`service` prop on `DataServiceProvider` (mounted in `main.tsx` above the router). Swapping the mock
+`service` prop on `DataServiceProvider` (mounted in `main.jsx` above the router). Swapping the mock
 for the real adapter is a **one-line prop change**; pages do not change
 (`DataServiceContext.tsx:1–10`, 22–38).
 
@@ -139,7 +139,7 @@ the census living only in docs. **SPEC** — appears here only as a pointer; the
 ## Backend / datastore · **RESERVED (greenfield)**
 
 Zero server code, zero datastore clients. Data is in-memory fixtures behind `mockDataService`
-(`src/main.tsx`); the mutable command stores (`purchaseOrderStore`, `asnStore`,
+(`src/main.jsx`); the mutable command stores (`purchaseOrderStore`, `asnStore`,
 `goodsReceiptStore`, `invoiceStore`, `rfqStore`, `quotationStore`) hold command results in memory.
 Tenant scoping is enforced client-side. The real backend core is the Phase-F1 build (behind
 `httpDataService`); fixtures are multi-tenant (sup-002 / sup-005 / sup-007) and a service-level

@@ -38,7 +38,7 @@ describe('POPULATION + MATCHER CONTROLS — before any row is believed', () => {
   it('the storage scope resolves to real files, and includes the three known homes', () => {
     expect(SCOPE_FILES.length).toBeGreaterThan(3);
     expect(SCOPE_FILES).toContain('src/services/data/types.ts');
-    expect(SCOPE_FILES).toContain('src/data/mockContracts.ts');
+    expect(SCOPE_FILES).toContain('src/data/mockContracts.js');
     expect(SCOPE_FILES).toContain('src/types/supplier.types.ts');
   });
 

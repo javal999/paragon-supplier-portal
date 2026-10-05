@@ -534,12 +534,12 @@ describe('AC-12 — every rule above holds on the supplier summary too', () => {
 
 // ── The addresses resolve to real routes ────────────────────────────────────
 describe('every address the summary generates resolves to a route the router actually serves', () => {
-  // ⚠️ **THE ROUTE LIST IS DERIVED FROM `AppRouter.tsx`, NOT RESTATED HERE.** A
+  // ⚠️ **THE ROUTE LIST IS DERIVED FROM `AppRouter.jsx`, NOT RESTATED HERE.** A
   // hand-kept copy of the routes would agree with itself forever while the real
   // router moved underneath it — which is exactly how a drill-through link
   // starts landing on the catch-all `NotFound` with the whole suite green.
   const routes = (() => {
-    const src = readFileSync(resolve(__dirname, '../router/AppRouter.tsx'), 'utf8');
+    const src = readFileSync(resolve(__dirname, '../router/AppRouter.jsx'), 'utf8');
     const found = [...src.matchAll(/path="([^"]+)"/g)].map((m) => m[1]);
     return found;
   })();

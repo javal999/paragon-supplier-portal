@@ -41,7 +41,7 @@ const INCLUDE_FORECAST = process.argv.includes('--include-forecast');
 
 // Read the alias list from aliases.ts as TEXT (this script runs in plain Node,
 // which cannot import a .ts module without a loader). The guard spec
-// src/test/aliases.guard.test.ts keeps aliases.ts itself honest.
+// src/test/aliases.guard.test.js keeps aliases.ts itself honest.
 const aliasSource = readFileSync(join(ROOT, 'aliases.ts'), 'utf8');
 const FOLDER_TO_ALIAS = new Map(
   [...aliasSource.matchAll(/'(@[\w-]+)':\s*'([\w-]+)'/g)].map(([, alias, folder]) => [folder, alias]),

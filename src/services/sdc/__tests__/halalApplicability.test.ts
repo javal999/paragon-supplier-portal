@@ -42,7 +42,7 @@ import type { HalalApplicability } from '../types';
 const ENTRIES = Object.values(MATERIAL_MASTER);
 const CODES = Object.keys(MATERIAL_MASTER).sort();
 
-/** The predicate `inferHalal` applies (`GRInspectionWizard.tsx:272-275`).
+/** The predicate `inferHalal` applies (`GRInspectionWizard.jsx:272-275`).
  *  Deliberately a COPY, on `bpomApplicability.test.ts`'s precedent: importing it
  *  would couple a regulatory pin to a component's export surface, and the point
  *  is to detect the day the two stop agreeing.
@@ -93,7 +93,7 @@ describe('H1 — the seed is a CLASS RULE, and the rule DERIVES FROM THE AXIS', 
     // THE REFINEMENT, PINNED. BPOM excludes packaging and rules it
     // `NOT_APPLICABLE` by the same registry axis. Halal may not: `doc-001` is an
     // MUI halal certificate linked to a PET bottle material, and
-    // `AdaptiveContext.tsx:89` puts `packaging` inside its `isHalal` selector.
+    // `AdaptiveContext.jsx:89` puts `packaging` inside its `isHalal` selector.
     // We do not know, so the seed says we do not know.
     expect(PACKAGING_GROUPS).toContain('MG-25');
     for (const g of PACKAGING_GROUPS) {
@@ -382,7 +382,7 @@ describe('H2 — WIRED, and the prose parse is GONE', () => {
 
   it('the GR wizard runs the MASTER LOOKUP, and the prose parse is not in the file', () => {
     const src = sources();
-    const wizard = src['/src/components/v2-features/GRInspectionWizard.tsx'];
+    const wizard = src['/src/components/v2-features/GRInspectionWizard.jsx'];
     expect(wizard).toBeDefined();
 
     // WAS: `toContain('const inferHalal = …')` and `not.toContain('halalOf(')`.
@@ -393,14 +393,14 @@ describe('H2 — WIRED, and the prose parse is GONE', () => {
 
     // NOT MERELY CALLED — LOAD-BEARING. The outcome is what the step gate reads,
     // so a refusal cannot be reduced to a banner beside a check that still
-    // passes. `GRInspectionWizard.test.tsx` proves the behaviour; this proves the
+    // passes. `GRInspectionWizard.test.jsx` proves the behaviour; this proves the
     // wiring is the one the behaviour runs through.
     expect(wizard).toContain('if (!l.halal.ok) return false;');
     // ⚠️ CP-3 · E4 — THE CLAUSE GAINED A CONJUNCT, AND THIS CENSUS CAUGHT IT.
     // The required-and-unanswered clause now reads its CONSEQUENCE off the
     // enforcement ledger (`sealBlocks`) instead of hard-coding it. The delta is
     // ZERO — the seeded mode is `BLOCK` and `blocks('BLOCK')` is the `true` the
-    // clause used to assume — and `GRInspectionWizard.test.tsx` measures that
+    // clause used to assume — and `GRInspectionWizard.test.jsx` measures that
     // per check and per receivable line.
     //
     // ⚠️ THE REFUSAL LINE ABOVE IS DELIBERATELY UNCHANGED, and the contrast is
@@ -463,12 +463,12 @@ describe('H2 — WIRED, and the prose parse is GONE', () => {
     // The two that DID die in this batch, asserted by absence at their own
     // addresses rather than trusted to the count above.
     expect(
-      codeLines(src['/src/components/v2-features/GRInspectionWizard.tsx']).filter(({ line }) =>
+      codeLines(src['/src/components/v2-features/GRInspectionWizard.jsx']).filter(({ line }) =>
         PROSE_PARSE.test(line),
       ),
     ).toEqual([]);
     expect(
-      codeLines(src['/src/context/AdaptiveContext.tsx']).filter(({ line }) =>
+      codeLines(src['/src/context/AdaptiveContext.jsx']).filter(({ line }) =>
         PROSE_PARSE.test(line),
       ),
     ).toEqual([]);
@@ -476,7 +476,7 @@ describe('H2 — WIRED, and the prose parse is GONE', () => {
     // above, as the record of what was retired and why — the same exemption, for
     // the same reason.
     expect(
-      codeLines(src['/src/context/AdaptiveContext.tsx']).filter(({ line }) =>
+      codeLines(src['/src/context/AdaptiveContext.jsx']).filter(({ line }) =>
         line.includes('isHalal'),
       ),
     ).toEqual([]);
@@ -503,7 +503,7 @@ describe('H2 — WIRED, and the prose parse is GONE', () => {
     // Derived rather than listed: exactly one NON-TEST caller, and it is the GR
     // wizard. A second production caller means the lookup has spread to a
     // surface nobody reviewed, which is worth failing over.
-    expect(callers).toEqual(['/src/components/v2-features/GRInspectionWizard.tsx']);
+    expect(callers).toEqual(['/src/components/v2-features/GRInspectionWizard.jsx']);
 
     // ⚠️ AND EXACTLY ONE TYPE-ONLY REFERENCE, NAMED (`CENSUS-COUNTS-TYPE-IMPORTS-01`).
     // `src/lib/enforcement.ts` imports `HalalRefusalReason` to derive — at

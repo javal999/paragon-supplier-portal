@@ -133,7 +133,7 @@ export interface RfqSamplesRequest {
 
 /**
  * The RFQ fields the rebuilt authoring adds. Spread into `RFQ` (in
- * `data/mockRfqs.ts`) so the entity stays one interface and a reader never has
+ * `data/mockRfqs.js`) so the entity stays one interface and a reader never has
  * to ask which half it holds.
  */
 export interface RfqAuthoringFields {

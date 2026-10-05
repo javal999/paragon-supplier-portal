@@ -136,7 +136,7 @@ export type BpomApplicability = 'APPLICABLE' | 'NOT_APPLICABLE' | 'UNDETERMINED'
  * `D-COMP-HALAL-1` says so in the register: BPOM rules packaging
  * `NOT_APPLICABLE` by registry axis (`bpom.ts`), and halal may not — `doc-001`
  * is an **MUI halal certificate covering PET bottles**, and
- * `AdaptiveContext.tsx:89` puts `packaging` inside its `isHalal` selector.
+ * `AdaptiveContext.jsx:89` puts `packaging` inside its `isHalal` selector.
  * **Packaging is where the two regimes visibly disagree in this tree.** So the
  * halal class rule seeds packaging `'UNDETERMINED'` — we do not know — rather
  * than copying a ruling made under a different regulation. That is Seat 3's
@@ -225,7 +225,7 @@ export interface MaterialMasterEntry {
    *
    * ⚠️ **AUTHORED, NOT WIRED (H1).** Nothing reads this field. The receiving
    * surface still decides the halal question by parsing prose
-   * (`inferHalal`, `GRInspectionWizard.tsx`), which is untouched — retiring it
+   * (`inferHalal`, `GRInspectionWizard.jsx`), which is untouched — retiring it
    * is H2, and the certificate-verification leg is H4, gated on
    * `D-COMP-HALAL-4`. Editing a row here moves NOTHING today; it will move what
    * an inspector is asked to check the moment H2 lands.

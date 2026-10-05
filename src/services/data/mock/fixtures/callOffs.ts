@@ -508,7 +508,7 @@ export const CALL_OFF_SEED: readonly CallOff[] = [
 
   // ── BL-94 · sup-007's delivery history ─────────────────────────────────────
   // Four past call-offs on the 100ml PET line, each received ON its date and IN
-  // FULL (GR-2026-018..021 in `mockGoodsReceipts.ts`), so the main supplier
+  // FULL (GR-2026-018..021 in `mockGoodsReceipts.js`), so the main supplier
   // persona has a real OTIF record: 5 met of 6 decided in the 90-day window
   // (these four, 0013, and the late 0001) = 83%, which clears the compliance
   // gate's 80% and lets sup-007 take a share of the Oslo award (rfq-021).

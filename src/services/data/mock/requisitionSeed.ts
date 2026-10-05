@@ -106,7 +106,7 @@ export interface RequisitionSeedOutcome {
  * Grow one Approved, member-categoried requisition.
  *
  * Idempotent: re-running finds the existing row and skips. Safe to call more
- * than once, and it is called once at startup (`main.tsx`).
+ * than once, and it is called once at startup (`main.jsx`).
  */
 export async function seedSourceableRequisition(
   commands: MockCommandService = new MockCommandService(),

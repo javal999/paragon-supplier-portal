@@ -9,7 +9,7 @@
 // (Posted to SAP, Quality Hold) is a lifecycle state, not a result, and is not
 // compared.
 //
-// BL-35 — the supplier the demo signs in as (sup-007, `identitySources.ts`)
+// BL-35 — the supplier the demo signs in as (sup-007, `identitySources.js`)
 // has an Open RFI and an Open RFP it has not answered, read through its OWN
 // scope, so the supplier walkthrough can start from "a request waiting for
 // you". They were added in 9651e4a; this pins them so a fixture edit cannot

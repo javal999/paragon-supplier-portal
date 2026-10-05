@@ -48,7 +48,7 @@ const at = (d: string) => `${d}T00:00:00.000Z`;
  *  fixture's notes now quote retired literals), and the section markers are
  *  captured before the strip. */
 const raw = (() => {
-  const lines = readFileSync('src/data/mockContracts.ts', 'utf8')
+  const lines = readFileSync('src/data/mockContracts.js', 'utf8')
     .replace(/\r/g, '')
     .split('\n');
   const sectionOf = new Map<string, string>();

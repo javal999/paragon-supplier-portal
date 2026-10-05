@@ -146,7 +146,7 @@ describe('the union now equals the machine', () => {
 //     independent confirmation. One row, and it is stated as one row.
 // ─────────────────────────────────────────────────────────────────────────────
 
-/** The authored literals, read off `mockShipments.ts` before they were deleted. */
+/** The authored literals, read off `mockShipments.js` before they were deleted. */
 const AUTHORED_TRANSIT: Record<string, number> = {
   'shp-004': 5, 'shp-005': 28, 'shp-006': 1, 'shp-007': 3, 'shp-008': 7,
   'shp-009': 7, 'shp-010': 33, 'shp-011': 1, 'shp-012': 1, 'shp-013': 1,

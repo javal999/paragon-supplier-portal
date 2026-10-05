@@ -140,9 +140,57 @@ export function isFixturePath(path: string): boolean {
   );
 }
 
-type Named = ts.InterfaceDeclaration | ts.ClassDeclaration | ts.TypeAliasDeclaration;
+// ⚠️ A NAMED DECLARATION IN EITHER FORM (frontend-standard Phase 4): the
+// TypeScript `interface` / `type` / `class`, or the JSDoc `@typedef` a converted
+// `.js` file declares the same DTO with. Reading only the TypeScript form
+// dropped every DTO in a converted folder from the population, and the
+// bilateral allowlist check reported `TolerancePctOutcome.pct` as a field that
+// "no longer exists" — it did, as `@typedef {…} TolerancePctOutcome`.
+type Named =
+  | ts.InterfaceDeclaration
+  | ts.ClassDeclaration
+  | ts.TypeAliasDeclaration
+  | ts.JSDocTypedefTag;
 const isNamed = (n: ts.Node): n is Named =>
-  ts.isInterfaceDeclaration(n) || ts.isClassDeclaration(n) || ts.isTypeAliasDeclaration(n);
+  ts.isInterfaceDeclaration(n) ||
+  ts.isClassDeclaration(n) ||
+  ts.isTypeAliasDeclaration(n) ||
+  ts.isJSDocTypedefTag(n);
+
+/** The name node of a named declaration — a `@typedef` may omit it. */
+const nameOf = (n: Named): ts.Identifier | undefined =>
+  n.name && ts.isIdentifier(n.name) ? n.name : undefined;
+
+/**
+ * Walk `node` AND every JSDoc comment attached to it. `forEachChild` never
+ * enters a comment, so a walk without this cannot see a `@typedef` or its
+ * `@property` tags.
+ *
+ * ⚠️ `node.jsDoc`, NOT `ts.getJSDocCommentsAndTags(node)`: the public helper
+ * returns only the LAST comment above a statement, and a converted file stacks
+ * several typedefs above one.
+ */
+function walkWithJsDoc(node: ts.Node, cb: (n: ts.Node) => void): void {
+  const visit = (n: ts.Node): void => {
+    cb(n);
+    for (const doc of (n as { jsDoc?: readonly ts.JSDoc[] }).jsDoc ?? []) visit(doc);
+    n.forEachChild(visit);
+  };
+  visit(node);
+}
+
+/** A field declaration in either form: `a: T` (TypeScript or a JSDoc type
+ *  literal), a class property, or `@property {T} a`. */
+const isFieldDecl = (
+  n: ts.Node,
+): n is ts.PropertySignature | ts.PropertyDeclaration | ts.JSDocPropertyTag =>
+  ts.isPropertySignature(n) || ts.isPropertyDeclaration(n) || ts.isJSDocPropertyTag(n);
+
+/** The declared type node of a field, in either form. */
+const typeNodeOf = (decl: ts.Declaration): ts.TypeNode | undefined =>
+  ts.isJSDocPropertyTag(decl)
+    ? decl.typeExpression?.type
+    : (decl as ts.PropertySignature | ts.PropertyDeclaration).type;
 
 const partsOf = (t: ts.Type): readonly ts.Type[] =>
   t.isUnion() || t.isIntersection() ? t.types : [t];
@@ -188,7 +236,10 @@ function vocabularyOf(
 /** The nearest named declaration a property is written inside. */
 function ownerOf(decl: ts.Node): string | null {
   for (let n: ts.Node | undefined = decl.parent; n; n = n.parent) {
-    if (isNamed(n) && n.name) return n.name.text;
+    if (isNamed(n)) {
+      const name = nameOf(n);
+      if (name) return name.text;
+    }
   }
   return null;
 }
@@ -215,9 +266,10 @@ export function deriveCensus(program: ts.Program, opts: DeriveOptions): Census {
 
   // ── every property declaration in src, by name: the masking set ───────────
   const declsByName = new Map<string, Set<string>>();
+  // Reads both the TypeScript and the JSDoc form (frontend-standard Phase 4).
   for (const f of sources) {
-    const visit = (n: ts.Node): void => {
-      if ((ts.isPropertySignature(n) || ts.isPropertyDeclaration(n)) && n.name && ts.isIdentifier(n.name)) {
+    walkWithJsDoc(f, (n) => {
+      if (isFieldDecl(n) && n.name && ts.isIdentifier(n.name)) {
         const owner = ownerOf(n);
         if (owner) {
           const set = declsByName.get(n.name.text) ?? new Set<string>();
@@ -225,9 +277,7 @@ export function deriveCensus(program: ts.Program, opts: DeriveOptions): Census {
           declsByName.set(n.name.text, set);
         }
       }
-      n.forEachChild(visit);
-    };
-    visit(f);
+    });
   }
 
   // ── pass 1: covered DTOs and the field declarations they expose ───────────
@@ -241,15 +291,27 @@ export function deriveCensus(program: ts.Program, opts: DeriveOptions): Census {
   const coveredTypes: { name: string; file: string; via: string[] }[] = [];
 
   for (const f of sources) {
+    // The candidates are the file's top-level named declarations in BOTH forms:
+    // its statements, and every `@typedef` in a JSDoc comment anywhere in it
+    // (frontend-standard Phase 4). In a `.ts` file the checker ignores a
+    // `@typedef`, so `getSymbolAtLocation` returns nothing and it drops out.
+    const candidates: Named[] = [];
     f.forEachChild((node) => {
-      if (!isNamed(node) || !node.name) return;
-      const sym = checker.getSymbolAtLocation(node.name);
-      if (!sym) return;
+      if (isNamed(node)) candidates.push(node);
+    });
+    walkWithJsDoc(f, (n) => {
+      if (ts.isJSDocTypedefTag(n)) candidates.push(n);
+    });
+    for (const node of candidates) {
+      const nodeName = nameOf(node);
+      if (!nodeName) continue;
+      const sym = checker.getSymbolAtLocation(nodeName);
+      if (!sym) continue;
       let declared: ts.Type;
       try {
         declared = checker.getDeclaredTypeOfSymbol(sym);
       } catch {
-        return;
+        continue;
       }
       // Union type aliases expose only their COMMON properties through
       // getPropertiesOfType, so the constituents are walked individually — a
@@ -258,7 +320,7 @@ export function deriveCensus(program: ts.Program, opts: DeriveOptions): Census {
       for (const c of partsOf(declared)) {
         for (const p of checker.getPropertiesOfType(c)) if (!props.has(p.name)) props.set(p.name, p);
       }
-      if (props.size === 0) return;
+      if (props.size === 0) continue;
 
       const collected: { key: string; decl: ts.Declaration; file: string; vocab: string[] }[] = [];
       const via: string[] = [];
@@ -273,20 +335,20 @@ export function deriveCensus(program: ts.Program, opts: DeriveOptions): Census {
         if (ts.isMethodSignature(decl) || ts.isMethodDeclaration(decl)) continue;
         const propType = checker.getTypeOfSymbolAtLocation(p, decl);
         if (isMethodLike(propType)) continue;
-        const typeNode = (decl as ts.PropertySignature | ts.PropertyDeclaration).type;
+        const typeNode = typeNodeOf(decl);
         const vocab = vocabularyOf(propType, typeNode, opts.vocabulary);
         if (vocab.length > 0) via.push(`${p.name}:${vocab.join('|')}`);
-        collected.push({ key: `${ownerOf(decl) ?? node.name.text}.${p.name}`, decl, file, vocab });
+        collected.push({ key: `${ownerOf(decl) ?? nodeName.text}.${p.name}`, decl, file, vocab });
       }
-      if (via.length === 0) return;
+      if (via.length === 0) continue;
 
-      coveredTypes.push({ name: node.name.text, file: rel(f.fileName), via });
+      coveredTypes.push({ name: nodeName.text, file: rel(f.fileName), via });
       for (const c of collected) {
         const existing = byKey.get(c.key);
-        if (existing) existing.exposedBy.add(node.name.text);
-        else byKey.set(c.key, { decl: c.decl, file: c.file, vocab: c.vocab, exposedBy: new Set([node.name.text]) });
+        if (existing) existing.exposedBy.add(nodeName.text);
+        else byKey.set(c.key, { decl: c.decl, file: c.file, vocab: c.vocab, exposedBy: new Set([nodeName.text]) });
       }
-    });
+    }
   }
 
   // ── pass 2: the entity-qualified reader census ────────────────────────────
@@ -410,7 +472,17 @@ export function buildRepoProgram(root: string, tsconfig = 'tsconfig.vitest.json'
  * before it believes the bad one FAILED.
  */
 export function buildProgramFromSources(files: Readonly<Record<string, string>>): ts.Program {
-  const options: ts.CompilerOptions = { noLib: true, strict: true, noEmit: true, target: ts.ScriptTarget.ES2020 };
+  // `allowJs` + `checkJs`: the harness reads both the TypeScript and the JSDoc
+  // form, as `tsconfig.json` does for the real tree (frontend-standard Phase 4).
+  // Without them a `.js` synthetic file is silently dropped from the program.
+  const options: ts.CompilerOptions = {
+    noLib: true,
+    strict: true,
+    noEmit: true,
+    target: ts.ScriptTarget.ES2020,
+    allowJs: true,
+    checkJs: true,
+  };
   const sourceFiles = new Map<string, ts.SourceFile>();
   for (const [name, text] of Object.entries(files)) {
     sourceFiles.set(name, ts.createSourceFile(name, text, ts.ScriptTarget.ES2020, true, scriptKindOf(name)));

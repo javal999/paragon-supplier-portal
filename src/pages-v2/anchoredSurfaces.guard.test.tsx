@@ -61,7 +61,7 @@
 //     not, so its exclusion now rests on the SURFACE and no longer on the
 //     fixtures — a narrower claim, and a smaller job than it was.
 //   · `rfq` still has no `FAMILY_ANCHORS` entry (it carries its own ad-hoc shift
-//     in `mockRfqs.ts`), so that half stands unchanged.
+//     in `mockRfqs.js`), so that half stands unchanged.
 // ─────────────────────────────────────────────────────────────────────────────
 import React from 'react';
 import { describe, it, expect, afterEach } from 'vitest';

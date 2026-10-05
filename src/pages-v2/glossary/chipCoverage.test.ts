@@ -27,8 +27,9 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
+import ts from 'typescript';
 import { GLOSSARY_REGISTRIES } from '@lib/glossary';
-import { isTestFile } from '@test/sourceFiles';
+import { isTestFile, scriptKindOf } from '@test/sourceFiles';
 
 const ROOT = join(__dirname, '..', '..', '..');
 const SRC = join(ROOT, 'src');
@@ -69,20 +70,56 @@ const CHIP_WINDOW = 20;
 /** How far back to look for the string-typed API a non-render use feeds. */
 const CONTEXT_WINDOW = 6;
 
+/**
+ * Every `const`/`let` NAME initialised with an object literal and declared as
+ * `Record<…>`, with the generic body as written (`A, B`).
+ *
+ * Reads the declaration in EITHER form, through the TypeScript parser
+ * (frontend-standard Phase 4): the TS annotation
+ * `const X: Record<A, string> = {` and the JSDoc one
+ * `/** @type {Record<A, string>} *\/ const X = {` (`ts.getJSDocType`). The
+ * regex it replaces, `(?:const|let)\s+(\w+)\s*:\s*Record<…>\s*=\s*\{`, read
+ * only the first, so every converted `.js`/`.jsx` map left the population.
+ */
+function recordDecls(src: string, full: string): Array<[name: string, body: string]> {
+  const sf = ts.createSourceFile(full, src, ts.ScriptTarget.Latest, true, scriptKindOf(full));
+  const out: Array<[string, string]> = [];
+  const visit = (n: ts.Node): void => {
+    if (
+      ts.isVariableDeclaration(n) &&
+      ts.isIdentifier(n.name) &&
+      n.initializer &&
+      n.initializer.getText(sf).startsWith('{') &&
+      ts.isVariableDeclarationList(n.parent) &&
+      n.parent.flags & (ts.NodeFlags.Const | ts.NodeFlags.Let)
+    ) {
+      const type = n.type ?? ts.getJSDocType(n);
+      if (
+        type &&
+        ts.isTypeReferenceNode(type) &&
+        type.typeName.getText(sf) === 'Record' &&
+        type.typeArguments
+      ) {
+        out.push([n.name.text, type.typeArguments.map((a) => a.getText(sf)).join(', ')]);
+      }
+    }
+    ts.forEachChild(n, visit);
+  };
+  visit(sf);
+  return out;
+}
+
 function deriveUses(): MapUse[] {
   const uses: MapUse[] = [];
   // The generic body is captured WHOLE (`Record< … > = {`) rather than matched
   // key-first, so both halves can be tested. Matching only the key type swept in
   // `ingest.ts`'s `Record<QtyRefusalReason, ParseReason>` — a union-to-union
   // translation table in a service, with no message and no surface to chip.
-  const declRe = /(?:const|let)\s+(\w+)\s*:\s*Record<([\s\S]*?)>\s*=\s*\{/g;
-
   for (const full of sourceFiles(SRC)) {
     const src = readFileSync(full, 'utf8');
     const file = relative(ROOT, full).split(sep).join('/');
     const maps = new Map<string, string>();
-    for (const m of src.matchAll(declRe)) {
-      const body = m[2];
+    for (const [name, body] of recordDecls(src, full)) {
       // `Exclude<Vocab, …>` counts: a map over a NARROWED registered vocabulary
       // is still a map over registered terms (`RFQ_BUDGET_REFUSAL_KEY` is this).
       const vocabulary = REGISTERED_VOCABULARIES.find((v) =>
@@ -90,7 +127,7 @@ function deriveUses(): MapUse[] {
       );
       // …and the VALUE must be an i18n key. That is what makes it a MESSAGE map
       // — the shape whose member is already the key of a user-facing sentence.
-      if (vocabulary && /,\s*string\s*$/.test(body.trim())) maps.set(m[1], vocabulary);
+      if (vocabulary && /,\s*string\s*$/.test(body.trim())) maps.set(name, vocabulary);
     }
     if (maps.size === 0) continue;
 
@@ -150,7 +187,7 @@ describe('GL-1 chip coverage — the instrument, before the conclusion', () => {
   it('finds a KNOWN-TRUE render site — the goods-receipt halal refusal', () => {
     // The exact site HALAL-REFUSAL-DEAD-ENDS-01 was found at.
     const halal = USES.filter(
-      (u) => u.file.endsWith('GRInspectionWizard.tsx') && u.vocabulary === 'HalalRefusalReason',
+      (u) => u.file.endsWith('GRInspectionWizard.jsx') && u.vocabulary === 'HalalRefusalReason',
     );
     expect(halal.length).toBeGreaterThan(0);
     expect(halal.every((u) => u.isRender)).toBe(true);

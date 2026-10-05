@@ -573,7 +573,7 @@ describe('H4 — ⚠️ WIRED TO A NOTICE, AND TO NOTHING THAT CAN REFUSE', () =
       .map(([path]) => path)
       .sort();
     expect(referencing).toEqual([
-      '/src/components/v2-features/GRInspectionWizard.tsx',
+      '/src/components/v2-features/GRInspectionWizard.jsx',
       '/src/services/data/halalVerification.ts',
     ]);
 
@@ -593,7 +593,7 @@ describe('H4 — ⚠️ WIRED TO A NOTICE, AND TO NOTHING THAT CAN REFUSE', () =
     //     Object.entries(sources()).find(([p]) => p.includes('GRInspectionWizard'))
     //
     // and `find` takes the FIRST match. The glob is alphabetical and
-    // `GRInspectionWizard.test.tsx` sorts BEFORE `GRInspectionWizard.tsx`, so
+    // `GRInspectionWizard.test.jsx` sorts BEFORE `GRInspectionWizard.jsx`, so
     // every one of those three `not.toContain` calls was inspecting THE SPEC
     // FILE. It asserted that the test does not mention the registry — true,
     // vacuous, and not the claim in its own title. §42's rule exactly: **the
@@ -604,11 +604,11 @@ describe('H4 — ⚠️ WIRED TO A NOTICE, AND TO NOTHING THAT CAN REFUSE', () =
     // Fixed by naming the path the claim REQUIRES instead of matching a
     // substring, and the fix is what makes the assertions below mean anything.
     const src = sources();
-    const wizard = src['/src/components/v2-features/GRInspectionWizard.tsx'];
+    const wizard = src['/src/components/v2-features/GRInspectionWizard.jsx'];
     expect(wizard, 'the component, not its spec').toBeDefined();
     // The control that would have caught the original defect: the two files are
     // BOTH in the glob, so "the one I meant" was never a safe assumption.
-    expect(src['/src/components/v2-features/GRInspectionWizard.test.tsx']).toBeDefined();
+    expect(src['/src/components/v2-features/GRInspectionWizard.test.jsx']).toBeDefined();
 
     const code = codeLines(wizard).join('\n');
     // IT READS. That is the batch.

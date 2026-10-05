@@ -19,7 +19,7 @@
 //
 // ── ⚠️ WHY THE GATE IS NOT IN `register()` ──────────────────────────────────
 //   `flowRegistry.register` THROWS AT IMPORT TIME (`assertValidFlow`), and the
-//   barrel is imported by `main.tsx`. A graph check there would BRICK THE APP
+//   barrel is imported by `main.jsx`. A graph check there would BRICK THE APP
 //   THE DAY IT LANDS — every existing loose end below becomes a white screen.
 //   The floor's failure mode is the right one: **RED PR, RUNNING APP.** So this
 //   module only ever RETURNS findings; refusing is the caller's job, and the

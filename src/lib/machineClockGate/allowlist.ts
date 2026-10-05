@@ -29,19 +29,19 @@ import type { AllowRow } from './derive';
 
 export const MACHINE_CLOCK_ALLOWLIST: readonly AllowRow[] = [
   {
-    key: 'src/context/AdaptiveContext.tsx::getLocalTimeStr::new Date()',
+    key: 'src/context/AdaptiveContext.jsx::getLocalTimeStr::new Date()',
     count: 1,
     why: 'time-of-day',
     reason: "A supplier's live local time (HH:MM) on their storefront; the hub clock carries a date, not a moving time of day.",
   },
   {
-    key: 'src/context/AdaptiveContext.tsx::getLocalDateObj.parts::new Date()',
+    key: 'src/context/AdaptiveContext.jsx::getLocalDateObj.parts::new Date()',
     count: 1,
     why: 'time-of-day',
     reason: "The 'open now' business-hours flag reads the supplier's live local hour; a fixed 12:00Z instant would freeze it.",
   },
   {
-    key: 'src/hooks/useToast.ts::generateId::Date.now()',
+    key: 'src/hooks/useToast.js::generateId::Date.now()',
     count: 1,
     why: 'unique-id',
     reason: 'Toast id fallback when crypto.randomUUID is unavailable; never rendered.',

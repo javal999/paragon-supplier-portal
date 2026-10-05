@@ -234,7 +234,9 @@ export default defineConfig([
     plugins: { js, react: pluginReact, 'react-hooks': pluginReactHooks, jsdoc: pluginJsdoc },
     extends: ['js/recommended'],
     languageOptions: {
-      globals: globals.browser,
+      // `__DEPLOY_ENV__` is a build-time constant injected by Vite's `define`
+      // (vite.config.ts / vitest.config.ts), declared for TypeScript in vite-env.d.ts.
+      globals: { ...globals.browser, __DEPLOY_ENV__: 'readonly' },
       parserOptions: { ecmaVersion: 'latest', sourceType: 'module', ecmaFeatures: { jsx: true } }
     },
     settings: REACT_SETTINGS,
@@ -297,7 +299,10 @@ export default defineConfig([
   // the boilerplate uses a central `src/__test__/` folder instead).
   {
     files: ['src/**/*.test.{js,jsx,ts,tsx}', 'src/test/**'],
-    languageOptions: { globals: { ...globals.browser, ...globals.vitest } },
+    // Specs and test helpers also run in Node: guards read source files with
+    // `__dirname` / `process.cwd()` (TypeScript knew these from @types/node;
+    // ESLint's JavaScript block needs them listed).
+    languageOptions: { globals: { ...globals.browser, ...globals.vitest, ...globals.node } },
     rules: {
       // Specs document behaviour through their `it(...)` titles; a JSDoc block
       // per helper would repeat it.

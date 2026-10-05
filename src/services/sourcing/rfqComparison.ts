@@ -63,7 +63,7 @@ export const isTieredRfq = (rfq: { readonly items?: readonly unknown[] }): boole
  *
  * ⚠️ A TIERED LINE IS NAMED BY ITS LINE NUMBER, NEVER BY A CODE MINTED INTO
  * `itemCode`. `itemCode` is a material-code field (the material identity census
- * in `materialIdentity.test.ts` derives it as one), and an Oslo sticker has no
+ * in `materialIdentity.test.js` derives it as one), and an Oslo sticker has no
  * material code; a value like `item-1` there would be a fake code in a code
  * field. The first build did exactly that and the census declined the field.
  */

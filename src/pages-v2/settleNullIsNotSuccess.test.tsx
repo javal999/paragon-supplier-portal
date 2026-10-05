@@ -89,7 +89,7 @@ describe('§90 POPULATION — every settle call site, derived from source', () =
   const SITES: readonly { file: string; rel: string }[] = [
     { file: 'BuyerInvoices.tsx', rel: './BuyerInvoices.tsx' },
     { file: 'BuyerGoodsReceipt.tsx', rel: './BuyerGoodsReceipt.tsx' },
-    { file: 'GRInspectionWizard.tsx', rel: '../components/v2-features/GRInspectionWizard.tsx' },
+    { file: 'GRInspectionWizard.jsx', rel: '../components/v2-features/GRInspectionWizard.jsx' },
   ];
 
   it('the settle call sites are exactly the three components that consume a settle hook', () => {
@@ -97,7 +97,7 @@ describe('§90 POPULATION — every settle call site, derived from source', () =
     expect(settling.map((s) => s.file).sort()).toEqual([
       'BuyerGoodsReceipt.tsx',
       'BuyerInvoices.tsx',
-      'GRInspectionWizard.tsx',
+      'GRInspectionWizard.jsx',
     ]);
 
     // KNOWN-FALSE CONTROL, in the same run: a page with no settle must not match,

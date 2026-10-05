@@ -5,7 +5,7 @@
 // maybe throw DataError('CHAOS') before delegating to the real method.
 //
 // GATED: only wired in when import.meta.env.DEV && VITE_CHAOS === 'on'
-// (see main.tsx). import.meta.env.DEV is statically false in the Vercel
+// (see main.jsx). import.meta.env.DEV is statically false in the Vercel
 // production build, so this module is dead code there and tree-shaken out.
 // Tests get determinism by default (flag unset) and can opt in explicitly by
 // passing a chaos-wrapped service to renderWithProviders.

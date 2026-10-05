@@ -49,7 +49,7 @@ committing. It is held in a dedicated client-side plan store and is, by contract
   overlays; that pattern stays dead. A PlanDraft is session-scoped and disappears on reload.
 
 **Where it lives — the harvested neighbor pattern.** The plan store follows the house
-client-state pattern of `CurrentIdentityContext` (`src/context/CurrentIdentityContext.tsx`):
+client-state pattern of `CurrentIdentityContext` (`src/context/CurrentIdentityContext.jsx`):
 `createContext` + a `Provider` holding state in `useState`/`useReducer` (:35-56) + a `useX()`
 hook that throws outside its provider (:58-65). It lives beside `CurrentIdentityContext` and
 `AdaptiveContext` — **but differs in one deliberate way**: `CurrentIdentity` carries an
@@ -333,7 +333,7 @@ Every seam cited traces to a `file:line` in the shipped tree:
 `src/services/query/commandHooks.ts` (dispatch+invalidate pattern :29-156),
 `src/services/query/useServiceQuery.ts` (`scopeKey` read pattern :19-38),
 `src/services/liveness/registry.ts` (`liveness`/`isLive`/`Tier` :45-184),
-`src/context/CurrentIdentityContext.tsx` (client-state provider pattern :35-65),
+`src/context/CurrentIdentityContext.jsx` (client-state provider pattern :35-65),
 `src/pages-v2/BuyerSourcing.tsx` (the `extraRfqs` anti-pattern — RETIRED in PR #77; RFQ
 creation now rides `t_rfq_create` on the dispatcher). §1-7 were
 authored pre-grid (FORK-3 harvest); §8 (C6-LOCK) is recorded at **G1.2b** alongside its first

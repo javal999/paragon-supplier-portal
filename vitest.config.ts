@@ -19,7 +19,7 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: true,
-    setupFiles: ['./src/test/setup.ts'],
+    setupFiles: ['./src/test/setup.js'],
     // `.js/.jsx` are collected too, so specs keep running as the portal is
     // converted from TypeScript to JavaScript (frontend-standard plan, Phases
     // 3–4). Without them a converted spec would silently stop being collected.

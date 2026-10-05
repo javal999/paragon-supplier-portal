@@ -3,7 +3,7 @@
 //
 // ⚠️ THIS IS WHERE THE OPERATOR'S CRITERION BITES, and it lives HERE and not in
 // `flowRegistry.register()` on purpose. Registration throws at import time and
-// the barrel is imported by `main.tsx`, so a graph check there would BRICK THE
+// the barrel is imported by `main.jsx`, so a graph check there would BRICK THE
 // APP THE DAY IT LANDS — every one of the eighteen holes below becomes a white
 // screen. The floor's failure mode is the right one: **RED PR, RUNNING APP.**
 //

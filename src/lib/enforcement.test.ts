@@ -61,7 +61,8 @@ import type {
 import { bpomOf } from '@services/sdc/bpom';
 import { halalOf } from '@services/sdc/halal';
 import { MATERIAL_MASTER } from '@services/sdc/fixtures';
-import { isTestFile } from '@test/sourceFiles';
+import ts from 'typescript';
+import { isTestFile, scriptKindOf } from '@test/sourceFiles';
 
 // ─── Fixtures local to the suite. E1 SEEDS NONE IN THE TREE ──────────────────
 
@@ -110,11 +111,111 @@ const sources = () =>
  *  DISCUSSES the fail-open modes it refuses to declare and the stale stored
  *  clock values on main, and a census that could not tell code from record
  *  would force deleting the evidence along with the defect (H2/H3 precedent). */
-const codeOf = (text: string) =>
-  text
-    .split('\n')
-    .filter((line) => !/^\s*(?:\/\/|\/\*|\*)/.test(line))
-    .join('\n');
+const codeOf = (text: string, path = 'x.tsx') =>
+  [
+    text
+      .split('\n')
+      .filter((line) => !/^\s*(?:\/\/|\/\*|\*)/.test(line))
+      .join('\n'),
+    ...jsDocTypeText(text, path),
+  ].join('\n');
+
+/**
+ * ⚠️ THE JSDOC FORM OF THE CODE (frontend-standard Phase 4). A converted `.js`
+ * file writes its TYPES inside comments — `@import { EnforcementSetting } from
+ * '@lib/enforcement'`, `@type {readonly EnforcementSetting[]}`, `@property
+ * {ActorAttribution} actor` — so the comment-dropping filter above dropped
+ * them, and `wizardSettleSpeaks.test.jsx` fell off the consumer census while
+ * still consuming the surface as a type. This reads both the TypeScript and the
+ * JSDoc form: the comment PROSE stays exempt (the H2/H3 precedent above), and
+ * only what the TypeScript parser reads as a TYPE is kept — type expressions,
+ * `@import` clauses, and the names a `@typedef` / `@property` / `@param`
+ * declares.
+ */
+function jsDocTypeText(text: string, path: string): string[] {
+  const sf = ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true, scriptKindOf(path));
+  const out: string[] = [];
+  const textOf = (n: ts.Node) => sf.text.slice(n.getStart(sf), n.end);
+  const inDoc = (n: ts.Node): void => {
+    if (ts.isJSDocTypeExpression(n)) {
+      out.push(textOf(n));
+      return;
+    }
+    if (ts.isJSDocImportTag(n)) {
+      out.push(`import ${n.importClause ? textOf(n.importClause) : ''} from ${textOf(n.moduleSpecifier)}`);
+      return;
+    }
+    if (
+      (ts.isJSDocTypedefTag(n) ||
+        ts.isJSDocCallbackTag(n) ||
+        ts.isJSDocPropertyTag(n) ||
+        ts.isJSDocParameterTag(n)) &&
+      n.name
+    ) {
+      out.push(textOf(n.name));
+    }
+    if (ts.isJSDocTemplateTag(n)) {
+      for (const tp of n.typeParameters) out.push(textOf(tp));
+    }
+    ts.forEachChild(n, inDoc);
+  };
+  // `node.jsDoc`, not `ts.getJSDocCommentsAndTags`: the public helper returns
+  // only the LAST comment above a statement, and converted files stack several.
+  const visit = (n: ts.Node): void => {
+    for (const doc of (n as { jsDoc?: readonly ts.JSDoc[] }).jsDoc ?? []) inDoc(doc);
+    ts.forEachChild(n, visit);
+  };
+  visit(sf);
+  return out;
+}
+
+/**
+ * The type `name` as DECLARED in `text`, in either form: `[export] interface
+ * name { … }` or a JSDoc `@typedef {object} name` with its `@property` tags (a
+ * JSDoc typedef in a module is exported by construction). Returns its field
+ * names, or `undefined` when no such declaration exists.
+ */
+function declaredType(
+  text: string,
+  path: string,
+  name: string,
+): { exported: boolean; fields: string[] } | undefined {
+  const sf = ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true, scriptKindOf(path));
+  let found: { exported: boolean; fields: string[] } | undefined;
+  const fieldsOf = (members: readonly ts.Node[]) =>
+    members.flatMap((m) =>
+      (ts.isPropertySignature(m) || ts.isJSDocPropertyTag(m)) && ts.isIdentifier(m.name)
+        ? [m.name.text]
+        : [],
+    );
+  const inDoc = (n: ts.Node): void => {
+    if (ts.isJSDocTypedefTag(n) && n.name?.text === name) {
+      const t = n.typeExpression;
+      found = {
+        exported: true,
+        fields:
+          t && ts.isJSDocTypeLiteral(t)
+            ? fieldsOf(t.jsDocPropertyTags ?? [])
+            : t && ts.isTypeLiteralNode(t.type)
+              ? fieldsOf(t.type.members)
+              : [],
+      };
+    }
+    ts.forEachChild(n, inDoc);
+  };
+  const visit = (n: ts.Node): void => {
+    if (ts.isInterfaceDeclaration(n) && n.name.text === name) {
+      found = {
+        exported: !!n.modifiers?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword),
+        fields: fieldsOf(n.members),
+      };
+    }
+    for (const doc of (n as { jsDoc?: readonly ts.JSDoc[] }).jsDoc ?? []) inDoc(doc);
+    ts.forEachChild(n, visit);
+  };
+  visit(sf);
+  return found;
+}
 
 const moduleText = () => {
   const text = sources()['/src/lib/enforcement.ts'];
@@ -643,13 +744,13 @@ describe('E1 — ⚠️ HEADLESS. NO STORE, NO CONSUMER, NO CLOCK', () => {
     //
     // ⚠️ THE E2 FENCE IS DELIBERATELY GONE. It read "nothing renders or enforces
     // a mode yet"; E4 is the batch that retires it, and the retirement is the
-    // point rather than a casualty. `GRInspectionWizard.tsx` is now on this list
+    // point rather than a casualty. `GRInspectionWizard.jsx` is now on this list
     // BY DESIGN — it is the first gate in the system that reads an enforcement
     // setting instead of asserting one.
     const src = sources();
     const referencing = Object.entries(src)
-      .filter(([, text]) => {
-        const code = codeOf(text);
+      .filter(([path, text]) => {
+        const code = codeOf(text, path);
         return SURFACE.some((name) => code.includes(name));
       })
       .map(([path]) => path)
@@ -659,15 +760,15 @@ describe('E1 — ⚠️ HEADLESS. NO STORE, NO CONSUMER, NO CLOCK', () => {
     // hide behind a new spec file.
     const suites = referencing.filter((p) => isTestFile(p));
     expect(suites).toEqual([
-      '/src/components/v2-features/GRInspectionWizard.test.tsx',
+      '/src/components/v2-features/GRInspectionWizard.test.jsx',
       // ⚠️ §91 — the wizard's COMPLETION path, which had no spec at all until
-      // this batch: `GRInspectionWizard.test.tsx` stops at the quality step. It
+      // this batch: `GRInspectionWizard.test.jsx` stops at the quality step. It
       // consumes `EnforcementSetting` as a TYPE, for the empty ledger the wizard
       // requires as a prop — the same `EMPTY_LEDGER` the suite above renders
       // under, so the two agree on what an un-seeded gate does. Typing it
       // `never[]` would have kept this census green while consuming the surface
       // in spirit, which is the trade this list refuses. Authorised by §91.
-      '/src/components/v2-features/wizardSettleSpeaks.test.tsx',
+      '/src/components/v2-features/wizardSettleSpeaks.test.jsx',
       // ⚠️ Matches on `getEnforcementSettings` — the E4 end-to-end spec that
       // proves the ledger reaches the gate through the real read rather than a
       // prop. That spec exists because the wizard's own suite could not tell a
@@ -705,7 +806,7 @@ describe('E1 — ⚠️ HEADLESS. NO STORE, NO CONSUMER, NO CLOCK', () => {
       '/src/services/transitions/staleState.test.ts',
     ]);
     expect(referencing.filter((p) => !suites.includes(p))).toEqual([
-      '/src/components/v2-features/GRInspectionWizard.tsx', // ⚠️ E4 — THE FIRST GATE
+      '/src/components/v2-features/GRInspectionWizard.jsx', // ⚠️ E4 — THE FIRST GATE
       '/src/lib/enforcement.ts', //                       the vocabulary + derivation
       // ⚠️ GL-0 — the glossary. STILL TYPE-ONLY, but **NO LONGER HEADLESS**: it
       // imports the six enforcement unions to pin `Record<Member,
@@ -751,7 +852,7 @@ describe('E1 — ⚠️ HEADLESS. NO STORE, NO CONSUMER, NO CLOCK', () => {
       '/src/services/query/hooks.ts', //                  E4 — the scoped read hook
       '/src/services/transitions/policies.ts', //         the recording policy
     ]);
-    // ⚠️ `main.tsx` IS A CONSUMER OF THE SEED AND IS NOT ON THIS LIST, because it
+    // ⚠️ `main.jsx` IS A CONSUMER OF THE SEED AND IS NOT ON THIS LIST, because it
     // names `seedEnforcementLedger` and no enforcement vocabulary at all. Stated
     // rather than filtered: the list is exact, and a reader who assumes "every
     // file touching enforcement" would otherwise take the omission for absence.
@@ -814,10 +915,10 @@ describe('E1 — ⚠️ HEADLESS. NO STORE, NO CONSUMER, NO CLOCK', () => {
     // of the touch is the thing worth pinning: it reads the LEDGER through a
     // prop and derives the mode with `effectiveEnforcement` and its own instant.
     const wizard = Object.entries(sources()).find(([p]) =>
-      p.endsWith('/GRInspectionWizard.tsx'),
+      p.endsWith('/GRInspectionWizard.jsx'),
     );
     expect(wizard).toBeDefined();
-    const code = codeOf(wizard![1]);
+    const code = codeOf(wizard![1], wizard![0]);
     expect(code).toContain('effectiveEnforcement(');
     expect(code).toContain('enforcementSettings');
 
@@ -1177,10 +1278,19 @@ describe('E2 — ⚠️ AN UNATTRIBUTED OVERRIDE CANNOT COMPLETE (the operator r
     // unattributed, so every one of them falls through to the ceiling. That is
     // the design: a built lane that is visibly unusable is how F1 identity gets
     // prioritised, instead of the gap being papered over with a typed name.
-    const identity = sources()['/src/context/CurrentIdentityContext.tsx'];
+    const identityPath = '/src/context/CurrentIdentityContext.jsx';
+    const identity = sources()[identityPath];
     expect(identity).toBeDefined();
-    const code = codeOf(identity);
-    expect(code).toContain('export interface CurrentIdentity {');
+    const code = codeOf(identity, identityPath);
+    // Was `toContain('export interface CurrentIdentity {')`. The type is now
+    // read as DECLARED in either form — the TypeScript `export interface` or
+    // the JSDoc `@typedef` the converted file carries (frontend-standard Phase
+    // 4) — and its fields are derived, with `actor` as the known-true member so
+    // an empty derivation cannot read clean.
+    const declared = declaredType(identity, identityPath, 'CurrentIdentity');
+    expect(declared, 'CurrentIdentity is not declared in either form').toBeDefined();
+    expect(declared!.exported).toBe(true);
+    expect(declared!.fields).toContain('actor');
     for (const personField of ['personId', 'displayName', 'userId', 'email']) {
       expect(code).not.toContain(personField);
     }

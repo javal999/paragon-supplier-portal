@@ -1,0 +1,363 @@
+/** @import React from 'react' */
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Check, ShieldCheck, Info, ChevronDown } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { useCurrentIdentity } from '@context/CurrentIdentityContext';
+/** @import { SystemRoleId } from '@services/transitions/businessRoles' */
+import {
+  PERSONA_SYSTEM_ROLES,
+  SYSTEM_ROLES,
+  isSystemRole
+} from '@services/transitions/businessRoles';
+import { atomsForSeat } from '@services/transitions/customRoles';
+import { useNavigate } from 'react-router-dom';
+import { HUB_ROLES, useHubRole } from './hubRole';
+import { UTILITY_NAV } from './navConfig';
+import MyMrpControllerSelect from './MyMrpControllerSelect';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// THE IDENTITY PANEL — the current role and the scope it grants.
+//
+// **IDENTITY BELONGS WITH IDENTITY.** Batch A put authorisation in the machine
+// and left it invisible: a user could not see which role they held, so
+// "Awaiting Finance" answered *whose act is next* while leaving *who am I*
+// unanswered. That is half a handoff.
+//
+// ⚠️ **ONE ROLE CONTROL, NOT TWO** (operator ruling). The demo role switcher
+// lives HERE and nowhere else. A chip block above the navigation was built and
+// REJECTED for the reason worth keeping: a persistent control above the nav
+// makes role-switching look like a navigation-level concern — something done
+// constantly, like a filter. **A person holds a role; they do not shop for one.**
+//
+// ── THE SPLIT THAT MAKES THIS HONEST: ROLE IS SELECTABLE, SCOPE IS NOT ──────
+// The reference (Paragon's TMS) states the role, offers a selector, shows the
+// access scope, and says CHANGING SCOPE IS SOMEONE ELSE'S ACT. That last line is
+// the same handoff pattern this arc ruled for cross-role verbs, one layer up —
+// so it is not decoration, it is the rule applied to identity.
+//
+// ⚠️ **AND OUR SCOPE AXES ARE DERIVED, NOT IMPORTED.** TMS scopes on warehouses,
+// nodes and workspaces. **Those are TMS's axes and none of them exists here.**
+// Ours is exactly `QueryScope` — `{ personaType, supplierId }` — because that is
+// the tuple every read and every command is actually scoped by. Copying TMS's
+// axes would put three words on this panel that no code enforces, which is the
+// false-affordance class this project spends its time removing.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** @type {React.FC} */
+const IdentityPanel = () => {
+  const { t } = useTranslation();
+  const { identity, setIdentity } = useCurrentIdentity();
+  const navigate = useNavigate();
+  const [hubRole, setHubRole] = useHubRole();
+  const [open, setOpen] = useState(false);
+  // The role list is a DROPDOWN, collapsed by default. A permanently expanded
+  // list made the panel as tall as the viewport on the supplier side and put six
+  // controls in front of a reader who mostly wants to know WHICH ROLE THEY ARE.
+  // Collapsed, the panel STATES the role and offers the change on request.
+  const [rolesOpen, setRolesOpen] = useState(false);
+  const rootRef = useRef(/** @type {HTMLDivElement | null} */ (null));
+  const buttonRef = useRef(/** @type {HTMLButtonElement | null} */ (null));
+
+  const persona = identity.personaType;
+  const assignable = PERSONA_SYSTEM_ROLES[persona];
+  const held = identity.businessRoles;
+
+  // ── ⚠️ THE TWO NOTICES, AND BOTH DESCRIBE RATHER THAN PRESCRIBE ────────────
+  //
+  // **THE PANEL SAYS WHAT THE ROLES DO; IT DOES NOT DECIDE WHICH SET A PERSON
+  // SHOULD HOLD** (operator ruling — the enforcement notice's discipline: *say
+  // whose act it is; do not take the act*). So neither of these blocks a toggle,
+  // reorders the list, or auto-narrows a seat. They state a fact and stop.
+  //
+  // ⚠️ **AND THE PREMISE THAT ASKED FOR THE FIRST ONE INVERTED ON MEASUREMENT —
+  // BOTH THE OPERATOR AND THIS SEAT STATED IT, AND IT IS WRONG.** The claim was
+  // that a seat of `['buyer_all']` ALONE is unreachable, because removing the
+  // six lanes leaves the last role un-removable. Derived from `toggleRole`
+  // below: an ADD is never blocked (`next.length` is at least 1 by
+  // construction), and a REMOVE is blocked only at `held.length === 1`. So
+  // ADD-then-remove reaches `['buyer_all']` in seven gestures and only
+  // REMOVE-first stalls. **The set is reachable; the ORDER is what constrains**,
+  // and `identityPanelBuyerAll.test.jsx` walks both orders rather than asserting
+  // the reachable one twice.
+  const redundant = useMemo(() => {
+    // A held role whose atoms are wholly contained in ANOTHER held role's.
+    // DERIVED, never a list of superset ids: `compliance` beside `buyer_all` is
+    // NOT redundant — it carries `role:grant`, which the manager's seat
+    // deliberately does not — and a hardcoded rule would have said otherwise.
+    /** @param {string} r */
+    const atomsOf = (r) =>
+      /** @type {Set<string>} */ (new Set(isSystemRole(r) ? SYSTEM_ROLES[r] : []));
+    return held.filter((r) =>
+      held.some((other) => {
+        if (other === r) return false;
+        const mine = atomsOf(r);
+        if (mine.size === 0) return false;
+        const theirs = atomsOf(other);
+        return [...mine].every((a) => theirs.has(a));
+      })
+    );
+  }, [held]);
+
+  const lastRoleHeld = held.length === 1;
+
+  // Close on outside click (mousedown so it beats the button's own onClick) —
+  // the LanguageMenu precedent, one component over.
+  useEffect(() => {
+    if (!open) return;
+    /** @param {MouseEvent} e */
+    const onDocPointer = (e) => {
+      if (rootRef.current && !rootRef.current.contains(/** @type {Node} */ (e.target)))
+        setOpen(false);
+    };
+    document.addEventListener('mousedown', onDocPointer);
+    return () => document.removeEventListener('mousedown', onDocPointer);
+  }, [open]);
+
+  /** @param {React.KeyboardEvent} e */
+  const onKeyDown = (e) => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      // Esc collapses the dropdown first, then the panel — the inner surface
+      // closes before the outer one, which is what a nested menu owes a
+      // keyboard user.
+      if (rolesOpen) {
+        setRolesOpen(false);
+        return;
+      }
+      setOpen(false);
+      buttonRef.current?.focus();
+    }
+  };
+
+  useEffect(() => {
+    if (!open) setRolesOpen(false);
+  }, [open]);
+
+  const toggleRole = useCallback(
+    /** @param {SystemRoleId} role */ (role) => {
+      const has = held.includes(role);
+      const next = has ? held.filter((r) => r !== role) : [...held, role];
+      // ⚠️ A SEAT WITH NO ROLES READS AS A BROKEN PORTAL, NOT A NARROW ONE.
+      // Every governed act would refuse and every surface would look defective.
+      // Narrowing is a choice; locking yourself out is not one worth offering.
+      if (next.length === 0) return;
+      setIdentity({ ...identity, businessRoles: next });
+    },
+    [held, identity, setIdentity]
+  );
+
+  // The seat's atoms — DERIVED, so the count cannot drift from what the
+  // dispatcher will actually resolve. A restated number here would be
+  // `FLOOR-IN-PROSE-01` on an identity panel.
+  //
+  // ⚠️ **`atomsForSeat`, AND THE CALL SITE DERIVATION IS WHAT FOUND IT.** This
+  // read `atomsFor(held)` — the SYSTEM vocabulary — so a seat holding a granted
+  // custom role would have been told it holds FEWER permissions than the
+  // dispatcher will grant it. A panel whose whole job is stating a seat's reach,
+  // under-reporting that reach, in the direction that reads as reassuring.
+  const atomCount = atomsForSeat(held).length;
+
+  const initials = persona === 'supplier' ? 'PS' : 'JJ';
+
+  return (
+    <div ref={rootRef} className="relative" onKeyDown={onKeyDown}>
+      <button
+        ref={buttonRef}
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        aria-label={t('topbar.userAvatar')}
+        data-testid="identity-avatar"
+        className="w-8 h-8 rounded-full bg-action-muted text-white text-xs font-semibold flex items-center justify-center hover:ring-2 hover:ring-action/30"
+      >
+        {initials}
+      </button>
+
+      {open ? (
+        <div
+          role="dialog"
+          aria-label={t('identity.panel.title')}
+          data-testid="identity-panel"
+          className="absolute right-0 mt-2 w-80 bg-white border border-border-subtle rounded-lg shadow-lg z-50 p-4 text-left"
+        >
+          {/* — WHO — */}
+          <div className="pb-3 border-b border-border-subtle">
+            <div className="text-label text-text-tertiary uppercase">
+              {t('identity.panel.signedInAs')}
+            </div>
+            <div className="text-sm font-medium text-text-primary" data-testid="identity-persona">
+              {t(`nav.persona.${persona}`)}
+            </div>
+          </div>
+
+          {/* — MENU FOR A PTI ROLE (NV-02): a view choice, not a permission — */}
+          {persona === 'buyer' && (
+            <div className="py-3 border-b border-border-subtle">
+              <label htmlFor="hub-role" className="text-label text-text-tertiary uppercase">
+                {t('hub.role.title')}
+              </label>
+              <select
+                id="hub-role"
+                data-testid="hub-role-select"
+                value={hubRole}
+                onChange={(e) => setHubRole(/** @type {typeof hubRole} */ (e.target.value))}
+                className="mt-1 w-full h-8 rounded-md border border-border-input bg-white px-2 text-sm text-text-primary"
+              >
+                {HUB_ROLES.map((r) => (
+                  <option key={r} value={r}>
+                    {t(`hub.role.${r}`)}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1 text-xs text-text-tertiary">{t('hub.role.hint')}</p>
+              {/* Material C4 — the seat's own MRP controller code, for "My
+                  materials" (MR-5 AC-02). A view choice, like the menu. */}
+              <MyMrpControllerSelect />
+            </div>
+          )}
+
+          {/* — HELP AND ADMINISTRATION (NV-01) — */}
+          <div className="py-3 border-b border-border-subtle">
+            <div className="text-label text-text-tertiary uppercase">{t('hub.nav.util.title')}</div>
+            <ul className="mt-1">
+              {UTILITY_NAV[persona].map((item) => {
+                const Icon = item.icon;
+                return (
+                  <li key={item.path}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setOpen(false);
+                        navigate(item.path);
+                      }}
+                      className="w-full flex items-center gap-2 rounded-md px-1 py-1.5 text-sm text-text-secondary hover:bg-bg-hover"
+                    >
+                      <Icon size={14} />
+                      {t(item.labelKey)}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+
+          {/* — ACCESS SCOPE: SHOWN, NEVER EDITABLE HERE — */}
+          <div className="py-3 border-b border-border-subtle">
+            <div className="text-label text-text-tertiary uppercase flex items-center gap-1">
+              <ShieldCheck size={12} className="text-teal" />
+              {t('identity.panel.scope')}
+            </div>
+            <div className="text-sm text-text-primary mt-0.5" data-testid="identity-scope">
+              {identity.supplierId
+                ? t('identity.scope.oneSupplier', {
+                    name: identity.supplierName ?? identity.supplierId
+                  })
+                : t('identity.scope.allSuppliers')}
+            </div>
+            {/* The honest handoff, one layer up from the verb-level one: a scope
+                change is somebody else's act, and saying so beats a control that
+                silently does nothing. */}
+            <div className="text-xs text-text-tertiary mt-1" data-testid="identity-scope-handoff">
+              {t('identity.panel.scopeHandoff')}
+            </div>
+          </div>
+
+          {/* — ROLE: STATED, AND SELECTABLE — */}
+          <div className="py-3 border-b border-border-subtle">
+            <div className="text-label text-text-tertiary uppercase">
+              {t('identity.panel.roles')}
+            </div>
+            <div className="text-xs text-text-tertiary mb-2" data-testid="identity-roles-summary">
+              {t('identity.panel.rolesSummary', { roles: held.length, permissions: atomCount })}
+            </div>
+            {/* THE ROLE CONTROL — collapsed. The panel's job is to STATE the
+                role; changing it is a secondary act and reads as one. */}
+            <button
+              type="button"
+              aria-haspopup="menu"
+              aria-expanded={rolesOpen}
+              data-testid="identity-roles-trigger"
+              onClick={() => setRolesOpen((o) => !o)}
+              className="w-full flex items-center justify-between px-2 py-1.5 rounded-md border border-border-subtle text-sm hover:bg-bg-hover text-left"
+            >
+              {/* ⚠️ THE CURRENT ROLE, NOT A LIST OF THEM. Enumerating every held
+                  role in the trigger turns the panel's headline answer — WHICH
+                  ROLE AM I — back into a roster, which is the question the
+                  dropdown exists to keep collapsed. Extra roles are a count, so
+                  nothing is hidden and nothing is spelled out. */}
+              <span className="text-text-primary truncate" data-testid="identity-current-role">
+                {t(`roles.owner.${held[0]}`)}
+                {held.length > 1 && <span className="text-text-tertiary"> +{held.length - 1}</span>}
+              </span>
+              <ChevronDown
+                size={14}
+                className={`shrink-0 text-text-tertiary transition-transform ${rolesOpen ? 'rotate-180' : ''}`}
+              />
+            </button>
+
+            {rolesOpen ? (
+              <ul
+                role="menu"
+                className="mt-1 flex flex-col gap-0.5 border border-border-subtle rounded-md p-1"
+                data-testid="identity-roles-list"
+              >
+                {assignable.map((role) => {
+                  const isHeld = held.includes(role);
+                  return (
+                    <li key={role}>
+                      <button
+                        type="button"
+                        role="menuitemcheckbox"
+                        aria-checked={isHeld}
+                        data-testid={`identity-role-${role}`}
+                        onClick={() => toggleRole(role)}
+                        className="w-full flex items-center justify-between px-2 py-1.5 rounded-md text-sm hover:bg-bg-hover text-left"
+                      >
+                        <span className={isHeld ? 'text-text-primary' : 'text-text-tertiary'}>
+                          {t(`roles.owner.${role}`)}
+                        </span>
+                        {isHeld ? <Check size={14} className="text-action" /> : null}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : null}
+
+            {/* ⚠️ WARN, DO NOT BLOCK — see the derivation above. */}
+            {redundant.length > 0 && (
+              <p
+                className="mt-1.5 text-xs text-text-tertiary leading-relaxed"
+                data-testid="identity-roles-redundant"
+              >
+                {t('identity.panel.rolesRedundant', {
+                  roles: redundant.map((r) => t(`roles.owner.${r}`)).join(', ')
+                })}
+              </p>
+            )}
+
+            {lastRoleHeld ? (
+              <p
+                className="mt-1.5 text-xs text-text-tertiary leading-relaxed"
+                data-testid="identity-roles-last"
+              >
+                {t('identity.panel.rolesLast')}
+              </p>
+            ) : null}
+          </div>
+
+          {/* — THE HONEST MARKER (D-CENSUS-8): what is real, what is not — */}
+          <div className="pt-3 flex gap-2" data-testid="identity-demo-marker">
+            <Info size={12} className="text-text-tertiary shrink-0 mt-0.5" />
+            <p className="text-xs text-text-tertiary leading-relaxed">
+              {t('identity.panel.demoMarker')}
+            </p>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+};
+
+export default IdentityPanel;
