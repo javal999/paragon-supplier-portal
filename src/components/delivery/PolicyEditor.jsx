@@ -160,7 +160,7 @@ const PolicyEditor = ({
               a refused tolerance disabled Save and explained nothing — which is
               how the default locale's own decimal form became unenterable
               without anyone being told. */}
-          {pctInvalid && !pctRead.ok ? (
+          {pctInvalid && !pctRead.ok && (
             <div
               role="alert"
               data-testid="policy-pct-refusal"
@@ -169,7 +169,7 @@ const PolicyEditor = ({
               {t(PCT_REFUSAL_KEY[pctRead.reason])}{' '}
               <GlossaryTermChip refTo={{ sourceType: 'QtyRefusalReason', term: pctRead.reason }} />
             </div>
-          ) : null}
+          )}
         </div>
 
         <div className="flex flex-col gap-1">
@@ -226,7 +226,7 @@ const PolicyEditor = ({
           {t('delivery.policy.edit.cancel')}
         </Button>
         {/* Reset-to-default — only meaningful when the active policy has deviated. */}
-        {deviation ? (
+        {deviation && (
           <Button
             variant="secondary"
             className="ml-auto px-3 py-1.5 text-xs"
@@ -235,7 +235,7 @@ const PolicyEditor = ({
           >
             {t('delivery.policy.edit.reset')}
           </Button>
-        ) : null}
+        )}
       </div>
     </div>
   );

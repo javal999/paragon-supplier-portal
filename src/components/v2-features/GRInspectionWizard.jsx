@@ -1052,15 +1052,15 @@ const GRInspectionWizard = ({
               className={inputCls}
             />
           </label>
-          {manualNotFound ? (
+          {manualNotFound && (
             <p className="text-xs text-danger">{t('goodsReceipt.wizard.source.notFound')}</p>
-          ) : null}
-          {manualAsnMatch ? (
+          )}
+          {manualAsnMatch && (
             <p className="text-xs text-success">
               {manualAsnMatch.asnNumber} · {manualAsnMatch.poReference} — {manualAsnMatch.status}.{' '}
               {t('goodsReceipt.wizard.source.readyToReceive')}
             </p>
-          ) : null}
+          )}
         </div>
       )}
     </div>
@@ -1325,7 +1325,7 @@ const GRInspectionWizard = ({
                   · REQUIRED, ANSWERED     → row, a selection, no marker
                   Neither check opens with an answer (`REQUIRED-OPENS-PRE-
                   ANSWERED-01`); both block `qualityValid` until ticked. */}
-              {l.halal.ok && l.halal.required ? (
+              {l.halal.ok && l.halal.required && (
                 <RegulatoryCheck
                   name={`halal-${i}`}
                   label={t('goodsReceipt.wizard.field.halalSealCheck')}
@@ -1335,7 +1335,7 @@ const GRInspectionWizard = ({
                   unansweredText={t('goodsReceipt.wizard.check.unanswered')}
                   testId={`gr-halal-unanswered-${i}`}
                 />
-              ) : null}
+              )}
               {/* CP-3 · H4 — the CERTIFICATE half of the halal fact, directly
                   under the SEAL half. Two facts, two rows, never merged: an
                   inspector's attestation about a physical seal and a document's
@@ -1352,7 +1352,7 @@ const GRInspectionWizard = ({
                   index={i}
                 />
               )}
-              {l.bpom.ok && l.bpom.applicable ? (
+              {l.bpom.ok && l.bpom.applicable && (
                 <RegulatoryCheck
                   name={`bpom-${i}`}
                   label={t('goodsReceipt.wizard.field.bpomLotTracking')}
@@ -1362,7 +1362,7 @@ const GRInspectionWizard = ({
                   unansweredText={t('goodsReceipt.wizard.check.unanswered')}
                   testId={`gr-bpom-unanswered-${i}`}
                 />
-              ) : null}
+              )}
               {/* THE REFUSALS, BY NAME. Not a hidden row and not a skipped
                   check: the line says which material it cannot answer for and
                   why, and `qualityValid` will not let the wizard past this step.
@@ -1417,11 +1417,11 @@ const GRInspectionWizard = ({
                 />
                 {t('goodsReceipt.wizard.labSampleRequired')}
               </label>
-              {l.labSampleRequired ? (
+              {l.labSampleRequired && (
                 <div className="text-xs text-text-secondary">
                   {t('goodsReceipt.wizard.labRequestId')} <Data>{l.labRequestId}</Data>
                 </div>
-              ) : null}
+              )}
             </div>
           </div>
         ))}
