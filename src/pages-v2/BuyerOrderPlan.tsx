@@ -18,6 +18,7 @@ import ErrorState from '@components/ui-v2/ErrorState';
 import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
 import DataHealthChip from '@components/forecast/DataHealthChip';
 import PurposeHeader from '@components/forecast/PurposeHeader';
+import CycleSteps from '@components/forecast/CycleSteps';
 import SimulatedDataBanner from '@components/forecast/SimulatedDataBanner';
 import AboutThisPage from '@components/forecast/AboutThisPage';
 import DataAsOf from '@components/forecast/DataAsOf';
@@ -397,6 +398,7 @@ const BuyerOrderPlan: React.FC = () => {
     <AppShellV2>
       <PageHeader breadcrumb={crumb} title={forecastTitle(t, 'whatToOrder')} />
       <PurposeHeader page="whatToOrder" />
+      <CycleSteps current="whatToOrder" />
       <SimulatedDataBanner capability="engineDataset" />
       <DataAsOf
         date={run?.planMadeAt ?? null}
