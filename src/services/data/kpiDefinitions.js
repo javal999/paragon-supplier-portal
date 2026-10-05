@@ -7,15 +7,15 @@
 // counts, the grain, and whether a date change resets the clock.
 //
 // ⚠️ **THIS FILE DESCRIBES THE CODE; IT DOES NOT DEFINE THE MEASURE.** The
-// measure is `performanceRules.ts` over `callOffRules.js` (CR-06 to CR-08) and
+// measure is `performanceRules.js` over `callOffRules.js` (CR-06 to CR-08) and
 // `poCfot`. Every number below is READ from the constants those modules use,
-// and `kpiDefinitions.bl53.test.ts` fires the real functions at each stated
+// and `kpiDefinitions.bl53.test.js` fires the real functions at each stated
 // boundary — so if the arithmetic changes and this text does not, a named test
 // goes red. Where the code differs from the decided wording in the
 // requirements, the page shows what the code does (and the difference is
 // reported, not silently fixed). Since BL-82 the five BL-66 differences are
 // closed and the text describes the aligned calculation; the early window is
-// a PROPOSED value until BL-56 (`kpiWindow.ts`).
+// a PROPOSED value until BL-56 (`kpiWindow.js`).
 //
 // ⚠️ **NO TARGET IS SHOWN.** BL-19 decided to measure a baseline before any
 // target is set, so both measures read "Baseline period" and the CR-17 90%
