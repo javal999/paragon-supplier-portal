@@ -15,13 +15,16 @@ import { DECLARED_PRESENT } from '@services/data/fixturePresent';
  * single-item event the prototype already had, unchanged.
  */
 /**
- * @typedef {object} RfqLineItem
- * @property {number} lineNo
- * @property {string} materialCode
- * @property {string} description
- * @property {number} quantity
- * @property {'KG' | 'PCS' | 'L' | 'MT'} uom
- * @property {string} [specification] -  The specification an RFI pre-fills (REQ-E03-03 BR-02), buyer-editable.
+ * `specification`:  The specification an RFI pre-fills (REQ-E03-03 BR-02), buyer-editable.
+ *
+ * @typedef {{
+ *   readonly lineNo: number;
+ *   readonly materialCode: string;
+ *   readonly description: string;
+ *   readonly quantity: number;
+ *   readonly uom: 'KG' | 'PCS' | 'L' | 'MT';
+ *   readonly specification?: string;
+ * }} RfqLineItem
  */
 
 /**

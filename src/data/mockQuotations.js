@@ -9,12 +9,13 @@ import { shiftRfqDay } from './mockRfqs';
  * instead of on one blended number.
  */
 /**
- * @typedef {object} QuotationLine
- * @property {number} lineNo
- * @property {string} materialCode
- * @property {number} quantity
- * @property {string} uom
- * @property {number} unitPrice
+ * @typedef {{
+ *   readonly lineNo: number;
+ *   readonly materialCode: string;
+ *   readonly quantity: number;
+ *   readonly uom: string;
+ *   readonly unitPrice: number;
+ * }} QuotationLine
  */
 
 /**
