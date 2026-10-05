@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import AppShellV2 from '@components/layout-v2/AppShellV2';
 import PageHeader from '@components/ui-v2/PageHeader';
 import SampleDataBadge from '@components/ui-v2/SampleDataBadge';
@@ -272,6 +273,15 @@ const BuyerHome: React.FC = () => {
       <div className="mb-4">
         <SampleDataBadge />
       </div>
+      {/* FUX phase 2 B1 (F-03) — the planner's way into the weekly cycle. My
+          tasks stays the landing page; This week is Weekly plan's first item. */}
+      {(role === 'MP' || role === 'ALL') && (
+        <p className="mb-4 text-sm">
+          <Link to="/buyer/this-week" className="text-action-hover hover:underline" data-testid="home-this-week">
+            {t('hub.home.pti.thisWeek')}
+          </Link>
+        </p>
+      )}
       <TaskList tasks={tasks} />
     </AppShellV2>
   );
