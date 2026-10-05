@@ -86,6 +86,7 @@ import { BuyerFixedStockReconcile, SupplierFixedStockReconcile } from '@pages-v2
 import BuyerMaterialRequirement from '@pages-v2/BuyerMaterialRequirement';
 import BuyerSafetyStock from '@pages-v2/BuyerSafetyStock';
 import BuyerOrderPlan from '@pages-v2/BuyerOrderPlan';
+import BuyerThisWeek from '@pages-v2/BuyerThisWeek';
 import BuyerReschedule from '@pages-v2/BuyerReschedule';
 import BuyerStabilise from '@pages-v2/BuyerStabilise';
 import BuyerDataHealth from '@pages-v2/BuyerDataHealth';
@@ -164,6 +165,8 @@ const AppRouter: React.FC = () => {
           <Route path="/buyer/material-requirement" element={<BuyerMaterialRequirement />} />
           {/* REQ-E14-04 — safety stock, safety lead time and reorder point (SIMULATED). */}
           <Route path="/buyer/safety-stock" element={<BuyerSafetyStock />} />
+          {/* FUX phase 2 B1 (F-03) — the weekly cycle's start page (SIMULATED figures). */}
+          <Route path="/buyer/this-week" element={<BuyerThisWeek />} />
           <Route path="/buyer/order-plan" element={<BuyerOrderPlan />} />
           {/* REQ-E14-13 — reschedule or cancel open orders for warehouse relief (SIMULATED). */}
           <Route path="/buyer/reschedule" element={<BuyerReschedule />} />

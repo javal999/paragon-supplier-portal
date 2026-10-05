@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import StatusPill from '@components/ui-v2/StatusPill';
 import { useDataHealth } from '@services/query/hooks';
 import type { EngineStep } from '@services/engine/dataHealth';
+import { failingChecks } from './cycleCounts';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DATA HEALTH CHIP — F-02 (Forecast UX phase 1, task A3).
@@ -28,9 +29,7 @@ const DataHealthChip: React.FC<DataHealthChipProps> = ({ step, className = '' })
   const query = useDataHealth();
   if (query.isPending) return null;
   const report = query.data ?? null;
-  const failing = report
-    ? report.feeds.filter((f) => f.affects.includes(step)).flatMap((f) => f.checks).filter((c) => !c.passed).length
-    : null;
+  const failing = report ? failingChecks(report, step) : null;
   return (
     <p className={`flex flex-wrap items-center gap-2 text-xs ${className}`} data-testid="data-health-chip">
       {failing === null ? (
