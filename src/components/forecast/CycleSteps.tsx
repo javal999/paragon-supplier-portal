@@ -17,7 +17,7 @@ import {
   STEP_HEALTH,
   currentVersions,
   failingChecks,
-  materialsToOrderThisWeek,
+  recommendedOrders,
   openExceptions,
   publishWithheld,
   weeksOverCapacity,
@@ -73,7 +73,7 @@ const CycleSteps: React.FC<CycleStepsProps> = ({ current }) => {
         return report && failingChecks(report) === 0 ? t('fux.steps.pass') : null;
       case 'whatToOrder':
         return orderPlan.data
-          ? t('fux.count.toOrder', { count: materialsToOrderThisWeek(orderPlan.data) })
+          ? t('fux.count.toOrder', { count: recommendedOrders(orderPlan.data) })
           : null;
       case 'makeRoom':
         return reschedule.data

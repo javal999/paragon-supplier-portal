@@ -36,21 +36,23 @@ export function failingChecks(report: DataHealthReport, step?: EngineStep): numb
 }
 
 /**
- * What to order: materials with a recommended order to release this week or
- * already late to release. The page's "Release in" column reads `releaseWeek`
- * and marks it late when it falls before the run's first week (the engine's
- * `lateToRelease`); both warehouses count.
+ * What to order: the page's headline, "Recommended orders" — its KPI reads
+ * `w.after.orders` for the warehouse shown; this sums both warehouses, so the
+ * card counts every order the page can list.
  */
-export function materialsToOrderThisWeek(run: OrderPlanView): number {
-  const thisWeek = run.weeks[0];
-  const codes = new Set(
-    run.warehouses.flatMap((w) =>
-      w.materials
-        .filter((m) => m.recommendations.some((r) => r.releaseWeek <= thisWeek))
-        .map((m) => m.materialCode)
-    )
-  );
-  return codes.size;
+export function recommendedOrders(run: OrderPlanView): number {
+  return run.warehouses.reduce((sum, w) => sum + w.after.orders, 0);
+}
+
+/**
+ * What to order: the earliest release week of any recommended order, both
+ * warehouses — the page's "Release in" column (`releaseWeek`). Null when the
+ * plan recommends nothing.
+ */
+export function firstReleaseWeek(run: OrderPlanView): string | null {
+  return run.warehouses
+    .flatMap((w) => w.materials.flatMap((m) => m.recommendations.map((r) => r.releaseWeek)))
+    .reduce<string | null>((min, wk) => (min === null || wk < min ? wk : min), null);
 }
 
 /**

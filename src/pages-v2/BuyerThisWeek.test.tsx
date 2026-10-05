@@ -3,6 +3,7 @@ import { describe, it, expect, afterEach, beforeEach } from 'vitest';
 import { screen, within, fireEvent, cleanup } from '@testing-library/react';
 import { renderWithProviders, BUYER } from '@test/test-utils';
 import i18n from '@lib/i18n';
+import { formatDate } from '@lib/format';
 import { SEEDED_SEAT_ROLES, PERSONA_SYSTEM_ROLES } from '@services/transitions/businessRoles';
 import { mockDataService } from '@services/data/mock/mockDataService';
 import { isoWeek } from '@services/engine/dates';
@@ -107,43 +108,34 @@ describe('This week — the page (F-03)', () => {
     );
   });
 
-  it('What to order: equals the materials the order plan lists with a release this week or late to release, both warehouses', async () => {
+  it('What to order: equals the page’s Recommended orders KPI over both warehouses, with the earliest release week its table lists', async () => {
     await renderThisWeek();
     const shown = leadingNumber(screen.getByTestId('tw-count-whatToOrder'));
+    const firstRelease = screen.getByTestId('tw-first-release').textContent;
     cleanup();
 
-    const run = (await mockDataService.procurement.getOrderPlan(buyerScope))!;
-    const thisWeek = `W${isoWeek(run.weeks[0])}`;
     renderWithProviders(<BuyerOrderPlan />, { identity: PLANNER, route: '/buyer/order-plan' });
-    const rows: { code: string; release: string }[] = [];
+    let kpi = 0;
+    const releases: string[] = [];
     for (const name of ['Packaging warehouse', 'Raw material warehouse']) {
       fireEvent.click(await screen.findByRole('radio', { name }, SLOW));
-      for (const row of screen.queryAllByTestId(/^op-rec-/)) {
-        rows.push({
-          code: row
-            .getAttribute('data-testid')!
-            .replace(/^op-rec-/, '')
-            .replace(/-\d{4}-\d{2}-\d{2}$/, ''),
-          release: row.querySelectorAll('td')[3].textContent ?? ''
-        });
-      }
+      kpi += Number((await screen.findByTestId('op-kpi-orders', {}, SLOW)).textContent);
+      for (const row of screen.queryAllByTestId(/^op-rec-/))
+        releases.push(row.querySelectorAll('td')[3].textContent ?? '');
     }
-    const due = (label: string) =>
-      new Set(
-        rows
-          .filter(
-            (r) => /^W\d+/.exec(r.release)![0] === label || r.release.includes('Late to release')
-          )
-          .map((r) => r.code)
-      ).size;
-    // The instrument reads the "Release in" column, and can fire: counted by the
-    // first listed release week instead, it finds that row's material.
-    expect(rows.length).toBeGreaterThan(0);
-    expect(rows.every((r) => /^W\d+/.test(r.release))).toBe(true);
-    expect(due(/^W\d+/.exec(rows[0].release)![0])).toBeGreaterThan(0);
-    // The sample run starts in a week no recommendation releases in, so the
-    // figure is 0 on both pages — the same 0.
-    expect(shown).toBe(due(thisWeek));
+    // The row reader reads the "Release in" column, and has rows to read.
+    expect(releases.length).toBeGreaterThan(0);
+    expect(releases.every((r) => /^W\d+/.test(r))).toBe(true);
+    expect(kpi).toBeGreaterThan(0);
+    expect(shown).toBe(kpi);
+
+    const run = (await mockDataService.procurement.getOrderPlan(buyerScope))!;
+    const earliest = run.warehouses
+      .flatMap((w) => w.materials.flatMap((m) => m.recommendations.map((r) => r.releaseWeek)))
+      .sort()[0];
+    const label = `W${isoWeek(earliest)}`;
+    expect(releases.some((r) => /^W\d+/.exec(r)![0] === label)).toBe(true);
+    expect(firstRelease).toBe(`First release ${label} · ${formatDate(earliest)}`);
   });
 
   it('Make warehouse room: equals the weeks the fill table marks over capacity, both warehouses', async () => {

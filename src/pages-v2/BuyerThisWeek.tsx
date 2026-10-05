@@ -15,13 +15,15 @@ import {
   STEP_HEALTH,
   currentVersions,
   failingChecks,
-  materialsToOrderThisWeek,
+  recommendedOrders,
+  firstReleaseWeek,
   openExceptions,
   publishWithheld,
   weeksOverCapacity,
   type CycleStepId
 } from '@components/forecast/cycleCounts';
 import { formatDate } from '@lib/format';
+import { isoWeek } from '@services/engine/dates';
 import { sdcClock } from '@services/sdc/clock';
 import {
   useDataHealth,
@@ -102,6 +104,8 @@ const BuyerThisWeek: React.FC = () => {
   };
   const pending = <span className="text-text-tertiary">—</span>;
   const current = versions.data ? currentVersions(versions.data.items) : null;
+  // The page's "Release in" column labels a week `W<iso week>` (BuyerOrderPlan's weekLabel).
+  const firstRelease = orderPlan.data ? firstReleaseWeek(orderPlan.data) : null;
 
   return (
     <AppShellV2>
@@ -147,9 +151,21 @@ const BuyerThisWeek: React.FC = () => {
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StepCard id="whatToOrder" checks={checksFor('whatToOrder')}>
           {orderPlan.data ? (
-            <Data data-testid="tw-count-whatToOrder">
-              {t('fux.count.toOrder', { count: materialsToOrderThisWeek(orderPlan.data) })}
-            </Data>
+            <>
+              <Data data-testid="tw-count-whatToOrder">
+                {t('fux.count.toOrder', { count: recommendedOrders(orderPlan.data) })}
+              </Data>
+              {firstRelease !== null && (
+                <p className="mt-1 text-xs text-text-secondary" data-testid="tw-first-release">
+                  <Data>
+                    {t('fux.count.firstRelease', {
+                      week: `W${isoWeek(firstRelease)}`,
+                      date: formatDate(firstRelease)
+                    })}
+                  </Data>
+                </p>
+              )}
+            </>
           ) : (
             pending
           )}
