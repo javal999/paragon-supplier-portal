@@ -348,130 +348,136 @@ const BuyerCommitments: React.FC = () => {
         </div>
       </section>
 
-      {/* BR-01 / BR-02 — the grid of commitment against forecast. */}
-      <section className="mb-6" data-testid="fc-grid">
-        <h2 className="text-section text-text-primary mb-2">{t('fc.pti.gaps.grid')}</h2>
-        <p className="text-sm text-text-secondary mb-3">{t('fc.pti.gaps.gridHint', {
-            green: thresholdPct(gapColourThresholds().greenFrom),
-            amber: thresholdPct(gapColourThresholds().amberFrom),
-          })}</p>
-        <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto">
-          <table className="text-sm min-w-full">
-            <thead>
-              <tr className="bg-bg-hover text-label text-text-tertiary uppercase">
-                <th scope="col" className="text-left px-3 py-2 sticky left-0 bg-bg-hover">
-                  {t('fc.col.supplierMaterial')}
-                </th>
-                {periods.map(([p]) => (
-                  <th key={p} scope="col" className="text-left px-3 py-2 whitespace-nowrap">
-                    {periodLabel(p)}
+      {/* F-23 — the exceptions drive action; the grid and the cumulative chart
+          are context, collapsed below them. Same data, same order inside. */}
+      <details className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-6" data-testid="fc-coverage-details">
+        <summary className="text-section text-text-primary cursor-pointer">{t('fc.pti.gaps.coverageDetails')}</summary>
+        <p className="text-sm text-text-secondary mt-1 mb-4">{t('fc.pti.gaps.coverageDetailsHint')}</p>
+        {/* BR-01 / BR-02 — the grid of commitment against forecast. */}
+        <section className="mb-6" data-testid="fc-grid">
+          <h2 className="text-section text-text-primary mb-2">{t('fc.pti.gaps.grid')}</h2>
+          <p className="text-sm text-text-secondary mb-3">{t('fc.pti.gaps.gridHint', {
+              green: thresholdPct(gapColourThresholds().greenFrom),
+              amber: thresholdPct(gapColourThresholds().amberFrom),
+            })}</p>
+          <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto">
+            <table className="text-sm min-w-full">
+              <thead>
+                <tr className="bg-bg-hover text-label text-text-tertiary uppercase">
+                  <th scope="col" className="text-left px-3 py-2 sticky left-0 bg-bg-hover">
+                    {t('fc.col.supplierMaterial')}
                   </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r) => (
-                <tr key={`${r.supplierId}|${r.materialCode}`} className="border-t border-border-subtle">
-                  <th scope="row" className="text-left px-3 py-2 sticky left-0 bg-bg-surface font-normal whitespace-nowrap">
-                    <div className="text-text-primary">{r.supplierName}</div>
-                    <Data className="text-xs">{r.materialCode}</Data>
-                  </th>
-                  {periods.map(([p]) => {
-                    const l = cell(r.supplierId, r.materialCode, p);
-                    if (!l) return <td key={p} className="px-3 py-2 text-text-tertiary">—</td>;
-                    const committed = l.committedQty !== null && l.state !== 'awaiting' && l.zone !== 'forecast';
-                    const gap = committed ? commitmentGap(l.zone, l.forecastQty, l.committedQty!) : null;
-                    const tint = gap ? (gap.colour === 'green' ? 'bg-success-soft' : gap.colour === 'amber' ? 'bg-warning-soft' : 'bg-danger-soft') : '';
-                    return (
-                      <td
-                        key={p}
-                        className={`px-3 py-2 align-top whitespace-nowrap ${tint}`}
-                        data-testid={`fc-cell-${l.supplierId}-${l.materialCode}-${l.periodBucket}`}
-                        data-colour={gap?.colour ?? 'none'}
-                      >
-                        <div>
-                          <Data>{committed ? qtyText(l.committedQty!) : '—'}</Data>
-                          <span className="text-text-tertiary"> / </span>
-                          <Data>{qtyText(l.forecastQty)}</Data>
-                        </div>
-                        <div className="text-xs text-text-secondary">
-                          {t(`fc.zone.${l.zone}`)}
-                          {gap && (
-                            <>
-                              {' · '}
-                              <Data>{pctText(gap.pct)}</Data>
-                              {gap.overCommit ? ` · ${t('fc.gap.overCommit')}` : ''}
-                            </>
-                          )}
-                          {!gap && l.zone !== 'forecast' && ` · ${t('fc.state.awaiting')}`}
-                          {l.zone === 'forecast' && l.state === 'acknowledged' && ` · ${t('fc.state.acknowledged')}`}
-                        </div>
-                        {/* CR-26 · BL-48 — time left or how late, per cell. */}
-                        <CommitmentDeadline
-                          line={l}
-                          nowIso={nowIso}
-                          compact
-                          testId={`fc-due-cell-${l.supplierId}-${l.materialCode}-${l.periodBucket}`}
-                        />
-                      </td>
-                    );
-                  })}
+                  {periods.map(([p]) => (
+                    <th key={p} scope="col" className="text-left px-3 py-2 whitespace-nowrap">
+                      {periodLabel(p)}
+                    </th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
+              </thead>
+              <tbody>
+                {rows.map((r) => (
+                  <tr key={`${r.supplierId}|${r.materialCode}`} className="border-t border-border-subtle">
+                    <th scope="row" className="text-left px-3 py-2 sticky left-0 bg-bg-surface font-normal whitespace-nowrap">
+                      <div className="text-text-primary">{r.supplierName}</div>
+                      <Data className="text-xs">{r.materialCode}</Data>
+                    </th>
+                    {periods.map(([p]) => {
+                      const l = cell(r.supplierId, r.materialCode, p);
+                      if (!l) return <td key={p} className="px-3 py-2 text-text-tertiary">—</td>;
+                      const committed = l.committedQty !== null && l.state !== 'awaiting' && l.zone !== 'forecast';
+                      const gap = committed ? commitmentGap(l.zone, l.forecastQty, l.committedQty!) : null;
+                      const tint = gap ? (gap.colour === 'green' ? 'bg-success-soft' : gap.colour === 'amber' ? 'bg-warning-soft' : 'bg-danger-soft') : '';
+                      return (
+                        <td
+                          key={p}
+                          className={`px-3 py-2 align-top whitespace-nowrap ${tint}`}
+                          data-testid={`fc-cell-${l.supplierId}-${l.materialCode}-${l.periodBucket}`}
+                          data-colour={gap?.colour ?? 'none'}
+                        >
+                          <div>
+                            <Data>{committed ? qtyText(l.committedQty!) : '—'}</Data>
+                            <span className="text-text-tertiary"> / </span>
+                            <Data>{qtyText(l.forecastQty)}</Data>
+                          </div>
+                          <div className="text-xs text-text-secondary">
+                            {t(`fc.zone.${l.zone}`)}
+                            {gap && (
+                              <>
+                                {' · '}
+                                <Data>{pctText(gap.pct)}</Data>
+                                {gap.overCommit ? ` · ${t('fc.gap.overCommit')}` : ''}
+                              </>
+                            )}
+                            {!gap && l.zone !== 'forecast' && ` · ${t('fc.state.awaiting')}`}
+                            {l.zone === 'forecast' && l.state === 'acknowledged' && ` · ${t('fc.state.acknowledged')}`}
+                          </div>
+                          {/* CR-26 · BL-48 — time left or how late, per cell. */}
+                          <CommitmentDeadline
+                            line={l}
+                            nowIso={nowIso}
+                            compact
+                            testId={`fc-due-cell-${l.supplierId}-${l.materialCode}-${l.periodBucket}`}
+                          />
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
 
-      {/* BR-03 — cumulative commitment against cumulative forecast per material. */}
-      <section className="mb-6" data-testid="fc-cumulative">
-        <h2 className="text-section text-text-primary mb-2">{t('fc.pti.gaps.cumulative')}</h2>
-        <p className="text-sm text-text-secondary mb-3">{t('fc.pti.gaps.cumulativeHint')}</p>
-        <div className="grid gap-4 lg:grid-cols-2">
-          {[...new Set(shown.map((l) => l.materialCode))].map((code) => {
-            const series = cumulativeCommitment(shown.filter((l) => l.materialCode === code)).map((p) => ({
-              ...p,
-              label: periodLabel(p.periodBucket),
-            }));
-            const last = series[series.length - 1];
-            const behind = last && last.cumulativeForecast > 0 ? (last.cumulativeCommitment - last.cumulativeForecast) / last.cumulativeForecast : 0;
-            return (
-              <div key={code} className="bg-bg-surface border border-border-subtle rounded-lg p-4" data-testid={`fc-cumulative-${code}`}>
-                <div className="flex flex-wrap items-baseline justify-between gap-2 mb-2">
-                  <Data className="font-semibold">{code}</Data>
-                  {last && (
-                    <span className="text-xs text-text-secondary" data-testid={`fc-cumulative-summary-${code}`}>
-                      {t('fc.pti.gaps.cumulativeSummary', {
-                        commit: qtyText(last.cumulativeCommitment),
-                        forecast: qtyText(last.cumulativeForecast),
-                        pct: pctText(behind),
-                        period: last.label,
-                      })}
-                    </span>
+        {/* BR-03 — cumulative commitment against cumulative forecast per material. */}
+        <section className="mb-6" data-testid="fc-cumulative">
+          <h2 className="text-section text-text-primary mb-2">{t('fc.pti.gaps.cumulative')}</h2>
+          <p className="text-sm text-text-secondary mb-3">{t('fc.pti.gaps.cumulativeHint')}</p>
+          <div className="grid gap-4 lg:grid-cols-2">
+            {[...new Set(shown.map((l) => l.materialCode))].map((code) => {
+              const series = cumulativeCommitment(shown.filter((l) => l.materialCode === code)).map((p) => ({
+                ...p,
+                label: periodLabel(p.periodBucket),
+              }));
+              const last = series[series.length - 1];
+              const behind = last && last.cumulativeForecast > 0 ? (last.cumulativeCommitment - last.cumulativeForecast) / last.cumulativeForecast : 0;
+              return (
+                <div key={code} className="bg-bg-surface border border-border-subtle rounded-lg p-4" data-testid={`fc-cumulative-${code}`}>
+                  <div className="flex flex-wrap items-baseline justify-between gap-2 mb-2">
+                    <Data className="font-semibold">{code}</Data>
+                    {last && (
+                      <span className="text-xs text-text-secondary" data-testid={`fc-cumulative-summary-${code}`}>
+                        {t('fc.pti.gaps.cumulativeSummary', {
+                          commit: qtyText(last.cumulativeCommitment),
+                          forecast: qtyText(last.cumulativeForecast),
+                          pct: pctText(behind),
+                          period: last.label,
+                        })}
+                      </span>
+                    )}
+                  </div>
+                  {series.length > 0 ? (
+                    <div style={{ width: '100%', height: 180 }}>
+                      <ResponsiveContainer>
+                        <LineChart data={series} margin={{ top: 8, right: 8, left: 8, bottom: 0 }}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="label" tick={{ fontSize: 11 }} />
+                          <YAxis tick={{ fontSize: 11 }} width={64} />
+                          <Tooltip />
+                          <Legend />
+                          <Line type="monotone" dataKey="cumulativeForecast" name={t('fc.pti.gaps.cumForecast')} stroke={CHART_SERIES[1]} dot={false} />
+                          <Line type="monotone" dataKey="cumulativeCommitment" name={t('fc.pti.gaps.cumCommitment')} stroke={CHART_SERIES[0]} dot={false} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-text-tertiary">{t('fc.pti.gaps.cumulativeNone')}</p>
                   )}
                 </div>
-                {series.length > 0 ? (
-                  <div style={{ width: '100%', height: 180 }}>
-                    <ResponsiveContainer>
-                      <LineChart data={series} margin={{ top: 8, right: 8, left: 8, bottom: 0 }}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="label" tick={{ fontSize: 11 }} />
-                        <YAxis tick={{ fontSize: 11 }} width={64} />
-                        <Tooltip />
-                        <Legend />
-                        <Line type="monotone" dataKey="cumulativeForecast" name={t('fc.pti.gaps.cumForecast')} stroke={CHART_SERIES[1]} dot={false} />
-                        <Line type="monotone" dataKey="cumulativeCommitment" name={t('fc.pti.gaps.cumCommitment')} stroke={CHART_SERIES[0]} dot={false} />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </div>
-                ) : (
-                  <p className="text-sm text-text-tertiary">{t('fc.pti.gaps.cumulativeNone')}</p>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </section>
+              );
+            })}
+          </div>
+        </section>
+      </details>
 
       {/* BR-07 — supplier coverage per material (CR-03), an estimate. */}
       <section data-testid="fc-coverage">
