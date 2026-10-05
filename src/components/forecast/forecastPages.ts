@@ -74,6 +74,16 @@ export const FORECAST_PAGES: Readonly<Record<ForecastPageId, ForecastPage>> = Ob
 
 const PERFORMANCE: PageTarget = { path: '/buyer/scorecard', titleKey: 'hub.nav.pti.performance' };
 
+/**
+ * The Supplier scorecard is not one of the forecast pages, but it is the
+ * "performance" step that Uses/Next links point to, so its own place in the
+ * cycle is stated here beside the others (phase 2, B6).
+ */
+export const PERFORMANCE_PLACE: { readonly uses: ForecastLinkTarget; readonly next: ForecastLinkTarget } = Object.freeze({
+  uses: 'responses',
+  next: 'forecastQuality',
+});
+
 /** Where a purpose-header link goes, and the key of the name it shows. */
 export function linkTarget(target: ForecastLinkTarget): PageTarget {
   return target === 'performance' ? PERFORMANCE : FORECAST_PAGES[target];

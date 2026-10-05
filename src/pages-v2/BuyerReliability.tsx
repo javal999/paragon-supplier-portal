@@ -36,7 +36,7 @@ import { forecastCrumb, forecastTitle } from '@components/forecast/forecastPages
 // computed by the forecast engine at read time on its SYNTHETIC dataset, and
 // the page says so (the `engineDataset` pill, X-03).
 //
-// CFOT ("Delivered on the confirmed date") is shown since BL-82: the engine's
+// CFOT ("Confirmed-date lines delivered" since B6, FUX-D5) is shown since BL-82: the engine's
 // `agreedCfot`, per PO on the same synthetic rows, with the ONE early window
 // OTIF uses (`data/kpiWindow.ts`). The portfolio figure counts every PO once.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -115,7 +115,15 @@ const BuyerReliability: React.FC = () => {
         <KpiCard
           eyebrow={t('rel.kpi.cfot')}
           value={<span data-testid="rel-portfolio-cfot">{pctOf(totalCfot.rate) ?? t('rel.noData')}</span>}
-          subtitle={<span className="text-text-tertiary">{t('rel.kpi.cfot.sub', { count: totalCfot.pos })}</span>}
+          subtitle={
+            <span className="text-text-tertiary">
+              {t('rel.kpi.cfot.sub', { count: totalCfot.pos })}
+              {/* B6 (FUX-D5) — the basis, so this is not read as the scorecard's measure. */}
+              <span className="block" data-testid="rel-cfot-basis">
+                {t('rel.kpi.cfot.basis', { weeks })}
+              </span>
+            </span>
+          }
         />
         <KpiCard
           eyebrow={t('rel.kpi.misses')}

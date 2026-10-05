@@ -32,9 +32,7 @@
 export const buyerScorecardEn: Record<string, string> = {
   // — Breadcrumb —
   'buyerScorecard.crumb.intelligence': 'INTELLIGENCE',
-  'buyerScorecard.crumb.scorecard': 'SUPPLIER SCORECARD',
   // — Page header —
-  'buyerScorecard.header.title': 'Supplier Scorecard',
   'buyerScorecard.header.subtitle':
     'Performance scoring across all active suppliers.',
   'buyerScorecard.header.selectSupplier': 'Select supplier',
@@ -82,9 +80,7 @@ export const buyerScorecardEn: Record<string, string> = {
 export const buyerScorecardId: Record<string, string> = {
   // — Breadcrumb —
   'buyerScorecard.crumb.intelligence': 'INTELIJEN',
-  'buyerScorecard.crumb.scorecard': 'KARTU SKOR PEMASOK',
   // — Page header —
-  'buyerScorecard.header.title': 'Kartu Skor Pemasok',
   'buyerScorecard.header.subtitle':
     'Penilaian kinerja di seluruh pemasok aktif.',
   'buyerScorecard.header.selectSupplier': 'Pilih pemasok',
