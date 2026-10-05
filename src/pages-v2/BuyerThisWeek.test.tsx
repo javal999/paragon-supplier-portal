@@ -196,14 +196,13 @@ describe('This week — the page (F-03)', () => {
     expect(shown).toBe(listed);
   });
 
-  it('a step card shows the failing checks its page’s Data health chip shows', async () => {
+  it('states the failing input check once, in the input check card, and no step card repeats it', async () => {
     await renderThisWeek();
-    const num = (text: string | null | undefined) => (text ? Number(/(\d+)/.exec(text)![1]) : null);
-    const card = num(screen.queryByTestId('tw-checks-whatToOrder')?.textContent);
-    cleanup();
-    renderWithProviders(<BuyerOrderPlan />, { identity: PLANNER, route: '/buyer/order-plan' });
-    const chip = await screen.findByTestId('data-health-chip', {}, SLOW);
-    expect(card).toBe(num(within(chip).queryByTestId('data-health-chip-failing')?.textContent));
+    // The fixture really carries a failing check, so the count does show on the page.
+    expect(screen.getByTestId('tw-input-check')).toHaveTextContent(/1 check failing/);
+    for (const id of ['whatToOrder', 'makeRoom', 'publish', 'responses']) {
+      expect(screen.getByTestId(`tw-card-${id}`)).not.toHaveTextContent(/input checks? failing/);
+    }
   });
 
   it('reads in Indonesian', async () => {
