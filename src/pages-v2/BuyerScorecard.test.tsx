@@ -175,3 +175,41 @@ describe('BuyerScorecard — update compliance (Material B3)', () => {
     expect(all.items.find((c) => c.supplierId === 'sup-004')?.pct).toBeNull();
   });
 });
+
+// ────────────────────────────────────────────────────────────────────────────
+// Forecast UX phase 2, B6 (F-11, FUX-D2, FUX-D5) — the scorecard is the one
+// supplier-evaluation page: it states its purpose, carries the one simulated-
+// data banner, and says the basis of its "Delivered on the confirmed date".
+// ────────────────────────────────────────────────────────────────────────────
+describe('BuyerScorecard — purpose header, banner and measure basis (B6)', () => {
+  it('renders the purpose header and the simulated-data banner, and no old "Sample data" label', async () => {
+    renderWithProviders(<BuyerScorecard />, { route: '/buyer/scorecard' });
+    const header = await screen.findByTestId('purpose-header');
+    expect(header).toHaveAttribute('data-page', 'performance');
+    expect(screen.getByTestId('purpose-decision')).toHaveTextContent('Which suppliers to follow up this month.');
+    expect(screen.getByTestId('purpose-uses')).toHaveTextContent('Supplier responses');
+    expect(screen.getByTestId('purpose-uses')).toHaveAttribute('href', '/buyer/collaboration');
+    expect(screen.getByTestId('purpose-next')).toHaveTextContent('Forecast quality');
+    expect(screen.getByTestId('purpose-next')).toHaveAttribute('href', '/buyer/demand-forecast');
+    expect(screen.getByTestId('simulated-data-banner')).toHaveTextContent('Sample data. Nothing here reaches suppliers or SAP.');
+    expect(screen.getByTestId('data-as-of')).toBeInTheDocument();
+    // The old ProvenanceMarker label read exactly "Sample data" (rendered upper-case).
+    expect(screen.queryByText('Sample data')).toBeNull();
+  });
+
+  it('states the basis of "Delivered on the confirmed date" for the selected period', async () => {
+    renderWithProviders(<BuyerScorecard />);
+    expect(await screen.findByTestId('scorecard-cfot-basis')).toHaveTextContent('By quantity, per order, last 90 days.');
+    fireEvent.click(screen.getByText('Last 30 days'));
+    await waitFor(() =>
+      expect(screen.getByTestId('scorecard-cfot-basis')).toHaveTextContent('By quantity, per order, last 30 days.'),
+    );
+  });
+
+  it('links to Supplier reliability for the plan-change measures', async () => {
+    renderWithProviders(<BuyerScorecard />);
+    const line = await screen.findByTestId('scorecard-reliability-link');
+    expect(line).toHaveTextContent('Plan-change measures behind the weekly plan → Supplier reliability');
+    expect(line.querySelector('a')).toHaveAttribute('href', '/buyer/reliability');
+  });
+});
