@@ -27,7 +27,7 @@ const TopBarV2 = () => {
         <span className="text-sm font-semibold text-text-primary whitespace-nowrap">
           {t('app.title')}
         </span>
-        {badge ? (
+        {badge && (
           <span
             className={`text-label px-2 py-0.5 rounded-full uppercase ${
               badge === 'PREVIEW'
@@ -37,7 +37,7 @@ const TopBarV2 = () => {
           >
             {badge}
           </span>
-        ) : null}
+        )}
       </div>
 
       {/* Center search */}

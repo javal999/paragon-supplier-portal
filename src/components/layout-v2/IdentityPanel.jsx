@@ -174,7 +174,7 @@ const IdentityPanel = () => {
         {initials}
       </button>
 
-      {open ? (
+      {open && (
         <div
           role="dialog"
           aria-label={t('identity.panel.title')}
@@ -296,7 +296,7 @@ const IdentityPanel = () => {
               />
             </button>
 
-            {rolesOpen ? (
+            {rolesOpen && (
               <ul
                 role="menu"
                 className="mt-1 flex flex-col gap-0.5 border border-border-subtle rounded-md p-1"
@@ -317,13 +317,13 @@ const IdentityPanel = () => {
                         <span className={isHeld ? 'text-text-primary' : 'text-text-tertiary'}>
                           {t(`roles.owner.${role}`)}
                         </span>
-                        {isHeld ? <Check size={14} className="text-action" /> : null}
+                        {isHeld && <Check size={14} className="text-action" />}
                       </button>
                     </li>
                   );
                 })}
               </ul>
-            ) : null}
+            )}
 
             {/* ⚠️ WARN, DO NOT BLOCK — see the derivation above. */}
             {redundant.length > 0 && (
@@ -337,14 +337,14 @@ const IdentityPanel = () => {
               </p>
             )}
 
-            {lastRoleHeld ? (
+            {lastRoleHeld && (
               <p
                 className="mt-1.5 text-xs text-text-tertiary leading-relaxed"
                 data-testid="identity-roles-last"
               >
                 {t('identity.panel.rolesLast')}
               </p>
-            ) : null}
+            )}
           </div>
 
           {/* — THE HONEST MARKER (D-CENSUS-8): what is real, what is not — */}
@@ -355,7 +355,7 @@ const IdentityPanel = () => {
             </p>
           </div>
         </div>
-      ) : null}
+      )}
     </div>
   );
 };
