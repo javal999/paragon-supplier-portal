@@ -110,7 +110,7 @@ import { PERSONA_ROLES } from './roles';
  * `recordsFact`:  Records a fact and leaves the entity where it is (`statePreserving`).
  * `sapBoundary`:  Crosses the SAP boundary — settles asynchronously (Option B).
  * `settlesTo`:  Where settlement lands the entity; non-null exactly when `sapBoundary`.
- * `fansOutTo`:  Cross-entity cascades this transition FIRES, as a source (`cascades.ts`).
+ * `fansOutTo`:  Cross-entity cascades this transition FIRES, as a source (`cascades.js`).
  * `firedBy`:  Source transition ids that fire THIS one. Empty ⇒ nothing fires it.
  *
  * @typedef {{
